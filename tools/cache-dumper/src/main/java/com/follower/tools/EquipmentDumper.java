@@ -140,6 +140,8 @@ public class EquipmentDumper
 
 		SpotAnimDump spotAnims = new SpotAnimDump();
 		spotAnims.cacheRevision = dump.cacheRevision;
+		FontDump fontDump = new FontDump();
+		fontDump.cacheRevision = dump.cacheRevision;
 
 		try (Store store = new Store(cacheDir.toFile()))
 		{
@@ -147,6 +149,7 @@ public class EquipmentDumper
 			dumpItems(store, dump);
 			dumpKits(store, dump);
 			dumpSpotAnims(store, spotAnims);
+			dumpFonts(store, fontDump);
 		}
 
 		Files.createDirectories(output.getParent());
@@ -161,6 +164,14 @@ public class EquipmentDumper
 		{
 			gson.toJson(spotAnims, writer);
 		}
+
+		Path fontOutput = output.resolveSibling("fonts.json");
+		try (Writer writer = Files.newBufferedWriter(fontOutput, StandardCharsets.UTF_8))
+		{
+			gson.toJson(fontDump, writer);
+		}
+		System.out.printf("Wrote %d fonts to %s (%.1f KB)%n",
+			fontDump.fonts.size(), fontOutput, Files.size(fontOutput) / 1024.0);
 
 		System.out.printf("Wrote %d items and %d kits to %s (%.1f MB)%n",
 			dump.items.size(), dump.kits.size(), output, Files.size(output) / 1024.0 / 1024.0);
@@ -250,6 +261,124 @@ public class EquipmentDumper
 			entry.tr = kit.retextureToReplace;
 
 			dump.kits.put(Integer.toString(file.getFileId()), entry);
+		}
+	}
+
+	/** Mirrors com.follower.ui.GameFontRepository's expected format. */
+	static class GlyphEntry
+	{
+		int w;
+		int h;
+		int ox;
+		int oy;
+		/** Base64 of one byte per pixel, row-major: 0 = off, nonzero = on. */
+		String mask;
+	}
+
+	static class FontEntry
+	{
+		/** The sprite archive id - the same id widgets report as getFontId(). */
+		int id;
+		/** Resolved archive name (p12_full, b12_full, ...) or null if unknown. */
+		String name;
+		int ascent;
+		int[] advances;
+		java.util.List<GlyphEntry> glyphs = new java.util.ArrayList<>();
+	}
+
+	/** Candidate font archive names, resolved against name hashes. */
+	private static final String[] FONT_NAMES = {
+		"p11_full", "p12_full", "b12_full", "q8_full",
+		"quill_oblique_large", "quill_caps_large", "lunar_alphabet", "lunar_alphabet_lrg",
+		"barbassault_font", "surok_font", "verdana_11pt_regular", "verdana_11pt_bold",
+		"verdana_13pt_regular", "verdana_13pt_bold", "verdana_15pt_regular",
+	};
+
+	static class FontDump
+	{
+		int version = FORMAT_VERSION;
+		String cacheRevision;
+		java.util.List<FontEntry> fonts = new java.util.ArrayList<>();
+	}
+
+	/**
+	 * The game's text is GLYPH BITMAPS from the cache, not a TTF - no system
+	 * font rasterizer reproduces it exactly. Metrics (per-char advances,
+	 * ascent) live in the FONTS index keyed by name hash; the glyph images are
+	 * the sprite archive with the SAME name hash, and that sprite archive's id
+	 * is precisely the id widgets report from {@code getFontId()}.
+	 */
+	private static void dumpFonts(Store store, FontDump dump) throws IOException
+	{
+		Storage storage = store.getStorage();
+		Index fontIndex = store.getIndex(IndexType.FONTS);
+		Index spriteIndex = store.getIndex(IndexType.SPRITES);
+		net.runelite.cache.definitions.loaders.FontLoader fontLoader =
+			new net.runelite.cache.definitions.loaders.FontLoader();
+		net.runelite.cache.definitions.loaders.SpriteLoader spriteLoader =
+			new net.runelite.cache.definitions.loaders.SpriteLoader();
+
+		for (Archive fontArchive : fontIndex.getArchives())
+		{
+			byte[] metricData = storage.loadArchive(fontArchive);
+			FSFile metricFile = fontArchive.getFiles(metricData).findFile(0);
+			net.runelite.cache.definitions.FontDefinition metrics =
+				fontLoader.load(metricFile.getContents());
+
+			Archive glyphArchive = null;
+			for (Archive candidate : spriteIndex.getArchives())
+			{
+				if (candidate.getNameHash() == fontArchive.getNameHash())
+				{
+					glyphArchive = candidate;
+					break;
+				}
+			}
+			if (glyphArchive == null)
+			{
+				System.out.printf("Font archive %d has no matching glyph sprites%n",
+					fontArchive.getArchiveId());
+				continue;
+			}
+
+			FSFile glyphFile = glyphArchive.getFiles(storage.loadArchive(glyphArchive)).findFile(0);
+			net.runelite.cache.definitions.SpriteDefinition[] glyphs =
+				spriteLoader.load(glyphArchive.getArchiveId(), glyphFile.getContents());
+
+			FontEntry entry = new FontEntry();
+			entry.id = glyphArchive.getArchiveId();
+			entry.ascent = metrics.getAscent();
+			entry.advances = metrics.getAdvances();
+			for (String candidate : FONT_NAMES)
+			{
+				if (net.runelite.cache.util.Djb2.hash(candidate) == fontArchive.getNameHash())
+				{
+					entry.name = candidate;
+					break;
+				}
+			}
+
+			for (net.runelite.cache.definitions.SpriteDefinition glyph : glyphs)
+			{
+				GlyphEntry g = new GlyphEntry();
+				g.w = glyph.getWidth();
+				g.h = glyph.getHeight();
+				g.ox = glyph.getOffsetX();
+				g.oy = glyph.getOffsetY();
+				int[] pixels = glyph.getPixels();
+				byte[] mask = new byte[g.w * g.h];
+				for (int i = 0; i < mask.length && pixels != null && i < pixels.length; i++)
+				{
+					mask[i] = (byte) (pixels[i] != 0 ? 1 : 0);
+				}
+				g.mask = java.util.Base64.getEncoder().encodeToString(mask);
+				entry.glyphs.add(g);
+			}
+
+			dump.fonts.add(entry);
+			System.out.printf("Font id=%d name=%s: %d glyphs, %d advances, ascent %d%n",
+				entry.id, entry.name, entry.glyphs.size(),
+				entry.advances == null ? 0 : entry.advances.length, entry.ascent);
 		}
 	}
 

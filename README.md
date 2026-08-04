@@ -547,8 +547,12 @@ the whole widget) or line-for-line from the preserved client:
 | Brightness | varp 166: 1..4 -> gamma 0.9/0.8/0.7/0.6 | `Client.clientVar`; read at login and on change |
 | Head origin | widget centre, measured (69, 75) in the chatbox | sniffed |
 | Clip | interface rect (inset 7, 6) + 14px | `drawInterface` sets the clip to the component's bounds; the 14 offsets our slightly larger projection |
-| Fonts | RuneStar's pixel recreations of Plain 12 / Bold 12 | RuneLite's bundled font is a looser recreation |
-| Name / continue | `DARKRED 0x800000` / blue | `Colour` enum |
+| Fonts | The game's OWN glyph bitmaps, blitted (`GameFont` + fonts.json from the cache-dumper) | dialog text is fontId 497 = `q8_full` (Quill 8!) - the widget sniff settled it; the wiki's "Plain 12" was wrong. Overhead text is `b12_full`. TTFs can never be pixel-exact |
+| Text cells | name y=23, body (39,67) centred, continue y=103; column 380 wide at x=115 (NPC) / x=24 (player, head right at 433,59) | sniffed live widgets |
+| Body spacing | lineHeight by line count: 1→16, 2→28, 3→20 | sniffed; the game really spaces two lines wider than three |
+| Options menu | header "Select an option" dark red at (20,22), swords sprite 302/301 at (92,24)/(370,24), option step 36−4n from measured tops 46/39/40 (3/4/5 options) | sniffed across three menus |
+| Name / continue | `DARKRED 0x800000` / blue `0x0000FF`, hover white; "Please wait..." in flight (base blue on continue, hover-white kept on options) | sniffed + client source |
+| Tick gate | open/advance/choose/dismiss resolve on the next GAME TICK via `FollowerDialog.tick()` | the real dialog's server round trip |
 
 **Traps worth remembering.** Backface culling is required or the back of the
 head bleeds through the face. Perspective-divided spans are far below 1.0, so a

@@ -110,6 +110,9 @@ public class FollowerPlugin extends Plugin
 	private com.follower.appearance.SpotAnimRepository spotAnimRepository;
 
 	@Inject
+	private com.follower.ui.GameFontRepository gameFontRepository;
+
+	@Inject
 	private AppearanceService appearanceService;
 
 	@Inject
@@ -200,6 +203,7 @@ public class FollowerPlugin extends Plugin
 
 		modelRepository.load(dataDir);
 		spotAnimRepository.load(dataDir);
+		gameFontRepository.load(dataDir);
 		ruleLoader.initialise(dataDir);
 		stanceLibrary.load(dataDir);
 		paletteHarvest.load(dataDir);
@@ -1185,7 +1189,7 @@ public class FollowerPlugin extends Plugin
 					com.follower.speech.SpeechOutput.OVERHEAD, null, -1);
 			}
 		});
-		addFollowerMenuEntry("Talk-to", () -> dialog.start(config.followerName(), talkScript(), "start"));
+		addFollowerMenuEntry("Talk-to", () -> dialog.startNextTick(config.followerName(), talkScript(), "start"));
 	}
 
 	/**
@@ -1258,7 +1262,7 @@ public class FollowerPlugin extends Plugin
 		}
 
 		addFollowerMenuEntry("Talk-to", () ->
-			dialog.start(config.followerName(), talkScript(), "start"));
+			dialog.startNextTick(config.followerName(), talkScript(), "start"));
 	}
 
 	private void addFollowerMenuEntry(String option, Runnable action)
@@ -1343,6 +1347,11 @@ public class FollowerPlugin extends Plugin
 		{
 			return;
 		}
+
+		// The dialog's tick gate: queued clicks (open, continue, option,
+		// dismiss) resolve here, one tick after the input - the same beat a
+		// real dialog takes for its server round trip.
+		dialog.tick();
 
 		// Watchdog: a slaved chain waits on the player's next stage; if that
 		// never arrives (desync, logout race), release the follower rather than
@@ -1438,8 +1447,11 @@ public class FollowerPlugin extends Plugin
 	public void onWidgetLoaded(net.runelite.api.events.WidgetLoaded event)
 	{
 		int group = event.getGroupId();
+		// 219 = the "Select an Option" chat menu, sniffed for its exact option
+		// text layout alongside the two speech dialogs.
 		if (group != net.runelite.api.gameval.InterfaceID.CHAT_LEFT
-			&& group != net.runelite.api.gameval.InterfaceID.CHAT_RIGHT)
+			&& group != net.runelite.api.gameval.InterfaceID.CHAT_RIGHT
+			&& group != 219)
 		{
 			return;
 		}
@@ -1447,6 +1459,55 @@ public class FollowerPlugin extends Plugin
 		// The children are populated after the load event; read them next cycle.
 		clientThread.invokeLater(() ->
 		{
+			// Full layout dump: every child with its text properties, positioned
+			// relative to the CHATBOX widget (the same base our dialog draws
+			// against). This is the measured truth for fonts, text positions,
+			// and the player-side head placement - not guessed, read.
+			net.runelite.api.widgets.Widget chatbox = client.getWidget(
+				net.runelite.api.gameval.InterfaceID.CHATBOX, 0);
+			java.awt.Rectangle chatboxRect = chatbox == null ? null : chatbox.getBounds();
+			for (int child = 0; child < 16; child++)
+			{
+				net.runelite.api.widgets.Widget w = client.getWidget(group, child);
+				if (w == null)
+				{
+					continue;
+				}
+				java.awt.Rectangle b = w.getBounds();
+				String rel = b == null || chatboxRect == null ? "?" :
+					(b.x - chatboxRect.x) + "," + (b.y - chatboxRect.y);
+				log.info("DIALOGWIDGET group={} child={} type={} text='{}' fontId={} "
+						+ "color={} shadowed={} xAlign={} yAlign={} lineHeight={} "
+						+ "relToChatbox={} size={}x{} canvas={}",
+					group, child, w.getType(), w.getText(), w.getFontId(),
+					Integer.toHexString(w.getTextColor()), w.getTextShadowed(),
+					w.getXTextAlignment(), w.getYTextAlignment(), w.getLineHeight(),
+					rel, w.getWidth(), w.getHeight(), b);
+
+				// The option menu builds its entries as dynamic children.
+				net.runelite.api.widgets.Widget[] dynamic = w.getDynamicChildren();
+				if (dynamic != null)
+				{
+					for (net.runelite.api.widgets.Widget d : dynamic)
+					{
+						if (d == null)
+						{
+							continue;
+						}
+						java.awt.Rectangle db = d.getBounds();
+						String drel = db == null || chatboxRect == null ? "?" :
+							(db.x - chatboxRect.x) + "," + (db.y - chatboxRect.y);
+						log.info("DIALOGWIDGET group={} child={}[dyn] type={} text='{}' "
+								+ "fontId={} spriteId={} color={} shadowed={} xAlign={} yAlign={} "
+								+ "lineHeight={} relToChatbox={} size={}x{}",
+							group, child, d.getType(), d.getText(), d.getFontId(),
+							d.getSpriteId(), Integer.toHexString(d.getTextColor()),
+							d.getTextShadowed(), d.getXTextAlignment(), d.getYTextAlignment(),
+							d.getLineHeight(), drel, d.getWidth(), d.getHeight());
+					}
+				}
+			}
+
 			for (int child = 0; child < 16; child++)
 			{
 				net.runelite.api.widgets.Widget widget = client.getWidget(group, child);
@@ -1476,6 +1537,15 @@ public class FollowerPlugin extends Plugin
 
 				// Copy the real head's rectangle, expressed relative to the dialog,
 				// so ours sits at the same place and size instead of a guess.
+				if (group == net.runelite.api.gameval.InterfaceID.CHAT_RIGHT
+					&& headRect != null && rootRect != null
+					&& headRect.width > 0 && headRect.height > 0)
+				{
+					// The player side's right-hand head cell, kept calibrated.
+					dialog.setPlayerHeadRect(new java.awt.Rectangle(
+						headRect.x - rootRect.x, headRect.y - rootRect.y,
+						headRect.width, headRect.height));
+				}
 				if (group == net.runelite.api.gameval.InterfaceID.CHAT_LEFT
 					&& headRect != null && rootRect != null
 					&& headRect.width > 0 && headRect.height > 0)

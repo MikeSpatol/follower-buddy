@@ -20,31 +20,36 @@ import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
 
 /**
- * Draws the follower's speech bubble.
+ * Draws the follower's overhead chat.
  *
  * <p>A {@code RuneLiteObject} isn't an {@code Actor}, so the client's real overhead
- * chat system can't be used — the text is projected and drawn by hand.
+ * chat system can't be used - the text is projected and drawn by hand, to the
+ * client's own recipe (its chat-above-head draw, ported verbatim): the BOLD 12
+ * glyph font, a black copy one pixel STRAIGHT DOWN (not diagonal), the coloured
+ * text over it, centred on the entity's projected height point, and no fade -
+ * real overhead text simply disappears when its timer ends.
  */
 public class FollowerOverlay extends Overlay
 {
 	private static final int MAX_LINE_CHARS = 34;
-	private static final int LINE_PADDING = 3;
-	private static final int FADE_MS = 400;
 
 	private final Client client;
 	private final FollowerEntity follower;
 	private final FollowerConfig config;
+	private final com.follower.ui.GameFontRepository gameFonts;
 
 	private String message;
 	private long shownAtMs;
 	private long durationMs;
 
 	@Inject
-	public FollowerOverlay(Client client, FollowerEntity follower, FollowerConfig config)
+	public FollowerOverlay(Client client, FollowerEntity follower, FollowerConfig config,
+		com.follower.ui.GameFontRepository gameFonts)
 	{
 		this.client = client;
 		this.follower = follower;
 		this.config = config;
+		this.gameFonts = gameFonts;
 
 		setPosition(OverlayPosition.DYNAMIC);
 		setLayer(OverlayLayer.ABOVE_SCENE);
@@ -83,57 +88,59 @@ public class FollowerOverlay extends Overlay
 			return null;
 		}
 
-		// The game's own font is most of what makes overhead text read as overhead
-		// text; the default AWT font looks immediately wrong next to real NPC chat.
-		graphics.setFont(FontManager.getRunescapeFont());
-		FontMetrics metrics = graphics.getFontMetrics();
-		List<String> lines = wrap(message, metrics);
-		int lineHeight = metrics.getHeight() + LINE_PADDING;
-
-		// Anchor above the follower's head, then stack lines upward.
+		List<String> lines = wrap(message);
 		int zOffset = config.speechHeight();
-		Point anchor = Perspective.getCanvasTextLocation(client, graphics, location, lines.get(0), zOffset);
+		int rgb = config.speechColor().getRGB() & 0xFFFFFF;
+
+		// The client's own overhead draw: BOLD 12 glyphs, centred on the
+		// entity's projected height point, black copy one pixel straight down,
+		// coloured text over it, stacked upward by the font's height. No fade -
+		// real overhead text just disappears.
+		com.follower.ui.GameFont b12 = gameFonts.getByName("b12_full");
+		if (b12 != null)
+		{
+			Point anchor = Perspective.localToCanvas(client, location,
+				client.getTopLevelWorldView().getPlane(), zOffset);
+			if (anchor == null)
+			{
+				return null;
+			}
+			int lineHeight = b12.getLineHeight();
+			for (int i = 0; i < lines.size(); i++)
+			{
+				int baseline = anchor.getY() - (lines.size() - 1 - i) * lineHeight;
+				b12.drawCenteredOverhead(graphics, lines.get(i),
+					anchor.getX(), baseline, rgb);
+			}
+			return null;
+		}
+
+		// Fallback while fonts.json is missing: RuneLite's recreation.
+		graphics.setFont(FontManager.getRunescapeBoldFont());
+		FontMetrics metrics = graphics.getFontMetrics();
+		Point anchor = Perspective.getCanvasTextLocation(
+			client, graphics, location, lines.get(0), zOffset);
 		if (anchor == null)
 		{
 			return null;
 		}
-
-		int alpha = 255;
-		long remaining = durationMs - elapsed;
-		if (remaining < FADE_MS)
-		{
-			alpha = (int) Math.max(0, Math.min(255, (remaining * 255) / FADE_MS));
-		}
-
-		Color textColor = config.speechColor();
-		Color faded = new Color(textColor.getRed(), textColor.getGreen(), textColor.getBlue(),
-			Math.min(alpha, textColor.getAlpha()));
-		// Overhead chat uses a hard black drop shadow one pixel down-right, at full
-		// opacity - not the soft translucent shadow a UI overlay would use.
-		Color shadow = new Color(0, 0, 0, alpha);
-
-		// getCanvasTextLocation already centres on the first line, so centre every
-		// other line against that same anchor rather than left-aligning them.
-		int firstWidth = metrics.stringWidth(lines.get(0));
-		int centreX = anchor.getX() + firstWidth / 2;
-		int topY = anchor.getY() - (lines.size() - 1) * lineHeight;
-
+		int lineHeight = metrics.getHeight();
+		int centreX = anchor.getX() + metrics.stringWidth(lines.get(0)) / 2;
 		for (int i = 0; i < lines.size(); i++)
 		{
 			String line = lines.get(i);
 			int x = centreX - metrics.stringWidth(line) / 2;
-			int y = topY + i * lineHeight;
-
-			graphics.setColor(shadow);
-			graphics.drawString(line, x + 1, y + 1);
-			graphics.setColor(faded);
+			int y = anchor.getY() - (lines.size() - 1 - i) * lineHeight;
+			graphics.setColor(Color.BLACK);
+			graphics.drawString(line, x, y + 1);
+			graphics.setColor(config.speechColor());
 			graphics.drawString(line, x, y);
 		}
 
 		return null;
 	}
 
-	private static List<String> wrap(String text, FontMetrics metrics)
+	private static List<String> wrap(String text)
 	{
 		List<String> lines = new ArrayList<>();
 		StringBuilder line = new StringBuilder();

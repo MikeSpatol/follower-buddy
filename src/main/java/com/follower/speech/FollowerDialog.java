@@ -111,13 +111,80 @@ public class FollowerDialog extends Overlay
 	private static final Color HOVER = Color.WHITE;
 
 	/**
-	 * Vertical layout, measured off a real dialog screenshot: name baseline 32px
-	 * from the top, continue baseline 23px above the button strip, and the body
-	 * block centred between them at 16px per line.
+	 * The dialog's text cells, sniffed off the LIVE widgets (2026-08-04): both
+	 * speech dialogs share rows name=23, body=39..106, continue=103 in a
+	 * 380-wide centred column - at x=115 on the NPC side, x=24 on the player
+	 * side (whose head swaps to the right at (433,59)). Everything renders in
+	 * the game's font id 497. Coordinates relative to the chatbox widget.
 	 */
-	private static final int NAME_BASELINE = 32;
-	private static final int CONTINUE_RISE = 23;
-	private static final int LINE_SPACING = 16;
+	private static final int DIALOG_FONT_ID = 497;
+	private static final int TEXT_WIDTH = 380;
+	private static final int NPC_TEXT_X = 115;
+	private static final int PLAYER_TEXT_X = 24;
+	private static final int NAME_TOP = 23;
+	private static final int BODY_TOP = 39;
+	private static final int BODY_HEIGHT = 67;
+	private static final int CONTINUE_TOP = 103;
+	private static final int ROW_HEIGHT = 17;
+
+	/**
+	 * The option menu's cells, same source: header "Select an option" (dark
+	 * red, lowercase o - the widget's own text) at (20,22,479,20), flanked by
+	 * the sword ornaments - sprite 302 on the left at (92,24), its mirror 301
+	 * on the right at (370,24). Option spacing varies with the COUNT, measured
+	 * across three-, four- and five-option menus: step = 36 - 4n (24/20/16),
+	 * cells capped at 20 tall, first tops 46/39/40.
+	 */
+	private static final int OPTION_X = 20;
+	private static final int OPTION_WIDTH = 479;
+	private static final int OPTION_HEADER_TOP = 22;
+	private static final int SWORD_LEFT_SPRITE = 302;
+	private static final int SWORD_RIGHT_SPRITE = 301;
+	private static final int SWORD_LEFT_X = 92;
+	private static final int SWORD_RIGHT_X = 370;
+	private static final int SWORD_Y = 24;
+
+	/** Per-option vertical step for an n-option menu; measured 3/4/5, extrapolated else. */
+	private static int optionStep(int options)
+	{
+		return 36 - 4 * Math.min(Math.max(options, 1), 5);
+	}
+
+	/** First option row top for an n-option menu, measured; centred-block fallback. */
+	private static int optionFirstTop(int options)
+	{
+		switch (options)
+		{
+			case 3:
+				return 46;
+			case 4:
+				return 39;
+			case 5:
+				return 40;
+			default:
+				int step = optionStep(options);
+				int cell = Math.min(step, 20);
+				return 80 - ((options - 1) * step + cell) / 2;
+		}
+	}
+
+	/**
+	 * Body line spacing, MEASURED per line count from the live widget's
+	 * lineHeight: one line 16, two lines 28, three lines 20. Not derived -
+	 * the game genuinely spaces a two-line message wider than a three-line one.
+	 */
+	private static int measuredLineHeight(int lines)
+	{
+		switch (lines)
+		{
+			case 2:
+				return 28;
+			case 3:
+				return 20;
+			default:
+				return 16;
+		}
+	}
 
 	/**
 	 * The game's actual dialog fonts: RuneStar's pixel-perfect recreations of the
@@ -157,6 +224,7 @@ public class FollowerDialog extends Overlay
 	private final net.runelite.client.callback.ClientThread clientThread;
 	private final com.follower.appearance.AppearanceComposer composer;
 	private final net.runelite.client.input.KeyManager keyManager;
+	private final com.follower.ui.GameFontRepository gameFonts;
 
 	/**
 	 * Head-tuning mode: while on and a dialog is open, the arrow keys nudge the
@@ -244,6 +312,40 @@ public class FollowerDialog extends Overlay
 	private int page;
 	private boolean open;
 
+	/**
+	 * The tick gate: dialog input resolves ON the game tick, never instantly.
+	 * A real dialog's click travels to the server and takes effect when the
+	 * next tick processes it - opening, advancing, choosing and dismissing all
+	 * carry that beat, and the continue line shows the client's own
+	 * "Please wait..." (in its base colour, not hover white) while one is in
+	 * flight. Extra clicks while waiting are ignored, as the real client does.
+	 */
+	private Runnable pendingAction;
+	private boolean awaitingContinue;
+
+	/** The clicked option's index while its tick is in flight; it reads "Please wait..." */
+	private int pendingOptionIndex = -1;
+
+	/** Runs the queued input, if any. Called once per game tick by the plugin. */
+	public void tick()
+	{
+		if (pendingAction == null)
+		{
+			return;
+		}
+		Runnable action = pendingAction;
+		pendingAction = null;
+		awaitingContinue = false;
+		pendingOptionIndex = -1;
+		action.run();
+	}
+
+	/** Opens the conversation on the NEXT game tick, like a real Talk-to. */
+	public void startNextTick(String speakerName, Map<String, Node> conversation, String startId)
+	{
+		pendingAction = () -> start(speakerName, conversation, startId);
+	}
+
 	private Rectangle bounds = new Rectangle();
 	private Rectangle[] optionBounds = new Rectangle[0];
 	private Rectangle continueBounds = new Rectangle();
@@ -287,6 +389,14 @@ public class FollowerDialog extends Overlay
 	 */
 	@lombok.Setter
 	private java.awt.Rectangle headRect;
+
+	/**
+	 * The PLAYER side's head cell, measured off a live player dialog: the head
+	 * sits on the RIGHT at (433,59) 32x32 - centre (449,75) - mirroring the
+	 * NPC side. Kept calibrated by the sniffer whenever a real one opens.
+	 */
+	@lombok.Setter
+	private java.awt.Rectangle playerHeadRect = new java.awt.Rectangle(433, 59, 32, 32);
 
 	/**
 	 * The client anchors a widget model at the widget's CENTRE (the origin point)
@@ -341,17 +451,26 @@ public class FollowerDialog extends Overlay
 			}
 
 			// Clicking away from the box dismisses it, as any click that starts
-			// another action does in game. The click is NOT consumed - it still
-			// walks you there or opens what you aimed at.
+			// another action does in game - ON the tick that action processes.
+			// The click is NOT consumed: it still walks you there or opens what
+			// you aimed at.
 			if (!bounds.contains(event.getPoint()))
 			{
-				close();
+				pendingAction = FollowerDialog.this::close;
 				return event;
 			}
 
 			if (sweepMode)
 			{
 				close();
+				event.consume();
+				return event;
+			}
+
+			// One input in flight at a time - the real client ignores clicks
+			// while its "Please wait..." is up.
+			if (pendingAction != null)
+			{
 				event.consume();
 				return event;
 			}
@@ -364,14 +483,17 @@ public class FollowerDialog extends Overlay
 				{
 					if (optionBounds[i] != null && optionBounds[i].contains(event.getPoint()))
 					{
-						goTo(node.optionNext[i]);
+						String target = node.optionNext[i];
+						pendingOptionIndex = i;
+						pendingAction = () -> goTo(target);
 						break;
 					}
 				}
 			}
 			else
 			{
-				advance();
+				awaitingContinue = true;
+				pendingAction = FollowerDialog.this::advance;
 			}
 
 			event.consume();
@@ -384,7 +506,8 @@ public class FollowerDialog extends Overlay
 		MouseManager mouseManager, SpriteManager spriteManager,
 		net.runelite.client.callback.ClientThread clientThread,
 		com.follower.appearance.AppearanceComposer composer,
-		net.runelite.client.input.KeyManager keyManager)
+		net.runelite.client.input.KeyManager keyManager,
+		com.follower.ui.GameFontRepository gameFonts)
 	{
 		this.client = client;
 		this.follower = follower;
@@ -393,6 +516,7 @@ public class FollowerDialog extends Overlay
 		this.clientThread = clientThread;
 		this.composer = composer;
 		this.keyManager = keyManager;
+		this.gameFonts = gameFonts;
 		setPosition(OverlayPosition.DYNAMIC);
 		setLayer(OverlayLayer.ABOVE_WIDGETS);
 	}
@@ -422,6 +546,11 @@ public class FollowerDialog extends Overlay
 		talkAnimation = null;
 		sweepMode = false;
 		sweep = null;
+		// An interrupt-close cancels any input still in flight, or a stale
+		// queued action would fire a tick after the box is gone.
+		pendingAction = null;
+		awaitingContinue = false;
+		pendingOptionIndex = -1;
 	}
 
 	/** Starts a conversation at {@code startId}. */
@@ -753,7 +882,11 @@ public class FollowerDialog extends Overlay
 		// The canvas is anchored so the model's origin lands at the measured
 		// widget centre, its top row IS the dialog's top row, and the blit clips
 		// at the dialog bounds - so tall hair is cut exactly where the real chat
-		// surface cuts it.
+		// surface cuts it. The PLAYER'S head anchors at the measured right-side
+		// cell, the way a real player dialog mirrors the NPC one.
+		int headCentreX = headIsPlayer
+			? playerHeadRect.x + playerHeadRect.width / 2
+			: originX();
 		if (face != null)
 		{
 			// Clip at the dialog INTERFACE edge - the inner parchment - which is
@@ -765,45 +898,69 @@ public class FollowerDialog extends Overlay
 			graphics.setClip(bounds.x + dialogInsetX, clipTop,
 				bounds.width - dialogInsetX * 2, bounds.y + bounds.height - clipTop);
 			graphics.drawImage(face,
-				bounds.x + originX() - face.getWidth() / 2, bounds.y, null);
+				bounds.x + headCentreX - face.getWidth() / 2, bounds.y, null);
 			graphics.setClip(oldClip);
 		}
 
-		// Text centres across the FULL dialog width, head overlapping - compare
-		// any real dialog: the name sits at the box's centre, not the text
-		// column's.
-		int textLeft = bounds.x;
-		int textWidth = bounds.width;
+		// The measured text column: 380 wide at x=115 beside an NPC head on the
+		// left, x=24 with the player's head on the right.
+		com.follower.ui.GameFont font = gameFonts.get(DIALOG_FONT_ID);
+		int cellX = bounds.x + (headIsPlayer ? PLAYER_TEXT_X : NPC_TEXT_X);
 
-		// The name uses the real b12 - now that it IS the real b12 (RuneStar's
-		// pixel recreation), not RuneLite's much heavier bold TTF.
-		graphics.setFont(PLAIN_12);
-		drawCentred(graphics, speakerName(), textLeft, textWidth,
-			bounds.y + NAME_BASELINE, NAME);
+		drawCell(graphics, font, speakerName(), cellX, TEXT_WIDTH,
+			bounds.y + NAME_TOP, NAME.getRGB() & 0xFFFFFF);
 
-		int continueBaseline = bounds.y + bounds.height - CONTINUE_RISE;
-
-		graphics.setFont(PLAIN_12);
-		String[] wrapped = wrap(graphics, node.pages[page], textWidth - 8);
-
-		// The body block sits centred between the name and the continue line, the
-		// way the real dialog spaces a message of any length.
-		int blockCentre = (bounds.y + NAME_BASELINE + continueBaseline) / 2;
-		int y = blockCentre - (wrapped.length - 1) * LINE_SPACING / 2 + 4;
+		String[] wrapped = wrap(graphics, font, node.pages[page], TEXT_WIDTH);
+		int lineHeight = measuredLineHeight(wrapped.length);
+		int top = bounds.y + BODY_TOP + (BODY_HEIGHT - wrapped.length * lineHeight) / 2;
 		for (String line : wrapped)
 		{
-			drawCentred(graphics, line, textLeft, textWidth, y, TEXT);
-			y += LINE_SPACING;
+			drawCell(graphics, font, line, cellX, TEXT_WIDTH, top, 0x000000);
+			top += lineHeight;
 		}
 
-		String prompt = "Click here to continue";
-		int promptWidth = graphics.getFontMetrics().stringWidth(prompt);
+		// The client's own in-flight text: after a continue click, the prompt
+		// reads "Please wait..." in its BASE colour (no hover white) until the
+		// tick lands.
+		String prompt = awaitingContinue ? "Please wait..." : "Click here to continue";
+		int promptTop = bounds.y + CONTINUE_TOP;
+		int promptWidth = textWidth(graphics, font, prompt);
 		continueBounds = new Rectangle(
-			textLeft + (textWidth - promptWidth) / 2, continueBaseline - 12,
-			promptWidth, 16);
+			cellX + (TEXT_WIDTH - promptWidth) / 2, promptTop, promptWidth, ROW_HEIGHT);
 
-		drawCentred(graphics, prompt, textLeft, textWidth, continueBaseline,
-			hovered(continueBounds) ? HOVER : CONTINUE);
+		drawCell(graphics, font, prompt, cellX, TEXT_WIDTH, promptTop,
+			!awaitingContinue && hovered(continueBounds) ? 0xFFFFFF : 0x0000FF);
+	}
+
+	/**
+	 * One line centred in a measured cell: the game's own glyphs when the font
+	 * dump is loaded, the bundled TTF otherwise. {@code top} is the line's top
+	 * edge - the glyphs' baked offsets place them within it, exactly as the
+	 * client's font renderer does.
+	 */
+	private void drawCell(Graphics2D graphics, com.follower.ui.GameFont font,
+		String text, int cellX, int cellWidth, int top, int rgb)
+	{
+		if (font != null)
+		{
+			font.drawTop(graphics, text,
+				cellX + (cellWidth - font.stringWidth(text)) / 2, top, rgb, false);
+			return;
+		}
+		graphics.setFont(PLAIN_12);
+		graphics.setColor(new Color(rgb));
+		int width = graphics.getFontMetrics().stringWidth(text);
+		graphics.drawString(text, cellX + (cellWidth - width) / 2, top + 13);
+	}
+
+	private int textWidth(Graphics2D graphics, com.follower.ui.GameFont font, String text)
+	{
+		if (font != null)
+		{
+			return font.stringWidth(text);
+		}
+		graphics.setFont(PLAIN_12);
+		return graphics.getFontMetrics().stringWidth(text);
 	}
 
 	/** True when the mouse is inside {@code area} on the canvas. */
@@ -815,28 +972,45 @@ public class FollowerDialog extends Overlay
 
 	private void drawOptions(Graphics2D graphics)
 	{
-		graphics.setFont(PLAIN_12);
-		drawCentred(graphics, "Select an Option", bounds.x, bounds.width,
-			bounds.y + NAME_BASELINE, TEXT);
+		com.follower.ui.GameFont font = gameFonts.get(DIALOG_FONT_ID);
+		int cellX = bounds.x + OPTION_X;
 
-		graphics.setFont(PLAIN_12);
-		optionBounds = new Rectangle[node.optionText.length];
+		drawCell(graphics, font, "Select an option", cellX, OPTION_WIDTH,
+			bounds.y + OPTION_HEADER_TOP, NAME.getRGB() & 0xFFFFFF);
 
-		// Options are centred as a block in the space below the header, matching
-		// how the real menu spaces two options differently from five.
-		int step = 18;
-		int top = bounds.y + NAME_BASELINE + 10;
-		int blockCentre = (top + bounds.y + bounds.height - 8) / 2;
-		int y = blockCentre - (node.optionText.length - 1) * step / 2 + 4;
-
-		for (int i = 0; i < node.optionText.length; i++)
+		// The game's own sword ornaments beside the header, at their measured
+		// cells - sprite 302 left, mirror 301 right.
+		BufferedImage swordLeft = spriteManager.getSprite(SWORD_LEFT_SPRITE, 0);
+		BufferedImage swordRight = spriteManager.getSprite(SWORD_RIGHT_SPRITE, 0);
+		if (swordLeft != null)
 		{
-			Rectangle row = new Rectangle(bounds.x + 6, y - 13, bounds.width - 12, step);
+			graphics.drawImage(swordLeft, bounds.x + SWORD_LEFT_X, bounds.y + SWORD_Y, null);
+		}
+		if (swordRight != null)
+		{
+			graphics.drawImage(swordRight, bounds.x + SWORD_RIGHT_X, bounds.y + SWORD_Y, null);
+		}
+
+		int count = node.optionText.length;
+		int step = optionStep(count);
+		int cellHeight = Math.min(step, 20);
+		optionBounds = new Rectangle[count];
+		int top = bounds.y + optionFirstTop(count);
+		for (int i = 0; i < count; i++)
+		{
+			Rectangle row = new Rectangle(cellX, top, OPTION_WIDTH, cellHeight);
 			optionBounds[i] = row;
 
-			drawCentred(graphics, node.optionText[i], bounds.x, bounds.width, y,
-				hovered(row) ? HOVER : TEXT);
-			y += step;
+			// Options are vertically centred in their cell (yAlign=1); the
+			// 16-tall cell is the font's own line box, so only taller cells
+			// push the text down. A clicked option shows the client's own
+			// "Please wait..." until the tick lands - and unlike the continue
+			// button (whose colour the client forces to base), options keep
+			// their hover white while waiting.
+			String label = i == pendingOptionIndex ? "Please wait..." : node.optionText[i];
+			drawCell(graphics, font, label, cellX, OPTION_WIDTH,
+				top + (cellHeight - 16) / 2, hovered(row) ? 0xFFFFFF : 0x000000);
+			top += step;
 		}
 	}
 
@@ -853,8 +1027,13 @@ public class FollowerDialog extends Overlay
 		graphics.drawString(text, left + (width - textWidth) / 2, y);
 	}
 
-	/** Greedy word wrap; a single word longer than the column is left to overflow. */
-	private static String[] wrap(Graphics2D graphics, String text, int maxWidth)
+	/**
+	 * Greedy word wrap measured with the GAME's own advances when available -
+	 * wrap decisions have to agree with the renderer or lines land wrong. A
+	 * single word longer than the column is left to overflow.
+	 */
+	private String[] wrap(Graphics2D graphics, com.follower.ui.GameFont font,
+		String text, int maxWidth)
 	{
 		java.util.List<String> out = new java.util.ArrayList<>();
 		StringBuilder line = new StringBuilder();
@@ -862,7 +1041,7 @@ public class FollowerDialog extends Overlay
 		for (String word : text.split(" "))
 		{
 			String candidate = line.length() == 0 ? word : line + " " + word;
-			if (graphics.getFontMetrics().stringWidth(candidate) > maxWidth && line.length() > 0)
+			if (textWidth(graphics, font, candidate) > maxWidth && line.length() > 0)
 			{
 				out.add(line.toString());
 				line = new StringBuilder(word);
