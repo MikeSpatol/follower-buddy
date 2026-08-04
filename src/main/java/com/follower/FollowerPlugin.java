@@ -113,6 +113,98 @@ public class FollowerPlugin extends Plugin
 	private com.follower.ui.GameFontRepository gameFontRepository;
 
 	@Inject
+	private net.runelite.client.ui.overlay.tooltip.TooltipManager tooltipManager;
+
+	@Inject
+	private net.runelite.client.input.MouseManager mouseManager;
+
+	@Inject
+	private net.runelite.client.game.SpriteManager spriteManager;
+
+	/**
+	 * The client's red click cross, drawn to its own recipe: on an entity op
+	 * the client stamps the click point and animates four sprite frames, one
+	 * per 100ms, dead at 400ms, plotted 12 pixels up-left of the click
+	 * (crossX - 8 - 4 in its source). Red frames are sprites 519-522.
+	 */
+	private long crossStartMs;
+	private java.awt.Point crossPoint;
+
+	private void showRedCross()
+	{
+		net.runelite.api.Point mouse = client.getMouseCanvasPosition();
+		if (mouse != null)
+		{
+			crossPoint = new java.awt.Point(mouse.getX(), mouse.getY());
+			crossStartMs = System.currentTimeMillis();
+		}
+	}
+
+	private final net.runelite.client.ui.overlay.Overlay crossOverlay =
+		new net.runelite.client.ui.overlay.Overlay()
+	{
+		{
+			setPosition(net.runelite.client.ui.overlay.OverlayPosition.DYNAMIC);
+			setLayer(net.runelite.client.ui.overlay.OverlayLayer.ABOVE_SCENE);
+		}
+
+		@Override
+		public java.awt.Dimension render(java.awt.Graphics2D graphics)
+		{
+			long elapsed = System.currentTimeMillis() - crossStartMs;
+			if (crossPoint == null || elapsed >= 400)
+			{
+				return null;
+			}
+			int frame = (int) (elapsed / 100);
+			java.awt.image.BufferedImage sprite = spriteManager.getSprite(
+				net.runelite.api.SpriteID.RED_CLICK_ANIMATION_1 + frame, 0);
+			if (sprite != null)
+			{
+				// Centre each frame's own image on the click: the cache sprites
+				// carry per-frame padding offsets the client's plotSprite
+				// applies, but the sprite manager returns them trimmed - a
+				// fixed corner offset let the small early frames drift off
+				// centre.
+				graphics.drawImage(sprite,
+					crossPoint.x - sprite.getWidth() / 2,
+					crossPoint.y - sprite.getHeight() / 2, null);
+			}
+			return null;
+		}
+	};
+
+	/**
+	 * Shift + left-click on the follower performs the hover box's action -
+	 * Talk-to - like clicking a real NPC. Intercepted directly rather than
+	 * trusting the injected menu entry to be present on the click's exact
+	 * frame. The click is consumed so it doesn't also walk.
+	 */
+	private final net.runelite.client.input.MouseAdapter shiftClickAdapter =
+		new net.runelite.client.input.MouseAdapter()
+	{
+		@Override
+		public java.awt.event.MouseEvent mousePressed(java.awt.event.MouseEvent event)
+		{
+			if (!javax.swing.SwingUtilities.isLeftMouseButton(event)
+				|| !client.isKeyPressed(net.runelite.api.KeyCode.KC_SHIFT)
+				|| client.isMenuOpen()
+				|| dialog.isOpen()
+				|| !follower.isSpawned()
+				|| !follower.isUnderMouse(new net.runelite.api.Point(event.getX(), event.getY())))
+			{
+				return event;
+			}
+
+			crossPoint = event.getPoint();
+			crossStartMs = System.currentTimeMillis();
+			dialog.startNextTick(config.followerName(), talkScript(), "start");
+			event.consume();
+			return event;
+		}
+	};
+
+	@Inject
 	private AppearanceService appearanceService;
 
 	@Inject
@@ -216,7 +308,9 @@ public class FollowerPlugin extends Plugin
 		overlayManager.add(overlay);
 		overlayManager.add(followDebugOverlay);
 		overlayManager.add(dialog);
+		overlayManager.add(crossOverlay);
 		dialog.register();
+		mouseManager.registerMouseListener(shiftClickAdapter);
 		dialog.setFollowerOutfit(() -> OutfitParser.parse(config.customOutfit()));
 		addPanel();
 
@@ -232,7 +326,9 @@ public class FollowerPlugin extends Plugin
 		overlayManager.remove(overlay);
 		overlayManager.remove(followDebugOverlay);
 		overlayManager.remove(dialog);
+		overlayManager.remove(crossOverlay);
 		dialog.unregister();
+		mouseManager.unregisterMouseListener(shiftClickAdapter);
 		dialog.close();
 		overlay.clear();
 
@@ -1098,50 +1194,178 @@ public class FollowerPlugin extends Plugin
 	 * do. Real content will come from the rules file once speech and dialog share
 	 * a source.
 	 */
+	/** Shorthand for the conversation script below. */
+	private static com.follower.speech.FollowerDialog.Node says(String... pages)
+	{
+		return com.follower.speech.FollowerDialog.Node.says(pages);
+	}
+
+	private static com.follower.speech.FollowerDialog.Node you(String... pages)
+	{
+		return com.follower.speech.FollowerDialog.Node.you(pages);
+	}
+
+	/**
+	 * The follower's conversation. A hub of branches: who they are, what they
+	 * can do (in-character documentation of the plugin's features), small talk,
+	 * and adventuring advice - written to the register of a real dialogue,
+	 * player interjections and all. Menus stay within the five options the
+	 * real chat menu supports.
+	 */
 	private static java.util.Map<String, com.follower.speech.FollowerDialog.Node> talkScript()
 	{
 		java.util.Map<String, com.follower.speech.FollowerDialog.Node> script =
 			new java.util.LinkedHashMap<>();
-		java.util.function.Supplier<com.follower.speech.FollowerDialog.Node> menu =
-			() -> com.follower.speech.FollowerDialog.Node.says()
-				.choices(
-					"How are you doing?", "ask-how",
-					"Where did you get that outfit?", "ask-outfit",
-					"Stay close, would you?", "ask-close",
-					"Never mind.", "bye-you");
 
-		script.put("start", com.follower.speech.FollowerDialog.Node
-			.says("Hello! Did you need something?")
+		script.put("start", says("Yes? I'm listening.")
 			.choices(
-				"How are you doing?", "ask-how",
-				"Where did you get that outfit?", "ask-outfit",
-				"Stay close, would you?", "ask-close",
-				"Never mind.", "bye-you"));
+				"Who are you, exactly?", "who-q",
+				"What can you actually do?", "do-q",
+				"Let's just chat.", "chat-q",
+				"Any advice for an adventurer?", "advice-q",
+				"Never mind.", "bye-q"));
 
-		script.put("menu", menu.get());
+		// Returning hub, without the greeting.
+		script.put("menu", says()
+			.choices(
+				"Who are you, exactly?", "who-q",
+				"What can you actually do?", "do-q",
+				"Let's just chat.", "chat-q",
+				"Any advice for an adventurer?", "advice-q",
+				"That's all for now.", "bye-q"));
 
-		script.put("ask-how", com.follower.speech.FollowerDialog.Node
-			.you("How are you doing?").then("say-how"));
-		script.put("say-how", com.follower.speech.FollowerDialog.Node
-			.says("Can't complain!", "Bit of walking, bit of standing about. The usual.")
+		// ------------------------------------------------ who are you
+		script.put("who-q", you("Who are you, exactly?").then("who-a"));
+		script.put("who-a", says(
+			"Now there's a question.",
+			"I'm your follower. Your shadow, with better posture.")
+			.then("who-b"));
+		script.put("who-b", says(
+			"You dress me, I walk behind you, and I keep my opinions about your bank standing to myself.")
+			.choices(
+				"So you're... me?", "who-me-q",
+				"Don't you get tired of following me?", "who-tired-q",
+				"Fair enough. Back to business.", "menu"));
+
+		// Re-offers the follow-ups WITHOUT replaying who-b's line - a branch
+		// should never repeat dialogue the player has already read.
+		script.put("who-menu", says()
+			.choices(
+				"So you're... me?", "who-me-q",
+				"Don't you get tired of following me?", "who-tired-q",
+				"Fair enough. Back to business.", "menu"));
+
+		script.put("who-me-q", you("So you're... me?").then("who-me-a"));
+		script.put("who-me-a", says(
+			"In a manner of speaking. You picked the face, the hair, the clothes...",
+			"The sparkling personality, though? All mine.")
+			.then("who-menu"));
+
+		script.put("who-tired-q", you("Don't you get tired of following me?").then("who-tired-a"));
+		script.put("who-tired-a", says(
+			"Tired? I once watched you stand at a furnace for three hours straight.",
+			"After that, nothing tires me.")
+			.then("who-menu"));
+
+		// ------------------------------------------------ what can you do
+		script.put("do-q", you("What can you actually do?").then("do-a"));
+		script.put("do-a", says("Plenty. What would you like to know?")
+			.then("do-menu"));
+		script.put("do-menu", says()
+			.choices(
+				"Tell me about following.", "do-follow-q",
+				"Can you wait somewhere for me?", "do-stay-q",
+				"What happens when I teleport?", "do-tele-q",
+				"Can you dance?", "do-emote-q",
+				"That's all I needed to know.", "menu"));
+
+		script.put("do-follow-q", you("Tell me about following.").then("do-follow-a"));
+		script.put("do-follow-a", says(
+			"I follow one tile behind, the way any proper companion does. Corners, doorways, running - I keep up.",
+			"Adventurers cleverer than you have tried to lose me. It didn't work.")
+			.then("do-menu"));
+
+		script.put("do-stay-q", you("Can you wait somewhere for me?").then("do-stay-a"));
+		script.put("do-stay-a", says(
+			"Right-click me and say Stay, and I'll hold my ground.",
+			"Or point at a spot - shift-click the ground and Send me - and I'll make my own way over.",
+			"Say Follow when you want me back at your heel. I won't take it personally.")
+			.then("do-menu"));
+
+		script.put("do-tele-q", you("What happens when I teleport?").then("do-tele-a"));
+		script.put("do-tele-a", says(
+			"I come with you, obviously. Same spell, same swirl of magic, half a step behind.",
+			"Where you go, I go. That was the arrangement.")
+			.then("do-menu"));
+
+		script.put("do-emote-q", you("Can you dance?").then("do-emote-a"));
+		script.put("do-emote-a", says(
+			"Can I dance? I contain multitudes.",
+			"Right-click me and ask - a wave, a dance, whatever the occasion demands.")
+			.then("do-menu"));
+
+		// ------------------------------------------------ small talk
+		script.put("chat-q", you("Let's just chat.").then("chat-a"));
+		script.put("chat-a", says("My favourite duty.").then("chat-menu"));
+		script.put("chat-menu", says()
+			.choices(
+				"Seen anything interesting lately?", "chat-seen-q",
+				"What do you think of my outfit?", "chat-outfit-q",
+				"Tell me a joke.", "chat-joke-q",
+				"Back to business.", "menu"));
+
+		script.put("chat-seen-q", you("Seen anything interesting lately?").then("chat-seen-a"));
+		script.put("chat-seen-a", says(
+			"Mostly the back of your head.",
+			"It's a fine head. It could carry a better hat.")
+			.then("chat-menu"));
+
+		script.put("chat-outfit-q", you("What do you think of my outfit?").then("chat-outfit-a"));
+		script.put("chat-outfit-a", says(
+			"Anyone who dresses their follower this well clearly has taste.",
+			"The rest of your wardrobe I couldn't possibly comment on.")
+			.then("chat-menu"));
+
+		script.put("chat-joke-q", you("Tell me a joke.").then("chat-joke-a"));
+		script.put("chat-joke-a", says(
+			"Why did the Wise Old Man rob the bank of Draynor?",
+			"Because that's where the money was.")
+			.choices(
+				"Heh. Got another one?", "chat-joke2-q",
+				"That's terrible.", "chat-groan-q"));
+
+		script.put("chat-joke2-q", you("Heh. Got another one?").then("chat-joke2-a"));
+		script.put("chat-joke2-a", says(
+			"What do you call an adventurer who takes their whole bank into the Wilderness?",
+			"A benefactor.")
+			.then("chat-menu"));
+
+		script.put("chat-groan-q", you("That's terrible.").then("chat-groan-a"));
+		script.put("chat-groan-a", says(
+			"I've been saving it since Lumbridge.",
+			"There's more where that came from, so choose your next question carefully.")
+			.then("chat-menu"));
+
+		// ------------------------------------------------ advice
+		script.put("advice-q", you("Any advice for an adventurer?").then("advice-a"));
+		script.put("advice-a", says(
+			"Three rules I've learned, walking behind you:")
+			.then("advice-b"));
+		script.put("advice-b", says(
+			"One: the cabbage is never worth the detour.",
+			"Two: if a stranger offers to trim your armour, he is not a barber.")
+			.then("advice-c"));
+		script.put("advice-c", says(
+			"Three: bank early, bank often. A gravestone is not a storage solution.")
+			.then("advice-d"));
+		script.put("advice-d", says(
+			"That's everything I know. The rest I've learned to keep quiet about.")
 			.then("menu"));
 
-		script.put("ask-outfit", com.follower.speech.FollowerDialog.Node
-			.you("Where did you get that outfit?").then("say-outfit"));
-		script.put("say-outfit", com.follower.speech.FollowerDialog.Node
-			.says("You picked it out for me, remember?", "I think it suits me.")
-			.then("menu"));
-
-		script.put("ask-close", com.follower.speech.FollowerDialog.Node
-			.you("Stay close, would you?").then("say-close"));
-		script.put("say-close", com.follower.speech.FollowerDialog.Node
-			.says("I'm always one step behind you.", "That's rather the point.")
-			.then("menu"));
-
-		script.put("bye-you", com.follower.speech.FollowerDialog.Node
-			.you("Never mind.").then("bye"));
-		script.put("bye", com.follower.speech.FollowerDialog.Node
-			.says("Right you are."));
+		// ------------------------------------------------ farewells
+		script.put("bye-q", you("Never mind.").then("bye"));
+		script.put("bye", says(
+			"Right you are. I'll be one step behind."));
 
 		return script;
 	}
@@ -1165,6 +1389,36 @@ public class FollowerPlugin extends Plugin
 			addSendFollowerEntry(event);
 			return;
 		}
+
+		// The hover hint injects a Talk-to every client tick so the game draws
+		// the top-left text natively; when the menu OPENS that entry is still
+		// in it, and adding a fresh set would duplicate it. Strip our own
+		// entries first, then rebuild the full menu in NPC order.
+		net.runelite.api.MenuEntry[] existing = client.getMenu().getMenuEntries();
+		java.util.List<net.runelite.api.MenuEntry> kept = new java.util.ArrayList<>();
+		for (net.runelite.api.MenuEntry entry : existing)
+		{
+			if (entry.getType() != net.runelite.api.MenuAction.RUNELITE
+				|| !entry.getTarget().contains(config.followerName()))
+			{
+				kept.add(entry);
+			}
+		}
+		client.getMenu().setMenuEntries(kept.toArray(new net.runelite.api.MenuEntry[0]));
+
+		// Examine sits where a real NPC's does: below Walk here, above Cancel -
+		// index 1 in the bottom-up entry array (Cancel is index 0).
+		client.getMenu().createMenuEntry(1)
+			.setOption("Examine")
+			.setTarget("<col=ffff00>" + config.followerName() + "</col>")
+			.setType(net.runelite.api.MenuAction.RUNELITE)
+			.onClick(e ->
+			{
+				showRedCross();
+				client.addChatMessage(
+					net.runelite.api.ChatMessageType.NPC_EXAMINE, "",
+					"Follows you around. Better dressed every week.", null);
+			});
 
 		if (follower.isStaying())
 		{
@@ -1233,14 +1487,18 @@ public class FollowerPlugin extends Plugin
 			.setOption("Send")
 			.setTarget("<col=ffff00>" + config.followerName() + "</col>")
 			.setType(net.runelite.api.MenuAction.RUNELITE)
-			.onClick(e -> clientThread.invoke(() ->
+			.onClick(e ->
 			{
-				if (!follower.stayAt(target))
+				showRedCross();
+				clientThread.invoke(() ->
 				{
-					speak("I can't get to that spot from here!",
-						com.follower.speech.SpeechOutput.OVERHEAD, null, -1);
-				}
-			}));
+					if (!follower.stayAt(target))
+					{
+						speak("I can't get to that spot from here!",
+							com.follower.speech.SpeechOutput.OVERHEAD, null, -1);
+					}
+				});
+			});
 	}
 
 	/**
@@ -1263,6 +1521,14 @@ public class FollowerPlugin extends Plugin
 
 		addFollowerMenuEntry("Talk-to", () ->
 			dialog.startNextTick(config.followerName(), talkScript(), "start"));
+
+		// Shift-hover: the same little action tooltip a real NPC gets, drawn
+		// by RuneLite's own tooltip component so the styling is identical.
+		if (client.isKeyPressed(net.runelite.api.KeyCode.KC_SHIFT))
+		{
+			tooltipManager.add(new net.runelite.client.ui.overlay.tooltip.Tooltip(
+				"Talk-to <col=ffff00>" + config.followerName() + "</col>"));
+		}
 	}
 
 	private void addFollowerMenuEntry(String option, Runnable action)
@@ -1271,7 +1537,12 @@ public class FollowerPlugin extends Plugin
 			.setOption(option)
 			.setTarget("<col=ffff00>" + config.followerName() + "</col>")
 			.setType(net.runelite.api.MenuAction.RUNELITE)
-			.onClick(e -> clientThread.invoke(action::run));
+			.onClick(e ->
+			{
+				// An op on an entity flashes the red click cross, like any NPC.
+				showRedCross();
+				clientThread.invoke(action::run);
+			});
 	}
 
 	@Subscribe
