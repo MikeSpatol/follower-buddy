@@ -1,0 +1,5 @@
+rootProject.name = 'follower-buddy'
+
+// NOTE: tools/cache-dumper is deliberately NOT included here.
+// The RuneLite Plugin Hub requires a single-project build; the dumper is a
+// standalone Gradle project you run once, by hand, to generate model data.

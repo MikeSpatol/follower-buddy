@@ -1,0 +1,274 @@
+{
+  "version": 1,
+  "comment": "Follower Buddy rules. Edit and save — the plugin reloads within a second. Run ::follower where to print your current region id and coordinates when writing area rules.",
+  "rules": [
+    {
+      "id": "boss-spawn",
+      "note": "Fires when a named boss appears in the scene. Add or remove names freely; matching is case-insensitive and supports * wildcards.",
+      "group": "boss",
+      "priority": 90,
+      "cooldownMs": 20000,
+      "output": "both",
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "General Graardor", "K'ril Tsutsaroth", "Commander Zilyana", "Kree'arra",
+          "Zulrah", "Vorkath", "Cerberus", "Kraken", "Alchemical Hydra",
+          "Great Olm", "Verzik Vitur", "Tekton", "Vasa Nistirio", "Muttadile",
+          "TzTok-Jad", "TzKal-Zuk", "Nex", "Corporeal Beast",
+          "Callisto", "Venenatis", "Vet'ion", "Scorpia", "Chaos Elemental",
+          "Abyssal Sire", "Giant Mole", "Kalphite Queen", "King Black Dragon",
+          "Sarachnis", "Zalcano", "Dusk", "Dawn", "Scurrius", "Araxxor",
+          "Phantom Muspah", "Duke Sucellus", "The Leviathan", "The Whisperer", "Vardorvis"
+        ]
+      },
+      "say": [
+        "{npc} is up. Here we go.",
+        "Eyes up — {npc}.",
+        "{npc} spawned. Don't embarrass us."
+      ]
+    },
+    {
+      "id": "boss-spawn-inferno-wave",
+      "note": "Wildcard example: every Inferno NPC name starts with Jal-.",
+      "group": "boss",
+      "priority": 70,
+      "cooldownMs": 30000,
+      "when": {
+        "type": "npcSpawn",
+        "names": ["Jal-*"]
+      },
+      "say": [
+        "Another {npc}. Lovely.",
+        "{npc} incoming."
+      ]
+    },
+    {
+      "id": "low-hp",
+      "note": "Rising-edge: speaks once when you cross under 40%, not every tick you spend there.",
+      "group": "health",
+      "priority": 100,
+      "cooldownMs": 8000,
+      "output": "both",
+      "when": {
+        "type": "healthBelow",
+        "percent": 40
+      },
+      "say": [
+        "Eat something! {hp}/{maxHp}.",
+        "You're on {hp} HP. Do something about it.",
+        "{hpPercent}% health. Tick-eat!"
+      ]
+    },
+    {
+      "id": "critical-hp",
+      "group": "health",
+      "priority": 120,
+      "cooldownMs": 5000,
+      "output": "both",
+      "when": {
+        "type": "healthBelow",
+        "percent": 20
+      },
+      "say": [
+        "TELEPORT. NOW.",
+        "{hp} HP! Get out!"
+      ]
+    },
+    {
+      "id": "low-prayer",
+      "note": "requirePrayerActive stops this firing when you're just walking around unprayed.",
+      "group": "health",
+      "priority": 95,
+      "cooldownMs": 10000,
+      "output": "both",
+      "when": {
+        "type": "prayerBelow",
+        "percent": 20,
+        "requirePrayerActive": true
+      },
+      "say": [
+        "Prayer's nearly out — {prayer} points.",
+        "Sip a restore, you're on {prayer} prayer."
+      ]
+    },
+    {
+      "id": "big-hit-taken",
+      "group": "health",
+      "priority": 60,
+      "cooldownMs": 12000,
+      "when": {
+        "type": "damageTaken",
+        "minimum": 30
+      },
+      "say": [
+        "Ouch. {damage}.",
+        "That was a {damage}. Maybe pray next time."
+      ]
+    },
+    {
+      "id": "enter-god-wars",
+      "note": "EXAMPLE region ids — verify yours with ::follower where before trusting these.",
+      "group": "area",
+      "priority": 80,
+      "cooldownMs": 60000,
+      "output": "both",
+      "when": {
+        "type": "regionEnter",
+        "regions": [11347]
+      },
+      "say": [
+        "God Wars. Watch the aggro.",
+        "Bring a games necklace, right? ...Right?"
+      ]
+    },
+    {
+      "id": "enter-wilderness",
+      "group": "area",
+      "priority": 110,
+      "cooldownMs": 30000,
+      "output": "both",
+      "when": {
+        "type": "varbitEquals",
+        "varbit": 5963,
+        "value": 1
+      },
+      "say": [
+        "Wilderness. Don't get skulled.",
+        "We're in the Wildy. Stay sharp."
+      ]
+    },
+    {
+      "id": "enter-dungeon-area",
+      "note": "inArea example: a rectangle of world coordinates on a given plane.",
+      "group": "area",
+      "priority": 50,
+      "cooldownMs": 60000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "inArea", "x1": 2880, "y1": 9800, "x2": 2940, "y2": 9860, "plane": 0 },
+          { "type": "healthAbove", "percent": 0 }
+        ]
+      },
+      "say": [
+        "Down we go.",
+        "Dungeon time."
+      ]
+    },
+    {
+      "id": "boss-while-low",
+      "note": "Combinator example: only complains if a boss is near AND you're hurt.",
+      "group": "boss",
+      "priority": 130,
+      "cooldownMs": 15000,
+      "output": "both",
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "healthBelow", "percent": 50 },
+          {
+            "type": "npcNearby",
+            "within": 12,
+            "names": ["Great Olm", "Verzik Vitur", "TzKal-Zuk", "Nex", "Vorkath", "Zulrah"]
+          }
+        ]
+      },
+      "say": [
+        "You are NOT winning this on {hp} HP.",
+        "Heal up or leave, {player}."
+      ]
+    },
+    {
+      "id": "death",
+      "group": "misc",
+      "priority": 140,
+      "cooldownMs": 5000,
+      "output": "both",
+      "when": {
+        "type": "chatMessage",
+        "contains": "Oh dear, you are dead"
+      },
+      "say": [
+        "Well. That happened.",
+        "I'll go get the gravestone."
+      ]
+    },
+    {
+      "id": "pet-drop",
+      "group": "misc",
+      "priority": 150,
+      "cooldownMs": 1000,
+      "output": "both",
+      "when": {
+        "type": "chatMessage",
+        "contains": "funny feeling like"
+      },
+      "say": [
+        "PET! Actual pet!",
+        "You lucky thing."
+      ]
+    },
+    {
+      "id": "level-up",
+      "group": "misc",
+      "priority": 40,
+      "cooldownMs": 3000,
+      "when": {
+        "type": "levelUp",
+        "names": ["*"]
+      },
+      "say": [
+        "{skill} {level}. Nice.",
+        "Level {level} {skill}!"
+      ]
+    },
+    {
+      "id": "mirror-teleport",
+      "note": "Plays YOUR teleport animation on the follower, whichever one fired, plus any spell graphic. 714 = standard spellbook and jewellery, 3864 = teleport scrolls, 1979 = Ancient Magicks. Home teleports have their own rule below. Find more ids with ::follower watch — perform the teleport and the id is announced.",
+      "group": "reactions",
+      "priority": 60,
+      "cooldownMs": 3000,
+      "when": {
+        "type": "animationSelf",
+        "ids": [714, 3864, 1979]
+      },
+      "mirrorAnimation": true,
+      "vanishAfter": true
+    },
+    {
+      "id": "mirror-home-teleport",
+      "note": "ANY home teleport — default or a cosmetic override the follower doesn't own — plays the DEFAULT home teleport on the follower, rune-circle graphics and all (stage pairing measured in game: animations 4847/4850/4853/4855/4857 with graphics 800/-/802/803/804). Trigger ids are each variant's FIRST stage; the chain carries the rest, and the long cooldown stops later stages retriggering it. For a new variant, add its first stage id here (::follower watch announces it).",
+      "group": "reactions",
+      "priority": 70,
+      "cooldownMs": 15000,
+      "when": {
+        "type": "animationSelf",
+        "ids": [4847, 13764, 8798, 9209, 1696]
+      },
+      "animations": [4847, 4850, 4853, 4855, 4857],
+      "graphics": [800, -1, 802, 803, 804],
+      "syncToPlayer": true,
+      "vanishAfter": true
+    },
+    {
+      "id": "idle-chatter",
+      "note": "Fires after ~90 seconds of standing still, and only 30% of the time.",
+      "group": "idle",
+      "priority": 10,
+      "cooldownMs": 120000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "idle", "ticks": 150 },
+          { "type": "chance", "percent": 30 }
+        ]
+      },
+      "say": [
+        "Are we doing anything, or...",
+        "I could be at the Grand Exchange right now.",
+        "Nice spot. Very afk."
+      ]
+    }
+  ]
+}

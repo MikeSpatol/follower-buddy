@@ -1,0 +1,97 @@
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenLocal()
+    maven {
+        url = 'https://repo.runelite.net'
+    }
+    mavenCentral()
+}
+
+def runeLiteVersion = 'latest.release'
+
+dependencies {
+    compileOnly group: 'net.runelite', name: 'client', version: runeLiteVersion
+
+    compileOnly 'org.projectlombok:lombok:1.18.34'
+    annotationProcessor 'org.projectlombok:lombok:1.18.34'
+
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation group: 'net.runelite', name: 'client', version: runeLiteVersion
+    testImplementation group: 'net.runelite', name: 'jshell', version: runeLiteVersion
+}
+
+group = 'com.follower'
+version = '1.0.0'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+// src/test holds the runClient launcher (a main method), not JUnit tests. Gradle 9
+// treats "test sources present but nothing discovered" as an error by default.
+tasks.named('test') {
+    failOnNoDiscoveredTests = false
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    // ./gradlew compileJava -Plint  to surface deprecation/unchecked details
+    if (project.hasProperty('lint')) {
+        options.compilerArgs << '-Xlint:deprecation' << '-Xlint:unchecked'
+    }
+}
+
+// Launches a real RuneLite client with this plugin loaded as a built-in.
+// --developer-mode also enables Dev Tools, which is how you find NPC and region ids.
+tasks.register('runClient', JavaExec) {
+    group = 'application'
+    description = 'Runs RuneLite with Follower Buddy loaded'
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.follower.FollowerPluginTest'
+    // ExternalPluginManager.loadBuiltin hard-fails without assertions enabled.
+    jvmArgs = ['-ea']
+    args = ['--developer-mode']
+
+    // Jagex accounts are authenticated by the injected vanilla game client, which
+    // reads the JX_* variables the Jagex Launcher puts in RuneLite's environment.
+    // Shell inheritance is unreliable here: the Gradle daemon keeps whatever
+    // environment it was first started with, so read them from a file instead.
+    // jx.env is gitignored - it holds live session tokens.
+    // The Jagex Launcher hands the real RuneLite exactly five JX_ variables:
+    // JX_SESSION_ID / JX_CHARACTER_ID / JX_DISPLAY_NAME populated, and
+    // JX_ACCESS_TOKEN / JX_REFRESH_TOKEN DEFINED BUT EMPTY. We mirror that block
+    // exactly so the dev client's login path sees what the real client sees.
+    def jxDefaults = ['JX_ACCESS_TOKEN': '', 'JX_REFRESH_TOKEN': '',
+                      'JX_SESSION_ID': '', 'JX_CHARACTER_ID': '', 'JX_DISPLAY_NAME': '']
+    def jxEnv = file('jx.env')
+    if (jxEnv.exists()) {
+        def populated = 0
+        jxEnv.readLines().each { rawLine ->
+            def line = rawLine.trim()
+            if (line && !line.startsWith('#')) {
+                // Accept KEY=value, and also KEY<tab>value / KEY<spaces>value.
+                def m = line =~ /^([A-Za-z_][A-Za-z0-9_]*)\s*(?:=|\t|\s{2,})\s*(.*)$/
+                if (m.matches()) {
+                    def key = m.group(1)
+                    def value = m.group(2).trim()
+                    jxDefaults[key] = value
+                    if (value) populated++
+                }
+            }
+        }
+        jxDefaults.each { k, v -> environment k, v }
+        logger.lifecycle("runClient: mirrored JX_ block from jx.env (${populated} populated, ${jxDefaults.size()} defined)")
+    } else {
+        logger.lifecycle("runClient: no jx.env found - Jagex accounts will not be able to log in")
+    }
+}
+
+tasks.register('shadowJar', Jar) {
+    archiveClassifier = 'shaded'
+    from sourceSets.main.output
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
