@@ -50,6 +50,9 @@ public class FollowerDialog extends Overlay
 		private String[] optionNext = new String[0];
 		private String next;
 
+		/** Resolved fresh on every ENTRY to the node - a re-rolled joke, say. */
+		private java.util.function.Supplier<String[]> dynamicPages;
+
 		private Node(boolean playerSpeaking, String[] pages)
 		{
 			this.playerSpeaking = playerSpeaking;
@@ -60,6 +63,14 @@ public class FollowerDialog extends Overlay
 		public static Node says(String... pages)
 		{
 			return new Node(false, pages);
+		}
+
+		/** The follower speaks pages resolved fresh each visit. */
+		public static Node saysDynamic(java.util.function.Supplier<String[]> pages)
+		{
+			Node node = new Node(false, new String[0]);
+			node.dynamicPages = pages;
+			return node;
 		}
 
 		/** The player speaks these pages, with their own head and name. */
@@ -570,6 +581,9 @@ public class FollowerDialog extends Overlay
 		start(speakerName, single, "start");
 	}
 
+	/** The current node's pages, resolved per ENTRY so dynamic nodes re-roll. */
+	private String[] pages = new String[0];
+
 	private void goTo(String nodeId)
 	{
 		node = nodeId == null ? null : script.get(nodeId);
@@ -579,6 +593,7 @@ public class FollowerDialog extends Overlay
 			return;
 		}
 
+		pages = node.dynamicPages != null ? node.dynamicPages.get() : node.pages;
 		page = 0;
 		follower.facePlayer();
 		refreshHead();
@@ -587,7 +602,7 @@ public class FollowerDialog extends Overlay
 	private void advance()
 	{
 		page++;
-		if (page < node.pages.length || optionsVisible())
+		if (page < pages.length || optionsVisible())
 		{
 			return;
 		}
@@ -603,7 +618,7 @@ public class FollowerDialog extends Overlay
 
 	private boolean optionsVisible()
 	{
-		return node != null && page >= node.pages.length && node.optionText.length > 0;
+		return node != null && page >= pages.length && node.optionText.length > 0;
 	}
 
 	/** The composed dialogue-head model of the current speaker; null = fallback. */
@@ -910,7 +925,7 @@ public class FollowerDialog extends Overlay
 		drawCell(graphics, font, speakerName(), cellX, TEXT_WIDTH,
 			bounds.y + NAME_TOP, NAME.getRGB() & 0xFFFFFF);
 
-		String[] wrapped = wrap(graphics, font, node.pages[page], TEXT_WIDTH);
+		String[] wrapped = wrap(graphics, font, pages[page], TEXT_WIDTH);
 		int lineHeight = measuredLineHeight(wrapped.length);
 		int top = bounds.y + BODY_TOP + (BODY_HEIGHT - wrapped.length * lineHeight) / 2;
 		for (String line : wrapped)

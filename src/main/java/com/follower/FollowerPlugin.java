@@ -1206,11 +1206,44 @@ public class FollowerPlugin extends Plugin
 	}
 
 	/**
+	 * The joke pool, each entry a setup page and a punchline page. Every
+	 * conversation draws a random one, and "Got another one?" serves a second,
+	 * guaranteed different joke.
+	 */
+	private static final String[][] JOKES = {
+		{"Why did the Wise Old Man rob the bank of Draynor?",
+			"Because that's where the money was."},
+		{"What do you call an adventurer who takes their whole bank into the Wilderness?",
+			"A benefactor."},
+		{"Why did the chicken cross the road?",
+			"In Lumbridge? It never got the chance."},
+		{"I tried talking to a camel in Al Kharid once.",
+			"Apparently you need a special amulet. He made his opinion clear without one."},
+	};
+
+	/** The previous joke, so consecutive draws never repeat. */
+	private static int lastJoke = -1;
+
+	/** A random joke from the pool, guaranteed different from the last one told. */
+	private static String[] nextJoke()
+	{
+		int pick;
+		do
+		{
+			pick = java.util.concurrent.ThreadLocalRandom.current().nextInt(JOKES.length);
+		}
+		while (pick == lastJoke && JOKES.length > 1);
+		lastJoke = pick;
+		return JOKES[pick];
+	}
+
+	/**
 	 * The follower's conversation. A hub of branches: who they are, what they
 	 * can do (in-character documentation of the plugin's features), small talk,
 	 * and adventuring advice - written to the register of a real dialogue,
 	 * player interjections and all. Menus stay within the five options the
-	 * real chat menu supports.
+	 * real chat menu supports. Joke nodes resolve dynamically, re-rolling on
+	 * every visit.
 	 */
 	private static java.util.Map<String, com.follower.speech.FollowerDialog.Node> talkScript()
 	{
@@ -1326,19 +1359,21 @@ public class FollowerPlugin extends Plugin
 			"The rest of your wardrobe I couldn't possibly comment on.")
 			.then("chat-menu"));
 
+		// Every visit to a joke node re-rolls from the pool (never the same
+		// joke twice in a row), and the loop lets you keep asking for more.
 		script.put("chat-joke-q", you("Tell me a joke.").then("chat-joke-a"));
-		script.put("chat-joke-a", says(
-			"Why did the Wise Old Man rob the bank of Draynor?",
-			"Because that's where the money was.")
+		script.put("chat-joke-a", com.follower.speech.FollowerDialog.Node
+			.saysDynamic(FollowerPlugin::nextJoke)
 			.choices(
 				"Heh. Got another one?", "chat-joke2-q",
 				"That's terrible.", "chat-groan-q"));
 
 		script.put("chat-joke2-q", you("Heh. Got another one?").then("chat-joke2-a"));
-		script.put("chat-joke2-a", says(
-			"What do you call an adventurer who takes their whole bank into the Wilderness?",
-			"A benefactor.")
-			.then("chat-menu"));
+		script.put("chat-joke2-a", com.follower.speech.FollowerDialog.Node
+			.saysDynamic(FollowerPlugin::nextJoke)
+			.choices(
+				"Another!", "chat-joke2-q",
+				"That's terrible.", "chat-groan-q"));
 
 		script.put("chat-groan-q", you("That's terrible.").then("chat-groan-a"));
 		script.put("chat-groan-a", says(
