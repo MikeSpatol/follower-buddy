@@ -16,6 +16,19 @@ The follower is a `RuneLiteObject` (`Client#createRuneLiteObject`) carrying a mo
 composed from equipment and body-kit parts, positioned each frame along a trail of
 tiles you've already walked.
 
+**Render mode matters: `RENDERMODE_SORTED_NO_DEPTH`.** Player parts genuinely
+interpenetrate - the torso pokes through the cape, hair through the hat - and the
+game always hides it by drawing actors with the 12-class face-priority sort and NO
+depth testing, trusting the sort. A RuneLiteObject's DEFAULT mode takes the
+cheaper depth-buffered route, which faithfully displays the raw interpenetration
+as clipping. The model's priority data is not the issue (`::follower priorities`
+proved it identical to the client's own model index-for-index, along with alpha,
+face order, and geometry); the DRAW must be asked to sort with it, and
+`SORTED_NO_DEPTH` is the only mode that reaches the GPU plugin's
+`uploadSortedModel` with `prioritySort=true` - plain `SORTED` is not special-cased
+there at all. The mirrored spotanim graphics use the same mode, since the real
+client composites a spotanim INTO the actor model and sorts them together.
+
 ### The gear problem
 
 The runtime RuneLite API exposes only `ItemComposition#getInventoryModel()`. The

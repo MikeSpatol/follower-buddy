@@ -170,6 +170,18 @@ public class FollowerEntity
 			return;
 		}
 
+		// Actor-style FACE-SORTED rendering. Player parts genuinely
+		// interpenetrate - the back pokes through the cape, hair through the
+		// hat - and the game always hides it by drawing actors with the
+		// 12-class priority sort and NO depth testing, trusting the sort. A
+		// RuneLiteObject's DEFAULT mode takes the cheaper depth-buffered route,
+		// which faithfully shows the raw interpenetration; the model's priority
+		// data - verified identical to the client's own, index for index -
+		// only matters on the sorted path. SORTED_NO_DEPTH is that path: in the
+		// GPU plugin it is the ONLY mode that reaches uploadSortedModel with
+		// prioritySort=true (plain SORTED is not special-cased at all).
+		object.setRenderMode(net.runelite.api.Renderable.RENDERMODE_SORTED_NO_DEPTH);
+
 		animatable = appearance.isAnimatable();
 		object.setModel(appearance.getModel());
 		// Keep the unposed model: measuring wrap points needs to pose it at arbitrary
@@ -416,6 +428,12 @@ public class FollowerEntity
 	public boolean isStaying()
 	{
 		return stayTile != null;
+	}
+
+	/** The model the object is rendering RIGHT NOW (post-animation), for diagnostics. */
+	public net.runelite.api.Model getRenderModel()
+	{
+		return object == null ? null : object.getModel();
 	}
 
 	/** Releases a stay pose; following resumes on its own. */
@@ -2426,6 +2444,9 @@ public class FollowerEntity
 		Model lit = data.light(64 + fx.ambient(), 850 + fx.contrast(), -30, -50, -30);
 
 		RuneLiteObject graphic = client.createRuneLiteObject();
+		// Same sorted mode as the follower: in the real client a spotanim is
+		// composited INTO the actor model and drawn through the sorted path.
+		graphic.setRenderMode(net.runelite.api.Renderable.RENDERMODE_SORTED_NO_DEPTH);
 		graphic.setModel(lit);
 		graphic.setLocation(lastRenderedLocation,
 			tile != null ? tile.getPlane() : client.getTopLevelWorldView().getPlane());

@@ -1747,8 +1747,39 @@ public class FollowerPlugin extends Plugin
 				// that overlap in space are separated by priority alone, so if the
 				// composed model carries different priority data than the client's own
 				// player model, overlaps resolve differently - which is what a cape
-				// poking through a shoulder looks like.
-				clientThread.invoke(() -> compareAgainstClient("PROBE"));
+				// poking through a shoulder looks like. The earlier probe showed the
+				// COMPOSED model matching the client exactly; the per-stage lines
+				// below chase the remaining suspect - the RENDER model, after the
+				// animation pipeline has had its way with it.
+				clientThread.invoke(() ->
+				{
+					compareAgainstClient("PROBE");
+					Player me = client.getLocalPlayer();
+					logPriorities("player live model",
+						me == null ? null : me.getModel());
+					logPriorities("follower base model", follower.getBaseModel());
+					logPriorities("follower render model", follower.getRenderModel());
+
+					// The model actually DRAWN each frame is the animated temp the
+					// animation pipeline produces, not the base we set - if the
+					// temp loses the priority array, the engine falls back to its
+					// simple depth path whose insertion-order ties are exactly the
+					// torso-over-cape / hair-over-hat symptom.
+					net.runelite.api.Model base = follower.getBaseModel();
+					net.runelite.api.Animation idle =
+						client.loadAnimation(com.follower.follower.PlayerPose.IDLE);
+					if (base != null && idle != null)
+					{
+						net.runelite.api.Model temp =
+							client.applyTransformations(base, idle, 0, null, 0);
+						logPriorities("animated temp", temp);
+						if (temp != null)
+						{
+							logPriorities("detached merge of temp",
+								client.mergeModels(new net.runelite.api.Model[]{temp}, 1));
+						}
+					}
+				});
 				break;
 
 			case "palette":
@@ -2249,8 +2280,52 @@ public class FollowerPlugin extends Plugin
 
 			Outfit yours = Outfit.from(composition);
 			log.info("{} outfit: {}", tag, describeSlots(yours));
-			log.info("{} composed: {}", tag, describePriorities(appearanceComposer.compose(yours)));
-			log.info("{} client:   {}", tag, describePriorities(local.getModel()));
+			net.runelite.api.Model composed = appearanceComposer.compose(yours);
+			net.runelite.api.Model clients = local.getModel();
+			log.info("{} composed: {}", tag, describePriorities(composed));
+			log.info("{} client:   {}", tag, describePriorities(clients));
+
+			// Identical histograms can still hide two rendering-relevant
+			// differences: a transparency array (which reroutes the model onto
+			// the GPU's alpha path, drawn without depth writes) and FACE ORDER
+			// (equal-priority coincident faces tie-break by draw order).
+			if (composed != null && clients != null)
+			{
+				log.info("{} alpha: composed={} trans={} | client={} trans={}", tag,
+					composed.getFaceTransparencies() == null ? "null"
+						: composed.getFaceTransparencies().length + " entries",
+					composed.getTransparency(),
+					clients.getFaceTransparencies() == null ? "null"
+						: clients.getFaceTransparencies().length + " entries",
+					clients.getTransparency());
+
+				byte[] composedPriorities = composed.getFaceRenderPriorities();
+				byte[] clientPriorities = clients.getFaceRenderPriorities();
+				if (composedPriorities != null && clientPriorities != null
+					&& composedPriorities.length == clientPriorities.length)
+				{
+					int firstMismatch = -1;
+					for (int i = 0; i < composedPriorities.length; i++)
+					{
+						if (composedPriorities[i] != clientPriorities[i])
+						{
+							firstMismatch = i;
+							break;
+						}
+					}
+					log.info("{} face order: {}", tag, firstMismatch < 0
+						? "priorities IDENTICAL index-for-index"
+						: "first priority mismatch at face " + firstMismatch
+							+ " (composed " + composedPriorities[firstMismatch]
+							+ " vs client " + clientPriorities[firstMismatch] + ")");
+				}
+
+				// The last uncompared dimension: the GEOMETRY. The client
+				// translates each worn part by its wear offsets before merging;
+				// a part sitting even a couple of units off pokes through its
+				// neighbour on ANY renderer. Compare the unposed vertices.
+				logVertexDiff(tag, composed, clients);
+			}
 			poseProbeTicks = POSE_PROBE_SAMPLES;
 		}
 		catch (RuntimeException e)
@@ -2351,6 +2426,110 @@ public class FollowerPlugin extends Plugin
 		StringBuilder out = new StringBuilder(priorities.length + " faces:");
 		histogram.forEach((priority, count) -> out.append(" p").append(priority).append("x").append(count));
 		return out.toString();
+	}
+
+	/**
+	 * Diffs the composed model's vertices against the client's own, posed with
+	 * the player's CURRENT pose so like compares with like. The client model's
+	 * vertices are snapshotted FIRST - it and applyTransformations can share
+	 * the same animation scratch buffer, and posing ours would overwrite it.
+	 */
+	private void logVertexDiff(String tag, net.runelite.api.Model composed,
+		net.runelite.api.Model clientModel)
+	{
+		int count = clientModel.getVerticesCount();
+		float[] snapX = java.util.Arrays.copyOf(clientModel.getVerticesX(), count);
+		float[] snapY = java.util.Arrays.copyOf(clientModel.getVerticesY(), count);
+		float[] snapZ = java.util.Arrays.copyOf(clientModel.getVerticesZ(), count);
+
+		Player local = client.getLocalPlayer();
+		net.runelite.api.Model posed = composed;
+		if (local != null)
+		{
+			net.runelite.api.Animation pose = client.loadAnimation(local.getPoseAnimation());
+			if (pose != null)
+			{
+				net.runelite.api.Model tmp = client.applyTransformations(
+					composed, pose, local.getPoseAnimationFrame(), null, 0);
+				if (tmp != null)
+				{
+					posed = tmp;
+				}
+			}
+		}
+
+		if (posed.getVerticesCount() != count)
+		{
+			log.info("{} vertices: counts differ - composed {} vs client {}",
+				tag, posed.getVerticesCount(), count);
+			return;
+		}
+
+		float[] vx = posed.getVerticesX();
+		float[] vy = posed.getVerticesY();
+		float[] vz = posed.getVerticesZ();
+		float maxDx = 0;
+		float maxDy = 0;
+		float maxDz = 0;
+		int differing = 0;
+		int worst = -1;
+		float worstDistance = 0;
+		for (int i = 0; i < count; i++)
+		{
+			float dx = Math.abs(vx[i] - snapX[i]);
+			float dy = Math.abs(vy[i] - snapY[i]);
+			float dz = Math.abs(vz[i] - snapZ[i]);
+			maxDx = Math.max(maxDx, dx);
+			maxDy = Math.max(maxDy, dy);
+			maxDz = Math.max(maxDz, dz);
+			float distance = dx + dy + dz;
+			if (distance > 1f)
+			{
+				differing++;
+				if (distance > worstDistance)
+				{
+					worstDistance = distance;
+					worst = i;
+				}
+			}
+		}
+
+		log.info("{} vertices: {} total, {} differ by >1 unit, max |dx|={} |dy|={} |dz|={}, "
+				+ "worst vertex {} (composed {},{},{} vs client {},{},{})",
+			tag, count, differing, maxDx, maxDy, maxDz, worst,
+			worst < 0 ? 0 : vx[worst], worst < 0 ? 0 : vy[worst], worst < 0 ? 0 : vz[worst],
+			worst < 0 ? 0 : snapX[worst], worst < 0 ? 0 : snapY[worst], worst < 0 ? 0 : snapZ[worst]);
+	}
+
+	/** One line per model: face count and a render-priority histogram, or "no data". */
+	private void logPriorities(String label, net.runelite.api.Model model)
+	{
+		if (model == null)
+		{
+			sendStatus(label + ": no model");
+			log.info("priorities {}: no model", label);
+			return;
+		}
+
+		byte[] priorities = model.getFaceRenderPriorities();
+		if (priorities == null)
+		{
+			sendStatus(label + ": " + model.getFaceCount() + " faces, NO priority data");
+			log.info("priorities {}: {} faces, NO priority data", label, model.getFaceCount());
+			return;
+		}
+
+		java.util.Map<Integer, Integer> histogram = new java.util.TreeMap<>();
+		for (byte priority : priorities)
+		{
+			histogram.merge((int) priority, 1, Integer::sum);
+		}
+		String alpha = model.getFaceTransparencies() == null
+			? "no alpha array" : "ALPHA ARRAY (" + model.getFaceTransparencies().length + ")";
+		sendStatus(label + ": " + model.getFaceCount() + " faces, priorities " + histogram
+			+ ", " + alpha);
+		log.info("priorities {}: {} faces, priorities {}, {}",
+			label, model.getFaceCount(), histogram, alpha);
 	}
 
 	private void sendStatus(String message)
