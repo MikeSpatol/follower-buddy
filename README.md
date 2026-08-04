@@ -1,5 +1,7 @@
 # Follower Buddy
 
+Repository: <https://github.com/MikeSpatol/follower-buddy>
+
 A RuneLite plugin that spawns a client-side follower rendered as a **player model**,
 dressable in any gear, that speaks configurable phrases driven by game state.
 
