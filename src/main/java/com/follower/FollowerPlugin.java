@@ -1924,6 +1924,12 @@ public class FollowerPlugin extends Plugin
 	@Subscribe
 	public void onChatMessage(ChatMessage event)
 	{
+		// The follower's own lines land in public chat under its name; feeding
+		// them back into the rules would let it react to itself.
+		if (config.followerName().equals(event.getName()))
+		{
+			return;
+		}
 		speechEngine.dispatch(TriggerEvent.chat(event.getMessage(), event.getType().getType()));
 	}
 
@@ -2548,19 +2554,13 @@ public class FollowerPlugin extends Plugin
 			overlay.show(text, config.speechDurationMs());
 		}
 
-		if (!text.isEmpty() && output.showsChatbox())
+		if (!text.isEmpty())
 		{
-			String formatted = new ChatMessageBuilder()
-				.append(ChatColorType.HIGHLIGHT)
-				.append("[" + config.followerName() + "] ")
-				.append(ChatColorType.NORMAL)
-				.append(text)
-				.build();
-
-			chatMessageManager.queue(QueuedMessage.builder()
-				.type(ChatMessageType.CONSOLE)
-				.runeLiteFormattedMessage(formatted)
-				.build());
+			// Every spoken line lands in the chatbox as PUBLIC CHAT under the
+			// follower's name - "Name: message" in the game's own chat colours
+			// - exactly as a real player's overhead words mirror into chat.
+			clientThread.invoke(() -> client.addChatMessage(
+				ChatMessageType.PUBLICCHAT, config.followerName(), text, null));
 		}
 
 		if (rule != null && rule.hasAnimationChain())
