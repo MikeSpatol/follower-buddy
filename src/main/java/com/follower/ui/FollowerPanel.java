@@ -86,6 +86,14 @@ public class FollowerPanel extends PluginPanel
 		this.onEditPhrases = onEditPhrases;
 	}
 
+	/** Opens the location-message editor; set by the plugin after construction. */
+	private Runnable onEditLocations = () -> { };
+
+	public void setOnEditLocations(Runnable onEditLocations)
+	{
+		this.onEditLocations = onEditLocations;
+	}
+
 	private final JPanel gearGrid = new JPanel();
 	private final JPanel bodyList = new JPanel();
 	private final JPanel picker = new JPanel();
@@ -167,13 +175,24 @@ public class FollowerPanel extends PluginPanel
 		header.add(buttons);
 		header.add(javax.swing.Box.createVerticalStrut(6));
 
+		JPanel editorButtons = new JPanel(new GridLayout(1, 2, 6, 0));
+		editorButtons.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		editorButtons.setAlignmentX(LEFT_ALIGNMENT);
+		editorButtons.setMaximumSize(new Dimension(Integer.MAX_VALUE, 26));
+
 		JButton phrases = new JButton("Item messages...");
 		phrases.setToolTipText("View and edit what the follower says when you equip items");
 		phrases.setFocusPainted(false);
-		phrases.setAlignmentX(LEFT_ALIGNMENT);
-		phrases.setMaximumSize(new Dimension(Integer.MAX_VALUE, 26));
 		phrases.addActionListener(e -> onEditPhrases.run());
-		header.add(phrases);
+		editorButtons.add(phrases);
+
+		JButton locations = new JButton("Locations...");
+		locations.setToolTipText("View, edit and add what the follower says in different places");
+		locations.setFocusPainted(false);
+		locations.addActionListener(e -> onEditLocations.run());
+		editorButtons.add(locations);
+
+		header.add(editorButtons);
 
 		status.setFont(FontManager.getRunescapeSmallFont());
 		status.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);

@@ -244,8 +244,8 @@ public interface FollowerConfig extends Config
 
 	@ConfigItem(
 		keyName = "groupArea",
-		name = "Area & dungeon phrases",
-		description = "Rules in the \"area\" group",
+		name = "Location phrases",
+		description = "Rules in the \"area\" group — comments on entering towns, dungeons and landmarks",
 		section = groupsSection,
 		position = 2
 	)

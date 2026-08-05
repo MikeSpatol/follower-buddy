@@ -97,8 +97,17 @@ public final class TriggerContext
 	 * Worn item ids taken from the player's composition. Note this covers only
 	 * slots with a visible model: rings and ammo never appear here.
 	 */
+	/**
+	 * Whether a refresh has actually seen the local player's composition yet.
+	 * False for the first ticks after login, while the player entity is still
+	 * materialising - state read before this is empty, not truth.
+	 */
+	@lombok.Getter
+	private boolean playerReady;
+
 	private void refreshEquipment(PlayerComposition composition)
 	{
+		playerReady = composition != null;
 		Set<Integer> worn = new HashSet<>();
 		if (composition != null)
 		{

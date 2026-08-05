@@ -115,13 +115,18 @@ public class SpeechEngine
 	private final java.util.List<PendingSpeech> pending = new java.util.ArrayList<>();
 
 	/**
-	 * Set at login: the first couple of TICK evaluations record every rule's
-	 * edge state without firing. The world as found at spawn is baseline, not
-	 * news - a rule should react to what CHANGES afterwards (gear equipped
-	 * mid-session), not to whatever the player logged in wearing. Two ticks
-	 * because the player composition can populate a tick after login, which
-	 * would slip past a single primed tick. Event-driven dispatches (the login
-	 * greeting itself) are unaffected.
+	 * Set at login: evaluations record every rule's edge state without firing
+	 * until a couple of ticks have passed WITH the player's composition
+	 * actually readable. The world as found at spawn is baseline, not news - a
+	 * rule should react to what CHANGES afterwards (gear equipped mid-session),
+	 * not to whatever the player logged in wearing.
+	 *
+	 * <p>Two subtleties bought by bugs: the composition can lag several ticks
+	 * behind login, so the countdown only consumes ticks the context reports
+	 * ready; and edges rise on ANY dispatch (the login welcome chat message,
+	 * an animation), so priming gates every event, not just the tick
+	 * heartbeat. Delayed firings already queued (the login greeting) ride the
+	 * pending path and are unaffected.
 	 */
 	private int primeTicksLeft;
 
@@ -190,11 +195,16 @@ public class SpeechEngine
 		}
 
 		// While primed (just after login), edges have been recorded above but
-		// nothing fires from the tick heartbeat: worn gear and standing state
-		// register as already-true instead of as fresh rising edges.
-		if (primeTicksLeft > 0 && event.getType() == TriggerEvent.Type.TICK)
+		// nothing fires from ANY event: worn gear and standing state register
+		// as already-true instead of as fresh rising edges. The countdown only
+		// consumes ticks where the player composition is actually readable -
+		// before that, "no equipment" is an artefact of loading, not a state.
+		if (primeTicksLeft > 0)
 		{
-			primeTicksLeft--;
+			if (event.getType() == TriggerEvent.Type.TICK && getContext().isPlayerReady())
+			{
+				primeTicksLeft--;
+			}
 			return;
 		}
 

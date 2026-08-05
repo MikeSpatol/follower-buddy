@@ -107,27 +107,13 @@
       ]
     },
     {
-      "id": "enter-god-wars",
-      "note": "EXAMPLE region ids — verify yours with ::follower where before trusting these.",
-      "group": "area",
-      "priority": 80,
-      "cooldownMs": 60000,
-      "output": "both",
-      "when": {
-        "type": "regionEnter",
-        "regions": [11347]
-      },
-      "say": [
-        "God Wars. Watch the aggro.",
-        "Bring a games necklace, right? ...Right?"
-      ]
-    },
-    {
       "id": "enter-wilderness",
+      "note": "Fires on crossing into the Wilderness, via the wilderness varbit.",
       "group": "area",
       "priority": 110,
-      "cooldownMs": 30000,
       "output": "both",
+      "delayTicks": 2,
+      "cooldownMs": 30000,
       "when": {
         "type": "varbitEquals",
         "varbit": 5963,
@@ -135,25 +121,826 @@
       },
       "say": [
         "Wilderness. Don't get skulled.",
-        "We're in the Wildy. Stay sharp."
+        "We're in the Wildy. Stay sharp.",
+        "Everything north of that ditch wants your items. Everything.",
+        "If someone waves at you out here, they are not being friendly.",
+        "The revenants used to be worse, if you can believe it.",
+        "Don't bring anything you'd cry about losing. Too late now, I suppose."
       ]
     },
     {
-      "id": "enter-dungeon-area",
-      "note": "inArea example: a rectangle of world coordinates on a given plane.",
+      "id": "area-lumbridge",
+      "note": "Lumbridge town and castle.",
       "group": "area",
-      "priority": 50,
-      "cooldownMs": 60000,
-      "when": {
-        "type": "all",
-        "conditions": [
-          { "type": "inArea", "x1": 2880, "y1": 9800, "x2": 2940, "y2": 9860, "plane": 0 },
-          { "type": "healthAbove", "percent": 0 }
-        ]
-      },
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [12850] },
       "say": [
-        "Down we go.",
-        "Dungeon time."
+        "Lumbridge. Everyone's story starts somewhere.",
+        "Named after the bridge over the River Lum, you know. The locals are very proud of it.",
+        "The Duke's still up in that castle, worrying about his shield.",
+        "Smell that? Castle kitchen. The cook's probably out of eggs again.",
+        "Ah, Lumbridge. I hear the gravestones are lovely this time of year.",
+        "The swamp's just south. Try not to fall in any holes."
+      ]
+    },
+    {
+      "id": "area-grand-exchange",
+      "note": "The Grand Exchange plaza.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [12598] },
+      "say": [
+        "The Grand Exchange. Fortunes made and lost before lunch.",
+        "Listen to them shout numbers at each other. Magnificent.",
+        "Careful with your coin here. The clerks never sleep.",
+        "This was a plain old field once, they say. Now look at it.",
+        "If you're buying, someone's selling. Usually at twice the price.",
+        "Half of Gielinor's wealth walks through here. Try to keep yours."
+      ]
+    },
+    {
+      "id": "area-varrock",
+      "note": "Varrock: west bank, centre and palace.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [12597, 12853, 12854] },
+      "say": [
+        "Varrock. The old-timers still call it Avarrocka.",
+        "Biggest city in Misthalin, and it has the pickpockets to prove it.",
+        "The Blue Moon Inn pours a decent ale, if you're stopping.",
+        "Mind the stray dog by the square. He's harmless. Mostly.",
+        "King Roald rules from that palace. Well. His advisors do."
+      ]
+    },
+    {
+      "id": "area-falador",
+      "note": "Falador, both halves of the white city.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [11828, 12084] },
+      "say": [
+        "Falador, the white city. Do wipe your boots.",
+        "The White Knights run things here. Very shiny. Very serious.",
+        "There's a whole dwarven mine under our feet, you know.",
+        "The Party Room's here. People throw fortunes into that chest.",
+        "Wyson tends the park. Bring him mole bits, he loves that."
+      ]
+    },
+    {
+      "id": "area-edgeville",
+      "note": "Edgeville.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [12342] },
+      "say": [
+        "Edgeville. Last stop before the Wilderness.",
+        "Cosy little place, considering what's just north of it.",
+        "The monks at the monastery brew something special, I hear.",
+        "These ruins were grand once. The gods saw to that.",
+        "People bank here before doing something brave. Or foolish. Usually both."
+      ]
+    },
+    {
+      "id": "area-ferox-enclave",
+      "note": "Ferox Enclave, the Wilderness safe haven. Higher priority than the wilderness line.",
+      "group": "area",
+      "priority": 45,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [12344] },
+      "say": [
+        "Ferox Enclave. Safe ground, strange as that sounds out here.",
+        "The pool here fixes everything. Wish I could bottle it.",
+        "Ferox carved peace out of the Wilderness itself. Respect.",
+        "Deep breath. It's back to danger the moment we step out."
+      ]
+    },
+    {
+      "id": "area-draynor",
+      "note": "Draynor Village.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [12338] },
+      "say": [
+        "Draynor Village. Keep a hand on your coin pouch.",
+        "The Wise Old Man robbed the bank here. Broad daylight. Legend.",
+        "That manor up the road? People go in the front door and leave out the back. Always."
+      ]
+    },
+    {
+      "id": "area-al-kharid",
+      "note": "Al Kharid.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [13105] },
+      "say": [
+        "Al Kharid. Mind the heat, mind the scimitar prices.",
+        "Ten coins at the gate, or a quest — I never forgave that toll.",
+        "Get a kebab while we're here. One coin. Can't go wrong. Probably."
+      ]
+    },
+    {
+      "id": "area-port-sarim",
+      "note": "Port Sarim.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [12082] },
+      "say": [
+        "Port Sarim. Smells of fish, tar and bad decisions.",
+        "Boats to everywhere, if you've the stomach for it.",
+        "The jail here holds the careless. Wave at Wormbrain."
+      ]
+    },
+    {
+      "id": "area-rimmington",
+      "note": "Rimmington.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [11826] },
+      "say": [
+        "Rimmington. Quiet. Suspiciously quiet.",
+        "Folk build lovely houses around here, I'm told."
+      ]
+    },
+    {
+      "id": "area-taverley",
+      "note": "Taverley.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [11573] },
+      "say": [
+        "Taverley. Druids, herbs and very good air.",
+        "All stone circles and potions here. Peaceful, mostly.",
+        "The dungeon under this village goes DOWN. Black dragons down."
+      ]
+    },
+    {
+      "id": "area-burthorpe",
+      "note": "Burthorpe.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [11575] },
+      "say": [
+        "Burthorpe. The Imperial Guard holds the troll line here.",
+        "Trolls in the mountains, heroes in the pub. Balance.",
+        "The Heroes' Guild is close. One day, eh?"
+      ]
+    },
+    {
+      "id": "area-catherby",
+      "note": "Catherby.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [11061] },
+      "say": [
+        "Catherby. Best fishing beach in Kandarin.",
+        "Nets, harpoons, lobster pots — this town runs on fish.",
+        "Lovely little farm patch up the hill. Smells better than the fish."
+      ]
+    },
+    {
+      "id": "area-seers-camelot",
+      "note": "Seers' Village and Camelot castle.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [10806] },
+      "say": [
+        "Seers' Village. They probably knew we were coming.",
+        "Camelot. King Arthur and his knights, actual legends, right there.",
+        "The seers see all futures. Awkward at parties, I imagine.",
+        "Flax everywhere. Some folk have picked it for years and won't say why."
+      ]
+    },
+    {
+      "id": "area-east-ardougne",
+      "note": "East Ardougne and its market.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [10291, 10547] },
+      "say": [
+        "Ardougne. Biggest market in Kandarin, fastest fingers too.",
+        "Watch the stalls. Watch the guards watching the stalls.",
+        "King Lathas rules here. Don't ask me what I think of him."
+      ]
+    },
+    {
+      "id": "area-west-ardougne",
+      "note": "West Ardougne, behind the wall.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [9779, 10035] },
+      "say": [
+        "West Ardougne. The wall tells you everything, really.",
+        "Grim over here. The people deserve better.",
+        "They say it's plague. Some say otherwise. Hm."
+      ]
+    },
+    {
+      "id": "area-yanille",
+      "note": "Yanille.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [10288] },
+      "say": [
+        "Yanille. Built to keep the ogres out. Sturdy work.",
+        "Watchtower to the west, wizards in the guild. Magic town, this.",
+        "Ogres have battered these walls for years. The walls are winning."
+      ]
+    },
+    {
+      "id": "area-castle-wars",
+      "note": "Castle Wars lobby area.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [9776] },
+      "say": [
+        "Castle Wars. Old grudges, fresh barricades.",
+        "Saradomin and Zamorak settle it here, over and over.",
+        "Grab a flag, lose your dignity. Tradition."
+      ]
+    },
+    {
+      "id": "area-gnome-stronghold",
+      "note": "Tree Gnome Stronghold.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [9525, 9781] },
+      "say": [
+        "The Tree Gnome Stronghold. Mind where you step. Gnomes everywhere.",
+        "That's the Grand Tree. It's a tree AND a government.",
+        "Gnome cuisine is... an experience. Try the crunchies."
+      ]
+    },
+    {
+      "id": "area-barbarian-village",
+      "note": "Barbarian Village.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [12341] },
+      "say": [
+        "Gunnarsgrunn. Though everyone just says Barbarian Village.",
+        "They fish with their bare hands here. Show-offs.",
+        "That hole in the middle goes down further than anyone admits."
+      ]
+    },
+    {
+      "id": "area-rellekka",
+      "note": "Rellekka.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [10553] },
+      "say": [
+        "Rellekka. Fremennik country — best not mention magic.",
+        "Everything here is earned. Names included.",
+        "The longhall ale flows all night. The singing, unfortunately, too."
+      ]
+    },
+    {
+      "id": "area-canifis",
+      "note": "Canifis.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [13878] },
+      "say": [
+        "Canifis. Lovely people. Don't stare at their teeth.",
+        "Everyone here is a werewolf. Everyone. Walk casual.",
+        "The general store meat is best left unexamined."
+      ]
+    },
+    {
+      "id": "area-barrows",
+      "note": "The Barrows mounds.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [14131] },
+      "say": [
+        "The Barrows. Six brothers, six mounds, no rest.",
+        "The brothers were heroes once. Their reward was... this.",
+        "Dig if you dare. They do bite back."
+      ]
+    },
+    {
+      "id": "area-port-phasmatys",
+      "note": "Port Phasmatys.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [14646] },
+      "say": [
+        "Port Phasmatys. A town of ghosts, and it still charges tolls.",
+        "The ghosts here can't leave. Necrovarus saw to that.",
+        "Bring ectoplasm. It's the only coin that counts here."
+      ]
+    },
+    {
+      "id": "area-lunar-isle",
+      "note": "Lunar Isle. Spot-check the id with ::follower where if it stays quiet.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [8253] },
+      "say": [
+        "Lunar Isle. The Moon Clan dream deeper than most folk live.",
+        "Half this island's business happens while asleep.",
+        "Mind the suqah. All that grace, none of the manners."
+      ]
+    },
+    {
+      "id": "area-miscellania",
+      "note": "Miscellania. Spot-check the id with ::follower where if it stays quiet.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [10044] },
+      "say": [
+        "Miscellania. Somebody important runs this place, I hear.",
+        "The subjects will work, if someone keeps the coffers full."
+      ]
+    },
+    {
+      "id": "area-sophanem",
+      "note": "Sophanem. Spot-check the id with ::follower where if it stays quiet.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [13099] },
+      "say": [
+        "Sophanem, city of the dead. They mean that literally.",
+        "Plagues, locusts, tombs. Charming place for a stroll."
+      ]
+    },
+    {
+      "id": "area-mor-ul-rek",
+      "note": "Mor Ul Rek, the TzHaar city.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [9808] },
+      "say": [
+        "Mor Ul Rek. The TzHaar are made of living rock. Mind the handshakes.",
+        "Everything here is obsidian. Even the shopkeepers.",
+        "Somewhere in there waits Jad. We do not have to say hello."
+      ]
+    },
+    {
+      "id": "area-brimhaven",
+      "note": "Brimhaven.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [11057] },
+      "say": [
+        "Brimhaven. Pirate town with respectable rent, somehow.",
+        "The agility arena's here, if you fancy jumping over lava for tickets."
+      ]
+    },
+    {
+      "id": "area-musa-point",
+      "note": "Musa Point, Karamja.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [11569] },
+      "say": [
+        "Musa Point. Bananas as far as the eye can see.",
+        "Luthas pays coin for banana crates. No questions asked either way.",
+        "Karamja rum doesn't travel well. Famously."
+      ]
+    },
+    {
+      "id": "area-shilo-village",
+      "note": "Shilo Village.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [11310] },
+      "say": [
+        "Shilo Village. They fought the dead for this town.",
+        "The gem mine here made a lot of folk rich. The cart ride's extra."
+      ]
+    },
+    {
+      "id": "area-crandor",
+      "note": "Crandor.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [11314] },
+      "say": [
+        "Crandor. Elvarg burned this whole island to cinders.",
+        "A city stood here once. One dragon later..."
+      ]
+    },
+    {
+      "id": "area-entrana",
+      "note": "Entrana.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [11316] },
+      "say": [
+        "Entrana. Holy ground — the monks took ALL the weapons.",
+        "The law altar's here. Fitting, with all these rules.",
+        "Deep breath. No fighting. It's actually rather nice."
+      ]
+    },
+    {
+      "id": "area-ape-atoll",
+      "note": "Ape Atoll.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [11051] },
+      "say": [
+        "Ape Atoll. The monkeys are armed and extremely accurate.",
+        "Walk like you belong or we're both getting arrested by gorillas."
+      ]
+    },
+    {
+      "id": "area-zanaris",
+      "note": "Zanaris.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [9797] },
+      "say": [
+        "Zanaris. The lost city itself — took some finding.",
+        "This place is the moon, you know. The actual moon.",
+        "Fairy rings can take you anywhere from here. Well. Almost."
+      ]
+    },
+    {
+      "id": "area-keldagrim",
+      "note": "Keldagrim. Spot-check the id with ::follower where if it stays quiet.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [11679] },
+      "say": [
+        "Keldagrim. The dwarves built a whole city and kept it quiet.",
+        "The Consortium runs everything here. Eight companies, one grudge each."
+      ]
+    },
+    {
+      "id": "area-fossil-island",
+      "note": "Fossil Island, museum camp side. Spot-check the id with ::follower where if it stays quiet.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [14907] },
+      "say": [
+        "Fossil Island. The museum folk barely scratched the surface.",
+        "Ancient wyverns sleep in the caves here. SLEEP. Let's keep it so."
+      ]
+    },
+    {
+      "id": "area-god-wars",
+      "note": "The God Wars Dungeon.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [11602] },
+      "say": [
+        "The God Wars Dungeon. The war never ended down here.",
+        "Four armies, frozen mid-battle for thousands of years. And us, visiting.",
+        "Wear their colours or they WILL take it personally."
+      ]
+    },
+    {
+      "id": "area-taverley-dungeon",
+      "note": "Taverley Dungeon.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [11673] },
+      "say": [
+        "Taverley Dungeon. It gets worse the deeper you go. Much worse.",
+        "Black dragons at the bottom, and something meaner below."
+      ]
+    },
+    {
+      "id": "area-catacombs",
+      "note": "Catacombs of Kourend. Spot-check the id with ::follower where if it stays quiet.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [6557] },
+      "say": [
+        "The Catacombs of Kourend. The dark altar hums through these walls.",
+        "The dead down here don't rest. Blame the altar."
+      ]
+    },
+    {
+      "id": "area-warriors-guild",
+      "note": "Warriors' Guild.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [11319] },
+      "say": [
+        "The Warriors' Guild. Even the armour fights here.",
+        "Harrallak collects the finest warriors. And us, apparently."
+      ]
+    },
+    {
+      "id": "area-fishing-guild",
+      "note": "Fishing Guild.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [10293] },
+      "say": [
+        "The Fishing Guild. Sixty-eight and not a level lower, the door says.",
+        "The sharks here practically volunteer."
+      ]
+    },
+    {
+      "id": "area-wintertodt",
+      "note": "Wintertodt camp. Spot-check the id with ::follower where if it stays quiet.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [6462] },
+      "say": [
+        "The Wintertodt. The cold out here is ALIVE. Layer up.",
+        "The pyromancers hold it back with bonfires and stubbornness.",
+        "Feed the flames. I'll supervise from a warm distance."
+      ]
+    },
+    {
+      "id": "area-motherlode-mine",
+      "note": "Motherlode Mine.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [14936] },
+      "say": [
+        "The Motherlode Mine. Percy's pay-dirt racket, and we're all in on it.",
+        "Listen to that water wheel. Honest work, this."
+      ]
+    },
+    {
+      "id": "area-mining-guild",
+      "note": "Mining Guild, under Falador. Spot-check the id with ::follower where if it stays quiet.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [12184] },
+      "say": [
+        "The Mining Guild. The dwarves keep the good rocks behind a door.",
+        "Coal and mithril as far as the pick swings."
+      ]
+    },
+    {
+      "id": "area-woodcutting-guild",
+      "note": "Woodcutting Guild, Hosidius. Spot-check the id with ::follower where if it stays quiet.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [6454] },
+      "say": [
+        "The Woodcutting Guild. The axes here never seem to stop.",
+        "Hosidius grows the trees; we take the logs. Fair trade."
+      ]
+    },
+    {
+      "id": "area-farming-guild",
+      "note": "Farming Guild. Spot-check the id with ::follower where if it stays quiet.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [4922] },
+      "say": [
+        "The Farming Guild. Everything here grows bigger than it should.",
+        "Mind where you step. Someone loves every plant in here."
+      ]
+    },
+    {
+      "id": "area-pest-control",
+      "note": "Void Knights' Outpost.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [10537] },
+      "say": [
+        "The Void Knights' outpost. The portals never stay shut for long.",
+        "The lander leaves soon. Try to come back with all your limbs."
+      ]
+    },
+    {
+      "id": "area-barbarian-assault",
+      "note": "Barbarian Assault. Spot-check the id with ::follower where if it stays quiet.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [10039] },
+      "say": [
+        "Barbarian Assault. The Penance don't negotiate.",
+        "Teams win here. Lone heroes get carried out."
+      ]
+    },
+    {
+      "id": "area-arceuus",
+      "note": "Arceuus, Great Kourend. Spot-check the id with ::follower where if it stays quiet.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [6714] },
+      "say": [
+        "Arceuus. The magic here is old, dark and rather rude.",
+        "The library rearranges itself. The scholars pretend that's fine."
+      ]
+    },
+    {
+      "id": "area-hosidius",
+      "note": "Hosidius, Great Kourend. Spot-check the id with ::follower where if it stays quiet.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [6968] },
+      "say": [
+        "Hosidius. Half of Kourend eats because of these fields.",
+        "Good soil, better kitchens. I could get used to this."
+      ]
+    },
+    {
+      "id": "area-shayzien",
+      "note": "Shayzien, Great Kourend. Spot-check the id with ::follower where if it stays quiet.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [5944] },
+      "say": [
+        "Shayzien. Soldiers everywhere and every one of them busy.",
+        "They keep the lizardmen at bay. Someone has to."
+      ]
+    },
+    {
+      "id": "area-lovakengj",
+      "note": "Lovakengj, Great Kourend. Spot-check the id with ::follower where if it stays quiet.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [5947] },
+      "say": [
+        "Lovakengj. Sulphur in the air, minecarts in every direction.",
+        "Breathe lightly. The forges never cool here."
+      ]
+    },
+    {
+      "id": "area-piscarilius",
+      "note": "Port Piscarilius, Great Kourend. Spot-check the id with ::follower where if it stays quiet.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [7226] },
+      "say": [
+        "Port Piscarilius. Fresh fish and sticky fingers.",
+        "Half this port needs repairing at any given moment. Job security."
+      ]
+    },
+    {
+      "id": "area-prifddinas",
+      "note": "Prifddinas. Spot-check the id with ::follower where if it stays quiet.",
+      "group": "area",
+      "priority": 40,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 180000,
+      "when": { "type": "inRegion", "regions": [12894, 12895, 13150, 13151] },
+      "say": [
+        "Prifddinas. A city grown from crystal. Listen — it sings.",
+        "The elves waited a very long time for this place to stand again.",
+        "Sung into being, every wall of it. Try not to chip anything."
       ]
     },
     {

@@ -252,7 +252,8 @@ public class FollowerPlugin extends Plugin
 
 	private com.follower.ui.FollowerPanel panel;
 	private net.runelite.client.ui.NavigationButton navButton;
-	private com.follower.ui.GearPhrasesDialog phrasesDialog;
+	private com.follower.ui.PhrasesDialog gearPhrasesDialog;
+	private com.follower.ui.PhrasesDialog areaPhrasesDialog;
 
 	@Inject
 	private com.google.gson.Gson gson;
@@ -263,6 +264,15 @@ public class FollowerPlugin extends Plugin
 	private int reloadPollTicks;
 	private int spawnDelayTicks;
 	private boolean rebuildQueued;
+
+	/**
+	 * LOGGED_IN fires after EVERY map chunk reload, not just at login - running
+	 * across a region boundary goes LOADING -> LOGGED_IN too. Set on the real
+	 * logged-out states and consumed once, so the LOGIN trigger and the edge
+	 * priming only happen when the player actually logged in, not every time
+	 * they jog into a freshly loaded part of the map.
+	 */
+	private boolean freshLogin;
 	private boolean watchAnimations;
 	private int animTraceRemaining;
 	private final List<Integer> animTrace = new ArrayList<>();
@@ -309,6 +319,12 @@ public class FollowerPlugin extends Plugin
 		applyConfig();
 		loadExactPalette();
 
+		// On a fresh client boot the LOGIN_SCREEN transition can happen before
+		// this plugin subscribes, so the first login would not read as fresh.
+		// Enabled mid-session instead, the next LOGGED_IN is a chunk reload,
+		// not a login - so only pre-arm when not already in the world.
+		freshLogin = client.getGameState() != GameState.LOGGED_IN;
+
 		overlayManager.add(overlay);
 		overlayManager.add(followDebugOverlay);
 		overlayManager.add(dialog);
@@ -342,10 +358,15 @@ public class FollowerPlugin extends Plugin
 			navButton = null;
 			panel = null;
 		}
-		if (phrasesDialog != null)
+		if (gearPhrasesDialog != null)
 		{
-			phrasesDialog.dispose();
-			phrasesDialog = null;
+			gearPhrasesDialog.dispose();
+			gearPhrasesDialog = null;
+		}
+		if (areaPhrasesDialog != null)
+		{
+			areaPhrasesDialog.dispose();
+			areaPhrasesDialog = null;
 		}
 
 		clientThread.invoke(() ->
@@ -382,7 +403,8 @@ public class FollowerPlugin extends Plugin
 			this::equipFromPanel, this::clearSlotFromPanel,
 			() -> clientThread.invoke(this::copyGearToCustomOutfit),
 			this::clearOutfit, this::setGender, this::cycleKit, this::setBodyColor);
-		panel.setOnEditPhrases(this::openPhrasesDialog);
+		panel.setOnEditPhrases(this::openGearPhrasesDialog);
+		panel.setOnEditLocations(this::openAreaPhrasesDialog);
 
 		// ImageUtil.loadImageResource THROWS on a missing resource rather than
 		// returning null, and an exception here aborts startUp() and makes RuneLite
@@ -470,15 +492,37 @@ public class FollowerPlugin extends Plugin
 
 	/** Pushes the current outfit into the panel so it shows what is actually worn. */
 	/** Lazily builds the item-message editor window and fronts it. */
-	private void openPhrasesDialog()
+	private void openGearPhrasesDialog()
 	{
 		javax.swing.SwingUtilities.invokeLater(() ->
 		{
-			if (phrasesDialog == null)
+			if (gearPhrasesDialog == null)
 			{
-				phrasesDialog = new com.follower.ui.GearPhrasesDialog(gson, ruleLoader.getFile());
+				gearPhrasesDialog = new com.follower.ui.PhrasesDialog(gson, ruleLoader.getFile(),
+					"gear", "Follower Buddy — Item messages",
+					"One message per line. Edit, remove or add lines, untick a rule to"
+						+ " silence it, then Save — changes reach the follower within a second.",
+					false);
 			}
-			phrasesDialog.open();
+			gearPhrasesDialog.open();
+		});
+	}
+
+	/** Lazily builds the location-message editor window and fronts it. */
+	private void openAreaPhrasesDialog()
+	{
+		javax.swing.SwingUtilities.invokeLater(() ->
+		{
+			if (areaPhrasesDialog == null)
+			{
+				areaPhrasesDialog = new com.follower.ui.PhrasesDialog(gson, ruleLoader.getFile(),
+					"area", "Follower Buddy — Location messages",
+					"One message per line; region ids are editable and Add location makes a"
+						+ " new place. Run ::follower where in game to print the region id you"
+						+ " are standing in. Save reaches the follower within a second.",
+					true);
+			}
+			areaPhrasesDialog.open();
 		});
 	}
 
@@ -838,14 +882,21 @@ public class FollowerPlugin extends Plugin
 				spawnDelayTicks = SPAWN_DELAY_TICKS;
 				rebuildQueued = true;
 
-				// The LOGIN trigger, so rules can greet: a delayTicks on the rule
-				// puts the hello a couple of seconds AFTER the follower's own
-				// spawn (which waits out spawnDelayTicks itself).
-				speechEngine.dispatch(TriggerEvent.simple(TriggerEvent.Type.LOGIN));
+				// Only on a REAL login - LOGGED_IN also follows every chunk reload.
+				if (freshLogin)
+				{
+					freshLogin = false;
 
-				// The gear you logged in wearing is baseline, not an equip —
-				// the first tick's evaluation records edges without firing.
-				speechEngine.primeEdgesOnNextTick();
+					// The LOGIN trigger, so rules can greet: a delayTicks on the rule
+					// puts the hello a couple of seconds AFTER the follower's own
+					// spawn (which waits out spawnDelayTicks itself).
+					speechEngine.dispatch(TriggerEvent.simple(TriggerEvent.Type.LOGIN));
+
+					// The gear you logged in wearing and the place you logged in
+					// standing are baseline, not news - the first ticks' evaluation
+					// records edges without firing.
+					speechEngine.primeEdgesOnNextTick();
+				}
 
 				// Sync the colour table to the brightness setting as it stands now;
 				// the varp listener keeps it matched to slider changes from here.
@@ -870,9 +921,18 @@ public class FollowerPlugin extends Plugin
 				follower.markNeedsReattach();
 				break;
 
+			case LOGGING_IN:
+				// Belt and braces for the flag below: LOGGING_IN always precedes
+				// a real login and always fires after the plugin subscribed,
+				// where LOGIN_SCREEN can predate a freshly booted client's
+				// plugins entirely.
+				freshLogin = true;
+				break;
+
 			case LOGIN_SCREEN:
 			case HOPPING:
 			case CONNECTION_LOST:
+				freshLogin = true;
 				captureFallback.abort();
 				follower.despawn();
 				appearanceService.invalidate();
