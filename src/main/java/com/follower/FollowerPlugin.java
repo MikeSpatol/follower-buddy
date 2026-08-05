@@ -815,6 +815,15 @@ public class FollowerPlugin extends Plugin
 				spawnDelayTicks = SPAWN_DELAY_TICKS;
 				rebuildQueued = true;
 
+				// The LOGIN trigger, so rules can greet: a delayTicks on the rule
+				// puts the hello a couple of seconds AFTER the follower's own
+				// spawn (which waits out spawnDelayTicks itself).
+				speechEngine.dispatch(TriggerEvent.simple(TriggerEvent.Type.LOGIN));
+
+				// The gear you logged in wearing is baseline, not an equip —
+				// the first tick's evaluation records edges without firing.
+				speechEngine.primeEdgesOnNextTick();
+
 				// Sync the colour table to the brightness setting as it stands now;
 				// the varp listener keeps it matched to slider changes from here.
 				clientThread.invokeLater(() ->
@@ -1744,20 +1753,17 @@ public class FollowerPlugin extends Plugin
 	}
 
 	/**
-	 * Copies the head angles off a real NPC dialog the moment one opens. The
-	 * game's chathead widget carries the exact rotation values it renders with -
-	 * reading them beats guessing at authoring conventions. Values are logged so
-	 * a confirmed set can be baked in as defaults.
+	 * Copies the head angles and layout cells off a real dialog the moment one
+	 * opens, keeping the follower's dialog calibrated against whatever the game
+	 * currently renders. The measuring dumps that produced the baked-in layout
+	 * constants have been retired; only the silent adoption remains.
 	 */
 	@Subscribe
 	public void onWidgetLoaded(net.runelite.api.events.WidgetLoaded event)
 	{
 		int group = event.getGroupId();
-		// 219 = the "Select an Option" chat menu, sniffed for its exact option
-		// text layout alongside the two speech dialogs.
 		if (group != net.runelite.api.gameval.InterfaceID.CHAT_LEFT
-			&& group != net.runelite.api.gameval.InterfaceID.CHAT_RIGHT
-			&& group != 219)
+			&& group != net.runelite.api.gameval.InterfaceID.CHAT_RIGHT)
 		{
 			return;
 		}
@@ -1765,55 +1771,6 @@ public class FollowerPlugin extends Plugin
 		// The children are populated after the load event; read them next cycle.
 		clientThread.invokeLater(() ->
 		{
-			// Full layout dump: every child with its text properties, positioned
-			// relative to the CHATBOX widget (the same base our dialog draws
-			// against). This is the measured truth for fonts, text positions,
-			// and the player-side head placement - not guessed, read.
-			net.runelite.api.widgets.Widget chatbox = client.getWidget(
-				net.runelite.api.gameval.InterfaceID.CHATBOX, 0);
-			java.awt.Rectangle chatboxRect = chatbox == null ? null : chatbox.getBounds();
-			for (int child = 0; child < 16; child++)
-			{
-				net.runelite.api.widgets.Widget w = client.getWidget(group, child);
-				if (w == null)
-				{
-					continue;
-				}
-				java.awt.Rectangle b = w.getBounds();
-				String rel = b == null || chatboxRect == null ? "?" :
-					(b.x - chatboxRect.x) + "," + (b.y - chatboxRect.y);
-				log.info("DIALOGWIDGET group={} child={} type={} text='{}' fontId={} "
-						+ "color={} shadowed={} xAlign={} yAlign={} lineHeight={} "
-						+ "relToChatbox={} size={}x{} canvas={}",
-					group, child, w.getType(), w.getText(), w.getFontId(),
-					Integer.toHexString(w.getTextColor()), w.getTextShadowed(),
-					w.getXTextAlignment(), w.getYTextAlignment(), w.getLineHeight(),
-					rel, w.getWidth(), w.getHeight(), b);
-
-				// The option menu builds its entries as dynamic children.
-				net.runelite.api.widgets.Widget[] dynamic = w.getDynamicChildren();
-				if (dynamic != null)
-				{
-					for (net.runelite.api.widgets.Widget d : dynamic)
-					{
-						if (d == null)
-						{
-							continue;
-						}
-						java.awt.Rectangle db = d.getBounds();
-						String drel = db == null || chatboxRect == null ? "?" :
-							(db.x - chatboxRect.x) + "," + (db.y - chatboxRect.y);
-						log.info("DIALOGWIDGET group={} child={}[dyn] type={} text='{}' "
-								+ "fontId={} spriteId={} color={} shadowed={} xAlign={} yAlign={} "
-								+ "lineHeight={} relToChatbox={} size={}x{}",
-							group, child, d.getType(), d.getText(), d.getFontId(),
-							d.getSpriteId(), Integer.toHexString(d.getTextColor()),
-							d.getTextShadowed(), d.getXTextAlignment(), d.getYTextAlignment(),
-							d.getLineHeight(), drel, d.getWidth(), d.getHeight());
-					}
-				}
-			}
-
 			for (int child = 0; child < 16; child++)
 			{
 				net.runelite.api.widgets.Widget widget = client.getWidget(group, child);
@@ -1823,23 +1780,12 @@ public class FollowerPlugin extends Plugin
 					continue;
 				}
 
-				// The rotations were sniffed as 0 while real heads clearly render
-				// three-quarter turned - so the turn must come from the widget's
-				// ANIMATION posing the head model, not from a rotation. Capture
-				// everything, especially the animation id.
 				java.awt.Rectangle headRect = widget.getBounds();
 				// Relative to the CHATBOX widget - the same base the dialog overlay
 				// positions against - not the dialog root, which sits inset from it.
 				net.runelite.api.widgets.Widget root = client.getWidget(
 					net.runelite.api.gameval.InterfaceID.CHATBOX, 0);
 				java.awt.Rectangle rootRect = root == null ? null : root.getBounds();
-
-				log.info("CHATHEAD group={} child={} modelId={} modelType={} anim={} "
-						+ "yaw={} pitch={} roll={} zoom={} declared={}x{} canvas={} root={}",
-					group, child, widget.getModelId(), widget.getModelType(),
-					widget.getAnimationId(), widget.getRotationY(), widget.getRotationX(),
-					widget.getRotationZ(), widget.getModelZoom(),
-					widget.getWidth(), widget.getHeight(), headRect, rootRect);
 
 				// Copy the real head's rectangle, expressed relative to the dialog,
 				// so ours sits at the same place and size instead of a guess.
@@ -1882,8 +1828,6 @@ public class FollowerPlugin extends Plugin
 					dialog.setHeadPitch(widget.getRotationX() & 0x7ff);
 					dialog.setHeadZoom(Math.max(1, widget.getModelZoom()));
 				}
-				sendStatus("Sniffed dialog head: animation " + widget.getAnimationId()
-					+ " (see log for the full picture).");
 				return;
 			}
 		});
@@ -1964,13 +1908,6 @@ public class FollowerPlugin extends Plugin
 
 		int animationId = event.getActor().getAnimation();
 
-		// Also to the log, so id questions ("which animation is the home
-		// teleport?") can be answered from a session's log after the fact.
-		if (animationId != -1)
-		{
-			log.info("player animation {}", animationId);
-		}
-
 		// A slaved chain (the home teleport) steps stage-for-stage with the
 		// PLAYER's sequence: the server cuts each stage short by starting the
 		// next, and mirroring that schedule is what removes the freeze between
@@ -2024,7 +1961,6 @@ public class FollowerPlugin extends Plugin
 		}
 
 		int graphicHeight = event.getActor().getGraphicHeight();
-		log.info("player graphic {} height {}", graphicId, graphicHeight);
 		if (watchAnimations)
 		{
 			sendStatus("Graphic " + graphicId + " at height " + graphicHeight);

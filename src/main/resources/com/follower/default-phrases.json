@@ -224,6 +224,22 @@
       ]
     },
     {
+      "id": "login-greeting",
+      "note": "A hello a couple of seconds after the follower teleports in on login. Spawn happens ~4 ticks after login; delayTicks 8 lands the line ~2.5s after the puff. The cooldown stops quick world hops re-greeting.",
+      "group": "misc",
+      "priority": 90,
+      "output": "overhead",
+      "delayTicks": 8,
+      "cooldownMs": 60000,
+      "when": { "type": "login" },
+      "say": [
+        "There you are! Right on schedule.",
+        "Welcome back, {player}. I kept your spot warm.",
+        "Ah, you made it! Gielinor was getting quiet without you.",
+        "Back again? Excellent. Where to today?"
+      ]
+    },
+    {
       "id": "gear-staves",
       "note": "Equip reactions fire once per equip (rising edge). Ids: battlestaff, lava battlestaff, air/water/earth/fire staves.",
       "group": "gear",

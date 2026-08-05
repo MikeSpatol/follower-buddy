@@ -115,6 +115,22 @@ public class SpeechEngine
 	private final java.util.List<PendingSpeech> pending = new java.util.ArrayList<>();
 
 	/**
+	 * Set at login: the first couple of TICK evaluations record every rule's
+	 * edge state without firing. The world as found at spawn is baseline, not
+	 * news - a rule should react to what CHANGES afterwards (gear equipped
+	 * mid-session), not to whatever the player logged in wearing. Two ticks
+	 * because the player composition can populate a tick after login, which
+	 * would slip past a single primed tick. Event-driven dispatches (the login
+	 * greeting itself) are unaffected.
+	 */
+	private int primeTicksLeft;
+
+	public void primeEdgesOnNextTick()
+	{
+		primeTicksLeft = 2;
+	}
+
+	/**
 	 * Runs one evaluation pass. Every rule's edge state is updated regardless of
 	 * whether it can speak, so cooldowns and mutes never desynchronise the edges.
 	 */
@@ -136,7 +152,7 @@ public class SpeechEngine
 					if (!(delayed.rule.hasSpeech()
 						&& (muted || now - lastSpokeMs < globalCooldownMs)))
 					{
-						log.info("rule '{}' fired after its {}-tick delay",
+						log.debug("rule '{}' fired after its {}-tick delay",
 							delayed.rule.describe(), delayed.rule.delayTicks);
 						speak(delayed.rule, delayed.event, now);
 					}
@@ -173,6 +189,15 @@ public class SpeechEngine
 			}
 		}
 
+		// While primed (just after login), edges have been recorded above but
+		// nothing fires from the tick heartbeat: worn gear and standing state
+		// register as already-true instead of as fresh rising edges.
+		if (primeTicksLeft > 0 && event.getType() == TriggerEvent.Type.TICK)
+		{
+			primeTicksLeft--;
+			return;
+		}
+
 		if (winner == null)
 		{
 			return;
@@ -193,13 +218,13 @@ public class SpeechEngine
 		{
 			// Still charge the cooldown so a suppressed rule doesn't fire the instant
 			// the global window opens.
-			log.info("rule '{}' won but was suppressed (muted={}, sinceLastSpoke={}ms)",
+			log.debug("rule '{}' won but was suppressed (muted={}, sinceLastSpoke={}ms)",
 				winner.describe(), muted, now - lastSpokeMs);
 			winner.markFired(now);
 			return;
 		}
 
-		log.info("rule '{}' fired on {}", winner.describe(), event.getType());
+		log.debug("rule '{}' fired on {}", winner.describe(), event.getType());
 		speak(winner, event, now);
 	}
 

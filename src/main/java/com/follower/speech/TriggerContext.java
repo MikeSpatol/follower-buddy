@@ -119,7 +119,7 @@ public final class TriggerContext
 		}
 		if (!worn.equals(equippedItems))
 		{
-			log.info("equipment now {}", worn);
+			log.debug("equipment now {}", worn);
 		}
 		equippedItems = worn;
 	}
