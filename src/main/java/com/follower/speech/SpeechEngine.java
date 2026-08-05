@@ -90,11 +90,29 @@ public class SpeechEngine
 	{
 		context = null;
 		lastSpokeMs = 0L;
+		pending.clear();
 		for (SpeechRule rule : loader.getRules())
 		{
 			rule.reset();
 		}
 	}
+
+	/** A won rule waiting out its delayTicks before speaking. */
+	private static final class PendingSpeech
+	{
+		final SpeechRule rule;
+		final TriggerEvent event;
+		int ticksLeft;
+
+		PendingSpeech(SpeechRule rule, TriggerEvent event, int ticksLeft)
+		{
+			this.rule = rule;
+			this.event = event;
+			this.ticksLeft = ticksLeft;
+		}
+	}
+
+	private final java.util.List<PendingSpeech> pending = new java.util.ArrayList<>();
 
 	/**
 	 * Runs one evaluation pass. Every rule's edge state is updated regardless of
@@ -103,6 +121,29 @@ public class SpeechEngine
 	public void dispatch(TriggerEvent event)
 	{
 		long now = System.currentTimeMillis();
+
+		// Delayed firings count down on the tick heartbeat and speak through
+		// the same guarded path as everything else when their beat arrives.
+		if (event.getType() == TriggerEvent.Type.TICK && !pending.isEmpty())
+		{
+			java.util.Iterator<PendingSpeech> it = pending.iterator();
+			while (it.hasNext())
+			{
+				PendingSpeech delayed = it.next();
+				if (--delayed.ticksLeft <= 0)
+				{
+					it.remove();
+					if (!(delayed.rule.hasSpeech()
+						&& (muted || now - lastSpokeMs < globalCooldownMs)))
+					{
+						log.info("rule '{}' fired after its {}-tick delay",
+							delayed.rule.describe(), delayed.rule.delayTicks);
+						speak(delayed.rule, delayed.event, now);
+					}
+				}
+			}
+		}
+
 		SpeechRule winner = null;
 
 		for (SpeechRule rule : loader.getRules())
@@ -134,6 +175,15 @@ public class SpeechEngine
 
 		if (winner == null)
 		{
+			return;
+		}
+
+		// A delayed rule queues instead of speaking now; the cooldown is
+		// charged at the win so re-triggers don't stack up more firings.
+		if (winner.delayTicks != null && winner.delayTicks > 0)
+		{
+			winner.markFired(now);
+			pending.add(new PendingSpeech(winner, event, winner.delayTicks));
 			return;
 		}
 

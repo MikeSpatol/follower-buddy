@@ -29,6 +29,14 @@ public class SpeechRule
 	/** Minimum gap between firings of this rule. */
 	public long cooldownMs = 10_000L;
 
+	/**
+	 * Game ticks to wait between the trigger and the line - a companion
+	 * NOTICING something has a beat before the comment, where an instant
+	 * reaction reads as scripted. The suppression checks (mute, global speech
+	 * window) apply when the delay expires, not when it is queued.
+	 */
+	public Integer delayTicks;
+
 	/** Overrides the config default. One of overhead / chatbox / both. */
 	public String output;
 

@@ -229,6 +229,7 @@
       "group": "gear",
       "priority": 30,
       "output": "overhead",
+      "delayTicks": 2,
       "cooldownMs": 5000,
       "when": { "type": "itemEquipped", "ids": [1391, 3053, 1381, 1383, 1385, 1387] },
       "say": ["Runes at the ready, then. Try not to singe my outfit."]
@@ -238,6 +239,7 @@
       "group": "gear",
       "priority": 30,
       "output": "overhead",
+      "delayTicks": 2,
       "cooldownMs": 5000,
       "when": { "type": "itemEquipped", "ids": [11283] },
       "say": ["Is that dragon breath swirling in there? Keep it pointed away from me."]
@@ -247,6 +249,7 @@
       "group": "gear",
       "priority": 30,
       "output": "overhead",
+      "delayTicks": 2,
       "cooldownMs": 5000,
       "when": { "type": "itemEquipped", "ids": [5553, 5555, 5556, 5557] },
       "say": ["Dressed for crime, I see. I saw nothing."]
@@ -256,6 +259,7 @@
       "group": "gear",
       "priority": 30,
       "output": "overhead",
+      "delayTicks": 2,
       "cooldownMs": 5000,
       "when": { "type": "itemEquipped", "ids": [9768, 9769] },
       "say": ["Ninety-nine of something! I'm travelling with an expert."]
@@ -265,6 +269,7 @@
       "group": "gear",
       "priority": 30,
       "output": "overhead",
+      "delayTicks": 2,
       "cooldownMs": 5000,
       "when": { "type": "itemEquipped", "ids": [21143] },
       "say": ["A dodgy necklace? Sensible, in your line of work."]
@@ -274,6 +279,7 @@
       "group": "gear",
       "priority": 30,
       "output": "overhead",
+      "delayTicks": 2,
       "cooldownMs": 5000,
       "when": { "type": "itemEquipped", "ids": [1333] },
       "say": ["Rune scimmy. The people's blade."]
@@ -283,6 +289,7 @@
       "group": "gear",
       "priority": 30,
       "output": "overhead",
+      "delayTicks": 2,
       "cooldownMs": 5000,
       "when": { "type": "itemEquipped", "ids": [4587] },
       "say": ["A dragon scimitar. Sixty Attack and a dream."]
@@ -292,6 +299,7 @@
       "group": "gear",
       "priority": 30,
       "output": "overhead",
+      "delayTicks": 2,
       "cooldownMs": 5000,
       "when": { "type": "itemEquipped", "ids": [4151] },
       "say": ["The whip. Someone means business today."]
@@ -301,6 +309,7 @@
       "group": "gear",
       "priority": 30,
       "output": "overhead",
+      "delayTicks": 2,
       "cooldownMs": 5000,
       "when": { "type": "itemEquipped", "ids": [6570, 21295] },
       "say": ["That cape still smells of smoke."]
