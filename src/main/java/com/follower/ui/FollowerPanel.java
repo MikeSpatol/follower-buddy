@@ -78,6 +78,14 @@ public class FollowerPanel extends PluginPanel
 	/** (body colour slot 0-4, palette index) - the exact-palette picker. */
 	private final BiConsumer<Integer, Integer> onBodyColor;
 
+	/** Opens the item-message editor; set by the plugin after construction. */
+	private Runnable onEditPhrases = () -> { };
+
+	public void setOnEditPhrases(Runnable onEditPhrases)
+	{
+		this.onEditPhrases = onEditPhrases;
+	}
+
 	private final JPanel gearGrid = new JPanel();
 	private final JPanel bodyList = new JPanel();
 	private final JPanel picker = new JPanel();
@@ -157,6 +165,15 @@ public class FollowerPanel extends PluginPanel
 		buttons.add(clear);
 
 		header.add(buttons);
+		header.add(javax.swing.Box.createVerticalStrut(6));
+
+		JButton phrases = new JButton("Item messages...");
+		phrases.setToolTipText("View and edit what the follower says when you equip items");
+		phrases.setFocusPainted(false);
+		phrases.setAlignmentX(LEFT_ALIGNMENT);
+		phrases.setMaximumSize(new Dimension(Integer.MAX_VALUE, 26));
+		phrases.addActionListener(e -> onEditPhrases.run());
+		header.add(phrases);
 
 		status.setFont(FontManager.getRunescapeSmallFont());
 		status.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);

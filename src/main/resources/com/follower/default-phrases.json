@@ -271,16 +271,6 @@
       "say": ["Dressed for crime, I see. I saw nothing."]
     },
     {
-      "id": "gear-skillcape",
-      "group": "gear",
-      "priority": 30,
-      "output": "overhead",
-      "delayTicks": 2,
-      "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [9768, 9769] },
-      "say": ["Ninety-nine of something! I'm travelling with an expert."]
-    },
-    {
       "id": "gear-dodgy-necklace",
       "group": "gear",
       "priority": 30,
@@ -291,44 +281,859 @@
       "say": ["A dodgy necklace? Sensible, in your line of work."]
     },
     {
-      "id": "gear-rune-scimitar",
+      "id": "gear-dragon-dagger",
+      "note": "Dragon dagger, incl. poisoned and arena variants.",
       "group": "gear",
       "priority": 30,
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [1333] },
-      "say": ["Rune scimmy. The people's blade."]
+      "when": { "type": "itemEquipped", "ids": [1215, 1231, 5680, 5698, 20407, 28019, 28021, 28023, 28025] },
+      "say": [
+        "The dragon dagger. Four pokes, no waiting.",
+        "Ah, the classic. Stab twice, ask questions never.",
+        "Poisoned? Charming. Keep it pointed that way."
+      ]
     },
     {
-      "id": "gear-dragon-scimitar",
+      "id": "gear-granite-maul",
+      "note": "Granite maul, all variants.",
       "group": "gear",
       "priority": 30,
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [4587] },
-      "say": ["A dragon scimitar. Sixty Attack and a dream."]
+      "when": { "type": "itemEquipped", "ids": [4153, 12848, 20557, 24225, 24227] },
+      "say": [
+        "The granite maul. No warning, just bonk.",
+        "Subtlety's overrated anyway."
+      ]
     },
     {
-      "id": "gear-whip",
+      "id": "gear-dragon-warhammer",
+      "note": "Dragon warhammer, incl. ornament variants.",
       "group": "gear",
       "priority": 30,
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [4151] },
-      "say": ["The whip. Someone means business today."]
+      "when": { "type": "itemEquipped", "ids": [13576, 20785, 26710, 28035] },
+      "say": [
+        "One good smack and their armour turns to paper.",
+        "Please land it. For morale."
+      ]
+    },
+    {
+      "id": "gear-elder-maul",
+      "note": "Elder maul, incl. ornament variant.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [21003, 21205, 27100] },
+      "say": [
+        "That's not a weapon, that's a landmark.",
+        "Lift with the knees. Both of them."
+      ]
+    },
+    {
+      "id": "gear-godsword",
+      "note": "Any godsword: Armadyl, Bandos, Saradomin, Zamorak, Ancient, incl. ornament variants.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [11802, 11804, 11806, 11808, 20368, 20370, 20372, 20374, 20593, 22665, 26233, 27184, 28537, 29605] },
+      "say": [
+        "A godsword. Do warn me before you swing.",
+        "That blade is taller than I am.",
+        "The gods made that. Respect it — from a distance."
+      ]
+    },
+    {
+      "id": "gear-dragon-claws",
+      "note": "Dragon claws, incl. ornament variants.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [13652, 20784, 26708, 28039] },
+      "say": [
+        "Dragon claws. Four hits, zero mercy.",
+        "Scratch first, apologise never."
+      ]
+    },
+    {
+      "id": "gear-abyssal-tentacle",
+      "note": "Abyssal tentacle, incl. ornament variant.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [12006, 26484] },
+      "say": [
+        "A whip with a squid on it. Why not.",
+        "It's wriggling. It's WRIGGLING."
+      ]
+    },
+    {
+      "id": "gear-toxic-blowpipe",
+      "note": "Toxic blowpipe, charged or empty.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [12924, 12926] },
+      "say": [
+        "Darts and venom. Horribly efficient.",
+        "Just don't inhale."
+      ]
+    },
+    {
+      "id": "gear-twisted-bow",
+      "note": "Twisted bow.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [20997] },
+      "say": [
+        "THE bow. We're dangerous AND rich.",
+        "Careful where you lean that. It costs more than a castle."
+      ]
+    },
+    {
+      "id": "gear-bofa",
+      "note": "Bow of faerdhinen, incl. corrupted and recolours.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [25862, 25865, 25867, 25884, 25886, 25888, 25890, 25892, 25894, 25896, 27187, 33021] },
+      "say": [
+        "Crystal song in every draw. Fancy.",
+        "Elven craftsmanship. We're posh now."
+      ]
+    },
+    {
+      "id": "gear-scythe",
+      "note": "Scythe of vitur, incl. holy and sanguine variants.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [22325, 22486, 22664, 25736, 25738, 25739, 25741, 28543, 28545] },
+      "say": [
+        "Mind the arc — I walk behind you, remember.",
+        "A vampyre's scythe. Sweep them all at once."
+      ]
+    },
+    {
+      "id": "gear-ghrazi-rapier",
+      "note": "Ghrazi rapier, incl. holy variant.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [22324, 23628, 25734] },
+      "say": [
+        "The pointy end goes very fast. Understood.",
+        "Elegant. Deadly. Slightly showy."
+      ]
+    },
+    {
+      "id": "gear-osmumtens-fang",
+      "note": "Osmumten's fang, incl. ornament variant.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [26219, 27246, 33174] },
+      "say": [
+        "The fang rarely misses. The pharaohs knew things.",
+        "A pyramid's worth of history on your belt."
+      ]
+    },
+    {
+      "id": "gear-voidwaker",
+      "note": "Voidwaker.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [27690, 27869, 29607] },
+      "say": [
+        "That glow isn't friendly. Neither are you, apparently.",
+        "Three Wilderness bosses gave up pieces for that. Poetic."
+      ]
+    },
+    {
+      "id": "gear-rune-crossbow",
+      "note": "Rune crossbow, incl. ornament variant.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [9185, 23601, 26486] },
+      "say": [
+        "Old reliable clicks again.",
+        "Load, loose, repeat. The classics endure."
+      ]
+    },
+    {
+      "id": "gear-magic-shortbow",
+      "note": "Magic shortbow and imbued version.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [861, 12788, 20558] },
+      "say": [
+        "Bends like a reed, bites like a wolf.",
+        "Twang twang twang. Music to my ears."
+      ]
+    },
+    {
+      "id": "gear-trident",
+      "note": "Tridents of the seas and swamp, all variants.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [11905, 11907, 12899, 22288, 22292, 33314, 33318, 33322, 33323, 33326] },
+      "say": [
+        "A staff that casts itself. Lazy. Effective.",
+        "The kraken parted with that grudgingly, I'd wager."
+      ]
+    },
+    {
+      "id": "gear-tumekens-shadow",
+      "note": "Tumeken's shadow.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [27275, 27277] },
+      "say": [
+        "A staff of pure shadow. Kindly don't point it at me.",
+        "It hums with the sun god's power. Ominous. Expensive."
+      ]
+    },
+    {
+      "id": "gear-dinhs-bulwark",
+      "note": "Dinh's bulwark.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [21015] },
+      "say": [
+        "Is there room behind that for both of us?",
+        "A door with ambitions."
+      ]
+    },
+    {
+      "id": "gear-bandos-armour",
+      "note": "Bandos chestplate or tassets, incl. ornament variants.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [11832, 11834, 23646, 26718, 26719] },
+      "say": [
+        "Bandos armour. You could stop a battering ram in that.",
+        "The Big High War God's finest plate."
+      ]
+    },
+    {
+      "id": "gear-armadyl-armour",
+      "note": "Armadyl chestplate or chainskirt, incl. ornament variants.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [11828, 11830, 26715, 26716] },
+      "say": [
+        "Feathered and fierce. Kree'arra's tailor does good work.",
+        "Light as a feather. Costs like a mansion."
+      ]
+    },
+    {
+      "id": "gear-ancestral",
+      "note": "Any ancestral piece: hat, robe top, robe bottom.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [21018, 21021, 21024, 25518, 27193, 27194] },
+      "say": [
+        "Those robes hum with old magic.",
+        "Very stylish. Very purple. Very expensive."
+      ]
+    },
+    {
+      "id": "gear-justiciar",
+      "note": "Any justiciar piece: faceguard, chestguard, legguards.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [22326, 22327, 22328] },
+      "say": [
+        "Justiciar plate. You look like the law itself.",
+        "They'll need a bigger weapon."
+      ]
+    },
+    {
+      "id": "gear-black-dhide",
+      "note": "Black d'hide body or chaps, incl. trimmed variants.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [2497, 2503, 12381, 12383, 12385, 12387, 20423, 20424, 25493] },
+      "say": [
+        "Dragonhide. Practical AND menacing.",
+        "Some dragon is very cold right now."
+      ]
+    },
+    {
+      "id": "gear-fighter-torso",
+      "note": "Fighter torso, incl. ornament variants.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [10551, 24175, 28067, 28069] },
+      "say": [
+        "The torso! Penance-earned and proud.",
+        "Blood, sweat and Barbarian Assault."
+      ]
+    },
+    {
+      "id": "gear-barrows-gloves",
+      "note": "Barrows gloves.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [7462, 23593, 27112] },
+      "say": [
+        "Barrows gloves. The Culinaromancer sends his regards.",
+        "The finest gloves in Gielinor, earned one rescued feast at a time."
+      ]
+    },
+    {
+      "id": "gear-dragon-defender",
+      "note": "Dragon defender, incl. trimmed variants.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [12954, 19722, 23597, 24143, 27008] },
+      "say": [
+        "Attack and defence in one fist. Cyclops-approved.",
+        "How many cyclopes was it, in the end?"
+      ]
+    },
+    {
+      "id": "gear-avernic-defender",
+      "note": "Avernic defender.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [22322, 24186] },
+      "say": [
+        "An avernic defender. The cyclopes could never.",
+        "Forged in the Theatre. Fancy."
+      ]
+    },
+    {
+      "id": "gear-crystal-armour",
+      "note": "Crystal helm, body or legs, incl. recolours. Gauntlet versions excluded.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [23971, 23973, 23975, 23977, 23979, 23981, 27697, 27699, 27701, 27703, 27705, 27707, 27709, 27711, 27713, 27715, 27717, 27719, 27721, 27723, 27725, 27727, 27729, 27731, 27733, 27735, 27737, 27739, 27741, 27743, 27745, 27747, 27749, 27751, 27753, 27755, 27757, 27759, 27761, 27763, 27765, 27767, 27769, 27771, 27773, 27775, 27777, 27779, 33023, 33025, 33027, 33029, 33031, 33033, 33166, 33168, 33170] },
+      "say": [
+        "Crystal armour. You chime when you walk now.",
+        "Elegant. Just don't drop it."
+      ]
+    },
+    {
+      "id": "gear-cerberus-boots",
+      "note": "Primordial, pegasian or eternal boots.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [13235, 13237, 13239, 23644] },
+      "say": [
+        "Cerberus gave those up reluctantly, I imagine.",
+        "Fancy footwear. Mind the puddles."
+      ]
+    },
+    {
+      "id": "gear-dragon-boots",
+      "note": "Dragon boots, incl. gilded variant.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [11840, 22234, 28055] },
+      "say": [
+        "Dragon boots. Kicking above your weight.",
+        "Stomp responsibly."
+      ]
+    },
+    {
+      "id": "gear-ranger-boots",
+      "note": "Ranger boots.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [2577] },
+      "say": [
+        "Ranger boots. A fortune, on your feet.",
+        "More expensive than everything else you own. Combined."
+      ]
+    },
+    {
+      "id": "gear-fury",
+      "note": "Amulet of fury, incl. ornament variant.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [6585, 12436, 23640] },
+      "say": [
+        "A fury. All-round excellence around your neck.",
+        "Onyx. The good stuff."
+      ]
+    },
+    {
+      "id": "gear-torture",
+      "note": "Amulet of torture, incl. ornament variant.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [19553, 20366, 27173] },
+      "say": [
+        "An amulet that bites back. Bold choice.",
+        "Torture, worn voluntarily. You lot are strange."
+      ]
+    },
+    {
+      "id": "gear-anguish",
+      "note": "Necklace of anguish, incl. ornament variant.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [19547, 22249, 27172] },
+      "say": [
+        "Anguish. The name really sells it.",
+        "Zenyte on a chain. Mind the muggers."
+      ]
+    },
+    {
+      "id": "gear-occult",
+      "note": "Occult necklace, incl. ornament variant.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [12002, 19720, 23654] },
+      "say": [
+        "The occult necklace whispers. Ignore it.",
+        "Powerful, yes. Also deeply unsettling."
+      ]
+    },
+    {
+      "id": "gear-glory",
+      "note": "Amulet of glory, any charge, incl. trimmed variants.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [1704, 1706, 1708, 1710, 1712, 10354, 10356, 10358, 10360, 10362, 11964, 11966, 11976, 11978, 20586] },
+      "say": [
+        "An amulet of glory. A classic never dies.",
+        "Straight to Edgeville, then?"
+      ]
+    },
+    {
+      "id": "gear-set-graceful",
+      "note": "Full graceful outfit: all six pieces, any recolour mix.",
+      "group": "gear",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "itemEquipped", "ids": [11850, 11851, 13579, 13580, 13591, 13592, 13603, 13604, 13615, 13616, 13627, 13628, 13667, 13668, 21061, 21063, 24743, 24745, 25069, 25071, 27444, 27446, 30045, 30047] },
+          { "type": "itemEquipped", "ids": [11852, 11853, 13581, 13582, 13593, 13594, 13605, 13606, 13617, 13618, 13629, 13630, 13669, 13670, 21064, 21066, 24746, 24748, 25072, 25074, 27447, 27449, 30048, 30050] },
+          { "type": "itemEquipped", "ids": [11854, 11855, 13583, 13584, 13595, 13596, 13607, 13608, 13619, 13620, 13631, 13632, 13671, 13672, 21067, 21069, 24749, 24751, 25075, 25077, 27450, 27452, 30051, 30053] },
+          { "type": "itemEquipped", "ids": [11856, 11857, 13585, 13586, 13597, 13598, 13609, 13610, 13621, 13622, 13633, 13634, 13673, 13674, 21070, 21072, 24752, 24754, 25078, 25080, 27453, 27455, 30054, 30056] },
+          { "type": "itemEquipped", "ids": [11858, 11859, 13587, 13588, 13599, 13600, 13611, 13612, 13623, 13624, 13635, 13636, 13675, 13676, 21073, 21075, 24755, 24757, 25081, 25083, 27456, 27458, 30057, 30059] },
+          { "type": "itemEquipped", "ids": [11860, 11861, 13589, 13590, 13601, 13602, 13613, 13614, 13625, 13626, 13637, 13638, 13677, 13678, 21076, 21078, 24758, 24760, 25084, 25086, 27459, 27461, 30060, 30062] }
+        ]
+      },
+      "say": [
+        "Full graceful. Off to run laps, are we?",
+        "Marks well spent. Very aerodynamic.",
+        "Light as air. I still have to walk, though."
+      ]
+    },
+    {
+      "id": "gear-set-void",
+      "note": "Full void: any helm plus top, robe and gloves. Elite counts.",
+      "group": "gear",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "itemEquipped", "ids": [11663, 11664, 11665, 24183, 24184, 24185, 26473, 26475, 26477, 27005, 27006, 27007] },
+          { "type": "itemEquipped", "ids": [8839, 13072, 24177, 24178, 26463, 26469, 27000, 27003] },
+          { "type": "itemEquipped", "ids": [8840, 13073, 24179, 24180, 26465, 26471, 27001, 27004] },
+          { "type": "itemEquipped", "ids": [8842, 24182, 26467, 27002] }
+        ]
+      },
+      "say": [
+        "Full void. The pests fear you.",
+        "All those trips to the Void Knights' outpost finally paid off."
+      ]
+    },
+    {
+      "id": "gear-set-dharok",
+      "note": "Full Dharok's: helm, platebody, platelegs and greataxe, any repair state.",
+      "group": "gear",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "itemEquipped", "ids": [4716, 4880, 4881, 4882, 4883, 4884, 23639] },
+          { "type": "itemEquipped", "ids": [4720, 4892, 4893, 4894, 4895, 4896, 25515] },
+          { "type": "itemEquipped", "ids": [4722, 4898, 4899, 4900, 4901, 4902, 23633] },
+          { "type": "itemEquipped", "ids": [4718, 4886, 4887, 4888, 4889, 4890, 25516] }
+        ]
+      },
+      "say": [
+        "Full Dharok's. Please stay healthy. Or don't — that's the point.",
+        "The lower your health, the harder you hit. I hate the maths."
+      ]
+    },
+    {
+      "id": "gear-set-rune",
+      "note": "Full rune: full helm, platebody, platelegs and kiteshield. Trimmed and heraldic count.",
+      "group": "gear",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "itemEquipped", "ids": [1163, 2619, 2627] },
+          { "type": "itemEquipped", "ids": [1127, 2615, 2623, 20421] },
+          { "type": "itemEquipped", "ids": [1079, 2617, 2625, 20422] },
+          { "type": "itemEquipped", "ids": [1201, 2621, 2629, 8714, 8716, 8718, 8720, 8722, 8724, 8726, 8728, 8730, 8732, 8734, 8736, 8738, 8740, 8742, 8744] }
+        ]
+      },
+      "say": [
+        "Full rune! Every squire's dream.",
+        "Gilded next, I assume?"
+      ]
+    },
+    {
+      "id": "gear-set-bronze",
+      "note": "Full bronze: full helm, platebody, platelegs and kiteshield.",
+      "group": "gear",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "itemEquipped", "ids": [1155] },
+          { "type": "itemEquipped", "ids": [1117] },
+          { "type": "itemEquipped", "ids": [1075] },
+          { "type": "itemEquipped", "ids": [1189] }
+        ]
+      },
+      "say": [
+        "Full bronze. A bold fashion statement.",
+        "Ah, bronze. The metal of new beginnings."
+      ]
+    },
+    {
+      "id": "gear-infernal-cape",
+      "note": "Infernal cape.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [21295, 21297, 23622, 24224] },
+      "say": [
+        "An infernal cape. I'm not standing near that.",
+        "Zuk lost. The cape remembers."
+      ]
     },
     {
       "id": "gear-fire-cape",
+      "note": "Fire cape.",
       "group": "gear",
       "priority": 30,
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [6570, 21295] },
-      "say": ["That cape still smells of smoke."]
+      "when": { "type": "itemEquipped", "ids": [6570, 10566, 24223] },
+      "say": [
+        "That cape still smells of smoke.",
+        "Sixty-three waves for that. Worth it."
+      ]
+    },
+    {
+      "id": "gear-max-cape",
+      "note": "Max cape, every variant.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [13280, 13329, 13331, 13333, 13335, 13337, 13342, 20760, 21186, 21284, 21285, 21776, 21780, 21784, 21898, 24133, 24134, 24135, 24232, 24233, 24234, 24855, 27363, 27365, 28902, 28906] },
+      "say": [
+        "A max cape. I'm following a legend.",
+        "All ninety-nines. What's left — collecting me?"
+      ]
+    },
+    {
+      "id": "gear-quest-cape",
+      "note": "Quest point cape, incl. trimmed.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [9813, 13068] },
+      "say": [
+        "Every quest done. Gielinor thanks you.",
+        "The cape of having seen everything."
+      ]
+    },
+    {
+      "id": "gear-skillcape",
+      "note": "Any skillcape, trimmed or not.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [9747, 9748, 9750, 9751, 9753, 9754, 9756, 9757, 9759, 9760, 9762, 9763, 9765, 9766, 9768, 9769, 9771, 9772, 9774, 9775, 9777, 9778, 9780, 9781, 9783, 9784, 9786, 9787, 9789, 9790, 9792, 9793, 9795, 9796, 9798, 9799, 9801, 9802, 9804, 9805, 9807, 9808, 9810, 9811, 9948, 9949, 13340, 13341] },
+      "say": [
+        "Ninety-nine of something! I'm travelling with an expert.",
+        "A skillcape. Mastery looks good on you."
+      ]
+    },
+    {
+      "id": "gear-avas",
+      "note": "Ava's attractor, accumulator or assembler.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [10498, 10499, 22109, 23609, 24222] },
+      "say": [
+        "Ava's finest. Mind the magnetism — I have metal bits.",
+        "It catches your arrows. What a time to be alive."
+      ]
+    },
+    {
+      "id": "gear-partyhat",
+      "note": "Any partyhat.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [1038, 1040, 1042, 1044, 1046, 1048, 2422, 11862, 11863, 12399, 27828] },
+      "say": [
+        "A PARTYHAT? Careful. Half of Gielinor wants that.",
+        "A paper crown worth a kingdom. Only in Gielinor.",
+        "Don't sneeze."
+      ]
+    },
+    {
+      "id": "gear-santa-hat",
+      "note": "Santa hat, incl. black and inverted.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [1050, 13343, 13344, 21859] },
+      "say": [
+        "A santa hat. Festive AND wealthy.",
+        "Ho ho... hang on, it isn't even snowing."
+      ]
+    },
+    {
+      "id": "gear-halloween-mask",
+      "note": "Any halloween mask.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [1053, 1055, 1057, 11847] },
+      "say": [
+        "A halloween mask. Spooky. Iconic. Pricey.",
+        "Scary face, scarier price."
+      ]
+    },
+    {
+      "id": "gear-slayer-helmet",
+      "note": "Slayer helmet, every colour and imbue.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [11864, 11865, 19639, 19641, 19643, 19645, 19647, 19649, 21264, 21266, 21888, 21890, 23073, 23075, 24370, 24444, 25177, 25179, 25181, 25183, 25185, 25187, 25189, 25191, 25898, 25900, 25902, 25904, 25906, 25908, 25910, 25912, 25914, 26674, 26675, 26676, 26677, 26678, 26679, 26680, 26681, 26682, 26683, 26684, 29816, 29818, 29820, 29822, 33066, 33068, 33070, 33072, 33338, 33340, 33439, 33441, 33443, 33445, 33447, 33449] },
+      "say": [
+        "The slayer helmet. Duradel would be proud.",
+        "All those monster parts in one hat. Efficient."
+      ]
+    },
+    {
+      "id": "gear-pickaxe",
+      "note": "Dragon, infernal, crystal or 3rd age pickaxe.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [11920, 12797, 13243, 13244, 20014, 23677, 23680, 23682, 23863, 25063, 25369, 25376, 30345, 30346, 30351] },
+      "say": [
+        "A fine pick. The rocks don't stand a chance.",
+        "Off to bully some rocks, I see."
+      ]
+    },
+    {
+      "id": "gear-axe",
+      "note": "Dragon, infernal, crystal or 3rd age axe, felling axes too.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [6739, 13241, 13242, 20011, 23673, 23675, 23862, 25066, 25371, 25378, 28217, 28220, 28223, 30347, 30348, 30352] },
+      "say": [
+        "That axe means a forest is in trouble.",
+        "The trees whisper your name. Fearfully."
+      ]
+    },
+    {
+      "id": "gear-harpoon",
+      "note": "Dragon, infernal or crystal harpoon.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [21028, 21031, 21033, 23762, 23764, 23864, 25059, 25367, 25373, 30342, 30343, 30349] },
+      "say": [
+        "A harpoon like that? The fish are holding council as we speak.",
+        "Somewhere, a shark just shivered."
+      ]
+    },
+    {
+      "id": "gear-whip",
+      "note": "Abyssal whip, incl. volcanic, frozen and ornament variants.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [4151, 12773, 12774, 20405, 26482] },
+      "say": [
+        "The whip. Someone means business today."
+      ]
+    },
+    {
+      "id": "gear-rune-scimitar",
+      "note": "Rune scimitar, incl. ornament variants.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [1333, 20402, 23330, 23332, 23334] },
+      "say": [
+        "Rune scimmy. The people's blade."
+      ]
+    },
+    {
+      "id": "gear-dragon-scimitar",
+      "note": "Dragon scimitar, incl. ornament variant.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [4587, 20000, 20406, 28031] },
+      "say": [
+        "A dragon scimitar. Sixty Attack and a dream."
+      ]
     },
     {
       "id": "mirror-teleport",

@@ -267,11 +267,23 @@ public interface FollowerConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "groupGear",
+		name = "Item reactions",
+		description = "Rules in the \"gear\" group — comments when you equip notable items",
+		section = groupsSection,
+		position = 4
+	)
+	default boolean groupGear()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 		keyName = "disabledGroups",
 		name = "Other disabled groups",
 		description = "Comma separated group names or rule ids to silence",
 		section = groupsSection,
-		position = 4
+		position = 5
 	)
 	default String disabledGroups()
 	{

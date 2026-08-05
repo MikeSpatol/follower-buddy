@@ -252,6 +252,10 @@ public class FollowerPlugin extends Plugin
 
 	private com.follower.ui.FollowerPanel panel;
 	private net.runelite.client.ui.NavigationButton navButton;
+	private com.follower.ui.GearPhrasesDialog phrasesDialog;
+
+	@Inject
+	private com.google.gson.Gson gson;
 
 	private Path dataDir;
 	private WorldPoint lastPlayerTile;
@@ -338,6 +342,11 @@ public class FollowerPlugin extends Plugin
 			navButton = null;
 			panel = null;
 		}
+		if (phrasesDialog != null)
+		{
+			phrasesDialog.dispose();
+			phrasesDialog = null;
+		}
 
 		clientThread.invoke(() ->
 		{
@@ -373,6 +382,7 @@ public class FollowerPlugin extends Plugin
 			this::equipFromPanel, this::clearSlotFromPanel,
 			() -> clientThread.invoke(this::copyGearToCustomOutfit),
 			this::clearOutfit, this::setGender, this::cycleKit, this::setBodyColor);
+		panel.setOnEditPhrases(this::openPhrasesDialog);
 
 		// ImageUtil.loadImageResource THROWS on a missing resource rather than
 		// returning null, and an exception here aborts startUp() and makes RuneLite
@@ -459,6 +469,19 @@ public class FollowerPlugin extends Plugin
 	}
 
 	/** Pushes the current outfit into the panel so it shows what is actually worn. */
+	/** Lazily builds the item-message editor window and fronts it. */
+	private void openPhrasesDialog()
+	{
+		javax.swing.SwingUtilities.invokeLater(() ->
+		{
+			if (phrasesDialog == null)
+			{
+				phrasesDialog = new com.follower.ui.GearPhrasesDialog(gson, ruleLoader.getFile());
+			}
+			phrasesDialog.open();
+		});
+	}
+
 	private void syncPanel()
 	{
 		if (panel == null)
@@ -958,6 +981,10 @@ public class FollowerPlugin extends Plugin
 		if (!config.groupIdle())
 		{
 			disabled.add("idle");
+		}
+		if (!config.groupGear())
+		{
+			disabled.add("gear");
 		}
 		for (String token : config.disabledGroups().split(","))
 		{
