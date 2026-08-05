@@ -221,7 +221,7 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "groupBoss",
 		name = "Boss phrases",
-		description = "Rules in the \"boss\" group",
+		description = "Rules in the \"boss\" group — tips, lore and jokes when a boss appears",
 		section = groupsSection,
 		position = 0
 	)
@@ -232,8 +232,8 @@ public interface FollowerConfig extends Config
 
 	@ConfigItem(
 		keyName = "groupHealth",
-		name = "Health & prayer phrases",
-		description = "Rules in the \"health\" group",
+		name = "Player status phrases",
+		description = "Rules in the \"health\" group — HP, prayer, poison, venom, skull and run energy",
 		section = groupsSection,
 		position = 1
 	)

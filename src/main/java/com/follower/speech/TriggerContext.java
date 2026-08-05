@@ -54,6 +54,13 @@ public final class TriggerContext
 		prayerPoints = client.getBoostedSkillLevel(Skill.PRAYER);
 		maxPrayerPoints = client.getRealSkillLevel(Skill.PRAYER);
 
+		// getEnergy reports hundredths of a percent on current clients; the
+		// guard keeps a reading from an older 0-100 API correct too.
+		int rawEnergy = client.getEnergy();
+		energyPercent = rawEnergy > 100 ? rawEnergy / 100 : rawEnergy;
+
+		skulled = local.getSkullIcon() != -1;
+
 		if (lastPrayerPoints >= 0 && prayerPoints < lastPrayerPoints)
 		{
 			ticksSincePrayerDrain = 0;
@@ -104,6 +111,13 @@ public final class TriggerContext
 	 */
 	@lombok.Getter
 	private boolean playerReady;
+
+	/** Run energy as a whole percentage, 0-100. */
+	@lombok.Getter
+	private int energyPercent = 100;
+
+	@lombok.Getter
+	private boolean skulled;
 
 	private void refreshEquipment(PlayerComposition composition)
 	{

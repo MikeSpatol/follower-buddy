@@ -94,6 +94,22 @@ public class FollowerPanel extends PluginPanel
 		this.onEditLocations = onEditLocations;
 	}
 
+	/** Opens the boss-message editor; set by the plugin after construction. */
+	private Runnable onEditBosses = () -> { };
+
+	public void setOnEditBosses(Runnable onEditBosses)
+	{
+		this.onEditBosses = onEditBosses;
+	}
+
+	/** Opens the status-message editor; set by the plugin after construction. */
+	private Runnable onEditStatuses = () -> { };
+
+	public void setOnEditStatuses(Runnable onEditStatuses)
+	{
+		this.onEditStatuses = onEditStatuses;
+	}
+
 	private final JPanel gearGrid = new JPanel();
 	private final JPanel bodyList = new JPanel();
 	private final JPanel picker = new JPanel();
@@ -175,12 +191,12 @@ public class FollowerPanel extends PluginPanel
 		header.add(buttons);
 		header.add(javax.swing.Box.createVerticalStrut(6));
 
-		JPanel editorButtons = new JPanel(new GridLayout(1, 2, 6, 0));
+		JPanel editorButtons = new JPanel(new GridLayout(2, 2, 6, 4));
 		editorButtons.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		editorButtons.setAlignmentX(LEFT_ALIGNMENT);
-		editorButtons.setMaximumSize(new Dimension(Integer.MAX_VALUE, 26));
+		editorButtons.setMaximumSize(new Dimension(Integer.MAX_VALUE, 56));
 
-		JButton phrases = new JButton("Item messages...");
+		JButton phrases = new JButton("Items...");
 		phrases.setToolTipText("View and edit what the follower says when you equip items");
 		phrases.setFocusPainted(false);
 		phrases.addActionListener(e -> onEditPhrases.run());
@@ -191,6 +207,18 @@ public class FollowerPanel extends PluginPanel
 		locations.setFocusPainted(false);
 		locations.addActionListener(e -> onEditLocations.run());
 		editorButtons.add(locations);
+
+		JButton bosses = new JButton("Bosses...");
+		bosses.setToolTipText("View and edit what the follower says when bosses appear");
+		bosses.setFocusPainted(false);
+		bosses.addActionListener(e -> onEditBosses.run());
+		editorButtons.add(bosses);
+
+		JButton statuses = new JButton("Statuses...");
+		statuses.setToolTipText("View and edit what the follower says about your HP, prayer, poison and more");
+		statuses.setFocusPainted(false);
+		statuses.addActionListener(e -> onEditStatuses.run());
+		editorButtons.add(statuses);
 
 		header.add(editorButtons);
 

@@ -27,6 +27,8 @@ import net.runelite.api.NPC;
  *   <tr><td>levelUp</td><td>{@code names} (skill names)</td></tr>
  *   <tr><td>damageTaken</td><td>{@code minimum}</td></tr>
  *   <tr><td>itemEquipped</td><td>{@code ids}</td></tr>
+ *   <tr><td>poisoned / venomed / skulled</td><td>no fields</td></tr>
+ *   <tr><td>energyBelow</td><td>{@code percent}</td></tr>
  *   <tr><td>idle</td><td>{@code ticks}</td></tr>
  *   <tr><td>login / always</td><td>no fields</td></tr>
  *   <tr><td>chance</td><td>{@code percent} — rolled each evaluation</td></tr>
@@ -147,6 +149,20 @@ public class Condition
 					}
 				}
 				return false;
+
+			case "poisoned":
+			{
+				int poison = ctx.getClient().getVarpValue(net.runelite.api.VarPlayer.POISON);
+				return poison > 0 && poison < VENOM_THRESHOLD;
+			}
+			case "venomed":
+				return ctx.getClient().getVarpValue(net.runelite.api.VarPlayer.POISON) >= VENOM_THRESHOLD;
+
+			case "skulled":
+				return ctx.isSkulled();
+
+			case "energybelow":
+				return ctx.getEnergyPercent() < orDefault(percent, 20);
 
 			case "idle":
 				return ctx.getIdleTicks() >= orDefault(ticks, 50);
@@ -311,4 +327,11 @@ public class Condition
 	{
 		return boxed == null ? fallback : boxed;
 	}
+
+	/**
+	 * The poison varp holds small cycle values while poisoned; venom is encoded
+	 * as the same varp pushed above a million. Same scheme RuneLite's own
+	 * poison plugin decodes.
+	 */
+	private static final int VENOM_THRESHOLD = 1_000_000;
 }

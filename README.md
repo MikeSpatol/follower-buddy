@@ -572,6 +572,19 @@ lands on top of the pupil on some animation frames.
 **Tuning**, live while a dialog is open: `::follower head yaw|pitch|roll|zoom|crop|cliptop|talk <n>`,
 or `::follower head tune on` for arrow-key control.
 
+## Pending in-depth testing (parked 2026-08-04)
+
+- **Location rule region ids.** The 56 area rules' region ids were computed from
+  documented world coordinates (`region = (x >> 6) * 256 + (y >> 6)`), not read
+  from the running game. Mainland cities are high-confidence; the ones flagged
+  with a spot-check note in their rule `note` field are not: the five Kourend
+  cities, Prifddinas, Fossil Island, Catacombs of Kourend, Wintertodt camp,
+  Lunar Isle, Keldagrim, Miscellania, Sophanem, the Woodcutting/Farming guilds,
+  the Mining Guild and Barbarian Assault. The test is simply walking into each
+  place: if the follower stays quiet, run `::follower where` on the spot and
+  correct the id in the Locations editor (and mirror the fix into
+  `default-phrases.json` so fresh installs get it too).
+
 ## Known limitations
 
 These are inherent to the approach, not bugs to be filed:

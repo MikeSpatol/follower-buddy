@@ -1,33 +1,7 @@
 {
   "version": 1,
-  "comment": "Follower Buddy rules. Edit and save — the plugin reloads within a second. Run ::follower where to print your current region id and coordinates when writing area rules.",
+  "comment": "Follower Buddy rules. Edit and save, the plugin reloads within a second. Run ::follower where to print your current region id and coordinates when writing area rules.",
   "rules": [
-    {
-      "id": "boss-spawn",
-      "note": "Fires when a named boss appears in the scene. Add or remove names freely; matching is case-insensitive and supports * wildcards.",
-      "group": "boss",
-      "priority": 90,
-      "cooldownMs": 20000,
-      "output": "both",
-      "when": {
-        "type": "npcSpawn",
-        "names": [
-          "General Graardor", "K'ril Tsutsaroth", "Commander Zilyana", "Kree'arra",
-          "Zulrah", "Vorkath", "Cerberus", "Kraken", "Alchemical Hydra",
-          "Great Olm", "Verzik Vitur", "Tekton", "Vasa Nistirio", "Muttadile",
-          "TzTok-Jad", "TzKal-Zuk", "Nex", "Corporeal Beast",
-          "Callisto", "Venenatis", "Vet'ion", "Scorpia", "Chaos Elemental",
-          "Abyssal Sire", "Giant Mole", "Kalphite Queen", "King Black Dragon",
-          "Sarachnis", "Zalcano", "Dusk", "Dawn", "Scurrius", "Araxxor",
-          "Phantom Muspah", "Duke Sucellus", "The Leviathan", "The Whisperer", "Vardorvis"
-        ]
-      },
-      "say": [
-        "{npc} is up. Here we go.",
-        "Eyes up — {npc}.",
-        "{npc} spawned. Don't embarrass us."
-      ]
-    },
     {
       "id": "boss-spawn-inferno-wave",
       "note": "Wildcard example: every Inferno NPC name starts with Jal-.",
@@ -36,7 +10,9 @@
       "cooldownMs": 30000,
       "when": {
         "type": "npcSpawn",
-        "names": ["Jal-*"]
+        "names": [
+          "Jal-*"
+        ]
       },
       "say": [
         "Another {npc}. Lovely.",
@@ -44,52 +20,1398 @@
       ]
     },
     {
+      "id": "boss-callisto",
+      "note": "Callisto and Artio, the great bears of the Wilderness.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Callisto",
+          "Artio"
+        ]
+      },
+      "say": [
+        "The great bear. Watch the shockwave hop, it flings you like a rag doll.",
+        "His roar rattles your prayers right off. Re-pray fast.",
+        "A bear twisted huge and mean by the Wilderness itself.",
+        "They say hunters made him this way. The hunters are not available for comment.",
+        "All claw, all grudge, no hibernation.",
+        "The Wilderness grows everything wrong. Exhibit: bear.",
+        "He just wants a hug. Do NOT give him a hug.",
+        "Fur like a fortress and a temper to match.",
+        "Somewhere in there is an ordinary bear having a very long day.",
+        "Paws the size of shields. Mind the paws."
+      ]
+    },
+    {
+      "id": "boss-venenatis",
+      "note": "Venenatis and Spindel, the Wilderness spider matriarchs.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Venenatis",
+          "Spindel"
+        ]
+      },
+      "say": [
+        "The spider queen. Pray Magic, her web spit stings worst.",
+        "She drinks your prayer through the webs. Restores, plural.",
+        "Mind the sticky ground. Stuck is dead out here.",
+        "A spider the size of a house. The Wilderness grows them wrong.",
+        "Her brood carpets the ground when she calls. Charming family.",
+        "Eight legs, eight thousand opinions about you.",
+        "The webs came before the ruins. Think about that.",
+        "Every strand out here leads back to her.",
+        "She's patient the way only spiders are.",
+        "If you feel watched, it's the several hundred eyes."
+      ]
+    },
+    {
+      "id": "boss-vetion",
+      "note": "Vet'ion and Calvar'ion, the skeletal champions.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Vet'ion",
+          "Calvar'ion"
+        ]
+      },
+      "say": [
+        "Vet'ion. He gets back up once, two lives, one grudge.",
+        "The hellhounds come midway. Down them or juggle them.",
+        "His slam cracks the very ground. Don't stand in the cracks.",
+        "The last squire of a dead king, still on duty.",
+        "He mourns a kingdom nobody else remembers.",
+        "Bones held together by loyalty and spite.",
+        "The purple glow is not friendly. It matches nothing he owns.",
+        "Even dead, he keeps his post. Terrifying work ethic.",
+        "He's seen empires fall. Mostly his own.",
+        "Someone should tell him the war ended. Not it. Someone."
+      ]
+    },
+    {
+      "id": "boss-scorpia",
+      "note": "Scorpia beneath the Scorpion Pit.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Scorpia"
+        ]
+      },
+      "say": [
+        "Scorpia. Her little healers burrow up at half, stomp them fast.",
+        "The sting poisons, of course. She's a scorpion the size of a shed.",
+        "Under the pit, in the dark, with the grudge. Classic ambush.",
+        "Her offspring guard the sands above. Family business.",
+        "The claws are a distraction. The tail is the argument.",
+        "Chitin like armour plate. Aim for the attitude.",
+        "She's been down there longer than the pit has had a name.",
+        "Everything about her says do not touch. Adventurers touch anyway.",
+        "The healers love her. It's almost sweet. Stop them.",
+        "Some things scuttle. She looms AND scuttles."
+      ]
+    },
+    {
+      "id": "boss-chaos-elemental",
+      "note": "The Chaos Elemental near the Rogues Castle.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Chaos Elemental"
+        ]
+      },
+      "say": [
+        "The Chaos Elemental. It rips gear right off you, pack light, grip tight.",
+        "It teleports you about for fun. Its fun, specifically.",
+        "Every attack style, no pattern. Hence the name.",
+        "Born of the Wilderness's own broken magic, they say.",
+        "It ate a shipwreck once. Probably. Who'd check?",
+        "The tentacles reach from somewhere else entirely.",
+        "Do not try to understand it. That's how it wins twice.",
+        "Chaos isn't its weapon. Chaos is its hobby.",
+        "It's what raw magic dreams about when nobody's casting.",
+        "If your boots vanish, you were warned."
+      ]
+    },
+    {
+      "id": "boss-chaos-fanatic",
+      "note": "The Chaos Fanatic on the Wilderness cliffs.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Chaos Fanatic"
+        ]
+      },
+      "say": [
+        "The Fanatic. His blasts scatter wide, sidestep, always sidestep.",
+        "He giggles before the big one. Listen for the giggle.",
+        "A wizard who stared into the Wilderness too long. It stared back.",
+        "He's shouting at things that aren't there. Mostly.",
+        "Once a scholar, they say. The robes were nicer then.",
+        "His aim is bad. His volume is excellent.",
+        "Magic without a licence, hygiene or plan.",
+        "The staff was a fine one, decades and a bath ago.",
+        "Pity him later. Dodge him now.",
+        "Every hermit has a story. His has explosions."
+      ]
+    },
+    {
+      "id": "boss-crazy-arch",
+      "note": "The Crazy Archaeologist among the Wilderness ruins.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Crazy Archaeologist"
+        ]
+      },
+      "say": [
+        "The Archaeologist. When he shouts about books, MOVE. The pages explode.",
+        "He throws his research. The research is ordnance.",
+        "He dug up something he truly should not have.",
+        "Those ruins were a dig site. Now they're a warning.",
+        "Respect the fedora. Dodge the fedora's owner.",
+        "Somewhere between scholar and hazard. Leaning hazard.",
+        "His colleagues retired. He... specialised.",
+        "History buff, emphasis on the buffeting.",
+        "The artefacts scream, he says. He's not entirely wrong out here.",
+        "Field work does things to a person."
+      ]
+    },
+    {
+      "id": "boss-kbd",
+      "note": "The King Black Dragon.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "King Black Dragon"
+        ]
+      },
+      "say": [
+        "The KBD. Three heads, four breaths, antifire AND prayer if you have them.",
+        "Shock, ice, poison, fire. He's a full hazard chart with wings.",
+        "The original terror. Respect your elders.",
+        "Kings come and go. This one has a lair and a legend.",
+        "Three heads means three opinions, all about eating you.",
+        "Adventurers measured themselves against him for generations.",
+        "The lair smells of ash and old victories. His.",
+        "Black dragonhide starts here, one way or another.",
+        "He was the endgame once. He didn't get the memo.",
+        "Bow before the king. Then loose the bow."
+      ]
+    },
+    {
+      "id": "boss-corp",
+      "note": "The Corporeal Beast.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Corporeal Beast"
+        ]
+      },
+      "say": [
+        "Corp. Spears, or your blows bounce off that hide half-hearted.",
+        "The dark core leaps out and leeches, knock it away from you.",
+        "It stomps the daydreamers. Stay awake in there.",
+        "It devoured a piece of the Spirit Realm and grew from it.",
+        "The sigils it guards are worth kingdoms. Priced accordingly.",
+        "A beast so vast the cave was dug AROUND it. Probably.",
+        "Its shadow alone would win most fights.",
+        "Bring friends. Bring their friends. Bring spears for all.",
+        "The spirit realm wants it back. The spirit realm can have it.",
+        "Corporeal, as opposed to the ghost it ate. Naming was easy that day."
+      ]
+    },
+    {
+      "id": "boss-mole",
+      "note": "The Giant Mole under Falador Park.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Giant Mole"
+        ]
+      },
+      "say": [
+        "The Mole. She digs when hurt, follow the falling dirt.",
+        "Bring a light source and patience. Mostly patience.",
+        "A spade helps you in. Determination gets you through.",
+        "Wyson swears the growth potion wasn't his fault.",
+        "Malignius Mortifer's supplies, Wyson's garden. Falador's problem.",
+        "She's just a mole. A mole the size of a hay cart.",
+        "The park above has NO idea what maintains those tunnels.",
+        "All she wants is to dig. All you want is her fur. Impasse.",
+        "The tunnels go everywhere. She made them all. Respect.",
+        "Whack the mole. The classic, at scale."
+      ]
+    },
+    {
+      "id": "boss-kq",
+      "note": "The Kalphite Queen in the desert hive.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Kalphite Queen"
+        ]
+      },
+      "say": [
+        "The Queen. Her first form shrugs off spells and arrows, blade her. Then she flips it.",
+        "She flies at half. New form, new rules, new prayers.",
+        "Her overhead prayers block whole styles. Fight what she isn't blocking.",
+        "The hive mother herself. The workers were the welcome mat.",
+        "Kalphites descend from the scarabs of the old desert gods. She's their masterpiece.",
+        "Two forms, both furious.",
+        "The lance the guardians speak of was made FOR her hide... wait, other way round.",
+        "The hive builds itself around her will.",
+        "Desert heat above, chitin fury below. Lovely region.",
+        "Sting, claw, wing. The full royal treatment."
+      ]
+    },
+    {
+      "id": "boss-sarachnis",
+      "note": "Sarachnis beneath the Forthos Ruin.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Sarachnis"
+        ]
+      },
+      "say": [
+        "Sarachnis. She drags you to her, keep the food thumb ready.",
+        "Her spawn arrive in waves. Clear them or drown in legs.",
+        "She alternates styles as her temper rises. Watch the pattern.",
+        "A spider queen under a temple. Someone built ON TOP of that. On purpose.",
+        "The ruin kept its secret well. The secret kept its appetite.",
+        "Old Forthos fell. She stayed.",
+        "Web-wrapped acolytes decorate her lair. Don't join the decor.",
+        "She's been hungry since the temple had a roof.",
+        "The dragons upstairs are the FRIENDLY neighbours here.",
+        "Eight eyes and every one of them found you."
+      ]
+    },
+    {
+      "id": "boss-scurrius",
+      "note": "Scurrius, the rat king of the Varrock sewers.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Scurrius"
+        ]
+      },
+      "say": [
+        "Scurrius. Mind the falling masonry, the sewer disagrees with the fight.",
+        "His rats nibble at your feet. Clear them out.",
+        "The ratfolk of the sewers crowned themselves a king.",
+        "A giant rat with a crown of scrap. Aspirational, honestly.",
+        "Varrock flushed its problems downstream. They organised.",
+        "He's the humble start of many a fighter's tale.",
+        "The tail swipe stings more than pride allows admitting.",
+        "Every sewer has a king. This one has a THRONE.",
+        "The bones make fine trophies. He'd say the same of yours.",
+        "Squeak softly and carry a big everything."
+      ]
+    },
+    {
+      "id": "boss-zalcano",
+      "note": "Zalcano in the Prifddinas dungeon.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Zalcano"
+        ]
+      },
+      "say": [
+        "Zalcano. Weapons mean nothing, it's pickaxes and imbued stone down here.",
+        "Mine, refine, throw. The forge fights for you.",
+        "Dodge the falling rock, she shakes the ceiling when she's cross.",
+        "A demon the elves bound into living stone.",
+        "The crystal city keeps its monster in the basement.",
+        "She predates the city above. The elves built anyway. Elves.",
+        "The one fight where mining fast IS the combat style.",
+        "Stone skin, magma heart, zero patience for miners.",
+        "Every swing of the pick offends her personally.",
+        "She throws the floor at you. Efficient, really."
+      ]
+    },
+    {
+      "id": "boss-araxxor",
+      "note": "Araxxor in the lair beneath Morytania.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Araxxor"
+        ]
+      },
+      "say": [
+        "Araxxor. Mind the eggs, they hatch into exactly what you'd fear.",
+        "The acid trail eats boots. Walk around your mistakes.",
+        "Match your prayers to what it throws. It telegraphs, briefly.",
+        "The nightmare with legs. Eight of them.",
+        "Morytania keeps its worst under the ground. Mostly.",
+        "The webs down here predate the swamp above.",
+        "Its brood NEVER stops. Neither should your feet.",
+        "Spiders sense fear. This one farms it.",
+        "The lair breathes. Try not to think about that.",
+        "Somewhere, Sarachnis is proud of her cousin."
+      ]
+    },
+    {
+      "id": "boss-muspah",
+      "note": "The Phantom Muspah beneath the Ghorrock ruins.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Phantom Muspah"
+        ]
+      },
+      "say": [
+        "The Muspah. It shifts forms, shift your prayers with it.",
+        "Spikes burst from the ice. Keep those feet moving.",
+        "When it shields itself, the darts fly. Special answers for special problems.",
+        "A muspah from Jhallan's dreams. His nightmares, technically.",
+        "The Mahjarrat dreamed monsters so vividly one stayed.",
+        "Ghorrock's ice kept it quiet for an age. You woke it. Well done.",
+        "Part memory, part monster, all hostile.",
+        "The frozen north keeps receipts. This is one.",
+        "It flickers between shapes like it can't decide how to end you.",
+        "Dream logic with claws."
+      ]
+    },
+    {
+      "id": "boss-nightmare",
+      "note": "The Nightmare of Ashihama, and Phosani's Nightmare.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "The Nightmare",
+          "Phosani's Nightmare"
+        ]
+      },
+      "say": [
+        "The Nightmare. She telegraphs everything, slowly, grandly, lethally.",
+        "The totems charge as she sleeps deeper. Feed them.",
+        "When the floor blooms, be elsewhere. The spores are hers.",
+        "She feeds on the sleepers of Slepe. Literally. That's the diet.",
+        "She crossed the sea from Ashihama for richer dreams.",
+        "The sisters of Slepe pray over the sleeping. She prays back, in a way.",
+        "An entire town dozes so she may dine.",
+        "Fight in a dream, wake with the loot. Fair trade.",
+        "Her curses rewrite the rules mid-fight. Read fast.",
+        "Sweet dreams are made of this. Regrettably."
+      ]
+    },
+    {
+      "id": "boss-duke",
+      "note": "Duke Sucellus in the Ghorrock depths.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Duke Sucellus"
+        ]
+      },
+      "say": [
+        "The Duke. Brew the fumes and wake him woozy, or he wakes YOU.",
+        "The eyes on the walls mean the floor is about to argue.",
+        "Left, right, never in front. He spits worse than he looks.",
+        "A lieutenant of the old empire, frozen mid-command.",
+        "Zaros froze his failures. This one kept.",
+        "The ice did not improve his mood.",
+        "Even asleep he commands the room. Literally. The room attacks.",
+        "The salts and mushrooms are the trick. Chemistry beats bravery here.",
+        "An age on ice and the first thing he does is fight. Committed.",
+        "Wake the Duke gently. There is no gently. Wake him anyway."
+      ]
+    },
+    {
+      "id": "boss-leviathan",
+      "note": "The Leviathan in the Scar.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "The Leviathan"
+        ]
+      },
+      "say": [
+        "The Leviathan. The lightning marks where the rocks fall. Read the sky.",
+        "Dodge the volleys, the pattern is strict until it isn't.",
+        "When it stirs the abyssal ones, feed them to your blade quickly.",
+        "The Scar kept it fed. The sea kept it secret.",
+        "A leftover of the abyss, grown vast in the dark water.",
+        "It circles like it has all the time in the world. It does.",
+        "The waters of the Scar drown gods' mistakes. Incompletely.",
+        "Scales like shield walls. Aim between the walls.",
+        "It remembers the empire that chained it. Fondly? No.",
+        "Big fish, biggest pond, worst temperament."
+      ]
+    },
+    {
+      "id": "boss-whisperer",
+      "note": "The Whisperer in the drowned city of the Scar.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "The Whisperer"
+        ]
+      },
+      "say": [
+        "The Whisperer. The lantern is your line back from the shadow realm. Mind it.",
+        "When the hush falls, don't be where you were standing.",
+        "The shadow realm shows the truth of her attacks. Peek wisely.",
+        "A siren, drowned in shadow, still singing after a fashion.",
+        "The sunken city listens to her. So do your worst instincts.",
+        "Her song pulls at the edges of you. Hold your shape.",
+        "Beauty once, dread now, voice unchanged.",
+        "The deep dark has a spokesperson.",
+        "What she whispers is worse than what she shouts.",
+        "Cover your ears. Doesn't help. Do it anyway."
+      ]
+    },
+    {
+      "id": "boss-vardorvis",
+      "note": "Vardorvis in the Stranglewood.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Vardorvis"
+        ]
+      },
+      "say": [
+        "Vardorvis. The axes sweep the arena, dance between them, always.",
+        "When his head speaks, refuse it. Firmly.",
+        "The strangler tendrils grab, break them before they squeeze.",
+        "A champion kept alive by the very thing devouring him.",
+        "The Stranglewood grows through him. He'd object if he could.",
+        "Once Zaros's finest blade. The wood took the rest.",
+        "He fights the plant and you at once. Respect the effort.",
+        "Every swing is his own. Most of the will isn't.",
+        "The forest whispers through his teeth.",
+        "Pity and axes. That's the whole encounter."
+      ]
+    },
+    {
+      "id": "boss-jad",
+      "note": "TzTok-Jad atop the Fight Caves.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "TzTok-Jad"
+        ]
+      },
+      "say": [
+        "Jad. Rears up tall, pray Magic. Slams down, pray Ranged. Nothing else matters.",
+        "The healers come at half. Tag them away, don't brawl them.",
+        "Watch the animation, not your nerves.",
+        "Sixty-two waves were just the queue for this.",
+        "The TzHaar's champion. Their word for it means fire. Everything's fire with them.",
+        "Born in lava, raised on challengers.",
+        "The obsidian cape is woven from wins like this.",
+        "It's a chimney with teeth and a schedule.",
+        "One mistake is the whole exam. No pressure.",
+        "The Fight Caves save their best joke for last. Laugh later."
+      ]
+    },
+    {
+      "id": "boss-zuk",
+      "note": "TzKal-Zuk at the floor of the Inferno.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "TzKal-Zuk"
+        ]
+      },
+      "say": [
+        "Zuk. Stay behind the glowing wall. That is the entire religion of this fight.",
+        "The set spawns have an order. You know the order. Trust the order.",
+        "When the wall stops, feet first, panic second.",
+        "He waited at the Inferno's floor for someone worth burning.",
+        "The TzHaar sealed their deepest fire behind him. He IS the seal.",
+        "Older than the caves, angrier than the lava.",
+        "The infernal cape remembers every wave it cost.",
+        "Sixty-eight waves of warm-up. His word for hello.",
+        "The wall serves him. It carries mercy anyway. Use it.",
+        "This is the mountain's heart, and it's furious."
+      ]
+    },
+    {
+      "id": "boss-hunllef",
+      "note": "The Hunllef in the Gauntlet.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Crystalline Hunllef",
+          "Corrupted Hunllef"
+        ]
+      },
+      "say": [
+        "The Hunllef. Four attacks, then it swaps style. Count along.",
+        "The floor patterns kill faster than the beast. Feet first.",
+        "Swap your own style when it prays. It does pray. Rude.",
+        "Trapped in there with it. It thinks the same about you.",
+        "The Gauntlet feeds it challengers. It's never once been full.",
+        "Everything in that maze was practice. This is the test.",
+        "Crystal tonics and courage. That's the whole kit.",
+        "It was here before the city sang. It'll outlast the song.",
+        "The elves don't name it. Names imply conversation.",
+        "Prepared beats brave, in there. Be both."
+      ]
+    },
+    {
+      "id": "boss-olm",
+      "note": "The Great Olm at the end of the Chambers of Xeric.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Great Olm"
+        ]
+      },
+      "say": [
+        "Olm. Hands first, the claws hold all the tricks.",
+        "Lightning down the lanes, crystals from above. The head sees everything.",
+        "When the hands cross, so do the rules. Watch for it.",
+        "It slept under Kourend before Kourend had a name.",
+        "Xeric's chambers kept it fed on the ambitious.",
+        "The mountain is its shell. You're in the shell.",
+        "Old, vast, and slow to wake. Awake now, though. You managed that.",
+        "Every raid ends at those claws or not at all.",
+        "It watches with a patience mountains understand.",
+        "The olmlet is cuter. Marginally."
+      ]
+    },
+    {
+      "id": "boss-verzik",
+      "note": "Verzik Vitur, finale of the Theatre of Blood.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Verzik Vitur"
+        ]
+      },
+      "say": [
+        "Verzik. Keep a pillar between you and her opening performance.",
+        "When the webs wrap someone, tear them free fast.",
+        "Her final form skips the pleasantries. Save your best for it.",
+        "A vampyre matriarch who hosts a theatre. The show is you.",
+        "Ver Sinhaza cheers for the house. The house is her.",
+        "The nylocas are her orchestra. Loud section, the melee ones.",
+        "Aristocracy, appetite, and a stage. Morytania in one hostess.",
+        "The blood keeps the theatre young. Guess whose.",
+        "Take a bow when it's done. She would.",
+        "Curtains for someone. Let's make it her."
+      ]
+    },
+    {
+      "id": "boss-wardens",
+      "note": "The Wardens, finale of the Tombs of Amascut.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Tumeken's Warden",
+          "Elidinis' Warden"
+        ]
+      },
+      "say": [
+        "The Wardens. Break the obelisk's rhythm or they never slow.",
+        "Stone until provoked, divine afterwards. Provoke carefully.",
+        "When the floor charges, the safe squares are a promise. Trust them.",
+        "Two wardens, one borrowed god burning inside.",
+        "Tumeken and Elidinis built guardians, not gods. Amascut disagreed.",
+        "The pyramid's last line of defence, and it's a good line.",
+        "The Devourer wears armies like gloves. These are the gloves.",
+        "Old magic, older grudges, oldest sand.",
+        "The desert buries its arguments. This one dug out.",
+        "Endure the light show. Then end it."
+      ]
+    },
+    {
+      "id": "boss-obor",
+      "note": "Obor, the Hill Titan.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Obor"
+        ]
+      },
+      "say": [
+        "Obor. He hits like a landslide, keep off the back wall.",
+        "A hill giant that outgrew the hill.",
+        "The giants whisper his name. The whisper is quite loud.",
+        "Club diplomacy. He wrote the book. It's a club.",
+        "The key was the easy part. The door regrets opening.",
+        "Every hill giant's hero. Low bar, cleared hugely.",
+        "Big, simple plans, flawlessly executed.",
+        "The Titan of the hills, undefeated at home. Until.",
+        "His club predates carpentry. Possibly trees.",
+        "Duck. General advice, but especially now."
+      ]
+    },
+    {
+      "id": "boss-bryophyta",
+      "note": "Bryophyta, the Moss Titan.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Bryophyta"
+        ]
+      },
+      "say": [
+        "Bryophyta. Her growths heal her, cut them down first.",
+        "The moss queen of the sewers. Varrock's dampest secret.",
+        "She grows where the city forgot to look.",
+        "Moss giants leave her offerings. Mostly moss.",
+        "Green, patient, and rooted in bad intentions.",
+        "The sewer floor is hers. The walls too. Possibly your boots now.",
+        "Nature reclaims everything. She's just faster about it.",
+        "Fungus among us. Titan-sized.",
+        "Her garden, her rules, her regrettable guests.",
+        "Bring something sharp. Gardening, at speed."
+      ]
+    },
+    {
+      "id": "boss-sol",
+      "note": "Sol Heredit, finale of the Fortis Colosseum.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Sol Heredit"
+        ]
+      },
+      "say": [
+        "Sol Heredit. Footwork or funeral, his spear checks both.",
+        "He punishes greed. Take the hits you're given, not the ones you want.",
+        "The shield bash rearranges the brave. Stay sharp on the swaps.",
+        "The Colosseum's final word, and he enunciates.",
+        "Varlamore's champion of champions. The crowd adores him. The crowd is safe.",
+        "He fights fair. Relentlessly, exhaustingly fair.",
+        "Rome wasn't built in a day. Fortis was built around HIM.",
+        "The sun crest isn't decoration. He earned the sky.",
+        "Win, and the city remembers your name. He'll remember it first.",
+        "Salute him. He notices. Then he tests you anyway."
+      ]
+    },
+    {
+      "id": "boss-hueycoatl",
+      "note": "The Hueycoatl in the Varlamore hills.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "The Hueycoatl"
+        ]
+      },
+      "say": [
+        "The Hueycoatl. Bring friends, it minds none of them individually.",
+        "The head strikes where the tail distracts. Watch both ends.",
+        "Varlamore's feathered serpent, older than the city and angrier.",
+        "The locals leave it offerings. It leaves them alone. Mostly.",
+        "A god to some, a hunt to others, a hazard to all.",
+        "Feathers and fury at cathedral scale.",
+        "It shed its patience ages ago. The scales too, occasionally.",
+        "The hills shake when it stirs. The hills have learned to cope.",
+        "Serpent the size of a river, mood to match rapids.",
+        "Majestic from a distance. We are not at a distance."
+      ]
+    },
+    {
+      "id": "boss-amoxliatl",
+      "note": "Amoxliatl beneath the Tlati Rainforest.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Amoxliatl"
+        ]
+      },
+      "say": [
+        "Amoxliatl. Mind the ice, the floor is half the fight.",
+        "The frost pulses come in rhythm. Move on the beat.",
+        "A guardian of ice under a rainforest. The world is strange.",
+        "The child of something far bigger. Try not to meet the parent.",
+        "Frozen faith, kept cold under all that green.",
+        "The glacial kin serve it without question. Or warmth.",
+        "Every icicle in there is aimed. Assume so anyway.",
+        "It guards a door best left shut. So naturally, adventurers.",
+        "Cold hands, colder heart, coldest floor.",
+        "Bundle up. Then fight for your life. In that order."
+      ]
+    },
+    {
+      "id": "boss-yama",
+      "note": "Yama, lord of the pit.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Yama"
+        ]
+      },
+      "say": [
+        "Yama. The lord of the pit deals in contracts. Read yours twice.",
+        "The fire waves have gaps. The gaps are the contract's fine print.",
+        "His court attends the fight. Ignore the audience, mind the host.",
+        "A demon lord who prefers paperwork to war. The paperwork is war.",
+        "Souls are his currency. Arrive rich, leave richer. Or don't leave.",
+        "The pit answers to him. The pit is thorough.",
+        "Every bargain down here favours the house.",
+        "He's polite, for a cataclysm.",
+        "Hell has middle management. He's upper.",
+        "Sign nothing. Swing everything."
+      ]
+    },
+    {
+      "id": "boss-graardor",
+      "note": "General Graardor, Bandos general.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "General Graardor"
+        ]
+      },
+      "say": [
+        "Graardor. Pray Melee and watch his goons, they cover what he doesn't.",
+        "His rangers sting through prayer. That's the bodyguards, not him.",
+        "The bodyguards attack in their own rhythm. Learn it, save the food.",
+        "Last of the Ourg, this one. Bandos worked the rest to death.",
+        "He's guarded that door since the Third Age. Dedication.",
+        "Somewhere under the armour is a war god's favourite pet.",
+        "FOR THE GLORY OF BANDOS! ...Sorry. It's catching.",
+        "Six thousand years of shouting and still not hoarse.",
+        "Big, loud, and honest about both. Almost admirable.",
+        "He hits like a falling building. Do keep the prayer up."
+      ]
+    },
+    {
+      "id": "boss-kril",
+      "note": "K'ril Tsutsaroth, Zamorak general.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "K'ril Tsutsaroth"
+        ]
+      },
+      "say": [
+        "K'ril. Protect from Melee, but his roar smashes through it and flattens your prayer. Restore ready.",
+        "Keep a super restore thumbed. He cheats.",
+        "Mind the poison off those halberd swings.",
+        "Zamorak's general. A greater demon with a title, and the title does a lot of work.",
+        "His bodyguards take their jobs very seriously. Briefly.",
+        "Two blades, one very loud demon.",
+        "Demon logic: if it moves, halberd it.",
+        "Zamorak promoted him for enthusiasm. Clearly not subtlety.",
+        "ATTACK IN THE NAME OF ZAMORAK! ...He means it, too.",
+        "The chaos god's finest. Chaos included at no extra charge."
+      ]
+    },
+    {
+      "id": "boss-zilyana",
+      "note": "Commander Zilyana, Saradomin general.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Commander Zilyana"
+        ]
+      },
+      "say": [
+        "Zilyana. Pray Magic, the lightning is the killer, not the sword.",
+        "She is FAST. Don't stand there admiring the wings.",
+        "An Icyene, one of the last. Saradomin's finest.",
+        "She fought in the God Wars and never really stopped.",
+        "All grace and glowing swords until the lightning starts.",
+        "A unicorn, a lion and a wolf guard her. Saradomin collects odd friends.",
+        "The hilt she guards is worth more than this whole dungeon.",
+        "Saradomin be praised, from behind a prayer, ideally.",
+        "She means the shouting. Icyene always mean the shouting.",
+        "Wings of light, sword of light, patience of a thunderstorm."
+      ]
+    },
+    {
+      "id": "boss-kreearra",
+      "note": "Kree'arra, Armadyl general.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Kree'arra"
+        ]
+      },
+      "say": [
+        "Kree'arra. Pray Ranged, and the wind will still shove you about.",
+        "Blades can't reach him up there. Bring answers that fly.",
+        "The gusts throw you across the room. Plant your feet and keep at it.",
+        "An aviansie war leader. His kind nearly died out fighting over this place.",
+        "Armadyl's general, justice, delivered at wingspeed.",
+        "The feathers drift down like snow. Sharp snow.",
+        "His flock follows him into every fight. Loyal to the last feather.",
+        "The skies belonged to the aviansie once. He remembers.",
+        "Mind the draft. The draft has opinions.",
+        "All those wings and he still won't leave the room. Principles."
+      ]
+    },
+    {
+      "id": "boss-nex",
+      "note": "Nex, Zaros general in the Ancient Prison.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Nex"
+        ]
+      },
+      "say": [
+        "Nex. Smoke first, keep an antipoison handy.",
+        "When she calls the shadows, step out of them. Quickly.",
+        "Fill my soul, that's the blood phase. She heals off what you give her.",
+        "Ice phase: keep moving or get entombed.",
+        "The Zarosians locked her behind a frozen door for a reason.",
+        "Zaros's finest general. The other gods teamed up just to contain her.",
+        "Four elements, then pure darkness. She saves the worst for last.",
+        "The Ancient Prison held for millennia. We let her out for sport.",
+        "She was sealed away as armies fell. Respect the door next time.",
+        "Four elements, zero mercy. Some chill, though. The ice bit."
+      ]
+    },
+    {
+      "id": "boss-zulrah",
+      "note": "Zulrah, the serpent of Zul-Andra.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Zulrah"
+        ]
+      },
+      "say": [
+        "Zulrah. Green form, pray Ranged. Blue, pray Magic. Red, just move.",
+        "The clouds are poison. Obviously. Don't stand in them.",
+        "Snakelings underfoot, swat them or step away.",
+        "It surfaces where it pleases. Learn its moods and be elsewhere.",
+        "The serpent god of Zul-Andra. The villagers worship it AND fight it. Complicated.",
+        "Sacrifices kept it calm for generations. You are not a sacrifice. Probably.",
+        "Venom given form, with a shrine to its name.",
+        "The swamp belongs to it. We're just visiting.",
+        "It has three moods and all of them are hostile.",
+        "Toxic doesn't begin to cover this relationship."
+      ]
+    },
+    {
+      "id": "boss-vorkath",
+      "note": "Vorkath, the undead dragon of Ungael.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Vorkath"
+        ]
+      },
+      "say": [
+        "Vorkath. When the pink fireball goes up, MOVE. That one's most of your health.",
+        "The ice drags you still, then the spawn crawls out, crumble it or eat the hit.",
+        "Acid on the floor: walk the gaps and don't stop casting your feet.",
+        "Antifire and prayer. He breathes most things a dragon can.",
+        "A failed experiment that refused to stay failed.",
+        "Zorgoth made him. The dragonkin's leftovers, still hungry.",
+        "He was dead once. It didn't take.",
+        "An island all to himself and he still won't share.",
+        "The head on your wall would be the size of a boat.",
+        "Sleepy-looking, isn't he. He wakes up fast."
+      ]
+    },
+    {
+      "id": "boss-cerberus",
+      "note": "Cerberus, hellhound of the underworld.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Cerberus"
+        ]
+      },
+      "say": [
+        "Cerberus. When the souls rise, match your prayer to each one's weapon.",
+        "Mind the lava pools, she spits them where you stand.",
+        "Three heads, three attack styles. Keep the prayers nimble.",
+        "The guard dog of this corner of the underworld.",
+        "Hellhounds answer to her. That should tell you something.",
+        "Key master's pet, and the keys are soul-shaped.",
+        "Good dog. Terrible circumstances.",
+        "She howls and the ghosts come running. Rude of them.",
+        "Somewhere under the fire and hate, she just wants the door guarded.",
+        "Fetch has a very different meaning down here."
+      ]
+    },
+    {
+      "id": "boss-kraken",
+      "note": "The Kraken, cave kraken boss.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Kraken"
+        ]
+      },
+      "say": [
+        "The Kraken. Disturb the little pools first or the big one sulks below.",
+        "Magic only, blades and arrows flop in the water.",
+        "The tentacles are the welcome party. The head is the argument.",
+        "It's mostly tentacle. The rest is grudge.",
+        "Fishermen's tales got this one right, unfortunately.",
+        "The whirlpool is not decorative. Respect the whirlpool.",
+        "Deep water hides deep problems. This one has arms.",
+        "It naps under the surface. You're the alarm.",
+        "Calamari the size of a house, and it fights back.",
+        "The sea keeps its monsters. This one it lends out."
+      ]
+    },
+    {
+      "id": "boss-thermy",
+      "note": "The Thermonuclear smoke devil.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Thermonuclear smoke devil"
+        ]
+      },
+      "say": [
+        "Face mask on? The smoke is the entire point of it.",
+        "It fills the room, there's no clean air, only prayer and pace.",
+        "A smoke devil that ate far, far too well.",
+        "The little ones sting. The big one suffocates.",
+        "Born in a cavern of fumes and very committed to the theme.",
+        "Breathe shallow, hit deep.",
+        "It's less a creature, more a weather condition with teeth.",
+        "The slayer masters mention it quietly, like a bad memory.",
+        "All that smoke and not one campfire story worth telling.",
+        "If your eyes are watering, you're doing it normally."
+      ]
+    },
+    {
+      "id": "boss-hydra",
+      "note": "The Alchemical Hydra beneath Mount Karuulm.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Alchemical Hydra"
+        ]
+      },
+      "say": [
+        "The Hydra. Lure it over the vents, it only drops its guard doused.",
+        "New head, new attack. Swap your prayer when it swaps its mood.",
+        "Poison, lightning, then flame. It escalates. So should you.",
+        "The chemists under Karuulm MADE this. On purpose. With funding.",
+        "Alchemy gave it heads. Nobody gave it manners.",
+        "Mind the floor, it redecorates with hazards.",
+        "Cut off one head and it grows an attitude.",
+        "The Lovakengj call it research. The research bites.",
+        "Somewhere a Karuulm chemist is very proud and very fired.",
+        "Green means poison. Blue means lightning. Red means regret."
+      ]
+    },
+    {
+      "id": "boss-sire",
+      "note": "The Abyssal Sire in the Abyssal Nexus.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Abyssal Sire"
+        ]
+      },
+      "say": [
+        "The Sire. Disorient it while the vents hiss or the spawn swarm you.",
+        "Silence the tentacles, then the real fight starts.",
+        "It dreams in that sludge. You're the interruption.",
+        "The abyss made demons. This one makes MORE demons.",
+        "Every whip started life down here. Think on that.",
+        "The Nexus hums when it stirs. The hum is a warning.",
+        "It's an ecosystem with a temper.",
+        "Wake it politely. It ignores politeness, but still.",
+        "The spawn have their father's everything. Tragically.",
+        "One day the abyss will explain itself. Not today."
+      ]
+    },
+    {
+      "id": "boss-grotesque",
+      "note": "The Grotesque Guardians, Dusk and Dawn, on the Slayer Tower roof.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Dusk",
+          "Dawn"
+        ]
+      },
+      "say": [
+        "The Guardians. Dawn flies out of blade's reach, bring something that arcs.",
+        "When the ceiling starts falling, watch your feet, not the fight.",
+        "Dawn heals if you let her feed. Don't let her feed.",
+        "Dusk hits like the roof he lives on. Respect the fists.",
+        "Gargoyles that outgrew the gutter. Literally.",
+        "They dance this rooftop every night. You're cutting in.",
+        "Stone by day, murder by night.",
+        "Two of them, one of you. I don't really count...",
+        "The tower keeps its worst on the roof. Landlords, eh.",
+        "Mind the orbs, mind the rubble, mind the everything."
+      ]
+    },
+    {
+      "id": "boss-skotizo",
+      "note": "Skotizo beneath the Catacombs of Kourend.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 45000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Skotizo"
+        ]
+      },
+      "say": [
+        "Skotizo. Douse the altars or it shrugs your hits off.",
+        "The altars feed it. Starve them first.",
+        "Demonbane weapons sing down here. Arclight especially.",
+        "It sleeps under the Catacombs, held down by the dark altar itself.",
+        "Kourend built a church district on top of THIS. Bold.",
+        "The reanimated rise to help it. Terribly loyal, the dead.",
+        "A demon so large the ceiling is a formality.",
+        "The dark totem was the key. You did knock, technically.",
+        "Its shadow arrives a moment before it does.",
+        "The Catacombs whisper. Down here, they shout."
+      ]
+    },
+    {
       "id": "low-hp",
-      "note": "Rising-edge: speaks once when you cross under 40%, not every tick you spend there.",
+      "note": "Speaks once when health crosses under 40 percent.",
       "group": "health",
       "priority": 100,
-      "cooldownMs": 8000,
       "output": "both",
+      "cooldownMs": 15000,
       "when": {
         "type": "healthBelow",
         "percent": 40
       },
       "say": [
-        "Eat something! {hp}/{maxHp}.",
-        "You're on {hp} HP. Do something about it.",
-        "{hpPercent}% health. Tick-eat!"
+        "Eat something! {hp} out of {maxHp} is not a plan.",
+        "You're on {hp}. I'd feel better if you weren't.",
+        "Getting low, {player}. Food exists for a reason.",
+        "That's {hpPercent} percent. Top up when you get a breath.",
+        "I've seen you fight better on a full belly. Just saying.",
+        "Health's dipping. Nothing a bite won't fix.",
+        "Steady on, {hp} left. Mind the next hit.",
+        "A shark about now wouldn't hurt. Well. It would help.",
+        "You handle the fight, I'll handle the worrying. {hp} of {maxHp}.",
+        "Low health, high spirits. Let's fix the first one."
       ]
     },
     {
       "id": "critical-hp",
+      "note": "Speaks once when health crosses under 20 percent. The urgent one.",
       "group": "health",
       "priority": 120,
-      "cooldownMs": 5000,
       "output": "both",
+      "cooldownMs": 8000,
       "when": {
         "type": "healthBelow",
         "percent": 20
       },
       "say": [
         "TELEPORT. NOW.",
-        "{hp} HP! Get out!"
+        "{hp} HP! Get out!",
+        "This is the dangerous kind of low. Move!",
+        "Eat, teleport, run, pick one, quickly!",
+        "{hp} left. I am officially worried.",
+        "Whatever you're doing, it can wait. LIVE first.",
+        "That health bar is a rumour at this point. Go!",
+        "No shame in leaving. Plenty of shame in a gravestone.",
+        "You've survived worse. Prove it. Now.",
+        "Panic usefully! Food, then feet!"
       ]
     },
     {
       "id": "low-prayer",
-      "note": "requirePrayerActive stops this firing when you're just walking around unprayed.",
+      "note": "Speaks once when prayer crosses under 20 percent with prayers active.",
       "group": "health",
       "priority": 95,
-      "cooldownMs": 10000,
       "output": "both",
+      "cooldownMs": 12000,
       "when": {
         "type": "prayerBelow",
         "percent": 20,
         "requirePrayerActive": true
       },
       "say": [
-        "Prayer's nearly out — {prayer} points.",
-        "Sip a restore, you're on {prayer} prayer."
+        "Prayer's nearly out, {prayer} points.",
+        "Sip a restore, you're on {prayer} prayer.",
+        "The gods are barely hearing you. {prayer} left.",
+        "Your prayers are running on fumes.",
+        "Restore now, thank me later.",
+        "{prayer} prayer points. The overheads flicker out soon.",
+        "The faith is strong. The points, less so.",
+        "Keep those prayers fed or let them rest, friend.",
+        "An altar or a potion. Either. Soon.",
+        "The gods appreciate persistence, not bankruptcy. {prayer} left."
+      ]
+    },
+    {
+      "id": "status-poisoned",
+      "note": "Speaks once each time you become poisoned (not venomed).",
+      "group": "health",
+      "priority": 105,
+      "output": "both",
+      "cooldownMs": 30000,
+      "when": {
+        "type": "poisoned"
+      },
+      "say": [
+        "You're poisoned. Antidote, when you can.",
+        "That green tint is not a good look on you.",
+        "Poison in the veins. Don't just walk it off.",
+        "Something bit deep. Cure it before it adds up.",
+        "You're dripping green numbers. I hate the green numbers.",
+        "Poisoned again? Sip the antipoison, hero.",
+        "It'll keep biting until you deal with it.",
+        "Poison's patient. Be less patient than it.",
+        "One little vial of antipoison and this all goes away.",
+        "Remind me to pack more antipoison next time."
+      ]
+    },
+    {
+      "id": "status-venomed",
+      "note": "Speaks once each time you become venomed. Venom outranks poison.",
+      "group": "health",
+      "priority": 115,
+      "output": "both",
+      "cooldownMs": 30000,
+      "when": {
+        "type": "venomed"
+      },
+      "say": [
+        "That's VENOM, not poison. It gets worse. Fix it!",
+        "Anti-venom. Not antipoison. The strong stuff!",
+        "The numbers are climbing. Venom does that. Cure it!",
+        "Whatever bit you meant it. Anti-venom, quickly.",
+        "Green and getting greener. This one won't stop on its own.",
+        "Venom eats faster the longer you wait.",
+        "This is the serious green. Please respect the serious green.",
+        "Cure that before it hits harder than the monster does.",
+        "I can smell it from here. Anti-venom, now!",
+        "Your blood is losing an argument. Send in the potion."
+      ]
+    },
+    {
+      "id": "status-skulled",
+      "note": "Speaks once when a skull appears over your head.",
+      "group": "health",
+      "priority": 85,
+      "output": "both",
+      "cooldownMs": 60000,
+      "when": {
+        "type": "skulled"
+      },
+      "say": [
+        "You're skulled. Everything you carry is on the table now.",
+        "That skull over your head is not a fashion statement.",
+        "Skulled! Watch every stranger like they owe you money.",
+        "Until that fades, you're carrying a target, not a skull.",
+        "Whatever you did, half the Wilderness felt it. Stay sharp.",
+        "Skull's up. Bank trips are for optimists now.",
+        "I'd keep the valuables at home until that clears.",
+        "You look terrifying. Everyone else thinks so too. Careful.",
+        "The skull fades with time. Patience and paranoia, in that order.",
+        "Bold move. Now let's live long enough to regret it properly."
+      ]
+    },
+    {
+      "id": "status-low-energy",
+      "note": "Speaks when run energy crosses under 15 percent. Long cooldown so it never nags.",
+      "group": "health",
+      "priority": 15,
+      "output": "overhead",
+      "cooldownMs": 240000,
+      "when": {
+        "type": "energyBelow",
+        "percent": 15
+      },
+      "say": [
+        "Out of breath already? We've places to be.",
+        "Have a rest. I'll pretend I'm not judging.",
+        "Your legs called. They'd like a word.",
+        "Energy's spent. Walk it off, literally.",
+        "A stamina potion would change your life, you know.",
+        "We can walk. Walking is dignified. Sort of.",
+        "All that gear and no wind. Happens to the best.",
+        "Agility training pays off eventually. Allegedly.",
+        "Catch your breath. The scenery's nice enough.",
+        "I could carry you. I won't. But I could."
       ]
     },
     {
@@ -136,7 +1458,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [12850] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          12850
+        ]
+      },
       "say": [
         "Lumbridge. Everyone's story starts somewhere.",
         "Named after the bridge over the River Lum, you know. The locals are very proud of it.",
@@ -154,7 +1481,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [12598] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          12598
+        ]
+      },
       "say": [
         "The Grand Exchange. Fortunes made and lost before lunch.",
         "Listen to them shout numbers at each other. Magnificent.",
@@ -172,7 +1504,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [12597, 12853, 12854] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          12597,
+          12853,
+          12854
+        ]
+      },
       "say": [
         "Varrock. The old-timers still call it Avarrocka.",
         "Biggest city in Misthalin, and it has the pickpockets to prove it.",
@@ -189,7 +1528,13 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [11828, 12084] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          11828,
+          12084
+        ]
+      },
       "say": [
         "Falador, the white city. Do wipe your boots.",
         "The White Knights run things here. Very shiny. Very serious.",
@@ -206,7 +1551,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [12342] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          12342
+        ]
+      },
       "say": [
         "Edgeville. Last stop before the Wilderness.",
         "Cosy little place, considering what's just north of it.",
@@ -223,7 +1573,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [12344] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          12344
+        ]
+      },
       "say": [
         "Ferox Enclave. Safe ground, strange as that sounds out here.",
         "The pool here fixes everything. Wish I could bottle it.",
@@ -239,7 +1594,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [12338] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          12338
+        ]
+      },
       "say": [
         "Draynor Village. Keep a hand on your coin pouch.",
         "The Wise Old Man robbed the bank here. Broad daylight. Legend.",
@@ -254,10 +1614,15 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [13105] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          13105
+        ]
+      },
       "say": [
         "Al Kharid. Mind the heat, mind the scimitar prices.",
-        "Ten coins at the gate, or a quest — I never forgave that toll.",
+        "Ten coins at the gate, or a quest, I never forgave that toll.",
         "Get a kebab while we're here. One coin. Can't go wrong. Probably."
       ]
     },
@@ -269,7 +1634,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [12082] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          12082
+        ]
+      },
       "say": [
         "Port Sarim. Smells of fish, tar and bad decisions.",
         "Boats to everywhere, if you've the stomach for it.",
@@ -284,7 +1654,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [11826] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          11826
+        ]
+      },
       "say": [
         "Rimmington. Quiet. Suspiciously quiet.",
         "Folk build lovely houses around here, I'm told."
@@ -298,7 +1673,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [11573] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          11573
+        ]
+      },
       "say": [
         "Taverley. Druids, herbs and very good air.",
         "All stone circles and potions here. Peaceful, mostly.",
@@ -313,7 +1693,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [11575] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          11575
+        ]
+      },
       "say": [
         "Burthorpe. The Imperial Guard holds the troll line here.",
         "Trolls in the mountains, heroes in the pub. Balance.",
@@ -328,10 +1713,15 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [11061] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          11061
+        ]
+      },
       "say": [
         "Catherby. Best fishing beach in Kandarin.",
-        "Nets, harpoons, lobster pots — this town runs on fish.",
+        "Nets, harpoons, lobster pots, this town runs on fish.",
         "Lovely little farm patch up the hill. Smells better than the fish."
       ]
     },
@@ -343,7 +1733,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [10806] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          10806
+        ]
+      },
       "say": [
         "Seers' Village. They probably knew we were coming.",
         "Camelot. King Arthur and his knights, actual legends, right there.",
@@ -359,7 +1754,13 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [10291, 10547] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          10291,
+          10547
+        ]
+      },
       "say": [
         "Ardougne. Biggest market in Kandarin, fastest fingers too.",
         "Watch the stalls. Watch the guards watching the stalls.",
@@ -374,7 +1775,13 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [9779, 10035] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          9779,
+          10035
+        ]
+      },
       "say": [
         "West Ardougne. The wall tells you everything, really.",
         "Grim over here. The people deserve better.",
@@ -389,7 +1796,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [10288] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          10288
+        ]
+      },
       "say": [
         "Yanille. Built to keep the ogres out. Sturdy work.",
         "Watchtower to the west, wizards in the guild. Magic town, this.",
@@ -404,7 +1816,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [9776] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          9776
+        ]
+      },
       "say": [
         "Castle Wars. Old grudges, fresh barricades.",
         "Saradomin and Zamorak settle it here, over and over.",
@@ -419,7 +1836,13 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [9525, 9781] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          9525,
+          9781
+        ]
+      },
       "say": [
         "The Tree Gnome Stronghold. Mind where you step. Gnomes everywhere.",
         "That's the Grand Tree. It's a tree AND a government.",
@@ -434,7 +1857,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [12341] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          12341
+        ]
+      },
       "say": [
         "Gunnarsgrunn. Though everyone just says Barbarian Village.",
         "They fish with their bare hands here. Show-offs.",
@@ -449,9 +1877,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [10553] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          10553
+        ]
+      },
       "say": [
-        "Rellekka. Fremennik country — best not mention magic.",
+        "Rellekka. Fremennik country, best not mention magic.",
         "Everything here is earned. Names included.",
         "The longhall ale flows all night. The singing, unfortunately, too."
       ]
@@ -464,7 +1897,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [13878] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          13878
+        ]
+      },
       "say": [
         "Canifis. Lovely people. Don't stare at their teeth.",
         "Everyone here is a werewolf. Everyone. Walk casual.",
@@ -479,7 +1917,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [14131] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          14131
+        ]
+      },
       "say": [
         "The Barrows. Six brothers, six mounds, no rest.",
         "The brothers were heroes once. Their reward was... this.",
@@ -494,7 +1937,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [14646] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          14646
+        ]
+      },
       "say": [
         "Port Phasmatys. A town of ghosts, and it still charges tolls.",
         "The ghosts here can't leave. Necrovarus saw to that.",
@@ -509,7 +1957,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [8253] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          8253
+        ]
+      },
       "say": [
         "Lunar Isle. The Moon Clan dream deeper than most folk live.",
         "Half this island's business happens while asleep.",
@@ -524,7 +1977,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [10044] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          10044
+        ]
+      },
       "say": [
         "Miscellania. Somebody important runs this place, I hear.",
         "The subjects will work, if someone keeps the coffers full."
@@ -538,7 +1996,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [13099] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          13099
+        ]
+      },
       "say": [
         "Sophanem, city of the dead. They mean that literally.",
         "Plagues, locusts, tombs. Charming place for a stroll."
@@ -552,7 +2015,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [9808] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          9808
+        ]
+      },
       "say": [
         "Mor Ul Rek. The TzHaar are made of living rock. Mind the handshakes.",
         "Everything here is obsidian. Even the shopkeepers.",
@@ -567,7 +2035,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [11057] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          11057
+        ]
+      },
       "say": [
         "Brimhaven. Pirate town with respectable rent, somehow.",
         "The agility arena's here, if you fancy jumping over lava for tickets."
@@ -581,7 +2054,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [11569] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          11569
+        ]
+      },
       "say": [
         "Musa Point. Bananas as far as the eye can see.",
         "Luthas pays coin for banana crates. No questions asked either way.",
@@ -596,7 +2074,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [11310] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          11310
+        ]
+      },
       "say": [
         "Shilo Village. They fought the dead for this town.",
         "The gem mine here made a lot of folk rich. The cart ride's extra."
@@ -610,7 +2093,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [11314] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          11314
+        ]
+      },
       "say": [
         "Crandor. Elvarg burned this whole island to cinders.",
         "A city stood here once. One dragon later..."
@@ -624,9 +2112,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [11316] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          11316
+        ]
+      },
       "say": [
-        "Entrana. Holy ground — the monks took ALL the weapons.",
+        "Entrana. Holy ground, the monks took ALL the weapons.",
         "The law altar's here. Fitting, with all these rules.",
         "Deep breath. No fighting. It's actually rather nice."
       ]
@@ -639,7 +2132,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [11051] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          11051
+        ]
+      },
       "say": [
         "Ape Atoll. The monkeys are armed and extremely accurate.",
         "Walk like you belong or we're both getting arrested by gorillas."
@@ -653,9 +2151,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [9797] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          9797
+        ]
+      },
       "say": [
-        "Zanaris. The lost city itself — took some finding.",
+        "Zanaris. The lost city itself, took some finding.",
         "This place is the moon, you know. The actual moon.",
         "Fairy rings can take you anywhere from here. Well. Almost."
       ]
@@ -668,7 +2171,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [11679] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          11679
+        ]
+      },
       "say": [
         "Keldagrim. The dwarves built a whole city and kept it quiet.",
         "The Consortium runs everything here. Eight companies, one grudge each."
@@ -682,7 +2190,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [14907] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          14907
+        ]
+      },
       "say": [
         "Fossil Island. The museum folk barely scratched the surface.",
         "Ancient wyverns sleep in the caves here. SLEEP. Let's keep it so."
@@ -696,7 +2209,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [11602] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          11602
+        ]
+      },
       "say": [
         "The God Wars Dungeon. The war never ended down here.",
         "Four armies, frozen mid-battle for thousands of years. And us, visiting.",
@@ -711,7 +2229,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [11673] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          11673
+        ]
+      },
       "say": [
         "Taverley Dungeon. It gets worse the deeper you go. Much worse.",
         "Black dragons at the bottom, and something meaner below."
@@ -725,7 +2248,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [6557] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          6557
+        ]
+      },
       "say": [
         "The Catacombs of Kourend. The dark altar hums through these walls.",
         "The dead down here don't rest. Blame the altar."
@@ -739,7 +2267,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [11319] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          11319
+        ]
+      },
       "say": [
         "The Warriors' Guild. Even the armour fights here.",
         "Harrallak collects the finest warriors. And us, apparently."
@@ -753,7 +2286,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [10293] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          10293
+        ]
+      },
       "say": [
         "The Fishing Guild. Sixty-eight and not a level lower, the door says.",
         "The sharks here practically volunteer."
@@ -767,7 +2305,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [6462] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          6462
+        ]
+      },
       "say": [
         "The Wintertodt. The cold out here is ALIVE. Layer up.",
         "The pyromancers hold it back with bonfires and stubbornness.",
@@ -782,7 +2325,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [14936] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          14936
+        ]
+      },
       "say": [
         "The Motherlode Mine. Percy's pay-dirt racket, and we're all in on it.",
         "Listen to that water wheel. Honest work, this."
@@ -796,7 +2344,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [12184] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          12184
+        ]
+      },
       "say": [
         "The Mining Guild. The dwarves keep the good rocks behind a door.",
         "Coal and mithril as far as the pick swings."
@@ -810,7 +2363,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [6454] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          6454
+        ]
+      },
       "say": [
         "The Woodcutting Guild. The axes here never seem to stop.",
         "Hosidius grows the trees; we take the logs. Fair trade."
@@ -824,7 +2382,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [4922] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          4922
+        ]
+      },
       "say": [
         "The Farming Guild. Everything here grows bigger than it should.",
         "Mind where you step. Someone loves every plant in here."
@@ -838,7 +2401,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [10537] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          10537
+        ]
+      },
       "say": [
         "The Void Knights' outpost. The portals never stay shut for long.",
         "The lander leaves soon. Try to come back with all your limbs."
@@ -852,7 +2420,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [10039] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          10039
+        ]
+      },
       "say": [
         "Barbarian Assault. The Penance don't negotiate.",
         "Teams win here. Lone heroes get carried out."
@@ -866,7 +2439,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [6714] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          6714
+        ]
+      },
       "say": [
         "Arceuus. The magic here is old, dark and rather rude.",
         "The library rearranges itself. The scholars pretend that's fine."
@@ -880,7 +2458,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [6968] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          6968
+        ]
+      },
       "say": [
         "Hosidius. Half of Kourend eats because of these fields.",
         "Good soil, better kitchens. I could get used to this."
@@ -894,7 +2477,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [5944] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          5944
+        ]
+      },
       "say": [
         "Shayzien. Soldiers everywhere and every one of them busy.",
         "They keep the lizardmen at bay. Someone has to."
@@ -908,7 +2496,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [5947] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          5947
+        ]
+      },
       "say": [
         "Lovakengj. Sulphur in the air, minecarts in every direction.",
         "Breathe lightly. The forges never cool here."
@@ -922,7 +2515,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [7226] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          7226
+        ]
+      },
       "say": [
         "Port Piscarilius. Fresh fish and sticky fingers.",
         "Half this port needs repairing at any given moment. Job security."
@@ -936,9 +2534,17 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 180000,
-      "when": { "type": "inRegion", "regions": [12894, 12895, 13150, 13151] },
+      "when": {
+        "type": "inRegion",
+        "regions": [
+          12894,
+          12895,
+          13150,
+          13151
+        ]
+      },
       "say": [
-        "Prifddinas. A city grown from crystal. Listen — it sings.",
+        "Prifddinas. A city grown from crystal. Listen, it sings.",
         "The elves waited a very long time for this place to stand again.",
         "Sung into being, every wall of it. Try not to chip anything."
       ]
@@ -953,11 +2559,21 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "healthBelow", "percent": 50 },
+          {
+            "type": "healthBelow",
+            "percent": 50
+          },
           {
             "type": "npcNearby",
             "within": 12,
-            "names": ["Great Olm", "Verzik Vitur", "TzKal-Zuk", "Nex", "Vorkath", "Zulrah"]
+            "names": [
+              "Great Olm",
+              "Verzik Vitur",
+              "TzKal-Zuk",
+              "Nex",
+              "Vorkath",
+              "Zulrah"
+            ]
           }
         ]
       },
@@ -1003,7 +2619,9 @@
       "cooldownMs": 3000,
       "when": {
         "type": "levelUp",
-        "names": ["*"]
+        "names": [
+          "*"
+        ]
       },
       "say": [
         "{skill} {level}. Nice.",
@@ -1018,7 +2636,9 @@
       "output": "overhead",
       "delayTicks": 8,
       "cooldownMs": 60000,
-      "when": { "type": "login" },
+      "when": {
+        "type": "login"
+      },
       "say": [
         "There you are! Right on schedule.",
         "Welcome back, {player}. I kept your spot warm.",
@@ -1034,8 +2654,20 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [1391, 3053, 1381, 1383, 1385, 1387] },
-      "say": ["Runes at the ready, then. Try not to singe my outfit."]
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          1391,
+          3053,
+          1381,
+          1383,
+          1385,
+          1387
+        ]
+      },
+      "say": [
+        "Runes at the ready, then. Try not to singe my outfit."
+      ]
     },
     {
       "id": "gear-dfs",
@@ -1044,8 +2676,15 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [11283] },
-      "say": ["Is that dragon breath swirling in there? Keep it pointed away from me."]
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          11283
+        ]
+      },
+      "say": [
+        "Is that dragon breath swirling in there? Keep it pointed away from me."
+      ]
     },
     {
       "id": "gear-rogue",
@@ -1054,8 +2693,18 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [5553, 5555, 5556, 5557] },
-      "say": ["Dressed for crime, I see. I saw nothing."]
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          5553,
+          5555,
+          5556,
+          5557
+        ]
+      },
+      "say": [
+        "Dressed for crime, I see. I saw nothing."
+      ]
     },
     {
       "id": "gear-dodgy-necklace",
@@ -1064,8 +2713,15 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [21143] },
-      "say": ["A dodgy necklace? Sensible, in your line of work."]
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          21143
+        ]
+      },
+      "say": [
+        "A dodgy necklace? Sensible, in your line of work."
+      ]
     },
     {
       "id": "gear-dragon-dagger",
@@ -1075,7 +2731,20 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [1215, 1231, 5680, 5698, 20407, 28019, 28021, 28023, 28025] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          1215,
+          1231,
+          5680,
+          5698,
+          20407,
+          28019,
+          28021,
+          28023,
+          28025
+        ]
+      },
       "say": [
         "The dragon dagger. Four pokes, no waiting.",
         "Ah, the classic. Stab twice, ask questions never.",
@@ -1090,7 +2759,16 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [4153, 12848, 20557, 24225, 24227] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          4153,
+          12848,
+          20557,
+          24225,
+          24227
+        ]
+      },
       "say": [
         "The granite maul. No warning, just bonk.",
         "Subtlety's overrated anyway."
@@ -1104,7 +2782,15 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [13576, 20785, 26710, 28035] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          13576,
+          20785,
+          26710,
+          28035
+        ]
+      },
       "say": [
         "One good smack and their armour turns to paper.",
         "Please land it. For morale."
@@ -1118,7 +2804,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [21003, 21205, 27100] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          21003,
+          21205,
+          27100
+        ]
+      },
       "say": [
         "That's not a weapon, that's a landmark.",
         "Lift with the knees. Both of them."
@@ -1132,11 +2825,29 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [11802, 11804, 11806, 11808, 20368, 20370, 20372, 20374, 20593, 22665, 26233, 27184, 28537, 29605] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          11802,
+          11804,
+          11806,
+          11808,
+          20368,
+          20370,
+          20372,
+          20374,
+          20593,
+          22665,
+          26233,
+          27184,
+          28537,
+          29605
+        ]
+      },
       "say": [
         "A godsword. Do warn me before you swing.",
         "That blade is taller than I am.",
-        "The gods made that. Respect it — from a distance."
+        "The gods made that. Respect it, from a distance."
       ]
     },
     {
@@ -1147,7 +2858,15 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [13652, 20784, 26708, 28039] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          13652,
+          20784,
+          26708,
+          28039
+        ]
+      },
       "say": [
         "Dragon claws. Four hits, zero mercy.",
         "Scratch first, apologise never."
@@ -1161,7 +2880,13 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [12006, 26484] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          12006,
+          26484
+        ]
+      },
       "say": [
         "A whip with a squid on it. Why not.",
         "It's wriggling. It's WRIGGLING."
@@ -1175,7 +2900,13 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [12924, 12926] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          12924,
+          12926
+        ]
+      },
       "say": [
         "Darts and venom. Horribly efficient.",
         "Just don't inhale."
@@ -1189,7 +2920,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [20997] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          20997
+        ]
+      },
       "say": [
         "THE bow. We're dangerous AND rich.",
         "Careful where you lean that. It costs more than a castle."
@@ -1203,7 +2939,23 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [25862, 25865, 25867, 25884, 25886, 25888, 25890, 25892, 25894, 25896, 27187, 33021] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          25862,
+          25865,
+          25867,
+          25884,
+          25886,
+          25888,
+          25890,
+          25892,
+          25894,
+          25896,
+          27187,
+          33021
+        ]
+      },
       "say": [
         "Crystal song in every draw. Fancy.",
         "Elven craftsmanship. We're posh now."
@@ -1217,9 +2969,22 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [22325, 22486, 22664, 25736, 25738, 25739, 25741, 28543, 28545] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          22325,
+          22486,
+          22664,
+          25736,
+          25738,
+          25739,
+          25741,
+          28543,
+          28545
+        ]
+      },
       "say": [
-        "Mind the arc — I walk behind you, remember.",
+        "Mind the arc, I walk behind you, remember.",
         "A vampyre's scythe. Sweep them all at once."
       ]
     },
@@ -1231,7 +2996,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [22324, 23628, 25734] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          22324,
+          23628,
+          25734
+        ]
+      },
       "say": [
         "The pointy end goes very fast. Understood.",
         "Elegant. Deadly. Slightly showy."
@@ -1245,7 +3017,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [26219, 27246, 33174] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          26219,
+          27246,
+          33174
+        ]
+      },
       "say": [
         "The fang rarely misses. The pharaohs knew things.",
         "A pyramid's worth of history on your belt."
@@ -1259,7 +3038,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [27690, 27869, 29607] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          27690,
+          27869,
+          29607
+        ]
+      },
       "say": [
         "That glow isn't friendly. Neither are you, apparently.",
         "Three Wilderness bosses gave up pieces for that. Poetic."
@@ -1273,7 +3059,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [9185, 23601, 26486] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          9185,
+          23601,
+          26486
+        ]
+      },
       "say": [
         "Old reliable clicks again.",
         "Load, loose, repeat. The classics endure."
@@ -1287,7 +3080,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [861, 12788, 20558] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          861,
+          12788,
+          20558
+        ]
+      },
       "say": [
         "Bends like a reed, bites like a wolf.",
         "Twang twang twang. Music to my ears."
@@ -1301,7 +3101,21 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [11905, 11907, 12899, 22288, 22292, 33314, 33318, 33322, 33323, 33326] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          11905,
+          11907,
+          12899,
+          22288,
+          22292,
+          33314,
+          33318,
+          33322,
+          33323,
+          33326
+        ]
+      },
       "say": [
         "A staff that casts itself. Lazy. Effective.",
         "The kraken parted with that grudgingly, I'd wager."
@@ -1315,7 +3129,13 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [27275, 27277] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          27275,
+          27277
+        ]
+      },
       "say": [
         "A staff of pure shadow. Kindly don't point it at me.",
         "It hums with the sun god's power. Ominous. Expensive."
@@ -1329,7 +3149,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [21015] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          21015
+        ]
+      },
       "say": [
         "Is there room behind that for both of us?",
         "A door with ambitions."
@@ -1343,7 +3168,16 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [11832, 11834, 23646, 26718, 26719] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          11832,
+          11834,
+          23646,
+          26718,
+          26719
+        ]
+      },
       "say": [
         "Bandos armour. You could stop a battering ram in that.",
         "The Big High War God's finest plate."
@@ -1357,7 +3191,15 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [11828, 11830, 26715, 26716] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          11828,
+          11830,
+          26715,
+          26716
+        ]
+      },
       "say": [
         "Feathered and fierce. Kree'arra's tailor does good work.",
         "Light as a feather. Costs like a mansion."
@@ -1371,7 +3213,17 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [21018, 21021, 21024, 25518, 27193, 27194] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          21018,
+          21021,
+          21024,
+          25518,
+          27193,
+          27194
+        ]
+      },
       "say": [
         "Those robes hum with old magic.",
         "Very stylish. Very purple. Very expensive."
@@ -1385,7 +3237,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [22326, 22327, 22328] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          22326,
+          22327,
+          22328
+        ]
+      },
       "say": [
         "Justiciar plate. You look like the law itself.",
         "They'll need a bigger weapon."
@@ -1399,7 +3258,20 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [2497, 2503, 12381, 12383, 12385, 12387, 20423, 20424, 25493] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          2497,
+          2503,
+          12381,
+          12383,
+          12385,
+          12387,
+          20423,
+          20424,
+          25493
+        ]
+      },
       "say": [
         "Dragonhide. Practical AND menacing.",
         "Some dragon is very cold right now."
@@ -1413,7 +3285,15 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [10551, 24175, 28067, 28069] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          10551,
+          24175,
+          28067,
+          28069
+        ]
+      },
       "say": [
         "The torso! Penance-earned and proud.",
         "Blood, sweat and Barbarian Assault."
@@ -1427,7 +3307,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [7462, 23593, 27112] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          7462,
+          23593,
+          27112
+        ]
+      },
       "say": [
         "Barrows gloves. The Culinaromancer sends his regards.",
         "The finest gloves in Gielinor, earned one rescued feast at a time."
@@ -1441,7 +3328,16 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [12954, 19722, 23597, 24143, 27008] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          12954,
+          19722,
+          23597,
+          24143,
+          27008
+        ]
+      },
       "say": [
         "Attack and defence in one fist. Cyclops-approved.",
         "How many cyclopes was it, in the end?"
@@ -1455,7 +3351,13 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [22322, 24186] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          22322,
+          24186
+        ]
+      },
       "say": [
         "An avernic defender. The cyclopes could never.",
         "Forged in the Theatre. Fancy."
@@ -1469,7 +3371,68 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [23971, 23973, 23975, 23977, 23979, 23981, 27697, 27699, 27701, 27703, 27705, 27707, 27709, 27711, 27713, 27715, 27717, 27719, 27721, 27723, 27725, 27727, 27729, 27731, 27733, 27735, 27737, 27739, 27741, 27743, 27745, 27747, 27749, 27751, 27753, 27755, 27757, 27759, 27761, 27763, 27765, 27767, 27769, 27771, 27773, 27775, 27777, 27779, 33023, 33025, 33027, 33029, 33031, 33033, 33166, 33168, 33170] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          23971,
+          23973,
+          23975,
+          23977,
+          23979,
+          23981,
+          27697,
+          27699,
+          27701,
+          27703,
+          27705,
+          27707,
+          27709,
+          27711,
+          27713,
+          27715,
+          27717,
+          27719,
+          27721,
+          27723,
+          27725,
+          27727,
+          27729,
+          27731,
+          27733,
+          27735,
+          27737,
+          27739,
+          27741,
+          27743,
+          27745,
+          27747,
+          27749,
+          27751,
+          27753,
+          27755,
+          27757,
+          27759,
+          27761,
+          27763,
+          27765,
+          27767,
+          27769,
+          27771,
+          27773,
+          27775,
+          27777,
+          27779,
+          33023,
+          33025,
+          33027,
+          33029,
+          33031,
+          33033,
+          33166,
+          33168,
+          33170
+        ]
+      },
       "say": [
         "Crystal armour. You chime when you walk now.",
         "Elegant. Just don't drop it."
@@ -1483,7 +3446,15 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [13235, 13237, 13239, 23644] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          13235,
+          13237,
+          13239,
+          23644
+        ]
+      },
       "say": [
         "Cerberus gave those up reluctantly, I imagine.",
         "Fancy footwear. Mind the puddles."
@@ -1497,7 +3468,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [11840, 22234, 28055] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          11840,
+          22234,
+          28055
+        ]
+      },
       "say": [
         "Dragon boots. Kicking above your weight.",
         "Stomp responsibly."
@@ -1511,7 +3489,12 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [2577] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          2577
+        ]
+      },
       "say": [
         "Ranger boots. A fortune, on your feet.",
         "More expensive than everything else you own. Combined."
@@ -1525,7 +3508,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [6585, 12436, 23640] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          6585,
+          12436,
+          23640
+        ]
+      },
       "say": [
         "A fury. All-round excellence around your neck.",
         "Onyx. The good stuff."
@@ -1539,7 +3529,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [19553, 20366, 27173] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          19553,
+          20366,
+          27173
+        ]
+      },
       "say": [
         "An amulet that bites back. Bold choice.",
         "Torture, worn voluntarily. You lot are strange."
@@ -1553,7 +3550,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [19547, 22249, 27172] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          19547,
+          22249,
+          27172
+        ]
+      },
       "say": [
         "Anguish. The name really sells it.",
         "Zenyte on a chain. Mind the muggers."
@@ -1567,7 +3571,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [12002, 19720, 23654] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          12002,
+          19720,
+          23654
+        ]
+      },
       "say": [
         "The occult necklace whispers. Ignore it.",
         "Powerful, yes. Also deeply unsettling."
@@ -1581,7 +3592,26 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [1704, 1706, 1708, 1710, 1712, 10354, 10356, 10358, 10360, 10362, 11964, 11966, 11976, 11978, 20586] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          1704,
+          1706,
+          1708,
+          1710,
+          1712,
+          10354,
+          10356,
+          10358,
+          10360,
+          10362,
+          11964,
+          11966,
+          11976,
+          11978,
+          20586
+        ]
+      },
       "say": [
         "An amulet of glory. A classic never dies.",
         "Straight to Edgeville, then?"
@@ -1598,12 +3628,180 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "itemEquipped", "ids": [11850, 11851, 13579, 13580, 13591, 13592, 13603, 13604, 13615, 13616, 13627, 13628, 13667, 13668, 21061, 21063, 24743, 24745, 25069, 25071, 27444, 27446, 30045, 30047] },
-          { "type": "itemEquipped", "ids": [11852, 11853, 13581, 13582, 13593, 13594, 13605, 13606, 13617, 13618, 13629, 13630, 13669, 13670, 21064, 21066, 24746, 24748, 25072, 25074, 27447, 27449, 30048, 30050] },
-          { "type": "itemEquipped", "ids": [11854, 11855, 13583, 13584, 13595, 13596, 13607, 13608, 13619, 13620, 13631, 13632, 13671, 13672, 21067, 21069, 24749, 24751, 25075, 25077, 27450, 27452, 30051, 30053] },
-          { "type": "itemEquipped", "ids": [11856, 11857, 13585, 13586, 13597, 13598, 13609, 13610, 13621, 13622, 13633, 13634, 13673, 13674, 21070, 21072, 24752, 24754, 25078, 25080, 27453, 27455, 30054, 30056] },
-          { "type": "itemEquipped", "ids": [11858, 11859, 13587, 13588, 13599, 13600, 13611, 13612, 13623, 13624, 13635, 13636, 13675, 13676, 21073, 21075, 24755, 24757, 25081, 25083, 27456, 27458, 30057, 30059] },
-          { "type": "itemEquipped", "ids": [11860, 11861, 13589, 13590, 13601, 13602, 13613, 13614, 13625, 13626, 13637, 13638, 13677, 13678, 21076, 21078, 24758, 24760, 25084, 25086, 27459, 27461, 30060, 30062] }
+          {
+            "type": "itemEquipped",
+            "ids": [
+              11850,
+              11851,
+              13579,
+              13580,
+              13591,
+              13592,
+              13603,
+              13604,
+              13615,
+              13616,
+              13627,
+              13628,
+              13667,
+              13668,
+              21061,
+              21063,
+              24743,
+              24745,
+              25069,
+              25071,
+              27444,
+              27446,
+              30045,
+              30047
+            ]
+          },
+          {
+            "type": "itemEquipped",
+            "ids": [
+              11852,
+              11853,
+              13581,
+              13582,
+              13593,
+              13594,
+              13605,
+              13606,
+              13617,
+              13618,
+              13629,
+              13630,
+              13669,
+              13670,
+              21064,
+              21066,
+              24746,
+              24748,
+              25072,
+              25074,
+              27447,
+              27449,
+              30048,
+              30050
+            ]
+          },
+          {
+            "type": "itemEquipped",
+            "ids": [
+              11854,
+              11855,
+              13583,
+              13584,
+              13595,
+              13596,
+              13607,
+              13608,
+              13619,
+              13620,
+              13631,
+              13632,
+              13671,
+              13672,
+              21067,
+              21069,
+              24749,
+              24751,
+              25075,
+              25077,
+              27450,
+              27452,
+              30051,
+              30053
+            ]
+          },
+          {
+            "type": "itemEquipped",
+            "ids": [
+              11856,
+              11857,
+              13585,
+              13586,
+              13597,
+              13598,
+              13609,
+              13610,
+              13621,
+              13622,
+              13633,
+              13634,
+              13673,
+              13674,
+              21070,
+              21072,
+              24752,
+              24754,
+              25078,
+              25080,
+              27453,
+              27455,
+              30054,
+              30056
+            ]
+          },
+          {
+            "type": "itemEquipped",
+            "ids": [
+              11858,
+              11859,
+              13587,
+              13588,
+              13599,
+              13600,
+              13611,
+              13612,
+              13623,
+              13624,
+              13635,
+              13636,
+              13675,
+              13676,
+              21073,
+              21075,
+              24755,
+              24757,
+              25081,
+              25083,
+              27456,
+              27458,
+              30057,
+              30059
+            ]
+          },
+          {
+            "type": "itemEquipped",
+            "ids": [
+              11860,
+              11861,
+              13589,
+              13590,
+              13601,
+              13602,
+              13613,
+              13614,
+              13625,
+              13626,
+              13637,
+              13638,
+              13677,
+              13678,
+              21076,
+              21078,
+              24758,
+              24760,
+              25084,
+              25086,
+              27459,
+              27461,
+              30060,
+              30062
+            ]
+          }
         ]
       },
       "say": [
@@ -1623,10 +3821,58 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "itemEquipped", "ids": [11663, 11664, 11665, 24183, 24184, 24185, 26473, 26475, 26477, 27005, 27006, 27007] },
-          { "type": "itemEquipped", "ids": [8839, 13072, 24177, 24178, 26463, 26469, 27000, 27003] },
-          { "type": "itemEquipped", "ids": [8840, 13073, 24179, 24180, 26465, 26471, 27001, 27004] },
-          { "type": "itemEquipped", "ids": [8842, 24182, 26467, 27002] }
+          {
+            "type": "itemEquipped",
+            "ids": [
+              11663,
+              11664,
+              11665,
+              24183,
+              24184,
+              24185,
+              26473,
+              26475,
+              26477,
+              27005,
+              27006,
+              27007
+            ]
+          },
+          {
+            "type": "itemEquipped",
+            "ids": [
+              8839,
+              13072,
+              24177,
+              24178,
+              26463,
+              26469,
+              27000,
+              27003
+            ]
+          },
+          {
+            "type": "itemEquipped",
+            "ids": [
+              8840,
+              13073,
+              24179,
+              24180,
+              26465,
+              26471,
+              27001,
+              27004
+            ]
+          },
+          {
+            "type": "itemEquipped",
+            "ids": [
+              8842,
+              24182,
+              26467,
+              27002
+            ]
+          }
         ]
       },
       "say": [
@@ -1645,14 +3891,58 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "itemEquipped", "ids": [4716, 4880, 4881, 4882, 4883, 4884, 23639] },
-          { "type": "itemEquipped", "ids": [4720, 4892, 4893, 4894, 4895, 4896, 25515] },
-          { "type": "itemEquipped", "ids": [4722, 4898, 4899, 4900, 4901, 4902, 23633] },
-          { "type": "itemEquipped", "ids": [4718, 4886, 4887, 4888, 4889, 4890, 25516] }
+          {
+            "type": "itemEquipped",
+            "ids": [
+              4716,
+              4880,
+              4881,
+              4882,
+              4883,
+              4884,
+              23639
+            ]
+          },
+          {
+            "type": "itemEquipped",
+            "ids": [
+              4720,
+              4892,
+              4893,
+              4894,
+              4895,
+              4896,
+              25515
+            ]
+          },
+          {
+            "type": "itemEquipped",
+            "ids": [
+              4722,
+              4898,
+              4899,
+              4900,
+              4901,
+              4902,
+              23633
+            ]
+          },
+          {
+            "type": "itemEquipped",
+            "ids": [
+              4718,
+              4886,
+              4887,
+              4888,
+              4889,
+              4890,
+              25516
+            ]
+          }
         ]
       },
       "say": [
-        "Full Dharok's. Please stay healthy. Or don't — that's the point.",
+        "Full Dharok's. Please stay healthy. Or don't, that's the point.",
         "The lower your health, the harder you hit. I hate the maths."
       ]
     },
@@ -1667,10 +3957,56 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "itemEquipped", "ids": [1163, 2619, 2627] },
-          { "type": "itemEquipped", "ids": [1127, 2615, 2623, 20421] },
-          { "type": "itemEquipped", "ids": [1079, 2617, 2625, 20422] },
-          { "type": "itemEquipped", "ids": [1201, 2621, 2629, 8714, 8716, 8718, 8720, 8722, 8724, 8726, 8728, 8730, 8732, 8734, 8736, 8738, 8740, 8742, 8744] }
+          {
+            "type": "itemEquipped",
+            "ids": [
+              1163,
+              2619,
+              2627
+            ]
+          },
+          {
+            "type": "itemEquipped",
+            "ids": [
+              1127,
+              2615,
+              2623,
+              20421
+            ]
+          },
+          {
+            "type": "itemEquipped",
+            "ids": [
+              1079,
+              2617,
+              2625,
+              20422
+            ]
+          },
+          {
+            "type": "itemEquipped",
+            "ids": [
+              1201,
+              2621,
+              2629,
+              8714,
+              8716,
+              8718,
+              8720,
+              8722,
+              8724,
+              8726,
+              8728,
+              8730,
+              8732,
+              8734,
+              8736,
+              8738,
+              8740,
+              8742,
+              8744
+            ]
+          }
         ]
       },
       "say": [
@@ -1689,10 +4025,30 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "itemEquipped", "ids": [1155] },
-          { "type": "itemEquipped", "ids": [1117] },
-          { "type": "itemEquipped", "ids": [1075] },
-          { "type": "itemEquipped", "ids": [1189] }
+          {
+            "type": "itemEquipped",
+            "ids": [
+              1155
+            ]
+          },
+          {
+            "type": "itemEquipped",
+            "ids": [
+              1117
+            ]
+          },
+          {
+            "type": "itemEquipped",
+            "ids": [
+              1075
+            ]
+          },
+          {
+            "type": "itemEquipped",
+            "ids": [
+              1189
+            ]
+          }
         ]
       },
       "say": [
@@ -1708,7 +4064,15 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [21295, 21297, 23622, 24224] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          21295,
+          21297,
+          23622,
+          24224
+        ]
+      },
       "say": [
         "An infernal cape. I'm not standing near that.",
         "Zuk lost. The cape remembers."
@@ -1722,7 +4086,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [6570, 10566, 24223] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          6570,
+          10566,
+          24223
+        ]
+      },
       "say": [
         "That cape still smells of smoke.",
         "Sixty-three waves for that. Worth it."
@@ -1736,10 +4107,40 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [13280, 13329, 13331, 13333, 13335, 13337, 13342, 20760, 21186, 21284, 21285, 21776, 21780, 21784, 21898, 24133, 24134, 24135, 24232, 24233, 24234, 24855, 27363, 27365, 28902, 28906] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          13280,
+          13329,
+          13331,
+          13333,
+          13335,
+          13337,
+          13342,
+          20760,
+          21186,
+          21284,
+          21285,
+          21776,
+          21780,
+          21784,
+          21898,
+          24133,
+          24134,
+          24135,
+          24232,
+          24233,
+          24234,
+          24855,
+          27363,
+          27365,
+          28902,
+          28906
+        ]
+      },
       "say": [
         "A max cape. I'm following a legend.",
-        "All ninety-nines. What's left — collecting me?"
+        "All ninety-nines. What's left, collecting me?"
       ]
     },
     {
@@ -1750,7 +4151,13 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [9813, 13068] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          9813,
+          13068
+        ]
+      },
       "say": [
         "Every quest done. Gielinor thanks you.",
         "The cape of having seen everything."
@@ -1764,7 +4171,59 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [9747, 9748, 9750, 9751, 9753, 9754, 9756, 9757, 9759, 9760, 9762, 9763, 9765, 9766, 9768, 9769, 9771, 9772, 9774, 9775, 9777, 9778, 9780, 9781, 9783, 9784, 9786, 9787, 9789, 9790, 9792, 9793, 9795, 9796, 9798, 9799, 9801, 9802, 9804, 9805, 9807, 9808, 9810, 9811, 9948, 9949, 13340, 13341] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          9747,
+          9748,
+          9750,
+          9751,
+          9753,
+          9754,
+          9756,
+          9757,
+          9759,
+          9760,
+          9762,
+          9763,
+          9765,
+          9766,
+          9768,
+          9769,
+          9771,
+          9772,
+          9774,
+          9775,
+          9777,
+          9778,
+          9780,
+          9781,
+          9783,
+          9784,
+          9786,
+          9787,
+          9789,
+          9790,
+          9792,
+          9793,
+          9795,
+          9796,
+          9798,
+          9799,
+          9801,
+          9802,
+          9804,
+          9805,
+          9807,
+          9808,
+          9810,
+          9811,
+          9948,
+          9949,
+          13340,
+          13341
+        ]
+      },
       "say": [
         "Ninety-nine of something! I'm travelling with an expert.",
         "A skillcape. Mastery looks good on you."
@@ -1778,9 +4237,18 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [10498, 10499, 22109, 23609, 24222] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          10498,
+          10499,
+          22109,
+          23609,
+          24222
+        ]
+      },
       "say": [
-        "Ava's finest. Mind the magnetism — I have metal bits.",
+        "Ava's finest. Mind the magnetism, I have metal bits.",
         "It catches your arrows. What a time to be alive."
       ]
     },
@@ -1792,7 +4260,22 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [1038, 1040, 1042, 1044, 1046, 1048, 2422, 11862, 11863, 12399, 27828] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          1038,
+          1040,
+          1042,
+          1044,
+          1046,
+          1048,
+          2422,
+          11862,
+          11863,
+          12399,
+          27828
+        ]
+      },
       "say": [
         "A PARTYHAT? Careful. Half of Gielinor wants that.",
         "A paper crown worth a kingdom. Only in Gielinor.",
@@ -1807,7 +4290,15 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [1050, 13343, 13344, 21859] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          1050,
+          13343,
+          13344,
+          21859
+        ]
+      },
       "say": [
         "A santa hat. Festive AND wealthy.",
         "Ho ho... hang on, it isn't even snowing."
@@ -1821,7 +4312,15 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [1053, 1055, 1057, 11847] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          1053,
+          1055,
+          1057,
+          11847
+        ]
+      },
       "say": [
         "A halloween mask. Spooky. Iconic. Pricey.",
         "Scary face, scarier price."
@@ -1835,7 +4334,71 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [11864, 11865, 19639, 19641, 19643, 19645, 19647, 19649, 21264, 21266, 21888, 21890, 23073, 23075, 24370, 24444, 25177, 25179, 25181, 25183, 25185, 25187, 25189, 25191, 25898, 25900, 25902, 25904, 25906, 25908, 25910, 25912, 25914, 26674, 26675, 26676, 26677, 26678, 26679, 26680, 26681, 26682, 26683, 26684, 29816, 29818, 29820, 29822, 33066, 33068, 33070, 33072, 33338, 33340, 33439, 33441, 33443, 33445, 33447, 33449] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          11864,
+          11865,
+          19639,
+          19641,
+          19643,
+          19645,
+          19647,
+          19649,
+          21264,
+          21266,
+          21888,
+          21890,
+          23073,
+          23075,
+          24370,
+          24444,
+          25177,
+          25179,
+          25181,
+          25183,
+          25185,
+          25187,
+          25189,
+          25191,
+          25898,
+          25900,
+          25902,
+          25904,
+          25906,
+          25908,
+          25910,
+          25912,
+          25914,
+          26674,
+          26675,
+          26676,
+          26677,
+          26678,
+          26679,
+          26680,
+          26681,
+          26682,
+          26683,
+          26684,
+          29816,
+          29818,
+          29820,
+          29822,
+          33066,
+          33068,
+          33070,
+          33072,
+          33338,
+          33340,
+          33439,
+          33441,
+          33443,
+          33445,
+          33447,
+          33449
+        ]
+      },
       "say": [
         "The slayer helmet. Duradel would be proud.",
         "All those monster parts in one hat. Efficient."
@@ -1849,7 +4412,26 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [11920, 12797, 13243, 13244, 20014, 23677, 23680, 23682, 23863, 25063, 25369, 25376, 30345, 30346, 30351] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          11920,
+          12797,
+          13243,
+          13244,
+          20014,
+          23677,
+          23680,
+          23682,
+          23863,
+          25063,
+          25369,
+          25376,
+          30345,
+          30346,
+          30351
+        ]
+      },
       "say": [
         "A fine pick. The rocks don't stand a chance.",
         "Off to bully some rocks, I see."
@@ -1863,7 +4445,27 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [6739, 13241, 13242, 20011, 23673, 23675, 23862, 25066, 25371, 25378, 28217, 28220, 28223, 30347, 30348, 30352] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          6739,
+          13241,
+          13242,
+          20011,
+          23673,
+          23675,
+          23862,
+          25066,
+          25371,
+          25378,
+          28217,
+          28220,
+          28223,
+          30347,
+          30348,
+          30352
+        ]
+      },
       "say": [
         "That axe means a forest is in trouble.",
         "The trees whisper your name. Fearfully."
@@ -1877,7 +4479,23 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [21028, 21031, 21033, 23762, 23764, 23864, 25059, 25367, 25373, 30342, 30343, 30349] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          21028,
+          21031,
+          21033,
+          23762,
+          23764,
+          23864,
+          25059,
+          25367,
+          25373,
+          30342,
+          30343,
+          30349
+        ]
+      },
       "say": [
         "A harpoon like that? The fish are holding council as we speak.",
         "Somewhere, a shark just shivered."
@@ -1891,7 +4509,16 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [4151, 12773, 12774, 20405, 26482] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          4151,
+          12773,
+          12774,
+          20405,
+          26482
+        ]
+      },
       "say": [
         "The whip. Someone means business today."
       ]
@@ -1904,7 +4531,16 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [1333, 20402, 23330, 23332, 23334] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          1333,
+          20402,
+          23330,
+          23332,
+          23334
+        ]
+      },
       "say": [
         "Rune scimmy. The people's blade."
       ]
@@ -1917,36 +4553,66 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 5000,
-      "when": { "type": "itemEquipped", "ids": [4587, 20000, 20406, 28031] },
+      "when": {
+        "type": "itemEquipped",
+        "ids": [
+          4587,
+          20000,
+          20406,
+          28031
+        ]
+      },
       "say": [
         "A dragon scimitar. Sixty Attack and a dream."
       ]
     },
     {
       "id": "mirror-teleport",
-      "note": "Plays YOUR teleport animation on the follower, whichever one fired, plus any spell graphic. 714 = standard spellbook and jewellery, 3864 = teleport scrolls, 1979 = Ancient Magicks. Home teleports have their own rule below. Find more ids with ::follower watch — perform the teleport and the id is announced.",
+      "note": "Plays YOUR teleport animation on the follower, whichever one fired, plus any spell graphic. 714 = standard spellbook and jewellery, 3864 = teleport scrolls, 1979 = Ancient Magicks. Home teleports have their own rule below. Find more ids with ::follower watch, perform the teleport and the id is announced.",
       "group": "reactions",
       "priority": 60,
       "cooldownMs": 3000,
       "when": {
         "type": "animationSelf",
-        "ids": [714, 3864, 1979]
+        "ids": [
+          714,
+          3864,
+          1979
+        ]
       },
       "mirrorAnimation": true,
       "vanishAfter": true
     },
     {
       "id": "mirror-home-teleport",
-      "note": "ANY home teleport — default or a cosmetic override the follower doesn't own — plays the DEFAULT home teleport on the follower, rune-circle graphics and all (stage pairing measured in game: animations 4847/4850/4853/4855/4857 with graphics 800/-/802/803/804). Trigger ids are each variant's FIRST stage; the chain carries the rest, and the long cooldown stops later stages retriggering it. For a new variant, add its first stage id here (::follower watch announces it).",
+      "note": "ANY home teleport, default or a cosmetic override the follower doesn't own, plays the DEFAULT home teleport on the follower, rune-circle graphics and all (stage pairing measured in game: animations 4847/4850/4853/4855/4857 with graphics 800/-/802/803/804). Trigger ids are each variant's FIRST stage; the chain carries the rest, and the long cooldown stops later stages retriggering it. For a new variant, add its first stage id here (::follower watch announces it).",
       "group": "reactions",
       "priority": 70,
       "cooldownMs": 15000,
       "when": {
         "type": "animationSelf",
-        "ids": [4847, 13764, 8798, 9209, 1696]
+        "ids": [
+          4847,
+          13764,
+          8798,
+          9209,
+          1696
+        ]
       },
-      "animations": [4847, 4850, 4853, 4855, 4857],
-      "graphics": [800, -1, 802, 803, 804],
+      "animations": [
+        4847,
+        4850,
+        4853,
+        4855,
+        4857
+      ],
+      "graphics": [
+        800,
+        -1,
+        802,
+        803,
+        804
+      ],
       "syncToPlayer": true,
       "vanishAfter": true
     },
@@ -1959,8 +4625,14 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "idle", "ticks": 150 },
-          { "type": "chance", "percent": 30 }
+          {
+            "type": "idle",
+            "ticks": 150
+          },
+          {
+            "type": "chance",
+            "percent": 30
+          }
         ]
       },
       "say": [

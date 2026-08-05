@@ -254,6 +254,8 @@ public class FollowerPlugin extends Plugin
 	private net.runelite.client.ui.NavigationButton navButton;
 	private com.follower.ui.PhrasesDialog gearPhrasesDialog;
 	private com.follower.ui.PhrasesDialog areaPhrasesDialog;
+	private com.follower.ui.PhrasesDialog bossPhrasesDialog;
+	private com.follower.ui.PhrasesDialog statusPhrasesDialog;
 
 	@Inject
 	private com.google.gson.Gson gson;
@@ -368,6 +370,16 @@ public class FollowerPlugin extends Plugin
 			areaPhrasesDialog.dispose();
 			areaPhrasesDialog = null;
 		}
+		if (bossPhrasesDialog != null)
+		{
+			bossPhrasesDialog.dispose();
+			bossPhrasesDialog = null;
+		}
+		if (statusPhrasesDialog != null)
+		{
+			statusPhrasesDialog.dispose();
+			statusPhrasesDialog = null;
+		}
 
 		clientThread.invoke(() ->
 		{
@@ -405,6 +417,8 @@ public class FollowerPlugin extends Plugin
 			this::clearOutfit, this::setGender, this::cycleKit, this::setBodyColor);
 		panel.setOnEditPhrases(this::openGearPhrasesDialog);
 		panel.setOnEditLocations(this::openAreaPhrasesDialog);
+		panel.setOnEditBosses(this::openBossPhrasesDialog);
+		panel.setOnEditStatuses(this::openStatusPhrasesDialog);
 
 		// ImageUtil.loadImageResource THROWS on a missing resource rather than
 		// returning null, and an exception here aborts startUp() and makes RuneLite
@@ -505,6 +519,42 @@ public class FollowerPlugin extends Plugin
 					false);
 			}
 			gearPhrasesDialog.open();
+		});
+	}
+
+	/** Lazily builds the boss-message editor window and fronts it. */
+	private void openBossPhrasesDialog()
+	{
+		javax.swing.SwingUtilities.invokeLater(() ->
+		{
+			if (bossPhrasesDialog == null)
+			{
+				bossPhrasesDialog = new com.follower.ui.PhrasesDialog(gson, ruleLoader.getFile(),
+					"boss", "Follower Buddy — Boss messages",
+					"One message per line. Each rule fires when that boss appears nearby."
+						+ " Edit, remove or add lines, untick a rule to silence it, then Save"
+						+ " — changes reach the follower within a second.",
+					false);
+			}
+			bossPhrasesDialog.open();
+		});
+	}
+
+	/** Lazily builds the status-message editor window and fronts it. */
+	private void openStatusPhrasesDialog()
+	{
+		javax.swing.SwingUtilities.invokeLater(() ->
+		{
+			if (statusPhrasesDialog == null)
+			{
+				statusPhrasesDialog = new com.follower.ui.PhrasesDialog(gson, ruleLoader.getFile(),
+					"health", "Follower Buddy — Status messages",
+					"One message per line. These react to your HP, prayer, poison, venom,"
+						+ " skull and run energy. Edit, remove or add lines, untick a rule to"
+						+ " silence it, then Save — changes reach the follower within a second.",
+					false);
+			}
+			statusPhrasesDialog.open();
 		});
 	}
 
@@ -1802,6 +1852,11 @@ public class FollowerPlugin extends Plugin
 			reloadPollTicks = 0;
 			if (ruleLoader.reloadIfChanged())
 			{
+				// A reload resets every rule's edge state, so the gear you are
+				// wearing and the place you are standing would read as fresh
+				// rising edges on the next tick. Same cure as login: baseline
+				// first, react to actual changes after.
+				speechEngine.primeEdgesOnNextTick();
 				sendStatus("Reloaded " + ruleLoader.getStatus());
 				reportRuleErrors();
 			}
