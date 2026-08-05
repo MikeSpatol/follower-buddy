@@ -155,17 +155,38 @@ public class FollowerDialog extends Overlay
 	private static final int SWORD_RIGHT_X = 370;
 	private static final int SWORD_Y = 24;
 
-	/** Per-option vertical step for an n-option menu; measured 3/4/5, extrapolated else. */
+	/**
+	 * Option menu vertical layout, MEASURED for every count the real menu
+	 * shows (2/3/4/5 options): steps 32/24/20/16, cell heights 24/20/20/16,
+	 * first tops 52/46/39/40. The block always centres on row 80 (the 39 is
+	 * the game's own rounding); the fallback uses that centring.
+	 */
 	private static int optionStep(int options)
 	{
-		return 36 - 4 * Math.min(Math.max(options, 1), 5);
+		switch (options)
+		{
+			case 2:
+				return 32;
+			case 3:
+				return 24;
+			case 4:
+				return 20;
+			default:
+				return 16;
+		}
 	}
 
-	/** First option row top for an n-option menu, measured; centred-block fallback. */
+	private static int optionCellHeight(int options)
+	{
+		return options <= 2 ? 24 : options >= 5 ? 16 : 20;
+	}
+
 	private static int optionFirstTop(int options)
 	{
 		switch (options)
 		{
+			case 2:
+				return 52;
 			case 3:
 				return 46;
 			case 4:
@@ -174,7 +195,7 @@ public class FollowerDialog extends Overlay
 				return 40;
 			default:
 				int step = optionStep(options);
-				int cell = Math.min(step, 20);
+				int cell = optionCellHeight(options);
 				return 80 - ((options - 1) * step + cell) / 2;
 		}
 	}
@@ -1008,7 +1029,7 @@ public class FollowerDialog extends Overlay
 
 		int count = node.optionText.length;
 		int step = optionStep(count);
-		int cellHeight = Math.min(step, 20);
+		int cellHeight = optionCellHeight(count);
 		optionBounds = new Rectangle[count];
 		int top = bounds.y + optionFirstTop(count);
 		for (int i = 0; i < count; i++)

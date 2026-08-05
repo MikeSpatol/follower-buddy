@@ -14,6 +14,7 @@ import net.runelite.api.coords.WorldPoint;
  * A snapshot of game state, refreshed once per game tick and shared by every
  * condition evaluated that tick.
  */
+@lombok.extern.slf4j.Slf4j
 public final class TriggerContext
 {
 	/** Prayer counts as "active" if points have dropped within this many ticks. */
@@ -115,6 +116,10 @@ public final class TriggerContext
 					}
 				}
 			}
+		}
+		if (!worn.equals(equippedItems))
+		{
+			log.info("equipment now {}", worn);
 		}
 		equippedItems = worn;
 	}

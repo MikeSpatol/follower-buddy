@@ -224,6 +224,88 @@
       ]
     },
     {
+      "id": "gear-staves",
+      "note": "Equip reactions fire once per equip (rising edge). Ids: battlestaff, lava battlestaff, air/water/earth/fire staves.",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [1391, 3053, 1381, 1383, 1385, 1387] },
+      "say": ["Runes at the ready, then. Try not to singe my outfit."]
+    },
+    {
+      "id": "gear-dfs",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [11283] },
+      "say": ["Is that dragon breath swirling in there? Keep it pointed away from me."]
+    },
+    {
+      "id": "gear-rogue",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [5553, 5555, 5556, 5557] },
+      "say": ["Dressed for crime, I see. I saw nothing."]
+    },
+    {
+      "id": "gear-skillcape",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [9768, 9769] },
+      "say": ["Ninety-nine of something! I'm travelling with an expert."]
+    },
+    {
+      "id": "gear-dodgy-necklace",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [21143] },
+      "say": ["A dodgy necklace? Sensible, in your line of work."]
+    },
+    {
+      "id": "gear-rune-scimitar",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [1333] },
+      "say": ["Rune scimmy. The people's blade."]
+    },
+    {
+      "id": "gear-dragon-scimitar",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [4587] },
+      "say": ["A dragon scimitar. Sixty Attack and a dream."]
+    },
+    {
+      "id": "gear-whip",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [4151] },
+      "say": ["The whip. Someone means business today."]
+    },
+    {
+      "id": "gear-fire-cape",
+      "group": "gear",
+      "priority": 30,
+      "output": "overhead",
+      "cooldownMs": 5000,
+      "when": { "type": "itemEquipped", "ids": [6570, 21295] },
+      "say": ["That cape still smells of smoke."]
+    },
+    {
       "id": "mirror-teleport",
       "note": "Plays YOUR teleport animation on the follower, whichever one fired, plus any spell graphic. 714 = standard spellbook and jewellery, 3864 = teleport scrolls, 1979 = Ancient Magicks. Home teleports have their own rule below. Find more ids with ::follower watch — perform the teleport and the id is announced.",
       "group": "reactions",

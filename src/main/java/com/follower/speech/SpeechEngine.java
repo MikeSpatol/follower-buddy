@@ -143,10 +143,13 @@ public class SpeechEngine
 		{
 			// Still charge the cooldown so a suppressed rule doesn't fire the instant
 			// the global window opens.
+			log.info("rule '{}' won but was suppressed (muted={}, sinceLastSpoke={}ms)",
+				winner.describe(), muted, now - lastSpokeMs);
 			winner.markFired(now);
 			return;
 		}
 
+		log.info("rule '{}' fired on {}", winner.describe(), event.getType());
 		speak(winner, event, now);
 	}
 
