@@ -110,6 +110,14 @@ public class FollowerPanel extends PluginPanel
 		this.onEditStatuses = onEditStatuses;
 	}
 
+	/** Opens the quest-NPC-message editor; set by the plugin after construction. */
+	private Runnable onEditQuests = () -> { };
+
+	public void setOnEditQuests(Runnable onEditQuests)
+	{
+		this.onEditQuests = onEditQuests;
+	}
+
 	private final JPanel gearGrid = new JPanel();
 	private final JPanel bodyList = new JPanel();
 	private final JPanel picker = new JPanel();
@@ -191,10 +199,10 @@ public class FollowerPanel extends PluginPanel
 		header.add(buttons);
 		header.add(javax.swing.Box.createVerticalStrut(6));
 
-		JPanel editorButtons = new JPanel(new GridLayout(2, 2, 6, 4));
+		JPanel editorButtons = new JPanel(new GridLayout(0, 2, 6, 4));
 		editorButtons.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		editorButtons.setAlignmentX(LEFT_ALIGNMENT);
-		editorButtons.setMaximumSize(new Dimension(Integer.MAX_VALUE, 56));
+		editorButtons.setMaximumSize(new Dimension(Integer.MAX_VALUE, 88));
 
 		JButton phrases = new JButton("Items...");
 		phrases.setToolTipText("View and edit what the follower says when you equip items");
@@ -219,6 +227,12 @@ public class FollowerPanel extends PluginPanel
 		statuses.setFocusPainted(false);
 		statuses.addActionListener(e -> onEditStatuses.run());
 		editorButtons.add(statuses);
+
+		JButton quests = new JButton("Quest NPCs...");
+		quests.setToolTipText("View and edit what the follower says when famous quest figures are nearby");
+		quests.setFocusPainted(false);
+		quests.addActionListener(e -> onEditQuests.run());
+		editorButtons.add(quests);
 
 		header.add(editorButtons);
 

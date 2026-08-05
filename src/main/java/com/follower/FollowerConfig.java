@@ -216,6 +216,18 @@ public interface FollowerConfig extends Config
 		return 3000;
 	}
 
+	@ConfigItem(
+		keyName = "mirrorToChat",
+		name = "Mirror speech to chatbox",
+		description = "Overhead lines also appear in the chatbox as public chat under the follower's name",
+		section = speechSection,
+		position = 6
+	)
+	default boolean mirrorToChat()
+	{
+		return true;
+	}
+
 	// ------------------------------------------------------------ rule groups
 
 	@ConfigItem(
@@ -279,11 +291,23 @@ public interface FollowerConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "groupQuest",
+		name = "Quest NPC phrases",
+		description = "Rules in the \"quest\" group — comments when famous quest figures are nearby",
+		section = groupsSection,
+		position = 5
+	)
+	default boolean groupQuest()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 		keyName = "disabledGroups",
 		name = "Other disabled groups",
 		description = "Comma separated group names or rule ids to silence",
 		section = groupsSection,
-		position = 5
+		position = 6
 	)
 	default String disabledGroups()
 	{

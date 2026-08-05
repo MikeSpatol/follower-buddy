@@ -25,7 +25,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -52,7 +52,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -79,7 +79,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -106,7 +106,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -132,7 +132,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -158,7 +158,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -184,7 +184,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -210,7 +210,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -236,7 +236,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -262,7 +262,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -288,7 +288,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -314,7 +314,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -340,7 +340,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -366,7 +366,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -392,7 +392,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -418,7 +418,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -444,7 +444,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -471,7 +471,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -497,7 +497,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -523,7 +523,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -549,7 +549,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -575,7 +575,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -601,7 +601,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -627,7 +627,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -654,7 +654,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -680,7 +680,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -706,7 +706,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -733,7 +733,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -759,7 +759,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -785,7 +785,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -811,7 +811,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -837,7 +837,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -863,7 +863,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -889,7 +889,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -915,7 +915,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -941,7 +941,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -967,7 +967,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -993,7 +993,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -1019,7 +1019,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -1045,7 +1045,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -1071,7 +1071,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -1097,7 +1097,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -1123,7 +1123,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -1149,7 +1149,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -1175,7 +1175,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -1201,7 +1201,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -1228,7 +1228,7 @@
       "group": "boss",
       "priority": 90,
       "output": "both",
-      "cooldownMs": 45000,
+      "cooldownMs": 3600000,
       "when": {
         "type": "npcSpawn",
         "names": [
@@ -2644,6 +2644,636 @@
         "Welcome back, {player}. I kept your spot warm.",
         "Ah, you made it! Gielinor was getting quiet without you.",
         "Back again? Excellent. Where to today?"
+      ]
+    },
+    {
+      "id": "quest-wise-old-man",
+      "note": "The Wise Old Man of Draynor.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Wise Old Man"] },
+      "say": [
+        "The Wise Old Man of Draynor. Partly wise, entirely dangerous.",
+        "He robbed a bank in that very outfit and everyone just... let him.",
+        "Ask him about his cape. Or his exploits. He'll tell you either way."
+      ]
+    },
+    {
+      "id": "quest-hans",
+      "note": "Hans, circling Lumbridge Castle.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Hans"] },
+      "say": [
+        "That's Hans. He's walked that castle circuit longer than anyone's been alive.",
+        "Hans knows exactly how long you've been at this. To the day. Ask him.",
+        "Still on patrol after all these years. Dedication or habit, hard to say."
+      ]
+    },
+    {
+      "id": "quest-duke-horacio",
+      "note": "Duke Horacio of Lumbridge.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Duke Horacio"] },
+      "say": [
+        "Duke Horacio himself. Lovely man. Bit preoccupied with dragons.",
+        "The Duke's been handing out anti-dragon shields for years. Stock never runs dry.",
+        "Rules all of Lumbridge from one room. Efficient, really."
+      ]
+    },
+    {
+      "id": "quest-cook",
+      "note": "The Lumbridge cook. NOTE: other NPCs named Cook exist and will match too.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Cook"] },
+      "say": [
+        "A cook in distress, I'd wager. There's usually an egg involved.",
+        "The kitchens of Gielinor would collapse without adventurers, you know.",
+        "If he asks for flour, eggs and milk, act surprised. It's kinder."
+      ]
+    },
+    {
+      "id": "quest-father-aereck",
+      "note": "Father Aereck of the Lumbridge church.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Father Aereck"] },
+      "say": [
+        "Father Aereck. Keeps the church, minds the graveyard. Busy man, sadly.",
+        "He'll want help with the restless sort. The buried restless sort.",
+        "A good shepherd, even when the flock includes ghosts."
+      ]
+    },
+    {
+      "id": "quest-fred-the-farmer",
+      "note": "Fred the Farmer of Lumbridge.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Fred the Farmer"] },
+      "say": [
+        "Fred the Farmer. Do NOT mention the shears.",
+        "He guards those sheep like they're made of gold. The wool, technically, is.",
+        "Twenty balls of wool. That request outlives us all."
+      ]
+    },
+    {
+      "id": "quest-doric",
+      "note": "Doric the dwarf smith near Falador.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Doric"] },
+      "say": [
+        "Doric the dwarf. Finest anvils this side of Falador, and he shares.",
+        "He just wants his clay and ores. Salt of the earth. Literally.",
+        "A dwarf who lends his anvils for free. Rarer than a rune rock."
+      ]
+    },
+    {
+      "id": "quest-thurgo",
+      "note": "Thurgo, last of the Imcando dwarves.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Thurgo"] },
+      "say": [
+        "Thurgo. The last of the Imcando smiths, and powered by redberry pie.",
+        "Bring pie. I'm serious. It's the only currency he respects.",
+        "The man reforged a knight's sword from a portrait. For pie."
+      ]
+    },
+    {
+      "id": "quest-oziach",
+      "note": "Oziach of Edgeville.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Oziach"] },
+      "say": [
+        "Oziach. He decides who's champion enough for rune platebodies.",
+        "Sends greenhorns at Elvarg and sells armour to the survivors. A system.",
+        "Grumpy, mumbly, and the gatekeeper of every rune platebody dream."
+      ]
+    },
+    {
+      "id": "quest-guildmaster",
+      "note": "The Champions' Guild Guildmaster.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Guildmaster"] },
+      "say": [
+        "The Guildmaster of the Champions' Guild. He starts legends for a living.",
+        "Behind that door, the dragon business began. Ask him about Crandor.",
+        "Thirty-two quest points just to hear him say hello. Worth it."
+      ]
+    },
+    {
+      "id": "quest-gypsy-aris",
+      "note": "Gypsy Aris of Varrock Square.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Gypsy Aris"] },
+      "say": [
+        "Gypsy Aris. She saw this conversation coming, of course.",
+        "Her crystal ball has started more heroics than every sword in Varrock.",
+        "Cross her palm with coin and she'll show you the world ending. Cheery."
+      ]
+    },
+    {
+      "id": "quest-sir-amik",
+      "note": "Sir Amik Varze of the White Knights.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Sir Amik Varze"] },
+      "say": [
+        "Sir Amik Varze, head of the White Knights. Third floor, very important.",
+        "The man runs Falador from a tower and still needs errand-runners.",
+        "Knighthood looks a lot like paperwork from up close, doesn't it."
+      ]
+    },
+    {
+      "id": "quest-sir-tiffy",
+      "note": "Sir Tiffy Cashien in Falador Park.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Sir Tiffy Cashien"] },
+      "say": [
+        "Sir Tiffy Cashien. Park bench, sandwiches, secret order of knights.",
+        "The most dangerous man in Falador is feeding the ducks.",
+        "Temple Knight recruitment happens over cucumber sandwiches. Naturally."
+      ]
+    },
+    {
+      "id": "quest-king-roald",
+      "note": "King Roald of Misthalin.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["King Roald"] },
+      "say": [
+        "King Roald of Misthalin. Bow. Or nod. He's flexible.",
+        "Half the kingdom's problems cross his desk. The other half cross ours.",
+        "A king who takes walk-in appointments. Varrock is lucky."
+      ]
+    },
+    {
+      "id": "quest-reldo",
+      "note": "Reldo, the Varrock palace librarian.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Reldo"] },
+      "say": [
+        "Reldo, the palace librarian. If it's written down, he's read it twice.",
+        "Half of Varrock's history lives in his head. The dusty half.",
+        "Ask him anything. The answer involves a book. It always involves a book."
+      ]
+    },
+    {
+      "id": "quest-aubury",
+      "note": "Aubury of the Varrock rune shop.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Aubury"] },
+      "say": [
+        "Aubury. Sells runes, keeps secrets, teleports on request.",
+        "That little shop hides quite the basement. Ask him about essence sometime.",
+        "The most powerful shopkeeper in Varrock, and it isn't close."
+      ]
+    },
+    {
+      "id": "quest-sedridor",
+      "note": "Sedridor, head of the Wizards Tower.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["*Sedridor"] },
+      "say": [
+        "Sedridor, head wizard of the tower. The essence mine was his secret first.",
+        "The tower burned once, you know. They rebuilt. Wizards persist.",
+        "He studies the runes that move the world. And answers letters. Busy man."
+      ]
+    },
+    {
+      "id": "quest-traiborn",
+      "note": "Wizard Traiborn of the Wizards Tower.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Wizard Traiborn"] },
+      "say": [
+        "Traiborn. Brilliant wizard. Absolutely scattered. Wonderful company.",
+        "He'll ask for bones and forget why. Bring bones anyway.",
+        "Thingummywut! ...I don't know either. Nobody knows."
+      ]
+    },
+    {
+      "id": "quest-gertrude",
+      "note": "Gertrude of Varrock.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Gertrude"] },
+      "say": [
+        "Gertrude. Cat breeder, mother of many, patience of a saint.",
+        "Every adventurer's first cat came through her door.",
+        "Fluffs has run off again, I'd bet my hood on it."
+      ]
+    },
+    {
+      "id": "quest-romeo-juliet",
+      "note": "Romeo and Juliet of Varrock.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Romeo", "Juliet"] },
+      "say": [
+        "Ah, the star-crossed pair. It ends badly whichever way you help.",
+        "Romeo forgets, Juliet plans, Varrock gossips.",
+        "Some romances need an adventurer. This one needed a warning."
+      ]
+    },
+    {
+      "id": "quest-oddenstein",
+      "note": "Professor Oddenstein in Draynor Manor.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Professor Oddenstein"] },
+      "say": [
+        "Professor Oddenstein. Turns people into chickens. Turns them back, mostly.",
+        "The manor attic hums when he's working. Knock first.",
+        "Science, he calls it. The chicken had opinions."
+      ]
+    },
+    {
+      "id": "quest-veronica",
+      "note": "Veronica outside Draynor Manor.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Veronica"] },
+      "say": [
+        "Veronica's been waiting by that gate a long while. Her fiance went inside.",
+        "Draynor Manor takes guests easily. It's the leaving it struggles with.",
+        "Don't promise her anything unless you mean to enter that house."
+      ]
+    },
+    {
+      "id": "quest-ned",
+      "note": "Ned of Draynor Village.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Ned"] },
+      "say": [
+        "Ned of Draynor. Ropes, wigs, and questionable sailing credentials.",
+        "The man can braid anything. Rope, wigs, alibis.",
+        "Captain Ned, if you're feeling generous about the word captain."
+      ]
+    },
+    {
+      "id": "quest-aggie",
+      "note": "Aggie the Draynor witch.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Aggie"] },
+      "say": [
+        "Aggie the witch. Dyes, potions, and the odd miracle in a pot.",
+        "Need something coloured or conjured? She's your woman.",
+        "The friendliest witch in Misthalin. Low bar, high marks."
+      ]
+    },
+    {
+      "id": "quest-hetty",
+      "note": "Hetty the Rimmington witch.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Hetty"] },
+      "say": [
+        "Hetty of Rimmington. Her potions improve your magic and your humility.",
+        "She asked someone for a rat's tail once. They brought it. Magic happened.",
+        "Cauldron's always on. Best not to ask what's in it."
+      ]
+    },
+    {
+      "id": "quest-morgan",
+      "note": "Morgan of Draynor Village.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Morgan"] },
+      "say": [
+        "Morgan of Draynor. He keeps garlic on hand for very practical reasons.",
+        "His village had a vampyre problem. Had. Adventurers, eh?",
+        "The nervous look is earned. Count Draynor lived just up the road."
+      ]
+    },
+    {
+      "id": "quest-redbeard-frank",
+      "note": "Redbeard Frank of Port Sarim.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Redbeard Frank"] },
+      "say": [
+        "Redbeard Frank. He'd trade his secrets for Karamja rum. Has done.",
+        "The man knows where treasure's buried and tells anyone with a bottle.",
+        "Port Sarim's finest source of rum-soaked intelligence."
+      ]
+    },
+    {
+      "id": "quest-luthas",
+      "note": "Luthas of the Musa Point plantation.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Luthas"] },
+      "say": [
+        "Luthas runs the banana plantation. Ask no questions about the crates.",
+        "Honest work, banana picking. The crates, less so.",
+        "Ten bananas a crate, no peeking inside. Deal."
+      ]
+    },
+    {
+      "id": "quest-zanik",
+      "note": "Zanik of the Dorgeshuun.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Zanik"] },
+      "say": [
+        "Zanik of the Dorgeshuun. The bravest goblin you'll ever meet.",
+        "Her people hid underground for ages. She walked out first.",
+        "Destiny follows that one around. Try to keep up."
+      ]
+    },
+    {
+      "id": "quest-juna",
+      "note": "Juna, guardian of the Tears of Guthix.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Juna"] },
+      "say": [
+        "Juna, the serpent of the chasm. She guards Guthix's own tears.",
+        "Tell her a good story. She's heard thousands and still listens.",
+        "A guardian of Guthix, patient as stone. Mind your manners."
+      ]
+    },
+    {
+      "id": "quest-hazelmere",
+      "note": "Hazelmere, the ancient gnome mystic.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Hazelmere"] },
+      "say": [
+        "Hazelmere. One of the oldest, wisest gnomes alive. Speaks in signs.",
+        "He lives alone with his thoughts, and his thoughts are worth the trip.",
+        "The Grand Tree trusts him. That should settle any doubts."
+      ]
+    },
+    {
+      "id": "quest-narnode",
+      "note": "King Narnode Shareen of the Grand Tree.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["King Narnode Shareen"] },
+      "say": [
+        "King Narnode of the Grand Tree. Small king, enormous responsibilities.",
+        "He rules a tree. A magnificent tree, but still. A tree.",
+        "The gnomes' best diplomat, and their most worried one."
+      ]
+    },
+    {
+      "id": "quest-glough",
+      "note": "Glough of the Tree Gnome Stronghold.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Glough"] },
+      "say": [
+        "Glough. Watch that one. The trees whisper complaints about him.",
+        "Ambitious, for a gnome. Gnome ambition ends in headlines.",
+        "If he offers you a job, read the fine print. Twice."
+      ]
+    },
+    {
+      "id": "quest-sanfew",
+      "note": "Sanfew of Taverley.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Sanfew"] },
+      "say": [
+        "Sanfew of Taverley. The druids trust him with their hardest cures.",
+        "He's part herblore, part stubbornness, all druid.",
+        "If it can be brewed, he's brewed it. If it can't, give him a week."
+      ]
+    },
+    {
+      "id": "quest-kaqemeex",
+      "note": "Kaqemeex of the Taverley stone circle.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Kaqemeex"] },
+      "say": [
+        "Kaqemeex. He teaches herblore to anyone who proves willing.",
+        "Keeper of the stone circle. The Zamorakians ruined the last one. Sore subject.",
+        "A druid of the old ways, and generous with them."
+      ]
+    },
+    {
+      "id": "quest-elena",
+      "note": "Elena of East Ardougne.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Elena"] },
+      "say": [
+        "Elena of Ardougne. She crossed the wall for the truth and paid for it.",
+        "Plague researcher, prisoner, hero. In that order.",
+        "The bravest person in either half of this city."
+      ]
+    },
+    {
+      "id": "quest-king-lathas",
+      "note": "King Lathas of East Ardougne.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["King Lathas"] },
+      "say": [
+        "King Lathas. Smile, nod, and count your change afterwards.",
+        "The wall was his idea. The reasons shift depending on who's asking.",
+        "Some kings earn statues. Some earn questions."
+      ]
+    },
+    {
+      "id": "quest-sir-prysin",
+      "note": "Sir Prysin of Varrock Palace.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Sir Prysin"] },
+      "say": [
+        "Sir Prysin. Ask him about Silverlight. Then ask where the keys went.",
+        "A knight who lost the keys to a demon-slaying sword. Varrock's finest.",
+        "Delrith nearly rose again because of his filing system."
+      ]
+    },
+    {
+      "id": "quest-evil-dave",
+      "note": "Evil Dave of Edgeville. Well, of his mum's basement.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Evil Dave"] },
+      "say": [
+        "Evil Dave. His lair of DARKNESS is his mum's cellar.",
+        "He's mastered evil stew and very little else. Bless him.",
+        "The hellcats respect him. The hellcats are the only ones."
+      ]
+    },
+    {
+      "id": "quest-ali-morrisane",
+      "note": "Ali Morrisane of Al Kharid.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Ali Morrisane"] },
+      "say": [
+        "Ali Morrisane, the world's greatest salesman. His words. Always his words.",
+        "He could sell sand in the Kharidian desert. He HAS.",
+        "Fine man. Check your pockets after. Fine man."
+      ]
+    },
+    {
+      "id": "quest-oracle",
+      "note": "The Oracle atop Ice Mountain.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Oracle"] },
+      "say": [
+        "The Oracle of Ice Mountain. Speaks in riddles, means every word.",
+        "People climb all this way for wisdom. She dispenses confusion. Same thing.",
+        "Ask about the dragon. The answer will be a poem. It's always a poem."
+      ]
+    },
+    {
+      "id": "quest-ernest",
+      "note": "Ernest, formerly a chicken, of Draynor Manor.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": { "type": "npcNearby", "within": 5, "names": ["Ernest"] },
+      "say": [
+        "Ernest. He went into the manor a man and spent a while as a chicken.",
+        "The manor did that to him. The manor does that to people.",
+        "Fully recovered. Mostly. Feathered no longer, anyway."
       ]
     },
     {

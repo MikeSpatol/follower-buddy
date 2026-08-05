@@ -256,6 +256,7 @@ public class FollowerPlugin extends Plugin
 	private com.follower.ui.PhrasesDialog areaPhrasesDialog;
 	private com.follower.ui.PhrasesDialog bossPhrasesDialog;
 	private com.follower.ui.PhrasesDialog statusPhrasesDialog;
+	private com.follower.ui.PhrasesDialog questPhrasesDialog;
 
 	@Inject
 	private com.google.gson.Gson gson;
@@ -380,6 +381,11 @@ public class FollowerPlugin extends Plugin
 			statusPhrasesDialog.dispose();
 			statusPhrasesDialog = null;
 		}
+		if (questPhrasesDialog != null)
+		{
+			questPhrasesDialog.dispose();
+			questPhrasesDialog = null;
+		}
 
 		clientThread.invoke(() ->
 		{
@@ -419,6 +425,7 @@ public class FollowerPlugin extends Plugin
 		panel.setOnEditLocations(this::openAreaPhrasesDialog);
 		panel.setOnEditBosses(this::openBossPhrasesDialog);
 		panel.setOnEditStatuses(this::openStatusPhrasesDialog);
+		panel.setOnEditQuests(this::openQuestPhrasesDialog);
 
 		// ImageUtil.loadImageResource THROWS on a missing resource rather than
 		// returning null, and an exception here aborts startUp() and makes RuneLite
@@ -555,6 +562,25 @@ public class FollowerPlugin extends Plugin
 					false);
 			}
 			statusPhrasesDialog.open();
+		});
+	}
+
+	/** Lazily builds the quest-NPC-message editor window and fronts it. */
+	private void openQuestPhrasesDialog()
+	{
+		javax.swing.SwingUtilities.invokeLater(() ->
+		{
+			if (questPhrasesDialog == null)
+			{
+				questPhrasesDialog = new com.follower.ui.PhrasesDialog(gson, ruleLoader.getFile(),
+					"quest", "Follower Buddy — Quest NPC messages",
+					"One message per line. Each rule fires when that quest figure comes"
+						+ " within a few tiles of you. Edit, remove or add lines, untick a"
+						+ " rule to silence it, then Save — changes reach the follower"
+						+ " within a second.",
+					false);
+			}
+			questPhrasesDialog.open();
 		});
 	}
 
@@ -1095,6 +1121,10 @@ public class FollowerPlugin extends Plugin
 		if (!config.groupGear())
 		{
 			disabled.add("gear");
+		}
+		if (!config.groupQuest())
+		{
+			disabled.add("quest");
 		}
 		for (String token : config.disabledGroups().split(","))
 		{
@@ -2632,7 +2662,7 @@ public class FollowerPlugin extends Plugin
 			overlay.show(text, config.speechDurationMs());
 		}
 
-		if (!text.isEmpty())
+		if (!text.isEmpty() && config.mirrorToChat())
 		{
 			// Every spoken line lands in the chatbox as PUBLIC CHAT under the
 			// follower's name - "Name: message" in the game's own chat colours
