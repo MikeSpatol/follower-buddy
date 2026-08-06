@@ -105,8 +105,9 @@ public class SpotAnimRepository
 		Path file = dataDir.resolve(FILE_NAME);
 		if (!Files.isRegularFile(file))
 		{
-			status = "no " + FILE_NAME + " - re-run tools/cache-dumper to enable graphic mirroring";
-			log.info("SpotAnim dump not found at {}; graphic mirroring disabled", file);
+			// Not an error: the live-cache parse takes over once the client
+			// has its indexes loaded.
+			status = "no " + FILE_NAME + "; will parse the live cache";
 			return;
 		}
 
@@ -128,6 +129,23 @@ public class SpotAnimRepository
 			status = "failed to read " + FILE_NAME;
 			log.warn("Could not load {}", file, e);
 		}
+	}
+
+	/**
+	 * Builds the catalogue from the client's own loaded cache - the no-dump
+	 * path every Hub install uses. A dump file, when present, wins. No-op
+	 * while the cache indexes are not available yet; callers retry.
+	 */
+	public void loadFromClient(net.runelite.api.Client client)
+	{
+		Map<String, Entry> live = LiveCacheParser.parseSpotAnims(client);
+		if (live.isEmpty())
+		{
+			return;
+		}
+		spotanims = live;
+		status = spotanims.size() + " spotanims (live cache)";
+		log.info("Loaded {} spotanims from live cache", spotanims.size());
 	}
 
 	/** The definition for a graphic id, or null if unknown or not loaded. */

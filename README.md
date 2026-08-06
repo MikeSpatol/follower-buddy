@@ -160,7 +160,15 @@ already in the right shape).
 
 Add `-Plint` to surface deprecation and unchecked warnings.
 
-### 2. Generate the model data
+### 2. Generate the model data (OPTIONAL — development only)
+
+**As of 2026-08-06 the plugin needs no dumps at all.** Item, kit and spotanim
+definitions are parsed straight from the client's own loaded cache at runtime
+(`LiveCacheParser`), and the game fonts ship inside the jar. The runtime
+parsers are validated byte-exact against this dumper's output with
+`::follower cachecheck`. Dump files, when present in `~/.runelite/follower`,
+override the live parse — useful for pinning a cache revision during
+development, and as the `cachecheck` baseline.
 
 ```bash
 cd tools/cache-dumper

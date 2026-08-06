@@ -328,6 +328,9 @@ public class FollowerPlugin extends Plugin
 		applyConfig();
 		loadExactPalette();
 		hooks.registerRenderableDrawListener(thrallHider);
+		// Anything the dump files didn't provide is parsed from the client's
+		// own cache; retried from the login states until the indexes exist.
+		clientThread.invokeLater(this::ensureCatalogues);
 		errands = new com.follower.follower.ErrandController(client, follower, config,
 			speechEngine::dispatch, spotAnimRepository,
 			() -> dialog.isOpen() || follower.isNpcSlaved());
@@ -1015,6 +1018,9 @@ public class FollowerPlugin extends Plugin
 				spawnDelayTicks = SPAWN_DELAY_TICKS;
 				rebuildQueued = true;
 
+				// Belt and braces for a client that skipped the login screen.
+				ensureCatalogues();
+
 				// Only on a REAL login - LOGGED_IN also follows every chunk reload.
 				if (freshLogin)
 				{
@@ -1070,6 +1076,7 @@ public class FollowerPlugin extends Plugin
 			case HOPPING:
 			case CONNECTION_LOST:
 				freshLogin = true;
+				ensureCatalogues();
 				resetThrallQuietly();
 				if (errands != null)
 				{
@@ -1249,6 +1256,128 @@ public class FollowerPlugin extends Plugin
 				follower.spawn(appearance, behind != null ? behind : local.getWorldLocation());
 			}
 		});
+	}
+
+	/**
+	 * Validation for the live cache parsers: diffs every entry the offline
+	 * dumper produced against the runtime parse of the same cache. Field-level
+	 * equality via JSON serialisation - identical output proves the ported
+	 * opcode readers byte-exact. Run on a machine that has the dump files.
+	 */
+	private void runCacheCheck()
+	{
+		try
+		{
+			java.nio.file.Path modelFile = dataDir.resolve(com.follower.appearance.ModelRepository.FILE_NAME);
+			java.nio.file.Path spotFile = dataDir.resolve(com.follower.appearance.SpotAnimRepository.FILE_NAME);
+			if (!java.nio.file.Files.isRegularFile(modelFile) || !java.nio.file.Files.isRegularFile(spotFile))
+			{
+				sendStatus("cachecheck needs the dump files present to compare against");
+				return;
+			}
+
+			com.follower.appearance.ModelRepository.Dump dump;
+			try (java.io.Reader reader = java.nio.file.Files.newBufferedReader(modelFile))
+			{
+				dump = gson.fromJson(reader, com.follower.appearance.ModelRepository.Dump.class);
+			}
+			com.google.gson.JsonObject spotRoot;
+			try (java.io.Reader reader = java.nio.file.Files.newBufferedReader(spotFile))
+			{
+				spotRoot = gson.fromJson(reader, com.google.gson.JsonObject.class);
+			}
+			java.util.Map<String, com.follower.appearance.SpotAnimRepository.Entry> dumpSpots =
+				gson.fromJson(spotRoot.get("spotanims"),
+					new com.google.gson.reflect.TypeToken<java.util.Map<String,
+						com.follower.appearance.SpotAnimRepository.Entry>>() { }.getType());
+
+			int problems = 0;
+			problems += diffCatalogue("items", dump.items,
+				com.follower.appearance.LiveCacheParser.parseItems(client));
+			problems += diffCatalogue("kits", dump.kits,
+				com.follower.appearance.LiveCacheParser.parseKits(client));
+			problems += diffCatalogue("spotanims", dumpSpots,
+				com.follower.appearance.LiveCacheParser.parseSpotAnims(client));
+
+			sendStatus(problems == 0
+				? "cachecheck: PERFECT MATCH across items, kits and spotanims"
+				: "cachecheck: " + problems + " differences - see the client log");
+		}
+		catch (java.io.IOException | RuntimeException e)
+		{
+			log.warn("cachecheck failed", e);
+			sendStatus("cachecheck failed: " + e.getMessage());
+		}
+	}
+
+	/** @return the number of differing, missing or extra entries. */
+	private int diffCatalogue(String label, java.util.Map<String, ?> fromDump,
+		java.util.Map<String, ?> fromLive)
+	{
+		int problems = 0;
+		int logged = 0;
+		for (java.util.Map.Entry<String, ?> entry : fromDump.entrySet())
+		{
+			Object live = fromLive.get(entry.getKey());
+			if (live == null)
+			{
+				problems++;
+				if (logged++ < 5)
+				{
+					log.warn("cachecheck {}: id {} in dump but not live", label, entry.getKey());
+				}
+				continue;
+			}
+			String a = gson.toJson(entry.getValue());
+			String b = gson.toJson(live);
+			if (!a.equals(b))
+			{
+				problems++;
+				if (logged++ < 5)
+				{
+					log.warn("cachecheck {}: id {} differs\n  dump: {}\n  live: {}",
+						label, entry.getKey(), a, b);
+				}
+			}
+		}
+		for (String key : fromLive.keySet())
+		{
+			if (!fromDump.containsKey(key))
+			{
+				problems++;
+				if (logged++ < 5)
+				{
+					log.warn("cachecheck {}: id {} live but not in dump", label, key);
+				}
+			}
+		}
+		log.info("cachecheck {}: dump {}, live {}, {} problems",
+			label, fromDump.size(), fromLive.size(), problems);
+		return problems;
+	}
+
+	/**
+	 * The offline dumps are optional: whatever they didn't provide is parsed
+	 * from the client's own loaded cache. Retried from login-adjacent states
+	 * because the cache indexes may not exist when the plugin starts.
+	 */
+	private void ensureCatalogues()
+	{
+		if (!modelRepository.isLoaded())
+		{
+			modelRepository.loadFromClient(client);
+			if (modelRepository.isLoaded())
+			{
+				// The outfit picker's slot filter and status line were built
+				// against an empty catalogue; rebuild them on the real one.
+				buildSlotIndexAsync();
+				syncPanel();
+			}
+		}
+		if (!spotAnimRepository.isLoaded())
+		{
+			spotAnimRepository.loadFromClient(client);
+		}
 	}
 
 	private Outfit resolveOutfit()
@@ -3108,6 +3237,12 @@ public class FollowerPlugin extends Plugin
 					errands.debugScan();
 					sendStatus("Errand scan logged");
 				}
+				break;
+			}
+
+			case "cachecheck":
+			{
+				clientThread.invokeLater(this::runCacheCheck);
 				break;
 			}
 

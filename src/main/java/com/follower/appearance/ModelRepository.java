@@ -215,6 +215,26 @@ public class ModelRepository
 		return true;
 	}
 
+	/**
+	 * Builds the catalogue from the client's own loaded cache - the no-dump
+	 * path every Hub install uses. A dump file, when present, wins: it is the
+	 * development override and the validation baseline for the live parser.
+	 * No-op while the cache indexes are not available yet; callers retry.
+	 */
+	public void loadFromClient(net.runelite.api.Client client)
+	{
+		Map<String, Entry> liveItems = LiveCacheParser.parseItems(client);
+		if (liveItems.isEmpty())
+		{
+			return;
+		}
+		items = liveItems;
+		kits = LiveCacheParser.parseKits(client);
+		loaded = true;
+		status = items.size() + " items, " + kits.size() + " kits (live cache)";
+		log.info("Loaded model catalogue from live cache: {}", status);
+	}
+
 	public void unload()
 	{
 		items = Collections.emptyMap();
