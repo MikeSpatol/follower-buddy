@@ -601,6 +601,21 @@ lands on top of the pupil on some animation frames.
 **Tuning**, live while a dialog is open: `::follower head yaw|pitch|roll|zoom|crop|cliptop|talk <n>`,
 or `::follower head tune on` for arrow-key control.
 
+## Plugin hub submission
+
+`runelite-plugin.properties` holds the listing metadata and `icon.png` (48x72,
+the hub's maximum) sits in the repository root where the hub build looks for
+it. The icon is generated, not hand-painted, so it can be regenerated or
+tweaked reproducibly:
+
+```bash
+powershell -File tools/make-icon.ps1
+```
+
+What remains is process rather than code: fork
+[runelite/plugin-hub](https://github.com/runelite/plugin-hub), add a manifest
+naming this repository and a commit hash, and open a pull request.
+
 ## Location region ids — VERIFIED against the world map (2026-08-06)
 
 The area rules' region ids were originally computed from documented world
