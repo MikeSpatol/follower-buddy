@@ -27,3 +27,12 @@ java {
 application {
     mainClass = 'com.follower.tools.EquipmentDumper'
 }
+
+// Checks every location rule's region ids against the world map's own labels.
+//   gradlew runAudit --args="<phrases.json> [cacheDir]"
+tasks.register('runAudit', JavaExec) {
+    group = 'verification'
+    description = 'Audits phrases.json location regions against the game world map'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.follower.tools.RegionAudit'
+}

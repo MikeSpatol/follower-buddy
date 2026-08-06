@@ -601,18 +601,33 @@ lands on top of the pupil on some animation frames.
 **Tuning**, live while a dialog is open: `::follower head yaw|pitch|roll|zoom|crop|cliptop|talk <n>`,
 or `::follower head tune on` for arrow-key control.
 
-## Pending in-depth testing (parked 2026-08-04)
+## Location region ids — VERIFIED against the world map (2026-08-06)
 
-- **Location rule region ids.** The 56 area rules' region ids were computed from
-  documented world coordinates (`region = (x >> 6) * 256 + (y >> 6)`), not read
-  from the running game. Mainland cities are high-confidence; the ones flagged
-  with a spot-check note in their rule `note` field are not: the five Kourend
-  cities, Prifddinas, Fossil Island, Catacombs of Kourend, Wintertodt camp,
-  Lunar Isle, Keldagrim, Miscellania, Sophanem, the Woodcutting/Farming guilds,
-  the Mining Guild and Barbarian Assault. The test is simply walking into each
-  place: if the follower stays quiet, run `::follower where` on the spot and
-  correct the id in the Locations editor (and mirror the fix into
-  `default-phrases.json` so fresh installs get it too).
+The area rules' region ids were originally computed from documented world
+coordinates (`region = (x >> 6) * 256 + (y >> 6)`), which is a guess wherever
+the documentation is loose. They are now checked against the game's own data
+instead of by walking:
+
+```bash
+cd tools/cache-dumper && gradlew runAudit --args="<phrases.json>"
+```
+
+`RegionAudit` reads the world map's labels — an `AreaDefinition` carries the
+text the game draws ("Lumbridge", "Seers' Village") and a
+`WorldMapElementDefinition` places it at a world position — so name plus
+position yields the true region for every named place in the game. It reports
+each rule as confirmed, adjacent (a town spans regions, so a neighbouring id is
+the same place), or far off, and lists what the map labels **inside** the
+rule's own regions.
+
+All 55 region-based rules verified. The last seven only looked wrong because a
+dungeon's entrance label sits on the surface, regions away from where the
+player actually stands; the reverse lookup settles each one — region 11673
+contains "blue dragons" and "chaos druids" (Taverley Dungeon), 6557 contains
+"hellhounds" and "steel dragons" (the Catacombs), 11602 contains "Saradomin's
+Encampment" (the God Wars Dungeon), and so on.
+
+Re-run the audit after a game update that moves or renames an area.
 
 ## Known limitations
 

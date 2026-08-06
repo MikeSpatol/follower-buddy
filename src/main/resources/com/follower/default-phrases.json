@@ -1951,7 +1951,7 @@
     },
     {
       "id": "area-lunar-isle",
-      "note": "Lunar Isle. Spot-check the id with ::follower where if it stays quiet.",
+      "note": "Lunar Isle.",
       "group": "area",
       "priority": 40,
       "output": "overhead",
@@ -1971,7 +1971,7 @@
     },
     {
       "id": "area-miscellania",
-      "note": "Miscellania. Spot-check the id with ::follower where if it stays quiet.",
+      "note": "Miscellania.",
       "group": "area",
       "priority": 40,
       "output": "overhead",
@@ -1990,7 +1990,7 @@
     },
     {
       "id": "area-sophanem",
-      "note": "Sophanem. Spot-check the id with ::follower where if it stays quiet.",
+      "note": "Sophanem.",
       "group": "area",
       "priority": 40,
       "output": "overhead",
@@ -2165,7 +2165,7 @@
     },
     {
       "id": "area-keldagrim",
-      "note": "Keldagrim. Spot-check the id with ::follower where if it stays quiet.",
+      "note": "Keldagrim.",
       "group": "area",
       "priority": 40,
       "output": "overhead",
@@ -2184,7 +2184,7 @@
     },
     {
       "id": "area-fossil-island",
-      "note": "Fossil Island, museum camp side. Spot-check the id with ::follower where if it stays quiet.",
+      "note": "Fossil Island, museum camp side.",
       "group": "area",
       "priority": 40,
       "output": "overhead",
@@ -2242,7 +2242,7 @@
     },
     {
       "id": "area-catacombs",
-      "note": "Catacombs of Kourend. Spot-check the id with ::follower where if it stays quiet.",
+      "note": "Catacombs of Kourend.",
       "group": "area",
       "priority": 40,
       "output": "overhead",
@@ -2299,7 +2299,7 @@
     },
     {
       "id": "area-wintertodt",
-      "note": "Wintertodt camp. Spot-check the id with ::follower where if it stays quiet.",
+      "note": "Wintertodt camp.",
       "group": "area",
       "priority": 40,
       "output": "overhead",
@@ -2338,7 +2338,7 @@
     },
     {
       "id": "area-mining-guild",
-      "note": "Mining Guild, under Falador. Spot-check the id with ::follower where if it stays quiet.",
+      "note": "Mining Guild, under Falador.",
       "group": "area",
       "priority": 40,
       "output": "overhead",
@@ -2357,7 +2357,7 @@
     },
     {
       "id": "area-woodcutting-guild",
-      "note": "Woodcutting Guild, Hosidius. Spot-check the id with ::follower where if it stays quiet.",
+      "note": "Woodcutting Guild, Hosidius.",
       "group": "area",
       "priority": 40,
       "output": "overhead",
@@ -2376,7 +2376,7 @@
     },
     {
       "id": "area-farming-guild",
-      "note": "Farming Guild. Spot-check the id with ::follower where if it stays quiet.",
+      "note": "Farming Guild.",
       "group": "area",
       "priority": 40,
       "output": "overhead",
@@ -2414,7 +2414,7 @@
     },
     {
       "id": "area-barbarian-assault",
-      "note": "Barbarian Assault. Spot-check the id with ::follower where if it stays quiet.",
+      "note": "Barbarian Assault.",
       "group": "area",
       "priority": 40,
       "output": "overhead",
@@ -2433,7 +2433,7 @@
     },
     {
       "id": "area-arceuus",
-      "note": "Arceuus, Great Kourend. Spot-check the id with ::follower where if it stays quiet.",
+      "note": "Arceuus, Great Kourend.",
       "group": "area",
       "priority": 40,
       "output": "overhead",
@@ -2452,7 +2452,7 @@
     },
     {
       "id": "area-hosidius",
-      "note": "Hosidius, Great Kourend. Spot-check the id with ::follower where if it stays quiet.",
+      "note": "Hosidius, Great Kourend.",
       "group": "area",
       "priority": 40,
       "output": "overhead",
@@ -2471,7 +2471,7 @@
     },
     {
       "id": "area-shayzien",
-      "note": "Shayzien, Great Kourend. Spot-check the id with ::follower where if it stays quiet.",
+      "note": "Shayzien, Great Kourend.",
       "group": "area",
       "priority": 40,
       "output": "overhead",
@@ -2490,7 +2490,7 @@
     },
     {
       "id": "area-lovakengj",
-      "note": "Lovakengj, Great Kourend. Spot-check the id with ::follower where if it stays quiet.",
+      "note": "Lovakengj, Great Kourend.",
       "group": "area",
       "priority": 40,
       "output": "overhead",
@@ -2509,7 +2509,7 @@
     },
     {
       "id": "area-piscarilius",
-      "note": "Port Piscarilius, Great Kourend. Spot-check the id with ::follower where if it stays quiet.",
+      "note": "Port Piscarilius, Great Kourend.",
       "group": "area",
       "priority": 40,
       "output": "overhead",
@@ -2528,7 +2528,7 @@
     },
     {
       "id": "area-prifddinas",
-      "note": "Prifddinas. Spot-check the id with ::follower where if it stays quiet.",
+      "note": "Prifddinas.",
       "group": "area",
       "priority": 40,
       "output": "overhead",
