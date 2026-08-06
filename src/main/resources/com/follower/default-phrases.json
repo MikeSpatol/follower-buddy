@@ -2662,6 +2662,20 @@
       ]
     },
     {
+      "id": "thrall-switch",
+      "note": "Fires when a new thrall is summoned while the follower is already one. {style} is the new type, {from} the one it just left.",
+      "group": "thrall",
+      "priority": 95,
+      "output": "overhead",
+      "cooldownMs": 5000,
+      "when": { "type": "thrallSwitch" },
+      "say": [
+        "Done with {from}, are we? {style} it is.",
+        "Reshuffled. {from} out, {style} in.",
+        "Changed your mind again. Fine, {style}.",
+        "One moment I'm {from}, the next I'm {style}. Make up your mind."
+      ]
+    },    {
       "id": "thrall-end",
       "note": "Fires when the thrall's time runs out and the follower returns to your side.",
       "group": "thrall",

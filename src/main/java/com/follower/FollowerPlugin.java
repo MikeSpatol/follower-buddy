@@ -585,10 +585,12 @@ public class FollowerPlugin extends Plugin
 			if (statusPhrasesDialog == null)
 			{
 				statusPhrasesDialog = new com.follower.ui.PhrasesDialog(gson, ruleLoader.getFile(),
-					"health", "Follower Buddy — Status messages",
+					"health,idle", "Follower Buddy — Status and idle messages",
 					"One message per line. These react to your HP, prayer, poison, venom,"
-						+ " skull and run energy. Edit, remove or add lines, untick a rule to"
-						+ " silence it, then Save — changes reach the follower within a second.",
+						+ " skull and run energy, and include the idle chatter for when"
+						+ " nothing is happening. Edit, remove or add lines, untick a rule"
+						+ " to silence it, then Save — changes reach the follower within"
+						+ " a second.",
 					false);
 			}
 			statusPhrasesDialog.open();
@@ -799,6 +801,16 @@ public class FollowerPlugin extends Plugin
 			String name = modelRepository.itemName(itemId);
 			sendStatus("Follower now wearing " + (name == null ? "item " + itemId : name)
 				+ " (" + target.name().toLowerCase(Locale.ROOT) + ")");
+
+			// Weapon animations can only be learned by watching a real player
+			// hold one (measured: they are not in the cache as data). Say so
+			// rather than let an unknown weapon silently stand unarmed.
+			if (target == KitType.WEAPON && !stanceLibrary.knows(itemId))
+			{
+				sendStatus("No stances learned for that weapon yet - wield it once, or stand"
+					+ " near someone who has. For one you cannot get hold of:"
+					+ " ::follower stance " + itemId + " <idle> <walk> <run> [attack]");
+			}
 		});
 	}
 
@@ -1655,10 +1667,21 @@ public class FollowerPlugin extends Plugin
 		}
 		if (thrallNpc != null)
 		{
-			// A resummon while possessed: the server replaces the old thrall
-			// NPC with a fresh one. Switch bodies rather than dropping back to
-			// a vanilla thrall; the old NPC's despawn is then ignored.
+			// A resummon while the old thrall is still in the scene: switch
+			// bodies rather than dropping back to a vanilla thrall.
+			String previous = thrallStyle;
 			switchThrall(npc, style);
+			speechEngine.dispatch(TriggerEvent.thrallSwitch(previous, style));
+		}
+		else if (thrallExitPendingTicks > 0)
+		{
+			// The old thrall vanished a moment ago and we held the exit back
+			// for exactly this: a resummon, not an expiry. Take the new body
+			// and acknowledge the change instead of saying goodbye.
+			String previous = thrallExitStyle;
+			thrallExitPendingTicks = 0;
+			switchThrall(npc, style);
+			speechEngine.dispatch(TriggerEvent.thrallSwitch(previous, style));
 		}
 		else if (thrallLimbo)
 		{
@@ -1738,13 +1761,23 @@ public class FollowerPlugin extends Plugin
 		return models != null && models.length > 0 ? models[0] : -1;
 	}
 
+	/** Ticks left before a vanished thrall counts as gone rather than resummoned. */
+	private int thrallExitPendingTicks;
+	private String thrallExitStyle = "";
+
 	private void exitThrallMode()
 	{
 		if (thrallNpc == null && !thrallLimbo)
 		{
 			return;
 		}
-		String style = thrallStyle;
+		performThrallExit(thrallStyle);
+	}
+
+	/** The exit proper: phase out where it stands, then home and redressed. */
+	private void performThrallExit(String style)
+	{
+		thrallExitPendingTicks = 0;
 		thrallNpc = null;
 		thrallLimbo = false;
 		log.debug("Thrall gone; phasing the follower out");
@@ -1767,6 +1800,7 @@ public class FollowerPlugin extends Plugin
 	{
 		pendingThrallSpawnFxTicks = 0;
 		thrallExitTicks = 0;
+		thrallExitPendingTicks = 0;
 		if (thrallNpc != null || thrallLimbo)
 		{
 			thrallNpc = null;
@@ -1792,8 +1826,19 @@ public class FollowerPlugin extends Plugin
 		return OutfitParser.parse(outfit == null ? "" : outfit);
 	}
 
+	/**
+	 * What the follower swings, matched to what it is actually holding: the
+	 * learned attack animation for its own weapon when one has been observed,
+	 * else the configured per-style default. A scimitar should not slash like
+	 * a godsword just because both are melee.
+	 */
 	private int thrallAttackAnimation()
 	{
+		int learned = stanceLibrary.attackFor(follower.getWeaponItemId());
+		if (learned > 0)
+		{
+			return learned;
+		}
 		switch (thrallStyle)
 		{
 			case "melee":
@@ -2499,6 +2544,13 @@ public class FollowerPlugin extends Plugin
 			exitThrallMode();
 		}
 
+		// No resummon arrived in the grace window, so the thrall really did
+		// expire: say goodbye and go home.
+		if (thrallExitPendingTicks > 0 && --thrallExitPendingTicks == 0)
+		{
+			performThrallExit(thrallExitStyle);
+		}
+
 		if (errands != null)
 		{
 			errands.tick();
@@ -2698,8 +2750,16 @@ public class FollowerPlugin extends Plugin
 			}
 			else
 			{
-				// Steady play, no load in sight: the thrall's time ran out.
-				exitThrallMode();
+				// Steady play - but this is ALSO what a resummon looks like: the
+				// old thrall is removed the moment the new one is cast, and its
+				// despawn reaches us before the new spawn. Saying goodbye here
+				// made a resummon speak the farewell line. Hold the exit for a
+				// few ticks; if a thrall turns up, it was a switch.
+				log.debug("Thrall NPC gone; holding the exit in case this is a resummon");
+				thrallExitStyle = thrallStyle;
+				thrallExitPendingTicks = 3;
+				thrallNpc = null;
+				clientThread.invoke(follower::endNpcSlaveHolding);
 			}
 		}
 		speechEngine.dispatch(TriggerEvent.npc(TriggerEvent.Type.NPC_DESPAWN, npc.getId(), npc.getName()));
@@ -2782,6 +2842,15 @@ public class FollowerPlugin extends Plugin
 	@Subscribe
 	public void onAnimationChanged(AnimationChanged event)
 	{
+		// Every player in the scene teaches their weapon's attack animation,
+		// the same way they teach its walk and idle poses. The follower then
+		// swings whatever it is actually holding.
+		if (event.getActor() instanceof Player)
+		{
+			Player animating = (Player) event.getActor();
+			stanceLibrary.learnAttack(animating, animating.getAnimation());
+		}
+
 		// The possessed thrall attacking: the follower answers with the PLAYER
 		// attack animation for its style's weapon - NPC animation ids cannot
 		// play on a player skeleton.
@@ -3380,6 +3449,50 @@ public class FollowerPlugin extends Plugin
 				break;
 			}
 
+			case "stance":
+			{
+				// Weapon animations are not in the cache anywhere (measured -
+				// see tools/cache-dumper probes), so a weapon nobody can be
+				// seen wielding has to be entered by hand.
+				if (args.length < 2)
+				{
+					sendStatus("::follower stance <weaponId> - shows what is known");
+					sendStatus("::follower stance <weaponId> <idle> <walk> <run> [attack]"
+						+ " - sets it by hand");
+					break;
+				}
+				try
+				{
+					int weaponId = Integer.parseInt(args[1]);
+					if (args.length < 5)
+					{
+						com.follower.follower.StanceLibrary.Stance known =
+							stanceLibrary.describe(weaponId);
+						String name = modelRepository.itemName(weaponId);
+						sendStatus(known == null
+							? (name == null ? "Item " + weaponId : name)
+								+ ": no stance known - it will stand unarmed"
+							: (name == null ? "Item " + weaponId : name)
+								+ ": idle " + known.idle + ", walk " + known.walk
+								+ ", run " + known.run
+								+ ", attack " + (known.attack > 0 ? known.attack : "unknown"));
+						break;
+					}
+					stanceLibrary.setManual(weaponId,
+						Integer.parseInt(args[2]), Integer.parseInt(args[3]),
+						Integer.parseInt(args[4]),
+						args.length > 5 ? Integer.parseInt(args[5]) : 0);
+					stanceLibrary.save();
+					clientThread.invoke(this::rebuildFollower);
+					sendStatus("Stance set for item " + weaponId + " and saved.");
+				}
+				catch (NumberFormatException e)
+				{
+					sendStatus("Numbers only: ::follower stance <weaponId> <idle> <walk> <run> [attack]");
+				}
+				break;
+			}
+
 			case "outfit":
 			{
 				if (args.length < 2)
@@ -3416,7 +3529,8 @@ public class FollowerPlugin extends Plugin
 				sendStatus("::follower reload | copy | say <text> | here | rebuild | fix | "
 					+ "anim <id...> | watch | colours <part> | grabhair | keephair | "
 					+ "clearhair | hairbright <n> | highlight <n> | light <a> <c> | "
-					+ "height <n> | animinfo | animtrace | status | where | outfit <name>");
+					+ "height <n> | animinfo | animtrace | status | where | outfit <name> | "
+					+ "stance <weaponId> [idle walk run attack]");
 			// ::follower interp was removed: the interpolation filter is keyed on
 			// animation id, so it could not be changed for the follower without
 			// changing it for the player too.

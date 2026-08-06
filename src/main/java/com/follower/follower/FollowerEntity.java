@@ -734,10 +734,16 @@ public class FollowerEntity
 		}
 		else if (!wp.equals(lastThrallTile))
 		{
-			// A new server tile from the thrall becomes a waypoint; thralls
-			// walk, so no run flag - backlog is soaked up by the speed tiers.
+			// A new server tile from the thrall becomes a waypoint. The run
+			// flag is not cosmetic: a thrall keeps pace with the player, so
+			// when you run it covers two tiles a tick. Walking that gap takes
+			// two ticks and the follower falls permanently behind - which is
+			// exactly the "thrall walks too slowly" symptom. Two tiles in one
+			// tick IS running, so mark it and let the stepper move at run
+			// speed.
+			boolean covered = lastThrallTile.distanceTo(wp) >= 2;
 			route.addLast(wp);
-			routeRun.addLast(Boolean.FALSE);
+			routeRun.addLast(covered);
 		}
 		lastThrallTile = wp;
 
@@ -792,15 +798,7 @@ public class FollowerEntity
 		{
 			return false;
 		}
-		net.runelite.api.Actor target = thrallNpc.getInteracting();
-		if (target == null)
-		{
-			// Ranged and magic thralls attack from distance without always
-			// holding an interaction lock - but a thrall only ever fights the
-			// player's target, so that is the truth to face.
-			Player local = client.getLocalPlayer();
-			target = local == null ? null : local.getInteracting();
-		}
+		net.runelite.api.Actor target = thrallTarget();
 		WorldPoint targetTile = target == null ? null : target.getWorldLocation();
 		if (targetTile == null)
 		{
@@ -1552,9 +1550,12 @@ public class FollowerEntity
 			// stance has none - its own -1 fallback).
 			int remaining = (dstYaw - yaw) & 0x7ff;
 			int turn = remaining > 1024 ? stance.turnRight : stance.turnLeft;
-			// 0 = field missing from a pre-directional stance entry; the
-			// standard turn pose stands in until the weapon is re-observed.
-			pose = turn > 0 ? turn : PlayerPose.IDLE_TURN;
+			// 0 = field missing from a stance set by hand or learned before
+			// these fields existed. The standard turn only suits a weapon on
+			// the standard stance; anything else holds its own idle and lets
+			// the yaw come round, rather than turning empty-handed.
+			pose = turn > 0 ? turn
+				: (stance.walk == PlayerPose.WALK ? PlayerPose.IDLE_TURN : stance.idle);
 		}
 		else
 		{
@@ -1603,12 +1604,59 @@ public class FollowerEntity
 	 */
 	private boolean faceLocked()
 	{
+		// A thrall fighting something is face-locked on it, exactly like any
+		// interacting entity. This matters for SPEED as much as facing: the
+		// client's turn slowdown applies only when there is no face target,
+		// so without this a thrall in combat crawled at half pace while its
+		// yaw chased the enemy.
+		if (thrallNpc != null)
+		{
+			return thrallTarget() != null;
+		}
 		if (goalTile != null)
 		{
 			return true;
 		}
 		return stayTile != null
 			&& tile != null && tile.equals(stayTile) && route.isEmpty() && serverPath.isEmpty();
+	}
+
+	/**
+	 * What the possessed thrall is fighting: its own interaction, or failing
+	 * that the player's - ranged and magic thralls do not always hold a lock
+	 * of their own, but they only ever attack the player's target.
+	 */
+	private net.runelite.api.Actor thrallTarget()
+	{
+		if (thrallNpc == null)
+		{
+			return null;
+		}
+		net.runelite.api.Actor target = thrallNpc.getInteracting();
+		if (target == null)
+		{
+			Player local = client.getLocalPlayer();
+			target = local == null ? null : local.getInteracting();
+		}
+		return target != null && target.getWorldLocation() != null ? target : null;
+	}
+
+	/**
+	 * Where the follower looks while its feet move: the thrall's target in
+	 * thrall mode, the stay anchor or player otherwise. Falls through to the
+	 * travel heading when there is nothing to face, so it never moonwalks.
+	 */
+	private void faceAnchor()
+	{
+		if (thrallNpc != null)
+		{
+			if (!faceThrallTarget(false))
+			{
+				dstYaw = travelYaw;
+			}
+			return;
+		}
+		faceStayAnchor();
 	}
 
 	/**
@@ -1627,11 +1675,9 @@ public class FollowerEntity
 			delta -= 2048;
 		}
 
-		// A 0 means the field is MISSING - a stance learned before the
-		// directional fields existed - not that the weapon lacks the pose:
-		// every real player stance has directional animations. Fall back to the
-		// standard set (which most weapons use anyway) until the weapon is
-		// observed again and its own ids replace these.
+		// A 0 means the field is MISSING - a stance that was set by hand or
+		// learned before the directional fields existed - not that the weapon
+		// lacks the pose: every real player stance has directional animations.
 		int pose;
 		if (delta >= -256 && delta <= 256)
 		{
@@ -1639,15 +1685,18 @@ public class FollowerEntity
 		}
 		else if (delta >= 256 && delta < 768)
 		{
-			pose = stance.walkRight > 0 ? stance.walkRight : PlayerPose.SIDESTEP_RIGHT;
+			pose = stance.walkRight > 0 ? stance.walkRight
+				: directionalFallback(stance, PlayerPose.SIDESTEP_RIGHT);
 		}
 		else if (delta >= -768 && delta <= -256)
 		{
-			pose = stance.walkLeft > 0 ? stance.walkLeft : PlayerPose.SIDESTEP_LEFT;
+			pose = stance.walkLeft > 0 ? stance.walkLeft
+				: directionalFallback(stance, PlayerPose.SIDESTEP_LEFT);
 		}
 		else
 		{
-			pose = stance.walkBack > 0 ? stance.walkBack : PlayerPose.TURN_180;
+			pose = stance.walkBack > 0 ? stance.walkBack
+				: directionalFallback(stance, PlayerPose.TURN_180);
 		}
 
 		if (lastMoveSpeed >= 8 && pose == stance.walk && stance.run > 0)
@@ -1661,6 +1710,26 @@ public class FollowerEntity
 				pose, travelYaw, yaw, delta);
 		}
 		return pose;
+	}
+
+	/**
+	 * The side-step or back-pedal to use when a stance does not carry its own.
+	 *
+	 * <p>Which fallback is right depends entirely on the stance, and the
+	 * observed library says so plainly. Of the 26 weapons using the default
+	 * walk, ALL 26 also use the default side-steps, so the standard set is
+	 * exactly right there. Of the 41 with a weapon-specific walk, only 5 use
+	 * the standard side-step and NOT ONE uses the standard back-pedal - so
+	 * borrowing it is wrong roughly nine times in ten, and it looks it: an
+	 * empty-handed strafe while carrying a bulwark.
+	 *
+	 * <p>Those stances fall back to their own walk instead. It is the client's
+	 * own behaviour for a pose that resolves to -1, and it keeps the weapon in
+	 * hand, which is the part a player actually notices.
+	 */
+	private static int directionalFallback(StanceLibrary.Stance stance, int standardPose)
+	{
+		return stance.walk == PlayerPose.WALK ? standardPose : stance.walk;
 	}
 
 	/**
@@ -1709,7 +1778,7 @@ public class FollowerEntity
 			travelYaw = eightDirYaw(fineWX, fineWY, dstX, dstY);
 			if (faceLocked())
 			{
-				facePlayer();
+				faceAnchor();
 			}
 			else
 			{
@@ -2206,6 +2275,12 @@ public class FollowerEntity
 	{
 		poseOverride = animationId;
 		activePose = -1;
+	}
+
+	/** The weapon the follower is holding, for animation lookups. */
+	public int getWeaponItemId()
+	{
+		return weaponItemId;
 	}
 
 	/** Tells the follower which weapon it is holding, so it picks that weapon's stances. */

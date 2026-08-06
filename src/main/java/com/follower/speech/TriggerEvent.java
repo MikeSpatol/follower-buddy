@@ -24,6 +24,7 @@ public final class TriggerEvent
 		DAMAGE_TAKEN,
 		EQUIPMENT_CHANGE,
 		THRALL_START,
+		THRALL_SWITCH,
 		THRALL_END,
 		ERRAND_START,
 		ERRAND_END,
@@ -36,6 +37,17 @@ public final class TriggerEvent
 		TriggerEvent event = new TriggerEvent(type);
 		event.name = style == null ? "" : style;
 		event.placeholders.put("style", event.name);
+		return event;
+	}
+
+	/**
+	 * A resummon while already possessed: {@code style} is the new thrall
+	 * type, {@code from} the one being left behind.
+	 */
+	public static TriggerEvent thrallSwitch(String from, String style)
+	{
+		TriggerEvent event = thrall(Type.THRALL_SWITCH, style);
+		event.placeholders.put("from", from == null ? "" : from);
 		return event;
 	}
 

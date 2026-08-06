@@ -290,7 +290,8 @@ public class FollowerPanel extends PluginPanel
 		editorButtons.add(bosses);
 
 		JButton statuses = new JButton("Statuses...");
-		statuses.setToolTipText("View and edit what the follower says about your HP, prayer, poison and more");
+		statuses.setToolTipText("View and edit what the follower says about your HP, prayer,"
+			+ " poison and more, plus its idle chatter");
 		statuses.setFocusPainted(false);
 		statuses.addActionListener(e -> onEditStatuses.run());
 		editorButtons.add(statuses);

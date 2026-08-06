@@ -28,7 +28,7 @@ import net.runelite.api.NPC;
  *   <tr><td>damageTaken</td><td>{@code minimum}</td></tr>
  *   <tr><td>itemEquipped</td><td>{@code ids}</td></tr>
  *   <tr><td>poisoned / venomed / skulled</td><td>no fields</td></tr>
- *   <tr><td>thrallStart / thrallEnd</td><td>no fields; {@code {style}} placeholder</td></tr>
+ *   <tr><td>thrallStart / thrallSwitch / thrallEnd</td><td>no fields; {@code {style}} and, for a switch, {@code {from}}</td></tr>
  *   <tr><td>errandStart / errandEnd</td><td>optional {@code names} (errand names); {@code {errand}} placeholder</td></tr>
  *   <tr><td>energyBelow</td><td>{@code percent}</td></tr>
  *   <tr><td>idle</td><td>{@code ticks}</td></tr>
@@ -200,6 +200,8 @@ public class Condition
 
 			case "thrallstart":
 				return event.getType() == TriggerEvent.Type.THRALL_START;
+			case "thrallswitch":
+				return event.getType() == TriggerEvent.Type.THRALL_SWITCH;
 			case "thrallend":
 				return event.getType() == TriggerEvent.Type.THRALL_END;
 

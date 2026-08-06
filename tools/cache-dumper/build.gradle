@@ -30,6 +30,44 @@ application {
 
 // Checks every location rule's region ids against the world map's own labels.
 //   gradlew runAudit --args="<phrases.json> [cacheDir]"
+// Correlates learned stances against item params, to find out whether weapon
+// animations can be read from the cache instead of observed.
+//   gradlew runProbe --args="<stances.json>"
+tasks.register('runProbe', JavaExec) {
+    group = 'verification'
+    description = 'Probes whether weapon animations live in item params'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.follower.tools.StanceParamProbe'
+}
+
+tasks.register('runStructProbe', JavaExec) {
+    group = 'verification'
+    description = 'Probes whether weapon stance sets live in cache structs'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.follower.tools.StanceStructProbe'
+}
+
+tasks.register('runArchiveProbe', JavaExec) {
+    group = 'verification'
+    description = 'Scans every cache archive for paired weapon pose ids'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.follower.tools.StanceArchiveProbe'
+}
+
+tasks.register('runEnumProbe', JavaExec) {
+    group = 'verification'
+    description = 'Decodes enums looking for a weapon to stance mapping'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.follower.tools.StanceEnumProbe'
+}
+
+tasks.register('runSeqInfo', JavaExec) {
+    group = 'verification'
+    description = 'Prints what an animation id is, to check ids from outside the game'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.follower.tools.SequenceInfo'
+}
+
 tasks.register('runAudit', JavaExec) {
     group = 'verification'
     description = 'Audits phrases.json location regions against the game world map'

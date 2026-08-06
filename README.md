@@ -661,9 +661,21 @@ These are inherent to the approach, not bugs to be filed:
   RuneLite's GameTick event instead of per-frame inference - one observation
   per genuine server tick would replace the "3-4 tiles = 2 ticks" heuristics
   with ground truth, and is the likeliest route to an exact-feel follower.
-- **Pose animations** come from a library learned by watching real players — see
-  `StanceLibrary`. A weapon not yet seen falls back to unarmed (808/819/824). Wield it
-  yourself once and it's learned exactly.
+- **Pose animations come from observation, and cannot come from anywhere else.**
+  `StanceLibrary` learns a weapon's idle/walk/run (and now its attack) by watching
+  real players. This is not laziness — it was measured. Weapon animations are **not**
+  in the cache as data: item params hold the combat stat block, item `category`
+  disagrees with the observed stances 49 times out of 189, and not one of the
+  cache's 3,986 structs carries a pose set. The client resolves them in script at
+  equip time. Both probes are kept as `gradlew runProbe` and `runStructProbe` in
+  `tools/cache-dumper` so the conclusion can be re-tested after a game update.
+
+  Three things make observation cheap in practice. A starter library ships in the
+  jar, so a fresh install already knows ~190 weapons. Every player in the scene
+  teaches passively — a few minutes anywhere busy fills it out. And weapons cluster
+  hard: those 190 weapons collapse into just **32 stance classes**, two of which
+  cover 69% of them, so an unknown weapon's attack is borrowed from a weapon of the
+  same class. Seeing one scimitar swung covers every scimitar in the game.
 - **Animations must loop defensively.** Many pose animations have `frameStep = -1`,
   meaning they were never authored to loop. `AnimationController`'s default finish
   handler steps back by `frameStep` and, if the frame is still out of range, **drops

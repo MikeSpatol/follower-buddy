@@ -32,7 +32,7 @@ import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
 
 /**
- * The message editor: every rule of one group in phrases.json, shown with
+ * The message editor: every rule of one or more groups in phrases.json, with
  * what triggers it, an on/off tick and its message lines (one per line) free
  * to edit. Save writes straight back to phrases.json, which the plugin
  * hot-reloads within a second — no restart, no rebuild.
@@ -49,7 +49,18 @@ public class PhrasesDialog extends JDialog
 {
 	private final Gson gson;
 	private final Path file;
-	private final String group;
+
+	/**
+	 * The rule groups this window edits. Usually one, but related groups can
+	 * be shown together - idle chatter belongs with the status lines as far
+	 * as anyone looking for "things the follower says about itself" is
+	 * concerned, even though the engine keeps them separate so they can be
+	 * toggled apart.
+	 */
+	private final java.util.List<String> groups;
+
+	/** New rules are created in the first group. */
+	private final String primaryGroup;
 	private final boolean structural;
 
 	private final JPanel list = new JPanel();
@@ -77,12 +88,18 @@ public class PhrasesDialog extends JDialog
 		}
 	}
 
-	public PhrasesDialog(Gson gson, Path file, String group, String title, String hintText, boolean structural)
+	/**
+	 * @param group one or more rule groups to edit; the first receives any
+	 * rules added from this window
+	 */
+	public PhrasesDialog(Gson gson, Path file, String group, String title, String hintText,
+		boolean structural)
 	{
 		super((java.awt.Frame) null, title, false);
 		this.gson = gson.newBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 		this.file = file;
-		this.group = group;
+		this.groups = java.util.Arrays.asList(group.split("\\s*,\\s*"));
+		this.primaryGroup = this.groups.get(0);
 		this.structural = structural;
 
 		setDefaultCloseOperation(HIDE_ON_CLOSE);
@@ -172,7 +189,7 @@ public class PhrasesDialog extends JDialog
 		for (JsonElement element : parsed.getAsJsonArray("rules"))
 		{
 			JsonObject rule = element.getAsJsonObject();
-			if (!group.equals(optString(rule, "group")) || optString(rule, "id") == null)
+			if (!groups.contains(optString(rule, "group")) || optString(rule, "id") == null)
 			{
 				continue;
 			}
@@ -455,7 +472,7 @@ public class PhrasesDialog extends JDialog
 		JsonObject rule = new JsonObject();
 		rule.addProperty("id", id);
 		rule.addProperty("note", name + ". Added from the editor.");
-		rule.addProperty("group", group);
+		rule.addProperty("group", primaryGroup);
 		rule.addProperty("priority", 40);
 		rule.addProperty("output", "overhead");
 		rule.addProperty("delayTicks", 2);
