@@ -118,6 +118,14 @@ public class FollowerPanel extends PluginPanel
 		this.onEditQuests = onEditQuests;
 	}
 
+	/** Opens the errand-message editor; set by the plugin after construction. */
+	private Runnable onEditErrands = () -> { };
+
+	public void setOnEditErrands(Runnable onEditErrands)
+	{
+		this.onEditErrands = onEditErrands;
+	}
+
 	// ---------------------------------------------------------------- profiles
 
 	private final javax.swing.JComboBox<String> profileCombo = new javax.swing.JComboBox<>();
@@ -141,24 +149,35 @@ public class FollowerPanel extends PluginPanel
 		this.onProfileDelete = onProfileDelete;
 	}
 
-	/** Refreshes the dropdown, keeping whatever name is currently in the box. */
-	public void setProfileNames(java.util.List<String> names)
+	/** Set while the dropdown is being repopulated, so selection events are ignored. */
+	private boolean suppressProfileEvents;
+
+	/**
+	 * Refreshes the dropdown and selects {@code active}. Selection events are
+	 * suppressed throughout: repopulating must not read as the user picking a
+	 * profile, which would re-load the outfit mid-edit.
+	 */
+	public void setProfileNames(java.util.List<String> names, String active)
 	{
-		Object current = profileCombo.getEditor().getItem();
-		profileCombo.removeAllItems();
-		for (String name : names)
+		suppressProfileEvents = true;
+		try
 		{
-			profileCombo.addItem(name);
+			profileCombo.removeAllItems();
+			for (String name : names)
+			{
+				profileCombo.addItem(name);
+			}
+			profileCombo.setSelectedItem(active == null ? null : active);
 		}
-		if (current != null && !current.toString().trim().isEmpty())
+		finally
 		{
-			profileCombo.setSelectedItem(current.toString());
+			suppressProfileEvents = false;
 		}
 	}
 
 	private String profileName()
 	{
-		Object item = profileCombo.getEditor().getItem();
+		Object item = profileCombo.getSelectedItem();
 		return item == null ? "" : item.toString().trim();
 	}
 
@@ -199,11 +218,29 @@ public class FollowerPanel extends PluginPanel
 		this.onBodyColor = onBodyColor;
 
 		setLayout(new BorderLayout());
-		setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
 		setBackground(ColorScheme.DARK_GRAY_COLOR);
+		// The panel is taller than most sidebars and the picker grows as you
+		// search, so nothing may impose a floor on the viewport height.
+		setMinimumSize(new Dimension(0, 0));
 
-		add(buildHeader(), BorderLayout.NORTH);
-		add(buildContent(), BorderLayout.CENTER);
+		JPanel body = new JPanel();
+		body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
+		body.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		body.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+		body.add(buildHeader());
+		body.add(buildContent());
+
+		// Everything scrolls together: the sidebar is never tall enough for
+		// the dialogue editors, profiles, equipment grid and item picker at
+		// once, and a clipped panel hides controls with no way to reach them.
+		JScrollPane scroll = new JScrollPane(body,
+			JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		scroll.setBorder(BorderFactory.createEmptyBorder());
+		scroll.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		scroll.getViewport().setBackground(ColorScheme.DARK_GRAY_COLOR);
+		scroll.getVerticalScrollBar().setUnitIncrement(16);
+		scroll.setMinimumSize(new Dimension(0, 0));
+		add(scroll, BorderLayout.CENTER);
 
 		showPicker(null);
 	}
@@ -216,32 +253,18 @@ public class FollowerPanel extends PluginPanel
 		header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
 		header.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
-		JLabel title = new JLabel("Follower outfit");
-		title.setFont(FontManager.getRunescapeBoldFont());
-		title.setForeground(Color.WHITE);
-		title.setAlignmentX(LEFT_ALIGNMENT);
-		header.add(title);
-		header.add(javax.swing.Box.createVerticalStrut(6));
+		JLabel dialogueTitle = new JLabel("Follower dialogue");
+		dialogueTitle.setFont(FontManager.getRunescapeBoldFont());
+		dialogueTitle.setForeground(Color.WHITE);
+		dialogueTitle.setAlignmentX(LEFT_ALIGNMENT);
+		header.add(dialogueTitle);
 
-		JPanel buttons = new JPanel(new GridLayout(1, 2, 6, 0));
-		buttons.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		buttons.setAlignmentX(LEFT_ALIGNMENT);
-		buttons.setMaximumSize(new Dimension(Integer.MAX_VALUE, 26));
-
-		JButton copy = new JButton("Copy my gear");
-		copy.setToolTipText("Fill every slot from what you are currently wearing");
-		copy.setFocusPainted(false);
-		copy.addActionListener(e -> onCopyGear.run());
-		buttons.add(copy);
-
-		JButton clear = new JButton("Clear all");
-		clear.setToolTipText("Strip the follower back to the default body");
-		clear.setFocusPainted(false);
-		clear.addActionListener(e -> onClearAll.run());
-		buttons.add(clear);
-
-		header.add(buttons);
-		header.add(javax.swing.Box.createVerticalStrut(6));
+		JLabel dialogueHint = new JLabel("What the follower says, and when");
+		dialogueHint.setFont(FontManager.getRunescapeSmallFont());
+		dialogueHint.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
+		dialogueHint.setAlignmentX(LEFT_ALIGNMENT);
+		dialogueHint.setBorder(BorderFactory.createEmptyBorder(2, 0, 6, 0));
+		header.add(dialogueHint);
 
 		JPanel editorButtons = new JPanel(new GridLayout(0, 2, 6, 4));
 		editorButtons.setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -278,7 +301,40 @@ public class FollowerPanel extends PluginPanel
 		quests.addActionListener(e -> onEditQuests.run());
 		editorButtons.add(quests);
 
+		JButton errands = new JButton("Errands...");
+		errands.setToolTipText("View and edit what the follower says on its little errands");
+		errands.setFocusPainted(false);
+		errands.addActionListener(e -> onEditErrands.run());
+		editorButtons.add(errands);
+
 		header.add(editorButtons);
+		header.add(javax.swing.Box.createVerticalStrut(12));
+
+		JLabel title = new JLabel("Follower outfit");
+		title.setFont(FontManager.getRunescapeBoldFont());
+		title.setForeground(Color.WHITE);
+		title.setAlignmentX(LEFT_ALIGNMENT);
+		header.add(title);
+		header.add(javax.swing.Box.createVerticalStrut(6));
+
+		JPanel buttons = new JPanel(new GridLayout(1, 2, 6, 0));
+		buttons.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		buttons.setAlignmentX(LEFT_ALIGNMENT);
+		buttons.setMaximumSize(new Dimension(Integer.MAX_VALUE, 26));
+
+		JButton copy = new JButton("Copy my gear");
+		copy.setToolTipText("Fill every slot from what you are currently wearing");
+		copy.setFocusPainted(false);
+		copy.addActionListener(e -> onCopyGear.run());
+		buttons.add(copy);
+
+		JButton clear = new JButton("Clear all");
+		clear.setToolTipText("Strip the follower back to the default body");
+		clear.setFocusPainted(false);
+		clear.addActionListener(e -> onClearAll.run());
+		buttons.add(clear);
+
+		header.add(buttons);
 		header.add(javax.swing.Box.createVerticalStrut(6));
 
 		JLabel profilesLabel = new JLabel("OUTFIT PROFILES");
@@ -287,29 +343,42 @@ public class FollowerPanel extends PluginPanel
 		profilesLabel.setAlignmentX(LEFT_ALIGNMENT);
 		header.add(profilesLabel);
 
-		profileCombo.setEditable(true);
-		profileCombo.setToolTipText("Pick a profile, or type a new name and press Save");
+		// Pick a profile and you are wearing it; every change from then on is
+		// saved straight back to it. New makes one, Delete removes it.
+		profileCombo.setToolTipText("Pick a profile to wear it - changes save to it automatically");
 		profileCombo.setAlignmentX(LEFT_ALIGNMENT);
 		profileCombo.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
+		profileCombo.addActionListener(e ->
+		{
+			// Fires for programmatic repopulation too; the guard keeps a
+			// refresh from re-loading (and so re-saving) the outfit.
+			if (!suppressProfileEvents)
+			{
+				onProfileLoad.accept(profileName());
+			}
+		});
 		header.add(profileCombo);
 		header.add(javax.swing.Box.createVerticalStrut(4));
 
-		JPanel profileButtons = new JPanel(new GridLayout(1, 3, 6, 0));
+		JPanel profileButtons = new JPanel(new GridLayout(1, 2, 6, 0));
 		profileButtons.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		profileButtons.setAlignmentX(LEFT_ALIGNMENT);
 		profileButtons.setMaximumSize(new Dimension(Integer.MAX_VALUE, 26));
 
-		JButton profileLoad = new JButton("Load");
-		profileLoad.setToolTipText("Dress the follower in the selected profile");
-		profileLoad.setFocusPainted(false);
-		profileLoad.addActionListener(e -> onProfileLoad.accept(profileName()));
-		profileButtons.add(profileLoad);
-
-		JButton profileSave = new JButton("Save");
-		profileSave.setToolTipText("Save the follower's current outfit under this name");
-		profileSave.setFocusPainted(false);
-		profileSave.addActionListener(e -> onProfileSave.accept(profileName()));
-		profileButtons.add(profileSave);
+		JButton profileNew = new JButton("New");
+		profileNew.setToolTipText("Save the follower's current outfit as a new profile");
+		profileNew.setFocusPainted(false);
+		profileNew.addActionListener(e ->
+		{
+			String name = javax.swing.JOptionPane.showInputDialog(this,
+				"Name for the new outfit profile:", "New profile",
+				javax.swing.JOptionPane.PLAIN_MESSAGE);
+			if (name != null && !name.trim().isEmpty())
+			{
+				onProfileSave.accept(name.trim());
+			}
+		});
+		profileButtons.add(profileNew);
 
 		JButton profileDelete = new JButton("Delete");
 		profileDelete.setToolTipText("Remove the selected profile");
@@ -406,7 +475,10 @@ public class FollowerPanel extends PluginPanel
 		content.add(picker);
 
 		content.add(sectionHeader("BODY", "Styles cycle live on the follower; colours are the game's own"));
-		bodyList.setLayout(new GridLayout(0, 1, 0, 2));
+		// BoxLayout, NOT GridLayout: a grid splits its height evenly between
+		// rows and ignores their maximum size, so every row grew as the
+		// window did. A vertical box honours the fixed row height.
+		bodyList.setLayout(new BoxLayout(bodyList, BoxLayout.Y_AXIS));
 		bodyList.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		bodyList.setAlignmentX(LEFT_ALIGNMENT);
 		content.add(bodyList);
@@ -457,10 +529,18 @@ public class FollowerPanel extends PluginPanel
 		previewName.setFont(FontManager.getRunescapeSmallFont());
 		previewName.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
 		previewName.setVerticalAlignment(SwingConstants.TOP);
+		// Fixed size: an HTML label sizes itself to its longest line, so a
+		// long item name would widen this label, then the wrapper, then the
+		// whole sidebar column - the layout visibly jumping on hover.
+		previewName.setPreferredSize(new Dimension(PREVIEW_TEXT_WIDTH, 32 * PREVIEW_SCALE));
+		previewName.setMaximumSize(new Dimension(PREVIEW_TEXT_WIDTH, 32 * PREVIEW_SCALE));
 		wrapper.add(previewName, BorderLayout.CENTER);
 
 		return wrapper;
 	}
+
+	/** Width the preview's name column is held to, so long names wrap instead of stretch. */
+	private static final int PREVIEW_TEXT_WIDTH = 68;
 
 	// -------------------------------------------------------------- plugin hooks
 
@@ -505,9 +585,11 @@ public class FollowerPanel extends PluginPanel
 
 		bodyList.removeAll();
 		bodyList.add(buildGenderRow());
+		bodyList.add(javax.swing.Box.createVerticalStrut(2));
 		bodyList.add(buildSkinRow());
 		for (KitType part : BODY_PARTS)
 		{
+			bodyList.add(javax.swing.Box.createVerticalStrut(2));
 			bodyList.add(buildBodyRow(part));
 		}
 		bodyList.revalidate();
@@ -601,14 +683,12 @@ public class FollowerPanel extends PluginPanel
 
 	private JPanel buildGenderRow()
 	{
-		JPanel row = new JPanel(new BorderLayout(4, 0));
-		row.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		row.setBorder(BorderFactory.createEmptyBorder(3, 6, 3, 6));
+		JPanel row = bodyRowShell();
 
-		JLabel name = new JLabel("body type");
+		JLabel name = new JLabel("body");
 		name.setFont(FontManager.getRunescapeSmallFont());
 		name.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-		name.setPreferredSize(new Dimension(64, 20));
+		name.setPreferredSize(new Dimension(NAME_WIDTH, ROW_CONTENT_HEIGHT));
 		row.add(name, BorderLayout.WEST);
 
 		JPanel toggle = new JPanel(new GridLayout(1, 2, 2, 0));
@@ -649,44 +729,67 @@ public class FollowerPanel extends PluginPanel
 	 */
 	private JPanel buildSkinRow()
 	{
-		JPanel row = new JPanel(new BorderLayout(4, 0));
-		row.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		row.setBorder(BorderFactory.createEmptyBorder(3, 6, 3, 6));
+		JPanel row = bodyRowShell();
 
 		JLabel name = new JLabel("skin");
 		name.setFont(FontManager.getRunescapeSmallFont());
 		name.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-		name.setPreferredSize(new Dimension(64, 20));
+		name.setPreferredSize(new Dimension(NAME_WIDTH, ROW_CONTENT_HEIGHT));
 		row.add(name, BorderLayout.WEST);
 
 		row.add(swatch(4, "skin", GamePalette.SKIN), BorderLayout.EAST);
 		return row;
 	}
 
-	/** One body part: cycle its kit, and set its colour. */
-	private JPanel buildBodyRow(KitType part)
+	/** Label column width; the style label takes whatever is left over. */
+	private static final int NAME_WIDTH = 52;
+	private static final int ROW_CONTENT_HEIGHT = 20;
+	private static final int ROW_HEIGHT = ROW_CONTENT_HEIGHT + 6;
+
+	/**
+	 * A body-part row: fixed height so the vertical BoxLayout cannot stretch
+	 * it (rows doubled in height on a maximised window), and never wider than
+	 * the panel so the scrollbar cannot clip the colour swatch off the right.
+	 */
+	private JPanel bodyRowShell()
 	{
 		JPanel row = new JPanel(new BorderLayout(4, 0));
 		row.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 		row.setBorder(BorderFactory.createEmptyBorder(3, 6, 3, 6));
+		row.setMinimumSize(new Dimension(0, ROW_HEIGHT));
+		row.setPreferredSize(new Dimension(0, ROW_HEIGHT));
+		row.setMaximumSize(new Dimension(Integer.MAX_VALUE, ROW_HEIGHT));
+		row.setAlignmentX(LEFT_ALIGNMENT);
+		return row;
+	}
+
+	/** One body part: cycle its kit, and set its colour. */
+	private JPanel buildBodyRow(KitType part)
+	{
+		JPanel row = bodyRowShell();
 
 		JLabel name = new JLabel(part.name().toLowerCase());
 		name.setFont(FontManager.getRunescapeSmallFont());
 		name.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-		name.setPreferredSize(new Dimension(64, 20));
+		name.setPreferredSize(new Dimension(NAME_WIDTH, ROW_CONTENT_HEIGHT));
 		row.add(name, BorderLayout.WEST);
 
 		// Kits have no names in the cache, so they're cycled and judged by eye - the
 		// follower updates live, which makes it its own preview.
-		JPanel cycle = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
+		//
+		// BorderLayout rather than a flow: the arrows keep their size at the
+		// edges and the label in the middle absorbs whatever width is left, so
+		// a narrow sidebar squeezes the text instead of pushing the swatch out.
+		JPanel cycle = new JPanel(new BorderLayout(2, 0));
 		cycle.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 
 		JButton prev = new JButton("‹");
 		prev.setToolTipText("Previous style");
 		prev.setFocusPainted(false);
-		prev.setMargin(new java.awt.Insets(0, 6, 0, 6));
+		prev.setMargin(new java.awt.Insets(0, 2, 0, 2));
+		prev.setPreferredSize(new Dimension(18, ROW_CONTENT_HEIGHT));
 		prev.addActionListener(e -> onCycleKit.accept(part, -1));
-		cycle.add(prev);
+		cycle.add(prev, BorderLayout.WEST);
 
 		java.util.List<Integer> choices = repository.kitsFor(part, current.getGender());
 		int index = current.isKit(part) ? choices.indexOf(current.kitId(part)) : -1;
@@ -697,16 +800,17 @@ public class FollowerPanel extends PluginPanel
 		style.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
 		style.setToolTipText(label + "  (kit id "
 			+ (current.isKit(part) ? current.kitId(part) : -1) + ")");
-		style.setPreferredSize(new Dimension(96, 20));
+		style.setPreferredSize(new Dimension(0, ROW_CONTENT_HEIGHT));
 		style.setHorizontalAlignment(SwingConstants.CENTER);
-		cycle.add(style);
+		cycle.add(style, BorderLayout.CENTER);
 
 		JButton next = new JButton("›");
 		next.setToolTipText("Next style");
 		next.setFocusPainted(false);
-		next.setMargin(new java.awt.Insets(0, 6, 0, 6));
+		next.setMargin(new java.awt.Insets(0, 2, 0, 2));
+		next.setPreferredSize(new Dimension(18, ROW_CONTENT_HEIGHT));
 		next.addActionListener(e -> onCycleKit.accept(part, 1));
-		cycle.add(next);
+		cycle.add(next, BorderLayout.EAST);
 
 		row.add(cycle, BorderLayout.CENTER);
 
@@ -916,8 +1020,12 @@ public class FollowerPanel extends PluginPanel
 		JPanel row = new JPanel(new BorderLayout(4, 0));
 		row.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 		row.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
-		row.setToolTipText("Click to equip (id " + item.id + ")");
+		row.setToolTipText(item.name + " - click to equip (id " + item.id + ")");
 		row.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		// Never taller or wider than a row needs: the list lives in a vertical
+		// box, which would otherwise stretch rows to fill and let a long name
+		// widen the whole column.
+		row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
 
 		JLabel icon = new JLabel();
 		icon.setPreferredSize(new Dimension(36, 32));
@@ -931,6 +1039,10 @@ public class FollowerPanel extends PluginPanel
 		JLabel name = new JLabel(item.name);
 		name.setFont(FontManager.getRunescapeSmallFont());
 		name.setForeground(Color.WHITE);
+		// Zero preferred width: BorderLayout's centre takes whatever is left
+		// over at layout time, and the label ellipsises rather than demanding
+		// room for the full name. The tooltip carries the untruncated text.
+		name.setPreferredSize(new Dimension(0, 20));
 		row.add(name, BorderLayout.CENTER);
 
 		row.addMouseListener(new MouseAdapter()
@@ -963,7 +1075,10 @@ public class FollowerPanel extends PluginPanel
 
 	private void showPreview(ModelRepository.WearableItem item)
 	{
-		previewName.setText("<html><b>" + item.name + "</b><br>id " + item.id + "</html>");
+		// The body width is what makes long names WRAP; without it the label
+		// grows sideways and drags the sidebar's layout with it.
+		previewName.setText("<html><body style='width:" + (PREVIEW_TEXT_WIDTH - 4) + "px'><b>"
+			+ escapeHtml(item.name) + "</b><br>id " + item.id + "</body></html>");
 
 		AsyncBufferedImage image = itemManager.getImage(item.id);
 		if (image == null)
@@ -995,5 +1110,14 @@ public class FollowerPanel extends PluginPanel
 		label.setFont(FontManager.getRunescapeSmallFont());
 		label.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
 		return label;
+	}
+
+	/** Item names are cache text; they must not be able to inject markup. */
+	private static String escapeHtml(String text)
+	{
+		return text == null ? "" : text
+			.replace("&", "&amp;")
+			.replace("<", "&lt;")
+			.replace(">", "&gt;");
 	}
 }

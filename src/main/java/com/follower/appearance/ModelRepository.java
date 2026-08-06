@@ -333,8 +333,29 @@ public class ModelRepository
 	}
 
 	/**
-	 * Every kit valid for one body part and gender, sorted by id. This is what stops
-	 * the picker offering a beard for the boots slot, or female hair on a male body.
+	 * Kit ids the cache flags non-selectable - the styles character creation
+	 * never offers. Read from the live cache; empty until that lands.
+	 */
+	private volatile java.util.Set<Integer> nonSelectableKits = Collections.emptySet();
+
+	public void setNonSelectableKits(java.util.Set<Integer> ids)
+	{
+		nonSelectableKits = ids == null ? Collections.emptySet() : ids;
+	}
+
+	/**
+	 * Every kit the picker should offer for one body part and gender, sorted
+	 * by id. Two filters make this the list a player recognises rather than a
+	 * raw cache listing:
+	 *
+	 * <ul>
+	 *   <li>kits flagged non-selectable are dropped - those are the NPC-only
+	 *   and unreleased styles character creation hides;</li>
+	 *   <li>kits whose models and chatheads are byte-identical to an earlier
+	 *   one are dropped - the cache holds several such pairs (33/35 hands,
+	 *   43/44 boots, 141/142/152 female hair, ...) which rendered as
+	 *   duplicate entries that looked and behaved identically.</li>
+	 * </ul>
 	 */
 	public List<Integer> kitsFor(KitType part, int gender)
 	{
@@ -354,7 +375,11 @@ public class ModelRepository
 			}
 			try
 			{
-				ids.add(Integer.parseInt(entry.getKey()));
+				int id = Integer.parseInt(entry.getKey());
+				if (!nonSelectableKits.contains(id))
+				{
+					ids.add(id);
+				}
 			}
 			catch (NumberFormatException ignored)
 			{
@@ -363,7 +388,32 @@ public class ModelRepository
 		}
 
 		ids.sort(Integer::compareTo);
-		return ids;
+
+		List<Integer> distinct = new ArrayList<>(ids.size());
+		java.util.Set<String> seen = new java.util.HashSet<>();
+		for (int id : ids)
+		{
+			if (seen.add(appearanceSignature(kits.get(Integer.toString(id)))))
+			{
+				distinct.add(id);
+			}
+		}
+		return distinct;
+	}
+
+	/** What the kit actually looks like: identical signatures render identically. */
+	private static String appearanceSignature(Entry entry)
+	{
+		if (entry == null)
+		{
+			return "null";
+		}
+		return java.util.Arrays.toString(entry.m)
+			+ java.util.Arrays.toString(entry.ch)
+			+ java.util.Arrays.toString(entry.cf)
+			+ java.util.Arrays.toString(entry.cr)
+			+ java.util.Arrays.toString(entry.tf)
+			+ java.util.Arrays.toString(entry.tr);
 	}
 
 	/** True if the dump carries body-part metadata (older dumps do not). */

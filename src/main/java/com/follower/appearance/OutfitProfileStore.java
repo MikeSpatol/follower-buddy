@@ -37,20 +37,30 @@ public class OutfitProfileStore
 		this.gson = gson;
 	}
 
+	/** The bare body every install starts from, and the fallback selection. */
+	public static final String DEFAULT_PROFILE = "Default follower";
+
 	/**
-	 * The three combat-style looks, also the thrall-mode defaults. Item ids
-	 * verified against the cache dump: rune set + rune scimitar, green
-	 * d'hide + shortbow, blue wizard robes + staff of water.
+	 * The three combat-style looks, which double as the thrall-mode outfits,
+	 * plus the bare body. These are complete characters - gear, body kits,
+	 * body type and colours - so a first install has three finished thralls to
+	 * summon rather than three sets of armour on a default mannequin.
 	 */
 	private static final Map<String, String> DEFAULTS = new LinkedHashMap<>();
 	static
 	{
+		// An empty outfit is the plain default body with no clothing.
+		DEFAULTS.put(DEFAULT_PROFILE, "");
 		DEFAULTS.put("Melee",
-			"HEAD=item:1163, TORSO=item:1127, LEGS=item:1079, SHIELD=item:1201, WEAPON=item:1333");
+			"HEAD=item:1149,WEAPON=item:21009,TORSO=item:3140,SHIELD=item:21895,ARMS=kit:26,"
+				+ "LEGS=item:4087,HAIR=kit:0,HANDS=kit:33,BOOTS=kit:42,JAW=kit:10");
 		DEFAULTS.put("Ranged",
-			"HEAD=item:1167, TORSO=item:1135, LEGS=item:1099, HANDS=item:1065, BOOTS=item:1061, WEAPON=item:841");
+			"HEAD=item:2581,WEAPON=item:841,TORSO=item:12596,ARMS=kit:98,LEGS=item:23249,"
+				+ "HAIR=kit:128,HANDS=kit:69,BOOTS=kit:79,JAW=kit:296,gender=female");
 		DEFAULTS.put("Magic",
-			"HEAD=item:579, TORSO=item:577, LEGS=item:1011, WEAPON=item:1383");
+			"HEAD=item:7394,AMULET=item:10366,WEAPON=item:1383,TORSO=item:7390,SHIELD=item:6889,"
+				+ "ARMS=kit:98,LEGS=item:7386,HAIR=kit:143,HANDS=kit:69,BOOTS=item:2579,"
+				+ "JAW=kit:296,gender=female");
 	}
 
 	public void load(Path dataDir)
@@ -96,6 +106,32 @@ public class OutfitProfileStore
 	public List<String> names()
 	{
 		return new ArrayList<>(profiles.keySet());
+	}
+
+	/**
+	 * Whether this profile is one of the seeded combat-style looks. Those
+	 * double as the thrall-mode outfits, which are configured BY NAME, so
+	 * deleting one would silently break thrall dress; they stay editable.
+	 */
+	public boolean isProtected(String name)
+	{
+		return name != null && DEFAULTS.containsKey(name.trim());
+	}
+
+	/**
+	 * The first profile the user made themselves, or {@link #DEFAULT_PROFILE}
+	 * when they have not made any - what a fresh session should be wearing.
+	 */
+	public String firstUserProfile()
+	{
+		for (String name : profiles.keySet())
+		{
+			if (!DEFAULTS.containsKey(name))
+			{
+				return name;
+			}
+		}
+		return DEFAULT_PROFILE;
 	}
 
 	/** The stored outfit string, or null when no profile has that name. */

@@ -603,11 +603,6 @@ or `::follower head tune on` for arrow-key control.
 
 ## Pending in-depth testing (parked 2026-08-04)
 
-- **Body kit selector labels (noted 2026-08-05).** The names shown on the
-  panel's body-kit selectors are wrong in places, and some entries are
-  duplicates. Audit the kit list against the cache (names and distinct kit
-  ids), fix the labels and drop the duplicate entries.
-
 - **Location rule region ids.** The 56 area rules' region ids were computed from
   documented world coordinates (`region = (x >> 6) * 256 + (y >> 6)`), not read
   from the running game. Mainland cities are high-confidence; the ones flagged

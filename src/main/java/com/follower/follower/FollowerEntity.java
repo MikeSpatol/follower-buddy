@@ -1433,8 +1433,9 @@ public class FollowerEntity
 		}
 
 		// Watchdog: if anything at all has left the object hidden while the player
-		// is on screen, put it back.
-		if (!object.isActive())
+		// is on screen, put it back. A deliberate hide (an NPC sharing the
+		// tile) is not a fault and must not trigger a recovery snap.
+		if (!object.isActive() && !hiddenForNpcOverlap)
 		{
 			recoverPosition(local, playerTile);
 		}
@@ -1980,6 +1981,38 @@ public class FollowerEntity
 			: CollisionDataFlag.BLOCK_MOVEMENT_SOUTH_WEST;
 	}
 
+	/** True while the follower is hidden because an NPC shares its tile. */
+	private boolean hiddenForNpcOverlap;
+
+	/**
+	 * Whether a real NPC occupies this tile. The possessed thrall is excluded:
+	 * in thrall mode the follower deliberately stands exactly where it is, and
+	 * it is hidden from the renderer anyway.
+	 *
+	 * <p>Multi-tile NPCs are compared on their south-west tile, as the client
+	 * itself positions them; a giant's outer tiles do not count as occupied.
+	 */
+	private boolean npcOnTile(WorldPoint where)
+	{
+		if (where == null)
+		{
+			return false;
+		}
+		for (net.runelite.api.NPC npc : client.getTopLevelWorldView().npcs())
+		{
+			if (npc == null || npc == thrallNpc)
+			{
+				continue;
+			}
+			WorldPoint at = npc.getWorldLocation();
+			if (at != null && at.equals(where))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/** Collision flags for a tile, or null when no data covers it. */
 	private Integer flagAt(WorldPoint tile)
 	{
@@ -2086,6 +2119,24 @@ public class FollowerEntity
 		{
 			lastRenderedLocation = null;
 			return false;
+		}
+
+		// A real NPC standing on the follower's tile: give way and go
+		// invisible for as long as they share it. Two player-sized models on
+		// one tile interpenetrate badly, and the follower is the guest here.
+		// Position keeps updating underneath, so it reappears in the right
+		// place the moment the tile clears.
+		// Only once STOPPED on the shared tile: walking through an NPC is a
+		// moment, and blinking out mid-stride draws more attention than the
+		// overlap it hides.
+		hiddenForNpcOverlap = isSettled() && npcOnTile(tile);
+		if (hiddenForNpcOverlap)
+		{
+			if (object.isActive())
+			{
+				object.setActive(false);
+			}
+			return true;
 		}
 
 		// Re-insert into the rebuilt scene. Toggling off first is what actually

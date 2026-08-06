@@ -257,6 +257,7 @@ public class FollowerPlugin extends Plugin
 	private com.follower.ui.PhrasesDialog bossPhrasesDialog;
 	private com.follower.ui.PhrasesDialog statusPhrasesDialog;
 	private com.follower.ui.PhrasesDialog questPhrasesDialog;
+	private com.follower.ui.PhrasesDialog errandPhrasesDialog;
 
 	@Inject
 	private com.google.gson.Gson gson;
@@ -405,6 +406,11 @@ public class FollowerPlugin extends Plugin
 			questPhrasesDialog.dispose();
 			questPhrasesDialog = null;
 		}
+		if (errandPhrasesDialog != null)
+		{
+			errandPhrasesDialog.dispose();
+			errandPhrasesDialog = null;
+		}
 
 		clientThread.invoke(() ->
 		{
@@ -445,10 +451,11 @@ public class FollowerPlugin extends Plugin
 		panel.setOnEditBosses(this::openBossPhrasesDialog);
 		panel.setOnEditStatuses(this::openStatusPhrasesDialog);
 		panel.setOnEditQuests(this::openQuestPhrasesDialog);
+		panel.setOnEditErrands(this::openErrandPhrasesDialog);
 		panel.setOnProfileLoad(this::loadOutfitProfile);
 		panel.setOnProfileSave(this::saveOutfitProfile);
 		panel.setOnProfileDelete(this::deleteOutfitProfile);
-		panel.setProfileNames(profileStore.names());
+		restoreActiveProfile();
 
 		// ImageUtil.loadImageResource THROWS on a missing resource rather than
 		// returning null, and an exception here aborts startUp() and makes RuneLite
@@ -607,6 +614,24 @@ public class FollowerPlugin extends Plugin
 		});
 	}
 
+	/** Lazily builds the errand-message editor window and fronts it. */
+	private void openErrandPhrasesDialog()
+	{
+		javax.swing.SwingUtilities.invokeLater(() ->
+		{
+			if (errandPhrasesDialog == null)
+			{
+				errandPhrasesDialog = new com.follower.ui.PhrasesDialog(gson, ruleLoader.getFile(),
+					"errand", "Follower Buddy — Errand messages",
+					"One message per line. Each errand has a line for setting off and one"
+						+ " for coming back. Edit, remove or add lines, untick a rule to"
+						+ " silence it, then Save — changes reach the follower within a second.",
+					false);
+			}
+			errandPhrasesDialog.open();
+		});
+	}
+
 	/** Lazily builds the location-message editor window and fronts it. */
 	private void openAreaPhrasesDialog()
 	{
@@ -625,6 +650,13 @@ public class FollowerPlugin extends Plugin
 		});
 	}
 
+	/**
+	 * The profile the panel is currently showing. While one is selected every
+	 * outfit change is written straight back to it, so the dropdown behaves
+	 * like a live wardrobe rather than a pair of load/save buttons.
+	 */
+	private String activeProfile;
+
 	// The follower is redressed through the same config write the panel uses,
 	// so the existing config-changed path does the rebuild and panel sync.
 	private void loadOutfitProfile(String name)
@@ -632,34 +664,101 @@ public class FollowerPlugin extends Plugin
 		String outfit = profileStore.get(name);
 		if (outfit == null)
 		{
-			sendStatus("No outfit profile named '" + name + "'");
 			return;
 		}
+		setActiveProfile(name.trim());
 		configManager.setConfiguration(FollowerConfig.GROUP, "customOutfit", outfit);
-		sendStatus("Outfit profile '" + name.trim() + "' applied");
+		// A profile with an identical outfit writes no config change, so the
+		// panel is refreshed here rather than relying on the config event.
+		syncPanel();
+		sendStatus("Wearing outfit profile '" + activeProfile + "'");
+	}
+
+	private void setActiveProfile(String name)
+	{
+		activeProfile = name;
+		configManager.setConfiguration(FollowerConfig.GROUP, "activeProfile",
+			name == null ? "" : name);
+	}
+
+	/**
+	 * Picks the profile a session starts in: the one last worn, else the first
+	 * the user made themselves, else the bare default body. Applied so the
+	 * panel and the follower always agree with the dropdown on startup.
+	 */
+	private void restoreActiveProfile()
+	{
+		String stored = config.activeProfile();
+		String wanted = stored != null && !stored.trim().isEmpty()
+			&& profileStore.get(stored.trim()) != null
+			? stored.trim()
+			: profileStore.firstUserProfile();
+		loadOutfitProfile(wanted);
+		panel.setProfileNames(profileStore.names(), activeProfile);
 	}
 
 	private void saveOutfitProfile(String name)
 	{
 		if (name == null || name.trim().isEmpty())
 		{
-			sendStatus("Type a name in the profile box before saving");
 			return;
 		}
 		profileStore.put(name, config.customOutfit());
-		panel.setProfileNames(profileStore.names());
-		sendStatus("Outfit profile '" + name.trim() + "' saved");
+		setActiveProfile(name.trim());
+		panel.setProfileNames(profileStore.names(), activeProfile);
+		sendStatus("Outfit profile '" + activeProfile + "' created");
 	}
 
 	private void deleteOutfitProfile(String name)
 	{
-		if (!profileStore.remove(name))
+		if (name == null || name.trim().isEmpty())
 		{
-			sendStatus("No outfit profile named '" + name + "'");
 			return;
 		}
-		panel.setProfileNames(profileStore.names());
+		if (profileStore.isProtected(name))
+		{
+			sendStatus("'" + name.trim() + "' is a combat-style profile used by thrall mode"
+				+ " and cannot be deleted. Edit it instead.");
+			return;
+		}
+		if (!profileStore.remove(name))
+		{
+			sendStatus("No outfit profile named '" + name.trim() + "'");
+			return;
+		}
+		if (name.trim().equals(activeProfile))
+		{
+			// Fall back to something real rather than leaving the dropdown
+			// pointing at a profile that no longer exists.
+			loadOutfitProfile(profileStore.firstUserProfile());
+		}
+		panel.setProfileNames(profileStore.names(), activeProfile);
 		sendStatus("Outfit profile '" + name.trim() + "' deleted");
+	}
+
+	/**
+	 * Writes the follower's current outfit back to the selected profile. The
+	 * content comparison is what makes this safe to call from every panel
+	 * sync: loading a profile leaves the two identical and writes nothing,
+	 * while an actual edit differs and is saved.
+	 */
+	private void autoSaveActiveProfile()
+	{
+		if (activeProfile == null)
+		{
+			return;
+		}
+		String stored = profileStore.get(activeProfile);
+		if (stored == null)
+		{
+			activeProfile = null;
+			return;
+		}
+		String current = config.customOutfit();
+		if (!stored.equals(current))
+		{
+			profileStore.put(activeProfile, current);
+		}
 	}
 
 	private void syncPanel()
@@ -668,10 +767,13 @@ public class FollowerPlugin extends Plugin
 		{
 			return;
 		}
+		// Every route to a changed outfit lands here, so this is the one place
+		// the active profile needs keeping up to date.
+		autoSaveActiveProfile();
 		panel.setOutfit(OutfitParser.parse(config.customOutfit()));
 		panel.setStatus(modelRepository.isLoaded()
 			? modelRepository.getStatus()
-			: "no model dump loaded");
+			: "reading the game cache...");
 	}
 
 	/**
@@ -833,9 +935,7 @@ public class FollowerPlugin extends Plugin
 			List<Integer> choices = modelRepository.kitsFor(part, outfit.getGender());
 			if (choices.isEmpty())
 			{
-				sendStatus(modelRepository.hasKitParts()
-					? "No styles available for " + part.name().toLowerCase(Locale.ROOT) + "."
-					: "Your model dump predates style filtering - re-run tools/cache-dumper.");
+				sendStatus("No styles available for " + part.name().toLowerCase(Locale.ROOT) + ".");
 				return;
 			}
 
@@ -1115,6 +1215,10 @@ public class FollowerPlugin extends Plugin
 				appearanceService.invalidate();
 				rebuildFollower();
 			});
+			// The outfit can change from outside the panel - loading a profile,
+			// the chat commands - and the equipment grid and body-kit rows have
+			// to follow it, not just the follower.
+			syncPanel();
 		}
 	}
 
@@ -1377,6 +1481,36 @@ public class FollowerPlugin extends Plugin
 		if (!spotAnimRepository.isLoaded())
 		{
 			spotAnimRepository.loadFromClient(client);
+		}
+		if (!kitSelectabilityLoaded)
+		{
+			// Always from the LIVE cache, even when a dump supplied the
+			// entries: the flag is not part of the dump format, and the
+			// picker needs it to hide the styles character creation hides.
+			java.util.Set<Integer> nonSelectable = new java.util.HashSet<>();
+			com.follower.appearance.LiveCacheParser.parseKits(client, nonSelectable);
+			if (!nonSelectable.isEmpty())
+			{
+				modelRepository.setNonSelectableKits(nonSelectable);
+				kitSelectabilityLoaded = true;
+				log.debug("{} kits flagged non-selectable by the cache", nonSelectable.size());
+				logKitCatalogue();
+				syncPanel();
+			}
+		}
+	}
+
+	private boolean kitSelectabilityLoaded;
+
+	/** One-line-per-part census of what the picker will offer, for verification. */
+	private void logKitCatalogue()
+	{
+		for (KitType part : new KitType[]{KitType.HAIR, KitType.JAW, KitType.TORSO,
+			KitType.ARMS, KitType.HANDS, KitType.LEGS, KitType.BOOTS})
+		{
+			log.debug("kits offered for {}: male {}, female {}", part,
+				modelRepository.kitsFor(part, 0).size(),
+				modelRepository.kitsFor(part, 1).size());
 		}
 	}
 

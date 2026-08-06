@@ -508,6 +508,17 @@ public interface FollowerConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "activeProfile",
+		name = "Active outfit profile",
+		description = "Which outfit profile the follower is wearing; managed by the panel",
+		hidden = true
+	)
+	default String activeProfile()
+	{
+		return "";
+	}
+
+	@ConfigItem(
 		keyName = "disabledGroups",
 		name = "Other disabled groups",
 		description = "Comma separated group names or rule ids to silence",

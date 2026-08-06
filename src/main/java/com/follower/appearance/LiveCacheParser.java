@@ -76,6 +76,19 @@ public final class LiveCacheParser
 	/** Body kits keyed by id, matching equipment-models.json's kits map. */
 	public static Map<String, ModelRepository.Entry> parseKits(Client client)
 	{
+		return parseKits(client, null);
+	}
+
+	/**
+	 * @param nonSelectableOut when non-null, receives the ids of kits flagged
+	 * non-selectable - the styles character creation does not offer, which is
+	 * how the NPC-only and unreleased extras are told apart from real player
+	 * styles. Collected on the side so {@link ModelRepository.Entry} keeps the
+	 * dump file's exact shape and {@code ::follower cachecheck} stays honest.
+	 */
+	public static Map<String, ModelRepository.Entry> parseKits(Client client,
+		java.util.Set<Integer> nonSelectableOut)
+	{
 		IndexDataBase configs = client.getIndexConfig();
 		Map<String, ModelRepository.Entry> kits = new LinkedHashMap<>();
 		if (configs == null)
@@ -91,10 +104,15 @@ public final class LiveCacheParser
 			}
 			try
 			{
-				ModelRepository.Entry entry = decodeKit(data);
+				boolean[] nonSelectable = new boolean[1];
+				ModelRepository.Entry entry = decodeKit(data, nonSelectable);
 				if (entry != null)
 				{
 					kits.put(Integer.toString(id), entry);
+					if (nonSelectable[0] && nonSelectableOut != null)
+					{
+						nonSelectableOut.add(id);
+					}
 				}
 			}
 			catch (RuntimeException e)
@@ -434,7 +452,7 @@ public final class LiveCacheParser
 
 	// ------------------------------------------------------------------- kits
 
-	private static ModelRepository.Entry decodeKit(byte[] data)
+	private static ModelRepository.Entry decodeKit(byte[] data, boolean[] nonSelectableOut)
 	{
 		Buffer in = new Buffer(data);
 		Integer bodyPartId = null;
@@ -462,7 +480,9 @@ public final class LiveCacheParser
 			}
 			else if (opcode == 3)
 			{
-				// non-selectable flag, no payload
+				// Flagged non-selectable: character creation never offers this
+				// style. No payload.
+				nonSelectableOut[0] = true;
 			}
 			else if (opcode == 5)
 			{
