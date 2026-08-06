@@ -404,16 +404,44 @@ public class StanceLibrary
 			return 0;
 		}
 
+		// A class can hold several different attacks once a few of its weapons
+		// have been seen: most share the generic swing for their kind, while
+		// the occasional signature weapon has one all of its own. Taking the
+		// first match would hand a plain battlestaff the Eye of ayak's unique
+		// animation, and worse, WHICH one it took depended on hash order - the
+		// same weapon could animate differently between sessions.
+		//
+		// So: whichever attack the most weapons of this class agree on, with
+		// ties going to the lowest item id. Agreement finds the generic swing
+		// as soon as two weapons share it, and the tie-break stands in until
+		// then, since the plainer weapon of a kind is almost always the older
+		// and lower-numbered one.
+		Map<Integer, Integer> agreement = new HashMap<>();
+		Map<Integer, Integer> lowestDonor = new HashMap<>();
 		for (Map.Entry<Integer, Stance> entry : stances.entrySet())
 		{
 			Stance other = entry.getValue();
-			if (other.attack > 0 && other.sameClassAs(stance)
-				&& styleSource.styleOf(entry.getKey()) == style)
+			if (other.attack <= 0 || !other.sameClassAs(stance)
+				|| styleSource.styleOf(entry.getKey()) != style)
 			{
-				return other.attack;
+				continue;
+			}
+			agreement.merge(other.attack, 1, Integer::sum);
+			lowestDonor.merge(other.attack, entry.getKey(), Math::min);
+		}
+
+		int best = 0;
+		for (Map.Entry<Integer, Integer> candidate : agreement.entrySet())
+		{
+			if (best == 0
+				|| candidate.getValue() > agreement.get(best)
+				|| (candidate.getValue().equals(agreement.get(best))
+					&& lowestDonor.get(candidate.getKey()) < lowestDonor.get(best)))
+			{
+				best = candidate.getKey();
 			}
 		}
-		return 0;
+		return best;
 	}
 
 	/**
