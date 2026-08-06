@@ -119,6 +119,9 @@ public class StanceLibrary
 	/** base item name -> a weapon id known to have that name's stance. */
 	private Map<String, Integer> byBaseName;
 
+	/** metal-stripped item name -> a weapon id, for inheriting across tiers. */
+	private Map<String, Integer> byTierName;
+
 	/** How many stances the name index was built from, so it rebuilds when they grow. */
 	private int indexedSize = -1;
 
@@ -472,9 +475,15 @@ public class StanceLibrary
 	 * base-name groups the observed data contains, all 13 agree on their
 	 * stance with no exceptions.
 	 *
+	 * <p>Failing that, the same weapon in a different metal: an Adamant
+	 * longsword animates like a Black one. See {@link #tierBaseName(String)}
+	 * for why that covers the plain tiers only.
+	 *
 	 * <p>Deliberately NOT a fuzzy match. Allowing one name to be a subset of
 	 * another was measured at 96% - it equates "Dragon axe" with "Dragon
-	 * felling axe" - and a wrong animation is worse than a plain one.
+	 * felling axe" - and a wrong animation is worse than a plain one. Both
+	 * inheritance steps above are exact matches on what is left after a known
+	 * marker is removed, which is why they do not have that failure.
 	 */
 	public Stance forWeapon(int weaponItemId)
 	{
@@ -497,18 +506,33 @@ public class StanceLibrary
 			return cached;
 		}
 
+		if (byBaseName == null || indexedSize != stances.size())
+		{
+			buildNameIndex();
+		}
+
 		int donor = 0;
-		String base = baseName(models.itemName(weaponItemId));
+		String name = models.itemName(weaponItemId);
+		String base = baseName(name);
 		if (base != null)
 		{
-			if (byBaseName == null || indexedSize != stances.size())
-			{
-				buildNameIndex();
-			}
 			Integer match = byBaseName.get(base);
 			if (match != null && match != weaponItemId)
 			{
 				donor = match;
+			}
+		}
+		// Second chance: the same weapon in a different metal.
+		if (donor == 0)
+		{
+			String tierBase = tierBaseName(name);
+			if (tierBase != null)
+			{
+				Integer match = byTierName.get(tierBase);
+				if (match != null && match != weaponItemId)
+				{
+					donor = match;
+				}
 			}
 		}
 		donors.put(weaponItemId, donor);
@@ -518,19 +542,64 @@ public class StanceLibrary
 	private void buildNameIndex()
 	{
 		byBaseName = new HashMap<>();
+		byTierName = new HashMap<>();
 		for (Integer known : stances.keySet())
 		{
-			String base = baseName(models.itemName(known));
+			String name = models.itemName(known);
+			String base = baseName(name);
 			if (base != null)
 			{
 				// Lowest id wins: the plain version rather than a variant.
 				byBaseName.merge(base, known, Math::min);
+			}
+			String tierBase = tierBaseName(name);
+			if (tierBase != null)
+			{
+				byTierName.merge(tierBase, known, Math::min);
 			}
 		}
 		indexedSize = stances.size();
 		// Names may have arrived since the last resolution failed.
 		donors.clear();
 	}
+
+	/**
+	 * An item name with its metal tier removed, so "Adamant longsword" and
+	 * "Black longsword" both become "longsword" - one weapon in two metals,
+	 * which animate alike.
+	 *
+	 * <p>Returns null for anything that does not carry one of these tiers, so
+	 * only tiered weapons ever join this index and an untiered weapon can never
+	 * be pulled into a group by its noun alone.
+	 *
+	 * <p>Deliberately excludes dragon, crystal, gilded, 3rd age and the other
+	 * ornamental tiers, which the game special-cases. That is measured, not
+	 * assumed: across the observed library the plain metal tiers agree on their
+	 * stance in all 5 groups that have more than one tier, with no exceptions,
+	 * while including the special tiers introduces a real counterexample - the
+	 * Dragon longsword stands at 809 where the Black longsword stands at 808.
+	 * Admitting them would cover about 65 more weapons at the cost of being
+	 * wrong about some of them, and a wrong animation is worse than a plain one.
+	 */
+	static String tierBaseName(String name)
+	{
+		String base = baseName(name);
+		if (base == null)
+		{
+			return null;
+		}
+		java.util.regex.Matcher matcher = TIER_PREFIX.matcher(base);
+		if (!matcher.find())
+		{
+			return null;
+		}
+		String stripped = base.substring(matcher.end()).trim();
+		return stripped.isEmpty() ? null : stripped;
+	}
+
+	/** Plain metal tiers only - see {@link #tierBaseName(String)}. */
+	private static final java.util.regex.Pattern TIER_PREFIX = java.util.regex.Pattern.compile(
+		"^(bronze|iron|steel|black|white|mithril|adamant|rune|runite)\\s+");
 
 	/**
 	 * An item name with its variant markers removed, so every version of a

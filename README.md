@@ -677,6 +677,14 @@ These are inherent to the approach, not bugs to be filed:
   cover 69% of them, so an unknown weapon's attack can be borrowed from a weapon of
   the same class. Seeing one scimitar swung covers every scimitar in the game.
 
+  Inheritance also crosses metal tiers: an Adamant longsword animates like a
+  Black one. Plain tiers only (bronze through rune) — dragon, crystal, gilded and
+  3rd age are excluded because the game special-cases them, which is measured
+  rather than assumed. The plain tiers agree on their stance in all 5 observed
+  multi-tier groups with no exceptions; admitting the ornamental tiers covers
+  about 65 more weapons but introduces a real counterexample, the Dragon
+  longsword standing at 809 where the Black longsword stands at 808.
+
   A stance class alone is **not** enough to borrow an attack, though. It groups
   weapons by how they are *carried*, and the 79-weapon class that walks like an
   unarmed player contains both the Dragon harpoon and the Bow of faerdhinen —
