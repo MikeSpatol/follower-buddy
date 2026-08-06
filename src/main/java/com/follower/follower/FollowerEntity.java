@@ -442,6 +442,374 @@ public class FollowerEntity
 		stayTile = null;
 	}
 
+	// -------------------------------------------------------------- thrall mode
+
+	/** The possessed thrall NPC; non-null suspends ALL follow logic. */
+	private net.runelite.api.NPC thrallNpc;
+	private WorldPoint lastThrallTile;
+
+	/**
+	 * Enters thrall mode: the follower stops being a follower and becomes the
+	 * given NPC - position, plane and facing are copied from it every frame
+	 * until {@link #releaseNpcSlave()}. Movement poses still come from the
+	 * follower's own stance for its equipped weapon, so it walks like a player
+	 * in the thrall's footsteps rather than gliding.
+	 */
+	public void slaveToNpc(net.runelite.api.NPC npc)
+	{
+		thrallNpc = npc;
+		lastThrallTile = null;
+		stayTile = null;
+		goalTile = null;
+		route.clear();
+		routeRun.clear();
+		serverPath.clear();
+		cancelEmote();
+	}
+
+	/** Leaves thrall mode and reappears beside the player, following as before. */
+	public void releaseNpcSlave()
+	{
+		thrallNpc = null;
+		lastThrallTile = null;
+		clearThrallCircle();
+		Player local = client.getLocalPlayer();
+		if (local != null && local.getWorldLocation() != null)
+		{
+			snapBeside(local.getWorldLocation());
+		}
+	}
+
+	/**
+	 * Ends the possession but HOLDS the follower where it stands - the exit
+	 * flourish plays out at the thrall's last spot before the snap home.
+	 */
+	public void endNpcSlaveHolding()
+	{
+		thrallNpc = null;
+		lastThrallTile = null;
+		clearThrallCircle();
+		if (spawned && tile != null)
+		{
+			stayHere();
+		}
+	}
+
+	/** The thrall's summoning circle: a looping ground graphic riding the follower. */
+	private RuneLiteObject thrallCircle;
+
+	/**
+	 * A circle COMPONENT lies within this of the ground plane; the body
+	 * component reaches far above it. Component-level, so it need not be
+	 * razor thin - a foot is disqualified by the leg it is welded to.
+	 */
+	private static final float CIRCLE_HEIGHT_LIMIT = 12f;
+
+	/**
+	 * The authentic summoning circle, carved out of the thrall NPC's own model:
+	 * the circle is baked into the same mesh as the body (measured - each
+	 * thrall composition holds exactly one model id), so every face reaching
+	 * meaningfully above the ground plane is made fully transparent, leaving
+	 * the genuine style-coloured ring.
+	 */
+	public void setThrallCircleFromNpcModel(int modelId)
+	{
+		clearThrallCircle();
+		if (object == null || modelId < 0)
+		{
+			return;
+		}
+		ModelData data = client.loadModelData(modelId);
+		if (data == null)
+		{
+			return;
+		}
+		data = data.cloneVertices().cloneColors().cloneTransparencies(true);
+		byte[] alpha = data.getFaceTransparencies();
+		if (alpha == null)
+		{
+			return;
+		}
+		// Deterministic classification, no per-face guessing: faces that share
+		// vertices form connected components - each foot is welded to its own
+		// 3D geometry, the circle is its own component lying flat on the
+		// ground. A component is kept only when it is BOTH flat and grounded
+		// as a WHOLE, so a flat sole can never survive on its own: it is
+		// carried out with the leg it is attached to.
+		float[] ys = data.getVerticesY();
+		int[] f1 = data.getFaceIndices1();
+		int[] f2 = data.getFaceIndices2();
+		int[] f3 = data.getFaceIndices3();
+		int faceCount = data.getFaceCount();
+		int vertexCount = data.getVerticesCount();
+
+		int[] parent = new int[vertexCount];
+		for (int i = 0; i < vertexCount; i++)
+		{
+			parent[i] = i;
+		}
+		for (int i = 0; i < faceCount; i++)
+		{
+			union(parent, f1[i], f2[i]);
+			union(parent, f2[i], f3[i]);
+		}
+
+		// Vertical extent of every component, over its vertices.
+		float[] minY = new float[vertexCount];
+		float[] maxY = new float[vertexCount];
+		java.util.Arrays.fill(minY, Float.MAX_VALUE);
+		java.util.Arrays.fill(maxY, -Float.MAX_VALUE);
+		for (int i = 0; i < vertexCount; i++)
+		{
+			int root = find(parent, i);
+			minY[root] = Math.min(minY[root], ys[i]);
+			maxY[root] = Math.max(maxY[root], ys[i]);
+		}
+
+		for (int i = 0; i < faceCount; i++)
+		{
+			int root = find(parent, f1[i]);
+			// Up is negative Y: grounded means the component's highest point
+			// stays near the ground plane; flat means it has no real height.
+			boolean grounded = minY[root] > -CIRCLE_HEIGHT_LIMIT;
+			boolean flat = maxY[root] - minY[root] <= CIRCLE_FLATNESS;
+			if (!grounded || !flat)
+			{
+				alpha[i] = (byte) 0xFF;
+			}
+		}
+
+		Model lit = data.light(64, 850, -30, -50, -30);
+		RuneLiteObject graphic = client.createRuneLiteObject();
+		graphic.setRenderMode(net.runelite.api.Renderable.RENDERMODE_SORTED_NO_DEPTH);
+		graphic.setModel(lit);
+		if (lastRenderedLocation != null && tile != null)
+		{
+			graphic.setLocation(lastRenderedLocation, tile.getPlane());
+			graphic.setZ(lastRenderedZ);
+		}
+		graphic.setActive(true);
+		thrallCircle = graphic;
+
+		// Same-tile RuneLiteObjects draw in attach order: bouncing the
+		// follower back into the scene AFTER the circle puts the follower's
+		// model on top, feet over ring - the layering the real thrall shows.
+		needsReattach = true;
+	}
+
+	/** A circle COMPONENT has essentially no vertical extent; a foot's does. */
+	private static final float CIRCLE_FLATNESS = 6f;
+
+	private static int find(int[] parent, int i)
+	{
+		while (parent[i] != i)
+		{
+			parent[i] = parent[parent[i]];
+			i = parent[i];
+		}
+		return i;
+	}
+
+	private static void union(int[] parent, int a, int b)
+	{
+		parent[find(parent, a)] = find(parent, b);
+	}
+
+	public void setThrallCircle(SpotAnimRepository.Entry fx)
+	{
+		clearThrallCircle();
+		if (fx == null || object == null)
+		{
+			return;
+		}
+		ModelData data = client.loadModelData(fx.modelId());
+		Animation animation = data == null ? null : client.loadAnimation(fx.animationId());
+		if (data == null || animation == null)
+		{
+			return;
+		}
+
+		data = data.cloneColors();
+		if (fx.cf != null && fx.cr != null)
+		{
+			for (int i = 0; i < Math.min(fx.cf.length, fx.cr.length); i++)
+			{
+				data.recolor(fx.cf[i], fx.cr[i]);
+			}
+		}
+		if (fx.tf != null && fx.tr != null)
+		{
+			data = data.cloneTextures();
+			for (int i = 0; i < Math.min(fx.tf.length, fx.tr.length); i++)
+			{
+				data.retexture(fx.tf[i], fx.tr[i]);
+			}
+		}
+		for (int i = 0; i < fx.rotation(); i++)
+		{
+			data = data.cloneVertices().rotateY90Ccw();
+		}
+		if (fx.resizeX() != 128 || fx.resizeY() != 128)
+		{
+			data = data.cloneVertices().scale(fx.resizeX(), fx.resizeY(), fx.resizeX());
+		}
+
+		Model lit = data.light(64 + fx.ambient(), 850 + fx.contrast(), -30, -50, -30);
+		RuneLiteObject graphic = client.createRuneLiteObject();
+		graphic.setRenderMode(net.runelite.api.Renderable.RENDERMODE_SORTED_NO_DEPTH);
+		graphic.setModel(lit);
+		if (lastRenderedLocation != null && tile != null)
+		{
+			graphic.setLocation(lastRenderedLocation, tile.getPlane());
+			graphic.setZ(lastRenderedZ);
+		}
+		AnimationController controller = new AnimationController(client, animation);
+		// Loop forever: the circle lives exactly as long as the possession.
+		controller.setOnFinished(c -> c.setFrame(0));
+		graphic.setAnimationController(controller);
+		graphic.setActive(true);
+		thrallCircle = graphic;
+	}
+
+	public void clearThrallCircle()
+	{
+		if (thrallCircle != null)
+		{
+			thrallCircle.setActive(false);
+			thrallCircle = null;
+		}
+	}
+
+	public boolean isNpcSlaved()
+	{
+		return thrallNpc != null;
+	}
+
+	/**
+	 * The per-frame body of thrall mode. The REAL thrall is hidden by a draw
+	 * veto, and a vetoed draw also skips the client's per-frame movement
+	 * interpolation - a hidden NPC's fine position freezes between server
+	 * ticks. Its SERVER tile still updates, so those tiles feed the follower's
+	 * own stepper, which recreates the smooth walk the thrall would have
+	 * shown. The big-jump guard doubles as the thrall catch-up teleport.
+	 */
+	private void updateThrallFrame(long deltaMs)
+	{
+		net.runelite.api.NPC npc = thrallNpc;
+		WorldPoint wp = npc == null ? null : npc.getWorldLocation();
+		if (wp == null)
+		{
+			// Mid chunk-load the NPC blinks out for a beat; hold hidden rather
+			// than glitch to a stale spot. Despawn proper is the plugin's call.
+			if (object.isActive())
+			{
+				object.setActive(false);
+			}
+			return;
+		}
+
+		// First frame of a possession, a plane change or a genuine catch-up
+		// teleport: place directly rather than gliding across the map.
+		if (tile == null || lastThrallTile == null
+			|| wp.getPlane() != tile.getPlane() || tile.distanceTo(wp) > 10)
+		{
+			route.clear();
+			routeRun.clear();
+			tile = wp;
+			fineWX = wp.getX() * 128L + 64;
+			fineWY = wp.getY() * 128L + 64;
+		}
+		else if (!wp.equals(lastThrallTile))
+		{
+			// A new server tile from the thrall becomes a waypoint; thralls
+			// walk, so no run flag - backlog is soaked up by the speed tiers.
+			route.addLast(wp);
+			routeRun.addLast(Boolean.FALSE);
+		}
+		lastThrallTile = wp;
+
+		moveContinuous(deltaMs / (double) CYCLE_MS);
+
+		boolean moving = !route.isEmpty()
+			|| fineWX != tile.getX() * 128L + 64 || fineWY != tile.getY() * 128L + 64;
+
+		// A fighting entity keeps FACING its target even while its feet move -
+		// the client's entityFace. Applied after moveContinuous so it overrides
+		// the travel heading that was just set.
+		boolean facingTarget = faceThrallTarget(false);
+
+		StanceLibrary.Stance stance = stance();
+		int pose;
+		if (!moving)
+		{
+			pose = stance.idle;
+		}
+		else if (facingTarget)
+		{
+			// Stepping while locked on the target: directional poses (strafe,
+			// back-pedal), exactly as the client picks them for a face target.
+			pose = movePose(stance);
+		}
+		else
+		{
+			pose = lastMoveSpeed >= 8 ? stance.run : stance.walk;
+		}
+		applyPose(pose, false);
+		wrapBeforeFinalFrame();
+		render();
+
+		// The summoning circle rides the follower's rendered feet.
+		if (thrallCircle != null && lastRenderedLocation != null)
+		{
+			thrallCircle.setLocation(lastRenderedLocation, tile.getPlane());
+			thrallCircle.setZ(lastRenderedZ);
+		}
+	}
+
+	/**
+	 * Points the follower at the thrall's combat target. Smooth turns the yaw
+	 * toward it normally; {@code snap} sets it instantly - the moment an
+	 * attack fires, the swing must already face the enemy.
+	 *
+	 * @return true when there was a target to face
+	 */
+	public boolean faceThrallTarget(boolean snap)
+	{
+		if (thrallNpc == null || tile == null)
+		{
+			return false;
+		}
+		net.runelite.api.Actor target = thrallNpc.getInteracting();
+		if (target == null)
+		{
+			// Ranged and magic thralls attack from distance without always
+			// holding an interaction lock - but a thrall only ever fights the
+			// player's target, so that is the truth to face.
+			Player local = client.getLocalPlayer();
+			target = local == null ? null : local.getInteracting();
+		}
+		WorldPoint targetTile = target == null ? null : target.getWorldLocation();
+		if (targetTile == null)
+		{
+			return false;
+		}
+		// SELF minus TARGET, matching facePlayer: the reversed delta bakes in
+		// the game's 0-is-south yaw convention. Target-minus-self faces the
+		// exact opposite way.
+		int dx = tile.getX() - targetTile.getX();
+		int dy = tile.getY() - targetTile.getY();
+		if (dx == 0 && dy == 0)
+		{
+			return false;
+		}
+		dstYaw = (int) Math.round(Math.atan2(dx, dy) * 325.949) & 0x7ff;
+		if (snap)
+		{
+			yaw = dstYaw;
+		}
+		return true;
+	}
+
 	/** Holds the follower where it stands until released. */
 	public void stayHere()
 	{
@@ -1007,6 +1375,14 @@ public class FollowerEntity
 					snapBeside(where);
 				}
 			}
+			return;
+		}
+
+		// Thrall mode: the follower IS the thrall. Everything below - follow
+		// pathing, stay poses, leashes - is someone else's life for now.
+		if (thrallNpc != null)
+		{
+			updateThrallFrame(deltaMs);
 			return;
 		}
 

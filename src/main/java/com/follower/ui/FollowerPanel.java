@@ -118,6 +118,50 @@ public class FollowerPanel extends PluginPanel
 		this.onEditQuests = onEditQuests;
 	}
 
+	// ---------------------------------------------------------------- profiles
+
+	private final javax.swing.JComboBox<String> profileCombo = new javax.swing.JComboBox<>();
+
+	private Consumer<String> onProfileLoad = s -> { };
+	private Consumer<String> onProfileSave = s -> { };
+	private Consumer<String> onProfileDelete = s -> { };
+
+	public void setOnProfileLoad(Consumer<String> onProfileLoad)
+	{
+		this.onProfileLoad = onProfileLoad;
+	}
+
+	public void setOnProfileSave(Consumer<String> onProfileSave)
+	{
+		this.onProfileSave = onProfileSave;
+	}
+
+	public void setOnProfileDelete(Consumer<String> onProfileDelete)
+	{
+		this.onProfileDelete = onProfileDelete;
+	}
+
+	/** Refreshes the dropdown, keeping whatever name is currently in the box. */
+	public void setProfileNames(java.util.List<String> names)
+	{
+		Object current = profileCombo.getEditor().getItem();
+		profileCombo.removeAllItems();
+		for (String name : names)
+		{
+			profileCombo.addItem(name);
+		}
+		if (current != null && !current.toString().trim().isEmpty())
+		{
+			profileCombo.setSelectedItem(current.toString());
+		}
+	}
+
+	private String profileName()
+	{
+		Object item = profileCombo.getEditor().getItem();
+		return item == null ? "" : item.toString().trim();
+	}
+
 	private final JPanel gearGrid = new JPanel();
 	private final JPanel bodyList = new JPanel();
 	private final JPanel picker = new JPanel();
@@ -235,6 +279,45 @@ public class FollowerPanel extends PluginPanel
 		editorButtons.add(quests);
 
 		header.add(editorButtons);
+		header.add(javax.swing.Box.createVerticalStrut(6));
+
+		JLabel profilesLabel = new JLabel("OUTFIT PROFILES");
+		profilesLabel.setFont(FontManager.getRunescapeSmallFont());
+		profilesLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+		profilesLabel.setAlignmentX(LEFT_ALIGNMENT);
+		header.add(profilesLabel);
+
+		profileCombo.setEditable(true);
+		profileCombo.setToolTipText("Pick a profile, or type a new name and press Save");
+		profileCombo.setAlignmentX(LEFT_ALIGNMENT);
+		profileCombo.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
+		header.add(profileCombo);
+		header.add(javax.swing.Box.createVerticalStrut(4));
+
+		JPanel profileButtons = new JPanel(new GridLayout(1, 3, 6, 0));
+		profileButtons.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		profileButtons.setAlignmentX(LEFT_ALIGNMENT);
+		profileButtons.setMaximumSize(new Dimension(Integer.MAX_VALUE, 26));
+
+		JButton profileLoad = new JButton("Load");
+		profileLoad.setToolTipText("Dress the follower in the selected profile");
+		profileLoad.setFocusPainted(false);
+		profileLoad.addActionListener(e -> onProfileLoad.accept(profileName()));
+		profileButtons.add(profileLoad);
+
+		JButton profileSave = new JButton("Save");
+		profileSave.setToolTipText("Save the follower's current outfit under this name");
+		profileSave.setFocusPainted(false);
+		profileSave.addActionListener(e -> onProfileSave.accept(profileName()));
+		profileButtons.add(profileSave);
+
+		JButton profileDelete = new JButton("Delete");
+		profileDelete.setToolTipText("Remove the selected profile");
+		profileDelete.setFocusPainted(false);
+		profileDelete.addActionListener(e -> onProfileDelete.accept(profileName()));
+		profileButtons.add(profileDelete);
+
+		header.add(profileButtons);
 
 		status.setFont(FontManager.getRunescapeSmallFont());
 		status.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);

@@ -42,6 +42,13 @@ public interface FollowerConfig extends Config
 	)
 	String groupsSection = "groups";
 
+	@ConfigSection(
+		name = "Thrall mode",
+		description = "The follower takes the place of your Arceuus thralls",
+		position = 4
+	)
+	String thrallSection = "thrall";
+
 	// ------------------------------------------------------------- appearance
 
 	@ConfigItem(
@@ -226,6 +233,92 @@ public interface FollowerConfig extends Config
 	default boolean mirrorToChat()
 	{
 		return true;
+	}
+
+	// ---------------------------------------------------------------- thrall
+
+	@ConfigItem(
+		keyName = "thrallMode",
+		name = "Replace thralls",
+		description = "When you summon an Arceuus thrall, the follower takes its place - moving and attacking as the thrall does",
+		section = thrallSection,
+		position = 0
+	)
+	default boolean thrallMode()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "thrallMeleeProfile",
+		name = "Melee outfit profile",
+		description = "Outfit profile worn while replacing a zombie thrall",
+		section = thrallSection,
+		position = 1
+	)
+	default String thrallMeleeProfile()
+	{
+		return "Melee";
+	}
+
+	@ConfigItem(
+		keyName = "thrallRangedProfile",
+		name = "Ranged outfit profile",
+		description = "Outfit profile worn while replacing a skeleton thrall",
+		section = thrallSection,
+		position = 2
+	)
+	default String thrallRangedProfile()
+	{
+		return "Ranged";
+	}
+
+	@ConfigItem(
+		keyName = "thrallMagicProfile",
+		name = "Magic outfit profile",
+		description = "Outfit profile worn while replacing a ghost thrall",
+		section = thrallSection,
+		position = 3
+	)
+	default String thrallMagicProfile()
+	{
+		return "Magic";
+	}
+
+	@ConfigItem(
+		keyName = "thrallMeleeAttackAnim",
+		name = "Melee attack animation",
+		description = "Player animation the follower plays when the zombie thrall attacks",
+		section = thrallSection,
+		position = 5
+	)
+	default int thrallMeleeAttackAnim()
+	{
+		return 390;
+	}
+
+	@ConfigItem(
+		keyName = "thrallRangedAttackAnim",
+		name = "Ranged attack animation",
+		description = "Player animation the follower plays when the skeleton thrall attacks",
+		section = thrallSection,
+		position = 6
+	)
+	default int thrallRangedAttackAnim()
+	{
+		return 426;
+	}
+
+	@ConfigItem(
+		keyName = "thrallMagicAttackAnim",
+		name = "Magic attack animation",
+		description = "Player animation the follower plays when the ghost thrall attacks",
+		section = thrallSection,
+		position = 7
+	)
+	default int thrallMagicAttackAnim()
+	{
+		return 1162;
 	}
 
 	// ------------------------------------------------------------ rule groups

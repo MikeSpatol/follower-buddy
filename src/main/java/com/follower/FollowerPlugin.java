@@ -261,6 +261,9 @@ public class FollowerPlugin extends Plugin
 	@Inject
 	private com.google.gson.Gson gson;
 
+	@Inject
+	private com.follower.appearance.OutfitProfileStore profileStore;
+
 	private Path dataDir;
 	private WorldPoint lastPlayerTile;
 	private int lastRegionId = -1;
@@ -317,10 +320,12 @@ public class FollowerPlugin extends Plugin
 		stanceLibrary.load(dataDir);
 		paletteHarvest.load(dataDir);
 		wrapTrimStore.load(dataDir, follower);
+		profileStore.load(dataDir);
 
 		speechEngine.setSink(this::speak);
 		applyConfig();
 		loadExactPalette();
+		hooks.registerRenderableDrawListener(thrallHider);
 
 		// On a fresh client boot the LOGIN_SCREEN transition can happen before
 		// this plugin subscribes, so the first login would not read as fresh.
@@ -346,6 +351,8 @@ public class FollowerPlugin extends Plugin
 	@Override
 	protected void shutDown() throws Exception
 	{
+		hooks.unregisterRenderableDrawListener(thrallHider);
+		resetThrallQuietly();
 		overlayManager.remove(overlay);
 		overlayManager.remove(followDebugOverlay);
 		overlayManager.remove(dialog);
@@ -426,6 +433,10 @@ public class FollowerPlugin extends Plugin
 		panel.setOnEditBosses(this::openBossPhrasesDialog);
 		panel.setOnEditStatuses(this::openStatusPhrasesDialog);
 		panel.setOnEditQuests(this::openQuestPhrasesDialog);
+		panel.setOnProfileLoad(this::loadOutfitProfile);
+		panel.setOnProfileSave(this::saveOutfitProfile);
+		panel.setOnProfileDelete(this::deleteOutfitProfile);
+		panel.setProfileNames(profileStore.names());
 
 		// ImageUtil.loadImageResource THROWS on a missing resource rather than
 		// returning null, and an exception here aborts startUp() and makes RuneLite
@@ -600,6 +611,43 @@ public class FollowerPlugin extends Plugin
 			}
 			areaPhrasesDialog.open();
 		});
+	}
+
+	// The follower is redressed through the same config write the panel uses,
+	// so the existing config-changed path does the rebuild and panel sync.
+	private void loadOutfitProfile(String name)
+	{
+		String outfit = profileStore.get(name);
+		if (outfit == null)
+		{
+			sendStatus("No outfit profile named '" + name + "'");
+			return;
+		}
+		configManager.setConfiguration(FollowerConfig.GROUP, "customOutfit", outfit);
+		sendStatus("Outfit profile '" + name.trim() + "' applied");
+	}
+
+	private void saveOutfitProfile(String name)
+	{
+		if (name == null || name.trim().isEmpty())
+		{
+			sendStatus("Type a name in the profile box before saving");
+			return;
+		}
+		profileStore.put(name, config.customOutfit());
+		panel.setProfileNames(profileStore.names());
+		sendStatus("Outfit profile '" + name.trim() + "' saved");
+	}
+
+	private void deleteOutfitProfile(String name)
+	{
+		if (!profileStore.remove(name))
+		{
+			sendStatus("No outfit profile named '" + name + "'");
+			return;
+		}
+		panel.setProfileNames(profileStore.names());
+		sendStatus("Outfit profile '" + name.trim() + "' deleted");
 	}
 
 	private void syncPanel()
@@ -986,6 +1034,10 @@ public class FollowerPlugin extends Plugin
 				break;
 
 			case LOADING:
+				// For classifying thrall despawns: NPCs dropped around a load
+				// are scene shuffling, not deaths.
+				ticksSinceLoading = 0;
+
 				// The object is dropped from the rebuilt scene without its active flag
 				// changing, so it must be explicitly re-added or it stays invisible.
 				//
@@ -1009,6 +1061,7 @@ public class FollowerPlugin extends Plugin
 			case HOPPING:
 			case CONNECTION_LOST:
 				freshLogin = true;
+				resetThrallQuietly();
 				captureFallback.abort();
 				follower.despawn();
 				appearanceService.invalidate();
@@ -1187,6 +1240,12 @@ public class FollowerPlugin extends Plugin
 
 	private Outfit resolveOutfit()
 	{
+		// Thrall mode dresses the follower without touching the configured
+		// outfit, so leaving the mode restores exactly what the player set up.
+		if (outfitOverride != null)
+		{
+			return outfitOverride;
+		}
 		List<String> errors = new ArrayList<>();
 		Outfit outfit = OutfitParser.parse(config.customOutfit(), errors);
 		if (!errors.isEmpty())
@@ -1194,6 +1253,276 @@ public class FollowerPlugin extends Plugin
 			sendStatus("Outfit warnings: " + String.join("; ", errors));
 		}
 		return outfit;
+	}
+
+	// ------------------------------------------------------------- thrall mode
+
+	private NPC thrallNpc;
+	private String thrallStyle = "";
+	private Outfit outfitOverride;
+
+	/** Countdown to stage two of the exit flourish (snap home + redress). */
+	private int thrallExitTicks;
+
+	/** Plays the spawn-in burst a tick late, once the follower stands at the thrall. */
+	private int pendingThrallSpawnFxTicks;
+
+	/** Exit motion, and the necromancy shimmer for the return to follower form. */
+	private static final int THRALL_EXIT_ANIMATION = 8973;
+	private static final int THRALL_RETURN_SPOTANIM = 1290;
+
+	/** Per-style resurrect impact vfx: the burst when a thrall phases in or out. */
+	private static int thrallImpactSpotAnim(String style)
+	{
+		switch (style)
+		{
+			case "melee":
+				return 1905;
+			case "ranged":
+				return 1904;
+			default:
+				return 1903;
+		}
+	}
+
+	@Inject
+	private net.runelite.client.callback.Hooks hooks;
+
+	/**
+	 * Hides the REAL thrall while the follower stands in for it. Reference
+	 * comparison, so it costs nothing while no thrall is possessed.
+	 */
+	private final net.runelite.client.callback.Hooks.RenderableDrawListener thrallHider =
+		(renderable, drawingUi) -> renderable != thrallNpc;
+
+	/**
+	 * Thrall NPC ids, matched by ID because the NPCs' cache name is the literal
+	 * string "null" (measured live: a summon spawned id 10878 named 'null').
+	 * Mapping measured from the companion-pet hub plugin's bytecode and
+	 * consistent with our live captures: ghosts (magic) 10878-10880,
+	 * skeletons (ranged) 10881-10883, zombies (melee) 10884-10886, one id per
+	 * tier (lesser/superior/greater).
+	 */
+	private static String thrallStyleFor(int npcId)
+	{
+		if (npcId >= 10884 && npcId <= 10886)
+		{
+			return "melee";
+		}
+		if (npcId >= 10881 && npcId <= 10883)
+		{
+			return "ranged";
+		}
+		if (npcId >= 10878 && npcId <= 10880)
+		{
+			return "magic";
+		}
+		return null;
+	}
+
+	/**
+	 * A thrall NPC spawning inside the adoption window (a few ticks after the
+	 * resurrect cast) and beside the player is OUR summon: possess it. The
+	 * window plus proximity keeps other players' thralls out.
+	 */
+	/**
+	 * The varbit behind the thrall spells' 10-second summoning cooldown: it
+	 * rises to 1 the moment a thrall is summoned (combat-proof, unlike the
+	 * cast animation) and falls back to 0 ten seconds later - measured live,
+	 * metronomic 10s drops while the thrall stood healthy. Detection signal
+	 * ONLY; it says nothing about the thrall's remaining lifetime.
+	 */
+	private static final int THRALL_SUMMONED_VARBIT = 12290;
+
+	/**
+	 * Possession briefly lost to a scene rebuild: the thrall NPC despawned
+	 * during a load, not by expiry, so the follower keeps its outfit and
+	 * silently re-possesses the NPC when the scene brings it back.
+	 */
+	private boolean thrallLimbo;
+
+	/** Ticks spent in limbo; a respawn that never comes ends the possession. */
+	private int thrallLimboTicks;
+
+	/** Ticks since the last LOADING state, to classify NPC despawns. */
+	private int ticksSinceLoading = 1000;
+
+	private void maybeAdoptThrall(NPC npc)
+	{
+		if (!config.thrallMode() || npc == thrallNpc)
+		{
+			return;
+		}
+		// A fresh summon shows as the cooldown varbit reading 1 (it stays up
+		// for ten seconds after any cast - fresh, mid-combat or resummon). A
+		// limbo re-acquire may come later than that, so limbo bypasses it and
+		// matches purely on thrall id and proximity.
+		if (client.getVarbitValue(THRALL_SUMMONED_VARBIT) != 1 && !thrallLimbo)
+		{
+			return;
+		}
+		String style = thrallStyleFor(npc.getId());
+		if (style == null)
+		{
+			return;
+		}
+		Player local = client.getLocalPlayer();
+		int distance = local != null && local.getWorldLocation() != null && npc.getWorldLocation() != null
+			? npc.getWorldLocation().distanceTo(local.getWorldLocation()) : -1;
+		if (distance < 0 || distance > 6)
+		{
+			return;
+		}
+		if (thrallNpc != null)
+		{
+			// A resummon while possessed: the server replaces the old thrall
+			// NPC with a fresh one. Switch bodies rather than dropping back to
+			// a vanilla thrall; the old NPC's despawn is then ignored.
+			switchThrall(npc, style);
+		}
+		else if (thrallLimbo)
+		{
+			// The scene gave the thrall back: same possession, no re-greeting.
+			thrallLimbo = false;
+			switchThrall(npc, style);
+		}
+		else
+		{
+			adoptThrall(npc, style);
+		}
+	}
+
+	/** Adopts a thrall already in the scene when the varbit beats its spawn event. */
+	private void adoptExistingThrall()
+	{
+		for (NPC npc : client.getTopLevelWorldView().npcs())
+		{
+			if (npc != null && thrallStyleFor(npc.getId()) != null)
+			{
+				maybeAdoptThrall(npc);
+			}
+		}
+	}
+
+	private void switchThrall(NPC npc, String style)
+	{
+		boolean styleChanged = !style.equals(thrallStyle);
+		thrallNpc = npc;
+		thrallStyle = style;
+		thrallExitTicks = 0;
+		pendingThrallSpawnFxTicks = 1;
+		log.info("Switching possession to {} thrall (id {})", style, npc.getId());
+		if (styleChanged)
+		{
+			outfitOverride = resolveThrallOutfit(style);
+		}
+		clientThread.invoke(() ->
+		{
+			follower.slaveToNpc(npc);
+			follower.setThrallCircleFromNpcModel(thrallCircleModelId(npc));
+			if (styleChanged)
+			{
+				rebuildFollower();
+			}
+		});
+	}
+
+	private void adoptThrall(NPC npc, String style)
+	{
+
+		thrallNpc = npc;
+		thrallStyle = style;
+		thrallExitTicks = 0;
+		pendingThrallSpawnFxTicks = 1;
+		outfitOverride = resolveThrallOutfit(style);
+		log.info("Possessing {} thrall (id {})", style, npc.getId());
+		clientThread.invoke(() ->
+		{
+			follower.slaveToNpc(npc);
+			follower.setThrallCircleFromNpcModel(thrallCircleModelId(npc));
+			rebuildFollower();
+		});
+		speechEngine.dispatch(TriggerEvent.thrall(TriggerEvent.Type.THRALL_START, style));
+	}
+
+	/**
+	 * The thrall's whole body - circle included - is a single model on its
+	 * composition (measured: 41985/41989/41988 for melee/ranged/magic).
+	 * Reading it live keeps every tier authentic.
+	 */
+	private static int thrallCircleModelId(NPC npc)
+	{
+		net.runelite.api.NPCComposition comp = npc.getTransformedComposition() != null
+			? npc.getTransformedComposition() : npc.getComposition();
+		int[] models = comp == null ? null : comp.getModels();
+		return models != null && models.length > 0 ? models[0] : -1;
+	}
+
+	private void exitThrallMode()
+	{
+		if (thrallNpc == null && !thrallLimbo)
+		{
+			return;
+		}
+		String style = thrallStyle;
+		thrallNpc = null;
+		thrallLimbo = false;
+		log.info("Thrall gone; phasing the follower out");
+
+		// Stage one: still in thrall dress at the thrall's last spot, the
+		// follower phases out through the same per-style burst a thrall
+		// materialises with. Stage two (in onGameTick) snaps it home.
+		clientThread.invoke(() ->
+		{
+			follower.endNpcSlaveHolding();
+			follower.playAnimation(THRALL_EXIT_ANIMATION);
+			follower.playSpotAnim(spotAnimRepository.get(thrallImpactSpotAnim(style)));
+		});
+		thrallExitTicks = 4;
+		speechEngine.dispatch(TriggerEvent.thrall(TriggerEvent.Type.THRALL_END, style));
+	}
+
+	/** Logout/hop teardown: no snap, no message, just clean state. */
+	private void resetThrallQuietly()
+	{
+		pendingThrallSpawnFxTicks = 0;
+		thrallExitTicks = 0;
+		if (thrallNpc != null || thrallLimbo)
+		{
+			thrallNpc = null;
+			thrallLimbo = false;
+			outfitOverride = null;
+			follower.releaseNpcSlave();
+		}
+	}
+
+	private Outfit resolveThrallOutfit(String style)
+	{
+		String profileName = "melee".equals(style) ? config.thrallMeleeProfile()
+			: "ranged".equals(style) ? config.thrallRangedProfile()
+			: config.thrallMagicProfile();
+		String outfit = profileStore.get(profileName);
+		if (outfit == null)
+		{
+			// The configured profile was renamed or deleted; the seeded style
+			// profiles are restored on every load, so these always exist.
+			outfit = profileStore.get("melee".equals(style) ? "Melee"
+				: "ranged".equals(style) ? "Ranged" : "Magic");
+		}
+		return OutfitParser.parse(outfit == null ? "" : outfit);
+	}
+
+	private int thrallAttackAnimation()
+	{
+		switch (thrallStyle)
+		{
+			case "melee":
+				return config.thrallMeleeAttackAnim();
+			case "ranged":
+				return config.thrallRangedAttackAnim();
+			default:
+				return config.thrallMagicAttackAnim();
+		}
 	}
 
 	private boolean shouldHide()
@@ -1877,6 +2206,40 @@ public class FollowerPlugin extends Plugin
 		// Learn weapon stances from everyone on screen, including ourselves.
 		stanceLibrary.observe(client);
 
+		if (ticksSinceLoading < 1000)
+		{
+			ticksSinceLoading++;
+		}
+
+		// A limbo whose thrall never respawns - it expired during the very
+		// load that dropped it - ends the possession after a grace period.
+		if (thrallLimbo && ++thrallLimboTicks > 15)
+		{
+			log.info("Thrall never respawned after the load; ending possession");
+			exitThrallMode();
+		}
+
+		// The spawn-in burst waits one tick so the follower has already been
+		// rendered standing at the thrall's spot when it plays.
+		if (pendingThrallSpawnFxTicks > 0 && --pendingThrallSpawnFxTicks == 0 && thrallNpc != null)
+		{
+			clientThread.invoke(() ->
+				follower.playSpotAnim(spotAnimRepository.get(thrallImpactSpotAnim(thrallStyle))));
+		}
+
+		// Stage two of the exit flourish: home, redressed, shimmering back in.
+		if (thrallExitTicks > 0 && --thrallExitTicks == 0)
+		{
+			outfitOverride = null;
+			clientThread.invoke(() ->
+			{
+				follower.resumeFollowing();
+				follower.releaseNpcSlave();
+				rebuildFollower();
+				follower.playSpotAnim(spotAnimRepository.get(THRALL_RETURN_SPOTANIM));
+			});
+		}
+
 		if (++reloadPollTicks >= 2)
 		{
 			reloadPollTicks = 0;
@@ -2027,6 +2390,7 @@ public class FollowerPlugin extends Plugin
 	public void onNpcSpawned(NpcSpawned event)
 	{
 		NPC npc = event.getNpc();
+		maybeAdoptThrall(npc);
 		speechEngine.dispatch(TriggerEvent.npc(TriggerEvent.Type.NPC_SPAWN, npc.getId(), npc.getName()));
 	}
 
@@ -2034,6 +2398,25 @@ public class FollowerPlugin extends Plugin
 	public void onNpcDespawned(NpcDespawned event)
 	{
 		NPC npc = event.getNpc();
+		if (npc == thrallNpc)
+		{
+			// NpcDespawned also fires for every NPC a chunk reload drops from
+			// the scene. Classify by WHEN: a despawn during (or just after) a
+			// LOADING state is the scene shuffling, not the thrall dying.
+			if (client.getGameState() != GameState.LOGGED_IN || ticksSinceLoading <= 2)
+			{
+				log.info("Thrall NPC dropped by a scene load; holding possession for its respawn");
+				thrallNpc = null;
+				thrallLimbo = true;
+				thrallLimboTicks = 0;
+				clientThread.invoke(follower::releaseNpcSlave);
+			}
+			else
+			{
+				// Steady play, no load in sight: the thrall's time ran out.
+				exitThrallMode();
+			}
+		}
 		speechEngine.dispatch(TriggerEvent.npc(TriggerEvent.Type.NPC_DESPAWN, npc.getId(), npc.getName()));
 	}
 
@@ -2057,6 +2440,20 @@ public class FollowerPlugin extends Plugin
 			speechEngine.dispatch(TriggerEvent.varbit(event.getVarbitId(), event.getValue(), -1));
 		}
 
+		// The summoning-cooldown varbit rising is the RELIABLE summon signal:
+		// casting mid combat never surfaces the cast animation (the
+		// attack/block cycle owns the animation slot), but this rises
+		// regardless. Its FALL is just the ten-second cooldown ending and
+		// means nothing for the thrall's life.
+		if (event.getVarbitId() == THRALL_SUMMONED_VARBIT && config.thrallMode()
+			&& event.getValue() == 1)
+		{
+			log.info("Thrall summoned (cooldown varbit up)");
+			// The thrall NPC may already be in the scene - spawn-event
+			// ordering within the tick is not guaranteed.
+			adoptExistingThrall();
+		}
+
 		// The brightness setting: the chathead's colour table must be on the same
 		// gamma as the real chatheads around it, and must follow slider changes.
 		if (event.getVarpId() == BRIGHTNESS_VARP)
@@ -2073,6 +2470,21 @@ public class FollowerPlugin extends Plugin
 	@Subscribe
 	public void onAnimationChanged(AnimationChanged event)
 	{
+		// The possessed thrall attacking: the follower answers with the PLAYER
+		// attack animation for its style's weapon - NPC animation ids cannot
+		// play on a player skeleton.
+		if (event.getActor() == thrallNpc && thrallNpc != null
+			&& thrallNpc.getAnimation() != -1)
+		{
+			clientThread.invoke(() ->
+			{
+				// The swing must already face the enemy when it starts.
+				follower.faceThrallTarget(true);
+				follower.playAnimation(thrallAttackAnimation());
+			});
+			return;
+		}
+
 		if (event.getActor() != client.getLocalPlayer())
 		{
 			return;
@@ -2630,6 +3042,28 @@ public class FollowerPlugin extends Plugin
 				}
 				break;
 
+			case "outfit":
+			{
+				if (args.length < 2)
+				{
+					sendStatus("Profiles: " + (profileStore.names().isEmpty()
+						? "(none saved)" : String.join(", ", profileStore.names())));
+					break;
+				}
+				// Profile names may contain spaces; the args past "outfit" are one name.
+				StringBuilder joined = new StringBuilder();
+				for (int i = 1; i < args.length; i++)
+				{
+					if (joined.length() > 0)
+					{
+						joined.append(' ');
+					}
+					joined.append(args[i]);
+				}
+				loadOutfitProfile(joined.toString());
+				break;
+			}
+
 			case "status":
 			case "where":
 				sendStatus("Models: " + modelRepository.getStatus()
@@ -2644,7 +3078,7 @@ public class FollowerPlugin extends Plugin
 				sendStatus("::follower reload | copy | say <text> | here | rebuild | fix | "
 					+ "anim <id...> | watch | colours <part> | grabhair | keephair | "
 					+ "clearhair | hairbright <n> | highlight <n> | light <a> <c> | "
-					+ "height <n> | animinfo | animtrace | status | where");
+					+ "height <n> | animinfo | animtrace | status | where | outfit <name>");
 			// ::follower interp was removed: the interpolation filter is keyed on
 			// animation id, so it could not be changed for the follower without
 			// changing it for the player too.

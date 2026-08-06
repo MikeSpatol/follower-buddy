@@ -23,7 +23,18 @@ public final class TriggerEvent
 		LOGIN,
 		DAMAGE_TAKEN,
 		EQUIPMENT_CHANGE,
+		THRALL_START,
+		THRALL_END,
 		MANUAL,
+	}
+
+	/** Thrall-mode transitions; {@code style} lands in the {style} placeholder. */
+	public static TriggerEvent thrall(Type type, String style)
+	{
+		TriggerEvent event = new TriggerEvent(type);
+		event.name = style == null ? "" : style;
+		event.placeholders.put("style", event.name);
+		return event;
 	}
 
 	private final Type type;

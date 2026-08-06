@@ -2647,6 +2647,35 @@
       ]
     },
     {
+      "id": "thrall-start",
+      "note": "Fires when the follower takes a thrall's place. {style} is melee, ranged or magic.",
+      "group": "thrall",
+      "priority": 95,
+      "output": "overhead",
+      "cooldownMs": 5000,
+      "when": { "type": "thrallStart" },
+      "say": [
+        "A {style} thrall, am I? I'll allow it. Briefly.",
+        "Summoned! I make a better thrall than any pile of bones.",
+        "Fine, fine. Point me at something. The {style} arts it is.",
+        "From companion to conscript. The things I do for you."
+      ]
+    },
+    {
+      "id": "thrall-end",
+      "note": "Fires when the thrall's time runs out and the follower returns to your side.",
+      "group": "thrall",
+      "priority": 95,
+      "output": "overhead",
+      "cooldownMs": 5000,
+      "when": { "type": "thrallEnd" },
+      "say": [
+        "Time's up. Back to being your better half.",
+        "The spell fades. I remain. Convenient, that.",
+        "Thrall duty complete. I expect a raise.",
+        "And... I'm me again. That was strangely fun."
+      ]
+    },    {
       "id": "quest-wise-old-man",
       "note": "The Wise Old Man of Draynor.",
       "group": "quest",
