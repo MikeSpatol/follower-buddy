@@ -27,10 +27,34 @@ public final class LiveCacheParser
 	/** Config-index archive ids (net.runelite.cache.ConfigType). */
 	private static final int CONFIG_IDENTKIT = 3;
 	private static final int CONFIG_ITEM = 10;
+	private static final int CONFIG_SEQUENCE = 12;
 	private static final int CONFIG_SPOTANIM = 13;
 
 	private LiveCacheParser()
 	{
+	}
+
+	/**
+	 * The id of every animation the cache holds.
+	 *
+	 * <p>Only the archive's file list is read, never the definitions: an id is
+	 * either in there or it is not, which is the whole question a validity
+	 * check asks. Used by {@code ::follower stanceaudit} to prove that no
+	 * stance names an animation that does not exist.
+	 */
+	public static java.util.Set<Integer> sequenceIds(Client client)
+	{
+		IndexDataBase configs = client.getIndexConfig();
+		java.util.Set<Integer> ids = new java.util.HashSet<>();
+		if (configs == null)
+		{
+			return ids;
+		}
+		for (int id : configs.getFileIds(CONFIG_SEQUENCE))
+		{
+			ids.add(id);
+		}
+		return ids;
 	}
 
 	/** Wearable items keyed by id, matching equipment-models.json's items map. */

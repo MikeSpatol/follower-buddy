@@ -481,6 +481,7 @@ public class FollowerPlugin extends Plugin
 			.build();
 		clientToolbar.addNavigation(navButton);
 		syncPanel();
+		stanceLibrary.setStyleSource(this::weaponStyle);
 		buildSlotIndexAsync();
 	}
 
@@ -534,12 +535,24 @@ public class FollowerPlugin extends Plugin
 			}
 
 			log.info("Indexed {} of {} wearable items by slot", index.size(), ids.size());
+			slotIndex = index;
 			if (panel != null)
 			{
 				panel.setSlotIndex(index);
 			}
 		});
 	}
+
+	/** Item id -> equipment slot, kept so the stance audit can walk every weapon. */
+	private Map<Integer, KitType> slotIndex = java.util.Collections.emptyMap();
+
+	/**
+	 * How often learned animation data is flushed to disk: one minute, so an
+	 * unclean exit costs at most that much observation rather than a session.
+	 */
+	private static final int LEARNING_SAVE_TICKS = 100;
+
+	private int ticksSinceLearningSave;
 
 	/** Pushes the current outfit into the panel so it shows what is actually worn. */
 	/** Lazily builds the item-message editor window and fronts it. */
@@ -1078,6 +1091,42 @@ public class FollowerPlugin extends Plugin
 		return out;
 	}
 
+	/**
+	 * Which way a weapon fights, read from its own attack bonuses.
+	 *
+	 * <p>Used to stop the stance library borrowing an attack across combat
+	 * styles. Bonuses are the game's own statement of what a weapon is for:
+	 * whichever of the three it favours is how it is swung. Weapons with no
+	 * equipment stats at all report UNKNOWN, and the library then declines to
+	 * borrow rather than guess.
+	 */
+	private int weaponStyle(int itemId)
+	{
+		net.runelite.client.game.ItemStats stats = itemManager.getItemStats(itemId);
+		if (stats == null || stats.getEquipment() == null)
+		{
+			return com.follower.follower.StanceLibrary.StyleSource.UNKNOWN;
+		}
+		net.runelite.client.game.ItemEquipmentStats equipment = stats.getEquipment();
+		int melee = Math.max(equipment.getAstab(),
+			Math.max(equipment.getAslash(), equipment.getAcrush()));
+		int ranged = equipment.getArange();
+		int magic = equipment.getAmagic();
+
+		if (ranged > melee && ranged >= magic)
+		{
+			return com.follower.follower.StanceLibrary.StyleSource.RANGED;
+		}
+		if (magic > melee && magic > ranged)
+		{
+			return com.follower.follower.StanceLibrary.StyleSource.MAGIC;
+		}
+		// A weapon with no offensive bonus at all says nothing about itself.
+		return melee == 0 && ranged == 0 && magic == 0
+			? com.follower.follower.StanceLibrary.StyleSource.UNKNOWN
+			: com.follower.follower.StanceLibrary.StyleSource.MELEE;
+	}
+
 	private KitType resolveSlot(int itemId)
 	{
 		net.runelite.client.game.ItemStats stats = itemManager.getItemStats(itemId);
@@ -1470,6 +1519,137 @@ public class FollowerPlugin extends Plugin
 		log.info("cachecheck {}: dump {}, live {}, {} problems",
 			label, fromDump.size(), fromLive.size(), problems);
 		return problems;
+	}
+
+	/**
+	 * Audits the stance library: what it claims must be real, and how much of
+	 * the game it actually covers.
+	 *
+	 * <p>The library can never be PROVEN complete. Weapon stances are not in
+	 * the cache - four probes settled that - so the only proof a given weapon
+	 * animates correctly is watching a player wield it. What can be settled is
+	 * everything short of that, and none of it needs a human to eyeball a
+	 * follower:
+	 *
+	 * <ul>
+	 *   <li>Every animation id the library names exists in the cache. A typo
+	 *       or a bad outside source shows up here as an id the game does not
+	 *       have, and would otherwise be a follower that silently stops
+	 *       animating.</li>
+	 *   <li>Every weapon in the game either resolves to a stance directly,
+	 *       inherits one from its plain version, or is reported by name as
+	 *       falling back to unarmed.</li>
+	 *   <li>The same for attacks, which resolve through class borrowing and
+	 *       otherwise land on the configured default.</li>
+	 * </ul>
+	 */
+	private void runStanceAudit()
+	{
+		Set<Integer> sequences = com.follower.appearance.LiveCacheParser.sequenceIds(client);
+		if (sequences.isEmpty())
+		{
+			sendStatus("stanceaudit needs the client's cache loaded - log in and try again");
+			return;
+		}
+
+		int badIds = 0;
+		int noDirectionals = 0;
+		int withAttack = 0;
+		for (Map.Entry<Integer, com.follower.follower.StanceLibrary.Stance> entry
+			: stanceLibrary.all().entrySet())
+		{
+			int weaponId = entry.getKey();
+			com.follower.follower.StanceLibrary.Stance stance = entry.getValue();
+			String name = weaponId == com.follower.follower.StanceLibrary.UNARMED
+				? "(unarmed)" : modelRepository.itemName(weaponId);
+
+			badIds += auditAnimationId(sequences, weaponId, name, "idle", stance.idle);
+			badIds += auditAnimationId(sequences, weaponId, name, "walk", stance.walk);
+			badIds += auditAnimationId(sequences, weaponId, name, "run", stance.run);
+			badIds += auditAnimationId(sequences, weaponId, name, "attack", stance.attack);
+			badIds += auditAnimationId(sequences, weaponId, name, "walkBack", stance.walkBack);
+			badIds += auditAnimationId(sequences, weaponId, name, "walkLeft", stance.walkLeft);
+			badIds += auditAnimationId(sequences, weaponId, name, "walkRight", stance.walkRight);
+			badIds += auditAnimationId(sequences, weaponId, name, "turnLeft", stance.turnLeft);
+			badIds += auditAnimationId(sequences, weaponId, name, "turnRight", stance.turnRight);
+
+			if (stance.attack > 0)
+			{
+				withAttack++;
+			}
+			// No directional poses means the entry was either typed in by hand
+			// or observed before those fields existed. Its idle/walk/run may be
+			// perfectly good; it just cannot have come from a live sighting
+			// recently enough to carry the full set.
+			if (stance.walkLeft == 0 && weaponId != com.follower.follower.StanceLibrary.UNARMED)
+			{
+				noDirectionals++;
+			}
+		}
+
+		int weapons = 0;
+		int direct = 0;
+		int inherited = 0;
+		int attackResolved = 0;
+		List<String> uncovered = new ArrayList<>();
+		for (Map.Entry<Integer, KitType> entry : slotIndex.entrySet())
+		{
+			if (entry.getValue() != KitType.WEAPON)
+			{
+				continue;
+			}
+			int itemId = entry.getKey();
+			weapons++;
+			if (stanceLibrary.describe(itemId) != null)
+			{
+				direct++;
+			}
+			else if (stanceLibrary.knows(itemId))
+			{
+				inherited++;
+			}
+			else
+			{
+				String name = modelRepository.itemName(itemId);
+				uncovered.add((name == null ? "?" : name) + " (" + itemId + ")");
+			}
+			if (stanceLibrary.attackFor(itemId) > 0)
+			{
+				attackResolved++;
+			}
+		}
+
+		java.util.Collections.sort(uncovered);
+		log.info("stanceaudit: {} stances, {} name an animation the cache does not have,"
+				+ " {} carry no directional poses, {} have a learned attack",
+			stanceLibrary.all().size(), badIds, noDirectionals, withAttack);
+		log.info("stanceaudit: {} weapons in the slot index - {} with their own stance,"
+				+ " {} inheriting one, {} falling back to unarmed",
+			weapons, direct, inherited, uncovered.size());
+		log.info("stanceaudit: {} of {} weapons resolve to a real attack animation;"
+				+ " the rest use the configured default", attackResolved, weapons);
+		if (!uncovered.isEmpty())
+		{
+			log.info("stanceaudit: weapons with no stance:\n  {}", String.join("\n  ", uncovered));
+		}
+
+		sendStatus(badIds == 0
+			? "stanceaudit: every animation id checks out. " + direct + " weapons matched,"
+				+ " " + inherited + " inherited, " + uncovered.size() + " unknown - see the log."
+			: "stanceaudit: " + badIds + " animation ids do not exist - see the client log");
+	}
+
+	/** @return 1 when the id is set but is not a real animation, else 0. */
+	private int auditAnimationId(Set<Integer> sequences, int weaponId, String name,
+		String field, int animationId)
+	{
+		if (animationId <= 0 || sequences.contains(animationId))
+		{
+			return 0;
+		}
+		log.warn("stanceaudit: {} ({}) has {} = {}, which is not an animation in the cache",
+			name == null ? "item" : name, weaponId, field, animationId);
+		return 1;
 	}
 
 	/**
@@ -2531,6 +2711,22 @@ public class FollowerPlugin extends Plugin
 		// Learn weapon stances from everyone on screen, including ourselves.
 		stanceLibrary.observe(client);
 
+		// Persist what was learned without waiting for a clean shutdown. Saving
+		// only in shutDown() meant a crash, a force-quit or a killed client threw
+		// away the whole session's observations - which is exactly why the
+		// library had learned stances but not one attack animation. A sighting
+		// of someone else's weapon may never come again, so it is worth a write;
+		// wrap trims are deliberately left to shutdown, since they are measured
+		// from the animation itself and simply re-measure next run.
+		//
+		// save() no-ops unless something actually changed, so on the
+		// overwhelming majority of ticks this costs a comparison.
+		if (++ticksSinceLearningSave >= LEARNING_SAVE_TICKS)
+		{
+			ticksSinceLearningSave = 0;
+			stanceLibrary.save();
+		}
+
 		if (ticksSinceLoading < 1000)
 		{
 			ticksSinceLoading++;
@@ -3446,6 +3642,12 @@ public class FollowerPlugin extends Plugin
 			case "cachecheck":
 			{
 				clientThread.invokeLater(this::runCacheCheck);
+				break;
+			}
+
+			case "stanceaudit":
+			{
+				clientThread.invokeLater(this::runStanceAudit);
 				break;
 			}
 

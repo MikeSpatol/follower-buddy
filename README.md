@@ -674,8 +674,22 @@ These are inherent to the approach, not bugs to be filed:
   jar, so a fresh install already knows ~190 weapons. Every player in the scene
   teaches passively — a few minutes anywhere busy fills it out. And weapons cluster
   hard: those 190 weapons collapse into just **32 stance classes**, two of which
-  cover 69% of them, so an unknown weapon's attack is borrowed from a weapon of the
-  same class. Seeing one scimitar swung covers every scimitar in the game.
+  cover 69% of them, so an unknown weapon's attack can be borrowed from a weapon of
+  the same class. Seeing one scimitar swung covers every scimitar in the game.
+
+  A stance class alone is **not** enough to borrow an attack, though. It groups
+  weapons by how they are *carried*, and the 79-weapon class that walks like an
+  unarmed player contains both the Dragon harpoon and the Bow of faerdhinen —
+  identical carry, completely different swing. Borrowing therefore also requires
+  the combat style to match, taken from the item's own attack bonuses, and is
+  refused outright when either weapon's style can't be established. Poses have no
+  such problem: the class *is* the carry, which is why they borrow freely.
+
+  Note that attacks start empty — the shipped library carries stances only, since
+  attacks are learned from players seen swinging while interacting, and only a
+  weapon actually used in combat records one. Until a class has been seen fighting,
+  its weapons use the configured default attack animation. `::follower stanceaudit`
+  reports exactly where that stands.
 - **Animations must loop defensively.** Many pose animations have `frameStep = -1`,
   meaning they were never authored to loop. `AnimationController`'s default finish
   handler steps back by `frameStep` and, if the frame is still out of range, **drops

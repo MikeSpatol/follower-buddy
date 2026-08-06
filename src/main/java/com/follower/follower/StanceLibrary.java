@@ -338,13 +338,48 @@ public class StanceLibrary
 	}
 
 	/**
-	 * The attack animation to use for a weapon: its own if it has been seen
-	 * used, otherwise one borrowed from a weapon of the same class.
+	 * How a weapon is USED, which the pose set does not say.
 	 *
-	 * <p>The borrow is what keeps this practical. Nobody owns every weapon,
-	 * but weapons of a kind share a pose set, so seeing ONE scimitar swung
-	 * covers every scimitar in the game. Returns 0 when the class is entirely
-	 * unseen, leaving the caller to fall back.
+	 * <p>Supplied by the plugin from the item's own attack bonuses, because the
+	 * pose triple describes how a weapon is CARRIED and nothing more. The
+	 * 79-weapon class that walks like an unarmed player holds the Dragon
+	 * harpoon and the Bow of faerdhinen side by side: identical carry, utterly
+	 * different swing. Borrowing across that would put a chop on a bow.
+	 */
+	public interface StyleSource
+	{
+		int MELEE = 0;
+		int RANGED = 1;
+		int MAGIC = 2;
+		int UNKNOWN = -1;
+
+		int styleOf(int itemId);
+	}
+
+	private StyleSource styleSource;
+
+	public void setStyleSource(StyleSource styleSource)
+	{
+		this.styleSource = styleSource;
+	}
+
+	/**
+	 * The attack animation to use for a weapon: its own if it has been seen
+	 * used, otherwise one borrowed from a weapon that both carries AND fights
+	 * the same way.
+	 *
+	 * <p>The borrow is what keeps this practical. Nobody owns every weapon, but
+	 * weapons of a kind share a pose set, so seeing ONE scimitar swung covers
+	 * every scimitar in the game.
+	 *
+	 * <p>Matching the pose class alone is not enough, though. It groups by how
+	 * a weapon is carried, and melee and ranged weapons can be carried alike,
+	 * so the combat style has to agree as well. When the style of either weapon
+	 * cannot be established the borrow is refused outright: a wrong animation
+	 * is worse than a plain one, which is the same reason the variant matching
+	 * is exact rather than fuzzy.
+	 *
+	 * @return 0 when nothing can be borrowed, leaving the caller to fall back
 	 */
 	public int attackFor(int weaponItemId)
 	{
@@ -358,9 +393,19 @@ public class StanceLibrary
 		{
 			return stance.attack;
 		}
-		for (Stance other : stances.values())
+
+		int style = styleSource == null
+			? StyleSource.UNKNOWN : styleSource.styleOf(weaponItemId);
+		if (style == StyleSource.UNKNOWN)
 		{
-			if (other.attack > 0 && other.sameClassAs(stance))
+			return 0;
+		}
+
+		for (Map.Entry<Integer, Stance> entry : stances.entrySet())
+		{
+			Stance other = entry.getValue();
+			if (other.attack > 0 && other.sameClassAs(stance)
+				&& styleSource.styleOf(entry.getKey()) == style)
 			{
 				return other.attack;
 			}
@@ -408,6 +453,12 @@ public class StanceLibrary
 	public Stance describe(int weaponItemId)
 	{
 		return stances.get(weaponItemId <= 0 ? UNARMED : weaponItemId);
+	}
+
+	/** Every stance as stored, for auditing what the library actually holds. */
+	public Map<Integer, Stance> all()
+	{
+		return java.util.Collections.unmodifiableMap(stances);
 	}
 
 	/**
