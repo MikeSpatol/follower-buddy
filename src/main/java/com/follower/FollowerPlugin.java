@@ -1590,7 +1590,9 @@ public class FollowerPlugin extends Plugin
 		int weapons = 0;
 		int direct = 0;
 		int inherited = 0;
-		int attackResolved = 0;
+		int attackOwn = 0;
+		int attackFromClass = 0;
+		int attackGeneric = 0;
 		List<String> uncovered = new ArrayList<>();
 		for (Map.Entry<Integer, KitType> entry : slotIndex.entrySet())
 		{
@@ -1600,11 +1602,14 @@ public class FollowerPlugin extends Plugin
 			}
 			int itemId = entry.getKey();
 			weapons++;
-			if (stanceLibrary.describe(itemId) != null)
+
+			com.follower.follower.StanceLibrary.Stance own = stanceLibrary.describe(itemId);
+			boolean hasStance = stanceLibrary.knows(itemId);
+			if (own != null)
 			{
 				direct++;
 			}
-			else if (stanceLibrary.knows(itemId))
+			else if (hasStance)
 			{
 				inherited++;
 			}
@@ -1613,9 +1618,29 @@ public class FollowerPlugin extends Plugin
 				String name = modelRepository.itemName(itemId);
 				uncovered.add((name == null ? "?" : name) + " (" + itemId + ")");
 			}
+
+			// Three very different things, worth counting apart. A weapon that
+			// was seen swung has its OWN attack. One that shares a class with
+			// such a weapon borrows a correct animation for its kind. But a
+			// weapon with no stance at all falls back to the unarmed pose set,
+			// and the unarmed class is the big default one - so it picks up a
+			// GENERIC swing for its combat style. That last is better than a
+			// bow doing a sword's slash, and it is not the weapon's own
+			// animation. Reporting them as one number flatters the library.
 			if (stanceLibrary.attackFor(itemId) > 0)
 			{
-				attackResolved++;
+				if (own != null && own.attack > 0)
+				{
+					attackOwn++;
+				}
+				else if (hasStance)
+				{
+					attackFromClass++;
+				}
+				else
+				{
+					attackGeneric++;
+				}
 			}
 		}
 
@@ -1626,8 +1651,11 @@ public class FollowerPlugin extends Plugin
 		log.info("stanceaudit: {} weapons in the slot index - {} with their own stance,"
 				+ " {} inheriting one, {} falling back to unarmed",
 			weapons, direct, inherited, uncovered.size());
-		log.info("stanceaudit: {} of {} weapons resolve to a real attack animation;"
-				+ " the rest use the configured default", attackResolved, weapons);
+		log.info("stanceaudit: attacks - {} weapons swing their own learned animation,"
+				+ " {} borrow one from their weapon class, {} get a generic swing for their"
+				+ " style through the unarmed fallback, {} use the configured default",
+			attackOwn, attackFromClass, attackGeneric,
+			weapons - attackOwn - attackFromClass - attackGeneric);
 		if (!uncovered.isEmpty())
 		{
 			log.info("stanceaudit: weapons with no stance:\n  {}", String.join("\n  ", uncovered));
@@ -1635,7 +1663,8 @@ public class FollowerPlugin extends Plugin
 
 		sendStatus(badIds == 0
 			? "stanceaudit: every animation id checks out. " + direct + " weapons matched,"
-				+ " " + inherited + " inherited, " + uncovered.size() + " unknown - see the log."
+				+ " " + inherited + " inherited, " + uncovered.size() + " unknown; "
+				+ (attackOwn + attackFromClass) + " with a real attack - see the log."
 			: "stanceaudit: " + badIds + " animation ids do not exist - see the client log");
 	}
 
