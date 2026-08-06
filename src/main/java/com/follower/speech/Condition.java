@@ -29,6 +29,7 @@ import net.runelite.api.NPC;
  *   <tr><td>itemEquipped</td><td>{@code ids}</td></tr>
  *   <tr><td>poisoned / venomed / skulled</td><td>no fields</td></tr>
  *   <tr><td>thrallStart / thrallEnd</td><td>no fields; {@code {style}} placeholder</td></tr>
+ *   <tr><td>errandStart / errandEnd</td><td>optional {@code names} (errand names); {@code {errand}} placeholder</td></tr>
  *   <tr><td>energyBelow</td><td>{@code percent}</td></tr>
  *   <tr><td>idle</td><td>{@code ticks}</td></tr>
  *   <tr><td>login / always</td><td>no fields</td></tr>
@@ -175,6 +176,13 @@ public class Condition
 				return event.getType() == TriggerEvent.Type.THRALL_START;
 			case "thrallend":
 				return event.getType() == TriggerEvent.Type.THRALL_END;
+
+			case "errandstart":
+				return event.getType() == TriggerEvent.Type.ERRAND_START
+					&& (names == null || matchesAnyName(event.getName()));
+			case "errandend":
+				return event.getType() == TriggerEvent.Type.ERRAND_END
+					&& (names == null || matchesAnyName(event.getName()));
 
 			default:
 				log.warn("Unknown condition type '{}'", type);

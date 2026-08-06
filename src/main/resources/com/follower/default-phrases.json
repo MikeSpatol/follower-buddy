@@ -2691,6 +2691,201 @@
       ]
     },
     {
+      "id": "errand-bank-start",
+      "note": "The follower heads to a nearby bank booth.",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": { "type": "errandStart", "names": ["bank"] },
+      "say": [
+        "One second, I need to sort my bank. It's a disaster in there.",
+        "Hold on, quick bank stop. Don't wander off.",
+        "The bank calls. My gold misses me."
+      ]
+    },
+    {
+      "id": "errand-bank-end",
+      "note": "Back from the bank.",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": { "type": "errandEnd", "names": ["bank"] },
+      "say": [
+        "Don't ask how bad it is in there.",
+        "Right, sorted. Ish. Sorted-ish.",
+        "I counted it all. Still not enough."
+      ]
+    },
+    {
+      "id": "errand-altar-start",
+      "note": "The follower heads to a nearby altar.",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": { "type": "errandStart", "names": ["altar"] },
+      "say": [
+        "Just need a quick word with the gods. Won't be long.",
+        "One prayer, then straight back.",
+        "The altar's right there. It would be rude not to."
+      ]
+    },
+    {
+      "id": "errand-altar-end",
+      "note": "Back from the altar.",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": { "type": "errandEnd", "names": ["altar"] },
+      "say": [
+        "Right. Sins managed.",
+        "The gods say hello. Probably.",
+        "Prayed for both of us. You're welcome."
+      ]
+    },
+    {
+      "id": "errand-fire-start",
+      "note": "The follower warms up at a nearby fire.",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": { "type": "errandStart", "names": ["fire"] },
+      "say": [
+        "Is that a fire? My hands are freezing.",
+        "One minute by the fire. Adventuring is COLD.",
+        "Fire. Warmth. Priorities. Back in a tick."
+      ]
+    },
+    {
+      "id": "errand-fire-end",
+      "note": "Warmed up.",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": { "type": "errandEnd", "names": ["fire"] },
+      "say": [
+        "Better. Carry on.",
+        "Toasty. Right, where were we?",
+        "I regret nothing. My hands agree."
+      ]
+    },
+    {
+      "id": "errand-firedeath-start",
+      "note": "The rare fire errand where warming up goes catastrophically wrong.",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": { "type": "errandStart", "names": ["firedeath"] },
+      "say": [
+        "AAAAH! HOT! HOT HOT HOT!",
+        "WHY IS IT LIKE THIS!",
+        "MISTAKE! THIS WAS A MISTAKE!"
+      ]
+    },
+    {
+      "id": "errand-firedeath-end",
+      "note": "Back from the beyond, with grievances.",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": { "type": "errandEnd", "names": ["firedeath"] },
+      "say": [
+        "That hurt. That REALLY hurt.",
+        "Dying sucks. Zero out of ten. Would not recommend.",
+        "I'm fine. I'm FINE. We speak of this to no one.",
+        "Note to self: fire is hot. Eternally noted."
+      ]
+    },    {
+      "id": "errand-cat-start",
+      "note": "The follower has seen a cat. This is not negotiable.",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": { "type": "errandStart", "names": ["cat"] },
+      "say": [
+        "Cat. CAT. One minute.",
+        "Look at the cat. LOOK at it. One second.",
+        "There is a cat and I have priorities."
+      ]
+    },
+    {
+      "id": "errand-cat-end",
+      "note": "The cat has been attended to.",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": { "type": "errandEnd", "names": ["cat"] },
+      "say": [
+        "That was important. You wouldn't understand.",
+        "The cat and I have an understanding now.",
+        "Softest creature in Gielinor. Confirmed."
+      ]
+    },
+    {
+      "id": "errand-bootlace-start",
+      "note": "The follower stops for a bootlace; no trip, it catches up after.",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": { "type": "errandStart", "names": ["bootlace"] },
+      "say": [
+        "Bootlace. Go on, I'll catch up.",
+        "Hold on. Boot situation.",
+        "One moment. My boot disagrees with me."
+      ]
+    },
+    {
+      "id": "errand-bootlace-end",
+      "note": "Bootlace resolved.",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": { "type": "errandEnd", "names": ["bootlace"] },
+      "say": [
+        "Sorted. What did I miss?",
+        "There. Crisis averted.",
+        "Double knots this time. We're safe."
+      ]
+    },
+    {
+      "id": "errand-glance-start",
+      "note": "The follower thought it saw something.",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": { "type": "errandStart", "names": ["glance"] },
+      "say": [
+        "Wait. Did you see that?",
+        "Hold on. Something moved over there.",
+        "Shh. There. No, THERE."
+      ]
+    },
+    {
+      "id": "errand-glance-end",
+      "note": "It was nothing.",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": { "type": "errandEnd", "names": ["glance"] },
+      "say": [
+        "...Never mind. It was a rock.",
+        "Nothing. It was nothing. Probably nothing.",
+        "False alarm. The shadows are shifty today."
+      ]
+    },    {
       "id": "quest-hans",
       "note": "Hans, circling Lumbridge Castle.",
       "group": "quest",

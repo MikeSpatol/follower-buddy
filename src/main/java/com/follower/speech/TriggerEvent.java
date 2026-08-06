@@ -25,6 +25,8 @@ public final class TriggerEvent
 		EQUIPMENT_CHANGE,
 		THRALL_START,
 		THRALL_END,
+		ERRAND_START,
+		ERRAND_END,
 		MANUAL,
 	}
 
@@ -34,6 +36,15 @@ public final class TriggerEvent
 		TriggerEvent event = new TriggerEvent(type);
 		event.name = style == null ? "" : style;
 		event.placeholders.put("style", event.name);
+		return event;
+	}
+
+	/** Errand transitions; the errand's name matches rule {@code names} lists. */
+	public static TriggerEvent errand(Type type, String errand)
+	{
+		TriggerEvent event = new TriggerEvent(type);
+		event.name = errand == null ? "" : errand;
+		event.placeholders.put("errand", event.name);
 		return event;
 	}
 

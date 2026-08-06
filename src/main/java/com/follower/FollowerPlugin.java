@@ -264,6 +264,8 @@ public class FollowerPlugin extends Plugin
 	@Inject
 	private com.follower.appearance.OutfitProfileStore profileStore;
 
+	private com.follower.follower.ErrandController errands;
+
 	private Path dataDir;
 	private WorldPoint lastPlayerTile;
 	private int lastRegionId = -1;
@@ -326,6 +328,9 @@ public class FollowerPlugin extends Plugin
 		applyConfig();
 		loadExactPalette();
 		hooks.registerRenderableDrawListener(thrallHider);
+		errands = new com.follower.follower.ErrandController(client, follower, config,
+			speechEngine::dispatch, spotAnimRepository,
+			() -> dialog.isOpen() || follower.isNpcSlaved());
 
 		// On a fresh client boot the LOGIN_SCREEN transition can happen before
 		// this plugin subscribes, so the first login would not read as fresh.
@@ -1062,6 +1067,10 @@ public class FollowerPlugin extends Plugin
 			case CONNECTION_LOST:
 				freshLogin = true;
 				resetThrallQuietly();
+				if (errands != null)
+				{
+					errands.reset();
+				}
 				captureFallback.abort();
 				follower.despawn();
 				appearanceService.invalidate();
@@ -2219,6 +2228,11 @@ public class FollowerPlugin extends Plugin
 			exitThrallMode();
 		}
 
+		if (errands != null)
+		{
+			errands.tick();
+		}
+
 		// The spawn-in burst waits one tick so the follower has already been
 		// rendered standing at the thrall's spot when it plays.
 		if (pendingThrallSpawnFxTicks > 0 && --pendingThrallSpawnFxTicks == 0 && thrallNpc != null)
@@ -3041,6 +3055,26 @@ public class FollowerPlugin extends Plugin
 					sendStatus("Playing " + java.util.Arrays.toString(ids) + " on the follower.");
 				}
 				break;
+
+			case "errand":
+			{
+				if (errands != null)
+				{
+					errands.force(args.length > 1 ? args[1] : null);
+					sendStatus("Errand forced" + (args.length > 1 ? ": " + args[1] : ""));
+				}
+				break;
+			}
+
+			case "errandscan":
+			{
+				if (errands != null)
+				{
+					errands.debugScan();
+					sendStatus("Errand scan logged");
+				}
+				break;
+			}
 
 			case "outfit":
 			{

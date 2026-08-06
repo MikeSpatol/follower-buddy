@@ -430,6 +430,18 @@ public class FollowerEntity
 		return stayTile != null;
 	}
 
+	/**
+	 * True when the follower has fully stopped: no queued route, and its fine
+	 * position rests at its tile's centre. An emote started before this is
+	 * cancelled by the very next movement frame.
+	 */
+	public boolean isSettled()
+	{
+		return route.isEmpty() && serverPath.isEmpty() && tile != null
+			&& fineWX == tile.getX() * 128L + 64
+			&& fineWY == tile.getY() * 128L + 64;
+	}
+
 	/** The model the object is rendering RIGHT NOW (post-animation), for diagnostics. */
 	public net.runelite.api.Model getRenderModel()
 	{
@@ -440,6 +452,63 @@ public class FollowerEntity
 	public void resumeFollowing()
 	{
 		stayTile = null;
+		stayFaceTile = null;
+	}
+
+	/**
+	 * While holding a stay pose, face this tile instead of the player - an
+	 * errand faces its business: the booth, the altar, the cat. Cleared with
+	 * the pose.
+	 */
+	private WorldPoint stayFaceTile;
+
+	public void setStayFaceTile(WorldPoint tile)
+	{
+		stayFaceTile = tile;
+	}
+
+	/** The stay pose's idle facing: the face tile when set, the player otherwise. */
+	private void faceStayAnchor()
+	{
+		if (stayFaceTile != null && tile != null)
+		{
+			int dx = tile.getX() - stayFaceTile.getX();
+			int dy = tile.getY() - stayFaceTile.getY();
+			if (dx != 0 || dy != 0)
+			{
+				dstYaw = (int) Math.round(Math.atan2(dx, dy) * 325.949) & 0x7ff;
+			}
+			return;
+		}
+		facePlayer();
+	}
+
+	/** Until when the follower stays invisible (the comedy death's empty stage). */
+	private long hideUntilMs;
+
+	/** Armed by the comedy death: at the emote's final frame, go dark this long. */
+	private int hideAfterEmoteMs;
+
+	/**
+	 * Arms a frame-accurate disappearance: the instant the current emote
+	 * finishes, the follower goes invisible for the given time - no standing
+	 * back up first. The caller stages the return.
+	 */
+	public void hideAfterEmote(int ms)
+	{
+		hideAfterEmoteMs = ms;
+	}
+
+	/** Snaps the follower to the player's side, ending any pose - the errand's way home. */
+	public void teleportToPlayer()
+	{
+		// Arriving home ends any staged disappearance, however long it had left.
+		hideUntilMs = 0;
+		Player local = client.getLocalPlayer();
+		if (spawned && local != null && local.getWorldLocation() != null)
+		{
+			snapBeside(local.getWorldLocation());
+		}
 	}
 
 	// -------------------------------------------------------------- thrall mode
@@ -1378,6 +1447,16 @@ public class FollowerEntity
 			return;
 		}
 
+		// Briefly gone (the comedy death): nothing renders, nothing moves.
+		if (System.currentTimeMillis() < hideUntilMs)
+		{
+			if (object.isActive())
+			{
+				object.setActive(false);
+			}
+			return;
+		}
+
 		// Thrall mode: the follower IS the thrall. Everything below - follow
 		// pathing, stay poses, leashes - is someone else's life for now.
 		if (thrallNpc != null)
@@ -1424,7 +1503,7 @@ public class FollowerEntity
 		{
 			if (tile.equals(stayTile) && route.isEmpty() && serverPath.isEmpty())
 			{
-				facePlayer();
+				faceStayAnchor();
 			}
 			else if (serverPath.isEmpty() && route.isEmpty())
 			{
@@ -1500,10 +1579,11 @@ public class FollowerEntity
 
 		// Idle facing: the follow op interacts with its target, and an
 		// interacting entity keeps facing it while standing - turning in place
-		// with the turn pose as the player circles around.
+		// with the turn pose as the player circles around. A stay pose with a
+		// face tile (an errand at its business) faces that instead.
 		if (!moving && faceLocked())
 		{
-			facePlayer();
+			faceStayAnchor();
 		}
 
 		StanceLibrary.Stance stance = stance();
@@ -2637,6 +2717,18 @@ public class FollowerEntity
 	/** Called as a mirrored cast ends: go invisible and wait for the landing. */
 	private void consumeVanish()
 	{
+		// The comedy death's exit shares the emote-end moment: the corpse
+		// disappears on the death animation's last frame, not a beat after.
+		if (hideAfterEmoteMs > 0)
+		{
+			hideUntilMs = System.currentTimeMillis() + hideAfterEmoteMs;
+			hideAfterEmoteMs = 0;
+			if (object != null)
+			{
+				object.setActive(false);
+			}
+		}
+
 		if (!vanishAfterEmoteArmed)
 		{
 			return;
@@ -2857,6 +2949,9 @@ public class FollowerEntity
 		slavedChain = null;
 		slavedGraphics = null;
 		vanishAfterEmoteArmed = false;
+		// An interrupted death keeps the follower visible - same rule as the
+		// interrupted teleport above.
+		hideAfterEmoteMs = 0;
 
 		if (!emotePlaying)
 		{

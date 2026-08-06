@@ -49,6 +49,20 @@ public interface FollowerConfig extends Config
 	)
 	String thrallSection = "thrall";
 
+	@ConfigSection(
+		name = "Errands",
+		description = "Little trips the follower makes on its own - banks, altars, cats",
+		position = 5
+	)
+	String errandSection = "errands";
+
+	enum ErrandFrequency
+	{
+		RARE,
+		OCCASIONAL,
+		LIVELY
+	}
+
 	// ------------------------------------------------------------- appearance
 
 	@ConfigItem(
@@ -319,6 +333,104 @@ public interface FollowerConfig extends Config
 	default int thrallMagicAttackAnim()
 	{
 		return 1162;
+	}
+
+	// --------------------------------------------------------------- errands
+
+	@ConfigItem(
+		keyName = "errandsEnabled",
+		name = "Errands",
+		description = "Now and then the follower wanders off on a little errand and comes back",
+		section = errandSection,
+		position = 0
+	)
+	default boolean errandsEnabled()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "errandFrequency",
+		name = "Frequency",
+		description = "Roughly how often an errand happens: rare ~30 min, occasional ~18, lively ~8",
+		section = errandSection,
+		position = 1
+	)
+	default ErrandFrequency errandFrequency()
+	{
+		return ErrandFrequency.OCCASIONAL;
+	}
+
+	@ConfigItem(
+		keyName = "errandBank",
+		name = "Bank visits",
+		description = "A quick trip to a nearby bank booth",
+		section = errandSection,
+		position = 2
+	)
+	default boolean errandBank()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "errandAltar",
+		name = "Quick prayers",
+		description = "A moment at a nearby altar",
+		section = errandSection,
+		position = 3
+	)
+	default boolean errandAltar()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "errandFire",
+		name = "Warming up",
+		description = "Warms its hands at a nearby fire",
+		section = errandSection,
+		position = 4
+	)
+	default boolean errandFire()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "errandCat",
+		name = "Cats",
+		description = "Cannot walk past a cat. Will not apologise",
+		section = errandSection,
+		position = 5
+	)
+	default boolean errandCat()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "errandBootlace",
+		name = "Bootlaces",
+		description = "Stops to see to a bootlace, then catches up",
+		section = errandSection,
+		position = 6
+	)
+	default boolean errandBootlace()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "errandGlance",
+		name = "Did you see that?",
+		description = "Wanders a few tiles to investigate nothing in particular",
+		section = errandSection,
+		position = 7
+	)
+	default boolean errandGlance()
+	{
+		return true;
 	}
 
 	// ------------------------------------------------------------ rule groups
