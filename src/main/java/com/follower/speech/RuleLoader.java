@@ -42,6 +42,15 @@ public class RuleLoader
 	@Getter
 	private List<String> errors = Collections.emptyList();
 
+	/**
+	 * Whether any loaded rule uses the event-driven varbitChanged condition.
+	 * Varbit changes arrive in floods (thousands at login), and dispatching
+	 * each through every rule is pure waste when nothing listens - the
+	 * state-based varbitEquals rules evaluate on the tick heartbeat instead.
+	 */
+	@Getter
+	private boolean varbitEventRules;
+
 	private Path file;
 	private long lastModified = -1L;
 	private long lastSize = -1L;
@@ -184,6 +193,15 @@ public class RuleLoader
 	{
 		rules = newRules;
 		errors = problems;
+		varbitEventRules = false;
+		for (SpeechRule rule : newRules)
+		{
+			if (rule.when != null && rule.when.usesType("varbitChanged"))
+			{
+				varbitEventRules = true;
+				break;
+			}
+		}
 		status = summary + (problems.isEmpty() ? "" : ", " + problems.size() + " warning(s)");
 		log.info("Loaded rules: {}", status);
 	}

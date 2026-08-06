@@ -684,62 +684,6 @@ public class FollowerEntity
 		parent[find(parent, a)] = find(parent, b);
 	}
 
-	public void setThrallCircle(SpotAnimRepository.Entry fx)
-	{
-		clearThrallCircle();
-		if (fx == null || object == null)
-		{
-			return;
-		}
-		ModelData data = client.loadModelData(fx.modelId());
-		Animation animation = data == null ? null : client.loadAnimation(fx.animationId());
-		if (data == null || animation == null)
-		{
-			return;
-		}
-
-		data = data.cloneColors();
-		if (fx.cf != null && fx.cr != null)
-		{
-			for (int i = 0; i < Math.min(fx.cf.length, fx.cr.length); i++)
-			{
-				data.recolor(fx.cf[i], fx.cr[i]);
-			}
-		}
-		if (fx.tf != null && fx.tr != null)
-		{
-			data = data.cloneTextures();
-			for (int i = 0; i < Math.min(fx.tf.length, fx.tr.length); i++)
-			{
-				data.retexture(fx.tf[i], fx.tr[i]);
-			}
-		}
-		for (int i = 0; i < fx.rotation(); i++)
-		{
-			data = data.cloneVertices().rotateY90Ccw();
-		}
-		if (fx.resizeX() != 128 || fx.resizeY() != 128)
-		{
-			data = data.cloneVertices().scale(fx.resizeX(), fx.resizeY(), fx.resizeX());
-		}
-
-		Model lit = data.light(64 + fx.ambient(), 850 + fx.contrast(), -30, -50, -30);
-		RuneLiteObject graphic = client.createRuneLiteObject();
-		graphic.setRenderMode(net.runelite.api.Renderable.RENDERMODE_SORTED_NO_DEPTH);
-		graphic.setModel(lit);
-		if (lastRenderedLocation != null && tile != null)
-		{
-			graphic.setLocation(lastRenderedLocation, tile.getPlane());
-			graphic.setZ(lastRenderedZ);
-		}
-		AnimationController controller = new AnimationController(client, animation);
-		// Loop forever: the circle lives exactly as long as the possession.
-		controller.setOnFinished(c -> c.setFrame(0));
-		graphic.setAnimationController(controller);
-		graphic.setActive(true);
-		thrallCircle = graphic;
-	}
-
 	public void clearThrallCircle()
 	{
 		if (thrallCircle != null)

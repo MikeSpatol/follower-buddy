@@ -10,6 +10,27 @@ automated, and the follower cannot be interacted with.
 
 ---
 
+## Feature overview
+
+- **Authentic follower** — pet-style following on the game's own mechanics, learned
+  weapon stances, game-exact dialog boxes with chatheads, right-click menu, shift-hover
+  and click cross exactly as a real NPC.
+- **Speech system** — 240 bundled rules across editable groups (bosses, player
+  statuses, locations, item equips, quest NPCs, thrall, errands, misc), hot-reloaded
+  from `phrases.json` within a second. Editor windows for each group live behind
+  buttons on the sidebar panel; every group has a config toggle.
+- **Outfit profiles** — named outfits with Load/Save/Delete in the panel and a
+  `::follower outfit <name>` command. Melee/Ranged/Magic style profiles are seeded.
+- **Thrall mode** — summoning an Arceuus thrall replaces it with the follower:
+  combat-proof varbit detection, smooth possession movement, per-style outfits, the
+  authentic summoning circle carved from the thrall's own model, spawn/exit vfx, and
+  survival across chunk reloads. The real thrall is hidden client-side.
+- **Errands** — every so often the follower visits a nearby bank, prays at an altar,
+  warms its hands at a fire (usually), attends to cats, and returns by foot or by
+  teleport. All lines editable; frequency and per-errand toggles in config.
+
+---
+
 ## How it actually works
 
 The follower is a `RuneLiteObject` (`Client#createRuneLiteObject`) carrying a model

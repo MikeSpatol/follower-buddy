@@ -69,14 +69,32 @@ public class Condition
 	private transient Pattern compiledRegex;
 	private transient List<Pattern> compiledNames;
 
+	/**
+	 * The lowercased {@link #type}, cached: every rule is evaluated on every
+	 * event, and re-lowercasing the discriminator allocated a string per
+	 * evaluation across hundreds of rules.
+	 */
+	private transient String normalizedType;
+
+	/**
+	 * npcNearby scans the whole NPC list; its answer cannot change within a
+	 * tick, so it is cached per {@link TriggerContext#getRefreshGeneration()}.
+	 */
+	private transient int nearbyGeneration = -1;
+	private transient boolean nearbyCached;
+
 	public boolean matches(TriggerContext ctx, TriggerEvent event)
 	{
 		if (type == null)
 		{
 			return false;
 		}
+		if (normalizedType == null)
+		{
+			normalizedType = type.toLowerCase(Locale.ROOT);
+		}
 
-		switch (type.toLowerCase(Locale.ROOT))
+		switch (normalizedType)
 		{
 			case "all":
 				return allOf(ctx, event);
@@ -97,7 +115,15 @@ public class Condition
 				return event.getType() == TriggerEvent.Type.NPC_DESPAWN && matchesNpc(event);
 
 			case "npcnearby":
-				return ctx.isNpcNearby(this::matchesNpcObject, orDefault(within, 15));
+			{
+				int generation = ctx.getRefreshGeneration();
+				if (nearbyGeneration != generation)
+				{
+					nearbyGeneration = generation;
+					nearbyCached = ctx.isNpcNearby(this::matchesNpcObject, orDefault(within, 15));
+				}
+				return nearbyCached;
+			}
 
 			case "healthbelow":
 				return ctx.getHitpointsPercent() < orDefault(percent, 50);
@@ -154,11 +180,11 @@ public class Condition
 
 			case "poisoned":
 			{
-				int poison = ctx.getClient().getVarpValue(net.runelite.api.VarPlayer.POISON);
+				int poison = ctx.getClient().getVarpValue(net.runelite.api.gameval.VarPlayerID.POISON);
 				return poison > 0 && poison < VENOM_THRESHOLD;
 			}
 			case "venomed":
-				return ctx.getClient().getVarpValue(net.runelite.api.VarPlayer.POISON) >= VENOM_THRESHOLD;
+				return ctx.getClient().getVarpValue(net.runelite.api.gameval.VarPlayerID.POISON) >= VENOM_THRESHOLD;
 
 			case "skulled":
 				return ctx.isSkulled();
@@ -332,6 +358,26 @@ public class Condition
 			if (pattern.matcher(normalised).matches())
 			{
 				return true;
+			}
+		}
+		return false;
+	}
+
+	/** Whether this condition tree contains the given type (case-insensitive). */
+	public boolean usesType(String wanted)
+	{
+		if (wanted.equalsIgnoreCase(type))
+		{
+			return true;
+		}
+		if (conditions != null)
+		{
+			for (Condition child : conditions)
+			{
+				if (child != null && child.usesType(wanted))
+				{
+					return true;
+				}
 			}
 		}
 		return false;

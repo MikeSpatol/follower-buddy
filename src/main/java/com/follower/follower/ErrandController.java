@@ -500,8 +500,12 @@ public class ErrandController
 		follower.resumeFollowing();
 		Player local = client.getLocalPlayer();
 		WorldPoint at = follower.getWorldLocation();
-		if (local != null && local.getWorldLocation() != null && at != null
-			&& at.distanceTo(local.getWorldLocation()) > 8)
+		// A death interrupted mid-vanish must not stay invisible; the
+		// teleport home also clears any staged hide.
+		boolean mustClearHide = current == Errand.FIREDEATH || state == State.RETURNING;
+		if (mustClearHide
+			|| (local != null && local.getWorldLocation() != null && at != null
+				&& at.distanceTo(local.getWorldLocation()) > 8))
 		{
 			follower.teleportToPlayer();
 		}

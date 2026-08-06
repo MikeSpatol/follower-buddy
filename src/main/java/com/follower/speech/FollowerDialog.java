@@ -14,7 +14,6 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import net.runelite.api.Client;
 import net.runelite.api.Player;
-import net.runelite.api.SpriteID;
 import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.game.SpriteManager;
@@ -129,6 +128,12 @@ public class FollowerDialog extends Overlay
 	 * the game's font id 497. Coordinates relative to the chatbox widget.
 	 */
 	private static final int DIALOG_FONT_ID = 497;
+
+	/**
+	 * The chatbox background sprite, 1017 (the old api SpriteID.CHATBOX,
+	 * deprecated without a matching gameval name).
+	 */
+	private static final int CHATBOX_SPRITE = 1017;
 	private static final int TEXT_WIDTH = 380;
 	private static final int NPC_TEXT_X = 115;
 	private static final int PLAYER_TEXT_X = 24;
@@ -898,7 +903,7 @@ public class FollowerDialog extends Overlay
 
 	private void drawBackground(Graphics2D graphics)
 	{
-		BufferedImage sprite = spriteManager.getSprite(SpriteID.CHATBOX, 0);
+		BufferedImage sprite = spriteManager.getSprite(CHATBOX_SPRITE, 0);
 		if (sprite != null)
 		{
 			graphics.drawImage(sprite, bounds.x, bounds.y, bounds.width, bounds.height, null);

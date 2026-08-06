@@ -158,7 +158,7 @@ public class FollowerPlugin extends Plugin
 			}
 			int frame = (int) (elapsed / 100);
 			java.awt.image.BufferedImage sprite = spriteManager.getSprite(
-				net.runelite.api.SpriteID.RED_CLICK_ANIMATION_1 + frame, 0);
+				RED_CLICK_SPRITE_FIRST + frame, 0);
 			if (sprite != null)
 			{
 				// Centre each frame's own image on the click: the cache sprites
@@ -358,6 +358,10 @@ public class FollowerPlugin extends Plugin
 	{
 		hooks.unregisterRenderableDrawListener(thrallHider);
 		resetThrallQuietly();
+		// The engine is a singleton that survives plugin toggles; a stale sink
+		// would keep speaking into a dead plugin instance.
+		speechEngine.setSink(null);
+		speechEngine.reset();
 		overlayManager.remove(overlay);
 		overlayManager.remove(followDebugOverlay);
 		overlayManager.remove(dialog);
@@ -1033,7 +1037,7 @@ public class FollowerPlugin extends Plugin
 				{
 					int brightness = client.getVarpValue(BRIGHTNESS_VARP);
 					com.follower.ui.GameColourTable.setBrightnessSetting(brightness);
-					log.info("Brightness at login: varp {} -> gamma {}",
+					log.debug("Brightness at login: varp {} -> gamma {}",
 						brightness, com.follower.ui.GameColourTable.getCurrentGamma());
 				});
 				break;
@@ -1300,6 +1304,10 @@ public class FollowerPlugin extends Plugin
 	/**
 	 * Hides the REAL thrall while the follower stands in for it. Reference
 	 * comparison, so it costs nothing while no thrall is possessed.
+	 *
+	 * <p>RenderableDrawListener is marked deprecated but has no replacement
+	 * registration path yet, and the client's own Entity Hider plugin uses
+	 * this exact mechanism - revisit when core migrates.
 	 */
 	private final net.runelite.client.callback.Hooks.RenderableDrawListener thrallHider =
 		(renderable, drawingUi) -> renderable != thrallNpc;
@@ -1420,7 +1428,7 @@ public class FollowerPlugin extends Plugin
 		thrallStyle = style;
 		thrallExitTicks = 0;
 		pendingThrallSpawnFxTicks = 1;
-		log.info("Switching possession to {} thrall (id {})", style, npc.getId());
+		log.debug("Switching possession to {} thrall (id {})", style, npc.getId());
 		if (styleChanged)
 		{
 			outfitOverride = resolveThrallOutfit(style);
@@ -1444,7 +1452,7 @@ public class FollowerPlugin extends Plugin
 		thrallExitTicks = 0;
 		pendingThrallSpawnFxTicks = 1;
 		outfitOverride = resolveThrallOutfit(style);
-		log.info("Possessing {} thrall (id {})", style, npc.getId());
+		log.debug("Possessing {} thrall (id {})", style, npc.getId());
 		clientThread.invoke(() ->
 		{
 			follower.slaveToNpc(npc);
@@ -1476,7 +1484,7 @@ public class FollowerPlugin extends Plugin
 		String style = thrallStyle;
 		thrallNpc = null;
 		thrallLimbo = false;
-		log.info("Thrall gone; phasing the follower out");
+		log.debug("Thrall gone; phasing the follower out");
 
 		// Stage one: still in thrall dress at the thrall's last spot, the
 		// follower phases out through the same per-style burst a thrall
@@ -2011,7 +2019,7 @@ public class FollowerPlugin extends Plugin
 			return;
 		}
 
-		net.runelite.api.Tile sceneTile = client.getSelectedSceneTile();
+		net.runelite.api.Tile sceneTile = client.getTopLevelWorldView().getSelectedSceneTile();
 		if (sceneTile == null)
 		{
 			return;
@@ -2224,7 +2232,7 @@ public class FollowerPlugin extends Plugin
 		// load that dropped it - ends the possession after a grace period.
 		if (thrallLimbo && ++thrallLimboTicks > 15)
 		{
-			log.info("Thrall never respawned after the load; ending possession");
+			log.debug("Thrall never respawned after the load; ending possession");
 			exitThrallMode();
 		}
 
@@ -2419,7 +2427,7 @@ public class FollowerPlugin extends Plugin
 			// LOADING state is the scene shuffling, not the thrall dying.
 			if (client.getGameState() != GameState.LOGGED_IN || ticksSinceLoading <= 2)
 			{
-				log.info("Thrall NPC dropped by a scene load; holding possession for its respawn");
+				log.debug("Thrall NPC dropped by a scene load; holding possession for its respawn");
 				thrallNpc = null;
 				thrallLimbo = true;
 				thrallLimboTicks = 0;
@@ -2449,7 +2457,10 @@ public class FollowerPlugin extends Plugin
 	@Subscribe
 	public void onVarbitChanged(VarbitChanged event)
 	{
-		if (event.getVarbitId() != -1)
+		// Only pay the full rule pass when something actually listens for
+		// varbit EVENTS - varbit floods (login inits) are otherwise free.
+		// State-based varbitEquals rules evaluate on the tick heartbeat.
+		if (event.getVarbitId() != -1 && ruleLoader.isVarbitEventRules())
 		{
 			speechEngine.dispatch(TriggerEvent.varbit(event.getVarbitId(), event.getValue(), -1));
 		}
@@ -2462,7 +2473,7 @@ public class FollowerPlugin extends Plugin
 		if (event.getVarbitId() == THRALL_SUMMONED_VARBIT && config.thrallMode()
 			&& event.getValue() == 1)
 		{
-			log.info("Thrall summoned (cooldown varbit up)");
+			log.debug("Thrall summoned (cooldown varbit up)");
 			// The thrall NPC may already be in the scene - spawn-event
 			// ordering within the tick is not guaranteed.
 			adoptExistingThrall();
@@ -2473,13 +2484,37 @@ public class FollowerPlugin extends Plugin
 		if (event.getVarpId() == BRIGHTNESS_VARP)
 		{
 			com.follower.ui.GameColourTable.setBrightnessSetting(event.getValue());
-			log.info("Brightness setting {} -> colour table gamma {}",
+			log.debug("Brightness setting {} -> colour table gamma {}",
 				event.getValue(), com.follower.ui.GameColourTable.getCurrentGamma());
 		}
 	}
 
 	/** The client's brightness setting (1 Dark .. 4 V.Bright, 2 = Normal). */
 	private static final int BRIGHTNESS_VARP = 166;
+
+	/**
+	 * The four red click-cross frames, 519-522 (the old api SpriteID
+	 * RED_CLICK_ANIMATION_1..4, deprecated without a gameval equivalent name).
+	 */
+	private static final int RED_CLICK_SPRITE_FIRST = 519;
+
+	/**
+	 * The newest spotanim on an actor - the one a GraphicChanged event is
+	 * reporting. Replaces the deprecated single-graphic accessors now that
+	 * actors carry a list.
+	 */
+	private static net.runelite.api.ActorSpotAnim latestSpotAnim(net.runelite.api.Actor actor)
+	{
+		net.runelite.api.ActorSpotAnim latest = null;
+		for (net.runelite.api.ActorSpotAnim spotAnim : actor.getSpotAnims())
+		{
+			if (latest == null || spotAnim.getStartCycle() > latest.getStartCycle())
+			{
+				latest = spotAnim;
+			}
+		}
+		return latest;
+	}
 
 	@Subscribe
 	public void onAnimationChanged(AnimationChanged event)
@@ -2552,13 +2587,13 @@ public class FollowerPlugin extends Plugin
 			return;
 		}
 
-		int graphicId = event.getActor().getGraphic();
-		if (graphicId == -1)
+		net.runelite.api.ActorSpotAnim spotAnim = latestSpotAnim(event.getActor());
+		if (spotAnim == null)
 		{
 			return;
 		}
-
-		int graphicHeight = event.getActor().getGraphicHeight();
+		int graphicId = spotAnim.getId();
+		int graphicHeight = spotAnim.getHeight();
 		if (watchAnimations)
 		{
 			sendStatus("Graphic " + graphicId + " at height " + graphicHeight);
@@ -3185,9 +3220,10 @@ public class FollowerPlugin extends Plugin
 			clientThread.invoke(() ->
 			{
 				Player local = client.getLocalPlayer();
-				if (local != null && local.getGraphic() != -1)
+				net.runelite.api.ActorSpotAnim active = local == null ? null : latestSpotAnim(local);
+				if (active != null)
 				{
-					mirrorGraphic(local.getGraphic(), local.getGraphicHeight());
+					mirrorGraphic(active.getId(), active.getHeight());
 				}
 			});
 		}

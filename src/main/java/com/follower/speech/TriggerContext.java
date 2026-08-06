@@ -40,6 +40,13 @@ public final class TriggerContext
 		this.client = client;
 	}
 
+	/**
+	 * Bumped every {@link #refresh()}: per-tick memoisation key for expensive
+	 * state conditions (npcNearby caches its scan against it).
+	 */
+	@lombok.Getter
+	private int refreshGeneration;
+
 	public void refresh()
 	{
 		Player local = client.getLocalPlayer();
@@ -47,6 +54,7 @@ public final class TriggerContext
 		{
 			return;
 		}
+		refreshGeneration++;
 
 		hitpoints = client.getBoostedSkillLevel(Skill.HITPOINTS);
 		maxHitpoints = client.getRealSkillLevel(Skill.HITPOINTS);
