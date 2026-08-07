@@ -90,6 +90,47 @@ tasks.register('runClient', JavaExec) {
     }
 }
 
+// A self-contained folder someone can unzip and run without Gradle, without a
+// checkout, and without waiting for a first-run download. Everything the client
+// needs is copied beside a launcher script; only a Java runtime is assumed.
+// The launcher's main() lives in src/test beside the runClient task that normally
+// invokes it. The bundle has no Gradle to hand it a classpath, so it needs to be a
+// jar like everything else in lib.
+tasks.register('launcherJar', Jar) {
+    archiveClassifier = 'launcher'
+    from sourceSets.test.output
+}
+
+tasks.register('bundle', Sync) {
+    group = 'distribution'
+    description = 'Assembles a runnable Follower Buddy client into build/bundle'
+    dependsOn jar, 'launcherJar'
+
+    into layout.buildDirectory.dir('bundle')
+
+    into('lib') {
+        from jar
+        from tasks.named('launcherJar')
+        from sourceSets.test.runtimeClasspath.filter { it.name.endsWith('.jar') }
+    }
+
+    from('INSTALL-BUNDLE.md')
+    from('dist') {
+        include 'run.bat'
+        include 'run.sh'
+        filePermissions { unix(0755) }
+    }
+}
+
+tasks.register('bundleZip', Zip) {
+    group = 'distribution'
+    description = 'Zips the runnable bundle for handing to someone else'
+    dependsOn 'bundle'
+    from layout.buildDirectory.dir('bundle')
+    archiveFileName = 'follower-buddy-runnable.zip'
+    destinationDirectory = layout.buildDirectory.dir('distributions')
+}
+
 tasks.register('shadowJar', Jar) {
     archiveClassifier = 'shaded'
     from sourceSets.main.output
