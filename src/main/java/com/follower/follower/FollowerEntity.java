@@ -2230,25 +2230,31 @@ public class FollowerEntity
 		// centroid of z=-11 and the kneel reads z=-39, so the pose itself is
 		// worth 28 units, near a quarter of a tile.
 		//
-		// Measured ONCE per pose and held. Reading it every frame made the
-		// follower creep about: a centroid shifts slightly from frame to frame,
-		// and feeding that straight back into the position turned a fixed
-		// correction into constant motion.
-		if (RECENTRED_POSES.contains(activePose))
+		// What is actually on screen: an emote owns the animation slot without
+		// touching activePose, so a kneel or a stand played as an emote has to
+		// be read from the emote itself or it goes uncorrected.
+		int shownAnimation = emotePlaying ? emoteAnimation : activePose;
+
+		if (RECENTRED_POSES.contains(shownAnimation))
 		{
-			if (recentrePose != activePose)
+			int[] centre = modelCentre();
+			if (centre != null)
 			{
-				int[] centre = modelCentre();
-				if (centre != null)
-				{
-					recentreForward = centre[1] - STANDING_CENTRE_Z;
-					recentrePose = activePose;
-				}
+				// Followed continuously rather than sampled once. The descent
+				// is inside the loop - HUMAN_PRAY_LOOP is upright at frame 0
+				// and only kneels by frame 5 - so a single reading taken when
+				// the pose starts measures a standing follower and corrects by
+				// nothing at all.
+				//
+				// Eased toward the target instead of snapped to it: a centroid
+				// wobbles a little from frame to frame, and following that
+				// exactly is what had the follower creeping about.
+				int target = centre[1] - STANDING_CENTRE_Z;
+				recentreForward += (int) Math.round((target - recentreForward) / 4.0);
 			}
 		}
 		else
 		{
-			recentrePose = -1;
 			recentreForward = 0;
 		}
 
@@ -2704,15 +2710,15 @@ public class FollowerEntity
 	 * (pose 808) reads z=-11, the prayer kneel reads z=-39.
 	 */
 	private static final java.util.Set<Integer> RECENTRED_POSES =
-		new java.util.HashSet<>(java.util.Arrays.asList(179, 645));
+		new java.util.HashSet<>(java.util.Arrays.asList(179, 645, 534));
 
 	private static final int STANDING_CENTRE_Z = -11;
 
-	/** The pose the held correction was measured for, or -1 when none. */
-	private int recentrePose = -1;
-
-	/** The held correction, in model units along the follower's facing. */
+	/** The correction currently applied, in model units along the facing. */
 	private int recentreForward;
+
+	/** The clip an emote is showing right now, since activePose is not it. */
+	private int emoteAnimation = -1;
 
 	/**
 	 * Where the animated model's mass actually sits relative to the tile it is
@@ -2862,6 +2868,10 @@ public class FollowerEntity
 		object.setAnimationController(controller);
 		animationIds.add(ids[index]);
 		emotePlaying = true;
+		// Which clip is on screen right now: activePose is not updated while an
+		// emote owns the slot, so anything that needs to know what is being
+		// drawn - the tile recentring - has to read it from here.
+		emoteAnimation = ids[index];
 
 		if (graphics != null && index < graphics.length && graphics[index] != null)
 		{
