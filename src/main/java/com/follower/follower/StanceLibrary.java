@@ -646,6 +646,22 @@ public class StanceLibrary
 	 * weapon collapses to one key: "Abyssal whip (or)", "Dragon dagger(p++)"
 	 * and "Dharok's greataxe 25" become "abyssal whip", "dragon dagger" and
 	 * "dharok's greataxe".
+	 *
+	 * <p>Any trailing bracket goes, rather than a list of known markers. The
+	 * list was the original approach and it silently rotted: it knew (p) but
+	 * not (kp), so every karambwan-poisoned spear and hasta in the game sat
+	 * uncovered next to the plain ones it should have inherited from, and the
+	 * same held for the Bounty Hunter (bh) weapons, the Gauntlet's basic,
+	 * attuned and perfected tiers, the blackjacks' (o) and (d), and charge
+	 * counts like "Enchanted lyre(2)". Every marker the game has ever put in
+	 * brackets denotes a state of the same weapon, never a different one.
+	 *
+	 * <p>Measured before adopting: stripping every trailing bracket collapses
+	 * the observed library into 16 multi-item groups, and all 16 agree on their
+	 * stance with no exceptions. The match stays EXACT on what remains, which
+	 * is what keeps "Toxic staff (uncharged)" away from "Toxic staff of the
+	 * dead" and why this does not reintroduce the fuzzy matching that was
+	 * rejected at 96%.
 	 */
 	static String baseName(String name)
 	{
@@ -654,7 +670,7 @@ public class StanceLibrary
 			return null;
 		}
 		String base = name.toLowerCase(java.util.Locale.ROOT).trim();
-		// Some items carry two markers, "(l)(t)", so strip repeatedly.
+		// Some items carry two markers, "(bh)(p++)", so strip repeatedly.
 		String previous;
 		do
 		{
@@ -666,14 +682,13 @@ public class StanceLibrary
 		return base.isEmpty() ? null : base;
 	}
 
-	/** Ornament, trim, poison, charge and lock markers - never the weapon itself. */
-	private static final java.util.regex.Pattern VARIANT_SUFFIX = java.util.regex.Pattern.compile(
-		"\\s*\\((or|t|g|cr|l|i|e|u|p|p\\+|p\\+\\+|beta|deadman|uncharged|inactive|"
-			+ "full|empty|used|charged)\\)\\s*$");
+	/** Any bracketed marker: ornament, trim, poison, charge, tier, lock. */
+	private static final java.util.regex.Pattern VARIANT_SUFFIX =
+		java.util.regex.Pattern.compile("\\s*\\([^)]*\\)\\s*$");
 
-	/** Barrows and crystal wear levels: "Dharok's greataxe 75". */
+	/** Trailing wear or charge level: "Dharok's greataxe 75". */
 	private static final java.util.regex.Pattern DEGRADE_SUFFIX =
-		java.util.regex.Pattern.compile("\\s+(100|75|50|25|0)$");
+		java.util.regex.Pattern.compile("\\s+\\d+$");
 
 	public boolean knows(int weaponItemId)
 	{

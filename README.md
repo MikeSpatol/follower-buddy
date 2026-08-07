@@ -677,6 +677,15 @@ These are inherent to the approach, not bugs to be filed:
   cover 69% of them, so an unknown weapon's attack can be borrowed from a weapon of
   the same class. Seeing one scimitar swung covers every scimitar in the game.
 
+  Variant markers are stripped generally rather than from a known list. The list
+  rotted silently — it knew `(p)` but not `(kp)`, so every karambwan-poisoned
+  spear and hasta sat uncovered beside the plain one it should have inherited
+  from, and likewise the Bounty Hunter `(bh)` weapons, the Gauntlet's basic /
+  attuned / perfected tiers and charge counts like `Enchanted lyre(2)`. Every
+  bracket the game uses denotes a *state* of a weapon, never a different weapon.
+  Measured before adopting: stripping all of them collapses the observed library
+  into 16 multi-item groups, all 16 agreeing on their stance.
+
   Inheritance also crosses metal tiers: an Adamant longsword animates like a
   Black one. Plain tiers only (bronze through rune) — dragon, crystal, gilded and
   3rd age are excluded because the game special-cases them, which is measured
