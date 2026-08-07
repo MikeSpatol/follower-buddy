@@ -2733,9 +2733,13 @@ public class FollowerEntity
 	 * <p>Past zero and into a positive bias by eye. The centroid is an average
 	 * over every vertex, so a kneeling figure is weighted by wherever the bulk
 	 * of the mesh sits rather than by where the body reads as being, and the
-	 * two do not have to agree. Judged in game rather than derived.
+	 * two do not have to agree. Judged in game rather than derived: the
+	 * measurement gets within about a tenth of a tile and the rest is looking.
+	 *
+	 * <p>Settled at 13 over three passes - the delta alone fell short, zero
+	 * fell short, and eight was still a few units shy.
 	 */
-	private static final int STANDING_CENTRE_Z = 8;
+	private static final int STANDING_CENTRE_Z = 13;
 
 	/** Live nudge from ::follower centre, for dialling the last few units in. */
 	private int recentreBias;
