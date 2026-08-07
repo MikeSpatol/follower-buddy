@@ -90,16 +90,18 @@ public interface FollowerConfig extends Config
 	)
 	default String customOutfit()
 	{
-		// Coherent Armadyl set: helmet / chestplate / chainskirt are 11826/11828/11830.
-		return "gender=male\n"
-			+ "HEAD=item:11826\n"
-			+ "TORSO=item:11828\n"
-			+ "LEGS=item:11830\n"
-			+ "WEAPON=item:4151\n"
-			+ "CAPE=item:6570\n"
-			+ "AMULET=item:6585\n"
-			+ "HANDS=item:7462\n"
-			+ "BOOTS=item:11840";
+		// A bare character: no gear, and Outfit fills every empty body slot with
+		// the standard character-creation kits, so this is a plain person rather
+		// than a floating head. A first install should look like someone who has
+		// not been dressed yet, so the user's own choices are the first thing
+		// they see the follower wear.
+		//
+		// This value is rarely the one in play: startUp restores the active
+		// outfit profile, which on a fresh install is the empty "Default
+		// follower", and that write lands in this same key. It used to read as a
+		// full Armadyl set, which was dead weight - overwritten before it could
+		// ever render - and misleading about what a new user actually gets.
+		return "";
 	}
 
 	// --------------------------------------------------------------- movement
