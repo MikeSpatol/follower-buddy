@@ -3206,6 +3206,7 @@ public class FollowerPlugin extends Plugin
 		{
 			sendStatus("Animation " + animationId
 				+ "  (::follower anim " + animationId + " to replay it)");
+			log.info("WATCH self animation {}", animationId);
 		}
 
 		speechEngine.dispatch(TriggerEvent.animation(animationId));
@@ -3238,6 +3239,8 @@ public class FollowerPlugin extends Plugin
 					String who = event.getActor() instanceof NPC ? "NPC " : "";
 					sendStatus(who + event.getActor().getName() + " graphic " + other.getId()
 						+ "  (::follower gfx " + other.getId() + " to replay it)");
+					log.info("WATCH {}{} graphic {}", who, event.getActor().getName(),
+						other.getId());
 				}
 			}
 			return;
@@ -3254,6 +3257,9 @@ public class FollowerPlugin extends Plugin
 		{
 			sendStatus("Graphic " + graphicId + " at height " + graphicHeight
 				+ "  (::follower gfx " + graphicId + " to replay, add 'set' to keep it)");
+			// Also to the log: chat scrolls away, and a captured id is the
+			// whole point of watching.
+			log.info("WATCH self graphic {} height {}", graphicId, graphicHeight);
 		}
 
 		if (client.getTickCount() <= mirrorGraphicsUntilTick)
@@ -3326,7 +3332,7 @@ public class FollowerPlugin extends Plugin
 		"pitchsweep", "headsweep", "head", "followtrace",
 		"wraplerp", "wrapauto", "wrapearly", "pose",
 		"animinfo", "animtrace", "errandscan", "cachecheck", "stanceaudit",
-		"watch", "stance", "gfx"));
+		"watch", "stance", "gfx", "spectate"));
 
 	@Subscribe
 	public void onCommandExecuted(CommandExecuted event)
@@ -3807,6 +3813,20 @@ public class FollowerPlugin extends Plugin
 					errands.debugScan();
 					sendStatus("Errand scan logged");
 				}
+				break;
+			}
+
+			case "spectate":
+			{
+				if (spectate == null)
+				{
+					sendStatus("Spectating is not running.");
+					break;
+				}
+				String state = spectate.describe(
+					thrallNpc != null || (errands != null && errands.isBusy()));
+				sendStatus(state);
+				log.info("{}", state);
 				break;
 			}
 

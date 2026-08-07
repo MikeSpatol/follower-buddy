@@ -92,6 +92,27 @@ public class SpectateController
 	}
 
 	/**
+	 * Why the follower is or is not standing clear right now, for
+	 * {@code ::follower spectate}. Every gate in {@link #tick} reads back here,
+	 * so a feature that silently does nothing can be diagnosed in one command
+	 * rather than by guessing which condition failed.
+	 */
+	public String describe(boolean busy)
+	{
+		return "spectate: setting=" + config.spectateCombat()
+			+ " busy=" + busy
+			+ " spawned=" + follower.isSpawned()
+			+ " inCombat=" + context.isInCombat()
+			+ " target='" + context.getCombatTarget() + "' level=" + context.getCombatTargetLevel()
+			+ " boss=" + context.isBossFight()
+			+ " | spectating=" + spectating
+			+ " watchTile=" + watchTile
+			+ " settled=" + follower.isSettled()
+			+ " shieldUp=" + shieldUp
+			+ " releaseTicks=" + releaseTicks;
+	}
+
+	/**
 	 * @param busy true when something else owns the follower's feet - thrall
 	 * mode or an errand - in which case spectating stays out of the way
 	 */
