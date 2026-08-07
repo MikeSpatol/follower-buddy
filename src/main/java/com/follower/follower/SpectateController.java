@@ -179,6 +179,9 @@ public class SpectateController
 			// follower simply carries on following.
 			log.debug("Nowhere to stand clear of the fight; staying put");
 		}
+		log.info("Spectating '{}' level {} boss={} shieldEnabled={}",
+			context.getCombatTarget(), context.getCombatTargetLevel(),
+			context.isBossFight(), config.spectateShield());
 		speech.accept(TriggerEvent.combat(TriggerEvent.Type.COMBAT_START,
 			context.getCombatTarget()));
 	}
@@ -197,7 +200,7 @@ public class SpectateController
 		// the sequence closes the way it opened.
 		if (wasCasting && castChain(
 			new int[]{config.spectateShieldChannelEnd(), config.spectateShieldEndAnimation()},
-			new int[]{0, config.spectateShieldEndGraphic()}))
+			new int[]{config.spectateShieldEndGraphic(), config.spectateShieldEndGraphic()}))
 		{
 			releaseTicks = DISPEL_HOLD_TICKS;
 		}
@@ -336,9 +339,11 @@ public class SpectateController
 				// Cast, then sit, as one chain: the follower raises the ward
 				// and settles into holding it without a gap between the two.
 				// Nothing to play is not a reason to skip the channel.
+				// The particle rides every stage, not just the cast: the ward is
+				// meant to be visibly up from the moment it is raised.
 				if (castChain(
 					new int[]{config.spectateShieldAnimation(), config.spectateShieldChannelStart()},
-					new int[]{config.spectateShieldGraphic(), 0}))
+					new int[]{config.spectateShieldGraphic(), config.spectateShieldGraphic()}))
 				{
 					shield = Shield.SUMMONING;
 				}
@@ -389,12 +394,19 @@ public class SpectateController
 			follower.setPoseOverride(channel);
 		}
 		shield = Shield.CHANNELLING;
-		ticksSinceShield = 0;
+		// Renew on the very next tick rather than after a full interval, so the
+		// ward does not go dark between the summon and the first top-up.
+		ticksSinceShield = SHIELD_MAINTAIN_TICKS;
+		log.info("Shield: channelling, pose {}", channel);
 	}
 
 	/** Ends the channel and hands the follower's pose back to normal. */
 	private void dropChannel()
 	{
+		if (shield != Shield.NONE)
+		{
+			log.info("Shield: dropping from {}", shield);
+		}
 		if (shield == Shield.CHANNELLING)
 		{
 			follower.setPoseOverride(0);
@@ -444,7 +456,10 @@ public class SpectateController
 			{
 				chain[i] = ids.get(i);
 			}
-			log.debug("Shield chain: {}", ids);
+			// INFO while the sequence is being tuned in game: a handful of lines
+			// per fight, and the only way to see which stage actually ran.
+			log.info("Shield chain: animations {} settled={} emote={}",
+				ids, follower.isSettled(), follower.isEmotePlaying());
 			follower.playAnimations(chain,
 				graphics.toArray(new SpotAnimRepository.Entry[0]));
 			played = true;
