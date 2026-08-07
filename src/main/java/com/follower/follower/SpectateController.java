@@ -90,6 +90,19 @@ public class SpectateController
 	/** Counts down after a dispel; the follower walks back when it reaches zero. */
 	private int releaseTicks;
 
+	/**
+	 * How long the follower must have stood still before it starts the spell.
+	 *
+	 * <p>Observed in a Scurrius fight: a summon began and was abandoned a second
+	 * later because the player moved and the follower had to re-seat, which
+	 * reads as a cast that goes nowhere. Waiting a couple of ticks costs
+	 * nothing and means a spell is only started when there is a reasonable
+	 * chance of holding it.
+	 */
+	private static final int SETTLE_DWELL_TICKS = 3;
+
+	private int ticksSettled;
+
 	public SpectateController(Client client, FollowerEntity follower, FollowerConfig config,
 		TriggerContext context, SpotAnimRepository spotAnims, Consumer<TriggerEvent> speech)
 	{
@@ -329,13 +342,21 @@ public class SpectateController
 		// once it has settled somewhere new.
 		if (!follower.isSettled())
 		{
+			ticksSettled = 0;
 			dropChannel();
 			return;
 		}
+		ticksSettled++;
 
 		switch (shield)
 		{
 			case NONE:
+				// Only begin once it has genuinely stopped, or the spell is
+				// abandoned a second later when it has to re-seat.
+				if (ticksSettled < SETTLE_DWELL_TICKS)
+				{
+					break;
+				}
 				// Cast, then sit, as one chain: the follower raises the ward
 				// and settles into holding it without a gap between the two.
 				// Nothing to play is not a reason to skip the channel.
