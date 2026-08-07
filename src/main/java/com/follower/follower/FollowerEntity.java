@@ -2646,6 +2646,12 @@ public class FollowerEntity
 		}
 	}
 
+	/** The pose the follower is rendering right now, for labelling measurements. */
+	public int getActivePose()
+	{
+		return poseOverride > 0 ? poseOverride : activePose;
+	}
+
 	/**
 	 * Where the animated model's mass actually sits relative to the tile it is
 	 * placed on, in model units (128 to a tile).

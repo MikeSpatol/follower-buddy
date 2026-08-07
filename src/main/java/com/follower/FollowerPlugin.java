@@ -3857,13 +3857,18 @@ public class FollowerPlugin extends Plugin
 				clientThread.invoke(() ->
 				{
 					int[] centre = follower.modelCentre();
+					// Labelled with the pose it belongs to: a reading is
+					// meaningless without knowing what was playing, and a
+					// standing baseline is needed to tell the animation's
+					// displacement from the model's own asymmetry.
+					int pose = follower.getActivePose();
 					sendStatus(centre == null
 						? "No model to measure."
-						: "Model centre x=" + centre[0] + " z=" + centre[1]
+						: "Pose " + pose + ": centre x=" + centre[0] + " z=" + centre[1]
 							+ " (128 = one tile)");
 					if (centre != null)
 					{
-						log.info("MODEL CENTRE x={} z={}", centre[0], centre[1]);
+						log.info("MODEL CENTRE pose={} x={} z={}", pose, centre[0], centre[1]);
 					}
 				});
 				break;
