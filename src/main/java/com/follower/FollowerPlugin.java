@@ -3472,7 +3472,7 @@ public class FollowerPlugin extends Plugin
 		"pitchsweep", "headsweep", "head", "followtrace",
 		"wraplerp", "wrapauto", "wrapearly", "pose",
 		"animinfo", "animtrace", "errandscan", "cachecheck", "stanceaudit",
-		"watch", "stance", "gfx", "spectate", "shield", "centre", "center"));
+		"watch", "stance", "gfx", "spectate", "shield", "centre", "center", "loot"));
 
 	@Subscribe
 	public void onCommandExecuted(CommandExecuted event)
@@ -4033,6 +4033,35 @@ public class FollowerPlugin extends Plugin
 						log.info("MODEL CENTRE pose={} x={} z={}", pose, centre[0], centre[1]);
 					}
 				});
+				break;
+			}
+
+			case "loot":
+			{
+				// Fakes a loot drop, because the real thing cannot be tested on
+				// demand: the reaction fires on kill loot, which means waiting
+				// for an actual 100k+ drop. Dropping an item yourself fires no
+				// loot event at all - deliberately, or the follower would cheer
+				// every time you rearranged your bank.
+				if (args.length < 2)
+				{
+					sendStatus("::follower loot <value> [item name] - fake a drop, e.g."
+						+ " ::follower loot 2500000 Dragon warhammer");
+					break;
+				}
+				try
+				{
+					int value = Integer.parseInt(args[1]);
+					String item = args.length > 2
+						? String.join(" ", java.util.Arrays.copyOfRange(args, 2, args.length))
+						: "Coins";
+					speechEngine.dispatch(TriggerEvent.loot(value, item));
+					sendStatus("Faked a " + item + " drop worth " + value + ".");
+				}
+				catch (NumberFormatException e)
+				{
+					sendStatus("Numbers only: ::follower loot <value> [item name]");
+				}
 				break;
 			}
 
