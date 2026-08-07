@@ -1,29 +1,30 @@
 # Follower Buddy - weapons still needing a stance
 
-Regenerated 2026-08-06 19:01 from `::follower stanceaudit`.
-1145 weapons had no stance, down from 1199.
+Projected 2026-08-06 19:19 by applying the current inheritance
+rules to the last `::follower stanceaudit` run. 1034 weapons need a stance,
+down from 1,199 when this list was first generated.
 
 Equipping a weapon teaches its idle/walk/run poses - no combat needed.
 Only attack animations require actually fighting something.
 
 One item per family is enough: metal tiers (bronze through rune) inherit from
-each other, so the cheapest listed member covers its whole row.
+each other, and every bracketed variant now inherits from its plain version.
 
-## Weapon families (447 families, 705 items)
+## Weapon families (376 families, 594 items)
 
 | items | equip this | family |
 |---|---|---|
-| 35 | Bronze spear | spear |
-| 30 | Bronze hasta | hasta |
 | 16 | Banner | banner |
+| 10 | Rod of ivandis (10) | rod of ivandis |
+| 9 | Dragon spear | dragon spear |
 | 8 | Clan vexillum | clan vexillum |
 | 8 | Dark bow | dark bow |
 | 8 | Bronze halberd | halberd |
 | 8 | Iron mace | mace |
 | 7 | Archibald | archibald |
+| 7 | Enchanted lyre | enchanted lyre |
 | 7 | Bronze felling axe | felling axe |
 | 7 | Bronze staff of collection | staff of collection |
-| 6 | Dragon spear | dragon spear |
 | 6 | Echo ahrim's staff | echo ahrim's staff |
 | 6 | Infernal axe | infernal axe |
 | 6 | Infernal pickaxe | infernal pickaxe |
@@ -35,28 +36,32 @@ each other, so the cheapest listed member covers its whole row.
 | 4 | Bone dagger | bone dagger |
 | 4 | Butler's tray | butler's tray |
 | 4 | Decorative sword | decorative sword |
-| 4 | Dragon claws | dragon claws |
 | 4 | Dragon dart | dragon dart |
 | 4 | Keris | keris |
-| 3 | Abyssal dagger (bh)(p) | abyssal dagger (bh) |
+| 4 | Thammaron's sceptre (u) | thammaron's sceptre |
+| 4 | Uncharged trident | uncharged trident |
 | 3 | Black cane | cane |
+| 3 | Corrupted bow (basic) | corrupted bow |
+| 3 | Corrupted halberd (basic) | corrupted halberd |
+| 3 | Corrupted staff (basic) | corrupted staff |
 | 3 | Crystal axe | crystal axe |
 | 3 | Crystal harpoon | crystal harpoon |
+| 3 | Crystal staff (basic) | crystal staff |
+| 3 | Maple blackjack | maple blackjack |
 | 3 | Morrigan's javelin | morrigan's javelin |
+| 3 | Oak blackjack | oak blackjack |
 | 3 | Pharaoh's sceptre (uncharged) | pharaoh's sceptre |
-| 3 | Rune pickaxe (nz) | pickaxe (nz) |
 | 3 | Sled | sled |
 | 3 | Statius's warhammer | statius's warhammer |
-| 3 | Thammaron's sceptre (u) | thammaron's sceptre |
 | 3 | Toxic staff (uncharged) | toxic staff |
 | 3 | Vesta's longsword | vesta's longsword |
 | 3 | Volatile nightmare staff | volatile nightmare staff |
+| 3 | Willow blackjack | willow blackjack |
 | 3 | Zuriel's staff | zuriel's staff |
 | 2 | Ancient godsword | ancient godsword |
 | 2 | Barrelchest anchor | barrelchest anchor |
 | 2 | Barronite mace | barronite mace |
 | 2 | Beach boxing gloves | beach boxing gloves |
-| 2 | Blade of saeldor | blade of saeldor |
 | 2 | Blisterwood sickle | blisterwood sickle |
 | 2 | Blood ancient sceptre | blood ancient sceptre |
 | 2 | Boxing gloves | boxing gloves |
@@ -68,30 +73,25 @@ each other, so the cheapest listed member covers its whole row.
 | 2 | Corrupted tumeken's shadow | corrupted tumeken's shadow |
 | 2 | Dragon 2h sword | dragon 2h sword |
 | 2 | Dragon halberd | dragon halberd |
-| 2 | Eclipse atlatl | eclipse atlatl |
-| 2 | Enchanted lyre | enchanted lyre |
 | 2 | Falconer's glove | falconer's glove |
 | 2 | Holy sanguinesti staff | holy sanguinesti staff |
 | 2 | Ironwood blowpipe | ironwood blowpipe |
 | 2 | Light ballista | light ballista |
 | 2 | Lithic sceptre | lithic sceptre |
 | 2 | Magic staff | magic staff |
-| 2 | Mystic steam staff | mystic steam staff |
 | 2 | Prop sword | prop sword |
 | 2 | Sanguine scythe of vitur | sanguine scythe of vitur |
 | 2 | Saradomin banner | saradomin banner |
 | 2 | Saradomin godsword | saradomin godsword |
 | 2 | Shadow ancient sceptre | shadow ancient sceptre |
+| 2 | Silver sickle | silver sickle |
 | 2 | Silverlight | silverlight |
 | 2 | Skull sceptre | skull sceptre |
 | 2 | Smoke ancient sceptre | smoke ancient sceptre |
 | 2 | Staff of the dead | staff of the dead |
 | 2 | Steam battlestaff | steam battlestaff |
 | 2 | Tonalztics of ralos (uncharged) | tonalztics of ralos |
-| 2 | Trident of the swamp | trident of the swamp |
 | 2 | Tzhaar-ket-om | tzhaar-ket-om |
-| 2 | Uncharged toxic trident | uncharged toxic trident |
-| 2 | Uncharged trident | uncharged trident |
 | 2 | Vesta's spear | vesta's spear |
 | 2 | Viggora's chainmace (u) | viggora's chainmace |
 | 2 | Void knight mace | void knight mace |
@@ -107,8 +107,6 @@ each other, so the cheapest listed member covers its whole row.
 | 1 | 3rd age longsword | 3rd age longsword |
 | 1 | 3rd age pickaxe | 3rd age pickaxe |
 | 1 | 3rd age wand | 3rd age wand |
-| 1 | Abyssal dagger (bh) | abyssal dagger |
-| 1 | Accursed sceptre (au) | accursed sceptre |
 | 1 | Air battlestaff | air battlestaff |
 | 1 | Ale of the gods | ale of the gods |
 | 1 | Amy's saw | amy's saw |
@@ -145,20 +143,11 @@ each other, so the cheapest listed member covers its whole row.
 | 1 | Colossal blade | colossal blade |
 | 1 | Corrupted armadyl godsword | corrupted armadyl godsword |
 | 1 | Corrupted axe | corrupted axe |
-| 1 | Corrupted bow (attuned) | corrupted bow (attuned) |
-| 1 | Corrupted bow (basic) | corrupted bow (basic) |
-| 1 | Corrupted bow (perfected) | corrupted bow (perfected) |
 | 1 | Corrupted dark bow | corrupted dark bow |
 | 1 | Corrupted dragon claws | corrupted dragon claws |
-| 1 | Corrupted halberd (attuned) | corrupted halberd (attuned) |
-| 1 | Corrupted halberd (basic) | corrupted halberd (basic) |
-| 1 | Corrupted halberd (perfected) | corrupted halberd (perfected) |
 | 1 | Corrupted harpoon | corrupted harpoon |
 | 1 | Corrupted pickaxe | corrupted pickaxe |
 | 1 | Corrupted sceptre | corrupted sceptre |
-| 1 | Corrupted staff (attuned) | corrupted staff (attuned) |
-| 1 | Corrupted staff (basic) | corrupted staff (basic) |
-| 1 | Corrupted staff (perfected) | corrupted staff (perfected) |
 | 1 | Corrupted twisted bow | corrupted twisted bow |
 | 1 | Corrupted voidwaker | corrupted voidwaker |
 | 1 | Corrupted volatile nightmare staff | corrupted volatile nightmare staff |
@@ -166,18 +155,9 @@ each other, so the cheapest listed member covers its whole row.
 | 1 | Crier bell | crier bell |
 | 1 | Crimson kisten | crimson kisten |
 | 1 | Crossbow | crossbow |
-| 1 | Crystal bow (attuned) | crystal bow (attuned) |
-| 1 | Crystal bow (basic) | crystal bow (basic) |
-| 1 | Crystal bow (perfected) | crystal bow (perfected) |
-| 1 | Crystal dagger (perfected) | crystal dagger (perfected) |
+| 1 | Crystal dagger (perfected) | crystal dagger |
 | 1 | Crystal grail | crystal grail |
-| 1 | Crystal halberd (attuned) | crystal halberd (attuned) |
-| 1 | Crystal halberd (basic) | crystal halberd (basic) |
-| 1 | Crystal halberd (perfected) | crystal halberd (perfected) |
 | 1 | Crystal sceptre | crystal sceptre |
-| 1 | Crystal staff (attuned) | crystal staff (attuned) |
-| 1 | Crystal staff (basic) | crystal staff (basic) |
-| 1 | Crystal staff (perfected) | crystal staff (perfected) |
 | 1 | Cursed banana | cursed banana |
 | 1 | Cursed goblin bow | cursed goblin bow |
 | 1 | Cursed goblin hammer | cursed goblin hammer |
@@ -190,16 +170,10 @@ each other, so the cheapest listed member covers its whole row.
 | 1 | Demonic pacts banner | demonic pacts banner |
 | 1 | Demonic pacts dragon trophy | demonic pacts dragon trophy |
 | 1 | Demonic pacts rune trophy | demonic pacts rune trophy |
-| 1 | Diamond sickle (b) | diamond sickle (b) |
+| 1 | Diamond sickle (b) | diamond sickle |
 | 1 | Diamond speedrun trophy | diamond speedrun trophy |
 | 1 | Dorgeshuun crossbow | dorgeshuun crossbow |
 | 1 | Dragon candle dagger | dragon candle dagger |
-| 1 | Dragon hunter crossbow (b) | dragon hunter crossbow (b) |
-| 1 | Dragon longsword (bh) | dragon longsword |
-| 1 | Dragon mace (bh) | dragon mace |
-| 1 | Dragon spear (p)(cr) | dragon spear (p) |
-| 1 | Dragon spear (p+)(cr) | dragon spear (p+) |
-| 1 | Dragon spear (p++)(cr) | dragon spear (p++) |
 | 1 | Dragon staff of collection | dragon staff of collection |
 | 1 | Dragon thrownaxe | dragon thrownaxe |
 | 1 | Dual sai | dual sai |
@@ -210,18 +184,14 @@ each other, so the cheapest listed member covers its whole row.
 | 1 | Echo axe | echo axe |
 | 1 | Echo harpoon | echo harpoon |
 | 1 | Echo pickaxe | echo pickaxe |
+| 1 | Eclipse atlatl | eclipse atlatl |
 | 1 | Eek | eek |
 | 1 | Egg | egg |
 | 1 | Egg whisk | egg whisk |
-| 1 | Emerald sickle (b) | emerald sickle (b) |
-| 1 | Enchanted diamond sickle (b) | enchanted diamond sickle (b) |
-| 1 | Enchanted emerald sickle (b) | enchanted emerald sickle (b) |
-| 1 | Enchanted lyre(1) | enchanted lyre(1) |
-| 1 | Enchanted lyre(2) | enchanted lyre(2) |
-| 1 | Enchanted lyre(3) | enchanted lyre(3) |
-| 1 | Enchanted lyre(4) | enchanted lyre(4) |
-| 1 | Enchanted lyre(5) | enchanted lyre(5) |
-| 1 | Enchanted ruby sickle (b) | enchanted ruby sickle (b) |
+| 1 | Emerald sickle (b) | emerald sickle |
+| 1 | Enchanted diamond sickle (b) | enchanted diamond sickle |
+| 1 | Enchanted emerald sickle (b) | enchanted emerald sickle |
+| 1 | Enchanted ruby sickle (b) | enchanted ruby sickle |
 | 1 | Fang of the hound | fang of the hound |
 | 1 | Festive nutcracker staff | festive nutcracker staff |
 | 1 | Bronze fist flag | fist flag |
@@ -232,7 +202,6 @@ each other, so the cheapest listed member covers its whole row.
 | 1 | Gadderhammer | gadderhammer |
 | 1 | Giant bronze dagger | giant bronze dagger |
 | 1 | Giant easter egg | giant easter egg |
-| 1 | Giant present | giant present |
 | 1 | Giant stopwatch | giant stopwatch |
 | 1 | Gilded 2h sword | gilded 2h sword |
 | 1 | Gilded axe | gilded axe |
@@ -266,8 +235,6 @@ each other, so the cheapest listed member covers its whole row.
 | 1 | Hunters' crossbow | hunters' crossbow |
 | 1 | Hunter's spear | hunter's spear |
 | 1 | Hunting knife | hunting knife |
-| 1 | Iban's staff (o) | iban's staff (o) |
-| 1 | Iban's staff (u) (o) | iban's staff (u) (o) |
 | 1 | Imbued tephra | imbued tephra |
 | 1 | Imcando hammer | imcando hammer |
 | 1 | Infernal tecpatl | infernal tecpatl |
@@ -296,24 +263,16 @@ each other, so the cheapest listed member covers its whole row.
 | 1 | Machete | machete |
 | 1 | Magic comp bow | magic comp bow |
 | 1 | Magic longbow | magic longbow |
-| 1 | Magic secateurs (nz) | magic secateurs (nz) |
-| 1 | Maple blackjack | maple blackjack |
-| 1 | Maple blackjack(d) | maple blackjack(d) |
-| 1 | Maple blackjack(o) | maple blackjack(o) |
 | 1 | Meat tenderiser | meat tenderiser |
 | 1 | Merfolk trident | merfolk trident |
 | 1 | Mixed flowers | mixed flowers |
 | 1 | Monkey talisman | monkey talisman |
-| 1 | Morrigan's throwing axe | morrigan's throwing axe |
 | 1 | Mouse toy | mouse toy |
 | 1 | Mud pie | mud pie |
 | 1 | Mystic cards | mystic cards |
 | 1 | Mystic earth staff | mystic earth staff |
 | 1 | Nature's recurve | nature's recurve |
 | 1 | Nunchaku | nunchaku |
-| 1 | Oak blackjack | oak blackjack |
-| 1 | Oak blackjack(d) | oak blackjack(d) |
-| 1 | Oak blackjack(o) | oak blackjack(o) |
 | 1 | Oak longbow | oak longbow |
 | 1 | Oak shortbow | oak shortbow |
 | 1 | Oddskull | oddskull |
@@ -345,20 +304,10 @@ each other, so the cheapest listed member covers its whole row.
 | 1 | Red salamander | red salamander |
 | 1 | Red topaz machete | red topaz machete |
 | 1 | Redwood hiking staff | redwood hiking staff |
-| 1 | Rod of ivandis (1) | rod of ivandis (1) |
-| 1 | Rod of ivandis (10) | rod of ivandis (10) |
-| 1 | Rod of ivandis (2) | rod of ivandis (2) |
-| 1 | Rod of ivandis (3) | rod of ivandis (3) |
-| 1 | Rod of ivandis (4) | rod of ivandis (4) |
-| 1 | Rod of ivandis (5) | rod of ivandis (5) |
-| 1 | Rod of ivandis (6) | rod of ivandis (6) |
-| 1 | Rod of ivandis (7) | rod of ivandis (7) |
-| 1 | Rod of ivandis (8) | rod of ivandis (8) |
-| 1 | Rod of ivandis (9) | rod of ivandis (9) |
 | 1 | Rolling pin | rolling pin |
 | 1 | Royal sceptre | royal sceptre |
 | 1 | Rubber chicken | rubber chicken |
-| 1 | Ruby sickle (b) | ruby sickle (b) |
+| 1 | Ruby sickle (b) | ruby sickle |
 | 1 | Sage's axe | sage's axe |
 | 1 | Black salamander | salamander |
 | 1 | Saradomin mjolnir | saradomin mjolnir |
@@ -379,8 +328,6 @@ each other, so the cheapest listed member covers its whole row.
 | 1 | Shayzien banner | shayzien banner |
 | 1 | Iron sickle | sickle |
 | 1 | Signed oak bow | signed oak bow |
-| 1 | Silver sickle | silver sickle |
-| 1 | Silver sickle (b) | silver sickle (b) |
 | 1 | Silver speedrun trophy | silver speedrun trophy |
 | 1 | Silvthrill ballista | silvthrill ballista |
 | 1 | Skeleton lantern | skeleton lantern |
@@ -405,7 +352,6 @@ each other, so the cheapest listed member covers its whole row.
 | 1 | Sweet nutcracker staff | sweet nutcracker staff |
 | 1 | Teacher wand | teacher wand |
 | 1 | Tecu salamander | tecu salamander |
-| 1 | Thammaron's sceptre (a) | thammaron's sceptre (a) |
 | 1 | The dogsword | the dogsword |
 | 1 | Thunder khopesh | thunder khopesh |
 | 1 | Toktz-mej-tal | toktz-mej-tal |
@@ -423,10 +369,6 @@ each other, so the cheapest listed member covers its whole row.
 | 1 | Trailblazer rune trophy | trailblazer rune trophy |
 | 1 | Training sword | training sword |
 | 1 | Treasure flag | treasure flag |
-| 1 | Trident of the seas (e) (o) | trident of the seas (e) (o) |
-| 1 | Trident of the seas (full) (o) | trident of the seas (full) (o) |
-| 1 | Trident of the seas (o) | trident of the seas (o) |
-| 1 | Trident of the swamp (e) (o) | trident of the swamp (e) (o) |
 | 1 | Trollweiss | trollweiss |
 | 1 | Twisted adamant trophy | twisted adamant trophy |
 | 1 | Twisted banner | twisted banner |
@@ -434,20 +376,8 @@ each other, so the cheapest listed member covers its whole row.
 | 1 | Twisted dragon trophy | twisted dragon trophy |
 | 1 | Twisted rune trophy | twisted rune trophy |
 | 1 | Tzhaar-ket-em | tzhaar-ket-em |
-| 1 | Uncharged toxic trident (e) (o) | uncharged toxic trident (e) (o) |
-| 1 | Uncharged trident (e) (o) | uncharged trident (e) (o) |
-| 1 | Uncharged trident (o) | uncharged trident (o) |
 | 1 | Undead chicken | undead chicken |
 | 1 | Vesta's blighted longsword | vesta's blighted longsword |
-| 1 | Western banner 2 | western banner 2 |
-| 1 | Western banner 3 | western banner 3 |
-| 1 | Western banner 4 | western banner 4 |
-| 1 | Wilderness sword 1 | wilderness sword 1 |
-| 1 | Wilderness sword 2 | wilderness sword 2 |
-| 1 | Wilderness sword 3 | wilderness sword 3 |
-| 1 | Willow blackjack | willow blackjack |
-| 1 | Willow blackjack(d) | willow blackjack(d) |
-| 1 | Willow blackjack(o) | willow blackjack(o) |
 | 1 | Willow comp bow | willow comp bow |
 | 1 | Willow longbow | willow longbow |
 | 1 | Willow shortbow | willow shortbow |

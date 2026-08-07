@@ -616,6 +616,29 @@ What remains is process rather than code: fork
 [runelite/plugin-hub](https://github.com/runelite/plugin-hub), add a manifest
 naming this repository and a commit hash, and open a pull request.
 
+## Weapon stance coverage — PARKED, not a release blocker (2026-08-06)
+
+Filling in the stance library is ongoing work that deliberately does **not** gate
+the first release. At parking, 1,034 of the 1,619 weapon-slot items still fall
+back to unarmed poses, across 376 weapon families, and 26 weapons have an
+observed attack animation.
+
+It can ship this way because the mechanism is finished and only the observed data
+is thin. An unknown weapon falls back to unarmed poses plus a generic swing
+matched to its combat style, so it looks *plain* rather than wrong — the same
+principle that governs every borrowing rule above. Coverage also grows on its own
+as the user walks past other players.
+
+To pick it back up:
+
+- `::follower stanceaudit` prints the current counts and lists every uncovered
+  weapon in the client log.
+- [`stance-wishlist.md`](stance-wishlist.md) is that list grouped into families
+  with one representative each, since metal tiers and bracketed variants inherit
+  from a plain version. Regenerate it from a fresh audit.
+- **Equipping** a weapon teaches its idle/walk/run — no combat needed. Only
+  attack animations require actually fighting something.
+
 ## Location region ids — VERIFIED against the world map (2026-08-06)
 
 The area rules' region ids were originally computed from documented world
