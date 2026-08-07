@@ -133,39 +133,42 @@ public interface FollowerConfig extends Config
 	)
 	default int spectateShieldGraphic()
 	{
-		return 1729;
+		// The dragon harpoon special's swirl, captured with ::follower watch.
+		return 246;
 	}
 
 	@ConfigItem(
-		keyName = "spectateShieldHoldAnimation",
-		name = "Hold animation",
-		description = "Played every ~30s while the shield is up, to keep it looking alive."
-			+ " 0 for none.",
+		keyName = "spectateShieldChannelAnimation",
+		name = "Channel animation",
+		description = "Looping pose held after the summon, for as long as the follower stands"
+			+ " and the fight lasts. Unlike the others this one repeats, so pick something"
+			+ " that reads as sustained effort. 0 for none.",
 		section = combatSection,
 		position = 4
 	)
-	default int spectateShieldHoldAnimation()
+	default int spectateShieldChannelAnimation()
 	{
 		return 0;
 	}
 
 	@ConfigItem(
-		keyName = "spectateShieldHoldGraphic",
-		name = "Hold graphic",
-		description = "Graphic for the top-up while the shield is held. 0 for none.",
+		keyName = "spectateShieldChannelGraphic",
+		name = "Channel graphic",
+		description = "Renewed every ~30s while channelling, since a looping pose shows no"
+			+ " particles of its own. 0 for none.",
 		section = combatSection,
 		position = 5
 	)
-	default int spectateShieldHoldGraphic()
+	default int spectateShieldChannelGraphic()
 	{
-		return 1729;
+		return 246;
 	}
 
 	@ConfigItem(
 		keyName = "spectateShieldEndAnimation",
-		name = "Dispel animation",
-		description = "Played as the fight ends and the shield drops. The follower waits"
-			+ " for it to finish before walking back. 0 for none.",
+		name = "Finish animation",
+		description = "Played as the fight ends and the spell is completed. The follower"
+			+ " waits for it to finish before walking back. 0 for none.",
 		section = combatSection,
 		position = 6
 	)
@@ -176,8 +179,8 @@ public interface FollowerConfig extends Config
 
 	@ConfigItem(
 		keyName = "spectateShieldEndGraphic",
-		name = "Dispel graphic",
-		description = "Graphic as the shield drops. 0 for none.",
+		name = "Finish graphic",
+		description = "Graphic as the spell is completed. 0 for none.",
 		section = combatSection,
 		position = 7
 	)

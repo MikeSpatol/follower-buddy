@@ -2277,6 +2277,16 @@ public class FollowerEntity
 		activePose = -1;
 	}
 
+	/**
+	 * Whether a one-shot emote is still running. Lets a caller wait for one
+	 * animation to finish before starting what follows it, which is how a
+	 * summon leads into a channelled pose.
+	 */
+	public boolean isEmotePlaying()
+	{
+		return emotePlaying;
+	}
+
 	/** The weapon the follower is holding, for animation lookups. */
 	public int getWeaponItemId()
 	{

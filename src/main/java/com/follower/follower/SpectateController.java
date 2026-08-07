@@ -68,8 +68,17 @@ public class SpectateController
 
 	private WorldPoint watchTile;
 
-	/** Whether the shield has been summoned and is being held. */
-	private boolean shieldUp;
+	/**
+	 * The shield is a three-part spell rather than a repeating effect: it is
+	 * summoned once, channelled for as long as the follower stands and fights
+	 * are still going, and finished off deliberately at the end.
+	 */
+	private enum Shield
+	{
+		NONE, SUMMONING, CHANNELLING
+	}
+
+	private Shield shield = Shield.NONE;
 	private int ticksSinceShield;
 
 	/** Counts down after a dispel; the follower walks back when it reaches zero. */
@@ -108,7 +117,7 @@ public class SpectateController
 			+ " | spectating=" + spectating
 			+ " watchTile=" + watchTile
 			+ " settled=" + follower.isSettled()
-			+ " shieldUp=" + shieldUp
+			+ " shield=" + shield
 			+ " releaseTicks=" + releaseTicks;
 	}
 
@@ -173,9 +182,12 @@ public class SpectateController
 		spectating = false;
 		watchTile = null;
 
-		// Dropping the shield is its own moment: play it out where it stands,
-		// then walk back a few ticks later so the animation is not cut short.
-		if (shieldUp && cast(config.spectateShieldEndAnimation(),
+		// Finishing the spell is its own moment: drop the channelled pose, play
+		// the closing animation where it stands, and only walk back once it has
+		// had time to play - movement would cut it off otherwise.
+		boolean wasCasting = shield != Shield.NONE;
+		dropChannel();
+		if (wasCasting && cast(config.spectateShieldEndAnimation(),
 			config.spectateShieldEndGraphic()))
 		{
 			releaseTicks = DISPEL_HOLD_TICKS;
@@ -184,7 +196,6 @@ public class SpectateController
 		{
 			follower.resumeFollowing();
 		}
-		shieldUp = false;
 
 		speech.accept(TriggerEvent.combat(TriggerEvent.Type.COMBAT_END,
 			context.getCombatTarget()));
@@ -300,28 +311,82 @@ public class SpectateController
 		// cast used to fire on the same tick the follower set off to stand
 		// clear, so it was killed before a single particle appeared. Nothing is
 		// cast until it has actually stopped at its watching spot.
+		//
+		// The same rule ends a channel: a follower that has to move cannot go
+		// on channelling, so the pose is dropped and the spell begins again
+		// once it has settled somewhere new.
 		if (!follower.isSettled())
 		{
+			dropChannel();
 			return;
 		}
 
-		if (!shieldUp)
+		switch (shield)
 		{
-			if (cast(config.spectateShieldAnimation(), config.spectateShieldGraphic()))
-			{
-				shieldUp = true;
-				ticksSinceShield = 0;
-			}
-			return;
-		}
+			case NONE:
+				// Nothing to summon is not a reason to skip the channel.
+				if (cast(config.spectateShieldAnimation(), config.spectateShieldGraphic()))
+				{
+					shield = Shield.SUMMONING;
+				}
+				else
+				{
+					startChannel();
+				}
+				break;
 
-		// Holding it: its own stage on its own timer, so a long fight keeps the
-		// shield looking alive without repeating the summon.
-		if (++ticksSinceShield >= SHIELD_MAINTAIN_TICKS)
-		{
-			ticksSinceShield = 0;
-			cast(config.spectateShieldHoldAnimation(), config.spectateShieldHoldGraphic());
+			case SUMMONING:
+				// The summon is a one-shot; the channelled pose takes over the
+				// moment it has played out, so the two read as one spell.
+				if (!follower.isEmotePlaying())
+				{
+					startChannel();
+				}
+				break;
+
+			case CHANNELLING:
+				// A looping pose shows no particles of its own, so the graphic
+				// is renewed on its own timer to keep the ward alive.
+				if (++ticksSinceShield >= SHIELD_MAINTAIN_TICKS)
+				{
+					ticksSinceShield = 0;
+					SpotAnimRepository.Entry renew =
+						spotAnims.get(config.spectateShieldChannelGraphic());
+					if (renew != null)
+					{
+						follower.playSpotAnim(renew);
+					}
+				}
+				break;
+
+			default:
+				break;
 		}
+	}
+
+	/**
+	 * Starts the channelled pose. A pose override loops until it is cleared,
+	 * unlike an emote, which is what "until it moves or the fight ends" needs.
+	 */
+	private void startChannel()
+	{
+		int channel = config.spectateShieldChannelAnimation();
+		if (channel > 0)
+		{
+			follower.setPoseOverride(channel);
+		}
+		shield = Shield.CHANNELLING;
+		ticksSinceShield = 0;
+	}
+
+	/** Ends the channel and hands the follower's pose back to normal. */
+	private void dropChannel()
+	{
+		if (shield == Shield.CHANNELLING)
+		{
+			follower.setPoseOverride(0);
+		}
+		shield = Shield.NONE;
 	}
 
 	/**
