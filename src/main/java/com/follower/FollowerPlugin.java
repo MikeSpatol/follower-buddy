@@ -3226,15 +3226,17 @@ public class FollowerPlugin extends Plugin
 	{
 		if (event.getActor() != client.getLocalPlayer())
 		{
-			// Watching everyone is how a graphic gets identified when you do
-			// not own the thing that makes it: stand near someone who does and
-			// let them perform it.
-			if (watchOthers && event.getActor() instanceof Player)
+			// Watching everyone is how a graphic gets identified when you do not
+			// own the thing that makes it: stand near someone who does and let
+			// them perform it. NPCs count too - plenty of effects render on
+			// what is being hit rather than on whoever swung.
+			if (watchOthers)
 			{
 				net.runelite.api.ActorSpotAnim other = latestSpotAnim(event.getActor());
 				if (other != null)
 				{
-					sendStatus(event.getActor().getName() + " graphic " + other.getId()
+					String who = event.getActor() instanceof NPC ? "NPC " : "";
+					sendStatus(who + event.getActor().getName() + " graphic " + other.getId()
 						+ "  (::follower gfx " + other.getId() + " to replay it)");
 				}
 			}
