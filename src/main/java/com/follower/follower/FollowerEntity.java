@@ -2230,22 +2230,47 @@ public class FollowerEntity
 		// centroid of z=-11 and the kneel reads z=-39, so the pose itself is
 		// worth 28 units, near a quarter of a tile.
 		//
-		// Read live rather than tabulated, so each pose is corrected by its own
-		// displacement and none of it has to be kept up to date by hand.
-		int[] centre = RECENTRED_POSES.contains(activePose) ? modelCentre() : null;
-		if (centre != null)
+		// Measured ONCE per pose and held. Reading it every frame made the
+		// follower creep about: a centroid shifts slightly from frame to frame,
+		// and feeding that straight back into the position turned a fixed
+		// correction into constant motion.
+		if (RECENTRED_POSES.contains(activePose))
+		{
+			if (recentrePose != activePose)
+			{
+				int[] centre = modelCentre();
+				if (centre != null)
+				{
+					recentreForward = centre[1] - STANDING_CENTRE_Z;
+					recentrePose = activePose;
+				}
+			}
+		}
+		else
+		{
+			recentrePose = -1;
+			recentreForward = 0;
+		}
+
+		// The logical position stays the tile: facing, distance and the
+		// graphics all reason about where the follower IS, not where its model
+		// happened to be drawn.
+		lastRenderedLocation = new LocalPoint(lx, ly, client.getTopLevelWorldView());
+
+		int drawX = lx;
+		int drawY = ly;
+		if (recentreForward != 0)
 		{
 			// Model space is rotated by the object's orientation at draw time,
 			// so the correction has to be rotated the same way. yaw is
 			// atan2(dx, dy) in JAU, making (sin, cos) the axis it faces along.
 			double angle = yaw * Math.PI / 1024.0;
-			int forward = centre[1] - STANDING_CENTRE_Z;
-			lx -= (int) Math.round(forward * Math.sin(angle));
-			ly -= (int) Math.round(forward * Math.cos(angle));
+			drawX -= (int) Math.round(recentreForward * Math.sin(angle));
+			drawY -= (int) Math.round(recentreForward * Math.cos(angle));
 		}
-
-		lastRenderedLocation = new LocalPoint(lx, ly, client.getTopLevelWorldView());
-		object.setLocation(lastRenderedLocation, tile.getPlane());
+		object.setLocation(recentreForward == 0
+			? lastRenderedLocation
+			: new LocalPoint(drawX, drawY, client.getTopLevelWorldView()), tile.getPlane());
 
 		// Height from the interpolated position: getTileHeight interpolates WITHIN
 		// a tile, which is how a real player glides over slopes. Z is inverted, so
@@ -2679,9 +2704,15 @@ public class FollowerEntity
 	 * (pose 808) reads z=-11, the prayer kneel reads z=-39.
 	 */
 	private static final java.util.Set<Integer> RECENTRED_POSES =
-		new java.util.HashSet<>(java.util.Arrays.asList(645, 179));
+		new java.util.HashSet<>(java.util.Arrays.asList(179, 645));
 
 	private static final int STANDING_CENTRE_Z = -11;
+
+	/** The pose the held correction was measured for, or -1 when none. */
+	private int recentrePose = -1;
+
+	/** The held correction, in model units along the follower's facing. */
+	private int recentreForward;
 
 	/**
 	 * Where the animated model's mass actually sits relative to the tile it is

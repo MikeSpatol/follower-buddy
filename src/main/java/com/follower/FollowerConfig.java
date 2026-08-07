@@ -147,12 +147,14 @@ public interface FollowerConfig extends Config
 	)
 	default int spectateShieldChannelStart()
 	{
-		// AnimationID.HUMAN_PRAY, 2.34s: kneeling down. Chosen because this
-		// plugin already plays it successfully - it is the errand kneel at an
-		// altar - so it is known to render on the follower's model. The sitting
-		// animations that read well by name did not: 1137 merely turned the
-		// follower around when tried in game.
-		return 645;
+		// None, deliberately. HUMAN_PRAY (645) was here and produced a visible
+		// kneel, stand, kneel: it is a one-shot that ends upright, so the
+		// looping pose then had to kneel all over again.
+		//
+		// The loop does not need help. HUMAN_PRAY_LOOP carries frameStep 5,
+		// meaning frames 0-4 play once and only 5-8 repeat - the descent is
+		// built into it. Set an id here only for a pose that lacks its own.
+		return 0;
 	}
 
 	@ConfigItem(
