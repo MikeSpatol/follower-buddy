@@ -2222,6 +2222,28 @@ public class FollowerEntity
 
 		int lx = base.getX() + (int) (fineWX & 127) - 64;
 		int ly = base.getY() + (int) (fineWY & 127) - 64;
+
+		// Some poses move the body off the tile the object is placed on. The
+		// prayer kneel leans far enough forward to leave the follower standing
+		// on the edge of its own tile, which looks wrong beside a player
+		// kneeling at an altar. Measured rather than assumed: standing reads a
+		// centroid of z=-11 and the kneel reads z=-39, so the pose itself is
+		// worth 28 units, near a quarter of a tile.
+		//
+		// Read live rather than tabulated, so each pose is corrected by its own
+		// displacement and none of it has to be kept up to date by hand.
+		int[] centre = RECENTRED_POSES.contains(activePose) ? modelCentre() : null;
+		if (centre != null)
+		{
+			// Model space is rotated by the object's orientation at draw time,
+			// so the correction has to be rotated the same way. yaw is
+			// atan2(dx, dy) in JAU, making (sin, cos) the axis it faces along.
+			double angle = yaw * Math.PI / 1024.0;
+			int forward = centre[1] - STANDING_CENTRE_Z;
+			lx -= (int) Math.round(forward * Math.sin(angle));
+			ly -= (int) Math.round(forward * Math.cos(angle));
+		}
+
 		lastRenderedLocation = new LocalPoint(lx, ly, client.getTopLevelWorldView());
 		object.setLocation(lastRenderedLocation, tile.getPlane());
 
@@ -2645,6 +2667,21 @@ public class FollowerEntity
 			controller.setFrame(0);
 		}
 	}
+
+	/**
+	 * Poses corrected back onto their tile, and the standing reading they are
+	 * corrected against.
+	 *
+	 * <p>Deliberately a short list rather than every animation. A walk cycle's
+	 * centroid swings with the stride, so recentring it would fight the
+	 * movement; these are held poses where the body simply sits somewhere the
+	 * tile is not. Both were measured with {@code ::follower centre}: standing
+	 * (pose 808) reads z=-11, the prayer kneel reads z=-39.
+	 */
+	private static final java.util.Set<Integer> RECENTRED_POSES =
+		new java.util.HashSet<>(java.util.Arrays.asList(645, 179));
+
+	private static final int STANDING_CENTRE_Z = -11;
 
 	/**
 	 * Where the animated model's mass actually sits relative to the tile it is
