@@ -307,6 +307,7 @@ public class FollowerPlugin extends Plugin
 	private int scanPose = -2;
 	private int scanIdlePose = -2;
 	private int scanGraphic = -2;
+	private String scanCombat = "";
 	private int scanStartTick;
 	private final List<String> scanTimeline = new ArrayList<>();
 
@@ -328,6 +329,26 @@ public class FollowerPlugin extends Plugin
 		net.runelite.api.ActorSpotAnim spot = latestSpotAnim(local);
 		int graphic = spot == null ? -1 : spot.getId();
 		int at = client.getTickCount() - scanStartTick;
+
+		// Every input the combat check reads, spelled out. refreshCombat wants
+		// an NPC, a combat level above zero and a health ratio that is not
+		// zero; when it does not fire there is no way to tell which of the
+		// three failed without seeing all of them.
+		net.runelite.api.Actor target = local.getInteracting();
+		String combat = target == null
+			? "interacting = none"
+			: "interacting = " + target.getName()
+				+ " [" + target.getClass().getSimpleName() + "]"
+				+ " isNPC=" + (target instanceof NPC)
+				+ " level=" + target.getCombatLevel()
+				+ " healthRatio=" + target.getHealthRatio();
+		if (!combat.equals(scanCombat))
+		{
+			scanCombat = combat;
+			String line = "t+" + at + "  " + combat;
+			scanTimeline.add(line);
+			log.info("SCAN {}", line);
+		}
 
 		if (animation != scanAnimation)
 		{
@@ -4139,6 +4160,7 @@ public class FollowerPlugin extends Plugin
 				scanPose = -2;
 				scanIdlePose = -2;
 				scanGraphic = -2;
+				scanCombat = "";
 				sendStatus("Scanning your animation slots for " + seconds
 					+ "s - perform it now.");
 				break;
