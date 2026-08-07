@@ -95,6 +95,16 @@ tasks.register('runClient', JavaExec) {
     }
 }
 
+// ---------------------------------------------------------------------------
+// Development conveniences below. None of them are part of `build`, and the
+// Plugin Hub does not run them - it builds `jar` and nothing else.
+//
+// They exist because a plugin cannot be sideloaded into RuneLite: the client
+// loads external plugins only from the Hub. Until this is published, the only
+// way to put it in front of a tester is to hand them a client with it already
+// compiled in, which is what these tasks assemble.
+// ---------------------------------------------------------------------------
+
 // A self-contained folder someone can unzip and run without Gradle, without a
 // checkout, and without waiting for a first-run download. Everything the client
 // needs is copied beside a launcher script; only a Java runtime is assumed.
@@ -136,8 +146,5 @@ tasks.register('bundleZip', Zip) {
     destinationDirectory = layout.buildDirectory.dir('distributions')
 }
 
-tasks.register('shadowJar', Jar) {
-    archiveClassifier = 'shaded'
-    from sourceSets.main.output
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-}
+// shadowJar was removed: nothing referenced it, and it only re-jarred the main
+// output under another name. The Plugin Hub builds `jar`.

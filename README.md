@@ -647,6 +647,33 @@ What remains is process rather than code: fork
 [runelite/plugin-hub](https://github.com/runelite/plugin-hub), add a manifest
 naming this repository and a commit hash, and open a pull request.
 
+### What a reviewer will want to know
+
+The plugin is cosmetic and entirely client-side. It renders a `RuneLiteObject`
+and talks; it never acts on the player's behalf.
+
+- **No network access of any kind** — no HTTP client, no sockets.
+- **No reflection, no `Class.forName`, no process spawning.**
+- **It never sends input or packets.** Nothing invokes a menu action, writes to
+  a packet buffer or synthesises a key press. The menu entries it adds are
+  ordinary `createMenuEntry` options the player clicks themselves.
+- **Files stay in `~/.runelite/follower`** — phrases, learned weapon stances,
+  outfit profiles and measured animation trims. Nothing else on disk is touched.
+- **One NPC is hidden, narrowly.** In thrall mode the follower takes the place
+  of your own summoned thrall, so that one NPC is not drawn. The predicate is
+  `renderable != thrallNpc`, which is a single reference comparison against the
+  thrall currently possessed and nothing while none is. It uses the same
+  `RenderableDrawListener` the core Entity Hider plugin does.
+- **Two API notes.** `Hooks.registerRenderableDrawListener` is deprecated with
+  no replacement registration path yet, and core's Entity Hider uses the same
+  one. `Perspective.getClickbox` is marked internal; it backs
+  `TileObject#getClickbox()`, which a `RuneLiteObject` cannot provide.
+
+The development-only Gradle tasks (`bundle`, `bundleZip`, `launcherJar`) are not
+part of `build` and the hub never runs them. They assemble a runnable client for
+a tester, which exists only because a plugin cannot be sideloaded into RuneLite
+before it is published here.
+
 ## Standing clear of a fight
 
 A following follower stands exactly where you want to look: on the boss, on the
