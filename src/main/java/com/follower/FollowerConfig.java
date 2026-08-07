@@ -57,12 +57,72 @@ public interface FollowerConfig extends Config
 	String errandSection = "errands";
 
 	@ConfigSection(
+		name = "Combat",
+		description = "What the follower does while you are fighting",
+		position = 6
+	)
+	String combatSection = "combat";
+
+	@ConfigSection(
 		name = "Developer",
 		description = "Diagnostic chat commands used to build the plugin",
-		position = 6,
+		position = 7,
 		closedByDefault = true
 	)
 	String developerSection = "developer";
+
+	@ConfigItem(
+		keyName = "spectateCombat",
+		name = "Stand clear in combat",
+		description = "When a fight starts, the follower walks a few tiles clear and watches,"
+			+ " so it is never sitting on top of the boss you are trying to see or click."
+			+ " Thrall mode is exempt, being in the fight by definition.",
+		section = combatSection,
+		position = 0
+	)
+	default boolean spectateCombat()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "spectateShield",
+		name = "Cast a shield on bosses",
+		description = "While watching a boss fight, the follower occasionally plays a casting"
+			+ " animation with a graphic over it, as though warding itself.",
+		section = combatSection,
+		position = 1
+	)
+	default boolean spectateShield()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "spectateShieldAnimation",
+		name = "Shield animation",
+		description = "Player animation for the shield cast. 0 for none."
+			+ " Preview any id with ::follower anim <id>.",
+		section = combatSection,
+		position = 2
+	)
+	default int spectateShieldAnimation()
+	{
+		return 1162;
+	}
+
+	@ConfigItem(
+		keyName = "spectateShieldGraphic",
+		name = "Shield graphic",
+		description = "Spotanim (graphic) laid over the cast. 0 for none."
+			+ " Audition ids with ::follower gfx <id>.",
+		section = combatSection,
+		position = 3
+	)
+	default int spectateShieldGraphic()
+	{
+		return 1729;
+	}
 
 	/**
 	 * Gates the diagnostic half of the chat commands.
@@ -508,6 +568,18 @@ public interface FollowerConfig extends Config
 		position = 5
 	)
 	default boolean groupQuest()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "groupCombat",
+		name = "Combat phrases",
+		description = "Rules in the \"combat\" group — encouragement while it watches you fight",
+		section = groupsSection,
+		position = 6
+	)
+	default boolean groupCombat()
 	{
 		return true;
 	}

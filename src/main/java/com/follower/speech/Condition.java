@@ -30,6 +30,9 @@ import net.runelite.api.NPC;
  *   <tr><td>poisoned / venomed / skulled</td><td>no fields</td></tr>
  *   <tr><td>thrallStart / thrallSwitch / thrallEnd</td><td>no fields; {@code {style}} and, for a switch, {@code {from}}</td></tr>
  *   <tr><td>errandStart / errandEnd</td><td>optional {@code names} (errand names); {@code {errand}} placeholder</td></tr>
+ *   <tr><td>combat</td><td>no fields — true throughout a fight, including the gaps between targets</td></tr>
+ *   <tr><td>bossFight</td><td>{@code minimum} — target combat level, default 100</td></tr>
+ *   <tr><td>combatStart / combatEnd</td><td>optional {@code names}; {@code {npc}} placeholder</td></tr>
  *   <tr><td>energyBelow</td><td>{@code percent}</td></tr>
  *   <tr><td>idle</td><td>{@code ticks}</td></tr>
  *   <tr><td>login / always</td><td>no fields</td></tr>
@@ -195,6 +198,18 @@ public class Condition
 			case "idle":
 				return ctx.getIdleTicks() >= orDefault(ticks, 50);
 
+			// True through a whole fight, including the short gaps between a
+			// target dying and the next being clicked, so a rule using this
+			// does not flicker on and off mid-kill.
+			case "combat":
+				return ctx.isInCombat();
+
+			// The same, but only for something big. "minimum" overrides the
+			// default combat level for anyone who wants a different bar.
+			case "bossfight":
+				return ctx.isInCombat()
+					&& ctx.getCombatTargetLevel() >= orDefault(minimum, 100);
+
 			case "login":
 				return event.getType() == TriggerEvent.Type.LOGIN;
 
@@ -210,6 +225,15 @@ public class Condition
 					&& (names == null || matchesAnyName(event.getName()));
 			case "errandend":
 				return event.getType() == TriggerEvent.Type.ERRAND_END
+					&& (names == null || matchesAnyName(event.getName()));
+
+			// The moment a fight starts or ends, as opposed to "combat", which
+			// stays true throughout one. Optional names match what is fought.
+			case "combatstart":
+				return event.getType() == TriggerEvent.Type.COMBAT_START
+					&& (names == null || matchesAnyName(event.getName()));
+			case "combatend":
+				return event.getType() == TriggerEvent.Type.COMBAT_END
 					&& (names == null || matchesAnyName(event.getName()));
 
 			default:

@@ -267,6 +267,9 @@ public class FollowerPlugin extends Plugin
 
 	private com.follower.follower.ErrandController errands;
 
+	/** Stands the follower clear of a fight; see SpectateController. */
+	private com.follower.follower.SpectateController spectate;
+
 	private Path dataDir;
 	private WorldPoint lastPlayerTile;
 	private int lastRegionId = -1;
@@ -335,6 +338,8 @@ public class FollowerPlugin extends Plugin
 		errands = new com.follower.follower.ErrandController(client, follower, config,
 			speechEngine::dispatch, spotAnimRepository,
 			() -> dialog.isOpen() || follower.isNpcSlaved());
+		spectate = new com.follower.follower.SpectateController(client, follower, config,
+			speechEngine.getContext(), spotAnimRepository, speechEngine::dispatch);
 
 		// On a fresh client boot the LOGIN_SCREEN transition can happen before
 		// this plugin subscribes, so the first login would not read as fresh.
@@ -1380,6 +1385,10 @@ public class FollowerPlugin extends Plugin
 		if (!config.groupQuest())
 		{
 			disabled.add("quest");
+		}
+		if (!config.groupCombat())
+		{
+			disabled.add("combat");
 		}
 		for (String token : config.disabledGroups().split(","))
 		{
@@ -2812,6 +2821,15 @@ public class FollowerPlugin extends Plugin
 			errands.tick();
 		}
 
+		// After errands, so an errand in progress owns the feet: a follower
+		// halfway to a bank should finish the trip rather than be yanked
+		// sideways because something attacked. Thrall mode is in the fight, so
+		// it is excluded too.
+		if (spectate != null)
+		{
+			spectate.tick(thrallNpc != null || (errands != null && errands.isBusy()));
+		}
+
 		// The spawn-in burst waits one tick so the follower has already been
 		// rendered standing at the thrall's spot when it plays.
 		if (pendingThrallSpawnFxTicks > 0 && --pendingThrallSpawnFxTicks == 0 && thrallNpc != null)
@@ -3210,6 +3228,9 @@ public class FollowerPlugin extends Plugin
 	{
 		if (event.getActor() == client.getLocalPlayer() && event.getHitsplat().getAmount() > 0)
 		{
+			// Being hit is combat even when not hitting back, which the
+			// interaction check alone would miss.
+			speechEngine.getContext().noteDamageTaken();
 			speechEngine.dispatch(TriggerEvent.damageTaken(event.getHitsplat().getAmount()));
 			dialog.close();
 		}
@@ -3254,7 +3275,7 @@ public class FollowerPlugin extends Plugin
 		"pitchsweep", "headsweep", "head", "followtrace",
 		"wraplerp", "wrapauto", "wrapearly", "pose",
 		"animinfo", "animtrace", "errandscan", "cachecheck", "stanceaudit",
-		"watch", "stance"));
+		"watch", "stance", "gfx"));
 
 	@Subscribe
 	public void onCommandExecuted(CommandExecuted event)
@@ -3729,6 +3750,35 @@ public class FollowerPlugin extends Plugin
 				{
 					errands.debugScan();
 					sendStatus("Errand scan logged");
+				}
+				break;
+			}
+
+			case "gfx":
+			{
+				// Auditions a spotanim on the follower. "What a protective
+				// shield looks like" has no answer in the cache to measure, so
+				// the shield effect is chosen by eye and this is how.
+				if (args.length < 2)
+				{
+					sendStatus("::follower gfx <graphicId> - play a spotanim on the follower");
+					break;
+				}
+				try
+				{
+					int id = Integer.parseInt(args[1]);
+					com.follower.appearance.SpotAnimRepository.Entry fx = spotAnimRepository.get(id);
+					if (fx == null)
+					{
+						sendStatus("No graphic " + id + " in the cache.");
+						break;
+					}
+					clientThread.invoke(() -> follower.playSpotAnim(fx));
+					sendStatus("Playing graphic " + id + " on the follower.");
+				}
+				catch (NumberFormatException e)
+				{
+					sendStatus("Numbers only: ::follower gfx <graphicId>");
 				}
 				break;
 			}

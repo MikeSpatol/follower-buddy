@@ -106,6 +106,13 @@ public class ErrandController
 	private final BooleanSupplier busy;
 
 	private State state = State.IDLE;
+
+	/** True while an errand owns the follower's feet, so nothing else moves it. */
+	public boolean isBusy()
+	{
+		return state != State.IDLE;
+	}
+
 	private Errand current;
 	private WorldPoint targetTile;
 	private WorldPoint errandSite;

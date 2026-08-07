@@ -3,6 +3,7 @@ package com.follower.speech;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import net.runelite.api.Actor;
 import net.runelite.api.Client;
 import net.runelite.api.NPC;
 import net.runelite.api.Player;
@@ -100,12 +101,86 @@ public final class TriggerContext
 			idleTicks = 0;
 		}
 
+		refreshCombat(local);
+
 		int[] regions = client.getTopLevelWorldView().getMapRegions();
 		loadedRegions = regions == null
 			? new HashSet<>()
 			: Arrays.stream(regions).boxed().collect(java.util.stream.Collectors.toSet());
 
 		refreshEquipment(local.getPlayerComposition());
+	}
+
+	// ------------------------------------------------------------------ combat
+
+	/**
+	 * How long a fight is considered to still be going after the last sign of
+	 * one. Monsters die, targets are re-clicked, and a boss between phases can
+	 * leave a tick or two with no interaction at all; without a grace window
+	 * the follower would bob in and out of spectating throughout a kill.
+	 */
+	private static final int COMBAT_GRACE_TICKS = 8;
+
+	/** A rough line between "a monster" and "a boss", by combat level. */
+	private static final int BOSS_COMBAT_LEVEL = 100;
+
+	private int ticksSinceCombat = Integer.MAX_VALUE;
+	private String combatTarget = "";
+	private int combatTargetLevel;
+
+	/**
+	 * Works out whether the player is fighting, from the two things that are
+	 * always true of a fight: they are interacting with something that can
+	 * fight back, or something is hitting them.
+	 *
+	 * <p>Interaction alone is not enough - talking to a banker and pickpocketing
+	 * a guard are both interactions - so the target has to have a combat level.
+	 * Damage is fed in separately by the plugin's hitsplat handler, which
+	 * catches being attacked while doing nothing back.
+	 */
+	private void refreshCombat(Player local)
+	{
+		Actor target = local.getInteracting();
+		if (target instanceof NPC && target.getCombatLevel() > 0
+			&& target.getHealthRatio() != 0)
+		{
+			combatTarget = target.getName() == null ? "" : target.getName();
+			combatTargetLevel = target.getCombatLevel();
+			ticksSinceCombat = 0;
+		}
+		else if (ticksSinceCombat < Integer.MAX_VALUE)
+		{
+			ticksSinceCombat++;
+		}
+	}
+
+	/** Called by the plugin when the player takes a hit, which is also combat. */
+	public void noteDamageTaken()
+	{
+		ticksSinceCombat = 0;
+	}
+
+	/** Whether the player is fighting, or was a moment ago. */
+	public boolean isInCombat()
+	{
+		return ticksSinceCombat <= COMBAT_GRACE_TICKS;
+	}
+
+	/** Whether that fight is with something big enough to call a boss. */
+	public boolean isBossFight()
+	{
+		return isInCombat() && combatTargetLevel >= BOSS_COMBAT_LEVEL;
+	}
+
+	/** The name of what is being fought, for the {npc} placeholder. */
+	public String getCombatTarget()
+	{
+		return combatTarget;
+	}
+
+	public int getCombatTargetLevel()
+	{
+		return combatTargetLevel;
 	}
 
 	/**

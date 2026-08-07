@@ -306,6 +306,9 @@ wins.
 | `damageTaken` | `minimum` |
 | `itemEquipped` | `ids` |
 | `idle` | `ticks` |
+| `combat` | — true throughout a fight, including the gaps between targets |
+| `bossFight` | `minimum` — target's combat level, default 100 |
+| `combatStart` / `combatEnd` | `names`, `{npc}` placeholder |
 | `login`, `always` | — |
 | `chance` | `percent`, rolled each evaluation |
 
@@ -638,6 +641,42 @@ powershell -File tools/make-icon.ps1
 What remains is process rather than code: fork
 [runelite/plugin-hub](https://github.com/runelite/plugin-hub), add a manifest
 naming this repository and a commit hash, and open a pull request.
+
+## Standing clear of a fight
+
+A following follower stands exactly where you want to look: on the boss, on the
+tile you are about to click, in the middle of everything. It cannot actually
+block anything — it is a client-side object with no collision — but being
+visually in the way during a kill is problem enough.
+
+`SpectateController` walks it clear when a fight starts and holds it there.
+
+- **What counts as a fight.** Interacting with something that has a combat level
+  and is still alive, or taking damage. Interaction alone is not enough, or
+  talking to a banker would count. An eight-tick grace window keeps it steady
+  across the gap between one target dying and the next being clicked, so the
+  follower does not bob in and out mid-kill.
+- **Where it stands.** Not merely "near you" — that could be between you and the
+  boss. The vector from the target to you, continued past you, is the one
+  direction guaranteed to be out of the line of the fight. Tiles are tried
+  outward from there and then fanned to the sides, so a wall behind you degrades
+  to the next best angle rather than giving up, and never within 3 tiles of the
+  target. It re-seats only after being left 7 tiles behind, so it does not
+  re-path every time you shuffle.
+- **Who owns the feet.** Thrall mode is exempt, being in the fight by
+  definition, and an errand in progress wins too — a follower halfway to a bank
+  finishes the trip rather than being yanked sideways because something
+  attacked.
+- **What it says.** Nothing special: the ordinary rule system never stopped
+  running, so health and prayer warnings arrive as they always did. The
+  `combat`, `bossFight`, `combatStart` and `combatEnd` conditions simply let a
+  rule ask about a fight the way it asks about anything else, and the bundled
+  `combat` group uses them for encouragement.
+- **The shield flourish.** While watching a boss it occasionally plays a casting
+  animation with a graphic over it, as though warding itself. Both ids are
+  settings, not constants: unlike a weapon's swing, which the game answers
+  definitively, "what a protective shield looks like" has nothing to measure —
+  so pick by eye with `::follower gfx <id>` and `::follower anim <id>`.
 
 ## Weapon stance coverage — PARKED, not a release blocker (2026-08-06)
 

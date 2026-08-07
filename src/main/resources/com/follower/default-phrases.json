@@ -5485,6 +5485,133 @@
       "vanishAfter": true
     },
     {
+      "id": "combat-start-boss",
+      "note": "Outranks combat-start so a boss gets its own line naming it.",
+      "group": "combat",
+      "priority": 60,
+      "cooldownMs": 60000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "combatStart"
+          },
+          {
+            "type": "bossFight"
+          }
+        ]
+      },
+      "say": [
+        "A {npc}. I'll stand well back.",
+        "That's a {npc}. Take your time.",
+        "{npc}. Big one. You've got this.",
+        "Careful with the {npc}.",
+        "I'll keep my distance from the {npc}, thanks."
+      ]
+    },
+    {
+      "id": "combat-start",
+      "note": "Said as the follower steps clear of a fight.",
+      "group": "combat",
+      "priority": 50,
+      "cooldownMs": 45000,
+      "when": {
+        "type": "combatStart"
+      },
+      "say": [
+        "Go on then. I'll watch from here.",
+        "I'll stay out of your way.",
+        "This one's yours. I'm backing up.",
+        "Right. Room to swing.",
+        "Giving you space.",
+        "I'll be over here if it goes badly."
+      ]
+    },
+    {
+      "id": "combat-cheer-boss",
+      "note": "Encouragement during a boss fight. Outranks the ordinary cheer.",
+      "group": "combat",
+      "priority": 40,
+      "cooldownMs": 15000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "bossFight"
+          },
+          {
+            "type": "chance",
+            "percent": 12
+          }
+        ]
+      },
+      "say": [
+        "Stay sharp.",
+        "Mind the big one.",
+        "You've beaten worse.",
+        "Don't rush it.",
+        "Breathe. You're fine.",
+        "It's slowing down. I think.",
+        "Hold your nerve.",
+        "This is the tricky part."
+      ]
+    },
+    {
+      "id": "combat-cheer",
+      "note": "Encouragement during any fight, kept rare so it does not natter.",
+      "group": "combat",
+      "priority": 30,
+      "cooldownMs": 20000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "combat"
+          },
+          {
+            "type": "chance",
+            "percent": 8
+          }
+        ]
+      },
+      "say": [
+        "Keep at it.",
+        "That's it.",
+        "You're winning this.",
+        "Nice hit.",
+        "Don't let up.",
+        "Almost there.",
+        "Good. Again.",
+        "You've got the rhythm of it now.",
+        "Steady.",
+        "Watch its feet.",
+        "I'd help, but you're doing fine.",
+        "Still with you.",
+        "That looked like it hurt. Them, I mean.",
+        "Go on, finish it.",
+        "You make this look easy."
+      ]
+    },
+    {
+      "id": "combat-end",
+      "note": "Said as the follower comes back to your side.",
+      "group": "combat",
+      "priority": 50,
+      "cooldownMs": 45000,
+      "when": {
+        "type": "combatEnd"
+      },
+      "say": [
+        "Well fought.",
+        "That's that, then.",
+        "Nicely done.",
+        "I never doubted you.",
+        "Coming back over.",
+        "Right, where were we?",
+        "Good. I can stop hiding."
+      ]
+    },
+    {
       "id": "idle-chatter",
       "note": "Fires after ~90 seconds of standing still, and only 30% of the time. See idle-long for the five-minute tier.",
       "group": "idle",

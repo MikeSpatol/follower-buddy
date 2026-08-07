@@ -28,7 +28,21 @@ public final class TriggerEvent
 		THRALL_END,
 		ERRAND_START,
 		ERRAND_END,
+		COMBAT_START,
+		COMBAT_END,
 		MANUAL,
+	}
+
+	/**
+	 * A fight starting or ending, with what is being fought in {npc} so a line
+	 * can name it.
+	 */
+	public static TriggerEvent combat(Type type, String npcName)
+	{
+		TriggerEvent event = new TriggerEvent(type);
+		event.name = npcName == null ? "" : npcName;
+		event.placeholders.put("npc", event.name);
+		return event;
 	}
 
 	/** Thrall-mode transitions; {@code style} lands in the {style} placeholder. */
