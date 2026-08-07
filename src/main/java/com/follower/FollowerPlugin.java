@@ -3853,12 +3853,20 @@ public class FollowerPlugin extends Plugin
 					clientThread.invoke(() -> follower.playSpotAnim(fx));
 
 					// Auditioning is only useful if the winner can be kept
-					// without going hunting through the settings.
+					// without going hunting through the settings. All three
+					// stages are set together: "the shield particle" is one
+					// idea, and the stages differ by animation, not by effect.
+					// Per-stage graphics remain available in the settings.
 					if (args.length > 2 && "set".equalsIgnoreCase(args[2]))
 					{
 						configManager.setConfiguration(FollowerConfig.GROUP,
 							"spectateShieldGraphic", id);
-						sendStatus("Graphic " + id + " is now the shield effect.");
+						configManager.setConfiguration(FollowerConfig.GROUP,
+							"spectateShieldChannelGraphic", id);
+						configManager.setConfiguration(FollowerConfig.GROUP,
+							"spectateShieldEndGraphic", id);
+						sendStatus("Graphic " + id
+							+ " is now the shield effect for summon, channel and finish.");
 					}
 					else
 					{

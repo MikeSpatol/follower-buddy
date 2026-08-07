@@ -186,7 +186,7 @@ public interface FollowerConfig extends Config
 	)
 	default int spectateShieldEndGraphic()
 	{
-		return 0;
+		return 246;
 	}
 
 	/**
