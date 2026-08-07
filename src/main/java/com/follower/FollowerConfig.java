@@ -716,6 +716,28 @@ public interface FollowerConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "restAnimation",
+		name = "Rest pose",
+		description = "Looping animation held while resting. Audition candidates with"
+			+ " ::follower pose <id>, and 0 for none.",
+		section = movementSection,
+		position = 6
+	)
+	default int restAnimation()
+	{
+		// HUMAN_PRAY_LOOP: settling down rather than sitting, but it is the only
+		// looping pose SEEN to render correctly on the follower's model.
+		//
+		// WINTERTODT_RESTING (7323) was here and was wrong - it drew the
+		// follower bolt upright with no head. It passed every check that can be
+		// made from the cache (a real id, an authored loop, sane duration), and
+		// none of that says whether an animation was rigged for a player. Only
+		// looking does, which is the same way 1137 was caught turning the
+		// follower on the spot instead of sitting it down.
+		return 179;
+	}
+
+	@ConfigItem(
 		keyName = "activeProfile",
 		name = "Active outfit profile",
 		description = "Which outfit profile the follower is wearing; managed by the panel",

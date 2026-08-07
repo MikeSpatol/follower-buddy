@@ -564,9 +564,6 @@ public class FollowerPlugin extends Plugin
 	/** Item id -> equipment slot, kept so the stance audit can walk every weapon. */
 	private Map<Integer, KitType> slotIndex = java.util.Collections.emptyMap();
 
-	/** AnimationID.WINTERTODT_RESTING - sitting on the ground, at ease. */
-	private static final int REST_POSE = 7323;
-
 	/** AnimationID.HUMAN_GETUP, played as the rest ends. */
 	private static final int REST_STAND_UP = 534;
 
@@ -593,6 +590,7 @@ public class FollowerPlugin extends Plugin
 			|| (spectate != null && spectate.isSpectating())
 			|| dialog.isOpen();
 		boolean wantRest = config.restWhenIdle()
+			&& config.restAnimation() > 0
 			&& !busy
 			&& follower.isSpawned()
 			&& follower.isSettled()
@@ -604,7 +602,7 @@ public class FollowerPlugin extends Plugin
 		resting = wantRest;
 		if (wantRest)
 		{
-			follower.setPoseOverride(REST_POSE);
+			follower.setPoseOverride(config.restAnimation());
 		}
 		else
 		{

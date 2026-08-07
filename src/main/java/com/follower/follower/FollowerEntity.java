@@ -2718,7 +2718,7 @@ public class FollowerEntity
 	 * (pose 808) reads z=-11, the prayer kneel reads z=-39.
 	 */
 	private static final java.util.Set<Integer> RECENTRED_POSES =
-		new java.util.HashSet<>(java.util.Arrays.asList(179, 645, 534, 7323));
+		new java.util.HashSet<>(java.util.Arrays.asList(179, 645, 534));
 
 	/**
 	 * How much of the model's own offset to leave alone.
