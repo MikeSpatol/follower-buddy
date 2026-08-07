@@ -2254,7 +2254,7 @@ public class FollowerEntity
 				// for it.
 				recentreSum += centre[1] - STANDING_CENTRE_Z;
 				recentreSamples++;
-				recentreForward = (int) (recentreSum / recentreSamples);
+				recentreForward = (int) (recentreSum / recentreSamples) + recentreBias;
 				recentreFrozen = recentreSamples >= RECENTRE_FREEZE_SAMPLES;
 			}
 		}
@@ -2720,7 +2720,35 @@ public class FollowerEntity
 	private static final java.util.Set<Integer> RECENTRED_POSES =
 		new java.util.HashSet<>(java.util.Arrays.asList(179, 645, 534));
 
-	private static final int STANDING_CENTRE_Z = -11;
+	/**
+	 * How much of the model's own offset to leave alone.
+	 *
+	 * <p>Was the standing reading of -11, on the reasoning that a model's
+	 * natural asymmetry is not the animation's doing and should be left as it
+	 * is. Correcting only the difference left the follower visibly short of the
+	 * middle though, and the question being answered is simply "is it on its
+	 * tile" - which means putting the model's mass on the tile centre, all of
+	 * it, not the part of it the animation moved.
+	 */
+	private static final int STANDING_CENTRE_Z = 0;
+
+	/** Live nudge from ::follower centre, for dialling the last few units in. */
+	private int recentreBias;
+
+	public void setRecentreBias(int units)
+	{
+		recentreBias = units;
+		// Re-measure from scratch so the change is visible immediately rather
+		// than after the current pose ends.
+		recentreSum = 0;
+		recentreSamples = 0;
+		recentreFrozen = false;
+	}
+
+	public int getRecentreBias()
+	{
+		return recentreBias;
+	}
 
 	/**
 	 * Frames averaged before the correction is fixed for good. About two

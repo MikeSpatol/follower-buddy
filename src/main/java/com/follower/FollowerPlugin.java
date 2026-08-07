@@ -3854,6 +3854,24 @@ public class FollowerPlugin extends Plugin
 				// Measures how far an animation throws the model off its tile,
 				// so a correction can be a number rather than a guess. Run it
 				// while the pose in question is playing.
+				// ::follower centre <n> nudges the correction live, so the last
+				// few units can be dialled in by eye without a rebuild.
+				if (args.length > 1)
+				{
+					try
+					{
+						int bias = Integer.parseInt(args[1]);
+						clientThread.invoke(() -> follower.setRecentreBias(bias));
+						sendStatus("Recentre bias " + bias
+							+ " units (positive pulls it back, negative pushes it forward).");
+					}
+					catch (NumberFormatException e)
+					{
+						sendStatus("Numbers only: ::follower centre <units>");
+					}
+					break;
+				}
+
 				clientThread.invoke(() ->
 				{
 					int[] centre = follower.modelCentre();
@@ -3865,7 +3883,7 @@ public class FollowerPlugin extends Plugin
 					sendStatus(centre == null
 						? "No model to measure."
 						: "Pose " + pose + ": centre x=" + centre[0] + " z=" + centre[1]
-							+ " (128 = one tile)");
+							+ " (128 = one tile), bias " + follower.getRecentreBias());
 					if (centre != null)
 					{
 						log.info("MODEL CENTRE pose={} x={} z={}", pose, centre[0], centre[1]);
