@@ -39,6 +39,11 @@ tasks.named('test') {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+    // The Plugin Hub builds with Java 11. sourceCompatibility alone only sets the
+    // bytecode level - it still compiles against THIS machine's JDK, so a method
+    // added after 11 compiles here and fails there. release pins the API set too,
+    // so that failure surfaces locally instead of in the submission.
+    options.release = 11
     // ./gradlew compileJava -Plint  to surface deprecation/unchecked details
     if (project.hasProperty('lint')) {
         options.compilerArgs << '-Xlint:deprecation' << '-Xlint:unchecked'
