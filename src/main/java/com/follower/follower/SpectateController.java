@@ -43,8 +43,14 @@ public class SpectateController
 	/**
 	 * How far the follower may drift from its watching spot before it is moved
 	 * again. Without this it would re-path every tick as the player shuffles.
+	 *
+	 * <p>Generous on purpose. Every re-seat ends the channelled spell, so a
+	 * tight leash meant a boss that moves the player around - Scurrius was the
+	 * case that showed it - reduced the whole sequence to repeated casting and
+	 * sitting. A watcher standing well back is the point, so it only follows
+	 * once genuinely left behind.
 	 */
-	private static final int RESEAT_DISTANCE = 7;
+	private static final int RESEAT_DISTANCE = 12;
 
 	/**
 	 * How often the channelled graphic is renewed, in game ticks.
