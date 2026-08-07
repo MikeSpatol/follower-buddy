@@ -669,6 +669,11 @@ and talks; it never acts on the player's behalf.
   one. `Perspective.getClickbox` is marked internal; it backs
   `TileObject#getClickbox()`, which a `RuneLiteObject` cannot provide.
 
+Note `shadowJar` in `build.gradle` looks like dead code — nothing in this
+repository calls it. **It must not be deleted:** the hub's packager invokes it to
+produce the published jar. Removing it as unused turned a green hub build red,
+which is how that was established.
+
 The development-only Gradle tasks (`bundle`, `bundleZip`, `launcherJar`) are not
 part of `build` and the hub never runs them. They assemble a runnable client for
 a tester, which exists only because a plugin cannot be sideloaded into RuneLite
