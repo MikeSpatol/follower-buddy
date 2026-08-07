@@ -30,7 +30,44 @@ public final class TriggerEvent
 		ERRAND_END,
 		COMBAT_START,
 		COMBAT_END,
+		PLAYER_DEATH,
+		LOOT,
 		MANUAL,
+	}
+
+	/** The player has died. Where it happened lives in the context, not here. */
+	public static TriggerEvent death()
+	{
+		return new TriggerEvent(Type.PLAYER_DEATH);
+	}
+
+	/**
+	 * Loot arrived. {@code value} carries the total for {@code lootWorth}
+	 * conditions; {item} and {value} land as placeholders so a line can name
+	 * the prize without quoting a raw number.
+	 */
+	public static TriggerEvent loot(int totalValue, String bestItem)
+	{
+		TriggerEvent event = new TriggerEvent(Type.LOOT);
+		event.value = totalValue;
+		event.name = bestItem == null ? "" : bestItem;
+		event.placeholders.put("item", event.name);
+		event.placeholders.put("value", formatGp(totalValue));
+		return event;
+	}
+
+	/** 1.2M / 214K / 950 - the way a player says an amount, not a ledger. */
+	private static String formatGp(long value)
+	{
+		if (value >= 1_000_000)
+		{
+			return String.format("%.1fM", value / 1_000_000.0);
+		}
+		if (value >= 10_000)
+		{
+			return (value / 1_000) + "K";
+		}
+		return Long.toString(value);
 	}
 
 	/**

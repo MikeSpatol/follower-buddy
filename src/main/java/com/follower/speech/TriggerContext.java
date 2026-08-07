@@ -89,7 +89,11 @@ public final class TriggerContext
 			{
 				previousRegionId = regionId;
 				regionId = newRegion;
+				noteRegionEntered(newRegion);
 			}
+			// Seen THIS tick, so pacing along a region boundary - which fires
+			// the change over and over - never reads as a string of visits.
+			regionLastSeenTick.put(newRegion, client.getTickCount());
 		}
 
 		if (previousLocation != null && previousLocation.equals(location) && local.getAnimation() == -1)
@@ -181,6 +185,62 @@ public final class TriggerContext
 	public int getCombatTargetLevel()
 	{
 		return combatTargetLevel;
+	}
+
+	// ----------------------------------------------------------------- memory
+
+	/**
+	 * How long a region has to go unvisited before coming back counts as a
+	 * RETURN rather than a wander along its edge. Region boundaries run through
+	 * the middle of towns, so without this a trip across Varrock square would
+	 * tally half a dozen visits.
+	 */
+	private static final int REVISIT_GAP_TICKS = 250;
+
+	/** Death-site lines stay quiet this long after the death itself, since the
+	 * first person at the spot is the dying player. */
+	private static final int DEATH_SPOT_ARM_TICKS = 200;
+
+	private final java.util.Map<Integer, Integer> regionVisits = new java.util.HashMap<>();
+	private final java.util.Map<Integer, Integer> regionLastSeenTick = new java.util.HashMap<>();
+
+	private WorldPoint deathLocation;
+	private int deathTick = -1;
+
+	private void noteRegionEntered(int region)
+	{
+		Integer lastSeen = regionLastSeenTick.get(region);
+		if (lastSeen == null || client.getTickCount() - lastSeen > REVISIT_GAP_TICKS)
+		{
+			regionVisits.merge(region, 1, Integer::sum);
+		}
+	}
+
+	/** Session visits to the CURRENT region, for the returnVisit condition. */
+	public int getRegionVisits()
+	{
+		return regionVisits.getOrDefault(regionId, 0);
+	}
+
+	/** Called by the plugin when the player dies. Session memory, on purpose:
+	 * a companion remembering last week's death forever would wear thin. */
+	public void noteDeath(WorldPoint where)
+	{
+		deathLocation = where;
+		deathTick = client.getTickCount();
+	}
+
+	/**
+	 * Whether the player is standing near where they last died - and long
+	 * enough after the death that being there again is a RETURN, not the
+	 * dying itself or the walk back for the gravestone.
+	 */
+	public boolean isNearDeathSpot(int within)
+	{
+		return deathLocation != null && location != null
+			&& client.getTickCount() - deathTick > DEATH_SPOT_ARM_TICKS
+			&& location.getPlane() == deathLocation.getPlane()
+			&& location.distanceTo(deathLocation) <= within;
 	}
 
 	/**

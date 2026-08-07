@@ -5485,6 +5485,233 @@
       "vanishAfter": true
     },
     {
+      "id": "mimic-emotes",
+      "note": "Copies your emote, whichever one it was: the classic emote-tab set, ids verified against the cache. Extend the list with ::follower watch.",
+      "group": "mimic",
+      "priority": 40,
+      "cooldownMs": 2000,
+      "when": {
+        "type": "animationSelf",
+        "ids": [
+          855,
+          856,
+          857,
+          858,
+          859,
+          860,
+          861,
+          862,
+          863,
+          864,
+          865,
+          866,
+          1374,
+          2105,
+          2106,
+          2107,
+          2108,
+          2109,
+          2110,
+          2111,
+          2112,
+          2113
+        ]
+      },
+      "mirrorAnimation": true
+    },
+    {
+      "id": "mimic-eat",
+      "note": "Eats when you eat. 829 covers most food, 1191 bananas, 1194 rum, 1327 tankards; add more ids via ::follower watch.",
+      "group": "mimic",
+      "priority": 40,
+      "cooldownMs": 8000,
+      "when": {
+        "type": "animationSelf",
+        "ids": [
+          829,
+          1191,
+          1194,
+          1327
+        ]
+      },
+      "mirrorAnimation": true
+    },
+    {
+      "id": "idle-fidget-think",
+      "note": "A rare fidget while you stand about. idleBelow keeps fidgets out of the long rest, when the follower has sat down.",
+      "group": "idle",
+      "priority": 4,
+      "cooldownMs": 90000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "idle", "ticks": 80 },
+          { "type": "idleBelow", "ticks": 480 },
+          { "type": "chance", "percent": 4 }
+        ]
+      },
+      "animation": 857
+    },
+    {
+      "id": "idle-fidget-yawn",
+      "group": "idle",
+      "priority": 5,
+      "cooldownMs": 90000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "idle", "ticks": 80 },
+          { "type": "idleBelow", "ticks": 480 },
+          { "type": "chance", "percent": 4 }
+        ]
+      },
+      "animation": 2111
+    },
+    {
+      "id": "idle-fidget-shrug",
+      "group": "idle",
+      "priority": 6,
+      "cooldownMs": 90000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "idle", "ticks": 80 },
+          { "type": "idleBelow", "ticks": 480 },
+          { "type": "chance", "percent": 4 }
+        ]
+      },
+      "animation": 2113
+    },
+    {
+      "id": "death-moment",
+      "note": "The moment you die. Highest priority there is - nothing talks over this.",
+      "group": "reactions",
+      "priority": 90,
+      "cooldownMs": 60000,
+      "when": { "type": "playerDeath" },
+      "say": [
+        "No! Get up!",
+        "Please get up.",
+        "This is not how it ends. Go. Come back.",
+        "I will wait for you. However long it takes.",
+        "I... I will keep watch over your things.",
+        "I never know what to do at this part."
+      ]
+    },
+    {
+      "id": "death-spot",
+      "note": "Walking back over where you last died, two minutes or more after the fact. Session memory only - it forgets on logout, deliberately.",
+      "group": "reactions",
+      "priority": 30,
+      "cooldownMs": 600000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "nearDeathSpot", "within": 5 },
+          { "type": "chance", "percent": 35 }
+        ]
+      },
+      "say": [
+        "This is where it happened.",
+        "I remember this spot. I would rather not.",
+        "Walk carefully. This place has taken you once.",
+        "I stood right here, after. For a while.",
+        "Feels colder here. Maybe that is just me."
+      ]
+    },
+    {
+      "id": "loot-big",
+      "note": "A drop worth a million or more. The cheer is 862.",
+      "group": "reactions",
+      "priority": 80,
+      "cooldownMs": 60000,
+      "delayTicks": 2,
+      "when": { "type": "lootWorth", "minimum": 1000000 },
+      "animation": 862,
+      "say": [
+        "The {item}! LOOK at it!",
+        "A {item}! I need to sit down.",
+        "That is a {item}. That is a {item}!",
+        "I am never letting you bank that.",
+        "Did you SEE that?",
+        "{value}. In one drop. {value}!"
+      ]
+    },
+    {
+      "id": "loot-nice",
+      "note": "A solid drop, 100k up. Rarer than it could be, so it stays a treat.",
+      "group": "reactions",
+      "priority": 75,
+      "cooldownMs": 180000,
+      "delayTicks": 2,
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "lootWorth", "minimum": 100000 },
+          { "type": "chance", "percent": 60 }
+        ]
+      },
+      "animation": 865,
+      "say": [
+        "Ooh. {value}. Not bad at all.",
+        "That {item} will sell nicely.",
+        "I saw the {item} first. Just noting that.",
+        "Keep those coming.",
+        "A tidy little drop, that."
+      ]
+    },
+    {
+      "id": "cats-and-pets",
+      "note": "Waves at cats and boss pets that wander close. The long cooldown keeps a bank full of pets from turning it into a greeter.",
+      "group": "reactions",
+      "priority": 20,
+      "cooldownMs": 900000,
+      "delayTicks": 2,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Kitten",
+          "Cat",
+          "Hellcat",
+          "Hell-kitten",
+          "Wily cat",
+          "Lazy cat",
+          "Overgrown cat",
+          "Pet *"
+        ],
+        "within": 4
+      },
+      "animation": 863,
+      "say": [
+        "A cat! Hello, cat.",
+        "Oh, who is this then?",
+        "Hello there, little one.",
+        "I like this one. Can we keep it?",
+        "We should get one of those."
+      ]
+    },
+    {
+      "id": "return-visit",
+      "note": "Entering somewhere the session has already seen five times. Region ping-pong along a boundary is damped in the counter itself.",
+      "group": "area",
+      "priority": 20,
+      "cooldownMs": 900000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "returnVisit", "minimum": 5 },
+          { "type": "chance", "percent": 40 }
+        ]
+      },
+      "say": [
+        "Back again, are we?",
+        "We are becoming regulars here.",
+        "I could walk this place blind by now.",
+        "Again? There are other places, you know.",
+        "Ah. Here. Of course."
+      ]
+    },
+    {
       "id": "combat-start-boss",
       "note": "Outranks combat-start so a boss gets its own line naming it.",
       "group": "combat",

@@ -15,10 +15,15 @@ automated, and the follower cannot be interacted with.
 - **Authentic follower** — pet-style following on the game's own mechanics, learned
   weapon stances, game-exact dialog boxes with chatheads, right-click menu, shift-hover
   and click cross exactly as a real NPC.
-- **Speech system** — 240 bundled rules across editable groups (bosses, player
-  statuses, locations, item equips, quest NPCs, thrall, errands, misc), hot-reloaded
+- **Speech system** — 258 bundled rules across editable groups (bosses, player
+  statuses, locations, item equips, quest NPCs, thrall, errands, combat,
+  mimicry, reactions, misc), hot-reloaded
   from `phrases.json` within a second. Editor windows for each group live behind
   buttons on the sidebar panel; every group has a config toggle.
+- **Alive between the events** — copies your emotes and joins you when you eat,
+  fidgets when you stand about, sits down to rest after five minutes idle, cheers
+  big drops, waves at cats and passing pets, and remembers this session's death
+  spot and the places you keep coming back to.
 - **Outfit profiles** — named outfits with Load/Save/Delete in the panel and a
   `::follower outfit <name>` command. Melee/Ranged/Magic style profiles are seeded.
 - **Thrall mode** — summoning an Arceuus thrall replaces it with the follower:
@@ -311,6 +316,11 @@ wins.
 | `damageTaken` | `minimum` |
 | `itemEquipped` | `ids` |
 | `idle` | `ticks` |
+| `idleBelow` | `ticks` — the other bound, for fidgets that should stop once resting |
+| `playerDeath` | — the moment of death |
+| `nearDeathSpot` | `within` — standing near the session's last death, 2+ minutes after it |
+| `lootWorth` | `minimum` gp — fires on loot; `{item}` and `{value}` placeholders |
+| `returnVisit` | `minimum` — entering a region already visited that many times this session |
 | `combat` | — true throughout a fight, including the gaps between targets |
 | `bossFight` | `minimum` — target's combat level, default 100 |
 | `combatStart` / `combatEnd` | `names`, `{npc}` placeholder |
@@ -323,7 +333,9 @@ standing on, which is what you want for instanced dungeons and raids.
 ### Placeholders
 
 `{npc}`, `{npcId}`, `{message}`, `{skill}`, `{level}`, `{damage}`, `{value}`, `{region}`,
-`{hp}`, `{maxHp}`, `{hpPercent}`, `{prayer}`, `{maxPrayer}`, `{prayerPercent}`, `{player}`.
+`{hp}`, `{maxHp}`, `{hpPercent}`, `{prayer}`, `{maxPrayer}`, `{prayerPercent}`, `{player}`,
+`{item}` (the most valuable item in a loot drop; `{value}` on loot events is the drop's
+total, written the way a player says it — `1.2M`, `214K`).
 
 ### Other rule fields
 

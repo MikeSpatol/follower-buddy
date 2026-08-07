@@ -690,6 +690,32 @@ public interface FollowerConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "groupMimic",
+		name = "Mimicry",
+		description = "Rules in the \"mimic\" group — the follower copies your emotes and joins"
+			+ " you when you eat",
+		section = groupsSection,
+		position = 7
+	)
+	default boolean groupMimic()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "restWhenIdle",
+		name = "Rest when idle",
+		description = "After about five minutes of standing still, the follower sits down."
+			+ " It gets up the moment anything happens.",
+		section = movementSection,
+		position = 5
+	)
+	default boolean restWhenIdle()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 		keyName = "activeProfile",
 		name = "Active outfit profile",
 		description = "Which outfit profile the follower is wearing; managed by the panel",

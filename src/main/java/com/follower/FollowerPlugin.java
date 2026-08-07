@@ -564,6 +564,57 @@ public class FollowerPlugin extends Plugin
 	/** Item id -> equipment slot, kept so the stance audit can walk every weapon. */
 	private Map<Integer, KitType> slotIndex = java.util.Collections.emptyMap();
 
+	/** AnimationID.WINTERTODT_RESTING - sitting on the ground, at ease. */
+	private static final int REST_POSE = 7323;
+
+	/** AnimationID.HUMAN_GETUP, played as the rest ends. */
+	private static final int REST_STAND_UP = 534;
+
+	/** Matches idle-long's five minutes, so the sitting and the "we live here
+	 * now" lines arrive as one mood rather than two systems coinciding. */
+	private static final int REST_AFTER_TICKS = 500;
+
+	private boolean resting;
+
+	/**
+	 * Sits the follower down once the player has been still a long while, and
+	 * stands it back up the moment anything happens.
+	 *
+	 * <p>Runs on the game tick, which is the client thread, so the follower is
+	 * driven directly. Everything that owns the follower's feet - thrall mode,
+	 * errands, spectating, an open dialog - suppresses it, and the idle
+	 * counter resets on any player movement or animation, so combat can never
+	 * meet a seated follower.
+	 */
+	private void updateRest()
+	{
+		boolean busy = thrallNpc != null
+			|| (errands != null && errands.isBusy())
+			|| (spectate != null && spectate.isSpectating())
+			|| dialog.isOpen();
+		boolean wantRest = config.restWhenIdle()
+			&& !busy
+			&& follower.isSpawned()
+			&& follower.isSettled()
+			&& speechEngine.getContext().getIdleTicks() >= REST_AFTER_TICKS;
+		if (wantRest == resting)
+		{
+			return;
+		}
+		resting = wantRest;
+		if (wantRest)
+		{
+			follower.setPoseOverride(REST_POSE);
+		}
+		else
+		{
+			follower.setPoseOverride(0);
+			// Cancelled harmlessly by the next movement frame if the follower
+			// is already walking, which is the usual reason rest ended.
+			follower.playAnimation(REST_STAND_UP);
+		}
+	}
+
 	/**
 	 * How often learned animation data is flushed to disk: one minute, so an
 	 * unclean exit costs at most that much observation rather than a session.
@@ -1424,6 +1475,10 @@ public class FollowerPlugin extends Plugin
 		if (!config.groupCombat())
 		{
 			disabled.add("combat");
+		}
+		if (!config.groupMimic())
+		{
+			disabled.add("mimic");
 		}
 		for (String token : config.disabledGroups().split(","))
 		{
@@ -2883,6 +2938,7 @@ public class FollowerPlugin extends Plugin
 		}
 
 		drainSpeechQueue();
+		updateRest();
 
 		if (errands != null)
 		{
@@ -3322,6 +3378,58 @@ public class FollowerPlugin extends Plugin
 			speechEngine.getContext().noteDamageTaken();
 			speechEngine.dispatch(TriggerEvent.damageTaken(event.getHitsplat().getAmount()));
 			dialog.close();
+		}
+	}
+
+	@Subscribe
+	public void onActorDeath(net.runelite.api.events.ActorDeath event)
+	{
+		Player local = client.getLocalPlayer();
+		if (event.getActor() != local || local == null)
+		{
+			return;
+		}
+		// Where, as well as that: the death spot is remembered for the session,
+		// and walking back over it later has its own lines.
+		speechEngine.getContext().noteDeath(local.getWorldLocation());
+		speechEngine.dispatch(TriggerEvent.death());
+		dialog.close();
+	}
+
+	// NpcLootReceived comes from the core LootManager, so it fires regardless
+	// of which plugins are enabled. The loot tracker's own LootReceived event
+	// would have been silent whenever that plugin was off.
+	@Subscribe
+	public void onNpcLootReceived(net.runelite.client.events.NpcLootReceived event)
+	{
+		dispatchLoot(event.getItems());
+	}
+
+	@Subscribe
+	public void onPlayerLootReceived(net.runelite.client.events.PlayerLootReceived event)
+	{
+		dispatchLoot(event.getItems());
+	}
+
+	private void dispatchLoot(java.util.Collection<net.runelite.client.game.ItemStack> items)
+	{
+		long total = 0;
+		String best = null;
+		long bestValue = -1;
+		for (net.runelite.client.game.ItemStack stack : items)
+		{
+			long price = (long) itemManager.getItemPrice(stack.getId()) * stack.getQuantity();
+			total += price;
+			if (price > bestValue)
+			{
+				bestValue = price;
+				best = itemManager.getItemComposition(stack.getId()).getName();
+			}
+		}
+		if (total > 0)
+		{
+			speechEngine.dispatch(TriggerEvent.loot(
+				(int) Math.min(total, Integer.MAX_VALUE), best));
 		}
 	}
 
@@ -4152,6 +4260,16 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void speak(String text, SpeechOutput output, SpeechRule rule, int animationId)
 	{
+		// A silent rule - an emote mirror, a fidget - contends for nothing:
+		// the queue exists to serialise the overhead text box, and holding an
+		// emote back until a line finishes would have the follower wave at
+		// something you did five seconds ago.
+		if (text.isEmpty())
+		{
+			speakNow(new Utterance(text, output, rule, animationId));
+			return;
+		}
+
 		long now = System.currentTimeMillis();
 		if (now < speakingUntilMs)
 		{

@@ -30,6 +30,11 @@ import net.runelite.api.NPC;
  *   <tr><td>poisoned / venomed / skulled</td><td>no fields</td></tr>
  *   <tr><td>thrallStart / thrallSwitch / thrallEnd</td><td>no fields; {@code {style}} and, for a switch, {@code {from}}</td></tr>
  *   <tr><td>errandStart / errandEnd</td><td>optional {@code names} (errand names); {@code {errand}} placeholder</td></tr>
+ *   <tr><td>idleBelow</td><td>{@code ticks} — the other bound, for fidgets that should stop once resting</td></tr>
+ *   <tr><td>playerDeath</td><td>no fields — the moment of death</td></tr>
+ *   <tr><td>nearDeathSpot</td><td>{@code within} — standing near the session's last death, 2+ min after it</td></tr>
+ *   <tr><td>lootWorth</td><td>{@code minimum} gp — {@code {item}} and {@code {value}} placeholders</td></tr>
+ *   <tr><td>returnVisit</td><td>{@code minimum} — entering a region already visited that many times this session</td></tr>
  *   <tr><td>combat</td><td>no fields — true throughout a fight, including the gaps between targets</td></tr>
  *   <tr><td>bossFight</td><td>{@code minimum} — target combat level, default 100</td></tr>
  *   <tr><td>combatStart / combatEnd</td><td>optional {@code names}; {@code {npc}} placeholder</td></tr>
@@ -197,6 +202,27 @@ public class Condition
 
 			case "idle":
 				return ctx.getIdleTicks() >= orDefault(ticks, 50);
+
+			// The other bound, so a fidget can be told apart from a full rest:
+			// "been still a while" AND "not settled in for the night".
+			case "idlebelow":
+				return ctx.getIdleTicks() < orDefault(ticks, 500);
+
+			case "playerdeath":
+				return event.getType() == TriggerEvent.Type.PLAYER_DEATH;
+
+			// Standing where the last death happened, well after the fact.
+			case "neardeathspot":
+				return ctx.isNearDeathSpot(orDefault(within, 5));
+
+			case "lootworth":
+				return event.getType() == TriggerEvent.Type.LOOT
+					&& event.getValue() >= orDefault(minimum, 100_000);
+
+			// Entering a region the session has already seen a few times.
+			case "returnvisit":
+				return event.getType() == TriggerEvent.Type.REGION_CHANGE
+					&& ctx.getRegionVisits() >= orDefault(minimum, 5);
 
 			// True through a whole fight, including the short gaps between a
 			// target dying and the next being clicked, so a rule using this
