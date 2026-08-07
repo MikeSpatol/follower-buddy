@@ -75,6 +75,9 @@ public class SpectateController
 	private final SpotAnimRepository spotAnims;
 	private final Consumer<TriggerEvent> speech;
 
+	/** Puts the follower's weapon and shield away while it channels. */
+	private final java.util.function.Consumer<Boolean> disarm;
+
 	/** Whether the follower is currently standing aside for a fight. */
 	private boolean spectating;
 
@@ -118,7 +121,8 @@ public class SpectateController
 	private int ticksUnsettled;
 
 	public SpectateController(Client client, FollowerEntity follower, FollowerConfig config,
-		TriggerContext context, SpotAnimRepository spotAnims, Consumer<TriggerEvent> speech)
+		TriggerContext context, SpotAnimRepository spotAnims, Consumer<TriggerEvent> speech,
+		java.util.function.Consumer<Boolean> disarm)
 	{
 		this.client = client;
 		this.follower = follower;
@@ -126,6 +130,7 @@ public class SpectateController
 		this.context = context;
 		this.spotAnims = spotAnims;
 		this.speech = speech;
+		this.disarm = disarm;
 	}
 
 	public boolean isSpectating()
@@ -161,8 +166,11 @@ public class SpectateController
 	public void tick(boolean busy)
 	{
 		// A dispel in progress owns the feet until its animation has played.
+		// The weapon comes back at the same moment, for the same reason: the
+		// rebuild that returns it would otherwise cut the closing cast short.
 		if (releaseTicks > 0 && --releaseTicks == 0)
 		{
+			disarm.accept(false);
 			follower.resumeFollowing();
 		}
 
@@ -229,10 +237,17 @@ public class SpectateController
 			new int[]{config.spectateShieldChannelEnd(), config.spectateShieldEndAnimation()},
 			new int[]{config.spectateShieldEndGraphic(), config.spectateShieldEndGraphic()}))
 		{
+			// The weapon stays away until the closing cast has played: taking
+			// it back rebuilds the model, and a rebuild would cut the animation
+			// off mid-flourish.
 			releaseTicks = DISPEL_HOLD_TICKS;
 		}
 		else
 		{
+			if (wasCasting)
+			{
+				disarm.accept(false);
+			}
 			follower.resumeFollowing();
 		}
 
@@ -364,7 +379,14 @@ public class SpectateController
 			// supposed to be holding still.
 			if (++ticksUnsettled >= UNSETTLED_DROP_TICKS)
 			{
+				// Broken by movement, so there is no closing animation to
+				// protect: the weapon can come straight back.
+				boolean wasCasting = shield != Shield.NONE;
 				dropChannel("moved");
+				if (wasCasting)
+				{
+					disarm.accept(false);
+				}
 			}
 			return;
 		}
@@ -385,6 +407,9 @@ public class SpectateController
 				// Nothing to play is not a reason to skip the channel.
 				// The particle rides every stage, not just the cast: the ward is
 				// meant to be visibly up from the moment it is raised.
+				// Weapon and shield go away as the spell is raised, while the
+				// cast covers the rebuild, rather than when the kneel starts.
+				disarm.accept(true);
 				if (castChain(
 					new int[]{config.spectateShieldAnimation(), config.spectateShieldChannelStart()},
 					new int[]{config.spectateShieldGraphic(), config.spectateShieldGraphic()}))

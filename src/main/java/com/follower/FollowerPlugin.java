@@ -343,7 +343,8 @@ public class FollowerPlugin extends Plugin
 			speechEngine::dispatch, spotAnimRepository,
 			() -> dialog.isOpen() || follower.isNpcSlaved());
 		spectate = new com.follower.follower.SpectateController(client, follower, config,
-			speechEngine.getContext(), spotAnimRepository, speechEngine::dispatch);
+			speechEngine.getContext(), spotAnimRepository, speechEngine::dispatch,
+			this::setSpectateDisarmed);
 
 		// On a fresh client boot the LOGIN_SCREEN transition can happen before
 		// this plugin subscribes, so the first login would not read as fresh.
@@ -1809,7 +1810,38 @@ public class FollowerPlugin extends Plugin
 		{
 			sendStatus("Outfit warnings: " + String.join("; ", errors));
 		}
+
+		// Hands free to channel: a follower kneeling in prayer should not still
+		// be gripping a sword and a shield.
+		if (spectateDisarmed)
+		{
+			outfit.clear(KitType.WEAPON);
+			outfit.clear(KitType.SHIELD);
+		}
 		return outfit;
+	}
+
+	/** True while the shield channel has the follower's weapon and shield put away. */
+	private boolean spectateDisarmed;
+
+	/**
+	 * Puts the follower's weapon and shield away for the duration of the
+	 * channel, and hands them back afterwards.
+	 *
+	 * <p>Done at the START of the spell rather than when the pose begins. The
+	 * model has to be rebuilt to change what it is holding, and a rebuild
+	 * re-applies the pose from its first frame - which during the kneel would
+	 * be the stand-and-kneel-again that took three attempts to get rid of. The
+	 * cast is playing at that point and covers it.
+	 */
+	private void setSpectateDisarmed(boolean disarmed)
+	{
+		if (spectateDisarmed == disarmed)
+		{
+			return;
+		}
+		spectateDisarmed = disarmed;
+		clientThread.invoke(this::rebuildFollower);
 	}
 
 	// ------------------------------------------------------------- thrall mode
