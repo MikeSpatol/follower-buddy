@@ -98,10 +98,22 @@ public interface FollowerConfig extends Config
 		return true;
 	}
 
+	/*
+	 * The shield plays in three stages - summoned, held, dispelled - each an
+	 * animation and a graphic, either of which may be 0 for none.
+	 *
+	 * These are settings rather than constants on purpose. A weapon's swing has
+	 * a right answer the game will tell you; "what a protective ward looks
+	 * like" does not, so the only honest approach is a reasonable default and
+	 * an easy way to change it. ::follower watch prints the id of any animation
+	 * or graphic as it plays, including other players' with "watch all", and
+	 * ::follower gfx <id> set keeps one straight away.
+	 */
+
 	@ConfigItem(
 		keyName = "spectateShieldAnimation",
-		name = "Shield animation",
-		description = "Player animation for the shield cast. 0 for none."
+		name = "Summon animation",
+		description = "Animation as the shield goes up. 0 for none."
 			+ " Preview any id with ::follower anim <id>.",
 		section = combatSection,
 		position = 2
@@ -113,8 +125,8 @@ public interface FollowerConfig extends Config
 
 	@ConfigItem(
 		keyName = "spectateShieldGraphic",
-		name = "Shield graphic",
-		description = "Spotanim (graphic) laid over the cast. 0 for none."
+		name = "Summon graphic",
+		description = "Graphic laid over the summon. 0 for none."
 			+ " Audition ids with ::follower gfx <id>.",
 		section = combatSection,
 		position = 3
@@ -122,6 +134,56 @@ public interface FollowerConfig extends Config
 	default int spectateShieldGraphic()
 	{
 		return 1729;
+	}
+
+	@ConfigItem(
+		keyName = "spectateShieldHoldAnimation",
+		name = "Hold animation",
+		description = "Played every ~30s while the shield is up, to keep it looking alive."
+			+ " 0 for none.",
+		section = combatSection,
+		position = 4
+	)
+	default int spectateShieldHoldAnimation()
+	{
+		return 0;
+	}
+
+	@ConfigItem(
+		keyName = "spectateShieldHoldGraphic",
+		name = "Hold graphic",
+		description = "Graphic for the top-up while the shield is held. 0 for none.",
+		section = combatSection,
+		position = 5
+	)
+	default int spectateShieldHoldGraphic()
+	{
+		return 1729;
+	}
+
+	@ConfigItem(
+		keyName = "spectateShieldEndAnimation",
+		name = "Dispel animation",
+		description = "Played as the fight ends and the shield drops. The follower waits"
+			+ " for it to finish before walking back. 0 for none.",
+		section = combatSection,
+		position = 6
+	)
+	default int spectateShieldEndAnimation()
+	{
+		return 0;
+	}
+
+	@ConfigItem(
+		keyName = "spectateShieldEndGraphic",
+		name = "Dispel graphic",
+		description = "Graphic as the shield drops. 0 for none.",
+		section = combatSection,
+		position = 7
+	)
+	default int spectateShieldEndGraphic()
+	{
+		return 0;
 	}
 
 	/**

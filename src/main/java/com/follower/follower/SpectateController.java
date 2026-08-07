@@ -46,8 +46,15 @@ public class SpectateController
 	 */
 	private static final int RESEAT_DISTANCE = 7;
 
-	/** Minimum gap between shield casts, in game ticks. */
-	private static final int SHIELD_INTERVAL_TICKS = 50;
+	/** How often the shield is topped up while it is being held, in game ticks. */
+	private static final int SHIELD_MAINTAIN_TICKS = 50;
+
+	/**
+	 * How long the follower stays put after dispelling, so the closing
+	 * animation is not cut off by it walking back. Movement always wins over an
+	 * emote, so releasing on the same tick would kill the flourish outright.
+	 */
+	private static final int DISPEL_HOLD_TICKS = 4;
 
 	private final Client client;
 	private final FollowerEntity follower;
@@ -60,7 +67,13 @@ public class SpectateController
 	private boolean spectating;
 
 	private WorldPoint watchTile;
-	private int ticksSinceShield = SHIELD_INTERVAL_TICKS;
+
+	/** Whether the shield has been summoned and is being held. */
+	private boolean shieldUp;
+	private int ticksSinceShield;
+
+	/** Counts down after a dispel; the follower walks back when it reaches zero. */
+	private int releaseTicks;
 
 	public SpectateController(Client client, FollowerEntity follower, FollowerConfig config,
 		TriggerContext context, SpotAnimRepository spotAnims, Consumer<TriggerEvent> speech)
@@ -84,6 +97,12 @@ public class SpectateController
 	 */
 	public void tick(boolean busy)
 	{
+		// A dispel in progress owns the feet until its animation has played.
+		if (releaseTicks > 0 && --releaseTicks == 0)
+		{
+			follower.resumeFollowing();
+		}
+
 		if (!config.spectateCombat() || busy || !follower.isSpawned())
 		{
 			if (spectating)
@@ -117,7 +136,7 @@ public class SpectateController
 	private void start()
 	{
 		spectating = true;
-		ticksSinceShield = SHIELD_INTERVAL_TICKS;
+		releaseTicks = 0;
 		if (!moveClear())
 		{
 			// Nowhere to go is not a reason to keep announcing a fight; the
@@ -132,7 +151,20 @@ public class SpectateController
 	{
 		spectating = false;
 		watchTile = null;
-		follower.resumeFollowing();
+
+		// Dropping the shield is its own moment: play it out where it stands,
+		// then walk back a few ticks later so the animation is not cut short.
+		if (shieldUp && cast(config.spectateShieldEndAnimation(),
+			config.spectateShieldEndGraphic()))
+		{
+			releaseTicks = DISPEL_HOLD_TICKS;
+		}
+		else
+		{
+			follower.resumeFollowing();
+		}
+		shieldUp = false;
+
 		speech.accept(TriggerEvent.combat(TriggerEvent.Type.COMBAT_END,
 			context.getCombatTarget()));
 	}
@@ -241,37 +273,60 @@ public class SpectateController
 		{
 			return;
 		}
-		ticksSinceShield++;
-
 		// An emote started while the feet are still moving is cancelled by the
 		// very next movement frame - movement always wins over an emote, which
 		// is what stops a dancing follower gliding along behind you. The first
 		// cast used to fire on the same tick the follower set off to stand
-		// clear, so it was killed before a single particle appeared. Wait until
-		// it has actually stopped at its watching spot.
-		if (!follower.isSettled() || ticksSinceShield < SHIELD_INTERVAL_TICKS)
+		// clear, so it was killed before a single particle appeared. Nothing is
+		// cast until it has actually stopped at its watching spot.
+		if (!follower.isSettled())
 		{
 			return;
 		}
-		ticksSinceShield = 0;
 
-		int animation = config.spectateShieldAnimation();
-		SpotAnimRepository.Entry graphic = spotAnims.get(config.spectateShieldGraphic());
+		if (!shieldUp)
+		{
+			if (cast(config.spectateShieldAnimation(), config.spectateShieldGraphic()))
+			{
+				shieldUp = true;
+				ticksSinceShield = 0;
+			}
+			return;
+		}
+
+		// Holding it: its own stage on its own timer, so a long fight keeps the
+		// shield looking alive without repeating the summon.
+		if (++ticksSinceShield >= SHIELD_MAINTAIN_TICKS)
+		{
+			ticksSinceShield = 0;
+			cast(config.spectateShieldHoldAnimation(), config.spectateShieldHoldGraphic());
+		}
+	}
+
+	/**
+	 * Plays one stage of the shield.
+	 *
+	 * @return false when the stage has nothing configured, so a caller can tell
+	 * a skipped stage from a played one
+	 */
+	private boolean cast(int animation, int graphicId)
+	{
+		SpotAnimRepository.Entry graphic = spotAnims.get(graphicId);
 		if (animation <= 0 && graphic == null)
 		{
-			return;
+			return false;
 		}
-		log.debug("Shield cast: animation {} graphic {}", animation,
-			config.spectateShieldGraphic());
+		log.debug("Shield stage: animation {} graphic {}", animation, graphicId);
 
 		// playAnimations refuses an empty animation list, so a graphic on its
 		// own goes straight to the spotanim path rather than being dropped.
 		if (animation <= 0)
 		{
 			follower.playSpotAnim(graphic);
-			return;
+			return true;
 		}
 		follower.playAnimations(new int[]{animation},
 			graphic == null ? null : new SpotAnimRepository.Entry[]{graphic});
+		return true;
 	}
 }

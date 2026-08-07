@@ -287,6 +287,9 @@ public class FollowerPlugin extends Plugin
 	 */
 	private boolean freshLogin;
 	private boolean watchAnimations;
+
+	/** ::follower watch all - also report graphics played by other players. */
+	private boolean watchOthers;
 	private int animTraceRemaining;
 	private final List<Integer> animTrace = new ArrayList<>();
 	private final List<Integer> playerTrace = new ArrayList<>();
@@ -3223,6 +3226,18 @@ public class FollowerPlugin extends Plugin
 	{
 		if (event.getActor() != client.getLocalPlayer())
 		{
+			// Watching everyone is how a graphic gets identified when you do
+			// not own the thing that makes it: stand near someone who does and
+			// let them perform it.
+			if (watchOthers && event.getActor() instanceof Player)
+			{
+				net.runelite.api.ActorSpotAnim other = latestSpotAnim(event.getActor());
+				if (other != null)
+				{
+					sendStatus(event.getActor().getName() + " graphic " + other.getId()
+						+ "  (::follower gfx " + other.getId() + " to replay it)");
+				}
+			}
 			return;
 		}
 
@@ -3235,7 +3250,8 @@ public class FollowerPlugin extends Plugin
 		int graphicHeight = spotAnim.getHeight();
 		if (watchAnimations)
 		{
-			sendStatus("Graphic " + graphicId + " at height " + graphicHeight);
+			sendStatus("Graphic " + graphicId + " at height " + graphicHeight
+				+ "  (::follower gfx " + graphicId + " to replay, add 'set' to keep it)");
 		}
 
 		if (client.getTickCount() <= mirrorGraphicsUntilTick)
@@ -3744,10 +3760,15 @@ public class FollowerPlugin extends Plugin
 
 			case "watch":
 				watchAnimations = !watchAnimations;
+				// "all" widens it to everyone in the scene, for identifying an
+				// effect you cannot produce yourself.
+				watchOthers = watchAnimations && args.length > 1
+					&& "all".equalsIgnoreCase(args[1]);
 				sendStatus(watchAnimations
-					? "Watching your animations. Go and perform the one you want and I'll "
+					? "Watching " + (watchOthers ? "everyone's" : "your")
+						+ " animations and graphics. Perform the one you want and I'll "
 						+ "print its id. ::follower watch again to stop."
-					: "Stopped watching animations.");
+					: "Stopped watching.");
 				break;
 
 			case "anim":
