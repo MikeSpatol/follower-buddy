@@ -3332,7 +3332,7 @@ public class FollowerPlugin extends Plugin
 		"pitchsweep", "headsweep", "head", "followtrace",
 		"wraplerp", "wrapauto", "wrapearly", "pose",
 		"animinfo", "animtrace", "errandscan", "cachecheck", "stanceaudit",
-		"watch", "stance", "gfx", "spectate", "shield"));
+		"watch", "stance", "gfx", "spectate", "shield", "centre", "center"));
 
 	@Subscribe
 	public void onCommandExecuted(CommandExecuted event)
@@ -3845,6 +3845,27 @@ public class FollowerPlugin extends Plugin
 					+ " | finish " + config.spectateShieldEndAnimation()
 					+ "/" + config.spectateShieldEndGraphic()
 					+ "  (animation/graphic)");
+				break;
+			}
+
+			case "centre":
+			case "center":
+			{
+				// Measures how far an animation throws the model off its tile,
+				// so a correction can be a number rather than a guess. Run it
+				// while the pose in question is playing.
+				clientThread.invoke(() ->
+				{
+					int[] centre = follower.modelCentre();
+					sendStatus(centre == null
+						? "No model to measure."
+						: "Model centre x=" + centre[0] + " z=" + centre[1]
+							+ " (128 = one tile)");
+					if (centre != null)
+					{
+						log.info("MODEL CENTRE x={} z={}", centre[0], centre[1]);
+					}
+				});
 				break;
 			}
 

@@ -109,6 +109,14 @@ public class SpectateController
 
 	private int ticksSettled;
 
+	/**
+	 * Consecutive unsettled ticks before the channel is considered broken. A
+	 * real walk lasts many ticks; a momentary wobble should not end a spell.
+	 */
+	private static final int UNSETTLED_DROP_TICKS = 3;
+
+	private int ticksUnsettled;
+
 	public SpectateController(Client client, FollowerEntity follower, FollowerConfig config,
 		TriggerContext context, SpotAnimRepository spotAnims, Consumer<TriggerEvent> speech)
 	{
@@ -214,7 +222,7 @@ public class SpectateController
 		// the closing animation where it stands, and only walk back once it has
 		// had time to play - movement would cut it off otherwise.
 		boolean wasCasting = shield != Shield.NONE;
-		dropChannel();
+		dropChannel("fight over");
 		// Stand, then cast: it gets to its feet before releasing the spell, so
 		// the sequence closes the way it opened.
 		if (wasCasting && castChain(
@@ -349,9 +357,18 @@ public class SpectateController
 		if (!follower.isSettled())
 		{
 			ticksSettled = 0;
-			dropChannel();
+			// One unsettled tick is not a journey. The fine position can leave
+			// the tile centre for a moment without the follower going
+			// anywhere, and dropping on that alone made the spell restart -
+			// standing up out of the kneel and casting it again - while it was
+			// supposed to be holding still.
+			if (++ticksUnsettled >= UNSETTLED_DROP_TICKS)
+			{
+				dropChannel("moved");
+			}
 			return;
 		}
+		ticksUnsettled = 0;
 		ticksSettled++;
 
 		switch (shield)
@@ -428,11 +445,11 @@ public class SpectateController
 	}
 
 	/** Ends the channel and hands the follower's pose back to normal. */
-	private void dropChannel()
+	private void dropChannel(String reason)
 	{
 		if (shield != Shield.NONE)
 		{
-			log.info("Shield: dropping from {}", shield);
+			log.info("Shield: dropping from {} ({})", shield, reason);
 		}
 		if (shield == Shield.CHANNELLING)
 		{

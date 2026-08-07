@@ -2646,6 +2646,38 @@ public class FollowerEntity
 		}
 	}
 
+	/**
+	 * Where the animated model's mass actually sits relative to the tile it is
+	 * placed on, in model units (128 to a tile).
+	 *
+	 * <p>An animation is free to move the body away from the origin - kneeling
+	 * leans forward, and the prayer animation leans far enough to put the
+	 * follower on the edge of its tile. The object is positioned by its tile,
+	 * not by where the model ended up, so measuring the difference is the only
+	 * way to know what to correct by.
+	 *
+	 * @return {x, z} mean vertex position, or null when there is no model
+	 */
+	public int[] modelCentre()
+	{
+		net.runelite.api.Model model = object == null ? null : object.getModel();
+		if (model == null || model.getVerticesX() == null
+			|| model.getVerticesX().length == 0)
+		{
+			return null;
+		}
+		float[] xs = model.getVerticesX();
+		float[] zs = model.getVerticesZ();
+		double sumX = 0;
+		double sumZ = 0;
+		for (int i = 0; i < xs.length; i++)
+		{
+			sumX += xs[i];
+			sumZ += zs[i];
+		}
+		return new int[]{(int) Math.round(sumX / xs.length), (int) Math.round(sumZ / zs.length)};
+	}
+
 	/** True if the follower is currently using this animation. */
 	public boolean usesAnimation(int animationId)
 	{
