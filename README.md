@@ -154,9 +154,14 @@ in, so `gradlew` bootstraps Gradle 9.6.1 on first run.
 gradlew build
 ```
 
-Produces `build/libs/follower-buddy-1.0.0.jar`. Load it as an external plugin (or use
-the RuneLite plugin-hub workflow — the repo layout and `runelite-plugin.properties` are
-already in the right shape).
+Produces `build/libs/follower-buddy-1.0.0.jar`, and `gradlew runClient` launches a
+RuneLite client with the plugin loaded as a builtin.
+
+Note the jar on its own is **not installable**. RuneLite has no sideloading: the
+client loads external plugins only from the Plugin Hub, checked against its manifest,
+so a jar dropped into `.runelite` is ignored. Until this is published, running from
+source is the way to use it — see [INSTALL.md](INSTALL.md), written for someone who
+just wants to try it rather than work on it.
 
 Add `-Plint` to surface deprecation and unchecked warnings.
 
