@@ -499,17 +499,21 @@ the game. To copy your current look exactly instead, `::follower palette`.
 
 ---
 
-## Planned features (assessed 2026-08-02, not yet built)
+## Planned features — ALL FOUR DELIVERED (assessed 2026-08-02, closed 2026-08-06)
 
-Build order 4 -> 2 -> 3 -> 1: facing is the primitive, posing uses facing, rule
-actions use posing's animation plumbing, and the right-click menu fronts all of it.
+Kept as the original assessment and its outcome. Build order was 4 -> 2 -> 3 -> 1:
+facing is the primitive, posing uses facing, rule actions use posing's animation
+plumbing, and the right-click menu fronts all of it.
 
-1. **Right-click menu on the follower.** No native entry is possible (the game
-   doesn't know the object exists), but `MenuOpened` + a clickbox test via
-   `Perspective.getClickbox` (we hold the model, orientation and location) lets us
-   inject "Talk-to" / "Pose" / etc. entries with `onClick` handlers - the standard
-   technique. Caveats: left-click stays Walk here; entries coexist with an NPC's if
-   one overlaps the follower. Verify the clickbox API shape at implementation time.
+1. **Right-click menu on the follower.** DONE: `onMenuOpened` tests the click
+   against the follower's clickbox and injects its entries. No native entry is
+   possible (the game doesn't know the object exists), but `MenuOpened` + a
+   clickbox test via `Perspective.getClickbox` (we hold the model, orientation and
+   location) injects "Talk-to" / "Pose" / etc. entries with `onClick` handlers -
+   the standard technique. Left-click stays Walk here, and entries coexist with an
+   NPC's if one overlaps the follower. Note `Perspective.getClickbox` is marked
+   internal in the API (it backs `TileObject#getClickbox()`, which a
+   RuneLiteObject can never provide), so it is a watch item across client updates.
 2. **Posing - go there / play animation / say.** DONE (movement): `stayTile` is
    a posed destination that PERSISTS - unlike Face-me's `goalTile`, the player
    walking away does not release it. Right-click the follower for **Stay** (hold
@@ -544,8 +548,10 @@ actions use posing's animation plumbing, and the right-click menu fronts all of 
    scaling, recolours, lighting), and a mirror firing opens a 12-tick window in
    which the player's spotanims are copied onto the follower as transient
    RuneLiteObjects.
-4. **Face the player.** We own yaw and smooth turning already; `facePlayer()` is an
-   atan2 into `dstYaw`. Compose it into Talk-to and rule actions.
+4. **Face the player.** DONE: `facePlayer()` is an atan2 into `dstYaw`, composed
+   into Talk-to and the posed states. It grew a `faceLocked()` notion around it -
+   thrall combat, errands and held poses hold their facing while the body
+   strafes and back-pedals, which is also what selects the directional poses.
 
 ## The dialog box and chathead
 
