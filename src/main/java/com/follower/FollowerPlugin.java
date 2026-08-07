@@ -2053,10 +2053,24 @@ public class FollowerPlugin extends Plugin
 	}
 
 	/**
+	 * Generic swings, used only until the follower's actual weapon has been
+	 * seen used: an unarmed-style slash, a bow shot and a strike spell cast.
+	 *
+	 * <p>These were three settings once. They stopped making sense when the
+	 * stance library learned to match the animation to the weapon in the
+	 * follower's hands - a typed-in id could only contradict it, and the honest
+	 * answer for an unknown weapon is a plain swing of the right kind rather
+	 * than whatever someone last typed.
+	 */
+	private static final int GENERIC_MELEE_ATTACK = 390;
+	private static final int GENERIC_RANGED_ATTACK = 426;
+	private static final int GENERIC_MAGIC_ATTACK = 1162;
+
+	/**
 	 * What the follower swings, matched to what it is actually holding: the
 	 * learned attack animation for its own weapon when one has been observed,
-	 * else the configured per-style default. A scimitar should not slash like
-	 * a godsword just because both are melee.
+	 * else a generic swing for the style. A scimitar should not slash like a
+	 * godsword just because both are melee.
 	 */
 	private int thrallAttackAnimation()
 	{
@@ -2068,11 +2082,11 @@ public class FollowerPlugin extends Plugin
 		switch (thrallStyle)
 		{
 			case "melee":
-				return config.thrallMeleeAttackAnim();
+				return GENERIC_MELEE_ATTACK;
 			case "ranged":
-				return config.thrallRangedAttackAnim();
+				return GENERIC_RANGED_ATTACK;
 			default:
-				return config.thrallMagicAttackAnim();
+				return GENERIC_MAGIC_ATTACK;
 		}
 	}
 

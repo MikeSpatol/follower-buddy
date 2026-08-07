@@ -752,8 +752,13 @@ These are inherent to the approach, not bugs to be filed:
   Note that attacks start empty — the shipped library carries stances only, since
   attacks are learned from players seen swinging while interacting, and only a
   weapon actually used in combat records one. Until a class has been seen fighting,
-  its weapons use the configured default attack animation. `::follower stanceaudit`
-  reports exactly where that stands.
+  its weapons fall back to a generic swing for their combat style.
+  `::follower stanceaudit` reports exactly where that stands.
+
+  There is deliberately no setting for this. Three per-style attack pickers used to
+  exist and were removed once the library could match the animation to the weapon in
+  the follower's hands: a typed-in id could only ever contradict it, and for an
+  unknown weapon a plain swing of the right kind beats whatever was last typed.
 - **Animations must loop defensively.** Many pose animations have `frameStep = -1`,
   meaning they were never authored to loop. `AnimationController`'s default finish
   handler steps back by `frameStep` and, if the frame is still out of range, **drops

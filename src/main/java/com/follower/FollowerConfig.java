@@ -334,41 +334,11 @@ public interface FollowerConfig extends Config
 		return "Magic";
 	}
 
-	@ConfigItem(
-		keyName = "thrallMeleeAttackAnim",
-		name = "Melee attack animation",
-		description = "Player animation the follower plays when the zombie thrall attacks",
-		section = thrallSection,
-		position = 5
-	)
-	default int thrallMeleeAttackAnim()
-	{
-		return 390;
-	}
-
-	@ConfigItem(
-		keyName = "thrallRangedAttackAnim",
-		name = "Ranged attack animation",
-		description = "Player animation the follower plays when the skeleton thrall attacks",
-		section = thrallSection,
-		position = 6
-	)
-	default int thrallRangedAttackAnim()
-	{
-		return 426;
-	}
-
-	@ConfigItem(
-		keyName = "thrallMagicAttackAnim",
-		name = "Magic attack animation",
-		description = "Player animation the follower plays when the ghost thrall attacks",
-		section = thrallSection,
-		position = 7
-	)
-	default int thrallMagicAttackAnim()
-	{
-		return 1162;
-	}
+	// The three per-style attack animation pickers were removed: the follower
+	// now swings whatever its own weapon swings, learned by watching real
+	// players, so a typed-in id could only ever contradict the weapon in its
+	// hands. The per-style fallbacks live in FollowerPlugin as constants for
+	// the case where nothing has been observed yet.
 
 	// --------------------------------------------------------------- errands
 

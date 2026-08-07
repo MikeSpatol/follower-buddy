@@ -5486,7 +5486,7 @@
     },
     {
       "id": "idle-chatter",
-      "note": "Fires after ~90 seconds of standing still, and only 30% of the time.",
+      "note": "Fires after ~90 seconds of standing still, and only 30% of the time. See idle-long for the five-minute tier.",
       "group": "idle",
       "priority": 10,
       "cooldownMs": 120000,
@@ -5506,7 +5506,71 @@
       "say": [
         "Are we doing anything, or...",
         "I could be at the Grand Exchange right now.",
-        "Nice spot. Very afk."
+        "Nice spot. Very afk.",
+        "Still here. Still standing.",
+        "Is this the plan, then? Standing?",
+        "I could carry something, if you like.",
+        "Someone walked past. That was the excitement.",
+        "I'm not complaining. Just noting.",
+        "I'll be here. Obviously.",
+        "Any minute now.",
+        "Wake me when we move.",
+        "Take your time. I've got nowhere else to be.",
+        "I could fetch something. Say the word.",
+        "Are we waiting for someone?",
+        "I've been practising standing. I'm quite good at it.",
+        "There's a whole world out there, you know.",
+        "One of us should do something.",
+        "I keep thinking I hear a bank chest.",
+        "My feet have opinions about this.",
+        "If something wandered past, I'd notice. Probably.",
+        "I've memorised this view.",
+        "Quiet, isn't it.",
+        "I could hold that for you.",
+        "Do you ever wonder what's over there?",
+        "I'd whistle, but I never learned.",
+        "This is peaceful. I'll allow it.",
+        "I'm counting. Don't ask what.",
+        "Good a place as any, I suppose.",
+        "Don't mind me. I'm just admiring the ground.",
+        "We could be somewhere with monsters."
+      ]
+    },
+    {
+      "id": "idle-long",
+      "note": "The five-minute tier, so a long wait sounds different from a short one. Outranks idle-chatter, which is still true by this point.",
+      "group": "idle",
+      "priority": 20,
+      "cooldownMs": 180000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "idle",
+            "ticks": 500
+          },
+          {
+            "type": "chance",
+            "percent": 40
+          }
+        ]
+      },
+      "say": [
+        "I think I've put down roots.",
+        "Are you still there?",
+        "We live here now, apparently.",
+        "I've named the rocks. That one's Gerald.",
+        "I could have walked to Falador and back.",
+        "This is my life now. It's fine.",
+        "If you've fallen asleep, blink twice.",
+        "I'll keep watch. Not that there's anything to watch.",
+        "Someone will come along eventually.",
+        "I've made peace with it.",
+        "Still standing, in case you were wondering.",
+        "I've had worse afternoons.",
+        "Long day, this.",
+        "I've stopped expecting anything.",
+        "Wake me for the good part."
       ]
     }
   ]
