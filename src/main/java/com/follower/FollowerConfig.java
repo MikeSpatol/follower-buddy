@@ -725,16 +725,15 @@ public interface FollowerConfig extends Config
 	)
 	default int restAnimation()
 	{
-		// HUMAN_PRAY_LOOP: settling down rather than sitting, but it is the only
-		// looping pose SEEN to render correctly on the follower's model.
+		// The game's own sit emote, captured off a player performing it with
+		// ::follower scan rather than guessed from the constant list. It is
+		// rigged for a player by construction, which is the one thing the cache
+		// can never tell you - and what sank WINTERTODT_RESTING (headless) and
+		// HUMAN_SITTING_CHAIR (turned on the spot) before it.
 		//
-		// WINTERTODT_RESTING (7323) was here and was wrong - it drew the
-		// follower bolt upright with no head. It passed every check that can be
-		// made from the cache (a real id, an authored loop, sane duration), and
-		// none of that says whether an animation was rigged for a player. Only
-		// looking does, which is the same way 1137 was caught turning the
-		// follower on the spot instead of sitting it down.
-		return 179;
+		// frameStep 8: frames 0-7 are the sit-down, 8-16 the held loop, so one
+		// id covers settling AND holding. Same shape as the prayer channel.
+		return 10061;
 	}
 
 	@ConfigItem(

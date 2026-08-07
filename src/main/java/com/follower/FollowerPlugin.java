@@ -639,8 +639,12 @@ public class FollowerPlugin extends Plugin
 	/** Item id -> equipment slot, kept so the stance audit can walk every weapon. */
 	private Map<Integer, KitType> slotIndex = java.util.Collections.emptyMap();
 
-	/** AnimationID.HUMAN_GETUP, played as the rest ends. */
-	private static final int REST_STAND_UP = 534;
+	/**
+	 * The sit emote's own stand-up, 2.84s, captured alongside the sit itself.
+	 * Its partner rather than a generic getting-up animation, so the two read
+	 * as one gesture the way they do when a player performs it.
+	 */
+	private static final int REST_STAND_UP = 10053;
 
 	/** Matches idle-long's five minutes, so the sitting and the "we live here
 	 * now" lines arrive as one mood rather than two systems coinciding. */
