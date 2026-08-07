@@ -2729,8 +2729,13 @@ public class FollowerEntity
 	 * middle though, and the question being answered is simply "is it on its
 	 * tile" - which means putting the model's mass on the tile centre, all of
 	 * it, not the part of it the animation moved.
+	 *
+	 * <p>Past zero and into a positive bias by eye. The centroid is an average
+	 * over every vertex, so a kneeling figure is weighted by wherever the bulk
+	 * of the mesh sits rather than by where the body reads as being, and the
+	 * two do not have to agree. Judged in game rather than derived.
 	 */
-	private static final int STANDING_CENTRE_Z = 0;
+	private static final int STANDING_CENTRE_Z = 8;
 
 	/** Live nudge from ::follower centre, for dialling the last few units in. */
 	private int recentreBias;

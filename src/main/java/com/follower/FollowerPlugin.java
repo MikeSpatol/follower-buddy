@@ -3862,8 +3862,12 @@ public class FollowerPlugin extends Plugin
 					{
 						int bias = Integer.parseInt(args[1]);
 						clientThread.invoke(() -> follower.setRecentreBias(bias));
+						// The sign reads backwards from the field it feeds:
+						// recentreForward is negative while kneeling, so ADDING
+						// to it shortens the correction and lets the model sit
+						// further forward.
 						sendStatus("Recentre bias " + bias
-							+ " units (positive pulls it back, negative pushes it forward).");
+							+ " units (negative pulls it further back, positive lets it forward).");
 					}
 					catch (NumberFormatException e)
 					{
