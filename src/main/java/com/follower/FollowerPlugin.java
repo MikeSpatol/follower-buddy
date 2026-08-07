@@ -290,6 +290,81 @@ public class FollowerPlugin extends Plugin
 
 	/** ::follower watch all - also report graphics played by other players. */
 	private boolean watchOthers;
+
+	/**
+	 * ::follower scan - a tick-by-tick timeline of every animation slot the
+	 * player is using.
+	 *
+	 * <p>{@code watch} only reports the one-shot animation slot, because that is
+	 * what AnimationChanged fires for. A pose - standing, walking, or SITTING -
+	 * lives in a different slot that raises no event at all, so an emote that
+	 * settles into a held position is invisible to it. This samples all of them
+	 * every tick and records what changed, which is the only way to see a
+	 * sequence's transitions in the order they actually happen.
+	 */
+	private int scanTicksLeft;
+	private int scanAnimation = -2;
+	private int scanPose = -2;
+	private int scanIdlePose = -2;
+	private int scanGraphic = -2;
+	private int scanStartTick;
+	private final List<String> scanTimeline = new ArrayList<>();
+
+	private void tickScan()
+	{
+		if (scanTicksLeft <= 0)
+		{
+			return;
+		}
+		Player local = client.getLocalPlayer();
+		if (local == null)
+		{
+			return;
+		}
+
+		int animation = local.getAnimation();
+		int pose = local.getPoseAnimation();
+		int idlePose = local.getIdlePoseAnimation();
+		net.runelite.api.ActorSpotAnim spot = latestSpotAnim(local);
+		int graphic = spot == null ? -1 : spot.getId();
+		int at = client.getTickCount() - scanStartTick;
+
+		if (animation != scanAnimation)
+		{
+			scanAnimation = animation;
+			record(at, "animation", animation);
+		}
+		if (pose != scanPose)
+		{
+			scanPose = pose;
+			record(at, "pose", pose);
+		}
+		if (idlePose != scanIdlePose)
+		{
+			scanIdlePose = idlePose;
+			record(at, "idlePose", idlePose);
+		}
+		if (graphic != scanGraphic)
+		{
+			scanGraphic = graphic;
+			record(at, "graphic", graphic);
+		}
+
+		if (--scanTicksLeft == 0)
+		{
+			log.info("SCAN complete, {} changes:\n  {}",
+				scanTimeline.size(), String.join("\n  ", scanTimeline));
+			sendStatus("Scan finished - " + scanTimeline.size()
+				+ " changes recorded to the log.");
+		}
+	}
+
+	private void record(int tick, String slot, int value)
+	{
+		String line = "t+" + tick + "  " + slot + " = " + value;
+		scanTimeline.add(line);
+		log.info("SCAN {}", line);
+	}
 	private int animTraceRemaining;
 	private final List<Integer> animTrace = new ArrayList<>();
 	private final List<Integer> playerTrace = new ArrayList<>();
@@ -2936,6 +3011,7 @@ public class FollowerPlugin extends Plugin
 		}
 
 		drainSpeechQueue();
+		tickScan();
 		updateRest();
 
 		if (errands != null)
@@ -3470,7 +3546,8 @@ public class FollowerPlugin extends Plugin
 		"pitchsweep", "headsweep", "head", "followtrace",
 		"wraplerp", "wrapauto", "wrapearly", "pose",
 		"animinfo", "animtrace", "errandscan", "cachecheck", "stanceaudit",
-		"watch", "stance", "gfx", "spectate", "shield", "centre", "center", "loot"));
+		"watch", "stance", "gfx", "spectate", "shield", "centre", "center", "loot",
+		"scan"));
 
 	@Subscribe
 	public void onCommandExecuted(CommandExecuted event)
@@ -4031,6 +4108,35 @@ public class FollowerPlugin extends Plugin
 						log.info("MODEL CENTRE pose={} x={} z={}", pose, centre[0], centre[1]);
 					}
 				});
+				break;
+			}
+
+			case "scan":
+			{
+				int seconds = 15;
+				if (args.length > 1)
+				{
+					try
+					{
+						seconds = Integer.parseInt(args[1]);
+					}
+					catch (NumberFormatException e)
+					{
+						sendStatus("Numbers only: ::follower scan [seconds]");
+						break;
+					}
+				}
+				scanTicksLeft = Math.max(1, seconds) * 5 / 3;
+				scanStartTick = client.getTickCount();
+				scanTimeline.clear();
+				// -2 rather than -1: -1 is a real value for "no animation", and
+				// starting there would swallow the first change.
+				scanAnimation = -2;
+				scanPose = -2;
+				scanIdlePose = -2;
+				scanGraphic = -2;
+				sendStatus("Scanning your animation slots for " + seconds
+					+ "s - perform it now.");
 				break;
 			}
 
