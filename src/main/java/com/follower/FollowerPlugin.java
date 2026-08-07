@@ -3332,7 +3332,7 @@ public class FollowerPlugin extends Plugin
 		"pitchsweep", "headsweep", "head", "followtrace",
 		"wraplerp", "wrapauto", "wrapearly", "pose",
 		"animinfo", "animtrace", "errandscan", "cachecheck", "stanceaudit",
-		"watch", "stance", "gfx", "spectate"));
+		"watch", "stance", "gfx", "spectate", "shield"));
 
 	@Subscribe
 	public void onCommandExecuted(CommandExecuted event)
@@ -3813,6 +3813,35 @@ public class FollowerPlugin extends Plugin
 					errands.debugScan();
 					sendStatus("Errand scan logged");
 				}
+				break;
+			}
+
+			case "shield":
+			{
+				// A stored setting always beats a changed default, so a shipped
+				// default that arrives after someone has touched the setting
+				// would never reach them. This clears the six back to what the
+				// plugin ships, and with no argument just reports them.
+				String[] keys = {
+					"spectateShieldAnimation", "spectateShieldGraphic",
+					"spectateShieldChannelAnimation", "spectateShieldChannelGraphic",
+					"spectateShieldEndAnimation", "spectateShieldEndGraphic",
+				};
+				if (args.length > 1 && "defaults".equalsIgnoreCase(args[1]))
+				{
+					for (String key : keys)
+					{
+						configManager.unsetConfiguration(FollowerConfig.GROUP, key);
+					}
+					sendStatus("Shield settings reset to the shipped defaults.");
+				}
+				sendStatus("Shield: summon " + config.spectateShieldAnimation()
+					+ "/" + config.spectateShieldGraphic()
+					+ " | channel " + config.spectateShieldChannelAnimation()
+					+ "/" + config.spectateShieldChannelGraphic()
+					+ " | finish " + config.spectateShieldEndAnimation()
+					+ "/" + config.spectateShieldEndGraphic()
+					+ "  (animation/graphic)");
 				break;
 			}
 

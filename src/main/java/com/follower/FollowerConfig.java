@@ -148,7 +148,10 @@ public interface FollowerConfig extends Config
 	)
 	default int spectateShieldChannelAnimation()
 	{
-		return 0;
+		// AnimationID.SITTING_READY: two frames over about a second, which is
+		// the shape of a sustained seated idle rather than a one-shot. Taken
+		// from RuneLite's own named constants and checked against the cache.
+		return 1144;
 	}
 
 	@ConfigItem(
@@ -174,7 +177,9 @@ public interface FollowerConfig extends Config
 	)
 	default int spectateShieldEndAnimation()
 	{
-		return 0;
+		// The same cast as the summon, for now: the spell is released the way
+		// it was raised.
+		return 1162;
 	}
 
 	@ConfigItem(
