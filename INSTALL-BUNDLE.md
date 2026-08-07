@@ -1,56 +1,149 @@
-# Follower Buddy — try it out
+# Follower Buddy — how to run it
 
-A RuneLite client with the Follower Buddy plugin already in it. Nothing is
-installed, nothing is downloaded, and nothing is changed on your system outside
-your normal RuneLite settings folder.
+This is a copy of RuneLite with the Follower Buddy plugin built into it. Nothing
+gets installed, nothing is changed on your PC, and your normal RuneLite is left
+completely alone. To remove it later, delete the folder.
 
-## Running it
+Total time: about five minutes, most of it waiting for Java to install.
 
-1. Install **Java 17 or newer** if you do not have it — [adoptium.net](https://adoptium.net/),
-   take the LTS build and let the installer finish. This is the only requirement.
-2. Unzip this folder anywhere.
-3. **Windows:** double-click `run.bat`.
-   **macOS / Linux:** `chmod +x run.sh` then `./run.sh`.
+---
 
-RuneLite opens with the plugin loaded. Find **Follower Buddy** in the plugin list
-and switch it on; the **Follower outfit** panel is on the right-hand toolbar.
+## Before you start: two things to know
 
-## Two things to know before you start
+**You need a legacy account** — the kind you log into with a username and
+password. A Jagex account will not work here, and there is no way around it: the
+Jagex Launcher hands the real RuneLite a set of login tokens, and a copy started
+by double-clicking never receives them. If you only have a Jagex account, wait
+for this to reach the RuneLite Plugin Hub and install it the normal way instead.
 
-**Log in with a legacy account** — username and password. A Jagex account will not
-work here. The Jagex Launcher passes the real client a set of login tokens, and a
-client started by double-clicking never receives them. Nothing can be done about
-that from this end; it goes away when the plugin is published to the Plugin Hub and
-you install it the normal way.
+**It shares your RuneLite settings.** Your layout, your other plugins' settings,
+your bank tags — all exactly as you left them, because it reads the same
+`.runelite` folder your usual client does. It adds one folder of its own,
+`.runelite\follower`, and touches nothing else.
 
-**It uses your existing RuneLite settings.** Your layout, your other plugin settings,
-your everything — all as usual, from `~/.runelite`. The follower keeps its own files
-in `~/.runelite/follower` and touches nothing else.
+---
 
-## What it does
+## Step 1 — Install Java
 
-A second character follows you around: dressable in any gear in the game, moving on
-the real follow mechanics, and talking. It reacts to bosses, places, gear you equip,
-your health and prayer, quest NPCs it recognises, and it runs little errands of its
-own. It can also stand in for your Arceuus thralls, and it steps out of the way and
-watches when you fight.
+Skip this if you already have Java 17 or newer. To check, see step 2 first.
 
-Everything it says is editable — the buttons in its panel open the phrase tables.
+1. Go to **https://adoptium.net/**
+2. The big download button should already say **Temurin 21 (LTS)** and detect
+   Windows. Click it. You want the **.msi** installer.
+3. Run the downloaded file and click through it. **Leave the default options
+   alone** — the defaults add Java to your PATH, which is what makes the rest of
+   this work.
+4. Let it finish.
 
-## If it does not start
+---
 
-- **A window flashes and disappears** — run it from a terminal instead so the error
-  stays on screen. On Windows: open the folder, type `cmd` in the address bar, press
-  enter, then type `run.bat`.
-- **"Java was not found"** — Java is not installed, or not on the PATH. Installing
-  from the link above normally sorts both.
-- **"Unsupported class file major version"** — the Java you have is too old.
-  `java -version` should say 17 or higher.
-- **Anything else** — the log at `~/.runelite/logs/client.log` usually names the
-  problem in its last few lines.
+## Step 2 — Check Java is working
 
-## A note on what is in here
+1. Press **Windows key + R**, type `cmd`, press Enter. A black window opens.
+2. Type this and press Enter:
 
-`lib/` holds RuneLite and the libraries it needs, copied as they are published. It is
-a development build of the client, so Dev Tools appear in the sidebar and the console
-says more than usual. Both are normal.
+   ```
+   java -version
+   ```
+
+3. You should see something like `openjdk version "21.0.5"`. **Any number 17 or
+   higher is fine.**
+
+If it says *'java' is not recognized*, Java either did not install or was not
+added to your PATH. Reinstall from step 1 and leave the options at their
+defaults. A restart of the PC sometimes helps here.
+
+You can close the black window.
+
+---
+
+## Step 3 — Unzip the folder
+
+1. Right-click `follower-buddy-runnable.zip` → **Extract All...**
+2. Pick somewhere easy, like your Desktop, and click **Extract**.
+
+**This step matters.** Windows lets you open a zip and look inside without
+actually extracting it. If you double-click the launcher from that preview
+window, it will not work — nothing else it needs is really there. Make sure you
+have a normal folder you can open, containing `run.bat`, `run.sh`,
+`INSTALL-BUNDLE.md` and a `lib` folder.
+
+---
+
+## Step 4 — Start it
+
+Double-click **`run.bat`**.
+
+**If Windows shows a blue "Windows protected your PC" box**, that is SmartScreen
+being cautious about a script it has not seen before, which is expected. Click
+**More info**, then **Run anyway**.
+
+A black console window opens and stays open — that is normal, it is the client's
+log. After ten to thirty seconds the RuneLite window appears.
+
+Leave the black window alone while you play. Closing it closes the game.
+
+---
+
+## Step 5 — Turn the plugin on
+
+1. In RuneLite, click the **wrench icon** in the top-right sidebar.
+2. Type `follower` in the search box.
+3. Tick **Follower Buddy**.
+
+A new icon appears in the right-hand sidebar — that is the **Follower outfit**
+panel, where you dress it and edit everything it says.
+
+Log in with your legacy account and a second character will appear behind you.
+
+---
+
+## Playing with it
+
+**Dress it** in the Follower outfit panel: pick a body, then click any equipment
+slot to search all 6,000-odd wearable items by name.
+
+**Talk to it** — right-click the follower for options, and shift-right-click the
+ground to send it somewhere.
+
+**It reacts on its own** to bosses appearing, places you visit, gear you equip,
+your health and prayer running low, and quest characters it recognises. It runs
+small errands by itself, stands in for your Arceuus thralls, and steps out of
+the way to watch when you fight.
+
+**Everything it says is editable.** The buttons in its panel open tables of every
+line, grouped by what triggers them — change them, delete them, add your own.
+
+---
+
+## If something goes wrong
+
+**The window flashes and disappears.**
+Run it from a terminal so the error stays put: open the folder, click in the
+address bar at the top, type `cmd`, press Enter, then type `run.bat` and press
+Enter. Whatever it prints is the answer.
+
+**"Java was not found."**
+Java is not installed or not on your PATH. Go back to steps 1 and 2.
+
+**"Unsupported class file major version"**
+Your Java is too old. `java -version` must say 17 or higher.
+
+**Antivirus blocks it.**
+Some antivirus software dislikes unsigned `.bat` files on principle. Allowing
+the folder is safe — you can read `run.bat` in Notepad, it is nine lines and all
+it does is start Java.
+
+**It starts but something is wrong in game.**
+There is a log at `C:\Users\<you>\.runelite\logs\client.log`. The last hundred
+lines almost always name the problem — send those over.
+
+---
+
+## Removing it
+
+Delete the folder. That is all — nothing was installed.
+
+If you also want the follower's own settings gone, delete
+`C:\Users\<you>\.runelite\follower`. Leave the rest of `.runelite` alone or you
+will lose your normal RuneLite setup.
