@@ -2237,25 +2237,33 @@ public class FollowerEntity
 
 		if (RECENTRED_POSES.contains(shownAnimation))
 		{
-			int[] centre = modelCentre();
+			int[] centre = recentreFrozen ? null : modelCentre();
 			if (centre != null)
 			{
-				// Followed continuously rather than sampled once. The descent
-				// is inside the loop - HUMAN_PRAY_LOOP is upright at frame 0
-				// and only kneels by frame 5 - so a single reading taken when
-				// the pose starts measures a standing follower and corrects by
-				// nothing at all.
+				// A running mean, then frozen. The two obvious approaches both
+				// fail: a single reading when the pose begins measures a
+				// follower still standing, because HUMAN_PRAY_LOOP is upright
+				// at frame 0 and only kneels by frame 5; and following the
+				// centroid live slides the model around all through the loop,
+				// because the body genuinely shifts as it breathes.
 				//
-				// Eased toward the target instead of snapped to it: a centroid
-				// wobbles a little from frame to frame, and following that
-				// exactly is what had the follower creeping about.
-				int target = centre[1] - STANDING_CENTRE_Z;
-				recentreForward += (int) Math.round((target - recentreForward) / 4.0);
+				// The mean settles within a second and each further sample
+				// moves it less, so the model eases into place and then stops.
+				// Freezing outright after that makes it exactly still, which is
+				// the point - the model is meant to sit on its tile, not hunt
+				// for it.
+				recentreSum += centre[1] - STANDING_CENTRE_Z;
+				recentreSamples++;
+				recentreForward = (int) (recentreSum / recentreSamples);
+				recentreFrozen = recentreSamples >= RECENTRE_FREEZE_SAMPLES;
 			}
 		}
 		else
 		{
 			recentreForward = 0;
+			recentreSum = 0;
+			recentreSamples = 0;
+			recentreFrozen = false;
 		}
 
 		// The logical position stays the tile: facing, distance and the
@@ -2714,8 +2722,20 @@ public class FollowerEntity
 
 	private static final int STANDING_CENTRE_Z = -11;
 
+	/**
+	 * Frames averaged before the correction is fixed for good. About two
+	 * seconds at a normal frame rate, comfortably more than one cycle of the
+	 * prayer loop, so the mean covers the whole range of the pose rather than
+	 * whichever part of it happened to be showing.
+	 */
+	private static final int RECENTRE_FREEZE_SAMPLES = 100;
+
 	/** The correction currently applied, in model units along the facing. */
 	private int recentreForward;
+
+	private long recentreSum;
+	private int recentreSamples;
+	private boolean recentreFrozen;
 
 	/** The clip an emote is showing right now, since activePose is not it. */
 	private int emoteAnimation = -1;
