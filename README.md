@@ -370,6 +370,12 @@ the problem is reported in the chatbox and the log.
 
 ## Chat commands
 
+The everyday commands below are always available. The diagnostic ones — the
+instruments used to build the plugin rather than to use it — are gated behind
+**Developer commands** in the plugin settings (Developer section, off by
+default), and are marked **[dev]**. Typing a gated one while it is off says so
+rather than failing silently.
+
 | Command | Effect |
 |---|---|
 | `::follower reload` | Re-read `phrases.json` now |
@@ -384,24 +390,34 @@ the problem is reported in the chatbox and the log.
 
 | Command | Effect |
 |---|---|
-| `::follower hidden` | Print which slots each equipped item covers, from its `wearPos` data |
-| `::follower palette` | Copy your exact body colours onto the follower, extracted from the client's own tables |
-| `::follower palette clear` | Drop the exact colours, hand control back to the pickers |
-| `::follower harvest` | Auto-extract the client's complete colour tables (character flickers a few seconds); `stop` aborts |
-| `::follower followtrace` | Live follow-state overlay plus FTRACE log rows; `off` to stop |
-| `::follower height <n>` | Ground clearance, if the feet clip into terrain |
+| `::follower hidden` **[dev]** | Print which slots each equipped item covers, from its `wearPos` data |
+| `::follower palette` **[dev]** | Copy your exact body colours onto the follower, extracted from the client's own tables |
+| `::follower palette clear` **[dev]** | Drop the exact colours, hand control back to the pickers |
+| `::follower harvest` **[dev]** | Auto-extract the client's complete colour tables (character flickers a few seconds); `stop` aborts |
+| `::follower followtrace` **[dev]** | Live follow-state overlay plus FTRACE log rows; `off` to stop |
+| `::follower height <n>` **[dev]** | Ground clearance, if the feet clip into terrain |
 
-**Diagnostics**
+**Outfits and animation**
 
 | Command | Effect |
 |---|---|
 | `::follower anim <id...>` | Play an animation, or a chain of them, on the follower |
 | `::follower watch` | Print the id of every animation your character plays |
-| `::follower animinfo` | Frame count, duration, frameStep, restartMode, frame lengths, interpolation state |
-| `::follower animtrace` | Trace the follower's and your character's pose frames side by side for ~8s |
-| `::follower wrapearly <n>` | Override the loop trim for the animation currently playing |
-| `::follower wrapauto` | Drop manual trims and let measurement decide |
-| `::follower pose <id>` | Force a looping pose (0 to release) |
+| `::follower outfit <name>` | Wear a saved outfit profile |
+| `::follower stance <weaponId> [idle walk run attack]` | Show or hand-set a weapon's animations |
+| `::follower errand` | Send the follower on an errand now |
+
+**Diagnostics** — all developer-gated
+
+| Command | Effect |
+|---|---|
+| `::follower animinfo` **[dev]** | Frame count, duration, frameStep, restartMode, frame lengths, interpolation state |
+| `::follower animtrace` **[dev]** | Trace the follower's and your character's pose frames side by side for ~8s |
+| `::follower wrapearly <n>` **[dev]** | Override the loop trim for the animation currently playing |
+| `::follower wrapauto` **[dev]** | Drop manual trims and let measurement decide |
+| `::follower pose <id>` **[dev]** | Force a looping pose (0 to release) |
+| `::follower cachecheck` **[dev]** | Diff the live cache parse against the offline dump, field by field |
+| `::follower stanceaudit` **[dev]** | Validate every animation id the stance library names, and report weapon coverage |
 
 `animtrace` is the useful one for animation problems: it prints both models' frame
 sequences collapsed into `frame xHeld` runs, so a stall shows as an oversized hold, a

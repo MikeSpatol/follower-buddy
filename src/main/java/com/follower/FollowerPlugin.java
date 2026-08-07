@@ -3209,6 +3209,27 @@ public class FollowerPlugin extends Plugin
 
 	// --------------------------------------------------------------- commands
 
+	/**
+	 * The instruments used to BUILD the plugin, hidden behind the Developer
+	 * commands setting.
+	 *
+	 * <p>Everything here answers a question about the plugin's internals -
+	 * which face priority a model part landed in, what the wrap point of an
+	 * animation measured at, whether the live cache parse still matches the
+	 * offline dump. Left ungated they were a wall of chat text a step away from
+	 * anyone who typed the wrong word.
+	 *
+	 * <p>Commands a player has a reason to run are deliberately NOT here: say,
+	 * here, anim, watch, errand, outfit, stance, reload, copy, fix, rebuild,
+	 * status and where all stay available. {@code watch} in particular is how
+	 * the phrase docs tell people to find an animation id.
+	 */
+	private static final Set<String> DEVELOPER_COMMANDS = new HashSet<>(java.util.Arrays.asList(
+		"priorities", "palette", "harvest", "hidden", "height",
+		"pitchsweep", "headsweep", "head", "followtrace",
+		"wraplerp", "wrapauto", "wrapearly", "pose",
+		"animinfo", "animtrace", "errandscan", "cachecheck", "stanceaudit"));
+
 	@Subscribe
 	public void onCommandExecuted(CommandExecuted event)
 	{
@@ -3219,6 +3240,13 @@ public class FollowerPlugin extends Plugin
 
 		String[] args = event.getArguments();
 		String sub = args.length > 0 ? args[0].toLowerCase(Locale.ROOT) : "help";
+
+		if (DEVELOPER_COMMANDS.contains(sub) && !config.developerMode())
+		{
+			sendStatus("'" + sub + "' is a developer command - turn on Developer commands"
+				+ " in the plugin settings to use it.");
+			return;
+		}
 
 		switch (sub)
 		{
@@ -3768,11 +3796,16 @@ public class FollowerPlugin extends Plugin
 				break;
 
 			default:
-				sendStatus("::follower reload | copy | say <text> | here | rebuild | fix | "
-					+ "anim <id...> | watch | colours <part> | grabhair | keephair | "
-					+ "clearhair | hairbright <n> | highlight <n> | light <a> <c> | "
-					+ "height <n> | animinfo | animtrace | status | where | outfit <name> | "
-					+ "stance <weaponId> [idle walk run attack]");
+				sendStatus("::follower say <text> | here | anim <id...> | watch | "
+					+ "errand | outfit <name> | stance <weaponId> [idle walk run attack] | "
+					+ "copy | reload | rebuild | fix | status | where");
+				if (config.developerMode())
+				{
+					sendStatus("Developer: priorities | palette | harvest | hidden | "
+						+ "height <n> | pitchsweep | headsweep | head <...> | followtrace | "
+						+ "wraplerp | wrapauto | wrapearly | pose <id> | animinfo | "
+						+ "animtrace | errandscan | cachecheck | stanceaudit");
+				}
 			// ::follower interp was removed: the interpolation filter is keyed on
 			// animation id, so it could not be changed for the follower without
 			// changing it for the player too.

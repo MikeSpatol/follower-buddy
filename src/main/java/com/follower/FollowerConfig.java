@@ -56,6 +56,39 @@ public interface FollowerConfig extends Config
 	)
 	String errandSection = "errands";
 
+	@ConfigSection(
+		name = "Developer",
+		description = "Diagnostic chat commands used to build the plugin",
+		position = 6,
+		closedByDefault = true
+	)
+	String developerSection = "developer";
+
+	/**
+	 * Gates the diagnostic half of the chat commands.
+	 *
+	 * <p>The plugin grew a workshop of instruments - model priority dumps,
+	 * colour sweeps, animation traces, wrap tuning, the cache and stance audits
+	 * - and they were all reachable by anyone who typed them. They are for
+	 * building the plugin, not for using it, and a stray one mostly produces a
+	 * wall of chat text. The commands people actually have a reason to run
+	 * (say, here, anim, outfit, stance, reload, copy, fix, rebuild, watch,
+	 * errand, status) are never gated.
+	 */
+	@ConfigItem(
+		keyName = "developerMode",
+		name = "Developer commands",
+		description = "Enable the diagnostic ::follower commands (animation traces,"
+			+ " colour sweeps, cachecheck, stanceaudit). Off unless you're working"
+			+ " on the plugin itself.",
+		section = developerSection,
+		position = 0
+	)
+	default boolean developerMode()
+	{
+		return false;
+	}
+
 	enum ErrandFrequency
 	{
 		RARE,
