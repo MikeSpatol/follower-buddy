@@ -147,8 +147,12 @@ public interface FollowerConfig extends Config
 	)
 	default int spectateShieldChannelStart()
 	{
-		// AnimationID.HUMAN_SITTING_CHAIR, 1.68s - the act of sitting down.
-		return 1137;
+		// AnimationID.HUMAN_PRAY, 2.34s: kneeling down. Chosen because this
+		// plugin already plays it successfully - it is the errand kneel at an
+		// altar - so it is known to render on the follower's model. The sitting
+		// animations that read well by name did not: 1137 merely turned the
+		// follower around when tried in game.
+		return 645;
 	}
 
 	@ConfigItem(
@@ -175,10 +179,12 @@ public interface FollowerConfig extends Config
 	)
 	default int spectateShieldChannelAnimation()
 	{
-		// AnimationID.SITTING_READY: two frames over about a second, which is
-		// the shape of a sustained seated idle rather than a one-shot. Taken
-		// from RuneLite's own named constants and checked against the cache.
-		return 1144;
+		// AnimationID.HUMAN_PRAY_LOOP, and it genuinely loops: frameStep 5,
+		// meaning the cache says it wraps back to frame 5 rather than ending.
+		// That is the distinction worth having for a channel - the previous
+		// choice, SITTING_READY, carried frameStep -1 and was never authored to
+		// repeat at all.
+		return 179;
 	}
 
 	@ConfigItem(
