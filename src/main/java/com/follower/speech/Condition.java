@@ -30,6 +30,7 @@ import net.runelite.api.NPC;
  *   <tr><td>poisoned / venomed / skulled</td><td>no fields</td></tr>
  *   <tr><td>thrallStart / thrallSwitch / thrallEnd</td><td>no fields; {@code {style}} and, for a switch, {@code {from}}</td></tr>
  *   <tr><td>errandStart / errandEnd</td><td>optional {@code names} (errand names); {@code {errand}} placeholder</td></tr>
+ *   <tr><td>petNearby</td><td>{@code within} — any NPC the game flags as a follower, i.e. any pet</td></tr>
  *   <tr><td>idleBelow</td><td>{@code ticks} — the other bound, for fidgets that should stop once resting</td></tr>
  *   <tr><td>playerDeath</td><td>no fields — the moment of death</td></tr>
  *   <tr><td>nearDeathSpot</td><td>{@code within} — standing near the session's last death, 2+ min after it</td></tr>
@@ -129,6 +130,22 @@ public class Condition
 				{
 					nearbyGeneration = generation;
 					nearbyCached = ctx.isNpcNearby(this::matchesNpcObject, orDefault(within, 15));
+				}
+				return nearbyCached;
+			}
+
+			// Any NPC the game itself flags as a follower - every pet in the
+			// game, and every one added later, without naming any of them.
+			// Cached per tick like npcNearby, and for the same reason.
+			case "petnearby":
+			{
+				int generation = ctx.getRefreshGeneration();
+				if (nearbyGeneration != generation)
+				{
+					nearbyGeneration = generation;
+					nearbyCached = ctx.isNpcNearby(
+						npc -> npc.getComposition() != null && npc.getComposition().isFollower(),
+						orDefault(within, 5));
 				}
 				return nearbyCached;
 			}

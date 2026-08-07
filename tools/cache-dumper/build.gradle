@@ -61,6 +61,13 @@ tasks.register('runEnumProbe', JavaExec) {
     mainClass = 'com.follower.tools.StanceEnumProbe'
 }
 
+tasks.register('runPetProbe', JavaExec) {
+    group = 'verification'
+    description = 'Lists NPCs the game treats as pets, for the greeting rule'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.follower.tools.PetProbe'
+}
+
 tasks.register('runSeqInfo', JavaExec) {
     group = 'verification'
     description = 'Prints what an animation id is, to check ids from outside the game'

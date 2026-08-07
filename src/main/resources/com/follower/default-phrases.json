@@ -5660,26 +5660,41 @@
         "A tidy little drop, that."
       ]
     },
-    {
+{
       "id": "cats-and-pets",
-      "note": "Waves at cats and boss pets that wander close. The long cooldown keeps a bank full of pets from turning it into a greeter.",
+      "note": "Greets a pet or cat standing nearby. petNearby matches the game's own isFollower flag, which covers all 228 pets in the cache and any added later without naming one of them. The name list is only for cats that are NOT followers - ordinary scenery NPCs like Trotters, which no pet list would ever catch. Proximity, not npcSpawn: a spawn fires once when the NPC enters the scene, so walking up to one already standing there triggered nothing.",
       "group": "reactions",
       "priority": 20,
       "cooldownMs": 900000,
       "delayTicks": 2,
       "when": {
-        "type": "npcSpawn",
-        "names": [
-          "Kitten",
-          "Cat",
-          "Hellcat",
-          "Hell-kitten",
-          "Wily cat",
-          "Lazy cat",
-          "Overgrown cat",
-          "Pet *"
-        ],
-        "within": 4
+        "type": "any",
+        "conditions": [
+          {
+            "type": "petNearby",
+            "within": 4
+          },
+          {
+            "type": "npcNearby",
+            "within": 4,
+            "names": [
+              "Cat",
+              "Kitten",
+              "Hellcat",
+              "Hell-kitten",
+              "Wily cat",
+              "Lazy cat",
+              "Overgrown cat",
+              "Wily hellcat",
+              "Lazy hellcat",
+              "Overgrown hellcat",
+              "Trotters",
+              "Bob",
+              "Neite",
+              "Sphinx"
+            ]
+          }
+        ]
       },
       "animation": 863,
       "say": [
@@ -5687,7 +5702,9 @@
         "Oh, who is this then?",
         "Hello there, little one.",
         "I like this one. Can we keep it?",
-        "We should get one of those."
+        "We should get one of those.",
+        "Look at it. Just look at it.",
+        "Someone is very well looked after."
       ]
     },
     {
