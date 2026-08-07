@@ -380,6 +380,8 @@ public class FollowerPlugin extends Plugin
 		mouseManager.unregisterMouseListener(shiftClickAdapter);
 		dialog.close();
 		overlay.clear();
+		speechQueue.clear();
+		speakingUntilMs = 0;
 
 		if (navButton != null)
 		{
@@ -1295,6 +1297,10 @@ public class FollowerPlugin extends Plugin
 				appearanceService.invalidate();
 				speechEngine.reset();
 				overlay.clear();
+				// Anything still waiting its turn belongs to the session that
+				// just ended; it must not surface on the next login.
+				speechQueue.clear();
+				speakingUntilMs = 0;
 				knownLevels.clear();
 				lastPlayerTile = null;
 				lastRegionId = -1;
@@ -2841,6 +2847,8 @@ public class FollowerPlugin extends Plugin
 			performThrallExit(thrallExitStyle);
 		}
 
+		drainSpeechQueue();
+
 		if (errands != null)
 		{
 			errands.tick();
@@ -3787,6 +3795,7 @@ public class FollowerPlugin extends Plugin
 				if (args.length < 2)
 				{
 					sendStatus("::follower gfx <graphicId> - play a spotanim on the follower");
+					sendStatus("::follower gfx <graphicId> set - and keep it as the shield");
 					break;
 				}
 				try
@@ -3799,11 +3808,24 @@ public class FollowerPlugin extends Plugin
 						break;
 					}
 					clientThread.invoke(() -> follower.playSpotAnim(fx));
-					sendStatus("Playing graphic " + id + " on the follower.");
+
+					// Auditioning is only useful if the winner can be kept
+					// without going hunting through the settings.
+					if (args.length > 2 && "set".equalsIgnoreCase(args[2]))
+					{
+						configManager.setConfiguration(FollowerConfig.GROUP,
+							"spectateShieldGraphic", id);
+						sendStatus("Graphic " + id + " is now the shield effect.");
+					}
+					else
+					{
+						sendStatus("Playing graphic " + id + " on the follower."
+							+ " Add 'set' to keep it as the shield.");
+					}
 				}
 				catch (NumberFormatException e)
 				{
-					sendStatus("Numbers only: ::follower gfx <graphicId>");
+					sendStatus("Numbers only: ::follower gfx <graphicId> [set]");
 				}
 				break;
 			}
@@ -3917,11 +3939,101 @@ public class FollowerPlugin extends Plugin
 
 	// ----------------------------------------------------------------- output
 
+	/**
+	 * One line waiting its turn, kept whole so the overhead text, the chatbox
+	 * mirror and any animation stay together.
+	 */
+	private static final class Utterance
+	{
+		private final String text;
+		private final SpeechOutput output;
+		private final SpeechRule rule;
+		private final int animationId;
+		private final long queuedAtMs;
+
+		Utterance(String text, SpeechOutput output, SpeechRule rule, int animationId)
+		{
+			this.text = text;
+			this.output = output;
+			this.rule = rule;
+			this.animationId = animationId;
+			this.queuedAtMs = System.currentTimeMillis();
+		}
+	}
+
+	private final java.util.ArrayDeque<Utterance> speechQueue = new java.util.ArrayDeque<>();
+
+	/** When the line currently being spoken stops occupying the overhead box. */
+	private long speakingUntilMs;
+
+	/**
+	 * How many lines may wait. Two rules firing together is the case worth
+	 * handling - walking into a boss both spots it and starts a fight - while a
+	 * deep backlog would have the follower narrating minutes late.
+	 */
+	private static final int SPEECH_QUEUE_LIMIT = 3;
+
+	/** A queued line older than this is dropped rather than said out of its moment. */
+	private static final long SPEECH_STALE_MS = 12000;
+
+	/** A breath between lines, so two in a row do not read as one. */
+	private static final long SPEECH_GAP_MS = 400;
+
+	/**
+	 * Queues a line rather than letting it stamp over whatever is being said.
+	 *
+	 * <p>Rules fire independently, so arriving at a boss can trigger the sighting
+	 * and the start of the fight within a tick of each other. The overhead box
+	 * holds one message, so the second used to replace the first mid-word and
+	 * both were lost.
+	 */
 	private void speak(String text, SpeechOutput output, SpeechRule rule, int animationId)
 	{
+		long now = System.currentTimeMillis();
+		if (now < speakingUntilMs)
+		{
+			if (speechQueue.size() < SPEECH_QUEUE_LIMIT)
+			{
+				speechQueue.addLast(new Utterance(text, output, rule, animationId));
+			}
+			return;
+		}
+		speakNow(new Utterance(text, output, rule, animationId));
+	}
+
+	/**
+	 * Starts the next queued line once the current one has had its time.
+	 * Called every game tick.
+	 */
+	private void drainSpeechQueue()
+	{
+		long now = System.currentTimeMillis();
+		while (!speechQueue.isEmpty()
+			&& now - speechQueue.peekFirst().queuedAtMs > SPEECH_STALE_MS)
+		{
+			// Said too late is worse than not said: a boss sighting a dozen
+			// seconds after the fact is just noise.
+			speechQueue.removeFirst();
+		}
+		if (speechQueue.isEmpty() || now < speakingUntilMs)
+		{
+			return;
+		}
+		speakNow(speechQueue.removeFirst());
+	}
+
+	private void speakNow(Utterance utterance)
+	{
+		String text = utterance.text;
+		SpeechOutput output = utterance.output;
+		SpeechRule rule = utterance.rule;
+		int animationId = utterance.animationId;
+
 		if (!text.isEmpty() && output.showsOverhead())
 		{
 			overlay.show(text, config.speechDurationMs());
+			speakingUntilMs = System.currentTimeMillis()
+				+ config.speechDurationMs() + SPEECH_GAP_MS;
 		}
 
 		if (!text.isEmpty() && config.mirrorToChat())
