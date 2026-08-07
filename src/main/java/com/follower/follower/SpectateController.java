@@ -214,7 +214,7 @@ public class SpectateController
 			// follower simply carries on following.
 			log.debug("Nowhere to stand clear of the fight; staying put");
 		}
-		log.info("Spectating '{}' level {} boss={} shieldEnabled={}",
+		log.debug("Spectating '{}' level {} boss={} shieldEnabled={}",
 			context.getCombatTarget(), context.getCombatTargetLevel(),
 			context.isBossFight(), config.spectateShield());
 		speech.accept(TriggerEvent.combat(TriggerEvent.Type.COMBAT_START,
@@ -466,7 +466,7 @@ public class SpectateController
 		// Renew on the very next tick rather than after a full interval, so the
 		// ward does not go dark between the summon and the first top-up.
 		ticksSinceShield = SHIELD_MAINTAIN_TICKS;
-		log.info("Shield: channelling, pose {}", channel);
+		log.debug("Shield: channelling, pose {}", channel);
 	}
 
 	/** Ends the channel and hands the follower's pose back to normal. */
@@ -474,7 +474,7 @@ public class SpectateController
 	{
 		if (shield != Shield.NONE)
 		{
-			log.info("Shield: dropping from {} ({})", shield, reason);
+			log.debug("Shield: dropping from {} ({})", shield, reason);
 		}
 		if (shield == Shield.CHANNELLING)
 		{
@@ -525,9 +525,10 @@ public class SpectateController
 			{
 				chain[i] = ids.get(i);
 			}
-			// INFO while the sequence is being tuned in game: a handful of lines
-			// per fight, and the only way to see which stage actually ran.
-			log.info("Shield chain: animations {} settled={} emote={}",
+			// Kept, at debug: this is what showed the sit and stand were
+			// running all along and the ids were the problem. ::follower
+			// spectate reports the same state on demand without it.
+			log.debug("Shield chain: animations {} settled={} emote={}",
 				ids, follower.isSettled(), follower.isEmotePlaying());
 			follower.playAnimations(chain,
 				graphics.toArray(new SpotAnimRepository.Entry[0]));
