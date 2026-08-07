@@ -46,8 +46,14 @@ public class SpectateController
 	 */
 	private static final int RESEAT_DISTANCE = 7;
 
-	/** How often the shield is topped up while it is being held, in game ticks. */
-	private static final int SHIELD_MAINTAIN_TICKS = 50;
+	/**
+	 * How often the channelled graphic is renewed, in game ticks.
+	 *
+	 * <p>Two ticks is 1.2 seconds against a 1.34-second effect, so each renewal
+	 * starts just before the last has faded and the ward looks continuous
+	 * rather than blinking once in a while.
+	 */
+	private static final int SHIELD_MAINTAIN_TICKS = 2;
 
 	/**
 	 * How long the follower stays put after dispelling, so the closing
@@ -187,8 +193,11 @@ public class SpectateController
 		// had time to play - movement would cut it off otherwise.
 		boolean wasCasting = shield != Shield.NONE;
 		dropChannel();
-		if (wasCasting && cast(config.spectateShieldEndAnimation(),
-			config.spectateShieldEndGraphic()))
+		// Stand, then cast: it gets to its feet before releasing the spell, so
+		// the sequence closes the way it opened.
+		if (wasCasting && castChain(
+			new int[]{config.spectateShieldChannelEnd(), config.spectateShieldEndAnimation()},
+			new int[]{0, config.spectateShieldEndGraphic()}))
 		{
 			releaseTicks = DISPEL_HOLD_TICKS;
 		}
@@ -324,8 +333,12 @@ public class SpectateController
 		switch (shield)
 		{
 			case NONE:
-				// Nothing to summon is not a reason to skip the channel.
-				if (cast(config.spectateShieldAnimation(), config.spectateShieldGraphic()))
+				// Cast, then sit, as one chain: the follower raises the ward
+				// and settles into holding it without a gap between the two.
+				// Nothing to play is not a reason to skip the channel.
+				if (castChain(
+					new int[]{config.spectateShieldAnimation(), config.spectateShieldChannelStart()},
+					new int[]{config.spectateShieldGraphic(), 0}))
 				{
 					shield = Shield.SUMMONING;
 				}
@@ -395,24 +408,48 @@ public class SpectateController
 	 * @return false when the stage has nothing configured, so a caller can tell
 	 * a skipped stage from a played one
 	 */
-	private boolean cast(int animation, int graphicId)
+	/**
+	 * Plays several stages back to back, each with its own optional graphic.
+	 *
+	 * <p>A zero animation is dropped from the chain rather than played, but its
+	 * graphic is not: a stage may legitimately be particles alone.
+	 *
+	 * @return false only when the whole chain had nothing to show
+	 */
+	private boolean castChain(int[] animations, int[] graphicIds)
 	{
-		SpotAnimRepository.Entry graphic = spotAnims.get(graphicId);
-		if (animation <= 0 && graphic == null)
-		{
-			return false;
-		}
-		log.debug("Shield stage: animation {} graphic {}", animation, graphicId);
+		java.util.List<Integer> ids = new java.util.ArrayList<>();
+		java.util.List<SpotAnimRepository.Entry> graphics = new java.util.ArrayList<>();
+		boolean played = false;
 
-		// playAnimations refuses an empty animation list, so a graphic on its
-		// own goes straight to the spotanim path rather than being dropped.
-		if (animation <= 0)
+		for (int i = 0; i < animations.length; i++)
 		{
-			follower.playSpotAnim(graphic);
-			return true;
+			SpotAnimRepository.Entry fx = spotAnims.get(graphicIds[i]);
+			if (animations[i] > 0)
+			{
+				ids.add(animations[i]);
+				graphics.add(fx);
+			}
+			else if (fx != null)
+			{
+				follower.playSpotAnim(fx);
+				played = true;
+			}
 		}
-		follower.playAnimations(new int[]{animation},
-			graphic == null ? null : new SpotAnimRepository.Entry[]{graphic});
-		return true;
+
+		if (!ids.isEmpty())
+		{
+			int[] chain = new int[ids.size()];
+			for (int i = 0; i < chain.length; i++)
+			{
+				chain[i] = ids.get(i);
+			}
+			log.debug("Shield chain: {}", ids);
+			follower.playAnimations(chain,
+				graphics.toArray(new SpotAnimRepository.Entry[0]));
+			played = true;
+		}
+		return played;
 	}
+
 }

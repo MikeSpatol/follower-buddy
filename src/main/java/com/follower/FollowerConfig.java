@@ -138,6 +138,33 @@ public interface FollowerConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "spectateShieldChannelStart",
+		name = "Sit down animation",
+		description = "Played once as the follower settles into the channel, before the"
+			+ " looping pose takes over. 0 for none.",
+		section = combatSection,
+		position = 4
+	)
+	default int spectateShieldChannelStart()
+	{
+		// AnimationID.HUMAN_SITTING_CHAIR, 1.68s - the act of sitting down.
+		return 1137;
+	}
+
+	@ConfigItem(
+		keyName = "spectateShieldChannelEnd",
+		name = "Stand up animation",
+		description = "Played as the channel ends, before the finishing cast. 0 for none.",
+		section = combatSection,
+		position = 7
+	)
+	default int spectateShieldChannelEnd()
+	{
+		// AnimationID.HUMAN_GETUP, 0.40s - back on its feet.
+		return 534;
+	}
+
+	@ConfigItem(
 		keyName = "spectateShieldChannelAnimation",
 		name = "Channel animation",
 		description = "Looping pose held after the summon, for as long as the follower stands"

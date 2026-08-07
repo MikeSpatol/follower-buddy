@@ -3824,7 +3824,8 @@ public class FollowerPlugin extends Plugin
 				// plugin ships, and with no argument just reports them.
 				String[] keys = {
 					"spectateShieldAnimation", "spectateShieldGraphic",
-					"spectateShieldChannelAnimation", "spectateShieldChannelGraphic",
+					"spectateShieldChannelStart", "spectateShieldChannelAnimation",
+					"spectateShieldChannelGraphic", "spectateShieldChannelEnd",
 					"spectateShieldEndAnimation", "spectateShieldEndGraphic",
 				};
 				if (args.length > 1 && "defaults".equalsIgnoreCase(args[1]))
@@ -3837,8 +3838,10 @@ public class FollowerPlugin extends Plugin
 				}
 				sendStatus("Shield: summon " + config.spectateShieldAnimation()
 					+ "/" + config.spectateShieldGraphic()
+					+ " | sit " + config.spectateShieldChannelStart()
 					+ " | channel " + config.spectateShieldChannelAnimation()
 					+ "/" + config.spectateShieldChannelGraphic()
+					+ " | stand " + config.spectateShieldChannelEnd()
 					+ " | finish " + config.spectateShieldEndAnimation()
 					+ "/" + config.spectateShieldEndGraphic()
 					+ "  (animation/graphic)");
