@@ -343,11 +343,16 @@ public class StanceLibrary
 	/**
 	 * How a weapon is USED, which the pose set does not say.
 	 *
-	 * <p>Supplied by the plugin from the item's own attack bonuses, because the
-	 * pose triple describes how a weapon is CARRIED and nothing more. The
+	 * <p>Supplied by the plugin from the item's own equipment stats, because
+	 * the pose triple describes how a weapon is CARRIED and nothing more. The
 	 * 79-weapon class that walks like an unarmed player holds the Dragon
 	 * harpoon and the Bow of faerdhinen side by side: identical carry, utterly
 	 * different swing. Borrowing across that would put a chop on a bow.
+	 *
+	 * <p>Combat style alone turned out to be too coarse. That same class went
+	 * on to collect a bow, a dart and a knife - all ranged, none animating
+	 * remotely alike - and the follower would have shot a bow like a thrown
+	 * dart. Handedness splits them cleanly, so the key carries both.
 	 */
 	public interface StyleSource
 	{
@@ -356,7 +361,14 @@ public class StanceLibrary
 		int MAGIC = 2;
 		int UNKNOWN = -1;
 
-		int styleOf(int itemId);
+		/** A style and handedness folded into one comparable key. */
+		static int packed(int style, boolean twoHanded)
+		{
+			return style < 0 ? UNKNOWN : style * 2 + (twoHanded ? 1 : 0);
+		}
+
+		/** {@link #packed} for this item, or {@link #UNKNOWN}. */
+		int usageOf(int itemId);
 	}
 
 	private StyleSource styleSource;
@@ -397,9 +409,9 @@ public class StanceLibrary
 			return stance.attack;
 		}
 
-		int style = styleSource == null
-			? StyleSource.UNKNOWN : styleSource.styleOf(weaponItemId);
-		if (style == StyleSource.UNKNOWN)
+		int usage = styleSource == null
+			? StyleSource.UNKNOWN : styleSource.usageOf(weaponItemId);
+		if (usage == StyleSource.UNKNOWN)
 		{
 			return 0;
 		}
@@ -422,7 +434,7 @@ public class StanceLibrary
 		{
 			Stance other = entry.getValue();
 			if (other.attack <= 0 || !other.sameClassAs(stance)
-				|| styleSource.styleOf(entry.getKey()) != style)
+				|| styleSource.usageOf(entry.getKey()) != usage)
 			{
 				continue;
 			}

@@ -481,7 +481,7 @@ public class FollowerPlugin extends Plugin
 			.build();
 		clientToolbar.addNavigation(navButton);
 		syncPanel();
-		stanceLibrary.setStyleSource(this::weaponStyle);
+		stanceLibrary.setStyleSource(this::weaponUsage);
 		buildSlotIndexAsync();
 	}
 
@@ -1092,15 +1092,18 @@ public class FollowerPlugin extends Plugin
 	}
 
 	/**
-	 * Which way a weapon fights, read from its own attack bonuses.
+	 * How a weapon is used, read from its own equipment stats.
 	 *
-	 * <p>Used to stop the stance library borrowing an attack across combat
-	 * styles. Bonuses are the game's own statement of what a weapon is for:
-	 * whichever of the three it favours is how it is swung. Weapons with no
-	 * equipment stats at all report UNKNOWN, and the library then declines to
-	 * borrow rather than guess.
+	 * <p>Used to stop the stance library borrowing an attack between weapons
+	 * that merely look alike while carried. Bonuses are the game's own
+	 * statement of what a weapon is for: whichever of the three it favours is
+	 * how it is swung. Handedness comes along too, because style by itself put
+	 * a thrown dart's animation on bows - both ranged, nothing alike.
+	 *
+	 * <p>A weapon with no equipment stats, or none that favour any style,
+	 * reports UNKNOWN and the library declines to borrow rather than guess.
 	 */
-	private int weaponStyle(int itemId)
+	private int weaponUsage(int itemId)
 	{
 		net.runelite.client.game.ItemStats stats = itemManager.getItemStats(itemId);
 		if (stats == null || stats.getEquipment() == null)
@@ -1113,18 +1116,26 @@ public class FollowerPlugin extends Plugin
 		int ranged = equipment.getArange();
 		int magic = equipment.getAmagic();
 
+		int style;
 		if (ranged > melee && ranged >= magic)
 		{
-			return com.follower.follower.StanceLibrary.StyleSource.RANGED;
+			style = com.follower.follower.StanceLibrary.StyleSource.RANGED;
 		}
-		if (magic > melee && magic > ranged)
+		else if (magic > melee && magic > ranged)
 		{
-			return com.follower.follower.StanceLibrary.StyleSource.MAGIC;
+			style = com.follower.follower.StanceLibrary.StyleSource.MAGIC;
 		}
-		// A weapon with no offensive bonus at all says nothing about itself.
-		return melee == 0 && ranged == 0 && magic == 0
-			? com.follower.follower.StanceLibrary.StyleSource.UNKNOWN
-			: com.follower.follower.StanceLibrary.StyleSource.MELEE;
+		else if (melee == 0 && ranged == 0 && magic == 0)
+		{
+			// A weapon with no offensive bonus at all says nothing about itself.
+			return com.follower.follower.StanceLibrary.StyleSource.UNKNOWN;
+		}
+		else
+		{
+			style = com.follower.follower.StanceLibrary.StyleSource.MELEE;
+		}
+		return com.follower.follower.StanceLibrary.StyleSource.packed(
+			style, equipment.isTwoHanded());
 	}
 
 	private KitType resolveSlot(int itemId)
