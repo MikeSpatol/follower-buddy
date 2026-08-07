@@ -241,7 +241,15 @@ public class SpectateController
 		{
 			return;
 		}
-		if (++ticksSinceShield < SHIELD_INTERVAL_TICKS)
+		ticksSinceShield++;
+
+		// An emote started while the feet are still moving is cancelled by the
+		// very next movement frame - movement always wins over an emote, which
+		// is what stops a dancing follower gliding along behind you. The first
+		// cast used to fire on the same tick the follower set off to stand
+		// clear, so it was killed before a single particle appeared. Wait until
+		// it has actually stopped at its watching spot.
+		if (!follower.isSettled() || ticksSinceShield < SHIELD_INTERVAL_TICKS)
 		{
 			return;
 		}
@@ -253,8 +261,17 @@ public class SpectateController
 		{
 			return;
 		}
-		follower.playAnimations(
-			animation > 0 ? new int[]{animation} : new int[0],
+		log.debug("Shield cast: animation {} graphic {}", animation,
+			config.spectateShieldGraphic());
+
+		// playAnimations refuses an empty animation list, so a graphic on its
+		// own goes straight to the spotanim path rather than being dropped.
+		if (animation <= 0)
+		{
+			follower.playSpotAnim(graphic);
+			return;
+		}
+		follower.playAnimations(new int[]{animation},
 			graphic == null ? null : new SpotAnimRepository.Entry[]{graphic});
 	}
 }

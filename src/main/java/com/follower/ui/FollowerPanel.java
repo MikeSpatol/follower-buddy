@@ -126,6 +126,14 @@ public class FollowerPanel extends PluginPanel
 		this.onEditErrands = onEditErrands;
 	}
 
+	/** Opens the combat-message editor; set by the plugin after construction. */
+	private Runnable onEditCombat = () -> { };
+
+	public void setOnEditCombat(Runnable onEditCombat)
+	{
+		this.onEditCombat = onEditCombat;
+	}
+
 	// ---------------------------------------------------------------- profiles
 
 	private final javax.swing.JComboBox<String> profileCombo = new javax.swing.JComboBox<>();
@@ -269,7 +277,9 @@ public class FollowerPanel extends PluginPanel
 		JPanel editorButtons = new JPanel(new GridLayout(0, 2, 6, 4));
 		editorButtons.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		editorButtons.setAlignmentX(LEFT_ALIGNMENT);
-		editorButtons.setMaximumSize(new Dimension(Integer.MAX_VALUE, 88));
+		// Two columns, so the cap is per ROW of buttons: seven editors is four
+		// rows, and a height sized for three clipped the last one off.
+		editorButtons.setMaximumSize(new Dimension(Integer.MAX_VALUE, 120));
 
 		JButton phrases = new JButton("Items...");
 		phrases.setToolTipText("View and edit what the follower says when you equip items");
@@ -288,6 +298,12 @@ public class FollowerPanel extends PluginPanel
 		bosses.setFocusPainted(false);
 		bosses.addActionListener(e -> onEditBosses.run());
 		editorButtons.add(bosses);
+
+		JButton combat = new JButton("Combat...");
+		combat.setToolTipText("View and edit the encouragement while it watches you fight");
+		combat.setFocusPainted(false);
+		combat.addActionListener(e -> onEditCombat.run());
+		editorButtons.add(combat);
 
 		JButton statuses = new JButton("Statuses...");
 		statuses.setToolTipText("View and edit what the follower says about your HP, prayer,"

@@ -258,6 +258,7 @@ public class FollowerPlugin extends Plugin
 	private com.follower.ui.PhrasesDialog statusPhrasesDialog;
 	private com.follower.ui.PhrasesDialog questPhrasesDialog;
 	private com.follower.ui.PhrasesDialog errandPhrasesDialog;
+	private com.follower.ui.PhrasesDialog combatPhrasesDialog;
 
 	@Inject
 	private com.google.gson.Gson gson;
@@ -416,6 +417,11 @@ public class FollowerPlugin extends Plugin
 			errandPhrasesDialog.dispose();
 			errandPhrasesDialog = null;
 		}
+		if (combatPhrasesDialog != null)
+		{
+			combatPhrasesDialog.dispose();
+			combatPhrasesDialog = null;
+		}
 
 		clientThread.invoke(() ->
 		{
@@ -455,6 +461,7 @@ public class FollowerPlugin extends Plugin
 		panel.setOnEditLocations(this::openAreaPhrasesDialog);
 		panel.setOnEditBosses(this::openBossPhrasesDialog);
 		panel.setOnEditStatuses(this::openStatusPhrasesDialog);
+		panel.setOnEditCombat(this::openCombatPhrasesDialog);
 		panel.setOnEditQuests(this::openQuestPhrasesDialog);
 		panel.setOnEditErrands(this::openErrandPhrasesDialog);
 		panel.setOnProfileLoad(this::loadOutfitProfile);
@@ -578,6 +585,24 @@ public class FollowerPlugin extends Plugin
 	}
 
 	/** Lazily builds the boss-message editor window and fronts it. */
+	/** Lazily builds the combat-message editor window and fronts it. */
+	private void openCombatPhrasesDialog()
+	{
+		javax.swing.SwingUtilities.invokeLater(() ->
+		{
+			if (combatPhrasesDialog == null)
+			{
+				combatPhrasesDialog = new com.follower.ui.PhrasesDialog(gson, ruleLoader.getFile(),
+					"combat", "Follower Buddy — Combat messages",
+					"What the follower says while it stands clear and watches you fight."
+						+ " One message per line. Edit, remove or add lines, untick a rule to"
+						+ " silence it, then Save — changes reach the follower within a second.",
+					false);
+			}
+			combatPhrasesDialog.open();
+		});
+	}
+
 	private void openBossPhrasesDialog()
 	{
 		javax.swing.SwingUtilities.invokeLater(() ->
