@@ -402,10 +402,10 @@ rather than failing silently.
 | Command | Effect |
 |---|---|
 | `::follower anim <id...>` | Play an animation, or a chain of them, on the follower |
-| `::follower watch` | Print the id of every animation your character plays |
 | `::follower outfit <name>` | Wear a saved outfit profile |
-| `::follower stance <weaponId> [idle walk run attack]` | Show or hand-set a weapon's animations |
 | `::follower errand` | Send the follower on an errand now |
+| `::follower watch` **[dev]** | Print the id of every animation your character plays |
+| `::follower stance <weaponId> [idle walk run attack]` **[dev]** | Show or hand-set a weapon's animations |
 
 **Diagnostics** — all developer-gated
 
@@ -427,7 +427,8 @@ standing right next to the follower.
 
 `::follower where` is the fast way to get region ids and coordinates while writing
 `regionEnter` and `inArea` rules. `::follower watch` is how you find an animation id
-by performing it rather than guessing from community lists.
+by performing it rather than guessing from community lists — it needs **Developer
+commands** switched on, being an authoring tool rather than a playing one.
 
 ---
 
@@ -558,7 +559,7 @@ plumbing, and the right-click menu fronts all of it.
    optional once `animation` or `mirrorAnimation` is present), `mirrorAnimation`
    replays the player's own animation id, and the bundled `mirror-teleport` rule
    copies teleport casts (`animationSelf` on the known teleport ids; extend the
-   list with `::follower watch`). The existing snap rule relocates the follower
+   list with `::follower watch`, which needs **Developer commands** on). The existing snap rule relocates the follower
    on landing, which reads as teleporting along. Spell GFX mirror too: the
    cache-dumper now emits `spotanims.json` (graphic id -> model, animation,
    scaling, recolours, lighting), and a mirror firing opens a 12-tick window in
@@ -654,7 +655,8 @@ as the user walks past other players.
 To pick it back up:
 
 - `::follower stanceaudit` prints the current counts and lists every uncovered
-  weapon in the client log.
+  weapon in the client log. It and `::follower stance` both need **Developer
+  commands** switched on, in the config's Developer section.
 - [`stance-wishlist.md`](stance-wishlist.md) is that list grouped into families
   with one representative each, since metal tiers and bracketed variants inherit
   from a plain version. Regenerate it from a fresh audit.

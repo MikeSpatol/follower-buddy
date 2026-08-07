@@ -820,9 +820,15 @@ public class FollowerPlugin extends Plugin
 			// rather than let an unknown weapon silently stand unarmed.
 			if (target == KitType.WEAPON && !stanceLibrary.knows(itemId))
 			{
+				// The hand-set command is developer-gated, so only offer it to
+				// someone who has that switched on - otherwise this reads as
+				// advice that does not work.
 				sendStatus("No stances learned for that weapon yet - wield it once, or stand"
-					+ " near someone who has. For one you cannot get hold of:"
-					+ " ::follower stance " + itemId + " <idle> <walk> <run> [attack]");
+					+ " near someone who has."
+					+ (config.developerMode()
+						? " For one you cannot get hold of: ::follower stance " + itemId
+							+ " <idle> <walk> <run> [attack]"
+						: ""));
 			}
 		});
 	}
@@ -3220,15 +3226,21 @@ public class FollowerPlugin extends Plugin
 	 * anyone who typed the wrong word.
 	 *
 	 * <p>Commands a player has a reason to run are deliberately NOT here: say,
-	 * here, anim, watch, errand, outfit, stance, reload, copy, fix, rebuild,
-	 * status and where all stay available. {@code watch} in particular is how
-	 * the phrase docs tell people to find an animation id.
+	 * here, anim, errand, outfit, reload, copy, fix, rebuild, status and where
+	 * all stay available.
+	 *
+	 * <p>{@code watch} and {@code stance} are gated too, despite being useful
+	 * to a determined user - one prints an animation id for writing a rule, the
+	 * other hand-sets a weapon's animations. Both are authoring tools for
+	 * someone extending the plugin rather than playing with it, and every place
+	 * the documentation points at them names the setting they need.
 	 */
 	private static final Set<String> DEVELOPER_COMMANDS = new HashSet<>(java.util.Arrays.asList(
 		"priorities", "palette", "harvest", "hidden", "height",
 		"pitchsweep", "headsweep", "head", "followtrace",
 		"wraplerp", "wrapauto", "wrapearly", "pose",
-		"animinfo", "animtrace", "errandscan", "cachecheck", "stanceaudit"));
+		"animinfo", "animtrace", "errandscan", "cachecheck", "stanceaudit",
+		"watch", "stance"));
 
 	@Subscribe
 	public void onCommandExecuted(CommandExecuted event)
@@ -3796,13 +3808,13 @@ public class FollowerPlugin extends Plugin
 				break;
 
 			default:
-				sendStatus("::follower say <text> | here | anim <id...> | watch | "
-					+ "errand | outfit <name> | stance <weaponId> [idle walk run attack] | "
-					+ "copy | reload | rebuild | fix | status | where");
+				sendStatus("::follower say <text> | here | anim <id...> | errand | "
+					+ "outfit <name> | copy | reload | rebuild | fix | status | where");
 				if (config.developerMode())
 				{
-					sendStatus("Developer: priorities | palette | harvest | hidden | "
-						+ "height <n> | pitchsweep | headsweep | head <...> | followtrace | "
+					sendStatus("Developer: watch | stance <weaponId> [idle walk run attack] | "
+						+ "priorities | palette | harvest | hidden | height <n> | "
+						+ "pitchsweep | headsweep | head <...> | followtrace | "
 						+ "wraplerp | wrapauto | wrapearly | pose <id> | animinfo | "
 						+ "animtrace | errandscan | cachecheck | stanceaudit");
 				}
