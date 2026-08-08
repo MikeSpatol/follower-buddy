@@ -1727,7 +1727,7 @@ public class FollowerEntity
 	 * own behaviour for a pose that resolves to -1, and it keeps the weapon in
 	 * hand, which is the part a player actually notices.
 	 */
-	private static int directionalFallback(StanceLibrary.Stance stance, int standardPose)
+	static int directionalFallback(StanceLibrary.Stance stance, int standardPose)
 	{
 		return stance.walk == PlayerPose.WALK ? standardPose : stance.walk;
 	}
