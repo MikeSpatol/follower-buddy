@@ -714,6 +714,99 @@ public class FollowerPlugin extends Plugin
 		}
 	}
 
+	/** Player standing about this long before the follower starts drifting. */
+	private static final int WANDER_AFTER_TICKS = 50;
+
+	/** Ticks between drifts, picked fresh each time so it never reads as a metronome. */
+	private static final int WANDER_MIN_GAP = 25;
+	private static final int WANDER_MAX_GAP = 70;
+
+	/** How far from the player a drift may take it. */
+	private static final int WANDER_RADIUS = 4;
+
+	private int wanderCountdown;
+	private boolean wandered;
+
+	/**
+	 * Lets the follower drift about while the player stands still.
+	 *
+	 * <p>A companion planted on one tile for minutes reads as furniture. Real
+	 * people shift about while they wait, so the follower picks somewhere
+	 * nearby every twenty to forty seconds and walks over.
+	 *
+	 * <p>Bounded at both ends. It starts only after the player has genuinely
+	 * settled, and stops once the five-minute rest is due, so the two never
+	 * argue over the feet - drifting and then sitting down reads as winding
+	 * down, which is the intent.
+	 *
+	 * <p>Anything that owns the follower releases it: the moment wandering is
+	 * no longer allowed - the player moves, a fight starts, an errand begins -
+	 * the posed destination is dropped and normal following resumes. Without
+	 * that the follower would stay parked where it drifted, since a stay
+	 * persists by design.
+	 */
+	private void updateWander()
+	{
+		int idle = speechEngine.getContext().getIdleTicks();
+		boolean busy = thrallNpc != null
+			|| (errands != null && errands.isBusy())
+			|| (spectate != null && spectate.isSpectating())
+			|| dialog.isOpen()
+			|| resting;
+		boolean canWander = config.wanderWhenIdle()
+			&& !busy
+			&& follower.isSpawned()
+			&& idle >= WANDER_AFTER_TICKS
+			&& idle < REST_AFTER_TICKS;
+
+		if (!canWander)
+		{
+			if (wandered)
+			{
+				follower.resumeFollowing();
+				wandered = false;
+			}
+			wanderCountdown = 0;
+			return;
+		}
+
+		if (--wanderCountdown > 0)
+		{
+			return;
+		}
+		wanderCountdown = WANDER_MIN_GAP
+			+ java.util.concurrent.ThreadLocalRandom.current()
+				.nextInt(WANDER_MAX_GAP - WANDER_MIN_GAP);
+
+		Player local = client.getLocalPlayer();
+		if (local == null || local.getWorldLocation() == null)
+		{
+			return;
+		}
+		WorldPoint from = local.getWorldLocation();
+		java.util.concurrent.ThreadLocalRandom random =
+			java.util.concurrent.ThreadLocalRandom.current();
+
+		// A few attempts rather than one: stayAt refuses an unreachable tile,
+		// and indoors most of the ring is wall.
+		for (int attempt = 0; attempt < 6; attempt++)
+		{
+			int dx = random.nextInt(-WANDER_RADIUS, WANDER_RADIUS + 1);
+			int dy = random.nextInt(-WANDER_RADIUS, WANDER_RADIUS + 1);
+			if (dx == 0 && dy == 0)
+			{
+				continue;
+			}
+			WorldPoint target = new WorldPoint(
+				from.getX() + dx, from.getY() + dy, from.getPlane());
+			if (follower.stayAt(target))
+			{
+				wandered = true;
+				return;
+			}
+		}
+	}
+
 	/**
 	 * How often learned animation data is flushed to disk: one minute, so an
 	 * unclean exit costs at most that much observation rather than a session.
@@ -3065,6 +3158,7 @@ public class FollowerPlugin extends Plugin
 
 		drainSpeechQueue();
 		tickScan();
+		updateWander();
 		updateRest();
 
 		if (errands != null)

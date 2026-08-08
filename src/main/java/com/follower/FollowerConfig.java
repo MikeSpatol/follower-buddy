@@ -703,6 +703,20 @@ public interface FollowerConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "wanderWhenIdle",
+		name = "Wander when idle",
+		description = "While you stand still, the follower drifts to a nearby tile every"
+			+ " twenty seconds or so instead of standing to attention. Stops once it is"
+			+ " due to sit down.",
+		section = movementSection,
+		position = 4
+	)
+	default boolean wanderWhenIdle()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 		keyName = "restWhenIdle",
 		name = "Rest when idle",
 		description = "After about five minutes of standing still, the follower sits down."
