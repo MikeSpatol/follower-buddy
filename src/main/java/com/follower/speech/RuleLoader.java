@@ -123,15 +123,26 @@ public class RuleLoader
 		try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8))
 		{
 			RuleFile parsed = gson.fromJson(reader, RuleFile.class);
-			lastModified = Files.getLastModifiedTime(file).toMillis();
-			lastSize = Files.size(file);
 
 			if (parsed == null)
 			{
-				problems.add("File is empty");
-				apply(Collections.emptyList(), problems, "empty file");
+				// An empty read is almost never an empty file on purpose. It is
+				// what a poll sees in the instant between an editor truncating
+				// the file and writing it back, and it is what a failed save
+				// leaves behind. Treating it as "no rules" replaced the whole
+				// personality with silence, which is exactly what the syntax
+				// error path below is careful NOT to do. Keep what we had, say
+				// so, and do not record this read as current - the next poll
+				// then picks up the finished file.
+				problems.add("File is empty; keeping " + rules.size() + " previous rules");
+				errors = problems;
+				status = "empty file, keeping " + rules.size() + " previous rules";
+				log.warn("phrases.json read as empty; keeping the previous rules");
 				return;
 			}
+
+			lastModified = Files.getLastModifiedTime(file).toMillis();
+			lastSize = Files.size(file);
 
 			if (parsed.version != RuleFile.SUPPORTED_VERSION)
 			{
