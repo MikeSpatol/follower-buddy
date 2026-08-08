@@ -3572,7 +3572,7 @@ public class FollowerPlugin extends Plugin
 		"wraplerp", "wrapauto", "wrapearly", "pose",
 		"animinfo", "animtrace", "errandscan", "cachecheck", "stanceaudit",
 		"watch", "stance", "gfx", "spectate", "shield", "centre", "center", "loot",
-		"scan"));
+		"scan", "heights"));
 
 	@Subscribe
 	public void onCommandExecuted(CommandExecuted event)
@@ -4085,6 +4085,19 @@ public class FollowerPlugin extends Plugin
 					+ " | finish " + config.spectateShieldEndAnimation()
 					+ "/" + config.spectateShieldEndGraphic()
 					+ "  (animation/graphic)");
+				break;
+			}
+
+			case "heights":
+			{
+				clientThread.invoke(() ->
+				{
+					for (String line : follower.describeHeights())
+					{
+						sendStatus(line);
+						log.info("HEIGHTS {}", line);
+					}
+				});
 				break;
 			}
 

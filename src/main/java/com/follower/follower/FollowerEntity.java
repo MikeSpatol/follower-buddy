@@ -2054,13 +2054,52 @@ public class FollowerEntity
 	private boolean hiddenForNpcOverlap;
 
 	/**
-	 * Whether an NPC big enough to swallow the follower occupies this tile.
+	 * How tall an NPC has to be, against the follower's own height, before
+	 * sharing a tile with it is worth hiding for.
 	 *
-	 * <p>Hiding exists because a follower standing inside something large reads
-	 * as a rendering fault. A chicken or a cat sharing the tile does not: the
-	 * two simply overlap, the way two players on one tile do, and vanishing is
-	 * the more jarring of the two. So only NPCs of size 2 and up count - the
-	 * ones that actually enclose the space.
+	 * <p>Tile size was tried first and cannot make this distinction: a rat and
+	 * a woman are both one tile, yet one is ankle height and the other stands
+	 * eye to eye. Height is the property that actually decides whether the
+	 * follower disappears inside something or merely overlaps it.
+	 *
+	 * <p>Measured against the follower rather than a fixed number, so it holds
+	 * whatever the follower is wearing and whichever way the models are scaled.
+	 */
+	private static final double OVERLAP_HEIGHT_FRACTION = 0.55;
+
+	/** Model height by NPC id. A rat is always rat-shaped; measure it once. */
+	private final java.util.Map<Integer, Integer> npcHeights = new java.util.HashMap<>();
+
+	/**
+	 * A model's height in model units, from its own vertices. Y runs negative
+	 * upward, so the peak is the most negative vertex and the height is its
+	 * distance from the ground plane.
+	 */
+	private static int modelHeight(net.runelite.api.Model model)
+	{
+		if (model == null || model.getVerticesY() == null || model.getVerticesCount() == 0)
+		{
+			return 0;
+		}
+		float[] ys = model.getVerticesY();
+		float highest = 0;
+		for (int i = 0; i < model.getVerticesCount() && i < ys.length; i++)
+		{
+			if (ys[i] < highest)
+			{
+				highest = ys[i];
+			}
+		}
+		return Math.round(-highest);
+	}
+
+	/**
+	 * Whether an NPC tall enough to swallow the follower occupies this tile.
+	 *
+	 * <p>Hiding exists because a follower standing inside something reads as a
+	 * rendering fault. That is true of anything roughly person-sized and up; it
+	 * is not true of a rat, where the two simply overlap the way two players on
+	 * one tile do, and vanishing is the more jarring of the two.
 	 *
 	 * <p>The possessed thrall is excluded: in thrall mode the follower stands
 	 * exactly where it is deliberately, and it is hidden from the renderer
@@ -2075,19 +2114,36 @@ public class FollowerEntity
 		{
 			return false;
 		}
+
+		int own = modelHeight(object == null ? null : object.getModel());
 		for (net.runelite.api.NPC npc : client.getTopLevelWorldView().npcs())
 		{
 			if (npc == null || npc == thrallNpc)
 			{
 				continue;
 			}
-			net.runelite.api.NPCComposition composition = npc.getComposition();
-			if (composition == null || composition.getSize() < 2)
+			WorldPoint at = npc.getWorldLocation();
+			if (at == null || !at.equals(where))
 			{
 				continue;
 			}
-			WorldPoint at = npc.getWorldLocation();
-			if (at != null && at.equals(where))
+
+			// Only the NPCs actually on the tile are measured, so the vertex
+			// walk happens for at most a handful of models, and only until
+			// each type has been seen once.
+			Integer height = npcHeights.get(npc.getId());
+			if (height == null)
+			{
+				height = modelHeight(npc.getModel());
+				if (height == 0)
+				{
+					// Not rendered yet. Say no rather than caching a zero that
+					// would make this NPC permanently short.
+					continue;
+				}
+				npcHeights.put(npc.getId(), height);
+			}
+			if (own <= 0 || height >= own * OVERLAP_HEIGHT_FRACTION)
 			{
 				return true;
 			}
@@ -2820,6 +2876,37 @@ public class FollowerEntity
 			sumZ += zs[i];
 		}
 		return new int[]{(int) Math.round(sumX / xs.length), (int) Math.round(sumZ / zs.length)};
+	}
+
+	/**
+	 * The follower's own model height and that of every NPC within a few
+	 * tiles, for {@code ::follower heights}. The overlap rule is a comparison
+	 * between these two numbers, so seeing them is how the threshold gets
+	 * checked rather than trusted.
+	 */
+	public java.util.List<String> describeHeights()
+	{
+		java.util.List<String> lines = new java.util.ArrayList<>();
+		int own = modelHeight(object == null ? null : object.getModel());
+		lines.add("follower height " + own + ", hides at "
+			+ Math.round(own * OVERLAP_HEIGHT_FRACTION) + " and above");
+		if (tile == null)
+		{
+			return lines;
+		}
+		for (net.runelite.api.NPC npc : client.getTopLevelWorldView().npcs())
+		{
+			if (npc == null || npc.getWorldLocation() == null
+				|| npc.getWorldLocation().distanceTo(tile) > 3)
+			{
+				continue;
+			}
+			int height = modelHeight(npc.getModel());
+			lines.add(String.format("  %-24s height %-5d %s",
+				npc.getName(), height,
+				own > 0 && height >= own * OVERLAP_HEIGHT_FRACTION ? "HIDES" : "shows through"));
+		}
+		return lines;
 	}
 
 	/** True if the follower is currently using this animation. */
