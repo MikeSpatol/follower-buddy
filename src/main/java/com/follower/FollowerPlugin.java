@@ -1777,6 +1777,73 @@ public class FollowerPlugin extends Plugin
 	 * equality via JSON serialisation - identical output proves the ported
 	 * opcode readers byte-exact. Run on a machine that has the dump files.
 	 */
+	/**
+	 * Checks every animation the RULES play against the cache they play from.
+	 *
+	 * <p>Two failures are possible and neither announces itself. An id that is
+	 * not in the cache simply does nothing, and the rule looks broken for no
+	 * visible reason. Worse, an id that is an AUTHORED LOOP never reaches the
+	 * end its chain is waiting for: {@code playChain} finishes on the animation
+	 * controller's callback, which a looping clip never fires, so the follower
+	 * is left mid-emote - and since an emote empties its hands, holding nothing
+	 * for the rest of the session.
+	 *
+	 * <p>Only animations a rule PLAYS are checked. The ids in an
+	 * {@code animationSelf} trigger are the player's own and are none of the
+	 * follower's business, and a pose id (the rest) is applied through the pose
+	 * slot, where looping is the whole point.
+	 *
+	 * @return the number of problems found
+	 */
+	private int auditRuleAnimations()
+	{
+		java.util.Map<Integer, java.util.List<String>> played = new java.util.LinkedHashMap<>();
+		for (com.follower.speech.SpeechRule rule : ruleLoader.getRules())
+		{
+			if (rule.animation != null)
+			{
+				played.computeIfAbsent(rule.animation, id -> new ArrayList<>()).add(rule.id);
+			}
+			if (rule.animations != null)
+			{
+				for (Integer id : rule.animations)
+				{
+					if (id != null)
+					{
+						played.computeIfAbsent(id, key -> new ArrayList<>()).add(rule.id);
+					}
+				}
+			}
+		}
+
+		int problems = 0;
+		for (java.util.Map.Entry<Integer, java.util.List<String>> entry : played.entrySet())
+		{
+			int id = entry.getKey();
+			String rules = String.join(", ", entry.getValue());
+
+			net.runelite.api.Animation animation = client.loadAnimation(id);
+			if (animation == null)
+			{
+				log.warn("cachecheck: animation {} is not in the cache, used by {}", id, rules);
+				problems++;
+				continue;
+			}
+			if (animation.getFrameStep() >= 0)
+			{
+				log.warn("cachecheck: animation {} is an authored loop (frameStep {}),"
+						+ " used by {} - a chain would never finish and the follower"
+						+ " would be left mid-emote holding nothing",
+					id, animation.getFrameStep(), rules);
+				problems++;
+			}
+		}
+
+		log.info("cachecheck: {} animations played by rules, {} problems",
+			played.size(), problems);
+		return problems;
+	}
+
 	private void runCacheCheck()
 	{
 		try
@@ -1812,8 +1879,10 @@ public class FollowerPlugin extends Plugin
 			problems += diffCatalogue("spotanims", dumpSpots,
 				com.follower.appearance.LiveCacheParser.parseSpotAnims(client));
 
+			problems += auditRuleAnimations();
+
 			sendStatus(problems == 0
-				? "cachecheck: PERFECT MATCH across items, kits and spotanims"
+				? "cachecheck: PERFECT MATCH across items, kits, spotanims and rule animations"
 				: "cachecheck: " + problems + " differences - see the client log");
 		}
 		catch (java.io.IOException | RuntimeException e)

@@ -44,7 +44,7 @@ public class RuleSetIntegrityTest
 	 * the class itself so that adding a case without adding it here is a test
 	 * failure rather than a silent gap.
 	 */
-	private static final Set<String> KNOWN_TYPES = new HashSet<>(Arrays.asList(
+	static final Set<String> KNOWN_TYPES = new HashSet<>(Arrays.asList(
 		"all", "any", "none", "always", "chance", "npcspawn", "npcdespawn",
 		"npcnearby", "petnearby", "healthbelow", "healthabove", "prayerbelow",
 		"prayerabove", "inregion", "regionenter", "inarea", "chatmessage",

@@ -8,12 +8,13 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import net.runelite.api.Client;
 import net.runelite.api.IndexedObjectSet;
 import net.runelite.api.NPC;
+import net.runelite.api.NPCComposition;
 import net.runelite.api.Player;
 import net.runelite.api.PlayerComposition;
+import net.runelite.api.Skill;
 import net.runelite.api.WorldView;
 import net.runelite.api.coords.WorldPoint;
 
@@ -32,9 +33,23 @@ import net.runelite.api.coords.WorldPoint;
  */
 public final class FakeGame
 {
+	/**
+	 * An answer to one method call. Given the call's arguments so that readings
+	 * keyed by an id - varbits, varplayers, skill levels - can differ per id
+	 * rather than all sharing one value.
+	 */
+	private interface Answer
+	{
+		Object get(Object[] args);
+	}
+
 	private final Map<String, Object> clientAnswers = new HashMap<>();
 	private final Map<String, Object> playerAnswers = new HashMap<>();
 	private final List<NPC> npcs = new ArrayList<>();
+
+	private final Map<Integer, Integer> varbits = new HashMap<>();
+	private final Map<Integer, Integer> varps = new HashMap<>();
+	private final Map<Skill, int[]> skillLevels = new HashMap<>();
 
 	private int[] mapRegions = {12850};
 	private int[] equipment = new int[12];
@@ -58,14 +73,25 @@ public final class FakeGame
 		playerAnswers.put("getPlayerComposition", composition());
 
 		clientAnswers.put("getLocalPlayer", player);
-		clientAnswers.put("getBoostedSkillLevel", 99);
-		clientAnswers.put("getRealSkillLevel", 99);
 		clientAnswers.put("getEnergy", 10000);
 		clientAnswers.put("getTickCount", 0);
-		clientAnswers.put("getVarbitValue", 0);
-		clientAnswers.put("getVarpValue", 0);
 		clientAnswers.put("getTopLevelWorldView", worldView());
+
+		// Keyed readings: everything unset reads as the quiet default.
+		clientAnswers.put("getVarbitValue",
+			(Answer) args -> varbits.getOrDefault((Integer) args[0], 0));
+		clientAnswers.put("getVarpValue",
+			(Answer) args -> varps.getOrDefault((Integer) args[0], 0));
+		clientAnswers.put("getBoostedSkillLevel", (Answer) args -> levels(args[0])[0]);
+		clientAnswers.put("getRealSkillLevel", (Answer) args -> levels(args[0])[1]);
 	}
+
+	private int[] levels(Object skill)
+	{
+		return skillLevels.getOrDefault(skill, DEFAULT_LEVELS);
+	}
+
+	private static final int[] DEFAULT_LEVELS = {99, 99};
 
 	// ------------------------------------------------------------------ setup
 
@@ -90,8 +116,7 @@ public final class FakeGame
 	/** Hitpoints as a level pair; the context turns them into a percentage. */
 	public FakeGame hitpoints(int current, int max)
 	{
-		clientAnswers.put("getBoostedSkillLevel", current);
-		clientAnswers.put("getRealSkillLevel", max);
+		skillLevels.put(Skill.HITPOINTS, new int[]{current, max});
 		return this;
 	}
 
@@ -130,15 +155,65 @@ public final class FakeGame
 	/** Puts an NPC in the scene, at the player's own tile unless moved. */
 	public NPC spawnNpc(int id, String name, int combatLevel)
 	{
+		return spawnNpc(id, name, combatLevel, false);
+	}
+
+	/**
+	 * @param pet whether the game flags it as a follower, which is how the
+	 * plugin recognises every pet in the game without naming any of them
+	 */
+	public NPC spawnNpc(int id, String name, int combatLevel, boolean pet)
+	{
+		Map<String, Object> composition = new HashMap<>();
+		composition.put("isFollower", pet);
+		composition.put("getName", name);
+		composition.put("getId", id);
+		composition.put("getSize", 1);
+
 		Map<String, Object> answers = new HashMap<>();
 		answers.put("getId", id);
 		answers.put("getName", name);
 		answers.put("getCombatLevel", combatLevel);
 		answers.put("getHealthRatio", 30);
 		answers.put("getWorldLocation", playerAnswers.get("getWorldLocation"));
+		answers.put("getComposition", proxy(NPCComposition.class, composition));
 		NPC npc = proxy(NPC.class, answers);
 		npcs.add(npc);
 		return npc;
+	}
+
+	/** Empties the scene. */
+	public FakeGame clearNpcs()
+	{
+		npcs.clear();
+		return this;
+	}
+
+	/** A varbit reading, by id. Unset varbits read zero. */
+	public FakeGame varbit(int id, int value)
+	{
+		varbits.put(id, value);
+		return this;
+	}
+
+	/** A varplayer reading, by id. This is where poison and venom live. */
+	public FakeGame varp(int id, int value)
+	{
+		varps.put(id, value);
+		return this;
+	}
+
+	public FakeGame skulled(boolean skulled)
+	{
+		playerAnswers.put("getSkullIcon", skulled ? 0 : -1);
+		return this;
+	}
+
+	/** Prayer points, which the context also uses to decide if prayer is draining. */
+	public FakeGame prayer(int current, int max)
+	{
+		skillLevels.put(Skill.PRAYER, new int[]{current, max});
+		return this;
 	}
 
 	/** Makes the player interact with something, which is what combat looks like. */
@@ -153,15 +228,15 @@ public final class FakeGame
 	private PlayerComposition composition()
 	{
 		Map<String, Object> answers = new HashMap<>();
-		answers.put("getEquipmentIds", (Function<Void, Object>) ignored -> equipment);
+		answers.put("getEquipmentIds", (Answer) args -> equipment);
 		return proxy(PlayerComposition.class, answers);
 	}
 
 	private WorldView worldView()
 	{
 		Map<String, Object> answers = new HashMap<>();
-		answers.put("getMapRegions", (Function<Void, Object>) ignored -> mapRegions);
-		answers.put("npcs", (Function<Void, Object>) ignored -> indexed(npcs));
+		answers.put("getMapRegions", (Answer) args -> mapRegions);
+		answers.put("npcs", (Answer) args -> indexed(npcs));
 		return proxy(WorldView.class, answers);
 	}
 
@@ -212,8 +287,8 @@ public final class FakeGame
 			if (answers.containsKey(name))
 			{
 				Object answer = answers.get(name);
-				return answer instanceof Function
-					? ((Function<Void, Object>) answer).apply(null)
+				return answer instanceof Answer
+					? ((Answer) answer).get(args)
 					: answer;
 			}
 			return defaultFor(method.getReturnType());
