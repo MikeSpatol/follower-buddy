@@ -2054,9 +2054,17 @@ public class FollowerEntity
 	private boolean hiddenForNpcOverlap;
 
 	/**
-	 * Whether a real NPC occupies this tile. The possessed thrall is excluded:
-	 * in thrall mode the follower deliberately stands exactly where it is, and
-	 * it is hidden from the renderer anyway.
+	 * Whether an NPC big enough to swallow the follower occupies this tile.
+	 *
+	 * <p>Hiding exists because a follower standing inside something large reads
+	 * as a rendering fault. A chicken or a cat sharing the tile does not: the
+	 * two simply overlap, the way two players on one tile do, and vanishing is
+	 * the more jarring of the two. So only NPCs of size 2 and up count - the
+	 * ones that actually enclose the space.
+	 *
+	 * <p>The possessed thrall is excluded: in thrall mode the follower stands
+	 * exactly where it is deliberately, and it is hidden from the renderer
+	 * anyway.
 	 *
 	 * <p>Multi-tile NPCs are compared on their south-west tile, as the client
 	 * itself positions them; a giant's outer tiles do not count as occupied.
@@ -2070,6 +2078,11 @@ public class FollowerEntity
 		for (net.runelite.api.NPC npc : client.getTopLevelWorldView().npcs())
 		{
 			if (npc == null || npc == thrallNpc)
+			{
+				continue;
+			}
+			net.runelite.api.NPCComposition composition = npc.getComposition();
+			if (composition == null || composition.getSize() < 2)
 			{
 				continue;
 			}
