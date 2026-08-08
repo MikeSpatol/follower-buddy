@@ -158,14 +158,21 @@ public class RuleSetIntegrityTest
 	// ----------------------------------------------------------------- glyphs
 
 	/**
-	 * The game draws with bitmap fonts of exactly 256 glyphs, indexed by cp1252.
-	 * A character outside that set, or one whose glyph is blank, renders as
-	 * nothing at all - and silently, since there is no error to notice.
+	 * The game draws with bitmap fonts of exactly 256 glyphs, and
+	 * {@code GameFont} picks one with {@code text.charAt(i) & 0xFF}.
 	 *
-	 * <p>Measured rather than assumed: font 496 (b12_full, the overhead line)
-	 * has an em-dash glyph and font 497 (q8_full, the dialog box) does not, so
-	 * "avoid em-dashes" is not a rule that can be applied by eye. Both fonts
-	 * are missing curly quotes, en-dashes and the ellipsis.
+	 * <p>That mask is the whole rule, and it is stricter than it looks. There is
+	 * no charset mapping: a character above U+00FF is not rejected, it is
+	 * TRUNCATED to its low byte and drawn as whatever glyph happens to live
+	 * there. An em-dash, U+2014, reaches glyph 0x14 - not the em-dash the font
+	 * really does hold at 0x97, which is where cp1252 would have put it. So the
+	 * line does not come out blank, it comes out as a different character
+	 * entirely, and nothing anywhere reports it.
+	 *
+	 * <p>Hence both halves of the check: the character has to be inside Latin-1
+	 * at all, and the glyph at that index has to have pixels. Measured for both
+	 * fonts the plugin draws with, since they do not agree - 496 has a glyph at
+	 * 0x97 and 497 does not.
 	 */
 	@Test
 	public void everySpokenCharacterHasAGlyphInBothGameFonts() throws IOException
@@ -223,23 +230,13 @@ public class RuleSetIntegrityTest
 
 	private static boolean hasGlyph(JsonObject font, char c)
 	{
-		byte[] encoded;
-		try
-		{
-			encoded = String.valueOf(c).getBytes("windows-1252");
-		}
-		catch (java.io.UnsupportedEncodingException e)
+		// Anything past Latin-1 would be truncated to a different character.
+		if (c > 0xFF)
 		{
 			return false;
 		}
-		// Unmappable characters encode to '?'; anything that is not literally a
-		// question mark and came back as one has no place in the charset.
-		int index = encoded[0] & 0xFF;
-		if (index == '?' && c != '?')
-		{
-			return false;
-		}
-		JsonObject glyph = font.getAsJsonArray("glyphs").get(index).getAsJsonObject();
+		// Exactly what GameFont.drawTop does to choose a glyph.
+		JsonObject glyph = font.getAsJsonArray("glyphs").get(c & 0xFF).getAsJsonObject();
 		JsonElement mask = glyph.get("mask");
 		return glyph.get("w").getAsInt() > 0
 			&& mask != null && !mask.isJsonNull() && !mask.getAsString().isEmpty();
