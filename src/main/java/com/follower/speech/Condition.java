@@ -81,6 +81,66 @@ public class Condition
 	private transient List<Pattern> compiledNames;
 
 	/**
+	 * {@link #ids} and {@link #regions} unboxed, built on first use.
+	 *
+	 * <p>These two carry the bulk of the rule set - most rules are "wearing
+	 * this" or "standing here" - and every rule is evaluated against every
+	 * event, so a {@code List<Integer>.contains(int)} here means boxing the
+	 * needle and walking a chain of Integers, hundreds of times per event.
+	 */
+	private transient int[] idsUnboxed;
+	private transient int[] regionsUnboxed;
+
+	private static int[] unbox(List<Integer> boxed)
+	{
+		int[] out = new int[boxed.size()];
+		for (int i = 0; i < out.length; i++)
+		{
+			Integer value = boxed.get(i);
+			out[i] = value == null ? Integer.MIN_VALUE : value;
+		}
+		return out;
+	}
+
+	private static boolean contains(int[] values, int wanted)
+	{
+		for (int value : values)
+		{
+			if (value == wanted)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean idsContain(int wanted)
+	{
+		if (ids == null)
+		{
+			return false;
+		}
+		if (idsUnboxed == null)
+		{
+			idsUnboxed = unbox(ids);
+		}
+		return contains(idsUnboxed, wanted);
+	}
+
+	private boolean regionsContain(int wanted)
+	{
+		if (regions == null)
+		{
+			return false;
+		}
+		if (regionsUnboxed == null)
+		{
+			regionsUnboxed = unbox(regions);
+		}
+		return contains(regionsUnboxed, wanted);
+	}
+
+	/**
 	 * The lowercased {@link #type}, cached: every rule is evaluated on every
 	 * event, and re-lowercasing the discriminator allocated a string per
 	 * evaluation across hundreds of rules.
@@ -182,7 +242,7 @@ public class Condition
 					&& (value == null || event.getValue() == value);
 
 			case "animationself":
-				return event.getType() == TriggerEvent.Type.ANIMATION && ids != null && ids.contains(event.getId());
+				return event.getType() == TriggerEvent.Type.ANIMATION && idsContain(event.getId());
 
 			case "levelup":
 				return event.getType() == TriggerEvent.Type.LEVEL_UP && matchesText(event.getName());
@@ -192,11 +252,16 @@ public class Condition
 					&& event.getValue() >= orDefault(minimum, 1);
 
 			case "itemequipped":
+			{
 				if (ids == null)
 				{
 					return false;
 				}
-				for (int id : ids)
+				if (idsUnboxed == null)
+				{
+					idsUnboxed = unbox(ids);
+				}
+				for (int id : idsUnboxed)
 				{
 					if (ctx.isEquipped(id))
 					{
@@ -204,6 +269,7 @@ public class Condition
 					}
 				}
 				return false;
+			}
 
 			case "poisoned":
 			{
@@ -330,7 +396,7 @@ public class Condition
 
 	private boolean matchesNpc(TriggerEvent event)
 	{
-		if (ids != null && ids.contains(event.getId()))
+		if (idsContain(event.getId()))
 		{
 			return true;
 		}
@@ -339,7 +405,7 @@ public class Condition
 
 	private boolean matchesNpcObject(NPC npc)
 	{
-		if (ids != null && ids.contains(npc.getId()))
+		if (idsContain(npc.getId()))
 		{
 			return true;
 		}
@@ -352,9 +418,13 @@ public class Condition
 		{
 			return false;
 		}
+		if (regionsUnboxed == null)
+		{
+			regionsUnboxed = unbox(regions);
+		}
 		if (Boolean.TRUE.equals(anyLoadedRegion))
 		{
-			for (int region : regions)
+			for (int region : regionsUnboxed)
 			{
 				if (ctx.isRegionLoaded(region))
 				{
@@ -363,7 +433,7 @@ public class Condition
 			}
 			return false;
 		}
-		return regions.contains(currentRegion);
+		return contains(regionsUnboxed, currentRegion);
 	}
 
 	private boolean matchesArea(TriggerContext ctx)

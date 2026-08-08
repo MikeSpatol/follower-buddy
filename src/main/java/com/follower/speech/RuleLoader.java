@@ -10,8 +10,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -189,21 +192,72 @@ public class RuleLoader
 		}
 	}
 
+	/**
+	 * Which condition type answers which event. Only the types that are gated
+	 * on a specific event appear: a state condition (healthBelow, inRegion) can
+	 * be true during ANY dispatch and so is never listed.
+	 */
+	private static final Map<TriggerEvent.Type, String[]> EVENT_CONDITIONS;
+
+	static
+	{
+		EVENT_CONDITIONS = new EnumMap<>(TriggerEvent.Type.class);
+		EVENT_CONDITIONS.put(TriggerEvent.Type.NPC_SPAWN, new String[]{"npcSpawn"});
+		EVENT_CONDITIONS.put(TriggerEvent.Type.NPC_DESPAWN, new String[]{"npcDespawn"});
+		EVENT_CONDITIONS.put(TriggerEvent.Type.VARBIT, new String[]{"varbitChanged"});
+	}
+
+	private final Set<TriggerEvent.Type> listened = EnumSet.noneOf(TriggerEvent.Type.class);
+
+	/**
+	 * Whether any loaded rule can answer this kind of event.
+	 *
+	 * <p>Only meaningful for the FLOOD events - NPCs entering and leaving the
+	 * scene, and varbits at login - which arrive in the hundreds within a single
+	 * tick and each cost a pass over every rule. Everything else is rare enough
+	 * that asking is not worth it.
+	 *
+	 * <p>Skipping a pass costs nothing a state rule needed: state only changes
+	 * when the snapshot refreshes, once a tick, and the tick heartbeat always
+	 * gets its own dispatch. It does mean a {@code chance} roll no longer
+	 * happens per despawn, which is a fix rather than a loss - how talkative the
+	 * follower is should not depend on how many NPCs happen to be wandering out
+	 * of view.
+	 */
+	public boolean listensFor(TriggerEvent.Type type)
+	{
+		return !EVENT_CONDITIONS.containsKey(type) || listened.contains(type);
+	}
+
 	private void apply(List<SpeechRule> newRules, List<String> problems, String summary)
 	{
 		rules = newRules;
 		errors = problems;
-		varbitEventRules = false;
-		for (SpeechRule rule : newRules)
+
+		listened.clear();
+		for (Map.Entry<TriggerEvent.Type, String[]> entry : EVENT_CONDITIONS.entrySet())
 		{
-			if (rule.when != null && rule.when.usesType("varbitChanged"))
+			for (SpeechRule rule : newRules)
 			{
-				varbitEventRules = true;
-				break;
+				if (rule.when == null)
+				{
+					continue;
+				}
+				for (String conditionType : entry.getValue())
+				{
+					if (rule.when.usesType(conditionType))
+					{
+						listened.add(entry.getKey());
+						break;
+					}
+				}
 			}
 		}
+		varbitEventRules = listened.contains(TriggerEvent.Type.VARBIT);
+
 		status = summary + (problems.isEmpty() ? "" : ", " + problems.size() + " warning(s)");
 		log.info("Loaded rules: {}", status);
+		log.debug("Flood events with listeners: {}", listened);
 	}
 
 	private void writeDefaults()

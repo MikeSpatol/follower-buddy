@@ -71,6 +71,16 @@ public class GameFontRepository
 	 * bundled rather than parsed live because pairing font metrics to glyph
 	 * sprites requires archive name hashes the runtime API does not expose -
 	 * and the game's bitmap fonts have not changed in decades.
+	 *
+	 * <p>The BUNDLED dump carries only the two fonts the plugin draws with:
+	 * 497 (q8_full) for the dialog box and 496 (b12_full) for the overhead
+	 * line. The dumper still writes all 21, which is what you want on disk for
+	 * identifying a sniffed widget's font, but shipping the other 19 cost
+	 * around 60KB of the jar and 5,000 base64 glyph decodes at startup to hold
+	 * glyphs nothing ever asked for. Add an id to the trim if something starts
+	 * drawing with it - {@link #get} and {@link #getByName} return null for a
+	 * font that is not there, and both callers fall back to a TTF, so the
+	 * failure is quiet rather than loud.
 	 */
 	public void load(Path dataDir)
 	{

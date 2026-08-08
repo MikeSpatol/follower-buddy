@@ -63,10 +63,15 @@ public final class TriggerContext
 		prayerPoints = client.getBoostedSkillLevel(Skill.PRAYER);
 		maxPrayerPoints = client.getRealSkillLevel(Skill.PRAYER);
 
-		// getEnergy reports hundredths of a percent on current clients; the
-		// guard keeps a reading from an older 0-100 API correct too.
-		int rawEnergy = client.getEnergy();
-		energyPercent = rawEnergy > 100 ? rawEnergy / 100 : rawEnergy;
+		// getEnergy counts hundredths of a percent, 0-10000 - the same scale
+		// RuneLite's own run-energy plugin measures against.
+		//
+		// This used to divide only when the reading was above 100, meaning to
+		// tolerate an older 0-100 API. That guard was backwards where it
+		// mattered: 100 hundredths is one percent left, and it was reported as
+		// a hundred. Every reading under one percent - exactly the moment a
+		// low-energy line is worth saying - read as nearly full.
+		energyPercent = client.getEnergy() / 100;
 
 		skulled = local.getSkullIcon() != -1;
 
@@ -107,11 +112,7 @@ public final class TriggerContext
 
 		refreshCombat(local);
 
-		int[] regions = client.getTopLevelWorldView().getMapRegions();
-		loadedRegions = regions == null
-			? new HashSet<>()
-			: Arrays.stream(regions).boxed().collect(java.util.stream.Collectors.toSet());
-
+		refreshLoadedRegions();
 		refreshEquipment(local.getPlayerComposition());
 	}
 
@@ -262,32 +263,67 @@ public final class TriggerContext
 	@lombok.Getter
 	private boolean skulled;
 
+	/** The raw arrays behind the two sets, kept so an unchanged tick costs nothing. */
+	private int[] lastRegionIds;
+	private int[] lastEquipmentIds;
+
+	/**
+	 * The loaded map regions, rebuilt only when they actually change.
+	 *
+	 * <p>They change on a chunk load and are identical on every other tick, so
+	 * boxing the array into a fresh set each time was allocating for no reason
+	 * several times a second for the whole session.
+	 */
+	private void refreshLoadedRegions()
+	{
+		int[] regions = client.getTopLevelWorldView().getMapRegions();
+		if (Arrays.equals(regions, lastRegionIds))
+		{
+			return;
+		}
+		lastRegionIds = regions == null ? null : regions.clone();
+
+		Set<Integer> rebuilt = new HashSet<>();
+		if (regions != null)
+		{
+			for (int region : regions)
+			{
+				rebuilt.add(region);
+			}
+		}
+		loadedRegions = rebuilt;
+	}
+
 	private void refreshEquipment(PlayerComposition composition)
 	{
 		playerReady = composition != null;
-		Set<Integer> worn = new HashSet<>();
-		if (composition != null)
+		int[] ids = composition == null ? null : composition.getEquipmentIds();
+
+		// Same reasoning as the regions: worn gear is the same array tick after
+		// tick, and the old code rebuilt a set and compared it just to decide
+		// whether to log.
+		if (Arrays.equals(ids, lastEquipmentIds))
 		{
-			int[] ids = composition.getEquipmentIds();
-			if (ids != null)
+			return;
+		}
+		lastEquipmentIds = ids == null ? null : ids.clone();
+
+		Set<Integer> worn = new HashSet<>();
+		if (ids != null)
+		{
+			for (int raw : ids)
 			{
-				for (int raw : ids)
+				// Items start at 2048; 256..2047 is the kit range. Using 512 here
+				// meant every body kit was reported as a worn item, so an
+				// equippedItem rule could fire on a hairstyle.
+				if (raw >= PlayerComposition.ITEM_OFFSET)
 				{
-					// Items start at 2048; 256..2047 is the kit range. Using 512 here
-					// meant every body kit was reported as a worn item, so an
-					// equippedItem rule could fire on a hairstyle.
-					if (raw >= PlayerComposition.ITEM_OFFSET)
-					{
-						worn.add(raw - PlayerComposition.ITEM_OFFSET);
-					}
+					worn.add(raw - PlayerComposition.ITEM_OFFSET);
 				}
 			}
 		}
-		if (!worn.equals(equippedItems))
-		{
-			log.debug("equipment now {}", worn);
-		}
 		equippedItems = worn;
+		log.debug("equipment now {}", worn);
 	}
 
 	public Client getClient()

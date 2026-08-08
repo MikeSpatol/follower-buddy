@@ -3366,7 +3366,14 @@ public class FollowerPlugin extends Plugin
 	{
 		NPC npc = event.getNpc();
 		maybeAdoptThrall(npc);
-		speechEngine.dispatch(TriggerEvent.npc(TriggerEvent.Type.NPC_SPAWN, npc.getId(), npc.getName()));
+
+		// A chunk load raises one of these for every NPC in the new scene, and
+		// each costs a pass over every rule. Only pay it when something listens.
+		if (ruleLoader.listensFor(TriggerEvent.Type.NPC_SPAWN))
+		{
+			speechEngine.dispatch(
+				TriggerEvent.npc(TriggerEvent.Type.NPC_SPAWN, npc.getId(), npc.getName()));
+		}
 	}
 
 	@Subscribe
@@ -3400,7 +3407,13 @@ public class FollowerPlugin extends Plugin
 				clientThread.invoke(follower::endNpcSlaveHolding);
 			}
 		}
-		speechEngine.dispatch(TriggerEvent.npc(TriggerEvent.Type.NPC_DESPAWN, npc.getId(), npc.getName()));
+		// As with spawns: the whole scene despawns on a chunk load, and no
+		// bundled rule listens for it at all.
+		if (ruleLoader.listensFor(TriggerEvent.Type.NPC_DESPAWN))
+		{
+			speechEngine.dispatch(
+				TriggerEvent.npc(TriggerEvent.Type.NPC_DESPAWN, npc.getId(), npc.getName()));
+		}
 	}
 
 	@Subscribe
