@@ -18,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -25,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.Actor;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
@@ -752,6 +754,7 @@ public class FollowerPlugin extends Plugin
 			|| (errands != null && errands.isBusy())
 			|| (spectate != null && spectate.isSpectating())
 			|| dialog.isOpen()
+			|| emoteHold
 			|| resting;
 		boolean canWander = config.wanderWhenIdle()
 			&& !busy
@@ -1535,6 +1538,8 @@ public class FollowerPlugin extends Plugin
 				freshLogin = true;
 				ensureCatalogues();
 				resetThrallQuietly();
+				// Actor references from a scene that is going away.
+				damagedByPlayer.clear();
 				if (errands != null)
 				{
 					errands.reset();
@@ -2087,8 +2092,21 @@ public class FollowerPlugin extends Plugin
 	 * and a thrall swinging an invisible weapon would be worse than the problem
 	 * this solves.
 	 */
+	/**
+	 * Set while a {@code holdStill} rule's animation is playing, so the follower
+	 * is released the moment it ends - and so idle wandering cannot wander off
+	 * mid-celebration.
+	 */
+	private boolean emoteHold;
+
 	private void updateEmoteDisarm(boolean emoting)
 	{
+		if (!emoting && emoteHold)
+		{
+			emoteHold = false;
+			follower.resumeFollowing();
+		}
+
 		boolean wanted = emoting && thrallNpc == null;
 		if (wanted == emoteDisarmed)
 		{
@@ -3158,6 +3176,7 @@ public class FollowerPlugin extends Plugin
 
 		drainSpeechQueue();
 		tickScan();
+		expireKillClaims();
 		updateWander();
 		updateRest();
 
@@ -3589,10 +3608,31 @@ public class FollowerPlugin extends Plugin
 		clientThread.invoke(() -> follower.playSpotAnim(fx, height));
 	}
 
+	/**
+	 * NPCs the player has damaged, against the tick it last happened.
+	 *
+	 * <p>A death event says an NPC died, never who killed it - and a busy place
+	 * is full of deaths that are nothing to do with you. The client does mark
+	 * whose damage a hitsplat is ({@link net.runelite.api.Hitsplat#isMine()}),
+	 * so a kill is claimed only for something the player actually hit.
+	 *
+	 * <p>Entries expire, which matters twice: an NPC wounded and abandoned must
+	 * not be claimed when something else finishes it minutes later, and holding
+	 * actor references for a dead scene would keep it from being collected.
+	 */
+	private final Map<Actor, Integer> damagedByPlayer = new HashMap<>();
+
+	/** How long a hit stays claimable. Comfortably longer than any kill takes to land. */
+	private static final int KILL_CLAIM_TICKS = 30;
+
 	@Subscribe
 	public void onHitsplatApplied(HitsplatApplied event)
 	{
-		if (event.getActor() == client.getLocalPlayer() && event.getHitsplat().getAmount() > 0)
+		if (event.getHitsplat().getAmount() <= 0)
+		{
+			return;
+		}
+		if (event.getActor() == client.getLocalPlayer())
 		{
 			// Being hit is combat even when not hitting back, which the
 			// interaction check alone would miss.
@@ -3600,16 +3640,45 @@ public class FollowerPlugin extends Plugin
 			speechEngine.dispatch(TriggerEvent.damageTaken(event.getHitsplat().getAmount()));
 			dialog.close();
 		}
+		else if (event.getActor() instanceof NPC && event.getHitsplat().isMine())
+		{
+			damagedByPlayer.put(event.getActor(), client.getTickCount());
+		}
+	}
+
+	/** Drops damage claims that have gone stale, so the map cannot grow without bound. */
+	private void expireKillClaims()
+	{
+		if (damagedByPlayer.isEmpty())
+		{
+			return;
+		}
+		int cutoff = client.getTickCount() - KILL_CLAIM_TICKS;
+		damagedByPlayer.values().removeIf(tick -> tick < cutoff);
 	}
 
 	@Subscribe
 	public void onActorDeath(net.runelite.api.events.ActorDeath event)
 	{
 		Player local = client.getLocalPlayer();
-		if (event.getActor() != local || local == null)
+		if (local == null)
 		{
 			return;
 		}
+
+		if (event.getActor() != local)
+		{
+			// Someone else's death is only news if the player had a hand in it.
+			Integer hit = damagedByPlayer.remove(event.getActor());
+			if (hit != null && event.getActor() instanceof NPC)
+			{
+				NPC npc = (NPC) event.getActor();
+				speechEngine.dispatch(TriggerEvent.kill(
+					npc.getId(), npc.getName(), npc.getCombatLevel()));
+			}
+			return;
+		}
+
 		// Where, as well as that: the death spot is remembered for the session,
 		// and walking back over it later has its own lines.
 		speechEngine.getContext().noteDeath(local.getWorldLocation());
@@ -4618,6 +4687,14 @@ public class FollowerPlugin extends Plugin
 			// - exactly as a real player's overhead words mirror into chat.
 			clientThread.invoke(() -> client.addChatMessage(
 				ChatMessageType.PUBLICCHAT, config.followerName(), text, null));
+		}
+
+		// Plant it first, so the animation starts against a follower that is
+		// already stopped rather than one that stops a tick into the clip.
+		if (rule != null && Boolean.TRUE.equals(rule.holdStill) && rule.hasAnimationAction())
+		{
+			emoteHold = true;
+			clientThread.invoke(follower::stayHere);
 		}
 
 		if (rule != null && rule.hasAnimationChain())

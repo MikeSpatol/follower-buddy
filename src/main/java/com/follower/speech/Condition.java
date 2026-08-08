@@ -39,6 +39,7 @@ import net.runelite.api.NPC;
  *   <tr><td>combat</td><td>no fields — true throughout a fight, including the gaps between targets</td></tr>
  *   <tr><td>bossFight</td><td>{@code minimum} — target combat level, default 100</td></tr>
  *   <tr><td>combatStart / combatEnd</td><td>optional {@code names}; {@code {npc}} placeholder</td></tr>
+ *   <tr><td>npcKill</td><td>{@code minimum} / {@code maximum} combat level, optional {@code names} / {@code ids}</td></tr>
  *   <tr><td>energyBelow</td><td>{@code percent}</td></tr>
  *   <tr><td>idle</td><td>{@code ticks}</td></tr>
  *   <tr><td>login / always</td><td>no fields</td></tr>
@@ -58,6 +59,7 @@ public class Condition
 
 	public Integer percent;
 	public Integer minimum;
+	public Integer maximum;
 	public Integer within;
 	public Integer ticks;
 	public Integer varbit;
@@ -278,6 +280,15 @@ public class Condition
 			case "combatend":
 				return event.getType() == TriggerEvent.Type.COMBAT_END
 					&& (names == null || matchesAnyName(event.getName()));
+
+			// Something the player killed. "minimum"/"maximum" bracket the
+			// victim's COMBAT LEVEL, which is how one rule celebrates a boss
+			// and another shrugs at a chicken; "names"/"ids" narrow it further.
+			case "npckill":
+				return event.getType() == TriggerEvent.Type.NPC_KILL
+					&& event.getValue() >= orDefault(minimum, 0)
+					&& (maximum == null || event.getValue() <= maximum)
+					&& (names == null && ids == null || matchesNpc(event));
 
 			default:
 				log.warn("Unknown condition type '{}'", type);

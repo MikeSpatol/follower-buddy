@@ -5977,6 +5977,77 @@
         "I've stopped expecting anything.",
         "Wake me for the good part."
       ]
+    },
+    {
+      "id": "kill-cheer",
+      "note": "Sometimes cheers a kill. maximum 99 keeps this to ordinary monsters, leaving anything at the boss line to kill-boss-celebrate. holdStill plants the follower for the 2.4s cheer, since walking cancels an emote and it is usually chasing you to the next target.",
+      "group": "combat",
+      "priority": 55,
+      "cooldownMs": 40000,
+      "delayTicks": 1,
+      "delayTicksMax": 3,
+      "output": "overhead",
+      "holdStill": true,
+      "animation": 862,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "npcKill",
+            "maximum": 99
+          },
+          {
+            "type": "chance",
+            "percent": 30
+          }
+        ]
+      },
+      "say": [
+        "Nice one!",
+        "Got it!",
+        "That is the way!",
+        "Well struck!",
+        "Down it goes.",
+        "You made that look easy.",
+        "Good hit!",
+        "That {npc} never stood a chance.",
+        "Clean work.",
+        "Another one down.",
+        "Yes! Straight through it.",
+        "I saw that. That was good."
+      ]
+    },
+    {
+      "id": "kill-boss-celebrate",
+      "note": "A proper celebration for a boss kill: cheer, dance, then a jump for joy (862/866/2109, 7.4s in total). The 13-16 tick delay is deliberate - it lets the fight formally end and the spectating shield wind down first, so the celebration follows the fight instead of colliding with it. minimum 100 is the same combat level bossFight uses; lower it here and in the boss rules together if you want a different bar.",
+      "group": "boss",
+      "priority": 70,
+      "cooldownMs": 30000,
+      "delayTicks": 13,
+      "delayTicksMax": 16,
+      "output": "overhead",
+      "holdStill": true,
+      "animations": [
+        862,
+        866,
+        2109
+      ],
+      "when": {
+        "type": "npcKill",
+        "minimum": 100
+      },
+      "say": [
+        "YES! You did it!",
+        "{npc} is down! I knew you had it!",
+        "That was incredible. Absolutely incredible.",
+        "You beat {npc}! Do you know how few people can say that?",
+        "I was never worried. Well. Barely worried.",
+        "Look at you. Champion.",
+        "I am telling everyone about this.",
+        "{npc} down! That was magnificent.",
+        "You were unbelievable just then.",
+        "That is going to be the best thing I see all week."
+      ]
     }
   ]
 }

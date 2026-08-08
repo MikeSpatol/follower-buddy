@@ -324,6 +324,7 @@ wins.
 | `combat` | — true throughout a fight, including the gaps between targets |
 | `bossFight` | `minimum` — target's combat level, default 100 |
 | `combatStart` / `combatEnd` | `names`, `{npc}` placeholder |
+| `npcKill` | `minimum` / `maximum` combat level, `names`, `ids`; `{npc}` and `{level}` placeholders |
 | `login`, `always` | — |
 | `chance` | `percent`, rolled each evaluation |
 
@@ -376,6 +377,11 @@ total, written the way a player says it — `1.2M`, `214K`).
   freezes for a second or two between stages; slaving to the player removes the
   freeze, paces correctly under overrides on different schedules, and ends the
   moment the player's sequence ends (with a 25-tick watchdog against desync).
+- `holdStill` — plant the follower where it stands for the length of the
+  animation, releasing it when the animation ends. Movement always wins over an
+  emote, so anything triggered by a fight is otherwise cut off the instant the
+  follower starts walking back to you — which is immediately. `kill-cheer` and
+  `kill-boss-celebrate` both use it.
 - `delayTicks` / `delayTicksMax` — ticks to wait between the trigger and the
   whole firing, line and animation together. Set both and each firing draws a
   fresh wait between them, inclusive; set only `delayTicks` for a fixed one.

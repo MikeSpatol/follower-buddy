@@ -30,6 +30,7 @@ public final class TriggerEvent
 		ERRAND_END,
 		COMBAT_START,
 		COMBAT_END,
+		NPC_KILL,
 		PLAYER_DEATH,
 		LOOT,
 		MANUAL,
@@ -79,6 +80,22 @@ public final class TriggerEvent
 		TriggerEvent event = new TriggerEvent(type);
 		event.name = npcName == null ? "" : npcName;
 		event.placeholders.put("npc", event.name);
+		return event;
+	}
+
+	/**
+	 * Something the PLAYER killed. {@code value} carries the combat level, which
+	 * is how {@code npcKill} tells a boss from a rat; the name lands in {npc}.
+	 *
+	 * <p>Only raised for kills the player had a hand in - see the hitsplat
+	 * attribution in the plugin - so a follower does not applaud a guard losing
+	 * a fight with a dog on the other side of the street.
+	 */
+	public static TriggerEvent kill(int npcId, String npcName, int combatLevel)
+	{
+		TriggerEvent event = npc(Type.NPC_KILL, npcId, npcName);
+		event.value = combatLevel;
+		event.placeholders.put("level", Integer.toString(combatLevel));
 		return event;
 	}
 

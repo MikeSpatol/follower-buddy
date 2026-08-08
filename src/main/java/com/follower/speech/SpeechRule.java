@@ -92,6 +92,18 @@ public class SpeechRule
 	 */
 	public Boolean vanishAfter;
 
+	/**
+	 * Plant the follower where it stands for the length of the animation, and
+	 * let it follow again once the animation ends.
+	 *
+	 * <p>Movement always wins over an emote, so an animation played while the
+	 * follower is walking is cut off the moment it starts. That is most of the
+	 * time for anything triggered by a fight: it walks back to you the instant
+	 * the fight is over. Without this, a celebration is a celebration nobody
+	 * ever sees.
+	 */
+	public Boolean holdStill;
+
 	public Condition when;
 
 	/**
