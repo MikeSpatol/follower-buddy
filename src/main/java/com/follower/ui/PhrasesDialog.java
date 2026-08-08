@@ -10,8 +10,10 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -392,7 +394,7 @@ public class PhrasesDialog extends JDialog
 			}
 
 			parsed.add("rules", kept);
-			Files.write(file, (gson.toJson(parsed) + "\n").getBytes(StandardCharsets.UTF_8));
+			writeAtomically(gson.toJson(parsed) + "\n");
 
 			if (warnings.isEmpty())
 			{
@@ -408,6 +410,33 @@ public class PhrasesDialog extends JDialog
 		{
 			log.warn("Could not save {}", file, e);
 			setStatus("Save failed: " + e.getMessage(), true);
+		}
+	}
+
+	/**
+	 * Replaces the rules file in one step, via a sibling temp file.
+	 *
+	 * <p>The plugin polls this same file every game tick and reloads it when it
+	 * changes, which is what makes editing feel live. Writing in place truncates
+	 * it first, so a poll landing mid-write reads half a file, fails to parse
+	 * and reports a JSON error in the chatbox for something the user did
+	 * nothing wrong in. A rename is a single step: the poller sees the old file
+	 * or the new one, never a torn one.
+	 */
+	private void writeAtomically(String contents) throws IOException
+	{
+		Path temp = file.resolveSibling(file.getFileName() + ".tmp");
+		Files.write(temp, contents.getBytes(StandardCharsets.UTF_8));
+		try
+		{
+			Files.move(temp, file,
+				StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+		}
+		catch (AtomicMoveNotSupportedException e)
+		{
+			// Some filesystems cannot promise it. A plain replace is still one
+			// call rather than a truncate followed by a write.
+			Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING);
 		}
 	}
 

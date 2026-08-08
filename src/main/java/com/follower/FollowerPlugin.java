@@ -541,6 +541,41 @@ public class FollowerPlugin extends Plugin
 		knownLevels.clear();
 		lastPlayerTile = null;
 		lastRegionId = -1;
+		resetTransientState();
+	}
+
+	/**
+	 * Clears the flags that describe what the follower is in the MIDDLE of.
+	 *
+	 * <p>RuneLite builds a plugin once and calls startUp/shutDown on every
+	 * toggle, so instance fields outlive a disable. Anything latched here
+	 * survives into the next session and cannot be cleared by the thing that
+	 * would normally clear it, because that thing is over: switching the plugin
+	 * off mid-emote left {@code emoteDisarmed} set, and the follower came back
+	 * holding nothing for the rest of the client's life. The same trap holds for
+	 * the spectating disarm, the emote hold that pins the follower in place, and
+	 * the rest and wander timers.
+	 *
+	 * <p>The diagnostics go too: a scan or trace left running against a plugin
+	 * that is no longer loaded should not resume when it is.
+	 */
+	private void resetTransientState()
+	{
+		spectateDisarmed = false;
+		emoteDisarmed = false;
+		emoteHold = false;
+		resting = false;
+		wandered = false;
+		wanderCountdown = 0;
+		damagedByPlayer.clear();
+		mirrorGraphicsUntilTick = -1;
+
+		scanTicksLeft = 0;
+		animTraceRemaining = 0;
+		poseProbeTicks = 0;
+		autoHarvestTicks = 0;
+		watchAnimations = false;
+		watchOthers = false;
 	}
 
 	/*

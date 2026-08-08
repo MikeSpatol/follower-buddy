@@ -224,14 +224,18 @@ public class FollowerDialog extends Overlay
 	}
 
 	/**
-	 * The game's actual dialog fonts: RuneStar's pixel-perfect recreations of the
-	 * cache's Plain 12 and Bold 12, rebuilt glyph for glyph from the font data.
-	 * RuneLite's bundled runescape.ttf is its own looser recreation, which is why
-	 * the text never quite matched a real dialog. Sized 16pt: these TTFs are
-	 * authored so 16pt reproduces the native pixel size.
+	 * The game's actual dialog font: RuneStar's pixel-perfect recreation of the
+	 * cache's Plain 12, rebuilt glyph for glyph from the font data. RuneLite's
+	 * bundled runescape.ttf is its own looser recreation, which is why the text
+	 * never quite matched a real dialog. Sized 16pt: the TTF is authored so 16pt
+	 * reproduces the native pixel size.
+	 *
+	 * <p>Only reached when the font dump fails to load, which for a bundled
+	 * resource means a broken jar. The Bold 12 companion was loaded here too and
+	 * never drawn with - the overhead line's own fallback uses RuneLite's bold
+	 * font - so it and its resource are gone.
 	 */
 	private static final java.awt.Font PLAIN_12 = loadFont("RuneScape-Plain-12.ttf");
-	private static final java.awt.Font BOLD_12 = loadFont("RuneScape-Bold-12.ttf");
 
 	private static java.awt.Font loadFont(String resource)
 	{
