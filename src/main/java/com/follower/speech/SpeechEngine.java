@@ -102,12 +102,15 @@ public class SpeechEngine
 	{
 		final SpeechRule rule;
 		final TriggerEvent event;
+		/** The wait as drawn at the win - kept for the log, since a ranged delay is not on the rule. */
+		final int delay;
 		int ticksLeft;
 
 		PendingSpeech(SpeechRule rule, TriggerEvent event, int ticksLeft)
 		{
 			this.rule = rule;
 			this.event = event;
+			this.delay = ticksLeft;
 			this.ticksLeft = ticksLeft;
 		}
 	}
@@ -158,7 +161,7 @@ public class SpeechEngine
 						&& (muted || now - lastSpokeMs < globalCooldownMs)))
 					{
 						log.debug("rule '{}' fired after its {}-tick delay",
-							delayed.rule.describe(), delayed.rule.delayTicks);
+							delayed.rule.describe(), delayed.delay);
 						speak(delayed.rule, delayed.event, now);
 					}
 				}
@@ -214,11 +217,13 @@ public class SpeechEngine
 		}
 
 		// A delayed rule queues instead of speaking now; the cooldown is
-		// charged at the win so re-triggers don't stack up more firings.
-		if (winner.delayTicks != null && winner.delayTicks > 0)
+		// charged at the win so re-triggers don't stack up more firings. The
+		// wait is drawn HERE, once, so a ranged delay stays put while pending.
+		int delay = winner.rollDelayTicks();
+		if (delay > 0)
 		{
 			winner.markFired(now);
-			pending.add(new PendingSpeech(winner, event, winner.delayTicks));
+			pending.add(new PendingSpeech(winner, event, delay));
 			return;
 		}
 

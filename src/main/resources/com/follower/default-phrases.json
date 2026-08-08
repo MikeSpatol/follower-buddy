@@ -5489,6 +5489,8 @@
       "note": "Copies your emote. Every EMOTE_* id in RuneLite's constants that is a one-shot, checked against the cache. The 41 that are authored loops are excluded on purpose: a chain ends on the animation controller finishing, which a looping clip never does, so mirroring one would leave the follower stuck mid-emote and permanently disarmed.",
       "group": "mimic",
       "priority": 40,
+      "delayTicks": 1,
+      "delayTicksMax": 4,
       "cooldownMs": 2000,
       "when": {
         "type": "animationSelf",

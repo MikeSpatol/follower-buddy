@@ -376,6 +376,14 @@ total, written the way a player says it — `1.2M`, `214K`).
   freezes for a second or two between stages; slaving to the player removes the
   freeze, paces correctly under overrides on different schedules, and ends the
   moment the player's sequence ends (with a 25-tick watchdog against desync).
+- `delayTicks` / `delayTicksMax` — ticks to wait between the trigger and the
+  whole firing, line and animation together. Set both and each firing draws a
+  fresh wait between them, inclusive; set only `delayTicks` for a fixed one.
+  Reacting instantly reads as machinery, and so does a *constant* delay once
+  you have seen it twice — most obviously in `mimic-emotes`, which waits 1–4
+  ticks so the follower joins in a beat behind you rather than moving in
+  lockstep. Leave it off where the timing is the point: `mirror-teleport`
+  vanishes with your cast and must not lag it.
 - `note` — free text, ignored by the plugin.
 
 `say` is optional when the rule plays an animation: an animation-only rule is

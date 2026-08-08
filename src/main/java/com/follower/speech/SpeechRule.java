@@ -37,6 +37,17 @@ public class SpeechRule
 	 */
 	public Integer delayTicks;
 
+	/**
+	 * Upper bound for a VARIABLE delay: when set, each firing waits a fresh
+	 * number of ticks drawn between {@link #delayTicks} and this, inclusive.
+	 *
+	 * <p>A fixed delay still lands on the same beat every time, which reads as
+	 * machinery once you have seen it twice - most obvious when the follower
+	 * copies an emote, where a constant offset looks like a delay line rather
+	 * than someone joining in. Leave it unset for a fixed wait.
+	 */
+	public Integer delayTicksMax;
+
 	/** Overrides the config default. One of overhead / chatbox / both. */
 	public String output;
 
@@ -108,6 +119,21 @@ public class SpeechRule
 	public boolean hasSpeech()
 	{
 		return say != null && !say.isEmpty();
+	}
+
+	/**
+	 * How many ticks THIS firing waits: {@link #delayTicks}, or a fresh draw
+	 * between it and {@link #delayTicksMax} when that is set. Rolled once per
+	 * firing, so the wait is decided at the win and not re-rolled while the
+	 * firing sits pending.
+	 */
+	public int rollDelayTicks()
+	{
+		int min = delayTicks == null ? 0 : Math.max(0, delayTicks);
+		int max = delayTicksMax == null ? min : Math.max(min, delayTicksMax);
+		return max > min
+			? min + java.util.concurrent.ThreadLocalRandom.current().nextInt(max - min + 1)
+			: min;
 	}
 
 	public boolean hasAnimationAction()
