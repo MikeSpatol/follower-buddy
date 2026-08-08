@@ -75,6 +75,16 @@ tasks.register('runSeqInfo', JavaExec) {
     mainClass = 'com.follower.tools.SequenceInfo'
 }
 
+// The same check for the names the PLUGIN hardcodes: errand scene objects and
+// NPCs, and the standard pose ids.
+//   gradlew runSceneAudit
+tasks.register('runSceneAudit', JavaExec) {
+    group = 'verification'
+    description = 'Audits hardcoded scene names and pose ids against the cache'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.follower.tools.SceneNameAudit'
+}
+
 // Checks that every NPC name and item id the rules key on actually exists.
 // A name that matches nothing is a rule that can never fire, and says nothing.
 //   gradlew runTargetAudit --args="<phrases.json> [cacheDir]"

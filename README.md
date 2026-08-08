@@ -817,6 +817,17 @@ match the game. 118 names and 700 item ids now all resolve.
 
 Re-run after a game update that renames an NPC, and after adding rules by hand.
 
+The same check exists for the names the PLUGIN hardcodes rather than the rules —
+the scene objects and NPCs the errands look for, and the standard pose ids:
+
+```bash
+cd tools/cache-dumper && gradlew runSceneAudit
+```
+
+All twelve errand names and all seven `PlayerPose` constants resolve
+(2026-08-08). An errand looking for an object the game does not have would
+simply never happen, with nothing logged either way.
+
 ## Known limitations
 
 These are inherent to the approach, not bugs to be filed:
