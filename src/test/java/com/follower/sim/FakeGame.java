@@ -46,6 +46,8 @@ public final class FakeGame
 	private final Map<String, Object> clientAnswers = new HashMap<>();
 	private final Map<String, Object> playerAnswers = new HashMap<>();
 	private final List<NPC> npcs = new ArrayList<>();
+	/** Each NPC's answer map, so a spawned one can still be moved about. */
+	private final Map<NPC, Map<String, Object>> npcAnswers = new HashMap<>();
 
 	private final Map<Integer, Integer> varbits = new HashMap<>();
 	private final Map<Integer, Integer> varps = new HashMap<>();
@@ -179,6 +181,7 @@ public final class FakeGame
 		answers.put("getComposition", proxy(NPCComposition.class, composition));
 		NPC npc = proxy(NPC.class, answers);
 		npcs.add(npc);
+		npcAnswers.put(npc, answers);
 		return npc;
 	}
 
@@ -213,6 +216,13 @@ public final class FakeGame
 	public FakeGame prayer(int current, int max)
 	{
 		skillLevels.put(Skill.PRAYER, new int[]{current, max});
+		return this;
+	}
+
+	/** Moves an NPC that is already in the scene. */
+	public FakeGame moveNpc(NPC npc, int x, int y, int plane)
+	{
+		npcAnswers.get(npc).put("getWorldLocation", new WorldPoint(x, y, plane));
 		return this;
 	}
 
