@@ -127,19 +127,6 @@ public class Condition
 		return contains(idsUnboxed, wanted);
 	}
 
-	private boolean regionsContain(int wanted)
-	{
-		if (regions == null)
-		{
-			return false;
-		}
-		if (regionsUnboxed == null)
-		{
-			regionsUnboxed = unbox(regions);
-		}
-		return contains(regionsUnboxed, wanted);
-	}
-
 	/**
 	 * The lowercased {@link #type}, cached: every rule is evaluated on every
 	 * event, and re-lowercasing the discriminator allocated a string per
