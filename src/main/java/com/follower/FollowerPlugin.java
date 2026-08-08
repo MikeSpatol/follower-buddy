@@ -595,6 +595,7 @@ public class FollowerPlugin extends Plugin
 			.build();
 		clientToolbar.addNavigation(navButton);
 		syncPanel();
+		follower.setOnEmoteStateChanged(this::updateEmoteDisarm);
 		stanceLibrary.setStyleSource(this::weaponUsage);
 		buildSlotIndexAsync();
 	}
@@ -1964,9 +1965,9 @@ public class FollowerPlugin extends Plugin
 			sendStatus("Outfit warnings: " + String.join("; ", errors));
 		}
 
-		// Hands free to channel: a follower kneeling in prayer should not still
-		// be gripping a sword and a shield.
-		if (spectateDisarmed)
+		// Hands free: a follower kneeling in prayer should not still be
+		// gripping a sword and a shield, and neither should one waving.
+		if (spectateDisarmed || emoteDisarmed)
 		{
 			outfit.clear(KitType.WEAPON);
 			outfit.clear(KitType.SHIELD);
@@ -1976,6 +1977,33 @@ public class FollowerPlugin extends Plugin
 
 	/** True while the shield channel has the follower's weapon and shield put away. */
 	private boolean spectateDisarmed;
+
+	/** True while an emote has them put away. */
+	private boolean emoteDisarmed;
+
+	/**
+	 * Empties the follower's hands for the duration of an emote.
+	 *
+	 * <p>Emotes are authored for a player holding nothing: a wave with a
+	 * two-handed sword through the arm reads as a fault. Rebuilding the model
+	 * mid-emote is safe, which was not obvious - setAppearance re-applies the
+	 * pose, but applyPose returns early while an emote owns the animation slot,
+	 * so the model is swapped underneath a clip that keeps running.
+	 *
+	 * <p>Thrall mode is exempt. Its attacks run through the same emote path,
+	 * and a thrall swinging an invisible weapon would be worse than the problem
+	 * this solves.
+	 */
+	private void updateEmoteDisarm(boolean emoting)
+	{
+		boolean wanted = emoting && thrallNpc == null;
+		if (wanted == emoteDisarmed)
+		{
+			return;
+		}
+		emoteDisarmed = wanted;
+		rebuildFollower();
+	}
 
 	/**
 	 * Puts the follower's weapon and shield away for the duration of the

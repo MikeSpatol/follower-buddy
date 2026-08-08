@@ -2417,6 +2417,28 @@ public class FollowerEntity
 		return emotePlaying;
 	}
 
+	/** Notified the moment an emote starts or ends. */
+	@lombok.Setter
+	private java.util.function.Consumer<Boolean> onEmoteStateChanged;
+
+	/**
+	 * The one place emotePlaying changes, so anything that needs to react does
+	 * so AS it happens rather than on the next tick. Half a second of a wave
+	 * still holding a sword is most of a short emote.
+	 */
+	private void setEmotePlaying(boolean playing)
+	{
+		if (emotePlaying == playing)
+		{
+			return;
+		}
+		emotePlaying = playing;
+		if (onEmoteStateChanged != null)
+		{
+			onEmoteStateChanged.accept(playing);
+		}
+	}
+
 	/** The weapon the follower is holding, for animation lookups. */
 	public int getWeaponItemId()
 	{
@@ -3006,7 +3028,7 @@ public class FollowerEntity
 
 		if (index >= ids.length)
 		{
-			emotePlaying = false;
+			setEmotePlaying(false);
 			activePose = -1; // force the next frame to re-apply the locomotion pose
 			consumeVanish();
 			return;
@@ -3024,7 +3046,7 @@ public class FollowerEntity
 		controller.setOnFinished(finished -> playChain(ids, graphics, index + 1, generation));
 		object.setAnimationController(controller);
 		animationIds.add(ids[index]);
-		emotePlaying = true;
+		setEmotePlaying(true);
 		// Which clip is on screen right now: activePose is not updated while an
 		// emote owns the slot, so anything that needs to know what is being
 		// drawn - the tile recentring - has to read it from here.
@@ -3160,7 +3182,7 @@ public class FollowerEntity
 		AnimationController controller = new AnimationController(client, animation);
 		object.setAnimationController(controller);
 		animationIds.add(slavedChain[slavedIndex]);
-		emotePlaying = true;
+		setEmotePlaying(true);
 
 		if (slavedGraphics != null && slavedIndex < slavedGraphics.length
 			&& slavedGraphics[slavedIndex] != null)
@@ -3305,7 +3327,7 @@ public class FollowerEntity
 			return;
 		}
 		emoteGeneration++;
-		emotePlaying = false;
+		setEmotePlaying(false);
 		activePose = -1;
 
 		// A cancelled teleport should not leave its rune circle spinning at the
