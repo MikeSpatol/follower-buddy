@@ -146,6 +146,10 @@ public class ErrandController
 		current = null;
 		targetTile = null;
 		errandSite = null;
+		// Unlike clearErrand, this is the logout path. A forced errand that
+		// never got to run is not owed to the next session - the chat command
+		// asking for it was in the one before.
+		forceKey = null;
 		nextRollTicks = scheduleTicks();
 	}
 
