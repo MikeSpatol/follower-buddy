@@ -793,6 +793,30 @@ Encampment" (the God Wars Dungeon), and so on.
 
 Re-run the audit after a game update that moves or renames an area.
 
+## Rule targets — VERIFIED against the cache (2026-08-08)
+
+A rule that watches for an NPC the game does not have is invisible: it never
+fires, and there is nothing to notice. It looks exactly like a rule whose
+trigger has not happened yet. The same holds for an `itemEquipped` id that is
+one digit out.
+
+```bash
+cd tools/cache-dumper && gradlew runTargetAudit --args="<phrases.json>"
+```
+
+`RuleTargetAudit` reads every named NPC and item out of the cache and asks the
+question the plugin will ask at runtime — whole-name, case-insensitive, `*`
+wildcards — of every `npcSpawn` / `npcNearby` / `npcKill` name and every
+`itemEquipped` id in the file.
+
+It found one on its first run. `quest-gypsy-aris` watched for **"Gypsy Aris"**,
+which is what the wiki calls her; the game calls her **"Aris"** (npc 11868 and
+friends), so that rule could never have fired. The spoken lines still call her
+Gypsy Aris, because that is what a player would say — only the trigger has to
+match the game. 118 names and 700 item ids now all resolve.
+
+Re-run after a game update that renames an NPC, and after adding rules by hand.
+
 ## Known limitations
 
 These are inherent to the approach, not bugs to be filed:

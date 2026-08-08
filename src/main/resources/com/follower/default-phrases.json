@@ -3042,7 +3042,7 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby", "within": 5, "names": ["Gypsy Aris"] },
+      "when": { "type": "npcNearby", "within": 5, "names": ["Aris"] },
       "say": [
         "Gypsy Aris. She saw this conversation coming, of course.",
         "Her crystal ball has started more heroics than every sword in Varrock.",

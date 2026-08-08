@@ -75,6 +75,16 @@ tasks.register('runSeqInfo', JavaExec) {
     mainClass = 'com.follower.tools.SequenceInfo'
 }
 
+// Checks that every NPC name and item id the rules key on actually exists.
+// A name that matches nothing is a rule that can never fire, and says nothing.
+//   gradlew runTargetAudit --args="<phrases.json> [cacheDir]"
+tasks.register('runTargetAudit', JavaExec) {
+    group = 'verification'
+    description = 'Audits rule NPC names and item ids against the cache'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.follower.tools.RuleTargetAudit'
+}
+
 tasks.register('runAudit', JavaExec) {
     group = 'verification'
     description = 'Audits phrases.json location regions against the game world map'
