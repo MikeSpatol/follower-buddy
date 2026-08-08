@@ -2101,6 +2101,11 @@ public class FollowerEntity
 	 * is not true of a rat, where the two simply overlap the way two players on
 	 * one tile do, and vanishing is the more jarring of the two.
 	 *
+	 * <p>Both parties have to be still for it: the follower is checked by its
+	 * caller, and the NPC here. Two things settled on one tile look wrong for
+	 * as long as they stay there, which is worth hiding. One passing through is
+	 * over in a moment, and blinking out to cover it is the louder event.
+	 *
 	 * <p>The possessed thrall is excluded: in thrall mode the follower stands
 	 * exactly where it is deliberately, and it is hidden from the renderer
 	 * anyway.
@@ -2124,6 +2129,16 @@ public class FollowerEntity
 			}
 			WorldPoint at = npc.getWorldLocation();
 			if (at == null || !at.equals(where))
+			{
+				continue;
+			}
+
+			// Only once the NPC has STOPPED there. One walking through is a
+			// moment, and blinking out as it crosses draws far more attention
+			// than the overlap would have. An NPC on the move is playing a
+			// walk pose; a standing one is on its idle pose, including while
+			// it attacks, since that lives in the animation slot instead.
+			if (npc.getPoseAnimation() != npc.getIdlePoseAnimation())
 			{
 				continue;
 			}
