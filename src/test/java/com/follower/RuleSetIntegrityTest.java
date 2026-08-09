@@ -53,7 +53,7 @@ public class RuleSetIntegrityTest
 		"energybelow", "idle", "idlebelow", "playerdeath", "neardeathspot",
 		"lootworth", "returnvisit", "combat", "bossfight", "login",
 		"thrallstart", "thrallswitch", "thrallend", "errandstart", "errandend",
-		"combatstart", "combatend", "npckill", "mood"));
+		"combatstart", "combatend", "npckill", "mood", "repeating"));
 
 	private static JsonObject bundled(String resource) throws IOException
 	{
@@ -261,7 +261,7 @@ public class RuleSetIntegrityTest
 		java.util.Map<String, Set<String>> byType = new java.util.HashMap<>();
 		byType.put("npcspawn", new HashSet<>(Arrays.asList("npc", "npcId")));
 		byType.put("npcdespawn", new HashSet<>(Arrays.asList("npc", "npcId")));
-		byType.put("npckill", new HashSet<>(Arrays.asList("npc", "npcId", "level")));
+		byType.put("npckill", new HashSet<>(Arrays.asList("npc", "npcId", "level", "count")));
 		byType.put("combatstart", new HashSet<>(Arrays.asList("npc")));
 		byType.put("combatend", new HashSet<>(Arrays.asList("npc")));
 		byType.put("lootworth", new HashSet<>(Arrays.asList("item", "value")));

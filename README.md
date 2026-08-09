@@ -340,6 +340,7 @@ wins.
 | `combatStart` / `combatEnd` | `names`, `{npc}` placeholder |
 | `npcKill` | `minimum` / `maximum` combat level, `names`, `ids`; `{npc}` and `{level}` placeholders |
 | `mood` | `is` — a band (`low`, `down`, `even`, `good`, `high`) — or `minimum`/`maximum` over 0–100 |
+| `repeating` | `ticks` — how long the same animation has been running; optional `ids` |
 | `login`, `always` | — |
 | `chance` | `percent`, rolled each evaluation |
 
@@ -416,6 +417,24 @@ chatter, and a mirrored teleport is not chatter. It does still respect its own
 
 A JSON syntax error keeps the previously loaded rules rather than leaving you silent;
 the problem is reported in the chatbox and the log.
+
+### Noticing repetition
+
+Two ways, both about the follower appearing to have been paying attention.
+
+**How many.** `npcKill` takes `"every": 25`, which fires on the twenty-fifth
+kill of *that* NPC and every twenty-fifth after. `{count}` carries the number,
+so a line can say it. The tally is kept per NPC **name**, not id — a player
+counts kalphites, not the four ids the game happens to use for them — and it is
+counted where the kill is attributed, so the tally and the event can never
+disagree about which kill this was.
+
+**How long.** The `repeating` condition asks how many ticks the player has been
+playing the same animation. It knows nothing about trees or rocks or fish: an
+animation running for minutes *is* the activity, so one condition covers every
+skill at once, including ones added later. Brief gaps are tolerated, because
+most gathering drops to no animation for a tick between swings and treating
+that as stopping would hold the count at zero forever.
 
 ### Mood
 

@@ -65,6 +65,9 @@ public class Condition
 	public Integer varbit;
 	public Integer value;
 
+	/** Fire on every Nth occurrence rather than on each one. */
+	public Integer every;
+
 	public Integer x1;
 	public Integer y1;
 	public Integer x2;
@@ -358,7 +361,18 @@ public class Condition
 				return event.getType() == TriggerEvent.Type.NPC_KILL
 					&& event.getValue() >= orDefault(minimum, 0)
 					&& (maximum == null || event.getValue() <= maximum)
-					&& (names == null && ids == null || matchesNpc(event));
+					&& (names == null && ids == null || matchesNpc(event))
+					// "every": 50 fires on the fiftieth of THIS npc and every
+					// fiftieth after, which is what makes a tally a remark.
+					&& (every == null || every <= 0
+						|| (event.getCount() > 0 && event.getCount() % every == 0));
+
+			// How long the player has been doing the same thing. Knows nothing
+			// about trees or rocks: an animation running for minutes IS the
+			// activity, so this covers every skill at once.
+			case "repeating":
+				return ctx.getRepeatingTicks() >= orDefault(ticks, 100)
+					&& (ids == null || idsContain(ctx.getRepeatingAnimation()));
 
 			default:
 				log.warn("Unknown condition type '{}'", type);

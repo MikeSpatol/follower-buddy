@@ -3989,8 +3989,15 @@ public class FollowerPlugin extends Plugin
 			if (hit != null && event.getActor() instanceof NPC)
 			{
 				NPC npc = (NPC) event.getActor();
+				// Counted here, where the kill is known to be the player's, so
+				// the tally and the event can never disagree about it. Keyed by
+				// name rather than id: a player counts kalphites, not the four
+				// ids the game happens to use for them.
+				String name = npc.getName() == null ? "" : npc.getName();
+				int count = speechEngine.getContext().tally(
+					"kill:" + name.toLowerCase(Locale.ROOT));
 				speechEngine.dispatch(TriggerEvent.kill(
-					npc.getId(), npc.getName(), npc.getCombatLevel()));
+					npc.getId(), name, npc.getCombatLevel(), count));
 			}
 			return;
 		}

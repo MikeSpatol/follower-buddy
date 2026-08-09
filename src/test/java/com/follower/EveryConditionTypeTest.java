@@ -504,6 +504,20 @@ public class EveryConditionTypeTest
 		assertFired(range, "mood range");
 	}
 
+	@Test
+	public void repeating() throws IOException
+	{
+		note("repeating");
+
+		Harness h = harnessFor("{\"type\": \"repeating\", \"ticks\": 20}");
+		h.gameTicks(30);
+		assertQuiet(h, "standing about is not doing something over and over");
+
+		h.game.animating(879);
+		h.gameTicks(30);
+		assertFired(h, "repeating");
+	}
+
 	// ------------------------------------------------------------- coverage
 
 	@Test
@@ -523,6 +537,7 @@ public class EveryConditionTypeTest
 		oneShotEventConditions();
 		combatAndBossFightAndDeathSpot();
 		mood();
+		repeating();
 
 		List<String> missing = new ArrayList<>(new TreeSet<>(RuleSetIntegrityTest.KNOWN_TYPES));
 		missing.removeAll(exercised);

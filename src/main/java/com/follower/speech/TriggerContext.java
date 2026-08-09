@@ -114,6 +114,7 @@ public final class TriggerContext
 
 		refreshLoadedRegions();
 		refreshEquipment(local.getPlayerComposition());
+		refreshRepetition(local);
 		driftMood();
 	}
 
@@ -187,6 +188,91 @@ public final class TriggerContext
 	public int getCombatTargetLevel()
 	{
 		return combatTargetLevel;
+	}
+
+	// ---------------------------------------------------------------- tallies
+
+	/**
+	 * How many of each thing has happened this session, keyed by a short label.
+	 *
+	 * <p>Nothing signals that someone is paying attention like a tally. The
+	 * follower knowing this is the fiftieth kalphite is a different kind of
+	 * remark from anything it can say about one kill, and it costs a map.
+	 *
+	 * <p>Keyed by string so a new thing to count needs no new field - the
+	 * caller decides the label, the same way rules decide what moves the mood.
+	 */
+	private final java.util.Map<String, Integer> tallies = new java.util.HashMap<>();
+
+	/** Counts one, and returns the new total. */
+	public int tally(String what)
+	{
+		return tallies.merge(what, 1, Integer::sum);
+	}
+
+	public int getTally(String what)
+	{
+		return tallies.getOrDefault(what, 0);
+	}
+
+	// -------------------------------------------------------------- repeating
+
+	/**
+	 * How long the player has been doing the same thing, in ticks.
+	 *
+	 * <p>Repetition is the texture of the game, and a companion that never
+	 * notices it is not watching. This needs to know nothing about trees or
+	 * rocks or fish: an animation repeating for minutes IS the activity, so
+	 * counting the ticks it has been running covers every skill at once,
+	 * including ones added later.
+	 *
+	 * <p>Brief gaps are tolerated. Most gathering drops to no animation for a
+	 * tick between swings, and treating that as stopping would keep the count
+	 * at zero forever.
+	 */
+	private static final int REPEAT_GAP_GRACE_TICKS = 4;
+
+	private int repeatingAnimation = -1;
+	private int repeatingTicks;
+	private int ticksSinceAnimation;
+
+	private void refreshRepetition(Player local)
+	{
+		int animation = local.getAnimation();
+
+		if (animation == -1)
+		{
+			// A pause, not necessarily a stop. Hold the count for a moment.
+			if (repeatingAnimation != -1 && ++ticksSinceAnimation > REPEAT_GAP_GRACE_TICKS)
+			{
+				repeatingAnimation = -1;
+				repeatingTicks = 0;
+			}
+			return;
+		}
+
+		ticksSinceAnimation = 0;
+		if (animation == repeatingAnimation)
+		{
+			repeatingTicks++;
+		}
+		else
+		{
+			repeatingAnimation = animation;
+			repeatingTicks = 1;
+		}
+	}
+
+	/** The animation the player has been repeating, or -1. */
+	public int getRepeatingAnimation()
+	{
+		return repeatingAnimation;
+	}
+
+	/** How many ticks that animation has been going, gaps included. */
+	public int getRepeatingTicks()
+	{
+		return repeatingTicks;
 	}
 
 	// ------------------------------------------------------------------- mood

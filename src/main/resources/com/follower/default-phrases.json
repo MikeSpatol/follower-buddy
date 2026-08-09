@@ -6260,6 +6260,107 @@
         "That's the one we needed.",
         "Better. Much better."
       ]
+    },
+    {
+      "id": "kill-tally",
+      "note": "Notices the count. 'every': 25 fires on the twenty-fifth of THAT npc and every twenty-fifth after, with {count} carrying the number and {npc} the name. Nothing says paying attention like a tally.",
+      "group": "combat",
+      "priority": 58,
+      "cooldownMs": 20000,
+      "delayTicks": 2,
+      "delayTicksMax": 5,
+      "output": "overhead",
+      "mood": 2,
+      "when": {
+        "type": "npcKill",
+        "every": 25
+      },
+      "say": [
+        "That's {count} of them. Not that I'm counting. I am counting.",
+        "{count}. I've been keeping track, since nobody else was.",
+        "{count} now. The {npc} population is having a bad day.",
+        "Number {count}. You could stop. You won't, but you could.",
+        "{count}. At some point this stopped being a fight and became a job."
+      ]
+    },
+    {
+      "id": "kill-tally-hundred",
+      "note": "The bigger milestone, at every hundredth of one npc. Higher priority than kill-tally so the round number wins when both come up together.",
+      "group": "combat",
+      "priority": 62,
+      "cooldownMs": 20000,
+      "delayTicks": 2,
+      "delayTicksMax": 5,
+      "output": "overhead",
+      "mood": 5,
+      "when": {
+        "type": "npcKill",
+        "every": 100
+      },
+      "say": [
+        "{count}. A hundred more. I hope this is for something.",
+        "{count} of them. You realise that's a village?",
+        "{count}. I've watched every single one. Ask me anything.",
+        "That's {count}, and I'd like it noted that I never once complained."
+      ]
+    },
+    {
+      "id": "repeating-a-while",
+      "note": "Notices the same animation running for about two minutes. Knows nothing about the skill - a repeating animation IS the activity, which covers every one of them at once, including ones added later.",
+      "group": "idle",
+      "priority": 30,
+      "cooldownMs": 240000,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "repeating",
+            "ticks": 200
+          },
+          {
+            "type": "chance",
+            "percent": 40
+          }
+        ]
+      },
+      "say": [
+        "Still at it, then.",
+        "You've been doing that a while.",
+        "I've watched you do that about forty times now.",
+        "This is the part of the adventure the songs leave out.",
+        "Don't mind me. I'm just here.",
+        "We've been here a bit, haven't we."
+      ]
+    },
+    {
+      "id": "repeating-a-long-while",
+      "note": "The same, much later - about eight minutes of one activity. Higher priority so it wins over the shorter one once it is due.",
+      "group": "idle",
+      "priority": 34,
+      "cooldownMs": 600000,
+      "output": "overhead",
+      "mood": -3,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "repeating",
+            "ticks": 800
+          },
+          {
+            "type": "chance",
+            "percent": 50
+          }
+        ]
+      },
+      "say": [
+        "You have been doing this for a very long time.",
+        "I've started naming them. That one's Geoffrey.",
+        "I want you to know I'm still here. Fading, but here.",
+        "At what point does this become a lifestyle?",
+        "I've had time to think. I have some concerns."
+      ]
     }
   ]
 }

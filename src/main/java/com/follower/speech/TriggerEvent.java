@@ -93,9 +93,20 @@ public final class TriggerEvent
 	 */
 	public static TriggerEvent kill(int npcId, String npcName, int combatLevel)
 	{
+		return kill(npcId, npcName, combatLevel, 0);
+	}
+
+	/**
+	 * @param count how many of this NPC have been killed this session, which
+	 * rides along so a rule can fire on the fiftieth and say which one it was
+	 */
+	public static TriggerEvent kill(int npcId, String npcName, int combatLevel, int count)
+	{
 		TriggerEvent event = npc(Type.NPC_KILL, npcId, npcName);
 		event.value = combatLevel;
+		event.count = count;
 		event.placeholders.put("level", Integer.toString(combatLevel));
+		event.placeholders.put("count", Integer.toString(count));
 		return event;
 	}
 
@@ -135,6 +146,9 @@ public final class TriggerEvent
 	private String name = "";
 	private int id = -1;
 	private int value;
+
+	/** How many times this has happened before, where the raiser counts. */
+	private int count;
 	private int previousValue;
 	private String message = "";
 	private int chatTypeId = -1;
@@ -236,6 +250,11 @@ public final class TriggerEvent
 	public int getValue()
 	{
 		return value;
+	}
+
+	public int getCount()
+	{
+		return count;
 	}
 
 	public int getPreviousValue()
