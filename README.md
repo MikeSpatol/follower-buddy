@@ -425,6 +425,7 @@ and `wantExpired`).
 - `asks` — marks the line as a question, opening a twelve-second window in which
   the player's next public line can be read as an answer by an `answered` rule.
 - `want` — `{"region": 12850, "label": "Lumbridge", "minutes": 20}`. See below.
+- `hushMs` — takes the floor: nothing else speaks for this long. See below.
 - `note` — free text, ignored by the plugin.
 
 Both `asks` and `want` take effect when the line is actually **said**, not when
@@ -485,6 +486,31 @@ Only one want is open at a time — two would mean going anywhere satisfied
 something, which is the same as satisfying nothing — and a want for the region
 you are already standing in is refused outright. The `wanting` condition, inside
 a `none`, is how a rule avoids asking over the top of an open one.
+
+Each place a want can ask for has its own arrival line saying **why** it likes
+it, above the generic one. Thanking you for going somewhere is politeness;
+saying why *that* place is a preference, and a preference is the part that reads
+as a mind.
+
+### Taking the floor
+
+`hushMs` on a rule means: nothing else speaks for that long. Arriving where the
+follower asked is the case it was built for — the region change makes an area
+line true on the same pass, and a `feelsAbout` line can land moments later, so
+one arrival was coming out as two or three separate remarks.
+
+Two details that are the whole feature:
+
+- The floor is taken when the rule **wins**, not when it speaks. `want-fulfilled`
+  waits two to five ticks before saying anything, and a rule holding the floor
+  only from the moment it speaks would leave its own delay wide open for exactly
+  the line it meant to displace.
+- The holder is **exempt** from the global speech gap. This is the half that
+  actually bit: an area line a second earlier would drop the arrival line
+  entirely, so the moment worth having was the one being lost.
+
+Only speech is hushed. An animation-only rule is movement rather than chatter
+and carries on regardless — the same reason those skip the mute.
 
 ### Taste
 

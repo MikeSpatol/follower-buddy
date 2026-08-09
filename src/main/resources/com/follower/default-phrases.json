@@ -1420,6 +1420,7 @@
       "id": "big-hit-taken",
       "group": "health",
       "priority": 60,
+      "animation": 424,
       "cooldownMs": 12000,
       "when": {
         "type": "damageTaken",
@@ -7338,6 +7339,7 @@
       "output": "overhead",
       "animation": 2109,
       "holdStill": true,
+      "hushMs": 10000,
       "mood": 25,
       "when": {
         "type": "wantFulfilled"
@@ -7551,6 +7553,108 @@
         "type": "damageTaken",
         "minimum": 20
       }
+    },
+    {
+      "id": "want-fulfilled-lumbridge",
+      "note": "Arriving where it asked, with the REASON. The generic line thanks you for coming; this says why that place and not another, which is the difference between a companion that is pleased and one that has a preference. Above the generic want-fulfilled at 78, which stays as the fallback for any want without a line of its own. hushMs takes the floor for 10 seconds: the region change raises an area line at the same instant, and two lines about one arrival is one too many.",
+      "group": "reactions",
+      "priority": 80,
+      "cooldownMs": 60000,
+      "delayTicks": 2,
+      "delayTicksMax": 5,
+      "output": "overhead",
+      "animation": 2109,
+      "holdStill": true,
+      "hushMs": 10000,
+      "mood": 25,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "wantFulfilled"
+          },
+          {
+            "type": "inRegion",
+            "regions": [
+              12850
+            ]
+          }
+        ]
+      },
+      "say": [
+        "Lumbridge. Everyone's first steps happen here. Mine were with you.",
+        "This is where it all starts, for everyone. I like standing where that happened.",
+        "The castle, the river, the old stone. Nothing important happens here any more, and that is exactly why.",
+        "Thank you. Nobody's in a hurry in Lumbridge. Look at it."
+      ]
+    },
+    {
+      "id": "want-fulfilled-grand-exchange",
+      "note": "Arriving where it asked, with the REASON. The generic line thanks you for coming; this says why that place and not another, which is the difference between a companion that is pleased and one that has a preference. Above the generic want-fulfilled at 78, which stays as the fallback for any want without a line of its own. hushMs takes the floor for 10 seconds: the region change raises an area line at the same instant, and two lines about one arrival is one too many.",
+      "group": "reactions",
+      "priority": 80,
+      "cooldownMs": 60000,
+      "delayTicks": 2,
+      "delayTicksMax": 5,
+      "output": "overhead",
+      "animation": 2109,
+      "holdStill": true,
+      "hushMs": 10000,
+      "mood": 25,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "wantFulfilled"
+          },
+          {
+            "type": "inRegion",
+            "regions": [
+              12598
+            ]
+          }
+        ]
+      },
+      "say": [
+        "The Exchange. Everyone here wants something, and you can see it on them.",
+        "Listen to it. Hundreds of people all making a deal at once. I could watch this all day.",
+        "It's the noise I like. Nowhere else in the world sounds like this.",
+        "Fortunes made and lost round here before lunch, and I get to watch it happen."
+      ]
+    },
+    {
+      "id": "want-fulfilled-fishing-guild",
+      "note": "Arriving where it asked, with the REASON. The generic line thanks you for coming; this says why that place and not another, which is the difference between a companion that is pleased and one that has a preference. Above the generic want-fulfilled at 78, which stays as the fallback for any want without a line of its own. hushMs takes the floor for 10 seconds: the region change raises an area line at the same instant, and two lines about one arrival is one too many.",
+      "group": "reactions",
+      "priority": 80,
+      "cooldownMs": 60000,
+      "delayTicks": 2,
+      "delayTicksMax": 5,
+      "output": "overhead",
+      "animation": 2109,
+      "holdStill": true,
+      "hushMs": 10000,
+      "mood": 25,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "wantFulfilled"
+          },
+          {
+            "type": "inRegion",
+            "regions": [
+              10293
+            ]
+          }
+        ]
+      },
+      "say": [
+        "The Fishing Guild. It's the quiet. You don't get quiet like this anywhere.",
+        "Listen. Nothing. Just the water. I needed this.",
+        "I like it here because nothing is trying to kill us. Do you know how rare that is?",
+        "The water does something to me. Sorry. I know it's only water."
+      ]
     }
   ]
 }

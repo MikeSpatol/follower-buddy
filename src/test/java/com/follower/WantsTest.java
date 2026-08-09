@@ -3,6 +3,7 @@ package com.follower;
 import com.follower.sim.Harness;
 import com.follower.speech.Condition;
 import com.follower.speech.SpeechRule;
+import com.follower.speech.TriggerEvent;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
@@ -117,8 +118,12 @@ public class WantsTest
 		// want-fulfilled rolls a two-to-five tick delay, so four ticks leaves it
 		// pending a quarter of the time. Comfortably past the longest roll.
 		h.gameTicks(10);
+		// Either the place-specific arrival or the generic fallback: which one
+		// depends on whether that place has a line of its own, and both are a
+		// correct answer to having been taken there.
 		assertFalse("going where it asked is the whole point",
-			h.firedBy("want-fulfilled").isEmpty());
+			h.firedBy("want-fulfilled").isEmpty()
+				&& h.firedBy("want-fulfilled-" + winner.id.substring("want-".length())).isEmpty());
 		assertTrue("and the want is spent", !h.engine.getContext().isWanting());
 	}
 
@@ -158,6 +163,124 @@ public class WantsTest
 			expired.mood != null && expired.mood > -15);
 		assertTrue("and smaller than the lift for being listened to",
 			Math.abs(expired.mood) < fulfilled.mood);
+	}
+
+	@Test
+	public void takingTheFloorKeepsEverythingElseQuietForAWhile() throws IOException
+	{
+		// The engine mechanism on its own. The harness runs with no global
+		// speech gap, so without the floor the second line would come straight
+		// out - which is what makes this bite.
+		Harness h = new Harness(folder.newFolder().toPath(),
+			"{\"version\": 1, \"rules\": ["
+				+ "{\"id\": \"important\", \"group\": \"t\", \"cooldownMs\": 0,"
+				+ " \"hushMs\": 5000, \"when\": {\"type\": \"examined\"},"
+				+ " \"say\": [\"listen to me\"]},"
+				+ "{\"id\": \"chatter\", \"group\": \"t\", \"cooldownMs\": 0,"
+				+ " \"when\": {\"type\": \"playerDeath\"}, \"say\": [\"unrelated\"]}]}");
+		h.gameTicks(1);
+
+		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.EXAMINED));
+		assertFalse("the rule taking the floor says its line",
+			h.firedBy("important").isEmpty());
+
+		h.dispatch(TriggerEvent.death());
+		assertTrue("and nothing else gets a word in while it holds it",
+			h.firedBy("chatter").isEmpty());
+	}
+
+	@Test
+	public void theRuleTakingTheFloorIsNotHeldBackByWhatSpokeBeforeIt() throws IOException
+	{
+		// The same failure from the other end, and the one that actually bit:
+		// an area line a second earlier would drop the arrival line entirely on
+		// the global speech gap, so the moment worth having was the one lost.
+		Harness h = new Harness(folder.newFolder().toPath(),
+			"{\"version\": 1, \"rules\": ["
+				+ "{\"id\": \"important\", \"group\": \"t\", \"cooldownMs\": 0,"
+				+ " \"hushMs\": 5000, \"when\": {\"type\": \"examined\"},"
+				+ " \"say\": [\"listen to me\"]},"
+				+ "{\"id\": \"chatter\", \"group\": \"t\", \"cooldownMs\": 0,"
+				+ " \"when\": {\"type\": \"playerDeath\"}, \"say\": [\"unrelated\"]}]}");
+		h.engine.setGlobalCooldownMs(3000L);
+		h.gameTicks(1);
+
+		h.dispatch(TriggerEvent.death());
+		assertFalse("something ordinary speaks first", h.firedBy("chatter").isEmpty());
+
+		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.EXAMINED));
+		assertFalse("the important line must not be eaten by the gap",
+			h.firedBy("important").isEmpty());
+	}
+
+	@Test
+	public void arrivingWhereItAskedIsOneThoughtAndNotTwo() throws IOException
+	{
+		// Walking into the wanted region makes the arrival rule and the area
+		// rule true on the same pass. Only one can win, and both are evaluated
+		// in the WANT_FULFILLED dispatch, so the area rule's rising edge is
+		// consumed there without firing - it is not that it loses later, it is
+		// that its one chance was spent on a dispatch it did not win.
+		Harness h = new Harness(folder.newFolder().toPath());
+		h.game.at(3000, 3000, 0);
+		h.gameTicks(2);
+		h.engine.getContext().setWant(12850, "Lumbridge", 20);
+
+		// Into Lumbridge: region 12850, which area-lumbridge also watches.
+		h.game.at(12850 >> 8 << 6, (12850 & 0xFF) << 6, 0);
+		assertEquals("the test tile has to be Lumbridge", 12850,
+			new WorldPoint(12850 >> 8 << 6, (12850 & 0xFF) << 6, 0).getRegionID());
+		h.clear();
+		h.gameTicks(12);
+
+		assertFalse("the arrival it asked for has to survive the region change",
+			h.firedBy("want-fulfilled-lumbridge").isEmpty());
+		assertTrue("and the area line must not talk over it",
+			h.firedBy("area-lumbridge").isEmpty());
+	}
+
+	@Test
+	public void theArrivalLineSaysWhyRatherThanOnlyThankYou() throws IOException
+	{
+		// A place-specific line for every place a want can ask for. Thanking
+		// you for going somewhere is politeness; saying why THAT place is a
+		// preference, and a preference is the thing that reads as a mind.
+		Harness h = new Harness(folder.newFolder().toPath());
+		for (SpeechRule rule : h.loader.getRules())
+		{
+			if (rule.want == null)
+			{
+				continue;
+			}
+			String expected = "want-fulfilled-" + rule.id.substring("want-".length());
+			SpeechRule arrival = h.rule(expected);
+			assertTrue(expected + " must beat the generic want-fulfilled",
+				arrival.priority > h.rule("want-fulfilled").priority);
+			assertTrue(expected + " must take the floor like the generic one does",
+				arrival.hushMs != null && arrival.hushMs > 0);
+		}
+	}
+
+	@Test
+	public void holdingTheFloorDoesNotSilenceTheOneHoldingIt() throws IOException
+	{
+		// The obvious way to get this wrong: a rule caught by its own hush,
+		// which would make the feature silence exactly the line it exists for.
+		Harness h = new Harness(folder.newFolder().toPath());
+		h.gameTicks(1);
+
+		assertTrue(h.engine.force("want-fulfilled-lumbridge"));
+		assertFalse("the rule holding the floor still speaks",
+			h.firedBy("want-fulfilled-lumbridge").isEmpty());
+
+		// And an animation-only rule is movement rather than chatter, so the
+		// hush is not meant to stop it. A 20-29 hit is the band nothing is said
+		// about, so flinch-big-hit is the only rule in the running.
+		h.clear();
+		h.dispatch(TriggerEvent.damageTaken(25));
+		h.gameTicks(2);
+		assertFalse("the flinch is not speech and must not be hushed",
+			h.firedBy("flinch-big-hit").isEmpty());
 	}
 
 	@Test

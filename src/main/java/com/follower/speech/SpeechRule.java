@@ -144,6 +144,25 @@ public class SpeechRule
 	public Boolean asks;
 
 	/**
+	 * Takes the floor: nothing else speaks for this many milliseconds.
+	 *
+	 * <p>For the handful of moments worth more than whatever the follower was
+	 * otherwise about to say. Arriving where it asked to be taken is the clear
+	 * case - the region change raises an area line at the same instant, and two
+	 * lines about one arrival is one too many.
+	 *
+	 * <p>The floor is taken when the rule WINS rather than when it speaks, or a
+	 * rule with a delay would leave its own gap open for exactly the line it
+	 * meant to displace. The holder is also exempt from the global speech gap,
+	 * since being held back by whatever spoke a second earlier is the same
+	 * failure from the other end.
+	 *
+	 * <p>Only speech is hushed. An animation-only rule is movement rather than
+	 * chatter and carries on regardless.
+	 */
+	public Integer hushMs;
+
+	/**
 	 * Somewhere the follower would like to go, expressed as part of saying so.
 	 *
 	 * <p>{@code {"region": 10553, "label": "the fishing guild", "minutes": 20}}.

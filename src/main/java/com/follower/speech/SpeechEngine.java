@@ -105,6 +105,10 @@ public class SpeechEngine
 		context = null;
 		lastSpokeMs = 0L;
 		pending.clear();
+		// A held floor must not outlive the thing that held it: toggling the
+		// plugin mid-hush would otherwise leave the follower mute for it.
+		hushUntilMs = 0L;
+		hushOwner = null;
 		for (SpeechRule rule : loader.getRules())
 		{
 			rule.reset();
@@ -153,6 +157,42 @@ public class SpeechEngine
 	}
 
 	/**
+	 * When the floor is held, and by whom.
+	 *
+	 * <p>A handful of moments are worth more than whatever else the follower
+	 * was about to say. Walking into the place it asked to be taken is the
+	 * clearest: the region change raises an area line at the same instant, and
+	 * two lines about the same arrival is one line too many - the wrong one
+	 * usually winning, since the area rule has no delay and gets there first.
+	 */
+	private long hushUntilMs;
+	private SpeechRule hushOwner;
+
+	/**
+	 * Whether this rule is allowed to say its line right now.
+	 *
+	 * <p>The mute and the global window throttle SPEECH; a rule that only plays
+	 * an animation (teleport mirroring, the flinch) is not chatter and skips
+	 * both. The rule holding the floor skips them too - it is the reason
+	 * everything else is quiet, so being caught by its own hush, or held back
+	 * by whatever spoke a second before it, would defeat the point.
+	 */
+	private boolean cannotSpeak(SpeechRule rule, long now)
+	{
+		if (!rule.hasSpeech())
+		{
+			return false;
+		}
+		if (rule == hushOwner && now < hushUntilMs)
+		{
+			return muted;
+		}
+		return muted
+			|| now - lastSpokeMs < globalCooldownMs
+			|| now < hushUntilMs;
+	}
+
+	/**
 	 * Runs one evaluation pass. Every rule's edge state is updated regardless of
 	 * whether it can speak, so cooldowns and mutes never desynchronise the edges.
 	 */
@@ -171,8 +211,7 @@ public class SpeechEngine
 				if (--delayed.ticksLeft <= 0)
 				{
 					it.remove();
-					if (!(delayed.rule.hasSpeech()
-						&& (muted || now - lastSpokeMs < globalCooldownMs)))
+					if (!cannotSpeak(delayed.rule, now))
 					{
 						log.debug("rule '{}' fired after its {}-tick delay",
 							delayed.rule.describe(), delayed.delay);
@@ -230,6 +269,16 @@ public class SpeechEngine
 			return;
 		}
 
+		// Taking the floor happens at the WIN, not when the line finally comes
+		// out. A rule with a delay would otherwise leave its own gap open: the
+		// want-fulfilled line waits a few ticks, and the region-change line
+		// that arrives later in the same tick would walk straight into it.
+		if (winner.hushMs != null && winner.hushMs > 0 && winner.hasSpeech())
+		{
+			hushUntilMs = now + winner.hushMs;
+			hushOwner = winner;
+		}
+
 		// A delayed rule queues instead of speaking now; the cooldown is
 		// charged at the win so re-triggers don't stack up more firings. The
 		// wait is drawn HERE, once, so a ranged delay stays put while pending.
@@ -241,9 +290,7 @@ public class SpeechEngine
 			return;
 		}
 
-		// The mute and the global window throttle SPEECH; a rule that only plays
-		// an animation (teleport mirroring) is not chatter and skips both.
-		if (winner.hasSpeech() && (muted || now - lastSpokeMs < globalCooldownMs))
+		if (cannotSpeak(winner, now))
 		{
 			// Still charge the cooldown so a suppressed rule doesn't fire the instant
 			// the global window opens.
@@ -293,8 +340,15 @@ public class SpeechEngine
 		{
 			if (ruleId.equalsIgnoreCase(rule.id))
 			{
-				speak(rule, TriggerEvent.simple(TriggerEvent.Type.MANUAL),
-					System.currentTimeMillis());
+				long now = System.currentTimeMillis();
+				// Including the floor, so what you see when testing is what the
+				// rule really does rather than a quieter version of it.
+				if (rule.hushMs != null && rule.hushMs > 0 && rule.hasSpeech())
+				{
+					hushUntilMs = now + rule.hushMs;
+					hushOwner = rule;
+				}
+				speak(rule, TriggerEvent.simple(TriggerEvent.Type.MANUAL), now);
 				return true;
 			}
 		}

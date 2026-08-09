@@ -117,6 +117,16 @@ public class AttentionTest
 		assertTrue("the flinch must not speak",
 			flinch.say == null || flinch.say.isEmpty());
 		assertFalse("but it must do something", flinch.animation == null);
+
+		// One winner per event, so an animation-only rule is invisible for any
+		// hit a higher-priority spoken rule also matches. big-hit-taken owns
+		// everything from 30 up, which was the whole top of the range - the
+		// biggest hits were the ones that did NOT flinch. The body language has
+		// to live on whichever rule actually wins the moment.
+		SpeechRule spoken = h.rule("big-hit-taken");
+		assertTrue("big-hit-taken outranks the flinch and must carry it too",
+			spoken.priority <= flinch.priority
+				|| flinch.animation.equals(spoken.animation));
 	}
 
 	@Test
