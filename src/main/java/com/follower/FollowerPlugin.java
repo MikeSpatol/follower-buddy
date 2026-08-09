@@ -198,7 +198,7 @@ public class FollowerPlugin extends Plugin
 
 			crossPoint = event.getPoint();
 			crossStartMs = System.currentTimeMillis();
-			dialog.startNextTick(config.followerName(), talkScript(), "start");
+			startTalking();
 			event.consume();
 			return event;
 		}
@@ -241,6 +241,9 @@ public class FollowerPlugin extends Plugin
 	private RuleLoader ruleLoader;
 
 	@Inject
+	private com.follower.speech.DialogLoader dialogLoader;
+
+	@Inject
 	private FollowerOverlay overlay;
 
 	@Inject
@@ -259,6 +262,7 @@ public class FollowerPlugin extends Plugin
 	private com.follower.ui.PhrasesDialog questPhrasesDialog;
 	private com.follower.ui.PhrasesDialog errandPhrasesDialog;
 	private com.follower.ui.PhrasesDialog combatPhrasesDialog;
+	private com.follower.ui.DialogsDialog dialogsDialog;
 
 	@Inject
 	private com.google.gson.Gson gson;
@@ -426,6 +430,7 @@ public class FollowerPlugin extends Plugin
 		spotAnimRepository.load(dataDir);
 		gameFontRepository.load(dataDir);
 		ruleLoader.initialise(dataDir);
+		dialogLoader.initialise(dataDir);
 		stanceLibrary.load(dataDir);
 		paletteHarvest.load(dataDir);
 		wrapTrimStore.load(dataDir, follower);
@@ -494,6 +499,11 @@ public class FollowerPlugin extends Plugin
 			clientToolbar.removeNavigation(navButton);
 			navButton = null;
 			panel = null;
+		}
+		if (dialogsDialog != null)
+		{
+			dialogsDialog.dispose();
+			dialogsDialog = null;
 		}
 		if (gearPhrasesDialog != null)
 		{
@@ -610,6 +620,7 @@ public class FollowerPlugin extends Plugin
 		panel.setOnEditBosses(this::openBossPhrasesDialog);
 		panel.setOnEditStatuses(this::openStatusPhrasesDialog);
 		panel.setOnEditCombat(this::openCombatPhrasesDialog);
+		panel.setOnEditDialogs(this::openDialogsDialog);
 		panel.setOnEditQuests(this::openQuestPhrasesDialog);
 		panel.setOnEditErrands(this::openErrandPhrasesDialog);
 		panel.setOnProfileLoad(this::loadOutfitProfile);
@@ -1389,6 +1400,19 @@ public class FollowerPlugin extends Plugin
 					false);
 			}
 			errandPhrasesDialog.open();
+		});
+	}
+
+	/** Lazily builds the conversation editor window and fronts it. */
+	private void openDialogsDialog()
+	{
+		javax.swing.SwingUtilities.invokeLater(() ->
+		{
+			if (dialogsDialog == null)
+			{
+				dialogsDialog = new com.follower.ui.DialogsDialog(gson, dialogLoader.getFile());
+			}
+			dialogsDialog.open();
 		});
 	}
 
@@ -3323,6 +3347,39 @@ public class FollowerPlugin extends Plugin
 	 * real chat menu supports. Joke nodes resolve dynamically, re-rolling on
 	 * every visit.
 	 */
+	/**
+	 * Opens Talk-to: the conversation the follower is waiting on if it has
+	 * asked something, and the everyday script otherwise.
+	 *
+	 * <p>The override is what makes a question a question rather than a line
+	 * that happened to end in a question mark. The follower asked, so the
+	 * obvious thing - talk to it - is about what it asked, and the everyday
+	 * script waits its turn.
+	 */
+	private void startTalking()
+	{
+		String asked = speechEngine.getContext().getAskedTree();
+		com.follower.speech.DialogTree tree = dialogLoader.get(asked);
+		if (tree != null)
+		{
+			dialog.startNextTick(config.followerName(),
+				com.follower.speech.FollowerDialog.build(tree, this::answerQuestion),
+				tree.startId());
+			return;
+		}
+		dialog.startNextTick(config.followerName(), talkScript(), "start");
+	}
+
+	/**
+	 * The player picked a branch that answers. Closes the question and tells
+	 * the rules, which is what turns a conversation into a consequence.
+	 */
+	private void answerQuestion(String answer)
+	{
+		speechEngine.getContext().noteAnswered();
+		speechEngine.dispatch(TriggerEvent.answered(answer));
+	}
+
 	private static java.util.Map<String, com.follower.speech.FollowerDialog.Node> talkScript()
 	{
 		java.util.Map<String, com.follower.speech.FollowerDialog.Node> script =
@@ -3560,7 +3617,7 @@ public class FollowerPlugin extends Plugin
 					com.follower.speech.SpeechOutput.OVERHEAD, null, -1);
 			}
 		});
-		addFollowerMenuEntry("Talk-to", () -> dialog.startNextTick(config.followerName(), talkScript(), "start"));
+		addFollowerMenuEntry("Talk-to", this::startTalking);
 	}
 
 	/**
@@ -3643,8 +3700,7 @@ public class FollowerPlugin extends Plugin
 			return;
 		}
 
-		addFollowerMenuEntry("Talk-to", () ->
-			dialog.startNextTick(config.followerName(), talkScript(), "start"));
+		addFollowerMenuEntry("Talk-to", this::startTalking);
 
 		// Shift-hover: the same little action tooltip a real NPC gets, drawn
 		// by RuneLite's own tooltip component so the styling is identical.
@@ -3904,6 +3960,14 @@ public class FollowerPlugin extends Plugin
 		if (++reloadPollTicks >= 2)
 		{
 			reloadPollTicks = 0;
+			if (dialogLoader.reloadIfChanged())
+			{
+				sendStatus("Reloaded " + dialogLoader.getStatus());
+				for (String problem : dialogLoader.getErrors())
+				{
+					sendStatus("Dialog: " + problem);
+				}
+			}
 			if (ruleLoader.reloadIfChanged())
 			{
 				// A reload resets every rule's edge state, so the gear you are
@@ -4149,22 +4213,8 @@ public class FollowerPlugin extends Plugin
 			log.info("WATCH chat [{}] {}", event.getType(), event.getMessage());
 		}
 
-		TriggerContext context = speechEngine.getContext();
-		boolean mine = !event.getName().isEmpty()
-			&& event.getName().replace(' ', ' ').trim()
-			.equalsIgnoreCase(context.getPlayerName().replace(' ', ' ').trim());
-
 		speechEngine.dispatch(TriggerEvent.chat(
 			event.getMessage(), event.getType().getType(), event.getName()));
-
-		// After the dispatch, so an "answered" rule gets its chance first. Any
-		// line from the player closes an open question: saying something else
-		// IS declining to answer, and leaving it open would let a "yeah" two
-		// minutes from now land as agreement to something long forgotten.
-		if (mine)
-		{
-			context.noteAnswered();
-		}
 	}
 
 	@Subscribe

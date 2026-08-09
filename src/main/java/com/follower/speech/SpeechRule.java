@@ -134,14 +134,22 @@ public class SpeechRule
 	public Integer mood;
 
 	/**
-	 * Marks this line as a question, opening a window in which the player's next
-	 * public line can be read as the answer by an {@code answered} rule.
+	 * Marks this line as a question, and names the dialog tree that answers it.
+	 *
+	 * <p>The value is a tree id from dialogs.json. While the question is open,
+	 * right-clicking Talk-to opens THAT conversation instead of the everyday
+	 * one, and picking the branch marked with an answer is what replies.
+	 *
+	 * <p>The answer used to be a word typed into public chat. That asked the
+	 * player to know a magic word, and it asked the follower to listen to
+	 * everything said near it - in a crowd, somebody else's "yes" was
+	 * indistinguishable from yours. A menu of options can be neither misheard
+	 * nor guessed at.
 	 *
 	 * <p>The window is opened by SAYING it, not by winning: a question the mute
-	 * swallowed is one the player never heard, and a follower waiting for an
-	 * answer to that would take the next unrelated "yeah" as agreement.
+	 * swallowed is one the player never heard.
 	 */
-	public Boolean asks;
+	public String asks;
 
 	/**
 	 * Takes the floor: nothing else speaks for this many milliseconds.

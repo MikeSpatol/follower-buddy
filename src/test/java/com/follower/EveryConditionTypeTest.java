@@ -748,32 +748,22 @@ public class EveryConditionTypeTest
 	{
 		note("answered", "hovered", "examined");
 
+		// The answer is a branch picked in the conversation the follower
+		// opened, so nothing typed into chat can be one.
 		Harness yes = harnessFor("{\"type\": \"answered\", \"is\": \"yes\"}");
 		yes.gameTicks(1);
 		yes.playerSays("yes");
-		assertQuiet(yes, "nothing was asked, so nothing can be an answer");
+		assertQuiet(yes, "a word typed in chat is no longer an answer");
 
-		yes.engine.getContext().noteQuestion();
-		yes.playerSays("broken");
-		assertQuiet(yes, "'ok' inside 'broken' is not agreement");
+		yes.answers("no");
+		assertQuiet(yes, "no is not yes");
 
-		yes.engine.getContext().noteQuestion();
-		yes.playerSays("yeah!");
+		yes.answers("yes");
 		assertFired(yes, "answered yes");
-
-		// The window shuts, so a later stray "yes" is not agreement to
-		// something the player has long forgotten being asked.
-		Harness stale = harnessFor("{\"type\": \"answered\", \"is\": \"yes\"}");
-		stale.gameTicks(1);
-		stale.engine.getContext().noteQuestion();
-		stale.gameTicks(30);
-		stale.playerSays("yes");
-		assertQuiet(stale, "an answer twenty seconds late is an answer to nothing");
 
 		Harness no = harnessFor("{\"type\": \"answered\", \"is\": \"no\"}");
 		no.gameTicks(1);
-		no.engine.getContext().noteQuestion();
-		no.playerSays("nah");
+		no.answers("no");
 		assertFired(no, "answered no");
 
 		Harness hovered = harnessFor("{\"type\": \"hovered\", \"ticks\": 4}");

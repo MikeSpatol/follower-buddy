@@ -52,6 +52,9 @@ public class FollowerDialog extends Overlay
 		/** Resolved fresh on every ENTRY to the node - a re-rolled joke, say. */
 		private java.util.function.Supplier<String[]> dynamicPages;
 
+		/** Run on every ENTRY to the node, before its pages are shown. */
+		private Runnable onEnter;
+
 		private Node(boolean playerSpeaking, String[] pages)
 		{
 			this.playerSpeaking = playerSpeaking;
@@ -85,6 +88,20 @@ public class FollowerDialog extends Overlay
 			return this;
 		}
 
+		/**
+		 * Do something on arrival at this node.
+		 *
+		 * <p>How a conversation reaches back out: reaching the node under
+		 * "Go on then" is what tells the rules the player said yes. Fired on
+		 * ENTRY rather than on leaving, because the branch the player picked
+		 * is already the answer - whether they read the rest of it is not.
+		 */
+		public Node onEnter(Runnable action)
+		{
+			this.onEnter = action;
+			return this;
+		}
+
 		/** Offer choices once the pages are done; pairs of label and target id. */
 		public Node choices(String... labelThenTarget)
 		{
@@ -98,6 +115,64 @@ public class FollowerDialog extends Overlay
 			}
 			return this;
 		}
+	}
+
+	/**
+	 * Turns a loaded {@link DialogTree} into a runnable conversation.
+	 *
+	 * <p>The everyday talk script is built in Java and stays that way - it does
+	 * not change, so a file would buy nothing. These are the ones the follower
+	 * OPENS, and they are content: whoever writes them should not need a
+	 * compiler, and the one thing they must be able to do from the file is say
+	 * which branch counts as the answer.
+	 *
+	 * @param onAnswer handed "yes" or "no" the moment a branch carrying one is
+	 * reached
+	 */
+	public static Map<String, Node> build(DialogTree tree,
+		java.util.function.Consumer<String> onAnswer)
+	{
+		Map<String, Node> script = new LinkedHashMap<>();
+		if (tree == null || tree.nodes == null)
+		{
+			return script;
+		}
+
+		for (DialogTree.DialogNode source : tree.nodes)
+		{
+			if (source == null || source.id == null)
+			{
+				continue;
+			}
+
+			String[] pages = source.pages().toArray(new String[0]);
+			Node node = source.isPlayerSpeaking() ? Node.you(pages) : Node.says(pages);
+
+			if (source.choices != null && !source.choices.isEmpty())
+			{
+				String[] pairs = new String[source.choices.size() * 2];
+				for (int i = 0; i < source.choices.size(); i++)
+				{
+					DialogTree.DialogChoice choice = source.choices.get(i);
+					pairs[i * 2] = choice.label;
+					pairs[i * 2 + 1] = choice.next;
+				}
+				node.choices(pairs);
+			}
+			else if (source.next != null)
+			{
+				node.then(source.next);
+			}
+
+			if (source.answer != null && onAnswer != null)
+			{
+				String answer = source.answer;
+				node.onEnter(() -> onAnswer.accept(answer));
+			}
+
+			script.put(source.id, node);
+		}
+		return script;
 	}
 
 	/**
@@ -621,6 +696,11 @@ public class FollowerDialog extends Overlay
 		{
 			close();
 			return;
+		}
+
+		if (node.onEnter != null)
+		{
+			node.onEnter.run();
 		}
 
 		pages = node.dynamicPages != null ? node.dynamicPages.get() : node.pages;

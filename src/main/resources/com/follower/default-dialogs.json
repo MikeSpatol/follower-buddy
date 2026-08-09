@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "trees": [
+    {
+      "id": "want-outing",
+      "note": "Opened by the ask-outing rule. While the follower is waiting for an answer this REPLACES the everyday Talk-to script, so walking over and talking to it is how you answer - no magic word typed into public chat, and no follower listening to the whole street. The node carrying \"answer\" is what feeds the reply back to the rules: yes puts a want on the board, no closes it politely.",
+      "start": "start",
+      "nodes": [
+        {
+          "id": "start",
+          "says": [
+            "Oh good, you came over.",
+            "I wanted to ask you something, and I'd rather ask it properly."
+          ],
+          "next": "ask"
+        },
+        {
+          "id": "ask",
+          "says": [
+            "Have you got time to go somewhere with me? Nowhere far. Just somewhere I like."
+          ],
+          "choices": [
+            { "label": "Go on then. Where?", "next": "yes-q" },
+            { "label": "Why? What's brought this on?", "next": "why-q" },
+            { "label": "Not right now.", "next": "no-q" }
+          ]
+        },
+
+        {
+          "id": "why-q",
+          "you": [
+            "Why? What's brought this on?"
+          ],
+          "next": "why-a"
+        },
+        {
+          "id": "why-a",
+          "says": [
+            "We go where you need to go. That's the arrangement, and I've no complaints about it.",
+            "But there are places I'd go if it were up to me, and it never is."
+          ],
+          "next": "why-b"
+        },
+        {
+          "id": "why-b",
+          "says": [
+            "So I'm asking. That's all."
+          ],
+          "choices": [
+            { "label": "All right. Where?", "next": "yes-q" },
+            { "label": "Another time.", "next": "no-q" }
+          ]
+        },
+
+        {
+          "id": "yes-q",
+          "you": [
+            "All right. Where did you have in mind?"
+          ],
+          "next": "yes-a"
+        },
+        {
+          "id": "yes-a",
+          "says": [
+            "Give me a moment. I'll think of somewhere."
+          ],
+          "answer": "yes"
+        },
+
+        {
+          "id": "no-q",
+          "you": [
+            "Not right now."
+          ],
+          "next": "no-a"
+        },
+        {
+          "id": "no-a",
+          "says": [
+            "No bother. It'll keep.",
+            "Lead on."
+          ],
+          "answer": "no"
+        }
+      ]
+    }
+  ]
+}

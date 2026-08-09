@@ -422,16 +422,59 @@ and `wantExpired`).
   vanishes with your cast and must not lag it.
 - `mood` — how much this firing moves the follower's mood, positive or negative.
   See below.
-- `asks` — marks the line as a question, opening a twelve-second window in which
-  the player's next public line can be read as an answer by an `answered` rule.
+- `asks` — names a tree in `dialogs.json`. Marks the line as a question and arms
+  that conversation: see below.
 - `want` — `{"region": 12850, "label": "Lumbridge", "minutes": 20}`. See below.
 - `hushMs` — takes the floor: nothing else speaks for this long. See below.
 - `note` — free text, ignored by the plugin.
 
 Both `asks` and `want` take effect when the line is actually **said**, not when
-the rule wins. A question the mute swallowed is one the player never heard, and
-a follower waiting for an answer to that would take the next unrelated "yeah" as
-agreement.
+the rule wins. A question the mute swallowed is one the player never heard.
+
+### Conversations
+
+`dialogs.json` sits beside `phrases.json`, is hot-reloaded the same way, and
+holds the conversations the follower **starts**. While a question is open,
+right-clicking **Talk-to** opens the tree named by `asks` instead of the
+everyday script; once answered, or after a couple of minutes, Talk-to goes back
+to normal.
+
+The answer used to be a word typed into public chat. That asked the player to
+know a magic word and asked the follower to listen to everything said near it —
+in a crowd, somebody else's "yes" was indistinguishable from yours. A menu of
+options can be neither misheard nor guessed at.
+
+```json
+{
+  "id": "want-outing",
+  "start": "start",
+  "nodes": [
+    { "id": "start", "says": ["Oh good, you came over."], "next": "ask" },
+    { "id": "ask", "says": ["Have you got time to go somewhere with me?"],
+      "choices": [
+        { "label": "Go on then. Where?", "next": "yes-q" },
+        { "label": "Not right now.",     "next": "no-q" } ] },
+    { "id": "yes-q", "you": ["Go on then. Where?"], "next": "yes-a" },
+    { "id": "yes-a", "says": ["Give me a moment."], "answer": "yes" }
+  ]
+}
+```
+
+`says` is the follower speaking, `you` is the player, one page per line. A node
+carrying `answer` (`yes` or `no`) is what feeds the reply back to the rules, and
+an `answered` condition picks it up.
+
+A tree is validated as a whole at load and **refused outright** if anything is
+wrong — a branch pointing at a node id that does not exist, a start that is not
+a node, no answer anywhere. A conversation that dead-ends is worse than one that
+never opens, because the player is already inside it when it happens.
+
+Edit them in **Conversations...** in the side panel: one row per node, with who
+speaks, the pages, the choices and the answer. Save validates before writing, so
+a broken tree is reported rather than saved.
+
+The everyday Talk-to script is still written in Java. It never changes, so a
+file would buy nothing; these are different because they are content.
 
 `say` is optional when the rule plays an animation: an animation-only rule is
 valid, and it skips the mute and the global speech gap entirely — those throttle

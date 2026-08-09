@@ -47,7 +47,7 @@ import net.runelite.api.NPC;
  *   <tr><td>tally</td><td>{@code of} counter name, {@code minimum} / {@code maximum} — a LIFETIME count</td></tr>
  *   <tr><td>personalBest</td><td>optional {@code names}; {@code {record}} {@code {value}} {@code {previous}}</td></tr>
  *   <tr><td>sessionCount</td><td>{@code minimum} / {@code every} — login only</td></tr>
- *   <tr><td>answered</td><td>{@code is} yes|no — the player's reply to a rule marked {@code asks}</td></tr>
+ *   <tr><td>answered</td><td>{@code is} yes|no — the branch the player picked in the tree named by {@code asks}</td></tr>
  *   <tr><td>hovered</td><td>{@code ticks} — the mouse resting on the follower</td></tr>
  *   <tr><td>examined</td><td>no fields</td></tr>
  *   <tr><td>inventoryFree</td><td>{@code maximum} free slots — a warning, not a report</td></tr>
@@ -253,15 +253,12 @@ public class Condition
 					&& matchesSpeaker(ctx, event)
 					&& matchesText(event.getMessage());
 
-			// The player answering something the follower just asked. Yes and no
-			// only: anything richer would be a parser, and a companion that
-			// misreads a sentence is worse company than one that waits for a
-			// word it knows.
+			// The player answering something the follower asked, by picking a
+			// branch in the conversation it opened. Yes and no only - the
+			// options ARE the vocabulary, so there is nothing to misread.
 			case "answered":
-				return event.getType() == TriggerEvent.Type.CHAT
-					&& ctx.isAwaitingAnswer()
-					&& isFromPlayer(ctx, event)
-					&& answerMatches(event.getMessage());
+				return event.getType() == TriggerEvent.Type.ANSWERED
+					&& (is == null || is.equalsIgnoreCase(event.getName()));
 
 			case "varbitequals":
 				return varbit != null && ctx.getClient().getVarbitValue(varbit) == orDefault(value, 1);
@@ -689,37 +686,6 @@ public class Condition
 		// The game pads display names with non-breaking spaces.
 		return player.replace(' ', ' ').trim()
 			.equalsIgnoreCase(event.getName().replace(' ', ' ').trim());
-	}
-
-	private static final java.util.Set<String> YES = new java.util.HashSet<>(java.util.Arrays.asList(
-		"y", "ye", "yes", "yeah", "yep", "yup", "yea", "aye", "ok", "okay", "k",
-		"sure", "please", "alright", "fine", "go on", "why not", "definitely"));
-
-	private static final java.util.Set<String> NO = new java.util.HashSet<>(java.util.Arrays.asList(
-		"n", "no", "nope", "nah", "naw", "never", "not now", "later", "sorry",
-		"cant", "can't", "no thanks", "no ta", "maybe later"));
-
-	/**
-	 * Whether a reply is the yes or the no this rule is waiting for.
-	 *
-	 * <p>Whole-message rather than substring: "ok" inside "broken" is not
-	 * agreement, and a follower that hears one would be unnerving. Trailing
-	 * punctuation is stripped, since people type "yes!" more often than "yes".
-	 */
-	private boolean answerMatches(String reply)
-	{
-		if (reply == null)
-		{
-			return false;
-		}
-		String cleaned = reply.toLowerCase(Locale.ROOT)
-			.replaceAll("[^a-z' ]", "").trim().replaceAll(" +", " ");
-		if ("no".equalsIgnoreCase(is))
-		{
-			return NO.contains(cleaned);
-		}
-		// Default to yes, so a rule that just says "answered" waits for one.
-		return YES.contains(cleaned);
 	}
 
 	/** Matches against {@code contains} (case-insensitive), {@code regex}, or {@code names}. */

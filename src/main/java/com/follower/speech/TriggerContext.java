@@ -653,37 +653,49 @@ public final class TriggerContext
 	// ----------------------------------------------------------- conversation
 
 	/**
-	 * How long the follower waits for an answer after asking something.
+	 * How long the follower keeps hoping for an answer.
 	 *
-	 * <p>Twelve seconds. Long enough to type a short reply, short enough that a
-	 * "yes" arriving out of a conversation two minutes later is not mistaken
-	 * for one - which would be worse than never listening at all, because it
-	 * would look like the follower was answering somebody else.
+	 * <p>Two minutes. It was twelve seconds when the answer was a word typed
+	 * into public chat, which is about how long typing "yes" takes. Answering
+	 * now means walking over and right-clicking Talk-to, and a window sized for
+	 * typing would have expired somewhere around the second click.
 	 */
-	private static final int ANSWER_WINDOW_TICKS = 20;
+	private static final int ANSWER_WINDOW_TICKS = 200;
 
 	private int ticksSinceQuestion = Integer.MAX_VALUE;
 
-	/** Called when a rule marked {@code asks} speaks: the follower has the floor. */
-	public void noteQuestion()
+	/**
+	 * The dialog tree that answers the open question, or empty.
+	 *
+	 * <p>This is what makes Talk-to mean something different for a minute or
+	 * two: the follower asked, so the conversation it opens is the one about
+	 * what it asked, and the everyday script waits its turn.
+	 */
+	private String askedTree = "";
+
+	/** Called when a rule carrying {@code asks} speaks. */
+	public void noteQuestion(String treeId)
 	{
 		ticksSinceQuestion = 0;
+		askedTree = treeId == null ? "" : treeId;
 	}
 
-	/**
-	 * Called when the player says anything at all while a question is open.
-	 * Any line closes the window, answer or not: saying something else IS
-	 * declining to answer, and leaving the window open would let the next
-	 * unrelated "yeah" land as agreement.
-	 */
+	/** Called once the player has answered, or declined to. */
 	public void noteAnswered()
 	{
 		ticksSinceQuestion = Integer.MAX_VALUE;
+		askedTree = "";
 	}
 
 	public boolean isAwaitingAnswer()
 	{
 		return ticksSinceQuestion <= ANSWER_WINDOW_TICKS;
+	}
+
+	/** The tree Talk-to should open right now, or empty for the everyday one. */
+	public String getAskedTree()
+	{
+		return isAwaitingAnswer() ? askedTree : "";
 	}
 
 	private void ageQuestion()

@@ -89,8 +89,8 @@ public class WantsTest
 		// a chance roll between three rules, so this may take a couple of goes.
 		for (int i = 0; i < 20 && !h.engine.getContext().isWanting(); i++)
 		{
-			h.engine.getContext().noteQuestion();
-			h.playerSays("yes");
+			h.engine.getContext().noteQuestion("want-outing");
+			h.answers("yes");
 			h.gameTicks(5);
 		}
 		assertTrue("saying yes should get the follower to name somewhere",
@@ -298,6 +298,8 @@ public class WantsTest
 		assertTrue("the rule has to exist to be forced", h.engine.force("ask-outing"));
 		assertTrue("forcing a rule marked asks must open the window",
 			h.engine.getContext().isAwaitingAnswer());
+		assertEquals("and must arm the tree that answers it",
+			"want-outing", h.engine.getContext().getAskedTree());
 		assertFalse("and it must actually have said something",
 			h.firedBy("ask-outing").isEmpty());
 

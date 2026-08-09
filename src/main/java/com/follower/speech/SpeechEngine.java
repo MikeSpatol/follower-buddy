@@ -378,9 +378,9 @@ public class SpeechEngine
 		// A question only counts as asked once it has actually been said, for
 		// the same reason: a rule silenced by the mute must not leave the
 		// follower waiting for an answer to something nobody heard.
-		if (Boolean.TRUE.equals(rule.asks) && !text.isEmpty())
+		if (rule.asks != null && !rule.asks.isEmpty() && !text.isEmpty())
 		{
-			getContext().noteQuestion();
+			getContext().noteQuestion(rule.asks);
 		}
 
 		// Same rule, same reason: the follower can only be hoping for something

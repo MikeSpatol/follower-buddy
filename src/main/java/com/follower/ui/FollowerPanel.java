@@ -129,6 +129,13 @@ public class FollowerPanel extends PluginPanel
 	/** Opens the combat-message editor; set by the plugin after construction. */
 	private Runnable onEditCombat = () -> { };
 
+	private Runnable onEditDialogs = () -> { };
+
+	public void setOnEditDialogs(Runnable onEditDialogs)
+	{
+		this.onEditDialogs = onEditDialogs;
+	}
+
 	public void setOnEditCombat(Runnable onEditCombat)
 	{
 		this.onEditCombat = onEditCombat;
@@ -304,6 +311,13 @@ public class FollowerPanel extends PluginPanel
 		combat.setFocusPainted(false);
 		combat.addActionListener(e -> onEditCombat.run());
 		editorButtons.add(combat);
+
+		JButton conversations = new JButton("Conversations...");
+		conversations.setToolTipText("View and edit the conversations the follower STARTS -"
+			+ " the ones that replace Talk-to while it is waiting on an answer");
+		conversations.setFocusPainted(false);
+		conversations.addActionListener(e -> onEditDialogs.run());
+		editorButtons.add(conversations);
 
 		JButton statuses = new JButton("Statuses...");
 		statuses.setToolTipText("View and edit what the follower says about your HP, prayer,"

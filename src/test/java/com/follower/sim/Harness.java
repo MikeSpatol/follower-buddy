@@ -121,15 +121,22 @@ public final class Harness
 		return this;
 	}
 
-	/**
-	 * The local player saying something in public chat, closing any open
-	 * question afterwards exactly as the plugin's chat subscriber does.
-	 */
+	/** The local player saying something in public chat. */
 	public Harness playerSays(String message)
 	{
 		engine.dispatch(TriggerEvent.chat(message,
 			net.runelite.api.ChatMessageType.PUBLICCHAT.getType(), "Tester"));
+		return this;
+	}
+
+	/**
+	 * The player picking a branch that answers, as the dialog does: the
+	 * question closes and the rules are told, in that order.
+	 */
+	public Harness answers(String yesOrNo)
+	{
 		engine.getContext().noteAnswered();
+		engine.dispatch(TriggerEvent.answered(yesOrNo));
 		return this;
 	}
 

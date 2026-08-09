@@ -7150,12 +7150,12 @@
     },
     {
       "id": "ask-outing",
-      "note": "A question, which is a different thing from a remark: asks:true opens a twelve second window in which the player's next public line is read as an answer. The window is opened by SAYING it, so a question the mute swallowed leaves nothing waiting.",
+      "note": "A question, which is a different thing from a remark. asks names a tree in dialogs.json; while the question is open, right-clicking Talk-to opens THAT conversation instead of the everyday one, and picking a branch is the answer. It used to want a word typed into public chat, which asked the player to know a magic word and asked the follower to listen to the whole street. The window is opened by SAYING it, so a question the mute swallowed leaves nothing waiting.",
       "group": "idle",
       "priority": 26,
       "cooldownMs": 900000,
       "output": "overhead",
-      "asks": true,
+      "asks": "want-outing",
       "when": {
         "type": "all",
         "conditions": [
@@ -7182,9 +7182,10 @@
         ]
       },
       "say": [
-        "Can I ask you something? Say yes or no.",
-        "Are we doing anything in particular today? Yes or no will do.",
-        "Have you got a minute for me? Yes or no."
+        "There's something I want to ask you. Talk to me when you have a moment.",
+        "Come and talk to me a minute? It's nothing bad.",
+        "When you get a second, talk to me. I've got a question.",
+        "I'd like a word, when you're not busy."
       ]
     },
     {

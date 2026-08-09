@@ -39,7 +39,21 @@ public final class TriggerEvent
 		EXAMINED,
 		WANT_FULFILLED,
 		WANT_EXPIRED,
+		ANSWERED,
 		MANUAL,
+	}
+
+	/**
+	 * The player answered a question, by picking a branch in the conversation
+	 * the follower opened. {@code yes} or {@code no}, and never anything else -
+	 * an option cannot be misheard the way a typed word could.
+	 */
+	public static TriggerEvent answered(String answer)
+	{
+		TriggerEvent event = new TriggerEvent(Type.ANSWERED);
+		event.name = answer == null ? "" : answer;
+		event.placeholders.put("answer", event.name);
+		return event;
 	}
 
 	/** A want got its answer, one way or the other. {want} names what it was. */
