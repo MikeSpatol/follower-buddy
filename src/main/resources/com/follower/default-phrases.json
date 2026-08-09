@@ -7467,9 +7467,8 @@
         "type": "all",
         "conditions": [
           {
-            "type": "npcNearby",
-            "minimum": 250,
-            "within": 8
+            "type": "chance",
+            "percent": 25
           },
           {
             "type": "none",
@@ -7480,8 +7479,9 @@
             ]
           },
           {
-            "type": "chance",
-            "percent": 25
+            "type": "npcNearby",
+            "minimum": 250,
+            "within": 8
           }
         ]
       },
@@ -7504,13 +7504,13 @@
         "type": "all",
         "conditions": [
           {
+            "type": "chance",
+            "percent": 8
+          },
+          {
             "type": "playersNearby",
             "minimum": 6,
             "within": 6
-          },
-          {
-            "type": "chance",
-            "percent": 8
           }
         ]
       },

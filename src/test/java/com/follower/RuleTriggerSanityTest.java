@@ -68,6 +68,52 @@ public class RuleTriggerSanityTest
 	// ------------------------------------------------------- dead conditions
 
 	@Test
+	public void nothingScansTheSceneBeforeAChanceThrowsTheAnswerAway() throws IOException
+	{
+		// These four walk a list of actors or the whole inventory every time
+		// they are asked; everything else in the language is a field read or a
+		// set lookup. Inside an "all", a chance roll placed AFTER one of them
+		// means the scan happens every tick and the roll discards it - at a
+		// busy bank that is a couple of hundred world-point allocations a tick
+		// to answer a question that mattered eight percent of the time.
+		//
+		// The fix is free: "all" is a conjunction, so the order changes nothing
+		// but which condition gets to short-circuit.
+		Set<String> scans = new HashSet<>(Arrays.asList(
+			"npcnearby", "petnearby", "playersnearby", "inventoryfree"));
+
+		List<String> wasteful = new ArrayList<>();
+		for (SpeechRule rule : shippedRules())
+		{
+			walk(rule.when, condition ->
+			{
+				if (!"all".equals(type(condition)) || condition.conditions == null)
+				{
+					return;
+				}
+				int firstScan = -1;
+				for (int i = 0; i < condition.conditions.size(); i++)
+				{
+					String kind = type(condition.conditions.get(i));
+					if (firstScan < 0 && scans.contains(kind))
+					{
+						firstScan = i;
+					}
+					if (firstScan >= 0 && i > firstScan && "chance".equals(kind))
+					{
+						wasteful.add(rule.id + ": "
+							+ type(condition.conditions.get(firstScan))
+							+ " is scanned before the chance that discards it");
+						return;
+					}
+				}
+			});
+		}
+		assertTrue("scene scans that run more often than they need to:\n  "
+			+ String.join("\n  ", wasteful), wasteful.isEmpty());
+	}
+
+	@Test
 	public void noConditionLooksForSomethingWithoutSayingWhat() throws IOException
 	{
 		// These types match by a list. With the list absent or empty they can
