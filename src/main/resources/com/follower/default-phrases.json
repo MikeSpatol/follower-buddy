@@ -6538,11 +6538,11 @@
     },
     {
       "id": "thieving-lookout",
-      "note": "Keeping watch while the player works. Animation 13996 is HUMAN_SUSPECTING_IDLE, measured from the cache at 5.04s - one of a family of emotional idles (distant, concerned, pleased, suspecting, disgruntled, determined, smug, confused, 13993-14002) that would suit the mood system too. Silent by design: the whole session is muted, and an animation-only rule is movement rather than chatter so it plays anyway. A repeated furtive glance reads as a lookout better than one held pose would.",
+      "note": "Keeping watch while the player works. Animation 13993 is HUMAN_DISTANT_IDLE, measured from the cache at 5.04s: it reads as glancing about rather than as glaring at somebody, which suits a lookout better than SUSPECTING did. Silent by design - the whole session is muted, and an animation-only rule is movement rather than chatter so it plays anyway.",
       "group": "reactions",
       "priority": 20,
       "cooldownMs": 12000,
-      "animation": 13996,
+      "animation": 13993,
       "when": {
         "type": "all",
         "conditions": [
@@ -6552,6 +6552,296 @@
           {
             "type": "chance",
             "percent": 45
+          }
+        ]
+      }
+    },
+    {
+      "id": "idle-mood-low-13997",
+      "note": "Idle posture for a low mood (disgruntled, concerned). Silent: this is the mood being SHOWN rather than said, which is the half that does not wear thin. Same trigger as the plain fidgets, with a mood band on top.",
+      "group": "idle",
+      "priority": 7,
+      "cooldownMs": 90000,
+      "animation": 13997,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "mood",
+            "is": "low"
+          },
+          {
+            "type": "idle",
+            "ticks": 80
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 480
+          },
+          {
+            "type": "chance",
+            "percent": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "idle-mood-low-13994",
+      "note": "Idle posture for a low mood (disgruntled, concerned). Silent: this is the mood being SHOWN rather than said, which is the half that does not wear thin. Same trigger as the plain fidgets, with a mood band on top.",
+      "group": "idle",
+      "priority": 8,
+      "cooldownMs": 90000,
+      "animation": 13994,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "mood",
+            "is": "low"
+          },
+          {
+            "type": "idle",
+            "ticks": 80
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 480
+          },
+          {
+            "type": "chance",
+            "percent": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "idle-mood-down-13994",
+      "note": "Idle posture for a down mood (concerned, distant). Silent: this is the mood being SHOWN rather than said, which is the half that does not wear thin. Same trigger as the plain fidgets, with a mood band on top.",
+      "group": "idle",
+      "priority": 9,
+      "cooldownMs": 90000,
+      "animation": 13994,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "mood",
+            "is": "down"
+          },
+          {
+            "type": "idle",
+            "ticks": 80
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 480
+          },
+          {
+            "type": "chance",
+            "percent": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "idle-mood-down-13993",
+      "note": "Idle posture for a down mood (concerned, distant). Silent: this is the mood being SHOWN rather than said, which is the half that does not wear thin. Same trigger as the plain fidgets, with a mood band on top.",
+      "group": "idle",
+      "priority": 10,
+      "cooldownMs": 90000,
+      "animation": 13993,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "mood",
+            "is": "down"
+          },
+          {
+            "type": "idle",
+            "ticks": 80
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 480
+          },
+          {
+            "type": "chance",
+            "percent": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "idle-mood-even-13993",
+      "note": "Idle posture for a even mood (distant, confused). Silent: this is the mood being SHOWN rather than said, which is the half that does not wear thin. Same trigger as the plain fidgets, with a mood band on top.",
+      "group": "idle",
+      "priority": 11,
+      "cooldownMs": 90000,
+      "animation": 13993,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "mood",
+            "is": "even"
+          },
+          {
+            "type": "idle",
+            "ticks": 80
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 480
+          },
+          {
+            "type": "chance",
+            "percent": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "idle-mood-even-14001",
+      "note": "Idle posture for a even mood (distant, confused). Silent: this is the mood being SHOWN rather than said, which is the half that does not wear thin. Same trigger as the plain fidgets, with a mood band on top.",
+      "group": "idle",
+      "priority": 12,
+      "cooldownMs": 90000,
+      "animation": 14001,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "mood",
+            "is": "even"
+          },
+          {
+            "type": "idle",
+            "ticks": 80
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 480
+          },
+          {
+            "type": "chance",
+            "percent": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "idle-mood-good-13995",
+      "note": "Idle posture for a good mood (pleased, determined). Silent: this is the mood being SHOWN rather than said, which is the half that does not wear thin. Same trigger as the plain fidgets, with a mood band on top.",
+      "group": "idle",
+      "priority": 13,
+      "cooldownMs": 90000,
+      "animation": 13995,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "mood",
+            "is": "good"
+          },
+          {
+            "type": "idle",
+            "ticks": 80
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 480
+          },
+          {
+            "type": "chance",
+            "percent": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "idle-mood-good-13999",
+      "note": "Idle posture for a good mood (pleased, determined). Silent: this is the mood being SHOWN rather than said, which is the half that does not wear thin. Same trigger as the plain fidgets, with a mood band on top.",
+      "group": "idle",
+      "priority": 14,
+      "cooldownMs": 90000,
+      "animation": 13999,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "mood",
+            "is": "good"
+          },
+          {
+            "type": "idle",
+            "ticks": 80
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 480
+          },
+          {
+            "type": "chance",
+            "percent": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "idle-mood-high-13995",
+      "note": "Idle posture for a high mood (pleased, smug). Silent: this is the mood being SHOWN rather than said, which is the half that does not wear thin. Same trigger as the plain fidgets, with a mood band on top.",
+      "group": "idle",
+      "priority": 15,
+      "cooldownMs": 90000,
+      "animation": 13995,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "mood",
+            "is": "high"
+          },
+          {
+            "type": "idle",
+            "ticks": 80
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 480
+          },
+          {
+            "type": "chance",
+            "percent": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "idle-mood-high-14000",
+      "note": "Idle posture for a high mood (pleased, smug). Silent: this is the mood being SHOWN rather than said, which is the half that does not wear thin. Same trigger as the plain fidgets, with a mood band on top.",
+      "group": "idle",
+      "priority": 16,
+      "cooldownMs": 90000,
+      "animation": 14000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "mood",
+            "is": "high"
+          },
+          {
+            "type": "idle",
+            "ticks": 80
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 480
+          },
+          {
+            "type": "chance",
+            "percent": 5
           }
         ]
       }

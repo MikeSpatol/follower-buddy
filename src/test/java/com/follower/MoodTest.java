@@ -297,6 +297,64 @@ public class MoodTest
 	}
 
 	@Test
+	public void everyMoodBandHasAPostureToShowItIn() throws IOException
+	{
+		// The mood is meant to be READ off the follower, and an idle posture is
+		// how that happens without a word. A band with no fidget of its own is
+		// a mood that can be reached and never seen.
+		Harness h = new Harness(folder.newFolder().toPath());
+		java.util.Set<String> covered = new java.util.HashSet<>();
+		for (SpeechRule rule : h.loader.getRules())
+		{
+			if (rule.animation == null || rule.when == null)
+			{
+				continue;
+			}
+			for (String band : TriggerContext.moodBands())
+			{
+				if (namesBand(rule.when, band))
+				{
+					covered.add(band);
+				}
+			}
+		}
+		assertEquals("moods with no idle posture: "
+				+ new java.util.TreeSet<>(subtract(TriggerContext.moodBands(), covered)),
+			TriggerContext.moodBands().size(), covered.size());
+	}
+
+	private static java.util.Set<String> subtract(java.util.Set<String> all,
+		java.util.Set<String> covered)
+	{
+		java.util.Set<String> missing = new java.util.HashSet<>(all);
+		missing.removeAll(covered);
+		return missing;
+	}
+
+	private boolean namesBand(com.follower.speech.Condition condition, String band)
+	{
+		if (condition == null)
+		{
+			return false;
+		}
+		if ("mood".equalsIgnoreCase(condition.type) && band.equals(condition.is))
+		{
+			return true;
+		}
+		if (condition.conditions != null)
+		{
+			for (com.follower.speech.Condition child : condition.conditions)
+			{
+				if (namesBand(child, band))
+				{
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	@Test
 	public void theLowLinesOnlyTurnUpWhenThingsAreActuallyBad() throws IOException
 	{
 		Harness h = new Harness(folder.newFolder().toPath());
