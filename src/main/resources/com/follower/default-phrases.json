@@ -6500,7 +6500,7 @@
     },
     {
       "id": "thieving-start",
-      "note": "Said as the follower steps away. Everything until thieving-end is silent, and this is what makes that silence read as room being given rather than as the follower having stopped working.",
+      "note": "Said as the follower steps away. Everything until thieving-end is silent, and this is what makes that silence read as the follower keeping watch rather than as the follower having stopped working. Register is accomplice: we, lookout talk, and an alibi ready before anyone asks for one.",
       "group": "reactions",
       "priority": 65,
       "cooldownMs": 30000,
@@ -6509,16 +6509,19 @@
         "type": "thievingStart"
       },
       "say": [
-        "I'll give you some room.",
-        "Right. I'll be over here, seeing nothing.",
-        "Working, are we? I'll make myself scarce.",
-        "I'll wait. Try not to get caught.",
-        "Say no more. I was never here."
+        "Go on. I've got the corner.",
+        "Eyes open. I'll whistle if anyone looks twice.",
+        "You work, I'll watch. Same as always.",
+        "I'll take the far side. Whistle if it goes wrong.",
+        "Nobody's looking. Nobody who matters, anyway.",
+        "Right. I don't know you, you don't know me.",
+        "Take your time. I'm just admiring the architecture.",
+        "Say the word and we're both somewhere else entirely."
       ]
     },
     {
       "id": "thieving-end",
-      "note": "The other end, once the player has stopped or moved off.",
+      "note": "The other end, once the player has stopped or moved off. Same accomplice register as thieving-start - the job is over, the story is straight.",
       "group": "reactions",
       "priority": 65,
       "cooldownMs": 30000,
@@ -6529,11 +6532,14 @@
         "type": "thievingEnd"
       },
       "say": [
-        "Done? I saw nothing, for the record.",
-        "Back with you.",
-        "Right, I'm allowed to look again.",
-        "That's that, then. Where to?",
-        "I'll pretend I don't know where any of that came from."
+        "Clean work. We were never here.",
+        "Nothing to see. Nothing at all.",
+        "That's the take, then. Walk normally.",
+        "Don't run. Running looks guilty.",
+        "We're done. Straighten your face.",
+        "Lovely. And if anyone asks, we were fishing.",
+        "Right, that's enough larceny for one afternoon.",
+        "Whatever that was, I was somewhere else at the time."
       ]
     },
     {
