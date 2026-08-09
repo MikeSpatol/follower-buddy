@@ -110,6 +110,8 @@ public final class TriggerContext
 			idleTicks = 0;
 		}
 
+		// Before combat, which asks whether this is thieving before deciding.
+		refreshThieving(local);
 		refreshCombat(local);
 
 		refreshLoadedRegions();
@@ -145,8 +147,61 @@ public final class TriggerContext
 	 * Damage is fed in separately by the plugin's hitsplat handler, which
 	 * catches being attacked while doing nothing back.
 	 */
+	// ---------------------------------------------------------------- thieving
+
+	/**
+	 * Pickpocketing, and the stun that follows getting it wrong.
+	 *
+	 * <p>Measured from the cache: 881 is HUMAN_PICKPOCKET at 1.78s, 1054 is
+	 * STUNNED_THIEVING at 4.48s. Both are the player's own animation, so both
+	 * halves of a thieving session are visible without knowing anything about
+	 * which NPC is being robbed.
+	 */
+	private static final int PICKPOCKET_ANIMATION = 881;
+	private static final int THIEVING_STUN_ANIMATION = 1054;
+
+	/**
+	 * How long thieving is still considered to be going after the last sign.
+	 *
+	 * <p>Long enough to cover a stun and a pause before the next attempt - the
+	 * stun alone is over seven ticks - because a shorter window is what makes
+	 * the follower flicker between behaviours across a run of failures.
+	 */
+	private static final int THIEVING_GRACE_TICKS = 20;
+
+	private int ticksSinceThieving = Integer.MAX_VALUE;
+
+	private void refreshThieving(Player local)
+	{
+		int animation = local.getAnimation();
+		if (animation == PICKPOCKET_ANIMATION || animation == THIEVING_STUN_ANIMATION)
+		{
+			ticksSinceThieving = 0;
+		}
+		else if (ticksSinceThieving < Integer.MAX_VALUE)
+		{
+			ticksSinceThieving++;
+		}
+	}
+
+	/** Whether the player is working a pocket, or was a moment ago. */
+	public boolean isThieving()
+	{
+		return ticksSinceThieving <= THIEVING_GRACE_TICKS;
+	}
+
 	private void refreshCombat(Player local)
 	{
+		// Pickpocketing is not a fight, and it looks exactly like one from
+		// here: the target is an NPC with a combat level, and a failed attempt
+		// lands a hitsplat. Both of the signals combat is read from are
+		// therefore true, and the follower flickered in and out of spectating
+		// for the whole run. Thieving is checked first and wins.
+		if (isThieving())
+		{
+			return;
+		}
+
 		Actor target = local.getInteracting();
 		if (target instanceof NPC && target.getCombatLevel() > 0
 			&& target.getHealthRatio() != 0)
@@ -161,9 +216,16 @@ public final class TriggerContext
 		}
 	}
 
-	/** Called by the plugin when the player takes a hit, which is also combat. */
+	/**
+	 * Called by the plugin when the player takes a hit, which is also combat -
+	 * unless they are picking a pocket, where the hit is the failure itself.
+	 */
 	public void noteDamageTaken()
 	{
+		if (isThieving())
+		{
+			return;
+		}
 		ticksSinceCombat = 0;
 	}
 

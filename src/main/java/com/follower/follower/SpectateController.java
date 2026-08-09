@@ -151,6 +151,7 @@ public class SpectateController
 			+ " spawned=" + follower.isSpawned()
 			+ " inCombat=" + context.isInCombat()
 			+ " target='" + context.getCombatTarget() + "' level=" + context.getCombatTargetLevel()
+			+ " thieving=" + context.isThieving()
 			+ " boss=" + context.isBossFight()
 			+ " | spectating=" + spectating
 			+ " watchTile=" + watchTile
@@ -183,7 +184,14 @@ public class SpectateController
 			return;
 		}
 
-		if (!context.isInCombat())
+		// Standing clear is worth doing for thieving too: a follower underfoot
+		// while you work a pocket is in the way of the one click that matters.
+		// It is the same movement, so it goes through the same code rather than
+		// a second thing that would argue with this one over the feet.
+		boolean fighting = context.isInCombat();
+		boolean thieving = context.isThieving();
+
+		if (!fighting && !thieving)
 		{
 			if (spectating)
 			{
@@ -194,25 +202,41 @@ public class SpectateController
 
 		if (!spectating)
 		{
-			start();
+			start(fighting);
 		}
 		else
 		{
 			holdPosition();
 		}
 
-		maybeCastShield();
+		// The ward and the encouragement belong to a FIGHT. Thieving gets the
+		// distance and nothing else - a follower narrating every failed pocket
+		// would be worse than one standing in the way.
+		if (fighting)
+		{
+			maybeCastShield();
+		}
 	}
 
-	private void start()
+	/**
+	 * @param announce whether this is a fight, which is worth saying something
+	 * about. Thieving is not: it steps clear and keeps quiet.
+	 */
+	private void start(boolean announce)
 	{
 		spectating = true;
+		announced = announce;
 		releaseTicks = 0;
 		if (!moveClear())
 		{
 			// Nowhere to go is not a reason to keep announcing a fight; the
 			// follower simply carries on following.
-			log.debug("Nowhere to stand clear of the fight; staying put");
+			log.debug("Nowhere to stand clear; staying put");
+		}
+		if (!announce)
+		{
+			log.debug("Standing clear while thieving");
+			return;
 		}
 		log.debug("Spectating '{}' level {} boss={} shieldEnabled={}",
 			context.getCombatTarget(), context.getCombatTargetLevel(),
@@ -220,6 +244,12 @@ public class SpectateController
 		speech.accept(TriggerEvent.combat(TriggerEvent.Type.COMBAT_START,
 			context.getCombatTarget()));
 	}
+
+	/**
+	 * Whether the current stand-clear was announced as a fight, so that only
+	 * the ones that said hello say goodbye.
+	 */
+	private boolean announced;
 
 	private void stop()
 	{
@@ -251,8 +281,14 @@ public class SpectateController
 			follower.resumeFollowing();
 		}
 
-		speech.accept(TriggerEvent.combat(TriggerEvent.Type.COMBAT_END,
-			context.getCombatTarget()));
+		// Only a fight says goodbye. A thieving stand-clear ended is the
+		// follower simply coming back, which needs no remark.
+		if (announced)
+		{
+			speech.accept(TriggerEvent.combat(TriggerEvent.Type.COMBAT_END,
+				context.getCombatTarget()));
+		}
+		announced = false;
 	}
 
 	/** Re-seats the follower only once it has been left well behind. */
