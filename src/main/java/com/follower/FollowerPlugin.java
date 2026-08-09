@@ -818,11 +818,18 @@ public class FollowerPlugin extends Plugin
 			|| dialog.isOpen()
 			|| emoteHold
 			|| resting;
+
+		// Thieving wanders too, and does not wait to be invited. The idle gate
+		// exists so the follower does not drift while the player is busy, but
+		// picking pockets is the one activity where being underfoot is the
+		// problem - the player is animating constantly, so the idle counter
+		// never climbs and the follower would stand there for the whole run.
+		boolean thieving = speechEngine.getContext().isInThievingSession();
 		boolean canWander = config.wanderWhenIdle()
 			&& !busy
 			&& follower.isSpawned()
-			&& idle >= WANDER_AFTER_TICKS
-			&& idle < REST_AFTER_TICKS;
+			&& (thieving
+				|| (idle >= WANDER_AFTER_TICKS && idle < REST_AFTER_TICKS));
 
 		if (!canWander)
 		{
@@ -852,6 +859,15 @@ public class FollowerPlugin extends Plugin
 		java.util.concurrent.ThreadLocalRandom random =
 			java.util.concurrent.ThreadLocalRandom.current();
 
+		// While thieving, the point is to be OUT OF THE WAY, so it keeps its
+		// distance and does not go looking for something to inspect - a
+		// distraction near the player would walk it straight back in.
+		if (thieving)
+		{
+			driftAwayFrom(from, random);
+			return;
+		}
+
 		// Something to go and look at, if there is anything. A drift toward a
 		// chicken reads as curiosity where the same walk to an empty tile reads
 		// as pathing.
@@ -872,6 +888,48 @@ public class FollowerPlugin extends Plugin
 			{
 				continue;
 			}
+			WorldPoint target = new WorldPoint(
+				from.getX() + dx, from.getY() + dy, from.getPlane());
+			if (follower.stayAt(target))
+			{
+				wandered = true;
+				follower.setStayFaceTile(null);
+				return;
+			}
+		}
+	}
+
+	/**
+	 * How far off the follower keeps while the player works a pocket.
+	 *
+	 * <p>Far enough to be out from underfoot and out of the way of the click
+	 * that matters, near enough to still read as waiting for you rather than
+	 * having left.
+	 */
+	private static final int THIEVING_KEEP_MIN = 4;
+	private static final int THIEVING_KEEP_MAX = 7;
+
+	/**
+	 * Picks somewhere in a ring around the player and goes there.
+	 *
+	 * <p>A ring rather than a disc: the whole point is not to end up next to
+	 * them again, and a plain random offset would keep choosing tiles that are
+	 * technically a drift and practically underfoot.
+	 */
+	private void driftAwayFrom(WorldPoint from,
+		java.util.concurrent.ThreadLocalRandom random)
+	{
+		for (int attempt = 0; attempt < 10; attempt++)
+		{
+			double angle = random.nextDouble() * Math.PI * 2;
+			int distance = random.nextInt(THIEVING_KEEP_MIN, THIEVING_KEEP_MAX + 1);
+			int dx = (int) Math.round(Math.cos(angle) * distance);
+			int dy = (int) Math.round(Math.sin(angle) * distance);
+			if (dx == 0 && dy == 0)
+			{
+				continue;
+			}
+
 			WorldPoint target = new WorldPoint(
 				from.getX() + dx, from.getY() + dy, from.getPlane());
 			if (follower.stayAt(target))
@@ -3618,6 +3676,14 @@ public class FollowerPlugin extends Plugin
 		}
 
 		speechEngine.refreshContext();
+
+		// Nothing at all while a pocket is being worked. Failing repeatedly is
+		// already annoying; a companion remarking on each failure, each hit and
+		// each success is worse than one that says nothing, and no amount of
+		// tuning individual rules gets there - the answer is silence for the
+		// whole session, and normal chatter the moment it ends.
+		speechEngine.setMuted(config.muted()
+			|| speechEngine.getContext().isInThievingSession());
 
 		int region = speechEngine.getContext().getRegionId();
 		if (region != lastRegionId)

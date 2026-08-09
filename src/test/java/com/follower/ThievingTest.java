@@ -148,10 +148,12 @@ public class ThievingTest
 		sim.game.animating(-1);
 		sim.tick(40);
 
-		assertFalse("the short window is for combat and should have lapsed",
+		assertFalse("the attempt window is only for holding the session open",
 			sim.ctx.isThieving());
-		assertTrue("but the follower should still be standing back",
+		assertTrue("the session is what everything else asks about",
 			sim.ctx.isInThievingSession());
+		assertFalse("and it keeps combat suppressed across the gap",
+			sim.ctx.isInCombat());
 	}
 
 	@Test
@@ -242,8 +244,12 @@ public class ThievingTest
 		sim.game.animating(PICKPOCKET);
 		sim.tick(2);
 
+		// Walking off is what ends a session, so that is how a fight becomes
+		// visible again - and being attacked is one of the few things that
+		// actually makes a player move.
 		sim.game.animating(-1);
-		sim.tick(25);
+		sim.game.at(3222 + 12, 3218, 0);
+		sim.tick(2);
 
 		NPC goblin = sim.game.spawnNpc(3029, "Goblin", 5);
 		sim.game.fighting(goblin);

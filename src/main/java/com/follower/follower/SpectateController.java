@@ -185,17 +185,12 @@ public class SpectateController
 			return;
 		}
 
-		// Standing clear is worth doing for thieving too: a follower underfoot
-		// while you work a pocket is in the way of the one click that matters.
-		// It is the same movement, so it goes through the same code rather than
-		// a second thing that would argue with this one over the feet.
-		boolean fighting = context.isInCombat();
-		// The SESSION rather than the attempt: standing back should survive the
-		// gaps between pockets, and end when the player walks off rather than
-		// on a clock the gaps can outlast.
-		boolean thieving = context.isInThievingSession();
-
-		if (!fighting && !thieving)
+		// Thieving is not a fight and is not spectated. Standing clear was tried
+		// and is the wrong shape: it holds one spot facing the action, which
+		// reads as an audience. A player picking pockets wants the follower
+		// gone, not watching - so the thieving session suppresses this outright
+		// and the wandering takes over instead.
+		if (!context.isInCombat() || context.isInThievingSession())
 		{
 			if (spectating)
 			{
@@ -206,20 +201,14 @@ public class SpectateController
 
 		if (!spectating)
 		{
-			start(fighting);
+			start(true);
 		}
 		else
 		{
 			holdPosition();
 		}
 
-		// The ward and the encouragement belong to a FIGHT. Thieving gets the
-		// distance and nothing else - a follower narrating every failed pocket
-		// would be worse than one standing in the way.
-		if (fighting)
-		{
-			maybeCastShield();
-		}
+		maybeCastShield();
 	}
 
 	/**

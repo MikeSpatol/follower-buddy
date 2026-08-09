@@ -169,11 +169,10 @@ public final class TriggerContext
 		Arrays.asList(1054, 1874, 848, 14422, 14423, 14424, 10087, 10088));
 
 	/**
-	 * How long a thieving ANIMATION keeps combat suppressed afterwards.
+	 * How long a thieving ANIMATION counts as an attempt in progress.
 	 *
-	 * <p>Deliberately short. Suppressing combat is the part with a real cost -
-	 * a genuine attack in this window goes unnoticed - so it is sized to cover
-	 * the longest stun and little more.
+	 * <p>Only used to keep the session alive across the gap between attempts;
+	 * the session itself is what everything else asks about.
 	 */
 	private static final int THIEVING_GRACE_TICKS = 20;
 
@@ -238,8 +237,18 @@ public final class TriggerContext
 		// here: the target is an NPC with a combat level, and a failed attempt
 		// lands a hitsplat. Both of the signals combat is read from are
 		// therefore true, and the follower flickered in and out of spectating
-		// for the whole run. Thieving is checked first and wins.
-		if (isThieving())
+		// for the whole run.
+		//
+		// The whole SESSION is suppressed rather than the attempt, because the
+		// gap between attempts is longer than any window sized to a stun, and
+		// a fight registered in that gap surfaces the moment thieving ends -
+		// which is the follower announcing a fight that never happened.
+		//
+		// The cost is real and accepted: an actual attack while working a
+		// pocket goes unnoticed until the session ends, which it does as soon
+		// as the player moves off - and being attacked is one of the few
+		// things that makes a player move.
+		if (isInThievingSession())
 		{
 			return;
 		}
@@ -264,7 +273,7 @@ public final class TriggerContext
 	 */
 	public void noteDamageTaken()
 	{
-		if (isThieving())
+		if (isInThievingSession())
 		{
 			return;
 		}

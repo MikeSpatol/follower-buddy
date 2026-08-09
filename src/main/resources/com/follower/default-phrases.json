@@ -6428,49 +6428,6 @@
       ]
     },
     {
-      "id": "fail-pickpocket",
-      "note": "Caught with a hand in a pocket. Fragment rather than the whole line, and worth confirming with ::follower chatwatch.",
-      "group": "reactions",
-      "priority": 55,
-      "cooldownMs": 45000,
-      "delayTicks": 1,
-      "delayTicksMax": 3,
-      "output": "overhead",
-      "mood": -2,
-      "when": {
-        "type": "chatMessage",
-        "contains": "fail to pick"
-      },
-      "say": [
-        "Smooth.",
-        "They saw you. They definitely saw you.",
-        "Perhaps a different career.",
-        "That's the third time. I'm counting these now.",
-        "Subtle as a bell."
-      ]
-    },
-    {
-      "id": "fail-stunned",
-      "note": "Knocked about for trying. Confirm the wording with ::follower chatwatch.",
-      "group": "reactions",
-      "priority": 55,
-      "cooldownMs": 45000,
-      "delayTicks": 1,
-      "delayTicksMax": 3,
-      "output": "overhead",
-      "mood": -2,
-      "when": {
-        "type": "chatMessage",
-        "contains": "stunned"
-      },
-      "say": [
-        "Ooh. That'll ring for a bit.",
-        "Worth it?",
-        "I felt that from here.",
-        "Take a moment. Gather yourself."
-      ]
-    },
-    {
       "id": "fail-burnt-food",
       "note": "Cooking gone wrong. Confirm the wording with ::follower chatwatch.",
       "group": "reactions",
