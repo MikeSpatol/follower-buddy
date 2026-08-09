@@ -199,6 +199,91 @@ public class RuleTriggerSanityTest
 	}
 
 	@Test
+	public void noRuleAsksForTwoThingsThatCannotBothBeTrue() throws IOException
+	{
+		// phrases.json is edited by hand and through the panel, and the shape
+		// most of it is in is an "all" of thresholds. Nothing rejects a pair
+		// that cannot both hold - the rule loads, evaluates, and is false
+		// forever. The idle window is the one to watch: every fidget in the
+		// file is an idle/idleBelow pair, and widening the first past the
+		// second closes it completely.
+		List<String> impossible = new ArrayList<>();
+		for (SpeechRule rule : shippedRules())
+		{
+			List<Condition> conditions = conjunction(rule.when);
+			if (conditions == null)
+			{
+				continue;
+			}
+
+			int idleFrom = Integer.MIN_VALUE;
+			int idleTo = Integer.MAX_VALUE;
+			int healthBelow = Integer.MAX_VALUE;
+			int healthAbove = Integer.MIN_VALUE;
+			java.util.Map<String, Integer> minimums = new java.util.HashMap<>();
+			java.util.Map<String, Integer> maximums = new java.util.HashMap<>();
+
+			for (Condition condition : conditions)
+			{
+				String kind = type(condition);
+				if ("idle".equals(kind))
+				{
+					idleFrom = Math.max(idleFrom,
+						condition.ticks == null ? 50 : condition.ticks);
+				}
+				if ("idlebelow".equals(kind))
+				{
+					idleTo = Math.min(idleTo,
+						condition.ticks == null ? 500 : condition.ticks);
+				}
+				if ("healthbelow".equals(kind))
+				{
+					healthBelow = Math.min(healthBelow,
+						condition.percent == null ? 50 : condition.percent);
+				}
+				if ("healthabove".equals(kind))
+				{
+					healthAbove = Math.max(healthAbove,
+						condition.percent == null ? 50 : condition.percent);
+				}
+				if (condition.minimum != null)
+				{
+					minimums.merge(kind, condition.minimum, Math::max);
+				}
+				if (condition.maximum != null)
+				{
+					maximums.merge(kind, condition.maximum, Math::min);
+				}
+			}
+
+			if (idleFrom != Integer.MIN_VALUE && idleTo != Integer.MAX_VALUE
+				&& idleFrom >= idleTo)
+			{
+				impossible.add(rule.id + ": idle >= " + idleFrom + " and idleBelow "
+					+ idleTo + " is an empty window");
+			}
+			if (healthBelow != Integer.MAX_VALUE && healthAbove != Integer.MIN_VALUE
+				&& healthAbove >= healthBelow)
+			{
+				impossible.add(rule.id + ": health above " + healthAbove
+					+ " and below " + healthBelow + " at the same time");
+			}
+			for (java.util.Map.Entry<String, Integer> entry : minimums.entrySet())
+			{
+				Integer max = maximums.get(entry.getKey());
+				if (max != null && entry.getValue() > max)
+				{
+					impossible.add(rule.id + ": " + entry.getKey() + " wants minimum "
+						+ entry.getValue() + " and maximum " + max);
+				}
+			}
+		}
+		assertTrue("rules asking for two things that cannot both be true, so they"
+			+ " evaluate false forever:\n  " + String.join("\n  ", impossible),
+			impossible.isEmpty());
+	}
+
+	@Test
 	public void nothingScansTheSceneBeforeAChanceThrowsTheAnswerAway() throws IOException
 	{
 		// These four walk a list of actors or the whole inventory every time
