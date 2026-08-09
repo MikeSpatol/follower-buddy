@@ -469,6 +469,12 @@ public class ErrandController
 			// stands, swirl and all, then vanish to the player a beat later.
 			follower.playAnimation(TELEPORT_ANIMATION);
 			follower.playSpotAnim(spotAnims.get(TELEPORT_CAST_SPOTANIM));
+			// Gone on the cast's last frame. The cast runs 1.58s and the
+			// landing is three ticks out at 1.80s, so without this the
+			// follower drops back to its idle pose for a fifth of a second
+			// mid-teleport - brief, and quite visible. Cleared by
+			// teleportToPlayer on arrival.
+			follower.hideAfterEmote(1200);
 			state = State.RETURNING;
 			waitTicks = 3;
 			return;

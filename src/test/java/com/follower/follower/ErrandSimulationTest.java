@@ -32,6 +32,11 @@ import static org.junit.Assert.assertTrue;
  * object, and a scene is the one thing this harness has none of - which is
  * fine, because "found nothing, so did not start" is itself a refusal worth
  * checking.
+ *
+ * <p>It does mean the TELEPORT home is out of reach here. Both errands that run
+ * to completion are the two that come back on foot, and every errand that walks
+ * far enough to teleport is one that needs an object to walk to. That path is
+ * checked in game rather than pretended at.
  */
 public class ErrandSimulationTest
 {

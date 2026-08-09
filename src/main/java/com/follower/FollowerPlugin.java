@@ -1366,6 +1366,13 @@ public class FollowerPlugin extends Plugin
 		follower.clearStranded();
 		follower.playAnimation(TELEPORT_CAST_ANIMATION);
 		follower.playSpotAnim(spotAnimRepository.get(TELEPORT_CAST_SPOTANIM));
+		// Gone on the cast's last frame rather than standing there waiting for
+		// the landing tick. The cast runs 1.58s and the landing is three ticks
+		// out at 1.80s, so without this there is a fifth of a second of the
+		// follower standing at the wall in its idle pose, mid-teleport, which
+		// is exactly long enough to see. Cleared by teleportToPlayer on
+		// arrival, so the duration only has to outlast the gap.
+		follower.hideAfterEmote(1200);
 		strandedLandingTicks = 3;
 	}
 
