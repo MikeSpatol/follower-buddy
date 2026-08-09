@@ -79,9 +79,6 @@ public class FollowerPlugin extends Plugin
 	/** ~2 seconds at 600ms per tick, after the world becomes visible. */
 	private static final int SPAWN_DELAY_TICKS = 4;
 
-	/** Tiles in one tick above which the movement must have been a teleport. */
-	private static final int TELEPORT_TILES = 8;
-
 	/** Game ticks to let the client rebuild a changed player model before reading it. */
 	private static final int MODEL_REBUILD_TICKS = 4;
 

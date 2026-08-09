@@ -874,33 +874,6 @@ public class FollowerEntity
 		return true;
 	}
 
-	/** True if a tile is free of walls and floor blockers. */
-	private boolean isWalkable(WorldPoint tile)
-	{
-		LocalPoint localPoint = LocalPoint.fromWorld(client, tile);
-		if (localPoint == null)
-		{
-			return false;
-		}
-
-		CollisionData[] maps = client.getTopLevelWorldView().getCollisionMaps();
-		if (maps == null || tile.getPlane() >= maps.length || maps[tile.getPlane()] == null)
-		{
-			// No collision data (instances sometimes); assume open rather than refuse.
-			return true;
-		}
-
-		int[][] flags = maps[tile.getPlane()].getFlags();
-		int sx = localPoint.getSceneX();
-		int sy = localPoint.getSceneY();
-		if (sx < 0 || sy < 0 || sx >= flags.length || sy >= flags[sx].length)
-		{
-			return false;
-		}
-
-		return (flags[sx][sy] & CollisionDataFlag.BLOCK_MOVEMENT_FULL) == 0;
-	}
-
 	/** Drops queued route steps. */
 	public void clearTrail()
 	{

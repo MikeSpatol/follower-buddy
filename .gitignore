@@ -1,4 +1,5 @@
 build/
+build-test/
 .gradle/
 tools/cache-dumper/build/
 tools/cache-dumper/.gradle/

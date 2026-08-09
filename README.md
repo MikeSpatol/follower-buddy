@@ -170,6 +170,20 @@ just wants to try it rather than work on it.
 
 Add `-Plint` to surface deprecation and unchecked warnings.
 
+**Running the tests while a client is open.** `runClient` runs the client
+straight out of `build/classes`, so a plain `gradlew test` recompiles the very
+directory that client is loading from. Java loads classes lazily, so one it has
+not touched yet — the phrase editor, say — would be read back changed
+underneath it. Build somewhere else instead:
+
+```bash
+gradlew test -PaltBuild=build-test
+```
+
+Verified doing exactly that: 300 tests ran, `build/classes` and
+`build/resources` came out byte-for-byte identical across all 136 files, and
+the client carried on.
+
 ### 2. Generate the model data (OPTIONAL — development only)
 
 **As of 2026-08-06 the plugin needs no dumps at all.** Item, kit and spotanim

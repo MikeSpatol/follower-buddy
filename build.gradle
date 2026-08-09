@@ -2,6 +2,20 @@ plugins {
     id 'java'
 }
 
+// runClient runs the client straight out of build/classes, so a plain
+// `gradlew test` recompiles the very directory a live client is loading from.
+// Java loads classes lazily, so a class the client has not touched yet - the
+// phrase editor, say - would be read back changed underneath it.
+//
+// This lets a test run build somewhere else entirely and leave the running
+// client alone:
+//
+//   gradlew test -PaltBuild=build-test
+//
+if (project.hasProperty('altBuild')) {
+    layout.buildDirectory = layout.projectDirectory.dir(altBuild)
+}
+
 repositories {
     mavenLocal()
     maven {
