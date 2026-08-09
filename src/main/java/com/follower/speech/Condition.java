@@ -375,6 +375,12 @@ public class Condition
 			case "thievingend":
 				return event.getType() == TriggerEvent.Type.THIEVING_END;
 
+			// True for the whole session, unlike the two edges. Speech is muted
+			// throughout, so this is really for animation-only rules - which
+			// skip the mute, being movement rather than chatter.
+			case "thieving":
+				return ctx.isInThievingSession();
+
 			// How long the follower went without seeing the player, in minutes.
 			// Only meaningful on the login event, which is when it is worked
 			// out; -1 means it has no idea, and must never read as "just now".

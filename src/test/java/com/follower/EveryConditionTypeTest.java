@@ -540,7 +540,7 @@ public class EveryConditionTypeTest
 	@Test
 	public void thievingEdges() throws IOException
 	{
-		note("thievingStart", "thievingEnd");
+		note("thievingStart", "thievingEnd", "thieving");
 
 		fires("{\"type\": \"thievingStart\"}",
 			TriggerEvent.simple(TriggerEvent.Type.THIEVING_START));
@@ -549,6 +549,14 @@ public class EveryConditionTypeTest
 
 		quiet("{\"type\": \"thievingStart\"}",
 			TriggerEvent.simple(TriggerEvent.Type.THIEVING_END));
+
+		// The state, as opposed to the two edges.
+		Harness during = harnessFor("{\"type\": \"thieving\"}");
+		during.gameTicks(2);
+		assertQuiet(during, "nobody is thieving");
+		during.game.animating(881);
+		during.gameTicks(2);
+		assertFired(during, "thieving");
 	}
 
 	// ------------------------------------------------------------- coverage

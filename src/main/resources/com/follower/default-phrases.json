@@ -6535,6 +6535,26 @@
         "That's that, then. Where to?",
         "I'll pretend I don't know where any of that came from."
       ]
+    },
+    {
+      "id": "thieving-lookout",
+      "note": "Keeping watch while the player works. Animation 13996 is HUMAN_SUSPECTING_IDLE, measured from the cache at 5.04s - one of a family of emotional idles (distant, concerned, pleased, suspecting, disgruntled, determined, smug, confused, 13993-14002) that would suit the mood system too. Silent by design: the whole session is muted, and an animation-only rule is movement rather than chatter so it plays anyway. A repeated furtive glance reads as a lookout better than one held pose would.",
+      "group": "reactions",
+      "priority": 20,
+      "cooldownMs": 12000,
+      "animation": 13996,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "thieving"
+          },
+          {
+            "type": "chance",
+            "percent": 45
+          }
+        ]
+      }
     }
   ]
 }

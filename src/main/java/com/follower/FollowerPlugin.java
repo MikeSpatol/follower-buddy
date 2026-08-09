@@ -860,20 +860,24 @@ public class FollowerPlugin extends Plugin
 		java.util.concurrent.ThreadLocalRandom random =
 			java.util.concurrent.ThreadLocalRandom.current();
 
-		// While thieving, the point is to be OUT OF THE WAY, so it keeps its
-		// distance and does not go looking for something to inspect - a
-		// distraction near the player would walk it straight back in.
-		if (thieving)
+		// Something to go and look at, if there is anything. A drift toward a
+		// chicken reads as curiosity where the same walk to an empty tile reads
+		// as pathing - and that is worth having while thieving too, where the
+		// alternative is standing off at a distance staring at the player.
+		//
+		// The only difference is the near edge: while thieving it must not pick
+		// something underfoot, or it would inspect its way straight back into
+		// the way.
+		int nearest = thieving ? THIEVING_KEEP_MIN : 0;
+		if (driftToward(pickDistraction(local, from, nearest)))
 		{
-			driftAwayFrom(from, random);
 			return;
 		}
 
-		// Something to go and look at, if there is anything. A drift toward a
-		// chicken reads as curiosity where the same walk to an empty tile reads
-		// as pathing.
-		if (driftToward(pickDistraction(local, from)))
+		// Nothing far enough away to be worth looking at, so just keep clear.
+		if (thieving)
 		{
+			driftAwayFrom(from, random);
 			return;
 		}
 
@@ -964,7 +968,7 @@ public class FollowerPlugin extends Plugin
 	 * objects would need the tile walk the errands do, and are the thing
 	 * errands are already for.
 	 */
-	private WorldPoint pickDistraction(Player local, WorldPoint from)
+	private WorldPoint pickDistraction(Player local, WorldPoint from, int nearest)
 	{
 		List<WorldPoint> candidates = new ArrayList<>();
 
@@ -976,7 +980,7 @@ public class FollowerPlugin extends Plugin
 			{
 				continue;
 			}
-			addIfNear(candidates, npc.getWorldLocation(), from);
+			addIfNear(candidates, npc.getWorldLocation(), from, nearest);
 		}
 
 		for (Player other : client.getTopLevelWorldView().players())
@@ -985,7 +989,7 @@ public class FollowerPlugin extends Plugin
 			{
 				continue;
 			}
-			addIfNear(candidates, other.getWorldLocation(), from);
+			addIfNear(candidates, other.getWorldLocation(), from, nearest);
 		}
 
 		return candidates.isEmpty() ? null
@@ -993,10 +997,19 @@ public class FollowerPlugin extends Plugin
 				.nextInt(candidates.size()));
 	}
 
-	private void addIfNear(List<WorldPoint> into, WorldPoint at, WorldPoint from)
+	/**
+	 * @param nearest how close a thing may be and still be worth walking to.
+	 * Zero normally; while thieving it is the distance the follower is keeping,
+	 * so that going to look at something cannot bring it back underfoot.
+	 */
+	private void addIfNear(List<WorldPoint> into, WorldPoint at, WorldPoint from, int nearest)
 	{
-		if (at != null && at.getPlane() == from.getPlane()
-			&& at.distanceTo(from) <= DISTRACTION_RADIUS)
+		if (at == null || at.getPlane() != from.getPlane())
+		{
+			return;
+		}
+		int distance = at.distanceTo(from);
+		if (distance <= DISTRACTION_RADIUS && distance >= nearest)
 		{
 			into.add(at);
 		}
