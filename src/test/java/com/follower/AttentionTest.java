@@ -130,6 +130,42 @@ public class AttentionTest
 	}
 
 	@Test
+	public void anythingThatVanishesHoldsStillWhileItGoes()
+	{
+		// A rule that vanishes is playing a departure - a teleport cast, a
+		// comedy death - and a departure has to finish where it started.
+		//
+		// The case that found this: the player teleports while the follower is
+		// off on an idle distraction. The player animating resets the idle
+		// counter, so the wander is released that same tick, and the follower
+		// abandons its own cast to run back to somebody who is no longer
+		// standing there. Holding still also keeps the wander logic out
+		// entirely, since it treats a held emote as busy.
+		Harness h;
+		try
+		{
+			h = new Harness(folder.newFolder().toPath());
+		}
+		catch (IOException e)
+		{
+			throw new AssertionError(e);
+		}
+
+		java.util.List<String> loose = new java.util.ArrayList<>();
+		for (SpeechRule rule : h.loader.getRules())
+		{
+			if (Boolean.TRUE.equals(rule.vanishAfter)
+				&& !Boolean.TRUE.equals(rule.holdStill))
+			{
+				loose.add(rule.id);
+			}
+		}
+		assertTrue("rules that vanish without planting the follower first,"
+			+ " so anything that moves it mid-animation cuts the exit short: "
+			+ loose, loose.isEmpty());
+	}
+
+	@Test
 	public void theBagWarningComesWhileThereIsStillRoom() throws IOException
 	{
 		Harness h = new Harness(folder.newFolder().toPath());

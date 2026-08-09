@@ -5442,10 +5442,11 @@
     },
     {
       "id": "mirror-teleport",
-      "note": "Plays YOUR teleport animation on the follower, whichever one fired, plus any spell graphic. 714 = standard spellbook and jewellery, 3864 = teleport scrolls, 1979 = Ancient Magicks. Home teleports have their own rule below. Find more ids with ::follower watch, perform the teleport and the id is announced.",
+      "note": "Mirrors the player's teleport cast, then vanishes and reappears beside them. holdStill plants the follower for the duration: without it, a teleport that happens while the follower is off on an idle distraction interrupts its own cast. The player animating resets the idle counter, the wander is released the same tick, and the follower abandons the animation to run back to somebody who is no longer there. The hold also keeps updateWander out - it treats a held emote as busy.",
       "group": "reactions",
       "priority": 60,
       "cooldownMs": 3000,
+      "holdStill": true,
       "when": {
         "type": "animationSelf",
         "ids": [
@@ -5463,6 +5464,7 @@
       "group": "reactions",
       "priority": 70,
       "cooldownMs": 15000,
+      "holdStill": true,
       "when": {
         "type": "animationSelf",
         "ids": [
