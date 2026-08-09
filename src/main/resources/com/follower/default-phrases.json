@@ -6361,6 +6361,185 @@
         "At what point does this become a lifestyle?",
         "I've had time to think. I have some concerns."
       ]
+    },
+    {
+      "id": "away-a-while",
+      "note": "A few hours away. awayFor is the one thing the follower remembers between sessions, and it is what makes it feel like it existed while you were gone.",
+      "group": "misc",
+      "priority": 70,
+      "cooldownMs": 5000,
+      "delayTicks": 6,
+      "delayTicksMax": 10,
+      "output": "both",
+      "mood": 4,
+      "when": {
+        "type": "awayFor",
+        "minimum": 180,
+        "maximum": 1439
+      },
+      "say": [
+        "There you are. It's been a few hours.",
+        "Back, then. I did wonder.",
+        "Afternoon. Or evening. I've rather lost track.",
+        "You were gone a while. Everything's where you left it."
+      ]
+    },
+    {
+      "id": "away-a-day",
+      "note": "A day or more. Higher priority so it wins over away-a-while.",
+      "group": "misc",
+      "priority": 74,
+      "cooldownMs": 5000,
+      "delayTicks": 6,
+      "delayTicksMax": 10,
+      "output": "both",
+      "mood": 8,
+      "when": {
+        "type": "awayFor",
+        "minimum": 1440,
+        "maximum": 10079
+      },
+      "say": [
+        "A whole day. I counted.",
+        "You're back! I'd started talking to the scenery.",
+        "That was a long one. Good to see you.",
+        "I was beginning to think you'd found a better follower."
+      ]
+    },
+    {
+      "id": "away-a-long-time",
+      "note": "A week or more. The warmest of the three, and the highest priority.",
+      "group": "misc",
+      "priority": 78,
+      "cooldownMs": 5000,
+      "delayTicks": 6,
+      "delayTicksMax": 10,
+      "output": "both",
+      "mood": 12,
+      "when": {
+        "type": "awayFor",
+        "minimum": 10080
+      },
+      "say": [
+        "You came back. I wasn't sure you would.",
+        "It's been weeks. Weeks! Where do I start.",
+        "Look who it is. I kept your spot.",
+        "I'd given up on the countdown. Welcome back."
+      ]
+    },
+    {
+      "id": "fail-pickpocket",
+      "note": "Caught with a hand in a pocket. Fragment rather than the whole line, and worth confirming with ::follower chatwatch.",
+      "group": "reactions",
+      "priority": 55,
+      "cooldownMs": 45000,
+      "delayTicks": 1,
+      "delayTicksMax": 3,
+      "output": "overhead",
+      "mood": -2,
+      "when": {
+        "type": "chatMessage",
+        "contains": "fail to pick"
+      },
+      "say": [
+        "Smooth.",
+        "They saw you. They definitely saw you.",
+        "Perhaps a different career.",
+        "That's the third time. I'm counting these now.",
+        "Subtle as a bell."
+      ]
+    },
+    {
+      "id": "fail-stunned",
+      "note": "Knocked about for trying. Confirm the wording with ::follower chatwatch.",
+      "group": "reactions",
+      "priority": 55,
+      "cooldownMs": 45000,
+      "delayTicks": 1,
+      "delayTicksMax": 3,
+      "output": "overhead",
+      "mood": -2,
+      "when": {
+        "type": "chatMessage",
+        "contains": "stunned"
+      },
+      "say": [
+        "Ooh. That'll ring for a bit.",
+        "Worth it?",
+        "I felt that from here.",
+        "Take a moment. Gather yourself."
+      ]
+    },
+    {
+      "id": "fail-burnt-food",
+      "note": "Cooking gone wrong. Confirm the wording with ::follower chatwatch.",
+      "group": "reactions",
+      "priority": 52,
+      "cooldownMs": 60000,
+      "delayTicks": 1,
+      "delayTicksMax": 4,
+      "output": "overhead",
+      "mood": -1,
+      "when": {
+        "type": "chatMessage",
+        "contains": "accidentally burn"
+      },
+      "say": [
+        "That was food, once.",
+        "I wasn't hungry anyway.",
+        "The fire wins again.",
+        "We'll call that a sacrifice."
+      ]
+    },
+    {
+      "id": "fail-slip",
+      "note": "An agility obstacle going badly. Confirm with ::follower chatwatch.",
+      "group": "reactions",
+      "priority": 55,
+      "cooldownMs": 45000,
+      "delayTicks": 1,
+      "delayTicksMax": 3,
+      "output": "overhead",
+      "mood": -2,
+      "when": {
+        "type": "chatMessage",
+        "contains": "You slip"
+      },
+      "say": [
+        "Gravity: still undefeated.",
+        "I'd have caught you. Probably.",
+        "Nobody saw. Except everyone.",
+        "Up you get."
+      ]
+    },
+    {
+      "id": "cold-stamp-feet",
+      "note": "Stamps its feet in the snow. Silent on purpose - a physical tell says more than a line about being cold. Animation 4278 is EMOTE_STAMPFEET, measured from the cache; the regions are ones RegionAudit has confirmed.",
+      "group": "area",
+      "priority": 25,
+      "cooldownMs": 45000,
+      "animation": 4278,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "inRegion",
+            "regions": [
+              10553,
+              8253,
+              6462
+            ]
+          },
+          {
+            "type": "idle",
+            "ticks": 30
+          },
+          {
+            "type": "chance",
+            "percent": 25
+          }
+        ]
+      }
     }
   ]
 }

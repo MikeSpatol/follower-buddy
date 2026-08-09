@@ -341,6 +341,7 @@ wins.
 | `npcKill` | `minimum` / `maximum` combat level, `names`, `ids`; `{npc}` and `{level}` placeholders |
 | `mood` | `is` — a band (`low`, `down`, `even`, `good`, `high`) — or `minimum`/`maximum` over 0–100 |
 | `repeating` | `ticks` — how long the same animation has been running; optional `ids` |
+| `awayFor` | `minimum`/`maximum` minutes since the follower last saw you; login only |
 | `login`, `always` | — |
 | `chance` | `percent`, rolled each evaluation |
 
@@ -417,6 +418,19 @@ chatter, and a mirrored teleport is not chatter. It does still respect its own
 
 A JSON syntax error keeps the previously loaded rules rather than leaving you silent;
 the problem is reported in the chatbox and the log.
+
+### Existing between sessions
+
+`awayFor` is the only thing the follower remembers when it is not running, and
+the only thing that should be — it is the difference between a companion that
+existed while you were gone and one created fresh each time you look at it. A
+timestamp goes in the config (one number; a whole file would be more machinery
+than the fact deserves) and is refreshed about once a minute as well as at
+login, because a client that crashes never gets to write anything on the way
+out and every crash would otherwise look like an absence.
+
+A quick relog is not an absence. `-1` means it has no idea — a first run, or a
+cleared config — and never reads as "just now".
 
 ### Noticing repetition
 

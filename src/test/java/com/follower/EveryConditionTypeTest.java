@@ -518,6 +518,25 @@ public class EveryConditionTypeTest
 		assertFired(h, "repeating");
 	}
 
+	@Test
+	public void awayFor() throws IOException
+	{
+		note("awayFor");
+
+		Harness h = harnessFor("{\"type\": \"awayFor\", \"minimum\": 60}");
+		h.gameTicks(1);
+		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.LOGIN));
+		assertQuiet(h, "a follower with no idea how long it was must not guess");
+
+		h.engine.getContext().setMinutesAway(30);
+		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.LOGIN));
+		assertQuiet(h, "half an hour is not an absence");
+
+		h.engine.getContext().setMinutesAway(600);
+		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.LOGIN));
+		assertFired(h, "awayFor");
+	}
+
 	// ------------------------------------------------------------- coverage
 
 	@Test
@@ -538,6 +557,7 @@ public class EveryConditionTypeTest
 		combatAndBossFightAndDeathSpot();
 		mood();
 		repeating();
+		awayFor();
 
 		List<String> missing = new ArrayList<>(new TreeSet<>(RuleSetIntegrityTest.KNOWN_TYPES));
 		missing.removeAll(exercised);

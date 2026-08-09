@@ -290,6 +290,9 @@ public class FollowerPlugin extends Plugin
 	/** ::follower watch all - also report graphics played by other players. */
 	private boolean watchOthers;
 
+	/** ::follower chatwatch - print chat messages so a rule can quote them exactly. */
+	private boolean watchChat;
+
 	/**
 	 * ::follower scan - a tick-by-tick timeline of every animation slot the
 	 * player is using.
@@ -574,6 +577,7 @@ public class FollowerPlugin extends Plugin
 		autoHarvestTicks = 0;
 		watchAnimations = false;
 		watchOthers = false;
+		watchChat = false;
 	}
 
 	/*
@@ -759,6 +763,31 @@ public class FollowerPlugin extends Plugin
 	/** How far from the player a drift may take it. */
 	private static final int WANDER_RADIUS = 4;
 
+	/**
+	 * How far a drift may take it, scaled by mood.
+	 *
+	 * <p>This is the honest version of "follows closer when it is unhappy". The
+	 * follow distance itself is not touched: following is a one-tile-behind
+	 * path model tuned over trace sessions, and the one attempt at re-modelling
+	 * it was reverted for feel rather than for numbers. Wandering is the only
+	 * time the follower is not already at your heel, so it is the only place
+	 * where distance is the follower's choice to make.
+	 */
+	private int wanderRadius()
+	{
+		String band = speechEngine.getContext().getMoodBand();
+		if ("low".equals(band) || "down".equals(band))
+		{
+			// Staying close is what low looks like from the outside.
+			return Math.max(2, WANDER_RADIUS - 2);
+		}
+		if ("high".equals(band))
+		{
+			return WANDER_RADIUS + 2;
+		}
+		return WANDER_RADIUS;
+	}
+
 	private int wanderCountdown;
 	private boolean wandered;
 
@@ -831,12 +860,14 @@ public class FollowerPlugin extends Plugin
 			return;
 		}
 
+		int radius = wanderRadius();
+
 		// A few attempts rather than one: stayAt refuses an unreachable tile,
 		// and indoors most of the ring is wall.
 		for (int attempt = 0; attempt < 6; attempt++)
 		{
-			int dx = random.nextInt(-WANDER_RADIUS, WANDER_RADIUS + 1);
-			int dy = random.nextInt(-WANDER_RADIUS, WANDER_RADIUS + 1);
+			int dx = random.nextInt(-radius, radius + 1);
+			int dy = random.nextInt(-radius, radius + 1);
 			if (dx == 0 && dy == 0)
 			{
 				continue;
@@ -946,6 +977,53 @@ public class FollowerPlugin extends Plugin
 		}
 		return false;
 	}
+
+	/**
+	 * Works out how long the follower went without seeing the player, and starts
+	 * the clock again.
+	 *
+	 * <p>Stored in the config rather than a file of its own: it is one number,
+	 * RuneLite already persists config per profile, and a whole file for a long
+	 * would be more machinery than the fact deserves.
+	 *
+	 * <p>Kept fresh on a timer as well as here, because a client that crashes
+	 * or is killed never gets to write anything on the way out - without that,
+	 * every crash would look like an absence of however long the session ran.
+	 */
+	private void readTimeAway()
+	{
+		long now = System.currentTimeMillis();
+		String stored = config.lastSeenMs();
+		long minutes = -1;
+		if (stored != null && !stored.isEmpty())
+		{
+			try
+			{
+				long then = Long.parseLong(stored.trim());
+				// A stored time in the future is a clock change, not an absence.
+				minutes = then > now ? -1 : (now - then) / 60000L;
+			}
+			catch (NumberFormatException e)
+			{
+				log.debug("last seen was not a number: {}", stored);
+			}
+		}
+
+		speechEngine.getContext().setMinutesAway(minutes);
+		log.debug("Away for {} minutes", minutes);
+		touchLastSeen();
+	}
+
+	private void touchLastSeen()
+	{
+		configManager.setConfiguration(FollowerConfig.GROUP, "lastSeenMs",
+			Long.toString(System.currentTimeMillis()));
+	}
+
+	/** Ticks between writing the last-seen stamp: about a minute. */
+	private static final int LAST_SEEN_TICKS = 100;
+
+	private int ticksSinceLastSeen;
 
 	/**
 	 * How often learned animation data is flushed to disk: one minute, so an
@@ -1622,6 +1700,10 @@ public class FollowerPlugin extends Plugin
 				if (freshLogin)
 				{
 					freshLogin = false;
+
+					// How long it has been, worked out before the greeting so a
+					// rule can choose a different one for a long absence.
+					readTimeAway();
 
 					// The LOGIN trigger, so rules can greet: a delayTicks on the rule
 					// puts the hello a couple of seconds AFTER the follower's own
@@ -3450,6 +3532,15 @@ public class FollowerPlugin extends Plugin
 			stanceLibrary.save();
 		}
 
+		// Same reasoning as the stance flush: a crash never gets to write on
+		// the way out, and without this every crash would look like an absence
+		// of however long the session had been running.
+		if (++ticksSinceLastSeen >= LAST_SEEN_TICKS)
+		{
+			ticksSinceLastSeen = 0;
+			touchLastSeen();
+		}
+
 		if (ticksSinceLoading < 1000)
 		{
 			ticksSinceLoading++;
@@ -3721,6 +3812,15 @@ public class FollowerPlugin extends Plugin
 		{
 			return;
 		}
+		// ::follower chatwatch - the same idea as watching animations. A
+		// chatMessage rule has to match the game's exact wording, and wording
+		// taken from memory or a wiki is how a rule ends up never firing.
+		if (watchChat)
+		{
+			sendStatus("Chat [" + event.getType() + "] " + event.getMessage());
+			log.info("WATCH chat [{}] {}", event.getType(), event.getMessage());
+		}
+
 		speechEngine.dispatch(TriggerEvent.chat(event.getMessage(), event.getType().getType()));
 	}
 
@@ -4086,7 +4186,7 @@ public class FollowerPlugin extends Plugin
 		"wraplerp", "wrapauto", "wrapearly", "pose",
 		"animinfo", "animtrace", "errandscan", "cachecheck", "stanceaudit",
 		"watch", "stance", "gfx", "spectate", "shield", "centre", "center", "loot",
-		"scan", "heights", "mood"));
+		"scan", "heights", "mood", "chatwatch"));
 
 	@Subscribe
 	public void onCommandExecuted(CommandExecuted event)
@@ -4518,6 +4618,15 @@ public class FollowerPlugin extends Plugin
 				lastControllerGeneration = follower.getControllerGeneration();
 				sendStatus("Tracing frames for ~2s - keep the follower doing the thing "
 					+ "that skips.");
+				break;
+
+			case "chatwatch":
+				watchChat = !watchChat;
+				sendStatus(watchChat
+					? "Printing every chat message with its type. Do the thing you"
+						+ " want a rule for and copy the wording exactly."
+						+ " ::follower chatwatch again to stop."
+					: "Stopped watching chat.");
 				break;
 
 			case "watch":

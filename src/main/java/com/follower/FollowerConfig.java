@@ -762,6 +762,18 @@ public interface FollowerConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "lastSeenMs",
+		name = "Last seen",
+		description = "When the follower last saw you, so it can tell a quick"
+			+ " relog from an absence; managed by the plugin",
+		hidden = true
+	)
+	default String lastSeenMs()
+	{
+		return "";
+	}
+
+	@ConfigItem(
 		keyName = "disabledGroups",
 		name = "Other disabled groups",
 		description = "Comma separated group names or rule ids to silence",

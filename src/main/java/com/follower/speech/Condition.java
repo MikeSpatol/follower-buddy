@@ -367,6 +367,15 @@ public class Condition
 					&& (every == null || every <= 0
 						|| (event.getCount() > 0 && event.getCount() % every == 0));
 
+			// How long the follower went without seeing the player, in minutes.
+			// Only meaningful on the login event, which is when it is worked
+			// out; -1 means it has no idea, and must never read as "just now".
+			case "awayfor":
+				return event.getType() == TriggerEvent.Type.LOGIN
+					&& ctx.getMinutesAway() >= 0
+					&& ctx.getMinutesAway() >= orDefault(minimum, 60)
+					&& (maximum == null || ctx.getMinutesAway() <= maximum);
+
 			// How long the player has been doing the same thing. Knows nothing
 			// about trees or rocks: an animation running for minutes IS the
 			// activity, so this covers every skill at once.

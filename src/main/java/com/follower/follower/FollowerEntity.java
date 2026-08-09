@@ -1501,6 +1501,10 @@ public class FollowerEntity
 		{
 			faceStayAnchor();
 		}
+		else if (!moving)
+		{
+			watchTheWork(local);
+		}
 
 		StanceLibrary.Stance stance = stance();
 		int pose;
@@ -3341,6 +3345,32 @@ public class FollowerEntity
 	 * Turns to look at the player. Sets the destination yaw only - the authentic
 	 * turn rate then eases into it, the same as any other facing change.
 	 */
+	/**
+	 * While the player is working, look where they are looking.
+	 *
+	 * <p>A companion that stares at your face while you chop a tree is watching
+	 * YOU; one that looks at the tree is watching what you are doing, and the
+	 * difference costs a yaw.
+	 *
+	 * <p>The player's orientation is used rather than their target, because
+	 * there usually is no target to read: {@code getInteracting} only reports
+	 * actors, so mining a rock or chopping a tree exposes nothing at all. Which
+	 * way they are turned is always known and is the same information - they
+	 * are facing the thing.
+	 *
+	 * <p>Only while they are animating. Standing about is not work, and the
+	 * follower goes back to facing them, which is the attentive default.
+	 */
+	private void watchTheWork(Player local)
+	{
+		if (local.getAnimation() == -1)
+		{
+			facePlayer();
+			return;
+		}
+		dstYaw = local.getOrientation() & 0x7ff;
+	}
+
 	public void facePlayer()
 	{
 		Player local = client.getLocalPlayer();

@@ -190,6 +190,21 @@ public final class TriggerContext
 		return combatTargetLevel;
 	}
 
+	// ------------------------------------------------------------ time away
+
+	/**
+	 * Minutes between the follower last seeing the player and this login, or -1
+	 * when it has no idea - a first run, or a cleared config.
+	 *
+	 * <p>The only thing in here that outlives a session, and the only thing
+	 * that should: it is the difference between a companion that exists when
+	 * you are gone and one that is created fresh each time you look at it. A
+	 * quick relog is not an absence; a day is.
+	 */
+	@lombok.Getter
+	@lombok.Setter
+	private long minutesAway = -1;
+
 	// ---------------------------------------------------------------- tallies
 
 	/**
