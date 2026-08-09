@@ -260,6 +260,16 @@ public class EveryConditionTypeTest
 		region.gameTicks(2);
 		assertFired(region, "inRegion");
 
+		// And the half that was missing: it has to stay quiet ELSEWHERE.
+		// Fifty-eight area rules hang off this one condition, so a version
+		// that matched everywhere would have the follower announcing Lumbridge
+		// from Varrock - and every test here passed against exactly that.
+		Harness elsewhere = harnessFor("{\"type\": \"inRegion\", \"regions\": ["
+			+ lumbridge.getRegionID() + "]}");
+		elsewhere.game.at(2624, 3648, 0);
+		elsewhere.gameTicks(3);
+		assertQuiet(elsewhere, "a region rule fired somewhere else entirely");
+
 		Harness area = harnessFor("{\"type\": \"inArea\", \"x1\": 3200, \"y1\": 3200,"
 			+ " \"x2\": 3250, \"y2\": 3250, \"plane\": 0}");
 		area.gameTicks(2);
@@ -334,6 +344,16 @@ public class EveryConditionTypeTest
 		nearby.game.spawnNpc(3029, "Goblin", 5);
 		nearby.gameTicks(2);
 		assertFired(nearby, "npcNearby");
+
+		// The name was checked and the RADIUS never was. Without it the
+		// follower announces a boss from the other side of the map, which is
+		// what "within" exists to stop.
+		Harness far = harnessFor("{\"type\": \"npcNearby\", \"names\": [\"Goblin\"],"
+			+ " \"within\": 5}");
+		NPC distant = far.game.spawnNpc(3029, "Goblin", 5);
+		far.game.moveNpc(distant, 3222 + 40, 3218 + 40, 0);
+		far.gameTicks(3);
+		assertQuiet(far, "a goblin forty tiles away is not nearby");
 
 		Harness pet = harnessFor("{\"type\": \"petNearby\", \"within\": 5}");
 		pet.game.spawnNpc(3029, "Goblin", 5, false);
