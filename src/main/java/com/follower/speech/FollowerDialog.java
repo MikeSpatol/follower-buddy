@@ -108,6 +108,32 @@ public class FollowerDialog extends Overlay
 			return this;
 		}
 
+		/** The pages this node speaks, and the labels of any choices it offers. */
+		public java.util.List<String> getLines()
+		{
+			java.util.List<String> lines = new java.util.ArrayList<>(
+				java.util.Arrays.asList(pages));
+			lines.addAll(java.util.Arrays.asList(optionText));
+			return lines;
+		}
+
+		/** Every node id this one can lead to, by continuing or by choice. */
+		public java.util.List<String> getTargets()
+		{
+			java.util.List<String> found = new java.util.ArrayList<>(
+				java.util.Arrays.asList(optionNext));
+			if (next != null)
+			{
+				found.add(next);
+			}
+			return found;
+		}
+
+		public boolean hasChoices()
+		{
+			return optionText.length > 0;
+		}
+
 		/** Offer choices once the pages are done; pairs of label and target id. */
 		public Node choices(String... labelThenTarget)
 		{

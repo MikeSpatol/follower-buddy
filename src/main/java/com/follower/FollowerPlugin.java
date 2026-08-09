@@ -3427,26 +3427,45 @@ public class FollowerPlugin extends Plugin
 		speechEngine.dispatch(TriggerEvent.answered(answer));
 	}
 
-	private static java.util.Map<String, com.follower.speech.FollowerDialog.Node> talkScript()
+	/**
+	 * The everyday Talk-to conversation.
+	 *
+	 * <p>Written in Java rather than kept in dialogs.json because it does not
+	 * change with play - it is what the follower is, not what it is currently
+	 * up to. The trees in dialogs.json are the ones the follower OPENS, which
+	 * is a different job.
+	 *
+	 * <p>Two rules hold this together. Nothing here is a feature list: what the
+	 * follower can do comes out as habits and grievances, the way a person
+	 * describes their job, because a companion reciting its own capabilities is
+	 * a manual with a face. And a branch never replays a line the player has
+	 * already read - hence the {@code -menu} nodes, which re-offer the
+	 * follow-ups without the preamble.
+	 *
+	 * <p>Package-private so the test can check every line renders in the game's
+	 * fonts. It is the only speech in the plugin that does not live in
+	 * phrases.json, and it was the only speech nothing checked.
+	 */
+	static java.util.Map<String, com.follower.speech.FollowerDialog.Node> talkScript()
 	{
 		java.util.Map<String, com.follower.speech.FollowerDialog.Node> script =
 			new java.util.LinkedHashMap<>();
 
-		script.put("start", says("Yes? I'm listening.")
+		script.put("start", says("Yes?")
 			.choices(
 				"Who are you, exactly?", "who-q",
-				"What can you actually do?", "do-q",
-				"Let's just chat.", "chat-q",
-				"Any advice for an adventurer?", "advice-q",
+				"What is it you actually do?", "do-q",
+				"How have you been?", "how-q",
+				"Let's just talk.", "chat-q",
 				"Never mind.", "bye-q"));
 
-		// Returning hub, without the greeting.
+		// The returning hub, without the greeting.
 		script.put("menu", says()
 			.choices(
 				"Who are you, exactly?", "who-q",
-				"What can you actually do?", "do-q",
-				"Let's just chat.", "chat-q",
-				"Any advice for an adventurer?", "advice-q",
+				"What is it you actually do?", "do-q",
+				"How have you been?", "how-q",
+				"Let's just talk.", "chat-q",
 				"That's all for now.", "bye-q"));
 
 		// ------------------------------------------------ who are you
@@ -3456,80 +3475,137 @@ public class FollowerPlugin extends Plugin
 			"I'm your follower. Your shadow, with better posture.")
 			.then("who-b"));
 		script.put("who-b", says(
-			"You dress me, I walk behind you, and I keep my opinions about your bank standing to myself.")
+			"You dress me, I walk behind you, and I keep quiet about your bank.")
 			.choices(
 				"So you're... me?", "who-me-q",
+				"Do you have a name?", "who-name-q",
 				"Don't you get tired of following me?", "who-tired-q",
 				"Fair enough. Back to business.", "menu"));
 
-		// Re-offers the follow-ups WITHOUT replaying who-b's line - a branch
-		// should never repeat dialogue the player has already read.
 		script.put("who-menu", says()
 			.choices(
 				"So you're... me?", "who-me-q",
+				"Do you have a name?", "who-name-q",
 				"Don't you get tired of following me?", "who-tired-q",
 				"Fair enough. Back to business.", "menu"));
 
 		script.put("who-me-q", you("So you're... me?").then("who-me-a"));
 		script.put("who-me-a", says(
-			"In a manner of speaking. You picked the face, the hair, the clothes...",
-			"The sparkling personality, though? All mine.")
+			"In a manner of speaking. You picked the face, the hair, the clothes.",
+			"The personality came free, and it shows.")
+			.then("who-menu"));
+
+		script.put("who-name-q", you("Do you have a name?").then("who-name-a"));
+		script.put("who-name-a", says(
+			"You gave me one. I'd have chosen differently, but I wasn't asked.",
+			"It's grown on me.")
 			.then("who-menu"));
 
 		script.put("who-tired-q", you("Don't you get tired of following me?").then("who-tired-a"));
 		script.put("who-tired-a", says(
-			"Tired? I once watched you stand at a furnace for three hours straight.",
-			"After that, nothing tires me.")
+			"Tired? I once watched you stand at a furnace for three hours.",
+			"Nothing has tired me since.")
 			.then("who-menu"));
 
-		// ------------------------------------------------ what can you do
-		script.put("do-q", you("What can you actually do?").then("do-a"));
-		script.put("do-a", says("Plenty. What would you like to know?")
+		// ------------------------------------------------ what do you do
+		script.put("do-q", you("What is it you actually do?").then("do-a"));
+		script.put("do-a", says("Walk behind you. It's more involved than it sounds.")
 			.then("do-menu"));
 		script.put("do-menu", says()
 			.choices(
-				"Tell me about following.", "do-follow-q",
-				"Can you wait somewhere for me?", "do-stay-q",
-				"What happens when I teleport?", "do-tele-q",
+				"Tell me about the walking.", "do-follow-q",
+				"What do you do when I'm fighting?", "do-fight-q",
+				"And when I'm working?", "do-work-q",
 				"Can you dance?", "do-emote-q",
-				"That's all I needed to know.", "menu"));
+				"That's all I needed.", "menu"));
 
-		script.put("do-follow-q", you("Tell me about following.").then("do-follow-a"));
+		script.put("do-follow-q", you("Tell me about the walking.").then("do-follow-a"));
 		script.put("do-follow-a", says(
-			"I follow one tile behind, the way any proper companion does. Corners, doorways, running - I keep up.",
-			"Adventurers cleverer than you have tried to lose me. It didn't work.")
+			"One tile behind. Corners, doorways, stairs, running - I keep up.",
+			"Where you go I go, teleports included. Same swirl, half a step later.")
+			.then("do-follow-b"));
+		script.put("do-follow-b", says(
+			"Tell me to Stay and I'll hold the spot until you want me back.",
+			"Or shift-click a tile and Send me, and I'll walk there myself.")
 			.then("do-menu"));
 
-		script.put("do-stay-q", you("Can you wait somewhere for me?").then("do-stay-a"));
-		script.put("do-stay-a", says(
-			"Right-click me and say Stay, and I'll hold my ground.",
-			"Or point at a spot - shift-click the ground and Send me - and I'll make my own way over.",
-			"Say Follow when you want me back at your heel. I won't take it personally.")
+		script.put("do-fight-q", you("What do you do when I'm fighting?").then("do-fight-a"));
+		script.put("do-fight-a", says(
+			"Get out of the way, mainly. Then watch.",
+			"If something enormous is standing near us I'll mention it first. For all the good that does.")
+			.then("do-fight-b"));
+		script.put("do-fight-b", says(
+			"And when it goes down I make a fuss. You've usually earned it by then.")
 			.then("do-menu"));
 
-		script.put("do-tele-q", you("What happens when I teleport?").then("do-tele-a"));
-		script.put("do-tele-a", says(
-			"I come with you, obviously. Same spell, same swirl of magic, half a step behind.",
-			"Where you go, I go. That was the arrangement.")
+		script.put("do-work-q", you("And when I'm working?").then("do-work-a"));
+		script.put("do-work-a", says(
+			"Depends what you're at.",
+			"If it's pockets, I give you room and keep an eye on the street. I say nothing until you're done.")
+			.then("do-work-b"));
+		script.put("do-work-b", says(
+			"Otherwise I'll find something to look at. I don't need watching every minute.",
+			"Now and then I wander off on an errand of my own. I always come back.")
 			.then("do-menu"));
 
 		script.put("do-emote-q", you("Can you dance?").then("do-emote-a"));
 		script.put("do-emote-a", says(
-			"Can I dance? I contain multitudes.",
-			"Right-click me and ask - a wave, a dance, whatever the occasion demands.")
+			"Ask and find out. Right-click me - wave, dance, whatever the moment wants.",
+			"Or do one yourself and I'll join in a beat behind. I'm not a mirror. I have timing.")
 			.then("do-menu"));
 
+		// ------------------------------------------------ the inner life
+		script.put("how-q", you("How have you been?").then("how-a"));
+		script.put("how-a", says(
+			"That depends on the day. You've given me some days.")
+			.then("how-menu"));
+		script.put("how-menu", says()
+			.choices(
+				"You keep track of things?", "how-count-q",
+				"You have moods?", "how-mood-q",
+				"Anywhere you'd rather be?", "how-place-q",
+				"Back to business.", "menu"));
+
+		script.put("how-count-q", you("You keep track of things?").then("how-count-a"));
+		script.put("how-count-a", says(
+			"I count. Every rat, every level, every time you've gone down in front of me.",
+			"It isn't judgement. Somebody should, that's all.")
+			.then("how-count-b"));
+		script.put("how-count-b", says(
+			"I remember it between days, too. You come back and the number's still there.")
+			.then("how-menu"));
+
+		script.put("how-mood-q", you("You have moods?").then("how-mood-a"));
+		script.put("how-mood-a", says(
+			"I do. You'd know if you looked up.",
+			"When it's gone well I stand one way. When it hasn't, I stand another.")
+			.then("how-mood-b"));
+		script.put("how-mood-b", says(
+			"It passes. Everything does, if you keep walking.")
+			.then("how-menu"));
+
+		script.put("how-place-q", you("Anywhere you'd rather be?").then("how-place-a"));
+		script.put("how-place-a", says(
+			"There are places I like. I couldn't tell you why.",
+			"And one or two I'd sooner we didn't linger in. You'll hear about those.")
+			.then("how-place-b"));
+		script.put("how-place-b", says(
+			"If I ever ask you to take me somewhere, come and talk to me and I'll say where.",
+			"I won't ask twice. It's not that sort of arrangement.")
+			.then("how-menu"));
+
 		// ------------------------------------------------ small talk
-		script.put("chat-q", you("Let's just chat.").then("chat-a"));
+		script.put("chat-q", you("Let's just talk.").then("chat-a"));
 		script.put("chat-a", says("My favourite duty.").then("chat-menu"));
 		script.put("chat-menu", says()
 			.choices(
-				"Seen anything interesting lately?", "chat-seen-q",
+				"Seen anything interesting?", "chat-seen-q",
 				"What do you think of my outfit?", "chat-outfit-q",
+				"Any advice?", "advice-q",
 				"Tell me a joke.", "chat-joke-q",
 				"Back to business.", "menu"));
 
-		script.put("chat-seen-q", you("Seen anything interesting lately?").then("chat-seen-a"));
+		script.put("chat-seen-q", you("Seen anything interesting?").then("chat-seen-a"));
 		script.put("chat-seen-a", says(
 			"Mostly the back of your head.",
 			"It's a fine head. It could carry a better hat.")
@@ -3541,8 +3617,8 @@ public class FollowerPlugin extends Plugin
 			"The rest of your wardrobe I couldn't possibly comment on.")
 			.then("chat-menu"));
 
-		// Every visit to a joke node re-rolls from the pool (never the same
-		// joke twice in a row), and the loop lets you keep asking for more.
+		// Every visit re-rolls from the pool (never the same joke twice in a
+		// row), and the loop lets you keep asking for more.
 		script.put("chat-joke-q", you("Tell me a joke.").then("chat-joke-a"));
 		script.put("chat-joke-a", com.follower.speech.FollowerDialog.Node
 			.saysDynamic(FollowerPlugin::nextJoke)
@@ -3559,30 +3635,29 @@ public class FollowerPlugin extends Plugin
 
 		script.put("chat-groan-q", you("That's terrible.").then("chat-groan-a"));
 		script.put("chat-groan-a", says(
-			"I've been saving it since Lumbridge.",
-			"There's more where that came from, so choose your next question carefully.")
+			"I've been saving that one since Lumbridge.",
+			"There's more where it came from. Choose your next question carefully.")
 			.then("chat-menu"));
 
 		// ------------------------------------------------ advice
-		script.put("advice-q", you("Any advice for an adventurer?").then("advice-a"));
+		script.put("advice-q", you("Any advice?").then("advice-a"));
 		script.put("advice-a", says(
-			"Three rules I've learned, walking behind you:")
+			"Don't take the detour for the cabbage. It is never worth it.")
 			.then("advice-b"));
 		script.put("advice-b", says(
-			"One: the cabbage is never worth the detour.",
-			"Two: if a stranger offers to trim your armour, he is not a barber.")
+			"If a stranger offers to trim your armour, he is not a barber.")
 			.then("advice-c"));
 		script.put("advice-c", says(
-			"Three: bank early, bank often. A gravestone is not a storage solution.")
+			"And bank before you think you need to. A gravestone is not storage.")
 			.then("advice-d"));
 		script.put("advice-d", says(
-			"That's everything I know. The rest I've learned to keep quiet about.")
-			.then("menu"));
+			"That's the lot. The rest I've learned to keep to myself.")
+			.then("chat-menu"));
 
 		// ------------------------------------------------ farewells
 		script.put("bye-q", you("Never mind.").then("bye"));
 		script.put("bye", says(
-			"Right you are. I'll be one step behind."));
+			"Right you are. One step behind."));
 
 		return script;
 	}
