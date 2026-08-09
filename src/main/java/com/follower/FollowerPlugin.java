@@ -823,6 +823,14 @@ public class FollowerPlugin extends Plugin
 		java.util.concurrent.ThreadLocalRandom random =
 			java.util.concurrent.ThreadLocalRandom.current();
 
+		// Something to go and look at, if there is anything. A drift toward a
+		// chicken reads as curiosity where the same walk to an empty tile reads
+		// as pathing.
+		if (driftToward(pickDistraction(local, from)))
+		{
+			return;
+		}
+
 		// A few attempts rather than one: stayAt refuses an unreachable tile,
 		// and indoors most of the ring is wall.
 		for (int attempt = 0; attempt < 6; attempt++)
@@ -838,9 +846,105 @@ public class FollowerPlugin extends Plugin
 			if (follower.stayAt(target))
 			{
 				wandered = true;
+				follower.setStayFaceTile(null);
 				return;
 			}
 		}
+	}
+
+	/**
+	 * How far to look for something worth drifting over to.
+	 *
+	 * <p>Wider than the plain wander radius, because the follower walks to a
+	 * tile BESIDE the thing and a nearer ring would only ever find what is
+	 * already underfoot. Not much wider though: the walk has to read as going
+	 * to look at something rather than as wandering off, and the follower is
+	 * still meant to be waiting for you.
+	 */
+	private static final int DISTRACTION_RADIUS = 6;
+
+	/**
+	 * Something nearby worth a look, or null if the place is empty.
+	 *
+	 * <p>Chosen at random from everything in range rather than by any ranking.
+	 * A follower that always makes for the pet is as predictable as one that
+	 * always picks an empty tile; what sells it is that the choice is its own.
+	 *
+	 * <p>Only NPCs and other players, which the client already lists. Scene
+	 * objects would need the tile walk the errands do, and are the thing
+	 * errands are already for.
+	 */
+	private WorldPoint pickDistraction(Player local, WorldPoint from)
+	{
+		List<WorldPoint> candidates = new ArrayList<>();
+
+		for (NPC npc : client.getTopLevelWorldView().npcs())
+		{
+			// The thrall is the follower's own body in thrall mode, and
+			// wandering is suppressed then anyway.
+			if (npc == null || npc == thrallNpc)
+			{
+				continue;
+			}
+			addIfNear(candidates, npc.getWorldLocation(), from);
+		}
+
+		for (Player other : client.getTopLevelWorldView().players())
+		{
+			if (other == null || other == local)
+			{
+				continue;
+			}
+			addIfNear(candidates, other.getWorldLocation(), from);
+		}
+
+		return candidates.isEmpty() ? null
+			: candidates.get(java.util.concurrent.ThreadLocalRandom.current()
+				.nextInt(candidates.size()));
+	}
+
+	private void addIfNear(List<WorldPoint> into, WorldPoint at, WorldPoint from)
+	{
+		if (at != null && at.getPlane() == from.getPlane()
+			&& at.distanceTo(from) <= DISTRACTION_RADIUS)
+		{
+			into.add(at);
+		}
+	}
+
+	/**
+	 * Walks to a tile BESIDE the thing and turns to face it.
+	 *
+	 * <p>Beside rather than onto: standing inside a cat is the same mistake the
+	 * errands avoid, and the follower would be hidden by the overlap rule for
+	 * anything person-sized anyway. Facing it is what makes the walk read as
+	 * having gone to look at something rather than having stopped near it.
+	 *
+	 * @return true if it set off
+	 */
+	private boolean driftToward(WorldPoint thing)
+	{
+		if (thing == null)
+		{
+			return false;
+		}
+
+		int[][] beside = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {-1, -1}, {1, -1}, {-1, 1}};
+		List<int[]> order = new ArrayList<>(java.util.Arrays.asList(beside));
+		java.util.Collections.shuffle(order);
+
+		for (int[] offset : order)
+		{
+			WorldPoint spot = new WorldPoint(
+				thing.getX() + offset[0], thing.getY() + offset[1], thing.getPlane());
+			if (follower.stayAt(spot))
+			{
+				follower.setStayFaceTile(thing);
+				wandered = true;
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
