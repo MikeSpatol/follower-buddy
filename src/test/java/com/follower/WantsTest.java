@@ -161,6 +161,43 @@ public class WantsTest
 	}
 
 	@Test
+	public void forcingARuleRunsTheWholeRuleAndNotJustTheWords() throws IOException
+	{
+		// ::follower fire exists because several rules only happen on a small
+		// roll after a minute of standing still. It is worth nothing if it
+		// only says the line: the point of forcing ask-outing is to get the
+		// question WINDOW open so the answer can be tested.
+		Harness h = new Harness(folder.newFolder().toPath());
+		h.game.at(3000, 3000, 0);
+		h.gameTicks(1);
+
+		assertFalse("nothing has been asked", h.engine.getContext().isAwaitingAnswer());
+		assertTrue("the rule has to exist to be forced", h.engine.force("ask-outing"));
+		assertTrue("forcing a rule marked asks must open the window",
+			h.engine.getContext().isAwaitingAnswer());
+		assertFalse("and it must actually have said something",
+			h.firedBy("ask-outing").isEmpty());
+
+		assertFalse("a rule that does not exist reports as much",
+			h.engine.force("no-such-rule"));
+	}
+
+	@Test
+	public void forcingIgnoresTheCooldownThatWouldNormallyHoldItBack() throws IOException
+	{
+		// ask-outing has a fifteen minute cooldown. A test tool that respected
+		// it would be useless the second time you reached for it.
+		Harness h = new Harness(folder.newFolder().toPath());
+		h.game.at(3000, 3000, 0);
+		h.gameTicks(1);
+
+		h.engine.force("examined");
+		h.engine.force("examined");
+		assertTrue("forcing twice in a row has to work twice",
+			h.firedBy("examined").size() >= 2);
+	}
+
+	@Test
 	public void itDoesNotAskToBeTakenWhereItAlreadyIs() throws IOException
 	{
 		// Being delighted about arriving somewhere you never left is not a wish.

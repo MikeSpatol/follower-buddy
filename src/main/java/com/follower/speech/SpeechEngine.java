@@ -269,6 +269,38 @@ public class SpeechEngine
 		sink.speak(text, output == null ? defaultOutput : output, null, -1);
 	}
 
+	/**
+	 * Says a rule this instant, whatever its conditions, cooldown and the mute
+	 * have to say about it.
+	 *
+	 * <p>For testing a rule you cannot conveniently provoke. Several of them
+	 * only happen on a five percent roll after a minute of standing still, or
+	 * on the hundredth login, and waiting for one of those in a live client is
+	 * not testing, it is hoping.
+	 *
+	 * <p>Everything the rule carries still happens - the animation, the mood
+	 * nudge, {@code asks}, {@code want} - because the point is to exercise the
+	 * whole path rather than only the words. Placeholders that come from an
+	 * event ({npc}, {want}, {value}) have no event to come from here and will
+	 * print literally; that is the honest cost of firing something out of
+	 * nowhere.
+	 *
+	 * @return whether a rule by that id exists
+	 */
+	public boolean force(String ruleId)
+	{
+		for (SpeechRule rule : loader.getRules())
+		{
+			if (ruleId.equalsIgnoreCase(rule.id))
+			{
+				speak(rule, TriggerEvent.simple(TriggerEvent.Type.MANUAL),
+					System.currentTimeMillis());
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private void speak(SpeechRule rule, TriggerEvent event, long now)
 	{
 		String text = substitute(rule.pickPhrase(), event);

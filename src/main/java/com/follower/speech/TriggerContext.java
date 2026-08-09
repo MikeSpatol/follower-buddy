@@ -601,6 +601,18 @@ public final class TriggerContext
 		return wantOpen;
 	}
 
+	/** Which region the open want is for, or -1. */
+	public int getWantRegion()
+	{
+		return wantOpen ? wantRegion : -1;
+	}
+
+	/** Ticks left before the open want gives up, or 0. */
+	public int getWantTicksLeft()
+	{
+		return wantOpen ? Math.max(0, wantDeadlineTick - client.getTickCount()) : 0;
+	}
+
 	/** The label of the current want, or of the one that just resolved. */
 	public String getWantLabel()
 	{

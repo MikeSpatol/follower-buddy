@@ -4549,7 +4549,7 @@ public class FollowerPlugin extends Plugin
 		"wraplerp", "wrapauto", "wrapearly", "pose",
 		"animinfo", "animtrace", "errandscan", "cachecheck", "stanceaudit",
 		"watch", "stance", "gfx", "spectate", "shield", "centre", "center", "loot",
-		"scan", "heights", "mood", "chatwatch"));
+		"scan", "heights", "mood", "chatwatch", "fire", "want"));
 
 	@Subscribe
 	public void onCommandExecuted(CommandExecuted event)
@@ -5359,6 +5359,47 @@ public class FollowerPlugin extends Plugin
 				break;
 			}
 
+			// Fires a rule out of nowhere. Several of the newer ones only
+			// happen on a small roll after a minute of standing still, or on
+			// the hundredth login, and waiting for those in a live client is
+			// hoping rather than testing.
+			case "fire":
+			{
+				if (args.length < 2)
+				{
+					sendStatus("::follower fire <rule-id> - try ask-outing, want-fulfilled, examined");
+					break;
+				}
+				String ruleId = args[1];
+				if (speechEngine.force(ruleId))
+				{
+					sendStatus("Fired '" + ruleId + "'");
+				}
+				else
+				{
+					sendStatus("No rule called '" + ruleId + "'");
+				}
+				break;
+			}
+
+			// What the follower is currently hoping for, which is otherwise
+			// only visible by going there and seeing whether it notices.
+			case "want":
+			{
+				com.follower.speech.TriggerContext context = speechEngine.getContext();
+				if (!context.isWanting())
+				{
+					sendStatus("Not hoping for anything. Question window "
+						+ (context.isAwaitingAnswer() ? "OPEN - answer yes or no" : "closed"));
+					break;
+				}
+				sendStatus("Wants " + context.getWantLabel()
+					+ " (region " + context.getWantRegion() + "), "
+					+ context.getWantTicksLeft() + " ticks left."
+					+ " You are in region " + context.getRegionId());
+				break;
+			}
+
 			case "status":
 			case "where":
 				sendStatus("Models: " + modelRepository.getStatus()
@@ -5378,7 +5419,8 @@ public class FollowerPlugin extends Plugin
 						+ "priorities | palette | harvest | hidden | height <n> | "
 						+ "pitchsweep | headsweep | head <...> | followtrace | "
 						+ "wraplerp | wrapauto | wrapearly | pose <id> | animinfo | "
-						+ "animtrace | errandscan | cachecheck | stanceaudit");
+						+ "animtrace | errandscan | cachecheck | stanceaudit | "
+						+ "mood [0-100] | chatwatch | fire <rule-id> | want");
 				}
 			// ::follower interp was removed: the interpolation filter is keyed on
 			// animation id, so it could not be changed for the follower without

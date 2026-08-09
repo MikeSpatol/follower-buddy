@@ -609,6 +609,18 @@ rather than failing silently.
 | `::follower pose <id>` **[dev]** | Force a looping pose (0 to release) |
 | `::follower cachecheck` **[dev]** | Diff the live cache parse against the offline dump, field by field |
 | `::follower stanceaudit` **[dev]** | Validate every animation id the stance library names, and report weapon coverage |
+| `::follower chatwatch` **[dev]** | Print every chat line with its `ChatMessageType`, for writing `chatMessage` rules |
+| `::follower mood [0-100]` **[dev]** | Read or set the mood |
+| `::follower fire <rule-id>` **[dev]** | Say a rule now, whatever its conditions, cooldown and the mute say |
+| `::follower want` **[dev]** | What the follower is hoping for, and whether a question is open |
+
+`::follower fire` is how you test a rule you cannot conveniently provoke — several
+only happen on a five percent roll after a minute of standing still, or on the
+hundredth login, and waiting for one of those in a live client is hoping rather
+than testing. It runs the **whole** rule, not just the words: the animation, the
+mood nudge, `asks` and `want` all take effect, which is the point. Placeholders
+that come from an event (`{npc}`, `{want}`, `{value}`) have no event to come from
+and will print literally.
 
 `animtrace` is the useful one for animation problems: it prints both models' frame
 sequences collapsed into `frame xHeld` runs, so a stall shows as an oversized hold, a
