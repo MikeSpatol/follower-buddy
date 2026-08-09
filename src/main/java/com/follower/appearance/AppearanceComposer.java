@@ -279,7 +279,7 @@ public class AppearanceComposer
 	 * covered one case out of many and left helmets rendering hair straight through
 	 * themselves.
 	 */
-	private java.util.Set<KitType> hiddenSlots(Outfit outfit)
+	java.util.Set<KitType> hiddenSlots(Outfit outfit)
 	{
 		java.util.Set<KitType> hidden = java.util.EnumSet.noneOf(KitType.class);
 		KitType[] slots = KitType.values();
