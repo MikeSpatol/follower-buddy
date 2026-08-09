@@ -367,6 +367,14 @@ public class Condition
 					&& (every == null || every <= 0
 						|| (event.getCount() > 0 && event.getCount() % every == 0));
 
+			// The two ends of a thieving session. Everything between them is
+			// silent, and these are what make that silence read as the
+			// follower giving the player room rather than having broken.
+			case "thievingstart":
+				return event.getType() == TriggerEvent.Type.THIEVING_START;
+			case "thievingend":
+				return event.getType() == TriggerEvent.Type.THIEVING_END;
+
 			// How long the follower went without seeing the player, in minutes.
 			// Only meaningful on the login event, which is when it is worked
 			// out; -1 means it has no idea, and must never read as "just now".

@@ -6497,6 +6497,44 @@
           }
         ]
       }
+    },
+    {
+      "id": "thieving-start",
+      "note": "Said as the follower steps away. Everything until thieving-end is silent, and this is what makes that silence read as room being given rather than as the follower having stopped working.",
+      "group": "reactions",
+      "priority": 65,
+      "cooldownMs": 30000,
+      "output": "overhead",
+      "when": {
+        "type": "thievingStart"
+      },
+      "say": [
+        "I'll give you some room.",
+        "Right. I'll be over here, seeing nothing.",
+        "Working, are we? I'll make myself scarce.",
+        "I'll wait. Try not to get caught.",
+        "Say no more. I was never here."
+      ]
+    },
+    {
+      "id": "thieving-end",
+      "note": "The other end, once the player has stopped or moved off.",
+      "group": "reactions",
+      "priority": 65,
+      "cooldownMs": 30000,
+      "delayTicks": 2,
+      "delayTicksMax": 5,
+      "output": "overhead",
+      "when": {
+        "type": "thievingEnd"
+      },
+      "say": [
+        "Done? I saw nothing, for the record.",
+        "Back with you.",
+        "Right, I'm allowed to look again.",
+        "That's that, then. Where to?",
+        "I'll pretend I don't know where any of that came from."
+      ]
     }
   ]
 }

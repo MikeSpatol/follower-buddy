@@ -30,6 +30,8 @@ public final class TriggerEvent
 		ERRAND_END,
 		COMBAT_START,
 		COMBAT_END,
+		THIEVING_START,
+		THIEVING_END,
 		NPC_KILL,
 		PLAYER_DEATH,
 		LOOT,

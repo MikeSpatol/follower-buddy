@@ -565,6 +565,7 @@ public class FollowerPlugin extends Plugin
 		emoteDisarmed = false;
 		emoteHold = false;
 		mirroredPose = 0;
+		wasThieving = false;
 		resting = false;
 		wandered = false;
 		wanderCountdown = 0;
@@ -2497,6 +2498,9 @@ public class FollowerPlugin extends Plugin
 	 * is released the moment it ends - and so idle wandering cannot wander off
 	 * mid-celebration.
 	 */
+	/** Whether a thieving session was running last tick, for the two edges. */
+	private boolean wasThieving;
+
 	private boolean emoteHold;
 
 	/**
@@ -3681,9 +3685,30 @@ public class FollowerPlugin extends Plugin
 		// already annoying; a companion remarking on each failure, each hit and
 		// each success is worse than one that says nothing, and no amount of
 		// tuning individual rules gets there - the answer is silence for the
-		// whole session, and normal chatter the moment it ends.
-		speechEngine.setMuted(config.muted()
-			|| speechEngine.getContext().isInThievingSession());
+		// whole session.
+		//
+		// Both ENDS of it are announced though, which is what makes the silence
+		// read as the follower giving you room rather than as it having
+		// stopped working. They are dispatched with the mute lifted, because
+		// otherwise the start line is swallowed by the silence it announces and
+		// the end line by the silence it ends.
+		boolean thievingNow = speechEngine.getContext().isInThievingSession();
+		if (thievingNow != wasThieving)
+		{
+			speechEngine.setMuted(config.muted());
+			if (thievingNow)
+			{
+				// Anything queued from before belongs to the moment before the
+				// silence; letting it trickle out during it is exactly the
+				// chatter this is meant to stop.
+				speechQueue.clear();
+			}
+			speechEngine.dispatch(TriggerEvent.simple(thievingNow
+				? TriggerEvent.Type.THIEVING_START
+				: TriggerEvent.Type.THIEVING_END));
+			wasThieving = thievingNow;
+		}
+		speechEngine.setMuted(config.muted() || thievingNow);
 
 		int region = speechEngine.getContext().getRegionId();
 		if (region != lastRegionId)

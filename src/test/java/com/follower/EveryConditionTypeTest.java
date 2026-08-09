@@ -537,6 +537,20 @@ public class EveryConditionTypeTest
 		assertFired(h, "awayFor");
 	}
 
+	@Test
+	public void thievingEdges() throws IOException
+	{
+		note("thievingStart", "thievingEnd");
+
+		fires("{\"type\": \"thievingStart\"}",
+			TriggerEvent.simple(TriggerEvent.Type.THIEVING_START));
+		fires("{\"type\": \"thievingEnd\"}",
+			TriggerEvent.simple(TriggerEvent.Type.THIEVING_END));
+
+		quiet("{\"type\": \"thievingStart\"}",
+			TriggerEvent.simple(TriggerEvent.Type.THIEVING_END));
+	}
+
 	// ------------------------------------------------------------- coverage
 
 	@Test
@@ -558,6 +572,7 @@ public class EveryConditionTypeTest
 		mood();
 		repeating();
 		awayFor();
+		thievingEdges();
 
 		List<String> missing = new ArrayList<>(new TreeSet<>(RuleSetIntegrityTest.KNOWN_TYPES));
 		missing.removeAll(exercised);
