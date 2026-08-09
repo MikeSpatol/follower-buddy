@@ -194,7 +194,7 @@ public final class LiveCacheParser
 	 * but EVERY opcode must be consumed at its exact width or the stream
 	 * desynchronises and the rest of the definition parses as garbage.
 	 */
-	private static ModelRepository.Entry decodeItem(byte[] data)
+	static ModelRepository.Entry decodeItem(byte[] data)
 	{
 		Buffer in = new Buffer(data);
 		// The cache's convention for an unnamed item is the literal string
@@ -476,7 +476,7 @@ public final class LiveCacheParser
 
 	// ------------------------------------------------------------------- kits
 
-	private static ModelRepository.Entry decodeKit(byte[] data, boolean[] nonSelectableOut)
+	static ModelRepository.Entry decodeKit(byte[] data, boolean[] nonSelectableOut)
 	{
 		Buffer in = new Buffer(data);
 		Integer bodyPartId = null;
