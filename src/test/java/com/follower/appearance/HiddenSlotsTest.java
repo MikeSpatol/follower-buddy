@@ -203,6 +203,49 @@ public class HiddenSlotsTest
 		assertTrue(composer.hiddenSlots(outfit).contains(KitType.TORSO));
 	}
 
+	/**
+	 * The {@code ::follower hidden} report walks the same wearPos fields in its
+	 * own copy of the loop, so it can drift from the renderer and then describe
+	 * something that is not happening. This holds the two together without
+	 * merging them: whatever the report SAYS is hidden must be what the
+	 * renderer actually hides.
+	 */
+	@Test
+	public void theHiddenReportAgreesWithWhatIsActuallyHidden() throws IOException
+	{
+		AppearanceComposer composer = composerWith(
+			"\"1\": {\"n\": \"Rune platebody\", \"wp1\": " + slot(KitType.TORSO)
+				+ ", \"wp2\": " + slot(KitType.ARMS) + "},"
+				+ "\"3\": {\"n\": \"Rune full helm\", \"wp1\": " + slot(KitType.HEAD)
+				+ ", \"wp2\": " + slot(KitType.HAIR)
+				+ ", \"wp3\": " + slot(KitType.JAW) + "},"
+				+ "\"2\": {\"n\": \"Rune chainbody\", \"wp1\": " + slot(KitType.LEGS) + "}");
+
+		Outfit outfit = new Outfit();
+		outfit.setItem(KitType.TORSO, 1);
+		outfit.setItem(KitType.HEAD, 3);
+		outfit.setItem(KitType.LEGS, 2);
+
+		Set<KitType> actuallyHidden = composer.hiddenSlots(outfit);
+
+		Set<KitType> reported = java.util.EnumSet.noneOf(KitType.class);
+		for (String line : composer.describeHidden(outfit))
+		{
+			int hides = line.indexOf(" hides ");
+			if (hides < 0 || line.endsWith(" hides nothing"))
+			{
+				continue;
+			}
+			for (String named : line.substring(hides + 7).split(" \\+ "))
+			{
+				reported.add(KitType.valueOf(named.trim().toUpperCase(java.util.Locale.ROOT)));
+			}
+		}
+
+		assertEquals("the report and the renderer disagree about what gear covers",
+			actuallyHidden, reported);
+	}
+
 	@Test
 	public void everyWearableSlotCanBeHiddenBySomething() throws IOException
 	{
