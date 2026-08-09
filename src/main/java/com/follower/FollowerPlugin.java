@@ -1277,6 +1277,79 @@ public class FollowerPlugin extends Plugin
 				(a, b) -> a, java.util.LinkedHashMap::new));
 	}
 
+	/**
+	 * How long the follower may be walled off before it gives up and teleports.
+	 *
+	 * <p>The count only climbs while there is no route AT ALL - the pathfinder
+	 * searches the whole loaded scene and settles for the closest reachable
+	 * tile, so an empty answer means a sealed room or a locked door rather
+	 * than a long way round. Five ticks is three seconds: long enough that
+	 * walking briefly out of sight is not a teleport, short enough that the
+	 * follower does not stand at a wall looking foolish.
+	 */
+	private static final int STRANDED_TELEPORT_TICKS = 5;
+
+	/**
+	 * The standard teleport cast and its landing, with the swirls that go with
+	 * them - the same pair the errand return uses, measured from the cache:
+	 * 714 casts at 1.58s, 715 lands at 1.56s, spotanims 111 out and 1299 back.
+	 */
+	private static final int TELEPORT_CAST_ANIMATION = 714;
+	private static final int TELEPORT_ARRIVE_ANIMATION = 715;
+	private static final int TELEPORT_CAST_SPOTANIM = 111;
+	private static final int TELEPORT_ARRIVE_SPOTANIM = 1299;
+
+	/** Ticks left before the stranded teleport lands, or 0 when none is in flight. */
+	private int strandedLandingTicks;
+
+	/**
+	 * Teleports the follower to the player when there is genuinely no way to
+	 * walk there.
+	 *
+	 * <p>It used to walk through the wall instead, which is the one thing a
+	 * follower must never do: everything else about it is an illusion held up
+	 * by obeying the same rules as everyone else, and a model sliding through
+	 * stone drops the illusion completely.
+	 *
+	 * <p>Two stages, like the errand's way home, because a follower blinking
+	 * from one side of a wall to the other is barely better. It casts where it
+	 * is standing, then lands beside you three ticks later.
+	 */
+	private void updateStrandedTeleport()
+	{
+		if (strandedLandingTicks > 0)
+		{
+			if (--strandedLandingTicks == 0)
+			{
+				follower.teleportToPlayer();
+				follower.playAnimation(TELEPORT_ARRIVE_ANIMATION);
+				follower.playSpotAnim(spotAnimRepository.get(TELEPORT_ARRIVE_SPOTANIM), 92);
+			}
+			return;
+		}
+
+		// Anything that has deliberately put the follower somewhere else owns
+		// it: a Stay, a Send, an errand, a possessed thrall. Being away from
+		// the player is the point of all four, and none of them is stuck.
+		if (!follower.isSpawned() || follower.isStaying() || follower.isPosed()
+			|| follower.isNpcSlaved() || (errands != null && errands.isBusy()))
+		{
+			return;
+		}
+
+		if (follower.getStrandedTicks() < STRANDED_TELEPORT_TICKS)
+		{
+			return;
+		}
+
+		log.debug("Follower walled off for {} ticks; teleporting",
+			follower.getStrandedTicks());
+		follower.clearStranded();
+		follower.playAnimation(TELEPORT_CAST_ANIMATION);
+		follower.playSpotAnim(spotAnimRepository.get(TELEPORT_CAST_SPOTANIM));
+		strandedLandingTicks = 3;
+	}
+
 	/** Ticks between writing the last-seen stamp: about a minute. */
 	private static final int LAST_SEEN_TICKS = 100;
 
@@ -4027,6 +4100,8 @@ public class FollowerPlugin extends Plugin
 		hoverTicks = hoveredThisTick ? hoverTicks + 1 : 0;
 		hoveredThisTick = false;
 		speechEngine.getContext().setHoverTicks(hoverTicks);
+
+		updateStrandedTeleport();
 
 		if (++ticksSinceLastSeen >= LAST_SEEN_TICKS)
 		{

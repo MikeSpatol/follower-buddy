@@ -504,6 +504,7 @@ public class FollowerEntity
 	{
 		// Arriving home ends any staged disappearance, however long it had left.
 		hideUntilMs = 0;
+		strandedTicks = 0;
 		Player local = client.getLocalPlayer();
 		if (spawned && local != null && local.getWorldLocation() != null)
 		{
@@ -526,6 +527,7 @@ public class FollowerEntity
 	 */
 	public void slaveToNpc(net.runelite.api.NPC npc)
 	{
+		strandedTicks = 0;
 		thrallNpc = npc;
 		lastThrallTile = null;
 		stayTile = null;
@@ -963,7 +965,7 @@ public class FollowerEntity
 		WorldPoint behind = lastSeenPlayerTile;
 		for (int i = 0; i < distance - 1; i++)
 		{
-			behind = stepToward(behind, current);
+			behind = stepToward(behind, current, true);
 		}
 		playerFollowTile = behind;
 		lastSeenPlayerTile = current;
@@ -978,22 +980,45 @@ public class FollowerEntity
 		// own model for player followers - was tried 2026-08-04 and reverted:
 		// the trace numbers were fine but the follow FEEL was off. The greedy
 		// append below is the behaviour the followtrace sessions verified.)
-		if (stayTile == null)
+		if (stayTile == null && playerFollowTile != null)
 		{
 			if (serverPath.isEmpty() && simTile != null
 				&& simTile.distanceTo(playerFollowTile) > 3)
 			{
 				// Re-acquiring from afar - a just-released pose, possibly with
-				// walls in between. The greedy stepper's blocked-tile fallback
-				// takes the RAW step (so missing collision data never freezes
-				// the follower), which from here means walking THROUGH the
-				// wall; the BFS routes around it. Steady-state following never
-				// enters this branch - its gap is one or two tiles.
+				// walls in between. Steady-state following never enters this
+				// branch; its gap is one or two tiles.
 				extendPathBfs(playerFollowTile, null);
 			}
 			else
 			{
 				extendPathTo(playerFollowTile);
+			}
+
+			// The greedy stepper walks only legal tiles now, so a wall between
+			// the follower and the player leaves the queue empty where it used
+			// to produce a step straight through. Round it with the BFS, which
+			// finds the doorway.
+			//
+			// This is the common case indoors and it is worth the search: two
+			// tiles apart through a partition is a six-tile walk, and nothing
+			// about the straight-line gap says so.
+			if (serverPath.isEmpty() && simTile != null
+				&& !simTile.equals(playerFollowTile))
+			{
+				extendPathBfs(playerFollowTile, null);
+
+				// Still nothing. The BFS covers the whole loaded scene and
+				// settles for the closest reachable tile, so an empty answer
+				// means there is genuinely no way round - a sealed room, a
+				// locked door, a floor the follower cannot reach. Count the
+				// ticks; the plugin teleports it once the count says stuck
+				// rather than merely slow.
+				strandedTicks = serverPath.isEmpty() ? strandedTicks + 1 : 0;
+			}
+			else
+			{
+				strandedTicks = 0;
 			}
 		}
 
@@ -1220,7 +1245,7 @@ public class FollowerEntity
 		// take more steps than the straight-line distance.
 		for (int guard = 0; guard < SNAP_DISTANCE * 2 && !tail.equals(target); guard++)
 		{
-			tail = stepToward(tail, target);
+			tail = stepToward(tail, target, false);
 			if (tail == null)
 			{
 				return;
@@ -1922,7 +1947,25 @@ public class FollowerEntity
 	 * is legal (boxed in, or no collision data), fall back to the raw step so the
 	 * follower keeps making progress rather than freezing.
 	 */
-	private WorldPoint stepToward(WorldPoint origin, WorldPoint target)
+	/**
+	 * One greedy step from {@code origin} toward {@code target}, or null when
+	 * every legal direction is closed.
+	 *
+	 * @param allowRaw whether a boxed-in step may be taken anyway. Only true
+	 * when RETRACING the player's own path: those tiles were walked a moment
+	 * ago, so a collision reading that disagrees is the reading that is wrong,
+	 * and refusing would leave the follow tile unknown.
+	 *
+	 * <p>False everywhere the follower moves under its own steam. It used to be
+	 * unconditional, on the reasoning that missing collision data should never
+	 * freeze the follower - but {@link #canStep} already answers "no data" with
+	 * yes, so the raw step only ever fired when collision was present and said
+	 * no. That is not blindness, it is a wall, and the follower walked through
+	 * it. Inside a building it happened constantly: the player is two tiles
+	 * away through a partition, the greedy stepper finds every direction shut,
+	 * and takes the step regardless.
+	 */
+	WorldPoint stepToward(WorldPoint origin, WorldPoint target, boolean allowRaw)
 	{
 		if (origin == null || target == null || origin.getPlane() != target.getPlane())
 		{
@@ -1962,12 +2005,14 @@ public class FollowerEntity
 			return new WorldPoint(origin.getX() + dx, origin.getY() + dy, origin.getPlane());
 		}
 
-		// Boxed in or blind: raw step, the pre-collision behaviour.
-		return new WorldPoint(origin.getX() + dx, origin.getY() + dy, origin.getPlane());
+		// Boxed in. Only the player's own retraced path may step anyway.
+		return allowRaw
+			? new WorldPoint(origin.getX() + dx, origin.getY() + dy, origin.getPlane())
+			: null;
 	}
 
 	/** True if one step from {@code from} by (dx, dy) is legal under collision. */
-	private boolean canStep(WorldPoint from, int dx, int dy)
+	boolean canStep(WorldPoint from, int dx, int dy)
 	{
 		if (dx == 0 && dy == 0)
 		{
@@ -2035,6 +2080,32 @@ public class FollowerEntity
 		return dy > 0
 			? CollisionDataFlag.BLOCK_MOVEMENT_NORTH_WEST
 			: CollisionDataFlag.BLOCK_MOVEMENT_SOUTH_WEST;
+	}
+
+	/**
+	 * Consecutive movement ticks with no route to the player at all.
+	 *
+	 * <p>Zero the moment a single step is found, so this only climbs while the
+	 * follower is genuinely walled off rather than merely behind. The plugin
+	 * reads it and teleports once it is high enough to mean stuck.
+	 */
+	@lombok.Getter
+	private int strandedTicks;
+
+	/** Called when the follower is placed somewhere by force; it is no longer stuck. */
+	public void clearStranded()
+	{
+		strandedTicks = 0;
+	}
+
+	/**
+	 * True while the follower has somewhere of its own to be - a Send, or the
+	 * walk-around behind Face-me. Being away from the player is the point of
+	 * both, so neither counts as stuck.
+	 */
+	public boolean isPosed()
+	{
+		return goalTile != null || stayTile != null;
 	}
 
 	/** True while the follower is hidden because an NPC shares its tile. */

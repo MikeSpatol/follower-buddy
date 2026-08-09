@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import net.runelite.api.Client;
+import net.runelite.api.CollisionData;
 import net.runelite.api.IndexedObjectSet;
 import net.runelite.api.Item;
 import net.runelite.api.ItemContainer;
@@ -63,6 +64,12 @@ public final class FakeGame
 	/** Null until a test says otherwise: the container is not always loaded. */
 	private Item[] inventory;
 
+	/**
+	 * Collision flags by scene tile, or null for "no data" - which the follower
+	 * reads as open, the same way it does at an instance edge.
+	 */
+	private int[][] collisionFlags;
+
 	public final Client client;
 	public final Player player;
 
@@ -84,7 +91,10 @@ public final class FakeGame
 		clientAnswers.put("getLocalPlayer", player);
 		clientAnswers.put("getEnergy", 10000);
 		clientAnswers.put("getTickCount", 0);
-		clientAnswers.put("getTopLevelWorldView", worldView());
+		WorldView view = worldView();
+		clientAnswers.put("getTopLevelWorldView", view);
+		clientAnswers.put("getWorldView", (Answer) args -> view);
+		clientAnswers.put("findWorldViewFromWorldPoint", (Answer) args -> view);
 
 		// Keyed readings: everything unset reads as the quiet default.
 		clientAnswers.put("getVarbitValue",
@@ -246,6 +256,38 @@ public final class FakeGame
 		return this;
 	}
 
+	/**
+	 * Turns collision data on, everything open. Until this is called the scene
+	 * has no collision map at all, which is the "off-scene" reading.
+	 */
+	public FakeGame withCollision()
+	{
+		collisionFlags = new int[net.runelite.api.Perspective.SCENE_SIZE]
+			[net.runelite.api.Perspective.SCENE_SIZE];
+		return this;
+	}
+
+	/**
+	 * Adds a wall on one edge of a world tile. The flag names the side of the
+	 * tile it sits on, so a wall between two tiles has to be declared from one
+	 * of them - exactly as the game stores it.
+	 */
+	public FakeGame wallAt(int x, int y, int flag)
+	{
+		if (collisionFlags == null)
+		{
+			withCollision();
+		}
+		collisionFlags[x][y] |= flag;
+		return this;
+	}
+
+	/** Blocks a whole tile, the way a solid object does. */
+	public FakeGame blockTile(int x, int y)
+	{
+		return wallAt(x, y, net.runelite.api.CollisionDataFlag.BLOCK_MOVEMENT_FULL);
+	}
+
 	/** A varbit reading, by id. Unset varbits read zero. */
 	public FakeGame varbit(int id, int value)
 	{
@@ -300,6 +342,15 @@ public final class FakeGame
 	{
 		Map<String, Object> answers = new HashMap<>();
 		answers.put("getMapRegions", (Answer) args -> mapRegions);
+		answers.put("getBaseX", (Answer) args -> 0);
+		answers.put("getBaseY", (Answer) args -> 0);
+		answers.put("getSizeX", (Answer) args -> net.runelite.api.Perspective.SCENE_SIZE);
+		answers.put("getSizeY", (Answer) args -> net.runelite.api.Perspective.SCENE_SIZE);
+		answers.put("isInstance", (Answer) args -> false);
+		answers.put("getCollisionMaps", (Answer) args -> collisionFlags == null
+			? null
+			: new CollisionData[]{proxyCollision(), proxyCollision(),
+				proxyCollision(), proxyCollision()});
 		answers.put("npcs", (Answer) args -> indexed(npcs));
 		// The local player is in the real list too, so the crowd count has to
 		// exclude it by identity - which is exactly what it does.
@@ -310,6 +361,13 @@ public final class FakeGame
 			return indexed(all);
 		});
 		return proxy(WorldView.class, answers);
+	}
+
+	private CollisionData proxyCollision()
+	{
+		Map<String, Object> answers = new HashMap<>();
+		answers.put("getFlags", (Answer) args -> collisionFlags);
+		return proxy(CollisionData.class, answers);
 	}
 
 	private ItemContainer inventoryContainer()
