@@ -3,6 +3,7 @@ package com.follower.speech;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -150,12 +151,28 @@ public class SpeechDetailsTest
 	public void twoPhrasesAlternateRatherThanHanging()
 	{
 		// The no-repeat draw loops until it gets a different index; with only
-		// two lines that leaves exactly one choice each time.
+		// two lines that leaves exactly one choice each time. The liveness half
+		// of this is that it returns at all - a draw that could not satisfy
+		// itself would spin forever on the game thread.
+		//
+		// The name also claims they ALTERNATE, which nothing here checked: the
+		// case passed just as well against a draw that returned "a" a hundred
+		// times. Now it says both.
 		SpeechRule rule = new SpeechRule();
 		rule.say = java.util.Arrays.asList("a", "b");
+
+		String previous = null;
+		java.util.Set<String> seen = new java.util.HashSet<>();
 		for (int i = 0; i < 100; i++)
 		{
-			rule.pickPhrase();
+			String picked = rule.pickPhrase();
+			seen.add(picked);
+			if (previous != null)
+			{
+				assertNotEquals("with two lines every draw has to swap", previous, picked);
+			}
+			previous = picked;
 		}
+		assertEquals("both lines have to come up", 2, seen.size());
 	}
 }

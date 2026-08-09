@@ -402,4 +402,104 @@ public class SpeechEngineSimulationTest
 		assertFalse("and it should take itself out of service",
 			h.rule("broken").isEnabled());
 	}
+
+	// ------------------------------------------- the two switches everything uses
+
+	@Test
+	public void theHighestPriorityRuleWinsAndTheRestStayQuiet() throws IOException
+	{
+		// Priority decides which of three hundred rules gets the moment, and
+		// nothing checked that the engine honours it at all. Every rule-ordering
+		// bug fixed this week - four of them - assumed a mechanism no test had
+		// ever exercised.
+		Harness h = new Harness(folder.newFolder().toPath(),
+			"{\"version\": 1, \"rules\": ["
+				+ "{\"id\": \"quiet\", \"group\": \"t\", \"cooldownMs\": 0,"
+				+ " \"priority\": 10, \"when\": {\"type\": \"examined\"},"
+				+ " \"say\": [\"the loser\"]},"
+				+ "{\"id\": \"loud\", \"group\": \"t\", \"cooldownMs\": 0,"
+				+ " \"priority\": 90, \"when\": {\"type\": \"examined\"},"
+				+ " \"say\": [\"the winner\"]}]}");
+		h.gameTicks(1);
+
+		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.EXAMINED));
+
+		assertFalse("the higher priority rule has to win", h.firedBy("loud").isEmpty());
+		assertTrue("and only one rule may speak per event",
+			h.firedBy("quiet").isEmpty());
+	}
+
+	@Test
+	public void theLoserSpeaksOnceTheWinnerIsOnCooldown() throws IOException
+	{
+		// The other half: losing is not being disabled. A rule under a busy one
+		// still gets the moments the winner cannot take, which is the whole
+		// reason a cooldown and a priority are different things.
+		Harness h = new Harness(folder.newFolder().toPath(),
+			"{\"version\": 1, \"rules\": ["
+				+ "{\"id\": \"quiet\", \"group\": \"t\", \"cooldownMs\": 0,"
+				+ " \"priority\": 10, \"when\": {\"type\": \"examined\"},"
+				+ " \"say\": [\"the loser\"]},"
+				+ "{\"id\": \"loud\", \"group\": \"t\", \"cooldownMs\": 600000,"
+				+ " \"priority\": 90, \"when\": {\"type\": \"examined\"},"
+				+ " \"say\": [\"the winner\"]}]}");
+		h.gameTicks(1);
+
+		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.EXAMINED));
+		assertFalse(h.firedBy("loud").isEmpty());
+
+		// The edge has to fall and rise again, or nothing fires a second time.
+		h.gameTicks(1);
+		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.EXAMINED));
+
+		assertFalse("with the winner on cooldown the next rule down gets its turn",
+			h.firedBy("quiet").isEmpty());
+	}
+
+	@Test
+	public void aDisabledGroupSaysNothing() throws IOException
+	{
+		// Every group toggle in the settings runs through this. If it stopped
+		// working, every "off" switch in the panel would silently do nothing -
+		// and nothing would have noticed.
+		Harness h = new Harness(folder.newFolder().toPath(),
+			"{\"version\": 1, \"rules\": ["
+				+ "{\"id\": \"chatty\", \"group\": \"idle\", \"cooldownMs\": 0,"
+				+ " \"when\": {\"type\": \"examined\"}, \"say\": [\"hello\"]}]}");
+		h.gameTicks(1);
+
+		h.engine.setDisabledGroups(
+			new java.util.HashSet<>(java.util.Collections.singletonList("idle")));
+		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.EXAMINED));
+		assertTrue("a switched-off group must not speak", h.firedBy("chatty").isEmpty());
+
+		h.gameTicks(1);
+		h.engine.setDisabledGroups(java.util.Collections.emptySet());
+		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.EXAMINED));
+		assertFalse("and must come back when switched on again",
+			h.firedBy("chatty").isEmpty());
+	}
+
+	@Test
+	public void asingleRuleCanBeSilencedByIdWithoutItsWholeGroup() throws IOException
+	{
+		// The disabled set matches rule ids too, which is how one line is muted
+		// without losing the twenty others in its group.
+		Harness h = new Harness(folder.newFolder().toPath(),
+			"{\"version\": 1, \"rules\": ["
+				+ "{\"id\": \"one\", \"group\": \"idle\", \"cooldownMs\": 0,"
+				+ " \"priority\": 50, \"when\": {\"type\": \"examined\"},"
+				+ " \"say\": [\"first\"]},"
+				+ "{\"id\": \"two\", \"group\": \"idle\", \"cooldownMs\": 0,"
+				+ " \"priority\": 40, \"when\": {\"type\": \"examined\"},"
+				+ " \"say\": [\"second\"]}]}");
+		h.gameTicks(1);
+
+		h.engine.setDisabledGroups(
+			new java.util.HashSet<>(java.util.Collections.singletonList("one")));
+		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.EXAMINED));
+
+		assertTrue("the silenced rule stays silent", h.firedBy("one").isEmpty());
+		assertFalse("its group-mate carries on", h.firedBy("two").isEmpty());
+	}
 }

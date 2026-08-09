@@ -279,6 +279,13 @@ public class SpeechEngine
 				continue;
 			}
 
+			// Belt and braces: the loader already hands rules over sorted by
+			// priority descending, so the comparison can never actually differ
+			// from "first match wins". Both are kept deliberately - the sort is
+			// what makes this loop cheap, the comparison is what makes the
+			// invariant true independently of it. Mutating either alone leaves
+			// the behaviour correct, which is worth knowing before anyone
+			// "simplifies" one of them away.
 			if (winner == null || rule.priority > winner.priority)
 			{
 				winner = rule;

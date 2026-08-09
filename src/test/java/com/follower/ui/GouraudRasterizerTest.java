@@ -25,23 +25,42 @@ public class GouraudRasterizerTest
 	private static final int WIDTH = 64;
 	private static final int HEIGHT = 64;
 
-	/** A canvas with a guard band around it, so an overrun is detectable. */
+	/**
+	 * Slack past the end of the visible buffer. The rasterizer takes its bounds
+	 * from the width and height it is given rather than from the array length,
+	 * so anything written past WIDTH * HEIGHT lands here instead of throwing -
+	 * which is the point. An index error is loud; an off-by-one that happens to
+	 * stay inside the allocation is silent, and in the real client the memory
+	 * past the buffer belongs to something else.
+	 */
+	private static final int GUARD = 512;
+
+	/** A canvas with a guard band after it, so an overrun is detectable. */
 	private static final class Canvas
 	{
-		final int[] pixels = new int[WIDTH * HEIGHT];
+		final int[] pixels = new int[WIDTH * HEIGHT + GUARD];
 		final GouraudRasterizer raster = new GouraudRasterizer(pixels, WIDTH, HEIGHT);
 
 		int painted()
 		{
 			int count = 0;
-			for (int pixel : pixels)
+			for (int i = 0; i < WIDTH * HEIGHT; i++)
 			{
-				if (pixel != 0)
+				if (pixels[i] != 0)
 				{
 					count++;
 				}
 			}
 			return count;
+		}
+
+		void assertGuardIntact(String what)
+		{
+			for (int i = WIDTH * HEIGHT; i < pixels.length; i++)
+			{
+				assertEquals(what + ": wrote " + pixels[i] + " past the end of the"
+					+ " buffer, at offset " + (i - WIDTH * HEIGHT), 0, pixels[i]);
+			}
 		}
 	}
 
@@ -119,11 +138,14 @@ public class GouraudRasterizerTest
 		for (int[] c : cases)
 		{
 			Canvas canvas = new Canvas();
-			// The assertion is simply that this returns without throwing:
-			// an ArrayIndexOutOfBounds here would surface as an exception
-			// thrown from inside the client's render loop.
+			// Two ways this fails. An ArrayIndexOutOfBounds surfaces as an
+			// exception thrown from inside the client's render loop, and that
+			// one announces itself. A write that lands just past the visible
+			// buffer does not - so the guard band is checked as well, which is
+			// what the name of this case actually claims.
 			canvas.raster.gouraudTriangle(c[0], c[1], c[2], c[3], c[4], c[5],
 				8000, 9000, 10000);
+			canvas.assertGuardIntact(java.util.Arrays.toString(c));
 		}
 	}
 
