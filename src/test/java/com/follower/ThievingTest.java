@@ -118,18 +118,119 @@ public class ThievingTest
 	}
 
 	@Test
-	public void walkingAwayEndsIt()
+	public void everyStunTheGameCanApplyIsRecognised()
+	{
+		// There is not one stun animation. Recognising only STUNNED_THIEVING
+		// covered one case in seven, and the rest is why the follower came
+		// back early against some targets and not others.
+		int[] stuns = {1054, 1874, 848, 14422, 14423, 14424, 10087, 10088};
+		for (int stun : stuns)
+		{
+			Sim sim = new Sim();
+			sim.game.animating(stun);
+			sim.tick(1);
+			assertTrue("stun " + stun + " was not recognised as thieving",
+				sim.ctx.isThieving());
+		}
+	}
+
+	// ---------------------------------------------------------------- session
+
+	@Test
+	public void theSessionOutlastsAGapTheAttemptWindowWouldNot()
+	{
+		// The complaint: back too early. A pause to eat, or a slow re-click,
+		// is longer than the window that suppresses combat.
+		Sim sim = new Sim();
+		sim.game.animating(PICKPOCKET);
+		sim.tick(2);
+
+		sim.game.animating(-1);
+		sim.tick(40);
+
+		assertFalse("the short window is for combat and should have lapsed",
+			sim.ctx.isThieving());
+		assertTrue("but the follower should still be standing back",
+			sim.ctx.isInThievingSession());
+	}
+
+	@Test
+	public void walkingOffEndsTheSessionAtOnce()
+	{
+		// What a person actually does when they are done, and it should not
+		// have to wait out any clock.
+		Sim sim = new Sim();
+		sim.game.animating(PICKPOCKET);
+		sim.tick(2);
+		assertTrue(sim.ctx.isInThievingSession());
+
+		sim.game.animating(-1);
+		sim.game.at(3222 + 12, 3218, 0);
+		sim.tick(1);
+
+		assertFalse("walking away is the signal to come back",
+			sim.ctx.isInThievingSession());
+	}
+
+	@Test
+	public void shufflingAboutDoesNotEndTheSession()
 	{
 		Sim sim = new Sim();
 		sim.game.animating(PICKPOCKET);
 		sim.tick(2);
-		assertTrue(sim.ctx.isThieving());
 
 		sim.game.animating(-1);
-		sim.tick(25);
+		sim.game.at(3222 + 2, 3218 + 1, 0);
+		sim.tick(3);
 
-		assertFalse("it has to let go once the player has moved on",
-			sim.ctx.isThieving());
+		assertTrue("a step or two is still the same spot",
+			sim.ctx.isInThievingSession());
+	}
+
+	@Test
+	public void aChangeOfFloorEndsTheSession()
+	{
+		Sim sim = new Sim();
+		sim.game.animating(PICKPOCKET);
+		sim.tick(2);
+
+		sim.game.animating(-1);
+		sim.game.at(3222, 3218, 1);
+		sim.tick(1);
+
+		assertFalse(sim.ctx.isInThievingSession());
+	}
+
+	@Test
+	public void standingThereDoingNothingEventuallyEndsIt()
+	{
+		Sim sim = new Sim();
+		sim.game.animating(PICKPOCKET);
+		sim.tick(2);
+
+		sim.game.animating(-1);
+		sim.tick(200);
+
+		assertFalse("it cannot stand back forever on one attempt",
+			sim.ctx.isInThievingSession());
+	}
+
+	@Test
+	public void aLongRunOfAttemptsKeepsTheSessionAlive()
+	{
+		Sim sim = new Sim();
+		for (int attempt = 0; attempt < 20; attempt++)
+		{
+			sim.game.animating(PICKPOCKET);
+			sim.tick(3);
+			sim.game.animating(1054);
+			sim.tick(8);
+			sim.game.animating(-1);
+			sim.tick(10);
+
+			assertTrue("the session lapsed during attempt " + attempt,
+				sim.ctx.isInThievingSession());
+		}
 	}
 
 	@Test

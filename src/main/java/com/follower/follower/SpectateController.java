@@ -152,6 +152,7 @@ public class SpectateController
 			+ " inCombat=" + context.isInCombat()
 			+ " target='" + context.getCombatTarget() + "' level=" + context.getCombatTargetLevel()
 			+ " thieving=" + context.isThieving()
+			+ " thievingSession=" + context.isInThievingSession()
 			+ " boss=" + context.isBossFight()
 			+ " | spectating=" + spectating
 			+ " watchTile=" + watchTile
@@ -189,7 +190,10 @@ public class SpectateController
 		// It is the same movement, so it goes through the same code rather than
 		// a second thing that would argue with this one over the feet.
 		boolean fighting = context.isInCombat();
-		boolean thieving = context.isThieving();
+		// The SESSION rather than the attempt: standing back should survive the
+		// gaps between pockets, and end when the player walks off rather than
+		// on a clock the gaps can outlast.
+		boolean thieving = context.isInThievingSession();
 
 		if (!fighting && !thieving)
 		{

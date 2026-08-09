@@ -149,45 +149,87 @@ public final class TriggerContext
 	 */
 	// ---------------------------------------------------------------- thieving
 
-	/**
-	 * Pickpocketing, and the stun that follows getting it wrong.
-	 *
-	 * <p>Measured from the cache: 881 is HUMAN_PICKPOCKET at 1.78s, 1054 is
-	 * STUNNED_THIEVING at 4.48s. Both are the player's own animation, so both
-	 * halves of a thieving session are visible without knowing anything about
-	 * which NPC is being robbed.
-	 */
+	/** HUMAN_PICKPOCKET, 1.78s. The attempt itself. */
 	private static final int PICKPOCKET_ANIMATION = 881;
-	private static final int THIEVING_STUN_ANIMATION = 1054;
 
 	/**
-	 * How long thieving is still considered to be going after the last sign.
+	 * Every stun the player can be put in for getting it wrong.
 	 *
-	 * <p>Long enough to cover a stun and a pause before the next attempt - the
-	 * stun alone is over seven ticks - because a shorter window is what makes
-	 * the follower flicker between behaviours across a run of failures.
+	 * <p>There is not one. Measured from the cache: 1054 STUNNED_THIEVING at
+	 * 4.48s, 1874 STUNNED_BLACKJACK at 1.28s, 848 HUMAN_STUNNED at 0.64s, and
+	 * a whole family sized to the stun's length - STUNNED_2CYCLE through
+	 * 6CYCLE at 1.20s, 1.84s, 2.40s, 3.04s and 3.60s.
+	 *
+	 * <p>Recognising only STUNNED_THIEVING covered one case in seven, so any
+	 * other target or method left the stun unaccounted for and the window
+	 * running from the last successful attempt instead. That is the "sometimes"
+	 * in "sometimes it comes back too early".
+	 */
+	private static final Set<Integer> THIEVING_STUNS = new HashSet<>(
+		Arrays.asList(1054, 1874, 848, 14422, 14423, 14424, 10087, 10088));
+
+	/**
+	 * How long a thieving ANIMATION keeps combat suppressed afterwards.
+	 *
+	 * <p>Deliberately short. Suppressing combat is the part with a real cost -
+	 * a genuine attack in this window goes unnoticed - so it is sized to cover
+	 * the longest stun and little more.
 	 */
 	private static final int THIEVING_GRACE_TICKS = 20;
 
+	/**
+	 * How long the follower keeps its distance while the player stays put.
+	 *
+	 * <p>Much longer, because the cost is only that the follower stands a few
+	 * tiles away. Anchored to WHERE the thieving happened rather than to a
+	 * clock alone: it ends the moment the player walks off, which is the signal
+	 * a person actually gives when they are done.
+	 */
+	private static final int THIEVING_SESSION_TICKS = 150;
+	private static final int THIEVING_SESSION_RADIUS = 5;
+
 	private int ticksSinceThieving = Integer.MAX_VALUE;
+	private WorldPoint thievingSpot;
 
 	private void refreshThieving(Player local)
 	{
 		int animation = local.getAnimation();
-		if (animation == PICKPOCKET_ANIMATION || animation == THIEVING_STUN_ANIMATION)
+		if (animation == PICKPOCKET_ANIMATION || THIEVING_STUNS.contains(animation))
 		{
 			ticksSinceThieving = 0;
+			thievingSpot = location;
 		}
 		else if (ticksSinceThieving < Integer.MAX_VALUE)
 		{
 			ticksSinceThieving++;
 		}
+
+		// Walking away ends the session outright, whatever the clock says.
+		if (thievingSpot != null && location != null
+			&& (location.getPlane() != thievingSpot.getPlane()
+			|| location.distanceTo(thievingSpot) > THIEVING_SESSION_RADIUS
+			|| ticksSinceThieving > THIEVING_SESSION_TICKS))
+		{
+			thievingSpot = null;
+		}
 	}
 
-	/** Whether the player is working a pocket, or was a moment ago. */
+	/**
+	 * Whether the player is mid-attempt, or was a moment ago. Used to keep a
+	 * picked pocket from reading as a fight.
+	 */
 	public boolean isThieving()
 	{
 		return ticksSinceThieving <= THIEVING_GRACE_TICKS;
+	}
+
+	/**
+	 * Whether the player is still working this spot, gaps between attempts
+	 * included. Used to decide whether the follower keeps its distance.
+	 */
+	public boolean isInThievingSession()
+	{
+		return thievingSpot != null;
 	}
 
 	private void refreshCombat(Player local)
