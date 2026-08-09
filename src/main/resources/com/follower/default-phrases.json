@@ -6239,9 +6239,9 @@
     },
     {
       "id": "mood-recovering",
-      "note": "A note after climbing out of a bad stretch: fires in the middle band only when something good has just happened, via the kill trigger.",
+      "note": "A note after climbing out of a bad stretch. It used to trigger on a BOSS kill, which is the one kill that already has kill-boss-celebrate sitting on it at priority 70 - so whenever this matched, that matched too and outranked it, and this could only ever have fired in the celebration's cooldown gap. Two boss kills inside thirty seconds is not a thing, so it never fired at all. Ordinary kills now, where the big moment is not already spoken for, and above kill-cheer: the day turning is worth more than a generic cheer.",
       "group": "combat",
-      "priority": 45,
+      "priority": 60,
       "cooldownMs": 180000,
       "delayTicks": 2,
       "delayTicksMax": 5,
@@ -6251,7 +6251,7 @@
         "conditions": [
           {
             "type": "npcKill",
-            "minimum": 100
+            "maximum": 99
           },
           {
             "type": "mood",

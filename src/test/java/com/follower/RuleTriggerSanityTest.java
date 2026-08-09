@@ -3,6 +3,7 @@ package com.follower;
 import com.follower.sim.Harness;
 import com.follower.speech.Condition;
 import com.follower.speech.SpeechRule;
+import com.google.gson.Gson;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -66,6 +67,136 @@ public class RuleTriggerSanityTest
 	}
 
 	// ------------------------------------------------------- dead conditions
+
+	/**
+	 * Event-gated condition types: the ones that are only true while a
+	 * particular event is being dispatched. Two rules can only compete for the
+	 * same moment if they answer the same event.
+	 */
+	private static final Set<String> EVENT_TYPES = new HashSet<>(Arrays.asList(
+		"npcspawn", "npcdespawn", "chatmessage", "varbitchanged", "animationself",
+		"levelup", "damagetaken", "playerdeath", "lootworth", "returnvisit",
+		"combatstart", "combatend", "npckill", "login", "thrallstart",
+		"thrallswitch", "thrallend", "errandstart", "errandend", "thievingstart",
+		"thievingend", "personalbest", "sessioncount", "answered", "examined",
+		"wantfulfilled", "wantexpired", "regionenter"));
+
+	@Test
+	public void noRuleIsOutrankedByOneThatMatchesWheneverItDoes() throws IOException
+	{
+		// One winner per event, highest priority takes it. So a rule whose
+		// conditions are a STRICT SUPERSET of a higher-priority rule's can
+		// never win: every time the specific one is true, the general one is
+		// true as well, and outranks it. The specific rule then only ever
+		// fires inside the general one's cooldown gap, which for anything with
+		// a real cooldown means never.
+		//
+		// This has been found and fixed by hand four times - deaths-many under
+		// death-moment, a fear rule under three low-HP rules, the flinch under
+		// big-hit-taken, and mood-recovering under the boss celebration. It is
+		// invisible by inspection: both rules read perfectly sensibly, and the
+		// only symptom is a line nobody ever hears.
+		List<SpeechRule> rules = shippedRules();
+		List<String> dead = new ArrayList<>();
+
+		for (SpeechRule lower : rules)
+		{
+			List<Condition> lowerFlat = conjunction(lower.when);
+			if (lowerFlat == null || eventsIn(lowerFlat).isEmpty())
+			{
+				continue;
+			}
+			Set<String> lowerSigs = signatures(lowerFlat);
+
+			for (SpeechRule higher : rules)
+			{
+				if (higher == lower || higher.priority <= lower.priority)
+				{
+					continue;
+				}
+				List<Condition> higherFlat = conjunction(higher.when);
+				if (higherFlat == null)
+				{
+					continue;
+				}
+				Set<String> higherEvents = eventsIn(higherFlat);
+				if (higherEvents.isEmpty()
+					|| java.util.Collections.disjoint(higherEvents, eventsIn(lowerFlat)))
+				{
+					continue;
+				}
+				Set<String> higherSigs = signatures(higherFlat);
+				if (!higherSigs.isEmpty() && lowerSigs.containsAll(higherSigs)
+					&& higherSigs.size() < lowerSigs.size())
+				{
+					dead.add(lower.id + " (p" + lower.priority + ") can never beat "
+						+ higher.id + " (p" + higher.priority + ")");
+				}
+			}
+		}
+		assertTrue("rules that can never win, because a higher-priority rule"
+			+ " matches whenever they do:\n  " + String.join("\n  ", dead),
+			dead.isEmpty());
+	}
+
+	/**
+	 * The condition list when AND is the whole story, or null. A tree with any
+	 * or none in it cannot be compared this way - "not X" and "X" do not
+	 * subset each other - so those are left alone rather than guessed at.
+	 */
+	private static List<Condition> conjunction(Condition when)
+	{
+		if (when == null)
+		{
+			return null;
+		}
+		String kind = type(when);
+		if ("any".equals(kind) || "none".equals(kind))
+		{
+			return null;
+		}
+		if (!"all".equals(kind))
+		{
+			return java.util.Collections.singletonList(when);
+		}
+		if (when.conditions == null)
+		{
+			return null;
+		}
+		for (Condition child : when.conditions)
+		{
+			String childKind = type(child);
+			if ("all".equals(childKind) || "any".equals(childKind) || "none".equals(childKind))
+			{
+				return null;
+			}
+		}
+		return when.conditions;
+	}
+
+	private static Set<String> eventsIn(List<Condition> conditions)
+	{
+		Set<String> found = new HashSet<>();
+		for (Condition condition : conditions)
+		{
+			if (EVENT_TYPES.contains(type(condition)))
+			{
+				found.add(type(condition));
+			}
+		}
+		return found;
+	}
+
+	/** A condition as a comparable key: its type plus every field it sets. */
+	private static Set<String> signatures(List<Condition> conditions)
+	{
+		Set<String> found = new HashSet<>();
+		for (Condition condition : conditions)
+		{
+			found.add(new Gson().toJson(condition));
+		}
+		return found;
+	}
 
 	@Test
 	public void nothingScansTheSceneBeforeAChanceThrowsTheAnswerAway() throws IOException
