@@ -11,6 +11,7 @@ import com.follower.speech.RuleLoader;
 import com.follower.speech.SpeechEngine;
 import com.follower.speech.SpeechOutput;
 import com.follower.speech.SpeechRule;
+import com.follower.speech.TriggerContext;
 import com.follower.speech.TriggerEvent;
 import com.google.inject.Provides;
 import java.io.IOException;
@@ -470,6 +471,9 @@ public class FollowerPlugin extends Plugin
 	{
 		hooks.unregisterRenderableDrawListener(thrallHider);
 		resetThrallQuietly();
+		// Before the engine is reset: an orderly shutdown is the one chance to
+		// save what the last few ticks counted.
+		writeCounters();
 		// The engine is a singleton that survives plugin toggles; a stale sink
 		// would keep speaking into a dead plugin instance.
 		speechEngine.setSink(null);
@@ -571,6 +575,8 @@ public class FollowerPlugin extends Plugin
 		wanderCountdown = 0;
 		damagedByPlayer.clear();
 		mirrorGraphicsUntilTick = -1;
+		hoveredThisTick = false;
+		hoverTicks = 0;
 
 		scanTicksLeft = 0;
 		animTraceRemaining = 0;
@@ -1092,10 +1098,180 @@ public class FollowerPlugin extends Plugin
 			Long.toString(System.currentTimeMillis()));
 	}
 
+	/**
+	 * What the follower has counted, kept between sessions.
+	 *
+	 * <p>The counts themselves are the point of the feature: "your fiftieth"
+	 * means nothing if the fifty were all this afternoon, and everything if
+	 * they were the fifty since you met. A session-scoped tally is a scoreboard;
+	 * this is a memory.
+	 *
+	 * <p>One config value holding one JSON object, for the same reason the
+	 * last-seen stamp is a config value: RuneLite already persists config per
+	 * profile, and a file of our own would be more machinery than this deserves.
+	 */
+	private static final class SavedCounters
+	{
+		java.util.Map<String, Integer> tallies;
+		java.util.Map<String, Integer> records;
+		int sessions;
+	}
+
+	/**
+	 * How many counters are kept. Every distinct NPC name the player has ever
+	 * killed earns an entry, so this grows for as long as the plugin is used;
+	 * without a bound it would grow into the config file forever. The rarest
+	 * counts go first, since a count of one is the least likely to be the
+	 * subject of a milestone rule.
+	 */
+	private static final int MAX_COUNTERS = 300;
+
+	private void readCounters()
+	{
+		String stored = config.counters();
+		if (stored == null || stored.isEmpty())
+		{
+			return;
+		}
+		try
+		{
+			SavedCounters saved = gson.fromJson(stored, SavedCounters.class);
+			if (saved == null)
+			{
+				return;
+			}
+			TriggerContext context = speechEngine.getContext();
+			context.restoreCounters(saved.tallies, saved.records);
+			context.setSessionCount(saved.sessions);
+			log.debug("Restored {} tallies, {} records, session {}",
+				saved.tallies == null ? 0 : saved.tallies.size(),
+				saved.records == null ? 0 : saved.records.size(),
+				saved.sessions);
+		}
+		catch (com.google.gson.JsonSyntaxException e)
+		{
+			// A corrupt value costs the follower its memory, which is sad but
+			// survivable; refusing to start over it would not be.
+			log.warn("Stored counters were not readable, starting fresh", e);
+		}
+	}
+
+	private void writeCounters()
+	{
+		TriggerContext context = speechEngine.getContext();
+		SavedCounters saved = new SavedCounters();
+		saved.tallies = trimCounters(context.getTallies());
+		saved.records = trimCounters(context.getRecords());
+		saved.sessions = context.getSessionCount();
+		configManager.setConfiguration(FollowerConfig.GROUP, "counters", gson.toJson(saved));
+	}
+
+	/**
+	 * What this follower likes and dislikes. Rolled once, then kept for good.
+	 */
+	private static final class SavedTraits
+	{
+		java.util.List<Integer> liked;
+		java.util.List<Integer> disliked;
+	}
+
+	/** How many places a follower gets to be fond of, and to grumble about. */
+	private static final int LIKED_PLACES = 3;
+	private static final int DISLIKED_PLACES = 2;
+
+	/**
+	 * Gives the follower its taste, rolling it the first time and reading it
+	 * back every time after.
+	 *
+	 * <p>The pool is the regions the RULE SET already has opinions about, which
+	 * means it maintains itself: every area rule added later widens what a
+	 * follower can come to love, and no separate list can fall out of date
+	 * against the one that matters.
+	 */
+	private void readTraits()
+	{
+		String stored = config.traits();
+		if (stored != null && !stored.isEmpty())
+		{
+			try
+			{
+				SavedTraits saved = gson.fromJson(stored, SavedTraits.class);
+				if (saved != null)
+				{
+					speechEngine.getContext().setTraits(
+						new java.util.HashSet<>(
+							saved.liked == null ? java.util.Collections.emptyList() : saved.liked),
+						new java.util.HashSet<>(
+							saved.disliked == null ? java.util.Collections.emptyList() : saved.disliked));
+					return;
+				}
+			}
+			catch (com.google.gson.JsonSyntaxException e)
+			{
+				log.warn("Stored traits were not readable, rolling again", e);
+			}
+		}
+
+		java.util.Set<Integer> pool = new java.util.TreeSet<>();
+		for (SpeechRule rule : ruleLoader.getRules())
+		{
+			if (rule.when != null)
+			{
+				rule.when.collectRegions(pool);
+			}
+		}
+		if (pool.size() < LIKED_PLACES + DISLIKED_PLACES)
+		{
+			// No rules loaded yet, or a rule set with no places in it. Leave it
+			// unrolled rather than writing out a taste of one place: the next
+			// login will try again with a full set.
+			log.debug("Not enough places to roll traits from ({})", pool.size());
+			return;
+		}
+
+		java.util.List<Integer> shuffled = new java.util.ArrayList<>(pool);
+		java.util.Collections.shuffle(shuffled);
+		SavedTraits rolled = new SavedTraits();
+		rolled.liked = new java.util.ArrayList<>(shuffled.subList(0, LIKED_PLACES));
+		rolled.disliked = new java.util.ArrayList<>(
+			shuffled.subList(LIKED_PLACES, LIKED_PLACES + DISLIKED_PLACES));
+
+		speechEngine.getContext().setTraits(
+			new java.util.HashSet<>(rolled.liked), new java.util.HashSet<>(rolled.disliked));
+		configManager.setConfiguration(FollowerConfig.GROUP, "traits", gson.toJson(rolled));
+		log.debug("Rolled traits: likes {}, dislikes {}", rolled.liked, rolled.disliked);
+	}
+
+	private static java.util.Map<String, Integer> trimCounters(java.util.Map<String, Integer> counters)
+	{
+		if (counters.size() <= MAX_COUNTERS)
+		{
+			return counters;
+		}
+		return counters.entrySet().stream()
+			.sorted(java.util.Map.Entry.<String, Integer>comparingByValue().reversed())
+			.limit(MAX_COUNTERS)
+			.collect(java.util.stream.Collectors.toMap(
+				java.util.Map.Entry::getKey, java.util.Map.Entry::getValue,
+				(a, b) -> a, java.util.LinkedHashMap::new));
+	}
+
 	/** Ticks between writing the last-seen stamp: about a minute. */
 	private static final int LAST_SEEN_TICKS = 100;
 
 	private int ticksSinceLastSeen;
+
+	/** Minutes this session has run, for the longest-session record. */
+	private int sessionMinutes;
+
+	/** Whether the longest-session record has already been remarked on today. */
+	private boolean sessionRecordSaid;
+
+	/** Set by the client tick when the mouse is over the follower; read once a game tick. */
+	private boolean hoveredThisTick;
+
+	/** Consecutive game ticks the mouse has rested on the follower. */
+	private int hoverTicks;
 
 	/**
 	 * How often learned animation data is flushed to disk: one minute, so an
@@ -1776,6 +1952,18 @@ public class FollowerPlugin extends Plugin
 					// How long it has been, worked out before the greeting so a
 					// rule can choose a different one for a long absence.
 					readTimeAway();
+
+					// Everything the follower remembers, also before the
+					// greeting: a session count is only worth mentioning as
+					// part of hello, and the tallies want to be whole before
+					// the first kill of the session lands on top of them.
+					readCounters();
+					readTraits();
+					TriggerContext counted = speechEngine.getContext();
+					counted.setSessionCount(counted.getSessionCount() + 1);
+					sessionMinutes = 0;
+					sessionRecordSaid = false;
+					writeCounters();
 
 					// The LOGIN trigger, so rules can greet: a delayTicks on the rule
 					// puts the hello a couple of seconds AFTER the follower's own
@@ -3343,6 +3531,10 @@ public class FollowerPlugin extends Plugin
 				client.addChatMessage(
 					net.runelite.api.ChatMessageType.NPC_EXAMINE, "",
 					"Follows you around. Better dressed every week.", null);
+				// Being looked up is worth noticing. The examine text is the
+				// game's line about the follower; a rule gets to give the
+				// follower's line about being looked up.
+				speechEngine.dispatch(TriggerEvent.simple(TriggerEvent.Type.EXAMINED));
 			});
 
 		if (follower.isStaying())
@@ -3438,8 +3630,15 @@ public class FollowerPlugin extends Plugin
 	@Subscribe
 	public void onClientTick(net.runelite.api.events.ClientTick event)
 	{
-		if (client.isMenuOpen() || !follower.isSpawned()
-			|| !follower.isUnderMouse(client.getMouseCanvasPosition()))
+		boolean over = !client.isMenuOpen() && follower.isSpawned()
+			&& follower.isUnderMouse(client.getMouseCanvasPosition());
+
+		// Latched for the game tick to read. The clickbox is already projected
+		// here to draw the hover hint, so knowing the mouse is resting on the
+		// follower costs nothing beyond this line.
+		hoveredThisTick |= over;
+
+		if (!over)
 		{
 			return;
 		}
@@ -3610,10 +3809,35 @@ public class FollowerPlugin extends Plugin
 		// Same reasoning as the stance flush: a crash never gets to write on
 		// the way out, and without this every crash would look like an absence
 		// of however long the session had been running.
+		// Client ticks run many times per game tick; collapse them into one
+		// answer here so "how long have they been looking" counts in the same
+		// units as everything else a rule can ask about.
+		hoverTicks = hoveredThisTick ? hoverTicks + 1 : 0;
+		hoveredThisTick = false;
+		speechEngine.getContext().setHoverTicks(hoverTicks);
+
 		if (++ticksSinceLastSeen >= LAST_SEEN_TICKS)
 		{
 			ticksSinceLastSeen = 0;
 			touchLastSeen();
+			// Ride the same timer: the counters are worth exactly as much as
+			// the last-seen stamp on a crash, and this is already the "write
+			// what would otherwise be lost" tick.
+			writeCounters();
+
+			// A hundred ticks is a minute, so the timer that saves is also the
+			// one that measures how long today has run. Stored every minute so
+			// a crash still keeps the mark; said only on the minute it crosses,
+			// because a record that re-announces every minute for the rest of a
+			// long session stops being a compliment and becomes a clock.
+			TriggerContext context = speechEngine.getContext();
+			int previousBest = context.getRecord("session");
+			if (context.noteRecord("session", ++sessionMinutes) && !sessionRecordSaid)
+			{
+				sessionRecordSaid = true;
+				speechEngine.dispatch(
+					TriggerEvent.record("session", sessionMinutes, previousBest));
+			}
 		}
 
 		if (ticksSinceLoading < 1000)
@@ -3925,7 +4149,22 @@ public class FollowerPlugin extends Plugin
 			log.info("WATCH chat [{}] {}", event.getType(), event.getMessage());
 		}
 
-		speechEngine.dispatch(TriggerEvent.chat(event.getMessage(), event.getType().getType()));
+		TriggerContext context = speechEngine.getContext();
+		boolean mine = !event.getName().isEmpty()
+			&& event.getName().replace(' ', ' ').trim()
+			.equalsIgnoreCase(context.getPlayerName().replace(' ', ' ').trim());
+
+		speechEngine.dispatch(TriggerEvent.chat(
+			event.getMessage(), event.getType().getType(), event.getName()));
+
+		// After the dispatch, so an "answered" rule gets its chance first. Any
+		// line from the player closes an open question: saying something else
+		// IS declining to answer, and leaving it open would let a "yeah" two
+		// minutes from now land as agreement to something long forgotten.
+		if (mine)
+		{
+			context.noteAnswered();
+		}
 	}
 
 	@Subscribe
@@ -4163,6 +4402,24 @@ public class FollowerPlugin extends Plugin
 		else if (event.getActor() instanceof NPC && event.getHitsplat().isMine())
 		{
 			damagedByPlayer.put(event.getActor(), client.getTickCount());
+			noteRecord("hit", event.getHitsplat().getAmount());
+		}
+	}
+
+	/**
+	 * Files a value against a record and announces it if it beat one.
+	 *
+	 * <p>Keeping the "did it beat one" answer with the announcement is
+	 * deliberate: a record that is stored without being said is invisible, and
+	 * one that is said without being stored is said again next time.
+	 */
+	private void noteRecord(String what, int value)
+	{
+		TriggerContext context = speechEngine.getContext();
+		int previous = context.getRecord(what);
+		if (context.noteRecord(what, value))
+		{
+			speechEngine.dispatch(TriggerEvent.record(what, value, previous));
 		}
 	}
 
@@ -4209,6 +4466,7 @@ public class FollowerPlugin extends Plugin
 		// Where, as well as that: the death spot is remembered for the session,
 		// and walking back over it later has its own lines.
 		speechEngine.getContext().noteDeath(local.getWorldLocation());
+		speechEngine.getContext().tally("deaths");
 		speechEngine.dispatch(TriggerEvent.death());
 		dialog.close();
 	}
@@ -4258,6 +4516,7 @@ public class FollowerPlugin extends Plugin
 		Integer previous = knownLevels.put(skill, level);
 		if (previous != null && level > previous)
 		{
+			speechEngine.getContext().tally("levels");
 			speechEngine.dispatch(TriggerEvent.levelUp(skill.getName(), level));
 		}
 	}

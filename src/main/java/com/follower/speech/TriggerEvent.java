@@ -35,7 +35,37 @@ public final class TriggerEvent
 		NPC_KILL,
 		PLAYER_DEATH,
 		LOOT,
+		RECORD,
+		EXAMINED,
+		WANT_FULFILLED,
+		WANT_EXPIRED,
 		MANUAL,
+	}
+
+	/** A want got its answer, one way or the other. {want} names what it was. */
+	public static TriggerEvent want(Type type, String label)
+	{
+		TriggerEvent event = new TriggerEvent(type);
+		event.name = label == null ? "" : label;
+		event.placeholders.put("want", event.name);
+		return event;
+	}
+
+	/**
+	 * A personal best was just beaten. {record} names it, {value} is the new
+	 * mark and {previous} the one it replaced - which is what makes the line
+	 * land, since a record without the old number is just a number.
+	 */
+	public static TriggerEvent record(String what, int value, int previous)
+	{
+		TriggerEvent event = new TriggerEvent(Type.RECORD);
+		event.name = what == null ? "" : what;
+		event.value = value;
+		event.previousValue = previous;
+		event.placeholders.put("record", event.name);
+		event.placeholders.put("value", Integer.toString(value));
+		event.placeholders.put("previous", Integer.toString(previous));
+		return event;
 	}
 
 	/** The player has died. Where it happened lives in the context, not here. */
@@ -175,12 +205,20 @@ public final class TriggerEvent
 		return event;
 	}
 
-	public static TriggerEvent chat(String message, int chatTypeId)
+	/**
+	 * Something was said. The sender rides along in {@link #getName()} so a rule
+	 * can tell the player's own line from the rest of the street - which is the
+	 * difference between a follower that answers you and one that answers
+	 * everybody.
+	 */
+	public static TriggerEvent chat(String message, int chatTypeId, String sender)
 	{
 		TriggerEvent event = new TriggerEvent(Type.CHAT);
 		event.message = message == null ? "" : message;
 		event.chatTypeId = chatTypeId;
+		event.name = sender == null ? "" : sender;
 		event.placeholders.put("message", event.message);
+		event.placeholders.put("speaker", event.name);
 		return event;
 	}
 

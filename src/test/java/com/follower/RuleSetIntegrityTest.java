@@ -53,7 +53,12 @@ public class RuleSetIntegrityTest
 		"energybelow", "idle", "idlebelow", "playerdeath", "neardeathspot",
 		"lootworth", "returnvisit", "combat", "bossfight", "login",
 		"thrallstart", "thrallswitch", "thrallend", "errandstart", "errandend",
-		"combatstart", "combatend", "npckill", "mood", "repeating", "awayfor", "thievingstart", "thievingend", "thieving"));
+		"combatstart", "combatend", "npckill", "mood", "repeating", "awayfor",
+		"thievingstart", "thievingend", "thieving",
+		"tally", "personalbest", "sessioncount",
+		"answered", "hovered", "examined",
+		"inventoryfree", "playersnearby",
+		"wanting", "wantfulfilled", "wantexpired", "feelsabout"));
 
 	private static JsonObject bundled(String resource) throws IOException
 	{
@@ -274,6 +279,9 @@ public class RuleSetIntegrityTest
 		byType.put("errandstart", new HashSet<>(Arrays.asList("errand")));
 		byType.put("errandend", new HashSet<>(Arrays.asList("errand")));
 		byType.put("damagetaken", new HashSet<>(Arrays.asList("damage")));
+		byType.put("personalbest", new HashSet<>(Arrays.asList("record", "value", "previous")));
+		byType.put("wantfulfilled", new HashSet<>(Arrays.asList("want")));
+		byType.put("wantexpired", new HashSet<>(Arrays.asList("want")));
 
 		Harness h = new Harness(folder.newFolder().toPath());
 		List<String> problems = new ArrayList<>();

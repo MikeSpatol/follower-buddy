@@ -83,7 +83,21 @@ public class SpeechEngine
 	/** Refreshes the state snapshot. Call once per game tick, before dispatching. */
 	public void refreshContext()
 	{
-		getContext().refresh();
+		TriggerContext context = getContext();
+		context.refresh();
+
+		// A want resolving is state becoming an event. It happens here rather
+		// than in the plugin so the rules see it wherever the engine is driven
+		// from, and exactly once - the poll consumes it.
+		TriggerContext.WantOutcome outcome = context.pollWant();
+		if (outcome != null)
+		{
+			dispatch(TriggerEvent.want(
+				outcome == TriggerContext.WantOutcome.FULFILLED
+					? TriggerEvent.Type.WANT_FULFILLED
+					: TriggerEvent.Type.WANT_EXPIRED,
+				context.getWantLabel()));
+		}
 	}
 
 	public void reset()
@@ -273,6 +287,22 @@ public class SpeechEngine
 		if (rule.mood != null && rule.mood != 0)
 		{
 			getContext().adjustMood(rule.mood);
+		}
+
+		// A question only counts as asked once it has actually been said, for
+		// the same reason: a rule silenced by the mute must not leave the
+		// follower waiting for an answer to something nobody heard.
+		if (Boolean.TRUE.equals(rule.asks) && !text.isEmpty())
+		{
+			getContext().noteQuestion();
+		}
+
+		// Same rule, same reason: the follower can only be hoping for something
+		// it managed to ask for out loud.
+		if (rule.want != null && rule.want.region != null && !text.isEmpty())
+		{
+			getContext().setWant(rule.want.region, rule.want.label,
+				rule.want.minutes == null ? 15 : rule.want.minutes);
 		}
 
 		if (!text.isEmpty())

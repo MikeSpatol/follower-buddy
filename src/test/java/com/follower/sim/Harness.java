@@ -121,6 +121,26 @@ public final class Harness
 		return this;
 	}
 
+	/**
+	 * The local player saying something in public chat, closing any open
+	 * question afterwards exactly as the plugin's chat subscriber does.
+	 */
+	public Harness playerSays(String message)
+	{
+		engine.dispatch(TriggerEvent.chat(message,
+			net.runelite.api.ChatMessageType.PUBLICCHAT.getType(), "Tester"));
+		engine.getContext().noteAnswered();
+		return this;
+	}
+
+	/** Somebody else in public chat. */
+	public Harness someoneSays(String who, String message)
+	{
+		engine.dispatch(TriggerEvent.chat(message,
+			net.runelite.api.ChatMessageType.PUBLICCHAT.getType(), who));
+		return this;
+	}
+
 	public List<Spoken> firedBy(String ruleId)
 	{
 		List<Spoken> hits = new ArrayList<>();

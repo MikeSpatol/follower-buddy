@@ -44,7 +44,24 @@ import net.runelite.api.NPC;
  *   <tr><td>idle</td><td>{@code ticks}</td></tr>
  *   <tr><td>login / always</td><td>no fields</td></tr>
  *   <tr><td>chance</td><td>{@code percent} — rolled each evaluation</td></tr>
+ *   <tr><td>tally</td><td>{@code of} counter name, {@code minimum} / {@code maximum} — a LIFETIME count</td></tr>
+ *   <tr><td>personalBest</td><td>optional {@code names}; {@code {record}} {@code {value}} {@code {previous}}</td></tr>
+ *   <tr><td>sessionCount</td><td>{@code minimum} / {@code every} — login only</td></tr>
+ *   <tr><td>answered</td><td>{@code is} yes|no — the player's reply to a rule marked {@code asks}</td></tr>
+ *   <tr><td>hovered</td><td>{@code ticks} — the mouse resting on the follower</td></tr>
+ *   <tr><td>examined</td><td>no fields</td></tr>
+ *   <tr><td>inventoryFree</td><td>{@code maximum} free slots — a warning, not a report</td></tr>
+ *   <tr><td>playersNearby</td><td>{@code minimum} count, {@code within} tiles</td></tr>
+ *   <tr><td>wanting</td><td>no fields — a want is open; usually used negated</td></tr>
+ *   <tr><td>wantFulfilled / wantExpired</td><td>no fields; {@code {want}} placeholder</td></tr>
+ *   <tr><td>feelsAbout</td><td>{@code is} liked|disliked — about the CURRENT region</td></tr>
  * </table>
+ *
+ * <p>{@code npcNearby} also takes {@code minimum}/{@code maximum} combat level,
+ * which on their own match any NPC in that bracket.
+ *
+ * <p>{@code chatMessage} also takes {@code from} (player|others) and {@code is}
+ * (a {@link net.runelite.api.ChatMessageType} name).
  */
 @Slf4j
 public class Condition
@@ -79,6 +96,12 @@ public class Condition
 
 	/** A named band, for conditions that read better as a word than a number. */
 	public String is;
+
+	/** Which counter a tally or record condition is asking about. */
+	public String of;
+
+	/** Who said it: "player" for the local player's own chat, "others" for the rest. */
+	public String from;
 
 	public Boolean requirePrayerActive;
 	public Boolean anyLoadedRegion;
@@ -184,7 +207,7 @@ public class Condition
 				if (nearbyGeneration != generation)
 				{
 					nearbyGeneration = generation;
-					nearbyCached = ctx.isNpcNearby(this::matchesNpcObject, orDefault(within, 15));
+					nearbyCached = ctx.isNpcNearby(this::isNearbyCandidate, orDefault(within, 15));
 				}
 				return nearbyCached;
 			}
@@ -225,7 +248,20 @@ public class Condition
 				return matchesArea(ctx);
 
 			case "chatmessage":
-				return event.getType() == TriggerEvent.Type.CHAT && matchesText(event.getMessage());
+				return event.getType() == TriggerEvent.Type.CHAT
+					&& matchesChatType(event)
+					&& matchesSpeaker(ctx, event)
+					&& matchesText(event.getMessage());
+
+			// The player answering something the follower just asked. Yes and no
+			// only: anything richer would be a parser, and a companion that
+			// misreads a sentence is worse company than one that waits for a
+			// word it knows.
+			case "answered":
+				return event.getType() == TriggerEvent.Type.CHAT
+					&& ctx.isAwaitingAnswer()
+					&& isFromPlayer(ctx, event)
+					&& answerMatches(event.getMessage());
 
 			case "varbitequals":
 				return varbit != null && ctx.getClient().getVarbitValue(varbit) == orDefault(value, 1);
@@ -390,6 +426,81 @@ public class Condition
 					&& ctx.getMinutesAway() >= orDefault(minimum, 60)
 					&& (maximum == null || ctx.getMinutesAway() <= maximum);
 
+			// A lifetime count, as against npcKill's "every" which fires on the
+			// moment. This is state: it stays true once passed, so it belongs
+			// alongside something that picks the moment to say it.
+			// How this particular follower feels about where it is standing.
+			// The set is rolled once per character, so the answer is a fact
+			// about your follower rather than about the game.
+			case "feelsabout":
+				return ctx.feelsAbout(is == null ? "liked" : is);
+
+			// The follower is hoping for something. Mostly used NEGATED, to stop
+			// a second want being asked for while one is still open.
+			case "wanting":
+				return ctx.isWanting();
+
+			case "wantfulfilled":
+				return event.getType() == TriggerEvent.Type.WANT_FULFILLED;
+			case "wantexpired":
+				return event.getType() == TriggerEvent.Type.WANT_EXPIRED;
+
+			// Room left in the bag. The point of this one is the WARNING - set
+			// maximum to 2 and the follower speaks up while there is still
+			// somewhere to put the next log, which is a companion paying
+			// attention rather than a companion narrating a full inventory.
+			case "inventoryfree":
+			{
+				int free = ctx.getFreeInventorySlots();
+				return free <= orDefault(maximum, 2) && free >= orDefault(minimum, 0);
+			}
+
+			// How busy it is here. "within" is the radius, "minimum" how many
+			// other players it takes before that counts as a crowd.
+			case "playersnearby":
+				return ctx.countPlayersNearby(orDefault(within, 10))
+					>= orDefault(minimum, 5);
+
+			// Somebody is looking at the follower. "ticks" is how long the mouse
+			// has to rest on it: a cursor crossing the screen is not attention.
+			case "hovered":
+				return ctx.getHoverTicks() >= orDefault(ticks, 5);
+
+			case "examined":
+				return event.getType() == TriggerEvent.Type.EXAMINED;
+
+			case "tally":
+			{
+				if (of == null)
+				{
+					return false;
+				}
+				int counted = ctx.getTally(of);
+				return counted >= orDefault(minimum, 1)
+					&& (maximum == null || counted <= maximum);
+			}
+
+			// The moment a record was beaten. {record}, {value} and {previous}
+			// are on the event; "names" narrows to particular records.
+			case "personalbest":
+				return event.getType() == TriggerEvent.Type.RECORD
+					&& (names == null || matchesAnyName(event.getName()));
+
+			// How many times the follower has been started up with this player.
+			// Login only, which is the one moment it changes and the one moment
+			// remarking on it is not out of nowhere.
+			case "sessioncount":
+			{
+				if (event.getType() != TriggerEvent.Type.LOGIN)
+				{
+					return false;
+				}
+				int sessions = ctx.getSessionCount();
+				return sessions >= orDefault(minimum, 1)
+					&& (maximum == null || sessions <= maximum)
+					&& (every == null || every <= 0 || sessions % every == 0);
+			}
+
 			// How long the player has been doing the same thing. Knows nothing
 			// about trees or rocks: an animation running for minutes IS the
 			// activity, so this covers every skill at once.
@@ -444,6 +555,31 @@ public class Condition
 		return names != null && matchesAnyName(event.getName());
 	}
 
+	/**
+	 * Whether an NPC in the scene is one this rule cares about.
+	 *
+	 * <p>{@code minimum} and {@code maximum} bracket its COMBAT LEVEL, which is
+	 * what turns npcNearby into "something big is standing near us" without
+	 * naming a single monster - and keeps covering everything the game adds
+	 * later. With no names or ids given, that bracket is the whole test.
+	 */
+	private boolean isNearbyCandidate(NPC npc)
+	{
+		if (minimum != null && npc.getCombatLevel() < minimum)
+		{
+			return false;
+		}
+		if (maximum != null && npc.getCombatLevel() > maximum)
+		{
+			return false;
+		}
+		if (names == null && ids == null)
+		{
+			return minimum != null || maximum != null;
+		}
+		return matchesNpcObject(npc);
+	}
+
 	private boolean matchesNpcObject(NPC npc)
 	{
 		if (idsContain(npc.getId()))
@@ -491,6 +627,99 @@ public class Condition
 		}
 		return px >= Math.min(x1, x2) && px <= Math.max(x1, x2)
 			&& py >= Math.min(y1, y2) && py <= Math.max(y1, y2);
+	}
+
+	/**
+	 * Narrows a chat rule to one kind of message. {@code is} takes the
+	 * {@link net.runelite.api.ChatMessageType} name exactly as {@code ::follower
+	 * chatwatch} prints it, so the way to write one of these is to watch the
+	 * real message go past and copy what it says. No table of friendly aliases,
+	 * because a table is a thing that drifts out of date silently.
+	 */
+	private boolean matchesChatType(TriggerEvent event)
+	{
+		if (is == null)
+		{
+			return true;
+		}
+		if (wantedChatType == Integer.MIN_VALUE)
+		{
+			int resolved = -1;
+			try
+			{
+				resolved = net.runelite.api.ChatMessageType
+					.valueOf(is.toUpperCase(Locale.ROOT)).getType();
+			}
+			catch (IllegalArgumentException e)
+			{
+				log.warn("Unknown chat type '{}' - see ::follower chatwatch for the real names", is);
+			}
+			wantedChatType = resolved;
+		}
+		return wantedChatType >= 0 && event.getChatTypeId() == wantedChatType;
+	}
+
+	private transient int wantedChatType = Integer.MIN_VALUE;
+
+	/**
+	 * {@code from} is "player" for the local player's own lines and "others"
+	 * for everybody else's. Absent means either.
+	 */
+	private boolean matchesSpeaker(TriggerContext ctx, TriggerEvent event)
+	{
+		if (from == null)
+		{
+			return true;
+		}
+		boolean mine = isFromPlayer(ctx, event);
+		return "player".equalsIgnoreCase(from) ? mine : !mine;
+	}
+
+	private static boolean isFromPlayer(TriggerContext ctx, TriggerEvent event)
+	{
+		// Read straight off the client rather than through getPlayerName(),
+		// which substitutes "you" when there is no player - a placeholder
+		// fallback that would be a wrong ANSWER here.
+		net.runelite.api.Player local = ctx.getClient().getLocalPlayer();
+		String player = local == null || local.getName() == null ? "" : local.getName();
+		if (player.isEmpty() || event.getName().isEmpty())
+		{
+			return false;
+		}
+		// The game pads display names with non-breaking spaces.
+		return player.replace(' ', ' ').trim()
+			.equalsIgnoreCase(event.getName().replace(' ', ' ').trim());
+	}
+
+	private static final java.util.Set<String> YES = new java.util.HashSet<>(java.util.Arrays.asList(
+		"y", "ye", "yes", "yeah", "yep", "yup", "yea", "aye", "ok", "okay", "k",
+		"sure", "please", "alright", "fine", "go on", "why not", "definitely"));
+
+	private static final java.util.Set<String> NO = new java.util.HashSet<>(java.util.Arrays.asList(
+		"n", "no", "nope", "nah", "naw", "never", "not now", "later", "sorry",
+		"cant", "can't", "no thanks", "no ta", "maybe later"));
+
+	/**
+	 * Whether a reply is the yes or the no this rule is waiting for.
+	 *
+	 * <p>Whole-message rather than substring: "ok" inside "broken" is not
+	 * agreement, and a follower that hears one would be unnerving. Trailing
+	 * punctuation is stripped, since people type "yes!" more often than "yes".
+	 */
+	private boolean answerMatches(String reply)
+	{
+		if (reply == null)
+		{
+			return false;
+		}
+		String cleaned = reply.toLowerCase(Locale.ROOT)
+			.replaceAll("[^a-z' ]", "").trim().replaceAll(" +", " ");
+		if ("no".equalsIgnoreCase(is))
+		{
+			return NO.contains(cleaned);
+		}
+		// Default to yes, so a rule that just says "answered" waits for one.
+		return YES.contains(cleaned);
 	}
 
 	/** Matches against {@code contains} (case-insensitive), {@code regex}, or {@code names}. */
@@ -552,6 +781,35 @@ public class Condition
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Every region id this condition tree names, for the trait roll - the
+	 * follower's likes are drawn from the places the rule set already has
+	 * opinions about, so the pool maintains itself as rules are added.
+	 */
+	public void collectRegions(java.util.Collection<Integer> into)
+	{
+		if (regions != null)
+		{
+			for (Integer region : regions)
+			{
+				if (region != null)
+				{
+					into.add(region);
+				}
+			}
+		}
+		if (conditions != null)
+		{
+			for (Condition child : conditions)
+			{
+				if (child != null)
+				{
+					child.collectRegions(into);
+				}
+			}
+		}
 	}
 
 	/** Whether this condition tree contains the given type (case-insensitive). */

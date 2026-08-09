@@ -133,6 +133,34 @@ public class SpeechRule
 	 */
 	public Integer mood;
 
+	/**
+	 * Marks this line as a question, opening a window in which the player's next
+	 * public line can be read as the answer by an {@code answered} rule.
+	 *
+	 * <p>The window is opened by SAYING it, not by winning: a question the mute
+	 * swallowed is one the player never heard, and a follower waiting for an
+	 * answer to that would take the next unrelated "yeah" as agreement.
+	 */
+	public Boolean asks;
+
+	/**
+	 * Somewhere the follower would like to go, expressed as part of saying so.
+	 *
+	 * <p>{@code {"region": 10553, "label": "the fishing guild", "minutes": 20}}.
+	 * Going there before the deadline fulfils it; the deadline passing expires
+	 * it. Either way a rule gets to react, and the {want} placeholder carries
+	 * the label - so the follower can be pleased about the specific thing it
+	 * asked for rather than pleased in general.
+	 */
+	public Want want;
+
+	public static final class Want
+	{
+		public Integer region;
+		public String label;
+		public Integer minutes;
+	}
+
 	public Condition when;
 
 	/**

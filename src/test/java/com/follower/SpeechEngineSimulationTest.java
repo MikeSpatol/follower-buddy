@@ -392,7 +392,7 @@ public class SpeechEngineSimulationTest
 				+ " \"when\": {\"type\": \"healthBelow\", \"percent\": 50}, \"say\": [\"b\"]}"));
 
 		h.gameTicks(1);
-		h.dispatch(TriggerEvent.chat("anything", 0));
+		h.dispatch(TriggerEvent.chat("anything", 0, ""));
 
 		h.game.hitpoints(10, 99);
 		h.gameTicks(2);

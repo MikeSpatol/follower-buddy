@@ -318,12 +318,14 @@ wins.
 |---|---|
 | `all` / `any` / `none` | `conditions` — nest freely |
 | `npcSpawn` / `npcDespawn` | `names` (case-insensitive, `*` wildcards) or `ids` |
-| `npcNearby` | `names`/`ids`, `within` (tiles) |
+| `npcNearby` | `names`/`ids`, `within` (tiles); `minimum`/`maximum` combat level, which on their own match anything in that bracket |
+| `playersNearby` | `minimum` other players, `within` (tiles) |
 | `healthBelow` / `healthAbove` | `percent` |
 | `prayerBelow` / `prayerAbove` | `percent`, `requirePrayerActive` |
 | `inRegion` / `regionEnter` | `regions`, `anyLoadedRegion` |
 | `inArea` | `x1`, `y1`, `x2`, `y2`, `plane` |
-| `chatMessage` | `contains` or `regex` |
+| `chatMessage` | `contains` or `regex`; `from` (`player`/`others`) and `is` (a `ChatMessageType` name, exactly as `::follower chatwatch` prints it) |
+| `answered` | `is` — `yes` or `no`; the player's reply to a rule marked `asks` |
 | `varbitEquals` / `varbitChanged` | `varbit`, `value` |
 | `animationSelf` | `ids` |
 | `levelUp` | `names` (skill names, `*` ok) |
@@ -342,6 +344,15 @@ wins.
 | `mood` | `is` — a band (`low`, `down`, `even`, `good`, `high`) — or `minimum`/`maximum` over 0–100 |
 | `repeating` | `ticks` — how long the same animation has been running; optional `ids` |
 | `awayFor` | `minimum`/`maximum` minutes since the follower last saw you; login only |
+| `tally` | `of` (counter name), `minimum`/`maximum` — a **lifetime** count, kept between sessions |
+| `personalBest` | optional `names`; fires the moment a record is beaten. `{record}`, `{value}`, `{previous}` |
+| `sessionCount` | `minimum`/`maximum`/`every` — how many times the follower has been out with you; login only |
+| `inventoryFree` | `maximum` free slots — meant as a warning while there is still room |
+| `hovered` | `ticks` — the mouse resting on the follower |
+| `examined` | — somebody looked it up |
+| `wanting` | — a want is open; normally used inside a `none` |
+| `wantFulfilled` / `wantExpired` | — `{want}` names the place it asked for |
+| `feelsAbout` | `is` — `liked` or `disliked`, about the region you are standing in |
 | `login`, `always` | — |
 | `chance` | `percent`, rolled each evaluation |
 
@@ -353,7 +364,9 @@ standing on, which is what you want for instanced dungeons and raids.
 `{npc}`, `{npcId}`, `{message}`, `{skill}`, `{level}`, `{damage}`, `{value}`, `{region}`,
 `{hp}`, `{maxHp}`, `{hpPercent}`, `{prayer}`, `{maxPrayer}`, `{prayerPercent}`, `{player}`,
 `{item}` (the most valuable item in a loot drop; `{value}` on loot events is the drop's
-total, written the way a player says it — `1.2M`, `214K`).
+total, written the way a player says it — `1.2M`, `214K`), `{speaker}` (who said it, on
+chat events), `{record}` / `{previous}` (on `personalBest`), `{want}` (on `wantFulfilled`
+and `wantExpired`).
 
 ### Other rule fields
 
@@ -409,7 +422,15 @@ total, written the way a player says it — `1.2M`, `214K`).
   vanishes with your cast and must not lag it.
 - `mood` — how much this firing moves the follower's mood, positive or negative.
   See below.
+- `asks` — marks the line as a question, opening a twelve-second window in which
+  the player's next public line can be read as an answer by an `answered` rule.
+- `want` — `{"region": 12850, "label": "Lumbridge", "minutes": 20}`. See below.
 - `note` — free text, ignored by the plugin.
+
+Both `asks` and `want` take effect when the line is actually **said**, not when
+the rule wins. A question the mute swallowed is one the player never heard, and
+a follower waiting for an answer to that would take the next unrelated "yeah" as
+agreement.
 
 `say` is optional when the rule plays an animation: an animation-only rule is
 valid, and it skips the mute and the global speech gap entirely — those throttle
@@ -431,6 +452,54 @@ out and every crash would otherwise look like an absence.
 
 A quick relog is not an absence. `-1` means it has no idea — a first run, or a
 cleared config — and never reads as "just now".
+
+**Counts and records outlive the session too.** The tallies the follower keeps
+(`kill:<name>`, `deaths`, `levels`) and the records it holds (`hit`, `session`)
+go into the config alongside the timestamp, on the same once-a-minute timer and
+for the same crash reason. This is what makes a milestone worth saying: "your
+fiftieth" means nothing if the fifty were all this afternoon, and everything if
+they were the fifty since you met. Read them back with `tally` and
+`personalBest`, and `npcKill`'s `every` counts across sessions rather than
+within one.
+
+The first value ever filed against a record seeds it **silently**. Otherwise
+every new install would announce a personal best on its very first hit, which
+makes the feature look broken to every new user at once.
+
+Counters are capped at 300 entries, rarest evicted first — every distinct NPC
+name you have ever killed earns one, so without a bound it would grow into the
+config forever.
+
+### Wanting something
+
+Everything else in the rule set runs one direction: something happened, and a
+line remarks on it. A `want` runs the other way. The follower names somewhere it
+would like to go, and then the next twenty minutes are an answer to that — going
+there fires `wantFulfilled` and is the largest mood swing in the file, while the
+deadline passing fires `wantExpired` for a small drop.
+
+A thing with desires that can be *satisfied* reads as alive in a way no amount
+of commentary manages, which is why the payoff is priced so high.
+
+Only one want is open at a time — two would mean going anywhere satisfied
+something, which is the same as satisfying nothing — and a want for the region
+you are already standing in is refused outright. The `wanting` condition, inside
+a `none`, is how a rule avoids asking over the top of an open one.
+
+### Taste
+
+`feelsAbout` asks how *this* follower feels about where it is standing. The
+liked and disliked regions are rolled once, the first time it has enough rules
+to roll from, and then kept for good in the config — so two people running this
+plugin do not get the same follower.
+
+The pool is the regions the rule set already has opinions about, which means it
+maintains itself: every area rule added later widens what a follower can come to
+love, and there is no second list to fall out of date.
+
+Taste is what makes a mood legible. A number moving for reasons you cannot see
+is weather; a follower that is always glad to be back at the same place and
+always grumbles about the same one is a temperament you can learn.
 
 ### Noticing repetition
 

@@ -1278,6 +1278,8 @@
       "group": "health",
       "priority": 120,
       "output": "both",
+      "animation": 2105,
+      "mood": -15,
       "cooldownMs": 8000,
       "when": {
         "type": "healthBelow",
@@ -6850,6 +6852,704 @@
             "percent": 5
           }
         ]
+      }
+    },
+    {
+      "id": "session-10",
+      "note": "The 10th time the follower has been started up with this player. Pinned to the exact number with minimum and maximum, so the line can name it - 'every 25th' would have to stay vague. The count lives in the config and survives a logout, which is the whole point: a session counter that resets is not a memory.",
+      "group": "misc",
+      "priority": 92,
+      "cooldownMs": 60000,
+      "delayTicks": 8,
+      "delayTicksMax": 14,
+      "output": "overhead",
+      "mood": 10,
+      "when": {
+        "type": "sessionCount",
+        "minimum": 10,
+        "maximum": 10
+      },
+      "say": [
+        "Ten times now you've come back to me. I do notice, you know.",
+        "Ten. That's ten days I've been yours."
+      ]
+    },
+    {
+      "id": "session-50",
+      "note": "The 50th time the follower has been started up with this player. Pinned to the exact number with minimum and maximum, so the line can name it - 'every 25th' would have to stay vague. The count lives in the config and survives a logout, which is the whole point: a session counter that resets is not a memory.",
+      "group": "misc",
+      "priority": 92,
+      "cooldownMs": 60000,
+      "delayTicks": 8,
+      "delayTicksMax": 14,
+      "output": "overhead",
+      "mood": 10,
+      "when": {
+        "type": "sessionCount",
+        "minimum": 50,
+        "maximum": 50
+      },
+      "say": [
+        "Fifty. Fifty times you've turned up. Not that I'm counting.",
+        "That's the fiftieth time you've called me out. I kept count."
+      ]
+    },
+    {
+      "id": "session-100",
+      "note": "The 100th time the follower has been started up with this player. Pinned to the exact number with minimum and maximum, so the line can name it - 'every 25th' would have to stay vague. The count lives in the config and survives a logout, which is the whole point: a session counter that resets is not a memory.",
+      "group": "misc",
+      "priority": 92,
+      "cooldownMs": 60000,
+      "delayTicks": 8,
+      "delayTicksMax": 14,
+      "output": "overhead",
+      "mood": 10,
+      "when": {
+        "type": "sessionCount",
+        "minimum": 100,
+        "maximum": 100
+      },
+      "say": [
+        "A hundred. A hundred days we've been doing this.",
+        "One hundred. I don't know many who'd stay a hundred."
+      ]
+    },
+    {
+      "id": "session-365",
+      "note": "The 365th time the follower has been started up with this player. Pinned to the exact number with minimum and maximum, so the line can name it - 'every 25th' would have to stay vague. The count lives in the config and survives a logout, which is the whole point: a session counter that resets is not a memory.",
+      "group": "misc",
+      "priority": 92,
+      "cooldownMs": 60000,
+      "delayTicks": 8,
+      "delayTicksMax": 14,
+      "output": "overhead",
+      "mood": 10,
+      "when": {
+        "type": "sessionCount",
+        "minimum": 365,
+        "maximum": 365
+      },
+      "say": [
+        "Three hundred and sixty five. A whole year of you.",
+        "A year. We've been at this a year now."
+      ]
+    },
+    {
+      "id": "record-hit",
+      "note": "A new biggest hit. {value} is the new mark and {previous} the one it beat, which is what makes it land - a record without the old number is just a number. The first hit after an install seeds the record silently and says nothing, so this cannot fire on day one.",
+      "group": "combat",
+      "priority": 68,
+      "cooldownMs": 20000,
+      "output": "overhead",
+      "animation": 862,
+      "mood": 12,
+      "when": {
+        "type": "personalBest",
+        "names": [
+          "hit"
+        ]
+      },
+      "say": [
+        "{value}! That's the hardest I've ever seen you hit. Old best was {previous}.",
+        "{value} damage. You've never done better than {previous} before now.",
+        "Did you see that? {value}. New best."
+      ]
+    },
+    {
+      "id": "record-session",
+      "note": "The longest we have ever been out. Said once, on the minute it crosses - the plugin stores the mark every minute but only announces the crossing, or it would be a clock rather than a compliment.",
+      "group": "misc",
+      "priority": 60,
+      "cooldownMs": 600000,
+      "output": "overhead",
+      "when": {
+        "type": "personalBest",
+        "names": [
+          "session"
+        ]
+      },
+      "say": [
+        "{value} minutes. That's the longest we've ever been out together.",
+        "We've been at this {value} minutes. Longest yet. Beat {previous}.",
+        "This is officially the longest day we've had. {value} minutes."
+      ]
+    },
+    {
+      "id": "deaths-many",
+      "note": "Dying when it is very much not the first time. The tally survives a logout, so 'again' means since we met rather than since you logged in - which is the difference between a companion and a scoreboard.",
+      "group": "reactions",
+      "priority": 92,
+      "cooldownMs": 120000,
+      "delayTicks": 4,
+      "output": "overhead",
+      "mood": -8,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "playerDeath"
+          },
+          {
+            "type": "tally",
+            "of": "deaths",
+            "minimum": 10
+          }
+        ]
+      },
+      "say": [
+        "Again? I've lost count of how many times I've watched this.",
+        "You do this a lot, you know. I've been keeping track.",
+        "I've seen you die more times than I care to say."
+      ]
+    },
+    {
+      "id": "levels-many",
+      "note": "A level up when there have been a great many. Same lifetime tally.",
+      "group": "reactions",
+      "priority": 42,
+      "cooldownMs": 300000,
+      "output": "overhead",
+      "mood": 6,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "levelUp"
+          },
+          {
+            "type": "tally",
+            "of": "levels",
+            "minimum": 25
+          }
+        ]
+      },
+      "say": [
+        "Another one. You've had dozens since I've known you.",
+        "You keep doing that. I've watched you do it more times than most.",
+        "{skill} again. You never do stop, do you."
+      ]
+    },
+    {
+      "id": "greet-back",
+      "note": "The follower answering YOU rather than the world. from:player and is:PUBLICCHAT together are what stop it greeting the whole street - the chat type name is exactly what ::follower chatwatch prints.",
+      "group": "reactions",
+      "priority": 66,
+      "cooldownMs": 45000,
+      "delayTicks": 1,
+      "delayTicksMax": 3,
+      "output": "overhead",
+      "animation": 863,
+      "mood": 4,
+      "when": {
+        "type": "chatMessage",
+        "from": "player",
+        "is": "PUBLICCHAT",
+        "regex": "^(hi|hey|hello|yo|hiya|greetings)\\b"
+      },
+      "say": [
+        "Hello to you too.",
+        "Oh, hello. Was that for me?",
+        "Hello! Right, I'm listening.",
+        "Hey yourself."
+      ]
+    },
+    {
+      "id": "laugh-along",
+      "note": "Laughing because you did. Not because anything was funny.",
+      "group": "reactions",
+      "priority": 44,
+      "cooldownMs": 60000,
+      "delayTicks": 1,
+      "delayTicksMax": 4,
+      "output": "overhead",
+      "animation": 861,
+      "mood": 5,
+      "when": {
+        "type": "chatMessage",
+        "from": "player",
+        "is": "PUBLICCHAT",
+        "regex": "(\\blol\\b|\\blmao\\b|haha|\\bhehe\\b|rofl)"
+      },
+      "say": [
+        "I don't know what's funny but I'm in.",
+        "Ha! Yes. Whatever that was.",
+        "Look at us, having a laugh.",
+        "That's the spirit."
+      ]
+    },
+    {
+      "id": "thanked",
+      "note": "Being thanked. Rarely happens; worth having a line ready.",
+      "group": "reactions",
+      "priority": 46,
+      "cooldownMs": 90000,
+      "delayTicks": 1,
+      "delayTicksMax": 3,
+      "output": "overhead",
+      "animation": 858,
+      "mood": 8,
+      "when": {
+        "type": "chatMessage",
+        "from": "player",
+        "is": "PUBLICCHAT",
+        "regex": "(\\bty\\b|\\bthanks\\b|thank you|\\bcheers\\b)"
+      },
+      "say": [
+        "Any time. Genuinely.",
+        "Don't mention it. Please do mention it again though.",
+        "That's what I'm here for."
+      ]
+    },
+    {
+      "id": "hovered",
+      "note": "Being LOOKED at. The mouse resting on the follower for eight ticks is attention; a cursor crossing the screen is not, which is what the tick count is for. Costs nothing to know - the clickbox is already projected every client tick to draw the hover hint.",
+      "group": "reactions",
+      "priority": 30,
+      "cooldownMs": 120000,
+      "output": "overhead",
+      "animation": 863,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "hovered",
+            "ticks": 8
+          },
+          {
+            "type": "chance",
+            "percent": 40
+          }
+        ]
+      },
+      "say": [
+        "Yes? Something on my face?",
+        "I can see you looking.",
+        "Hello. You've been staring a while.",
+        "Go on then, get a good look."
+      ]
+    },
+    {
+      "id": "examined",
+      "note": "Being looked up. The game gives its line about the follower; this is the follower's line about being looked up.",
+      "group": "reactions",
+      "priority": 50,
+      "cooldownMs": 60000,
+      "delayTicks": 2,
+      "output": "overhead",
+      "animation": 858,
+      "mood": 3,
+      "when": {
+        "type": "examined"
+      },
+      "say": [
+        "Yes, that's me. All of that is true.",
+        "Reading up on me, are you?",
+        "Better dressed every week. It says so."
+      ]
+    },
+    {
+      "id": "ask-outing",
+      "note": "A question, which is a different thing from a remark: asks:true opens a twelve second window in which the player's next public line is read as an answer. The window is opened by SAYING it, so a question the mute swallowed leaves nothing waiting.",
+      "group": "idle",
+      "priority": 26,
+      "cooldownMs": 900000,
+      "output": "overhead",
+      "asks": true,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "idle",
+            "ticks": 60
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 400
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "wanting"
+              }
+            ]
+          },
+          {
+            "type": "chance",
+            "percent": 3
+          }
+        ]
+      },
+      "say": [
+        "Can I ask you something? Say yes or no.",
+        "Are we doing anything in particular today? Yes or no will do.",
+        "Have you got a minute for me? Yes or no."
+      ]
+    },
+    {
+      "id": "want-lumbridge",
+      "note": "The follower asking for something, which is the only thing in the whole rule set that runs the other way round: everything else is a reaction to what you did, and this makes the next few minutes an answer to what IT said. Going to region 12850 within twenty minutes fulfils it; the deadline passing expires it. Three of these at descending priority with a chance roll, so the place asked for varies - only one want can be open at a time.",
+      "group": "idle",
+      "priority": 74,
+      "cooldownMs": 1200000,
+      "delayTicks": 1,
+      "delayTicksMax": 3,
+      "output": "overhead",
+      "want": {
+        "region": 12850,
+        "label": "Lumbridge",
+        "minutes": 20
+      },
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "answered",
+            "is": "yes"
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "wanting"
+              }
+            ]
+          },
+          {
+            "type": "chance",
+            "percent": 40
+          }
+        ]
+      },
+      "say": [
+        "Then can we go back to Lumbridge? I like it there. It's where things start.",
+        "Lumbridge, then. Humour me."
+      ]
+    },
+    {
+      "id": "want-grand-exchange",
+      "note": "The follower asking for something, which is the only thing in the whole rule set that runs the other way round: everything else is a reaction to what you did, and this makes the next few minutes an answer to what IT said. Going to region 12598 within twenty minutes fulfils it; the deadline passing expires it. Three of these at descending priority with a chance roll, so the place asked for varies - only one want can be open at a time.",
+      "group": "idle",
+      "priority": 73,
+      "cooldownMs": 1200000,
+      "delayTicks": 1,
+      "delayTicksMax": 3,
+      "output": "overhead",
+      "want": {
+        "region": 12598,
+        "label": "the Grand Exchange",
+        "minutes": 20
+      },
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "answered",
+            "is": "yes"
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "wanting"
+              }
+            ]
+          },
+          {
+            "type": "chance",
+            "percent": 50
+          }
+        ]
+      },
+      "say": [
+        "Then take me to the Grand Exchange. I want to watch the crowd for a bit.",
+        "The Grand Exchange, please. There's always something happening."
+      ]
+    },
+    {
+      "id": "want-fishing-guild",
+      "note": "The follower asking for something, which is the only thing in the whole rule set that runs the other way round: everything else is a reaction to what you did, and this makes the next few minutes an answer to what IT said. Going to region 10293 within twenty minutes fulfils it; the deadline passing expires it. Three of these at descending priority with a chance roll, so the place asked for varies - only one want can be open at a time.",
+      "group": "idle",
+      "priority": 72,
+      "cooldownMs": 1200000,
+      "delayTicks": 1,
+      "delayTicksMax": 3,
+      "output": "overhead",
+      "want": {
+        "region": 10293,
+        "label": "the Fishing Guild",
+        "minutes": 20
+      },
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "answered",
+            "is": "yes"
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "wanting"
+              }
+            ]
+          },
+          {
+            "type": "chance",
+            "percent": 100
+          }
+        ]
+      },
+      "say": [
+        "Then the Fishing Guild. It's quiet there and I like quiet.",
+        "The Fishing Guild, if you're offering. I'd like to see the water."
+      ]
+    },
+    {
+      "id": "answered-no",
+      "note": "Turned down. Gracious about it, because sulking would only teach the player not to answer.",
+      "group": "idle",
+      "priority": 40,
+      "cooldownMs": 60000,
+      "delayTicks": 1,
+      "delayTicksMax": 3,
+      "output": "overhead",
+      "animation": 856,
+      "mood": -4,
+      "when": {
+        "type": "answered",
+        "is": "no"
+      },
+      "say": [
+        "Fair enough. Another time.",
+        "No bother. Forget I asked.",
+        "Right you are. Carry on."
+      ]
+    },
+    {
+      "id": "want-fulfilled",
+      "note": "The player actually went. This is the payoff for the whole want mechanism and the biggest single mood swing in the file: a thing with desires that can be SATISFIED reads as alive in a way no amount of commentary manages. {want} names the place it asked for.",
+      "group": "reactions",
+      "priority": 78,
+      "cooldownMs": 60000,
+      "delayTicks": 2,
+      "delayTicksMax": 5,
+      "output": "overhead",
+      "animation": 2109,
+      "holdStill": true,
+      "mood": 25,
+      "when": {
+        "type": "wantFulfilled"
+      },
+      "say": [
+        "{want}! You actually brought me. Thank you.",
+        "You remembered. We're in {want}. I'm delighted.",
+        "Look at that - {want}. You didn't have to do that.",
+        "I asked for {want} and here we are. You're all right, you are."
+      ]
+    },
+    {
+      "id": "want-expired",
+      "note": "Asked for, never done. A small drop, not a sulk - it has to be survivable or the follower becomes a chore.",
+      "group": "reactions",
+      "priority": 34,
+      "cooldownMs": 60000,
+      "output": "overhead",
+      "animation": 13997,
+      "mood": -8,
+      "when": {
+        "type": "wantExpired"
+      },
+      "say": [
+        "We never did get to {want}. Never mind.",
+        "I'd given up on {want} anyway.",
+        "So much for {want}, then."
+      ]
+    },
+    {
+      "id": "place-liked",
+      "note": "Somewhere THIS follower is fond of. The set is rolled once per character from the regions the rule set already has opinions about, then kept for good - so two people do not get the same follower, and the mood stops being weather and becomes a temperament you can learn.",
+      "group": "area",
+      "priority": 24,
+      "cooldownMs": 600000,
+      "output": "overhead",
+      "animation": 13995,
+      "mood": 10,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "feelsAbout",
+            "is": "liked"
+          },
+          {
+            "type": "chance",
+            "percent": 6
+          }
+        ]
+      },
+      "say": [
+        "I do like it here. I don't know why. I just do.",
+        "This is one of my places, this.",
+        "Oh, good. I like this one.",
+        "We should come here more."
+      ]
+    },
+    {
+      "id": "place-disliked",
+      "note": "The other half of the same coin. A follower with no dislikes has no taste, only enthusiasm.",
+      "group": "area",
+      "priority": 24,
+      "cooldownMs": 600000,
+      "output": "overhead",
+      "animation": 13997,
+      "mood": -8,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "feelsAbout",
+            "is": "disliked"
+          },
+          {
+            "type": "chance",
+            "percent": 6
+          }
+        ]
+      },
+      "say": [
+        "Here again. I've never liked this place.",
+        "Something about this spot puts me off. Always has.",
+        "Can we not stay here long?",
+        "I'd rather be almost anywhere else, if I'm honest."
+      ]
+    },
+    {
+      "id": "bag-nearly-full",
+      "note": "A WARNING rather than a report. Two slots left, not none: reacting before is the thing that reads as a mind paying attention, and reacting after is only narration. Counted by walking the container, so it is right whichever way round size() and count() are.",
+      "group": "reactions",
+      "priority": 54,
+      "cooldownMs": 180000,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "inventoryFree",
+            "maximum": 2
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 100
+          }
+        ]
+      },
+      "say": [
+        "You're nearly out of room, you know.",
+        "Two slots left. Just so you've heard it from someone.",
+        "Bag's about full. Might want to do something about that."
+      ]
+    },
+    {
+      "id": "something-big-nearby",
+      "note": "Nerves. npcNearby with a combat level and no names at all, so this covers every large thing in the game and everything added later without a list to maintain. Suppressed during a fight - once it has started, saying something big is nearby is not news.",
+      "group": "combat",
+      "priority": 52,
+      "cooldownMs": 240000,
+      "output": "overhead",
+      "animation": 14001,
+      "mood": -5,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "npcNearby",
+            "minimum": 250,
+            "within": 8
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "combat"
+              }
+            ]
+          },
+          {
+            "type": "chance",
+            "percent": 25
+          }
+        ]
+      },
+      "say": [
+        "That thing is very large and very close.",
+        "I'd like it noted that I've seen what's standing over there.",
+        "We are extremely near something that could end this quickly.",
+        "Are we meant to be this close to that?"
+      ]
+    },
+    {
+      "id": "crowded-here",
+      "note": "Crowd awareness. Six people inside six tiles is a bank, an event, or a queue - all of them worth a word.",
+      "group": "area",
+      "priority": 22,
+      "cooldownMs": 600000,
+      "output": "overhead",
+      "animation": 2113,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "playersNearby",
+            "minimum": 6,
+            "within": 6
+          },
+          {
+            "type": "chance",
+            "percent": 8
+          }
+        ]
+      },
+      "say": [
+        "Busy here, isn't it.",
+        "Everyone's turned up at once.",
+        "I can't move for people.",
+        "Is something happening, or is it always like this?"
+      ]
+    },
+    {
+      "id": "wilderness-crossing",
+      "note": "Varbit 5963 is INSIDE_WILDERNESS, verified against the cache - much better than a guessed coordinate for the ditch. Read as STATE rather than as a change: a varbitChanged rule anywhere in the shipped set switches the varbit flood back on, and every login then pays a full rule pass per varbit initialised. The state is first true on the tick you cross, so the crossing is still what gets said; the long cooldown is what stops it being said again while you are still down there.",
+      "group": "area",
+      "priority": 76,
+      "cooldownMs": 1800000,
+      "delayTicks": 1,
+      "output": "overhead",
+      "animation": 2105,
+      "mood": -12,
+      "when": {
+        "type": "varbitEquals",
+        "varbit": 5963,
+        "value": 1
+      },
+      "say": [
+        "You've crossed. You know what that means.",
+        "Right. Wilderness. Everyone here can kill you now.",
+        "Oh, we're doing this. Fine. I'm staying close.",
+        "That's the ditch behind us. No takebacks."
+      ]
+    },
+    {
+      "id": "flinch-big-hit",
+      "note": "A flinch, and nothing else. Animation 424 is HUMAN_UNARMEDBLOCK, 1.26s, the unarmed defensive recoil. Silent on purpose: a body that reacts before the mouth does is most of what makes something look like it is watching, and a line here would be one more thing said during a fight that is already noisy.",
+      "group": "combat",
+      "priority": 48,
+      "cooldownMs": 8000,
+      "animation": 424,
+      "when": {
+        "type": "damageTaken",
+        "minimum": 20
       }
     }
   ]

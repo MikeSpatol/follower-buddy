@@ -86,7 +86,14 @@ public class RuleTriggerSanityTest
 				boolean noNames = condition.names == null || condition.names.isEmpty();
 				boolean noIds = condition.ids == null || condition.ids.isEmpty();
 
-				if (needsNames.contains(type) && noNames && noIds)
+				// npcNearby is the exception: a combat-level bracket on its own
+				// is a complete test, and a deliberate one - it matches every
+				// large thing in the game, including the ones added after this
+				// was written, which no list of names can manage.
+				boolean bracketed = "npcnearby".equals(type)
+					&& (condition.minimum != null || condition.maximum != null);
+
+				if (needsNames.contains(type) && noNames && noIds && !bracketed)
 				{
 					dead.add(rule.id + ": " + type + " with neither names nor ids");
 				}

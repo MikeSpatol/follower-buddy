@@ -117,6 +117,8 @@ public final class TriggerContext
 		refreshLoadedRegions();
 		refreshEquipment(local.getPlayerComposition());
 		refreshRepetition(local);
+		ageQuestion();
+		checkWant();
 		driftMood();
 	}
 
@@ -321,7 +323,7 @@ public final class TriggerContext
 	// ---------------------------------------------------------------- tallies
 
 	/**
-	 * How many of each thing has happened this session, keyed by a short label.
+	 * How many of each thing has happened, ever, keyed by a short label.
 	 *
 	 * <p>Nothing signals that someone is paying attention like a tally. The
 	 * follower knowing this is the fiftieth kalphite is a different kind of
@@ -329,8 +331,20 @@ public final class TriggerContext
 	 *
 	 * <p>Keyed by string so a new thing to count needs no new field - the
 	 * caller decides the label, the same way rules decide what moves the mood.
+	 *
+	 * <p>These outlive the session, written back to the config by the plugin.
+	 * A count that resets every login is not a memory, it is a scoreboard for
+	 * the current game: "your fiftieth" means nothing if the fifty were all
+	 * this afternoon, and everything if they were the fifty since you met.
 	 */
 	private final java.util.Map<String, Integer> tallies = new java.util.HashMap<>();
+
+	/**
+	 * The best of each thing seen, keyed the same way. Separate from the
+	 * tallies because the operation is different: one accumulates, the other
+	 * only ever moves up, and a rule wants to know the moment it moved.
+	 */
+	private final java.util.Map<String, Integer> records = new java.util.HashMap<>();
 
 	/** Counts one, and returns the new total. */
 	public int tally(String what)
@@ -341,6 +355,73 @@ public final class TriggerContext
 	public int getTally(String what)
 	{
 		return tallies.getOrDefault(what, 0);
+	}
+
+	/**
+	 * Files a value against a record.
+	 *
+	 * @return whether this BEAT a record that already existed. The first value
+	 * ever seen seeds the record silently and returns false on purpose: the
+	 * first hit of a new install is not a personal best, it is the only
+	 * measurement, and announcing it would make the feature look broken to
+	 * every new user at once.
+	 */
+	public boolean noteRecord(String what, int value)
+	{
+		Integer previous = records.get(what);
+		if (previous == null)
+		{
+			records.put(what, value);
+			return false;
+		}
+		if (value <= previous)
+		{
+			return false;
+		}
+		records.put(what, value);
+		return true;
+	}
+
+	public int getRecord(String what)
+	{
+		return records.getOrDefault(what, 0);
+	}
+
+	/**
+	 * How many times the follower has been started up with this player,
+	 * this one included. Counted at login, so the first session is 1.
+	 */
+	@lombok.Getter
+	@lombok.Setter
+	private int sessionCount;
+
+	/** The live tally map, for the plugin to write out. Not a copy: read-only by convention. */
+	public java.util.Map<String, Integer> getTallies()
+	{
+		return tallies;
+	}
+
+	public java.util.Map<String, Integer> getRecords()
+	{
+		return records;
+	}
+
+	/**
+	 * Puts back what a previous session counted. Merged rather than replaced so
+	 * a restore arriving after something has already been counted - a kill in
+	 * the first ticks after login - does not throw that away.
+	 */
+	public void restoreCounters(java.util.Map<String, Integer> savedTallies,
+		java.util.Map<String, Integer> savedRecords)
+	{
+		if (savedTallies != null)
+		{
+			savedTallies.forEach((key, value) -> tallies.merge(key, value, Integer::sum));
+		}
+		if (savedRecords != null)
+		{
+			savedRecords.forEach((key, value) -> records.merge(key, value, Math::max));
+		}
 	}
 
 	// -------------------------------------------------------------- repeating
@@ -401,6 +482,204 @@ public final class TriggerContext
 	public int getRepeatingTicks()
 	{
 		return repeatingTicks;
+	}
+
+	// -------------------------------------------------------------- attention
+
+	/**
+	 * How many ticks the mouse has been resting on the follower.
+	 *
+	 * <p>Fed by the plugin, which already projects the clickbox every client
+	 * tick to draw the hover hint, so knowing this costs nothing extra.
+	 */
+	@lombok.Getter
+	@lombok.Setter
+	private int hoverTicks;
+
+	// ---------------------------------------------------------------- traits
+
+	/**
+	 * Places this particular follower likes and dislikes, rolled once and then
+	 * kept for good.
+	 *
+	 * <p>Taste is what makes a mood legible. A number that goes up and down for
+	 * reasons the player cannot see is just weather; a follower that is always
+	 * pleased to be back at the same place and always grumbles about the same
+	 * swamp is one you can come to KNOW, and the mood stops being a mechanic
+	 * and starts being a temperament.
+	 *
+	 * <p>Rolled per character rather than shipped as a list, so two people with
+	 * this plugin do not have the same follower.
+	 */
+	private java.util.Set<Integer> likedRegions = java.util.Collections.emptySet();
+	private java.util.Set<Integer> dislikedRegions = java.util.Collections.emptySet();
+
+	public void setTraits(java.util.Set<Integer> liked, java.util.Set<Integer> disliked)
+	{
+		likedRegions = liked == null ? java.util.Collections.emptySet() : liked;
+		dislikedRegions = disliked == null ? java.util.Collections.emptySet() : disliked;
+	}
+
+	public java.util.Set<Integer> getLikedRegions()
+	{
+		return likedRegions;
+	}
+
+	public java.util.Set<Integer> getDislikedRegions()
+	{
+		return dislikedRegions;
+	}
+
+	/** Whether the follower feels the named way about where it is standing. */
+	public boolean feelsAbout(String how)
+	{
+		if ("disliked".equalsIgnoreCase(how))
+		{
+			return dislikedRegions.contains(regionId);
+		}
+		return likedRegions.contains(regionId);
+	}
+
+	// ----------------------------------------------------------------- wants
+
+	/**
+	 * Somewhere the follower has asked to go, and how long it will keep hoping.
+	 *
+	 * <p>This is the only thing in here that the follower WANTS rather than
+	 * notices. Everything else in this class is a reaction: something happened,
+	 * and a rule gets to remark on it. A want runs the other way - the follower
+	 * says what it would like, and then the player either does it or does not,
+	 * which makes the player's next few minutes an answer to something. A thing
+	 * with desires that can be satisfied reads as alive in a way no amount of
+	 * commentary manages.
+	 *
+	 * <p>Deliberately one at a time. Two open wants would make going anywhere
+	 * satisfy something, which is the same as satisfying nothing.
+	 */
+	public enum WantOutcome
+	{
+		FULFILLED,
+		EXPIRED,
+	}
+
+	private boolean wantOpen;
+	private int wantRegion = -1;
+	private String wantLabel = "";
+	private int wantDeadlineTick;
+	private WantOutcome wantOutcome;
+
+	/**
+	 * Asks for somewhere. Ignored while a want is already open, so a rule that
+	 * fires twice extends nothing and a second rule cannot quietly replace the
+	 * first - the follower asked for one thing, and that is the thing.
+	 */
+	public void setWant(int region, String label, int minutes)
+	{
+		if (wantOpen)
+		{
+			return;
+		}
+		// Asking to be taken somewhere you are already standing, and then being
+		// delighted about arriving, is not a companion with a wish - it is a
+		// companion that cannot see out of the window. The check has to be here
+		// rather than in the rule, because a rule has no way to say "anywhere
+		// except where we are".
+		if (region == regionId)
+		{
+			log.debug("Not asking for region {}: we are already in it", region);
+			return;
+		}
+		wantOpen = true;
+		wantRegion = region;
+		wantLabel = label == null ? "" : label;
+		// A hundred ticks to the minute.
+		wantDeadlineTick = client.getTickCount() + Math.max(1, minutes) * 100;
+	}
+
+	public boolean isWanting()
+	{
+		return wantOpen;
+	}
+
+	/** The label of the current want, or of the one that just resolved. */
+	public String getWantLabel()
+	{
+		return wantLabel;
+	}
+
+	/**
+	 * Takes the outcome of a want that has just resolved, if any. Consumed by
+	 * the engine once per tick and turned into an event, so a resolution is
+	 * announced exactly once.
+	 */
+	public WantOutcome pollWant()
+	{
+		WantOutcome outcome = wantOutcome;
+		wantOutcome = null;
+		return outcome;
+	}
+
+	private void checkWant()
+	{
+		if (!wantOpen)
+		{
+			return;
+		}
+		if (regionId == wantRegion)
+		{
+			wantOpen = false;
+			wantOutcome = WantOutcome.FULFILLED;
+			return;
+		}
+		if (client.getTickCount() >= wantDeadlineTick)
+		{
+			wantOpen = false;
+			wantOutcome = WantOutcome.EXPIRED;
+		}
+	}
+
+	// ----------------------------------------------------------- conversation
+
+	/**
+	 * How long the follower waits for an answer after asking something.
+	 *
+	 * <p>Twelve seconds. Long enough to type a short reply, short enough that a
+	 * "yes" arriving out of a conversation two minutes later is not mistaken
+	 * for one - which would be worse than never listening at all, because it
+	 * would look like the follower was answering somebody else.
+	 */
+	private static final int ANSWER_WINDOW_TICKS = 20;
+
+	private int ticksSinceQuestion = Integer.MAX_VALUE;
+
+	/** Called when a rule marked {@code asks} speaks: the follower has the floor. */
+	public void noteQuestion()
+	{
+		ticksSinceQuestion = 0;
+	}
+
+	/**
+	 * Called when the player says anything at all while a question is open.
+	 * Any line closes the window, answer or not: saying something else IS
+	 * declining to answer, and leaving the window open would let the next
+	 * unrelated "yeah" land as agreement.
+	 */
+	public void noteAnswered()
+	{
+		ticksSinceQuestion = Integer.MAX_VALUE;
+	}
+
+	public boolean isAwaitingAnswer()
+	{
+		return ticksSinceQuestion <= ANSWER_WINDOW_TICKS;
+	}
+
+	private void ageQuestion()
+	{
+		if (ticksSinceQuestion < Integer.MAX_VALUE)
+		{
+			ticksSinceQuestion++;
+		}
 	}
 
 	// ------------------------------------------------------------------- mood
@@ -735,6 +1014,96 @@ public final class TriggerContext
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * How many other players are standing within {@code within} tiles.
+	 *
+	 * <p>Memoised per tick against the refresh generation, like the NPC scan:
+	 * a busy bank holds a couple of hundred players and the answer cannot
+	 * change between two conditions evaluated on the same tick.
+	 */
+	public int countPlayersNearby(int within)
+	{
+		if (crowdGeneration == refreshGeneration && crowdWithin == within)
+		{
+			return crowdCached;
+		}
+		crowdGeneration = refreshGeneration;
+		crowdWithin = within;
+
+		int found = 0;
+		Player local = client.getLocalPlayer();
+		if (location != null)
+		{
+			for (Player other : client.getTopLevelWorldView().players())
+			{
+				if (other == null || other == local)
+				{
+					continue;
+				}
+				WorldPoint where = other.getWorldLocation();
+				if (where != null && where.distanceTo(location) <= within)
+				{
+					found++;
+				}
+			}
+		}
+		crowdCached = found;
+		return found;
+	}
+
+	private int crowdGeneration = -1;
+	private int crowdWithin = -1;
+	private int crowdCached;
+
+	/** An inventory holds twenty-eight things and always has. */
+	private static final int INVENTORY_SIZE = 28;
+
+	private int freeSlotsGeneration = -1;
+	private int freeSlots = INVENTORY_SIZE;
+
+	/**
+	 * Empty inventory slots.
+	 *
+	 * <p>Counted by walking the container and counting what is IN it, rather
+	 * than trusting {@code size()} or {@code count()}: one of those is the
+	 * container's capacity and the other the number of items, and which is
+	 * which is not worth betting a wrong warning on. Everything with an id
+	 * above zero occupies a slot under either reading, so counting those and
+	 * subtracting is right whichever way round it is.
+	 *
+	 * <p>Worked out on demand and memoised per tick, so a rule set with no
+	 * inventory rule in it never pays for this at all.
+	 */
+	public int getFreeInventorySlots()
+	{
+		if (freeSlotsGeneration == refreshGeneration)
+		{
+			return freeSlots;
+		}
+		freeSlotsGeneration = refreshGeneration;
+
+		net.runelite.api.ItemContainer inventory =
+			client.getItemContainer(net.runelite.api.gameval.InventoryID.INV);
+		if (inventory == null)
+		{
+			// Not loaded yet. Reporting a full inventory here would have the
+			// follower warning about a bag it has not seen.
+			freeSlots = INVENTORY_SIZE;
+			return freeSlots;
+		}
+
+		int used = 0;
+		for (net.runelite.api.Item item : inventory.getItems())
+		{
+			if (item != null && item.getId() > 0)
+			{
+				used++;
+			}
+		}
+		freeSlots = Math.max(0, INVENTORY_SIZE - used);
+		return freeSlots;
 	}
 
 	public String getPlayerName()

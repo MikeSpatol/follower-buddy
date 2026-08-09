@@ -251,7 +251,7 @@ public class RuleLoaderRobustnessTest
 			h.dispatch(TriggerEvent.simple(type));
 		}
 		h.dispatch(TriggerEvent.npc(TriggerEvent.Type.NPC_SPAWN, 1, null));
-		h.dispatch(TriggerEvent.chat(null, 0));
+		h.dispatch(TriggerEvent.chat(null, 0, ""));
 		h.dispatch(TriggerEvent.levelUp(null, 1));
 		h.dispatch(TriggerEvent.loot(0, null));
 		h.dispatch(TriggerEvent.kill(1, null, 0));

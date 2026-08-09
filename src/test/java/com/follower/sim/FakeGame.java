@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import net.runelite.api.Client;
 import net.runelite.api.IndexedObjectSet;
+import net.runelite.api.Item;
+import net.runelite.api.ItemContainer;
 import net.runelite.api.NPC;
 import net.runelite.api.NPCComposition;
 import net.runelite.api.Player;
@@ -56,6 +58,11 @@ public final class FakeGame
 	private int[] mapRegions = {12850};
 	private int[] equipment = new int[12];
 
+	private final List<Player> others = new ArrayList<>();
+
+	/** Null until a test says otherwise: the container is not always loaded. */
+	private Item[] inventory;
+
 	public final Client client;
 	public final Player player;
 
@@ -86,6 +93,8 @@ public final class FakeGame
 			(Answer) args -> varps.getOrDefault((Integer) args[0], 0));
 		clientAnswers.put("getBoostedSkillLevel", (Answer) args -> levels(args[0])[0]);
 		clientAnswers.put("getRealSkillLevel", (Answer) args -> levels(args[0])[1]);
+		clientAnswers.put("getItemContainer",
+			(Answer) args -> inventory == null ? null : inventoryContainer());
 	}
 
 	private int[] levels(Object skill)
@@ -192,6 +201,51 @@ public final class FakeGame
 		return this;
 	}
 
+	/**
+	 * Puts another player in the scene, at the given offset from the local one.
+	 * Only their position matters to anything that asks about a crowd.
+	 */
+	public Player spawnPlayer(int dx, int dy)
+	{
+		WorldPoint here = (WorldPoint) playerAnswers.get("getWorldLocation");
+		Map<String, Object> answers = new HashMap<>();
+		answers.put("getName", "Bystander" + others.size());
+		answers.put("getWorldLocation",
+			new WorldPoint(here.getX() + dx, here.getY() + dy, here.getPlane()));
+		Player other = proxy(Player.class, answers);
+		others.add(other);
+		return other;
+	}
+
+	public FakeGame clearPlayers()
+	{
+		others.clear();
+		return this;
+	}
+
+	/**
+	 * Fills the inventory with that many occupied slots. What is in them does
+	 * not matter: only how many slots are left.
+	 */
+	public FakeGame inventoryUsing(int slots)
+	{
+		// Item is a final class rather than an interface, so this is the real
+		// thing rather than a proxy - which is better anyway.
+		inventory = new Item[28];
+		for (int i = 0; i < inventory.length; i++)
+		{
+			inventory[i] = i < slots ? new Item(1511, 1) : new Item(-1, 0);
+		}
+		return this;
+	}
+
+	/** No inventory container at all, as in the first ticks after login. */
+	public FakeGame noInventory()
+	{
+		inventory = null;
+		return this;
+	}
+
 	/** A varbit reading, by id. Unset varbits read zero. */
 	public FakeGame varbit(int id, int value)
 	{
@@ -247,21 +301,36 @@ public final class FakeGame
 		Map<String, Object> answers = new HashMap<>();
 		answers.put("getMapRegions", (Answer) args -> mapRegions);
 		answers.put("npcs", (Answer) args -> indexed(npcs));
+		// The local player is in the real list too, so the crowd count has to
+		// exclude it by identity - which is exactly what it does.
+		answers.put("players", (Answer) args ->
+		{
+			List<Player> all = new ArrayList<>(others);
+			all.add(player);
+			return indexed(all);
+		});
 		return proxy(WorldView.class, answers);
 	}
 
-	private static IndexedObjectSet<NPC> indexed(List<NPC> backing)
+	private ItemContainer inventoryContainer()
 	{
-		return new IndexedObjectSet<NPC>()
+		Map<String, Object> answers = new HashMap<>();
+		answers.put("getItems", (Answer) args -> inventory);
+		return proxy(ItemContainer.class, answers);
+	}
+
+	private static <T> IndexedObjectSet<T> indexed(List<T> backing)
+	{
+		return new IndexedObjectSet<T>()
 		{
 			@Override
-			public NPC byIndex(int index)
+			public T byIndex(int index)
 			{
 				return index >= 0 && index < backing.size() ? backing.get(index) : null;
 			}
 
 			@Override
-			public Iterator<NPC> iterator()
+			public Iterator<T> iterator()
 			{
 				return backing.iterator();
 			}

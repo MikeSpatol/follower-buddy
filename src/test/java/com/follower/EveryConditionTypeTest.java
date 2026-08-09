@@ -378,9 +378,9 @@ public class EveryConditionTypeTest
 			TriggerEvent.levelUp("Attack", 70));
 		fires("{\"type\": \"damageTaken\", \"minimum\": 10}", TriggerEvent.damageTaken(30));
 		fires("{\"type\": \"chatMessage\", \"contains\": \"hello\"}",
-			TriggerEvent.chat("well hello there", 0));
+			TriggerEvent.chat("well hello there", 0, ""));
 		fires("{\"type\": \"chatMessage\", \"regex\": \"h.llo\"}",
-			TriggerEvent.chat("hallo", 0));
+			TriggerEvent.chat("hallo", 0, ""));
 		fires("{\"type\": \"animationSelf\", \"ids\": [862]}", TriggerEvent.animation(862));
 		fires("{\"type\": \"varbitChanged\", \"varbit\": 100, \"value\": 2}",
 			TriggerEvent.varbit(100, 2, 1));
@@ -422,7 +422,7 @@ public class EveryConditionTypeTest
 		quiet("{\"type\": \"levelUp\", \"names\": [\"Attack\"]}",
 			TriggerEvent.levelUp("Cooking", 70));
 		quiet("{\"type\": \"chatMessage\", \"contains\": \"hello\"}",
-			TriggerEvent.chat("goodbye", 0));
+			TriggerEvent.chat("goodbye", 0, ""));
 		quiet("{\"type\": \"animationSelf\", \"ids\": [862]}", TriggerEvent.animation(999));
 		quiet("{\"type\": \"varbitChanged\", \"varbit\": 100, \"value\": 2}",
 			TriggerEvent.varbit(100, 5, 1));
@@ -442,7 +442,7 @@ public class EveryConditionTypeTest
 		Harness h = harnessFor("{\"type\": \"playerDeath\"}");
 		h.gameTicks(1);
 		h.dispatch(TriggerEvent.animation(862));
-		h.dispatch(TriggerEvent.chat("hello", 0));
+		h.dispatch(TriggerEvent.chat("hello", 0, ""));
 		h.dispatch(TriggerEvent.loot(9999999, "Twisted bow"));
 		h.gameTicks(5);
 		assertQuiet(h, "playerDeath answering something else");
@@ -538,6 +538,256 @@ public class EveryConditionTypeTest
 	}
 
 	@Test
+	public void tallyAndRecordsAndSessions() throws IOException
+	{
+		note("tally", "personalBest", "sessionCount");
+
+		// A lifetime count. State, so it needs no event of its own - which is
+		// exactly why it has to stay quiet until the count is actually there.
+		Harness counted = harnessFor("{\"type\": \"tally\", \"of\": \"kill:rat\", \"minimum\": 3}");
+		counted.gameTicks(2);
+		assertQuiet(counted, "nothing has been counted yet");
+		counted.engine.getContext().tally("kill:rat");
+		counted.engine.getContext().tally("kill:rat");
+		counted.gameTicks(2);
+		assertQuiet(counted, "two is not three");
+		counted.engine.getContext().tally("kill:rat");
+		counted.gameTicks(2);
+		assertFired(counted, "tally");
+
+		fires("{\"type\": \"personalBest\", \"names\": [\"hit\"]}",
+			TriggerEvent.record("hit", 42, 30));
+		quiet("{\"type\": \"personalBest\", \"names\": [\"session\"]}",
+			TriggerEvent.record("hit", 42, 30));
+
+		Harness sessions = harnessFor("{\"type\": \"sessionCount\", \"every\": 10}");
+		sessions.gameTicks(1);
+		sessions.engine.getContext().setSessionCount(7);
+		sessions.dispatch(TriggerEvent.simple(TriggerEvent.Type.LOGIN));
+		assertQuiet(sessions, "seven is not a round number");
+		sessions.engine.getContext().setSessionCount(10);
+		sessions.dispatch(TriggerEvent.simple(TriggerEvent.Type.LOGIN));
+		assertFired(sessions, "sessionCount");
+	}
+
+	@Test
+	public void tasteIsAboutWhereTheFollowerIsStanding() throws IOException
+	{
+		note("feelsAbout");
+
+		Harness h = harnessFor("{\"type\": \"feelsAbout\", \"is\": \"liked\"}");
+		h.gameTicks(2);
+		assertQuiet(h, "a follower with no taste yet likes nowhere in particular");
+
+		int here = new WorldPoint(3222, 3218, 0).getRegionID();
+		h.engine.getContext().setTraits(
+			new HashSet<>(java.util.Collections.singletonList(here)),
+			new HashSet<>(java.util.Collections.singletonList(here + 1)));
+		h.gameTicks(2);
+		assertFired(h, "feelsAbout");
+
+		// The other half: a place it dislikes is not one it likes.
+		Harness sour = harnessFor("{\"type\": \"feelsAbout\", \"is\": \"disliked\"}");
+		sour.engine.getContext().setTraits(
+			new HashSet<>(java.util.Collections.singletonList(here + 1)),
+			new HashSet<>(java.util.Collections.singletonList(here)));
+		sour.gameTicks(2);
+		assertFired(sour, "feelsAbout disliked");
+	}
+
+	@Test
+	public void wantsAreAskedForFulfilledAndForgotten() throws IOException
+	{
+		note("wanting", "wantFulfilled", "wantExpired");
+
+		// A rule that asks for somewhere, and one that notices the answer.
+		Harness h = new Harness(folder.newFolder().toPath(),
+			"{\"version\": 1, \"rules\": ["
+				+ "{\"id\": \"probe\", \"group\": \"t\", \"cooldownMs\": 0,"
+				+ " \"when\": {\"type\": \"wantFulfilled\"}, \"say\": [\"fired\"]},"
+				+ "{\"id\": \"asker\", \"group\": \"t\", \"cooldownMs\": 0,"
+				+ " \"want\": {\"region\": 10553, \"label\": \"the guild\", \"minutes\": 5},"
+				+ " \"when\": {\"type\": \"login\"}, \"say\": [\"can we go?\"]},"
+				+ "{\"id\": \"gaveup\", \"group\": \"t\", \"cooldownMs\": 0,"
+				+ " \"when\": {\"type\": \"wantExpired\"}, \"say\": [\"never mind\"]}]}");
+
+		h.gameTicks(1);
+		assertTrue("nothing has been asked for yet", !h.engine.getContext().isWanting());
+		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.LOGIN));
+		assertTrue("saying it is what opens the want", h.engine.getContext().isWanting());
+
+		// A second ask must not quietly replace the first.
+		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.LOGIN));
+		assertEquals("the follower asked for one thing", "the guild",
+			h.engine.getContext().getWantLabel());
+
+		h.gameTicks(2);
+		assertQuiet(h, "we have not gone anywhere");
+
+		// A region id is (x >> 6) << 8 | (y >> 6), so this tile IS region 10553.
+		h.game.at(2624, 3648, 0);
+		assertEquals("the test tile has to be in the wanted region",
+			10553, new WorldPoint(2624, 3648, 0).getRegionID());
+		h.gameTicks(2);
+		assertFired(h, "wantFulfilled");
+		assertTrue("a fulfilled want is closed", !h.engine.getContext().isWanting());
+
+		// And the other ending: asked for, never done, quietly given up on.
+		Harness lapsed = new Harness(folder.newFolder().toPath(),
+			"{\"version\": 1, \"rules\": ["
+				+ "{\"id\": \"probe\", \"group\": \"t\", \"cooldownMs\": 0,"
+				+ " \"when\": {\"type\": \"wantExpired\"}, \"say\": [\"fired\"]},"
+				+ "{\"id\": \"asker\", \"group\": \"t\", \"cooldownMs\": 0,"
+				+ " \"want\": {\"region\": 10553, \"label\": \"the guild\", \"minutes\": 1},"
+				+ " \"when\": {\"type\": \"login\"}, \"say\": [\"can we go?\"]}]}");
+		lapsed.gameTicks(1);
+		lapsed.dispatch(TriggerEvent.simple(TriggerEvent.Type.LOGIN));
+		lapsed.gameTicks(50);
+		assertQuiet(lapsed, "a minute has not passed");
+		lapsed.gameTicks(60);
+		assertFired(lapsed, "wantExpired");
+
+		Harness open = harnessFor("{\"type\": \"wanting\"}");
+		open.gameTicks(2);
+		assertQuiet(open, "nothing is wanted");
+		open.engine.getContext().setWant(10553, "the guild", 5);
+		open.gameTicks(1);
+		assertFired(open, "wanting");
+	}
+
+	@Test
+	public void inventoryRoomAndCrowdsAndDangerousNeighbours() throws IOException
+	{
+		note("inventoryFree", "playersNearby");
+
+		// The point of this one is that it fires while there is still room.
+		Harness bag = harnessFor("{\"type\": \"inventoryFree\", \"maximum\": 2}");
+		bag.game.inventoryUsing(20);
+		bag.gameTicks(2);
+		assertQuiet(bag, "eight slots left is not nearly full");
+		bag.game.inventoryUsing(26);
+		bag.gameTicks(2);
+		assertFired(bag, "inventoryFree");
+
+		// No container yet must read as empty, not as full: a follower warning
+		// about a bag it has not seen would fire on every login.
+		Harness unloaded = harnessFor("{\"type\": \"inventoryFree\", \"maximum\": 2}");
+		unloaded.game.noInventory();
+		unloaded.gameTicks(2);
+		assertQuiet(unloaded, "an inventory that has not loaded is not a full one");
+
+		Harness crowd = harnessFor("{\"type\": \"playersNearby\", \"minimum\": 4, \"within\": 5}");
+		crowd.gameTicks(2);
+		assertQuiet(crowd, "nobody about");
+		for (int i = 0; i < 3; i++)
+		{
+			crowd.game.spawnPlayer(1, i);
+		}
+		crowd.gameTicks(2);
+		assertQuiet(crowd, "three is not a crowd");
+		crowd.game.spawnPlayer(2, 2);
+		crowd.gameTicks(2);
+		assertFired(crowd, "playersNearby");
+
+		// Someone standing well out of the way does not make it busy here.
+		Harness distant = harnessFor("{\"type\": \"playersNearby\", \"minimum\": 1, \"within\": 3}");
+		distant.game.spawnPlayer(40, 40);
+		distant.gameTicks(2);
+		assertQuiet(distant, "a player two streets away is not nearby");
+
+		// npcNearby on combat level alone, naming nothing.
+		Harness big = harnessFor("{\"type\": \"npcNearby\", \"minimum\": 200, \"within\": 6}");
+		big.game.spawnNpc(1, "Rat", 1);
+		big.gameTicks(2);
+		assertQuiet(big, "a rat is not a threat");
+		big.game.spawnNpc(2, "Something Enormous", 400);
+		big.gameTicks(2);
+		assertFired(big, "npcNearby by level with no name given");
+	}
+
+	@Test
+	public void chatCanBeNarrowedToWhoSaidItAndHow() throws IOException
+	{
+		int publicChat = net.runelite.api.ChatMessageType.PUBLICCHAT.getType();
+
+		Harness mine = harnessFor("{\"type\": \"chatMessage\", \"from\": \"player\","
+			+ " \"contains\": \"hello\"}");
+		mine.gameTicks(1);
+		mine.someoneSays("Bystander", "hello");
+		assertQuiet(mine, "a follower that answers the whole street is not answering you");
+		mine.playerSays("hello");
+		assertFired(mine, "the player's own line");
+
+		Harness others = harnessFor("{\"type\": \"chatMessage\", \"from\": \"others\","
+			+ " \"contains\": \"hello\"}");
+		others.gameTicks(1);
+		others.playerSays("hello");
+		assertQuiet(others, "the player is not 'others'");
+		others.someoneSays("Bystander", "hello");
+		assertFired(others, "somebody else's line");
+
+		// The chat TYPE, named exactly as ::follower chatwatch prints it.
+		Harness typed = harnessFor("{\"type\": \"chatMessage\", \"is\": \"PUBLICCHAT\","
+			+ " \"contains\": \"burnt\"}");
+		typed.gameTicks(1);
+		typed.dispatch(TriggerEvent.chat("You accidentally burnt the food.",
+			net.runelite.api.ChatMessageType.GAMEMESSAGE.getType(), ""));
+		assertQuiet(typed, "a game message is not somebody talking");
+		typed.dispatch(TriggerEvent.chat("burnt again", publicChat, "Tester"));
+		assertFired(typed, "the right chat type");
+
+		Harness unknownType = harnessFor("{\"type\": \"chatMessage\", \"is\": \"NONSENSE\","
+			+ " \"contains\": \"x\"}");
+		unknownType.gameTicks(1);
+		unknownType.playerSays("x");
+		assertQuiet(unknownType, "a misspelt chat type must match nothing, not everything");
+	}
+
+	@Test
+	public void answeredHovererAndExamined() throws IOException
+	{
+		note("answered", "hovered", "examined");
+
+		Harness yes = harnessFor("{\"type\": \"answered\", \"is\": \"yes\"}");
+		yes.gameTicks(1);
+		yes.playerSays("yes");
+		assertQuiet(yes, "nothing was asked, so nothing can be an answer");
+
+		yes.engine.getContext().noteQuestion();
+		yes.playerSays("broken");
+		assertQuiet(yes, "'ok' inside 'broken' is not agreement");
+
+		yes.engine.getContext().noteQuestion();
+		yes.playerSays("yeah!");
+		assertFired(yes, "answered yes");
+
+		// The window shuts, so a later stray "yes" is not agreement to
+		// something the player has long forgotten being asked.
+		Harness stale = harnessFor("{\"type\": \"answered\", \"is\": \"yes\"}");
+		stale.gameTicks(1);
+		stale.engine.getContext().noteQuestion();
+		stale.gameTicks(30);
+		stale.playerSays("yes");
+		assertQuiet(stale, "an answer twenty seconds late is an answer to nothing");
+
+		Harness no = harnessFor("{\"type\": \"answered\", \"is\": \"no\"}");
+		no.gameTicks(1);
+		no.engine.getContext().noteQuestion();
+		no.playerSays("nah");
+		assertFired(no, "answered no");
+
+		Harness hovered = harnessFor("{\"type\": \"hovered\", \"ticks\": 4}");
+		hovered.gameTicks(3);
+		assertQuiet(hovered, "nobody is looking");
+		hovered.engine.getContext().setHoverTicks(6);
+		hovered.gameTicks(1);
+		assertFired(hovered, "hovered");
+
+		fires("{\"type\": \"examined\"}",
+			TriggerEvent.simple(TriggerEvent.Type.EXAMINED));
+	}
+
+	@Test
 	public void thievingEdges() throws IOException
 	{
 		note("thievingStart", "thievingEnd", "thieving");
@@ -580,6 +830,11 @@ public class EveryConditionTypeTest
 		mood();
 		repeating();
 		awayFor();
+		tallyAndRecordsAndSessions();
+		answeredHovererAndExamined();
+		inventoryRoomAndCrowdsAndDangerousNeighbours();
+		wantsAreAskedForFulfilledAndForgotten();
+		tasteIsAboutWhereTheFollowerIsStanding();
 		thievingEdges();
 
 		List<String> missing = new ArrayList<>(new TreeSet<>(RuleSetIntegrityTest.KNOWN_TYPES));

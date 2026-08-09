@@ -774,6 +774,30 @@ public interface FollowerConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "counters",
+		name = "Counters",
+		description = "What the follower has counted and the records it holds,"
+			+ " so its memory survives a logout; managed by the plugin",
+		hidden = true
+	)
+	default String counters()
+	{
+		return "";
+	}
+
+	@ConfigItem(
+		keyName = "traits",
+		name = "Traits",
+		description = "The places this follower likes and dislikes, rolled once"
+			+ " when it first met you; managed by the plugin",
+		hidden = true
+	)
+	default String traits()
+	{
+		return "";
+	}
+
+	@ConfigItem(
 		keyName = "disabledGroups",
 		name = "Other disabled groups",
 		description = "Comma separated group names or rule ids to silence",
