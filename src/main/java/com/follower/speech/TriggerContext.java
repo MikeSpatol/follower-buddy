@@ -346,9 +346,26 @@ public final class TriggerContext
 	 */
 	private final java.util.Map<String, Integer> records = new java.util.HashMap<>();
 
+	/**
+	 * Whether anything countable has moved since the last save.
+	 *
+	 * <p>The save is nine kilobytes of JSON at the cap and it used to happen
+	 * every minute regardless. Most minutes nothing is counted at all: no kill,
+	 * no level, no death, and the longest-session record only moves on a day
+	 * that beats every previous one.
+	 */
+	@lombok.Getter
+	private boolean countersDirty;
+
+	public void clearCountersDirty()
+	{
+		countersDirty = false;
+	}
+
 	/** Counts one, and returns the new total. */
 	public int tally(String what)
 	{
+		countersDirty = true;
 		return tallies.merge(what, 1, Integer::sum);
 	}
 
@@ -372,13 +389,17 @@ public final class TriggerContext
 		if (previous == null)
 		{
 			records.put(what, value);
+			countersDirty = true;
 			return false;
 		}
 		if (value <= previous)
 		{
+			// The overwhelmingly common case, minute after minute: today is not
+			// the longest day. Nothing changed, so nothing needs writing.
 			return false;
 		}
 		records.put(what, value);
+		countersDirty = true;
 		return true;
 	}
 
@@ -392,8 +413,13 @@ public final class TriggerContext
 	 * this one included. Counted at login, so the first session is 1.
 	 */
 	@lombok.Getter
-	@lombok.Setter
 	private int sessionCount;
+
+	public void setSessionCount(int sessionCount)
+	{
+		this.sessionCount = sessionCount;
+		countersDirty = true;
+	}
 
 	/** The live tally map, for the plugin to write out. Not a copy: read-only by convention. */
 	public java.util.Map<String, Integer> getTallies()
@@ -422,6 +448,9 @@ public final class TriggerContext
 		{
 			savedRecords.forEach((key, value) -> records.merge(key, value, Math::max));
 		}
+		// A restore merges rather than replaces, so what is now in memory is
+		// not what is on disk - the next save has real work to do.
+		countersDirty = true;
 	}
 
 	// -------------------------------------------------------------- repeating

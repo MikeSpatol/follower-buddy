@@ -109,6 +109,20 @@ public class SpeechEngine
 	 * world number changed is how a want quietly disappears on the way
 	 * somewhere.
 	 */
+	/**
+	 * Drops the held floor.
+	 *
+	 * <p>Must happen on a rule reload. The exemption that lets the holder speak
+	 * through its own hush is identity-based, and a reload parses every rule
+	 * afresh - so the holder becomes an object nothing points at any more, and
+	 * the hush it left behind silences the whole file until it times out.
+	 */
+	public void clearFloor()
+	{
+		hushUntilMs = 0L;
+		hushOwner = null;
+	}
+
 	public void resetForNewScene()
 	{
 		lastSpokeMs = 0L;

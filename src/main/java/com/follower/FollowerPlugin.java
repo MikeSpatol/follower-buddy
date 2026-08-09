@@ -597,6 +597,7 @@ public class FollowerPlugin extends Plugin
 		hoveredThisTick = false;
 		hoverTicks = 0;
 		hopped = false;
+		strandedLandingTicks = 0;
 
 		scanTicksLeft = 0;
 		animTraceRemaining = 0;
@@ -1177,6 +1178,23 @@ public class FollowerPlugin extends Plugin
 		}
 	}
 
+	/**
+	 * Saves only if something was actually counted since the last save.
+	 *
+	 * <p>The blob is nine kilobytes of JSON at the cap, and this runs every
+	 * hundred ticks for as long as the client is open. Most of those minutes
+	 * contain no kill, no level and no death, and the longest-session record
+	 * only moves on a day that beats every previous one - so most of those
+	 * writes serialised and stored a value identical to the one already there.
+	 */
+	private void writeCountersIfChanged()
+	{
+		if (speechEngine.getContext().isCountersDirty())
+		{
+			writeCounters();
+		}
+	}
+
 	private void writeCounters()
 	{
 		TriggerContext context = speechEngine.getContext();
@@ -1185,6 +1203,7 @@ public class FollowerPlugin extends Plugin
 		saved.records = trimCounters(context.getRecords());
 		saved.sessions = context.getSessionCount();
 		configManager.setConfiguration(FollowerConfig.GROUP, "counters", gson.toJson(saved));
+		context.clearCountersDirty();
 	}
 
 	/**
@@ -4110,7 +4129,7 @@ public class FollowerPlugin extends Plugin
 			// Ride the same timer: the counters are worth exactly as much as
 			// the last-seen stamp on a crash, and this is already the "write
 			// what would otherwise be lost" tick.
-			writeCounters();
+			writeCountersIfChanged();
 
 			// A hundred ticks is a minute, so the timer that saves is also the
 			// one that measures how long today has run. Stored every minute so
@@ -4206,6 +4225,9 @@ public class FollowerPlugin extends Plugin
 				// rising edges on the next tick. Same cure as login: baseline
 				// first, react to actual changes after.
 				speechEngine.primeEdgesOnNextTick();
+				// The rule holding the floor is one of the objects just thrown
+				// away, and the exemption that lets it speak is by identity.
+				speechEngine.clearFloor();
 				sendStatus("Reloaded " + ruleLoader.getStatus());
 				reportRuleErrors();
 			}
