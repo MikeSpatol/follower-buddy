@@ -448,7 +448,7 @@ public class FollowerPlugin extends Plugin
 		speechEngine.setSink(this::speak);
 		applyConfig();
 		loadExactPalette();
-		hooks.registerRenderableDrawListener(thrallHider);
+		renderCallbacks.register(thrallHider);
 		// Anything the dump files didn't provide is parsed from the client's
 		// own cache; retried from the login states until the indexes exist.
 		clientThread.invokeLater(this::ensureCatalogues);
@@ -483,7 +483,7 @@ public class FollowerPlugin extends Plugin
 	@Override
 	protected void shutDown() throws Exception
 	{
-		hooks.unregisterRenderableDrawListener(thrallHider);
+		renderCallbacks.unregister(thrallHider);
 		resetThrallQuietly();
 		// Before the engine is reset: an orderly shutdown is the one chance to
 		// save what the last few ticks counted.
@@ -2971,18 +2971,28 @@ public class FollowerPlugin extends Plugin
 	}
 
 	@Inject
-	private net.runelite.client.callback.Hooks hooks;
+	private net.runelite.client.callback.RenderCallbackManager renderCallbacks;
 
 	/**
 	 * Hides the REAL thrall while the follower stands in for it. Reference
 	 * comparison, so it costs nothing while no thrall is possessed.
 	 *
-	 * <p>RenderableDrawListener is marked deprecated but has no replacement
-	 * registration path yet, and the client's own Entity Hider plugin uses
-	 * this exact mechanism - revisit when core migrates.
+	 * <p>This used to be a {@code Hooks.RenderableDrawListener}, with a note
+	 * saying there was no replacement registration path yet. There is one now:
+	 * {@link net.runelite.client.callback.RenderCallbackManager} takes a
+	 * {@link net.runelite.client.callback.RenderCallback}, and {@code addEntity}
+	 * is the same question in the same place - return false and the thing is
+	 * not drawn.
 	 */
-	private final net.runelite.client.callback.Hooks.RenderableDrawListener thrallHider =
-		(renderable, drawingUi) -> renderable != thrallNpc;
+	private final net.runelite.client.callback.RenderCallback thrallHider =
+		new net.runelite.client.callback.RenderCallback()
+		{
+			@Override
+			public boolean addEntity(net.runelite.api.Renderable renderable, boolean drawingUi)
+			{
+				return renderable != thrallNpc;
+			}
+		};
 
 	/**
 	 * Thrall NPC ids, matched by ID because the NPCs' cache name is the literal

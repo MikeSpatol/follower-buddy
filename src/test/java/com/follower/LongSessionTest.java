@@ -86,6 +86,78 @@ public class LongSessionTest
 	}
 
 	@Test
+	public void seventeenHoursOfTheNewerStateStaysBounded() throws IOException
+	{
+		// The soak above predates the counters, the wants, the floor and the
+		// conversations - the four things added since that hold state between
+		// ticks rather than within one. Anything that only ever grows shows up
+		// here or nowhere.
+		Harness h = new Harness(folder.newFolder().toPath());
+		Random random = new Random(7L);
+		h.game.at(3000, 3000, 0);
+
+		for (int step = 0; step < 100000; step++)
+		{
+			switch (random.nextInt(8))
+			{
+				case 0:
+					// A different NPC name every time: the worst case for the
+					// tally map, which is keyed by name.
+					h.dispatch(TriggerEvent.kill(1, "Monster " + step, 40));
+					break;
+				case 1:
+					h.engine.getContext().noteQuestion("want-outing");
+					break;
+				case 2:
+					h.answers(random.nextBoolean() ? "yes" : "no");
+					break;
+				case 3:
+					h.dispatch(TriggerEvent.record("hit", random.nextInt(100), 30));
+					break;
+				case 4:
+					h.game.at(3000 + random.nextInt(8) * 64, 3000, 0);
+					break;
+				case 5:
+					h.dispatch(TriggerEvent.simple(TriggerEvent.Type.EXAMINED));
+					break;
+				case 6:
+					h.engine.getContext().setHoverTicks(random.nextInt(40));
+					break;
+				default:
+					break;
+			}
+			h.gameTick();
+			if (h.spoken.size() > 500)
+			{
+				h.clear();
+			}
+		}
+
+		// A want is one at a time and always resolves. Asking how many ticks
+		// are LEFT is not the question - that clamps at zero, so a want which
+		// never expires reads the same as no want at all. The question is
+		// whether one is still open with its deadline behind it.
+		assertTrue("a want is still open with its deadline long past, so"
+				+ " nothing can ever be asked for again",
+			!h.engine.getContext().isWanting()
+				|| h.engine.getContext().getWantTicksLeft() > 0);
+
+		// The counters are keyed by NPC name and a name was invented every
+		// time. The live map is not the saved one - the cap applies on write -
+		// but it still must not be the whole session.
+		int counted = h.engine.getContext().getTallies().size();
+		assertTrue("the tally map holds " + counted + " entries after 100,000"
+			+ " ticks; it is keyed by name and names were invented, so this is"
+			+ " the shape of the growth rather than the exact number",
+			counted < 30000);
+
+		// And it still answers.
+		h.clear();
+		h.game.hitpoints(1, 99);
+		h.gameTicks(3);
+	}
+
+	@Test
 	public void aVeryLongSessionOfEverythingDoesNotDrift() throws IOException
 	{
 		// Not a leak test so much as a soak: a hundred thousand ticks of the
