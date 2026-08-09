@@ -52,8 +52,8 @@ public class FollowerDialog extends Overlay
 		/** Resolved fresh on every ENTRY to the node - a re-rolled joke, say. */
 		private java.util.function.Supplier<String[]> dynamicPages;
 
-		/** Run on every ENTRY to the node, before its pages are shown. */
-		private Runnable onEnter;
+		/** Latched when the node is reached, run when the conversation ENDS. */
+		private Runnable onFinish;
 
 		private Node(boolean playerSpeaking, String[] pages)
 		{
@@ -89,16 +89,22 @@ public class FollowerDialog extends Overlay
 		}
 
 		/**
-		 * Do something on arrival at this node.
+		 * Do something once the conversation is over, if this node was reached.
 		 *
-		 * <p>How a conversation reaches back out: reaching the node under
-		 * "Go on then" is what tells the rules the player said yes. Fired on
-		 * ENTRY rather than on leaving, because the branch the player picked
-		 * is already the answer - whether they read the rest of it is not.
+		 * <p>How a conversation reaches back out: reaching the node under "Go on
+		 * then" is what tells the rules the player said yes.
+		 *
+		 * <p>Latched on arrival but run at the END, which is the whole point.
+		 * The follower's reply to its own question goes overhead, and firing it
+		 * the instant the branch is picked puts it above a dialog box the
+		 * player is still reading - so the one line they were waiting for is
+		 * the one they miss. Latched rather than run at the end unconditionally
+		 * so that closing the box early still counts: the player answered, and
+		 * whether they read the rest of it is their business.
 		 */
-		public Node onEnter(Runnable action)
+		public Node onFinish(Runnable action)
 		{
-			this.onEnter = action;
+			this.onFinish = action;
 			return this;
 		}
 
@@ -167,7 +173,7 @@ public class FollowerDialog extends Overlay
 			if (source.answer != null && onAnswer != null)
 			{
 				String answer = source.answer;
-				node.onEnter(() -> onAnswer.accept(answer));
+				node.onFinish(() -> onAnswer.accept(answer));
 			}
 
 			script.put(source.id, node);
@@ -654,6 +660,40 @@ public class FollowerDialog extends Overlay
 		return open;
 	}
 
+	/**
+	 * Whatever the conversation reached that should happen once it is over.
+	 * Held rather than run on arrival so the follower's spoken reply lands
+	 * after the box is gone rather than over the top of it.
+	 */
+	private Runnable pendingFinish;
+
+	private void latch(Node reached)
+	{
+		if (reached != null && reached.onFinish != null)
+		{
+			pendingFinish = reached.onFinish;
+		}
+	}
+
+	/**
+	 * Test seams. Reaching a node the real way needs a follower to face the
+	 * player and a client to compose a chathead from, neither of which exists
+	 * headlessly - and the behaviour worth pinning down here is only which
+	 * moment the answer is delivered at. These touch the same fields and the
+	 * same {@link #latch} and {@link #close} the real path does.
+	 */
+	void openForTest(Map<String, Node> conversation)
+	{
+		script = conversation;
+		open = true;
+		pendingFinish = null;
+	}
+
+	void reachForTest(String nodeId)
+	{
+		latch(script.get(nodeId));
+	}
+
 	public void close()
 	{
 		open = false;
@@ -667,6 +707,15 @@ public class FollowerDialog extends Overlay
 		pendingAction = null;
 		awaitingContinue = false;
 		pendingOptionIndex = -1;
+
+		// Cleared before it runs: whatever it does, it must not be able to
+		// arrive here a second time.
+		Runnable finish = pendingFinish;
+		pendingFinish = null;
+		if (finish != null)
+		{
+			finish.run();
+		}
 	}
 
 	/** Starts a conversation at {@code startId}. */
@@ -675,6 +724,9 @@ public class FollowerDialog extends Overlay
 		followerName = speakerName;
 		script = conversation;
 		open = true;
+		// A fresh conversation inherits nothing from the last one; a leftover
+		// would fire on the wrong ending entirely.
+		pendingFinish = null;
 		goTo(startId);
 	}
 
@@ -698,10 +750,7 @@ public class FollowerDialog extends Overlay
 			return;
 		}
 
-		if (node.onEnter != null)
-		{
-			node.onEnter.run();
-		}
+		latch(node);
 
 		pages = node.dynamicPages != null ? node.dynamicPages.get() : node.pages;
 		page = 0;

@@ -464,6 +464,13 @@ options can be neither misheard nor guessed at.
 carrying `answer` (`yes` or `no`) is what feeds the reply back to the rules, and
 an `answered` condition picks it up.
 
+The answer is **latched** when the branch is reached and **delivered when the
+box closes**. The follower's reply to its own question goes overhead, and firing
+it the moment the option is clicked puts that line above a dialog box the player
+is still reading — so the one thing they were waiting to hear is the one thing
+they miss. Latched rather than checked at the end, so closing the box early
+still counts: they answered, and whether they read the rest is their business.
+
 A tree is validated as a whole at load and **refused outright** if anything is
 wrong — a branch pointing at a node id that does not exist, a start that is not
 a node, no answer anywhere. A conversation that dead-ends is worse than one that
