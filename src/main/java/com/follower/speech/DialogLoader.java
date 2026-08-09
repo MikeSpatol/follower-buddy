@@ -166,6 +166,9 @@ public class DialogLoader
 			errors = problems;
 			status = valid.size() + " trees"
 				+ (problems.isEmpty() ? "" : ", " + problems.size() + " warning(s)");
+			// At INFO like the rule loader: when a conversation does not open,
+			// the first thing worth knowing is whether it loaded at all.
+			log.info("Loaded dialogs: {}", status);
 		}
 		catch (IOException e)
 		{

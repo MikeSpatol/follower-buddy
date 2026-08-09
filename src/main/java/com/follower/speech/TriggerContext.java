@@ -586,7 +586,7 @@ public final class TriggerContext
 		// except where we are".
 		if (region == regionId)
 		{
-			log.debug("Not asking for region {}: we are already in it", region);
+			log.info("Want refused: asked for region {} but we are standing in it", region);
 			return;
 		}
 		wantOpen = true;
@@ -594,6 +594,14 @@ public final class TriggerContext
 		wantLabel = label == null ? "" : label;
 		// A hundred ticks to the minute.
 		wantDeadlineTick = client.getTickCount() + Math.max(1, minutes) * 100;
+
+		// Logged at INFO rather than debug, and so are both endings. A want
+		// happens at most once every twenty minutes, so this is three lines a
+		// session - and when one does not land the way it should, the log is
+		// the only place that can say whether it opened, what it was watching
+		// for, and where the player actually was.
+		log.info("Want opened: {} (region {}), {} minutes, from region {}",
+			wantLabel, region, minutes, regionId);
 	}
 
 	public boolean isWanting()
@@ -641,12 +649,15 @@ public final class TriggerContext
 		{
 			wantOpen = false;
 			wantOutcome = WantOutcome.FULFILLED;
+			log.info("Want fulfilled: {} (region {})", wantLabel, wantRegion);
 			return;
 		}
 		if (client.getTickCount() >= wantDeadlineTick)
 		{
 			wantOpen = false;
 			wantOutcome = WantOutcome.EXPIRED;
+			log.info("Want expired: {} (region {}), never left region {}",
+				wantLabel, wantRegion, regionId);
 		}
 	}
 

@@ -290,6 +290,15 @@ public class FollowerPlugin extends Plugin
 	 * they jog into a freshly loaded part of the map.
 	 */
 	private boolean freshLogin;
+
+	/**
+	 * Set while a world hop is in flight, so coming back is told apart from
+	 * arriving. A hop needs the edges primed - the gear worn and the place
+	 * stood in are the same as a moment ago, and without priming every one of
+	 * them reads as a fresh rising edge and the follower greets the new world
+	 * with a monologue.
+	 */
+	private boolean hopped;
 	private boolean watchAnimations;
 
 	/** ::follower watch all - also report graphics played by other players. */
@@ -587,6 +596,7 @@ public class FollowerPlugin extends Plugin
 		mirrorGraphicsUntilTick = -1;
 		hoveredThisTick = false;
 		hoverTicks = 0;
+		hopped = false;
 
 		scanTicksLeft = 0;
 		animTraceRemaining = 0;
@@ -1969,9 +1979,18 @@ public class FollowerPlugin extends Plugin
 				ensureCatalogues();
 
 				// Only on a REAL login - LOGGED_IN also follows every chunk reload.
+				if (!freshLogin && hopped)
+				{
+					// Back from a hop. Nothing to greet and nothing to count -
+					// only the baseline to re-take.
+					hopped = false;
+					speechEngine.primeEdgesOnNextTick();
+				}
+
 				if (freshLogin)
 				{
 					freshLogin = false;
+					hopped = false;
 
 					// How long it has been, worked out before the greeting so a
 					// rule can choose a different one for a long absence.
@@ -2036,34 +2055,62 @@ public class FollowerPlugin extends Plugin
 				break;
 
 			case LOGIN_SCREEN:
-			case HOPPING:
 			case CONNECTION_LOST:
 				freshLogin = true;
-				ensureCatalogues();
-				resetThrallQuietly();
-				// Actor references from a scene that is going away.
-				damagedByPlayer.clear();
-				if (errands != null)
-				{
-					errands.reset();
-				}
-				captureFallback.abort();
-				follower.despawn();
-				appearanceService.invalidate();
+				tearDownScene();
+				// A session really ending. What the follower was feeling, what
+				// it was hoping for and the question it was waiting on all
+				// belonged to that session.
 				speechEngine.reset();
-				overlay.clear();
-				// Anything still waiting its turn belongs to the session that
-				// just ended; it must not surface on the next login.
-				speechQueue.clear();
-				speakingUntilMs = 0;
-				knownLevels.clear();
-				lastPlayerTile = null;
-				lastRegionId = -1;
+				break;
+
+			case HOPPING:
+				// A hop is not a new day. Same player, same tile, same
+				// follower, mid-everything - so the mood it is in, the want it
+				// is holding you to and the tallies it is keeping all carry
+				// across. Only the scene goes.
+				//
+				// Sharing the branch above cost a want every time somebody
+				// hopped worlds on the way somewhere, which at the Grand
+				// Exchange is most of the time. It also counted the hop as
+				// another session together, so the hundredth day arrived early
+				// and by accident.
+				hopped = true;
+				tearDownScene();
+				speechEngine.resetForNewScene();
 				break;
 
 			default:
 				break;
 		}
+	}
+
+	/**
+	 * Everything that belongs to the scene being left, whether the player is
+	 * logging out or only changing worlds. Deliberately holds nothing about
+	 * what the follower knows or feels - that is the difference between the two.
+	 */
+	private void tearDownScene()
+	{
+		ensureCatalogues();
+		resetThrallQuietly();
+		// Actor references from a scene that is going away.
+		damagedByPlayer.clear();
+		if (errands != null)
+		{
+			errands.reset();
+		}
+		captureFallback.abort();
+		follower.despawn();
+		appearanceService.invalidate();
+		overlay.clear();
+		// Anything still waiting its turn belongs to the scene that just went;
+		// it must not surface in the next one.
+		speechQueue.clear();
+		speakingUntilMs = 0;
+		knownLevels.clear();
+		lastPlayerTile = null;
+		lastRegionId = -1;
 	}
 
 	@Subscribe
@@ -5443,10 +5490,13 @@ public class FollowerPlugin extends Plugin
 						+ (context.isAwaitingAnswer() ? "OPEN - answer yes or no" : "closed"));
 					break;
 				}
-				sendStatus("Wants " + context.getWantLabel()
-					+ " (region " + context.getWantRegion() + "), "
-					+ context.getWantTicksLeft() + " ticks left."
-					+ " You are in region " + context.getRegionId());
+				int wanted = context.getWantRegion();
+				int here = context.getRegionId();
+				sendStatus("Wants " + context.getWantLabel() + " = region " + wanted
+					+ ". You are in region " + here
+					+ (wanted == here ? " - MATCH, it should fire this tick"
+					: " - no match, keep going")
+					+ ". " + (context.getWantTicksLeft() / 100) + " minutes left.");
 				break;
 			}
 

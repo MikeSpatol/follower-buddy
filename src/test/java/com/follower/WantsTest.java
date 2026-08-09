@@ -323,6 +323,54 @@ public class WantsTest
 	}
 
 	@Test
+	public void aWorldHopDoesNotThrowAwayWhatTheFollowerKnows() throws IOException
+	{
+		// Hopping shared a branch with logging out, so it nulled the whole
+		// state snapshot. That cost a want every time somebody changed worlds
+		// on the way somewhere - which, going to the Grand Exchange, is most
+		// of the time - and counted the hop as another session together.
+		Harness h = new Harness(folder.newFolder().toPath());
+		h.game.at(3000, 3000, 0);
+		h.gameTicks(2);
+
+		h.engine.getContext().setWant(12850, "Lumbridge", 20);
+		h.engine.getContext().adjustMood(30);
+		h.engine.getContext().tally("kill:rat");
+		h.engine.getContext().setSessionCount(7);
+
+		h.engine.resetForNewScene();
+
+		assertTrue("a hop must not lose the want", h.engine.getContext().isWanting());
+		assertEquals("nor where it was for", "Lumbridge",
+			h.engine.getContext().getWantLabel());
+		assertEquals("nor the mood", 80, h.engine.getContext().getMood());
+		assertEquals("nor the tallies", 1, h.engine.getContext().getTally("kill:rat"));
+		assertEquals("nor how many days you have done this",
+			7, h.engine.getContext().getSessionCount());
+
+		// And the want still resolves afterwards, which is the whole point.
+		h.game.at(12850 >> 8 << 6, (12850 & 0xFF) << 6, 0);
+		h.gameTicks(10);
+		assertFalse("the want has to survive intact enough to fulfil",
+			h.firedBy("want-fulfilled-lumbridge").isEmpty());
+	}
+
+	@Test
+	public void loggingOutDoesThrowItAway() throws IOException
+	{
+		// The other half. A follower still holding you to a promise from
+		// yesterday, made in a session it cannot remember, would be strange.
+		Harness h = new Harness(folder.newFolder().toPath());
+		h.game.at(3000, 3000, 0);
+		h.gameTicks(2);
+		h.engine.getContext().setWant(12850, "Lumbridge", 20);
+
+		h.engine.reset();
+		assertFalse("a real session end clears the want",
+			h.engine.getContext().isWanting());
+	}
+
+	@Test
 	public void itDoesNotAskToBeTakenWhereItAlreadyIs() throws IOException
 	{
 		// Being delighted about arriving somewhere you never left is not a wish.

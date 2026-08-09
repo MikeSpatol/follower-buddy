@@ -100,6 +100,27 @@ public class SpeechEngine
 		}
 	}
 
+	/**
+	 * Clears everything mid-flight but KEEPS the state snapshot.
+	 *
+	 * <p>For a world hop, where the scene goes and the player does not. What
+	 * the follower is feeling, hoping for and counting are facts about the
+	 * session rather than about the scene, and throwing them away because the
+	 * world number changed is how a want quietly disappears on the way
+	 * somewhere.
+	 */
+	public void resetForNewScene()
+	{
+		lastSpokeMs = 0L;
+		pending.clear();
+		hushUntilMs = 0L;
+		hushOwner = null;
+		for (SpeechRule rule : loader.getRules())
+		{
+			rule.reset();
+		}
+	}
+
 	public void reset()
 	{
 		context = null;
