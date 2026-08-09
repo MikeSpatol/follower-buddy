@@ -561,6 +561,7 @@ public class FollowerPlugin extends Plugin
 		spectateDisarmed = false;
 		emoteDisarmed = false;
 		emoteHold = false;
+		mirroredPose = 0;
 		resting = false;
 		wandered = false;
 		wanderCountdown = 0;
@@ -1836,8 +1837,62 @@ public class FollowerPlugin extends Plugin
 			}
 		}
 
+		problems += auditMirroredAnimations();
+
 		log.info("cachecheck: {} animations played by rules, {} problems",
 			played.size(), problems);
+		return problems;
+	}
+
+	/**
+	 * Checks the two mimic rules have their animations the right way round.
+	 *
+	 * <p>They divide by whether an animation loops, and the division is what
+	 * makes each one work: a one-shot mirrored as a POSE would freeze on its
+	 * last frame until the player moved, and a loop mirrored as an EMOTE would
+	 * never reach the finish its chain waits for. Neither says anything when it
+	 * goes wrong, so the cache is asked directly.
+	 *
+	 * @return the number of animations on the wrong side
+	 */
+	private int auditMirroredAnimations()
+	{
+		int problems = 0;
+		for (com.follower.speech.SpeechRule rule : ruleLoader.getRules())
+		{
+			if (rule.when == null || rule.when.ids == null)
+			{
+				continue;
+			}
+			boolean wantsLoop = Boolean.TRUE.equals(rule.mirrorPose);
+			boolean wantsOneShot = Boolean.TRUE.equals(rule.mirrorAnimation);
+			if (!wantsLoop && !wantsOneShot)
+			{
+				continue;
+			}
+
+			for (Integer id : rule.when.ids)
+			{
+				net.runelite.api.Animation animation =
+					id == null ? null : client.loadAnimation(id);
+				if (animation == null)
+				{
+					log.warn("cachecheck: {} lists animation {}, which is not in the cache",
+						rule.id, id);
+					problems++;
+					continue;
+				}
+				boolean loops = animation.getFrameStep() >= 0;
+				if (loops != wantsLoop)
+				{
+					log.warn("cachecheck: {} lists animation {} which {}, but the rule"
+							+ " mirrors it as a {}",
+						rule.id, id, loops ? "LOOPS" : "is a one-shot",
+						wantsLoop ? "held pose" : "one-shot emote");
+					problems++;
+				}
+			}
+		}
 		return problems;
 	}
 
@@ -2200,6 +2255,33 @@ public class FollowerPlugin extends Plugin
 	 */
 	private boolean emoteHold;
 
+	/**
+	 * The looping animation currently being held to match the player's, or 0.
+	 *
+	 * <p>Held emotes cannot go through the one-shot path: their animation never
+	 * finishes, so the chain would wait forever. A pose override loops on its
+	 * own and is released when the player's animation changes.
+	 */
+	private int mirroredPose;
+
+	private void startPoseMirror(int animationId)
+	{
+		mirroredPose = animationId;
+		clientThread.invoke(() -> follower.setPoseOverride(animationId));
+		refreshEmoteDisarm(follower.isEmotePlaying());
+	}
+
+	private void stopPoseMirror()
+	{
+		if (mirroredPose == 0)
+		{
+			return;
+		}
+		mirroredPose = 0;
+		clientThread.invoke(() -> follower.setPoseOverride(0));
+		refreshEmoteDisarm(follower.isEmotePlaying());
+	}
+
 	private void updateEmoteDisarm(boolean emoting)
 	{
 		if (!emoting && emoteHold)
@@ -2207,8 +2289,17 @@ public class FollowerPlugin extends Plugin
 			emoteHold = false;
 			follower.resumeFollowing();
 		}
+		refreshEmoteDisarm(emoting);
+	}
 
-		boolean wanted = emoting && thrallNpc == null;
+	/**
+	 * Empties the follower's hands while it is emoting AT ALL - a one-shot copy
+	 * or a held pose. Both are emotes as far as a player is concerned, so both
+	 * put the weapon away.
+	 */
+	private void refreshEmoteDisarm(boolean emoting)
+	{
+		boolean wanted = (emoting || mirroredPose != 0) && thrallNpc == null;
 		if (wanted == emoteDisarmed)
 		{
 			return;
@@ -3642,6 +3733,13 @@ public class FollowerPlugin extends Plugin
 			}
 		}
 
+		// A held emote ends the moment the player's animation becomes anything
+		// else, which is the only signal there is that they have stopped.
+		if (mirroredPose != 0 && animationId != mirroredPose)
+		{
+			stopPoseMirror();
+		}
+
 		// ::follower watch - report ids as they play, so an animation can be
 		// identified by performing it rather than guessing from community id lists.
 		if (watchAnimations && animationId != -1)
@@ -4801,6 +4899,15 @@ public class FollowerPlugin extends Plugin
 			// - exactly as a real player's overhead words mirror into chat.
 			clientThread.invoke(() -> client.addChatMessage(
 				ChatMessageType.PUBLICCHAT, config.followerName(), text, null));
+		}
+
+		// A held emote takes the pose path instead of playing anything: the
+		// follower matches the loop for as long as the player keeps it up.
+		if (rule != null && Boolean.TRUE.equals(rule.mirrorPose)
+			&& utterance.animationId > 0)
+		{
+			startPoseMirror(utterance.animationId);
+			return;
 		}
 
 		// Plant it first, so the animation starts against a follower that is

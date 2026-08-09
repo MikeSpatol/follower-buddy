@@ -1504,7 +1504,17 @@ public class FollowerEntity
 
 		StanceLibrary.Stance stance = stance();
 		int pose;
-		if (poseOverride > 0)
+
+		// A forced pose only holds while STANDING. Movement wins over it for the
+		// same reason it wins over an emote: a follower running back to you
+		// still kneeling in prayer looks broken, and that is exactly what a
+		// spectated fight ending used to produce.
+		//
+		// The override is kept rather than cleared, so a momentary shuffle does
+		// not end a spell that is still being held. Whoever set it decides when
+		// it is over - the spectate controller does that on its own count of
+		// unsettled ticks.
+		if (poseOverride > 0 && !moving)
 		{
 			pose = poseOverride;
 		}

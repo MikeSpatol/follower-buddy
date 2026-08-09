@@ -63,6 +63,20 @@ public class SpeechRule
 	public Boolean mirrorAnimation;
 
 	/**
+	 * Mirror the player's animation as a held POSE rather than a one-shot, for
+	 * the emotes you can keep doing until you stop.
+	 *
+	 * <p>The game splits those in two: clicking Dance plays an entry clip and
+	 * then loops a second animation for as long as you hold it. The entry is a
+	 * one-shot and {@link #mirrorAnimation} handles it; the loop never ends, so
+	 * playing it as an emote would wait forever for a finish that never comes
+	 * and leave the follower stuck. A pose override loops by nature and is
+	 * released when the player's animation changes, which is what "until I am
+	 * done" actually means.
+	 */
+	public Boolean mirrorPose;
+
+	/**
 	 * A CHAIN of animation ids played back to back - for sequences authored as
 	 * separate clips, like the home teleport's five stages. Takes precedence
 	 * over {@link #animation} and {@link #mirrorAnimation}.
@@ -152,6 +166,7 @@ public class SpeechRule
 	{
 		return animation != null
 			|| Boolean.TRUE.equals(mirrorAnimation)
+			|| Boolean.TRUE.equals(mirrorPose)
 			|| hasAnimationChain();
 	}
 
@@ -167,7 +182,7 @@ public class SpeechRule
 	 */
 	public Integer resolveAnimation(TriggerEvent event)
 	{
-		if (Boolean.TRUE.equals(mirrorAnimation)
+		if ((Boolean.TRUE.equals(mirrorAnimation) || Boolean.TRUE.equals(mirrorPose))
 			&& event != null
 			&& event.getType() == TriggerEvent.Type.ANIMATION
 			&& event.getId() != -1)

@@ -348,6 +348,55 @@ public class RuleSetIntegrityTest
 	}
 
 	@Test
+	public void aRuleThatMirrorsAPoseAlsoTriggersOnAnAnimation() throws IOException
+	{
+		Harness h = new Harness(folder.newFolder().toPath());
+		List<String> problems = new ArrayList<>();
+		for (SpeechRule rule : h.loader.getRules())
+		{
+			if (Boolean.TRUE.equals(rule.mirrorPose)
+				&& (rule.when == null || !rule.when.usesType("animationSelf")))
+			{
+				problems.add(rule.id);
+			}
+		}
+		assertTrue("mirrorPose takes the id from the animation that triggered it,"
+			+ " so it needs an animation trigger: " + problems, problems.isEmpty());
+	}
+
+	@Test
+	public void theTwoMimicRulesNeverClaimTheSameAnimation() throws IOException
+	{
+		// One plays a one-shot and the other holds a pose. An id in both would
+		// have them fighting over the same animation.
+		Harness h = new Harness(folder.newFolder().toPath());
+		Set<Integer> oneShots = new HashSet<>(h.rule("mimic-emotes").when.ids);
+		Set<Integer> loops = new HashSet<>(h.rule("mimic-emote-loops").when.ids);
+
+		Set<Integer> both = new HashSet<>(oneShots);
+		both.retainAll(loops);
+
+		assertTrue("animations claimed by both mimic rules: " + both, both.isEmpty());
+		assertTrue("the one-shot list looks too short to be the whole set",
+			oneShots.size() > 50);
+		assertTrue("the loop list looks too short to be the whole set",
+			loops.size() > 20);
+	}
+
+	@Test
+	public void theCrabDanceIsMirroredBothWays() throws IOException
+	{
+		// It was missing entirely: HUMAN_EMOTE_CRABDANCE does not start with
+		// EMOTE_, so the prefix match that built the first list never saw it.
+		Harness h = new Harness(folder.newFolder().toPath());
+
+		assertTrue("the crab dance entry clip is not mirrored",
+			h.rule("mimic-emotes").when.ids.contains(10051));
+		assertTrue("and its loop is not held",
+			h.rule("mimic-emote-loops").when.ids.contains(10052));
+	}
+
+	@Test
 	public void noRuleAsksToHoldStillWithoutAnimatingAnything() throws IOException
 	{
 		Harness h = new Harness(folder.newFolder().toPath());
