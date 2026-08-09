@@ -6432,7 +6432,7 @@
     },
     {
       "id": "fail-burnt-food",
-      "note": "Cooking gone wrong. Confirm the wording with ::follower chatwatch.",
+      "note": "Cooking gone wrong. The fragment 'accidentally burn' is confirmed against the live game - it fires. Leave it a fragment rather than the whole sentence: the food's name sits in the middle of it.",
       "group": "reactions",
       "priority": 52,
       "cooldownMs": 60000,
