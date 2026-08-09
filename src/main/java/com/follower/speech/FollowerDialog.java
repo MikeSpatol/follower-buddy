@@ -134,6 +134,30 @@ public class FollowerDialog extends Overlay
 			return optionText.length > 0;
 		}
 
+		/** The choice labels, in the order they are offered. */
+		public java.util.List<String> getOptionLabels()
+		{
+			return java.util.Arrays.asList(optionText);
+		}
+
+		/** Where each choice leads, parallel to {@link #getOptionLabels()}. */
+		public java.util.List<String> getOptionTargets()
+		{
+			return java.util.Arrays.asList(optionNext);
+		}
+
+		/** The pages only, without the choice labels. */
+		public java.util.List<String> getPages()
+		{
+			return java.util.Arrays.asList(pages);
+		}
+
+		/** Whether the PLAYER speaks this node, with their own head and name. */
+		public boolean isPlayerSpeaking()
+		{
+			return playerSpeaking;
+		}
+
 		/** Offer choices once the pages are done; pairs of label and target id. */
 		public Node choices(String... labelThenTarget)
 		{

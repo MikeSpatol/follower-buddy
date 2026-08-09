@@ -3435,16 +3435,24 @@ public class FollowerPlugin extends Plugin
 	 * up to. The trees in dialogs.json are the ones the follower OPENS, which
 	 * is a different job.
 	 *
-	 * <p>Two rules hold this together. Nothing here is a feature list: what the
-	 * follower can do comes out as habits and grievances, the way a person
-	 * describes their job, because a companion reciting its own capabilities is
-	 * a manual with a face. And a branch never replays a line the player has
-	 * already read - hence the {@code -menu} nodes, which re-offer the
-	 * follow-ups without the preamble.
+	 * <p>Three rules hold this together.
 	 *
-	 * <p>Package-private so the test can check every line renders in the game's
-	 * fonts. It is the only speech in the plugin that does not live in
-	 * phrases.json, and it was the only speech nothing checked.
+	 * <p>Every choice leads to a node where the PLAYER says that exact line.
+	 * The game works that way and players read it that way: the option is the
+	 * sentence you are about to speak, not a summary of it. Jumping straight
+	 * to a menu instead reads as the click having gone astray, and an option
+	 * whose node says something slightly different reads as a bug, because it
+	 * is one. A test enforces the match.
+	 *
+	 * <p>Nothing here is a feature list: what the follower can do comes out as
+	 * habits and grievances, the way a person describes their job, because a
+	 * companion reciting its own capabilities is a manual with a face.
+	 *
+	 * <p>And a branch never replays a line already read - hence the
+	 * {@code -menu} nodes, which re-offer the follow-ups without the preamble.
+	 *
+	 * <p>Package-private so the test can reach it. It is the only speech in the
+	 * plugin outside phrases.json, and so the only speech nothing checked.
 	 */
 	static java.util.Map<String, com.follower.speech.FollowerDialog.Node> talkScript()
 	{
@@ -3466,7 +3474,13 @@ public class FollowerPlugin extends Plugin
 				"What is it you actually do?", "do-q",
 				"How have you been?", "how-q",
 				"Let's just talk.", "chat-q",
-				"That's all for now.", "bye-q"));
+				"That's all for now.", "done-q"));
+
+		// Shared closings. Both are spoken, like every other option.
+		script.put("bye-q", you("Never mind.").then("bye"));
+		script.put("done-q", you("That's all for now.").then("bye"));
+		script.put("back-q", you("Back to business.").then("menu"));
+		script.put("bye", says("Right you are. One step behind."));
 
 		// ------------------------------------------------ who are you
 		script.put("who-q", you("Who are you, exactly?").then("who-a"));
@@ -3480,14 +3494,14 @@ public class FollowerPlugin extends Plugin
 				"So you're... me?", "who-me-q",
 				"Do you have a name?", "who-name-q",
 				"Don't you get tired of following me?", "who-tired-q",
-				"Fair enough. Back to business.", "menu"));
+				"Back to business.", "back-q"));
 
 		script.put("who-menu", says()
 			.choices(
 				"So you're... me?", "who-me-q",
 				"Do you have a name?", "who-name-q",
 				"Don't you get tired of following me?", "who-tired-q",
-				"Fair enough. Back to business.", "menu"));
+				"Back to business.", "back-q"));
 
 		script.put("who-me-q", you("So you're... me?").then("who-me-a"));
 		script.put("who-me-a", says(
@@ -3517,7 +3531,8 @@ public class FollowerPlugin extends Plugin
 				"What do you do when I'm fighting?", "do-fight-q",
 				"And when I'm working?", "do-work-q",
 				"Can you dance?", "do-emote-q",
-				"That's all I needed.", "menu"));
+				"That's all I needed.", "do-done-q"));
+		script.put("do-done-q", you("That's all I needed.").then("menu"));
 
 		script.put("do-follow-q", you("Tell me about the walking.").then("do-follow-a"));
 		script.put("do-follow-a", says(
@@ -3536,6 +3551,27 @@ public class FollowerPlugin extends Plugin
 			.then("do-fight-b"));
 		script.put("do-fight-b", says(
 			"And when it goes down I make a fuss. You've usually earned it by then.")
+			.choices(
+				"What about my thralls?", "do-thrall-q",
+				"Good to know.", "do-fight-done-q"));
+		script.put("do-fight-done-q", you("Good to know.").then("do-menu"));
+
+		// The thrall styles are measured, not guessed: zombie ids are melee,
+		// skeleton ranged, ghost magic, and each has its own outfit profile in
+		// the settings. Worth saying out loud - the follower turning up to a
+		// mage fight in melee gear is the one thing about this that looks
+		// broken rather than deliberate.
+		script.put("do-thrall-q", you("What about my thralls?").then("do-thrall-a"));
+		script.put("do-thrall-a", says(
+			"Raise one of those Arceuus things and I'll take its place.",
+			"Same walking, same swinging, considerably better dressed.")
+			.then("do-thrall-b"));
+		script.put("do-thrall-b", says(
+			"Three sorts, mind. Zombie, skeleton, ghost - melee, ranged and magic.")
+			.then("do-thrall-c"));
+		script.put("do-thrall-c", says(
+			"Set me an outfit for each in the settings.",
+			"Otherwise I turn up to a mage fight holding a greataxe and we both look foolish.")
 			.then("do-menu"));
 
 		script.put("do-work-q", you("And when I'm working?").then("do-work-a"));
@@ -3564,7 +3600,7 @@ public class FollowerPlugin extends Plugin
 				"You keep track of things?", "how-count-q",
 				"You have moods?", "how-mood-q",
 				"Anywhere you'd rather be?", "how-place-q",
-				"Back to business.", "menu"));
+				"Back to business.", "back-q"));
 
 		script.put("how-count-q", you("You keep track of things?").then("how-count-a"));
 		script.put("how-count-a", says(
@@ -3603,7 +3639,7 @@ public class FollowerPlugin extends Plugin
 				"What do you think of my outfit?", "chat-outfit-q",
 				"Any advice?", "advice-q",
 				"Tell me a joke.", "chat-joke-q",
-				"Back to business.", "menu"));
+				"Back to business.", "back-q"));
 
 		script.put("chat-seen-q", you("Seen anything interesting?").then("chat-seen-a"));
 		script.put("chat-seen-a", says(
@@ -3618,7 +3654,8 @@ public class FollowerPlugin extends Plugin
 			.then("chat-menu"));
 
 		// Every visit re-rolls from the pool (never the same joke twice in a
-		// row), and the loop lets you keep asking for more.
+		// row), and the loop lets you keep asking. Both loop options get their
+		// own spoken node so the label and the line stay identical.
 		script.put("chat-joke-q", you("Tell me a joke.").then("chat-joke-a"));
 		script.put("chat-joke-a", com.follower.speech.FollowerDialog.Node
 			.saysDynamic(FollowerPlugin::nextJoke)
@@ -3630,8 +3667,10 @@ public class FollowerPlugin extends Plugin
 		script.put("chat-joke2-a", com.follower.speech.FollowerDialog.Node
 			.saysDynamic(FollowerPlugin::nextJoke)
 			.choices(
-				"Another!", "chat-joke2-q",
+				"Another!", "chat-joke3-q",
 				"That's terrible.", "chat-groan-q"));
+
+		script.put("chat-joke3-q", you("Another!").then("chat-joke2-a"));
 
 		script.put("chat-groan-q", you("That's terrible.").then("chat-groan-a"));
 		script.put("chat-groan-a", says(
@@ -3653,11 +3692,6 @@ public class FollowerPlugin extends Plugin
 		script.put("advice-d", says(
 			"That's the lot. The rest I've learned to keep to myself.")
 			.then("chat-menu"));
-
-		// ------------------------------------------------ farewells
-		script.put("bye-q", you("Never mind.").then("bye"));
-		script.put("bye", says(
-			"Right you are. One step behind."));
 
 		return script;
 	}

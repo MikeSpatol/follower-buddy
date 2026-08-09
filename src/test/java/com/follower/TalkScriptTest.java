@@ -47,6 +47,66 @@ public class TalkScriptTest
 	}
 
 	@Test
+	public void pickingAnOptionSaysExactlyThatOption()
+	{
+		// The option IS the sentence you are about to speak, not a summary of
+		// it - that is how the game works and how players read it. An option
+		// whose node says something slightly different reads as a bug, because
+		// it is one; and one that jumps straight to a menu without saying
+		// anything reads as the click having gone astray.
+		Map<String, FollowerDialog.Node> script = script();
+		List<String> problems = new ArrayList<>();
+
+		for (Map.Entry<String, FollowerDialog.Node> entry : script.entrySet())
+		{
+			FollowerDialog.Node node = entry.getValue();
+			List<String> labels = node.getOptionLabels();
+			List<String> targets = node.getOptionTargets();
+
+			for (int i = 0; i < labels.size(); i++)
+			{
+				String label = labels.get(i);
+				FollowerDialog.Node landed = script.get(targets.get(i));
+				if (landed == null)
+				{
+					continue;
+				}
+				if (!landed.isPlayerSpeaking() || landed.getPages().isEmpty())
+				{
+					problems.add(entry.getKey() + ": \"" + label
+						+ "\" is picked but never said");
+					continue;
+				}
+				String spoken = landed.getPages().get(0);
+				if (!label.equals(spoken))
+				{
+					problems.add(entry.getKey() + ": picked \"" + label
+						+ "\" but said \"" + spoken + "\"");
+				}
+			}
+		}
+		assertTrue("options that do not match what the player says:\n  "
+			+ String.join("\n  ", problems), problems.isEmpty());
+	}
+
+	@Test
+	public void theCombatBranchExplainsTheThrallOutfits()
+	{
+		// Thrall mode is the one feature where getting it wrong looks broken
+		// rather than deliberate: an unset outfit puts the follower in a mage
+		// fight holding a greataxe. The dialogue is the only place a player is
+		// told that the three styles want three outfits.
+		String text = allText();
+		assertTrue("nothing about standing in for a thrall", text.contains("thrall"));
+		for (String style : new String[]{"zombie", "skeleton", "ghost",
+			"melee", "ranged", "magic"})
+		{
+			assertTrue("the thrall talk never mentions " + style, text.contains(style));
+		}
+		assertTrue("never says to set an outfit for each", text.contains("outfit for each"));
+	}
+
+	@Test
 	public void everyBranchLeadsToANodeThatExists()
 	{
 		Map<String, FollowerDialog.Node> script = script();
@@ -180,15 +240,7 @@ public class TalkScriptTest
 		// described a follower that only walked, stayed and danced, long after
 		// it had a memory, a mood, tastes and things it wanted. Nothing catches
 		// that automatically - this at least catches it going backwards.
-		StringBuilder all = new StringBuilder();
-		for (FollowerDialog.Node node : script().values())
-		{
-			for (String line : node.getLines())
-			{
-				all.append(line).append(' ');
-			}
-		}
-		String text = all.toString().toLowerCase(java.util.Locale.ROOT);
+		String text = allText();
 
 		assertTrue("nothing about counting or remembering", text.contains("count"));
 		assertTrue("nothing about having moods", text.contains("mood"));
@@ -202,6 +254,20 @@ public class TalkScriptTest
 	}
 
 	// ------------------------------------------------------------- plumbing
+
+	/** Every line the script can put on screen, lowercased. */
+	private static String allText()
+	{
+		StringBuilder all = new StringBuilder();
+		for (FollowerDialog.Node node : script().values())
+		{
+			for (String line : node.getLines())
+			{
+				all.append(line).append(' ');
+			}
+		}
+		return all.toString().toLowerCase(java.util.Locale.ROOT);
+	}
 
 	private static JsonObject bundled(String resource) throws IOException
 	{
