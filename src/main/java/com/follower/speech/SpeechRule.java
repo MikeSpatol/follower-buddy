@@ -118,6 +118,21 @@ public class SpeechRule
 	 */
 	public Boolean holdStill;
 
+	/**
+	 * How much this firing moves the follower's mood, positive or negative.
+	 *
+	 * <p>This is the whole mechanism by which anything affects mood: there is
+	 * no list of significant events in the code. A rule that already knows how
+	 * to notice a boss dying or a death or a good drop is exactly the thing
+	 * that should say how much it mattered, and a new influence is a line in
+	 * this file rather than a change to the engine.
+	 *
+	 * <p>Applied when the rule actually fires, so a rule suppressed by its
+	 * cooldown or a disabled group does not move the mood either - the
+	 * follower's state and what it says stay the same story.
+	 */
+	public Integer mood;
+
 	public Condition when;
 
 	/**

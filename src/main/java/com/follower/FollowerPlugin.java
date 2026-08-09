@@ -3975,7 +3975,7 @@ public class FollowerPlugin extends Plugin
 		"wraplerp", "wrapauto", "wrapearly", "pose",
 		"animinfo", "animtrace", "errandscan", "cachecheck", "stanceaudit",
 		"watch", "stance", "gfx", "spectate", "shield", "centre", "center", "loot",
-		"scan", "heights"));
+		"scan", "heights", "mood"));
 
 	@Subscribe
 	public void onCommandExecuted(CommandExecuted event)
@@ -4751,6 +4751,28 @@ public class FollowerPlugin extends Plugin
 					joined.append(args[i]);
 				}
 				loadOutfitProfile(joined.toString());
+				break;
+			}
+
+			// Mood is felt through what the follower says rather than shown, so
+			// this is the only way to see the number behind it.
+			case "mood":
+			{
+				com.follower.speech.TriggerContext context = speechEngine.getContext();
+				if (args.length > 1)
+				{
+					try
+					{
+						int to = Integer.parseInt(args[1]);
+						context.adjustMood(to - context.getMood());
+					}
+					catch (NumberFormatException e)
+					{
+						sendStatus("::follower mood [0-100]");
+						break;
+					}
+				}
+				sendStatus("Mood " + context.getMood() + " (" + context.getMoodBand() + ")");
 				break;
 			}
 

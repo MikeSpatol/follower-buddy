@@ -265,6 +265,16 @@ public class SpeechEngine
 		}
 
 		rule.markFired(now);
+
+		// Mood moves with what the follower ACTUALLY did. Applying it here
+		// rather than at the win means a rule held back by a cooldown, a
+		// disabled group or the mute does not quietly move the mood while
+		// saying nothing - the state and the words stay one story.
+		if (rule.mood != null && rule.mood != 0)
+		{
+			getContext().adjustMood(rule.mood);
+		}
+
 		if (!text.isEmpty())
 		{
 			// Only actual speech resets the global window; an animation-only

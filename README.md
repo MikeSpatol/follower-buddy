@@ -339,6 +339,7 @@ wins.
 | `bossFight` | `minimum` — target's combat level, default 100 |
 | `combatStart` / `combatEnd` | `names`, `{npc}` placeholder |
 | `npcKill` | `minimum` / `maximum` combat level, `names`, `ids`; `{npc}` and `{level}` placeholders |
+| `mood` | `is` — a band (`low`, `down`, `even`, `good`, `high`) — or `minimum`/`maximum` over 0–100 |
 | `login`, `always` | — |
 | `chance` | `percent`, rolled each evaluation |
 
@@ -404,6 +405,8 @@ total, written the way a player says it — `1.2M`, `214K`).
   ticks so the follower joins in a beat behind you rather than moving in
   lockstep. Leave it off where the timing is the point: `mirror-teleport`
   vanishes with your cast and must not lag it.
+- `mood` — how much this firing moves the follower's mood, positive or negative.
+  See below.
 - `note` — free text, ignored by the plugin.
 
 `say` is optional when the rule plays an animation: an animation-only rule is
@@ -413,6 +416,44 @@ chatter, and a mirrored teleport is not chatter. It does still respect its own
 
 A JSON syntax error keeps the previously loaded rules rather than leaving you silent;
 the problem is reported in the chatbox and the log.
+
+### Mood
+
+The follower carries one number, 0 to 100, starting at 50. It is not shown
+anywhere — you read it off what it chooses to say.
+
+**Nothing in the code decides what moves it.** A rule carries `"mood": 18` or
+`"mood": -25`, and the engine applies that when the rule *fires*. So every
+trigger the rule format already understands can affect the mood, and adding a
+new influence is a line in `phrases.json` rather than a change to the plugin.
+The nudge lands on firing rather than on winning, so a rule held back by its
+cooldown, a disabled group or the mute does not quietly move the mood while
+saying nothing — the follower's state and its words stay one story.
+
+Rules read it back with the `mood` condition, normally by band:
+
+```json
+{"type": "mood", "is": "low"}
+```
+
+| Band | Range |
+|---|---|
+| `low` | 0–20 |
+| `down` | 21–40 |
+| `even` | 41–59 |
+| `good` | 60–79 |
+| `high` | 80–100 |
+
+It drifts a point back toward 50 about every 30 seconds, so nothing that
+happens is permanent and a bad run is recovered from by carrying on. It is
+session-scoped: a follower that remembered last night's bad luck would be
+strange, and a fresh start is the honest default for something that cannot see
+what you did while it was gone.
+
+The shipped nudges are deliberately asymmetric — a death costs more than a kill
+earns — and `mood-low-idle` / `mood-high-idle` are the two rule sets that only
+exist at the extremes. `::follower mood` reads the number, and
+`::follower mood 90` sets it, both behind developer mode.
 
 ---
 

@@ -74,6 +74,9 @@ public class Condition
 	public String contains;
 	public String regex;
 
+	/** A named band, for conditions that read better as a word than a number. */
+	public String is;
+
 	public Boolean requirePrayerActive;
 	public Boolean anyLoadedRegion;
 
@@ -337,6 +340,20 @@ public class Condition
 			// Something the player killed. "minimum"/"maximum" bracket the
 			// victim's COMBAT LEVEL, which is how one rule celebrates a boss
 			// and another shrugs at a chicken; "names"/"ids" narrow it further.
+			// How the follower is feeling. "is" names a band (low, down, even,
+			// good, high); minimum and maximum bracket the raw 0..100 for
+			// anything that wants a finer edge than the bands give.
+			case "mood":
+			{
+				if (is != null)
+				{
+					return is.equalsIgnoreCase(ctx.getMoodBand());
+				}
+				int value = ctx.getMood();
+				return value >= orDefault(minimum, 0)
+					&& value <= orDefault(maximum, 100);
+			}
+
 			case "npckill":
 				return event.getType() == TriggerEvent.Type.NPC_KILL
 					&& event.getValue() >= orDefault(minimum, 0)

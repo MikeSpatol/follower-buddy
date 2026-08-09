@@ -480,6 +480,30 @@ public class EveryConditionTypeTest
 		assertFired(spot, "nearDeathSpot");
 	}
 
+	@Test
+	public void mood() throws IOException
+	{
+		note("mood");
+
+		Harness even = harnessFor("{\"type\": \"mood\", \"is\": \"even\"}");
+		even.gameTicks(2);
+		assertFired(even, "a session starts even");
+
+		Harness low = harnessFor("{\"type\": \"mood\", \"is\": \"low\"}");
+		low.gameTicks(2);
+		assertQuiet(low, "even is not low");
+		low.engine.getContext().adjustMood(-40);
+		low.gameTicks(2);
+		assertFired(low, "mood band");
+
+		Harness range = harnessFor("{\"type\": \"mood\", \"minimum\": 60}");
+		range.gameTicks(2);
+		assertQuiet(range, "fifty is below sixty");
+		range.engine.getContext().adjustMood(20);
+		range.gameTicks(2);
+		assertFired(range, "mood range");
+	}
+
 	// ------------------------------------------------------------- coverage
 
 	@Test
@@ -498,6 +522,7 @@ public class EveryConditionTypeTest
 		npcSpawnDespawnAndNearby();
 		oneShotEventConditions();
 		combatAndBossFightAndDeathSpot();
+		mood();
 
 		List<String> missing = new ArrayList<>(new TreeSet<>(RuleSetIntegrityTest.KNOWN_TYPES));
 		missing.removeAll(exercised);

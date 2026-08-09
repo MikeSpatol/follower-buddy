@@ -2588,6 +2588,7 @@
       "priority": 140,
       "cooldownMs": 5000,
       "output": "both",
+      "mood": -10,
       "when": {
         "type": "chatMessage",
         "contains": "Oh dear, you are dead"
@@ -2617,6 +2618,7 @@
       "group": "misc",
       "priority": 40,
       "cooldownMs": 3000,
+      "mood": 8,
       "when": {
         "type": "levelUp",
         "names": [
@@ -2795,6 +2797,7 @@
       "priority": 85,
       "output": "overhead",
       "cooldownMs": 1000,
+      "mood": -6,
       "when": { "type": "errandStart", "names": ["firedeath"] },
       "say": [
         "AAAAH! HOT! HOT HOT HOT!",
@@ -5656,6 +5659,7 @@
       "group": "reactions",
       "priority": 90,
       "cooldownMs": 60000,
+      "mood": -25,
       "when": { "type": "playerDeath" },
       "say": [
         "No! Get up!",
@@ -5695,6 +5699,7 @@
       "priority": 80,
       "cooldownMs": 60000,
       "delayTicks": 2,
+      "mood": 20,
       "when": { "type": "lootWorth", "minimum": 1000000 },
       "animation": 862,
       "say": [
@@ -5713,6 +5718,7 @@
       "priority": 75,
       "cooldownMs": 180000,
       "delayTicks": 2,
+      "mood": 10,
       "when": {
         "type": "all",
         "conditions": [
@@ -5803,6 +5809,7 @@
       "group": "combat",
       "priority": 60,
       "cooldownMs": 60000,
+      "mood": -4,
       "when": {
         "type": "all",
         "conditions": [
@@ -6024,6 +6031,7 @@
       "output": "overhead",
       "holdStill": true,
       "animation": 862,
+      "mood": 3,
       "when": {
         "type": "all",
         "conditions": [
@@ -6067,6 +6075,7 @@
         866,
         2109
       ],
+      "mood": 18,
       "when": {
         "type": "npcKill",
         "minimum": 100
@@ -6148,6 +6157,109 @@
           12085
         ]
       }
+    },
+    {
+      "id": "mood-low-idle",
+      "note": "Idle chatter when the session has gone badly. Gated on the mood band rather than on any one event, so it is the accumulation that shows.",
+      "group": "idle",
+      "priority": 35,
+      "cooldownMs": 90000,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "mood",
+            "is": "low"
+          },
+          {
+            "type": "idle",
+            "ticks": 40
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 500
+          },
+          {
+            "type": "chance",
+            "percent": 30
+          }
+        ]
+      },
+      "say": [
+        "Rough one today.",
+        "We can call it, you know. No shame in it.",
+        "I'm still here. For whatever that's worth.",
+        "Take a minute. It'll keep.",
+        "Days like this happen. They pass.",
+        "Not our finest hour."
+      ]
+    },
+    {
+      "id": "mood-high-idle",
+      "note": "The other end: idle chatter when it has been a good session. Same trigger as mood-low-idle, opposite band.",
+      "group": "idle",
+      "priority": 35,
+      "cooldownMs": 90000,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "mood",
+            "is": "high"
+          },
+          {
+            "type": "idle",
+            "ticks": 40
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 500
+          },
+          {
+            "type": "chance",
+            "percent": 30
+          }
+        ]
+      },
+      "say": [
+        "Good day, this.",
+        "I could do this all week.",
+        "You're on form today. Genuinely.",
+        "Whatever you're doing, keep doing it.",
+        "This is the good stuff.",
+        "I'm having a lovely time. Thought you should know."
+      ]
+    },
+    {
+      "id": "mood-recovering",
+      "note": "A note after climbing out of a bad stretch: fires in the middle band only when something good has just happened, via the kill trigger.",
+      "group": "combat",
+      "priority": 45,
+      "cooldownMs": 180000,
+      "delayTicks": 2,
+      "delayTicksMax": 5,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "npcKill",
+            "minimum": 100
+          },
+          {
+            "type": "mood",
+            "is": "down"
+          }
+        ]
+      },
+      "say": [
+        "There. That's more like it.",
+        "See? The day turns.",
+        "That's the one we needed.",
+        "Better. Much better."
+      ]
     }
   ]
 }

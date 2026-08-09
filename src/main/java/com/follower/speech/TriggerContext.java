@@ -114,6 +114,7 @@ public final class TriggerContext
 
 		refreshLoadedRegions();
 		refreshEquipment(local.getPlayerComposition());
+		driftMood();
 	}
 
 	// ------------------------------------------------------------------ combat
@@ -186,6 +187,111 @@ public final class TriggerContext
 	public int getCombatTargetLevel()
 	{
 		return combatTargetLevel;
+	}
+
+	// ------------------------------------------------------------------- mood
+
+	/**
+	 * How the follower is feeling, 0 (flat) to 100 (delighted), starting even.
+	 *
+	 * <p>One number rather than several axes, because the point is not to model
+	 * an emotion - it is to give the lines already written a STATE to be said
+	 * from. A rule that only fires when the follower is low turns the same
+	 * event into a different moment depending on how the session has gone,
+	 * which is most of what makes a companion feel like it is present rather
+	 * than reacting.
+	 *
+	 * <p>Nothing here decides what moves it. Rules do, by carrying a {@code
+	 * mood} nudge, which means every trigger the engine already understands can
+	 * affect it and a new influence is an edit to phrases.json rather than to
+	 * this file.
+	 *
+	 * <p>Session-scoped on purpose. A follower that remembered last night's bad
+	 * run would be strange, and a fresh start each login is also the honest
+	 * default for something that cannot see what you did while it was gone.
+	 */
+	private static final int MOOD_NEUTRAL = 50;
+	private static final int MOOD_MIN = 0;
+	private static final int MOOD_MAX = 100;
+
+	/** Ticks between one point of drift back toward neutral: about 30 seconds. */
+	private static final int MOOD_DRIFT_TICKS = 50;
+
+	private int mood = MOOD_NEUTRAL;
+	private int ticksSinceMoodDrift;
+
+	/** The mood right now, 0..100. */
+	public int getMood()
+	{
+		return mood;
+	}
+
+	/**
+	 * Nudges the mood and clamps it. Called when a rule carrying a nudge fires.
+	 *
+	 * @return the mood after the nudge
+	 */
+	public int adjustMood(int delta)
+	{
+		int before = mood;
+		mood = Math.max(MOOD_MIN, Math.min(MOOD_MAX, mood + delta));
+		if (mood != before)
+		{
+			log.debug("mood {} -> {} ({}{})", before, mood, delta > 0 ? "+" : "", delta);
+		}
+		return mood;
+	}
+
+	/**
+	 * The band the mood falls in, which is what rules should normally ask for -
+	 * a name reads better in a rule file than a number, and the boundaries can
+	 * move without every rule having to.
+	 */
+	public String getMoodBand()
+	{
+		if (mood <= 20)
+		{
+			return "low";
+		}
+		if (mood <= 40)
+		{
+			return "down";
+		}
+		if (mood < 60)
+		{
+			return "even";
+		}
+		if (mood < 80)
+		{
+			return "good";
+		}
+		return "high";
+	}
+
+	/** Every band name, so a rule naming one that does not exist can be caught. */
+	public static java.util.Set<String> moodBands()
+	{
+		return new java.util.LinkedHashSet<>(
+			java.util.Arrays.asList("low", "down", "even", "good", "high"));
+	}
+
+	/**
+	 * Pulls the mood back toward neutral a point at a time, so nothing that
+	 * happens is permanent and a bad stretch is recovered from by carrying on.
+	 */
+	private void driftMood()
+	{
+		if (mood == MOOD_NEUTRAL)
+		{
+			ticksSinceMoodDrift = 0;
+			return;
+		}
+		if (++ticksSinceMoodDrift < MOOD_DRIFT_TICKS)
+		{
+			return;
+		}
+		ticksSinceMoodDrift = 0;
+		mood += mood > MOOD_NEUTRAL ? -1 : 1;
 	}
 
 	// ----------------------------------------------------------------- memory

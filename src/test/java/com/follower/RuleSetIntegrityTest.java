@@ -53,7 +53,7 @@ public class RuleSetIntegrityTest
 		"energybelow", "idle", "idlebelow", "playerdeath", "neardeathspot",
 		"lootworth", "returnvisit", "combat", "bossfight", "login",
 		"thrallstart", "thrallswitch", "thrallend", "errandstart", "errandend",
-		"combatstart", "combatend", "npckill"));
+		"combatstart", "combatend", "npckill", "mood"));
 
 	private static JsonObject bundled(String resource) throws IOException
 	{
