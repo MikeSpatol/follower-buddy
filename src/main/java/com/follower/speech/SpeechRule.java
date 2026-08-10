@@ -188,6 +188,57 @@ public class SpeechRule
 		public Integer minutes;
 	}
 
+	/**
+	 * Files what just happened as the incident worth bringing up again.
+	 *
+	 * <p>{@code {"key": "chicken-death", "as": "that chicken"}}. The key is what
+	 * a later rule recognises; the phrase is how the follower says it out loud,
+	 * via {memory}.
+	 *
+	 * <p>This is the difference between counting and remembering. A tally makes
+	 * "your four hundredth yew" possible, which is data delivered well. An
+	 * incident makes "careful, I've seen what a chicken can do to you"
+	 * possible, which is a shared history - and only one of those sounds like
+	 * somebody who was there.
+	 */
+	public Incident remember;
+
+	public static final class Incident
+	{
+		public String key;
+		public String as;
+	}
+
+	/**
+	 * Something the follower picks up and carries about for a while.
+	 *
+	 * <p>{@code {"what": "a nice flat rock", "minutes": 30}}. Nothing else it
+	 * owns is an object: everything else is a number, a mood or a place.
+	 */
+	public Souvenir pickUp;
+
+	public static final class Souvenir
+	{
+		public String what;
+		public Integer minutes;
+	}
+
+	/**
+	 * A prediction about what the next drop is worth.
+	 *
+	 * <p>{@code {"rich": false, "threshold": 50000, "minutes": 5}} is the
+	 * follower betting the next drop comes in UNDER fifty thousand. Being wrong
+	 * is the better half - anything that can only be right is not predicting.
+	 */
+	public Bet bet;
+
+	public static final class Bet
+	{
+		public Boolean rich;
+		public Integer threshold;
+		public Integer minutes;
+	}
+
 	public Condition when;
 
 	/**

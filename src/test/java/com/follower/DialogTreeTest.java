@@ -1,5 +1,6 @@
 package com.follower;
 
+import com.follower.speech.Condition;
 import com.follower.speech.DialogLoader;
 import com.follower.speech.DialogTree;
 import com.follower.speech.FollowerDialog;
@@ -15,6 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -225,5 +227,92 @@ public class DialogTreeTest
 				+ "', which is not a tree in dialogs.json", dialogs.get(rule.asks));
 		}
 		assertTrue("something has to be asking, or none of this runs", asking > 0);
+	}
+
+	@Test
+	public void everyAnswerATreeCanGiveHasARuleListeningForIt() throws IOException
+	{
+		// An answer is any plain word now, not just yes and no. That is what
+		// lets a tree be a game, and it is also what makes this check the only
+		// thing standing between "left" and a typo: an answered rule spelt
+		// wrong never fires, and a tree branch nothing listens for means the
+		// player picks an option and the follower stares back.
+		DialogLoader dialogs = loaded();
+		RuleLoader rules = new RuleLoader(new Gson());
+		rules.initialise(folder.newFolder().toPath());
+
+		Set<String> offered = new TreeSet<>();
+		for (DialogTree tree : dialogs.getTrees())
+		{
+			for (DialogTree.DialogNode node : tree.nodes)
+			{
+				if (node.answer != null && !node.answer.isEmpty())
+				{
+					offered.add(node.answer.toLowerCase(java.util.Locale.ROOT));
+				}
+			}
+		}
+
+		Set<String> listened = new TreeSet<>();
+		for (SpeechRule rule : rules.getRules())
+		{
+			collectAnswers(rule.when, listened);
+		}
+
+		Set<String> deaf = new TreeSet<>(offered);
+		deaf.removeAll(listened);
+		assertTrue("answers a tree can give that no rule reacts to, so picking"
+			+ " them does nothing: " + deaf, deaf.isEmpty());
+
+		Set<String> imagined = new TreeSet<>(listened);
+		imagined.removeAll(offered);
+		assertTrue("rules waiting on answers no tree can give, so they can never"
+			+ " fire: " + imagined, imagined.isEmpty());
+	}
+
+	private static void collectAnswers(Condition condition, Set<String> into)
+	{
+		if (condition == null)
+		{
+			return;
+		}
+		if ("answered".equalsIgnoreCase(condition.type) && condition.is != null)
+		{
+			into.add(condition.is.toLowerCase(java.util.Locale.ROOT));
+		}
+		if (condition.conditions != null)
+		{
+			for (Condition child : condition.conditions)
+			{
+				collectAnswers(child, into);
+			}
+		}
+	}
+
+	@Test
+	public void everyQuestionRefusesToTalkOverAnotherOne() throws IOException
+	{
+		// Opening a question REPLACES whatever was waiting for an answer. With
+		// one question in the file that was harmless; with two, a follower that
+		// asks to go somewhere and then offers a game has silently withdrawn
+		// the outing, and the player answers a question nobody is listening
+		// for. The guard is a none/asking block, and every asks rule needs it.
+		RuleLoader rules = new RuleLoader(new Gson());
+		rules.initialise(folder.newFolder().toPath());
+
+		List<String> unguarded = new ArrayList<>();
+		for (SpeechRule rule : rules.getRules())
+		{
+			if (rule.asks == null || rule.asks.isEmpty())
+			{
+				continue;
+			}
+			if (rule.when == null || !rule.when.usesType("asking"))
+			{
+				unguarded.add(rule.id);
+			}
+		}
+		assertTrue("rules that ask a question without checking whether one is"
+			+ " already on the table: " + unguarded, unguarded.isEmpty());
 	}
 }

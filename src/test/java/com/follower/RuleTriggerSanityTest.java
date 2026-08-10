@@ -246,13 +246,24 @@ public class RuleTriggerSanityTest
 					healthAbove = Math.max(healthAbove,
 						condition.percent == null ? 50 : condition.percent);
 				}
+				// timeOfDay is a window on a CLOCK: 23 to 5 is five hours,
+				// not an empty range, and the evaluator wraps deliberately.
+				if ("timeofday".equals(kind))
+				{
+					return;
+				}
+				// Two tally conditions in one rule are usually counting two
+				// different things - "asked three times, taken nowhere" is one
+				// rule with a minimum on one tally and a maximum on another.
+				// Keyed on the type alone they read as one contradictory range.
+				String counted = condition.of == null ? kind : kind + ":" + condition.of;
 				if (condition.minimum != null)
 				{
-					minimums.merge(kind, condition.minimum, Math::max);
+					minimums.merge(counted, condition.minimum, Math::max);
 				}
 				if (condition.maximum != null)
 				{
-					maximums.merge(kind, condition.maximum, Math::min);
+					maximums.merge(counted, condition.maximum, Math::min);
 				}
 			}
 
@@ -571,7 +582,8 @@ public class RuleTriggerSanityTest
 					problems.add(rule.id + ": ticks " + condition.ticks);
 				}
 				if (condition.minimum != null && condition.maximum != null
-					&& condition.maximum < condition.minimum)
+					&& condition.maximum < condition.minimum
+					&& !"timeofday".equalsIgnoreCase(condition.type))
 				{
 					problems.add(rule.id + ": minimum " + condition.minimum
 						+ " above maximum " + condition.maximum);

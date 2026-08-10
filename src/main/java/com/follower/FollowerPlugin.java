@@ -1137,6 +1137,21 @@ public class FollowerPlugin extends Plugin
 		java.util.Map<String, Integer> tallies;
 		java.util.Map<String, Integer> records;
 		int sessions;
+
+		/** The incident the follower is still thinking about, and how to say it. */
+		String incidentKey;
+		String incidentPhrase;
+		int incidentCount;
+
+		/**
+		 * Where the last death happened. Session-scoped memory made
+		 * nearDeathSpot a thing that could only fire on the walk back; kept
+		 * between sessions it becomes an anniversary, which is a much better
+		 * line - "this is the spot" six weeks later.
+		 */
+		int deathX;
+		int deathY;
+		int deathPlane = -1;
 	}
 
 	/**
@@ -1165,6 +1180,13 @@ public class FollowerPlugin extends Plugin
 			TriggerContext context = speechEngine.getContext();
 			context.restoreCounters(saved.tallies, saved.records);
 			context.setSessionCount(saved.sessions);
+			context.restoreIncident(saved.incidentKey, saved.incidentPhrase,
+				saved.incidentCount);
+			if (saved.deathPlane >= 0)
+			{
+				context.restoreDeathSpot(new WorldPoint(
+					saved.deathX, saved.deathY, saved.deathPlane));
+			}
 			log.debug("Restored {} tallies, {} records, session {}",
 				saved.tallies == null ? 0 : saved.tallies.size(),
 				saved.records == null ? 0 : saved.records.size(),
@@ -1202,6 +1224,16 @@ public class FollowerPlugin extends Plugin
 		saved.tallies = trimCounters(context.getTallies());
 		saved.records = trimCounters(context.getRecords());
 		saved.sessions = context.getSessionCount();
+		saved.incidentKey = context.getIncidentKey();
+		saved.incidentPhrase = context.getIncidentPhrase();
+		saved.incidentCount = context.getIncidentCount();
+		WorldPoint died = context.getDeathLocation();
+		if (died != null)
+		{
+			saved.deathX = died.getX();
+			saved.deathY = died.getY();
+			saved.deathPlane = died.getPlane();
+		}
 		configManager.setConfiguration(FollowerConfig.GROUP, "counters", gson.toJson(saved));
 		context.clearCountersDirty();
 	}
@@ -1284,6 +1316,18 @@ public class FollowerPlugin extends Plugin
 
 	private static java.util.Map<String, Integer> trimCounters(java.util.Map<String, Integer> counters)
 	{
+		// Today's counters are for today. Writing them out would have the
+		// follower's summary open with yesterday's afternoon still in it.
+		java.util.Map<String, Integer> lasting = new java.util.LinkedHashMap<>();
+		counters.forEach((key, value) ->
+		{
+			if (!key.endsWith(TriggerContext.TODAY))
+			{
+				lasting.put(key, value);
+			}
+		});
+		counters = lasting;
+
 		if (counters.size() <= MAX_COUNTERS)
 		{
 			return counters;
@@ -2100,6 +2144,7 @@ public class FollowerPlugin extends Plugin
 					// part of hello, and the tallies want to be whole before
 					// the first kill of the session lands on top of them.
 					readCounters();
+					speechEngine.getContext().clearDailyTallies();
 					readTraits();
 					TriggerContext counted = speechEngine.getContext();
 					counted.setSessionCount(counted.getSessionCount() + 1);
@@ -2325,6 +2370,22 @@ public class FollowerPlugin extends Plugin
 		if (!config.groupMimic())
 		{
 			disabled.add("mimic");
+		}
+		if (!config.groupMemory())
+		{
+			disabled.add("memory");
+		}
+		if (!config.groupSouvenir())
+		{
+			disabled.add("souvenir");
+		}
+		if (!config.groupBet())
+		{
+			disabled.add("bet");
+		}
+		if (!config.groupClock())
+		{
+			disabled.add("clock");
 		}
 		for (String token : config.disabledGroups().split(","))
 		{
@@ -3479,6 +3540,110 @@ public class FollowerPlugin extends Plugin
 			"Apparently you need a special amulet. He made his opinion clear without one."},
 	};
 
+	/**
+	 * What today came to, in the follower's words.
+	 *
+	 * <p>Built fresh every time the branch is opened. Everything in it is
+	 * already counted somewhere - the tallies exist for the milestone lines -
+	 * so this is the same memory said as a sentence rather than as a number.
+	 *
+	 * <p>Only the parts that actually happened are mentioned. A summary that
+	 * dutifully reports nought kills and nought deaths reads like a form; one
+	 * that leaves those out reads like somebody remembering.
+	 */
+	private String[] daySummary()
+	{
+		com.follower.speech.TriggerContext context = speechEngine.getContext();
+		return daySummary(
+			sessionMinutes,
+			context.getTally("kills:today"),
+			context.getTally("levels:today"),
+			context.getTally("deaths:today"),
+			context.getMoodBand(),
+			context.hasIncident() ? context.getIncidentPhrase() : null);
+	}
+
+	/**
+	 * The wording, with the figures already gathered. Split out from its caller
+	 * so a test can walk every branch of it - there are sixteen combinations of
+	 * what did and did not happen today, and they are all sentences the player
+	 * reads.
+	 */
+	static String[] daySummary(int minutes, int kills, int levels, int deaths,
+		String moodBand, String incident)
+	{
+		java.util.List<String> parts = new java.util.ArrayList<>();
+
+		if (minutes >= 1)
+		{
+			parts.add(minutes < 60
+				? minutes + (minutes == 1 ? " minute" : " minutes")
+				: (minutes / 60) + (minutes / 60 == 1 ? " hour" : " hours"));
+		}
+
+		if (kills > 0)
+		{
+			parts.add(kills + (kills == 1 ? " thing killed" : " things killed"));
+		}
+		if (levels > 0)
+		{
+			parts.add(levels + (levels == 1 ? " level" : " levels"));
+		}
+		if (deaths > 0)
+		{
+			parts.add(deaths + (deaths == 1 ? " death" : " deaths"));
+		}
+
+		java.util.List<String> pages = new java.util.ArrayList<>();
+		if (parts.isEmpty())
+		{
+			pages.add("We have done absolutely nothing so far. It has been restful.");
+		}
+		else
+		{
+			pages.add("So far: " + join(parts) + ".");
+		}
+
+		// The mood is the follower's own verdict on all that, which is a
+		// different thing from the figures and worth saying separately.
+		switch (moodBand == null ? "" : moodBand)
+		{
+			case "low":
+				pages.add("I have had better days, if I am honest.");
+				break;
+			case "down":
+				pages.add("Not our finest, but we are still walking.");
+				break;
+			case "good":
+				pages.add("A good day, that. I would take another like it.");
+				break;
+			case "high":
+				pages.add("One of the good ones. I mean that.");
+				break;
+			default:
+				pages.add("An ordinary day. There is nothing wrong with those.");
+				break;
+		}
+
+		// And the one thing it has not let go of.
+		if (incident != null && !incident.isEmpty())
+		{
+			pages.add("I am still thinking about " + incident + ".");
+		}
+		return pages.toArray(new String[0]);
+	}
+
+	/** "a, b and c" - the way a person lists things. */
+	private static String join(java.util.List<String> parts)
+	{
+		if (parts.size() == 1)
+		{
+			return parts.get(0);
+		}
+		return String.join(", ", parts.subList(0, parts.size() - 1))
+			+ " and " + parts.get(parts.size() - 1);
+	}
+
 	/** The previous joke, so consecutive draws never repeat. */
 	private static int lastJoke = -1;
 
@@ -3523,7 +3688,7 @@ public class FollowerPlugin extends Plugin
 				tree.startId());
 			return;
 		}
-		dialog.startNextTick(config.followerName(), talkScript(), "start");
+		dialog.startNextTick(config.followerName(), talkScript(this::daySummary), "start");
 	}
 
 	/**
@@ -3563,7 +3728,8 @@ public class FollowerPlugin extends Plugin
 	 * <p>Package-private so the test can reach it. It is the only speech in the
 	 * plugin outside phrases.json, and so the only speech nothing checked.
 	 */
-	static java.util.Map<String, com.follower.speech.FollowerDialog.Node> talkScript()
+	static java.util.Map<String, com.follower.speech.FollowerDialog.Node> talkScript(
+		java.util.function.Supplier<String[]> summary)
 	{
 		java.util.Map<String, com.follower.speech.FollowerDialog.Node> script =
 			new java.util.LinkedHashMap<>();
@@ -3706,10 +3872,21 @@ public class FollowerPlugin extends Plugin
 			.then("how-menu"));
 		script.put("how-menu", says()
 			.choices(
+				"How did today go?", "how-today-q",
 				"You keep track of things?", "how-count-q",
 				"You have moods?", "how-mood-q",
 				"Anywhere you'd rather be?", "how-place-q",
 				"Back to business.", "back-q"));
+
+		// The one page in the script that is different every time it is read.
+		// Everything in it is already counted - the tallies exist for the
+		// milestone lines - so this is the same memory said as a sentence
+		// rather than as a number, which is what makes it sound like somebody
+		// who was there rather than a scoreboard.
+		script.put("how-today-q", you("How did today go?").then("how-today-a"));
+		script.put("how-today-a", com.follower.speech.FollowerDialog.Node
+			.saysDynamic(summary)
+			.then("how-menu"));
 
 		script.put("how-count-q", you("You keep track of things?").then("how-count-a"));
 		script.put("how-count-a", says(
@@ -4155,7 +4332,8 @@ public class FollowerPlugin extends Plugin
 			// long session stops being a compliment and becomes a clock.
 			TriggerContext context = speechEngine.getContext();
 			int previousBest = context.getRecord("session");
-			if (context.noteRecord("session", ++sessionMinutes) && !sessionRecordSaid)
+			context.setSessionMinutes(++sessionMinutes);
+			if (context.noteRecord("session", sessionMinutes) && !sessionRecordSaid)
 			{
 				sessionRecordSaid = true;
 				speechEngine.dispatch(
@@ -4775,6 +4953,7 @@ public class FollowerPlugin extends Plugin
 				// name rather than id: a player counts kalphites, not the four
 				// ids the game happens to use for them.
 				String name = npc.getName() == null ? "" : npc.getName();
+				speechEngine.getContext().tally("kills" + TriggerContext.TODAY);
 				int count = speechEngine.getContext().tally(
 					"kill:" + name.toLowerCase(Locale.ROOT));
 				speechEngine.dispatch(TriggerEvent.kill(
@@ -4786,7 +4965,7 @@ public class FollowerPlugin extends Plugin
 		// Where, as well as that: the death spot is remembered for the session,
 		// and walking back over it later has its own lines.
 		speechEngine.getContext().noteDeath(local.getWorldLocation());
-		speechEngine.getContext().tally("deaths");
+		speechEngine.getContext().tallyBoth("deaths");
 		speechEngine.dispatch(TriggerEvent.death());
 		dialog.close();
 	}
@@ -4823,8 +5002,12 @@ public class FollowerPlugin extends Plugin
 		}
 		if (total > 0)
 		{
-			speechEngine.dispatch(TriggerEvent.loot(
-				(int) Math.min(total, Integer.MAX_VALUE), best));
+			int worth = (int) Math.min(total, Integer.MAX_VALUE);
+			// Settled BEFORE the loot line, so the follower collects on its
+			// prediction rather than remarking on the drop and then
+			// remembering it had money on it.
+			speechEngine.getContext().settleBet(worth);
+			speechEngine.dispatch(TriggerEvent.loot(worth, best));
 		}
 	}
 
@@ -4836,7 +5019,7 @@ public class FollowerPlugin extends Plugin
 		Integer previous = knownLevels.put(skill, level);
 		if (previous != null && level > previous)
 		{
-			speechEngine.getContext().tally("levels");
+			speechEngine.getContext().tallyBoth("levels");
 			speechEngine.dispatch(TriggerEvent.levelUp(skill.getName(), level));
 		}
 	}

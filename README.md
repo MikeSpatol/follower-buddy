@@ -15,15 +15,26 @@ automated, and the follower cannot be interacted with.
 - **Authentic follower** — pet-style following on the game's own mechanics, learned
   weapon stances, game-exact dialog boxes with chatheads, right-click menu, shift-hover
   and click cross exactly as a real NPC.
-- **Speech system** — 258 bundled rules across editable groups (bosses, player
+- **Speech system** — 349 bundled rules across editable groups (bosses, player
   statuses, locations, item equips, quest NPCs, thrall, errands, combat,
-  mimicry, reactions, misc), hot-reloaded
+  mimicry, reactions, memory, souvenirs, predictions, the clock, misc), hot-reloaded
   from `phrases.json` within a second. Editor windows for each group live behind
   buttons on the sidebar panel; every group has a config toggle.
-- **Alive between the events** — copies your emotes and joins you when you eat,
-  fidgets when you stand about, sits down to rest after five minutes idle, cheers
-  big drops, waves at cats and passing pets, and remembers this session's death
-  spot and the places you keep coming back to.
+- **Alive between the events** — copies your emotes, joins you when you eat, and
+  has a go at whatever you have been mining or chopping or fishing for the last
+  half minute; fidgets when you stand about, sits down to rest after five minutes
+  idle, cheers big drops, waves at cats and passing pets, and remembers this
+  session's death spot and the places you keep coming back to.
+- **Somebody who was there** — keeps ONE incident in mind and brings it up
+  unprompted ("careful, I have not forgotten how close that was"), picks up a
+  rock and carries it about until it loses it, calls what the next drop is worth
+  before it lands and has to live with being wrong, knows what time it is where
+  you actually are, and keeps a running score of the outings you did and did not
+  take it on. Ask it how today went and it will tell you.
+- **Games** — right-click Talk-to while it is waiting for an answer and the
+  everyday script is replaced by whatever it wanted: an outing, or a hand to
+  guess. The reveal lands overhead a beat after the box closes, and it is a real
+  coin flip.
 - **Outfit profiles** — named outfits with Load/Save/Delete in the panel and a
   `::follower outfit <name>` command. Melee/Ranged/Magic style profiles are seeded.
 - **Thrall mode** — summoning an Arceuus thrall replaces it with the follower:
@@ -325,7 +336,8 @@ wins.
 | `inRegion` / `regionEnter` | `regions`, `anyLoadedRegion` |
 | `inArea` | `x1`, `y1`, `x2`, `y2`, `plane` |
 | `chatMessage` | `contains` or `regex`; `from` (`player`/`others`) and `is` (a `ChatMessageType` name, exactly as `::follower chatwatch` prints it) |
-| `answered` | `is` — `yes` or `no`; the player's reply to a rule marked `asks` |
+| `answered` | `is` — the token on the branch the player picked, in a rule marked `asks`. Any plain word: `yes`/`no` for a question, `left`/`right` for a game |
+| `asking` | — a question is already waiting for an answer; optional `is` names the tree. **Every `asks` rule needs this inside a `none`**, or opening a second question silently withdraws the first |
 | `varbitEquals` / `varbitChanged` | `varbit`, `value` |
 | `animationSelf` | `ids` |
 | `levelUp` | `names` (skill names, `*` ok) |
@@ -353,6 +365,13 @@ wins.
 | `wanting` | — a want is open; normally used inside a `none` |
 | `wantFulfilled` / `wantExpired` | — `{want}` names the place it asked for |
 | `feelsAbout` | `is` — `liked` or `disliked`, about the region you are standing in |
+| `remembers` | the incident on its mind; optional `is` names it, `minimum` how many times it has happened. `{memory}` says it out loud |
+| `carrying` | — it is holding a souvenir. `{souvenir}` names it |
+| `souvenirLost` | — the thing it was carrying is gone |
+| `betting` | — a prediction is outstanding; normally used inside a `none` |
+| `betWon` / `betLost` | — the prediction came good, or did not |
+| `timeOfDay` | `minimum`/`maximum` hour on **your** clock, 0–23. Wraps past midnight, so `23`–`5` is five hours |
+| `sessionMinutes` | `minimum`/`maximum` — how long today has run |
 | `login`, `always` | — |
 | `chance` | `percent`, rolled each evaluation |
 
@@ -366,18 +385,24 @@ standing on, which is what you want for instanced dungeons and raids.
 `{item}` (the most valuable item in a loot drop; `{value}` on loot events is the drop's
 total, written the way a player says it — `1.2M`, `214K`), `{speaker}` (who said it, on
 chat events), `{record}` / `{previous}` (on `personalBest`), `{want}` (on `wantFulfilled`
-and `wantExpired`).
+and `wantExpired`), `{memory}` (the incident on its mind - guard the rule with
+`remembers` or it prints nothing) and `{souvenir}` (what it is carrying, or has
+just lost - guard with `carrying` or `souvenirLost`).
 
 ### Other rule fields
 
 - `output` — `overhead`, `chatbox`, or `both`. Falls back to the config default.
 - `group` — used by the **Rule groups** config section to silence whole categories.
-  The built-in toggles cover `boss`, `health`, `area` and `idle`; anything else goes in
-  the *Other disabled groups* box (rule ids work there too).
+  The built-in toggles cover `boss`, `health`, `area`, `idle`, `gear`, `quest`,
+  `combat`, `mimic`, `memory`, `souvenir`, `bet` and `clock`; anything else goes
+  in the *Other disabled groups* box (rule ids work there too).
 - `animation` — optional emote animation id played alongside the line.
 - `mirrorAnimation` — `true` to replay the PLAYER'S animation on the follower
-  instead of a fixed id. Only meaningful with an `animationSelf` trigger; the
-  bundled `mirror-teleport` rule uses it to copy whichever teleport you cast.
+  instead of a fixed id. Needs a trigger that says WHICH animation: either
+  `animationSelf`, whose event carries the id, or `repeating`, which is how the
+  follower joins in with skilling. The bundled `mirror-teleport` rule uses it to
+  copy whichever teleport you cast, and `mime-oneshots` to have a go at whatever
+  you have been doing for the last thirty ticks.
   Spell graphics ride along automatically: for 12 ticks after a mirror rule
   fires, any spotanim shown on the player is copied onto the follower too — a
   transient `RuneLiteObject` carrying the spotanim's model (recoloured, scaled
@@ -420,6 +445,21 @@ and `wantExpired`).
   ticks so the follower joins in a beat behind you rather than moving in
   lockstep. Leave it off where the timing is the point: `mirror-teleport`
   vanishes with your cast and must not lag it.
+- `mirrorPose` — the same, held as a LOOP until your animation changes, for the
+  animations that never end on their own. Which of the two a rule wants is
+  decided by the cache, not by taste: mining, woodcutting, fishing and fletching
+  are authored loops (`frameStep >= 0`) and hang forever if played as a one-shot,
+  while cooking, smithing, herblore and firemaking are one-shots the server
+  restarts each cycle. `::follower animinfo` prints the `frameStep`.
+- `remember` — `{"key": "close-call", "as": "how close that was"}`. Files what
+  just happened as the incident the follower keeps coming back to; `remembers`
+  conditions match on the key and `{memory}` says the phrase. Filed whether or
+  not the line was heard: the thing happened either way.
+- `pickUp` — `{"what": "a nice flat rock", "minutes": 25}`. Something it carries
+  about and is put out about losing. Refused while its hands are full.
+- `bet` — `{"rich": false, "threshold": 50000, "minutes": 5}`: the follower
+  calling the next drop UNDER fifty thousand. Both directions exist because
+  anything that can only be right is not predicting.
 - `mood` — how much this firing moves the follower's mood, positive or negative.
   See below.
 - `asks` — names a tree in `dialogs.json`. Marks the line as a question and arms
@@ -428,8 +468,12 @@ and `wantExpired`).
 - `hushMs` — takes the floor: nothing else speaks for this long. See below.
 - `note` — free text, ignored by the plugin.
 
-Both `asks` and `want` take effect when the line is actually **said**, not when
-the rule wins. A question the mute swallowed is one the player never heard.
+`asks`, `want`, `pickUp` and `bet` all take effect when the line is actually
+**said**, not when the rule wins: a question the mute swallowed is one the player
+never heard, a souvenir nobody was told about is invisible, and a silent
+prediction can only ever be right. `remember` is the exception — it is filed
+regardless, because the chicken killed you whether or not the follower got a
+word in.
 
 ### Conversations
 
@@ -576,6 +620,58 @@ love, and there is no second list to fall out of date.
 Taste is what makes a mood legible. A number moving for reasons you cannot see
 is weather; a follower that is always glad to be back at the same place and
 always grumbles about the same one is a temperament you can learn.
+
+### Remembering one thing
+
+A tally makes "your four hundredth yew" possible, which is data delivered well.
+It does not make "careful, I have seen what a chicken can do to you" possible,
+and only one of those sounds like somebody who was there.
+
+So the follower keeps exactly one incident: a key, a phrase, and a count. A rule
+files it with `remember`; later rules match on the key with `remembers` and say
+the phrase with `{memory}`. One is the right number. A follower with a list is
+running a database, and the thing that makes a memory feel like a memory is that
+it crowds out the others.
+
+The count is what makes "again" honest — `recall-death-again` waits for the
+third — and it survives logout with the rest of the counters.
+
+### Things, hours and predictions
+
+Three small departures from the follower being made of numbers.
+
+**A souvenir** is the only OBJECT it owns. Everything else it has is a number, a
+mood or a place; `pickUp` gives it a nice flat rock, and for the next
+twenty-five minutes it is the same rock, and then one day it is not. Losing it
+costs mood, and the name survives the loss so the line can mourn it by name.
+
+**A bet** is an opinion about what happens next, which is a different thing from
+commentary on what just happened. `bet` calls the next drop over or under a
+threshold; `betWon` and `betLost` collect. Both directions exist deliberately —
+anything that can only be right is not predicting — and a bet nobody collects on
+is quietly dropped rather than counted as a win.
+
+**The clock** is yours, not the game's. `timeOfDay` reads the hour where you are
+sitting and wraps past midnight, so a window can be written the way a person says
+it. A follower that knows it is two in the morning is a different kind of
+companion from one that knows how much prayer you have left.
+
+### Games
+
+`asks` already turned a line into a question and armed a conversation to answer
+it. A game is the same machinery with a wider vocabulary: an answer is any plain
+word now, so a menu can offer `left` and `right` as unmistakably as it offers yes
+and no.
+
+What a tree cannot do is be surprising — it is fixed text, so a guess it resolved
+itself would have the same hand every time. The reveal is left to two rules that
+split a coin flip by priority: the winning one is gated on `chance: 50` and
+outranks the losing one, so a failed roll falls through. That also puts the
+verdict overhead, a beat after the box closes, which is where a reveal belongs.
+
+Opening a question replaces whatever was waiting for an answer, so every `asks`
+rule carries a `none`/`asking` guard and a test refuses the file without it.
+Offering a game must not silently withdraw the outing.
 
 ### Noticing repetition
 

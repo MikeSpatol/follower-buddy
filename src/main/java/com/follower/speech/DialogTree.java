@@ -49,11 +49,14 @@ public class DialogTree
 		/**
 		 * Reaching this node answers the question the follower asked.
 		 *
-		 * <p>"yes" or "no". This is the whole reason these trees exist: the
-		 * answer used to be a word typed into public chat, which meant the
-		 * follower was listening to the whole street and the player had to know
-		 * the magic word. Picking an option cannot be misheard, cannot be
-		 * ambiguous, and shows the player what their choices are.
+		 * <p>Any single plain word; {@code answered} rules match on it. This is
+		 * the whole reason these trees exist: the answer used to be a word
+		 * typed into public chat, which meant the follower was listening to the
+		 * whole street and the player had to know the magic word. Picking an
+		 * option cannot be misheard, cannot be ambiguous, and shows the player
+		 * what their choices are - which is also why the vocabulary is not
+		 * limited to yes and no. A menu offering "left" and "right" is exactly
+		 * as unmistakable as one offering yes and no, and it can be a game.
 		 */
 		public String answer;
 
@@ -140,11 +143,10 @@ public class DialogTree
 					}
 				}
 			}
-			if (node.answer != null
-				&& !"yes".equalsIgnoreCase(node.answer) && !"no".equalsIgnoreCase(node.answer))
+			if (node.answer != null && !node.answer.matches("[a-zA-Z0-9-]+"))
 			{
 				found.add(id + ": '" + node.id + "' answers '" + node.answer
-					+ "'; only yes and no mean anything");
+					+ "'; an answer is a single plain word for a rule to match on");
 			}
 			if (node.pages().isEmpty() && node.choices == null && node.next == null)
 			{

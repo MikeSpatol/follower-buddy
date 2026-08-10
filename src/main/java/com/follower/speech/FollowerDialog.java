@@ -149,7 +149,7 @@ public class FollowerDialog extends Overlay
 		/** The pages only, without the choice labels. */
 		public java.util.List<String> getPages()
 		{
-			return java.util.Arrays.asList(pages);
+			return java.util.Arrays.asList(dynamicPages != null ? dynamicPages.get() : pages);
 		}
 
 		/** Whether the PLAYER speaks this node, with their own head and name. */

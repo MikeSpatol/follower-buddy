@@ -2647,7 +2647,7 @@
       "say": [
         "There you are! Right on schedule.",
         "Welcome back, {player}. I kept your spot warm.",
-        "Ah, you made it! Gielinor was getting quiet without you.",
+        "You made it. It was getting quiet without you.",
         "Back again? Excellent. Where to today?"
       ]
     },
@@ -5710,8 +5710,8 @@
       "say": [
         "The {item}! LOOK at it!",
         "A {item}! I need to sit down.",
-        "That is a {item}. That is a {item}!",
-        "I am never letting you bank that.",
+        "That's a {item}. That's a {item}!",
+        "I'm never letting you bank that.",
         "Did you SEE that?",
         "{value}. In one drop. {value}!"
       ]
@@ -6360,7 +6360,7 @@
         ]
       },
       "say": [
-        "You have been doing this for a very long time.",
+        "You've been doing this a very long time.",
         "I've started naming them. That one's Geoffrey.",
         "I want you to know I'm still here. Fading, but here.",
         "At what point does this become a lifestyle?",
@@ -7174,6 +7174,9 @@
             "conditions": [
               {
                 "type": "wanting"
+              },
+              {
+                "type": "asking"
               }
             ]
           },
@@ -7490,7 +7493,7 @@
       "say": [
         "That thing is very large and very close.",
         "I'd like it noted that I've seen what's standing over there.",
-        "We are extremely near something that could end this quickly.",
+        "We're stood very close to something that could end this quickly.",
         "Are we meant to be this close to that?"
       ]
     },
@@ -7657,6 +7660,1016 @@
         "Listen. Nothing. Just the water. I needed this.",
         "I like it here because nothing is trying to kill us. Do you know how rare that is?",
         "The water does something to me. Sorry. I know it's only water."
+      ]
+    },
+    {
+      "id": "memory-close-call",
+      "note": "Filed when you come out the far side of nearly dying. The follower does not need to say anything at the time - critical-hp already does - it just needs to remember, so it can bring it up later.",
+      "group": "memory",
+      "priority": 30,
+      "cooldownMs": 300000,
+      "output": "overhead",
+      "remember": {
+        "key": "close-call",
+        "as": "how close that was"
+      },
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "healthBelow",
+            "percent": 8
+          },
+          {
+            "type": "combat"
+          }
+        ]
+      },
+      "say": [
+        "I'm not going to forget that one.",
+        "That'll stay with me, that will."
+      ]
+    },
+    {
+      "id": "memory-death",
+      "note": "The obvious one. Filed on every death, so the count is what makes the recall land: once is bad luck, four times is a habit.",
+      "group": "memory",
+      "priority": 30,
+      "cooldownMs": 5000,
+      "output": "overhead",
+      "remember": {
+        "key": "the-death",
+        "as": "the way that went"
+      },
+      "delayTicks": 6,
+      "delayTicksMax": 12,
+      "when": {
+        "type": "playerDeath"
+      },
+      "say": [
+        "That's going in the book.",
+        "I saw all of it, for what it's worth."
+      ]
+    },
+    {
+      "id": "memory-big-drop",
+      "note": "Filed on a drop big enough to still be talking about an hour later. Above the loot-celebrate threshold so the celebration wins the event and this one only files - two lines about one drop is one too many, and the recall is the part that matters here.",
+      "group": "memory",
+      "priority": 20,
+      "cooldownMs": 600000,
+      "output": "overhead",
+      "remember": {
+        "key": "big-drop",
+        "as": "that drop"
+      },
+      "when": {
+        "type": "lootWorth",
+        "minimum": 1000000
+      },
+      "say": [
+        "I'm still not over that."
+      ]
+    },
+    {
+      "id": "memory-boss",
+      "note": "Filed when something with a combat level in three figures stops moving. Low priority so the celebration rules win the kill.",
+      "group": "memory",
+      "priority": 20,
+      "cooldownMs": 600000,
+      "output": "overhead",
+      "remember": {
+        "key": "the-boss",
+        "as": "the size of that thing"
+      },
+      "when": {
+        "type": "npcKill",
+        "minimum": 150
+      },
+      "say": [
+        "I want that written down somewhere."
+      ]
+    },
+    {
+      "id": "recall-idle",
+      "note": "The whole point of the incident. Brought up unprompted, in a quiet moment, about the specific thing that happened rather than about the number of times something like it has. Deliberately rare.",
+      "group": "memory",
+      "priority": 24,
+      "cooldownMs": 900000,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "idle",
+            "ticks": 120
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 600
+          },
+          {
+            "type": "remembers"
+          },
+          {
+            "type": "chance",
+            "percent": 4
+          }
+        ]
+      },
+      "say": [
+        "I keep thinking about {memory}.",
+        "I've not stopped thinking about {memory}, if I'm honest.",
+        "Do you ever think about {memory}? I do.",
+        "It's quiet. So naturally I'm thinking about {memory}."
+      ]
+    },
+    {
+      "id": "recall-death-again",
+      "note": "Named rather than generic, because the count is the joke and only this incident has a count worth making one of.",
+      "group": "memory",
+      "priority": 92,
+      "cooldownMs": 120000,
+      "output": "overhead",
+      "delayTicks": 10,
+      "delayTicksMax": 16,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "playerDeath"
+          },
+          {
+            "type": "remembers",
+            "is": "the-death",
+            "minimum": 3
+          }
+        ]
+      },
+      "say": [
+        "That's three. I've started keeping count, and I wish I hadn't.",
+        "I'm starting to see a pattern, and I don't like it.",
+        "We've done this before. Several times. Recently."
+      ]
+    },
+    {
+      "id": "recall-close-call-warning",
+      "note": "The line that could not exist without incidents: advice with a reason attached, and the reason is something you were both there for. Fires on going back into a fight, not on idling.",
+      "group": "memory",
+      "priority": 52,
+      "cooldownMs": 600000,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "combatStart"
+          },
+          {
+            "type": "remembers",
+            "is": "close-call"
+          },
+          {
+            "type": "chance",
+            "percent": 25
+          }
+        ]
+      },
+      "say": [
+        "Careful. I've not forgotten {memory}.",
+        "Before you start. Remember {memory}?",
+        "Go on then. But I'm watching, after {memory}."
+      ]
+    },
+    {
+      "id": "souvenir-rock",
+      "note": "Picks something up and carries it about for a while. It only counts if it was SAID - a souvenir nobody was told about is invisible - and it refuses while already carrying something, or the follower silently swaps out an object it has been talking about.",
+      "group": "souvenir",
+      "priority": 22,
+      "cooldownMs": 1800000,
+      "output": "overhead",
+      "pickUp": {
+        "what": "a nice flat rock",
+        "minutes": 25
+      },
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "idle",
+            "ticks": 80
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 500
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "carrying"
+              }
+            ]
+          },
+          {
+            "type": "chance",
+            "percent": 2
+          }
+        ]
+      },
+      "say": [
+        "Hold on. Look at this rock. Perfectly flat.",
+        "I'm taking this rock. It's a good rock and I'll hear nothing else."
+      ]
+    },
+    {
+      "id": "souvenir-stick",
+      "note": "Picks something up and carries it about for a while. It only counts if it was SAID - a souvenir nobody was told about is invisible - and it refuses while already carrying something, or the follower silently swaps out an object it has been talking about.",
+      "group": "souvenir",
+      "priority": 22,
+      "cooldownMs": 1800000,
+      "output": "overhead",
+      "pickUp": {
+        "what": "an interesting stick",
+        "minutes": 25
+      },
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "idle",
+            "ticks": 80
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 500
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "carrying"
+              }
+            ]
+          },
+          {
+            "type": "chance",
+            "percent": 2
+          }
+        ]
+      },
+      "say": [
+        "Wait. This stick's interesting. I couldn't tell you why.",
+        "I'm keeping this stick. Don't look at me like that."
+      ]
+    },
+    {
+      "id": "souvenir-pebble",
+      "note": "Picks something up and carries it about for a while. It only counts if it was SAID - a souvenir nobody was told about is invisible - and it refuses while already carrying something, or the follower silently swaps out an object it has been talking about.",
+      "group": "souvenir",
+      "priority": 22,
+      "cooldownMs": 1800000,
+      "output": "overhead",
+      "pickUp": {
+        "what": "a lucky-looking pebble",
+        "minutes": 25
+      },
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "idle",
+            "ticks": 80
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 500
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "carrying"
+              }
+            ]
+          },
+          {
+            "type": "chance",
+            "percent": 2
+          }
+        ]
+      },
+      "say": [
+        "That pebble's lucky. I can tell. Give me a second.",
+        "This one's lucky. I'm taking it and you can't stop me."
+      ]
+    },
+    {
+      "id": "souvenir-feather",
+      "note": "Picks something up and carries it about for a while. It only counts if it was SAID - a souvenir nobody was told about is invisible - and it refuses while already carrying something, or the follower silently swaps out an object it has been talking about.",
+      "group": "souvenir",
+      "priority": 22,
+      "cooldownMs": 1800000,
+      "output": "overhead",
+      "pickUp": {
+        "what": "a feather",
+        "minutes": 25
+      },
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "idle",
+            "ticks": 80
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 500
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "carrying"
+              }
+            ]
+          },
+          {
+            "type": "chance",
+            "percent": 2
+          }
+        ]
+      },
+      "say": [
+        "A feather. Right. In the pocket it goes.",
+        "Somebody dropped a feather here. Their loss."
+      ]
+    },
+    {
+      "id": "souvenir-nail",
+      "note": "Picks something up and carries it about for a while. It only counts if it was SAID - a souvenir nobody was told about is invisible - and it refuses while already carrying something, or the follower silently swaps out an object it has been talking about.",
+      "group": "souvenir",
+      "priority": 22,
+      "cooldownMs": 1800000,
+      "output": "overhead",
+      "pickUp": {
+        "what": "a bent nail",
+        "minutes": 25
+      },
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "idle",
+            "ticks": 80
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 500
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "carrying"
+              }
+            ]
+          },
+          {
+            "type": "chance",
+            "percent": 2
+          }
+        ]
+      },
+      "say": [
+        "Somebody's dropped a nail. Bent, but a nail.",
+        "A bent nail. That'll come in useful one day."
+      ]
+    },
+    {
+      "id": "souvenir-mention",
+      "note": "Brings up the thing it is holding. This is the payoff for the object existing at all: it is the same rock forty minutes later.",
+      "group": "souvenir",
+      "priority": 20,
+      "cooldownMs": 420000,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "carrying"
+          },
+          {
+            "type": "idle",
+            "ticks": 100
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 600
+          },
+          {
+            "type": "chance",
+            "percent": 5
+          }
+        ]
+      },
+      "say": [
+        "I've still got {souvenir}, in case you were wondering.",
+        "Still carrying {souvenir}. No regrets.",
+        "You've not asked about {souvenir} once."
+      ]
+    },
+    {
+      "id": "souvenir-lost",
+      "note": "And one day it is not the same rock. The name survives the loss so the line can mourn it properly.",
+      "group": "souvenir",
+      "priority": 36,
+      "cooldownMs": 5000,
+      "output": "overhead",
+      "mood": -6,
+      "when": {
+        "type": "souvenirLost"
+      },
+      "say": [
+        "I've lost {souvenir}. Somewhere back there.",
+        "{souvenir}. Gone. I don't want to talk about it.",
+        "Right, well. That's {souvenir} gone, then."
+      ]
+    },
+    {
+      "id": "bet-poor",
+      "note": "The pessimist, which on most drops is also the realist. Betting the next drop comes in UNDER the threshold. Refuses while a bet is already open, or the follower is betting twice on one drop.",
+      "group": "bet",
+      "priority": 28,
+      "cooldownMs": 240000,
+      "output": "overhead",
+      "bet": {
+        "rich": false,
+        "threshold": 50000,
+        "minutes": 5
+      },
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "combatStart"
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "betting"
+              }
+            ]
+          },
+          {
+            "type": "chance",
+            "percent": 12
+          }
+        ]
+      },
+      "say": [
+        "Ten gold says this one drops nothing worth carrying.",
+        "This one'll drop bones and disappointment. Watch.",
+        "I'll call it now. Nothing good comes off this."
+      ]
+    },
+    {
+      "id": "bet-rich",
+      "note": "The optimist. Same machinery, other direction, so being wrong is on the table for both of them.",
+      "group": "bet",
+      "priority": 28,
+      "cooldownMs": 240000,
+      "output": "overhead",
+      "bet": {
+        "rich": true,
+        "threshold": 100000,
+        "minutes": 5
+      },
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "combatStart"
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "betting"
+              }
+            ]
+          },
+          {
+            "type": "chance",
+            "percent": 6
+          }
+        ]
+      },
+      "say": [
+        "I've got a feeling about this one. A good feeling.",
+        "This is the one. I can feel it. Something big.",
+        "Mark this fight. Something's coming off it."
+      ]
+    },
+    {
+      "id": "bet-won",
+      "note": "Above the loot rules so the verdict on the prediction beats the remark about the prize. The follower called it; that is the story.",
+      "group": "bet",
+      "priority": 72,
+      "cooldownMs": 5000,
+      "output": "overhead",
+      "mood": 10,
+      "holdStill": true,
+      "animation": 2109,
+      "when": {
+        "type": "betWon"
+      },
+      "say": [
+        "Told you.",
+        "I said. I did say.",
+        "And that's why you listen to me.",
+        "Called it. Not a word of thanks, mind."
+      ]
+    },
+    {
+      "id": "bet-lost",
+      "note": "The half that makes the other half worth anything.",
+      "group": "bet",
+      "priority": 72,
+      "cooldownMs": 5000,
+      "output": "overhead",
+      "mood": -4,
+      "when": {
+        "type": "betLost"
+      },
+      "say": [
+        "I was wrong. Enjoy it, it doesn't happen often.",
+        "Well. Ignore everything I said.",
+        "That's not what I predicted. Moving on.",
+        "We'll not speak of this again."
+      ]
+    },
+    {
+      "id": "clock-small-hours",
+      "note": "minimum and maximum are hours, and the comparison wraps past midnight, so this window is written the way a person says it.",
+      "group": "clock",
+      "priority": 24,
+      "cooldownMs": 2700000,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "timeOfDay",
+            "minimum": 1,
+            "maximum": 4
+          },
+          {
+            "type": "idle",
+            "ticks": 100
+          },
+          {
+            "type": "chance",
+            "percent": 10
+          }
+        ]
+      },
+      "say": [
+        "You do know what time it is.",
+        "It's the small hours. I'm not judging. I'm noticing.",
+        "Everyone sensible's asleep. I'm nearly one of them.",
+        "The birds'll start up soon. Just so you know."
+      ]
+    },
+    {
+      "id": "clock-late-and-long",
+      "note": "The two facts together, which is a different remark from either of them alone: it is late AND we have been at this for hours.",
+      "group": "clock",
+      "priority": 30,
+      "cooldownMs": 3600000,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "timeOfDay",
+            "minimum": 23,
+            "maximum": 5
+          },
+          {
+            "type": "sessionMinutes",
+            "minimum": 180
+          },
+          {
+            "type": "idle",
+            "ticks": 60
+          },
+          {
+            "type": "chance",
+            "percent": 20
+          }
+        ]
+      },
+      "say": [
+        "Whatever this is, it'll still be here tomorrow.",
+        "This late, and this long at it. Go to bed. I'll keep watch.",
+        "I'm not going to stop you. I am going to keep mentioning it."
+      ]
+    },
+    {
+      "id": "clock-morning",
+      "note": "Early, which is either admirable or the other thing.",
+      "group": "clock",
+      "priority": 24,
+      "cooldownMs": 2700000,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "timeOfDay",
+            "minimum": 5,
+            "maximum": 7
+          },
+          {
+            "type": "idle",
+            "ticks": 100
+          },
+          {
+            "type": "chance",
+            "percent": 10
+          }
+        ]
+      },
+      "say": [
+        "Up early, or not been to bed? I won't ask.",
+        "This is a respectable hour to be out. Barely.",
+        "Morning. Whichever side of it you're on."
+      ]
+    },
+    {
+      "id": "been-at-it-two-hours",
+      "note": "Pinned with a maximum so the two-hour line does not keep being true at four hours and shout over the four-hour one.",
+      "group": "clock",
+      "priority": 26,
+      "cooldownMs": 3600000,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "sessionMinutes",
+            "minimum": 120,
+            "maximum": 179
+          },
+          {
+            "type": "idle",
+            "ticks": 60
+          },
+          {
+            "type": "chance",
+            "percent": 25
+          }
+        ]
+      },
+      "say": [
+        "Two hours. I checked. Twice.",
+        "We've been at this two hours. I've enjoyed most of it."
+      ]
+    },
+    {
+      "id": "been-at-it-all-day",
+      "note": "Five hours. Said once, and meant.",
+      "group": "clock",
+      "priority": 28,
+      "cooldownMs": 7200000,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "sessionMinutes",
+            "minimum": 300
+          },
+          {
+            "type": "idle",
+            "ticks": 60
+          },
+          {
+            "type": "chance",
+            "percent": 30
+          }
+        ]
+      },
+      "say": [
+        "Five hours. Stand up, walk about. I'll still be here.",
+        "That's most of a day, that is. Have you eaten?",
+        "Five hours together. I've seen marriages with less."
+      ]
+    },
+    {
+      "id": "favour-remembered",
+      "note": "Three outings taken. The follower is not thanking you for the last one; it is thanking you for the pattern, which is the difference between politeness and knowing somebody.",
+      "group": "memory",
+      "priority": 26,
+      "cooldownMs": 3600000,
+      "output": "overhead",
+      "mood": 6,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "tally",
+            "of": "want:kept",
+            "minimum": 3
+          },
+          {
+            "type": "idle",
+            "ticks": 100
+          },
+          {
+            "type": "chance",
+            "percent": 8
+          }
+        ]
+      },
+      "say": [
+        "You've taken me everywhere I've asked. I do notice.",
+        "Every time I've asked to go somewhere, we went. Not everyone would.",
+        "I've no complaints. That's not something I say lightly."
+      ]
+    },
+    {
+      "id": "grudge-noted",
+      "note": "And the other ledger. Not sulking - noting. A follower that forgot the times you said no would not be much of a companion either.",
+      "group": "memory",
+      "priority": 26,
+      "cooldownMs": 3600000,
+      "output": "overhead",
+      "mood": -4,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "tally",
+            "of": "want:missed",
+            "minimum": 3
+          },
+          {
+            "type": "tally",
+            "of": "want:kept",
+            "maximum": 0
+          },
+          {
+            "type": "idle",
+            "ticks": 100
+          },
+          {
+            "type": "chance",
+            "percent": 8
+          }
+        ]
+      },
+      "say": [
+        "That's three times I've asked to go somewhere. I'm not sulking.",
+        "I ask less than I used to. You'll have noticed that too, maybe.",
+        "Ask me again why I don't ask for much."
+      ]
+    },
+    {
+      "id": "mime-loops",
+      "note": "Held as a POSE, because these all loop: mining 624-629/642/3873/4482 (frameStep 8), woodcutting 867-879/2117/2846/5383 (frameStep 6), fishing 618-623 (frameStep 42/44/2) and fletching 1248 (frameStep 15), all measured. The pose is released when your animation changes, which is what joining in until you stop actually means. holdStill keeps the follower planted, since movement beats an animation and it would otherwise mime for half a tick.",
+      "group": "mimic",
+      "priority": 18,
+      "cooldownMs": 180000,
+      "mirrorPose": true,
+      "holdStill": true,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "repeating",
+            "ticks": 30,
+            "ids": [
+              618,
+              619,
+              620,
+              621,
+              622,
+              623,
+              624,
+              625,
+              626,
+              627,
+              628,
+              629,
+              642,
+              867,
+              869,
+              871,
+              873,
+              875,
+              877,
+              879,
+              1248,
+              2117,
+              2846,
+              3873,
+              4482,
+              5383
+            ]
+          },
+          {
+            "type": "chance",
+            "percent": 35
+          }
+        ]
+      }
+    },
+    {
+      "id": "mime-oneshots",
+      "note": "The same idea for the animations the cache says are ONE-SHOTS (frameStep -1): cooking 896/897, smithing 898/6712, herblore 4969, firemaking 4975, crafting 1249. The server restarts these every cycle, so the follower having a single go and stopping is right; held as a pose they would loop wrong.",
+      "group": "mimic",
+      "priority": 18,
+      "cooldownMs": 180000,
+      "mirrorAnimation": true,
+      "holdStill": true,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "repeating",
+            "ticks": 30,
+            "ids": [
+              896,
+              897,
+              898,
+              1249,
+              4969,
+              4975,
+              6712
+            ]
+          },
+          {
+            "type": "chance",
+            "percent": 35
+          }
+        ]
+      }
+    },
+    {
+      "id": "mime-caught",
+      "note": "Said occasionally instead of silently copying you, so the joining in reads as deliberate rather than as a rendering bug. Priority above the two mimes so it takes the tick when it wins.",
+      "group": "mimic",
+      "priority": 19,
+      "cooldownMs": 900000,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "repeating",
+            "ticks": 60
+          },
+          {
+            "type": "chance",
+            "percent": 4
+          }
+        ]
+      },
+      "say": [
+        "I've been copying you a while now. You've not noticed.",
+        "I'm joining in. You carry on.",
+        "It looked easy when you were doing it.",
+        "I could do this. Given the tools. And the levels."
+      ]
+    },
+    {
+      "id": "offer-game",
+      "note": "Guarded with none/asking so it cannot replace a question already waiting for an answer. Without that, offering a game silently withdraws the outing and the player answers a question nothing is listening for.",
+      "group": "idle",
+      "priority": 25,
+      "cooldownMs": 1800000,
+      "output": "overhead",
+      "asks": "game-hands",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "idle",
+            "ticks": 80
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 400
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "asking"
+              }
+            ]
+          },
+          {
+            "type": "chance",
+            "percent": 3
+          }
+        ]
+      },
+      "say": [
+        "I've thought of a game. Come and talk to me.",
+        "Talk to me a minute. I want to try something.",
+        "I'm bored. Come here, I've had an idea."
+      ]
+    },
+    {
+      "id": "game-hands-won",
+      "note": "Half of the coin flip. This one is gated on chance 50 and sits above the losing rule, so a failed roll falls through to it: one winner per event by priority is what makes that a fair fifty-fifty rather than two rules both firing.",
+      "group": "idle",
+      "priority": 70,
+      "cooldownMs": 1000,
+      "output": "overhead",
+      "delayTicks": 3,
+      "delayTicksMax": 6,
+      "mood": 8,
+      "holdStill": true,
+      "animation": 2109,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "any",
+            "conditions": [
+              {
+                "type": "answered",
+                "is": "left"
+              },
+              {
+                "type": "answered",
+                "is": "right"
+              }
+            ]
+          },
+          {
+            "type": "chance",
+            "percent": 50
+          }
+        ]
+      },
+      "say": [
+        "It was. How did you do that?",
+        "Right first time. I'm slightly annoyed.",
+        "There it is. You're better at this than me.",
+        "Correct. I had it there the whole time."
+      ]
+    },
+    {
+      "id": "game-hands-lost",
+      "note": "The other half. No chance gate: it fires whenever the winning rule did not, which is exactly half the time.",
+      "group": "idle",
+      "priority": 68,
+      "cooldownMs": 1000,
+      "output": "overhead",
+      "delayTicks": 3,
+      "delayTicksMax": 6,
+      "when": {
+        "type": "any",
+        "conditions": [
+          {
+            "type": "answered",
+            "is": "left"
+          },
+          {
+            "type": "answered",
+            "is": "right"
+          }
+        ]
+      },
+      "say": [
+        "Wrong hand. It was the other one.",
+        "No. Other one. Bad luck.",
+        "Nothing in that one. Try again sometime.",
+        "Wrong. I won't gloat. I'm gloating."
+      ]
+    },
+    {
+      "id": "game-hands-declined",
+      "note": "So that saying no is answered rather than ignored.",
+      "group": "idle",
+      "priority": 66,
+      "cooldownMs": 1000,
+      "output": "overhead",
+      "delayTicks": 3,
+      "delayTicksMax": 6,
+      "when": {
+        "type": "answered",
+        "is": "nogame"
+      },
+      "say": [
+        "Suit yourself. They're both still full.",
+        "Your loss. Probably.",
+        "Some other time, then."
       ]
     }
   ]

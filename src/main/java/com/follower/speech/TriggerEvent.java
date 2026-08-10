@@ -40,7 +40,25 @@ public final class TriggerEvent
 		WANT_FULFILLED,
 		WANT_EXPIRED,
 		ANSWERED,
+		SOUVENIR_LOST,
+		BET_WON,
+		BET_LOST,
 		MANUAL,
+	}
+
+	/** The thing it was carrying is gone. {souvenir} names it one last time. */
+	public static TriggerEvent souvenirLost(String what)
+	{
+		TriggerEvent event = new TriggerEvent(Type.SOUVENIR_LOST);
+		event.name = what == null ? "" : what;
+		event.placeholders.put("souvenir", event.name);
+		return event;
+	}
+
+	/** A prediction came good, or did not. */
+	public static TriggerEvent bet(Type type)
+	{
+		return new TriggerEvent(type);
 	}
 
 	/**

@@ -58,7 +58,10 @@ public class RuleSetIntegrityTest
 		"tally", "personalbest", "sessioncount",
 		"answered", "hovered", "examined",
 		"inventoryfree", "playersnearby",
-		"wanting", "wantfulfilled", "wantexpired", "feelsabout"));
+		"wanting", "wantfulfilled", "wantexpired", "feelsabout",
+		"remembers", "carrying", "souvenirlost",
+		"betting", "betwon", "betlost",
+		"timeofday", "sessionminutes", "asking"));
 
 	private static JsonObject bundled(String resource) throws IOException
 	{
@@ -145,7 +148,8 @@ public class RuleSetIntegrityTest
 		// always on. A group outside this list has no off switch in settings.
 		Set<String> switchable = new HashSet<>(Arrays.asList(
 			"boss", "health", "area", "gear", "quest", "combat", "mimic",
-			"errand", "idle", "reactions", "thrall", "misc"));
+			"errand", "idle", "reactions", "thrall", "misc",
+			"memory", "souvenir", "bet", "clock"));
 
 		Harness h = new Harness(folder.newFolder().toPath());
 		Set<String> orphans = new TreeSet<>();
@@ -283,6 +287,15 @@ public class RuleSetIntegrityTest
 		byType.put("wantfulfilled", new HashSet<>(Arrays.asList("want")));
 		byType.put("wantexpired", new HashSet<>(Arrays.asList("want")));
 
+		// These two come off the state snapshot rather than the event, so they
+		// are readable from any trigger - but they are EMPTY unless there is
+		// something to read, and an empty one leaves a hole in the sentence
+		// ("I keep thinking about ."). Listing them as conditional rather than
+		// ambient is what makes the guard compulsory.
+		byType.put("remembers", new HashSet<>(Arrays.asList("memory")));
+		byType.put("carrying", new HashSet<>(Arrays.asList("souvenir")));
+		byType.put("souvenirlost", new HashSet<>(Arrays.asList("souvenir")));
+
 		Harness h = new Harness(folder.newFolder().toPath());
 		List<String> problems = new ArrayList<>();
 		for (SpeechRule rule : h.loader.getRules())
@@ -346,13 +359,17 @@ public class RuleSetIntegrityTest
 		for (SpeechRule rule : h.loader.getRules())
 		{
 			if (Boolean.TRUE.equals(rule.mirrorAnimation)
-				&& (rule.when == null || !rule.when.usesType("animationSelf")))
+				&& (rule.when == null
+					|| (!rule.when.usesType("animationSelf")
+						&& !rule.when.usesType("repeating"))))
 			{
 				problems.add(rule.id);
 			}
 		}
-		assertTrue("mirrorAnimation only resolves on an animation trigger; these"
-			+ " rules would mirror nothing: " + problems, problems.isEmpty());
+		assertTrue("mirrorAnimation needs a trigger that says WHICH animation to"
+			+ " copy - the event's own id, or the one the repeating condition is"
+			+ " watching. These rules would mirror nothing: " + problems,
+			problems.isEmpty());
 	}
 
 	@Test
@@ -363,13 +380,16 @@ public class RuleSetIntegrityTest
 		for (SpeechRule rule : h.loader.getRules())
 		{
 			if (Boolean.TRUE.equals(rule.mirrorPose)
-				&& (rule.when == null || !rule.when.usesType("animationSelf")))
+				&& (rule.when == null
+					|| (!rule.when.usesType("animationSelf")
+						&& !rule.when.usesType("repeating"))))
 			{
 				problems.add(rule.id);
 			}
 		}
 		assertTrue("mirrorPose takes the id from the animation that triggered it,"
-			+ " so it needs an animation trigger: " + problems, problems.isEmpty());
+			+ " or from the one repeating is watching, so it needs one of those"
+			+ " two triggers: " + problems, problems.isEmpty());
 	}
 
 	@Test

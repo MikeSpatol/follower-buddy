@@ -703,6 +703,58 @@ public interface FollowerConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "groupMemory",
+		name = "Memory",
+		description = "Rules in the \"memory\" group — the follower brings up things that"
+			+ " happened, and keeps score of the outings you did and did not take it on",
+		section = groupsSection,
+		position = 8
+	)
+	default boolean groupMemory()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "groupSouvenir",
+		name = "Souvenirs",
+		description = "Rules in the \"souvenir\" group — the follower picks things up, carries"
+			+ " them about for a while, and is put out when it loses them",
+		section = groupsSection,
+		position = 9
+	)
+	default boolean groupSouvenir()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "groupBet",
+		name = "Predictions",
+		description = "Rules in the \"bet\" group — the follower calls what the next drop is"
+			+ " worth before it lands, and has to live with being wrong",
+		section = groupsSection,
+		position = 10
+	)
+	default boolean groupBet()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "groupClock",
+		name = "The hour and the session",
+		description = "Rules in the \"clock\" group — remarks about what time it is where you"
+			+ " are and how long you have been playing",
+		section = groupsSection,
+		position = 11
+	)
+	default boolean groupClock()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 		keyName = "wanderWhenIdle",
 		name = "Wander when idle",
 		description = "While you stand still, the follower drifts to a nearby tile every"

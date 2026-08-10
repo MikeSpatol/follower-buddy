@@ -32,7 +32,12 @@ public class TalkScriptTest
 {
 	private static Map<String, FollowerDialog.Node> script()
 	{
-		return FollowerPlugin.talkScript();
+		// The day-summary branch is built fresh each visit from figures only the
+		// running plugin has. A stand-in keeps the structural checks honest
+		// (the node is reachable, its pages are readable, it ends where it says
+		// it does); the wording itself is walked branch by branch below.
+		return FollowerPlugin.talkScript(
+			() -> FollowerPlugin.daySummary(95, 12, 2, 1, "good", "that chicken"));
 	}
 
 	/** Every node id something points at, via {@code then} or a choice. */
@@ -162,6 +167,78 @@ public class TalkScriptTest
 		}
 		assertTrue("lines the game cannot draw:\n  "
 			+ String.join("\n  ", problems), problems.isEmpty());
+	}
+
+	@Test
+	public void everyDaySummaryReadsLikeASentence()
+	{
+		// The one branch of the conversation whose wording is assembled at run
+		// time rather than written out, so it is the one branch the checks
+		// above cannot see. Sixteen combinations of what happened today, times
+		// five moods, and each has to be a sentence the player can read.
+		List<String> problems = new ArrayList<>();
+		String[] moods = {"low", "down", "neutral", "good", "high"};
+		int[][] figures = {
+			{0, 0, 0, 0}, {1, 1, 1, 1}, {59, 0, 0, 0}, {60, 0, 0, 0},
+			{95, 12, 2, 1}, {480, 999, 9, 40}, {0, 3, 0, 0}, {0, 0, 0, 2},
+		};
+
+		for (String mood : moods)
+		{
+			for (int[] f : figures)
+			{
+				for (String incident : new String[]{null, "that chicken"})
+				{
+					String[] pages = FollowerPlugin.daySummary(
+						f[0], f[1], f[2], f[3], mood, incident);
+					String where = mood + " " + java.util.Arrays.toString(f);
+
+					if (pages.length == 0)
+					{
+						problems.add(where + ": said nothing at all");
+						continue;
+					}
+					for (String page : pages)
+					{
+						if (page.trim().isEmpty())
+						{
+							problems.add(where + ": blank page");
+						}
+						else if (page.length() > 110)
+						{
+							problems.add(where + " (" + page.length() + "): " + page);
+						}
+						else if (!page.endsWith(".") && !page.endsWith("!")
+							&& !page.endsWith("?"))
+						{
+							problems.add(where + ": unfinished - " + page);
+						}
+						// A plural agreement slip is the tell that the numbers
+						// were pasted in rather than spoken.
+						if (page.contains("1 things") || page.contains("1 levels")
+							|| page.contains("1 deaths") || page.contains("1 minutes")
+							|| page.contains("1 hours"))
+						{
+							problems.add(where + ": plural on one - " + page);
+						}
+					}
+				}
+			}
+		}
+		assertTrue("day summaries that do not read:\n  "
+			+ String.join("\n  ", problems), problems.isEmpty());
+	}
+
+	@Test
+	public void aQuietDaySaysSoRatherThanReportingZeroes()
+	{
+		// The reason the branch exists at all. A follower that answers "0
+		// kills, 0 levels, 0 deaths" has read the tallies out; one that says
+		// nothing happened has understood them.
+		String[] pages = FollowerPlugin.daySummary(0, 0, 0, 0, "neutral", null);
+		String first = pages[0];
+		assertFalse("reported a zero: " + first, first.contains("0 "));
+		assertFalse("reported a zero: " + first, first.startsWith("So far:"));
 	}
 
 	@Test

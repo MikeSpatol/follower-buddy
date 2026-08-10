@@ -83,6 +83,101 @@
           "answer": "no"
         }
       ]
+    },
+    {
+      "id": "game-hands",
+      "note": "A game, opened by the offer-game rule the same way want-outing is opened by ask-outing. The reveal is deliberately NOT in here: a tree is fixed text, so a guess it resolved itself would have the same answer every time. The box closes on \"hold on\", and the verdict arrives overhead a beat later from game-hands-won and game-hands-lost, which split a coin flip between them by priority. That also puts the reveal where the follower is standing rather than in a menu, which is where a reveal belongs.",
+      "start": "start",
+      "nodes": [
+        {
+          "id": "start",
+          "says": [
+            "Hold on. Stop a minute.",
+            "Both hands behind my back. One of them's got something in it."
+          ],
+          "next": "ask"
+        },
+        {
+          "id": "ask",
+          "says": [
+            "Go on then. Which one?"
+          ],
+          "choices": [
+            {
+              "label": "Left.",
+              "next": "left-q"
+            },
+            {
+              "label": "Right.",
+              "next": "right-q"
+            },
+            {
+              "label": "What have you got in there?",
+              "next": "what-q"
+            },
+            {
+              "label": "Not now.",
+              "next": "no-q"
+            }
+          ]
+        },
+        {
+          "id": "what-q",
+          "you": [
+            "What have you got in there?"
+          ],
+          "next": "what-a"
+        },
+        {
+          "id": "what-a",
+          "says": [
+            "That'd be telling."
+          ],
+          "next": "ask"
+        },
+        {
+          "id": "left-q",
+          "you": [
+            "Left."
+          ],
+          "next": "left-a"
+        },
+        {
+          "id": "left-a",
+          "says": [
+            "Left. You sound sure. Hold on."
+          ],
+          "answer": "left"
+        },
+        {
+          "id": "right-q",
+          "you": [
+            "Right."
+          ],
+          "next": "right-a"
+        },
+        {
+          "id": "right-a",
+          "says": [
+            "Right, is it. Hold on."
+          ],
+          "answer": "right"
+        },
+        {
+          "id": "no-q",
+          "you": [
+            "Not now."
+          ],
+          "next": "no-a"
+        },
+        {
+          "id": "no-a",
+          "says": [
+            "Fair enough. They'll both still be here later."
+          ],
+          "answer": "nogame"
+        }
+      ]
     }
   ]
 }

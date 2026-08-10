@@ -55,6 +55,12 @@ import net.runelite.api.NPC;
  *   <tr><td>wanting</td><td>no fields — a want is open; usually used negated</td></tr>
  *   <tr><td>wantFulfilled / wantExpired</td><td>no fields; {@code {want}} placeholder</td></tr>
  *   <tr><td>feelsAbout</td><td>{@code is} liked|disliked — about the CURRENT region</td></tr>
+ *   <tr><td>remembers</td><td>optional {@code is} incident key, {@code minimum} times; {@code {memory}}</td></tr>
+ *   <tr><td>carrying</td><td>no fields — holding a souvenir; {@code {souvenir}}</td></tr>
+ *   <tr><td>souvenirLost</td><td>no fields; {@code {souvenir}} names it one last time</td></tr>
+ *   <tr><td>betting / betWon / betLost</td><td>no fields</td></tr>
+ *   <tr><td>timeOfDay</td><td>{@code minimum} / {@code maximum} hour, 0-23, wrapping past midnight</td></tr>
+ *   <tr><td>sessionMinutes</td><td>{@code minimum} / {@code maximum} minutes today</td></tr>
  * </table>
  *
  * <p>{@code npcNearby} also takes {@code minimum}/{@code maximum} combat level,
@@ -426,6 +432,59 @@ public class Condition
 			// A lifetime count, as against npcKill's "every" which fires on the
 			// moment. This is state: it stays true once passed, so it belongs
 			// alongside something that picks the moment to say it.
+			// The incident the follower is still thinking about. "is" names a
+			// particular one; without it, any incident will do - which is what
+			// a generic "I still think about {memory}" line wants.
+			case "remembers":
+				return ctx.hasIncident()
+					&& (is == null || is.equalsIgnoreCase(ctx.getIncidentKey()))
+					&& ctx.getIncidentCount() >= orDefault(minimum, 1);
+
+			// A question is already on the table. Used NEGATED, and every rule
+			// with an "asks" needs it: opening a second question replaces the
+			// first, so without the guard a follower that asks to go somewhere
+			// and then offers a game has silently withdrawn the outing, and the
+			// player answers a question nobody is listening for.
+			case "asking":
+				return ctx.isAwaitingAnswer()
+					&& (is == null || is.equalsIgnoreCase(ctx.getAskedTree()));
+
+			// Carrying something it picked up. Mostly used negated, to stop it
+			// picking up a second thing while its hands are full.
+			case "carrying":
+				return ctx.isCarrying();
+
+			case "souvenirlost":
+				return event.getType() == TriggerEvent.Type.SOUVENIR_LOST;
+
+			// A prediction is outstanding. Negated, this stops it betting twice
+			// on the same drop.
+			case "betting":
+				return ctx.isBetting();
+
+			case "betwon":
+				return event.getType() == TriggerEvent.Type.BET_WON;
+			case "betlost":
+				return event.getType() == TriggerEvent.Type.BET_LOST;
+
+			// The hour on the player's own wall, not the game's. "minimum" and
+			// "maximum" bound it, wrapping past midnight so a late-night window
+			// can be written the way a person would say it: 23 to 5.
+			case "timeofday":
+			{
+				int hour = ctx.getHourOfDay();
+				int from = orDefault(minimum, 0);
+				int to = orDefault(maximum, 23);
+				return from <= to
+					? hour >= from && hour <= to
+					: hour >= from || hour <= to;
+			}
+
+			// How long today has run, in minutes.
+			case "sessionminutes":
+				return ctx.getSessionMinutes() >= orDefault(minimum, 60)
+					&& (maximum == null || ctx.getSessionMinutes() <= maximum);
+
 			// How this particular follower feels about where it is standing.
 			// The set is rolled once per character, so the answer is a fact
 			// about your follower rather than about the game.

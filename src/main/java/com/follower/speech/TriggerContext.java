@@ -119,6 +119,8 @@ public final class TriggerContext
 		refreshRepetition(local);
 		ageQuestion();
 		checkWant();
+		checkSouvenir();
+		checkBet();
 		driftMood();
 	}
 
@@ -375,6 +377,30 @@ public final class TriggerContext
 	}
 
 	/**
+	 * The suffix marking a counter as belonging to THIS session.
+	 *
+	 * <p>They live in the same map as the lifetime ones so a rule can ask about
+	 * either with the same condition - "your third death today" and "your
+	 * hundredth ever" are the same question with a different key. They are
+	 * dropped at login and never written out, which is what makes today mean
+	 * today.
+	 */
+	public static final String TODAY = ":today";
+
+	/** Counts one against both the lifetime total and today's. */
+	public int tallyBoth(String what)
+	{
+		tally(what + TODAY);
+		return tally(what);
+	}
+
+	/** Called at login: yesterday's session counters are not today's. */
+	public void clearDailyTallies()
+	{
+		tallies.keySet().removeIf(key -> key.endsWith(TODAY));
+	}
+
+	/**
 	 * Files a value against a record.
 	 *
 	 * @return whether this BEAT a record that already existed. The first value
@@ -524,6 +550,84 @@ public final class TriggerContext
 	@lombok.Getter
 	@lombok.Setter
 	private int hoverTicks;
+
+	// ------------------------------------------------------------- incidents
+
+	/**
+	 * The last thing daft enough to be worth bringing up again.
+	 *
+	 * <p>The tallies count; this remembers. They are not the same faculty and
+	 * the difference is most of what makes a companion feel like one. "Your
+	 * four hundredth yew" is data delivered well. "Careful, I've seen what a
+	 * chicken can do to you" is a shared history, and it only works because
+	 * something specific happened and was kept.
+	 *
+	 * <p>One at a time on purpose. A follower with a filing cabinet of
+	 * grievances is a different and much worse character than one with a
+	 * favourite story.
+	 */
+	private String incidentKey = "";
+	private String incidentPhrase = "";
+	private int incidentCount;
+
+	/**
+	 * Files an incident, or counts another of the same.
+	 *
+	 * @param key   what happened, for a rule to recognise
+	 * @param phrase how to refer to it out loud - "that chicken"
+	 */
+	public void noteIncident(String key, String phrase)
+	{
+		if (key == null || key.isEmpty())
+		{
+			return;
+		}
+		if (key.equals(incidentKey))
+		{
+			incidentCount++;
+		}
+		else
+		{
+			incidentKey = key;
+			incidentPhrase = phrase == null ? "" : phrase;
+			incidentCount = 1;
+		}
+		countersDirty = true;
+		log.debug("Incident: {} ({}), now {}", key, incidentPhrase, incidentCount);
+	}
+
+	public boolean hasIncident()
+	{
+		return !incidentKey.isEmpty();
+	}
+
+	public String getIncidentKey()
+	{
+		return incidentKey;
+	}
+
+	/** How to say it out loud, for the {memory} placeholder. */
+	public String getIncidentPhrase()
+	{
+		return incidentPhrase;
+	}
+
+	public int getIncidentCount()
+	{
+		return incidentCount;
+	}
+
+	/** Puts back the incident a previous session was still thinking about. */
+	public void restoreIncident(String key, String phrase, int count)
+	{
+		if (key == null || key.isEmpty())
+		{
+			return;
+		}
+		incidentKey = key;
+		incidentPhrase = phrase == null ? "" : phrase;
+		incidentCount = Math.max(1, count);
+	}
 
 	// ---------------------------------------------------------------- traits
 
@@ -689,6 +793,161 @@ public final class TriggerContext
 				wantLabel, wantRegion, regionId);
 		}
 	}
+
+	// --------------------------------------------------------- the souvenir
+
+	/**
+	 * Something the follower picked up and is carrying about.
+	 *
+	 * <p>Nothing else in the plugin persists an OBJECT. Everything it has is a
+	 * number, a mood or a place - and a companion holding a particular rock it
+	 * found is a different kind of detail: it is the same rock an hour later,
+	 * and then one day it is not.
+	 */
+	private String souvenir = "";
+	private int souvenirDroppedTick;
+
+	public void pickUp(String what, int minutes)
+	{
+		if (what == null || what.isEmpty() || !souvenir.isEmpty())
+		{
+			return;
+		}
+		souvenir = what;
+		souvenirDroppedTick = client.getTickCount() + Math.max(1, minutes) * 100;
+		log.debug("Picked up {} for {} minutes", what, minutes);
+	}
+
+	public boolean isCarrying()
+	{
+		return !souvenir.isEmpty();
+	}
+
+	/** What it is carrying, or what it just lost, for the {souvenir} placeholder. */
+	public String getSouvenir()
+	{
+		return souvenir;
+	}
+
+	private boolean souvenirLost;
+
+	/** Consumed once by the engine when the souvenir goes, like a want outcome. */
+	public boolean pollSouvenirLost()
+	{
+		boolean lost = souvenirLost;
+		souvenirLost = false;
+		return lost;
+	}
+
+	private void checkSouvenir()
+	{
+		if (souvenir.isEmpty() || client.getTickCount() < souvenirDroppedTick)
+		{
+			return;
+		}
+		souvenirLost = true;
+		log.debug("Lost the {}", souvenir);
+		// The name survives the loss so the line can mourn it by name.
+		souvenirDroppedTick = 0;
+	}
+
+	/** Called once the loss has been announced. */
+	public void clearSouvenir()
+	{
+		souvenir = "";
+	}
+
+	// -------------------------------------------------------------- the bet
+
+	/**
+	 * A prediction about the next thing to drop, and what it is worth.
+	 *
+	 * <p>A companion with an opinion about what happens next has a stake in it,
+	 * which is a different thing from commentary. Being WRONG is the better
+	 * half: anything that can only be right is not really predicting.
+	 */
+	public enum BetOutcome
+	{
+		WON,
+		LOST,
+	}
+
+	private boolean betOpen;
+	private boolean betOnRich;
+	private int betThreshold;
+	private int betDeadlineTick;
+	private BetOutcome betOutcome;
+
+	/**
+	 * @param onRich whether the follower is betting the drop BEATS the
+	 * threshold. Both directions exist so it can be pessimistic, which is
+	 * funnier and, on most drops, correct.
+	 */
+	public void placeBet(boolean onRich, int threshold, int minutes)
+	{
+		if (betOpen)
+		{
+			return;
+		}
+		betOpen = true;
+		betOnRich = onRich;
+		betThreshold = threshold;
+		betDeadlineTick = client.getTickCount() + Math.max(1, minutes) * 100;
+	}
+
+	public boolean isBetting()
+	{
+		return betOpen;
+	}
+
+	/** Called by the plugin when loot lands, while a bet is open. */
+	public void settleBet(int lootValue)
+	{
+		if (!betOpen)
+		{
+			return;
+		}
+		betOpen = false;
+		boolean rich = lootValue >= betThreshold;
+		betOutcome = rich == betOnRich ? BetOutcome.WON : BetOutcome.LOST;
+		log.debug("Bet {} on {}{}: loot was {}", betOutcome,
+			betOnRich ? ">=" : "<", betThreshold, lootValue);
+	}
+
+	public BetOutcome pollBet()
+	{
+		BetOutcome outcome = betOutcome;
+		betOutcome = null;
+		return outcome;
+	}
+
+	private void checkBet()
+	{
+		// A bet nobody collected on. Quietly forgotten rather than counted as
+		// a win, which would let it be right by saying nothing.
+		if (betOpen && client.getTickCount() >= betDeadlineTick)
+		{
+			betOpen = false;
+		}
+	}
+
+	// ----------------------------------------------------------- the clock
+
+	/**
+	 * The hour on the player's own wall, 0-23.
+	 *
+	 * <p>Nothing else in the game acknowledges the room the player is sitting
+	 * in, which is exactly why a follower noticing it lands the way it does.
+	 */
+	public int getHourOfDay()
+	{
+		return java.time.LocalTime.now().getHour();
+	}
+
+	/** Minutes this session has run, fed by the plugin's own timer. */
+	@lombok.Getter
+	@lombok.Setter
+	private int sessionMinutes;
 
 	// ----------------------------------------------------------- conversation
 
@@ -886,12 +1145,37 @@ public final class TriggerContext
 		return regionVisits.getOrDefault(regionId, 0);
 	}
 
-	/** Called by the plugin when the player dies. Session memory, on purpose:
-	 * a companion remembering last week's death forever would wear thin. */
+	/**
+	 * Called by the plugin when the player dies.
+	 *
+	 * <p>This used to be session memory, on the reasoning that a companion
+	 * remembering last week's death forever would wear thin. That was the
+	 * wrong call: within a session the only time you are near the spot is the
+	 * walk back for your gravestone, which is the one moment the line must NOT
+	 * fire - hence the arming delay. Kept between sessions it becomes what it
+	 * was always trying to be, which is an anniversary.
+	 */
 	public void noteDeath(WorldPoint where)
 	{
 		deathLocation = where;
 		deathTick = client.getTickCount();
+		countersDirty = true;
+	}
+
+	/** Where the player last died, for the plugin to write out. */
+	public WorldPoint getDeathLocation()
+	{
+		return deathLocation;
+	}
+
+	/**
+	 * Puts back a death from a previous session. The arming delay is spent:
+	 * whenever it was, it was not this walk back.
+	 */
+	public void restoreDeathSpot(WorldPoint where)
+	{
+		deathLocation = where;
+		deathTick = Integer.MIN_VALUE / 2;
 	}
 
 	/**

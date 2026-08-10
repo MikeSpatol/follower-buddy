@@ -819,6 +819,173 @@ public class EveryConditionTypeTest
 		assertFired(during, "thieving");
 	}
 
+	@Test
+	public void theIncidentItKeepsBringingUp() throws IOException
+	{
+		note("remembers");
+
+		Harness any = harnessFor("{\"type\": \"remembers\"}");
+		any.gameTicks(2);
+		assertQuiet(any, "nothing has happened worth remembering");
+		any.engine.getContext().noteIncident("chicken-death", "that chicken");
+		any.gameTicks(1);
+		assertFired(any, "remembers");
+
+		// Named: it is the RIGHT incident, not merely some incident. Without
+		// this the follower brings up the chicken after drowning in the sea.
+		Harness named = harnessFor(
+			"{\"type\": \"remembers\", \"is\": \"chicken-death\"}");
+		named.engine.getContext().noteIncident("drowned", "the swim back");
+		named.gameTicks(2);
+		assertQuiet(named, "a different incident is on its mind");
+		named.engine.getContext().noteIncident("chicken-death", "that chicken");
+		named.gameTicks(1);
+		assertFired(named, "remembers named");
+
+		// And the count, which is what makes "again" honest.
+		Harness twice = harnessFor(
+			"{\"type\": \"remembers\", \"is\": \"chicken-death\", \"minimum\": 2}");
+		twice.engine.getContext().noteIncident("chicken-death", "that chicken");
+		twice.gameTicks(2);
+		assertQuiet(twice, "it has only happened once");
+		twice.engine.getContext().noteIncident("chicken-death", "that chicken");
+		twice.gameTicks(1);
+		assertFired(twice, "remembers twice");
+	}
+
+	@Test
+	public void whatItIsCarryingAndWhenItLosesIt() throws IOException
+	{
+		note("carrying", "souvenirLost");
+
+		Harness h = harnessFor("{\"type\": \"carrying\"}");
+		h.gameTicks(2);
+		assertQuiet(h, "its hands are empty");
+		h.engine.getContext().pickUp("a nice flat rock", 1);
+		h.gameTicks(1);
+		assertFired(h, "carrying");
+
+		// One at a time: a second pick-up while holding something is refused,
+		// or the follower ends up describing a rock it swapped out silently.
+		h.engine.getContext().pickUp("a shinier rock", 5);
+		assertEquals("it can only carry one thing", "a nice flat rock",
+			h.engine.getContext().getSouvenir());
+
+		// And the losing of it, a minute later.
+		Harness gone = harnessFor("{\"type\": \"souvenirLost\"}");
+		gone.engine.getContext().pickUp("a nice flat rock", 1);
+		gone.gameTicks(50);
+		assertQuiet(gone, "it is still holding the thing");
+		gone.gameTicks(60);
+		assertFired(gone, "souvenirLost");
+	}
+
+	@Test
+	public void theBetIsPlacedAndSettledBothWays() throws IOException
+	{
+		note("betting", "betWon", "betLost");
+
+		Harness open = harnessFor("{\"type\": \"betting\"}");
+		open.gameTicks(2);
+		assertQuiet(open, "no prediction is outstanding");
+		open.engine.getContext().placeBet(false, 50_000, 5);
+		open.gameTicks(1);
+		assertFired(open, "betting");
+
+		// Betting the drop comes in UNDER 50k, and it does.
+		Harness won = harnessFor("{\"type\": \"betWon\"}");
+		won.engine.getContext().placeBet(false, 50_000, 5);
+		won.gameTicks(1);
+		won.engine.getContext().settleBet(1_200);
+		won.gameTicks(2);
+		assertFired(won, "betWon");
+
+		// Same prediction, a drop that beats it. The half that has to work for
+		// the other half to mean anything.
+		Harness lost = harnessFor("{\"type\": \"betLost\"}");
+		lost.engine.getContext().placeBet(false, 50_000, 5);
+		lost.gameTicks(1);
+		lost.engine.getContext().settleBet(2_000_000);
+		lost.gameTicks(2);
+		assertFired(lost, "betLost");
+
+		// A bet nobody ever collected on is not a win.
+		Harness lapsed = harnessFor("{\"type\": \"betWon\"}");
+		lapsed.engine.getContext().placeBet(false, 50_000, 1);
+		lapsed.gameTicks(120);
+		assertQuiet(lapsed, "an uncollected bet cannot be right by default");
+	}
+
+	@Test
+	public void theHourAndHowLongWeHaveBeenAtIt() throws IOException
+	{
+		note("timeOfDay", "sessionMinutes");
+
+		// The hour comes off the player's own clock, so the test cannot pick
+		// it - it can only ask about the hour it actually is, and about the
+		// window that excludes it.
+		int hour = java.time.LocalTime.now().getHour();
+
+		Harness now = harnessFor(
+			"{\"type\": \"timeOfDay\", \"minimum\": " + hour
+				+ ", \"maximum\": " + hour + "}");
+		now.gameTicks(2);
+		assertFired(now, "timeOfDay covering the current hour");
+
+		int elsewhere = (hour + 6) % 24;
+		Harness other = harnessFor(
+			"{\"type\": \"timeOfDay\", \"minimum\": " + elsewhere
+				+ ", \"maximum\": " + elsewhere + "}");
+		other.gameTicks(2);
+		assertQuiet(other, "a window six hours away is not now");
+
+		// The wrap past midnight, which is the whole reason the comparison is
+		// not a plain range check: 23-to-5 has to mean five hours, not none.
+		Harness wrapped = harnessFor(
+			"{\"type\": \"timeOfDay\", \"minimum\": " + ((hour + 23) % 24)
+				+ ", \"maximum\": " + ((hour + 1) % 24) + "}");
+		wrapped.gameTicks(2);
+		assertFired(wrapped, "a window straddling midnight still contains now");
+
+		Harness been = harnessFor("{\"type\": \"sessionMinutes\", \"minimum\": 90}");
+		been.engine.getContext().setSessionMinutes(89);
+		been.gameTicks(2);
+		assertQuiet(been, "eighty-nine minutes is not ninety");
+		been.engine.getContext().setSessionMinutes(90);
+		been.gameTicks(1);
+		assertFired(been, "sessionMinutes");
+	}
+
+	@Test
+	public void aQuestionAlreadyOnTheTable() throws IOException
+	{
+		note("asking");
+
+		Harness h = harnessFor("{\"type\": \"asking\"}");
+		h.gameTicks(2);
+		assertQuiet(h, "nothing has been asked");
+		h.engine.getContext().noteQuestion("want-outing");
+		h.gameTicks(1);
+		assertFired(h, "asking");
+
+		// Named, which is how one question can be told from another.
+		Harness named = harnessFor("{\"type\": \"asking\", \"is\": \"game-hands\"}");
+		named.engine.getContext().noteQuestion("want-outing");
+		named.gameTicks(2);
+		assertQuiet(named, "a different question is open");
+		named.engine.getContext().noteQuestion("game-hands");
+		named.gameTicks(1);
+		assertFired(named, "asking named");
+
+		// Answering closes it, which is what the guard on every asking rule
+		// depends on: once answered, a new question may be opened.
+		Harness closed = harnessFor("{\"type\": \"asking\"}");
+		closed.engine.getContext().noteQuestion("want-outing");
+		closed.engine.getContext().noteAnswered();
+		closed.gameTicks(2);
+		assertQuiet(closed, "an answered question is no longer on the table");
+	}
+
 	// ------------------------------------------------------------- coverage
 
 	@Test
@@ -846,6 +1013,11 @@ public class EveryConditionTypeTest
 		wantsAreAskedForFulfilledAndForgotten();
 		tasteIsAboutWhereTheFollowerIsStanding();
 		thievingEdges();
+		theIncidentItKeepsBringingUp();
+		whatItIsCarryingAndWhenItLosesIt();
+		theBetIsPlacedAndSettledBothWays();
+		theHourAndHowLongWeHaveBeenAtIt();
+		aQuestionAlreadyOnTheTable();
 
 		List<String> missing = new ArrayList<>(new TreeSet<>(RuleSetIntegrityTest.KNOWN_TYPES));
 		missing.removeAll(exercised);

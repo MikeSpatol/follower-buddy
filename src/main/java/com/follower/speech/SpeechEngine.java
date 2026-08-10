@@ -92,23 +92,33 @@ public class SpeechEngine
 		TriggerContext.WantOutcome outcome = context.pollWant();
 		if (outcome != null)
 		{
+			// Counted as well as announced. A grudge then needs no machinery of
+			// its own: "you have ignored me three times" is a tally condition,
+			// and lives in phrases.json with everything else.
+			context.tally(outcome == TriggerContext.WantOutcome.FULFILLED
+				? "want:kept" : "want:missed");
 			dispatch(TriggerEvent.want(
 				outcome == TriggerContext.WantOutcome.FULFILLED
 					? TriggerEvent.Type.WANT_FULFILLED
 					: TriggerEvent.Type.WANT_EXPIRED,
 				context.getWantLabel()));
 		}
+
+		// The souvenir going, and a prediction coming good or not. Same shape
+		// as the want: state becoming an event, consumed exactly once.
+		if (context.pollSouvenirLost())
+		{
+			dispatch(TriggerEvent.souvenirLost(context.getSouvenir()));
+			context.clearSouvenir();
+		}
+		TriggerContext.BetOutcome bet = context.pollBet();
+		if (bet != null)
+		{
+			dispatch(TriggerEvent.bet(bet == TriggerContext.BetOutcome.WON
+				? TriggerEvent.Type.BET_WON : TriggerEvent.Type.BET_LOST));
+		}
 	}
 
-	/**
-	 * Clears everything mid-flight but KEEPS the state snapshot.
-	 *
-	 * <p>For a world hop, where the scene goes and the player does not. What
-	 * the follower is feeling, hoping for and counting are facts about the
-	 * session rather than about the scene, and throwing them away because the
-	 * world number changed is how a want quietly disappears on the way
-	 * somewhere.
-	 */
 	/**
 	 * Drops the held floor.
 	 *
@@ -123,6 +133,15 @@ public class SpeechEngine
 		hushOwner = null;
 	}
 
+	/**
+	 * Clears everything mid-flight but KEEPS the state snapshot.
+	 *
+	 * <p>For a world hop, where the scene goes and the player does not. What
+	 * the follower is feeling, hoping for and counting are facts about the
+	 * session rather than about the scene, and throwing them away because the
+	 * world number changed is how a want quietly disappears on the way
+	 * somewhere.
+	 */
 	public void resetForNewScene()
 	{
 		lastSpokeMs = 0L;
@@ -401,6 +420,26 @@ public class SpeechEngine
 	{
 		String text = substitute(rule.pickPhrase(), event);
 		Integer animation = rule.resolveAnimation(event);
+
+		// A mirroring rule triggered by something OTHER than an animation event
+		// - the repeating condition, which is how the follower joins in with
+		// what the player is doing - has no id on the event to copy. The
+		// player's current repeating animation is the thing being copied, and
+		// only the state snapshot knows it.
+		//
+		// Which of the two the rule asks for matters, and the cache decides it:
+		// mining, woodcutting, fishing and fletching are authored loops
+		// (frameStep >= 0) and have to be held as a POSE, because playing one
+		// as an emote waits forever for an end that never comes and leaves the
+		// follower stuck mid-swing. Cooking, smithing, herblore and firemaking
+		// are one-shots the server restarts each cycle, and mirrorAnimation
+		// gives those a single honest go.
+		if (animation == null
+			&& (Boolean.TRUE.equals(rule.mirrorPose) || Boolean.TRUE.equals(rule.mirrorAnimation)))
+		{
+			int repeating = getContext().getRepeatingAnimation();
+			animation = repeating > 0 ? repeating : null;
+		}
 		if (text.isEmpty() && animation == null && !rule.hasAnimationChain())
 		{
 			return;
@@ -431,6 +470,27 @@ public class SpeechEngine
 		{
 			getContext().setWant(rule.want.region, rule.want.label,
 				rule.want.minutes == null ? 15 : rule.want.minutes);
+		}
+
+		// An incident is filed whether or not the line was heard: the chicken
+		// killed you regardless of whether the follower got a word in.
+		if (rule.remember != null && rule.remember.key != null)
+		{
+			getContext().noteIncident(rule.remember.key, rule.remember.as);
+		}
+
+		// Picking something up and betting on something both need to have been
+		// SAID, like the want - a souvenir nobody was told about is invisible,
+		// and a silent prediction can only ever be right.
+		if (rule.pickUp != null && rule.pickUp.what != null && !text.isEmpty())
+		{
+			getContext().pickUp(rule.pickUp.what,
+				rule.pickUp.minutes == null ? 20 : rule.pickUp.minutes);
+		}
+		if (rule.bet != null && rule.bet.threshold != null && !text.isEmpty())
+		{
+			getContext().placeBet(Boolean.TRUE.equals(rule.bet.rich),
+				rule.bet.threshold, rule.bet.minutes == null ? 5 : rule.bet.minutes);
 		}
 
 		if (!text.isEmpty())
@@ -471,6 +531,10 @@ public class SpeechEngine
 
 		Map<String, String> values = new HashMap<>(event.getPlaceholders());
 		TriggerContext ctx = getContext();
+		// Available wherever the state is: a callback line wants {memory}
+		// whatever event happened to trigger it.
+		values.putIfAbsent("memory", ctx.getIncidentPhrase());
+		values.putIfAbsent("souvenir", ctx.getSouvenir());
 		values.putIfAbsent("hp", Integer.toString(ctx.getHitpoints()));
 		values.putIfAbsent("maxHp", Integer.toString(ctx.getMaxHitpoints()));
 		values.putIfAbsent("hpPercent", Integer.toString(ctx.getHitpointsPercent()));
