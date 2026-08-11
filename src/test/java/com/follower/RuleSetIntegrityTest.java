@@ -301,6 +301,67 @@ public class RuleSetIntegrityTest
 		assertTrue("lines that take longer to read than they are worth:\n  "
 			+ String.join("\n  ", slow), slow.isEmpty());
 	}
+
+	/**
+	 * {@code 've} may help a verb. It may not be one.
+	 *
+	 * <p>"I've seen" is fine: the contraction is an auxiliary and the participle
+	 * does the work. "I've no complaints" is not, because there is no
+	 * participle - {@code 've} is carrying the whole of "have" on its own, and
+	 * that only survives in a register two generations older than this
+	 * follower's. The test is simply what comes next: a determiner or a bare
+	 * pronoun means nothing is coming to help.
+	 *
+	 * <p>Six of these had accumulated - four rules, an area line, and a node in
+	 * the Talk-to tree - and none was caught by reading. The character document
+	 * says to contract by default, so each one looked like obedience.
+	 *
+	 * <p>Scans both bundled files as raw text rather than walking two different
+	 * object models. The defect is a property of the words, and the half of it
+	 * that got missed last time was the half that lived in the other file.
+	 */
+	@Test
+	public void aContractionMayHelpAVerbButMayNotBeOne() throws IOException
+	{
+		String determiners = "a|an|the|no|some|any|my|your|his|her|its|our|their"
+			+ "|this|that|these|those|one|two|three|four|five|several|enough"
+			+ "|plenty|nothing|something|anything|everything|none|both|half";
+		java.util.regex.Pattern bare = java.util.regex.Pattern.compile(
+			"\\b\\w+'ve\\s+(?:" + determiners + ")\\b",
+			java.util.regex.Pattern.CASE_INSENSITIVE);
+
+		List<String> wrong = new ArrayList<>();
+		for (String resource : new String[]{
+			"/com/follower/default-phrases.json",
+			"/com/follower/default-dialogs.json"})
+		{
+			java.util.regex.Matcher m = bare.matcher(bundledText(resource));
+			while (m.find())
+			{
+				wrong.add(resource + ": \"" + m.group() + "\"");
+			}
+		}
+		assertTrue("'ve used as a verb rather than as an auxiliary. Let the"
+			+ " participle back in (\"I've got no...\") or drop the pronoun and"
+			+ " let it be a fragment (\"No complaints.\"):\n  "
+			+ String.join("\n  ", wrong), wrong.isEmpty());
+	}
+
+	private static String bundledText(String resource) throws IOException
+	{
+		try (InputStream in = RuleSetIntegrityTest.class.getResourceAsStream(resource))
+		{
+			assertTrue("missing bundled resource " + resource, in != null);
+			java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+			byte[] buffer = new byte[8192];
+			for (int read; (read = in.read(buffer)) != -1; )
+			{
+				out.write(buffer, 0, read);
+			}
+			return new String(out.toByteArray(), StandardCharsets.UTF_8);
+		}
+	}
+
 	@Test
 	public void everyPlaceholderCanBeSuppliedByTheTriggerThatFiresIt() throws IOException
 	{
