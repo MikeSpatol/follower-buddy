@@ -262,6 +262,45 @@ public class RuleSetIntegrityTest
 	 * A placeholder only resolves if the event that triggered the rule carries
 	 * it. {npc} in a rule that fires on login would print literally.
 	 */
+
+	/**
+	 * Nothing so long that reading it becomes the activity.
+	 *
+	 * <p>The display time now scales with the line, so an over-long line is no
+	 * longer unreadable - it is SLOW, and it holds the queue behind it for as
+	 * long as it is up. Five seconds at a comfortable reading speed is about
+	 * the point where an overhead remark stops being a remark.
+	 *
+	 * <p>Sits next to the glyph check because it is the same kind of rule: a
+	 * property of the text that nothing at runtime will ever complain about.
+	 */
+	@Test
+	public void nothingTakesLongerToReadThanItIsWorth() throws IOException
+	{
+		final int cps = 17;
+		final double maxSeconds = 5.0;
+		int limit = (int) (cps * maxSeconds);
+
+		Harness h = new Harness(folder.newFolder().toPath());
+		List<String> slow = new ArrayList<>();
+		for (SpeechRule rule : h.loader.getRules())
+		{
+			if (rule.say == null)
+			{
+				continue;
+			}
+			for (String line : rule.say)
+			{
+				if (line.length() > limit)
+				{
+					slow.add(String.format("%s: %d chars, %.1fs to read - %s",
+						rule.id, line.length(), line.length() / (double) cps, line));
+				}
+			}
+		}
+		assertTrue("lines that take longer to read than they are worth:\n  "
+			+ String.join("\n  ", slow), slow.isEmpty());
+	}
 	@Test
 	public void everyPlaceholderCanBeSuppliedByTheTriggerThatFiresIt() throws IOException
 	{

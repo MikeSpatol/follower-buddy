@@ -928,7 +928,7 @@
         ]
       },
       "say": [
-        "K'ril. Protect from Melee, but his roar smashes through it and flattens your prayer. Restore ready.",
+        "K'ril. Pray Melee, but his roar breaks through and empties it. Keep a restore up.",
         "Keep a super restore thumbed. He cheats.",
         "Mind the poison off those halberd swings.",
         "Zamorak's general. A greater demon with a title, and the title does a lot of work.",
@@ -7623,7 +7623,7 @@
       "say": [
         "Lumbridge. Everyone's first steps happen here. Mine were with you.",
         "This is where it all starts, for everyone. I like standing where that happened.",
-        "The castle, the river, the old stone. Nothing important happens here any more, and that is exactly why.",
+        "The castle, the river, the old stone. Nothing happens here. That's the appeal.",
         "Thank you. Nobody's in a hurry in Lumbridge. Look at it."
       ]
     },
@@ -7656,7 +7656,7 @@
       },
       "say": [
         "The Exchange. Everyone here wants something, and you can see it on them.",
-        "Listen to it. Hundreds of people all making a deal at once. I could watch this all day.",
+        "Listen to it. Hundreds of people haggling at once. I could watch all day.",
         "It's the noise I like. Nowhere else in the world sounds like this.",
         "Fortunes made and lost round here before lunch, and I get to watch it happen."
       ]

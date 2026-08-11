@@ -103,7 +103,22 @@ public class ConfigDefaultsTest
 	{
 		assertTrue("speech that vanishes instantly cannot be read",
 			config.speechDurationMs() > 0);
-		assertTrue(config.globalCooldownMs() >= 0);
+		assertTrue("a line has to be given some time per character",
+			config.readingSpeed() > 0);
+
+		// The raw milliseconds box became a named setting; every level still
+		// has to leave a gap, and they have to run in the order they read.
+		com.follower.speech.Chattiness previous = null;
+		for (com.follower.speech.Chattiness level : com.follower.speech.Chattiness.values())
+		{
+			assertTrue(level + " must leave some gap", level.getGapMs() > 0);
+			if (previous != null)
+			{
+				assertTrue(level + " should talk more than " + previous,
+					level.getGapMs() < previous.getGapMs());
+			}
+			previous = level;
+		}
 	}
 
 	@Test

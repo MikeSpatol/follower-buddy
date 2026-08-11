@@ -401,14 +401,30 @@ public interface FollowerConfig extends Config
 	@Range(min = 500, max = 15000)
 	@ConfigItem(
 		keyName = "speechDurationMs",
-		name = "Display time (ms)",
-		description = "How long a line stays on screen",
+		name = "Minimum display time (ms)",
+		description = "The least time a line stays on screen. A long line is"
+			+ " given longer, at the reading speed below.",
 		section = speechSection,
 		position = 3
 	)
 	default int speechDurationMs()
 	{
 		return 4000;
+	}
+
+	@Range(min = 8, max = 40)
+	@ConfigItem(
+		keyName = "readingSpeed",
+		name = "Reading speed (chars/sec)",
+		description = "How fast you read. Subtitling practice treats 17"
+			+ " characters a second as comfortable and 20 as the ceiling;"
+			+ " lower it to give every line more time.",
+		section = speechSection,
+		position = 4
+	)
+	default int readingSpeed()
+	{
+		return 17;
 	}
 
 	@Range(min = 0, max = 400)
@@ -424,17 +440,18 @@ public interface FollowerConfig extends Config
 		return 220;
 	}
 
-	@Range(min = 0, max = 30000)
 	@ConfigItem(
-		keyName = "globalCooldownMs",
-		name = "Minimum gap (ms)",
-		description = "Nothing is said within this long of the previous line",
+		keyName = "chattiness",
+		name = "Chattiness",
+		description = "How often the follower speaks at all. Sets the least"
+			+ " gap between any two lines; its mood still stretches or shortens"
+			+ " that on top.",
 		section = speechSection,
 		position = 5
 	)
-	default int globalCooldownMs()
+	default com.follower.speech.Chattiness chattiness()
 	{
-		return 3000;
+		return com.follower.speech.Chattiness.NORMAL;
 	}
 
 	@ConfigItem(

@@ -2431,7 +2431,7 @@ public class FollowerPlugin extends Plugin
 	{
 		follower.setVerticalOffset(config.verticalOffset());
 		speechEngine.setDefaultOutput(config.defaultOutput());
-		speechEngine.setGlobalCooldownMs(config.globalCooldownMs());
+		speechEngine.setGlobalCooldownMs(config.chattiness().getGapMs());
 		speechEngine.setMuted(config.muted());
 		speechEngine.setDisabledGroups(collectDisabledGroups());
 		speechEngine.setOnSuppressed(journal::suppressed);
@@ -6288,6 +6288,32 @@ public class FollowerPlugin extends Plugin
 		speakNow(speechQueue.removeFirst());
 	}
 
+	/**
+	 * How long a line needs to be on screen to be read.
+	 *
+	 * <p>A fixed duration is the wrong model for text of varying length. All
+	 * the guidance the speech rules were written against is about recorded
+	 * VOICE, which sets its own pace; ours is text on a timer, where the
+	 * constraint is reading speed. Subtitling practice puts that at about 17
+	 * characters a second, and against a flat four seconds 94 of the shipped
+	 * lines could not be read in the time they were shown - the longest needing
+	 * six.
+	 *
+	 * <p>Never shorter than the configured minimum, so nothing that reads
+	 * comfortably today gets snatched away; longer only where the line earns
+	 * it. Capped, because a runaway line should not hold the floor all day -
+	 * the queue waits on this too.
+	 */
+	private long readingTimeMs(String text)
+	{
+		int cps = Math.max(1, config.readingSpeed());
+		long needed = (long) text.length() * 1000L / cps;
+		return Math.min(MAX_SPEECH_MS, Math.max(config.speechDurationMs(), needed));
+	}
+
+	/** Nothing holds the overhead, or the queue behind it, longer than this. */
+	private static final long MAX_SPEECH_MS = 12_000L;
+
 	private void speakNow(Utterance utterance)
 	{
 		String text = utterance.text;
@@ -6299,9 +6325,9 @@ public class FollowerPlugin extends Plugin
 
 		if (!text.isEmpty() && output.showsOverhead())
 		{
-			overlay.show(text, config.speechDurationMs());
-			speakingUntilMs = System.currentTimeMillis()
-				+ config.speechDurationMs() + SPEECH_GAP_MS;
+			long showFor = readingTimeMs(text);
+			overlay.show(text, showFor);
+			speakingUntilMs = System.currentTimeMillis() + showFor + SPEECH_GAP_MS;
 		}
 
 		if (!text.isEmpty() && config.mirrorToChat())
