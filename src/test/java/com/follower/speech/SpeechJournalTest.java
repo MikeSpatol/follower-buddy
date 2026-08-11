@@ -232,4 +232,59 @@ public class SpeechJournalTest
 		assertFalse("a muted rule still wins and is still held back", reasons.isEmpty());
 		assertEquals("chatty:muted", reasons.get(0));
 	}
+
+	@Test
+	public void theDirectorsReasonsReachTheTranscript() throws IOException
+	{
+		// The transcript is the only way to tell a follower with little to say
+		// from one being throttled, and the director became the biggest source
+		// of throttling in the plugin the day it landed. A reason that stops at
+		// the engine is a blind spot in the one diagnostic there is.
+		// An "always" rule rises exactly once and then never again, so it can
+		// never be suppressed twice - which is why this needs a real event to
+		// re-trigger on, with a tick between to let the edge fall.
+		Harness h = new Harness(folder.newFolder().toPath(),
+			"{\"version\": 1, \"rules\": ["
+				+ "{\"id\": \"scenery\", \"group\": \"area\", \"cooldownMs\": 0,"
+				+ " \"when\": {\"type\": \"examined\"}, \"say\": [\"one\", \"two\"]}]}");
+
+		SpeechJournal journal = new SpeechJournal();
+		journal.initialise(folder.newFolder().toPath());
+		journal.setEnabled(true);
+		h.engine.setOnSuppressed(journal::suppressed);
+
+		h.engine.setGlobalCooldownMs(3_000L);
+		h.engine.getContext().setSessionCount(1);
+		h.gameTicks(1);
+
+		// The first one speaks, which arms the settling damper; the next two
+		// arrive well inside its window and are the ones held.
+		for (int i = 0; i < 3; i++)
+		{
+			h.dispatch(TriggerEvent.simple(TriggerEvent.Type.EXAMINED));
+			h.gameTicks(1);
+		}
+
+		// Then a rest, by handing the director a burst directly.
+		com.follower.speech.SpeechRule filler = new com.follower.speech.SpeechRule();
+		filler.id = "filler";
+		filler.group = "reactions";
+		for (int i = 0; i < 4; i++)
+		{
+			h.engine.getDirector().noteSpoke(filler, System.currentTimeMillis());
+		}
+		for (int i = 0; i < 2; i++)
+		{
+			h.dispatch(TriggerEvent.simple(TriggerEvent.Type.EXAMINED));
+			h.gameTicks(1);
+		}
+		journal.flush();
+
+		String written = String.join("\n", java.nio.file.Files.readAllLines(
+			journal.getFile()));
+		assertTrue("the transcript never mentions the director resting:\n" + written,
+			written.contains("\trelax"));
+		assertTrue("the transcript never mentions the settling damper:\n" + written,
+			written.contains("\tsettling"));
+	}
 }

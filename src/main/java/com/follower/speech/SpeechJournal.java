@@ -170,7 +170,15 @@ public class SpeechJournal
 	/**
 	 * A rule that won its event and was held back anyway.
 	 *
-	 * @param reason one of muted / gap / hush
+	 * <p>This is the half of the story the player never sees, and the only way
+	 * to tell a follower with little to say from one being throttled. A reason
+	 * that never reaches here is a blind spot in the only diagnostic there is.
+	 *
+	 * @param reason whatever {@code SpeechEngine.blockedBy} decided: muted,
+	 * gap, hush, or one of the director's - relax after a burst, settling while
+	 * the follower is still new. Recorded verbatim rather than checked against
+	 * a list, so a reason added later shows up in the transcript without this
+	 * needing to know about it.
 	 */
 	public void suppressed(SpeechRule rule, String reason)
 	{
