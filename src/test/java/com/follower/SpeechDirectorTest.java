@@ -219,6 +219,31 @@ public class SpeechDirectorTest
 	}
 
 	@Test
+	public void anOccasionIsExemptFromTheSettlingDamperToo()
+	{
+		// The bug this exists for. The relax check exempted occasions and the
+		// settling check did not, which handed the damper the power to swallow
+		// enter-wilderness - group "area", so it counts as scenery, and an
+		// occasion precisely because it must reach a player who has never seen
+		// the place. A follower is only settling in because the player is new,
+		// so the two conditions peak at exactly the same moment.
+		SpeechDirector director = paced();
+		director.setSessionCount(1);
+
+		SpeechRule warning = lore();
+		warning.id = "enter-wilderness";
+		warning.occasion = Boolean.TRUE;
+
+		long now = 10_000L;
+		director.noteSpoke(lore(), now);
+
+		assertEquals("ordinary scenery is thinned, as intended",
+			"settling", director.blocks(lore(), now + GAP));
+		assertNull("but a warning is not scenery, whatever group it lives in",
+			director.blocks(warning, now + GAP));
+	}
+
+	@Test
 	public void aFollowerThatKnowsYouTalksAboutTheSceneryFreely()
 	{
 		SpeechDirector director = paced();

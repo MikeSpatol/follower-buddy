@@ -1195,19 +1195,37 @@ public class FollowerPlugin extends Plugin
 
 	private void readCounters()
 	{
-		String stored = config.counters();
+		metWearingValue = restoreMemory(speechEngine.getContext(), config.counters(),
+			gson, metWearingValue);
+	}
+
+	/**
+	 * Puts a saved blob back into a context, and returns the gear value the
+	 * follower first met the player wearing.
+	 *
+	 * <p>Separated from the config plumbing so the round trip can be tested
+	 * without a client. Nothing else in the plugin verifies that what is
+	 * written comes back, and the cost of a field written but never read is
+	 * silent: the follower simply forgets one thing forever, and the only
+	 * symptom is a line that repeats every restart.
+	 *
+	 * <p>The saved shape stays private - this seam is a string in and a string
+	 * out, which is what actually crosses the disk.
+	 */
+	static int restoreMemory(TriggerContext context, String stored,
+		com.google.gson.Gson gson, int fallbackMetWearing)
+	{
 		if (stored == null || stored.isEmpty())
 		{
-			return;
+			return fallbackMetWearing;
 		}
 		try
 		{
 			SavedCounters saved = gson.fromJson(stored, SavedCounters.class);
 			if (saved == null)
 			{
-				return;
+				return fallbackMetWearing;
 			}
-			TriggerContext context = speechEngine.getContext();
 			context.restoreCounters(saved.tallies, saved.records);
 			context.setSessionCount(saved.sessions);
 			context.restoreIncident(saved.incidentKey, saved.incidentPhrase,
@@ -1215,7 +1233,6 @@ public class FollowerPlugin extends Plugin
 			context.restorePlaces(saved.placeScores, saved.placeMemories);
 			context.restoreSpokenOnce(saved.spokenOnce);
 			context.setMetOnDay(saved.metOnDay);
-			metWearingValue = saved.metWearingValue;
 			context.setMetWearingValue(saved.metWearingValue);
 			if (saved.deathPlane >= 0)
 			{
@@ -1226,12 +1243,14 @@ public class FollowerPlugin extends Plugin
 				saved.tallies == null ? 0 : saved.tallies.size(),
 				saved.records == null ? 0 : saved.records.size(),
 				saved.sessions);
+			return saved.metWearingValue;
 		}
 		catch (com.google.gson.JsonSyntaxException e)
 		{
 			// A corrupt value costs the follower its memory, which is sad but
 			// survivable; refusing to start over it would not be.
 			log.warn("Stored counters were not readable, starting fresh", e);
+			return fallbackMetWearing;
 		}
 	}
 
@@ -1255,6 +1274,15 @@ public class FollowerPlugin extends Plugin
 	private void writeCounters()
 	{
 		TriggerContext context = speechEngine.getContext();
+		configManager.setConfiguration(FollowerConfig.GROUP, "counters",
+			snapshotMemory(context, metWearingValue, gson));
+		context.clearCountersDirty();
+	}
+
+	/** Everything the follower remembers, as it goes to disk. See {@link #restoreMemory}. */
+	static String snapshotMemory(TriggerContext context, int metWearing,
+		com.google.gson.Gson gson)
+	{
 		SavedCounters saved = new SavedCounters();
 		saved.tallies = trimCounters(context.getTallies());
 		saved.records = trimCounters(context.getRecords());
@@ -1266,7 +1294,7 @@ public class FollowerPlugin extends Plugin
 		saved.placeMemories = context.getPlaceMemories();
 		saved.spokenOnce = new java.util.ArrayList<>(context.getSpokenOnce());
 		saved.metOnDay = context.getMetOnDay();
-		saved.metWearingValue = metWearingValue;
+		saved.metWearingValue = metWearing;
 		WorldPoint died = context.getDeathLocation();
 		if (died != null)
 		{
@@ -1274,8 +1302,7 @@ public class FollowerPlugin extends Plugin
 			saved.deathY = died.getY();
 			saved.deathPlane = died.getPlane();
 		}
-		configManager.setConfiguration(FollowerConfig.GROUP, "counters", gson.toJson(saved));
-		context.clearCountersDirty();
+		return gson.toJson(saved);
 	}
 
 	/**
@@ -6249,11 +6276,31 @@ public class FollowerPlugin extends Plugin
 	 */
 	private static final int SPEECH_QUEUE_LIMIT = 3;
 
-	/** A queued line older than this is dropped rather than said out of its moment. */
-	private static final long SPEECH_STALE_MS = 12000;
+	/** Nothing holds the overhead, or the queue behind it, longer than this. */
+	private static final long MAX_SPEECH_MS = 12_000L;
 
 	/** A breath between lines, so two in a row do not read as one. */
 	private static final long SPEECH_GAP_MS = 400;
+
+	/**
+	 * A queued line older than this is dropped rather than said out of its
+	 * moment.
+	 *
+	 * <p>Derived rather than chosen, because the obvious number is wrong. This
+	 * has to exceed the longest a single line can occupy the overhead, or a
+	 * line queued behind a long one is discarded before the floor it is waiting
+	 * for ever frees - and the queue exists precisely for two rules firing at
+	 * once, which is when that happens.
+	 *
+	 * <p>It used to be a flat twelve seconds, which was fine while every line
+	 * was shown for four. Reading time made the display scale with the line and
+	 * capped it at twelve, so the two numbers met exactly: a maximum-length line
+	 * holds the floor for {@value #MAX_SPEECH_MS} plus a breath, and anything
+	 * behind it aged out with milliseconds to spare. Setting the minimum
+	 * display time high enough was sufficient to stop the queue delivering
+	 * anything at all, ever, using nothing but a slider the plugin offers.
+	 */
+	private static final long SPEECH_STALE_MS = MAX_SPEECH_MS + SPEECH_GAP_MS + 3_000L;
 
 	/**
 	 * Queues a line rather than letting it stamp over whatever is being said.
@@ -6330,9 +6377,6 @@ public class FollowerPlugin extends Plugin
 		long needed = (long) text.length() * 1000L / cps;
 		return Math.min(MAX_SPEECH_MS, Math.max(config.speechDurationMs(), needed));
 	}
-
-	/** Nothing holds the overhead, or the queue behind it, longer than this. */
-	private static final long MAX_SPEECH_MS = 12_000L;
 
 	private void speakNow(Utterance utterance)
 	{

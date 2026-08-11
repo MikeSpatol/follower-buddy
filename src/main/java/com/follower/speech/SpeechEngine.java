@@ -70,6 +70,30 @@ public class SpeechEngine
 	@Setter
 	private boolean muted;
 
+	/**
+	 * Where "now" comes from.
+	 *
+	 * <p>Every window in this class is wall-clock - the speech gap, the held
+	 * floor, each rule's cooldown, the director's rest - which made all of them
+	 * untestable together. A simulation runs ten thousand ticks a second, so it
+	 * sits inside the first rest period for its entire length and proves
+	 * nothing about what happens after one. Real seconds cannot be spent
+	 * waiting and a fake clock is the only honest way to walk hours of them.
+	 *
+	 * <p>Defaults to the real one and is only ever replaced by tests.
+	 */
+	private java.util.function.LongSupplier clock = System::currentTimeMillis;
+
+	public void setClock(java.util.function.LongSupplier clock)
+	{
+		this.clock = clock == null ? System::currentTimeMillis : clock;
+	}
+
+	private long now()
+	{
+		return clock.getAsLong();
+	}
+
 	@Getter
 	private long lastSpokeMs;
 
@@ -480,7 +504,7 @@ public class SpeechEngine
 	 */
 	public void dispatch(TriggerEvent event)
 	{
-		long now = System.currentTimeMillis();
+		long now = now();
 
 		// An animation the player played may be them doing the thing they were
 		// just told to. Offered before the rules run, so the settling and the
@@ -614,7 +638,7 @@ public class SpeechEngine
 		{
 			return;
 		}
-		lastSpokeMs = System.currentTimeMillis();
+		lastSpokeMs = now();
 		lastSpokenText = text;
 		sink.speak(text, output == null ? defaultOutput : output, null, -1);
 	}
@@ -643,7 +667,7 @@ public class SpeechEngine
 		{
 			if (ruleId.equalsIgnoreCase(rule.id))
 			{
-				long now = System.currentTimeMillis();
+				long now = now();
 				// Including the floor, so what you see when testing is what the
 				// rule really does rather than a quieter version of it.
 				if (rule.hushMs != null && rule.hushMs > 0 && rule.hasSpeech())

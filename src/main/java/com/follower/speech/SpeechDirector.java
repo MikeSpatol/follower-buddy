@@ -149,18 +149,36 @@ public class SpeechDirector
 		{
 			return null;
 		}
-		if (isRelaxing(now) && !rule.isOccasion())
+
+		// An occasion is exempt from EVERYTHING this class does, and that has to
+		// be said once at the top rather than repeated per damper. It was not,
+		// and the settling check below quietly acquired the power to swallow
+		// enter-wilderness - a line whose whole job is to reach a player who has
+		// never seen the place, from a follower that is only settling in
+		// because the player is new. The two conditions peak together.
+		if (rule.isOccasion())
+		{
+			return null;
+		}
+
+		if (isRelaxing(now))
 		{
 			return "relax";
 		}
-		if (isSettlingIn() && isLore(rule) && now - lastLoreMs < baseGapMs * SETTLING_LORE_GAPS)
+		if (isLore(rule) && isSettlingIn() && now - lastLoreMs < baseGapMs * SETTLING_LORE_GAPS)
 		{
 			return "settling";
 		}
 		return null;
 	}
 
-	static boolean isLore(SpeechRule rule)
+	/**
+	 * Whether this rule recites what the world IS, rather than reacting to
+	 * what happened in it. Public so a test can assert the other way round -
+	 * that nothing which must always be heard has been left in a group the
+	 * damper thins.
+	 */
+	public static boolean isLore(SpeechRule rule)
 	{
 		return rule.group != null
 			&& LORE_GROUPS.contains(rule.group.toLowerCase(java.util.Locale.ROOT));

@@ -150,19 +150,28 @@ public class ShuffleBagTest
 	@Test
 	public void skippingReordersTheBagWithoutDamagingIt()
 	{
-		// The bug this exists for: the first version overwrote the rejected
-		// slot instead of swapping it, which dropped one line out of the bag
-		// and left another in twice. Every draw still looked plausible.
-		Set<String> recent = new HashSet<>(Arrays.asList("alpha", "gamma"));
-		for (int attempt = 0; attempt < 200; attempt++)
+		// Skipping reorders the bag, and reordering is the operation most able
+		// to lose or duplicate an entry by accident. Twelve lines with four in
+		// the window means several swaps happen inside one bag, which is where
+		// an off-by-one in the shuffling would show.
+		//
+		// Two corrections are baked into the shape of this. It first used three
+		// lines and one skip, which is too small for a reordering fault to be
+		// visible at all. And the window was written as "l1", "l4" against
+		// lines that ofSize calls "line 1", "line 4" - so it matched nothing,
+		// no skip ever ran, and the test exercised none of the code it names.
+		Set<String> recent = new HashSet<>(
+			Arrays.asList("line 1", "line 4", "line 7", "line 9"));
+		for (int attempt = 0; attempt < 300; attempt++)
 		{
-			SpeechRule rule = of("alpha", "beta", "gamma");
-			Set<String> drawn = new HashSet<>();
-			for (int i = 0; i < 3; i++)
+			SpeechRule rule = ofSize(12);
+			List<String> drawn = new ArrayList<>();
+			for (int i = 0; i < 12; i++)
 			{
 				drawn.add(rule.pickPhrase(recent));
 			}
-			assertEquals("the bag must still hold every line: " + drawn, 3, drawn.size());
+			assertEquals("the bag lost or duplicated a line: " + drawn,
+				12, new HashSet<>(drawn).size());
 		}
 	}
 
@@ -234,11 +243,50 @@ public class ShuffleBagTest
 	}
 
 	@Test
-	public void theWindowIsFedByWhatWasActuallySaid() throws IOException
+	public void theEngineActuallyFeedsTheWindow() throws IOException
 	{
-		// The engine keys the window on the TEMPLATE, not the rendered text.
+		// The first version of this only asserted no back-to-back repeats,
+		// which the bag alone already guarantees - so a mutation that stopped
+		// the engine feeding the window entirely went unnoticed. Nothing tested
+		// the wiring, only the thing on the far end of it.
+		//
+		// Thirteen variants against a window of twelve makes it deterministic.
+		// After a full bag, exactly one line has aged out of the window: the
+		// one said first. It is therefore the only line the new bag may open
+		// with, and any other answer means the window is empty.
+		Harness h = new Harness(folder.newFolder().toPath(),
+			"{\"version\": 1, \"rules\": ["
+				+ "{\"id\": \"many\", \"group\": \"t\", \"cooldownMs\": 0,"
+				+ " \"when\": {\"type\": \"examined\"},"
+				+ " \"say\": [\"v0\", \"v1\", \"v2\", \"v3\", \"v4\", \"v5\", \"v6\","
+				+ " \"v7\", \"v8\", \"v9\", \"v10\", \"v11\", \"v12\"]}]}");
+		h.gameTicks(1);
+
+		List<String> said = new ArrayList<>();
+		for (int i = 0; i < 14; i++)
+		{
+			h.dispatch(TriggerEvent.simple(TriggerEvent.Type.EXAMINED));
+			h.gameTicks(1);
+		}
+		for (Harness.Spoken s : h.spoken)
+		{
+			said.add(s.text);
+		}
+
+		assertEquals("all fourteen firings should have spoken", 14, said.size());
+		assertEquals("the first thirteen are one whole bag",
+			13, new HashSet<>(said.subList(0, 13)).size());
+		assertEquals("the fourteenth line should be the only one old enough to"
+			+ " have left the window, which means the engine is feeding it",
+			said.get(0), said.get(13));
+	}
+
+	@Test
+	public void theWindowIsKeyedOnTheTemplateAndNotTheRenderedText()
+		throws IOException
+	{
 		// "{count}. Keeping track" is one line however many numbers it has
-		// carried, and keying on the finished string would let it through every
+		// carried. Keying on the finished string would let it through every
 		// time the count changed - which is every time.
 		Harness h = new Harness(folder.newFolder().toPath(),
 			"{\"version\": 1, \"rules\": ["

@@ -398,7 +398,10 @@ public interface FollowerConfig extends Config
 		return new Color(255, 255, 0);
 	}
 
-	@Range(min = 500, max = 15000)
+	// Capped at the same twelve seconds the display itself is capped at. Above
+	// that the setting simply lied: the code clamped it and the box went on
+	// showing a number that did nothing.
+	@Range(min = 500, max = 12000)
 	@ConfigItem(
 		keyName = "speechDurationMs",
 		name = "Minimum display time (ms)",

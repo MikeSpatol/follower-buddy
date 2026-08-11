@@ -510,10 +510,16 @@ public class SpeechRule
 			{
 				if (!recentlySaid.contains(say.get(bag[i])))
 				{
-					// A SWAP, not an overwrite. The rejected line goes back
-					// into the un-drawn part of the bag so it still gets its
-					// turn later; writing over it would drop one line from the
-					// bag entirely and leave another in it twice.
+					// The rejected line goes back into the un-drawn part of the
+					// bag, so it still gets its turn later in this cycle.
+					//
+					// The second assignment is dead and kept on purpose. Slots
+					// below bagPos are never read again before the array is
+					// rebuilt, so writing the fresher index there changes
+					// nothing - but it keeps the array a true permutation at
+					// every instant, which is the invariant this is easiest to
+					// reason about and to assert. A mutation sweep flagged it
+					// as unreachable, which is correct and not a defect.
 					int fresher = bag[i];
 					bag[i] = bag[drawnAt];
 					bag[drawnAt] = fresher;
