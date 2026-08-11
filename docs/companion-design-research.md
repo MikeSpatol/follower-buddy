@@ -1288,5 +1288,20 @@ consumed by it**. An overlap is not a line that arrives late, it is a line that
 never arrives. The windows were made mutually exclusive rather than trusted to
 arrive in order.
 
-**Still open**: R2–R5 (shuffle bag, corpus-level recently-said, variant counts,
-composed lines), R6–R8, R11–R26, R28–R37.
+**R2 and R3 — shipped 2026-08-11.** `pickPhrase` drew uniformly at random,
+refusing only an immediate repeat, which sounds right and is not: simulated
+against the shipped rules, `idle-chatter` began repeating after 8.5 draws with
+thirty variants written. A shuffle bag makes that thirty. R3 came out much
+narrower than written — `noTwoRulesShareASentence` already forbids two rules
+owning the same line, so the ping-pong it was aimed at cannot arise; what
+remains is carrying the bag's guarantee across a refill.
+
+This also makes **R4 worth doing, which it was not before**. A thirty-first line
+for `idle-chatter` bought almost nothing under uniform selection.
+
+**Still open**: R4 (variant counts on the highest-firing rules), R5, R6–R8,
+R11–R26, R28–R37.
+
+**What five rounds of testing found**, including two shipped bugs that lived
+between features rather than inside them, and why overlapping systems are
+harder to verify than separate ones: [testing-notes.md](testing-notes.md).
