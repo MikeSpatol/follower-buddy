@@ -76,6 +76,50 @@ public class SpeechEngine
 	@Getter
 	private String lastSpokenText = "";
 
+	/**
+	 * How many lines back the follower remembers having said, across every rule.
+	 *
+	 * <p>A shuffle bag can only keep one rule honest about itself. It cannot
+	 * stop two rules that were written about the same thing - and there are
+	 * plenty, since a companion notices standing still in several different
+	 * ways - from handing the same observation back and forth. This is the
+	 * window that does.
+	 *
+	 * <p>Twelve is a compromise with a real cost either way: too short and the
+	 * ping-pong survives, too long and a rule with two variants finds both of
+	 * them blocked and simply repeats anyway, having spent the effort.
+	 */
+	private static final int RECENT_LINES = 12;
+
+	/**
+	 * The last {@link #RECENT_LINES} things said, as TEMPLATES rather than as
+	 * finished text. "{count}. I've been keeping track" is one line however
+	 * many different numbers it has carried, and keying on the rendered version
+	 * would let it through every time the count changed - which is every time.
+	 */
+	private final java.util.ArrayDeque<String> recentLines = new java.util.ArrayDeque<>();
+	private final Set<String> recentLineSet = new java.util.HashSet<>();
+
+	private void noteRecentLine(String template)
+	{
+		if (template == null || template.isEmpty() || !recentLineSet.add(template))
+		{
+			// Already in the window: move it to the front by dropping the old
+			// entry, or a line said twice would leave the window early.
+			if (template != null && !template.isEmpty())
+			{
+				recentLines.remove(template);
+				recentLines.addLast(template);
+			}
+			return;
+		}
+		recentLines.addLast(template);
+		while (recentLines.size() > RECENT_LINES)
+		{
+			recentLineSet.remove(recentLines.removeFirst());
+		}
+	}
+
 	@Inject
 	public SpeechEngine(Client client, RuleLoader loader)
 	{
@@ -196,7 +240,9 @@ public class SpeechEngine
 		hushOwner = null;
 		for (SpeechRule rule : loader.getRules())
 		{
-			rule.reset();
+			// Edges only. The scene changed; what the follower has already said
+			// did not, and neither did the player's memory of hearing it.
+			rule.resetEdges();
 		}
 	}
 
@@ -205,6 +251,8 @@ public class SpeechEngine
 		context = null;
 		lastSpokeMs = 0L;
 		director.reset();
+		recentLines.clear();
+		recentLineSet.clear();
 		pending.clear();
 		// A held floor must not outlive the thing that held it: toggling the
 		// plugin mid-hush would otherwise leave the follower mute for it.
@@ -612,7 +660,8 @@ public class SpeechEngine
 
 	private void speak(SpeechRule rule, TriggerEvent event, long now)
 	{
-		String text = substitute(rule.pickPhrase(), event);
+		String template = rule.pickPhrase(recentLineSet);
+		String text = substitute(template, event);
 		Integer animation = rule.resolveAnimation(event);
 
 		// A mirroring rule triggered by something OTHER than an animation event
@@ -725,6 +774,7 @@ public class SpeechEngine
 			lastSpokeMs = now;
 			lastSpokenText = text;
 			director.noteSpoke(rule, now);
+			noteRecentLine(template);
 
 			// A first is only spent once it has been heard. Marked here rather
 			// than at the win for the same reason as the question and the want:

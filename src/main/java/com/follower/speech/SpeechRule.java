@@ -333,9 +333,9 @@ public class SpeechRule
 	public Condition when;
 
 	/**
-	 * Phrases to choose from. One is picked at random, avoiding an immediate repeat.
-	 * Optional when the rule plays an animation: an animation-only rule is a valid
-	 * rule with no speech at all.
+	 * Phrases to choose from, drawn without replacement. Optional when the rule
+	 * plays an animation: an animation-only rule is a valid rule with no speech
+	 * at all.
 	 */
 	public List<String> say;
 
@@ -343,6 +343,19 @@ public class SpeechRule
 	private transient boolean lastState;
 	private transient long lastFiredMs;
 	private transient int lastPhraseIndex = -1;
+
+	/**
+	 * The shuffle bag: a shuffled run of every index, drawn through in order
+	 * and refilled when it empties.
+	 *
+	 * <p>Uniform random with an anti-immediate-repeat guard sounds like the
+	 * right thing and is not, because a player does not hear "random" - they
+	 * hear the second time. With thirty variants, uniform draws start repeating
+	 * after about eight, which is a quarter of the value of the writing. A bag
+	 * gives all thirty first, every time.
+	 */
+	private transient int[] bag;
+	private transient int bagPos;
 
 	public boolean isEnabled()
 	{
@@ -436,14 +449,44 @@ public class SpeechRule
 		lastFiredMs = nowMs;
 	}
 
-	public void reset()
+	/**
+	 * Forgets the edge and the cooldown, so the rule may fire again as soon as
+	 * its condition next rises. Deliberately leaves the shuffle bag alone: what
+	 * the follower has already said is not scene state, and a player who hops
+	 * worlds often would otherwise be handed the front of a fresh bag every
+	 * time and hear the same few lines for it.
+	 */
+	public void resetEdges()
 	{
 		lastState = false;
 		lastFiredMs = 0L;
+	}
+
+	/** The full clear, bag included. For starting the follower over. */
+	public void reset()
+	{
+		resetEdges();
 		lastPhraseIndex = -1;
+		bag = null;
+		bagPos = 0;
 	}
 
 	public String pickPhrase()
+	{
+		return pickPhrase(java.util.Collections.<String>emptySet());
+	}
+
+	/**
+	 * The next line, drawn without replacement.
+	 *
+	 * @param recentlySaid lines the follower has used lately, ACROSS every
+	 * rule. Skipped when there is an alternative, which is what stops two
+	 * neighbouring rules from ping-ponging the same observation at each other -
+	 * a bag can only keep one rule honest about itself. Never allowed to
+	 * produce silence: if everything in the bag has been heard lately, the
+	 * draw stands, because a repeated line beats no line.
+	 */
+	public String pickPhrase(java.util.Set<String> recentlySaid)
 	{
 		if (say == null || say.isEmpty())
 		{
@@ -454,15 +497,72 @@ public class SpeechRule
 			return say.get(0);
 		}
 
-		int index;
-		do
+		int index = draw();
+
+		// One pass over what is left in the bag, in bag order, looking for
+		// something unheard. Bounded deliberately: the alternative is
+		// reshuffling until something fits, which never terminates for a rule
+		// whose every line is already in the window.
+		if (recentlySaid.contains(say.get(index)))
 		{
-			index = ThreadLocalRandom.current().nextInt(say.size());
+			int drawnAt = bagPos - 1;
+			for (int i = bagPos; i < bag.length; i++)
+			{
+				if (!recentlySaid.contains(say.get(bag[i])))
+				{
+					// A SWAP, not an overwrite. The rejected line goes back
+					// into the un-drawn part of the bag so it still gets its
+					// turn later; writing over it would drop one line from the
+					// bag entirely and leave another in it twice.
+					int fresher = bag[i];
+					bag[i] = bag[drawnAt];
+					bag[drawnAt] = fresher;
+					index = fresher;
+					break;
+				}
+			}
 		}
-		while (index == lastPhraseIndex);
 
 		lastPhraseIndex = index;
 		return say.get(index);
+	}
+
+	/** The next index out of the bag, refilling it when it runs dry. */
+	private int draw()
+	{
+		if (bag == null || bag.length != say.size() || bagPos >= bag.length)
+		{
+			refill();
+		}
+		return bag[bagPos++];
+	}
+
+	private void refill()
+	{
+		bag = new int[say.size()];
+		for (int i = 0; i < bag.length; i++)
+		{
+			bag[i] = i;
+		}
+		for (int i = bag.length - 1; i > 0; i--)
+		{
+			int j = ThreadLocalRandom.current().nextInt(i + 1);
+			int swap = bag[i];
+			bag[i] = bag[j];
+			bag[j] = swap;
+		}
+
+		// The one seam a bag has: the last line of one bag and the first of the
+		// next are adjacent draws with nothing stopping them being the same
+		// line. That is the exact back-to-back repeat the old code existed to
+		// prevent, and it would happen once per bag rather than at random.
+		if (bag.length > 1 && bag[0] == lastPhraseIndex)
+		{
+			int j = 1 + ThreadLocalRandom.current().nextInt(bag.length - 1);
+			bag[0] = bag[j];
+			bag[j] = lastPhraseIndex;
+		}
+		bagPos = 0;
 	}
 
 	public String describe()
