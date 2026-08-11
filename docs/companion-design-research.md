@@ -1226,3 +1226,67 @@ structural gap. Round 5 found a benchmark and two process gaps. A sixth round of
 the same kind is unlikely to pay; the open questions now are empirical — what
 does an hour of this actually sound like — and R27 is the thing that answers
 them.
+
+---
+
+## What has been built
+
+**Tier 0 — shipped 2026-08-10.** R0a (reading time), R0b (length lint), R0c
+(named chattiness). Every line now holds the floor for as long as it takes to
+read at a configurable 17 characters a second, and the lint that came with it
+caught three lines nobody could have finished.
+
+**Tier 0b and the director — shipped 2026-08-10.**
+
+R1 landed as `SpeechDirector`: intensity rises one unit per spoken line, decays
+one unit per five speech gaps, and crossing 2.5 buys 30–45 seconds during which
+only an occasion gets through. Everything is expressed in multiples of the base
+gap, so the chattiness setting moves the whole model rather than fighting it —
+at Quiet, three lines are already far enough apart that they never peak, which
+is correct, because that player has been given their contrast already.
+
+R10 landed narrower than written. The three-tier scheme (evergreen /
+conditional / occasion) collapsed to the one distinction that has behaviour:
+`occasion: true`, meaning *this gets through a relax period and spends no
+intensity of its own*. Sixty-eight rules carry it, and they divide into two
+kinds that the recommendation did not separate — the moment worth marking (the
+pet, the anniversary, the place it asked to be taken) and **the warning that has
+to land**. If the player is about to die and the director has just told the
+follower to be quiet, silence is a worse failure than repetition could ever be.
+All eight health warnings and all forty-seven boss identifications are
+occasions for that second reason, not the first.
+
+R0e was implemented as policy rather than as 219 rule edits: while
+`sessionCount <= 2`, area and gear lines must clear four gaps between them. This
+is the settling-in damper, and it decays on its own without anything needing to
+remember to remove it.
+
+R9 (one-time lines) came forward from Tier 2 because R0f depends on it. Spent
+ids live with the tallies rather than on the rule, which is what makes them
+survive the rule reload that fires whenever `phrases.json` is edited.
+
+R0f and R0g are four one-time lines — `first-meeting`, `first-page`,
+`first-hour`, `first-return` — covering the first login, ten minutes in,
+forty-five minutes in, and the first return on a later day. `first-page` is R0g:
+scheduled on purpose, because a new player's first characterful moment otherwise
+waits on a tally, a record or a place score, and they have none of those.
+
+**Two bugs that only a real firing would have caught**, both in the arrival arc,
+both found by writing the test rather than reading the file:
+
+- Two of the rules used an `"all": [...]` shorthand the condition parser does
+  not have. They loaded, validated, evaluated false forever, and would have
+  shipped as four lines nobody ever heard.
+- `first-return` as first written said *"you have been here before, on an
+  earlier day"*, which is true of every returning player for the rest of time.
+  Only `once` stood between a four-hundred-session veteran and being greeted
+  with "page two".
+
+A third was structural: `first-page` and `first-hour` both sit on the session
+clock, and a rule that loses an evaluation pass has **still had its rising edge
+consumed by it**. An overlap is not a line that arrives late, it is a line that
+never arrives. The windows were made mutually exclusive rather than trusted to
+arrive in order.
+
+**Still open**: R2–R5 (shuffle bag, corpus-level recently-said, variant counts,
+composed lines), R6–R8, R11–R26, R28–R37.

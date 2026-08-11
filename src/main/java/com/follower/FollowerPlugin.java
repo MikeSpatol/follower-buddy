@@ -1168,6 +1168,12 @@ public class FollowerPlugin extends Plugin
 		java.util.Map<Integer, String> placeMemories;
 
 		/**
+		 * Ids of the one-time lines already said. Small and slow-growing: there
+		 * are only ever as many entries as there are firsts worth marking.
+		 */
+		java.util.List<String> spokenOnce;
+
+		/**
 		 * The day the follower first met this player, as an epoch day. Written
 		 * once and never again: it is the only thing here that would be a lie
 		 * if it were ever recalculated.
@@ -1207,6 +1213,7 @@ public class FollowerPlugin extends Plugin
 			context.restoreIncident(saved.incidentKey, saved.incidentPhrase,
 				saved.incidentCount);
 			context.restorePlaces(saved.placeScores, saved.placeMemories);
+			context.restoreSpokenOnce(saved.spokenOnce);
 			context.setMetOnDay(saved.metOnDay);
 			metWearingValue = saved.metWearingValue;
 			context.setMetWearingValue(saved.metWearingValue);
@@ -1257,6 +1264,7 @@ public class FollowerPlugin extends Plugin
 		saved.incidentCount = context.getIncidentCount();
 		saved.placeScores = context.getPlaceScores();
 		saved.placeMemories = context.getPlaceMemories();
+		saved.spokenOnce = new java.util.ArrayList<>(context.getSpokenOnce());
 		saved.metOnDay = context.getMetOnDay();
 		saved.metWearingValue = metWearingValue;
 		WorldPoint died = context.getDeathLocation();
@@ -6107,6 +6115,18 @@ public class FollowerPlugin extends Plugin
 					}
 				}
 				sendStatus("Mood " + context.getMood() + " (" + context.getMoodBand() + ")");
+
+				// The other half of how much gets said, and the half with no
+				// visible symptom: a follower resting after a burst and a
+				// follower with nothing to say look exactly alike.
+				com.follower.speech.SpeechDirector director = speechEngine.getDirector();
+				long now = System.currentTimeMillis();
+				sendStatus(String.format("Pace: intensity %.1f, %s%s",
+					director.getIntensity(),
+					director.isRelaxing(now)
+						? "resting for another " + (director.relaxRemainingMs(now) / 1000) + "s"
+						: "listening",
+					director.isSettlingIn() ? ", still settling in" : ""));
 				break;
 			}
 

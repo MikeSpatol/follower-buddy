@@ -52,8 +52,20 @@ public class SpeechEngine
 	private SpeechOutput defaultOutput = SpeechOutput.OVERHEAD;
 
 	/** Nothing speaks within this window of the previous line, whatever the rule. */
-	@Setter
 	private long globalCooldownMs = 3_000L;
+
+	public void setGlobalCooldownMs(long globalCooldownMs)
+	{
+		this.globalCooldownMs = globalCooldownMs;
+		director.setBaseGapMs(globalCooldownMs);
+	}
+
+	/**
+	 * How much has been said lately, and whether it is time to stop for a bit.
+	 * The gap above is a floor between two lines; this is a budget across many.
+	 */
+	@Getter
+	private final SpeechDirector director = new SpeechDirector();
 
 	@Setter
 	private boolean muted;
@@ -85,6 +97,11 @@ public class SpeechEngine
 	{
 		TriggerContext context = getContext();
 		context.refresh();
+
+		// Synced here rather than pushed from wherever the count is loaded or
+		// bumped, because there are several such places and the settling-in
+		// damper being right depends on all of them remembering.
+		director.setSessionCount(context.getSessionCount());
 
 		// A want resolving is state becoming an event. It happens here rather
 		// than in the plugin so the rules see it wherever the engine is driven
@@ -187,6 +204,7 @@ public class SpeechEngine
 	{
 		context = null;
 		lastSpokeMs = 0L;
+		director.reset();
 		pending.clear();
 		// A held floor must not outlive the thing that held it: toggling the
 		// plugin mid-hush would otherwise leave the follower mute for it.
@@ -302,6 +320,15 @@ public class SpeechEngine
 		if (muted)
 		{
 			return "muted";
+		}
+		// Before the gap, because when both apply the director is the honest
+		// answer: the gap is three seconds and would be gone by the next tick,
+		// where a relax period is most of a minute and is the reason nothing
+		// else got through either.
+		String directed = director.blocks(rule, now);
+		if (directed != null)
+		{
+			return directed;
 		}
 		if (now - lastSpokeMs < moodScaledGap())
 		{
@@ -697,6 +724,17 @@ public class SpeechEngine
 			// firing should not push back the next spoken line.
 			lastSpokeMs = now;
 			lastSpokenText = text;
+			director.noteSpoke(rule, now);
+
+			// A first is only spent once it has been heard. Marked here rather
+			// than at the win for the same reason as the question and the want:
+			// a line the mute swallowed was never said, and burning the one
+			// chance the follower had to say it would be the worst possible
+			// place to be strict.
+			if (rule.isOnce())
+			{
+				getContext().noteSaidOnce(rule.id);
+			}
 		}
 
 		SpeechOutput output = SpeechOutput.parse(rule.output, defaultOutput);
@@ -710,7 +748,7 @@ public class SpeechEngine
 
 	private boolean isActive(SpeechRule rule)
 	{
-		if (!rule.isEnabled())
+		if (!rule.isEnabled() || (rule.isOnce() && getContext().hasSaidOnce(rule.id)))
 		{
 			return false;
 		}

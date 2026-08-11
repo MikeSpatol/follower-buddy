@@ -171,6 +171,43 @@ public class SpeechRule
 	public Integer hushMs;
 
 	/**
+	 * A line the follower must not be too busy to say.
+	 *
+	 * <p>Distinct from {@link #priority}, which only decides who wins when
+	 * several rules fire at once. This decides whether the winner gets through
+	 * a RELAX period - the director stops ordinary chatter after a burst, and
+	 * this is what the stopping was for. An occasion also spends no intensity
+	 * of its own, so the moment does not cost the follower the next thing it
+	 * wanted to say.
+	 *
+	 * <p>Two kinds of line qualify, and they are not the same kind. One is the
+	 * moment worth marking - the pet, the anniversary, the place it asked to be
+	 * taken. The other is the warning that has to land: if the player is about
+	 * to die and the director has just told the follower to be quiet, silence
+	 * is a worse failure than repetition could ever be.
+	 *
+	 * <p>Reserve it anyway, and judge it by how often the player HEARS one
+	 * rather than by how many rules carry the flag. Forty-seven boss lines look
+	 * like a lot in the file and amount to one a session in play.
+	 */
+	public Boolean occasion;
+
+	/**
+	 * Said once, ever, and then never again.
+	 *
+	 * <p>For firsts. A line that only has to hold up on a single hearing can be
+	 * specific in a way no repeating line can afford to be - it can name the
+	 * moment, admit something, or land a joke that would be unbearable the
+	 * fourth time. That makes it the highest value per word in the file, and
+	 * the only kind of line that never wears out.
+	 *
+	 * <p>What was spent is remembered by ID, alongside the tallies and the
+	 * places, rather than on this object - so it survives both a restart and a
+	 * rule reload, which throws every rule away and parses the file afresh.
+	 */
+	public Boolean once;
+
+	/**
 	 * Somewhere the follower would like to go, expressed as part of saying so.
 	 *
 	 * <p>{@code {"region": 10553, "label": "the fishing guild", "minutes": 20}}.
@@ -310,6 +347,16 @@ public class SpeechRule
 	public boolean isEnabled()
 	{
 		return enabled == null || enabled;
+	}
+
+	public boolean isOccasion()
+	{
+		return Boolean.TRUE.equals(occasion);
+	}
+
+	public boolean isOnce()
+	{
+		return Boolean.TRUE.equals(once);
 	}
 
 	public boolean isValid()

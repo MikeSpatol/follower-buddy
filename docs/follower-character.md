@@ -241,3 +241,41 @@ outside the scope of this pass.
 
 Everything else stands. The dry, counting, understated voice needed no change at
 all; a scribe explains the counting better than a construct did.
+
+---
+
+## 10. The arrival arc — added 2026-08-10
+
+§2 says the arc is the drift: early on it catalogues the world because it does
+not know you, and over weeks it catalogues you instead. That was a description
+of a slope with nothing at the top of it. Four one-time lines now open it, and
+they are the only lines in the file a player can miss permanently.
+
+| When | Rule | The line's job |
+|---|---|---|
+| The very first login | `first-meeting` | State the arrangement. Do not be pleased about it. |
+| Ten minutes in | `first-page` | The first note. One word of it is the tell. |
+| Forty-five minutes in | `first-hour` | Admit it has nothing on you yet. |
+| First return on a later day | `first-return` | Twice is how a habit starts. |
+
+The shipped text:
+
+> "Right. You go places, I write things down. That's the arrangement."
+> "Page one, done. Mostly the buildings. Mostly."
+> "I've nothing on you yet. Come back a few times and that'll fix itself."
+> "Back again. Twice is how a habit starts. Notebook's out."
+
+`first-page` is the one doing character work. The second "Mostly." is the whole
+line, and per §3 it is never explained — the notebook has stopped being about
+the buildings and the follower has not said so. Any future edit that clarifies
+that sentence spends the asset described in §7.
+
+`first-hour` is the arc naming its own gap out loud. This is deliberate: a
+follower with no history to draw on is the honest state of a first session, and
+saying so is better than pretending otherwise. It is also a promise, which the
+tallies and the places then keep.
+
+**The follower is now quieter about scenery for the first two sessions** — area
+and gear lines leave four gaps between them while `sessionCount <= 2`. This is
+§2's drift made mechanical at the near end. It is enforced in `SpeechDirector`
+rather than in the rules, so no line had to be rewritten to make it true.

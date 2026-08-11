@@ -26,6 +26,7 @@
     },
     {
       "id": "boss-callisto",
+      "occasion": true,
       "note": "Callisto and Artio, the great bears of the Wilderness.",
       "group": "boss",
       "priority": 90,
@@ -53,6 +54,7 @@
     },
     {
       "id": "boss-venenatis",
+      "occasion": true,
       "note": "Venenatis and Spindel, the Wilderness spider matriarchs.",
       "group": "boss",
       "priority": 90,
@@ -80,6 +82,7 @@
     },
     {
       "id": "boss-vetion",
+      "occasion": true,
       "note": "Vet'ion and Calvar'ion, the skeletal champions.",
       "group": "boss",
       "priority": 90,
@@ -107,6 +110,7 @@
     },
     {
       "id": "boss-scorpia",
+      "occasion": true,
       "note": "Scorpia beneath the Scorpion Pit.",
       "group": "boss",
       "priority": 90,
@@ -133,6 +137,7 @@
     },
     {
       "id": "boss-chaos-elemental",
+      "occasion": true,
       "note": "The Chaos Elemental near the Rogues Castle.",
       "group": "boss",
       "priority": 90,
@@ -159,6 +164,7 @@
     },
     {
       "id": "boss-chaos-fanatic",
+      "occasion": true,
       "note": "The Chaos Fanatic on the Wilderness cliffs.",
       "group": "boss",
       "priority": 90,
@@ -185,6 +191,7 @@
     },
     {
       "id": "boss-crazy-arch",
+      "occasion": true,
       "note": "The Crazy Archaeologist among the Wilderness ruins.",
       "group": "boss",
       "priority": 90,
@@ -211,6 +218,7 @@
     },
     {
       "id": "boss-kbd",
+      "occasion": true,
       "note": "The King Black Dragon.",
       "group": "boss",
       "priority": 90,
@@ -237,6 +245,7 @@
     },
     {
       "id": "boss-corp",
+      "occasion": true,
       "note": "The Corporeal Beast.",
       "group": "boss",
       "priority": 90,
@@ -263,6 +272,7 @@
     },
     {
       "id": "boss-mole",
+      "occasion": true,
       "note": "The Giant Mole under Falador Park.",
       "group": "boss",
       "priority": 90,
@@ -289,6 +299,7 @@
     },
     {
       "id": "boss-kq",
+      "occasion": true,
       "note": "The Kalphite Queen in the desert hive.",
       "group": "boss",
       "priority": 90,
@@ -315,6 +326,7 @@
     },
     {
       "id": "boss-sarachnis",
+      "occasion": true,
       "note": "Sarachnis beneath the Forthos Ruin.",
       "group": "boss",
       "priority": 90,
@@ -341,6 +353,7 @@
     },
     {
       "id": "boss-scurrius",
+      "occasion": true,
       "note": "Scurrius, the rat king of the Varrock sewers.",
       "group": "boss",
       "priority": 90,
@@ -367,6 +380,7 @@
     },
     {
       "id": "boss-zalcano",
+      "occasion": true,
       "note": "Zalcano in the Prifddinas dungeon.",
       "group": "boss",
       "priority": 90,
@@ -393,6 +407,7 @@
     },
     {
       "id": "boss-araxxor",
+      "occasion": true,
       "note": "Araxxor in the lair beneath Morytania.",
       "group": "boss",
       "priority": 90,
@@ -419,6 +434,7 @@
     },
     {
       "id": "boss-muspah",
+      "occasion": true,
       "note": "The Phantom Muspah beneath the Ghorrock ruins.",
       "group": "boss",
       "priority": 90,
@@ -445,6 +461,7 @@
     },
     {
       "id": "boss-nightmare",
+      "occasion": true,
       "note": "The Nightmare of Ashihama, and Phosani's Nightmare.",
       "group": "boss",
       "priority": 90,
@@ -472,6 +489,7 @@
     },
     {
       "id": "boss-duke",
+      "occasion": true,
       "note": "Duke Sucellus in the Ghorrock depths.",
       "group": "boss",
       "priority": 90,
@@ -498,6 +516,7 @@
     },
     {
       "id": "boss-leviathan",
+      "occasion": true,
       "note": "The Leviathan in the Scar.",
       "group": "boss",
       "priority": 90,
@@ -524,6 +543,7 @@
     },
     {
       "id": "boss-whisperer",
+      "occasion": true,
       "note": "The Whisperer in the drowned city of the Scar.",
       "group": "boss",
       "priority": 90,
@@ -550,6 +570,7 @@
     },
     {
       "id": "boss-vardorvis",
+      "occasion": true,
       "note": "Vardorvis in the Stranglewood.",
       "group": "boss",
       "priority": 90,
@@ -576,6 +597,7 @@
     },
     {
       "id": "boss-jad",
+      "occasion": true,
       "note": "TzTok-Jad atop the Fight Caves.",
       "group": "boss",
       "priority": 90,
@@ -602,6 +624,7 @@
     },
     {
       "id": "boss-zuk",
+      "occasion": true,
       "note": "TzKal-Zuk at the floor of the Inferno.",
       "group": "boss",
       "priority": 90,
@@ -628,6 +651,7 @@
     },
     {
       "id": "boss-hunllef",
+      "occasion": true,
       "note": "The Hunllef in the Gauntlet.",
       "group": "boss",
       "priority": 90,
@@ -655,6 +679,7 @@
     },
     {
       "id": "boss-olm",
+      "occasion": true,
       "note": "The Great Olm at the end of the Chambers of Xeric.",
       "group": "boss",
       "priority": 90,
@@ -681,6 +706,7 @@
     },
     {
       "id": "boss-verzik",
+      "occasion": true,
       "note": "Verzik Vitur, finale of the Theatre of Blood.",
       "group": "boss",
       "priority": 90,
@@ -707,6 +733,7 @@
     },
     {
       "id": "boss-wardens",
+      "occasion": true,
       "note": "The Wardens, finale of the Tombs of Amascut.",
       "group": "boss",
       "priority": 90,
@@ -734,6 +761,7 @@
     },
     {
       "id": "boss-obor",
+      "occasion": true,
       "note": "Obor, the Hill Titan.",
       "group": "boss",
       "priority": 90,
@@ -760,6 +788,7 @@
     },
     {
       "id": "boss-bryophyta",
+      "occasion": true,
       "note": "Bryophyta, the Moss Titan.",
       "group": "boss",
       "priority": 90,
@@ -786,6 +815,7 @@
     },
     {
       "id": "boss-sol",
+      "occasion": true,
       "note": "Sol Heredit, finale of the Fortis Colosseum.",
       "group": "boss",
       "priority": 90,
@@ -812,6 +842,7 @@
     },
     {
       "id": "boss-hueycoatl",
+      "occasion": true,
       "note": "The Hueycoatl in the Varlamore hills.",
       "group": "boss",
       "priority": 90,
@@ -838,6 +869,7 @@
     },
     {
       "id": "boss-amoxliatl",
+      "occasion": true,
       "note": "Amoxliatl beneath the Tlati Rainforest.",
       "group": "boss",
       "priority": 90,
@@ -864,6 +896,7 @@
     },
     {
       "id": "boss-yama",
+      "occasion": true,
       "note": "Yama, lord of the pit.",
       "group": "boss",
       "priority": 90,
@@ -890,6 +923,7 @@
     },
     {
       "id": "boss-graardor",
+      "occasion": true,
       "note": "General Graardor, Bandos general.",
       "group": "boss",
       "priority": 90,
@@ -916,6 +950,7 @@
     },
     {
       "id": "boss-kril",
+      "occasion": true,
       "note": "K'ril Tsutsaroth, Zamorak general.",
       "group": "boss",
       "priority": 90,
@@ -942,6 +977,7 @@
     },
     {
       "id": "boss-zilyana",
+      "occasion": true,
       "note": "Commander Zilyana, Saradomin general.",
       "group": "boss",
       "priority": 90,
@@ -968,6 +1004,7 @@
     },
     {
       "id": "boss-kreearra",
+      "occasion": true,
       "note": "Kree'arra, Armadyl general.",
       "group": "boss",
       "priority": 90,
@@ -994,6 +1031,7 @@
     },
     {
       "id": "boss-nex",
+      "occasion": true,
       "note": "Nex, Zaros general in the Ancient Prison.",
       "group": "boss",
       "priority": 90,
@@ -1020,6 +1058,7 @@
     },
     {
       "id": "boss-zulrah",
+      "occasion": true,
       "note": "Zulrah, the serpent of Zul-Andra.",
       "group": "boss",
       "priority": 90,
@@ -1046,6 +1085,7 @@
     },
     {
       "id": "boss-vorkath",
+      "occasion": true,
       "note": "Vorkath, the undead dragon of Ungael.",
       "group": "boss",
       "priority": 90,
@@ -1072,6 +1112,7 @@
     },
     {
       "id": "boss-cerberus",
+      "occasion": true,
       "note": "Cerberus, hellhound of the underworld.",
       "group": "boss",
       "priority": 90,
@@ -1098,6 +1139,7 @@
     },
     {
       "id": "boss-kraken",
+      "occasion": true,
       "note": "The Kraken, cave kraken boss.",
       "group": "boss",
       "priority": 90,
@@ -1124,6 +1166,7 @@
     },
     {
       "id": "boss-thermy",
+      "occasion": true,
       "note": "The Thermonuclear smoke devil.",
       "group": "boss",
       "priority": 90,
@@ -1150,6 +1193,7 @@
     },
     {
       "id": "boss-hydra",
+      "occasion": true,
       "note": "The Alchemical Hydra beneath Mount Karuulm.",
       "group": "boss",
       "priority": 90,
@@ -1176,6 +1220,7 @@
     },
     {
       "id": "boss-sire",
+      "occasion": true,
       "note": "The Abyssal Sire in the Abyssal Nexus.",
       "group": "boss",
       "priority": 90,
@@ -1202,6 +1247,7 @@
     },
     {
       "id": "boss-grotesque",
+      "occasion": true,
       "note": "The Grotesque Guardians, Dusk and Dawn, on the Slayer Tower roof.",
       "group": "boss",
       "priority": 90,
@@ -1229,6 +1275,7 @@
     },
     {
       "id": "boss-skotizo",
+      "occasion": true,
       "note": "Skotizo beneath the Catacombs of Kourend.",
       "group": "boss",
       "priority": 90,
@@ -1255,6 +1302,7 @@
     },
     {
       "id": "low-hp",
+      "occasion": true,
       "advise": {
         "about": "food",
         "ids": [829, 1191, 1194, 1327],
@@ -1284,6 +1332,7 @@
     },
     {
       "id": "critical-hp",
+      "occasion": true,
       "advise": {
         "about": "leaving",
         "ids": [714, 3864, 1979, 4847, 13764, 8798, 9209, 1696],
@@ -1315,6 +1364,7 @@
     },
     {
       "id": "low-prayer",
+      "occasion": true,
       "note": "Speaks once when prayer crosses under 20 percent with prayers active.",
       "group": "health",
       "priority": 95,
@@ -1340,6 +1390,7 @@
     },
     {
       "id": "status-poisoned",
+      "occasion": true,
       "note": "Speaks once each time you become poisoned (not venomed).",
       "group": "health",
       "priority": 105,
@@ -1363,6 +1414,7 @@
     },
     {
       "id": "status-venomed",
+      "occasion": true,
       "note": "Speaks once each time you become venomed. Venom outranks poison.",
       "group": "health",
       "priority": 115,
@@ -1386,6 +1438,7 @@
     },
     {
       "id": "status-skulled",
+      "occasion": true,
       "note": "Speaks once when a skull appears over your head.",
       "group": "health",
       "priority": 85,
@@ -1448,6 +1501,7 @@
     },
     {
       "id": "enter-wilderness",
+      "occasion": true,
       "note": "Fires on crossing into the Wilderness, via the wilderness varbit.",
       "group": "area",
       "priority": 110,
@@ -2569,6 +2623,7 @@
     },
     {
       "id": "boss-while-low",
+      "occasion": true,
       "note": "Combinator example: only complains if a boss is near AND you're hurt.",
       "group": "boss",
       "priority": 130,
@@ -2602,6 +2657,7 @@
     },
     {
       "id": "death",
+      "occasion": true,
       "group": "misc",
       "priority": 140,
       "cooldownMs": 5000,
@@ -2618,6 +2674,7 @@
     },
     {
       "id": "pet-drop",
+      "occasion": true,
       "group": "misc",
       "priority": 150,
       "cooldownMs": 1000,
@@ -2646,6 +2703,94 @@
       "say": [
         "{skill} {level}. Nice.",
         "Level {level} {skill}!"
+      ]
+    },
+    {
+      "id": "first-meeting",
+      "note": "The very first login, ever. First of the four arrival-arc lines: the moments where the follower has no history to draw on, which is exactly the window in which a new player decides whether to keep the plugin. Beats login-greeting on priority. The sessionCount gate is belt and braces behind once, so a lost memory still cannot introduce the follower twice.",
+      "group": "misc",
+      "priority": 95,
+      "once": true,
+      "occasion": true,
+      "output": "overhead",
+      "delayTicks": 8,
+      "cooldownMs": 60000,
+      "hushMs": 8000,
+      "when": {
+        "type": "sessionCount",
+        "maximum": 1
+      },
+      "say": [
+        "Right. You go places, I write things down. That's the arrangement.",
+        "New notebook, fresh page. Try to do something worth the ink.",
+        "I'll be behind you, taking notes. You'll stop noticing within a week."
+      ]
+    },
+    {
+      "id": "first-page",
+      "note": "Ten minutes into the first day. Scheduled rather than left to a gate that may not fire for hours, because an early characterful moment is the thing the first session is missing. Also the first hint that the notebook is not really about the scenery - and it never explains itself.",
+      "group": "misc",
+      "priority": 72,
+      "once": true,
+      "occasion": true,
+      "output": "overhead",
+      "cooldownMs": 60000,
+      "hushMs": 6000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "sessionMinutes", "minimum": 10, "maximum": 44 },
+          { "type": "daysKnown", "minimum": 0, "maximum": 1 }
+        ]
+      },
+      "say": [
+        "Page one, done. Mostly the buildings. Mostly.",
+        "That's a page filled. Roads, walls, weather. And one line I'll keep."
+      ]
+    },
+    {
+      "id": "first-hour",
+      "note": "Three quarters of an hour in, on one of the first days. The follower says the true thing about itself: it has no history with you yet, and every personal line in the file is waiting on one. Naming the gap is better than pretending there is not one.",
+      "group": "misc",
+      "priority": 72,
+      "once": true,
+      "occasion": true,
+      "output": "overhead",
+      "cooldownMs": 60000,
+      "hushMs": 6000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "sessionMinutes", "minimum": 45 },
+          { "type": "daysKnown", "minimum": 0, "maximum": 2 }
+        ]
+      },
+      "say": [
+        "I've nothing on you yet. Come back a few times and that'll fix itself.",
+        "An hour, and my notes are all scenery. Give me something to write down."
+      ]
+    },
+    {
+      "id": "first-return",
+      "note": "The first login on a later day than the first. The last of the arrival arc, and the only one that needs the player to have chosen to come back - which is the whole thing the first twenty minutes were for.",
+      "group": "misc",
+      "priority": 95,
+      "once": true,
+      "occasion": true,
+      "output": "overhead",
+      "delayTicks": 8,
+      "cooldownMs": 60000,
+      "hushMs": 8000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "sessionCount", "minimum": 2, "maximum": 3 },
+          { "type": "daysKnown", "minimum": 1, "maximum": 7 }
+        ]
+      },
+      "say": [
+        "You came back. Right, then. Page two.",
+        "Back again. Twice is how a habit starts. Notebook's out."
       ]
     },
     {
@@ -5675,6 +5820,7 @@
     },
     {
       "id": "death-moment",
+      "occasion": true,
       "markHere": "it went wrong for you",
       "note": "The moment you die. Highest priority there is - nothing talks over this.",
       "group": "reactions",
@@ -5715,6 +5861,7 @@
     },
     {
       "id": "loot-big",
+      "occasion": true,
       "markHere": "you got that drop",
       "note": "A drop worth a million or more. The cheer is 862.",
       "group": "reactions",
@@ -6877,6 +7024,7 @@
     },
     {
       "id": "session-10",
+      "occasion": true,
       "note": "The 10th time the follower has been started up with this player. Pinned to the exact number with minimum and maximum, so the line can name it - 'every 25th' would have to stay vague. The count lives in the config and survives a logout, which is the whole point: a session counter that resets is not a memory.",
       "group": "misc",
       "priority": 92,
@@ -6897,6 +7045,7 @@
     },
     {
       "id": "session-50",
+      "occasion": true,
       "note": "The 50th time the follower has been started up with this player. Pinned to the exact number with minimum and maximum, so the line can name it - 'every 25th' would have to stay vague. The count lives in the config and survives a logout, which is the whole point: a session counter that resets is not a memory.",
       "group": "misc",
       "priority": 92,
@@ -6917,6 +7066,7 @@
     },
     {
       "id": "session-100",
+      "occasion": true,
       "note": "The 100th time the follower has been started up with this player. Pinned to the exact number with minimum and maximum, so the line can name it - 'every 25th' would have to stay vague. The count lives in the config and survives a logout, which is the whole point: a session counter that resets is not a memory.",
       "group": "misc",
       "priority": 92,
@@ -6937,6 +7087,7 @@
     },
     {
       "id": "session-365",
+      "occasion": true,
       "note": "The 365th time the follower has been started up with this player. Pinned to the exact number with minimum and maximum, so the line can name it - 'every 25th' would have to stay vague. The count lives in the config and survives a logout, which is the whole point: a session counter that resets is not a memory.",
       "group": "misc",
       "priority": 92,
@@ -7355,6 +7506,7 @@
     },
     {
       "id": "want-fulfilled",
+      "occasion": true,
       "note": "The player actually went. This is the payoff for the whole want mechanism and the biggest single mood swing in the file: a thing with desires that can be SATISFIED reads as alive in a way no amount of commentary manages. {want} names the place it asked for.",
       "group": "reactions",
       "priority": 78,
@@ -7595,6 +7747,7 @@
     },
     {
       "id": "want-fulfilled-lumbridge",
+      "occasion": true,
       "note": "Arriving where it asked, with the REASON. The generic line thanks you for coming; this says why that place and not another, which is the difference between a companion that is pleased and one that has a preference. Above the generic want-fulfilled at 78, which stays as the fallback for any want without a line of its own. hushMs takes the floor for 10 seconds: the region change raises an area line at the same instant, and two lines about one arrival is one too many.",
       "group": "reactions",
       "priority": 80,
@@ -7629,6 +7782,7 @@
     },
     {
       "id": "want-fulfilled-grand-exchange",
+      "occasion": true,
       "note": "Arriving where it asked, with the REASON. The generic line thanks you for coming; this says why that place and not another, which is the difference between a companion that is pleased and one that has a preference. Above the generic want-fulfilled at 78, which stays as the fallback for any want without a line of its own. hushMs takes the floor for 10 seconds: the region change raises an area line at the same instant, and two lines about one arrival is one too many.",
       "group": "reactions",
       "priority": 80,
@@ -7663,6 +7817,7 @@
     },
     {
       "id": "want-fulfilled-fishing-guild",
+      "occasion": true,
       "note": "Arriving where it asked, with the REASON. The generic line thanks you for coming; this says why that place and not another, which is the difference between a companion that is pleased and one that has a preference. Above the generic want-fulfilled at 78, which stays as the fallback for any want without a line of its own. hushMs takes the floor for 10 seconds: the region change raises an area line at the same instant, and two lines about one arrival is one too many.",
       "group": "reactions",
       "priority": 80,
@@ -8971,6 +9126,7 @@
     },
     {
       "id": "anniversary",
+      "occasion": true,
       "note": "The same day of the year as the first one. Priority high enough to beat the everyday chatter, because it happens once.",
       "group": "memory",
       "priority": 68,

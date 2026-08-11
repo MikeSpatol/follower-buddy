@@ -599,6 +599,47 @@ public final class TriggerContext
 		countersDirty = true;
 	}
 
+	// ------------------------------------------------------------ one-time lines
+
+	/**
+	 * Rules marked {@code once} that have already had their one time.
+	 *
+	 * <p>Kept here rather than on the rule for two reasons, and each one is a
+	 * bug avoided. The rule file reloads whenever it changes on disk, throwing
+	 * every rule object away and parsing fresh ones - a flag on the object
+	 * would un-say the follower's introduction every time a phrase was edited.
+	 * And this belongs with the tallies and the places anyway: what the
+	 * follower has already told you is memory, and memory is kept in one place.
+	 */
+	private final java.util.Set<String> spokenOnce = new java.util.HashSet<>();
+
+	public boolean hasSaidOnce(String ruleId)
+	{
+		return ruleId != null && spokenOnce.contains(ruleId);
+	}
+
+	public void noteSaidOnce(String ruleId)
+	{
+		if (ruleId != null && spokenOnce.add(ruleId))
+		{
+			countersDirty = true;
+		}
+	}
+
+	/** Live set, for the plugin to write out. Read-only by convention. */
+	public java.util.Set<String> getSpokenOnce()
+	{
+		return spokenOnce;
+	}
+
+	public void restoreSpokenOnce(java.util.Collection<String> saved)
+	{
+		if (saved != null)
+		{
+			spokenOnce.addAll(saved);
+		}
+	}
+
 	// -------------------------------------------------------------- repeating
 
 	/**
