@@ -8037,18 +8037,18 @@
       "output": "overhead",
       "pickUp": {
         "what": "a nice flat rock",
-        "minutes": 25
+        "minutes": 50
       },
       "when": {
         "type": "all",
         "conditions": [
           {
             "type": "idle",
-            "ticks": 80
+            "ticks": 500
           },
           {
             "type": "idleBelow",
-            "ticks": 500
+            "ticks": 620
           },
           {
             "type": "none",
@@ -8060,7 +8060,7 @@
           },
           {
             "type": "chance",
-            "percent": 2
+            "percent": 1
           }
         ]
       },
@@ -8078,18 +8078,18 @@
       "output": "overhead",
       "pickUp": {
         "what": "an interesting stick",
-        "minutes": 25
+        "minutes": 50
       },
       "when": {
         "type": "all",
         "conditions": [
           {
             "type": "idle",
-            "ticks": 80
+            "ticks": 500
           },
           {
             "type": "idleBelow",
-            "ticks": 500
+            "ticks": 620
           },
           {
             "type": "none",
@@ -8101,7 +8101,7 @@
           },
           {
             "type": "chance",
-            "percent": 2
+            "percent": 1
           }
         ]
       },
@@ -8119,18 +8119,18 @@
       "output": "overhead",
       "pickUp": {
         "what": "a lucky-looking pebble",
-        "minutes": 25
+        "minutes": 50
       },
       "when": {
         "type": "all",
         "conditions": [
           {
             "type": "idle",
-            "ticks": 80
+            "ticks": 500
           },
           {
             "type": "idleBelow",
-            "ticks": 500
+            "ticks": 620
           },
           {
             "type": "none",
@@ -8142,7 +8142,7 @@
           },
           {
             "type": "chance",
-            "percent": 2
+            "percent": 1
           }
         ]
       },
@@ -8160,18 +8160,18 @@
       "output": "overhead",
       "pickUp": {
         "what": "a feather",
-        "minutes": 25
+        "minutes": 50
       },
       "when": {
         "type": "all",
         "conditions": [
           {
             "type": "idle",
-            "ticks": 80
+            "ticks": 500
           },
           {
             "type": "idleBelow",
-            "ticks": 500
+            "ticks": 620
           },
           {
             "type": "none",
@@ -8183,7 +8183,7 @@
           },
           {
             "type": "chance",
-            "percent": 2
+            "percent": 1
           }
         ]
       },
@@ -8201,18 +8201,18 @@
       "output": "overhead",
       "pickUp": {
         "what": "a bent nail",
-        "minutes": 25
+        "minutes": 50
       },
       "when": {
         "type": "all",
         "conditions": [
           {
             "type": "idle",
-            "ticks": 80
+            "ticks": 500
           },
           {
             "type": "idleBelow",
-            "ticks": 500
+            "ticks": 620
           },
           {
             "type": "none",
@@ -8224,7 +8224,7 @@
           },
           {
             "type": "chance",
-            "percent": 2
+            "percent": 1
           }
         ]
       },
@@ -8238,7 +8238,7 @@
       "note": "Brings up the thing it is holding. This is the payoff for the object existing at all: it is the same rock forty minutes later.",
       "group": "souvenir",
       "priority": 20,
-      "cooldownMs": 420000,
+      "cooldownMs": 1200000,
       "output": "overhead",
       "when": {
         "type": "all",
@@ -8256,7 +8256,7 @@
           },
           {
             "type": "chance",
-            "percent": 5
+            "percent": 2
           }
         ]
       },
