@@ -167,10 +167,129 @@ public class ThievingTest
 		assertTrue(sim.ctx.isInThievingSession());
 
 		sim.game.animating(-1);
-		sim.game.at(3222 + 12, 3218, 0);
+		sim.game.at(3222 + 20, 3218, 0);
 		sim.tick(1);
 
 		assertFalse("walking away is the signal to come back",
+			sim.ctx.isInThievingSession());
+	}
+
+	@Test
+	public void everyWayTheGameOffersATheftCounts()
+	{
+		// The silence has to hold for anything the player is robbing, not just
+		// for the one target that was tested. Matched on the words rather than
+		// on an exact list, because an exact list is silently wrong about
+		// everything it left out.
+		for (String option : new String[]{
+			"Pickpocket", "pickpocket", "Steal-from", "Steal from", "Steal",
+			"<col=00ff00>Pickpocket</col>"})
+		{
+			assertTrue(option + " should read as thieving",
+				FollowerPlugin.isThievingOption(option));
+		}
+
+		// And things that are not.
+		for (String option : new String[]{
+			"Attack", "Talk-to", "Trade", "Examine", "Walk here", "Bank", null, ""})
+		{
+			assertFalse(option + " should not read as thieving",
+				FollowerPlugin.isThievingOption(option));
+		}
+	}
+
+	@Test
+	public void clickingPickpocketArmsItBeforeTheWalkOver()
+	{
+		// Reported from play: the FIRST attempt of a session announced a fight.
+		// Clicking Pickpocket on an elf across the room sets the interaction
+		// target at once and then the player walks over, and every tick of that
+		// walk looked like combat - an NPC with a combat level and a health
+		// bar - because the session only armed on the pickpocket animation,
+		// which does not happen until the player arrives.
+		Sim sim = new Sim();
+		NPC elf = sim.game.spawnNpc(4993, "Elf", 108);
+
+		sim.ctx.noteThievingIntent();
+		sim.game.fighting(elf);
+		sim.tick(4);
+
+		assertTrue("intent arms the session", sim.ctx.isInThievingSession());
+		assertFalse("walking over to rob someone is not a fight",
+			sim.ctx.isInCombat());
+	}
+
+	@Test
+	public void withoutTheIntentTheWalkOverStillReadsAsAFight()
+	{
+		// The other half, so the test above cannot pass for the wrong reason:
+		// the same setup with no click IS how a real approach looks.
+		Sim sim = new Sim();
+		NPC elf = sim.game.spawnNpc(4993, "Elf", 108);
+
+		sim.game.fighting(elf);
+		sim.tick(4);
+
+		assertTrue("an NPC target with no stated intent is still a fight",
+			sim.ctx.isInCombat());
+	}
+
+	@Test
+	public void clickingAttackEndsTheTheftAtOnce()
+	{
+		// The session outlives the gaps between attempts on purpose, and the
+		// cost is a window where a genuine fight goes unnoticed. Saying Attack
+		// is the one unambiguous signal that closes it now.
+		Sim sim = new Sim();
+		sim.game.animating(PICKPOCKET);
+		sim.tick(2);
+		assertTrue(sim.ctx.isInThievingSession());
+
+		sim.ctx.noteFightIntent();
+		NPC goblin = sim.game.spawnNpc(3029, "Goblin", 5);
+		sim.game.animating(-1);
+		sim.game.fighting(goblin);
+		sim.tick(2);
+
+		assertFalse("attacking ends the theft", sim.ctx.isInThievingSession());
+		assertTrue("and the fight registers immediately", sim.ctx.isInCombat());
+	}
+
+	@Test
+	public void followingAMarkThatWandersDoesNotEndTheSession()
+	{
+		// Found in a transcript. The radius was sized for a stall - a fixed
+		// point you stand at - and elves wander, so following one across a few
+		// tiles ended the session several times a minute. The follower
+		// announced the end of a theft that was still going on, and then
+		// cheered on the "fight" the next failed attempt looked like.
+		Sim sim = new Sim();
+		sim.game.animating(PICKPOCKET);
+		sim.tick(2);
+		assertTrue(sim.ctx.isInThievingSession());
+
+		sim.game.animating(-1);
+		sim.game.at(3222 + 8, 3218 + 4, 0);
+		sim.tick(3);
+
+		assertTrue("chasing the mark is still working the mark",
+			sim.ctx.isInThievingSession());
+	}
+
+	@Test
+	public void aBreakToOpenCoinPouchesDoesNotEndTheSession()
+	{
+		// The other half of the same transcript: the ninety-second window ran
+		// out while the player emptied pouches or drank a dose, which ended the
+		// session mid-run for the same reason.
+		Sim sim = new Sim();
+		sim.game.animating(PICKPOCKET);
+		sim.tick(2);
+
+		sim.game.animating(-1);
+		sim.tick(160);
+
+		assertTrue("a two-minute pause is a pause, not an ending",
 			sim.ctx.isInThievingSession());
 	}
 
@@ -211,7 +330,7 @@ public class ThievingTest
 		sim.tick(2);
 
 		sim.game.animating(-1);
-		sim.tick(200);
+		sim.tick(300);
 
 		assertFalse("it cannot stand back forever on one attempt",
 			sim.ctx.isInThievingSession());
@@ -248,7 +367,7 @@ public class ThievingTest
 		// visible again - and being attacked is one of the few things that
 		// actually makes a player move.
 		sim.game.animating(-1);
-		sim.game.at(3222 + 12, 3218, 0);
+		sim.game.at(3222 + 20, 3218, 0);
 		sim.tick(2);
 
 		NPC goblin = sim.game.spawnNpc(3029, "Goblin", 5);

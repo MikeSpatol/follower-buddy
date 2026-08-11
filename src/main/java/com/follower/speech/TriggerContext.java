@@ -92,6 +92,9 @@ public final class TriggerContext
 			int newRegion = location.getRegionID();
 			if (newRegion != regionId)
 			{
+				// Leaving is what turns a fresh memory into one worth
+				// bringing up when you next come back.
+				placesJustFiled.remove(regionId);
 				previousRegionId = regionId;
 				regionId = newRegion;
 				noteRegionEntered(newRegion);
@@ -121,6 +124,9 @@ public final class TriggerContext
 		checkWant();
 		checkSouvenir();
 		checkBet();
+		checkAdvice();
+		checkChallenge();
+		refreshAttention();
 		driftMood();
 	}
 
@@ -188,8 +194,25 @@ public final class TriggerContext
 	 * clock alone: it ends the moment the player walks off, which is the signal
 	 * a person actually gives when they are done.
 	 */
-	private static final int THIEVING_SESSION_TICKS = 150;
-	private static final int THIEVING_SESSION_RADIUS = 5;
+	/**
+	 * How long a pause can run before the session is over. Two and a half
+	 * minutes rather than ninety seconds: opening a run of coin pouches or
+	 * drinking a stamina dose ran past the old figure, which ended the session
+	 * mid-run and let the next failed pickpocket read as a fight.
+	 */
+	private static final int THIEVING_SESSION_TICKS = 250;
+	/**
+	 * How far the player may drift from the last attempt before the session is
+	 * considered over.
+	 *
+	 * <p>Five tiles was sized for a STALL - a fixed point you stand at. Elves
+	 * wander and you follow them, so five tiles ended the session every time
+	 * the mark walked, several times a minute: the follower announced the end
+	 * of a theft that was still going on, and cheered on the "fight" the next
+	 * failed attempt looked like. The anchor moves to the player on every
+	 * attempt, so this only has to cover the drift BETWEEN attempts.
+	 */
+	private static final int THIEVING_SESSION_RADIUS = 12;
 
 	private int ticksSinceThieving = Integer.MAX_VALUE;
 	private WorldPoint thievingSpot;
@@ -207,6 +230,17 @@ public final class TriggerContext
 			ticksSinceThieving++;
 		}
 
+		// Intent can arm the clock before there is anywhere to anchor it - the
+		// click arrives from the menu, which does not wait for a refresh. Adopt
+		// the first location seen after it, ONCE: without the latch this also
+		// re-anchors a session that walking away had just ended, and walking
+		// away stops working.
+		if (awaitingThievingAnchor && location != null)
+		{
+			thievingSpot = location;
+			awaitingThievingAnchor = false;
+		}
+
 		// Walking away ends the session outright, whatever the clock says.
 		if (thievingSpot != null && location != null
 			&& (location.getPlane() != thievingSpot.getPlane()
@@ -214,7 +248,52 @@ public final class TriggerContext
 			|| ticksSinceThieving > THIEVING_SESSION_TICKS))
 		{
 			thievingSpot = null;
+			awaitingThievingAnchor = false;
 		}
+	}
+
+	/**
+	 * The player has said they are about to steal something.
+	 *
+	 * <p>Arming on the ANIMATION was too late. Clicking Pickpocket on an elf
+	 * across the room sets the interaction target immediately and then the
+	 * player walks over, and for every tick of that walk the follower saw an
+	 * NPC with a combat level and called it a fight - so the very first attempt
+	 * of a session announced a battle that was actually a theft. The click is
+	 * intent and arrives first; the animation is outcome and arrives after the
+	 * damage.
+	 */
+	public void noteThievingIntent()
+	{
+		ticksSinceThieving = 0;
+		if (location != null)
+		{
+			thievingSpot = location;
+		}
+		else
+		{
+			awaitingThievingAnchor = true;
+		}
+		log.debug("Thieving intent at {}", location);
+	}
+
+	/** Set when intent arrived before there was a location to pin it to. */
+	private boolean awaitingThievingAnchor;
+
+	/**
+	 * The player has said they are about to fight something, which ends any
+	 * theft outright.
+	 *
+	 * <p>The session deliberately outlives the gaps between attempts, and the
+	 * cost of that is a window where a genuine fight goes unnoticed. An
+	 * explicit Attack is the one unambiguous signal that the window should
+	 * close now rather than when the player next wanders off.
+	 */
+	public void noteFightIntent()
+	{
+		thievingSpot = null;
+		awaitingThievingAnchor = false;
+		ticksSinceThieving = Integer.MAX_VALUE;
 	}
 
 	/**
@@ -258,8 +337,10 @@ public final class TriggerContext
 		}
 
 		Actor target = local.getInteracting();
-		if (target instanceof NPC && target.getCombatLevel() > 0
-			&& target.getHealthRatio() != 0)
+		boolean facing = target instanceof NPC && target.getCombatLevel() > 0
+			&& target.getHealthRatio() != 0;
+
+		if (facing && blowsHaveBeenExchanged(local, target))
 		{
 			combatTarget = target.getName() == null ? "" : target.getName();
 			combatTargetLevel = target.getCombatLevel();
@@ -272,10 +353,43 @@ public final class TriggerContext
 	}
 
 	/**
+	 * Whether facing this NPC is a FIGHT, as opposed to merely looking at it.
+	 *
+	 * <p>Interaction alone used to be enough, and interaction covers walking
+	 * up to somebody, talking to them and trading with them. Any levelled NPC
+	 * would do - so approaching a guard for directions read as a battle
+	 * starting, and the follower announced one.
+	 *
+	 * <p>A fight has two sides or it has blows. Either the NPC is facing back,
+	 * or damage has passed between them recently - the first hit in either
+	 * direction arms this through {@link #noteDamageTaken} and
+	 * {@link #noteDamageDealt}, and this then keeps it alive for as long as the
+	 * two are still squared up.
+	 */
+	private boolean blowsHaveBeenExchanged(Player local, Actor target)
+	{
+		return target.getInteracting() == local || isInCombat();
+	}
+
+	/**
 	 * Called by the plugin when the player takes a hit, which is also combat -
 	 * unless they are picking a pocket, where the hit is the failure itself.
 	 */
 	public void noteDamageTaken()
+	{
+		if (isInThievingSession())
+		{
+			return;
+		}
+		ticksSinceCombat = 0;
+	}
+
+	/**
+	 * The player landed a hit on something, which is the other way a fight
+	 * starts - and the only signal available when the target dies before it
+	 * can turn round, or cannot reach the player at all.
+	 */
+	public void noteDamageDealt()
 	{
 		if (isInThievingSession())
 		{
@@ -358,6 +472,12 @@ public final class TriggerContext
 	 */
 	@lombok.Getter
 	private boolean countersDirty;
+
+	/** Marks the saved blob as needing a write, for state set from outside. */
+	public void markCountersDirty()
+	{
+		countersDirty = true;
+	}
 
 	public void clearCountersDirty()
 	{
@@ -663,14 +783,192 @@ public final class TriggerContext
 		return dislikedRegions;
 	}
 
-	/** Whether the follower feels the named way about where it is standing. */
+	// ------------------------------------------------------- earned taste
+
+	/**
+	 * What each place has come to mean, learned rather than rolled.
+	 *
+	 * <p>The rolled sets above give the follower a taste before anything has
+	 * happened to it, which is the only honest thing to do on the first login.
+	 * After that they are the WEAKER claim: a place you died in twice should
+	 * not stay a favourite because a shuffle said so on day one.
+	 *
+	 * <p>The signal costs nothing to author, because the rules already carry
+	 * it. Every rule that knows a boss dying is worth +18 and a death is worth
+	 * -25 is already saying how much the moment mattered; all this does is
+	 * remember WHERE it happened. A new influence on how the follower feels
+	 * about a place is a mood value on a rule, same as before.
+	 */
+	private final java.util.Map<Integer, Integer> placeScores = new java.util.HashMap<>();
+
+	/** What the follower brings up about a place, keyed the same way. */
+	private final java.util.Map<Integer, String> placeMemories = new java.util.HashMap<>();
+
+	/**
+	 * Places whose memory was filed on THIS visit, and so is not yet worth
+	 * bringing up.
+	 *
+	 * <p>Found in a transcript: the follower set a personal best, filed the
+	 * spot, and told the player about the spot five seconds later - "this is
+	 * where you hit harder than you ever had", said to somebody still standing
+	 * there. The whole value of a place memory is that it waits, and nothing
+	 * made it wait. A region leaves this set when the player leaves the region,
+	 * which is precisely what "come back to it" means.
+	 */
+	private final java.util.Set<Integer> placesJustFiled = new java.util.HashSet<>();
+
+	/** Past this, an accumulation of small moments counts as an opinion. */
+	public static final int OPINION_AT = 40;
+
+	/**
+	 * Bounded so an opinion can be strong and still turn around. Without a cap
+	 * a region farmed for a week reaches a score no amount of later misery can
+	 * move, and the follower is left insisting it loves somewhere you both now
+	 * hate.
+	 */
+	private static final int OPINION_CAP = 150;
+
+	/** How many places it can hold an opinion about, oldest-weakest evicted. */
+	private static final int MAX_PLACES = 60;
+
+	/**
+	 * Records that something worth {@code delta} happened where we are standing.
+	 *
+	 * @param delta the same number the rule moves the mood by
+	 */
+	public void notePlaceFeeling(int delta)
+	{
+		if (delta == 0 || regionId == 0)
+		{
+			return;
+		}
+		int now = placeScores.getOrDefault(regionId, 0) + delta;
+		placeScores.put(regionId, Math.max(-OPINION_CAP, Math.min(OPINION_CAP, now)));
+		countersDirty = true;
+		trimPlaces();
+	}
+
+	/** Records what happened here, for a rule to bring up next time. */
+	public void notePlaceMemory(String phrase)
+	{
+		if (phrase == null || phrase.isEmpty() || regionId == 0)
+		{
+			return;
+		}
+		placeMemories.put(regionId, phrase);
+		placesJustFiled.add(regionId);
+		countersDirty = true;
+		trimPlaces();
+	}
+
+	/**
+	 * Drops the places it feels least strongly about once there are too many.
+	 * A follower with an opinion about everywhere has an opinion about nowhere,
+	 * and the saved blob has to stay a sensible size.
+	 */
+	private void trimPlaces()
+	{
+		while (placeScores.size() > MAX_PLACES)
+		{
+			Integer weakest = null;
+			int least = Integer.MAX_VALUE;
+			for (java.util.Map.Entry<Integer, Integer> entry : placeScores.entrySet())
+			{
+				int strength = Math.abs(entry.getValue());
+				if (strength < least)
+				{
+					least = strength;
+					weakest = entry.getKey();
+				}
+			}
+			if (weakest == null)
+			{
+				return;
+			}
+			placeScores.remove(weakest);
+			placeMemories.remove(weakest);
+		}
+		while (placeMemories.size() > MAX_PLACES)
+		{
+			placeMemories.remove(placeMemories.keySet().iterator().next());
+		}
+	}
+
+	public int getPlaceScore()
+	{
+		return placeScores.getOrDefault(regionId, 0);
+	}
+
+	public java.util.Map<Integer, Integer> getPlaceScores()
+	{
+		return placeScores;
+	}
+
+	public java.util.Map<Integer, String> getPlaceMemories()
+	{
+		return placeMemories;
+	}
+
+	public void restorePlaces(java.util.Map<Integer, Integer> scores,
+		java.util.Map<Integer, String> memories)
+	{
+		placeScores.clear();
+		placeMemories.clear();
+		if (scores != null)
+		{
+			placeScores.putAll(scores);
+		}
+		if (memories != null)
+		{
+			placeMemories.putAll(memories);
+		}
+	}
+
+	/**
+	 * Something the follower remembers about this place, or empty.
+	 *
+	 * <p>Empty while the memory is still fresh from this visit: a thing that
+	 * happened a moment ago is not a thing the place reminds you of.
+	 */
+	public String getPlaceMemory()
+	{
+		if (placesJustFiled.contains(regionId))
+		{
+			return "";
+		}
+		String here = placeMemories.get(regionId);
+		return here == null ? "" : here;
+	}
+
+	public boolean hasPlaceMemory()
+	{
+		return !getPlaceMemory().isEmpty();
+	}
+
+	/**
+	 * Whether the follower feels the named way about where it is standing.
+	 *
+	 * <p>Experience outranks the roll, and only in the direction experience
+	 * points: a place it has come to dislike is not liked, whatever the shuffle
+	 * said on the first login. Where nothing has happened yet, the roll still
+	 * answers, so a new follower has a temperament from the start.
+	 */
 	public boolean feelsAbout(String how)
 	{
-		if ("disliked".equalsIgnoreCase(how))
+		int earned = getPlaceScore();
+		boolean askingDisliked = "disliked".equalsIgnoreCase(how);
+
+		if (earned <= -OPINION_AT)
 		{
-			return dislikedRegions.contains(regionId);
+			return askingDisliked;
 		}
-		return likedRegions.contains(regionId);
+		if (earned >= OPINION_AT)
+		{
+			return !askingDisliked;
+		}
+		return askingDisliked
+			? dislikedRegions.contains(regionId)
+			: likedRegions.contains(regionId);
 	}
 
 	// ----------------------------------------------------------------- wants
@@ -855,6 +1153,425 @@ public final class TriggerContext
 	public void clearSouvenir()
 	{
 		souvenir = "";
+	}
+
+	// ---------------------------------------------------- how long we have known each other
+
+	/**
+	 * The day the follower first met this player, as an epoch day.
+	 *
+	 * <p>The session count already says a hundred logins. It cannot say a
+	 * hundred DAYS, and those are different claims about a friendship: one is a
+	 * number of visits, the other is a stretch of somebody's life. Only a date
+	 * can tell you it has been a year, and only a date can notice that today is
+	 * the anniversary of the first one.
+	 */
+	private long metOnDay;
+
+	public void setMetOnDay(long epochDay)
+	{
+		metOnDay = epochDay;
+	}
+
+	public long getMetOnDay()
+	{
+		return metOnDay;
+	}
+
+	/** Days since the first meeting, or 0 if it has not been recorded yet. */
+	public int getDaysKnown()
+	{
+		if (metOnDay <= 0)
+		{
+			return 0;
+		}
+		long days = java.time.LocalDate.now().toEpochDay() - metOnDay;
+		return days < 0 ? 0 : (int) Math.min(days, Integer.MAX_VALUE);
+	}
+
+	/**
+	 * Whether today is the same day of the year as the first meeting - and not
+	 * the first meeting itself, which is not an anniversary of anything.
+	 */
+	public boolean isAnniversary()
+	{
+		if (metOnDay <= 0 || getDaysKnown() < 300)
+		{
+			return false;
+		}
+		java.time.LocalDate met = java.time.LocalDate.ofEpochDay(metOnDay);
+		java.time.LocalDate today = java.time.LocalDate.now();
+		return met.getMonthValue() == today.getMonthValue()
+			&& met.getDayOfMonth() == today.getDayOfMonth();
+	}
+
+	/**
+	 * What the player is wearing now, and what they were wearing the day the
+	 * follower met them, both in gp.
+	 *
+	 * <p>Priced by the plugin, which has the item manager; kept here so a
+	 * condition can compare them. The comparison is the whole point - a number
+	 * on its own is a wealth tracker, and there are better ones. "You were in
+	 * bronze when I met you" is only available to something that was there.
+	 */
+	private int wornValue;
+	private int metWearingValue = -1;
+
+	public void setWornValue(int value)
+	{
+		wornValue = value;
+	}
+
+	public int getWornValue()
+	{
+		return wornValue;
+	}
+
+	public void setMetWearingValue(int value)
+	{
+		metWearingValue = value;
+	}
+
+	public int getMetWearingValue()
+	{
+		return metWearingValue;
+	}
+
+	/**
+	 * How many times better dressed the player is than the day they met,
+	 * or 0 while there is nothing to compare against.
+	 */
+	public int getTimesBetterDressed()
+	{
+		if (metWearingValue <= 0 || wornValue <= 0)
+		{
+			return 0;
+		}
+		return wornValue / Math.max(1, metWearingValue);
+	}
+
+	// ------------------------------------------------------------ the nickname
+
+	/**
+	 * What the follower has taken to calling you, earned from whatever you do
+	 * most.
+	 *
+	 * <p>It counts everything already; this is the one place it draws a
+	 * conclusion from the counting. The name moves as your play moves, which
+	 * makes it a mirror rather than a label - and being called the gravedigger
+	 * for a fortnight is a fact about you that no line written in advance could
+	 * have known.
+	 */
+	private final java.util.Map<String, String> nicknamesFor = new java.util.LinkedHashMap<>();
+
+	/** Registered by the plugin from the rule file, so the names stay editable. */
+	public void setNicknames(java.util.Map<String, String> byTally)
+	{
+		nicknamesFor.clear();
+		if (byTally != null)
+		{
+			nicknamesFor.putAll(byTally);
+		}
+	}
+
+	/** How much of a lead a tally needs before it earns you the name. */
+	private static final int NICKNAME_AT = 25;
+
+	public String getNickname()
+	{
+		String best = "";
+		int most = NICKNAME_AT;
+		for (java.util.Map.Entry<String, String> entry : nicknamesFor.entrySet())
+		{
+			int count = getTally(entry.getKey());
+			if (count > most)
+			{
+				most = count;
+				best = entry.getValue();
+			}
+		}
+		return best;
+	}
+
+	public boolean hasNickname()
+	{
+		return !getNickname().isEmpty();
+	}
+
+	// -------------------------------------------------------- the challenge
+
+	/**
+	 * A wager on the PLAYER, against the clock.
+	 *
+	 * <p>The bet is about what the world will do - what the next drop is worth.
+	 * This is about what you will do, which is the difference between a
+	 * companion watching and a companion involved. It also gives the follower
+	 * something to be wrong about that is your fault, which is funnier.
+	 *
+	 * <p>Measured against a tally it already keeps, so a challenge is a rule
+	 * naming a counter and a number, not a scoring system of its own.
+	 */
+	public enum ChallengeOutcome
+	{
+		MET,
+		FAILED,
+	}
+
+	private String challengeAbout = "";
+	private String challengeTally = "";
+	private int challengeTarget;
+	private int challengeStartedAt;
+	private int challengeDeadlineTick;
+	private ChallengeOutcome challengeOutcome;
+
+	public void setChallenge(String about, String tally, int target, int minutes)
+	{
+		if (tally == null || tally.isEmpty() || isChallenging())
+		{
+			return;
+		}
+		challengeAbout = about == null ? "" : about;
+		challengeTally = tally;
+		challengeTarget = Math.max(1, target);
+		challengeStartedAt = getTally(tally);
+		challengeDeadlineTick = client.getTickCount() + Math.max(1, minutes) * 100;
+		log.debug("Challenge: {} of {} in {} minutes", target, tally, minutes);
+	}
+
+	public boolean isChallenging()
+	{
+		return challengeDeadlineTick > 0;
+	}
+
+	/** What the challenge was, for the {challenge} placeholder. */
+	public String getChallengeAbout()
+	{
+		return challengeAbout;
+	}
+
+	/** How many are still needed, for a line that can count down. */
+	public int getChallengeLeft()
+	{
+		if (!isChallenging())
+		{
+			return 0;
+		}
+		return Math.max(0, challengeTarget - (getTally(challengeTally) - challengeStartedAt));
+	}
+
+	private void checkChallenge()
+	{
+		if (!isChallenging())
+		{
+			return;
+		}
+		if (getTally(challengeTally) - challengeStartedAt >= challengeTarget)
+		{
+			challengeDeadlineTick = 0;
+			challengeOutcome = ChallengeOutcome.MET;
+			return;
+		}
+		if (client.getTickCount() >= challengeDeadlineTick)
+		{
+			challengeDeadlineTick = 0;
+			challengeOutcome = ChallengeOutcome.FAILED;
+		}
+	}
+
+	public ChallengeOutcome pollChallenge()
+	{
+		ChallengeOutcome outcome = challengeOutcome;
+		challengeOutcome = null;
+		return outcome;
+	}
+
+	// ------------------------------------------------------------- underfoot
+
+	/**
+	 * The player clicked the tile the follower happened to be standing on.
+	 *
+	 * <p>The one nuisance of a companion that nothing in here acknowledged. It
+	 * keeps clear of fights and it walks behind you, and then every so often it
+	 * is simply in the way, and a follower that never notices that is a follower
+	 * you are managing rather than travelling with.
+	 *
+	 * <p>Consumed on read, because it is a moment rather than a state: the tile
+	 * is walked to a second later and the fact stops being true.
+	 */
+	private boolean underfoot;
+
+	public void noteUnderfoot()
+	{
+		underfoot = true;
+	}
+
+	public boolean pollUnderfoot()
+	{
+		boolean was = underfoot;
+		underfoot = false;
+		return was;
+	}
+
+	// ------------------------------------------------------- gone, or just still
+
+	/**
+	 * Whether the player has stopped touching the controls, as distinct from
+	 * standing still on purpose.
+	 *
+	 * <p>{@code idle} cannot tell those apart: a player at a furnace and a
+	 * player who has gone to make tea look identical to it, and the follower
+	 * saying "still here, still standing" to an empty chair is only funny by
+	 * accident. The camera is the tell - it moves when somebody is there.
+	 */
+	private int cameraX = Integer.MIN_VALUE;
+	private int cameraY;
+	private int cameraPitch;
+	private int stillTicks;
+
+	private void refreshAttention()
+	{
+		int x = client.getCameraX();
+		int y = client.getCameraY();
+		int pitch = client.getCameraPitch();
+		if (cameraX == Integer.MIN_VALUE)
+		{
+			cameraX = x;
+			cameraY = y;
+			cameraPitch = pitch;
+			return;
+		}
+		if (x != cameraX || y != cameraY || pitch != cameraPitch)
+		{
+			cameraX = x;
+			cameraY = y;
+			cameraPitch = pitch;
+			stillTicks = 0;
+			return;
+		}
+		if (stillTicks < Integer.MAX_VALUE)
+		{
+			stillTicks++;
+		}
+	}
+
+	/** Ticks since the camera last moved. */
+	public int getUnattendedTicks()
+	{
+		return stillTicks;
+	}
+
+	// ----------------------------------------------------------- the advice
+
+	/**
+	 * Whether the player did the thing the follower just told them to.
+	 *
+	 * <p>Everything else here runs one way: something happens, and a rule gets
+	 * to remark on it. The follower shouts "eat something!" and then, however
+	 * that turns out, never mentions it again - which is commentary rather than
+	 * conversation, and after the fiftieth time it is obviously a recording.
+	 *
+	 * <p>What satisfies a piece of advice is named by the RULE that gives it,
+	 * not decided here, so there is no vocabulary of blessed actions in the
+	 * code to fall out of date against the rule file.
+	 */
+	public enum AdviceOutcome
+	{
+		HEEDED,
+		IGNORED,
+	}
+
+	private String adviceAbout = "";
+	private java.util.Set<Integer> adviceIds = java.util.Collections.emptySet();
+	private boolean adviceWantsRoom;
+	private int adviceFreeSlotsAtStart;
+	private int adviceStartTick;
+	private int adviceDeadlineTick;
+
+	/**
+	 * How long the player must take before making room counts as taking the
+	 * advice.
+	 *
+	 * <p>Only the room kind needs this. Eating when told to eat is a discrete
+	 * act that can be attributed however quickly it happens; a bag getting
+	 * emptier is ambient, and in any gathering loop it was going to happen
+	 * anyway. Without the delay the follower warned about the bag and thanked
+	 * the player four seconds later, over and over - fifty-six lines of one
+	 * three-hour session, all of it noise.
+	 */
+	private static final int ROOM_ADVICE_MIN_TICKS = 25;
+	private AdviceOutcome adviceOutcome;
+
+	/**
+	 * @param ids animations that would settle it - eating, teleporting
+	 * @param wantsRoom whether freeing an inventory slot settles it instead
+	 */
+	public void adviseOn(String about, java.util.Set<Integer> ids, boolean wantsRoom, int minutes)
+	{
+		if (about == null || about.isEmpty() || isAdvising())
+		{
+			return;
+		}
+		adviceAbout = about;
+		adviceIds = ids == null ? java.util.Collections.emptySet() : ids;
+		adviceWantsRoom = wantsRoom;
+		adviceFreeSlotsAtStart = getFreeInventorySlots();
+		adviceStartTick = client.getTickCount();
+		adviceDeadlineTick = client.getTickCount() + Math.max(1, minutes) * 100;
+		log.debug("Advised about {} for {} minutes", about, minutes);
+	}
+
+	public boolean isAdvising()
+	{
+		return adviceDeadlineTick > 0;
+	}
+
+	/** What the last piece of advice was about, for the {advice} placeholder. */
+	public String getAdviceAbout()
+	{
+		return adviceAbout;
+	}
+
+	/** Offered every animation the player plays, while advice is outstanding. */
+	public void offerAct(int animationId)
+	{
+		if (isAdvising() && adviceIds.contains(animationId))
+		{
+			settleAdvice(AdviceOutcome.HEEDED);
+		}
+	}
+
+	private void settleAdvice(AdviceOutcome outcome)
+	{
+		adviceDeadlineTick = 0;
+		adviceOutcome = outcome;
+		log.debug("Advice about {} was {}", adviceAbout, outcome);
+	}
+
+	public AdviceOutcome pollAdvice()
+	{
+		AdviceOutcome outcome = adviceOutcome;
+		adviceOutcome = null;
+		return outcome;
+	}
+
+	private void checkAdvice()
+	{
+		if (!isAdvising())
+		{
+			return;
+		}
+		// Making room counts the moment the bag is emptier than it was, which
+		// covers banking, dropping and eating the thing that was in the way.
+		if (adviceWantsRoom && getFreeInventorySlots() > adviceFreeSlotsAtStart
+			&& client.getTickCount() - adviceStartTick >= ROOM_ADVICE_MIN_TICKS)
+		{
+			settleAdvice(AdviceOutcome.HEEDED);
+			return;
+		}
+		if (client.getTickCount() >= adviceDeadlineTick)
+		{
+			settleAdvice(AdviceOutcome.IGNORED);
+		}
 	}
 
 	// -------------------------------------------------------------- the bet
@@ -1336,6 +2053,12 @@ public final class TriggerContext
 	public boolean isRegionLoaded(int region)
 	{
 		return loadedRegions.contains(region);
+	}
+
+	/** Everything worn, by item id. Used to decide when repricing is needed. */
+	public Set<Integer> getEquippedItems()
+	{
+		return equippedItems;
 	}
 
 	public boolean isEquipped(int itemId)

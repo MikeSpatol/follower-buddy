@@ -47,6 +47,7 @@ import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.GraphicChanged;
 import net.runelite.api.events.HitsplatApplied;
+import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.events.NpcDespawned;
 import net.runelite.api.events.NpcSpawned;
 import net.runelite.api.events.PlayerChanged;
@@ -439,6 +440,9 @@ public class FollowerPlugin extends Plugin
 		spotAnimRepository.load(dataDir);
 		gameFontRepository.load(dataDir);
 		ruleLoader.initialise(dataDir);
+		journal.initialise(dataDir);
+		journal.setRegionSource(() -> speechEngine.getContext().getRegionId());
+		journal.setEnabled(config.transcriptOn());
 		dialogLoader.initialise(dataDir);
 		stanceLibrary.load(dataDir);
 		paletteHarvest.load(dataDir);
@@ -483,6 +487,7 @@ public class FollowerPlugin extends Plugin
 	@Override
 	protected void shutDown() throws Exception
 	{
+		journal.flush();
 		renderCallbacks.unregister(thrallHider);
 		resetThrallQuietly();
 		// Before the engine is reset: an orderly shutdown is the one chance to
@@ -1152,6 +1157,25 @@ public class FollowerPlugin extends Plugin
 		int deathX;
 		int deathY;
 		int deathPlane = -1;
+
+		/**
+		 * What each place has come to mean, and the one thing worth bringing up
+		 * about it. Keyed by region id. Earned rather than rolled, so unlike the
+		 * traits blob this one is never regenerated - losing it would have the
+		 * follower forget which places it has reason to feel anything about.
+		 */
+		java.util.Map<Integer, Integer> placeScores;
+		java.util.Map<Integer, String> placeMemories;
+
+		/**
+		 * The day the follower first met this player, as an epoch day. Written
+		 * once and never again: it is the only thing here that would be a lie
+		 * if it were ever recalculated.
+		 */
+		long metOnDay;
+
+		/** What the player was wearing then, so an upgrade has something to beat. */
+		int metWearingValue = -1;
 	}
 
 	/**
@@ -1182,6 +1206,10 @@ public class FollowerPlugin extends Plugin
 			context.setSessionCount(saved.sessions);
 			context.restoreIncident(saved.incidentKey, saved.incidentPhrase,
 				saved.incidentCount);
+			context.restorePlaces(saved.placeScores, saved.placeMemories);
+			context.setMetOnDay(saved.metOnDay);
+			metWearingValue = saved.metWearingValue;
+			context.setMetWearingValue(saved.metWearingValue);
 			if (saved.deathPlane >= 0)
 			{
 				context.restoreDeathSpot(new WorldPoint(
@@ -1227,6 +1255,10 @@ public class FollowerPlugin extends Plugin
 		saved.incidentKey = context.getIncidentKey();
 		saved.incidentPhrase = context.getIncidentPhrase();
 		saved.incidentCount = context.getIncidentCount();
+		saved.placeScores = context.getPlaceScores();
+		saved.placeMemories = context.getPlaceMemories();
+		saved.metOnDay = context.getMetOnDay();
+		saved.metWearingValue = metWearingValue;
 		WorldPoint died = context.getDeathLocation();
 		if (died != null)
 		{
@@ -1312,6 +1344,72 @@ public class FollowerPlugin extends Plugin
 			new java.util.HashSet<>(rolled.liked), new java.util.HashSet<>(rolled.disliked));
 		configManager.setConfiguration(FollowerConfig.GROUP, "traits", gson.toJson(rolled));
 		log.debug("Rolled traits: likes {}, dislikes {}", rolled.liked, rolled.disliked);
+	}
+
+	/**
+	 * What the player was wearing the day the follower met them, in gp.
+	 * -1 until it has been measured, which cannot happen until the composition
+	 * is readable - several ticks after login on a slow world.
+	 */
+	private int metWearingValue = -1;
+
+	/** The worn set last priced, so the prices are not looked up every tick. */
+	private java.util.Set<Integer> lastPricedGear = java.util.Collections.emptySet();
+
+	/**
+	 * Puts a number on what the player has on, and remembers the first one.
+	 *
+	 * <p>Only when the worn set actually changes. Item prices come from a
+	 * lookup per item and the gear is the same eleven ids tick after tick, so
+	 * pricing on the heartbeat would be the most expensive thing in here for no
+	 * information at all.
+	 *
+	 * <p>The first-meeting figure cannot be taken at login: the composition is
+	 * not readable for a few ticks, and a follower that recorded zero would
+	 * spend the rest of its life claiming you were naked when you met.
+	 */
+	private void priceWhatYouAreWearing()
+	{
+		TriggerContext context = speechEngine.getContext();
+		java.util.Set<Integer> worn = context.getEquippedItems();
+		if (worn.equals(lastPricedGear))
+		{
+			return;
+		}
+		lastPricedGear = new java.util.HashSet<>(worn);
+
+		long total = 0;
+		for (int id : worn)
+		{
+			total += Math.max(0, itemManager.getItemPrice(id));
+		}
+		int value = (int) Math.min(total, Integer.MAX_VALUE);
+		context.setWornValue(value);
+
+		if (metWearingValue < 0 && value > 0)
+		{
+			metWearingValue = value;
+			context.setMetWearingValue(value);
+			speechEngine.getContext().markCountersDirty();
+			log.debug("First seen wearing {} gp of gear", value);
+		}
+	}
+
+	/**
+	 * Writes down the day, once, the first time this follower is ever run.
+	 *
+	 * <p>Existing players get today, which is a small lie and the only one
+	 * available: the alternative is a follower that can never say how long it
+	 * has known anybody because it was born before it started counting.
+	 */
+	private void noteFirstMeeting()
+	{
+		TriggerContext context = speechEngine.getContext();
+		if (context.getMetOnDay() <= 0)
+		{
+			context.setMetOnDay(java.time.LocalDate.now().toEpochDay());
+			log.debug("First meeting recorded as {}", java.time.LocalDate.now());
+		}
 	}
 
 	private static java.util.Map<String, Integer> trimCounters(java.util.Map<String, Integer> counters)
@@ -2145,6 +2243,8 @@ public class FollowerPlugin extends Plugin
 					// the first kill of the session lands on top of them.
 					readCounters();
 					speechEngine.getContext().clearDailyTallies();
+					noteFirstMeeting();
+					speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
 					readTraits();
 					TriggerContext counted = speechEngine.getContext();
 					counted.setSessionCount(counted.getSessionCount() + 1);
@@ -2334,6 +2434,7 @@ public class FollowerPlugin extends Plugin
 		speechEngine.setGlobalCooldownMs(config.globalCooldownMs());
 		speechEngine.setMuted(config.muted());
 		speechEngine.setDisabledGroups(collectDisabledGroups());
+		speechEngine.setOnSuppressed(journal::suppressed);
 	}
 
 	private Set<String> collectDisabledGroups()
@@ -3597,11 +3698,11 @@ public class FollowerPlugin extends Plugin
 		java.util.List<String> pages = new java.util.ArrayList<>();
 		if (parts.isEmpty())
 		{
-			pages.add("We have done absolutely nothing so far. It has been restful.");
+			pages.add("Today's page is blank. Restful, I call that.");
 		}
 		else
 		{
-			pages.add("So far: " + join(parts) + ".");
+			pages.add("Today's page: " + join(parts) + ".");
 		}
 
 		// The mood is the follower's own verdict on all that, which is a
@@ -3761,27 +3862,27 @@ public class FollowerPlugin extends Plugin
 		script.put("who-q", you("Who are you, exactly?").then("who-a"));
 		script.put("who-a", says(
 			"Now there's a question.",
-			"I'm your follower. Your shadow, with better posture.")
+			"A scribe. Somebody has to write all this down.")
 			.then("who-b"));
 		script.put("who-b", says(
 			"You dress me, I walk behind you, and I keep quiet about your bank.")
 			.choices(
-				"So you're... me?", "who-me-q",
+				"Writing what, exactly?", "who-me-q",
 				"Do you have a name?", "who-name-q",
 				"Don't you get tired of following me?", "who-tired-q",
 				"Back to business.", "back-q"));
 
 		script.put("who-menu", says()
 			.choices(
-				"So you're... me?", "who-me-q",
+				"Writing what, exactly?", "who-me-q",
 				"Do you have a name?", "who-name-q",
 				"Don't you get tired of following me?", "who-tired-q",
 				"Back to business.", "back-q"));
 
-		script.put("who-me-q", you("So you're... me?").then("who-me-a"));
+		script.put("who-me-q", you("Writing what, exactly?").then("who-me-a"));
 		script.put("who-me-a", says(
-			"In a manner of speaking. You picked the face, the hair, the clothes.",
-			"The personality came free, and it shows.")
+			"Everything. Roads, rulers, prices, what lives under things.",
+			"It's a long project. Nobody's asked to read it.")
 			.then("who-menu"));
 
 		script.put("who-name-q", you("Do you have a name?").then("who-name-a"));
@@ -3890,7 +3991,7 @@ public class FollowerPlugin extends Plugin
 
 		script.put("how-count-q", you("You keep track of things?").then("how-count-a"));
 		script.put("how-count-a", says(
-			"I count. Every rat, every level, every time you've gone down in front of me.",
+			"It's the job. Every rat, every level, every time you've gone down in front of me.",
 			"It isn't judgement. Somebody should, that's all.")
 			.then("how-count-b"));
 		script.put("how-count-b", says(
@@ -4029,7 +4130,7 @@ public class FollowerPlugin extends Plugin
 				showRedCross();
 				client.addChatMessage(
 					net.runelite.api.ChatMessageType.NPC_EXAMINE, "",
-					"Follows you around. Better dressed every week.", null);
+					"A travelling scribe. Always writing something down.", null);
 				// Being looked up is worth noticing. The examine text is the
 				// game's line about the follower; a rule gets to give the
 				// follower's line about being looked up.
@@ -4324,6 +4425,7 @@ public class FollowerPlugin extends Plugin
 			// the last-seen stamp on a crash, and this is already the "write
 			// what would otherwise be lost" tick.
 			writeCountersIfChanged();
+			journal.flushIfDue();
 
 			// A hundred ticks is a minute, so the timer that saves is also the
 			// one that measures how long today has run. Stored every minute so
@@ -4423,12 +4525,15 @@ public class FollowerPlugin extends Plugin
 				// The rule holding the floor is one of the objects just thrown
 				// away, and the exemption that lets it speak is by identity.
 				speechEngine.clearFloor();
+				speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
 				sendStatus("Reloaded " + ruleLoader.getStatus());
 				reportRuleErrors();
 			}
 		}
 
 		speechEngine.refreshContext();
+
+		priceWhatYouAreWearing();
 
 		// Nothing at all while a pocket is being worked. Failing repeatedly is
 		// already annoying; a companion remarking on each failure, each hit and
@@ -4900,6 +5005,9 @@ public class FollowerPlugin extends Plugin
 		else if (event.getActor() instanceof NPC && event.getHitsplat().isMine())
 		{
 			damagedByPlayer.put(event.getActor(), client.getTickCount());
+			// Landing one is combat too. Facing an NPC is not enough on its
+			// own any more, so this is what arms a fight the player starts.
+			speechEngine.getContext().noteDamageDealt();
 			noteRecord("hit", event.getHitsplat().getAmount());
 		}
 	}
@@ -5052,7 +5160,87 @@ public class FollowerPlugin extends Plugin
 		"wraplerp", "wrapauto", "wrapearly", "pose",
 		"animinfo", "animtrace", "errandscan", "cachecheck", "stanceaudit",
 		"watch", "stance", "gfx", "spectate", "shield", "centre", "center", "loot",
-		"scan", "heights", "mood", "chatwatch", "fire", "want"));
+		"scan", "heights", "mood", "chatwatch", "fire", "want", "transcript",
+		"thieftargets"));
+
+	/**
+	 * Notices when you have clicked the tile the follower is standing on.
+	 *
+	 * <p>Read from the selected tile rather than from the click's raw
+	 * parameters: getSelectedSceneTile is the client's own answer to "which
+	 * tile is this", and it is valid for exactly as long as the click is being
+	 * handled. A null means the click was not a tile after all, and nothing
+	 * happens - being wrong here should cost nothing.
+	 */
+	@Subscribe
+	public void onMenuOptionClicked(MenuOptionClicked event)
+	{
+		noteIntentFrom(event.getMenuOption());
+
+		if (event.getMenuAction() != net.runelite.api.MenuAction.WALK
+			|| !follower.isSpawned())
+		{
+			return;
+		}
+		// WorldView's, not the deprecated Client shortcut: the shortcut just
+		// forwards to the top-level view, and it is on its way out.
+		net.runelite.api.WorldView view = client.getTopLevelWorldView();
+		net.runelite.api.Tile clicked = view == null ? null : view.getSelectedSceneTile();
+		WorldPoint standing = follower.getWorldLocation();
+		if (clicked != null && standing != null
+			&& standing.equals(clicked.getWorldLocation()))
+		{
+			speechEngine.getContext().noteUnderfoot();
+		}
+	}
+
+	/**
+	 * What the player has just said they are about to do.
+	 *
+	 * <p>Read from the menu option because it is the earliest honest signal
+	 * there is. Everything else the follower could watch - the animation, the
+	 * hitsplat, the interaction target - arrives after the player has already
+	 * committed, and in the pickpocket case the interaction target arrives
+	 * FIRST and looks exactly like a fight for the whole walk over.
+	 *
+	 * <p>Matched on the WORDS rather than on exact strings. An exact list has
+	 * to be right about every target in the game and silently covers none of
+	 * the ones it missed - and the whole point of the silence is that it should
+	 * hold for anything the player is robbing, not just for elves. Anything
+	 * offering to pickpocket or steal is thieving; nothing else in the game
+	 * words an option that way.
+	 *
+	 * <p>{@code ::follower thieftargets} lists what the NPCs around you
+	 * actually offer, so this can be checked rather than believed.
+	 */
+	private void noteIntentFrom(String option)
+	{
+		if (option == null || option.isEmpty())
+		{
+			return;
+		}
+		TriggerContext context = speechEngine.getContext();
+		if (isThievingOption(option))
+		{
+			context.noteThievingIntent();
+		}
+		else if (option.equalsIgnoreCase("Attack"))
+		{
+			context.noteFightIntent();
+		}
+	}
+
+	/** Whether a menu option means "I am about to take that". */
+	static boolean isThievingOption(String option)
+	{
+		if (option == null)
+		{
+			return false;
+		}
+		// The game colours menu text with tags; strip them before matching.
+		String plain = option.replaceAll("<[^>]*>", "").toLowerCase(Locale.ROOT);
+		return plain.contains("pickpocket") || plain.contains("steal");
+	}
 
 	@Subscribe
 	public void onCommandExecuted(CommandExecuted event)
@@ -5076,6 +5264,7 @@ public class FollowerPlugin extends Plugin
 		{
 			case "reload":
 				ruleLoader.reload();
+				speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
 				sendStatus("Rules: " + ruleLoader.getStatus());
 				reportRuleErrors();
 				break;
@@ -5842,6 +6031,65 @@ public class FollowerPlugin extends Plugin
 
 			// Mood is felt through what the follower says rather than shown, so
 			// this is the only way to see the number behind it.
+			case "thieftargets":
+			{
+				// Answers "does the silence cover this target" without having
+				// to rob one and watch. Reads the options the game itself
+				// hands out, so it cannot drift from what the player sees.
+				java.util.Map<String, String> found = new java.util.TreeMap<>();
+				int scanned = 0;
+				for (NPC npc : client.getTopLevelWorldView().npcs())
+				{
+					net.runelite.api.NPCComposition composition =
+						npc.getTransformedComposition() != null
+							? npc.getTransformedComposition() : npc.getComposition();
+					if (composition == null || composition.getActions() == null)
+					{
+						continue;
+					}
+					scanned++;
+					for (String action : composition.getActions())
+					{
+						if (isThievingOption(action))
+						{
+							found.put(composition.getName() + " - " + action,
+								"id " + composition.getId());
+						}
+					}
+				}
+				sendStatus("Scanned " + scanned + " NPCs nearby.");
+				if (found.isEmpty())
+				{
+					sendStatus("None of them offer anything worth stealing.");
+				}
+				for (java.util.Map.Entry<String, String> e : found.entrySet())
+				{
+					sendStatus("  " + e.getKey() + "  (" + e.getValue() + ")");
+				}
+				break;
+			}
+
+			case "transcript":
+			{
+				if (args.length > 1 && "stats".equalsIgnoreCase(args[1]))
+				{
+					for (String line : journal.summary())
+					{
+						sendStatus(line);
+					}
+					break;
+				}
+				boolean on = journal.toggle();
+				configManager.setConfiguration(FollowerConfig.GROUP, "transcriptOn", on);
+				sendStatus("Transcript " + (on ? "on" : "off")
+					+ " - " + journal.getFile());
+				if (on)
+				{
+					sendStatus("'::follower transcript stats' for the session so far.");
+				}
+				break;
+			}
+
 			case "mood":
 			{
 				com.follower.speech.TriggerContext context = speechEngine.getContext();
@@ -5963,6 +6211,15 @@ public class FollowerPlugin extends Plugin
 	private final java.util.ArrayDeque<Utterance> speechQueue = new java.util.ArrayDeque<>();
 
 	/** When the line currently being spoken stops occupying the overhead box. */
+	/**
+	 * A record of what was actually said, and of what was held back. Off by
+	 * default and behind the developer flag: it writes a file about the
+	 * player's session, which is a surprising thing for a plugin to do
+	 * unasked.
+	 */
+	private final com.follower.speech.SpeechJournal journal =
+		new com.follower.speech.SpeechJournal();
+
 	private long speakingUntilMs;
 
 	/**
@@ -6037,6 +6294,8 @@ public class FollowerPlugin extends Plugin
 		SpeechOutput output = utterance.output;
 		SpeechRule rule = utterance.rule;
 		int animationId = utterance.animationId;
+
+		journal.spoke(rule, text);
 
 		if (!text.isEmpty() && output.showsOverhead())
 		{

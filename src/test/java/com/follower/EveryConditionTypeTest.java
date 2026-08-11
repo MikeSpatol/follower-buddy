@@ -986,6 +986,322 @@ public class EveryConditionTypeTest
 		assertQuiet(closed, "an answered question is no longer on the table");
 	}
 
+	@Test
+	public void tasteIsEarnedAndOutranksTheRoll() throws IOException
+	{
+		note("placeScore", "happenedHere");
+
+		Harness h = harnessFor("{\"type\": \"placeScore\", \"maximum\": -80}");
+		h.gameTicks(2);
+		assertQuiet(h, "nothing has happened here yet");
+
+		// Five deaths' worth of misery, in the units the rules already use.
+		for (int i = 0; i < 5; i++)
+		{
+			h.engine.getContext().notePlaceFeeling(-25);
+		}
+		h.gameTicks(1);
+		assertFired(h, "placeScore");
+
+		// And the point of it: experience beats the shuffle. A place the roll
+		// called a favourite is not a favourite once it has taken you twice.
+		Harness sour = harnessFor("{\"type\": \"feelsAbout\", \"is\": \"liked\"}");
+		int here = new WorldPoint(3222, 3218, 0).getRegionID();
+		sour.engine.getContext().setTraits(
+			new HashSet<>(java.util.Collections.singletonList(here)),
+			new HashSet<>());
+		sour.gameTicks(2);
+		assertFired(sour, "the rolled taste still answers where nothing has happened");
+
+		sour.clear();
+		for (int i = 0; i < 3; i++)
+		{
+			sour.engine.getContext().notePlaceFeeling(-25);
+		}
+		sour.gameTicks(2);
+		assertQuiet(sour, "a place it has learned to dislike is not liked");
+
+		// The place's own memory, which waits here rather than following you.
+		Harness held = harnessFor("{\"type\": \"happenedHere\"}");
+		held.gameTicks(2);
+		assertQuiet(held, "this place holds nothing yet");
+		held.engine.getContext().notePlaceMemory("you got that drop");
+		held.gameTicks(2);
+		assertQuiet(held, "a thing that just happened is not something a place reminds you of");
+
+		// It belongs to the PLACE: somewhere else, it is not on offer.
+		held.game.at(3300, 3300, 0);
+		held.gameTicks(2);
+		assertQuiet(held, "a different region holds a different nothing");
+
+		// And coming back is what makes it worth saying.
+		held.game.at(3222, 3218, 0);
+		held.gameTicks(2);
+		assertFired(held, "happenedHere, once you have been away and returned");
+	}
+
+	@Test
+	public void adviceIsTakenOrIsNot() throws IOException
+	{
+		note("heeded", "ignored", "advising");
+
+		Harness open = harnessFor("{\"type\": \"advising\"}");
+		open.gameTicks(2);
+		assertQuiet(open, "no advice is outstanding");
+		open.engine.getContext().adviseOn("food",
+			new HashSet<>(java.util.Arrays.asList(829)), false, 1);
+		open.gameTicks(1);
+		assertFired(open, "advising");
+
+		// Doing the thing inside the window settles it.
+		Harness took = harnessFor("{\"type\": \"heeded\", \"is\": \"food\"}");
+		took.engine.getContext().adviseOn("food",
+			new HashSet<>(java.util.Arrays.asList(829)), false, 1);
+		took.gameTicks(2);
+		assertQuiet(took, "nothing has been eaten");
+		took.dispatch(TriggerEvent.animation(829));
+		took.gameTicks(2);
+		assertFired(took, "heeded");
+
+		// A DIFFERENT animation is not the thing that was asked for.
+		Harness wrong = harnessFor("{\"type\": \"heeded\"}");
+		wrong.engine.getContext().adviseOn("food",
+			new HashSet<>(java.util.Arrays.asList(829)), false, 1);
+		wrong.dispatch(TriggerEvent.animation(714));
+		wrong.gameTicks(3);
+		assertQuiet(wrong, "teleporting is not eating");
+
+		// And the window shutting on nothing.
+		Harness lapsed = harnessFor("{\"type\": \"ignored\"}");
+		lapsed.engine.getContext().adviseOn("food",
+			new HashSet<>(java.util.Arrays.asList(829)), false, 1);
+		lapsed.gameTicks(50);
+		assertQuiet(lapsed, "the minute is not up");
+		lapsed.gameTicks(60);
+		assertFired(lapsed, "ignored");
+	}
+
+	@Test
+	public void adviceAboutTheBagIsSettledByMakingRoom() throws IOException
+	{
+		// The one piece of advice with no animation to watch for. Room is made
+		// by banking, dropping, or eating the thing that was in the way, and
+		// the follower should not care which.
+		Harness h = harnessFor("{\"type\": \"heeded\", \"is\": \"the bag\"}");
+		h.game.inventoryUsing(27);
+		h.gameTicks(1);
+		h.engine.getContext().adviseOn("the bag", null, true, 3);
+		h.gameTicks(2);
+		assertQuiet(h, "the bag is as full as it was");
+
+		h.game.inventoryUsing(22);
+		h.gameTicks(2);
+		assertQuiet(h, "emptying it instantly is not taking advice");
+
+		// It settles once enough time has passed that the player can be said
+		// to have acted on it rather than to have been about to anyway.
+		h.gameTicks(30);
+		assertFired(h, "heeded via making room");
+	}
+
+	@Test
+	public void makingRoomAtOnceIsNotTakingAdvice() throws IOException
+	{
+		// Found in a transcript rather than by review. Three hours of Guardians
+		// of the Rift produced fifty-six lines - a fifth of everything said -
+		// of the follower warning about the bag and thanking the player four
+		// seconds later, because emptying the bag IS the activity. A bag
+		// getting emptier is ambient in a way that eating is not, so the room
+		// kind needs a beat before it counts.
+		Harness h = harnessFor("{\"type\": \"heeded\"}");
+		h.game.inventoryUsing(27);
+		h.gameTicks(1);
+		h.engine.getContext().adviseOn("the bag", null, true, 3);
+
+		h.game.inventoryUsing(10);
+		h.gameTicks(4);
+		assertQuiet(h, "four seconds is not a response, it is a coincidence");
+	}
+
+	@Test
+	public void eatingWhenToldToEatStillCountsImmediately() throws IOException
+	{
+		// The other half: the delay must NOT apply to an animation. Eating
+		// promptly when told to eat is exactly the thing worth acknowledging,
+		// and it is attributable in a way that a slot freeing up is not.
+		Harness h = harnessFor("{\"type\": \"heeded\", \"is\": \"food\"}");
+		h.gameTicks(1);
+		h.engine.getContext().adviseOn("food",
+			new HashSet<>(java.util.Arrays.asList(829)), false, 1);
+		h.dispatch(TriggerEvent.animation(829));
+		h.gameTicks(2);
+		assertFired(h, "prompt is the point, for food");
+	}
+
+	@Test
+	public void howLongWeHaveKnownEachOther() throws IOException
+	{
+		note("daysKnown", "anniversary");
+
+		Harness h = harnessFor("{\"type\": \"daysKnown\", \"minimum\": 365}");
+		h.gameTicks(2);
+		assertQuiet(h, "no first meeting has been recorded");
+
+		h.engine.getContext().setMetOnDay(
+			java.time.LocalDate.now().toEpochDay() - 400);
+		h.gameTicks(1);
+		assertFired(h, "daysKnown");
+
+		Harness young = harnessFor("{\"type\": \"daysKnown\", \"minimum\": 365}");
+		young.engine.getContext().setMetOnDay(
+			java.time.LocalDate.now().toEpochDay() - 100);
+		young.gameTicks(2);
+		assertQuiet(young, "a hundred days is not a year");
+
+		// The same day of the year, come round again.
+		Harness today = harnessFor("{\"type\": \"anniversary\"}");
+		today.engine.getContext().setMetOnDay(
+			java.time.LocalDate.now().minusYears(2).toEpochDay());
+		today.gameTicks(2);
+		assertFired(today, "anniversary");
+
+		// The first meeting is not an anniversary of anything.
+		Harness first = harnessFor("{\"type\": \"anniversary\"}");
+		first.engine.getContext().setMetOnDay(java.time.LocalDate.now().toEpochDay());
+		first.gameTicks(2);
+		assertQuiet(first, "today is not the anniversary of today");
+
+		// Nor is a date that merely shares the year.
+		Harness other = harnessFor("{\"type\": \"anniversary\"}");
+		other.engine.getContext().setMetOnDay(
+			java.time.LocalDate.now().minusYears(2).plusDays(3).toEpochDay());
+		other.gameTicks(2);
+		assertQuiet(other, "three days out is not the day");
+	}
+
+	@Test
+	public void theNameYouEarnAndTheGearYouOutgrew() throws IOException
+	{
+		note("nicknamed", "outgrew");
+
+		Harness h = harnessFor("{\"type\": \"nicknamed\"}");
+		java.util.Map<String, String> names = new java.util.LinkedHashMap<>();
+		names.put("deaths", "the gravedigger");
+		names.put("kills", "the local menace");
+		h.engine.getContext().setNicknames(names);
+		h.gameTicks(2);
+		assertQuiet(h, "nothing has been done often enough to earn a name");
+
+		for (int i = 0; i < 30; i++)
+		{
+			h.engine.getContext().tally("deaths");
+		}
+		h.gameTicks(1);
+		assertFired(h, "nicknamed");
+		assertEquals("the biggest tally names you",
+			"the gravedigger", h.engine.getContext().getNickname());
+
+		// And it MOVES. A name earned by dying is not kept once you mostly kill.
+		for (int i = 0; i < 60; i++)
+		{
+			h.engine.getContext().tally("kills");
+		}
+		assertEquals("the name follows what you actually do",
+			"the local menace", h.engine.getContext().getNickname());
+
+		Harness rich = harnessFor("{\"type\": \"outgrew\", \"minimum\": 10}");
+		rich.engine.getContext().setWornValue(500_000);
+		rich.gameTicks(2);
+		assertQuiet(rich, "there is nothing to compare against yet");
+
+		rich.engine.getContext().setMetWearingValue(1_000);
+		rich.gameTicks(1);
+		assertFired(rich, "outgrew");
+
+		// A follower that has only ever known you rich has no story to tell.
+		Harness always = harnessFor("{\"type\": \"outgrew\", \"minimum\": 10}");
+		always.engine.getContext().setWornValue(500_000);
+		always.engine.getContext().setMetWearingValue(400_000);
+		always.gameTicks(2);
+		assertQuiet(always, "you were already well dressed");
+	}
+
+	@Test
+	public void theChallengeIsMetOrIsNot() throws IOException
+	{
+		note("challenging", "challengeMet", "challengeFailed");
+
+		Harness open = harnessFor("{\"type\": \"challenging\"}");
+		open.gameTicks(2);
+		assertQuiet(open, "nothing has been wagered");
+		open.engine.getContext().setChallenge("ten kills", "kills", 10, 5);
+		open.gameTicks(1);
+		assertFired(open, "challenging");
+
+		Harness won = harnessFor("{\"type\": \"challengeMet\"}");
+		won.engine.getContext().setChallenge("ten kills", "kills", 3, 5);
+		won.gameTicks(2);
+		assertQuiet(won, "nothing has been killed");
+		for (int i = 0; i < 3; i++)
+		{
+			won.engine.getContext().tally("kills");
+		}
+		won.gameTicks(2);
+		assertFired(won, "challengeMet");
+
+		// Counted from where the wager STARTED, not from zero: a challenge set
+		// after four hundred kills must not settle itself on the spot.
+		Harness late = harnessFor("{\"type\": \"challengeMet\"}");
+		for (int i = 0; i < 400; i++)
+		{
+			late.engine.getContext().tally("kills");
+		}
+		late.engine.getContext().setChallenge("ten kills", "kills", 10, 5);
+		late.gameTicks(3);
+		assertQuiet(late, "a wager is measured from when it was made");
+
+		Harness lost = harnessFor("{\"type\": \"challengeFailed\"}");
+		lost.engine.getContext().setChallenge("ten kills", "kills", 10, 1);
+		lost.gameTicks(50);
+		assertQuiet(lost, "there is time left");
+		lost.gameTicks(60);
+		assertFired(lost, "challengeFailed");
+	}
+
+	@Test
+	public void underfootAndGoneFromTheKeyboard() throws IOException
+	{
+		note("underfoot", "unattended");
+
+		Harness h = harnessFor("{\"type\": \"underfoot\"}");
+		h.gameTicks(2);
+		assertQuiet(h, "nobody has clicked the follower's tile");
+		h.engine.getContext().noteUnderfoot();
+		h.gameTicks(2);
+		assertFired(h, "underfoot");
+
+		// A moment, not a state: it does not keep being true afterwards.
+		h.clear();
+		h.gameTicks(4);
+		assertQuiet(h, "the tile was walked to a second later");
+
+		// Gone is not the same as standing still on purpose. The camera is the
+		// tell, and the fake game holds it still unless a test moves it.
+		Harness away = harnessFor("{\"type\": \"unattended\", \"ticks\": 30}");
+		away.gameTicks(10);
+		assertQuiet(away, "ten ticks is not gone");
+		away.gameTicks(30);
+		assertFired(away, "unattended");
+
+		Harness present = harnessFor("{\"type\": \"unattended\", \"ticks\": 30}");
+		for (int i = 0; i < 60; i++)
+		{
+			present.game.cameraMoved();
+			present.gameTick();
+		}
+		assertQuiet(present, "somebody who keeps moving the camera is there");
+	}
+
 	// ------------------------------------------------------------- coverage
 
 	@Test
@@ -1018,6 +1334,12 @@ public class EveryConditionTypeTest
 		theBetIsPlacedAndSettledBothWays();
 		theHourAndHowLongWeHaveBeenAtIt();
 		aQuestionAlreadyOnTheTable();
+		tasteIsEarnedAndOutranksTheRoll();
+		adviceIsTakenOrIsNot();
+		howLongWeHaveKnownEachOther();
+		theNameYouEarnAndTheGearYouOutgrew();
+		theChallengeIsMetOrIsNot();
+		underfootAndGoneFromTheKeyboard();
 
 		List<String> missing = new ArrayList<>(new TreeSet<>(RuleSetIntegrityTest.KNOWN_TYPES));
 		missing.removeAll(exercised);

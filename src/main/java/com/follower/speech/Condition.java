@@ -440,6 +440,78 @@ public class Condition
 					&& (is == null || is.equalsIgnoreCase(ctx.getIncidentKey()))
 					&& ctx.getIncidentCount() >= orDefault(minimum, 1);
 
+			// You clicked the tile the follower was standing on.
+			case "underfoot":
+				return event.getType() == TriggerEvent.Type.UNDERFOOT;
+
+			// A challenge is outstanding, was met, or ran out. {challenge}
+			// names it. "challenging" is mostly used negated, so the follower
+			// does not set a second one over the top of the first.
+			case "challenging":
+				return ctx.isChallenging();
+			case "challengemet":
+				return event.getType() == TriggerEvent.Type.CHALLENGE_MET;
+			case "challengefailed":
+				return event.getType() == TriggerEvent.Type.CHALLENGE_FAILED;
+
+			// Nobody has touched the camera for this long. Distinct from idle,
+			// which a player working a furnace also satisfies.
+			case "unattended":
+				return ctx.getUnattendedTicks() >= orDefault(ticks, 200);
+
+			// How long the follower has known you, in days, and the day of
+			// the year it met you coming round again.
+			case "daysknown":
+				return ctx.getDaysKnown() >= orDefault(minimum, 1)
+					&& (maximum == null || ctx.getDaysKnown() <= maximum);
+			case "anniversary":
+				return ctx.isAnniversary();
+
+			// The player is "minimum" times better dressed than the day they
+			// met. Needs a first-meeting figure to compare against, so it stays
+			// quiet for a follower that has only ever known you rich.
+			case "outgrew":
+				return ctx.getTimesBetterDressed() >= orDefault(minimum, 10);
+
+			// The follower has taken to calling you something. {nickname} says
+			// it; without this guard the placeholder prints nothing.
+			case "nicknamed":
+				return ctx.hasNickname()
+					&& (is == null || is.equalsIgnoreCase(ctx.getNickname()));
+
+			// The player did what the follower suggested, or the window shut
+			// without them. {advice} names what it was about. "is" narrows to
+			// one piece of advice, so the food line and the bag line can react
+			// differently.
+			case "heeded":
+				return event.getType() == TriggerEvent.Type.ADVICE_HEEDED
+					&& (is == null || is.equalsIgnoreCase(ctx.getAdviceAbout()));
+			case "ignored":
+				return event.getType() == TriggerEvent.Type.ADVICE_IGNORED
+					&& (is == null || is.equalsIgnoreCase(ctx.getAdviceAbout()));
+
+			// Advice is outstanding. Used NEGATED, so the follower does not
+			// give the same advice twice while still waiting on the first.
+			case "advising":
+				return ctx.isAdvising();
+
+			// Something happened HERE that the follower has not let go of.
+			// {here} says it. Distinct from "remembers", which holds one
+			// incident wherever you are; this one is the place's, and waits
+			// for you to come back to it.
+			case "happenedhere":
+				return ctx.hasPlaceMemory();
+
+			// How strongly it feels about where it is standing, as a number
+			// rather than a verdict, so a rule can want a STRONG opinion.
+			// Negative is the bad direction.
+			case "placescore":
+			{
+				int score = ctx.getPlaceScore();
+				return (minimum == null || score >= minimum)
+					&& (maximum == null || score <= maximum);
+			}
+
 			// A question is already on the table. Used NEGATED, and every rule
 			// with an "asks" needs it: opening a second question replaces the
 			// first, so without the guard a follower that asks to go somewhere

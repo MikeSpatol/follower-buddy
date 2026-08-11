@@ -826,6 +826,18 @@ public interface FollowerConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "transcriptOn",
+		name = "Transcript",
+		description = "Whether the session transcript is running; toggled with"
+			+ " ::follower transcript, kept here so it survives a restart",
+		hidden = true
+	)
+	default boolean transcriptOn()
+	{
+		return false;
+	}
+
+	@ConfigItem(
 		keyName = "counters",
 		name = "Counters",
 		description = "What the follower has counted and the records it holds,"

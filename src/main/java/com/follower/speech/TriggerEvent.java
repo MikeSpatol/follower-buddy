@@ -43,6 +43,11 @@ public final class TriggerEvent
 		SOUVENIR_LOST,
 		BET_WON,
 		BET_LOST,
+		ADVICE_HEEDED,
+		ADVICE_IGNORED,
+		CHALLENGE_MET,
+		CHALLENGE_FAILED,
+		UNDERFOOT,
 		MANUAL,
 	}
 
@@ -52,6 +57,24 @@ public final class TriggerEvent
 		TriggerEvent event = new TriggerEvent(Type.SOUVENIR_LOST);
 		event.name = what == null ? "" : what;
 		event.placeholders.put("souvenir", event.name);
+		return event;
+	}
+
+	/** A challenge was met inside the window, or it was not. */
+	public static TriggerEvent challenge(Type type, String about)
+	{
+		TriggerEvent event = new TriggerEvent(type);
+		event.name = about == null ? "" : about;
+		event.placeholders.put("challenge", event.name);
+		return event;
+	}
+
+	/** The player took the follower's advice, or let the window shut. */
+	public static TriggerEvent advice(Type type, String about)
+	{
+		TriggerEvent event = new TriggerEvent(type);
+		event.name = about == null ? "" : about;
+		event.placeholders.put("advice", event.name);
 		return event;
 	}
 

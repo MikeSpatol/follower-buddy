@@ -1,6 +1,11 @@
 {
   "version": 1,
   "comment": "Follower Buddy rules. Edit and save, the plugin reloads within a second. Run ::follower where to print your current region id and coordinates when writing area rules.",
+  "nicknames": {
+    "deaths": "the gravedigger",
+    "kills": "the local menace",
+    "levels": "the swot"
+  },
   "rules": [
     {
       "id": "boss-spawn-inferno-wave",
@@ -1250,6 +1255,11 @@
     },
     {
       "id": "low-hp",
+      "advise": {
+        "about": "food",
+        "ids": [829, 1191, 1194, 1327],
+        "minutes": 1
+      },
       "note": "Speaks once when health crosses under 40 percent.",
       "group": "health",
       "priority": 100,
@@ -1274,6 +1284,11 @@
     },
     {
       "id": "critical-hp",
+      "advise": {
+        "about": "leaving",
+        "ids": [714, 3864, 1979, 4847, 13764, 8798, 9209, 1696],
+        "minutes": 1
+      },
       "note": "Speaks once when health crosses under 20 percent. The urgent one.",
       "group": "health",
       "priority": 120,
@@ -5660,6 +5675,7 @@
     },
     {
       "id": "death-moment",
+      "markHere": "it went wrong for you",
       "note": "The moment you die. Highest priority there is - nothing talks over this.",
       "group": "reactions",
       "priority": 90,
@@ -5699,6 +5715,7 @@
     },
     {
       "id": "loot-big",
+      "markHere": "you got that drop",
       "note": "A drop worth a million or more. The cheer is 862.",
       "group": "reactions",
       "priority": 80,
@@ -6067,6 +6084,7 @@
     },
     {
       "id": "kill-boss-celebrate",
+      "markHere": "you put that thing down",
       "note": "A proper celebration for a boss kill: cheer, dance, then a jump for joy (862/866/2109, 7.4s in total). The 13-16 tick delay is deliberate - it lets the fight formally end and the spectating shield wind down first, so the celebration follows the fight instead of colliding with it. minimum 100 is the same combat level bossFight uses; lower it here and in the boss rules together if you want a different bar.",
       "group": "boss",
       "priority": 70,
@@ -6508,7 +6526,7 @@
       "note": "Said as the follower steps away. Everything until thieving-end is silent, and this is what makes that silence read as the follower keeping watch rather than as the follower having stopped working. Register is accomplice: we, lookout talk, and an alibi ready before anyone asks for one.",
       "group": "reactions",
       "priority": 65,
-      "cooldownMs": 30000,
+      "cooldownMs": 240000,
       "output": "overhead",
       "when": {
         "type": "thievingStart"
@@ -6529,7 +6547,7 @@
       "note": "The other end, once the player has stopped or moved off. Same accomplice register as thieving-start - the job is over, the story is straight.",
       "group": "reactions",
       "priority": 65,
-      "cooldownMs": 30000,
+      "cooldownMs": 240000,
       "delayTicks": 2,
       "delayTicksMax": 5,
       "output": "overhead",
@@ -6939,6 +6957,7 @@
     },
     {
       "id": "record-hit",
+      "markHere": "you hit harder than you ever had",
       "note": "A new biggest hit. {value} is the new mark and {previous} the one it beat, which is what makes it land - a record without the old number is just a number. The first hit after an install seeds the record silently and says nothing, so this cannot fire on day one.",
       "group": "combat",
       "priority": 68,
@@ -7147,7 +7166,7 @@
       "say": [
         "Yes, that's me. All of that is true.",
         "Reading up on me, are you?",
-        "Better dressed every week. It says so."
+        "Always writing something. They're not wrong."
       ]
     },
     {
@@ -7229,8 +7248,8 @@
         ]
       },
       "say": [
-        "Then can we go back to Lumbridge? I like it there. It's where things start.",
-        "Lumbridge, then. Humour me."
+        "Can we go back to Lumbridge? Everyone starts there. I've a page on it.",
+        "Lumbridge, then. I want to check something in my notes."
       ]
     },
     {
@@ -7269,8 +7288,8 @@
         ]
       },
       "say": [
-        "Then take me to the Grand Exchange. I want to watch the crowd for a bit.",
-        "The Grand Exchange, please. There's always something happening."
+        "The Grand Exchange, please. Prices change and mine are out of date.",
+        "Take me to the Exchange? I want to hear what things cost."
       ]
     },
     {
@@ -7309,7 +7328,7 @@
         ]
       },
       "say": [
-        "Then the Fishing Guild. It's quiet there and I like quiet.",
+        "Then the Fishing Guild. Nothing to record there. That's rather the point.",
         "The Fishing Guild, if you're offering. I'd like to see the water."
       ]
     },
@@ -7435,10 +7454,15 @@
     },
     {
       "id": "bag-nearly-full",
+      "advise": {
+        "about": "the bag",
+        "room": true,
+        "minutes": 3
+      },
       "note": "A WARNING rather than a report. Two slots left, not none: reacting before is the thing that reads as a mind paying attention, and reacting after is only narration. Counted by walking the container, so it is right whichever way round size() and count() are.",
       "group": "reactions",
       "priority": 54,
-      "cooldownMs": 180000,
+      "cooldownMs": 600000,
       "output": "overhead",
       "when": {
         "type": "all",
@@ -7446,6 +7470,15 @@
           {
             "type": "inventoryFree",
             "maximum": 2
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "repeating",
+                "ticks": 30
+              }
+            ]
           },
           {
             "type": "idleBelow",
@@ -8096,44 +8129,6 @@
       ]
     },
     {
-      "id": "bet-poor",
-      "note": "The pessimist, which on most drops is also the realist. Betting the next drop comes in UNDER the threshold. Refuses while a bet is already open, or the follower is betting twice on one drop.",
-      "group": "bet",
-      "priority": 28,
-      "cooldownMs": 240000,
-      "output": "overhead",
-      "bet": {
-        "rich": false,
-        "threshold": 50000,
-        "minutes": 5
-      },
-      "when": {
-        "type": "all",
-        "conditions": [
-          {
-            "type": "combatStart"
-          },
-          {
-            "type": "none",
-            "conditions": [
-              {
-                "type": "betting"
-              }
-            ]
-          },
-          {
-            "type": "chance",
-            "percent": 12
-          }
-        ]
-      },
-      "say": [
-        "Ten gold says this one drops nothing worth carrying.",
-        "This one'll drop bones and disappointment. Watch.",
-        "I'll call it now. Nothing good comes off this."
-      ]
-    },
-    {
       "id": "bet-rich",
       "note": "The optimist. Same machinery, other direction, so being wrong is on the table for both of them.",
       "group": "bet",
@@ -8161,7 +8156,7 @@
           },
           {
             "type": "chance",
-            "percent": 6
+            "percent": 12
           }
         ]
       },
@@ -8670,6 +8665,517 @@
         "Suit yourself. They're both still full.",
         "Your loss. Probably.",
         "Some other time, then."
+      ]
+    },
+    {
+      "id": "place-earned-dislike",
+      "note": "A score is a running total of what the rules said moments here were worth, so this only reaches -80 after several bad ones. Priority above place-disliked, which would otherwise win with a milder line.",
+      "group": "area",
+      "priority": 30,
+      "cooldownMs": 900000,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "placeScore",
+            "maximum": -80
+          },
+          {
+            "type": "chance",
+            "percent": 8
+          }
+        ]
+      },
+      "say": [
+        "I hate it here, and I've got reasons. You were there for all of them.",
+        "Nothing good has ever happened to us in this place. Nothing.",
+        "Every time we come here I think about leaving here."
+      ]
+    },
+    {
+      "id": "place-earned-like",
+      "note": "The other end of the same total.",
+      "group": "area",
+      "priority": 30,
+      "cooldownMs": 900000,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "placeScore",
+            "minimum": 80
+          },
+          {
+            "type": "chance",
+            "percent": 8
+          }
+        ]
+      },
+      "say": [
+        "Good things happen here. I've kept count, and they do.",
+        "I like this place, and for once I can tell you exactly why.",
+        "We've had some luck here. Long may it continue."
+      ]
+    },
+    {
+      "id": "place-remembers",
+      "note": "What the place itself holds, via markHere on the rules that won those moments. Waits for you to come back to it, which is the whole difference from the incident: that one follows you about.",
+      "group": "area",
+      "priority": 32,
+      "cooldownMs": 1200000,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "happenedHere"
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 500
+          },
+          {
+            "type": "chance",
+            "percent": 10
+          }
+        ]
+      },
+      "say": [
+        "This is where {here}. I remember it.",
+        "Same spot. This is where {here}.",
+        "Stand here a second. This is where {here}."
+      ]
+    },
+    {
+      "id": "advice-taken",
+      "note": "The other half of a warning. Until now the follower shouted and then never mentioned it again, whichever way it went, which is the difference between commentary and a conversation.",
+      "group": "reactions",
+      "priority": 44,
+      "cooldownMs": 300000,
+      "output": "overhead",
+      "mood": 5,
+      "delayTicks": 2,
+      "delayTicksMax": 5,
+      "when": {
+        "type": "heeded"
+      },
+      "say": [
+        "Thank you. That's all I wanted.",
+        "There. Was that so hard?",
+        "Good. I'll stop going on about it.",
+        "You listened. I'm putting that in the book."
+      ]
+    },
+    {
+      "id": "advice-ignored",
+      "note": "And the funnier half.",
+      "group": "reactions",
+      "priority": 42,
+      "cooldownMs": 120000,
+      "output": "overhead",
+      "mood": -3,
+      "delayTicks": 2,
+      "delayTicksMax": 5,
+      "when": {
+        "type": "ignored"
+      },
+      "say": [
+        "Right. I'll stop saying it, then.",
+        "I did mention it. For the record.",
+        "No? Fine. It's your skin.",
+        "I'll just say it to myself next time."
+      ]
+    },
+    {
+      "id": "advice-never-listens",
+      "note": "The ledger, the same shape as the outings one: ten pieces of advice into the wind is a fact about the pair of you rather than about any one of them.",
+      "group": "memory",
+      "priority": 28,
+      "cooldownMs": 2700000,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "tally",
+            "of": "advice:ignored",
+            "minimum": 10
+          },
+          {
+            "type": "idle",
+            "ticks": 100
+          },
+          {
+            "type": "chance",
+            "percent": 8
+          }
+        ]
+      },
+      "say": [
+        "Ten times I've told you something and ten times you've done as you liked.",
+        "I've stopped counting how often you ignore me. That's a lie. I know exactly.",
+        "You never listen. I've decided that's part of your charm."
+      ]
+    },
+    {
+      "id": "advice-good-listener",
+      "note": "And the warm end of it.",
+      "group": "memory",
+      "priority": 28,
+      "cooldownMs": 2700000,
+      "output": "overhead",
+      "mood": 6,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "tally",
+            "of": "advice:taken",
+            "minimum": 10
+          },
+          {
+            "type": "idle",
+            "ticks": 100
+          },
+          {
+            "type": "chance",
+            "percent": 8
+          }
+        ]
+      },
+      "say": [
+        "You actually listen to me. Do you know how rare that is?",
+        "I say something, you do it. We're a good team, whatever anyone says.",
+        "I've never had to tell you twice. Well. Rarely."
+      ]
+    },
+    {
+      "id": "known-a-week",
+      "note": "Pinned with a maximum so the week line stops being true at a month and shouting over the month one.",
+      "group": "memory",
+      "priority": 27,
+      "cooldownMs": 3600000,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "daysKnown",
+            "minimum": 7,
+            "maximum": 29
+          },
+          {
+            "type": "idle",
+            "ticks": 100
+          },
+          {
+            "type": "chance",
+            "percent": 6
+          }
+        ]
+      },
+      "say": [
+        "A week now, you and me. Settling in nicely.",
+        "Seven days I've been following you about. I've no complaints."
+      ]
+    },
+    {
+      "id": "known-a-month",
+      "group": "memory",
+      "priority": 27,
+      "cooldownMs": 3600000,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "daysKnown",
+            "minimum": 30,
+            "maximum": 99
+          },
+          {
+            "type": "idle",
+            "ticks": 100
+          },
+          {
+            "type": "chance",
+            "percent": 6
+          }
+        ]
+      },
+      "say": [
+        "A month of this. I'd not have guessed it would stick.",
+        "{days} days. Not that I keep a calendar. I keep a calendar."
+      ]
+    },
+    {
+      "id": "known-a-hundred-days",
+      "group": "memory",
+      "priority": 27,
+      "cooldownMs": 3600000,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "daysKnown",
+            "minimum": 100,
+            "maximum": 364
+          },
+          {
+            "type": "idle",
+            "ticks": 100
+          },
+          {
+            "type": "chance",
+            "percent": 6
+          }
+        ]
+      },
+      "say": [
+        "{days} days I've known you. That's a proper stretch, that is.",
+        "Over a hundred days. I've seen you at your best and the other thing."
+      ]
+    },
+    {
+      "id": "known-a-year",
+      "note": "The one that could not exist without a date. A session count can say a hundred logins; only a calendar can say a year, and they are different claims about a friendship.",
+      "group": "memory",
+      "priority": 29,
+      "cooldownMs": 7200000,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "daysKnown",
+            "minimum": 365
+          },
+          {
+            "type": "idle",
+            "ticks": 100
+          },
+          {
+            "type": "chance",
+            "percent": 10
+          }
+        ]
+      },
+      "say": [
+        "Over a year, this. {days} days. I looked it up.",
+        "A year of walking behind you. I'd do it again.",
+        "{days} days. I'm not going anywhere, in case that was in doubt."
+      ]
+    },
+    {
+      "id": "anniversary",
+      "note": "The same day of the year as the first one. Priority high enough to beat the everyday chatter, because it happens once.",
+      "group": "memory",
+      "priority": 68,
+      "cooldownMs": 7200000,
+      "output": "overhead",
+      "hushMs": 8000,
+      "holdStill": true,
+      "animation": 863,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "anniversary"
+          },
+          {
+            "type": "idle",
+            "ticks": 20
+          }
+        ]
+      },
+      "say": [
+        "It's today, you know. The day you first called me out. I remembered.",
+        "A year ago today. Same face, better hat.",
+        "Happy anniversary. I'll not make a fuss. That was the fuss."
+      ]
+    },
+    {
+      "id": "nickname-earned",
+      "note": "Drawn from whichever tally is highest, so it moves as your play moves. The names live at the top of this file, not in the code.",
+      "group": "memory",
+      "priority": 26,
+      "cooldownMs": 1800000,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "nicknamed"
+          },
+          {
+            "type": "idle",
+            "ticks": 80
+          },
+          {
+            "type": "chance",
+            "percent": 5
+          }
+        ]
+      },
+      "say": [
+        "All right, {nickname}.",
+        "I've got you filed under {nickname}. It fits.",
+        "If anyone reads these notes, they'll know you as {nickname}."
+      ]
+    },
+    {
+      "id": "outgrew-the-gear",
+      "note": "Ten times better dressed than the day it met you. Needs a first-meeting figure, so a follower that has only ever known you rich stays quiet rather than inventing a humble beginning.",
+      "group": "memory",
+      "priority": 30,
+      "cooldownMs": 7200000,
+      "output": "overhead",
+      "mood": 8,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "outgrew",
+            "minimum": 10
+          },
+          {
+            "type": "idle",
+            "ticks": 60
+          },
+          {
+            "type": "chance",
+            "percent": 8
+          }
+        ]
+      },
+      "say": [
+        "Look at the state of you. You were in rags when we met.",
+        "I remember what you turned up in. This is better.",
+        "You've come up in the world. I was there for the bottom of it."
+      ]
+    },
+    {
+      "id": "offer-challenge",
+      "note": "A wager on YOU rather than on the world. Guarded against a second one and against talking over a piece of advice still outstanding.",
+      "group": "idle",
+      "priority": 24,
+      "cooldownMs": 1800000,
+      "output": "overhead",
+      "challenge": {
+        "about": "ten kills",
+        "tally": "kills",
+        "target": 10,
+        "minutes": 5
+      },
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "combat"
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "challenging"
+              },
+              {
+                "type": "advising"
+              }
+            ]
+          },
+          {
+            "type": "chance",
+            "percent": 4
+          }
+        ]
+      },
+      "say": [
+        "Ten of them. Five minutes. I say you can't.",
+        "Right, a wager. Ten kills before I lose interest. Go on.",
+        "Bet you can't manage ten in five minutes. Prove me wrong."
+      ]
+    },
+    {
+      "id": "challenge-met",
+      "note": "Paid out. Above the kill rules so the wager beats the cheer.",
+      "group": "idle",
+      "priority": 74,
+      "cooldownMs": 5000,
+      "output": "overhead",
+      "mood": 12,
+      "holdStill": true,
+      "animation": 862,
+      "when": {
+        "type": "challengeMet"
+      },
+      "say": [
+        "You did it. {challenge}, and with time to spare.",
+        "All right, that was impressive. I'll say it once.",
+        "Done, and I'm out of pocket. Worth it."
+      ]
+    },
+    {
+      "id": "challenge-failed",
+      "group": "idle",
+      "priority": 72,
+      "cooldownMs": 5000,
+      "output": "overhead",
+      "when": {
+        "type": "challengeFailed"
+      },
+      "say": [
+        "Time. You didn't get there.",
+        "That's five minutes. I win, and I'm insufferable about it.",
+        "Time, I'm afraid. Closer than I expected, mind."
+      ]
+    },
+    {
+      "id": "underfoot",
+      "note": "The one ordinary nuisance of a companion that nothing acknowledged. Short lines: it is an interruption, and a paragraph would be worse than the standing there.",
+      "group": "reactions",
+      "priority": 58,
+      "cooldownMs": 45000,
+      "output": "overhead",
+      "delayTicks": 1,
+      "when": {
+        "type": "underfoot"
+      },
+      "say": [
+        "Sorry. Moving.",
+        "Right, that's me in the way again.",
+        "Excuse me. Coming through. Myself.",
+        "I was standing there. I'm aware."
+      ]
+    },
+    {
+      "id": "gone-away",
+      "note": "Not the same as idle, which a player working a furnace also satisfies. The camera is the tell: it moves when somebody is there.",
+      "group": "idle",
+      "priority": 22,
+      "cooldownMs": 1200000,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "unattended",
+            "ticks": 400
+          },
+          {
+            "type": "chance",
+            "percent": 6
+          }
+        ]
+      },
+      "say": [
+        "You've gone, haven't you.",
+        "I'll talk amongst myself, then.",
+        "Kettle on, is it? Take your time.",
+        "Nobody's driving. I'll keep an eye on things."
       ]
     }
   ]

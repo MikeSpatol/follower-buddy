@@ -239,6 +239,60 @@ public class SpeechRule
 		public Integer minutes;
 	}
 
+	/**
+	 * Sets the player a challenge, against a counter and a clock.
+	 *
+	 * <p>{@code {"about": "ten kills", "tally": "kills", "target": 10,
+	 * "minutes": 5}}. The bet is a wager on the world; this is a wager on you.
+	 *
+	 * <p>Any tally the follower already keeps will do, so a new challenge is a
+	 * rule naming a counter and a number rather than a scoring system.
+	 */
+	public Challenge challenge;
+
+	public static final class Challenge
+	{
+		public String about;
+		public String tally;
+		public Integer target;
+		public Integer minutes;
+	}
+
+	/**
+	 * Marks this line as ADVICE, and says what taking it would look like.
+	 *
+	 * <p>{@code {"about": "food", "ids": [829, 1191], "minutes": 1}} - the
+	 * follower says eat something, and eating inside the minute settles it.
+	 * {@code "room": true} settles instead on the inventory getting emptier,
+	 * which covers banking, dropping, and eating the thing in the way.
+	 *
+	 * <p>What counts is named HERE rather than known by the engine, so adding a
+	 * new piece of advice is a rule and not a code change.
+	 *
+	 * <p>Like a question, it only opens if the line was actually said: advice
+	 * the mute swallowed is advice the player was never given, and holding it
+	 * against them would be unfair as well as wrong.
+	 */
+	public Advice advise;
+
+	public static final class Advice
+	{
+		public String about;
+		public List<Integer> ids;
+		public Boolean room;
+		public Integer minutes;
+	}
+
+	/**
+	 * Files this moment against the PLACE, for a rule to bring up next time you
+	 * are standing here.
+	 *
+	 * <p>{@code "markHere": "the drop"} - said later via {here}, as in "this is
+	 * where you got the drop". The incident in {@link #remember} is one thing
+	 * anywhere; this is one thing per place, and waits for you to come back.
+	 */
+	public String markHere;
+
 	public Condition when;
 
 	/**

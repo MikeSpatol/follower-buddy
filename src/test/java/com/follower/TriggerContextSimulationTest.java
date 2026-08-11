@@ -81,6 +81,56 @@ public class TriggerContextSimulationTest
 	// ----------------------------------------------------------------- combat
 
 	@Test
+	public void walkingUpToTalkToSomebodyIsNotAFight()
+	{
+		// Interacting with a levelled NPC used to be the whole test for
+		// combat, and that is also what approaching a guard for directions
+		// looks like, and trading, and robbing. The follower announced a
+		// battle every time.
+		Sim sim = new Sim();
+		NPC guard = sim.game.spawnNpc(3269, "Guard", 21);
+
+		sim.game.facing(guard);
+		sim.tick(6);
+
+		assertFalse("looking at someone is not fighting them",
+			sim.ctx.isInCombat());
+	}
+
+	@Test
+	public void theFirstBlowStartsTheFightEvenIfNobodyIsFacingBack()
+	{
+		// The player swings first at something that dies before it can turn
+		// round, or cannot reach them at all. Facing plus a landed hit is a
+		// fight even without the other side squaring up.
+		Sim sim = new Sim();
+		NPC goblin = sim.game.spawnNpc(3029, "Goblin", 5);
+
+		sim.game.facing(goblin);
+		sim.tick(2);
+		assertFalse("no blows yet", sim.ctx.isInCombat());
+
+		sim.ctx.noteDamageDealt();
+		sim.tick(1);
+		assertTrue("landing one starts it", sim.ctx.isInCombat());
+		assertEquals("and the target is named", "Goblin", sim.ctx.getCombatTarget());
+	}
+
+	@Test
+	public void beingSquaredUpAtIsAFightWithoutAnyDamageYet()
+	{
+		// The other arming path: both sides facing each other, before either
+		// has landed anything.
+		Sim sim = new Sim();
+		NPC goblin = sim.game.spawnNpc(3029, "Goblin", 5);
+
+		sim.game.fighting(goblin);
+		sim.tick(1);
+
+		assertTrue("two sides squared up is a fight", sim.ctx.isInCombat());
+	}
+
+	@Test
 	public void aFightSurvivesTheGapBetweenTargets()
 	{
 		Sim sim = new Sim();

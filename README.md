@@ -372,6 +372,17 @@ wins.
 | `betWon` / `betLost` | — the prediction came good, or did not |
 | `timeOfDay` | `minimum`/`maximum` hour on **your** clock, 0–23. Wraps past midnight, so `23`–`5` is five hours |
 | `sessionMinutes` | `minimum`/`maximum` — how long today has run |
+| `placeScore` | `minimum`/`maximum` — how strongly it feels about here, as a number. Negative is the bad direction |
+| `happenedHere` | — this place holds a memory; `{here}` says it |
+| `heeded` / `ignored` | — the player took the last piece of advice, or the window shut. `is` narrows to one; `{advice}` names it |
+| `advising` | — advice is outstanding; normally used inside a `none` |
+| `daysKnown` | `minimum`/`maximum` days since the first meeting. `{days}` |
+| `anniversary` | — today is the same day of the year as the first meeting |
+| `outgrew` | `minimum` — times better dressed than the day you met |
+| `nicknamed` | — a name has been earned; `{nickname}` says it. Optional `is` |
+| `challenging` / `challengeMet` / `challengeFailed` | — a wager on the player. `{challenge}`, `{left}` |
+| `unattended` | `ticks` since the camera last moved. **Not** `idle`: a player at a furnace is idle and present |
+| `underfoot` | — you clicked the tile the follower was standing on |
 | `login`, `always` | — |
 | `chance` | `percent`, rolled each evaluation |
 
@@ -386,8 +397,10 @@ standing on, which is what you want for instanced dungeons and raids.
 total, written the way a player says it — `1.2M`, `214K`), `{speaker}` (who said it, on
 chat events), `{record}` / `{previous}` (on `personalBest`), `{want}` (on `wantFulfilled`
 and `wantExpired`), `{memory}` (the incident on its mind - guard the rule with
-`remembers` or it prints nothing) and `{souvenir}` (what it is carrying, or has
-just lost - guard with `carrying` or `souvenirLost`).
+`remembers` or it prints nothing), `{souvenir}` (what it is carrying, or has
+just lost - guard with `carrying` or `souvenirLost`), `{here}` (guard with
+`happenedHere`), `{nickname}` (guard with `nicknamed`), `{days}` (guard with
+`daysKnown`), `{advice}` and `{challenge}`.
 
 ### Other rule fields
 
@@ -466,6 +479,15 @@ just lost - guard with `carrying` or `souvenirLost`).
   that conversation: see below.
 - `want` — `{"region": 12850, "label": "Lumbridge", "minutes": 20}`. See below.
 - `hushMs` — takes the floor: nothing else speaks for this long. See below.
+- `markHere` — files this moment against the PLACE, said later via `{here}`.
+  The incident in `remember` is one thing anywhere; this is one per place, and
+  it waits for you to come back.
+- `advise` — `{"about": "food", "ids": [829, 1191], "minutes": 1}` marks the
+  line as advice and says what taking it looks like. `"room": true` settles on
+  the inventory getting emptier instead of on an animation. What counts is named
+  by the rule, so new advice is a rule and not a code change.
+- `challenge` — `{"about": "ten kills", "tally": "kills", "target": 10,
+  "minutes": 5}`. A wager on the player against a counter it already keeps.
 - `note` — free text, ignored by the plugin.
 
 `asks`, `want`, `pickUp` and `bet` all take effect when the line is actually
@@ -655,6 +677,51 @@ is quietly dropped rather than counted as a win.
 sitting and wraps past midnight, so a window can be written the way a person says
 it. A follower that knows it is two in the morning is a different kind of
 companion from one that knows how much prayer you have left.
+
+### Taste it earned rather than taste it was given
+
+The rolled sets are the follower's temperament before anything has happened to
+it, which is the only honest thing to have on the first login. After that they
+are the weaker claim. Each region carries a running score, and experience
+outranks the shuffle in whichever direction experience points.
+
+Nothing new has to be authored for it. Every rule that already knows a boss
+dying is worth +18 and a death is worth -25 is already saying how much the
+moment mattered; the place simply keeps its share. A new influence on how the
+follower feels about somewhere is a mood value on a rule, exactly as before.
+
+Two things are held out, and neither is obvious from the mood value alone. The
+liking rules are themselves worth mood and fire *because* of how it feels about
+where it is, so counting them would let the follower talk itself into an ever
+firmer opinion on no evidence but its own. And everything about the session
+rather than the world - logging in after a day away is worth +8 - happens
+wherever you logged out, which is the same tile every time; left in, the
+best-loved place in the game would reliably be your bank.
+
+The upshot is that `"I've never liked this place"` stops being a shrug. It is
+the same rule and the same words, and after you have died there twice it means
+something.
+
+### Taking advice, or not
+
+The follower shouts *eat something* and then, however that turns out, never
+mentions it again. That is commentary; after the fiftieth time it is obviously a
+recording. `advise` opens a window and names what taking it would look like -
+an animation, or simply the bag getting emptier - and `heeded` and `ignored`
+give it the other half of the exchange. Both are tallied, so *"ten times I've
+told you something"* is a `tally` condition and needs no machinery of its own.
+
+### Saying less
+
+Mood decided what the follower said and never how much, so a bad day sounded
+like a costume: the same rate of speech, sadder words. The shared speech gap now
+scales with the band - two and a half times longer at the bottom, a little
+shorter at the top. It thins everything evenly rather than silencing particular
+rules, so the follower still says what matters, with more room around it.
+
+Standing about with nothing happening, the rule file offers roughly 590 lines an
+hour before any gap is applied. At a low mood the gap caps it at 480, so the
+quiet is real rather than decorative.
 
 ### Games
 

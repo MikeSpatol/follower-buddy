@@ -105,6 +105,12 @@ public final class FakeGame
 		clientAnswers.put("getRealSkillLevel", (Answer) args -> levels(args[0])[1]);
 		clientAnswers.put("getItemContainer",
 			(Answer) args -> inventory == null ? null : inventoryContainer());
+
+		// The camera is how the follower tells "gone" from "standing still on
+		// purpose", so a test needs to be able to move it and leave it.
+		clientAnswers.put("getCameraX", 0);
+		clientAnswers.put("getCameraY", 0);
+		clientAnswers.put("getCameraPitch", 128);
 	}
 
 	private int[] levels(Object skill)
@@ -119,6 +125,14 @@ public final class FakeGame
 	public FakeGame tick(int tickCount)
 	{
 		clientAnswers.put("getTickCount", tickCount);
+		return this;
+	}
+
+	/** Nudges the camera, which is what somebody being at the keyboard looks like. */
+	public FakeGame cameraMoved()
+	{
+		clientAnswers.put("getCameraX",
+			((Integer) clientAnswers.get("getCameraX")) + 64);
 		return this;
 	}
 
@@ -322,8 +336,33 @@ public final class FakeGame
 		return this;
 	}
 
-	/** Makes the player interact with something, which is what combat looks like. */
+	/**
+	 * A real fight: both sides squared up at each other.
+	 *
+	 * <p>This used to set only the player's side, on the reasoning that
+	 * interacting with an NPC is what combat looks like. It is also what
+	 * walking up to a guard for directions looks like, and what trading and
+	 * talking look like - so the context could not tell them apart and called
+	 * all of them a fight. Now that it needs evidence, the harness has to model
+	 * the evidence: a fight has two sides.
+	 */
 	public FakeGame fighting(NPC target)
+	{
+		playerAnswers.put("getInteracting", target);
+		if (target != null)
+		{
+			// null is how a test says the target is gone.
+			npcAnswers.get(target).put("getInteracting", player);
+		}
+		return this;
+	}
+
+	/**
+	 * Facing an NPC without fighting it - walking over to talk, to trade, or
+	 * to rob it. One-way interaction, which is precisely the case that used to
+	 * be indistinguishable from combat.
+	 */
+	public FakeGame facing(NPC target)
 	{
 		playerAnswers.put("getInteracting", target);
 		return this;

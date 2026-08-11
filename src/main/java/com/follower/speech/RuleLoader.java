@@ -185,6 +185,8 @@ public class RuleLoader
 			}
 
 			valid.sort((a, b) -> Integer.compare(b.priority, a.priority));
+			nicknames = parsed.nicknames == null
+				? Collections.<String, String>emptyMap() : parsed.nicknames;
 			apply(valid, problems, valid.size() + " rules");
 		}
 		catch (IOException e)
@@ -202,6 +204,13 @@ public class RuleLoader
 			log.warn("phrases.json failed to parse", e);
 		}
 	}
+
+	/**
+	 * Names the follower may earn for you, keyed by the tally that earns each.
+	 * Reloaded with the rules, so editing the file re-reads them too.
+	 */
+	@lombok.Getter
+	private Map<String, String> nicknames = Collections.emptyMap();
 
 	/**
 	 * Which condition type answers which event. Only the types that are gated

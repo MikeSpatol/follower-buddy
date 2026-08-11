@@ -319,7 +319,10 @@ public class TalkScriptTest
 		// that automatically - this at least catches it going backwards.
 		String text = allText();
 
-		assertTrue("nothing about counting or remembering", text.contains("count"));
+		// Matched on the player's own question rather than on the follower's
+		// answer: the answer is characterisation and gets reworded, the
+		// question is the capability and does not.
+		assertTrue("nothing about counting or remembering", text.contains("keep track"));
 		assertTrue("nothing about having moods", text.contains("mood"));
 		assertTrue("nothing about places it likes", text.contains("places i like"));
 		assertTrue("nothing about asking to be taken somewhere",

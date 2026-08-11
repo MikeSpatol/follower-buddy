@@ -61,7 +61,12 @@ public class RuleSetIntegrityTest
 		"wanting", "wantfulfilled", "wantexpired", "feelsabout",
 		"remembers", "carrying", "souvenirlost",
 		"betting", "betwon", "betlost",
-		"timeofday", "sessionminutes", "asking"));
+		"timeofday", "sessionminutes", "asking",
+		"placescore", "happenedhere",
+		"heeded", "ignored", "advising",
+		"daysknown", "anniversary", "outgrew", "nicknamed",
+		"challenging", "challengemet", "challengefailed",
+		"unattended", "underfoot"));
 
 	private static JsonObject bundled(String resource) throws IOException
 	{
@@ -295,6 +300,20 @@ public class RuleSetIntegrityTest
 		byType.put("remembers", new HashSet<>(Arrays.asList("memory")));
 		byType.put("carrying", new HashSet<>(Arrays.asList("souvenir")));
 		byType.put("souvenirlost", new HashSet<>(Arrays.asList("souvenir")));
+		byType.put("happenedhere", new HashSet<>(Arrays.asList("here")));
+		byType.put("nicknamed", new HashSet<>(Arrays.asList("nickname")));
+		byType.put("heeded", new HashSet<>(Arrays.asList("advice")));
+		byType.put("ignored", new HashSet<>(Arrays.asList("advice")));
+		byType.put("challengemet", new HashSet<>(Arrays.asList("challenge")));
+		byType.put("challengefailed", new HashSet<>(Arrays.asList("challenge")));
+		byType.put("challenging", new HashSet<>(Arrays.asList("challenge", "left")));
+
+		// {days} reads a date the follower has had since its first login, so
+		// unlike the others it is genuinely always there - but it is zero
+		// until that date exists, and "0 days" is not a sentence. daysKnown
+		// is the guard that makes it a number worth printing.
+		byType.put("daysknown", new HashSet<>(Arrays.asList("days")));
+		byType.put("anniversary", new HashSet<>(Arrays.asList("days")));
 
 		Harness h = new Harness(folder.newFolder().toPath());
 		List<String> problems = new ArrayList<>();

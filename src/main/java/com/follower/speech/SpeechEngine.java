@@ -111,6 +111,35 @@ public class SpeechEngine
 			dispatch(TriggerEvent.souvenirLost(context.getSouvenir()));
 			context.clearSouvenir();
 		}
+		if (context.pollUnderfoot())
+		{
+			dispatch(TriggerEvent.simple(TriggerEvent.Type.UNDERFOOT));
+		}
+
+		TriggerContext.ChallengeOutcome challenge = context.pollChallenge();
+		if (challenge != null)
+		{
+			dispatch(TriggerEvent.challenge(
+				challenge == TriggerContext.ChallengeOutcome.MET
+					? TriggerEvent.Type.CHALLENGE_MET
+					: TriggerEvent.Type.CHALLENGE_FAILED,
+				context.getChallengeAbout()));
+		}
+
+		TriggerContext.AdviceOutcome advice = context.pollAdvice();
+		if (advice != null)
+		{
+			// Counted as well as announced, like a want, so "you never listen"
+			// can be a tally condition rather than machinery of its own.
+			context.tally(advice == TriggerContext.AdviceOutcome.HEEDED
+				? "advice:taken" : "advice:ignored");
+			dispatch(TriggerEvent.advice(
+				advice == TriggerContext.AdviceOutcome.HEEDED
+					? TriggerEvent.Type.ADVICE_HEEDED
+					: TriggerEvent.Type.ADVICE_IGNORED,
+				context.getAdviceAbout()));
+		}
+
 		TriggerContext.BetOutcome bet = context.pollBet();
 		if (bet != null)
 		{
@@ -223,6 +252,22 @@ public class SpeechEngine
 	private SpeechRule hushOwner;
 
 	/**
+	 * Told when a rule won its event and was held back anyway. Set by the
+	 * plugin so the transcript can see the half of the story the player never
+	 * does; left null everywhere else, including in tests.
+	 */
+	@Setter
+	private java.util.function.BiConsumer<SpeechRule, String> onSuppressed;
+
+	private void noteSuppressed(SpeechRule rule, String reason)
+	{
+		if (onSuppressed != null)
+		{
+			onSuppressed.accept(rule, reason);
+		}
+	}
+
+	/**
 	 * Whether this rule is allowed to say its line right now.
 	 *
 	 * <p>The mute and the global window throttle SPEECH; a rule that only plays
@@ -233,17 +278,125 @@ public class SpeechEngine
 	 */
 	private boolean cannotSpeak(SpeechRule rule, long now)
 	{
+		return blockedBy(rule, now) != null;
+	}
+
+	/**
+	 * WHY this rule cannot speak, or null if it can.
+	 *
+	 * <p>Same decision as {@link #cannotSpeak}, phrased so the transcript can
+	 * record the reason. A held-back line never reaches the player and so never
+	 * reaches an impression, which makes it exactly the evidence needed to tell
+	 * a follower with little to say from one that is being throttled.
+	 */
+	private String blockedBy(SpeechRule rule, long now)
+	{
 		if (!rule.hasSpeech())
 		{
-			return false;
+			return null;
 		}
 		if (rule == hushOwner && now < hushUntilMs)
 		{
-			return muted;
+			return muted ? "muted" : null;
 		}
-		return muted
-			|| now - lastSpokeMs < globalCooldownMs
-			|| now < hushUntilMs;
+		if (muted)
+		{
+			return "muted";
+		}
+		if (now - lastSpokeMs < moodScaledGap())
+		{
+			return "gap";
+		}
+		if (now < hushUntilMs)
+		{
+			return "hush";
+		}
+		return null;
+	}
+
+	/**
+	 * Whether this firing says anything about WHERE it happened.
+	 *
+	 * <p>Two things have to be kept out of the place score, and neither is
+	 * obvious from the mood value alone.
+	 *
+	 * <p>The first is the loop. The rules that remark on liking or disliking
+	 * somewhere are themselves worth +10 and -8, so feeding those back would
+	 * have the follower talk itself into an ever firmer opinion about a place
+	 * on no evidence but its own earlier opinion.
+	 *
+	 * <p>The second is everything that is about the SESSION rather than the
+	 * world. Logging in after a day away is worth +8, and it happens wherever
+	 * you happened to log out - which is the same tile every time. Left in, the
+	 * single most-loved place in the game would reliably be your bank.
+	 */
+	private boolean belongsToThisPlace(SpeechRule rule, TriggerEvent event)
+	{
+		if (rule.when != null && rule.when.usesType("feelsAbout"))
+		{
+			return false;
+		}
+		switch (event.getType())
+		{
+			// Things that happened to you, here.
+			case TICK:
+			case VARBIT:
+			case PLAYER_DEATH:
+			case NPC_KILL:
+			case NPC_SPAWN:
+			case LOOT:
+			case LEVEL_UP:
+			case DAMAGE_TAKEN:
+			case COMBAT_START:
+			case COMBAT_END:
+			case THIEVING_START:
+			case THIEVING_END:
+			case REGION_CHANGE:
+			case WANT_FULFILLED:
+				return true;
+			// Things about the session, the conversation, or the follower's
+			// own belongings, which would happen the same anywhere.
+			default:
+				return false;
+		}
+	}
+
+	/**
+	 * The speech gap, stretched or shortened by how the follower feels.
+	 *
+	 * <p>Mood already decides WHAT it says. Until now it had no say in HOW MUCH,
+	 * so a follower having a bad day recited sad lines at exactly the rate it
+	 * recited cheerful ones - which reads as a costume rather than a mood.
+	 * Somebody in a bad way talks less. Somebody in a good one talks over you.
+	 *
+	 * <p>Applied to the shared gap rather than to any rule, so it thins out
+	 * everything evenly instead of silencing particular things: the follower
+	 * still says what matters, just with more room around it.
+	 */
+	private long moodScaledGap()
+	{
+		return gapForMood(globalCooldownMs, getContext().getMoodBand());
+	}
+
+	/**
+	 * The mapping itself, as a function of the band rather than of the engine,
+	 * so a test can walk every band without having to make real seconds pass.
+	 */
+	static long gapForMood(long base, String band)
+	{
+		switch (band == null ? "" : band)
+		{
+			case "low":
+				return base * 5 / 2;
+			case "down":
+				return base * 3 / 2;
+			case "good":
+				return base * 4 / 5;
+			case "high":
+				return base * 3 / 5;
+			default:
+				return base;
+		}
 	}
 
 	/**
@@ -253,6 +406,14 @@ public class SpeechEngine
 	public void dispatch(TriggerEvent event)
 	{
 		long now = System.currentTimeMillis();
+
+		// An animation the player played may be them doing the thing they were
+		// just told to. Offered before the rules run, so the settling and the
+		// reaction land on the same tick rather than a tick apart.
+		if (event.getType() == TriggerEvent.Type.ANIMATION && event.getId() != -1)
+		{
+			getContext().offerAct(event.getId());
+		}
 
 		// Delayed firings count down on the tick heartbeat and speak through
 		// the same guarded path as everything else when their beat arrives.
@@ -265,11 +426,16 @@ public class SpeechEngine
 				if (--delayed.ticksLeft <= 0)
 				{
 					it.remove();
-					if (!cannotSpeak(delayed.rule, now))
+					String held = blockedBy(delayed.rule, now);
+					if (held == null)
 					{
 						log.debug("rule '{}' fired after its {}-tick delay",
 							delayed.rule.describe(), delayed.delay);
 						speak(delayed.rule, delayed.event, now);
+					}
+					else
+					{
+						noteSuppressed(delayed.rule, held);
 					}
 				}
 			}
@@ -351,12 +517,13 @@ public class SpeechEngine
 			return;
 		}
 
-		if (cannotSpeak(winner, now))
+		String blocked = blockedBy(winner, now);
+		if (blocked != null)
 		{
 			// Still charge the cooldown so a suppressed rule doesn't fire the instant
 			// the global window opens.
-			log.debug("rule '{}' won but was suppressed (muted={}, sinceLastSpoke={}ms)",
-				winner.describe(), muted, now - lastSpokeMs);
+			log.debug("rule '{}' won but was suppressed ({})", winner.describe(), blocked);
+			noteSuppressed(winner, blocked);
 			winner.markFired(now);
 			return;
 		}
@@ -454,6 +621,13 @@ public class SpeechEngine
 		if (rule.mood != null && rule.mood != 0)
 		{
 			getContext().adjustMood(rule.mood);
+
+			// And the place keeps its share of it. The rules already say how
+			// much a moment was worth; this is only remembering where it was.
+			if (belongsToThisPlace(rule, event))
+			{
+				getContext().notePlaceFeeling(rule.mood);
+			}
 		}
 
 		// A question only counts as asked once it has actually been said, for
@@ -479,6 +653,12 @@ public class SpeechEngine
 			getContext().noteIncident(rule.remember.key, rule.remember.as);
 		}
 
+		// And the same moment against the place, when the rule says so.
+		if (rule.markHere != null && !rule.markHere.isEmpty())
+		{
+			getContext().notePlaceMemory(rule.markHere);
+		}
+
 		// Picking something up and betting on something both need to have been
 		// SAID, like the want - a souvenir nobody was told about is invisible,
 		// and a silent prediction can only ever be right.
@@ -491,6 +671,24 @@ public class SpeechEngine
 		{
 			getContext().placeBet(Boolean.TRUE.equals(rule.bet.rich),
 				rule.bet.threshold, rule.bet.minutes == null ? 5 : rule.bet.minutes);
+		}
+		if (rule.challenge != null && rule.challenge.tally != null && !text.isEmpty())
+		{
+			getContext().setChallenge(
+				rule.challenge.about,
+				rule.challenge.tally,
+				rule.challenge.target == null ? 10 : rule.challenge.target,
+				rule.challenge.minutes == null ? 5 : rule.challenge.minutes);
+		}
+		if (rule.advise != null && rule.advise.about != null && !text.isEmpty())
+		{
+			getContext().adviseOn(
+				rule.advise.about,
+				rule.advise.ids == null
+					? java.util.Collections.emptySet()
+					: new java.util.HashSet<>(rule.advise.ids),
+				Boolean.TRUE.equals(rule.advise.room),
+				rule.advise.minutes == null ? 1 : rule.advise.minutes);
 		}
 
 		if (!text.isEmpty())
@@ -535,6 +733,10 @@ public class SpeechEngine
 		// whatever event happened to trigger it.
 		values.putIfAbsent("memory", ctx.getIncidentPhrase());
 		values.putIfAbsent("souvenir", ctx.getSouvenir());
+		values.putIfAbsent("here", ctx.getPlaceMemory());
+		values.putIfAbsent("nickname", ctx.getNickname());
+		values.putIfAbsent("left", Integer.toString(ctx.getChallengeLeft()));
+		values.putIfAbsent("days", Integer.toString(ctx.getDaysKnown()));
 		values.putIfAbsent("hp", Integer.toString(ctx.getHitpoints()));
 		values.putIfAbsent("maxHp", Integer.toString(ctx.getMaxHitpoints()));
 		values.putIfAbsent("hpPercent", Integer.toString(ctx.getHitpointsPercent()));
