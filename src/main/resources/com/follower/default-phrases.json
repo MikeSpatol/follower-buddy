@@ -2669,7 +2669,10 @@
       },
       "say": [
         "Well. That happened.",
-        "I'll go get the gravestone."
+        "I'll go get the gravestone.",
+        "We do not speak of the last five minutes.",
+        "I'll mark the spot. It's what I'm for.",
+        "Deep breath. Everything's retrievable. Mostly."
       ]
     },
     {
@@ -2685,7 +2688,10 @@
       },
       "say": [
         "PET! Actual pet!",
-        "You lucky thing."
+        "You lucky thing.",
+        "A pet! Look at its little face!",
+        "We have a pet. Today is a good page.",
+        "THE LUCK. Write it down, nobody will believe us."
       ]
     },
     {
@@ -2702,7 +2708,11 @@
       },
       "say": [
         "{skill} {level}. Nice.",
-        "Level {level} {skill}!"
+        "Level {level} {skill}!",
+        "{skill} {level}. Underlined.",
+        "That's {level} in {skill}. The column grows.",
+        "Level {level}. Your {skill} is coming along nicely.",
+        "{skill} up. I'll want a demonstration later."
       ]
     },
     {
@@ -2808,7 +2818,12 @@
         "There you are! Right on schedule.",
         "Welcome back, {player}. I kept your spot warm.",
         "You made it. It was getting quiet without you.",
-        "Back again? Excellent. Where to today?"
+        "Back again? Excellent. Where to today?",
+        "And we're back. Notebook's open.",
+        "There you are, {player}. The page was getting lonely.",
+        "Right on time. Ish.",
+        "Good. You're here. The world kept happening without you.",
+        "Evening. Or morning. You pick, I'll log it."
       ]
     },
     {
@@ -2823,7 +2838,9 @@
         "A {style} thrall, am I? I'll allow it. Briefly.",
         "Summoned! I make a better thrall than any pile of bones.",
         "Fine, fine. Point me at something. The {style} arts it is.",
-        "From companion to conscript. The things I do for you."
+        "From companion to conscript. The things I do for you.",
+        "Conscripted again. The pay had better improve.",
+        "A thrall with a notebook. First of my kind."
       ]
     },
     {
@@ -2838,7 +2855,9 @@
         "Done with {from}, are we? {style} it is.",
         "Reshuffled. {from} out, {style} in.",
         "Changed your mind again. Fine, {style}.",
-        "One moment I'm {from}, the next I'm {style}. Make up your mind."
+        "One moment I'm {from}, the next I'm {style}. Make up your mind.",
+        "New orders. I serve at the pleasure of a whim.",
+        "{from} to {style}, just like that. Versatile, me."
       ]
     },    {
       "id": "thrall-end",
@@ -2852,7 +2871,9 @@
         "Time's up. Back to being your better half.",
         "The spell fades. I remain. Convenient, that.",
         "Thrall duty complete. I expect a raise.",
-        "And... I'm me again. That was strangely fun."
+        "And... I'm me again. That was strangely fun.",
+        "Discharged with honours. I assume.",
+        "Freedom. I'll put the whole episode in an appendix."
       ]
     },    {
       "id": "quest-wise-old-man",
@@ -2880,7 +2901,9 @@
       "say": [
         "One second, I need to sort my bank. It's a disaster in there.",
         "Hold on, quick bank stop. Don't wander off.",
-        "The bank calls. My gold misses me."
+        "The bank calls. My gold misses me.",
+        "Bank run. Mine, not yours. Momentarily.",
+        "Two minutes with my vault. It's mostly receipts."
       ]
     },
     {
@@ -2894,7 +2917,9 @@
       "say": [
         "Don't ask how bad it is in there.",
         "Right, sorted. Ish. Sorted-ish.",
-        "I counted it all. Still not enough."
+        "I counted it all. Still not enough.",
+        "All accounted for. Roughly.",
+        "The vault says I'm rich in paper."
       ]
     },
     {
@@ -2908,7 +2933,9 @@
       "say": [
         "Just need a quick word with the gods. Won't be long.",
         "One prayer, then straight back.",
-        "The altar's right there. It would be rude not to."
+        "The altar's right there. It would be rude not to.",
+        "Quick devotions. Hold that thought.",
+        "The gods expect a word when I'm passing."
       ]
     },
     {
@@ -2922,7 +2949,9 @@
       "say": [
         "Right. Sins managed.",
         "The gods say hello. Probably.",
-        "Prayed for both of us. You're welcome."
+        "Prayed for both of us. You're welcome.",
+        "Duty done. The gods send their regards.",
+        "Blessed, or near enough."
       ]
     },
     {
@@ -2936,7 +2965,9 @@
       "say": [
         "Is that a fire? My hands are freezing.",
         "One minute by the fire. Adventuring is COLD.",
-        "Fire. Warmth. Priorities. Back in a tick."
+        "Fire. Warmth. Priorities. Back in a tick.",
+        "A fire. Warmth is research. Back shortly.",
+        "Cold hands, warm fire, short detour."
       ]
     },
     {
@@ -2950,7 +2981,9 @@
       "say": [
         "Better. Carry on.",
         "Toasty. Right, where were we?",
-        "I regret nothing. My hands agree."
+        "I regret nothing. My hands agree.",
+        "Feeling returns to my fingers. Onward.",
+        "Warm now. The quill thanks the fire."
       ]
     },
     {
@@ -2965,7 +2998,9 @@
       "say": [
         "AAAAH! HOT! HOT HOT HOT!",
         "WHY IS IT LIKE THIS!",
-        "MISTAKE! THIS WAS A MISTAKE!"
+        "MISTAKE! THIS WAS A MISTAKE!",
+        "OW OW OW BAD IDEA!",
+        "THE FIRE IS WINNING!"
       ]
     },
     {
@@ -2980,7 +3015,9 @@
         "That hurt. That REALLY hurt.",
         "Dying sucks. Zero out of ten. Would not recommend.",
         "I'm fine. I'm FINE. We speak of this to no one.",
-        "Note to self: fire is hot. Eternally noted."
+        "Note to self: fire is hot. Eternally noted.",
+        "We agreed the fire won. Moving on.",
+        "Singed but wiser. Mostly singed."
       ]
     },    {
       "id": "errand-cat-start",
@@ -2993,7 +3030,9 @@
       "say": [
         "Cat. CAT. One minute.",
         "Look at the cat. LOOK at it. One second.",
-        "There is a cat and I have priorities."
+        "There is a cat and I have priorities.",
+        "Priorities have shifted. There's a cat.",
+        "The cat requires acknowledgement. Standards."
       ]
     },
     {
@@ -3007,7 +3046,9 @@
       "say": [
         "That was important. You wouldn't understand.",
         "The cat and I have an understanding now.",
-        "Softest creature in Gielinor. Confirmed."
+        "Softest creature in Gielinor. Confirmed.",
+        "Cat acknowledged. Order restored.",
+        "I'm told I'm a good judge of cats. By cats."
       ]
     },
     {
@@ -3021,7 +3062,9 @@
       "say": [
         "Bootlace. Go on, I'll catch up.",
         "Hold on. Boot situation.",
-        "One moment. My boot disagrees with me."
+        "One moment. My boot disagrees with me.",
+        "Lace emergency. Seconds, not minutes.",
+        "My boot's gone rogue. Dealing with it."
       ]
     },
     {
@@ -3035,7 +3078,9 @@
       "say": [
         "Sorted. What did I miss?",
         "There. Crisis averted.",
-        "Double knots this time. We're safe."
+        "Double knots this time. We're safe.",
+        "Boot subdued. After you.",
+        "Laces behaving. For now."
       ]
     },
     {
@@ -3049,7 +3094,9 @@
       "say": [
         "Wait. Did you see that?",
         "Hold on. Something moved over there.",
-        "Shh. There. No, THERE."
+        "Shh. There. No, THERE.",
+        "Hold up. Movement, left side.",
+        "One second. My eyes caught something."
       ]
     },
     {
@@ -3063,7 +3110,9 @@
       "say": [
         "...Never mind. It was a rock.",
         "Nothing. It was nothing. Probably nothing.",
-        "False alarm. The shadows are shifty today."
+        "False alarm. The shadows are shifty today.",
+        "Stand down. It was a bush being a bush.",
+        "As you were. The shadow checked out."
       ]
     },    {
       "id": "quest-hans",
@@ -5835,7 +5884,10 @@
         "I never know what to do at this part.",
         "I hate this. I hate watching this.",
         "Go, then. I am right behind you.",
-        "Wherever you land, I am coming with you."
+        "Wherever you land, I am coming with you.",
+        "Not like this. Not here.",
+        "I will mark the place. Go.",
+        "It is all right. I have seen where you land."
       ]
     },
     {
@@ -5856,7 +5908,10 @@
         "I remember this spot. I would rather not.",
         "Walk carefully. This place has taken you once.",
         "I stood right here, after. For a while.",
-        "Feels colder here. Maybe that is just me."
+        "Feels colder here. Maybe that is just me.",
+        "Here again. The grass has grown back, at least.",
+        "The page for this place has a black corner.",
+        "We both know what this spot is."
       ]
     },
     {
@@ -5877,7 +5932,10 @@
         "That's a {item}. That's a {item}!",
         "I'm never letting you bank that.",
         "Did you SEE that?",
-        "{value}. In one drop. {value}!"
+        "{value}. In one drop. {value}!",
+        "Stop. Look at what you're holding.",
+        "That's a page all to itself, that is.",
+        "{value}! I need to write this down twice."
       ]
     },
     {
@@ -5901,7 +5959,11 @@
         "That {item} will sell nicely.",
         "I saw the {item} first. Just noting that.",
         "Keep those coming.",
-        "A tidy little drop, that."
+        "A tidy little drop, that.",
+        "{item}. The good column of the ledger.",
+        "Worth the trip already, that.",
+        "That {item} goes straight in the day's highlights.",
+        "Somebody will pay handsomely for that."
       ]
     },
 {
@@ -5948,7 +6010,10 @@
         "I like this one. Can we keep it?",
         "We should get one of those.",
         "Look at it. Just look at it.",
-        "Someone is very well looked after."
+        "Someone is very well looked after.",
+        "We are stopping for this. Briefly. Or longer.",
+        "Business can wait. There's an animal.",
+        "I keep a page for good creatures. Adding one."
       ]
     },
     {
@@ -5969,7 +6034,9 @@
         "We are becoming regulars here.",
         "I could walk this place blind by now.",
         "Again? There are other places, you know.",
-        "Ah. Here. Of course."
+        "Ah. Here. Of course.",
+        "This place again. The entry's mostly ditto marks.",
+        "We do keep ending up here."
       ]
     },
     {
@@ -5995,7 +6062,10 @@
         "That's a {npc}. Take your time.",
         "{npc}. Big one. You've got this.",
         "Careful with the {npc}.",
-        "I'll keep my distance from the {npc}, thanks."
+        "I'll keep my distance from the {npc}, thanks.",
+        "A {npc}. I'll fetch the long page.",
+        "The {npc} is all yours. I insist.",
+        "Big entry for the book, this one."
       ]
     },
     {
@@ -6013,7 +6083,11 @@
         "This one's yours. I'm backing up.",
         "Right. Room to swing.",
         "Giving you space.",
-        "I'll be over here if it goes badly."
+        "I'll be over here if it goes badly.",
+        "Right. Best of luck to the other one.",
+        "I'll narrate quietly from here.",
+        "Opening move's yours. It usually is.",
+        "Deep breath. Swing things."
       ]
     },
     {
@@ -6042,7 +6116,10 @@
         "Breathe. You're fine.",
         "It's slowing down. I think.",
         "Hold your nerve.",
-        "This is the tricky part."
+        "This is the tricky part.",
+        "Patience wins this one.",
+        "Eyes up. It's got more to give.",
+        "Halfway. Roughly. Don't check."
       ]
     },
     {
@@ -6078,7 +6155,12 @@
         "Still with you.",
         "That looked like it hurt. Them, I mean.",
         "Go on, finish it.",
-        "You make this look easy."
+        "You make this look easy.",
+        "Form's holding.",
+        "Keep the feet moving.",
+        "You've done harder.",
+        "There's the opening.",
+        "Won't be long now."
       ]
     },
     {
@@ -6097,7 +6179,11 @@
         "I never doubted you.",
         "Coming back over.",
         "Right, where were we?",
-        "Good. I can stop hiding."
+        "Good. I can stop hiding.",
+        "And breathe. All done.",
+        "Add one more to the record.",
+        "The quiet after a fight is my favourite part.",
+        "Still in one piece. Both of us, even."
       ]
     },
     {
@@ -6149,7 +6235,15 @@
         "I'm counting. Don't ask what.",
         "Good a place as any, I suppose.",
         "Don't mind me. I'm just admiring the ground.",
-        "We could be somewhere with monsters."
+        "We could be somewhere with monsters.",
+        "The clouds are doing something. I'll report back.",
+        "A scribe's work is mostly waiting. This is the work.",
+        "I'd read to you, but you'd only want the good bits.",
+        "Somewhere out there, a bank booth stands empty.",
+        "I'm between thoughts. It's roomy.",
+        "The grass here is adequate. That's the whole note.",
+        "No news. I checked.",
+        "The wind changed. Twice. Big day."
       ]
     },
     {
@@ -6186,7 +6280,13 @@
         "There have been worse afternoons.",
         "Long day, this.",
         "Stopped expecting anything a while back.",
-        "Wake me for the good part."
+        "Wake me for the good part.",
+        "A lesser scribe would have wandered off by now.",
+        "The sun's moved. I checked against a fence post.",
+        "Day's not getting any younger. Neither am I.",
+        "I have inventoried the immediate area. Twice.",
+        "If this is a stakeout, nobody told me what we're watching.",
+        "Chapter title for today: We Stood Somewhere."
       ]
     },
     {
@@ -6226,7 +6326,11 @@
         "Clean work.",
         "Another one down.",
         "Yes! Straight through it.",
-        "I saw that. That was good."
+        "I saw that. That was good.",
+        "Textbook. If there were a textbook.",
+        "And down. Barely a scuff on you.",
+        "The {npc} has filed its complaint.",
+        "Swift. I approve."
       ]
     },
     {
@@ -6362,7 +6466,10 @@
         "I'm still here. For whatever that's worth.",
         "Take a minute. It'll keep.",
         "Days like this happen. They pass.",
-        "Not our finest hour."
+        "Not our finest hour.",
+        "No rush. The world keeps.",
+        "Some days are for standing still. This one qualifies.",
+        "We'll file today under 'weather'."
       ]
     },
     {
@@ -6399,7 +6506,10 @@
         "You're on form today. Genuinely.",
         "Whatever you're doing, keep doing it.",
         "This is the good stuff.",
-        "I'm having a lovely time. Thought you should know."
+        "I'm having a lovely time. Thought you should know.",
+        "Even the pigeons look cheerful today.",
+        "Days like this write themselves up nicely.",
+        "If you're keeping score, we're winning."
       ]
     },
     {
@@ -6428,7 +6538,10 @@
         "There. That's more like it.",
         "See? The day turns.",
         "That's the one we needed.",
-        "Better. Much better."
+        "Better. Much better.",
+        "The day's looking up. Cautiously.",
+        "There it is. Knew it was in there somewhere.",
+        "Right, the slump's over. Onward."
       ]
     },
     {
@@ -6450,7 +6563,10 @@
         "{count}. I've been keeping track, since nobody else was.",
         "{count} now. The {npc} population is having a bad day.",
         "Number {count}. You could stop. You won't, but you could.",
-        "{count}. At some point this stopped being a fight and became a job."
+        "{count}. At some point this stopped being a fight and became a job.",
+        "{count}. The tally marks are becoming a drawing.",
+        "{count} of the {npc} now. The column overflows.",
+        "Entry {count}. Same as entry one, but later."
       ]
     },
     {
@@ -6471,7 +6587,10 @@
         "{count}. A hundred more. I hope this is for something.",
         "{count} of them. You realise that's a village?",
         "{count}. I've watched every single one. Ask me anything.",
-        "That's {count}, and I'd like it noted that I never once complained."
+        "That's {count}, and I'd like it noted that I never once complained.",
+        "{count}. Some scribes record wars smaller than this.",
+        "{count}. I had to start a second page.",
+        "{count}, and my quill is filing a grievance."
       ]
     },
     {
@@ -6500,7 +6619,11 @@
         "I've watched you do that about forty times now.",
         "This is the part of the adventure the songs leave out.",
         "Don't mind me. I'm just here.",
-        "We've been here a bit, haven't we."
+        "We've been here a bit, haven't we.",
+        "Rhythm's good. I'd clap along, but no.",
+        "You've found a pace. The pace has found you.",
+        "That's the sound of industry, that is.",
+        "Somewhere a ledger fills itself. Carry on."
       ]
     },
     {
@@ -6529,7 +6652,11 @@
         "I've started naming them. That one's Geoffrey.",
         "I want you to know I'm still here. Fading, but here.",
         "At what point does this become a lifestyle?",
-        "I've had time to think. I have some concerns."
+        "I've had time to think. I have some concerns.",
+        "The birds have stopped commenting. Even they're used to it.",
+        "I've begun composing. It's an epic. It's about this.",
+        "Your dedication is noted. Repeatedly.",
+        "We may be here forever. There are worse spots."
       ]
     },
     {
@@ -6551,7 +6678,10 @@
         "There you are. It's been a few hours.",
         "Back, then. I did wonder.",
         "Afternoon. Or evening. I've rather lost track.",
-        "You were gone a while. Everything's where you left it."
+        "You were gone a while. Everything's where you left it.",
+        "A few hours by my count. The count is reliable.",
+        "You missed nothing. I double-checked.",
+        "Nothing happened. I wrote that down, too."
       ]
     },
     {
@@ -6573,7 +6703,10 @@
         "A whole day. I counted.",
         "You're back! I'd started talking to the scenery.",
         "That was a long one. Good to see you.",
-        "I was beginning to think you'd found a better follower."
+        "I was beginning to think you'd found a better follower.",
+        "A day, near enough. The entry was short.",
+        "Yesterday's page just says 'waited'. Today looks better.",
+        "You're back! The scenery was poor company."
       ]
     },
     {
@@ -6594,7 +6727,10 @@
         "You came back. I wasn't sure you would.",
         "It's been weeks. Weeks! Where do I start.",
         "Look who it is. I kept your spot.",
-        "I'd given up on the countdown. Welcome back."
+        "I'd given up on the countdown. Welcome back.",
+        "Weeks. I re-read the whole book waiting.",
+        "Long absence, short reunion speech: hello.",
+        "I'd started sketching. Don't ask to see them."
       ]
     },
     {
@@ -6615,7 +6751,11 @@
         "That was food, once.",
         "I wasn't hungry anyway.",
         "The fire wins again.",
-        "We'll call that a sacrifice."
+        "We'll call that a sacrifice.",
+        "That's carbon now. Historically, food.",
+        "The recipe said nothing about flames that tall.",
+        "Another one for the fire's collection.",
+        "Smells like progress. Burnt progress."
       ]
     },
     {
@@ -6636,7 +6776,10 @@
         "Gravity: still undefeated.",
         "I'd have caught you. Probably.",
         "Nobody saw. Except everyone.",
-        "Up you get."
+        "Up you get.",
+        "The ground moved. We'll say the ground moved.",
+        "Graceful. In a manner of speaking.",
+        "I'll leave that out of the notes. Kidding. It's in."
       ]
     },
     {
@@ -6686,7 +6829,11 @@
         "Nobody's looking. Nobody who matters, anyway.",
         "Right. I don't know you, you don't know me.",
         "Take your time. I'm just admiring the architecture.",
-        "Say the word and we're both somewhere else entirely."
+        "Say the word and we're both somewhere else entirely.",
+        "Left pocket. Trust me, it's always the left.",
+        "I count guards for a hobby. Currently: none.",
+        "Quick fingers, slow breathing. Off you go.",
+        "The trick is looking bored. I'm a natural."
       ]
     },
     {
@@ -6709,7 +6856,11 @@
         "We're done. Straighten your face.",
         "Lovely. And if anyone asks, we were fishing.",
         "Right, that's enough larceny for one afternoon.",
-        "Whatever that was, I was somewhere else at the time."
+        "Whatever that was, I was somewhere else at the time.",
+        "Pockets full, consciences clear enough.",
+        "A tidy afternoon's redistribution.",
+        "We'll split it later. By which I mean you keep it.",
+        "History will remember us kindly. It won't hear about this."
       ]
     },
     {
@@ -7125,7 +7276,10 @@
       "say": [
         "{value}! That's the hardest I've ever seen you hit. Old best was {previous}.",
         "{value} damage. You've never done better than {previous} before now.",
-        "Did you see that? {value}. New best."
+        "Did you see that? {value}. New best.",
+        "{value}. The old record was {previous}. Was.",
+        "A {value}! Underline it. Twice.",
+        "New best: {value}. The book takes back what it said."
       ]
     },
     {
@@ -7144,7 +7298,9 @@
       "say": [
         "{value} minutes. That's the longest we've ever been out together.",
         "We've been at this {value} minutes. Longest yet. Beat {previous}.",
-        "This is officially the longest day we've had. {value} minutes."
+        "This is officially the longest day we've had. {value} minutes.",
+        "{value} minutes and counting. A personal best, this.",
+        "New record: {value} minutes out. The old one was {previous}."
       ]
     },
     {
@@ -7172,7 +7328,12 @@
       "say": [
         "Again? Right. Same page as last time, then.",
         "You do this a lot, you know. I've been keeping track.",
-        "I've seen you die more times than I care to say."
+        "I've seen you die more times than I care to say.",
+        "This page is getting crowded.",
+        "There's a whole chapter on these now.",
+        "At this point I keep the quill out.",
+        "One more for a list I never wanted to start.",
+        "You and gravestones. A recurring theme."
       ]
     },
     {
@@ -7199,7 +7360,12 @@
       "say": [
         "Another one. You've had dozens since I've known you.",
         "You keep doing that. I've watched you do it more times than most.",
-        "{skill} again. You never do stop, do you."
+        "{skill} again. You never do stop, do you.",
+        "Another {skill} level. The column barely fits.",
+        "Up again. You collect these like feathers.",
+        "More {skill}. I'm running out of margin.",
+        "That's plenty of levels for one lifetime. Apparently not yours.",
+        "Progress noted. Again. My wrist aches."
       ]
     },
     {
@@ -7223,7 +7389,11 @@
         "Hello to you too.",
         "Oh, hello. Was that for me?",
         "Hello! Right, I'm listening.",
-        "Hey yourself."
+        "Hey yourself.",
+        "Present and accounted for.",
+        "Afternoon. Or whatever it is.",
+        "Yes, hello, still listening.",
+        "At your service. Within reason."
       ]
     },
     {
@@ -7247,7 +7417,10 @@
         "I don't know what's funny but I'm in.",
         "Ha! Yes. Whatever that was.",
         "Look at us, having a laugh.",
-        "That's the spirit."
+        "That's the spirit.",
+        "Comedy. I'm noting the date.",
+        "Heh. All right, that got me.",
+        "If you're laughing, I'm laughing."
       ]
     },
     {
@@ -7270,7 +7443,11 @@
       "say": [
         "Any time. Genuinely.",
         "Don't mention it. Please do mention it again though.",
-        "That's what I'm here for."
+        "That's what I'm here for.",
+        "You're welcome. Twice, even.",
+        "Careful. I'll come to expect gratitude.",
+        "Accepted. Filed under rare events.",
+        "Well now. Manners. Lovely."
       ]
     },
     {
@@ -7298,7 +7475,10 @@
         "Yes? Something on my face?",
         "I can see you looking.",
         "Hello. You've been staring a while.",
-        "Go on then, get a good look."
+        "Go on then, get a good look.",
+        "Still here. Still fascinating, apparently.",
+        "Take notes if you like. I do.",
+        "I'd pose, but this is my only expression."
       ]
     },
     {
@@ -7317,7 +7497,11 @@
       "say": [
         "Yes, that's me. All of that is true.",
         "Reading up on me, are you?",
-        "Always writing something. They're not wrong."
+        "Always writing something. They're not wrong.",
+        "Accurate, if a bit brief.",
+        "Somebody wrote that about me. Fair play.",
+        "That's the official version. The real one's longer.",
+        "Examined! I feel positively catalogued."
       ]
     },
     {
@@ -7360,7 +7544,11 @@
         "There's something I want to ask you. Talk to me when you have a moment.",
         "Come and talk to me a minute? It's nothing bad.",
         "When you get a second, talk to me. I've got a question.",
-        "I'd like a word, when you're not busy."
+        "I'd like a word, when you're not busy.",
+        "A word, when your hands are free.",
+        "No hurry, but come and find me for a minute.",
+        "Something to ask. It'll keep until you're ready.",
+        "When there's a lull, I have a small proposal."
       ]
     },
     {
@@ -7400,7 +7588,9 @@
       },
       "say": [
         "Can we go back to Lumbridge? Everyone starts there. I've got a page on it.",
-        "Lumbridge, then. I want to check something in my notes."
+        "Lumbridge, then. I want to check something in my notes.",
+        "Lumbridge next? The early pages need checking.",
+        "I'd like Lumbridge, when it suits. Old ground, good notes."
       ]
     },
     {
@@ -7440,7 +7630,9 @@
       },
       "say": [
         "The Grand Exchange, please. Prices change and mine are out of date.",
-        "Take me to the Exchange? I want to hear what things cost."
+        "Take me to the Exchange? I want to hear what things cost.",
+        "The Exchange, when you can. My price list is a relic.",
+        "Take me past the Exchange. I miss the shouting."
       ]
     },
     {
@@ -7480,7 +7672,9 @@
       },
       "say": [
         "Then the Fishing Guild. Nothing to record there. That's rather the point.",
-        "The Fishing Guild, if you're offering. I'd like to see the water."
+        "The Fishing Guild, if you're offering. I'd like to see the water.",
+        "The Fishing Guild would do nicely. Water and no surprises.",
+        "Somewhere quiet next. The Fishing Guild knows how."
       ]
     },
     {
@@ -7501,7 +7695,10 @@
       "say": [
         "Fair enough. Another time.",
         "No bother. Forget I asked.",
-        "Right you are. Carry on."
+        "Right you are. Carry on.",
+        "Understood. Withdrawn.",
+        "Not the answer I'd hoped for, but an answer.",
+        "So noted. No hard feelings."
       ]
     },
     {
@@ -7525,7 +7722,10 @@
         "{want}! You actually brought me. Thank you.",
         "You remembered. We're in {want}. I'm delighted.",
         "Look at that - {want}. You didn't have to do that.",
-        "I asked for {want} and here we are. You're all right, you are."
+        "I asked for {want} and here we are. You're all right, you are.",
+        "{want}, as requested. You take requests.",
+        "We made it to {want}. The notes thank you.",
+        "And here we are. {want}. Good as your word."
       ]
     },
     {
@@ -7543,7 +7743,10 @@
       "say": [
         "We never did get to {want}. Never mind.",
         "I'd given up on {want} anyway.",
-        "So much for {want}, then."
+        "So much for {want}, then.",
+        "The page for {want} stays half written.",
+        "{want} will keep. Everything keeps.",
+        "Maybe next time, {want}."
       ]
     },
     {
@@ -7572,7 +7775,10 @@
         "I do like it here. I don't know why. I just do.",
         "This is one of my places, this.",
         "Oh, good. I like this one.",
-        "We should come here more."
+        "We should come here more.",
+        "This place agrees with me. No idea why.",
+        "Good air here. Good everything, really.",
+        "Add this one to the short list."
       ]
     },
     {
@@ -7601,7 +7807,10 @@
         "Here again. I've never liked this place.",
         "Something about this spot puts me off. Always has.",
         "Can we not stay here long?",
-        "I'd rather be almost anywhere else, if I'm honest."
+        "I'd rather be almost anywhere else, if I'm honest.",
+        "This place and I have an understanding. We don't get on.",
+        "The notes on this spot are all in a darker ink.",
+        "Every visit here feels a page too long."
       ]
     },
     {
@@ -7641,7 +7850,14 @@
       "say": [
         "You're nearly out of room, you know.",
         "Two slots left. Just so you've heard it from someone.",
-        "Bag's about full. Might want to do something about that."
+        "Bag's about full. Might want to do something about that.",
+        "Bag check: nearly full. That's the whole report.",
+        "You're down to your last two slots.",
+        "The bag is not getting any emptier.",
+        "Almost out of room. Noting it for the record.",
+        "Space is getting scarce in there.",
+        "Whatever you pick up next had better be worth a slot.",
+        "The bag and I agree: something has to go."
       ]
     },
     {
@@ -7679,7 +7895,9 @@
         "That thing is very large and very close.",
         "I'd like it noted that I've seen what's standing over there.",
         "We're stood very close to something that could end this quickly.",
-        "Are we meant to be this close to that?"
+        "Are we meant to be this close to that?",
+        "Official measurement: enormous.",
+        "I'm noting its size from a distance. There is no safe distance."
       ]
     },
     {
@@ -7708,7 +7926,11 @@
         "Busy here, isn't it.",
         "Everyone's turned up at once.",
         "I can't move for people.",
-        "Is something happening, or is it always like this?"
+        "Is something happening, or is it always like this?",
+        "Half the world's here and the other half's queuing.",
+        "A crowd. My notes prefer them at a distance.",
+        "Mind your pockets. Mine are already minded.",
+        "All these people, and not one of them taking notes."
       ]
     },
     {
@@ -7730,7 +7952,9 @@
         "You've crossed. You know what that means.",
         "Right. Wilderness. Everyone here can kill you now.",
         "Oh, we're doing this. Fine. I'm staying close.",
-        "That's the ditch behind us. No takebacks."
+        "That's the ditch behind us. No takebacks.",
+        "Past the ditch. Speak softly and count your escapes.",
+        "North it is. I'll keep the notes brief and the eyes open."
       ]
     },
     {
@@ -7875,7 +8099,10 @@
       },
       "say": [
         "I'm not going to forget that one.",
-        "That'll stay with me, that will."
+        "That'll stay with me, that will.",
+        "Too close. The handwriting shows it.",
+        "That gets an underline.",
+        "My heart was in the margin for that one."
       ]
     },
     {
@@ -7896,7 +8123,10 @@
       },
       "say": [
         "That's going in the book.",
-        "I saw all of it, for what it's worth."
+        "I saw all of it, for what it's worth.",
+        "The record will be kind about it.",
+        "Written. Not happily.",
+        "Some entries I would rather not have."
       ]
     },
     {
@@ -7915,7 +8145,10 @@
         "minimum": 1000000
       },
       "say": [
-        "I'm still not over that."
+        "I'm still not over that.",
+        "That drop gets its own footnote.",
+        "I re-read that entry sometimes. For morale.",
+        "Best line in the ledger so far."
       ]
     },
     {
@@ -7934,7 +8167,10 @@
         "minimum": 150
       },
       "say": [
-        "I want that written down somewhere."
+        "I want that written down somewhere.",
+        "That one goes in with a steadier hand.",
+        "Chapters end on moments like that.",
+        "Tell people. If you don't, I will."
       ]
     },
     {
@@ -7968,7 +8204,10 @@
         "I keep thinking about {memory}.",
         "I've not stopped thinking about {memory}, if I'm honest.",
         "Do you ever think about {memory}? I do.",
-        "It's quiet. So naturally I'm thinking about {memory}."
+        "It's quiet. So naturally I'm thinking about {memory}.",
+        "The notes keep opening at {memory}. Odd, that.",
+        "{memory}. No reason. It just visits.",
+        "Quiet enough to hear myself think about {memory}."
       ]
     },
     {
@@ -7996,7 +8235,10 @@
       "say": [
         "That's three. I've started keeping count, and I wish I hadn't.",
         "I'm starting to see a pattern, and I don't like it.",
-        "We've done this before. Several times. Recently."
+        "We've done this before. Several times. Recently.",
+        "Same ending, new page.",
+        "The entries are starting to rhyme.",
+        "I'd say lightning doesn't strike twice, but here we are."
       ]
     },
     {
@@ -8025,7 +8267,10 @@
       "say": [
         "Careful. I've not forgotten {memory}.",
         "Before you start. Remember {memory}?",
-        "Go on then. But I'm watching, after {memory}."
+        "Go on then. But I'm watching, after {memory}.",
+        "Mind how you go. {memory} is still fresh ink.",
+        "A thought, before you start: {memory}.",
+        "The book says {memory}. The book has a point."
       ]
     },
     {
@@ -8066,7 +8311,9 @@
       },
       "say": [
         "Hold on. Look at this rock. Perfectly flat.",
-        "I'm taking this rock. It's a good rock and I'll hear nothing else."
+        "I'm taking this rock. It's a good rock and I'll hear nothing else.",
+        "One more rock for the collection. The collection is one rock.",
+        "Flat, grey, dependable. This rock has everything."
       ]
     },
     {
@@ -8107,7 +8354,9 @@
       },
       "say": [
         "Wait. This stick's interesting. I couldn't tell you why.",
-        "I'm keeping this stick. Don't look at me like that."
+        "I'm keeping this stick. Don't look at me like that.",
+        "A stick with character. You don't see many.",
+        "This stick has a future. I can't say what kind."
       ]
     },
     {
@@ -8148,7 +8397,9 @@
       },
       "say": [
         "That pebble's lucky. I can tell. Give me a second.",
-        "This one's lucky. I'm taking it and you can't stop me."
+        "This one's lucky. I'm taking it and you can't stop me.",
+        "Round, smooth, promising. In it goes.",
+        "A pebble like this doesn't come along twice."
       ]
     },
     {
@@ -8189,7 +8440,9 @@
       },
       "say": [
         "A feather. Right. In the pocket it goes.",
-        "Somebody dropped a feather here. Their loss."
+        "Somebody dropped a feather here. Their loss.",
+        "A feather in decent condition. The day improves.",
+        "Some bird has excellent taste. I'll take this."
       ]
     },
     {
@@ -8230,7 +8483,9 @@
       },
       "say": [
         "Somebody's dropped a nail. Bent, but a nail.",
-        "A bent nail. That'll come in useful one day."
+        "A bent nail. That'll come in useful one day.",
+        "One bent nail, slightly historic. Mine now.",
+        "You'd be amazed what a nail can fix. Not this one. Still."
       ]
     },
     {
@@ -8263,7 +8518,12 @@
       "say": [
         "I've still got {souvenir}, in case you were wondering.",
         "Still carrying {souvenir}. No regrets.",
-        "You've not asked about {souvenir} once."
+        "You've not asked about {souvenir} once.",
+        "Update: {souvenir} is safe and well.",
+        "Me and {souvenir}, still going strong.",
+        "{souvenir} has seen some things today.",
+        "For the curious: yes, I kept {souvenir}.",
+        "{souvenir} stays. This is not a negotiation."
       ]
     },
     {
@@ -8280,7 +8540,10 @@
       "say": [
         "I've lost {souvenir}. Somewhere back there.",
         "{souvenir}. Gone. I don't want to talk about it.",
-        "Right, well. That's {souvenir} gone, then."
+        "Right, well. That's {souvenir} gone, then.",
+        "A moment of silence for {souvenir}.",
+        "{souvenir} has left us. Somewhere muddy, probably.",
+        "Gone. {souvenir} deserved better."
       ]
     },
     {
@@ -8318,7 +8581,9 @@
       "say": [
         "I've got a feeling about this one. A good feeling.",
         "This is the one. I can feel it. Something big.",
-        "Mark this fight. Something's coming off it."
+        "Mark this fight. Something's coming off it.",
+        "Next drop's a good one. Put it in writing. I just did.",
+        "Call it instinct. This one pays."
       ]
     },
     {
@@ -8338,7 +8603,9 @@
         "Told you.",
         "I said. I did say.",
         "And that's why you listen to me.",
-        "Called it. Not a word of thanks, mind."
+        "Called it. Not a word of thanks, mind.",
+        "As predicted. The book never lies.",
+        "Right again. Try to look surprised."
       ]
     },
     {
@@ -8356,7 +8623,9 @@
         "I was wrong. Enjoy it, it doesn't happen often.",
         "Well. Ignore everything I said.",
         "That's not what I predicted. Moving on.",
-        "We'll not speak of this again."
+        "We'll not speak of this again.",
+        "The prediction business is harder than it looks.",
+        "Strike that entry. We move on."
       ]
     },
     {
@@ -8388,7 +8657,10 @@
         "You do know what time it is.",
         "It's the small hours. I'm not judging. I'm noticing.",
         "Everyone sensible's asleep. I'm nearly one of them.",
-        "The birds'll start up soon. Just so you know."
+        "The birds'll start up soon. Just so you know.",
+        "The candle's low. Metaphorically. Go to bed.",
+        "Night watchmen keep better hours than this.",
+        "The moon and I think you should stop soon."
       ]
     },
     {
@@ -8423,7 +8695,10 @@
       "say": [
         "Whatever this is, it'll still be here tomorrow.",
         "This late, and this long at it. Go to bed. I'll keep watch.",
-        "I'm not going to stop you. I am going to keep mentioning it."
+        "I'm not going to stop you. I am going to keep mentioning it.",
+        "Long day, late hour. The maths says rest.",
+        "Even the ink wants to sleep.",
+        "Tomorrow exists. I've seen the schedule."
       ]
     },
     {
@@ -8454,7 +8729,10 @@
       "say": [
         "Up early, or not been to bed? I won't ask.",
         "This is a respectable hour to be out. Barely.",
-        "Morning. Whichever side of it you're on."
+        "Morning. Whichever side of it you're on.",
+        "Morning light. Good for reading, better for walking.",
+        "The day's fresh. Let's not waste the legible hours.",
+        "Dawn patrol, is it? I'm awake. Mostly."
       ]
     },
     {
@@ -8484,7 +8762,10 @@
       },
       "say": [
         "Two hours. I checked. Twice.",
-        "We've been at this two hours. I've enjoyed most of it."
+        "We've been at this two hours. I've enjoyed most of it.",
+        "Two hours in. The entry just says 'continued'.",
+        "That's two hours. My feet filed the first complaint.",
+        "Hour two complete. You're consistent, I'll grant."
       ]
     },
     {
@@ -8514,7 +8795,10 @@
       "say": [
         "Five hours. Stand up, walk about. I'll still be here.",
         "That's most of a day, that is. Have you eaten?",
-        "Five hours together. I've seen marriages with less."
+        "Five hours together. I've seen marriages with less.",
+        "A full day's work by any honest measure. Twice over.",
+        "The sun has done most of an arc. We noticed neither.",
+        "Whole chapters have passed. Stretch, at least."
       ]
     },
     {
@@ -8546,7 +8830,10 @@
       "say": [
         "You've taken me everywhere I've asked. I do notice.",
         "Every time I've asked to go somewhere, we went. Not everyone would.",
-        "No complaints. That's not something I say lightly."
+        "No complaints. That's not something I say lightly.",
+        "For the record, you keep your promises.",
+        "Everywhere I ask to go, we end up going. It's noticed.",
+        "The ledger of favours runs well in your colour."
       ]
     },
     {
@@ -8583,7 +8870,10 @@
       "say": [
         "That's three times I've asked to go somewhere. I'm not sulking.",
         "I ask less than I used to. You'll have noticed that too, maybe.",
-        "Ask me again why I don't ask for much."
+        "Ask me again why I don't ask for much.",
+        "The requests column has a lot of blank replies.",
+        "I mention places. We stay put. It's a pattern.",
+        "Fine. The wanting was probably good for me."
       ]
     },
     {
@@ -8691,7 +8981,9 @@
         "I've been copying you a while now. You've not noticed.",
         "I'm joining in. You carry on.",
         "It looked easy when you were doing it.",
-        "I could do this. Given the tools. And the levels."
+        "I could do this. Given the tools. And the levels.",
+        "Caught. I regret only the timing.",
+        "In my defence, it looked fun. It was fun."
       ]
     },
     {
@@ -8730,7 +9022,10 @@
       "say": [
         "I've thought of a game. Come and talk to me.",
         "Talk to me a minute. I want to try something.",
-        "I'm bored. Come here, I've had an idea."
+        "I'm bored. Come here, I've had an idea.",
+        "Got a minute? I want to test something on you.",
+        "A quick game, if you're willing. Come talk to me.",
+        "Entertainment's available. Enquire within."
       ]
     },
     {
@@ -8771,7 +9066,10 @@
         "It was. How did you do that?",
         "Right first time. I'm slightly annoyed.",
         "There it is. You're better at this than me.",
-        "Correct. I had it there the whole time."
+        "Correct. I had it there the whole time.",
+        "Yes. Annoyingly, yes.",
+        "You read me like a page.",
+        "Correct again. I need better hands."
       ]
     },
     {
@@ -8800,7 +9098,10 @@
         "Wrong hand. It was the other one.",
         "No. Other one. Bad luck.",
         "Nothing in that one. Try again sometime.",
-        "Wrong. I won't gloat. I'm gloating."
+        "Wrong. I won't gloat. I'm gloating.",
+        "Empty. The other one, always the other one.",
+        "Not that hand. This delights me.",
+        "Missed. My secrets survive another day."
       ]
     },
     {
@@ -8819,7 +9120,9 @@
       "say": [
         "Suit yourself. They're both still full.",
         "Your loss. Probably.",
-        "Some other time, then."
+        "Some other time, then.",
+        "Fair. It wasn't much of a prize.",
+        "Declined. I'll play against myself. I usually win."
       ]
     },
     {
@@ -8845,7 +9148,9 @@
       "say": [
         "I hate it here, and I've got reasons. You were there for all of them.",
         "Nothing good has ever happened to us in this place. Nothing.",
-        "Every time we come here I think about leaving here."
+        "Every time we come here I think about leaving here.",
+        "The evidence against this place keeps arriving.",
+        "This spot owes us. It knows what it did."
       ]
     },
     {
@@ -8871,7 +9176,9 @@
       "say": [
         "Good things happen here. I've kept count, and they do.",
         "I like this place, and for once I can tell you exactly why.",
-        "We've had some luck here. Long may it continue."
+        "We've had some luck here. Long may it continue.",
+        "The tally for this place runs firmly in its favour.",
+        "This spot has earned its reputation with me. All of it good."
       ]
     },
     {
@@ -8900,7 +9207,10 @@
       "say": [
         "This is where {here}. I remember it.",
         "Same spot. This is where {here}.",
-        "Stand here a second. This is where {here}."
+        "Stand here a second. This is where {here}.",
+        "You may not remember. This is where {here}.",
+        "The map in my head marks this spot: {here}.",
+        "Here. Right here. This is where {here}."
       ]
     },
     {
@@ -8920,7 +9230,13 @@
         "Thank you. That's all I wanted.",
         "There. Was that so hard?",
         "Good. I'll stop going on about it.",
-        "You listened. I'm putting that in the book."
+        "You listened. I'm putting that in the book.",
+        "Noted: advice, followed. A banner day.",
+        "See? Painless.",
+        "And that's why I bother saying things.",
+        "Good. The book gets a tidy little tick.",
+        "Sensible. I'll not let it go to your head.",
+        "We work well when you do as I say. Coincidence, I'm sure."
       ]
     },
     {
@@ -8940,7 +9256,12 @@
         "Right. I'll stop saying it, then.",
         "I did mention it. For the record.",
         "No? Fine. It's your skin.",
-        "I'll just say it to myself next time."
+        "I'll just say it to myself next time.",
+        "Ignoring me is also a decision. Logged.",
+        "The margin note here just says 'told them'.",
+        "As you like. The page remembers.",
+        "One day the ledger of ignored advice gets read aloud.",
+        "Duly noted. Duly ignored. The usual."
       ]
     },
     {
@@ -8971,7 +9292,10 @@
       "say": [
         "Ten times I've told you something and ten times you've done as you liked.",
         "Stopped counting how often you ignore me. That's a lie. I know exactly.",
-        "You never listen. I've decided that's part of your charm."
+        "You never listen. I've decided that's part of your charm.",
+        "My advice does its best work as background noise.",
+        "The counsel column is write-only, apparently.",
+        "One day you'll take a suggestion and I'll faint."
       ]
     },
     {
@@ -9003,7 +9327,10 @@
       "say": [
         "You actually listen to me. Do you know how rare that is?",
         "I say something, you do it. We're a good team, whatever anyone says.",
-        "I've never had to tell you twice. Well. Rarely."
+        "I've never had to tell you twice. Well. Rarely.",
+        "Advice given, advice taken. The page is tidy.",
+        "You make being right feel almost useful.",
+        "Between us, we're nearly sensible."
       ]
     },
     {
@@ -9033,7 +9360,9 @@
       },
       "say": [
         "A week now, you and me. Settling in nicely.",
-        "Seven days I've been following you about. Nothing to report."
+        "Seven days I've been following you about. Nothing to report.",
+        "One week in. The notes are getting personal.",
+        "Seven days. Long enough to learn your walk."
       ]
     },
     {
@@ -9062,7 +9391,9 @@
       },
       "say": [
         "A month of this. I'd not have guessed it would stick.",
-        "{days} days. Not that I keep a calendar. I keep a calendar."
+        "{days} days. Not that I keep a calendar. I keep a calendar.",
+        "A month, give or take. Mostly give.",
+        "{days} days in. The early pages already read like history."
       ]
     },
     {
@@ -9091,7 +9422,9 @@
       },
       "say": [
         "{days} days I've known you. That's a proper stretch, that is.",
-        "Over a hundred days. I've seen you at your best and the other thing."
+        "Over a hundred days. I've seen you at your best and the other thing.",
+        "{days} days. The notebook needed a second volume.",
+        "A hundred days and change. I remember the first one clearly."
       ]
     },
     {
@@ -9121,7 +9454,9 @@
       "say": [
         "Over a year, this. {days} days. I looked it up.",
         "A year of walking behind you. I'd do it again.",
-        "{days} days. I'm not going anywhere, in case that was in doubt."
+        "{days} days. I'm not going anywhere, in case that was in doubt.",
+        "{days} days, and I could still tell you about day one.",
+        "A year and more. The spine's cracked on this volume."
       ]
     },
     {
@@ -9150,7 +9485,9 @@
       "say": [
         "It's today, you know. The day you first called me out. I remembered.",
         "A year ago today. Same face, better hat.",
-        "Happy anniversary. I'll not make a fuss. That was the fuss."
+        "Happy anniversary. I'll not make a fuss. That was the fuss.",
+        "One year since you first called me out. I wrote it down then, too.",
+        "Today's the day, a year on. No fuss. One line in the book."
       ]
     },
     {
@@ -9179,7 +9516,10 @@
       "say": [
         "All right, {nickname}.",
         "I've got you filed under {nickname}. It fits.",
-        "If anyone reads these notes, they'll know you as {nickname}."
+        "If anyone reads these notes, they'll know you as {nickname}.",
+        "It's official. The index says {nickname}.",
+        "History gets a say, and it says {nickname}.",
+        "{nickname}. Cross-referenced and everything."
       ]
     },
     {
@@ -9210,7 +9550,9 @@
       "say": [
         "Look at the state of you. You were in rags when we met.",
         "I remember what you turned up in. This is better.",
-        "You've come up in the world. I was there for the bottom of it."
+        "You've come up in the world. I was there for the bottom of it.",
+        "The kit's improved beyond recognition. The walk's the same.",
+        "Page one has you in bronze. I check it when you get grand."
       ]
     },
     {
@@ -9252,7 +9594,10 @@
       "say": [
         "Ten of them. Five minutes. I say you can't.",
         "Right, a wager. Ten kills before I lose interest. Go on.",
-        "Bet you can't manage ten in five minutes. Prove me wrong."
+        "Bet you can't manage ten in five minutes. Prove me wrong.",
+        "Small wager: ten before five minutes are up. Go.",
+        "I've set a mark. Ten of them, five minutes. Impress me.",
+        "Care to make this interesting? Ten kills. Clock's running."
       ]
     },
     {
@@ -9271,7 +9616,10 @@
       "say": [
         "You did it. {challenge}, and with time to spare.",
         "All right, that was impressive. I'll say it once.",
-        "Done, and I'm out of pocket. Worth it."
+        "Done, and I'm out of pocket. Worth it.",
+        "Done and done. I'll adjust my expectations upward.",
+        "Well. That's me told.",
+        "Paid in full. The book records a win."
       ]
     },
     {
@@ -9286,7 +9634,10 @@
       "say": [
         "Time. You didn't get there.",
         "That's five minutes. I win, and I'm insufferable about it.",
-        "Time, I'm afraid. Closer than I expected, mind."
+        "Time, I'm afraid. Closer than I expected, mind.",
+        "Short of the mark. The mark sends its regards.",
+        "Time's up. Dignity intact, wager lost.",
+        "Not this time. The book is gentle about it."
       ]
     },
     {
@@ -9304,7 +9655,11 @@
         "Sorry. Moving.",
         "Right, that's me in the way again.",
         "Excuse me. Coming through. Myself.",
-        "I was standing there. I'm aware."
+        "I was standing there. I'm aware.",
+        "My fault. Shifting.",
+        "And there I am, underfoot again.",
+        "You walk, I dodge. That's the system.",
+        "One of us has to give way. It's me. It's always me."
       ]
     },
     {
@@ -9331,7 +9686,10 @@
         "You've gone, haven't you.",
         "I'll talk amongst myself, then.",
         "Kettle on, is it? Take your time.",
-        "Nobody's driving. I'll keep an eye on things."
+        "Nobody's driving. I'll keep an eye on things.",
+        "Off making tea, I expect. Reasonable.",
+        "Gone quiet up there. I'll mind the shop.",
+        "I'll use the time to tidy my notes. They're immaculate."
       ]
     }
   ]
