@@ -2738,6 +2738,11 @@
     },
     {
       "id": "first-page",
+      "prop": {
+        "item": 10485,
+        "pose": 5354,
+        "ticks": 12
+      },
       "note": "Ten minutes into the first day. Scheduled rather than left to a gate that may not fire for hours, because an early characterful moment is the thing the first session is missing. Also the first hint that the notebook is not really about the scenery - and it never explains itself.",
       "group": "misc",
       "priority": 72,
@@ -6612,6 +6617,11 @@
     },
     {
       "id": "kill-tally-hundred",
+      "prop": {
+        "item": 10485,
+        "pose": 5354,
+        "ticks": 8
+      },
       "note": "The bigger milestone, at every hundredth of one npc. Higher priority than kill-tally so the round number wins when both come up together.",
       "group": "combat",
       "priority": 62,
@@ -8148,6 +8158,11 @@
     },
     {
       "id": "memory-death",
+      "prop": {
+        "item": 10485,
+        "pose": 5354,
+        "ticks": 8
+      },
       "note": "The obvious one. Filed on every death, so the count is what makes the recall land: once is bad luck, four times is a habit.",
       "group": "memory",
       "priority": 30,
@@ -8172,6 +8187,11 @@
     },
     {
       "id": "memory-big-drop",
+      "prop": {
+        "item": 10485,
+        "pose": 5354,
+        "ticks": 8
+      },
       "note": "Filed on a drop big enough to still be talking about an hour later. Above the loot-celebrate threshold so the celebration wins the event and this one only files - two lines about one drop is one too many, and the recall is the part that matters here.",
       "group": "memory",
       "priority": 20,
@@ -8194,6 +8214,11 @@
     },
     {
       "id": "memory-boss",
+      "prop": {
+        "item": 10485,
+        "pose": 5354,
+        "ticks": 8
+      },
       "note": "Filed when something with a combat level in three figures stops moving. Low priority so the celebration rules win the kill.",
       "group": "memory",
       "priority": 20,

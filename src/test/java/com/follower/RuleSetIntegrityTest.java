@@ -347,6 +347,55 @@ public class RuleSetIntegrityTest
 			+ String.join("\n  ", wrong), wrong.isEmpty());
 	}
 
+	/**
+	 * Every authored flourish is playable as written.
+	 *
+	 * <p>The prop is equipment and the pose is a loop held as an override;
+	 * neither is checked at runtime beyond a warning log, so a typo here is a
+	 * gesture that silently never happens. The item must be one the wearable
+	 * dump knows, the pose must be present, and the hold must be long enough
+	 * to survive the two-tick settle and short enough not to plant the
+	 * follower for half a minute. A prop rule must not also carry an
+	 * animation - the flourish owns the follower's body for its duration.
+	 */
+	@Test
+	public void everyFlourishIsPlayableAsWritten() throws IOException
+	{
+		Harness h = new Harness(folder.newFolder().toPath());
+		List<String> broken = new ArrayList<>();
+		for (SpeechRule rule : h.loader.getRules())
+		{
+			if (rule.prop == null)
+			{
+				continue;
+			}
+			if (rule.prop.item == null || rule.prop.item <= 0)
+			{
+				broken.add(rule.id + ": no prop item");
+			}
+			if (rule.prop.pose == null || rule.prop.pose <= 0)
+			{
+				broken.add(rule.id + ": no prop pose");
+			}
+			int ticks = rule.prop.ticks == null ? 8 : rule.prop.ticks;
+			if (ticks < 3 || ticks > 25)
+			{
+				broken.add(rule.id + ": hold of " + ticks + " ticks is outside 3..25");
+			}
+			if (rule.hasAnimationAction())
+			{
+				broken.add(rule.id + ": carries both a prop and an animation");
+			}
+			if (!rule.hasSpeech())
+			{
+				broken.add(rule.id + ": a silent flourish is a follower stopping"
+					+ " for no visible reason");
+			}
+		}
+		assertTrue("flourishes that cannot play as written:\n  "
+			+ String.join("\n  ", broken), broken.isEmpty());
+	}
+
 	private static String bundledText(String resource) throws IOException
 	{
 		try (InputStream in = RuleSetIntegrityTest.class.getResourceAsStream(resource))

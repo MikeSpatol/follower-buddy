@@ -273,6 +273,9 @@ public class FollowerPlugin extends Plugin
 
 	private com.follower.follower.ErrandController errands;
 
+	/** The rule-level writing gesture; null until startUp builds it. */
+	private com.follower.follower.PropFlourish flourish;
+
 	/** Stands the follower clear of a fight; see SpectateController. */
 	private com.follower.follower.SpectateController spectate;
 
@@ -456,21 +459,19 @@ public class FollowerPlugin extends Plugin
 		// Anything the dump files didn't provide is parsed from the client's
 		// own cache; retried from the login states until the indexes exist.
 		clientThread.invokeLater(this::ensureCatalogues);
-		errands = new com.follower.follower.ErrandController(client, follower, config,
-			speechEngine::dispatch, spotAnimRepository,
-			() -> dialog.isOpen() || follower.isNpcSlaved(),
+		// The same transient-prop path the dev commands use: overlaid on the
+		// outfit at compose time, never persisted. Shared by the errand and
+		// the rule-level flourish; both run on the client thread.
+		com.follower.follower.ErrandController.Hands hands =
 			new com.follower.follower.ErrandController.Hands()
 			{
-				// The same transient-prop path the dev commands use: overlaid
-				// on the outfit at compose time, never persisted. The errand
-				// runs on the client thread already.
 				@Override
 				public void hold(int itemId)
 				{
 					KitType slot = resolveSlot(itemId);
 					if (slot == null)
 					{
-						log.warn("Errand prop {} has no wearable slot", itemId);
+						log.warn("Prop {} has no wearable slot", itemId);
 						return;
 					}
 					propSlot = slot;
@@ -491,7 +492,11 @@ public class FollowerPlugin extends Plugin
 					propItemId = 0;
 					rebuildFollower();
 				}
-			});
+			};
+		errands = new com.follower.follower.ErrandController(client, follower, config,
+			speechEngine::dispatch, spotAnimRepository,
+			() -> dialog.isOpen() || follower.isNpcSlaved(), hands);
+		flourish = new com.follower.follower.PropFlourish(follower, hands);
 		spectate = new com.follower.follower.SpectateController(client, follower, config,
 			speechEngine.getContext(), spotAnimRepository, speechEngine::dispatch,
 			this::setSpectateDisarmed);
@@ -540,6 +545,10 @@ public class FollowerPlugin extends Plugin
 		overlay.clear();
 		speechQueue.clear();
 		speakingUntilMs = 0;
+		if (flourish != null)
+		{
+			flourish.abort();
+		}
 
 		if (navButton != null)
 		{
@@ -2426,6 +2435,11 @@ public class FollowerPlugin extends Plugin
 		if (errands != null)
 		{
 			errands.reset();
+		}
+		if (flourish != null)
+		{
+			// Mid-gesture when the scene went: the scroll must not survive it.
+			flourish.abort();
 		}
 		captureFallback.abort();
 		follower.despawn();
@@ -4577,6 +4591,10 @@ public class FollowerPlugin extends Plugin
 		{
 			errands.tick();
 		}
+		if (flourish != null)
+		{
+			flourish.tick();
+		}
 
 		// After errands, so an errand in progress owns the feet: a follower
 		// halfway to a bank should finish the trip rather than be yanked
@@ -6623,6 +6641,21 @@ public class FollowerPlugin extends Plugin
 			// - exactly as a real player's overhead words mirror into chat.
 			clientThread.invoke(() -> client.addChatMessage(
 				ChatMessageType.PUBLICCHAT, config.followerName(), text, null));
+		}
+
+		// The writing flourish: the scroll comes out as the line is said, so
+		// the claim and the act happen together. Best effort - mid-errand or
+		// otherwise spoken for, the words stand alone, which still reads fine;
+		// the gesture without the words never happens the other way round.
+		if (rule != null && rule.prop != null && flourish != null
+			&& !text.isEmpty()
+			&& follower.isSpawned() && !follower.isStaying()
+			&& !follower.isNpcSlaved() && !errands.isBusy() && !dialog.isOpen())
+		{
+			clientThread.invoke(() -> flourish.start(
+				rule.prop.item == null ? 0 : rule.prop.item,
+				rule.prop.pose == null ? 0 : rule.prop.pose,
+				rule.prop.ticks == null ? 8 : rule.prop.ticks));
 		}
 
 		// A held emote takes the pose path instead of playing anything: the

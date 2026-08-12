@@ -208,6 +208,32 @@ public class SpeechRule
 	public Boolean once;
 
 	/**
+	 * A held prop and a pose to play over it, for the length of the line's
+	 * moment: the writing flourish.
+	 *
+	 * <p>{@code {"item": 10485, "pose": 5354, "ticks": 8}} - the follower
+	 * stops, the scroll comes out, the writing pose holds for the ticks given,
+	 * and everything goes back where it was. For the lines that CLAIM the
+	 * notebook - "That's going in the book" - so the claim and the act finally
+	 * happen together.
+	 *
+	 * <p>The item must be wearable (the prop is equipment, transiently) and
+	 * the pose id must be a LOOP, because it is held as a pose override. Both
+	 * halves of the shipped pairing were verified in game before being written
+	 * down here; see docs/prop-and-animation-catalogue.md before inventing new
+	 * ones. Best effort by design: if the follower is mid-errand or otherwise
+	 * spoken for, the line still says its words and the gesture is dropped.
+	 */
+	public Flourish prop;
+
+	public static final class Flourish
+	{
+		public Integer item;
+		public Integer pose;
+		public Integer ticks;
+	}
+
+	/**
 	 * Somewhere the follower would like to go, expressed as part of saying so.
 	 *
 	 * <p>{@code {"region": 10553, "label": "the fishing guild", "minutes": 20}}.
