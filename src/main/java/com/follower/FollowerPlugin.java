@@ -2202,15 +2202,30 @@ public class FollowerPlugin extends Plugin
 	private KitType resolveSlot(int itemId)
 	{
 		net.runelite.client.game.ItemStats stats = itemManager.getItemStats(itemId);
-		if (stats == null || stats.getEquipment() == null)
+		if (stats != null && stats.getEquipment() != null)
 		{
-			return null;
+			return slotFromEquipmentIndex(stats.getEquipment().getSlot());
 		}
 
+		// The stats database only knows items with combat stats. Purely
+		// cosmetic wearables - a plain Scroll, the Book of portraiture - have
+		// a worn model and a wear position in the cache but no stats row, so
+		// they used to report as "not wearable" while rendering perfectly
+		// well. Our own model dump carries the cache's wear position, and it
+		// is the same dump the renderer builds from: if the item is in there,
+		// the follower can wear it, by construction.
+		ModelRepository.Entry entry = modelRepository.item(itemId);
+		return entry != null && entry.wp1 != null
+			? slotFromEquipmentIndex(entry.wp1)
+			: null;
+	}
+
+	private static KitType slotFromEquipmentIndex(int slot)
+	{
 		// Equipment container indices are NOT contiguous and do NOT line up with
 		// KitType ordinals (6, 8 and 11 are kit-only slots with no equippable item),
 		// so map them explicitly rather than relying on ordinal coincidence.
-		switch (stats.getEquipment().getSlot())
+		switch (slot)
 		{
 			case 0:
 				return KitType.HEAD;
