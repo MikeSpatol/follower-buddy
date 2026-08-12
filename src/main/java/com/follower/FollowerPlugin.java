@@ -5249,7 +5249,7 @@ public class FollowerPlugin extends Plugin
 		"animinfo", "animtrace", "errandscan", "cachecheck", "stanceaudit",
 		"watch", "stance", "gfx", "spectate", "shield", "centre", "center", "loot",
 		"scan", "heights", "mood", "chatwatch", "fire", "want", "transcript",
-		"thieftargets", "sniffanims", "finditem", "prop"));
+		"thieftargets", "sniffanims", "finditem", "prop", "propoffset"));
 
 	/**
 	 * Notices when you have clicked the tile the follower is standing on.
@@ -5818,6 +5818,8 @@ public class FollowerPlugin extends Plugin
 					{
 						propSlot = null;
 						propItemId = 0;
+						// A nudge belongs to the item it was eyeballed for.
+						appearanceComposer.setItemAdjustment(-1, 0, 0, 0);
 						clientThread.invoke(this::rebuildFollower);
 						sendStatus("Prop cleared.");
 						break;
@@ -5833,6 +5835,7 @@ public class FollowerPlugin extends Plugin
 						}
 						propSlot = slot;
 						propItemId = itemId;
+						appearanceComposer.setItemAdjustment(-1, 0, 0, 0);
 						rebuildFollower();
 						String name = modelRepository.itemName(itemId);
 						sendStatus("Propped " + (name == null ? "item " + itemId : name)
@@ -5844,6 +5847,43 @@ public class FollowerPlugin extends Plugin
 				catch (NumberFormatException e)
 				{
 					sendStatus("Usage: ::follower prop <itemId>  (0 to clear)");
+				}
+				break;
+			}
+
+			case "propoffset":
+			{
+				// The nudging half of the prop workflow. The item model's place
+				// on the body is baked into its vertices and authored for a
+				// different pose, so a prop that sits wrong under the reading
+				// animation is corrected by eye: nudge, look, nudge again.
+				// y is vertical and NEGATIVE is up; a tile is 128 units, so
+				// useful steps are 4 to 16.
+				if (propSlot == null)
+				{
+					sendStatus("No prop is held. ::follower prop <itemId> first.");
+					break;
+				}
+				if (args.length < 4)
+				{
+					sendStatus("Usage: ::follower propoffset <x> <y> <z>   (0 0 0"
+						+ " to reset; negative y is up; currently "
+						+ appearanceComposer.describeItemAdjustment() + ")");
+					break;
+				}
+				try
+				{
+					float x = Float.parseFloat(args[1]);
+					float y = Float.parseFloat(args[2]);
+					float z = Float.parseFloat(args[3]);
+					appearanceComposer.setItemAdjustment(propItemId, x, y, z);
+					clientThread.invoke(this::rebuildFollower);
+					sendStatus("Prop nudged: " + appearanceComposer.describeItemAdjustment()
+						+ ". Keep the pose running and adjust until it sits right.");
+				}
+				catch (NumberFormatException e)
+				{
+					sendStatus("Usage: ::follower propoffset <x> <y> <z>");
 				}
 				break;
 			}
@@ -6370,7 +6410,7 @@ public class FollowerPlugin extends Plugin
 						+ "wraplerp | wrapauto | wrapearly | pose <id> | animinfo | "
 						+ "animtrace | errandscan | cachecheck | stanceaudit | "
 						+ "mood [0-100] | chatwatch | sniffanims | finditem <name> | "
-						+ "prop <itemId> | fire <rule-id> | want");
+						+ "prop <itemId> | propoffset <x y z> | fire <rule-id> | want");
 				}
 			// ::follower interp was removed: the interpolation filter is keyed on
 			// animation id, so it could not be changed for the follower without

@@ -69,6 +69,40 @@ public class AppearanceComposer
 		return new java.util.LinkedHashMap<>(exactPairs);
 	}
 
+	/**
+	 * A vertex nudge for one item, applied before the merge.
+	 *
+	 * <p>A worn model's place on the body is baked into its vertices, authored
+	 * for how the ORIGINAL context holds it - a god book sits where a wielded
+	 * god book sits, not where the reading animation's hands meet. There is no
+	 * transform to read back and correct; the only sensor for "it looks wrong"
+	 * is an eye, so the values here arrive by nudging in game until it looks
+	 * right ({@code ::follower propoffset}).
+	 *
+	 * <p>Model space: y is vertical and NEGATIVE is up; x and z are the
+	 * horizontal plane, relative to the model's facing. A tile is 128 units,
+	 * so hand-scale corrections are single digits to low tens.
+	 */
+	private int adjustItemId = -1;
+	private float adjustX;
+	private float adjustY;
+	private float adjustZ;
+
+	public void setItemAdjustment(int itemId, float x, float y, float z)
+	{
+		adjustItemId = itemId;
+		adjustX = x;
+		adjustY = y;
+		adjustZ = z;
+	}
+
+	public String describeItemAdjustment()
+	{
+		return adjustItemId < 0 ? "none"
+			: "item " + adjustItemId + " by x=" + adjustX
+				+ " y=" + adjustY + " z=" + adjustZ;
+	}
+
 	@Inject
 	public AppearanceComposer(Client client, ModelRepository repository)
 	{
@@ -122,7 +156,23 @@ public class AppearanceComposer
 
 			// Parts stay in their authored source colours; body colouring happens
 			// post-merge via the palette tables, exactly as the client does it.
+			int before = parts.size();
 			addPart(parts, entry, resolved.getGender());
+
+			// The nudge, applied to every model this item contributed. After
+			// the colour clones and before the merge: a merged model shares
+			// nothing back, but the loaded parts share arrays with every other
+			// caller of loadModelData, hence cloneVertices first.
+			if (item && id == adjustItemId
+				&& (adjustX != 0 || adjustY != 0 || adjustZ != 0))
+			{
+				for (int i = before; i < parts.size(); i++)
+				{
+					ModelData nudged = parts.get(i).cloneVertices();
+					translate(nudged, adjustX, adjustY, adjustZ);
+					parts.set(i, nudged);
+				}
+			}
 		}
 
 		if (!missing.isEmpty())
@@ -264,6 +314,20 @@ public class AppearanceComposer
 			}
 
 			parts.add(data);
+		}
+	}
+
+	/** ModelData has no translate; the mesh exposes its vertex arrays instead. */
+	private static void translate(ModelData data, float dx, float dy, float dz)
+	{
+		float[] xs = data.getVerticesX();
+		float[] ys = data.getVerticesY();
+		float[] zs = data.getVerticesZ();
+		for (int v = 0; v < data.getVerticesCount(); v++)
+		{
+			xs[v] += dx;
+			ys[v] += dy;
+			zs[v] += dz;
 		}
 	}
 
