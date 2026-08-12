@@ -1,0 +1,6334 @@
+# id	name	slot  (from equipment-models.json, cache revision 2026-08-04)
+35	Excalibur	weapon
+48	Longbow (u)	?
+50	Shortbow (u)	?
+54	Oak shortbow (u)	?
+56	Oak longbow (u)	?
+58	Willow longbow (u)	?
+60	Willow shortbow (u)	?
+62	Maple longbow (u)	?
+64	Maple shortbow (u)	?
+66	Yew longbow (u)	?
+68	Yew shortbow (u)	?
+70	Magic longbow (u)	?
+72	Magic shortbow (u)	?
+74	Khazard helmet	head
+75	Khazard armour	torso
+84	Staff of armadyl	weapon
+86	Pendant of lucien	amulet
+87	Armadyl pendant	amulet
+88	Boots of lightness	boots
+89	Boots of lightness	boots
+229	Vial	?
+272	Fish food	shield
+278	Cattleprod	weapon
+284	Plague jacket	torso
+285	Plague trousers	legs
+295	Glarial's amulet	amulet
+301	Lobster pot	?
+303	Small fishing net	?
+305	Big fishing net	?
+307	Fishing rod	?
+309	Fly fishing rod	?
+311	Harpoon	?
+314	Feather	?
+411	Oyster pearl	shield
+413	Oyster pearls	shield
+421	Lathas' amulet	amulet
+426	Priest gown	torso
+428	Priest gown	legs
+430	Medical gown	torso
+538	Druid's robe	legs
+540	Druid's robe top	torso
+542	Monk's robe	legs
+544	Monk's robe top	torso
+546	Shade robe top	torso
+548	Shade robe	legs
+552	Ghostspeak amulet	amulet
+577	Blue wizard robe	torso
+579	Blue wizard hat	head
+581	Black robe	torso
+583	Bailing bucket	?
+585	Bailing bucket	?
+589	Gnome amulet	amulet
+590	Tinderbox	?
+616	Beads of the dead	amulet
+626	Pink boots	boots
+628	Green boots	boots
+630	Blue boots	boots
+632	Cream boots	boots
+634	Turquoise boots	boots
+636	Pink robe top	torso
+638	Green robe top	torso
+640	Blue robe top	torso
+642	Cream robe top	torso
+644	Turquoise robe top	torso
+646	Pink robe bottoms	legs
+648	Green robe bottoms	legs
+650	Blue robe bottoms	legs
+652	Cream robe bottoms	legs
+654	Turquoise robe bottoms	legs
+656	Pink hat	head
+658	Green hat	head
+660	Blue hat	head
+662	Cream hat	head
+664	Turquoise hat	head
+667	Blurite sword	weapon
+675	Rock pick	weapon
+677	Panning tray	?
+717	Scrawled note	?
+718	A scribbled note	?
+719	Scrumpled note	?
+727	Hollow reed	?
+728	Hollow reed	?
+731	Enchanted vial	?
+732	Holy water	weapon
+740	Blue hat	head
+746	Dark dagger	weapon
+747	Glowing dagger	weapon
+751	Gnomeball	weapon
+767	Phoenix crossbow	weapon
+772	Dramen staff	weapon
+774	'perfect' necklace	amulet
+775	Cooking gauntlets	hands
+776	Goldsmith gauntlets	hands
+777	Chaos gauntlets	hands
+778	Steel gauntlets	hands
+796	null	?
+797	null	?
+798	null	?
+800	Bronze thrownaxe	weapon
+801	Iron thrownaxe	weapon
+802	Steel thrownaxe	weapon
+803	Mithril thrownaxe	weapon
+804	Adamant thrownaxe	weapon
+805	Rune thrownaxe	weapon
+806	Bronze dart	weapon
+807	Iron dart	weapon
+808	Steel dart	weapon
+809	Mithril dart	weapon
+810	Adamant dart	weapon
+811	Rune dart	weapon
+812	Bronze dart(p)	weapon
+813	Iron dart (p)	weapon
+814	Steel dart(p)	weapon
+815	Mithril dart(p)	weapon
+816	Adamant dart(p)	weapon
+817	Rune dart(p)	weapon
+818	Poisoned dart(p)	weapon
+837	Crossbow	weapon
+839	Longbow	weapon
+841	Shortbow	weapon
+843	Oak shortbow	weapon
+845	Oak longbow	weapon
+847	Willow longbow	weapon
+849	Willow shortbow	weapon
+851	Maple longbow	weapon
+853	Maple shortbow	weapon
+855	Yew longbow	weapon
+857	Yew shortbow	weapon
+859	Magic longbow	weapon
+861	Magic shortbow	weapon
+863	Iron knife	weapon
+864	Bronze knife	weapon
+865	Steel knife	weapon
+866	Mithril knife	weapon
+867	Adamant knife	weapon
+868	Rune knife	weapon
+869	Black knife	weapon
+870	Bronze knife(p)	weapon
+871	Iron knife(p)	weapon
+872	Steel knife(p)	weapon
+873	Mithril knife(p)	weapon
+874	Black knife(p)	weapon
+875	Adamant knife(p)	weapon
+876	Rune knife(p)	weapon
+945	Throwing rope	weapon
+946	Knife	?
+952	Spade	?
+954	Rope	?
+970	Papyrus	?
+972	Papyrus	?
+973	Charcoal	?
+975	Machete	weapon
+1005	White apron	torso
+1007	Red cape	cape
+1009	Brass necklace	amulet
+1011	Blue skirt	legs
+1013	Pink skirt	legs
+1015	Black skirt	legs
+1017	Wizard hat	head
+1019	Black cape	cape
+1021	Blue cape	cape
+1023	Yellow cape	cape
+1025	Right eye patch	head
+1027	Green cape	cape
+1029	Purple cape	cape
+1031	Orange cape	cape
+1033	Zamorak monk bottom	legs
+1035	Zamorak monk top	torso
+1037	Bunny ears	head
+1038	Red partyhat	head
+1040	Yellow partyhat	head
+1042	Blue partyhat	head
+1044	Green partyhat	head
+1046	Purple partyhat	head
+1048	White partyhat	head
+1050	Santa hat	head
+1052	Cape of legends	cape
+1053	Green halloween mask	head
+1055	Blue halloween mask	head
+1057	Red halloween mask	head
+1059	Leather gloves	hands
+1061	Leather boots	boots
+1063	Leather vambraces	hands
+1065	Green d'hide vambraces	hands
+1067	Iron platelegs	legs
+1069	Steel platelegs	legs
+1071	Mithril platelegs	legs
+1073	Adamant platelegs	legs
+1075	Bronze platelegs	legs
+1077	Black platelegs	legs
+1079	Rune platelegs	legs
+1081	Iron plateskirt	legs
+1083	Steel plateskirt	legs
+1085	Mithril plateskirt	legs
+1087	Bronze plateskirt	legs
+1089	Black plateskirt	legs
+1091	Adamant plateskirt	legs
+1093	Rune plateskirt	legs
+1095	Leather chaps	legs
+1097	Studded chaps	legs
+1099	Green d'hide chaps	legs
+1101	Iron chainbody	torso
+1103	Bronze chainbody	torso
+1105	Steel chainbody	torso
+1107	Black chainbody	torso
+1109	Mithril chainbody	torso
+1111	Adamant chainbody	torso
+1113	Rune chainbody	torso
+1115	Iron platebody	torso
+1117	Bronze platebody	torso
+1119	Steel platebody	torso
+1121	Mithril platebody	torso
+1123	Adamant platebody	torso
+1125	Black platebody	torso
+1127	Rune platebody	torso
+1129	Leather body	torso
+1131	Hardleather body	torso
+1133	Studded body	torso
+1135	Green d'hide body	torso
+1137	Iron med helm	head
+1139	Bronze med helm	head
+1141	Steel med helm	head
+1143	Mithril med helm	head
+1145	Adamant med helm	head
+1147	Rune med helm	head
+1149	Dragon med helm	head
+1151	Black med helm	head
+1153	Iron full helm	head
+1155	Bronze full helm	head
+1157	Steel full helm	head
+1159	Mithril full helm	head
+1161	Adamant full helm	head
+1163	Rune full helm	head
+1165	Black full helm	head
+1167	Leather cowl	head
+1169	Coif	head
+1171	Wooden shield	shield
+1173	Bronze sq shield	shield
+1175	Iron sq shield	shield
+1177	Steel sq shield	shield
+1179	Black sq shield	shield
+1181	Mithril sq shield	shield
+1183	Adamant sq shield	shield
+1185	Rune sq shield	shield
+1187	Dragon sq shield	shield
+1189	Bronze kiteshield	shield
+1191	Iron kiteshield	shield
+1193	Steel kiteshield	shield
+1195	Black kiteshield	shield
+1197	Mithril kiteshield	shield
+1199	Adamant kiteshield	shield
+1201	Rune kiteshield	shield
+1203	Iron dagger	weapon
+1205	Bronze dagger	weapon
+1207	Steel dagger	weapon
+1209	Mithril dagger	weapon
+1211	Adamant dagger	weapon
+1213	Rune dagger	weapon
+1215	Dragon dagger	weapon
+1217	Black dagger	weapon
+1219	Iron dagger(p)	weapon
+1221	Bronze dagger(p)	weapon
+1223	Steel dagger(p)	weapon
+1225	Mithril dagger(p)	weapon
+1227	Adamant dagger(p)	weapon
+1229	Rune dagger(p)	weapon
+1231	Dragon dagger(p)	weapon
+1233	Black dagger(p)	weapon
+1235	Poisoned dagger(p)	weapon
+1237	Bronze spear	weapon
+1239	Iron spear	weapon
+1241	Steel spear	weapon
+1243	Mithril spear	weapon
+1245	Adamant spear	weapon
+1247	Rune spear	weapon
+1249	Dragon spear	weapon
+1251	Bronze spear(p)	weapon
+1253	Iron spear(p)	weapon
+1255	Steel spear(p)	weapon
+1257	Mithril spear(p)	weapon
+1259	Adamant spear(p)	weapon
+1261	Rune spear(p)	weapon
+1263	Dragon spear(p)	weapon
+1265	Bronze pickaxe	weapon
+1267	Iron pickaxe	weapon
+1269	Steel pickaxe	weapon
+1271	Adamant pickaxe	weapon
+1273	Mithril pickaxe	weapon
+1275	Rune pickaxe	weapon
+1277	Bronze sword	weapon
+1279	Iron sword	weapon
+1281	Steel sword	weapon
+1283	Black sword	weapon
+1285	Mithril sword	weapon
+1287	Adamant sword	weapon
+1289	Rune sword	weapon
+1291	Bronze longsword	weapon
+1293	Iron longsword	weapon
+1295	Steel longsword	weapon
+1297	Black longsword	weapon
+1299	Mithril longsword	weapon
+1301	Adamant longsword	weapon
+1303	Rune longsword	weapon
+1305	Dragon longsword	weapon
+1307	Bronze 2h sword	weapon
+1309	Iron 2h sword	weapon
+1311	Steel 2h sword	weapon
+1313	Black 2h sword	weapon
+1315	Mithril 2h sword	weapon
+1317	Adamant 2h sword	weapon
+1319	Rune 2h sword	weapon
+1321	Bronze scimitar	weapon
+1323	Iron scimitar	weapon
+1325	Steel scimitar	weapon
+1327	Black scimitar	weapon
+1329	Mithril scimitar	weapon
+1331	Adamant scimitar	weapon
+1333	Rune scimitar	weapon
+1335	Iron warhammer	weapon
+1337	Bronze warhammer	weapon
+1339	Steel warhammer	weapon
+1341	Black warhammer	weapon
+1343	Mithril warhammer	weapon
+1345	Adamant warhammer	weapon
+1347	Rune warhammer	weapon
+1349	Iron axe	weapon
+1351	Bronze axe	weapon
+1353	Steel axe	weapon
+1355	Mithril axe	weapon
+1357	Adamant axe	weapon
+1359	Rune axe	weapon
+1361	Black axe	weapon
+1363	Iron battleaxe	weapon
+1365	Steel battleaxe	weapon
+1367	Black battleaxe	weapon
+1369	Mithril battleaxe	weapon
+1371	Adamant battleaxe	weapon
+1373	Rune battleaxe	weapon
+1375	Bronze battleaxe	weapon
+1377	Dragon battleaxe	weapon
+1379	Staff	weapon
+1381	Staff of air	weapon
+1383	Staff of water	weapon
+1385	Staff of earth	weapon
+1387	Staff of fire	weapon
+1389	Magic staff	weapon
+1391	Battlestaff	weapon
+1393	Fire battlestaff	weapon
+1395	Water battlestaff	weapon
+1397	Air battlestaff	weapon
+1399	Earth battlestaff	weapon
+1401	Mystic fire staff	weapon
+1403	Mystic water staff	weapon
+1405	Mystic air staff	weapon
+1407	Mystic earth staff	weapon
+1409	Iban's staff	weapon
+1419	Scythe	weapon
+1420	Iron mace	weapon
+1422	Bronze mace	weapon
+1424	Steel mace	weapon
+1426	Black mace	weapon
+1428	Mithril mace	weapon
+1430	Adamant mace	weapon
+1432	Rune mace	weapon
+1434	Dragon mace	weapon
+1478	Amulet of accuracy	amulet
+1495	Klank's gauntlets	hands
+1506	Gas mask	head
+1511	Logs	?
+1540	Anti-dragon shield	shield
+1575	Cat training medal	amulet
+1580	Ice gloves	hands
+1601	Diamond	?
+1603	Ruby	?
+1605	Emerald	?
+1607	Sapphire	?
+1609	Opal	?
+1611	Jade	?
+1613	Red topaz	?
+1615	Dragonstone	?
+1654	Gold necklace	amulet
+1656	Sapphire necklace	amulet
+1658	Emerald necklace	amulet
+1660	Ruby necklace	amulet
+1662	Diamond necklace	amulet
+1664	Dragon necklace	amulet
+1692	Gold amulet	amulet
+1694	Sapphire amulet	amulet
+1696	Emerald amulet	amulet
+1698	Ruby amulet	amulet
+1700	Diamond amulet	amulet
+1702	Dragonstone amulet	amulet
+1704	Amulet of glory	amulet
+1706	Amulet of glory(1)	amulet
+1708	Amulet of glory(2)	amulet
+1710	Amulet of glory(3)	amulet
+1712	Amulet of glory(4)	amulet
+1716	Unblessed symbol	amulet
+1718	Holy symbol	amulet
+1722	Unpowered symbol	amulet
+1724	Unholy symbol	amulet
+1725	Amulet of strength	amulet
+1727	Amulet of magic	amulet
+1729	Amulet of defence	amulet
+1731	Amulet of power	amulet
+1733	Needle	?
+1735	Shears	?
+1741	Leather	?
+1757	Brown apron	torso
+1761	Soft clay	?
+1785	Glassblowing pipe	?
+1796	Silver necklace	amulet
+1797	Silver necklace	amulet
+1833	Desert shirt	torso
+1835	Desert robe	legs
+1837	Desert boots	boots
+1844	Slave shirt	torso
+1845	Slave robe	legs
+1846	Slave boots	boots
+1917	Beer	weapon
+1919	Beer glass	?
+1925	Bucket	?
+1931	Pot	?
+1949	Chef's hat	head
+1963	Banana	weapon
+1973	Chocolate bar	shield
+2347	Hammer	?
+2395	Magic ogre potion	weapon
+2402	Silverlight	weapon
+2405	Carnillean armour	torso
+2406	Hazeel's mark	amulet
+2412	Saradomin cape	cape
+2413	Guthix cape	cape
+2414	Zamorak cape	cape
+2415	Saradomin staff	weapon
+2416	Guthix staff	weapon
+2417	Zamorak staff	weapon
+2422	Blue partyhat	head
+2460	Assorted flowers	weapon
+2462	Red flowers	weapon
+2464	Blue flowers	weapon
+2466	Yellow flowers	weapon
+2468	Purple flowers	weapon
+2470	Orange flowers	weapon
+2472	Mixed flowers	weapon
+2474	White flowers	weapon
+2476	Black flowers	weapon
+2480	null	?
+2487	Blue d'hide vambraces	hands
+2489	Red d'hide vambraces	hands
+2491	Black d'hide vambraces	hands
+2493	Blue d'hide chaps	legs
+2495	Red d'hide chaps	legs
+2497	Black d'hide chaps	legs
+2499	Blue d'hide body	torso
+2501	Red d'hide body	torso
+2503	Black d'hide body	torso
+2520	Brown toy horsey	?
+2522	White toy horsey	?
+2524	Black toy horsey	?
+2526	Grey toy horsey	?
+2577	Ranger boots	boots
+2579	Wizard boots	boots
+2581	Robin hood hat	head
+2583	Black platebody (t)	torso
+2585	Black platelegs (t)	legs
+2587	Black full helm (t)	head
+2589	Black kiteshield (t)	shield
+2591	Black platebody (g)	torso
+2593	Black platelegs (g)	legs
+2595	Black full helm (g)	head
+2597	Black kiteshield (g)	shield
+2599	Adamant platebody (t)	torso
+2601	Adamant platelegs (t)	legs
+2603	Adamant kiteshield (t)	shield
+2605	Adamant full helm (t)	head
+2607	Adamant platebody (g)	torso
+2609	Adamant platelegs (g)	legs
+2611	Adamant kiteshield (g)	shield
+2613	Adamant full helm (g)	head
+2615	Rune platebody (g)	torso
+2617	Rune platelegs (g)	legs
+2619	Rune full helm (g)	head
+2621	Rune kiteshield (g)	shield
+2623	Rune platebody (t)	torso
+2625	Rune platelegs (t)	legs
+2627	Rune full helm (t)	head
+2629	Rune kiteshield (t)	shield
+2631	Highwayman mask	head
+2633	Blue beret	head
+2635	Black beret	head
+2637	White beret	head
+2639	Tan cavalier	head
+2641	Dark cavalier	head
+2643	Black cavalier	head
+2645	Red headband	head
+2647	Black headband	head
+2649	Brown headband	head
+2651	Pirate's hat	head
+2653	Zamorak platebody	torso
+2655	Zamorak platelegs	legs
+2657	Zamorak full helm	head
+2659	Zamorak kiteshield	shield
+2661	Saradomin platebody	torso
+2663	Saradomin platelegs	legs
+2665	Saradomin full helm	head
+2667	Saradomin kiteshield	shield
+2669	Guthix platebody	torso
+2671	Guthix platelegs	legs
+2673	Guthix full helm	head
+2675	Guthix kiteshield	shield
+2883	Ogre bow	weapon
+2888	A stone bowl	weapon
+2889	A stone bowl	weapon
+2890	Elemental shield	shield
+2894	Grey boots	boots
+2896	Grey robe top	torso
+2898	Grey robe bottoms	legs
+2900	Grey hat	head
+2902	Grey gloves	hands
+2904	Red boots	boots
+2906	Red robe top	torso
+2908	Red robe bottoms	legs
+2910	Red hat	head
+2912	Red gloves	hands
+2914	Yellow boots	boots
+2916	Yellow robe top	torso
+2918	Yellow robe bottoms	legs
+2920	Yellow hat	head
+2922	Yellow gloves	hands
+2924	Teal boots	boots
+2926	Teal robe top	torso
+2928	Teal robe bottoms	legs
+2930	Teal hat	head
+2932	Teal gloves	hands
+2934	Purple boots	boots
+2936	Purple robe top	torso
+2938	Purple robe bottoms	legs
+2940	Purple hat	head
+2942	Purple gloves	hands
+2946	Golden tinderbox	?
+2949	Golden hammer	?
+2952	Wolfbane	weapon
+2961	Silver sickle	weapon
+2963	Silver sickle (b)	weapon
+2968	Druidic spell	?
+2969	A used spell	?
+2978	Chompy bird hat	head
+2979	Chompy bird hat	head
+2980	Chompy bird hat	head
+2981	Chompy bird hat	head
+2982	Chompy bird hat	head
+2983	Chompy bird hat	head
+2984	Chompy bird hat	head
+2985	Chompy bird hat	head
+2986	Chompy bird hat	head
+2987	Chompy bird hat	head
+2988	Chompy bird hat	head
+2989	Chompy bird hat	head
+2990	Chompy bird hat	head
+2991	Chompy bird hat	head
+2992	Chompy bird hat	head
+2993	Chompy bird hat	head
+2994	Chompy bird hat	head
+2995	Chompy bird hat	head
+2997	Pirate's hook	hands
+3053	Lava battlestaff	weapon
+3054	Mystic lava staff	weapon
+3057	Mime mask	head
+3058	Mime top	torso
+3059	Mime legs	legs
+3060	Mime gloves	hands
+3061	Mime boots	boots
+3080	null	weapon
+3093	Black dart	weapon
+3094	Black dart(p)	weapon
+3095	Bronze claws	weapon
+3096	Iron claws	weapon
+3097	Steel claws	weapon
+3098	Black claws	weapon
+3099	Mithril claws	weapon
+3100	Adamant claws	weapon
+3101	Rune claws	weapon
+3105	Climbing boots	boots
+3107	Spiked boots	boots
+3122	Granite shield	shield
+3140	Dragon chainbody	torso
+3157	Karambwan vessel	weapon
+3159	Karambwan vessel	?
+3164	Karamjan rum	?
+3170	Bronze spear(kp)	weapon
+3171	Iron spear(kp)	weapon
+3172	Steel spear(kp)	weapon
+3173	Mithril spear(kp)	weapon
+3174	Adamant spear(kp)	weapon
+3175	Rune spear(kp)	weapon
+3176	Dragon spear(kp)	weapon
+3177	Left-handed banana	shield
+3190	Bronze halberd	weapon
+3192	Iron halberd	weapon
+3194	Steel halberd	weapon
+3196	Black halberd	weapon
+3198	Mithril halberd	weapon
+3200	Adamant halberd	weapon
+3202	Rune halberd	weapon
+3204	Dragon halberd	weapon
+3208	Crystal pendant	amulet
+3327	Myre snelm	head
+3329	Blood'n'tar snelm	head
+3331	Ochre snelm	head
+3333	Bruise blue snelm	head
+3335	Broken bark snelm	head
+3337	Pointed myre snelm	head
+3339	Pointed blood'n'tar snelm	head
+3341	Pointed ochre snelm	head
+3343	Pointed bruise blue snelm	head
+3385	Splitbark helm	head
+3387	Splitbark body	torso
+3389	Splitbark legs	legs
+3391	Splitbark gauntlets	hands
+3393	Splitbark boots	boots
+3472	Black plateskirt (t)	legs
+3473	Black plateskirt (g)	legs
+3474	Adamant plateskirt (t)	legs
+3475	Adamant plateskirt (g)	legs
+3476	Rune plateskirt (g)	legs
+3477	Rune plateskirt (t)	legs
+3478	Zamorak plateskirt	legs
+3479	Saradomin plateskirt	legs
+3480	Guthix plateskirt	legs
+3481	Gilded platebody	torso
+3483	Gilded platelegs	legs
+3485	Gilded plateskirt	legs
+3486	Gilded full helm	head
+3488	Gilded kiteshield	shield
+3688	Unstrung lyre	weapon
+3689	Lyre	weapon
+3690	Enchanted lyre	weapon
+3691	Enchanted lyre(1)	weapon
+3695	Pet rock	weapon
+3711	Keg of beer	?
+3748	Fremennik helm	head
+3749	Archer helm	head
+3751	Berserker helm	head
+3753	Warrior helm	head
+3755	Farseer helm	head
+3757	Fremennik blade	weapon
+3758	Fremennik shield	shield
+3759	Fremennik cyan cloak	cape
+3761	Fremennik brown cloak	cape
+3763	Fremennik blue cloak	cape
+3765	Fremennik green cloak	cape
+3767	Fremennik brown shirt	torso
+3769	Fremennik grey shirt	torso
+3771	Fremennik beige shirt	torso
+3773	Fremennik red shirt	torso
+3775	Fremennik blue shirt	torso
+3777	Fremennik red cloak	cape
+3779	Fremennik grey cloak	cape
+3781	Fremennik yellow cloak	cape
+3783	Fremennik teal cloak	cape
+3785	Fremennik purple cloak	cape
+3787	Fremennik pink cloak	cape
+3789	Fremennik black cloak	cape
+3791	Fremennik boots	boots
+3793	Fremennik robe	torso
+3795	Fremennik skirt	legs
+3797	Fremennik hat	head
+3799	Fremennik gloves	hands
+3801	Keg of beer	?
+3803	Beer tankard	?
+3839	Damaged book	shield
+3840	Holy book	shield
+3841	Damaged book	shield
+3842	Unholy book	shield
+3843	Damaged book	shield
+3844	Book of balance	shield
+3850	null	weapon
+3853	Games necklace(8)	amulet
+3855	Games necklace(7)	amulet
+3857	Games necklace(6)	amulet
+3859	Games necklace(5)	amulet
+3861	Games necklace(4)	amulet
+3863	Games necklace(3)	amulet
+3865	Games necklace(2)	amulet
+3867	Games necklace(1)	amulet
+3893	Stool	weapon
+3899	Iron sickle	weapon
+3935	null	weapon
+3937	null	weapon
+3939	null	weapon
+3941	null	weapon
+3943	null	weapon
+3945	null	weapon
+3947	null	weapon
+3949	null	weapon
+3953	null	?
+3969	null	weapon
+3971	null	weapon
+4021	M'speak amulet	amulet
+4023	Monkey talisman	weapon
+4032	null	weapon
+4035	10th squad sigil	amulet
+4037	Saradomin banner	weapon
+4039	Zamorak banner	weapon
+4041	Saradomin cloak	cape
+4042	Zamorak cloak	cape
+4068	Decorative sword	weapon
+4069	Decorative armour	torso
+4070	Decorative armour	legs
+4071	Decorative helm	head
+4072	Decorative shield	shield
+4073	Damp tinderbox	?
+4080	null	weapon
+4081	Salve amulet	amulet
+4083	Sled	weapon
+4084	Sled	weapon
+4085	Wax	shield
+4086	Trollweiss	weapon
+4087	Dragon platelegs	legs
+4089	Mystic hat	head
+4091	Mystic robe top	torso
+4093	Mystic robe bottom	legs
+4095	Mystic gloves	hands
+4097	Mystic boots	boots
+4099	Mystic hat (dark)	head
+4101	Mystic robe top (dark)	torso
+4103	Mystic robe bottom (dark)	legs
+4105	Mystic gloves (dark)	hands
+4107	Mystic boots (dark)	boots
+4109	Mystic hat (light)	head
+4111	Mystic robe top (light)	torso
+4113	Mystic robe bottom (light)	legs
+4115	Mystic gloves (light)	hands
+4117	Mystic boots (light)	boots
+4119	Bronze boots	boots
+4121	Iron boots	boots
+4123	Steel boots	boots
+4125	Black boots	boots
+4127	Mithril boots	boots
+4129	Adamant boots	boots
+4131	Rune boots	boots
+4151	Abyssal whip	weapon
+4153	Granite maul	weapon
+4155	Enchanted gem	?
+4156	Mirror shield	shield
+4158	Leaf-bladed spear	weapon
+4159	Leaf-bladed spear	weapon
+4161	Bag of salt	?
+4162	Rock hammer	weapon
+4164	Facemask	head
+4166	Earmuffs	head
+4168	Nose peg	head
+4170	Slayer's staff	weapon
+4181	Mouth grip	weapon
+4193	Extended brush	weapon
+4212	New crystal bow	weapon
+4213	New crystal bow	weapon
+4214	Crystal bow full	weapon
+4215	Crystal bow 9/10	weapon
+4216	Crystal bow 8/10	weapon
+4217	Crystal bow 7/10	weapon
+4218	Crystal bow 6/10	weapon
+4219	Crystal bow 5/10	weapon
+4220	Crystal bow 4/10	weapon
+4221	Crystal bow 3/10	weapon
+4222	Crystal bow 2/10	weapon
+4223	Crystal bow 1/10	weapon
+4224	New crystal shield	shield
+4225	Crystal shield full	shield
+4226	Crystal shield 9/10	shield
+4227	Crystal shield 8/10	shield
+4228	Crystal shield 7/10	shield
+4229	Crystal shield 6/10	shield
+4230	Crystal shield 5/10	shield
+4231	Crystal shield 4/10	shield
+4232	Crystal shield 3/10	shield
+4233	Crystal shield 2/10	shield
+4234	Crystal shield 1/10	shield
+4235	New crystal shield	shield
+4236	Signed oak bow	weapon
+4250	Ghostspeak amulet	amulet
+4251	Ectophial	?
+4298	Ham shirt	torso
+4300	Ham robe	legs
+4302	Ham hood	head
+4304	Ham cloak	cape
+4306	Ham logo	amulet
+4308	Ham gloves	hands
+4310	Ham boots	boots
+4315	Team-1 cape	cape
+4317	Team-2 cape	cape
+4319	Team-3 cape	cape
+4321	Team-4 cape	cape
+4323	Team-5 cape	cape
+4325	Team-6 cape	cape
+4327	Team-7 cape	cape
+4329	Team-8 cape	cape
+4331	Team-9 cape	cape
+4333	Team-10 cape	cape
+4335	Team-11 cape	cape
+4337	Team-12 cape	cape
+4339	Team-13 cape	cape
+4341	Team-14 cape	cape
+4343	Team-15 cape	cape
+4345	Team-16 cape	cape
+4347	Team-17 cape	cape
+4349	Team-18 cape	cape
+4351	Team-19 cape	cape
+4353	Team-20 cape	cape
+4355	Team-21 cape	cape
+4357	Team-22 cape	cape
+4359	Team-23 cape	cape
+4361	Team-24 cape	cape
+4363	Team-25 cape	cape
+4365	Team-26 cape	cape
+4367	Team-27 cape	cape
+4369	Team-28 cape	cape
+4371	Team-29 cape	cape
+4373	Team-30 cape	cape
+4375	Team-31 cape	cape
+4377	Team-32 cape	cape
+4379	Team-33 cape	cape
+4381	Team-34 cape	cape
+4383	Team-35 cape	cape
+4385	Team-36 cape	cape
+4387	Team-37 cape	cape
+4389	Team-38 cape	cape
+4391	Team-39 cape	cape
+4393	Team-40 cape	cape
+4395	Team-41 cape	cape
+4397	Team-42 cape	cape
+4399	Team-43 cape	cape
+4401	Team-44 cape	cape
+4403	Team-45 cape	cape
+4405	Team-46 cape	cape
+4407	Team-47 cape	cape
+4409	Team-48 cape	cape
+4411	Team-49 cape	cape
+4413	Team-50 cape	cape
+4435	Weather report	?
+4498	Rope	weapon
+4500	Pole	weapon
+4501	Null	weapon
+4502	Bearhead	head
+4503	Decorative sword	weapon
+4504	Decorative armour	torso
+4505	Decorative armour	legs
+4506	Decorative helm	head
+4507	Decorative shield	shield
+4508	Decorative sword	weapon
+4509	Decorative armour	torso
+4510	Decorative armour	legs
+4511	Decorative helm	head
+4512	Decorative shield	shield
+4513	Castlewars hood	head
+4514	Castlewars cloak	cape
+4515	Castlewars hood	head
+4516	Castlewars cloak	cape
+4551	Spiny helmet	head
+4565	Easter basket	weapon
+4566	Rubber chicken	weapon
+4567	Gold helmet	head
+4580	Black spear	weapon
+4582	Black spear(p)	weapon
+4584	Black spear(kp)	weapon
+4585	Dragon plateskirt	legs
+4587	Dragon scimitar	weapon
+4599	Oak blackjack	weapon
+4600	Willow blackjack	weapon
+4605	Snake charm	weapon
+4611	Desert disguise	head
+4613	Spinning plate	?
+4614	Broken plate	?
+4675	Ancient staff	weapon
+4677	Catspeak amulet	amulet
+4692	Gold leaf	?
+4704	Stone bowl	weapon
+4705	null	weapon
+4708	Ahrim's hood	head
+4710	Ahrim's staff	weapon
+4712	Ahrim's robetop	torso
+4714	Ahrim's robeskirt	legs
+4716	Dharok's helm	head
+4718	Dharok's greataxe	weapon
+4720	Dharok's platebody	torso
+4722	Dharok's platelegs	legs
+4724	Guthan's helm	head
+4726	Guthan's warspear	weapon
+4728	Guthan's platebody	torso
+4730	Guthan's chainskirt	legs
+4732	Karil's coif	head
+4734	Karil's crossbow	weapon
+4736	Karil's leathertop	torso
+4738	Karil's leatherskirt	legs
+4745	Torag's helm	head
+4747	Torag's hammers	weapon
+4749	Torag's platebody	torso
+4751	Torag's platelegs	legs
+4753	Verac's helm	head
+4755	Verac's flail	weapon
+4757	Verac's brassard	torso
+4759	Verac's plateskirt	legs
+4809	Torn page	?
+4814	Sithik portrait	?
+4815	Sithik portrait	?
+4816	Signed portrait	?
+4817	Book of portraiture	shield
+4827	Comp ogre bow	weapon
+4829	Book of 'h.a.m'	shield
+4837	Necromancy book	shield
+4856	Ahrim's hood 100	head
+4857	Ahrim's hood 75	head
+4858	Ahrim's hood 50	head
+4859	Ahrim's hood 25	head
+4860	Ahrim's hood 0	head
+4862	Ahrim's staff 100	weapon
+4863	Ahrim's staff 75	weapon
+4864	Ahrim's staff 50	weapon
+4865	Ahrim's staff 25	weapon
+4866	Ahrim's staff 0	weapon
+4868	Ahrim's robetop 100	torso
+4869	Ahrim's robetop 75	torso
+4870	Ahrim's robetop 50	torso
+4871	Ahrim's robetop 25	torso
+4872	Ahrim's robetop 0	torso
+4874	Ahrim's robeskirt 100	legs
+4875	Ahrim's robeskirt 75	legs
+4876	Ahrim's robeskirt 50	legs
+4877	Ahrim's robeskirt 25	legs
+4878	Ahrim's robeskirt 0	legs
+4880	Dharok's helm 100	head
+4881	Dharok's helm 75	head
+4882	Dharok's helm 50	head
+4883	Dharok's helm 25	head
+4884	Dharok's helm 0	head
+4886	Dharok's greataxe 100	weapon
+4887	Dharok's greataxe 75	weapon
+4888	Dharok's greataxe 50	weapon
+4889	Dharok's greataxe 25	weapon
+4890	Dharok's greataxe 0	weapon
+4892	Dharok's platebody 100	torso
+4893	Dharok's platebody 75	torso
+4894	Dharok's platebody 50	torso
+4895	Dharok's platebody 25	torso
+4896	Dharok's platebody 0	torso
+4898	Dharok's platelegs 100	legs
+4899	Dharok's platelegs 75	legs
+4900	Dharok's platelegs 50	legs
+4901	Dharok's platelegs 25	legs
+4902	Dharok's platelegs 0	legs
+4904	Guthan's helm 100	head
+4905	Guthan's helm 75	head
+4906	Guthan's helm 50	head
+4907	Guthan's helm 25	head
+4908	Guthan's helm 0	head
+4910	Guthan's warspear 100	weapon
+4911	Guthan's warspear 75	weapon
+4912	Guthan's warspear 50	weapon
+4913	Guthan's warspear 25	weapon
+4914	Guthan's warspear 0	weapon
+4916	Guthan's platebody 100	torso
+4917	Guthan's platebody 75	torso
+4918	Guthan's platebody 50	torso
+4919	Guthan's platebody 25	torso
+4920	Guthan's platebody 0	torso
+4922	Guthan's chainskirt 100	legs
+4923	Guthan's chainskirt 75	legs
+4924	Guthan's chainskirt 50	legs
+4925	Guthan's chainskirt 25	legs
+4926	Guthan's chainskirt 0	legs
+4928	Karil's coif 100	head
+4929	Karil's coif 75	head
+4930	Karil's coif 50	head
+4931	Karil's coif 25	head
+4932	Karil's coif 0	head
+4934	Karil's crossbow 100	weapon
+4935	Karil's crossbow 75	weapon
+4936	Karil's crossbow 50	weapon
+4937	Karil's crossbow 25	weapon
+4938	Karil's crossbow 0	weapon
+4940	Karil's leathertop 100	torso
+4941	Karil's leathertop 75	torso
+4942	Karil's leathertop 50	torso
+4943	Karil's leathertop 25	torso
+4944	Karil's leathertop 0	torso
+4946	Karil's leatherskirt 100	legs
+4947	Karil's leatherskirt 75	legs
+4948	Karil's leatherskirt 50	legs
+4949	Karil's leatherskirt 25	legs
+4950	Karil's leatherskirt 0	legs
+4952	Torag's helm 100	head
+4953	Torag's helm 75	head
+4954	Torag's helm 50	head
+4955	Torag's helm 25	head
+4956	Torag's helm 0	head
+4958	Torag's hammers 100	weapon
+4959	Torag's hammers 75	weapon
+4960	Torag's hammers 50	weapon
+4961	Torag's hammers 25	weapon
+4962	Torag's hammers 0	weapon
+4964	Torag's platebody 100	torso
+4965	Torag's platebody 75	torso
+4966	Torag's platebody 50	torso
+4967	Torag's platebody 25	torso
+4968	Torag's platebody 0	torso
+4970	Torag's platelegs 100	legs
+4971	Torag's platelegs 75	legs
+4972	Torag's platelegs 50	legs
+4973	Torag's platelegs 25	legs
+4974	Torag's platelegs 0	legs
+4976	Verac's helm 100	head
+4977	Verac's helm 75	head
+4978	Verac's helm 50	head
+4979	Verac's helm 25	head
+4980	Verac's helm 0	head
+4982	Verac's flail 100	weapon
+4983	Verac's flail 75	weapon
+4984	Verac's flail 50	weapon
+4985	Verac's flail 25	weapon
+4986	Verac's flail 0	weapon
+4988	Verac's brassard 100	torso
+4989	Verac's brassard 75	torso
+4990	Verac's brassard 50	torso
+4991	Verac's brassard 25	torso
+4992	Verac's brassard 0	torso
+4994	Verac's plateskirt 100	legs
+4995	Verac's plateskirt 75	legs
+4996	Verac's plateskirt 50	legs
+4997	Verac's plateskirt 25	legs
+4998	Verac's plateskirt 0	legs
+5013	Mining helmet	head
+5014	Mining helmet	head
+5016	Bone spear	weapon
+5018	Bone club	weapon
+5024	Woven top	torso
+5026	Woven top	torso
+5028	Woven top	torso
+5030	Shirt	torso
+5032	Shirt	torso
+5034	Shirt	torso
+5036	Trousers	legs
+5038	Trousers	legs
+5040	Trousers	legs
+5042	Shorts	legs
+5044	Shorts	legs
+5046	Shorts	legs
+5048	Skirt	legs
+5050	Skirt	legs
+5052	Skirt	legs
+5060	Dwarven battleaxe	weapon
+5061	Dwarven battleaxe	weapon
+5081	null	weapon
+5083	null	weapon
+5325	Gardening trowel	?
+5329	Secateurs	weapon
+5331	Watering can	?
+5333	Watering can(1)	?
+5334	Watering can(2)	?
+5335	Watering can(3)	?
+5336	Watering can(4)	?
+5337	Watering can(5)	?
+5338	Watering can(6)	?
+5339	Watering can(7)	?
+5340	Watering can(8)	?
+5341	Rake	?
+5343	Seed dibber	?
+5345	Gardening boots	boots
+5350	Empty plant pot	?
+5521	Binding necklace	amulet
+5525	Tiara	head
+5527	Air tiara	head
+5529	Mind tiara	head
+5531	Water tiara	head
+5533	Body tiara	head
+5535	Earth tiara	head
+5537	Fire tiara	head
+5539	Cosmic tiara	head
+5541	Nature tiara	head
+5543	Chaos tiara	head
+5545	Law tiara	head
+5547	Death tiara	head
+5549	Blood tiara	head
+5553	Rogue top	torso
+5554	Rogue mask	head
+5555	Rogue trousers	legs
+5556	Rogue gloves	hands
+5557	Rogue boots	boots
+5560	Stethoscope	shield
+5561	Mystic jewel	?
+5574	Initiate sallet	head
+5575	Initiate hauberk	torso
+5576	Initiate cuisse	legs
+5603	Shears	?
+5607	Grain	cape
+5608	Fox	weapon
+5609	Chicken	shield
+5614	Magic carpet	weapon
+5628	Bronze dart(p+)	weapon
+5629	Iron dart(p+)	weapon
+5630	Steel dart(p+)	weapon
+5631	Black dart(p+)	weapon
+5632	Mithril dart(p+)	weapon
+5633	Adamant dart(p+)	weapon
+5634	Rune dart(p+)	weapon
+5635	Bronze dart(p++)	weapon
+5636	Iron dart(p++)	weapon
+5637	Steel dart(p++)	weapon
+5638	Black dart(p++)	weapon
+5639	Mithril dart(p++)	weapon
+5640	Adamant dart(p++)	weapon
+5641	Rune dart(p++)	weapon
+5654	Bronze knife(p+)	weapon
+5655	Iron knife(p+)	weapon
+5656	Steel knife(p+)	weapon
+5657	Mithril knife(p+)	weapon
+5658	Black knife(p+)	weapon
+5659	Adamant knife(p+)	weapon
+5660	Rune knife(p+)	weapon
+5661	Bronze knife(p++)	weapon
+5662	Iron knife(p++)	weapon
+5663	Steel knife(p++)	weapon
+5664	Mithril knife(p++)	weapon
+5665	Black knife(p++)	weapon
+5666	Adamant knife(p++)	weapon
+5667	Rune knife(p++)	weapon
+5668	Iron dagger(p+)	weapon
+5670	Bronze dagger(p+)	weapon
+5672	Steel dagger(p+)	weapon
+5674	Mithril dagger(p+)	weapon
+5676	Adamant dagger(p+)	weapon
+5678	Rune dagger(p+)	weapon
+5680	Dragon dagger(p+)	weapon
+5682	Black dagger(p+)	weapon
+5684	Poison dagger(p+)	weapon
+5686	Iron dagger(p++)	weapon
+5688	Bronze dagger(p++)	weapon
+5690	Steel dagger(p++)	weapon
+5692	Mithril dagger(p++)	weapon
+5694	Adamant dagger(p++)	weapon
+5696	Rune dagger(p++)	weapon
+5698	Dragon dagger(p++)	weapon
+5700	Black dagger(p++)	weapon
+5702	Poison dagger(p++)	weapon
+5704	Bronze spear(p+)	weapon
+5706	Iron spear(p+)	weapon
+5708	Steel spear(p+)	weapon
+5710	Mithril spear(p+)	weapon
+5712	Adamant spear(p+)	weapon
+5714	Rune spear(p+)	weapon
+5716	Dragon spear(p+)	weapon
+5718	Bronze spear(p++)	weapon
+5720	Iron spear(p++)	weapon
+5722	Steel spear(p++)	weapon
+5724	Mithril spear(p++)	weapon
+5726	Adamant spear(p++)	weapon
+5728	Rune spear(p++)	weapon
+5730	Dragon spear(p++)	weapon
+5732	Stool	shield
+5734	Black spear(p+)	weapon
+5736	Black spear(p++)	weapon
+5769	Calquat keg	?
+5771	Dwarven stout(1)	?
+5982	Watermelon	?
+6036	Plant cure	?
+6040	Amulet of nature	amulet
+6041	Pre-nature amulet	amulet
+6065	Mourner top	torso
+6067	Mourner trousers	legs
+6068	Mourner gloves	hands
+6069	Mourner boots	boots
+6070	Mourner cloak	cape
+6082	Fixed device	weapon
+6106	Ghostly boots	boots
+6107	Ghostly robe	torso
+6108	Ghostly robe	legs
+6109	Ghostly hood	head
+6110	Ghostly gloves	hands
+6111	Ghostly cloak	cape
+6122	A chair	shield
+6123	Beer glass	weapon
+6125	Enchanted lyre(2)	weapon
+6126	Enchanted lyre(3)	weapon
+6127	Enchanted lyre(4)	weapon
+6128	Rock-shell helm	head
+6129	Rock-shell plate	torso
+6130	Rock-shell legs	legs
+6131	Spined helm	head
+6133	Spined body	torso
+6135	Spined chaps	legs
+6137	Skeletal helm	head
+6139	Skeletal top	torso
+6141	Skeletal bottoms	legs
+6143	Spined boots	boots
+6145	Rock-shell boots	boots
+6147	Skeletal boots	boots
+6149	Spined gloves	hands
+6151	Rock-shell gloves	hands
+6153	Skeletal gloves	hands
+6180	Lederhosen top	torso
+6181	Lederhosen shorts	legs
+6182	Lederhosen hat	head
+6184	Royal frog tunic	torso
+6185	Royal frog leggings	legs
+6186	Royal frog blouse	torso
+6187	Royal frog skirt	legs
+6188	Frog mask	head
+6209	Small fishing net	?
+6215	Broodoo shield (10)	shield
+6217	Broodoo shield (9)	shield
+6219	Broodoo shield (8)	shield
+6221	Broodoo shield (7)	shield
+6223	Broodoo shield (6)	shield
+6225	Broodoo shield (5)	shield
+6227	Broodoo shield (4)	shield
+6229	Broodoo shield (3)	shield
+6231	Broodoo shield (2)	shield
+6233	Broodoo shield (1)	shield
+6235	Broodoo shield	shield
+6237	Broodoo shield (10)	shield
+6239	Broodoo shield (9)	shield
+6241	Broodoo shield (8)	shield
+6243	Broodoo shield (7)	shield
+6245	Broodoo shield (6)	shield
+6247	Broodoo shield (5)	shield
+6249	Broodoo shield (4)	shield
+6251	Broodoo shield (3)	shield
+6253	Broodoo shield (2)	shield
+6255	Broodoo shield (1)	shield
+6257	Broodoo shield	shield
+6259	Broodoo shield (10)	shield
+6261	Broodoo shield (9)	shield
+6263	Broodoo shield (8)	shield
+6265	Broodoo shield (7)	shield
+6267	Broodoo shield (6)	shield
+6269	Broodoo shield (5)	shield
+6271	Broodoo shield (4)	shield
+6273	Broodoo shield (3)	shield
+6275	Broodoo shield (2)	shield
+6277	Broodoo shield (1)	shield
+6279	Broodoo shield	shield
+6281	Thatch spar light	shield
+6283	Thatch spar med	shield
+6285	Thatch spar dense	shield
+6313	Opal machete	weapon
+6315	Jade machete	weapon
+6317	Red topaz machete	weapon
+6322	Snakeskin body	torso
+6324	Snakeskin chaps	legs
+6326	Snakeskin bandana	head
+6328	Snakeskin boots	boots
+6330	Snakeskin vambraces	hands
+6335	Tribal mask	head
+6337	Tribal mask	head
+6339	Tribal mask	head
+6341	Tribal top	torso
+6343	Villager robe	legs
+6345	Villager hat	head
+6347	Villager armband	hands
+6349	Villager sandals	boots
+6351	Tribal top	torso
+6353	Villager robe	legs
+6355	Villager hat	head
+6357	Villager sandals	boots
+6359	Villager armband	hands
+6361	Tribal top	torso
+6363	Villager robe	legs
+6365	Villager hat	head
+6367	Villager sandals	boots
+6369	Villager armband	hands
+6371	Tribal top	torso
+6373	Villager robe	legs
+6375	Villager hat	head
+6377	Villager sandals	boots
+6379	Villager armband	hands
+6382	Fez	head
+6384	Desert top	torso
+6386	Desert robes	legs
+6388	Desert top	torso
+6390	Desert legs	legs
+6392	Menaphite purple hat	head
+6394	Menaphite purple top	torso
+6396	Menaphite purple robe	legs
+6398	Menaphite purple kilt	legs
+6400	Menaphite red hat	head
+6402	Menaphite red top	torso
+6404	Menaphite red robe	legs
+6406	Menaphite red kilt	legs
+6408	Oak blackjack(o)	weapon
+6410	Oak blackjack(d)	weapon
+6412	Willow blackjack(o)	weapon
+6414	Willow blackjack(d)	weapon
+6416	Maple blackjack	weapon
+6418	Maple blackjack(o)	weapon
+6420	Maple blackjack(d)	weapon
+6448	Spadeful of coke	?
+6449	null	weapon
+6451	null	weapon
+6468	Plant cure	?
+6470	Compost potion(4)	?
+6472	Compost potion(3)	?
+6474	Compost potion(2)	?
+6476	Compost potion(1)	?
+6522	Toktz-xil-ul	weapon
+6523	Toktz-xil-ak	weapon
+6524	Toktz-ket-xil	shield
+6525	Toktz-xil-ek	weapon
+6526	Toktz-mej-tal	weapon
+6527	Tzhaar-ket-em	weapon
+6528	Tzhaar-ket-om	weapon
+6541	Mouse toy	weapon
+6544	Catspeak amulet(e)	amulet
+6547	Doctor's hat	head
+6548	Nurse hat	head
+6562	Mud battlestaff	weapon
+6563	Mystic mud staff	weapon
+6565	null	weapon
+6568	Obsidian cape	cape
+6570	Fire cape	cape
+6573	Onyx	?
+6577	Onyx necklace	amulet
+6581	Onyx amulet	amulet
+6585	Amulet of fury	amulet
+6587	White claws	weapon
+6589	White battleaxe	weapon
+6591	White dagger	weapon
+6593	White dagger(p)	weapon
+6595	White dagger(p+)	weapon
+6597	White dagger(p++)	weapon
+6599	White halberd	weapon
+6601	White mace	weapon
+6603	White magic staff	weapon
+6605	White sword	weapon
+6607	White longsword	weapon
+6609	White 2h sword	weapon
+6611	White scimitar	weapon
+6613	White warhammer	weapon
+6615	White chainbody	torso
+6617	White platebody	torso
+6619	White boots	boots
+6621	White med helm	head
+6623	White full helm	head
+6625	White platelegs	legs
+6627	White plateskirt	legs
+6629	White gloves	hands
+6631	White sq shield	shield
+6633	White kiteshield	shield
+6635	Commorb	?
+6654	Camo top	torso
+6655	Camo bottoms	legs
+6656	Camo helmet	head
+6657	Camo top	torso
+6658	Camo bottoms	legs
+6659	Camo helmet	head
+6664	Fishing explosive	?
+6665	Mudskipper hat	head
+6666	Flippers	boots
+6670	Fishbowl	weapon
+6671	Fishbowl	weapon
+6672	Fishbowl	weapon
+6673	Fishbowl and net	?
+6707	Camulet	amulet
+6713	Wrench	?
+6714	Holy wrench	?
+6720	Slayer gloves	hands
+6721	Rusty scimitar	?
+6722	Zombie head	?
+6724	Seercull	weapon
+6739	Dragon axe	weapon
+6745	Silverlight	weapon
+6746	Darklight	weapon
+6748	Demonic sigil	?
+6750	Black desert shirt	torso
+6752	Black desert robe	legs
+6760	Guthix mjolnir	weapon
+6762	Saradomin mjolnir	weapon
+6764	Zamorak mjolnir	weapon
+6772	Smouldering pot	?
+6773	Rat pole	weapon
+6774	Rat pole	weapon
+6775	Rat pole	weapon
+6776	Rat pole	weapon
+6777	Rat pole	weapon
+6778	Rat pole	weapon
+6779	Rat pole	weapon
+6786	Robe of elidinis	torso
+6787	Robe of elidinis	legs
+6788	Torn robe	?
+6789	Torn robe	?
+6790	Shoes	boots
+6809	Granite legs	legs
+6817	Slender blade	weapon
+6818	Bow-sword	weapon
+6856	Bobble hat	head
+6857	Bobble scarf	amulet
+6858	Jester hat	head
+6859	Jester scarf	amulet
+6860	Tri-jester hat	head
+6861	Tri-jester scarf	amulet
+6862	Woolly hat	head
+6863	Woolly scarf	amulet
+6864	Marionette handle	weapon
+6885	Progress hat	head
+6886	Progress hat	head
+6887	Progress hat	head
+6889	Mage's book	shield
+6908	Beginner wand	weapon
+6910	Apprentice wand	weapon
+6912	Teacher wand	weapon
+6914	Master wand	weapon
+6916	Infinity top	torso
+6918	Infinity hat	head
+6920	Infinity boots	boots
+6922	Infinity gloves	hands
+6924	Infinity bottoms	legs
+6959	Pink cape	cape
+7003	Camel mask	head
+7004	null	weapon
+7051	Unlit bug lantern	shield
+7053	Lit bug lantern	shield
+7110	Stripy pirate shirt	torso
+7112	Pirate bandana	head
+7114	Pirate boots	boots
+7116	Pirate leggings	legs
+7118	Canister	?
+7119	Cannon ball	?
+7120	Ramrod	?
+7121	Repair plank	?
+7122	Stripy pirate shirt	torso
+7124	Pirate bandana	head
+7126	Pirate leggings	legs
+7128	Stripy pirate shirt	torso
+7130	Pirate bandana	head
+7132	Pirate leggings	legs
+7134	Stripy pirate shirt	torso
+7136	Pirate bandana	head
+7138	Pirate leggings	legs
+7140	Lucky cutlass	weapon
+7141	Harry's cutlass	weapon
+7142	Rapier	weapon
+7158	Dragon 2h sword	weapon
+7159	Insulated boots	boots
+7170	Mud pie	weapon
+7319	Red boater	head
+7321	Orange boater	head
+7323	Green boater	head
+7325	Blue boater	head
+7327	Black boater	head
+7332	Black shield (h1)	shield
+7334	Adamant shield (h1)	shield
+7336	Rune shield (h1)	shield
+7338	Black shield (h2)	shield
+7340	Adamant shield (h2)	shield
+7342	Rune shield (h2)	shield
+7344	Black shield (h3)	shield
+7346	Adamant shield (h3)	shield
+7348	Rune shield (h3)	shield
+7350	Black shield (h4)	shield
+7352	Adamant shield (h4)	shield
+7354	Rune shield (h4)	shield
+7356	Black shield (h5)	shield
+7358	Adamant shield (h5)	shield
+7360	Rune shield (h5)	shield
+7362	Studded body (g)	torso
+7364	Studded body (t)	torso
+7366	Studded chaps (g)	legs
+7368	Studded chaps (t)	legs
+7370	Green d'hide body (g)	torso
+7372	Green d'hide body (t)	torso
+7374	Blue d'hide body (g)	torso
+7376	Blue d'hide body (t)	torso
+7378	Green d'hide chaps (g)	legs
+7380	Green d'hide chaps (t)	legs
+7382	Blue d'hide chaps (g)	legs
+7384	Blue d'hide chaps (t)	legs
+7386	Blue skirt (g)	legs
+7388	Blue skirt (t)	legs
+7390	Blue wizard robe (g)	torso
+7392	Blue wizard robe (t)	torso
+7394	Blue wizard hat (g)	head
+7396	Blue wizard hat (t)	head
+7398	Enchanted robe	legs
+7399	Enchanted top	torso
+7400	Enchanted hat	head
+7404	Red logs	?
+7405	Green logs	?
+7406	Blue logs	?
+7409	Magic secateurs	weapon
+7410	Queen's secateurs	weapon
+7412	null	weapon
+7414	Paddle	weapon
+7421	Fungicide spray 10	weapon
+7422	Fungicide spray 9	weapon
+7423	Fungicide spray 8	weapon
+7424	Fungicide spray 7	weapon
+7425	Fungicide spray 6	weapon
+7426	Fungicide spray 5	weapon
+7427	Fungicide spray 4	weapon
+7428	Fungicide spray 3	weapon
+7429	Fungicide spray 2	weapon
+7430	Fungicide spray 1	weapon
+7431	Fungicide spray 0	weapon
+7433	Wooden spoon	weapon
+7435	Egg whisk	weapon
+7437	Spork	weapon
+7439	Spatula	weapon
+7441	Frying pan	weapon
+7443	Skewer	weapon
+7445	Rolling pin	weapon
+7447	Kitchen knife	weapon
+7449	Meat tenderiser	weapon
+7451	Cleaver	weapon
+7453	Hardleather gloves	hands
+7454	Bronze gloves	hands
+7455	Iron gloves	hands
+7456	Steel gloves	hands
+7457	Black gloves	hands
+7458	Mithril gloves	hands
+7459	Adamant gloves	hands
+7460	Rune gloves	hands
+7461	Dragon gloves	hands
+7462	Barrows gloves	hands
+7475	Brulee	?
+7509	Dwarven rock cake	?
+7534	Fishbowl helmet	head
+7535	Diving apparatus	cape
+7537	Crab claw	hands
+7539	Crab helmet	head
+7572	Red banana	shield
+7592	Zombie shirt	torso
+7593	Zombie trousers	legs
+7594	Zombie mask	head
+7595	Zombie gloves	hands
+7596	Zombie boots	boots
+7637	Silvthrill rod	weapon
+7639	Rod of ivandis (10)	weapon
+7640	Rod of ivandis (9)	weapon
+7641	Rod of ivandis (8)	weapon
+7642	Rod of ivandis (7)	weapon
+7643	Rod of ivandis (6)	weapon
+7644	Rod of ivandis (5)	weapon
+7645	Rod of ivandis (4)	weapon
+7646	Rod of ivandis (3)	weapon
+7647	Rod of ivandis (2)	weapon
+7648	Rod of ivandis (1)	weapon
+7668	Gadderhammer	weapon
+7671	Boxing gloves	weapon
+7673	Boxing gloves	weapon
+7675	Wooden sword	weapon
+7676	Wooden shield	shield
+7679	Pugel	weapon
+7682	Hoop	weapon
+7684	Dart	weapon
+7686	Bow and arrow	weapon
+7688	Kettle	?
+7690	Full kettle	?
+7691	Hot kettle	?
+7728	Empty cup	?
+7730	Cup of tea	?
+7731	Cup of tea	?
+7732	Porcelain cup	?
+7733	Cup of tea	?
+7734	Cup of tea	?
+7735	Porcelain cup	?
+7736	Cup of tea	?
+7737	Cup of tea	?
+7740	Beer	?
+7742	Beer glass	?
+7744	Asgarnian ale	?
+7746	Greenman's ale	?
+7748	Dragon bitter	?
+7750	Moonlight mead	?
+7752	Cider	?
+7754	Chef's delight	?
+7756	Paintbrush	weapon
+7758	null	weapon
+7773	Branch	weapon
+7777	Long vine	?
+7778	Short vine	?
+7803	Yin yang amulet	amulet
+7804	Ancient mjolnir	weapon
+7806	Anger sword	weapon
+7807	Anger battleaxe	weapon
+7808	Anger mace	weapon
+7809	Anger spear	weapon
+7917	Ram skull helm	head
+7918	Bonesack	cape
+8464	Rune heraldic helm	head
+8466	Rune heraldic helm	head
+8468	Rune heraldic helm	head
+8470	Rune heraldic helm	head
+8472	Rune heraldic helm	head
+8474	Rune heraldic helm	head
+8476	Rune heraldic helm	head
+8478	Rune heraldic helm	head
+8480	Rune heraldic helm	head
+8482	Rune heraldic helm	head
+8484	Rune heraldic helm	head
+8486	Rune heraldic helm	head
+8488	Rune heraldic helm	head
+8490	Rune heraldic helm	head
+8492	Rune heraldic helm	head
+8494	Rune heraldic helm	head
+8650	Banner	weapon
+8652	Banner	weapon
+8654	Banner	weapon
+8656	Banner	weapon
+8658	Banner	weapon
+8660	Banner	weapon
+8662	Banner	weapon
+8664	Banner	weapon
+8666	Banner	weapon
+8668	Banner	weapon
+8670	Banner	weapon
+8672	Banner	weapon
+8674	Banner	weapon
+8676	Banner	weapon
+8678	Banner	weapon
+8680	Banner	weapon
+8682	Steel heraldic helm	head
+8684	Steel heraldic helm	head
+8686	Steel heraldic helm	head
+8688	Steel heraldic helm	head
+8690	Steel heraldic helm	head
+8692	Steel heraldic helm	head
+8694	Steel heraldic helm	head
+8696	Steel heraldic helm	head
+8698	Steel heraldic helm	head
+8700	Steel heraldic helm	head
+8702	Steel heraldic helm	head
+8704	Steel heraldic helm	head
+8706	Steel heraldic helm	head
+8708	Steel heraldic helm	head
+8710	Steel heraldic helm	head
+8712	Steel heraldic helm	head
+8714	Rune kiteshield	shield
+8716	Rune kiteshield	shield
+8718	Rune kiteshield	shield
+8720	Rune kiteshield	shield
+8722	Rune kiteshield	shield
+8724	Rune kiteshield	shield
+8726	Rune kiteshield	shield
+8728	Rune kiteshield	shield
+8730	Rune kiteshield	shield
+8732	Rune kiteshield	shield
+8734	Rune kiteshield	shield
+8736	Rune kiteshield	shield
+8738	Rune kiteshield	shield
+8740	Rune kiteshield	shield
+8742	Rune kiteshield	shield
+8744	Rune kiteshield	shield
+8746	Steel kiteshield	shield
+8748	Steel kiteshield	shield
+8750	Steel kiteshield	shield
+8752	Steel kiteshield	shield
+8754	Steel kiteshield	shield
+8756	Steel kiteshield	shield
+8758	Steel kiteshield	shield
+8760	Steel kiteshield	shield
+8762	Steel kiteshield	shield
+8764	Steel kiteshield	shield
+8766	Steel kiteshield	shield
+8768	Steel kiteshield	shield
+8770	Steel kiteshield	shield
+8772	Steel kiteshield	shield
+8774	Steel kiteshield	shield
+8776	Steel kiteshield	shield
+8794	Saw	weapon
+8798	null	weapon
+8799	null	weapon
+8800	null	weapon
+8801	null	weapon
+8802	null	weapon
+8803	null	weapon
+8804	null	weapon
+8805	null	weapon
+8806	null	weapon
+8807	null	weapon
+8808	null	weapon
+8809	null	weapon
+8810	null	weapon
+8811	null	weapon
+8812	null	weapon
+8813	null	weapon
+8814	null	weapon
+8815	null	weapon
+8816	null	weapon
+8817	null	weapon
+8818	null	weapon
+8819	null	weapon
+8820	null	weapon
+8821	null	weapon
+8822	null	weapon
+8823	null	weapon
+8824	null	weapon
+8825	null	weapon
+8826	null	weapon
+8827	null	weapon
+8829	null	weapon
+8830	null	weapon
+8831	null	weapon
+8832	null	weapon
+8833	null	weapon
+8834	null	weapon
+8835	null	weapon
+8839	Void knight top	torso
+8840	Void knight robe	legs
+8841	Void knight mace	weapon
+8842	Void knight gloves	hands
+8844	Bronze defender	shield
+8845	Iron defender	shield
+8846	Steel defender	shield
+8847	Black defender	shield
+8848	Mithril defender	shield
+8849	Adamant defender	shield
+8850	Rune defender	shield
+8856	Defensive shield	shield
+8857	Shot	?
+8858	18lb shot	?
+8859	22lb shot	?
+8860	One barrel	head
+8861	Two barrels	head
+8862	Three barrels	head
+8863	Four barrels	head
+8864	Five barrels	head
+8871	Crate with zanik	weapon
+8872	Bone dagger	weapon
+8874	Bone dagger (p)	weapon
+8876	Bone dagger (p+)	weapon
+8878	Bone dagger (p++)	weapon
+8880	Dorgeshuun crossbow	weapon
+8901	Black mask (10)	head
+8903	Black mask (9)	head
+8905	Black mask (8)	head
+8907	Black mask (7)	head
+8909	Black mask (6)	head
+8911	Black mask (5)	head
+8913	Black mask (4)	head
+8915	Black mask (3)	head
+8917	Black mask (2)	head
+8919	Black mask (1)	head
+8921	Black mask	head
+8923	Witchwood icon	amulet
+8924	Bandana eyepatch (white)	head
+8925	Bandana eyepatch (red)	head
+8926	Bandana eyepatch (blue)	head
+8927	Bandana eyepatch (brown)	head
+8928	Hat eyepatch	head
+8929	Crabclaw hook	hands
+8940	Rum	?
+8941	Rum	?
+8949	Pirate bandana	head
+8950	Pirate hat	head
+8952	Blue naval shirt	torso
+8953	Green naval shirt	torso
+8954	Red naval shirt	torso
+8955	Brown naval shirt	torso
+8956	Black naval shirt	torso
+8957	Purple naval shirt	torso
+8958	Grey naval shirt	torso
+8959	Blue tricorn hat	head
+8960	Green tricorn hat	head
+8961	Red tricorn hat	head
+8962	Brown tricorn hat	head
+8963	Black tricorn hat	head
+8964	Purple tricorn hat	head
+8965	Grey tricorn hat	head
+8966	Cutthroat flag	weapon
+8967	Gilded smile flag	weapon
+8968	Bronze fist flag	weapon
+8969	Lucky shot flag	weapon
+8970	Treasure flag	weapon
+8971	Phasmatys flag	weapon
+8986	Bucket	?
+8987	Torch	weapon
+8991	Blue navy slacks	legs
+8992	Green navy slacks	legs
+8993	Red navy slacks	legs
+8994	Brown navy slacks	legs
+8995	Black navy slacks	legs
+8996	Purple navy slacks	legs
+8997	Grey navy slacks	legs
+9005	Fancy boots	boots
+9006	Fighting boots	boots
+9013	Skull sceptre	weapon
+9020	Queen's secateurs	weapon
+9044	Pharaoh's sceptre	weapon
+9045	Pharaoh's sceptre	weapon
+9046	Pharaoh's sceptre	weapon
+9047	Pharaoh's sceptre	weapon
+9048	Pharaoh's sceptre	weapon
+9049	Pharaoh's sceptre	weapon
+9050	Pharaoh's sceptre	weapon
+9051	Pharaoh's sceptre	weapon
+9060	null	?
+9061	null	?
+9062	null	?
+9063	null	?
+9065	Emerald lantern	shield
+9068	Moonclan helm	head
+9069	Moonclan hat	head
+9070	Moonclan armour	torso
+9071	Moonclan skirt	legs
+9072	Moonclan gloves	hands
+9073	Moonclan boots	boots
+9074	Moonclan cape	cape
+9083	Seal of passage	amulet
+9084	Lunar staff	weapon
+9085	Empty vial	?
+9086	Vial of water	?
+9087	Waking sleep vial	?
+9088	Guam vial	?
+9089	Marr vial	?
+9090	Guam-marr vial	?
+9091	Lunar staff - pt1	weapon
+9092	Lunar staff - pt2	weapon
+9093	Lunar staff - pt3	weapon
+9096	Lunar helm	head
+9097	Lunar torso	torso
+9098	Lunar legs	legs
+9099	Lunar gloves	hands
+9100	Lunar boots	boots
+9101	Lunar cape	cape
+9102	Lunar amulet	amulet
+9103	A special tiara	?
+9106	Astral tiara	head
+9138	null	?
+9174	Bronze crossbow	weapon
+9176	Blurite crossbow	weapon
+9177	Iron crossbow	weapon
+9179	Steel crossbow	weapon
+9181	Mithril crossbow	weapon
+9183	Adamant crossbow	weapon
+9185	Rune crossbow	weapon
+9420	Bronze limbs	shield
+9422	Blurite limbs	shield
+9423	Iron limbs	shield
+9425	Steel limbs	shield
+9427	Mithril limbs	shield
+9429	Adamantite limbs	shield
+9431	Runite limbs	shield
+9440	Wooden stock	weapon
+9442	Oak stock	weapon
+9444	Willow stock	weapon
+9446	Teak stock	weapon
+9448	Maple stock	weapon
+9450	Mahogany stock	weapon
+9452	Yew stock	weapon
+9454	Bronze crossbow (u)	?
+9456	Blurite crossbow (u)	?
+9457	Iron crossbow (u)	?
+9459	Steel crossbow (u)	?
+9461	Mithril crossbow (u)	?
+9463	Adamant crossbow (u)	?
+9465	Runite crossbow (u)	?
+9470	Gnome scarf	amulet
+9472	Gnome goggles	head
+9590	Dossier	?
+9629	Tyras helm	head
+9631	null	?
+9634	Vyrewatch top	torso
+9636	Vyrewatch legs	legs
+9638	Vyrewatch shoes	boots
+9640	Citizen top	torso
+9642	Citizen trousers	legs
+9644	Citizen shoes	boots
+9646	Castle sketch 1	?
+9647	Castle sketch 2	?
+9648	Castle sketch 3	?
+9660	Bucket	?
+9665	Torch	weapon
+9672	Proselyte sallet	head
+9674	Proselyte hauberk	torso
+9676	Proselyte cuisse	legs
+9678	Proselyte tasset	legs
+9681	Commorb v2	?
+9702	Stick	weapon
+9703	Training sword	weapon
+9704	Training shield	shield
+9705	Training bow	weapon
+9729	Elemental helmet	head
+9731	Mind shield	shield
+9733	Mind helmet	head
+9747	Attack cape	cape
+9748	Attack cape(t)	cape
+9749	Attack hood	head
+9750	Strength cape	cape
+9751	Strength cape(t)	cape
+9752	Strength hood	head
+9753	Defence cape	cape
+9754	Defence cape(t)	cape
+9755	Defence hood	head
+9756	Ranging cape	cape
+9757	Ranging cape(t)	cape
+9758	Ranging hood	head
+9759	Prayer cape	cape
+9760	Prayer cape(t)	cape
+9761	Prayer hood	head
+9762	Magic cape	cape
+9763	Magic cape(t)	cape
+9764	Magic hood	head
+9765	Runecraft cape	cape
+9766	Runecraft cape(t)	cape
+9767	Runecraft hood	head
+9768	Hitpoints cape	cape
+9769	Hitpoints cape(t)	cape
+9770	Hitpoints hood	head
+9771	Agility cape	cape
+9772	Agility cape(t)	cape
+9773	Agility hood	head
+9774	Herblore cape	cape
+9775	Herblore cape(t)	cape
+9776	Herblore hood	head
+9777	Thieving cape	cape
+9778	Thieving cape(t)	cape
+9779	Thieving hood	head
+9780	Crafting cape	cape
+9781	Crafting cape(t)	cape
+9782	Crafting hood	head
+9783	Fletching cape	cape
+9784	Fletching cape(t)	cape
+9785	Fletching hood	head
+9786	Slayer cape	cape
+9787	Slayer cape(t)	cape
+9788	Slayer hood	head
+9789	Construct. cape	cape
+9790	Construct. cape(t)	cape
+9791	Construct. hood	head
+9792	Mining cape	cape
+9793	Mining cape(t)	cape
+9794	Mining hood	head
+9795	Smithing cape	cape
+9796	Smithing cape(t)	cape
+9797	Smithing hood	head
+9798	Fishing cape	cape
+9799	Fishing cape(t)	cape
+9800	Fishing hood	head
+9801	Cooking cape	cape
+9802	Cooking cape(t)	cape
+9803	Cooking hood	head
+9804	Firemaking cape	cape
+9805	Firemaking cape(t)	cape
+9806	Firemaking hood	head
+9807	Woodcutting cape	cape
+9808	Woodcut. cape(t)	cape
+9809	Woodcutting hood	head
+9810	Farming cape	cape
+9811	Farming cape(t)	cape
+9812	Farming hood	head
+9813	Quest point cape	cape
+9814	Quest point hood	head
+9893	null	?
+9894	null	?
+9895	null	?
+9896	null	?
+9897	null	?
+9898	null	shield
+9899	null	weapon
+9905	null	weapon
+9906	Ghost buster 500	weapon
+9907	Ghost buster 500	weapon
+9908	Ghost buster 500	weapon
+9909	Ghost buster 500	weapon
+9910	Ghost buster 500	weapon
+9911	Ghost buster 500	weapon
+9912	Ghost buster 500	weapon
+9913	White destabiliser	shield
+9914	Red destabiliser	shield
+9915	Blue destabiliser	shield
+9916	Green destabiliser	shield
+9917	Yellow destabiliser	shield
+9918	Black destabiliser	shield
+9920	Jack lantern mask	head
+9921	Skeleton boots	boots
+9922	Skeleton gloves	hands
+9923	Skeleton leggings	legs
+9924	Skeleton shirt	torso
+9925	Skeleton mask	head
+9926	null	shield
+9927	null	shield
+9928	null	shield
+9929	null	shield
+9930	null	shield
+9931	null	shield
+9943	Sandbag	weapon
+9944	Bomber jacket	torso
+9945	Bomber cap	head
+9946	Cap and goggles	head
+9948	Hunter cape	cape
+9949	Hunter cape(t)	cape
+9950	Hunter hood	head
+10010	Butterfly net	weapon
+10022	null	shield
+10023	Falconer's glove	weapon
+10024	Falconer's glove	weapon
+10029	Teasing stick	weapon
+10033	Chinchompa	weapon
+10034	Red chinchompa	weapon
+10035	Kyatt legs	legs
+10037	Kyatt top	torso
+10039	Kyatt hat	head
+10041	Larupia legs	legs
+10043	Larupia top	torso
+10045	Larupia hat	head
+10047	Graahk legs	legs
+10049	Graahk top	torso
+10051	Graahk headdress	head
+10053	Wood camo top	torso
+10055	Wood camo legs	legs
+10057	Jungle camo top	torso
+10059	Jungle camo legs	legs
+10061	Desert camo top	torso
+10063	Desert camo legs	legs
+10065	Polar camo top	torso
+10067	Polar camo legs	legs
+10069	Spotted cape	cape
+10071	Spottier cape	cape
+10073	Spotted cape	cape
+10074	Spottier cape	cape
+10075	Gloves of silence	hands
+10077	Spiky vambraces	hands
+10079	Green spiky vambraces	hands
+10081	Blue spiky vambraces	hands
+10083	Red spiky vambraces	hands
+10085	Black spiky vambraces	hands
+10129	Barb-tail harpoon	weapon
+10131	null	weapon
+10132	Strung rabbit foot	amulet
+10146	Orange salamander	weapon
+10147	Red salamander	weapon
+10148	Black salamander	weapon
+10149	Swamp lizard	weapon
+10150	Noose wand	weapon
+10152	null	weapon
+10153	null	weapon
+10154	null	weapon
+10155	null	weapon
+10156	Hunters' crossbow	weapon
+10164	null	?
+10171	Eagle cape	cape
+10172	Fake beak	head
+10280	Willow comp bow	weapon
+10282	Yew comp bow	weapon
+10284	Magic comp bow	weapon
+10286	Rune helm (h1)	head
+10288	Rune helm (h2)	head
+10290	Rune helm (h3)	head
+10292	Rune helm (h4)	head
+10294	Rune helm (h5)	head
+10296	Adamant helm (h1)	head
+10298	Adamant helm (h2)	head
+10300	Adamant helm (h3)	head
+10302	Adamant helm (h4)	head
+10304	Adamant helm (h5)	head
+10306	Black helm (h1)	head
+10308	Black helm (h2)	head
+10310	Black helm (h3)	head
+10312	Black helm (h4)	head
+10314	Black helm (h5)	head
+10316	Bob's red shirt	torso
+10318	Bob's blue shirt	torso
+10320	Bob's green shirt	torso
+10322	Bob's black shirt	torso
+10324	Bob's purple shirt	torso
+10330	3rd age range top	torso
+10332	3rd age range legs	legs
+10334	3rd age range coif	head
+10336	3rd age vambraces	hands
+10338	3rd age robe top	torso
+10340	3rd age robe	legs
+10342	3rd age mage hat	head
+10344	3rd age amulet	amulet
+10346	3rd age platelegs	legs
+10348	3rd age platebody	torso
+10350	3rd age full helmet	head
+10352	3rd age kiteshield	shield
+10354	Amulet of glory (t4)	amulet
+10356	Amulet of glory (t3)	amulet
+10358	Amulet of glory (t2)	amulet
+10360	Amulet of glory (t1)	amulet
+10362	Amulet of glory (t)	amulet
+10364	Strength amulet (t)	amulet
+10366	Amulet of magic (t)	amulet
+10368	Zamorak bracers	hands
+10370	Zamorak d'hide body	torso
+10372	Zamorak chaps	legs
+10374	Zamorak coif	head
+10376	Guthix bracers	hands
+10378	Guthix d'hide body	torso
+10380	Guthix chaps	legs
+10382	Guthix coif	head
+10384	Saradomin bracers	hands
+10386	Saradomin d'hide body	torso
+10388	Saradomin chaps	legs
+10390	Saradomin coif	head
+10392	A powdered wig	head
+10394	Flared trousers	legs
+10396	Pantaloons	legs
+10398	Sleeping cap	head
+10400	Black elegant shirt	torso
+10402	Black elegant legs	legs
+10404	Red elegant shirt	torso
+10406	Red elegant legs	legs
+10408	Blue elegant shirt	torso
+10410	Blue elegant legs	legs
+10412	Green elegant shirt	torso
+10414	Green elegant legs	legs
+10416	Purple elegant shirt	torso
+10418	Purple elegant legs	legs
+10420	White elegant blouse	torso
+10422	White elegant skirt	legs
+10424	Red elegant blouse	torso
+10426	Red elegant skirt	legs
+10428	Blue elegant blouse	torso
+10430	Blue elegant skirt	legs
+10432	Green elegant blouse	torso
+10434	Green elegant skirt	legs
+10436	Purple elegant blouse	torso
+10438	Purple elegant skirt	legs
+10440	Saradomin crozier	weapon
+10442	Guthix crozier	weapon
+10444	Zamorak crozier	weapon
+10446	Saradomin cloak	cape
+10448	Guthix cloak	cape
+10450	Zamorak cloak	cape
+10452	Saradomin mitre	head
+10454	Guthix mitre	head
+10456	Zamorak mitre	head
+10458	Saradomin robe top	torso
+10460	Zamorak robe top	torso
+10462	Guthix robe top	torso
+10464	Saradomin robe legs	legs
+10466	Guthix robe legs	legs
+10468	Zamorak robe legs	legs
+10470	Saradomin stole	amulet
+10472	Guthix stole	amulet
+10474	Zamorak stole	amulet
+10484	null	weapon
+10485	Scroll	weapon
+10487	Undead chicken	weapon
+10488	Selected iron	weapon
+10491	Blessed axe	weapon
+10498	Ava's attractor	cape
+10499	Ava's accumulator	cape
+10500	Crone-made amulet	amulet
+10501	Snowball	weapon
+10507	Reindeer hat	head
+10544	Healing vial(2)	?
+10547	Healer hat	head
+10548	Fighter hat	head
+10549	Runner hat	head
+10550	Ranger hat	head
+10551	Fighter torso	torso
+10552	Runner boots	boots
+10553	Penance gloves	hands
+10554	Penance gloves	hands
+10555	Penance skirt	legs
+10556	Attacker icon	jaw
+10557	Collector icon	jaw
+10558	Defender icon	jaw
+10559	Healer icon	jaw
+10564	Granite body	torso
+10566	Fire cape	cape
+10567	Healer icon	jaw
+10568	null	weapon
+10581	Keris	weapon
+10582	Keris(p)	weapon
+10583	Keris(p+)	weapon
+10584	Keris(p++)	weapon
+10588	Salve amulet (e)	amulet
+10589	Granite helm	head
+10810	Arctic pine logs	shield
+10822	Yak-hide armour	torso
+10824	Yak-hide armour	legs
+10826	Neitiznot shield	shield
+10828	Helm of neitiznot	head
+10836	Silly jester hat	head
+10837	Silly jester top	torso
+10838	Silly jester tights	legs
+10839	Silly jester boots	boots
+10840	A jester stick	weapon
+10841	Apricot cream pie	?
+10842	Decapitated head	?
+10857	Severed leg	?
+10858	Shadow sword	weapon
+10860	null	?
+10861	null	?
+10862	Hard hat	head
+10863	Builder's shirt	torso
+10864	Builder's trousers	legs
+10865	Builder's boots	boots
+10877	Plain satchel	shield
+10878	Green satchel	shield
+10879	Red satchel	shield
+10880	Black satchel	shield
+10881	Gold satchel	shield
+10882	Rune satchel	shield
+10886	Prayer book	?
+10887	Barrelchest anchor	weapon
+10933	Lumberjack boots	boots
+10939	Lumberjack top	torso
+10940	Lumberjack legs	legs
+10941	Lumberjack hat	head
+10952	Slayer bell	?
+10954	Frog-leather body	torso
+10956	Frog-leather chaps	legs
+10958	Frog-leather boots	boots
+11012	Wand	weapon
+11013	Infused wand	weapon
+11019	Chicken feet	boots
+11020	Chicken wings	torso
+11021	Chicken head	head
+11022	Chicken legs	legs
+11027	Easter egg	weapon
+11028	Easter egg	weapon
+11029	Easter egg	weapon
+11030	Easter egg	weapon
+11037	Brine sabre	weapon
+11046	Rope	?
+11061	Ancient mace	weapon
+11063	null	weapon
+11068	Gold bracelet	hands
+11069	Gold bracelet	hands
+11071	Sapphire bracelet	hands
+11072	Sapphire bracelet	hands
+11074	Bracelet of clay	hands
+11076	Emerald bracelet	hands
+11078	Emerald bracelet	hands
+11079	Castle wars bracelet(3)	hands
+11081	Castle wars bracelet(2)	hands
+11083	Castle wars bracelet(1)	hands
+11085	Ruby bracelet	hands
+11087	Ruby bracelet	hands
+11088	Inoculation bracelet	hands
+11090	Phoenix necklace	amulet
+11092	Diamond bracelet	hands
+11094	Diamond bracelet	hands
+11095	Abyssal bracelet(5)	hands
+11097	Abyssal bracelet(4)	hands
+11099	Abyssal bracelet(3)	hands
+11101	Abyssal bracelet(2)	hands
+11103	Abyssal bracelet(1)	hands
+11105	Skills necklace(4)	amulet
+11107	Skills necklace(3)	amulet
+11109	Skills necklace(2)	amulet
+11111	Skills necklace(1)	amulet
+11113	Skills necklace	amulet
+11115	Dragonstone bracelet	hands
+11117	Dragon bracelet	hands
+11118	Combat bracelet(4)	hands
+11120	Combat bracelet(3)	hands
+11122	Combat bracelet(2)	hands
+11124	Combat bracelet(1)	hands
+11126	Combat bracelet	hands
+11128	Berserker necklace	amulet
+11130	Onyx bracelet	hands
+11132	Onyx bracelet	hands
+11133	Regen bracelet	hands
+11136	Karamja gloves 1	hands
+11138	Karamja gloves 2	hands
+11140	Karamja gloves 3	hands
+11151	Dream vial (empty)	?
+11152	Dream vial (water)	?
+11153	Dream vial (herb)	?
+11154	Dream potion	?
+11165	Phoenix crossbow	weapon
+11167	Phoenix crossbow	weapon
+11190	Digsite pendant (1)	amulet
+11191	Digsite pendant (2)	amulet
+11192	Digsite pendant (3)	amulet
+11193	Digsite pendant (4)	amulet
+11194	Digsite pendant (5)	amulet
+11195	Clean necklace	amulet
+11200	Dwarven helmet	head
+11204	Shrink-me-quick	weapon
+11230	Dragon dart	weapon
+11231	Dragon dart(p)	weapon
+11233	Dragon dart(p+)	weapon
+11234	Dragon dart(p++)	weapon
+11235	Dark bow	weapon
+11259	Magic butterfly net	weapon
+11279	Elvarg's head	weapon
+11280	Cavalier mask	head
+11282	Beret mask	head
+11283	Dragonfire shield	shield
+11284	Dragonfire shield	shield
+11288	null	?
+11289	null	?
+11290	null	?
+11291	null	?
+11292	null	?
+11293	null	?
+11294	null	?
+11295	null	?
+11296	null	?
+11297	null	?
+11298	null	?
+11299	null	?
+11300	null	?
+11301	null	?
+11302	null	?
+11303	null	?
+11304	null	?
+11305	null	?
+11306	null	?
+11307	null	?
+11308	null	?
+11309	null	?
+11310	null	?
+11311	null	?
+11312	null	?
+11313	null	?
+11314	null	?
+11315	null	?
+11316	null	?
+11317	null	?
+11318	null	?
+11319	null	?
+11320	null	?
+11321	null	?
+11322	null	?
+11323	Barbarian rod	?
+11335	Dragon full helm	head
+11367	Bronze hasta	weapon
+11369	Iron hasta	weapon
+11371	Steel hasta	weapon
+11373	Mithril hasta	weapon
+11375	Adamant hasta	weapon
+11377	Rune hasta	weapon
+11379	Bronze hasta(p)	weapon
+11381	Bronze hasta(kp)	weapon
+11382	Bronze hasta(p+)	weapon
+11384	Bronze hasta(p++)	weapon
+11386	Iron hasta(p)	weapon
+11388	Iron hasta(kp)	weapon
+11389	Iron hasta(p+)	weapon
+11391	Iron hasta(p++)	weapon
+11393	Steel hasta(p)	weapon
+11395	Steel hasta(kp)	weapon
+11396	Steel hasta(p+)	weapon
+11398	Steel hasta(p++)	weapon
+11400	Mithril hasta(p)	weapon
+11402	Mithril hasta(kp)	weapon
+11403	Mithril hasta(p+)	weapon
+11405	Mithril hasta(p++)	weapon
+11407	Adamant hasta(p)	weapon
+11409	Adamant hasta(kp)	weapon
+11410	Adamant hasta(p+)	weapon
+11412	Adamant hasta(p++)	weapon
+11414	Rune hasta(p)	weapon
+11416	Rune hasta(kp)	weapon
+11417	Rune hasta(p+)	weapon
+11419	Rune hasta(p++)	weapon
+11542	null	weapon
+11543	null	weapon
+11663	Void mage helm	head
+11664	Void ranger helm	head
+11665	Void melee helm	head
+11666	Void seal(8)	amulet
+11667	Void seal(7)	amulet
+11668	Void seal(6)	amulet
+11669	Void seal(5)	amulet
+11670	Void seal(4)	amulet
+11671	Void seal(3)	amulet
+11672	Void seal(2)	amulet
+11673	Void seal(1)	amulet
+11705	Beach boxing gloves	weapon
+11706	Beach boxing gloves	weapon
+11707	Cursed goblin hammer	weapon
+11708	Cursed goblin bow	weapon
+11709	Cursed goblin staff	weapon
+11710	Anti-dragon shield (nz)	shield
+11711	Magic secateurs (nz)	weapon
+11719	Rune pickaxe (nz)	weapon
+11720	Mithril pickaxe (nz)	weapon
+11721	Iron pickaxe (nz)	weapon
+11748	New crystal bow (i)	weapon
+11749	Crystal bow full (i)	weapon
+11750	Crystal bow 9/10 (i)	weapon
+11751	Crystal bow 8/10 (i)	weapon
+11752	Crystal bow 7/10 (i)	weapon
+11753	Crystal bow 6/10 (i)	weapon
+11754	Crystal bow 5/10 (i)	weapon
+11755	Crystal bow 4/10 (i)	weapon
+11756	Crystal bow 3/10 (i)	weapon
+11757	Crystal bow 2/10 (i)	weapon
+11758	Crystal bow 1/10 (i)	weapon
+11759	New crystal shield (i)	shield
+11760	Crystal shield full (i)	shield
+11761	Crystal shield 9/10 (i)	shield
+11762	Crystal shield 8/10 (i)	shield
+11763	Crystal shield 7/10 (i)	shield
+11764	Crystal shield 6/10 (i)	shield
+11765	Crystal shield 5/10 (i)	shield
+11766	Crystal shield 4/10 (i)	shield
+11767	Crystal shield 3/10 (i)	shield
+11768	Crystal shield 2/10 (i)	shield
+11769	Crystal shield 1/10 (i)	shield
+11774	Black mask (10) (i)	head
+11775	Black mask (9) (i)	head
+11776	Black mask (8) (i)	head
+11777	Black mask (7) (i)	head
+11778	Black mask (6) (i)	head
+11779	Black mask (5) (i)	head
+11780	Black mask (4) (i)	head
+11781	Black mask (3) (i)	head
+11782	Black mask (2) (i)	head
+11783	Black mask (1) (i)	head
+11784	Black mask (i)	head
+11785	Armadyl crossbow	weapon
+11787	Steam battlestaff	weapon
+11789	Mystic steam staff	weapon
+11791	Staff of the dead	weapon
+11802	Armadyl godsword	weapon
+11804	Bandos godsword	weapon
+11806	Saradomin godsword	weapon
+11808	Zamorak godsword	weapon
+11824	Zamorakian spear	weapon
+11826	Armadyl helmet	head
+11828	Armadyl chestplate	torso
+11830	Armadyl chainskirt	legs
+11832	Bandos chestplate	torso
+11834	Bandos tassets	legs
+11836	Bandos boots	boots
+11838	Saradomin sword	weapon
+11840	Dragon boots	boots
+11847	Black h'ween mask	head
+11850	Graceful hood	head
+11851	Graceful hood	head
+11852	Graceful cape	cape
+11853	Graceful cape	cape
+11854	Graceful top	torso
+11855	Graceful top	torso
+11856	Graceful legs	legs
+11857	Graceful legs	legs
+11858	Graceful gloves	hands
+11859	Graceful gloves	hands
+11860	Graceful boots	boots
+11861	Graceful boots	boots
+11862	Black partyhat	head
+11863	Rainbow partyhat	head
+11864	Slayer helmet	head
+11865	Slayer helmet (i)	head
+11889	Zamorakian hasta	weapon
+11891	Saradomin banner	weapon
+11892	Zamorak banner	weapon
+11893	Decorative armour	legs
+11894	Decorative armour	legs
+11895	Decorative armour	legs
+11896	Decorative armour	torso
+11897	Decorative armour	legs
+11898	Decorative armour	head
+11899	Decorative armour	torso
+11900	Decorative armour	legs
+11901	Decorative armour	cape
+11902	Leaf-bladed sword	weapon
+11905	Trident of the seas (full)	weapon
+11907	Trident of the seas	weapon
+11908	Uncharged trident	weapon
+11919	Cow mask	head
+11920	Dragon pickaxe	weapon
+11924	Malediction ward	shield
+11926	Odium ward	shield
+11959	Black chinchompa	weapon
+11964	Amulet of glory (t6)	amulet
+11966	Amulet of glory (t5)	amulet
+11968	Skills necklace(6)	amulet
+11970	Skills necklace(5)	amulet
+11972	Combat bracelet(6)	hands
+11974	Combat bracelet(5)	hands
+11976	Amulet of glory(5)	amulet
+11978	Amulet of glory(6)	amulet
+11990	Fedora	head
+11998	Smoke battlestaff	weapon
+12000	Mystic smoke staff	weapon
+12002	Occult necklace	amulet
+12006	Abyssal tentacle	weapon
+12013	Prospector helmet	head
+12014	Prospector jacket	torso
+12015	Prospector legs	legs
+12016	Prospector boots	boots
+12017	Salve amulet(i)	amulet
+12018	Salve amulet(ei)	amulet
+12193	Ancient robe top	torso
+12195	Ancient robe legs	legs
+12197	Ancient cloak	cape
+12199	Ancient crozier	weapon
+12201	Ancient stole	amulet
+12203	Ancient mitre	head
+12205	Bronze platebody (g)	torso
+12207	Bronze platelegs (g)	legs
+12209	Bronze plateskirt (g)	legs
+12211	Bronze full helm (g)	head
+12213	Bronze kiteshield (g)	shield
+12215	Bronze platebody (t)	torso
+12217	Bronze platelegs (t)	legs
+12219	Bronze plateskirt (t)	legs
+12221	Bronze full helm (t)	head
+12223	Bronze kiteshield (t)	shield
+12225	Iron platebody (t)	torso
+12227	Iron platelegs (t)	legs
+12229	Iron plateskirt (t)	legs
+12231	Iron full helm (t)	head
+12233	Iron kiteshield (t)	shield
+12235	Iron platebody (g)	torso
+12237	Iron platelegs (g)	legs
+12239	Iron plateskirt (g)	legs
+12241	Iron full helm (g)	head
+12243	Iron kiteshield (g)	shield
+12245	Beanie	head
+12247	Red beret	head
+12249	Imp mask	head
+12251	Goblin mask	head
+12253	Armadyl robe top	torso
+12255	Armadyl robe legs	legs
+12257	Armadyl stole	amulet
+12259	Armadyl mitre	head
+12261	Armadyl cloak	cape
+12263	Armadyl crozier	weapon
+12265	Bandos robe top	torso
+12267	Bandos robe legs	legs
+12269	Bandos stole	amulet
+12271	Bandos mitre	head
+12273	Bandos cloak	cape
+12275	Bandos crozier	weapon
+12277	Mithril platebody (g)	torso
+12279	Mithril platelegs (g)	legs
+12281	Mithril kiteshield (g)	shield
+12283	Mithril full helm (g)	head
+12285	Mithril plateskirt (g)	legs
+12287	Mithril platebody (t)	torso
+12289	Mithril platelegs (t)	legs
+12291	Mithril kiteshield (t)	shield
+12293	Mithril full helm (t)	head
+12295	Mithril plateskirt (t)	legs
+12297	Black pickaxe	weapon
+12299	White headband	head
+12301	Blue headband	head
+12303	Gold headband	head
+12305	Pink headband	head
+12307	Green headband	head
+12309	Pink boater	head
+12311	Purple boater	head
+12313	White boater	head
+12315	Pink elegant shirt	torso
+12317	Pink elegant legs	legs
+12319	Crier hat	head
+12321	White cavalier	head
+12323	Red cavalier	head
+12325	Navy cavalier	head
+12327	Red d'hide body (g)	torso
+12329	Red d'hide chaps (g)	legs
+12331	Red d'hide body (t)	torso
+12333	Red d'hide chaps (t)	legs
+12335	Briefcase	shield
+12337	Sagacious spectacles	head
+12339	Pink elegant blouse	torso
+12341	Pink elegant skirt	legs
+12343	Gold elegant blouse	torso
+12345	Gold elegant skirt	legs
+12347	Gold elegant shirt	torso
+12349	Gold elegant legs	legs
+12351	Musketeer hat	head
+12353	Monocle	head
+12355	Big pirate hat	head
+12357	Katana	weapon
+12359	Leprechaun hat	head
+12361	Cat mask	head
+12363	Bronze dragon mask	head
+12365	Iron dragon mask	head
+12367	Steel dragon mask	head
+12369	Mithril dragon mask	head
+12371	Lava dragon mask	head
+12373	Dragon cane	weapon
+12375	Black cane	weapon
+12377	Adamant cane	weapon
+12379	Rune cane	weapon
+12381	Black d'hide body (g)	torso
+12383	Black d'hide chaps (g)	legs
+12385	Black d'hide body (t)	torso
+12387	Black d'hide chaps (t)	legs
+12389	Gilded scimitar	weapon
+12391	Gilded boots	boots
+12393	Royal gown top	torso
+12395	Royal gown bottom	legs
+12397	Royal crown	head
+12399	Partyhat & specs	head
+12401	null	?
+12412	Pirate hat & patch	head
+12414	Dragon chainbody (g)	torso
+12415	Dragon platelegs (g)	legs
+12416	Dragon plateskirt (g)	legs
+12417	Dragon full helm (g)	head
+12418	Dragon sq shield (g)	shield
+12419	Light infinity hat	head
+12420	Light infinity top	torso
+12421	Light infinity bottoms	legs
+12422	3rd age wand	weapon
+12424	3rd age bow	weapon
+12426	3rd age longsword	weapon
+12428	Penguin mask	head
+12430	Afro	head
+12432	Top hat	head
+12434	Top hat & monocle	head
+12436	Amulet of fury (or)	amulet
+12437	3rd age cloak	cape
+12439	Royal sceptre	weapon
+12441	Musketeer tabard	torso
+12443	Musketeer pants	legs
+12445	Black skirt (g)	legs
+12447	Black skirt (t)	legs
+12449	Black wizard robe (g)	torso
+12451	Black wizard robe (t)	torso
+12453	Black wizard hat (g)	head
+12455	Black wizard hat (t)	head
+12457	Dark infinity hat	head
+12458	Dark infinity top	torso
+12459	Dark infinity bottoms	legs
+12460	Ancient platebody	torso
+12462	Ancient platelegs	legs
+12464	Ancient plateskirt	legs
+12466	Ancient full helm	head
+12468	Ancient kiteshield	shield
+12470	Armadyl platebody	torso
+12472	Armadyl platelegs	legs
+12474	Armadyl plateskirt	legs
+12476	Armadyl full helm	head
+12478	Armadyl kiteshield	shield
+12480	Bandos platebody	torso
+12482	Bandos platelegs	legs
+12484	Bandos plateskirt	legs
+12486	Bandos full helm	head
+12488	Bandos kiteshield	shield
+12490	Ancient bracers	hands
+12492	Ancient d'hide body	torso
+12494	Ancient chaps	legs
+12496	Ancient coif	head
+12498	Bandos bracers	hands
+12500	Bandos d'hide body	torso
+12502	Bandos chaps	legs
+12504	Bandos coif	head
+12506	Armadyl bracers	hands
+12508	Armadyl d'hide body	torso
+12510	Armadyl chaps	legs
+12512	Armadyl coif	head
+12514	Explorer backpack	cape
+12516	Pith helmet	head
+12518	Green dragon mask	head
+12520	Blue dragon mask	head
+12522	Red dragon mask	head
+12524	Black dragon mask	head
+12540	Deerstalker	head
+12596	Rangers' tunic	torso
+12598	Holy sandals	boots
+12600	Druidic wreath	head
+12607	Damaged book	shield
+12608	Book of war	shield
+12609	Damaged book	shield
+12610	Book of law	shield
+12611	Damaged book	shield
+12612	Book of darkness	shield
+12637	Saradomin halo	head
+12638	Zamorak halo	head
+12639	Guthix halo	head
+12658	Iban's staff (u)	weapon
+12659	Clan wars cape	jaw
+12660	Clan wars cape	jaw
+12661	Clan wars cape	jaw
+12662	Clan wars cape	jaw
+12663	Clan wars cape	jaw
+12664	Clan wars cape	jaw
+12665	Clan wars cape	jaw
+12666	Clan wars cape	jaw
+12667	Clan wars cape	jaw
+12668	Clan wars cape	jaw
+12669	Clan wars cape	jaw
+12670	Clan wars cape	jaw
+12671	Clan wars cape	jaw
+12672	Clan wars cape	jaw
+12673	Clan wars cape	jaw
+12674	Clan wars cape	jaw
+12675	Clan wars cape	jaw
+12676	Clan wars cape	jaw
+12677	Clan wars cape	jaw
+12678	Clan wars cape	jaw
+12679	Clan wars cape	jaw
+12680	Clan wars cape	jaw
+12681	Clan wars cape	jaw
+12682	Clan wars cape	jaw
+12683	Clan wars cape	jaw
+12684	Clan wars cape	jaw
+12685	Clan wars cape	jaw
+12686	Clan wars cape	jaw
+12687	Clan wars cape	jaw
+12688	Clan wars cape	jaw
+12689	Clan wars cape	jaw
+12690	Clan wars cape	jaw
+12727	Goblin paint cannon	weapon
+12765	Dark bow	weapon
+12766	Dark bow	weapon
+12767	Dark bow	weapon
+12768	Dark bow	weapon
+12773	Volcanic abyssal whip	weapon
+12774	Frozen abyssal whip	weapon
+12788	Magic shortbow (i)	weapon
+12795	Steam battlestaff	weapon
+12796	Mystic steam staff	weapon
+12797	Dragon pickaxe	weapon
+12806	Malediction ward	shield
+12807	Odium ward	shield
+12808	Sara's blessed sword (full)	weapon
+12809	Saradomin's blessed sword	weapon
+12810	Ironman helm	head
+12811	Ironman platebody	torso
+12812	Ironman platelegs	legs
+12813	Ultimate ironman helm	head
+12814	Ultimate ironman platebody	torso
+12815	Ultimate ironman platelegs	legs
+12817	Elysian spirit shield	shield
+12821	Spectral spirit shield	shield
+12825	Arcane spirit shield	shield
+12829	Spirit shield	shield
+12831	Blessed spirit shield	shield
+12845	Grim reaper hood	head
+12848	Granite maul	weapon
+12851	Amulet of the damned (full)	amulet
+12853	Amulet of the damned	amulet
+12855	Hunter's honour	head
+12856	Rogue's revenge	head
+12887	Santa mask	head
+12888	Santa jacket	torso
+12889	Santa pantaloons	legs
+12890	Santa gloves	hands
+12891	Santa boots	boots
+12892	Antisanta mask	head
+12893	Antisanta jacket	torso
+12894	Antisanta pantaloons	legs
+12895	Antisanta gloves	hands
+12896	Antisanta boots	boots
+12899	Trident of the swamp	weapon
+12900	Uncharged toxic trident	weapon
+12902	Toxic staff (uncharged)	weapon
+12904	Toxic staff of the dead	weapon
+12924	Toxic blowpipe (empty)	weapon
+12926	Toxic blowpipe	weapon
+12929	Serpentine helm (uncharged)	head
+12931	Serpentine helm	head
+12954	Dragon defender	shield
+12956	Cow top	torso
+12957	Cow trousers	legs
+12958	Cow gloves	hands
+12959	Cow shoes	boots
+13068	Quest point cape (t)	cape
+13069	Achievement diary cape (t)	cape
+13070	Achievement diary hood	head
+13072	Elite void top	torso
+13073	Elite void robe	legs
+13074	Pharaoh's sceptre	weapon
+13075	Pharaoh's sceptre	weapon
+13076	Pharaoh's sceptre	weapon
+13077	Pharaoh's sceptre	weapon
+13078	Pharaoh's sceptre	weapon
+13079	Enchanted lyre(5)	weapon
+13080	New crystal halberd full (i)	weapon
+13081	Crystal halberd full (i)	weapon
+13082	Crystal halberd 9/10 (i)	weapon
+13083	Crystal halberd 8/10 (i)	weapon
+13084	Crystal halberd 7/10 (i)	weapon
+13085	Crystal halberd 6/10 (i)	weapon
+13086	Crystal halberd 5/10 (i)	weapon
+13087	Crystal halberd 4/10 (i)	weapon
+13088	Crystal halberd 3/10 (i)	weapon
+13089	Crystal halberd 2/10 (i)	weapon
+13090	Crystal halberd 1/10 (i)	weapon
+13091	New crystal halberd full	weapon
+13092	Crystal halberd full	weapon
+13093	Crystal halberd 9/10	weapon
+13094	Crystal halberd 8/10	weapon
+13095	Crystal halberd 7/10	weapon
+13096	Crystal halberd 6/10	weapon
+13097	Crystal halberd 5/10	weapon
+13098	Crystal halberd 4/10	weapon
+13099	Crystal halberd 3/10	weapon
+13100	Crystal halberd 2/10	weapon
+13101	Crystal halberd 1/10	weapon
+13103	Karamja gloves 4	hands
+13104	Varrock armour 1	torso
+13105	Varrock armour 2	torso
+13106	Varrock armour 3	torso
+13107	Varrock armour 4	torso
+13108	Wilderness sword 1	weapon
+13109	Wilderness sword 2	weapon
+13110	Wilderness sword 3	weapon
+13111	Wilderness sword 4	weapon
+13112	Morytania legs 1	legs
+13113	Morytania legs 2	legs
+13114	Morytania legs 3	legs
+13115	Morytania legs 4	legs
+13117	Falador shield 1	shield
+13118	Falador shield 2	shield
+13119	Falador shield 3	shield
+13120	Falador shield 4	shield
+13121	Ardougne cloak 1	cape
+13122	Ardougne cloak 2	cape
+13123	Ardougne cloak 3	cape
+13124	Ardougne cloak 4	cape
+13129	Fremennik sea boots 1	boots
+13130	Fremennik sea boots 2	boots
+13131	Fremennik sea boots 3	boots
+13132	Fremennik sea boots 4	boots
+13133	Desert amulet 1	amulet
+13134	Desert amulet 2	amulet
+13135	Desert amulet 3	amulet
+13136	Desert amulet 4	amulet
+13137	Kandarin headgear 1	head
+13138	Kandarin headgear 2	head
+13139	Kandarin headgear 3	head
+13140	Kandarin headgear 4	head
+13141	Western banner 1	weapon
+13142	Western banner 2	weapon
+13143	Western banner 3	weapon
+13144	Western banner 4	weapon
+13182	Bunny feet	boots
+13188	Diango's claws	?
+13195	Oddskull	weapon
+13196	Tanzanite helm (uncharged)	head
+13197	Tanzanite helm	head
+13198	Magma helm (uncharged)	head
+13199	Magma helm	head
+13203	Mask of balance	head
+13215	Tiger toy	?
+13216	Lion toy	?
+13217	Snow leopard toy	?
+13218	Amur leopard toy	?
+13221	Music cape	cape
+13222	Music cape(t)	cape
+13223	Music hood	head
+13233	Smouldering stone	?
+13235	Eternal boots	boots
+13237	Pegasian boots	boots
+13239	Primordial boots	boots
+13241	Infernal axe	weapon
+13242	Infernal axe (uncharged)	weapon
+13243	Infernal pickaxe	weapon
+13244	Infernal pickaxe (uncharged)	weapon
+13258	Angler hat	head
+13259	Angler top	torso
+13260	Angler waders	legs
+13261	Angler boots	boots
+13263	Abyssal bludgeon	weapon
+13265	Abyssal dagger	weapon
+13267	Abyssal dagger (p)	weapon
+13269	Abyssal dagger (p+)	weapon
+13271	Abyssal dagger (p++)	weapon
+13280	Max cape	cape
+13281	Max hood	head
+13283	Gravedigger mask	head
+13284	Gravedigger top	torso
+13285	Gravedigger leggings	legs
+13286	Gravedigger boots	boots
+13287	Gravedigger gloves	hands
+13288	Anti-panties	legs
+13317	Deadman's chest	torso
+13318	Deadman's legs	legs
+13319	Deadman's cape	cape
+13328	Green banner	weapon
+13329	Fire max cape	cape
+13330	Fire max hood	head
+13331	Saradomin max cape	cape
+13332	Saradomin max hood	head
+13333	Zamorak max cape	cape
+13334	Zamorak max hood	head
+13335	Guthix max cape	cape
+13336	Guthix max hood	head
+13337	Accumulator max cape	cape
+13338	Accumulator max hood	head
+13340	Agility cape	cape
+13341	Agility cape(t)	cape
+13342	Max cape	cape
+13343	Black santa hat	head
+13344	Inverted santa hat	head
+13353	Gricoller's can	?
+13357	Shayzien gloves (1)	hands
+13358	Shayzien boots (1)	boots
+13359	Shayzien helm (1)	head
+13360	Shayzien greaves (1)	legs
+13361	Shayzien platebody (1)	torso
+13362	Shayzien gloves (2)	hands
+13363	Shayzien boots (2)	boots
+13364	Shayzien helm (2)	head
+13365	Shayzien greaves (2)	legs
+13366	Shayzien platebody (2)	torso
+13367	Shayzien gloves (3)	hands
+13368	Shayzien boots (3)	boots
+13369	Shayzien helm (3)	head
+13370	Shayzien greaves (3)	legs
+13371	Shayzien platebody (3)	torso
+13372	Shayzien gloves (4)	hands
+13373	Shayzien boots (4)	boots
+13374	Shayzien helm (4)	head
+13375	Shayzien greaves (4)	legs
+13376	Shayzien platebody (4)	torso
+13377	Shayzien gloves (5)	hands
+13378	Shayzien boots (5)	boots
+13379	Shayzien helm (5)	head
+13380	Shayzien greaves (5)	legs
+13381	Shayzien body (5)	torso
+13385	Xerician hat	head
+13387	Xerician top	torso
+13389	Xerician robe	legs
+13392	Xeric's talisman (inert)	amulet
+13393	Xeric's talisman	amulet
+13446	Dark essence block	?
+13570	Juniper charcoal	?
+13576	Dragon warhammer	weapon
+13579	Graceful hood	head
+13580	Graceful hood	head
+13581	Graceful cape	cape
+13582	Graceful cape	cape
+13583	Graceful top	torso
+13584	Graceful top	torso
+13585	Graceful legs	legs
+13586	Graceful legs	legs
+13587	Graceful gloves	hands
+13588	Graceful gloves	hands
+13589	Graceful boots	boots
+13590	Graceful boots	boots
+13591	Graceful hood	head
+13592	Graceful hood	head
+13593	Graceful cape	cape
+13594	Graceful cape	cape
+13595	Graceful top	torso
+13596	Graceful top	torso
+13597	Graceful legs	legs
+13598	Graceful legs	legs
+13599	Graceful gloves	hands
+13600	Graceful gloves	hands
+13601	Graceful boots	boots
+13602	Graceful boots	boots
+13603	Graceful hood	head
+13604	Graceful hood	head
+13605	Graceful cape	cape
+13606	Graceful cape	cape
+13607	Graceful top	torso
+13608	Graceful top	torso
+13609	Graceful legs	legs
+13610	Graceful legs	legs
+13611	Graceful gloves	hands
+13612	Graceful gloves	hands
+13613	Graceful boots	boots
+13614	Graceful boots	boots
+13615	Graceful hood	head
+13616	Graceful hood	head
+13617	Graceful cape	cape
+13618	Graceful cape	cape
+13619	Graceful top	torso
+13620	Graceful top	torso
+13621	Graceful legs	legs
+13622	Graceful legs	legs
+13623	Graceful gloves	hands
+13624	Graceful gloves	hands
+13625	Graceful boots	boots
+13626	Graceful boots	boots
+13627	Graceful hood	head
+13628	Graceful hood	head
+13629	Graceful cape	cape
+13630	Graceful cape	cape
+13631	Graceful top	torso
+13632	Graceful top	torso
+13633	Graceful legs	legs
+13634	Graceful legs	legs
+13635	Graceful gloves	hands
+13636	Graceful gloves	hands
+13637	Graceful boots	boots
+13638	Graceful boots	boots
+13640	Farmer's boro trousers	legs
+13641	Farmer's boro trousers	legs
+13642	Farmer's jacket	torso
+13643	Farmer's shirt	torso
+13644	Farmer's boots	boots
+13645	Farmer's boots	boots
+13646	Farmer's strawhat	head
+13647	Farmer's strawhat	head
+13652	Dragon claws	weapon
+13655	Gnome child hat	head
+13660	Chronicle	shield
+13663	Bunny top	torso
+13664	Bunny legs	legs
+13665	Bunny paws	hands
+13667	Graceful hood	head
+13668	Graceful hood	head
+13669	Graceful cape	cape
+13670	Graceful cape	cape
+13671	Graceful top	torso
+13672	Graceful top	torso
+13673	Graceful legs	legs
+13674	Graceful legs	legs
+13675	Graceful gloves	hands
+13676	Graceful gloves	hands
+13677	Graceful boots	boots
+13678	Graceful boots	boots
+13679	Cabbage cape	cape
+13681	Cruciferous codex	shield
+13682	null	?
+13683	null	?
+13685	null	?
+16176	Pharaoh's sceptre	weapon
+16888	New crystal bow	weapon
+16889	New crystal bow (i)	weapon
+16890	New crystal shield	shield
+16891	New crystal shield (i)	shield
+16892	New crystal halberd full (i)	weapon
+16893	New crystal halberd full	weapon
+19476	Achievement diary cape	cape
+19478	Light ballista	weapon
+19481	Heavy ballista	weapon
+19492	Zenyte bracelet	hands
+19493	Zenyte	?
+19532	Zenyte bracelet	hands
+19535	Zenyte necklace	amulet
+19541	Zenyte amulet	amulet
+19544	Tormented bracelet	hands
+19547	Necklace of anguish	amulet
+19553	Amulet of torture	amulet
+19556	Monkey	cape
+19560	Charged onyx	?
+19562	Deconstructed onyx	?
+19639	Black slayer helmet	head
+19641	Black slayer helmet (i)	head
+19643	Green slayer helmet	head
+19645	Green slayer helmet (i)	head
+19647	Red slayer helmet	head
+19649	Red slayer helmet (i)	head
+19675	Arclight	weapon
+19687	Helm of raedwald	head
+19689	Clue hunter garb	torso
+19691	Clue hunter gloves	hands
+19693	Clue hunter trousers	legs
+19695	Clue hunter boots	boots
+19697	Clue hunter cloak	cape
+19699	Hornwood helm	head
+19707	Amulet of eternal glory	amulet
+19720	Occult necklace (or)	amulet
+19722	Dragon defender (t)	shield
+19724	Left eye patch	head
+19727	Double eye patch	head
+19912	Zombie head	weapon
+19915	Cyclops head	head
+19918	Nunchaku	weapon
+19921	Ancient d'hide boots	boots
+19924	Bandos d'hide boots	boots
+19927	Guthix d'hide boots	boots
+19930	Armadyl d'hide boots	boots
+19933	Saradomin d'hide boots	boots
+19936	Zamorak d'hide boots	boots
+19941	Heavy casket	weapon
+19943	Arceuus scarf	amulet
+19946	Hosidius scarf	amulet
+19949	Lovakengj scarf	amulet
+19952	Piscarilius scarf	amulet
+19955	Shayzien scarf	amulet
+19958	Dark tuxedo jacket	torso
+19961	Dark tuxedo cuffs	hands
+19964	Dark trousers	legs
+19967	Dark tuxedo shoes	boots
+19970	Dark bow tie	amulet
+19973	Light tuxedo jacket	torso
+19976	Light tuxedo cuffs	hands
+19979	Light trousers	legs
+19982	Light tuxedo shoes	boots
+19985	Light bow tie	amulet
+19988	Blacksmith's helm	head
+19991	Bucket helm	head
+19994	Ranger gloves	hands
+19997	Holy wraps	hands
+20000	Dragon scimitar (or)	weapon
+20008	Fancy tiara	head
+20011	3rd age axe	weapon
+20014	3rd age pickaxe	weapon
+20020	Lesser demon mask	head
+20023	Greater demon mask	head
+20026	Black demon mask	head
+20029	Old demon mask	head
+20032	Jungle demon mask	head
+20035	Samurai kasa	head
+20038	Samurai shirt	torso
+20041	Samurai gloves	hands
+20044	Samurai greaves	legs
+20047	Samurai boots	boots
+20050	Obsidian cape (r)	cape
+20053	Half moon spectacles	head
+20056	Ale of the gods	weapon
+20059	Bucket helm (g)	head
+20080	Mummy's head	head
+20083	Mummy's body	torso
+20086	Mummy's hands	hands
+20089	Mummy's legs	legs
+20092	Mummy's feet	boots
+20095	Ankou mask	head
+20098	Ankou top	torso
+20101	Ankou gloves	hands
+20104	Ankou's leggings	legs
+20107	Ankou socks	boots
+20110	Bowl wig	head
+20113	Arceuus hood	head
+20116	Hosidius hood	head
+20119	Lovakengj hood	head
+20122	Piscarilius hood	head
+20125	Shayzien hood	head
+20128	Hood of darkness	head
+20131	Robe top of darkness	torso
+20134	Gloves of darkness	hands
+20137	Robe bottom of darkness	legs
+20140	Boots of darkness	boots
+20146	Gilded med helm	head
+20149	Gilded chainbody	torso
+20152	Gilded sq shield	shield
+20155	Gilded 2h sword	weapon
+20158	Gilded spear	weapon
+20161	Gilded hasta	weapon
+20164	Large spade	weapon
+20166	Wooden shield (g)	shield
+20169	Steel platebody (g)	torso
+20172	Steel platelegs (g)	legs
+20175	Steel plateskirt (g)	legs
+20178	Steel full helm (g)	head
+20181	Steel kiteshield (g)	shield
+20184	Steel platebody (t)	torso
+20187	Steel platelegs (t)	legs
+20190	Steel plateskirt (t)	legs
+20193	Steel full helm (t)	head
+20196	Steel kiteshield (t)	shield
+20199	Monk's robe top (g)	torso
+20202	Monk's robe (g)	legs
+20205	Golden chef's hat	head
+20208	Golden apron	torso
+20211	Team cape zero	cape
+20214	Team cape x	cape
+20217	Team cape i	cape
+20240	Crier coat	torso
+20243	Crier bell	weapon
+20246	Black leprechaun hat	head
+20249	Clueless scroll	weapon
+20251	Arceuus banner	weapon
+20254	Hosidius banner	weapon
+20257	Lovakengj banner	weapon
+20260	Piscarilius banner	weapon
+20263	Shayzien banner	weapon
+20266	Black unicorn mask	head
+20269	White unicorn mask	head
+20272	Cabbage round shield	shield
+20275	Gnomish firelighter	?
+20278	Gnomish firelighter	?
+20366	Amulet of torture (or)	amulet
+20368	Armadyl godsword (or)	weapon
+20370	Bandos godsword (or)	weapon
+20372	Saradomin godsword (or)	weapon
+20374	Zamorak godsword (or)	weapon
+20397	Spear	weapon
+20401	Yew shortbow	weapon
+20402	Rune scimitar	weapon
+20403	Maple shortbow	weapon
+20405	Abyssal whip	weapon
+20406	Dragon scimitar	weapon
+20407	Dragon dagger	weapon
+20408	Dark bow	weapon
+20415	Adamant platebody	torso
+20416	Adamant platelegs	legs
+20417	Blue d'hide body	torso
+20418	Blue d'hide chaps	legs
+20421	Rune platebody	torso
+20422	Rune platelegs	legs
+20423	Black d'hide body	torso
+20424	Black d'hide chaps	legs
+20425	Mystic robe top	torso
+20426	Mystic robe bottom	legs
+20428	Dragon chainbody	torso
+20429	Dragon platelegs	legs
+20431	Ancient staff	weapon
+20433	Evil chicken feet	boots
+20436	Evil chicken wings	torso
+20439	Evil chicken head	head
+20442	Evil chicken legs	legs
+20517	Elder chaos top	torso
+20520	Elder chaos robe	legs
+20552	Rune battleaxe	weapon
+20553	Beginner wand	weapon
+20554	Toktz-xil-ak	weapon
+20555	Rune 2h sword	weapon
+20556	Apprentice wand	weapon
+20557	Granite maul	weapon
+20558	Magic shortbow	weapon
+20559	Dragon 2h sword	weapon
+20560	Master wand	weapon
+20561	Adamant full helm	head
+20562	Mystic hat	head
+20563	Proselyte sallet	head
+20564	Proselyte hauberk	torso
+20565	Proselyte cuisse	legs
+20566	Red d'hide body	torso
+20567	Red d'hide chaps	legs
+20568	Splitbark helm	head
+20571	Warrior helm	head
+20572	Archer helm	head
+20573	Farseer helm	head
+20574	Infinity top	torso
+20575	Infinity bottoms	legs
+20576	3rd age robe top	torso
+20577	3rd age robe	legs
+20578	Climbing boots	boots
+20579	Mystic boots	boots
+20580	Snakeskin boots	boots
+20581	Mithril gloves	hands
+20582	Adamant gloves	hands
+20583	Rune gloves	hands
+20584	Amulet of accuracy	amulet
+20585	Amulet of power	amulet
+20586	Amulet of glory	amulet
+20587	Rope	?
+20590	Stale baguette	weapon
+20593	Armadyl godsword	weapon
+20595	Elder chaos hood	head
+20598	Ahrim's robetop	torso
+20599	Ahrim's robeskirt	legs
+20695	Bruma root	?
+20696	Bruma kindling	?
+20704	Pyromancer garb	torso
+20706	Pyromancer robe	legs
+20708	Pyromancer hood	head
+20710	Pyromancer boots	boots
+20712	Warm gloves	hands
+20714	Tome of fire	shield
+20716	Tome of fire (empty)	shield
+20720	Bruma torch	weapon
+20727	Leaf-bladed battleaxe	weapon
+20730	Mist battlestaff	weapon
+20733	Mystic mist staff	weapon
+20736	Dust battlestaff	weapon
+20739	Mystic dust staff	weapon
+20756	Hill giant club	weapon
+20760	Ardougne max cape	cape
+20764	Ardougne max hood	head
+20773	Banshee mask	head
+20775	Banshee top	torso
+20777	Banshee robe	legs
+20779	Hunting knife	weapon
+20781	Killer's knife	weapon
+20784	Dragon claws	weapon
+20785	Dragon warhammer	weapon
+20792	Hardcore ironman helm	head
+20794	Hardcore ironman platebody	torso
+20796	Hardcore ironman platelegs	legs
+20802	Healer icon	jaw
+20834	Sack of presents	cape
+20836	Giant present	weapon
+20838	Corrupted helm	head
+20840	Corrupted platebody	torso
+20842	Corrupted platelegs	legs
+20844	Corrupted plateskirt	legs
+20846	Corrupted kiteshield	shield
+20849	Dragon thrownaxe	weapon
+20997	Twisted bow	weapon
+21000	Twisted buckler	shield
+21003	Elder maul	weapon
+21006	Kodai wand	weapon
+21009	Dragon sword	weapon
+21012	Dragon hunter crossbow	weapon
+21015	Dinh's bulwark	weapon
+21018	Ancestral hat	head
+21021	Ancestral robe top	torso
+21024	Ancestral robe bottom	legs
+21028	Dragon harpoon	weapon
+21031	Infernal harpoon	weapon
+21033	Infernal harpoon (uncharged)	weapon
+21059	Killer's knife	weapon
+21061	Graceful hood	head
+21063	Graceful hood	head
+21064	Graceful cape	cape
+21066	Graceful cape	cape
+21067	Graceful top	torso
+21069	Graceful top	torso
+21070	Graceful legs	legs
+21072	Graceful legs	legs
+21073	Graceful gloves	hands
+21075	Graceful gloves	hands
+21076	Graceful boots	boots
+21078	Graceful boots	boots
+21090	Opal necklace	amulet
+21093	Jade necklace	amulet
+21096	Topaz necklace	amulet
+21108	Opal amulet	amulet
+21111	Jade amulet	amulet
+21114	Topaz amulet	amulet
+21117	Opal bracelet	hands
+21120	Jade bracelet	hands
+21123	Topaz bracelet	hands
+21143	Dodgy necklace	amulet
+21146	Necklace of passage(5)	amulet
+21149	Necklace of passage(4)	amulet
+21151	Necklace of passage(3)	amulet
+21153	Necklace of passage(2)	amulet
+21155	Necklace of passage(1)	amulet
+21157	Necklace of faith	amulet
+21160	Amulet of bounty	amulet
+21163	Amulet of chemistry	amulet
+21166	Burning amulet(5)	amulet
+21169	Burning amulet(4)	amulet
+21171	Burning amulet(3)	amulet
+21173	Burning amulet(2)	amulet
+21175	Burning amulet(1)	amulet
+21177	Expeditious bracelet	hands
+21180	Flamtaer bracelet	hands
+21183	Bracelet of slaughter	hands
+21186	Fire max cape	cape
+21198	Lava battlestaff	weapon
+21200	Mystic lava staff	weapon
+21205	Elder maul	weapon
+21206	Dragon sword	weapon
+21207	Dragon thrownaxe	weapon
+21209	Birthday balloons	weapon
+21211	4th birthday hat	head
+21214	Easter egg helm	head
+21253	Farmer's strawhat	head
+21254	Farmer's strawhat	head
+21255	Slayer's staff (e)	weapon
+21261	Mysterious orb	?
+21264	Purple slayer helmet	head
+21266	Purple slayer helmet (i)	head
+21270	Eternal gem	?
+21276	Skull sceptre (i)	weapon
+21282	Infernal max hood	head
+21284	Infernal max cape	cape
+21285	Infernal max cape	cape
+21295	Infernal cape	cape
+21297	Infernal cape	cape
+21298	Obsidian helmet	head
+21301	Obsidian platebody	torso
+21304	Obsidian platelegs	legs
+21314	Rainbow scarf	amulet
+21343	Mining gloves	hands
+21345	Superior mining gloves	hands
+21347	Amethyst	?
+21354	Hand fan	weapon
+21392	Expert mining gloves	hands
+21396	Clan wars cape	jaw
+21397	Clan wars cape	jaw
+21398	Clan wars cape	jaw
+21399	Clan wars cape	jaw
+21400	Clan wars cape	jaw
+21401	Clan wars cape	jaw
+21402	Clan wars cape	jaw
+21403	Clan wars cape	jaw
+21404	Clan wars cape	jaw
+21405	Clan wars cape	jaw
+21406	Clan wars cape	jaw
+21407	Clan wars cape	jaw
+21408	Clan wars cape	jaw
+21409	Clan wars cape	jaw
+21410	Clan wars cape	jaw
+21411	Clan wars cape	jaw
+21412	Clan wars cape	jaw
+21413	Clan wars cape	jaw
+21414	Clan wars cape	jaw
+21415	Clan wars cape	jaw
+21416	Clan wars cape	jaw
+21417	Clan wars cape	jaw
+21418	Clan wars cape	jaw
+21419	Clan wars cape	jaw
+21420	Clan wars cape	jaw
+21421	Clan wars cape	jaw
+21422	Clan wars cape	jaw
+21423	Clan wars cape	jaw
+21424	Clan wars cape	jaw
+21425	Clan wars cape	jaw
+21426	Clan wars cape	jaw
+21427	Clan wars cape	jaw
+21428	Wilderness cape	cape
+21429	Wilderness cape	cape
+21430	Wilderness cape	cape
+21431	Wilderness cape	cape
+21432	Wilderness cape	cape
+21433	Wilderness champion amulet	amulet
+21434	Wilderness cape	cape
+21435	Wilderness cape	cape
+21436	Wilderness cape	cape
+21437	Wilderness cape	cape
+21438	Wilderness cape	cape
+21439	Champion's cape	cape
+21445	Pharaoh's sceptre	weapon
+21446	Pharaoh's sceptre	weapon
+21539	Heat-proof vessel	weapon
+21633	Ancient wyvern shield	shield
+21634	Ancient wyvern shield	shield
+21643	Granite boots	boots
+21646	Granite longsword	weapon
+21649	Merfolk trident	weapon
+21652	Drift net	?
+21655	Pufferfish	?
+21695	Runefest shield	shield
+21720	Jonas mask	head
+21722	Diving helmet	head
+21723	Diving apparatus	cape
+21733	Guardian boots	boots
+21736	Granite gloves	hands
+21742	Granite hammer	weapon
+21760	Kharedst's memoirs	shield
+21776	Imbued saradomin max cape	cape
+21778	Imbued saradomin max hood	head
+21780	Imbued zamorak max cape	cape
+21782	Imbued zamorak max hood	head
+21784	Imbued guthix max cape	cape
+21786	Imbued guthix max hood	head
+21791	Imbued saradomin cape	cape
+21793	Imbued guthix cape	cape
+21795	Imbued zamorak cape	cape
+21816	Bracelet of ethereum	hands
+21817	Bracelet of ethereum (uncharged)	hands
+21838	Shaman mask	head
+21847	Snow imp costume head	head
+21849	Snow imp costume body	torso
+21851	Snow imp costume legs	legs
+21853	Snow imp costume tail	cape
+21855	Snow imp costume gloves	hands
+21857	Snow imp costume feet	boots
+21859	Wise old man's santa hat	head
+21888	Turquoise slayer helmet	head
+21890	Turquoise slayer helmet (i)	head
+21892	Dragon platebody	torso
+21895	Dragon kiteshield	shield
+21898	Assembler max cape	cape
+21900	Assembler max hood	head
+21902	Dragon crossbow	weapon
+21918	Dragon limbs	shield
+21921	Dragon crossbow (u)	?
+21952	Magic stock	weapon
+22002	Dragonfire ward	shield
+22003	Dragonfire ward	shield
+22109	Ava's assembler	cape
+22111	Dragonbone necklace	amulet
+22114	Mythical cape	cape
+22121	Wrath tiara	head
+22127	Adamant kiteshield	shield
+22129	Adamant kiteshield	shield
+22131	Adamant kiteshield	shield
+22133	Adamant kiteshield	shield
+22135	Adamant kiteshield	shield
+22137	Adamant kiteshield	shield
+22139	Adamant kiteshield	shield
+22141	Adamant kiteshield	shield
+22143	Adamant kiteshield	shield
+22145	Adamant kiteshield	shield
+22147	Adamant kiteshield	shield
+22149	Adamant kiteshield	shield
+22151	Adamant kiteshield	shield
+22153	Adamant kiteshield	shield
+22155	Adamant kiteshield	shield
+22157	Adamant kiteshield	shield
+22159	Adamant heraldic helm	head
+22161	Adamant heraldic helm	head
+22163	Adamant heraldic helm	head
+22165	Adamant heraldic helm	head
+22167	Adamant heraldic helm	head
+22169	Adamant heraldic helm	head
+22171	Adamant heraldic helm	head
+22173	Adamant heraldic helm	head
+22175	Adamant heraldic helm	head
+22177	Adamant heraldic helm	head
+22179	Adamant heraldic helm	head
+22181	Adamant heraldic helm	head
+22183	Adamant heraldic helm	head
+22185	Adamant heraldic helm	head
+22187	Adamant heraldic helm	head
+22189	Adamant heraldic helm	head
+22234	Dragon boots (g)	boots
+22242	Dragon platebody (g)	torso
+22244	Dragon kiteshield (g)	shield
+22249	Necklace of anguish (or)	amulet
+22251	Oak shield	shield
+22254	Willow shield	shield
+22257	Maple shield	shield
+22260	Yew shield	shield
+22263	Magic shield	shield
+22266	Redwood shield	shield
+22269	Hard leather shield	shield
+22272	Snakeskin shield	shield
+22275	Green d'hide shield	shield
+22278	Blue d'hide shield	shield
+22281	Red d'hide shield	shield
+22284	Black d'hide shield	shield
+22288	Trident of the seas (e)	weapon
+22290	Uncharged trident (e)	weapon
+22292	Trident of the swamp (e)	weapon
+22294	Uncharged toxic trident (e)	weapon
+22296	Staff of light	weapon
+22308	Healer icon	jaw
+22309	Healer icon	jaw
+22310	Healer icon	jaw
+22311	Healer icon	jaw
+22312	Collector icon	jaw
+22313	Collector icon	jaw
+22314	Collector icon	jaw
+22315	Collector icon	jaw
+22316	Prop sword	weapon
+22322	Avernic defender	shield
+22323	Sanguinesti staff	weapon
+22324	Ghrazi rapier	weapon
+22325	Scythe of vitur	weapon
+22326	Justiciar faceguard	head
+22327	Justiciar chestguard	torso
+22328	Justiciar legguards	legs
+22331	Starter sword	weapon
+22333	Starter bow	weapon
+22335	Starter staff	weapon
+22337	Collector icon	jaw
+22338	Collector icon	jaw
+22339	Collector icon	jaw
+22340	Defender icon	jaw
+22341	Defender icon	jaw
+22342	Defender icon	jaw
+22343	Defender icon	jaw
+22344	Defender icon	jaw
+22345	Defender icon	jaw
+22346	Attacker icon	jaw
+22347	Attacker icon	jaw
+22348	Attacker icon	jaw
+22349	Attacker icon	jaw
+22351	Eggshell platebody	torso
+22353	Eggshell platelegs	legs
+22355	Holy handegg	weapon
+22358	Peaceful handegg	weapon
+22361	Chaotic handegg	weapon
+22368	Bryophyta's staff (uncharged)	weapon
+22370	Bryophyta's staff	weapon
+22388	Xeric's guard	cape
+22390	Xeric's warrior	cape
+22392	Xeric's sentinel	cape
+22394	Xeric's general	cape
+22396	Xeric's champion	cape
+22398	Ivandis flail	weapon
+22400	Drakan's medallion	amulet
+22433	Emerald sickle (b)	weapon
+22435	Enchanted emerald sickle (b)	weapon
+22481	Sanguinesti staff (uncharged)	weapon
+22486	Scythe of vitur (uncharged)	weapon
+22494	Sinhaza shroud tier 1	cape
+22496	Sinhaza shroud tier 2	cape
+22498	Sinhaza shroud tier 3	cape
+22500	Sinhaza shroud tier 4	cape
+22502	Sinhaza shroud tier 5	cape
+22516	Dawnbringer	weapon
+22542	Viggora's chainmace (u)	weapon
+22545	Viggora's chainmace	weapon
+22547	Craw's bow (u)	weapon
+22550	Craw's bow	weapon
+22552	Thammaron's sceptre (u)	weapon
+22555	Thammaron's sceptre	weapon
+22557	Amulet of avarice	amulet
+22610	Vesta's spear	weapon
+22613	Vesta's longsword	weapon
+22616	Vesta's chainbody	torso
+22619	Vesta's plateskirt	legs
+22622	Statius's warhammer	weapon
+22625	Statius's full helm	head
+22628	Statius's platebody	torso
+22631	Statius's platelegs	legs
+22634	Morrigan's throwing axe	weapon
+22636	Morrigan's javelin	weapon
+22638	Morrigan's coif	head
+22641	Morrigan's leather body	torso
+22644	Morrigan's leather chaps	legs
+22647	Zuriel's staff	weapon
+22650	Zuriel's hood	head
+22653	Zuriel's robe top	torso
+22656	Zuriel's robe bottom	legs
+22664	Scythe of vitur	weapon
+22665	Armadyl godsword	weapon
+22666	Rubber chicken	weapon
+22675	Scroll sack	cape
+22684	Eek	weapon
+22688	Null	?
+22689	Clown mask	head
+22691	Null	amulet
+22692	Clown bow tie	amulet
+22694	Null	?
+22695	Clown gown	torso
+22697	Null	?
+22698	Clown trousers	legs
+22700	Null	boots
+22701	Clown shoes	boots
+22711	Collection log	shield
+22713	Star-face	head
+22715	Tree top	torso
+22717	Tree skirt	legs
+22719	Candy cane	weapon
+22721	Attacker icon	jaw
+22722	Attacker icon	jaw
+22723	Attacker icon	jaw
+22724	Collector icon	jaw
+22725	Defender icon	jaw
+22726	Defender icon	jaw
+22727	Defender icon	jaw
+22728	Defender icon	jaw
+22729	Attacker icon	jaw
+22730	Attacker icon	jaw
+22731	Dragon hasta	weapon
+22734	Dragon hasta(p)	weapon
+22737	Dragon hasta(p+)	weapon
+22740	Dragon hasta(p++)	weapon
+22743	Dragon hasta(kp)	weapon
+22804	Dragon knife	weapon
+22806	Dragon knife(p)	weapon
+22808	Dragon knife(p+)	weapon
+22810	Dragon knife(p++)	weapon
+22812	Dragon knife	shield
+22814	Dragon knife	shield
+22816	Cormorant's glove	weapon
+22817	Cormorant's glove	weapon
+22838	Fish sack	cape
+22840	Golden tench	weapon
+22842	Pearl barbarian rod	weapon
+22844	Pearl fly fishing rod	weapon
+22846	Pearl fishing rod	weapon
+22951	Boots of brimstone	boots
+22954	Devout boots	boots
+22978	Dragon hunter lance	weapon
+22981	Ferocious gloves	hands
+22986	Bonecrusher necklace	amulet
+22994	Bottomless compost bucket	?
+22997	Bottomless compost bucket	?
+23037	Boots of stone	boots
+23047	Mystic hat (dusk)	head
+23050	Mystic robe top (dusk)	torso
+23053	Mystic robe bottom (dusk)	legs
+23056	Mystic gloves (dusk)	hands
+23059	Mystic boots (dusk)	boots
+23073	Hydra slayer helmet	head
+23075	Hydra slayer helmet (i)	head
+23091	Ornate gloves	hands
+23093	Ornate boots	boots
+23095	Ornate legs	legs
+23097	Ornate top	torso
+23099	Ornate cape	cape
+23101	Ornate helm	head
+23108	Birthday cake	weapon
+23122	Oily pearl fishing rod	weapon
+23188	Guthix d'hide shield	shield
+23191	Saradomin d'hide shield	shield
+23194	Zamorak d'hide shield	shield
+23197	Ancient d'hide shield	shield
+23200	Armadyl d'hide shield	shield
+23203	Bandos d'hide shield	shield
+23206	Dual sai	weapon
+23209	Rune platebody (h1)	torso
+23212	Rune platebody (h2)	torso
+23215	Rune platebody (h3)	torso
+23218	Rune platebody (h4)	torso
+23221	Rune platebody (h5)	torso
+23224	Thieving bag	cape
+23230	Rune defender (t)	shield
+23235	Tzhaar-ket-om (t)	weapon
+23240	Berserker necklace (or)	amulet
+23242	3rd age plateskirt	legs
+23246	Fremennik kilt	legs
+23249	Rangers' tights	legs
+23252	Giant boot	head
+23255	Uri's hat	head
+23258	Gilded coif	head
+23261	Gilded d'hide vambraces	hands
+23264	Gilded d'hide body	torso
+23267	Gilded d'hide chaps	legs
+23270	Adamant dragon mask	head
+23273	Rune dragon mask	head
+23276	Gilded pickaxe	weapon
+23279	Gilded axe	weapon
+23282	Gilded spade	weapon
+23285	Mole slippers	boots
+23288	Frog slippers	boots
+23291	Bear feet	boots
+23294	Demon feet	boots
+23297	Jester cape	cape
+23300	Shoulder parrot	cape
+23303	Monk's robe top (t)	torso
+23306	Monk's robe (t)	legs
+23309	Amulet of defence (t)	amulet
+23312	Sandwich lady hat	head
+23315	Sandwich lady top	torso
+23318	Sandwich lady bottom	legs
+23330	Rune scimitar	weapon
+23332	Rune scimitar	weapon
+23334	Rune scimitar	weapon
+23336	3rd age druidic robe top	torso
+23339	3rd age druidic robe bottoms	legs
+23342	3rd age druidic staff	weapon
+23345	3rd age druidic cloak	cape
+23351	Cape of skulls	cape
+23354	Amulet of power (t)	amulet
+23357	Rain bow	weapon
+23360	Ham joint	weapon
+23363	Staff of bob the cat	weapon
+23366	Black platebody (h1)	torso
+23369	Black platebody (h2)	torso
+23372	Black platebody (h3)	torso
+23375	Black platebody (h4)	torso
+23378	Black platebody (h5)	torso
+23381	Leather body (g)	torso
+23384	Leather chaps (g)	legs
+23389	Spiked manacles	boots
+23392	Adamant platebody (h1)	torso
+23395	Adamant platebody (h2)	torso
+23398	Adamant platebody (h3)	torso
+23401	Adamant platebody (h4)	torso
+23404	Adamant platebody (h5)	torso
+23407	Wolf mask	head
+23410	Wolf cloak	cape
+23413	Climbing boots (g)	boots
+23444	Tormented bracelet (or)	hands
+23446	Giant easter egg	weapon
+23448	Bunnyman mask	head
+23458	Enchanted lyre(i)	weapon
+23460	Attacker icon	jaw
+23461	Attacker icon	jaw
+23462	Attacker icon	jaw
+23463	Attacker icon	jaw
+23464	Attacker icon	jaw
+23465	Attacker icon	jaw
+23466	Defender icon	jaw
+23467	Defender icon	jaw
+23468	Defender icon	jaw
+23469	Defender icon	jaw
+23470	Defender icon	jaw
+23471	Collector icon	jaw
+23472	Collector icon	jaw
+23473	Collector icon	jaw
+23474	Collector icon	jaw
+23475	Collector icon	jaw
+23476	Collector icon	jaw
+23477	Collector icon	jaw
+23478	Healer icon	jaw
+23479	Healer icon	jaw
+23480	Healer icon	jaw
+23481	Healer icon	jaw
+23482	Healer icon	jaw
+23483	Healer icon	jaw
+23484	Healer icon	jaw
+23485	Healer icon	jaw
+23486	Healer icon	jaw
+23522	Mask of ranul	head
+23528	Sarachnis cudgel	weapon
+23591	Helm of neitiznot	head
+23593	Barrows gloves	hands
+23597	Dragon defender	shield
+23599	Spirit shield	shield
+23601	Rune crossbow	weapon
+23603	Imbued guthix cape	cape
+23605	Imbued zamorak cape	cape
+23607	Imbued saradomin cape	cape
+23609	Ava's accumulator	cape
+23611	Armadyl crossbow	weapon
+23613	Staff of the dead	weapon
+23615	Vesta's longsword	weapon
+23617	Zuriel's staff	weapon
+23619	Morrigan's javelin	weapon
+23620	Statius's warhammer	weapon
+23622	Infernal cape	cape
+23626	Kodai wand	weapon
+23628	Ghrazi rapier	weapon
+23630	Heavy ballista	weapon
+23632	Karil's leathertop	torso
+23633	Dharok's platelegs	legs
+23634	Torag's platelegs	legs
+23635	Verac's plateskirt	legs
+23636	Verac's helm	head
+23637	Torag's helm	head
+23638	Guthan's helm	head
+23639	Dharok's helm	head
+23640	Amulet of fury	amulet
+23642	Blessed spirit shield	shield
+23644	Eternal boots	boots
+23646	Bandos tassets	legs
+23652	Mage's book	shield
+23653	Ahrim's staff	weapon
+23654	Occult necklace	amulet
+23673	Crystal axe	weapon
+23675	Crystal axe (inactive)	weapon
+23677	Dragon pickaxe (or)	weapon
+23679	null	weapon
+23680	Crystal pickaxe	weapon
+23682	Crystal pickaxe (inactive)	weapon
+23684	null	weapon
+23762	Crystal harpoon	weapon
+23764	Crystal harpoon (inactive)	weapon
+23766	null	weapon
+23767	null	weapon
+23785	Ardougne knight helm	head
+23787	Ardougne knight platebody	torso
+23789	Ardougne knight platelegs	legs
+23819	null	?
+23820	Corrupted sceptre	weapon
+23821	Corrupted axe	weapon
+23822	Corrupted pickaxe	weapon
+23823	Corrupted harpoon	weapon
+23839	Vial	?
+23840	Corrupted helm (basic)	head
+23841	Corrupted helm (attuned)	head
+23842	Corrupted helm (perfected)	head
+23843	Corrupted body (basic)	torso
+23844	Corrupted body (attuned)	torso
+23845	Corrupted body (perfected)	torso
+23846	Corrupted legs (basic)	legs
+23847	Corrupted legs (attuned)	legs
+23848	Corrupted legs (perfected)	legs
+23849	Corrupted halberd (basic)	weapon
+23850	Corrupted halberd (attuned)	weapon
+23851	Corrupted halberd (perfected)	weapon
+23852	Corrupted staff (basic)	weapon
+23853	Corrupted staff (attuned)	weapon
+23854	Corrupted staff (perfected)	weapon
+23855	Corrupted bow (basic)	weapon
+23856	Corrupted bow (attuned)	weapon
+23857	Corrupted bow (perfected)	weapon
+23859	Gauntlet cape	cape
+23861	Crystal sceptre	weapon
+23862	Crystal axe	weapon
+23863	Crystal pickaxe	weapon
+23864	Crystal harpoon	weapon
+23879	Vial	?
+23886	Crystal helm (basic)	head
+23887	Crystal helm (attuned)	head
+23888	Crystal helm (perfected)	head
+23889	Crystal body (basic)	torso
+23890	Crystal body (attuned)	torso
+23891	Crystal body (perfected)	torso
+23892	Crystal legs (basic)	legs
+23893	Crystal legs (attuned)	legs
+23894	Crystal legs (perfected)	legs
+23895	Crystal halberd (basic)	weapon
+23896	Crystal halberd (attuned)	weapon
+23897	Crystal halberd (perfected)	weapon
+23898	Crystal staff (basic)	weapon
+23899	Crystal staff (attuned)	weapon
+23900	Crystal staff (perfected)	weapon
+23901	Crystal bow (basic)	weapon
+23902	Crystal bow (attuned)	weapon
+23903	Crystal bow (perfected)	weapon
+23907	Imbued tephra	weapon
+23911	Crystal crown	head
+23913	Crystal crown	head
+23915	Crystal crown	head
+23917	Crystal crown	head
+23919	Crystal crown	head
+23921	Crystal crown	head
+23923	Crystal crown	head
+23925	Crystal crown	head
+23971	Crystal helm	head
+23973	Crystal helm (inactive)	head
+23975	Crystal body	torso
+23977	Crystal body (inactive)	torso
+23979	Crystal legs	legs
+23981	Crystal legs (inactive)	legs
+23983	Crystal bow	weapon
+23985	Crystal bow (inactive)	weapon
+23987	Crystal halberd	weapon
+23989	Crystal halberd (inactive)	weapon
+23991	Crystal shield	shield
+23993	Crystal shield (inactive)	shield
+23995	Blade of saeldor	weapon
+23997	Blade of saeldor (inactive)	weapon
+24000	Crystal grail	weapon
+24003	Elven boots	boots
+24006	Elven gloves	hands
+24009	Elven top	torso
+24012	Elven skirt	legs
+24015	Elven top	torso
+24018	Elven skirt	legs
+24021	Elven top	torso
+24024	Elven legwear	legs
+24027	Elven top	torso
+24034	Dragonstone full helm	head
+24037	Dragonstone platebody	torso
+24040	Dragonstone platelegs	legs
+24043	Dragonstone boots	boots
+24046	Dragonstone gauntlets	hands
+24077	null	?
+24078	null	?
+24079	null	?
+24080	null	?
+24081	null	?
+24082	null	?
+24083	null	?
+24084	null	?
+24085	null	?
+24086	null	?
+24087	null	?
+24088	null	?
+24089	null	?
+24090	null	?
+24091	null	?
+24092	null	?
+24093	null	?
+24094	null	?
+24095	null	?
+24096	null	?
+24097	null	?
+24098	null	?
+24099	null	?
+24100	null	?
+24101	null	?
+24102	null	?
+24103	null	?
+24104	null	?
+24105	null	?
+24106	null	?
+24107	null	?
+24108	null	?
+24109	null	?
+24110	null	?
+24111	null	?
+24112	null	?
+24113	null	?
+24114	null	?
+24115	null	?
+24116	null	?
+24117	null	?
+24118	null	?
+24119	null	?
+24120	null	?
+24121	null	?
+24122	null	?
+24123	Crystal bow	weapon
+24125	Crystal halberd	weapon
+24127	Crystal shield	shield
+24133	Infernal max cape (l)	cape
+24134	Fire max cape (l)	cape
+24135	Assembler max cape (l)	cape
+24136	Bronze defender (l)	shield
+24137	Iron defender (l)	shield
+24138	Steel defender (l)	shield
+24139	Black defender (l)	shield
+24140	Mithril defender (l)	shield
+24141	Adamant defender (l)	shield
+24142	Rune defender (l)	shield
+24143	Dragon defender (l)	shield
+24144	Staff of balance	weapon
+24157	Decorative sword (l)	weapon
+24158	Decorative armour (l)	torso
+24159	Decorative armour (l)	legs
+24160	Decorative helm (l)	head
+24161	Decorative shield (l)	shield
+24162	Decorative armour (l)	legs
+24163	Decorative armour (l)	torso
+24164	Decorative armour (l)	legs
+24165	Decorative armour (l)	head
+24166	Decorative armour (l)	torso
+24167	Decorative armour (l)	legs
+24168	Decorative armour (l)	cape
+24169	Saradomin halo (l)	head
+24170	Zamorak halo (l)	head
+24171	Guthix halo (l)	head
+24172	Healer hat (l)	head
+24173	Fighter hat (l)	head
+24174	Ranger hat (l)	head
+24175	Fighter torso (l)	torso
+24176	Penance skirt (l)	legs
+24177	Void knight top (l)	torso
+24178	Elite void top (l)	torso
+24179	Void knight robe (l)	legs
+24180	Elite void robe (l)	legs
+24181	Void knight mace (l)	weapon
+24182	Void knight gloves (l)	hands
+24183	Void mage helm (l)	head
+24184	Void ranger helm (l)	head
+24185	Void melee helm (l)	head
+24186	Avernic defender (l)	shield
+24189	Deadman's chest	torso
+24190	Deadman's legs	legs
+24191	Deadman's cape	cape
+24192	Armadyl halo	head
+24194	Armadyl halo (l)	head
+24195	Bandos halo	head
+24197	Bandos halo (l)	head
+24198	Seren halo	head
+24200	Seren halo (l)	head
+24201	Ancient halo	head
+24203	Ancient halo (l)	head
+24204	Brassica halo	head
+24206	Brassica halo (l)	head
+24207	Victor's cape (1)	cape
+24209	Victor's cape (10)	cape
+24211	Victor's cape (50)	cape
+24213	Victor's cape (100)	cape
+24215	Victor's cape (500)	cape
+24219	Swift blade	weapon
+24222	Ava's assembler (l)	cape
+24223	Fire cape (l)	cape
+24224	Infernal cape (l)	cape
+24225	Granite maul	weapon
+24227	Granite maul	weapon
+24232	Imbued saradomin max cape (l)	cape
+24233	Imbued zamorak max cape (l)	cape
+24234	Imbued guthix max cape (l)	cape
+24248	Imbued saradomin cape (l)	cape
+24249	Imbued guthix cape (l)	cape
+24250	Imbued zamorak cape (l)	cape
+24266	V's shield	shield
+24271	Neitiznot faceguard	head
+24273	null	weapon
+24274	null	weapon
+24275	null	weapon
+24288	Dagon'hai hat	head
+24291	Dagon'hai robe top	torso
+24294	Dagon'hai robe bottom	legs
+24300	Spooky hood	head
+24301	Spooky robe	torso
+24302	Spooky skirt	legs
+24303	Spooky gloves	hands
+24304	Spooky boots	boots
+24305	Spooky hood	head
+24307	Spooky robe	torso
+24309	Spooky skirt	legs
+24311	Spooky gloves	hands
+24313	Spooky boots	boots
+24315	Spookier hood	head
+24317	Spookier robe	torso
+24319	Spookier skirt	legs
+24321	Spookier gloves	hands
+24323	Spookier boots	boots
+24325	Pumpkin lantern	shield
+24327	Skeleton lantern	weapon
+24338	Bounty hunter hat (tier 1)	head
+24340	Bounty hunter hat (tier 2)	head
+24342	Bounty hunter hat (tier 3)	head
+24344	Bounty hunter hat (tier 4)	head
+24346	Bounty hunter hat (tier 5)	head
+24348	Bounty hunter hat (tier 6)	head
+24370	Twisted slayer helmet	head
+24372	Twisted dragon trophy	weapon
+24374	Twisted rune trophy	weapon
+24376	Twisted adamant trophy	weapon
+24378	Twisted mithril trophy	shield
+24380	Twisted steel trophy	shield
+24382	Twisted iron trophy	shield
+24384	Twisted bronze trophy	shield
+24386	null	weapon
+24387	Twisted hat (t3)	head
+24389	Twisted coat (t3)	torso
+24391	Twisted trousers (t3)	legs
+24393	Twisted boots (t3)	boots
+24395	Twisted cane	weapon
+24397	Twisted hat (t2)	head
+24399	Twisted coat (t2)	torso
+24401	Twisted trousers (t2)	legs
+24403	Twisted boots (t2)	boots
+24405	Twisted hat (t1)	head
+24407	Twisted coat (t1)	torso
+24409	Twisted trousers (t1)	legs
+24411	Twisted boots (t1)	boots
+24413	Twisted banner	weapon
+24417	Inquisitor's mace	weapon
+24419	Inquisitor's great helm	head
+24420	Inquisitor's hauberk	torso
+24421	Inquisitor's plateskirt	legs
+24422	Nightmare staff	weapon
+24423	Harmonised nightmare staff	weapon
+24424	Volatile nightmare staff	weapon
+24425	Eldritch nightmare staff	weapon
+24428	Green gingerbread shield	shield
+24430	Red gingerbread shield	shield
+24431	Blue gingerbread shield	shield
+24435	Festive pot	?
+24437	Gingerbread shield	shield
+24438	Iced gingerbread shield	shield
+24439	Iced gingerbread shield	shield
+24440	Iced gingerbread shield	shield
+24444	Twisted slayer helmet (i)	head
+24460	Twisted teleport scroll	weapon
+24487	null	weapon
+24520	Victor's cape (1000)	cape
+24525	Cat ears	head
+24527	Hell cat ears	head
+24533	Runner hat (l)	head
+24537	Carrot sword	weapon
+24539	'24-carat' sword	weapon
+24551	Blade of saeldor (c)	weapon
+24617	Vesta's blighted longsword	weapon
+24664	Twisted ancestral hat	head
+24666	Twisted ancestral robe top	torso
+24668	Twisted ancestral robe bottom	legs
+24676	Vyre noble top	torso
+24678	Vyre noble legs	legs
+24680	Vyre noble shoes	boots
+24693	Ruby sickle (b)	weapon
+24695	Enchanted ruby sickle (b)	weapon
+24697	Blisterwood sickle	weapon
+24699	Blisterwood flail	weapon
+24723	Hallowed focus	shield
+24725	Hallowed symbol	amulet
+24727	Hallowed hammer	weapon
+24743	Graceful hood	head
+24745	Graceful hood	head
+24746	Graceful cape	cape
+24748	Graceful cape	cape
+24749	Graceful top	torso
+24751	Graceful top	torso
+24752	Graceful legs	legs
+24754	Graceful legs	legs
+24755	Graceful gloves	hands
+24757	Graceful gloves	hands
+24758	Graceful boots	boots
+24760	Graceful boots	boots
+24780	Amulet of blood fury	amulet
+24790	Long rope	?
+24792	Severed leg	weapon
+24794	Vyre noble blazer	torso
+24796	Vyre noble coat tails	legs
+24798	Vyre noble vest	torso
+24800	Vyre noble pants	legs
+24802	Vyre noble corset	torso
+24804	Vyre noble skirt	legs
+24806	Vyre noble dress top	torso
+24808	Vyre noble dress bottom	legs
+24810	Vyre noble blazer	torso
+24812	Vyre noble coat tails	legs
+24814	Vyre noble vest	torso
+24816	Vyre noble pants	legs
+24818	Vyre noble corset	torso
+24820	Vyre noble skirt	legs
+24822	Vyre noble dress top	torso
+24824	Vyre noble dress bottom	legs
+24826	Vyre noble blazer	torso
+24828	Vyre noble coat tails	legs
+24830	Vyre noble vest	torso
+24832	Vyre noble pants	legs
+24834	Vyre noble corset	torso
+24836	Vyre noble skirt	legs
+24838	Vyre noble dress top	torso
+24840	Vyre noble dress bottom	legs
+24855	Mythical max cape	cape
+24857	Mythical max hood	head
+24862	Karamjan monkey	cape
+24863	Zombie monkey	cape
+24864	Maniacal monkey	cape
+24865	Skeleton monkey	cape
+24866	Kruk jr	cape
+24867	Princely monkey	cape
+24872	Carpenter's helmet	head
+24874	Carpenter's shirt	torso
+24876	Carpenter's trousers	legs
+24878	Carpenter's boots	boots
+24880	Amy's saw	weapon
+24942	Reinforced goggles	head
+24975	Headless head	head
+24998	null	weapon
+24999	null	weapon
+25000	null	weapon
+25001	Trailblazer hood (t3)	head
+25004	Trailblazer top (t3)	torso
+25007	Trailblazer trousers (t3)	legs
+25010	Trailblazer boots (t3)	boots
+25013	Trailblazer cane	weapon
+25016	Trailblazer hood (t2)	head
+25019	Trailblazer top (t2)	torso
+25022	Trailblazer trousers (t2)	legs
+25025	Trailblazer boots (t2)	boots
+25028	Trailblazer hood (t1)	head
+25031	Trailblazer top (t1)	torso
+25034	Trailblazer trousers (t1)	legs
+25037	Trailblazer boots (t1)	boots
+25042	Trailblazer dragon trophy	weapon
+25044	Trailblazer rune trophy	weapon
+25046	Trailblazer adamant trophy	weapon
+25048	Trailblazer mithril trophy	shield
+25050	Trailblazer steel trophy	shield
+25052	Trailblazer iron trophy	shield
+25054	Trailblazer bronze trophy	shield
+25056	Trailblazer banner	weapon
+25059	Infernal harpoon (or)	weapon
+25062	null	weapon
+25063	Infernal pickaxe (or)	weapon
+25066	Infernal axe (or)	weapon
+25069	Graceful hood	head
+25071	Graceful hood	head
+25072	Graceful cape	cape
+25074	Graceful cape	cape
+25075	Graceful top	torso
+25077	Graceful top	torso
+25078	Graceful legs	legs
+25080	Graceful legs	legs
+25081	Graceful gloves	hands
+25083	Graceful gloves	hands
+25084	Graceful boots	boots
+25086	Graceful boots	boots
+25087	Trailblazer teleport scroll	weapon
+25102	Fairy mushroom	shield
+25106	Extradimensional bag	cape
+25108	Extradimensional bag	cape
+25110	Echo axe	weapon
+25112	Echo pickaxe	weapon
+25114	Echo harpoon	weapon
+25116	null	weapon
+25129	Beekeeper's hat	head
+25131	Beekeeper's top	torso
+25133	Beekeeper's legs	legs
+25135	Beekeeper's gloves	hands
+25137	Beekeeper's boots	boots
+25163	Decorative boots	boots
+25165	Decorative full helm	head
+25167	Decorative boots	boots
+25169	Decorative full helm	head
+25171	Decorative boots	boots
+25173	Decorative boots (l)	boots
+25174	Decorative full helm	head
+25176	Decorative full helm (l)	head
+25177	Slayer helmet (i)	head
+25179	Black slayer helmet (i)	head
+25181	Green slayer helmet (i)	head
+25183	Red slayer helmet (i)	head
+25185	Purple slayer helmet (i)	head
+25187	Turquoise slayer helmet (i)	head
+25189	Hydra slayer helmet (i)	head
+25191	Twisted slayer helmet (i)	head
+25195	Blue cape	cape
+25207	Red cape	cape
+25208	Blue cape	cape
+25212	Blue icon	jaw
+25213	Blue icon	jaw
+25214	Blue icon	jaw
+25215	Blue icon	jaw
+25216	Blue icon	jaw
+25217	Blue icon	jaw
+25218	Blue icon	jaw
+25219	Blue icon	jaw
+25220	Blue icon	jaw
+25221	Blue icon	jaw
+25222	Blue icon	jaw
+25223	Blue icon	jaw
+25224	Blue icon	jaw
+25225	Blue icon	jaw
+25226	Blue icon	jaw
+25227	Blue icon	jaw
+25228	Red icon	jaw
+25229	Red icon	jaw
+25230	Red icon	jaw
+25231	Red icon	jaw
+25232	Red icon	jaw
+25233	Red icon	jaw
+25234	Red icon	jaw
+25235	Red icon	jaw
+25236	Red icon	jaw
+25237	Red icon	jaw
+25238	Red icon	jaw
+25239	Red icon	jaw
+25240	Red icon	jaw
+25241	Red icon	jaw
+25242	Red icon	jaw
+25243	Red icon	jaw
+25250	Salve amulet(i)	amulet
+25266	Black mask (10) (i)	head
+25267	Black mask (9) (i)	head
+25268	Black mask (8) (i)	head
+25269	Black mask (7) (i)	head
+25270	Black mask (6) (i)	head
+25271	Black mask (5) (i)	head
+25272	Black mask (4) (i)	head
+25273	Black mask (3) (i)	head
+25274	Black mask (2) (i)	head
+25275	Black mask (1) (i)	head
+25276	Black mask (i)	head
+25278	Salve amulet(ei)	amulet
+25282	Sled	weapon
+25314	Giant boulder	weapon
+25322	20th anniversary hat	head
+25324	20th anniversary top	torso
+25326	20th anniversary bottom	legs
+25328	20th anniversary boots	boots
+25330	20th anniversary gloves	hands
+25332	20th anniversary necklace	amulet
+25334	20th anniversary cape	cape
+25336	Gnome child mask	head
+25344	Soul cape	cape
+25346	Soul cape	cape
+25367	Infernal harpoon (uncharged)	weapon
+25369	Infernal pickaxe (uncharged)	weapon
+25371	Infernal axe (uncharged)	weapon
+25373	Dragon harpoon (or)	weapon
+25375	null	weapon
+25376	Dragon pickaxe (or)	weapon
+25378	Dragon axe (or)	weapon
+25389	Swampbark body	torso
+25392	Swampbark gauntlets	hands
+25395	Swampbark boots	boots
+25398	Swampbark helm	head
+25401	Swampbark legs	legs
+25404	Bloodbark body	torso
+25407	Bloodbark gauntlets	hands
+25410	Bloodbark boots	boots
+25413	Bloodbark helm	head
+25416	Bloodbark legs	legs
+25434	Zealot's robe top	torso
+25436	Zealot's robe bottom	legs
+25438	Zealot's helm	head
+25440	Zealot's boots	boots
+25459	Bronze coffin	cape
+25461	Steel coffin	cape
+25463	Black coffin	cape
+25465	Silver coffin	cape
+25467	Gold coffin	cape
+25469	Open bronze coffin	cape
+25470	Open steel coffin	cape
+25471	Open black coffin	cape
+25472	Open silver coffin	cape
+25473	Open gold coffin	cape
+25484	Soulreaper axe	weapon
+25489	Blood ancient sceptre	weapon
+25490	Ice ancient sceptre	weapon
+25491	Smoke ancient sceptre	weapon
+25492	Shadow ancient sceptre	weapon
+25493	Black d'hide chaps (beta)	legs
+25494	Black d'hide vambraces (beta)	hands
+25495	Crystal helm (beta)	head
+25496	Crystal body (beta)	torso
+25497	Crystal legs (beta)	legs
+25500	Cursed banana	weapon
+25502	Banana cape	cape
+25515	Dharok's platebody	torso
+25516	Dharok's greataxe	weapon
+25517	Volatile nightmare staff	weapon
+25518	Ancestral hat	head
+25549	Golden prospector helmet	head
+25551	Golden prospector jacket	torso
+25553	Golden prospector legs	legs
+25555	Golden prospector boots	boots
+25557	Dark flippers	boots
+25574	Tome of water	shield
+25576	Tome of water (empty)	shield
+25585	Fish sack barrel	cape
+25587	Open fish sack barrel	cape
+25592	Spirit angler headband	head
+25594	Spirit angler top	torso
+25596	Spirit angler waders	legs
+25598	Spirit angler boots	boots
+25604	Gregg's eastdoor	weapon
+25606	Propeller hat	head
+25615	Large water container	?
+25633	Imcando hammer (broken)	?
+25641	Barronite mace	weapon
+25643	Barronite mace (l)	weapon
+25644	Imcando hammer	weapon
+25710	Stool	weapon
+25711	Stool	weapon
+25712	Clan cloak	cape
+25714	Clan cloak	cape
+25715	Clan cloak	cape
+25716	Clan cloak	cape
+25717	Clan cloak	cape
+25718	Clan cloak	cape
+25719	Clan cloak	cape
+25720	Clan cloak	cape
+25721	Clan vexillum	weapon
+25723	Clan vexillum	weapon
+25724	Clan vexillum	weapon
+25725	Clan vexillum	weapon
+25726	Clan vexillum	weapon
+25727	Clan vexillum	weapon
+25728	Clan vexillum	weapon
+25729	Clan vexillum	weapon
+25731	Holy sanguinesti staff	weapon
+25733	Holy sanguinesti staff (uncharged)	weapon
+25734	Holy ghrazi rapier	weapon
+25736	Holy scythe of vitur	weapon
+25738	Holy scythe of vitur (uncharged)	weapon
+25739	Sanguine scythe of vitur	weapon
+25741	Sanguine scythe of vitur (uncharged)	weapon
+25818	Book of the dead	shield
+25822	Protest banner	weapon
+25840	Banana hat	head
+25848	null	?
+25849	Amethyst dart	weapon
+25851	Amethyst dart(p)	weapon
+25855	Amethyst dart(p+)	weapon
+25857	Amethyst dart(p++)	weapon
+25862	Bow of faerdhinen (inactive)	weapon
+25865	Bow of faerdhinen	weapon
+25867	Bow of faerdhinen (c)	weapon
+25870	Blade of saeldor (c)	weapon
+25872	Blade of saeldor (c)	weapon
+25874	Blade of saeldor (c)	weapon
+25876	Blade of saeldor (c)	weapon
+25878	Blade of saeldor (c)	weapon
+25880	Blade of saeldor (c)	weapon
+25882	Blade of saeldor (c)	weapon
+25884	Bow of faerdhinen (c)	weapon
+25886	Bow of faerdhinen (c)	weapon
+25888	Bow of faerdhinen (c)	weapon
+25890	Bow of faerdhinen (c)	weapon
+25892	Bow of faerdhinen (c)	weapon
+25894	Bow of faerdhinen (c)	weapon
+25896	Bow of faerdhinen (c)	weapon
+25898	Tztok slayer helmet	head
+25900	Tztok slayer helmet (i)	head
+25902	Tztok slayer helmet (i)	head
+25904	Vampyric slayer helmet	head
+25906	Vampyric slayer helmet (i)	head
+25908	Vampyric slayer helmet (i)	head
+25910	Tzkal slayer helmet	head
+25912	Tzkal slayer helmet (i)	head
+25914	Tzkal slayer helmet (i)	head
+25916	Dragon hunter crossbow (t)	weapon
+25918	Dragon hunter crossbow (b)	weapon
+25926	Ghommal's hilt 1	shield
+25928	Ghommal's hilt 2	shield
+25930	Ghommal's hilt 3	shield
+25932	Ghommal's hilt 4	shield
+25934	Ghommal's hilt 5	shield
+25936	Ghommal's hilt 6	shield
+25938	Anim offhand	?
+25941	Anim offhand	?
+25944	Anim offhand	?
+25947	Anim offhand	?
+25950	Anim offhand	?
+25953	Anim offhand	?
+25979	Keris partisan	weapon
+25981	Keris partisan of breaching	weapon
+25985	Elidinis' ward	shield
+26156	Group ironman helm	head
+26158	Group ironman platebody	torso
+26160	Group ironman platebody	torso
+26162	Group ironman platebody	torso
+26164	Group ironman platebody	torso
+26166	Group ironman platelegs	legs
+26168	Group ironman bracers	hands
+26170	Hardcore group ironman helm	head
+26172	Hardcore group ironman platebody	torso
+26174	Hardcore group ironman platebody	torso
+26176	Hardcore group ironman platebody	torso
+26178	Hardcore group ironman platebody	torso
+26180	Hardcore group ironman platelegs	legs
+26182	Hardcore group ironman bracers	hands
+26184	Blue icon	jaw
+26185	Blue icon	jaw
+26186	Blue icon	jaw
+26187	Blue icon	jaw
+26188	Blue icon	jaw
+26189	Blue icon	jaw
+26190	Blue icon	jaw
+26191	Blue icon	jaw
+26192	Blue icon	jaw
+26193	Blue icon	jaw
+26194	Blue icon	jaw
+26195	Blue icon	jaw
+26196	Blue icon	jaw
+26197	Blue icon	jaw
+26198	Blue icon	jaw
+26199	Blue icon	jaw
+26200	Red icon	jaw
+26201	Red icon	jaw
+26202	Red icon	jaw
+26203	Red icon	jaw
+26204	Red icon	jaw
+26205	Red icon	jaw
+26206	Red icon	jaw
+26207	Red icon	jaw
+26208	Red icon	jaw
+26209	Red icon	jaw
+26210	Red icon	jaw
+26211	Red icon	jaw
+26212	Red icon	jaw
+26213	Red icon	jaw
+26214	Red icon	jaw
+26215	Red icon	jaw
+26219	Osmumten's fang	weapon
+26221	Ancient ceremonial top	torso
+26223	Ancient ceremonial legs	legs
+26225	Ancient ceremonial mask	head
+26227	Ancient ceremonial gloves	hands
+26229	Ancient ceremonial boots	boots
+26233	Ancient godsword	weapon
+26235	Zaryte vambraces	hands
+26241	Virtus mask	head
+26243	Virtus robe top	torso
+26245	Virtus robe bottom	legs
+26254	Saucepan	head
+26256	Ugly halloween jumper (orange)	torso
+26258	Ugly halloween jumper (black)	torso
+26260	Haunted wine bottle	weapon
+26310	Festive elf slippers	boots
+26312	Festive elf hat	head
+26316	Secret santa present (red)	shield
+26318	Secret santa present (blue)	shield
+26320	Secret santa present (green)	shield
+26322	Secret santa present (black)	shield
+26324	Secret santa present (gold)	shield
+26374	Zaryte crossbow	weapon
+26382	Torva full helm	head
+26384	Torva platebody	torso
+26386	Torva platelegs	legs
+26424	Shattered banner	weapon
+26427	Shattered hood (t1)	head
+26430	Shattered top (t1)	torso
+26433	Shattered trousers (t1)	legs
+26436	Shattered boots (t1)	boots
+26439	Shattered hood (t2)	head
+26442	Shattered top (t2)	torso
+26445	Shattered trousers (t2)	legs
+26448	Shattered boots (t2)	boots
+26451	Shattered hood (t3)	head
+26454	Shattered top (t3)	torso
+26457	Shattered trousers (t3)	legs
+26460	Shattered boots (t3)	boots
+26463	Void knight top (or)	torso
+26465	Void knight robe (or)	legs
+26467	Void knight gloves (or)	hands
+26469	Elite void top (or)	torso
+26471	Elite void robe (or)	legs
+26473	Void mage helm (or)	head
+26475	Void ranger helm (or)	head
+26477	Void melee helm (or)	head
+26482	Abyssal whip (or)	weapon
+26484	Abyssal tentacle (or)	weapon
+26486	Rune crossbow (or)	weapon
+26488	Book of balance (or)	shield
+26490	Book of darkness (or)	shield
+26492	Book of law (or)	shield
+26494	Book of war (or)	shield
+26496	Holy book (or)	shield
+26498	Unholy book (or)	shield
+26500	Shattered teleport scroll	weapon
+26503	Shattered relics bronze trophy	shield
+26505	Shattered relics iron trophy	shield
+26507	Shattered relics steel trophy	shield
+26509	Shattered relics mithril trophy	shield
+26511	Shattered relics adamant trophy	weapon
+26513	Shattered relics rune trophy	weapon
+26515	Shattered relics dragon trophy	weapon
+26517	Shattered cane	weapon
+26531	Mystic hat (or)	head
+26533	Mystic robe top (or)	torso
+26535	Mystic robe bottom (or)	legs
+26537	Mystic gloves (or)	hands
+26539	Mystic boots (or)	boots
+26549	Portable waystone	amulet
+26551	Arcane grimoire	shield
+26581	Goblin potion(4)	shield
+26649	Skis	weapon
+26674	Slayer helmet (i)	head
+26675	Black slayer helmet (i)	head
+26676	Green slayer helmet (i)	head
+26677	Red slayer helmet (i)	head
+26678	Purple slayer helmet (i)	head
+26679	Turquoise slayer helmet (i)	head
+26680	Hydra slayer helmet (i)	head
+26681	Twisted slayer helmet (i)	head
+26682	Tztok slayer helmet (i)	head
+26683	Vampyric slayer helmet (i)	head
+26684	Tzkal slayer helmet (i)	head
+26696	Wristbands of the arena (broken)	?
+26697	Hardened wristbands of the arena (broken)	?
+26708	Dragon claws (or)	weapon
+26710	Dragon warhammer (or)	weapon
+26712	Heavy ballista (or)	weapon
+26714	Armadyl helmet (or)	head
+26715	Armadyl chestplate (or)	torso
+26716	Armadyl chainskirt (or)	legs
+26718	Bandos chestplate (or)	torso
+26719	Bandos tassets (or)	legs
+26720	Bandos boots (or)	boots
+26721	Centurion cuirass	torso
+26722	Centurion cuirass (l)	torso
+26723	Wristbands of the arena	hands
+26724	Wristbands of the arena (l)	hands
+26725	Wristbands of the arena (c)	hands
+26726	Wristbands of the arena (cl)	hands
+26727	Wristbands of the arena (i)	hands
+26728	Wristbands of the arena (il)	hands
+26729	Wristbands of the arena (ic)	hands
+26730	Wristbands of the arena (ilc)	hands
+26731	Saika's hood	head
+26732	Saika's hood (l)	head
+26733	Saika's veil	head
+26734	Saika's veil (l)	head
+26735	Saika's shroud	head
+26736	Saika's shroud (l)	head
+26737	Koriff's headband	head
+26738	Koriff's headband (l)	head
+26739	Koriff's cowl	head
+26740	Koriff's cowl (l)	head
+26741	Koriff's coif	head
+26742	Koriff's coif (l)	head
+26743	Maoma's med helm	head
+26744	Maoma's med helm (l)	head
+26745	Maoma's full helm	head
+26746	Maoma's full helm (l)	head
+26747	Maoma's great helm	head
+26748	Maoma's great helm (l)	head
+26749	Calamity chest	torso
+26750	Calamity chest (l)	torso
+26751	Superior calamity chest	torso
+26752	Superior calamity chest (l)	torso
+26753	Elite calamity chest	torso
+26754	Elite calamity chest (l)	torso
+26755	Calamity breeches	legs
+26756	Calamity breeches (l)	legs
+26757	Superior calamity breeches	legs
+26758	Superior calamity breeches (l)	legs
+26759	Elite calamity breeches	legs
+26760	Elite calamity breeches (l)	legs
+26763	Salve amulet(i)	amulet
+26771	Black mask (10) (i)	head
+26772	Black mask (9) (i)	head
+26773	Black mask (8) (i)	head
+26774	Black mask (7) (i)	head
+26775	Black mask (6) (i)	head
+26776	Black mask (5) (i)	head
+26777	Black mask (4) (i)	head
+26778	Black mask (3) (i)	head
+26779	Black mask (2) (i)	head
+26780	Black mask (1) (i)	head
+26781	Black mask (i)	head
+26782	Salve amulet(ei)	amulet
+26788	Gold tiara	head
+26801	Catalytic tiara	head
+26804	Elemental tiara	head
+26822	Abyssal lantern	shield
+26824	Abyssal lantern (normal logs)	shield
+26826	Abyssal lantern (blue logs)	shield
+26828	Abyssal lantern (red logs)	shield
+26830	Abyssal lantern (white logs)	shield
+26832	Abyssal lantern (purple logs)	shield
+26834	Abyssal lantern (green logs)	shield
+26836	Abyssal lantern (oak logs)	shield
+26838	Abyssal lantern (willow logs)	shield
+26840	Abyssal lantern (maple logs)	shield
+26842	Abyssal lantern (yew logs)	shield
+26844	Abyssal lantern (blisterwood logs)	shield
+26846	Abyssal lantern (magic logs)	shield
+26848	Abyssal lantern (redwood logs)	shield
+26850	Hat of the eye	head
+26852	Robe top of the eye	torso
+26854	Robe bottoms of the eye	legs
+26856	Boots of the eye	boots
+26858	Hat of the eye (red)	head
+26860	Robe top of the eye (red)	torso
+26862	Robe bottoms of the eye (red)	legs
+26864	Hat of the eye (green)	head
+26866	Robe top of the eye (green)	torso
+26868	Robe bottoms of the eye (green)	legs
+26870	Hat of the eye (blue)	head
+26872	Robe top of the eye (blue)	torso
+26874	Robe bottoms of the eye (blue)	legs
+26879	Guardian essence	?
+26880	Catalytic guardian stone	?
+26881	Elemental guardian stone	?
+26903	Eye amulet	amulet
+26910	Tarnished locket	amulet
+26912	Lost bag	cape
+26914	Amulet of the eye	amulet
+26937	Easter hat	head
+26941	Polyelemental guardian stone	?
+26945	Pharaoh's sceptre (uncharged)	weapon
+26948	Pharaoh's sceptre	weapon
+26950	Pharaoh's sceptre	weapon
+26963	Odd spectacles	head
+26967	Circlet of water (uncharged)	head
+26969	Circlet of water	head
+26984	Lost bag	cape
+26986	Lost bag	cape
+26988	Lost bag	cape
+26990	Amulet of the eye	amulet
+26992	Amulet of the eye	amulet
+26994	Amulet of the eye	amulet
+27000	Void knight top (l)(or)	torso
+27001	Void knight robe (l)(or)	legs
+27002	Void knight gloves (l)(or)	hands
+27003	Elite void top (l)(or)	torso
+27004	Elite void robe (l)(or)	legs
+27005	Void mage helm (l)(or)	head
+27006	Void ranger helm (l)(or)	head
+27007	Void melee helm (l)(or)	head
+27008	Dragon defender (l)(t)	shield
+27009	Rune defender (l)(t)	shield
+27010	Preform	weapon
+27014	Kovac's grog	?
+27021	Colossal blade	weapon
+27023	Smiths tunic	torso
+27025	Smiths trousers	legs
+27027	Smiths boots	boots
+27029	Smiths gloves	hands
+27031	Smiths gloves (i)	hands
+27035	Flower crown	head
+27042	Group ironman helm (unranked)	head
+27044	Group ironman platelegs (unranked)	legs
+27046	Group ironman bracers (unranked)	hands
+27048	Group ironman platebody (unranked)	torso
+27050	Group ironman platebody (unranked)	torso
+27052	Group ironman platebody (unranked)	torso
+27054	Group ironman platebody (unranked)	torso
+27100	Elder maul (or)	weapon
+27110	Mithril gloves (wrapped)	hands
+27111	Rune gloves (wrapped)	hands
+27112	Barrows gloves (wrapped)	hands
+27115	Elder chaos top (or)	torso
+27117	Elder chaos robe (or)	legs
+27119	Elder chaos hood (or)	head
+27123	Dagon'hai hat (or)	head
+27125	Dagon'hai robe top (or)	torso
+27127	Dagon'hai robe bottom (or)	legs
+27141	Flower crown	head
+27143	Flower crown	head
+27145	Flower crown	head
+27147	Flower crown	head
+27149	Flower crown	head
+27151	Flower crown	head
+27153	Flower crown	head
+27155	Flower crown	head
+27157	Dragon knife	weapon
+27158	Mystic robe top (dark)	torso
+27159	Mystic robe bottom (dark)	legs
+27160	Mystic robe top (light)	torso
+27161	Mystic robe bottom (light)	legs
+27162	Wizard boots	boots
+27163	Guthix halo	head
+27164	Zamorak halo	head
+27165	Saradomin halo	head
+27166	Ghostly hood	head
+27167	Ghostly robe	torso
+27168	Ghostly robe	legs
+27169	Berserker helm	head
+27170	Infinity boots	boots
+27171	Tormented bracelet	hands
+27172	Necklace of anguish	amulet
+27173	Amulet of torture	amulet
+27174	Elder chaos top	torso
+27175	Elder chaos robe	legs
+27176	Elder chaos hood	head
+27177	Fremennik kilt	legs
+27178	Spiked manacles	boots
+27179	Rangers' tunic	torso
+27180	Guthix chaps	legs
+27181	Zamorak chaps	legs
+27182	Saradomin chaps	legs
+27183	3rd age mage hat	head
+27184	Ancient godsword	weapon
+27185	Rune defender	shield
+27186	Zaryte crossbow	weapon
+27187	Bow of faerdhinen (c)	weapon
+27188	Light ballista	weapon
+27189	Verac's flail	weapon
+27190	Verac's brassard	torso
+27191	Unholy book	shield
+27193	Ancestral robe top	torso
+27194	Ancestral robe bottom	legs
+27195	Inquisitor's great helm	head
+27196	Inquisitor's hauberk	torso
+27197	Inquisitor's plateskirt	legs
+27198	Inquisitor's mace	weapon
+27199	3rd age range top	torso
+27200	3rd age range legs	legs
+27201	3rd age range coif	head
+27226	Masori mask	head
+27229	Masori body	torso
+27232	Masori chaps	legs
+27235	Masori mask (f)	head
+27238	Masori body (f)	torso
+27241	Masori chaps (f)	legs
+27246	Osmumten's fang (or)	weapon
+27251	Elidinis' ward (f)	shield
+27253	Elidinis' ward (or)	shield
+27257	Icthlarin's shroud (tier 1)	cape
+27259	Icthlarin's shroud (tier 2)	cape
+27261	Icthlarin's shroud (tier 3)	cape
+27263	Icthlarin's shroud (tier 4)	cape
+27265	Icthlarin's shroud (tier 5)	cape
+27267	Icthlarin's hood (tier 5)	head
+27275	Tumeken's shadow	weapon
+27277	Tumeken's shadow (uncharged)	weapon
+27287	Keris partisan of corruption	weapon
+27291	Keris partisan of the sun	weapon
+27358	Tome of fire	shield
+27363	Masori assembler max cape	cape
+27365	Masori assembler max cape (l)	cape
+27366	Masori assembler max hood	head
+27370	Mask of rebirth	head
+27374	Masori assembler	cape
+27376	Masori assembler (l)	cape
+27388	Adventurer's top (t1)	torso
+27390	Adventurer's trousers (t1)	legs
+27392	Adventurer's hood (t1)	head
+27394	Adventurer's boots (t1)	boots
+27396	Adventurer's top (t2)	torso
+27398	Adventurer's trousers (t2)	legs
+27400	Adventurer's hood (t2)	head
+27402	Adventurer's boots (t2)	boots
+27404	Adventurer's top (t3)	torso
+27406	Adventurer's trousers (t3)	legs
+27408	Adventurer's hood (t3)	head
+27410	Adventurer's boots (t3)	boots
+27412	Adventurer's vambraces	hands
+27414	Giant stopwatch	weapon
+27416	Speedy teleport scroll	weapon
+27418	Bronze speedrun trophy	weapon
+27420	Silver speedrun trophy	weapon
+27422	Gold speedrun trophy	weapon
+27424	Platinum speedrun trophy	weapon
+27428	Hood of ruin	head
+27430	Robe top of ruin	torso
+27432	Robe bottom of ruin	legs
+27434	Gloves of ruin	hands
+27436	Socks of ruin	boots
+27438	Cloak of ruin	cape
+27440	Infinite money bag	cape
+27442	Adventurer's cape	cape
+27444	Graceful hood	head
+27446	Graceful hood	head
+27447	Graceful cape	cape
+27449	Graceful cape	cape
+27450	Graceful top	torso
+27452	Graceful top	torso
+27453	Graceful legs	legs
+27455	Graceful legs	legs
+27456	Graceful gloves	hands
+27458	Graceful gloves	hands
+27459	Graceful boots	boots
+27461	Graceful boots	boots
+27463	Treat cauldron	shield
+27465	Treat cauldron	shield
+27467	Treat cauldron	shield
+27469	Treat cauldron	shield
+27471	Treat cauldron	shield
+27473	Witch hat	head
+27475	Witch top	torso
+27477	Witch robes	legs
+27479	Witch boots	boots
+27481	Witch cape	cape
+27497	Halloween wig	head
+27499	Halloween wig	head
+27501	Halloween wig	head
+27503	Halloween wig	head
+27505	Halloween wig	head
+27507	Halloween wig	head
+27546	Anim offhand	?
+27548	Anim offhand	?
+27550	Ghommal's avernic defender 5	shield
+27551	Ghommal's avernic defender 5 (l)	shield
+27552	Ghommal's avernic defender 6	shield
+27553	Ghommal's avernic defender 6 (l)	shield
+27558	Sack of coal	cape
+27564	Santa's list	cape
+27566	Christmas jumper	torso
+27568	Snow goggles & hat	head
+27570	Sack of coal	cape
+27572	Festive nutcracker top	torso
+27574	Festive nutcracker trousers	legs
+27576	Festive nutcracker hat	head
+27578	Festive nutcracker boots	boots
+27580	Festive nutcracker staff	weapon
+27582	Sweet nutcracker top	torso
+27583	Sweet nutcracker trousers	legs
+27584	Sweet nutcracker hat	head
+27585	Sweet nutcracker boots	boots
+27586	Sweet nutcracker staff	weapon
+27588	Festive games crown	head
+27610	Venator bow	weapon
+27612	Venator bow (uncharged)	weapon
+27624	Ancient sceptre	weapon
+27626	Ancient sceptre (l)	weapon
+27645	Mystic cards	weapon
+27652	Webweaver bow (u)	weapon
+27655	Webweaver bow	weapon
+27657	Ursine chainmace (u)	weapon
+27660	Ursine chainmace	weapon
+27662	Accursed sceptre (u)	weapon
+27665	Accursed sceptre	weapon
+27676	Accursed sceptre (au)	weapon
+27679	Accursed sceptre (a)	weapon
+27690	Voidwaker	weapon
+27697	Crystal body	torso
+27699	Crystal body (inactive)	torso
+27701	Crystal legs	legs
+27703	Crystal legs (inactive)	legs
+27705	Crystal helm	head
+27707	Crystal helm (inactive)	head
+27709	Crystal body	torso
+27711	Crystal body (inactive)	torso
+27713	Crystal legs	legs
+27715	Crystal legs (inactive)	legs
+27717	Crystal helm	head
+27719	Crystal helm (inactive)	head
+27721	Crystal body	torso
+27723	Crystal body (inactive)	torso
+27725	Crystal legs	legs
+27727	Crystal legs (inactive)	legs
+27729	Crystal helm	head
+27731	Crystal helm (inactive)	head
+27733	Crystal body	torso
+27735	Crystal body (inactive)	torso
+27737	Crystal legs	legs
+27739	Crystal legs (inactive)	legs
+27741	Crystal helm	head
+27743	Crystal helm (inactive)	head
+27745	Crystal body	torso
+27747	Crystal body (inactive)	torso
+27749	Crystal legs	legs
+27751	Crystal legs (inactive)	legs
+27753	Crystal helm	head
+27755	Crystal helm (inactive)	head
+27757	Crystal body	torso
+27759	Crystal body (inactive)	torso
+27761	Crystal legs	legs
+27763	Crystal legs (inactive)	legs
+27765	Crystal helm	head
+27767	Crystal helm (inactive)	head
+27769	Crystal body	torso
+27771	Crystal body (inactive)	torso
+27773	Crystal legs	legs
+27775	Crystal legs (inactive)	legs
+27777	Crystal helm	head
+27779	Crystal helm (inactive)	head
+27783	Diamond speedrun trophy	weapon
+27785	Thammaron's sceptre (au)	weapon
+27788	Thammaron's sceptre (a)	weapon
+27802	Gnome child backpack	cape
+27804	Cake hat	head
+27806	Bob the cat slippers	boots
+27807	Null	boots
+27808	Jad slippers	boots
+27810	Dragon candle dagger	weapon
+27812	10th birthday cape	cape
+27814	Jad plush	shield
+27816	Stray dog plush	shield
+27817	Null	shield
+27818	Gnome child plush	shield
+27819	Null	shield
+27820	10th birthday balloons	weapon
+27822	Oldschool jumper	torso
+27823	Oldschool jumper	torso
+27824	Oldschool jumper	torso
+27825	Oldschool jumper	torso
+27826	Oldschool jumper	torso
+27827	Oldschool jumper	torso
+27828	Silver partyhat	head
+27831	Vesta's chainbody (bh)	torso
+27832	Vesta's plateskirt (bh)	legs
+27833	Statius's full helm (bh)	head
+27834	Statius's platebody (bh)	torso
+27835	Statius's platelegs (bh)	legs
+27836	Morrigan's coif (bh)	head
+27837	Morrigan's leather body (bh)	torso
+27838	Morrigan's leather chaps (bh)	legs
+27839	Zuriel's hood (bh)	head
+27840	Zuriel's robe top (bh)	torso
+27841	Zuriel's robe bottom (bh)	legs
+27842	Corrupted vesta's chainbody (bh)	torso
+27843	Corrupted vesta's plateskirt (bh)	legs
+27844	Corrupted statius's full helm (bh)	head
+27845	Corrupted statius's platebody (bh)	torso
+27846	Corrupted statius's platelegs (bh)	legs
+27847	Corrupted morrigan's coif (bh)	head
+27848	Corrupted morrigan's leather body (bh)	torso
+27849	Corrupted morrigan's leather chaps (bh)	legs
+27850	Corrupted zuriel's hood (bh)	head
+27851	Corrupted zuriel's robe top (bh)	torso
+27852	Corrupted zuriel's robe bottom (bh)	legs
+27853	Dark bow (bh)	weapon
+27855	Barrelchest anchor (bh)	weapon
+27857	Dragon mace (bh)	weapon
+27859	Dragon longsword (bh)	weapon
+27861	Abyssal dagger (bh)	weapon
+27863	Abyssal dagger (bh)(p)	weapon
+27865	Abyssal dagger (bh)(p+)	weapon
+27867	Abyssal dagger (bh)(p++)	weapon
+27869	Voidwaker	weapon
+27871	Giant bronze dagger	weapon
+27873	Eastfloor spade	?
+27875	Nest hat	head
+27877	Nest hat	head
+27900	Vesta's spear (bh)	weapon
+27904	Vesta's longsword (bh)	weapon
+27908	Statius's warhammer (bh)	weapon
+27912	Morrigan's throwing axe (bh)	weapon
+27916	Morrigan's javelin (bh)	weapon
+27920	Zuriel's staff (bh)	weapon
+28019	Dragon dagger (cr)	weapon
+28021	Dragon dagger (p)(cr)	weapon
+28023	Dragon dagger (p+)(cr)	weapon
+28025	Dragon dagger (p++)(cr)	weapon
+28027	Dragon mace (cr)	weapon
+28029	Dragon sword (cr)	weapon
+28031	Dragon scimitar (cr)	weapon
+28033	Dragon longsword (cr)	weapon
+28035	Dragon warhammer (cr)	weapon
+28037	Dragon battleaxe (cr)	weapon
+28039	Dragon claws (cr)	weapon
+28041	Dragon spear (cr)	weapon
+28043	Dragon spear (p)(cr)	weapon
+28045	Dragon spear (p+)(cr)	weapon
+28047	Dragon spear (p++)(cr)	weapon
+28049	Dragon halberd (cr)	weapon
+28051	Dragon 2h sword (cr)	weapon
+28053	Dragon crossbow (cr)	weapon
+28055	Dragon boots (cr)	boots
+28057	Dragon med helm (cr)	head
+28059	Dragon sq shield (cr)	shield
+28061	Dragon platelegs (cr)	legs
+28063	Dragon plateskirt (cr)	legs
+28065	Dragon chainbody (cr)	torso
+28067	Fighter torso (or)	torso
+28069	Fighter torso (l)(or)	torso
+28070	Helm of neitiznot (or)	head
+28108	Colourful scarf	amulet
+28109	Colourful scarf	amulet
+28110	Colourful scarf	amulet
+28111	Colourful scarf	amulet
+28112	Colourful scarf	amulet
+28113	Colourful scarf	amulet
+28114	Colourful scarf	amulet
+28115	Colourful scarf	amulet
+28116	Rainbow jumper	torso
+28118	Colourful jumper	torso
+28119	Colourful jumper	torso
+28120	Colourful jumper	torso
+28121	Colourful jumper	torso
+28122	Colourful jumper	torso
+28123	Colourful jumper	torso
+28124	Colourful jumper	torso
+28125	Colourful jumper	torso
+28126	Poet's jacket	torso
+28128	Love crossbow	weapon
+28136	Forestry kit	cape
+28140	Log basket	cape
+28142	Open log basket	cape
+28143	Forestry basket	cape
+28145	Open forestry basket	cape
+28169	Forestry top	torso
+28171	Forestry legs	legs
+28173	Forestry hat	head
+28175	Forestry boots	boots
+28196	Bronze felling axe	weapon
+28199	Iron felling axe	weapon
+28202	Steel felling axe	weapon
+28205	Black felling axe	weapon
+28208	Mithril felling axe	weapon
+28211	Adamant felling axe	weapon
+28214	Rune felling axe	weapon
+28217	Dragon felling axe	weapon
+28220	Crystal felling axe	weapon
+28223	Crystal felling axe (inactive)	weapon
+28226	3rd age felling axe	weapon
+28254	Sanguine torva full helm	head
+28256	Sanguine torva platebody	torso
+28258	Sanguine torva platelegs	legs
+28260	Blood ancient sceptre	weapon
+28262	Ice ancient sceptre	weapon
+28264	Smoke ancient sceptre	weapon
+28266	Shadow ancient sceptre	weapon
+28338	Soulreaper axe	weapon
+28363	Very long rope	?
+28426	Magic lantern	shield
+28473	Blood ancient sceptre (l)	weapon
+28474	Ice ancient sceptre (l)	weapon
+28475	Smoke ancient sceptre (l)	weapon
+28476	Shadow ancient sceptre (l)	weapon
+28531	Corrupted voidwaker	weapon
+28534	Corrupted dragon claws	weapon
+28537	Corrupted armadyl godsword	weapon
+28540	Corrupted twisted bow	weapon
+28543	Corrupted scythe of vitur	weapon
+28545	Corrupted scythe of vitur (uncharged)	weapon
+28547	Corrupted tumeken's shadow	weapon
+28549	Corrupted tumeken's shadow (uncharged)	weapon
+28555	Starter bow	weapon
+28557	Starter staff	weapon
+28559	Starter sword	weapon
+28577	Crystal chime	weapon
+28583	Warped sceptre (uncharged)	weapon
+28585	Warped sceptre	weapon
+28601	Cobweb cape	cape
+28603	Spider hat	head
+28605	Spider hat	head
+28607	Spider hat	head
+28609	Spider hat	head
+28611	Spider hat	head
+28616	Pheasant cape	cape
+28618	Pheasant boots	boots
+28620	Pheasant hat	head
+28622	Pheasant legs	legs
+28624	Pheasant tail feathers	?
+28630	Twitcher's gloves	hands
+28632	null	?
+28633	null	?
+28634	null	?
+28635	null	?
+28636	null	?
+28637	null	?
+28638	null	?
+28639	null	?
+28640	null	?
+28641	null	?
+28642	null	?
+28643	null	?
+28655	Petal garland	amulet
+28671	Web cloak	cape
+28672	Fancier boots	boots
+28682	Dinh's blazing bulwark	weapon
+28687	Blazing blowpipe (empty)	weapon
+28688	Blazing blowpipe	weapon
+28693	Trailblazer reloaded alchemy scroll	?
+28696	Trailblazer reloaded vengeance scroll	?
+28699	Trailblazer reloaded death scroll	?
+28702	Trailblazer reloaded banner	weapon
+28705	Trailblazer reloaded home teleport scroll	weapon
+28708	Trailblazer reloaded rejuvenation pool scroll	weapon
+28712	Trailblazer reloaded headband (t1)	head
+28715	Trailblazer reloaded top (t1)	torso
+28718	Trailblazer reloaded trousers (t1)	legs
+28721	Trailblazer reloaded boots (t1)	boots
+28724	Trailblazer reloaded headband (t2)	head
+28727	Trailblazer reloaded top (t2)	torso
+28730	Trailblazer reloaded trousers (t2)	legs
+28733	Trailblazer reloaded boots (t2)	boots
+28736	Trailblazer reloaded headband (t3)	head
+28739	Trailblazer reloaded top (t3)	torso
+28742	Trailblazer reloaded trousers (t3)	legs
+28745	Trailblazer reloaded boots (t3)	boots
+28748	Trailblazer reloaded torch	weapon
+28751	Trailblazer reloaded dragon trophy	weapon
+28753	Trailblazer reloaded rune trophy	weapon
+28755	Trailblazer reloaded adamant trophy	weapon
+28757	Trailblazer reloaded mithril trophy	shield
+28759	Trailblazer reloaded steel trophy	shield
+28761	Trailblazer reloaded iron trophy	shield
+28763	Trailblazer reloaded bronze trophy	shield
+28765	Globetrotter pendant	amulet
+28771	Searing boots	boots
+28773	Sage's axe	weapon
+28775	Ruinous powers	shield
+28786	Icy jumper	torso
+28788	Snowglobe helmet	head
+28792	Bone mace	weapon
+28794	Bone shortbow	weapon
+28796	Bone staff	weapon
+28807	Shield of arrav	shield
+28810	Zombie axe	weapon
+28834	Tecu salamander	weapon
+28839	Wood camo top	torso
+28842	Wood camo legs	legs
+28845	Jungle camo top	torso
+28848	Jungle camo legs	legs
+28851	Desert camo top	torso
+28854	Desert camo legs	legs
+28857	Polar camo top	torso
+28860	Polar camo legs	legs
+28869	Hunters' sunlight crossbow	weapon
+28902	Dizana's max cape	cape
+28904	Dizana's max hood	head
+28906	Dizana's max cape (l)	cape
+28919	Tonalztics of ralos (uncharged)	weapon
+28922	Tonalztics of ralos	weapon
+28933	Sunfire fanatic helm	head
+28936	Sunfire fanatic cuirass	torso
+28939	Sunfire fanatic chausses	legs
+28945	Echo boots	boots
+28947	Dizana's quiver (uncharged)	cape
+28949	Dizana's quiver (l) (uncharged)	cape
+28951	Dizana's quiver	cape
+28953	Dizana's quiver (l)	cape
+28955	Blessed dizana's quiver	cape
+28957	Blessed dizana's quiver (l)	cape
+28975	Quetzal feed	?
+28988	Blue moon spear	weapon
+28997	Dual macuahuitl	weapon
+29000	Eclipse atlatl	weapon
+29003	null	weapon
+29004	Eclipse moon chestplate	torso
+29007	Eclipse moon tassets	legs
+29010	Eclipse moon helm	head
+29013	Blue moon chestplate	torso
+29016	Blue moon tassets	legs
+29019	Blue moon helm	head
+29022	Blood moon chestplate	torso
+29025	Blood moon tassets	legs
+29028	Blood moon helm	head
+29031	Eclipse moon chestplate	torso
+29033	Eclipse moon tassets	legs
+29035	Eclipse moon helm	head
+29037	Blue moon chestplate	torso
+29039	Blue moon tassets	legs
+29041	Blue moon helm	head
+29043	Blood moon chestplate	torso
+29045	Blood moon tassets	legs
+29047	Blood moon helm	head
+29049	Eclipse moon chestplate (broken)	torso
+29052	Eclipse moon tassets (broken)	legs
+29055	Eclipse moon helm (broken)	head
+29058	Blue moon chestplate (broken)	torso
+29061	Blue moon tassets (broken)	legs
+29064	Blue moon helm (broken)	head
+29067	Blood moon chestplate (broken)	torso
+29070	Blood moon tassets (broken)	legs
+29073	Blood moon helm (broken)	head
+29084	Sulphur blades	weapon
+29263	Guild hunter headwear	head
+29265	Guild hunter top	torso
+29267	Guild hunter legs	legs
+29269	Guild hunter boots	boots
+29277	Trapper's tipple	weapon
+29280	Mixed hide top	torso
+29283	Mixed hide legs	legs
+29286	Mixed hide boots	boots
+29289	Mixed hide cape	cape
+29305	Hunter's spear	weapon
+29430	null	weapon
+29433	Book of egg	shield
+29435	Book of egg	shield
+29437	Egg priest robe	legs
+29439	Egg priest robe top	torso
+29441	Egg priest necklace	amulet
+29443	Egg priest mitre	head
+29472	Prospector helmet	head
+29474	Prospector jacket	torso
+29476	Prospector legs	legs
+29478	Prospector boots	boots
+29486	Cursed amulet of magic	amulet
+29489	Rainbow cape	cape
+29491	Colourful cape	cape
+29493	Colourful cape	cape
+29495	Colourful cape	cape
+29497	Colourful cape	cape
+29499	Colourful cape	cape
+29501	Colourful cape	cape
+29503	Colourful cape	cape
+29505	Colourful cape	cape
+29507	Rainbow crown shirt	torso
+29509	Colourful crown shirt	torso
+29510	Colourful crown shirt	torso
+29511	Colourful crown shirt	torso
+29512	Colourful crown shirt	torso
+29513	Colourful crown shirt	torso
+29514	Colourful crown shirt	torso
+29515	Colourful crown shirt	torso
+29516	Colourful crown shirt	torso
+29521	Dirty shirt	?
+29560	Elite black full helm	head
+29562	Elite black platebody	torso
+29564	Elite black platelegs	legs
+29566	Dark squall hood	head
+29568	Dark squall robe top	torso
+29570	Dark squall robe bottom	legs
+29577	Burning claws	weapon
+29589	Emberlight	weapon
+29591	Scorching bow	weapon
+29593	null	?
+29594	Purging staff	weapon
+29599	Corrupted dark bow	weapon
+29602	Corrupted volatile nightmare staff	weapon
+29605	Armadyl godsword (deadman)	weapon
+29607	Voidwaker (deadman)	weapon
+29609	Volatile nightmare staff (deadman)	weapon
+29611	Dark bow (deadman)	weapon
+29613	Imbued zamorak cape (deadman)	cape
+29615	Imbued guthix cape (deadman)	cape
+29617	Imbued saradomin cape (deadman)	cape
+29622	Armageddon teleport scroll	weapon
+29686	Dni23 torso lightbuttons	torso
+29688	Dni23 torso darkbuttons	torso
+29690	Dni23 torso darkbuttons	torso
+29692	Dni23 torso shirt	torso
+29694	Dni23 torso stitching	torso
+29696	Dni23 torso twotoned	torso
+29698	Dni23 torso princely	torso
+29700	Dni23 torso rippedweskit	torso
+29702	Dni23 torso rippedweskit	torso
+29704	Dni23 torso croptops	torso
+29706	Dni23 torso poloneck	torso
+29708	Dni23 torso simple	torso
+29710	Dni23 torso frilly	torso
+29712	Dni23 torso corsetry	torso
+29714	Dni23 torso bodice	torso
+29716	Dni23 arms thin	torso
+29718	Dni23 arms shoulderpads	torso
+29720	Dni23 arms thickstripe	torso
+29722	Dni23 arms loosesleeves	torso
+29724	Dni23 arms princely	torso
+29726	Dni23 arms tattylong	torso
+29728	Dni23 arms ripped	torso
+29730	Dni23 arms bare	torso
+29732	Dni23 arms frilly	torso
+29734	Dni23 arms tattyshort	torso
+29736	Dni23 arms bareshoulders	torso
+29738	Dni23 legs shorts	legs
+29740	Dni23 legs beach	legs
+29742	Dni23 legs princely	legs
+29744	Dni23 legs leggings	legs
+29746	Dni23 legs sidestripes	legs
+29748	Dni23 legs ripped	legs
+29750	Dni23 legs patched	legs
+29752	Dni23 legs skirt	legs
+29754	Dni23 legs longskirt	legs
+29756	Dni23 legs longnarrowskirt	legs
+29758	Dni23 legs shortskirt	legs
+29760	Dni23 legs layered	legs
+29762	Dni23 legs sashdots	legs
+29764	Dni23 legs bighem	legs
+29766	Dni23 legs sashtrousers	legs
+29768	Dni23 legs patterned	legs
+29770	Dni23 legs tornskirt	legs
+29772	Dni23 legs patchedskirt	legs
+29774	Amy's saw (off-hand)	shield
+29775	Imcando hammer (off-hand)	shield
+29777	Bruma torch (off-hand)	shield
+29796	Noxious halberd	weapon
+29801	Amulet of rancour	amulet
+29804	Amulet of rancour (s)	amulet
+29806	Aranea boots	boots
+29811	null	?
+29812	null	?
+29813	null	?
+29814	null	?
+29815	null	?
+29816	Araxyte slayer helmet	head
+29818	Araxyte slayer helmet (i)	head
+29820	Araxyte slayer helmet (i)	head
+29822	Araxyte slayer helmet (i)	head
+29840	Eclipse moon chestplate	torso
+29841	Eclipse moon tassets	legs
+29842	Eclipse moon helm	head
+29843	Blue moon chestplate	torso
+29844	Blue moon tassets	legs
+29845	Blue moon helm	head
+29846	Blood moon chestplate	torso
+29847	Blood moon tassets	legs
+29848	Blood moon helm	head
+29849	Blue moon spear	weapon
+29850	Dual macuahuitl	weapon
+29851	Eclipse atlatl	weapon
+29868	Emissary hood	head
+29870	Emissary robe top	torso
+29872	Emissary robe bottom	legs
+29874	Emissary sandals	boots
+29889	Glacial temotli	weapon
+29892	Pendant of ates (inert)	amulet
+29893	Pendant of ates	amulet
+29911	Prop sword	weapon
+29912	Butler's tray	weapon
+29913	Butler's tray	weapon
+29914	Butler's uniform	torso
+29915	Butler's uniform	legs
+29916	Butler's uniform	torso
+29918	Butler's uniform	legs
+29920	Costume needle	?
+29929	Ram mask	head
+29930	Wolf mask	head
+29931	Bird mask	head
+29932	Jaguar mask	head
+29933	Snake mask	head
+29934	Ram mask	head
+29936	Wolf mask	head
+29938	Bird mask	head
+29940	Jaguar mask	head
+29942	Snake mask	head
+29974	Prescription goggles	head
+29976	Prescription goggles	head
+29978	Alchemist labcoat	torso
+29980	Alchemist labcoat	torso
+29982	Alchemist pants	legs
+29984	Alchemist pants	legs
+29986	Alchemist gloves	hands
+29988	Alchemist's amulet	amulet
+29990	Alchemist's amulet	amulet
+29992	Alchemist's amulet	amulet
+30000	Chugging barrel	?
+30034	null	weapon
+30045	Graceful hood	head
+30047	Graceful hood	head
+30048	Graceful cape	cape
+30050	Graceful cape	cape
+30051	Graceful top	torso
+30053	Graceful top	torso
+30054	Graceful legs	legs
+30056	Graceful legs	legs
+30057	Graceful gloves	hands
+30059	Graceful gloves	hands
+30060	Graceful boots	boots
+30062	Graceful boots	boots
+30063	null	?
+30064	Tome of earth	shield
+30066	Tome of earth (empty)	shield
+30070	Dragon hunter wand	weapon
+30073	Hueycoatl hide coif	head
+30076	Hueycoatl hide body	torso
+30079	Hueycoatl hide chaps	legs
+30082	Hueycoatl hide vambraces	hands
+30111	Helmet of the moon	head
+30156	Butler's tray	weapon
+30157	Butler's tray	weapon
+30232	Scarecrow shirt	torso
+30237	Beige pumpkin (disgusted)	head
+30239	Beige pumpkin (silly)	head
+30241	Beige pumpkin (evil)	head
+30242	Beige pumpkin (angry)	head
+30243	Beige pumpkin (depressed)	head
+30244	Beige pumpkin (shocked)	head
+30245	Beige pumpkin (sad)	head
+30246	Beige pumpkin (happy)	head
+30247	Beige pumpkin (laughing)	head
+30248	White pumpkin (disgusted)	head
+30249	White pumpkin (silly)	head
+30250	White pumpkin (evil)	head
+30251	White pumpkin (angry)	head
+30252	White pumpkin (depressed)	head
+30253	White pumpkin (shocked)	head
+30254	White pumpkin (sad)	head
+30255	White pumpkin (happy)	head
+30256	White pumpkin (laughing)	head
+30257	Yellow pumpkin (disgusted)	head
+30258	Yellow pumpkin (silly)	head
+30259	Yellow pumpkin (evil)	head
+30260	Yellow pumpkin (angry)	head
+30261	Yellow pumpkin (depressed)	head
+30262	Yellow pumpkin (shocked)	head
+30263	Yellow pumpkin (sad)	head
+30264	Yellow pumpkin (happy)	head
+30265	Yellow pumpkin (laughing)	head
+30266	Orange pumpkin (disgusted)	head
+30267	Orange pumpkin (silly)	head
+30268	Orange pumpkin (evil)	head
+30269	Orange pumpkin (angry)	head
+30270	Orange pumpkin (depressed)	head
+30271	Orange pumpkin (shocked)	head
+30272	Orange pumpkin (sad)	head
+30273	Orange pumpkin (happy)	head
+30274	Orange pumpkin (laughing)	head
+30275	Red pumpkin (disgusted)	head
+30276	Red pumpkin (silly)	head
+30277	Red pumpkin (evil)	head
+30278	Red pumpkin (angry)	head
+30279	Red pumpkin (depressed)	head
+30280	Red pumpkin (shocked)	head
+30281	Red pumpkin (sad)	head
+30282	Red pumpkin (happy)	head
+30283	Red pumpkin (laughing)	head
+30284	Dark green pumpkin (disgusted)	head
+30285	Dark green pumpkin (silly)	head
+30286	Dark green pumpkin (evil)	head
+30287	Dark green pumpkin (angry)	head
+30288	Dark green pumpkin (depressed)	head
+30289	Dark green pumpkin (shocked)	head
+30290	Dark green pumpkin (sad)	head
+30291	Dark green pumpkin (happy)	head
+30292	Dark green pumpkin (laughing)	head
+30293	Powder grey pumpkin (disgusted)	head
+30294	Powder grey pumpkin (silly)	head
+30295	Powder grey pumpkin (evil)	head
+30296	Powder grey pumpkin (angry)	head
+30297	Powder grey pumpkin (depressed)	head
+30298	Powder grey pumpkin (shocked)	head
+30299	Powder grey pumpkin (sad)	head
+30300	Powder grey pumpkin (happy)	head
+30301	Powder grey pumpkin (laughing)	head
+30302	Torva full helm	head
+30303	Torva platebody	torso
+30304	Torva platelegs	legs
+30305	Arclight (inactive)	weapon
+30320	Arrav's axe	weapon
+30321	Zombie helmet	head
+30340	Crystal dagger (perfected)	weapon
+30342	Infernal harpoon (or)	weapon
+30343	Infernal harpoon (uncharged)	weapon
+30344	null	weapon
+30345	Infernal pickaxe (or)	weapon
+30346	Infernal pickaxe (uncharged)	weapon
+30347	Infernal axe (or)	weapon
+30348	Infernal axe (uncharged)	weapon
+30349	Dragon harpoon (or)	weapon
+30350	null	weapon
+30351	Dragon pickaxe (or)	weapon
+30352	Dragon axe (or)	weapon
+30357	Forager's pouch	shield
+30361	Banker's briefcase	cape
+30365	Pocket kingdom	?
+30367	The dogsword	weapon
+30369	Sunlight spear	weapon
+30371	Devil's element	shield
+30373	Drygore blowpipe (empty)	weapon
+30374	Drygore blowpipe	weapon
+30376	Amulet of the monarchs	amulet
+30380	Gloves of the damned	hands
+30382	Thousand-dragon ward	shield
+30386	Sunlit bracers	hands
+30388	Thunder khopesh	weapon
+30390	Nature's reprisal	weapon
+30392	Nature's reprisal (uncharged)	weapon
+30404	Raging echoes hat (t1)	head
+30406	Raging echoes top (t1)	torso
+30408	Raging echoes robeskirt (t1)	legs
+30410	Raging echoes boots (t1)	boots
+30412	Raging echoes hat (t2)	head
+30414	Raging echoes top (t2)	torso
+30416	Raging echoes robeskirt (t2)	legs
+30418	Raging echoes boots (t2)	boots
+30420	Raging echoes hat (t3)	head
+30422	Raging echoes top (t3)	torso
+30424	Raging echoes robeskirt (t3)	legs
+30426	Raging echoes boots (t3)	boots
+30428	Raging echoes cane	weapon
+30430	Raging echoes banner	weapon
+30432	Echo venator bow ornament kit	?
+30434	Echo venator bow	weapon
+30436	Echo venator bow (uncharged)	weapon
+30437	Echo virtus mask	head
+30439	Echo virtus robe top	torso
+30441	Echo virtus robe bottom	legs
+30445	Echo ahrim's hood	head
+30447	Echo ahrim's robetop	torso
+30449	Echo ahrim's robeskirt	legs
+30453	Echo home teleport scroll	weapon
+30455	Raging echoes death scroll	?
+30457	Raging echoes astral contact scroll	?
+30459	Raging echoes nexus scroll	?
+30461	Raging echoes portal scroll	?
+30465	Raging echoes dragon trophy	weapon
+30467	Raging echoes rune trophy	weapon
+30469	Raging echoes adamant trophy	weapon
+30471	Raging echoes mithril trophy	shield
+30473	Raging echoes steel trophy	shield
+30475	Raging echoes iron trophy	shield
+30477	Raging echoes bronze trophy	shield
+30479	Present box hat	head
+30481	Present box hat	head
+30483	Present box hat	head
+30485	Present box hat	head
+30487	Dog disguise	head
+30489	Festive scarf	amulet
+30491	Dog boots	boots
+30519	Echo ahrim's hood 100	head
+30521	Echo ahrim's robetop 100	torso
+30523	Echo ahrim's robeskirt 100	legs
+30525	Echo ahrim's hood 75	head
+30527	Echo ahrim's robetop 75	torso
+30529	Echo ahrim's robeskirt 75	legs
+30531	Echo ahrim's hood 50	head
+30533	Echo ahrim's robetop 50	torso
+30535	Echo ahrim's robeskirt 50	legs
+30537	Echo ahrim's hood 25	head
+30539	Echo ahrim's robetop 25	torso
+30541	Echo ahrim's robeskirt 25	legs
+30543	Echo ahrim's hood 0	head
+30545	Echo ahrim's robetop 0	torso
+30547	Echo ahrim's robeskirt 0	legs
+30560	Raging echoes scrying pool scroll	?
+30563	Raging echoes spirit tree scroll	?
+30568	Echo ahrim's staff	weapon
+30570	Echo ahrim's staff 100	weapon
+30571	Echo ahrim's staff 75	weapon
+30572	Echo ahrim's staff 50	weapon
+30573	Echo ahrim's staff 25	weapon
+30574	Echo ahrim's staff 0	weapon
+30579	Collection log	shield
+30581	Collection log	shield
+30583	Collection log	shield
+30585	Collection log	shield
+30587	Collection log	shield
+30589	Collection log	shield
+30591	Collection log	shield
+30593	Collection log	shield
+30595	Collection log	shield
+30597	Bronze staff of collection	weapon
+30599	Iron staff of collection	weapon
+30601	Steel staff of collection	weapon
+30603	Black staff of collection	weapon
+30605	Mithril staff of collection	weapon
+30607	Adamant staff of collection	weapon
+30609	Rune staff of collection	weapon
+30611	Dragon staff of collection	weapon
+30613	Gilded staff of collection	weapon
+30634	Twinflame staff	weapon
+30637	Giantsoul amulet (uncharged)	amulet
+30638	Giantsoul amulet	amulet
+30642	null	?
+30643	null	?
+30646	Classic imp tail	cape
+30648	Classic imp hood	head
+30720	Carrot costume hat	head
+30722	Carrot costume body	torso
+30724	Carrot costume tights	legs
+30726	Carrot costume gloves	hands
+30750	Oathplate helm	head
+30753	Oathplate chest	torso
+30756	Oathplate legs	legs
+30759	Soulflame horn	weapon
+30762	null	?
+30777	Radiant oathplate helm	head
+30779	Radiant oathplate chest	torso
+30781	Radiant oathplate legs	legs
+30872		weapon
+30874	null	?
+30887	Polycatalytic guardian stone	?
+30891	Keris partisan of amascut	weapon
+30944	Makeshift blackjack	?
+30947	Potato sack	head
+30955	Arkan blade	weapon
+30957	Earthbound tecpatl	weapon
+30965	Knife blade	?
+30970	Egg	weapon
+31034	Greenman mask	head
+31037	Greenman mask (normal)	head
+31038	Greenman mask (oak)	head
+31039	Greenman mask (willow)	head
+31040	Greenman mask (maple)	head
+31041	Greenman mask (yew)	head
+31042	Greenman mask (magic)	head
+31043	Fletching knife	shield
+31049	Redwood hiking staff	weapon
+31081	Antler guard	shield
+31088	Avernic treads	boots
+31091	Avernic treads (pr)	boots
+31092	Avernic treads (pe)	boots
+31093	Avernic treads (et)	boots
+31094	Avernic treads (pr)(pe)	boots
+31095	Avernic treads (pr)(et)	boots
+31096	Avernic treads (pe)(et)	boots
+31097	Avernic treads (max)	boots
+31106	Confliction gauntlets	hands
+31113	Eye of ayak	weapon
+31115	Eye of ayak (uncharged)	weapon
+31117	Orange	head
+31132	Dinh's blazing bulwark	weapon
+31133	Venator bow	weapon
+31172	Battlehat	head
+31181	Grid master tabard	torso
+31184	Grid master tabard (b)	torso
+31187	Grid master tabard (p)	torso
+31190	Grid master tabard (g)	torso
+31193	Swords and emblem	cape
+31196	Swords and emblem (b)	cape
+31199	Swords and emblem (p)	cape
+31202	Swords and emblem (g)	cape
+31227	Spooky pumpkin lantern	weapon
+31229	Grim reaper top	torso
+31231	Grim reaper bottoms	legs
+31233	Grim reaper gloves	hands
+31241	Horn of plenty	shield
+31243	Horn of plenty (empty)	shield
+31248	Belle's folly	weapon
+31252	Spirit angler headband	head
+31288	Sailing cape	cape
+31290	Sailing cape(t)	cape
+31292	Sailing hood	head
+31294	null	?
+31298	Deep sea helmet	head
+31300	Deep sea apparatus	cape
+31331	Mayor of catherby	weapon
+31359	Tin cup	weapon
+31361	Tin cup	weapon
+31369	Accordion	?
+31371	Vacuum pump	?
+31373	Vacuum pump and gull	weapon
+31398	Tortugan shield	cape
+31401	Deep sea helmet	head
+31403	Deep sea apparatus	cape
+31575	Camphor blowpipe	weapon
+31577	Camphor blowpipe (empty)	weapon
+31579	Ironwood blowpipe	weapon
+31581	Ironwood blowpipe (empty)	weapon
+31583	Rosewood blowpipe	weapon
+31585	Rosewood blowpipe (empty)	weapon
+31736	Storm cruiser's hat	head
+31738	Storm cruiser's coat	torso
+31740	Storm cruiser's trousers	legs
+31742	Storm cruiser's shoes	boots
+31748	Swamp cruiser's hat	head
+31750	Swamp cruiser's jacket	torso
+31752	Swamp cruiser's trousers	legs
+31754	Swamp cruiser's shoes	boots
+31760	Crystal glider's hat	head
+31762	Crystal glider's jacket	torso
+31764	Crystal glider's trousers	legs
+31766	Crystal glider's shoes	boots
+31826	null	?
+31827	null	?
+31828	null	?
+31829	null	?
+31830	null	?
+31988	null	weapon
+32386	Medallion of the deep	amulet
+32398	Sailors' amulet (inert)	amulet
+32399	Sailors' amulet	amulet
+32435	Crate of adamantite ore	weapon
+32436	Crate of crab paste	weapon
+32437	Crate of crystal seeds	weapon
+32438	Crate of daggers	weapon
+32439	Crate of dyes	weapon
+32440	Crate of furs	weapon
+32441	Crate of jewellery	weapon
+32442	Crate of lead ore	weapon
+32443	Crate of monkfish	weapon
+32444	Crate of nickel ore	weapon
+32445	Crate of pest remains	weapon
+32446	Crate of platebodies	weapon
+32447	Crate of spears	weapon
+32448	Crate of arrowtips	weapon
+32449	Crate of bananas	weapon
+32450	Crate of crystal seeds	weapon
+32451	Crate of fish	weapon
+32452	Crate of furs	weapon
+32453	Crate of gold ore	weapon
+32454	Crate of halberds	weapon
+32455	Crate of jewellery	weapon
+32456	Crate of poison	weapon
+32457	Crate of rabbit meat	weapon
+32458	Crate of red coral	weapon
+32459	Crate of runes	weapon
+32460	Crate of salamanders	weapon
+32461	Crate of sand	weapon
+32462	Crate of silk	weapon
+32463	Crate of spices	weapon
+32464	Crate of bear meat	weapon
+32465	Crate of beer	weapon
+32466	Crate of cacti	weapon
+32467	Crate of camphor logs	weapon
+32468	Crate of compost	weapon
+32469	Crate of fish	weapon
+32470	Crate of gems	weapon
+32471	Crate of iron bars	weapon
+32472	Crate of jewellery	weapon
+32473	Crate of machinery parts	weapon
+32474	Crate of rum	weapon
+32475	Crate of sandstone	weapon
+32476	Crate of silver ore	weapon
+32477	Crate of spices	weapon
+32478	Crate of vodka	weapon
+32479	Crate of wine	weapon
+32480	Crate of gold bars	weapon
+32481	Crate of secret stuff	weapon
+32482	Crate of arrowtips	weapon
+32483	Crate of bait	weapon
+32484	Crate of feathers	weapon
+32485	Crate of bananas	weapon
+32486	Crate of coconuts	weapon
+32487	Crate of furs	weapon
+32488	Crate of glassmaking supplies	weapon
+32489	Crate of gold ore	weapon
+32490	Crate of grog	weapon
+32491	Crate of javelins	weapon
+32492	Crate of jewellery	weapon
+32493	Crate of karambwans	weapon
+32494	Crate of pineapples	weapon
+32495	Crate of potatoes	weapon
+32496	Crate of seeds	weapon
+32497	Crate of silk	weapon
+32498	Crate of silver ore	weapon
+32499	Crate of vials	weapon
+32500	Crate of astral runes	weapon
+32501	Crate of books	weapon
+32502	Crate of coral	weapon
+32503	Crate of fish	weapon
+32504	Crate of fruit	weapon
+32505	Crate of gems	weapon
+32506	Crate of historical artefacts	weapon
+32507	Crate of nickel ore	weapon
+32508	Crate of oranges	weapon
+32509	Crate of ores	weapon
+32510	Crate of pineapples	weapon
+32511	Crate of red coral	weapon
+32512	Crate of runes	weapon
+32513	Crate of seeds	weapon
+32514	Crate of ship parts	weapon
+32515	Crate of spices	weapon
+32516	Crate of staffs	weapon
+32517	Crate of tokens	weapon
+32518	Crate of vegetables	weapon
+32519	Crate of arrowtips	weapon
+32520	Crate of bear meat	weapon
+32521	Crate of beer	weapon
+32522	Crate of daggers	weapon
+32523	Crate of fish	weapon
+32524	Crate of gems	weapon
+32525	Crate of khali brews	weapon
+32526	Crate of peg legs	weapon
+32527	Crate of platebodies	weapon
+32528	Crate of rum	weapon
+32529	Crate of scimitars	weapon
+32530	Crate of ship parts	weapon
+32531	Crate of swords	weapon
+32532	Crate of alpaca wool	weapon
+32533	Crate of camphor logs	weapon
+32534	Crate of fabrics	weapon
+32535	Crate of fruit	weapon
+32536	Crate of furs	weapon
+32537	Crate of granite	weapon
+32538	Crate of javelins	weapon
+32539	Crate of logs	weapon
+32540	Crate of machinery parts	weapon
+32541	Crate of mahogany logs	weapon
+32542	Crate of pest remains	weapon
+32543	Crate of pickaxes	weapon
+32544	Crate of planks	weapon
+32545	Crate of suqah hides	weapon
+32546	Crate of warhammers	weapon
+32547	Crate of bananas	weapon
+32548	Crate of barley	weapon
+32549	Crate of sand	weapon
+32550	Crate of adamantite ore	weapon
+32551	Crate of fish	weapon
+32552	Crate of fruit	weapon
+32553	Crate of iron ore	weapon
+32554	Crate of monkfish	weapon
+32555	Crate of onions	weapon
+32556	Crate of planks	weapon
+32557	Crate of swords	weapon
+32558	Crate of warhammers	weapon
+32559	Crate of yak hair	weapon
+32560	Crate of fish	weapon
+32561	Crate of lead ore	weapon
+32562	Crate of rope	weapon
+32563	Crate of xerician fabrics	weapon
+32564	Crate of fish	weapon
+32565	Crate of flax	weapon
+32566	Crate of logs	weapon
+32567	Crate of bear meat	weapon
+32568	Crate of fish	weapon
+32569	Crate of furs	weapon
+32570	Crate of gems	weapon
+32571	Crate of kebbit fur	weapon
+32572	Crate of meat	weapon
+32573	Crate of ores	weapon
+32574	Crate of secret things	weapon
+32575	Crate of swords	weapon
+32576	Crate of vegetables	weapon
+32577	Crate of wine	weapon
+32578	Crate of antelope fur	weapon
+32579	Crate of berries	weapon
+32580	Crate of coal	weapon
+32581	Crate of crystal seeds	weapon
+32582	Crate of fish	weapon
+32583	Crate of furs	weapon
+32584	Crate of kebbit fur	weapon
+32585	Crate of logs	weapon
+32586	Crate of potions	weapon
+32587	Crate of red coral	weapon
+32588	Crate of bananas	weapon
+32589	Crate of beer glasses	weapon
+32590	Crate of cocktails	weapon
+32591	Crate of eye patches	weapon
+32592	Crate of fish	weapon
+32593	Crate of high importance	weapon
+32594	Crate of honey	weapon
+32595	Crate of lobsters	weapon
+32596	Crate of logs	weapon
+32597	Crate of mahogany logs	weapon
+32598	Crate of meat	weapon
+32599	Crate of rotten bananas	weapon
+32600	Crate of secret stuff	weapon
+32601	Crate of ship parts	weapon
+32602	Crate of silk	weapon
+32603	Crate of coal	weapon
+32604	Crate of mahogany logs	weapon
+32605	Crate of sand	weapon
+32606	Crate of fabrics	weapon
+32607	Crate of fish	weapon
+32608	Crate of flax	weapon
+32609	Crate of furs	weapon
+32610	Crate of potions	weapon
+32611	Crate of vodka	weapon
+32612	Crate of angler outfit pieces	weapon
+32613	Crate of arrowtips	weapon
+32614	Crate of bows	weapon
+32615	Crate of bread	weapon
+32616	Crate of chainbodies	weapon
+32617	Crate of coal	weapon
+32618	Crate of crab paste	weapon
+32619	Crate of fruit	weapon
+32620	Crate of gunpowder	weapon
+32621	Crate of herbs	weapon
+32622	Crate of huasca	weapon
+32623	Crate of kyatt teeth	weapon
+32624	Crate of planks	weapon
+32625	Crate of platebodies	weapon
+32626	Crate of red coral	weapon
+32627	Crate of scimitars	weapon
+32628	Crate of secret stuff	weapon
+32629	Crate of spears	weapon
+32630	Crate of swamp paste	weapon
+32631	Crate of vodka	weapon
+32632	Crate of antelope meat	weapon
+32633	Crate of astral runes	weapon
+32634	Crate of books	weapon
+32635	Crate of cannonballs	weapon
+32636	Crate of coal	weapon
+32637	Crate of fabrics	weapon
+32638	Crate of furs	weapon
+32639	Crate of gems	weapon
+32640	Crate of gin	weapon
+32641	Crate of honey	weapon
+32642	Crate of jewellery	weapon
+32643	Crate of kebbit fur	weapon
+32644	Crate of mahogany logs	weapon
+32645	Crate of planks	weapon
+32646	Crate of platebodies	weapon
+32647	Crate of red coral	weapon
+32648	Crate of seeds	weapon
+32649	Crate of wine	weapon
+32650	Crate of antelope fur	weapon
+32651	Crate of berries	weapon
+32652	Crate of bows	weapon
+32653	Crate of coral	weapon
+32654	Crate of fabrics	weapon
+32655	Crate of fish	weapon
+32656	Crate of flax	weapon
+32657	Crate of furs	weapon
+32658	Crate of gems	weapon
+32659	Crate of honey	weapon
+32660	Crate of jewellery	weapon
+32661	Crate of logs	weapon
+32662	Crate of meat	weapon
+32663	Crate of nickel ore	weapon
+32664	Crate of ores	weapon
+32665	Crate of red coral	weapon
+32666	Crate of runes	weapon
+32667	Crate of seeds	weapon
+32668	Crate of silk	weapon
+32669	Crate of silver ore	weapon
+32670	Crate of staffs	weapon
+32671	Crate of teak logs	weapon
+32672	Crate of wine	weapon
+32673	Crate of amulets	weapon
+32674	Crate of beer	weapon
+32675	Crate of books	weapon
+32676	Crate of cacti	weapon
+32677	Crate of camphor logs	weapon
+32678	Crate of coconuts	weapon
+32679	Crate of fish	weapon
+32680	Crate of flax	weapon
+32681	Crate of honey	weapon
+32682	Crate of jewellery	weapon
+32683	Crate of kebabs	weapon
+32684	Crate of logs	weapon
+32685	Crate of nothing sinister	weapon
+32686	Crate of pest remains	weapon
+32687	Crate of red coral	weapon
+32688	Crate of runes	weapon
+32689	Crate of seeds	weapon
+32690	Crate of spices	weapon
+32691	Crate of sunbeam ale	weapon
+32692	Crate of swords	weapon
+32693	Crate of arrowtips	weapon
+32694	Crate of chinchompas	weapon
+32695	Crate of coal	weapon
+32696	Crate of fabrics	weapon
+32697	Crate of fish	weapon
+32698	Crate of fruit	weapon
+32699	Crate of furs	weapon
+32700	Crate of herbs	weapon
+32701	Crate of mithril ore	weapon
+32702	Crate of ores	weapon
+32703	Crate of platebodies	weapon
+32704	Crate of seeds	weapon
+32705	Crate of shields	weapon
+32706	Crate of snakeskin	weapon
+32707	Crate of swords	weapon
+32708	Crate of vegetables	weapon
+32709	Crate of astral runes	weapon
+32710	Crate of books	weapon
+32711	Crate of clothes	weapon
+32712	Crate of fish	weapon
+32713	Crate of halberds	weapon
+32714	Crate of herbs	weapon
+32715	Crate of logs	weapon
+32716	Crate of ores	weapon
+32717	Crate of potions	weapon
+32718	Crate of silk	weapon
+32719	Crate of spices	weapon
+32720	Crate of xerician fabrics	weapon
+32721	Crate of astral runes	weapon
+32722	Crate of battleaxes	weapon
+32723	Crate of coal	weapon
+32724	Crate of fish	weapon
+32725	Crate of furs	weapon
+32726	Crate of granite	weapon
+32727	Crate of herbs	weapon
+32728	Crate of karambwans	weapon
+32729	Crate of ores	weapon
+32730	Crate of protective clothing	weapon
+32731	Crate of runes	weapon
+32732	Crate of ship parts	weapon
+32733	Crate of spices	weapon
+32734	Crate of adamantite ore	weapon
+32735	Crate of beer	weapon
+32736	Crate of dragon bitter	weapon
+32737	Crate of fabrics	weapon
+32738	Crate of fish	weapon
+32739	Crate of halberds	weapon
+32740	Crate of lead ore	weapon
+32741	Crate of monkfish	weapon
+32742	Crate of pies	weapon
+32743	Crate of planks	weapon
+32744	Crate of redwood logs	weapon
+32745	Crate of rope	weapon
+32746	Crate of ship parts	weapon
+32747	Crate of teak logs	weapon
+32748	Crate of wine	weapon
+32749	Crate of calquat	weapon
+32750	Crate of cocktails	weapon
+32751	Crate of coral	weapon
+32752	Crate of fish	weapon
+32753	Crate of fishing supplies	weapon
+32754	Crate of javelins	weapon
+32755	Crate of planks	weapon
+32756	Crate of runes	weapon
+32757	Crate of ship parts	weapon
+32758	Crate of beer	weapon
+32759	Crate of fabrics	weapon
+32760	Crate of fish	weapon
+32761	Crate of maces	weapon
+32762	Crate of warhammers	weapon
+32763	Crate of wine	weapon
+32764	Crate of arrowtips	weapon
+32765	Crate of bananas	weapon
+32766	Crate of battleaxes	weapon
+32767	Crate of cacti	weapon
+32768	Crate of coral	weapon
+32769	Crate of gold bars	weapon
+32770	Crate of granite	weapon
+32771	Crate of meat	weapon
+32772	Crate of pineapples	weapon
+32773	Crate of platebodies	weapon
+32774	Crate of rum	weapon
+32775	Crate of sea shells	weapon
+32776	Crate of spices	weapon
+32777	Crate of steel bars	weapon
+32778	Crate of swamp paste	weapon
+32779	Crate of wax	weapon
+32780	Crate of bananas	weapon
+32781	Crate of cacti	weapon
+32782	Crate of gems	weapon
+32783	Crate of javelins	weapon
+32784	Crate of jewellery	weapon
+32785	Crate of leather	weapon
+32786	Crate of meat	weapon
+32787	Crate of nickel ore	weapon
+32788	Crate of pest remains	weapon
+32789	Crate of pineapples	weapon
+32790	Crate of potions	weapon
+32791	Crate of rope	weapon
+32792	Crate of sandstone	weapon
+32793	Crate of shields	weapon
+32794	Crate of coral	weapon
+32795	Crate of dragonhide	weapon
+32796	Crate of granite	weapon
+32797	Crate of herbs	weapon
+32798	Crate of logs	weapon
+32799	Crate of maces	weapon
+32800	Crate of ores	weapon
+32801	Crate of platebodies	weapon
+32802	Crate of potions	weapon
+32803	Crate of runes	weapon
+32804	Crate of seeds	weapon
+32805	Crate of spears	weapon
+32806	Crate of wrath runes	weapon
+32807	Crate of ship parts	weapon
+32808	Crate of looty	weapon
+32879	Aquanite hopper	shield
+32898	null	?
+32899	null	?
+32900	null	?
+32901	null	?
+32924	Crate of arrowtips	weapon
+32925	Crate of clothes	weapon
+32928	Lovley jubbly bib	amulet
+32930	Beer belly sweater	torso
+32932	Jad jumper	torso
+32934	Christmas dinner	weapon
+32936	Crate of furs	weapon
+32937	Crate of fish	weapon
+32938	Crate of fish	weapon
+32939	Crate of fish	weapon
+32940	Crate of sand	weapon
+32941	Crate of red coral	weapon
+32942	Crate of fish	weapon
+32943	Crate of spices	weapon
+32944	Crate of jewellery	weapon
+32945	Crate of bait	weapon
+32946	Crate of coconuts	weapon
+32947	Crate of arrowtips	weapon
+32948	Crate of pineapples	weapon
+32949	Crate of logs	weapon
+32950	Crate of planks	weapon
+32951	Crate of logs	weapon
+32952	Crate of alpaca wool	weapon
+32953	Crate of planks	weapon
+32954	Crate of fabrics	weapon
+32955	Crate of planks	weapon
+32956	Crate of logs	weapon
+32957	Crate of planks	weapon
+32958	Crate of fish	weapon
+32959	Crate of fish	weapon
+32960	Crate of gems	weapon
+32961	Crate of fish	weapon
+32962	Crate of fish	weapon
+32963	Crate of potions	weapon
+32964	Crate of furs	weapon
+32965	Crate of swamp paste	weapon
+32966	Crate of planks	weapon
+32967	Crate of books	weapon
+32968	Crate of books	weapon
+32969	Crate of jewellery	weapon
+32970	Crate of jewellery	weapon
+32971	Crate of planks	weapon
+32972	Crate of furs	weapon
+32973	Crate of fish	weapon
+32974	Crate of fish	weapon
+32975	Crate of silk	weapon
+32976	Crate of fish	weapon
+32977	Crate of logs	weapon
+32978	Crate of swords	weapon
+32979	Crate of fish	weapon
+32980	Crate of fish	weapon
+32981	Crate of seeds	weapon
+32982	Crate of swords	weapon
+32983	Crate of platebodies	weapon
+32984	Crate of swords	weapon
+32985	Crate of ores	weapon
+32986	Crate of logs	weapon
+32987	Crate of potions	weapon
+32988	Crate of fish	weapon
+32989	Crate of fish	weapon
+32990	Crate of runes	weapon
+32991	Crate of fish	weapon
+32992	Crate of planks	weapon
+32993	Crate of teak logs	weapon
+32994	Crate of runes	weapon
+32995	Crate of cocktails	weapon
+32996	Crate of ship parts	weapon
+32997	Crate of rum	weapon
+32998	Crate of javelins	weapon
+32999	Crate of potions	weapon
+33000	Crate of ores	weapon
+33001	Crate of potions	weapon
+33002	Holy moleys	boots
+33010	Ruinous powers	shield
+33018	Annihilation teleport scroll	weapon
+33021	Bow of faerdhinen (c)	weapon
+33023	Crystal body	torso
+33025	Crystal body (inactive)	torso
+33027	Crystal legs	legs
+33029	Crystal legs (inactive)	legs
+33031	Crystal helm	head
+33033	Crystal helm (inactive)	head
+33035	Toxic staff (uncharged)	weapon
+33036	Toxic staff (deadman)	weapon
+33038	The dogsword	weapon
+33041	Thunder khopesh	weapon
+33063	Starter cape	cape
+33066	Hooded slayer helmet	head
+33068	Hooded slayer helmet (i)	head
+33070	Hooded slayer helmet (i)	head
+33072	Hooded slayer helmet (i)	head
+33080	25th anniversary helmet	head
+33082	25th anniversary warrior tabard	torso
+33084	25th anniversary skeleton tabard	torso
+33086	25th anniversary 5x5 hat	head
+33089	Bottomless milk bucket	?
+33091	Bottomless milk bucket (empty)	?
+33093	Cow slippers	boots
+33096	Cow slippers	boots
+33097	Cow slippers	boots
+33098	Cow slippers	boots
+33099	Brutus slippers	boots
+33101	Mooleta	shield
+33103	Cowbell amulet	amulet
+33104	Cowbell amulet	amulet
+33151	Archibald	weapon
+33153	Archibald	weapon
+33155	Archibald	weapon
+33157	Archibald	weapon
+33159	Archibald	weapon
+33161	Archibald	weapon
+33163	Archibald	weapon
+33166	Crystal body	torso
+33168	Crystal legs	legs
+33170	Crystal helm	head
+33172	Avernic treads (max)	boots
+33174	Osmumten's fang	weapon
+33176	Elidinis' ward (f)	shield
+33178	Noxious halberd	weapon
+33184	Purging staff	weapon
+33186	Dragonfire shield	shield
+33188	Twisted buckler	shield
+33190	Masori body (f)	torso
+33192	Masori chaps (f)	legs
+33194	Torva platelegs	legs
+33196	Virtus robe top	torso
+33198	Virtus robe bottom	legs
+33200	Burning claws	weapon
+33202	Aranea boots	boots
+33227	Evil eye	amulet
+33229	Transmutation ledger	shield
+33243	Infernal tecpatl	weapon
+33245	Nature's recurve	weapon
+33247	V's helm	head
+33249	Fang of the hound	weapon
+33251	King's barrage	weapon
+33253	Shadowflame quadrant	weapon
+33255	Lithic sceptre	weapon
+33257	Lithic sceptre (uncharged)	weapon
+33259	null	?
+33260	Demonic hood (t1)	head
+33263	Demonic robe top (t1)	torso
+33266	Demonic robe bottom (t1)	legs
+33269	Demonic boots (t1)	boots
+33272	Demonic hood (t2)	head
+33275	Demonic robe top (t2)	torso
+33278	Demonic robe bottom (t2)	legs
+33281	Demonic boots (t2)	boots
+33284	Demonic hood (t3)	head
+33287	Demonic robe top (t3)	torso
+33290	Demonic robe bottom (t3)	legs
+33293	Demonic boots (t3)	boots
+33296	Demonic sceptre	shield
+33299	Demonic pacts banner	weapon
+33314	Trident of the swamp (o)	weapon
+33316	Uncharged toxic trident (o)	weapon
+33318	Trident of the swamp (e) (o)	weapon
+33320	Uncharged toxic trident (e) (o)	weapon
+33322	Trident of the seas (o)	weapon
+33323	Trident of the seas (full) (o)	weapon
+33326	Trident of the seas (e) (o)	weapon
+33328	Uncharged trident (e) (o)	weapon
+33330	Iban's staff (o)	weapon
+33332	Iban's staff (u) (o)	weapon
+33335	Soulreaper axe (o)	weapon
+33338	Oathplate slayer helmet	head
+33340	Radiant slayer helmet	head
+33345	Demonic pacts dragon trophy	weapon
+33347	Demonic pacts rune trophy	weapon
+33349	Demonic pacts adamant trophy	weapon
+33351	Demonic pacts mithril trophy	shield
+33353	Demonic pacts steel trophy	shield
+33355	Demonic pacts iron trophy	shield
+33357	Demonic pacts bronze trophy	shield
+33359	Impish ritual scroll	weapon
+33368	Demonic pacts demon butler scroll	?
+33434	Uncharged trident (o)	weapon
+33436	null	weapon
+33439	Oathplate slayer helmet (i)	head
+33441	Oathplate slayer helmet (i)	head
+33443	Oathplate slayer helmet (i)	head
+33445	Radiant slayer helmet (i)	head
+33447	Radiant slayer helmet (i)	head
+33449	Radiant slayer helmet (i)	head
+33460	Dragon crossbow	weapon
+33462	Oathplate helm	head
+33607	Sap-treated logs	?
+33631	Crimson kisten	weapon
+33639	Necklace of rupture	amulet
+33644	Dummy stymphike feather	weapon
+33647	null	?
+33648	null	?
+33649	null	?
+33650	null	?
+33651	Stymphike feather	?
+33655	Makeshift spear	weapon
+33699	Vial	?
+33709	Diamond sickle (b)	weapon
+33711	Enchanted diamond sickle (b)	weapon
+33713	Blisterwood sickle (e)	weapon
+33716	Blisterwood stake	weapon
+33718	Hallowed flail	weapon
+33722	Sunspear	weapon
+33790	Spine	weapon
+33792	Serpent rope	?
+33800	Silvthrill ballista	weapon
+33836	Noble robe top	torso
+33839	Noble robe top	torso
+33842	Noble robe top	torso
+33845	Noble robe top	torso
+33848	Noble robe top	torso
+33851	Noble robe top	torso
+33854	Noble robe top	torso
+33857	Wyrmscraig noble skirt	legs
+33860	Wyrmscraig noble skirt	legs
+33863	Wyrmscraig noble skirt	legs
+33866	Wyrmscraig noble skirt	legs
+33869	Wyrmscraig noble skirt	legs
+33872	Wyrmscraig noble skirt	legs
+33875	Wyrmscraig noble skirt	legs
+33878	Wyrmscraig shoes	boots
+33881	Wyrmscraig boots	boots
+33884	Wyrmscraig villager robe top	torso
+33887	Wyrmscraig villager robe top	torso
+33890	Wyrmscraig villager robe top	torso
+33893	Wyrmscraig villager robe top	torso
+33896	Wyrmscraig villager robe top	torso
+33899	Wyrmscraig villager robe top	torso
+33902	Wyrmscraig villager robe top	torso
+33905	Wyrmscraig villager robe top	torso
+33908	Wyrmscraig villager robe bottom	legs
+33911	Wyrmscraig villager robe bottom	legs
+33914	Wyrmscraig villager robe bottom	legs
+33917	Wyrmscraig villager robe bottom	legs
+33920	Wyrmscraig villager robe bottom	legs
+33923	Wyrmscraig villager robe bottom	legs
+33926	Wyrmscraig villager robe bottom	legs
+33929	Wyrmscraig villager robe bottom	legs
+33932	Wyrmscraig villager robe bottom	legs
+33935	Wyrmscraig villager robe bottom	legs
+33938	Wyrmscraig villager robe bottom	legs
+33941	Wyrmscraig villager robe bottom	legs
+33944	Wyrmscraig villager robe bottom	legs
+33947	Wyrmscraig villager robe bottom	legs
+33950	Wyrmscraig villager robe top	torso
+33953	Wyrmscraig villager robe top	torso
+33956	Wyrmscraig villager robe top	torso
+33959	Wyrmscraig villager robe top	torso
+33962	Wyrmscraig villager robe top	torso
+33965	Wyrmscraig villager robe top	torso
+33968	Wyrmscraig villager robe top	torso
+33971	Wyrmscraig villager skirt	legs
+33974	Wyrmscraig villager skirt	legs
+33977	Wyrmscraig villager skirt	legs
+33980	Wyrmscraig villager skirt	legs
+33983	Wyrmscraig villager skirt	legs
+33986	Wyrmscraig villager skirt	legs
+33989	Wyrmscraig villager skirt	legs
+33992	Wyrmscraig villager work skirt	legs
+33995	Wyrmscraig villager work skirt	legs
+33998	Wyrmscraig villager work skirt	legs
+34001	Wyrmscraig villager work skirt	legs
+34004	Wyrmscraig villager work skirt	legs
+34007	Wyrmscraig villager work skirt	legs
+34010	Wyrmscraig villager work skirt	legs
+34013	Wyrmscraig villager work skirt	legs
+34027	Hallowfell	weapon
+34035	Placeholder	weapon
+34047	null	?
