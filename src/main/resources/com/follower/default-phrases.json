@@ -2639,6 +2639,7 @@
           {
             "type": "npcNearby",
             "within": 12,
+            "visible": true,
             "names": [
               "Great Olm",
               "Verzik Vitur",
@@ -6267,6 +6268,7 @@
           {
             "type": "npcNearby",
             "within": 4,
+            "visible": true,
             "names": [
               "Cat",
               "Kitten",
@@ -8176,7 +8178,8 @@
           {
             "type": "npcNearby",
             "minimum": 250,
-            "within": 8
+            "within": 8,
+            "visible": true
           }
         ]
       },

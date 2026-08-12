@@ -390,6 +390,11 @@ public final class FakeGame
 			? null
 			: new CollisionData[]{proxyCollision(), proxyCollision(),
 				proxyCollision(), proxyCollision()});
+		// hasLineOfSightTo reads the scene's tiles for bridge handling; a grid
+		// of nulls is honest for a fake with no bridges, where a null SCENE is
+		// a NullPointerException that the engine's rule guard then swallows -
+		// the throwing rule gets disabled and the test fails by silence.
+		answers.put("getScene", (Answer) args -> proxyScene());
 		answers.put("npcs", (Answer) args -> indexed(npcs));
 		// The local player is in the real list too, so the crowd count has to
 		// exclude it by identity - which is exactly what it does.
@@ -407,6 +412,46 @@ public final class FakeGame
 		Map<String, Object> answers = new HashMap<>();
 		answers.put("getFlags", (Answer) args -> collisionFlags);
 		return proxy(CollisionData.class, answers);
+	}
+
+	/**
+	 * Built once: the LOS walk skips any null tile pair, so an empty grid
+	 * reads as "nothing can see anything" rather than "nothing is in the
+	 * way". Each tile only ever answers the two questions the sight check
+	 * asks - its plane and its scene location.
+	 */
+	private net.runelite.api.Tile[][][] sceneTiles;
+
+	private net.runelite.api.Scene proxyScene()
+	{
+		Map<String, Object> answers = new HashMap<>();
+		answers.put("getTiles", (Answer) args ->
+		{
+			if (sceneTiles == null)
+			{
+				int size = net.runelite.api.Perspective.SCENE_SIZE;
+				sceneTiles = new net.runelite.api.Tile[4][size][size];
+				for (int plane = 0; plane < 4; plane++)
+				{
+					for (int x = 0; x < size; x++)
+					{
+						for (int y = 0; y < size; y++)
+						{
+							Map<String, Object> tile = new HashMap<>();
+							tile.put("getPlane", plane);
+							tile.put("getSceneLocation",
+								new net.runelite.api.Point(x, y));
+							sceneTiles[plane][x][y] =
+								proxy(net.runelite.api.Tile.class, tile);
+						}
+					}
+				}
+			}
+			return sceneTiles;
+		});
+		answers.put("getBaseX", 0);
+		answers.put("getBaseY", 0);
+		return proxy(net.runelite.api.Scene.class, answers);
 	}
 
 	private ItemContainer inventoryContainer()

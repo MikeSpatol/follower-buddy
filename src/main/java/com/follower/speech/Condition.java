@@ -64,7 +64,9 @@ import net.runelite.api.NPC;
  * </table>
  *
  * <p>{@code npcNearby} also takes {@code minimum}/{@code maximum} combat level,
- * which on their own match any NPC in that bracket.
+ * which on their own match any NPC in that bracket, and {@code visible}, which
+ * additionally requires line of sight to the player - for lines that invite
+ * the player to look at the thing.
  *
  * <p>{@code chatMessage} also takes {@code from} (player|others) and {@code is}
  * (a {@link net.runelite.api.ChatMessageType} name).
@@ -111,6 +113,16 @@ public class Condition
 
 	public Boolean requirePrayerActive;
 	public Boolean anyLoadedRegion;
+
+	/**
+	 * On {@code npcNearby}: the NPC must also have line of sight to the
+	 * player, by the game's own collision rules. For lines that invite the
+	 * player to LOOK - a callout at something behind a wall is worse than no
+	 * callout, because one bad one teaches the player to stop checking.
+	 * Opt-in per rule rather than a change to what npcNearby means, since
+	 * plenty of uses are atmosphere rather than assertion.
+	 */
+	public Boolean visible;
 
 	private transient Pattern compiledRegex;
 	private transient List<Pattern> compiledNames;
@@ -213,7 +225,8 @@ public class Condition
 				if (nearbyGeneration != generation)
 				{
 					nearbyGeneration = generation;
-					nearbyCached = ctx.isNpcNearby(this::isNearbyCandidate, orDefault(within, 15));
+					nearbyCached = ctx.isNpcNearby(this::isNearbyCandidate,
+						orDefault(within, 15), Boolean.TRUE.equals(visible));
 				}
 				return nearbyCached;
 			}

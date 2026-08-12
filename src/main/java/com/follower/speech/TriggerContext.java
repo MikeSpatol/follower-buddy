@@ -2109,6 +2109,21 @@ public final class TriggerContext
 
 	public boolean isNpcNearby(java.util.function.Predicate<NPC> predicate, int within)
 	{
+		return isNpcNearby(predicate, within, false);
+	}
+
+	/**
+	 * @param requireVisible the NPC must also have line of sight to the
+	 * player. For rules whose line invites the player to LOOK at something:
+	 * "that thing is very large and very close" pointing at a wall with a
+	 * kalphite behind it is worse than silence, because a bad callout teaches
+	 * the player to stop checking. Distance alone was the whole test before
+	 * this, and a different plane was only excluded by accident of
+	 * {@code distanceTo} returning MAX_VALUE across planes.
+	 */
+	public boolean isNpcNearby(java.util.function.Predicate<NPC> predicate, int within,
+		boolean requireVisible)
+	{
 		for (NPC npc : client.getTopLevelWorldView().npcs())
 		{
 			if (npc == null || !predicate.test(npc))
@@ -2120,12 +2135,44 @@ public final class TriggerContext
 			{
 				continue;
 			}
-			if (npcLocation.distanceTo(location) <= within)
+			if (npcLocation.distanceTo(location) > within)
+			{
+				continue;
+			}
+			if (!requireVisible || canSee(npcLocation, npcSize(npc)))
 			{
 				return true;
 			}
 		}
 		return false;
+	}
+
+	private static int npcSize(NPC npc)
+	{
+		return npc.getComposition() == null ? 1
+			: Math.max(1, npc.getComposition().getSize());
+	}
+
+	/**
+	 * Line of sight from an NPC's area to the player, by the game's own
+	 * algorithm - {@link net.runelite.api.coords.WorldArea#hasLineOfSightTo}
+	 * reads the scene's sight-blocking collision flags, which is exactly what
+	 * the game consults to decide the same question.
+	 *
+	 * <p>The area is built from location and size rather than asked of the
+	 * actor, and no collision data reads as visible: during loading there is
+	 * nothing to consult, and refusing to speak about a boss because the map
+	 * has not finished arriving would be the wrong kind of caution.
+	 */
+	private boolean canSee(WorldPoint from, int size)
+	{
+		net.runelite.api.WorldView wv = client.getTopLevelWorldView();
+		if (wv == null || wv.getCollisionMaps() == null)
+		{
+			return true;
+		}
+		return new net.runelite.api.coords.WorldArea(from, size, size)
+			.hasLineOfSightTo(wv, location);
 	}
 
 	/**
