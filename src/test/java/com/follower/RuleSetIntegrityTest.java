@@ -396,6 +396,48 @@ public class RuleSetIntegrityTest
 			+ String.join("\n  ", broken), broken.isEmpty());
 	}
 
+	/**
+	 * Every study target the controller can find has its lines, both ends.
+	 *
+	 * <p>The target list lives in code and the lines live in phrases.json, and
+	 * nothing at runtime notices when they drift: a target without rules is a
+	 * follower that walks up to a fountain, writes solemnly in its scroll, and
+	 * says nothing at all - which reads as a bug precisely because everything
+	 * else about the moment worked.
+	 */
+	@Test
+	public void everyStudyTargetHasItsLines() throws IOException
+	{
+		Harness h = new Harness(folder.newFolder().toPath());
+		List<String> missing = new ArrayList<>();
+		for (String target : com.follower.follower.ErrandController.STUDY_TARGETS)
+		{
+			String key = com.follower.follower.ErrandController.studyKey(target);
+			boolean start = false;
+			boolean end = false;
+			for (SpeechRule rule : h.loader.getRules())
+			{
+				if (rule.when == null || rule.when.names == null
+					|| !rule.when.names.contains(key))
+				{
+					continue;
+				}
+				start |= rule.when.usesType("errandStart");
+				end |= rule.when.usesType("errandEnd");
+			}
+			if (!start)
+			{
+				missing.add(key + " has no start lines");
+			}
+			if (!end)
+			{
+				missing.add(key + " has no end lines");
+			}
+		}
+		assertTrue("study targets the rules do not know:\n  "
+			+ String.join("\n  ", missing), missing.isEmpty());
+	}
+
 	private static String bundledText(String resource) throws IOException
 	{
 		try (InputStream in = RuleSetIntegrityTest.class.getResourceAsStream(resource))

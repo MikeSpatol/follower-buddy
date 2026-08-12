@@ -45,7 +45,9 @@ public class ErrandController
 		BOOTLACE("bootlace"),
 		GLANCE("glance"),
 		/** Stops where it stands and writes something up in its scroll. */
-		DOCUMENT("document");
+		DOCUMENT("document"),
+		/** Walks to something notable, looks at it, and writes THAT up. */
+		STUDY("study");
 
 		final String key;
 
@@ -78,6 +80,30 @@ public class ErrandController
 	/** Ticks between taking the prop and starting the pose: the model rebuild
 	 * is asynchronous, and a scroll popping in mid-read gives the trick away. */
 	private static final int PROP_SETTLE_TICKS = 2;
+
+	/**
+	 * What the scribe considers worth walking over to.
+	 *
+	 * <p>Matched by exact name against the loaded scene, the same way the bank
+	 * and altar errands find their targets. A name that never matches costs
+	 * nothing - that study simply never fires - so the honest verification is
+	 * in game: {@code ::follower errandscan} lists what the scene actually
+	 * calls things. Every name here must have its study-<slug> start and end
+	 * rules in phrases.json; a lint holds the two lists together.
+	 *
+	 * <p>Deliberately the mundane fixtures of the world rather than its
+	 * wonders. The follower already has area lines for the famous things; the
+	 * joke of the field study is the seriousness applied to a crate.
+	 */
+	public static final String[] STUDY_TARGETS = {
+		"Anvil", "Furnace", "Well", "Fountain", "Statue", "Bookcase", "Crate",
+	};
+
+	/** The errand-event key a studied thing announces itself under. */
+	public static String studyKey(String objectName)
+	{
+		return "study-" + objectName.toLowerCase(java.util.Locale.ROOT).replace(' ', '-');
+	}
 
 	/**
 	 * What holds the prop. Implemented by the plugin, which owns the follower's
@@ -157,6 +183,12 @@ public class ErrandController
 	/** Counting down to the scroll pose, so the prop's rebuild lands first. */
 	private int posePendingTicks;
 
+	/** The study's look phase: facing the thing before the scroll comes out. */
+	private int studyLookTicks;
+
+	/** What the current study announced itself as, e.g. "study-anvil". */
+	private String currentStudyKey;
+
 	/** Test hook: run an errand now - a specific one by name, or any ("*"). */
 	public void force(String key)
 	{
@@ -233,6 +265,14 @@ public class ErrandController
 		}
 		else if (state == State.DOING)
 		{
+			// The study looks BEFORE it writes: a few ticks facing the thing,
+			// and only then the scroll. Reversing that order reads as a scribe
+			// deciding the conclusion before the evidence.
+			if (studyLookTicks > 0 && --studyLookTicks == 0)
+			{
+				hands.hold(SCROLL_PROP);
+				posePendingTicks = PROP_SETTLE_TICKS;
+			}
 			// The scroll pose starts a beat after the prop, so the model
 			// rebuild has landed and the scroll is in hand from frame one.
 			if (posePendingTicks > 0 && --posePendingTicks == 0)
@@ -314,6 +354,10 @@ public class ErrandController
 		{
 			candidates.add(Errand.DOCUMENT);
 		}
+		if (config.errandStudy())
+		{
+			candidates.add(Errand.STUDY);
+		}
 		Collections.shuffle(candidates);
 
 		for (Errand errand : candidates)
@@ -387,6 +431,22 @@ public class ErrandController
 				log.debug("Errand started: {}", errand.key);
 				return true;
 			}
+			case STUDY:
+			{
+				// Whatever notable fixture the scene has closest; a scene with
+				// none of them simply produces no study today.
+				List<String> names = new ArrayList<>(java.util.Arrays.asList(STUDY_TARGETS));
+				Collections.shuffle(names);
+				for (String name : names)
+				{
+					WorldPoint found = findObject(name::equals);
+					if (found != null && beginStudyAt(found, name))
+					{
+						return true;
+					}
+				}
+				return false;
+			}
 			case DOCUMENT:
 			{
 				// No trip: something here is worth the record, apparently. The
@@ -419,6 +479,45 @@ public class ErrandController
 			default:
 				return false;
 		}
+	}
+
+	/**
+	 * Starts a study of a specific named thing. Package-private as the test
+	 * seam: the find half needs a real scene, but everything after the find -
+	 * the walk, the look, the scroll, the write-up, the return - is the part
+	 * with lifecycle promises, and this is where a test can inject the thing
+	 * the fake scene cannot provide.
+	 */
+	boolean beginStudyAt(WorldPoint target, String objectName)
+	{
+		List<WorldPoint> besides = new ArrayList<>();
+		besides.add(new WorldPoint(target.getX() + 1, target.getY(), target.getPlane()));
+		besides.add(new WorldPoint(target.getX() - 1, target.getY(), target.getPlane()));
+		besides.add(new WorldPoint(target.getX(), target.getY() + 1, target.getPlane()));
+		besides.add(new WorldPoint(target.getX(), target.getY() - 1, target.getPlane()));
+		WorldPoint from = follower.getWorldLocation();
+		if (from != null)
+		{
+			besides.sort(java.util.Comparator.comparingInt(p -> p.distanceTo(from)));
+		}
+		for (WorldPoint beside : besides)
+		{
+			if (follower.stayAt(beside))
+			{
+				follower.setStayFaceTile(target);
+				current = Errand.STUDY;
+				currentStudyKey = studyKey(objectName);
+				targetTile = beside;
+				errandSite = target;
+				dispatch.accept(TriggerEvent.errand(
+					TriggerEvent.Type.ERRAND_START, currentStudyKey));
+				state = State.TRAVELING;
+				waitTicks = TRAVEL_TIMEOUT_TICKS;
+				log.debug("Errand started: {} at {}", currentStudyKey, target);
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/** For walkable targets (fires, cats): aim at a free tile BESIDE them. */
@@ -486,6 +585,12 @@ public class ErrandController
 		state = State.DOING;
 		switch (current)
 		{
+			case STUDY:
+				// Look, then write. The whole visit runs about twelve seconds:
+				// four of honest looking, the rest with the scroll out.
+				studyLookTicks = 4;
+				waitTicks = 18 + ThreadLocalRandom.current().nextInt(5);
+				break;
 			case ALTAR:
 				follower.playAnimation(PRAY_ANIMATION);
 				waitTicks = 8;
@@ -553,8 +658,8 @@ public class ErrandController
 		// longer one - which is what a person would do.
 		Errand done = current;
 		follower.resumeFollowing();
-		dispatch.accept(TriggerEvent.errand(TriggerEvent.Type.ERRAND_END, done.key));
-		log.debug("Errand finished: {}", done.key);
+		dispatch.accept(TriggerEvent.errand(TriggerEvent.Type.ERRAND_END, endKey(done)));
+		log.debug("Errand finished: {}", endKey(done));
 		clearErrand();
 	}
 
@@ -576,8 +681,8 @@ public class ErrandController
 		follower.playAnimation(TELEPORT_ARRIVE_ANIMATION);
 		// Raised to mid-body: at ground height the swirl sat in the ankles.
 		follower.playSpotAnim(spotAnims.get(TELEPORT_REVERSE_SPOTANIM), 92);
-		dispatch.accept(TriggerEvent.errand(TriggerEvent.Type.ERRAND_END, done.key));
-		log.debug("Errand finished: {}", done.key);
+		dispatch.accept(TriggerEvent.errand(TriggerEvent.Type.ERRAND_END, endKey(done)));
+		log.debug("Errand finished: {}", endKey(done));
 		clearErrand();
 	}
 
@@ -592,11 +697,19 @@ public class ErrandController
 	private void putTheScrollAway()
 	{
 		posePendingTicks = 0;
-		if (current == Errand.DOCUMENT)
+		studyLookTicks = 0;
+		if (current == Errand.DOCUMENT || current == Errand.STUDY)
 		{
 			follower.setPoseOverride(0);
 		}
 		hands.release();
+	}
+
+	/** What this errand reports as, which for a study names the thing studied. */
+	private String endKey(Errand done)
+	{
+		return done == Errand.STUDY && currentStudyKey != null
+			? currentStudyKey : done.key;
 	}
 
 	private void abort()
@@ -622,6 +735,7 @@ public class ErrandController
 	{
 		state = State.IDLE;
 		current = null;
+		currentStudyKey = null;
 		targetTile = null;
 		errandSite = null;
 		nextRollTicks = scheduleTicks();

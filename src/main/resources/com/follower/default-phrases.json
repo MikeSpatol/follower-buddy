@@ -3130,6 +3130,244 @@
       ]
     },
     {
+      "id": "errand-study-anvil-start",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": {
+        "type": "errandStart",
+        "names": [
+          "study-anvil"
+        ]
+      },
+      "say": [
+        "An anvil. Hold on, they vary more than you'd think.",
+        "One moment. That anvil wants recording."
+      ]
+    },
+    {
+      "id": "errand-study-anvil-end",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": {
+        "type": "errandEnd",
+        "names": [
+          "study-anvil"
+        ]
+      },
+      "say": [
+        "Anvil: dented, honest, load-bearing. Noted.",
+        "Recorded. A serviceable anvil, that."
+      ]
+    },
+    {
+      "id": "errand-study-furnace-start",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": {
+        "type": "errandStart",
+        "names": [
+          "study-furnace"
+        ]
+      },
+      "say": [
+        "A furnace. The record wants its particulars.",
+        "One second. I take an interest in furnaces."
+      ]
+    },
+    {
+      "id": "errand-study-furnace-end",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": {
+        "type": "errandEnd",
+        "names": [
+          "study-furnace"
+        ]
+      },
+      "say": [
+        "Furnace: hot, dutiful, slightly smug. Filed.",
+        "Noted. It's a good furnace. Posterity will want to know."
+      ]
+    },
+    {
+      "id": "errand-study-well-start",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": {
+        "type": "errandStart",
+        "names": [
+          "study-well"
+        ]
+      },
+      "say": [
+        "A well. The depths want documenting.",
+        "Hold on. Wells have histories, you know."
+      ]
+    },
+    {
+      "id": "errand-study-well-end",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": {
+        "type": "errandEnd",
+        "names": [
+          "study-well"
+        ]
+      },
+      "say": [
+        "Well: deep, damp, dependable. In the record.",
+        "Documented. I didn't look down. I never look down."
+      ]
+    },
+    {
+      "id": "errand-study-fountain-start",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": {
+        "type": "errandStart",
+        "names": [
+          "study-fountain"
+        ]
+      },
+      "say": [
+        "A fountain. Civic pride, in water form.",
+        "One moment. The fountain goes in the book."
+      ]
+    },
+    {
+      "id": "errand-study-fountain-end",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": {
+        "type": "errandEnd",
+        "names": [
+          "study-fountain"
+        ]
+      },
+      "say": [
+        "Fountain: ornamental, faintly leaky. Recorded.",
+        "Noted. The pigeons rate it highly."
+      ]
+    },
+    {
+      "id": "errand-study-statue-start",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": {
+        "type": "errandStart",
+        "names": [
+          "study-statue"
+        ]
+      },
+      "say": [
+        "A statue. Somebody mattered once. Let's see who.",
+        "Hold on. Statues are just history showing off."
+      ]
+    },
+    {
+      "id": "errand-study-statue-end",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": {
+        "type": "errandEnd",
+        "names": [
+          "study-statue"
+        ]
+      },
+      "say": [
+        "Statue: taller than the subject ever stood, no doubt.",
+        "Recorded. The plaque flatters. They always do."
+      ]
+    },
+    {
+      "id": "errand-study-bookcase-start",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": {
+        "type": "errandStart",
+        "names": [
+          "study-bookcase"
+        ]
+      },
+      "say": [
+        "A bookcase. Checking the competition.",
+        "One moment. I audit other people's shelves."
+      ]
+    },
+    {
+      "id": "errand-study-bookcase-end",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": {
+        "type": "errandEnd",
+        "names": [
+          "study-bookcase"
+        ]
+      },
+      "say": [
+        "Competition assessed. I remain unworried.",
+        "Noted: books, shelved, unread. Typical."
+      ]
+    },
+    {
+      "id": "errand-study-crate-start",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": {
+        "type": "errandStart",
+        "names": [
+          "study-crate"
+        ]
+      },
+      "say": [
+        "That crate could hold anything. Duty calls.",
+        "A crate. The record does not skip crates."
+      ]
+    },
+    {
+      "id": "errand-study-crate-end",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": {
+        "type": "errandEnd",
+        "names": [
+          "study-crate"
+        ]
+      },
+      "say": [
+        "Crate: wooden, nailed shut, deeply mysterious. Filed.",
+        "Documented. Its secrets survive another day."
+      ]
+    },
+    {
       "id": "errand-glance-start",
       "note": "The follower thought it saw something.",
       "group": "errand",

@@ -635,6 +635,18 @@ public interface FollowerConfig extends Config
 		return true;
 	}
 
+	@ConfigItem(
+		keyName = "errandStudy",
+		name = "Field study",
+		description = "Walks over to something notable nearby and writes it up",
+		section = errandSection,
+		position = 9
+	)
+	default boolean errandStudy()
+	{
+		return true;
+	}
+
 	// ------------------------------------------------------------ rule groups
 
 	@ConfigItem(

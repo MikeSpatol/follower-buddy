@@ -301,6 +301,51 @@ public class ErrandSimulationTest
 	}
 
 	@Test
+	public void aStudyLooksBeforeItWritesAndNamesWhatItStudied()
+	{
+		// The find half needs a real scene; everything after it is lifecycle,
+		// injected through the same seam a real find would use.
+		assertTrue(errands.beginStudyAt(new WorldPoint(3225, 3218, 0), "Well"));
+		assertTrue(errands.isBusy());
+		assertTrue("it announced the specific thing", started("study-well"));
+
+		tick(2);      // arrive (the recording follower is always settled)
+		assertEquals("looking first: no scroll during the look", 0, heldProp);
+
+		tick(5);      // the look ends, the scroll comes out
+		assertEquals(10485, heldProp);
+		tick(2);
+		assertEquals("then the writing pose", 5354, follower.poseOverride);
+
+		tick(30);
+		assertFalse("the study should have finished", errands.isBusy());
+		assertEquals(0, follower.poseOverride);
+		assertEquals(0, heldProp);
+
+		boolean endNamed = false;
+		for (TriggerEvent event : dispatched)
+		{
+			endNamed |= event.getType() == TriggerEvent.Type.ERRAND_END
+				&& "study-well".equals(event.getName());
+		}
+		assertTrue("the verdict names the thing too", endNamed);
+	}
+
+	@Test
+	public void anInterruptedStudyReleasesEverything()
+	{
+		errands.beginStudyAt(new WorldPoint(3225, 3218, 0), "Anvil");
+		tick(9);      // deep enough that the scroll is out and the pose holds
+
+		busy = true;
+		tick(1);
+
+		assertFalse(errands.isBusy());
+		assertEquals("the pose must not outlive the study", 0, follower.poseOverride);
+		assertEquals("nor the scroll", 0, heldProp);
+	}
+
+	@Test
 	public void anErrandAnnouncesBothItsEndsExactlyOnce()
 	{
 		errands.force("bootlace");
