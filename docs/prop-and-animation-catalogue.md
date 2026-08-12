@@ -21,10 +21,18 @@ list, and RuneLite's `AnimationID` names none of them.
 | id | what it is | notes |
 |---|---|---|
 | 1350 | reading a book | arms mime a held book; nothing drawn in hand |
-| 3140 | reading a book | pairs with 3141 |
+| 3140 | reading a book | pairs with 3141; god-book props sit visibly OFF under it |
 | 3141 | turning the page | the two chain: read, turn, read |
 | 4549 | reading a note, shaking head | disapproval included |
-| 5354 | reading a scroll | wants a scroll-shaped prop |
+| 5354 | reading a scroll | **SHIPPED**: pairs with item 10485, no offset needed |
+
+**The winning pair, verified 2026-08-12:** pose 5354 with the plain Scroll
+(10485, weapon slot) sits between the hands with no vertex nudge at all. It
+ships as the `document` errand - the follower stops where it stands, takes the
+scroll out, writes something up, and puts it away. The book animations remain
+unshipped: every book prop tried sat where a *wielded* book sits, not where
+3140's hands meet, so a book pairing needs `propoffset` tuning or the
+synthetic-model fallback before it is usable.
 
 All four mime holding something that is not there. In the real game the item
 in your hands comes from your equipment — so the prop is an item, overlaid on

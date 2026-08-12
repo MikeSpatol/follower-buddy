@@ -3084,6 +3084,47 @@
       ]
     },
     {
+      "id": "errand-document-start",
+      "note": "The documenting errand: stops where it stands, takes out the scroll (item 10485, transient prop) and reads/writes in it (pose 5354, both verified in game 2026-08-12). The scribe caught doing the job title.",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": {
+        "type": "errandStart",
+        "names": [
+          "document"
+        ]
+      },
+      "say": [
+        "Hold on. This needs writing down.",
+        "One moment. Posterity calls.",
+        "Stop a second. This goes in the record.",
+        "Wait there. The scroll wants an entry.",
+        "If I don't write this down now, it never happened."
+      ]
+    },
+    {
+      "id": "errand-document-end",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": {
+        "type": "errandEnd",
+        "names": [
+          "document"
+        ]
+      },
+      "say": [
+        "There. Recorded for the ages.",
+        "Noted, dated, filed.",
+        "The record grows. Onward.",
+        "That's in ink now. No taking it back.",
+        "Done. Future scholars, you're welcome."
+      ]
+    },
+    {
       "id": "errand-glance-start",
       "note": "The follower thought it saw something.",
       "group": "errand",

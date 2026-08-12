@@ -458,7 +458,40 @@ public class FollowerPlugin extends Plugin
 		clientThread.invokeLater(this::ensureCatalogues);
 		errands = new com.follower.follower.ErrandController(client, follower, config,
 			speechEngine::dispatch, spotAnimRepository,
-			() -> dialog.isOpen() || follower.isNpcSlaved());
+			() -> dialog.isOpen() || follower.isNpcSlaved(),
+			new com.follower.follower.ErrandController.Hands()
+			{
+				// The same transient-prop path the dev commands use: overlaid
+				// on the outfit at compose time, never persisted. The errand
+				// runs on the client thread already.
+				@Override
+				public void hold(int itemId)
+				{
+					KitType slot = resolveSlot(itemId);
+					if (slot == null)
+					{
+						log.warn("Errand prop {} has no wearable slot", itemId);
+						return;
+					}
+					propSlot = slot;
+					propItemId = itemId;
+					rebuildFollower();
+				}
+
+				@Override
+				public void release()
+				{
+					// Idempotent: the reset and abort paths call this with
+					// nothing held, including once at construction time.
+					if (propSlot == null)
+					{
+						return;
+					}
+					propSlot = null;
+					propItemId = 0;
+					rebuildFollower();
+				}
+			});
 		spectate = new com.follower.follower.SpectateController(client, follower, config,
 			speechEngine.getContext(), spotAnimRepository, speechEngine::dispatch,
 			this::setSpectateDisarmed);

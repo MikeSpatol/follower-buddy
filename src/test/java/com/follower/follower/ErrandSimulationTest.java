@@ -113,6 +113,14 @@ public class ErrandSimulationTest
 			where = new WorldPoint(3222, 3218, 0);
 		}
 
+		int poseOverride;
+
+		@Override
+		public void setPoseOverride(int id)
+		{
+			poseOverride = id;
+		}
+
 		@Override
 		public void playAnimation(int id)
 		{
@@ -151,7 +159,40 @@ public class ErrandSimulationTest
 		spotAnims.load(folder.newFolder().toPath());
 
 		errands = new ErrandController(game.client, follower, config(),
-			dispatched::add, spotAnims, () -> busy);
+			dispatched::add, spotAnims, () -> busy, new ErrandController.Hands()
+			{
+				@Override
+				public void hold(int itemId)
+				{
+					heldProp = itemId;
+				}
+
+				@Override
+				public void release()
+				{
+					heldProp = 0;
+				}
+			});
+	}
+
+	/** What the hands are holding; 0 for nothing. */
+	private int heldProp;
+
+	/** For the secondary controllers a few tests build: hands nobody watches. */
+	private static ErrandController.Hands idleHands()
+	{
+		return new ErrandController.Hands()
+		{
+			@Override
+			public void hold(int itemId)
+			{
+			}
+
+			@Override
+			public void release()
+			{
+			}
+		};
 	}
 
 	private FollowerConfig config()
@@ -216,6 +257,47 @@ public class ErrandSimulationTest
 		tick(60);
 		assertFalse(errands.isBusy());
 		assertTrue(follower.following);
+	}
+
+	@Test
+	public void theDocumentErrandHoldsTheScrollForExactlyTheRead()
+	{
+		errands.force("document");
+		tick(1);
+
+		assertTrue("the errand never started", errands.isBusy());
+		assertTrue("it should have stopped where it stood", follower.staying);
+		assertEquals("the scroll comes out first", 10485, heldProp);
+		assertEquals("but the pose waits for the model rebuild to land",
+			0, follower.poseOverride);
+		assertTrue("and it announced itself", started("document"));
+
+		tick(2);
+		assertEquals("then the reading pose starts", 5354, follower.poseOverride);
+
+		tick(30);
+		assertFalse("the errand should have finished", errands.isBusy());
+		assertEquals("the pose released", 0, follower.poseOverride);
+		assertEquals("and the scroll went away", 0, heldProp);
+		assertTrue("and the follower came back", follower.following);
+	}
+
+	@Test
+	public void anInterruptedDocumentStillPutsTheScrollAway()
+	{
+		// The failure shape every interesting bug here has had: state
+		// outliving its owner. A follower stuck holding a scroll in its
+		// walking pose would wear this bug forever.
+		errands.force("document");
+		tick(3);
+		assertEquals(5354, follower.poseOverride);
+
+		busy = true;      // the dialog opened mid-read
+		tick(1);
+
+		assertFalse("the errand should have aborted", errands.isBusy());
+		assertEquals("the pose must not outlive it", 0, follower.poseOverride);
+		assertEquals("nor the scroll", 0, heldProp);
 	}
 
 	@Test
@@ -388,7 +470,7 @@ public class ErrandSimulationTest
 			}
 		};
 		ErrandController disabled = new ErrandController(game.client, follower, off,
-			dispatched::add, new SpotAnimRepository(new Gson()), () -> busy);
+			dispatched::add, new SpotAnimRepository(new Gson()), () -> busy, idleHands());
 
 		disabled.force("bootlace");
 		for (int i = 0; i < 10; i++)
@@ -497,9 +579,15 @@ public class ErrandSimulationTest
 			{
 				return false;
 			}
+
+			@Override
+			public boolean errandDocument()
+			{
+				return false;
+			}
 		};
 		ErrandController silent = new ErrandController(game.client, follower, none,
-			dispatched::add, new SpotAnimRepository(new Gson()), () -> busy);
+			dispatched::add, new SpotAnimRepository(new Gson()), () -> busy, idleHands());
 
 		for (int i = 0; i < 3000; i++)
 		{

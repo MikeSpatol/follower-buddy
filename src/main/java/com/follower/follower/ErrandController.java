@@ -43,7 +43,9 @@ public class ErrandController
 		FIREDEATH("firedeath"),
 		CAT("cat"),
 		BOOTLACE("bootlace"),
-		GLANCE("glance");
+		GLANCE("glance"),
+		/** Stops where it stands and writes something up in its scroll. */
+		DOCUMENT("document");
 
 		final String key;
 
@@ -56,6 +58,38 @@ public class ErrandController
 	private enum State
 	{
 		IDLE, TRAVELING, DOING, RETURNING
+	}
+
+	/**
+	 * Reading a scroll: harvested live with {@code sniffanims} and verified as
+	 * a pose on the follower, 2026-08-12. Loops, so it is held as a pose
+	 * override rather than played as a one-shot.
+	 */
+	private static final int READ_SCROLL_POSE = 5354;
+
+	/**
+	 * The plain Scroll, weapon slot. The animation mimes the scroll and draws
+	 * nothing - the item in hand comes from equipment - and of the sixty-five
+	 * hand-slot candidates this is the one that sits between the hands with no
+	 * vertex nudge at all. Verified with the pose above, same session.
+	 */
+	private static final int SCROLL_PROP = 10485;
+
+	/** Ticks between taking the prop and starting the pose: the model rebuild
+	 * is asynchronous, and a scroll popping in mid-read gives the trick away. */
+	private static final int PROP_SETTLE_TICKS = 2;
+
+	/**
+	 * What holds the prop. Implemented by the plugin, which owns the follower's
+	 * composed appearance; the errand only says when the scroll comes out and
+	 * when it goes away. Release must be idempotent - it is also called from
+	 * the abort and reset paths, where nothing may be held.
+	 */
+	public interface Hands
+	{
+		void hold(int itemId);
+
+		void release();
 	}
 
 	/** Praying at an altar - the classic kneel. */
@@ -120,15 +154,20 @@ public class ErrandController
 	private int nextRollTicks;
 	private String forceKey;
 
+	/** Counting down to the scroll pose, so the prop's rebuild lands first. */
+	private int posePendingTicks;
+
 	/** Test hook: run an errand now - a specific one by name, or any ("*"). */
 	public void force(String key)
 	{
 		forceKey = key == null || key.isEmpty() ? "*" : key.toLowerCase(java.util.Locale.ROOT);
 	}
 
+	private final Hands hands;
+
 	public ErrandController(Client client, FollowerEntity follower, FollowerConfig config,
 		Consumer<TriggerEvent> dispatch, com.follower.appearance.SpotAnimRepository spotAnims,
-		BooleanSupplier busy)
+		BooleanSupplier busy, Hands hands)
 	{
 		this.client = client;
 		this.follower = follower;
@@ -136,12 +175,14 @@ public class ErrandController
 		this.dispatch = dispatch;
 		this.spotAnims = spotAnims;
 		this.busy = busy;
+		this.hands = hands;
 		reset();
 	}
 
 	/** Logout/shutdown: clean slate, fresh schedule. */
 	public void reset()
 	{
+		putTheScrollAway();
 		state = State.IDLE;
 		current = null;
 		targetTile = null;
@@ -192,6 +233,12 @@ public class ErrandController
 		}
 		else if (state == State.DOING)
 		{
+			// The scroll pose starts a beat after the prop, so the model
+			// rebuild has landed and the scroll is in hand from frame one.
+			if (posePendingTicks > 0 && --posePendingTicks == 0)
+			{
+				follower.setPoseOverride(READ_SCROLL_POSE);
+			}
 			if (--waitTicks <= 0)
 			{
 				finish();
@@ -263,6 +310,10 @@ public class ErrandController
 		{
 			candidates.add(Errand.GLANCE);
 		}
+		if (config.errandDocument())
+		{
+			candidates.add(Errand.DOCUMENT);
+		}
 		Collections.shuffle(candidates);
 
 		for (Errand errand : candidates)
@@ -333,6 +384,22 @@ public class ErrandController
 				dispatch.accept(TriggerEvent.errand(TriggerEvent.Type.ERRAND_START, errand.key));
 				state = State.DOING;
 				waitTicks = 6;
+				log.debug("Errand started: {}", errand.key);
+				return true;
+			}
+			case DOCUMENT:
+			{
+				// No trip: something here is worth the record, apparently. The
+				// scroll comes out first and the pose follows once the rebuilt
+				// model lands; the read runs long enough to look deliberate.
+				current = errand;
+				errandSite = follower.getWorldLocation();
+				follower.stayHere();
+				hands.hold(SCROLL_PROP);
+				dispatch.accept(TriggerEvent.errand(TriggerEvent.Type.ERRAND_START, errand.key));
+				state = State.DOING;
+				posePendingTicks = PROP_SETTLE_TICKS;
+				waitTicks = 12 + ThreadLocalRandom.current().nextInt(8);
 				log.debug("Errand started: {}", errand.key);
 				return true;
 			}
@@ -453,6 +520,7 @@ public class ErrandController
 
 	private void finish()
 	{
+		putTheScrollAway();
 		if (current == Errand.FIREDEATH)
 		{
 			// The vanish already happened on the death animation's last frame
@@ -462,7 +530,8 @@ public class ErrandController
 			waitTicks = 2;
 			return;
 		}
-		boolean walkedAway = current != Errand.BOOTLACE && current != Errand.GLANCE;
+		boolean walkedAway = current != Errand.BOOTLACE && current != Errand.GLANCE
+			&& current != Errand.DOCUMENT;
 		if (walkedAway && distanceToPlayer() > RETURN_ON_FOOT_DISTANCE)
 		{
 			// Too far to jog: a proper teleport home. Cast the spell where it
@@ -512,8 +581,27 @@ public class ErrandController
 		clearErrand();
 	}
 
+	/**
+	 * Ends the documenting stance, wherever the errand went from here.
+	 *
+	 * <p>Idempotent on purpose: it runs on the finish, abort AND reset paths,
+	 * and on most of those nothing is held. The alternative - remembering
+	 * which paths can be reached with the scroll out - is exactly the kind of
+	 * bookkeeping that left a floor held by a rule that no longer existed.
+	 */
+	private void putTheScrollAway()
+	{
+		posePendingTicks = 0;
+		if (current == Errand.DOCUMENT)
+		{
+			follower.setPoseOverride(0);
+		}
+		hands.release();
+	}
+
 	private void abort()
 	{
+		putTheScrollAway();
 		follower.resumeFollowing();
 		Player local = client.getLocalPlayer();
 		WorldPoint at = follower.getWorldLocation();

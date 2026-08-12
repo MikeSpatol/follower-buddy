@@ -623,6 +623,18 @@ public interface FollowerConfig extends Config
 		return true;
 	}
 
+	@ConfigItem(
+		keyName = "errandDocument",
+		name = "Field notes",
+		description = "Stops to write something up in its scroll",
+		section = errandSection,
+		position = 8
+	)
+	default boolean errandDocument()
+	{
+		return true;
+	}
+
 	// ------------------------------------------------------------ rule groups
 
 	@ConfigItem(
