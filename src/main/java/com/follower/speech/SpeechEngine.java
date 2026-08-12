@@ -67,6 +67,79 @@ public class SpeechEngine
 	@Getter
 	private final SpeechDirector director = new SpeechDirector();
 
+	/**
+	 * How many unprompted idle remarks the current stretch of standing still
+	 * has already produced, and when the last one was.
+	 *
+	 * <p>The director cannot see this problem. It handles BURSTS - intensity
+	 * that rises faster than it decays - and a line every forty-five seconds
+	 * decays completely between lines, so an idle afternoon sails under its
+	 * peak forever while still producing eighty lines an hour. Measured, that
+	 * is what a long AFK sounded like: the longest silence in forty minutes
+	 * was two.
+	 *
+	 * <p>A companion does not drip at a fixed rate. It chats when you first
+	 * stop, and then it runs out of things to say about standing still. So the
+	 * first few remarks of a stretch are free, and each one after that needs a
+	 * longer wait than the one before - the follower audibly winding down -
+	 * until anything at all happens and the count starts over.
+	 *
+	 * <p>"Unprompted" is precise: a rule whose condition mentions {@code idle}
+	 * is speaking because you are standing still, and is throttled. A reaction
+	 * to something real - a cat, a passer-by, an errand - is not, because
+	 * answering the world is not chatter. Occasions are exempt as everywhere.
+	 */
+	private int idleStretchSpoken;
+	private long lastIdleRemarkMs;
+
+	/** Idle remarks per stretch before the winding-down starts. */
+	private static final int IDLE_FREE_REMARKS = 4;
+
+	/** Each remark past the free ones waits this many gaps longer than the last. */
+	private static final long TRAIL_STEP_GAPS = 30;
+
+	/** The wind-down stops growing here: never rarer than one per this many gaps. */
+	private static final long TRAIL_CAP_GAPS = 200;
+
+	private boolean isIdleRemark(SpeechRule rule)
+	{
+		return rule.when != null && rule.when.usesType("idle") && !rule.isOccasion();
+	}
+
+	/**
+	 * The events that end an idle stretch.
+	 *
+	 * <p>NOT movement. The first version reset when the idle counter did, and
+	 * that would have made the whole mechanism a no-op in exactly the session
+	 * it was built from: a player pottering about a bank moves every few
+	 * seconds, and each little stop re-arms the idle rules' rising edges -
+	 * that is precisely HOW an "idle" session produces a line every forty-five
+	 * seconds. Shuffling two tiles is not doing something. Fighting, stealing,
+	 * skilling, killing, arriving somewhere new, or dying is.
+	 */
+	private static final java.util.Set<TriggerEvent.Type> REAL_ACTIVITY =
+		java.util.EnumSet.of(
+			TriggerEvent.Type.ANIMATION,
+			TriggerEvent.Type.COMBAT_START,
+			TriggerEvent.Type.THIEVING_START,
+			TriggerEvent.Type.NPC_KILL,
+			TriggerEvent.Type.LOOT,
+			TriggerEvent.Type.LEVEL_UP,
+			TriggerEvent.Type.REGION_CHANGE,
+			TriggerEvent.Type.PLAYER_DEATH,
+			TriggerEvent.Type.WANT_FULFILLED);
+
+	/** How long the NEXT idle remark has to wait, given the stretch so far. */
+	private long trailWaitMs()
+	{
+		if (idleStretchSpoken < IDLE_FREE_REMARKS)
+		{
+			return 0L;
+		}
+		long steps = idleStretchSpoken - IDLE_FREE_REMARKS + 1;
+		return Math.min(TRAIL_CAP_GAPS, steps * TRAIL_STEP_GAPS) * globalCooldownMs;
+	}
+
 	@Setter
 	private boolean muted;
 
@@ -170,6 +243,7 @@ public class SpeechEngine
 		// bumped, because there are several such places and the settling-in
 		// damper being right depends on all of them remembering.
 		director.setSessionCount(context.getSessionCount());
+
 
 		// A want resolving is state becoming an event. It happens here rather
 		// than in the plugin so the rules see it wherever the engine is driven
@@ -277,6 +351,8 @@ public class SpeechEngine
 		director.reset();
 		recentLines.clear();
 		recentLineSet.clear();
+		idleStretchSpoken = 0;
+		lastIdleRemarkMs = 0L;
 		pending.clear();
 		// A held floor must not outlive the thing that held it: toggling the
 		// plugin mid-hush would otherwise leave the follower mute for it.
@@ -402,6 +478,10 @@ public class SpeechEngine
 		{
 			return directed;
 		}
+		if (isIdleRemark(rule) && now - lastIdleRemarkMs < trailWaitMs())
+		{
+			return "trailing";
+		}
 		if (now - lastSpokeMs < moodScaledGap())
 		{
 			return "gap";
@@ -512,6 +592,14 @@ public class SpeechEngine
 		if (event.getType() == TriggerEvent.Type.ANIMATION && event.getId() != -1)
 		{
 			getContext().offerAct(event.getId());
+		}
+
+		// Doing something real ends the idle stretch, and the follower perks
+		// back up. Checked on the event rather than on movement - see the note
+		// on REAL_ACTIVITY for why a step is not enough.
+		if (REAL_ACTIVITY.contains(event.getType()))
+		{
+			idleStretchSpoken = 0;
 		}
 
 		// Delayed firings count down on the tick heartbeat and speak through
@@ -799,6 +887,11 @@ public class SpeechEngine
 			lastSpokenText = text;
 			director.noteSpoke(rule, now);
 			noteRecentLine(template);
+			if (isIdleRemark(rule))
+			{
+				idleStretchSpoken++;
+				lastIdleRemarkMs = now;
+			}
 
 			// A first is only spent once it has been heard. Marked here rather
 			// than at the win for the same reason as the question and the want:
