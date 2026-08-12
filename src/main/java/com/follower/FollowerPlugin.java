@@ -4867,6 +4867,16 @@ public class FollowerPlugin extends Plugin
 		return latest;
 	}
 
+	/**
+	 * Prints every player animation id as it plays. For harvesting animation
+	 * ids from the running game - the cache gives animations no names, so the
+	 * only honest way to find "the one where you write on a scroll" is to
+	 * watch somebody do it. Players only: an NPC animation id cannot play on
+	 * the follower's player skeleton, so sniffing NPCs would only collect ids
+	 * the follower can never use.
+	 */
+	private boolean sniffAnims;
+
 	@Subscribe
 	public void onAnimationChanged(AnimationChanged event)
 	{
@@ -4877,6 +4887,13 @@ public class FollowerPlugin extends Plugin
 		{
 			Player animating = (Player) event.getActor();
 			stanceLibrary.learnAttack(animating, animating.getAnimation());
+
+			if (sniffAnims && animating.getAnimation() != -1)
+			{
+				sendStatus((animating == client.getLocalPlayer()
+					? "You" : String.valueOf(animating.getName()))
+					+ " played animation " + animating.getAnimation());
+			}
 		}
 
 		// The possessed thrall attacking: the follower answers with the PLAYER
@@ -5196,7 +5213,7 @@ public class FollowerPlugin extends Plugin
 		"animinfo", "animtrace", "errandscan", "cachecheck", "stanceaudit",
 		"watch", "stance", "gfx", "spectate", "shield", "centre", "center", "loot",
 		"scan", "heights", "mood", "chatwatch", "fire", "want", "transcript",
-		"thieftargets"));
+		"thieftargets", "sniffanims"));
 
 	/**
 	 * Notices when you have clicked the tile the follower is standing on.
@@ -5710,6 +5727,16 @@ public class FollowerPlugin extends Plugin
 					+ "that skips.");
 				break;
 
+			case "sniffanims":
+				sniffAnims = !sniffAnims;
+				sendStatus(sniffAnims
+					? "Printing every player animation with its id. Do the thing"
+						+ " (read a clue, use a lectern) or stand near someone doing"
+						+ " it, then preview with ::follower pose <id>."
+						+ " ::follower sniffanims again to stop."
+					: "Stopped sniffing animations.");
+				break;
+
 			case "chatwatch":
 				watchChat = !watchChat;
 				sendStatus(watchChat
@@ -6221,7 +6248,7 @@ public class FollowerPlugin extends Plugin
 						+ "pitchsweep | headsweep | head <...> | followtrace | "
 						+ "wraplerp | wrapauto | wrapearly | pose <id> | animinfo | "
 						+ "animtrace | errandscan | cachecheck | stanceaudit | "
-						+ "mood [0-100] | chatwatch | fire <rule-id> | want");
+						+ "mood [0-100] | chatwatch | sniffanims | fire <rule-id> | want");
 				}
 			// ::follower interp was removed: the interpolation filter is keyed on
 			// animation id, so it could not be changed for the follower without
