@@ -267,13 +267,11 @@ public class ErrandSimulationTest
 
 		assertTrue("the errand never started", errands.isBusy());
 		assertTrue("it should have stopped where it stood", follower.staying);
-		assertEquals("the scroll comes out first", 10485, heldProp);
-		assertEquals("but the pose waits for the model rebuild to land",
-			0, follower.poseOverride);
+		assertEquals("the scroll is out", 10485, heldProp);
+		assertEquals("and the pose plays from the same tick - the dump path is"
+			+ " synchronous, so waiting only shows a scroll in idle hands",
+			5354, follower.poseOverride);
 		assertTrue("and it announced itself", started("document"));
-
-		tick(2);
-		assertEquals("then the reading pose starts", 5354, follower.poseOverride);
 
 		tick(30);
 		assertFalse("the errand should have finished", errands.isBusy());
@@ -311,11 +309,11 @@ public class ErrandSimulationTest
 
 		tick(2);      // arrive (the recording follower is always settled)
 		assertEquals("looking first: no scroll during the look", 0, heldProp);
+		assertEquals("and no pose either", 0, follower.poseOverride);
 
-		tick(5);      // the look ends, the scroll comes out
-		assertEquals(10485, heldProp);
-		tick(2);
-		assertEquals("then the writing pose", 5354, follower.poseOverride);
+		tick(5);      // the look ends
+		assertEquals("the scroll comes out", 10485, heldProp);
+		assertEquals("with the pose on the same tick", 5354, follower.poseOverride);
 
 		tick(30);
 		assertFalse("the study should have finished", errands.isBusy());

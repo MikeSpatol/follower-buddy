@@ -77,10 +77,6 @@ public class ErrandController
 	 */
 	private static final int SCROLL_PROP = 10485;
 
-	/** Ticks between taking the prop and starting the pose: the model rebuild
-	 * is asynchronous, and a scroll popping in mid-read gives the trick away. */
-	private static final int PROP_SETTLE_TICKS = 2;
-
 	/**
 	 * What the scribe considers worth walking over to.
 	 *
@@ -180,9 +176,6 @@ public class ErrandController
 	private int nextRollTicks;
 	private String forceKey;
 
-	/** Counting down to the scroll pose, so the prop's rebuild lands first. */
-	private int posePendingTicks;
-
 	/** The study's look phase: facing the thing before the scroll comes out. */
 	private int studyLookTicks;
 
@@ -270,14 +263,7 @@ public class ErrandController
 			// deciding the conclusion before the evidence.
 			if (studyLookTicks > 0 && --studyLookTicks == 0)
 			{
-				hands.hold(SCROLL_PROP);
-				posePendingTicks = PROP_SETTLE_TICKS;
-			}
-			// The scroll pose starts a beat after the prop, so the model
-			// rebuild has landed and the scroll is in hand from frame one.
-			if (posePendingTicks > 0 && --posePendingTicks == 0)
-			{
-				follower.setPoseOverride(READ_SCROLL_POSE);
+				takeOutTheScroll();
 			}
 			if (--waitTicks <= 0)
 			{
@@ -449,16 +435,15 @@ public class ErrandController
 			}
 			case DOCUMENT:
 			{
-				// No trip: something here is worth the record, apparently. The
-				// scroll comes out first and the pose follows once the rebuilt
-				// model lands; the read runs long enough to look deliberate.
+				// No trip: something here is worth the record, apparently.
+				// Scroll and pose together, and the read runs long enough to
+				// look deliberate.
 				current = errand;
 				errandSite = follower.getWorldLocation();
 				follower.stayHere();
-				hands.hold(SCROLL_PROP);
+				takeOutTheScroll();
 				dispatch.accept(TriggerEvent.errand(TriggerEvent.Type.ERRAND_START, errand.key));
 				state = State.DOING;
-				posePendingTicks = PROP_SETTLE_TICKS;
 				waitTicks = 12 + ThreadLocalRandom.current().nextInt(8);
 				log.debug("Errand started: {}", errand.key);
 				return true;
@@ -687,6 +672,25 @@ public class ErrandController
 	}
 
 	/**
+	 * The scroll and the writing pose, on the same tick and therefore the
+	 * same rendered frame.
+	 *
+	 * <p>They can be simultaneous because the dump path of the appearance
+	 * service is synchronous: the composed model with the scroll in it is
+	 * applied before {@code hold} returns. The first version put two "settle"
+	 * ticks between them out of caution about a rebuild delay that does not
+	 * exist on this path - and those two ticks were exactly the window in
+	 * which the follower stood in its idle pose holding a scroll, which is
+	 * the wrong order to ever show. Measured by eye in game: prop-then-wait
+	 * reads wrong, together reads right.
+	 */
+	private void takeOutTheScroll()
+	{
+		hands.hold(SCROLL_PROP);
+		follower.setPoseOverride(READ_SCROLL_POSE);
+	}
+
+	/**
 	 * Ends the documenting stance, wherever the errand went from here.
 	 *
 	 * <p>Idempotent on purpose: it runs on the finish, abort AND reset paths,
@@ -696,7 +700,6 @@ public class ErrandController
 	 */
 	private void putTheScrollAway()
 	{
-		posePendingTicks = 0;
 		studyLookTicks = 0;
 		if (current == Errand.DOCUMENT || current == Errand.STUDY)
 		{

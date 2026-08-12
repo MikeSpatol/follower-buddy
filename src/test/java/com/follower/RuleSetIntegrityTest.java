@@ -354,9 +354,9 @@ public class RuleSetIntegrityTest
 	 * neither is checked at runtime beyond a warning log, so a typo here is a
 	 * gesture that silently never happens. The item must be one the wearable
 	 * dump knows, the pose must be present, and the hold must be long enough
-	 * to survive the two-tick settle and short enough not to plant the
-	 * follower for half a minute. A prop rule must not also carry an
-	 * animation - the flourish owns the follower's body for its duration.
+	 * to actually render and short enough not to plant the follower for half
+	 * a minute. A prop rule must not also carry an animation - the flourish
+	 * owns the follower's body for its duration.
 	 */
 	@Test
 	public void everyFlourishIsPlayableAsWritten() throws IOException
@@ -377,6 +377,8 @@ public class RuleSetIntegrityTest
 			{
 				broken.add(rule.id + ": no prop pose");
 			}
+			// Under three ticks the gesture barely renders; over twenty-five
+			// the follower is planted for a quarter of a minute.
 			int ticks = rule.prop.ticks == null ? 8 : rule.prop.ticks;
 			if (ticks < 3 || ticks > 25)
 			{

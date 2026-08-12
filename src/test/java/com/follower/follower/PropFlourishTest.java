@@ -82,17 +82,18 @@ public class PropFlourishTest
 	}
 
 	@Test
-	public void theScrollLeadsAndThePoseFollows()
+	public void theScrollAndThePoseArriveTogether()
 	{
+		// On the same tick, and so the same rendered frame. The first version
+		// held the pose back two "settle" ticks out of caution about a rebuild
+		// delay the dump path does not have - and those ticks were exactly the
+		// window in which the follower stood in its idle pose holding a
+		// scroll, which the eye reads as wrong immediately.
 		assertTrue(flourish.start(10485, 5354, 5));
 		assertTrue(flourish.isActive());
 		assertTrue("it should stop to write", follower.staying);
-		assertEquals("the scroll comes out immediately", 10485, held);
-		assertEquals("but the pose waits for the rebuild", 0, follower.poseOverride);
-
-		flourish.tick();
-		flourish.tick();
-		assertEquals("two ticks later the pose starts", 5354, follower.poseOverride);
+		assertEquals("the scroll is out", 10485, held);
+		assertEquals("and the pose is already playing", 5354, follower.poseOverride);
 	}
 
 	@Test

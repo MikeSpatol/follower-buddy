@@ -13,25 +13,17 @@ import lombok.extern.slf4j.Slf4j;
  * authored in phrases.json - the engine stays ignorant of scrolls.
  *
  * <p>Same shape as the errand's scroll handling, and deliberately so: prop
- * first, pose two ticks later once the rebuilt model has landed, and the
- * cleanup path is idempotent because it runs from finish, abort and shutdown
- * alike. One flourish at a time; a second request while one is playing is
- * dropped rather than queued, because a follower that files a backlog of
- * gestures stops reading as spontaneous.
+ * and pose together on one tick, and the cleanup path is idempotent because
+ * it runs from finish, abort and shutdown alike. One flourish at a time; a
+ * second request while one is playing is dropped rather than queued, because
+ * a follower that files a backlog of gestures stops reading as spontaneous.
  */
 @Slf4j
 public class PropFlourish
 {
-	/** Ticks between taking the prop and starting the pose - the model
-	 * rebuild is asynchronous, and the prop popping in mid-pose gives the
-	 * trick away. Matches the errand's constant for the same reason. */
-	private static final int SETTLE_TICKS = 2;
-
 	private final FollowerEntity follower;
 	private final ErrandController.Hands hands;
 
-	private int pose;
-	private int settleTicks;
 	private int holdTicks;
 	private boolean active;
 
@@ -59,11 +51,14 @@ public class PropFlourish
 			return false;
 		}
 		active = true;
-		pose = poseId;
-		settleTicks = SETTLE_TICKS;
 		holdTicks = Math.max(1, ticks);
 		follower.stayHere();
+		// Prop and pose on the same tick, and so the same rendered frame: the
+		// appearance service's dump path is synchronous, so the model with the
+		// prop in it is applied before hold() returns. A settle delay here
+		// only ever produced the wrong order - idle hands holding a scroll.
 		hands.hold(itemId);
+		follower.setPoseOverride(poseId);
 		log.debug("Flourish started: item {} pose {} for {} ticks", itemId, poseId, ticks);
 		return true;
 	}
@@ -73,14 +68,6 @@ public class PropFlourish
 	{
 		if (!active)
 		{
-			return;
-		}
-		if (settleTicks > 0)
-		{
-			if (--settleTicks == 0)
-			{
-				follower.setPoseOverride(pose);
-			}
 			return;
 		}
 		if (--holdTicks <= 0)
@@ -112,7 +99,6 @@ public class PropFlourish
 	private void putEverythingBack()
 	{
 		active = false;
-		settleTicks = 0;
 		holdTicks = 0;
 		follower.setPoseOverride(0);
 		hands.release();
