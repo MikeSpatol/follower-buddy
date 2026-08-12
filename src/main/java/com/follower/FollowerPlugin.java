@@ -2551,6 +2551,18 @@ public class FollowerPlugin extends Plugin
 		}
 
 		Outfit outfit = resolveOutfit();
+
+		// A transient prop - a book for the reading animation, a scroll for
+		// the scroll one. Overlaid AFTER the outfit resolves so it never
+		// touches what the player configured, and skipped in thrall mode,
+		// whose override is a shared object and whose conscript has no time
+		// to read. The animations themselves hold nothing: the game draws
+		// whatever is in your hands, and these hands are ours to fill.
+		if (propSlot != null && outfitOverride == null)
+		{
+			outfit.setItem(propSlot, propItemId);
+		}
+
 		appearanceService.request(outfit, com.follower.appearance.ModelSource.DUMP_ONLY, appearance ->
 		{
 			if (appearance == null)
@@ -3016,6 +3028,15 @@ public class FollowerPlugin extends Plugin
 				modelRepository.kitsFor(part, 1).size());
 		}
 	}
+
+	/**
+	 * A transient item shown on the follower without touching the saved
+	 * outfit. For animations that mime holding something: the reading and
+	 * writing animations move the arms and draw nothing, because in the real
+	 * game the book comes from the reader's own equipment.
+	 */
+	private KitType propSlot;
+	private int propItemId;
 
 	private Outfit resolveOutfit()
 	{
@@ -5213,7 +5234,7 @@ public class FollowerPlugin extends Plugin
 		"animinfo", "animtrace", "errandscan", "cachecheck", "stanceaudit",
 		"watch", "stance", "gfx", "spectate", "shield", "centre", "center", "loot",
 		"scan", "heights", "mood", "chatwatch", "fire", "want", "transcript",
-		"thieftargets", "sniffanims"));
+		"thieftargets", "sniffanims", "finditem", "prop"));
 
 	/**
 	 * Notices when you have clicked the tile the follower is standing on.
@@ -5726,6 +5747,91 @@ public class FollowerPlugin extends Plugin
 				sendStatus("Tracing frames for ~2s - keep the follower doing the thing "
 					+ "that skips.");
 				break;
+
+			case "finditem":
+			{
+				// Wearable items by name, from the same index the outfit picker
+				// uses. For finding the follower a book to hold: animations
+				// carry no prop, so the prop has to be an item, and items DO
+				// have names to search.
+				if (args.length < 2)
+				{
+					sendStatus("Usage: ::follower finditem <name fragment>");
+					break;
+				}
+				String fragment = String.join(" ",
+					java.util.Arrays.copyOfRange(args, 1, args.length))
+					.toLowerCase(Locale.ROOT);
+				int shown = 0;
+				int matches = 0;
+				for (Map.Entry<Integer, KitType> entry : slotIndex.entrySet())
+				{
+					String name = modelRepository.itemName(entry.getKey());
+					if (name == null || !name.toLowerCase(Locale.ROOT).contains(fragment))
+					{
+						continue;
+					}
+					matches++;
+					if (shown < 15)
+					{
+						shown++;
+						sendStatus(entry.getKey() + "  " + name + "  ("
+							+ entry.getValue().name().toLowerCase(Locale.ROOT) + ")");
+					}
+				}
+				sendStatus(matches == 0
+					? "No wearable item matches '" + fragment + "'."
+					: matches + " wearable match(es)." + (matches > shown
+						? " Showing " + shown + "; narrow the name." : "")
+					+ " Try one with ::follower prop <id>.");
+				break;
+			}
+
+			case "prop":
+			{
+				// A transient held item, for pairing with pose/anim: prop the
+				// book, play the reading animation, judge the pair together.
+				if (args.length < 2)
+				{
+					sendStatus("Usage: ::follower prop <itemId>  (0 to clear)");
+					break;
+				}
+				try
+				{
+					int itemId = Integer.parseInt(args[1]);
+					if (itemId <= 0)
+					{
+						propSlot = null;
+						propItemId = 0;
+						clientThread.invoke(this::rebuildFollower);
+						sendStatus("Prop cleared.");
+						break;
+					}
+					clientThread.invoke(() ->
+					{
+						KitType slot = resolveSlot(itemId);
+						if (slot == null)
+						{
+							sendStatus("Item " + itemId + " is not wearable, so it"
+								+ " cannot be held. ::follower finditem to hunt.");
+							return;
+						}
+						propSlot = slot;
+						propItemId = itemId;
+						rebuildFollower();
+						String name = modelRepository.itemName(itemId);
+						sendStatus("Propped " + (name == null ? "item " + itemId : name)
+							+ " in the " + slot.name().toLowerCase(Locale.ROOT)
+							+ " slot. Pair it: ::follower pose <animId>."
+							+ " ::follower prop 0 to clear.");
+					});
+				}
+				catch (NumberFormatException e)
+				{
+					sendStatus("Usage: ::follower prop <itemId>  (0 to clear)");
+				}
+				break;
+			}
 
 			case "sniffanims":
 				sniffAnims = !sniffAnims;
@@ -6248,7 +6354,8 @@ public class FollowerPlugin extends Plugin
 						+ "pitchsweep | headsweep | head <...> | followtrace | "
 						+ "wraplerp | wrapauto | wrapearly | pose <id> | animinfo | "
 						+ "animtrace | errandscan | cachecheck | stanceaudit | "
-						+ "mood [0-100] | chatwatch | sniffanims | fire <rule-id> | want");
+						+ "mood [0-100] | chatwatch | sniffanims | finditem <name> | "
+						+ "prop <itemId> | fire <rule-id> | want");
 				}
 			// ::follower interp was removed: the interpolation filter is keyed on
 			// animation id, so it could not be changed for the follower without
