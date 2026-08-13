@@ -1307,8 +1307,16 @@ schedule it has an arrival trigger: entering a new region arms a watch, and
 once the player holds still the follower goes for its look around, rationed
 by a cooldown so a trip through four regions is one inspection.
 
+**R17 — shipped 2026-08-12.** Per-line say counts, persisted with the rest of
+the memory and counted at delivery rather than at the win (a line the queue
+dropped has not worn out its welcome). Retirement lives in the shuffle bag's
+refill: lines said twenty times stand aside while anything fresher exists in
+the same rule, and when every line is equally worn they all come back,
+because wear is relative and retiring the lot would retire the rule. The
+ledger is capped at 500 entries, least-worn dropped first.
+
 **Still open**: R4 (variant counts on the highest-firing rules), R5, R6–R8,
-R11–R18, R20–R26, R28–R37.
+R11–R16, R18, R20–R26, R28–R37.
 
 **What five rounds of testing found**, including two shipped bugs that lived
 between features rather than inside them, and why overlapping systems are

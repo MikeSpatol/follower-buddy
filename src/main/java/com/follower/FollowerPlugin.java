@@ -1232,6 +1232,13 @@ public class FollowerPlugin extends Plugin
 		java.util.List<String> spokenOnce;
 
 		/**
+		 * How worn each line is - times actually said, keyed by the template's
+		 * hash so the blob stays small. Capped at 500 entries by the context,
+		 * least-worn dropped first.
+		 */
+		java.util.Map<String, Integer> lineWear;
+
+		/**
 		 * The day the follower first met this player, as an epoch day. Written
 		 * once and never again: it is the only thing here that would be a lie
 		 * if it were ever recalculated.
@@ -1290,6 +1297,7 @@ public class FollowerPlugin extends Plugin
 				saved.incidentCount);
 			context.restorePlaces(saved.placeScores, saved.placeMemories);
 			context.restoreSpokenOnce(saved.spokenOnce);
+			context.restoreLineWear(saved.lineWear);
 			context.setMetOnDay(saved.metOnDay);
 			context.setMetWearingValue(saved.metWearingValue);
 			if (saved.deathPlane >= 0)
@@ -1351,6 +1359,7 @@ public class FollowerPlugin extends Plugin
 		saved.placeScores = context.getPlaceScores();
 		saved.placeMemories = context.getPlaceMemories();
 		saved.spokenOnce = new java.util.ArrayList<>(context.getSpokenOnce());
+		saved.lineWear = context.getLineWear();
 		saved.metOnDay = context.getMetOnDay();
 		saved.metWearingValue = metWearing;
 		WorldPoint died = context.getDeathLocation();

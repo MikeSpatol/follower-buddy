@@ -61,6 +61,28 @@ public class SwallowedLineTest
 	}
 
 	@Test
+	public void aDroppedLineWearsNothingOut() throws IOException
+	{
+		// The wear ledger (R17) counts what was heard. A line the queue
+		// swallowed has not worn out its welcome - and if drops counted,
+		// a noisy scene could retire lines the player never got to read.
+		Harness h = new Harness(folder.newFolder().toPath(), RULES);
+		h.gameTicks(1);
+
+		// force() rather than a second LOGIN: the director's pacing would
+		// otherwise hold the second firing, and this test is about the sink.
+		h.engine.setSink((text, output, rule, animationId, onSaid) -> { });
+		h.engine.force("wisher");
+		assertEquals("swallowed, so unworn", 0,
+			h.engine.getContext().lineWear("some soft clay, if you find any"));
+
+		h.engine.setSink((text, output, rule, animationId, onSaid) -> onSaid.run());
+		h.engine.force("wisher");
+		assertEquals("said, so worn by one", 1,
+			h.engine.getContext().lineWear("some soft clay, if you find any"));
+	}
+
+	@Test
 	public void aQueuedLineOpensWhenItFinallyLands() throws IOException
 	{
 		Harness h = new Harness(folder.newFolder().toPath(), RULES);

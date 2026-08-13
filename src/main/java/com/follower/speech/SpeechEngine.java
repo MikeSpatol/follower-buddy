@@ -781,7 +781,8 @@ public class SpeechEngine
 
 	private void speak(SpeechRule rule, TriggerEvent event, long now)
 	{
-		String template = rule.pickPhrase(recentLineSet);
+		String template = rule.pickPhrase(recentLineSet,
+			line -> getContext().lineWear(line));
 		String text = substitute(template, event);
 		Integer animation = rule.resolveAnimation(event);
 
@@ -839,6 +840,12 @@ public class SpeechEngine
 		// unexplained. They latch when the sink says the line landed.
 		Runnable onSaid = () ->
 		{
+			// The wear ledger counts what was HEARD, not what was queued -
+			// a line the queue dropped has not worn out its welcome.
+			if (!text.isEmpty())
+			{
+				getContext().noteLineSaid(template);
+			}
 			if (rule.asks != null && !rule.asks.isEmpty() && !text.isEmpty())
 			{
 				getContext().noteQuestion(rule.asks);

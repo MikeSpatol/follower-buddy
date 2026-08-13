@@ -48,6 +48,8 @@ public class MemorySurvivesRestartTest
 		context.notePlaceMemory("the drop");
 		context.noteSaidOnce("first-meeting");
 		context.noteSaidOnce("first-page");
+		context.noteLineSaid("A line said twice.");
+		context.noteLineSaid("A line said twice.");
 		context.setMetOnDay(20_400L);
 		context.setMetWearingValue(1_234);
 		context.restoreDeathSpot(new WorldPoint(3200, 3200, 1));
@@ -80,6 +82,35 @@ public class MemorySurvivesRestartTest
 		assertTrue(after.hasSaidOnce("first-page"));
 		assertFalse("and nothing else should come back spent",
 			after.hasSaidOnce("first-hour"));
+
+		// Line wear resetting every restart would make retirement (R17) a
+		// per-session mechanism, which is to say no mechanism at all.
+		assertEquals("how worn a line is has to survive too",
+			2, after.lineWear("A line said twice."));
+		assertEquals("and unheard lines stay unheard",
+			0, after.lineWear("A line never said."));
+	}
+
+	@Test
+	public void theWearLedgerStaysASensibleSize()
+	{
+		// The blob this rides in is written every few minutes for as long as
+		// the client is open; an unbounded map would grow it forever. The cap
+		// drops the least-worn entries - the ones farthest from ever standing
+		// a line aside.
+		TriggerContext context = fresh();
+		context.noteLineSaid("the favourite");
+		context.noteLineSaid("the favourite");
+		context.noteLineSaid("the favourite");
+		for (int i = 0; i < 700; i++)
+		{
+			context.noteLineSaid("filler line " + i);
+		}
+
+		assertTrue("the ledger must stay capped, was " + context.getLineWear().size(),
+			context.getLineWear().size() <= 500);
+		assertEquals("and the most-worn entries are the ones kept",
+			3, context.lineWear("the favourite"));
 	}
 
 	@Test

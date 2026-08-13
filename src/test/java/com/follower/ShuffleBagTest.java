@@ -50,6 +50,61 @@ public class ShuffleBagTest
 		return of(lines);
 	}
 
+	// ------------------------------------------------------------- line wear
+
+	@Test
+	public void aWornLineStandsAsideWhileAnythingFresherExists()
+	{
+		// R17: the player does not hear "well written", they hear the fortieth
+		// telling. Past the threshold a line waits its siblings out.
+		SpeechRule rule = of("worn out", "fresh one", "fresh two");
+		java.util.function.ToIntFunction<String> wear =
+			line -> line.equals("worn out") ? SpeechRule.TIRED_AFTER : 0;
+
+		for (int i = 0; i < 30; i++)
+		{
+			assertFalse("the worn line came back with fresher ones available",
+				"worn out".equals(rule.pickPhrase(
+					java.util.Collections.emptySet(), wear)));
+		}
+	}
+
+	@Test
+	public void freshLinesStillArriveAsFullCycles()
+	{
+		// The bag's guarantee survives the retirement: a cycle is still a
+		// cycle, just of what remains.
+		SpeechRule rule = of("worn out", "fresh one", "fresh two");
+		java.util.function.ToIntFunction<String> wear =
+			line -> line.equals("worn out") ? 99 : 0;
+
+		for (int cycle = 0; cycle < 10; cycle++)
+		{
+			Set<String> drawn = new HashSet<>();
+			drawn.add(rule.pickPhrase(java.util.Collections.emptySet(), wear));
+			drawn.add(rule.pickPhrase(java.util.Collections.emptySet(), wear));
+			assertEquals("cycle " + cycle + " should hold both fresh lines",
+				new HashSet<>(Arrays.asList("fresh one", "fresh two")), drawn);
+		}
+	}
+
+	@Test
+	public void whenEveryLineIsWornTheyAllComeBack()
+	{
+		// Wear is relative, not absolute: retiring every line would retire
+		// the rule, and a familiar line beats silence.
+		SpeechRule rule = ofSize(4);
+		java.util.function.ToIntFunction<String> wear = line -> 999;
+
+		Set<String> drawn = new HashSet<>();
+		for (int i = 0; i < 4; i++)
+		{
+			drawn.add(rule.pickPhrase(java.util.Collections.emptySet(), wear));
+		}
+		assertEquals("all four should serve when all four are equally worn",
+			4, drawn.size());
+	}
+
 	// ------------------------------------------------------------- the bag
 
 	@Test

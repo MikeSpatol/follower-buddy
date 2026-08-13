@@ -421,6 +421,20 @@ public class SpeechRule
 	private transient int[] bag;
 	private transient int bagPos;
 
+	/** How long the say list was when the bag was built, so a hot-reloaded
+	 * rule gets a fresh bag; the bag itself may be shorter than the list
+	 * when worn lines are standing aside. */
+	private transient int bagSaySize;
+
+	/**
+	 * Says past which a line is worn out: with anything fresher in the same
+	 * rule, a line heard this many times stands aside at the next refill
+	 * (R17). Relative rather than absolute - when every line in a rule is
+	 * this worn, all of them come back, because retiring the lot would
+	 * retire the rule.
+	 */
+	public static final int TIRED_AFTER = 20;
+
 	public boolean isEnabled()
 	{
 		return enabled == null || enabled;
@@ -540,6 +554,11 @@ public class SpeechRule
 		return pickPhrase(java.util.Collections.<String>emptySet());
 	}
 
+	public String pickPhrase(java.util.Set<String> recentlySaid)
+	{
+		return pickPhrase(recentlySaid, line -> 0);
+	}
+
 	/**
 	 * The next line, drawn without replacement.
 	 *
@@ -549,8 +568,12 @@ public class SpeechRule
 	 * a bag can only keep one rule honest about itself. Never allowed to
 	 * produce silence: if everything in the bag has been heard lately, the
 	 * draw stands, because a repeated line beats no line.
+	 * @param wear how many times a line has been said across every session;
+	 * lines at {@link #TIRED_AFTER} or beyond stand aside at the refill while
+	 * anything fresher exists.
 	 */
-	public String pickPhrase(java.util.Set<String> recentlySaid)
+	public String pickPhrase(java.util.Set<String> recentlySaid,
+		java.util.function.ToIntFunction<String> wear)
 	{
 		if (say == null || say.isEmpty())
 		{
@@ -561,7 +584,7 @@ public class SpeechRule
 			return say.get(0);
 		}
 
-		int index = draw();
+		int index = draw(wear);
 
 		// One pass over what is left in the bag, in bag order, looking for
 		// something unheard. Bounded deliberately: the alternative is
@@ -598,21 +621,41 @@ public class SpeechRule
 	}
 
 	/** The next index out of the bag, refilling it when it runs dry. */
-	private int draw()
+	private int draw(java.util.function.ToIntFunction<String> wear)
 	{
-		if (bag == null || bag.length != say.size() || bagPos >= bag.length)
+		if (bag == null || bagSaySize != say.size() || bagPos >= bag.length)
 		{
-			refill();
+			refill(wear);
 		}
 		return bag[bagPos++];
 	}
 
-	private void refill()
+	private void refill(java.util.function.ToIntFunction<String> wear)
 	{
-		bag = new int[say.size()];
-		for (int i = 0; i < bag.length; i++)
+		// Worn lines stand aside here, which keeps the bag's guarantee intact
+		// for what remains: a cycle is still a cycle, just of fresher lines.
+		// Wear is checked at the refill rather than the draw, so a line
+		// crossing the threshold mid-cycle still finishes its turn.
+		int fresh = 0;
+		boolean[] tired = new boolean[say.size()];
+		for (int i = 0; i < say.size(); i++)
 		{
-			bag[i] = i;
+			tired[i] = wear.applyAsInt(say.get(i)) >= TIRED_AFTER;
+			if (!tired[i])
+			{
+				fresh++;
+			}
+		}
+		boolean everyoneWorn = fresh == 0;
+
+		bag = new int[everyoneWorn ? say.size() : fresh];
+		int at = 0;
+		for (int i = 0; i < say.size(); i++)
+		{
+			if (everyoneWorn || !tired[i])
+			{
+				bag[at++] = i;
+			}
 		}
 		for (int i = bag.length - 1; i > 0; i--)
 		{
@@ -632,6 +675,7 @@ public class SpeechRule
 			bag[0] = bag[j];
 			bag[j] = lastPhraseIndex;
 		}
+		bagSaySize = say.size();
 		bagPos = 0;
 	}
 

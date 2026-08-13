@@ -599,6 +599,85 @@ public final class TriggerContext
 		countersDirty = true;
 	}
 
+	// ---------------------------------------------------------------- line wear
+
+	/**
+	 * How many times each line has actually been SAID, across every session -
+	 * the ledger behind retiring content the player has heard to death (R17).
+	 *
+	 * <p>Keyed by the template's hash in hex rather than its text, so the
+	 * saved blob stays small: a collision merely shares one wear count
+	 * between two lines, which costs a little freshness and shows nothing.
+	 * An edited line hashes fresh, which is right - new words are new
+	 * content, and they arrive unheard.
+	 */
+	private final java.util.Map<String, Integer> lineWear = new java.util.HashMap<>();
+
+	/**
+	 * Entries kept. The least-worn are dropped first: they are the farthest
+	 * from ever standing a line aside, so forgetting them costs the least.
+	 */
+	private static final int MAX_WORN_LINES = 500;
+
+	private static String wearKey(String template)
+	{
+		return Integer.toHexString(template.hashCode());
+	}
+
+	/**
+	 * One more actual saying of this line - called at delivery, not at the win.
+	 *
+	 * <p>Deliberately NOT marking the counters dirty: something is said every
+	 * minute or two, and wear alone would turn the every-hundred-ticks
+	 * housekeeping write back on for good - the exact rewriting the dirty
+	 * flag exists to stop. The ledger rides out with the next write anything
+	 * else causes, and the orderly shutdown writes unconditionally; a crash
+	 * costs one session's wear, which a statistical ledger can afford.
+	 */
+	public void noteLineSaid(String template)
+	{
+		if (template == null || template.isEmpty())
+		{
+			return;
+		}
+		lineWear.merge(wearKey(template), 1, Integer::sum);
+		while (lineWear.size() > MAX_WORN_LINES)
+		{
+			String lightest = null;
+			int least = Integer.MAX_VALUE;
+			for (java.util.Map.Entry<String, Integer> entry : lineWear.entrySet())
+			{
+				if (entry.getValue() < least)
+				{
+					least = entry.getValue();
+					lightest = entry.getKey();
+				}
+			}
+			lineWear.remove(lightest);
+		}
+	}
+
+	public int lineWear(String template)
+	{
+		return template == null || template.isEmpty()
+			? 0 : lineWear.getOrDefault(wearKey(template), 0);
+	}
+
+	/** The live ledger, for the plugin to write out. Read-only by convention. */
+	public java.util.Map<String, Integer> getLineWear()
+	{
+		return lineWear;
+	}
+
+	public void restoreLineWear(java.util.Map<String, Integer> saved)
+	{
+		if (saved != null)
+		{
+			saved.forEach((key, value) -> lineWear.merge(key, value, Integer::sum));
+			countersDirty = true;
+		}
+	}
+
 	// ------------------------------------------------------------ one-time lines
 
 	/**
