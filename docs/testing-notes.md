@@ -215,3 +215,25 @@ running, and the follower still capable of speech at the end.
 refill, the boundary noted before the evaluation loop instead of after, the
 core-taste check deleted from feelsAbout, and the wish latched at hand-off
 instead of delivery - each killed by the named test that owns it.
+
+## Second pass, same day: the gaps and the survivor
+
+The first pass tested what the features promise; this one tested what the
+TESTS promise. Three gaps filled: the boundary window now has an expiry test
+(a twelve-second-old ending opens nothing), the arrival watch has a
+lost-to-a-fight test (a look forfeited to combat does not burn the cooldown,
+so the next region still gets its curiosity), and the wear ledger has a
+long-run property (start one line nearly worn, accrue realistically for two
+hundred draws, and the last forty must deal all four lines evenly -
+retirement redistributes, it never silences).
+
+**One mutation survived, which is the whole point of running them.** Removing
+the settle re-arm from the arrival watch passed the arrival test unchanged:
+the test moved the player too briefly for "re-arms on movement" and "merely
+keeps counting" to differ. Rewritten as stop-start travel - never eight
+quiet ticks in a row, far more than eight in total - the mutant dies and the
+watch is actually pinned to CONSECUTIVE stillness. Five other fresh
+mutations (arrival cooldown never charged, wear trim dropping the heaviest,
+the name cap removed, the boundary window never closing, the greeting eras
+overlapping) were killed first try, the last one proving the tiling lint
+bites on data as well as code.

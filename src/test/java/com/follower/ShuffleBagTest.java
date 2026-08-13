@@ -89,6 +89,44 @@ public class ShuffleBagTest
 	}
 
 	@Test
+	public void wearNeverStarvesALineOverTheLongRun()
+	{
+		// The property that matters across months: retirement redistributes,
+		// it never silences. Start with one line nearly worn out and the
+		// rest fresh, accrue wear the way real play does (one per say), and
+		// after everything has crossed the threshold the bag must go back to
+		// dealing all four evenly.
+		SpeechRule rule = of("old favourite", "new one", "new two", "new three");
+		java.util.Map<String, Integer> wear = new java.util.HashMap<>();
+		wear.put("old favourite", SpeechRule.TIRED_AFTER - 1);
+
+		java.util.Map<String, Integer> lastForty = new java.util.HashMap<>();
+		for (int draw = 0; draw < 200; draw++)
+		{
+			String said = rule.pickPhrase(java.util.Collections.emptySet(),
+				line -> wear.getOrDefault(line, 0));
+			wear.merge(said, 1, Integer::sum);
+			if (draw >= 160)
+			{
+				lastForty.merge(said, 1, Integer::sum);
+			}
+		}
+
+		assertEquals("every line is still in service at the end",
+			4, lastForty.size());
+		int most = 0;
+		int fewest = Integer.MAX_VALUE;
+		for (int n : lastForty.values())
+		{
+			most = Math.max(most, n);
+			fewest = Math.min(fewest, n);
+		}
+		assertTrue("the last forty draws dealt " + most + " of one line and "
+			+ fewest + " of another; retirement must settle back to even",
+			most - fewest <= 3);
+	}
+
+	@Test
 	public void whenEveryLineIsWornTheyAllComeBack()
 	{
 		// Wear is relative, not absolute: retiring every line would retire

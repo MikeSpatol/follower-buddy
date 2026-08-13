@@ -389,14 +389,22 @@ public class ErrandSimulationTest
 		errands.noticeArrival();
 		tick(1);
 
-		// Still moving: every step re-arms the settle counter.
-		game.at(51, 50, 0);
-		tick(1);
-		game.at(52, 50, 0);
-		tick(6);
-		assertFalse("no exploring while the player is on the move", errands.isBusy());
+		// Stop-start travel: never eight QUIET ticks in a row, though far
+		// more than eight in total. The watch must demand consecutive
+		// stillness - a counter that merely accumulated across the pauses
+		// in the walking would start the errand mid-journey. (The first
+		// version of this test moved too briefly to tell the difference;
+		// the mutation sweep caught it.)
+		for (int leg = 0; leg < 4; leg++)
+		{
+			game.at(51 + leg, 50, 0);
+			tick(4);
+		}
+		assertFalse("no exploring while the player is stop-starting",
+			errands.isBusy());
 
-		// Now they stop, and eight quiet ticks later the nosiness begins.
+		// Now they genuinely stop, and eight quiet ticks later the
+		// nosiness begins.
 		tick(8);
 		assertTrue("the settled arrival earns a look", started("explore-chest"));
 		assertTrue(errands.isBusy());
@@ -404,6 +412,27 @@ public class ErrandSimulationTest
 		tick(40);
 		assertFalse(errands.isBusy());
 		assertTrue(follower.following);
+	}
+
+	@Test
+	public void anArrivalLostToAFightDoesNotBurnTheCooldown()
+	{
+		// Settling mid-combat forfeits THIS look, not the next one: the
+		// cooldown is charged only when an explore actually starts, so the
+		// next region change still gets its curiosity.
+		game.at(50, 50, 0);
+		follower.where = new WorldPoint(50, 51, 0);
+		game.placeObject(9001, "Chest", 53, 50, 0);
+
+		game.fighting(game.spawnNpc(3029, "Goblin", 5));
+		errands.noticeArrival();
+		tick(12);
+		assertFalse("no nosing about mid-fight", errands.isBusy());
+
+		game.fighting(null);
+		errands.noticeArrival();
+		tick(12);
+		assertTrue("the next arrival still gets its look", started("explore-chest"));
 	}
 
 	@Test

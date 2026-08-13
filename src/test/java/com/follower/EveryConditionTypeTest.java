@@ -702,6 +702,26 @@ public class EveryConditionTypeTest
 		any.gameTicks(2);
 		assertFired(any, "boundary, one beat after the ending");
 		assertEquals("combat", any.engine.getContext().getBoundaryKind());
+
+		// And the window CLOSES: a breather is about six seconds, and an
+		// ending gone stale must not open anything. Probed with an answered
+		// trigger so the timing of the ask is the test's to choose.
+		Harness stale = new Harness(folder.newFolder().toPath(),
+			"{\"version\": 1, \"rules\": ["
+				+ "{\"id\": \"probe\", \"group\": \"t\", \"cooldownMs\": 0,"
+				+ " \"when\": {\"type\": \"all\", \"conditions\": ["
+				+ "{\"type\": \"boundary\"},"
+				+ "{\"type\": \"answered\", \"is\": \"yes\"}]},"
+				+ " \"say\": [\"fired\"]}]}");
+		stale.gameTicks(1);
+		stale.engine.getContext().noteBoundary("bank");
+		stale.gameTicks(20);      // well past the ten-tick window
+		stale.answers("yes");
+		assertQuiet(stale, "a twelve-second-old ending is not a breather");
+		stale.engine.getContext().noteBoundary("bank");
+		stale.gameTicks(2);
+		stale.answers("yes");
+		assertFired(stale, "a fresh ending is");
 	}
 
 	@Test
