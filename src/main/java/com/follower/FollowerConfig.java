@@ -647,6 +647,19 @@ public interface FollowerConfig extends Config
 		return true;
 	}
 
+	@ConfigItem(
+		keyName = "errandExplore",
+		name = "Exploring",
+		description = "Noses at whatever the place offers - a chest, a trapdoor,"
+			+ " a noticeboard - especially somewhere it has just arrived",
+		section = errandSection,
+		position = 10
+	)
+	default boolean errandExplore()
+	{
+		return true;
+	}
+
 	// ------------------------------------------------------------ rule groups
 
 	@ConfigItem(

@@ -47,7 +47,10 @@ public class ErrandController
 		/** Stops where it stands and writes something up in its scroll. */
 		DOCUMENT("document"),
 		/** Walks to something notable, looks at it, and writes THAT up. */
-		STUDY("study");
+		STUDY("study"),
+		/** Plain nosiness: walks to something curious and just looks at it.
+		 * Also the one errand with an arrival trigger - see noticeArrival. */
+		EXPLORE("explore");
 
 		final String key;
 
@@ -99,6 +102,28 @@ public class ErrandController
 	public static String studyKey(String objectName)
 	{
 		return "study-" + objectName.toLowerCase(java.util.Locale.ROOT).replace(' ', '-');
+	}
+
+	/**
+	 * What plain curiosity considers worth a look.
+	 *
+	 * <p>The study list is the mundane fixtures, deadpan; this is the other
+	 * register - the things a person new to a place actually noses at: what's
+	 * in the chest, where the trapdoor goes, what the noticeboard says. Same
+	 * contract as the study list: matched by exact scene name, a name that
+	 * never matches costs nothing, {@code ::follower errandscan} is the
+	 * verification, and the lint holds every entry to its explore-<slug>
+	 * start and end rules in phrases.json.
+	 */
+	public static final String[] EXPLORE_TARGETS = {
+		"Chest", "Trapdoor", "Signpost", "Noticeboard", "Gravestone",
+		"Scarecrow", "Web",
+	};
+
+	/** The errand-event key an explored thing announces itself under. */
+	public static String exploreKey(String objectName)
+	{
+		return "explore-" + objectName.toLowerCase(java.util.Locale.ROOT).replace(' ', '-');
 	}
 
 	/**
@@ -179,8 +204,39 @@ public class ErrandController
 	/** The study's look phase: facing the thing before the scroll comes out. */
 	private int studyLookTicks;
 
-	/** What the current study announced itself as, e.g. "study-anvil". */
-	private String currentStudyKey;
+	/** What the current study or explore announced itself as, e.g. "study-anvil". */
+	private String currentSiteKey;
+
+	/** True from a region change until the follower has had its look around. */
+	private boolean arrivalWatched;
+
+	/** Ticks the player has to hold still before the arrival look begins. */
+	private int arrivalSettleTicks;
+
+	/** Ticks until the next arrival may trigger an explore; the schedule is
+	 * untouched by this - a shopping trip through four regions must not
+	 * become four inspections. */
+	private int arrivalCooldownTicks;
+
+	/** Where the player stood last idle tick, for the settle watch. */
+	private WorldPoint lastPlayerTile;
+
+	private static final int ARRIVAL_SETTLE_TICKS = 8;
+	private static final int ARRIVAL_COOLDOWN_TICKS = 700;
+
+	/**
+	 * The player has arrived somewhere new. Once they settle - hold still for
+	 * a few ticks - the follower goes and noses at something nearby, if the
+	 * scene offers anything from the explore list and the cooldown allows.
+	 * The scheduled roll is the follower on its own time; this is curiosity
+	 * about THIS place, which is the half that reads as a companion relating
+	 * to the world rather than running a timer.
+	 */
+	public void noticeArrival()
+	{
+		arrivalWatched = true;
+		arrivalSettleTicks = ARRIVAL_SETTLE_TICKS;
+	}
 
 	/** Test hook: run an errand now - a specific one by name, or any ("*"). */
 	public void force(String key)
@@ -216,6 +272,10 @@ public class ErrandController
 		// never got to run is not owed to the next session - the chat command
 		// asking for it was in the one before.
 		forceKey = null;
+		arrivalWatched = false;
+		arrivalSettleTicks = 0;
+		arrivalCooldownTicks = 0;
+		lastPlayerTile = null;
 		nextRollTicks = scheduleTicks();
 	}
 
@@ -229,6 +289,11 @@ public class ErrandController
 				abort();
 			}
 			return;
+		}
+
+		if (arrivalCooldownTicks > 0)
+		{
+			arrivalCooldownTicks--;
 		}
 
 		if (state == State.IDLE)
@@ -301,6 +366,34 @@ public class ErrandController
 			return;
 		}
 
+		// The arrival look: the player entered a new region and has now held
+		// still long enough to count as settled. Watching stillness rather
+		// than the region edge matters - regions change constantly mid-run,
+		// and a follower that peels off while the player is still moving is
+		// aborted three ticks later by the distance check, which reads as a
+		// glitch rather than a character.
+		if (arrivalWatched)
+		{
+			Player walker = client.getLocalPlayer();
+			WorldPoint here = walker == null ? null : walker.getWorldLocation();
+			if (here == null || !here.equals(lastPlayerTile))
+			{
+				arrivalSettleTicks = ARRIVAL_SETTLE_TICKS;
+			}
+			else if (--arrivalSettleTicks <= 0)
+			{
+				arrivalWatched = false;
+				if (arrivalCooldownTicks == 0 && config.errandExplore()
+					&& safeToStart() && tryStart(Errand.EXPLORE))
+				{
+					arrivalCooldownTicks = ARRIVAL_COOLDOWN_TICKS;
+					lastPlayerTile = here;
+					return;
+				}
+			}
+			lastPlayerTile = here;
+		}
+
 		if (--nextRollTicks > 0)
 		{
 			return;
@@ -343,6 +436,10 @@ public class ErrandController
 		if (config.errandStudy())
 		{
 			candidates.add(Errand.STUDY);
+		}
+		if (config.errandExplore())
+		{
+			candidates.add(Errand.EXPLORE);
 		}
 		Collections.shuffle(candidates);
 
@@ -433,6 +530,22 @@ public class ErrandController
 				}
 				return false;
 			}
+			case EXPLORE:
+			{
+				// Same hunt, different register: whatever curiosity the scene
+				// offers, or no exploring here today.
+				List<String> names = new ArrayList<>(java.util.Arrays.asList(EXPLORE_TARGETS));
+				Collections.shuffle(names);
+				for (String name : names)
+				{
+					WorldPoint found = findObject(name::equals);
+					if (found != null && beginExploreAt(found, name))
+					{
+						return true;
+					}
+				}
+				return false;
+			}
 			case DOCUMENT:
 			{
 				// No trip: something here is worth the record, apparently.
@@ -475,6 +588,18 @@ public class ErrandController
 	 */
 	boolean beginStudyAt(WorldPoint target, String objectName)
 	{
+		return beginSiteVisit(Errand.STUDY, target, studyKey(objectName));
+	}
+
+	/** The explore twin of {@link #beginStudyAt}, and a test seam for the same reason. */
+	boolean beginExploreAt(WorldPoint target, String objectName)
+	{
+		return beginSiteVisit(Errand.EXPLORE, target, exploreKey(objectName));
+	}
+
+	/** The shared trip to a named thing: beside it, facing it, announced by name. */
+	private boolean beginSiteVisit(Errand errand, WorldPoint target, String siteKey)
+	{
 		List<WorldPoint> besides = new ArrayList<>();
 		besides.add(new WorldPoint(target.getX() + 1, target.getY(), target.getPlane()));
 		besides.add(new WorldPoint(target.getX() - 1, target.getY(), target.getPlane()));
@@ -490,15 +615,15 @@ public class ErrandController
 			if (follower.stayAt(beside))
 			{
 				follower.setStayFaceTile(target);
-				current = Errand.STUDY;
-				currentStudyKey = studyKey(objectName);
+				current = errand;
+				currentSiteKey = siteKey;
 				targetTile = beside;
 				errandSite = target;
 				dispatch.accept(TriggerEvent.errand(
-					TriggerEvent.Type.ERRAND_START, currentStudyKey));
+					TriggerEvent.Type.ERRAND_START, currentSiteKey));
 				state = State.TRAVELING;
 				waitTicks = TRAVEL_TIMEOUT_TICKS;
-				log.debug("Errand started: {} at {}", currentStudyKey, target);
+				log.debug("Errand started: {} at {}", currentSiteKey, target);
 				return true;
 			}
 		}
@@ -575,6 +700,11 @@ public class ErrandController
 				// four of honest looking, the rest with the scroll out.
 				studyLookTicks = 4;
 				waitTicks = 18 + ThreadLocalRandom.current().nextInt(5);
+				break;
+			case EXPLORE:
+				// Just the look. No scroll, no gesture: the walk over and the
+				// stare are the whole act, and the lines carry the reaction.
+				waitTicks = 9 + ThreadLocalRandom.current().nextInt(4);
 				break;
 			case ALTAR:
 				follower.playAnimation(PRAY_ANIMATION);
@@ -708,11 +838,11 @@ public class ErrandController
 		hands.release();
 	}
 
-	/** What this errand reports as, which for a study names the thing studied. */
+	/** What this errand reports as; a study or explore names the thing itself. */
 	private String endKey(Errand done)
 	{
-		return done == Errand.STUDY && currentStudyKey != null
-			? currentStudyKey : done.key;
+		return (done == Errand.STUDY || done == Errand.EXPLORE) && currentSiteKey != null
+			? currentSiteKey : done.key;
 	}
 
 	private void abort()
@@ -738,7 +868,7 @@ public class ErrandController
 	{
 		state = State.IDLE;
 		current = null;
-		currentStudyKey = null;
+		currentSiteKey = null;
 		targetTile = null;
 		errandSite = null;
 		nextRollTicks = scheduleTicks();

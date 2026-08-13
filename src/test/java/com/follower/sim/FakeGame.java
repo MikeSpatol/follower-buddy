@@ -111,6 +111,19 @@ public final class FakeGame
 		clientAnswers.put("getCameraX", 0);
 		clientAnswers.put("getCameraY", 0);
 		clientAnswers.put("getCameraPitch", 128);
+
+		clientAnswers.put("getObjectDefinition", (Answer) args ->
+		{
+			String name = objectNames.get((Integer) args[0]);
+			if (name == null)
+			{
+				return null;
+			}
+			Map<String, Object> answers = new HashMap<>();
+			answers.put("getName", name);
+			answers.put("getImpostorIds", null);
+			return proxy(net.runelite.api.ObjectComposition.class, answers);
+		});
 	}
 
 	private int[] levels(Object skill)
@@ -139,6 +152,32 @@ public final class FakeGame
 	public FakeGame at(int x, int y, int plane)
 	{
 		playerAnswers.put("getWorldLocation", new WorldPoint(x, y, plane));
+		// Scene base is 0 here, so scene coords equal world coords. Only
+		// meaningful for tests that keep their coordinates inside the
+		// 104-tile scene.
+		playerAnswers.put("getLocalLocation",
+			net.runelite.api.coords.LocalPoint.fromWorld(proxyScene(), x, y));
+		return this;
+	}
+
+	/** Scene objects by tile, keyed plane:x:y; see {@link #placeObject}. */
+	private final Map<String, List<net.runelite.api.GameObject>> placedObjects = new HashMap<>();
+	private final Map<Integer, String> objectNames = new HashMap<>();
+
+	/**
+	 * Puts a named object into the scene, the way the errand scanner sees one.
+	 * The scene base is 0, so world coordinates must stay under the 104-tile
+	 * scene size for the object to be inside the tile grid at all.
+	 */
+	public FakeGame placeObject(int id, String name, int x, int y, int plane)
+	{
+		objectNames.put(id, name);
+		Map<String, Object> answers = new HashMap<>();
+		answers.put("getId", id);
+		answers.put("getWorldLocation", new WorldPoint(x, y, plane));
+		placedObjects
+			.computeIfAbsent(plane + ":" + x + ":" + y, k -> new ArrayList<>())
+			.add(proxy(net.runelite.api.GameObject.class, answers));
 		return this;
 	}
 
@@ -452,6 +491,18 @@ public final class FakeGame
 							tile.put("getPlane", plane);
 							tile.put("getSceneLocation",
 								new net.runelite.api.Point(x, y));
+							// Read fresh, so objects placed after the grid
+							// was built still appear; empty rather than null
+							// because the errand scanner iterates it bare.
+							String key = plane + ":" + x + ":" + y;
+							tile.put("getGameObjects", (Answer) callArgs ->
+							{
+								List<net.runelite.api.GameObject> here =
+									placedObjects.get(key);
+								return here == null
+									? new net.runelite.api.GameObject[0]
+									: here.toArray(new net.runelite.api.GameObject[0]);
+							});
 							sceneTiles[plane][x][y] =
 								proxy(net.runelite.api.Tile.class, tile);
 						}

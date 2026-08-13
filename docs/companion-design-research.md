@@ -1299,8 +1299,16 @@ remains is carrying the bag's guarantee across a refill.
 This also makes **R4 worth doing, which it was not before**. A thirty-first line
 for `idle-chatter` bought almost nothing under uniform selection.
 
+**R19 — shipped 2026-08-12.** Most of its letter had already arrived as
+errands (fire, altar, bank, cat, the studies); what was genuinely missing was
+the *noticing*. The explore errand walks to plain curiosities - a chest, a
+trapdoor, a noticeboard - and reacts to that thing by name, and alongside the
+schedule it has an arrival trigger: entering a new region arms a watch, and
+once the player holds still the follower goes for its look around, rationed
+by a cooldown so a trip through four regions is one inspection.
+
 **Still open**: R4 (variant counts on the highest-firing rules), R5, R6–R8,
-R11–R26, R28–R37.
+R11–R18, R20–R26, R28–R37.
 
 **What five rounds of testing found**, including two shipped bugs that lived
 between features rather than inside them, and why overlapping systems are

@@ -4831,6 +4831,12 @@ public class FollowerPlugin extends Plugin
 			if (previous != -1)
 			{
 				speechEngine.dispatch(TriggerEvent.regionChange(region, previous));
+				// Somewhere new: once the player settles, the follower may go
+				// and nose at something (the explore errand's arrival trigger).
+				if (errands != null)
+				{
+					errands.noticeArrival();
+				}
 			}
 		}
 

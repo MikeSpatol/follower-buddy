@@ -3131,6 +3131,258 @@
       ]
     },
     {
+      "id": "errand-explore-chest-start",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": {
+        "type": "errandStart",
+        "names": [
+          "explore-chest"
+        ]
+      },
+      "say": [
+        "Hold on. Nobody leaves a chest just sitting there.",
+        "A chest. Probably locked. Going to check anyway.",
+        "One second. That chest and I have business."
+      ]
+    },
+    {
+      "id": "errand-explore-chest-end",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": {
+        "type": "errandEnd",
+        "names": [
+          "explore-chest"
+        ]
+      },
+      "say": [
+        "Locked. Naturally. Everything good is locked.",
+        "Empty, or as good as. The mystery was better.",
+        "No treasure. The disappointment is character-building."
+      ]
+    },
+    {
+      "id": "errand-explore-trapdoor-start",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": {
+        "type": "errandStart",
+        "names": [
+          "explore-trapdoor"
+        ]
+      },
+      "say": [
+        "A trapdoor. I'll just see where it goes. From up here.",
+        "Hold on, trapdoor. I want a look. A careful one.",
+        "One moment. Floors with doors in them deserve attention."
+      ]
+    },
+    {
+      "id": "errand-explore-trapdoor-end",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": {
+        "type": "errandEnd",
+        "names": [
+          "explore-trapdoor"
+        ]
+      },
+      "say": [
+        "It goes DOWN. That's all I'm prepared to confirm.",
+        "Didn't open it. Some doors are questions you don't ask.",
+        "Verdict: ominous. Moving on."
+      ]
+    },
+    {
+      "id": "errand-explore-signpost-start",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": {
+        "type": "errandStart",
+        "names": [
+          "explore-signpost"
+        ]
+      },
+      "say": [
+        "A signpost. Let's see if it agrees with me.",
+        "Hold on, checking the sign. I like to know my exits.",
+        "One second. The sign might know something I don't."
+      ]
+    },
+    {
+      "id": "errand-explore-signpost-end",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": {
+        "type": "errandEnd",
+        "names": [
+          "explore-signpost"
+        ]
+      },
+      "say": [
+        "The sign says what signs say. Places, that way.",
+        "Confirmed: we are where I thought. Good sign, that.",
+        "It points four ways at once. Committed to nothing."
+      ]
+    },
+    {
+      "id": "errand-explore-noticeboard-start",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": {
+        "type": "errandStart",
+        "names": [
+          "explore-noticeboard"
+        ]
+      },
+      "say": [
+        "A noticeboard. I'll just see what the locals are on about.",
+        "Hold on. Noticeboards are gossip with structure.",
+        "One moment, catching up on the local news."
+      ]
+    },
+    {
+      "id": "errand-explore-noticeboard-end",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": {
+        "type": "errandEnd",
+        "names": [
+          "explore-noticeboard"
+        ]
+      },
+      "say": [
+        "Mostly chores dressed up as adventure. As usual.",
+        "Somebody lost a cat. Somebody always has.",
+        "Nothing for us on the board. The news is we're fine."
+      ]
+    },
+    {
+      "id": "errand-explore-gravestone-start",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": {
+        "type": "errandStart",
+        "names": [
+          "explore-gravestone"
+        ]
+      },
+      "say": [
+        "A gravestone. Paying respects. Won't be long.",
+        "Hold on. Someone should read the old names.",
+        "One moment at the stone. Manners cost nothing."
+      ]
+    },
+    {
+      "id": "errand-explore-gravestone-end",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": {
+        "type": "errandEnd",
+        "names": [
+          "explore-gravestone"
+        ]
+      },
+      "say": [
+        "Couldn't read the name. Weather got there first.",
+        "Rest easy, whoever. We're just passing.",
+        "Old stone, older story. Right, onward."
+      ]
+    },
+    {
+      "id": "errand-explore-scarecrow-start",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": {
+        "type": "errandStart",
+        "names": [
+          "explore-scarecrow"
+        ]
+      },
+      "say": [
+        "Is that a scarecrow or is someone standing very still?",
+        "Hold on. I don't trust that scarecrow.",
+        "One second. That scarecrow moved. I'm nearly sure."
+      ]
+    },
+    {
+      "id": "errand-explore-scarecrow-end",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": {
+        "type": "errandEnd",
+        "names": [
+          "explore-scarecrow"
+        ]
+      },
+      "say": [
+        "It's straw. I checked. It's definitely straw.",
+        "The scarecrow and I have an understanding now.",
+        "Not a person. Relieved and slightly disappointed."
+      ]
+    },
+    {
+      "id": "errand-explore-web-start",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": {
+        "type": "errandStart",
+        "names": [
+          "explore-web"
+        ]
+      },
+      "say": [
+        "That's a big web. I want to know HOW big.",
+        "Hold on. Inspecting the web. From a respectful distance.",
+        "One moment. Whatever made that web deserves monitoring."
+      ]
+    },
+    {
+      "id": "errand-explore-web-end",
+      "group": "errand",
+      "priority": 85,
+      "output": "overhead",
+      "cooldownMs": 1000,
+      "when": {
+        "type": "errandEnd",
+        "names": [
+          "explore-web"
+        ]
+      },
+      "say": [
+        "Big web. Bigger spider, somewhere. Stay alert.",
+        "No spider in residence. That's worse, if anything.",
+        "Web inspected. I'll be watching the ceilings."
+      ]
+    },
+    {
       "id": "errand-study-anvil-start",
       "group": "errand",
       "priority": 85,

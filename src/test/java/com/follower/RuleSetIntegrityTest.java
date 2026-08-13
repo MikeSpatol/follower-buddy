@@ -441,6 +441,40 @@ public class RuleSetIntegrityTest
 			+ String.join("\n  ", missing), missing.isEmpty());
 	}
 
+	/** The explore list is held to the same bargain as the study list above. */
+	@Test
+	public void everyExploreTargetHasItsLines() throws IOException
+	{
+		Harness h = new Harness(folder.newFolder().toPath());
+		List<String> missing = new ArrayList<>();
+		for (String target : com.follower.follower.ErrandController.EXPLORE_TARGETS)
+		{
+			String key = com.follower.follower.ErrandController.exploreKey(target);
+			boolean start = false;
+			boolean end = false;
+			for (SpeechRule rule : h.loader.getRules())
+			{
+				if (rule.when == null || rule.when.names == null
+					|| !rule.when.names.contains(key))
+				{
+					continue;
+				}
+				start |= rule.when.usesType("errandStart");
+				end |= rule.when.usesType("errandEnd");
+			}
+			if (!start)
+			{
+				missing.add(key + " has no start lines");
+			}
+			if (!end)
+			{
+				missing.add(key + " has no end lines");
+			}
+		}
+		assertTrue("explore targets the rules do not know:\n  "
+			+ String.join("\n  ", missing), missing.isEmpty());
+	}
+
 	private static String bundledText(String resource) throws IOException
 	{
 		try (InputStream in = RuleSetIntegrityTest.class.getResourceAsStream(resource))

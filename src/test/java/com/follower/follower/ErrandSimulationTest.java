@@ -330,6 +330,90 @@ public class ErrandSimulationTest
 	}
 
 	@Test
+	public void anExploreJustLooksAndNamesTheThing()
+	{
+		// The explore is the study's nosy sibling: same trip, no scroll. The
+		// walk over and the stare are the whole act, so the only physical
+		// promise to check is that nothing is ever held or posed.
+		assertTrue(errands.beginExploreAt(new WorldPoint(3225, 3218, 0), "Chest"));
+		assertTrue(errands.isBusy());
+		assertTrue("it announced the specific thing", started("explore-chest"));
+
+		tick(25);
+		assertFalse("the look should have finished", errands.isBusy());
+		assertEquals("nothing was ever held", 0, heldProp);
+		assertEquals("and nothing posed", 0, follower.poseOverride);
+		assertTrue("and the follower came back", follower.following);
+
+		boolean endNamed = false;
+		for (TriggerEvent event : dispatched)
+		{
+			endNamed |= event.getType() == TriggerEvent.Type.ERRAND_END
+				&& "explore-chest".equals(event.getName());
+		}
+		assertTrue("the verdict names the thing too", endNamed);
+	}
+
+	@Test
+	public void arrivingSomewhereNewEarnsALookOnceSettled()
+	{
+		// The R19 half: a region change arms a watch, and the explore begins
+		// only after the player holds still - never while they are mid-run,
+		// where the distance abort would yank it back three ticks later.
+		game.at(50, 50, 0);
+		follower.where = new WorldPoint(50, 51, 0);
+		game.placeObject(9001, "Chest", 53, 50, 0);
+
+		errands.noticeArrival();
+		tick(1);
+
+		// Still moving: every step re-arms the settle counter.
+		game.at(51, 50, 0);
+		tick(1);
+		game.at(52, 50, 0);
+		tick(6);
+		assertFalse("no exploring while the player is on the move", errands.isBusy());
+
+		// Now they stop, and eight quiet ticks later the nosiness begins.
+		tick(8);
+		assertTrue("the settled arrival earns a look", started("explore-chest"));
+		assertTrue(errands.isBusy());
+
+		tick(40);
+		assertFalse(errands.isBusy());
+		assertTrue(follower.following);
+	}
+
+	@Test
+	public void arrivalLooksAreRationedByTheCooldown()
+	{
+		game.at(50, 50, 0);
+		follower.where = new WorldPoint(50, 51, 0);
+		game.placeObject(9001, "Chest", 53, 50, 0);
+
+		errands.noticeArrival();
+		tick(10);
+		assertTrue(started("explore-chest"));
+		tick(40);
+		assertFalse(errands.isBusy());
+
+		// The next region, minutes too soon: watched, settled, and refused.
+		errands.noticeArrival();
+		tick(15);
+
+		int starts = 0;
+		for (TriggerEvent event : dispatched)
+		{
+			if (event.getType() == TriggerEvent.Type.ERRAND_START)
+			{
+				starts++;
+			}
+		}
+		assertEquals("a trip through several regions is one inspection, not several",
+			1, starts);
+	}
+
+	@Test
 	public void anInterruptedStudyReleasesEverything()
 	{
 		errands.beginStudyAt(new WorldPoint(3225, 3218, 0), "Anvil");
