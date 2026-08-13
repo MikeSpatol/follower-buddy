@@ -8130,6 +8130,7 @@
       "when": {
         "type": "all",
         "conditions": [
+          { "type": "none", "conditions": [ { "type": "repeating" } ] },
           { "type": "none", "conditions": [ { "type": "mood", "is": "low" } ] },
           {
             "type": "idle",
@@ -8184,6 +8185,7 @@
       "when": {
         "type": "all",
         "conditions": [
+          { "type": "none", "conditions": [ { "type": "repeating" } ] },
           {
             "type": "answered",
             "is": "yes"
@@ -8226,6 +8228,7 @@
       "when": {
         "type": "all",
         "conditions": [
+          { "type": "none", "conditions": [ { "type": "repeating" } ] },
           {
             "type": "answered",
             "is": "yes"
@@ -8268,6 +8271,7 @@
       "when": {
         "type": "all",
         "conditions": [
+          { "type": "none", "conditions": [ { "type": "repeating" } ] },
           {
             "type": "answered",
             "is": "yes"
@@ -9135,6 +9139,7 @@
       "when": {
         "type": "all",
         "conditions": [
+          { "type": "none", "conditions": [ { "type": "repeating" } ] },
           { "type": "idle", "ticks": 60 },
           { "type": "idleBelow", "ticks": 500 },
           { "type": "chance", "percent": 4 },
@@ -9162,6 +9167,7 @@
       "when": {
         "type": "all",
         "conditions": [
+          { "type": "none", "conditions": [ { "type": "repeating" } ] },
           { "type": "idle", "ticks": 60 },
           { "type": "idleBelow", "ticks": 500 },
           { "type": "chance", "percent": 4 },
@@ -9189,6 +9195,7 @@
       "when": {
         "type": "all",
         "conditions": [
+          { "type": "none", "conditions": [ { "type": "repeating" } ] },
           { "type": "idle", "ticks": 60 },
           { "type": "idleBelow", "ticks": 500 },
           { "type": "chance", "percent": 4 },
@@ -9216,6 +9223,7 @@
       "when": {
         "type": "all",
         "conditions": [
+          { "type": "none", "conditions": [ { "type": "repeating" } ] },
           { "type": "idle", "ticks": 60 },
           { "type": "idleBelow", "ticks": 500 },
           { "type": "chance", "percent": 4 },
@@ -9243,6 +9251,7 @@
       "when": {
         "type": "all",
         "conditions": [
+          { "type": "none", "conditions": [ { "type": "repeating" } ] },
           { "type": "idle", "ticks": 60 },
           { "type": "idleBelow", "ticks": 500 },
           { "type": "chance", "percent": 4 },
@@ -9885,6 +9894,7 @@
       "when": {
         "type": "all",
         "conditions": [
+          { "type": "none", "conditions": [ { "type": "repeating" } ] },
           { "type": "none", "conditions": [ { "type": "mood", "is": "low" } ] },
           {
             "type": "idle",
@@ -10517,6 +10527,7 @@
       "when": {
         "type": "all",
         "conditions": [
+          { "type": "none", "conditions": [ { "type": "repeating" } ] },
           { "type": "none", "conditions": [ { "type": "mood", "is": "low" } ] },
           {
             "type": "combat"

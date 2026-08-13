@@ -814,7 +814,7 @@ public class RuleSetIntegrityTest
 		{
 			for (SpeechRule rule : h.loader.getRules())
 			{
-				if (id.equals(rule.id) && !consultsMood(rule.when))
+				if (id.equals(rule.id) && !consultsType(rule.when, "mood"))
 				{
 					unguarded.add(id);
 				}
@@ -825,13 +825,38 @@ public class RuleSetIntegrityTest
 			unguarded.isEmpty());
 	}
 
-	private static boolean consultsMood(Condition condition)
+	/**
+	 * The grind guard (R24): anything that OPENS a demanding interaction - a
+	 * question, a want, a wish, a challenge - must consult the repeating
+	 * condition, so none of them lands while the player is mid-task in the
+	 * activity they deliberately entered for calm. Field-driven rather than
+	 * id-driven, so a future opener cannot arrive without its guard.
+	 */
+	@Test
+	public void theGrindGuardStaysInPlace() throws IOException
+	{
+		Harness h = new Harness(folder.newFolder().toPath());
+		List<String> unguarded = new ArrayList<>();
+		for (SpeechRule rule : h.loader.getRules())
+		{
+			boolean opener = rule.asks != null || rule.want != null
+				|| rule.wish != null || rule.challenge != null;
+			if (opener && !consultsType(rule.when, "repeating"))
+			{
+				unguarded.add(rule.id);
+			}
+		}
+		assertTrue("openers that would interrupt a deliberate grind: " + unguarded,
+			unguarded.isEmpty());
+	}
+
+	private static boolean consultsType(Condition condition, String type)
 	{
 		if (condition == null)
 		{
 			return false;
 		}
-		if ("mood".equalsIgnoreCase(condition.type))
+		if (type.equalsIgnoreCase(condition.type))
 		{
 			return true;
 		}
@@ -839,7 +864,7 @@ public class RuleSetIntegrityTest
 		{
 			for (Condition child : condition.conditions)
 			{
-				if (consultsMood(child))
+				if (consultsType(child, type))
 				{
 					return true;
 				}
