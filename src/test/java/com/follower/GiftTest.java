@@ -46,23 +46,39 @@ public class GiftTest
 	}
 
 	@Test
-	public void aClaimedGiftWithAnEmptyBagIsCalledOut() throws IOException
+	public void aBluffGetsItsDryCodaAndTheWishSurvives() throws IOException
 	{
-		// The bug report that reshaped the feature: "i said i found one but i
-		// didnt have one in the inventory". The follower checks the bag now,
-		// and a bluff gets caught rather than thanked. The wish stays open,
-		// because the honest version of this moment is going and getting one.
+		// The catch itself happens in the dialog box now - the script
+		// branches on the bag - so what the rules owe the bluff is one dry
+		// coda overhead and the mood dent, not a second telling-off.
 		Harness h = wishing();
 		h.game.inventoryContaining();      // pockets full of nothing
-		h.answers("gift");
+		h.answers("bluff");                // what the empty-bag branch answers
 		h.gameTicks(3);
 
-		assertEquals("caught, in words", 1, h.firedBy("gifted-bluff").size());
+		assertEquals("the coda", 1, h.firedBy("gifted-bluff").size());
 		assertTrue("no thanks were given", h.firedBy("gifted-accept").isEmpty());
 		assertFalse("nothing is carried out of a bluff",
 			h.engine.getContext().isCarrying());
 		assertTrue("and the wish survives for a real attempt",
 			h.engine.getContext().isWishing());
+	}
+
+	@Test
+	public void theMidBoxDropStillGetsAnHonestAnswer() throws IOException
+	{
+		// The race the box cannot see: the bag held the thing when the script
+		// was built and not when the branch was picked. The box already said
+		// "that's the one", so the rules re-check and say where it went.
+		Harness h = wishing();
+		h.game.inventoryContaining();      // gone by dispatch time
+		h.answers("gift");                 // what the holding branch answers
+		h.gameTicks(3);
+
+		assertEquals("the follower notices the vanishing act",
+			1, h.firedBy("gifted-slipped").size());
+		assertTrue("and no thanks were given", h.firedBy("gifted-accept").isEmpty());
+		assertTrue("the wish stays open", h.engine.getContext().isWishing());
 	}
 
 	@Test

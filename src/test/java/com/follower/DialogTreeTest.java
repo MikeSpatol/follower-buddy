@@ -256,14 +256,18 @@ public class DialogTreeTest
 		// The everyday talk script is the second source of answers - "gift"
 		// was its first. Those only exist inside finish runnables, so the
 		// honest enumeration is to run every node's finish against a
-		// recording consumer. Built with a wish open, since the gift branch
-		// only exists while one is.
-		for (FollowerDialog.Node node : FollowerPlugin.talkScript(
-			() -> new String[]{""},
-			answer -> offered.add(answer.toLowerCase(java.util.Locale.ROOT)),
-			"feather").values())
+		// recording consumer. Built with a wish open in BOTH bag states,
+		// because the script branches on the bag and each branch answers
+		// differently: gift with the thing held, bluff without.
+		for (boolean held : new boolean[]{true, false})
 		{
-			node.runFinish();
+			for (FollowerDialog.Node node : FollowerPlugin.talkScript(
+				() -> new String[]{""},
+				answer -> offered.add(answer.toLowerCase(java.util.Locale.ROOT)),
+				"feather", held).values())
+			{
+				node.runFinish();
+			}
 		}
 
 		Set<String> listened = new TreeSet<>();

@@ -36,12 +36,12 @@ public class TalkScriptTest
 		// running plugin has. A stand-in keeps the structural checks honest
 		// (the node is reachable, its pages are readable, it ends where it says
 		// it does); the wording itself is walked branch by branch below.
-		// Built WITH a wish open, so the gift branch exists and every
-		// structural check walks it too; the wishless variant is checked in
-		// its own test below.
+		// Built WITH a wish open and the thing in the bag, so the gift branch
+		// exists and every structural check walks it too; the other variants
+		// are checked in their own test below.
 		return FollowerPlugin.talkScript(
 			() -> FollowerPlugin.daySummary(95, 12, 2, 1, "good", "that chicken"),
-			answer -> { }, "feather");
+			answer -> { }, "feather", true);
 	}
 
 	/** Every node id something points at, via {@code then} or a choice. */
@@ -113,7 +113,7 @@ public class TalkScriptTest
 
 		Map<String, FollowerDialog.Node> wishless = FollowerPlugin.talkScript(
 			() -> FollowerPlugin.daySummary(95, 12, 2, 1, "good", "that chicken"),
-			answer -> { }, "");
+			answer -> { }, "", false);
 		assertTrue("with no wish there is no gift branch at all",
 			!wishless.containsKey("gift-q"));
 		for (FollowerDialog.Node node : wishless.values())
@@ -124,6 +124,31 @@ public class TalkScriptTest
 					!label.startsWith("Found you"));
 			}
 		}
+	}
+
+	@Test
+	public void theBoxItselfKnowsWhetherTheBagHoldsTheThing()
+	{
+		// The neutral version - "Let's see it, then." either way - read in
+		// play as the follower not looking, and a scribe that does not look
+		// is out of character in its own conversation. Same claim, different
+		// reception, decided by the bag.
+		java.util.List<String> reactions = new java.util.ArrayList<>();
+
+		Map<String, FollowerDialog.Node> holding = FollowerPlugin.talkScript(
+			() -> new String[]{""}, reactions::add, "feather", true);
+		holding.get("gift-a").runFinish();
+		assertTrue("with the feather in the bag, the box accepts",
+			holding.get("gift-a").getPages().get(0).contains("That's the one"));
+
+		Map<String, FollowerDialog.Node> bluffing = FollowerPlugin.talkScript(
+			() -> new String[]{""}, reactions::add, "feather", false);
+		bluffing.get("gift-a").runFinish();
+		assertTrue("with an empty bag, the box catches the bluff",
+			bluffing.get("gift-a").getPages().get(0).contains("empty bag"));
+
+		assertTrue("and the two branches answer differently",
+			reactions.contains("gift") && reactions.contains("bluff"));
 	}
 
 	@Test

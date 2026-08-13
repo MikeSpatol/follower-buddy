@@ -3909,7 +3909,8 @@ public class FollowerPlugin extends Plugin
 		}
 		dialog.startNextTick(config.followerName(),
 			talkScript(this::daySummary, this::answerQuestion,
-				speechEngine.getContext().getWishLabel()), "start");
+				speechEngine.getContext().getWishLabel(),
+				speechEngine.getContext().isWishedItemInBag()), "start");
 	}
 
 	/**
@@ -3952,7 +3953,8 @@ public class FollowerPlugin extends Plugin
 	static java.util.Map<String, com.follower.speech.FollowerDialog.Node> talkScript(
 		java.util.function.Supplier<String[]> summary,
 		java.util.function.Consumer<String> onAnswer,
-		String wish)
+		String wish,
+		boolean wishItemInBag)
 	{
 		java.util.Map<String, com.follower.speech.FollowerDialog.Node> script =
 			new java.util.LinkedHashMap<>();
@@ -4006,14 +4008,29 @@ public class FollowerPlugin extends Plugin
 		// the rules.
 		if (wishing)
 		{
-			// "You didn't." as delighted disbelief read as an accusation in
-			// play - the line has to be one nobody can hear two ways, because
-			// whether the player HAS the thing is decided by the rules a beat
-			// later, and this line must not pre-judge it.
+			// The box branches on the bag, because the first neutral version
+			// ("Let's see it, then." either way) read as the follower not
+			// looking - and a scribe that does not look is out of character
+			// in its own conversation. The bag is read when the script is
+			// built; the rules re-check at dispatch, so the rare mid-box drop
+			// still gets an honest overhead answer.
 			script.put("gift-q", you(giftLabel).then("gift-a"));
-			script.put("gift-a", says(
-				"Let's see it, then.")
-				.onFinish(() -> onAnswer.accept("gift")));
+			if (wishItemInBag)
+			{
+				script.put("gift-a", says(
+					"Let's see it, then. ...That's the one.")
+					.onFinish(() -> onAnswer.accept("gift")));
+			}
+			else
+			{
+				// The catch happens HERE, in the conversation, where the claim
+				// was made. The overhead coda afterwards is one dry line, not
+				// a second telling-off.
+				script.put("gift-a", says(
+					"You're patting an empty bag. I can hear it from here.",
+					"Bring me a real " + wish + " and I'll be delighted.")
+					.onFinish(() -> onAnswer.accept("bluff")));
+			}
 		}
 
 		// Shared closings. Both are spoken, like every other option.

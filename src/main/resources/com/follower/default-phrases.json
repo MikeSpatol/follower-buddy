@@ -8986,13 +8986,31 @@
     },
     {
       "id": "gifted-bluff",
-      "note": "Claimed the wish with an empty bag. The scribe checks, because a follower that cannot tell is a follower that cannot see. The wish stays open - the honest version of this moment is going and getting one.",
+      "note": "The empty-bag claim, already caught IN the dialog box - the script branches on the bag, because a neutral box read as the follower not looking. This is the dry coda afterwards, not a second telling-off, so it needs no {wish} and no bag re-check.",
       "group": "souvenir",
       "priority": 70,
       "output": "overhead",
       "cooldownMs": 30000,
       "delayTicks": 2,
       "mood": -2,
+      "when": {
+        "type": "answered",
+        "is": "bluff"
+      },
+      "say": [
+        "The record notes the attempt.",
+        "Filed under: nice try."
+      ]
+    },
+    {
+      "id": "gifted-slipped",
+      "note": "The mid-box race: the bag had the thing when the box opened and not when the branch was picked. The box already said 'that is the one', so silence here would read as the follower being fooled - and this follower checks.",
+      "group": "souvenir",
+      "priority": 65,
+      "output": "overhead",
+      "cooldownMs": 10000,
+      "delayTicks": 2,
+      "mood": 0,
       "when": {
         "type": "all",
         "conditions": [
@@ -9002,10 +9020,8 @@
         ]
       },
       "say": [
-        "You're patting an empty bag. I can hear it.",
-        "Show me, then. ...That's air. That's a handful of air.",
-        "Is the {wish} invisible? It's invisible, isn't it.",
-        "A generous thought. Now the actual {wish}, when you have one."
+        "Where did the {wish} go? It was in there a moment ago.",
+        "You had it just now. I watched the bag. Bring it back."
       ]
     },
     {
