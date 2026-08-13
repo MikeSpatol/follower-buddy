@@ -604,6 +604,27 @@ public final class TriggerContext
 		countersDirty = true;
 	}
 
+	// -------------------------------------------------------------- stay mode
+
+	/**
+	 * True while the follower is on a player-commanded Stay (R25) - not the
+	 * stays its own machinery takes for errands, spectating or thrall work.
+	 * Fed by the plugin each tick, because only the plugin can tell those
+	 * apart. Stay is when the follower is most watched and least occupied,
+	 * which is exactly where a little life pays best.
+	 */
+	private boolean followerStaying;
+
+	public void setFollowerStaying(boolean staying)
+	{
+		followerStaying = staying;
+	}
+
+	public boolean isFollowerStaying()
+	{
+		return followerStaying;
+	}
+
 	// --------------------------------------------------------------- boundaries
 
 	/**

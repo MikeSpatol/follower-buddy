@@ -650,6 +650,19 @@ public class EveryConditionTypeTest
 	}
 
 	@Test
+	public void aParkedFollowerKnowsItIsParked() throws IOException
+	{
+		note("staying");
+
+		Harness h = harnessFor("{\"type\": \"staying\"}");
+		h.gameTicks(2);
+		assertQuiet(h, "following at heel is not staying");
+		h.engine.getContext().setFollowerStaying(true);
+		h.gameTicks(2);
+		assertFired(h, "staying");
+	}
+
+	@Test
 	public void theBreatherAfterSomethingEnds() throws IOException
 	{
 		note("boundary");
@@ -1416,6 +1429,7 @@ public class EveryConditionTypeTest
 		inventoryRoomAndCrowdsAndDangerousNeighbours();
 		wantsAreAskedForFulfilledAndForgotten();
 		aWishOpensBySayingAndTheBagDecidesTheGift();
+		aParkedFollowerKnowsItIsParked();
 		theBreatherAfterSomethingEnds();
 		theRollStaysReadableUnderTheOverride();
 		tasteIsAboutWhereTheFollowerIsStanding();

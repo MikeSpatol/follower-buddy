@@ -476,6 +476,11 @@ public class Condition
 
 			// How long the follower has known you, in days, and the day of
 			// the year it met you coming round again.
+			// A player-commanded Stay: watched, parked, and free to have a
+			// little life of its own.
+			case "staying":
+				return ctx.isFollowerStaying();
+
 			// A few ticks of breather after something ENDS - combat, a level,
 			// an arrival, thieving, the bank. "is" names which ending; left
 			// out, any ending counts.

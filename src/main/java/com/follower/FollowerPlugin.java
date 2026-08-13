@@ -296,6 +296,9 @@ public class FollowerPlugin extends Plugin
 	/** Whether the bank was open last tick, for the close-is-a-boundary watch. */
 	private boolean wasBankOpen;
 
+	/** True once the player has walked out of sight of a parked follower. */
+	private boolean leftTheFollowerParked;
+
 	/** Ten seconds after the first spawn, so the arrival isn't talked over. */
 	private static final int NAME_PROMPT_DELAY_TICKS = 17;
 
@@ -4918,6 +4921,38 @@ public class FollowerPlugin extends Plugin
 			speechEngine.getContext().noteBoundary("bank");
 		}
 		wasBankOpen = bankOpen;
+
+		// A player-commanded Stay (R25): the follower's own machinery also
+		// parks it - errands, spectating, thrall work - and only this side
+		// can tell the difference, so the context is fed the distinction.
+		boolean stayCommanded = follower.isStaying() && thrallNpc == null
+			&& (errands == null || !errands.isBusy())
+			&& (spectate == null || !spectate.isSpectating());
+		speechEngine.getContext().setFollowerStaying(stayCommanded);
+
+		// An absence ending is a boundary too: the player went out of sight
+		// of the parked follower and has now come back to it.
+		if (stayCommanded)
+		{
+			WorldPoint parked = follower.getWorldLocation();
+			WorldPoint player = local.getWorldLocation();
+			int apart = parked == null || player == null
+				|| parked.getPlane() != player.getPlane()
+				? Integer.MAX_VALUE : parked.distanceTo(player);
+			if (apart > 12)
+			{
+				leftTheFollowerParked = true;
+			}
+			else if (leftTheFollowerParked && apart <= 3)
+			{
+				leftTheFollowerParked = false;
+				speechEngine.getContext().noteBoundary("reunion");
+			}
+		}
+		else
+		{
+			leftTheFollowerParked = false;
+		}
 
 		int region = speechEngine.getContext().getRegionId();
 		if (region != lastRegionId)

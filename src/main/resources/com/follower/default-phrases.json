@@ -2840,6 +2840,89 @@
       ]
     },
     {
+      "id": "stay-start",
+      "note": "R25: taking the post. Rises once on the staying edge, so one per Stay.",
+      "group": "misc",
+      "priority": 55,
+      "output": "overhead",
+      "cooldownMs": 60000,
+      "when": {
+        "type": "staying"
+      },
+      "say": [
+        "Right. This spot is mine now.",
+        "Understood. Guarding this exact square.",
+        "Go on. Me and this spot have an arrangement.",
+        "Staying. If anything moves, I'll describe it thoroughly."
+      ]
+    },
+    {
+      "id": "stay-watch",
+      "note": "R25: the sentry mutter. The chance flicker re-arms the edge, the cooldown paces it to roughly one remark per long wait.",
+      "group": "misc",
+      "priority": 25,
+      "output": "overhead",
+      "cooldownMs": 480000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "staying" },
+          { "type": "chance", "percent": 1 }
+        ]
+      },
+      "say": [
+        "Still here. Holding the fort.",
+        "All quiet at my post. Suspiciously quiet.",
+        "The view hasn't changed. I've checked twice.",
+        "Post report: one follower, zero incidents."
+      ]
+    },
+    {
+      "id": "stay-fidget",
+      "prop": {
+        "item": 10485,
+        "pose": 5354,
+        "ticks": 10
+      },
+      "note": "R25: the notes come out at the post. Same verified scroll-and-pose pair the errands use.",
+      "group": "misc",
+      "priority": 25,
+      "output": "overhead",
+      "cooldownMs": 300000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "staying" },
+          { "type": "chance", "percent": 2 }
+        ]
+      },
+      "say": [
+        "Might as well update the notes while I wait.",
+        "Reviewing the morning's entries. Standards apply."
+      ]
+    },
+    {
+      "id": "stay-reunion",
+      "note": "R25: the absence ended - the player walked out of sight of the post and came back to it. The plugin marks it as a reunion boundary.",
+      "group": "misc",
+      "priority": 60,
+      "output": "overhead",
+      "cooldownMs": 120000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "staying" },
+          { "type": "boundary", "is": "reunion" }
+        ]
+      },
+      "say": [
+        "There you are. This spot is fine, by the way. I checked.",
+        "Back already? The perimeter held.",
+        "Nothing happened here. One duck came past. It's logged.",
+        "You returned. The post is yours again."
+      ]
+    },
+    {
       "id": "breather-bank",
       "note": "R6: the bank closing is an ending, and the moment after it is a boundary - the restock is done, nothing is mid-task, a remark is company rather than interruption.",
       "group": "misc",
