@@ -122,6 +122,9 @@ public class FollowerPlugin extends Plugin
 	@Inject
 	private net.runelite.client.game.SpriteManager spriteManager;
 
+	@Inject
+	private net.runelite.client.game.chatbox.ChatboxPanelManager chatboxPanelManager;
+
 	/**
 	 * The client's red click cross, drawn to its own recipe: on an entity op
 	 * the client stamps the click point and animates four sprite frames, one
@@ -285,6 +288,12 @@ public class FollowerPlugin extends Plugin
 	private int reloadPollTicks;
 	private int spawnDelayTicks;
 	private boolean rebuildQueued;
+
+	/** Ticks until the one-time naming prompt opens; 0 = nothing pending. */
+	private int namePromptDelayTicks;
+
+	/** Three seconds after the first spawn, so the arrival isn't talked over. */
+	private static final int NAME_PROMPT_DELAY_TICKS = 5;
 
 	/**
 	 * LOGGED_IN fires after EVERY map chunk reload, not just at login - running
@@ -4608,6 +4617,13 @@ public class FollowerPlugin extends Plugin
 		else if (!follower.isSpawned() && appearanceService.getCurrent() != null)
 		{
 			follower.spawn(appearanceService.getCurrent(), local.getWorldLocation());
+
+			// The very first spawn ever is the one moment naming is cheap and
+			// natural; a few ticks so the arrival has landed before the ask.
+			if (!config.namePrompted())
+			{
+				namePromptDelayTicks = NAME_PROMPT_DELAY_TICKS;
+			}
 		}
 
 		updateTrail(local);
@@ -4687,6 +4703,12 @@ public class FollowerPlugin extends Plugin
 		if (thrallExitPendingTicks > 0 && --thrallExitPendingTicks == 0)
 		{
 			performThrallExit(thrallExitStyle);
+		}
+
+		if (namePromptDelayTicks > 0 && --namePromptDelayTicks == 0
+			&& !config.namePrompted() && follower.isSpawned())
+		{
+			offerName();
 		}
 
 		drainSpeechQueue();
@@ -7141,6 +7163,84 @@ public class FollowerPlugin extends Plugin
 			+ ", " + alpha);
 		log.info("priorities {}: {} faces, priorities {}, {}",
 			label, model.getFaceCount(), histogram, alpha);
+	}
+
+	/**
+	 * The one-time naming prompt, a few ticks after the first spawn ever.
+	 *
+	 * <p>A follower called "Follower" is a stranger; a name is the cheapest
+	 * decision a player can make about it, and delayed customisation is a
+	 * named churn cause. One chatbox prompt, skippable with Esc, and the
+	 * pointer at the side panel rides along either way so both the name and
+	 * the outfit are discoverable from the same breath.
+	 */
+	private void offerName()
+	{
+		// Marked at the offer rather than the answer, so closing the prompt
+		// half-way does not re-ask on every later spawn - the side panel
+		// message covers the road back.
+		configManager.setConfiguration(FollowerConfig.GROUP, "namePrompted", true);
+
+		final boolean[] named = {false};
+		chatboxPanelManager.openTextInput("Your new follower is waiting. What will you call them?")
+			.value("")
+			.charValidator(c -> Character.isLetterOrDigit(c)
+				|| c == ' ' || c == '\'' || c == '-')
+			.onDone((String answer) ->
+			{
+				String name = cleanFollowerName(answer);
+				if (!name.isEmpty())
+				{
+					named[0] = true;
+					configManager.setConfiguration(FollowerConfig.GROUP,
+						"followerName", name);
+					clientThread.invoke(() ->
+						speechEngine.say(name + ". I'll answer to that.",
+							com.follower.speech.SpeechOutput.OVERHEAD));
+					sendStatus("The name and the outfit both live in the"
+						+ " Follower Buddy side panel, any time you want them.");
+				}
+			})
+			// Runs on Esc and after a successful onDone alike, so it only
+			// speaks for the skip.
+			.onClose(() ->
+			{
+				if (!named[0])
+				{
+					sendStatus("No name for now, then. You can set one any time"
+						+ " in the Follower Buddy side panel.");
+				}
+			})
+			.build();
+	}
+
+	/**
+	 * What survives of a typed name: the allowed characters, single spaces,
+	 * at most twenty of them. The chatbox validator already refuses most of
+	 * this, but pasted text does not go through it, and the menu target and
+	 * dialog header downstream trust the name to hold no tags.
+	 */
+	static String cleanFollowerName(String raw)
+	{
+		if (raw == null)
+		{
+			return "";
+		}
+		StringBuilder kept = new StringBuilder();
+		for (int i = 0; i < raw.length(); i++)
+		{
+			char c = raw.charAt(i);
+			if (Character.isLetterOrDigit(c) || c == ' ' || c == '\'' || c == '-')
+			{
+				kept.append(c);
+			}
+		}
+		String name = kept.toString().trim().replaceAll(" {2,}", " ");
+		if (name.length() > 20)
+		{
+			name = name.substring(0, 20).trim();
+		}
+		return name;
 	}
 
 	private void sendStatus(String message)

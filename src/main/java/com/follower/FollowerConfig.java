@@ -882,6 +882,18 @@ public interface FollowerConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "namePrompted",
+		name = "Name prompted",
+		description = "Whether the one-time naming prompt has been offered;"
+			+ " managed by the plugin",
+		hidden = true
+	)
+	default boolean namePrompted()
+	{
+		return false;
+	}
+
+	@ConfigItem(
 		keyName = "counters",
 		name = "Counters",
 		description = "What the follower has counted and the records it holds,"
