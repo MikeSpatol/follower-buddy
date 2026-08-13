@@ -292,8 +292,8 @@ public class FollowerPlugin extends Plugin
 	/** Ticks until the one-time naming prompt opens; 0 = nothing pending. */
 	private int namePromptDelayTicks;
 
-	/** Three seconds after the first spawn, so the arrival isn't talked over. */
-	private static final int NAME_PROMPT_DELAY_TICKS = 5;
+	/** Ten seconds after the first spawn, so the arrival isn't talked over. */
+	private static final int NAME_PROMPT_DELAY_TICKS = 17;
 
 	/**
 	 * LOGGED_IN fires after EVERY map chunk reload, not just at login - running
@@ -2668,6 +2668,15 @@ public class FollowerPlugin extends Plugin
 				// Arrive on a free tile behind the player rather than inside them.
 				WorldPoint behind = follower.restingTileBehind(local, 2);
 				follower.spawn(appearance, behind != null ? behind : local.getWorldLocation());
+
+				// The very first spawn ever is the one moment naming is cheap
+				// and natural. THIS is the spawn a login takes - the queued
+				// rebuild - not the bare auto-spawn fallback below in the tick
+				// loop, which is why the countdown is armed in both places.
+				if (!config.namePrompted())
+				{
+					namePromptDelayTicks = NAME_PROMPT_DELAY_TICKS;
+				}
 			}
 		});
 	}
@@ -4618,8 +4627,6 @@ public class FollowerPlugin extends Plugin
 		{
 			follower.spawn(appearanceService.getCurrent(), local.getWorldLocation());
 
-			// The very first spawn ever is the one moment naming is cheap and
-			// natural; a few ticks so the arrival has landed before the ask.
 			if (!config.namePrompted())
 			{
 				namePromptDelayTicks = NAME_PROMPT_DELAY_TICKS;
