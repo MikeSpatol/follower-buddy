@@ -195,14 +195,46 @@ public class TalkScriptTest
 		assertTrue("never says to set an outfit for each", text.contains("outfit for each"));
 	}
 
+	/**
+	 * Every structurally distinct build of the script: the two question
+	 * shapes (lowish and everyday) crossed with the three wish states. The
+	 * structural checks walk ALL of them, because a dead end that only
+	 * exists in the low-band variant is exactly the kind nobody meets until
+	 * a bad day - which is the worst possible day to have the box shut in
+	 * your face. (The first version of these checks walked one variant; the
+	 * third deep-testing pass caught the gap.)
+	 */
+	private static Map<String, Map<String, FollowerDialog.Node>> allVariants()
+	{
+		Map<String, Map<String, FollowerDialog.Node>> variants =
+			new java.util.LinkedHashMap<>();
+		for (String band : new String[]{"low", "even"})
+		{
+			variants.put(band + "/no-wish", FollowerPlugin.talkScript(
+				() -> FollowerPlugin.daySummary(95, 12, 2, 1, "good", "that chicken"),
+				answer -> { }, "", false, band));
+			variants.put(band + "/wish-held", FollowerPlugin.talkScript(
+				() -> FollowerPlugin.daySummary(95, 12, 2, 1, "good", "that chicken"),
+				answer -> { }, "feather", true, band));
+			variants.put(band + "/wish-empty", FollowerPlugin.talkScript(
+				() -> FollowerPlugin.daySummary(95, 12, 2, 1, "good", "that chicken"),
+				answer -> { }, "feather", false, band));
+		}
+		return variants;
+	}
+
 	@Test
 	public void everyBranchLeadsToANodeThatExists()
 	{
-		Map<String, FollowerDialog.Node> script = script();
-		Set<String> missing = new TreeSet<>(targets(script));
-		missing.removeAll(script.keySet());
-		assertTrue("branches pointing at nodes that do not exist, which shut the"
-			+ " box mid-conversation: " + missing, missing.isEmpty());
+		for (Map.Entry<String, Map<String, FollowerDialog.Node>> variant
+			: allVariants().entrySet())
+		{
+			Set<String> missing = new TreeSet<>(targets(variant.getValue()));
+			missing.removeAll(variant.getValue().keySet());
+			assertTrue(variant.getKey() + ": branches pointing at nodes that do"
+				+ " not exist, which shut the box mid-conversation: " + missing,
+				missing.isEmpty());
+		}
 	}
 
 	@Test
@@ -210,13 +242,18 @@ public class TalkScriptTest
 	{
 		// An unreachable node is dialogue nobody will ever read. Usually it
 		// means a branch was repointed and its old destination left behind.
-		Map<String, FollowerDialog.Node> script = script();
-		Set<String> reachable = new HashSet<>(targets(script));
-		reachable.add("start");
+		for (Map.Entry<String, Map<String, FollowerDialog.Node>> variant
+			: allVariants().entrySet())
+		{
+			Map<String, FollowerDialog.Node> script = variant.getValue();
+			Set<String> reachable = new HashSet<>(targets(script));
+			reachable.add("start");
 
-		Set<String> orphans = new TreeSet<>(script.keySet());
-		orphans.removeAll(reachable);
-		assertTrue("nodes nothing leads to: " + orphans, orphans.isEmpty());
+			Set<String> orphans = new TreeSet<>(script.keySet());
+			orphans.removeAll(reachable);
+			assertTrue(variant.getKey() + ": nodes nothing leads to: " + orphans,
+				orphans.isEmpty());
+		}
 	}
 
 	@Test
@@ -231,20 +268,24 @@ public class TalkScriptTest
 		JsonObject dialog = fontById(fonts, 497);
 
 		List<String> problems = new ArrayList<>();
-		for (Map.Entry<String, FollowerDialog.Node> entry : script().entrySet())
+		for (Map.Entry<String, Map<String, FollowerDialog.Node>> variant
+			: allVariants().entrySet())
 		{
-			for (String line : entry.getValue().getLines())
+			for (Map.Entry<String, FollowerDialog.Node> entry : variant.getValue().entrySet())
 			{
-				for (char c : line.toCharArray())
+				for (String line : entry.getValue().getLines())
 				{
-					if (c == ' ')
+					for (char c : line.toCharArray())
 					{
-						continue;
-					}
-					if (!hasGlyph(overhead, c) || !hasGlyph(dialog, c))
-					{
-						problems.add(String.format("%s: '%c' (U+%04X) in %s",
-							entry.getKey(), c, (int) c, line));
+						if (c == ' ')
+						{
+							continue;
+						}
+						if (!hasGlyph(overhead, c) || !hasGlyph(dialog, c))
+						{
+							problems.add(String.format("%s %s: '%c' (U+%04X) in %s",
+								variant.getKey(), entry.getKey(), c, (int) c, line));
+						}
 					}
 				}
 			}
@@ -332,13 +373,18 @@ public class TalkScriptTest
 		// this is either cut off or crushes the whole conversation into a wall,
 		// and a follower that monologues stops sounding like an NPC.
 		List<String> tooLong = new ArrayList<>();
-		for (Map.Entry<String, FollowerDialog.Node> entry : script().entrySet())
+		for (Map.Entry<String, Map<String, FollowerDialog.Node>> variant
+			: allVariants().entrySet())
 		{
-			for (String line : entry.getValue().getLines())
+			for (Map.Entry<String, FollowerDialog.Node> entry : variant.getValue().entrySet())
 			{
-				if (line.length() > 110)
+				for (String line : entry.getValue().getLines())
 				{
-					tooLong.add(entry.getKey() + " (" + line.length() + "): " + line);
+					if (line.length() > 110)
+					{
+						tooLong.add(variant.getKey() + " " + entry.getKey()
+							+ " (" + line.length() + "): " + line);
+					}
 				}
 			}
 		}
@@ -353,16 +399,21 @@ public class TalkScriptTest
 		// "back" on it - the joke loop escapes two hops away, through the
 		// groan - but that no node strands the player. From anywhere, some
 		// sequence of clicks has to reach an ending.
-		Map<String, FollowerDialog.Node> script = script();
-		List<String> trapped = new ArrayList<>();
-		for (String from : script.keySet())
+		for (Map.Entry<String, Map<String, FollowerDialog.Node>> variant
+			: allVariants().entrySet())
 		{
-			if (!canEnd(script, from))
+			Map<String, FollowerDialog.Node> script = variant.getValue();
+			List<String> trapped = new ArrayList<>();
+			for (String from : script.keySet())
 			{
-				trapped.add(from);
+				if (!canEnd(script, from))
+				{
+					trapped.add(from);
+				}
 			}
+			assertTrue(variant.getKey() + ": nodes the player cannot get out of: "
+				+ trapped, trapped.isEmpty());
 		}
-		assertTrue("nodes the player cannot get out of: " + trapped, trapped.isEmpty());
 	}
 
 	/** Whether any path from here reaches a node that closes the box. */

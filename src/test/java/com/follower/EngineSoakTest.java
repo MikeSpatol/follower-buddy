@@ -54,6 +54,15 @@ public class EngineSoakTest
 		"{\"type\": \"damageTaken\", \"minimum\": 1}",
 		"{\"type\": \"inRegion\", \"regions\": [12850]}",
 		"{\"type\": \"itemEquipped\", \"ids\": [4151]}",
+		// The 2026-08-12 batch: state conditions the driver flips at random,
+		// so combinators wrapping them open and close mid-flight.
+		"{\"type\": \"boundary\"}",
+		"{\"type\": \"boundary\", \"is\": \"bank\"}",
+		"{\"type\": \"staying\"}",
+		"{\"type\": \"inWilderness\"}",
+		"{\"type\": \"rolledFeeling\", \"is\": \"disliked\"}",
+		"{\"type\": \"daysKnown\", \"minimum\": 0, \"maximum\": 3}",
+		"{\"type\": \"none\", \"conditions\": [{\"type\": \"repeating\"}]}",
 	};
 
 	private static String condition(Random random, int depth)
@@ -110,7 +119,7 @@ public class EngineSoakTest
 
 	private void randomEvent(Harness h, Random random)
 	{
-		switch (random.nextInt(10))
+		switch (random.nextInt(14))
 		{
 			case 0:
 				h.dispatch(TriggerEvent.npc(TriggerEvent.Type.NPC_SPAWN, 3029, "Goblin"));
@@ -139,8 +148,21 @@ public class EngineSoakTest
 			case 8:
 				h.game.hitpoints(1 + random.nextInt(99), 99);
 				break;
-			default:
+			case 9:
 				h.game.energy(random.nextInt(10001));
+				break;
+			case 10:
+				h.engine.getContext().noteBoundary(
+					new String[]{"combat", "bank", "reunion"}[random.nextInt(3)]);
+				break;
+			case 11:
+				h.engine.getContext().setFollowerStaying(random.nextBoolean());
+				break;
+			case 12:
+				h.game.varbit(5963, random.nextInt(2));
+				break;
+			default:
+				h.game.animating(random.nextBoolean() ? 879 : -1);
 				break;
 		}
 	}

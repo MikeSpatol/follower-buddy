@@ -237,3 +237,30 @@ mutations (arrival cooldown never charged, wear trim dropping the heaviest,
 the name cap removed, the boundary window never closing, the greeting eras
 overlapping) were killed first try, the last one proving the tiling lint
 bites on data as well as code.
+
+## Third pass: the corners the harness cannot see from
+
+**The dialog structural walkers only walked one script.** Every check -
+branches lead somewhere, every node reachable, glyphs, page length, always
+escapable - ran against the even-band wish-held variant. A dead end that
+only existed in the low-band script would go unmet until somebody's bad
+day, which is the worst day to have the box shut in their face. All five
+walkers now iterate the six structurally distinct builds (two question
+shapes crossed with three wish states); all six came back clean.
+
+**The random-ruleset fuzzer predated the new conditions.** Its pool now
+carries boundary (bare and kind-specific), staying, inWilderness,
+rolledFeeling, daysKnown windows and the none(repeating) guard, and its
+driver flips the states behind them mid-flight. Forty seeds, promises kept.
+
+**One glue bug from reading the plugin code:** forgetEverything reset the
+engine but left the plugin speech queue holding pre-forget lines, whose
+delivery latches would then run against the blank context - a queued wish
+ask handing the brand-new stranger an open wish nobody heard asked. The
+queue is now cleared with the rest. (Same review confirmed the stay watch
+is null-guarded and the bank watch dies harmlessly at logout.)
+
+**Cost re-measured at 424 rules** (was 371 when last recorded): 115 us for
+the heaviest pass with sixty NPCs in scene, 21-23 us warm on the tick
+heartbeat - the wear lookups, the boundary countdown and the wilderness
+refresh cost nothing visible against the 1 ms budget.

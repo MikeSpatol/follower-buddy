@@ -1815,6 +1815,12 @@ public class FollowerPlugin extends Plugin
 			configManager.unsetConfiguration(FollowerConfig.GROUP, "counters");
 			configManager.unsetConfiguration(FollowerConfig.GROUP, "traits");
 			configManager.unsetConfiguration(FollowerConfig.GROUP, "lastSeenMs");
+			// Lines queued by the follower that no longer exists: saying them
+			// would be strange enough, but their delivery latches - a queued
+			// wish ask, say - would run against the blank context and hand
+			// the brand-new stranger an open wish nobody heard asked.
+			speechQueue.clear();
+			speakingUntilMs = 0;
 			speechEngine.reset();
 			speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
 			metWearingValue = -1;
