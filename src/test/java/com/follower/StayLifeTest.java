@@ -82,6 +82,29 @@ public class StayLifeTest
 	}
 
 	@Test
+	public void theWanderGateOpensLateAndClosesForTheRest()
+	{
+		// The window the play reports set: not before the stop has proven to
+		// be a stay (48 seconds - "they start to wander too soon"), and not
+		// once the rest has taken over. Thieving overrides it entirely,
+		// because there the follower being underfoot IS the problem.
+		assertTrue("a settled stop earns the drift",
+			FollowerPlugin.wanderAllowed(true, false, true, false, 80));
+		assertTrue("but not before it has proven to be a stay",
+			!FollowerPlugin.wanderAllowed(true, false, true, false, 79));
+		assertTrue("and not once the rest has taken over",
+			!FollowerPlugin.wanderAllowed(true, false, true, false, 500));
+		assertTrue("thieving wanders without waiting to be invited",
+			FollowerPlugin.wanderAllowed(true, false, true, true, 0));
+		assertTrue("busy always wins",
+			!FollowerPlugin.wanderAllowed(true, true, true, true, 200));
+		assertTrue("no follower, no drift",
+			!FollowerPlugin.wanderAllowed(true, false, false, false, 200));
+		assertTrue("and the setting is the law",
+			!FollowerPlugin.wanderAllowed(false, false, true, false, 200));
+	}
+
+	@Test
 	public void aReunionMeansNothingToAFollowerAtHeel() throws IOException
 	{
 		// The boundary alone must not be enough: stay-reunion requires the

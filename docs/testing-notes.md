@@ -317,3 +317,23 @@ the crowded bank, default elsewhere), the bank breather landed sixteen
 times in a heavy banking session, the director held back stay-watch and
 recall-idle rather than occasions, and the longest silence was six minutes
 against the trail-off design's intent.
+
+## Sixth pass: the sequel to the wander find
+
+Three sweeps, one code change. The wander gate is now an extracted,
+named function with each of its edges pinned - the 48-second threshold a
+play report set, the hand-over to rest, the thieving override, busy always
+winning - so the subsystem that just produced the stay bug has a contract
+where it used to have inline glue.
+
+A cooldown-violation scare in yesterday morning's transcript (idle-chatter
+every two minutes against a five-minute cooldown) resolved against git
+history: that session ran the morning build, before the evening frequency
+tweak raised the cooldown from two minutes to five. The digest plus the
+commit log answered it in two minutes, which is the pairing the strategy
+prescribes.
+
+The adversarial-persistence sweep found the ground already held:
+corrupt counter blobs fall back rather than throw, a broken phrases.json
+mid-session keeps the working rules and reports why, and a repaired file
+is noticed rather than remembered as already-read. No gaps.

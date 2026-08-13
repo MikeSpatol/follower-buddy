@@ -925,11 +925,8 @@ public class FollowerPlugin extends Plugin
 		// problem - the player is animating constantly, so the idle counter
 		// never climbs and the follower would stand there for the whole run.
 		boolean thieving = speechEngine.getContext().isInThievingSession();
-		boolean canWander = config.wanderWhenIdle()
-			&& !busy
-			&& follower.isSpawned()
-			&& (thieving
-				|| (idle >= WANDER_AFTER_TICKS && idle < REST_AFTER_TICKS));
+		boolean canWander = wanderAllowed(config.wanderWhenIdle(), busy,
+			follower.isSpawned(), thieving, idle);
 
 		if (!canWander)
 		{
@@ -7317,6 +7314,23 @@ public class FollowerPlugin extends Plugin
 			+ ", " + alpha);
 		log.info("priorities {}: {} faces, priorities {}, {}",
 			label, model.getFaceCount(), histogram, alpha);
+	}
+
+	/**
+	 * Whether the follower may drift off on its own. The idle window opens
+	 * only once the player's stop has proven to be a stay (the threshold the
+	 * play report "they start to wander too soon" set) and closes again when
+	 * the rest takes over; thieving overrides the window entirely, because
+	 * there the follower being underfoot IS the problem and the player never
+	 * reads as idle. Extracted after the wander bit the stay rules, so the
+	 * gate has a name and a test rather than living inline in the glue.
+	 */
+	static boolean wanderAllowed(boolean enabled, boolean busy, boolean spawned,
+		boolean thieving, int idleTicks)
+	{
+		return enabled && !busy && spawned
+			&& (thieving
+				|| (idleTicks >= WANDER_AFTER_TICKS && idleTicks < REST_AFTER_TICKS));
 	}
 
 	/**
