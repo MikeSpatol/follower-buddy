@@ -1789,12 +1789,21 @@ public final class TriggerContext
 	 * <p>{@code idle} cannot tell those apart: a player at a furnace and a
 	 * player who has gone to make tea look identical to it, and the follower
 	 * saying "still here, still standing" to an empty chair is only funny by
-	 * accident. The camera is the tell - it moves when somebody is there.
+	 * accident. The camera is one tell; the feet and hands are the others -
+	 * a player who just moved or animated is at the keyboard whatever the
+	 * camera is doing, which matters because plenty of real play (and every
+	 * simulation) runs minutes at a time on an untouched camera.
 	 */
 	private int cameraX = Integer.MIN_VALUE;
 	private int cameraY;
 	private int cameraPitch;
 	private int stillTicks;
+
+	/** Evidence of presence from outside the snapshot: a real event arrived. */
+	public void noteAttention()
+	{
+		stillTicks = 0;
+	}
 
 	private void refreshAttention()
 	{
@@ -1808,11 +1817,17 @@ public final class TriggerContext
 			cameraPitch = pitch;
 			return;
 		}
-		if (x != cameraX || y != cameraY || pitch != cameraPitch)
+		boolean cameraMoved = x != cameraX || y != cameraY || pitch != cameraPitch;
+		if (cameraMoved)
 		{
 			cameraX = x;
 			cameraY = y;
 			cameraPitch = pitch;
+		}
+		// Runs after the idle update on purpose: idleTicks at zero means the
+		// player moved or animated THIS tick, which is presence too.
+		if (cameraMoved || idleTicks == 0)
+		{
 			stillTicks = 0;
 			return;
 		}

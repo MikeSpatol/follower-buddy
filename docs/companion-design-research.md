@@ -1386,7 +1386,22 @@ not-needing-one is the warmth. Questions claim nothing, so R7's
 verifiability rule is satisfied by construction; the trail-off throttles it
 like all idle speech.
 
-**Still open**: R5, R7, R8, R11–R15, R22, R29–R37.
+**R15 — shipped 2026-08-13.** Speech scales to attention: three minutes with
+camera, feet and hands all untouched and the engine holds everything but
+occasions and the absence jokes, with "unattended" as the transcript-visible
+reason. Attention itself grew honest first - camera OR movement OR animation
+OR a real event counts as presence - because the old camera-only detector
+would have called a fisher absent and collapsed every simulation.
+
+**R7 — shipped 2026-08-13.** The verifiability audit. Its named target,
+something-big-nearby, had already been tightened when the visible flag was
+built; the finding was the forty-two quest-NPC callouts pointing at people
+within five tiles who could be behind a wall, a door, or a floor. All now
+confirm line of sight, and a lint makes sight the law for every npcNearby
+present and future. The wondering lines (R26) pass by construction:
+questions claim nothing.
+
+**Still open**: R5, R8, R11–R14, R22, R29–R37.
 
 **What five rounds of testing found**, including two shipped bugs that lived
 between features rather than inside them, and why overlapping systems are

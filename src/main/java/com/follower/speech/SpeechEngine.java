@@ -101,6 +101,14 @@ public class SpeechEngine
 	private int idleStretchSpoken;
 	private long lastIdleRemarkMs;
 
+	/**
+	 * Three minutes with camera, feet and hands all untouched before the
+	 * damper (R15) decides nobody is watching. Deliberately past the
+	 * gone-away jokes' own threshold, so the follower notices the absence
+	 * out loud before it stops performing to it.
+	 */
+	private static final int UNATTENDED_DAMPER_TICKS = 300;
+
 	/** Idle remarks per stretch before the winding-down starts. */
 	private static final int IDLE_FREE_REMARKS = 4;
 
@@ -487,6 +495,18 @@ public class SpeechEngine
 		{
 			return directed;
 		}
+		// R15: speech scales to attention. With camera, feet and hands all
+		// untouched this long, the world is playing to an empty chair -
+		// reactions included, not just idle chatter. Occasions still land
+		// (a warning matters the moment they glance back), and the rules
+		// ABOUT the absence are exactly the ones that should speak into it.
+		// Any input at all clears the state instantly.
+		if (getContext().getUnattendedTicks() >= UNATTENDED_DAMPER_TICKS
+			&& !rule.isOccasion()
+			&& (rule.when == null || !rule.when.usesType("unattended")))
+		{
+			return "unattended";
+		}
 		if (isIdleRemark(rule) && now - lastIdleRemarkMs < trailWaitMs())
 		{
 			return "trailing";
@@ -605,10 +625,12 @@ public class SpeechEngine
 
 		// Doing something real ends the idle stretch, and the follower perks
 		// back up. Checked on the event rather than on movement - see the note
-		// on REAL_ACTIVITY for why a step is not enough.
+		// on REAL_ACTIVITY for why a step is not enough. It is also evidence
+		// of presence: you cannot level up from the kettle.
 		if (REAL_ACTIVITY.contains(event.getType()))
 		{
 			idleStretchSpoken = 0;
+			getContext().noteAttention();
 		}
 
 		// Delayed firings count down on the tick heartbeat and speak through

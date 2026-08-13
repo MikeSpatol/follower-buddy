@@ -494,6 +494,46 @@ public class RuleSetIntegrityTest
 		throw new AssertionError(ruleId + " no longer carries a daysKnown era gate");
 	}
 
+	/**
+	 * R7: a callout at somebody the player cannot see is a bad callout, and
+	 * a bad callout is worse than silence. Every npcNearby in the shipped
+	 * set confirms line of sight, because every rule that uses it names or
+	 * gestures at the body in question - and a future one will too.
+	 */
+	@Test
+	public void everyNearbyCalloutConfirmsSight() throws IOException
+	{
+		Harness h = new Harness(folder.newFolder().toPath());
+		List<String> unsighted = new ArrayList<>();
+		for (SpeechRule rule : h.loader.getRules())
+		{
+			collectUnsightedNearby(rule.when, rule.id, unsighted);
+		}
+		assertTrue("rules pointing at NPCs without confirming they are visible: "
+			+ unsighted, unsighted.isEmpty());
+	}
+
+	private static void collectUnsightedNearby(Condition condition, String ruleId,
+		List<String> into)
+	{
+		if (condition == null)
+		{
+			return;
+		}
+		if ("npcNearby".equalsIgnoreCase(condition.type)
+			&& !Boolean.TRUE.equals(condition.visible))
+		{
+			into.add(ruleId);
+		}
+		if (condition.conditions != null)
+		{
+			for (Condition child : condition.conditions)
+			{
+				collectUnsightedNearby(child, ruleId, into);
+			}
+		}
+	}
+
 	/** The explore list is held to the same bargain as the study list above. */
 	@Test
 	public void everyExploreTargetHasItsLines() throws IOException
