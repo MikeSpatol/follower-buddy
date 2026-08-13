@@ -859,9 +859,19 @@ public class SpeechEngine
 		if (rule.pickUp != null && rule.pickUp.what != null && !text.isEmpty())
 		{
 			// Substituted like a spoken line, so a souvenir can be named after
-			// the wish it grants: "the {wish} you found me".
-			getContext().pickUp(substitute(rule.pickUp.what, event),
-				rule.pickUp.minutes == null ? 20 : rule.pickUp.minutes);
+			// the wish it grants: "the {wish} you found me". A swap rule
+			// replaces what is carried - it said the exchange out loud, which
+			// is what the refuse-if-carrying guard exists to require.
+			String what = substitute(rule.pickUp.what, event);
+			int minutes = rule.pickUp.minutes == null ? 20 : rule.pickUp.minutes;
+			if (Boolean.TRUE.equals(rule.pickUp.swap))
+			{
+				getContext().tradeFor(what, minutes);
+			}
+			else
+			{
+				getContext().pickUp(what, minutes);
+			}
 		}
 		// AFTER the pickUp, which may still need the wish's name. The wish
 		// closes on a SPOKEN thank-you only: the follower acknowledging the

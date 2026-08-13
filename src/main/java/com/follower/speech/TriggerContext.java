@@ -1252,6 +1252,26 @@ public final class TriggerContext
 		log.debug("Picked up {} for {} minutes", what, minutes);
 	}
 
+	/**
+	 * Puts this down and carries that instead, deliberately.
+	 *
+	 * <p>{@link #pickUp} refuses while carrying, and that guard is right for
+	 * every accidental path - a souvenir rule firing while the pocket is full
+	 * must not silently vanish something the follower has been talking about.
+	 * The trade is the AUTHORED swap: the rule that calls it says the
+	 * exchange out loud, which is the whole difference.
+	 */
+	public void tradeFor(String what, int minutes)
+	{
+		if (what == null || what.isEmpty())
+		{
+			return;
+		}
+		log.debug("Traded {} for {}", souvenir, what);
+		souvenir = what;
+		souvenirDroppedTick = client.getTickCount() + Math.max(1, minutes) * 100;
+	}
+
 	public boolean isCarrying()
 	{
 		return !souvenir.isEmpty();

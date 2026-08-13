@@ -315,6 +315,13 @@ public class SpeechRule
 	{
 		public String what;
 		public Integer minutes;
+
+		/**
+		 * Replace whatever is carried instead of refusing while the pocket is
+		 * full. Only for rules that SAY the exchange - the refuse-if-carrying
+		 * guard exists to stop silent swaps, not spoken ones.
+		 */
+		public Boolean swap;
 	}
 
 	/**

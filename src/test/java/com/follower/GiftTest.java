@@ -107,19 +107,24 @@ public class GiftTest
 	}
 
 	@Test
-	public void aGiftWhileCarryingLeavesTheWishOpen() throws IOException
+	public void aGiftWhileCarryingTradesUpOutLoud() throws IOException
 	{
+		// The deferral this replaces parked the gift option for the length of
+		// a ninety-minute carry, which play testing read as the option
+		// refusing to go away. A gift outranks a rock the follower found
+		// itself, and the swap is spoken - a SILENT swap was the thing the
+		// old rule existed to prevent, not the swap itself.
 		Harness h = wishingAndHolding();
 		h.engine.getContext().pickUp("a nice flat rock", 30);
 		h.answers("gift");
 		h.gameTicks(3);
 
-		assertEquals("declined, in words", 1, h.firedBy("gifted-carrying").size());
-		assertTrue("the decline still names the wished thing",
-			h.firedBy("gifted-carrying").get(0).text.contains("feather"));
-		assertEquals("the carried souvenir survived",
-			"a nice flat rock", h.engine.getContext().getSouvenir());
-		assertTrue("and the wish stays open for when the pocket frees up",
+		assertEquals("the trade, in words", 1, h.firedBy("gifted-swap").size());
+		assertTrue("naming what goes out",
+			h.firedBy("gifted-swap").get(0).text.contains("a nice flat rock"));
+		assertEquals("the gift took the pocket",
+			"the feather you found me", h.engine.getContext().getSouvenir());
+		assertFalse("and the wish is spent, so the option finally goes away",
 			h.engine.getContext().isWishing());
 	}
 

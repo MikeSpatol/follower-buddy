@@ -8961,14 +8961,20 @@
       ]
     },
     {
-      "id": "gifted-carrying",
-      "note": "The wish granted - thing in bag - while the pocket already holds a souvenir. No pickUp, and the wish stays open for when the pocket frees up.",
+      "id": "gifted-swap",
+      "note": "The wish granted while the pocket already holds a souvenir: the follower trades up, out loud. A gift outranks a rock it found itself, and a SPOKEN swap is honest where a silent one was the thing the old deferral rule existed to prevent. Deferring instead parked the option for the length of a ninety-minute carry, which play testing read as the option refusing to go away.",
       "group": "souvenir",
       "priority": 60,
       "output": "overhead",
-      "cooldownMs": 30000,
+      "cooldownMs": 10000,
       "delayTicks": 2,
-      "mood": 2,
+      "mood": 10,
+      "grantsWish": true,
+      "pickUp": {
+        "what": "the {wish} you found me",
+        "minutes": 90,
+        "swap": true
+      },
       "when": {
         "type": "all",
         "conditions": [
@@ -8979,9 +8985,9 @@
         ]
       },
       "say": [
-        "Hold onto the {wish} a moment. My pocket's occupied.",
-        "One treasure at a time. Keep the {wish} safe for me.",
-        "The {wish}! And me with a full pocket. Give it here later."
+        "The {wish}! I'll set down {souvenir} to make room.",
+        "A trade, then: {souvenir} out, the {wish} in.",
+        "The {wish} outranks {souvenir}. Pocket rearranged."
       ]
     },
     {
