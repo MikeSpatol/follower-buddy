@@ -7806,6 +7806,7 @@
       "when": {
         "type": "all",
         "conditions": [
+          { "type": "none", "conditions": [ { "type": "mood", "is": "low" } ] },
           {
             "type": "idle",
             "ticks": 60
@@ -9560,6 +9561,7 @@
       "when": {
         "type": "all",
         "conditions": [
+          { "type": "none", "conditions": [ { "type": "mood", "is": "low" } ] },
           {
             "type": "idle",
             "ticks": 80
@@ -9714,6 +9716,63 @@
         "Every time we come here I think about leaving here.",
         "The evidence against this place keeps arriving.",
         "This spot owes us. It knows what it did."
+      ]
+    },
+    {
+      "id": "comforted",
+      "note": "The player picked 'You all right?' on a lowish day. Asking is the kindness; this is the lift and one soft overhead coda after the box closes.",
+      "group": "memory",
+      "priority": 50,
+      "output": "overhead",
+      "cooldownMs": 300000,
+      "delayTicks": 2,
+      "mood": 6,
+      "when": {
+        "type": "answered",
+        "is": "comforted"
+      },
+      "say": [
+        "Asked and answered. Lighter for it.",
+        "Noted: you checked. It helps."
+      ]
+    },
+    {
+      "id": "defended-dislike",
+      "note": "The roll says it hates this place; the earned score says good things keep happening here. feelsAbout already answers 'liked' - the override won - so this is the follower conceding the evidence while keeping the grudge, which is the only moment the temperament is visible as a temperament.",
+      "group": "area",
+      "priority": 60,
+      "output": "overhead",
+      "cooldownMs": 2700000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "rolledFeeling", "is": "disliked" },
+          { "type": "placeScore", "minimum": 40 }
+        ]
+      },
+      "say": [
+        "I know. Good things happen here. I still don't like it.",
+        "The ledger says this place is good to us. The ledger doesn't have to stand in it.",
+        "Fine, it's been lucky for us. Lucky and unlovely."
+      ]
+    },
+    {
+      "id": "defended-like",
+      "note": "The mirror: rolled fondness against earned bad luck. Loyalty, argued with the record.",
+      "group": "area",
+      "priority": 60,
+      "output": "overhead",
+      "cooldownMs": 2700000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "rolledFeeling", "is": "liked" },
+          { "type": "placeScore", "maximum": -40 }
+        ]
+      },
+      "say": [
+        "Nothing but trouble for us here, I know. I like it anyway. Don't ask.",
+        "The record is against this place. I'm not. Loyalty is like that."
       ]
     },
     {
@@ -10134,6 +10193,7 @@
       "when": {
         "type": "all",
         "conditions": [
+          { "type": "none", "conditions": [ { "type": "mood", "is": "low" } ] },
           {
             "type": "combat"
           },

@@ -650,6 +650,31 @@ public class EveryConditionTypeTest
 	}
 
 	@Test
+	public void theRollStaysReadableUnderTheOverride() throws IOException
+	{
+		// rolledFeeling reads the raw roll where feelsAbout reads the verdict.
+		// The proof is the disagreement: pile enough earned good fortune on a
+		// rolled-disliked region that feelsAbout flips to liked, and the roll
+		// must still answer disliked underneath.
+		note("rolledFeeling");
+
+		Harness h = harnessFor("{\"type\": \"rolledFeeling\", \"is\": \"disliked\"}");
+		h.gameTicks(2);
+		assertQuiet(h, "no temperament rolled yet, so nothing is disliked");
+
+		int here = new WorldPoint(3222, 3218, 0).getRegionID();
+		h.engine.getContext().setTraits(
+			new HashSet<>(java.util.Collections.singletonList(here + 1)),
+			new HashSet<>(java.util.Collections.singletonList(here)));
+		h.engine.getContext().notePlaceFeeling(30);
+		h.engine.getContext().notePlaceFeeling(30);
+		assertTrue("the earned record has overridden the verdict",
+			h.engine.getContext().feelsAbout("liked"));
+		h.gameTicks(2);
+		assertFired(h, "rolledFeeling disliked, whatever the ledger says");
+	}
+
+	@Test
 	public void wantsAreAskedForFulfilledAndForgotten() throws IOException
 	{
 		note("wanting", "wantFulfilled", "wantExpired");
@@ -1362,6 +1387,7 @@ public class EveryConditionTypeTest
 		inventoryRoomAndCrowdsAndDangerousNeighbours();
 		wantsAreAskedForFulfilledAndForgotten();
 		aWishOpensBySayingAndTheBagDecidesTheGift();
+		theRollStaysReadableUnderTheOverride();
 		tasteIsAboutWhereTheFollowerIsStanding();
 		thievingEdges();
 		theIncidentItKeepsBringingUp();

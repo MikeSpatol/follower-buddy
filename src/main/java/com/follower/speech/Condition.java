@@ -578,6 +578,13 @@ public class Condition
 			case "feelsabout":
 				return ctx.feelsAbout(is == null ? "liked" : is);
 
+			// The ROLL alone, before experience overrode it. Paired with
+			// placeScore, this is how a rule catches the two disagreeing -
+			// which feelsAbout cannot express, having already resolved the
+			// argument. The disagreement is where the temperament shows.
+			case "rolledfeeling":
+				return ctx.rolledFeeling(is == null ? "liked" : is);
+
 			// The follower is hoping for something. Mostly used NEGATED, to stop
 			// a second want being asked for while one is still open.
 			case "wanting":

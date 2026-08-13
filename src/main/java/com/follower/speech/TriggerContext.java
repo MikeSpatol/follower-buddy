@@ -824,6 +824,25 @@ public final class TriggerContext
 		return dislikedRegions;
 	}
 
+	/**
+	 * The ROLLED feeling about where it is standing, ignoring everything
+	 * experience has since proved.
+	 *
+	 * <p>{@link #feelsAbout} answers with experience outranking the roll,
+	 * which is right everywhere except the one moment that makes the
+	 * temperament visible: when the two disagree. A rule cannot express "it
+	 * rolled dislike but the evidence says otherwise" through feelsAbout,
+	 * because the override has already swallowed the disagreement - and the
+	 * disagreement is the character. Conceding the facts while keeping the
+	 * feeling needs both halves readable.
+	 */
+	public boolean rolledFeeling(String how)
+	{
+		return "disliked".equalsIgnoreCase(how)
+			? dislikedRegions.contains(regionId)
+			: likedRegions.contains(regionId);
+	}
+
 	// ------------------------------------------------------- earned taste
 
 	/**

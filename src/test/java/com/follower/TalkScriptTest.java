@@ -38,10 +38,10 @@ public class TalkScriptTest
 		// it does); the wording itself is walked branch by branch below.
 		// Built WITH a wish open and the thing in the bag, so the gift branch
 		// exists and every structural check walks it too; the other variants
-		// are checked in their own test below.
+		// are checked in their own tests below.
 		return FollowerPlugin.talkScript(
 			() -> FollowerPlugin.daySummary(95, 12, 2, 1, "good", "that chicken"),
-			answer -> { }, "feather", true);
+			answer -> { }, "feather", true, "even");
 	}
 
 	/** Every node id something points at, via {@code then} or a choice. */
@@ -113,7 +113,7 @@ public class TalkScriptTest
 
 		Map<String, FollowerDialog.Node> wishless = FollowerPlugin.talkScript(
 			() -> FollowerPlugin.daySummary(95, 12, 2, 1, "good", "that chicken"),
-			answer -> { }, "", false);
+			answer -> { }, "", false, "even");
 		assertTrue("with no wish there is no gift branch at all",
 			!wishless.containsKey("gift-q"));
 		for (FollowerDialog.Node node : wishless.values())
@@ -136,19 +136,46 @@ public class TalkScriptTest
 		java.util.List<String> reactions = new java.util.ArrayList<>();
 
 		Map<String, FollowerDialog.Node> holding = FollowerPlugin.talkScript(
-			() -> new String[]{""}, reactions::add, "feather", true);
+			() -> new String[]{""}, reactions::add, "feather", true, "even");
 		holding.get("gift-a").runFinish();
 		assertTrue("with the feather in the bag, the box accepts",
 			holding.get("gift-a").getPages().get(0).contains("That's the one"));
 
 		Map<String, FollowerDialog.Node> bluffing = FollowerPlugin.talkScript(
-			() -> new String[]{""}, reactions::add, "feather", false);
+			() -> new String[]{""}, reactions::add, "feather", false, "even");
 		bluffing.get("gift-a").runFinish();
 		assertTrue("with an empty bag, the box catches the bluff",
 			bluffing.get("gift-a").getPages().get(0).contains("empty bag"));
 
 		assertTrue("and the two branches answer differently",
 			reactions.contains("gift") && reactions.contains("bluff"));
+	}
+
+	@Test
+	public void aLowDaySharpensTheQuestion()
+	{
+		// "How have you been?" becomes "You all right?" when the band is low
+		// or down - same slot, same spirit, pointed by state - and asking is
+		// itself the kindness: the answer node latches "comforted" on arrival.
+		java.util.List<String> answers = new java.util.ArrayList<>();
+
+		Map<String, FollowerDialog.Node> low = FollowerPlugin.talkScript(
+			() -> new String[]{""}, answers::add, "", false, "low");
+		assertTrue("the sharpened option leads somewhere real",
+			low.containsKey("allright-q"));
+		assertTrue("and the hub offers it",
+			low.get("start").getOptionLabels().contains("You all right?"));
+		assertTrue("while the everyday entrance rests",
+			!low.get("start").getOptionLabels().contains("How have you been?"));
+		low.get("allright-a").runFinish();
+		assertTrue("asking is the kindness", answers.contains("comforted"));
+
+		Map<String, FollowerDialog.Node> fine = FollowerPlugin.talkScript(
+			() -> new String[]{""}, answers::add, "", false, "good");
+		assertTrue("on a fine day the everyday question is back",
+			fine.get("start").getOptionLabels().contains("How have you been?"));
+		assertTrue("and nobody asks a cheerful follower if it is all right",
+			!fine.containsKey("allright-q"));
 	}
 
 	@Test

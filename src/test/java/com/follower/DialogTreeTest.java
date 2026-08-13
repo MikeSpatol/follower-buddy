@@ -258,15 +258,20 @@ public class DialogTreeTest
 		// honest enumeration is to run every node's finish against a
 		// recording consumer. Built with a wish open in BOTH bag states,
 		// because the script branches on the bag and each branch answers
-		// differently: gift with the thing held, bluff without.
+		// differently: gift with the thing held, bluff without - and in a
+		// low band too, because "comforted" only exists behind the
+		// sharpened question.
 		for (boolean held : new boolean[]{true, false})
 		{
-			for (FollowerDialog.Node node : FollowerPlugin.talkScript(
-				() -> new String[]{""},
-				answer -> offered.add(answer.toLowerCase(java.util.Locale.ROOT)),
-				"feather", held).values())
+			for (String band : new String[]{"even", "low"})
 			{
-				node.runFinish();
+				for (FollowerDialog.Node node : FollowerPlugin.talkScript(
+					() -> new String[]{""},
+					answer -> offered.add(answer.toLowerCase(java.util.Locale.ROOT)),
+					"feather", held, band).values())
+				{
+					node.runFinish();
+				}
 			}
 		}
 

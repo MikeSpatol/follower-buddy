@@ -3917,7 +3917,8 @@ public class FollowerPlugin extends Plugin
 		dialog.startNextTick(config.followerName(),
 			talkScript(this::daySummary, this::answerQuestion,
 				speechEngine.getContext().getWishLabel(),
-				speechEngine.getContext().isWishedItemInBag()), "start");
+				speechEngine.getContext().isWishedItemInBag(),
+				speechEngine.getContext().getMoodBand()), "start");
 	}
 
 	/**
@@ -3961,7 +3962,8 @@ public class FollowerPlugin extends Plugin
 		java.util.function.Supplier<String[]> summary,
 		java.util.function.Consumer<String> onAnswer,
 		String wish,
-		boolean wishItemInBag)
+		boolean wishItemInBag,
+		String moodBand)
 	{
 		java.util.Map<String, com.follower.speech.FollowerDialog.Node> script =
 			new java.util.LinkedHashMap<>();
@@ -3976,17 +3978,25 @@ public class FollowerPlugin extends Plugin
 		boolean wishing = wish != null && !wish.isEmpty();
 		String giftLabel = "Found you that " + wish + ".";
 
+		// When the follower is not itself, "How have you been?" sharpens into
+		// "You all right?" - same slot, same spirit, pointed by state. The
+		// research calls this answering its mood, and it is the one thing a
+		// player can DO about a low band besides witness it.
+		boolean lowish = "low".equals(moodBand) || "down".equals(moodBand);
+		String howLabel = lowish ? "You all right?" : "How have you been?";
+		String howTarget = lowish ? "allright-q" : "how-q";
+
 		script.put("start", wishing
 			? says("Yes?").choices(
 				"Who are you, exactly?", "who-q",
 				"What is it you actually do?", "do-q",
-				"How have you been?", "how-q",
+				howLabel, howTarget,
 				giftLabel, "gift-q",
 				"Never mind.", "bye-q")
 			: says("Yes?").choices(
 				"Who are you, exactly?", "who-q",
 				"What is it you actually do?", "do-q",
-				"How have you been?", "how-q",
+				howLabel, howTarget,
 				"Let's just talk.", "chat-q",
 				"Never mind.", "bye-q"));
 
@@ -3997,16 +4007,39 @@ public class FollowerPlugin extends Plugin
 		script.put("menu", wishing
 			? says().choices(
 				"What is it you actually do?", "do-q",
-				"How have you been?", "how-q",
+				howLabel, howTarget,
 				giftLabel, "gift-q",
 				"Let's just talk.", "chat-q",
 				"That's all for now.", "done-q")
 			: says().choices(
 				"Who are you, exactly?", "who-q",
 				"What is it you actually do?", "do-q",
-				"How have you been?", "how-q",
+				howLabel, howTarget,
 				"Let's just talk.", "chat-q",
 				"That's all for now.", "done-q"));
+
+		// ------------------------------------------------ answering its mood
+		// Asking is itself the kindness: reaching the answer node is what
+		// counts (latched on arrival, like every answer), so closing the box
+		// early still asked. The lift arrives from the comforted rule; the
+		// pages differ by band because "not the best day" and "middling" are
+		// different admissions. Either way the usual how-menu follows - a low
+		// day does not lock away the notebook.
+		if (lowish)
+		{
+			script.put("allright-q", you("You all right?").then("allright-a"));
+			script.put("allright-a", "low".equals(moodBand)
+				? says(
+					"Honestly? Not the best day in the ledger.",
+					"But you noticed. That's worth an entry of its own.")
+					.onFinish(() -> onAnswer.accept("comforted"))
+					.then("how-menu")
+				: says(
+					"Middling. The ink's been thicker.",
+					"Asking helps. Don't tell anyone I said that.")
+					.onFinish(() -> onAnswer.accept("comforted"))
+					.then("how-menu"));
+		}
 
 		// ------------------------------------------------ the gift
 		// Client-side, so nothing real changes hands: the box closes on the
@@ -4155,10 +4188,15 @@ public class FollowerPlugin extends Plugin
 			.then("do-menu"));
 
 		// ------------------------------------------------ the inner life
-		script.put("how-q", you("How have you been?").then("how-a"));
-		script.put("how-a", says(
-			"That depends on the day. You've given me some days.")
-			.then("how-menu"));
+		// The everyday entrance; on a lowish day allright-q replaces it (and
+		// leads to the same menu), so it is only built when reachable.
+		if (!lowish)
+		{
+			script.put("how-q", you("How have you been?").then("how-a"));
+			script.put("how-a", says(
+				"That depends on the day. You've given me some days.")
+				.then("how-menu"));
+		}
 		script.put("how-menu", says()
 			.choices(
 				"How did today go?", "how-today-q",

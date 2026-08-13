@@ -59,7 +59,7 @@ public class RuleSetIntegrityTest
 		"answered", "hovered", "examined",
 		"inventoryfree", "playersnearby",
 		"wanting", "wantfulfilled", "wantexpired", "feelsabout", "wishing",
-		"wishitemheld",
+		"wishitemheld", "rolledfeeling",
 		"remembers", "carrying", "souvenirlost",
 		"betting", "betwon", "betlost",
 		"timeofday", "sessionminutes", "asking",
@@ -712,6 +712,53 @@ public class RuleSetIntegrityTest
 			}
 		}
 		assertTrue("rules that neither speak nor move: " + silent, silent.isEmpty());
+	}
+
+	@Test
+	public void theLowMoodRefusalsStayInPlace() throws IOException
+	{
+		// The social offers go quiet at a genuinely low band - that friction
+		// IS the low-mood arc, and it would vanish silently if an edit to
+		// these rules dropped the mood guard. Any mood condition anywhere in
+		// the tree counts; the arc only needs the band consulted.
+		Harness h = new Harness(folder.newFolder().toPath());
+		List<String> unguarded = new ArrayList<>();
+		for (String id : new String[]{"offer-game", "offer-challenge", "ask-outing"})
+		{
+			for (SpeechRule rule : h.loader.getRules())
+			{
+				if (id.equals(rule.id) && !consultsMood(rule.when))
+				{
+					unguarded.add(id);
+				}
+			}
+		}
+		assertTrue("social offers that no longer consult the mood band, so they"
+			+ " would cheerfully fire on the follower's worst day: " + unguarded,
+			unguarded.isEmpty());
+	}
+
+	private static boolean consultsMood(Condition condition)
+	{
+		if (condition == null)
+		{
+			return false;
+		}
+		if ("mood".equalsIgnoreCase(condition.type))
+		{
+			return true;
+		}
+		if (condition.conditions != null)
+		{
+			for (Condition child : condition.conditions)
+			{
+				if (consultsMood(child))
+				{
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	@Test
