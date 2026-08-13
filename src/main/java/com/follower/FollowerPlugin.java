@@ -267,6 +267,7 @@ public class FollowerPlugin extends Plugin
 	private com.follower.ui.PhrasesDialog errandPhrasesDialog;
 	private com.follower.ui.PhrasesDialog combatPhrasesDialog;
 	private com.follower.ui.DialogsDialog dialogsDialog;
+	private com.follower.ui.MemoryDialog memoryDialog;
 
 	@Inject
 	private com.google.gson.Gson gson;
@@ -690,6 +691,7 @@ public class FollowerPlugin extends Plugin
 		panel.setOnEditDialogs(this::openDialogsDialog);
 		panel.setOnEditQuests(this::openQuestPhrasesDialog);
 		panel.setOnEditErrands(this::openErrandPhrasesDialog);
+		panel.setOnShowMemory(this::openMemoryDialog);
 		panel.setOnProfileLoad(this::loadOutfitProfile);
 		panel.setOnProfileSave(this::saveOutfitProfile);
 		panel.setOnProfileDelete(this::deleteOutfitProfile);
@@ -1753,6 +1755,62 @@ public class FollowerPlugin extends Plugin
 					false);
 			}
 			errandPhrasesDialog.open();
+		});
+	}
+
+	/**
+	 * Opens the memory window (R20) on a snapshot taken on the client thread,
+	 * so the Swing side never reads live maps the game loop is writing.
+	 */
+	private void openMemoryDialog()
+	{
+		clientThread.invoke(() ->
+		{
+			java.util.List<String[]> rows =
+				com.follower.ui.MemoryDialog.summarise(speechEngine.getContext());
+			javax.swing.SwingUtilities.invokeLater(() ->
+			{
+				if (memoryDialog == null)
+				{
+					memoryDialog = new com.follower.ui.MemoryDialog(this::forgetEverything);
+				}
+				memoryDialog.show(rows);
+			});
+		});
+	}
+
+	/**
+	 * The eraser behind the memory window's one button: every stored blob
+	 * unset and the context rebuilt blank, so the follower meets you again as
+	 * a stranger from this very moment. The rolled traits go too - a re-roll
+	 * at the next login gives the stranger a fresh temperament - and the
+	 * one-time arrival arc is unspent, so it can introduce itself again,
+	 * which is both the charm and the proof the wipe worked.
+	 */
+	private void forgetEverything()
+	{
+		clientThread.invoke(() ->
+		{
+			configManager.unsetConfiguration(FollowerConfig.GROUP, "counters");
+			configManager.unsetConfiguration(FollowerConfig.GROUP, "traits");
+			configManager.unsetConfiguration(FollowerConfig.GROUP, "lastSeenMs");
+			speechEngine.reset();
+			speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
+			metWearingValue = -1;
+			sessionMinutes = 0;
+			sessionRecordSaid = false;
+			knownLevels.clear();
+			sendStatus("Forgotten. All of it. Clean page.");
+
+			java.util.List<String[]> rows =
+				com.follower.ui.MemoryDialog.summarise(speechEngine.getContext());
+			javax.swing.SwingUtilities.invokeLater(() ->
+			{
+				if (memoryDialog != null)
+				{
+					memoryDialog.show(rows);
+				}
+			});
 		});
 	}
 

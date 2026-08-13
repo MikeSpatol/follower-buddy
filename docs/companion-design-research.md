@@ -1322,8 +1322,18 @@ daysKnown - formal on days 0-2, thawing 3-6, the familiar register from day
 contractions) rather than announced. A lint holds the eras to tiling the
 calendar exactly, so no day is silent and no day has two hellos racing.
 
+**R20 — shipped 2026-08-12.** A "Memory..." button on the side panel opens the
+surface: the date it met you, sessions, mood, the top counts, the bests, the
+incident, place feelings with region ids left visible (it doubles as the
+debugging window), the rolled tastes, what it is carrying or hoping for right
+now, and the bookkeeping. Underneath, "Forget everything" - one confirmed
+click unsets every stored blob and rebuilds the context blank, so the
+follower meets you again as a stranger, arrival arc unspent. The snapshot is
+taken on the client thread; the claims are a pure function held to honesty
+in both directions by tests.
+
 **Still open**: R4 (variant counts on the highest-firing rules), R5, R6–R8,
-R11–R15, R18, R20–R26, R28–R37.
+R11–R15, R18, R21–R26, R28–R37.
 
 **What five rounds of testing found**, including two shipped bugs that lived
 between features rather than inside them, and why overlapping systems are

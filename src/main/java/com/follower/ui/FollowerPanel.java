@@ -126,6 +126,14 @@ public class FollowerPanel extends PluginPanel
 		this.onEditErrands = onEditErrands;
 	}
 
+	/** Opens the memory window (R20); set by the plugin after construction. */
+	private Runnable onShowMemory = () -> { };
+
+	public void setOnShowMemory(Runnable onShowMemory)
+	{
+		this.onShowMemory = onShowMemory;
+	}
+
 	/** Opens the combat-message editor; set by the plugin after construction. */
 	private Runnable onEditCombat = () -> { };
 
@@ -284,9 +292,9 @@ public class FollowerPanel extends PluginPanel
 		JPanel editorButtons = new JPanel(new GridLayout(0, 2, 6, 4));
 		editorButtons.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		editorButtons.setAlignmentX(LEFT_ALIGNMENT);
-		// Two columns, so the cap is per ROW of buttons: seven editors is four
-		// rows, and a height sized for three clipped the last one off.
-		editorButtons.setMaximumSize(new Dimension(Integer.MAX_VALUE, 120));
+		// Two columns, so the cap is per ROW of buttons: nine buttons is five
+		// rows, and a height sized for four clipped the last one off.
+		editorButtons.setMaximumSize(new Dimension(Integer.MAX_VALUE, 150));
 
 		JButton phrases = new JButton("Items...");
 		phrases.setToolTipText("View and edit what the follower says when you equip items");
@@ -337,6 +345,13 @@ public class FollowerPanel extends PluginPanel
 		errands.setFocusPainted(false);
 		errands.addActionListener(e -> onEditErrands.run());
 		editorButtons.add(errands);
+
+		JButton memory = new JButton("Memory...");
+		memory.setToolTipText("Everything the follower knows about you, and the"
+			+ " button that erases it");
+		memory.setFocusPainted(false);
+		memory.addActionListener(e -> onShowMemory.run());
+		editorButtons.add(memory);
 
 		header.add(editorButtons);
 		header.add(javax.swing.Box.createVerticalStrut(12));
