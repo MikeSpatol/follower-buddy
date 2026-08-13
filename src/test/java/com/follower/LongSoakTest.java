@@ -222,8 +222,9 @@ public class LongSoakTest
 		h.clear();
 
 		List<Long> spokenAt = new ArrayList<>();
-		h.engine.setSink((text, output, rule, animationId) ->
+		h.engine.setSink((text, output, rule, animationId, onSaid) ->
 		{
+			onSaid.run();
 			if (!text.isEmpty())
 			{
 				spokenAt.add(clock.get());

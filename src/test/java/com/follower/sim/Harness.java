@@ -81,8 +81,14 @@ public final class Harness
 
 		loader.initialise(scratch);
 		engine = new SpeechEngine(game.client, loader);
-		engine.setSink((text, output, rule, animationId) ->
-			spoken.add(new Spoken(text, output, rule, animationId)));
+		// No queue in the harness: every line is delivered the moment it is
+		// handed over, so the said-conditional latches run before the engine
+		// call returns - same order the old immediate latching had.
+		engine.setSink((text, output, rule, animationId, onSaid) ->
+		{
+			onSaid.run();
+			spoken.add(new Spoken(text, output, rule, animationId));
+		});
 		// Off by default: the global window is a separate thing to test, and
 		// leaving it on would silently swallow most firings in every other test.
 		engine.setGlobalCooldownMs(0L);

@@ -108,8 +108,9 @@ public class IdleTrailOffTest
 		// stretches everything after.
 		Harness h = harness();
 		List<Long> spokenAt = new ArrayList<>();
-		h.engine.setSink((text, output, rule, animationId) ->
+		h.engine.setSink((text, output, rule, animationId, onSaid) ->
 		{
+			onSaid.run();
 			if (!text.isEmpty())
 			{
 				spokenAt.add(clock.get());

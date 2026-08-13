@@ -30,10 +30,19 @@ public class SpeechEngine
 	 * Callback for delivering a firing. Implemented by the plugin. {@code text}
 	 * may be empty (an animation-only rule) and {@code animationId} is -1 when
 	 * the rule plays nothing.
+	 *
+	 * <p>{@code onSaid} is the moment the line actually reaches the player. A
+	 * sink that shows lines immediately runs it before returning; a sink that
+	 * queues them runs it when the line takes the floor, and never for a line
+	 * it drops. The engine hangs the states that OPEN something - a question,
+	 * a want, a wish - on this, because each of those later puts an
+	 * interaction in front of the player that only makes sense if the opening
+	 * line was seen.
 	 */
 	public interface Sink
 	{
-		void speak(String text, SpeechOutput output, SpeechRule rule, int animationId);
+		void speak(String text, SpeechOutput output, SpeechRule rule, int animationId,
+			Runnable onSaid);
 	}
 
 	private final Client client;
@@ -728,7 +737,7 @@ public class SpeechEngine
 		}
 		lastSpokeMs = now();
 		lastSpokenText = text;
-		sink.speak(text, output == null ? defaultOutput : output, null, -1);
+		sink.speak(text, output == null ? defaultOutput : output, null, -1, () -> { });
 	}
 
 	/**
@@ -818,27 +827,34 @@ public class SpeechEngine
 			}
 		}
 
-		// A question only counts as asked once it has actually been said, for
-		// the same reason: a rule silenced by the mute must not leave the
-		// follower waiting for an answer to something nobody heard.
-		if (rule.asks != null && !rule.asks.isEmpty() && !text.isEmpty())
+		// A question only counts as asked once it has actually been said - a
+		// rule silenced by the mute must not leave the follower waiting for an
+		// answer to something nobody heard. The same goes for the want and the
+		// wish, and "said" is the sink's moment, not this method's: the plugin
+		// queues lines behind the overhead box, and a queued line can still be
+		// dropped - aged out, displaced by a full queue, cleared with the
+		// scene. Each of these three later puts an interaction in front of the
+		// player (a conversation, a thank-you, a gift option in the Talk-to
+		// box), so opening them on a line nobody saw leaves that interaction
+		// unexplained. They latch when the sink says the line landed.
+		Runnable onSaid = () ->
 		{
-			getContext().noteQuestion(rule.asks);
-		}
-
-		// Same rule, same reason: the follower can only be hoping for something
-		// it managed to ask for out loud.
-		if (rule.want != null && rule.want.region != null && !text.isEmpty())
-		{
-			getContext().setWant(rule.want.region, rule.want.label,
-				rule.want.minutes == null ? 15 : rule.want.minutes);
-		}
-		if (rule.wish != null && rule.wish.what != null && !text.isEmpty())
-		{
-			getContext().setWish(rule.wish.what,
-				rule.wish.minutes == null ? 45 : rule.wish.minutes,
-				rule.wish.items);
-		}
+			if (rule.asks != null && !rule.asks.isEmpty() && !text.isEmpty())
+			{
+				getContext().noteQuestion(rule.asks);
+			}
+			if (rule.want != null && rule.want.region != null && !text.isEmpty())
+			{
+				getContext().setWant(rule.want.region, rule.want.label,
+					rule.want.minutes == null ? 15 : rule.want.minutes);
+			}
+			if (rule.wish != null && rule.wish.what != null && !text.isEmpty())
+			{
+				getContext().setWish(rule.wish.what,
+					rule.wish.minutes == null ? 45 : rule.wish.minutes,
+					rule.wish.items);
+			}
+		};
 
 		// An incident is filed whether or not the line was heard: the chicken
 		// killed you regardless of whether the follower got a word in.
@@ -932,7 +948,7 @@ public class SpeechEngine
 		SpeechOutput output = SpeechOutput.parse(rule.output, defaultOutput);
 		if (sink != null)
 		{
-			sink.speak(text, output, rule, animation == null ? -1 : animation);
+			sink.speak(text, output, rule, animation == null ? -1 : animation, onSaid);
 		}
 		log.debug("Rule '{}' fired: {}", rule.describe(),
 			text.isEmpty() ? "(animation " + animation + ")" : text);

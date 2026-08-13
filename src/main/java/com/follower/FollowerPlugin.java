@@ -4383,7 +4383,7 @@ public class FollowerPlugin extends Plugin
 			if (!follower.moveToFront(local))
 			{
 				speak("There's no room in front of you for me to stand!",
-					com.follower.speech.SpeechOutput.OVERHEAD, null, -1);
+					com.follower.speech.SpeechOutput.OVERHEAD, null, -1, null);
 			}
 		});
 		addFollowerMenuEntry("Talk-to", this::startTalking);
@@ -4438,7 +4438,7 @@ public class FollowerPlugin extends Plugin
 					if (!follower.stayAt(target))
 					{
 						speak("I can't get to that spot from here!",
-							com.follower.speech.SpeechOutput.OVERHEAD, null, -1);
+							com.follower.speech.SpeechOutput.OVERHEAD, null, -1, null);
 					}
 				});
 			});
@@ -6591,14 +6591,17 @@ public class FollowerPlugin extends Plugin
 		private final SpeechOutput output;
 		private final SpeechRule rule;
 		private final int animationId;
+		private final Runnable onSaid;
 		private final long queuedAtMs;
 
-		Utterance(String text, SpeechOutput output, SpeechRule rule, int animationId)
+		Utterance(String text, SpeechOutput output, SpeechRule rule, int animationId,
+			Runnable onSaid)
 		{
 			this.text = text;
 			this.output = output;
 			this.rule = rule;
 			this.animationId = animationId;
+			this.onSaid = onSaid;
 			this.queuedAtMs = System.currentTimeMillis();
 		}
 	}
@@ -6658,7 +6661,8 @@ public class FollowerPlugin extends Plugin
 	 * holds one message, so the second used to replace the first mid-word and
 	 * both were lost.
 	 */
-	private void speak(String text, SpeechOutput output, SpeechRule rule, int animationId)
+	private void speak(String text, SpeechOutput output, SpeechRule rule, int animationId,
+		Runnable onSaid)
 	{
 		// A silent rule - an emote mirror, a fidget - contends for nothing:
 		// the queue exists to serialise the overhead text box, and holding an
@@ -6666,7 +6670,7 @@ public class FollowerPlugin extends Plugin
 		// something you did five seconds ago.
 		if (text.isEmpty())
 		{
-			speakNow(new Utterance(text, output, rule, animationId));
+			speakNow(new Utterance(text, output, rule, animationId, onSaid));
 			return;
 		}
 
@@ -6675,11 +6679,11 @@ public class FollowerPlugin extends Plugin
 		{
 			if (speechQueue.size() < SPEECH_QUEUE_LIMIT)
 			{
-				speechQueue.addLast(new Utterance(text, output, rule, animationId));
+				speechQueue.addLast(new Utterance(text, output, rule, animationId, onSaid));
 			}
 			return;
 		}
-		speakNow(new Utterance(text, output, rule, animationId));
+		speakNow(new Utterance(text, output, rule, animationId, onSaid));
 	}
 
 	/**
@@ -6732,6 +6736,16 @@ public class FollowerPlugin extends Plugin
 		SpeechOutput output = utterance.output;
 		SpeechRule rule = utterance.rule;
 		int animationId = utterance.animationId;
+
+		// The engine's said-conditional state latches here and nowhere else:
+		// this is the single door every utterance that survives the queue goes
+		// through, so a line the queue drops - stale, displaced, cleared with
+		// the scene - opens nothing. A wish nobody heard used to leave a gift
+		// option sitting in the Talk-to box with no ask behind it.
+		if (utterance.onSaid != null)
+		{
+			utterance.onSaid.run();
+		}
 
 		journal.spoke(rule, text);
 
