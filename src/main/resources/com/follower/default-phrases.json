@@ -2713,7 +2713,11 @@
         "Level {level} in {skill}. Congratulations.",
         "{skill} to {level}. Duly recorded.",
         "That is {skill} level {level}. Well done.",
-        "Progress: {skill}, {level}. It has been noted with respect."
+        "Progress: {skill}, {level}. It has been noted with respect.",
+        "Another level in {skill}. You are making steady work of it.",
+        "{skill} at {level} now. I have made a clean entry of it.",
+        "Level {level}. Your {skill} improves faster than my shorthand.",
+        "A new {skill} level. I will record it exactly as it happened."
       ]
     },
     {
@@ -2735,7 +2739,11 @@
         "{skill} {level}. Underlined.",
         "That's {level} in {skill}. The column grows.",
         "Level {level}. Your {skill} is coming along nicely.",
-        "{skill} up. I'll want a demonstration later."
+        "{skill} up. I'll want a demonstration later.",
+        "{skill} {level}. The demonstration can wait, but not forever.",
+        "There's the {skill}. Level {level} suits you.",
+        "{level} in {skill}. At this rate I'll need a thicker book.",
+        "Another {skill} level. I acted surprised in the notes."
       ]
     },
     {
@@ -6496,7 +6504,9 @@
         "Wherever you land, I am coming with you.",
         "Not like this. Not here.",
         "I will mark the place. Go.",
-        "It is all right. I have seen where you land."
+        "It is all right. I have seen where you land.",
+        "Up. Please. The page can wait.",
+        "I looked away and I still saw it."
       ]
     },
     {
@@ -6697,7 +6707,9 @@
         "Right. Best of luck to the other one.",
         "I'll narrate quietly from here.",
         "Opening move's yours. It usually is.",
-        "Deep breath. Swing things."
+        "Deep breath. Swing things.",
+        "Started without me. Correct.",
+        "I'll hold your place in the notes."
       ]
     },
     {
@@ -6793,7 +6805,9 @@
         "And breathe. All done.",
         "Add one more to the record.",
         "The quiet after a fight is my favourite part.",
-        "Still in one piece. Both of us, even."
+        "Still in one piece. Both of us, even.",
+        "You do make it look like a chore. A finished one.",
+        "Fight's over. The paperwork begins."
       ]
     },
     {
@@ -8116,7 +8130,10 @@
         "Accurate, if a bit brief.",
         "Somebody wrote that about me. Fair play.",
         "That's the official version. The real one's longer.",
-        "Examined! I feel positively catalogued."
+        "Examined! I feel positively catalogued.",
+        "Go on, read the whole entry. I'll wait.",
+        "That description undersells the notebook.",
+        "Careful. I examine back."
       ]
     },
     {
@@ -8430,7 +8447,9 @@
         "I'd rather be almost anywhere else, if I'm honest.",
         "This place and I have an understanding. We don't get on.",
         "The notes on this spot are all in a darker ink.",
-        "Every visit here feels a page too long."
+        "Every visit here feels a page too long.",
+        "We're back HERE. Wonderful. I'll keep my coat on.",
+        "This place again. My handwriting gets worse just standing in it."
       ]
     },
     {
@@ -8752,7 +8771,11 @@
         "I saw all of it, for what it's worth.",
         "The record will be kind about it.",
         "Written. Not happily.",
-        "Some entries I would rather not have."
+        "Some entries I would rather not have.",
+        "Filed under things we don't mention.",
+        "The ink went on heavier than usual for that one.",
+        "I wrote it smaller, so it looks further away.",
+        "One more for the chapter I keep meaning to close."
       ]
     },
     {
@@ -8874,7 +8897,9 @@
         "We've done this before. Several times. Recently.",
         "Same ending, new page.",
         "The entries are starting to rhyme.",
-        "I'd say lightning doesn't strike twice, but here we are."
+        "I'd say lightning doesn't strike twice, but here we are.",
+        "At this point the margin notes are just sighs.",
+        "New page, same shape. I could trace these by now."
       ]
     },
     {
@@ -9480,7 +9505,10 @@
         "This is the one. I can feel it. Something big.",
         "Mark this fight. Something's coming off it.",
         "Next drop's a good one. Put it in writing. I just did.",
-        "Call it instinct. This one pays."
+        "Call it instinct. This one pays.",
+        "Today's the day the luck pays out. Noted in advance.",
+        "I've done the arithmetic on this one. It's owed.",
+        "Watch this next bit. I've gone on record."
       ]
     },
     {
@@ -10049,7 +10077,10 @@
         "Nothing good has ever happened to us in this place. Nothing.",
         "Every time we come here I think about leaving here.",
         "The evidence against this place keeps arriving.",
-        "This spot owes us. It knows what it did."
+        "This spot owes us. It knows what it did.",
+        "The file on this place is thick, and none of it flattering.",
+        "Here we are again, at the scene of most of it.",
+        "I've counted what this place has cost us. Twice, to be sure."
       ]
     },
     {
@@ -10647,7 +10678,9 @@
         "Nobody's driving. I'll keep an eye on things.",
         "Off making tea, I expect. Reasonable.",
         "Gone quiet up there. I'll mind the shop.",
-        "I'll use the time to tidy my notes. They're immaculate."
+        "I'll use the time to tidy my notes. They're immaculate.",
+        "Still gone. The scenery and I are getting acquainted.",
+        "Take your time. The notes on your absence are brief."
       ]
     }
   ]

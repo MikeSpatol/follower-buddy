@@ -1332,8 +1332,25 @@ follower meets you again as a stranger, arrival arc unspent. The snapshot is
 taken on the client thread; the claims are a pure function held to honesty
 in both directions by tests.
 
-**Still open**: R4 (variant counts on the highest-firing rules), R5, R6–R8,
-R11–R15, R18, R21–R26, R28–R37.
+**R24 — shipped 2026-08-12.** Every rule that opens a demanding interaction -
+asks, want, wish, challenge - now carries none(repeating). The idle gates
+already kept most openers out of the grind itself; the guard covers the
+seams: the pause at the bank mid-session, and the combat grind the challenge
+used to interrupt freely. The lint is field-driven, so a future opener
+cannot arrive unguarded.
+
+**R23 — shipped 2026-08-12.** The first region of each rolled list is core:
+feelsAbout answers from the roll there whatever the earned score says. No
+blob change - the lists were already ordered - and the memory window names
+the two places under "Won't be argued out of".
+
+**R4 — shipped 2026-08-12.** The soak model (three seeds, ten simulated
+hours) ranked rules by firings; the twelve loudest observations with the
+thinnest lists gained 33 lines between them - deaths, the combat edges,
+examines, level-ups in both eras, the standing bets, the disliked places and
+the AFK watch. Jokes stayed thin on purpose, per R4's own qualifier.
+
+**Still open**: R5, R6–R8, R11–R15, R18, R21, R22, R25, R26, R28–R37.
 
 **What five rounds of testing found**, including two shipped bugs that lived
 between features rather than inside them, and why overlapping systems are
