@@ -4006,9 +4006,13 @@ public class FollowerPlugin extends Plugin
 		// the rules.
 		if (wishing)
 		{
+			// "You didn't." as delighted disbelief read as an accusation in
+			// play - the line has to be one nobody can hear two ways, because
+			// whether the player HAS the thing is decided by the rules a beat
+			// later, and this line must not pre-judge it.
 			script.put("gift-q", you(giftLabel).then("gift-a"));
 			script.put("gift-a", says(
-				"You didn't. Let's see it, then.")
+				"Let's see it, then.")
 				.onFinish(() -> onAnswer.accept("gift")));
 		}
 

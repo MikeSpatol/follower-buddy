@@ -270,6 +270,17 @@ public final class FakeGame
 		return this;
 	}
 
+	/** An inventory holding exactly these item ids, one of each. */
+	public FakeGame inventoryContaining(int... ids)
+	{
+		inventory = new Item[28];
+		for (int i = 0; i < inventory.length; i++)
+		{
+			inventory[i] = i < ids.length ? new Item(ids[i], 1) : new Item(-1, 0);
+		}
+		return this;
+	}
+
 	/**
 	 * Turns collision data on, everything open. Until this is called the scene
 	 * has no collision map at all, which is the "off-scene" reading.

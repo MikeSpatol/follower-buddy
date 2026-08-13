@@ -1032,16 +1032,62 @@ public final class TriggerContext
 	 */
 	private String wishLabel = "";
 	private int wishDeadlineTick;
+	private java.util.Set<Integer> wishItems = java.util.Collections.emptySet();
 
 	public void setWish(String label, int minutes)
+	{
+		setWish(label, minutes, null);
+	}
+
+	/**
+	 * @param itemIds the real inventory items that grant this wish. The wish
+	 * is fictional in that nothing is consumed, but it is honest in that the
+	 * thing must actually be in the bag - play testing found the bluff
+	 * immediately, claiming a pot of ink with empty pockets, and a follower
+	 * that cannot tell is a follower that cannot see.
+	 */
+	public void setWish(String label, int minutes, java.util.List<Integer> itemIds)
 	{
 		if (isWishing() || label == null || label.isEmpty())
 		{
 			return;
 		}
 		wishLabel = label;
+		wishItems = itemIds == null || itemIds.isEmpty()
+			? java.util.Collections.emptySet()
+			: new java.util.HashSet<>(itemIds);
 		wishDeadlineTick = client.getTickCount() + Math.max(1, minutes) * 100;
-		log.info("Wish opened: {} for {} minutes", label, minutes);
+		log.info("Wish opened: {} for {} minutes, granted by {}", label, minutes, wishItems);
+	}
+
+	/**
+	 * Whether the wished-for thing is actually in the player's bag right now.
+	 * A wish with no item list is grantable on word alone.
+	 */
+	public boolean isWishedItemInBag()
+	{
+		if (!isWishing())
+		{
+			return false;
+		}
+		if (wishItems.isEmpty())
+		{
+			return true;
+		}
+		net.runelite.api.ItemContainer inventory =
+			client.getItemContainer(net.runelite.api.gameval.InventoryID.INV);
+		if (inventory == null)
+		{
+			return false;
+		}
+		for (net.runelite.api.Item item : inventory.getItems())
+		{
+			if (item != null && wishItems.contains(item.getId()))
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public boolean isWishing()

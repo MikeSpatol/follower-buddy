@@ -836,7 +836,8 @@ public class SpeechEngine
 		if (rule.wish != null && rule.wish.what != null && !text.isEmpty())
 		{
 			getContext().setWish(rule.wish.what,
-				rule.wish.minutes == null ? 45 : rule.wish.minutes);
+				rule.wish.minutes == null ? 45 : rule.wish.minutes,
+				rule.wish.items);
 		}
 
 		// An incident is filed whether or not the line was heard: the chicken

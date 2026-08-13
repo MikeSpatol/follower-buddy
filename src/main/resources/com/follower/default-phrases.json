@@ -8804,7 +8804,8 @@
       "mood": 0,
       "wish": {
         "what": "feather",
-        "minutes": 45
+        "minutes": 45,
+        "items": [314]
       },
       "when": {
         "type": "all",
@@ -8822,15 +8823,16 @@
       ]
     },
     {
-      "id": "wish-decent-bit-of-string",
+      "id": "wish-papyrus",
       "group": "souvenir",
       "priority": 24,
       "output": "overhead",
       "cooldownMs": 2700000,
       "mood": 0,
       "wish": {
-        "what": "decent bit of string",
-        "minutes": 45
+        "what": "papyrus",
+        "minutes": 45,
+        "items": [970]
       },
       "when": {
         "type": "all",
@@ -8843,20 +8845,21 @@
         ]
       },
       "say": [
-        "The scroll wants a decent bit of string. No hurry.",
-        "String. I need a decent bit of string. The good kind."
+        "Papyrus, if you pass any. Mine's nearly out.",
+        "Running low on papyrus. The good pages go fast."
       ]
     },
     {
-      "id": "wish-flat-stone",
+      "id": "wish-ball-of-wool",
       "group": "souvenir",
       "priority": 24,
       "output": "overhead",
       "cooldownMs": 2700000,
       "mood": 0,
       "wish": {
-        "what": "flat stone",
-        "minutes": 45
+        "what": "ball of wool",
+        "minutes": 45,
+        "items": [1759]
       },
       "when": {
         "type": "all",
@@ -8869,20 +8872,21 @@
         ]
       },
       "say": [
-        "A flat stone would do for a paperweight. If you see one.",
-        "The pages keep lifting. A flat stone would settle them."
+        "A ball of wool would tie these scrolls properly.",
+        "The scrolls keep unrolling. A ball of wool would fix that."
       ]
     },
     {
-      "id": "wish-pot-of-ink",
+      "id": "wish-soft-clay",
       "group": "souvenir",
       "priority": 24,
       "output": "overhead",
       "cooldownMs": 2700000,
       "mood": 0,
       "wish": {
-        "what": "pot of ink",
-        "minutes": 45
+        "what": "soft clay",
+        "minutes": 45,
+        "items": [1761]
       },
       "when": {
         "type": "all",
@@ -8895,20 +8899,21 @@
         ]
       },
       "say": [
-        "Ink runs low. A pot would not go amiss.",
-        "Running out of ink. A pot of it, if you pass a shop."
+        "Soft clay, if you see any. Seals want stamping.",
+        "I could use soft clay. Official documents deserve a seal."
       ]
     },
     {
-      "id": "wish-sealing-wax",
+      "id": "wish-charcoal",
       "group": "souvenir",
       "priority": 24,
       "output": "overhead",
       "cooldownMs": 2700000,
       "mood": 0,
       "wish": {
-        "what": "sealing wax",
-        "minutes": 45
+        "what": "charcoal",
+        "minutes": 45,
+        "items": [973]
       },
       "when": {
         "type": "all",
@@ -8921,13 +8926,13 @@
         ]
       },
       "say": [
-        "Sealing wax. That's a thing I'm short of.",
-        "Some sealing wax would be welcome. Letters want closing."
+        "Charcoal, if any crosses your path. For the rough sketches.",
+        "A bit of charcoal would be welcome. Some things get drawn, not written."
       ]
     },
     {
       "id": "gifted-accept",
-      "note": "The player picked 'Found you that <wish>.' in the Talk-to script. The option only exists while a wish is open and it names the thing, because the first design failed in play: an unspecified gift reads as a null action. Nothing real changes hands - client-side - but the noun is concrete at every step, and the souvenir label keeps it concrete for the whole carry.",
+      "note": "The player picked 'Found you that <wish>.' AND the thing is really in their bag - checked, because play testing produced the bluff within minutes. Nothing is consumed (client-side), but presence is honest.",
       "group": "souvenir",
       "priority": 50,
       "output": "overhead",
@@ -8944,6 +8949,7 @@
         "conditions": [
           { "type": "answered", "is": "gift" },
           { "type": "wishing" },
+          { "type": "wishItemHeld" },
           { "type": "none", "conditions": [ { "type": "carrying" } ] }
         ]
       },
@@ -8956,7 +8962,7 @@
     },
     {
       "id": "gifted-carrying",
-      "note": "The wish granted while the pocket already holds something. No pickUp - a silently swapped souvenir would drop something the follower has been talking about - and the wish stays open for when the pocket frees up.",
+      "note": "The wish granted - thing in bag - while the pocket already holds a souvenir. No pickUp, and the wish stays open for when the pocket frees up.",
       "group": "souvenir",
       "priority": 60,
       "output": "overhead",
@@ -8968,6 +8974,7 @@
         "conditions": [
           { "type": "answered", "is": "gift" },
           { "type": "wishing" },
+          { "type": "wishItemHeld" },
           { "type": "carrying" }
         ]
       },
@@ -8975,6 +8982,30 @@
         "Hold onto the {wish} a moment. My pocket's occupied.",
         "One treasure at a time. Keep the {wish} safe for me.",
         "The {wish}! And me with a full pocket. Give it here later."
+      ]
+    },
+    {
+      "id": "gifted-bluff",
+      "note": "Claimed the wish with an empty bag. The scribe checks, because a follower that cannot tell is a follower that cannot see. The wish stays open - the honest version of this moment is going and getting one.",
+      "group": "souvenir",
+      "priority": 70,
+      "output": "overhead",
+      "cooldownMs": 30000,
+      "delayTicks": 2,
+      "mood": -2,
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "answered", "is": "gift" },
+          { "type": "wishing" },
+          { "type": "none", "conditions": [ { "type": "wishItemHeld" } ] }
+        ]
+      },
+      "say": [
+        "You're patting an empty bag. I can hear it.",
+        "Show me, then. ...That's air. That's a handful of air.",
+        "Is the {wish} invisible? It's invisible, isn't it.",
+        "A generous thought. Now the actual {wish}, when you have one."
       ]
     },
     {

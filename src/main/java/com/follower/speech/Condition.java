@@ -590,6 +590,13 @@ public class Condition
 				return ctx.isWishing()
 					&& (is == null || is.equalsIgnoreCase(ctx.getWishLabel()));
 
+			// And the wished-for thing is actually in the player's bag. The
+			// gift's thank-you requires this; the bluff rule requires its
+			// absence - claiming to have found a feather is checkable, and a
+			// follower that cannot tell is a follower that cannot see.
+			case "wishitemheld":
+				return ctx.isWishedItemInBag();
+
 			case "wantfulfilled":
 				return event.getType() == TriggerEvent.Type.WANT_FULFILLED;
 			case "wantexpired":

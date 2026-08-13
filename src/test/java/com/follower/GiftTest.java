@@ -37,10 +37,38 @@ public class GiftTest
 		return h;
 	}
 
+	/** The same, with an actual feather in the bag. */
+	private Harness wishingAndHolding() throws IOException
+	{
+		Harness h = wishing();
+		h.game.inventoryContaining(314);      // Feather
+		return h;
+	}
+
+	@Test
+	public void aClaimedGiftWithAnEmptyBagIsCalledOut() throws IOException
+	{
+		// The bug report that reshaped the feature: "i said i found one but i
+		// didnt have one in the inventory". The follower checks the bag now,
+		// and a bluff gets caught rather than thanked. The wish stays open,
+		// because the honest version of this moment is going and getting one.
+		Harness h = wishing();
+		h.game.inventoryContaining();      // pockets full of nothing
+		h.answers("gift");
+		h.gameTicks(3);
+
+		assertEquals("caught, in words", 1, h.firedBy("gifted-bluff").size());
+		assertTrue("no thanks were given", h.firedBy("gifted-accept").isEmpty());
+		assertFalse("nothing is carried out of a bluff",
+			h.engine.getContext().isCarrying());
+		assertTrue("and the wish survives for a real attempt",
+			h.engine.getContext().isWishing());
+	}
+
 	@Test
 	public void theGiftAnswersTheWishByName() throws IOException
 	{
-		Harness h = wishing();
+		Harness h = wishingAndHolding();
 		h.answers("gift");
 		h.gameTicks(3);      // the thank-you rides a two-tick delay
 
@@ -65,7 +93,7 @@ public class GiftTest
 	@Test
 	public void aGiftWhileCarryingLeavesTheWishOpen() throws IOException
 	{
-		Harness h = wishing();
+		Harness h = wishingAndHolding();
 		h.engine.getContext().pickUp("a nice flat rock", 30);
 		h.answers("gift");
 		h.gameTicks(3);
@@ -98,7 +126,7 @@ public class GiftTest
 	public void theMentionRulesTalkAboutTheGiftWithoutKnowingAboutGifts()
 		throws IOException
 	{
-		Harness h = wishing();
+		Harness h = wishingAndHolding();
 		h.answers("gift");
 		h.gameTicks(3);
 		h.clear();
@@ -118,7 +146,7 @@ public class GiftTest
 		// The answered vocabulary grew a word, and the yes/no rules must not
 		// hear it: a gift arriving while a want question is open must not
 		// read as agreeing to the outing.
-		Harness h = wishing();
+		Harness h = wishingAndHolding();
 		h.engine.getContext().noteQuestion("want-outing");
 		h.answers("gift");
 		h.gameTicks(3);

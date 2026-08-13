@@ -616,18 +616,19 @@ public class EveryConditionTypeTest
 	}
 
 	@Test
-	public void aWishOpensBySayingAndClosesByGiving() throws IOException
+	public void aWishOpensBySayingAndTheBagDecidesTheGift() throws IOException
 	{
-		note("wishing");
+		note("wishing", "wishItemHeld");
 
 		Harness h = new Harness(folder.newFolder().toPath(),
 			"{\"version\": 1, \"rules\": ["
 				+ "{\"id\": \"wisher\", \"group\": \"t\", \"cooldownMs\": 0,"
-				+ " \"wish\": {\"what\": \"feather\", \"minutes\": 5},"
+				+ " \"wish\": {\"what\": \"feather\", \"minutes\": 5, \"items\": [314]},"
 				+ " \"when\": {\"type\": \"login\"}, \"say\": [\"a feather, if you see one\"]},"
 				+ "{\"id\": \"probe\", \"group\": \"t\", \"cooldownMs\": 0,"
 				+ " \"when\": {\"type\": \"all\", \"conditions\": ["
 				+ "{\"type\": \"wishing\", \"is\": \"feather\"},"
+				+ "{\"type\": \"wishItemHeld\"},"
 				+ "{\"type\": \"answered\", \"is\": \"gift\"}]},"
 				+ " \"say\": [\"fired\"]}]}");
 		h.gameTicks(1);
@@ -639,8 +640,13 @@ public class EveryConditionTypeTest
 		h.gameTicks(1);
 		assertTrue("saying the wish opens it", h.engine.getContext().isWishing());
 
+		h.game.inventoryContaining();
 		h.answers("gift");
-		assertFired(h, "wishing while the gift arrives");
+		assertQuiet(h, "wishing, but the bag has no feather in it");
+
+		h.game.inventoryContaining(314);
+		h.answers("gift");
+		assertFired(h, "wishing with the feather actually in the bag");
 	}
 
 	@Test
@@ -1355,7 +1361,7 @@ public class EveryConditionTypeTest
 		answeredHovererAndExamined();
 		inventoryRoomAndCrowdsAndDangerousNeighbours();
 		wantsAreAskedForFulfilledAndForgotten();
-		aWishOpensBySayingAndClosesByGiving();
+		aWishOpensBySayingAndTheBagDecidesTheGift();
 		tasteIsAboutWhereTheFollowerIsStanding();
 		thievingEdges();
 		theIncidentItKeepsBringingUp();

@@ -266,6 +266,14 @@ public class SpeechRule
 	{
 		public String what;
 		public Integer minutes;
+
+		/**
+		 * The real inventory items that grant it. The wish must be for a
+		 * thing the player can actually go and get - play testing found the
+		 * bluff on day one - so every authored wish names its item ids, and
+		 * the gift checks the bag.
+		 */
+		public java.util.List<Integer> items;
 	}
 
 	/**
