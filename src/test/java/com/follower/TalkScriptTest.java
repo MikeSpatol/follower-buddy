@@ -36,9 +36,12 @@ public class TalkScriptTest
 		// running plugin has. A stand-in keeps the structural checks honest
 		// (the node is reachable, its pages are readable, it ends where it says
 		// it does); the wording itself is walked branch by branch below.
+		// Built WITH a wish open, so the gift branch exists and every
+		// structural check walks it too; the wishless variant is checked in
+		// its own test below.
 		return FollowerPlugin.talkScript(
 			() -> FollowerPlugin.daySummary(95, 12, 2, 1, "good", "that chicken"),
-			answer -> { });
+			answer -> { }, "feather");
 	}
 
 	/** Every node id something points at, via {@code then} or a choice. */
@@ -93,6 +96,34 @@ public class TalkScriptTest
 		}
 		assertTrue("options that do not match what the player says:\n  "
 			+ String.join("\n  ", problems), problems.isEmpty());
+	}
+
+	@Test
+	public void theGiftOptionOnlyExistsWhileAWishDoes()
+	{
+		// The first gift design offered "Found you something." at all times,
+		// and it failed in play precisely because there was no something and
+		// no wanting. The option now appears with the wish, names the thing,
+		// and disappears with it.
+		Map<String, FollowerDialog.Node> wishing = script();
+		assertTrue("with a wish open the gift branch exists",
+			wishing.containsKey("gift-q"));
+		assertTrue("and the option names the thing",
+			wishing.get("start").getOptionLabels().contains("Found you that feather."));
+
+		Map<String, FollowerDialog.Node> wishless = FollowerPlugin.talkScript(
+			() -> FollowerPlugin.daySummary(95, 12, 2, 1, "good", "that chicken"),
+			answer -> { }, "");
+		assertTrue("with no wish there is no gift branch at all",
+			!wishless.containsKey("gift-q"));
+		for (FollowerDialog.Node node : wishless.values())
+		{
+			for (String label : node.getOptionLabels())
+			{
+				assertTrue("a wishless script must not offer a gift: " + label,
+					!label.startsWith("Found you"));
+			}
+		}
 	}
 
 	@Test

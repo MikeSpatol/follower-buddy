@@ -58,7 +58,7 @@ public class RuleSetIntegrityTest
 		"tally", "personalbest", "sessioncount",
 		"answered", "hovered", "examined",
 		"inventoryfree", "playersnearby",
-		"wanting", "wantfulfilled", "wantexpired", "feelsabout",
+		"wanting", "wantfulfilled", "wantexpired", "feelsabout", "wishing",
 		"remembers", "carrying", "souvenirlost",
 		"betting", "betwon", "betlost",
 		"timeofday", "sessionminutes", "asking",
@@ -492,6 +492,7 @@ public class RuleSetIntegrityTest
 		// ambient is what makes the guard compulsory.
 		byType.put("remembers", new HashSet<>(Arrays.asList("memory")));
 		byType.put("carrying", new HashSet<>(Arrays.asList("souvenir")));
+		byType.put("wishing", new HashSet<>(Arrays.asList("wish")));
 		byType.put("souvenirlost", new HashSet<>(Arrays.asList("souvenir")));
 		byType.put("happenedhere", new HashSet<>(Arrays.asList("here")));
 		byType.put("nicknamed", new HashSet<>(Arrays.asList("nickname")));

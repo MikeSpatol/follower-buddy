@@ -8796,46 +8796,167 @@
       ]
     },
     {
+      "id": "wish-feather",
+      "group": "souvenir",
+      "priority": 24,
+      "output": "overhead",
+      "cooldownMs": 2700000,
+      "mood": 0,
+      "wish": {
+        "what": "feather",
+        "minutes": 45
+      },
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "idle", "ticks": 60 },
+          { "type": "idleBelow", "ticks": 500 },
+          { "type": "chance", "percent": 4 },
+          { "type": "none", "conditions": [ { "type": "wishing" } ] },
+          { "type": "none", "conditions": [ { "type": "carrying" } ] }
+        ]
+      },
+      "say": [
+        "A feather would be useful, if one turns up.",
+        "Quills wear out. Keep an eye open for a feather."
+      ]
+    },
+    {
+      "id": "wish-decent-bit-of-string",
+      "group": "souvenir",
+      "priority": 24,
+      "output": "overhead",
+      "cooldownMs": 2700000,
+      "mood": 0,
+      "wish": {
+        "what": "decent bit of string",
+        "minutes": 45
+      },
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "idle", "ticks": 60 },
+          { "type": "idleBelow", "ticks": 500 },
+          { "type": "chance", "percent": 4 },
+          { "type": "none", "conditions": [ { "type": "wishing" } ] },
+          { "type": "none", "conditions": [ { "type": "carrying" } ] }
+        ]
+      },
+      "say": [
+        "The scroll wants a decent bit of string. No hurry.",
+        "String. I need a decent bit of string. The good kind."
+      ]
+    },
+    {
+      "id": "wish-flat-stone",
+      "group": "souvenir",
+      "priority": 24,
+      "output": "overhead",
+      "cooldownMs": 2700000,
+      "mood": 0,
+      "wish": {
+        "what": "flat stone",
+        "minutes": 45
+      },
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "idle", "ticks": 60 },
+          { "type": "idleBelow", "ticks": 500 },
+          { "type": "chance", "percent": 4 },
+          { "type": "none", "conditions": [ { "type": "wishing" } ] },
+          { "type": "none", "conditions": [ { "type": "carrying" } ] }
+        ]
+      },
+      "say": [
+        "A flat stone would do for a paperweight. If you see one.",
+        "The pages keep lifting. A flat stone would settle them."
+      ]
+    },
+    {
+      "id": "wish-pot-of-ink",
+      "group": "souvenir",
+      "priority": 24,
+      "output": "overhead",
+      "cooldownMs": 2700000,
+      "mood": 0,
+      "wish": {
+        "what": "pot of ink",
+        "minutes": 45
+      },
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "idle", "ticks": 60 },
+          { "type": "idleBelow", "ticks": 500 },
+          { "type": "chance", "percent": 4 },
+          { "type": "none", "conditions": [ { "type": "wishing" } ] },
+          { "type": "none", "conditions": [ { "type": "carrying" } ] }
+        ]
+      },
+      "say": [
+        "Ink runs low. A pot would not go amiss.",
+        "Running out of ink. A pot of it, if you pass a shop."
+      ]
+    },
+    {
+      "id": "wish-sealing-wax",
+      "group": "souvenir",
+      "priority": 24,
+      "output": "overhead",
+      "cooldownMs": 2700000,
+      "mood": 0,
+      "wish": {
+        "what": "sealing wax",
+        "minutes": 45
+      },
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "idle", "ticks": 60 },
+          { "type": "idleBelow", "ticks": 500 },
+          { "type": "chance", "percent": 4 },
+          { "type": "none", "conditions": [ { "type": "wishing" } ] },
+          { "type": "none", "conditions": [ { "type": "carrying" } ] }
+        ]
+      },
+      "say": [
+        "Sealing wax. That's a thing I'm short of.",
+        "Some sealing wax would be welcome. Letters want closing."
+      ]
+    },
+    {
       "id": "gifted-accept",
-      "note": "The player picked 'Found you something.' in the Talk-to script. Nothing real changes hands - client-side - so what it was is never specified, and the vagueness of the label is the joke that carries the constraint. Becomes an ordinary souvenir: mentioned by the mention rules, mourned by the lost rule, and the label makes every one of those lines read as the gift.",
+      "note": "The player picked 'Found you that <wish>.' in the Talk-to script. The option only exists while a wish is open and it names the thing, because the first design failed in play: an unspecified gift reads as a null action. Nothing real changes hands - client-side - but the noun is concrete at every step, and the souvenir label keeps it concrete for the whole carry.",
       "group": "souvenir",
       "priority": 50,
       "output": "overhead",
-      "cooldownMs": 600000,
+      "cooldownMs": 10000,
       "delayTicks": 2,
       "mood": 10,
+      "grantsWish": true,
       "pickUp": {
-        "what": "the little thing you found me",
+        "what": "the {wish} you found me",
         "minutes": 90
       },
       "when": {
         "type": "all",
         "conditions": [
-          {
-            "type": "answered",
-            "is": "gift"
-          },
-          {
-            "type": "none",
-            "conditions": [
-              {
-                "type": "carrying"
-              }
-            ]
-          }
+          { "type": "answered", "is": "gift" },
+          { "type": "wishing" },
+          { "type": "none", "conditions": [ { "type": "carrying" } ] }
         ]
       },
       "say": [
-        "For me? It goes in the good pocket.",
-        "You found this for me. Noted. Underlined, actually.",
-        "I'll keep it with the important things.",
-        "A gift. The ledger tips your way today.",
-        "Nobody finds me things. You find me things."
+        "That {wish}. Exactly what I needed.",
+        "The {wish}! You remembered. I notice, you know.",
+        "Perfect. The {wish} goes in the good pocket.",
+        "You actually found the {wish}. The ledger tips your way."
       ]
     },
     {
       "id": "gifted-carrying",
-      "note": "The gift offered while the pocket already holds something. Higher priority than gifted-accept so exactly one of the pair answers, and no pickUp - a silently swapped souvenir would drop something the follower has been talking about.",
+      "note": "The wish granted while the pocket already holds something. No pickUp - a silently swapped souvenir would drop something the follower has been talking about - and the wish stays open for when the pocket frees up.",
       "group": "souvenir",
       "priority": 60,
       "output": "overhead",
@@ -8845,19 +8966,36 @@
       "when": {
         "type": "all",
         "conditions": [
-          {
-            "type": "answered",
-            "is": "gift"
-          },
-          {
-            "type": "carrying"
-          }
+          { "type": "answered", "is": "gift" },
+          { "type": "wishing" },
+          { "type": "carrying" }
         ]
       },
       "say": [
-        "One treasure at a time. It'll keep.",
-        "Pocket's occupied. Ask me again when it's free.",
-        "Hold that thought. I'm already carrying a good one."
+        "Hold onto the {wish} a moment. My pocket's occupied.",
+        "One treasure at a time. Keep the {wish} safe for me.",
+        "The {wish}! And me with a full pocket. Give it here later."
+      ]
+    },
+    {
+      "id": "gifted-late",
+      "note": "The race: the wish lapsed between the box opening and the click. Rare, but silence there reads as a bug.",
+      "group": "souvenir",
+      "priority": 40,
+      "output": "overhead",
+      "cooldownMs": 10000,
+      "delayTicks": 2,
+      "mood": 2,
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "answered", "is": "gift" },
+          { "type": "none", "conditions": [ { "type": "wishing" } ] }
+        ]
+      },
+      "say": [
+        "Kind of you. The moment's rather passed, but kind of you.",
+        "I'd stopped hoping for that one. Appreciated all the same."
       ]
     },
     {

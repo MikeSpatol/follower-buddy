@@ -1012,6 +1012,55 @@ public final class TriggerContext
 			: likedRegions.contains(regionId);
 	}
 
+	// ---------------------------------------------------------------- wishes
+
+	/**
+	 * A small thing the follower has said it could use - a feather, a bit of
+	 * string - waiting for the player to "find" one via the Talk-to gift.
+	 *
+	 * <p>The want asks for somewhere; the wish asks for someTHING, and it
+	 * exists because the first gift design failed in play: an unspecified
+	 * gift reads as a null action, and giving with no wanting before it has
+	 * no pull. The wish is the wanting. Everything downstream - the option
+	 * label, the thank-you, the souvenir - names the specific thing, so the
+	 * player always knows what they gave because the follower said what it
+	 * wanted.
+	 *
+	 * <p>One at a time, like the want and for the same reason. Lapses
+	 * silently at its deadline: a small hope that quietly expires needs no
+	 * announcement.
+	 */
+	private String wishLabel = "";
+	private int wishDeadlineTick;
+
+	public void setWish(String label, int minutes)
+	{
+		if (isWishing() || label == null || label.isEmpty())
+		{
+			return;
+		}
+		wishLabel = label;
+		wishDeadlineTick = client.getTickCount() + Math.max(1, minutes) * 100;
+		log.info("Wish opened: {} for {} minutes", label, minutes);
+	}
+
+	public boolean isWishing()
+	{
+		return !wishLabel.isEmpty() && client.getTickCount() <= wishDeadlineTick;
+	}
+
+	/** The small thing currently hoped for, or empty. */
+	public String getWishLabel()
+	{
+		return isWishing() ? wishLabel : "";
+	}
+
+	/** The wish came true (or is being abandoned); either way it is over. */
+	public void clearWish()
+	{
+		wishLabel = "";
+	}
+
 	// ----------------------------------------------------------------- wants
 
 	/**

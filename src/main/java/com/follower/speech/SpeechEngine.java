@@ -833,6 +833,11 @@ public class SpeechEngine
 			getContext().setWant(rule.want.region, rule.want.label,
 				rule.want.minutes == null ? 15 : rule.want.minutes);
 		}
+		if (rule.wish != null && rule.wish.what != null && !text.isEmpty())
+		{
+			getContext().setWish(rule.wish.what,
+				rule.wish.minutes == null ? 45 : rule.wish.minutes);
+		}
 
 		// An incident is filed whether or not the line was heard: the chicken
 		// killed you regardless of whether the follower got a word in.
@@ -852,8 +857,17 @@ public class SpeechEngine
 		// and a silent prediction can only ever be right.
 		if (rule.pickUp != null && rule.pickUp.what != null && !text.isEmpty())
 		{
-			getContext().pickUp(rule.pickUp.what,
+			// Substituted like a spoken line, so a souvenir can be named after
+			// the wish it grants: "the {wish} you found me".
+			getContext().pickUp(substitute(rule.pickUp.what, event),
 				rule.pickUp.minutes == null ? 20 : rule.pickUp.minutes);
+		}
+		// AFTER the pickUp, which may still need the wish's name. The wish
+		// closes on a SPOKEN thank-you only: the follower acknowledging the
+		// gift is what spends it.
+		if (Boolean.TRUE.equals(rule.grantsWish) && !text.isEmpty())
+		{
+			getContext().clearWish();
 		}
 		if (rule.bet != null && rule.bet.threshold != null && !text.isEmpty())
 		{
@@ -938,6 +952,7 @@ public class SpeechEngine
 		// whatever event happened to trigger it.
 		values.putIfAbsent("memory", ctx.getIncidentPhrase());
 		values.putIfAbsent("souvenir", ctx.getSouvenir());
+		values.putIfAbsent("wish", ctx.getWishLabel());
 		values.putIfAbsent("here", ctx.getPlaceMemory());
 		values.putIfAbsent("nickname", ctx.getNickname());
 		values.putIfAbsent("left", Integer.toString(ctx.getChallengeLeft()));

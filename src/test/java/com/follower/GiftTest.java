@@ -11,78 +11,105 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
- * The gift: the first thing the player can DO for the follower beyond taking
- * it somewhere.
+ * The wish and the gift that answers it.
  *
- * <p>Client-side, nothing real changes hands, so the gift is fictional and
- * deliberately unspecified - and then made real by the machinery it lands in:
- * it becomes an ordinary souvenir, which means the mention rules bring it up
- * unprompted, the lost rule mourns it, and the label makes every one of those
- * lines read as the gift without any of them knowing about gifts.
+ * <p>The first design offered "Found you something." at all times, and play
+ * testing killed it in one sentence: you don't know what you gifted or what
+ * the follower even wanted. So the wanting now comes first - the follower
+ * asks for a small specific thing, the gift option exists only while that
+ * hope does, and every line downstream names the thing. Client-side, nothing
+ * real changes hands; the concreteness of the noun is what carries it.
  */
 public class GiftTest
 {
 	@Rule
 	public final TemporaryFolder folder = new TemporaryFolder();
 
-	private Harness given() throws IOException
+	/** A follower that has just wished for a feather, out loud. */
+	private Harness wishing() throws IOException
 	{
 		Harness h = new Harness(folder.newFolder().toPath());
 		h.gameTicks(1);
-		h.answers("gift");
-		h.gameTicks(3);      // the thank-you rides a two-tick delay
+		assertTrue(h.engine.force("wish-feather"));
+		assertTrue("saying the wish is what opens it",
+			h.engine.getContext().isWishing());
+		assertEquals("feather", h.engine.getContext().getWishLabel());
 		return h;
 	}
 
 	@Test
-	public void aGiftIsThankedAndCarried()
+	public void theGiftAnswersTheWishByName() throws IOException
 	{
-		try
-		{
-			Harness h = given();
-			assertEquals("the thank-you line", 1, h.firedBy("gifted-accept").size());
-			assertTrue("and the gift is now carried",
-				h.engine.getContext().isCarrying());
-			assertEquals("under the label that makes every later line about it",
-				"the little thing you found me", h.engine.getContext().getSouvenir());
-		}
-		catch (IOException e)
-		{
-			throw new AssertionError(e);
-		}
+		Harness h = wishing();
+		h.answers("gift");
+		h.gameTicks(3);      // the thank-you rides a two-tick delay
+
+		assertEquals("the thank-you fired", 1, h.firedBy("gifted-accept").size());
+		assertTrue("and it names the thing",
+			h.firedBy("gifted-accept").get(0).text.contains("feather"));
+		assertEquals("the souvenir label keeps the noun for the whole carry",
+			"the feather you found me", h.engine.getContext().getSouvenir());
+		assertFalse("and the wish is spent", h.engine.getContext().isWishing());
 	}
 
 	@Test
-	public void aSecondGiftWhileCarryingIsDeclinedWithoutDroppingTheFirst()
-		throws IOException
+	public void oneWishAtATime() throws IOException
 	{
-		Harness h = given();
+		Harness h = wishing();
+		h.engine.getContext().setWish("pot of ink", 45);
+
+		assertEquals("a second wish cannot replace the first",
+			"feather", h.engine.getContext().getWishLabel());
+	}
+
+	@Test
+	public void aGiftWhileCarryingLeavesTheWishOpen() throws IOException
+	{
+		Harness h = wishing();
+		h.engine.getContext().pickUp("a nice flat rock", 30);
 		h.answers("gift");
 		h.gameTicks(3);
 
 		assertEquals("declined, in words", 1, h.firedBy("gifted-carrying").size());
-		assertEquals("the accept rule stayed out of it",
-			1, h.firedBy("gifted-accept").size());
-		assertEquals("and the first gift survived",
-			"the little thing you found me", h.engine.getContext().getSouvenir());
+		assertTrue("the decline still names the wished thing",
+			h.firedBy("gifted-carrying").get(0).text.contains("feather"));
+		assertEquals("the carried souvenir survived",
+			"a nice flat rock", h.engine.getContext().getSouvenir());
+		assertTrue("and the wish stays open for when the pocket frees up",
+			h.engine.getContext().isWishing());
+	}
+
+	@Test
+	public void aLapsedWishStillGetsAGraciousWord() throws IOException
+	{
+		// The race: the wish expires between the box opening and the click.
+		Harness h = new Harness(folder.newFolder().toPath());
+		h.gameTicks(1);
+		h.answers("gift");
+		h.gameTicks(3);
+
+		assertEquals("silence there would read as a bug",
+			1, h.firedBy("gifted-late").size());
+		assertFalse("and nothing is carried out of it",
+			h.engine.getContext().isCarrying());
 	}
 
 	@Test
 	public void theMentionRulesTalkAboutTheGiftWithoutKnowingAboutGifts()
 		throws IOException
 	{
-		Harness h = given();
+		Harness h = wishing();
+		h.answers("gift");
+		h.gameTicks(3);
 		h.clear();
 
-		// The mention machinery is generic; force one and read the label back
-		// through the {souvenir} placeholder.
 		assertTrue(h.engine.force("souvenir-mention"));
 		boolean mentioned = false;
 		for (Harness.Spoken s : h.spoken)
 		{
-			mentioned |= s.text.contains("the little thing you found me");
+			mentioned |= s.text.contains("the feather you found me");
 		}
-		assertTrue("a mention should read as the gift by label alone", mentioned);
+		assertTrue("a mention reads as the gift by label alone", mentioned);
 	}
 
 	@Test
@@ -91,8 +118,7 @@ public class GiftTest
 		// The answered vocabulary grew a word, and the yes/no rules must not
 		// hear it: a gift arriving while a want question is open must not
 		// read as agreeing to the outing.
-		Harness h = new Harness(folder.newFolder().toPath());
-		h.gameTicks(1);
+		Harness h = wishing();
 		h.engine.getContext().noteQuestion("want-outing");
 		h.answers("gift");
 		h.gameTicks(3);

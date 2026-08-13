@@ -252,6 +252,29 @@ public class SpeechRule
 	}
 
 	/**
+	 * A small thing the follower says it could use, opened by SAYING so, like
+	 * the want. {@code {"what": "feather", "minutes": 45}}. While it is open
+	 * the Talk-to script offers "Found you that feather." - the gift names
+	 * the thing because the follower named it first.
+	 *
+	 * <p>The label is a bare noun phrase with no article, because everything
+	 * downstream frames it: "that {wish}", "the {wish} you found me".
+	 */
+	public Wish wish;
+
+	public static final class Wish
+	{
+		public String what;
+		public Integer minutes;
+	}
+
+	/**
+	 * This firing grants the open wish: the follower got the thing, and the
+	 * wish closes. Only meaningful on rules reacting to the gift.
+	 */
+	public Boolean grantsWish;
+
+	/**
 	 * Files what just happened as the incident worth bringing up again.
 	 *
 	 * <p>{@code {"key": "chicken-death", "as": "that chicken"}}. The key is what

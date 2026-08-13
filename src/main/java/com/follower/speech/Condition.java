@@ -583,6 +583,13 @@ public class Condition
 			case "wanting":
 				return ctx.isWanting();
 
+			// A small thing has been wished for and not yet found. Negated by
+			// the wish rules (one hope at a time) and required by the gift's
+			// thank-you, which names the thing via {wish}.
+			case "wishing":
+				return ctx.isWishing()
+					&& (is == null || is.equalsIgnoreCase(ctx.getWishLabel()));
+
 			case "wantfulfilled":
 				return event.getType() == TriggerEvent.Type.WANT_FULFILLED;
 			case "wantexpired":

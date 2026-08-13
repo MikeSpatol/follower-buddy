@@ -616,6 +616,34 @@ public class EveryConditionTypeTest
 	}
 
 	@Test
+	public void aWishOpensBySayingAndClosesByGiving() throws IOException
+	{
+		note("wishing");
+
+		Harness h = new Harness(folder.newFolder().toPath(),
+			"{\"version\": 1, \"rules\": ["
+				+ "{\"id\": \"wisher\", \"group\": \"t\", \"cooldownMs\": 0,"
+				+ " \"wish\": {\"what\": \"feather\", \"minutes\": 5},"
+				+ " \"when\": {\"type\": \"login\"}, \"say\": [\"a feather, if you see one\"]},"
+				+ "{\"id\": \"probe\", \"group\": \"t\", \"cooldownMs\": 0,"
+				+ " \"when\": {\"type\": \"all\", \"conditions\": ["
+				+ "{\"type\": \"wishing\", \"is\": \"feather\"},"
+				+ "{\"type\": \"answered\", \"is\": \"gift\"}]},"
+				+ " \"say\": [\"fired\"]}]}");
+		h.gameTicks(1);
+
+		h.answers("gift");
+		assertQuiet(h, "no wish is open yet, so the gift lands on nothing");
+
+		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.LOGIN));
+		h.gameTicks(1);
+		assertTrue("saying the wish opens it", h.engine.getContext().isWishing());
+
+		h.answers("gift");
+		assertFired(h, "wishing while the gift arrives");
+	}
+
+	@Test
 	public void wantsAreAskedForFulfilledAndForgotten() throws IOException
 	{
 		note("wanting", "wantFulfilled", "wantExpired");
@@ -1327,6 +1355,7 @@ public class EveryConditionTypeTest
 		answeredHovererAndExamined();
 		inventoryRoomAndCrowdsAndDangerousNeighbours();
 		wantsAreAskedForFulfilledAndForgotten();
+		aWishOpensBySayingAndClosesByGiving();
 		tasteIsAboutWhereTheFollowerIsStanding();
 		thievingEdges();
 		theIncidentItKeepsBringingUp();
