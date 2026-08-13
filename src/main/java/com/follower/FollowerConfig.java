@@ -651,7 +651,8 @@ public interface FollowerConfig extends Config
 		keyName = "errandExplore",
 		name = "Exploring",
 		description = "Noses at whatever the place offers - a chest, a trapdoor,"
-			+ " a noticeboard - especially somewhere it has just arrived",
+			+ " a noticeboard - and notes it down, especially somewhere it has"
+			+ " just arrived",
 		section = errandSection,
 		position = 10
 	)

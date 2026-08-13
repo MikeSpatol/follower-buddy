@@ -48,8 +48,9 @@ public class ErrandController
 		DOCUMENT("document"),
 		/** Walks to something notable, looks at it, and writes THAT up. */
 		STUDY("study"),
-		/** Plain nosiness: walks to something curious and just looks at it.
-		 * Also the one errand with an arrival trigger - see noticeArrival. */
+		/** Plain nosiness: walks to something curious, looks, then notes it
+		 * down in the scroll - everything explored is for posterity. Also
+		 * the one errand with an arrival trigger - see noticeArrival. */
 		EXPLORE("explore");
 
 		final String key;
@@ -201,7 +202,8 @@ public class ErrandController
 	private int nextRollTicks;
 	private String forceKey;
 
-	/** The study's look phase: facing the thing before the scroll comes out. */
+	/** The look phase of a study or explore: facing the thing before the
+	 * scroll comes out. */
 	private int studyLookTicks;
 
 	/** What the current study or explore announced itself as, e.g. "study-anvil". */
@@ -702,9 +704,11 @@ public class ErrandController
 				waitTicks = 18 + ThreadLocalRandom.current().nextInt(5);
 				break;
 			case EXPLORE:
-				// Just the look. No scroll, no gesture: the walk over and the
-				// stare are the whole act, and the lines carry the reaction.
-				waitTicks = 9 + ThreadLocalRandom.current().nextInt(4);
+				// Look, then note it down - everything explored is for
+				// posterity. Same beat as the study, a touch brisker: the
+				// scribe writes a report, the explorer jots an entry.
+				studyLookTicks = 4;
+				waitTicks = 14 + ThreadLocalRandom.current().nextInt(5);
 				break;
 			case ALTAR:
 				follower.playAnimation(PRAY_ANIMATION);
@@ -831,7 +835,8 @@ public class ErrandController
 	private void putTheScrollAway()
 	{
 		studyLookTicks = 0;
-		if (current == Errand.DOCUMENT || current == Errand.STUDY)
+		if (current == Errand.DOCUMENT || current == Errand.STUDY
+			|| current == Errand.EXPLORE)
 		{
 			follower.setPoseOverride(0);
 		}

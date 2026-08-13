@@ -330,19 +330,26 @@ public class ErrandSimulationTest
 	}
 
 	@Test
-	public void anExploreJustLooksAndNamesTheThing()
+	public void anExploreLooksThenNotesItDownForPosterity()
 	{
-		// The explore is the study's nosy sibling: same trip, no scroll. The
-		// walk over and the stare are the whole act, so the only physical
-		// promise to check is that nothing is ever held or posed.
+		// The explore is the study's nosy sibling: same trip, same
+		// look-then-write beat - everything explored goes in the scroll.
 		assertTrue(errands.beginExploreAt(new WorldPoint(3225, 3218, 0), "Chest"));
 		assertTrue(errands.isBusy());
 		assertTrue("it announced the specific thing", started("explore-chest"));
 
+		tick(2);      // arrive (the recording follower is always settled)
+		assertEquals("looking first: no scroll during the look", 0, heldProp);
+		assertEquals("and no pose either", 0, follower.poseOverride);
+
+		tick(5);      // the look ends
+		assertEquals("the entry gets written", 10485, heldProp);
+		assertEquals("with the pose on the same tick", 5354, follower.poseOverride);
+
 		tick(25);
 		assertFalse("the look should have finished", errands.isBusy());
-		assertEquals("nothing was ever held", 0, heldProp);
-		assertEquals("and nothing posed", 0, follower.poseOverride);
+		assertEquals("the scroll went away", 0, heldProp);
+		assertEquals("and the pose released", 0, follower.poseOverride);
 		assertTrue("and the follower came back", follower.following);
 
 		boolean endNamed = false;
@@ -352,6 +359,21 @@ public class ErrandSimulationTest
 				&& "explore-chest".equals(event.getName());
 		}
 		assertTrue("the verdict names the thing too", endNamed);
+	}
+
+	@Test
+	public void anInterruptedExploreReleasesEverything()
+	{
+		errands.beginExploreAt(new WorldPoint(3225, 3218, 0), "Chest");
+		tick(9);      // deep enough that the scroll is out and the pose holds
+		assertEquals(5354, follower.poseOverride);
+
+		busy = true;
+		tick(1);
+
+		assertFalse(errands.isBusy());
+		assertEquals("the pose must not outlive the look", 0, follower.poseOverride);
+		assertEquals("nor the scroll", 0, heldProp);
 	}
 
 	@Test
