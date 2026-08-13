@@ -165,10 +165,14 @@ public class MemoryDialog extends JDialog
 		c.getRecords().forEach((what, value) ->
 			rows.add(row(what, Integer.toString(value))));
 
+		// The phrase is written for the middle of a sentence - "I keep
+		// thinking about {memory}" - so bare in a window it reads as a
+		// riddle ("the way that went"?). Quoting it as its words and naming
+		// the file key beside it is what makes it legible out of context.
 		rows.add(header("THE INCIDENT"));
 		rows.add(c.hasIncident()
-			? row("Keeps bringing up", c.getIncidentPhrase()
-				+ " (x" + c.getIncidentCount() + ")")
+			? row("Keeps bringing up", "\"" + c.getIncidentPhrase() + "\" ("
+				+ c.getIncidentKey() + ", x" + c.getIncidentCount() + ")")
 			: remark("Nothing has stuck yet."));
 
 		rows.add(header("PLACES"));

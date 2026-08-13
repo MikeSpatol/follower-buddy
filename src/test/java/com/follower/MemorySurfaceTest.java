@@ -57,7 +57,8 @@ public class MemorySurfaceTest
 		assertTrue(surface.contains("Sessions together: 36"));
 		assertTrue(surface.contains("kill:goblin: 2"));
 		assertTrue(surface.contains("hit: 42"));
-		assertTrue(surface.contains("that chicken (x1)"));
+		assertTrue("the incident quoted as its words, filed under its key: " + surface,
+			surface.contains("\"that chicken\" (chicken-death, x1)"));
 		assertTrue("the place, its feeling and its memory: " + surface,
 			surface.contains("+45 - the drop"));
 		assertTrue(surface.contains("region 12850"));
