@@ -6915,6 +6915,34 @@
       ]
     },
     {
+      "id": "wonders-about-you",
+      "note": "R26: the attention turns around. Deliberately no asks field - a real answer would make it a form, and the not-needing-one is the warmth. The trail-off throttles it like all idle speech.",
+      "group": "idle",
+      "priority": 12,
+      "output": "overhead",
+      "cooldownMs": 1200000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "idle", "ticks": 200 },
+          { "type": "idleBelow", "ticks": 500 },
+          { "type": "chance", "percent": 15 }
+        ]
+      },
+      "say": [
+        "What are we saving for, anyway? Don't tell me. I'll guess wrong on purpose.",
+        "Why here, of all places? No, don't explain. I like a mystery.",
+        "Do you ever miss anywhere? You look like you might.",
+        "What's the plan this week? Rough shape only. I'll fill in the margins.",
+        "Were you always like this, or did the adventuring do it?",
+        "What do you do when I'm not here? Practise standing, I assume.",
+        "Are we staying long? Not a complaint. A census.",
+        "Who taught you to fight like that? Somebody must answer for it.",
+        "Ever think about settling down somewhere? No, me neither. Onward.",
+        "What's the best thing you've ever pulled out of that bag? Don't say bones."
+      ]
+    },
+    {
       "id": "idle-chatter-wilds",
       "note": "R18: the idle pool in the Wilderness. Same trigger shape as idle-chatter, different register - clipped and watchful, because standing about is a decision here.",
       "group": "idle",

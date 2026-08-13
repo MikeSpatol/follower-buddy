@@ -1372,7 +1372,21 @@ everywhere else - partitioned by guards the way the voice eras partition the
 calendar, exactly one pool serving in any state, behaviourally tested in all
 three.
 
-**Still open**: R5, R7, R8, R11–R15, R21, R22, R26, R28–R37.
+**R28 — shipped 2026-08-13.** The voice document, half a page as specified:
+docs/voice.md. Dry and unexplained, one thought per line, contract
+everything with the era exception named as a deliberate device, the notebook
+as the character, and the mechanical rules listed beside the lints that
+enforce them. **R21 ships inside it** as doctrine: one remembered fact per
+line, framed warm, the number's warmth over the number.
+
+**R26 — shipped 2026-08-13.** wonders-about-you: ten idle lines that turn
+the attention around, written under the new voice doc as its first proof.
+Deliberately no asks field - a real answer would make it a form, and the
+not-needing-one is the warmth. Questions claim nothing, so R7's
+verifiability rule is satisfied by construction; the trail-off throttles it
+like all idle speech.
+
+**Still open**: R5, R7, R8, R11–R15, R22, R29–R37.
 
 **What five rounds of testing found**, including two shipped bugs that lived
 between features rather than inside them, and why overlapping systems are
