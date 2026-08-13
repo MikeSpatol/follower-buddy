@@ -4929,11 +4929,15 @@ public class FollowerPlugin extends Plugin
 		wasBankOpen = bankOpen;
 
 		// A player-commanded Stay (R25): the follower's own machinery also
-		// parks it - errands, spectating, thrall work - and only this side
-		// can tell the difference, so the context is fed the distinction.
-		boolean stayCommanded = follower.isStaying() && thrallNpc == null
-			&& (errands == null || !errands.isBusy())
-			&& (spectate == null || !spectate.isSpectating());
+		// parks it - errands, spectating, thrall work, and the WANDER, which
+		// drifts via the same stayAt - and only this side can tell the
+		// difference, so the context is fed the distinction. The wander was
+		// missed at first, and the transcript showed the follower taking
+		// the post thirty times in an afternoon of its own pottering.
+		boolean stayCommanded = stayIsPlayerCommanded(follower.isStaying(),
+			wandered, thrallNpc != null,
+			errands != null && errands.isBusy(),
+			spectate != null && spectate.isSpectating());
 		speechEngine.getContext().setFollowerStaying(stayCommanded);
 
 		// An absence ending is a boundary too: the player went out of sight
@@ -7313,6 +7317,20 @@ public class FollowerPlugin extends Plugin
 			+ ", " + alpha);
 		log.info("priorities {}: {} faces, priorities {}, {}",
 			label, model.getFaceCount(), histogram, alpha);
+	}
+
+	/**
+	 * Whether a stay belongs to the PLAYER rather than to the follower's own
+	 * machinery. Every exclusion here is a system that parks the follower
+	 * through the same stayAt: the errands, the fight spectating, thrall
+	 * conscription, and the idle wander - the one the first version forgot,
+	 * which had the follower announcing "this spot is mine now" thirty times
+	 * in an afternoon of its own drifting.
+	 */
+	static boolean stayIsPlayerCommanded(boolean staying, boolean wandered,
+		boolean thrall, boolean errandBusy, boolean spectating)
+	{
+		return staying && !wandered && !thrall && !errandBusy && !spectating;
 	}
 
 	/**

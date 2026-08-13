@@ -292,3 +292,28 @@ real-play figure, pre-bag pre-wear, was 38); idle-chatter mean repeat
 distance 17.3 over 42 firings of its 38 variants. Speech by group under
 the driver: misc 28%, combat 22%, reactions 21%, memory 20% (the driver
 dies every twenty seconds; real play will not), idle 5%, bet 2%.
+
+## Fifth pass: the layer only real play can run, 2026-08-13
+
+The strategy's Layer 5 finally got its data: a four-hour real-play
+transcript from the day after the batch shipped, digested against the
+strategy's questions.
+
+**The find: the wander read as a Stay.** stay-start fired thirty times and
+stay-fidget twenty across the afternoon - across four regions, minutes
+apart, right after errands - because the idle wander drifts via the same
+stayAt as everything else, and the stayCommanded computation excluded
+errands, spectating and thrall work but not the wander. "Right. This spot
+is mine now", announced by a follower in the middle of its own pottering.
+No simulation could have caught it: the harness has no wander. The
+discriminator is the plugin's own wandered flag; the computation is now the
+stayIsPlayerCommanded function with each exclusion pinned by name.
+
+**Everything else in the transcript reads healthy.** 94 lines an hour
+through an active testing session; repeats within a dozen: ZERO in 393
+lines, with the bag, window and wear ledger all live - the 2026-08-10
+baseline was 38. The context pools served correctly (idle-chatter-town in
+the crowded bank, default elsewhere), the bank breather landed sixteen
+times in a heavy banking session, the director held back stay-watch and
+recall-idle rather than occasions, and the longest silence was six minutes
+against the trail-off design's intent.

@@ -61,6 +61,27 @@ public class StayLifeTest
 	}
 
 	@Test
+	public void onlyThePlayersOwnStayCounts()
+	{
+		// Every exclusion is a system that parks the follower through the
+		// same stayAt. The wander is the one the first version forgot, and
+		// the real-play transcript showed the cost: "this spot is mine now"
+		// thirty times in an afternoon of the follower's own drifting.
+		assertTrue(FollowerPlugin.stayIsPlayerCommanded(
+			true, false, false, false, false));
+		assertTrue("wandering is not a post",
+			!FollowerPlugin.stayIsPlayerCommanded(true, true, false, false, false));
+		assertTrue("an errand is not a post",
+			!FollowerPlugin.stayIsPlayerCommanded(true, false, false, true, false));
+		assertTrue("spectating is not a post",
+			!FollowerPlugin.stayIsPlayerCommanded(true, false, false, false, true));
+		assertTrue("thrall work is not a post",
+			!FollowerPlugin.stayIsPlayerCommanded(true, false, true, false, false));
+		assertTrue("and following at heel is nothing at all",
+			!FollowerPlugin.stayIsPlayerCommanded(false, false, false, false, false));
+	}
+
+	@Test
 	public void aReunionMeansNothingToAFollowerAtHeel() throws IOException
 	{
 		// The boundary alone must not be enough: stay-reunion requires the
