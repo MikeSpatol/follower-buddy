@@ -170,6 +170,14 @@ public class TalkScriptTest
 		low.get("allright-a").runFinish();
 		assertTrue("asking is the kindness", answers.contains("comforted"));
 
+		// "down" is lowish too - the sharpened question covers the whole
+		// bottom of the mood range, not just its floor. (Only "low" was
+		// tested at first; the strategy's mutation analysis caught it.)
+		Map<String, FollowerDialog.Node> down = FollowerPlugin.talkScript(
+			() -> new String[]{""}, answers::add, "", false, "down");
+		assertTrue("a down day sharpens the question too",
+			down.get("start").getOptionLabels().contains("You all right?"));
+
 		Map<String, FollowerDialog.Node> fine = FollowerPlugin.talkScript(
 			() -> new String[]{""}, answers::add, "", false, "good");
 		assertTrue("on a fine day the everyday question is back",

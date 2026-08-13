@@ -47,12 +47,15 @@ public class SwallowedLineTest
 		h.gameTicks(1);
 
 		// A sink that swallows everything, the way a cleared or overfull
-		// queue does: the line is accepted and never said.
+		// queue does: the line is accepted and never said. Each opener is
+		// FORCED, because back-to-back dispatches pace each other out and a
+		// rule that never fired proves nothing about its latch - the first
+		// version of this test only ever fired the wisher, and a mutation
+		// latching the question at hand-off sailed through the other two.
 		h.engine.setSink((text, output, rule, animationId, onSaid) -> { });
-
-		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.LOGIN));
-		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.LEVEL_UP));
-		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.PLAYER_DEATH));
+		h.engine.force("wisher");
+		h.engine.force("asker");
+		h.engine.force("wanter");
 
 		assertFalse("a wish nobody heard must not open",
 			h.engine.getContext().isWishing());
@@ -89,17 +92,24 @@ public class SwallowedLineTest
 		h.gameTicks(1);
 
 		// A sink that holds its lines the way the plugin's queue does, and
-		// says them later.
+		// says them later. All three openers, for the same reason as above.
 		List<Runnable> held = new ArrayList<>();
 		h.engine.setSink((text, output, rule, animationId, onSaid) -> held.add(onSaid));
+		h.engine.force("wisher");
+		h.engine.force("asker");
+		h.engine.force("wanter");
 
-		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.LOGIN));
 		assertFalse("waiting its turn behind the overhead box is not yet said",
 			h.engine.getContext().isWishing());
+		assertEquals("", h.engine.getContext().getAskedTree());
+		assertFalse(h.engine.getContext().isWanting());
 
 		held.forEach(Runnable::run);
 		assertTrue("the moment it lands, the wish is open",
 			h.engine.getContext().isWishing());
 		assertEquals("soft clay", h.engine.getContext().getWishLabel());
+		assertEquals("and the question", "want-outing",
+			h.engine.getContext().getAskedTree());
+		assertTrue("and the want", h.engine.getContext().isWanting());
 	}
 }

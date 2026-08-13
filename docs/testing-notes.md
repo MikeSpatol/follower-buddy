@@ -264,3 +264,31 @@ is null-guarded and the bank watch dies harmlessly at logout.)
 the heaviest pass with sixty NPCs in scene, 21-23 us warm on the tick
 heartbeat - the wear lookups, the boundary countdown and the wilderness
 refresh cost nothing visible against the 1 ms budget.
+
+## Fourth pass, run by the strategy doc, 2026-08-13
+
+The trigger table said a corpus change owes a dated talk-model re-measure,
+and the mutation layer owed the seams the earlier passes skipped. Both paid.
+
+**Two more weak tests found by mutation, both strengthened.** Dropping
+"down" from the lowish gate survived, because only "low" and "good" were
+ever tested - the sharpened question's coverage of the whole bottom band
+now has its own assertion. And latching the QUESTION at hand-off instead of
+delivery survived `SwallowedLineTest`, because its three back-to-back
+dispatches paced each other out: only the wisher ever actually fired, so
+the asks and want halves were asserting quiet about rules that never got
+the chance to latch. The openers are now forced individually, and the
+deferred-delivery test proves all three open at the landing. Re-applied,
+both mutants die; four others (the want latch, the explore pose release,
+a stripped grind guard, the comfort lift zeroed) died first try. Twelve
+of the campaign's sixteen mutations died on first contact; all four
+survivors were real test weaknesses, now fixed.
+
+**The talk-model baseline at 424 rules** (soak driver, three seeds, ten
+simulated hours - a stress mix far denser than real play, so compare
+against this driver, not against transcripts): 256 lines/hour under that
+pressure; **repeats within a dozen: 4 in 2,561 lines** (the 2026-08-10
+real-play figure, pre-bag pre-wear, was 38); idle-chatter mean repeat
+distance 17.3 over 42 firings of its 38 variants. Speech by group under
+the driver: misc 28%, combat 22%, reactions 21%, memory 20% (the driver
+dies every twenty seconds; real play will not), idle 5%, bet 2%.
