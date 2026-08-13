@@ -650,6 +650,35 @@ public class EveryConditionTypeTest
 	}
 
 	@Test
+	public void theBreatherAfterSomethingEnds() throws IOException
+	{
+		note("boundary");
+
+		// The kind-specific form: a bank breather is not a combat breather.
+		Harness h = harnessFor("{\"type\": \"boundary\", \"is\": \"bank\"}");
+		h.gameTicks(2);
+		assertQuiet(h, "nothing has ended yet");
+		h.engine.getContext().noteBoundary("combat");
+		h.gameTicks(2);
+		assertQuiet(h, "a combat ending is not a bank visit");
+		h.engine.getContext().noteBoundary("bank");
+		h.gameTicks(2);
+		assertFired(h, "boundary");
+
+		// The bare form takes any ending, and the engine maps the ending
+		// events onto it - the window opening AFTER the dispatch, so the
+		// breather never competes with the ending's own reaction.
+		Harness any = harnessFor("{\"type\": \"boundary\"}");
+		any.gameTicks(2);
+		assertQuiet(any, "still nothing has ended");
+		any.dispatch(TriggerEvent.simple(TriggerEvent.Type.COMBAT_END));
+		assertQuiet(any, "not on the ending event itself");
+		any.gameTicks(2);
+		assertFired(any, "boundary, one beat after the ending");
+		assertEquals("combat", any.engine.getContext().getBoundaryKind());
+	}
+
+	@Test
 	public void theRollStaysReadableUnderTheOverride() throws IOException
 	{
 		// rolledFeeling reads the raw roll where feelsAbout reads the verdict.
@@ -1387,6 +1416,7 @@ public class EveryConditionTypeTest
 		inventoryRoomAndCrowdsAndDangerousNeighbours();
 		wantsAreAskedForFulfilledAndForgotten();
 		aWishOpensBySayingAndTheBagDecidesTheGift();
+		theBreatherAfterSomethingEnds();
 		theRollStaysReadableUnderTheOverride();
 		tasteIsAboutWhereTheFollowerIsStanding();
 		thievingEdges();

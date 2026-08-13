@@ -673,6 +673,30 @@ public class SpeechEngine
 			}
 		}
 
+		// Something just ENDED: open the breather window (R6). Noted AFTER the
+		// evaluation loop on purpose - a boundary rule should rise on the NEXT
+		// pass rather than competing with the ending's own reaction on this
+		// event, where losing would consume its edge for the whole window. The
+		// breather comes after the reaction, which is also the right order to
+		// hear them in.
+		switch (event.getType())
+		{
+			case COMBAT_END:
+				getContext().noteBoundary("combat");
+				break;
+			case LEVEL_UP:
+				getContext().noteBoundary("level");
+				break;
+			case REGION_CHANGE:
+				getContext().noteBoundary("arrival");
+				break;
+			case THIEVING_END:
+				getContext().noteBoundary("thieving");
+				break;
+			default:
+				break;
+		}
+
 		// While primed (just after login), edges have been recorded above but
 		// nothing fires from ANY event: worn gear and standing state register
 		// as already-true instead of as fresh rising edges. The countdown only

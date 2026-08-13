@@ -2840,6 +2840,27 @@
       ]
     },
     {
+      "id": "breather-bank",
+      "note": "R6: the bank closing is an ending, and the moment after it is a boundary - the restock is done, nothing is mid-task, a remark is company rather than interruption.",
+      "group": "misc",
+      "priority": 30,
+      "output": "overhead",
+      "cooldownMs": 600000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "boundary", "is": "bank" },
+          { "type": "chance", "percent": 30 }
+        ]
+      },
+      "say": [
+        "Restocked. The economy thanks you.",
+        "Bank sorted. Half of it is souvenirs, I assume.",
+        "All tidied away. I respect a good hoard.",
+        "Vault fed. Where next?"
+      ]
+    },
+    {
       "id": "login-greeting-new",
       "note": "R16, days 0-2: the same hello, before it has earned any warmth. The formality is carried by the grammar - full sentences, no contractions - rather than announced.",
       "group": "misc",

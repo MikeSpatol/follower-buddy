@@ -57,6 +57,11 @@ public final class TriggerContext
 		}
 		refreshGeneration++;
 
+		if (boundaryTicksLeft > 0)
+		{
+			boundaryTicksLeft--;
+		}
+
 		hitpoints = client.getBoostedSkillLevel(Skill.HITPOINTS);
 		maxHitpoints = client.getRealSkillLevel(Skill.HITPOINTS);
 
@@ -597,6 +602,37 @@ public final class TriggerContext
 		// A restore merges rather than replaces, so what is now in memory is
 		// not what is on disk - the next save has real work to do.
 		countersDirty = true;
+	}
+
+	// --------------------------------------------------------------- boundaries
+
+	/**
+	 * A few ticks of breather after something ENDS (R6): combat, a level, an
+	 * arrival, a thieving session, the bank. The research is blunt about
+	 * timing - a line in the middle of a task is an interruption, the same
+	 * line just after the task ends is company - and this is the state that
+	 * lets rules aim at the second one.
+	 */
+	private int boundaryTicksLeft;
+	private String boundaryKind = "";
+
+	/** How long an ending stays fresh enough to remark on: about six seconds. */
+	private static final int BOUNDARY_TICKS = 10;
+
+	public void noteBoundary(String kind)
+	{
+		boundaryKind = kind == null ? "" : kind;
+		boundaryTicksLeft = BOUNDARY_TICKS;
+	}
+
+	public boolean isAtBoundary()
+	{
+		return boundaryTicksLeft > 0;
+	}
+
+	public String getBoundaryKind()
+	{
+		return boundaryKind;
 	}
 
 	// ---------------------------------------------------------------- line wear

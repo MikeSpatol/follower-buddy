@@ -293,6 +293,9 @@ public class FollowerPlugin extends Plugin
 	/** Ticks until the one-time naming prompt opens; 0 = nothing pending. */
 	private int namePromptDelayTicks;
 
+	/** Whether the bank was open last tick, for the close-is-a-boundary watch. */
+	private boolean wasBankOpen;
+
 	/** Ten seconds after the first spawn, so the arrival isn't talked over. */
 	private static final int NAME_PROMPT_DELAY_TICKS = 17;
 
@@ -4904,6 +4907,17 @@ public class FollowerPlugin extends Plugin
 			wasThieving = thievingNow;
 		}
 		speechEngine.setMuted(config.muted() || thievingNow);
+
+		// The bank has no close event of its own; watched by widget presence.
+		// Closing it is an ending (R6) - the restock is done, the breather is
+		// real - and it is the one boundary no dispatched event can supply.
+		boolean bankOpen = client.getWidget(
+			net.runelite.api.gameval.InterfaceID.BANKMAIN, 0) != null;
+		if (wasBankOpen && !bankOpen)
+		{
+			speechEngine.getContext().noteBoundary("bank");
+		}
+		wasBankOpen = bankOpen;
 
 		int region = speechEngine.getContext().getRegionId();
 		if (region != lastRegionId)

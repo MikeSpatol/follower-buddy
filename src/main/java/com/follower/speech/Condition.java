@@ -476,6 +476,13 @@ public class Condition
 
 			// How long the follower has known you, in days, and the day of
 			// the year it met you coming round again.
+			// A few ticks of breather after something ENDS - combat, a level,
+			// an arrival, thieving, the bank. "is" names which ending; left
+			// out, any ending counts.
+			case "boundary":
+				return ctx.isAtBoundary()
+					&& (is == null || is.equalsIgnoreCase(ctx.getBoundaryKind()));
+
 			case "daysknown":
 				return ctx.getDaysKnown() >= orDefault(minimum, 1)
 					&& (maximum == null || ctx.getDaysKnown() <= maximum);
