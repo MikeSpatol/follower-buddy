@@ -62,6 +62,8 @@ public final class TriggerContext
 			boundaryTicksLeft--;
 		}
 
+		inWilderness = client.getVarbitValue(WILDERNESS_VARBIT) == 1;
+
 		hitpoints = client.getBoostedSkillLevel(Skill.HITPOINTS);
 		maxHitpoints = client.getRealSkillLevel(Skill.HITPOINTS);
 
@@ -602,6 +604,22 @@ public final class TriggerContext
 		// A restore merges rather than replaces, so what is now in memory is
 		// not what is on disk - the next save has real work to do.
 		countersDirty = true;
+	}
+
+	// -------------------------------------------------------------- wilderness
+
+	/**
+	 * Standing in the Wilderness, as a STATE - the crossing already has its
+	 * occasion via the varbit event; this is what lets whole bark sets swap
+	 * while we are in there (R18).
+	 */
+	private boolean inWilderness;
+
+	private static final int WILDERNESS_VARBIT = 5963;
+
+	public boolean isInWilderness()
+	{
+		return inWilderness;
 	}
 
 	// -------------------------------------------------------------- stay mode

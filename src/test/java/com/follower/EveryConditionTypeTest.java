@@ -650,6 +650,19 @@ public class EveryConditionTypeTest
 	}
 
 	@Test
+	public void standingInTheWildernessIsAStateNotACrossing() throws IOException
+	{
+		note("inWilderness");
+
+		Harness h = harnessFor("{\"type\": \"inWilderness\"}");
+		h.gameTicks(2);
+		assertQuiet(h, "the safe side of the ditch");
+		h.game.varbit(5963, 1);
+		h.gameTicks(2);
+		assertFired(h, "inWilderness");
+	}
+
+	@Test
 	public void aParkedFollowerKnowsItIsParked() throws IOException
 	{
 		note("staying");
@@ -1429,6 +1442,7 @@ public class EveryConditionTypeTest
 		inventoryRoomAndCrowdsAndDangerousNeighbours();
 		wantsAreAskedForFulfilledAndForgotten();
 		aWishOpensBySayingAndTheBagDecidesTheGift();
+		standingInTheWildernessIsAStateNotACrossing();
 		aParkedFollowerKnowsItIsParked();
 		theBreatherAfterSomethingEnds();
 		theRollStaysReadableUnderTheOverride();

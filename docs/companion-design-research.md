@@ -1350,7 +1350,29 @@ thinnest lists gained 33 lines between them - deaths, the combat edges,
 examines, level-ups in both eras, the standing bets, the disliked places and
 the AFK watch. Jokes stayed thin on purpose, per R4's own qualifier.
 
-**Still open**: R5, R6–R8, R11–R15, R18, R21, R22, R25, R26, R28–R37.
+**R6 — shipped 2026-08-12.** The boundary condition: a six-second breather
+window opened whenever something ENDS - combat, a level, an arrival,
+thieving, and the bank, watched by widget presence. Opened after the dispatch
+that caused it, so a boundary rule rises on the next pass instead of
+competing with the ending's own reaction. First tenant: the bank breather.
+The ambient migration happens rule by rule as transcripts show what lands
+mid-task.
+
+**R25 — shipped 2026-08-12.** Stay has a life: a staying condition marking
+only the PLAYER-commanded Stay (the plugin distinguishes it from errand,
+spectate and thrall stays), taking the post acknowledged, the sentry mutter
+paced by chance-flicker and cooldown, the notes coming out on the verified
+scroll pair, and the reunion - leaving the parked follower's sight and
+coming back - noticed as a boundary.
+
+**R18 — shipped 2026-08-12.** The idle pool swaps by context: a Wilderness
+set (clipped, watchful, via a new inWilderness state condition), a crowd set
+(people-watching, eight players within ten tiles), and the default
+everywhere else - partitioned by guards the way the voice eras partition the
+calendar, exactly one pool serving in any state, behaviourally tested in all
+three.
+
+**Still open**: R5, R7, R8, R11–R15, R21, R22, R26, R28–R37.
 
 **What five rounds of testing found**, including two shipped bugs that lived
 between features rather than inside them, and why overlapping systems are

@@ -481,6 +481,10 @@ public class Condition
 			case "staying":
 				return ctx.isFollowerStaying();
 
+			// Standing in the Wilderness, as a state rather than the crossing.
+			case "inwilderness":
+				return ctx.isInWilderness();
+
 			// A few ticks of breather after something ENDS - combat, a level,
 			// an arrival, thieving, the bank. "is" names which ending; left
 			// out, any ending counts.

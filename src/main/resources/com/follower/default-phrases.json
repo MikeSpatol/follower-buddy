@@ -6915,6 +6915,53 @@
       ]
     },
     {
+      "id": "idle-chatter-wilds",
+      "note": "R18: the idle pool in the Wilderness. Same trigger shape as idle-chatter, different register - clipped and watchful, because standing about is a decision here.",
+      "group": "idle",
+      "priority": 10,
+      "cooldownMs": 300000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "inWilderness" },
+          { "type": "idle", "ticks": 150 },
+          { "type": "chance", "percent": 30 }
+        ]
+      },
+      "say": [
+        "Standing still in the Wilderness. Bold strategy.",
+        "I'm watching the horizon. Both of them.",
+        "Every bush here has opinions. I'm listening.",
+        "We could idle somewhere less stabby.",
+        "Nobody's come to kill us yet. Lovely spot, really.",
+        "My notes for this page are just exits."
+      ]
+    },
+    {
+      "id": "idle-chatter-town",
+      "note": "R18: the idle pool in a crowd - people-watching instead of foot-tapping. Guarded off in the Wilderness, where a crowd means something else entirely.",
+      "group": "idle",
+      "priority": 10,
+      "cooldownMs": 300000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "none", "conditions": [ { "type": "inWilderness" } ] },
+          { "type": "idle", "ticks": 150 },
+          { "type": "chance", "percent": 30 },
+          { "type": "playersNearby", "minimum": 8, "within": 10 }
+        ]
+      },
+      "say": [
+        "Busy here. I've counted hats. Eleven.",
+        "So many people, and every one of them walking through you.",
+        "I like a crowd. More to write about, less to fight.",
+        "Somebody nearby is showing off. I won't say who.",
+        "All these adventurers, and you picked this spot to stand in.",
+        "The people-watching here is excellent. Take your time."
+      ]
+    },
+    {
       "id": "idle-chatter",
       "note": "Fires after ~90 seconds of standing still, and only 30% of the time. See idle-long for the five-minute tier.",
       "group": "idle",
@@ -6923,6 +6970,7 @@
       "when": {
         "type": "all",
         "conditions": [
+          { "type": "none", "conditions": [ { "type": "inWilderness" } ] },
           {
             "type": "idle",
             "ticks": 150
@@ -6930,7 +6978,8 @@
           {
             "type": "chance",
             "percent": 30
-          }
+          },
+          { "type": "none", "conditions": [ { "type": "playersNearby", "minimum": 8, "within": 10 } ] }
         ]
       },
       "say": [

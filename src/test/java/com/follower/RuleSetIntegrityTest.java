@@ -59,7 +59,7 @@ public class RuleSetIntegrityTest
 		"answered", "hovered", "examined",
 		"inventoryfree", "playersnearby",
 		"wanting", "wantfulfilled", "wantexpired", "feelsabout", "wishing",
-		"wishitemheld", "rolledfeeling", "boundary", "staying",
+		"wishitemheld", "rolledfeeling", "boundary", "staying", "inwilderness",
 		"remembers", "carrying", "souvenirlost",
 		"betting", "betwon", "betlost",
 		"timeofday", "sessionminutes", "asking",
