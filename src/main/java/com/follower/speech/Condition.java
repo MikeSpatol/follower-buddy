@@ -273,8 +273,10 @@ public class Condition
 					&& matchesText(event.getMessage());
 
 			// The player answering something the follower asked, by picking a
-			// branch in the conversation it opened. Yes and no only - the
-			// options ARE the vocabulary, so there is nothing to misread.
+			// branch in the conversation it opened. The options ARE the
+			// vocabulary, so there is nothing to misread: yes and no from the
+			// question trees, and the handful of named acts the everyday
+			// script can perform - "gift" being the first.
 			case "answered":
 				return event.getType() == TriggerEvent.Type.ANSWERED
 					&& (is == null || is.equalsIgnoreCase(event.getName()));

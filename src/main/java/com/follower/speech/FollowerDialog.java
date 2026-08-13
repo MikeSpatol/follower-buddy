@@ -108,6 +108,21 @@ public class FollowerDialog extends Overlay
 			return this;
 		}
 
+		/**
+		 * Runs the finish action now, if there is one. For the lint that
+		 * cross-checks every answer a conversation can produce against the
+		 * rules listening for one - the talk script's answers only exist
+		 * inside these runnables, so the only honest way to enumerate them is
+		 * to run them against a recording consumer.
+		 */
+		public void runFinish()
+		{
+			if (onFinish != null)
+			{
+				onFinish.run();
+			}
+		}
+
 		/** The pages this node speaks, and the labels of any choices it offers. */
 		public java.util.List<String> getLines()
 		{

@@ -37,7 +37,8 @@ public class TalkScriptTest
 		// (the node is reachable, its pages are readable, it ends where it says
 		// it does); the wording itself is walked branch by branch below.
 		return FollowerPlugin.talkScript(
-			() -> FollowerPlugin.daySummary(95, 12, 2, 1, "good", "that chicken"));
+			() -> FollowerPlugin.daySummary(95, 12, 2, 1, "good", "that chicken"),
+			answer -> { });
 	}
 
 	/** Every node id something points at, via {@code then} or a choice. */

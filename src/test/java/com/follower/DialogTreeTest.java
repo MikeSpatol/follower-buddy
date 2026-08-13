@@ -253,6 +253,17 @@ public class DialogTreeTest
 			}
 		}
 
+		// The everyday talk script is the second source of answers - "gift"
+		// was its first. Those only exist inside finish runnables, so the
+		// honest enumeration is to run every node's finish against a
+		// recording consumer.
+		for (FollowerDialog.Node node : FollowerPlugin.talkScript(
+			() -> new String[]{""},
+			answer -> offered.add(answer.toLowerCase(java.util.Locale.ROOT))).values())
+		{
+			node.runFinish();
+		}
+
 		Set<String> listened = new TreeSet<>();
 		for (SpeechRule rule : rules.getRules())
 		{

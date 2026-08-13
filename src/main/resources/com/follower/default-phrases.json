@@ -8796,6 +8796,71 @@
       ]
     },
     {
+      "id": "gifted-accept",
+      "note": "The player picked 'Found you something.' in the Talk-to script. Nothing real changes hands - client-side - so what it was is never specified, and the vagueness of the label is the joke that carries the constraint. Becomes an ordinary souvenir: mentioned by the mention rules, mourned by the lost rule, and the label makes every one of those lines read as the gift.",
+      "group": "souvenir",
+      "priority": 50,
+      "output": "overhead",
+      "cooldownMs": 600000,
+      "delayTicks": 2,
+      "mood": 10,
+      "pickUp": {
+        "what": "the little thing you found me",
+        "minutes": 90
+      },
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "answered",
+            "is": "gift"
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "carrying"
+              }
+            ]
+          }
+        ]
+      },
+      "say": [
+        "For me? It goes in the good pocket.",
+        "You found this for me. Noted. Underlined, actually.",
+        "I'll keep it with the important things.",
+        "A gift. The ledger tips your way today.",
+        "Nobody finds me things. You find me things."
+      ]
+    },
+    {
+      "id": "gifted-carrying",
+      "note": "The gift offered while the pocket already holds something. Higher priority than gifted-accept so exactly one of the pair answers, and no pickUp - a silently swapped souvenir would drop something the follower has been talking about.",
+      "group": "souvenir",
+      "priority": 60,
+      "output": "overhead",
+      "cooldownMs": 30000,
+      "delayTicks": 2,
+      "mood": 2,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "answered",
+            "is": "gift"
+          },
+          {
+            "type": "carrying"
+          }
+        ]
+      },
+      "say": [
+        "One treasure at a time. It'll keep.",
+        "Pocket's occupied. Ask me again when it's free.",
+        "Hold that thought. I'm already carrying a good one."
+      ]
+    },
+    {
       "id": "souvenir-mention",
       "note": "Brings up the thing it is holding. This is the payoff for the object existing at all: it is the same rock forty minutes later.",
       "group": "souvenir",

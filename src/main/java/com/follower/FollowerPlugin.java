@@ -3907,7 +3907,8 @@ public class FollowerPlugin extends Plugin
 				tree.startId());
 			return;
 		}
-		dialog.startNextTick(config.followerName(), talkScript(this::daySummary), "start");
+		dialog.startNextTick(config.followerName(),
+			talkScript(this::daySummary, this::answerQuestion), "start");
 	}
 
 	/**
@@ -3948,7 +3949,8 @@ public class FollowerPlugin extends Plugin
 	 * plugin outside phrases.json, and so the only speech nothing checked.
 	 */
 	static java.util.Map<String, com.follower.speech.FollowerDialog.Node> talkScript(
-		java.util.function.Supplier<String[]> summary)
+		java.util.function.Supplier<String[]> summary,
+		java.util.function.Consumer<String> onAnswer)
 	{
 		java.util.Map<String, com.follower.speech.FollowerDialog.Node> script =
 			new java.util.LinkedHashMap<>();
@@ -3958,17 +3960,32 @@ public class FollowerPlugin extends Plugin
 				"Who are you, exactly?", "who-q",
 				"What is it you actually do?", "do-q",
 				"How have you been?", "how-q",
-				"Let's just talk.", "chat-q",
+				"Found you something.", "gift-q",
 				"Never mind.", "bye-q"));
 
-		// The returning hub, without the greeting.
+		// The returning hub, without the greeting. Five options is the most
+		// the box has measured spacing for, so the hubs trade: the first
+		// visit leads with who-are-you and the return hub retires it for the
+		// small talk - somebody coming BACK mid-conversation knows who it is.
 		script.put("menu", says()
 			.choices(
-				"Who are you, exactly?", "who-q",
 				"What is it you actually do?", "do-q",
 				"How have you been?", "how-q",
+				"Found you something.", "gift-q",
 				"Let's just talk.", "chat-q",
 				"That's all for now.", "done-q"));
+
+		// ------------------------------------------------ the gift
+		// The first thing the player can DO for the follower besides taking it
+		// somewhere. Client-side, so nothing real changes hands - the box
+		// closes on the handover and the verdict arrives overhead from the
+		// gifted-* rules, exactly the shape the hands game uses: fixed text
+		// here, consequence from the rules. What it was is never specified,
+		// which is the joke carrying the constraint.
+		script.put("gift-q", you("Found you something.").then("gift-a"));
+		script.put("gift-a", says(
+			"Did you now? Hand it over, then.")
+			.onFinish(() -> onAnswer.accept("gift")));
 
 		// Shared closings. Both are spoken, like every other option.
 		script.put("bye-q", you("Never mind.").then("bye"));
