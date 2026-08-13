@@ -2696,15 +2696,37 @@
       ]
     },
     {
+      "id": "level-up-new",
+      "note": "R16, days 0-2: congratulations from someone still being polite about it. The familiar sibling takes over from day 3.",
+      "group": "misc",
+      "priority": 40,
+      "cooldownMs": 3000,
+      "mood": 8,
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "levelUp", "names": [ "*" ] },
+          { "type": "daysKnown", "minimum": 0, "maximum": 2 }
+        ]
+      },
+      "say": [
+        "Level {level} in {skill}. Congratulations.",
+        "{skill} to {level}. Duly recorded.",
+        "That is {skill} level {level}. Well done.",
+        "Progress: {skill}, {level}. It has been noted with respect."
+      ]
+    },
+    {
       "id": "level-up",
       "group": "misc",
       "priority": 40,
       "cooldownMs": 3000,
       "mood": 8,
       "when": {
-        "type": "levelUp",
-        "names": [
-          "*"
+        "type": "all",
+        "conditions": [
+          { "type": "levelUp", "names": [ "*" ] },
+          { "type": "daysKnown", "minimum": 3 }
         ]
       },
       "say": [
@@ -2810,6 +2832,52 @@
       ]
     },
     {
+      "id": "login-greeting-new",
+      "note": "R16, days 0-2: the same hello, before it has earned any warmth. The formality is carried by the grammar - full sentences, no contractions - rather than announced.",
+      "group": "misc",
+      "priority": 90,
+      "output": "overhead",
+      "delayTicks": 8,
+      "cooldownMs": 60000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "login" },
+          { "type": "daysKnown", "minimum": 0, "maximum": 2 }
+        ]
+      },
+      "say": [
+        "Good day, {player}. Ready when you are.",
+        "Hello. You will hardly notice me. Most people stop noticing.",
+        "You are here. Very good. I will follow your lead.",
+        "Welcome back. I trust the road treated you well.",
+        "At your disposal, {player}. The notebook is new. So am I."
+      ]
+    },
+    {
+      "id": "login-greeting-settling",
+      "note": "R16, days 3-6: the thaw. Contractions start creeping in, which is the point.",
+      "group": "misc",
+      "priority": 90,
+      "output": "overhead",
+      "delayTicks": 8,
+      "cooldownMs": 60000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          { "type": "login" },
+          { "type": "daysKnown", "minimum": 3, "maximum": 6 }
+        ]
+      },
+      "say": [
+        "Back again, {player}. Good. I am getting used to this.",
+        "There you are. The waiting is becoming a habit of mine.",
+        "Welcome back. I kept notes while you were gone. Short ones.",
+        "You're here. The routine is becoming a routine.",
+        "Morning, or whatever it is. I've stopped checking. We work on your clock."
+      ]
+    },
+    {
       "id": "login-greeting",
       "note": "A hello a couple of seconds after the follower teleports in on login. Spawn happens ~4 ticks after login; delayTicks 8 lands the line ~2.5s after the puff. The cooldown stops quick world hops re-greeting.",
       "group": "misc",
@@ -2818,7 +2886,11 @@
       "delayTicks": 8,
       "cooldownMs": 60000,
       "when": {
-        "type": "login"
+        "type": "all",
+        "conditions": [
+          { "type": "login" },
+          { "type": "daysKnown", "minimum": 7 }
+        ]
       },
       "say": [
         "There you are! Right on schedule.",

@@ -441,6 +441,59 @@ public class RuleSetIntegrityTest
 			+ String.join("\n  ", missing), missing.isEmpty());
 	}
 
+	/**
+	 * The voice eras (R16) must tile the calendar: on every day known there
+	 * is exactly one greeting and one level-up voice - no gap where the
+	 * follower falls silent, no overlap where two hellos race each other.
+	 */
+	@Test
+	public void theVoiceErasTileTheCalendar() throws IOException
+	{
+		Harness h = new Harness(folder.newFolder().toPath());
+		String[][] families = {
+			{"login-greeting-new", "login-greeting-settling", "login-greeting"},
+			{"level-up-new", "level-up"},
+		};
+		for (String[] family : families)
+		{
+			for (int day = 0; day <= 40; day++)
+			{
+				List<String> holders = new ArrayList<>();
+				for (String id : family)
+				{
+					Condition window = daysKnownWindow(h, id);
+					int minimum = window.minimum == null ? 1 : window.minimum;
+					if (day >= minimum
+						&& (window.maximum == null || day <= window.maximum))
+					{
+						holders.add(id);
+					}
+				}
+				assertEquals("day " + day + " of " + family[family.length - 1]
+					+ "'s family belongs to " + holders, 1, holders.size());
+			}
+		}
+	}
+
+	private static Condition daysKnownWindow(Harness h, String ruleId)
+	{
+		for (SpeechRule rule : h.loader.getRules())
+		{
+			if (!ruleId.equals(rule.id))
+			{
+				continue;
+			}
+			for (Condition part : rule.when.conditions)
+			{
+				if ("daysKnown".equalsIgnoreCase(part.type))
+				{
+					return part;
+				}
+			}
+		}
+		throw new AssertionError(ruleId + " no longer carries a daysKnown era gate");
+	}
+
 	/** The explore list is held to the same bargain as the study list above. */
 	@Test
 	public void everyExploreTargetHasItsLines() throws IOException

@@ -90,20 +90,23 @@ public class ArrivalArcTest
 		assertEquals("the first login has its own hello", 1, h.firedBy("first-meeting").size());
 		assertTrue("and the everyday one stays out of its way",
 			h.firedBy("login-greeting").isEmpty());
+		assertTrue("in every era",
+			h.firedBy("login-greeting-new").isEmpty());
 	}
 
 	@Test
 	public void theSecondLoginIsTheEverydayGreetingAgain() throws IOException
 	{
 		// Same day, so this is a relog rather than a return - the arc's last
-		// beat is about coming back TOMORROW and must not fire here.
+		// beat is about coming back TOMORROW and must not fire here. On day
+		// zero the everyday hello wears its polite era (R16).
 		Harness h = known(2, 0);
 		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.LOGIN));
 		settle(h);
 
 		assertTrue(h.firedBy("first-meeting").isEmpty());
 		assertTrue(h.firedBy("first-return").isEmpty());
-		assertEquals(1, h.firedBy("login-greeting").size());
+		assertEquals(1, h.firedBy("login-greeting-new").size());
 	}
 
 	@Test

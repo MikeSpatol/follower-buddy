@@ -1315,8 +1315,15 @@ the same rule, and when every line is equally worn they all come back,
 because wear is relative and retiring the lot would retire the rule. The
 ledger is capped at 500 entries, least-worn dropped first.
 
+**R16 — shipped 2026-08-12.** As cheap as promised: era-gated siblings on the
+recurring touchpoints. The login hello and the level-up each split on
+daysKnown - formal on days 0-2, thawing 3-6, the familiar register from day
+7 - with the formality carried by the grammar (full sentences, no
+contractions) rather than announced. A lint holds the eras to tiling the
+calendar exactly, so no day is silent and no day has two hellos racing.
+
 **Still open**: R4 (variant counts on the highest-firing rules), R5, R6–R8,
-R11–R16, R18, R20–R26, R28–R37.
+R11–R15, R18, R20–R26, R28–R37.
 
 **What five rounds of testing found**, including two shipped bugs that lived
 between features rather than inside them, and why overlapping systems are
