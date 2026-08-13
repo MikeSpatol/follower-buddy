@@ -191,6 +191,20 @@ public class MemoryDialog extends JDialog
 			? "nowhere in particular" : joined(c.getLikedRegions())));
 		rows.add(row("Avoids on a whim", c.getDislikedRegions().isEmpty()
 			? "nowhere in particular" : joined(c.getDislikedRegions())));
+		if (c.getCoreLikedRegion() != 0 || c.getCoreDislikedRegion() != 0)
+		{
+			StringBuilder core = new StringBuilder();
+			if (c.getCoreLikedRegion() != 0)
+			{
+				core.append("likes region ").append(c.getCoreLikedRegion());
+			}
+			if (c.getCoreDislikedRegion() != 0)
+			{
+				core.append(core.length() == 0 ? "" : ", ")
+					.append("avoids region ").append(c.getCoreDislikedRegion());
+			}
+			rows.add(row("Won't be argued out of", core.toString()));
+		}
 
 		rows.add(header("RIGHT NOW"));
 		boolean anything = false;

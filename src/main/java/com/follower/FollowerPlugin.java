@@ -1411,6 +1411,7 @@ public class FollowerPlugin extends Plugin
 							saved.liked == null ? java.util.Collections.emptyList() : saved.liked),
 						new java.util.HashSet<>(
 							saved.disliked == null ? java.util.Collections.emptyList() : saved.disliked));
+					applyCoreTastes(saved);
 					return;
 				}
 			}
@@ -1446,8 +1447,22 @@ public class FollowerPlugin extends Plugin
 
 		speechEngine.getContext().setTraits(
 			new java.util.HashSet<>(rolled.liked), new java.util.HashSet<>(rolled.disliked));
+		applyCoreTastes(rolled);
 		configManager.setConfiguration(FollowerConfig.GROUP, "traits", gson.toJson(rolled));
 		log.debug("Rolled traits: likes {}, dislikes {}", rolled.liked, rolled.disliked);
+	}
+
+	/**
+	 * The core tastes (R23) are the FIRST entry of each rolled list: the blob
+	 * stores ordered lists, so the same two regions come back on every
+	 * restore, including from blobs written before cores existed. One like
+	 * and one grudge the earned record can never argue away.
+	 */
+	private void applyCoreTastes(SavedTraits traits)
+	{
+		speechEngine.getContext().setCoreTastes(
+			traits.liked == null || traits.liked.isEmpty() ? 0 : traits.liked.get(0),
+			traits.disliked == null || traits.disliked.isEmpty() ? 0 : traits.disliked.get(0));
 	}
 
 	/**

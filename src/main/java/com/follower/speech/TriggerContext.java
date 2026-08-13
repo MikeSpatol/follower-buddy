@@ -1085,18 +1085,57 @@ public final class TriggerContext
 	}
 
 	/**
+	 * One rolled like and one rolled dislike that experience can never
+	 * override (R23): a place it is fond of for no reason it will give.
+	 * Over-adaptation reads as inauthentic - a companion the record can
+	 * always argue around has no opinions of its own - so these two hold
+	 * whatever happens there. 0 means none is set.
+	 */
+	private int coreLikedRegion;
+	private int coreDislikedRegion;
+
+	public void setCoreTastes(int liked, int disliked)
+	{
+		coreLikedRegion = liked;
+		coreDislikedRegion = disliked;
+	}
+
+	public int getCoreLikedRegion()
+	{
+		return coreLikedRegion;
+	}
+
+	public int getCoreDislikedRegion()
+	{
+		return coreDislikedRegion;
+	}
+
+	/**
 	 * Whether the follower feels the named way about where it is standing.
 	 *
 	 * <p>Experience outranks the roll, and only in the direction experience
 	 * points: a place it has come to dislike is not liked, whatever the shuffle
 	 * said on the first login. Where nothing has happened yet, the roll still
 	 * answers, so a new follower has a temperament from the start.
+	 *
+	 * <p>Except in the two core places, where the roll outranks everything:
+	 * the follower keeps one fondness and one grudge the player cannot argue
+	 * it out of, because that is what having a temperament means.
 	 */
 	public boolean feelsAbout(String how)
 	{
-		int earned = getPlaceScore();
 		boolean askingDisliked = "disliked".equalsIgnoreCase(how);
 
+		if (regionId != 0 && regionId == coreLikedRegion)
+		{
+			return !askingDisliked;
+		}
+		if (regionId != 0 && regionId == coreDislikedRegion)
+		{
+			return askingDisliked;
+		}
+
+		int earned = getPlaceScore();
 		if (earned <= -OPINION_AT)
 		{
 			return askingDisliked;
