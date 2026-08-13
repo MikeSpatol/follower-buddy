@@ -6477,7 +6477,7 @@
       "note": "Fires after ~90 seconds of standing still, and only 30% of the time. See idle-long for the five-minute tier.",
       "group": "idle",
       "priority": 10,
-      "cooldownMs": 120000,
+      "cooldownMs": 300000,
       "when": {
         "type": "all",
         "conditions": [
@@ -8045,7 +8045,7 @@
       "note": "Somewhere THIS follower is fond of. The set is rolled once per character from the regions the rule set already has opinions about, then kept for good - so two people do not get the same follower, and the mood stops being weather and becomes a temperament you can learn.",
       "group": "area",
       "priority": 24,
-      "cooldownMs": 600000,
+      "cooldownMs": 3600000,
       "output": "overhead",
       "animation": 13995,
       "mood": 10,
@@ -8197,7 +8197,7 @@
       "note": "Crowd awareness. Six people inside six tiles is a bank, an event, or a queue - all of them worth a word.",
       "group": "area",
       "priority": 22,
-      "cooldownMs": 600000,
+      "cooldownMs": 2700000,
       "output": "overhead",
       "animation": 2113,
       "when": {
@@ -9721,7 +9721,7 @@
       "note": "The other end of the same total.",
       "group": "area",
       "priority": 30,
-      "cooldownMs": 900000,
+      "cooldownMs": 2700000,
       "output": "overhead",
       "when": {
         "type": "all",

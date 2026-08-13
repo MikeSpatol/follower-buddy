@@ -829,8 +829,15 @@ public class FollowerPlugin extends Plugin
 		}
 	}
 
-	/** Player standing about this long before the follower starts drifting. */
-	private static final int WANDER_AFTER_TICKS = 50;
+	/**
+	 * Player standing about this long before the follower starts drifting.
+	 *
+	 * <p>Was thirty seconds, and play testing read that as the follower
+	 * getting restless while the player was merely sorting a bank tab. Most
+	 * ordinary pauses are under a minute; the drift should start only once
+	 * the stop has proven to be a stay.
+	 */
+	private static final int WANDER_AFTER_TICKS = 80;
 
 	/** Ticks between drifts, picked fresh each time so it never reads as a metronome. */
 	private static final int WANDER_MIN_GAP = 25;
