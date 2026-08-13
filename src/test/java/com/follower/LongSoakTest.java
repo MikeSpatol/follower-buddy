@@ -213,6 +213,105 @@ public class LongSoakTest
 	}
 
 	@Test
+	public void theNewSystemsSurviveHoursTogether() throws IOException
+	{
+		// Everything the last two days added, live at once for simulated
+		// hours: stays with reunions, wilderness stints, boundaries from
+		// every ending, era-gated greetings, wear accruing on every line,
+		// the context idle pools. What this is for is the failure that only
+		// shows when three of them line up - and the silent one, where a new
+		// condition throws once and its rules are disabled forever.
+		Harness h = soakHarness();
+		h.gameTicks(3);
+		h.clear();
+
+		Random random = new Random(20260812L);
+		boolean staying = false;
+		for (int i = 0; i < TICKS; i++)
+		{
+			clock.addAndGet(TICK_MS);
+			h.gameTick();
+
+			int roll = random.nextInt(1000);
+			if (roll < 30)
+			{
+				h.dispatch(TriggerEvent.simple(TriggerEvent.Type.COMBAT_START));
+			}
+			else if (roll < 60)
+			{
+				h.dispatch(TriggerEvent.simple(TriggerEvent.Type.COMBAT_END));
+			}
+			else if (roll < 75)
+			{
+				h.dispatch(TriggerEvent.levelUp("Cooking", 30 + random.nextInt(60)));
+			}
+			else if (roll < 90)
+			{
+				h.dispatch(TriggerEvent.regionChange(
+					12850 + random.nextInt(4), 12850));
+			}
+			else if (roll < 100)
+			{
+				h.engine.getContext().noteBoundary("bank");
+			}
+			else if (roll < 110)
+			{
+				staying = !staying;
+				h.engine.getContext().setFollowerStaying(staying);
+			}
+			else if (roll < 120 && staying)
+			{
+				h.engine.getContext().noteBoundary("reunion");
+			}
+			else if (roll < 140)
+			{
+				h.game.varbit(5963, random.nextBoolean() ? 1 : 0);
+			}
+			else if (roll < 160)
+			{
+				h.game.animating(roll % 2 == 0 ? 879 : -1);
+			}
+			else if (roll < 170)
+			{
+				h.dispatch(TriggerEvent.death());
+			}
+		}
+
+		assertFalse("hours of everything at once and nothing was said",
+			h.spoken.isEmpty());
+
+		// The silent failure: a condition that throws disables its rule for
+		// good, and the only symptom is a line nobody ever hears again.
+		for (SpeechRule rule : h.loader.getRules())
+		{
+			assertTrue("rule '" + rule.id + "' was disabled by a thrown condition",
+				rule.isEnabled());
+		}
+
+		assertTrue("the wear ledger stayed bounded",
+			h.engine.getContext().getLineWear().size() <= 500);
+
+		// Never the same line twice running, whatever lined up.
+		String previous = null;
+		for (Harness.Spoken s : h.spoken)
+		{
+			if (!s.text.isEmpty())
+			{
+				assertFalse("said \"" + s.text + "\" twice running",
+					s.text.equals(previous));
+				previous = s.text;
+			}
+		}
+
+		// And still capable of speech at the end.
+		h.engine.getContext().setFollowerStaying(false);
+		h.clear();
+		play(h, 600, new Random(7L));
+		assertFalse("the follower went permanently quiet by the end",
+			h.spoken.isEmpty());
+	}
+
+	@Test
 	public void theDirectorRestsWithoutEverStopping() throws IOException
 	{
 		// The shape the whole model is for: bursts with real quiet between them,

@@ -171,3 +171,47 @@ The baseline to beat, from the whole-day transcript of 2026-08-10:
 
 The per-rule shuffle bags and the twelve-entry corpus window cost nothing worth
 reporting.
+
+## Deep pass over the two-day feature batch, 2026-08-12
+
+Thirteen features shipped in two days (the low-mood arc, delivery-latched
+openers, the name prompt, explore, wear, eras, the memory surface, the grind
+guard, core tastes, R4 variants, boundaries, stay life, idle contexts), then
+the same four-round treatment the first batch got.
+
+**Round 1, interaction mapping, found one real bug.** In a core-liked region
+(R23) with the earned score at -80, `place-earned-dislike` said "I hate it
+here" in the one place the follower cannot be argued out of liking - while
+`defended-like` said the opposite moments later. The earned verdicts claim a
+FEELING, so they now require `feelsAbout` agreement, which is a no-op
+everywhere except core regions, where the core owns the answer. Pinned by
+`theEarnedVerdictNeverContradictsTheCore`.
+
+**The grind guard, measured rather than believed:** `repeating` needs a
+hundred sustained ticks to count and resets within four quiet ticks. So the
+guard bites during a live grind - the long fight is the case that matters,
+since idle-gated openers cannot fire during anything animated anyway - and
+releases almost immediately after. The R24 commit's claim that it covers the
+bank pause mid-grind was wrong: the counter has reset long before the pause
+matters. Acceptable, because a bank pause is a menu rather than the calm the
+research protects, but the record should say what the guard actually does.
+`GrindGuardTest` now pins both the bite and the fast release.
+
+**Cleared suspicions:** relogging cannot double-merge the wear ledger
+(LOGIN_SCREEN resets the engine before the next restore); the boundary kind
+is a single slot where the latest ending wins, so a reunion can displace a
+pending bank breather within one six-second window, at the cost of one
+30%-chance remark - accepted. Noted in passing, pre-existing: the logout path
+writes no final counter snapshot, so up to a minute of tallies can be lost
+per logout, bounded by the periodic write.
+
+**Round 3 soak:** all the new systems driven at once for 3h20m simulated -
+stays toggling, reunions, wilderness stints, boundaries from every ending,
+level-ups, deaths - asserting the failure only hours can produce: no rule
+disabled by a throwing condition, the wear ledger bounded, no line twice
+running, and the follower still capable of speech at the end.
+
+**Round 4 mutations, four for four:** the wear filter removed from the bag
+refill, the boundary noted before the evaluation loop instead of after, the
+core-taste check deleted from feelsAbout, and the wish latched at hand-off
+instead of delivery - each killed by the named test that owns it.

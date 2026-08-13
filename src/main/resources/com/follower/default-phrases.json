@@ -10220,6 +10220,10 @@
             "maximum": -80
           },
           {
+            "type": "feelsAbout",
+            "is": "disliked"
+          },
+          {
             "type": "chance",
             "percent": 8
           }
@@ -10306,6 +10310,10 @@
           {
             "type": "placeScore",
             "minimum": 80
+          },
+          {
+            "type": "feelsAbout",
+            "is": "liked"
           },
           {
             "type": "chance",

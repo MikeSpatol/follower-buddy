@@ -63,6 +63,38 @@ public class UnshakableTasteTest
 	}
 
 	@Test
+	public void theEarnedVerdictNeverContradictsTheCore() throws java.io.IOException
+	{
+		// Round-1 finding from the deep-testing pass: with the raw score at
+		// -80 in a core-liked region, place-earned-dislike said "I hate it
+		// here" in the one place the follower cannot be argued out of
+		// liking, while defended-like said the opposite moments later. The
+		// earned verdicts now defer to feelsAbout, which the core owns.
+		com.follower.sim.Harness h = new com.follower.sim.Harness(
+			folder.newFolder().toPath());
+		h.gameTicks(1);
+		h.engine.getContext().setTraits(Collections.singleton(HERE),
+			Collections.emptySet());
+		h.engine.getContext().setCoreTastes(HERE, 0);
+		for (int i = 0; i < 4; i++)
+		{
+			h.engine.getContext().notePlaceFeeling(-30);
+		}
+
+		// The 8% chance flicker re-arms the rule constantly; three hundred
+		// ticks would be more than enough for it to fire if it were allowed.
+		h.gameTicks(300);
+		assertTrue("the record cannot put hate in a core-fond mouth",
+			h.firedBy("place-earned-dislike").isEmpty());
+		assertFalse("the defence is what speaks for the disagreement",
+			h.firedBy("defended-like").isEmpty());
+	}
+
+	@org.junit.Rule
+	public final org.junit.rules.TemporaryFolder folder =
+		new org.junit.rules.TemporaryFolder();
+
+	@Test
 	public void everywhereElseExperienceStillOutranksTheRoll()
 	{
 		// The control: a rolled fondness that is NOT core concedes to the
