@@ -913,6 +913,39 @@ public class RuleSetIntegrityTest
 		return false;
 	}
 
+	/**
+	 * The line book (docs/lines.md) is generated from the rule file by
+	 * tools/lines.py and is the surface every line is reviewed on. A book
+	 * that drifts from the rules reviews the wrong words, so the build holds
+	 * it current: the check runs the generator in --check mode and fails
+	 * when a regeneration is due. Skipped where python is not on the path
+	 * (a CI box that lacks it must not turn the whole suite red).
+	 */
+	@Test
+	public void theLineBookIsCurrent() throws IOException, InterruptedException
+	{
+		java.nio.file.Path tool = java.nio.file.Paths.get("tools", "lines.py");
+		if (!java.nio.file.Files.exists(tool))
+		{
+			return;
+		}
+		Process check;
+		try
+		{
+			check = new ProcessBuilder("python", tool.toString(), "--check")
+				.redirectErrorStream(true).start();
+		}
+		catch (IOException noPython)
+		{
+			return;
+		}
+		String output = new String(check.getInputStream().readAllBytes(),
+			StandardCharsets.UTF_8);
+		int code = check.waitFor();
+		assertTrue("docs/lines.md is stale - run: python tools/lines.py\n" + output,
+			code == 0);
+	}
+
 	@Test
 	public void theRuleFileParsesWithAPlainGson() throws IOException
 	{

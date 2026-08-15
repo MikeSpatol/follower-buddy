@@ -137,7 +137,8 @@ speech by group. That turns "feels chattier lately" into a diff.
 | New persisted field | `lived()` + roundtrip assertion, same commit |
 | New opener, guard, or target list | Field-driven lint, never id-driven |
 | Feature batch lands | Interaction-mapping pass + 4-6 mutations + glue read-through |
-| Corpus or pacing change | Talk-rate re-measure + one idle and one combat session before push |
+| Corpus or pacing change | `python tools/lines.py` (the build fails if the line book is stale) + talk-rate re-measure + one idle and one combat session before push |
+| Voice review | Read [lines.md](lines.md) against [voice.md](voice.md), group by group; fix in the rules, regenerate |
 | Before a Hub release | Full campaign, fresh transcript baselines, the smoke list below |
 
 ## The in-game smoke list
