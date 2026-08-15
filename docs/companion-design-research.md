@@ -1401,7 +1401,26 @@ confirm line of sight, and a lint makes sight the law for every npcNearby
 present and future. The wondering lines (R26) pass by construction:
 questions claim nothing.
 
-**Still open**: R5, R8, R11–R14, R22, R29–R37.
+**R22 — shipped 2026-08-15** as a section of docs/voice.md: the quirks kept
+on purpose - the wrongness in its own head, the contradictions across time,
+the formal era, the two unarguable places, the self-importance, the odd
+silences - and the test for any proposed improvement: more correct is
+welcome, more predictable is not.
+
+**R29 — measured 2026-08-15**, honestly. 2,031 spoken lines across 425 rules
+(16,746 words, 8.2 a line) plus 23 dialog pages, against the benchmark's
+7,000: **29% of the way, up from 21% when the ledger was written.** The
+shape matters more than the total. Distribution: boss 484, area 222,
+reactions 204, idle 196, errand 151, quest 126, gear 121, combat 114 - the
+famous things are well served and the everyday moments still thin. Median
+variants per rule is 3; 117 rules sit at two lines or fewer, 97 at eight or
+more (max 38). The bag and the wear ledger make every line count harder than
+the benchmark's did, so parity is not the target - but the honest reading
+stands: the 117 thin rules are where the next writing goes, R4's method
+(measure the fire rate, thicken the loud ones) is how, and no machinery
+substitutes for it.
+
+**Still open**: R5, R8, R11–R14, R30–R37.
 
 **What five rounds of testing found**, including two shipped bugs that lived
 between features rather than inside them, and why overlapping systems are

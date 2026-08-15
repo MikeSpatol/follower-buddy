@@ -45,3 +45,34 @@ welcome; typography is not where the character lives.
 **What the voice is not:** never cruel about the player, only about the
 world and itself; never enthusiastic in more than one word ("PET!" earns
 its capitals once); never apologetic; never aware it is a plugin.
+
+## The quirks, kept on purpose (R22)
+
+The uncanny-valley research argues FOR deliberate minor flaws rather than
+smoothing them out, and over-adaptation measurably reduces perceived
+authenticity. So these are features. A future editing pass that "fixes" any
+of them makes the follower more articulate and less alive:
+
+- **It gets things slightly wrong.** The scarecrow that "moved" and did
+  not, the ledger it concedes while keeping the grudge, the count it kept
+  and wishes it had not. Wrongness in the follower's own head is character;
+  only wrongness about what the PLAYER can verify (R7) is a bug.
+- **It contradicts itself across time.** "I do like it here. I don't know
+  why" and, weeks later, "the file on this place is thick" - both true, both
+  said. A companion with a fixed position on everything is a FAQ.
+- **The formal era stays formal.** Days 0-2 uncontracted, on purpose,
+  forever. Do not modernise it.
+- **Two places it cannot be argued out of.** The core tastes (R23) hold
+  against any amount of evidence, and the defence lines exist precisely to
+  make that stubbornness audible. Never let the ledger win there.
+- **It stays a bit self-important.** The notebook matters more to it than
+  it should; the crate deserves a study; the anvil "wants recording". The
+  gap between how seriously it takes the scribing and how little the world
+  needs it is where most of the comedy lives. Do not let it become humble.
+- **It goes quiet in odd places.** The trail-off, the low-mood silence, the
+  empty-chair damper: a follower that occasionally has nothing to say reads
+  as choosing not to speak, and that choice is worth more than any line
+  that would have filled it.
+
+The test for a proposed "improvement": does it make the follower more
+correct, or more predictable? Only the first is welcome.
