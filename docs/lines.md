@@ -1,20 +1,20 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 425 rules, 2031 spoken lines, 2 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 425 rules, 2069 spoken lines, 2 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
 ## Contents
 
-- [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (24 rules, 108 lines)
+- [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (24 rules, 127 lines)
 - [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (35 rules, 196 lines)
 - [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (28 rules, 204 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 114 lines)
 - [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 72 lines)
 - [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (19 rules, 102 lines)
 - [area](#area) - Places: named lines, tastes, earned verdicts, the defences (67 rules, 222 lines)
-- [errand](#errand) - Its little trips: bank, altar, fire, cat, studies, explores (44 rules, 151 lines)
-- [souvenir](#souvenir) - Wishes, gifts, the pocket, and what it carries (17 rules, 57 lines)
+- [errand](#errand) - Its little trips: bank, altar, fire, cat, studies, explores (44 rules, 155 lines)
+- [souvenir](#souvenir) - Wishes, gifts, the pocket, and what it carries (17 rules, 72 lines)
 - [bet](#bet) - Its predictions about drops (3 rules, 20 lines)
 - [clock](#clock) - The hour and how long we have been at it (5 rules, 30 lines)
 - [gear](#gear) - What you put on (62 rules, 121 lines)
@@ -143,6 +143,10 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Understood. Guarding this exact square.
 - Go on. Me and this spot have an arrangement.
 - Staying. If anything moves, I'll describe it thoroughly.
+- Right you are. Holding here. The notebook will keep me company.
+- Stay it is. I'll guard the spot and the spot will guard me.
+- Fine. Off you go. This square and I will get acquainted.
+- Understood. Not moving. Possibly not blinking either.
 
 ### `stay-watch`
 
@@ -155,6 +159,10 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - All quiet at my post. Suspiciously quiet.
 - The view hasn't changed. I've checked twice.
 - Post report: one follower, zero incidents.
+- Still stationed. The grass has done nothing suspicious.
+- Nobody's tried anything. I'd have written it down.
+- Holding position. Morale: adequate. Snacks: none.
+- The spot remains held. I'm quite good at this, it turns out.
 
 ### `stay-fidget`
 
@@ -166,6 +174,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - Might as well update the notes while I wait.
 - Reviewing the morning's entries. Standards apply.
+- Quiet post. Time to see whether the earlier notes still hold up.
+- Nothing doing here. Good. The scroll's been neglected all day.
+- A still moment. I'll fill it with handwriting.
 
 ### `stay-reunion`
 
@@ -190,6 +201,14 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Bank sorted. Half of it is souvenirs, I assume.
 - All tidied away. I respect a good hoard.
 - Vault fed. Where next?
+- Bank done. I counted the coins by ear. Sounded healthy.
+- That's the archive fed. Mine's smaller and better organised.
+- Restocked. I saw what you keep in there. No judgement. Some judgement.
+- The bank has everything. The bank has never once been anywhere.
+- All squared away. Right, back out into the weather.
+- In and out. Efficient. I made a note of it, obviously.
+- Sorted. If anything's missing, it was missing before we arrived.
+- Bank closed. Adventure reopened. Order of business restored.
 
 ### `login-greeting-new`
 
@@ -374,7 +393,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > R26: the attention turns around. Deliberately no asks field - a real answer would make it a form, and the not-needing-one is the warmth. The trail-off throttles it like all idle speech.
 
 - **when:** standing still 200+ ticks AND standing still under 500 ticks AND a 15% roll
-- **pacing:** priority 12, cooldown 20m, overhead
+- **pacing:** priority 16, cooldown 20m, overhead
 
 - What are we saving for, anyway? Don't tell me. I'll guess wrong on purpose.
 - Why here, of all places? No, don't explain. I like a mystery.
@@ -2974,6 +2993,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - A gravestone. Paying respects. Won't be long.
 - Hold on. Someone should read the old names.
 - One moment at the stone. Manners cost nothing.
+- A grave. I'll read it and say nothing clever. That's the rule.
+- Hold on. Somebody's under there and nobody's stopped in a while.
 
 ### `errand-explore-gravestone-end`
 
@@ -2983,6 +3004,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Couldn't read the name. Weather got there first.
 - Rest easy, whoever. We're just passing.
 - Old stone, older story. Right, onward.
+- Name's gone, date's gone. The stone's still trying. Fair enough.
+- Read what I could. Wrote down less. Some things stay theirs.
 
 ### `errand-explore-scarecrow-start`
 
@@ -3235,6 +3258,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - A feather would be useful, if one turns up.
 - Quills wear out. Keep an eye open for a feather.
+- If a bird's been careless anywhere near you, I'd take the feather.
+- A feather would do. The old quill's more stump than quill.
+- Not to nag, but a feather wouldn't go amiss. For the writing.
 
 ### `wish-papyrus`
 
@@ -3244,6 +3270,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - Papyrus, if you pass any. Mine's nearly out.
 - Running low on papyrus. The good pages go fast.
+- The margins are doing overtime. Papyrus, if you see any.
+- If you see papyrus, think of me. Then pick it up.
+- Papyrus, should any wander past. I write small, but not that small.
 
 ### `wish-ball-of-wool`
 
@@ -3253,6 +3282,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - A ball of wool would tie these scrolls properly.
 - The scrolls keep unrolling. A ball of wool would fix that.
+- Wool, if you spot some. My scrolls are currently a loose confederation.
+- Not urgent, but a ball of wool would bring some order to the satchel.
+- A ball of wool. To tie the bundle before it flaps itself to bits.
 
 ### `wish-soft-clay`
 
@@ -3262,6 +3294,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - Soft clay, if you see any. Seals want stamping.
 - I could use soft clay. Official documents deserve a seal.
+- Some soft clay would help. Don't ask what for. It's a surprise.
+- If any soft clay comes your way, I've got plans for it. Small plans.
+- Soft clay, ideally. I'm making something and it's going badly.
 
 ### `wish-charcoal`
 
@@ -3271,6 +3306,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - Charcoal, if any crosses your path. For the rough sketches.
 - A bit of charcoal would be welcome. Some things get drawn, not written.
+- If charcoal turns up, I'll take it. The sketches are getting faint.
+- Charcoal, should you find any. Somebody has to draw the crates.
+- A stick of charcoal would do. Ink is for words; this is for shapes.
 
 ### `gifted-accept`
 

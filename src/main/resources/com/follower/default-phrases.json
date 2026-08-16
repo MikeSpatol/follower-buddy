@@ -2853,7 +2853,11 @@
         "Right. This spot is mine now.",
         "Understood. Guarding this exact square.",
         "Go on. Me and this spot have an arrangement.",
-        "Staying. If anything moves, I'll describe it thoroughly."
+        "Staying. If anything moves, I'll describe it thoroughly.",
+        "Right you are. Holding here. The notebook will keep me company.",
+        "Stay it is. I'll guard the spot and the spot will guard me.",
+        "Fine. Off you go. This square and I will get acquainted.",
+        "Understood. Not moving. Possibly not blinking either."
       ]
     },
     {
@@ -2874,7 +2878,11 @@
         "Still here. Holding the fort.",
         "All quiet at my post. Suspiciously quiet.",
         "The view hasn't changed. I've checked twice.",
-        "Post report: one follower, zero incidents."
+        "Post report: one follower, zero incidents.",
+        "Still stationed. The grass has done nothing suspicious.",
+        "Nobody's tried anything. I'd have written it down.",
+        "Holding position. Morale: adequate. Snacks: none.",
+        "The spot remains held. I'm quite good at this, it turns out."
       ]
     },
     {
@@ -2898,7 +2906,10 @@
       },
       "say": [
         "Might as well update the notes while I wait.",
-        "Reviewing the morning's entries. Standards apply."
+        "Reviewing the morning's entries. Standards apply.",
+        "Quiet post. Time to see whether the earlier notes still hold up.",
+        "Nothing doing here. Good. The scroll's been neglected all day.",
+        "A still moment. I'll fill it with handwriting."
       ]
     },
     {
@@ -2940,7 +2951,15 @@
         "Restocked. The economy thanks you.",
         "Bank sorted. Half of it is souvenirs, I assume.",
         "All tidied away. I respect a good hoard.",
-        "Vault fed. Where next?"
+        "Vault fed. Where next?",
+        "Bank done. I counted the coins by ear. Sounded healthy.",
+        "That's the archive fed. Mine's smaller and better organised.",
+        "Restocked. I saw what you keep in there. No judgement. Some judgement.",
+        "The bank has everything. The bank has never once been anywhere.",
+        "All squared away. Right, back out into the weather.",
+        "In and out. Efficient. I made a note of it, obviously.",
+        "Sorted. If anything's missing, it was missing before we arrived.",
+        "Bank closed. Adventure reopened. Order of business restored."
       ]
     },
     {
@@ -3474,7 +3493,9 @@
       "say": [
         "A gravestone. Paying respects. Won't be long.",
         "Hold on. Someone should read the old names.",
-        "One moment at the stone. Manners cost nothing."
+        "One moment at the stone. Manners cost nothing.",
+        "A grave. I'll read it and say nothing clever. That's the rule.",
+        "Hold on. Somebody's under there and nobody's stopped in a while."
       ]
     },
     {
@@ -3492,7 +3513,9 @@
       "say": [
         "Couldn't read the name. Weather got there first.",
         "Rest easy, whoever. We're just passing.",
-        "Old stone, older story. Right, onward."
+        "Old stone, older story. Right, onward.",
+        "Name's gone, date's gone. The stone's still trying. Fair enough.",
+        "Read what I could. Wrote down less. Some things stay theirs."
       ]
     },
     {
@@ -6960,7 +6983,7 @@
       "id": "wonders-about-you",
       "note": "R26: the attention turns around. Deliberately no asks field - a real answer would make it a form, and the not-needing-one is the warmth. The trail-off throttles it like all idle speech.",
       "group": "idle",
-      "priority": 12,
+      "priority": 16,
       "output": "overhead",
       "cooldownMs": 1200000,
       "when": {
@@ -9397,7 +9420,10 @@
       },
       "say": [
         "A feather would be useful, if one turns up.",
-        "Quills wear out. Keep an eye open for a feather."
+        "Quills wear out. Keep an eye open for a feather.",
+        "If a bird's been careless anywhere near you, I'd take the feather.",
+        "A feather would do. The old quill's more stump than quill.",
+        "Not to nag, but a feather wouldn't go amiss. For the writing."
       ]
     },
     {
@@ -9425,7 +9451,10 @@
       },
       "say": [
         "Papyrus, if you pass any. Mine's nearly out.",
-        "Running low on papyrus. The good pages go fast."
+        "Running low on papyrus. The good pages go fast.",
+        "The margins are doing overtime. Papyrus, if you see any.",
+        "If you see papyrus, think of me. Then pick it up.",
+        "Papyrus, should any wander past. I write small, but not that small."
       ]
     },
     {
@@ -9453,7 +9482,10 @@
       },
       "say": [
         "A ball of wool would tie these scrolls properly.",
-        "The scrolls keep unrolling. A ball of wool would fix that."
+        "The scrolls keep unrolling. A ball of wool would fix that.",
+        "Wool, if you spot some. My scrolls are currently a loose confederation.",
+        "Not urgent, but a ball of wool would bring some order to the satchel.",
+        "A ball of wool. To tie the bundle before it flaps itself to bits."
       ]
     },
     {
@@ -9481,7 +9513,10 @@
       },
       "say": [
         "Soft clay, if you see any. Seals want stamping.",
-        "I could use soft clay. Official documents deserve a seal."
+        "I could use soft clay. Official documents deserve a seal.",
+        "Some soft clay would help. Don't ask what for. It's a surprise.",
+        "If any soft clay comes your way, I've got plans for it. Small plans.",
+        "Soft clay, ideally. I'm making something and it's going badly."
       ]
     },
     {
@@ -9509,7 +9544,10 @@
       },
       "say": [
         "Charcoal, if any crosses your path. For the rough sketches.",
-        "A bit of charcoal would be welcome. Some things get drawn, not written."
+        "A bit of charcoal would be welcome. Some things get drawn, not written.",
+        "If charcoal turns up, I'll take it. The sketches are getting faint.",
+        "Charcoal, should you find any. Somebody has to draw the crates.",
+        "A stick of charcoal would do. Ink is for words; this is for shapes."
       ]
     },
     {
