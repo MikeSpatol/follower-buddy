@@ -68,17 +68,21 @@ public class StayLifeTest
 		// the real-play transcript showed the cost: "this spot is mine now"
 		// thirty times in an afternoon of the follower's own drifting.
 		assertTrue(FollowerPlugin.stayIsPlayerCommanded(
-			true, false, false, false, false));
+			true, false, false, false, false, false));
 		assertTrue("wandering is not a post",
-			!FollowerPlugin.stayIsPlayerCommanded(true, true, false, false, false));
+			!FollowerPlugin.stayIsPlayerCommanded(true, true, false, false, false, false));
 		assertTrue("an errand is not a post",
-			!FollowerPlugin.stayIsPlayerCommanded(true, false, false, true, false));
+			!FollowerPlugin.stayIsPlayerCommanded(true, false, false, true, false, false));
 		assertTrue("spectating is not a post",
-			!FollowerPlugin.stayIsPlayerCommanded(true, false, false, false, true));
+			!FollowerPlugin.stayIsPlayerCommanded(true, false, false, false, true, false));
 		assertTrue("thrall work is not a post",
-			!FollowerPlugin.stayIsPlayerCommanded(true, false, true, false, false));
+			!FollowerPlugin.stayIsPlayerCommanded(true, false, true, false, false, false));
+		// The second play report: a teleport plants the follower for its
+		// cast, and that plant read as a Stay command.
+		assertTrue("planting for an emote is not a post",
+			!FollowerPlugin.stayIsPlayerCommanded(true, false, false, false, false, true));
 		assertTrue("and following at heel is nothing at all",
-			!FollowerPlugin.stayIsPlayerCommanded(false, false, false, false, false));
+			!FollowerPlugin.stayIsPlayerCommanded(false, false, false, false, false, false));
 	}
 
 	@Test

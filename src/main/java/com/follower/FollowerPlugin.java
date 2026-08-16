@@ -4934,7 +4934,8 @@ public class FollowerPlugin extends Plugin
 		boolean stayCommanded = stayIsPlayerCommanded(follower.isStaying(),
 			wandered, thrallNpc != null,
 			errands != null && errands.isBusy(),
-			spectate != null && spectate.isSpectating());
+			spectate != null && spectate.isSpectating(),
+			emoteHold);
 		speechEngine.getContext().setFollowerStaying(stayCommanded);
 
 		// An absence ending is a boundary too: the player went out of sight
@@ -7337,14 +7338,18 @@ public class FollowerPlugin extends Plugin
 	 * Whether a stay belongs to the PLAYER rather than to the follower's own
 	 * machinery. Every exclusion here is a system that parks the follower
 	 * through the same stayAt: the errands, the fight spectating, thrall
-	 * conscription, and the idle wander - the one the first version forgot,
-	 * which had the follower announcing "this spot is mine now" thirty times
-	 * in an afternoon of its own drifting.
+	 * conscription, the idle wander (which had the follower announcing "this
+	 * spot is mine now" thirty times in an afternoon of its own drifting),
+	 * and the emote hold - a holdStill rule plants the follower before its
+	 * animation so the clip is not cut off by walking, and every teleport
+	 * mirror, kill cheer and celebration carries one. Play report: "when I
+	 * teleport, the follower says a line like it was told to stay."
 	 */
 	static boolean stayIsPlayerCommanded(boolean staying, boolean wandered,
-		boolean thrall, boolean errandBusy, boolean spectating)
+		boolean thrall, boolean errandBusy, boolean spectating, boolean emoteHold)
 	{
-		return staying && !wandered && !thrall && !errandBusy && !spectating;
+		return staying && !wandered && !thrall && !errandBusy && !spectating
+			&& !emoteHold;
 	}
 
 	/**
