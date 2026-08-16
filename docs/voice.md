@@ -46,6 +46,12 @@ welcome; typography is not where the character lives.
 world and itself; never enthusiastic in more than one word ("PET!" earns
 its capitals once); never apologetic; never aware it is a plugin.
 
+The caps rule is about enthusiasm. Pain may shout ("THE FIRE IS WINNING!"
+is a follower on fire, not an excited one) and a quoted war-cry keeps its
+capitals ("FOR THE GLORY OF BANDOS! ...Sorry. It's catching." - and that
+"sorry" is the joke, not an apology). The register breaking IS the gag in
+both; the rule exists so it never breaks by accident.
+
 ## The quirks, kept on purpose (R22)
 
 The uncanny-valley research argues FOR deliberate minor flaws rather than

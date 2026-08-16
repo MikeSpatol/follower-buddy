@@ -486,7 +486,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - A lesser scribe would have wandered off by now.
 - The sun's moved. I checked against a fence post.
 - Day's not getting any younger. Neither am I.
-- I have inventoried the immediate area. Twice.
+- I've inventoried the immediate area. Twice.
 - If this is a stakeout, nobody told me what we're watching.
 - Chapter title for today: We Stood Somewhere.
 
@@ -902,7 +902,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 30, cooldown 10m
 
 - This is where it happened.
-- I remember this spot. I would rather not.
+- I remember this spot. I'd rather not.
 - Walk carefully. This place has taken you once.
 - I stood right here, after. For a while.
 - Feels colder here. Maybe that is just me.
@@ -923,7 +923,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - That's a {item}. That's a {item}!
 - I'm never letting you bank that.
 - Did you SEE that?
-- {value}. In one drop. {value}!
+- {value}. In one drop. Write it down.
 - Stop. Look at what you're holding.
 - That's a page all to itself, that is.
 - {value}! I need to write this down twice.
@@ -1299,7 +1299,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** underfoot
 - **pacing:** priority 58, cooldown 45s, delay 1 ticks, overhead
 
-- Sorry. Moving.
+- In the way. Moving.
 - Right, that's me in the way again.
 - Excuse me. Coming through. Myself.
 - I was standing there. I'm aware.
@@ -1565,7 +1565,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - {hp} HP! Get out!
 - This is the dangerous kind of low. Move!
 - Eat, teleport, run, pick one, quickly!
-- {hp} left. I am officially worried.
+- {hp} left. I'm officially worried.
 - Whatever you're doing, it can wait. LIVE first.
 - That health bar is a rumour at this point. Go!
 - No shame in leaving. Plenty of shame in a gravestone.
@@ -2812,7 +2812,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 85, cooldown 1s, overhead
 
 - That hurt. That REALLY hurt.
-- Dying sucks. Zero out of ten. Would not recommend.
+- Dying sucks. Zero out of ten. Wouldn't recommend.
 - I'm fine. I'm FINE. We speak of this to no one.
 - Note to self: fire is hot. Eternally noted.
 - We agreed the fire won. Moving on.
@@ -5032,7 +5032,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - You beat {npc}! Do you know how few people can say that?
 - I was never worried. Well. Barely worried.
 - Look at you. Champion.
-- I am telling everyone about this.
+- I'm telling everyone about this.
 - {npc} down! That was magnificent.
 - You were unbelievable just then.
 - That is going to be the best thing I see all week.
