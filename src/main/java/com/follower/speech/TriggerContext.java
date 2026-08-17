@@ -379,8 +379,19 @@ public final class TriggerContext
 	}
 
 	/**
-	 * Called by the plugin when the player takes a hit, which is also combat -
-	 * unless they are picking a pocket, where the hit is the failure itself.
+	 * Called by the plugin when the player takes a hit.
+	 *
+	 * <p>A hit is combat only if the player is ENGAGED - facing a levelled
+	 * NPC. Taken alone it is not: running through an aggressive area collects
+	 * hits from things the player is neither fighting nor going to fight, and
+	 * every combat line is written for the player's own fight ("room to
+	 * swing", "you make this look easy") - which is wrong in kind, not just
+	 * in volume, when they are the one being chased. Play report: a night's
+	 * transcript at 57% combat that was mostly the player getting hit
+	 * running past aggro. Retaliation still starts a fight instantly, since
+	 * attacking back is interacting; a hit landed by the player still counts
+	 * through {@link #noteDamageDealt}; and a boss whose mechanics hit the
+	 * player while they are targeting it is engaged by definition.
 	 */
 	public void noteDamageTaken()
 	{
@@ -388,7 +399,13 @@ public final class TriggerContext
 		{
 			return;
 		}
-		ticksSinceCombat = 0;
+		Player local = client.getLocalPlayer();
+		Actor target = local == null ? null : local.getInteracting();
+		boolean engaged = target instanceof NPC && target.getCombatLevel() > 0;
+		if (engaged)
+		{
+			ticksSinceCombat = 0;
+		}
 	}
 
 	/**

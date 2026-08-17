@@ -152,14 +152,38 @@ public class TriggerContextSimulationTest
 	}
 
 	@Test
-	public void beingHitCountsAsCombatEvenWhileDoingNothingBack()
+	public void beingHitWhileRunningPastIsNotAFight()
 	{
+		// This test used to assert the opposite - "taking damage is a fight
+		// whether or not you joined in" - and a night's transcript at 57%
+		// combat, mostly the player getting hit running through aggressive
+		// areas, is what that premise sounds like. Every combat line is
+		// written for the player's OWN fight, so a hit taken while engaged
+		// with nothing is not one.
 		Sim sim = new Sim();
 		sim.tick(1);
 		assertFalse(sim.ctx.isInCombat());
 
 		sim.ctx.noteDamageTaken();
-		assertTrue("taking damage is a fight whether or not you joined in",
+		assertFalse("a hit taken while engaged with nothing is being chased, not fighting",
+			sim.ctx.isInCombat());
+	}
+
+	@Test
+	public void beingHitWhileEngagedIsAFightAtOnce()
+	{
+		// The other half: facing a levelled NPC and taking a hit from it is
+		// two-way by definition, and the fight starts on the first blow rather
+		// than waiting for the NPC to turn round - which a boss between phases
+		// or an archer at range may never visibly do.
+		Sim sim = new Sim();
+		NPC goblin = sim.game.spawnNpc(3029, "Goblin", 5);
+		sim.game.facing(goblin);
+		sim.tick(1);
+		assertFalse("facing alone is not a fight yet", sim.ctx.isInCombat());
+
+		sim.ctx.noteDamageTaken();
+		assertTrue("a hit while squared up is the fight starting",
 			sim.ctx.isInCombat());
 	}
 

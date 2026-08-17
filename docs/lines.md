@@ -1353,7 +1353,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Said as the follower steps clear of a fight.
 
 - **when:** a fight starting
-- **pacing:** priority 50, cooldown 45s
+- **pacing:** priority 50, cooldown 2m
 
 - Go on then. I'll watch from here.
 - I'll stay out of your way.
@@ -1420,7 +1420,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Said as the follower comes back to your side.
 
 - **when:** a fight ending
-- **pacing:** priority 50, cooldown 45s
+- **pacing:** priority 50, cooldown 2m
 
 - Well fought.
 - That's that, then.
