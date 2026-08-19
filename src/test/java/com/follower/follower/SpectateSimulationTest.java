@@ -52,6 +52,10 @@ public class SpectateSimulationTest
 		final List<int[]> chains = new ArrayList<>();
 		final List<SpotAnimRepository.Entry> spotAnims = new ArrayList<>();
 
+		/** Tiles the arena refuses; null means everywhere is standable. */
+		java.util.function.Predicate<WorldPoint> walled;
+		int stayAttempts;
+
 		FakeFollower()
 		{
 			super(null, null);
@@ -78,9 +82,14 @@ public class SpectateSimulationTest
 		@Override
 		public boolean stayAt(WorldPoint target)
 		{
+			stayAttempts++;
+			if (target == null || (walled != null && walled.test(target)))
+			{
+				return false;
+			}
 			stayingAt = target;
 			following = false;
-			return target != null;
+			return true;
 		}
 
 		@Override
@@ -205,6 +214,83 @@ public class SpectateSimulationTest
 		assertTrue(spectate.isSpectating());
 		assertTrue("it should have moved out of the way", follower.stayingAt != null);
 		assertTrue("and announced the fight", spoke(TriggerEvent.Type.COMBAT_START));
+	}
+
+	@Test
+	public void aWalledArenaStillFindsSomewhereNotUnderfoot()
+	{
+		// The player fights with their back to a wall - everything on the
+		// away-from-the-boss side is stone. The old fan only ever tried that
+		// side and gave up; the follower stood glued to the player for the
+		// whole fight. Any tile at a distance that is not beside the boss
+		// serves the real goal, which is "not underfoot".
+		NPC boss = game.spawnNpc(100, "Vorkath", 392);
+		game.at(3222, 3218, 0);
+		game.fighting(boss);
+		WorldPoint player = new WorldPoint(3222, 3218, 0);
+		WorldPoint threat = boss.getWorldLocation();
+		int awayX = Integer.signum(player.getX() - threat.getX());
+		int awayY = Integer.signum(player.getY() - threat.getY());
+		// Wall: everything on the away side (and straight sideways).
+		follower.walled = tile ->
+			Integer.signum(tile.getX() - player.getX()) == awayX
+				&& Integer.signum(tile.getY() - player.getY()) == awayY
+			|| tile.getY() == player.getY() || tile.getX() == player.getX();
+
+		tick(2);
+
+		assertTrue(spectate.isSpectating());
+		assertTrue("the ring found a standable tile the fan could not",
+			follower.stayingAt != null);
+		assertTrue("and it is not beside the boss",
+			follower.stayingAt.distanceTo(threat) >= 3);
+	}
+
+	@Test
+	public void anUnseatedSpectatorKeepsLookingAsTheFightMoves()
+	{
+		// Nowhere at all to stand on the first tick - and then the fight
+		// shifts and a tile opens. The old code never looked again: a null
+		// watch tile made holdPosition return every tick until the fight
+		// ended, which is the whole boss fight spent underfoot.
+		NPC boss = game.spawnNpc(100, "Vorkath", 392);
+		game.at(3222, 3218, 0);
+		game.fighting(boss);
+		follower.walled = tile -> true;      // the arena is all wall
+		tick(2);
+		assertTrue(spectate.isSpectating());
+		assertTrue("nowhere to go yet", follower.stayingAt == null);
+		int attemptsSoFar = follower.stayAttempts;
+
+		follower.walled = null;              // the fight moved; tiles open
+		tick(6);                             // past the retry interval
+
+		assertTrue("it looked again", follower.stayAttempts > attemptsSoFar);
+		assertTrue("and stepped clear once it could",
+			follower.stayingAt != null);
+	}
+
+	@Test
+	public void aBossThatHitsYouWhileYouTargetItIsAFightToStepClearOf()
+	{
+		// The shape a real boss fight takes from the client's side: the player
+		// is targeting it (one-way interaction - a boss between phases or at
+		// range need never be seen facing back), it is landing hits, and its
+		// health ratio can read as zero until it has taken damage. Play
+		// report: a boss fight where the follower never stepped clear.
+		NPC boss = game.spawnNpc(100, "Vorkath", 392);
+		game.at(3222, 3218, 0);
+		game.facing(boss);
+		tick(1);
+		assertFalse("targeting alone is not yet a fight", spectate.isSpectating());
+
+		context.noteDamageTaken();
+		tick(2);
+
+		assertTrue("a hit while targeting the boss is the fight",
+			spectate.isSpectating());
+		assertTrue("and the follower steps clear", follower.stayingAt != null);
+		assertTrue(spoke(TriggerEvent.Type.COMBAT_START));
 	}
 
 	@Test

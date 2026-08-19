@@ -220,6 +220,7 @@ public class SpectateController
 		spectating = true;
 		announced = announce;
 		releaseTicks = 0;
+		unseatedTicks = 0;
 		if (!moveClear())
 		{
 			// Nowhere to go is not a reason to keep announcing a fight; the
@@ -248,6 +249,7 @@ public class SpectateController
 	{
 		spectating = false;
 		watchTile = null;
+		unseatedTicks = 0;
 
 		// Finishing the spell is its own moment: drop the channelled pose, play
 		// the closing animation where it stands, and only walk back once it has
@@ -288,8 +290,21 @@ public class SpectateController
 	private void holdPosition()
 	{
 		Player local = client.getLocalPlayer();
-		if (local == null || local.getWorldLocation() == null || watchTile == null)
+		if (local == null || local.getWorldLocation() == null)
 		{
+			return;
+		}
+		// Unseated - the first moveClear found nowhere to stand. That used to
+		// be final: this method returned on a null watchTile, so a follower
+		// that failed once in a cramped arena stood glued to the player for
+		// the whole fight. Play report: a boss fight where it never stepped
+		// clear. Fights move; tiles open up; try again every few ticks.
+		if (watchTile == null)
+		{
+			if (++unseatedTicks % RESEAT_RETRY_TICKS == 0)
+			{
+				moveClear();
+			}
 			return;
 		}
 		if (watchTile.distanceTo(local.getWorldLocation()) > RESEAT_DISTANCE
@@ -298,6 +313,12 @@ public class SpectateController
 			moveClear();
 		}
 	}
+
+	/** Ticks spent spectating without a tile to stand on. */
+	private int unseatedTicks;
+
+	/** How often an unseated spectator looks again for somewhere to stand. */
+	private static final int RESEAT_RETRY_TICKS = 5;
 
 	/**
 	 * Puts the follower behind the player, away from whatever is being fought.
@@ -366,6 +387,35 @@ public class SpectateController
 				{
 					watchTile = candidate;
 					return true;
+				}
+			}
+		}
+
+		// The away-from-the-threat fan is walled - a boss arena is exactly the
+		// place where "behind the player" is stone. In a fight the goal is not
+		// underfoot, and any tile at a distance that is not next to the threat
+		// serves it. The full ring, nearest first, before giving up.
+		for (int distance = 2; distance <= WATCH_DISTANCE; distance++)
+		{
+			for (int ox = -distance; ox <= distance; ox++)
+			{
+				for (int oy = -distance; oy <= distance; oy++)
+				{
+					if (Math.max(Math.abs(ox), Math.abs(oy)) != distance)
+					{
+						continue;
+					}
+					WorldPoint candidate = new WorldPoint(
+						player.getX() + ox, player.getY() + oy, player.getPlane());
+					if (threat != null && candidate.distanceTo(threat) < 3)
+					{
+						continue;
+					}
+					if (follower.stayAt(candidate))
+					{
+						watchTile = candidate;
+						return true;
+					}
 				}
 			}
 		}
