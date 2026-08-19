@@ -71,9 +71,24 @@ public class SpectateController
 	private final Client client;
 	private final FollowerEntity follower;
 	private final FollowerConfig config;
-	private final TriggerContext context;
+
+	/**
+	 * Read fresh on every use, never held. The engine REPLACES its context on
+	 * every reset - each login screen, the memory eraser, a plugin toggle -
+	 * and a controller holding the original object was reading a context
+	 * that had stopped being refreshed: its isInCombat was false forever, so
+	 * spectating never started again after the first relog. Cheers still
+	 * fired (the rules read the live context), which is what made the boss
+	 * fights look detected while the follower stood glued to the player.
+	 */
+	private final java.util.function.Supplier<TriggerContext> contextSource;
 	private final SpotAnimRepository spotAnims;
 	private final Consumer<TriggerEvent> speech;
+
+	private TriggerContext context()
+	{
+		return contextSource.get();
+	}
 
 	/** Puts the follower's weapon and shield away while it channels. */
 	private final java.util.function.Consumer<Boolean> disarm;
@@ -121,13 +136,13 @@ public class SpectateController
 	private int ticksUnsettled;
 
 	public SpectateController(Client client, FollowerEntity follower, FollowerConfig config,
-		TriggerContext context, SpotAnimRepository spotAnims, Consumer<TriggerEvent> speech,
-		java.util.function.Consumer<Boolean> disarm)
+		java.util.function.Supplier<TriggerContext> contextSource, SpotAnimRepository spotAnims,
+		Consumer<TriggerEvent> speech, java.util.function.Consumer<Boolean> disarm)
 	{
 		this.client = client;
 		this.follower = follower;
 		this.config = config;
-		this.context = context;
+		this.contextSource = contextSource;
 		this.spotAnims = spotAnims;
 		this.speech = speech;
 		this.disarm = disarm;
@@ -149,11 +164,11 @@ public class SpectateController
 		return "spectate: setting=" + config.spectateCombat()
 			+ " busy=" + busy
 			+ " spawned=" + follower.isSpawned()
-			+ " inCombat=" + context.isInCombat()
-			+ " target='" + context.getCombatTarget() + "' level=" + context.getCombatTargetLevel()
-			+ " thieving=" + context.isThieving()
-			+ " thievingSession=" + context.isInThievingSession()
-			+ " boss=" + context.isBossFight()
+			+ " inCombat=" + context().isInCombat()
+			+ " target='" + context().getCombatTarget() + "' level=" + context().getCombatTargetLevel()
+			+ " thieving=" + context().isThieving()
+			+ " thievingSession=" + context().isInThievingSession()
+			+ " boss=" + context().isBossFight()
 			+ " | spectating=" + spectating
 			+ " watchTile=" + watchTile
 			+ " settled=" + follower.isSettled()
@@ -190,7 +205,7 @@ public class SpectateController
 		// reads as an audience. A player picking pockets wants the follower
 		// gone, not watching - so the thieving session suppresses this outright
 		// and the wandering takes over instead.
-		if (!context.isInCombat() || context.isInThievingSession())
+		if (!context().isInCombat() || context().isInThievingSession())
 		{
 			if (spectating)
 			{
@@ -233,10 +248,10 @@ public class SpectateController
 			return;
 		}
 		log.debug("Spectating '{}' level {} boss={} shieldEnabled={}",
-			context.getCombatTarget(), context.getCombatTargetLevel(),
-			context.isBossFight(), config.spectateShield());
+			context().getCombatTarget(), context().getCombatTargetLevel(),
+			context().isBossFight(), config.spectateShield());
 		speech.accept(TriggerEvent.combat(TriggerEvent.Type.COMBAT_START,
-			context.getCombatTarget()));
+			context().getCombatTarget()));
 	}
 
 	/**
@@ -281,7 +296,7 @@ public class SpectateController
 		if (announced)
 		{
 			speech.accept(TriggerEvent.combat(TriggerEvent.Type.COMBAT_END,
-				context.getCombatTarget()));
+				context().getCombatTarget()));
 		}
 		announced = false;
 	}
@@ -434,7 +449,7 @@ public class SpectateController
 	 */
 	private void maybeCastShield()
 	{
-		if (!config.spectateShield() || !context.isBossFight())
+		if (!config.spectateShield() || !context().isBossFight())
 		{
 			return;
 		}

@@ -150,7 +150,7 @@ public class SpectateSimulationTest
 		spotAnims.load(folder.newFolder().toPath());
 
 		spectate = new SpectateController(game.client, follower, config(),
-			context, spotAnims, spoken::add, disarms::add);
+			() -> context, spotAnims, spoken::add, disarms::add);
 	}
 
 	/** The shipped defaults, which is what a player will actually be running. */
@@ -214,6 +214,42 @@ public class SpectateSimulationTest
 		assertTrue(spectate.isSpectating());
 		assertTrue("it should have moved out of the way", follower.stayingAt != null);
 		assertTrue("and announced the fight", spoke(TriggerEvent.Type.COMBAT_START));
+	}
+
+	@Test
+	public void spectatingSurvivesTheEngineReplacingItsContext()
+	{
+		// The real bug behind two boss-fight reports. SpeechEngine.reset()
+		// nulls its context and lazily builds a NEW one - on every login
+		// screen, the memory eraser, a plugin toggle. The controller was
+		// handed the ORIGINAL object at startup and kept reading it: a
+		// context nobody refreshed any more, inCombat false forever. The
+		// rules kept cheering (they read the live one), the follower stood
+		// glued to the player, and both arena fixes were beside the point
+		// because start() never ran. The controller now reads through a
+		// supplier, so it sees whichever context the engine currently owns.
+		TriggerContext[] live = {context};
+		spectate = new SpectateController(game.client, follower, config(),
+			() -> live[0], new SpotAnimRepository(new Gson()), spoken::add, disarms::add);
+
+		// A relog: the engine throws its context away and starts a fresh one.
+		live[0] = new TriggerContext(game.client);
+
+		NPC boss = game.spawnNpc(100, "Vorkath", 392);
+		game.at(3222, 3218, 0);
+		game.fighting(boss);
+		for (int i = 0; i < 3; i++)
+		{
+			game.tick(++tick);
+			live[0].refresh();          // the plugin refreshes the LIVE one
+			follower.advance();
+			spectate.tick(false);
+		}
+
+		assertTrue("the fight after a relog must still be spectated",
+			spectate.isSpectating());
+		assertTrue("and stepped clear of", follower.stayingAt != null);
+		assertTrue(spoke(TriggerEvent.Type.COMBAT_START));
 	}
 
 	@Test
@@ -503,7 +539,7 @@ public class SpectateSimulationTest
 			}
 		};
 		SpectateController disabled = new SpectateController(game.client, follower,
-			off, context, new SpotAnimRepository(new Gson()), spoken::add, disarms::add);
+			off, () -> context, new SpotAnimRepository(new Gson()), spoken::add, disarms::add);
 
 		fight("Zulrah", 725);
 		for (int i = 0; i < 10; i++)

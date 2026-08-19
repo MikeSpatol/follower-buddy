@@ -513,8 +513,13 @@ public class FollowerPlugin extends Plugin
 			speechEngine::dispatch, spotAnimRepository,
 			() -> dialog.isOpen() || follower.isNpcSlaved(), hands);
 		flourish = new com.follower.follower.PropFlourish(follower, hands);
+		// A SUPPLIER, not the context itself: the engine replaces its context
+		// on every reset, and a controller holding the original object read a
+		// context that had stopped being refreshed - inCombat false forever,
+		// spectating dead after the first relog. See the field note in
+		// SpectateController.
 		spectate = new com.follower.follower.SpectateController(client, follower, config,
-			speechEngine.getContext(), spotAnimRepository, speechEngine::dispatch,
+			speechEngine::getContext, spotAnimRepository, speechEngine::dispatch,
 			this::setSpectateDisarmed);
 
 		// On a fresh client boot the LOGIN_SCREEN transition can happen before
