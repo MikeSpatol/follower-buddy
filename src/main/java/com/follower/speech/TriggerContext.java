@@ -133,6 +133,7 @@ public final class TriggerContext
 		checkBet();
 		checkAdvice();
 		checkChallenge();
+		checkWishLapse();
 		refreshAttention();
 		driftMood();
 	}
@@ -1336,6 +1337,25 @@ public final class TriggerContext
 		wishLabel = "";
 	}
 
+	/**
+	 * A wish that lapses unfulfilled rests the wishing for a while (the
+	 * gentler half of the ignored-overtures back-off). Detected here because
+	 * the lapse itself is lazy - {@link #isWishing} simply reads false past
+	 * the deadline - and the gift path ({@link #clearWish}) empties the label
+	 * before the deadline, so a granted wish never trips this.
+	 */
+	private void checkWishLapse()
+	{
+		if (!wishLabel.isEmpty() && client.getTickCount() > wishDeadlineTick)
+		{
+			wishLabel = "";
+			wishItems = java.util.Collections.emptySet();
+			wishBackoffUntilTick = client.getTickCount() + WISH_BACKOFF_TICKS;
+			log.debug("Wish lapsed unfulfilled; wishing rests until tick {}",
+				wishBackoffUntilTick);
+		}
+	}
+
 	// ----------------------------------------------------------------- wants
 
 	/**
@@ -2101,6 +2121,10 @@ public final class TriggerContext
 	{
 		ticksSinceQuestion = Integer.MAX_VALUE;
 		askedTree = "";
+		// Engaging with a question clears the ignored ledger: the back-off
+		// exists for a player who is not answering, not one who just did.
+		ignoredAsks = 0;
+		askBackoffUntilTick = 0;
 	}
 
 	public boolean isAwaitingAnswer()
@@ -2120,6 +2144,51 @@ public final class TriggerContext
 		{
 			ticksSinceQuestion++;
 		}
+		// The question just lapsed with nobody answering. That is a signal,
+		// not a non-event: a transcript showed fifteen outings asked into one
+		// AFK afternoon, each politely expiring and each politely re-asked at
+		// the next cooldown, which added up to nagging. A hint dropped and
+		// ignored earns a long pause; two of them end the asking for the day.
+		if (ticksSinceQuestion == ANSWER_WINDOW_TICKS + 1 && !askedTree.isEmpty())
+		{
+			askedTree = "";
+			ignoredAsks++;
+			askBackoffUntilTick = client.getTickCount() + ASK_BACKOFF_TICKS;
+			log.debug("Question ignored ({} this session); asks rest until tick {}",
+				ignoredAsks, askBackoffUntilTick);
+		}
+	}
+
+	// ------------------------------------------------------- ignored overtures
+
+	/** Two hours before an ignored question may be followed by another. */
+	private static final int ASK_BACKOFF_TICKS = 12_000;
+
+	/** Ignored questions per session before the asking stops altogether. */
+	private static final int MAX_IGNORED_ASKS = 2;
+
+	/** Ninety minutes of not wishing after a wish lapses unfulfilled. */
+	private static final int WISH_BACKOFF_TICKS = 9_000;
+
+	private int ignoredAsks;
+	private int askBackoffUntilTick;
+	private int wishBackoffUntilTick;
+
+	/**
+	 * Whether rules that ASK something should hold their tongue: a question
+	 * was ignored recently, or two have been ignored this session. Answering
+	 * any question resets both.
+	 */
+	public boolean isAskBackedOff()
+	{
+		return ignoredAsks >= MAX_IGNORED_ASKS
+			|| client.getTickCount() < askBackoffUntilTick;
+	}
+
+	/** Whether the wishing should rest, after a wish lapsed unfulfilled. */
+	public boolean isWishBackedOff()
+	{
+		return client.getTickCount() < wishBackoffUntilTick;
 	}
 
 	// ------------------------------------------------------------------- mood

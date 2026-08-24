@@ -507,6 +507,20 @@ public class SpeechEngine
 		{
 			return "unattended";
 		}
+		// Ignored overtures rest. A question that lapsed unanswered is not
+		// followed by another for a long while, and two ignored in one
+		// session end the asking - a polite companion drops a hint twice and
+		// lets it go, where re-asking at every cooldown reads as nagging.
+		// A wish that lapsed unfulfilled rests more gently. Answering any
+		// question, or granting any wish, clears the respective ledger.
+		if (rule.asks != null && !rule.asks.isEmpty() && getContext().isAskBackedOff())
+		{
+			return "ignored";
+		}
+		if (rule.wish != null && getContext().isWishBackedOff())
+		{
+			return "ignored";
+		}
 		if (isIdleRemark(rule) && now - lastIdleRemarkMs < trailWaitMs())
 		{
 			return "trailing";
