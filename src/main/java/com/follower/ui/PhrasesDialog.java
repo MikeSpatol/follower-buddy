@@ -597,10 +597,17 @@ public class PhrasesDialog extends JDialog
 	 *
 	 * <p>The plugin polls this same file every game tick and reloads it when it
 	 * changes, which is what makes editing feel live. Writing in place truncates
-	 * it first, so a poll landing mid-write reads half a file, fails to parse
-	 * and reports a JSON error in the chatbox for something the user did
-	 * nothing wrong in. A rename is a single step: the poller sees the old file
-	 * or the new one, never a torn one.
+	 * it first, so a poll landing mid-write reads half a file; a rename is a
+	 * single step - the poller sees the old file or the new one, never a torn
+	 * one.
+	 *
+	 * <p>Windows will not rename over a file another handle has open, and the
+	 * plugin's poller opens this one every couple of ticks, so the rename can
+	 * lose that race. When it does, write in place rather than lose the edit:
+	 * the loader keeps its previous rules if a poll catches the file
+	 * half-written, and picks the finished file up on the following poll. (A
+	 * sleep-and-retry between move attempts would spare that one-in-a-thousand
+	 * poll, but the Hub forbids Thread.sleep; this is the surviving tradeoff.)
 	 */
 	private void writeAtomically(String contents) throws IOException
 	{
@@ -608,51 +615,21 @@ public class PhrasesDialog extends JDialog
 		byte[] bytes = contents.getBytes(StandardCharsets.UTF_8);
 		Files.write(temp, bytes);
 
-		// Windows will not let a file be replaced while another handle has it
-		// open, and the plugin opens this one every game tick to poll it. So
-		// the rename loses that race often enough to matter, and losing it
-		// means the user's edits vanish with a "save failed" - which is a worse
-		// outcome than the torn read the rename was there to prevent.
-		//
-		// Retry across a few polls first; the reader holds the file only for
-		// as long as it takes to parse.
-		for (int attempt = 0; attempt < 20; attempt++)
-		{
-			try
-			{
-				Files.move(temp, file,
-					StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-				return;
-			}
-			catch (AtomicMoveNotSupportedException e)
-			{
-				// Some filesystems cannot promise it; a plain replace is still
-				// one call rather than a truncate followed by a write.
-				Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING);
-				return;
-			}
-			catch (FileSystemException e)
-			{
-				sleepBriefly();
-			}
-		}
-
-		// Still contended. Write in place rather than lose the edit: the loader
-		// keeps its previous rules if it catches this half-written, and picks
-		// the file up on the following poll.
-		Files.write(file, bytes);
-		Files.deleteIfExists(temp);
-	}
-
-	private static void sleepBriefly()
-	{
 		try
 		{
-			Thread.sleep(25);
+			Files.move(temp, file,
+				StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
 		}
-		catch (InterruptedException e)
+		catch (AtomicMoveNotSupportedException e)
 		{
-			Thread.currentThread().interrupt();
+			// Some filesystems cannot promise it; a plain replace is still
+			// one call rather than a truncate followed by a write.
+			Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING);
+		}
+		catch (FileSystemException e)
+		{
+			Files.write(file, bytes);
+			Files.deleteIfExists(temp);
 		}
 	}
 

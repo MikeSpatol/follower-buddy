@@ -608,8 +608,8 @@ public class DialogsDialog extends JDialog
 
 	/**
 	 * Replaces the file in one step, via a sibling temp file, with the same
-	 * retry-then-fall-back-to-in-place dance phrases.json uses: the plugin polls
-	 * this file every couple of ticks, Windows will not rename over an open
+	 * fall-back-to-in-place dance phrases.json uses: the plugin polls this
+	 * file every couple of ticks, Windows will not rename over an open
 	 * handle, and losing somebody's edits is worse than a torn read the loader
 	 * already knows how to survive.
 	 */
@@ -619,34 +619,20 @@ public class DialogsDialog extends JDialog
 		byte[] bytes = contents.getBytes(StandardCharsets.UTF_8);
 		Files.write(temp, bytes);
 
-		for (int attempt = 0; attempt < 20; attempt++)
+		try
 		{
-			try
-			{
-				Files.move(temp, file,
-					StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-				return;
-			}
-			catch (AtomicMoveNotSupportedException e)
-			{
-				Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING);
-				return;
-			}
-			catch (FileSystemException e)
-			{
-				try
-				{
-					Thread.sleep(25);
-				}
-				catch (InterruptedException interrupted)
-				{
-					Thread.currentThread().interrupt();
-				}
-			}
+			Files.move(temp, file,
+				StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
 		}
-
-		Files.write(file, bytes);
-		Files.deleteIfExists(temp);
+		catch (AtomicMoveNotSupportedException e)
+		{
+			Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING);
+		}
+		catch (FileSystemException e)
+		{
+			Files.write(file, bytes);
+			Files.deleteIfExists(temp);
+		}
 	}
 
 	private void setStatus(String text, boolean bad)
