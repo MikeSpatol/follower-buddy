@@ -479,10 +479,9 @@ public class FollowerPlugin extends Plugin
 		// own cache; retried from the login states until the indexes exist.
 		clientThread.invokeLater(this::ensureCatalogues);
 		// The same transient-prop path the dev commands use: overlaid on the
-		// outfit at compose time, never persisted. Shared by the errand and
-		// the rule-level flourish; both run on the client thread.
-		com.follower.follower.ErrandController.Hands hands =
-			new com.follower.follower.ErrandController.Hands()
+		// outfit at compose time, never persisted. Shared by the errand, the
+		// rule-level flourish and the minutes-taking; all on the client thread.
+		hands = new com.follower.follower.ErrandController.Hands()
 			{
 				@Override
 				public void hold(int itemId)
@@ -514,7 +513,9 @@ public class FollowerPlugin extends Plugin
 			};
 		errands = new com.follower.follower.ErrandController(client, follower, config,
 			speechEngine::dispatch, spotAnimRepository,
-			() -> dialog.isOpen() || follower.isNpcSlaved(), hands);
+			// Minutes-taking counts as busy: an errand must not set off with
+			// the scroll already out over somebody's meeting.
+			() -> dialog.isOpen() || follower.isNpcSlaved() || minutesState != 0, hands);
 		flourish = new com.follower.follower.PropFlourish(follower, hands);
 		// A SUPPLIER, not the context itself: the engine replaces its context
 		// on every reset, and a controller holding the original object read a
@@ -573,6 +574,8 @@ public class FollowerPlugin extends Plugin
 		{
 			flourish.abort();
 		}
+		// The scroll must not survive a disable either.
+		endMinutes(false);
 
 		if (navButton != null)
 		{
@@ -793,7 +796,9 @@ public class FollowerPlugin extends Plugin
 		boolean busy = thrallNpc != null
 			|| (errands != null && errands.isBusy())
 			|| (spectate != null && spectate.isSpectating())
-			|| dialog.isOpen();
+			|| dialog.isOpen()
+			// A long dialog must not sit the minute-taker down mid-sentence.
+			|| minutesState != 0;
 		boolean wantRest = config.restWhenIdle()
 			&& config.restAnimation() > 0
 			&& !busy
@@ -815,6 +820,235 @@ public class FollowerPlugin extends Plugin
 			// Cancelled harmlessly by the next movement frame if the follower
 			// is already walking, which is the usual reason rest ended.
 			follower.playAnimation(REST_STAND_UP);
+		}
+	}
+
+	// --------------------------------------------------------- taking minutes
+
+	/** The shared prop surface, kept so the minutes-taking can borrow it. */
+	private com.follower.follower.ErrandController.Hands hands;
+
+	/** 0 = not taking minutes, 1 = walking to the flank, 2 = writing. */
+	private int minutesState;
+
+	/** Whether the current dialog already rolled for minutes, win or lose. */
+	private boolean minutesConsidered;
+
+	/** Consecutive ticks with no dialog widget up, to ride out page flips. */
+	private int dialogGoneTicks = 1000;
+
+	/** A meeting is minuted at most this often. */
+	private static final long MINUTES_COOLDOWN_MS = 480_000;
+	private long lastMinutesMs;
+
+	/** Whether any NPC-dialog interface is up (heads or the options menu). */
+	private boolean npcDialogOpen()
+	{
+		return client.getWidget(net.runelite.api.gameval.InterfaceID.CHAT_LEFT, 0) != null
+			|| client.getWidget(net.runelite.api.gameval.InterfaceID.CHAT_RIGHT, 0) != null
+			|| client.getWidget(net.runelite.api.gameval.InterfaceID.CHATMENU, 0) != null;
+	}
+
+	/**
+	 * Attends the player's meetings, occasionally: when an NPC dialog opens,
+	 * the follower steps one tile to the player's side, faces the meeting,
+	 * takes the scroll out and writes until the box closes. The physical tell
+	 * is the whole joke - the errand's own documenting stance, solemnly
+	 * applied to your chat with a banker - so no line is needed, though the
+	 * rare one rides the MINUTES_TAKEN event that fires when the box closes.
+	 *
+	 * <p>Heavily gated: one roll per dialog, a long cooldown between
+	 * performances, and everything that owns the feet (thrall work, errands,
+	 * spectating, a player-commanded Stay, combat) declines it outright.
+	 */
+	private void updateMinutes()
+	{
+		boolean open = npcDialogOpen();
+		if (open)
+		{
+			dialogGoneTicks = 0;
+		}
+		else if (dialogGoneTicks < 1000)
+		{
+			dialogGoneTicks++;
+		}
+		// Page flips and choice menus drop the widget for a beat; only three
+		// clean ticks of absence mean the meeting is really over.
+		boolean over = !open && dialogGoneTicks > 2;
+
+		boolean busy = thrallNpc != null
+			|| (errands != null && errands.isBusy())
+			|| (spectate != null && spectate.isSpectating())
+			|| dialog.isOpen()
+			|| speechEngine.getContext().isInCombat();
+
+		Player local = client.getLocalPlayer();
+		switch (minutesState)
+		{
+			case 0:
+				if (over)
+				{
+					minutesConsidered = false;
+				}
+				else if (open && !minutesConsidered)
+				{
+					minutesConsidered = true;
+					if (!busy && !follower.isStaying() && follower.isSpawned()
+						&& local != null
+						&& System.currentTimeMillis() - lastMinutesMs >= MINUTES_COOLDOWN_MS
+						&& java.util.concurrent.ThreadLocalRandom.current().nextInt(100) < 35
+						&& stepAsideForMinutes(local))
+					{
+						lastMinutesMs = System.currentTimeMillis();
+						minutesState = 1;
+					}
+				}
+				break;
+
+			case 1:
+				if (over || busy || local == null)
+				{
+					// The meeting ended before it got there; nothing was held.
+					endMinutes(false);
+				}
+				else if (follower.isStaying() && follower.isSettled())
+				{
+					hands.hold(com.follower.follower.ErrandController.SCROLL_PROP);
+					follower.setPoseOverride(
+						com.follower.follower.ErrandController.READ_SCROLL_POSE);
+					minutesState = 2;
+				}
+				break;
+
+			case 2:
+				if (busy || local == null
+					|| follower.getWorldLocation() == null
+					|| local.getWorldLocation() == null
+					|| follower.getWorldLocation().distanceTo(local.getWorldLocation()) > 8)
+				{
+					endMinutes(false);
+				}
+				else if (over)
+				{
+					endMinutes(true);
+				}
+				break;
+
+			default:
+				break;
+		}
+	}
+
+	/** Flank tile pick: one tile to the player's side, facing the meeting. */
+	private boolean stepAsideForMinutes(Player local)
+	{
+		WorldPoint p = local.getWorldLocation();
+		if (p == null)
+		{
+			return false;
+		}
+		int jau = local.getCurrentOrientation();
+		double radians = (jau / 2048.0) * 2.0 * Math.PI;
+		int fx = (int) Math.round(-Math.sin(radians));
+		int fy = (int) Math.round(-Math.cos(radians));
+		// The meeting is where the player is facing; the follower faces it too.
+		WorldPoint front = new WorldPoint(
+			p.getX() + fx, p.getY() + fy, p.getPlane());
+		// The two perpendiculars, tried in a random order so the follower has
+		// no favourite side.
+		int sx = -fy;
+		int sy = fx;
+		if (java.util.concurrent.ThreadLocalRandom.current().nextBoolean())
+		{
+			sx = -sx;
+			sy = -sy;
+		}
+		WorldPoint[] flanks = {
+			new WorldPoint(p.getX() + sx, p.getY() + sy, p.getPlane()),
+			new WorldPoint(p.getX() - sx, p.getY() - sy, p.getPlane()),
+		};
+		for (WorldPoint flank : flanks)
+		{
+			if (follower.stayAt(flank))
+			{
+				follower.setStayFaceTile(front);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Ends the minute-taking, on completion and every abort path alike. The
+	 * event only fires when the meeting was actually written through.
+	 */
+	private void endMinutes(boolean wrote)
+	{
+		if (minutesState == 2)
+		{
+			follower.setPoseOverride(0);
+			hands.release();
+		}
+		if (minutesState != 0)
+		{
+			follower.resumeFollowing();
+		}
+		minutesState = 0;
+		if (wrote)
+		{
+			speechEngine.dispatch(TriggerEvent.simple(TriggerEvent.Type.MINUTES_TAKEN));
+		}
+	}
+
+	// --------------------------------------------------------- welfare check
+
+	/** How long the camera goes untouched before it comes round to look. */
+	private static final int WELFARE_AFTER_TICKS = 600;
+
+	/** Whether it came round this absence; cleared when the player returns. */
+	private boolean welfareChecked;
+
+	/**
+	 * Leave the keyboard long enough and the follower walks round in front of
+	 * your character and peers at you - and if the rest pose is due, sits
+	 * back down there, facing you, which is better than anything this method
+	 * could stage on purpose (updateRest re-evaluates on its own). The check
+	 * itself is silent: the attention damper is already holding speech while
+	 * nobody is there to read it. The payoff line rides ATTENDED_AGAIN, which
+	 * fires the moment the camera moves again.
+	 */
+	private void updateWelfare()
+	{
+		int unattended = speechEngine.getContext().getUnattendedTicks();
+		if (welfareChecked)
+		{
+			if (unattended == 0)
+			{
+				welfareChecked = false;
+				speechEngine.dispatch(
+					TriggerEvent.simple(TriggerEvent.Type.ATTENDED_AGAIN));
+			}
+			return;
+		}
+		if (unattended < WELFARE_AFTER_TICKS)
+		{
+			return;
+		}
+		boolean busy = thrallNpc != null
+			|| (errands != null && errands.isBusy())
+			|| (spectate != null && spectate.isSpectating())
+			|| dialog.isOpen()
+			|| minutesState != 0
+			|| follower.isStaying()
+			|| speechEngine.getContext().isInCombat();
+		Player local = client.getLocalPlayer();
+		if (busy || local == null || !follower.isSpawned())
+		{
+			return;
+		}
+		if (follower.moveToFront(local))
+		{
+			welfareChecked = true;
 		}
 	}
 
@@ -2478,6 +2712,9 @@ public class FollowerPlugin extends Plugin
 			// Mid-gesture when the scene went: the scroll must not survive it.
 			flourish.abort();
 		}
+		// Same for the minute-taking: the meeting went with the scene.
+		endMinutes(false);
+		welfareChecked = false;
 		captureFallback.abort();
 		follower.despawn();
 		appearanceService.invalidate();
@@ -4815,6 +5052,8 @@ public class FollowerPlugin extends Plugin
 		tickScan();
 		expireKillClaims();
 		updateWander();
+		updateMinutes();
+		updateWelfare();
 		updateRest();
 
 		if (errands != null)
@@ -4962,7 +5201,7 @@ public class FollowerPlugin extends Plugin
 			wandered, thrallNpc != null,
 			errands != null && errands.isBusy(),
 			spectate != null && spectate.isSpectating(),
-			emoteHold);
+			emoteHold, minutesState != 0);
 		speechEngine.getContext().setFollowerStaying(stayCommanded);
 
 		// An absence ending is a boundary too: the player went out of sight
@@ -7693,13 +7932,15 @@ public class FollowerPlugin extends Plugin
 	 * and the emote hold - a holdStill rule plants the follower before its
 	 * animation so the clip is not cut off by walking, and every teleport
 	 * mirror, kill cheer and celebration carries one. Play report: "when I
-	 * teleport, the follower says a line like it was told to stay."
+	 * teleport, the follower says a line like it was told to stay." The
+	 * minute-taking parks it through the same stayAt as the rest of them.
 	 */
 	static boolean stayIsPlayerCommanded(boolean staying, boolean wandered,
-		boolean thrall, boolean errandBusy, boolean spectating, boolean emoteHold)
+		boolean thrall, boolean errandBusy, boolean spectating, boolean emoteHold,
+		boolean takingMinutes)
 	{
 		return staying && !wandered && !thrall && !errandBusy && !spectating
-			&& !emoteHold;
+			&& !emoteHold && !takingMinutes;
 	}
 
 	/**

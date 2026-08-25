@@ -71,7 +71,9 @@ public class ErrandController
 	 * a pose on the follower, 2026-08-12. Loops, so it is held as a pose
 	 * override rather than played as a one-shot.
 	 */
-	private static final int READ_SCROLL_POSE = 5354;
+	// Public: the minutes-taking borrows the same stance and prop, so the
+	// documenting look has exactly one definition.
+	public static final int READ_SCROLL_POSE = 5354;
 
 	/**
 	 * The plain Scroll, weapon slot. The animation mimes the scroll and draws
@@ -79,7 +81,7 @@ public class ErrandController
 	 * hand-slot candidates this is the one that sits between the hands with no
 	 * vertex nudge at all. Verified with the pose above, same session.
 	 */
-	private static final int SCROLL_PROP = 10485;
+	public static final int SCROLL_PROP = 10485;
 
 	/**
 	 * What the scribe considers worth walking over to.

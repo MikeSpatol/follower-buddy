@@ -12234,6 +12234,47 @@
         "There's a full page on the {target} somewhere. Not my best work.",
         "{target}, examined. We're being thorough today."
       ]
+    },
+    {
+      "id": "minutes-taken",
+      "note": "The follower just minuted one of the player's NPC dialogs - stepped aside, wrote through the meeting, put the scroll away as the box closed. The performance is the joke; the line is the rare receipt.",
+      "group": "reactions",
+      "priority": 30,
+      "cooldownMs": 600000,
+      "delayTicks": 3,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "minutesTaken"
+          },
+          {
+            "type": "chance",
+            "percent": 40
+          }
+        ]
+      },
+      "say": [
+        "I have the minutes, if it ever comes to a dispute.",
+        "Minuted. Every word. Some of the pauses.",
+        "That's in the record now. They seemed nice."
+      ]
+    },
+    {
+      "id": "welfare-check",
+      "note": "The player came back from a long AFK during which the follower walked round to peer at them. The check itself was silent (the damper held); this is the payoff, on a present player.",
+      "group": "idle",
+      "priority": 45,
+      "cooldownMs": 600000,
+      "delayTicks": 2,
+      "when": {
+        "type": "attendedAgain"
+      },
+      "say": [
+        "Back with us. You had the look of somebody listening at a door.",
+        "There you are. I came round to check. You hadn't moved. Noted.",
+        "Welcome back. I performed a welfare check. You passed, barely."
+      ]
     }
   ]
 }

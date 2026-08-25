@@ -1,14 +1,14 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 444 rules, 2121 spoken lines, 2 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 446 rules, 2127 spoken lines, 2 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
 ## Contents
 
 - [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (32 rules, 149 lines)
-- [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (35 rules, 196 lines)
-- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (32 rules, 216 lines)
+- [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (36 rules, 199 lines)
+- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (33 rules, 219 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 114 lines)
 - [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 72 lines)
 - [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (20 rules, 106 lines)
@@ -954,6 +954,17 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Still gone. The scenery and I are getting acquainted.
 - Take your time. The notes on your absence are brief.
 
+### `welfare-check`
+
+> The player came back from a long AFK during which the follower walked round to peer at them. The check itself was silent (the damper held); this is the payoff, on a present player.
+
+- **when:** attendedagain
+- **pacing:** priority 45, cooldown 10m, delay 2 ticks
+
+- Back with us. You had the look of somebody listening at a door.
+- There you are. I came round to check. You hadn't moved. Noted.
+- Welcome back. I performed a welfare check. You passed, barely.
+
 ## reactions
 
 *Answering the world: pets, drops, examines, bags, crowds.*
@@ -1456,6 +1467,17 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - The {target}. Noted, reluctantly.
 - There's a full page on the {target} somewhere. Not my best work.
 - {target}, examined. We're being thorough today.
+
+### `minutes-taken`
+
+> The follower just minuted one of the player's NPC dialogs - stepped aside, wrote through the meeting, put the scroll away as the box closed. The performance is the joke; the line is the rare receipt.
+
+- **when:** minutestaken AND a 40% roll
+- **pacing:** priority 30, cooldown 10m, delay 3 ticks
+
+- I have the minutes, if it ever comes to a dispute.
+- Minuted. Every word. Some of the pauses.
+- That's in the record now. They seemed nice.
 
 ## combat
 

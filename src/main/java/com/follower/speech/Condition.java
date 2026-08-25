@@ -73,6 +73,8 @@ import net.runelite.api.NPC;
  *   <tr><td>channelJoined / channelLeft</td><td>no fields; {@code {name}} says who</td></tr>
  *   <tr><td>npcShout</td><td>{@code names} (wildcards ok) and/or {@code contains}; {@code {npc}} and {@code {message}}</td></tr>
  *   <tr><td>examinedThing</td><td>optional {@code names} (wildcards ok) — the player examined something; {@code {target}}</td></tr>
+ *   <tr><td>attendedAgain</td><td>no fields — the player is back from an absence the follower came round to check on</td></tr>
+ *   <tr><td>minutesTaken</td><td>no fields — the follower finished minuting an NPC dialog</td></tr>
  * </table>
  *
  * <p>{@code npcNearby} also takes {@code minimum}/{@code maximum} combat level,
@@ -750,6 +752,19 @@ public class Condition
 			case "examinedthing":
 				return event.getType() == TriggerEvent.Type.EXAMINED_THING
 					&& (names == null || matchesAnyName(event.getName()));
+
+			// The player came back from a long absence during which the
+			// follower walked round to peer at them. The check itself is
+			// silent - the damper holds while nobody is there to read a line -
+			// so this is the payoff, landing on a present player.
+			case "attendedagain":
+				return event.getType() == TriggerEvent.Type.ATTENDED_AGAIN;
+
+			// The follower finished minuting one of the player's NPC dialogs:
+			// it stepped aside, wrote through the meeting, and put the scroll
+			// away as the box closed.
+			case "minutestaken":
+				return event.getType() == TriggerEvent.Type.MINUTES_TAKEN;
 
 			case "tally":
 			{

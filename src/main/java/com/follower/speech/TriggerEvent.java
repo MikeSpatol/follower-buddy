@@ -61,6 +61,8 @@ public final class TriggerEvent
 		NPC_SHOUT,
 		TRACK_CHANGE,
 		EXAMINED_THING,
+		ATTENDED_AGAIN,
+		MINUTES_TAKEN,
 	}
 
 	/**

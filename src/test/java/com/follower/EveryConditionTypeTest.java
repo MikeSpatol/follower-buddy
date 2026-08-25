@@ -436,7 +436,13 @@ public class EveryConditionTypeTest
 	{
 		note("worldHop", "gameUpdated", "notesEdited", "musicUnlock",
 			"collectionAdd", "questComplete", "geOffer", "channelJoined",
-			"channelLeft", "npcShout", "dateIs", "musicTrack", "examinedThing");
+			"channelLeft", "npcShout", "dateIs", "musicTrack", "examinedThing",
+			"attendedAgain", "minutesTaken");
+
+		fires("{\"type\": \"attendedAgain\"}",
+			TriggerEvent.simple(TriggerEvent.Type.ATTENDED_AGAIN));
+		fires("{\"type\": \"minutesTaken\"}",
+			TriggerEvent.simple(TriggerEvent.Type.MINUTES_TAKEN));
 
 		fires("{\"type\": \"examinedThing\"}", TriggerEvent.examinedThing("Scarecrow"));
 		fires("{\"type\": \"examinedThing\", \"names\": [\"Scare*\"]}",

@@ -399,6 +399,8 @@ wins.
 | `channelJoined` / `channelLeft` | â€” somebody arrived in or left your friends chat or clan channel. `{name}` |
 | `npcShout` | `names` (wildcards ok) and/or `contains` â€” a named NPC said something overhead. `{npc}`, `{message}` |
 | `examinedThing` | optional `names` (wildcards ok) â€” the player examined something; the follower also turns to look. `{target}` |
+| `attendedAgain` | â€” the player is back from a long absence the follower came round to check on |
+| `minutesTaken` | â€” the follower finished minuting one of the player's NPC dialogs |
 | `login`, `always` | â€” |
 | `chance` | `percent`, rolled each evaluation |
 
