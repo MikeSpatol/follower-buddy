@@ -78,52 +78,12 @@ public class FollowerPanel extends PluginPanel
 	/** (body colour slot 0-4, palette index) - the exact-palette picker. */
 	private final BiConsumer<Integer, Integer> onBodyColor;
 
-	/** Opens the item-message editor; set by the plugin after construction. */
-	private Runnable onEditPhrases = () -> { };
+	/** Opens the message editor window; set by the plugin after construction. */
+	private Runnable onEditMessages = () -> { };
 
-	public void setOnEditPhrases(Runnable onEditPhrases)
+	public void setOnEditMessages(Runnable onEditMessages)
 	{
-		this.onEditPhrases = onEditPhrases;
-	}
-
-	/** Opens the location-message editor; set by the plugin after construction. */
-	private Runnable onEditLocations = () -> { };
-
-	public void setOnEditLocations(Runnable onEditLocations)
-	{
-		this.onEditLocations = onEditLocations;
-	}
-
-	/** Opens the boss-message editor; set by the plugin after construction. */
-	private Runnable onEditBosses = () -> { };
-
-	public void setOnEditBosses(Runnable onEditBosses)
-	{
-		this.onEditBosses = onEditBosses;
-	}
-
-	/** Opens the status-message editor; set by the plugin after construction. */
-	private Runnable onEditStatuses = () -> { };
-
-	public void setOnEditStatuses(Runnable onEditStatuses)
-	{
-		this.onEditStatuses = onEditStatuses;
-	}
-
-	/** Opens the quest-NPC-message editor; set by the plugin after construction. */
-	private Runnable onEditQuests = () -> { };
-
-	public void setOnEditQuests(Runnable onEditQuests)
-	{
-		this.onEditQuests = onEditQuests;
-	}
-
-	/** Opens the errand-message editor; set by the plugin after construction. */
-	private Runnable onEditErrands = () -> { };
-
-	public void setOnEditErrands(Runnable onEditErrands)
-	{
-		this.onEditErrands = onEditErrands;
+		this.onEditMessages = onEditMessages;
 	}
 
 	/** Opens the memory window (R20); set by the plugin after construction. */
@@ -134,19 +94,12 @@ public class FollowerPanel extends PluginPanel
 		this.onShowMemory = onShowMemory;
 	}
 
-	/** Opens the combat-message editor; set by the plugin after construction. */
-	private Runnable onEditCombat = () -> { };
-
+	/** Opens the conversation editor; set by the plugin after construction. */
 	private Runnable onEditDialogs = () -> { };
 
 	public void setOnEditDialogs(Runnable onEditDialogs)
 	{
 		this.onEditDialogs = onEditDialogs;
-	}
-
-	public void setOnEditCombat(Runnable onEditCombat)
-	{
-		this.onEditCombat = onEditCombat;
 	}
 
 	// ---------------------------------------------------------------- profiles
@@ -276,7 +229,16 @@ public class FollowerPanel extends PluginPanel
 		header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
 		header.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
-		JLabel dialogueTitle = new JLabel("Follower dialogue");
+		// The one line that says what this thing IS, before any controls do.
+		JLabel identity = new JLabel("<html>A follower only you can see."
+			+ " Dress it here; the talking it mostly handles itself.</html>");
+		identity.setFont(FontManager.getRunescapeSmallFont());
+		identity.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
+		identity.setAlignmentX(LEFT_ALIGNMENT);
+		identity.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
+		header.add(identity);
+
+		JLabel dialogueTitle = new JLabel("Follower messages");
 		dialogueTitle.setFont(FontManager.getRunescapeBoldFont());
 		dialogueTitle.setForeground(Color.WHITE);
 		dialogueTitle.setAlignmentX(LEFT_ALIGNMENT);
@@ -289,36 +251,20 @@ public class FollowerPanel extends PluginPanel
 		dialogueHint.setBorder(BorderFactory.createEmptyBorder(2, 0, 6, 0));
 		header.add(dialogueHint);
 
-		JPanel editorButtons = new JPanel(new GridLayout(0, 2, 6, 4));
+		// Three doors, not nine: the old grid surfaced every internal rule
+		// group as its own button, a navigation decision nobody should have
+		// to make cold. The categories live in a dropdown inside Messages.
+		JPanel editorButtons = new JPanel(new GridLayout(0, 1, 6, 4));
 		editorButtons.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		editorButtons.setAlignmentX(LEFT_ALIGNMENT);
-		// Two columns, so the cap is per ROW of buttons: nine buttons is five
-		// rows, and a height sized for four clipped the last one off.
-		editorButtons.setMaximumSize(new Dimension(Integer.MAX_VALUE, 150));
+		editorButtons.setMaximumSize(new Dimension(Integer.MAX_VALUE, 90));
 
-		JButton phrases = new JButton("Items...");
-		phrases.setToolTipText("View and edit what the follower says when you equip items");
-		phrases.setFocusPainted(false);
-		phrases.addActionListener(e -> onEditPhrases.run());
-		editorButtons.add(phrases);
-
-		JButton locations = new JButton("Locations...");
-		locations.setToolTipText("View, edit and add what the follower says in different places");
-		locations.setFocusPainted(false);
-		locations.addActionListener(e -> onEditLocations.run());
-		editorButtons.add(locations);
-
-		JButton bosses = new JButton("Bosses...");
-		bosses.setToolTipText("View and edit what the follower says when bosses appear");
-		bosses.setFocusPainted(false);
-		bosses.addActionListener(e -> onEditBosses.run());
-		editorButtons.add(bosses);
-
-		JButton combat = new JButton("Combat...");
-		combat.setToolTipText("View and edit the encouragement while it watches you fight");
-		combat.setFocusPainted(false);
-		combat.addActionListener(e -> onEditCombat.run());
-		editorButtons.add(combat);
+		JButton messages = new JButton("Messages...");
+		messages.setToolTipText("Everything the follower says - items, places, bosses,"
+			+ " combat, statuses, quest NPCs and errands - viewable and editable");
+		messages.setFocusPainted(false);
+		messages.addActionListener(e -> onEditMessages.run());
+		editorButtons.add(messages);
 
 		JButton conversations = new JButton("Conversations...");
 		conversations.setToolTipText("View and edit the conversations the follower STARTS -"
@@ -327,26 +273,7 @@ public class FollowerPanel extends PluginPanel
 		conversations.addActionListener(e -> onEditDialogs.run());
 		editorButtons.add(conversations);
 
-		JButton statuses = new JButton("Statuses...");
-		statuses.setToolTipText("View and edit what the follower says about your HP, prayer,"
-			+ " poison and more, plus its idle chatter");
-		statuses.setFocusPainted(false);
-		statuses.addActionListener(e -> onEditStatuses.run());
-		editorButtons.add(statuses);
-
-		JButton quests = new JButton("Quest NPCs...");
-		quests.setToolTipText("View and edit what the follower says when famous quest figures are nearby");
-		quests.setFocusPainted(false);
-		quests.addActionListener(e -> onEditQuests.run());
-		editorButtons.add(quests);
-
-		JButton errands = new JButton("Errands...");
-		errands.setToolTipText("View and edit what the follower says on its little errands");
-		errands.setFocusPainted(false);
-		errands.addActionListener(e -> onEditErrands.run());
-		editorButtons.add(errands);
-
-		JButton memory = new JButton("Memory...");
+		JButton memory = new JButton("What it knows...");
 		memory.setToolTipText("Everything the follower knows about you, and the"
 			+ " button that erases it");
 		memory.setFocusPainted(false);
@@ -391,7 +318,6 @@ public class FollowerPanel extends PluginPanel
 
 		// Pick a profile and you are wearing it; every change from then on is
 		// saved straight back to it. New makes one, Delete removes it.
-		profileCombo.setToolTipText("Pick a profile to wear it - changes save to it automatically");
 		profileCombo.setAlignmentX(LEFT_ALIGNMENT);
 		profileCombo.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
 		profileCombo.addActionListener(e ->
@@ -404,6 +330,15 @@ public class FollowerPanel extends PluginPanel
 			}
 		});
 		header.add(profileCombo);
+
+		// The autosave behaviour used to live in a hover tooltip, which is
+		// exactly where the one surprising fact about profiles should not be.
+		JLabel autosave = new JLabel("Changes save to the selected profile automatically");
+		autosave.setFont(FontManager.getRunescapeSmallFont());
+		autosave.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
+		autosave.setAlignmentX(LEFT_ALIGNMENT);
+		autosave.setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
+		header.add(autosave);
 		header.add(javax.swing.Box.createVerticalStrut(4));
 
 		JPanel profileButtons = new JPanel(new GridLayout(1, 2, 6, 0));
@@ -429,7 +364,23 @@ public class FollowerPanel extends PluginPanel
 		JButton profileDelete = new JButton("Delete");
 		profileDelete.setToolTipText("Remove the selected profile");
 		profileDelete.setFocusPainted(false);
-		profileDelete.addActionListener(e -> onProfileDelete.accept(profileName()));
+		profileDelete.addActionListener(e ->
+		{
+			String name = profileName();
+			if (name.isEmpty())
+			{
+				return;
+			}
+			// The other destructive button in this plugin (Forget everything)
+			// confirms; a profile deserves no less than a memory.
+			int choice = javax.swing.JOptionPane.showConfirmDialog(this,
+				"Delete outfit profile \"" + name + "\"? There is no undo.",
+				"Delete profile", javax.swing.JOptionPane.YES_NO_OPTION);
+			if (choice == javax.swing.JOptionPane.YES_OPTION)
+			{
+				onProfileDelete.accept(name);
+			}
+		});
 		profileButtons.add(profileDelete);
 
 		header.add(profileButtons);
@@ -495,8 +446,8 @@ public class FollowerPanel extends PluginPanel
 		picker.add(search);
 
 		showAll.setText("Show items from every slot");
-		showAll.setToolTipText("1,042 wearable items have no equipment-slot data (mostly "
-			+ "quest and holiday items). Tick this to include them.");
+		showAll.setToolTipText("Some wearable items (mostly quest and holiday ones)"
+			+ " don't say which slot they belong to. Tick to include them in every search.");
 		showAll.setFont(FontManager.getRunescapeSmallFont());
 		showAll.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
 		showAll.setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -844,8 +795,7 @@ public class FollowerPanel extends PluginPanel
 		JLabel style = new JLabel(label);
 		style.setFont(FontManager.getRunescapeSmallFont());
 		style.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
-		style.setToolTipText(label + "  (kit id "
-			+ (current.isKit(part) ? current.kitId(part) : -1) + ")");
+		style.setToolTipText(label);
 		style.setPreferredSize(new Dimension(0, ROW_CONTENT_HEIGHT));
 		style.setHorizontalAlignment(SwingConstants.CENTER);
 		cycle.add(style, BorderLayout.CENTER);
@@ -1012,13 +962,12 @@ public class FollowerPanel extends PluginPanel
 			return;
 		}
 
-		if (!repository.isLoaded())
+		// The cache-dumper detail belongs in the log, not in front of a user
+		// who has never heard of the build tooling.
+		if (!repository.isLoaded() || !repository.hasNames())
 		{
-			resultList.add(hint("No model dump loaded - run tools/cache-dumper"));
-		}
-		else if (!repository.hasNames())
-		{
-			resultList.add(hint("Dump has no item names - re-run tools/cache-dumper"));
+			resultList.add(hint("Item data didn't load - try restarting the client."
+				+ " If it keeps happening, report a bug."));
 		}
 		else
 		{

@@ -24,25 +24,34 @@ import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
 
 /**
- * The message editor: every rule of one or more groups in phrases.json, with
- * what triggers it, an on/off tick and its message lines (one per line) free
- * to edit. Save writes straight back to phrases.json, which the plugin
- * hot-reloads within a second — no restart, no rebuild.
+ * The message editor: one window for every category of message rule in
+ * phrases.json, picked from a dropdown, with what triggers each rule, an
+ * on/off tick and its message lines (one per line) free to edit. Save writes
+ * straight back to phrases.json, which the plugin hot-reloads within a second
+ * — no restart, no rebuild.
  *
- * <p>In structural mode (the location editor) each rule's region ids are
- * editable too, rules can be deleted outright and new ones added — paste in
- * the id that ::follower where prints and the follower learns a new place.
+ * <p>One window rather than seven buttons because the split by rule group is
+ * an implementation detail; a user looking for "the thing it says about
+ * bosses" should not have to know which of nine doors it lives behind.
+ *
+ * <p>In the structural category (Locations) each rule's region ids are
+ * editable too, rules can be deleted outright and new ones added — the
+ * "Use my current location" button fills the id in for you.
  *
  * <p>Deliberately a plain window rather than a sidebar panel: message lines
  * are sentences, and editing sentences in a 225px column is misery.
@@ -50,27 +59,81 @@ import net.runelite.client.ui.FontManager;
 @Slf4j
 public class PhrasesDialog extends JDialog
 {
+	/**
+	 * One entry of the category dropdown: a set of rule groups shown under one
+	 * user-facing name. Usually one group, but related groups can be shown
+	 * together - idle chatter belongs with the status lines as far as anyone
+	 * looking for "things the follower says about itself" is concerned, even
+	 * though the engine keeps them separate so they can be toggled apart.
+	 */
+	public static final class Category
+	{
+		final String name;
+		final List<String> groups;
+		final String hint;
+		final boolean structural;
+
+		/**
+		 * @param groups one or more rule groups, comma separated; the first
+		 * receives any rules added from this window
+		 */
+		public Category(String name, String groups, String hint, boolean structural)
+		{
+			this.name = name;
+			this.groups = java.util.Arrays.asList(groups.split("\\s*,\\s*"));
+			this.hint = hint;
+			this.structural = structural;
+		}
+	}
+
 	private final Gson gson;
 	private final Path file;
+	private final List<Category> categories;
 
-	/**
-	 * The rule groups this window edits. Usually one, but related groups can
-	 * be shown together - idle chatter belongs with the status lines as far
-	 * as anyone looking for "things the follower says about itself" is
-	 * concerned, even though the engine keeps them separate so they can be
-	 * toggled apart.
-	 */
-	private final java.util.List<String> groups;
+	/** Where "Use my current location" gets its region id; may be null. */
+	private final java.util.function.IntSupplier currentRegion;
 
-	/** New rules are created in the first group. */
-	private final String primaryGroup;
-	private final boolean structural;
+	private Category category;
 
+	private final JComboBox<String> categoryPicker = new JComboBox<>();
+	private final JLabel hint = new JLabel();
+	private final JButton addLocation = new JButton("Add location");
 	private final JPanel list = new JPanel();
 	private final JLabel status = new JLabel(" ");
 	private final List<Row> rows = new ArrayList<>();
 	private final List<Row> added = new ArrayList<>();
 	private final Set<String> deleted = new HashSet<>();
+
+	/** True while the category picker is being set programmatically. */
+	private boolean switching;
+
+	/**
+	 * Whether anything on screen differs from the file. Guards every road out
+	 * of the window - closing, reopening, switching category - because the
+	 * first design lost ten typed lines to a stray click on the X.
+	 */
+	private boolean dirty;
+
+	private final DocumentListener dirtyMarker = new DocumentListener()
+	{
+		@Override
+		public void insertUpdate(DocumentEvent e)
+		{
+			dirty = true;
+		}
+
+		@Override
+		public void removeUpdate(DocumentEvent e)
+		{
+			dirty = true;
+		}
+
+		@Override
+		public void changedUpdate(DocumentEvent e)
+		{
+			dirty = true;
+		}
+	};
 
 	private static final class Row
 	{
@@ -91,30 +154,64 @@ public class PhrasesDialog extends JDialog
 		}
 	}
 
-	/**
-	 * @param group one or more rule groups to edit; the first receives any
-	 * rules added from this window
-	 */
-	public PhrasesDialog(Gson gson, Path file, String group, String title, String hintText,
-		boolean structural)
+	public PhrasesDialog(Gson gson, Path file, List<Category> categories,
+		java.util.function.IntSupplier currentRegion)
 	{
-		super((java.awt.Frame) null, title, false);
+		super((java.awt.Frame) null, "Follower Buddy — Messages", false);
 		this.gson = gson.newBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 		this.file = file;
-		this.groups = java.util.Arrays.asList(group.split("\\s*,\\s*"));
-		this.primaryGroup = this.groups.get(0);
-		this.structural = structural;
+		this.categories = categories;
+		this.currentRegion = currentRegion;
+		this.category = categories.get(0);
 
-		setDefaultCloseOperation(HIDE_ON_CLOSE);
+		// Closing is handled below so unsaved edits get a say first.
+		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+		addWindowListener(new java.awt.event.WindowAdapter()
+		{
+			@Override
+			public void windowClosing(java.awt.event.WindowEvent e)
+			{
+				if (confirmDirty())
+				{
+					setVisible(false);
+				}
+			}
+		});
 
 		JPanel root = new JPanel(new BorderLayout(0, 6));
 		root.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		root.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-		JLabel hint = new JLabel("<html>" + hintText + "</html>");
+		for (Category c : categories)
+		{
+			categoryPicker.addItem(c.name);
+		}
+		categoryPicker.addActionListener(e ->
+		{
+			if (switching || categoryPicker.getSelectedIndex() < 0)
+			{
+				return;
+			}
+			if (!confirmDirty())
+			{
+				// Cancelled: put the picker back without re-entering this.
+				switching = true;
+				categoryPicker.setSelectedItem(category.name);
+				switching = false;
+				return;
+			}
+			category = categories.get(categoryPicker.getSelectedIndex());
+			refresh();
+		});
+
 		hint.setFont(FontManager.getRunescapeSmallFont());
 		hint.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-		root.add(hint, BorderLayout.NORTH);
+
+		JPanel top = new JPanel(new BorderLayout(6, 6));
+		top.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		top.add(categoryPicker, BorderLayout.NORTH);
+		top.add(hint, BorderLayout.CENTER);
+		root.add(top, BorderLayout.NORTH);
 
 		list.setLayout(new BoxLayout(list, BoxLayout.Y_AXIS));
 		list.setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -134,16 +231,14 @@ public class PhrasesDialog extends JDialog
 
 		JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
 		buttons.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		if (structural)
-		{
-			JButton add = new JButton("Add location");
-			add.setToolTipText("A new place for the follower to comment on."
-				+ " ::follower where prints the region id you are standing in.");
-			add.addActionListener(e -> addBlankRow());
-			buttons.add(add);
-		}
+		addLocation.setToolTipText("A new place for the follower to comment on");
+		addLocation.addActionListener(e -> addBlankRow());
+		// Only the structural category can add rules; refresh() keeps the
+		// button's visibility in step with the picked category.
+		addLocation.setVisible(category.structural);
+		buttons.add(addLocation);
 		JButton reload = new JButton("Reload");
-		reload.setToolTipText("Throw away unsaved edits and re-read phrases.json");
+		reload.setToolTipText("Discard unsaved edits and reload from disk");
 		reload.addActionListener(e -> refresh());
 		buttons.add(reload);
 		JButton save = new JButton("Save");
@@ -159,12 +254,47 @@ public class PhrasesDialog extends JDialog
 		setLocationRelativeTo(null);
 	}
 
-	/** Shows the window with fresh file contents, fronting it if already open. */
+	/**
+	 * Shows the window, fronting it if already open. Fresh file contents
+	 * unless there are edits in progress - alt-tabbing away and clicking the
+	 * panel button again must not wipe half-typed lines.
+	 */
 	public void open()
 	{
-		refresh();
+		if (!dirty)
+		{
+			refresh();
+		}
 		setVisible(true);
 		toFront();
+	}
+
+	/**
+	 * Gives unsaved edits a say before they would be lost.
+	 *
+	 * @return true when the action may proceed - nothing was pending, the
+	 * edits were saved, or the user chose to discard them
+	 */
+	private boolean confirmDirty()
+	{
+		if (!dirty)
+		{
+			return true;
+		}
+		int choice = JOptionPane.showOptionDialog(this,
+			"There are unsaved changes.", "Save changes?",
+			JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null,
+			new Object[]{"Save", "Discard", "Cancel"}, "Save");
+		if (choice == 0)
+		{
+			return save();
+		}
+		if (choice == 1)
+		{
+			dirty = false;
+			return true;
+		}
+		return false;
 	}
 
 	private void refresh()
@@ -182,7 +312,8 @@ public class PhrasesDialog extends JDialog
 		catch (Exception e)
 		{
 			log.warn("Could not read {}", file, e);
-			setStatus("Could not read phrases.json: " + e.getMessage(), true);
+			setStatus("The messages file couldn't be read - it may have been"
+				+ " hand-edited. Fix it or restore a backup, then Reload.", true);
 			list.revalidate();
 			list.repaint();
 			return;
@@ -192,7 +323,7 @@ public class PhrasesDialog extends JDialog
 		for (JsonElement element : parsed.getAsJsonArray("rules"))
 		{
 			JsonObject rule = element.getAsJsonObject();
-			if (!groups.contains(optString(rule, "group")) || optString(rule, "id") == null)
+			if (!category.groups.contains(optString(rule, "group")) || optString(rule, "id") == null)
 			{
 				continue;
 			}
@@ -200,9 +331,12 @@ public class PhrasesDialog extends JDialog
 			count++;
 		}
 
-		setStatus(count + " rules loaded", false);
+		hint.setText("<html>" + category.hint + "</html>");
+		addLocation.setVisible(category.structural);
+		setStatus(count + " message sets loaded", false);
 		list.revalidate();
 		list.repaint();
+		dirty = false;
 	}
 
 	private JPanel buildRow(JsonObject rule)
@@ -226,8 +360,9 @@ public class PhrasesDialog extends JDialog
 		enabled.setSelected(!rule.has("enabled") || rule.get("enabled").getAsBoolean());
 		enabled.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		enabled.setToolTipText("Untick to silence just this rule");
+		enabled.addItemListener(e -> dirty = true);
 		controls.add(enabled);
-		if (structural)
+		if (category.structural)
 		{
 			JButton delete = new JButton("Delete");
 			delete.setToolTipText("Remove this rule entirely on Save");
@@ -239,6 +374,7 @@ public class PhrasesDialog extends JDialog
 				list.revalidate();
 				list.repaint();
 				setStatus("'" + prettyName(id) + "' will be removed on Save", false);
+				dirty = true;
 			});
 			controls.add(delete);
 		}
@@ -257,7 +393,7 @@ public class PhrasesDialog extends JDialog
 		}
 
 		JTextField regionsField = null;
-		if (structural)
+		if (category.structural)
 		{
 			JsonArray regions = regionsOf(rule);
 			if (regions != null)
@@ -268,11 +404,13 @@ public class PhrasesDialog extends JDialog
 					ids.add(r.getAsString());
 				}
 				regionsField = new JTextField(String.join(", ", ids));
+				regionsField.getDocument().addDocumentListener(dirtyMarker);
 				row.add(labelledField("Regions:", regionsField));
 			}
 			else
 			{
-				JLabel special = new JLabel("(special trigger — edit in phrases.json)");
+				JLabel special = new JLabel("(triggered by something other than a place"
+					+ " - the messages can still be edited)");
 				special.setFont(FontManager.getRunescapeSmallFont());
 				special.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
 				special.setAlignmentX(LEFT_ALIGNMENT);
@@ -291,6 +429,7 @@ public class PhrasesDialog extends JDialog
 			text.append(line.getAsString());
 		}
 		JTextArea area = sayArea(text.toString(), Math.max(2, say.size()));
+		area.getDocument().addDocumentListener(dirtyMarker);
 		row.add(area);
 
 		Row r = new Row(id, null, enabled, regionsField, area);
@@ -318,21 +457,48 @@ public class PhrasesDialog extends JDialog
 		row.add(header);
 
 		JTextField name = new JTextField();
+		name.getDocument().addDocumentListener(dirtyMarker);
 		row.add(labelledField("Name:", name));
 		JTextField regions = new JTextField();
-		regions.setToolTipText("Comma separated region ids — ::follower where prints the one you stand in");
-		row.add(labelledField("Regions:", regions));
+		regions.setToolTipText("Comma separated region ids");
+		regions.getDocument().addDocumentListener(dirtyMarker);
+		JPanel regionsLine = labelledField("Regions:", regions);
+		if (currentRegion != null)
+		{
+			// The first design taught the user a chat command in a tooltip and
+			// had them carry the id back by hand. The plugin knows where you
+			// are standing; the button just asks it.
+			JButton here = new JButton("Use my current location");
+			here.setToolTipText("Fill in the region you are standing in right now");
+			here.addActionListener(e ->
+			{
+				int region = currentRegion.getAsInt();
+				if (region <= 0)
+				{
+					setStatus("The game hasn't said where you are yet - log in first.", true);
+					return;
+				}
+				String existing = regions.getText().trim();
+				regions.setText(existing.isEmpty() ? String.valueOf(region)
+					: existing + ", " + region);
+			});
+			regionsLine.add(here, BorderLayout.EAST);
+		}
+		row.add(regionsLine);
 		JTextArea area = sayArea("", 3);
+		area.getDocument().addDocumentListener(dirtyMarker);
 		row.add(area);
 
 		JCheckBox enabled = new JCheckBox("On", true);
 		enabled.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		enabled.addItemListener(e -> dirty = true);
 		controls.add(enabled);
 		controls.add(delete);
 
 		Row r = new Row(null, name, enabled, regions, area);
 		r.panel = row;
 		added.add(r);
+		dirty = true;
 		delete.addActionListener(e ->
 		{
 			added.remove(r);
@@ -350,8 +516,10 @@ public class PhrasesDialog extends JDialog
 	/**
 	 * Applies the edits to a FRESH parse of the file, so hand edits made while
 	 * the window sat open are kept rather than clobbered with stale contents.
+	 *
+	 * @return whether the file was written
 	 */
-	private void save()
+	private boolean save()
 	{
 		try
 		{
@@ -401,16 +569,26 @@ public class PhrasesDialog extends JDialog
 			{
 				setStatus("Saved — the follower picks it up within a second", false);
 			}
+			else if (warnings.size() == 1)
+			{
+				setStatus("Saved with a warning: " + warnings.get(0), true);
+			}
 			else
 			{
-				setStatus("Saved with warnings: " + String.join("; ", warnings), true);
+				// A status line clips past one warning; a list does not.
+				setStatus("Saved with warnings", true);
+				JOptionPane.showMessageDialog(this,
+					"Saved, but:\n\n- " + String.join("\n- ", warnings),
+					"Saved with warnings", JOptionPane.WARNING_MESSAGE);
 			}
 			refresh();
+			return true;
 		}
 		catch (Exception e)
 		{
 			log.warn("Could not save {}", file, e);
 			setStatus("Save failed: " + e.getMessage(), true);
+			return false;
 		}
 	}
 
@@ -500,7 +678,7 @@ public class PhrasesDialog extends JDialog
 
 		if (row.regions != null)
 		{
-			JsonArray regions = parseRegions(row.regions.getText());
+			JsonArray regions = parseRegions(row.regions.getText(), warnings);
 			if (regions.size() > 0)
 			{
 				rule.getAsJsonObject("when").add("regions", regions);
@@ -515,7 +693,7 @@ public class PhrasesDialog extends JDialog
 	private JsonObject buildAddedRule(Row row, Set<String> existingIds, List<String> warnings)
 	{
 		String name = row.name.getText().trim();
-		JsonArray regions = parseRegions(row.regions.getText());
+		JsonArray regions = parseRegions(row.regions.getText(), warnings);
 		JsonArray say = parseSay(row.say.getText());
 		if (name.isEmpty() || regions.size() == 0 || say.size() == 0)
 		{
@@ -539,7 +717,7 @@ public class PhrasesDialog extends JDialog
 		JsonObject rule = new JsonObject();
 		rule.addProperty("id", id);
 		rule.addProperty("note", name + ". Added from the editor.");
-		rule.addProperty("group", primaryGroup);
+		rule.addProperty("group", category.groups.get(0));
 		rule.addProperty("priority", 40);
 		rule.addProperty("output", "overhead");
 		rule.addProperty("delayTicks", 2);
@@ -614,14 +792,24 @@ public class PhrasesDialog extends JDialog
 		return say;
 	}
 
-	private static JsonArray parseRegions(String text)
+	private static JsonArray parseRegions(String text, List<String> warnings)
 	{
 		JsonArray regions = new JsonArray();
 		for (String token : text.split("[^0-9]+"))
 		{
-			if (!token.isEmpty())
+			if (token.isEmpty())
+			{
+				continue;
+			}
+			try
 			{
 				regions.add(Integer.parseInt(token));
+			}
+			catch (NumberFormatException e)
+			{
+				// An 11-digit paste used to abort the whole save with a raw
+				// "For input string" - name the token and carry on instead.
+				warnings.add("'" + token + "' isn't a region id the game uses - skipped");
 			}
 		}
 		return regions;
@@ -656,7 +844,7 @@ public class PhrasesDialog extends JDialog
 		return object.has(key) && object.get(key).isJsonPrimitive() ? object.get(key).getAsString() : null;
 	}
 
-	private static String prettyName(String id)
+	static String prettyName(String id)
 	{
 		if (id == null)
 		{

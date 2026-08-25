@@ -60,13 +60,57 @@ public class DialogsDialog extends JDialog
 	private DialogFile parsed;
 	private boolean loading;
 
+	/** The tree the rows on screen belong to, for reverting a cancelled switch. */
+	private int shownTreeIndex;
+
+	/**
+	 * Whether anything on screen differs from the file. Guards every road out
+	 * of the window - closing, reopening, switching tree - because unsaved
+	 * node edits used to vanish silently on any of them.
+	 */
+	private boolean dirty;
+
+	private final javax.swing.event.DocumentListener dirtyMarker =
+		new javax.swing.event.DocumentListener()
+	{
+		@Override
+		public void insertUpdate(javax.swing.event.DocumentEvent e)
+		{
+			dirty = true;
+		}
+
+		@Override
+		public void removeUpdate(javax.swing.event.DocumentEvent e)
+		{
+			dirty = true;
+		}
+
+		@Override
+		public void changedUpdate(javax.swing.event.DocumentEvent e)
+		{
+			dirty = true;
+		}
+	};
+
 	public DialogsDialog(Gson gson, Path file)
 	{
 		super((java.awt.Frame) null, "Follower Buddy — Conversations", false);
 		this.gson = gson.newBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 		this.file = file;
 
-		setDefaultCloseOperation(HIDE_ON_CLOSE);
+		// Closing is handled below so unsaved edits get a say first.
+		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+		addWindowListener(new java.awt.event.WindowAdapter()
+		{
+			@Override
+			public void windowClosing(java.awt.event.WindowEvent e)
+			{
+				if (confirmDirty())
+				{
+					setVisible(false);
+				}
+			}
+		});
 
 		JPanel root = new JPanel(new BorderLayout(0, 6));
 		root.setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -86,10 +130,28 @@ public class DialogsDialog extends JDialog
 		top.add(hint, BorderLayout.CENTER);
 		treePicker.addActionListener(e ->
 		{
-			if (!loading)
+			if (loading || treePicker.getSelectedIndex() < 0)
 			{
-				showSelectedTree();
+				return;
 			}
+			int wanted = treePicker.getSelectedIndex();
+			if (!confirmDirty())
+			{
+				// Cancelled: put the picker back without re-entering this.
+				loading = true;
+				treePicker.setSelectedIndex(shownTreeIndex);
+				loading = false;
+				return;
+			}
+			// Saving inside confirmDirty refreshes, which resets the picker to
+			// the first tree; the user asked for a different one.
+			if (treePicker.getSelectedIndex() != wanted)
+			{
+				loading = true;
+				treePicker.setSelectedIndex(wanted);
+				loading = false;
+			}
+			showSelectedTree();
 		});
 		top.add(treePicker, BorderLayout.SOUTH);
 		root.add(top, BorderLayout.NORTH);
@@ -119,7 +181,7 @@ public class DialogsDialog extends JDialog
 		buttons.add(add);
 
 		JButton reload = new JButton("Reload");
-		reload.setToolTipText("Throw away unsaved edits and re-read dialogs.json");
+		reload.setToolTipText("Discard unsaved edits and reload from disk");
 		reload.addActionListener(e -> refresh());
 		buttons.add(reload);
 
@@ -136,11 +198,48 @@ public class DialogsDialog extends JDialog
 		setLocationRelativeTo(null);
 	}
 
+	/**
+	 * Shows the window, fronting it if already open. Fresh file contents
+	 * unless there are edits in progress - alt-tabbing away and clicking the
+	 * panel button again must not wipe half-typed nodes.
+	 */
 	public void open()
 	{
-		refresh();
+		if (!dirty)
+		{
+			refresh();
+		}
 		setVisible(true);
 		toFront();
+	}
+
+	/**
+	 * Gives unsaved edits a say before they would be lost.
+	 *
+	 * @return true when the action may proceed - nothing was pending, the
+	 * edits were saved, or the user chose to discard them
+	 */
+	private boolean confirmDirty()
+	{
+		if (!dirty)
+		{
+			return true;
+		}
+		int choice = javax.swing.JOptionPane.showOptionDialog(this,
+			"There are unsaved changes.", "Save changes?",
+			javax.swing.JOptionPane.YES_NO_CANCEL_OPTION,
+			javax.swing.JOptionPane.QUESTION_MESSAGE, null,
+			new Object[]{"Save", "Discard", "Cancel"}, "Save");
+		if (choice == 0)
+		{
+			return save();
+		}
+		if (choice == 1)
+		{
+			dirty = false;
+			return true;
+		}
+		return false;
 	}
 
 	private void refresh()
@@ -152,7 +251,8 @@ public class DialogsDialog extends JDialog
 		catch (Exception e)
 		{
 			log.warn("Could not read {}", file, e);
-			setStatus("Could not read dialogs.json: " + e.getMessage(), true);
+			setStatus("The conversations file couldn't be read - it may have been"
+				+ " hand-edited. Fix it or restore a backup, then Reload.", true);
 			return;
 		}
 
@@ -166,7 +266,9 @@ public class DialogsDialog extends JDialog
 		treePicker.removeAllItems();
 		for (DialogTree tree : parsed.trees)
 		{
-			treePicker.addItem(tree.id);
+			// The picker shows the same prettified names as the message editor;
+			// the raw id still appears in each node's own rows for editing.
+			treePicker.addItem(PhrasesDialog.prettyName(tree.id));
 		}
 		loading = false;
 		showSelectedTree();
@@ -203,6 +305,8 @@ public class DialogsDialog extends JDialog
 			+ tree.startId() + "'", false);
 		list.revalidate();
 		list.repaint();
+		shownTreeIndex = treePicker.getSelectedIndex();
+		dirty = false;
 	}
 
 	private void addBlankRow()
@@ -213,6 +317,7 @@ public class DialogsDialog extends JDialog
 		list.add(buildRow(node));
 		list.revalidate();
 		list.repaint();
+		dirty = true;
 	}
 
 	private static final class Row
@@ -221,10 +326,40 @@ public class DialogsDialog extends JDialog
 		final JComboBox<String> speaker = new JComboBox<>(new String[]{"Follower", "You"});
 		final JTextArea pages = new JTextArea(2, 40);
 		final JTextField next = new JTextField();
-		final JTextArea choices = new JTextArea(2, 40);
+		final JTextArea choices = new GhostArea("Yes please -> node-thanks", 2, 40);
 		final JComboBox<String> answer = new JComboBox<>(new String[]{"—", "yes", "no"});
 		boolean deleted;
 		JPanel panel;
+	}
+
+	/**
+	 * A text area that shows an example of its little syntax while empty, so
+	 * "label -> node-id" is visible at the point of use rather than three
+	 * paragraphs up in the header.
+	 */
+	private static final class GhostArea extends JTextArea
+	{
+		private final String ghost;
+
+		GhostArea(String ghost, int rows, int columns)
+		{
+			super(rows, columns);
+			this.ghost = ghost;
+		}
+
+		@Override
+		protected void paintComponent(java.awt.Graphics g)
+		{
+			super.paintComponent(g);
+			if (getText().isEmpty())
+			{
+				g.setColor(ColorScheme.MEDIUM_GRAY_COLOR);
+				g.setFont(getFont().deriveFont(java.awt.Font.ITALIC));
+				java.awt.Insets insets = getInsets();
+				g.drawString(ghost, insets.left + 2,
+					insets.top + g.getFontMetrics().getAscent());
+			}
+		}
 	}
 
 	private JPanel buildRow(DialogTree.DialogNode node)
@@ -282,6 +417,7 @@ public class DialogsDialog extends JDialog
 		{
 			row.deleted = true;
 			panel.setVisible(false);
+			dirty = true;
 		});
 		panel.add(remove, c);
 
@@ -318,6 +454,15 @@ public class DialogsDialog extends JDialog
 		c.gridx = 3;
 		panel.add(row.answer, c);
 
+		// Attached after the values above are set, so populating a row does
+		// not read as the user editing one.
+		row.id.getDocument().addDocumentListener(dirtyMarker);
+		row.pages.getDocument().addDocumentListener(dirtyMarker);
+		row.choices.getDocument().addDocumentListener(dirtyMarker);
+		row.next.getDocument().addDocumentListener(dirtyMarker);
+		row.speaker.addActionListener(e -> dirty = true);
+		row.answer.addActionListener(e -> dirty = true);
+
 		row.panel = panel;
 		return panel;
 	}
@@ -343,12 +488,13 @@ public class DialogsDialog extends JDialog
 		return scroll;
 	}
 
-	private void save()
+	/** @return whether the file was written */
+	private boolean save()
 	{
 		DialogTree tree = selectedTree();
 		if (tree == null)
 		{
-			return;
+			return false;
 		}
 
 		List<DialogTree.DialogNode> rebuilt = new ArrayList<>();
@@ -439,14 +585,16 @@ public class DialogsDialog extends JDialog
 			tree.nodes = previous;
 			tree.start = previousStart;
 			setStatus("Not saved — " + String.join("; ", problems), true);
-			return;
+			return false;
 		}
 
 		try
 		{
 			writeAtomically(gson.toJson(parsed) + "\n");
 			setStatus("Saved — the follower picks it up within a second", false);
+			dirty = false;
 			refresh();
+			return true;
 		}
 		catch (Exception e)
 		{
@@ -454,6 +602,7 @@ public class DialogsDialog extends JDialog
 			tree.nodes = previous;
 			tree.start = previousStart;
 			setStatus("Save failed: " + e.getMessage(), true);
+			return false;
 		}
 	}
 

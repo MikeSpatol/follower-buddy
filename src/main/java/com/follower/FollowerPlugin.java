@@ -259,13 +259,7 @@ public class FollowerPlugin extends Plugin
 
 	private com.follower.ui.FollowerPanel panel;
 	private net.runelite.client.ui.NavigationButton navButton;
-	private com.follower.ui.PhrasesDialog gearPhrasesDialog;
-	private com.follower.ui.PhrasesDialog areaPhrasesDialog;
-	private com.follower.ui.PhrasesDialog bossPhrasesDialog;
-	private com.follower.ui.PhrasesDialog statusPhrasesDialog;
-	private com.follower.ui.PhrasesDialog questPhrasesDialog;
-	private com.follower.ui.PhrasesDialog errandPhrasesDialog;
-	private com.follower.ui.PhrasesDialog combatPhrasesDialog;
+	private com.follower.ui.PhrasesDialog messagesDialog;
 	private com.follower.ui.DialogsDialog dialogsDialog;
 	private com.follower.ui.MemoryDialog memoryDialog;
 
@@ -588,40 +582,10 @@ public class FollowerPlugin extends Plugin
 			dialogsDialog.dispose();
 			dialogsDialog = null;
 		}
-		if (gearPhrasesDialog != null)
+		if (messagesDialog != null)
 		{
-			gearPhrasesDialog.dispose();
-			gearPhrasesDialog = null;
-		}
-		if (areaPhrasesDialog != null)
-		{
-			areaPhrasesDialog.dispose();
-			areaPhrasesDialog = null;
-		}
-		if (bossPhrasesDialog != null)
-		{
-			bossPhrasesDialog.dispose();
-			bossPhrasesDialog = null;
-		}
-		if (statusPhrasesDialog != null)
-		{
-			statusPhrasesDialog.dispose();
-			statusPhrasesDialog = null;
-		}
-		if (questPhrasesDialog != null)
-		{
-			questPhrasesDialog.dispose();
-			questPhrasesDialog = null;
-		}
-		if (errandPhrasesDialog != null)
-		{
-			errandPhrasesDialog.dispose();
-			errandPhrasesDialog = null;
-		}
-		if (combatPhrasesDialog != null)
-		{
-			combatPhrasesDialog.dispose();
-			combatPhrasesDialog = null;
+			messagesDialog.dispose();
+			messagesDialog = null;
 		}
 
 		clientThread.invoke(() ->
@@ -700,14 +664,8 @@ public class FollowerPlugin extends Plugin
 			this::equipFromPanel, this::clearSlotFromPanel,
 			() -> clientThread.invoke(this::copyGearToCustomOutfit),
 			this::clearOutfit, this::setGender, this::cycleKit, this::setBodyColor);
-		panel.setOnEditPhrases(this::openGearPhrasesDialog);
-		panel.setOnEditLocations(this::openAreaPhrasesDialog);
-		panel.setOnEditBosses(this::openBossPhrasesDialog);
-		panel.setOnEditStatuses(this::openStatusPhrasesDialog);
-		panel.setOnEditCombat(this::openCombatPhrasesDialog);
+		panel.setOnEditMessages(this::openMessagesDialog);
 		panel.setOnEditDialogs(this::openDialogsDialog);
-		panel.setOnEditQuests(this::openQuestPhrasesDialog);
-		panel.setOnEditErrands(this::openErrandPhrasesDialog);
 		panel.setOnShowMemory(this::openMemoryDialog);
 		panel.setOnProfileLoad(this::loadOutfitProfile);
 		panel.setOnProfileSave(this::saveOutfitProfile);
@@ -1677,113 +1635,66 @@ public class FollowerPlugin extends Plugin
 	private int ticksSinceLearningSave;
 
 	/** Pushes the current outfit into the panel so it shows what is actually worn. */
-	/** Lazily builds the item-message editor window and fronts it. */
-	private void openGearPhrasesDialog()
+	/**
+	 * Lazily builds the one message-editor window and fronts it. Every rule
+	 * group the panel used to spread over seven buttons lives here behind a
+	 * category dropdown; only Locations is structural (regions editable,
+	 * rules addable).
+	 */
+	private void openMessagesDialog()
 	{
 		javax.swing.SwingUtilities.invokeLater(() ->
 		{
-			if (gearPhrasesDialog == null)
+			if (messagesDialog == null)
 			{
-				gearPhrasesDialog = new com.follower.ui.PhrasesDialog(gson, ruleLoader.getFile(),
-					"gear", "Follower Buddy — Item messages",
-					"One message per line. Edit, remove or add lines, untick a rule to"
-						+ " silence it, then Save — changes reach the follower within a second.",
-					false);
+				messagesDialog = new com.follower.ui.PhrasesDialog(gson, ruleLoader.getFile(),
+					java.util.Arrays.asList(
+						new com.follower.ui.PhrasesDialog.Category("Items", "gear",
+							"What the follower says when you equip items. One message per"
+								+ " line. Edit, remove or add lines, untick a rule to silence"
+								+ " it, then Save — changes reach the follower within a second.",
+							false),
+						new com.follower.ui.PhrasesDialog.Category("Locations", "area",
+							"What the follower says in different places. One message per"
+								+ " line; region ids are editable and Add location makes a"
+								+ " new place. Save reaches the follower within a second.",
+							true),
+						new com.follower.ui.PhrasesDialog.Category("Bosses", "boss",
+							"One message per line. Each rule fires when that boss appears"
+								+ " nearby. Edit, remove or add lines, untick a rule to"
+								+ " silence it, then Save — changes reach the follower"
+								+ " within a second.",
+							false),
+						new com.follower.ui.PhrasesDialog.Category("Combat", "combat",
+							"What the follower says while it stands clear and watches you"
+								+ " fight. One message per line. Edit, remove or add lines,"
+								+ " untick a rule to silence it, then Save — changes reach"
+								+ " the follower within a second.",
+							false),
+						new com.follower.ui.PhrasesDialog.Category("Statuses and idle", "health,idle",
+							"One message per line. These react to your HP, prayer, poison,"
+								+ " venom, skull and run energy, and include the idle chatter"
+								+ " for when nothing is happening. Edit, remove or add lines,"
+								+ " untick a rule to silence it, then Save — changes reach"
+								+ " the follower within a second.",
+							false),
+						new com.follower.ui.PhrasesDialog.Category("Quest NPCs", "quest",
+							"One message per line. Each rule fires when that quest figure"
+								+ " comes within a few tiles of you. Edit, remove or add"
+								+ " lines, untick a rule to silence it, then Save — changes"
+								+ " reach the follower within a second.",
+							false),
+						new com.follower.ui.PhrasesDialog.Category("Errands", "errand",
+							"One message per line. Each errand has a line for setting off"
+								+ " and one for coming back. Edit, remove or add lines,"
+								+ " untick a rule to silence it, then Save — changes reach"
+								+ " the follower within a second.",
+							false)),
+					// The tick loop keeps lastRegionId current; reading a
+					// slightly stale int from the EDT is harmless.
+					() -> lastRegionId);
 			}
-			gearPhrasesDialog.open();
-		});
-	}
-
-	/** Lazily builds the boss-message editor window and fronts it. */
-	/** Lazily builds the combat-message editor window and fronts it. */
-	private void openCombatPhrasesDialog()
-	{
-		javax.swing.SwingUtilities.invokeLater(() ->
-		{
-			if (combatPhrasesDialog == null)
-			{
-				combatPhrasesDialog = new com.follower.ui.PhrasesDialog(gson, ruleLoader.getFile(),
-					"combat", "Follower Buddy — Combat messages",
-					"What the follower says while it stands clear and watches you fight."
-						+ " One message per line. Edit, remove or add lines, untick a rule to"
-						+ " silence it, then Save — changes reach the follower within a second.",
-					false);
-			}
-			combatPhrasesDialog.open();
-		});
-	}
-
-	private void openBossPhrasesDialog()
-	{
-		javax.swing.SwingUtilities.invokeLater(() ->
-		{
-			if (bossPhrasesDialog == null)
-			{
-				bossPhrasesDialog = new com.follower.ui.PhrasesDialog(gson, ruleLoader.getFile(),
-					"boss", "Follower Buddy — Boss messages",
-					"One message per line. Each rule fires when that boss appears nearby."
-						+ " Edit, remove or add lines, untick a rule to silence it, then Save"
-						+ " — changes reach the follower within a second.",
-					false);
-			}
-			bossPhrasesDialog.open();
-		});
-	}
-
-	/** Lazily builds the status-message editor window and fronts it. */
-	private void openStatusPhrasesDialog()
-	{
-		javax.swing.SwingUtilities.invokeLater(() ->
-		{
-			if (statusPhrasesDialog == null)
-			{
-				statusPhrasesDialog = new com.follower.ui.PhrasesDialog(gson, ruleLoader.getFile(),
-					"health,idle", "Follower Buddy — Status and idle messages",
-					"One message per line. These react to your HP, prayer, poison, venom,"
-						+ " skull and run energy, and include the idle chatter for when"
-						+ " nothing is happening. Edit, remove or add lines, untick a rule"
-						+ " to silence it, then Save — changes reach the follower within"
-						+ " a second.",
-					false);
-			}
-			statusPhrasesDialog.open();
-		});
-	}
-
-	/** Lazily builds the quest-NPC-message editor window and fronts it. */
-	private void openQuestPhrasesDialog()
-	{
-		javax.swing.SwingUtilities.invokeLater(() ->
-		{
-			if (questPhrasesDialog == null)
-			{
-				questPhrasesDialog = new com.follower.ui.PhrasesDialog(gson, ruleLoader.getFile(),
-					"quest", "Follower Buddy — Quest NPC messages",
-					"One message per line. Each rule fires when that quest figure comes"
-						+ " within a few tiles of you. Edit, remove or add lines, untick a"
-						+ " rule to silence it, then Save — changes reach the follower"
-						+ " within a second.",
-					false);
-			}
-			questPhrasesDialog.open();
-		});
-	}
-
-	/** Lazily builds the errand-message editor window and fronts it. */
-	private void openErrandPhrasesDialog()
-	{
-		javax.swing.SwingUtilities.invokeLater(() ->
-		{
-			if (errandPhrasesDialog == null)
-			{
-				errandPhrasesDialog = new com.follower.ui.PhrasesDialog(gson, ruleLoader.getFile(),
-					"errand", "Follower Buddy — Errand messages",
-					"One message per line. Each errand has a line for setting off and one"
-						+ " for coming back. Edit, remove or add lines, untick a rule to"
-						+ " silence it, then Save — changes reach the follower within a second.",
-					false);
-			}
-			errandPhrasesDialog.open();
+			messagesDialog.open();
 		});
 	}
 
@@ -1859,24 +1770,6 @@ public class FollowerPlugin extends Plugin
 				dialogsDialog = new com.follower.ui.DialogsDialog(gson, dialogLoader.getFile());
 			}
 			dialogsDialog.open();
-		});
-	}
-
-	/** Lazily builds the location-message editor window and fronts it. */
-	private void openAreaPhrasesDialog()
-	{
-		javax.swing.SwingUtilities.invokeLater(() ->
-		{
-			if (areaPhrasesDialog == null)
-			{
-				areaPhrasesDialog = new com.follower.ui.PhrasesDialog(gson, ruleLoader.getFile(),
-					"area", "Follower Buddy — Location messages",
-					"One message per line; region ids are editable and Add location makes a"
-						+ " new place. Run ::follower where in game to print the region id you"
-						+ " are standing in. Save reaches the follower within a second.",
-					true);
-			}
-			areaPhrasesDialog.open();
 		});
 	}
 
