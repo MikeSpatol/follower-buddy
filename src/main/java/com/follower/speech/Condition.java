@@ -66,6 +66,7 @@ import net.runelite.api.NPC;
  *   <tr><td>gameUpdated</td><td>no fields — first login on a new game build</td></tr>
  *   <tr><td>notesEdited</td><td>no fields — phrases.json changed on disk and hot-reloaded</td></tr>
  *   <tr><td>musicUnlock</td><td>no fields; {@code {track}} names the new track</td></tr>
+ *   <tr><td>musicTrack</td><td>optional {@code names} (wildcards ok) — the playing track changed; {@code {track}}</td></tr>
  *   <tr><td>collectionAdd</td><td>no fields; {@code {item}} is the new collection log entry</td></tr>
  *   <tr><td>questComplete</td><td>no fields; {@code {quest}} names the quest just finished</td></tr>
  *   <tr><td>geOffer</td><td>{@code is} bought|sold; {@code {item}} and {@code {value}}</td></tr>
@@ -646,6 +647,14 @@ public class Condition
 
 			case "musicunlock":
 				return event.getType() == TriggerEvent.Type.MUSIC_UNLOCK;
+
+			// The music changed to another track - the town's own song, where
+			// musicUnlock is hearing one for the FIRST time. Names narrow it
+			// to particular tracks, which is how a rule gets an opinion about
+			// Sea Shanty 2 without one about everything.
+			case "musictrack":
+				return event.getType() == TriggerEvent.Type.TRACK_CHANGE
+					&& (names == null || matchesAnyName(event.getName()));
 
 			case "collectionadd":
 				return event.getType() == TriggerEvent.Type.COLLECTION_ADD;

@@ -1,12 +1,12 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 442 rules, 2115 spoken lines, 2 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 443 rules, 2117 spoken lines, 2 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
 ## Contents
 
-- [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (31 rules, 147 lines)
+- [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (32 rules, 149 lines)
 - [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (35 rules, 196 lines)
 - [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (31 rules, 212 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 114 lines)
@@ -433,6 +433,16 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - {item}, sold. {value} to the estate.
 - The {item} went. Try to look like you'll miss it.
 - Sold, one {item}. The economy sends its regards.
+
+### `song-sea-shanty`
+
+> The one track name certain enough to write a rule for. musicTrack fires on the change TO a track; users add their own opinions in the editor.
+
+- **when:** musictrack AND a 60% roll
+- **pacing:** priority 22, cooldown 2h, delay 3 ticks
+
+- Sea Shanty 2. The sailors request it nightly. The sailors are the problem.
+- This tune again. I've transcribed it. It doesn't help.
 
 ## idle
 

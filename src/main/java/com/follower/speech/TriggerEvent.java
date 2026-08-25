@@ -59,6 +59,19 @@ public final class TriggerEvent
 		CHANNEL_JOIN,
 		CHANNEL_LEAVE,
 		NPC_SHOUT,
+		TRACK_CHANGE,
+	}
+
+	/**
+	 * The game's music changed to another track - the local song, as against
+	 * {@link Type#MUSIC_UNLOCK}, which is hearing one for the first time ever.
+	 */
+	public static TriggerEvent trackChange(String track)
+	{
+		TriggerEvent event = new TriggerEvent(Type.TRACK_CHANGE);
+		event.name = track == null ? "" : track;
+		event.placeholders.put("track", event.name);
+		return event;
 	}
 
 	/** A world hop landed. {world} is the number on the new door. */

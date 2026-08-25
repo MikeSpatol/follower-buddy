@@ -436,7 +436,16 @@ public class EveryConditionTypeTest
 	{
 		note("worldHop", "gameUpdated", "notesEdited", "musicUnlock",
 			"collectionAdd", "questComplete", "geOffer", "channelJoined",
-			"channelLeft", "npcShout", "dateIs");
+			"channelLeft", "npcShout", "dateIs", "musicTrack");
+
+		fires("{\"type\": \"musicTrack\"}", TriggerEvent.trackChange("Harmony"));
+		fires("{\"type\": \"musicTrack\", \"names\": [\"Sea Shanty*\"]}",
+			TriggerEvent.trackChange("Sea Shanty 2"));
+		Harness wrongTune = harnessFor(
+			"{\"type\": \"musicTrack\", \"names\": [\"Sea Shanty*\"]}");
+		wrongTune.gameTicks(1);
+		wrongTune.dispatch(TriggerEvent.trackChange("Harmony"));
+		assertQuiet(wrongTune, "the wrong tune");
 
 		fires("{\"type\": \"worldHop\"}", TriggerEvent.worldHop(302));
 		fires("{\"type\": \"gameUpdated\"}",

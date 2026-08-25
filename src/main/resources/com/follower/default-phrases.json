@@ -12181,6 +12181,33 @@
         "All Hallows. Every scarecrow tonight is a suspect.",
         "Halloween. If the graveyard moves, I'm not recording it."
       ]
+    },
+    {
+      "id": "song-sea-shanty",
+      "note": "The one track name certain enough to write a rule for. musicTrack fires on the change TO a track; users add their own opinions in the editor.",
+      "group": "misc",
+      "priority": 22,
+      "cooldownMs": 7200000,
+      "delayTicks": 3,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "musicTrack",
+            "names": [
+              "Sea Shanty 2"
+            ]
+          },
+          {
+            "type": "chance",
+            "percent": 60
+          }
+        ]
+      },
+      "say": [
+        "Sea Shanty 2. The sailors request it nightly. The sailors are the problem.",
+        "This tune again. I've transcribed it. It doesn't help."
+      ]
     }
   ]
 }

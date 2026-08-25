@@ -293,6 +293,9 @@ public class FollowerPlugin extends Plugin
 	/** Whether a wish was open last tick, to spot the moment one opens. */
 	private boolean wasWishing;
 
+	/** The track playing last tick; null until the first read seeds it. */
+	private String lastMusicTrack;
+
 	/** Whether the bank was open last tick, for the close-is-a-boundary watch. */
 	private boolean wasBankOpen;
 
@@ -4931,6 +4934,23 @@ public class FollowerPlugin extends Plugin
 			speechEngine.getContext().noteBoundary("bank");
 		}
 		wasBankOpen = bankOpen;
+
+		// The local song: the music tab's now-playing text is script-updated
+		// on every track change whether or not the tab is fronted. The first
+		// read after a login is baseline, not news, same as the region you
+		// logged in standing.
+		net.runelite.api.widgets.Widget nowPlaying = client.getWidget(
+			net.runelite.api.gameval.InterfaceID.Music.NOW_PLAYING_TEXT);
+		String track = nowPlaying == null || nowPlaying.getText() == null
+			? null : nowPlaying.getText().replaceAll("<[^>]*>", "").trim();
+		if (track != null && !track.isEmpty())
+		{
+			if (lastMusicTrack != null && !track.equals(lastMusicTrack))
+			{
+				speechEngine.dispatch(TriggerEvent.trackChange(track));
+			}
+			lastMusicTrack = track;
+		}
 
 		// A player-commanded Stay (R25): the follower's own machinery also
 		// parks it - errands, spectating, thrall work, and the WANDER, which

@@ -392,6 +392,7 @@ wins.
 | `gameUpdated` | â€” first login on a new game build (the weekly update) |
 | `notesEdited` | â€” phrases.json changed on disk and hot-reloaded |
 | `musicUnlock` | â€” a music track unlocked. `{track}` names it; tally `music` counts them |
+| `musicTrack` | optional `names` (wildcards ok) â€” the playing track changed. `{track}` |
 | `collectionAdd` | â€” a new collection log entry (needs the game's own log notification on). `{item}`; tally `collections` |
 | `questComplete` | â€” the quest reward scroll appeared. `{quest}` names it; tally `quests` |
 | `geOffer` | `is` `bought` or `sold` â€” a Grand Exchange offer finished. `{item}`, `{value}` |
