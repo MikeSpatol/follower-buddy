@@ -230,8 +230,13 @@ public class FollowerPanel extends PluginPanel
 		header.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
 		// The one line that says what this thing IS, before any controls do.
-		JLabel identity = new JLabel("<html>A follower only you can see."
-			+ " Dress it here; the talking it mostly handles itself.</html>");
+		// The body style width matters: an HTML label's preferred width is one
+		// unwrapped line, and a single wide child forces the WHOLE panel past
+		// the sidebar, clipping every section against the no-horizontal-scroll
+		// viewport.
+		JLabel identity = new JLabel("<html><body style='width:180px'>A follower"
+			+ " only you can see. Dress it here; the talking it mostly handles"
+			+ " itself.</body></html>");
 		identity.setFont(FontManager.getRunescapeSmallFont());
 		identity.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
 		identity.setAlignmentX(LEFT_ALIGNMENT);
@@ -333,7 +338,10 @@ public class FollowerPanel extends PluginPanel
 
 		// The autosave behaviour used to live in a hover tooltip, which is
 		// exactly where the one surprising fact about profiles should not be.
-		JLabel autosave = new JLabel("Changes save to the selected profile automatically");
+		// Width-bounded like the identity line, so it wraps instead of
+		// widening the panel.
+		JLabel autosave = new JLabel("<html><body style='width:180px'>Changes"
+			+ " save to the selected profile automatically</body></html>");
 		autosave.setFont(FontManager.getRunescapeSmallFont());
 		autosave.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
 		autosave.setAlignmentX(LEFT_ALIGNMENT);
@@ -966,8 +974,9 @@ public class FollowerPanel extends PluginPanel
 		// who has never heard of the build tooling.
 		if (!repository.isLoaded() || !repository.hasNames())
 		{
-			resultList.add(hint("Item data didn't load - try restarting the client."
-				+ " If it keeps happening, report a bug."));
+			resultList.add(hint("<html><body style='width:180px'>Item data didn't"
+				+ " load - try restarting the client. If it keeps happening,"
+				+ " report a bug.</body></html>"));
 		}
 		else
 		{
