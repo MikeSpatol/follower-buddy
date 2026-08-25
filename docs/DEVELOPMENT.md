@@ -387,6 +387,16 @@ wins.
 | `challenging` / `challengeMet` / `challengeFailed` | â€” a wager on the player. `{challenge}`, `{left}` |
 | `unattended` | `ticks` since the camera last moved. **Not** `idle`: a player at a furnace is idle and present |
 | `underfoot` | â€” you clicked the tile the follower was standing on |
+| `dateIs` | `month`/`day` on **your** calendar; optional `untilMonth`/`untilDay` range wraps past new year. `day` alone means that day of every month |
+| `worldHop` | â€” a world hop landed. `{world}` is the new world number |
+| `gameUpdated` | â€” first login on a new game build (the weekly update) |
+| `notesEdited` | â€” phrases.json changed on disk and hot-reloaded |
+| `musicUnlock` | â€” a music track unlocked. `{track}` names it; tally `music` counts them |
+| `collectionAdd` | â€” a new collection log entry (needs the game's own log notification on). `{item}`; tally `collections` |
+| `questComplete` | â€” the quest reward scroll appeared. `{quest}` names it; tally `quests` |
+| `geOffer` | `is` `bought` or `sold` â€” a Grand Exchange offer finished. `{item}`, `{value}` |
+| `channelJoined` / `channelLeft` | â€” somebody arrived in or left your friends chat or clan channel. `{name}` |
+| `npcShout` | `names` (wildcards ok) and/or `contains` â€” a named NPC said something overhead. `{npc}`, `{message}` |
 | `login`, `always` | â€” |
 | `chance` | `percent`, rolled each evaluation |
 

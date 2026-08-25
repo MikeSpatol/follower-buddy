@@ -49,6 +49,90 @@ public final class TriggerEvent
 		CHALLENGE_FAILED,
 		UNDERFOOT,
 		MANUAL,
+		WORLD_HOP,
+		GAME_UPDATE,
+		NOTES_EDITED,
+		MUSIC_UNLOCK,
+		COLLECTION_ADD,
+		QUEST_COMPLETE,
+		GE_OFFER,
+		CHANNEL_JOIN,
+		CHANNEL_LEAVE,
+		NPC_SHOUT,
+	}
+
+	/** A world hop landed. {world} is the number on the new door. */
+	public static TriggerEvent worldHop(int world)
+	{
+		TriggerEvent event = new TriggerEvent(Type.WORLD_HOP);
+		event.value = world;
+		event.placeholders.put("world", Integer.toString(world));
+		return event;
+	}
+
+	/** A music track just unlocked. {track} names it for the catalogue. */
+	public static TriggerEvent musicUnlock(String track)
+	{
+		TriggerEvent event = new TriggerEvent(Type.MUSIC_UNLOCK);
+		event.name = track == null ? "" : track;
+		event.placeholders.put("track", event.name);
+		return event;
+	}
+
+	/** The other ledger gained a line. {item} is what went in it. */
+	public static TriggerEvent collectionAdd(String item)
+	{
+		TriggerEvent event = new TriggerEvent(Type.COLLECTION_ADD);
+		event.name = item == null ? "" : item;
+		event.placeholders.put("item", event.name);
+		return event;
+	}
+
+	/** A quest reward scroll was handed over. {quest} names the quest. */
+	public static TriggerEvent questComplete(String quest)
+	{
+		TriggerEvent event = new TriggerEvent(Type.QUEST_COMPLETE);
+		event.name = quest == null ? "" : quest;
+		event.placeholders.put("quest", event.name);
+		return event;
+	}
+
+	/**
+	 * A Grand Exchange offer finished. The name carries "bought" or "sold"
+	 * for the condition's {@code is}; {item} and {value} land as placeholders
+	 * so the line can read like a clerk's telegram rather than a receipt.
+	 */
+	public static TriggerEvent geOffer(boolean bought, String item, long spent)
+	{
+		TriggerEvent event = new TriggerEvent(Type.GE_OFFER);
+		event.name = bought ? "bought" : "sold";
+		event.placeholders.put("item", item == null ? "" : item);
+		event.placeholders.put("value", formatGp(spent));
+		return event;
+	}
+
+	/** Somebody arrived in or left the player's chat channel. {name} says who. */
+	public static TriggerEvent channel(Type type, String who)
+	{
+		TriggerEvent event = new TriggerEvent(type);
+		event.name = who == null ? "" : who;
+		event.placeholders.put("name", event.name);
+		return event;
+	}
+
+	/**
+	 * A named NPC said something overhead. The name matches like npcSpawn's,
+	 * the message like chatMessage's, and both land as placeholders - NPC
+	 * overheads never reach the chatbox, so no chat rule can see these.
+	 */
+	public static TriggerEvent npcShout(String npc, String message)
+	{
+		TriggerEvent event = new TriggerEvent(Type.NPC_SHOUT);
+		event.name = npc == null ? "" : npc;
+		event.message = message == null ? "" : message;
+		event.placeholders.put("npc", event.name);
+		event.placeholders.put("message", event.message);
+		return event;
 	}
 
 	/** The thing it was carrying is gone. {souvenir} names it one last time. */

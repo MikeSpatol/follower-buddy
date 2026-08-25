@@ -698,7 +698,7 @@ public class RuleTriggerSanityTest
 			if (mentions && rule.when != null
 				&& !(rule.when.usesType("npcSpawn") || rule.when.usesType("npcDespawn")
 				|| rule.when.usesType("npcKill") || rule.when.usesType("combatStart")
-				|| rule.when.usesType("combatEnd")))
+				|| rule.when.usesType("combatEnd") || rule.when.usesType("npcShout")))
 			{
 				problems.add(rule.id);
 			}

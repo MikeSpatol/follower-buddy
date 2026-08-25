@@ -1,25 +1,25 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 425 rules, 2069 spoken lines, 2 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 442 rules, 2115 spoken lines, 2 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
 ## Contents
 
-- [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (24 rules, 127 lines)
+- [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (31 rules, 147 lines)
 - [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (35 rules, 196 lines)
-- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (28 rules, 204 lines)
+- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (31 rules, 212 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 114 lines)
 - [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 72 lines)
-- [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (19 rules, 102 lines)
+- [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (20 rules, 106 lines)
 - [area](#area) - Places: named lines, tastes, earned verdicts, the defences (67 rules, 222 lines)
 - [errand](#errand) - Its little trips: bank, altar, fire, cat, studies, explores (44 rules, 155 lines)
 - [souvenir](#souvenir) - Wishes, gifts, the pocket, and what it carries (17 rules, 72 lines)
 - [bet](#bet) - Its predictions about drops (3 rules, 20 lines)
-- [clock](#clock) - The hour and how long we have been at it (5 rules, 30 lines)
+- [clock](#clock) - The hour and how long we have been at it (9 rules, 39 lines)
 - [gear](#gear) - What you put on (62 rules, 121 lines)
 - [boss](#boss) - Bosses sighted and fought (50 rules, 484 lines)
-- [quest](#quest) - Famous quest figures nearby (42 rules, 126 lines)
+- [quest](#quest) - Famous quest figures nearby (44 rules, 131 lines)
 - [thrall](#thrall) - When it stands in for a thrall (3 rules, 18 lines)
 - [mimic](#mimic) - Copying your emotes (6 rules, 6 lines)
 - [dialogs](#dialogs) - the conversations it starts (2 trees)
@@ -357,6 +357,82 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - This is officially the longest day we've had. {value} minutes.
 - {value} minutes and counting. A personal best, this.
 - New record: {value} minutes out. The old one was {previous}.
+
+### `world-hop`
+
+> A world hop landed. The one thing that actually changed is everyone; the scenery came along.
+
+- **when:** worldhop AND a 60% roll
+- **pacing:** priority 26, cooldown 15m, delay 5 ticks
+
+- Same field, different census.
+- World {world}. The scenery didn't even blink.
+- Everyone's been replaced. I'll pretend not to notice.
+- A new world. The roads, I note, came with us.
+
+### `game-updated`
+
+> First login on a new game build - the world literally changes weekly, and a keeper of maps would notice. Delay puts it after the greeting.
+
+- **when:** gameupdated
+- **pacing:** priority 55, cooldown 2h, delay 12 ticks
+
+- The world moved in the night. I'll have to redraw the maps.
+- They've changed the world again. Nobody consulted the scribe.
+- Something shifted since last we walked. I'll re-survey as we go.
+
+### `music-unlock`
+
+> A music track unlocked - somewhere new enough to have its own song. The tally 'music' counts unlocks since install.
+
+- **when:** musicunlock AND a 50% roll
+- **pacing:** priority 24, cooldown 10m, delay 2 ticks
+
+- Another one for the catalogue: {track}.
+- {track}. Somewhere new enough to have its own song.
+- New tune. {track}, the locals call it.
+
+### `music-milestone-50`
+
+> The fiftieth track unlocked since the follower arrived. Exact tally bracket so it says this once, on the moment.
+
+- **when:** musicunlock AND music count at 50+
+- **pacing:** priority 45, cooldown 10m, delay 2 ticks
+
+- Fifty songs since we met. The catalogue wants a second volume.
+
+### `collection-add`
+
+> A new collection log entry - the OTHER ledger, the bank-rival canon's cousin. Only fires when the game's own log notification setting is on.
+
+- **when:** collectionadd AND a 60% roll
+- **pacing:** priority 26, cooldown 10m, delay 2 ticks
+
+- New entry in the other ledger: {item}. Mine's better organised.
+- The {item} goes in your list. The moment goes in mine.
+- {item}, catalogued. Both archives grow.
+
+### `ge-bought`
+
+> A Grand Exchange buy completed, often miles from the Exchange - the clerk receives the telegram wherever you are.
+
+- **when:** geoffer AND a 70% roll
+- **pacing:** priority 24, cooldown 5m, delay 2 ticks
+
+- {item}, bought. The ledger balances.
+- Word's come through. The {item} is yours.
+- The {item} came through. I signed for it in spirit.
+
+### `ge-sold`
+
+> A Grand Exchange sale completed. The estate grows; the scribe approves of liquidation on principle.
+
+- **when:** geoffer AND a 70% roll
+- **pacing:** priority 24, cooldown 5m, delay 2 ticks
+
+- {item}, sold. {value} to the estate.
+- The {item} went. Try to look like you'll miss it.
+- Sold, one {item}. The economy sends its regards.
 
 ## idle
 
@@ -1327,6 +1403,38 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - You walk, I dodge. That's the system.
 - One of us has to give way. It's me. It's always me.
 
+### `channel-joined`
+
+> Somebody arrived in the friends chat or clan channel. Low duty cycle on purpose: a busy clan should be a murmur, not a roll call.
+
+- **when:** channeljoined AND a 25% roll
+- **pacing:** priority 16, cooldown 10m
+
+- {name}, present. Noted.
+- Attendance: {name}, arrived.
+- {name}'s in. I'll rule them a line.
+
+### `channel-left`
+
+> Somebody left the channel. The drier entry of the two.
+
+- **when:** channelleft AND a 20% roll
+- **pacing:** priority 15, cooldown 10m
+
+- {name}, departed. The minutes will show it.
+- {name}'s gone. Fewer witnesses.
+
+### `npc-dictation`
+
+> Any named NPC shouting overhead nearby - the town crier, a quest scene, a market stall. Heavy chance gate: busy scenes shout constantly.
+
+- **when:** npcshout AND a 8% roll
+- **pacing:** priority 12, cooldown 15m, delay 2 ticks
+
+- I wrote down what {npc} said. Most of it.
+- Noted, {npc}. Volume down next time.
+- {npc} wants that on the record. It very nearly is.
+
 ## combat
 
 *The fight from the sidelines, and its ends.*
@@ -1957,6 +2065,18 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - You've come up in the world. I was there for the bottom of it.
 - The kit's improved beyond recognition. The walk's the same.
 - Page one has you in bronze. I check it when you get grand.
+
+### `notes-edited`
+
+> phrases.json changed on disk and hot-reloaded. In-world, somebody wrote in the scribe's own book. Long cooldown so an editing session earns one remark.
+
+- **when:** notesedited AND a 75% roll
+- **pacing:** priority 40, cooldown 30m, delay 3 ticks
+
+- This isn't my handwriting.
+- Someone's been in my notes. The margins are different.
+- The annotations are an improvement. Worrying.
+- My notebook smells of fresh ink I didn't buy.
 
 ## area
 
@@ -3522,6 +3642,50 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - A full day's work by any honest measure. Twice over.
 - The sun has done most of an arc. We noticed neither.
 - Whole chapters have passed. Stretch, at least.
+
+### `clock-new-month`
+
+> The first of every month, on the player's own calendar - day without month means every month. The scribe's favourite day.
+
+- **when:** dateis AND standing still 20+ ticks
+- **pacing:** priority 34, cooldown 6h, overhead
+
+- New month. Fresh page. Let's fill this one with better decisions.
+- First of the month. I've ruled the columns already.
+- A new month. The old one's filed under done.
+
+### `clock-christmas`
+
+> The 24th through the 26th of December, player's own calendar. Once per session at most; the cooldown keeps a relog from repeating it same day.
+
+- **when:** dateis AND standing still 20+ ticks
+- **does:** occasion (never held back)
+- **pacing:** priority 62, cooldown 6h, overhead
+
+- Christmas. I got you nothing. I wrote you in, though.
+- Merry Christmas. The ledger takes the day off. I don't.
+
+### `clock-new-year`
+
+> New Year's Eve into New Year's Day, wrapping past the year end the way the late-night clock window wraps past midnight.
+
+- **when:** dateis AND standing still 20+ ticks
+- **does:** occasion (never held back)
+- **pacing:** priority 62, cooldown 6h, overhead
+
+- A new year. Next volume, same author.
+- The year turned. I'll be mis-dating entries for a month.
+
+### `clock-halloween`
+
+> The 31st of October. The scarecrow canon gets its day.
+
+- **when:** dateis AND standing still 20+ ticks
+- **does:** occasion (never held back)
+- **pacing:** priority 62, cooldown 6h, overhead
+
+- All Hallows. Every scarecrow tonight is a suspect.
+- Halloween. If the graveyard moves, I'm not recording it.
 
 ## gear
 
@@ -5540,6 +5704,28 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Ernest. He went into the manor a man and spent a while as a chicken.
 - The manor did that to him. The manor does that to people.
 - Fully recovered. Mostly. Feathered no longer, anyway.
+
+### `quest-complete`
+
+> The quest reward scroll - the one moment the game hands the player literal paperwork, witnessed by a professional. Tally 'quests' counts them.
+
+- **when:** questcomplete
+- **does:** mood +8; occasion (never held back)
+- **pacing:** priority 85, cooldown 1m, delay 3 ticks
+
+- {quest}, done and witnessed. That deserves a full page.
+- That's {quest} closed. Their scroll is nice. Mine has footnotes.
+- {quest}. Signed, sealed, filed.
+- At last, a world that hands out paperwork properly.
+
+### `quest-milestone-10`
+
+> The tenth quest completed since the follower arrived. Exact bracket, once.
+
+- **when:** questcomplete AND quests count at 10+
+- **pacing:** priority 60, cooldown 1m, delay 5 ticks
+
+- Ten quests since we met. The index has its own page now.
 
 ## thrall
 

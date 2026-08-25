@@ -61,6 +61,16 @@ import net.runelite.api.NPC;
  *   <tr><td>betting / betWon / betLost</td><td>no fields</td></tr>
  *   <tr><td>timeOfDay</td><td>{@code minimum} / {@code maximum} hour, 0-23, wrapping past midnight</td></tr>
  *   <tr><td>sessionMinutes</td><td>{@code minimum} / {@code maximum} minutes today</td></tr>
+ *   <tr><td>dateIs</td><td>{@code month}/{@code day} on the player's own calendar, optional {@code untilMonth}/{@code untilDay} range wrapping past new year; {@code day} alone means that day of every month</td></tr>
+ *   <tr><td>worldHop</td><td>no fields; {@code {world}} is the new world number</td></tr>
+ *   <tr><td>gameUpdated</td><td>no fields — first login on a new game build</td></tr>
+ *   <tr><td>notesEdited</td><td>no fields — phrases.json changed on disk and hot-reloaded</td></tr>
+ *   <tr><td>musicUnlock</td><td>no fields; {@code {track}} names the new track</td></tr>
+ *   <tr><td>collectionAdd</td><td>no fields; {@code {item}} is the new collection log entry</td></tr>
+ *   <tr><td>questComplete</td><td>no fields; {@code {quest}} names the quest just finished</td></tr>
+ *   <tr><td>geOffer</td><td>{@code is} bought|sold; {@code {item}} and {@code {value}}</td></tr>
+ *   <tr><td>channelJoined / channelLeft</td><td>no fields; {@code {name}} says who</td></tr>
+ *   <tr><td>npcShout</td><td>{@code names} (wildcards ok) and/or {@code contains}; {@code {npc}} and {@code {message}}</td></tr>
  * </table>
  *
  * <p>{@code npcNearby} also takes {@code minimum}/{@code maximum} combat level,
@@ -92,6 +102,12 @@ public class Condition
 
 	/** Fire on every Nth occurrence rather than on each one. */
 	public Integer every;
+
+	/** dateIs: the day on the player's own calendar, optionally through a range. */
+	public Integer month;
+	public Integer day;
+	public Integer untilMonth;
+	public Integer untilDay;
 
 	public Integer x1;
 	public Integer y1;
@@ -587,6 +603,75 @@ public class Condition
 			case "sessionminutes":
 				return ctx.getSessionMinutes() >= orDefault(minimum, 60)
 					&& (maximum == null || ctx.getSessionMinutes() <= maximum);
+
+			// The date on the player's own calendar, like timeOfDay is the
+			// player's own clock. A single day, or a range that may wrap past
+			// new year the way a late-night window wraps past midnight - the
+			// scribe dates its entries, so this is the most in-character
+			// knowledge it could have. Rising-edge, so a matching day fires
+			// once per session, same as anniversary.
+			case "dateis":
+			{
+				if (day == null)
+				{
+					return false;
+				}
+				int today = ctx.getMonthDay();
+				// Day alone means that day of EVERY month - the first of the
+				// month is the scribe's favourite day of it.
+				if (month == null)
+				{
+					return today % 100 == day;
+				}
+				int from = month * 100 + day;
+				int to = untilMonth == null || untilDay == null
+					? from : untilMonth * 100 + untilDay;
+				return from <= to
+					? today >= from && today <= to
+					: today >= from || today <= to;
+			}
+
+			// A world hop landed. Rare by nature, so no flood guard needed.
+			case "worldhop":
+				return event.getType() == TriggerEvent.Type.WORLD_HOP;
+
+			// First login since the game itself changed under everyone's feet.
+			case "gameupdated":
+				return event.getType() == TriggerEvent.Type.GAME_UPDATE;
+
+			// The notebook was edited from outside and hot-reloaded. In-world
+			// this is somebody writing in the scribe's own book.
+			case "notesedited":
+				return event.getType() == TriggerEvent.Type.NOTES_EDITED;
+
+			case "musicunlock":
+				return event.getType() == TriggerEvent.Type.MUSIC_UNLOCK;
+
+			case "collectionadd":
+				return event.getType() == TriggerEvent.Type.COLLECTION_ADD;
+
+			case "questcomplete":
+				return event.getType() == TriggerEvent.Type.QUEST_COMPLETE;
+
+			// A Grand Exchange offer finished; "is" narrows to bought or sold.
+			case "geoffer":
+				return event.getType() == TriggerEvent.Type.GE_OFFER
+					&& (is == null || is.equalsIgnoreCase(event.getName()));
+
+			case "channeljoined":
+				return event.getType() == TriggerEvent.Type.CHANNEL_JOIN;
+			case "channelleft":
+				return event.getType() == TriggerEvent.Type.CHANNEL_LEAVE;
+
+			// A named NPC's overhead line. Names match like npcSpawn's and the
+			// message like chatMessage's contains - spelled out here rather
+			// than through matchesText, which would also try the message
+			// against the NAMES and quietly widen what a rule matches.
+			case "npcshout":
+				return event.getType() == TriggerEvent.Type.NPC_SHOUT
+					&& (names == null || matchesAnyName(event.getName()))
+					&& (contains == null || event.getMessage().toLowerCase(Locale.ROOT)
+						.contains(contains.toLowerCase(Locale.ROOT)));
 
 			// How this particular follower feels about where it is standing.
 			// The set is rolled once per character, so the answer is a fact

@@ -2081,6 +2081,16 @@ public final class TriggerContext
 		return java.time.LocalTime.now().getHour();
 	}
 
+	/**
+	 * Today's date on the same wall, packed month*100+day so a range compare
+	 * can wrap past new year the way timeOfDay wraps past midnight.
+	 */
+	public int getMonthDay()
+	{
+		java.time.LocalDate today = java.time.LocalDate.now();
+		return today.getMonthValue() * 100 + today.getDayOfMonth();
+	}
+
 	/** Minutes this session has run, fed by the plugin's own timer. */
 	@lombok.Getter
 	@lombok.Setter

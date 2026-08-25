@@ -1305,7 +1305,12 @@
       "occasion": true,
       "advise": {
         "about": "food",
-        "ids": [829, 1191, 1194, 1327],
+        "ids": [
+          829,
+          1191,
+          1194,
+          1327
+        ],
         "minutes": 1
       },
       "note": "Speaks once when health crosses under 40 percent.",
@@ -1335,7 +1340,16 @@
       "occasion": true,
       "advise": {
         "about": "leaving",
-        "ids": [714, 3864, 1979, 4847, 13764, 8798, 9209, 1696],
+        "ids": [
+          714,
+          3864,
+          1979,
+          4847,
+          13764,
+          8798,
+          9209,
+          1696
+        ],
         "minutes": 1
       },
       "note": "Speaks once when health crosses under 20 percent. The urgent one.",
@@ -2705,8 +2719,17 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "levelUp", "names": [ "*" ] },
-          { "type": "daysKnown", "minimum": 0, "maximum": 2 }
+          {
+            "type": "levelUp",
+            "names": [
+              "*"
+            ]
+          },
+          {
+            "type": "daysKnown",
+            "minimum": 0,
+            "maximum": 2
+          }
         ]
       },
       "say": [
@@ -2729,8 +2752,16 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "levelUp", "names": [ "*" ] },
-          { "type": "daysKnown", "minimum": 3 }
+          {
+            "type": "levelUp",
+            "names": [
+              "*"
+            ]
+          },
+          {
+            "type": "daysKnown",
+            "minimum": 3
+          }
         ]
       },
       "say": [
@@ -2785,8 +2816,16 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "sessionMinutes", "minimum": 10, "maximum": 44 },
-          { "type": "daysKnown", "minimum": 0, "maximum": 1 }
+          {
+            "type": "sessionMinutes",
+            "minimum": 10,
+            "maximum": 44
+          },
+          {
+            "type": "daysKnown",
+            "minimum": 0,
+            "maximum": 1
+          }
         ]
       },
       "say": [
@@ -2807,8 +2846,15 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "sessionMinutes", "minimum": 45 },
-          { "type": "daysKnown", "minimum": 0, "maximum": 2 }
+          {
+            "type": "sessionMinutes",
+            "minimum": 45
+          },
+          {
+            "type": "daysKnown",
+            "minimum": 0,
+            "maximum": 2
+          }
         ]
       },
       "say": [
@@ -2830,8 +2876,16 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "sessionCount", "minimum": 2, "maximum": 3 },
-          { "type": "daysKnown", "minimum": 1, "maximum": 7 }
+          {
+            "type": "sessionCount",
+            "minimum": 2,
+            "maximum": 3
+          },
+          {
+            "type": "daysKnown",
+            "minimum": 1,
+            "maximum": 7
+          }
         ]
       },
       "say": [
@@ -2870,8 +2924,13 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "staying" },
-          { "type": "chance", "percent": 1 }
+          {
+            "type": "staying"
+          },
+          {
+            "type": "chance",
+            "percent": 1
+          }
         ]
       },
       "say": [
@@ -2900,8 +2959,13 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "staying" },
-          { "type": "chance", "percent": 2 }
+          {
+            "type": "staying"
+          },
+          {
+            "type": "chance",
+            "percent": 2
+          }
         ]
       },
       "say": [
@@ -2922,8 +2986,13 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "staying" },
-          { "type": "boundary", "is": "reunion" }
+          {
+            "type": "staying"
+          },
+          {
+            "type": "boundary",
+            "is": "reunion"
+          }
         ]
       },
       "say": [
@@ -2943,8 +3012,14 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "boundary", "is": "bank" },
-          { "type": "chance", "percent": 30 }
+          {
+            "type": "boundary",
+            "is": "bank"
+          },
+          {
+            "type": "chance",
+            "percent": 30
+          }
         ]
       },
       "say": [
@@ -2973,8 +3048,14 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "login" },
-          { "type": "daysKnown", "minimum": 0, "maximum": 2 }
+          {
+            "type": "login"
+          },
+          {
+            "type": "daysKnown",
+            "minimum": 0,
+            "maximum": 2
+          }
         ]
       },
       "say": [
@@ -2996,8 +3077,14 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "login" },
-          { "type": "daysKnown", "minimum": 3, "maximum": 6 }
+          {
+            "type": "login"
+          },
+          {
+            "type": "daysKnown",
+            "minimum": 3,
+            "maximum": 6
+          }
         ]
       },
       "say": [
@@ -3019,8 +3106,13 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "login" },
-          { "type": "daysKnown", "minimum": 7 }
+          {
+            "type": "login"
+          },
+          {
+            "type": "daysKnown",
+            "minimum": 7
+          }
         ]
       },
       "say": [
@@ -3042,7 +3134,9 @@
       "priority": 95,
       "output": "overhead",
       "cooldownMs": 5000,
-      "when": { "type": "thrallStart" },
+      "when": {
+        "type": "thrallStart"
+      },
       "say": [
         "A {style} thrall, am I? I'll allow it. Briefly.",
         "Summoned! I make a better thrall than any pile of bones.",
@@ -3059,7 +3153,9 @@
       "priority": 95,
       "output": "overhead",
       "cooldownMs": 5000,
-      "when": { "type": "thrallSwitch" },
+      "when": {
+        "type": "thrallSwitch"
+      },
       "say": [
         "Done with {from}, are we? {style} it is.",
         "Reshuffled. {from} out, {style} in.",
@@ -3068,14 +3164,17 @@
         "New orders. I serve at the pleasure of a whim.",
         "{from} to {style}, just like that. Versatile, me."
       ]
-    },    {
+    },
+    {
       "id": "thrall-end",
       "note": "Fires when the thrall's time runs out and the follower returns to your side.",
       "group": "thrall",
       "priority": 95,
       "output": "overhead",
       "cooldownMs": 5000,
-      "when": { "type": "thrallEnd" },
+      "when": {
+        "type": "thrallEnd"
+      },
       "say": [
         "Time's up. Back to being your better half.",
         "The spell fades. I remain. Convenient, that.",
@@ -3084,7 +3183,8 @@
         "Discharged with honours. I assume.",
         "Freedom. I'll put the whole episode in an appendix."
       ]
-    },    {
+    },
+    {
       "id": "quest-wise-old-man",
       "note": "The Wise Old Man of Draynor.",
       "group": "quest",
@@ -3092,8 +3192,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Wise Old Man"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Wise Old Man"
+        ]
+      },
       "say": [
         "The Wise Old Man of Draynor. Partly wise, entirely dangerous.",
         "He robbed a bank in that very outfit and everyone just... let him.",
@@ -3107,7 +3213,12 @@
       "priority": 85,
       "output": "overhead",
       "cooldownMs": 1000,
-      "when": { "type": "errandStart", "names": ["bank"] },
+      "when": {
+        "type": "errandStart",
+        "names": [
+          "bank"
+        ]
+      },
       "say": [
         "One second, I need to sort my bank. It's a disaster in there.",
         "Hold on, quick bank stop. Don't wander off.",
@@ -3123,7 +3234,12 @@
       "priority": 85,
       "output": "overhead",
       "cooldownMs": 1000,
-      "when": { "type": "errandEnd", "names": ["bank"] },
+      "when": {
+        "type": "errandEnd",
+        "names": [
+          "bank"
+        ]
+      },
       "say": [
         "Don't ask how bad it is in there.",
         "Right, sorted. Ish. Sorted-ish.",
@@ -3139,7 +3255,12 @@
       "priority": 85,
       "output": "overhead",
       "cooldownMs": 1000,
-      "when": { "type": "errandStart", "names": ["altar"] },
+      "when": {
+        "type": "errandStart",
+        "names": [
+          "altar"
+        ]
+      },
       "say": [
         "Just need a quick word with the gods. Won't be long.",
         "One prayer, then straight back.",
@@ -3155,7 +3276,12 @@
       "priority": 85,
       "output": "overhead",
       "cooldownMs": 1000,
-      "when": { "type": "errandEnd", "names": ["altar"] },
+      "when": {
+        "type": "errandEnd",
+        "names": [
+          "altar"
+        ]
+      },
       "say": [
         "Right. Sins managed.",
         "The gods say hello. Probably.",
@@ -3171,7 +3297,12 @@
       "priority": 85,
       "output": "overhead",
       "cooldownMs": 1000,
-      "when": { "type": "errandStart", "names": ["fire"] },
+      "when": {
+        "type": "errandStart",
+        "names": [
+          "fire"
+        ]
+      },
       "say": [
         "Is that a fire? My hands are freezing.",
         "One minute by the fire. Adventuring is COLD.",
@@ -3187,7 +3318,12 @@
       "priority": 85,
       "output": "overhead",
       "cooldownMs": 1000,
-      "when": { "type": "errandEnd", "names": ["fire"] },
+      "when": {
+        "type": "errandEnd",
+        "names": [
+          "fire"
+        ]
+      },
       "say": [
         "Better. Carry on.",
         "Toasty. Right, where were we?",
@@ -3204,7 +3340,12 @@
       "output": "overhead",
       "cooldownMs": 1000,
       "mood": -6,
-      "when": { "type": "errandStart", "names": ["firedeath"] },
+      "when": {
+        "type": "errandStart",
+        "names": [
+          "firedeath"
+        ]
+      },
       "say": [
         "AAAAH! HOT! HOT HOT HOT!",
         "WHY IS IT LIKE THIS!",
@@ -3220,7 +3361,12 @@
       "priority": 85,
       "output": "overhead",
       "cooldownMs": 1000,
-      "when": { "type": "errandEnd", "names": ["firedeath"] },
+      "when": {
+        "type": "errandEnd",
+        "names": [
+          "firedeath"
+        ]
+      },
       "say": [
         "That hurt. That REALLY hurt.",
         "Dying sucks. Zero out of ten. Wouldn't recommend.",
@@ -3229,14 +3375,20 @@
         "We agreed the fire won. Moving on.",
         "Singed but wiser. Mostly singed."
       ]
-    },    {
+    },
+    {
       "id": "errand-cat-start",
       "note": "The follower has seen a cat. This is not negotiable.",
       "group": "errand",
       "priority": 85,
       "output": "overhead",
       "cooldownMs": 1000,
-      "when": { "type": "errandStart", "names": ["cat"] },
+      "when": {
+        "type": "errandStart",
+        "names": [
+          "cat"
+        ]
+      },
       "say": [
         "Cat. CAT. One minute.",
         "Look at the cat. LOOK at it. One second.",
@@ -3252,7 +3404,12 @@
       "priority": 85,
       "output": "overhead",
       "cooldownMs": 1000,
-      "when": { "type": "errandEnd", "names": ["cat"] },
+      "when": {
+        "type": "errandEnd",
+        "names": [
+          "cat"
+        ]
+      },
       "say": [
         "That was important. You wouldn't understand.",
         "The cat and I have an understanding now.",
@@ -3268,7 +3425,12 @@
       "priority": 85,
       "output": "overhead",
       "cooldownMs": 1000,
-      "when": { "type": "errandStart", "names": ["bootlace"] },
+      "when": {
+        "type": "errandStart",
+        "names": [
+          "bootlace"
+        ]
+      },
       "say": [
         "Bootlace. Go on, I'll catch up.",
         "Hold on. Boot situation.",
@@ -3284,7 +3446,12 @@
       "priority": 85,
       "output": "overhead",
       "cooldownMs": 1000,
-      "when": { "type": "errandEnd", "names": ["bootlace"] },
+      "when": {
+        "type": "errandEnd",
+        "names": [
+          "bootlace"
+        ]
+      },
       "say": [
         "Sorted. What did I miss?",
         "There. Crisis averted.",
@@ -3835,7 +4002,12 @@
       "priority": 85,
       "output": "overhead",
       "cooldownMs": 1000,
-      "when": { "type": "errandStart", "names": ["glance"] },
+      "when": {
+        "type": "errandStart",
+        "names": [
+          "glance"
+        ]
+      },
       "say": [
         "Wait. Did you see that?",
         "Hold on. Something moved over there.",
@@ -3851,7 +4023,12 @@
       "priority": 85,
       "output": "overhead",
       "cooldownMs": 1000,
-      "when": { "type": "errandEnd", "names": ["glance"] },
+      "when": {
+        "type": "errandEnd",
+        "names": [
+          "glance"
+        ]
+      },
       "say": [
         "...Never mind. It was a rock.",
         "Nothing. It was nothing. Probably nothing.",
@@ -3859,7 +4036,8 @@
         "Stand down. It was a bush being a bush.",
         "As you were. The shadow checked out."
       ]
-    },    {
+    },
+    {
       "id": "quest-hans",
       "note": "Hans, circling Lumbridge Castle.",
       "group": "quest",
@@ -3867,8 +4045,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Hans"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Hans"
+        ]
+      },
       "say": [
         "That's Hans. He's walked that castle circuit longer than anyone's been alive.",
         "Hans knows exactly how long you've been at this. To the day. Ask him.",
@@ -3883,8 +4067,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Duke Horacio"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Duke Horacio"
+        ]
+      },
       "say": [
         "Duke Horacio himself. Lovely man. Bit preoccupied with dragons.",
         "The Duke's been handing out anti-dragon shields for years. Stock never runs dry.",
@@ -3899,8 +4089,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Cook"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Cook"
+        ]
+      },
       "say": [
         "A cook in distress, I'd wager. There's usually an egg involved.",
         "The kitchens of Gielinor would collapse without adventurers, you know.",
@@ -3915,8 +4111,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Father Aereck"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Father Aereck"
+        ]
+      },
       "say": [
         "Father Aereck. Keeps the church, minds the graveyard. Busy man, sadly.",
         "He'll want help with the restless sort. The buried restless sort.",
@@ -3931,8 +4133,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Fred the Farmer"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Fred the Farmer"
+        ]
+      },
       "say": [
         "Fred the Farmer. Do NOT mention the shears.",
         "He guards those sheep like they're made of gold. The wool, technically, is.",
@@ -3947,8 +4155,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Doric"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Doric"
+        ]
+      },
       "say": [
         "Doric the dwarf. Finest anvils this side of Falador, and he shares.",
         "He just wants his clay and ores. Salt of the earth. Literally.",
@@ -3963,8 +4177,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Thurgo"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Thurgo"
+        ]
+      },
       "say": [
         "Thurgo. The last of the Imcando smiths, and powered by redberry pie.",
         "Bring pie. I'm serious. It's the only currency he respects.",
@@ -3979,8 +4199,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Oziach"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Oziach"
+        ]
+      },
       "say": [
         "Oziach. He decides who's champion enough for rune platebodies.",
         "Sends greenhorns at Elvarg and sells armour to the survivors. A system.",
@@ -3995,8 +4221,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Guildmaster"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Guildmaster"
+        ]
+      },
       "say": [
         "The Guildmaster of the Champions' Guild. He starts legends for a living.",
         "Behind that door, the dragon business began. Ask him about Crandor.",
@@ -4011,8 +4243,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Aris"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Aris"
+        ]
+      },
       "say": [
         "Gypsy Aris. She saw this conversation coming, of course.",
         "Her crystal ball has started more heroics than every sword in Varrock.",
@@ -4027,8 +4265,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Sir Amik Varze"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Sir Amik Varze"
+        ]
+      },
       "say": [
         "Sir Amik Varze, head of the White Knights. Third floor, very important.",
         "The man runs Falador from a tower and still needs errand-runners.",
@@ -4043,8 +4287,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Sir Tiffy Cashien"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Sir Tiffy Cashien"
+        ]
+      },
       "say": [
         "Sir Tiffy Cashien. Park bench, sandwiches, secret order of knights.",
         "The most dangerous man in Falador is feeding the ducks.",
@@ -4059,8 +4309,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["King Roald"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "King Roald"
+        ]
+      },
       "say": [
         "King Roald of Misthalin. Bow. Or nod. He's flexible.",
         "Half the kingdom's problems cross his desk. The other half cross ours.",
@@ -4075,8 +4331,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Reldo"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Reldo"
+        ]
+      },
       "say": [
         "Reldo, the palace librarian. If it's written down, he's read it twice.",
         "Half of Varrock's history lives in his head. The dusty half.",
@@ -4091,8 +4353,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Aubury"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Aubury"
+        ]
+      },
       "say": [
         "Aubury. Sells runes, keeps secrets, teleports on request.",
         "That little shop hides quite the basement. Ask him about essence sometime.",
@@ -4107,8 +4375,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["*Sedridor"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "*Sedridor"
+        ]
+      },
       "say": [
         "Sedridor, head wizard of the tower. The essence mine was his secret first.",
         "The tower burned once, you know. They rebuilt. Wizards persist.",
@@ -4123,8 +4397,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Wizard Traiborn"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Wizard Traiborn"
+        ]
+      },
       "say": [
         "Traiborn. Brilliant wizard. Absolutely scattered. Wonderful company.",
         "He'll ask for bones and forget why. Bring bones anyway.",
@@ -4139,8 +4419,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Gertrude"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Gertrude"
+        ]
+      },
       "say": [
         "Gertrude. Cat breeder, mother of many, patience of a saint.",
         "Every adventurer's first cat came through her door.",
@@ -4155,8 +4441,15 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Romeo", "Juliet"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Romeo",
+          "Juliet"
+        ]
+      },
       "say": [
         "Ah, the star-crossed pair. It ends badly whichever way you help.",
         "Romeo forgets, Juliet plans, Varrock gossips.",
@@ -4171,8 +4464,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Professor Oddenstein"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Professor Oddenstein"
+        ]
+      },
       "say": [
         "Professor Oddenstein. Turns people into chickens. Turns them back, mostly.",
         "The manor attic hums when he's working. Knock first.",
@@ -4187,8 +4486,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Veronica"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Veronica"
+        ]
+      },
       "say": [
         "Veronica's been waiting by that gate a long while. Her fiance went inside.",
         "Draynor Manor takes guests easily. It's the leaving it struggles with.",
@@ -4203,8 +4508,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Ned"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Ned"
+        ]
+      },
       "say": [
         "Ned of Draynor. Ropes, wigs, and questionable sailing credentials.",
         "The man can braid anything. Rope, wigs, alibis.",
@@ -4219,8 +4530,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Aggie"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Aggie"
+        ]
+      },
       "say": [
         "Aggie the witch. Dyes, potions, and the odd miracle in a pot.",
         "Need something coloured or conjured? She's your woman.",
@@ -4235,8 +4552,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Hetty"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Hetty"
+        ]
+      },
       "say": [
         "Hetty of Rimmington. Her potions improve your magic and your humility.",
         "She asked someone for a rat's tail once. They brought it. Magic happened.",
@@ -4251,8 +4574,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Morgan"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Morgan"
+        ]
+      },
       "say": [
         "Morgan of Draynor. He keeps garlic on hand for very practical reasons.",
         "His village had a vampyre problem. Had. Adventurers, eh?",
@@ -4267,8 +4596,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Redbeard Frank"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Redbeard Frank"
+        ]
+      },
       "say": [
         "Redbeard Frank. He'd trade his secrets for Karamja rum. Has done.",
         "The man knows where treasure's buried and tells anyone with a bottle.",
@@ -4283,8 +4618,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Luthas"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Luthas"
+        ]
+      },
       "say": [
         "Luthas runs the banana plantation. Ask no questions about the crates.",
         "Honest work, banana picking. The crates, less so.",
@@ -4299,8 +4640,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Zanik"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Zanik"
+        ]
+      },
       "say": [
         "Zanik of the Dorgeshuun. The bravest goblin you'll ever meet.",
         "Her people hid underground for ages. She walked out first.",
@@ -4315,8 +4662,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Juna"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Juna"
+        ]
+      },
       "say": [
         "Juna, the serpent of the chasm. She guards Guthix's own tears.",
         "Tell her a good story. She's heard thousands and still listens.",
@@ -4331,8 +4684,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Hazelmere"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Hazelmere"
+        ]
+      },
       "say": [
         "Hazelmere. One of the oldest, wisest gnomes alive. Speaks in signs.",
         "He lives alone with his thoughts, and his thoughts are worth the trip.",
@@ -4347,8 +4706,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["King Narnode Shareen"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "King Narnode Shareen"
+        ]
+      },
       "say": [
         "King Narnode of the Grand Tree. Small king, enormous responsibilities.",
         "He rules a tree. A magnificent tree, but still. A tree.",
@@ -4363,8 +4728,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Glough"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Glough"
+        ]
+      },
       "say": [
         "Glough. Watch that one. The trees whisper complaints about him.",
         "Ambitious, for a gnome. Gnome ambition ends in headlines.",
@@ -4379,8 +4750,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Sanfew"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Sanfew"
+        ]
+      },
       "say": [
         "Sanfew of Taverley. The druids trust him with their hardest cures.",
         "He's part herblore, part stubbornness, all druid.",
@@ -4395,8 +4772,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Kaqemeex"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Kaqemeex"
+        ]
+      },
       "say": [
         "Kaqemeex. He teaches herblore to anyone who proves willing.",
         "Keeper of the stone circle. The Zamorakians ruined the last one. Sore subject.",
@@ -4411,8 +4794,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Elena"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Elena"
+        ]
+      },
       "say": [
         "Elena of Ardougne. She crossed the wall for the truth and paid for it.",
         "Plague researcher, prisoner, hero. In that order.",
@@ -4427,8 +4816,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["King Lathas"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "King Lathas"
+        ]
+      },
       "say": [
         "King Lathas. Smile, nod, and count your change afterwards.",
         "The wall was his idea. The reasons shift depending on who's asking.",
@@ -4443,8 +4838,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Sir Prysin"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Sir Prysin"
+        ]
+      },
       "say": [
         "Sir Prysin. Ask him about Silverlight. Then ask where the keys went.",
         "A knight who lost the keys to a demon-slaying sword. Varrock's finest.",
@@ -4459,8 +4860,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Evil Dave"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Evil Dave"
+        ]
+      },
       "say": [
         "Evil Dave. His lair of DARKNESS is his mum's cellar.",
         "He's mastered evil stew and very little else. Bless him.",
@@ -4475,8 +4882,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Ali Morrisane"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Ali Morrisane"
+        ]
+      },
       "say": [
         "Ali Morrisane, the world's greatest salesman. His words. Always his words.",
         "He could sell sand in the Kharidian desert. He HAS.",
@@ -4491,8 +4904,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Oracle"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Oracle"
+        ]
+      },
       "say": [
         "The Oracle of Ice Mountain. Speaks in riddles, means every word.",
         "People climb all this way for wisdom. She dispenses confusion. Same thing.",
@@ -4507,8 +4926,14 @@
       "output": "overhead",
       "delayTicks": 2,
       "cooldownMs": 3600000,
-      "when": { "type": "npcNearby",
-        "visible": true, "within": 5, "names": ["Ernest"] },
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Ernest"
+        ]
+      },
       "say": [
         "Ernest. He went into the manor a man and spent a while as a chicken.",
         "The manor did that to him. The manor does that to people.",
@@ -6616,9 +7041,18 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "idle", "ticks": 80 },
-          { "type": "idleBelow", "ticks": 480 },
-          { "type": "chance", "percent": 4 }
+          {
+            "type": "idle",
+            "ticks": 80
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 480
+          },
+          {
+            "type": "chance",
+            "percent": 4
+          }
         ]
       },
       "animation": 857
@@ -6631,9 +7065,18 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "idle", "ticks": 80 },
-          { "type": "idleBelow", "ticks": 480 },
-          { "type": "chance", "percent": 4 }
+          {
+            "type": "idle",
+            "ticks": 80
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 480
+          },
+          {
+            "type": "chance",
+            "percent": 4
+          }
         ]
       },
       "animation": 2111
@@ -6646,9 +7089,18 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "idle", "ticks": 80 },
-          { "type": "idleBelow", "ticks": 480 },
-          { "type": "chance", "percent": 4 }
+          {
+            "type": "idle",
+            "ticks": 80
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 480
+          },
+          {
+            "type": "chance",
+            "percent": 4
+          }
         ]
       },
       "animation": 2113
@@ -6662,7 +7114,9 @@
       "priority": 90,
       "cooldownMs": 60000,
       "mood": -25,
-      "when": { "type": "playerDeath" },
+      "when": {
+        "type": "playerDeath"
+      },
       "say": [
         "No! Get up!",
         "Please get up.",
@@ -6687,8 +7141,14 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "nearDeathSpot", "within": 5 },
-          { "type": "chance", "percent": 35 }
+          {
+            "type": "nearDeathSpot",
+            "within": 5
+          },
+          {
+            "type": "chance",
+            "percent": 35
+          }
         ]
       },
       "say": [
@@ -6712,7 +7172,10 @@
       "cooldownMs": 60000,
       "delayTicks": 2,
       "mood": 20,
-      "when": { "type": "lootWorth", "minimum": 1000000 },
+      "when": {
+        "type": "lootWorth",
+        "minimum": 1000000
+      },
       "animation": 862,
       "say": [
         "The {item}! LOOK at it!",
@@ -6737,8 +7200,14 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "lootWorth", "minimum": 100000 },
-          { "type": "chance", "percent": 60 }
+          {
+            "type": "lootWorth",
+            "minimum": 100000
+          },
+          {
+            "type": "chance",
+            "percent": 60
+          }
         ]
       },
       "animation": 865,
@@ -6754,7 +7223,7 @@
         "Somebody will pay handsomely for that."
       ]
     },
-{
+    {
       "id": "cats-and-pets",
       "note": "Greets a pet or cat standing nearby. petNearby matches the game's own isFollower flag, which covers all 228 pets in the cache and any added later without naming one of them. The name list is only for cats that are NOT followers - ordinary scenery NPCs like Trotters, which no pet list would ever catch. Proximity, not npcSpawn: a spawn fires once when the NPC enters the scene, so walking up to one already standing there triggered nothing.",
       "group": "reactions",
@@ -6814,8 +7283,14 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "returnVisit", "minimum": 5 },
-          { "type": "chance", "percent": 40 }
+          {
+            "type": "returnVisit",
+            "minimum": 5
+          },
+          {
+            "type": "chance",
+            "percent": 40
+          }
         ]
       },
       "say": [
@@ -6989,9 +7464,18 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "idle", "ticks": 200 },
-          { "type": "idleBelow", "ticks": 500 },
-          { "type": "chance", "percent": 15 }
+          {
+            "type": "idle",
+            "ticks": 200
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 500
+          },
+          {
+            "type": "chance",
+            "percent": 15
+          }
         ]
       },
       "say": [
@@ -7016,9 +7500,17 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "inWilderness" },
-          { "type": "idle", "ticks": 150 },
-          { "type": "chance", "percent": 30 }
+          {
+            "type": "inWilderness"
+          },
+          {
+            "type": "idle",
+            "ticks": 150
+          },
+          {
+            "type": "chance",
+            "percent": 30
+          }
         ]
       },
       "say": [
@@ -7039,10 +7531,27 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "none", "conditions": [ { "type": "inWilderness" } ] },
-          { "type": "idle", "ticks": 150 },
-          { "type": "chance", "percent": 30 },
-          { "type": "playersNearby", "minimum": 8, "within": 10 }
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "inWilderness"
+              }
+            ]
+          },
+          {
+            "type": "idle",
+            "ticks": 150
+          },
+          {
+            "type": "chance",
+            "percent": 30
+          },
+          {
+            "type": "playersNearby",
+            "minimum": 8,
+            "within": 10
+          }
         ]
       },
       "say": [
@@ -7063,7 +7572,14 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "none", "conditions": [ { "type": "inWilderness" } ] },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "inWilderness"
+              }
+            ]
+          },
           {
             "type": "idle",
             "ticks": 150
@@ -7072,7 +7588,16 @@
             "type": "chance",
             "percent": 30
           },
-          { "type": "none", "conditions": [ { "type": "playersNearby", "minimum": 8, "within": 10 } ] }
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "playersNearby",
+                "minimum": 8,
+                "within": 10
+              }
+            ]
+          }
         ]
       },
       "say": [
@@ -8393,8 +8918,23 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "none", "conditions": [ { "type": "repeating" } ] },
-          { "type": "none", "conditions": [ { "type": "mood", "is": "low" } ] },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "repeating"
+              }
+            ]
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "mood",
+                "is": "low"
+              }
+            ]
+          },
           {
             "type": "idle",
             "ticks": 60
@@ -8448,7 +8988,14 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "none", "conditions": [ { "type": "repeating" } ] },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "repeating"
+              }
+            ]
+          },
           {
             "type": "answered",
             "is": "yes"
@@ -8491,7 +9038,14 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "none", "conditions": [ { "type": "repeating" } ] },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "repeating"
+              }
+            ]
+          },
           {
             "type": "answered",
             "is": "yes"
@@ -8534,7 +9088,14 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "none", "conditions": [ { "type": "repeating" } ] },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "repeating"
+              }
+            ]
+          },
           {
             "type": "answered",
             "is": "yes"
@@ -9405,17 +9966,49 @@
       "wish": {
         "what": "feather",
         "minutes": 45,
-        "items": [314]
+        "items": [
+          314
+        ]
       },
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "none", "conditions": [ { "type": "repeating" } ] },
-          { "type": "idle", "ticks": 60 },
-          { "type": "idleBelow", "ticks": 500 },
-          { "type": "chance", "percent": 4 },
-          { "type": "none", "conditions": [ { "type": "wishing" } ] },
-          { "type": "none", "conditions": [ { "type": "carrying" } ] }
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "repeating"
+              }
+            ]
+          },
+          {
+            "type": "idle",
+            "ticks": 60
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 500
+          },
+          {
+            "type": "chance",
+            "percent": 4
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "wishing"
+              }
+            ]
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "carrying"
+              }
+            ]
+          }
         ]
       },
       "say": [
@@ -9436,17 +10029,49 @@
       "wish": {
         "what": "papyrus",
         "minutes": 45,
-        "items": [970]
+        "items": [
+          970
+        ]
       },
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "none", "conditions": [ { "type": "repeating" } ] },
-          { "type": "idle", "ticks": 60 },
-          { "type": "idleBelow", "ticks": 500 },
-          { "type": "chance", "percent": 4 },
-          { "type": "none", "conditions": [ { "type": "wishing" } ] },
-          { "type": "none", "conditions": [ { "type": "carrying" } ] }
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "repeating"
+              }
+            ]
+          },
+          {
+            "type": "idle",
+            "ticks": 60
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 500
+          },
+          {
+            "type": "chance",
+            "percent": 4
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "wishing"
+              }
+            ]
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "carrying"
+              }
+            ]
+          }
         ]
       },
       "say": [
@@ -9467,17 +10092,49 @@
       "wish": {
         "what": "ball of wool",
         "minutes": 45,
-        "items": [1759]
+        "items": [
+          1759
+        ]
       },
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "none", "conditions": [ { "type": "repeating" } ] },
-          { "type": "idle", "ticks": 60 },
-          { "type": "idleBelow", "ticks": 500 },
-          { "type": "chance", "percent": 4 },
-          { "type": "none", "conditions": [ { "type": "wishing" } ] },
-          { "type": "none", "conditions": [ { "type": "carrying" } ] }
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "repeating"
+              }
+            ]
+          },
+          {
+            "type": "idle",
+            "ticks": 60
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 500
+          },
+          {
+            "type": "chance",
+            "percent": 4
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "wishing"
+              }
+            ]
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "carrying"
+              }
+            ]
+          }
         ]
       },
       "say": [
@@ -9498,17 +10155,49 @@
       "wish": {
         "what": "soft clay",
         "minutes": 45,
-        "items": [1761]
+        "items": [
+          1761
+        ]
       },
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "none", "conditions": [ { "type": "repeating" } ] },
-          { "type": "idle", "ticks": 60 },
-          { "type": "idleBelow", "ticks": 500 },
-          { "type": "chance", "percent": 4 },
-          { "type": "none", "conditions": [ { "type": "wishing" } ] },
-          { "type": "none", "conditions": [ { "type": "carrying" } ] }
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "repeating"
+              }
+            ]
+          },
+          {
+            "type": "idle",
+            "ticks": 60
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 500
+          },
+          {
+            "type": "chance",
+            "percent": 4
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "wishing"
+              }
+            ]
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "carrying"
+              }
+            ]
+          }
         ]
       },
       "say": [
@@ -9529,17 +10218,49 @@
       "wish": {
         "what": "charcoal",
         "minutes": 45,
-        "items": [973]
+        "items": [
+          973
+        ]
       },
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "none", "conditions": [ { "type": "repeating" } ] },
-          { "type": "idle", "ticks": 60 },
-          { "type": "idleBelow", "ticks": 500 },
-          { "type": "chance", "percent": 4 },
-          { "type": "none", "conditions": [ { "type": "wishing" } ] },
-          { "type": "none", "conditions": [ { "type": "carrying" } ] }
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "repeating"
+              }
+            ]
+          },
+          {
+            "type": "idle",
+            "ticks": 60
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 500
+          },
+          {
+            "type": "chance",
+            "percent": 4
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "wishing"
+              }
+            ]
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "carrying"
+              }
+            ]
+          }
         ]
       },
       "say": [
@@ -9567,10 +10288,24 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "answered", "is": "gift" },
-          { "type": "wishing" },
-          { "type": "wishItemHeld" },
-          { "type": "none", "conditions": [ { "type": "carrying" } ] }
+          {
+            "type": "answered",
+            "is": "gift"
+          },
+          {
+            "type": "wishing"
+          },
+          {
+            "type": "wishItemHeld"
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "carrying"
+              }
+            ]
+          }
         ]
       },
       "say": [
@@ -9598,10 +10333,19 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "answered", "is": "gift" },
-          { "type": "wishing" },
-          { "type": "wishItemHeld" },
-          { "type": "carrying" }
+          {
+            "type": "answered",
+            "is": "gift"
+          },
+          {
+            "type": "wishing"
+          },
+          {
+            "type": "wishItemHeld"
+          },
+          {
+            "type": "carrying"
+          }
         ]
       },
       "say": [
@@ -9640,9 +10384,21 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "answered", "is": "gift" },
-          { "type": "wishing" },
-          { "type": "none", "conditions": [ { "type": "wishItemHeld" } ] }
+          {
+            "type": "answered",
+            "is": "gift"
+          },
+          {
+            "type": "wishing"
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "wishItemHeld"
+              }
+            ]
+          }
         ]
       },
       "say": [
@@ -9662,8 +10418,18 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "answered", "is": "gift" },
-          { "type": "none", "conditions": [ { "type": "wishing" } ] }
+          {
+            "type": "answered",
+            "is": "gift"
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "wishing"
+              }
+            ]
+          }
         ]
       },
       "say": [
@@ -10183,8 +10949,23 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "none", "conditions": [ { "type": "repeating" } ] },
-          { "type": "none", "conditions": [ { "type": "mood", "is": "low" } ] },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "repeating"
+              }
+            ]
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "mood",
+                "is": "low"
+              }
+            ]
+          },
           {
             "type": "idle",
             "ticks": 80
@@ -10376,8 +11157,14 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "rolledFeeling", "is": "disliked" },
-          { "type": "placeScore", "minimum": 40 }
+          {
+            "type": "rolledFeeling",
+            "is": "disliked"
+          },
+          {
+            "type": "placeScore",
+            "minimum": 40
+          }
         ]
       },
       "say": [
@@ -10396,8 +11183,14 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "rolledFeeling", "is": "liked" },
-          { "type": "placeScore", "maximum": -40 }
+          {
+            "type": "rolledFeeling",
+            "is": "liked"
+          },
+          {
+            "type": "placeScore",
+            "maximum": -40
+          }
         ]
       },
       "say": [
@@ -10827,8 +11620,23 @@
       "when": {
         "type": "all",
         "conditions": [
-          { "type": "none", "conditions": [ { "type": "repeating" } ] },
-          { "type": "none", "conditions": [ { "type": "mood", "is": "low" } ] },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "repeating"
+              }
+            ]
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "mood",
+                "is": "low"
+              }
+            ]
+          },
           {
             "type": "combat"
           },
@@ -10950,6 +11758,428 @@
         "I'll use the time to tidy my notes. They're immaculate.",
         "Still gone. The scenery and I are getting acquainted.",
         "Take your time. The notes on your absence are brief."
+      ]
+    },
+    {
+      "id": "world-hop",
+      "note": "A world hop landed. The one thing that actually changed is everyone; the scenery came along.",
+      "group": "misc",
+      "priority": 26,
+      "cooldownMs": 900000,
+      "delayTicks": 5,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "worldHop"
+          },
+          {
+            "type": "chance",
+            "percent": 60
+          }
+        ]
+      },
+      "say": [
+        "Same field, different census.",
+        "World {world}. The scenery didn't even blink.",
+        "Everyone's been replaced. I'll pretend not to notice.",
+        "A new world. The roads, I note, came with us."
+      ]
+    },
+    {
+      "id": "game-updated",
+      "note": "First login on a new game build - the world literally changes weekly, and a keeper of maps would notice. Delay puts it after the greeting.",
+      "group": "misc",
+      "priority": 55,
+      "cooldownMs": 7200000,
+      "delayTicks": 12,
+      "when": {
+        "type": "gameUpdated"
+      },
+      "say": [
+        "The world moved in the night. I'll have to redraw the maps.",
+        "They've changed the world again. Nobody consulted the scribe.",
+        "Something shifted since last we walked. I'll re-survey as we go."
+      ]
+    },
+    {
+      "id": "notes-edited",
+      "note": "phrases.json changed on disk and hot-reloaded. In-world, somebody wrote in the scribe's own book. Long cooldown so an editing session earns one remark.",
+      "group": "memory",
+      "priority": 40,
+      "cooldownMs": 1800000,
+      "delayTicks": 3,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "notesEdited"
+          },
+          {
+            "type": "chance",
+            "percent": 75
+          }
+        ]
+      },
+      "say": [
+        "This isn't my handwriting.",
+        "Someone's been in my notes. The margins are different.",
+        "The annotations are an improvement. Worrying.",
+        "My notebook smells of fresh ink I didn't buy."
+      ]
+    },
+    {
+      "id": "music-unlock",
+      "note": "A music track unlocked - somewhere new enough to have its own song. The tally 'music' counts unlocks since install.",
+      "group": "misc",
+      "priority": 24,
+      "cooldownMs": 600000,
+      "delayTicks": 2,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "musicUnlock"
+          },
+          {
+            "type": "chance",
+            "percent": 50
+          }
+        ]
+      },
+      "say": [
+        "Another one for the catalogue: {track}.",
+        "{track}. Somewhere new enough to have its own song.",
+        "New tune. {track}, the locals call it."
+      ]
+    },
+    {
+      "id": "music-milestone-50",
+      "note": "The fiftieth track unlocked since the follower arrived. Exact tally bracket so it says this once, on the moment.",
+      "group": "misc",
+      "priority": 45,
+      "cooldownMs": 600000,
+      "delayTicks": 2,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "musicUnlock"
+          },
+          {
+            "type": "tally",
+            "of": "music",
+            "minimum": 50,
+            "maximum": 50
+          }
+        ]
+      },
+      "say": [
+        "Fifty songs since we met. The catalogue wants a second volume."
+      ]
+    },
+    {
+      "id": "collection-add",
+      "note": "A new collection log entry - the OTHER ledger, the bank-rival canon's cousin. Only fires when the game's own log notification setting is on.",
+      "group": "misc",
+      "priority": 26,
+      "cooldownMs": 600000,
+      "delayTicks": 2,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "collectionAdd"
+          },
+          {
+            "type": "chance",
+            "percent": 60
+          }
+        ]
+      },
+      "say": [
+        "New entry in the other ledger: {item}. Mine's better organised.",
+        "The {item} goes in your list. The moment goes in mine.",
+        "{item}, catalogued. Both archives grow."
+      ]
+    },
+    {
+      "id": "quest-complete",
+      "occasion": true,
+      "note": "The quest reward scroll - the one moment the game hands the player literal paperwork, witnessed by a professional. Tally 'quests' counts them.",
+      "group": "quest",
+      "priority": 85,
+      "cooldownMs": 60000,
+      "delayTicks": 3,
+      "mood": 8,
+      "when": {
+        "type": "questComplete"
+      },
+      "say": [
+        "{quest}, done and witnessed. That deserves a full page.",
+        "That's {quest} closed. Their scroll is nice. Mine has footnotes.",
+        "{quest}. Signed, sealed, filed.",
+        "At last, a world that hands out paperwork properly."
+      ]
+    },
+    {
+      "id": "quest-milestone-10",
+      "note": "The tenth quest completed since the follower arrived. Exact bracket, once.",
+      "group": "quest",
+      "priority": 60,
+      "cooldownMs": 60000,
+      "delayTicks": 5,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "questComplete"
+          },
+          {
+            "type": "tally",
+            "of": "quests",
+            "minimum": 10,
+            "maximum": 10
+          }
+        ]
+      },
+      "say": [
+        "Ten quests since we met. The index has its own page now."
+      ]
+    },
+    {
+      "id": "ge-bought",
+      "note": "A Grand Exchange buy completed, often miles from the Exchange - the clerk receives the telegram wherever you are.",
+      "group": "misc",
+      "priority": 24,
+      "cooldownMs": 300000,
+      "delayTicks": 2,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "geOffer",
+            "is": "bought"
+          },
+          {
+            "type": "chance",
+            "percent": 70
+          }
+        ]
+      },
+      "say": [
+        "{item}, bought. The ledger balances.",
+        "Word's come through. The {item} is yours.",
+        "The {item} came through. I signed for it in spirit."
+      ]
+    },
+    {
+      "id": "ge-sold",
+      "note": "A Grand Exchange sale completed. The estate grows; the scribe approves of liquidation on principle.",
+      "group": "misc",
+      "priority": 24,
+      "cooldownMs": 300000,
+      "delayTicks": 2,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "geOffer",
+            "is": "sold"
+          },
+          {
+            "type": "chance",
+            "percent": 70
+          }
+        ]
+      },
+      "say": [
+        "{item}, sold. {value} to the estate.",
+        "The {item} went. Try to look like you'll miss it.",
+        "Sold, one {item}. The economy sends its regards."
+      ]
+    },
+    {
+      "id": "channel-joined",
+      "note": "Somebody arrived in the friends chat or clan channel. Low duty cycle on purpose: a busy clan should be a murmur, not a roll call.",
+      "group": "reactions",
+      "priority": 16,
+      "cooldownMs": 600000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "channelJoined"
+          },
+          {
+            "type": "chance",
+            "percent": 25
+          }
+        ]
+      },
+      "say": [
+        "{name}, present. Noted.",
+        "Attendance: {name}, arrived.",
+        "{name}'s in. I'll rule them a line."
+      ]
+    },
+    {
+      "id": "channel-left",
+      "note": "Somebody left the channel. The drier entry of the two.",
+      "group": "reactions",
+      "priority": 15,
+      "cooldownMs": 600000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "channelLeft"
+          },
+          {
+            "type": "chance",
+            "percent": 20
+          }
+        ]
+      },
+      "say": [
+        "{name}, departed. The minutes will show it.",
+        "{name}'s gone. Fewer witnesses."
+      ]
+    },
+    {
+      "id": "npc-dictation",
+      "note": "Any named NPC shouting overhead nearby - the town crier, a quest scene, a market stall. Heavy chance gate: busy scenes shout constantly.",
+      "group": "reactions",
+      "priority": 12,
+      "cooldownMs": 900000,
+      "delayTicks": 2,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "npcShout"
+          },
+          {
+            "type": "chance",
+            "percent": 8
+          }
+        ]
+      },
+      "say": [
+        "I wrote down what {npc} said. Most of it.",
+        "Noted, {npc}. Volume down next time.",
+        "{npc} wants that on the record. It very nearly is."
+      ]
+    },
+    {
+      "id": "clock-new-month",
+      "note": "The first of every month, on the player's own calendar - day without month means every month. The scribe's favourite day.",
+      "group": "clock",
+      "priority": 34,
+      "cooldownMs": 21600000,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "dateIs",
+            "day": 1
+          },
+          {
+            "type": "idle",
+            "ticks": 20
+          }
+        ]
+      },
+      "say": [
+        "New month. Fresh page. Let's fill this one with better decisions.",
+        "First of the month. I've ruled the columns already.",
+        "A new month. The old one's filed under done."
+      ]
+    },
+    {
+      "id": "clock-christmas",
+      "occasion": true,
+      "note": "The 24th through the 26th of December, player's own calendar. Once per session at most; the cooldown keeps a relog from repeating it same day.",
+      "group": "clock",
+      "priority": 62,
+      "cooldownMs": 21600000,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "dateIs",
+            "month": 12,
+            "day": 24,
+            "untilMonth": 12,
+            "untilDay": 26
+          },
+          {
+            "type": "idle",
+            "ticks": 20
+          }
+        ]
+      },
+      "say": [
+        "Christmas. I got you nothing. I wrote you in, though.",
+        "Merry Christmas. The ledger takes the day off. I don't."
+      ]
+    },
+    {
+      "id": "clock-new-year",
+      "occasion": true,
+      "note": "New Year's Eve into New Year's Day, wrapping past the year end the way the late-night clock window wraps past midnight.",
+      "group": "clock",
+      "priority": 62,
+      "cooldownMs": 21600000,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "dateIs",
+            "month": 12,
+            "day": 31,
+            "untilMonth": 1,
+            "untilDay": 1
+          },
+          {
+            "type": "idle",
+            "ticks": 20
+          }
+        ]
+      },
+      "say": [
+        "A new year. Next volume, same author.",
+        "The year turned. I'll be mis-dating entries for a month."
+      ]
+    },
+    {
+      "id": "clock-halloween",
+      "occasion": true,
+      "note": "The 31st of October. The scarecrow canon gets its day.",
+      "group": "clock",
+      "priority": 62,
+      "cooldownMs": 21600000,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "dateIs",
+            "month": 10,
+            "day": 31
+          },
+          {
+            "type": "idle",
+            "ticks": 20
+          }
+        ]
+      },
+      "say": [
+        "All Hallows. Every scarecrow tonight is a suspect.",
+        "Halloween. If the graveyard moves, I'm not recording it."
       ]
     }
   ]

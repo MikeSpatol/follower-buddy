@@ -2319,6 +2319,9 @@ public class FollowerPlugin extends Plugin
 				spawnDelayTicks = SPAWN_DELAY_TICKS;
 				rebuildQueued = true;
 
+				// The GE replay arrives between here and the first tick.
+				geOffersSettled = false;
+
 				// Belt and braces for a client that skipped the login screen.
 				ensureCatalogues();
 
@@ -2329,6 +2332,10 @@ public class FollowerPlugin extends Plugin
 					// only the baseline to re-take.
 					hopped = false;
 					speechEngine.primeEdgesOnNextTick();
+
+					// The one thing a hop actually changes is everyone. A rule
+					// delayTicks puts the remark after the scene settles.
+					speechEngine.dispatch(TriggerEvent.worldHop(client.getWorld()));
 				}
 
 				if (freshLogin)
@@ -2359,6 +2366,22 @@ public class FollowerPlugin extends Plugin
 					// puts the hello a couple of seconds AFTER the follower's own
 					// spawn (which waits out spawnDelayTicks itself).
 					speechEngine.dispatch(TriggerEvent.simple(TriggerEvent.Type.LOGIN));
+
+					// The world literally changes under everyone's feet once a
+					// week; a scribe keeping maps would notice. Seeded silently
+					// on the first ever run, like the personal bests, so a new
+					// install does not announce an update that is not one.
+					int revision = client.getRevision();
+					if (config.lastRevision() > 0 && revision != config.lastRevision())
+					{
+						speechEngine.dispatch(
+							TriggerEvent.simple(TriggerEvent.Type.GAME_UPDATE));
+					}
+					if (revision != config.lastRevision())
+					{
+						configManager.setConfiguration(FollowerConfig.GROUP,
+							"lastRevision", revision);
+					}
 
 					// The gear you logged in wearing and the place you logged in
 					// standing are baseline, not news - the first ticks' evaluation
@@ -4729,6 +4752,13 @@ public class FollowerPlugin extends Plugin
 		{
 			ticksSinceLoading++;
 		}
+		// A tick means the login's offer replay and any channel roster replay
+		// have been delivered; what arrives from here on is news.
+		geOffersSettled = true;
+		if (channelSettleTicks > 0)
+		{
+			channelSettleTicks--;
+		}
 
 		// A limbo whose thrall never respawns - it expired during the very
 		// load that dropped it - ends the possession after a grace period.
@@ -4847,6 +4877,14 @@ public class FollowerPlugin extends Plugin
 				speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
 				sendStatus("Reloaded " + ruleLoader.getStatus());
 				reportRuleErrors();
+
+				// In-world, phrases.json IS the scribe's notebook, so an edit
+				// arriving from outside is somebody writing in it. Panel saves
+				// count too - that is also the player in its book. The rules
+				// carry long cooldowns so an editing session earns one remark,
+				// not a heckle per save.
+				speechEngine.dispatch(
+					TriggerEvent.simple(TriggerEvent.Type.NOTES_EDITED));
 			}
 		}
 
@@ -4977,6 +5015,15 @@ public class FollowerPlugin extends Plugin
 	public void onWidgetLoaded(net.runelite.api.events.WidgetLoaded event)
 	{
 		int group = event.getGroupId();
+
+		// The quest reward scroll - the one moment the game hands the player
+		// a literal scroll, witnessed by a professional.
+		if (group == net.runelite.api.gameval.InterfaceID.QUESTSCROLL)
+		{
+			noteQuestScroll();
+			return;
+		}
+
 		if (group != net.runelite.api.gameval.InterfaceID.CHAT_LEFT
 			&& group != net.runelite.api.gameval.InterfaceID.CHAT_RIGHT)
 		{
@@ -5141,6 +5188,47 @@ public class FollowerPlugin extends Plugin
 
 		speechEngine.dispatch(TriggerEvent.chat(
 			event.getMessage(), event.getType().getType(), event.getName()));
+
+		// Two game messages worth parsing rather than merely matching: the
+		// tail is a NAME a line can say, which a plain chatMessage rule can
+		// see but never extract. The wordings are the ones the client's own
+		// plugins match (crowdsourcing music, screenshot), not from memory.
+		if (event.getType() == ChatMessageType.GAMEMESSAGE)
+		{
+			String parsed = parseTailAfter(event.getMessage(),
+				"You have unlocked a new music track:");
+			if (parsed != null)
+			{
+				speechEngine.getContext().tally("music");
+				speechEngine.dispatch(TriggerEvent.musicUnlock(parsed));
+			}
+			parsed = parseTailAfter(event.getMessage(),
+				"New item added to your collection log:");
+			if (parsed != null)
+			{
+				speechEngine.getContext().tally("collections");
+				speechEngine.dispatch(TriggerEvent.collectionAdd(parsed));
+			}
+		}
+	}
+
+	/**
+	 * The text after a known game-message prefix, stripped of colour tags and
+	 * trailing punctuation; null when the message is not that one.
+	 */
+	private static String parseTailAfter(String message, String prefix)
+	{
+		if (message == null)
+		{
+			return null;
+		}
+		String plain = message.replaceAll("<[^>]*>", "").trim();
+		if (!plain.startsWith(prefix))
+		{
+			return null;
+		}
+		String tail = plain.substring(prefix.length()).replaceAll("[.!]+$", "").trim();
+		return tail.isEmpty() ? null : tail;
 	}
 
 	@Subscribe
@@ -5176,6 +5264,147 @@ public class FollowerPlugin extends Plugin
 			log.debug("Brightness setting {} -> colour table gamma {}",
 				event.getValue(), com.follower.ui.GameColourTable.getCurrentGamma());
 		}
+	}
+
+	/**
+	 * Reads the quest name off the reward scroll's title ("You have completed
+	 * The Restless Ghost!"). The children are populated after the load event,
+	 * so it is read next cycle, like the chathead calibration.
+	 */
+	private void noteQuestScroll()
+	{
+		clientThread.invokeLater(() ->
+		{
+			net.runelite.api.widgets.Widget title = client.getWidget(
+				net.runelite.api.gameval.InterfaceID.Questscroll.QUEST_TITLE);
+			if (title == null || title.getText() == null)
+			{
+				return;
+			}
+			String text = title.getText().replaceAll("<[^>]*>", "").trim();
+			String prefix = "You have completed ";
+			if (!text.startsWith(prefix))
+			{
+				// Speedruns and oddities use their own scrolls; a completion
+				// this could not read is better silent than misquoted.
+				log.debug("Quest scroll title in an unexpected shape: {}", text);
+				return;
+			}
+			String quest = text.substring(prefix.length())
+				.replaceAll("[.!]+$", "").trim();
+			if (quest.isEmpty())
+			{
+				return;
+			}
+			speechEngine.getContext().tally("quests");
+			speechEngine.dispatch(TriggerEvent.questComplete(quest));
+		});
+	}
+
+	/**
+	 * Whether the Grand Exchange offer replay at login has passed. Logging in
+	 * fires one offer-changed per slot for offers that were already sitting
+	 * there; reacting to those would report last week's flips as news. Armed
+	 * by the first game tick, cleared whenever the game state churns.
+	 */
+	private boolean geOffersSettled;
+
+	@Subscribe
+	public void onGrandExchangeOfferChanged(net.runelite.api.events.GrandExchangeOfferChanged event)
+	{
+		if (!geOffersSettled)
+		{
+			return;
+		}
+		net.runelite.api.GrandExchangeOffer offer = event.getOffer();
+		if (offer == null)
+		{
+			return;
+		}
+		boolean bought = offer.getState() == net.runelite.api.GrandExchangeOfferState.BOUGHT;
+		if (!bought && offer.getState() != net.runelite.api.GrandExchangeOfferState.SOLD)
+		{
+			return;
+		}
+		// The clerk receives the telegram wherever you are - that is the joke.
+		String item = itemManager.getItemComposition(offer.getItemId()).getName();
+		speechEngine.dispatch(TriggerEvent.geOffer(bought, item, offer.getSpent()));
+	}
+
+	/**
+	 * Ticks left of ignoring channel joins. Joining a channel replays a join
+	 * for every member already in it - a roster, not an arrival - so the
+	 * window after the channel itself changes is swallowed, the same
+	 * settle-delay trick the NPC spawn flood uses.
+	 */
+	private int channelSettleTicks;
+
+	@Subscribe
+	public void onFriendsChatChanged(net.runelite.api.events.FriendsChatChanged event)
+	{
+		channelSettleTicks = 5;
+	}
+
+	@Subscribe
+	public void onClanChannelChanged(net.runelite.api.events.ClanChannelChanged event)
+	{
+		channelSettleTicks = 5;
+	}
+
+	@Subscribe
+	public void onFriendsChatMemberJoined(net.runelite.api.events.FriendsChatMemberJoined event)
+	{
+		dispatchChannel(TriggerEvent.Type.CHANNEL_JOIN, event.getMember().getName());
+	}
+
+	@Subscribe
+	public void onFriendsChatMemberLeft(net.runelite.api.events.FriendsChatMemberLeft event)
+	{
+		dispatchChannel(TriggerEvent.Type.CHANNEL_LEAVE, event.getMember().getName());
+	}
+
+	@Subscribe
+	public void onClanMemberJoined(net.runelite.api.events.ClanMemberJoined event)
+	{
+		dispatchChannel(TriggerEvent.Type.CHANNEL_JOIN, event.getClanMember().getName());
+	}
+
+	@Subscribe
+	public void onClanMemberLeft(net.runelite.api.events.ClanMemberLeft event)
+	{
+		dispatchChannel(TriggerEvent.Type.CHANNEL_LEAVE, event.getClanMember().getName());
+	}
+
+	private void dispatchChannel(TriggerEvent.Type type, String who)
+	{
+		if (channelSettleTicks > 0 || who == null)
+		{
+			return;
+		}
+		// Display names arrive padded with non-breaking spaces.
+		speechEngine.dispatch(TriggerEvent.channel(type, who.replace(' ', ' ').trim()));
+	}
+
+	/**
+	 * NPC overheads never reach the chatbox, so no chat rule can see them -
+	 * this is the only road to a scribe taking dictation from a town crier.
+	 * Guarded like the spawn flood: busy scenes shout constantly, and the
+	 * pass over every rule is only paid when a rule actually listens.
+	 */
+	@Subscribe
+	public void onOverheadTextChanged(net.runelite.api.events.OverheadTextChanged event)
+	{
+		if (!(event.getActor() instanceof NPC)
+			|| !ruleLoader.listensFor(TriggerEvent.Type.NPC_SHOUT))
+		{
+			return;
+		}
+		NPC npc = (NPC) event.getActor();
+		if (npc.getName() == null || event.getOverheadText() == null)
+		{
+			return;
+		}
+		speechEngine.dispatch(TriggerEvent.npcShout(npc.getName(), event.getOverheadText()));
 	}
 
 	/** The client's brightness setting (1 Dark .. 4 V.Bright, 2 = Normal). */

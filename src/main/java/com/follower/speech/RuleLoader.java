@@ -225,6 +225,8 @@ public class RuleLoader
 		EVENT_CONDITIONS.put(TriggerEvent.Type.NPC_SPAWN, new String[]{"npcSpawn"});
 		EVENT_CONDITIONS.put(TriggerEvent.Type.NPC_DESPAWN, new String[]{"npcDespawn"});
 		EVENT_CONDITIONS.put(TriggerEvent.Type.VARBIT, new String[]{"varbitChanged"});
+		// Busy scenes fire NPC overheads constantly; same economics as spawns.
+		EVENT_CONDITIONS.put(TriggerEvent.Type.NPC_SHOUT, new String[]{"npcShout"});
 	}
 
 	private final Set<TriggerEvent.Type> listened = EnumSet.noneOf(TriggerEvent.Type.class);

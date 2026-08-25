@@ -962,6 +962,18 @@ public interface FollowerConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "lastRevision",
+		name = "Last game revision",
+		description = "The game build the last session ran on, so the follower"
+			+ " can notice a weekly update; managed by the plugin",
+		hidden = true
+	)
+	default int lastRevision()
+	{
+		return 0;
+	}
+
+	@ConfigItem(
 		keyName = "counters",
 		name = "Counters",
 		description = "What the follower has counted and the records it holds,"

@@ -67,7 +67,10 @@ public class RuleSetIntegrityTest
 		"heeded", "ignored", "advising",
 		"daysknown", "anniversary", "outgrew", "nicknamed",
 		"challenging", "challengemet", "challengefailed",
-		"unattended", "underfoot"));
+		"unattended", "underfoot",
+		"dateis", "worldhop", "gameupdated", "notesedited",
+		"musicunlock", "collectionadd", "questcomplete", "geoffer",
+		"channeljoined", "channelleft", "npcshout"));
 
 	private static JsonObject bundled(String resource) throws IOException
 	{
@@ -612,6 +615,14 @@ public class RuleSetIntegrityTest
 		byType.put("personalbest", new HashSet<>(Arrays.asList("record", "value", "previous")));
 		byType.put("wantfulfilled", new HashSet<>(Arrays.asList("want")));
 		byType.put("wantexpired", new HashSet<>(Arrays.asList("want")));
+		byType.put("worldhop", new HashSet<>(Arrays.asList("world")));
+		byType.put("musicunlock", new HashSet<>(Arrays.asList("track")));
+		byType.put("collectionadd", new HashSet<>(Arrays.asList("item")));
+		byType.put("questcomplete", new HashSet<>(Arrays.asList("quest")));
+		byType.put("geoffer", new HashSet<>(Arrays.asList("item", "value")));
+		byType.put("channeljoined", new HashSet<>(Arrays.asList("name")));
+		byType.put("channelleft", new HashSet<>(Arrays.asList("name")));
+		byType.put("npcshout", new HashSet<>(Arrays.asList("npc", "message")));
 
 		// These two come off the state snapshot rather than the event, so they
 		// are readable from any trigger - but they are EMPTY unless there is

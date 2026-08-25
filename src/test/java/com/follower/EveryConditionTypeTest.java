@@ -432,6 +432,77 @@ public class EveryConditionTypeTest
 	}
 
 	@Test
+	public void theScribeNoticesTheWiderWorld() throws IOException
+	{
+		note("worldHop", "gameUpdated", "notesEdited", "musicUnlock",
+			"collectionAdd", "questComplete", "geOffer", "channelJoined",
+			"channelLeft", "npcShout", "dateIs");
+
+		fires("{\"type\": \"worldHop\"}", TriggerEvent.worldHop(302));
+		fires("{\"type\": \"gameUpdated\"}",
+			TriggerEvent.simple(TriggerEvent.Type.GAME_UPDATE));
+		fires("{\"type\": \"notesEdited\"}",
+			TriggerEvent.simple(TriggerEvent.Type.NOTES_EDITED));
+		fires("{\"type\": \"musicUnlock\"}", TriggerEvent.musicUnlock("Sea Shanty 2"));
+		fires("{\"type\": \"collectionAdd\"}",
+			TriggerEvent.collectionAdd("Bandos chestplate"));
+		fires("{\"type\": \"questComplete\"}",
+			TriggerEvent.questComplete("The Restless Ghost"));
+
+		fires("{\"type\": \"geOffer\"}", TriggerEvent.geOffer(true, "Yew logs", 40000));
+		fires("{\"type\": \"geOffer\", \"is\": \"sold\"}",
+			TriggerEvent.geOffer(false, "Yew logs", 40000));
+		Harness wrongWay = harnessFor("{\"type\": \"geOffer\", \"is\": \"bought\"}");
+		wrongWay.gameTicks(1);
+		wrongWay.dispatch(TriggerEvent.geOffer(false, "Yew logs", 40000));
+		assertQuiet(wrongWay, "a sale is not a purchase");
+
+		fires("{\"type\": \"channelJoined\"}",
+			TriggerEvent.channel(TriggerEvent.Type.CHANNEL_JOIN, "Bob"));
+		fires("{\"type\": \"channelLeft\"}",
+			TriggerEvent.channel(TriggerEvent.Type.CHANNEL_LEAVE, "Bob"));
+
+		fires("{\"type\": \"npcShout\", \"names\": [\"Town crier\"],"
+			+ " \"contains\": \"hear ye\"}",
+			TriggerEvent.npcShout("Town crier", "Hear ye! Hear ye!"));
+		Harness wrongCrier = harnessFor("{\"type\": \"npcShout\", \"names\": [\"Town crier\"]}");
+		wrongCrier.gameTicks(1);
+		wrongCrier.dispatch(TriggerEvent.npcShout("Goblin", "Hear ye!"));
+		assertQuiet(wrongCrier, "the wrong shouter");
+		Harness wrongWords = harnessFor("{\"type\": \"npcShout\", \"contains\": \"hear ye\"}");
+		wrongWords.gameTicks(1);
+		wrongWords.dispatch(TriggerEvent.npcShout("Town crier", "Fresh fish!"));
+		assertQuiet(wrongWords, "the wrong words");
+
+		// The date comes off the player's own calendar, like the hour: the
+		// test can only ask about the day it actually is.
+		java.time.LocalDate today = java.time.LocalDate.now();
+		int m = today.getMonthValue();
+		int d = today.getDayOfMonth();
+		Harness todayIs = harnessFor(
+			"{\"type\": \"dateIs\", \"month\": " + m + ", \"day\": " + d + "}");
+		todayIs.gameTicks(2);
+		assertFired(todayIs, "dateIs on today's own date");
+
+		int otherMonth = (m + 5) % 12 + 1;
+		Harness otherDay = harnessFor(
+			"{\"type\": \"dateIs\", \"month\": " + otherMonth + ", \"day\": " + d + "}");
+		otherDay.gameTicks(2);
+		assertQuiet(otherDay, "a month half a year away is not today");
+
+		// The wrap past new year, same shape as timeOfDay's wrap past
+		// midnight: a range from last month to next month always holds today,
+		// whichever side of January it straddles.
+		int prevMonth = m == 1 ? 12 : m - 1;
+		int nextMonth = m == 12 ? 1 : m + 1;
+		Harness range = harnessFor("{\"type\": \"dateIs\", \"month\": " + prevMonth
+			+ ", \"day\": " + d + ", \"untilMonth\": " + nextMonth
+			+ ", \"untilDay\": " + d + "}");
+		range.gameTicks(2);
+		assertFired(range, "a range around today contains it");
+	}
+
+	@Test
 	public void thresholdConditionsRejectTheWrongSideOfTheLine() throws IOException
 	{
 		quiet("{\"type\": \"damageTaken\", \"minimum\": 30}", TriggerEvent.damageTaken(5));
@@ -1479,6 +1550,7 @@ public class EveryConditionTypeTest
 		theNameYouEarnAndTheGearYouOutgrew();
 		theChallengeIsMetOrIsNot();
 		underfootAndGoneFromTheKeyboard();
+		theScribeNoticesTheWiderWorld();
 
 		List<String> missing = new ArrayList<>(new TreeSet<>(RuleSetIntegrityTest.KNOWN_TYPES));
 		missing.removeAll(exercised);
