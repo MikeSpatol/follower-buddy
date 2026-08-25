@@ -12208,6 +12208,32 @@
         "Sea Shanty 2. The sailors request it nightly. The sailors are the problem.",
         "This tune again. I've transcribed it. It doesn't help."
       ]
+    },
+    {
+      "id": "examine-echo",
+      "note": "The player examined something and the follower turned to look at it too. The head-turn is the usual whole reaction; this line is the rare garnish, hence the heavy chance gate.",
+      "group": "reactions",
+      "priority": 20,
+      "cooldownMs": 480000,
+      "delayTicks": 2,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "examinedThing"
+          },
+          {
+            "type": "chance",
+            "percent": 12
+          }
+        ]
+      },
+      "say": [
+        "One {target}. Condition: fair.",
+        "The {target}. Noted, reluctantly.",
+        "There's a full page on the {target} somewhere. Not my best work.",
+        "{target}, examined. We're being thorough today."
+      ]
     }
   ]
 }

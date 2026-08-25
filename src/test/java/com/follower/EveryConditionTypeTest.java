@@ -436,7 +436,16 @@ public class EveryConditionTypeTest
 	{
 		note("worldHop", "gameUpdated", "notesEdited", "musicUnlock",
 			"collectionAdd", "questComplete", "geOffer", "channelJoined",
-			"channelLeft", "npcShout", "dateIs", "musicTrack");
+			"channelLeft", "npcShout", "dateIs", "musicTrack", "examinedThing");
+
+		fires("{\"type\": \"examinedThing\"}", TriggerEvent.examinedThing("Scarecrow"));
+		fires("{\"type\": \"examinedThing\", \"names\": [\"Scare*\"]}",
+			TriggerEvent.examinedThing("Scarecrow"));
+		Harness wrongThing = harnessFor(
+			"{\"type\": \"examinedThing\", \"names\": [\"Scare*\"]}");
+		wrongThing.gameTicks(1);
+		wrongThing.dispatch(TriggerEvent.examinedThing("Anvil"));
+		assertQuiet(wrongThing, "the wrong curiosity");
 
 		fires("{\"type\": \"musicTrack\"}", TriggerEvent.trackChange("Harmony"));
 		fires("{\"type\": \"musicTrack\", \"names\": [\"Sea Shanty*\"]}",

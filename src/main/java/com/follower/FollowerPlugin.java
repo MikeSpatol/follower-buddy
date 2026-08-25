@@ -5819,6 +5819,7 @@ public class FollowerPlugin extends Plugin
 	public void onMenuOptionClicked(MenuOptionClicked event)
 	{
 		noteIntentFrom(event.getMenuOption());
+		noteExamine(event);
 
 		if (event.getMenuAction() != net.runelite.api.MenuAction.WALK
 			|| !follower.isSpawned())
@@ -5834,6 +5835,71 @@ public class FollowerPlugin extends Plugin
 			&& standing.equals(clicked.getWorldLocation()))
 		{
 			speechEngine.getContext().noteUnderfoot();
+		}
+	}
+
+	/**
+	 * Co-attention: when the player Examines something, the follower turns to
+	 * look at the same thing - a field scribe's whole job is looking at what
+	 * its companion looks at. The head-turn IS the reaction; a spoken note is
+	 * the rare garnish, left to the rules.
+	 */
+	private void noteExamine(MenuOptionClicked event)
+	{
+		if (!follower.isSpawned())
+		{
+			return;
+		}
+		String target = null;
+		WorldPoint at = null;
+		net.runelite.api.WorldView view = client.getTopLevelWorldView();
+		switch (event.getMenuAction())
+		{
+			case EXAMINE_NPC:
+			{
+				NPC npc = event.getMenuEntry().getNpc();
+				if (npc != null)
+				{
+					target = npc.getName();
+					at = npc.getWorldLocation();
+				}
+				break;
+			}
+			case EXAMINE_OBJECT:
+			{
+				net.runelite.api.ObjectComposition def =
+					client.getObjectDefinition(event.getId());
+				target = def == null ? null : def.getName();
+				if (view != null)
+				{
+					at = WorldPoint.fromScene(view,
+						event.getParam0(), event.getParam1(), view.getPlane());
+				}
+				break;
+			}
+			case EXAMINE_ITEM_GROUND:
+			{
+				target = itemManager.getItemComposition(event.getId()).getName();
+				if (view != null)
+				{
+					at = WorldPoint.fromScene(view,
+						event.getParam0(), event.getParam1(), view.getPlane());
+				}
+				break;
+			}
+			default:
+				return;
+		}
+		if (at != null)
+		{
+			follower.glanceAt(at, 2400);
+		}
+		// Multiloc objects answer "null" until their impostor resolves; a
+		// glance without a line is fine, a line naming "null" is not.
+		if (target != null && !target.isEmpty() && !"null".equals(target))
+		{
+			speechEngine.dispatch(TriggerEvent.examinedThing(
+				target.replaceAll("<[^>]*>", "")));
 		}
 	}
 

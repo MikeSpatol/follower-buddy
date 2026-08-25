@@ -398,6 +398,7 @@ wins.
 | `geOffer` | `is` `bought` or `sold` â€” a Grand Exchange offer finished. `{item}`, `{value}` |
 | `channelJoined` / `channelLeft` | â€” somebody arrived in or left your friends chat or clan channel. `{name}` |
 | `npcShout` | `names` (wildcards ok) and/or `contains` â€” a named NPC said something overhead. `{npc}`, `{message}` |
+| `examinedThing` | optional `names` (wildcards ok) â€” the player examined something; the follower also turns to look. `{target}` |
 | `login`, `always` | â€” |
 | `chance` | `percent`, rolled each evaluation |
 

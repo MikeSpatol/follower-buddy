@@ -72,6 +72,7 @@ import net.runelite.api.NPC;
  *   <tr><td>geOffer</td><td>{@code is} bought|sold; {@code {item}} and {@code {value}}</td></tr>
  *   <tr><td>channelJoined / channelLeft</td><td>no fields; {@code {name}} says who</td></tr>
  *   <tr><td>npcShout</td><td>{@code names} (wildcards ok) and/or {@code contains}; {@code {npc}} and {@code {message}}</td></tr>
+ *   <tr><td>examinedThing</td><td>optional {@code names} (wildcards ok) — the player examined something; {@code {target}}</td></tr>
  * </table>
  *
  * <p>{@code npcNearby} also takes {@code minimum}/{@code maximum} combat level,
@@ -742,6 +743,13 @@ public class Condition
 
 			case "examined":
 				return event.getType() == TriggerEvent.Type.EXAMINED;
+
+			// The player examined something - the other direction. Names
+			// narrow it to particular things, so the scarecrow can have its
+			// own line without everything having one.
+			case "examinedthing":
+				return event.getType() == TriggerEvent.Type.EXAMINED_THING
+					&& (names == null || matchesAnyName(event.getName()));
 
 			case "tally":
 			{

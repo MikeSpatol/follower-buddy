@@ -1,6 +1,6 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 443 rules, 2117 spoken lines, 2 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 444 rules, 2121 spoken lines, 2 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
@@ -8,7 +8,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (32 rules, 149 lines)
 - [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (35 rules, 196 lines)
-- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (31 rules, 212 lines)
+- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (32 rules, 216 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 114 lines)
 - [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 72 lines)
 - [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (20 rules, 106 lines)
@@ -1444,6 +1444,18 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - I wrote down what {npc} said. Most of it.
 - Noted, {npc}. Volume down next time.
 - {npc} wants that on the record. It very nearly is.
+
+### `examine-echo`
+
+> The player examined something and the follower turned to look at it too. The head-turn is the usual whole reaction; this line is the rare garnish, hence the heavy chance gate.
+
+- **when:** examinedthing AND a 12% roll
+- **pacing:** priority 20, cooldown 8m, delay 2 ticks
+
+- One {target}. Condition: fair.
+- The {target}. Noted, reluctantly.
+- There's a full page on the {target} somewhere. Not my best work.
+- {target}, examined. We're being thorough today.
 
 ## combat
 

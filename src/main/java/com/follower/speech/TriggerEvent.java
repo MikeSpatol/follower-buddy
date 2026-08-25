@@ -60,6 +60,20 @@ public final class TriggerEvent
 		CHANNEL_LEAVE,
 		NPC_SHOUT,
 		TRACK_CHANGE,
+		EXAMINED_THING,
+	}
+
+	/**
+	 * The PLAYER examined something - the reverse direction of
+	 * {@link Type#EXAMINED}, which is somebody examining the follower.
+	 * {target} names what was looked at.
+	 */
+	public static TriggerEvent examinedThing(String target)
+	{
+		TriggerEvent event = new TriggerEvent(Type.EXAMINED_THING);
+		event.name = target == null ? "" : target;
+		event.placeholders.put("target", event.name);
+		return event;
 	}
 
 	/**

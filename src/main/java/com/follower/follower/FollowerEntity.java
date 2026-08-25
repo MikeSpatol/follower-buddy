@@ -1526,7 +1526,7 @@ public class FollowerEntity
 		{
 			faceStayAnchor();
 		}
-		else if (!moving)
+		else if (!moving && !glance())
 		{
 			watchTheWork(local);
 		}
@@ -3457,5 +3457,47 @@ public class FollowerEntity
 			return;
 		}
 		dstYaw = (int) Math.round(Math.atan2(dx, dy) * 325.949) & 0x7ff;
+	}
+
+	/** Where and until when the follower's gaze is borrowed by a glance. */
+	private WorldPoint glanceTile;
+	private long glanceUntilMs;
+
+	/**
+	 * Turns the gaze onto a tile for a moment - co-attention, the cheapest
+	 * sign of presence there is. Gaze only: the feet stay with whatever owns
+	 * them, and a real facing (a pose's anchor, a goal, the thrall's target)
+	 * outranks it, which is why it only applies in the plain idle case.
+	 */
+	public void glanceAt(WorldPoint at, int ms)
+	{
+		glanceTile = at;
+		glanceUntilMs = System.currentTimeMillis() + ms;
+	}
+
+	/** Applies a live glance's facing; false once it lapses or cannot aim. */
+	private boolean glance()
+	{
+		if (glanceTile == null)
+		{
+			return false;
+		}
+		if (System.currentTimeMillis() >= glanceUntilMs)
+		{
+			glanceTile = null;
+			return false;
+		}
+		if (tile == null)
+		{
+			return false;
+		}
+		int dx = tile.getX() - glanceTile.getX();
+		int dy = tile.getY() - glanceTile.getY();
+		if (dx == 0 && dy == 0)
+		{
+			return false;
+		}
+		dstYaw = (int) Math.round(Math.atan2(dx, dy) * 325.949) & 0x7ff;
+		return true;
 	}
 }
