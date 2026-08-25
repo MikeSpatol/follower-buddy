@@ -293,6 +293,12 @@ public class FollowerPlugin extends Plugin
 	/** Ticks until the one-time naming prompt opens; 0 = nothing pending. */
 	private int namePromptDelayTicks;
 
+	/** Times the naming prompt closed unanswered this session; one re-offer. */
+	private int nameOfferRetries;
+
+	/** Whether a wish was open last tick, to spot the moment one opens. */
+	private boolean wasWishing;
+
 	/** Whether the bank was open last tick, for the close-is-a-boundary watch. */
 	private boolean wasBankOpen;
 
@@ -3917,9 +3923,15 @@ public class FollowerPlugin extends Plugin
 
 		if (minutes >= 1)
 		{
-			parts.add(minutes < 60
+			// A scribe does not round 95 minutes down to "1 hour" - the
+			// half hour happened and it was there for it.
+			int hours = minutes / 60;
+			int rest = minutes % 60;
+			parts.add(hours == 0
 				? minutes + (minutes == 1 ? " minute" : " minutes")
-				: (minutes / 60) + (minutes / 60 == 1 ? " hour" : " hours"));
+				: hours + (hours == 1 ? " hour" : " hours")
+					+ (rest == 0 ? "" : " and " + rest
+						+ (rest == 1 ? " minute" : " minutes")));
 		}
 
 		if (kills > 0)
@@ -4101,12 +4113,16 @@ public class FollowerPlugin extends Plugin
 		String howLabel = lowish ? "You all right?" : "How have you been?";
 		String howTarget = lowish ? "allright-q" : "how-q";
 
+		// While a wish is open the five-slot box retires who-are-you, not the
+		// small talk: who-a stays reachable from the returning hub later, but
+		// the jokes and advice are the perishable first-hour charm, and a
+		// 45-minute wish window used to wall them off from the opening screen.
 		script.put("start", wishing
 			? says("Yes?").choices(
-				"Who are you, exactly?", "who-q",
 				"What is it you actually do?", "do-q",
 				howLabel, howTarget,
 				giftLabel, "gift-q",
+				"Let's just talk.", "chat-q",
 				"Never mind.", "bye-q")
 			: says("Yes?").choices(
 				"Who are you, exactly?", "who-q",
@@ -4195,43 +4211,50 @@ public class FollowerPlugin extends Plugin
 		script.put("bye", says("Right you are. One step behind."));
 
 		// ------------------------------------------------ who are you
-		script.put("who-q", you("Who are you, exactly?").then("who-a"));
-		script.put("who-a", says(
-			"Now there's a question.",
-			"A scribe. Somebody has to write all this down.")
-			.then("who-b"));
-		script.put("who-b", says(
-			"You dress me, I walk behind you, and I keep quiet about your bank.")
-			.choices(
-				"Writing what, exactly?", "who-me-q",
-				"Do you have a name?", "who-name-q",
-				"Don't you get tired of following me?", "who-tired-q",
-				"Back to business.", "back-q"));
+		// Retired entirely while a wish is open: neither hub offers it then
+		// (the five-slot cap spends its seat on the gift), and a node nothing
+		// leads to is dialogue nobody will ever read - the reachability test
+		// says exactly that.
+		if (!wishing)
+		{
+			script.put("who-q", you("Who are you, exactly?").then("who-a"));
+			script.put("who-a", says(
+				"Now there's a question.",
+				"A scribe. Somebody has to write all this down.")
+				.then("who-b"));
+			script.put("who-b", says(
+				"You dress me, I walk behind you, and I keep quiet about your bank.")
+				.choices(
+					"Writing what, exactly?", "who-me-q",
+					"Do you have a name?", "who-name-q",
+					"Don't you get tired of following me?", "who-tired-q",
+					"Back to business.", "back-q"));
 
-		script.put("who-menu", says()
-			.choices(
-				"Writing what, exactly?", "who-me-q",
-				"Do you have a name?", "who-name-q",
-				"Don't you get tired of following me?", "who-tired-q",
-				"Back to business.", "back-q"));
+			script.put("who-menu", says()
+				.choices(
+					"Writing what, exactly?", "who-me-q",
+					"Do you have a name?", "who-name-q",
+					"Don't you get tired of following me?", "who-tired-q",
+					"Back to business.", "back-q"));
 
-		script.put("who-me-q", you("Writing what, exactly?").then("who-me-a"));
-		script.put("who-me-a", says(
-			"Everything. Roads, rulers, prices, what lives under things.",
-			"It's a long project. Nobody's asked to read it.")
-			.then("who-menu"));
+			script.put("who-me-q", you("Writing what, exactly?").then("who-me-a"));
+			script.put("who-me-a", says(
+				"Everything. Roads, rulers, prices, what lives under things.",
+				"It's a long project. Nobody's asked to read it.")
+				.then("who-menu"));
 
-		script.put("who-name-q", you("Do you have a name?").then("who-name-a"));
-		script.put("who-name-a", says(
-			"You gave me one. I'd have chosen differently, but I wasn't asked.",
-			"It's grown on me.")
-			.then("who-menu"));
+			script.put("who-name-q", you("Do you have a name?").then("who-name-a"));
+			script.put("who-name-a", says(
+				"You gave me one. I'd have chosen differently, but I wasn't asked.",
+				"It's grown on me.")
+				.then("who-menu"));
 
-		script.put("who-tired-q", you("Don't you get tired of following me?").then("who-tired-a"));
-		script.put("who-tired-a", says(
-			"Tired? I once watched you stand at a furnace for three hours.",
-			"Nothing has tired me since.")
-			.then("who-menu"));
+			script.put("who-tired-q", you("Don't you get tired of following me?").then("who-tired-a"));
+			script.put("who-tired-a", says(
+				"Tired? I once watched you stand at a furnace for three hours.",
+				"Nothing has tired me since.")
+				.then("who-menu"));
+		}
 
 		// ------------------------------------------------ what do you do
 		script.put("do-q", you("What is it you actually do?").then("do-a"));
@@ -4484,11 +4507,17 @@ public class FollowerPlugin extends Plugin
 		}
 		else
 		{
-			addFollowerMenuEntry("Stay", follower::stayHere);
+			addFollowerMenuEntry("Stay", () ->
+			{
+				follower.stayHere();
+				// Stay is the moment positional control has been asked for, so
+				// the one place Send is taught is the first of these clicks.
+				maybeSendSendHint();
+			});
 		}
 		addFollowerMenuEntry("Dance", () -> follower.playAnimation(866));
 		addFollowerMenuEntry("Wave", () -> follower.playAnimation(863));
-		addFollowerMenuEntry("Face-me", () ->
+		addFollowerMenuEntry("Step-in-front", () ->
 		{
 			Player local = client.getLocalPlayer();
 			if (local == null)
@@ -4501,7 +4530,20 @@ public class FollowerPlugin extends Plugin
 					com.follower.speech.SpeechOutput.OVERHEAD, null, -1, null);
 			}
 		});
-		addFollowerMenuEntry("Talk-to", this::startTalking);
+		addFollowerMenuEntry(talkOption(), this::startTalking);
+	}
+
+	/**
+	 * "Talk-to" sharpens into "Answer" while a question is waiting, the way a
+	 * real NPC's default op turns quest-specific. The overhead line that asked
+	 * scrolls away in seconds; the hover hint is the durable sign that the
+	 * follower is waiting on you, and it explains why the dialog that opens
+	 * is not the everyday one.
+	 */
+	private String talkOption()
+	{
+		return speechEngine.getContext().getAskedTree().isEmpty()
+			? "Talk-to" : "Answer";
 	}
 
 	/**
@@ -4584,14 +4626,14 @@ public class FollowerPlugin extends Plugin
 			return;
 		}
 
-		addFollowerMenuEntry("Talk-to", this::startTalking);
+		addFollowerMenuEntry(talkOption(), this::startTalking);
 
 		// Shift-hover: the same little action tooltip a real NPC gets, drawn
 		// by RuneLite's own tooltip component so the styling is identical.
 		if (client.isKeyPressed(net.runelite.api.KeyCode.KC_SHIFT))
 		{
 			tooltipManager.add(new net.runelite.client.ui.overlay.tooltip.Tooltip(
-				"Talk-to <col=ffff00>" + config.followerName() + "</col>"));
+				talkOption() + " <col=ffff00>" + config.followerName() + "</col>"));
 		}
 	}
 
@@ -4811,12 +4853,39 @@ public class FollowerPlugin extends Plugin
 		}
 
 		if (namePromptDelayTicks > 0 && --namePromptDelayTicks == 0
-			&& !config.namePrompted() && follower.isSpawned())
+			&& follower.isSpawned())
 		{
-			offerName();
+			// A chatbox input dies to almost any other interface, and ten
+			// seconds after first spawn is exactly when a new user is still
+			// clicking around. The one naming moment is not spent while the
+			// bank or another input is up - the countdown re-arms instead.
+			if (client.getWidget(net.runelite.api.gameval.InterfaceID.BANKMAIN, 0) != null
+				|| chatboxPanelManager.getCurrentInput() != null)
+			{
+				namePromptDelayTicks = NAME_PROMPT_DELAY_TICKS;
+			}
+			else
+			{
+				offerName();
+			}
 		}
 
 		drainSpeechQueue();
+
+		// The first wish that ever opens gets one out-of-character line naming
+		// the handover mechanism - the wish lines themselves stay in voice and
+		// never explain the interface. The wish latches when its line is
+		// actually displayed (inside the drain above), so the rising edge
+		// lands here the same tick.
+		boolean wishingNow = !speechEngine.getContext().getWishLabel().isEmpty();
+		if (wishingNow && !wasWishing && !config.wishHintShown())
+		{
+			configManager.setConfiguration(FollowerConfig.GROUP, "wishHintShown", true);
+			sendStatus("When you have the " + speechEngine.getContext().getWishLabel()
+				+ ", right-click " + config.followerName()
+				+ " and Talk-to to hand it over.");
+		}
+		wasWishing = wishingNow;
 		tickScan();
 		expireKillClaims();
 		updateWander();
@@ -7436,18 +7505,15 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void offerName()
 	{
-		// Marked at the offer rather than the answer, so closing the prompt
-		// half-way does not re-ask on every later spawn - the side panel
-		// message covers the road back.
-		configManager.setConfiguration(FollowerConfig.GROUP, "namePrompted", true);
-
 		final boolean[] named = {false};
+		final boolean[] done = {false};
 		chatboxPanelManager.openTextInput("Your new follower is waiting. What will you call them?")
 			.value("")
 			.charValidator(c -> Character.isLetterOrDigit(c)
 				|| c == ' ' || c == '\'' || c == '-')
 			.onDone((String answer) ->
 			{
+				done[0] = true;
 				String name = cleanFollowerName(answer);
 				if (!name.isEmpty())
 				{
@@ -7457,15 +7523,36 @@ public class FollowerPlugin extends Plugin
 					clientThread.invoke(() ->
 						speechEngine.say(name + ". I'll answer to that.",
 							com.follower.speech.SpeechOutput.OVERHEAD));
+					// The 20-char cap in cleanFollowerName is silent; a pasted
+					// longer name should hear where the rest went.
+					if (name.length() == 20 && answer != null
+						&& answer.trim().length() > 20)
+					{
+						sendStatus("Twenty characters is all a name can carry,"
+							+ " so '" + name + "' it is.");
+					}
 					sendStatus("The name and the outfit both live in the"
 						+ " Follower Buddy side panel, any time you want them.");
 				}
 			})
-			// Runs on Esc and after a successful onDone alike, so it only
-			// speaks for the skip.
+			// Every way the input can end lands here (Enter runs onDone first,
+			// then this). Marked here rather than at the offer, so a prompt
+			// the client never got to close does not count as offered.
 			.onClose(() ->
 			{
-				if (!named[0])
+				configManager.setConfiguration(FollowerConfig.GROUP,
+					"namePrompted", true);
+				if (!done[0] && nameOfferRetries++ == 0)
+				{
+					// Closed without Enter: Esc, or destroyed by another
+					// interface opening. The client routes both through the
+					// same close (verified against the client's chatbox
+					// manager), so the callbacks cannot tell an ambushed
+					// prompt from a declined one - one quiet re-offer covers
+					// the ambush without nagging the decliner.
+					namePromptDelayTicks = NAME_PROMPT_DELAY_TICKS;
+				}
+				else if (!named[0])
 				{
 					sendStatus("No name for now, then. You can set one any time"
 						+ " in the Follower Buddy side panel.");
@@ -7503,15 +7590,37 @@ public class FollowerPlugin extends Plugin
 		return name;
 	}
 
-	/** One chat line, once ever: nothing else in game names the command. */
+	/**
+	 * Two chat lines, once ever, at the very first spawn: that the follower is
+	 * client-side (the one fact a Hub user most needs and nothing in game ever
+	 * states), and that ::follower exists (nothing else in game names it).
+	 */
 	private void maybeSendCommandHint()
 	{
-		if (config.commandHintShown())
+		if (config.firstSpawnNoticeShown())
 		{
 			return;
 		}
-		configManager.setConfiguration(FollowerConfig.GROUP, "commandHintShown", true);
+		configManager.setConfiguration(FollowerConfig.GROUP, "firstSpawnNoticeShown", true);
+		sendStatus("Only you can see " + config.followerName()
+			+ ". Everything it does is client-side - nothing is sent to the game.");
 		sendStatus("Type ::follower in chat for commands.");
+	}
+
+	/**
+	 * Send is unreachable by exploration (it needs Shift held before the menu
+	 * opens), so it is taught once, at the first Stay - the moment the user
+	 * has just demonstrated they want positional control.
+	 */
+	private void maybeSendSendHint()
+	{
+		if (config.sendHintShown())
+		{
+			return;
+		}
+		configManager.setConfiguration(FollowerConfig.GROUP, "sendHintShown", true);
+		sendStatus("You can also hold Shift and right-click any tile to Send "
+			+ config.followerName() + " there.");
 	}
 
 	private void sendStatus(String message)

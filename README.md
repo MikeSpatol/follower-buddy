@@ -11,8 +11,9 @@ it, it sends nothing to the game, and it never acts on your behalf.
 **A follower rendered as a player model.** It wears any gear you choose from
 the side panel - full equipment slots, body styles, hair and skin colours -
 and follows using the game's own pet mechanics, so it walks, runs and turns
-the way a real follower does. Right-click it for Talk-to, Stay, Follow, Face-me
-and a couple of emotes.
+the way a real follower does. Right-click it for Talk-to, Stay, Follow,
+Step-in-front and a couple of emotes, or hold Shift and right-click any tile
+to Send it there.
 
 **It talks.** Over 2,000 lines across 425 rules, chosen by what's happening:
 bosses sighted and fought, levels, deaths, drops, low HP and prayer, the

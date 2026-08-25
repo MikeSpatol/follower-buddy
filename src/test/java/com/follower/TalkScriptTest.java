@@ -313,7 +313,8 @@ public class TalkScriptTest
 		String[] moods = {"low", "down", "neutral", "good", "high"};
 		int[][] figures = {
 			{0, 0, 0, 0}, {1, 1, 1, 1}, {59, 0, 0, 0}, {60, 0, 0, 0},
-			{95, 12, 2, 1}, {480, 999, 9, 40}, {0, 3, 0, 0}, {0, 0, 0, 2},
+			{61, 0, 0, 0}, {95, 12, 2, 1}, {480, 999, 9, 40},
+			{0, 3, 0, 0}, {0, 0, 0, 2},
 		};
 
 		for (String mood : moods)
@@ -360,6 +361,16 @@ public class TalkScriptTest
 		}
 		assertTrue("day summaries that do not read:\n  "
 			+ String.join("\n  ", problems), problems.isEmpty());
+	}
+
+	@Test
+	public void anHourAndAHalfIsNotRoundedDownToAnHour()
+	{
+		// 95 minutes used to read "1 hour" - the diary of somebody who was
+		// not really keeping one.
+		String[] pages = FollowerPlugin.daySummary(95, 0, 0, 0, "neutral", null);
+		assertTrue("the extra minutes went missing: " + pages[0],
+			pages[0].contains("1 hour and 35 minutes"));
 	}
 
 	@Test

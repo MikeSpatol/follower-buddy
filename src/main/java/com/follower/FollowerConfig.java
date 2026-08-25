@@ -926,13 +926,37 @@ public interface FollowerConfig extends Config
 	}
 
 	@ConfigItem(
-		keyName = "commandHintShown",
-		name = "Command hint shown",
-		description = "Whether the one-time ::follower chat hint has been printed;"
+		keyName = "firstSpawnNoticeShown",
+		name = "First spawn notice shown",
+		description = "Whether the one-time client-side notice and ::follower hint"
+			+ " have been printed; managed by the plugin",
+		hidden = true
+	)
+	default boolean firstSpawnNoticeShown()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+		keyName = "sendHintShown",
+		name = "Send hint shown",
+		description = "Whether the one-time shift-right-click Send hint has been"
+			+ " printed; managed by the plugin",
+		hidden = true
+	)
+	default boolean sendHintShown()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+		keyName = "wishHintShown",
+		name = "Wish hint shown",
+		description = "Whether the one-time gift handover hint has been printed;"
 			+ " managed by the plugin",
 		hidden = true
 	)
-	default boolean commandHintShown()
+	default boolean wishHintShown()
 	{
 		return false;
 	}
