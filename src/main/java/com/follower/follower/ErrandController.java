@@ -128,6 +128,20 @@ public class ErrandController
 	}
 
 	/**
+	 * Every errand key the force command accepts, straight from the enum so
+	 * the chat command's validation can never drift from what exists.
+	 */
+	public static java.util.List<String> keys()
+	{
+		java.util.List<String> keys = new java.util.ArrayList<>();
+		for (Errand errand : Errand.values())
+		{
+			keys.add(errand.key);
+		}
+		return keys;
+	}
+
+	/**
 	 * What holds the prop. Implemented by the plugin, which owns the follower's
 	 * composed appearance; the errand only says when the scroll comes out and
 	 * when it goes away. Release must be idempotent - it is also called from

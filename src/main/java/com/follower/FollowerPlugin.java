@@ -2773,6 +2773,7 @@ public class FollowerPlugin extends Plugin
 				{
 					namePromptDelayTicks = NAME_PROMPT_DELAY_TICKS;
 				}
+				maybeSendCommandHint();
 			}
 		});
 	}
@@ -4727,6 +4728,7 @@ public class FollowerPlugin extends Plugin
 			{
 				namePromptDelayTicks = NAME_PROMPT_DELAY_TICKS;
 			}
+			maybeSendCommandHint();
 		}
 
 		updateTrail(local);
@@ -5589,6 +5591,10 @@ public class FollowerPlugin extends Plugin
 		"scan", "heights", "mood", "chatwatch", "fire", "want", "transcript",
 		"thieftargets", "sniffanims", "finditem", "prop", "propoffset"));
 
+	/** The errand keys ::follower errand accepts, read from the enum itself. */
+	private static final java.util.List<String> ERRAND_KEYS =
+		com.follower.follower.ErrandController.keys();
+
 	/**
 	 * Notices when you have clicked the tile the follower is standing on.
 	 *
@@ -5682,7 +5688,11 @@ public class FollowerPlugin extends Plugin
 		if (DEVELOPER_COMMANDS.contains(sub) && !config.developerMode())
 		{
 			sendStatus("'" + sub + "' is a developer command - turn on Developer commands"
-				+ " in the plugin settings to use it.");
+				+ " in the plugin settings to use it."
+				// The campfire errand shares the name; don't send somebody
+				// chasing it into developer mode by accident.
+				+ ("fire".equals(sub) ? " Looking for the campfire errand?"
+					+ " That's ::follower errand fire." : ""));
 			return;
 		}
 
@@ -5706,6 +5716,10 @@ public class FollowerPlugin extends Plugin
 				{
 					speechEngine.say(String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length)), null);
 				}
+				else
+				{
+					sendStatus("Usage: ::follower say <text>");
+				}
 				break;
 
 			case "here":
@@ -5715,6 +5729,11 @@ public class FollowerPlugin extends Plugin
 					if (local != null && appearanceService.getCurrent() != null)
 					{
 						follower.spawn(appearanceService.getCurrent(), local.getWorldLocation());
+						sendStatus("Here I am.");
+					}
+					else
+					{
+						sendStatus("No follower model to place - try ::follower rebuild.");
 					}
 				});
 				break;
@@ -5725,6 +5744,7 @@ public class FollowerPlugin extends Plugin
 					appearanceService.invalidate();
 					follower.despawn();
 					rebuildFollower();
+					sendStatus("Rebuilt from the current outfit.");
 				});
 				break;
 
@@ -6273,14 +6293,29 @@ public class FollowerPlugin extends Plugin
 					clientThread.invoke(() -> follower.playAnimations(ids));
 					sendStatus("Playing " + java.util.Arrays.toString(ids) + " on the follower.");
 				}
+				else
+				{
+					sendStatus("Usage: ::follower anim <id> [id ...]");
+				}
 				break;
 
 			case "errand":
 			{
 				if (errands != null)
 				{
-					errands.force(args.length > 1 ? args[1] : null);
-					sendStatus("Errand forced" + (args.length > 1 ? ": " + args[1] : ""));
+					// Validated here, because force() stores any string and the
+					// scheduler only ever matches real keys - a typo used to
+					// claim success and then nothing happened, forever.
+					String key = args.length > 1 ? args[1].toLowerCase(Locale.ROOT) : null;
+					if (key != null && !ERRAND_KEYS.contains(key))
+					{
+						sendStatus("No errand called '" + key + "'. Try: "
+							+ String.join(", ", ERRAND_KEYS));
+						break;
+					}
+					errands.force(key);
+					sendStatus("Will run the " + (key == null ? "next" : key)
+						+ " errand at the next quiet moment.");
 				}
 				break;
 			}
@@ -6586,6 +6621,15 @@ public class FollowerPlugin extends Plugin
 					}
 					joined.append(args[i]);
 				}
+				// loadOutfitProfile stays silent on a miss because the startup
+				// restore path also calls it; a typed name deserves an answer.
+				if (profileStore.get(joined.toString()) == null)
+				{
+					sendStatus("No outfit profile named '" + joined + "'. Saved: "
+						+ (profileStore.names().isEmpty()
+						? "(none)" : String.join(", ", profileStore.names())));
+					break;
+				}
 				loadOutfitProfile(joined.toString());
 				break;
 			}
@@ -6728,18 +6772,40 @@ public class FollowerPlugin extends Plugin
 			}
 
 			case "status":
-			case "where":
 				sendStatus("Models: " + modelRepository.getStatus()
 					+ " | Rules: " + ruleLoader.getStatus()
 					+ " | Follower " + (follower.isSpawned() ? "spawned" : "not spawned"));
-				// Handy when writing regionEnter / inArea rules.
 				sendStatus("Region " + speechEngine.getContext().getRegionId()
 					+ " at " + speechEngine.getContext().getLocation());
 				break;
 
+			case "where":
+				// Split from status: every place that advertises this command
+				// promises the region id, which used to arrive buried after a
+				// model report nobody asked for.
+				sendStatus("Region " + speechEngine.getContext().getRegionId()
+					+ " at " + speechEngine.getContext().getLocation()
+					+ " - use this id in the Locations editor.");
+				break;
+
 			default:
-				sendStatus("::follower say <text> | here | anim <id...> | errand | "
-					+ "outfit <name> | copy | reload | rebuild | fix | status | where");
+				if (!"help".equals(sub))
+				{
+					sendStatus("Unknown command '" + sub + "'.");
+				}
+				sendStatus("::follower commands:");
+				sendStatus("  say <text> - make the follower say it");
+				sendStatus("  here - place the follower at your feet");
+				sendStatus("  fix - re-attach it if it vanished");
+				sendStatus("  rebuild - rebuild its model from the outfit");
+				sendStatus("  copy - dress it in your gear (also a panel button)");
+				sendStatus("  outfit <name> - wear a saved profile (also in the panel)");
+				sendStatus("  anim <id...> - preview an animation on it");
+				sendStatus("  errand [" + String.join("|", ERRAND_KEYS) + "] - an errand now");
+				sendStatus("  reload - re-read the phrase files");
+				sendStatus("  status - models, rules and spawn state");
+				sendStatus("  where - your region id, for the Locations editor");
+				sendStatus("More in the Follower Buddy side panel.");
 				if (config.developerMode())
 				{
 					sendStatus("Developer: watch | stance <weaponId> [idle walk run attack] | "
@@ -6748,7 +6814,9 @@ public class FollowerPlugin extends Plugin
 						+ "wraplerp | wrapauto | wrapearly | pose <id> | animinfo | "
 						+ "animtrace | errandscan | cachecheck | stanceaudit | "
 						+ "mood [0-100] | chatwatch | sniffanims | finditem <name> | "
-						+ "prop <itemId> | propoffset <x y z> | fire <rule-id> | want");
+						+ "prop <itemId> | propoffset <x y z> | fire <rule-id> | want | "
+						+ "gfx <id> | spectate | shield | centre <x y z> | loot <value> | "
+						+ "scan | heights | transcript | thieftargets");
 				}
 			// ::follower interp was removed: the interpolation filter is keyed on
 			// animation id, so it could not be changed for the follower without
@@ -7433,6 +7501,17 @@ public class FollowerPlugin extends Plugin
 			name = name.substring(0, 20).trim();
 		}
 		return name;
+	}
+
+	/** One chat line, once ever: nothing else in game names the command. */
+	private void maybeSendCommandHint()
+	{
+		if (config.commandHintShown())
+		{
+			return;
+		}
+		configManager.setConfiguration(FollowerConfig.GROUP, "commandHintShown", true);
+		sendStatus("Type ::follower in chat for commands.");
 	}
 
 	private void sendStatus(String message)

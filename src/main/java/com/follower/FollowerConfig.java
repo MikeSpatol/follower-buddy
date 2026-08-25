@@ -248,8 +248,8 @@ public interface FollowerConfig extends Config
 	 * - and they were all reachable by anyone who typed them. They are for
 	 * building the plugin, not for using it, and a stray one mostly produces a
 	 * wall of chat text. The commands people actually have a reason to run
-	 * (say, here, anim, outfit, stance, reload, copy, fix, rebuild, watch,
-	 * errand, status) are never gated.
+	 * (say, here, anim, outfit, reload, copy, fix, rebuild, errand, status,
+	 * where) are never gated.
 	 */
 	@ConfigItem(
 		keyName = "developerMode",
@@ -921,6 +921,18 @@ public interface FollowerConfig extends Config
 		hidden = true
 	)
 	default boolean namePrompted()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+		keyName = "commandHintShown",
+		name = "Command hint shown",
+		description = "Whether the one-time ::follower chat hint has been printed;"
+			+ " managed by the plugin",
+		hidden = true
+	)
+	default boolean commandHintShown()
 	{
 		return false;
 	}
