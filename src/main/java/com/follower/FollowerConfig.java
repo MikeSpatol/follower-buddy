@@ -16,7 +16,7 @@ public interface FollowerConfig extends Config
 
 	@ConfigSection(
 		name = "Appearance",
-		description = "What the follower looks like",
+		description = "Name it here - dress it in the Follower Buddy panel in the sidebar",
 		position = 0
 	)
 	String appearanceSection = "appearance";
@@ -36,8 +36,8 @@ public interface FollowerConfig extends Config
 	String speechSection = "speech";
 
 	@ConfigSection(
-		name = "Rule groups",
-		description = "Switch whole categories of phrases on and off",
+		name = "Phrases",
+		description = "Switch whole categories of what the follower says on and off",
 		position = 3
 	)
 	String groupsSection = "groups";
@@ -64,9 +64,20 @@ public interface FollowerConfig extends Config
 	String combatSection = "combat";
 
 	@ConfigSection(
+		name = "Shield look (advanced)",
+		description = "The exact animations and graphics of the boss-fight shield."
+			+ " These are OSRS animation and graphic ids: find one with ::follower"
+			+ " watch, preview with ::follower anim <id> or ::follower gfx <id>."
+			+ " The defaults look right; nothing here needs changing.",
+		position = 7,
+		closedByDefault = true
+	)
+	String shieldSection = "shield";
+
+	@ConfigSection(
 		name = "Developer",
 		description = "Diagnostic chat commands used to build the plugin",
-		position = 7,
+		position = 8,
 		closedByDefault = true
 	)
 	String developerSection = "developer";
@@ -115,8 +126,8 @@ public interface FollowerConfig extends Config
 		name = "Summon animation",
 		description = "Animation as the shield goes up. 0 for none."
 			+ " Preview any id with ::follower anim <id>.",
-		section = combatSection,
-		position = 2
+		section = shieldSection,
+		position = 0
 	)
 	default int spectateShieldAnimation()
 	{
@@ -128,8 +139,8 @@ public interface FollowerConfig extends Config
 		name = "Summon graphic",
 		description = "Graphic laid over the summon. 0 for none."
 			+ " Audition ids with ::follower gfx <id>.",
-		section = combatSection,
-		position = 3
+		section = shieldSection,
+		position = 1
 	)
 	default int spectateShieldGraphic()
 	{
@@ -142,8 +153,8 @@ public interface FollowerConfig extends Config
 		name = "Sit down animation",
 		description = "Played once as the follower settles into the channel, before the"
 			+ " looping pose takes over. 0 for none.",
-		section = combatSection,
-		position = 4
+		section = shieldSection,
+		position = 2
 	)
 	default int spectateShieldChannelStart()
 	{
@@ -161,8 +172,8 @@ public interface FollowerConfig extends Config
 		keyName = "spectateShieldChannelEnd",
 		name = "Stand up animation",
 		description = "Played as the channel ends, before the finishing cast. 0 for none.",
-		section = combatSection,
-		position = 7
+		section = shieldSection,
+		position = 5
 	)
 	default int spectateShieldChannelEnd()
 	{
@@ -176,8 +187,8 @@ public interface FollowerConfig extends Config
 		description = "Looping pose held after the summon, for as long as the follower stands"
 			+ " and the fight lasts. Unlike the others this one repeats, so pick something"
 			+ " that reads as sustained effort. 0 for none.",
-		section = combatSection,
-		position = 4
+		section = shieldSection,
+		position = 3
 	)
 	default int spectateShieldChannelAnimation()
 	{
@@ -194,8 +205,8 @@ public interface FollowerConfig extends Config
 		name = "Channel graphic",
 		description = "Renewed every ~30s while channelling, since a looping pose shows no"
 			+ " particles of its own. 0 for none.",
-		section = combatSection,
-		position = 5
+		section = shieldSection,
+		position = 4
 	)
 	default int spectateShieldChannelGraphic()
 	{
@@ -207,7 +218,7 @@ public interface FollowerConfig extends Config
 		name = "Finish animation",
 		description = "Played as the fight ends and the spell is completed. The follower"
 			+ " waits for it to finish before walking back. 0 for none.",
-		section = combatSection,
+		section = shieldSection,
 		position = 6
 	)
 	default int spectateShieldEndAnimation()
@@ -221,7 +232,7 @@ public interface FollowerConfig extends Config
 		keyName = "spectateShieldEndGraphic",
 		name = "Finish graphic",
 		description = "Graphic as the spell is completed. 0 for none.",
-		section = combatSection,
+		section = shieldSection,
 		position = 7
 	)
 	default int spectateShieldEndGraphic()
@@ -320,10 +331,11 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "verticalOffset",
 		name = "Height offset",
-		description = "Raises the follower out of the ground if its feet are clipped. "
-			+ "Positive lifts. Tune it live with ::follower height <n>.",
+		description = "Raises the follower out of the ground if its feet are clipped."
+			+ " In small model units; the default 15 lifts the boots just clear."
+			+ " Positive lifts. Tune it live with ::follower height <n>.",
 		section = movementSection,
-		position = 3
+		position = 6
 	)
 	default int verticalOffset()
 	{
@@ -335,11 +347,12 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "spawnAnimation",
 		name = "Spawn animation",
-		description = "Animation id played when the follower appears. Comma-separate "
-			+ "to chain clips, e.g. \"6723,4191\" for a landing followed by a get-up. "
-			+ "Preview with ::follower anim 6723 4191. Blank or 0 for none.",
+		description = "Animation played when the follower appears; the default 715 is"
+			+ " the teleport arrival. Comma-separate to chain clips, e.g. \"6723,4191\""
+			+ " for a landing followed by a get-up. Preview with"
+			+ " ::follower anim 6723 4191. Blank or 0 for none.",
 		section = movementSection,
-		position = 2
+		position = 5
 	)
 	default String spawnAnimation()
 	{
@@ -363,8 +376,9 @@ public interface FollowerConfig extends Config
 
 	@ConfigItem(
 		keyName = "defaultOutput",
-		name = "Default output",
-		description = "Used by any rule that doesn't set its own \"output\"",
+		name = "Where speech appears",
+		description = "Overhead bubble, chatbox, or both. A few special phrases"
+			+ " choose their own place.",
 		section = speechSection,
 		position = 0
 	)
@@ -376,7 +390,8 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "muted",
 		name = "Mute",
-		description = "Stops all rule-driven speech without unloading the rules",
+		description = "The follower stops talking. Everything else keeps working,"
+			+ " and your other speech settings are kept.",
 		section = speechSection,
 		position = 1
 	)
@@ -405,8 +420,9 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "speechDurationMs",
 		name = "Minimum display time (ms)",
-		description = "The least time a line stays on screen. A long line is"
-			+ " given longer, at the reading speed below.",
+		description = "The least time a line stays on screen, in milliseconds"
+			+ " (4000 = 4 seconds). A long line is given longer, at the reading"
+			+ " speed below.",
 		section = speechSection,
 		position = 3
 	)
@@ -436,7 +452,7 @@ public interface FollowerConfig extends Config
 		name = "Bubble height",
 		description = "Height of the speech bubble above the follower's feet",
 		section = speechSection,
-		position = 4
+		position = 6
 	)
 	default int speechHeight()
 	{
@@ -462,7 +478,7 @@ public interface FollowerConfig extends Config
 		name = "Mirror speech to chatbox",
 		description = "Overhead lines also appear in the chatbox as public chat under the follower's name",
 		section = speechSection,
-		position = 6
+		position = 7
 	)
 	default boolean mirrorToChat()
 	{
@@ -486,7 +502,9 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "thrallMeleeProfile",
 		name = "Melee outfit profile",
-		description = "Outfit profile worn while replacing a zombie thrall",
+		description = "Outfit profile worn while replacing a zombie thrall. Must"
+			+ " match a profile name from the side panel; Melee, Ranged and Magic"
+			+ " come ready-made.",
 		section = thrallSection,
 		position = 1
 	)
@@ -666,7 +684,7 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "groupBoss",
 		name = "Boss phrases",
-		description = "Rules in the \"boss\" group — tips, lore and jokes when a boss appears",
+		description = "Tips, lore and jokes when a boss appears (group \"boss\")",
 		section = groupsSection,
 		position = 0
 	)
@@ -678,7 +696,7 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "groupHealth",
 		name = "Player status phrases",
-		description = "Rules in the \"health\" group — HP, prayer, poison, venom, skull and run energy",
+		description = "Remarks on your HP, prayer, poison, venom, skull and run energy (group \"health\")",
 		section = groupsSection,
 		position = 1
 	)
@@ -690,7 +708,7 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "groupArea",
 		name = "Location phrases",
-		description = "Rules in the \"area\" group — comments on entering towns, dungeons and landmarks",
+		description = "Comments on entering towns, dungeons and landmarks (group \"area\")",
 		section = groupsSection,
 		position = 2
 	)
@@ -702,7 +720,7 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "groupIdle",
 		name = "Idle chatter",
-		description = "Rules in the \"idle\" group",
+		description = "Small talk while nothing much is happening (group \"idle\")",
 		section = groupsSection,
 		position = 3
 	)
@@ -714,7 +732,7 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "groupGear",
 		name = "Item reactions",
-		description = "Rules in the \"gear\" group — comments when you equip notable items",
+		description = "Comments when you equip notable items (group \"gear\")",
 		section = groupsSection,
 		position = 4
 	)
@@ -726,7 +744,7 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "groupQuest",
 		name = "Quest NPC phrases",
-		description = "Rules in the \"quest\" group — comments when famous quest figures are nearby",
+		description = "Comments when famous quest figures are nearby (group \"quest\")",
 		section = groupsSection,
 		position = 5
 	)
@@ -738,7 +756,7 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "groupCombat",
 		name = "Combat phrases",
-		description = "Rules in the \"combat\" group — encouragement while it watches you fight",
+		description = "Encouragement while it watches you fight (group \"combat\")",
 		section = groupsSection,
 		position = 6
 	)
@@ -750,8 +768,7 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "groupMimic",
 		name = "Mimicry",
-		description = "Rules in the \"mimic\" group — the follower copies your emotes and joins"
-			+ " you when you eat",
+		description = "It copies your emotes and joins you when you eat (group \"mimic\")",
 		section = groupsSection,
 		position = 7
 	)
@@ -763,8 +780,8 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "groupMemory",
 		name = "Memory",
-		description = "Rules in the \"memory\" group — the follower brings up things that"
-			+ " happened, and keeps score of the outings you did and did not take it on",
+		description = "It brings up things that happened, and keeps score of the outings"
+			+ " you did and did not take it on (group \"memory\")",
 		section = groupsSection,
 		position = 8
 	)
@@ -776,8 +793,8 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "groupSouvenir",
 		name = "Souvenirs",
-		description = "Rules in the \"souvenir\" group — the follower picks things up, carries"
-			+ " them about for a while, and is put out when it loses them",
+		description = "It picks things up, carries them about for a while, and is put"
+			+ " out when it loses them (group \"souvenir\")",
 		section = groupsSection,
 		position = 9
 	)
@@ -789,8 +806,8 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "groupBet",
 		name = "Predictions",
-		description = "Rules in the \"bet\" group — the follower calls what the next drop is"
-			+ " worth before it lands, and has to live with being wrong",
+		description = "It calls what the next drop is worth before it lands, and has to"
+			+ " live with being wrong (group \"bet\")",
 		section = groupsSection,
 		position = 10
 	)
@@ -802,8 +819,8 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "groupClock",
 		name = "The hour and the session",
-		description = "Rules in the \"clock\" group — remarks about what time it is where you"
-			+ " are and how long you have been playing",
+		description = "Remarks about what time it is where you are and how long you"
+			+ " have been playing (group \"clock\")",
 		section = groupsSection,
 		position = 11
 	)
@@ -819,7 +836,7 @@ public interface FollowerConfig extends Config
 			+ " twenty seconds or so instead of standing to attention. Stops once it is"
 			+ " due to sit down.",
 		section = movementSection,
-		position = 4
+		position = 2
 	)
 	default boolean wanderWhenIdle()
 	{
@@ -832,7 +849,7 @@ public interface FollowerConfig extends Config
 		description = "After about five minutes of standing still, the follower sits down."
 			+ " It gets up the moment anything happens.",
 		section = movementSection,
-		position = 5
+		position = 3
 	)
 	default boolean restWhenIdle()
 	{
@@ -842,10 +859,11 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "restAnimation",
 		name = "Rest pose",
-		description = "Looping animation held while resting. Audition candidates with"
-			+ " ::follower pose <id>, and 0 for none.",
+		description = "Looping animation held while resting; the default 10061 is the"
+			+ " game's own sit emote. Audition candidates with ::follower pose <id>,"
+			+ " and 0 for none.",
 		section = movementSection,
-		position = 6
+		position = 4
 	)
 	default int restAnimation()
 	{
@@ -933,10 +951,12 @@ public interface FollowerConfig extends Config
 
 	@ConfigItem(
 		keyName = "disabledGroups",
-		name = "Other disabled groups",
-		description = "Comma separated group names or rule ids to silence",
+		name = "Silence by name (advanced)",
+		description = "Comma-separated group names or single phrase ids to silence,"
+			+ " beyond the toggles above. Group names are shown in each toggle's"
+			+ " hover text; phrase ids appear in the panel's message editors.",
 		section = groupsSection,
-		position = 6
+		position = 12
 	)
 	default String disabledGroups()
 	{
