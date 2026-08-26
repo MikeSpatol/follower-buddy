@@ -2753,6 +2753,17 @@ public class FollowerPlugin extends Plugin
 		{
 			panel.setMuted(config.muted());
 		}
+		// The Follow me toggle, finally wired to its own description ("stays
+		// where it was last placed"): off parks the follower through the same
+		// stay the right-click op uses, on releases it. Applied on the toggle
+		// EDGE only, so it never fights the systems that borrow the feet -
+		// errands, spectating, the minute-taking - and a leash snap from
+		// walking a scene away still brings it along rather than stranding it.
+		if ("followEnabled".equals(key))
+		{
+			clientThread.invoke(config.followEnabled()
+				? follower::resumeFollowing : follower::stayHere);
+		}
 		if ("customOutfit".equals(key) || "verticalOffset".equals(key))
 		{
 			clientThread.invoke(() ->
@@ -2950,6 +2961,13 @@ public class FollowerPlugin extends Plugin
 					namePromptDelayTicks = NAME_PROMPT_DELAY_TICKS;
 				}
 				maybeSendCommandHint();
+
+				// Spawned with Follow me off: parked from the first tile, not
+				// following until somebody notices the toggle.
+				if (!config.followEnabled())
+				{
+					follower.stayHere();
+				}
 			}
 		});
 	}
@@ -3856,12 +3874,17 @@ public class FollowerPlugin extends Plugin
 		}
 	}
 
+	/**
+	 * Whether the follower should not exist right now. Only the PvP hide
+	 * says so: a cosmetic second player in the Wilderness reads as another
+	 * person to everyone deciding whether to fight you.
+	 *
+	 * <p>This used to bail out first when Follow me was off, which silently
+	 * disabled the PvP hide for anyone who parked their follower - the two
+	 * settings are about different things, and neither may veto the other.
+	 */
 	private boolean shouldHide()
 	{
-		if (!config.followEnabled())
-		{
-			return false;
-		}
 		return config.hideInPvp() && client.getVarbitValue(VarbitID.INSIDE_WILDERNESS) == 1;
 	}
 
@@ -4944,6 +4967,11 @@ public class FollowerPlugin extends Plugin
 				namePromptDelayTicks = NAME_PROMPT_DELAY_TICKS;
 			}
 			maybeSendCommandHint();
+
+			if (!config.followEnabled())
+			{
+				follower.stayHere();
+			}
 		}
 
 		updateTrail(local);
