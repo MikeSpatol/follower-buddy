@@ -15,8 +15,11 @@ public interface FollowerConfig extends Config
 	String GROUP = "followerbuddy";
 
 	@ConfigSection(
-		name = "Appearance",
-		description = "Name it here - dress it in the Follower Buddy panel in the sidebar",
+		name = "Appearance (outfit: side panel)",
+		description = "Only the name lives here. The outfit, body styles and"
+			+ " colours are edited visually in the Follower Buddy side panel -"
+			+ " its icon is on the right edge of the client, with the other"
+			+ " plugin panels",
 		position = 0
 	)
 	String appearanceSection = "appearance";
@@ -277,7 +280,9 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "followerName",
 		name = "Follower name",
-		description = "Shown in the dialog box, right-click menu, hover text and chat",
+		description = "Shown in the dialog box, right-click menu, hover text and"
+			+ " chat. Everything else about its look - gear, body, colours - is"
+			+ " in the Follower Buddy side panel, not here",
 		section = appearanceSection,
 		position = 0
 	)

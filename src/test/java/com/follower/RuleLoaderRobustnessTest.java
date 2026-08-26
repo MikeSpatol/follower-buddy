@@ -59,6 +59,54 @@ public class RuleLoaderRobustnessTest
 	}
 
 	@Test
+	public void anOldFileGainsNewlyBundledRulesWithoutLosingItsEdits() throws IOException
+	{
+		// The upgrade gap: the starter file is written only when missing, so
+		// a file from an old release never gained the rules added since -
+		// play report, emote mirroring "not working" for a tester whose file
+		// predated the mimic rules entirely.
+		Path dir = dir();
+		// An old-looking file: one bundled rule reworded and silenced, one
+		// rule of the user's own, and one bundled rule the editor deleted.
+		String old = "{\"version\": 1, \"removed\": [\"mimic-emote-loops\"], \"rules\": ["
+			+ "{\"id\": \"mimic-emotes\", \"group\": \"mimic\", \"enabled\": false,"
+			+ " \"when\": {\"type\": \"always\"}, \"say\": [\"my own words\"]},"
+			+ "{\"id\": \"my-rule\", \"group\": \"t\","
+			+ " \"when\": {\"type\": \"always\"}, \"say\": [\"mine\"]}"
+			+ "]}";
+		Files.write(dir.resolve(RuleLoader.FILE_NAME),
+			old.getBytes(StandardCharsets.UTF_8));
+
+		RuleLoader loader = new RuleLoader(new Gson());
+		loader.initialise(dir, true);
+
+		java.util.Set<String> ids = new java.util.HashSet<>();
+		for (SpeechRule rule : loader.getRules())
+		{
+			ids.add(rule.id);
+			if ("mimic-emotes".equals(rule.id))
+			{
+				assertEquals("the user's edit to an existing rule survived",
+					"my own words", rule.say.get(0));
+			}
+		}
+		assertTrue("a newly bundled rule arrived", ids.contains("world-hop"));
+		assertTrue("the user's own rule survived", ids.contains("my-rule"));
+		assertFalse("a rule the editor deleted stayed deleted",
+			ids.contains("mimic-emote-loops"));
+		assertTrue("the file as it stood was kept as a backup",
+			Files.isRegularFile(dir.resolve(RuleLoader.FILE_NAME + ".bak")));
+
+		// And the merge is idempotent: a second start adds nothing.
+		byte[] merged = Files.readAllBytes(dir.resolve(RuleLoader.FILE_NAME));
+		RuleLoader again = new RuleLoader(new Gson());
+		again.initialise(dir, true);
+		assertTrue("a second start rewrote an already-merged file",
+			java.util.Arrays.equals(merged,
+				Files.readAllBytes(dir.resolve(RuleLoader.FILE_NAME))));
+	}
+
+	@Test
 	public void malformedFilesNeverThrow() throws IOException
 	{
 		String[] nonsense = {

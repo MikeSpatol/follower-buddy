@@ -69,8 +69,9 @@ import net.runelite.client.ui.overlay.OverlayManager;
 @Slf4j
 @PluginDescriptor(
 	name = "Follower Buddy",
-	description = "A player-model follower that wears any gear and speaks configurable phrases",
-	tags = {"follower", "companion", "pet", "player", "model", "chat", "cosmetic"}
+	description = "A player-model follower that wears any gear and speaks configurable"
+		+ " phrases. Dress it in the Follower Buddy side panel",
+	tags = {"follower", "companion", "pet", "player", "model", "chat", "cosmetic", "outfit"}
 )
 public class FollowerPlugin extends Plugin
 {
@@ -461,11 +462,15 @@ public class FollowerPlugin extends Plugin
 		modelRepository.load(dataDir);
 		spotAnimRepository.load(dataDir);
 		gameFontRepository.load(dataDir);
-		ruleLoader.initialise(dataDir);
+		// With merging: an existing install's files gain the rules and trees
+		// this build added, which otherwise never reach it (the starter files
+		// are only written when missing - a tester's file from 1.0.0 had no
+		// emote mirroring at all, and it looked broken rather than absent).
+		ruleLoader.initialise(dataDir, true);
 		journal.initialise(dataDir);
 		journal.setRegionSource(() -> speechEngine.getContext().getRegionId());
 		journal.setEnabled(config.transcriptOn());
-		dialogLoader.initialise(dataDir);
+		dialogLoader.initialise(dataDir, true);
 		stanceLibrary.load(dataDir);
 		paletteHarvest.load(dataDir);
 		wrapTrimStore.load(dataDir, follower);
@@ -673,6 +678,11 @@ public class FollowerPlugin extends Plugin
 		panel.setOnEditMessages(this::openMessagesDialog);
 		panel.setOnEditDialogs(this::openDialogsDialog);
 		panel.setOnShowMemory(this::openMemoryDialog);
+		// The panel's Mute and the settings' Mute are the same config key,
+		// synced both ways, so they can never disagree.
+		panel.setOnMute(muted -> configManager.setConfiguration(
+			FollowerConfig.GROUP, "muted", muted));
+		panel.setMuted(config.muted());
 		panel.setOnProfileLoad(this::loadOutfitProfile);
 		panel.setOnProfileSave(this::saveOutfitProfile);
 		panel.setOnProfileDelete(this::deleteOutfitProfile);
@@ -2739,6 +2749,10 @@ public class FollowerPlugin extends Plugin
 		applyConfig();
 
 		String key = event.getKey();
+		if ("muted".equals(key) && panel != null)
+		{
+			panel.setMuted(config.muted());
+		}
 		if ("customOutfit".equals(key) || "verticalOffset".equals(key))
 		{
 			clientThread.invoke(() ->
@@ -4188,6 +4202,9 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void startTalking()
 	{
+		// A bubble still up when the box opens is two mouths at once; the
+		// queue is likewise held while the box is open (see drainSpeechQueue).
+		overlay.clear();
 		String asked = speechEngine.getContext().getAskedTree();
 		com.follower.speech.DialogTree tree = dialogLoader.get(asked);
 		if (tree != null)
@@ -5068,10 +5085,16 @@ public class FollowerPlugin extends Plugin
 		// After errands, so an errand in progress owns the feet: a follower
 		// halfway to a bank should finish the trip rather than be yanked
 		// sideways because something attacked. Thrall mode is in the fight, so
-		// it is excluded too.
+		// it is excluded too - and so is the whole EXIT from it: thrallNpc
+		// goes null ticks before the goodbye flourish and the snap home have
+		// finished with the feet, and a spectate started in that window had
+		// its seat wiped by the exit machinery. Play report: fresh out of
+		// thrall mode, wards at the player's side, no stepping away.
 		if (spectate != null)
 		{
-			spectate.tick(thrallNpc != null || (errands != null && errands.isBusy()));
+			spectate.tick(thrallNpc != null || thrallLimbo
+				|| thrallExitPendingTicks > 0 || thrallExitTicks > 0
+				|| (errands != null && errands.isBusy()));
 		}
 
 		// The spawn-in burst waits one tick so the follower has already been
@@ -7455,6 +7478,14 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void drainSpeechQueue()
 	{
+		// Nothing overhead while the follower is talking to you in the box:
+		// a bubble above its head mid-conversation is two mouths at once.
+		// Held, not dropped - the stale sweep below decides what survives
+		// a long conversation, same as any other wait.
+		if (dialog.isOpen())
+		{
+			return;
+		}
 		long now = System.currentTimeMillis();
 		while (!speechQueue.isEmpty()
 			&& now - speechQueue.peekFirst().queuedAtMs > SPEECH_STALE_MS)

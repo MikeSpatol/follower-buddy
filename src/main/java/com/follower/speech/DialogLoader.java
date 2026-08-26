@@ -56,12 +56,102 @@ public class DialogLoader
 
 	public void initialise(Path dataDir)
 	{
+		initialise(dataDir, false);
+	}
+
+	/**
+	 * @param mergeDefaults whether to fold newly bundled trees into an
+	 * existing file first. The plugin passes true; the test harnesses supply
+	 * exact files and pass false through the plain overload.
+	 */
+	public void initialise(Path dataDir, boolean mergeDefaults)
+	{
 		file = dataDir.resolve(FILE_NAME);
 		if (!Files.exists(file))
 		{
 			writeDefaults();
 		}
+		else if (mergeDefaults)
+		{
+			mergeNewDefaults();
+		}
 		reload();
+	}
+
+	/**
+	 * Appends bundled conversation trees the user's file has never seen -
+	 * the same upgrade gap phrases.json had: the starter file is written
+	 * once, so trees added in updates never reached an existing install.
+	 * Only absent tree ids are appended; every edit to an existing tree
+	 * survives, and the file as it stood is kept as dialogs.json.bak.
+	 */
+	private void mergeNewDefaults()
+	{
+		try (InputStream in = DialogLoader.class.getResourceAsStream(BUNDLED_DEFAULT))
+		{
+			if (in == null)
+			{
+				return;
+			}
+			Gson pretty = gson.newBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+			com.google.gson.JsonObject bundled = pretty.fromJson(
+				new java.io.InputStreamReader(in, java.nio.charset.StandardCharsets.UTF_8),
+				com.google.gson.JsonObject.class);
+			com.google.gson.JsonObject ours = pretty.fromJson(
+				new String(Files.readAllBytes(file), java.nio.charset.StandardCharsets.UTF_8),
+				com.google.gson.JsonObject.class);
+			if (bundled == null || ours == null
+				|| !bundled.has("trees") || !ours.has("trees"))
+			{
+				return;
+			}
+
+			java.util.Set<String> known = new java.util.HashSet<>();
+			for (com.google.gson.JsonElement element : ours.getAsJsonArray("trees"))
+			{
+				String id = treeIdOf(element);
+				if (id != null)
+				{
+					known.add(id);
+				}
+			}
+
+			com.google.gson.JsonArray trees = ours.getAsJsonArray("trees");
+			int added = 0;
+			for (com.google.gson.JsonElement element : bundled.getAsJsonArray("trees"))
+			{
+				String id = treeIdOf(element);
+				if (id != null && !known.contains(id))
+				{
+					trees.add(element);
+					added++;
+				}
+			}
+			if (added == 0)
+			{
+				return;
+			}
+
+			Files.copy(file, file.resolveSibling(file.getFileName() + ".bak"),
+				java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+			Files.write(file, (pretty.toJson(ours) + "\n")
+				.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+			log.info("Merged {} new default tree(s) into {}", added, file);
+		}
+		catch (Exception e)
+		{
+			log.warn("Could not merge new defaults into {}", file, e);
+		}
+	}
+
+	private static String treeIdOf(com.google.gson.JsonElement element)
+	{
+		if (!element.isJsonObject())
+		{
+			return null;
+		}
+		com.google.gson.JsonElement id = element.getAsJsonObject().get("id");
+		return id != null && id.isJsonPrimitive() ? id.getAsString() : null;
 	}
 
 	public Path getFile()

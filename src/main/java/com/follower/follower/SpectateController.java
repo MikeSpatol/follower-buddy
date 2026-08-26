@@ -322,7 +322,17 @@ public class SpectateController
 			}
 			return;
 		}
-		if (watchTile.distanceTo(local.getWorldLocation()) > RESEAT_DISTANCE
+		// The seat is HELD through FollowerEntity's stayTile, and plenty of
+		// hands can release that without telling this controller: the thrall
+		// exit's stayHere/resumeFollowing/snapBeside chain, the leash snap,
+		// scene recovery. Measuring watchTile against the PLAYER missed all
+		// of them - the tile was still nearby, so the spectator stood glued
+		// to the player casting wards while never stepping away. Play report:
+		// "out of thrall mode they don't step away, but still do the magic
+		// barrier animations." If the follower no longer holds ANY stay, it
+		// was un-seated, whoever did it: take the seat again.
+		if (!follower.isStaying()
+			|| watchTile.distanceTo(local.getWorldLocation()) > RESEAT_DISTANCE
 			|| watchTile.getPlane() != local.getWorldLocation().getPlane())
 		{
 			moveClear();
@@ -463,7 +473,12 @@ public class SpectateController
 		// The same rule ends a channel: a follower that has to move cannot go
 		// on channelling, so the pose is dropped and the spell begins again
 		// once it has settled somewhere new.
-		if (!follower.isSettled())
+		// Settled is not seated. A follower glued to the player - un-seated
+		// by the thrall exit, a failed moveClear in a cramped arena, a leash
+		// snap - is perfectly still and used to pass this gate, which is how
+		// the ward got cast at the player's elbow instead of from the seat.
+		// No stay held means no seat, and no seat means no spell.
+		if (!follower.isSettled() || !follower.isStaying())
 		{
 			ticksSettled = 0;
 			// One unsettled tick is not a journey. The fine position can leave

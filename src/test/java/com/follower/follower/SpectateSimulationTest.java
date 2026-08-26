@@ -74,6 +74,12 @@ public class SpectateSimulationTest
 		}
 
 		@Override
+		public boolean isStaying()
+		{
+			return stayingAt != null;
+		}
+
+		@Override
 		public boolean isEmotePlaying()
 		{
 			return emoting;
@@ -304,6 +310,29 @@ public class SpectateSimulationTest
 		assertTrue("it looked again", follower.stayAttempts > attemptsSoFar);
 		assertTrue("and stepped clear once it could",
 			follower.stayingAt != null);
+	}
+
+	@Test
+	public void anotherSystemStealingTheSeatGetsItTakenBack()
+	{
+		// The stay is held through FollowerEntity, and plenty of hands can
+		// release it without telling this controller - the thrall exit's
+		// stayHere/resumeFollowing/snapBeside chain, the leash snap, scene
+		// recovery. Play report, near verbatim: "out of thrall mode they
+		// don't step away, but they still do the magic barrier animations."
+		fight("Boss", 300);
+		tick(3);
+		assertTrue(spectate.isSpectating());
+		assertTrue("seated", follower.stayingAt != null);
+
+		// The thrall exit hands the feet back to plain following.
+		follower.stayingAt = null;
+		int attemptsSoFar = follower.stayAttempts;
+		tick(2);
+
+		assertTrue("it noticed and took the seat back",
+			follower.stayAttempts > attemptsSoFar);
+		assertTrue(follower.stayingAt != null);
 	}
 
 	@Test

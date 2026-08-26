@@ -46,7 +46,6 @@ import net.runelite.client.util.AsyncBufferedImage;
  */
 public class FollowerPanel extends PluginPanel
 {
-	private static final int MAX_RESULTS = 60;
 	private static final int PREVIEW_SCALE = 3;
 	private static final int CELL = 44;
 
@@ -84,6 +83,38 @@ public class FollowerPanel extends PluginPanel
 	public void setOnEditMessages(Runnable onEditMessages)
 	{
 		this.onEditMessages = onEditMessages;
+	}
+
+	// ------------------------------------------------------------------- mute
+
+	/**
+	 * The same Mute as the one in settings, surfaced where people actually
+	 * are. Both write the one config key, so they can never disagree.
+	 */
+	private final javax.swing.JCheckBox muteBox = new javax.swing.JCheckBox("Mute the follower");
+
+	private Consumer<Boolean> onMute = m -> { };
+
+	/** Set while the box is being synced FROM config, so it does not echo. */
+	private boolean suppressMuteEvents;
+
+	public void setOnMute(Consumer<Boolean> onMute)
+	{
+		this.onMute = onMute;
+	}
+
+	/** Reflects a config-side change without writing it back again. */
+	public void setMuted(boolean muted)
+	{
+		suppressMuteEvents = true;
+		try
+		{
+			muteBox.setSelected(muted);
+		}
+		finally
+		{
+			suppressMuteEvents = false;
+		}
 	}
 
 	/** Opens the memory window (R20); set by the plugin after construction. */
@@ -161,6 +192,15 @@ public class FollowerPanel extends PluginPanel
 	private final JPanel bodyList = new JPanel();
 	private final JPanel picker = new JPanel();
 	private final JPanel resultList = new JPanel();
+
+	/** Matches not yet built into rows, drained as the list scrolls down. */
+	private final java.util.ArrayDeque<ModelRepository.WearableItem> pendingResults =
+		new java.util.ArrayDeque<>();
+
+	/** Rows built per slice - the first fill and each scroll-to-the-end. */
+	private static final int RESULT_CHUNK = 100;
+
+	private JScrollPane resultScroll;
 	private final JTextField search = new JTextField();
 	private final JLabel status = new JLabel();
 	private final JLabel pickerTitle = new JLabel();
@@ -199,7 +239,12 @@ public class FollowerPanel extends PluginPanel
 		// search, so nothing may impose a floor on the viewport height.
 		setMinimumSize(new Dimension(0, 0));
 
-		JPanel body = new JPanel();
+		// A ScrollableColumn, not a plain panel: a plain view is laid out at
+		// its own preferred width, so any child preferring more than the
+		// sidebar (or the width left once the scrollbar appears) pushed the
+		// whole column past the right edge - padding gone, buttons clipped -
+		// with the horizontal scrollbar deliberately never there to save it.
+		JPanel body = new ScrollableColumn();
 		body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
 		body.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		body.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
@@ -242,6 +287,22 @@ public class FollowerPanel extends PluginPanel
 		identity.setAlignmentX(LEFT_ALIGNMENT);
 		identity.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
 		header.add(identity);
+
+		muteBox.setToolTipText("The follower stops talking. All your other"
+			+ " speech settings are kept. Same switch as Mute in settings.");
+		muteBox.setFont(FontManager.getRunescapeSmallFont());
+		muteBox.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+		muteBox.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		muteBox.setAlignmentX(LEFT_ALIGNMENT);
+		muteBox.addActionListener(e ->
+		{
+			if (!suppressMuteEvents)
+			{
+				onMute.accept(muteBox.isSelected());
+			}
+		});
+		header.add(muteBox);
+		header.add(javax.swing.Box.createVerticalStrut(6));
 
 		JLabel dialogueTitle = new JLabel("Follower messages");
 		dialogueTitle.setFont(FontManager.getRunescapeBoldFont());
@@ -468,14 +529,28 @@ public class FollowerPanel extends PluginPanel
 		resultList.setLayout(new GridLayout(0, 1, 0, 2));
 		resultList.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
-		JScrollPane scroll = new JScrollPane(resultList,
+		resultScroll = new JScrollPane(resultList,
 			JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		scroll.setBorder(BorderFactory.createEmptyBorder());
-		scroll.setPreferredSize(new Dimension(PANEL_WIDTH, 240));
-		scroll.setMaximumSize(new Dimension(Integer.MAX_VALUE, 240));
-		scroll.setAlignmentX(LEFT_ALIGNMENT);
-		scroll.getVerticalScrollBar().setUnitIncrement(16);
-		picker.add(scroll);
+		resultScroll.setBorder(BorderFactory.createEmptyBorder());
+		// Zero preferred WIDTH: a fixed one (this used to say PANEL_WIDTH)
+		// out-demanded the sidebar and shoved the whole column off its right
+		// edge. The height is the fixed part; the width is the container's.
+		resultScroll.setPreferredSize(new Dimension(0, 240));
+		resultScroll.setMaximumSize(new Dimension(Integer.MAX_VALUE, 240));
+		resultScroll.setAlignmentX(LEFT_ALIGNMENT);
+		resultScroll.getVerticalScrollBar().setUnitIncrement(16);
+		// The rest of the catalogue arrives as the list is scrolled toward
+		// its end - every match is reachable, none is paid for up front.
+		resultScroll.getVerticalScrollBar().addAdjustmentListener(e ->
+		{
+			javax.swing.JScrollBar bar = resultScroll.getVerticalScrollBar();
+			if (!pendingResults.isEmpty()
+				&& bar.getValue() + bar.getVisibleAmount() >= bar.getMaximum() - 64)
+			{
+				appendResults(RESULT_CHUNK);
+			}
+		});
+		picker.add(resultScroll);
 
 		content.add(picker);
 
@@ -489,6 +564,45 @@ public class FollowerPanel extends PluginPanel
 		content.add(bodyList);
 
 		return content;
+	}
+
+	/**
+	 * A panel whose scroll view always matches the viewport's width, whatever
+	 * the viewport happens to be once the vertical scrollbar takes its share.
+	 * Content adapts or wraps; it never slides out past the right edge.
+	 */
+	private static final class ScrollableColumn extends JPanel
+		implements javax.swing.Scrollable
+	{
+		@Override
+		public Dimension getPreferredScrollableViewportSize()
+		{
+			return getPreferredSize();
+		}
+
+		@Override
+		public int getScrollableUnitIncrement(java.awt.Rectangle visible, int orientation, int direction)
+		{
+			return 16;
+		}
+
+		@Override
+		public int getScrollableBlockIncrement(java.awt.Rectangle visible, int orientation, int direction)
+		{
+			return visible.height;
+		}
+
+		@Override
+		public boolean getScrollableTracksViewportWidth()
+		{
+			return true;
+		}
+
+		@Override
+		public boolean getScrollableTracksViewportHeight()
+		{
+			return false;
+		}
 	}
 
 	private JPanel sectionHeader(String text, String tooltip)
@@ -962,6 +1076,7 @@ public class FollowerPanel extends PluginPanel
 	private void refreshResults()
 	{
 		resultList.removeAll();
+		pendingResults.clear();
 
 		if (activeSlot == null)
 		{
@@ -980,12 +1095,15 @@ public class FollowerPanel extends PluginPanel
 		}
 		else
 		{
+			// EVERY match, not a page of them: rows are built lazily as the
+			// list scrolls (see the adjustment listener on resultScroll), so
+			// the full catalogue is reachable without being paid for up front.
+			// The limit is a formality search() multiplies internally - large,
+			// but nowhere near where that multiply would overflow.
 			List<ModelRepository.WearableItem> matches =
-				repository.search(search.getText(), MAX_RESULTS * 6);
+				repository.search(search.getText(), 100_000);
 
 			boolean filter = !slotIndex.isEmpty() && !showAll.isSelected();
-			int shown = 0;
-
 			for (ModelRepository.WearableItem item : matches)
 			{
 				// Only offer items that belong in this slot. Until the index is built
@@ -994,14 +1112,10 @@ public class FollowerPanel extends PluginPanel
 				{
 					continue;
 				}
-				resultList.add(buildResultRow(item));
-				if (++shown >= MAX_RESULTS)
-				{
-					break;
-				}
+				pendingResults.addLast(item);
 			}
 
-			if (shown == 0)
+			if (pendingResults.isEmpty())
 			{
 				if (slotIndex.isEmpty())
 				{
@@ -1013,8 +1127,23 @@ public class FollowerPanel extends PluginPanel
 						+ " items match - try \"Show items from every slot\""));
 				}
 			}
+			else
+			{
+				appendResults(RESULT_CHUNK);
+			}
 		}
 
+		resultList.revalidate();
+		resultList.repaint();
+	}
+
+	/** Builds the next slice of pending matches into rows. */
+	private void appendResults(int count)
+	{
+		for (int i = 0; i < count && !pendingResults.isEmpty(); i++)
+		{
+			resultList.add(buildResultRow(pendingResults.pollFirst()));
+		}
 		resultList.revalidate();
 		resultList.repaint();
 	}

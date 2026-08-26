@@ -70,14 +70,146 @@ public class RuleLoader
 	 */
 	public void initialise(Path dataDir)
 	{
+		initialise(dataDir, false);
+	}
+
+	/**
+	 * @param mergeDefaults whether to fold newly bundled rules into an
+	 * existing file first. The plugin passes true; the test harnesses supply
+	 * exact files and pass false through the plain overload.
+	 */
+	public void initialise(Path dataDir, boolean mergeDefaults)
+	{
 		file = dataDir.resolve(FILE_NAME);
 
 		if (!Files.exists(file))
 		{
 			writeDefaults();
 		}
+		else if (mergeDefaults)
+		{
+			mergeNewDefaults();
+		}
 
 		reload();
+	}
+
+	/**
+	 * Appends bundled rules the user's file has never seen.
+	 *
+	 * <p>The starter file is only written when no file exists, so before this
+	 * every rule an update added silently never reached an existing install:
+	 * the Hub updated the code, the file stayed at whatever release first
+	 * wrote it, and the new features looked broken rather than missing. Play
+	 * report: emote mirroring "not working" for a tester whose file predated
+	 * the mimic rules entirely.
+	 *
+	 * <p>Only ABSENT ids are appended, so every edit to an existing rule -
+	 * rewording, silencing, extra lines - survives untouched. Rules the
+	 * editor deleted are recorded in the file's "removed" list and stay
+	 * deleted. The file as it stood is kept beside the merged one as
+	 * phrases.json.bak, and new nickname hooks arrive the same way (existing
+	 * keys are the user's to keep).
+	 */
+	private void mergeNewDefaults()
+	{
+		try (InputStream in = RuleLoader.class.getResourceAsStream(BUNDLED_DEFAULT))
+		{
+			if (in == null)
+			{
+				return;
+			}
+			Gson pretty = gson.newBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+			com.google.gson.JsonObject bundled = pretty.fromJson(
+				new java.io.InputStreamReader(in, StandardCharsets.UTF_8),
+				com.google.gson.JsonObject.class);
+			com.google.gson.JsonObject ours = pretty.fromJson(
+				new String(Files.readAllBytes(file), StandardCharsets.UTF_8),
+				com.google.gson.JsonObject.class);
+			if (bundled == null || ours == null
+				|| !bundled.has("rules") || !ours.has("rules"))
+			{
+				return;
+			}
+
+			Set<String> known = new HashSet<>();
+			for (com.google.gson.JsonElement element : ours.getAsJsonArray("rules"))
+			{
+				String id = idOf(element);
+				if (id != null)
+				{
+					known.add(id);
+				}
+			}
+			if (ours.has("removed") && ours.get("removed").isJsonArray())
+			{
+				for (com.google.gson.JsonElement element : ours.getAsJsonArray("removed"))
+				{
+					if (element.isJsonPrimitive())
+					{
+						known.add(element.getAsString());
+					}
+				}
+			}
+
+			com.google.gson.JsonArray rules = ours.getAsJsonArray("rules");
+			int added = 0;
+			for (com.google.gson.JsonElement element : bundled.getAsJsonArray("rules"))
+			{
+				String id = idOf(element);
+				if (id != null && !known.contains(id))
+				{
+					rules.add(element);
+					added++;
+				}
+			}
+
+			int nicknamesAdded = 0;
+			if (bundled.has("nicknames") && bundled.get("nicknames").isJsonObject())
+			{
+				com.google.gson.JsonObject theirs = bundled.getAsJsonObject("nicknames");
+				com.google.gson.JsonObject mine =
+					ours.has("nicknames") && ours.get("nicknames").isJsonObject()
+						? ours.getAsJsonObject("nicknames") : new com.google.gson.JsonObject();
+				for (Map.Entry<String, com.google.gson.JsonElement> entry : theirs.entrySet())
+				{
+					if (!mine.has(entry.getKey()))
+					{
+						mine.add(entry.getKey(), entry.getValue());
+						nicknamesAdded++;
+					}
+				}
+				ours.add("nicknames", mine);
+			}
+
+			if (added == 0 && nicknamesAdded == 0)
+			{
+				return;
+			}
+
+			Files.copy(file, file.resolveSibling(file.getFileName() + ".bak"),
+				java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+			Files.write(file,
+				(pretty.toJson(ours) + "\n").getBytes(StandardCharsets.UTF_8));
+			log.info("Merged {} new default rule(s) and {} nickname(s) into {}",
+				added, nicknamesAdded, file);
+		}
+		catch (Exception e)
+		{
+			// A file that cannot be merged is one reload() will complain about
+			// in its own words; do not block startup over it.
+			log.warn("Could not merge new defaults into {}", file, e);
+		}
+	}
+
+	private static String idOf(com.google.gson.JsonElement element)
+	{
+		if (!element.isJsonObject())
+		{
+			return null;
+		}
+		com.google.gson.JsonElement id = element.getAsJsonObject().get("id");
+		return id != null && id.isJsonPrimitive() ? id.getAsString() : null;
 	}
 
 	public Path getFile()

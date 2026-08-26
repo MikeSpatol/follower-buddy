@@ -562,6 +562,31 @@ public class PhrasesDialog extends JDialog
 				}
 			}
 
+			// Rules deleted here must STAY deleted across updates: the loader
+			// merges newly bundled rules in by id at startup, and without a
+			// record it would politely resurrect these on the next client.
+			if (!deleted.isEmpty())
+			{
+				JsonArray removed = parsed.has("removed") && parsed.get("removed").isJsonArray()
+					? parsed.getAsJsonArray("removed") : new JsonArray();
+				Set<String> already = new HashSet<>();
+				for (JsonElement element : removed)
+				{
+					if (element.isJsonPrimitive())
+					{
+						already.add(element.getAsString());
+					}
+				}
+				for (String id : deleted)
+				{
+					if (!already.contains(id))
+					{
+						removed.add(id);
+					}
+				}
+				parsed.add("removed", removed);
+			}
+
 			parsed.add("rules", kept);
 			writeAtomically(gson.toJson(parsed) + "\n");
 
