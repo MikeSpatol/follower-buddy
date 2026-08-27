@@ -967,6 +967,18 @@ public interface FollowerConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "attacksRelearned",
+		name = "Attacks relearned",
+		description = "Whether the one-time clear of learned attack animations has"
+			+ " run; managed by the plugin",
+		hidden = true
+	)
+	default boolean attacksRelearned()
+	{
+		return false;
+	}
+
+	@ConfigItem(
 		keyName = "lastRevision",
 		name = "Last game revision",
 		description = "The game build the last session ran on, so the follower"

@@ -472,6 +472,15 @@ public class FollowerPlugin extends Plugin
 		journal.setEnabled(config.transcriptOn());
 		dialogLoader.initialise(dataDir, true);
 		stanceLibrary.load(dataDir);
+		// One-time repair: until the observer learned to tell a swing from a
+		// flinch, any block seen on a fighting player was filed as that
+		// weapon's attack - so a shortbow "shot" by blocking. The bad entries
+		// are already on disk and nothing else would ever overwrite them.
+		if (!config.attacksRelearned())
+		{
+			stanceLibrary.clearLearnedAttacks();
+			configManager.setConfiguration(FollowerConfig.GROUP, "attacksRelearned", true);
+		}
 		paletteHarvest.load(dataDir);
 		wrapTrimStore.load(dataDir, follower);
 		profileStore.load(dataDir);
@@ -5124,6 +5133,7 @@ public class FollowerPlugin extends Plugin
 		}
 		wasWishing = wishingNow;
 		tickScan();
+		commitAttackSighting();
 		expireKillClaims();
 		updateWander();
 		updateMinutes();
@@ -5796,7 +5806,7 @@ public class FollowerPlugin extends Plugin
 		if (event.getActor() instanceof Player)
 		{
 			Player animating = (Player) event.getActor();
-			stanceLibrary.learnAttack(animating, animating.getAnimation());
+			noteAttackSighting(animating);
 
 			if (sniffAnims && animating.getAnimation() != -1)
 			{
@@ -5952,6 +5962,14 @@ public class FollowerPlugin extends Plugin
 	@Subscribe
 	public void onHitsplatApplied(HitsplatApplied event)
 	{
+		// Recorded before the size check, and for anybody: a block animation
+		// plays on a zero as readily as on a forty, and it is the tell that an
+		// animation was a defence rather than a swing.
+		if (event.getActor() instanceof Player)
+		{
+			playersHit.put(event.getActor(), client.getTickCount());
+		}
+
 		if (event.getHitsplat().getAmount() <= 0)
 		{
 			return;
@@ -5992,6 +6010,66 @@ public class FollowerPlugin extends Plugin
 	}
 
 	/** Drops damage claims that have gone stale, so the map cannot grow without bound. */
+	/**
+	 * Players hit recently, by tick. A player's block animation fires when
+	 * they TAKE a hit, and nothing in the animation itself says which of the
+	 * two it was.
+	 */
+	private final java.util.Map<net.runelite.api.Actor, Integer> playersHit =
+		new java.util.HashMap<>();
+
+	/** The most recent animation seen on a player, held for one tick. */
+	private Player sightedPlayer;
+	private int sightedAnimation;
+	private int sightedTick;
+
+	/**
+	 * Notes an animation that MIGHT be an attack worth learning.
+	 *
+	 * <p>Held rather than learned, because the two animations a fighting
+	 * player produces are indistinguishable at this moment: swinging and being
+	 * swung at both animate, and both leave {@code getInteracting} set. Taught
+	 * on the spot, the library happily filed a shortbow's attack as the
+	 * unarmed block, and the thrall then "shot" by flinching - play report,
+	 * and true of the magic staff as well.
+	 *
+	 * <p>A hitsplat on the same player in the same tick is what tells them
+	 * apart, and it can arrive either side of the animation, so the decision
+	 * waits a tick for both to be in. Only the latest sighting is kept: an
+	 * attack repeats every few ticks all fight long, so one missed is free,
+	 * and a wrong one learned is not.
+	 */
+	private void noteAttackSighting(Player animating)
+	{
+		if (animating.getAnimation() <= 0 || animating.getInteracting() == null)
+		{
+			return;
+		}
+		sightedPlayer = animating;
+		sightedAnimation = animating.getAnimation();
+		sightedTick = client.getTickCount();
+	}
+
+	/** Commits a held sighting once the tick it belongs to is complete. */
+	private void commitAttackSighting()
+	{
+		if (sightedPlayer != null && sightedTick < client.getTickCount())
+		{
+			Integer hit = playersHit.get(sightedPlayer);
+			if (hit == null || hit < sightedTick)
+			{
+				stanceLibrary.learnAttack(sightedPlayer, sightedAnimation);
+			}
+			sightedPlayer = null;
+		}
+
+		if (!playersHit.isEmpty())
+		{
+			int cutoff = client.getTickCount() - 3;
+			playersHit.values().removeIf(tick -> tick < cutoff);
+		}
+	}
+
 	private void expireKillClaims()
 	{
 		if (damagedByPlayer.isEmpty())

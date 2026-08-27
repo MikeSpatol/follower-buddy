@@ -215,6 +215,34 @@ public class StanceLibrary
 		return added;
 	}
 
+	/**
+	 * Forgets every learned attack, keeping how each weapon is CARRIED.
+	 *
+	 * <p>For repairing a library that learned blocks as attacks before the
+	 * observer could tell them apart. The carry poses are safe - they come
+	 * from the composition rather than from a moment of combat - and an attack
+	 * is re-learned within a fight or two of holding the weapon, so this costs
+	 * a little accuracy briefly and fixes a follower that flinches instead of
+	 * swinging.
+	 */
+	public void clearLearnedAttacks()
+	{
+		int cleared = 0;
+		for (Stance stance : stances.values())
+		{
+			if (stance.attack > 0)
+			{
+				stance.attack = 0;
+				cleared++;
+			}
+		}
+		if (cleared > 0)
+		{
+			dirty = true;
+			log.info("Cleared {} learned attack animation(s) for relearning", cleared);
+		}
+	}
+
 	public void save()
 	{
 		if (!dirty || file == null)

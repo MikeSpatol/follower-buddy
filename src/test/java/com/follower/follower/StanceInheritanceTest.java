@@ -347,4 +347,23 @@ public class StanceInheritanceTest
 		assertTrue("the bundled library should hold hundreds of weapons",
 			shipped.size() > 100);
 	}
+
+	@Test
+	public void clearingLearnedAttacksKeepsHowEachWeaponIsCarried()
+	{
+		// The repair for a library that learned blocks as attacks: a shortbow
+		// had filed the unarmed block as its swing, so the thrall flinched
+		// instead of shooting. Only the attack is forgotten - the carry poses
+		// come from the composition, not from a moment of combat, and losing
+		// them would strip walk and idle from every weapon ever seen.
+		observe(BASE + 40, "Rune scimitar", SCIMITAR, 424);
+		assertEquals(424, library.attackFor(BASE + 40));
+
+		library.clearLearnedAttacks();
+
+		assertEquals("the block was still remembered as an attack",
+			0, library.forWeapon(BASE + 40).attack);
+		assertEquals("the weapon forgot how it is held, not just how it swings",
+			SCIMITAR[0], library.forWeapon(BASE + 40).idle);
+	}
 }
