@@ -272,4 +272,36 @@ public class InterruptedMidFlightTest
 		assertTrue("a line queued before the reset came out after it",
 			h.spoken.isEmpty());
 	}
+
+	@Test
+	public void aOneShotRaisedWhileEdgesArePrimedIsSwallowed() throws IOException
+	{
+		// Priming stops the gear you are wearing and the place you are standing
+		// reading as fresh news after a login or a reload. It does that bluntly:
+		// while it holds, dispatch discards the winner of every event, one-shot
+		// announcements included. Two shipped triggers - the world hop and the
+		// notebook edit - were raised just after arming it, and were therefore
+		// silently dead from the day they were written, rules and lines and all.
+		//
+		// The cure is ordering at the call site: raise the event, THEN prime.
+		// This pins the constraint that makes that ordering load-bearing, so
+		// the next one-shot added does not quietly join them.
+		String rules = "{\"version\": 1, \"rules\": ["
+			+ "{\"id\": \"hop\", \"group\": \"t\", \"cooldownMs\": 0,"
+			+ " \"when\": {\"type\": \"worldHop\"}, \"say\": [\"a new world\"]}]}";
+
+		Harness primed = harness(rules);
+		primed.gameTicks(1);
+		primed.engine.primeEdgesOnNextTick();
+		primed.dispatch(TriggerEvent.worldHop(302));
+		assertTrue("a one-shot raised inside the prime window still fired",
+			primed.firedBy("hop").isEmpty());
+
+		Harness ordered = harness(rules);
+		ordered.gameTicks(1);
+		ordered.dispatch(TriggerEvent.worldHop(302));
+		ordered.engine.primeEdgesOnNextTick();
+		assertFalse("raising it before priming is what makes it reachable",
+			ordered.firedBy("hop").isEmpty());
+	}
 }

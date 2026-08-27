@@ -548,7 +548,23 @@ public class FollowerPlugin extends Plugin
 
 		if (client.getGameState() == GameState.LOGGED_IN)
 		{
-			clientThread.invoke(this::rebuildFollower);
+			// Enabled while already in the world, so no login is coming and the
+			// one path that restores the follower's memory would never run.
+			// That alone would be forgetfulness; what made it destructive is
+			// that the periodic writer then saved the BLANK context straight
+			// over the stored one, erasing every tally, record, place opinion
+			// and once-ever line. Toggling a plugin is ordinary play.
+			//
+			// The session count is deliberately left alone: a toggle is not a
+			// new session, and the greeting belongs to a real login.
+			clientThread.invoke(() ->
+			{
+				readCounters();
+				noteFirstMeeting();
+				speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
+				readTraits();
+				rebuildFollower();
+			});
 		}
 	}
 
@@ -2578,11 +2594,18 @@ public class FollowerPlugin extends Plugin
 					// Back from a hop. Nothing to greet and nothing to count -
 					// only the baseline to re-take.
 					hopped = false;
-					speechEngine.primeEdgesOnNextTick();
 
-					// The one thing a hop actually changes is everyone. A rule
-					// delayTicks puts the remark after the scene settles.
+					// The one thing a hop actually changes is everyone. Raised
+					// BEFORE the priming below, and that order is the whole
+					// point: while priming holds, dispatch discards the winner
+					// of EVERY event, so a one-shot raised after arming it can
+					// never fire - which is exactly what silently killed this
+					// line. The rule's delayTicks still carries the remark past
+					// the scene settling, because pending releases are drained
+					// ahead of the prime gate.
 					speechEngine.dispatch(TriggerEvent.worldHop(client.getWorld()));
+
+					speechEngine.primeEdgesOnNextTick();
 				}
 
 				if (freshLogin)
@@ -2675,6 +2698,12 @@ public class FollowerPlugin extends Plugin
 			case CONNECTION_LOST:
 				freshLogin = true;
 				tearDownScene();
+				// Save BEFORE the reset drops the context: a normal logout does
+				// not go through shutDown, so everything counted since the last
+				// hundred-tick flush died here - the kill that just happened,
+				// the death that usually prompts the logout, and any once-ever
+				// line said in that window, which then said itself again.
+				writeCountersIfChanged();
 				// A session really ending. What the follower was feeling, what
 				// it was hoping for and the question it was waiting on all
 				// belonged to that session.
@@ -5159,11 +5188,6 @@ public class FollowerPlugin extends Plugin
 			}
 			if (ruleLoader.reloadIfChanged())
 			{
-				// A reload resets every rule's edge state, so the gear you are
-				// wearing and the place you are standing would read as fresh
-				// rising edges on the next tick. Same cure as login: baseline
-				// first, react to actual changes after.
-				speechEngine.primeEdgesOnNextTick();
 				// The rule holding the floor is one of the objects just thrown
 				// away, and the exemption that lets it speak is by identity.
 				speechEngine.clearFloor();
@@ -5176,8 +5200,19 @@ public class FollowerPlugin extends Plugin
 				// count too - that is also the player in its book. The rules
 				// carry long cooldowns so an editing session earns one remark,
 				// not a heckle per save.
+				//
+				// Raised after the floor is cleared and BEFORE the priming
+				// below: a held floor would hush it, and priming discards the
+				// winner of every dispatch while it holds. Either way round it
+				// was silently unreachable.
 				speechEngine.dispatch(
 					TriggerEvent.simple(TriggerEvent.Type.NOTES_EDITED));
+
+				// A reload resets every rule's edge state, so the gear you are
+				// wearing and the place you are standing would read as fresh
+				// rising edges on the next tick. Same cure as login: baseline
+				// first, react to actual changes after.
+				speechEngine.primeEdgesOnNextTick();
 			}
 		}
 
@@ -5990,7 +6025,11 @@ public class FollowerPlugin extends Plugin
 				// name rather than id: a player counts kalphites, not the four
 				// ids the game happens to use for them.
 				String name = npc.getName() == null ? "" : npc.getName();
-				speechEngine.getContext().tally("kills" + TriggerContext.TODAY);
+				// tallyBoth, like deaths and levels: the LIFETIME key is what the
+				// kill challenge counts against and what earns the nickname, and
+				// writing only the daily one left both permanently unreachable -
+				// every wager failed on its deadline however well it went.
+				speechEngine.getContext().tallyBoth("kills");
 				int count = speechEngine.getContext().tally(
 					"kill:" + name.toLowerCase(Locale.ROOT));
 				speechEngine.dispatch(TriggerEvent.kill(

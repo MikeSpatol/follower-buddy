@@ -971,4 +971,184 @@ public class RuleSetIntegrityTest
 			assertFalse(parsed == null);
 		}
 	}
+
+	// ---------------------------------------------------------------- tallies
+
+	/**
+	 * Every tally a rule wagers on, is nicknamed after, or gates itself on has
+	 * to be a counter some code path actually increments.
+	 *
+	 * <p>The kill challenge and the "local menace" nickname both named a
+	 * lifetime key nothing ever wrote. The wager failed on its deadline however
+	 * well the player did, and the name could never be earned. Nothing could
+	 * see it: the key is perfectly legal, it is simply always zero. The written
+	 * set is read back out of the source rather than listed here, because a
+	 * list is a thing that drifts out of date silently - which is the failure
+	 * this is here to end, not to repeat.
+	 */
+	@Test
+	public void everyTallyTheRulesNameIsOneTheCodeWrites() throws IOException
+	{
+		Set<String> written = new TreeSet<>();
+		Set<String> prefixes = new TreeSet<>();
+		for (String source : new String[]{
+			"src/main/java/com/follower/FollowerPlugin.java",
+			"src/main/java/com/follower/speech/SpeechEngine.java"})
+		{
+			java.nio.file.Path path = java.nio.file.Paths.get(source);
+			assertTrue("cannot read " + source, java.nio.file.Files.isRegularFile(path));
+			collectTalliedKeys(new String(
+				java.nio.file.Files.readAllBytes(path), StandardCharsets.UTF_8),
+				written, prefixes);
+		}
+		assertFalse("no tally calls found at all - the scan broke, not the rules",
+			written.isEmpty() && prefixes.isEmpty());
+
+		JsonObject file = bundled("/com/follower/default-phrases.json");
+		List<String> problems = new ArrayList<>();
+
+		if (file.has("nicknames"))
+		{
+			for (java.util.Map.Entry<String, JsonElement> nickname
+				: file.getAsJsonObject("nicknames").entrySet())
+			{
+				if (!isWritten(nickname.getKey(), written, prefixes))
+				{
+					problems.add("the nickname '" + nickname.getValue().getAsString()
+						+ "' is earned on tally '" + nickname.getKey()
+						+ "', which nothing writes");
+				}
+			}
+		}
+
+		for (JsonElement element : file.getAsJsonArray("rules"))
+		{
+			JsonObject rule = element.getAsJsonObject();
+			String id = rule.has("id") ? rule.get("id").getAsString() : "?";
+			if (rule.has("challenge") && rule.get("challenge").isJsonObject())
+			{
+				JsonObject challenge = rule.getAsJsonObject("challenge");
+				if (challenge.has("tally")
+					&& !isWritten(challenge.get("tally").getAsString(), written, prefixes))
+				{
+					problems.add(id + " wagers on tally '"
+						+ challenge.get("tally").getAsString() + "', which nothing writes");
+				}
+			}
+			for (String of : tallyKeysIn(rule.get("when")))
+			{
+				if (!isWritten(of, written, prefixes))
+				{
+					problems.add(id + " gates on tally '" + of + "', which nothing writes");
+				}
+			}
+		}
+
+		assertTrue("tallies named by rules that no code path increments:\n  "
+			+ String.join("\n  ", problems), problems.isEmpty());
+	}
+
+	/** The {@code of} of every tally condition in a when-block, however nested. */
+	private static List<String> tallyKeysIn(JsonElement when)
+	{
+		List<String> keys = new ArrayList<>();
+		if (when == null || !when.isJsonObject())
+		{
+			return keys;
+		}
+		JsonObject block = when.getAsJsonObject();
+		if (block.has("type")
+			&& "tally".equalsIgnoreCase(block.get("type").getAsString())
+			&& block.has("of"))
+		{
+			keys.add(block.get("of").getAsString());
+		}
+		if (block.has("conditions") && block.get("conditions").isJsonArray())
+		{
+			for (JsonElement child : block.getAsJsonArray("conditions"))
+			{
+				keys.addAll(tallyKeysIn(child));
+			}
+		}
+		return keys;
+	}
+
+	/**
+	 * Every string literal handed to a tally call in the given source, split
+	 * by what it actually produces.
+	 *
+	 * <p>The split is the whole point. A literal that IS the argument writes
+	 * that key exactly; a literal glued to something else ({@code "kill:" +
+	 * name}, {@code "kills" + TODAY}) only ever writes keys LONGER than
+	 * itself, and reading it as a whole key is precisely the mistake that let
+	 * a challenge wager on a counter that was never written.
+	 */
+	private static void collectTalliedKeys(String source,
+		Set<String> exact, Set<String> prefixes)
+	{
+		// Case matters: this must not match getTally(), which only READS.
+		java.util.regex.Matcher call = java.util.regex.Pattern
+			.compile("tallyBoth\\(|tally\\(").matcher(source);
+		while (call.find())
+		{
+			int open = call.end() - 1;
+			int depth = 0;
+			int end = open;
+			while (end < source.length())
+			{
+				char c = source.charAt(end);
+				if (c == '(')
+				{
+					depth++;
+				}
+				else if (c == ')' && --depth == 0)
+				{
+					break;
+				}
+				end++;
+			}
+
+			String argument = source.substring(open, Math.min(end + 1, source.length()));
+			java.util.regex.Matcher literal = java.util.regex.Pattern
+				.compile("\"([^\"]+)\"").matcher(argument);
+			while (literal.find())
+			{
+				int after = literal.end();
+				while (after < argument.length()
+					&& Character.isWhitespace(argument.charAt(after)))
+				{
+					after++;
+				}
+				boolean glued = after < argument.length() && argument.charAt(after) == '+';
+				(glued ? prefixes : exact).add(literal.group(1));
+			}
+		}
+	}
+
+	/**
+	 * Whether a key is one the code writes: exactly, as today's half of a
+	 * lifetime pair, or as something longer than a prefix the code builds on.
+	 */
+	private static boolean isWritten(String key, Set<String> exact, Set<String> prefixes)
+	{
+		if (exact.contains(key))
+		{
+			return true;
+		}
+		String base = key.endsWith(":today")
+			? key.substring(0, key.length() - ":today".length()) : key;
+		if (exact.contains(base))
+		{
+			return true;
+		}
+		for (String prefix : prefixes)
+		{
+			// Strictly longer: a prefix is only ever half of the key it makes.
+			if (key.length() > prefix.length() && key.startsWith(prefix))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
 }
