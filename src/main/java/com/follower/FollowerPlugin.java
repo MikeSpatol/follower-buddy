@@ -479,6 +479,11 @@ public class FollowerPlugin extends Plugin
 		if (!config.attacksRelearned())
 		{
 			stanceLibrary.clearLearnedAttacks();
+			// Written NOW, not at the next clean shutdown. The flag below says
+			// the repair has happened, and a client that is killed before it
+			// saves would leave that promise sitting over an unrepaired file
+			// with nothing left to run the repair again.
+			stanceLibrary.save();
 			configManager.setConfiguration(FollowerConfig.GROUP, "attacksRelearned", true);
 		}
 		paletteHarvest.load(dataDir);
