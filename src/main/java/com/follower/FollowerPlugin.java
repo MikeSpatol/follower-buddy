@@ -2594,18 +2594,18 @@ public class FollowerPlugin extends Plugin
 					// Back from a hop. Nothing to greet and nothing to count -
 					// only the baseline to re-take.
 					hopped = false;
-
-					// The one thing a hop actually changes is everyone. Raised
-					// BEFORE the priming below, and that order is the whole
-					// point: while priming holds, dispatch discards the winner
-					// of EVERY event, so a one-shot raised after arming it can
-					// never fire - which is exactly what silently killed this
-					// line. The rule's delayTicks still carries the remark past
-					// the scene settling, because pending releases are drained
-					// ahead of the prime gate.
-					speechEngine.dispatch(TriggerEvent.worldHop(client.getWorld()));
-
 					speechEngine.primeEdgesOnNextTick();
+
+					// The one thing a hop actually changes is everyone - said
+					// once the priming above has taken its baseline. It cannot
+					// go either side of that gate: inside the window the winner
+					// is discarded and the line is dead, and immediately before
+					// it the scene's cleared edges all rise at once, so a piece
+					// of worn gear outranks the hop and remarks on itself as if
+					// you had just put it on. Waiting costs two ticks and wins
+					// the pass outright.
+					speechEngine.dispatchAfterPriming(
+						TriggerEvent.worldHop(client.getWorld()));
 				}
 
 				if (freshLogin)
@@ -5201,18 +5201,16 @@ public class FollowerPlugin extends Plugin
 				// carry long cooldowns so an editing session earns one remark,
 				// not a heckle per save.
 				//
-				// Raised after the floor is cleared and BEFORE the priming
-				// below: a held floor would hush it, and priming discards the
-				// winner of every dispatch while it holds. Either way round it
-				// was silently unreachable.
-				speechEngine.dispatch(
-					TriggerEvent.simple(TriggerEvent.Type.NOTES_EDITED));
-
 				// A reload resets every rule's edge state, so the gear you are
 				// wearing and the place you are standing would read as fresh
 				// rising edges on the next tick. Same cure as login: baseline
 				// first, react to actual changes after.
 				speechEngine.primeEdgesOnNextTick();
+
+				// And the remark waits for that baseline, or the re-risen gear
+				// and area rules outrank it and speak in its place.
+				speechEngine.dispatchAfterPriming(
+					TriggerEvent.simple(TriggerEvent.Type.NOTES_EDITED));
 			}
 		}
 

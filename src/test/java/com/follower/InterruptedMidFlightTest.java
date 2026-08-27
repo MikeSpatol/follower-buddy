@@ -274,34 +274,55 @@ public class InterruptedMidFlightTest
 	}
 
 	@Test
-	public void aOneShotRaisedWhileEdgesArePrimedIsSwallowed() throws IOException
+	public void anAnnouncementWaitsForTheBaselineInsteadOfRacingIt() throws IOException
 	{
-		// Priming stops the gear you are wearing and the place you are standing
-		// reading as fresh news after a login or a reload. It does that bluntly:
-		// while it holds, dispatch discards the winner of every event, one-shot
-		// announcements included. Two shipped triggers - the world hop and the
-		// notebook edit - were raised just after arming it, and were therefore
-		// silently dead from the day they were written, rules and lines and all.
+		// A world hop clears every rule's edges and then wants to say one
+		// thing about the hop. Both obvious ways to arrange that are wrong,
+		// and the plugin shipped each of them in turn.
 		//
-		// The cure is ordering at the call site: raise the event, THEN prime.
-		// This pins the constraint that makes that ordering load-bearing, so
-		// the next one-shot added does not quietly join them.
+		// Raise it INSIDE the prime window and the winner is discarded along
+		// with everything else: the rule is silently dead.
+		//
+		// Raise it just BEFORE arming the window and the cleared edges all
+		// rise on that same pass - every piece of worn gear, the region
+		// underfoot - and since one event has one winner and those rules
+		// outrank it, the follower remarks on your gear as though you had
+		// just put it on and says nothing about the hop. Play report, word
+		// for word.
+		//
+		// So it waits for the baseline, which is what dispatchAfterPriming is.
 		String rules = "{\"version\": 1, \"rules\": ["
-			+ "{\"id\": \"hop\", \"group\": \"t\", \"cooldownMs\": 0,"
-			+ " \"when\": {\"type\": \"worldHop\"}, \"say\": [\"a new world\"]}]}";
+			+ "{\"id\": \"hop\", \"group\": \"t\", \"priority\": 26, \"cooldownMs\": 0,"
+			+ " \"when\": {\"type\": \"worldHop\"}, \"say\": [\"a new world\"]},"
+			// Stands in for the 62 gear rules, all of which outrank the hop.
+			+ "{\"id\": \"gear\", \"group\": \"t\", \"priority\": 35, \"cooldownMs\": 0,"
+			+ " \"when\": {\"type\": \"always\"}, \"say\": [\"nice hat\"]}]}";
 
-		Harness primed = harness(rules);
-		primed.gameTicks(1);
-		primed.engine.primeEdgesOnNextTick();
-		primed.dispatch(TriggerEvent.worldHop(302));
-		assertTrue("a one-shot raised inside the prime window still fired",
-			primed.firedBy("hop").isEmpty());
+		Harness swallowed = harness(rules);
+		swallowed.gameTicks(1);
+		swallowed.engine.primeEdgesOnNextTick();
+		swallowed.dispatch(TriggerEvent.worldHop(302));
+		assertTrue("raised inside the window, it is discarded like everything else",
+			swallowed.firedBy("hop").isEmpty());
 
-		Harness ordered = harness(rules);
-		ordered.gameTicks(1);
-		ordered.dispatch(TriggerEvent.worldHop(302));
-		ordered.engine.primeEdgesOnNextTick();
-		assertFalse("raising it before priming is what makes it reachable",
-			ordered.firedBy("hop").isEmpty());
+		Harness held = harness(rules);
+		held.gameTicks(1);
+		// The scene changed: every edge is cleared, exactly as a hop does.
+		held.engine.resetForNewScene();
+		held.engine.primeEdgesOnNextTick();
+		// The stand-in speaks on the setup tick too, being unconditional; only
+		// what it does from the hop onwards is the question.
+		held.clear();
+		held.engine.dispatchAfterPriming(TriggerEvent.worldHop(302));
+
+		assertTrue("it must not speak before the baseline is taken",
+			held.firedBy("hop").isEmpty());
+
+		held.gameTicks(6);
+
+		assertFalse("the announcement never arrived after the window drained",
+			held.firedBy("hop").isEmpty());
+		assertTrue("the re-risen gear rule stole the announcement's pass",
+			held.firedBy("gear").isEmpty());
 	}
 }

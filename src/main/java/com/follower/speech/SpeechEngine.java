@@ -351,6 +351,9 @@ public class SpeechEngine
 	{
 		lastSpokeMs = 0L;
 		pending.clear();
+		// An announcement waiting on the old scene's prime window belongs to
+		// that scene, not to the one arriving.
+		afterPriming.clear();
 		hushUntilMs = 0L;
 		hushOwner = null;
 		for (SpeechRule rule : loader.getRules())
@@ -365,6 +368,7 @@ public class SpeechEngine
 	{
 		context = null;
 		lastSpokeMs = 0L;
+		afterPriming.clear();
 		director.reset();
 		recentLines.clear();
 		recentLineSet.clear();
@@ -420,6 +424,38 @@ public class SpeechEngine
 	public void primeEdgesOnNextTick()
 	{
 		primeTicksLeft = 2;
+	}
+
+	/** Announcements waiting for the prime window to drain. */
+	private final java.util.List<TriggerEvent> afterPriming = new java.util.ArrayList<>();
+
+	/**
+	 * Raises an event the plugin MEANT to raise - a world hop, an edited
+	 * notebook - once the prime window has drained, or immediately if none is
+	 * open.
+	 *
+	 * <p>These cannot simply be dispatched around the priming, and both ways
+	 * of trying were wrong. Dispatched inside the window, the winner is
+	 * discarded with everything else and the rule is silently dead. Dispatched
+	 * just BEFORE arming it, the announcement lands on a rule set whose edges
+	 * were cleared with the scene, so every piece of worn gear and the region
+	 * underfoot rise on that same pass - and since one event has one winner
+	 * and those rules outrank the announcement, the follower remarks on your
+	 * gear as though you had just put it on and the hop goes unmentioned.
+	 * Play report, exactly that.
+	 *
+	 * <p>Waiting is what makes it correct: the window baselines the state
+	 * first, so by the time this lands, nothing else is rising and the
+	 * announcement wins the pass it deserves to win.
+	 */
+	public void dispatchAfterPriming(TriggerEvent event)
+	{
+		if (primeTicksLeft <= 0)
+		{
+			dispatch(event);
+			return;
+		}
+		afterPriming.add(event);
 	}
 
 	/**
@@ -740,9 +776,18 @@ public class SpeechEngine
 		// before that, "no equipment" is an artefact of loading, not a state.
 		if (primeTicksLeft > 0)
 		{
-			if (event.getType() == TriggerEvent.Type.TICK && getContext().isPlayerReady())
+			if (event.getType() == TriggerEvent.Type.TICK && getContext().isPlayerReady()
+				&& --primeTicksLeft == 0 && !afterPriming.isEmpty())
 			{
-				primeTicksLeft--;
+				// The baseline is taken; anything held back now lands on a rule
+				// set where only it is rising. Drained into a copy first, so a
+				// re-entrant dispatch cannot see the queue twice.
+				java.util.List<TriggerEvent> held = new java.util.ArrayList<>(afterPriming);
+				afterPriming.clear();
+				for (TriggerEvent announcement : held)
+				{
+					dispatch(announcement);
+				}
 			}
 			return;
 		}
