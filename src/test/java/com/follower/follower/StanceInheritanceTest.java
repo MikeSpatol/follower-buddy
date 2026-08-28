@@ -85,6 +85,41 @@ public class StanceInheritanceTest
 		library.setManual(itemId, poses[0], poses[1], poses[2], attack);
 	}
 
+	// --------------------------------------------------------- attack styles
+
+	@Test
+	public void theStyleTheWeaponWasSwungInWinsOverTheGenericSwing()
+	{
+		// Everyone in the scene teaches the generic swing; only the local
+		// player can teach a styled one, because which style anyone else has
+		// selected is not readable. So a weapon ends up with both, and the
+		// styled slot is the better answer when there is one.
+		observe(BASE + 40, "Dragon scimitar", SCIMITAR, 390);
+		library.forWeapon(BASE + 40).attackByStyle = new int[]{0, 386, 0, 0};
+
+		assertEquals("with no style asked for, the generic swing",
+			390, library.attackFor(BASE + 40));
+		assertEquals("the animation this weapon really uses in that style",
+			386, library.attackFor(BASE + 40, 1));
+		assertEquals("a style it has never been swung in falls back",
+			390, library.attackFor(BASE + 40, 2));
+	}
+
+	@Test
+	public void aStyleSlotIsNeverBorrowedFromAnotherWeapon()
+	{
+		// The generic swing borrows across a stance class; a styled one must
+		// not. A style NUMBER means different things on different weapon
+		// types, so another weapon's slot 1 is not this weapon's slot 1 - even
+		// when the two are close enough to share a carry class and a swing.
+		observe(BASE + 41, "Rune scimitar", SCIMITAR, 390);
+		library.forWeapon(BASE + 41).attackByStyle = new int[]{0, 386, 0, 0};
+		observe(BASE + 42, "Rune longsword", SCIMITAR, 390);
+
+		assertEquals("it took the neighbour's styled animation",
+			390, library.attackFor(BASE + 42, 1));
+	}
+
 	// -------------------------------------------------------------- variants
 
 	@Test

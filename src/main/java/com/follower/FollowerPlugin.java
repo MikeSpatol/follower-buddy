@@ -3901,7 +3901,7 @@ public class FollowerPlugin extends Plugin
 	 */
 	private int thrallAttackAnimation()
 	{
-		int learned = stanceLibrary.attackFor(follower.getWeaponItemId());
+		int learned = stanceLibrary.attackFor(follower.getWeaponItemId(), attackStyle());
 		if (learned > 0)
 		{
 			return learned;
@@ -5767,6 +5767,18 @@ public class FollowerPlugin extends Plugin
 		speechEngine.dispatch(TriggerEvent.npcShout(npc.getName(), event.getOverheadText()));
 	}
 
+	/**
+	 * Which attack style the player has selected, as the game numbers them.
+	 *
+	 * <p>Deliberately not translated into stab, slash or crush: what a style
+	 * number means depends on the weapon type, and the follower only ever
+	 * needs the animation that goes with the style, never its name.
+	 */
+	private int attackStyle()
+	{
+		return client.getVarpValue(net.runelite.api.gameval.VarPlayerID.COM_MODE);
+	}
+
 	/** The client's brightness setting (1 Dark .. 4 V.Bright, 2 = Normal). */
 	private static final int BRIGHTNESS_VARP = 166;
 
@@ -6065,7 +6077,11 @@ public class FollowerPlugin extends Plugin
 			Integer hit = playersHit.get(sightedPlayer);
 			if (hit == null || hit < sightedTick)
 			{
-				stanceLibrary.learnAttack(sightedPlayer, sightedAnimation);
+				// Only the local player's selected style is knowable - varps
+				// are theirs alone - so everyone else teaches the generic
+				// swing and your own play teaches the styled ones.
+				stanceLibrary.learnAttack(sightedPlayer, sightedAnimation,
+					sightedPlayer == client.getLocalPlayer() ? attackStyle() : -1);
 			}
 			sightedPlayer = null;
 		}

@@ -67,6 +67,26 @@ public class StanceLibrary
 		 */
 		public int attack;
 
+		/**
+		 * The swing for each attack style, indexed by the game's own style
+		 * number (COM_MODE, 0-3). 0 in a slot means that style has not been
+		 * seen; null means none have.
+		 *
+		 * <p>Only the LOCAL player can fill these. Which style anyone else has
+		 * selected is not readable - varps are the local player's - so every
+		 * other player in the scene can still only teach the generic swing
+		 * above. That asymmetry is the whole reason this is a separate field
+		 * rather than a replacement: the crowd teaches breadth, your own play
+		 * teaches depth, and a weapon ends up with both.
+		 *
+		 * <p>Deliberately indexed by style NUMBER rather than named stab,
+		 * slash or crush. What a style means depends on the weapon type, which
+		 * would need a table the cache does not carry - and the follower never
+		 * needs to know the name. It needs the animation that goes with the
+		 * style the player has selected, and that is exactly what the index is.
+		 */
+		public int[] attackByStyle;
+
 		public Stance()
 		{
 		}
@@ -344,6 +364,16 @@ public class StanceLibrary
 	 */
 	public void learnAttack(Player player, int animationId)
 	{
+		learnAttack(player, animationId, -1);
+	}
+
+	/**
+	 * @param style the attack style the swing was performed in (COM_MODE,
+	 * 0-3), or -1 when it cannot be known - which is every player but the
+	 * local one
+	 */
+	public void learnAttack(Player player, int animationId, int style)
+	{
 		if (animationId <= 0 || player.getInteracting() == null)
 		{
 			return;
@@ -361,6 +391,28 @@ public class StanceLibrary
 		{
 			// No pose set yet means the weapon is brand new to us; observe()
 			// creates it on the next tick and the attack lands then.
+			return;
+		}
+		if (style >= 0 && style < STYLES)
+		{
+			if (stance.attackByStyle == null)
+			{
+				stance.attackByStyle = new int[STYLES];
+			}
+			if (stance.attackByStyle[style] != animationId)
+			{
+				stance.attackByStyle[style] = animationId;
+				dirty = true;
+				log.debug("Learned attack animation {} for weapon {} in style {}",
+					animationId, weaponId, style);
+			}
+		}
+
+		// The generic slot is still written, and still by everyone: it is what
+		// borrowing across a stance class reads, and what an unknown style
+		// falls back to.
+		if (stance.attack == animationId)
+		{
 			return;
 		}
 		stance.attack = animationId;
@@ -426,11 +478,32 @@ public class StanceLibrary
 	 */
 	public int attackFor(int weaponItemId)
 	{
+		return attackFor(weaponItemId, -1);
+	}
+
+	/** How many attack styles the game numbers, for the per-style slots. */
+	private static final int STYLES = 4;
+
+	/**
+	 * @param style the style the swing should be in (COM_MODE, 0-3), or -1 to
+	 * take whatever the weapon is generally known to do
+	 */
+	public int attackFor(int weaponItemId, int style)
+	{
 		// forWeapon already resolves a trim variant to its plain original.
 		Stance stance = forWeapon(weaponItemId);
 		if (stance == null)
 		{
 			return 0;
+		}
+		// The style the player actually has selected wins when this weapon has
+		// been swung in it. Not borrowed across the class: a style number means
+		// different things on different weapon types, so another weapon's slot
+		// 2 is not this weapon's slot 2.
+		if (style >= 0 && style < STYLES && stance.attackByStyle != null
+			&& stance.attackByStyle[style] > 0)
+		{
+			return stance.attackByStyle[style];
 		}
 		if (stance.attack > 0)
 		{
