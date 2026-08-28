@@ -4268,6 +4268,8 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void startTalking()
 	{
+		// Opening the box is presence too, even before anything is chosen.
+		speechEngine.getContext().noteAttention();
 		// A bubble still up when the box opens is two mouths at once; the
 		// queue is likewise held while the box is open (see drainSpeechQueue).
 		overlay.clear();

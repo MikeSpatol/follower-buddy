@@ -33,6 +33,36 @@ public class AttentionDamperTest
 		+ " \"when\": {\"type\": \"unattended\", \"ticks\": 250},"
 		+ " \"say\": [\"gone, then\"]}]}";
 
+	@Test
+	public void answeringIsPresence() throws IOException
+	{
+		// Play report: a whole hands game played out and the follower never
+		// said which hand it was. The game asks you to stand still to be
+		// offered at all, and a player who then only clicks dialog options
+		// moves neither camera nor feet - so three minutes in, the damper
+		// decided the chair was empty and silenced the reveal, while the
+		// person it was talking to was answering its question.
+		//
+		// Reading a question and choosing is the most direct evidence of a
+		// person there is, so it clears the state like any other input.
+		String rules = "{\"version\": 1, \"rules\": ["
+			+ "{\"id\": \"reveal\", \"group\": \"t\", \"cooldownMs\": 0,"
+			+ " \"when\": {\"type\": \"answered\", \"is\": \"left\"},"
+			+ " \"say\": [\"it was the other one\"]}]}";
+
+		Harness h = new Harness(folder.newFolder().toPath(), rules);
+		h.gameTicks(320);
+		assertTrue("the damper should have engaged by now",
+			h.engine.getContext().getUnattendedTicks() >= 300);
+
+		h.dispatch(TriggerEvent.answered("left"));
+
+		assertTrue("the follower went quiet on somebody who was talking to it",
+			!h.firedBy("reveal").isEmpty());
+		assertEquals("answering left the follower still thinking it was alone",
+			0, h.engine.getContext().getUnattendedTicks());
+	}
+
 	/** A harness left genuinely alone: no camera, no feet, no hands, no events. */
 	private Harness abandoned() throws IOException
 	{

@@ -144,7 +144,14 @@ public class SpeechEngine
 			TriggerEvent.Type.LEVEL_UP,
 			TriggerEvent.Type.REGION_CHANGE,
 			TriggerEvent.Type.PLAYER_DEATH,
-			TriggerEvent.Type.WANT_FULFILLED);
+			TriggerEvent.Type.WANT_FULFILLED,
+			// Answering is the most direct evidence of a person there is:
+			// somebody read a question and chose. Without it the damper could
+			// silence the follower MID-CONVERSATION - the guessing game asks
+			// you to stand still, so a player who then only clicks dialog
+			// options never moves camera or feet, and the reveal of which
+			// hand it was went to an "empty chair" that was answering it.
+			TriggerEvent.Type.ANSWERED);
 
 	/** How long the NEXT idle remark has to wait, given the stretch so far. */
 	private long trailWaitMs()
