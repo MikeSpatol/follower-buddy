@@ -568,10 +568,48 @@ public class FollowerEntity
 		thrallNpc = null;
 		lastThrallTile = null;
 		clearThrallCircle();
-		if (spawned && tile != null)
+		if (!spawned || tile == null)
 		{
-			stayHere();
+			return;
 		}
+
+		// Whatever the possession left behind belongs to the thrall, not to
+		// the follower. Its waypoints are the NPC's raw server tiles, which
+		// were never collision-checked because they never needed to be - a
+		// thrall walks where a thrall may - and walking them now, as itself,
+		// is how the follower ends up somewhere it cannot stand.
+		route.clear();
+		routeRun.clear();
+
+		// The tile underfoot is the thrall's for the same reason: behind
+		// counters, over water, inside scenery. Holding the spot is right
+		// when the spot is a real one. When it is not, the possession ended
+		// somewhere the follower has no business standing, so it goes home.
+		if (!standable(tile))
+		{
+			Player local = client.getLocalPlayer();
+			if (local != null && local.getWorldLocation() != null)
+			{
+				snapBeside(local.getWorldLocation());
+				return;
+			}
+		}
+
+		// Possession moved `tile` every tick and never touched simTile, which
+		// is what the pathfinder plans from - left stale, the next route would
+		// be worked out from wherever the follower was when it was possessed.
+		simTile = tile;
+		stayHere();
+	}
+
+	/** Whether the follower could stand on this tile at all. */
+	boolean standable(WorldPoint at)
+	{
+		Integer flags = flagAt(at);
+		// No data - an instance edge, an unloaded scene - reads as open, the
+		// same reading canStep takes, so this never freezes it out of a place
+		// the game simply has not described.
+		return flags == null || (flags & CollisionDataFlag.BLOCK_MOVEMENT_FULL) == 0;
 	}
 
 	/** The thrall's summoning circle: a looping ground graphic riding the follower. */

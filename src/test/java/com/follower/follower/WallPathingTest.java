@@ -171,6 +171,24 @@ public class WallPathingTest
 	}
 
 	@Test
+	public void aTileAThrallCanStandOnIsNotAlwaysOneTheFollowerCan()
+	{
+		// The gap that outlives possession. A thrall stands behind counters,
+		// over water and inside scenery quite legally, and while possessed the
+		// follower copies it exactly - correctly, because it IS the thrall.
+		// The moment that ends, the same tile is just somewhere it cannot be,
+		// so ending the hold there had to stop being unconditional.
+		FakeGame game = new FakeGame().withCollision();
+		game.wallAt(12, 12, CollisionDataFlag.BLOCK_MOVEMENT_FULL);
+		FollowerEntity follower = followerOn(game);
+
+		assertFalse("a solid tile is not somewhere to be left standing",
+			follower.standable(new WorldPoint(12, 12, 0)));
+		assertTrue("and open ground still is",
+			follower.standable(new WorldPoint(10, 10, 0)));
+	}
+
+	@Test
 	public void aPlayerBoxedInGetsTheirOwnTileShared()
 	{
 		// Nowhere legal at all: standing on top of the player for a moment is
