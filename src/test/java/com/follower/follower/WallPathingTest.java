@@ -5,6 +5,7 @@ import net.runelite.api.CollisionDataFlag;
 import net.runelite.api.coords.WorldPoint;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -136,5 +137,62 @@ public class WallPathingTest
 
 		assertFalse("the corner is shut",
 			follower.canStep(new WorldPoint(10, 10, 0), 1, 1));
+	}
+
+	// ------------------------------------------------------------- teleports
+
+	/**
+	 * Walking obeys the walls; snapping used to ignore them entirely.
+	 *
+	 * <p>Every teleport, plane change and scene recovery put the follower one
+	 * step west of the player by arithmetic alone, and arithmetic does not
+	 * know about stone. Play report: the follower teleporting onto tiles it
+	 * could not stand on.
+	 */
+	@Test
+	public void aSnapNeverLandsSomewhereItCouldNotWalkTo()
+	{
+		FakeGame game = new FakeGame().withCollision();
+		// The tile a snap wants - one west of the player - is solid.
+		game.wallAt(9, 10, CollisionDataFlag.BLOCK_MOVEMENT_FULL);
+		FollowerEntity follower = followerOn(game);
+
+		WorldPoint player = new WorldPoint(10, 10, 0);
+		WorldPoint wanted = new WorldPoint(9, 10, 0);
+		WorldPoint landing = follower.landingTile(wanted, player);
+
+		assertFalse("it landed inside the scenery it was told to land in",
+			wanted.equals(landing));
+		// Not necessarily adjacent - going round the blocked tile can cost two
+		// steps - but it must be somewhere connected to the player rather than
+		// a hole on the far side of a wall.
+		assertNotNull("whatever it chose has to be walkable ground",
+			follower.stepToward(landing, player, false));
+	}
+
+	@Test
+	public void aPlayerBoxedInGetsTheirOwnTileShared()
+	{
+		// Nowhere legal at all: standing on top of the player for a moment is
+		// a far smaller lie than standing inside a wall, and their tile is
+		// standable by definition because they are standing on it.
+		FakeGame game = new FakeGame().withCollision();
+		for (int dx = -2; dx <= 2; dx++)
+		{
+			for (int dy = -2; dy <= 2; dy++)
+			{
+				if (dx == 0 && dy == 0)
+				{
+					continue;
+				}
+				game.wallAt(10 + dx, 10 + dy, CollisionDataFlag.BLOCK_MOVEMENT_FULL);
+			}
+		}
+		FollowerEntity follower = followerOn(game);
+
+		WorldPoint player = new WorldPoint(10, 10, 0);
+		assertEquals("with nowhere else to go it must share the player's tile",
+			player,
+			follower.landingTile(new WorldPoint(9, 10, 0), player));
 	}
 }

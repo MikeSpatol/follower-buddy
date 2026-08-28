@@ -192,6 +192,14 @@ public class FollowerEntity
 		// so re-measuring on every gear change would be wasted work.
 		object.setDrawFrontTilesFirst(true);
 
+		// Arriving is a snap like any other: whatever the caller worked out,
+		// it does not get to put the follower inside a wall.
+		Player spawnAnchor = client.getLocalPlayer();
+		if (spawnAnchor != null && spawnAnchor.getWorldLocation() != null)
+		{
+			at = landingTile(at, spawnAnchor.getWorldLocation());
+		}
+
 		tile = at;
 		simTile = at;
 		fineWX = at.getX() * 128L + 64;
@@ -2249,11 +2257,73 @@ public class FollowerEntity
 		return flags[sx][sy];
 	}
 
+	/** How far around the player a snap may look for somewhere legal to land. */
+	private static final int LANDING_SEARCH_RADIUS = 2;
+
+	/**
+	 * Where a snap actually puts the follower.
+	 *
+	 * <p>Every teleport, plane change and scene recovery used to drop it on a
+	 * tile picked by arithmetic alone - one step west of the player - and
+	 * arithmetic does not know about walls. Play report: the follower
+	 * teleporting onto tiles it could not stand on.
+	 *
+	 * <p>So the wanted tile is taken only if the follower could actually WALK
+	 * there from the player, which is stricter than merely standable and rules
+	 * out landing through a wall into a closet. Failing that, the nearest tile
+	 * that qualifies. Failing even that - a player boxed into a single tile -
+	 * the player's own, which is standable by definition because they are
+	 * standing on it: sharing a tile for a moment is a far smaller lie than
+	 * standing inside the scenery.
+	 */
+	WorldPoint landingTile(WorldPoint wanted, WorldPoint anchor)
+	{
+		if (anchor == null)
+		{
+			return wanted;
+		}
+
+		java.util.Set<WorldPoint> reachable = reachableFrom(anchor, LANDING_SEARCH_RADIUS);
+		if (wanted != null && reachable.contains(wanted))
+		{
+			return wanted;
+		}
+
+		WorldPoint target = wanted == null ? anchor : wanted;
+		WorldPoint best = anchor;
+		int bestDistance = Integer.MAX_VALUE;
+		for (WorldPoint candidate : reachable)
+		{
+			if (candidate.equals(anchor))
+			{
+				// The last resort, not a preference: only if nothing else fits.
+				continue;
+			}
+			int distance = candidate.distanceTo(target);
+			// Coordinates break ties so the choice cannot jitter between
+			// frames on the iteration order of a hash set.
+			if (distance < bestDistance
+				|| (distance == bestDistance && comesFirst(candidate, best)))
+			{
+				best = candidate;
+				bestDistance = distance;
+			}
+		}
+		return best;
+	}
+
+	private static boolean comesFirst(WorldPoint candidate, WorldPoint against)
+	{
+		return candidate.getX() != against.getX()
+			? candidate.getX() < against.getX()
+			: candidate.getY() < against.getY();
+	}
+
 	/** Re-places the follower beside the player after a teleport or plane change. */
 	private boolean snapBeside(WorldPoint playerTile)
 	{
-		WorldPoint beside = new WorldPoint(
-			playerTile.getX() - 1, playerTile.getY(), playerTile.getPlane());
+		WorldPoint beside = landingTile(new WorldPoint(
+			playerTile.getX() - 1, playerTile.getY(), playerTile.getPlane()), playerTile);
 
 		// A forced relocation ends any pose - the tile it was holding is gone.
 		stayTile = null;
@@ -2297,8 +2367,20 @@ public class FollowerEntity
 		route.clear();
 		routeRun.clear();
 
-		LocalPoint beside = new LocalPoint(
-			playerLocal.getX() - TILE, playerLocal.getY(), client.getTopLevelWorldView());
+		// Last ditch, and still not licence to stand in a wall: pick the
+		// landing tile in world space and come back to local, falling back to
+		// the player's own spot if that cannot be resolved.
+		LocalPoint beside = null;
+		if (playerTile != null)
+		{
+			WorldPoint landing = landingTile(new WorldPoint(
+				playerTile.getX() - 1, playerTile.getY(), playerTile.getPlane()), playerTile);
+			beside = LocalPoint.fromWorld(client, landing);
+		}
+		if (beside == null)
+		{
+			beside = playerLocal;
+		}
 
 		lastRenderedLocation = beside;
 		object.setLocation(beside, client.getTopLevelWorldView().getPlane());
