@@ -1,14 +1,14 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 446 rules, 2127 spoken lines, 2 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 446 rules, 2173 spoken lines, 2 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
 ## Contents
 
 - [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (32 rules, 149 lines)
-- [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (36 rules, 199 lines)
-- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (33 rules, 219 lines)
+- [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (36 rules, 211 lines)
+- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (33 rules, 253 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 114 lines)
 - [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 72 lines)
 - [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (20 rules, 106 lines)
@@ -953,6 +953,18 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - I'll use the time to tidy my notes. They're immaculate.
 - Still gone. The scenery and I are getting acquainted.
 - Take your time. The notes on your absence are brief.
+- Nothing has happened in some detail.
+- Two of us here, if you count the notebook.
+- Gone long enough to be a paragraph.
+- Wherever you've gone, I hope it's well documented.
+- I'll pretend that was a dramatic pause.
+- You've left me in charge. I've told the birds.
+- I'll add you to the list of things not currently here.
+- That's another quiet page. They're my favourite.
+- No one to walk after. I'll stand somewhere sensible.
+- I was saying something. It'll keep.
+- There'll be a summary. It's one word.
+- I do some of my best noticing alone.
 
 ### `welfare-check`
 
@@ -1080,6 +1092,16 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - We are stopping for this. Briefly. Or longer.
 - Business can wait. There's an animal.
 - I keep a page for good creatures. Adding one.
+- It has no idea what it's done to me.
+- It blinked at me. I'll take that as a greeting.
+- It's done nothing all day and I respect it enormously.
+- I have a favourite now. It's not you.
+- You haven't said hello. I've noticed.
+- Careful, I'll get attached.
+- I'm told professionals walk past these.
+- Do you think it likes me? Don't answer that.
+- Does it have a name, or shall I invent one?
+- Who's a good... anyway.
 
 ### `fail-burnt-food`
 
@@ -1331,6 +1353,20 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Space is getting scarce in there.
 - Whatever you pick up next had better be worth a slot.
 - The bag and I agree: something has to go.
+- Nearly full. I'll stop mentioning it eventually.
+- How attached are you to everything in there?
+- Everything in there was essential at the time.
+- You're two items from a difficult decision.
+- That bag has ambitions above its size.
+- Consider this the polite version of running out.
+- I'm keeping a list of what you won't part with.
+- The bank, then? I'll allow it this once.
+- There's space for two more mistakes.
+- Something in there will have to become a memory.
+- The bag's at the stage where I'd start choosing.
+- The ground is always an option. A poor one.
+- I'd hate for the next good thing to have nowhere to go.
+- Shall I pretend I didn't see the bag?
 
 ### `want-fulfilled-lumbridge`
 
@@ -1389,6 +1425,16 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Good. The book gets a tidy little tick.
 - Sensible. I'll not let it go to your head.
 - We work well when you do as I say. Coincidence, I'm sure.
+- Ah. So you do hear me.
+- Was that on my account, or were you going to anyway?
+- Quietly pleased. That's as loud as I get.
+- Right on cue. I'll pretend I timed that.
+- I'll take that as listening. Don't correct me.
+- Underlined. It's my page, I'll underline what I like.
+- There's a version of this where I had to ask twice.
+- My reputation as an oracle survives another day.
+- Did that help? I'll write it down as though it did.
+- Nothing left to nag about. I'll find something.
 
 ### `advice-ignored`
 
