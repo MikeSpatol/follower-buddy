@@ -776,4 +776,50 @@ public class ErrandSimulationTest
 		assertFalse(silent.isBusy());
 		assertTrue("with every errand switched off, none may run", dispatched.isEmpty());
 	}
+
+	// ------------------------------------------------------------- rotation
+
+	@Test
+	public void theSameErrandDoesNotComeRoundAgainAndAgain()
+	{
+		// Fifteen days of real play, measured: three errands were 84% of every
+		// one that ran. Not because the roll preferred them - it shuffles -
+		// but because they are the three that need nothing in the world. A
+		// bank errand needs a booth in sight; the bootlace needs only a boot,
+		// so it won every roll the others could not. It ran 189 times on five
+		// lines, and the player heard each of them thirty-seven times.
+		//
+		// An empty scene is exactly that situation: nothing to walk to, so
+		// only the self-contained errands can start. Whatever runs here must
+		// still take turns.
+		List<String> order = new ArrayList<>();
+		for (int i = 0; i < 20_000; i++)
+		{
+			game.tick(++tick);
+			errands.tick();
+			for (TriggerEvent event : dispatched)
+			{
+				if (event.getType() == TriggerEvent.Type.ERRAND_START)
+				{
+					order.add(event.getName());
+				}
+			}
+			dispatched.clear();
+		}
+
+		assertTrue("nothing ran at all, so this proves nothing", order.size() >= 4);
+
+		int repeats = 0;
+		for (int i = 1; i < order.size(); i++)
+		{
+			if (order.get(i).equals(order.get(i - 1)))
+			{
+				repeats++;
+			}
+		}
+		assertEquals("an errand ran twice in a row: " + order, 0, repeats);
+
+		long distinct = order.stream().distinct().count();
+		assertTrue("only one kind of errand ever ran: " + order, distinct >= 2);
+	}
 }
