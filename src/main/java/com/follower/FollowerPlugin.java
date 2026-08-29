@@ -331,6 +331,9 @@ public class FollowerPlugin extends Plugin
 	/** ::follower chatwatch - print chat messages so a rule can quote them exactly. */
 	private boolean watchChat;
 
+	/** ::follower examinewatch - prints what every Examine click resolved to. */
+	private boolean watchExamine;
+
 	/**
 	 * ::follower scan - a tick-by-tick timeline of every animation slot the
 	 * player is using.
@@ -685,6 +688,7 @@ public class FollowerPlugin extends Plugin
 		watchAnimations = false;
 		watchOthers = false;
 		watchChat = false;
+		watchExamine = false;
 	}
 
 	/*
@@ -6227,7 +6231,7 @@ public class FollowerPlugin extends Plugin
 		"wraplerp", "wrapauto", "wrapearly", "pose",
 		"animinfo", "animtrace", "errandscan", "cachecheck", "stanceaudit",
 		"watch", "stance", "gfx", "spectate", "shield", "centre", "center", "loot",
-		"scan", "heights", "mood", "chatwatch", "fire", "want", "transcript",
+		"scan", "heights", "mood", "chatwatch", "examinewatch", "fire", "want", "transcript",
 		"thieftargets", "sniffanims", "finditem", "prop", "propoffset"));
 
 	/** The errand keys ::follower errand accepts, read from the enum itself. */
@@ -6281,6 +6285,11 @@ public class FollowerPlugin extends Plugin
 		String target = null;
 		WorldPoint at = null;
 		net.runelite.api.WorldView view = client.getTopLevelWorldView();
+		if (watchExamine)
+		{
+			sendStatus("Examine: action " + event.getMenuAction()
+				+ ", option '" + event.getMenuOption() + "', id " + event.getId());
+		}
 		switch (event.getMenuAction())
 		{
 			case EXAMINE_NPC:
@@ -6324,6 +6333,11 @@ public class FollowerPlugin extends Plugin
 		}
 		// Multiloc objects answer "null" until their impostor resolves; a
 		// glance without a line is fine, a line naming "null" is not.
+		if (watchExamine)
+		{
+			sendStatus("   resolved to '" + target + "'"
+				+ (at == null ? ", no tile (no glance)" : " at " + at));
+		}
 		if (target != null && !target.isEmpty() && !"null".equals(target))
 		{
 			speechEngine.dispatch(TriggerEvent.examinedThing(
@@ -6961,6 +6975,14 @@ public class FollowerPlugin extends Plugin
 					: "Stopped sniffing animations.");
 				break;
 
+			case "examinewatch":
+				watchExamine = !watchExamine;
+				sendStatus(watchExamine
+					? "Printing what every Examine click resolves to. Examine"
+						+ " something. ::follower examinewatch again to stop."
+					: "Stopped watching examines.");
+				break;
+
 			case "chatwatch":
 				watchChat = !watchChat;
 				sendStatus(watchChat
@@ -7517,7 +7539,7 @@ public class FollowerPlugin extends Plugin
 						+ "priorities | palette | harvest | hidden | height <n> | "
 						+ "pitchsweep | headsweep | head <...> | followtrace | "
 						+ "wraplerp | wrapauto | wrapearly | pose <id> | animinfo | "
-						+ "animtrace | errandscan | cachecheck | stanceaudit | "
+						+ "animtrace | errandscan | cachecheck | stanceaudit | examinewatch | "
 						+ "mood [0-100] | chatwatch | sniffanims | finditem <name> | "
 						+ "prop <itemId> | propoffset <x y z> | fire <rule-id> | want | "
 						+ "gfx <id> | spectate | shield | centre <x y z> | loot <value> | "

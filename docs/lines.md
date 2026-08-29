@@ -1515,10 +1515,10 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `examine-echo`
 
-> The player examined something and the follower turned to look at it too. The head-turn is the usual whole reaction; this line is the rare garnish, hence the heavy chance gate.
+> The player examined something and the follower turned to look at it too. The head-turn is the usual whole reaction; this line is the garnish. Examining is player-INITIATED - they are asking for attention - so it answers more readily than ambient chatter does, but not every time.
 
-- **when:** examinedthing AND a 12% roll
-- **pacing:** priority 20, cooldown 8m, delay 2 ticks
+- **when:** examinedthing AND a 30% roll
+- **pacing:** priority 20, cooldown 3m, delay 2 ticks
 
 - One {target}. Condition: fair.
 - The {target}. Noted, reluctantly.

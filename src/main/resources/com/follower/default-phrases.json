@@ -12278,10 +12278,10 @@
     },
     {
       "id": "examine-echo",
-      "note": "The player examined something and the follower turned to look at it too. The head-turn is the usual whole reaction; this line is the rare garnish, hence the heavy chance gate.",
+      "note": "The player examined something and the follower turned to look at it too. The head-turn is the usual whole reaction; this line is the garnish. Examining is player-INITIATED - they are asking for attention - so it answers more readily than ambient chatter does, but not every time.",
       "group": "reactions",
       "priority": 20,
-      "cooldownMs": 480000,
+      "cooldownMs": 180000,
       "delayTicks": 2,
       "when": {
         "type": "all",
@@ -12291,7 +12291,7 @@
           },
           {
             "type": "chance",
-            "percent": 12
+            "percent": 30
           }
         ]
       },
