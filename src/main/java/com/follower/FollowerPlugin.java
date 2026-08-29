@@ -6304,9 +6304,12 @@ public class FollowerPlugin extends Plugin
 			}
 			case EXAMINE_OBJECT:
 			{
-				net.runelite.api.ObjectComposition def =
-					client.getObjectDefinition(event.getId());
-				target = def == null ? null : def.getName();
+				// Through the errand's resolver: most scenery is a multiloc
+				// whose base definition is named "null" until the impostor is
+				// asked, and reading the base name alone was quietly dropping
+				// the line for a large share of everything examinable.
+				target = com.follower.follower.ErrandController.objectName(
+					client, event.getId());
 				if (view != null)
 				{
 					at = WorldPoint.fromScene(view,

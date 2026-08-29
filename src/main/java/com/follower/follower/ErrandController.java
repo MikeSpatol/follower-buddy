@@ -996,7 +996,7 @@ public class ErrandController
 					{
 						continue;
 					}
-					String name = objectName(object.getId());
+					String name = objectName(client, object.getId());
 					if (name == null || !nameMatch.test(name))
 					{
 						continue;
@@ -1014,7 +1014,15 @@ public class ErrandController
 		return best;
 	}
 
-	private String objectName(int objectId)
+	/**
+	 * An object's real name, resolving multilocs.
+	 *
+	 * <p>Public and static because the examine echo needs exactly this and had
+	 * its own naive version: most scenery is a multiloc whose base definition
+	 * is called "null" until its impostor is asked, so reading getName() alone
+	 * silently answers nothing for a large share of the world.
+	 */
+	public static String objectName(Client client, int objectId)
 	{
 		ObjectComposition comp = client.getObjectDefinition(objectId);
 		if (comp == null)
