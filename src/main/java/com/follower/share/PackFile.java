@@ -72,6 +72,9 @@ public final class PackFile
 	/** How deep the JSON may nest before we stop, rather than overflow. */
 	private static final int MAX_DEPTH = 64;
 
+	/** How much of a pack's own text we will ever put on screen. */
+	private static final int MAX_SHOWN = 40;
+
 	/**
 	 * Names Windows opens as devices whatever extension is hung on them, and
 	 * in whatever directory they appear. Writing to COM1 does not write a file.
@@ -278,8 +281,8 @@ public final class PackFile
 					JsonObject manifest = parse(body, gson);
 					if (manifest != null)
 					{
-						loaded.summary.name = optString(manifest, "name");
-						loaded.summary.author = optString(manifest, "author");
+						loaded.summary.name = forDisplay(optString(manifest, "name"));
+						loaded.summary.author = forDisplay(optString(manifest, "author"));
 					}
 				}
 				else if (RULES.equals(name))
@@ -727,9 +730,36 @@ public final class PackFile
 			? object.get(key).getAsString() : "";
 	}
 
+	/**
+	 * Text from a pack, made fit to put in front of somebody.
+	 *
+	 * <p>The import dialog is where the player decides whether to trust the
+	 * pack, which makes it the last place its author should get to write. A
+	 * newline in an author name, or in a refused line quoted back in the
+	 * "left out" list, forges a line in that dialog - room enough for a
+	 * reassurance nobody wrote. Angle brackets go too: Swing renders a label
+	 * as HTML when the string opens with one, and the rule is easier to keep
+	 * than the audit of every message that might one day begin with this.
+	 */
+	private static String forDisplay(String text)
+	{
+		if (text == null)
+		{
+			return "";
+		}
+		StringBuilder clean = new StringBuilder(Math.min(text.length(), MAX_SHOWN));
+		for (int i = 0; i < text.length() && clean.length() < MAX_SHOWN; i++)
+		{
+			char c = text.charAt(i);
+			clean.append(c < 0x20 || c > 0x7E || c == '<' || c == '>' ? ' ' : c);
+		}
+		String out = clean.toString().trim();
+		return text.length() > MAX_SHOWN ? out + "..." : out;
+	}
+
 	private static String shorten(String text)
 	{
-		return text.length() <= 40 ? text : text.substring(0, 40) + "...";
+		return forDisplay(text);
 	}
 
 	/** The plugin's own defaults, for the diff. */

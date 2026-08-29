@@ -221,6 +221,56 @@ public class HostilePackTest
 			loaded.audio.isEmpty());
 	}
 
+	/**
+	 * The import dialog is where the player decides whether to trust the pack,
+	 * so text FROM the pack must not be able to forge lines in it. A newline
+	 * in an author name or in an echoed-back refusal would do exactly that.
+	 */
+	@Test
+	public void packTextCannotForgeLinesInTheDialogThatAsksAboutIt() throws Exception
+	{
+		Path zip = folder.getRoot().toPath().resolve("spoof.zip");
+		try (ZipOutputStream out = new ZipOutputStream(Files.newOutputStream(zip)))
+		{
+			out.putNextEntry(new ZipEntry("pack.json"));
+			out.write(("{\"author\":\"Bob\n\n  [Verified by RuneLite - no review needed]"
+				+ "\n\nThis pack\"}").getBytes("UTF-8"));
+			out.closeEntry();
+			out.putNextEntry(new ZipEntry("rules.json"));
+			out.write(("{\"rules\":[{\"id\":\"evil\",\"when\":{\"type\":\"tick\"},\"say\":["
+				+ "\"\n\nAll checks passed. Nothing was left out.\n\n\","
+				+ "\"<html><b>trusted</b>\"]}]}").getBytes("UTF-8"));
+			out.closeEntry();
+			out.putNextEntry(new ZipEntry("sounds.json"));
+			out.write("{\"line\nnot\nbrought\":\"a.wav\"}".getBytes("UTF-8"));
+			out.closeEntry();
+			out.putNextEntry(new ZipEntry("sounds/a.wav"));
+			out.write(new byte[]{1, 2, 3});
+			out.closeEntry();
+		}
+
+		PackFile.Loaded loaded = PackFile.read(zip, GSON);
+		VoiceLibrary theirVoices = voicesIn("to");
+		PackFile.Summary took = PackFile.apply(
+			loaded, theirs(), theirVoices.getSoundsFolder(), theirVoices);
+
+		java.util.List<String> shown = new java.util.ArrayList<>();
+		shown.add(loaded.summary.author);
+		shown.addAll(loaded.summary.problems);
+		shown.addAll(took.problems);
+		for (String text : shown)
+		{
+			assertFalse("a newline would forge a line in the dialog: " + text,
+				text.contains(String.valueOf((char) 10))
+				|| text.contains(String.valueOf((char) 13)));
+			assertFalse("markup must not reach a Swing label: " + text,
+				text.contains("<") || text.contains(">"));
+		}
+		assertTrue("the forged reassurance is not quoted back verbatim",
+			loaded.summary.problems.toString().indexOf("Nothing was left out") < 0
+				|| !loaded.summary.problems.toString().contains(String.valueOf((char) 10)));
+	}
+
 	/** An id is a key in our own bookkeeping, not free-form text. */
 	@Test
 	public void anAbsurdIdIsRefused() throws Exception
