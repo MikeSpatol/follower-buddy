@@ -64,6 +64,23 @@ public final class PackFile
 	/** What a line has to be, whoever wrote it. Matches the shipped lints. */
 	private static final int MAX_LINE = 85;
 
+	/** Bulk caps. A pack must not be able to bury the player's own file. */
+	private static final int MAX_RULES = 500;
+	private static final int MAX_LINES = 5000;
+	private static final int MAX_ID = 64;
+
+	/** How deep the JSON may nest before we stop, rather than overflow. */
+	private static final int MAX_DEPTH = 64;
+
+	/**
+	 * Names Windows opens as devices whatever extension is hung on them, and
+	 * in whatever directory they appear. Writing to COM1 does not write a file.
+	 */
+	private static final Set<String> RESERVED = new HashSet<>(java.util.Arrays.asList(
+		"con", "prn", "aux", "nul",
+		"com1", "com2", "com3", "com4", "com5", "com6", "com7", "com8", "com9",
+		"lpt1", "lpt2", "lpt3", "lpt4", "lpt5", "lpt6", "lpt7", "lpt8", "lpt9"));
+
 	private PackFile()
 	{
 	}
@@ -258,8 +275,7 @@ public final class PackFile
 
 				if (MANIFEST.equals(name))
 				{
-					JsonObject manifest = gson.fromJson(
-						new String(body, StandardCharsets.UTF_8), JsonObject.class);
+					JsonObject manifest = parse(body, gson);
 					if (manifest != null)
 					{
 						loaded.summary.name = optString(manifest, "name");
@@ -268,8 +284,7 @@ public final class PackFile
 				}
 				else if (RULES.equals(name))
 				{
-					JsonObject parsed = gson.fromJson(
-						new String(body, StandardCharsets.UTF_8), JsonObject.class);
+					JsonObject parsed = parse(body, gson);
 					if (parsed != null && parsed.has("rules")
 						&& parsed.get("rules").isJsonArray())
 					{
@@ -278,8 +293,7 @@ public final class PackFile
 				}
 				else if (SOUND_MAP.equals(name))
 				{
-					JsonObject parsed = gson.fromJson(
-						new String(body, StandardCharsets.UTF_8), JsonObject.class);
+					JsonObject parsed = parse(body, gson);
 					if (parsed != null)
 					{
 						for (Map.Entry<String, JsonElement> pair : parsed.entrySet())
@@ -317,14 +331,27 @@ public final class PackFile
 			}
 			JsonObject rule = element.getAsJsonObject();
 			String id = optString(rule, "id");
-			if (id.isEmpty() || !rule.has("say") || !rule.get("say").isJsonArray())
+			if (!idIsOurs(id) || !rule.has("say") || !rule.get("say").isJsonArray())
 			{
-				loaded.summary.problems.add("a rule with no id or no lines was left out");
+				loaded.summary.problems.add("a rule with no lines, or an id that is not"
+					+ " one of ours, was left out");
 				continue;
+			}
+			if (loaded.summary.rules >= MAX_RULES || loaded.summary.lines >= MAX_LINES)
+			{
+				loaded.summary.problems.add("the pack holds more than we will take on;"
+					+ " the rest was left out");
+				break;
 			}
 			JsonArray good = new JsonArray();
 			for (JsonElement line : rule.getAsJsonArray("say"))
 			{
+				if (loaded.summary.lines + good.size() >= MAX_LINES)
+				{
+					loaded.summary.problems.add("more lines than we will take on; the"
+						+ " rest of " + id + " was left out");
+					break;
+				}
 				String text = line.isJsonPrimitive() ? line.getAsString() : "";
 				String fault = faultIn(text);
 				if (fault == null)
@@ -366,12 +393,111 @@ public final class PackFile
 		}
 		for (int i = 0; i < line.length(); i++)
 		{
-			if (line.charAt(i) > 0x7F)
+			char c = line.charAt(i);
+			if (c > 0x7F)
 			{
 				return "has a character the game's font cannot draw";
 			}
+			if (c < 0x20)
+			{
+				return "has a control character in it";
+			}
+			if (c == '<' || c == '>')
+			{
+				// Spoken lines are mirrored into the chatbox by default, and
+				// the chatbox reads Jagex markup: <col=ff0000>, <br>, <img=N>.
+				// A stranger's tag would render on somebody's screen in
+				// whatever colour and with whatever icon it asked for, which
+				// is how a line becomes a forged system message. No shipped
+				// line needs either bracket, so neither does anybody else's.
+				return "has chat markup in it";
+			}
 		}
 		return null;
+	}
+
+	/**
+	 * An id is a key in our own bookkeeping rather than free text: it names
+	 * cooldowns, matches rules across two people's files, and reaches the log.
+	 */
+	private static boolean idIsOurs(String id)
+	{
+		if (id.isEmpty() || id.length() > MAX_ID)
+		{
+			return false;
+		}
+		for (int i = 0; i < id.length(); i++)
+		{
+			char c = id.charAt(i);
+			boolean ok = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+				|| (c >= '0' && c <= '9') || c == '-' || c == '_' || c == '.';
+			if (!ok)
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Gson parses by recursion, so JSON nested deeply enough overflows the
+	 * stack - and a StackOverflowError is an Error, which sails straight past
+	 * the catch (Exception) around the import and out of the action listener.
+	 * Depth is counted first, on the raw text, so the parser is never handed
+	 * anything that could do it.
+	 */
+	private static JsonObject parse(byte[] body, Gson gson)
+	{
+		String text = new String(body, StandardCharsets.UTF_8);
+		int depth = 0;
+		boolean inString = false;
+		boolean escaped = false;
+		for (int i = 0; i < text.length(); i++)
+		{
+			char c = text.charAt(i);
+			if (escaped)
+			{
+				escaped = false;
+			}
+			else if (inString)
+			{
+				if (c == '\\')
+				{
+					escaped = true;
+				}
+				else if (c == '\"')
+				{
+					inString = false;
+				}
+			}
+			else if (c == '\"')
+			{
+				inString = true;
+			}
+			else if (c == '{' || c == '[')
+			{
+				if (++depth > MAX_DEPTH)
+				{
+					return null;
+				}
+			}
+			else if (c == '}' || c == ']')
+			{
+				depth--;
+			}
+		}
+		try
+		{
+			return gson.fromJson(text, JsonObject.class);
+		}
+		catch (RuntimeException | StackOverflowError e)
+		{
+			// Belt as well as braces. The count above should mean this never
+			// fires, and a pack that finds a way past it is still refused
+			// rather than thrown out of the window that asked for it.
+			log.warn("Unreadable JSON in a pack", e);
+			return null;
+		}
 	}
 
 	/**
@@ -398,6 +524,11 @@ public final class PackFile
 	private static boolean playable(String file)
 	{
 		String lower = file.toLowerCase(Locale.ROOT);
+		int dot = lower.indexOf('.');
+		if (RESERVED.contains(dot < 0 ? lower : lower.substring(0, dot)))
+		{
+			return false;
+		}
 		return lower.endsWith(".wav") || lower.endsWith(".aif")
 			|| lower.endsWith(".aiff") || lower.endsWith(".au");
 	}
@@ -505,13 +636,35 @@ public final class PackFile
 			}
 		}
 
+		// A pack may only give a voice to lines it actually carried, and only
+		// where the player has not already given that line one of their own.
+		// The sound map is a file of its own, so without this it could name
+		// any line in the recipient's install - one that ships, or one they
+		// had recorded themselves - and quietly speak over it.
+		Set<String> arrived = new HashSet<>();
+		for (JsonElement element : loaded.rules)
+		{
+			arrived.addAll(lines(element.getAsJsonObject()));
+		}
 		for (Map.Entry<String, String> pair : loaded.sounds.entrySet())
 		{
-			String file = renamed.getOrDefault(pair.getValue(), pair.getValue());
-			if (loaded.audio.containsKey(pair.getValue()))
+			String line = pair.getKey();
+			if (!loaded.audio.containsKey(pair.getValue()))
 			{
-				voices.attach(pair.getKey(), file);
+				continue;
 			}
+			if (!arrived.contains(line))
+			{
+				applied.problems.add("a sound for a line the pack did not bring: "
+					+ shorten(line));
+				continue;
+			}
+			if (voices.attachmentFor(line) != null)
+			{
+				applied.problems.add("kept your own recording for: " + shorten(line));
+				continue;
+			}
+			voices.attach(line, renamed.getOrDefault(pair.getValue(), pair.getValue()));
 		}
 		return applied;
 	}
