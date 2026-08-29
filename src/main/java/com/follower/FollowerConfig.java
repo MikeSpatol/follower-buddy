@@ -479,6 +479,34 @@ public interface FollowerConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "voiceEnabled",
+		name = "Play attached sounds",
+		description = "Play the sound file attached to a line when the follower"
+			+ " says it. Attach them in the Messages window; drop your own WAV"
+			+ " files into the sounds folder beside phrases.json first",
+		section = speechSection,
+		position = 8
+	)
+	default boolean voiceEnabled()
+	{
+		return true;
+	}
+
+	@Range(min = 0, max = 100)
+	@ConfigItem(
+		keyName = "voiceVolume",
+		name = "Sound volume",
+		description = "How loud the attached sounds play, as a percentage."
+			+ " Zero is silence",
+		section = speechSection,
+		position = 9
+	)
+	default int voiceVolume()
+	{
+		return 100;
+	}
+
+	@ConfigItem(
 		keyName = "mirrorToChat",
 		name = "Mirror speech to chatbox",
 		description = "Overhead lines also appear in the chatbox as public chat under the follower's name",

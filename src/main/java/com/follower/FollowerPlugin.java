@@ -106,6 +106,9 @@ public class FollowerPlugin extends Plugin
 	private FollowerConfig config;
 
 	@Inject
+	private com.follower.sound.VoiceLibrary voices;
+
+	@Inject
 	private ModelRepository modelRepository;
 
 	@Inject
@@ -261,6 +264,7 @@ public class FollowerPlugin extends Plugin
 	private com.follower.ui.FollowerPanel panel;
 	private net.runelite.client.ui.NavigationButton navButton;
 	private com.follower.ui.PhrasesDialog messagesDialog;
+	private com.follower.ui.VoiceDialog voiceDialog;
 	private com.follower.ui.DialogsDialog dialogsDialog;
 	private com.follower.ui.MemoryDialog memoryDialog;
 
@@ -470,6 +474,7 @@ public class FollowerPlugin extends Plugin
 		// are only written when missing - a tester's file from 1.0.0 had no
 		// emote mirroring at all, and it looked broken rather than absent).
 		ruleLoader.initialise(dataDir, true);
+		voices.load(dataDir);
 		journal.initialise(dataDir);
 		journal.setRegionSource(() -> speechEngine.getContext().getRegionId());
 		journal.setEnabled(config.transcriptOn());
@@ -614,6 +619,7 @@ public class FollowerPlugin extends Plugin
 		}
 		// The scroll must not survive a disable either.
 		endMinutes(false);
+		voices.close();
 
 		if (navButton != null)
 		{
@@ -630,6 +636,11 @@ public class FollowerPlugin extends Plugin
 		{
 			messagesDialog.dispose();
 			messagesDialog = null;
+		}
+		if (voiceDialog != null)
+		{
+			voiceDialog.dispose();
+			voiceDialog = null;
 		}
 
 		clientThread.invoke(() ->
@@ -1974,6 +1985,15 @@ public class FollowerPlugin extends Plugin
 					// The tick loop keeps lastRegionId current; reading a
 					// slightly stale int from the EDT is harmless.
 					() -> lastRegionId);
+				messagesDialog.setOnEditSounds((title, lines) ->
+				{
+					if (voiceDialog == null)
+					{
+						voiceDialog = new com.follower.ui.VoiceDialog(
+							voices, config::voiceVolume);
+					}
+					voiceDialog.open(title, lines);
+				});
 			}
 			messagesDialog.open();
 		});
@@ -7733,6 +7753,14 @@ public class FollowerPlugin extends Plugin
 		}
 
 		journal.spoke(rule, text);
+
+		// The line's own voice, if the player has given it one. After the
+		// journal so a sounded line is recorded like any other, and before
+		// the text so the mouth and the words start together.
+		if (!text.isEmpty() && config.voiceEnabled())
+		{
+			voices.play(text, config.voiceVolume());
+		}
 
 		if (!text.isEmpty() && output.showsOverhead())
 		{

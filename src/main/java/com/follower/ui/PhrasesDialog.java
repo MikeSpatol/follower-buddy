@@ -93,6 +93,15 @@ public class PhrasesDialog extends JDialog
 	/** Where "Use my current location" gets its region id; may be null. */
 	private final java.util.function.IntSupplier currentRegion;
 
+	/** Opens the sound picker for a rule's lines; may be null. */
+	private java.util.function.BiConsumer<String, java.util.List<String>> onEditSounds;
+
+	public void setOnEditSounds(
+		java.util.function.BiConsumer<String, java.util.List<String>> onEditSounds)
+	{
+		this.onEditSounds = onEditSounds;
+	}
+
 	private Category category;
 
 	private final JComboBox<String> categoryPicker = new JComboBox<>();
@@ -134,6 +143,9 @@ public class PhrasesDialog extends JDialog
 			dirty = true;
 		}
 	};
+
+	/** The sounds button of the row being built, waiting for its say area. */
+	private JButton soundsButton;
 
 	private static final class Row
 	{
@@ -362,6 +374,14 @@ public class PhrasesDialog extends JDialog
 		enabled.setToolTipText("Untick to silence just this rule");
 		enabled.addItemListener(e -> dirty = true);
 		controls.add(enabled);
+		if (onEditSounds != null)
+		{
+			JButton sounds = new JButton("Sounds");
+			sounds.setToolTipText("Attach a sound file to any of these lines");
+			controls.add(sounds);
+			// Wired below, once the say area it reads from exists.
+			soundsButton = sounds;
+		}
 		if (category.structural)
 		{
 			JButton delete = new JButton("Delete");
@@ -431,6 +451,17 @@ public class PhrasesDialog extends JDialog
 		JTextArea area = sayArea(text.toString(), Math.max(2, say.size()));
 		area.getDocument().addDocumentListener(dirtyMarker);
 		row.add(area);
+
+		if (soundsButton != null)
+		{
+			// Reads the box rather than the file: a line can be given a voice
+			// the moment it is typed, without saving first.
+			JButton sounds = soundsButton;
+			soundsButton = null;
+			String ruleName = prettyName(id);
+			sounds.addActionListener(e -> onEditSounds.accept(ruleName,
+				java.util.Arrays.asList(area.getText().split("\\r?\\n"))));
+		}
 
 		Row r = new Row(id, null, enabled, regionsField, area);
 		r.panel = row;
