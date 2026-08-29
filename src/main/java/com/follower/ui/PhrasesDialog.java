@@ -93,6 +93,18 @@ public class PhrasesDialog extends JDialog
 	/** Where "Use my current location" gets its region id; may be null. */
 	private final java.util.function.IntSupplier currentRegion;
 
+	/** Shares everything the player has written; may be null. */
+	private Runnable onExportPack;
+
+	/** Takes on somebody else's pack; may be null. */
+	private Runnable onImportPack;
+
+	public void setOnPack(Runnable onExportPack, Runnable onImportPack)
+	{
+		this.onExportPack = onExportPack;
+		this.onImportPack = onImportPack;
+	}
+
 	/** Opens the sound picker for a rule's lines; may be null. */
 	private java.util.function.BiConsumer<String, java.util.List<String>> onEditSounds;
 
@@ -249,6 +261,37 @@ public class PhrasesDialog extends JDialog
 		// button's visibility in step with the picked category.
 		addLocation.setVisible(category.structural);
 		buttons.add(addLocation);
+		JButton share = new JButton("Share...");
+		share.setToolTipText("Export what you have written, or take on somebody else's");
+		share.addActionListener(e ->
+		{
+			// Both halves work on the file rather than on this window, so
+			// half-typed lines have to be settled before either runs.
+			if (!confirmDirty())
+			{
+				return;
+			}
+			Object[] choices = {"Export mine", "Import a pack", "Cancel"};
+			int picked = JOptionPane.showOptionDialog(this,
+				"Share the lines you have written, and the sounds attached to them."
+					+ "\n\nExporting writes a .zip holding only what you have added,"
+					+ "\nnot the lines that ship with the plugin."
+					+ "\n\nImporting adds somebody else's to yours. Nothing is replaced.",
+				"Share", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
+				null, choices, choices[0]);
+			if (picked == 0 && onExportPack != null)
+			{
+				onExportPack.run();
+			}
+			else if (picked == 1 && onImportPack != null)
+			{
+				onImportPack.run();
+				// The file has grown underneath us; show what it says now.
+				refresh();
+			}
+		});
+		buttons.add(share);
+
 		JButton reload = new JButton("Reload");
 		reload.setToolTipText("Discard unsaved edits and reload from disk");
 		reload.addActionListener(e -> refresh());

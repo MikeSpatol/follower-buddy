@@ -1985,6 +1985,7 @@ public class FollowerPlugin extends Plugin
 					// The tick loop keeps lastRegionId current; reading a
 					// slightly stale int from the EDT is harmless.
 					() -> lastRegionId);
+				messagesDialog.setOnPack(this::exportPack, this::importPack);
 				messagesDialog.setOnEditSounds((title, lines) ->
 				{
 					if (voiceDialog == null)
@@ -8320,6 +8321,160 @@ public class FollowerPlugin extends Plugin
 		configManager.setConfiguration(FollowerConfig.GROUP, "sendHintShown", true);
 		sendStatus("You can also hold Shift and right-click any tile to Send "
 			+ config.followerName() + " there.");
+	}
+
+	// ---------------------------------------------------------------- sharing
+
+	/** A file chooser pointed at the follower's own folder, for packs. */
+	private java.io.File choosePack(boolean saving)
+	{
+		javax.swing.JFileChooser chooser = new javax.swing.JFileChooser(dataDir.toFile());
+		chooser.setDialogTitle(saving ? "Save your pack" : "Open a pack");
+		chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
+			"Follower Buddy pack (*.zip)", "zip"));
+		int answer = saving
+			? chooser.showSaveDialog(messagesDialog)
+			: chooser.showOpenDialog(messagesDialog);
+		if (answer != javax.swing.JFileChooser.APPROVE_OPTION)
+		{
+			return null;
+		}
+		java.io.File picked = chooser.getSelectedFile();
+		if (saving && !picked.getName().toLowerCase(java.util.Locale.ROOT).endsWith(".zip"))
+		{
+			picked = new java.io.File(picked.getParentFile(), picked.getName() + ".zip");
+		}
+		return picked;
+	}
+
+	/** Writes everything the player has added to a pack they can hand over. */
+	private void exportPack()
+	{
+		java.io.File target = choosePack(true);
+		if (target == null)
+		{
+			return;
+		}
+		try
+		{
+			com.google.gson.JsonObject mine = gson.fromJson(
+				new String(java.nio.file.Files.readAllBytes(ruleLoader.getFile()),
+					java.nio.charset.StandardCharsets.UTF_8),
+				com.google.gson.JsonObject.class);
+			com.google.gson.JsonObject shipped =
+				com.follower.share.PackFile.shippedRules(gson);
+			if (shipped == null)
+			{
+				// No defaults to diff against means everything would look like
+				// the player's own work, and the pack would carry all two
+				// thousand shipped lines. Better to write nothing.
+				javax.swing.JOptionPane.showMessageDialog(messagesDialog,
+					"The plugin's own lines could not be read, so there is nothing"
+						+ " to compare yours against. No pack was written.",
+					"Pack not saved", javax.swing.JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+
+			com.follower.share.PackFile.Summary made = com.follower.share.PackFile.export(
+				target.toPath(), mine, shipped, voices, gson, config.followerName());
+
+			if (made.isEmpty())
+			{
+				javax.swing.JOptionPane.showMessageDialog(messagesDialog,
+					"There is nothing of your own to share yet. Add a line or a rule"
+						+ " in this window first, and it will go in the pack.",
+					"Nothing to share", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+				return;
+			}
+			javax.swing.JOptionPane.showMessageDialog(messagesDialog,
+				"Saved " + target.getName() + " with " +
+					+ made.rules + " rule(s), " + made.lines + " line(s), "
+					+ made.sounds + " sound(s)."
+					+ (made.problems.isEmpty() ? ""
+					: System.lineSeparator() + System.lineSeparator() + String.join(System.lineSeparator(), made.problems)),
+				"Pack saved", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+		}
+		catch (Exception e)
+		{
+			log.warn("Could not write the pack", e);
+			javax.swing.JOptionPane.showMessageDialog(messagesDialog,
+				"That pack could not be written: " + e.getMessage(),
+				"Pack not saved", javax.swing.JOptionPane.ERROR_MESSAGE);
+		}
+	}
+
+	/**
+	 * Takes on somebody else's pack, after showing exactly what it holds. The
+	 * file is read and checked in full before a single line of it is kept.
+	 */
+	private void importPack()
+	{
+		java.io.File source = choosePack(false);
+		if (source == null)
+		{
+			return;
+		}
+		try
+		{
+			com.follower.share.PackFile.Loaded loaded =
+				com.follower.share.PackFile.read(source.toPath(), gson);
+
+			if (loaded.summary.isEmpty())
+			{
+				javax.swing.JOptionPane.showMessageDialog(messagesDialog,
+					"There was nothing usable in that pack."
+						+ (loaded.summary.problems.isEmpty() ? ""
+						: System.lineSeparator() + System.lineSeparator() + String.join(System.lineSeparator(), loaded.summary.problems)),
+					"Nothing to import", javax.swing.JOptionPane.WARNING_MESSAGE);
+				return;
+			}
+
+			String from = loaded.summary.author == null || loaded.summary.author.isEmpty()
+				? "" : " from " + loaded.summary.author;
+			int confirm = javax.swing.JOptionPane.showConfirmDialog(messagesDialog,
+				"This pack" + from + " holds:" + System.lineSeparator()
+					+ System.lineSeparator() + "  " + loaded.summary.rules + " rule(s)"
+					+ System.lineSeparator() + "  " + loaded.summary.lines + " line(s)"
+					+ System.lineSeparator() + "  " + loaded.summary.sounds + " sound file(s), "
+					+ (loaded.summary.bytes / 1024) + " KB"
+					+ System.lineSeparator() + System.lineSeparator() + "They are added to yours. Nothing you have"
+					+ " written is replaced."
+					+ (loaded.summary.problems.isEmpty() ? ""
+					: System.lineSeparator() + System.lineSeparator() + "Left out:" + System.lineSeparator()
+						+ String.join(System.lineSeparator(), loaded.summary.problems)),
+				"Import this pack?", javax.swing.JOptionPane.OK_CANCEL_OPTION);
+			if (confirm != javax.swing.JOptionPane.OK_OPTION)
+			{
+				return;
+			}
+
+			com.google.gson.JsonObject mine = gson.fromJson(
+				new String(java.nio.file.Files.readAllBytes(ruleLoader.getFile()),
+					java.nio.charset.StandardCharsets.UTF_8),
+				com.google.gson.JsonObject.class);
+
+			com.follower.share.PackFile.Summary took = com.follower.share.PackFile.apply(
+				loaded, mine, voices.getSoundsFolder(), voices);
+			com.follower.share.PackFile.save(ruleLoader.getFile(), mine,
+				gson.newBuilder().setPrettyPrinting().disableHtmlEscaping().create());
+
+			javax.swing.JOptionPane.showMessageDialog(messagesDialog,
+				"Taken on " + took.lines + " new line(s) across " + took.rules
+					+ " rule(s), and " + took.sounds + " sound file(s)."
+					+ System.lineSeparator() + System.lineSeparator() + "The follower has them already."
+					+ (took.problems.isEmpty() ? ""
+					: System.lineSeparator() + System.lineSeparator() + "Left out:"
+						+ System.lineSeparator()
+						+ String.join(System.lineSeparator(), took.problems)),
+				"Pack imported", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+		}
+		catch (Exception e)
+		{
+			log.warn("Could not read the pack", e);
+			javax.swing.JOptionPane.showMessageDialog(messagesDialog,
+				"That pack could not be read: " + e.getMessage(),
+				"Pack not imported", javax.swing.JOptionPane.ERROR_MESSAGE);
+		}
 	}
 
 	private void sendStatus(String message)
