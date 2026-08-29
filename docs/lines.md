@@ -1,13 +1,13 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 446 rules, 2173 spoken lines, 2 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 446 rules, 2194 spoken lines, 2 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
 ## Contents
 
 - [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (32 rules, 149 lines)
-- [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (36 rules, 211 lines)
+- [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (36 rules, 222 lines)
 - [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (33 rules, 253 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 114 lines)
 - [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 72 lines)
@@ -21,7 +21,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - [boss](#boss) - Bosses sighted and fought (50 rules, 484 lines)
 - [quest](#quest) - Famous quest figures nearby (44 rules, 131 lines)
 - [thrall](#thrall) - When it stands in for a thrall (3 rules, 18 lines)
-- [mimic](#mimic) - Copying your emotes (6 rules, 6 lines)
+- [mimic](#mimic) - Copying your emotes (6 rules, 16 lines)
 - [dialogs](#dialogs) - the conversations it starts (2 trees)
 - [talk-to](#talk-to) - the everyday Talk-to script (in code)
 
@@ -519,6 +519,17 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Somebody nearby is showing off. I won't say who.
 - All these adventurers, and you picked this spot to stand in.
 - The people-watching here is excellent. Take your time.
+- Not one of them has looked at me. Ideal conditions for a scribe.
+- Everyone here looks busy. I'm noting which ones only look it.
+- Which one's your favourite? I chose mine within the minute.
+- Someone walked through me mid-sentence. The handwriting shows it.
+- I've started a page for strangers. It's filling up nicely.
+- The one in the green hat is up to something. I'd stake a page on it.
+- I could stand inside any of them and nobody would object.
+- Someone's dancing over there. I've recorded it without comment.
+- You're the only one here who can see me. Do try to look pleased.
+- I was going to write about the crowd, but I keep watching it instead.
+- Nothing's happening here, but it's happening to a lot of people.
 
 ### `idle-chatter`
 
@@ -5930,6 +5941,16 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - I could do this. Given the tools. And the levels.
 - Caught. I regret only the timing.
 - In my defence, it looked fun. It was fun.
+- Purely observational. Ignore the arms.
+- My hands are empty. The technique is not.
+- Don't stare. I lose my place.
+- Is this how you hold it? I've been guessing.
+- I'll stop when you stop. It seemed only fair.
+- Not copying. Corroborating.
+- One of us is producing something. It isn't me.
+- I'd log the hours, but there's no column for it.
+- The notes can wait. This is research.
+- You keep the pace. I'll keep the form.
 
 ## dialogs
 
