@@ -101,3 +101,13 @@ tasks.register('runAudit', JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'com.follower.tools.RegionAudit'
 }
+
+// Looks a name up in the cache, for when a question about an NPC deserves an
+// answer from the game rather than from memory.
+//   gradlew runNpcFind --args="brutus"
+tasks.register('runNpcFind', JavaExec) {
+    group = 'verification'
+    description = 'Finds NPCs in the cache whose name contains the given text'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.follower.tools.NpcFind'
+}
