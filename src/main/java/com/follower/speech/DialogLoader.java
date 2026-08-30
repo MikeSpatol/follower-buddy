@@ -30,6 +30,17 @@ import lombok.extern.slf4j.Slf4j;
 public class DialogLoader
 {
 	public static final String FILE_NAME = "dialogs.json";
+
+	/** The bundled trees as of the last merge, for the three-way. */
+	public static final String BASE_FILE = "dialogs-seen.json";
+
+	/** Handled by the node pass rather than as a field of the tree. */
+	private static final java.util.Set<String> TREE_FIELDS =
+		new java.util.HashSet<>(java.util.Arrays.asList("nodes", "id"));
+
+	/** Lines have their own pass; the id is what we matched on. */
+	private static final java.util.Set<String> NODE_FIELDS =
+		new java.util.HashSet<>(java.util.Arrays.asList("says", "id"));
 	private static final String BUNDLED_DEFAULT = "/com/follower/default-dialogs.json";
 
 	private static final int SUPPORTED_VERSION = 1;
@@ -45,6 +56,7 @@ public class DialogLoader
 	private List<String> errors = Collections.emptyList();
 
 	private Path file;
+	private Path baseFile;
 	private long lastModified = -1L;
 	private long lastSize = -1L;
 
@@ -67,6 +79,7 @@ public class DialogLoader
 	public void initialise(Path dataDir, boolean mergeDefaults)
 	{
 		file = dataDir.resolve(FILE_NAME);
+		baseFile = dataDir.resolve(BASE_FILE);
 		if (!Files.exists(file))
 		{
 			writeDefaults();
@@ -79,11 +92,18 @@ public class DialogLoader
 	}
 
 	/**
-	 * Appends bundled conversation trees the user's file has never seen -
-	 * the same upgrade gap phrases.json had: the starter file is written
-	 * once, so trees added in updates never reached an existing install.
-	 * Only absent tree ids are appended; every edit to an existing tree
-	 * survives, and the file as it stood is kept as dialogs.json.bak.
+	 * Folds bundled conversation changes into the player's file, three ways.
+	 *
+	 * <p>The same upgrade gap {@code phrases.json} had, and fixed the same way -
+	 * see {@link ThreeWay}. Appending only whole new trees meant a reworded
+	 * node, an added choice or a fixed dead end reached nobody who already had
+	 * the plugin.
+	 *
+	 * <p>Trees merge at two levels because that is how they are built: the tree
+	 * carries its own fields and a list of nodes, and each node carries its own
+	 * fields and its lines. A node the update added arrives, a node it removed
+	 * goes unless the player had already changed it, and a node they have
+	 * rewritten is theirs.
 	 */
 	private void mergeNewDefaults()
 	{
@@ -106,41 +126,238 @@ public class DialogLoader
 				return;
 			}
 
-			java.util.Set<String> known = new java.util.HashSet<>();
-			for (com.google.gson.JsonElement element : ours.getAsJsonArray("trees"))
-			{
-				String id = treeIdOf(element);
-				if (id != null)
-				{
-					known.add(id);
-				}
-			}
+			com.google.gson.JsonObject base = readBase(pretty);
+			java.util.Map<String, com.google.gson.JsonObject> mine =
+				ThreeWay.byId(ThreeWay.array(ours, "trees"));
+			java.util.Map<String, com.google.gson.JsonObject> was =
+				ThreeWay.byId(ThreeWay.array(base, "trees"));
 
 			com.google.gson.JsonArray trees = ours.getAsJsonArray("trees");
 			int added = 0;
+			int updated = 0;
 			for (com.google.gson.JsonElement element : bundled.getAsJsonArray("trees"))
 			{
-				String id = treeIdOf(element);
-				if (id != null && !known.contains(id))
+				String id = ThreeWay.idOf(element);
+				if (id == null)
+				{
+					continue;
+				}
+				com.google.gson.JsonObject held = mine.get(id);
+				if (held == null)
 				{
 					trees.add(element);
 					added++;
+					continue;
+				}
+				if (mergeTree(held, was.get(id), element.getAsJsonObject()) > 0)
+				{
+					updated++;
 				}
 			}
-			if (added == 0)
+
+			if (added > 0 || updated > 0)
 			{
-				return;
+				Files.copy(file, file.resolveSibling(file.getFileName() + ".bak"),
+					java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+				Files.write(file, (pretty.toJson(ours) + "\n")
+					.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+				log.info("Merged {} new tree(s) and {} changed tree(s) into {}",
+					added, updated, file);
 			}
 
-			Files.copy(file, file.resolveSibling(file.getFileName() + ".bak"),
-				java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-			Files.write(file, (pretty.toJson(ours) + "\n")
-				.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-			log.info("Merged {} new default tree(s) into {}", added, file);
+			// Last, and whether or not anything moved, so a merge that only
+			// half-happened is retried rather than recorded as done.
+			writeBase(bundled, pretty);
 		}
 		catch (Exception e)
 		{
 			log.warn("Could not merge new defaults into {}", file, e);
+		}
+	}
+
+	/** One bundled tree, folded into the player's copy of it. */
+	private static int mergeTree(com.google.gson.JsonObject held,
+		com.google.gson.JsonObject base, com.google.gson.JsonObject bundled)
+	{
+		if (base == null)
+		{
+			return bootstrap(held, bundled);
+		}
+
+		int changes = ThreeWay.fields(held, base, bundled, TREE_FIELDS);
+
+		com.google.gson.JsonArray nodes = ThreeWay.array(held, "nodes");
+		com.google.gson.JsonArray shipped = ThreeWay.array(bundled, "nodes");
+		if (nodes == null || shipped == null)
+		{
+			return changes;
+		}
+		java.util.Map<String, com.google.gson.JsonObject> wasNodes =
+			ThreeWay.byId(ThreeWay.array(base, "nodes"));
+
+		java.util.Set<String> shippedIds = new java.util.HashSet<>();
+		for (com.google.gson.JsonElement element : shipped)
+		{
+			String id = ThreeWay.idOf(element);
+			if (id != null)
+			{
+				shippedIds.add(id);
+			}
+		}
+
+		// Rebuilt rather than edited in place, because a node can leave.
+		java.util.List<com.google.gson.JsonObject> kept = new java.util.ArrayList<>();
+		java.util.Set<String> keptIds = new java.util.HashSet<>();
+		for (com.google.gson.JsonElement element : nodes)
+		{
+			if (!element.isJsonObject())
+			{
+				continue;
+			}
+			com.google.gson.JsonObject node = element.getAsJsonObject();
+			String id = ThreeWay.idOf(element);
+			com.google.gson.JsonObject before = id == null ? null : wasNodes.get(id);
+			if (id != null && before != null && !shippedIds.contains(id)
+				&& before.equals(node))
+			{
+				// The update removed it and the player never touched it.
+				changes++;
+				continue;
+			}
+			kept.add(node);
+			if (id != null)
+			{
+				keptIds.add(id);
+			}
+		}
+
+		for (com.google.gson.JsonElement element : shipped)
+		{
+			String id = ThreeWay.idOf(element);
+			if (id == null)
+			{
+				continue;
+			}
+			com.google.gson.JsonObject now = element.getAsJsonObject();
+			if (!keptIds.contains(id))
+			{
+				// Absent here: new upstream unless the player deleted it, and
+				// the base is what tells the two apart.
+				if (!wasNodes.containsKey(id))
+				{
+					kept.add(now);
+					changes++;
+				}
+				continue;
+			}
+			com.google.gson.JsonObject node = null;
+			for (com.google.gson.JsonObject candidate : kept)
+			{
+				if (id.equals(ThreeWay.idOf(candidate)))
+				{
+					node = candidate;
+					break;
+				}
+			}
+			// A node the base never had is one the player wrote; comparing it
+			// with itself leaves it alone, which is the intent.
+			com.google.gson.JsonObject before = wasNodes.getOrDefault(id, node);
+			changes += ThreeWay.fields(node, before, now, NODE_FIELDS);
+			changes += ThreeWay.strings(node, "says", before, now);
+		}
+
+		if (changes > 0)
+		{
+			com.google.gson.JsonArray out = new com.google.gson.JsonArray();
+			for (com.google.gson.JsonObject node : kept)
+			{
+				out.add(node);
+			}
+			held.add("nodes", out);
+		}
+		return changes;
+	}
+
+	/**
+	 * The first run, with no record of what shipped before. As with the rules,
+	 * the only honest question left is whether the player has written into
+	 * this tree at all: a tree holding nothing but shipped lines has not been,
+	 * and can be brought up to date without taking anything from anybody.
+	 */
+	private static int bootstrap(com.google.gson.JsonObject held,
+		com.google.gson.JsonObject bundled)
+	{
+		if (!ThreeWay.untouched(allSays(held), allSays(bundled)))
+		{
+			return 0;
+		}
+		if (held.equals(bundled))
+		{
+			return 0;
+		}
+		for (String key : new java.util.ArrayList<>(held.keySet()))
+		{
+			held.remove(key);
+		}
+		for (java.util.Map.Entry<String, com.google.gson.JsonElement> entry : bundled.entrySet())
+		{
+			held.add(entry.getKey(), entry.getValue());
+		}
+		return 1;
+	}
+
+	/** Every line the tree can speak, for the bootstrap's one question. */
+	private static java.util.List<String> allSays(com.google.gson.JsonObject tree)
+	{
+		java.util.List<String> out = new java.util.ArrayList<>();
+		com.google.gson.JsonArray nodes = ThreeWay.array(tree, "nodes");
+		if (nodes == null)
+		{
+			return out;
+		}
+		for (com.google.gson.JsonElement element : nodes)
+		{
+			if (element.isJsonObject())
+			{
+				out.addAll(ThreeWay.strings(element.getAsJsonObject(), "says"));
+			}
+		}
+		return out;
+	}
+
+	/** The trees as they shipped at the last merge, or null if never written. */
+	private com.google.gson.JsonObject readBase(Gson pretty)
+	{
+		if (baseFile == null || !Files.exists(baseFile))
+		{
+			return null;
+		}
+		try
+		{
+			return pretty.fromJson(new String(Files.readAllBytes(baseFile),
+				java.nio.charset.StandardCharsets.UTF_8), com.google.gson.JsonObject.class);
+		}
+		catch (Exception e)
+		{
+			log.warn("Could not read {}, merging without a base", baseFile, e);
+			return null;
+		}
+	}
+
+	private void writeBase(com.google.gson.JsonObject bundled, Gson pretty)
+	{
+		if (baseFile == null)
+		{
+			return;
+		}
+		try
+		{
+			Files.write(baseFile, (pretty.toJson(bundled) + "\n")
+				.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+		}
+		catch (Exception e)
+		{
+			log.warn("Could not record the merged defaults in {}", baseFile, e);
 		}
 	}
 
