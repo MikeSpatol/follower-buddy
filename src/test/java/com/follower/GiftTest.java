@@ -81,6 +81,35 @@ public class GiftTest
 		assertTrue("the wish stays open", h.engine.getContext().isWishing());
 	}
 
+	/**
+	 * Every thank-you names the thing, not just the one a shuffle happened to
+	 * pick. The rule above tests a single firing, which is one line out of
+	 * fourteen - it passed for a year and then failed the moment ten lines
+	 * were added, four of which had quietly dropped the noun. The design says
+	 * everything downstream says feather; this is that, asked of the pool.
+	 */
+	@Test
+	public void everyThankYouNamesTheThing() throws IOException
+	{
+		Harness h = wishingAndHolding();
+		java.util.List<String> bare = new java.util.ArrayList<>();
+		for (com.follower.speech.SpeechRule rule : h.loader.getRules())
+		{
+			if ("gifted-accept".equals(rule.id) || "gifted-swap".equals(rule.id))
+			{
+				for (String line : rule.say)
+				{
+					if (!line.contains("{wish}"))
+					{
+						bare.add(rule.id + ": " + line);
+					}
+				}
+			}
+		}
+		assertTrue("a handover that does not name what was handed over: " + bare,
+			bare.isEmpty());
+	}
+
 	@Test
 	public void theGiftAnswersTheWishByName() throws IOException
 	{

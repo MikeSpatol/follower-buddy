@@ -1,6 +1,6 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 448 rules, 2234 spoken lines, 2 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 448 rules, 2246 spoken lines, 2 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
@@ -14,7 +14,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (20 rules, 106 lines)
 - [area](#area) - Places: named lines, tastes, earned verdicts, the defences (67 rules, 222 lines)
 - [errand](#errand) - Its little trips: bank, altar, fire, cat, studies, explores (44 rules, 155 lines)
-- [souvenir](#souvenir) - Wishes, gifts, the pocket, and what it carries (17 rules, 72 lines)
+- [souvenir](#souvenir) - Wishes, gifts, the pocket, and what it carries (17 rules, 84 lines)
 - [bet](#bet) - Its predictions about drops (3 rules, 20 lines)
 - [clock](#clock) - The hour and how long we have been at it (9 rules, 39 lines)
 - [gear](#gear) - What you put on (62 rules, 121 lines)
@@ -3563,6 +3563,16 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - The {wish}! You remembered. I notice, you know.
 - Perfect. The {wish} goes in the good pocket.
 - You actually found the {wish}. The ledger tips your way.
+- My old {wish} for your new one. You come out even, which is how I like it.
+- Take my worn {wish} in exchange. It has years left in it yet.
+- A trade rather than a gift. You keep a {wish}, I keep a {wish}.
+- The {wish} is mine now and my old one is yours. Nobody is poorer.
+- Here, my tired {wish} back. Still good for crafting, still good for fletching.
+- Even trade, {wish} for {wish}. You will barely notice. I very much will.
+- I took the fresh {wish} and left you my old one. That is only manners.
+- Your bag keeps a {wish}. I am not in the business of leaving you short.
+- The old {wish} is yours. Do not look at it too closely.
+- Straight swap: my worn {wish} for your good one, and thank you.
 
 ### `gifted-swap`
 
@@ -3575,6 +3585,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - The {wish}! I'll set down {souvenir} to make room.
 - A trade, then: {souvenir} out, the {wish} in.
 - The {wish} outranks {souvenir}. Pocket rearranged.
+- {souvenir} out, the {wish} in, and my old one to you. Everybody gains.
+- The {wish} outranks {souvenir}. Take the worn one, your bag stays even.
 
 ### `gifted-bluff`
 

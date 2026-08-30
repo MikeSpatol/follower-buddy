@@ -4454,8 +4454,18 @@ public class FollowerPlugin extends Plugin
 			script.put("gift-q", you(giftLabel).then("gift-a"));
 			if (wishItemInBag)
 			{
+				// Second page, and it earns its click: nothing is consumed,
+				// so the player walks away still holding the thing they just
+				// handed over, and a handover that leaves the bag untouched
+				// reads as the gift not having registered. The follower
+				// trading its worn one back is the honest account of what the
+				// bag will show - the count does not move because a swap does
+				// not move it - and it is truer to a scribe than pretending
+				// to pocket something it cannot pocket.
 				script.put("gift-a", says(
-					"Let's see it, then. ...That's the one.")
+					"Let's see it, then. ...That's the one.",
+					"Take my old one in trade. Still good for your crafting,"
+						+ " so your bag comes out even.")
 					.onFinish(() -> onAnswer.accept("gift")));
 			}
 			else
