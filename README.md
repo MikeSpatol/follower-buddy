@@ -69,7 +69,8 @@ currently knows about you - with a button to erase all of it.
 
 In the Messages window, **Sounds** attaches a recording to any line in a rule,
 and **Share...** exports what you have written or takes on somebody else's
-pack. Sound files live in `.runelite/follower/sounds`.
+pack. The Sounds window shows the folder your files go in, with a button to
+copy the path.
 
 Config sections: Appearance, Movement, Speech (chattiness, output, reading
 speed), Voice (on/off and volume), Rule groups (a toggle per group), Thrall

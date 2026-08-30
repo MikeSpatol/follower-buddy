@@ -3,7 +3,6 @@ package com.follower.ui;
 import com.follower.sound.VoiceLibrary;
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.util.ArrayList;
@@ -16,6 +15,7 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
@@ -65,7 +65,7 @@ public class VoiceDialog extends JDialog
 
 		JLabel hint = new JLabel("<html><body style='width:480px'>"
 			+ "A sound plays when the follower says that line, and the line still"
-			+ " appears as usual. Put your own files in the sounds folder and they"
+			+ " appears as usual. Put your own files in the folder below and they"
 			+ " turn up in these lists. Java plays <b>WAV, AIFF and AU</b> only -"
 			+ " an MP3 will simply stay silent.</body></html>");
 		hint.setFont(FontManager.getRunescapeSmallFont());
@@ -75,12 +75,30 @@ public class VoiceDialog extends JDialog
 		header.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		header.add(hint, BorderLayout.CENTER);
 
-		JButton folder = new JButton("Open the sounds folder");
-		folder.addActionListener(e -> openFolder());
-		JPanel headerButtons = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
-		headerButtons.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		headerButtons.add(folder);
-		header.add(headerButtons, BorderLayout.SOUTH);
+		// The path is SHOWN rather than opened. Opening a file manager needs
+		// Desktop::open, which the Plugin Hub restricts - reasonably, since a
+		// plugin handing paths to the operating system is a category of thing
+		// they cannot review one use of. Shown and copyable answers the same
+		// question ("where do my files go?") with nothing but a text field.
+		JTextField where = new JTextField(
+			voices.getSoundsFolder() == null ? "" : voices.getSoundsFolder().toString());
+		where.setEditable(false);
+		where.setFont(FontManager.getRunescapeSmallFont());
+		where.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+		where.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+		where.setBorder(BorderFactory.createEmptyBorder(4, 6, 4, 6));
+		where.setCaretPosition(0);
+
+		JButton copy = new JButton("Copy path");
+		copy.setToolTipText("Copy the sounds folder path to the clipboard");
+		copy.addActionListener(e -> copyFolderPath());
+
+		JPanel folderRow = new JPanel(new BorderLayout(6, 0));
+		folderRow.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		folderRow.setBorder(BorderFactory.createEmptyBorder(6, 0, 0, 0));
+		folderRow.add(where, BorderLayout.CENTER);
+		folderRow.add(copy, BorderLayout.EAST);
+		header.add(folderRow, BorderLayout.SOUTH);
 		root.add(header, BorderLayout.NORTH);
 
 		JPanel list = new JPanel();
@@ -186,7 +204,7 @@ public class VoiceDialog extends JDialog
 		return row;
 	}
 
-	private void openFolder()
+	private void copyFolderPath()
 	{
 		java.nio.file.Path folder = voices.getSoundsFolder();
 		if (folder == null)
@@ -195,14 +213,14 @@ public class VoiceDialog extends JDialog
 		}
 		try
 		{
-			if (Desktop.isDesktopSupported())
-			{
-				Desktop.getDesktop().open(folder.toFile());
-			}
+			java.awt.Toolkit.getDefaultToolkit().getSystemClipboard().setContents(
+				new java.awt.datatransfer.StringSelection(folder.toString()), null);
 		}
 		catch (Exception e)
 		{
-			log.warn("Could not open {}", folder, e);
+			// The path is on screen either way, so a clipboard that will not
+			// take it costs the player a copy rather than the answer.
+			log.warn("Could not copy {} to the clipboard", folder, e);
 		}
 	}
 
