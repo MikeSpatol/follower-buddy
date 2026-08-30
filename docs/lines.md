@@ -1,6 +1,6 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 446 rules, 2194 spoken lines, 2 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 448 rules, 2214 spoken lines, 2 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
@@ -18,7 +18,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - [bet](#bet) - Its predictions about drops (3 rules, 20 lines)
 - [clock](#clock) - The hour and how long we have been at it (9 rules, 39 lines)
 - [gear](#gear) - What you put on (62 rules, 121 lines)
-- [boss](#boss) - Bosses sighted and fought (50 rules, 484 lines)
+- [boss](#boss) - Bosses sighted and fought (52 rules, 504 lines)
 - [quest](#quest) - Famous quest figures nearby (44 rules, 131 lines)
 - [thrall](#thrall) - When it stands in for a thrall (3 rules, 18 lines)
 - [mimic](#mimic) - Copying your emotes (6 rules, 16 lines)
@@ -5157,6 +5157,44 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - The swamp belongs to it. We're just visiting.
 - It has three moods and all of them are hostile.
 - Toxic doesn't begin to cover this relationship.
+
+### `boss-brutus`
+
+> Brutus in his pen, before the turn. Cache ids 15626-15627, combat 30.
+
+- **when:** Brutus appearing
+- **does:** occasion (never held back)
+- **pacing:** priority 90, cooldown 1h, both
+
+- That is a very large animal in a very small pen.
+- Level thirty. I do not believe that for a second.
+- He looks calm. Things in pens usually look calm.
+- Whoever built that fence was an optimist.
+- Three tiles of him, and he is being polite about it.
+- Do not trust the number over the animal.
+- He is waiting for something. I would rather miss it.
+- There is more of him than that. I can tell.
+- A pen this size is a suggestion, not a wall.
+- Say hello. Quietly.
+
+### `boss-brutus-demonic`
+
+> Demonic Brutus, the turned form. Cache ids 15628-15629, combat 1224.
+
+- **when:** Demonic Brutus appearing
+- **does:** occasion (never held back)
+- **pacing:** priority 90, cooldown 1h, both
+
+- There it is. That was the real one all along.
+- The pen was never going to hold that.
+- Twelve hundred and twenty four. The thirty was a costume.
+- Well. He grew.
+- That is not the same animal, and we both know it.
+- It has stopped pretending. Get your prayer up.
+- It let us walk right up to it first. That was on purpose.
+- Nothing that size hits softly. Mind yourself.
+- I take back everything I said about the fence.
+- I liked him better in the pen.
 
 ### `boss-vorkath`
 

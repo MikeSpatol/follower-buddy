@@ -1084,6 +1084,60 @@
       ]
     },
     {
+      "id": "boss-brutus",
+      "occasion": true,
+      "note": "Brutus in his pen, before the turn. Cache ids 15626-15627, combat 30.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 3600000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Brutus"
+        ]
+      },
+      "say": [
+        "That is a very large animal in a very small pen.",
+        "Level thirty. I do not believe that for a second.",
+        "He looks calm. Things in pens usually look calm.",
+        "Whoever built that fence was an optimist.",
+        "Three tiles of him, and he is being polite about it.",
+        "Do not trust the number over the animal.",
+        "He is waiting for something. I would rather miss it.",
+        "There is more of him than that. I can tell.",
+        "A pen this size is a suggestion, not a wall.",
+        "Say hello. Quietly."
+      ]
+    },
+    {
+      "id": "boss-brutus-demonic",
+      "occasion": true,
+      "note": "Demonic Brutus, the turned form. Cache ids 15628-15629, combat 1224.",
+      "group": "boss",
+      "priority": 90,
+      "output": "both",
+      "cooldownMs": 3600000,
+      "when": {
+        "type": "npcSpawn",
+        "names": [
+          "Demonic Brutus"
+        ]
+      },
+      "say": [
+        "There it is. That was the real one all along.",
+        "The pen was never going to hold that.",
+        "Twelve hundred and twenty four. The thirty was a costume.",
+        "Well. He grew.",
+        "That is not the same animal, and we both know it.",
+        "It has stopped pretending. Get your prayer up.",
+        "It let us walk right up to it first. That was on purpose.",
+        "Nothing that size hits softly. Mind yourself.",
+        "I take back everything I said about the fence.",
+        "I liked him better in the pen."
+      ]
+    },
+    {
       "id": "boss-vorkath",
       "occasion": true,
       "note": "Vorkath, the undead dragon of Ungael.",
