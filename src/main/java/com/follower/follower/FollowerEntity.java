@@ -3021,9 +3021,18 @@ public class FollowerEntity
 	 * measurement gets within about a tenth of a tile and the rest is looking.
 	 *
 	 * <p>Settled at 13 over three passes - the delta alone fell short, zero
-	 * fell short, and eight was still a few units shy.
+	 * fell short, and eight was still a few units shy - and then at 22 once
+	 * there was something to measure against. Every earlier pass judged a bare
+	 * model against a tile whose centre has to be imagined; the spectating ward
+	 * draws a circle on that centre, so the kneel is suddenly sitting inside a
+	 * ring that either fits it or does not. It did not. The model read forward
+	 * of the ring by about the width of a foot, which is exactly the sort of
+	 * error an imagined centre hides and a drawn one cannot.
+	 *
+	 * <p>Still an eye judgement rather than a derivation, and still adjustable
+	 * live with {@code ::follower centre <n>} - negative pulls further back.
 	 */
-	private static final int STANDING_CENTRE_Z = 13;
+	private static final int STANDING_CENTRE_Z = 22;
 
 	/** Live nudge from ::follower centre, for dialling the last few units in. */
 	private int recentreBias;
