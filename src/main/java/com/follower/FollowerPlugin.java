@@ -6487,7 +6487,14 @@ public class FollowerPlugin extends Plugin
 			case "reload":
 				ruleLoader.reload();
 				speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
-				sendStatus("Rules: " + ruleLoader.getStatus());
+				// The sounds file is one of ours on disk too, and the command
+				// reads as "re-read my files". Leaving it out meant an
+				// attachment edited by hand - or removed by hand - only took
+				// effect when the Sounds window happened to be opened, which
+				// is a strange place to hide a reload.
+				voices.reload();
+				sendStatus("Rules: " + ruleLoader.getStatus()
+					+ "; sounds: " + voices.attachmentCount() + " attached");
 				reportRuleErrors();
 				break;
 

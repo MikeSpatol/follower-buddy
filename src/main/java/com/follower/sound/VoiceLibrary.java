@@ -282,5 +282,13 @@ public class VoiceLibrary
 	public void reload()
 	{
 		attached = read();
+		// A file that would not open may have been replaced by one that will.
+		refused.clear();
+	}
+
+	/** How many lines currently have a voice, for the reload command to report. */
+	public int attachmentCount()
+	{
+		return attached.size();
 	}
 }
