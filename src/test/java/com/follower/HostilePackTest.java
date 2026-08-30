@@ -68,7 +68,7 @@ public class HostilePackTest
 
 	private VoiceLibrary voicesIn(String name) throws Exception
 	{
-		VoiceLibrary voices = new VoiceLibrary(GSON);
+		VoiceLibrary voices = new VoiceLibrary(GSON, new net.runelite.client.audio.AudioPlayer());
 		voices.load(folder.newFolder(name).toPath());
 		return voices;
 	}

@@ -1125,9 +1125,12 @@ and talks; it never acts on the player's behalf.
   cannot render a coloured or icon-bearing message in the chatbox. Text a pack
   supplies for display is sanitised before it reaches a Swing dialog.
   `PackRoundTripTest` and `HostilePackTest` are the two test classes for it.
-- **Audio is `javax.sound.sampled` on local files only.** No audio ships with
-  the plugin and none is fetched. Clips are opened lazily, one sounds at a
-  time, and all are closed on shutdown.
+- **Audio is `net.runelite.client.audio.AudioPlayer` on local files only.** No
+  audio ships with the plugin and none is fetched. The Hub's automated check
+  rejects direct `javax.sound` use and names this as the replacement; it is
+  also the smaller code, since it opens a line per sound, closes it when the
+  sound ends, and closes the previous line before starting the next - which is
+  the one-mouth behaviour this used to keep by hand.
 - **One NPC is hidden, narrowly.** In thrall mode the follower takes the place
   of your own summoned thrall, so that one NPC is not drawn. The predicate is
   `renderable != thrallNpc`, which is a single reference comparison against the

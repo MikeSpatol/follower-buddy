@@ -19,10 +19,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
-import javax.sound.sampled.FloatControl;
+import net.runelite.client.audio.AudioPlayer;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -43,6 +40,12 @@ import lombok.extern.slf4j.Slf4j;
  * <p>Java plays WAV, AIFF and AU and nothing else without help, which is worth
  * saying plainly in the interface rather than letting somebody discover it with
  * an MP3 and a silence.
+ *
+ * <p>Playback goes through RuneLite's own {@link AudioPlayer} rather than
+ * {@code javax.sound} directly, which the Hub requires and which turns out to
+ * be the smaller code anyway: it opens a line per sound and closes it when the
+ * sound ends, and it closes the previous line before starting the next - so
+ * the one mouth this used to keep by hand is simply how it behaves.
  */
 @Slf4j
 @Singleton
@@ -58,6 +61,7 @@ public class VoiceLibrary
 		new HashSet<>(java.util.Arrays.asList(".wav", ".aif", ".aiff", ".au"));
 
 	private final Gson gson;
+	private final AudioPlayer audio;
 
 	private Path file;
 	private Path sounds;
@@ -65,19 +69,16 @@ public class VoiceLibrary
 	/** Line text to file name. Insertion-ordered so the file reads sensibly. */
 	private Map<String, String> attached = new LinkedHashMap<>();
 
-	/** Opened clips, kept because opening one per line would stutter. */
-	private final Map<String, Clip> clips = new HashMap<>();
 
 	/** Files that failed to open; remembered so a broken one is logged once. */
 	private final Set<String> refused = new HashSet<>();
 
-	/** The clip currently sounding. The follower has one mouth. */
-	private Clip speaking;
 
 	@Inject
-	public VoiceLibrary(Gson gson)
+	public VoiceLibrary(Gson gson, AudioPlayer audio)
 	{
 		this.gson = gson;
+		this.audio = audio;
 	}
 
 	public void load(Path dataDir)
@@ -218,114 +219,62 @@ public class VoiceLibrary
 		{
 			return;
 		}
-		String fileName = attachmentFor(line);
-		if (fileName == null)
-		{
-			return;
-		}
-		Clip clip = open(fileName);
-		if (clip == null)
-		{
-			return;
-		}
-
-		// One mouth: a new line cuts off the one still sounding, the same way
-		// its text replaces the text still on screen.
-		if (speaking != null && speaking.isRunning())
-		{
-			speaking.stop();
-		}
-		clip.stop();
-		clip.setFramePosition(0);
-		setVolume(clip, volume);
-		clip.start();
-		speaking = clip;
+		sound(attachmentFor(line), volume);
 	}
 
 	/** Plays a file directly, for the preview button in the editor. */
 	public void preview(String fileName, int volume)
 	{
-		Clip clip = open(fileName);
-		if (clip == null)
+		// Auditioning at nothing would look broken rather than quiet, so the
+		// preview always makes a sound even with the volume slider at zero.
+		sound(fileName, Math.max(1, volume));
+	}
+
+	private void sound(String fileName, int volume)
+	{
+		if (fileName == null || fileName.isEmpty()
+			|| sounds == null || refused.contains(fileName))
 		{
 			return;
 		}
-		if (speaking != null && speaking.isRunning())
-		{
-			speaking.stop();
-		}
-		clip.stop();
-		clip.setFramePosition(0);
-		setVolume(clip, Math.max(1, volume));
-		clip.start();
-		speaking = clip;
-	}
-
-	private Clip open(String fileName)
-	{
-		Clip cached = clips.get(fileName);
-		if (cached != null)
-		{
-			return cached;
-		}
-		if (refused.contains(fileName) || sounds == null)
-		{
-			return null;
-		}
-
 		Path path = sounds.resolve(fileName);
 		if (!Files.isRegularFile(path))
 		{
 			log.warn("Sound file {} is not in {}", fileName, sounds);
 			refused.add(fileName);
-			return null;
+			return;
 		}
-
-		try (AudioInputStream stream = AudioSystem.getAudioInputStream(path.toFile()))
+		try
 		{
-			Clip clip = AudioSystem.getClip();
-			clip.open(stream);
-			clips.put(fileName, clip);
-			return clip;
+			audio.play(path.toFile(), gain(volume));
 		}
 		catch (Exception e)
 		{
-			// Deliberately broad: an unreadable sound must never be able to
-			// stop the follower speaking, and the formats Java refuses are
-			// the ones a player is most likely to try first.
+			// Deliberately everything: a file that will not open must not stop
+			// the follower speaking, and the formats Java refuses are only the
+			// commonest reason. Remembered, so it is complained about once.
 			log.warn("Could not play {} - Java opens WAV, AIFF and AU only", fileName, e);
 			refused.add(fileName);
-			return null;
 		}
 	}
 
-	private static void setVolume(Clip clip, int volume)
+	/**
+	 * Percentage to the decibels the mixer speaks. 100 is the file as
+	 * recorded, and every step down is a real halving rather than a linear
+	 * fraction of a number nobody hears linearly.
+	 */
+	private static float gain(int volume)
 	{
-		if (!clip.isControlSupported(FloatControl.Type.MASTER_GAIN))
-		{
-			return;
-		}
-		FloatControl gain = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
-		// Percentage to decibels, which is what the control speaks. Clamped to
-		// whatever range this line actually offers rather than a guessed one.
-		float decibels = (float) (20.0 * Math.log10(Math.max(1, volume) / 100.0));
-		gain.setValue(Math.max(gain.getMinimum(), Math.min(gain.getMaximum(), decibels)));
+		return (float) (20.0 * Math.log10(Math.max(1, Math.min(100, volume)) / 100.0));
 	}
 
-	/** Releases every open line. Called when the plugin stops. */
+	/**
+	 * Forgets which files would not open, so a replaced file gets another
+	 * chance next time. There are no lines of ours to release: every one
+	 * belongs to {@link AudioPlayer} and closes itself when its sound ends.
+	 */
 	public void close()
 	{
-		if (speaking != null)
-		{
-			speaking.stop();
-			speaking = null;
-		}
-		for (Clip clip : clips.values())
-		{
-			clip.stop();
-			clip.close();
-		}
-		clips.clear();
 		refused.clear();
 	}
 

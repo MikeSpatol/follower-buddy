@@ -109,9 +109,10 @@ Useful commands: `::follower say <text>`, `::follower outfit <name>`,
   model animates.
 - Speech is a data-driven rule engine (`src/main/resources/com/follower/`),
   evaluated once per event; a full pass over all rules costs about 0.1 ms.
-- Audio uses `javax.sound.sampled` only, on files already in the user's own
-  folder. Clips are opened lazily, one plays at a time, and everything is
-  released on shutdown.
+- Audio goes through RuneLite's own `AudioPlayer`, on files already in the
+  user's own folder. It opens a line per sound, closes it when the sound ends,
+  and closes the previous one before starting the next - so a new line cuts off
+  the one still sounding, the way its text replaces the text on screen.
 - Import and export are plain `java.util.zip` over a file the user picks in a
   `JFileChooser`. Entry names are matched against a fixed set of four rather
   than resolved as paths, entry and total sizes are capped before reading, and
