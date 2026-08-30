@@ -6348,6 +6348,39 @@ public class FollowerPlugin extends Plugin
 				}
 				break;
 			}
+			case CC_OP_LOW_PRIORITY:
+			{
+				// Everything examined out of a bag - inventory, bank,
+				// equipment, shop - arrives as a widget op rather than as
+				// EXAMINE_ITEM, which is why none of it ever reached a line.
+				// The action alone is not enough here the way it is above: a
+				// low-priority widget op is every other such op too, so the
+				// word is the discriminator, exactly as RuneLite's own examine
+				// does it.
+				if (!"Examine".equals(event.getMenuOption()))
+				{
+					return;
+				}
+				int itemId = event.getItemId();
+				if (itemId <= 0)
+				{
+					// The event's own id is the widget's, not the item's, so
+					// the id comes off the slot that was clicked.
+					net.runelite.api.widgets.Widget parent =
+						client.getWidget(event.getParam1());
+					net.runelite.api.widgets.Widget slot = parent == null
+						? null : parent.getChild(event.getParam0());
+					itemId = slot == null ? -1 : slot.getItemId();
+				}
+				if (itemId > 0)
+				{
+					target = itemManager.getItemComposition(itemId).getName();
+				}
+				// No tile, deliberately: the thing is in a bag rather than in
+				// the world, so there is nowhere to turn and look. The line
+				// still lands; only the glance is skipped.
+				break;
+			}
 			default:
 				return;
 		}

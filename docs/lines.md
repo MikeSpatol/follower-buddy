@@ -1,6 +1,6 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 448 rules, 2214 spoken lines, 2 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 448 rules, 2234 spoken lines, 2 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
@@ -8,7 +8,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (32 rules, 149 lines)
 - [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (36 rules, 222 lines)
-- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (33 rules, 253 lines)
+- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (33 rules, 273 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 114 lines)
 - [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 72 lines)
 - [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (20 rules, 106 lines)
@@ -1515,15 +1515,35 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `examine-echo`
 
-> The player examined something and the follower turned to look at it too. The head-turn is the usual whole reaction; this line is the garnish. Examining is player-INITIATED - they are asking for attention - so it answers more readily than ambient chatter does, but not every time.
+> The player examined something and the follower turned to look at it too. The head-turn is the usual whole reaction; this line is the garnish. Examining is player-INITIATED - they are asking for attention - so it answers readily, but not every single time.
 
-- **when:** examinedthing AND a 30% roll
-- **pacing:** priority 20, cooldown 3m, delay 2 ticks
+- **when:** examinedthing AND a 70% roll
+- **pacing:** priority 20, cooldown 30s, delay 2 ticks
 
 - One {target}. Condition: fair.
 - The {target}. Noted, reluctantly.
 - There's a full page on the {target} somewhere. Not my best work.
 - {target}, examined. We're being thorough today.
+- Ah, the {target}. I have opinions.
+- {target}. Write it down, we might be tested.
+- You examined the {target}. I looked too. We are a team.
+- Is the {target} interesting? Be honest.
+- A {target}, apparently. The game insists.
+- I would have guessed {target} without reading it.
+- Another {target} for the collection of things we have looked at.
+- The {target}. Riveting stuff.
+- {target}. Noted. Filed. Forgotten by lunch.
+- Looking closely at the {target}, are we?
+- I did not need to read that to know it was a {target}.
+- The {target}. Somebody wrote that description with real effort.
+- {target}. There. Now we both know.
+- The {target}. Yes. Very much a {target}.
+- Careful with the {target}. Or do not. It is only a {target}.
+- One more {target} examined and I am putting it in the notebook.
+- You read everything, do you not.
+- Go on then. What did it say?
+- I looked where you looked. I saw a {target}.
+- You do like reading the small print.
 
 ### `minutes-taken`
 

@@ -12332,10 +12332,10 @@
     },
     {
       "id": "examine-echo",
-      "note": "The player examined something and the follower turned to look at it too. The head-turn is the usual whole reaction; this line is the garnish. Examining is player-INITIATED - they are asking for attention - so it answers more readily than ambient chatter does, but not every time.",
+      "note": "The player examined something and the follower turned to look at it too. The head-turn is the usual whole reaction; this line is the garnish. Examining is player-INITIATED - they are asking for attention - so it answers readily, but not every single time.",
       "group": "reactions",
       "priority": 20,
-      "cooldownMs": 180000,
+      "cooldownMs": 30000,
       "delayTicks": 2,
       "when": {
         "type": "all",
@@ -12345,7 +12345,7 @@
           },
           {
             "type": "chance",
-            "percent": 30
+            "percent": 70
           }
         ]
       },
@@ -12353,7 +12353,27 @@
         "One {target}. Condition: fair.",
         "The {target}. Noted, reluctantly.",
         "There's a full page on the {target} somewhere. Not my best work.",
-        "{target}, examined. We're being thorough today."
+        "{target}, examined. We're being thorough today.",
+        "Ah, the {target}. I have opinions.",
+        "{target}. Write it down, we might be tested.",
+        "You examined the {target}. I looked too. We are a team.",
+        "Is the {target} interesting? Be honest.",
+        "A {target}, apparently. The game insists.",
+        "I would have guessed {target} without reading it.",
+        "Another {target} for the collection of things we have looked at.",
+        "The {target}. Riveting stuff.",
+        "{target}. Noted. Filed. Forgotten by lunch.",
+        "Looking closely at the {target}, are we?",
+        "I did not need to read that to know it was a {target}.",
+        "The {target}. Somebody wrote that description with real effort.",
+        "{target}. There. Now we both know.",
+        "The {target}. Yes. Very much a {target}.",
+        "Careful with the {target}. Or do not. It is only a {target}.",
+        "One more {target} examined and I am putting it in the notebook.",
+        "You read everything, do you not.",
+        "Go on then. What did it say?",
+        "I looked where you looked. I saw a {target}.",
+        "You do like reading the small print."
       ]
     },
     {
