@@ -484,7 +484,12 @@ public class FollowerPlugin extends Plugin
 		// flinch, any block seen on a fighting player was filed as that
 		// weapon's attack - so a shortbow "shot" by blocking. The bad entries
 		// are already on disk and nothing else would ever overwrite them.
-		if (!config.attacksRelearned())
+		// Second repair, same shape as the first and for the neighbouring
+		// reason: the flinch guard stopped blocks being filed as swings, and
+		// left skilling animations doing it. Everything learned before the
+		// fight check went in was observed under a test that could not tell a
+		// swing from a pickaxe, so all of it is suspect and cheap to reobserve.
+		if (!config.attacksRelearned() || !config.attacksRelearnedSkilling())
 		{
 			stanceLibrary.clearLearnedAttacks();
 			// Written NOW, not at the next clean shutdown. The flag below says
@@ -493,6 +498,8 @@ public class FollowerPlugin extends Plugin
 			// with nothing left to run the repair again.
 			stanceLibrary.save();
 			configManager.setConfiguration(FollowerConfig.GROUP, "attacksRelearned", true);
+			configManager.setConfiguration(
+				FollowerConfig.GROUP, "attacksRelearnedSkilling", true);
 		}
 		paletteHarvest.load(dataDir);
 		wrapTrimStore.load(dataDir, follower);
@@ -6112,13 +6119,42 @@ public class FollowerPlugin extends Plugin
 		sightedTick = client.getTickCount();
 	}
 
+	/**
+	 * Whether a sighted animation was a SWING, as against something else the
+	 * player happens to be doing while an interaction is still set.
+	 *
+	 * <p>Interaction alone was the whole test, and interaction is sticky: it
+	 * survives the fight that set it. Walk away from an NPC, start mining, and
+	 * the pickaxe's 30-frame swing gets filed as that weapon's attack. It did -
+	 * one mining animation ended up as the learned attack of six pickaxes and,
+	 * because whatever was equipped at the time takes the blame, a shortbow.
+	 * The follower then shot its bow by mining with it.
+	 *
+	 * <p>This is the lesson {@code TriggerContext} already learned and wrote
+	 * down: "a fight has two sides or it has blows". For the local player the
+	 * context can simply be asked. For anybody else there are no varps to read,
+	 * so the evidence is their target wearing a health bar, which only happens
+	 * in combat.
+	 *
+	 * @param targetHealthRatio the interaction target's, or -1 for no target
+	 */
+	static boolean sightingIsASwing(boolean local, boolean inCombat, int targetHealthRatio)
+	{
+		return local ? inCombat : targetHealthRatio > 0;
+	}
+
 	/** Commits a held sighting once the tick it belongs to is complete. */
 	private void commitAttackSighting()
 	{
 		if (sightedPlayer != null && sightedTick < client.getTickCount())
 		{
 			Integer hit = playersHit.get(sightedPlayer);
-			if (hit == null || hit < sightedTick)
+			net.runelite.api.Actor target = sightedPlayer.getInteracting();
+			boolean swing = sightingIsASwing(
+				sightedPlayer == client.getLocalPlayer(),
+				speechEngine.getContext().isInCombat(),
+				target == null ? -1 : target.getHealthRatio());
+			if ((hit == null || hit < sightedTick) && swing)
 			{
 				// Only the local player's selected style is knowable - varps
 				// are theirs alone - so everyone else teaches the generic

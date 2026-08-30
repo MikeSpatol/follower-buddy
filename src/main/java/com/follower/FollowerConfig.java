@@ -1025,6 +1025,18 @@ public interface FollowerConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "attacksRelearnedSkilling",
+		name = "Attacks relearned again",
+		description = "Whether the second clear of learned attack animations has run,"
+			+ " after skilling animations were found among them; managed by the plugin",
+		hidden = true
+	)
+	default boolean attacksRelearnedSkilling()
+	{
+		return false;
+	}
+
+	@ConfigItem(
 		keyName = "attacksRelearned",
 		name = "Attacks relearned",
 		description = "Whether the one-time clear of learned attack animations has"
