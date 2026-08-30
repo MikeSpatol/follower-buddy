@@ -155,6 +155,11 @@ public final class TriggerContext
 	private String combatTarget = "";
 	private int combatTargetLevel;
 
+	/** Names the boss rules watch for, and those names compiled. */
+	private java.util.Set<String> bossNames = java.util.Collections.emptySet();
+	private java.util.List<java.util.regex.Pattern> bossPatterns =
+		java.util.Collections.emptyList();
+
 	/**
 	 * Works out whether the player is fighting, from the two things that are
 	 * always true of a fight: they are interacting with something that can
@@ -430,9 +435,58 @@ public final class TriggerContext
 	}
 
 	/** Whether that fight is with something big enough to call a boss. */
+	/**
+	 * The names the boss rules list, so that "boss" means one thing.
+	 *
+	 * <p>It used to mean combat level 100, in two places that had to be kept
+	 * agreeing by hand, and the proxy simply fails for anything that fights
+	 * above its level. Taking the names from the rules rather than from a
+	 * second list in here means adding a boss rule is all it takes: the
+	 * follower stands clear of it and cheers it going down without anybody
+	 * remembering to say so twice.
+	 */
+	public void setBossNames(java.util.Set<String> names)
+	{
+		if (names == bossNames)
+		{
+			return;
+		}
+		bossNames = names == null ? java.util.Collections.emptySet() : names;
+		java.util.List<java.util.regex.Pattern> compiled =
+			new java.util.ArrayList<>(bossNames.size());
+		for (String name : bossNames)
+		{
+			compiled.add(Condition.compileName(name));
+		}
+		bossPatterns = compiled;
+	}
+
+	public boolean isNamedBoss(String name)
+	{
+		if (name == null || name.isEmpty())
+		{
+			return false;
+		}
+		String normalised = Condition.normaliseName(name);
+		for (java.util.regex.Pattern pattern : bossPatterns)
+		{
+			if (pattern.matcher(normalised).matches())
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/** Big enough to be a boss, or named as one. Either will do. */
+	public boolean isBoss(String name, int level)
+	{
+		return level >= BOSS_COMBAT_LEVEL || isNamedBoss(name);
+	}
+
 	public boolean isBossFight()
 	{
-		return isInCombat() && combatTargetLevel >= BOSS_COMBAT_LEVEL;
+		return isInCombat() && isBoss(combatTarget, combatTargetLevel);
 	}
 
 	/** The name of what is being fought, for the {npc} placeholder. */

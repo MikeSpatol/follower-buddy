@@ -75,7 +75,11 @@ public class NpcFind
 		{
 			System.out.println("  id " + npc.id + "  \"" + npc.name + "\""
 				+ "  combat " + npc.combatLevel
-				+ "  size " + npc.size);
+				+ "  size " + npc.size
+				+ (npc.varbitId == -1 ? "" : "  varbit " + npc.varbitId)
+				+ (npc.varpIndex == -1 ? "" : "  varp " + npc.varpIndex)
+				+ (npc.configs == null ? ""
+					: "  becomes " + java.util.Arrays.toString(npc.configs)));
 		}
 	}
 }

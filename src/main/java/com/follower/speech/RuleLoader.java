@@ -38,6 +38,7 @@ public class RuleLoader
 
 	@Getter
 	private List<SpeechRule> rules = Collections.emptyList();
+	private java.util.Set<String> bossNames = Collections.emptySet();
 
 	@Getter
 	private String status = "not loaded";
@@ -383,10 +384,52 @@ public class RuleLoader
 		return !EVENT_CONDITIONS.containsKey(type) || listened.contains(type);
 	}
 
+	/**
+	 * The NPC names the boss rules name, which is what the rest of the plugin
+	 * means by "boss" - see {@link com.follower.speech.TriggerContext#isBoss}.
+	 * Collected here because this is where the rules are already walked, and
+	 * because the rule file is the only place the list should live.
+	 */
+	public java.util.Set<String> getBossNames()
+	{
+		return bossNames;
+	}
+
+	private void collectBossNames(Condition condition, java.util.Set<String> into)
+	{
+		if (condition == null)
+		{
+			return;
+		}
+		if (condition.type != null
+			&& condition.type.toLowerCase(java.util.Locale.ROOT).startsWith("npc")
+			&& condition.names != null)
+		{
+			into.addAll(condition.names);
+		}
+		if (condition.conditions != null)
+		{
+			for (Condition sub : condition.conditions)
+			{
+				collectBossNames(sub, into);
+			}
+		}
+	}
+
 	private void apply(List<SpeechRule> newRules, List<String> problems, String summary)
 	{
 		rules = newRules;
 		errors = problems;
+
+		java.util.Set<String> bosses = new java.util.HashSet<>();
+		for (SpeechRule rule : newRules)
+		{
+			if ("boss".equalsIgnoreCase(rule.group))
+			{
+				collectBossNames(rule.when, bosses);
+			}
+		}
+		bossNames = bosses;
 
 		listened.clear();
 		for (Map.Entry<TriggerEvent.Type, String[]> entry : EVENT_CONDITIONS.entrySet())

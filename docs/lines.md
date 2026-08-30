@@ -5381,7 +5381,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `kill-boss-celebrate`
 
-> A proper celebration for a boss kill: cheer, dance, then a jump for joy (862/866/2109, 7.4s in total). The 13-16 tick delay is deliberate - it lets the fight formally end and the spectating shield wind down first, so the celebration follows the fight instead of colliding with it. minimum 100 is the same combat level bossFight uses; lower it here and in the boss rules together if you want a different bar.
+> A proper celebration for a boss kill: cheer, dance, then a jump for joy (862/866/2109, 7.4s in total). The 13-16 tick delay is deliberate - it lets the fight formally end and the spectating shield wind down first, so the celebration follows the fight instead of colliding with it. boss: true asks the same question the spectating shield asks - big enough, or named in the boss rules - so the two can no longer drift apart, and a boss that fights above its combat level is covered by being listed rather than by being large.
 
 - **when:** a kill
 - **does:** mood +18; marks this place: 'you put that thing down'; animation chain; holds still

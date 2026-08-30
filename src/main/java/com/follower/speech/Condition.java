@@ -39,7 +39,7 @@ import net.runelite.api.NPC;
  *   <tr><td>combat</td><td>no fields — true throughout a fight, including the gaps between targets</td></tr>
  *   <tr><td>bossFight</td><td>{@code minimum} — target combat level, default 100</td></tr>
  *   <tr><td>combatStart / combatEnd</td><td>optional {@code names}; {@code {npc}} placeholder</td></tr>
- *   <tr><td>npcKill</td><td>{@code minimum} / {@code maximum} combat level, optional {@code names} / {@code ids}</td></tr>
+ *   <tr><td>npcKill</td><td>{@code minimum} / {@code maximum} combat level, optional {@code names} / {@code ids}, or {@code boss: true} for either big enough or named in the boss rules</td></tr>
  *   <tr><td>energyBelow</td><td>{@code percent}</td></tr>
  *   <tr><td>idle</td><td>{@code ticks}</td></tr>
  *   <tr><td>login / always</td><td>no fields</td></tr>
@@ -98,6 +98,18 @@ public class Condition
 
 	public Integer percent;
 	public Integer minimum;
+
+	/**
+	 * Whether the NPC has to be a BOSS - which is a bigger question than any
+	 * combat level, and the reason this is not just {@code minimum: 100}.
+	 *
+	 * <p>The level is only a proxy, and it is wrong in both directions. It was
+	 * wrong for Brutus, who fights at thirty and is unmistakably a boss, so
+	 * the follower neither stood clear of him nor said anything when he went
+	 * down. The names the boss rules already list are the other half of the
+	 * answer, and this consults both.
+	 */
+	public Boolean boss;
 	public Integer maximum;
 	public Integer within;
 	public Integer ticks;
@@ -433,6 +445,8 @@ public class Condition
 
 			case "npckill":
 				return event.getType() == TriggerEvent.Type.NPC_KILL
+					&& (!Boolean.TRUE.equals(boss)
+						|| ctx.isBoss(event.getName(), event.getValue()))
 					&& event.getValue() >= orDefault(minimum, 0)
 					&& (maximum == null || event.getValue() <= maximum)
 					&& (names == null && ids == null || matchesNpc(event))
@@ -1014,6 +1028,31 @@ public class Condition
 	}
 
 	/** Name matching is case-insensitive and supports {@code *} wildcards. */
+	/**
+	 * Compiles one name pattern the way every {@code names} list here is
+	 * matched: literal, case-insensitive, with {@code *} standing for any run
+	 * of characters.
+	 */
+	public static Pattern compileName(String name)
+	{
+		StringBuilder pattern = new StringBuilder();
+		for (String literal : name.split("\\*", -1))
+		{
+			if (pattern.length() > 0)
+			{
+				pattern.append(".*");
+			}
+			pattern.append(Pattern.quote(literal));
+		}
+		return Pattern.compile(pattern.toString(), Pattern.CASE_INSENSITIVE);
+	}
+
+	/** The game pads names with non-breaking spaces in places. */
+	public static String normaliseName(String candidate)
+	{
+		return candidate == null ? "" : candidate.replace('\u00A0', ' ').trim();
+	}
+
 	private boolean matchesAnyName(String candidate)
 	{
 		if (candidate == null || names == null)
@@ -1025,20 +1064,10 @@ public class Condition
 			compiledNames = new java.util.ArrayList<>(names.size());
 			for (String name : names)
 			{
-				StringBuilder pattern = new StringBuilder();
-				for (String literal : name.split("\\*", -1))
-				{
-					if (pattern.length() > 0)
-					{
-						pattern.append(".*");
-					}
-					pattern.append(Pattern.quote(literal));
-				}
-				compiledNames.add(Pattern.compile(pattern.toString(), Pattern.CASE_INSENSITIVE));
+				compiledNames.add(compileName(name));
 			}
 		}
-		// The game pads names with non-breaking spaces in places; normalise first.
-		String normalised = candidate.replace(' ', ' ').trim();
+		String normalised = normaliseName(candidate);
 		for (Pattern pattern : compiledNames)
 		{
 			if (pattern.matcher(normalised).matches())

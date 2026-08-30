@@ -263,6 +263,11 @@ public class SpeechEngine
 		TriggerContext context = getContext();
 		context.refresh();
 
+		// Cheap, and it has to survive a reload: the rules are the source of
+		// the boss list, so the context follows them rather than being told
+		// once at startup and going stale the next time the file is saved.
+		context.setBossNames(loader.getBossNames());
+
 		// Synced here rather than pushed from wherever the count is loaded or
 		// bumped, because there are several such places and the settling-in
 		// damper being right depends on all of them remembering.
