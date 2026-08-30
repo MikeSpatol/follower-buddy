@@ -126,6 +126,8 @@ public class FollowerEntity
 	@Getter
 	private net.runelite.api.Model baseModel;
 	private int[] spawnAnimationIds;
+	private SpotAnimRepository.Entry spawnGraphic;
+	private int spawnGraphicHeight;
 	private int weaponItemId = StanceLibrary.UNARMED;
 
 	/** Units to raise the follower clear of the ground. */
@@ -225,12 +227,35 @@ public class FollowerEntity
 		{
 			playAnimations(spawnAnimationIds);
 		}
+		if (spawnGraphic != null)
+		{
+			// Same pairing updateStrandedTeleport uses, and for the same reason:
+			// a spotanim sits at the feet unless it is lifted, and a teleport
+			// wraps the body.
+			playSpotAnim(spawnGraphic, spawnGraphicHeight);
+		}
 	}
 
-	/** Animation(s) played on spawn so the follower doesn't just pop in. */
-	public void setSpawnAnimation(int[] animationIds)
+	/**
+	 * Animation(s) played on spawn so the follower doesn't just pop in, and the
+	 * spotanim that goes with each.
+	 *
+	 * <p>The animation alone was a teleport arrival with nothing arriving: the
+	 * follower performed the landing and the air around it stayed empty, which
+	 * reads as the effect having failed rather than as a choice. A real
+	 * spellbook teleport is an animation AND a graphic, and the paired chain
+	 * this hands to {@link #playAnimations(int[], SpotAnimRepository.Entry[])}
+	 * was built for exactly that - it just had nobody passing it graphics.
+	 *
+	 * @param graphic drawn alongside the animation, or null for none
+	 * @param height how far up the model to lift it
+	 */
+	public void setSpawnAnimation(int[] animationIds,
+		SpotAnimRepository.Entry graphic, int height)
 	{
 		spawnAnimationIds = animationIds;
+		spawnGraphic = graphic;
+		spawnGraphicHeight = height;
 	}
 
 	public void despawn()

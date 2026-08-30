@@ -340,7 +340,7 @@ public interface FollowerConfig extends Config
 			+ " In small model units; the default 15 lifts the boots just clear."
 			+ " Positive lifts. Tune it live with ::follower height <n>.",
 		section = movementSection,
-		position = 6
+		position = 8
 	)
 	default int verticalOffset()
 	{
@@ -362,6 +362,36 @@ public interface FollowerConfig extends Config
 	default String spawnAnimation()
 	{
 		return "715";
+	}
+
+	@ConfigItem(
+		keyName = "spawnGraphic",
+		name = "Arrival graphic",
+		description = "Spotanim drawn as the follower arrives. The default 1299 is the"
+			+ " teleport ARRIVAL, which is what animation 715 above is; 111 is the"
+			+ " cast that goes with the vanish, and pairing it here looks"
+			+ " mistimed because it is the wrong half of the spell. Audition with"
+			+ " ::follower gfx 1299. Blank or 0 for none.",
+		section = movementSection,
+		position = 6
+	)
+	default String spawnGraphic()
+	{
+		return "1299";
+	}
+
+	@ConfigItem(
+		keyName = "spawnGraphicHeight",
+		name = "Arrival graphic height",
+		description = "How far up the model the arrival graphic sits. A spotanim is"
+			+ " drawn at the feet unless it is lifted, and a teleport wraps the"
+			+ " body: 92 is the height the follower's other teleports already use.",
+		section = movementSection,
+		position = 7
+	)
+	default int spawnGraphicHeight()
+	{
+		return 92;
 	}
 
 	@ConfigItem(

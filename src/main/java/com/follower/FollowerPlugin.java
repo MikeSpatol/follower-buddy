@@ -2470,6 +2470,13 @@ public class FollowerPlugin extends Plugin
 
 
 	/** Parses "6723,4191" or "6723 4191" into ids, dropping anything unusable. */
+	/** The first id in a list, resolved to a spotanim, or null. */
+	private com.follower.appearance.SpotAnimRepository.Entry firstGraphic(String text)
+	{
+		int[] ids = parseAnimationIds(text);
+		return ids.length == 0 ? null : spotAnimRepository.get(ids[0]);
+	}
+
 	private static int[] parseAnimationIds(String text)
 	{
 		if (text == null || text.trim().isEmpty())
@@ -3014,7 +3021,8 @@ public class FollowerPlugin extends Plugin
 			}
 			else
 			{
-				follower.setSpawnAnimation(parseAnimationIds(config.spawnAnimation()));
+				follower.setSpawnAnimation(parseAnimationIds(config.spawnAnimation()),
+					firstGraphic(config.spawnGraphic()), config.spawnGraphicHeight());
 
 				// Arrive on a free tile behind the player rather than inside them.
 				WorldPoint behind = follower.restingTileBehind(local, 2);
