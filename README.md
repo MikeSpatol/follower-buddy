@@ -15,12 +15,25 @@ the way a real follower does. Right-click it for Talk-to, Stay, Follow,
 Step-in-front and a couple of emotes, or hold Shift and right-click any tile
 to Send it there.
 
-**It talks.** Over 2,000 lines across 425 rules, chosen by what's happening:
+**It talks.** Over 2,200 lines across 448 rules, chosen by what's happening:
 bosses sighted and fought, levels, deaths, drops, low HP and prayer, the
-places you visit, the gear you put on, famous quest NPCs nearby, and long
-stretches of nothing at all. Lines appear overhead, in the chatbox, or both.
-It never repeats itself within a session's short memory, and lines you've
-heard many times give way to fresher ones over the weeks.
+places you visit, the gear you put on, things you examine, famous quest NPCs
+nearby, and long stretches of nothing at all. Lines appear overhead, in the
+chatbox, or both. It never repeats itself within a session's short memory, and
+lines you've heard many times give way to fresher ones over the weeks.
+
+**You can give it a voice.** Attach a sound file to any line - one you wrote or
+one that ships - and it plays when the follower says it, with the text still
+appearing as usual. Attachments are keyed by the line itself, so reordering a
+rule keeps every recording with its own words. The plugin ships no audio and
+downloads none: the files are yours, in your own folder, and WAV, AIFF and AU
+are the formats Java can play.
+
+**You can share what you have written.** The Messages window exports your own
+lines, and the sounds attached to them, as a `.zip` you can hand to somebody
+else. A pack holds only what you added - never the lines that ship - and
+importing one adds to yours rather than replacing anything. You see exactly
+what a pack contains, and what was left out and why, before any of it is kept.
 
 **It has a character.** A dry, understated field scribe who writes everything
 down. It keeps a mood that your day moves, likes some places and dislikes
@@ -54,9 +67,13 @@ within a second of saving. The side panel has editor windows for each group
 conversations), and a **Memory** window that shows everything the follower
 currently knows about you - with a button to erase all of it.
 
+In the Messages window, **Sounds** attaches a recording to any line in a rule,
+and **Share...** exports what you have written or takes on somebody else's
+pack. Sound files live in `.runelite/follower/sounds`.
+
 Config sections: Appearance, Movement, Speech (chattiness, output, reading
-speed), Rule groups (a toggle per group), Thrall mode, Errands (a toggle per
-errand type and a frequency), Combat.
+speed), Voice (on/off and volume), Rule groups (a toggle per group), Thrall
+mode, Errands (a toggle per errand type and a frequency), Combat.
 
 Useful commands: `::follower say <text>`, `::follower outfit <name>`,
 `::follower errand`, `::follower reload`, `::follower status`.
@@ -72,6 +89,15 @@ Useful commands: `::follower say <text>`, `::follower outfit <name>`,
   window shows all of it and erases it in one click.
 - Item, animation and object identities come from the game cache and the
   RuneLite API; no external service is contacted.
+- Sounds are files you put in your own folder. Nothing is bundled and nothing
+  is fetched; the plugin only reads what is already there, and only plays it
+  when the line it is attached to is said.
+- Sharing is you choosing a file. Exporting writes a `.zip` where you point it;
+  importing reads one you picked and nothing else. A pack that came from
+  somebody else is treated as untrusted - its names are matched against a
+  fixed list rather than used as paths, its size is capped, and every line in
+  it is checked before it is kept - and you are shown what it holds, and what
+  was rejected, before you accept it.
 
 ## Notes for reviewers
 
@@ -83,9 +109,18 @@ Useful commands: `::follower say <text>`, `::follower outfit <name>`,
   model animates.
 - Speech is a data-driven rule engine (`src/main/resources/com/follower/`),
   evaluated once per event; a full pass over all rules costs about 0.1 ms.
-- The test suite (693 tests) covers the rule engine, the follower's movement
-  and errand refusals, the dialog structure, and every bundled rule's
-  integrity; see `docs/testing-strategy.md`.
+- Audio uses `javax.sound.sampled` only, on files already in the user's own
+  folder. Clips are opened lazily, one plays at a time, and everything is
+  released on shutdown.
+- Import and export are plain `java.util.zip` over a file the user picks in a
+  `JFileChooser`. Entry names are matched against a fixed set of four rather
+  than resolved as paths, entry and total sizes are capped before reading, and
+  incoming text is validated and sanitised before it reaches a rule file, the
+  chatbox or a dialog; see `com.follower.share.PackFile` and the two test
+  classes that attack it.
+- The test suite (741 tests) covers the rule engine, the follower's movement
+  and errand refusals, the dialog structure, hostile share packs, and every
+  bundled rule's integrity; see `docs/testing-strategy.md`.
 
 ## Documentation
 

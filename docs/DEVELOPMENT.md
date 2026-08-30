@@ -1110,7 +1110,24 @@ and talks; it never acts on the player's behalf.
   a packet buffer or synthesises a key press. The menu entries it adds are
   ordinary `createMenuEntry` options the player clicks themselves.
 - **Files stay in `~/.runelite/follower`** â€” phrases, learned weapon stances,
-  outfit profiles and measured animation trims. Nothing else on disk is touched.
+  outfit profiles and measured animation trims. Sound files the player supplies
+  live in the `sounds` subfolder beside them.
+- **Two paths the player chooses themselves.** Sharing exports a `.zip` to a
+  location picked in a `JFileChooser`, and imports one from the same. Those are
+  the only reads or writes outside the profile folder, both are initiated by a
+  button, and neither happens without the player picking the file.
+- **An imported pack is treated as hostile,** because it came from somebody
+  else. Entry names are matched against a fixed set of four rather than
+  resolved as paths; entry and total sizes are capped before anything is read;
+  JSON depth is counted before the parser sees it, so a nested pack cannot
+  throw `StackOverflowError` past the handler; and every incoming line is
+  refused if it carries chat markup or control characters, so a stranger's text
+  cannot render a coloured or icon-bearing message in the chatbox. Text a pack
+  supplies for display is sanitised before it reaches a Swing dialog.
+  `PackRoundTripTest` and `HostilePackTest` are the two test classes for it.
+- **Audio is `javax.sound.sampled` on local files only.** No audio ships with
+  the plugin and none is fetched. Clips are opened lazily, one sounds at a
+  time, and all are closed on shutdown.
 - **One NPC is hidden, narrowly.** In thrall mode the follower takes the place
   of your own summoned thrall, so that one NPC is not drawn. The predicate is
   `renderable != thrallNpc`, which is a single reference comparison against the
