@@ -31,6 +31,9 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class RuleLoader
 {
+	/** The bundled defaults as of the last merge, for the three-way. */
+	public static final String BASE_FILE = "defaults-seen.json";
+
 	public static final String FILE_NAME = "phrases.json";
 	private static final String BUNDLED_DEFAULT = "/com/follower/default-phrases.json";
 
@@ -39,6 +42,7 @@ public class RuleLoader
 	@Getter
 	private List<SpeechRule> rules = Collections.emptyList();
 	private java.util.Set<String> bossNames = Collections.emptySet();
+	private Path baseFile;
 
 	@Getter
 	private String status = "not loaded";
@@ -82,6 +86,7 @@ public class RuleLoader
 	public void initialise(Path dataDir, boolean mergeDefaults)
 	{
 		file = dataDir.resolve(FILE_NAME);
+		baseFile = dataDir.resolve(BASE_FILE);
 
 		if (!Files.exists(file))
 		{
@@ -96,21 +101,33 @@ public class RuleLoader
 	}
 
 	/**
-	 * Appends bundled rules the user's file has never seen.
+	 * Folds bundled changes into the player's file, three ways.
 	 *
-	 * <p>The starter file is only written when no file exists, so before this
-	 * every rule an update added silently never reached an existing install:
-	 * the Hub updated the code, the file stayed at whatever release first
-	 * wrote it, and the new features looked broken rather than missing. Play
-	 * report: emote mirroring "not working" for a tester whose file predated
-	 * the mimic rules entirely.
+	 * <p>The old merge only ever APPENDED rules the file had never seen, which
+	 * fixed the tester whose file predated the mimic rules and left a bigger
+	 * hole behind it: a change to an existing rule reached nobody. Retuning the
+	 * examine echo from 30% every three minutes to 70% every thirty, and
+	 * writing twenty lines for it, changed nothing at all for anybody who
+	 * already had the plugin - the work shipped and stayed invisible.
 	 *
-	 * <p>Only ABSENT ids are appended, so every edit to an existing rule -
-	 * rewording, silencing, extra lines - survives untouched. Rules the
-	 * editor deleted are recorded in the file's "removed" list and stay
-	 * deleted. The file as it stood is kept beside the merged one as
-	 * phrases.json.bak, and new nickname hooks arrive the same way (existing
-	 * keys are the user's to keep).
+	 * <p>It could not be fixed by simply copying more across, because two
+	 * situations look identical from the user's file alone: a line the update
+	 * ADDED, and a line the player DELETED. Both are lines the bundled file has
+	 * and theirs does not. Copying blindly resurrects everything anybody has
+	 * ever removed.
+	 *
+	 * <p>So the defaults are kept as they stood at the last merge, in
+	 * {@value #BASE_FILE}, and the question becomes answerable: bundled against
+	 * BASE says what the update did, and theirs against base says what the
+	 * player did. Upstream's changes are taken where the player has not touched
+	 * that field, and the player wins everywhere they have. A line missing from
+	 * theirs but present in base was deleted on purpose and stays gone; one
+	 * that is in bundled but not in base is genuinely new and arrives.
+	 *
+	 * <p>Rules the editor deleted are recorded in the file's "removed" list and
+	 * stay deleted. The file as it stood is kept beside the merged one as
+	 * phrases.json.bak, and new nickname hooks arrive as before - existing keys
+	 * are the user's to keep.
 	 */
 	private void mergeNewDefaults()
 	{
@@ -133,6 +150,10 @@ public class RuleLoader
 				return;
 			}
 
+			// Null the first time this version runs: there is no record of what
+			// shipped before, and mergeRule says what it does about that.
+			com.google.gson.JsonObject base = readBase(pretty);
+
 			Set<String> known = new HashSet<>();
 			for (com.google.gson.JsonElement element : ours.getAsJsonArray("rules"))
 			{
@@ -153,15 +174,31 @@ public class RuleLoader
 				}
 			}
 
+			Map<String, com.google.gson.JsonObject> mine = byId(ours);
+			Map<String, com.google.gson.JsonObject> was = byId(base);
+
 			com.google.gson.JsonArray rules = ours.getAsJsonArray("rules");
 			int added = 0;
+			int updated = 0;
 			for (com.google.gson.JsonElement element : bundled.getAsJsonArray("rules"))
 			{
 				String id = idOf(element);
-				if (id != null && !known.contains(id))
+				if (id == null || !element.isJsonObject())
+				{
+					continue;
+				}
+				if (!known.contains(id))
 				{
 					rules.add(element);
 					added++;
+					continue;
+				}
+				com.google.gson.JsonObject held = mine.get(id);
+				// Absent but known means the editor deleted it; it stays deleted.
+				if (held != null
+					&& mergeRule(held, was.get(id), element.getAsJsonObject()) > 0)
+				{
+					updated++;
 				}
 			}
 
@@ -169,37 +206,255 @@ public class RuleLoader
 			if (bundled.has("nicknames") && bundled.get("nicknames").isJsonObject())
 			{
 				com.google.gson.JsonObject theirs = bundled.getAsJsonObject("nicknames");
-				com.google.gson.JsonObject mine =
+				com.google.gson.JsonObject held =
 					ours.has("nicknames") && ours.get("nicknames").isJsonObject()
 						? ours.getAsJsonObject("nicknames") : new com.google.gson.JsonObject();
 				for (Map.Entry<String, com.google.gson.JsonElement> entry : theirs.entrySet())
 				{
-					if (!mine.has(entry.getKey()))
+					if (!held.has(entry.getKey()))
 					{
-						mine.add(entry.getKey(), entry.getValue());
+						held.add(entry.getKey(), entry.getValue());
 						nicknamesAdded++;
 					}
 				}
-				ours.add("nicknames", mine);
+				ours.add("nicknames", held);
 			}
 
-			if (added == 0 && nicknamesAdded == 0)
+			if (added > 0 || updated > 0 || nicknamesAdded > 0)
 			{
-				return;
+				Files.copy(file, file.resolveSibling(file.getFileName() + ".bak"),
+					java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+				Files.write(file,
+					(pretty.toJson(ours) + "\n").getBytes(StandardCharsets.UTF_8));
+				log.info("Merged {} new rule(s), {} changed rule(s) and {} nickname(s) into {}",
+					added, updated, nicknamesAdded, file);
 			}
 
-			Files.copy(file, file.resolveSibling(file.getFileName() + ".bak"),
-				java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-			Files.write(file,
-				(pretty.toJson(ours) + "\n").getBytes(StandardCharsets.UTF_8));
-			log.info("Merged {} new default rule(s) and {} nickname(s) into {}",
-				added, nicknamesAdded, file);
+			// Written whether or not anything moved, and last, so a merge that
+			// half-happened is retried rather than recorded as done. From here
+			// on there is a base and the guessing above never runs again.
+			writeBase(bundled, pretty);
 		}
 		catch (Exception e)
 		{
 			// A file that cannot be merged is one reload() will complain about
 			// in its own words; do not block startup over it.
 			log.warn("Could not merge new defaults into {}", file, e);
+		}
+	}
+
+	/**
+	 * Folds one bundled rule into the player's copy.
+	 *
+	 * @param base the rule as it was bundled at the last merge, or null when
+	 * there is no record - see the bootstrap below
+	 * @return how many changes were made, so the caller can count rules
+	 */
+	private static int mergeRule(com.google.gson.JsonObject held,
+		com.google.gson.JsonObject base, com.google.gson.JsonObject bundled)
+	{
+		if (base == null)
+		{
+			return bootstrap(held, bundled);
+		}
+
+		int changes = 0;
+		Set<String> keys = new java.util.LinkedHashSet<>(bundled.keySet());
+		keys.addAll(base.keySet());
+		for (String key : keys)
+		{
+			// Lines are a set with a history and get their own pass; the id is
+			// what we matched on and cannot move.
+			if ("say".equals(key) || "id".equals(key))
+			{
+				continue;
+			}
+			com.google.gson.JsonElement before = base.get(key);
+			com.google.gson.JsonElement now = bundled.get(key);
+			if (java.util.Objects.equals(before, now))
+			{
+				// The update did not touch this, so there is nothing to offer.
+				continue;
+			}
+			if (!java.util.Objects.equals(held.get(key), before))
+			{
+				// The player did touch it. Theirs wins - a tuned cooldown or a
+				// silenced rule is a decision, not a stale copy.
+				continue;
+			}
+			if (now == null)
+			{
+				held.remove(key);
+			}
+			else
+			{
+				held.add(key, now);
+			}
+			changes++;
+		}
+		return changes + mergeLines(held, lines(base), lines(bundled));
+	}
+
+	/**
+	 * The first run under this version, with no record of what shipped before.
+	 *
+	 * <p>Nothing can be deduced about deletions, so the only honest signal left
+	 * is whether the player has written into the rule at all. If every line in
+	 * their copy is one that ships, they have not - and taking the bundled rule
+	 * is right, which is how a year of tuning finally reaches them. If they
+	 * have added anything the rule is theirs and is left exactly alone this
+	 * once; the base written afterwards makes every later merge exact.
+	 *
+	 * <p>{@code enabled} is the player's either way. Switching a rule off is a
+	 * decision made in the editor and adopting over it would turn it back on.
+	 */
+	private static int bootstrap(com.google.gson.JsonObject held,
+		com.google.gson.JsonObject bundled)
+	{
+		Set<String> shipped = new HashSet<>(lines(bundled));
+		for (String line : lines(held))
+		{
+			if (!shipped.contains(line))
+			{
+				return 0;
+			}
+		}
+		com.google.gson.JsonElement enabled = held.get("enabled");
+		int before = lines(held).size();
+		for (String key : new java.util.ArrayList<>(held.keySet()))
+		{
+			held.remove(key);
+		}
+		for (Map.Entry<String, com.google.gson.JsonElement> entry : bundled.entrySet())
+		{
+			held.add(entry.getKey(), entry.getValue());
+		}
+		if (enabled != null)
+		{
+			held.add("enabled", enabled);
+		}
+		return lines(held).size() == before && before > 0 ? 0 : 1;
+	}
+
+	/**
+	 * The lines, three ways. A line in base but not in bundled was dropped by
+	 * an update and goes, unless the player has already dropped it themselves.
+	 * A line in bundled but not in base is new and arrives. Anything else -
+	 * their own lines, their own rewordings - is left where it is.
+	 */
+	private static int mergeLines(com.google.gson.JsonObject held,
+		List<String> base, List<String> bundled)
+	{
+		if (!held.has("say") || !held.get("say").isJsonArray())
+		{
+			return 0;
+		}
+		Set<String> was = new HashSet<>(base);
+		Set<String> now = new HashSet<>(bundled);
+		int changes = 0;
+
+		List<String> kept = new java.util.ArrayList<>();
+		for (String line : lines(held))
+		{
+			if (was.contains(line) && !now.contains(line))
+			{
+				changes++;
+				continue;
+			}
+			kept.add(line);
+		}
+		for (String line : bundled)
+		{
+			if (!was.contains(line) && !kept.contains(line))
+			{
+				kept.add(line);
+				changes++;
+			}
+		}
+		if (changes > 0)
+		{
+			com.google.gson.JsonArray say = new com.google.gson.JsonArray();
+			for (String line : kept)
+			{
+				say.add(line);
+			}
+			held.add("say", say);
+		}
+		return changes;
+	}
+
+	private static List<String> lines(com.google.gson.JsonObject rule)
+	{
+		List<String> out = new java.util.ArrayList<>();
+		if (rule != null && rule.has("say") && rule.get("say").isJsonArray())
+		{
+			for (com.google.gson.JsonElement line : rule.getAsJsonArray("say"))
+			{
+				if (line.isJsonPrimitive())
+				{
+					out.add(line.getAsString());
+				}
+			}
+		}
+		return out;
+	}
+
+	private static Map<String, com.google.gson.JsonObject> byId(com.google.gson.JsonObject file)
+	{
+		Map<String, com.google.gson.JsonObject> map = new java.util.HashMap<>();
+		if (file == null || !file.has("rules") || !file.get("rules").isJsonArray())
+		{
+			return map;
+		}
+		for (com.google.gson.JsonElement element : file.getAsJsonArray("rules"))
+		{
+			String id = idOf(element);
+			if (id != null)
+			{
+				map.put(id, element.getAsJsonObject());
+			}
+		}
+		return map;
+	}
+
+	/** The defaults as they stood at the last merge, or null if never written. */
+	private com.google.gson.JsonObject readBase(Gson pretty)
+	{
+		if (baseFile == null || !Files.exists(baseFile))
+		{
+			return null;
+		}
+		try
+		{
+			return pretty.fromJson(
+				new String(Files.readAllBytes(baseFile), StandardCharsets.UTF_8),
+				com.google.gson.JsonObject.class);
+		}
+		catch (Exception e)
+		{
+			// Unreadable is the same as absent: fall back to the bootstrap
+			// rather than refusing to merge at all.
+			log.warn("Could not read {}, merging without a base", baseFile, e);
+			return null;
+		}
+	}
+
+	private void writeBase(com.google.gson.JsonObject bundled, Gson pretty)
+	{
+		if (baseFile == null)
+		{
+			return;
+		}
+		try
+		{
+			Files.write(baseFile,
+				(pretty.toJson(bundled) + "\n").getBytes(StandardCharsets.UTF_8));
+		}
+		catch (Exception e)
+		{
+			// Only costs a repeat of the bootstrap next start, which is
+			// idempotent, so it is not worth failing the merge over.
+			log.warn("Could not record the merged defaults in {}", baseFile, e);
 		}
 	}
 
