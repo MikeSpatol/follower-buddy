@@ -2479,11 +2479,30 @@ public class FollowerPlugin extends Plugin
 
 
 	/** Parses "6723,4191" or "6723 4191" into ids, dropping anything unusable. */
-	/** The first id in a list, resolved to a spotanim, or null. */
-	private com.follower.appearance.SpotAnimRepository.Entry firstGraphic(String text)
+	/**
+	 * The arrival effect, played the tick the follower appears.
+	 *
+	 * <p>Resolved here rather than held on the entity, because there are three
+	 * ways to spawn - the queued rebuild a login takes, the tick loop's
+	 * fallback, and ::follower here - and only one of them was ever configured.
+	 * A spotanim cached on a field is only as good as the path that set it,
+	 * which is why the animation arrived without its particle. Every teleport
+	 * elsewhere in the plugin resolves at the moment of use; this now does too.
+	 */
+	private void playSpawnGraphic()
 	{
-		int[] ids = parseAnimationIds(text);
-		return ids.length == 0 ? null : spotAnimRepository.get(ids[0]);
+		int[] ids = parseAnimationIds(config.spawnGraphic());
+		if (ids.length == 0)
+		{
+			return;
+		}
+		com.follower.appearance.SpotAnimRepository.Entry fx = spotAnimRepository.get(ids[0]);
+		if (fx == null)
+		{
+			log.debug("Spawn graphic {} is not in the spotanim repository", ids[0]);
+			return;
+		}
+		follower.playSpotAnim(fx, config.spawnGraphicHeight());
 	}
 
 	private static int[] parseAnimationIds(String text)
@@ -3030,12 +3049,12 @@ public class FollowerPlugin extends Plugin
 			}
 			else
 			{
-				follower.setSpawnAnimation(parseAnimationIds(config.spawnAnimation()),
-					firstGraphic(config.spawnGraphic()), config.spawnGraphicHeight());
+				follower.setSpawnAnimation(parseAnimationIds(config.spawnAnimation()));
 
 				// Arrive on a free tile behind the player rather than inside them.
 				WorldPoint behind = follower.restingTileBehind(local, 2);
 				follower.spawn(appearance, behind != null ? behind : local.getWorldLocation());
+				playSpawnGraphic();
 
 				// The very first spawn ever is the one moment naming is cheap
 				// and natural. THIS is the spawn a login takes - the queued
@@ -5058,6 +5077,7 @@ public class FollowerPlugin extends Plugin
 		else if (!follower.isSpawned() && appearanceService.getCurrent() != null)
 		{
 			follower.spawn(appearanceService.getCurrent(), local.getWorldLocation());
+			playSpawnGraphic();
 
 			if (!config.namePrompted())
 			{
@@ -6568,6 +6588,7 @@ public class FollowerPlugin extends Plugin
 					if (local != null && appearanceService.getCurrent() != null)
 					{
 						follower.spawn(appearanceService.getCurrent(), local.getWorldLocation());
+						playSpawnGraphic();
 						sendStatus("Here I am.");
 					}
 					else

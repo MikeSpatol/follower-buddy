@@ -126,8 +126,6 @@ public class FollowerEntity
 	@Getter
 	private net.runelite.api.Model baseModel;
 	private int[] spawnAnimationIds;
-	private SpotAnimRepository.Entry spawnGraphic;
-	private int spawnGraphicHeight;
 	private int weaponItemId = StanceLibrary.UNARMED;
 
 	/** Units to raise the follower clear of the ground. */
@@ -227,13 +225,6 @@ public class FollowerEntity
 		{
 			playAnimations(spawnAnimationIds);
 		}
-		if (spawnGraphic != null)
-		{
-			// Same pairing updateStrandedTeleport uses, and for the same reason:
-			// a spotanim sits at the feet unless it is lifted, and a teleport
-			// wraps the body.
-			playSpotAnim(spawnGraphic, spawnGraphicHeight);
-		}
 	}
 
 	/**
@@ -247,15 +238,15 @@ public class FollowerEntity
 	 * this hands to {@link #playAnimations(int[], SpotAnimRepository.Entry[])}
 	 * was built for exactly that - it just had nobody passing it graphics.
 	 *
-	 * @param graphic drawn alongside the animation, or null for none
-	 * @param height how far up the model to lift it
+	 * <p>The graphic is NOT held here. It is played by the caller the tick the
+	 * spawn happens, resolved fresh from the repository - the same way every
+	 * other teleport in the plugin does it, and for the reason this one
+	 * originally did not work: an Entry cached on a field is only as good as
+	 * the one path that set it, and there are three ways to spawn.
 	 */
-	public void setSpawnAnimation(int[] animationIds,
-		SpotAnimRepository.Entry graphic, int height)
+	public void setSpawnAnimation(int[] animationIds)
 	{
 		spawnAnimationIds = animationIds;
-		spawnGraphic = graphic;
-		spawnGraphicHeight = height;
 	}
 
 	public void despawn()
