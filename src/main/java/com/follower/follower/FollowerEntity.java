@@ -223,8 +223,6 @@ public class FollowerEntity
 
 		applyPose(stance().idle, true);
 		render();
-
-		object.setActive(true);
 		spawned = true;
 
 		if (spawnAnimationIds != null && spawnAnimationIds.length > 0)
@@ -236,6 +234,16 @@ public class FollowerEntity
 				arrival == null ? null : new SpotAnimRepository.Entry[]{arrival},
 				arrivalHeight);
 		}
+
+		// Attached LAST, after its own arrival graphic, for the reason the
+		// thrall circle already documents: same-tile RuneLiteObjects draw in
+		// attach order. Activating the follower first put it in the scene a
+		// frame before the swirl that was supposed to bring it, so the effect
+		// arrived visibly behind the animation it is exactly the length of -
+		// 715 and 7165 are both twelve frames and 1.56s, authored to run
+		// together. Nothing else spawns an object and animates it on the same
+		// tick, which is why nothing else showed this.
+		object.setActive(true);
 	}
 
 	/**
