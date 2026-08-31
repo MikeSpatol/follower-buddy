@@ -786,7 +786,8 @@ public class ErrandController
 			// Too far to jog: a proper teleport home. Cast the spell where it
 			// stands, swirl and all, then vanish to the player a beat later.
 			follower.playAnimation(TELEPORT_ANIMATION);
-			follower.playSpotAnim(spotAnims.get(TELEPORT_CAST_SPOTANIM));
+			follower.playSpotAnim(spotAnims.get(TELEPORT_CAST_SPOTANIM),
+				FollowerEntity.TELEPORT_GRAPHIC_HEIGHT);
 			// Gone on the cast's last frame. The cast runs 1.58s and the
 			// landing is three ticks out at 1.80s, so without this the
 			// follower drops back to its idle pose for a fifth of a second
@@ -824,7 +825,8 @@ public class ErrandController
 		follower.teleportToPlayer();
 		follower.playAnimation(TELEPORT_ARRIVE_ANIMATION);
 		// Raised to mid-body: at ground height the swirl sat in the ankles.
-		follower.playSpotAnim(spotAnims.get(TELEPORT_REVERSE_SPOTANIM), 92);
+		follower.playSpotAnim(spotAnims.get(TELEPORT_REVERSE_SPOTANIM),
+			FollowerEntity.TELEPORT_GRAPHIC_HEIGHT);
 		dispatch.accept(TriggerEvent.errand(TriggerEvent.Type.ERRAND_END, endKey(done)));
 		log.debug("Errand finished: {}", endKey(done));
 		clearErrand();

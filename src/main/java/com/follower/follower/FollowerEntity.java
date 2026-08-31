@@ -3447,6 +3447,17 @@ public class FollowerEntity
 	}
 
 	/**
+	 * How far up the model a teleport's graphic sits.
+	 *
+	 * <p>A spotanim is drawn at the feet unless it is lifted, and a teleport
+	 * wraps the body rather than pooling on the floor. Judged by eye on the
+	 * arrival and then found to be missing from the departures, which is what
+	 * naming it here is for: the number was written twice, in two files, and
+	 * the two places that needed it most had a bare zero instead.
+	 */
+	public static final int TELEPORT_GRAPHIC_HEIGHT = 92;
+
+	/**
 	 * @param height how far above the ground the graphic sits, in unscaled model
 	 *               units - the server sends one with every cast (a body-height
 	 *               teleport swirl is not a feet-height rune circle), and the

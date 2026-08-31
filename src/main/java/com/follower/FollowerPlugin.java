@@ -1874,7 +1874,8 @@ public class FollowerPlugin extends Plugin
 			{
 				follower.teleportToPlayer();
 				follower.playAnimation(TELEPORT_ARRIVE_ANIMATION);
-				follower.playSpotAnim(spotAnimRepository.get(TELEPORT_ARRIVE_SPOTANIM), 92);
+				follower.playSpotAnim(spotAnimRepository.get(TELEPORT_ARRIVE_SPOTANIM),
+					FollowerEntity.TELEPORT_GRAPHIC_HEIGHT);
 			}
 			return;
 		}
@@ -1897,7 +1898,8 @@ public class FollowerPlugin extends Plugin
 			follower.getStrandedTicks());
 		follower.clearStranded();
 		follower.playAnimation(TELEPORT_CAST_ANIMATION);
-		follower.playSpotAnim(spotAnimRepository.get(TELEPORT_CAST_SPOTANIM));
+		follower.playSpotAnim(spotAnimRepository.get(TELEPORT_CAST_SPOTANIM),
+			FollowerEntity.TELEPORT_GRAPHIC_HEIGHT);
 		// Gone on the cast's last frame rather than standing there waiting for
 		// the landing tick. The cast runs 1.58s and the landing is three ticks
 		// out at 1.80s, so without this there is a fifth of a second of the
