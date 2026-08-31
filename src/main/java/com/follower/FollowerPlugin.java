@@ -5372,7 +5372,7 @@ public class FollowerPlugin extends Plugin
 		boolean stayCommanded = stayIsPlayerCommanded(follower.isStaying(),
 			wandered, thrallNpc != null,
 			errands != null && errands.isBusy(),
-			spectate != null && spectate.isSpectating(),
+			spectate != null && spectate.holdsTheFeet(),
 			emoteHold, minutesState != 0);
 		speechEngine.getContext().setFollowerStaying(stayCommanded);
 

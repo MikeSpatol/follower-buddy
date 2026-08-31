@@ -4,10 +4,12 @@ import com.follower.sim.Harness;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.Rule;
+import com.follower.follower.SpectateController;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -85,6 +87,31 @@ public class StayLifeTest
 			!FollowerPlugin.stayIsPlayerCommanded(true, false, false, false, false, false, true));
 		assertTrue("and following at heel is nothing at all",
 			!FollowerPlugin.stayIsPlayerCommanded(false, false, false, false, false, false, false));
+	}
+
+	/**
+	 * The gap between a fight ending and the follower walking back.
+	 *
+	 * <p>stop() clears the spectating flag straight away, but the follower is
+	 * held where it stands for a few more ticks so the closing cast can play
+	 * out. Asking only whether it is spectating reports false through that
+	 * window while the follower is still parked, which reads as a Stay the
+	 * player asked for - and the follower announced taking the post every time
+	 * it finished watching a fight.
+	 */
+	@Test
+	public void theWindDownAfterAFightIsNotACommandedStay()
+	{
+		assertTrue("during the fight",
+			SpectateController.spectateOwnsTheFeet(true, 0));
+		assertTrue("and while it finishes the spell before walking back",
+			SpectateController.spectateOwnsTheFeet(false, 4));
+		assertFalse("only once it has actually been released",
+			SpectateController.spectateOwnsTheFeet(false, 0));
+
+		assertFalse("so the post is not announced on the way back",
+			FollowerPlugin.stayIsPlayerCommanded(true, false, false, false,
+				SpectateController.spectateOwnsTheFeet(false, 4), false, false));
 	}
 
 	@Test

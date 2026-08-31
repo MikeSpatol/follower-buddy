@@ -154,6 +154,27 @@ public class SpectateController
 	}
 
 	/**
+	 * Whether the spectate logic owns the follower's feet right now, which is
+	 * a longer window than {@link #isSpectating()}.
+	 *
+	 * <p>stop() clears the flag at once but leaves the follower standing where
+	 * it is for a few ticks, so the closing cast is not cut off by walking
+	 * away. Through that gap the follower is parked and no longer counted as
+	 * spectating, which is indistinguishable from a Stay the player asked for
+	 * unless somebody asks this instead.
+	 */
+	public boolean holdsTheFeet()
+	{
+		return spectateOwnsTheFeet(spectating, releaseTicks);
+	}
+
+	/** The above as a decision, so it can be tested without a controller. */
+	public static boolean spectateOwnsTheFeet(boolean spectating, int releaseTicks)
+	{
+		return spectating || releaseTicks > 0;
+	}
+
+	/**
 	 * Why the follower is or is not standing clear right now, for
 	 * {@code ::follower spectate}. Every gate in {@link #tick} reads back here,
 	 * so a feature that silently does nothing can be diagnosed in one command
