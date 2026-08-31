@@ -2489,20 +2489,19 @@ public class FollowerPlugin extends Plugin
 	 * which is why the animation arrived without its particle. Every teleport
 	 * elsewhere in the plugin resolves at the moment of use; this now does too.
 	 */
-	private void playSpawnGraphic()
+	private com.follower.appearance.SpotAnimRepository.Entry spawnGraphic()
 	{
 		int[] ids = parseAnimationIds(config.spawnGraphic());
 		if (ids.length == 0)
 		{
-			return;
+			return null;
 		}
 		com.follower.appearance.SpotAnimRepository.Entry fx = spotAnimRepository.get(ids[0]);
 		if (fx == null)
 		{
 			log.debug("Spawn graphic {} is not in the spotanim repository", ids[0]);
-			return;
 		}
-		follower.playSpotAnim(fx, config.spawnGraphicHeight());
+		return fx;
 	}
 
 	private static int[] parseAnimationIds(String text)
@@ -3053,8 +3052,8 @@ public class FollowerPlugin extends Plugin
 
 				// Arrive on a free tile behind the player rather than inside them.
 				WorldPoint behind = follower.restingTileBehind(local, 2);
-				follower.spawn(appearance, behind != null ? behind : local.getWorldLocation());
-				playSpawnGraphic();
+				follower.spawn(appearance, behind != null ? behind : local.getWorldLocation(),
+					spawnGraphic(), config.spawnGraphicHeight());
 
 				// The very first spawn ever is the one moment naming is cheap
 				// and natural. THIS is the spawn a login takes - the queued
@@ -5076,8 +5075,8 @@ public class FollowerPlugin extends Plugin
 		}
 		else if (!follower.isSpawned() && appearanceService.getCurrent() != null)
 		{
-			follower.spawn(appearanceService.getCurrent(), local.getWorldLocation());
-			playSpawnGraphic();
+			follower.spawn(appearanceService.getCurrent(), local.getWorldLocation(),
+				spawnGraphic(), config.spawnGraphicHeight());
 
 			if (!config.namePrompted())
 			{
@@ -6587,8 +6586,8 @@ public class FollowerPlugin extends Plugin
 					Player local = client.getLocalPlayer();
 					if (local != null && appearanceService.getCurrent() != null)
 					{
-						follower.spawn(appearanceService.getCurrent(), local.getWorldLocation());
-						playSpawnGraphic();
+						follower.spawn(appearanceService.getCurrent(), local.getWorldLocation(),
+							spawnGraphic(), config.spawnGraphicHeight());
 						sendStatus("Here I am.");
 					}
 					else

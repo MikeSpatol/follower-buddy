@@ -154,7 +154,13 @@ public class FollowerEntity
 
 	// ------------------------------------------------------------------ lifecycle
 
-	public void spawn(ComposedAppearance appearance, WorldPoint at)
+	/**
+	 * @param arrival the spotanim to swirl in with, or null for none, and how
+	 * far to lift it. Passed rather than held, because there are three ways to
+	 * spawn and a field only one of them set is a field two of them forget.
+	 */
+	public void spawn(ComposedAppearance appearance, WorldPoint at,
+		SpotAnimRepository.Entry arrival, int arrivalHeight)
 	{
 		despawn();
 
@@ -223,7 +229,12 @@ public class FollowerEntity
 
 		if (spawnAnimationIds != null && spawnAnimationIds.length > 0)
 		{
-			playAnimations(spawnAnimationIds);
+			// Paired through the chain rather than played after it, so the
+			// swirl begins in the same statement that starts the clip. Calling
+			// it afterwards left it to whatever the caller did next.
+			playAnimations(spawnAnimationIds,
+				arrival == null ? null : new SpotAnimRepository.Entry[]{arrival},
+				arrivalHeight);
 		}
 	}
 
@@ -3227,14 +3238,25 @@ public class FollowerEntity
 	 */
 	public void playAnimations(int[] animationIds, SpotAnimRepository.Entry[] graphics)
 	{
+		playAnimations(animationIds, graphics, 0);
+	}
+
+	/**
+	 * @param graphicHeight how far up the model to lift each stage's spotanim.
+	 * Zero for a rune circle on the floor; body height for a teleport swirl.
+	 */
+	public void playAnimations(int[] animationIds, SpotAnimRepository.Entry[] graphics,
+		int graphicHeight)
+	{
 		if (object == null || !animatable || animationIds == null || animationIds.length == 0)
 		{
 			return;
 		}
-		playChain(animationIds, graphics, 0, emoteGeneration);
+		playChain(animationIds, graphics, graphicHeight, 0, emoteGeneration);
 	}
 
-	private void playChain(int[] ids, SpotAnimRepository.Entry[] graphics, int index, int generation)
+	private void playChain(int[] ids, SpotAnimRepository.Entry[] graphics, int graphicHeight,
+		int index, int generation)
 	{
 		// A cancelled emote's chain must not resurrect itself: the finished handler
 		// for the clip that was interrupted still fires, and without this check it
@@ -3256,12 +3278,12 @@ public class FollowerEntity
 		if (animation == null)
 		{
 			log.debug("Animation {} not in cache, skipping", ids[index]);
-			playChain(ids, graphics, index + 1, generation);
+			playChain(ids, graphics, graphicHeight, index + 1, generation);
 			return;
 		}
 
 		AnimationController controller = new AnimationController(client, animation);
-		controller.setOnFinished(finished -> playChain(ids, graphics, index + 1, generation));
+		controller.setOnFinished(finished -> playChain(ids, graphics, graphicHeight, index + 1, generation));
 		object.setAnimationController(controller);
 		animationIds.add(ids[index]);
 		setEmotePlaying(true);
@@ -3272,7 +3294,7 @@ public class FollowerEntity
 
 		if (graphics != null && index < graphics.length && graphics[index] != null)
 		{
-			playSpotAnim(graphics[index]);
+			playSpotAnim(graphics[index], graphicHeight);
 		}
 	}
 
