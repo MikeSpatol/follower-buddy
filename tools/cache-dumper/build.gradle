@@ -111,3 +111,13 @@ tasks.register('runNpcFind', JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'com.follower.tools.NpcFind'
 }
+
+// Asks whether the cache already knows a weapon's attack animation, so the
+// stance backlog is only asked of the community if it genuinely has to be.
+//   gradlew runWeaponAnims --args="4151 1333 841"
+tasks.register('runWeaponAnims', JavaExec) {
+    group = 'verification'
+    description = 'Prints item params and category for named weapons'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.follower.tools.WeaponAnimProbe'
+}

@@ -100,8 +100,14 @@ public class Condition
 	public Integer minimum;
 
 	/**
-	 * Whether the NPC has to be a BOSS - which is a bigger question than any
-	 * combat level, and the reason this is not just {@code minimum: 100}.
+	 * Whether the NPC has to be a BOSS, or has to NOT be one.
+	 *
+	 * <p>Three states. Left out, it does not care. True, only bosses.
+	 * False, only things that are not, which is how the generic "well fought"
+	 * stands aside for a boss's own send-off instead of talking over it.
+	 *
+	 * <p>A bigger question than any combat level, and the reason this is not
+	 * just {@code minimum: 100}.
 	 *
 	 * <p>The level is only a proxy, and it is wrong in both directions. It was
 	 * wrong for Brutus, who fights at thirty and is unmistakably a boss, so
@@ -424,6 +430,11 @@ public class Condition
 					&& (names == null || matchesAnyName(event.getName()));
 			case "combatend":
 				return event.getType() == TriggerEvent.Type.COMBAT_END
+					// The level comes from the context rather than the event,
+					// which carries only the name: the target's level is still
+					// the one the fight was fought at when this fires.
+					&& (boss == null
+						|| boss == ctx.isBoss(event.getName(), ctx.getCombatTargetLevel()))
 					&& (names == null || matchesAnyName(event.getName()));
 
 			// Something the player killed. "minimum"/"maximum" bracket the
@@ -445,8 +456,8 @@ public class Condition
 
 			case "npckill":
 				return event.getType() == TriggerEvent.Type.NPC_KILL
-					&& (!Boolean.TRUE.equals(boss)
-						|| ctx.isBoss(event.getName(), event.getValue()))
+					&& (boss == null
+						|| boss == ctx.isBoss(event.getName(), event.getValue()))
 					&& event.getValue() >= orDefault(minimum, 0)
 					&& (maximum == null || event.getValue() <= maximum)
 					&& (names == null && ids == null || matchesNpc(event))

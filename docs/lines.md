@@ -1646,7 +1646,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `combat-end`
 
-> Said as the follower comes back to your side.
+> The generic send-off, for ordinary fights only. A boss gets kill-boss-celebrate instead, which lands a few seconds later once the ward has wound down; both firing meant the boss was seen off with 'Well fought' and then congratulated properly eight seconds afterwards.
 
 - **when:** a fight ending
 - **pacing:** priority 50, cooldown 2m
@@ -5393,11 +5393,11 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `kill-boss-celebrate`
 
-> A proper celebration for a boss kill: cheer, dance, then a jump for joy (862/866/2109, 7.4s in total). The 13-16 tick delay is deliberate - it lets the fight formally end and the spectating shield wind down first, so the celebration follows the fight instead of colliding with it. boss: true asks the same question the spectating shield asks - big enough, or named in the boss rules - so the two can no longer drift apart, and a boss that fights above its combat level is covered by being listed rather than by being large.
+> A proper celebration for a boss kill: cheer, dance, then a jump for joy (862/866/2109, 7.4s in total). The 6-8 tick delay lets the fight formally end and the spectating ward wind down first, so the celebration follows the fight instead of colliding with it - the ward's own release is 4 ticks, which this clears. It was 13-16, which cleared the ward three times over and left an eight second hole between the kill and the cheer. boss: true asks the same question the ward asks: big enough, or named in the boss rules.
 
 - **when:** a kill
 - **does:** mood +18; marks this place: 'you put that thing down'; animation chain; holds still
-- **pacing:** priority 70, cooldown 30s, delay 13-16 ticks, overhead
+- **pacing:** priority 70, cooldown 30s, delay 6-8 ticks, overhead
 
 - YES! You did it!
 - {npc} is down! I knew you had it!
