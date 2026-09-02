@@ -1211,6 +1211,63 @@ To pick it back up:
 - **Equipping** a weapon teaches its idle/walk/run â€” no combat needed. Only
   attack animations require actually fighting something.
 
+## Party-visible followers: FUTURE ROUTE, not started (2026-09-02)
+
+A recorded design, deliberately not built. The question was whether other
+players could see your follower exactly as you do: gear, colours and speech.
+The answer is yes for players in the same RuneLite party, and no for strangers,
+and the party version is the one to build if this is ever picked up.
+
+**How it would work.** RuneLite's `PartyService` lets plugins in a party
+exchange messages over RuneLite's own websocket; core plugins share HP and
+special attack state through it and Hub plugins may use it. A follower's
+appearance is already a short string, the same one `OutfitProfileStore` saves:
+
+```
+HEAD=item:2581,WEAPON=item:841,TORSO=item:12596,...,colors=...
+```
+
+Broadcast that to the party when it changes and every member's client composes
+the same model from the same cache with the code that already exists. Speech
+travels the same way: send the line text as it is spoken and the receiver
+draws it overhead. Sounds do not travel, since they are files on the sender's
+machine.
+
+**Position mostly need not travel.** Party members can already see the sender's
+player, and the follow logic is deterministic given the player's movement, so
+the receiving client can run the same algorithm against the sender's player and
+arrive at the same tile. Position only has to be sent for the cases where the
+follower is not following: stays, errands, spectating.
+
+**Hard limits.**
+
+- Both players need the plugin. Someone without it sees empty ground and
+  nothing sent can change that. The honest name for the feature is "your party
+  members with Follower Buddy can see your follower".
+- Strangers cannot be reached without a server of our own tracking who is where
+  with what. That is a privacy problem, would draw heavy Hub scrutiny, and would
+  end the plugin's posture of contacting no external service. Do not build that
+  version.
+- Animations are the messy part. Stances are learned per machine, so the
+  receiver may never have seen the sender's weapon used. Either transmit
+  animation ids with events, or accept that the receiver animates from its own
+  stance library. The item `category` finding (see `runWeaponAnims`) helps,
+  since it makes a correct borrow far more likely.
+
+**What it changes about the plugin.** The README and the reviewer notes say the
+plugin has no network access. Party messaging goes over RuneLite's websocket, so
+that claim would have to be withdrawn. Reviewers treat RuneLite's own party
+infrastructure very differently from a third party server, so it is not a
+blocker, only a claim to stop making. It would also be the first feature that
+acts on data from another player's client. Incoming appearance strings and
+lines must be validated the way share packs are: matched against what the
+cache knows, size capped, and never trusted as paths or markup.
+
+**Why not now.** It is a second rendering path, a message protocol and a trust
+boundary, on a plugin that is mid review. It answers "nobody else can see it"
+with "your friends can", which is the answer people actually want, and it
+belongs to a later version rather than a point release.
+
 ## Location region ids â€” VERIFIED against the world map (2026-08-06)
 
 The area rules' region ids were originally computed from documented world
