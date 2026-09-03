@@ -407,7 +407,7 @@ public final class PackFile
 			}
 			if (c == '<' || c == '>')
 			{
-				// Spoken lines are mirrored into the chatbox by default, and
+				// Spoken lines can be mirrored into the chatbox, and
 				// the chatbox reads Jagex markup: <col=ff0000>, <br>, <img=N>.
 				// A stranger's tag would render on somebody's screen in
 				// whatever colour and with whatever icon it asked for, which

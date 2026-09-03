@@ -12,9 +12,16 @@ package com.follower.speech;
  * <p>The value is the floor between any two spoken lines. The mood scaling in
  * {@link SpeechEngine} still applies on top, so a quiet setting and a bad day
  * compound rather than fight.
+ *
+ * <p>Minimal exists because Quiet was not quiet enough for some people. Twelve
+ * seconds between lines still allows five a minute, which reads as constant
+ * to anybody who wanted the follower mostly for the company. Forty-five
+ * seconds is about one remark a minute at most, and the idle wind-down scales
+ * with it, so a long AFK on Minimal goes properly silent.
  */
 public enum Chattiness
 {
+	MINIMAL("Minimal", 45_000L),
 	QUIET("Quiet", 12_000L),
 	OCCASIONAL("Occasional", 6_000L),
 	NORMAL("Normal", 3_000L),

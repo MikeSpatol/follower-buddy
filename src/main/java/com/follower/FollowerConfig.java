@@ -539,13 +539,15 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "mirrorToChat",
 		name = "Mirror speech to chatbox",
-		description = "Overhead lines also appear in the chatbox as public chat under the follower's name",
+		description = "Overhead lines also appear in the chatbox as public chat under the"
+			+ " follower's name. Off by default: the chatbox is the one place it can"
+			+ " crowd out the game, and the overhead bubble is the follower's own.",
 		section = speechSection,
 		position = 7
 	)
 	default boolean mirrorToChat()
 	{
-		return true;
+		return false;
 	}
 
 	// ---------------------------------------------------------------- thrall

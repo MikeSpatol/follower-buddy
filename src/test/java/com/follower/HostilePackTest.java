@@ -85,8 +85,8 @@ public class HostilePackTest
 	}
 
 	/**
-	 * The chatbox interprets Jagex markup, and mirroring to it is on by
-	 * default, so a tag in a line is a tag on somebody's screen.
+	 * The chatbox interprets Jagex markup, and mirroring to it is one
+	 * setting away, so a tag in a line is a tag on somebody's screen.
 	 */
 	@Test
 	public void markupIsRefusedBecauseTheChatboxWouldRenderIt() throws Exception
