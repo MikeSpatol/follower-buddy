@@ -505,7 +505,10 @@ public interface FollowerConfig extends Config
 	)
 	default com.follower.speech.Chattiness chattiness()
 	{
-		return com.follower.speech.Chattiness.NORMAL;
+		// Occasional, not Normal, since 1.4: the first impression was "it
+		// talks too much", and a level below Quiet only helps the people who
+		// go looking for it. The default is what everybody else hears.
+		return com.follower.speech.Chattiness.OCCASIONAL;
 	}
 
 	@ConfigItem(
