@@ -7,8 +7,6 @@ import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
-import java.util.List;
 import javax.inject.Inject;
 import net.runelite.api.Client;
 import net.runelite.api.Perspective;
@@ -27,12 +25,12 @@ import net.runelite.client.ui.overlay.OverlayPosition;
  * client's own recipe (its chat-above-head draw, ported verbatim): the BOLD 12
  * glyph font, a black copy one pixel STRAIGHT DOWN (not diagonal), the coloured
  * text over it, centred on the entity's projected height point, and no fade -
- * real overhead text simply disappears when its timer ends.
+ * real overhead text simply disappears when its timer ends. And ONE line,
+ * however long: the game never wraps overhead text, so a wrapped line here
+ * read as the follower doing something no player or NPC can.
  */
 public class FollowerOverlay extends Overlay
 {
-	private static final int MAX_LINE_CHARS = 34;
-
 	private final Client client;
 	private final FollowerEntity follower;
 	private final FollowerConfig config;
@@ -88,30 +86,22 @@ public class FollowerOverlay extends Overlay
 			return null;
 		}
 
-		List<String> lines = wrap(message);
 		int zOffset = config.speechHeight();
 		int rgb = config.speechColor().getRGB() & 0xFFFFFF;
 
 		// The client's own overhead draw: BOLD 12 glyphs, centred on the
 		// entity's projected height point, black copy one pixel straight down,
-		// coloured text over it, stacked upward by the font's height. No fade -
-		// real overhead text just disappears.
+		// coloured text over it. No fade - real overhead text just disappears.
 		com.follower.ui.GameFont b12 = gameFonts.getByName("b12_full");
 		if (b12 != null)
 		{
 			Point anchor = Perspective.localToCanvas(client, location,
-				client.getTopLevelWorldView().getPlane(), zOffset);
+				client.getWorldView(location.getWorldView()).getPlane(), zOffset);
 			if (anchor == null)
 			{
 				return null;
 			}
-			int lineHeight = b12.getLineHeight();
-			for (int i = 0; i < lines.size(); i++)
-			{
-				int baseline = anchor.getY() - (lines.size() - 1 - i) * lineHeight;
-				b12.drawCenteredOverhead(graphics, lines.get(i),
-					anchor.getX(), baseline, rgb);
-			}
+			b12.drawCenteredOverhead(graphics, message, anchor.getX(), anchor.getY(), rgb);
 			return null;
 		}
 
@@ -119,54 +109,16 @@ public class FollowerOverlay extends Overlay
 		graphics.setFont(FontManager.getRunescapeBoldFont());
 		FontMetrics metrics = graphics.getFontMetrics();
 		Point anchor = Perspective.getCanvasTextLocation(
-			client, graphics, location, lines.get(0), zOffset);
+			client, graphics, location, message, zOffset);
 		if (anchor == null)
 		{
 			return null;
 		}
-		int lineHeight = metrics.getHeight();
-		int centreX = anchor.getX() + metrics.stringWidth(lines.get(0)) / 2;
-		for (int i = 0; i < lines.size(); i++)
-		{
-			String line = lines.get(i);
-			int x = centreX - metrics.stringWidth(line) / 2;
-			int y = anchor.getY() - (lines.size() - 1 - i) * lineHeight;
-			graphics.setColor(Color.BLACK);
-			graphics.drawString(line, x, y + 1);
-			graphics.setColor(config.speechColor());
-			graphics.drawString(line, x, y);
-		}
+		graphics.setColor(Color.BLACK);
+		graphics.drawString(message, anchor.getX(), anchor.getY() + 1);
+		graphics.setColor(config.speechColor());
+		graphics.drawString(message, anchor.getX(), anchor.getY());
 
 		return null;
-	}
-
-	private static List<String> wrap(String text)
-	{
-		List<String> lines = new ArrayList<>();
-		StringBuilder line = new StringBuilder();
-
-		for (String word : text.split(" "))
-		{
-			if (line.length() > 0 && line.length() + 1 + word.length() > MAX_LINE_CHARS)
-			{
-				lines.add(line.toString());
-				line.setLength(0);
-			}
-			if (line.length() > 0)
-			{
-				line.append(' ');
-			}
-			line.append(word);
-		}
-
-		if (line.length() > 0)
-		{
-			lines.add(line.toString());
-		}
-		if (lines.isEmpty())
-		{
-			lines.add(text);
-		}
-		return lines;
 	}
 }

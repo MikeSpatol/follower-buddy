@@ -17,8 +17,8 @@ import static org.junit.Assert.assertTrue;
  * Whether the shipped lines read well, rather than whether they work.
  *
  * <p>Everything else about the rule file is checked for correctness. These are
- * the things that are correct and still wrong: a line so long it stacks five
- * deep over the follower's head, or the same sentence written into two rules so
+ * the things that are correct and still wrong: a line so long it runs off both
+ * sides of the screen, or the same sentence written into two rules so
  * the follower appears to repeat itself for no reason.
  *
  * <p>The current set is comfortably inside all of these - the longest line is
@@ -30,11 +30,12 @@ public class PhraseQualityTest
 	@Rule
 	public final TemporaryFolder folder = new TemporaryFolder();
 
-	/** FollowerOverlay wraps the overhead line at this width. */
-	private static final int WRAP_WIDTH = 34;
-
-	/** Four stacked lines is about as tall as it can get before it reads as a wall. */
-	private static final int MAX_LENGTH = 4 * WRAP_WIDTH;
+	/**
+	 * Overhead text is ONE line, as in the game, so length is width. This many
+	 * bold-12 characters is roughly a screen at the default size; past it the
+	 * ends fall off the sides.
+	 */
+	private static final int MAX_LENGTH = 136;
 
 	private List<SpeechRule> shipped() throws IOException
 	{
@@ -42,7 +43,7 @@ public class PhraseQualityTest
 	}
 
 	@Test
-	public void noLineIsTallEnoughToBecomeAWall() throws IOException
+	public void noLineIsWideEnoughToLeaveTheScreen() throws IOException
 	{
 		List<String> tooLong = new ArrayList<>();
 		for (SpeechRule rule : shipped())
@@ -55,12 +56,11 @@ public class PhraseQualityTest
 			{
 				if (line.length() > MAX_LENGTH)
 				{
-					tooLong.add(rule.id + ": " + line.length() + " chars, about "
-						+ (line.length() / WRAP_WIDTH + 1) + " lines - " + line);
+					tooLong.add(rule.id + ": " + line.length() + " chars - " + line);
 				}
 			}
 		}
-		assertTrue("lines that would stack too high over the follower:\n  "
+		assertTrue("lines too wide to fit over the follower:\n  "
 			+ String.join("\n  ", tooLong), tooLong.isEmpty());
 	}
 
