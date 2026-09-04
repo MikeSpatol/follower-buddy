@@ -20,7 +20,9 @@ bosses sighted and fought, levels, deaths, drops, low HP and prayer, the
 places you visit, the gear you put on, things you examine, famous quest NPCs
 nearby, and long stretches of nothing at all. Lines appear overhead, in the
 chatbox, or both. It never repeats itself within a session's short memory, and
-lines you've heard many times give way to fresher ones over the weeks.
+lines you've heard many times give way to fresher ones over the weeks. If it is
+still too much, Chattiness runs from Minimal, about one remark a minute at most,
+up to Chatty. New installs start on Occasional with the chatbox mirror off.
 
 **You can give it a voice.** Attach a sound file to any line - one you wrote or
 one that ships - and it plays when the follower says it, with the text still
@@ -120,7 +122,7 @@ Useful commands: `::follower say <text>`, `::follower outfit <name>`,
   incoming text is validated and sanitised before it reaches a rule file, the
   chatbox or a dialog; see `com.follower.share.PackFile` and the two test
   classes that attack it.
-- The test suite (741 tests) covers the rule engine, the follower's movement
+- The test suite (770 tests) covers the rule engine, the follower's movement
   and errand refusals, the dialog structure, hostile share packs, and every
   bundled rule's integrity; see `docs/testing-strategy.md`.
 
