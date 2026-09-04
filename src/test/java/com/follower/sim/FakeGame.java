@@ -93,6 +93,7 @@ public final class FakeGame
 		clientAnswers.put("getTickCount", 0);
 		WorldView view = worldView();
 		clientAnswers.put("getTopLevelWorldView", view);
+		playerAnswers.put("getWorldView", view);
 		clientAnswers.put("getWorldView", (Answer) args -> view);
 		clientAnswers.put("findWorldViewFromWorldPoint", (Answer) args -> view);
 
@@ -355,25 +356,33 @@ public final class FakeGame
 	/** The boat's own collision map, separate from the sea's; null until aboard. */
 	private int[][] boatFlags;
 
+	/** An eight by sixteen deck, the size of the boat the bug was found on. */
+	public static final int BOAT_WIDTH = 8;
+	public static final int BOAT_LENGTH = 16;
+
 	/**
-	 * Puts the player aboard a boat: every tile now resolves to a second
-	 * world view with its own collision map, everything open, while the
-	 * top-level map underneath stays whatever the test made it. That is the
-	 * shape of sailing - a sub-world drawn over the sea - and the follower has
+	 * Puts the player aboard a boat: a second world view, eight by sixteen at
+	 * the origin, with its own collision map, everything open, while the
+	 * top-level map underneath stays whatever the test made it. Tiles inside
+	 * the deck resolve to the boat, tiles beyond it to the sea. That is the
+	 * shape of sailing - a sub-world laid over the sea - and the follower has
 	 * to read the deck's map, not the water's.
+	 *
+	 * <p>The map is padded the way the client pads a sub-world's: (sizeX + 6)
+	 * by (sizeY + 6) with both insets at -1, so scene (x, y) lives at
+	 * [x + 1][y + 1]. A reader that ignores the inset sees the wrong tile.
 	 */
 	public FakeGame aboardBoat()
 	{
-		boatFlags = new int[net.runelite.api.Perspective.SCENE_SIZE]
-			[net.runelite.api.Perspective.SCENE_SIZE];
+		boatFlags = new int[BOAT_WIDTH + 6][BOAT_LENGTH + 6];
 		Map<String, Object> answers = new HashMap<>();
 		answers.put("getId", (Answer) args -> 1);
 		answers.put("isTopLevel", (Answer) args -> false);
 		answers.put("getPlane", (Answer) args -> 0);
 		answers.put("getBaseX", (Answer) args -> 0);
 		answers.put("getBaseY", (Answer) args -> 0);
-		answers.put("getSizeX", (Answer) args -> net.runelite.api.Perspective.SCENE_SIZE);
-		answers.put("getSizeY", (Answer) args -> net.runelite.api.Perspective.SCENE_SIZE);
+		answers.put("getSizeX", (Answer) args -> BOAT_WIDTH);
+		answers.put("getSizeY", (Answer) args -> BOAT_LENGTH);
 		answers.put("isInstance", (Answer) args -> false);
 		Map<String, Object> deck = new HashMap<>();
 		deck.put("getFlags", (Answer) args -> boatFlags);
@@ -382,16 +391,22 @@ public final class FakeGame
 			new CollisionData[]{deckMap, deckMap, deckMap, deckMap});
 		WorldView boat = proxy(WorldView.class, answers);
 		WorldView sea = (WorldView) clientAnswers.get("getTopLevelWorldView");
-		clientAnswers.put("findWorldViewFromWorldPoint", (Answer) args -> boat);
+		clientAnswers.put("findWorldViewFromWorldPoint", (Answer) args ->
+		{
+			WorldPoint w = (WorldPoint) args[0];
+			return w.getX() >= 0 && w.getX() < BOAT_WIDTH && w.getY() >= 0 && w.getY() < BOAT_LENGTH
+				? boat : sea;
+		});
 		clientAnswers.put("getWorldView",
 			(Answer) args -> ((Integer) args[0]) == 1 ? boat : sea);
+		playerAnswers.put("getWorldView", boat);
 		return this;
 	}
 
-	/** Solid on the boat's map only: a rail, a mast, the edge of the deck. */
+	/** Solid on the boat's map only: a rail, a mast, a cannon, a workbench. */
 	public FakeGame boatBlocksTile(int x, int y)
 	{
-		boatFlags[x][y] |= net.runelite.api.CollisionDataFlag.BLOCK_MOVEMENT_FULL;
+		boatFlags[x + 1][y + 1] |= net.runelite.api.CollisionDataFlag.BLOCK_MOVEMENT_FULL;
 		return this;
 	}
 
@@ -473,6 +488,8 @@ public final class FakeGame
 	private WorldView worldView()
 	{
 		Map<String, Object> answers = new HashMap<>();
+		answers.put("getId", (Answer) args -> 0);
+		answers.put("isTopLevel", (Answer) args -> true);
 		answers.put("getMapRegions", (Answer) args -> mapRegions);
 		answers.put("getBaseX", (Answer) args -> 0);
 		answers.put("getBaseY", (Answer) args -> 0);

@@ -216,23 +216,74 @@ public class WallPathingTest
 
 	/**
 	 * Aboard a boat the player is in a sub-world laid over the sea, with its
-	 * own collision map. The map of the water underneath says nothing about
-	 * the deck, so a follower reading it would happily stand on the rail, or
-	 * on the sea beside the hull - which is what players were seeing.
+	 * own collision map, and that map is padded: the client stores scene
+	 * (x, y) at [x + 1][y + 1]. Read unshifted, every tile answers for its
+	 * neighbour, which on a real deck made the facilities read open and the
+	 * walkway between them read blocked - so the follower walked the
+	 * facilities. The sea's map underneath says nothing about the deck at all.
 	 */
 	@Test
 	public void aboardABoatItReadsTheDecksMapNotTheSeas()
 	{
 		FakeGame game = new FakeGame().withCollision().aboardBoat();
-		game.boatBlocksTile(11, 10);
+		game.boatBlocksTile(4, 8);
 		FollowerEntity follower = followerOn(game);
 
-		WorldPoint from = new WorldPoint(10, 10, 0);
+		WorldPoint from = new WorldPoint(3, 8, 0);
 		assertFalse("the sea's map is open here; the deck's is not, and the deck's is the one that counts",
 			follower.canStep(from, 1, 0));
 		assertFalse("nor is it a place to stand",
-			follower.standable(new WorldPoint(11, 10, 0)));
-		assertTrue("the rest of the deck is fine",
-			follower.standable(new WorldPoint(9, 10, 0)));
+			follower.standable(new WorldPoint(4, 8, 0)));
+		assertTrue("the tile next to it is fine, which an unshifted read would deny",
+			follower.standable(new WorldPoint(3, 7, 0)));
+		assertTrue("and so is the one on the other side",
+			follower.standable(new WorldPoint(5, 8, 0)));
+	}
+
+	/**
+	 * Aboard, the boat is the whole world. The sea beside the hull resolves to
+	 * the top-level view, whose map may well read open there - or be missing
+	 * altogether, which the follower otherwise treats as open. Neither is a
+	 * licence to stand in the water.
+	 */
+	@Test
+	public void aboardABoatTheSeaBesideTheHullIsNotAPlaceToStand()
+	{
+		FakeGame game = new FakeGame().withCollision().aboardBoat();
+		FollowerEntity follower = followerOn(game);
+
+		assertFalse("just past the hull, open on the sea's map",
+			follower.standable(new WorldPoint(FakeGame.BOAT_WIDTH, 8, 0)));
+		assertFalse("and no stepping off the deck onto it",
+			follower.canStep(new WorldPoint(FakeGame.BOAT_WIDTH - 1, 8, 0), 1, 0));
+		assertTrue("the deck itself is still fine",
+			follower.standable(new WorldPoint(FakeGame.BOAT_WIDTH - 1, 8, 0)));
+	}
+
+	/**
+	 * Boarding is a jump into a world whose map is still filling in. The
+	 * follower lands the instant the player's coordinates change, and the
+	 * deck's facilities reach the map over the ticks after, so the tile it
+	 * landed on can turn into a cannon underneath it. Aboard, that is a
+	 * reason to move. On land a follower standing where the map says it
+	 * cannot is there on purpose, and stays.
+	 */
+	@Test
+	public void aboardABoatAFacilityArrivingUnderfootIsAReasonToMove()
+	{
+		FakeGame game = new FakeGame().withCollision().aboardBoat();
+		FollowerEntity follower = followerOn(game);
+		WorldPoint landed = new WorldPoint(3, 8, 0);
+
+		assertFalse("an open deck tile is fine to stand on",
+			follower.deckSceneryUnderfoot(landed, game.player));
+		game.boatBlocksTile(3, 8);
+		assertTrue("until the facility arrives on it",
+			follower.deckSceneryUnderfoot(landed, game.player));
+
+		FakeGame land = new FakeGame().withCollision();
+		land.blockTile(10, 10);
+		assertFalse("on land the same reading is not a reason to move",
+			followerOn(land).deckSceneryUnderfoot(new WorldPoint(10, 10, 0), land.player));
 	}
 }

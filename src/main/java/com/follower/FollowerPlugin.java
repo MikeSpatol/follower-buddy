@@ -5035,6 +5035,16 @@ public class FollowerPlugin extends Plugin
 		{
 			return;
 		}
+		if (config.developerMode())
+		{
+			// Ground truth for ::follower boat: tiles the player has actually
+			// stood on are walkable whatever the collision map says.
+			if (walked.size() > 4000)
+			{
+				walked.clear();
+			}
+			walked.add(local.getWorldLocation());
+		}
 
 		// The dialog's tick gate: queued clicks (open, continue, option,
 		// dismiss) resolve here, one tick after the input - the same beat a
@@ -6321,6 +6331,9 @@ public class FollowerPlugin extends Plugin
 	 * someone extending the plugin rather than playing with it, and every place
 	 * the documentation points at them names the setting they need.
 	 */
+	/** Tiles the player has stood on, for the boat dump; developer mode only. */
+	private final Set<WorldPoint> walked = new HashSet<>();
+
 	private static final Set<String> DEVELOPER_COMMANDS = new HashSet<>(java.util.Arrays.asList(
 		"priorities", "palette", "harvest", "hidden", "height",
 		"pitchsweep", "headsweep", "head", "followtrace",
@@ -6328,6 +6341,7 @@ public class FollowerPlugin extends Plugin
 		"animinfo", "animtrace", "errandscan", "cachecheck", "stanceaudit",
 		"watch", "stance", "gfx", "spectate", "shield", "centre", "center", "loot",
 		"scan", "heights", "mood", "chatwatch", "examinewatch", "fire", "want", "transcript",
+		"boat",
 		"thieftargets", "sniffanims", "finditem", "prop", "propoffset"));
 
 	/** The errand keys ::follower errand accepts, read from the enum itself. */
@@ -7646,6 +7660,10 @@ public class FollowerPlugin extends Plugin
 					+ " at " + speechEngine.getContext().getLocation());
 				break;
 
+			case "boat":
+				dumpBoat();
+				break;
+
 			case "where":
 				// Split from status: every place that advertises this command
 				// promises the region id, which used to arrive buried after a
@@ -7677,7 +7695,7 @@ public class FollowerPlugin extends Plugin
 				{
 					sendStatus("Developer: watch | stance <weaponId> [idle walk run attack] | "
 						+ "priorities | palette | harvest | hidden | height <n> | "
-						+ "pitchsweep | headsweep | head <...> | followtrace | "
+						+ "pitchsweep | headsweep | head <...> | followtrace | boat | "
 						+ "wraplerp | wrapauto | wrapearly | pose <id> | animinfo | "
 						+ "animtrace | errandscan | cachecheck | stanceaudit | examinewatch | "
 						+ "mood [0-100] | chatwatch | sniffanims | finditem <name> | "
@@ -8591,6 +8609,210 @@ public class FollowerPlugin extends Plugin
 				"That pack could not be read: " + e.getMessage(),
 				"Pack not imported", javax.swing.JOptionPane.ERROR_MESSAGE);
 		}
+	}
+
+	/**
+	 * Developer dump of the world views around the player, for boats: which
+	 * view the player stands in, what its collision map says for the nine by
+	 * nine tiles around them, read the way the follower reads it, against the
+	 * sea map underneath, every object on those tiles, and the tiles the
+	 * player has stood on since developer mode went on. Written to the client
+	 * log. A walked tile marked blocked means the map is being misread.
+	 */
+	private void dumpBoat()
+	{
+		Player me = client.getLocalPlayer();
+		if (me == null)
+		{
+			sendStatus("Not logged in.");
+			return;
+		}
+		WorldPoint at = me.getWorldLocation();
+		net.runelite.api.WorldView top = client.getTopLevelWorldView();
+		StringBuilder out = new StringBuilder();
+		out.append("BOAT player at ").append(at).append(" local ").append(me.getLocalLocation())
+			.append("\n  player view: ").append(describeView(me.getWorldView()))
+			.append("\n  found view : ").append(describeView(client.findWorldViewFromWorldPoint(at)))
+			.append("\n  top view   : ").append(describeView(top))
+			.append("\n  follower at ").append(follower.getWorldLocation())
+			.append("\n  flags array: ").append(describeFlags(client.findWorldViewFromWorldPoint(at), at.getPlane()))
+			.append("\n  your tile in the scene array: ").append(describeTile(client.findWorldViewFromWorldPoint(at), at))
+			.append("\n  walked tiles remembered: ").append(walked.size())
+			.append("\n  grid: P you, . open, # blocked, o walked+open, X walked+BLOCKED, w wall bits, x other bits, - not in view, ? no data\n");
+		int lines = 0;
+		for (int dy = 4; dy >= -4; dy--)
+		{
+			StringBuilder row = new StringBuilder();
+			StringBuilder sea = new StringBuilder();
+			for (int dx = -4; dx <= 4; dx++)
+			{
+				WorldPoint t = new WorldPoint(at.getX() + dx, at.getY() + dy, at.getPlane());
+				char c = flagSymbol(client.findWorldViewFromWorldPoint(t), t, dx == 0 && dy == 0);
+				if (c != 'P' && walked.contains(t))
+				{
+					c = c == '#' ? 'X' : c == '.' ? 'o' : c;
+				}
+				row.append(c);
+				sea.append(flagSymbol(top, t, dx == 0 && dy == 0));
+			}
+			out.append("  ").append(row).append("   sea: ").append(sea).append('\n');
+			lines++;
+		}
+		for (int dy = 4; dy >= -4; dy--)
+		{
+			for (int dx = -4; dx <= 4; dx++)
+			{
+				WorldPoint t = new WorldPoint(at.getX() + dx, at.getY() + dy, at.getPlane());
+				net.runelite.api.WorldView v = client.findWorldViewFromWorldPoint(t);
+				net.runelite.api.coords.LocalPoint lp = v == null ? null : net.runelite.api.coords.LocalPoint.fromWorld(v, t);
+				if (lp == null)
+				{
+					continue;
+				}
+				StringBuilder objs = new StringBuilder();
+				net.runelite.api.Tile[][][] tiles = v.getScene() == null ? null : v.getScene().getTiles();
+				net.runelite.api.Tile tile = tiles == null || t.getPlane() >= tiles.length
+					|| lp.getSceneX() >= tiles[t.getPlane()].length
+					|| lp.getSceneY() >= tiles[t.getPlane()][lp.getSceneX()].length
+					? null : tiles[t.getPlane()][lp.getSceneX()][lp.getSceneY()];
+				if (tile != null)
+				{
+					if (tile.getGameObjects() != null)
+					{
+						for (net.runelite.api.GameObject g : tile.getGameObjects())
+						{
+							if (g != null)
+							{
+								objs.append(" obj ").append(g.getId()).append(' ').append(objectName(g.getId()))
+									.append(' ').append(g.sizeX()).append('x').append(g.sizeY());
+							}
+						}
+					}
+					if (tile.getWallObject() != null)
+					{
+						objs.append(" wall ").append(tile.getWallObject().getId());
+					}
+					if (tile.getGroundObject() != null)
+					{
+						objs.append(" ground ").append(tile.getGroundObject().getId());
+					}
+					if (tile.getDecorativeObject() != null)
+					{
+						objs.append(" decor ").append(tile.getDecorativeObject().getId());
+					}
+				}
+				Integer flags = flagsIn(v, lp, t.getPlane());
+				if (objs.length() > 0 || (flags != null && flags != 0))
+				{
+					out.append("  (").append(dx).append(',').append(dy).append(") view ").append(v.getId())
+						.append(" scene ").append(lp.getSceneX()).append(',').append(lp.getSceneY())
+						.append(" flags ").append(flags == null ? "none" : "0x" + Integer.toHexString(flags))
+						.append(objs).append('\n');
+					lines++;
+				}
+			}
+		}
+		log.info(out.toString());
+		sendStatus("Boat dump written to the client log, " + lines + " lines.");
+	}
+
+	private String objectName(int id)
+	{
+		try
+		{
+			net.runelite.api.ObjectComposition def = client.getObjectDefinition(id);
+			return def == null ? "?" : def.getName();
+		}
+		catch (Exception e)
+		{
+			return "?";
+		}
+	}
+
+	private static String describeFlags(net.runelite.api.WorldView v, int plane)
+	{
+		if (v == null || v.getCollisionMaps() == null || plane >= v.getCollisionMaps().length
+			|| v.getCollisionMaps()[plane] == null)
+		{
+			return "none";
+		}
+		int[][] flags = v.getCollisionMaps()[plane].getFlags();
+		StringBuilder edge = new StringBuilder();
+		for (int x = 0; x < flags.length && x < 12; x++)
+		{
+			edge.append(" 0x").append(Integer.toHexString(flags[x][Math.min(10, flags[x].length - 1)]));
+		}
+		return flags.length + "x" + (flags.length == 0 ? 0 : flags[0].length)
+			+ " for a view " + v.getSizeX() + "x" + v.getSizeY()
+			+ " | raw row [x][10] by x:" + edge;
+	}
+
+	private static String describeTile(net.runelite.api.WorldView v, WorldPoint at)
+	{
+		net.runelite.api.coords.LocalPoint lp = v == null ? null
+			: net.runelite.api.coords.LocalPoint.fromWorld(v, at);
+		if (lp == null || v.getScene() == null || v.getScene().getTiles() == null)
+		{
+			return "unresolved";
+		}
+		net.runelite.api.Tile[][][] tiles = v.getScene().getTiles();
+		net.runelite.api.Tile tile = at.getPlane() < tiles.length
+			&& lp.getSceneX() < tiles[at.getPlane()].length
+			&& lp.getSceneY() < tiles[at.getPlane()][lp.getSceneX()].length
+			? tiles[at.getPlane()][lp.getSceneX()][lp.getSceneY()] : null;
+		return "array " + tiles.length + "x" + tiles[0].length + "x" + tiles[0][0].length
+			+ " looked up [" + at.getPlane() + "][" + lp.getSceneX() + "][" + lp.getSceneY() + "] -> "
+			+ (tile == null ? "null" : "scene " + tile.getSceneLocation() + " world " + tile.getWorldLocation()
+				+ " plane " + tile.getPlane());
+	}
+
+	private static String describeView(net.runelite.api.WorldView v)
+	{
+		if (v == null)
+		{
+			return "null";
+		}
+		net.runelite.api.CollisionData[] maps = v.getCollisionMaps();
+		return "id " + v.getId() + (v.isTopLevel() ? " top" : " sub") + " base " + v.getBaseX() + ","
+			+ v.getBaseY() + " size " + v.getSizeX() + "x" + v.getSizeY() + " plane " + v.getPlane()
+			+ " maps " + (maps == null ? "null" : String.valueOf(maps.length));
+	}
+
+	/** The follower's own read, inset and all, so the dump shows what it sees. */
+	private static Integer flagsIn(net.runelite.api.WorldView v, net.runelite.api.coords.LocalPoint lp, int plane)
+	{
+		return com.follower.follower.FollowerEntity.sceneFlags(v, plane, lp.getSceneX(), lp.getSceneY());
+	}
+
+	private static char flagSymbol(net.runelite.api.WorldView v, WorldPoint t, boolean me)
+	{
+		if (v == null)
+		{
+			return '?';
+		}
+		net.runelite.api.coords.LocalPoint lp = net.runelite.api.coords.LocalPoint.fromWorld(v, t);
+		if (lp == null)
+		{
+			return '-';
+		}
+		Integer flags = flagsIn(v, lp, t.getPlane());
+		if (flags == null)
+		{
+			return '?';
+		}
+		if (me)
+		{
+			return 'P';
+		}
+		if ((flags & net.runelite.api.CollisionDataFlag.BLOCK_MOVEMENT_FULL) != 0)
+		{
+			return '#';
+		}
+		if ((flags & 0xFF) != 0)
+		{
+			return 'w';
+		}
+		return flags == 0 ? '.' : 'x';
 	}
 
 	private void sendStatus(String message)

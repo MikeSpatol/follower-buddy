@@ -637,6 +637,22 @@ public class FollowerEntity
 		stayHere();
 	}
 
+	/**
+	 * Aboard a boat, whether the tile under the follower has become scenery.
+	 * Only aboard: on land a follower standing where the map says it cannot is
+	 * there on purpose - the player's own retraced path, a thrall's exit spot -
+	 * and those exceptions stay.
+	 */
+	boolean deckSceneryUnderfoot(WorldPoint standing, Player local)
+	{
+		if (standing == null || local == null)
+		{
+			return false;
+		}
+		net.runelite.api.WorldView mine = local.getWorldView();
+		return mine != null && !mine.isTopLevel() && !standable(standing);
+	}
+
 	/** Whether the follower could stand on this tile at all. */
 	boolean standable(WorldPoint at)
 	{
@@ -1509,6 +1525,17 @@ public class FollowerEntity
 			return;
 		}
 
+		// Boarding is a jump into a world whose map is still filling in: the
+		// deck's facilities arrive over the ticks after the landing snap, so
+		// the tile the follower landed on can turn out to be a cannon. Aboard,
+		// a settled follower whose own tile now reads blocked hops to the spot
+		// beside the player.
+		if (isSettled() && deckSceneryUnderfoot(tile, local))
+		{
+			snapBeside(playerTile);
+			return;
+		}
+
 		// Watchdog: if anything at all has left the object hidden while the player
 		// is on screen, put it back. A deliberate hide (an NPC sharing the
 		// tile) is not a fault and must not trigger a recovery snap.
@@ -2313,6 +2340,16 @@ public class FollowerEntity
 		// map, and reading the sea's map at the boat's scene coordinates was
 		// how the follower came to walk the water beside the hull.
 		net.runelite.api.WorldView view = client.findWorldViewFromWorldPoint(tile);
+
+		// And aboard, the boat is the whole world: a tile that resolves to any
+		// other view is the sea, and the sea's map reading open, or missing,
+		// must not make it somewhere to stand.
+		Player local = client.getLocalPlayer();
+		net.runelite.api.WorldView mine = local == null ? null : local.getWorldView();
+		if (mine != null && !mine.isTopLevel() && (view == null || view.getId() != mine.getId()))
+		{
+			return CollisionDataFlag.BLOCK_MOVEMENT_FULL;
+		}
 		if (view == null)
 		{
 			return null;
@@ -2322,16 +2359,30 @@ public class FollowerEntity
 		{
 			return null;
 		}
+		return sceneFlags(view, tile.getPlane(), localPoint.getSceneX(), localPoint.getSceneY());
+	}
 
+	/**
+	 * Collision flags at a scene coordinate of one view, or null when no data
+	 * covers it.
+	 *
+	 * <p>The client pads a sub-world's map: it builds it (sizeX + 6) by
+	 * (sizeY + 6) with both insets at -1, so scene (x, y) lives at [x + 1][y + 1]
+	 * aboard a boat and at [x][y] on the top level, whose map is not padded.
+	 * Read unshifted, a deck's facilities came out open and its walkway
+	 * blocked, which is exactly where the follower then stood and walked.
+	 */
+	public static Integer sceneFlags(net.runelite.api.WorldView view, int plane, int sceneX, int sceneY)
+	{
 		CollisionData[] maps = view.getCollisionMaps();
-		if (maps == null || tile.getPlane() >= maps.length || maps[tile.getPlane()] == null)
+		if (maps == null || plane >= maps.length || maps[plane] == null)
 		{
 			return null;
 		}
-
-		int[][] flags = maps[tile.getPlane()].getFlags();
-		int sx = localPoint.getSceneX();
-		int sy = localPoint.getSceneY();
+		int[][] flags = maps[plane].getFlags();
+		int inset = flags.length == view.getSizeX() + 6 ? 1 : 0;
+		int sx = sceneX + inset;
+		int sy = sceneY + inset;
 		if (sx < 0 || sy < 0 || sx >= flags.length || sy >= flags[sx].length)
 		{
 			return null;

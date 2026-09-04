@@ -863,6 +863,7 @@ rather than failing silently.
 | `::follower animtrace` **[dev]** | Trace the follower's and your character's pose frames side by side for ~8s |
 | `::follower wrapearly <n>` **[dev]** | Override the loop trim for the animation currently playing |
 | `::follower wrapauto` **[dev]** | Drop manual trims and let measurement decide |
+| `::follower boat` **[dev]** | Dump the world views, collision grid and objects around you, for boats; walked tiles overlaid |
 | `::follower pose <id>` **[dev]** | Force a looping pose (0 to release) |
 | `::follower cachecheck` **[dev]** | Diff the live cache parse against the offline dump, field by field |
 | `::follower stanceaudit` **[dev]** | Validate every animation id the stance library names, and report weapon coverage |
@@ -1570,6 +1571,20 @@ carries its own collision map and tile heights. The follower reads collision fro
 the view a tile resolves to and tags every point it draws with that same view, so
 on deck it walks the deck. Reading the top-level map at the boat's scene
 coordinates was how it came to walk the sea beside the hull.
+
+Two more things the deck taught. The client pads a sub-world's collision map:
+it is built (sizeX + 6) by (sizeY + 6) with both insets at -1, so scene (x, y)
+lives at [x + 1][y + 1], while the top-level map has no inset at all. Read
+unshifted, a deck's facilities came out open and the walkway between them
+blocked, and the follower walked the facilities. `FollowerEntity.sceneFlags`
+applies the inset and is the one place flags are read. And aboard, the boat is
+the whole world: any tile that resolves to a different view is the sea, and it
+reads as blocked whatever the sea's map says. Boarding is a jump into a world
+whose map is still filling in, so the follower lands before the facilities
+reach the map; aboard, a settled follower whose own tile has since turned
+blocked hops to the spot beside the player. `::follower boat` dumps all of
+this for the tiles around you, with the tiles you have stood on overlaid, so a
+walked tile that reads blocked shows the map is being misread.
 
 Note `CommandExecuted` lives in `net.runelite.api.events`, not
 `net.runelite.client.events`.
