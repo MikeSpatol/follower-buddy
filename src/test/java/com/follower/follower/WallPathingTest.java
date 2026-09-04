@@ -213,4 +213,26 @@ public class WallPathingTest
 			player,
 			follower.landingTile(new WorldPoint(9, 10, 0), player));
 	}
+
+	/**
+	 * Aboard a boat the player is in a sub-world laid over the sea, with its
+	 * own collision map. The map of the water underneath says nothing about
+	 * the deck, so a follower reading it would happily stand on the rail, or
+	 * on the sea beside the hull - which is what players were seeing.
+	 */
+	@Test
+	public void aboardABoatItReadsTheDecksMapNotTheSeas()
+	{
+		FakeGame game = new FakeGame().withCollision().aboardBoat();
+		game.boatBlocksTile(11, 10);
+		FollowerEntity follower = followerOn(game);
+
+		WorldPoint from = new WorldPoint(10, 10, 0);
+		assertFalse("the sea's map is open here; the deck's is not, and the deck's is the one that counts",
+			follower.canStep(from, 1, 0));
+		assertFalse("nor is it a place to stand",
+			follower.standable(new WorldPoint(11, 10, 0)));
+		assertTrue("the rest of the deck is fine",
+			follower.standable(new WorldPoint(9, 10, 0)));
+	}
 }

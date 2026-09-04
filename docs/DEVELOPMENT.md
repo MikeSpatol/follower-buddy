@@ -1564,6 +1564,13 @@ client-level equivalents â€” `client.getTopLevelWorldView().npcs()` /
 `net.runelite.api.gameval.VarbitID` in place of the deprecated `Varbits`. If you
 build against an older client, those four call sites are the ones to revert.
 
+Sailing put the player in a sub-world. Aboard a boat the player's tiles resolve,
+through `Client#findWorldViewFromWorldPoint`, to the boat's own `WorldView`, which
+carries its own collision map and tile heights. The follower reads collision from
+the view a tile resolves to and tags every point it draws with that same view, so
+on deck it walks the deck. Reading the top-level map at the boat's scene
+coordinates was how it came to walk the sea beside the hull.
+
 Note `CommandExecuted` lives in `net.runelite.api.events`, not
 `net.runelite.client.events`.
 

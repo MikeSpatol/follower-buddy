@@ -352,6 +352,49 @@ public final class FakeGame
 		return wallAt(x, y, net.runelite.api.CollisionDataFlag.BLOCK_MOVEMENT_FULL);
 	}
 
+	/** The boat's own collision map, separate from the sea's; null until aboard. */
+	private int[][] boatFlags;
+
+	/**
+	 * Puts the player aboard a boat: every tile now resolves to a second
+	 * world view with its own collision map, everything open, while the
+	 * top-level map underneath stays whatever the test made it. That is the
+	 * shape of sailing - a sub-world drawn over the sea - and the follower has
+	 * to read the deck's map, not the water's.
+	 */
+	public FakeGame aboardBoat()
+	{
+		boatFlags = new int[net.runelite.api.Perspective.SCENE_SIZE]
+			[net.runelite.api.Perspective.SCENE_SIZE];
+		Map<String, Object> answers = new HashMap<>();
+		answers.put("getId", (Answer) args -> 1);
+		answers.put("isTopLevel", (Answer) args -> false);
+		answers.put("getPlane", (Answer) args -> 0);
+		answers.put("getBaseX", (Answer) args -> 0);
+		answers.put("getBaseY", (Answer) args -> 0);
+		answers.put("getSizeX", (Answer) args -> net.runelite.api.Perspective.SCENE_SIZE);
+		answers.put("getSizeY", (Answer) args -> net.runelite.api.Perspective.SCENE_SIZE);
+		answers.put("isInstance", (Answer) args -> false);
+		Map<String, Object> deck = new HashMap<>();
+		deck.put("getFlags", (Answer) args -> boatFlags);
+		CollisionData deckMap = proxy(CollisionData.class, deck);
+		answers.put("getCollisionMaps", (Answer) args ->
+			new CollisionData[]{deckMap, deckMap, deckMap, deckMap});
+		WorldView boat = proxy(WorldView.class, answers);
+		WorldView sea = (WorldView) clientAnswers.get("getTopLevelWorldView");
+		clientAnswers.put("findWorldViewFromWorldPoint", (Answer) args -> boat);
+		clientAnswers.put("getWorldView",
+			(Answer) args -> ((Integer) args[0]) == 1 ? boat : sea);
+		return this;
+	}
+
+	/** Solid on the boat's map only: a rail, a mast, the edge of the deck. */
+	public FakeGame boatBlocksTile(int x, int y)
+	{
+		boatFlags[x][y] |= net.runelite.api.CollisionDataFlag.BLOCK_MOVEMENT_FULL;
+		return this;
+	}
+
 	/** A varbit reading, by id. Unset varbits read zero. */
 	public FakeGame varbit(int id, int value)
 	{

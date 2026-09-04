@@ -1383,7 +1383,7 @@ public class FollowerEntity
 		}
 
 		java.awt.Shape clickbox = Perspective.getClickbox(client,
-			client.getTopLevelWorldView(), baseModel, yaw,
+			client.getWorldView(lastRenderedLocation.getWorldView()), baseModel, yaw,
 			lastRenderedLocation.getX(), lastRenderedLocation.getY(), lastRenderedZ);
 		return clickbox != null && clickbox.contains(canvasPoint.getX(), canvasPoint.getY());
 	}
@@ -2308,13 +2308,22 @@ public class FollowerEntity
 	/** Collision flags for a tile, or null when no data covers it. */
 	private Integer flagAt(WorldPoint tile)
 	{
-		LocalPoint localPoint = LocalPoint.fromWorld(client, tile);
+		// The view the tile is IN, not the top-level one. Aboard a boat the
+		// player stands in the boat's own sub-world with its own collision
+		// map, and reading the sea's map at the boat's scene coordinates was
+		// how the follower came to walk the water beside the hull.
+		net.runelite.api.WorldView view = client.findWorldViewFromWorldPoint(tile);
+		if (view == null)
+		{
+			return null;
+		}
+		LocalPoint localPoint = LocalPoint.fromWorld(view, tile);
 		if (localPoint == null)
 		{
 			return null;
 		}
 
-		CollisionData[] maps = client.getTopLevelWorldView().getCollisionMaps();
+		CollisionData[] maps = view.getCollisionMaps();
 		if (maps == null || tile.getPlane() >= maps.length || maps[tile.getPlane()] == null)
 		{
 			return null;
@@ -2456,7 +2465,7 @@ public class FollowerEntity
 		}
 
 		lastRenderedLocation = beside;
-		object.setLocation(beside, client.getTopLevelWorldView().getPlane());
+		object.setLocation(beside, client.getWorldView(beside.getWorldView()).getPlane());
 		object.setOrientation(yaw);
 		if (!object.isActive())
 		{
@@ -2486,6 +2495,10 @@ public class FollowerEntity
 			lastRenderedLocation = null;
 			return false;
 		}
+		// Drawn in the view the tile resolved to: a point tagged with the
+		// top-level view while the player is aboard a boat is placed, and
+		// given its height, in the sea outside the hull.
+		net.runelite.api.WorldView drawView = client.getWorldView(base.getWorldView());
 
 		// A real NPC standing on the follower's tile: give way and go
 		// invisible for as long as they share it. Two player-sized models on
@@ -2566,7 +2579,7 @@ public class FollowerEntity
 		// The logical position stays the tile: facing, distance and the
 		// graphics all reason about where the follower IS, not where its model
 		// happened to be drawn.
-		lastRenderedLocation = new LocalPoint(lx, ly, client.getTopLevelWorldView());
+		lastRenderedLocation = new LocalPoint(lx, ly, drawView);
 
 		int drawX = lx;
 		int drawY = ly;
@@ -2581,7 +2594,7 @@ public class FollowerEntity
 		}
 		object.setLocation(recentreForward == 0
 			? lastRenderedLocation
-			: new LocalPoint(drawX, drawY, client.getTopLevelWorldView()), tile.getPlane());
+			: new LocalPoint(drawX, drawY, drawView), tile.getPlane());
 
 		// Height from the interpolated position: getTileHeight interpolates WITHIN
 		// a tile, which is how a real player glides over slopes. Z is inverted, so
