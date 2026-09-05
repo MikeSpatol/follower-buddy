@@ -1130,6 +1130,8 @@ public class ErrandController
 			* (0.6 + ThreadLocalRandom.current().nextDouble() * 0.8));
 	}
 
+	// FollowerConfig.errandFrequency()'s description quotes these as minutes
+	// (30, 24, 12 at 0.6s a tick). Change one, change the other.
 	private int baseScheduleTicks()
 	{
 		switch (config.errandFrequency())

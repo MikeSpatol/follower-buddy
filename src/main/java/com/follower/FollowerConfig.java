@@ -15,11 +15,9 @@ public interface FollowerConfig extends Config
 	String GROUP = "followerbuddy";
 
 	@ConfigSection(
-		name = "Appearance (outfit: side panel)",
-		description = "Only the name lives here. The outfit, body styles and"
-			+ " colours are edited visually in the Follower Buddy side panel -"
-			+ " its icon is on the right edge of the client, with the other"
-			+ " plugin panels",
+		name = "Follower",
+		description = "The basics. The outfit is dressed in the Follower Buddy side"
+			+ " panel, the icon on the right-hand toolbar.",
 		position = 0
 	)
 	String appearanceSection = "appearance";
@@ -33,46 +31,56 @@ public interface FollowerConfig extends Config
 
 	@ConfigSection(
 		name = "Speech",
-		description = "How phrases are shown",
+		description = "Where the words go and how long they stay.",
 		position = 2
 	)
 	String speechSection = "speech";
 
 	@ConfigSection(
-		name = "Phrases",
-		description = "Switch whole categories of what the follower says on and off",
+		name = "Sounds",
+		description = "Sound files you attach to lines. Nothing ships with the plugin.",
 		position = 3
+	)
+	String soundsSection = "sounds";
+
+	@ConfigSection(
+		name = "Phrases",
+		description = "Turn whole subjects on or off. To read or edit the lines"
+			+ " themselves, open Messages in the Follower Buddy side panel.",
+		position = 4
 	)
 	String groupsSection = "groups";
 
 	@ConfigSection(
 		name = "Thrall mode",
-		description = "The follower takes the place of your Arceuus thralls",
-		position = 4
+		description = "Thralls are the undead helpers from the Arceuus spellbook's"
+			+ " Resurrect spells. With this on, the follower stands in for the one"
+			+ " you summon and the real thrall is hidden, on your screen only.",
+		position = 5
 	)
 	String thrallSection = "thrall";
 
 	@ConfigSection(
 		name = "Errands",
 		description = "Little trips the follower makes on its own - banks, altars, cats",
-		position = 5
+		position = 6
 	)
 	String errandSection = "errands";
 
 	@ConfigSection(
 		name = "Combat",
 		description = "What the follower does while you are fighting",
-		position = 6
+		position = 7
 	)
 	String combatSection = "combat";
 
 	@ConfigSection(
-		name = "Shield look (advanced)",
-		description = "The exact animations and graphics of the boss-fight shield."
-			+ " These are OSRS animation and graphic ids: find one with ::follower"
-			+ " watch, preview with ::follower anim <id> or ::follower gfx <id>."
-			+ " The defaults look right; nothing here needs changing.",
-		position = 7,
+		name = "Advanced: animations and graphics",
+		description = "Animation and graphic ids. Preview one with ::follower anim <id>,"
+			+ " ::follower gfx <id> or ::follower pose <id>; with Developer commands"
+			+ " on, ::follower watch prints ids as they play. The defaults look"
+			+ " right; nothing here needs changing.",
+		position = 8,
 		closedByDefault = true
 	)
 	String shieldSection = "shield";
@@ -80,7 +88,7 @@ public interface FollowerConfig extends Config
 	@ConfigSection(
 		name = "Developer",
 		description = "Diagnostic chat commands used to build the plugin",
-		position = 8,
+		position = 9,
 		closedByDefault = true
 	)
 	String developerSection = "developer";
@@ -124,26 +132,28 @@ public interface FollowerConfig extends Config
 	 * ::follower gfx <id> set keeps one straight away.
 	 */
 
+	@Range(min = 0)
 	@ConfigItem(
 		keyName = "spectateShieldAnimation",
 		name = "Summon animation",
 		description = "Animation as the shield goes up. 0 for none."
 			+ " Preview any id with ::follower anim <id>.",
 		section = shieldSection,
-		position = 0
+		position = 5
 	)
 	default int spectateShieldAnimation()
 	{
 		return 1162;
 	}
 
+	@Range(min = 0)
 	@ConfigItem(
 		keyName = "spectateShieldGraphic",
 		name = "Summon graphic",
 		description = "Graphic laid over the summon. 0 for none."
 			+ " Audition ids with ::follower gfx <id>.",
 		section = shieldSection,
-		position = 1
+		position = 6
 	)
 	default int spectateShieldGraphic()
 	{
@@ -151,13 +161,14 @@ public interface FollowerConfig extends Config
 		return 246;
 	}
 
+	@Range(min = 0)
 	@ConfigItem(
 		keyName = "spectateShieldChannelStart",
 		name = "Sit down animation",
 		description = "Played once as the follower settles into the channel, before the"
 			+ " looping pose takes over. 0 for none.",
 		section = shieldSection,
-		position = 2
+		position = 7
 	)
 	default int spectateShieldChannelStart()
 	{
@@ -171,12 +182,13 @@ public interface FollowerConfig extends Config
 		return 0;
 	}
 
+	@Range(min = 0)
 	@ConfigItem(
 		keyName = "spectateShieldChannelEnd",
 		name = "Stand up animation",
 		description = "Played as the channel ends, before the finishing cast. 0 for none.",
 		section = shieldSection,
-		position = 5
+		position = 10
 	)
 	default int spectateShieldChannelEnd()
 	{
@@ -184,6 +196,7 @@ public interface FollowerConfig extends Config
 		return 534;
 	}
 
+	@Range(min = 0)
 	@ConfigItem(
 		keyName = "spectateShieldChannelAnimation",
 		name = "Channel animation",
@@ -191,7 +204,7 @@ public interface FollowerConfig extends Config
 			+ " and the fight lasts. Unlike the others this one repeats, so pick something"
 			+ " that reads as sustained effort. 0 for none.",
 		section = shieldSection,
-		position = 3
+		position = 8
 	)
 	default int spectateShieldChannelAnimation()
 	{
@@ -203,26 +216,28 @@ public interface FollowerConfig extends Config
 		return 179;
 	}
 
+	@Range(min = 0)
 	@ConfigItem(
 		keyName = "spectateShieldChannelGraphic",
 		name = "Channel graphic",
 		description = "Renewed every ~30s while channelling, since a looping pose shows no"
 			+ " particles of its own. 0 for none.",
 		section = shieldSection,
-		position = 4
+		position = 9
 	)
 	default int spectateShieldChannelGraphic()
 	{
 		return 246;
 	}
 
+	@Range(min = 0)
 	@ConfigItem(
 		keyName = "spectateShieldEndAnimation",
 		name = "Finish animation",
 		description = "Played as the fight ends and the spell is completed. The follower"
 			+ " waits for it to finish before walking back. 0 for none.",
 		section = shieldSection,
-		position = 6
+		position = 11
 	)
 	default int spectateShieldEndAnimation()
 	{
@@ -231,12 +246,13 @@ public interface FollowerConfig extends Config
 		return 1162;
 	}
 
+	@Range(min = 0)
 	@ConfigItem(
 		keyName = "spectateShieldEndGraphic",
 		name = "Finish graphic",
 		description = "Graphic as the spell is completed. 0 for none.",
 		section = shieldSection,
-		position = 7
+		position = 12
 	)
 	default int spectateShieldEndGraphic()
 	{
@@ -270,9 +286,22 @@ public interface FollowerConfig extends Config
 
 	enum ErrandFrequency
 	{
-		RARE,
-		OCCASIONAL,
-		LIVELY
+		RARE("Rare"),
+		OCCASIONAL("Occasional"),
+		LIVELY("Lively");
+
+		private final String label;
+
+		ErrandFrequency(String label)
+		{
+			this.label = label;
+		}
+
+		@Override
+		public String toString()
+		{
+			return label;
+		}
 	}
 
 	// ------------------------------------------------------------- appearance
@@ -280,9 +309,9 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "followerName",
 		name = "Follower name",
-		description = "Shown in the dialog box, right-click menu, hover text and"
-			+ " chat. Everything else about its look - gear, body, colours - is"
-			+ " in the Follower Buddy side panel, not here",
+		description = "What it is called in the dialog box, right-click menu and"
+			+ " chat. Its gear, body and colours are set in the Follower Buddy"
+			+ " side panel, not here.",
 		section = appearanceSection,
 		position = 0
 	)
@@ -323,9 +352,11 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "followEnabled",
 		name = "Follow me",
-		description = "When off, the follower stays where it was last placed",
-		section = movementSection,
-		position = 0
+		description = "Off parks the follower where it stands. Same as right-click"
+			+ " Stay and Follow on the follower. Hold Shift and right-click a tile"
+			+ " to send it somewhere in particular.",
+		section = appearanceSection,
+		position = 1
 	)
 	default boolean followEnabled()
 	{
@@ -336,11 +367,11 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "verticalOffset",
 		name = "Height offset",
-		description = "Raises the follower out of the ground if its feet are clipped."
-			+ " In small model units; the default 15 lifts the boots just clear."
-			+ " Positive lifts. Tune it live with ::follower height <n>.",
-		section = movementSection,
-		position = 8
+		description = "Lifts the follower if its boots sink into the ground. Positive"
+			+ " lifts. In small model units; the default 15 lifts the boots just"
+			+ " clear. Tune it live with ::follower height <n>.",
+		section = shieldSection,
+		position = 4
 	)
 	default int verticalOffset()
 	{
@@ -352,12 +383,12 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "spawnAnimation",
 		name = "Spawn animation",
-		description = "Animation played when the follower appears; the default 715 is"
-			+ " the teleport arrival. Comma-separate to chain clips, e.g. \"6723,4191\""
-			+ " for a landing followed by a get-up. Preview with"
+		description = "Animation played as the follower arrives. Default 715 is the"
+			+ " teleport arrival. Comma-separate to chain clips, e.g. \"6723,4191\""
+			+ " for a landing followed by a get-up; preview with"
 			+ " ::follower anim 6723 4191. Blank or 0 for none.",
-		section = movementSection,
-		position = 5
+		section = shieldSection,
+		position = 1
 	)
 	default String spawnAnimation()
 	{
@@ -367,13 +398,11 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "spawnGraphic",
 		name = "Arrival graphic",
-		description = "Spotanim drawn as the follower arrives. The default 1299 is the"
-			+ " teleport ARRIVAL, which is what animation 715 above is; 111 is the"
-			+ " cast that goes with the vanish, and pairing it here looks"
-			+ " mistimed because it is the wrong half of the spell. Audition with"
-			+ " ::follower gfx 1299. Blank or 0 for none.",
-		section = movementSection,
-		position = 6
+		description = "Effect drawn as the follower arrives. Default 1299 is the"
+			+ " teleport arrival that goes with animation 715. Blank or 0 for none."
+			+ " Preview with ::follower gfx 1299.",
+		section = shieldSection,
+		position = 2
 	)
 	default String spawnGraphic()
 	{
@@ -383,11 +412,10 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "spawnGraphicHeight",
 		name = "Arrival graphic height",
-		description = "How far up the model the arrival graphic sits. A spotanim is"
-			+ " drawn at the feet unless it is lifted, and a teleport wraps the"
-			+ " body: 92 is the height the follower's other teleports already use.",
-		section = movementSection,
-		position = 7
+		description = "How high up the follower the arrival effect is drawn. 92 wraps"
+			+ " the body; 0 draws it at the feet.",
+		section = shieldSection,
+		position = 3
 	)
 	default int spawnGraphicHeight()
 	{
@@ -399,8 +427,8 @@ public interface FollowerConfig extends Config
 		name = "Hide in PvP areas",
 		description = "Despawns the follower in the Wilderness and other PvP zones so it "
 			+ "can't obscure a real player",
-		section = movementSection,
-		position = 1
+		section = appearanceSection,
+		position = 4
 	)
 	default boolean hideInPvp()
 	{
@@ -409,13 +437,17 @@ public interface FollowerConfig extends Config
 
 	// ----------------------------------------------------------------- speech
 
+	/**
+	 * Hidden since the overhaul: the engine only ever consulted the overhead
+	 * half of this plus mirrorToChat, so choosing Chatbox alone was silence.
+	 * It stays as the per-rule fallback the engine reads.
+	 */
 	@ConfigItem(
 		keyName = "defaultOutput",
 		name = "Where speech appears",
-		description = "Overhead bubble, chatbox, or both. A few special phrases"
-			+ " choose their own place.",
-		section = speechSection,
-		position = 0
+		description = "Overhead, chatbox, or both. The fallback for rules that do"
+			+ " not choose their own place; managed by the plugin",
+		hidden = true
 	)
 	default SpeechOutput defaultOutput()
 	{
@@ -427,8 +459,8 @@ public interface FollowerConfig extends Config
 		name = "Mute",
 		description = "The follower stops talking. Everything else keeps working,"
 			+ " and your other speech settings are kept.",
-		section = speechSection,
-		position = 1
+		section = appearanceSection,
+		position = 2
 	)
 	default boolean muted()
 	{
@@ -438,10 +470,10 @@ public interface FollowerConfig extends Config
 	@Alpha
 	@ConfigItem(
 		keyName = "speechColor",
-		name = "Text colour",
-		description = "Colour of the overhead speech bubble",
+		name = "Overhead text colour",
+		description = "Colour of the line drawn over the follower's head",
 		section = speechSection,
-		position = 2
+		position = 1
 	)
 	default Color speechColor()
 	{
@@ -454,10 +486,9 @@ public interface FollowerConfig extends Config
 	@Range(min = 500, max = 12000)
 	@ConfigItem(
 		keyName = "speechDurationMs",
-		name = "Minimum display time (ms)",
-		description = "The least time a line stays on screen, in milliseconds"
-			+ " (4000 = 4 seconds). A long line is given longer, at the reading"
-			+ " speed below.",
+		name = "Shortest time a line stays up",
+		description = "In milliseconds; 4000 is four seconds. Longer lines are"
+			+ " given longer, at the reading speed below.",
 		section = speechSection,
 		position = 3
 	)
@@ -469,10 +500,9 @@ public interface FollowerConfig extends Config
 	@Range(min = 8, max = 40)
 	@ConfigItem(
 		keyName = "readingSpeed",
-		name = "Reading speed (chars/sec)",
-		description = "How fast you read. Subtitling practice treats 17"
-			+ " characters a second as comfortable and 20 as the ceiling;"
-			+ " lower it to give every line more time.",
+		name = "Reading speed",
+		description = "Characters per second. Lower it if lines vanish before you"
+			+ " finish them; 17 suits most people.",
 		section = speechSection,
 		position = 4
 	)
@@ -484,10 +514,10 @@ public interface FollowerConfig extends Config
 	@Range(min = 0, max = 400)
 	@ConfigItem(
 		keyName = "speechHeight",
-		name = "Bubble height",
-		description = "Height of the speech bubble above the follower's feet",
+		name = "Overhead text height",
+		description = "How far above the follower's feet the line is drawn",
 		section = speechSection,
-		position = 6
+		position = 2
 	)
 	default int speechHeight()
 	{
@@ -497,11 +527,10 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "chattiness",
 		name = "Chattiness",
-		description = "How often the follower speaks at all. Sets the least"
-			+ " gap between any two lines; its mood still stretches or shortens"
-			+ " that on top.",
-		section = speechSection,
-		position = 5
+		description = "How much it talks. Minimal is about one remark a minute at"
+			+ " most; Chatty is a running commentary. Occasional is the default.",
+		section = appearanceSection,
+		position = 3
 	)
 	default com.follower.speech.Chattiness chattiness()
 	{
@@ -513,12 +542,13 @@ public interface FollowerConfig extends Config
 
 	@ConfigItem(
 		keyName = "voiceEnabled",
-		name = "Play attached sounds",
-		description = "Play the sound file attached to a line when the follower"
-			+ " says it. Attach them in the Messages window; drop your own WAV"
-			+ " files into the sounds folder beside phrases.json first",
-		section = speechSection,
-		position = 8
+		name = "Play sounds attached to lines",
+		description = "Plays the sound file attached to a line as the follower says"
+			+ " it. Attach one with the Sounds button next to any rule in Messages,"
+			+ " in the side panel; the Sounds window shows the folder to put WAV,"
+			+ " AIFF or AU files in and can copy the path.",
+		section = soundsSection,
+		position = 0
 	)
 	default boolean voiceEnabled()
 	{
@@ -529,10 +559,9 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "voiceVolume",
 		name = "Sound volume",
-		description = "How loud the attached sounds play, as a percentage."
-			+ " Zero is silence",
-		section = speechSection,
-		position = 9
+		description = "Volume of those sounds, as a percentage. 0 is silent.",
+		section = soundsSection,
+		position = 1
 	)
 	default int voiceVolume()
 	{
@@ -541,12 +570,11 @@ public interface FollowerConfig extends Config
 
 	@ConfigItem(
 		keyName = "mirrorToChat",
-		name = "Mirror speech to chatbox",
-		description = "Overhead lines also appear in the chatbox as public chat under the"
-			+ " follower's name. Off by default: the chatbox is the one place it can"
-			+ " crowd out the game, and the overhead bubble is the follower's own.",
+		name = "Also show lines in the chatbox",
+		description = "Every line also appears in the chatbox under the follower's"
+			+ " name. Off by default because it can crowd out the game's own chat.",
 		section = speechSection,
-		position = 7
+		position = 0
 	)
 	default boolean mirrorToChat()
 	{
@@ -570,9 +598,9 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "thrallMeleeProfile",
 		name = "Melee outfit profile",
-		description = "Outfit profile worn while replacing a zombie thrall. Must"
-			+ " match a profile name from the side panel; Melee, Ranged and Magic"
-			+ " come ready-made.",
+		description = "Outfit profile it wears in place of a zombie (melee) thrall."
+			+ " Type a name from OUTFIT PROFILES in the side panel, or pick it"
+			+ " there; if no profile has that name the ready-made Melee one is used.",
 		section = thrallSection,
 		position = 1
 	)
@@ -584,7 +612,9 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "thrallRangedProfile",
 		name = "Ranged outfit profile",
-		description = "Outfit profile worn while replacing a skeleton thrall",
+		description = "Outfit profile it wears in place of a skeleton (ranged) thrall."
+			+ " Type a name from OUTFIT PROFILES in the side panel, or pick it"
+			+ " there; if no profile has that name the ready-made Ranged one is used.",
 		section = thrallSection,
 		position = 2
 	)
@@ -596,7 +626,9 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "thrallMagicProfile",
 		name = "Magic outfit profile",
-		description = "Outfit profile worn while replacing a ghost thrall",
+		description = "Outfit profile it wears in place of a ghost (magic) thrall."
+			+ " Type a name from OUTFIT PROFILES in the side panel, or pick it"
+			+ " there; if no profile has that name the ready-made Magic one is used.",
 		section = thrallSection,
 		position = 3
 	)
@@ -615,8 +647,9 @@ public interface FollowerConfig extends Config
 
 	@ConfigItem(
 		keyName = "errandsEnabled",
-		name = "Errands",
-		description = "Now and then the follower wanders off on a little errand and comes back",
+		name = "Go on errands",
+		description = "Now and then it wanders off on a small errand and comes back."
+			+ " Untick to keep it at your heel.",
 		section = errandSection,
 		position = 0
 	)
@@ -625,10 +658,13 @@ public interface FollowerConfig extends Config
 		return true;
 	}
 
+	// The minutes quoted here come from ErrandController.baseScheduleTicks():
+	// 3000, 2400 and 1200 game ticks at 0.6s each. Change one, change the other.
 	@ConfigItem(
 		keyName = "errandFrequency",
 		name = "Frequency",
-		description = "Roughly how often an errand happens: rare ~30 min, occasional ~18, lively ~8",
+		description = "About every 30 minutes on Rare, 24 on Occasional, 12 on Lively,"
+			+ " give or take.",
 		section = errandSection,
 		position = 1
 	)
@@ -640,7 +676,7 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "errandBank",
 		name = "Bank visits",
-		description = "A quick trip to a nearby bank booth",
+		description = "A quick trip to a nearby bank booth (::follower errand bank)",
 		section = errandSection,
 		position = 2
 	)
@@ -652,7 +688,7 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "errandAltar",
 		name = "Quick prayers",
-		description = "A moment at a nearby altar",
+		description = "A moment at a nearby altar (::follower errand altar)",
 		section = errandSection,
 		position = 3
 	)
@@ -664,7 +700,7 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "errandFire",
 		name = "Warming up",
-		description = "Warms its hands at a nearby fire",
+		description = "Warms its hands at a nearby fire (::follower errand fire)",
 		section = errandSection,
 		position = 4
 	)
@@ -676,7 +712,7 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "errandCat",
 		name = "Cats",
-		description = "Cannot walk past a cat. Will not apologise",
+		description = "Cannot walk past a cat. Will not apologise (::follower errand cat)",
 		section = errandSection,
 		position = 5
 	)
@@ -688,7 +724,7 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "errandBootlace",
 		name = "Bootlaces",
-		description = "Stops to see to a bootlace, then catches up",
+		description = "Stops to see to a bootlace, then catches up (::follower errand bootlace)",
 		section = errandSection,
 		position = 6
 	)
@@ -700,7 +736,8 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "errandGlance",
 		name = "Did you see that?",
-		description = "Wanders a few tiles to investigate nothing in particular",
+		description = "Wanders a few tiles to investigate nothing in particular"
+			+ " (::follower errand glance)",
 		section = errandSection,
 		position = 7
 	)
@@ -712,7 +749,7 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "errandDocument",
 		name = "Field notes",
-		description = "Stops to write something up in its scroll",
+		description = "Stops to write something up in its scroll (::follower errand document)",
 		section = errandSection,
 		position = 8
 	)
@@ -724,7 +761,8 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "errandStudy",
 		name = "Field study",
-		description = "Walks over to something notable nearby and writes it up",
+		description = "Walks over to something notable nearby and writes it up"
+			+ " (::follower errand study)",
 		section = errandSection,
 		position = 9
 	)
@@ -738,7 +776,7 @@ public interface FollowerConfig extends Config
 		name = "Exploring",
 		description = "Noses at whatever the place offers - a chest, a trapdoor,"
 			+ " a noticeboard - and notes it down, especially somewhere it has"
-			+ " just arrived",
+			+ " just arrived (::follower errand explore)",
 		section = errandSection,
 		position = 10
 	)
@@ -751,10 +789,11 @@ public interface FollowerConfig extends Config
 
 	@ConfigItem(
 		keyName = "groupBoss",
-		name = "Boss phrases",
-		description = "Tips, lore and jokes when a boss appears (group \"boss\")",
+		name = "Bosses",
+		description = "Tips, lore and jokes when a boss appears (group \"boss\")."
+			+ " Editable under Bosses in Messages.",
 		section = groupsSection,
-		position = 0
+		position = 2
 	)
 	default boolean groupBoss()
 	{
@@ -763,10 +802,11 @@ public interface FollowerConfig extends Config
 
 	@ConfigItem(
 		keyName = "groupHealth",
-		name = "Player status phrases",
-		description = "Remarks on your HP, prayer, poison, venom, skull and run energy (group \"health\")",
+		name = "Statuses",
+		description = "Remarks on your HP, prayer, poison, venom, skull and run energy"
+			+ " (group \"health\"). Editable under Statuses in Messages.",
 		section = groupsSection,
-		position = 1
+		position = 4
 	)
 	default boolean groupHealth()
 	{
@@ -775,10 +815,11 @@ public interface FollowerConfig extends Config
 
 	@ConfigItem(
 		keyName = "groupArea",
-		name = "Location phrases",
-		description = "Comments on entering towns, dungeons and landmarks (group \"area\")",
+		name = "Locations",
+		description = "Comments on entering towns, dungeons and landmarks (group \"area\")."
+			+ " Editable under Locations in Messages.",
 		section = groupsSection,
-		position = 2
+		position = 1
 	)
 	default boolean groupArea()
 	{
@@ -788,9 +829,10 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "groupIdle",
 		name = "Idle chatter",
-		description = "Small talk while nothing much is happening (group \"idle\")",
+		description = "Small talk while nothing much is happening (group \"idle\")."
+			+ " Editable under Idle chatter in Messages.",
 		section = groupsSection,
-		position = 3
+		position = 5
 	)
 	default boolean groupIdle()
 	{
@@ -799,10 +841,11 @@ public interface FollowerConfig extends Config
 
 	@ConfigItem(
 		keyName = "groupGear",
-		name = "Item reactions",
-		description = "Comments when you equip notable items (group \"gear\")",
+		name = "Items",
+		description = "Comments when you equip notable items (group \"gear\")."
+			+ " Editable under Items in Messages.",
 		section = groupsSection,
-		position = 4
+		position = 0
 	)
 	default boolean groupGear()
 	{
@@ -811,10 +854,11 @@ public interface FollowerConfig extends Config
 
 	@ConfigItem(
 		keyName = "groupQuest",
-		name = "Quest NPC phrases",
-		description = "Comments when famous quest figures are nearby (group \"quest\")",
+		name = "Quest NPCs",
+		description = "Comments when famous quest figures are nearby (group \"quest\")."
+			+ " Editable under Quest NPCs in Messages.",
 		section = groupsSection,
-		position = 5
+		position = 6
 	)
 	default boolean groupQuest()
 	{
@@ -823,10 +867,11 @@ public interface FollowerConfig extends Config
 
 	@ConfigItem(
 		keyName = "groupCombat",
-		name = "Combat phrases",
-		description = "Encouragement while it watches you fight (group \"combat\")",
+		name = "Combat",
+		description = "Encouragement while it watches you fight (group \"combat\")."
+			+ " Editable under Combat in Messages.",
 		section = groupsSection,
-		position = 6
+		position = 3
 	)
 	default boolean groupCombat()
 	{
@@ -836,7 +881,8 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "groupMimic",
 		name = "Mimicry",
-		description = "It copies your emotes and joins you when you eat (group \"mimic\")",
+		description = "It copies your emotes and joins you when you eat (group \"mimic\")."
+			+ " Editable under Mimicry in Messages.",
 		section = groupsSection,
 		position = 7
 	)
@@ -847,9 +893,11 @@ public interface FollowerConfig extends Config
 
 	@ConfigItem(
 		keyName = "groupMemory",
-		name = "Memory",
-		description = "It brings up things that happened, and keeps score of the outings"
-			+ " you did and did not take it on (group \"memory\")",
+		name = "Reminiscing",
+		description = "It brings up things that happened and keeps score of the outings"
+			+ " it was and was not taken on (group \"memory\"). Does not stop it"
+			+ " remembering; the Memory window in the side panel does that."
+			+ " Editable under Reminiscing in Messages.",
 		section = groupsSection,
 		position = 8
 	)
@@ -862,7 +910,8 @@ public interface FollowerConfig extends Config
 		keyName = "groupSouvenir",
 		name = "Souvenirs",
 		description = "It picks things up, carries them about for a while, and is put"
-			+ " out when it loses them (group \"souvenir\")",
+			+ " out when it loses them (group \"souvenir\")."
+			+ " Editable under Souvenirs in Messages.",
 		section = groupsSection,
 		position = 9
 	)
@@ -875,7 +924,8 @@ public interface FollowerConfig extends Config
 		keyName = "groupBet",
 		name = "Predictions",
 		description = "It calls what the next drop is worth before it lands, and has to"
-			+ " live with being wrong (group \"bet\")",
+			+ " live with being wrong (group \"bet\")."
+			+ " Editable under Predictions in Messages.",
 		section = groupsSection,
 		position = 10
 	)
@@ -888,7 +938,8 @@ public interface FollowerConfig extends Config
 		keyName = "groupClock",
 		name = "The hour and the session",
 		description = "Remarks about what time it is where you are and how long you"
-			+ " have been playing (group \"clock\")",
+			+ " have been playing (group \"clock\")."
+			+ " Editable under The hour and the session in Messages.",
 		section = groupsSection,
 		position = 11
 	)
@@ -904,7 +955,7 @@ public interface FollowerConfig extends Config
 			+ " twenty seconds or so instead of standing to attention. Stops once it is"
 			+ " due to sit down.",
 		section = movementSection,
-		position = 2
+		position = 0
 	)
 	default boolean wanderWhenIdle()
 	{
@@ -917,21 +968,21 @@ public interface FollowerConfig extends Config
 		description = "After about five minutes of standing still, the follower sits down."
 			+ " It gets up the moment anything happens.",
 		section = movementSection,
-		position = 3
+		position = 1
 	)
 	default boolean restWhenIdle()
 	{
 		return true;
 	}
 
+	@Range(min = 0)
 	@ConfigItem(
 		keyName = "restAnimation",
 		name = "Rest pose",
-		description = "Looping animation held while resting; the default 10061 is the"
-			+ " game's own sit emote. Audition candidates with ::follower pose <id>,"
-			+ " and 0 for none.",
-		section = movementSection,
-		position = 4
+		description = "Animation held while it sits. 0 for none. Default 10061 is the"
+			+ " game's own sit emote; audition others with ::follower pose <id>.",
+		section = shieldSection,
+		position = 0
 	)
 	default int restAnimation()
 	{
@@ -955,6 +1006,28 @@ public interface FollowerConfig extends Config
 	default String activeProfile()
 	{
 		return "";
+	}
+
+	@ConfigItem(
+		keyName = "exactPalette",
+		name = "Exact palette",
+		description = "Body colour pairs captured by ::follower palette; managed by the plugin",
+		hidden = true
+	)
+	default String exactPalette()
+	{
+		return "";
+	}
+
+	@ConfigItem(
+		keyName = "panelFolds",
+		name = "Panel folds",
+		description = "Which side panel sections are open; managed by the panel",
+		hidden = true
+	)
+	default String panelFolds()
+	{
+		return "talking,outfit";
 	}
 
 	@ConfigItem(
@@ -1091,12 +1164,13 @@ public interface FollowerConfig extends Config
 
 	@ConfigItem(
 		keyName = "disabledGroups",
-		name = "Silence by name (advanced)",
+		name = "Silence groups or phrase ids by name",
 		description = "Comma-separated group names or single phrase ids to silence,"
-			+ " beyond the toggles above. Group names are shown in each toggle's"
-			+ " hover text; phrase ids appear in the panel's message editors.",
-		section = groupsSection,
-		position = 12
+			+ " beyond the toggles in the Phrases section. Each Phrases toggle"
+			+ " shows its group name in brackets; phrase ids are shown in the"
+			+ " Messages window.",
+		section = shieldSection,
+		position = 13
 	)
 	default String disabledGroups()
 	{
