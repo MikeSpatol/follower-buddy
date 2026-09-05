@@ -285,6 +285,10 @@ public class FollowerPlugin extends Plugin
 	private Path dataDir;
 	private WorldPoint lastPlayerTile;
 	private int lastRegionId = -1;
+	/** The player-commanded stay state last handed to onStayStateChanged. */
+	private boolean stayReported;
+	/** Told as the player-commanded stay starts or ends; the side panel's button reads it. */
+	private java.util.function.Consumer<Boolean> onStayStateChanged;
 	private int reloadPollTicks;
 	private int spawnDelayTicks;
 	private boolean rebuildQueued;
@@ -2863,8 +2867,38 @@ public class FollowerPlugin extends Plugin
 		// walking a scene away still brings it along rather than stranding it.
 		if ("followEnabled".equals(key))
 		{
-			clientThread.invoke(config.followEnabled()
-				? follower::resumeFollowing : follower::stayHere);
+			clientThread.invoke(() ->
+			{
+				// The right-click Stay and Follow ops move the follower and
+				// then write this same setting; only a value it is not
+				// already living gets applied, so that write is a no-op.
+				boolean wantFollow = config.followEnabled();
+				if (followToggleNeedsAction(wantFollow, follower.isStaying()))
+				{
+					if (wantFollow)
+					{
+						follower.resumeFollowing();
+					}
+					else
+					{
+						follower.stayHere();
+					}
+				}
+			});
+		}
+		if ("thrallMeleeProfile".equals(key) || "thrallRangedProfile".equals(key)
+			|| "thrallMagicProfile".equals(key))
+		{
+			// A typed name that matches nothing falls back to the ready-made
+			// profile in silence; say so here, where the typing happened.
+			String typed = "thrallMeleeProfile".equals(key) ? config.thrallMeleeProfile()
+				: "thrallRangedProfile".equals(key) ? config.thrallRangedProfile()
+				: config.thrallMagicProfile();
+			String name = typed == null ? "" : typed.trim();
+			if (!name.isEmpty() && profileStore.get(name) == null)
+			{
+				sendStatus(unknownProfileMessage(name));
+			}
 		}
 		if ("customOutfit".equals(key) || "verticalOffset".equals(key))
 		{
@@ -2880,10 +2914,45 @@ public class FollowerPlugin extends Plugin
 		}
 	}
 
+	/**
+	 * Whether a Follow me value needs applying: only when the follower is not
+	 * already in that state, so the right-click ops' own write changes nothing.
+	 */
+	static boolean followToggleNeedsAction(boolean followEnabled, boolean staying)
+	{
+		return followEnabled == staying;
+	}
+
+	/** The answer to a profile name nothing is saved under; the thrall settings share it. */
+	private String unknownProfileMessage(String name)
+	{
+		return "No outfit profile named '" + name + "'. Saved: "
+			+ (profileStore.names().isEmpty()
+			? "(none)" : String.join(", ", profileStore.names()));
+	}
+
+	/** Whether the follower is parked by the player: Follow me off, a right-click Stay or a Send. */
+	public boolean isStaying()
+	{
+		return stayReported;
+	}
+
+	/** Called on the client thread as the player-commanded stay starts or ends. */
+	public void setOnStayStateChanged(java.util.function.Consumer<Boolean> listener)
+	{
+		onStayStateChanged = listener;
+	}
+
+	/** The region the player stands in, the id the Locations rules use; -1 before the first tick. */
+	public int currentRegionId()
+	{
+		return lastRegionId;
+	}
+
 	/** Restores exact palette pairs saved by ::follower palette, format "find>replace;...". */
 	private void loadExactPalette()
 	{
-		String stored = configManager.getConfiguration(FollowerConfig.GROUP, EXACT_PALETTE_KEY);
+		String stored = config.exactPalette();
 		java.util.Map<Short, Short> pairs = new java.util.LinkedHashMap<>();
 		if (stored != null && !stored.trim().isEmpty())
 		{
@@ -4814,13 +4883,18 @@ public class FollowerPlugin extends Plugin
 
 		if (follower.isStaying())
 		{
-			addFollowerMenuEntry("Follow", follower::resumeFollowing);
+			addFollowerMenuEntry("Follow", () ->
+			{
+				follower.resumeFollowing();
+				setFollowEnabled(true);
+			});
 		}
 		else
 		{
 			addFollowerMenuEntry("Stay", () ->
 			{
 				follower.stayHere();
+				setFollowEnabled(false);
 				// Stay is the moment positional control has been asked for, so
 				// the one place Send is taught is the first of these clicks.
 				maybeSendSendHint();
@@ -5385,6 +5459,14 @@ public class FollowerPlugin extends Plugin
 			spectate != null && spectate.holdsTheFeet(),
 			emoteHold, minutesState != 0);
 		speechEngine.getContext().setFollowerStaying(stayCommanded);
+		if (stayCommanded != stayReported)
+		{
+			stayReported = stayCommanded;
+			if (onStayStateChanged != null)
+			{
+				onStayStateChanged.accept(stayCommanded);
+			}
+		}
 
 		// An absence ending is a boundary too: the player went out of sight
 		// of the parked follower and has now come back to it.
@@ -6322,8 +6404,8 @@ public class FollowerPlugin extends Plugin
 	 * anyone who typed the wrong word.
 	 *
 	 * <p>Commands a player has a reason to run are deliberately NOT here: say,
-	 * here, anim, errand, outfit, reload, copy, fix, rebuild, status and where
-	 * all stay available.
+	 * here, anim, gfx, pose, height, errand, outfit, reload, copy, fix,
+	 * rebuild, status and where all stay available.
 	 *
 	 * <p>{@code watch} and {@code stance} are gated too, despite being useful
 	 * to a determined user - one prints an animation id for writing a rule, the
@@ -6335,11 +6417,11 @@ public class FollowerPlugin extends Plugin
 	private final Set<WorldPoint> walked = new HashSet<>();
 
 	private static final Set<String> DEVELOPER_COMMANDS = new HashSet<>(java.util.Arrays.asList(
-		"priorities", "palette", "harvest", "hidden", "height",
+		"priorities", "palette", "harvest", "hidden",
 		"pitchsweep", "headsweep", "head", "followtrace",
-		"wraplerp", "wrapauto", "wrapearly", "pose",
+		"wraplerp", "wrapauto", "wrapearly",
 		"animinfo", "animtrace", "errandscan", "cachecheck", "stanceaudit",
-		"watch", "stance", "gfx", "spectate", "shield", "centre", "center", "loot",
+		"watch", "stance", "spectate", "shield", "centre", "center", "loot",
 		"scan", "heights", "mood", "chatwatch", "examinewatch", "fire", "want", "transcript",
 		"boat",
 		"thieftargets", "sniffanims", "finditem", "prop", "propoffset"));
@@ -6347,6 +6429,128 @@ public class FollowerPlugin extends Plugin
 	/** The errand keys ::follower errand accepts, read from the enum itself. */
 	private static final java.util.List<String> ERRAND_KEYS =
 		com.follower.follower.ErrandController.keys();
+
+	/**
+	 * The everyday commands as (command, description) pairs. The help printer
+	 * and the side panel's Commands section both read this list, so the two
+	 * cannot drift apart.
+	 */
+	public static final java.util.List<java.util.Map.Entry<String, String>> EVERYDAY_COMMANDS =
+		java.util.Collections.unmodifiableList(java.util.Arrays.asList(
+			command("say <text>", "make the follower say it"),
+			command("here", "place the follower at your feet"),
+			command("fix", "re-attach it if it vanished"),
+			command("rebuild", "rebuild its model from the outfit"),
+			command("copy", "dress it in your gear (also a panel button)"),
+			command("outfit <name>", "wear a saved profile (also in the panel)"),
+			command("anim <id...>", "preview an animation on it"),
+			command("gfx <id>", "preview a graphic on it"),
+			command("pose <id>", "hold a looping pose, 0 to release"),
+			command("height <n>", "lift or lower it"),
+			command("errand [" + String.join("|", ERRAND_KEYS) + "]", "an errand now"),
+			command("reload", "re-read the phrase and sound files"),
+			command("status", "models, rules and spawn state"),
+			command("where", "your region id, for the Locations editor")));
+
+	private static java.util.Map.Entry<String, String> command(String name, String effect)
+	{
+		return new java.util.AbstractMap.SimpleImmutableEntry<>(name, effect);
+	}
+
+	/** ::follower reload: re-reads the phrase and sound files from disk. */
+	private void reloadFiles()
+	{
+		ruleLoader.reload();
+		speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
+		// The sounds file is one of ours on disk too, and the command
+		// reads as "re-read my files". Leaving it out meant an
+		// attachment edited by hand - or removed by hand - only took
+		// effect when the Sounds window happened to be opened, which
+		// is a strange place to hide a reload.
+		voices.reload();
+		sendStatus("Rules: " + ruleLoader.getStatus()
+			+ "; sounds: " + voices.attachmentCount() + " attached");
+		reportRuleErrors();
+	}
+
+	/** ::follower here: puts the follower at the player's feet. */
+	private void placeHere()
+	{
+		clientThread.invoke(() ->
+		{
+			Player local = client.getLocalPlayer();
+			if (local != null && appearanceService.getCurrent() != null)
+			{
+				follower.spawn(appearanceService.getCurrent(), local.getWorldLocation(),
+					spawnGraphic(), config.spawnGraphicHeight());
+				sendStatus("Here I am.");
+			}
+			else
+			{
+				sendStatus("No follower model to place - try ::follower rebuild.");
+			}
+		});
+	}
+
+	/** ::follower rebuild: rebuilds the model from the current outfit. */
+	private void rebuildFromOutfit()
+	{
+		clientThread.invoke(() ->
+		{
+			appearanceService.invalidate();
+			follower.despawn();
+			rebuildFollower();
+			sendStatus("Rebuilt from the current outfit.");
+		});
+	}
+
+	/**
+	 * ::follower fix: re-adds the object to the scene without a full rebuild
+	 * or a plugin toggle - the quick way back if the follower ever vanishes.
+	 */
+	private void reattach()
+	{
+		clientThread.invoke(() ->
+		{
+			follower.markNeedsReattach();
+			sendStatus("Re-attached the follower to the scene.");
+		});
+	}
+
+	/**
+	 * ::follower errand: runs the named errand at the next quiet moment, or
+	 * the next due one when the key is null. The side panel's Go now button
+	 * calls this too, so both print the same status.
+	 */
+	public void forceErrand(String key)
+	{
+		if (errands == null)
+		{
+			return;
+		}
+		// Validated here, because force() stores any string and the
+		// scheduler only ever matches real keys - a typo used to
+		// claim success and then nothing happened, forever.
+		if (key != null && !ERRAND_KEYS.contains(key))
+		{
+			sendStatus("No errand called '" + key + "'. Try: "
+				+ String.join(", ", ERRAND_KEYS));
+			return;
+		}
+		errands.force(key);
+		sendStatus("Will run the " + (key == null ? "next" : key)
+			+ " errand at the next quiet moment.");
+	}
+
+	/**
+	 * Writes the Follow me setting, the one record of follow versus stay. The
+	 * caller has already moved the follower, so onConfigChanged finds nothing
+	 * left to apply.
+	 */
+	private void setFollowEnabled(boolean enabled)
+	{
+		configManager.setConfiguration(FollowerConfig.GROUP, "followEnabled", enabled);
+	}
 
 	/**
 	 * Notices when you have clicked the tile the follower is standing on.
@@ -6564,17 +6768,7 @@ public class FollowerPlugin extends Plugin
 		switch (sub)
 		{
 			case "reload":
-				ruleLoader.reload();
-				speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
-				// The sounds file is one of ours on disk too, and the command
-				// reads as "re-read my files". Leaving it out meant an
-				// attachment edited by hand - or removed by hand - only took
-				// effect when the Sounds window happened to be opened, which
-				// is a strange place to hide a reload.
-				voices.reload();
-				sendStatus("Rules: " + ruleLoader.getStatus()
-					+ "; sounds: " + voices.attachmentCount() + " attached");
-				reportRuleErrors();
+				reloadFiles();
 				break;
 
 			case "copy":
@@ -6595,30 +6789,11 @@ public class FollowerPlugin extends Plugin
 				break;
 
 			case "here":
-				clientThread.invoke(() ->
-				{
-					Player local = client.getLocalPlayer();
-					if (local != null && appearanceService.getCurrent() != null)
-					{
-						follower.spawn(appearanceService.getCurrent(), local.getWorldLocation(),
-							spawnGraphic(), config.spawnGraphicHeight());
-						sendStatus("Here I am.");
-					}
-					else
-					{
-						sendStatus("No follower model to place - try ::follower rebuild.");
-					}
-				});
+				placeHere();
 				break;
 
 			case "rebuild":
-				clientThread.invoke(() ->
-				{
-					appearanceService.invalidate();
-					follower.despawn();
-					rebuildFollower();
-					sendStatus("Rebuilt from the current outfit.");
-				});
+				rebuildFromOutfit();
 				break;
 
 			case "priorities":
@@ -6766,16 +6941,14 @@ public class FollowerPlugin extends Plugin
 						sendStatus("Usage: ::follower height <number>");
 					}
 				}
+				else
+				{
+					sendStatus("Usage: ::follower height <number>");
+				}
 				break;
 
 			case "fix":
-				// Re-adds the object to the scene without a full rebuild or a plugin
-				// toggle - the quick way back if the follower ever vanishes.
-				clientThread.invoke(() ->
-				{
-					follower.markNeedsReattach();
-					sendStatus("Re-attached the follower to the scene.");
-				});
+				reattach();
 				break;
 
 			case "pitchsweep":
@@ -7181,25 +7354,8 @@ public class FollowerPlugin extends Plugin
 				break;
 
 			case "errand":
-			{
-				if (errands != null)
-				{
-					// Validated here, because force() stores any string and the
-					// scheduler only ever matches real keys - a typo used to
-					// claim success and then nothing happened, forever.
-					String key = args.length > 1 ? args[1].toLowerCase(Locale.ROOT) : null;
-					if (key != null && !ERRAND_KEYS.contains(key))
-					{
-						sendStatus("No errand called '" + key + "'. Try: "
-							+ String.join(", ", ERRAND_KEYS));
-						break;
-					}
-					errands.force(key);
-					sendStatus("Will run the " + (key == null ? "next" : key)
-						+ " errand at the next quiet moment.");
-				}
+				forceErrand(args.length > 1 ? args[1].toLowerCase(Locale.ROOT) : null);
 				break;
-			}
 
 			case "errandscan":
 			{
@@ -7506,9 +7662,7 @@ public class FollowerPlugin extends Plugin
 				// restore path also calls it; a typed name deserves an answer.
 				if (profileStore.get(joined.toString()) == null)
 				{
-					sendStatus("No outfit profile named '" + joined + "'. Saved: "
-						+ (profileStore.names().isEmpty()
-						? "(none)" : String.join(", ", profileStore.names())));
+					sendStatus(unknownProfileMessage(joined.toString()));
 					break;
 				}
 				loadOutfitProfile(joined.toString());
@@ -7679,28 +7833,21 @@ public class FollowerPlugin extends Plugin
 					sendStatus("Unknown command '" + sub + "'.");
 				}
 				sendStatus("::follower commands:");
-				sendStatus("  say <text> - make the follower say it");
-				sendStatus("  here - place the follower at your feet");
-				sendStatus("  fix - re-attach it if it vanished");
-				sendStatus("  rebuild - rebuild its model from the outfit");
-				sendStatus("  copy - dress it in your gear (also a panel button)");
-				sendStatus("  outfit <name> - wear a saved profile (also in the panel)");
-				sendStatus("  anim <id...> - preview an animation on it");
-				sendStatus("  errand [" + String.join("|", ERRAND_KEYS) + "] - an errand now");
-				sendStatus("  reload - re-read the phrase files");
-				sendStatus("  status - models, rules and spawn state");
-				sendStatus("  where - your region id, for the Locations editor");
+				for (java.util.Map.Entry<String, String> entry : EVERYDAY_COMMANDS)
+				{
+					sendStatus("  " + entry.getKey() + " - " + entry.getValue());
+				}
 				sendStatus("More in the Follower Buddy side panel.");
 				if (config.developerMode())
 				{
 					sendStatus("Developer: watch | stance <weaponId> [idle walk run attack] | "
-						+ "priorities | palette | harvest | hidden | height <n> | "
+						+ "priorities | palette | harvest | hidden | "
 						+ "pitchsweep | headsweep | head <...> | followtrace | boat | "
-						+ "wraplerp | wrapauto | wrapearly | pose <id> | animinfo | "
+						+ "wraplerp | wrapauto | wrapearly | animinfo | "
 						+ "animtrace | errandscan | cachecheck | stanceaudit | examinewatch | "
 						+ "mood [0-100] | chatwatch | sniffanims | finditem <name> | "
 						+ "prop <itemId> | propoffset <x y z> | fire <rule-id> | want | "
-						+ "gfx <id> | spectate | shield | centre <x y z> | loot <value> | "
+						+ "spectate | shield | centre <x y z> | loot <value> | "
 						+ "scan | heights | transcript | thieftargets");
 				}
 			// ::follower interp was removed: the interpolation filter is keyed on
@@ -7870,6 +8017,16 @@ public class FollowerPlugin extends Plugin
 		return Math.min(MAX_SPEECH_MS, Math.max(config.speechDurationMs(), needed));
 	}
 
+	/**
+	 * Whether a line goes to the chatbox: the mirror setting sends every line
+	 * there, and a rule whose output names the chatbox goes regardless. One
+	 * test, so one post.
+	 */
+	static boolean postsToChatbox(boolean mirrorToChat, SpeechOutput output)
+	{
+		return mirrorToChat || output.showsChatbox();
+	}
+
 	private void speakNow(Utterance utterance)
 	{
 		String text = utterance.text;
@@ -7904,7 +8061,7 @@ public class FollowerPlugin extends Plugin
 			speakingUntilMs = System.currentTimeMillis() + showFor + SPEECH_GAP_MS;
 		}
 
-		if (!text.isEmpty() && config.mirrorToChat())
+		if (!text.isEmpty() && postsToChatbox(config.mirrorToChat(), output))
 		{
 			// Every spoken line lands in the chatbox as PUBLIC CHAT under the
 			// follower's name - "Name: message" in the game's own chat colours
@@ -8334,8 +8491,8 @@ public class FollowerPlugin extends Plugin
 	 * <p>A follower called "Follower" is a stranger; a name is the cheapest
 	 * decision a player can make about it, and delayed customisation is a
 	 * named churn cause. One chatbox prompt, skippable with Esc, and the
-	 * pointer at the side panel rides along either way so both the name and
-	 * the outfit are discoverable from the same breath.
+	 * pointer at the setting rides along either way so the name stays
+	 * findable once the prompt is gone.
 	 */
 	private void offerName()
 	{
@@ -8365,8 +8522,8 @@ public class FollowerPlugin extends Plugin
 						sendStatus("Twenty characters is all a name can carry,"
 							+ " so '" + name + "' it is.");
 					}
-					sendStatus("The name and the outfit both live in the"
-						+ " Follower Buddy side panel, any time you want them.");
+					sendStatus("You can change the name any time in the"
+						+ " plugin's settings, under Follower.");
 				}
 			})
 			// Every way the input can end lands here (Enter runs onDone first,
@@ -8388,8 +8545,8 @@ public class FollowerPlugin extends Plugin
 				}
 				else if (!named[0])
 				{
-					sendStatus("No name for now, then. You can set one any time"
-						+ " in the Follower Buddy side panel.");
+					sendStatus("No name for now, then. You can change the name"
+						+ " any time in the plugin's settings, under Follower.");
 				}
 			})
 			.build();

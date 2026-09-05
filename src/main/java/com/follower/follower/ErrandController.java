@@ -36,28 +36,31 @@ public class ErrandController
 	/** The errand types; names match the rule {@code names} lists. */
 	private enum Errand
 	{
-		BANK("bank"),
-		ALTAR("altar"),
-		FIRE("fire"),
+		BANK("bank", "Bank visit"),
+		ALTAR("altar", "Quick prayer"),
+		FIRE("fire", "Warming up"),
 		/** The 10% fire variant: walks INTO it. Announces itself as FIRE. */
-		FIREDEATH("firedeath"),
-		CAT("cat"),
-		BOOTLACE("bootlace"),
-		GLANCE("glance"),
+		FIREDEATH("firedeath", "Warming up, too close"),
+		CAT("cat", "Cat"),
+		BOOTLACE("bootlace", "Bootlace"),
+		GLANCE("glance", "Did you see that?"),
 		/** Stops where it stands and writes something up in its scroll. */
-		DOCUMENT("document"),
+		DOCUMENT("document", "Field notes"),
 		/** Walks to something notable, looks at it, and writes THAT up. */
-		STUDY("study"),
+		STUDY("study", "Field study"),
 		/** Plain nosiness: walks to something curious, looks, then notes it
 		 * down in the scroll - everything explored is for posterity. Also
 		 * the one errand with an arrival trigger - see noticeArrival. */
-		EXPLORE("explore");
+		EXPLORE("explore", "Exploring");
 
 		final String key;
+		/** What the side panel calls it; the settings use the same words. */
+		final String label;
 
-		Errand(String key)
+		Errand(String key, String label)
 		{
 			this.key = key;
+			this.label = label;
 		}
 	}
 
@@ -141,6 +144,17 @@ public class ErrandController
 			keys.add(errand.key);
 		}
 		return keys;
+	}
+
+	/** Every errand key with its display name, in the order keys() gives them. */
+	public static java.util.Map<String, String> displayNames()
+	{
+		java.util.Map<String, String> names = new java.util.LinkedHashMap<>();
+		for (Errand errand : Errand.values())
+		{
+			names.put(errand.key, errand.label);
+		}
+		return names;
 	}
 
 	/**
