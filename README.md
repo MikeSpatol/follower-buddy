@@ -63,23 +63,63 @@ client-side.
 
 ## Making it yours
 
+The **Follower Buddy** side panel is behind its icon on the right-hand
+toolbar. It has five sections, each folding on its header; Talking and Outfit
+start open, and the panel remembers which you leave open.
+
+**Talking.** A **Mute the follower** tick, a **Chattiness** dropdown and an
+**Also show lines in the chatbox** tick, each the same setting as in the
+plugin's config. Then four buttons. **Messages...** opens every line it can
+say, one category per subject: Items, Locations, Bosses, Combat, Statuses,
+Idle chatter, Quest NPCs, Errands, Mimicry, Reminiscing, Souvenirs,
+Predictions, The hour and the session, Reactions, Thrall, Everything else.
+Each rule shows its id in grey beside its title, a **Find** box narrows the
+category to rules containing the text, and every rule has a **Sounds** button
+that attaches a recording to any of its lines. **Conversations...** edits the
+Talk-to trees the follower starts itself. **Attach sounds...** opens the Sounds
+window on its own: the folder your WAV, AIFF or AU files go in, with a button
+to copy the path. **Share lines...** exports what you have written or takes on
+somebody else's pack; the Messages window's **Share...** button runs the same
+flow.
+
+**Memory.** One button, **Memory...**: everything the follower currently
+knows about you, and **Forget everything** to erase all of it.
+
+**Outfit.** **Copy my gear** and **Clear all**, then OUTFIT PROFILES: a
+dropdown of saved outfits with **Save as new...** and **Delete profile**;
+changes save to the selected profile automatically. A folded **Used for
+thralls** row picks the Melee, Ranged and Magic profile for Thrall mode, and a
+profile a thrall wears is marked in the dropdown and cannot be deleted. Under
+that, EQUIPMENT (click a slot to change it, right-click to clear it) and BODY
+(style cyclers per body part, and the game's own colours).
+
+**Behaviour.** A **Stay here** / **Follow me** button, the same switch as
+right-click Stay and Follow on the follower; **Come here**; a **Go on
+errands** tick; and a dropdown of errands with **Go now**.
+
+**Commands.** **Bring it here**, **Fix if it vanished** and **Reload phrase
+and sound files**, the list of everyday chat commands, and your current region
+id for writing Locations rules.
+
+The follower's name is not in the panel. It is in the plugin's settings, under
+Follower, with the rest of the settings in these sections: Follower (name,
+Follow me, Mute, Chattiness, Hide in PvP areas), Movement, Speech (the chatbox
+tick, overhead text colour and height, how long a line stays up, reading
+speed), Sounds (play attached sounds, volume), Phrases (a toggle per subject,
+named as in Messages), Thrall mode, Errands (a toggle per errand and a
+frequency), Combat, Advanced: animations and graphics (closed by default: the
+animation and graphic ids, and a box that silences groups or phrase ids by
+name) and Developer (closed by default).
+
 Everything it says lives in `.runelite/follower/phrases.json`, hot-reloaded
-within a second of saving. The side panel has editor windows for each group
-(items, locations, bosses, combat, statuses, quest NPCs, errands,
-conversations), and a **Memory** window that shows everything the follower
-currently knows about you - with a button to erase all of it.
+within a second of saving.
 
-In the Messages window, **Sounds** attaches a recording to any line in a rule,
-and **Share...** exports what you have written or takes on somebody else's
-pack. The Sounds window shows the folder your files go in, with a button to
-copy the path.
-
-Config sections: Appearance, Movement, Speech (chattiness, output, reading
-speed), Voice (on/off and volume), Rule groups (a toggle per group), Thrall
-mode, Errands (a toggle per errand type and a frequency), Combat.
-
-Useful commands: `::follower say <text>`, `::follower outfit <name>`,
-`::follower errand`, `::follower reload`, `::follower status`.
+Chat commands: type `::follower` on its own for the list. The everyday ones are
+`say <text>`, `here`, `fix`, `rebuild`, `copy`, `outfit <name>`,
+`anim <id...>`, `gfx <id>`, `pose <id>`, `height <n>`, `errand [<name>]`,
+`reload`, `status` and `where`. The diagnostic commands (`watch`, `stance`,
+`mood`, `fire` and the rest) are gated behind **Developer commands** in the
+Developer section, and typing one while it is off says so.
 
 ## Privacy and safety
 
@@ -122,7 +162,7 @@ Useful commands: `::follower say <text>`, `::follower outfit <name>`,
   incoming text is validated and sanitised before it reaches a rule file, the
   chatbox or a dialog; see `com.follower.share.PackFile` and the two test
   classes that attack it.
-- The test suite (770 tests) covers the rule engine, the follower's movement
+- The test suite (783 tests) covers the rule engine, the follower's movement
   and errand refusals, the dialog structure, hostile share packs, and every
   bundled rule's integrity; see `docs/testing-strategy.md`.
 

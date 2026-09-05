@@ -22,8 +22,9 @@ automated, and the follower cannot be interacted with.
 - **Speech system** â€” 349 bundled rules across editable groups (bosses, player
   statuses, locations, item equips, quest NPCs, thrall, errands, combat,
   mimicry, reactions, memory, souvenirs, predictions, the clock, misc), hot-reloaded
-  from `phrases.json` within a second. Editor windows for each group live behind
-  buttons on the sidebar panel; every group has a config toggle.
+  from `phrases.json` within a second. The Messages window, under Talking in
+  the side panel, edits them one category per group; the Phrases section of
+  the settings has a toggle per group.
 - **Alive between the events** â€” copies your emotes, joins you when you eat, and
   has a go at whatever you have been mining or chopping or fishing for the last
   half minute; fidgets when you stand about, sits down to rest after five minutes
@@ -39,8 +40,10 @@ automated, and the follower cannot be interacted with.
   everyday script is replaced by whatever it wanted: an outing, or a hand to
   guess. The reveal lands overhead a beat after the box closes, and it is a real
   coin flip.
-- **Outfit profiles** â€” named outfits with Load/Save/Delete in the panel and a
-  `::follower outfit <name>` command. Melee/Ranged/Magic style profiles are seeded.
+- **Outfit profiles** - named outfits in the OUTFIT PROFILES dropdown under
+  Outfit in the side panel (Save as new..., Delete profile; edits save back to
+  the selected profile) and a `::follower outfit <name>` command.
+  Melee/Ranged/Magic style profiles are seeded.
 - **Thrall mode** â€” summoning an Arceuus thrall replaces it with the follower:
   combat-proof varbit detection, smooth possession movement, per-style outfits, the
   authentic summoning circle carved from the thrall's own model, spawn/exit vfx, and
@@ -227,7 +230,9 @@ update that adds gear you want to use.
 
 ### 3. Dress the follower
 
-**Appearance â†’ Custom outfit**, one entry per line:
+The outfit is dressed under **Outfit** in the side panel. What the panel
+writes is one string in the config (key `customOutfit`, a hidden item; the
+text field it once had is gone), one entry per line:
 
 ```
 gender=male
@@ -325,7 +330,9 @@ been false. `healthBelow: 40` therefore speaks once when you cross the threshold
 every tick you spend below it. When several rules fire at once, the highest `priority`
 wins.
 
-`cooldownMs` is per rule; **Speech â†’ Minimum gap** is a global floor across all rules.
+`cooldownMs` is per rule; **Chattiness** (Follower section, and the same dropdown
+under Talking in the side panel) is a global floor across all rules, which the
+mood stretches or shortens on top.
 
 ### Condition types
 
@@ -423,10 +430,12 @@ just lost - guard with `carrying` or `souvenirLost`), `{here}` (guard with
 ### Other rule fields
 
 - `output` â€” `overhead`, `chatbox`, or `both`. Falls back to the config default.
-- `group` â€” used by the **Rule groups** config section to silence whole categories.
+- `group` - used by the **Phrases** config section to silence whole categories.
   The built-in toggles cover `boss`, `health`, `area`, `idle`, `gear`, `quest`,
   `combat`, `mimic`, `memory`, `souvenir`, `bet` and `clock`; anything else goes
-  in the *Other disabled groups* box (rule ids work there too).
+  in the *Silence groups or phrase ids by name* box under **Advanced:
+  animations and graphics** (rule ids work there too, and the Messages window
+  shows each rule's id beside its title).
 - `animation` â€” optional emote animation id played alongside the line.
 - `mirrorAnimation` â€” `true` to replay the PLAYER'S animation on the follower
   instead of a fixed id. Needs a trigger that says WHICH animation: either
@@ -833,6 +842,13 @@ rather than failing silently.
 | `::follower rebuild` | Rebuild the model from scratch |
 | `::follower fix` | Re-attach the follower to the scene if it has vanished |
 | `::follower status` / `where` | Model + rule status, current region id and coordinates |
+| `::follower gfx <id>` | Preview a graphic on the follower |
+| `::follower pose <id>` | Hold a looping pose (0 to release) |
+| `::follower height <n>` | Ground clearance, if the feet clip into terrain |
+
+The side panel's Commands section lists these same everyday commands, and the
+gated ones once Developer commands is on; both read `EVERYDAY_COMMANDS` and
+`DEVELOPER_COMMAND_HELP` in `FollowerPlugin`, so a new command goes in there.
 
 **Appearance**
 
@@ -843,7 +859,6 @@ rather than failing silently.
 | `::follower palette clear` **[dev]** | Drop the exact colours, hand control back to the pickers |
 | `::follower harvest` **[dev]** | Auto-extract the client's complete colour tables (character flickers a few seconds); `stop` aborts |
 | `::follower followtrace` **[dev]** | Live follow-state overlay plus FTRACE log rows; `off` to stop |
-| `::follower height <n>` **[dev]** | Ground clearance, if the feet clip into terrain |
 
 **Outfits and animation**
 
@@ -864,7 +879,6 @@ rather than failing silently.
 | `::follower wrapearly <n>` **[dev]** | Override the loop trim for the animation currently playing |
 | `::follower wrapauto` **[dev]** | Drop manual trims and let measurement decide |
 | `::follower boat` **[dev]** | Dump the world views, collision grid and objects around you, for boats; walked tiles overlaid |
-| `::follower pose <id>` **[dev]** | Force a looping pose (0 to release) |
 | `::follower cachecheck` **[dev]** | Diff the live cache parse against the offline dump, field by field |
 | `::follower stanceaudit` **[dev]** | Validate every animation id the stance library names, and report weapon coverage |
 | `::follower chatwatch` **[dev]** | Print every chat line with its `ChatMessageType`, for writing `chatMessage` rules |
@@ -895,17 +909,19 @@ commands** switched on, being an authoring tool rather than a playing one.
 
 ## Appearance and body style
 
-The **Follower outfit** panel (right-hand toolbar) has two sections.
+The **Follower Buddy** side panel (right-hand toolbar) has five folding
+sections: Talking, Memory, Outfit, Behaviour and Commands. The outfit lives
+under **Outfit**, below the profiles row, as two sub-headers.
 
-**Body** â€” body type, skin tone, and a style cycler per body part (hair, jaw, torso,
+**EQUIPMENT** - the nine real equipment slots. Click one to search all 6,333 wearable
+items by name; the slot is resolved from the item itself, so a chestplate cannot land
+in the legs slot. Hover a result to preview it; right-click a slot to clear it.
+
+**BODY** - body type, skin tone, and a style cycler per body part (hair, jaw, torso,
 arms, hands, legs, boots). Kits carry no names in the cache, so styles are browsed with
 `<` `>` and judged by eye; the follower rebuilds instantly, which makes it its own
 preview. Only kits matching that slot *and* body type are offered, using each kit's
 `bodyPartId` from the dump.
-
-**Slots** â€” the nine real equipment slots. Click one to search all 6,333 wearable items
-by name; the slot is resolved from the item itself, so a chestplate cannot land in the
-legs slot. Hover a result to preview it.
 
 ### How following works â€” the game's own mechanics (2026-08-02)
 
@@ -1425,7 +1441,7 @@ These are inherent to the approach, not bugs to be filed:
   composition, which only covers slots with a visible model.
 - The region ids in the starter rules are **examples**. Verify with `::follower where`.
 - The follower hides in the Wilderness by default so it can't obscure a real player.
-  Turn that off under **Movement** if you want.
+  Turn that off under **Follower** (Hide in PvP areas) if you want.
 
 ---
 
@@ -1624,7 +1640,11 @@ src/main/java/com/follower/
 â”‚   â”œâ”€â”€ StanceLibrary.java       per-weapon idle/walk/run ids, learned by watching
 â”‚   â””â”€â”€ PlayerPose.java          stand/walk/run animation ids
 â”œâ”€â”€ ui/
-â”‚   â””â”€â”€ FollowerPanel.java       outfit picker, body styles, exact colour swatches
+â”‚   â”œâ”€â”€ FollowerPanel.java       the side panel: Talking, Memory, Outfit, Behaviour, Commands
+â”‚   â”œâ”€â”€ PhrasesDialog.java       Messages window: one category per rule group, Find, Sounds, Share
+â”‚   â”œâ”€â”€ DialogsDialog.java       Conversations window: the trees the follower starts
+â”‚   â”œâ”€â”€ VoiceDialog.java         Sounds window: attach a file to a line, the sounds folder
+â”‚   â””â”€â”€ MemoryDialog.java        Memory window: what it knows, and Forget everything
 â””â”€â”€ speech/
     â”œâ”€â”€ RuleLoader.java          phrases.json load + hot reload
     â”œâ”€â”€ SpeechRule.java          one rule, plus its edge/cooldown state
