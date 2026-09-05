@@ -93,16 +93,18 @@ public class PhrasesDialog extends JDialog
 	/** Where "Use my current location" gets its region id; may be null. */
 	private final java.util.function.IntSupplier currentRegion;
 
-	/** Shares everything the player has written; may be null. */
-	private Runnable onExportPack;
+	/** The export-or-import choice, shared with the side panel; may be null. */
+	private Runnable onShare;
 
-	/** Takes on somebody else's pack; may be null. */
-	private Runnable onImportPack;
-
-	public void setOnPack(Runnable onExportPack, Runnable onImportPack)
+	public void setOnShare(Runnable onShare)
 	{
-		this.onExportPack = onExportPack;
-		this.onImportPack = onImportPack;
+		this.onShare = onShare;
+	}
+
+	/** Whether the window holds edits the file does not; the panel's Share checks it. */
+	public boolean isDirty()
+	{
+		return dirty;
 	}
 
 	/** Opens the sound picker for a rule's lines; may be null. */
@@ -181,7 +183,7 @@ public class PhrasesDialog extends JDialog
 	public PhrasesDialog(Gson gson, Path file, List<Category> categories,
 		java.util.function.IntSupplier currentRegion)
 	{
-		super((java.awt.Frame) null, "Follower Buddy — Messages", false);
+		super((java.awt.Frame) null, "Follower Buddy - Messages", false);
 		this.gson = gson.newBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 		this.file = file;
 		this.categories = categories;
@@ -266,28 +268,11 @@ public class PhrasesDialog extends JDialog
 		share.addActionListener(e ->
 		{
 			// Both halves work on the file rather than on this window, so
-			// half-typed lines have to be settled before either runs.
-			if (!confirmDirty())
+			// half-typed lines have to be settled before either runs. An
+			// import re-opens this window on the grown file.
+			if (confirmDirty() && onShare != null)
 			{
-				return;
-			}
-			Object[] choices = {"Export mine", "Import a pack", "Cancel"};
-			int picked = JOptionPane.showOptionDialog(this,
-				"Share the lines you have written, and the sounds attached to them."
-					+ "\n\nExporting writes a .zip holding only what you have added,"
-					+ "\nnot the lines that ship with the plugin."
-					+ "\n\nImporting adds somebody else's to yours. Nothing is replaced.",
-				"Share", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
-				null, choices, choices[0]);
-			if (picked == 0 && onExportPack != null)
-			{
-				onExportPack.run();
-			}
-			else if (picked == 1 && onImportPack != null)
-			{
-				onImportPack.run();
-				// The file has grown underneath us; show what it says now.
-				refresh();
+				onShare.run();
 			}
 		});
 		buttons.add(share);
@@ -666,7 +651,7 @@ public class PhrasesDialog extends JDialog
 
 			if (warnings.isEmpty())
 			{
-				setStatus("Saved — the follower picks it up within a second", false);
+				setStatus("Saved - the follower picks it up within a second", false);
 			}
 			else if (warnings.size() == 1)
 			{

@@ -133,13 +133,242 @@ public class FollowerPanel extends PluginPanel
 		this.onEditDialogs = onEditDialogs;
 	}
 
+	/** Opens the Sounds window with no lines, just the folder and the how-to. */
+	private Runnable onAttachSounds = () -> { };
+
+	public void setOnAttachSounds(Runnable onAttachSounds)
+	{
+		this.onAttachSounds = onAttachSounds;
+	}
+
+	/** Runs the same export-or-import choice the Messages window's Share button runs. */
+	private Runnable onShareLines = () -> { };
+
+	public void setOnShareLines(Runnable onShareLines)
+	{
+		this.onShareLines = onShareLines;
+	}
+
+	// -------------------------------------------------------- synced settings
+
+	/**
+	 * Chattiness, the chatbox mirror and errands follow the Mute pattern: the
+	 * same key as settings, written through the plugin, and reflected back
+	 * without an echo when the setting changes from the other side.
+	 */
+	private final javax.swing.JComboBox<com.follower.speech.Chattiness> chattinessBox =
+		new javax.swing.JComboBox<>(com.follower.speech.Chattiness.values());
+	private final javax.swing.JCheckBox chatboxBox =
+		new javax.swing.JCheckBox("Also show lines in the chatbox");
+	private final javax.swing.JCheckBox errandsBox = new javax.swing.JCheckBox("Go on errands");
+
+	private Consumer<com.follower.speech.Chattiness> onChattiness = c -> { };
+	private Consumer<Boolean> onMirrorToChat = m -> { };
+	private Consumer<Boolean> onErrandsEnabled = e -> { };
+
+	/** Set while a synced control is being set FROM config, so it does not echo. */
+	private boolean suppressSyncEvents;
+
+	public void setOnChattiness(Consumer<com.follower.speech.Chattiness> onChattiness)
+	{
+		this.onChattiness = onChattiness;
+	}
+
+	public void setOnMirrorToChat(Consumer<Boolean> onMirrorToChat)
+	{
+		this.onMirrorToChat = onMirrorToChat;
+	}
+
+	public void setOnErrandsEnabled(Consumer<Boolean> onErrandsEnabled)
+	{
+		this.onErrandsEnabled = onErrandsEnabled;
+	}
+
+	public void setChattiness(com.follower.speech.Chattiness chattiness)
+	{
+		synced(() -> chattinessBox.setSelectedItem(chattiness));
+	}
+
+	public void setMirrorToChat(boolean on)
+	{
+		synced(() -> chatboxBox.setSelected(on));
+	}
+
+	public void setErrandsEnabled(boolean on)
+	{
+		synced(() -> errandsBox.setSelected(on));
+	}
+
+	/** Applies a config-side value on the event thread with the echo guard up. */
+	private void synced(Runnable update)
+	{
+		SwingUtilities.invokeLater(() ->
+		{
+			suppressSyncEvents = true;
+			try
+			{
+				update.run();
+			}
+			finally
+			{
+				suppressSyncEvents = false;
+			}
+		});
+	}
+
+	// --------------------------------------------------------------- behaviour
+
+	private final JButton stayButton = new JButton("Stay here");
+	private boolean staying;
+	private Consumer<Boolean> onFollowEnabled = f -> { };
+	private Runnable onComeHere = () -> { };
+	private final JLabel behaviourCaption = new JLabel();
+	private final javax.swing.JComboBox<String> errandBox = new javax.swing.JComboBox<>();
+	private List<String> errandKeys = java.util.Collections.emptyList();
+	private Consumer<String> onErrand = k -> { };
+
+	public void setOnFollowEnabled(Consumer<Boolean> onFollowEnabled)
+	{
+		this.onFollowEnabled = onFollowEnabled;
+	}
+
+	public void setOnComeHere(Runnable onComeHere)
+	{
+		this.onComeHere = onComeHere;
+	}
+
+	public void setOnErrand(Consumer<String> onErrand)
+	{
+		this.onErrand = onErrand;
+	}
+
+	/** Reflects the player-commanded stay; the button always offers the other state. */
+	public void setStaying(boolean staying)
+	{
+		SwingUtilities.invokeLater(() ->
+		{
+			this.staying = staying;
+			stayButton.setText(staying ? "Follow me" : "Stay here");
+		});
+	}
+
+	public void setFollowerName(String name)
+	{
+		SwingUtilities.invokeLater(() -> behaviourCaption.setText(
+			"<html><body style='width:180px'>Right-click " + escapeHtml(name)
+				+ " in game for Talk-to, Stay, Dance, Wave and Step-in-front."
+				+ " Hold Shift and right-click any tile to send it there.</body></html>"));
+	}
+
+	/** The errands on offer, key to display name, in the order to list them. */
+	public void setErrands(Map<String, String> keyToLabel)
+	{
+		SwingUtilities.invokeLater(() ->
+		{
+			errandKeys = new java.util.ArrayList<>(keyToLabel.keySet());
+			errandBox.removeAllItems();
+			for (String label : keyToLabel.values())
+			{
+				errandBox.addItem(label);
+			}
+		});
+	}
+
+	// ---------------------------------------------------------------- commands
+
+	private Runnable onFix = () -> { };
+	private Runnable onReload = () -> { };
+	private final javax.swing.JTextArea commandList = new javax.swing.JTextArea();
+	private final JLabel regionCaption = new JLabel();
+
+	public void setOnFix(Runnable onFix)
+	{
+		this.onFix = onFix;
+	}
+
+	public void setOnReload(Runnable onReload)
+	{
+		this.onReload = onReload;
+	}
+
+	/** The command listing, one line each; the plugin decides what goes in. */
+	public void setCommands(List<String> lines)
+	{
+		SwingUtilities.invokeLater(() ->
+		{
+			commandList.setText(String.join("\n", lines));
+			commandList.setCaretPosition(0);
+		});
+	}
+
+	/** The region the player stands in, or below zero before the first tick. */
+	public void setRegionId(int region)
+	{
+		SwingUtilities.invokeLater(() -> regionCaption.setText(
+			"<html><body style='width:180px'>Your region id: "
+				+ (region > 0 ? Integer.toString(region) : "not known until you log in")
+				+ ", for Locations rules.</body></html>"));
+	}
+
+	// ------------------------------------------------------------------- folds
+
+	/** One foldable section: its header label carries the +/- prefix. */
+	private static final class Section
+	{
+		final String title;
+		final JLabel label;
+		final JPanel body;
+
+		Section(String title, JLabel label, JPanel body)
+		{
+			this.title = title;
+			this.label = label;
+			this.body = body;
+		}
+	}
+
+	private final Map<String, Section> sections = new java.util.LinkedHashMap<>();
+	private final java.util.Set<String> openSections;
+	private Consumer<String> onFoldsChanged = s -> { };
+
+	/** The whole scrolling column, revalidated as sections open and close. */
+	private final JPanel column = new ScrollableColumn();
+
+	public void setOnFoldsChanged(Consumer<String> onFoldsChanged)
+	{
+		this.onFoldsChanged = onFoldsChanged;
+	}
+
+	/** The stored fold list, "talking,outfit", as the set of open section keys. */
+	static java.util.Set<String> parseFolds(String stored)
+	{
+		java.util.Set<String> open = new java.util.LinkedHashSet<>();
+		if (stored == null)
+		{
+			return open;
+		}
+		for (String key : stored.split(","))
+		{
+			String trimmed = key.trim().toLowerCase(java.util.Locale.ROOT);
+			if (!trimmed.isEmpty())
+			{
+				open.add(trimmed);
+			}
+		}
+		return open;
+	}
+
 	// ---------------------------------------------------------------- profiles
 
 	private final javax.swing.JComboBox<String> profileCombo = new javax.swing.JComboBox<>();
+	private final JButton profileDelete = new JButton("Delete profile");
 
 	private Consumer<String> onProfileLoad = s -> { };
 	private Consumer<String> onProfileSave = s -> { };
 	private Consumer<String> onProfileDelete = s -> { };
+
+	/** Whether a profile is one of the seeded thrall looks; set by the plugin. */
+	private java.util.function.Predicate<String> profileProtected = n -> false;
 
 	public void setOnProfileLoad(Consumer<String> onProfileLoad)
 	{
@@ -156,16 +385,25 @@ public class FollowerPanel extends PluginPanel
 		this.onProfileDelete = onProfileDelete;
 	}
 
+	public void setProfileProtected(java.util.function.Predicate<String> profileProtected)
+	{
+		this.profileProtected = profileProtected;
+	}
+
 	/** Set while the dropdown is being repopulated, so selection events are ignored. */
 	private boolean suppressProfileEvents;
+
+	private List<String> profileNames = java.util.Collections.emptyList();
 
 	/**
 	 * Refreshes the dropdown and selects {@code active}. Selection events are
 	 * suppressed throughout: repopulating must not read as the user picking a
-	 * profile, which would re-load the outfit mid-edit.
+	 * profile, which would re-load the outfit mid-edit. The thrall dropdowns
+	 * are filled from the same names.
 	 */
 	public void setProfileNames(java.util.List<String> names, String active)
 	{
+		profileNames = new java.util.ArrayList<>(names);
 		suppressProfileEvents = true;
 		try
 		{
@@ -180,12 +418,103 @@ public class FollowerPanel extends PluginPanel
 		{
 			suppressProfileEvents = false;
 		}
+		fillThrallBoxes();
+		refreshDeleteButton();
 	}
 
 	private String profileName()
 	{
 		Object item = profileCombo.getSelectedItem();
 		return item == null ? "" : item.toString().trim();
+	}
+
+	// ----------------------------------------------------------------- thralls
+
+	/** Style key to its dropdown, in the order the rows are shown. */
+	private final Map<String, javax.swing.JComboBox<String>> thrallBoxes =
+		new java.util.LinkedHashMap<>();
+
+	/** Style key to the profile name the setting holds. */
+	private final Map<String, String> thrallProfiles = new java.util.LinkedHashMap<>();
+
+	private BiConsumer<String, String> onThrallProfile = (style, name) -> { };
+
+	/** (style key, profile name) as a thrall dropdown is changed. */
+	public void setOnThrallProfile(BiConsumer<String, String> onThrallProfile)
+	{
+		this.onThrallProfile = onThrallProfile;
+	}
+
+	/** Reflects the three thrall settings without writing them back. */
+	public void setThrallProfiles(String melee, String ranged, String magic)
+	{
+		SwingUtilities.invokeLater(() ->
+		{
+			thrallProfiles.put("melee", melee == null ? "" : melee.trim());
+			thrallProfiles.put("ranged", ranged == null ? "" : ranged.trim());
+			thrallProfiles.put("magic", magic == null ? "" : magic.trim());
+			fillThrallBoxes();
+			refreshDeleteButton();
+			profileCombo.repaint();
+		});
+	}
+
+	private void fillThrallBoxes()
+	{
+		suppressSyncEvents = true;
+		try
+		{
+			for (Map.Entry<String, javax.swing.JComboBox<String>> entry : thrallBoxes.entrySet())
+			{
+				javax.swing.JComboBox<String> box = entry.getValue();
+				box.removeAllItems();
+				for (String name : profileNames)
+				{
+					box.addItem(name);
+				}
+				String wanted = thrallProfiles.get(entry.getKey());
+				if (wanted != null && !wanted.isEmpty())
+				{
+					// A typed name nothing is saved under still shows, as
+					// typed, rather than the dropdown quietly claiming another.
+					if (!profileNames.contains(wanted))
+					{
+						box.addItem(wanted);
+					}
+					box.setSelectedItem(wanted);
+				}
+				else
+				{
+					box.setSelectedItem(null);
+				}
+			}
+		}
+		finally
+		{
+			suppressSyncEvents = false;
+		}
+	}
+
+	/** " (thrall: melee)" and so on, or nothing, for the profile dropdown. */
+	private String thrallSuffix(String name)
+	{
+		List<String> styles = new java.util.ArrayList<>();
+		for (Map.Entry<String, String> entry : thrallProfiles.entrySet())
+		{
+			if (entry.getValue().equals(name))
+			{
+				styles.add(entry.getKey());
+			}
+		}
+		return styles.isEmpty() ? "" : " (thrall: " + String.join(", ", styles) + ")";
+	}
+
+	/** Delete is offered only for a profile no thrall depends on. */
+	private void refreshDeleteButton()
+	{
+		String name = profileName();
+		profileDelete.setEnabled(!name.isEmpty() && !profileProtected.test(name)
+			&& thrallSuffix(name).isEmpty());
 	}
 
 	private final JPanel gearGrid = new JPanel();
@@ -220,7 +549,8 @@ public class FollowerPanel extends PluginPanel
 		Runnable onCopyGear, Runnable onClearAll,
 		java.util.function.IntConsumer onGender,
 		BiConsumer<KitType, Integer> onCycleKit,
-		BiConsumer<Integer, Integer> onBodyColor)
+		BiConsumer<Integer, Integer> onBodyColor,
+		String openFolds)
 	{
 		super(false);
 		this.itemManager = itemManager;
@@ -232,6 +562,7 @@ public class FollowerPanel extends PluginPanel
 		this.onGender = onGender;
 		this.onCycleKit = onCycleKit;
 		this.onBodyColor = onBodyColor;
+		this.openSections = parseFolds(openFolds);
 
 		setLayout(new BorderLayout());
 		setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -244,17 +575,20 @@ public class FollowerPanel extends PluginPanel
 		// sidebar (or the width left once the scrollbar appears) pushed the
 		// whole column past the right edge - padding gone, buttons clipped -
 		// with the horizontal scrollbar deliberately never there to save it.
-		JPanel body = new ScrollableColumn();
-		body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
-		body.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		body.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
-		body.add(buildHeader());
-		body.add(buildContent());
+		column.setLayout(new BoxLayout(column, BoxLayout.Y_AXIS));
+		column.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		column.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+		column.add(buildHeader());
+		buildTalking(section("talking", "TALKING"));
+		buildMemory(section("memory", "MEMORY"));
+		buildOutfit(section("outfit", "OUTFIT"));
+		buildBehaviour(section("behaviour", "BEHAVIOUR"));
+		buildCommands(section("commands", "COMMANDS"));
 
 		// Everything scrolls together: the sidebar is never tall enough for
 		// the dialogue editors, profiles, equipment grid and item picker at
 		// once, and a clipped panel hides controls with no way to reach them.
-		JScrollPane scroll = new JScrollPane(body,
+		JScrollPane scroll = new JScrollPane(column,
 			JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		scroll.setBorder(BorderFactory.createEmptyBorder());
 		scroll.setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -279,21 +613,172 @@ public class FollowerPanel extends PluginPanel
 		// unwrapped line, and a single wide child forces the WHOLE panel past
 		// the sidebar, clipping every section against the no-horizontal-scroll
 		// viewport.
-		JLabel identity = new JLabel("<html><body style='width:180px'>A follower"
-			+ " only you can see. Dress it here; the talking it mostly handles"
-			+ " itself.</body></html>");
+		JLabel identity = new JLabel("<html><body style='width:180px'>Only you"
+			+ " can see this follower. Dress it under Outfit; edit what it says"
+			+ " under Talking; see what it remembers under Memory.</body></html>");
 		identity.setFont(FontManager.getRunescapeSmallFont());
 		identity.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
 		identity.setAlignmentX(LEFT_ALIGNMENT);
-		identity.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
+		identity.setBorder(BorderFactory.createEmptyBorder(0, 0, 4, 0));
 		header.add(identity);
 
-		muteBox.setToolTipText("The follower stops talking. All your other"
+		return header;
+	}
+
+	/**
+	 * A foldable section: a clickable header and a body that shows while the
+	 * key is in the open set. Both go straight into the column; the body
+	 * comes back for filling.
+	 */
+	private JPanel section(String key, String title)
+	{
+		JLabel label = new JLabel();
+		label.setFont(FontManager.getRunescapeSmallFont());
+		label.setForeground(ColorScheme.BRAND_ORANGE);
+		JPanel header = headerRow(label);
+		header.setToolTipText("Click to open or close this section");
+		clickable(header, () -> toggleSection(key));
+
+		JPanel body = new JPanel();
+		body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
+		body.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		body.setAlignmentX(LEFT_ALIGNMENT);
+		body.setVisible(openSections.contains(key));
+
+		sections.put(key, new Section(title, label, body));
+		label.setText(foldTitle(key));
+		column.add(header);
+		column.add(body);
+		return body;
+	}
+
+	private String foldTitle(String key)
+	{
+		return (openSections.contains(key) ? "- " : "+ ") + sections.get(key).title;
+	}
+
+	private void toggleSection(String key)
+	{
+		if (!openSections.remove(key))
+		{
+			openSections.add(key);
+		}
+		Section section = sections.get(key);
+		section.body.setVisible(openSections.contains(key));
+		section.label.setText(foldTitle(key));
+		column.revalidate();
+		column.repaint();
+		// Stored in section order, whatever order they were clicked in.
+		List<String> open = new java.util.ArrayList<>();
+		for (String k : sections.keySet())
+		{
+			if (openSections.contains(k))
+			{
+				open.add(k);
+			}
+		}
+		onFoldsChanged.accept(String.join(",", open));
+	}
+
+	/**
+	 * A click anywhere on the component runs the action. Swing hands a click
+	 * to the deepest child under it, so the children listen too.
+	 */
+	private static void clickable(javax.swing.JComponent component, Runnable action)
+	{
+		component.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		component.addMouseListener(new MouseAdapter()
+		{
+			@Override
+			public void mouseClicked(MouseEvent e)
+			{
+				if (SwingUtilities.isLeftMouseButton(e))
+				{
+					action.run();
+				}
+			}
+		});
+		for (java.awt.Component child : component.getComponents())
+		{
+			if (child instanceof javax.swing.JComponent)
+			{
+				clickable((javax.swing.JComponent) child, action);
+			}
+		}
+	}
+
+	/** A width-bounded grey line of explanation, so it wraps instead of widening the panel. */
+	private JLabel caption(String text)
+	{
+		JLabel label = new JLabel("<html><body style='width:180px'>" + text + "</body></html>");
+		label.setFont(FontManager.getRunescapeSmallFont());
+		label.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
+		label.setAlignmentX(LEFT_ALIGNMENT);
+		label.setBorder(BorderFactory.createEmptyBorder(2, 0, 4, 0));
+		return label;
+	}
+
+	/** A full-width column of buttons. */
+	private JPanel buttonColumn(int count)
+	{
+		JPanel buttons = new JPanel(new GridLayout(0, 1, 6, 4));
+		buttons.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		buttons.setAlignmentX(LEFT_ALIGNMENT);
+		buttons.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30 * count));
+		return buttons;
+	}
+
+	/** Two buttons side by side. */
+	private JPanel buttonPair()
+	{
+		JPanel buttons = new JPanel(new GridLayout(1, 2, 6, 0));
+		buttons.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		buttons.setAlignmentX(LEFT_ALIGNMENT);
+		buttons.setMaximumSize(new Dimension(Integer.MAX_VALUE, 26));
+		return buttons;
+	}
+
+	private JButton button(String text, String tooltip, Runnable action)
+	{
+		JButton button = new JButton(text);
+		button.setToolTipText(tooltip);
+		button.setFocusPainted(false);
+		button.addActionListener(e -> action.run());
+		return button;
+	}
+
+	private void styleTick(javax.swing.JCheckBox box, String tooltip)
+	{
+		box.setToolTipText(tooltip);
+		box.setFont(FontManager.getRunescapeSmallFont());
+		box.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+		box.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		box.setAlignmentX(LEFT_ALIGNMENT);
+	}
+
+	/** A small label on the left and a control taking the rest of the row. */
+	private JPanel labelledRow(String text, javax.swing.JComponent control)
+	{
+		JPanel row = new JPanel(new BorderLayout(6, 0));
+		row.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		row.setAlignmentX(LEFT_ALIGNMENT);
+		row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
+		JLabel label = new JLabel(text);
+		label.setFont(FontManager.getRunescapeSmallFont());
+		label.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+		label.setPreferredSize(new Dimension(NAME_WIDTH, ROW_CONTENT_HEIGHT));
+		row.add(label, BorderLayout.WEST);
+		row.add(control, BorderLayout.CENTER);
+		return row;
+	}
+
+	private void buildTalking(JPanel body)
+	{
+		body.add(caption("What it says and when. Messages holds every line;"
+			+ " Conversations the Talk-to trees."));
+
+		styleTick(muteBox, "The follower stops talking. All your other"
 			+ " speech settings are kept. Same switch as Mute in settings.");
-		muteBox.setFont(FontManager.getRunescapeSmallFont());
-		muteBox.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-		muteBox.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		muteBox.setAlignmentX(LEFT_ALIGNMENT);
 		muteBox.addActionListener(e ->
 		{
 			if (!suppressMuteEvents)
@@ -301,91 +786,96 @@ public class FollowerPanel extends PluginPanel
 				onMute.accept(muteBox.isSelected());
 			}
 		});
-		header.add(muteBox);
-		header.add(javax.swing.Box.createVerticalStrut(6));
+		body.add(muteBox);
 
-		JLabel dialogueTitle = new JLabel("Follower messages");
-		dialogueTitle.setFont(FontManager.getRunescapeBoldFont());
-		dialogueTitle.setForeground(Color.WHITE);
-		dialogueTitle.setAlignmentX(LEFT_ALIGNMENT);
-		header.add(dialogueTitle);
+		chattinessBox.setToolTipText("How much it talks. Same setting as Chattiness in settings.");
+		chattinessBox.addActionListener(e ->
+		{
+			Object picked = chattinessBox.getSelectedItem();
+			if (!suppressSyncEvents && picked != null)
+			{
+				onChattiness.accept((com.follower.speech.Chattiness) picked);
+			}
+		});
+		body.add(labelledRow("Chattiness", chattinessBox));
 
-		JLabel dialogueHint = new JLabel("What the follower says, and when");
-		dialogueHint.setFont(FontManager.getRunescapeSmallFont());
-		dialogueHint.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
-		dialogueHint.setAlignmentX(LEFT_ALIGNMENT);
-		dialogueHint.setBorder(BorderFactory.createEmptyBorder(2, 0, 6, 0));
-		header.add(dialogueHint);
+		styleTick(chatboxBox, "Every line also appears in the chatbox under the"
+			+ " follower's name. Same switch as in settings.");
+		chatboxBox.addActionListener(e ->
+		{
+			if (!suppressSyncEvents)
+			{
+				onMirrorToChat.accept(chatboxBox.isSelected());
+			}
+		});
+		body.add(chatboxBox);
+		body.add(javax.swing.Box.createVerticalStrut(4));
 
-		// Three doors, not nine: the old grid surfaced every internal rule
+		// Four doors, not nine: the old grid surfaced every internal rule
 		// group as its own button, a navigation decision nobody should have
 		// to make cold. The categories live in a dropdown inside Messages.
-		JPanel editorButtons = new JPanel(new GridLayout(0, 1, 6, 4));
-		editorButtons.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		editorButtons.setAlignmentX(LEFT_ALIGNMENT);
-		editorButtons.setMaximumSize(new Dimension(Integer.MAX_VALUE, 90));
+		JPanel buttons = buttonColumn(4);
+		buttons.add(button("Messages...",
+			"Everything the follower says - items, places, bosses,"
+				+ " combat, statuses, quest NPCs and errands - viewable and editable",
+			() -> onEditMessages.run()));
+		buttons.add(button("Conversations...",
+			"View and edit the conversations the follower STARTS -"
+				+ " the ones that replace Talk-to while it is waiting on an answer",
+			() -> onEditDialogs.run()));
+		buttons.add(button("Attach sounds...",
+			"Where sound files go, and how to attach one to a line",
+			() -> onAttachSounds.run()));
+		buttons.add(button("Share lines...",
+			"Export what you have written, or take on somebody else's",
+			() -> onShareLines.run()));
+		body.add(buttons);
+	}
 
-		JButton messages = new JButton("Messages...");
-		messages.setToolTipText("Everything the follower says - items, places, bosses,"
-			+ " combat, statuses, quest NPCs and errands - viewable and editable");
-		messages.setFocusPainted(false);
-		messages.addActionListener(e -> onEditMessages.run());
-		editorButtons.add(messages);
+	private void buildMemory(JPanel body)
+	{
+		body.add(caption("What it remembers about you. The Reminiscing toggle in"
+			+ " settings silences the lines that use this; Forget everything in"
+			+ " the window erases it."));
+		JPanel buttons = buttonColumn(1);
+		buttons.add(button("Memory...",
+			"Everything the follower knows about you, and the button that erases it",
+			() -> onShowMemory.run()));
+		body.add(buttons);
+	}
 
-		JButton conversations = new JButton("Conversations...");
-		conversations.setToolTipText("View and edit the conversations the follower STARTS -"
-			+ " the ones that replace Talk-to while it is waiting on an answer");
-		conversations.setFocusPainted(false);
-		conversations.addActionListener(e -> onEditDialogs.run());
-		editorButtons.add(conversations);
-
-		JButton memory = new JButton("What it knows...");
-		memory.setToolTipText("Everything the follower knows about you, and the"
-			+ " button that erases it");
-		memory.setFocusPainted(false);
-		memory.addActionListener(e -> onShowMemory.run());
-		editorButtons.add(memory);
-
-		header.add(editorButtons);
-		header.add(javax.swing.Box.createVerticalStrut(12));
-
-		JLabel title = new JLabel("Follower outfit");
-		title.setFont(FontManager.getRunescapeBoldFont());
-		title.setForeground(Color.WHITE);
-		title.setAlignmentX(LEFT_ALIGNMENT);
-		header.add(title);
-		header.add(javax.swing.Box.createVerticalStrut(6));
-
-		JPanel buttons = new JPanel(new GridLayout(1, 2, 6, 0));
-		buttons.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		buttons.setAlignmentX(LEFT_ALIGNMENT);
-		buttons.setMaximumSize(new Dimension(Integer.MAX_VALUE, 26));
-
-		JButton copy = new JButton("Copy my gear");
-		copy.setToolTipText("Fill every slot from what you are currently wearing");
-		copy.setFocusPainted(false);
-		copy.addActionListener(e -> onCopyGear.run());
-		buttons.add(copy);
-
-		JButton clear = new JButton("Clear all");
-		clear.setToolTipText("Strip the follower back to the default body");
-		clear.setFocusPainted(false);
-		clear.addActionListener(e -> onClearAll.run());
-		buttons.add(clear);
-
-		header.add(buttons);
-		header.add(javax.swing.Box.createVerticalStrut(6));
+	private void buildOutfit(JPanel body)
+	{
+		JPanel buttons = buttonPair();
+		buttons.add(button("Copy my gear",
+			"Fill every slot from what you are currently wearing", () -> onCopyGear.run()));
+		buttons.add(button("Clear all",
+			"Strip the follower back to the default body", () -> onClearAll.run()));
+		body.add(buttons);
+		body.add(javax.swing.Box.createVerticalStrut(6));
 
 		JLabel profilesLabel = new JLabel("OUTFIT PROFILES");
 		profilesLabel.setFont(FontManager.getRunescapeSmallFont());
 		profilesLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
 		profilesLabel.setAlignmentX(LEFT_ALIGNMENT);
-		header.add(profilesLabel);
+		body.add(profilesLabel);
 
 		// Pick a profile and you are wearing it; every change from then on is
-		// saved straight back to it. New makes one, Delete removes it.
+		// saved straight back to it. Save as new makes one, Delete removes it.
 		profileCombo.setAlignmentX(LEFT_ALIGNMENT);
 		profileCombo.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
+		// The item stays the bare name; only its rendering says which thrall
+		// wears it, so profileName() and the plugin see the name as stored.
+		profileCombo.setRenderer(new javax.swing.DefaultListCellRenderer()
+		{
+			@Override
+			public java.awt.Component getListCellRendererComponent(javax.swing.JList<?> list,
+				Object value, int index, boolean isSelected, boolean cellHasFocus)
+			{
+				Object shown = value == null ? null : value + thrallSuffix(value.toString());
+				return super.getListCellRendererComponent(list, shown, index, isSelected, cellHasFocus);
+			}
+		});
 		profileCombo.addActionListener(e ->
 		{
 			// Fires for programmatic repopulation too; the guard keeps a
@@ -394,31 +884,17 @@ public class FollowerPanel extends PluginPanel
 			{
 				onProfileLoad.accept(profileName());
 			}
+			refreshDeleteButton();
 		});
-		header.add(profileCombo);
+		body.add(profileCombo);
 
 		// The autosave behaviour used to live in a hover tooltip, which is
 		// exactly where the one surprising fact about profiles should not be.
-		// Width-bounded like the identity line, so it wraps instead of
-		// widening the panel.
-		JLabel autosave = new JLabel("<html><body style='width:180px'>Changes"
-			+ " save to the selected profile automatically</body></html>");
-		autosave.setFont(FontManager.getRunescapeSmallFont());
-		autosave.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
-		autosave.setAlignmentX(LEFT_ALIGNMENT);
-		autosave.setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
-		header.add(autosave);
-		header.add(javax.swing.Box.createVerticalStrut(4));
+		body.add(caption("Changes save to the selected profile automatically"));
 
-		JPanel profileButtons = new JPanel(new GridLayout(1, 2, 6, 0));
-		profileButtons.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		profileButtons.setAlignmentX(LEFT_ALIGNMENT);
-		profileButtons.setMaximumSize(new Dimension(Integer.MAX_VALUE, 26));
-
-		JButton profileNew = new JButton("New");
-		profileNew.setToolTipText("Save the follower's current outfit as a new profile");
-		profileNew.setFocusPainted(false);
-		profileNew.addActionListener(e ->
+		JPanel profileButtons = buttonPair();
+		profileButtons.add(button("Save as new...",
+			"Save the follower's current outfit as a new profile", () ->
 		{
 			String name = javax.swing.JOptionPane.showInputDialog(this,
 				"Name for the new outfit profile:", "New profile",
@@ -427,11 +903,10 @@ public class FollowerPanel extends PluginPanel
 			{
 				onProfileSave.accept(name.trim());
 			}
-		});
-		profileButtons.add(profileNew);
+		}));
 
-		JButton profileDelete = new JButton("Delete");
-		profileDelete.setToolTipText("Remove the selected profile");
+		profileDelete.setToolTipText("Remove the selected profile. A profile a thrall"
+			+ " wears cannot be removed.");
 		profileDelete.setFocusPainted(false);
 		profileDelete.addActionListener(e ->
 		{
@@ -451,25 +926,168 @@ public class FollowerPanel extends PluginPanel
 			}
 		});
 		profileButtons.add(profileDelete);
-
-		header.add(profileButtons);
+		body.add(profileButtons);
+		body.add(buildThrallRow());
 
 		status.setFont(FontManager.getRunescapeSmallFont());
 		status.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
 		status.setAlignmentX(LEFT_ALIGNMENT);
 		status.setBorder(BorderFactory.createEmptyBorder(4, 0, 0, 0));
-		header.add(status);
+		body.add(status);
 
-		return header;
+		body.add(sectionHeader("EQUIPMENT", null));
+		body.add(caption("Click a slot to change it; right-click to clear it."));
+		body.add(buildGear());
+		body.add(sectionHeader("BODY", "Styles cycle live on the follower; colours are the game's own"));
+		// BoxLayout, NOT GridLayout: a grid splits its height evenly between
+		// rows and ignores their maximum size, so every row grew as the
+		// window did. A vertical box honours the fixed row height.
+		bodyList.setLayout(new BoxLayout(bodyList, BoxLayout.Y_AXIS));
+		bodyList.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		bodyList.setAlignmentX(LEFT_ALIGNMENT);
+		body.add(bodyList);
 	}
 
-	private JPanel buildContent()
+	/**
+	 * Which profile each thrall wears, folded under the profiles row: three
+	 * dropdowns over the same names, writing the three thrall settings.
+	 */
+	private JPanel buildThrallRow()
+	{
+		JPanel wrap = new JPanel();
+		wrap.setLayout(new BoxLayout(wrap, BoxLayout.Y_AXIS));
+		wrap.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		wrap.setAlignmentX(LEFT_ALIGNMENT);
+
+		JPanel rows = new JPanel();
+		rows.setLayout(new BoxLayout(rows, BoxLayout.Y_AXIS));
+		rows.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		rows.setAlignmentX(LEFT_ALIGNMENT);
+		rows.setVisible(false);
+
+		JLabel toggle = new JLabel("+ Used for thralls");
+		toggle.setFont(FontManager.getRunescapeSmallFont());
+		toggle.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+		toggle.setToolTipText("Which profile stands in for each thrall. Same"
+			+ " three settings as in Thrall mode.");
+		toggle.setAlignmentX(LEFT_ALIGNMENT);
+		toggle.setBorder(BorderFactory.createEmptyBorder(4, 0, 2, 0));
+		clickable(toggle, () ->
+		{
+			rows.setVisible(!rows.isVisible());
+			toggle.setText((rows.isVisible() ? "- " : "+ ") + "Used for thralls");
+			column.revalidate();
+			column.repaint();
+		});
+		wrap.add(toggle);
+
+		String[][] styles = {{"melee", "Melee"}, {"ranged", "Ranged"}, {"magic", "Magic"}};
+		for (String[] style : styles)
+		{
+			javax.swing.JComboBox<String> box = new javax.swing.JComboBox<>();
+			box.addActionListener(e ->
+			{
+				Object picked = box.getSelectedItem();
+				if (!suppressSyncEvents && picked != null)
+				{
+					onThrallProfile.accept(style[0], picked.toString());
+				}
+			});
+			thrallBoxes.put(style[0], box);
+			rows.add(labelledRow(style[1], box));
+			rows.add(javax.swing.Box.createVerticalStrut(2));
+		}
+		wrap.add(rows);
+		return wrap;
+	}
+
+	private void buildBehaviour(JPanel body)
+	{
+		JPanel buttons = buttonPair();
+		stayButton.setToolTipText("Same as right-click Stay and Follow on the follower,"
+			+ " and Follow me in settings");
+		stayButton.setFocusPainted(false);
+		stayButton.addActionListener(e -> onFollowEnabled.accept(staying));
+		buttons.add(stayButton);
+		buttons.add(button("Come here", "Places the follower at your feet",
+			() -> onComeHere.run()));
+		body.add(buttons);
+
+		behaviourCaption.setFont(FontManager.getRunescapeSmallFont());
+		behaviourCaption.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
+		behaviourCaption.setAlignmentX(LEFT_ALIGNMENT);
+		behaviourCaption.setBorder(BorderFactory.createEmptyBorder(4, 0, 4, 0));
+		body.add(behaviourCaption);
+
+		styleTick(errandsBox, "Now and then it wanders off on a small errand and"
+			+ " comes back. Same switch as Go on errands in settings.");
+		errandsBox.addActionListener(e ->
+		{
+			if (!suppressSyncEvents)
+			{
+				onErrandsEnabled.accept(errandsBox.isSelected());
+			}
+		});
+		body.add(errandsBox);
+
+		JPanel row = new JPanel(new BorderLayout(6, 0));
+		row.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		row.setAlignmentX(LEFT_ALIGNMENT);
+		row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
+		row.add(errandBox, BorderLayout.CENTER);
+		row.add(button("Go now", "Runs the chosen errand at the next quiet moment", () ->
+		{
+			int index = errandBox.getSelectedIndex();
+			if (index >= 0 && index < errandKeys.size())
+			{
+				onErrand.accept(errandKeys.get(index));
+			}
+		}), BorderLayout.EAST);
+		body.add(row);
+	}
+
+	private void buildCommands(JPanel body)
+	{
+		JPanel buttons = buttonColumn(3);
+		buttons.add(button("Bring it here", "Places the follower at your feet",
+			() -> onComeHere.run()));
+		buttons.add(button("Fix if it vanished",
+			"Re-attaches the follower to the scene, then rebuilds it from the outfit",
+			() -> onFix.run()));
+		buttons.add(button("Reload phrase and sound files",
+			"Re-reads phrases.json and the attached sounds from disk",
+			() -> onReload.run()));
+		body.add(buttons);
+		body.add(javax.swing.Box.createVerticalStrut(6));
+
+		// Wrapped, so the longest command folds rather than widening the
+		// column; the maximum height is left open so every line shows.
+		commandList.setEditable(false);
+		commandList.setLineWrap(true);
+		commandList.setWrapStyleWord(true);
+		commandList.setFont(FontManager.getRunescapeSmallFont());
+		commandList.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+		commandList.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+		commandList.setBorder(BorderFactory.createEmptyBorder(4, 6, 4, 6));
+		commandList.setAlignmentX(LEFT_ALIGNMENT);
+		commandList.setToolTipText("Type any of these in the chat as ::follower <command>");
+		body.add(commandList);
+
+		regionCaption.setFont(FontManager.getRunescapeSmallFont());
+		regionCaption.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
+		regionCaption.setAlignmentX(LEFT_ALIGNMENT);
+		regionCaption.setBorder(BorderFactory.createEmptyBorder(4, 0, 0, 0));
+		body.add(regionCaption);
+		setRegionId(-1);
+	}
+
+	/** The equipment grid and the item picker under it. */
+	private JPanel buildGear()
 	{
 		JPanel content = new JPanel();
 		content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
 		content.setBackground(ColorScheme.DARK_GRAY_COLOR);
-
-		content.add(sectionHeader("EQUIPMENT", "Click a slot to change it; right-click to clear it"));
+		content.setAlignmentX(LEFT_ALIGNMENT);
 
 		gearGrid.setLayout(new GridLayout(GEAR_GRID.length, 3, 4, 4));
 		gearGrid.setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -554,15 +1172,6 @@ public class FollowerPanel extends PluginPanel
 
 		content.add(picker);
 
-		content.add(sectionHeader("BODY", "Styles cycle live on the follower; colours are the game's own"));
-		// BoxLayout, NOT GridLayout: a grid splits its height evenly between
-		// rows and ignores their maximum size, so every row grew as the
-		// window did. A vertical box honours the fixed row height.
-		bodyList.setLayout(new BoxLayout(bodyList, BoxLayout.Y_AXIS));
-		bodyList.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		bodyList.setAlignmentX(LEFT_ALIGNMENT);
-		content.add(bodyList);
-
 		return content;
 	}
 
@@ -605,18 +1214,24 @@ public class FollowerPanel extends PluginPanel
 		}
 	}
 
+	/** A sub-header inside a section; the same look as a section header, but nothing folds. */
 	private JPanel sectionHeader(String text, String tooltip)
+	{
+		JLabel label = new JLabel(text);
+		label.setFont(FontManager.getRunescapeSmallFont());
+		label.setForeground(ColorScheme.BRAND_ORANGE);
+		label.setToolTipText(tooltip);
+		return headerRow(label);
+	}
+
+	/** The label on the left with a thin rule filling the rest of the line. */
+	private JPanel headerRow(JLabel label)
 	{
 		JPanel wrap = new JPanel(new BorderLayout());
 		wrap.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		wrap.setAlignmentX(LEFT_ALIGNMENT);
 		wrap.setBorder(BorderFactory.createEmptyBorder(10, 0, 4, 0));
 		wrap.setMaximumSize(new Dimension(Integer.MAX_VALUE, 26));
-
-		JLabel label = new JLabel(text);
-		label.setFont(FontManager.getRunescapeSmallFont());
-		label.setForeground(ColorScheme.BRAND_ORANGE);
-		label.setToolTipText(tooltip);
 		wrap.add(label, BorderLayout.WEST);
 
 		JPanel rule = new JPanel();

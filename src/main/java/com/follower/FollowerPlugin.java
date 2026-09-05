@@ -730,15 +730,62 @@ public class FollowerPlugin extends Plugin
 		panel = new com.follower.ui.FollowerPanel(itemManager, modelRepository,
 			this::equipFromPanel, this::clearSlotFromPanel,
 			() -> clientThread.invoke(this::copyGearToCustomOutfit),
-			this::clearOutfit, this::setGender, this::cycleKit, this::setBodyColor);
+			this::clearOutfit, this::setGender, this::cycleKit, this::setBodyColor,
+			config.panelFolds());
+		panel.setOnFoldsChanged(open -> configManager.setConfiguration(
+			FollowerConfig.GROUP, "panelFolds", open));
 		panel.setOnEditMessages(this::openMessagesDialog);
 		panel.setOnEditDialogs(this::openDialogsDialog);
 		panel.setOnShowMemory(this::openMemoryDialog);
+		panel.setOnAttachSounds(this::openSoundsDialog);
+		panel.setOnShareLines(this::shareLinesFromPanel);
 		// The panel's Mute and the settings' Mute are the same config key,
-		// synced both ways, so they can never disagree.
+		// synced both ways, so they can never disagree. Chattiness, the
+		// chatbox mirror, errands and the thrall profiles work the same way.
 		panel.setOnMute(muted -> configManager.setConfiguration(
 			FollowerConfig.GROUP, "muted", muted));
 		panel.setMuted(config.muted());
+		panel.setOnChattiness(chattiness -> configManager.setConfiguration(
+			FollowerConfig.GROUP, "chattiness", chattiness));
+		panel.setChattiness(config.chattiness());
+		panel.setOnMirrorToChat(on -> configManager.setConfiguration(
+			FollowerConfig.GROUP, "mirrorToChat", on));
+		panel.setMirrorToChat(config.mirrorToChat());
+		panel.setOnErrandsEnabled(on -> configManager.setConfiguration(
+			FollowerConfig.GROUP, "errandsEnabled", on));
+		panel.setErrandsEnabled(config.errandsEnabled());
+		panel.setOnThrallProfile((style, name) -> configManager.setConfiguration(
+			FollowerConfig.GROUP, "thrall" + Character.toUpperCase(style.charAt(0))
+				+ style.substring(1) + "Profile", name));
+		panel.setThrallProfiles(config.thrallMeleeProfile(),
+			config.thrallRangedProfile(), config.thrallMagicProfile());
+		panel.setProfileProtected(profileStore::isProtected);
+		panel.setOnFollowEnabled(this::followFromPanel);
+		panel.setStaying(isStaying());
+		setOnStayStateChanged(staying ->
+		{
+			if (panel != null)
+			{
+				panel.setStaying(staying);
+			}
+		});
+		panel.setOnComeHere(this::placeHere);
+		panel.setFollowerName(config.followerName());
+		// The too-close fire variant is the scheduler's own roll, not a
+		// choice to offer.
+		java.util.Map<String, String> errandNames =
+			com.follower.follower.ErrandController.displayNames();
+		errandNames.remove("firedeath");
+		panel.setErrands(errandNames);
+		panel.setOnErrand(key -> clientThread.invoke(() -> forceErrand(key)));
+		panel.setOnFix(() ->
+		{
+			reattach();
+			rebuildFromOutfit();
+		});
+		panel.setOnReload(() -> clientThread.invoke(this::reloadFiles));
+		panel.setCommands(commandLines());
+		panel.setRegionId(lastRegionId);
 		panel.setOnProfileLoad(this::loadOutfitProfile);
 		panel.setOnProfileSave(this::saveOutfitProfile);
 		panel.setOnProfileDelete(this::deleteOutfitProfile);
@@ -761,7 +808,7 @@ public class FollowerPlugin extends Plugin
 		}
 
 		navButton = net.runelite.client.ui.NavigationButton.builder()
-			.tooltip("Follower outfit")
+			.tooltip("Follower Buddy")
 			.priority(7)
 			.icon(icon)
 			.panel(panel)
@@ -1998,7 +2045,7 @@ public class FollowerPlugin extends Plugin
 					// The tick loop keeps lastRegionId current; reading a
 					// slightly stale int from the EDT is harmless.
 					() -> lastRegionId);
-				messagesDialog.setOnPack(this::exportPack, this::importPack);
+				messagesDialog.setOnShare(() -> shareLines(messagesDialog));
 				messagesDialog.setOnEditSounds((title, lines) ->
 				{
 					if (voiceDialog == null)
@@ -2072,6 +2119,60 @@ public class FollowerPlugin extends Plugin
 					memoryDialog.show(rows);
 				}
 			});
+		});
+	}
+
+	/** The Sounds window on its own, from the panel: the folder, and how to attach a file. */
+	private void openSoundsDialog()
+	{
+		javax.swing.SwingUtilities.invokeLater(() ->
+		{
+			if (voiceDialog == null)
+			{
+				voiceDialog = new com.follower.ui.VoiceDialog(voices, config::voiceVolume);
+			}
+			voiceDialog.open();
+		});
+	}
+
+	/**
+	 * The Share choice: export what the player has written, or take on a
+	 * pack. The Messages window's Share button and the panel's Share lines
+	 * button both run it; each settles unsaved edits before calling.
+	 */
+	private void shareLines(java.awt.Component parent)
+	{
+		Object[] choices = {"Export mine", "Import a pack", "Cancel"};
+		int picked = javax.swing.JOptionPane.showOptionDialog(parent,
+			"Share the lines you have written, and the sounds attached to them."
+				+ "\n\nExporting writes a .zip holding only what you have added,"
+				+ "\nnot the lines that ship with the plugin."
+				+ "\n\nImporting adds somebody else's to yours. Nothing is replaced.",
+			"Share", javax.swing.JOptionPane.DEFAULT_OPTION,
+			javax.swing.JOptionPane.QUESTION_MESSAGE, null, choices, choices[0]);
+		if (picked == 0)
+		{
+			exportPack(parent);
+		}
+		else if (picked == 1 && importPack(parent)
+			&& messagesDialog != null && messagesDialog.isVisible())
+		{
+			// The file has grown underneath the window; show what it says now.
+			messagesDialog.open();
+		}
+	}
+
+	/** Share lines from the panel, unless the Messages window holds edits the file does not. */
+	private void shareLinesFromPanel()
+	{
+		javax.swing.SwingUtilities.invokeLater(() ->
+		{
+			if (messagesDialog != null && messagesDialog.isDirty())
+			{
+				sendStatus("Save or discard the edits in the Messages window first.");
+				return;
+			}
+			shareLines(panel);
 		});
 	}
 
@@ -2859,6 +2960,29 @@ public class FollowerPlugin extends Plugin
 		{
 			panel.setMuted(config.muted());
 		}
+		if (panel != null)
+		{
+			if ("chattiness".equals(key))
+			{
+				panel.setChattiness(config.chattiness());
+			}
+			if ("mirrorToChat".equals(key))
+			{
+				panel.setMirrorToChat(config.mirrorToChat());
+			}
+			if ("errandsEnabled".equals(key))
+			{
+				panel.setErrandsEnabled(config.errandsEnabled());
+			}
+			if ("followerName".equals(key))
+			{
+				panel.setFollowerName(config.followerName());
+			}
+			if ("developerMode".equals(key))
+			{
+				panel.setCommands(commandLines());
+			}
+		}
 		// The Follow me toggle, finally wired to its own description ("stays
 		// where it was last placed"): off parks the follower through the same
 		// stay the right-click op uses, on releases it. Applied on the toggle
@@ -2867,24 +2991,8 @@ public class FollowerPlugin extends Plugin
 		// walking a scene away still brings it along rather than stranding it.
 		if ("followEnabled".equals(key))
 		{
-			clientThread.invoke(() ->
-			{
-				// The right-click Stay and Follow ops move the follower and
-				// then write this same setting; only a value it is not
-				// already living gets applied, so that write is a no-op.
-				boolean wantFollow = config.followEnabled();
-				if (followToggleNeedsAction(wantFollow, follower.isStaying()))
-				{
-					if (wantFollow)
-					{
-						follower.resumeFollowing();
-					}
-					else
-					{
-						follower.stayHere();
-					}
-				}
-			});
+			boolean wantFollow = config.followEnabled();
+			clientThread.invoke(() -> applyFollowEnabled(wantFollow));
 		}
 		if ("thrallMeleeProfile".equals(key) || "thrallRangedProfile".equals(key)
 			|| "thrallMagicProfile".equals(key))
@@ -2898,6 +3006,11 @@ public class FollowerPlugin extends Plugin
 			if (!name.isEmpty() && profileStore.get(name) == null)
 			{
 				sendStatus(unknownProfileMessage(name));
+			}
+			if (panel != null)
+			{
+				panel.setThrallProfiles(config.thrallMeleeProfile(),
+					config.thrallRangedProfile(), config.thrallMagicProfile());
 			}
 		}
 		if ("customOutfit".equals(key) || "verticalOffset".equals(key))
@@ -2921,6 +3034,43 @@ public class FollowerPlugin extends Plugin
 	static boolean followToggleNeedsAction(boolean followEnabled, boolean staying)
 	{
 		return followEnabled == staying;
+	}
+
+	/**
+	 * Applies a Follow me value on the client thread. The right-click Stay
+	 * and Follow ops move the follower and then write this same setting;
+	 * only a value it is not already living gets applied, so that write is
+	 * a no-op.
+	 */
+	private void applyFollowEnabled(boolean wantFollow)
+	{
+		if (followToggleNeedsAction(wantFollow, follower.isStaying()))
+		{
+			if (wantFollow)
+			{
+				follower.resumeFollowing();
+			}
+			else
+			{
+				follower.stayHere();
+			}
+		}
+	}
+
+	/**
+	 * The side panel's Stay here / Follow me button: writes Follow me, the
+	 * one record of follow versus stay. A Send parks the follower without
+	 * touching the setting, so the write can be a no-op that raises no
+	 * change event; then the move is applied here instead.
+	 */
+	private void followFromPanel(boolean enabled)
+	{
+		if (config.followEnabled() == enabled)
+		{
+			clientThread.invoke(() -> applyFollowEnabled(enabled));
+			return;
+		}
+		setFollowEnabled(enabled);
 	}
 
 	/** The answer to a profile name nothing is saved under; the thrall settings share it. */
@@ -5497,6 +5647,10 @@ public class FollowerPlugin extends Plugin
 		{
 			int previous = lastRegionId;
 			lastRegionId = region;
+			if (panel != null)
+			{
+				panel.setRegionId(region);
+			}
 			if (previous != -1)
 			{
 				speechEngine.dispatch(TriggerEvent.regionChange(region, previous));
@@ -6455,6 +6609,52 @@ public class FollowerPlugin extends Plugin
 	private static java.util.Map.Entry<String, String> command(String name, String effect)
 	{
 		return new java.util.AbstractMap.SimpleImmutableEntry<>(name, effect);
+	}
+
+	/**
+	 * The gated commands with their one-line effects, for the panel's
+	 * Commands section once Developer commands is on. The same table as
+	 * docs/DEVELOPMENT.md; keep the two together.
+	 */
+	private static final java.util.List<java.util.Map.Entry<String, String>> DEVELOPER_COMMAND_HELP =
+		java.util.Collections.unmodifiableList(java.util.Arrays.asList(
+			command("watch", "print the id of every animation you play"),
+			command("stance <weaponId> [idle walk run attack]", "show or hand-set a weapon's animations"),
+			command("hidden", "which slots each equipped item covers"),
+			command("palette", "copy your exact body colours onto it; palette clear drops them"),
+			command("harvest", "extract the client's colour tables; harvest stop aborts"),
+			command("followtrace", "live follow-state overlay and log rows; off to stop"),
+			command("animinfo", "frame count, duration and interpolation of the playing animation"),
+			command("animtrace", "trace its and your pose frames side by side for about 8s"),
+			command("wrapearly <n>", "override the loop trim of the playing animation"),
+			command("wrapauto", "drop manual trims and let measurement decide"),
+			command("boat", "dump the world views, collision and objects around you"),
+			command("cachecheck", "diff the live cache parse against the offline dump"),
+			command("stanceaudit", "check every stance animation id and report weapon coverage"),
+			command("chatwatch", "print every chat line with its type, for chatMessage rules"),
+			command("mood [0-100]", "read or set the mood"),
+			command("fire <rule-id>", "say a rule now, whatever its conditions"),
+			command("want", "what it is hoping for, and whether a question is open")));
+
+	/** The panel's command listing: the everyday commands, and the developer ones once they are on. */
+	private java.util.List<String> commandLines()
+	{
+		java.util.List<String> lines = new java.util.ArrayList<>();
+		lines.add("Type ::follower and one of:");
+		for (java.util.Map.Entry<String, String> entry : EVERYDAY_COMMANDS)
+		{
+			lines.add(entry.getKey() + " - " + entry.getValue());
+		}
+		if (config.developerMode())
+		{
+			lines.add("");
+			lines.add("Developer commands:");
+			for (java.util.Map.Entry<String, String> entry : DEVELOPER_COMMAND_HELP)
+			{
+				lines.add(entry.getKey() + " - " + entry.getValue());
+			}
+		}
+		return lines;
 	}
 
 	/** ::follower reload: re-reads the phrase and sound files from disk. */
@@ -8617,15 +8817,15 @@ public class FollowerPlugin extends Plugin
 	// ---------------------------------------------------------------- sharing
 
 	/** A file chooser pointed at the follower's own folder, for packs. */
-	private java.io.File choosePack(boolean saving)
+	private java.io.File choosePack(boolean saving, java.awt.Component parent)
 	{
 		javax.swing.JFileChooser chooser = new javax.swing.JFileChooser(dataDir.toFile());
 		chooser.setDialogTitle(saving ? "Save your pack" : "Open a pack");
 		chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
 			"Follower Buddy pack (*.zip)", "zip"));
 		int answer = saving
-			? chooser.showSaveDialog(messagesDialog)
-			: chooser.showOpenDialog(messagesDialog);
+			? chooser.showSaveDialog(parent)
+			: chooser.showOpenDialog(parent);
 		if (answer != javax.swing.JFileChooser.APPROVE_OPTION)
 		{
 			return null;
@@ -8639,9 +8839,9 @@ public class FollowerPlugin extends Plugin
 	}
 
 	/** Writes everything the player has added to a pack they can hand over. */
-	private void exportPack()
+	private void exportPack(java.awt.Component parent)
 	{
-		java.io.File target = choosePack(true);
+		java.io.File target = choosePack(true, parent);
 		if (target == null)
 		{
 			return;
@@ -8659,7 +8859,7 @@ public class FollowerPlugin extends Plugin
 				// No defaults to diff against means everything would look like
 				// the player's own work, and the pack would carry all two
 				// thousand shipped lines. Better to write nothing.
-				javax.swing.JOptionPane.showMessageDialog(messagesDialog,
+				javax.swing.JOptionPane.showMessageDialog(parent,
 					"The plugin's own lines could not be read, so there is nothing"
 						+ " to compare yours against. No pack was written.",
 					"Pack not saved", javax.swing.JOptionPane.ERROR_MESSAGE);
@@ -8671,13 +8871,13 @@ public class FollowerPlugin extends Plugin
 
 			if (made.isEmpty())
 			{
-				javax.swing.JOptionPane.showMessageDialog(messagesDialog,
+				javax.swing.JOptionPane.showMessageDialog(parent,
 					"There is nothing of your own to share yet. Add a line or a rule"
-						+ " in this window first, and it will go in the pack.",
+						+ " in the Messages window first, and it will go in the pack.",
 					"Nothing to share", javax.swing.JOptionPane.INFORMATION_MESSAGE);
 				return;
 			}
-			javax.swing.JOptionPane.showMessageDialog(messagesDialog,
+			javax.swing.JOptionPane.showMessageDialog(parent,
 				"Saved " + target.getName() + " with " +
 					+ made.rules + " rule(s), " + made.lines + " line(s), "
 					+ made.sounds + " sound(s)."
@@ -8688,7 +8888,7 @@ public class FollowerPlugin extends Plugin
 		catch (Exception e)
 		{
 			log.warn("Could not write the pack", e);
-			javax.swing.JOptionPane.showMessageDialog(messagesDialog,
+			javax.swing.JOptionPane.showMessageDialog(parent,
 				"That pack could not be written: " + e.getMessage(),
 				"Pack not saved", javax.swing.JOptionPane.ERROR_MESSAGE);
 		}
@@ -8697,13 +8897,15 @@ public class FollowerPlugin extends Plugin
 	/**
 	 * Takes on somebody else's pack, after showing exactly what it holds. The
 	 * file is read and checked in full before a single line of it is kept.
+	 *
+	 * @return whether the pack's lines were added to the file
 	 */
-	private void importPack()
+	private boolean importPack(java.awt.Component parent)
 	{
-		java.io.File source = choosePack(false);
+		java.io.File source = choosePack(false, parent);
 		if (source == null)
 		{
-			return;
+			return false;
 		}
 		try
 		{
@@ -8712,17 +8914,17 @@ public class FollowerPlugin extends Plugin
 
 			if (loaded.summary.isEmpty())
 			{
-				javax.swing.JOptionPane.showMessageDialog(messagesDialog,
+				javax.swing.JOptionPane.showMessageDialog(parent,
 					"There was nothing usable in that pack."
 						+ (loaded.summary.problems.isEmpty() ? ""
 						: System.lineSeparator() + System.lineSeparator() + String.join(System.lineSeparator(), loaded.summary.problems)),
 					"Nothing to import", javax.swing.JOptionPane.WARNING_MESSAGE);
-				return;
+				return false;
 			}
 
 			String from = loaded.summary.author == null || loaded.summary.author.isEmpty()
 				? "" : " from " + loaded.summary.author;
-			int confirm = javax.swing.JOptionPane.showConfirmDialog(messagesDialog,
+			int confirm = javax.swing.JOptionPane.showConfirmDialog(parent,
 				"This pack" + from + " holds:" + System.lineSeparator()
 					+ System.lineSeparator() + "  " + loaded.summary.rules + " rule(s)"
 					+ System.lineSeparator() + "  " + loaded.summary.lines + " line(s)"
@@ -8736,7 +8938,7 @@ public class FollowerPlugin extends Plugin
 				"Import this pack?", javax.swing.JOptionPane.OK_CANCEL_OPTION);
 			if (confirm != javax.swing.JOptionPane.OK_OPTION)
 			{
-				return;
+				return false;
 			}
 
 			com.google.gson.JsonObject mine = gson.fromJson(
@@ -8749,7 +8951,7 @@ public class FollowerPlugin extends Plugin
 			com.follower.share.PackFile.save(ruleLoader.getFile(), mine,
 				gson.newBuilder().setPrettyPrinting().disableHtmlEscaping().create());
 
-			javax.swing.JOptionPane.showMessageDialog(messagesDialog,
+			javax.swing.JOptionPane.showMessageDialog(parent,
 				"Taken on " + took.lines + " new line(s) across " + took.rules
 					+ " rule(s), and " + took.sounds + " sound file(s)."
 					+ System.lineSeparator() + System.lineSeparator() + "The follower has them already."
@@ -8758,13 +8960,15 @@ public class FollowerPlugin extends Plugin
 						+ System.lineSeparator()
 						+ String.join(System.lineSeparator(), took.problems)),
 				"Pack imported", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+			return true;
 		}
 		catch (Exception e)
 		{
 			log.warn("Could not read the pack", e);
-			javax.swing.JOptionPane.showMessageDialog(messagesDialog,
+			javax.swing.JOptionPane.showMessageDialog(parent,
 				"That pack could not be read: " + e.getMessage(),
 				"Pack not imported", javax.swing.JOptionPane.ERROR_MESSAGE);
+			return false;
 		}
 	}
 

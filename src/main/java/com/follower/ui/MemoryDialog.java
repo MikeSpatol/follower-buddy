@@ -39,7 +39,7 @@ public class MemoryDialog extends JDialog
 
 	public MemoryDialog(Runnable onForget)
 	{
-		super((java.awt.Frame) null, "Follower Buddy — What it knows", false);
+		super((java.awt.Frame) null, "Follower Buddy - Memory", false);
 		this.onForget = onForget;
 
 		setDefaultCloseOperation(HIDE_ON_CLOSE);

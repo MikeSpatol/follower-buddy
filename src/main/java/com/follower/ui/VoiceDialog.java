@@ -43,7 +43,24 @@ public class VoiceDialog extends JDialog
 		this.voices = voices;
 		this.volume = volume;
 		setDefaultCloseOperation(HIDE_ON_CLOSE);
-		setPreferredSize(new Dimension(560, 520));
+	}
+
+	/**
+	 * The window with no lines in it: the folder and how to attach a file,
+	 * for the side panel's Attach sounds button.
+	 */
+	public void open()
+	{
+		JPanel root = shell();
+
+		JLabel how = new JLabel("<html><body style='width:480px'>Pick a rule in Messages"
+			+ " and press Sounds to choose a file for each line.</body></html>");
+		how.setFont(FontManager.getRunescapeSmallFont());
+		how.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+		how.setVerticalAlignment(javax.swing.SwingConstants.TOP);
+		root.add(how, BorderLayout.CENTER);
+
+		show(root, "Follower Buddy - Sounds", new Dimension(560, 200));
 	}
 
 	/**
@@ -59,6 +76,53 @@ public class VoiceDialog extends JDialog
 		voices.reload();
 		List<String> files = voices.availableFiles();
 
+		JPanel root = shell();
+
+		JPanel list = new JPanel();
+		list.setLayout(new BoxLayout(list, BoxLayout.Y_AXIS));
+		list.setBackground(ColorScheme.DARK_GRAY_COLOR);
+
+		List<String> shown = new ArrayList<>();
+		for (String line : lines)
+		{
+			String trimmed = line == null ? "" : line.trim();
+			if (!trimmed.isEmpty() && !shown.contains(trimmed))
+			{
+				shown.add(trimmed);
+				list.add(row(trimmed, files));
+			}
+		}
+		if (shown.isEmpty())
+		{
+			JLabel empty = new JLabel("This one has no lines to give a voice to.");
+			empty.setFont(FontManager.getRunescapeSmallFont());
+			empty.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
+			list.add(empty);
+		}
+
+		JScrollPane scroll = new JScrollPane(list,
+			JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		scroll.setBorder(BorderFactory.createEmptyBorder());
+		scroll.getVerticalScrollBar().setUnitIncrement(16);
+		root.add(scroll, BorderLayout.CENTER);
+
+		show(root, "Follower Buddy - Sounds for " + title, new Dimension(560, 520));
+	}
+
+	private void show(JPanel root, String title, Dimension size)
+	{
+		setTitle(title);
+		setContentPane(root);
+		setPreferredSize(size);
+		pack();
+		setLocationRelativeTo(null);
+		setVisible(true);
+		toFront();
+	}
+
+	/** The window's frame: the hint, the folder path and Copy path across the top. */
+	private JPanel shell()
+	{
 		JPanel root = new JPanel(new BorderLayout(0, 8));
 		root.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		root.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -100,41 +164,7 @@ public class VoiceDialog extends JDialog
 		folderRow.add(copy, BorderLayout.EAST);
 		header.add(folderRow, BorderLayout.SOUTH);
 		root.add(header, BorderLayout.NORTH);
-
-		JPanel list = new JPanel();
-		list.setLayout(new BoxLayout(list, BoxLayout.Y_AXIS));
-		list.setBackground(ColorScheme.DARK_GRAY_COLOR);
-
-		List<String> shown = new ArrayList<>();
-		for (String line : lines)
-		{
-			String trimmed = line == null ? "" : line.trim();
-			if (!trimmed.isEmpty() && !shown.contains(trimmed))
-			{
-				shown.add(trimmed);
-				list.add(row(trimmed, files));
-			}
-		}
-		if (shown.isEmpty())
-		{
-			JLabel empty = new JLabel("This one has no lines to give a voice to.");
-			empty.setFont(FontManager.getRunescapeSmallFont());
-			empty.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
-			list.add(empty);
-		}
-
-		JScrollPane scroll = new JScrollPane(list,
-			JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		scroll.setBorder(BorderFactory.createEmptyBorder());
-		scroll.getVerticalScrollBar().setUnitIncrement(16);
-		root.add(scroll, BorderLayout.CENTER);
-
-		setTitle("Follower Buddy - Sounds for " + title);
-		setContentPane(root);
-		pack();
-		setLocationRelativeTo(null);
-		setVisible(true);
-		toFront();
+		return root;
 	}
 
 	private JPanel row(String line, List<String> files)

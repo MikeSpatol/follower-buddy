@@ -94,7 +94,7 @@ public class DialogsDialog extends JDialog
 
 	public DialogsDialog(Gson gson, Path file)
 	{
-		super((java.awt.Frame) null, "Follower Buddy — Conversations", false);
+		super((java.awt.Frame) null, "Follower Buddy - Conversations", false);
 		this.gson = gson.newBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 		this.file = file;
 
@@ -327,7 +327,7 @@ public class DialogsDialog extends JDialog
 		final JTextArea pages = new JTextArea(2, 40);
 		final JTextField next = new JTextField();
 		final JTextArea choices = new GhostArea("Yes please -> node-thanks", 2, 40);
-		final JComboBox<String> answer = new JComboBox<>(new String[]{"—", "yes", "no"});
+		final JComboBox<String> answer = new JComboBox<>(new String[]{"(none)", "yes", "no"});
 		boolean deleted;
 		JPanel panel;
 	}
@@ -371,7 +371,7 @@ public class DialogsDialog extends JDialog
 		row.speaker.setSelectedIndex(node.isPlayerSpeaking() ? 1 : 0);
 		row.pages.setText(String.join("\n", node.pages()));
 		row.next.setText(node.next == null ? "" : node.next);
-		row.answer.setSelectedItem(node.answer == null ? "—" : node.answer);
+		row.answer.setSelectedItem(node.answer == null ? "(none)" : node.answer);
 
 		StringBuilder choiceText = new StringBuilder();
 		if (node.choices != null)
@@ -562,7 +562,7 @@ public class DialogsDialog extends JDialog
 			node.next = next.isEmpty() ? null : next;
 
 			Object answer = row.answer.getSelectedItem();
-			node.answer = answer == null || "—".equals(answer) ? null : answer.toString();
+			node.answer = answer == null || "(none)".equals(answer) ? null : answer.toString();
 
 			rebuilt.add(node);
 		}
@@ -584,14 +584,14 @@ public class DialogsDialog extends JDialog
 			// when it happens.
 			tree.nodes = previous;
 			tree.start = previousStart;
-			setStatus("Not saved — " + String.join("; ", problems), true);
+			setStatus("Not saved - " + String.join("; ", problems), true);
 			return false;
 		}
 
 		try
 		{
 			writeAtomically(gson.toJson(parsed) + "\n");
-			setStatus("Saved — the follower picks it up within a second", false);
+			setStatus("Saved - the follower picks it up within a second", false);
 			dirty = false;
 			refresh();
 			return true;
