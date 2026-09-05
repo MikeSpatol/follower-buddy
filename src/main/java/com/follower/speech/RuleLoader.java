@@ -542,6 +542,51 @@ public class RuleLoader
 		return bossNames;
 	}
 
+	/**
+	 * Region id to place name, read off the Locations rules: the first
+	 * sentence of each area rule's note, for every region it names. The
+	 * Memory window shows these beside the bare ids so "Region 12850" reads
+	 * as Lumbridge. Only rules with a note contribute; an id no rule names is
+	 * simply absent.
+	 */
+	public Map<Integer, String> getRegionNames()
+	{
+		return regionNames;
+	}
+
+	private Map<Integer, String> regionNames = Collections.emptyMap();
+
+	private static void collectRegionNames(SpeechRule rule, Map<Integer, String> into)
+	{
+		if (rule.when == null || rule.when.regions == null
+			|| rule.note == null || rule.note.trim().isEmpty())
+		{
+			return;
+		}
+		String type = rule.when.type == null ? "" : rule.when.type.toLowerCase(java.util.Locale.ROOT);
+		if (!type.equals("inregion") && !type.equals("regionenter"))
+		{
+			return;
+		}
+		String name = rule.note.trim();
+		int stop = name.indexOf(". ");
+		if (stop > 0)
+		{
+			name = name.substring(0, stop);
+		}
+		else if (name.endsWith("."))
+		{
+			name = name.substring(0, name.length() - 1);
+		}
+		for (Integer region : rule.when.regions)
+		{
+			if (region != null)
+			{
+				into.putIfAbsent(region, name);
+			}
+		}
+	}
+
 	private void collectBossNames(Condition condition, java.util.Set<String> into)
 	{
 		if (condition == null)
@@ -569,14 +614,20 @@ public class RuleLoader
 		errors = problems;
 
 		java.util.Set<String> bosses = new java.util.HashSet<>();
+		Map<Integer, String> places = new java.util.HashMap<>();
 		for (SpeechRule rule : newRules)
 		{
 			if ("boss".equalsIgnoreCase(rule.group))
 			{
 				collectBossNames(rule.when, bosses);
 			}
+			else if ("area".equalsIgnoreCase(rule.group))
+			{
+				collectRegionNames(rule, places);
+			}
 		}
 		bossNames = bosses;
+		regionNames = places;
 
 		listened.clear();
 		for (Map.Entry<TriggerEvent.Type, String[]> entry : EVENT_CONDITIONS.entrySet())

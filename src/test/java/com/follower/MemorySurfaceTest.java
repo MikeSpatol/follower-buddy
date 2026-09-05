@@ -51,7 +51,8 @@ public class MemorySurfaceTest
 			java.util.Collections.singleton(10553));
 		context.setWish("feather", 5, java.util.Collections.singletonList(314));
 
-		String surface = flat(MemoryDialog.summarise(context));
+		String surface = flat(MemoryDialog.summarise(context,
+			java.util.Collections.singletonMap(12850, "Lumbridge town and castle")));
 
 		assertTrue(surface.contains("(31 days ago)"));
 		assertTrue(surface.contains("Sessions together: 36"));
@@ -61,9 +62,13 @@ public class MemorySurfaceTest
 			surface.contains("\"that chicken\" (chicken-death, x1)"));
 		assertTrue("the place, its feeling and its memory: " + surface,
 			surface.contains("+45 - the drop"));
-		assertTrue(surface.contains("region 12850"));
-		assertTrue(surface.contains("region 10553"));
-		assertTrue(surface.contains("Hoping for: feather"));
+		// A region the Locations rules name is shown with its name; one they
+		// do not stays a bare id.
+		assertTrue("the named region: " + surface,
+			surface.contains("region 12850 (Lumbridge town and castle)"));
+		assertTrue(surface.contains("region 10553\n"));
+		assertTrue("the open wish says how to hand it over: " + surface,
+			surface.contains("Hoping for: feather (right-click the follower and Talk-to to hand it over)"));
 		assertTrue(surface.contains("Firsts already said: 1"));
 		assertTrue(surface.contains("Lines wear-tracked: 1"));
 	}
@@ -72,7 +77,7 @@ public class MemorySurfaceTest
 	public void aStrangerHasNothingToShow()
 	{
 		TriggerContext context = new TriggerContext(new FakeGame().client);
-		String surface = flat(MemoryDialog.summarise(context));
+		String surface = flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap()));
 
 		assertTrue(surface.contains("First met: not recorded yet"));
 		assertTrue(surface.contains("Sessions together: 0"));

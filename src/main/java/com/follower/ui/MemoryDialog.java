@@ -53,7 +53,18 @@ public class MemoryDialog extends JDialog
 			+ " below erases all of it for good.</html>");
 		hint.setFont(FontManager.getRunescapeSmallFont());
 		hint.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
-		root.add(hint, BorderLayout.NORTH);
+
+		JLabel where = new JLabel("<html>The Reminiscing toggle in settings silences the"
+			+ " lines that use this; Forget everything erases it.</html>");
+		where.setFont(FontManager.getRunescapeSmallFont());
+		where.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
+		where.setBorder(BorderFactory.createEmptyBorder(4, 0, 0, 0));
+
+		JPanel top = new JPanel(new BorderLayout());
+		top.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		top.add(hint, BorderLayout.NORTH);
+		top.add(where, BorderLayout.SOUTH);
+		root.add(top, BorderLayout.NORTH);
 
 		list.setLayout(new BoxLayout(list, BoxLayout.Y_AXIS));
 		list.setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -127,8 +138,11 @@ public class MemoryDialog extends JDialog
 	 * Everything worth showing, as (label, value) rows; a null value marks a
 	 * section header and an empty one a plain remark. Static and pure so the
 	 * shape of what the player is told stays testable without a window.
+	 *
+	 * @param regionNames place names by region id, from the Locations rules;
+	 * an id with no name is shown bare
 	 */
-	public static List<String[]> summarise(TriggerContext c)
+	public static List<String[]> summarise(TriggerContext c, Map<Integer, String> regionNames)
 	{
 		List<String[]> rows = new ArrayList<>();
 
@@ -183,25 +197,25 @@ public class MemoryDialog extends JDialog
 		for (Map.Entry<Integer, Integer> place : places.subList(0, Math.min(3, places.size())))
 		{
 			String memory = c.getPlaceMemories().get(place.getKey());
-			rows.add(row("Region " + place.getKey(),
+			rows.add(row("Region " + named(place.getKey(), regionNames),
 				(place.getValue() > 0 ? "+" : "") + place.getValue()
 					+ (memory == null ? "" : " - " + memory)));
 		}
 		rows.add(row("Likes on a whim", c.getLikedRegions().isEmpty()
-			? "nowhere in particular" : joined(c.getLikedRegions())));
+			? "nowhere in particular" : joined(c.getLikedRegions(), regionNames)));
 		rows.add(row("Avoids on a whim", c.getDislikedRegions().isEmpty()
-			? "nowhere in particular" : joined(c.getDislikedRegions())));
+			? "nowhere in particular" : joined(c.getDislikedRegions(), regionNames)));
 		if (c.getCoreLikedRegion() != 0 || c.getCoreDislikedRegion() != 0)
 		{
 			StringBuilder core = new StringBuilder();
 			if (c.getCoreLikedRegion() != 0)
 			{
-				core.append("likes region ").append(c.getCoreLikedRegion());
+				core.append("likes region ").append(named(c.getCoreLikedRegion(), regionNames));
 			}
 			if (c.getCoreDislikedRegion() != 0)
 			{
 				core.append(core.length() == 0 ? "" : ", ")
-					.append("avoids region ").append(c.getCoreDislikedRegion());
+					.append("avoids region ").append(named(c.getCoreDislikedRegion(), regionNames));
 			}
 			rows.add(row("Won't be argued out of", core.toString()));
 		}
@@ -215,7 +229,8 @@ public class MemoryDialog extends JDialog
 		}
 		if (c.isWishing())
 		{
-			rows.add(row("Hoping for", c.getWishLabel()));
+			rows.add(row("Hoping for", c.getWishLabel()
+				+ " (right-click the follower and Talk-to to hand it over)"));
 			anything = true;
 		}
 		if (!c.getAskedTree().isEmpty())
@@ -256,13 +271,20 @@ public class MemoryDialog extends JDialog
 		return new String[]{text, ""};
 	}
 
-	private static String joined(java.util.Set<Integer> regions)
+	private static String joined(java.util.Set<Integer> regions, Map<Integer, String> names)
 	{
 		StringBuilder out = new StringBuilder();
 		for (Integer region : regions)
 		{
-			out.append(out.length() == 0 ? "region " : ", ").append(region);
+			out.append(out.length() == 0 ? "region " : ", ").append(named(region, names));
 		}
 		return out.toString();
+	}
+
+	/** "12850 (Lumbridge town and castle)", or the bare id when no rule names it. */
+	private static String named(int region, Map<Integer, String> names)
+	{
+		String name = names == null ? null : names.get(region);
+		return name == null ? Integer.toString(region) : region + " (" + name + ")";
 	}
 }

@@ -118,8 +118,15 @@ public class PhrasesDialog extends JDialog
 
 	private Category category;
 
+	/** What every category has in common; each category adds one line of its own. */
+	private static final String HOW_TO = "One message per line. Edit, remove or add lines,"
+		+ " untick a rule to silence it, then Save - changes reach the follower within a second.";
+
 	private final JComboBox<String> categoryPicker = new JComboBox<>();
 	private final JLabel hint = new JLabel();
+
+	/** Hides rows that do not mention the text, within the current category. */
+	private final JTextField find = new JTextField(14);
 	private final JButton addLocation = new JButton("Add location");
 	private final JPanel list = new JPanel();
 	private final JLabel status = new JLabel(" ");
@@ -169,6 +176,9 @@ public class PhrasesDialog extends JDialog
 		final JTextField regions;
 		final JTextArea say;
 		JPanel panel;
+
+		/** The rule's note, so Find can look through it. */
+		String note = "";
 
 		Row(String id, JTextField name, JCheckBox enabled, JTextField regions, JTextArea say)
 		{
@@ -233,9 +243,36 @@ public class PhrasesDialog extends JDialog
 		hint.setFont(FontManager.getRunescapeSmallFont());
 		hint.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
 
+		find.setToolTipText("Show only the rules in this category whose title, note or lines"
+			+ " contain this");
+		find.getDocument().addDocumentListener(new DocumentListener()
+		{
+			@Override
+			public void insertUpdate(DocumentEvent e)
+			{
+				applyFind();
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e)
+			{
+				applyFind();
+			}
+
+			@Override
+			public void changedUpdate(DocumentEvent e)
+			{
+				applyFind();
+			}
+		});
+		JPanel pickerRow = new JPanel(new BorderLayout(6, 0));
+		pickerRow.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		pickerRow.add(categoryPicker, BorderLayout.CENTER);
+		pickerRow.add(labelledField("Find:", find), BorderLayout.EAST);
+
 		JPanel top = new JPanel(new BorderLayout(6, 6));
 		top.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		top.add(categoryPicker, BorderLayout.NORTH);
+		top.add(pickerRow, BorderLayout.NORTH);
 		top.add(hint, BorderLayout.CENTER);
 		root.add(top, BorderLayout.NORTH);
 
@@ -371,12 +408,34 @@ public class PhrasesDialog extends JDialog
 			count++;
 		}
 
-		hint.setText("<html>" + category.hint + "</html>");
+		hint.setText("<html>" + HOW_TO + "<br>" + category.hint + "</html>");
 		addLocation.setVisible(category.structural);
 		setStatus(count + " message sets loaded", false);
+		applyFind();
 		list.revalidate();
 		list.repaint();
 		dirty = false;
+	}
+
+	/**
+	 * Shows only the rows that mention the Find text, in their title, id, note
+	 * or lines. Rows stay in the rows list either way, so Save is unaffected;
+	 * a row added from this window is always shown.
+	 */
+	private void applyFind()
+	{
+		String wanted = find.getText().trim().toLowerCase(Locale.ROOT);
+		for (Row row : rows)
+		{
+			boolean shown = wanted.isEmpty()
+				|| prettyName(row.id).toLowerCase(Locale.ROOT).contains(wanted)
+				|| row.id.toLowerCase(Locale.ROOT).contains(wanted)
+				|| row.note.toLowerCase(Locale.ROOT).contains(wanted)
+				|| row.say.getText().toLowerCase(Locale.ROOT).contains(wanted);
+			row.panel.setVisible(shown);
+		}
+		list.revalidate();
+		list.repaint();
 	}
 
 	private JPanel buildRow(JsonObject rule)
@@ -392,7 +451,16 @@ public class PhrasesDialog extends JDialog
 		JLabel title = new JLabel(prettyName(id));
 		title.setFont(FontManager.getRunescapeBoldFont());
 		title.setForeground(Color.WHITE);
-		header.add(title, BorderLayout.CENTER);
+		// The id beside the title is what the settings' silence-by-name box
+		// wants typed into it.
+		JLabel idLabel = new JLabel(id);
+		idLabel.setFont(FontManager.getRunescapeSmallFont());
+		idLabel.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
+		JPanel titles = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+		titles.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		titles.add(title);
+		titles.add(idLabel);
+		header.add(titles, BorderLayout.CENTER);
 
 		JPanel controls = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
 		controls.setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -493,6 +561,7 @@ public class PhrasesDialog extends JDialog
 
 		Row r = new Row(id, null, enabled, regionsField, area);
 		r.panel = row;
+		r.note = note == null ? "" : note;
 		rows.add(r);
 		return row;
 	}

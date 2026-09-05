@@ -2002,45 +2002,60 @@ public class FollowerPlugin extends Plugin
 				messagesDialog = new com.follower.ui.PhrasesDialog(gson, ruleLoader.getFile(),
 					java.util.Arrays.asList(
 						new com.follower.ui.PhrasesDialog.Category("Items", "gear",
-							"What the follower says when you equip items. One message per"
-								+ " line. Edit, remove or add lines, untick a rule to silence"
-								+ " it, then Save — changes reach the follower within a second.",
+							"Said when you equip something it has an opinion on.",
 							false),
 						new com.follower.ui.PhrasesDialog.Category("Locations", "area",
-							"What the follower says in different places. One message per"
-								+ " line; region ids are editable and Add location makes a"
-								+ " new place. Save reaches the follower within a second.",
+							"Said on entering a place. Region ids are editable and Add"
+								+ " location makes a new one.",
 							true),
 						new com.follower.ui.PhrasesDialog.Category("Bosses", "boss",
-							"One message per line. Each rule fires when that boss appears"
-								+ " nearby. Edit, remove or add lines, untick a rule to"
-								+ " silence it, then Save — changes reach the follower"
-								+ " within a second.",
+							"Said when that boss appears nearby.",
 							false),
 						new com.follower.ui.PhrasesDialog.Category("Combat", "combat",
-							"What the follower says while it stands clear and watches you"
-								+ " fight. One message per line. Edit, remove or add lines,"
-								+ " untick a rule to silence it, then Save — changes reach"
-								+ " the follower within a second.",
+							"Said while it stands clear and watches you fight.",
 							false),
-						new com.follower.ui.PhrasesDialog.Category("Statuses and idle", "health,idle",
-							"One message per line. These react to your HP, prayer, poison,"
-								+ " venom, skull and run energy, and include the idle chatter"
-								+ " for when nothing is happening. Edit, remove or add lines,"
-								+ " untick a rule to silence it, then Save — changes reach"
-								+ " the follower within a second.",
+						new com.follower.ui.PhrasesDialog.Category("Statuses", "health",
+							"Your HP, prayer, poison, venom, skull and run energy.",
+							false),
+						new com.follower.ui.PhrasesDialog.Category("Idle chatter", "idle",
+							"Small talk while nothing much is happening.",
 							false),
 						new com.follower.ui.PhrasesDialog.Category("Quest NPCs", "quest",
-							"One message per line. Each rule fires when that quest figure"
-								+ " comes within a few tiles of you. Edit, remove or add"
-								+ " lines, untick a rule to silence it, then Save — changes"
-								+ " reach the follower within a second.",
+							"Said when that quest figure comes within a few tiles of you.",
 							false),
 						new com.follower.ui.PhrasesDialog.Category("Errands", "errand",
-							"One message per line. Each errand has a line for setting off"
-								+ " and one for coming back. Edit, remove or add lines,"
-								+ " untick a rule to silence it, then Save — changes reach"
-								+ " the follower within a second.",
+							"Each errand has a line for setting off and one for coming"
+								+ " back.",
+							false),
+						new com.follower.ui.PhrasesDialog.Category("Mimicry", "mimic",
+							"Said now and then while it copies your emotes or eats when you"
+								+ " eat.",
+							false),
+						new com.follower.ui.PhrasesDialog.Category("Reminiscing", "memory",
+							"Things that happened before, the outings it was and was not"
+								+ " taken on, and how long it has known you.",
+							false),
+						new com.follower.ui.PhrasesDialog.Category("Souvenirs", "souvenir",
+							"Things it picks up, carries about and loses.",
+							false),
+						new com.follower.ui.PhrasesDialog.Category("Predictions", "bet",
+							"Its call on what the next drop is worth, and how it takes"
+								+ " being wrong.",
+							false),
+						new com.follower.ui.PhrasesDialog.Category("The hour and the session", "clock",
+							"What time it is where you are, how long you have been playing,"
+								+ " and the odd date.",
+							false),
+						new com.follower.ui.PhrasesDialog.Category("Reactions", "reactions",
+							"Deaths, drops, thieving, level-ups, being thanked or looked"
+								+ " at, and what goes on in the chat.",
+							false),
+						new com.follower.ui.PhrasesDialog.Category("Thrall", "thrall",
+							"Said as it takes a thrall's place and when the thrall's time"
+								+ " runs out.",
+							false),
+						new com.follower.ui.PhrasesDialog.Category("Everything else", "misc",
+							"Hellos, goodbyes, milestones and the rest.",
 							false)),
 					// The tick loop keeps lastRegionId current; reading a
 					// slightly stale int from the EDT is harmless.
@@ -2069,7 +2084,8 @@ public class FollowerPlugin extends Plugin
 		clientThread.invoke(() ->
 		{
 			java.util.List<String[]> rows =
-				com.follower.ui.MemoryDialog.summarise(speechEngine.getContext());
+				com.follower.ui.MemoryDialog.summarise(speechEngine.getContext(),
+					ruleLoader.getRegionNames());
 			javax.swing.SwingUtilities.invokeLater(() ->
 			{
 				if (memoryDialog == null)
@@ -2111,7 +2127,8 @@ public class FollowerPlugin extends Plugin
 			sendStatus("Forgotten. All of it. Clean page.");
 
 			java.util.List<String[]> rows =
-				com.follower.ui.MemoryDialog.summarise(speechEngine.getContext());
+				com.follower.ui.MemoryDialog.summarise(speechEngine.getContext(),
+					ruleLoader.getRegionNames());
 			javax.swing.SwingUtilities.invokeLater(() ->
 			{
 				if (memoryDialog != null)

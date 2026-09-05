@@ -59,6 +59,19 @@ public class RuleLoaderRobustnessTest
 	}
 
 	@Test
+	public void theLocationsRulesNameTheirRegions() throws IOException
+	{
+		RuleLoader loader = new RuleLoader(new Gson());
+		loader.initialise(dir());
+
+		// The first sentence of the note, without its full stop, for each
+		// region the rule lists; the Memory window shows it beside the id.
+		assertEquals("Lumbridge town and castle", loader.getRegionNames().get(12850));
+		assertEquals("Varrock: west bank, centre and palace", loader.getRegionNames().get(12853));
+		assertEquals("Ferox Enclave, the Wilderness safe haven", loader.getRegionNames().get(12344));
+	}
+
+	@Test
 	public void anOldFileGainsNewlyBundledRulesWithoutLosingItsEdits() throws IOException
 	{
 		// The upgrade gap: the starter file is written only when missing, so
