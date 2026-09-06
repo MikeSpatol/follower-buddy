@@ -38,8 +38,21 @@ public final class WorkSession
 
 	final int startTick;
 
+	/**
+	 * The tick this particular target was clicked: the session's start, or
+	 * the shift to the next tree. How long a target has been worked decides
+	 * whether its going is a fall or a twig.
+	 */
+	int targetSinceTick;
+
 	/** Where the player stood when the work began; walking off ends it. */
 	WorldPoint workSpot;
+
+	/**
+	 * Between a click on a moved spot and the swing at it: the player is on
+	 * their way, so their walk is not a walk-off and the seat waits.
+	 */
+	boolean settling;
 
 	int xpDrops;
 	int lastDropTick = -1;
@@ -69,6 +82,7 @@ public final class WorkSession
 		this.targetNpc = targetNpc;
 		this.workSpot = workSpot;
 		this.startTick = startTick;
+		this.targetSinceTick = startTick;
 		this.lastEvidenceTick = startTick;
 	}
 

@@ -565,9 +565,11 @@ public class FollowerPlugin extends Plugin
 			speechEngine::dispatch, spotAnimRepository,
 			// Minutes-taking counts as busy: an errand must not set off with
 			// the scroll already out over somebody's meeting. Nor during a
-			// work session, where the seat has the feet.
+			// work session, where the seat has the feet, nor while the seat
+			// is kept through a bank trip after one.
 			() -> dialog.isOpen() || follower.isNpcSlaved() || minutesState != 0
-				|| (skilling != null && skilling.isWorking()), hands);
+				|| (skilling != null && (skilling.isWorking() || skilling.holdsTheFeet())),
+			hands);
 		flourish = new com.follower.follower.PropFlourish(follower, hands);
 		// A SUPPLIER, not the context itself: the engine replaces its context
 		// on every reset, and a controller holding the original object read a
@@ -5947,6 +5949,23 @@ public class FollowerPlugin extends Plugin
 	}
 
 	/**
+	 * A ground item appeared. Only a session cares, and only about a nest at
+	 * the player's feet; the name is looked up on the client thread, where
+	 * the event arrives.
+	 */
+	@Subscribe
+	public void onItemSpawned(net.runelite.api.events.ItemSpawned event)
+	{
+		if (skilling == null || !skilling.isWorking() || event.getItem() == null
+			|| event.getTile() == null)
+		{
+			return;
+		}
+		skilling.itemSpawned(itemManager.getItemComposition(event.getItem().getId()).getName(),
+			event.getTile().getWorldLocation());
+	}
+
+	/**
 	 * Scenery coming and going, handed to the skilling company by footprint.
 	 * A chunk load raises one of these per object in the scene, so nothing is
 	 * done unless a session is on - and the company itself keeps only what
@@ -6297,6 +6316,13 @@ public class FollowerPlugin extends Plugin
 				follower.playAnimation(thrallAttackAnimation());
 			});
 			return;
+		}
+
+		if (skilling != null && event.getActor() instanceof Player)
+		{
+			// Any player's: the proof that an animation is safe on a player
+			// skeleton is a player playing it.
+			skilling.notePlayerAnimation(event.getActor().getAnimation());
 		}
 
 		if (event.getActor() != client.getLocalPlayer())

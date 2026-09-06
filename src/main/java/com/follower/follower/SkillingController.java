@@ -82,6 +82,22 @@ public class SkillingController
 	/** Free slots at which the bag counts as half full. */
 	static final int HALF_BAG_FREE = 14;
 
+	/** A bank this close to the work makes a walk-off a bank trip, maybe. */
+	static final int BANK_TRIP_TILES = 40;
+
+	/** The seat is kept this long for the bank to open; the walk there. */
+	static final int BANK_WALK_TICKS = 30;
+
+	/** Three minutes: the most a bank trip holds the seat once the bank opened. */
+	static final int BANK_TRIP_CAP_TICKS = 300;
+
+	/** How far the next same-name target is looked for after a depletion. */
+	private static final int NEXT_TARGET_TILES = 10;
+
+	/** Which scenery counts as the bank, for the trip and the bag's step. */
+	static final Predicate<String> BANK_NAMES =
+		name -> "Bank booth".equals(name) || "Bank chest".equals(name);
+
 	private final Client client;
 	private final FollowerEntity follower;
 	private final FollowerConfig config;
@@ -127,6 +143,21 @@ public class SkillingController
 
 	private int lastFreeSlots = -1;
 	private boolean halfArmed = true;
+
+	/**
+	 * The seat kept through a bank trip after the session ended: from the
+	 * walk-off, and confirmed when the bank opens. Until then the tick it
+	 * lapses is the walk's; after, the cap's.
+	 */
+	private boolean bankTrip;
+	private boolean bankTripConfirmed;
+	private int bankTripUntil;
+
+	/** Whether the player has been away from the seat, so that coming back counts. */
+	private boolean bankTripAway;
+
+	/** Whether a player has been seen playing the nest look, so it is safe to. */
+	private boolean nestLookProven;
 
 	public SkillingController(Client client, FollowerEntity follower, FollowerConfig config,
 		ErrandController.Hands hands, Consumer<TriggerEvent> dispatch,
@@ -297,7 +328,9 @@ public class SkillingController
 
 		if (session != null && name.equals(session.targetName)
 			&& min.getPlane() == session.targetTile.getPlane()
-			&& min.distanceTo(session.targetTile) <= WALK_OFF_TILES)
+			&& (min.distanceTo(session.targetTile) <= WALK_OFF_TILES
+				|| (session.depleted && "fishing".equals(session.activity)
+					&& min.distanceTo(session.targetTile) <= NEW_SPOT_TILES)))
 		{
 			session.targetId = targetId;
 			session.targetTile = min;
@@ -305,13 +338,16 @@ public class SkillingController
 			session.targetNpc = npc;
 			session.depleted = false;
 			session.newSpot = null;
-			session.workSpot = here;
+			session.targetSinceTick = now;
 			session.lastEvidenceTick = now;
-			// The old seat may now be on the line to the new target, or on
-			// it. Chosen again from scratch once the player is at the work.
+			// The player may have a walk ahead of them - a moved spot is
+			// yards off - so where they work from is read at the next swing,
+			// and the old seat, which may now be on the line to the new
+			// target or on it, is chosen again from scratch once they are at it.
+			session.settling = true;
 			reseat = true;
 			seatDueTick = now + SEAT_AFTER_TICKS;
-			company.aimAt(faceTile());
+			company.aimAt(faceTile(), now);
 			log.debug("Work moved to {} at {}", name, min);
 			return;
 		}
@@ -341,6 +377,38 @@ public class SkillingController
 		{
 			session.lastAnimation = animationId;
 			session.lastEvidenceTick = client.getTickCount();
+		}
+	}
+
+	/**
+	 * Any player's animation, the local one included. The nest look is
+	 * played on the follower only once a player skeleton has been seen
+	 * playing it; until then the nest gets a look and no more.
+	 */
+	public void notePlayerAnimation(int animationId)
+	{
+		if (animationId == KeepingCompany.NEST_LOOK)
+		{
+			nestLookProven = true;
+		}
+	}
+
+	/**
+	 * A ground item appeared. A bird's nest landing at the feet of a player
+	 * who is chopping is worth a look down, and the peer once that is known
+	 * to be safe on the follower.
+	 */
+	public void itemSpawned(String name, WorldPoint tile)
+	{
+		if (session == null || !"woodcutting".equals(session.activity) || name == null
+			|| tile == null || !name.toLowerCase(Locale.ROOT).startsWith("bird nest"))
+		{
+			return;
+		}
+		Player local = client.getLocalPlayer();
+		if (local != null && tile.equals(local.getWorldLocation()))
+		{
+			company.nest(tile, nestLookProven);
 		}
 	}
 
@@ -429,9 +497,44 @@ public class SkillingController
 			&& at.getPlane() == session.targetTile.getPlane()
 			&& at.distanceTo(session.targetTile) <= NEW_SPOT_TILES)
 		{
+			boolean first = session.newSpot == null;
 			session.newSpot = at;
+			if (first)
+			{
+				// Before the player clicks it, if the spawn came after the
+				// despawn; the depletion's own look covers the other order.
+				company.lookNext(at);
+			}
 			log.debug("The spot moved to {}", at);
 		}
+	}
+
+	/** The nearest same-name spot other than the target, or null. */
+	private WorldPoint nearestSpot()
+	{
+		WorldView view = client.getTopLevelWorldView();
+		if (view == null)
+		{
+			return null;
+		}
+		WorldPoint best = null;
+		for (NPC npc : view.npcs())
+		{
+			WorldPoint at = npc == null ? null : npc.getWorldLocation();
+			// The one on the target's own tile is the target, or what is
+			// left of it in the list this tick.
+			if (at == null || npc == session.targetNpc || at.equals(session.targetTile)
+				|| !session.targetName.equals(npc.getName())
+				|| at.getPlane() != session.targetTile.getPlane()
+				|| at.distanceTo(session.targetTile) > NEW_SPOT_TILES
+				|| (best != null && at.distanceTo(session.targetTile)
+					>= best.distanceTo(session.targetTile)))
+			{
+				continue;
+			}
+			best = at;
+		}
+		return best;
 	}
 
 	/** A scene load began: what despawns around it is shuffling, not change. */
@@ -447,6 +550,7 @@ public class SkillingController
 		{
 			end(true, false, false);
 		}
+		dropTheBankTrip(true);
 		pending = null;
 		releaseTicks = 0;
 		lastFreeSlots = -1;
@@ -471,6 +575,7 @@ public class SkillingController
 			{
 				end(true, false, true);
 			}
+			dropTheBankTrip(true);
 			pending = null;
 			return;
 		}
@@ -491,10 +596,15 @@ public class SkillingController
 			{
 				end(true, false, true);
 			}
+			dropTheBankTrip(true);
 			return;
 		}
 
 		int now = client.getTickCount();
+		if (bankTrip)
+		{
+			watchTheBankTrip(now, here);
+		}
 
 		// A parked click, with or without a session running: forgotten when
 		// it goes stale, promoted by an animation. During a session that is
@@ -529,13 +639,32 @@ public class SkillingController
 		{
 			session.lastAnimation = local.getAnimation();
 			session.lastEvidenceTick = now;
+			if (session.settling)
+			{
+				// The first swing at the moved target: this is where they
+				// work from now, and if it took a walk to get there the seat
+				// waits its six ticks from here, as it did at the start.
+				session.settling = false;
+				if (!here.equals(session.workSpot))
+				{
+					seatDueTick = now + SEAT_AFTER_TICKS;
+				}
+				session.workSpot = here;
+			}
 		}
 
-		// The natural ends: walked off, gone quiet, gone to the bank.
-		if (here.distanceTo(session.workSpot) > WALK_OFF_TILES
-			|| now - session.lastEvidenceTick > QUIET_END_TICKS
-			|| bankOpen.getAsBoolean())
+		// The natural ends: walked off, gone quiet, gone to the bank. A walk
+		// off toward a bank, or the bank opening, keeps the seat a while.
+		boolean walkedOff = !session.settling
+			&& here.distanceTo(session.workSpot) > WALK_OFF_TILES;
+		boolean banking = bankOpen.getAsBoolean();
+		if (walkedOff || banking || now - session.lastEvidenceTick > QUIET_END_TICKS)
 		{
+			if (seat != null && (walkedOff || banking)
+				&& nearestObject(client, session.workSpot, BANK_TRIP_TILES, BANK_NAMES) != null)
+			{
+				holdForTheBankTrip(now, here, banking);
+			}
 			end(false, now - session.startTick >= BEAT_AFTER_TICKS, true);
 			return;
 		}
@@ -544,7 +673,7 @@ public class SkillingController
 		{
 			// Not before the player has been at it, and not every tick when
 			// the ground keeps refusing.
-			if (now >= seatDueTick)
+			if (now >= seatDueTick && !session.settling)
 			{
 				reseat = false;
 				seatDueTick = now + SEAT_RETRY_TICKS;
@@ -578,7 +707,7 @@ public class SkillingController
 			company.bagFull(lastOption, here);
 		}
 		bagEdge = null;
-		company.tick(now, here, local.getAnimation() != -1);
+		company.tick(now, here, local.getAnimation() != -1, session.activity);
 		WorldPoint moved = company.seatMoved();
 		if (moved != null)
 		{
@@ -598,6 +727,8 @@ public class SkillingController
 		{
 			end(false, now - session.startTick >= BEAT_AFTER_TICKS, true);
 		}
+		// A seat kept for a bank trip is let go: the new work seats itself.
+		dropTheBankTrip(true);
 		session = new WorkSession(pending.option, pending.activity, pending.targetName,
 			pending.targetId, pending.targetTile, pending.targetMax, pending.targetNpc,
 			pending.workSpot, now);
@@ -608,7 +739,7 @@ public class SkillingController
 		refusedTool = 0;
 		seatDueTick = now + SEAT_AFTER_TICKS;
 		company.begin(now);
-		company.aimAt(faceTile());
+		company.aimAt(faceTile(), now);
 		log.debug("Work session: {} on {} at {}", session.option, session.targetName,
 			session.targetTile);
 	}
@@ -648,7 +779,7 @@ public class SkillingController
 				follower.playAnimation(standUp);
 			}
 		}
-		if (seat != null)
+		if (seat != null && !bankTrip)
 		{
 			seat = null;
 			if (beat || standUp > 0)
@@ -682,6 +813,106 @@ public class SkillingController
 		session.depleted = true;
 		dispatch.accept(TriggerEvent.targetDepleted(session.targetName));
 		log.debug("Target depleted: {} at {}", session.targetName, session.targetTile);
+
+		// Where the next one is: the nearest of the same name that is not
+		// this one. A moved spot may not have turned up yet; npcSpawned
+		// hands it over when it does.
+		WorldPoint next;
+		if ("fishing".equals(session.activity))
+		{
+			next = nearestSpot();
+		}
+		else
+		{
+			next = nearestObject(client, session.targetTile, NEXT_TARGET_TILES,
+				session.targetName::equals, session.targetTile, session.targetMax);
+		}
+		Player local = client.getLocalPlayer();
+		WorldPoint here = local == null ? null : local.getWorldLocation();
+		company.depleted(session.activity, client.getTickCount() - session.targetSinceTick,
+			session.targetTile, session.targetMax, next, here, client.getTickCount());
+		// The step back moved the seat; the tick would catch up, but a
+		// release in between must let go of where the follower now is.
+		WorldPoint moved = company.seatMoved();
+		if (moved != null)
+		{
+			seat = moved;
+		}
+	}
+
+	// ------------------------------------------------------------- bank trip
+
+	/**
+	 * The player has left the work with a bank near: the seat is kept, facing
+	 * the way they went, for the walk there and - once the bank opens - for
+	 * the trip, under a cap. No stay lines: the seat is still the company's.
+	 *
+	 * @param banking whether the bank is already open, which confirms it
+	 */
+	private void holdForTheBankTrip(int now, WorldPoint here, boolean banking)
+	{
+		bankTrip = true;
+		bankTripConfirmed = banking;
+		bankTripAway = false;
+		bankTripUntil = now + (banking ? BANK_TRIP_CAP_TICKS : BANK_WALK_TICKS);
+		follower.setStayFaceTile(here);
+		log.debug("A bank trip; the seat at {} is kept", seat);
+	}
+
+	/**
+	 * Every tick the seat is kept without a session: the bank opening confirms
+	 * the trip and starts the cap; the player back within three tiles, the
+	 * cap, the walk lapsing unconfirmed, a fight, or the leash snapping (the
+	 * stay is simply gone) all let it go.
+	 */
+	private void watchTheBankTrip(int now, WorldPoint here)
+	{
+		if (!follower.isStaying() || !follower.isSpawned() || feetTaken.getAsBoolean()
+			|| seat == null)
+		{
+			dropTheBankTrip(false);
+			return;
+		}
+		if (inCombat.getAsBoolean())
+		{
+			dropTheBankTrip(true);
+			return;
+		}
+		if (!bankTripConfirmed && bankOpen.getAsBoolean())
+		{
+			bankTripConfirmed = true;
+			bankTripUntil = now + BANK_TRIP_CAP_TICKS;
+			log.debug("The bank opened; the seat is kept for the trip");
+			return;
+		}
+		boolean near = here.getPlane() == seat.getPlane()
+			&& here.distanceTo(seat) <= WALK_OFF_TILES;
+		if (!near)
+		{
+			// A bank chest by the work: the player may never leave the
+			// seat's side, and then there is no coming back to end it on.
+			bankTripAway = true;
+		}
+		if (now >= bankTripUntil || (near && bankTripAway))
+		{
+			dropTheBankTrip(true);
+		}
+	}
+
+	/** @param release whether to hand the feet back, when they are still ours */
+	private void dropTheBankTrip(boolean release)
+	{
+		if (!bankTrip)
+		{
+			return;
+		}
+		bankTrip = false;
+		bankTripConfirmed = false;
+		seat = null;
+		if (release && follower.isStaying() && !feetTaken.getAsBoolean())
+		{
+			follower.resumeFollowing();
+		}
 	}
 
 	// ------------------------------------------------------------------ seat
@@ -703,7 +934,7 @@ public class SkillingController
 		}
 		List<WorldPoint> reserved = reservedTiles();
 		for (WorldPoint candidate : seatCandidates(player, session.targetTile,
-			session.targetMax, reserved))
+			session.targetMax, reserved, session.activity))
 		{
 			if (follower.stayAt(candidate))
 			{
@@ -741,6 +972,18 @@ public class SkillingController
 	static List<WorldPoint> seatCandidates(WorldPoint player, WorldPoint min, WorldPoint max,
 		Collection<WorldPoint> reserved)
 	{
+		return seatCandidates(player, min, max, reserved, "");
+	}
+
+	/**
+	 * The same, shaped to the work: a miner's company sits diagonal-behind,
+	 * two back, where the swing is in view and the rock is not; an angler's
+	 * on the bank beside the spot, the nearest bank tile that is not the
+	 * player's, so it looks at the water rather than at a back.
+	 */
+	static List<WorldPoint> seatCandidates(WorldPoint player, WorldPoint min, WorldPoint max,
+		Collection<WorldPoint> reserved, String activity)
+	{
 		// The direction to the nearest point of the footprint. A player
 		// standing on it (a fire, a patch) has no direction; north will do.
 		int nx = Math.max(min.getX(), Math.min(max.getX(), player.getX()));
@@ -754,27 +997,61 @@ public class SkillingController
 		int px = -dy;
 		int py = dx;
 
-		int[][] offsets = {
+		Set<WorldPoint> avoid = new HashSet<>(reserved);
+		List<WorldPoint> candidates = new ArrayList<>();
+
+		if ("fishing".equals(activity))
+		{
+			for (int x = min.getX() - 1; x <= max.getX() + 1; x++)
+			{
+				for (int y = min.getY() - 1; y <= max.getY() + 1; y++)
+				{
+					WorldPoint c = new WorldPoint(x, y, player.getPlane());
+					if (!avoid.contains(c) && !covers(min, max, c) && !c.equals(player)
+						&& !onTheLine(player, nx, ny, c))
+					{
+						candidates.add(c);
+					}
+				}
+			}
+			// The bank tile nearest the player is the bank; the water side
+			// of the spot is the ground's to refuse.
+			candidates.sort((a, b) -> Integer.compare(square(a, player), square(b, player)));
+			return candidates;
+		}
+
+		int[][] flank = {
 			{2 * px, 2 * py}, {-2 * px, -2 * py},
 			{2 * px - dx, 2 * py - dy}, {-2 * px - dx, -2 * py - dy},
 			{2 * px + dx, 2 * py + dy}, {-2 * px + dx, -2 * py + dy},
-			{-2 * dx, -2 * dy}, {-2 * dx + px, -2 * dy + py}, {-2 * dx - px, -2 * dy - py},
 		};
-
-		Set<WorldPoint> avoid = new HashSet<>(reserved);
-		List<WorldPoint> candidates = new ArrayList<>();
-		for (int[] offset : offsets)
+		int[][] behind = {
+			{-2 * dx + px, -2 * dy + py}, {-2 * dx - px, -2 * dy - py}, {-2 * dx, -2 * dy},
+		};
+		boolean mining = "mining".equals(activity);
+		int[][][] order = mining ? new int[][][]{behind, flank} : new int[][][]{flank, behind};
+		for (int[][] group : order)
 		{
-			WorldPoint c = new WorldPoint(player.getX() + offset[0], player.getY() + offset[1],
-				player.getPlane());
-			if (candidates.contains(c) || avoid.contains(c) || covers(min, max, c)
-				|| c.equals(player) || onTheLine(player, nx, ny, c))
+			for (int[] offset : group)
 			{
-				continue;
+				WorldPoint c = new WorldPoint(player.getX() + offset[0], player.getY() + offset[1],
+					player.getPlane());
+				if (candidates.contains(c) || avoid.contains(c) || covers(min, max, c)
+					|| c.equals(player) || onTheLine(player, nx, ny, c))
+				{
+					continue;
+				}
+				candidates.add(c);
 			}
-			candidates.add(c);
 		}
 		return candidates;
+	}
+
+	private static int square(WorldPoint a, WorldPoint b)
+	{
+		int dx = a.getX() - b.getX();
+		int dy = a.getY() - b.getY();
+		return dx * dx + dy * dy;
 	}
 
 	/** Whether the tile sits on the straight line from the player to the target. */
@@ -979,6 +1256,16 @@ public class SkillingController
 	static WorldPoint nearestObject(Client client, WorldPoint centre, int radius,
 		Predicate<String> nameMatch)
 	{
+		return nearestObject(client, centre, radius, nameMatch, null, null);
+	}
+
+	/**
+	 * The same, skipping anything standing on a footprint - the depleted
+	 * target itself, which an empty rock shares its name with.
+	 */
+	static WorldPoint nearestObject(Client client, WorldPoint centre, int radius,
+		Predicate<String> nameMatch, WorldPoint skipMin, WorldPoint skipMax)
+	{
 		WorldView view = client.getTopLevelWorldView();
 		Tile[][][] tiles = view == null || view.getScene() == null ? null
 			: view.getScene().getTiles();
@@ -1004,6 +1291,7 @@ public class SkillingController
 				for (GameObject object : tiles[plane][sx][sy].getGameObjects())
 				{
 					if (object == null || object.getWorldLocation() == null
+						|| covers(skipMin, skipMax, object.getWorldLocation())
 						|| !nameMatch.test(ErrandController.objectName(client, object.getId())))
 					{
 						continue;

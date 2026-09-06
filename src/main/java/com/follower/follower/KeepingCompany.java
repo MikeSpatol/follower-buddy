@@ -78,6 +78,51 @@ class KeepingCompany
 	private static final int SHRUG_TICKS = 3;
 	private static final int PLAYER_LOOK_TICKS = 8;
 
+	/** An angler's company looks at a different bit of water every 30-45 seconds. */
+	static final int WATER_LOOK_TICKS = 62;
+	private static final int WATER_LOOK_SPREAD = 12;
+	private static final int WATER_GAZE_TICKS = 4;
+
+	/** A tree worked this long falls with a crash; a rock worked this long was a rock. */
+	static final int TIMBER_AFTER_TICKS = 30;
+	static final int ROCK_AFTER_TICKS = 15;
+
+	/** The unarmed flinch, proven on the follower by the spectator's ducks. */
+	static final int FLINCH = 424;
+
+	/** The "no" head shake, proven by the answered-no rule. */
+	static final int HEAD_SHAKE = 856;
+
+	/**
+	 * The peer: AnimationID.LOOKING_INTO, a player bending to look at
+	 * something at their feet. New to the follower, so it is only played
+	 * once a player has been seen doing it.
+	 */
+	static final int NEST_LOOK = 832;
+
+	/** Three minutes at one rock earns a read of the notes: a pose, new to the follower. */
+	static final int GERALD_AFTER_TICKS = 300;
+	static final int NOTE_POSE = 4549;
+
+	/** Two depletions closer than this share the one look for the next. */
+	static final int NEXT_LOOK_GAP_TICKS = 15;
+	private static final int PLAYER_BEAT_TICKS = 3;
+	private static final int NEXT_LOOK_TICKS = 4;
+	private static final int EMPTY_LOOK_TICKS = 3;
+
+	/** One tile to look at for so many ticks; the reactions are queues of these. */
+	private static final class Look
+	{
+		final WorldPoint tile;
+		final int ticks;
+
+		Look(WorldPoint tile, int ticks)
+		{
+			this.tile = tile;
+			this.ticks = ticks;
+		}
+	}
+
 	private final Client client;
 	private final FollowerEntity follower;
 	private final FollowerConfig config;
@@ -129,6 +174,19 @@ class KeepingCompany
 	private WorldPoint step;
 	private int stepTicks;
 	private WorldPoint seatMoved;
+
+	/** The looks still to be taken, the one being taken, and its ticks left. */
+	private final List<Look> looks = new ArrayList<>();
+	private WorldPoint currentLook;
+	private int currentLookTicks;
+
+	private int targetSince;
+	private int lastDepletionTick;
+	private int waterLookAt;
+	private boolean geraldDone;
+
+	/** Ticks the note pose has left; the head shake follows it. */
+	private int noteTicks;
 
 	KeepingCompany(Client client, FollowerEntity follower, FollowerConfig config,
 		ErrandController.Hands hands, Borrow borrow, Random random)
@@ -182,6 +240,11 @@ class KeepingCompany
 		step = null;
 		stepTicks = 0;
 		seatMoved = null;
+		looks.clear();
+		currentLook = null;
+		currentLookTicks = 0;
+		lastDepletionTick = -1;
+		noteTicks = 0;
 	}
 
 	/** The controller took, or retook, the seat. A walk in progress is dropped. */
@@ -258,10 +321,20 @@ class KeepingCompany
 		return NOD_EVERY - 1 + random.nextInt(3);
 	}
 
-	/** The seat is not needed for the nod's glance, only for its aim. */
-	void aimAt(WorldPoint target)
+	/**
+	 * A target, the session's first or the next one over. The seat is not
+	 * needed for the nod's glance, only for its aim; the per-target clocks
+	 * (the notes, the water) start over, and looks about the old one go.
+	 */
+	void aimAt(WorldPoint target, int now)
 	{
 		this.target = target;
+		targetSince = now;
+		geraldDone = false;
+		waterLookAt = now + jitter(WATER_LOOK_TICKS, WATER_LOOK_SPREAD);
+		looks.clear();
+		currentLook = null;
+		currentLookTicks = 0;
 	}
 
 	// ------------------------------------------------------------------ tick
@@ -272,8 +345,9 @@ class KeepingCompany
 	 *
 	 * @param animating whether the player is mid-animation this tick
 	 */
-	void tick(int now, WorldPoint here, boolean animating)
+	void tick(int now, WorldPoint here, boolean animating, String activity)
 	{
+		lookOn();
 		if (seat == null)
 		{
 			lastHere = here;
@@ -289,6 +363,14 @@ class KeepingCompany
 		if (scrollTicks > 0 && --scrollTicks == 0)
 		{
 			putScrollAway();
+		}
+		if (noteTicks > 0 && --noteTicks == 0)
+		{
+			// The pose first, by hand: the notes may have been read over a
+			// tool, with no scroll for putScrollAway to take the pose with.
+			follower.setPoseOverride(0);
+			putScrollAway();
+			emote(HEAD_SHAKE);
 		}
 		if (lookTicks > 0)
 		{
@@ -332,16 +414,31 @@ class KeepingCompany
 			sit();
 		}
 
+		if ("mining".equals(activity) && !geraldDone && now - targetSince >= GERALD_AFTER_TICKS)
+		{
+			readTheNotes();
+		}
+		else if ("fishing".equals(activity) && now >= waterLookAt)
+		{
+			waterLookAt = now + jitter(WATER_LOOK_TICKS, WATER_LOOK_SPREAD);
+			look(waterTile(), WATER_GAZE_TICKS);
+		}
+
 		face(wantedFace(here));
 	}
 
 	/**
-	 * What the seat looks at right now, in order of claim: the player while
-	 * the scroll is out or the bag is full, the work for a nod, the player
-	 * when sitting or when they have stopped, the work otherwise.
+	 * What the seat looks at right now, in order of claim: a look being
+	 * taken, the player while the scroll is out or the bag is full, the work
+	 * for a nod, the player when sitting or when they have stopped, the work
+	 * otherwise.
 	 */
 	private WorldPoint wantedFace(WorldPoint here)
 	{
+		if (currentLook != null)
+		{
+			return currentLook;
+		}
 		if (scrollOut || playerLookTicks > 0)
 		{
 			return here;
@@ -441,6 +538,9 @@ class KeepingCompany
 		sitAfterWalk = thenSit;
 		stopped = false;
 		lookTicks = 0;
+		looks.clear();
+		currentLook = null;
+		currentLookTicks = 0;
 		// Up first, and the walk waits for it.
 		legWait = standUp() ? STAND_UP_TICKS : 0;
 	}
@@ -552,6 +652,12 @@ class KeepingCompany
 
 	private void putScrollAway()
 	{
+		if (noteTicks > 0)
+		{
+			// The notes may be read without the scroll, over a held tool.
+			noteTicks = 0;
+			follower.setPoseOverride(0);
+		}
 		if (!scrollOut)
 		{
 			return;
@@ -560,6 +666,169 @@ class KeepingCompany
 		scrollTicks = 0;
 		follower.setPoseOverride(0);
 		hands.release();
+	}
+
+	// ------------------------------------------------------------- gathering
+
+	/**
+	 * A look at a tile for so many ticks, queued after any in progress. On
+	 * the seat it is the face; off it, a glance. Nothing to look at is no look.
+	 */
+	private void look(WorldPoint tile, int ticks)
+	{
+		if (tile != null)
+		{
+			looks.add(new Look(tile, ticks));
+		}
+	}
+
+	/** The look in progress runs down and the next begins. */
+	private void lookOn()
+	{
+		if (currentLookTicks > 0 && --currentLookTicks == 0)
+		{
+			currentLook = null;
+		}
+		if (currentLook == null && !looks.isEmpty())
+		{
+			Look next = looks.remove(0);
+			currentLook = next.tile;
+			currentLookTicks = next.ticks;
+			if (seat == null)
+			{
+				follower.glanceAt(next.tile, next.ticks * 600);
+			}
+		}
+	}
+
+	/** A moved fishing spot turned up: a look at it before the player clicks. */
+	void lookNext(WorldPoint at)
+	{
+		look(at, NEXT_LOOK_TICKS);
+	}
+
+	/**
+	 * The target went. A tree worked long enough falls, and the follower
+	 * flinches and steps clear of the stump before looking at the player; a
+	 * rock worked long enough empties, and the follower steps back and looks
+	 * at the empty rock, at the next full one, then at the player. Anything
+	 * quicker is a look at the player and then at where the next one is -
+	 * unless the last depletion was moments ago, when once was enough.
+	 *
+	 * @param worked ticks this target was worked
+	 * @param next the nearest same-name target, or null when there is none
+	 */
+	void depleted(String activity, int worked, WorldPoint min, WorldPoint max, WorldPoint next,
+		WorldPoint here, int now)
+	{
+		boolean recent = lastDepletionTick >= 0 && now - lastDepletionTick < NEXT_LOOK_GAP_TICKS;
+		lastDepletionTick = now;
+		if (walking)
+		{
+			return;
+		}
+		if ("woodcutting".equals(activity) && worked >= TIMBER_AFTER_TICKS)
+		{
+			emote(FLINCH);
+			stepAwayFrom(min, max);
+			look(here, PLAYER_BEAT_TICKS);
+			look(next, NEXT_LOOK_TICKS);
+			return;
+		}
+		if ("mining".equals(activity) && worked >= ROCK_AFTER_TICKS)
+		{
+			stepAwayFrom(min, max);
+			look(target, EMPTY_LOOK_TICKS);
+			look(next, NEXT_LOOK_TICKS);
+			look(here, PLAYER_BEAT_TICKS);
+			return;
+		}
+		if (recent)
+		{
+			return;
+		}
+		look(here, PLAYER_BEAT_TICKS);
+		look(next, NEXT_LOOK_TICKS);
+	}
+
+	/** One tile further from the nearest point of a footprint, ground allowing. */
+	private void stepAwayFrom(WorldPoint min, WorldPoint max)
+	{
+		if (seat == null)
+		{
+			return;
+		}
+		int nx = Math.max(min.getX(), Math.min(max.getX(), seat.getX()));
+		int ny = Math.max(min.getY(), Math.min(max.getY(), seat.getY()));
+		int dx = Integer.signum(seat.getX() - nx);
+		int dy = Integer.signum(seat.getY() - ny);
+		if (dx == 0 && dy == 0)
+		{
+			return;
+		}
+		WorldPoint away = new WorldPoint(seat.getX() + dx, seat.getY() + dy, seat.getPlane());
+		if (follower.stayAt(away))
+		{
+			seat = away;
+			seatMoved = away;
+		}
+	}
+
+	/**
+	 * A bird's nest at the player's feet: a look at it, and the peer when a
+	 * player has been seen doing it - it is new to the follower's skeleton.
+	 */
+	void nest(WorldPoint tile, boolean peerProven)
+	{
+		look(tile, NEXT_LOOK_TICKS);
+		if (peerProven && !walking)
+		{
+			emote(NEST_LOOK);
+		}
+	}
+
+	/**
+	 * A bit of water that is not the spot: out past it from the seat, a tile
+	 * or two, a little to one side.
+	 */
+	private WorldPoint waterTile()
+	{
+		int dx = Integer.signum(target.getX() - seat.getX());
+		int dy = Integer.signum(target.getY() - seat.getY());
+		if (dx == 0 && dy == 0)
+		{
+			dy = 1;
+		}
+		int reach = 1 + random.nextInt(2);
+		int side = random.nextInt(3) - 1;
+		return new WorldPoint(target.getX() + dx * reach - dy * side,
+			target.getY() + dy * reach + dx * side, target.getPlane());
+	}
+
+	/**
+	 * Three minutes at the one rock: a turn to it, the notes read for four
+	 * seconds - with the scroll when the hands are free, over the pickaxe
+	 * otherwise - and one shake of the head. Once per rock.
+	 */
+	private void readTheNotes()
+	{
+		if (sitting || scrollOut || noteTicks > 0)
+		{
+			return;
+		}
+		geraldDone = true;
+		// The turn is now, not next tick: the pose must not open on the player.
+		looks.clear();
+		currentLook = target;
+		currentLookTicks = TALLY_TICKS + 1;
+		if (!borrow.isHolding() && !hands.isHolding())
+		{
+			hands.hold(ErrandController.SCROLL_PROP);
+			scrollOut = hands.isHolding();
+		}
+		follower.setPoseOverride(NOTE_POSE);
+		noteTicks = TALLY_TICKS;
+		log.debug("Reading the notes on this rock");
 	}
 
 	// ------------------------------------------------------------------- bag
@@ -626,6 +895,9 @@ class KeepingCompany
 		facing = null;
 		step = null;
 		stepTicks = 0;
+		looks.clear();
+		currentLook = null;
+		currentLookTicks = 0;
 		return leadIn;
 	}
 

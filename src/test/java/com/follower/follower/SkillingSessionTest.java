@@ -1200,6 +1200,421 @@ public class SkillingSessionTest
 		assertTrue(follower.following);
 	}
 
+	// ------------------------------------------------------------- gathering
+
+	/** A rock two tiles east of the player. */
+	private static final WorldPoint ROCK = new WorldPoint(52, 50, 0);
+	private static final int ROCK_ID = 11161;
+
+	/** HUMAN_MINING_BRONZE_PICKAXE. */
+	private static final int MINE = 625;
+
+	/** A spot in the water, with the player on the bank beside it. */
+	private static final WorldPoint SPOT = new WorldPoint(53, 50, 0);
+	private static final WorldPoint BANK_SIDE = new WorldPoint(52, 50, 0);
+
+	private void workTheRock()
+	{
+		skilling.noteClick("Mine", "Rocks", ROCK_ID, ROCK, null, null);
+		game.animating(MINE);
+		tick(1);
+		assertTrue("the session never started", skilling.isWorking());
+		tick(SkillingController.SEAT_AFTER_TICKS);
+	}
+
+	private NPC workTheSpot()
+	{
+		game.at(BANK_SIDE.getX(), BANK_SIDE.getY(), 0);
+		NPC spot = game.spawnNpc(1530, "Fishing spot", 0);
+		game.moveNpc(spot, SPOT.getX(), SPOT.getY(), 0);
+		skilling.noteClick("Net", "Fishing spot", 1530, SPOT, SPOT, spot);
+		game.animating(621);
+		tick(1);
+		assertTrue("the session never started", skilling.isWorking());
+		tick(SkillingController.SEAT_AFTER_TICKS);
+		return spot;
+	}
+
+	@Test
+	public void theAnglersSeatIsOnTheBankBesideTheSpot()
+	{
+		workTheSpot();
+		WorldPoint seat = follower.stayingAt;
+		assertNotNull(seat);
+		assertEquals("beside the spot", 1, seat.distanceTo(SPOT));
+		assertFalse("not the player's own tile", seat.equals(BANK_SIDE));
+		assertEquals("facing the water", SPOT, follower.facing);
+	}
+
+	@Test
+	public void theWaterGetsALookNowAndThen()
+	{
+		workTheSpot();
+		boolean lookedAway = false;
+		boolean back = false;
+		for (int i = 0; i < 80; i++)
+		{
+			tick(1);
+			WorldPoint face = follower.facing;
+			if (!SPOT.equals(face))
+			{
+				lookedAway = true;
+				assertFalse("at the water, not the player", BANK_SIDE.equals(face));
+				assertTrue("a different bit of the same water: " + face, face.distanceTo(SPOT) <= 3);
+			}
+			else if (lookedAway)
+			{
+				back = true;
+			}
+		}
+		assertTrue("no look at the water inside 45 seconds", lookedAway);
+		assertTrue("and back to the spot after", back);
+		assertEquals("the seat was never let go", 1, follower.stays.size());
+	}
+
+	@Test
+	public void theSpotMovingIsALookAtTheNewOneAndASeatBesideIt()
+	{
+		NPC spot = workTheSpot();
+		skilling.npcDespawned(spot);
+		WorldPoint newSpot = new WorldPoint(58, 53, 0);
+		NPC moved = game.spawnNpc(1530, "Fishing spot", 0);
+		game.moveNpc(moved, newSpot.getX(), newSpot.getY(), 0);
+		skilling.npcSpawned(moved);
+
+		tick(1);
+		assertEquals("a beat on the player first", BANK_SIDE, follower.facing);
+		tick(3);
+		assertEquals("then the new spot, before the click", newSpot, follower.facing);
+
+		// The player clicks it and walks over: five tiles is not a walk-off
+		// when the spot moved, and the seat waits for the first cast.
+		game.animating(-1);
+		skilling.noteClick("Net", "Fishing spot", 1530, newSpot, newSpot, moved);
+		assertTrue(skilling.isWorking());
+		game.at(55, 52, 0);
+		tick(2);
+		game.at(57, 53, 0);
+		tick(2);
+		assertTrue("on the way to the new spot", skilling.isWorking());
+		assertEquals(0, count(TriggerEvent.Type.WORK_END));
+		assertEquals("the seat waits for the cast", 1, follower.stays.size());
+
+		game.animating(621);
+		tick(SkillingController.SEAT_AFTER_TICKS);
+		assertEquals("six ticks at the new spot first", 1, follower.stays.size());
+		tick(1);
+		WorldPoint seat = follower.stayingAt;
+		assertEquals("re-seated beside the new spot", 1, seat.distanceTo(newSpot));
+		assertFalse(seat.equals(new WorldPoint(57, 53, 0)));
+		assertEquals(newSpot, follower.facing);
+	}
+
+	@Test
+	public void theMinersSeatIsDiagonalBehindTwoBack()
+	{
+		workTheRock();
+		WorldPoint seat = follower.stayingAt;
+		assertNotNull(seat);
+		assertEquals("two back from the player", PLAYER.getX() - 2, seat.getX());
+		assertEquals("and one to the side", 1, Math.abs(seat.getY() - PLAYER.getY()));
+		assertEquals("facing the rock", ROCK, follower.facing);
+	}
+
+	@Test
+	public void anEmptiedRockIsAStepBackAndThreeLooks()
+	{
+		WorldPoint next = new WorldPoint(52, 53, 0);
+		game.placeObject(ROCK_ID + 1, "Rocks", next.getX(), next.getY(), 0);
+		workTheRock();
+		tick(KeepingCompany.ROCK_AFTER_TICKS);
+		WorldPoint seat = follower.stayingAt;
+
+		// The empty rock takes the tile.
+		skilling.objectSpawned(ROCK_ID + 2, ROCK, null);
+		assertEquals("one step back", 2, follower.stays.size());
+		WorldPoint back = follower.stayingAt;
+		assertEquals(1, back.distanceTo(seat));
+		assertTrue("away from the rock", back.distanceTo(ROCK) > seat.distanceTo(ROCK));
+		assertEquals("the seat moved with it", back, skilling.getSeat());
+
+		tick(1);
+		assertEquals("the empty rock", ROCK, follower.facing);
+		tick(3);
+		assertEquals("the next full one", next, follower.facing);
+		tick(4);
+		assertEquals("then the player", PLAYER, follower.facing);
+		tick(3);
+		assertEquals("and back to the work", ROCK, follower.facing);
+		assertTrue(follower.animations.isEmpty());
+	}
+
+	@Test
+	public void aRockWorkedAMomentIsJustALookForTheNext()
+	{
+		WorldPoint next = new WorldPoint(52, 53, 0);
+		game.placeObject(ROCK_ID + 1, "Rocks", next.getX(), next.getY(), 0);
+		workTheRock();
+		tick(3);
+		skilling.objectSpawned(ROCK_ID + 2, ROCK, null);
+		assertEquals("no step for a twig", 1, follower.stays.size());
+
+		tick(1);
+		assertEquals("the player", PLAYER, follower.facing);
+		tick(3);
+		assertEquals("then where the next one is", next, follower.facing);
+	}
+
+	@Test
+	public void twoDepletionsInsideFifteenTicksShareTheOneLook()
+	{
+		WorldPoint next = new WorldPoint(52, 53, 0);
+		game.placeObject(ROCK_ID + 1, "Rocks", next.getX(), next.getY(), 0);
+		workTheRock();
+		tick(3);
+		skilling.objectSpawned(ROCK_ID + 2, ROCK, null);
+		tick(1);
+		assertEquals("the first gets its look", PLAYER, follower.facing);
+
+		skilling.noteClick("Mine", "Rocks", ROCK_ID + 1, next, null, null);
+		tick(SkillingController.SEAT_AFTER_TICKS);
+		assertEquals(next, follower.facing);
+		skilling.objectSpawned(ROCK_ID + 3, next, null);
+		tick(1);
+		assertFalse("inside fifteen ticks, no second look", PLAYER.equals(follower.facing));
+	}
+
+	@Test
+	public void threeMinutesAtOneRockIsAReadOfTheNotes()
+	{
+		borrowsTools = false;
+		workTheRock();
+		tick(KeepingCompany.GERALD_AFTER_TICKS);
+		assertEquals("the note pose", KeepingCompany.NOTE_POSE, follower.poseOverride);
+		assertEquals("with the scroll", ErrandController.SCROLL_PROP, held);
+		assertEquals("turned to the rock", ROCK, follower.facing);
+		assertTrue(follower.animations.isEmpty());
+
+		tick(KeepingCompany.TALLY_TICKS);
+		assertEquals(0, follower.poseOverride);
+		assertEquals(0, held);
+		assertEquals("one shake of the head",
+			Collections.singletonList(KeepingCompany.HEAD_SHAKE), follower.animations);
+
+		tick(KeepingCompany.GERALD_AFTER_TICKS);
+		assertEquals("once per rock", 1, follower.animations.size());
+	}
+
+	@Test
+	public void theNotesAreReadOverAPickaxeWithoutTheScroll()
+	{
+		workTheRock();
+		assertEquals(1265, held);
+		tick(KeepingCompany.GERALD_AFTER_TICKS);
+		assertEquals(KeepingCompany.NOTE_POSE, follower.poseOverride);
+		assertEquals("the pickaxe keeps the hand", 1265, held);
+		tick(KeepingCompany.TALLY_TICKS);
+		assertEquals(0, follower.poseOverride);
+		assertEquals(1265, held);
+		assertEquals(Collections.singletonList(KeepingCompany.HEAD_SHAKE), follower.animations);
+	}
+
+	@Test
+	public void timberAfterThirtyTicks()
+	{
+		WorldPoint next = new WorldPoint(53, 56, 0);
+		game.placeObject(TREE_ID + 1, "Yew tree", next.getX(), next.getY(), 0);
+		workTheTree();
+		tick(KeepingCompany.TIMBER_AFTER_TICKS);
+		WorldPoint seat = follower.stayingAt;
+
+		skilling.objectDespawned(TREE_ID, TREE_MIN, TREE_MAX);
+		assertEquals("the flinch", Collections.singletonList(KeepingCompany.FLINCH),
+			follower.animations);
+		assertEquals("one step clear of the stump", 2, follower.stays.size());
+		WorldPoint away = follower.stayingAt;
+		assertEquals(1, away.distanceTo(seat));
+		assertTrue(away.distanceTo(TREE_MIN) > seat.distanceTo(TREE_MIN));
+
+		tick(1);
+		assertEquals("then the player", PLAYER, follower.facing);
+		tick(3);
+		assertEquals("then the next yew", next, follower.facing);
+	}
+
+	@Test
+	public void aQuickChopIsNoFall()
+	{
+		WorldPoint next = new WorldPoint(53, 56, 0);
+		game.placeObject(TREE_ID + 1, "Yew tree", next.getX(), next.getY(), 0);
+		workTheTree();
+		tick(5);
+		skilling.objectDespawned(TREE_ID, TREE_MIN, TREE_MAX);
+		assertTrue("no flinch for a twig", follower.animations.isEmpty());
+		assertEquals("no step", 1, follower.stays.size());
+		tick(1);
+		assertEquals(PLAYER, follower.facing);
+		tick(3);
+		assertEquals(next, follower.facing);
+	}
+
+	@Test
+	public void aNestAtTheFeetIsALookDownAndThePeerOnceProven()
+	{
+		workTheTree();
+		skilling.itemSpawned("Bird nest", PLAYER);
+		tick(1);
+		assertEquals("a look at the ground", PLAYER, follower.facing);
+		assertTrue("no peer until a player has been seen doing it", follower.animations.isEmpty());
+		tick(4);
+		assertEquals(TREE_MIN, follower.facing);
+
+		skilling.notePlayerAnimation(KeepingCompany.NEST_LOOK);
+		skilling.itemSpawned("Bird nest", PLAYER);
+		assertEquals(Collections.singletonList(KeepingCompany.NEST_LOOK), follower.animations);
+
+		skilling.itemSpawned("Bird nest", new WorldPoint(60, 60, 0));
+		skilling.itemSpawned("Logs", PLAYER);
+		assertEquals("somebody else's nest, and logs, are nothing", 1, follower.animations.size());
+	}
+
+	@Test
+	public void aNestOutsideAChopIsNothing()
+	{
+		workTheFire();
+		skilling.notePlayerAnimation(KeepingCompany.NEST_LOOK);
+		skilling.itemSpawned("Bird nest", PLAYER);
+		tick(1);
+		assertTrue(follower.animations.isEmpty());
+		assertEquals(FIRE, follower.facing);
+	}
+
+	// ------------------------------------------------------------- bank trip
+
+	private static final WorldPoint BOOTH = new WorldPoint(60, 50, 0);
+
+	/** Works the tree with a bank ten tiles off, then walks off toward it. */
+	private WorldPoint walkOffToTheBank()
+	{
+		game.placeObject(9030, "Bank booth", BOOTH.getX(), BOOTH.getY(), 0);
+		workTheTree();
+		WorldPoint seat = follower.stayingAt;
+		game.at(55, 50, 0);
+		tick(1);
+		assertFalse("the session is over", skilling.isWorking());
+		assertEquals(1, count(TriggerEvent.Type.WORK_END));
+		return seat;
+	}
+
+	@Test
+	public void theBankTripKeepsTheSeat()
+	{
+		WorldPoint seat = walkOffToTheBank();
+		assertEquals("the seat is kept", seat, follower.stayingAt);
+		assertTrue("and is still the company's, not a Stay", skilling.holdsTheFeet());
+		assertEquals("facing the way they went", new WorldPoint(55, 50, 0), follower.facing);
+		assertEquals("the axe went back", 0, held);
+
+		game.at(59, 50, 0);
+		tick(10);
+		bankOpen = true;
+		tick(1);
+		bankOpen = false;
+		tick(100);
+		assertEquals("kept through the banking", seat, follower.stayingAt);
+		assertTrue(skilling.holdsTheFeet());
+
+		game.at(50, 51, 0);
+		tick(1);
+		assertTrue("back within three tiles: following again", follower.following);
+		assertFalse(skilling.holdsTheFeet());
+	}
+
+	@Test
+	public void aWalkOffThatNeverReachesTheBankLetsGoAfterTheWalk()
+	{
+		walkOffToTheBank();
+		tick(SkillingController.BANK_WALK_TICKS - 1);
+		assertTrue(skilling.holdsTheFeet());
+		tick(1);
+		assertTrue(follower.following);
+		assertFalse(skilling.holdsTheFeet());
+	}
+
+	@Test
+	public void theBankTripHasACap()
+	{
+		walkOffToTheBank();
+		bankOpen = true;
+		tick(1);
+		tick(SkillingController.BANK_TRIP_CAP_TICKS - 1);
+		assertTrue("three minutes is the most", skilling.holdsTheFeet());
+		tick(1);
+		assertTrue(follower.following);
+		assertFalse(skilling.holdsTheFeet());
+	}
+
+	@Test
+	public void theLeashSnapOrAFightEndsTheTrip()
+	{
+		walkOffToTheBank();
+		bankOpen = true;
+		tick(1);
+		// The entity's own leash release: the stay is simply gone.
+		follower.resumeFollowing();
+		tick(1);
+		assertFalse(skilling.holdsTheFeet());
+		assertTrue(follower.following);
+
+		setUp();
+		walkOffToTheBank();
+		inCombat = true;
+		tick(1);
+		assertFalse(skilling.holdsTheFeet());
+		assertTrue(follower.following);
+	}
+
+	@Test
+	public void theBankOpeningAtTheSeatIsATripToo()
+	{
+		game.placeObject(9030, "Bank booth", BOOTH.getX(), BOOTH.getY(), 0);
+		workTheTree();
+		WorldPoint seat = follower.stayingAt;
+		bankOpen = true;
+		tick(1);
+		assertFalse(skilling.isWorking());
+		assertEquals("kept", seat, follower.stayingAt);
+		tick(SkillingController.BANK_WALK_TICKS + 5);
+		assertTrue("confirmed from the start, so the walk's limit does not apply",
+			skilling.holdsTheFeet());
+	}
+
+	@Test
+	public void noBankNearMeansTheOldRelease()
+	{
+		game.placeObject(9030, "Bank booth", 95, 95, 0);
+		workTheTree();
+		game.at(55, 50, 0);
+		tick(1);
+		assertTrue("forty-five tiles is not a bank trip", follower.following);
+		assertFalse(skilling.holdsTheFeet());
+	}
+
+	@Test
+	public void newWorkLetsTheKeptSeatGo()
+	{
+		walkOffToTheBank();
+		game.at(55, 50, 0);
+		skilling.noteClick("Chop down", "Oak tree", 9005, new WorldPoint(58, 50, 0), null, null);
+		game.animating(CHOP);
+		tick(1);
+		assertTrue(skilling.isWorking());
+		assertTrue("the old seat is let go for the new work", follower.following);
+		tick(SkillingController.SEAT_AFTER_TICKS);
+		assertNotNull("and the new one taken", follower.stayingAt);
+		assertEquals(2, follower.stays.size());
+	}
+
 	// ----------------------------------------------------------- the words
 
 	@Test
