@@ -63,6 +63,49 @@ public final class TriggerEvent
 		EXAMINED_THING,
 		ATTENDED_AGAIN,
 		MINUTES_TAKEN,
+		XP_DROP,
+		WORK_END,
+		TARGET_DEPLETED,
+		BAG_FULL,
+		BAG_HALF,
+	}
+
+	/**
+	 * An XP drop landed. {skill} names it; {@code count} is how many the
+	 * current work session has seen, this one included, so a rule can fire
+	 * on every eighth the way npcKill fires on every fiftieth. Zero outside
+	 * a session.
+	 */
+	public static TriggerEvent xpDrop(String skill, int count)
+	{
+		TriggerEvent event = new TriggerEvent(Type.XP_DROP);
+		event.name = skill == null ? "" : skill;
+		event.count = count;
+		event.placeholders.put("skill", event.name);
+		event.placeholders.put("count", Integer.toString(count));
+		return event;
+	}
+
+	/**
+	 * A work session ended. The name is the activity, for {@code names}
+	 * lists; {activity} and {target} say what it was and on what.
+	 */
+	public static TriggerEvent workEnd(String activity, String target)
+	{
+		TriggerEvent event = new TriggerEvent(Type.WORK_END);
+		event.name = activity == null ? "" : activity;
+		event.placeholders.put("activity", event.name);
+		event.placeholders.put("target", target == null ? "" : target);
+		return event;
+	}
+
+	/** The thing being worked changed id or went. {target} names it. */
+	public static TriggerEvent targetDepleted(String target)
+	{
+		TriggerEvent event = new TriggerEvent(Type.TARGET_DEPLETED);
+		event.name = target == null ? "" : target;
+		event.placeholders.put("target", event.name);
+		return event;
 	}
 
 	/**

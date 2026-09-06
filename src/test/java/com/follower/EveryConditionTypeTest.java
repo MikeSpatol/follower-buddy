@@ -1531,6 +1531,47 @@ public class EveryConditionTypeTest
 		assertQuiet(present, "somebody who keeps moving the camera is there");
 	}
 
+	@Test
+	public void theSkillingCompany() throws IOException
+	{
+		note("working", "xpDrop", "workEnded", "targetDepleted", "bagFull", "bagHalf");
+
+		// The session as state, narrowed by the skill and by the target.
+		Harness at = harnessFor("{\"type\": \"working\", \"is\": \"woodcutting\","
+			+ " \"contains\": \"yew\"}");
+		at.gameTicks(2);
+		assertQuiet(at, "nobody is working");
+		at.engine.getContext().setWork(true, "mining", "Iron rocks", null, 10, 0, Integer.MAX_VALUE);
+		at.gameTicks(2);
+		assertQuiet(at, "mining iron is not chopping yew");
+		at.engine.getContext().setWork(true, "woodcutting", "Yew tree", null, 10, 0, Integer.MAX_VALUE);
+		at.gameTicks(1);
+		assertFired(at, "working");
+
+		// The drops, and the every-nth that makes a tally a remark.
+		fires("{\"type\": \"xpDrop\"}", TriggerEvent.xpDrop("Woodcutting", 1));
+		fires("{\"type\": \"xpDrop\", \"names\": [\"Woodcutting\"]}",
+			TriggerEvent.xpDrop("Woodcutting", 3));
+		quiet("{\"type\": \"xpDrop\", \"names\": [\"Woodcutting\"]}",
+			TriggerEvent.xpDrop("Mining", 3));
+		Harness eighth = harnessFor("{\"type\": \"xpDrop\", \"every\": 8}");
+		eighth.gameTicks(1);
+		for (int i = 1; i < 8; i++)
+		{
+			eighth.dispatch(TriggerEvent.xpDrop("Woodcutting", i));
+		}
+		assertQuiet(eighth, "seven drops is not eight");
+		eighth.dispatch(TriggerEvent.xpDrop("Woodcutting", 8));
+		assertFired(eighth, "xpDrop every eighth");
+
+		fires("{\"type\": \"workEnded\"}", TriggerEvent.workEnd("woodcutting", "Yew tree"));
+		quiet("{\"type\": \"workEnded\", \"names\": [\"mining\"]}",
+			TriggerEvent.workEnd("woodcutting", "Yew tree"));
+		fires("{\"type\": \"targetDepleted\"}", TriggerEvent.targetDepleted("Yew tree"));
+		fires("{\"type\": \"bagFull\"}", TriggerEvent.simple(TriggerEvent.Type.BAG_FULL));
+		fires("{\"type\": \"bagHalf\"}", TriggerEvent.simple(TriggerEvent.Type.BAG_HALF));
+	}
+
 	// ------------------------------------------------------------- coverage
 
 	@Test
@@ -1575,6 +1616,7 @@ public class EveryConditionTypeTest
 		theChallengeIsMetOrIsNot();
 		underfootAndGoneFromTheKeyboard();
 		theScribeNoticesTheWiderWorld();
+		theSkillingCompany();
 
 		List<String> missing = new ArrayList<>(new TreeSet<>(RuleSetIntegrityTest.KNOWN_TYPES));
 		missing.removeAll(exercised);

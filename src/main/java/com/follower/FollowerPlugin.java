@@ -282,6 +282,9 @@ public class FollowerPlugin extends Plugin
 	/** Stands the follower clear of a fight; see SpectateController. */
 	private com.follower.follower.SpectateController spectate;
 
+	/** The skilling company: the seat, the borrowed tool, the session the rules read. */
+	private com.follower.follower.SkillingController skilling;
+
 	private Path dataDir;
 	private WorldPoint lastPlayerTile;
 	private int lastRegionId = -1;
@@ -451,6 +454,9 @@ public class FollowerPlugin extends Plugin
 	private static final int ANIM_TRACE_FRAMES = 480;
 	private final Map<Skill, Integer> knownLevels = new EnumMap<>(Skill.class);
 
+	/** Last XP seen per skill; a rise is a drop, whatever the level did. */
+	private final Map<Skill, Integer> knownXp = new EnumMap<>(Skill.class);
+
 	@Provides
 	FollowerConfig provideConfig(ConfigManager configManager)
 	{
@@ -548,12 +554,20 @@ public class FollowerPlugin extends Plugin
 					propItemId = 0;
 					rebuildFollower();
 				}
+
+				@Override
+				public boolean isHolding()
+				{
+					return propSlot != null;
+				}
 			};
 		errands = new com.follower.follower.ErrandController(client, follower, config,
 			speechEngine::dispatch, spotAnimRepository,
 			// Minutes-taking counts as busy: an errand must not set off with
-			// the scroll already out over somebody's meeting.
-			() -> dialog.isOpen() || follower.isNpcSlaved() || minutesState != 0, hands);
+			// the scroll already out over somebody's meeting. Nor during a
+			// work session, where the seat has the feet.
+			() -> dialog.isOpen() || follower.isNpcSlaved() || minutesState != 0
+				|| (skilling != null && skilling.isWorking()), hands);
 		flourish = new com.follower.follower.PropFlourish(follower, hands);
 		// A SUPPLIER, not the context itself: the engine replaces its context
 		// on every reset, and a controller holding the original object read a
@@ -563,6 +577,15 @@ public class FollowerPlugin extends Plugin
 		spectate = new com.follower.follower.SpectateController(client, follower, config,
 			speechEngine::getContext, spotAnimRepository, speechEngine::dispatch,
 			this::setSpectateDisarmed);
+		// Thrall work and the spectator both beat the seat, so their whole
+		// ownership window - the exit flourish included - is the "feet taken"
+		// the company watches.
+		skilling = new com.follower.follower.SkillingController(client, follower, config,
+			hands, speechEngine::dispatch,
+			() -> speechEngine.getContext().isInCombat(),
+			() -> thrallNpc != null || thrallLimbo || thrallExitPendingTicks > 0
+				|| thrallExitTicks > 0 || (spectate != null && spectate.holdsTheFeet()),
+			() -> client.getWidget(net.runelite.api.gameval.InterfaceID.BANKMAIN, 0) != null);
 
 		// On a fresh client boot the LOGIN_SCREEN transition can happen before
 		// this plugin subscribes, so the first login would not read as fresh.
@@ -628,6 +651,10 @@ public class FollowerPlugin extends Plugin
 		{
 			flourish.abort();
 		}
+		if (skilling != null)
+		{
+			skilling.reset();
+		}
 		// The scroll must not survive a disable either.
 		endMinutes(false);
 		voices.close();
@@ -666,6 +693,7 @@ public class FollowerPlugin extends Plugin
 		wrapTrimStore.save(follower);
 		modelRepository.unload();
 		knownLevels.clear();
+		knownXp.clear();
 		lastPlayerTile = null;
 		lastRegionId = -1;
 		resetTransientState();
@@ -993,6 +1021,7 @@ public class FollowerPlugin extends Plugin
 			|| (errands != null && errands.isBusy())
 			|| (spectate != null && spectate.isSpectating())
 			|| dialog.isOpen()
+			|| (skilling != null && skilling.isWorking())
 			|| speechEngine.getContext().isInCombat();
 
 		Player local = client.getLocalPlayer();
@@ -1153,6 +1182,7 @@ public class FollowerPlugin extends Plugin
 			|| dialog.isOpen()
 			|| minutesState != 0
 			|| follower.isStaying()
+			|| (skilling != null && skilling.isWorking())
 			|| speechEngine.getContext().isInCombat();
 		Player local = client.getLocalPlayer();
 		if (busy || local == null || !follower.isSpawned())
@@ -1236,6 +1266,7 @@ public class FollowerPlugin extends Plugin
 			|| (spectate != null && spectate.isSpectating())
 			|| dialog.isOpen()
 			|| emoteHold
+			|| (skilling != null && skilling.holdsTheFeet())
 			|| resting;
 
 		// Thieving wanders too, and does not wait to be invited. The idle gate
@@ -2879,6 +2910,12 @@ public class FollowerPlugin extends Plugin
 				// a lost tick of movement - which is what made it stop and then snap.
 				// A real teleport is caught by the distance check in updateTrail.
 				follower.markNeedsReattach();
+				if (skilling != null)
+				{
+					// Objects and NPCs dropped around a load are shuffling,
+					// not a tree falling; the company ignores them for a beat.
+					skilling.sceneLoading();
+				}
 				break;
 
 			case LOGGING_IN:
@@ -2946,6 +2983,11 @@ public class FollowerPlugin extends Plugin
 			// Mid-gesture when the scene went: the scroll must not survive it.
 			flourish.abort();
 		}
+		if (skilling != null)
+		{
+			// The session, the seat and the borrowed tool all belonged to it.
+			skilling.reset();
+		}
 		// Same for the minute-taking: the meeting went with the scene.
 		endMinutes(false);
 		welfareChecked = false;
@@ -2958,6 +3000,7 @@ public class FollowerPlugin extends Plugin
 		speechQueue.clear();
 		speakingUntilMs = 0;
 		knownLevels.clear();
+		knownXp.clear();
 		lastPlayerTile = null;
 		lastRegionId = -1;
 	}
@@ -3249,18 +3292,10 @@ public class FollowerPlugin extends Plugin
 			return;
 		}
 
-		Outfit outfit = resolveOutfit();
-
-		// A transient prop - a book for the reading animation, a scroll for
-		// the scroll one. Overlaid AFTER the outfit resolves so it never
-		// touches what the player configured, and skipped in thrall mode,
-		// whose override is a shared object and whose conscript has no time
-		// to read. The animations themselves hold nothing: the game draws
-		// whatever is in your hands, and these hands are ours to fill.
-		if (propSlot != null && outfitOverride == null)
-		{
-			outfit.setItem(propSlot, propItemId);
-		}
+		// The prop is skipped in thrall mode, whose override is a shared object
+		// and whose conscript has no time to read.
+		Outfit outfit = dressForRender(resolveOutfit(), spectateDisarmed || emoteDisarmed,
+			outfitOverride == null ? propSlot : null, propItemId);
 
 		appearanceService.request(outfit, com.follower.appearance.ModelSource.DUMP_ONLY, appearance ->
 		{
@@ -3769,13 +3804,34 @@ public class FollowerPlugin extends Plugin
 		{
 			sendStatus("Outfit warnings: " + String.join("; ", errors));
 		}
+		return outfit;
+	}
 
-		// Hands free: a follower kneeling in prayer should not still be
-		// gripping a sword and a shield, and neither should one waving.
-		if (spectateDisarmed || emoteDisarmed)
+	/**
+	 * The last two steps before the model is built: the disarm, then the prop.
+	 *
+	 * <p>Hands free first: a follower kneeling in prayer should not still be
+	 * gripping a sword and a shield, and neither should one waving. Then the
+	 * transient prop - a book for the reading animation, a scroll for the
+	 * scroll one, a borrowed axe for a work session - overlaid AFTER the
+	 * outfit resolves so it never touches what the player configured. The
+	 * order is the point: the disarm empties the outfit's own weapon slot and
+	 * the prop fills it again, which is what keeps a borrowed tool in hand
+	 * through a mirrored emote. The animations themselves hold nothing: the
+	 * game draws whatever is in your hands, and these hands are ours to fill.
+	 *
+	 * @param propSlot the slot the prop takes, or null for no prop
+	 */
+	static Outfit dressForRender(Outfit outfit, boolean disarmed, KitType propSlot, int propItemId)
+	{
+		if (disarmed)
 		{
 			outfit.clear(KitType.WEAPON);
 			outfit.clear(KitType.SHIELD);
+		}
+		if (propSlot != null)
+		{
+			outfit.setItem(propSlot, propItemId);
 		}
 		return outfit;
 	}
@@ -5477,6 +5533,13 @@ public class FollowerPlugin extends Plugin
 		{
 			flourish.tick();
 		}
+		// Before the spectator, which beats it: on the tick a fight is seen
+		// the seat is let go first and the stand-clear takes the feet after.
+		if (skilling != null)
+		{
+			skilling.tick();
+			skilling.describeTo(speechEngine.getContext());
+		}
 
 		// After errands, so an errand in progress owns the feet: a follower
 		// halfway to a bank should finish the trip rather than be yanked
@@ -5624,7 +5687,8 @@ public class FollowerPlugin extends Plugin
 			wandered, thrallNpc != null,
 			errands != null && errands.isBusy(),
 			spectate != null && spectate.holdsTheFeet(),
-			emoteHold, minutesState != 0);
+			emoteHold, minutesState != 0,
+			skilling != null && skilling.holdsTheFeet());
 		speechEngine.getContext().setFollowerStaying(stayCommanded);
 		if (stayCommanded != stayReported)
 		{
@@ -5812,6 +5876,10 @@ public class FollowerPlugin extends Plugin
 	{
 		NPC npc = event.getNpc();
 		maybeAdoptThrall(npc);
+		if (skilling != null)
+		{
+			skilling.npcSpawned(npc);
+		}
 
 		// A chunk load raises one of these for every NPC in the new scene, and
 		// each costs a pass over every rule. Only pay it when something listens.
@@ -5853,12 +5921,59 @@ public class FollowerPlugin extends Plugin
 				clientThread.invoke(follower::endNpcSlaveHolding);
 			}
 		}
+		if (skilling != null)
+		{
+			skilling.npcDespawned(npc);
+		}
 		// As with spawns: the whole scene despawns on a chunk load, and no
 		// bundled rule listens for it at all.
 		if (ruleLoader.listensFor(TriggerEvent.Type.NPC_DESPAWN))
 		{
 			speechEngine.dispatch(
 				TriggerEvent.npc(TriggerEvent.Type.NPC_DESPAWN, npc.getId(), npc.getName()));
+		}
+	}
+
+	@Subscribe
+	public void onGameObjectSpawned(net.runelite.api.events.GameObjectSpawned event)
+	{
+		noteObjectChange(event.getGameObject(), true);
+	}
+
+	@Subscribe
+	public void onGameObjectDespawned(net.runelite.api.events.GameObjectDespawned event)
+	{
+		noteObjectChange(event.getGameObject(), false);
+	}
+
+	/**
+	 * Scenery coming and going, handed to the skilling company by footprint.
+	 * A chunk load raises one of these per object in the scene, so nothing is
+	 * done unless a session is on - and the company itself keeps only what
+	 * touches its target's tile.
+	 */
+	private void noteObjectChange(net.runelite.api.GameObject object, boolean spawned)
+	{
+		if (skilling == null || !skilling.isWorking() || object == null)
+		{
+			return;
+		}
+		net.runelite.api.WorldView view = client.getTopLevelWorldView();
+		net.runelite.api.Point lo = object.getSceneMinLocation();
+		net.runelite.api.Point hi = object.getSceneMaxLocation();
+		if (view == null || lo == null || hi == null)
+		{
+			return;
+		}
+		WorldPoint min = WorldPoint.fromScene(view, lo.getX(), lo.getY(), object.getPlane());
+		WorldPoint max = WorldPoint.fromScene(view, hi.getX(), hi.getY(), object.getPlane());
+		if (spawned)
+		{
+			skilling.objectSpawned(object.getId(), min, max);
+		}
+		else
+		{
+			skilling.objectDespawned(object.getId(), min, max);
 		}
 	}
 
@@ -6190,6 +6305,12 @@ public class FollowerPlugin extends Plugin
 		}
 
 		int animationId = event.getActor().getAnimation();
+
+		if (skilling != null)
+		{
+			// Proof that a work click turned into work, or that it goes on.
+			skilling.noteAnimation(animationId);
+		}
 
 		// A slaved chain (the home teleport) steps stage-for-stage with the
 		// PLAYER's sequence: the server cuts each stage short by starting the
@@ -6560,6 +6681,17 @@ public class FollowerPlugin extends Plugin
 			speechEngine.getContext().tallyBoth("levels");
 			speechEngine.dispatch(TriggerEvent.levelUp(skill.getName(), level));
 		}
+
+		// A rise in XP is a drop, whatever the level did. The work session
+		// counts it and the rules hear of it on the tick it lands; the first
+		// reading after a login is baseline, like the level above.
+		int xp = event.getXp();
+		Integer previousXp = knownXp.put(skill, xp);
+		if (previousXp != null && xp > previousXp)
+		{
+			int count = skilling == null ? 0 : skilling.noteXpDrop(skill);
+			speechEngine.dispatch(TriggerEvent.xpDrop(skill.getName(), count));
+		}
 	}
 
 	// --------------------------------------------------------------- commands
@@ -6783,6 +6915,9 @@ public class FollowerPlugin extends Plugin
 	{
 		noteIntentFrom(event.getMenuOption());
 		noteExamine(event);
+		speechEngine.getContext().noteMenuOption(
+			com.follower.follower.SkillingController.plainOption(event.getMenuOption()));
+		noteWorkClick(event);
 
 		if (event.getMenuAction() != net.runelite.api.MenuAction.WALK
 			|| !follower.isSpawned())
@@ -6958,6 +7093,88 @@ public class FollowerPlugin extends Plugin
 		// The game colours menu text with tags; strip them before matching.
 		String plain = option.replaceAll("<[^>]*>", "").toLowerCase(Locale.ROOT);
 		return plain.contains("pickpocket") || plain.contains("steal");
+	}
+
+	/**
+	 * The player clicked a work option - Chop down, Mine, Fish - on scenery
+	 * or an NPC. The skilling company reads the click first, as the thieving
+	 * intent does: it names the target before a single swing. Scenery is
+	 * looked up on its own tile for the true footprint, since the click
+	 * carries one tile of a two-by-two tree.
+	 */
+	private void noteWorkClick(MenuOptionClicked event)
+	{
+		if (skilling == null
+			|| !com.follower.follower.SkillingController.isWorkOption(event.getMenuOption()))
+		{
+			return;
+		}
+		net.runelite.api.WorldView view = client.getTopLevelWorldView();
+		if (view == null)
+		{
+			return;
+		}
+		switch (event.getMenuAction())
+		{
+			case GAME_OBJECT_FIRST_OPTION:
+			case GAME_OBJECT_SECOND_OPTION:
+			case GAME_OBJECT_THIRD_OPTION:
+			case GAME_OBJECT_FOURTH_OPTION:
+			case GAME_OBJECT_FIFTH_OPTION:
+			case WIDGET_TARGET_ON_GAME_OBJECT:
+			{
+				int id = event.getId();
+				int plane = view.getPlane();
+				int sx = event.getParam0();
+				int sy = event.getParam1();
+				WorldPoint min = WorldPoint.fromScene(view, sx, sy, plane);
+				WorldPoint max = min;
+				net.runelite.api.Tile[][][] tiles = view.getScene() == null
+					? null : view.getScene().getTiles();
+				if (tiles != null && plane >= 0 && plane < tiles.length && sx >= 0 && sy >= 0
+					&& sx < tiles[plane].length && sy < tiles[plane][sx].length
+					&& tiles[plane][sx][sy] != null)
+				{
+					for (net.runelite.api.GameObject object : tiles[plane][sx][sy].getGameObjects())
+					{
+						if (object != null && object.getId() == id
+							&& object.getSceneMinLocation() != null
+							&& object.getSceneMaxLocation() != null)
+						{
+							min = WorldPoint.fromScene(view, object.getSceneMinLocation().getX(),
+								object.getSceneMinLocation().getY(), plane);
+							max = WorldPoint.fromScene(view, object.getSceneMaxLocation().getX(),
+								object.getSceneMaxLocation().getY(), plane);
+							break;
+						}
+					}
+				}
+				skilling.noteClick(event.getMenuOption(),
+					com.follower.follower.ErrandController.objectName(client, id), id, min, max, null);
+				break;
+			}
+			case NPC_FIRST_OPTION:
+			case NPC_SECOND_OPTION:
+			case NPC_THIRD_OPTION:
+			case NPC_FOURTH_OPTION:
+			case NPC_FIFTH_OPTION:
+			case WIDGET_TARGET_ON_NPC:
+			{
+				NPC npc = event.getMenuEntry() == null ? null : event.getMenuEntry().getNpc();
+				WorldPoint at = npc == null ? null : npc.getWorldLocation();
+				if (at == null)
+				{
+					return;
+				}
+				int size = npc.getComposition() == null ? 1
+					: Math.max(1, npc.getComposition().getSize());
+				skilling.noteClick(event.getMenuOption(), npc.getName(), npc.getId(), at,
+					new WorldPoint(at.getX() + size - 1, at.getY() + size - 1, at.getPlane()), npc);
+				break;
+			}
+			default:
+				break;
+		}
 	}
 
 	@Subscribe
@@ -8692,14 +8909,15 @@ public class FollowerPlugin extends Plugin
 	 * animation so the clip is not cut off by walking, and every teleport
 	 * mirror, kill cheer and celebration carries one. Play report: "when I
 	 * teleport, the follower says a line like it was told to stay." The
-	 * minute-taking parks it through the same stayAt as the rest of them.
+	 * minute-taking parks it through the same stayAt as the rest of them, and
+	 * so does the skilling company's seat.
 	 */
 	static boolean stayIsPlayerCommanded(boolean staying, boolean wandered,
 		boolean thrall, boolean errandBusy, boolean spectating, boolean emoteHold,
-		boolean takingMinutes)
+		boolean takingMinutes, boolean keepingCompany)
 	{
 		return staying && !wandered && !thrall && !errandBusy && !spectating
-			&& !emoteHold && !takingMinutes;
+			&& !emoteHold && !takingMinutes && !keepingCompany;
 	}
 
 	/**

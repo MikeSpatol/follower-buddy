@@ -168,6 +168,17 @@ public class ErrandController
 		void hold(int itemId);
 
 		void release();
+
+		/**
+		 * Whether something is held right now. The scroll and a borrowed
+		 * tool share the weapon slot, so whichever is out first keeps it:
+		 * the flourish skips its scroll over a tool, the borrow skips its
+		 * tool over a scroll. Default false for hands that never say.
+		 */
+		default boolean isHolding()
+		{
+			return false;
+		}
 	}
 
 	/** Praying at an altar - the classic kneel. */

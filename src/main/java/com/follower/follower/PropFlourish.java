@@ -46,7 +46,9 @@ public class PropFlourish
 	 */
 	public boolean start(int itemId, int poseId, int ticks)
 	{
-		if (active || itemId <= 0 || poseId <= 0)
+		// Hands already full - a borrowed tool, most likely - and the scroll
+		// would take the same slot: the gesture is skipped, the line still lands.
+		if (active || itemId <= 0 || poseId <= 0 || hands.isHolding())
 		{
 			return false;
 		}

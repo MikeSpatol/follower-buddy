@@ -75,6 +75,11 @@ import net.runelite.api.NPC;
  *   <tr><td>examinedThing</td><td>optional {@code names} (wildcards ok) — the player examined something; {@code {target}}</td></tr>
  *   <tr><td>attendedAgain</td><td>no fields — the player is back from an absence the follower came round to check on</td></tr>
  *   <tr><td>minutesTaken</td><td>no fields — the follower finished minuting an NPC dialog</td></tr>
+ *   <tr><td>working</td><td>optional {@code is} (a skill name) and {@code contains} (part of the target's name) - a work session is on</td></tr>
+ *   <tr><td>xpDrop</td><td>optional {@code names} (skill names) and {@code every} - the tick of a drop; {@code {skill}} {@code {count}}</td></tr>
+ *   <tr><td>workEnded</td><td>optional {@code names} (activities) - the tick a session ends; {@code {activity}} {@code {target}}</td></tr>
+ *   <tr><td>targetDepleted</td><td>no fields - the session's target changed id or went; {@code {target}}</td></tr>
+ *   <tr><td>bagFull / bagHalf</td><td>no fields - the last slot went, or fourteen were left (once per fill)</td></tr>
  * </table>
  *
  * <p>{@code npcNearby} also takes {@code minimum}/{@code maximum} combat level,
@@ -829,6 +834,36 @@ public class Condition
 			case "repeating":
 				return ctx.getRepeatingTicks() >= orDefault(ticks, 100)
 					&& (ids == null || idsContain(ctx.getRepeatingAnimation()));
+
+			// The player is working something - a tree, a rock, a spot - as
+			// the skilling company sees it. "is" names the skill, "contains"
+			// a piece of the target's name, so a yew can have its own line.
+			case "working":
+				return ctx.isWorking()
+					&& (is == null || is.equalsIgnoreCase(ctx.getWorkActivity()))
+					&& (contains == null || ctx.getWorkTargetName().toLowerCase(Locale.ROOT)
+						.contains(contains.toLowerCase(Locale.ROOT)));
+
+			// The tick of an XP drop. "every" counts within the work session,
+			// the way npcKill's counts within the fight: 8 fires on the
+			// eighth drop and every eighth after.
+			case "xpdrop":
+				return event.getType() == TriggerEvent.Type.XP_DROP
+					&& (names == null || matchesAnyName(event.getName()))
+					&& (every == null || every <= 0
+						|| (event.getCount() > 0 && event.getCount() % every == 0));
+
+			case "workended":
+				return event.getType() == TriggerEvent.Type.WORK_END
+					&& (names == null || matchesAnyName(event.getName()));
+
+			case "targetdepleted":
+				return event.getType() == TriggerEvent.Type.TARGET_DEPLETED;
+
+			case "bagfull":
+				return event.getType() == TriggerEvent.Type.BAG_FULL;
+			case "baghalf":
+				return event.getType() == TriggerEvent.Type.BAG_HALF;
 
 			default:
 				log.warn("Unknown condition type '{}'", type);

@@ -68,9 +68,16 @@ public interface FollowerConfig extends Config
 	String errandSection = "errands";
 
 	@ConfigSection(
+		name = "Skilling",
+		description = "What the follower does while you work a tree, a rock, a spot",
+		position = 7
+	)
+	String skillingSection = "skilling";
+
+	@ConfigSection(
 		name = "Combat",
 		description = "What the follower does while you are fighting",
-		position = 7
+		position = 8
 	)
 	String combatSection = "combat";
 
@@ -80,7 +87,7 @@ public interface FollowerConfig extends Config
 			+ " ::follower gfx <id> or ::follower pose <id>; with Developer commands"
 			+ " on, ::follower watch prints ids as they play. The defaults look"
 			+ " right; nothing here needs changing.",
-		position = 8,
+		position = 9,
 		closedByDefault = true
 	)
 	String shieldSection = "shield";
@@ -88,7 +95,7 @@ public interface FollowerConfig extends Config
 	@ConfigSection(
 		name = "Developer",
 		description = "Diagnostic chat commands used to build the plugin",
-		position = 9,
+		position = 10,
 		closedByDefault = true
 	)
 	String developerSection = "developer";
@@ -781,6 +788,36 @@ public interface FollowerConfig extends Config
 		position = 10
 	)
 	default boolean errandExplore()
+	{
+		return true;
+	}
+
+	// --------------------------------------------------------------- skilling
+
+	@ConfigItem(
+		keyName = "keepsCompany",
+		name = "Keeps you company while you skill",
+		description = "While you work a tree, a rock or a fishing spot it takes a seat"
+			+ " off to your side, facing the work, and stays out of the way of"
+			+ " your next click. Untick to keep it at your heel.",
+		section = skillingSection,
+		position = 0
+	)
+	default boolean keepsCompany()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "borrowsTools",
+		name = "Borrows your tools",
+		description = "Holds a copy of your axe or pickaxe for the session - the one"
+			+ " you are wearing, or a bronze one - and gives it back with a bow"
+			+ " when you are done.",
+		section = skillingSection,
+		position = 1
+	)
+	default boolean borrowsTools()
 	{
 		return true;
 	}

@@ -90,6 +90,13 @@ public class ConfigDefaultsTest
 	}
 
 	@Test
+	public void theSkillingCompanyIsOnByDefault()
+	{
+		assertTrue("the seat and everything built on it", config.keepsCompany());
+		assertTrue("and the borrowed tool", config.borrowsTools());
+	}
+
+	@Test
 	public void theDiagnosticsAreOffForEveryoneElse()
 	{
 		assertFalse("developer commands must not ship enabled",

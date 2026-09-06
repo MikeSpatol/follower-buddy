@@ -715,6 +715,86 @@ public final class TriggerContext
 		return followerStaying;
 	}
 
+	// ---------------------------------------------------------- work sessions
+
+	/**
+	 * What the player is working at, as the skilling company sees it: a
+	 * session opened by a click and proven by the animation or the XP, with
+	 * the target and the drops it has counted. Fed by the plugin each tick,
+	 * because the controller that keeps the session lives on the follower's
+	 * side and this is the rules' side.
+	 */
+	private boolean working;
+	private String workActivity = "";
+	private String workTargetName = "";
+	private WorldPoint workTargetTile;
+	private int workTicks;
+	private int xpDropsThisSession;
+	private int ticksSinceXpDrop = Integer.MAX_VALUE;
+
+	/** The last menu option the player clicked, tags stripped. */
+	private String lastMenuOption = "";
+
+	public void setWork(boolean working, String activity, String targetName,
+		WorldPoint targetTile, int ticks, int drops, int ticksSinceDrop)
+	{
+		this.working = working;
+		workActivity = activity == null ? "" : activity;
+		workTargetName = targetName == null ? "" : targetName;
+		workTargetTile = targetTile;
+		workTicks = ticks;
+		xpDropsThisSession = drops;
+		ticksSinceXpDrop = ticksSinceDrop;
+	}
+
+	public boolean isWorking()
+	{
+		return working;
+	}
+
+	/** The skill being worked, lowercased ("woodcutting"), or empty. */
+	public String getWorkActivity()
+	{
+		return workActivity;
+	}
+
+	public String getWorkTargetName()
+	{
+		return workTargetName;
+	}
+
+	public WorldPoint getWorkTargetTile()
+	{
+		return workTargetTile;
+	}
+
+	/** Ticks the current session has run; 0 outside one. */
+	public int getWorkTicks()
+	{
+		return workTicks;
+	}
+
+	public int getXpDropsThisSession()
+	{
+		return xpDropsThisSession;
+	}
+
+	/** Ticks since the session's last drop; MAX_VALUE when there was none. */
+	public int getTicksSinceXpDrop()
+	{
+		return ticksSinceXpDrop;
+	}
+
+	public void noteMenuOption(String option)
+	{
+		lastMenuOption = option == null ? "" : option;
+	}
+
+	public String getLastMenuOption()
+	{
+		return lastMenuOption;
+	}
+
 	// --------------------------------------------------------------- boundaries
 
 	/**
