@@ -114,13 +114,32 @@ public class Borrow
 	 */
 	public void giveBack(boolean withBeat)
 	{
+		giveBack(withBeat, 0);
+	}
+
+	/**
+	 * As {@link #giveBack(boolean)}, with something to play first.
+	 *
+	 * @param leadIn an animation the beat follows on from - the stand-up,
+	 * when the follower was sitting - or 0 for none
+	 */
+	public void giveBack(boolean withBeat, int leadIn)
+	{
 		if (held == 0)
 		{
 			return;
 		}
 		if (withBeat)
 		{
-			follower.playAnimation(HATS.contains(held) ? SALUTE_ANIMATION : BOW_ANIMATION);
+			int beat = HATS.contains(held) ? SALUTE_ANIMATION : BOW_ANIMATION;
+			if (leadIn > 0)
+			{
+				follower.playAnimations(new int[]{leadIn, beat});
+			}
+			else
+			{
+				follower.playAnimation(beat);
+			}
 		}
 		log.debug("Returned item {}{}", held, withBeat ? " with a beat" : "");
 		held = 0;

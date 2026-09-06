@@ -6917,6 +6917,11 @@ public class FollowerPlugin extends Plugin
 		noteExamine(event);
 		speechEngine.getContext().noteMenuOption(
 			com.follower.follower.SkillingController.plainOption(event.getMenuOption()));
+		if (skilling != null)
+		{
+			skilling.noteMenuOption(
+				com.follower.follower.SkillingController.plainOption(event.getMenuOption()));
+		}
 		noteWorkClick(event);
 
 		if (event.getMenuAction() != net.runelite.api.MenuAction.WALK

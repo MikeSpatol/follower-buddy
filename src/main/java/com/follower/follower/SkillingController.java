@@ -9,9 +9,11 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Random;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.GameObject;
@@ -91,6 +93,18 @@ public class SkillingController
 	private final BooleanSupplier bankOpen;
 	private final Borrow borrow;
 
+	/** Every counter's jitter comes from here; a test may seed it. */
+	final Random random = new Random();
+
+	/** What the follower does in the seat; see {@link KeepingCompany}. */
+	private final KeepingCompany company;
+
+	/** The last menu option the player clicked, tags off, work or not. */
+	private String lastOption = "";
+
+	/** The bag edge seen this tick, handed to the company after the session checks. */
+	private TriggerEvent.Type bagEdge;
+
 	private WorkSession session;
 
 	/** A work click waiting for its proof, and the tick it was made. */
@@ -126,6 +140,7 @@ public class SkillingController
 		this.feetTaken = feetTaken;
 		this.bankOpen = bankOpen;
 		this.borrow = new Borrow(follower, hands);
+		this.company = new KeepingCompany(client, follower, config, hands, borrow, random);
 	}
 
 	public boolean isWorking()
@@ -159,7 +174,19 @@ public class SkillingController
 		return seat != null || releaseTicks > 0;
 	}
 
+	/** Whether the follower is sitting in for the long haul. */
+	public boolean isSitting()
+	{
+		return company.isSitting();
+	}
+
 	// ---------------------------------------------------------------- inputs
+
+	/** Any menu option the player clicked, tags off; the bag reads it. */
+	public void noteMenuOption(String plain)
+	{
+		lastOption = plain == null ? "" : plain;
+	}
 
 	/** Whether a menu option is one of the words that start work. */
 	public static boolean isWorkOption(String option)
@@ -284,6 +311,7 @@ public class SkillingController
 			// it. Chosen again from scratch once the player is at the work.
 			reseat = true;
 			seatDueTick = now + SEAT_AFTER_TICKS;
+			company.aimAt(faceTile());
 			log.debug("Work moved to {} at {}", name, min);
 			return;
 		}
@@ -345,6 +373,7 @@ public class SkillingController
 			// The drop may be what named the activity, and so the tool.
 			maybeBorrow();
 		}
+		company.drop(session.xpDrops, now);
 		return session.xpDrops;
 	}
 
@@ -530,11 +559,30 @@ public class SkillingController
 			if (follower.stayAt(seat))
 			{
 				follower.setStayFaceTile(faceTile());
+				company.seated(seat, faceTile());
 			}
 			else
 			{
 				seat = null;
+				company.unseated();
 			}
+		}
+
+		// The company, last: the session goes on and the seat is settled.
+		if (bagEdge == TriggerEvent.Type.BAG_HALF)
+		{
+			company.bagHalf(lastOption);
+		}
+		else if (bagEdge == TriggerEvent.Type.BAG_FULL)
+		{
+			company.bagFull(lastOption, here);
+		}
+		bagEdge = null;
+		company.tick(now, here, local.getAnimation() != -1);
+		WorldPoint moved = company.seatMoved();
+		if (moved != null)
+		{
+			seat = moved;
 		}
 	}
 
@@ -559,6 +607,8 @@ public class SkillingController
 		reseat = false;
 		refusedTool = 0;
 		seatDueTick = now + SEAT_AFTER_TICKS;
+		company.begin(now);
+		company.aimAt(faceTile());
 		log.debug("Work session: {} on {} at {}", session.option, session.targetName,
 			session.targetTile);
 	}
@@ -575,6 +625,10 @@ public class SkillingController
 		WorkSession done = session;
 		session = null;
 		reseat = false;
+		bagEdge = null;
+		// A sitting follower stands first, on a proper end; an abort simply
+		// lets the pose go.
+		int standUp = company.end(!silent);
 		boolean beat = !silent && withBeat && borrow.isHolding();
 		if (beat)
 		{
@@ -584,19 +638,25 @@ public class SkillingController
 			{
 				follower.setStayFaceTile(local.getWorldLocation());
 			}
-			borrow.giveBack(true);
+			borrow.giveBack(true, standUp);
 		}
 		else
 		{
 			borrow.abort();
+			if (standUp > 0)
+			{
+				follower.playAnimation(standUp);
+			}
 		}
 		if (seat != null)
 		{
 			seat = null;
-			if (beat)
+			if (beat || standUp > 0)
 			{
-				// Movement would cut the bow off; the feet stay a few ticks.
-				releaseTicks = RELEASE_HOLD_TICKS;
+				// Movement would cut the bow off; the feet stay a few ticks,
+				// and a few more when the stand-up comes first.
+				releaseTicks = RELEASE_HOLD_TICKS
+					+ (standUp > 0 ? KeepingCompany.STAND_UP_TICKS : 0);
 			}
 			else if (follower.isStaying() && !feetTaken.getAsBoolean())
 			{
@@ -649,11 +709,13 @@ public class SkillingController
 			{
 				seat = candidate;
 				follower.setStayFaceTile(faceTile());
+				company.seated(seat, faceTile());
 				log.debug("Seated at {} facing {}", seat, session.targetTile);
 				return;
 			}
 		}
 		seat = null;
+		company.unseated();
 		log.debug("No seat by {} for {}; following instead", player, session.targetName);
 	}
 
@@ -885,6 +947,7 @@ public class SkillingController
 	 */
 	private void watchBag()
 	{
+		bagEdge = null;
 		int free = freeSlots();
 		if (free < 0)
 		{
@@ -900,10 +963,61 @@ public class SkillingController
 			halfArmed = true;
 		}
 		lastFreeSlots = free;
+		// Cleared at the top and set here, so an edge seen outside a session
+		// never waits for the next one.
+		bagEdge = edge;
 		if (edge != null)
 		{
 			dispatch.accept(TriggerEvent.simple(edge));
 		}
+	}
+
+	/**
+	 * The nearest scene object by name within a radius of a tile, or null.
+	 * One bounded look, taken on an edge rather than on a tick.
+	 */
+	static WorldPoint nearestObject(Client client, WorldPoint centre, int radius,
+		Predicate<String> nameMatch)
+	{
+		WorldView view = client.getTopLevelWorldView();
+		Tile[][][] tiles = view == null || view.getScene() == null ? null
+			: view.getScene().getTiles();
+		if (tiles == null || centre == null)
+		{
+			return null;
+		}
+		int plane = view.getPlane();
+		WorldPoint best = null;
+		int bestDistance = Integer.MAX_VALUE;
+		for (int x = centre.getX() - radius; x <= centre.getX() + radius; x++)
+		{
+			for (int y = centre.getY() - radius; y <= centre.getY() + radius; y++)
+			{
+				int sx = x - view.getBaseX();
+				int sy = y - view.getBaseY();
+				if (plane < 0 || plane >= tiles.length || sx < 0 || sy < 0
+					|| sx >= tiles[plane].length || sy >= tiles[plane][sx].length
+					|| tiles[plane][sx][sy] == null)
+				{
+					continue;
+				}
+				for (GameObject object : tiles[plane][sx][sy].getGameObjects())
+				{
+					if (object == null || object.getWorldLocation() == null
+						|| !nameMatch.test(ErrandController.objectName(client, object.getId())))
+					{
+						continue;
+					}
+					int distance = object.getWorldLocation().distanceTo(centre);
+					if (distance < bestDistance)
+					{
+						bestDistance = distance;
+						best = object.getWorldLocation();
+					}
+				}
+			}
+		}
+		return best;
 	}
 
 	/** The edge between two readings, or null; pure so it can be tested. */

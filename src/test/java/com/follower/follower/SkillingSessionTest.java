@@ -40,7 +40,12 @@ public class SkillingSessionTest
 		WorldPoint facing;
 		boolean following = true;
 		int stayAttempts;
+		int poseOverride;
 		final List<Integer> animations = new ArrayList<>();
+
+		/** Every tile it was sent to, in order, and every glance. */
+		final List<WorldPoint> stays = new ArrayList<>();
+		final List<WorldPoint> glances = new ArrayList<>();
 
 		/** Tiles the ground refuses; null means everywhere is standable. */
 		java.util.function.Predicate<WorldPoint> walled;
@@ -84,6 +89,7 @@ public class SkillingSessionTest
 			}
 			stayingAt = target;
 			following = false;
+			stays.add(target);
 			return true;
 		}
 
@@ -112,6 +118,27 @@ public class SkillingSessionTest
 		public void playAnimation(int id)
 		{
 			animations.add(id);
+		}
+
+		@Override
+		public void playAnimations(int[] ids)
+		{
+			for (int id : ids)
+			{
+				animations.add(id);
+			}
+		}
+
+		@Override
+		public void setPoseOverride(int id)
+		{
+			poseOverride = id;
+		}
+
+		@Override
+		public void glanceAt(WorldPoint at, int ms)
+		{
+			glances.add(at);
 		}
 	}
 
@@ -827,6 +854,350 @@ public class SkillingSessionTest
 		game.inventoryUsing(20);
 		tick(1);
 		assertEquals("re-armed once the bag emptied", 2, count(TriggerEvent.Type.BAG_HALF));
+	}
+
+	// ------------------------------------------------------------ the company
+
+	/** A fire east of the player. */
+	private static final WorldPoint FIRE = new WorldPoint(53, 50, 0);
+
+	/** HUMAN_COOKING. */
+	private static final int COOK = 896;
+
+	/** A cook at a fire: nothing to borrow, so the hands are free for the scroll. */
+	private void workTheFire()
+	{
+		skilling.noteClick("Cook", "Fire", 9020, FIRE, null, null);
+		game.animating(COOK);
+		tick(1);
+		assertTrue("the session never started", skilling.isWorking());
+		tick(SkillingController.SEAT_AFTER_TICKS);
+	}
+
+	/** Drops that far apart until the scroll comes out; the drop it came out on, or -1. */
+	private int dropsUntilTheScroll(int gap, int most)
+	{
+		for (int i = 1; i <= most; i++)
+		{
+			tick(gap);
+			skilling.noteXpDrop(Skill.COOKING);
+			if (held == ErrandController.SCROLL_PROP)
+			{
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	@Test
+	public void theTallyScrollComesOutAroundEveryEighthDrop()
+	{
+		workTheFire();
+		int out = dropsUntilTheScroll(4, 12);
+		assertTrue("came out on drop " + out, out >= 7 && out <= 9);
+		assertEquals(ErrandController.READ_SCROLL_POSE, follower.poseOverride);
+		tick(1);
+		assertEquals("facing the player for it", PLAYER, follower.facing);
+
+		tick(KeepingCompany.TALLY_TICKS);
+		assertEquals("and away after four seconds", 0, held);
+		assertEquals(0, follower.poseOverride);
+		assertEquals("back to the work", FIRE, follower.facing);
+		assertEquals("the seat was never let go", 1, follower.stays.size());
+	}
+
+	@Test
+	public void theTallyIsNotOnAMetronome()
+	{
+		skilling.random.setSeed(7);
+		workTheFire();
+		List<Integer> gaps = new ArrayList<>();
+		for (int cycle = 0; cycle < 6; cycle++)
+		{
+			int out = dropsUntilTheScroll(4, 12);
+			assertTrue(out > 0);
+			gaps.add(out);
+			tick(KeepingCompany.TALLY_TICKS);
+		}
+		assertTrue("six cycles all the same length: " + gaps,
+			gaps.stream().distinct().count() > 1);
+	}
+
+	@Test
+	public void fastDropsTallyAroundEveryTwelfth()
+	{
+		workTheFire();
+		int out = dropsUntilTheScroll(2, 16);
+		assertTrue("came out on drop " + out, out >= 11 && out <= 13);
+	}
+
+	@Test
+	public void aToolInHandMeansNoScroll()
+	{
+		workTheTree();
+		assertEquals(1351, held);
+		for (int i = 0; i < 20; i++)
+		{
+			tick(4);
+			skilling.noteXpDrop(Skill.WOODCUTTING);
+			assertEquals("the axe keeps the weapon slot", 1351, held);
+		}
+		assertEquals(0, follower.poseOverride);
+	}
+
+	@Test
+	public void theNodIsAboutEveryThirdDropAndNeverTwoRunning()
+	{
+		// Off the seat the look is a glance, which the recorder can see.
+		follower.walled = tile -> true;
+		workTheFire();
+		List<Integer> nods = new ArrayList<>();
+		for (int i = 1; i <= 30; i++)
+		{
+			tick(4);
+			int before = follower.glances.size();
+			skilling.noteXpDrop(Skill.COOKING);
+			if (follower.glances.size() > before)
+			{
+				nods.add(i);
+				assertEquals("at the work", FIRE, follower.glances.get(before));
+			}
+		}
+		assertTrue("too few looks: " + nods, nods.size() >= 7);
+		assertTrue("too many looks: " + nods, nods.size() <= 15);
+		for (int i = 1; i < nods.size(); i++)
+		{
+			assertTrue("two in a row: " + nods, nods.get(i) - nods.get(i - 1) >= 2);
+		}
+	}
+
+	@Test
+	public void theStopEdge()
+	{
+		workTheFire();
+		game.animating(-1);
+		tick(KeepingCompany.STOP_AFTER_TICKS - 1);
+		assertEquals("four ticks is a pause", FIRE, follower.facing);
+
+		tick(1);
+		assertEquals("five is a stop: look over", PLAYER, follower.facing);
+		assertTrue("and wait", follower.animations.isEmpty());
+
+		tick(KeepingCompany.STOP_WAIT_TICKS + 2);
+		assertEquals("then the head scratch", Collections.singletonList(857), follower.animations);
+
+		game.animating(COOK);
+		tick(1);
+		assertEquals("back to the work when the player is", FIRE, follower.facing);
+
+		game.animating(-1);
+		tick(KeepingCompany.STOP_AFTER_TICKS + KeepingCompany.STOP_WAIT_TICKS + 2);
+		assertEquals("not again inside two minutes", 1, follower.animations.size());
+		assertEquals(FIRE, follower.facing);
+	}
+
+	@Test
+	public void aShuffleIsNotAStop()
+	{
+		workTheFire();
+		game.animating(-1);
+		tick(3);
+		game.at(51, 50, 0);
+		// The tick that sees the move resets the count; two still ticks follow.
+		tick(3);
+		assertEquals("moving resets the count", FIRE, follower.facing);
+		tick(KeepingCompany.STOP_AFTER_TICKS - 2);
+		assertEquals("five still ticks from the new tile is a stop",
+			PLAYER.getX() + 1, follower.facing.getX());
+	}
+
+	@Test
+	public void pacingTheLineAfterFiveMinutes()
+	{
+		workTheFire();
+		WorldPoint seat = follower.stayingAt;
+		tick(KeepingCompany.PACE_AFTER_TICKS - 60);
+		assertEquals("nothing yet", 1, follower.stays.size());
+
+		tick(120);
+		assertTrue("the walk out", follower.stays.size() >= 2);
+		WorldPoint away = follower.stays.get(1);
+		assertEquals("three tiles from the seat", 3, away.distanceTo(seat));
+		assertTrue("on the far side from the fire",
+			away.distanceTo(FIRE) > seat.distanceTo(FIRE));
+
+		tick(15);
+		assertEquals("and back", seat, follower.stayingAt);
+		assertEquals(FIRE, follower.facing);
+		assertEquals(3, follower.stays.size());
+		assertTrue(skilling.isWorking());
+	}
+
+	@Test
+	public void sittingInForTheLongHaul()
+	{
+		workTheFire();
+		tick(KeepingCompany.SIT_AFTER_TICKS + 70);
+		assertTrue(skilling.isSitting());
+		assertEquals("the rest pose", 10061, follower.poseOverride);
+		assertEquals("facing the player", PLAYER, follower.facing);
+
+		// An emote stands first; the pose sits it back down after.
+		game.animating(-1);
+		tick(KeepingCompany.STOP_AFTER_TICKS + KeepingCompany.STOP_WAIT_TICKS + 2);
+		assertEquals(Arrays.asList(KeepingCompany.STAND_UP, 857), follower.animations);
+		assertTrue(skilling.isSitting());
+		follower.animations.clear();
+		game.animating(COOK);
+		tick(1);
+
+		// The end stands, and the feet wait for it.
+		game.at(50, 54, 0);
+		tick(1);
+		assertFalse(skilling.isWorking());
+		assertFalse(skilling.isSitting());
+		assertEquals(0, follower.poseOverride);
+		assertEquals(Collections.singletonList(KeepingCompany.STAND_UP), follower.animations);
+		assertTrue(skilling.holdsTheFeet());
+		tick(KeepingCompany.STAND_UP_TICKS + 3);
+		assertTrue(follower.following);
+	}
+
+	@Test
+	public void anAbortWhileSittingLetsThePoseGoWithoutCeremony()
+	{
+		workTheFire();
+		tick(KeepingCompany.SIT_AFTER_TICKS + 70);
+		assertTrue(skilling.isSitting());
+		inCombat = true;
+		tick(1);
+		assertFalse(skilling.isSitting());
+		assertEquals(0, follower.poseOverride);
+		assertTrue("no stand-up, no anything", follower.animations.isEmpty());
+		assertFalse(skilling.holdsTheFeet());
+	}
+
+	@Test
+	public void stretchingItsLegsAtTheHourAndAgainAtTwo()
+	{
+		workTheFire();
+		WorldPoint seat = follower.stayingAt;
+		WorldPoint behind = new WorldPoint(48, 50, 0);
+		WorldPoint otherFlank = new WorldPoint(50, 48, 0);
+
+		tick(KeepingCompany.STRETCH_AFTER_TICKS + 350);
+		assertTrue("up first", follower.animations.contains(KeepingCompany.STAND_UP));
+		// The seat, the pace out and back, then the half circle home.
+		assertEquals(follower.stays.toString(), 7, follower.stays.size());
+		assertEquals(behind, follower.stays.get(3));
+		assertEquals(otherFlank, follower.stays.get(4));
+		assertEquals(behind, follower.stays.get(5));
+		assertEquals(seat, follower.stays.get(6));
+		assertFalse("standing after the hour", skilling.isSitting());
+		assertEquals(0, follower.poseOverride);
+		assertEquals(FIRE, follower.facing);
+
+		tick(KeepingCompany.STRETCH_AGAIN_TICKS - KeepingCompany.STRETCH_AFTER_TICKS);
+		assertEquals(11, follower.stays.size());
+		assertEquals(seat, follower.stayingAt);
+		assertTrue("and sits after the second", skilling.isSitting());
+		assertEquals(10061, follower.poseOverride);
+	}
+
+	@Test
+	public void halfABagIsANote()
+	{
+		workTheFire();
+		game.inventoryUsing(10);
+		tick(1);
+		game.inventoryUsing(14);
+		tick(1);
+		assertEquals(ErrandController.SCROLL_PROP, held);
+		assertEquals(ErrandController.READ_SCROLL_POSE, follower.poseOverride);
+		tick(KeepingCompany.NOTE_TICKS);
+		assertEquals(0, held);
+		assertEquals(0, follower.poseOverride);
+	}
+
+	@Test
+	public void aFullBagIsAShrugAndAStepBankward()
+	{
+		game.placeObject(9030, "Bank booth", 60, 50, 0);
+		workTheFire();
+		WorldPoint seat = follower.stayingAt;
+		game.inventoryUsing(27);
+		tick(1);
+		game.inventoryUsing(28);
+		tick(1);
+		assertEquals(Collections.singletonList(2113), follower.animations);
+		assertEquals("facing the player", PLAYER, follower.facing);
+
+		tick(4);
+		WorldPoint step = follower.stayingAt;
+		assertEquals("one step, no more", 1, step.distanceTo(seat));
+		assertTrue("toward the booth", step.distanceTo(new WorldPoint(60, 50, 0))
+			< seat.distanceTo(new WorldPoint(60, 50, 0)));
+		assertEquals("the seat moved with it", step, skilling.getSeat());
+	}
+
+	@Test
+	public void noBoothMeansTheShrugAlone()
+	{
+		workTheFire();
+		game.inventoryUsing(27);
+		tick(1);
+		game.inventoryUsing(28);
+		tick(5);
+		assertEquals(Collections.singletonList(2113), follower.animations);
+		assertEquals(1, follower.stays.size());
+	}
+
+	@Test
+	public void aPlayerDroppingAsTheyGoGetsNoBagBusiness()
+	{
+		game.placeObject(9030, "Bank booth", 60, 50, 0);
+		workTheFire();
+		skilling.noteMenuOption("Drop");
+		game.inventoryUsing(10);
+		tick(1);
+		game.inventoryUsing(14);
+		tick(1);
+		assertEquals("no note", 0, held);
+		game.inventoryUsing(28);
+		tick(5);
+		assertTrue("no shrug", follower.animations.isEmpty());
+		assertEquals("no step", 1, follower.stays.size());
+	}
+
+	@Test
+	public void nothingFiresWithTheCompanyOff()
+	{
+		keepsCompany = false;
+		game.placeObject(9030, "Bank booth", 60, 50, 0);
+		skilling.noteClick("Cook", "Fire", 9020, FIRE, null, null);
+		game.animating(COOK);
+		tick(1 + SkillingController.SEAT_AFTER_TICKS);
+		for (int i = 0; i < 30; i++)
+		{
+			tick(4);
+			skilling.noteXpDrop(Skill.COOKING);
+		}
+		game.animating(-1);
+		tick(12);
+		game.animating(COOK);
+		game.inventoryUsing(10);
+		tick(1);
+		game.inventoryUsing(14);
+		tick(1);
+		game.inventoryUsing(28);
+		tick(KeepingCompany.SIT_AFTER_TICKS + 100);
+
+		assertTrue(follower.animations.isEmpty());
+		assertTrue(follower.glances.isEmpty());
+		assertTrue(follower.stays.isEmpty());
+		assertEquals(0, follower.poseOverride);
+		assertEquals(0, held);
+		assertTrue(follower.following);
 	}
 
 	// ----------------------------------------------------------- the words
