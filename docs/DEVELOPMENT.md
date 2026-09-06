@@ -1,4 +1,4 @@
-﻿# Follower Buddy - development notes
+# Follower Buddy - development notes
 
 *The engineering document: how it works, why it works that way, and the full
 history of decisions. For what the plugin does and how to use it, see the
@@ -9,34 +9,34 @@ Repository: <https://github.com/MikeSpatol/follower-buddy>
 A RuneLite plugin that spawns a client-side follower rendered as a **player model**,
 dressable in any gear, that speaks configurable phrases driven by game state.
 
-Nobody else sees it. It is a local rendering only â€” no packets are sent, nothing is
+Nobody else sees it. It is a local rendering only — no packets are sent, nothing is
 automated, and the follower cannot be interacted with.
 
 ---
 
 ## Feature overview
 
-- **Authentic follower** â€” pet-style following on the game's own mechanics, learned
+- **Authentic follower** — pet-style following on the game's own mechanics, learned
   weapon stances, game-exact dialog boxes with chatheads, right-click menu, shift-hover
   and click cross exactly as a real NPC.
-- **Speech system** â€” 349 bundled rules across editable groups (bosses, player
+- **Speech system** — 349 bundled rules across editable groups (bosses, player
   statuses, locations, item equips, quest NPCs, thrall, errands, combat,
   mimicry, reactions, memory, souvenirs, predictions, the clock, misc), hot-reloaded
   from `phrases.json` within a second. The Messages window, under Talking in
   the side panel, edits them one category per group; the Phrases section of
   the settings has a toggle per group.
-- **Alive between the events** â€” copies your emotes, joins you when you eat, and
+- **Alive between the events** — copies your emotes, joins you when you eat, and
   has a go at whatever you have been mining or chopping or fishing for the last
   half minute; fidgets when you stand about, sits down to rest after five minutes
   idle, cheers big drops, waves at cats and passing pets, and remembers this
   session's death spot and the places you keep coming back to.
-- **Somebody who was there** â€” keeps ONE incident in mind and brings it up
+- **Somebody who was there** — keeps ONE incident in mind and brings it up
   unprompted ("careful, I have not forgotten how close that was"), picks up a
   rock and carries it about until it loses it, calls what the next drop is worth
   before it lands and has to live with being wrong, knows what time it is where
   you actually are, and keeps a running score of the outings you did and did not
   take it on. Ask it how today went and it will tell you.
-- **Games** â€” right-click Talk-to while it is waiting for an answer and the
+- **Games** — right-click Talk-to while it is waiting for an answer and the
   everyday script is replaced by whatever it wanted: an outing, or a hand to
   guess. The reveal lands overhead a beat after the box closes, and it is a real
   coin flip.
@@ -44,11 +44,11 @@ automated, and the follower cannot be interacted with.
   Outfit in the side panel (Save as new..., Delete profile; edits save back to
   the selected profile) and a `::follower outfit <name>` command.
   Melee/Ranged/Magic style profiles are seeded.
-- **Thrall mode** â€” summoning an Arceuus thrall replaces it with the follower:
+- **Thrall mode** — summoning an Arceuus thrall replaces it with the follower:
   combat-proof varbit detection, smooth possession movement, per-style outfits, the
   authentic summoning circle carved from the thrall's own model, spawn/exit vfx, and
   survival across chunk reloads. The real thrall is hidden client-side.
-- **Errands** â€” every so often the follower visits a nearby bank, prays at an altar,
+- **Errands** — every so often the follower visits a nearby bank, prays at an altar,
   warms its hands at a fire (usually), attends to cats, and returns by foot or by
   teleport. All lines editable; frequency and per-errand toggles in config.
 
@@ -79,18 +79,18 @@ The runtime RuneLite API exposes only `ItemComposition#getInventoryModel()`. The
 **worn** model ids (`maleModel0/1/2`, `femaleModel0/1/2`) and the body kit models
 live in the cache definitions and are not reachable from a plugin at runtime. So
 `tools/cache-dumper` reads your OSRS cache once and writes `equipment-models.json`,
-and the plugin rebuilds the model with `loadModelData` + `mergeModels` + `light` â€”
+and the plugin rebuilds the model with `loadModelData` + `mergeModels` + `light` —
 any item works, and the model is unposed so animations work.
 
-(A capture path also exists in code â€” overwrite your own `PlayerComposition`,
-steal the rendered model, restore â€” but captured models are already posed and
+(A capture path also exists in code — overwrite your own `PlayerComposition`,
+steal the rendered model, restore — but captured models are already posed and
 cannot animate, so it is no longer selectable; the dump is simply required.)
 
 ### How gear avoids clipping through the body
 
 Merging every equipped piece plus a full set of body kits draws parts that are
 meant to be mutually exclusive, and they intersect. The game does not solve this
-geometrically â€” each item declares which slots it covers, in three cache fields
+geometrically — each item declares which slots it covers, in three cache fields
 (`ItemDefinition` opcodes 13, 14, 27):
 
 | Field | Meaning |
@@ -110,18 +110,18 @@ rule "a torso item hides the arms", which is wrong for chainbodies and aprons
 (`wp2=-1`, arms should show) and did nothing at all for helmets, which is why
 hair rendered through full helms.
 
-### Composition slot encoding â€” the item offset is 2048
+### Composition slot encoding — the item offset is 2048
 
 `PlayerComposition#getEquipmentIds()` packs each of the 12 slots as:
 
 ```
 0            empty
-256 â€¦ 2047   kit    (value - 256)
+256 … 2047   kit    (value - 256)
 2048+        item   (value - 2048)
 ```
 
 **The item offset is 2048, not 512.** Getting this wrong corrupts every kit id above
-255 â€” hair and jaw kits run past 300 â€” in both directions: kit 305 encodes to 561,
+255 — hair and jaw kits run past 300 — in both directions: kit 305 encodes to 561,
 which reads back as "item 49", and real items decode to the wrong id entirely
 (a Black cape, item 1019, read back as a nonexistent item 2555 and was silently
 dropped). Symptoms were a follower missing gear in `Copy my gear` mode, a capture
@@ -132,7 +132,7 @@ Take these from `PlayerComposition.KIT_OFFSET` / `ITEM_OFFSET` rather than writi
 literals, so a future change to the scheme follows automatically.
 
 Verified: composing from a live `PlayerComposition` now produces a model identical
-to the client's own â€” same face count, same distribution across priority buckets:
+to the client's own — same face count, same distribution across priority buckets:
 
 ```
 composed: 928 faces: p0x77 p1x166 p2x81 p3x135 p5x86 p6x211 p10x172
@@ -146,7 +146,7 @@ A second, independent source of clipping is vertical placement: `maleOffset` /
 `femaleOffset` shift a worn model along Y before merging. 1,709 items have a
 non-zero offset; `ModelRepository.Entry.offset(gender)` applies it.
 
-Note that some interpenetration is genuine in OSRS â€” capes really do pass into
+Note that some interpenetration is genuine in OSRS — capes really do pass into
 shoulders on the live client. The test for a bug here is whether the follower
 clips **more** than your own character wearing the same gear.
 
@@ -156,7 +156,7 @@ end to end: composed model identical to the client's build (face count and
 priority-bucket histogram both exact), same idle animation at the same frames
 (tested with loop trim disabled), and finally matched front-view screenshots of
 the follower and a real player in the same gear showing the identical collar.
-It reads as a follower-only bug because the camera orbits the player â€” you see
+It reads as a follower-only bug because the camera orbits the player — you see
 the follower from the front constantly and your own character almost never.
 Before re-opening this, reproduce a *difference*: same gear, same camera angle,
 follower and player side by side.
@@ -168,7 +168,7 @@ follower and player side by side.
 ### 0. Prerequisites
 
 **JDK 17** (or 11+) with `JAVA_HOME` pointing at it. A Java 8 JRE will not build this.
-Gradle itself is *not* needed â€” both this project and the dumper have wrappers checked
+Gradle itself is *not* needed — both this project and the dumper have wrappers checked
 in, so `gradlew` bootstraps Gradle 9.6.1 on first run.
 
 ### 1. Build and install the plugin
@@ -183,7 +183,7 @@ RuneLite client with the plugin loaded as a builtin.
 Note the jar on its own is **not installable**. RuneLite has no sideloading: the
 client loads external plugins only from the Plugin Hub, checked against its manifest,
 so a jar dropped into `.runelite` is ignored. Until this is published, running from
-source is the way to use it â€” see [INSTALL.md](../INSTALL.md), written for someone who
+source is the way to use it — see [INSTALL.md](../INSTALL.md), written for someone who
 just wants to try it rather than work on it.
 
 Add `-Plint` to surface deprecation and unchecked warnings.
@@ -191,7 +191,7 @@ Add `-Plint` to surface deprecation and unchecked warnings.
 **Running the tests while a client is open.** `runClient` runs the client
 straight out of `build/classes`, so a plain `gradlew test` recompiles the very
 directory that client is loading from. Java loads classes lazily, so one it has
-not touched yet â€” the phrase editor, say â€” would be read back changed
+not touched yet — the phrase editor, say — would be read back changed
 underneath it. Build somewhere else instead:
 
 ```bash
@@ -202,14 +202,14 @@ Verified doing exactly that: 300 tests ran, `build/classes` and
 `build/resources` came out byte-for-byte identical across all 136 files, and
 the client carried on.
 
-### 2. Generate the model data (OPTIONAL â€” development only)
+### 2. Generate the model data (OPTIONAL — development only)
 
 **As of 2026-08-06 the plugin needs no dumps at all.** Item, kit and spotanim
 definitions are parsed straight from the client's own loaded cache at runtime
 (`LiveCacheParser`), and the game fonts ship inside the jar. The runtime
 parsers are validated byte-exact against this dumper's output with
 `::follower cachecheck`. Dump files, when present in `~/.runelite/follower`,
-override the live parse â€” useful for pinning a cache revision during
+override the live parse — useful for pinning a cache revision during
 development, and as the `cachecheck` baseline.
 
 ```bash
@@ -264,7 +264,7 @@ gradlew runClient
 This starts a real RuneLite client with the plugin loaded as a built-in, via
 `ExternalPluginManager.loadBuiltin` in `src/test/java/com/follower/FollowerPluginTest.java`.
 You can also run that class's `main` directly from an IDE. It's in the *test* source
-set deliberately â€” it depends on the RuneLite client at runtime, which the published
+set deliberately — it depends on the RuneLite client at runtime, which the published
 plugin jar must not.
 
 The task passes `--developer-mode`, which enables RuneLite's Dev Tools. That's how you
@@ -279,12 +279,12 @@ A migrated (Jagex account) login needs credentials that the **Jagex Launcher** i
 as `JX_*` environment variables. The dev client is started by Gradle, not the launcher,
 so it doesn't get them.
 
-RuneLite's own client jar has no Jagex auth code in it at all â€” the login is performed
+RuneLite's own client jar has no Jagex auth code in it at all — the login is performed
 by the injected vanilla game client, which reads those variables straight from its
 process environment. So the fix is simply to put them in the dev client's environment.
 
 Copy `jx.env.example` to `jx.env`, fill in the values, and `runClient` picks them up.
-`jx.env` is gitignored â€” the values are live session tokens, treat them like a password.
+`jx.env` is gitignored — the values are live session tokens, treat them like a password.
 The file explains where to read them from; they expire, so expect to refresh them.
 
 Shell environment variables are deliberately *not* used here: the Gradle daemon retains
@@ -294,14 +294,14 @@ only sometimes. The file is read at task configuration time and always wins.
 ### Why not just sideload into the real client?
 
 There's no sideload path. `~/.runelite/plugins` looks like one but is the plugin-hub jar
-cache â€” `ExternalPluginManager` only loads jars named in the manifest it downloaded, keyed
+cache — `ExternalPluginManager` only loads jars named in the manifest it downloaded, keyed
 by hash. Installing permanently means the plugin-hub submission route, which needs a
 public repo and review.
 
 ## Writing phrases
 
 Rules live in `~/.runelite/follower/phrases.json`, written from a starter file on first
-run. **Save the file and it reloads within a second** â€” no client restart.
+run. **Save the file and it reloads within a second** — no client restart.
 
 ```json
 {
@@ -316,7 +316,7 @@ run. **Save the file and it reloads within a second** â€” no client restart
     "requirePrayerActive": true
   },
   "say": [
-    "Prayer's nearly out â€” {prayer} points.",
+    "Prayer's nearly out — {prayer} points.",
     "Sip a restore, you're on {prayer} prayer."
   ]
 }
@@ -325,7 +325,7 @@ run. **Save the file and it reloads within a second** â€” no client restart
 ### Firing model
 
 Every rule is evaluated against every event, including a synthetic per-tick event, and
-fires on the **rising edge** of its `when` block â€” the moment it becomes true having
+fires on the **rising edge** of its `when` block — the moment it becomes true having
 been false. `healthBelow: 40` therefore speaks once when you cross the threshold, not
 every tick you spend below it. When several rules fire at once, the highest `priority`
 wins.
@@ -338,7 +338,7 @@ mood stretches or shortens on top.
 
 | Type | Fields |
 |---|---|
-| `all` / `any` / `none` | `conditions` â€” nest freely |
+| `all` / `any` / `none` | `conditions` — nest freely |
 | `npcSpawn` / `npcDespawn` | `names` (case-insensitive, `*` wildcards) or `ids` |
 | `npcNearby` | `names`/`ids`, `within` (tiles); `minimum`/`maximum` combat level, which on their own match anything in that bracket |
 | `playersNearby` | `minimum` other players, `within` (tiles) |
@@ -347,68 +347,68 @@ mood stretches or shortens on top.
 | `inRegion` / `regionEnter` | `regions`, `anyLoadedRegion` |
 | `inArea` | `x1`, `y1`, `x2`, `y2`, `plane` |
 | `chatMessage` | `contains` or `regex`; `from` (`player`/`others`) and `is` (a `ChatMessageType` name, exactly as `::follower chatwatch` prints it) |
-| `answered` | `is` â€” the token on the branch the player picked, in a rule marked `asks`. Any plain word: `yes`/`no` for a question, `left`/`right` for a game |
-| `asking` | â€” a question is already waiting for an answer; optional `is` names the tree. **Every `asks` rule needs this inside a `none`**, or opening a second question silently withdraws the first |
+| `answered` | `is` — the token on the branch the player picked, in a rule marked `asks`. Any plain word: `yes`/`no` for a question, `left`/`right` for a game |
+| `asking` | — a question is already waiting for an answer; optional `is` names the tree. **Every `asks` rule needs this inside a `none`**, or opening a second question silently withdraws the first |
 | `varbitEquals` / `varbitChanged` | `varbit`, `value` |
 | `animationSelf` | `ids` |
 | `levelUp` | `names` (skill names, `*` ok) |
 | `damageTaken` | `minimum` |
 | `itemEquipped` | `ids` |
 | `idle` | `ticks` |
-| `idleBelow` | `ticks` â€” the other bound, for fidgets that should stop once resting |
-| `playerDeath` | â€” the moment of death |
-| `nearDeathSpot` | `within` â€” standing near the session's last death, 2+ minutes after it |
-| `lootWorth` | `minimum` gp â€” fires on loot; `{item}` and `{value}` placeholders |
-| `returnVisit` | `minimum` â€” entering a region already visited that many times this session |
-| `combat` | â€” true throughout a fight, including the gaps between targets |
-| `bossFight` | `minimum` â€” target's combat level, default 100 |
+| `idleBelow` | `ticks` — the other bound, for fidgets that should stop once resting |
+| `playerDeath` | — the moment of death |
+| `nearDeathSpot` | `within` — standing near the session's last death, 2+ minutes after it |
+| `lootWorth` | `minimum` gp — fires on loot; `{item}` and `{value}` placeholders |
+| `returnVisit` | `minimum` — entering a region already visited that many times this session |
+| `combat` | — true throughout a fight, including the gaps between targets |
+| `bossFight` | `minimum` — target's combat level, default 100 |
 | `combatStart` / `combatEnd` | `names`, `{npc}` placeholder |
 | `npcKill` | `minimum` / `maximum` combat level, `names`, `ids`; `{npc}` and `{level}` placeholders |
-| `mood` | `is` â€” a band (`low`, `down`, `even`, `good`, `high`) â€” or `minimum`/`maximum` over 0â€“100 |
-| `repeating` | `ticks` â€” how long the same animation has been running; optional `ids` |
+| `mood` | `is` — a band (`low`, `down`, `even`, `good`, `high`) — or `minimum`/`maximum` over 0–100 |
+| `repeating` | `ticks` — how long the same animation has been running; optional `ids` |
 | `awayFor` | `minimum`/`maximum` minutes since the follower last saw you; login only |
-| `tally` | `of` (counter name), `minimum`/`maximum` â€” a **lifetime** count, kept between sessions |
+| `tally` | `of` (counter name), `minimum`/`maximum` — a **lifetime** count, kept between sessions |
 | `personalBest` | optional `names`; fires the moment a record is beaten. `{record}`, `{value}`, `{previous}` |
-| `sessionCount` | `minimum`/`maximum`/`every` â€” how many times the follower has been out with you; login only |
-| `inventoryFree` | `maximum` free slots â€” meant as a warning while there is still room |
-| `hovered` | `ticks` â€” the mouse resting on the follower |
-| `examined` | â€” somebody looked it up |
-| `wanting` | â€” a want is open; normally used inside a `none` |
-| `wantFulfilled` / `wantExpired` | â€” `{want}` names the place it asked for |
-| `feelsAbout` | `is` â€” `liked` or `disliked`, about the region you are standing in |
+| `sessionCount` | `minimum`/`maximum`/`every` — how many times the follower has been out with you; login only |
+| `inventoryFree` | `maximum` free slots — meant as a warning while there is still room |
+| `hovered` | `ticks` — the mouse resting on the follower |
+| `examined` | — somebody looked it up |
+| `wanting` | — a want is open; normally used inside a `none` |
+| `wantFulfilled` / `wantExpired` | — `{want}` names the place it asked for |
+| `feelsAbout` | `is` — `liked` or `disliked`, about the region you are standing in |
 | `remembers` | the incident on its mind; optional `is` names it, `minimum` how many times it has happened. `{memory}` says it out loud |
-| `carrying` | â€” it is holding a souvenir. `{souvenir}` names it |
-| `souvenirLost` | â€” the thing it was carrying is gone |
-| `betting` | â€” a prediction is outstanding; normally used inside a `none` |
-| `betWon` / `betLost` | â€” the prediction came good, or did not |
-| `timeOfDay` | `minimum`/`maximum` hour on **your** clock, 0â€“23. Wraps past midnight, so `23`â€“`5` is five hours |
-| `sessionMinutes` | `minimum`/`maximum` â€” how long today has run |
-| `placeScore` | `minimum`/`maximum` â€” how strongly it feels about here, as a number. Negative is the bad direction |
-| `happenedHere` | â€” this place holds a memory; `{here}` says it |
-| `heeded` / `ignored` | â€” the player took the last piece of advice, or the window shut. `is` narrows to one; `{advice}` names it |
-| `advising` | â€” advice is outstanding; normally used inside a `none` |
+| `carrying` | — it is holding a souvenir. `{souvenir}` names it |
+| `souvenirLost` | — the thing it was carrying is gone |
+| `betting` | — a prediction is outstanding; normally used inside a `none` |
+| `betWon` / `betLost` | — the prediction came good, or did not |
+| `timeOfDay` | `minimum`/`maximum` hour on **your** clock, 0–23. Wraps past midnight, so `23`–`5` is five hours |
+| `sessionMinutes` | `minimum`/`maximum` — how long today has run |
+| `placeScore` | `minimum`/`maximum` — how strongly it feels about here, as a number. Negative is the bad direction |
+| `happenedHere` | — this place holds a memory; `{here}` says it |
+| `heeded` / `ignored` | — the player took the last piece of advice, or the window shut. `is` narrows to one; `{advice}` names it |
+| `advising` | — advice is outstanding; normally used inside a `none` |
 | `daysKnown` | `minimum`/`maximum` days since the first meeting. `{days}` |
-| `anniversary` | â€” today is the same day of the year as the first meeting |
-| `outgrew` | `minimum` â€” times better dressed than the day you met |
-| `nicknamed` | â€” a name has been earned; `{nickname}` says it. Optional `is` |
-| `challenging` / `challengeMet` / `challengeFailed` | â€” a wager on the player. `{challenge}`, `{left}` |
+| `anniversary` | — today is the same day of the year as the first meeting |
+| `outgrew` | `minimum` — times better dressed than the day you met |
+| `nicknamed` | — a name has been earned; `{nickname}` says it. Optional `is` |
+| `challenging` / `challengeMet` / `challengeFailed` | — a wager on the player. `{challenge}`, `{left}` |
 | `unattended` | `ticks` since the camera last moved. **Not** `idle`: a player at a furnace is idle and present |
-| `underfoot` | â€” you clicked the tile the follower was standing on |
+| `underfoot` | — you clicked the tile the follower was standing on |
 | `dateIs` | `month`/`day` on **your** calendar; optional `untilMonth`/`untilDay` range wraps past new year. `day` alone means that day of every month |
-| `worldHop` | â€” a world hop landed. `{world}` is the new world number |
-| `gameUpdated` | â€” first login on a new game build (the weekly update) |
-| `notesEdited` | â€” phrases.json changed on disk and hot-reloaded |
-| `musicUnlock` | â€” a music track unlocked. `{track}` names it; tally `music` counts them |
-| `musicTrack` | optional `names` (wildcards ok) â€” the playing track changed. `{track}` |
-| `collectionAdd` | â€” a new collection log entry (needs the game's own log notification on). `{item}`; tally `collections` |
-| `questComplete` | â€” the quest reward scroll appeared. `{quest}` names it; tally `quests` |
-| `geOffer` | `is` `bought` or `sold` â€” a Grand Exchange offer finished. `{item}`, `{value}` |
-| `channelJoined` / `channelLeft` | â€” somebody arrived in or left your friends chat or clan channel. `{name}` |
-| `npcShout` | `names` (wildcards ok) and/or `contains` â€” a named NPC said something overhead. `{npc}`, `{message}` |
-| `examinedThing` | optional `names` (wildcards ok) â€” the player examined something; the follower also turns to look. `{target}` |
-| `attendedAgain` | â€” the player is back from a long absence the follower came round to check on |
-| `minutesTaken` | â€” the follower finished minuting one of the player's NPC dialogs |
-| `login`, `always` | â€” |
+| `worldHop` | — a world hop landed. `{world}` is the new world number |
+| `gameUpdated` | — first login on a new game build (the weekly update) |
+| `notesEdited` | — phrases.json changed on disk and hot-reloaded |
+| `musicUnlock` | — a music track unlocked. `{track}` names it; tally `music` counts them |
+| `musicTrack` | optional `names` (wildcards ok) — the playing track changed. `{track}` |
+| `collectionAdd` | — a new collection log entry (needs the game's own log notification on). `{item}`; tally `collections` |
+| `questComplete` | — the quest reward scroll appeared. `{quest}` names it; tally `quests` |
+| `geOffer` | `is` `bought` or `sold` — a Grand Exchange offer finished. `{item}`, `{value}` |
+| `channelJoined` / `channelLeft` | — somebody arrived in or left your friends chat or clan channel. `{name}` |
+| `npcShout` | `names` (wildcards ok) and/or `contains` — a named NPC said something overhead. `{npc}`, `{message}` |
+| `examinedThing` | optional `names` (wildcards ok) — the player examined something; the follower also turns to look. `{target}` |
+| `attendedAgain` | — the player is back from a long absence the follower came round to check on |
+| `minutesTaken` | — the follower finished minuting one of the player's NPC dialogs |
+| `login`, `always` | — |
 | `chance` | `percent`, rolled each evaluation |
 
 `anyLoadedRegion: true` checks the loaded map regions rather than the tile you're
@@ -419,7 +419,7 @@ standing on, which is what you want for instanced dungeons and raids.
 `{npc}`, `{npcId}`, `{message}`, `{skill}`, `{level}`, `{damage}`, `{value}`, `{region}`,
 `{hp}`, `{maxHp}`, `{hpPercent}`, `{prayer}`, `{maxPrayer}`, `{prayerPercent}`, `{player}`,
 `{item}` (the most valuable item in a loot drop; `{value}` on loot events is the drop's
-total, written the way a player says it â€” `1.2M`, `214K`), `{speaker}` (who said it, on
+total, written the way a player says it — `1.2M`, `214K`), `{speaker}` (who said it, on
 chat events), `{record}` / `{previous}` (on `personalBest`), `{want}` (on `wantFulfilled`
 and `wantExpired`), `{memory}` (the incident on its mind - guard the rule with
 `remembers` or it prints nothing), `{souvenir}` (what it is carrying, or has
@@ -429,98 +429,98 @@ just lost - guard with `carrying` or `souvenirLost`), `{here}` (guard with
 
 ### Other rule fields
 
-- `output` â€” `overhead`, `chatbox`, or `both`. Falls back to the config default.
+- `output` — `overhead`, `chatbox`, or `both`. Falls back to the config default.
 - `group` - used by the **Phrases** config section to silence whole categories.
   The built-in toggles cover `boss`, `health`, `area`, `idle`, `gear`, `quest`,
   `combat`, `mimic`, `memory`, `souvenir`, `bet` and `clock`; anything else goes
   in the *Silence groups or phrase ids by name* box under **Advanced:
   animations and graphics** (rule ids work there too, and the Messages window
   shows each rule's id beside its title).
-- `animation` â€” optional emote animation id played alongside the line.
-- `mirrorAnimation` â€” `true` to replay the PLAYER'S animation on the follower
+- `animation` — optional emote animation id played alongside the line.
+- `mirrorAnimation` — `true` to replay the PLAYER'S animation on the follower
   instead of a fixed id. Needs a trigger that says WHICH animation: either
   `animationSelf`, whose event carries the id, or `repeating`, which is how the
   follower joins in with skilling. The bundled `mirror-teleport` rule uses it to
   copy whichever teleport you cast, and `mime-oneshots` to have a go at whatever
   you have been doing for the last thirty ticks.
   Spell graphics ride along automatically: for 12 ticks after a mirror rule
-  fires, any spotanim shown on the player is copied onto the follower too â€” a
+  fires, any spotanim shown on the player is copied onto the follower too — a
   transient `RuneLiteObject` carrying the spotanim's model (recoloured, scaled
   and lit per its cache definition from `spotanims.json`), despawning when its
-  one-shot animation ends. Graphics attach to the follower on every axis â€” fine
-  position, height and yaw, resynced each frame â€” because the client composites
+  one-shot animation ends. Graphics attach to the follower on every axis — fine
+  position, height and yaw, resynced each frame — because the client composites
   an actor's spotanim into the actor's own model and draws it at the actor's
   rotation; a graphic parked where it spawned sits askew as the follower turns.
-  The server also sends a HEIGHT with every cast (`Actor.getGraphicHeight()`) â€”
-  a teleport swirl wraps the body, a rune circle sits at the feet â€” and the
+  The server also sends a HEIGHT with every cast (`Actor.getGraphicHeight()`) —
+  a teleport swirl wraps the body, a rune circle sits at the feet — and the
   client raises the spotanim model by it BEFORE resizing (`translate(-height)`
   then `resize`, from `ClientPlayer.getModel`), so the mirrored graphic applies
   the live height in that same order.
   Re-run tools/cache-dumper if `spotanims.json` is missing; the follower logs
   `player animation N` / `player graphic N` lines, so a teleport that fails to
   mirror can be diagnosed from the log.
-- `animations` + `graphics` â€” a CHAIN of clips played back to back, each stage
+- `animations` + `graphics` — a CHAIN of clips played back to back, each stage
   optionally opening its own spotanim (-1 skips). Takes precedence over
   `animation`/`mirrorAnimation`. The bundled `mirror-home-teleport` rule uses it
-  to answer ANY home teleport variant â€” cosmetic overrides included â€” with the
+  to answer ANY home teleport variant — cosmetic overrides included — with the
   DEFAULT sequence (measured in game: animations 4847/4850/4853/4855/4857 paired
   with graphics 800/-/802/803/804), triggered by each variant's first-stage id.
-- `syncToPlayer` â€” chain pacing. `true` advances each stage when the PLAYER's
-  animation steps to its next stage â€” the server's own schedule â€” instead of
+- `syncToPlayer` — chain pacing. `true` advances each stage when the PLAYER's
+  animation steps to its next stage — the server's own schedule — instead of
   when the follower's clip runs out. Teleport clips end in long hold frames the
   server always cuts short by starting the next stage, so clip-length pacing
   freezes for a second or two between stages; slaving to the player removes the
   freeze, paces correctly under overrides on different schedules, and ends the
   moment the player's sequence ends (with a 25-tick watchdog against desync).
-- `holdStill` â€” plant the follower where it stands for the length of the
+- `holdStill` — plant the follower where it stands for the length of the
   animation, releasing it when the animation ends. Movement always wins over an
   emote, so anything triggered by a fight is otherwise cut off the instant the
-  follower starts walking back to you â€” which is immediately. `kill-cheer` and
+  follower starts walking back to you — which is immediately. `kill-cheer` and
   `kill-boss-celebrate` both use it.
-- `delayTicks` / `delayTicksMax` â€” ticks to wait between the trigger and the
+- `delayTicks` / `delayTicksMax` — ticks to wait between the trigger and the
   whole firing, line and animation together. Set both and each firing draws a
   fresh wait between them, inclusive; set only `delayTicks` for a fixed one.
   Reacting instantly reads as machinery, and so does a *constant* delay once
-  you have seen it twice â€” most obviously in `mimic-emotes`, which waits 1â€“4
+  you have seen it twice — most obviously in `mimic-emotes`, which waits 1–4
   ticks so the follower joins in a beat behind you rather than moving in
   lockstep. Leave it off where the timing is the point: `mirror-teleport`
   vanishes with your cast and must not lag it.
-- `mirrorPose` â€” the same, held as a LOOP until your animation changes, for the
+- `mirrorPose` — the same, held as a LOOP until your animation changes, for the
   animations that never end on their own. Which of the two a rule wants is
   decided by the cache, not by taste: mining, woodcutting, fishing and fletching
   are authored loops (`frameStep >= 0`) and hang forever if played as a one-shot,
   while cooking, smithing, herblore and firemaking are one-shots the server
   restarts each cycle. `::follower animinfo` prints the `frameStep`.
-- `remember` â€” `{"key": "close-call", "as": "how close that was"}`. Files what
+- `remember` — `{"key": "close-call", "as": "how close that was"}`. Files what
   just happened as the incident the follower keeps coming back to; `remembers`
   conditions match on the key and `{memory}` says the phrase. Filed whether or
   not the line was heard: the thing happened either way.
-- `pickUp` â€” `{"what": "a nice flat rock", "minutes": 25}`. Something it carries
+- `pickUp` — `{"what": "a nice flat rock", "minutes": 25}`. Something it carries
   about and is put out about losing. Refused while its hands are full.
-- `bet` â€” `{"rich": false, "threshold": 50000, "minutes": 5}`: the follower
+- `bet` — `{"rich": false, "threshold": 50000, "minutes": 5}`: the follower
   calling the next drop UNDER fifty thousand. Both directions exist because
   anything that can only be right is not predicting.
-- `mood` â€” how much this firing moves the follower's mood, positive or negative.
+- `mood` — how much this firing moves the follower's mood, positive or negative.
   See below.
-- `asks` â€” names a tree in `dialogs.json`. Marks the line as a question and arms
+- `asks` — names a tree in `dialogs.json`. Marks the line as a question and arms
   that conversation: see below.
-- `want` â€” `{"region": 12850, "label": "Lumbridge", "minutes": 20}`. See below.
-- `hushMs` â€” takes the floor: nothing else speaks for this long. See below.
-- `markHere` â€” files this moment against the PLACE, said later via `{here}`.
+- `want` — `{"region": 12850, "label": "Lumbridge", "minutes": 20}`. See below.
+- `hushMs` — takes the floor: nothing else speaks for this long. See below.
+- `markHere` — files this moment against the PLACE, said later via `{here}`.
   The incident in `remember` is one thing anywhere; this is one per place, and
   it waits for you to come back.
-- `advise` â€” `{"about": "food", "ids": [829, 1191], "minutes": 1}` marks the
+- `advise` — `{"about": "food", "ids": [829, 1191], "minutes": 1}` marks the
   line as advice and says what taking it looks like. `"room": true` settles on
   the inventory getting emptier instead of on an animation. What counts is named
   by the rule, so new advice is a rule and not a code change.
-- `challenge` â€” `{"about": "ten kills", "tally": "kills", "target": 10,
+- `challenge` — `{"about": "ten kills", "tally": "kills", "target": 10,
   "minutes": 5}`. A wager on the player against a counter it already keeps.
-- `note` â€” free text, ignored by the plugin.
+- `note` — free text, ignored by the plugin.
 
 `asks`, `want`, `pickUp` and `bet` all take effect when the line is actually
 **said**, not when the rule wins: a question the mute swallowed is one the player
 never heard, a souvenir nobody was told about is invisible, and a silent
-prediction can only ever be right. `remember` is the exception â€” it is filed
+prediction can only ever be right. `remember` is the exception — it is filed
 regardless, because the chicken killed you whether or not the follower got a
 word in.
 
@@ -533,7 +533,7 @@ everyday script; once answered, or after a couple of minutes, Talk-to goes back
 to normal.
 
 The answer used to be a word typed into public chat. That asked the player to
-know a magic word and asked the follower to listen to everything said near it â€”
+know a magic word and asked the follower to listen to everything said near it —
 in a crowd, somebody else's "yes" was indistinguishable from yours. A menu of
 options can be neither misheard nor guessed at.
 
@@ -560,12 +560,12 @@ an `answered` condition picks it up.
 The answer is **latched** when the branch is reached and **delivered when the
 box closes**. The follower's reply to its own question goes overhead, and firing
 it the moment the option is clicked puts that line above a dialog box the player
-is still reading â€” so the one thing they were waiting to hear is the one thing
+is still reading — so the one thing they were waiting to hear is the one thing
 they miss. Latched rather than checked at the end, so closing the box early
 still counts: they answered, and whether they read the rest is their business.
 
 A tree is validated as a whole at load and **refused outright** if anything is
-wrong â€” a branch pointing at a node id that does not exist, a start that is not
+wrong — a branch pointing at a node id that does not exist, a start that is not
 a node, no answer anywhere. A conversation that dead-ends is worse than one that
 never opens, because the player is already inside it when it happens.
 
@@ -577,7 +577,7 @@ The everyday Talk-to script is still written in Java. It never changes, so a
 file would buy nothing; these are different because they are content.
 
 `say` is optional when the rule plays an animation: an animation-only rule is
-valid, and it skips the mute and the global speech gap entirely â€” those throttle
+valid, and it skips the mute and the global speech gap entirely — those throttle
 chatter, and a mirrored teleport is not chatter. It does still respect its own
 `cooldownMs` and rising-edge semantics.
 
@@ -587,15 +587,15 @@ the problem is reported in the chatbox and the log.
 ### Existing between sessions
 
 `awayFor` is the only thing the follower remembers when it is not running, and
-the only thing that should be â€” it is the difference between a companion that
+the only thing that should be — it is the difference between a companion that
 existed while you were gone and one created fresh each time you look at it. A
 timestamp goes in the config (one number; a whole file would be more machinery
 than the fact deserves) and is refreshed about once a minute as well as at
 login, because a client that crashes never gets to write anything on the way
 out and every crash would otherwise look like an absence.
 
-A quick relog is not an absence. `-1` means it has no idea â€” a first run, or a
-cleared config â€” and never reads as "just now".
+A quick relog is not an absence. `-1` means it has no idea — a first run, or a
+cleared config — and never reads as "just now".
 
 **Counts and records outlive the session too.** The tallies the follower keeps
 (`kill:<name>`, `deaths`, `levels`) and the records it holds (`hit`, `session`)
@@ -610,7 +610,7 @@ The first value ever filed against a record seeds it **silently**. Otherwise
 every new install would announce a personal best on its very first hit, which
 makes the feature look broken to every new user at once.
 
-Counters are capped at 300 entries, rarest evicted first â€” every distinct NPC
+Counters are capped at 300 entries, rarest evicted first — every distinct NPC
 name you have ever killed earns one, so without a bound it would grow into the
 config forever.
 
@@ -618,15 +618,15 @@ config forever.
 
 Everything else in the rule set runs one direction: something happened, and a
 line remarks on it. A `want` runs the other way. The follower names somewhere it
-would like to go, and then the next twenty minutes are an answer to that â€” going
+would like to go, and then the next twenty minutes are an answer to that — going
 there fires `wantFulfilled` and is the largest mood swing in the file, while the
 deadline passing fires `wantExpired` for a small drop.
 
 A thing with desires that can be *satisfied* reads as alive in a way no amount
 of commentary manages, which is why the payoff is priced so high.
 
-Only one want is open at a time â€” two would mean going anywhere satisfied
-something, which is the same as satisfying nothing â€” and a want for the region
+Only one want is open at a time — two would mean going anywhere satisfied
+something, which is the same as satisfying nothing — and a want for the region
 you are already standing in is refused outright. The `wanting` condition, inside
 a `none`, is how a rule avoids asking over the top of an open one.
 
@@ -638,7 +638,7 @@ as a mind.
 ### Taking the floor
 
 `hushMs` on a rule means: nothing else speaks for that long. Arriving where the
-follower asked is the case it was built for â€” the region change makes an area
+follower asked is the case it was built for — the region change makes an area
 line true on the same pass, and a `feelsAbout` line can land moments later, so
 one arrival was coming out as two or three separate remarks.
 
@@ -653,13 +653,13 @@ Two details that are the whole feature:
   entirely, so the moment worth having was the one being lost.
 
 Only speech is hushed. An animation-only rule is movement rather than chatter
-and carries on regardless â€” the same reason those skip the mute.
+and carries on regardless — the same reason those skip the mute.
 
 ### Taste
 
 `feelsAbout` asks how *this* follower feels about where it is standing. The
 liked and disliked regions are rolled once, the first time it has enough rules
-to roll from, and then kept for good in the config â€” so two people running this
+to roll from, and then kept for good in the config — so two people running this
 plugin do not get the same follower.
 
 The pool is the regions the rule set already has opinions about, which means it
@@ -682,8 +682,8 @@ the phrase with `{memory}`. One is the right number. A follower with a list is
 running a database, and the thing that makes a memory feel like a memory is that
 it crowds out the others.
 
-The count is what makes "again" honest â€” `recall-death-again` waits for the
-third â€” and it survives logout with the rest of the counters.
+The count is what makes "again" honest — `recall-death-again` waits for the
+third — and it survives logout with the rest of the counters.
 
 ### Things, hours and predictions
 
@@ -696,8 +696,8 @@ costs mood, and the name survives the loss so the line can mourn it by name.
 
 **A bet** is an opinion about what happens next, which is a different thing from
 commentary on what just happened. `bet` calls the next drop over or under a
-threshold; `betWon` and `betLost` collect. Both directions exist deliberately â€”
-anything that can only be right is not predicting â€” and a bet nobody collects on
+threshold; `betWon` and `betLost` collect. Both directions exist deliberately —
+anything that can only be right is not predicting — and a bet nobody collects on
 is quietly dropped rather than counted as a win.
 
 **The clock** is yours, not the game's. `timeOfDay` reads the hour where you are
@@ -757,7 +757,7 @@ it. A game is the same machinery with a wider vocabulary: an answer is any plain
 word now, so a menu can offer `left` and `right` as unmistakably as it offers yes
 and no.
 
-What a tree cannot do is be surprising â€” it is fixed text, so a guess it resolved
+What a tree cannot do is be surprising — it is fixed text, so a guess it resolved
 itself would have the same hand every time. The reveal is left to two rules that
 split a coin flip by priority: the winning one is gated on `chance: 50` and
 outranks the losing one, so a failed roll falls through. That also puts the
@@ -773,8 +773,8 @@ Two ways, both about the follower appearing to have been paying attention.
 
 **How many.** `npcKill` takes `"every": 25`, which fires on the twenty-fifth
 kill of *that* NPC and every twenty-fifth after. `{count}` carries the number,
-so a line can say it. The tally is kept per NPC **name**, not id â€” a player
-counts kalphites, not the four ids the game happens to use for them â€” and it is
+so a line can say it. The tally is kept per NPC **name**, not id — a player
+counts kalphites, not the four ids the game happens to use for them — and it is
 counted where the kill is attributed, so the tally and the event can never
 disagree about which kill this was.
 
@@ -788,7 +788,7 @@ that as stopping would hold the count at zero forever.
 ### Mood
 
 The follower carries one number, 0 to 100, starting at 50. It is not shown
-anywhere â€” you read it off what it chooses to say.
+anywhere — you read it off what it chooses to say.
 
 **Nothing in the code decides what moves it.** A rule carries `"mood": 18` or
 `"mood": -25`, and the engine applies that when the rule *fires*. So every
@@ -796,7 +796,7 @@ trigger the rule format already understands can affect the mood, and adding a
 new influence is a line in `phrases.json` rather than a change to the plugin.
 The nudge lands on firing rather than on winning, so a rule held back by its
 cooldown, a disabled group or the mute does not quietly move the mood while
-saying nothing â€” the follower's state and its words stay one story.
+saying nothing — the follower's state and its words stay one story.
 
 Rules read it back with the `mood` condition, normally by band:
 
@@ -806,11 +806,11 @@ Rules read it back with the `mood` condition, normally by band:
 
 | Band | Range |
 |---|---|
-| `low` | 0â€“20 |
-| `down` | 21â€“40 |
-| `even` | 41â€“59 |
-| `good` | 60â€“79 |
-| `high` | 80â€“100 |
+| `low` | 0–20 |
+| `down` | 21–40 |
+| `even` | 41–59 |
+| `good` | 60–79 |
+| `high` | 80–100 |
 
 It drifts a point back toward 50 about every 30 seconds, so nothing that
 happens is permanent and a bad run is recovered from by carrying on. It is
@@ -818,8 +818,8 @@ session-scoped: a follower that remembered last night's bad luck would be
 strange, and a fresh start is the honest default for something that cannot see
 what you did while it was gone.
 
-The shipped nudges are deliberately asymmetric â€” a death costs more than a kill
-earns â€” and `mood-low-idle` / `mood-high-idle` are the two rule sets that only
+The shipped nudges are deliberately asymmetric — a death costs more than a kill
+earns — and `mood-low-idle` / `mood-high-idle` are the two rule sets that only
 exist at the extremes. `::follower mood` reads the number, and
 `::follower mood 90` sets it, both behind developer mode.
 
@@ -827,8 +827,8 @@ exist at the extremes. `::follower mood` reads the number, and
 
 ## Chat commands
 
-The everyday commands below are always available. The diagnostic ones â€” the
-instruments used to build the plugin rather than to use it â€” are gated behind
+The everyday commands below are always available. The diagnostic ones — the
+instruments used to build the plugin rather than to use it — are gated behind
 **Developer commands** in the plugin settings (Developer section, off by
 default), and are marked **[dev]**. Typing a gated one while it is off says so
 rather than failing silently.
@@ -870,7 +870,7 @@ gated ones once Developer commands is on; both read `EVERYDAY_COMMANDS` and
 | `::follower watch` **[dev]** | Print the id of every animation your character plays |
 | `::follower stance <weaponId> [idle walk run attack]` **[dev]** | Show or hand-set a weapon's animations |
 
-**Diagnostics** â€” all developer-gated
+**Diagnostics** — all developer-gated
 
 | Command | Effect |
 |---|---|
@@ -886,7 +886,7 @@ gated ones once Developer commands is on; both read `EVERYDAY_COMMANDS` and
 | `::follower fire <rule-id>` **[dev]** | Say a rule now, whatever its conditions, cooldown and the mute say |
 | `::follower want` **[dev]** | What the follower is hoping for, and whether a question is open |
 
-`::follower fire` is how you test a rule you cannot conveniently provoke â€” several
+`::follower fire` is how you test a rule you cannot conveniently provoke — several
 only happen on a five percent roll after a minute of standing still, or on the
 hundredth login, and waiting for one of those in a live client is hoping rather
 than testing. It runs the **whole** rule, not just the words: the animation, the
@@ -897,12 +897,12 @@ and will print literally.
 `animtrace` is the useful one for animation problems: it prints both models' frame
 sequences collapsed into `frame xHeld` runs, so a stall shows as an oversized hold, a
 restart shows as a jump to 0, and a speed mismatch shows in the averages. Comparing
-against the player is what makes it conclusive â€” the reference implementation is
+against the player is what makes it conclusive — the reference implementation is
 standing right next to the follower.
 
 `::follower where` is the fast way to get region ids and coordinates while writing
 `regionEnter` and `inArea` rules. `::follower watch` is how you find an animation id
-by performing it rather than guessing from community lists â€” it needs **Developer
+by performing it rather than guessing from community lists — it needs **Developer
 commands** switched on, being an authoring tool rather than a playing one.
 
 ---
@@ -923,7 +923,7 @@ arms, hands, legs, boots). Kits carry no names in the cache, so styles are brows
 preview. Only kits matching that slot *and* body type are offered, using each kit's
 `bodyPartId` from the dump.
 
-### How following works â€” the game's own mechanics (2026-08-02)
+### How following works — the game's own mechanics (2026-08-02)
 
 The movement is a faithful implementation of the real follow system, researched
 from the preserved RS2 engine and client sources (LostCity), then verified with a
@@ -935,21 +935,21 @@ rule produces everything: trailing your exact path, stopping one tile behind,
 briefly overshooting a double-back.
 
 **The server gate.** Steps are released into the render route at most one per tick
-walking, two running â€” so the follower physically cannot outpace the player. A
+walking, two running — so the follower physically cannot outpace the player. A
 run-enabled follower takes two steps even while its target walks, until caught up.
 Releases are phase-locked to observed player movement (one release per observed
 server tick), because an independent clock drifts and every phase slip loses an
-unrecoverable tile. A 3â€“4 tile observation is two ticks sampled by one slow frame,
+unrecoverable tile. A 3–4 tile observation is two ticks sampled by one slow frame,
 not a teleport, and releases twice.
 
 **The client renderer** (`routeMove`, constants verbatim): fine position in
 128-units-per-tile world space; speed 4 per 20ms cycle walking, 2 while turning,
 doubled on run steps; yaw turned at 32/2048 per cycle toward the 8-direction of
-travel; run animation at speed â‰¥ 8; axis-independent stepping (diagonals genuinely
+travel; run animation at speed ≥ 8; axis-independent stepping (diagonals genuinely
 faster); snap when a step exceeds two tiles. Two deliberate adaptations for
 RuneLite's variable frame rate: consumption is continuous (fractional cycles) so
 whole-cycle quantisation can't beat against the fps, and the client's queue-depth
-catch-up tiers only engage past depth 6 â€” at normal depths they let the render
+catch-up tiers only engage past depth 6 — at normal depths they let the render
 sprint ahead of its enqueue phase and visually collapse the running gap onto the
 player (verified by trace; the burst exists to recover post-stall backlog only).
 
@@ -984,8 +984,8 @@ have landed; no known movement gaps remain.)
 
 ### Body colours
 
-Every colour button opens a swatch grid over the game's own palette tables â€” 30
-hair, 29 torso, 29 legs, 6 boots, 13 skin â€” recovered from the client (see the
+Every colour button opens a swatch grid over the game's own palette tables — 30
+hair, 29 torso, 29 legs, 6 boots, 13 skin — recovered from the client (see the
 hair-colour section below). The choice is stored as a palette index and rendered
 through the client's own find/replace, so the follower can never wear a colour the
 game cannot produce. Jaw follows hair, arms follow torso, hands follow skin, as in
@@ -993,7 +993,7 @@ the game. To copy your current look exactly instead, `::follower palette`.
 
 ---
 
-## Planned features â€” ALL FOUR DELIVERED (assessed 2026-08-02, closed 2026-08-06)
+## Planned features — ALL FOUR DELIVERED (assessed 2026-08-02, closed 2026-08-06)
 
 Kept as the original assessment and its outcome. Build order was 4 -> 2 -> 3 -> 1:
 facing is the primitive, posing uses facing, rule actions use posing's animation
@@ -1078,8 +1078,8 @@ the whole widget) or line-for-line from the preserved client:
 | Clip | interface rect (inset 7, 6) + 14px | `drawInterface` sets the clip to the component's bounds; the 14 offsets our slightly larger projection |
 | Fonts | The game's OWN glyph bitmaps, blitted (`GameFont` + fonts.json from the cache-dumper) | dialog text is fontId 497 = `q8_full` (Quill 8!) - the widget sniff settled it; the wiki's "Plain 12" was wrong. Overhead text is `b12_full`. TTFs can never be pixel-exact |
 | Text cells | name y=23, body (39,67) centred, continue y=103; column 380 wide at x=115 (NPC) / x=24 (player, head right at 433,59) | sniffed live widgets |
-| Body spacing | lineHeight by line count: 1â†’16, 2â†’28, 3â†’20 | sniffed; the game really spaces two lines wider than three |
-| Options menu | header "Select an option" dark red at (20,22), swords sprite 302/301 at (92,24)/(370,24), option step 36âˆ’4n from measured tops 46/39/40 (3/4/5 options) | sniffed across three menus |
+| Body spacing | lineHeight by line count: 1→16, 2→28, 3→20 | sniffed; the game really spaces two lines wider than three |
+| Options menu | header "Select an option" dark red at (20,22), swords sprite 302/301 at (92,24)/(370,24), option step 36−4n from measured tops 46/39/40 (3/4/5 options) | sniffed across three menus |
 | Name / continue | `DARKRED 0x800000` / blue `0x0000FF`, hover white; "Please wait..." in flight (base blue on continue, hover-white kept on options) | sniffed + client source |
 | Tick gate | open/advance/choose/dismiss resolve on the next GAME TICK via `FollowerDialog.tick()` | the real dialog's server round trip |
 
@@ -1121,12 +1121,12 @@ naming this repository and a commit hash, and open a pull request.
 The plugin is cosmetic and entirely client-side. It renders a `RuneLiteObject`
 and talks; it never acts on the player's behalf.
 
-- **No network access of any kind** â€” no HTTP client, no sockets.
+- **No network access of any kind** — no HTTP client, no sockets.
 - **No reflection, no `Class.forName`, no process spawning.**
 - **It never sends input or packets.** Nothing invokes a menu action, writes to
   a packet buffer or synthesises a key press. The menu entries it adds are
   ordinary `createMenuEntry` options the player clicks themselves.
-- **Files stay in `~/.runelite/follower`** â€” phrases, learned weapon stances,
+- **Files stay in `~/.runelite/follower`** — phrases, learned weapon stances,
   outfit profiles and measured animation trims. Sound files the player supplies
   live in the `sounds` subfolder beside them.
 - **Two paths the player chooses themselves.** Sharing exports a `.zip` to a
@@ -1158,7 +1158,7 @@ and talks; it never acts on the player's behalf.
   one. `Perspective.getClickbox` is marked internal; it backs
   `TileObject#getClickbox()`, which a `RuneLiteObject` cannot provide.
 
-Note `shadowJar` in `build.gradle` looks like dead code â€” nothing in this
+Note `shadowJar` in `build.gradle` looks like dead code — nothing in this
 repository calls it. **It must not be deleted:** the hub's packager invokes it to
 produce the published jar. Removing it as unused turned a green hub build red,
 which is how that was established.
@@ -1172,7 +1172,7 @@ before it is published here.
 
 A following follower stands exactly where you want to look: on the boss, on the
 tile you are about to click, in the middle of everything. It cannot actually
-block anything â€” it is a client-side object with no collision â€” but being
+block anything — it is a client-side object with no collision — but being
 visually in the way during a kill is problem enough.
 
 `SpectateController` walks it clear when a fight starts and holds it there.
@@ -1182,7 +1182,7 @@ visually in the way during a kill is problem enough.
   talking to a banker would count. An eight-tick grace window keeps it steady
   across the gap between one target dying and the next being clicked, so the
   follower does not bob in and out mid-kill.
-- **Where it stands.** Not merely "near you" â€” that could be between you and the
+- **Where it stands.** Not merely "near you" — that could be between you and the
   boss. The vector from the target to you, continued past you, is the one
   direction guaranteed to be out of the line of the fight. Tiles are tried
   outward from there and then fanned to the sides, so a wall behind you degrades
@@ -1190,7 +1190,7 @@ visually in the way during a kill is problem enough.
   target. It re-seats only after being left 7 tiles behind, so it does not
   re-path every time you shuffle.
 - **Who owns the feet.** Thrall mode is exempt, being in the fight by
-  definition, and an errand in progress wins too â€” a follower halfway to a bank
+  definition, and an errand in progress wins too — a follower halfway to a bank
   finishes the trip rather than being yanked sideways because something
   attacked.
 - **What it says.** Nothing special: the ordinary rule system never stopped
@@ -1201,10 +1201,10 @@ visually in the way during a kill is problem enough.
 - **The shield flourish.** While watching a boss it occasionally plays a casting
   animation with a graphic over it, as though warding itself. Both ids are
   settings, not constants: unlike a weapon's swing, which the game answers
-  definitively, "what a protective shield looks like" has nothing to measure â€”
+  definitively, "what a protective shield looks like" has nothing to measure —
   so pick by eye with `::follower gfx <id>` and `::follower anim <id>`.
 
-## Weapon stance coverage â€” PARKED, not a release blocker (2026-08-06)
+## Weapon stance coverage — PARKED, not a release blocker (2026-08-06)
 
 Filling in the stance library is ongoing work that deliberately does **not** gate
 the first release. At parking, 1,034 of the 1,619 weapon-slot items still fall
@@ -1213,7 +1213,7 @@ observed attack animation.
 
 It can ship this way because the mechanism is finished and only the observed data
 is thin. An unknown weapon falls back to unarmed poses plus a generic swing
-matched to its combat style, so it looks *plain* rather than wrong â€” the same
+matched to its combat style, so it looks *plain* rather than wrong — the same
 principle that governs every borrowing rule above. Coverage also grows on its own
 as the user walks past other players.
 
@@ -1225,7 +1225,7 @@ To pick it back up:
 - [`stance-wishlist.md`](stance-wishlist.md) is that list grouped into families
   with one representative each, since metal tiers and bracketed variants inherit
   from a plain version. Regenerate it from a fresh audit.
-- **Equipping** a weapon teaches its idle/walk/run â€” no combat needed. Only
+- **Equipping** a weapon teaches its idle/walk/run — no combat needed. Only
   attack animations require actually fighting something.
 
 ## Party-visible followers: FUTURE ROUTE, not started (2026-09-02)
@@ -1285,7 +1285,7 @@ boundary, on a plugin that is mid review. It answers "nobody else can see it"
 with "your friends can", which is the answer people actually want, and it
 belongs to a later version rather than a point release.
 
-## Location region ids â€” VERIFIED against the world map (2026-08-06)
+## Location region ids — VERIFIED against the world map (2026-08-06)
 
 The area rules' region ids were originally computed from documented world
 coordinates (`region = (x >> 6) * 256 + (y >> 6)`), which is a guess wherever
@@ -1296,9 +1296,9 @@ instead of by walking:
 cd tools/cache-dumper && gradlew runAudit --args="<phrases.json>"
 ```
 
-`RegionAudit` reads the world map's labels â€” an `AreaDefinition` carries the
+`RegionAudit` reads the world map's labels — an `AreaDefinition` carries the
 text the game draws ("Lumbridge", "Seers' Village") and a
-`WorldMapElementDefinition` places it at a world position â€” so name plus
+`WorldMapElementDefinition` places it at a world position — so name plus
 position yields the true region for every named place in the game. It reports
 each rule as confirmed, adjacent (a town spans regions, so a neighbouring id is
 the same place), or far off, and lists what the map labels **inside** the
@@ -1306,14 +1306,14 @@ rule's own regions.
 
 All 55 region-based rules verified. The last seven only looked wrong because a
 dungeon's entrance label sits on the surface, regions away from where the
-player actually stands; the reverse lookup settles each one â€” region 11673
+player actually stands; the reverse lookup settles each one — region 11673
 contains "blue dragons" and "chaos druids" (Taverley Dungeon), 6557 contains
 "hellhounds" and "steel dragons" (the Catacombs), 11602 contains "Saradomin's
 Encampment" (the God Wars Dungeon), and so on.
 
 Re-run the audit after a game update that moves or renames an area.
 
-## Rule targets â€” VERIFIED against the cache (2026-08-08)
+## Rule targets — VERIFIED against the cache (2026-08-08)
 
 A rule that watches for an NPC the game does not have is invisible: it never
 fires, and there is nothing to notice. It looks exactly like a rule whose
@@ -1325,19 +1325,19 @@ cd tools/cache-dumper && gradlew runTargetAudit --args="<phrases.json>"
 ```
 
 `RuleTargetAudit` reads every named NPC and item out of the cache and asks the
-question the plugin will ask at runtime â€” whole-name, case-insensitive, `*`
-wildcards â€” of every `npcSpawn` / `npcNearby` / `npcKill` name and every
+question the plugin will ask at runtime — whole-name, case-insensitive, `*`
+wildcards — of every `npcSpawn` / `npcNearby` / `npcKill` name and every
 `itemEquipped` id in the file.
 
 It found one on its first run. `quest-gypsy-aris` watched for **"Gypsy Aris"**,
 which is what the wiki calls her; the game calls her **"Aris"** (npc 11868 and
 friends), so that rule could never have fired. The spoken lines still call her
-Gypsy Aris, because that is what a player would say â€” only the trigger has to
+Gypsy Aris, because that is what a player would say — only the trigger has to
 match the game. 118 names and 700 item ids now all resolve.
 
 Re-run after a game update that renames an NPC, and after adding rules by hand.
 
-The same check exists for the names the PLUGIN hardcodes rather than the rules â€”
+The same check exists for the names the PLUGIN hardcodes rather than the rules —
 the scene objects and NPCs the errands look for, and the standard pose ids:
 
 ```bash
@@ -1367,7 +1367,7 @@ These are inherent to the approach, not bugs to be filed:
   with ground truth, and is the likeliest route to an exact-feel follower.
 - **Pose animations come from observation, and cannot come from anywhere else.**
   `StanceLibrary` learns a weapon's idle/walk/run (and now its attack) by watching
-  real players. This is not laziness â€” it was measured. Weapon animations are **not**
+  real players. This is not laziness — it was measured. Weapon animations are **not**
   in the cache as data: item params hold the combat stat block, item `category`
   disagrees with the observed stances 49 times out of 189, and not one of the
   cache's 3,986 structs carries a pose set. The client resolves them in script at
@@ -1376,13 +1376,13 @@ These are inherent to the approach, not bugs to be filed:
 
   Three things make observation cheap in practice. A starter library ships in the
   jar, so a fresh install already knows ~190 weapons. Every player in the scene
-  teaches passively â€” a few minutes anywhere busy fills it out. And weapons cluster
+  teaches passively — a few minutes anywhere busy fills it out. And weapons cluster
   hard: those 190 weapons collapse into just **32 stance classes**, two of which
   cover 69% of them, so an unknown weapon's attack can be borrowed from a weapon of
   the same class. Seeing one scimitar swung covers every scimitar in the game.
 
   Variant markers are stripped generally rather than from a known list. The list
-  rotted silently â€” it knew `(p)` but not `(kp)`, so every karambwan-poisoned
+  rotted silently — it knew `(p)` but not `(kp)`, so every karambwan-poisoned
   spear and hasta sat uncovered beside the plain one it should have inherited
   from, and likewise the Bounty Hunter `(bh)` weapons, the Gauntlet's basic /
   attuned / perfected tiers and charge counts like `Enchanted lyre(2)`. Every
@@ -1391,7 +1391,7 @@ These are inherent to the approach, not bugs to be filed:
   into 16 multi-item groups, all 16 agreeing on their stance.
 
   Inheritance also crosses metal tiers: an Adamant longsword animates like a
-  Black one. Plain tiers only (bronze through rune) â€” dragon, crystal, gilded and
+  Black one. Plain tiers only (bronze through rune) — dragon, crystal, gilded and
   3rd age are excluded because the game special-cases them, which is measured
   rather than assumed. The plain tiers agree on their stance in all 5 observed
   multi-tier groups with no exceptions; admitting the ornamental tiers covers
@@ -1400,13 +1400,13 @@ These are inherent to the approach, not bugs to be filed:
 
   A stance class alone is **not** enough to borrow an attack, though. It groups
   weapons by how they are *carried*, and the 79-weapon class that walks like an
-  unarmed player contains both the Dragon harpoon and the Bow of faerdhinen â€”
+  unarmed player contains both the Dragon harpoon and the Bow of faerdhinen —
   identical carry, completely different swing. Borrowing therefore also requires
   the combat style to match, taken from the item's own attack bonuses, and is
   refused outright when either weapon's style can't be established. Poses have no
   such problem: the class *is* the carry, which is why they borrow freely.
 
-  Note that attacks start empty â€” the shipped library carries stances only, since
+  Note that attacks start empty — the shipped library carries stances only, since
   attacks are learned from players seen swinging while interacting, and only a
   weapon actually used in combat records one. Until a class has been seen fighting,
   its weapons fall back to a generic swing for their combat style.
@@ -1419,23 +1419,23 @@ These are inherent to the approach, not bugs to be filed:
 - **Animations must loop defensively.** Many pose animations have `frameStep = -1`,
   meaning they were never authored to loop. `AnimationController`'s default finish
   handler steps back by `frameStep` and, if the frame is still out of range, **drops
-  the animation entirely** â€” the model silently freezes. `FollowerEntity.loopSafely`
+  the animation entirely** — the model silently freezes. `FollowerEntity.loopSafely`
   falls back to frame 0 instead. This was the cause of the end-of-cycle skip.
 - **Do not touch `setAnimationInterpolationFilter`.** It is keyed on animation ID, not
-  on the object being drawn â€” and the follower uses the same IDs as the player, since
+  on the object being drawn — and the follower uses the same IDs as the player, since
   the stances are learned from real players. So changing interpolation "for the
   follower" silently changes it for the **user's own character**, disabling RuneLite's
   animation smoothing for them. There is no way to scope it per object; the plugin
   leaves it alone.
 - **The pose slot is not auto-advanced.** `RuneLiteObject.tick()` advances only the
   main animation controller; the pose slot exists to be blended on top. A controller
-  placed there alone renders a static model â€” the follower's walk/idle therefore lives
+  placed there alone renders a static model — the follower's walk/idle therefore lives
   in the main slot.
 - **Captured models don't animate.** By construction; see the table above.
 - **Capture mode borrows the shared actor model cache.** `Actor#getModel()` returns a
   reference into a cache the client recycles between actors, so a naively held model
   turns into whichever nearby NPC or player reused the slot. The capture path merges
-  the model to detach it, but this is inherent fragility in the approach â€” the cache
+  the model to detach it, but this is inherent fragility in the approach — the cache
   dump path composes its own geometry and is immune. Prefer it.
 - **Equipment-based conditions miss rings and ammo.** `itemEquipped` reads the player
   composition, which only covers slots with a visible model.
@@ -1445,10 +1445,10 @@ These are inherent to the approach, not bugs to be filed:
 
 ---
 
-## Animation skip at the loop point â€” SOLVED (2026-08-02)
+## Animation skip at the loop point — SOLVED (2026-08-02)
 
 **Mechanism, confirmed in client source.** RSSequenceDefinition's transform methods
-compute `nextFrame = frame + 1` and set it to `-1` past the end â€” *"the last frame
+compute `nextFrame = frame + 1` and set it to `-1` past the end — *"the last frame
 is not interpolated"*. So with smoothing on, every frame of a loop glides toward
 the next except the final one, which holds statically for its whole duration
 (~420ms on a 21-tick frame) and then snaps to the loop target. Crucially the
@@ -1456,7 +1456,7 @@ the next except the final one, which holds statically for its whole duration
 loops with the last pose adjacent to the first. The follower's earlier trim
 workaround was compensating for a hold that is baked into the engine.
 
-**The fix â€” `WrapLerpController`.** Subclasses `AnimationController` and overrides
+**The fix — `WrapLerpController`.** Subclasses `AnimationController` and overrides
 `animate()`: on every frame but the last it defers to the client; on the last it
 poses the model at the true final frame and the true loop-target frame (both exact
 static poses via `applyTransformations` with an unpacked index, loop target
@@ -1472,7 +1472,7 @@ back over automatically if the lerp's safety guard ever trips.
 Verified in game 2026-08-02: idle, walk and run all loop smoothly with Animation
 Smoothing on, full frame count, no trim. One implementation note that cost a
 debugging round: `applyTransformations` returns a model backed by the client's
-shared animation scratch buffer â€” snapshot its vertices immediately and render
+shared animation scratch buffer — snapshot its vertices immediately and render
 into a mergeModels-detached copy, never hold references to its output.
 
 **Superseded history** (the trim era):
@@ -1526,11 +1526,11 @@ own animation smoothing.
 
 ---
 
-## Hair colour fidelity â€” SOLVED (2026-08-02)
+## Hair colour fidelity — SOLVED (2026-08-02)
 
 **The mechanism, from the deobfuscated client:** body colours are two plain
 find/replace passes per colour slot over the merged model, using palette tables
-hardcoded in the client. The highlight is NOT derived from the base colour â€” it is
+hardcoded in the client. The highlight is NOT derived from the base colour — it is
 a separate source colour with its own replacement table. Every heuristic below was
 approximating something that was never a computation.
 
@@ -1538,14 +1538,14 @@ approximating something that was never a computation.
 live game:** compose the player's outfit with no recolouring, diff lit face colours
 against the player's own model (hue/sat survive lighting; luminance recovered by
 relighting with all 128 candidates and keeping the one that reproduces the client
-bit-exactly). Verified against known legacy table values â€” hair source 6798 â†’
-white 107, skin 4550 â†’ 5681 â€” every luminance uniquely recovered. The recovered
+bit-exactly). Verified against known legacy table values — hair source 6798 →
+white 107, skin 4550 → 5681 — every luminance uniquely recovered. The recovered
 pairs are applied to the follower exactly as the client applies them, persisted in
 config, restored on startup. `::follower palette clear` reverts to picker colours.
 
 **The full tables are now recovered and shipped.** `::follower harvest` steps every
 colour index of every body slot through the local composition client-side (the
-same cosmetic mutation Fashionscape performs), extracting each entry â€” 104 runs,
+same cosmetic mutation Fashionscape performs), extracting each entry — 104 runs,
 all 30 hair (base + highlight), 29 torso, 29 legs, 6 boots, 13 skin. The classic-era
 rows validate exactly against the known legacy tables. The result is hardcoded in
 `GamePalette.java`, and `applyBodyColors` now uses it, so **any outfit carrying
@@ -1558,13 +1558,13 @@ skin rows open a swatch grid over the real tables (30/29/29/6/13 entries); the
 choice is stored as a palette INDEX (`colors=a/b/c/d/e` in the outfit string) and
 rendered through the client's own find/replace, so the follower can never wear a
 colour the game cannot produce. Jaw follows hair, arms follow torso, hands follow
-skin â€” as in the game. Picking a colour while a `::follower palette` copy is
+skin — as in the game. Picking a colour while a `::follower palette` copy is
 active first converts the copy to its equivalent indices (the pairs are table
 entries, so the conversion is exact), then applies the pick.
 
 **The heuristic era is gone.** The free-form colour chooser, the learned-hair
 palette, `grabhair`/`hairbright`/`keephair` and the whole heuristic restyle were
-removed in the 2026-08-02 cleanup â€” every one of them approximated tables that are
+removed in the 2026-08-02 cleanup — every one of them approximated tables that are
 now known exactly. `color.PART=hsl:` keys in old outfit strings are ignored with a
 warning; re-pick the colour in the panel. Two findings from that era worth
 keeping: the lighting constants are the client's own, verified as
@@ -1576,7 +1576,7 @@ packed HSL, never RGB, which loses precision both ways.
 Builds clean (zero warnings) against **RuneLite 1.12.33** on JDK 17.
 
 The plugin uses the current WorldView-based API rather than the deprecated
-client-level equivalents â€” `client.getTopLevelWorldView().npcs()` /
+client-level equivalents — `client.getTopLevelWorldView().npcs()` /
 `.getMapRegions()`, the `LocalPoint(int, int, WorldView)` constructor, and
 `net.runelite.api.gameval.VarbitID` in place of the deprecated `Varbits`. If you
 build against an older client, those four call sites are the ones to revert.
@@ -1613,44 +1613,44 @@ wearable items and 307 body kits** in a 0.4 MB file. The default body-kit ids in
 to real models.
 
 One thing the dump does *not* contain is item names, so there's no way to look up an
-id from within the data file â€” use RuneLite's item search or the wiki to find the ids
+id from within the data file — use RuneLite's item search or the wiki to find the ids
 you want for the outfit string.
 
 ## Project layout
 
 ```
 src/main/java/com/follower/
-â”œâ”€â”€ FollowerPlugin.java          orchestration, event subscriptions, chat commands
-â”œâ”€â”€ FollowerConfig.java          config panel
-â”œâ”€â”€ appearance/
-â”‚   â”œâ”€â”€ Outfit.java              12-slot composition encoding + colour indices
-â”‚   â”œâ”€â”€ OutfitParser.java        the config-panel outfit string
-â”‚   â”œâ”€â”€ ModelRepository.java     loads equipment-models.json
-â”‚   â”œâ”€â”€ AppearanceComposer.java  loadModelData -> mergeModels -> palette -> light
-â”‚   â”œâ”€â”€ GamePalette.java         the client's body-colour tables, recovered exactly
-â”‚   â”œâ”€â”€ HslColor.java            packed-HSL helpers + swatch RGB approximation
-â”‚   â”œâ”€â”€ PaletteHarvest.java      append-only record of palette extractions
-â”‚   â”œâ”€â”€ ColorHarvester.java      ::follower harvest - steps every colour index
-â”‚   â”œâ”€â”€ CaptureFallback.java     capture path: composition swap, one-frame grab
-â”‚   â””â”€â”€ AppearanceService.java   picks a path, memoises the result
-â”œâ”€â”€ follower/
-â”‚   â”œâ”€â”€ FollowerEntity.java      RuneLiteObject wrapper, trail walking, orientation
-â”‚   â”œâ”€â”€ WrapLerpController.java  interpolates looping animations across the wrap
-â”‚   â”œâ”€â”€ WrapTrimStore.java       persisted trims for the fallback wrap handling
-â”‚   â”œâ”€â”€ StanceLibrary.java       per-weapon idle/walk/run ids, learned by watching
-â”‚   â””â”€â”€ PlayerPose.java          stand/walk/run animation ids
-â”œâ”€â”€ ui/
-â”‚   â”œâ”€â”€ FollowerPanel.java       the side panel: Talking, Memory, Outfit, Behaviour, Commands
-â”‚   â”œâ”€â”€ PhrasesDialog.java       Messages window: one category per rule group, Find, Sounds, Share
-â”‚   â”œâ”€â”€ DialogsDialog.java       Conversations window: the trees the follower starts
-â”‚   â”œâ”€â”€ VoiceDialog.java         Sounds window: attach a file to a line, the sounds folder
-â”‚   â””â”€â”€ MemoryDialog.java        Memory window: what it knows, and Forget everything
-â””â”€â”€ speech/
-    â”œâ”€â”€ RuleLoader.java          phrases.json load + hot reload
-    â”œâ”€â”€ SpeechRule.java          one rule, plus its edge/cooldown state
-    â”œâ”€â”€ Condition.java           the condition evaluator
-    â”œâ”€â”€ TriggerContext.java      per-tick game state snapshot
-    â”œâ”€â”€ TriggerEvent.java        one thing that happened
-    â”œâ”€â”€ SpeechEngine.java        evaluation pass, priority, cooldowns, placeholders
-    â””â”€â”€ FollowerOverlay.java     projected speech bubble
+├── FollowerPlugin.java          orchestration, event subscriptions, chat commands
+├── FollowerConfig.java          config panel
+├── appearance/
+│   ├── Outfit.java              12-slot composition encoding + colour indices
+│   ├── OutfitParser.java        the config-panel outfit string
+│   ├── ModelRepository.java     loads equipment-models.json
+│   ├── AppearanceComposer.java  loadModelData -> mergeModels -> palette -> light
+│   ├── GamePalette.java         the client's body-colour tables, recovered exactly
+│   ├── HslColor.java            packed-HSL helpers + swatch RGB approximation
+│   ├── PaletteHarvest.java      append-only record of palette extractions
+│   ├── ColorHarvester.java      ::follower harvest - steps every colour index
+│   ├── CaptureFallback.java     capture path: composition swap, one-frame grab
+│   └── AppearanceService.java   picks a path, memoises the result
+├── follower/
+│   ├── FollowerEntity.java      RuneLiteObject wrapper, trail walking, orientation
+│   ├── WrapLerpController.java  interpolates looping animations across the wrap
+│   ├── WrapTrimStore.java       persisted trims for the fallback wrap handling
+│   ├── StanceLibrary.java       per-weapon idle/walk/run ids, learned by watching
+│   └── PlayerPose.java          stand/walk/run animation ids
+├── ui/
+│   ├── FollowerPanel.java       the side panel: Talking, Memory, Outfit, Behaviour, Commands
+│   ├── PhrasesDialog.java       Messages window: one category per rule group, Find, Sounds, Share
+│   ├── DialogsDialog.java       Conversations window: the trees the follower starts
+│   ├── VoiceDialog.java         Sounds window: attach a file to a line, the sounds folder
+│   └── MemoryDialog.java        Memory window: what it knows, and Forget everything
+└── speech/
+    ├── RuleLoader.java          phrases.json load + hot reload
+    ├── SpeechRule.java          one rule, plus its edge/cooldown state
+    ├── Condition.java           the condition evaluator
+    ├── TriggerContext.java      per-tick game state snapshot
+    ├── TriggerEvent.java        one thing that happened
+    ├── SpeechEngine.java        evaluation pass, priority, cooldowns, placeholders
+    └── FollowerOverlay.java     projected speech bubble
 ```
