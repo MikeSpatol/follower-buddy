@@ -244,6 +244,54 @@ public class ErrandSimulationTest
 	}
 
 	@Test
+	public void aSilentlyForcedErrandSaysNothingAtEitherEnd()
+	{
+		errands.force("bootlace", true);
+		tick(1);
+		assertTrue("it ran", follower.animations.contains(827));
+		tick(10);
+		assertTrue("and gave the follower back", follower.following);
+		assertTrue("without a word at either end", dispatched.isEmpty());
+
+		// The next, asked for aloud, announces itself as ever.
+		errands.force("bootlace");
+		tick(11);
+		assertTrue(started("bootlace"));
+	}
+
+	@Test
+	public void aSessionKeepsEveryErrandInButTheOneItAskedFor()
+	{
+		errands.setSession(() -> working);
+		game.at(50, 50, 0);
+		follower.where = new WorldPoint(50, 51, 0);
+		game.placeObject(9001, "Chest", 53, 50, 0);
+
+		// The arrival look is the follower's own idea, and a session says no.
+		working = true;
+		errands.noticeArrival();
+		tick(15);
+		assertFalse("no errand of its own during a session", errands.isBusy());
+		assertTrue(dispatched.isEmpty());
+
+		// The one the session sent for goes ahead.
+		errands.force("bootlace", true);
+		tick(1);
+		assertTrue("the forced errand is the session's own", errands.isBusy());
+		tick(10);
+		assertTrue(follower.following);
+
+		// The session over, the same arrival earns its look.
+		working = false;
+		errands.noticeArrival();
+		tick(15);
+		assertTrue("the look, once the session is done", started("explore-chest"));
+	}
+
+	/** Whether a work session is on, for the session gate. */
+	private boolean working;
+
+	@Test
 	public void aGlanceSendsItAShortWayAndBringsItBack()
 	{
 		errands.force("glance");

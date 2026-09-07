@@ -21,9 +21,9 @@ import net.runelite.api.NPC;
  *   <tr><td>prayerBelow / prayerAbove</td><td>{@code percent}, {@code requirePrayerActive}</td></tr>
  *   <tr><td>inRegion / regionEnter</td><td>{@code regions}, {@code anyLoadedRegion}</td></tr>
  *   <tr><td>inArea</td><td>{@code x1,y1,x2,y2,plane}</td></tr>
- *   <tr><td>chatMessage</td><td>{@code contains} or {@code regex}</td></tr>
+ *   <tr><td>chatMessage</td><td>{@code contains} or {@code regex}; optional {@code every} - the nth matching message</td></tr>
  *   <tr><td>varbitEquals / varbitChanged</td><td>{@code varbit}, {@code value}</td></tr>
- *   <tr><td>animationSelf</td><td>{@code ids}</td></tr>
+ *   <tr><td>animationSelf</td><td>{@code ids}; optional {@code every} - the nth time one plays</td></tr>
  *   <tr><td>levelUp</td><td>{@code names} (skill names)</td></tr>
  *   <tr><td>damageTaken</td><td>{@code minimum}</td></tr>
  *   <tr><td>itemEquipped</td><td>{@code ids}</td></tr>
@@ -204,6 +204,26 @@ public class Condition
 		return false;
 	}
 
+	/**
+	 * Matches of this condition so far, for {@link #every} on the conditions
+	 * that have no count of their own to read - a chat message, an animation.
+	 * Transient, so it is the rule's lifetime and not the file's.
+	 */
+	private transient int seen;
+
+	/**
+	 * Whether this match is the every-nth one. Counted only when it is
+	 * reached, so under an "all" the conditions before it gate the count.
+	 */
+	private boolean everyNth()
+	{
+		if (every == null || every <= 0)
+		{
+			return true;
+		}
+		return ++seen % every == 0;
+	}
+
 	private boolean idsContain(int wanted)
 	{
 		if (ids == null)
@@ -309,11 +329,15 @@ public class Condition
 			case "inarea":
 				return matchesArea(ctx);
 
+			// "every" counts this condition's own matches, for life: 3 fires
+			// on the third burn message and every third after, the way the
+			// skilling company shakes its head at a run of them, not each.
 			case "chatmessage":
 				return event.getType() == TriggerEvent.Type.CHAT
 					&& matchesChatType(event)
 					&& matchesSpeaker(ctx, event)
-					&& matchesText(event.getMessage());
+					&& matchesText(event.getMessage())
+					&& everyNth();
 
 			// The player answering something the follower asked, by picking a
 			// branch in the conversation it opened. The options ARE the
@@ -332,7 +356,8 @@ public class Condition
 					&& (value == null || event.getValue() == value);
 
 			case "animationself":
-				return event.getType() == TriggerEvent.Type.ANIMATION && idsContain(event.getId());
+				return event.getType() == TriggerEvent.Type.ANIMATION && idsContain(event.getId())
+					&& everyNth();
 
 			case "levelup":
 				return event.getType() == TriggerEvent.Type.LEVEL_UP && matchesText(event.getName());

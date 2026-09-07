@@ -372,6 +372,93 @@ public class SpectateSimulationTest
 			follower.stayingAt.getX() >= 3222);
 	}
 
+	private int panics()
+	{
+		int panics = 0;
+		for (int[] chain : follower.chains)
+		{
+			if (chain.length == 1 && chain[0] == SpectateController.PANIC)
+			{
+				panics++;
+			}
+		}
+		return panics;
+	}
+
+	@Test
+	public void aSuperiorIsWatchedFromTwoTilesFurtherWithOnePanic()
+	{
+		NPC superior = fight("Marble gargoyle", 349);
+		game.moveNpc(superior, 3210, 3218, 0);
+		tick(2);
+
+		assertTrue(follower.stayingAt != null);
+		assertEquals("two tiles beyond the usual four", 6,
+			follower.stayingAt.distanceTo(new WorldPoint(3222, 3218, 0)));
+		assertEquals("one panic", 1, panics());
+		tick(30);
+		assertEquals("and only the one", 1, panics());
+
+		// An ordinary gargoyle is watched from the usual distance, unpanicked.
+		game.fighting(null);
+		tick(3);
+		NPC ordinary = fight("Gargoyle", 111);
+		game.moveNpc(ordinary, 3210, 3218, 0);
+		tick(2);
+		assertEquals(4, follower.stayingAt.distanceTo(new WorldPoint(3222, 3218, 0)));
+		assertEquals(1, panics());
+	}
+
+	@Test
+	public void aSuperiorTurningUpMidFightMovesTheSeatOut()
+	{
+		// The usual way to meet one: it spawns during the task and the player
+		// turns on it from where they stand, seat already taken.
+		NPC ordinary = fight("Gargoyle", 111);
+		game.moveNpc(ordinary, 3210, 3218, 0);
+		tick(2);
+		assertEquals(4, follower.stayingAt.distanceTo(new WorldPoint(3222, 3218, 0)));
+		assertEquals(0, panics());
+
+		NPC superior = game.spawnNpc(101, "Marble gargoyle", 349);
+		game.moveNpc(superior, 3210, 3218, 0);
+		game.fighting(superior);
+		tick(2);
+		assertEquals("two tiles further, mid-fight", 6,
+			follower.stayingAt.distanceTo(new WorldPoint(3222, 3218, 0)));
+		assertEquals(1, panics());
+	}
+
+	@Test
+	public void withTheCompanySwitchedOffASuperiorIsJustAnotherFight()
+	{
+		FollowerConfig off = new FollowerConfig()
+		{
+			@Override
+			public boolean keepsCompany()
+			{
+				return false;
+			}
+		};
+		SpectateController plain = new SpectateController(game.client, follower,
+			off, () -> context, new SpotAnimRepository(new Gson()), spoken::add, disarms::add);
+
+		NPC superior = fight("Marble gargoyle", 349);
+		game.moveNpc(superior, 3210, 3218, 0);
+		for (int i = 0; i < 30; i++)
+		{
+			game.tick(++tick);
+			context.refresh();
+			follower.advance();
+			plain.tick(false);
+		}
+
+		assertTrue(follower.stayingAt != null);
+		assertEquals("the usual four tiles, the setting being off", 4,
+			follower.stayingAt.distanceTo(new WorldPoint(3222, 3218, 0)));
+		assertEquals("and no panic", 0, panics());
+	}
+
 	@Test
 	public void theFightEndingSendsItBackAndSaysSo()
 	{

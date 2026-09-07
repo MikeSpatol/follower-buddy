@@ -284,7 +284,48 @@ public class ErrandController
 	/** Test hook: run an errand now - a specific one by name, or any ("*"). */
 	public void force(String key)
 	{
+		force(key, false);
+	}
+
+	/**
+	 * As {@link #force(String)}, with the option of nobody hearing of it.
+	 *
+	 * @param silent whether the errand's start and end lines are skipped.
+	 * The skilling company sends the follower to kneel beside a player
+	 * praying at an altar, and that is company, not an errand worth a remark
+	 */
+	public void force(String key, boolean silent)
+	{
 		forceKey = key == null || key.isEmpty() ? "*" : key.toLowerCase(java.util.Locale.ROOT);
+		forceSilently = silent;
+	}
+
+	/** Whether the forced errand waiting to run keeps its lines to itself. */
+	private boolean forceSilently;
+
+	/**
+	 * Whether a work session is on. Errands do not start during one; the
+	 * exception is the errand the session itself asks for through
+	 * {@link #force(String, boolean)}, which is company rather than a
+	 * wander, so only the unforced starts read this.
+	 */
+	private BooleanSupplier session = () -> false;
+
+	public void setSession(BooleanSupplier session)
+	{
+		this.session = session;
+	}
+
+	/** Whether the errand under way says nothing at either end. */
+	private boolean silent;
+
+	/** The errand's start or end, unless this run was asked to keep quiet. */
+	private void announce(TriggerEvent event)
+	{
+		if (!silent)
+		{
+			dispatch.accept(event);
+		}
 	}
 
 	private final Hands hands;
@@ -395,7 +436,10 @@ public class ErrandController
 		{
 			String key = forceKey;
 			forceKey = null;
-			if (safeToStart())
+			// Set before the start, since the start is what announces it.
+			silent = forceSilently;
+			forceSilently = false;
+			if (clearToStart())
 			{
 				for (Errand errand : Errand.values())
 				{
@@ -405,6 +449,7 @@ public class ErrandController
 					}
 				}
 			}
+			silent = false;
 			log.debug("Forced errand '{}' could not start here", key);
 			return;
 		}
@@ -560,7 +605,7 @@ public class ErrandController
 				errandSite = follower.getWorldLocation();
 				follower.stayHere();
 				follower.playAnimation(BEND_ANIMATION);
-				dispatch.accept(TriggerEvent.errand(TriggerEvent.Type.ERRAND_START, errand.key));
+				announce(TriggerEvent.errand(TriggerEvent.Type.ERRAND_START, errand.key));
 				state = State.DOING;
 				waitTicks = 6;
 				log.debug("Errand started: {}", errand.key);
@@ -607,7 +652,7 @@ public class ErrandController
 				errandSite = follower.getWorldLocation();
 				follower.stayHere();
 				takeOutTheScroll();
-				dispatch.accept(TriggerEvent.errand(TriggerEvent.Type.ERRAND_START, errand.key));
+				announce(TriggerEvent.errand(TriggerEvent.Type.ERRAND_START, errand.key));
 				state = State.DOING;
 				waitTicks = 12 + ThreadLocalRandom.current().nextInt(8);
 				log.debug("Errand started: {}", errand.key);
@@ -671,7 +716,7 @@ public class ErrandController
 				currentSiteKey = siteKey;
 				targetTile = beside;
 				errandSite = target;
-				dispatch.accept(TriggerEvent.errand(
+				announce(TriggerEvent.errand(
 					TriggerEvent.Type.ERRAND_START, currentSiteKey));
 				state = State.TRAVELING;
 				waitTicks = TRAVEL_TIMEOUT_TICKS;
@@ -707,7 +752,7 @@ public class ErrandController
 				current = errand;
 				targetTile = beside;
 				errandSite = target;
-				dispatch.accept(TriggerEvent.errand(TriggerEvent.Type.ERRAND_START, errand.key));
+				announce(TriggerEvent.errand(TriggerEvent.Type.ERRAND_START, errand.key));
 				state = State.TRAVELING;
 				waitTicks = TRAVEL_TIMEOUT_TICKS;
 				log.debug("Errand started: {} beside {}", errand.key, target);
@@ -733,7 +778,7 @@ public class ErrandController
 		// The doomed fire trip announces itself as an innocent warm-up: the
 		// joke needs the audience not to see it coming.
 		String announce = errand == Errand.FIREDEATH ? Errand.FIRE.key : errand.key;
-		dispatch.accept(TriggerEvent.errand(TriggerEvent.Type.ERRAND_START, announce));
+		announce(TriggerEvent.errand(TriggerEvent.Type.ERRAND_START, announce));
 		state = State.TRAVELING;
 		waitTicks = TRAVEL_TIMEOUT_TICKS;
 		log.debug("Errand started: {} toward {}", errand.key, target);
@@ -772,7 +817,7 @@ public class ErrandController
 				// Standing IN the fire now. The pain is immediate and vocal.
 				// The disappearance is armed on the death animation's final
 				// frame, so the corpse never stands back up first.
-				dispatch.accept(TriggerEvent.errand(TriggerEvent.Type.ERRAND_START, current.key));
+				announce(TriggerEvent.errand(TriggerEvent.Type.ERRAND_START, current.key));
 				follower.playAnimation(FIRE_DEATH_ANIMATION);
 				follower.playSpotAnim(spotAnims.get(FIRE_DEATH_SPOTANIM));
 				// Generous window; the return home ends the hide exactly.
@@ -828,7 +873,7 @@ public class ErrandController
 		// longer one - which is what a person would do.
 		Errand done = current;
 		follower.resumeFollowing();
-		dispatch.accept(TriggerEvent.errand(TriggerEvent.Type.ERRAND_END, endKey(done)));
+		announce(TriggerEvent.errand(TriggerEvent.Type.ERRAND_END, endKey(done)));
 		log.debug("Errand finished: {}", endKey(done));
 		clearErrand();
 	}
@@ -852,7 +897,7 @@ public class ErrandController
 		// Raised to mid-body: at ground height the swirl sat in the ankles.
 		follower.playSpotAnim(spotAnims.get(TELEPORT_REVERSE_SPOTANIM),
 			FollowerEntity.TELEPORT_GRAPHIC_HEIGHT);
-		dispatch.accept(TriggerEvent.errand(TriggerEvent.Type.ERRAND_END, endKey(done)));
+		announce(TriggerEvent.errand(TriggerEvent.Type.ERRAND_END, endKey(done)));
 		log.debug("Errand finished: {}", endKey(done));
 		clearErrand();
 	}
@@ -926,6 +971,7 @@ public class ErrandController
 		state = State.IDLE;
 		current = null;
 		currentSiteKey = null;
+		silent = false;
 		targetTile = null;
 		errandSite = null;
 		nextRollTicks = scheduleTicks();
@@ -933,7 +979,14 @@ public class ErrandController
 
 	// ------------------------------------------------------------ conditions
 
+	/** An errand of the follower's own choosing: not during a session. */
 	private boolean safeToStart()
+	{
+		return clearToStart() && !session.getAsBoolean();
+	}
+
+	/** What any errand needs before it sets off, forced or not. */
+	private boolean clearToStart()
 	{
 		Player local = client.getLocalPlayer();
 		return local != null

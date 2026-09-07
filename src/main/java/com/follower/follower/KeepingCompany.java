@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Random;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
+import net.runelite.api.NPC;
+import net.runelite.api.Player;
 import net.runelite.api.coords.WorldPoint;
 
 /**
@@ -110,6 +112,78 @@ class KeepingCompany
 	private static final int NEXT_LOOK_TICKS = 4;
 	private static final int EMPTY_LOOK_TICKS = 3;
 
+	/** HUMAN_FIRECOOKING: the errand's warming of the hands, replayed at a fire. */
+	static final int WARM_HANDS = 897;
+	private static final int WARM_EVERY_TICKS = 4;
+
+	/** The anvil study puts the scroll down for a shrug about this often. */
+	static final int STUDY_SHRUG_EVERY = 50;
+	private static final int STUDY_RESUME_TICKS = 3;
+
+	/**
+	 * The peer over the shoulder: HUMAN_DISTANT_IDLE, a player squinting at
+	 * something far off, held as a pose. New to the follower.
+	 */
+	static final int PEER = 13993;
+	static final int PEER_TICKS = 6;
+
+	/** Three to five minutes between looks over the shoulder. */
+	static final int SHOULDER_AFTER_TICKS = 400;
+	private static final int SHOULDER_SPREAD = 100;
+
+	/** Every seventh potion, two seconds facing away from the fumes. */
+	static final int FUMES_EVERY = 7;
+	private static final int FUMES_TICKS = 3;
+
+	/** The kneel, proven on the follower by the altar errand. */
+	static final int KNEEL = 645;
+
+	/** A guard stirring earns a glance at the player, not more than this often. */
+	static final int GUARD_GLANCE_GAP_TICKS = 30;
+	private static final int GUARD_GLANCE_TICKS = 2;
+
+	/** EMOTE_YES, proven by the mirror rules: the foreman's nod. */
+	static final int NOD = 855;
+
+	/** EMOTE_STAMPFEET, proven by the cold-stamp-feet rule; every thirty seconds. */
+	static final int STAMP_FEET = 4278;
+	static final int STAMP_EVERY_TICKS = 50;
+	private static final int STAMP_SPREAD = 10;
+
+	/** The compost: a step back and two seconds facing the other way. */
+	private static final int COMPOST_TICKS = 3;
+
+	/**
+	 * How a seat is kept, shaped to the work. The controller reads it off the
+	 * session ({@link SkillingController#modeFor}); the geometry and the
+	 * habits both follow from it.
+	 */
+	enum Mode
+	{
+		/** The flank seat and the universal habits, nothing more. */
+		NONE,
+		/** Across the fire from the cook, hands to the flames. */
+		FIRESIDE,
+		/** One tile along the range's side. */
+		RANGE,
+		/** The anvil's far side, the notes out for the whole session. */
+		ANVIL,
+		/** Beside a wheel or a loom, sat down at once. */
+		WHEEL,
+		/** Work with nothing to click: a look over the shoulder now and then. */
+		STANDING,
+		/** The runecraft altar: one kneel, facing it. */
+		ALTAR,
+		/** The stall watch: off between the player and the guard, facing the guard. */
+		STALL,
+		/** The far edge of a patch; the notes only once the session ends. */
+		PATCH,
+		/** The foreman: three tiles off the hotspot, notes out, a nod per hammer. */
+		FOREMAN,
+		/** The brazier in the cold: three tiles off, stamping the feet. */
+		BRAZIER,
+	}
+
 	/** One tile to look at for so many ticks; the reactions are queues of these. */
 	private static final class Look
 	{
@@ -188,6 +262,28 @@ class KeepingCompany
 	/** Ticks the note pose has left; the head shake follows it. */
 	private int noteTicks;
 
+	private Mode mode = Mode.NONE;
+	private String activity = "";
+
+	/** The guard the stall watch faces, or null. */
+	private NPC guard;
+	private int guardGlanceAt;
+
+	private int warmAt;
+
+	/** The anvil study: ticks until the scroll goes down, and until it comes back. */
+	private int studyTicks;
+	private int studyResume;
+
+	private int shoulderAt;
+
+	/** Ticks the peer over the shoulder has left; the seat is retaken after. */
+	private int peerTicks;
+
+	private int fumesDrops;
+	private boolean wasAnimating;
+	private int stampAt;
+
 	KeepingCompany(Client client, FollowerEntity follower, FollowerConfig config,
 		ErrandController.Hands hands, Borrow borrow, Random random)
 	{
@@ -245,9 +341,23 @@ class KeepingCompany
 		currentLookTicks = 0;
 		lastDepletionTick = -1;
 		noteTicks = 0;
+		mode = Mode.NONE;
+		activity = "";
+		guard = null;
+		guardGlanceAt = 0;
+		warmAt = 0;
+		studyTicks = 0;
+		studyResume = 0;
+		peerTicks = 0;
+		fumesDrops = 0;
+		wasAnimating = false;
 	}
 
-	/** The controller took, or retook, the seat. A walk in progress is dropped. */
+	/**
+	 * The controller took, or retook, the seat. A walk in progress is
+	 * dropped, and the seat's own opening plays: the notes come out at an
+	 * anvil or a hotspot, the follower sits at a wheel, kneels at an altar.
+	 */
 	void seated(WorldPoint seat, WorldPoint target)
 	{
 		this.seat = seat;
@@ -256,6 +366,22 @@ class KeepingCompany
 		legs.clear();
 		walking = false;
 		legWait = 0;
+		switch (mode)
+		{
+			case ANVIL:
+			case FOREMAN:
+				takeOutTheScroll(0);
+				studyTicks = jitter(STUDY_SHRUG_EVERY, 5);
+				break;
+			case WHEEL:
+				sit();
+				break;
+			case ALTAR:
+				emote(KNEEL);
+				break;
+			default:
+				break;
+		}
 	}
 
 	void unseated()
@@ -264,6 +390,25 @@ class KeepingCompany
 		facing = null;
 		legs.clear();
 		walking = false;
+	}
+
+	/** The stall watch's guard; the seat faces it and watches it stir. */
+	void watch(NPC guard)
+	{
+		this.guard = guard;
+	}
+
+	/** Whether the follower is off the seat on purpose, peering over the shoulder. */
+	boolean isAway()
+	{
+		return peerTicks > 0;
+	}
+
+	/** Where the seat looks when nothing else claims it: the guard, or the work. */
+	private WorldPoint watched()
+	{
+		WorldPoint at = mode == Mode.STALL && guard != null ? guard.getWorldLocation() : null;
+		return at != null ? at : target;
 	}
 
 	/** Where the seat went of its own accord - the step toward the bank - once. */
@@ -294,7 +439,16 @@ class KeepingCompany
 		{
 			lastTallyDrop = drops;
 			tallyJitter = random.nextInt(3) - 1;
-			takeOutTheScroll(TALLY_TICKS);
+			// The patch inspector keeps its notes for the end.
+			if (mode != Mode.PATCH)
+			{
+				takeOutTheScroll(TALLY_TICKS);
+			}
+		}
+
+		if ("herblore".equals(activity) && ++fumesDrops % FUMES_EVERY == 0)
+		{
+			look(awayTile(), FUMES_TICKS);
 		}
 
 		if (drops - lastNodDrop >= nodGap)
@@ -322,16 +476,23 @@ class KeepingCompany
 	}
 
 	/**
-	 * A target, the session's first or the next one over. The seat is not
-	 * needed for the nod's glance, only for its aim; the per-target clocks
-	 * (the notes, the water) start over, and looks about the old one go.
+	 * A target, the session's first or the next one over, and the shape of
+	 * the work at it. The seat is not needed for the nod's glance, only for
+	 * its aim; the per-target clocks (the notes, the water, the look over
+	 * the shoulder) start over, and looks about the old one go.
 	 */
-	void aimAt(WorldPoint target, int now)
+	void aimAt(WorldPoint target, String activity, Mode mode, int now)
 	{
 		this.target = target;
+		this.activity = activity == null ? "" : activity;
+		this.mode = mode == null ? Mode.NONE : mode;
 		targetSince = now;
 		geraldDone = false;
 		waterLookAt = now + jitter(WATER_LOOK_TICKS, WATER_LOOK_SPREAD);
+		shoulderAt = now + jitter(SHOULDER_AFTER_TICKS, SHOULDER_SPREAD);
+		stampAt = now + jitter(STAMP_EVERY_TICKS, STAMP_SPREAD);
+		guardGlanceAt = 0;
+		fumesDrops = 0;
 		looks.clear();
 		currentLook = null;
 		currentLookTicks = 0;
@@ -424,14 +585,124 @@ class KeepingCompany
 			look(waterTile(), WATER_GAZE_TICKS);
 		}
 
+		keepTheSeatItsWay(now, here, animating);
+		if (peerTicks > 0)
+		{
+			// Off the seat, in front of the player: the seat's facing is theirs.
+			return;
+		}
 		face(wantedFace(here));
 	}
 
 	/**
+	 * The habits of the particular seat, once a tick. Each is a small thing
+	 * that says the follower knows what this work is: hands to a fire, a
+	 * shrug over the notes at the anvil, a look over the shoulder at a
+	 * fletcher, a glance at the mark when the guard stirs, a nod per hammer,
+	 * feet stamped in the cold.
+	 */
+	private void keepTheSeatItsWay(int now, WorldPoint here, boolean animating)
+	{
+		switch (mode)
+		{
+			case FIRESIDE:
+				if (animating && !sitting && !scrollOut && now >= warmAt)
+				{
+					warmAt = now + WARM_EVERY_TICKS;
+					follower.playAnimation(WARM_HANDS);
+				}
+				break;
+			case ANVIL:
+				if (scrollOut && --studyTicks <= 0)
+				{
+					putScrollAway();
+					emote(SHRUG);
+					studyResume = STUDY_RESUME_TICKS;
+				}
+				else if (!scrollOut && studyResume > 0 && --studyResume == 0)
+				{
+					takeOutTheScroll(0);
+					studyTicks = jitter(STUDY_SHRUG_EVERY, 5);
+				}
+				break;
+			case STANDING:
+				overTheShoulder(now);
+				break;
+			case STALL:
+				if (guard != null && now >= guardGlanceAt
+					&& guard.getPoseAnimation() != guard.getIdlePoseAnimation())
+				{
+					guardGlanceAt = now + GUARD_GLANCE_GAP_TICKS;
+					lookNow(here, GUARD_GLANCE_TICKS);
+				}
+				break;
+			case FOREMAN:
+				if (wasAnimating && !animating)
+				{
+					emote(NOD);
+				}
+				break;
+			case BRAZIER:
+				if (now >= stampAt && !sitting)
+				{
+					stampAt = now + jitter(STAMP_EVERY_TICKS, STAMP_SPREAD);
+					emote(STAMP_FEET);
+				}
+				break;
+			default:
+				break;
+		}
+		wasAnimating = animating;
+	}
+
+	/**
+	 * Every few minutes at work with nothing to click, a look over the
+	 * shoulder: to the tile in front of the player, the peer held for a few
+	 * ticks, and back to the seat. The front tile the pathing refuses is no
+	 * look, and the next is a few minutes off again.
+	 */
+	private void overTheShoulder(int now)
+	{
+		if (peerTicks > 0)
+		{
+			if (--peerTicks == 0)
+			{
+				follower.setPoseOverride(0);
+				if (follower.stayAt(seat))
+				{
+					follower.setStayFaceTile(target);
+					facing = target;
+				}
+			}
+			return;
+		}
+		if (now < shoulderAt)
+		{
+			return;
+		}
+		Player local = client.getLocalPlayer();
+		if (sitting || scrollOut || local == null)
+		{
+			// Busy with something; the next tick, not the next five minutes.
+			return;
+		}
+		shoulderAt = now + jitter(SHOULDER_AFTER_TICKS, SHOULDER_SPREAD);
+		if (!follower.moveToFront(local))
+		{
+			return;
+		}
+		peerTicks = PEER_TICKS;
+		facing = null;
+		follower.setPoseOverride(PEER);
+		log.debug("A look over the shoulder");
+	}
+
+	/**
 	 * What the seat looks at right now, in order of claim: a look being
-	 * taken, the player while the scroll is out or the bag is full, the work
+	 * taken, the player while the scroll is out (the anvil and the hotspot
+	 * excepted: the notes are about the work) or the bag is full, the work
 	 * for a nod, the player when sitting or when they have stopped, the work
-	 * otherwise.
+	 * otherwise - or the guard, on the stall watch.
 	 */
 	private WorldPoint wantedFace(WorldPoint here)
 	{
@@ -439,7 +710,8 @@ class KeepingCompany
 		{
 			return currentLook;
 		}
-		if (scrollOut || playerLookTicks > 0)
+		boolean studying = mode == Mode.ANVIL || mode == Mode.FOREMAN;
+		if ((scrollOut && !studying) || playerLookTicks > 0)
 		{
 			return here;
 		}
@@ -447,7 +719,81 @@ class KeepingCompany
 		{
 			return target;
 		}
-		return sitting || stopped ? here : target;
+		return sitting || stopped ? here : watched();
+	}
+
+	/** One tile past the seat, away from the work: where a turned back looks. */
+	private WorldPoint awayTile()
+	{
+		WorldPoint base = seat != null ? seat : follower.getWorldLocation();
+		if (base == null || target == null)
+		{
+			return null;
+		}
+		int dx = Integer.signum(base.getX() - target.getX());
+		int dy = Integer.signum(base.getY() - target.getY());
+		if (dx == 0 && dy == 0)
+		{
+			dy = -1;
+		}
+		return new WorldPoint(base.getX() + dx, base.getY() + dy, base.getPlane());
+	}
+
+	/** The compost went on: one step back and two seconds facing the other way. */
+	void compost(WorldPoint min, WorldPoint max)
+	{
+		if (walking)
+		{
+			return;
+		}
+		stepAwayFrom(min, max);
+		look(awayTile(), COMPOST_TICKS);
+	}
+
+	/** A one-shot for the controller's own reactions, stood up first when sitting. */
+	void gesture(int animationId)
+	{
+		emote(animationId);
+	}
+
+	/**
+	 * A look at a tile for the controller's own reactions: the face on the
+	 * seat, or a glance straight away off it - the queue only runs during a
+	 * session, and the out-of-runes think happens outside one.
+	 */
+	void lookAt(WorldPoint tile, int ticks)
+	{
+		if (seat == null && tile != null)
+		{
+			follower.glanceAt(tile, ticks * 600);
+		}
+		else
+		{
+			look(tile, ticks);
+		}
+	}
+
+	/**
+	 * The patch inspector's notes, after the session has ended: the scroll
+	 * out over free hands while the controller keeps the feet a moment.
+	 *
+	 * @return the ticks to keep the feet, or 0 when there was no note to take
+	 */
+	int endNote()
+	{
+		if (borrow.isHolding() || hands.isHolding())
+		{
+			return 0;
+		}
+		hands.hold(ErrandController.SCROLL_PROP);
+		if (!hands.isHolding())
+		{
+			return 0;
+		}
+		follower.setPoseOverride(ErrandController.READ_SCROLL_POSE);
+		scrollOut = true;
+		scrollTicks = 0;
+		return NOTE_TICKS;
 	}
 
 	private void face(WorldPoint tile)
@@ -629,9 +975,10 @@ class KeepingCompany
 	// ---------------------------------------------------------------- scroll
 
 	/**
-	 * The scroll, through the same hands as the errand's, for a few ticks.
-	 * Skipped over a borrowed tool (they share the weapon slot), over a
-	 * scroll already out for something else, while sitting, and off the seat.
+	 * The scroll, through the same hands as the errand's, for a few ticks -
+	 * or until put away, for none. Skipped over a borrowed tool (they share
+	 * the weapon slot), over a scroll already out for something else, while
+	 * sitting, and off the seat.
 	 */
 	private void takeOutTheScroll(int ticks)
 	{
@@ -650,7 +997,7 @@ class KeepingCompany
 		scrollTicks = ticks;
 	}
 
-	private void putScrollAway()
+	void putScrollAway()
 	{
 		if (noteTicks > 0)
 		{
@@ -679,6 +1026,25 @@ class KeepingCompany
 		if (tile != null)
 		{
 			looks.add(new Look(tile, ticks));
+		}
+	}
+
+	/**
+	 * A look that starts this tick when nothing is being looked at, rather
+	 * than the next: a glance at a guard stirring is late a tick later.
+	 */
+	private void lookNow(WorldPoint tile, int ticks)
+	{
+		if (tile == null || currentLook != null)
+		{
+			look(tile, ticks);
+			return;
+		}
+		currentLook = tile;
+		currentLookTicks = ticks;
+		if (seat == null)
+		{
+			follower.glanceAt(tile, ticks * 600);
 		}
 	}
 
@@ -884,6 +1250,12 @@ class KeepingCompany
 		putScrollAway();
 		legs.clear();
 		walking = false;
+		if (peerTicks > 0)
+		{
+			peerTicks = 0;
+			follower.setPoseOverride(0);
+		}
+		guard = null;
 		int leadIn = 0;
 		if (sitting)
 		{

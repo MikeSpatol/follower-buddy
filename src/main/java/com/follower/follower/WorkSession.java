@@ -36,6 +36,14 @@ public final class WorkSession
 	/** The interacted NPC, for a fishing spot; null for scenery. */
 	NPC targetNpc;
 
+	/**
+	 * Work with nothing in the world to click - fletching, herblore, gems -
+	 * opened by its first XP drop rather than a click. The target is the tile
+	 * in front of the player, so the seat has something to stand off, and no
+	 * object event can deplete it.
+	 */
+	boolean standing;
+
 	final int startTick;
 
 	/**
@@ -115,6 +123,11 @@ public final class WorkSession
 	public NPC getTargetNpc()
 	{
 		return targetNpc;
+	}
+
+	public boolean isStanding()
+	{
+		return standing;
 	}
 
 	public int getStartTick()

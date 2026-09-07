@@ -1,6 +1,6 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 448 rules, 2246 spoken lines, 2 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 452 rules, 2246 spoken lines, 2 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
@@ -8,7 +8,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (32 rules, 149 lines)
 - [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (36 rules, 222 lines)
-- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (33 rules, 273 lines)
+- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (35 rules, 273 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 114 lines)
 - [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 72 lines)
 - [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (20 rules, 106 lines)
@@ -21,7 +21,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - [boss](#boss) - Bosses sighted and fought (52 rules, 504 lines)
 - [quest](#quest) - Famous quest figures nearby (44 rules, 131 lines)
 - [thrall](#thrall) - When it stands in for a thrall (3 rules, 18 lines)
-- [mimic](#mimic) - Copying your emotes (6 rules, 16 lines)
+- [mimic](#mimic) - Copying your emotes (8 rules, 16 lines)
 - [dialogs](#dialogs) - the conversations it starts (2 trees)
 - [talk-to](#talk-to) - the everyday Talk-to script (in code)
 
@@ -1417,6 +1417,26 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Listen. Nothing. Just the water. I needed this.
 - I like it here because nothing is trying to kill us. Do you know how rare that is?
 - The water does something to me. Sorry. I know it's only water.
+
+### `burnt`
+
+> A shake of the head at a run of burnt food. The game says "You accidentally burn the shrimps." and every third of those, while a cooking session is on, earns 856 (EMOTE_NO, proven by the answered-no rule). Silent: the head says it. The working condition comes first so the count only runs during the session.
+
+- **when:** working AND a chat message (accidentally burn)
+- **does:** animation 856
+- **pacing:** priority 20, cooldown 30s
+
+- *(no lines - animation or effect only)*
+
+### `counting-batches`
+
+> Counts your batches: every fifth fletching animation earns a nod, 855 (EMOTE_YES, in the mirrored emotes). 1248 is HUMAN_FLETCHING, the one the mime-loops rule already holds; the server restarts it per bow, and each restart is one animation event. Only while the fletching session is on.
+
+- **when:** working AND your animation 1248
+- **does:** animation 855
+- **pacing:** priority 18, cooldown 3s
+
+- *(no lines - animation or effect only)*
 
 ### `advice-taken`
 
@@ -6021,6 +6041,26 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - I'd log the hours, but there's no column for it.
 - The notes can wait. This is research.
 - You keep the pace. I'll keep the form.
+
+### `bury-along`
+
+> Buries along with you. 827 is HUMAN_PICKUPFLOOR, the bend the bury uses, proven on the follower by the bootlace and cat errands. A one-shot, so mirrored as an emote; the chance keeps it from copying every bone in the pile.
+
+- **when:** your animation 827 AND a 30% roll
+- **does:** mirrors you
+- **pacing:** priority 18, cooldown 3s, delay 1-3 ticks
+
+- *(no lines - animation or effect only)*
+
+### `casting-along`
+
+> Casts along with you, rarely. The utility spells only: low and high alchemy 712/713, the three enchants 719-721, superheat 725 and charge orb 726, all HUMAN_CAST one-shots from the cache. The graphic copies through the mirror's twelve-tick window. Five percent with a minute between, so it reads as joining in once, not as a second caster.
+
+- **when:** your animation 712, 713, 719, 720, 721, 725, 726 AND a 5% roll
+- **does:** mirrors you
+- **pacing:** priority 18, cooldown 1m
+
+- *(no lines - animation or effect only)*
 
 ## dialogs
 

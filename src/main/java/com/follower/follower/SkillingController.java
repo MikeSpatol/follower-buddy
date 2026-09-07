@@ -11,10 +11,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
 import net.runelite.api.GameObject;
 import net.runelite.api.NPC;
@@ -47,6 +49,8 @@ public class SkillingController
 		"Cook", "Smith", "Smelt", "Craft", "Spin", "Weave", "Pray-at", "Craft-rune",
 		"Rake", "Plant", "Harvest", "Check-health", "Pick", "Steal-from", "Pickpocket",
 		"Build", "Light", "Burn", "Bury", "Lay", "Set-trap", "Catch", "Use",
+		// The Wintertodt brazier is fed, not lit, once it is burning.
+		"Feed",
 	};
 
 	/** Ticks the player has to be at it before the seat is taken. */
@@ -97,6 +101,74 @@ public class SkillingController
 	/** Which scenery counts as the bank, for the trip and the bag's step. */
 	static final Predicate<String> BANK_NAMES =
 		name -> "Bank booth".equals(name) || "Bank chest".equals(name);
+
+	/** The stall watch stands this far off the player, toward the guard. */
+	static final int STALL_WATCH_TILES = 5;
+	private static final int GUARD_TILES = 15;
+
+	/** Who counts as the guard a stall is watched against, in one place. */
+	static final String[] GUARD_NAMES = {"Guard", "Market Guard", "Knight of Ardougne", "Paladin"};
+
+	/** SpotanimID.STUNNED_THIEVING: the stars over a failed pickpocket. */
+	static final int STUN_GRAPHIC = 245;
+
+	/** A stun earns a head shake one time in three, and not again for twenty seconds. */
+	static final int STUN_COOLDOWN_TICKS = 33;
+	private static final int STUN_ONE_IN = 3;
+
+	/** The stun's graphic and its message inside this many ticks are the one stun. */
+	private static final int STUN_SAME_TICKS = 2;
+
+	/** HUMAN_LAYTRAP, the player's own; the trap object follows it onto their tile. */
+	static final int LAY_TRAP = 5208;
+	private static final int LAY_SETTLE_TICKS = 3;
+
+	/** The trap watcher stands two tiles off the trap, for two minutes at most. */
+	static final int TRAP_WATCH_TILES = 2;
+	static final int TRAP_WATCH_TICKS = 200;
+	private static final int TRAP_LOOK_TICKS = 3;
+
+	/** A fire lit within this of where the player just stood is theirs. */
+	static final int FIRE_LINE_TILES = 3;
+	static final int FIRE_LINE_EVERY = 4;
+
+	/** A fire this long after the last starts the count over. */
+	private static final int FIRE_LINE_LAPSE_TICKS = 100;
+
+	/** Three seconds at the fire once there. */
+	static final int FIRE_WARM_TICKS = 5;
+	private static final int FIRE_GAG_ONE_IN = 50;
+
+	/** The cold-stamp-feet rule's regions: the Wintertodt camp and the snows. */
+	static final Set<Integer> COLD_REGIONS = new HashSet<>(Arrays.asList(10553, 8253, 6462));
+
+	/** EMOTE_CLAP, proven by the mirror rules: the task ledger's applause. */
+	static final int CLAP = 865;
+	private static final int CLAP_TICKS = 3;
+
+	/** Ticks the ledger's scroll is out after the clap. */
+	static final int LEDGER_TICKS = 8;
+	static final int LEDGER_COOLDOWN_TICKS = 20;
+
+	/** Out of runes: a think, and not again for half a minute. */
+	static final int RUNES_COOLDOWN_TICKS = 50;
+
+	/**
+	 * The game's own words, as the smallest certain fragment of each, matched
+	 * without case. The thieving stun ("You have been stunned!"), an empty
+	 * rune pouch ("You do not have enough ... to cast this spell."), the
+	 * slayer task ending ("... return to a Slayer master.") and the next one
+	 * being set ("Your new task is to kill ..." in the master's dialog, or
+	 * "... you're now assigned to kill ..." for a boss task).
+	 */
+	static final String STUNNED_MESSAGE = "stunned";
+	static final String NO_RUNES_MESSAGE = "do not have enough";
+	static final String TASK_DONE_MESSAGE = "return to a slayer master";
+	static final String[] NEW_TASK_MESSAGES = {"new task is to kill", "now assigned to"};
+
+	/** The skills worked with nothing in the world to click; a drop opens them. */
+	private static final Set<Skill> STANDING_SKILLS = new HashSet<>(Arrays.asList(
+		Skill.FLETCHING, Skill.HERBLORE, Skill.CRAFTING));
 
 	private final Client client;
 	private final FollowerEntity follower;
@@ -159,6 +231,47 @@ public class SkillingController
 	/** Whether a player has been seen playing the nest look, so it is safe to. */
 	private boolean nestLookProven;
 
+	/** The player's tile at the last tick; a fire lit near it is theirs. */
+	private WorldPoint previousHere;
+
+	/**
+	 * The trap watch, outside any session: the tick the lay animation
+	 * played, the trap that followed it onto the player's tile, and the
+	 * seat two tiles off it.
+	 */
+	private int layTick = -1000;
+	private WorldPoint trapTile;
+	private int trapId;
+	private WorldPoint trapSeat;
+	private boolean trapAway;
+	private int trapUntil;
+	private int trapLookTicks;
+
+	/** The fire line: fires counted, and the visit to every fourth. */
+	private int fires;
+	private int lastFireTick = -1000;
+	private WorldPoint fireSeat;
+	private int fireWarmAt;
+	private int fireLeaveAt;
+
+	/** The task ledger's scroll, and the tick the clap hands over to it. */
+	private final PropFlourish ledger;
+	private int ledgerAt;
+	private int ledgerCooldownUntil;
+	private int runesCooldownUntil;
+	private int stunSeenTick = -1000;
+	private int stunCooldownUntil;
+
+	/** Ticks the feet are kept after a session for the patch inspector's notes. */
+	private boolean endNoteOut;
+
+	/**
+	 * A way to start an errand by key, silently or not: the prayer at the
+	 * altar borrows the altar errand, the fire line the too-close gag. Null
+	 * when nothing offered one.
+	 */
+	private BiConsumer<String, Boolean> errands;
+
 	public SkillingController(Client client, FollowerEntity follower, FollowerConfig config,
 		ErrandController.Hands hands, Consumer<TriggerEvent> dispatch,
 		BooleanSupplier inCombat, BooleanSupplier feetTaken, BooleanSupplier bankOpen)
@@ -172,6 +285,16 @@ public class SkillingController
 		this.bankOpen = bankOpen;
 		this.borrow = new Borrow(follower, hands);
 		this.company = new KeepingCompany(client, follower, config, hands, borrow, random);
+		this.ledger = new PropFlourish(follower, hands);
+	}
+
+	/**
+	 * Offers the errands: (key, silent), as {@link ErrandController#force}.
+	 * Without one the prayer kneel and the fire gag simply do not happen.
+	 */
+	public void setErrands(BiConsumer<String, Boolean> force)
+	{
+		this.errands = force;
 	}
 
 	public boolean isWorking()
@@ -202,7 +325,20 @@ public class SkillingController
 	 */
 	public boolean holdsTheFeet()
 	{
-		return seat != null || releaseTicks > 0;
+		return seat != null || releaseTicks > 0 || trapSeat != null || fireSeat != null
+			|| ledger.isActive();
+	}
+
+	/**
+	 * Whether the errands must stand aside: the feet are held, or a session
+	 * is on - except a prayer at an altar, which is the one session that
+	 * borrows an errand rather than a seat. This is the busy gate an errand
+	 * under way must also pass; the errands' own session gate keeps every
+	 * unforced start out of the prayer session too.
+	 */
+	public boolean blocksErrands()
+	{
+		return holdsTheFeet() || (session != null && !"prayer".equals(session.activity));
 	}
 
 	/** Whether the follower is sitting in for the long haul. */
@@ -216,7 +352,24 @@ public class SkillingController
 	/** Any menu option the player clicked, tags off; the bag reads it. */
 	public void noteMenuOption(String plain)
 	{
+		noteMenuOption(plain, "");
+	}
+
+	/**
+	 * The same with the option's target, tags off. Compost goes on a patch
+	 * as "Use" with the compost named in the target, and the patch inspector
+	 * steps back from it.
+	 */
+	public void noteMenuOption(String plain, String target)
+	{
 		lastOption = plain == null ? "" : plain;
+		if (session != null && "farming".equals(session.activity)
+			&& "Use".equalsIgnoreCase(lastOption) && target != null
+			&& target.toLowerCase(Locale.ROOT).contains("compost"))
+		{
+			company.compost(session.targetTile, session.targetMax);
+			syncTheSeat();
+		}
 	}
 
 	/** Whether a menu option is one of the words that start work. */
@@ -286,6 +439,7 @@ public class SkillingController
 				return "construction";
 			case "light":
 			case "burn":
+			case "feed":
 				return "firemaking";
 			case "lay":
 			case "set-trap":
@@ -326,7 +480,7 @@ public class SkillingController
 		String name = targetName == null ? "" : targetName;
 		int now = client.getTickCount();
 
-		if (session != null && name.equals(session.targetName)
+		if (session != null && !session.standing && name.equals(session.targetName)
 			&& min.getPlane() == session.targetTile.getPlane()
 			&& (min.distanceTo(session.targetTile) <= WALK_OFF_TILES
 				|| (session.depleted && "fishing".equals(session.activity)
@@ -347,7 +501,7 @@ public class SkillingController
 			session.settling = true;
 			reseat = true;
 			seatDueTick = now + SEAT_AFTER_TICKS;
-			company.aimAt(faceTile(), now);
+			company.aimAt(faceTile(), session.activity, modeFor(here), now);
 			log.debug("Work moved to {} at {}", name, min);
 			return;
 		}
@@ -363,6 +517,11 @@ public class SkillingController
 		if (animationId == -1)
 		{
 			return;
+		}
+		if (animationId == LAY_TRAP)
+		{
+			// The trap object turns up on the player's tile a moment later.
+			layTick = client.getTickCount();
 		}
 		// A click parked during a session is the player moving on to
 		// something else; the swing that follows is its proof, and the old
@@ -425,13 +584,32 @@ public class SkillingController
 		{
 			startPending();
 		}
+		if (session == null && skill != null && STANDING_SKILLS.contains(skill))
+		{
+			startStanding(skill, now);
+		}
 		if (session == null)
 		{
 			return 0;
 		}
 		if (skill != null)
 		{
-			session.activity = skill.getName().toLowerCase(Locale.ROOT);
+			String named = skill.getName().toLowerCase(Locale.ROOT);
+			if (!named.equals(session.activity))
+			{
+				// A "Use" click said nothing; the drop names the work, and the
+				// seat may be the wrong shape for it: across a fire, not on
+				// its flank. Chosen again, once the player is at it.
+				session.activity = named;
+				Player local = client.getLocalPlayer();
+				WorldPoint here = local == null ? null : local.getWorldLocation();
+				company.aimAt(faceTile(), named, modeFor(here), now);
+				if (seat != null)
+				{
+					reseat = true;
+					seatDueTick = now;
+				}
+			}
 		}
 		session.xpDrops++;
 		session.lastDropTick = now;
@@ -446,14 +624,44 @@ public class SkillingController
 	}
 
 	/**
-	 * A scenery object appeared. Only the target's tile matters: a different
-	 * id there is the stump, the empty rock, the used patch.
+	 * A scenery object appeared. During a session only the target's tile
+	 * matters: a different id there is the stump, the empty rock, the used
+	 * patch. Outside one, the trap the player just laid and the fire they
+	 * just lit are the two things worth noticing.
 	 */
 	public void objectSpawned(int id, WorldPoint min, WorldPoint max)
 	{
+		if (ticksSinceLoading <= LOAD_SETTLE_TICKS || min == null || !config.keepsCompany())
+		{
+			return;
+		}
 		if (watchingObjects() && id != session.targetId && covers(min, max, session.targetTile))
 		{
 			depleted();
+			return;
+		}
+		if (trapTile != null)
+		{
+			if (id != trapId && covers(min, max, trapTile))
+			{
+				// The trap sprang, or fell: a glance at the player.
+				trapId = id;
+				Player local = client.getLocalPlayer();
+				if (trapSeat != null && local != null && local.getWorldLocation() != null)
+				{
+					follower.setStayFaceTile(local.getWorldLocation());
+					trapLookTicks = TRAP_LOOK_TICKS;
+				}
+			}
+			return;
+		}
+		if (session != null)
+		{
+			return;
+		}
+		if (!maybeTheTrap(id, min, max))
+		{
+			maybeTheFire(id, min, max);
 		}
 	}
 
@@ -468,7 +676,8 @@ public class SkillingController
 
 	private boolean watchingObjects()
 	{
-		return session != null && session.targetNpc == null
+		// Standing work has no target in the world; nothing can deplete it.
+		return session != null && session.targetNpc == null && !session.standing
 			&& ticksSinceLoading > LOAD_SETTLE_TICKS;
 	}
 
@@ -551,11 +760,140 @@ public class SkillingController
 			end(true, false, false);
 		}
 		dropTheBankTrip(true);
+		dropTheTrap(true);
+		dropTheFireLine(true);
+		letGoOfTheNotes();
+		ledger.abort();
+		ledgerAt = 0;
 		pending = null;
 		releaseTicks = 0;
 		lastFreeSlots = -1;
 		halfArmed = true;
 		ticksSinceLoading = 1000;
+		previousHere = null;
+		layTick = -1000;
+	}
+
+	// ---------------------------------------------------------------- words
+
+	/**
+	 * A game message. The company reads four: the thieving stun, the empty
+	 * rune pouch, the slayer task ending and the next one being set. Each is
+	 * a small silent reaction with its own cooldown; nothing is said back.
+	 */
+	public void noteChatMessage(String message, ChatMessageType type)
+	{
+		if (!config.keepsCompany() || message == null)
+		{
+			return;
+		}
+		String plain = message.replaceAll("<[^>]*>", "").toLowerCase(Locale.ROOT);
+		int now = client.getTickCount();
+		if (type != ChatMessageType.GAMEMESSAGE && type != ChatMessageType.SPAM
+			&& type != ChatMessageType.DIALOG)
+		{
+			return;
+		}
+		if (session != null && "thieving".equals(session.activity) && plain.contains(STUNNED_MESSAGE))
+		{
+			stunned(now);
+		}
+		else if (plain.contains(NO_RUNES_MESSAGE))
+		{
+			outOfRunes(now);
+		}
+		else if (plain.contains(TASK_DONE_MESSAGE))
+		{
+			taskDone(now);
+		}
+		else
+		{
+			for (String fragment : NEW_TASK_MESSAGES)
+			{
+				if (plain.contains(fragment))
+				{
+					newTask(now);
+					return;
+				}
+			}
+		}
+	}
+
+	/** A graphic on the local player. The thieving stun is the one that matters. */
+	public void noteGraphic(int graphicId)
+	{
+		if (graphicId == STUN_GRAPHIC && session != null && "thieving".equals(session.activity)
+			&& config.keepsCompany())
+		{
+			stunned(client.getTickCount());
+		}
+	}
+
+	/**
+	 * Stunned: a shake of the head, one time in three, and not again for
+	 * twenty seconds. The graphic and the message of the one stun arrive
+	 * together, and count once.
+	 */
+	private void stunned(int now)
+	{
+		if (now - stunSeenTick <= STUN_SAME_TICKS)
+		{
+			return;
+		}
+		stunSeenTick = now;
+		if (now < stunCooldownUntil || random.nextInt(STUN_ONE_IN) != 0)
+		{
+			return;
+		}
+		stunCooldownUntil = now + STUN_COOLDOWN_TICKS;
+		company.gesture(KeepingCompany.HEAD_SHAKE);
+		log.debug("Stunned; a shake of the head");
+	}
+
+	/** Out of runes: a look at the player and a think. */
+	private void outOfRunes(int now)
+	{
+		if (now < runesCooldownUntil)
+		{
+			return;
+		}
+		runesCooldownUntil = now + RUNES_COOLDOWN_TICKS;
+		Player local = client.getLocalPlayer();
+		if (local != null && local.getWorldLocation() != null)
+		{
+			company.lookAt(local.getWorldLocation(), CLAP_TICKS);
+		}
+		company.gesture(KeepingCompany.SCRATCH_HEAD);
+	}
+
+	/**
+	 * The task ledger: applause, then the scroll for the entry. The scroll
+	 * goes through its own flourish, which holds the feet, so it is skipped
+	 * while something else has them.
+	 */
+	private void taskDone(int now)
+	{
+		if (now < ledgerCooldownUntil)
+		{
+			return;
+		}
+		ledgerCooldownUntil = now + LEDGER_COOLDOWN_TICKS;
+		company.gesture(CLAP);
+		if (!holdsTheFeet() && !feetTaken.getAsBoolean())
+		{
+			ledgerAt = now + CLAP_TICKS;
+		}
+	}
+
+	/** A new task: a shrug. Whatever it is, it is a lot of them. */
+	private void newTask(int now)
+	{
+		if (now < ledgerCooldownUntil)
+		{
+			return;
+		}
+		ledgerCooldownUntil = now + LEDGER_COOLDOWN_TICKS;
+		company.gesture(KeepingCompany.SHRUG);
 	}
 
 	// ------------------------------------------------------------------ tick
@@ -576,16 +914,24 @@ public class SkillingController
 				end(true, false, true);
 			}
 			dropTheBankTrip(true);
+			dropTheTrap(true);
+			dropTheFireLine(true);
+			letGoOfTheNotes();
+			ledger.abort();
+			ledgerAt = 0;
 			pending = null;
 			return;
 		}
 
-		if (releaseTicks > 0 && --releaseTicks == 0
-			&& follower.isStaying() && !feetTaken.getAsBoolean())
+		if (releaseTicks > 0 && --releaseTicks == 0)
 		{
-			// Only when the seat is still ours: a thrall or the spectator that
-			// took the feet during the bow must not be released by us.
-			follower.resumeFollowing();
+			letGoOfTheNotes();
+			if (follower.isStaying() && !feetTaken.getAsBoolean())
+			{
+				// Only when the seat is still ours: a thrall or the spectator
+				// that took the feet during the bow must not be released by us.
+				follower.resumeFollowing();
+			}
 		}
 
 		Player local = client.getLocalPlayer();
@@ -597,6 +943,9 @@ public class SkillingController
 				end(true, false, true);
 			}
 			dropTheBankTrip(true);
+			dropTheTrap(true);
+			dropTheFireLine(true);
+			previousHere = null;
 			return;
 		}
 
@@ -605,6 +954,19 @@ public class SkillingController
 		{
 			watchTheBankTrip(now, here);
 		}
+		watchTheTrap(now, here);
+		watchTheFireLine(now, here);
+		ledger.tick();
+		if (ledgerAt > 0 && now >= ledgerAt)
+		{
+			ledgerAt = 0;
+			if (!holdsTheFeet() && !feetTaken.getAsBoolean())
+			{
+				ledger.start(ErrandController.SCROLL_PROP, ErrandController.READ_SCROLL_POSE,
+					LEDGER_TICKS);
+			}
+		}
+		previousHere = here;
 
 		// A parked click, with or without a session running: forgotten when
 		// it goes stale, promoted by an animation. During a session that is
@@ -625,6 +987,9 @@ public class SkillingController
 		{
 			return;
 		}
+		// Stood at the trap or the fire when the work began: that is over.
+		dropTheTrap(true);
+		dropTheFireLine(true);
 
 		// The abort paths: something else owns the follower, or the world
 		// changed under the session. Silent, tool straight back.
@@ -681,10 +1046,11 @@ public class SkillingController
 				maybeBorrow();
 			}
 		}
-		else if (!follower.isStaying())
+		else if (!follower.isStaying() && !company.isAway())
 		{
 			// Un-seated by somebody else's release - a held emote ending, a
 			// leash snap - and the session is still on: take the seat again.
+			// Not while the company is off it on purpose, peering.
 			if (follower.stayAt(seat))
 			{
 				follower.setStayFaceTile(faceTile());
@@ -708,6 +1074,12 @@ public class SkillingController
 		}
 		bagEdge = null;
 		company.tick(now, here, local.getAnimation() != -1, session.activity);
+		syncTheSeat();
+	}
+
+	/** The company moved the seat of its own accord; the controller keeps up. */
+	private void syncTheSeat()
+	{
 		WorldPoint moved = company.seatMoved();
 		if (moved != null)
 		{
@@ -723,23 +1095,63 @@ public class SkillingController
 			return;
 		}
 		int now = client.getTickCount();
+		WorkSession opened = new WorkSession(pending.option, pending.activity,
+			pending.targetName, pending.targetId, pending.targetTile, pending.targetMax,
+			pending.targetNpc, pending.workSpot, now);
+		opened.lastAnimation = pending.lastAnimation;
+		pending = null;
+		open(opened, now);
+		// A prayer at an altar takes no seat: the follower goes and kneels
+		// beside the player through the altar errand, with its lines skipped.
+		if ("Pray-at".equalsIgnoreCase(session.option) && errands != null)
+		{
+			errands.accept("altar", true);
+		}
+	}
+
+	/**
+	 * Work with nothing clicked - a knife on logs, a pestle on a herb - opens
+	 * on its first drop. The target is the tile in front of the player, for
+	 * the seat to stand off; nothing in the world can deplete it.
+	 */
+	private void startStanding(Skill skill, int now)
+	{
+		Player local = client.getLocalPlayer();
+		WorldPoint here = local == null ? null : local.getWorldLocation();
+		if (here == null || !config.keepsCompany() || inCombat.getAsBoolean()
+			|| feetTaken.getAsBoolean() || !follower.isSpawned())
+		{
+			return;
+		}
+		double radians = (local.getCurrentOrientation() / 2048.0) * 2.0 * Math.PI;
+		WorldPoint front = new WorldPoint(here.getX() + (int) Math.round(-Math.sin(radians)),
+			here.getY() + (int) Math.round(-Math.cos(radians)), here.getPlane());
+		WorkSession opened = new WorkSession("", skill.getName().toLowerCase(Locale.ROOT), "", 0,
+			front, front, null, here, now);
+		opened.standing = true;
+		open(opened, now);
+	}
+
+	/** The session begins: whatever else had the feet lets go. */
+	private void open(WorkSession opened, int now)
+	{
 		if (session != null)
 		{
 			end(false, now - session.startTick >= BEAT_AFTER_TICKS, true);
 		}
-		// A seat kept for a bank trip is let go: the new work seats itself.
+		// A seat kept for a bank trip, a trap watched, a fire visited: let go,
+		// the new work seats itself.
 		dropTheBankTrip(true);
-		session = new WorkSession(pending.option, pending.activity, pending.targetName,
-			pending.targetId, pending.targetTile, pending.targetMax, pending.targetNpc,
-			pending.workSpot, now);
-		session.lastAnimation = pending.lastAnimation;
-		pending = null;
+		dropTheTrap(true);
+		dropTheFireLine(true);
+		letGoOfTheNotes();
+		session = opened;
 		seat = null;
 		reseat = false;
 		refusedTool = 0;
 		seatDueTick = now + SEAT_AFTER_TICKS;
 		company.begin(now);
-		company.aimAt(faceTile(), now);
+		company.aimAt(faceTile(), session.activity, modeFor(session.workSpot), now);
 		log.debug("Work session: {} on {} at {}", session.option, session.targetName,
 			session.targetTile);
 	}
@@ -782,11 +1194,15 @@ public class SkillingController
 		if (seat != null && !bankTrip)
 		{
 			seat = null;
-			if (beat || standUp > 0)
+			// The patch inspector's notes, at the end and only then.
+			int note = !silent && "farming".equals(done.activity) && follower.isStaying()
+				? company.endNote() : 0;
+			endNoteOut = note > 0;
+			if (beat || standUp > 0 || note > 0)
 			{
 				// Movement would cut the bow off; the feet stay a few ticks,
 				// and a few more when the stand-up comes first.
-				releaseTicks = RELEASE_HOLD_TICKS
+				releaseTicks = RELEASE_HOLD_TICKS + note
 					+ (standUp > 0 ? KeepingCompany.STAND_UP_TICKS : 0);
 			}
 			else if (follower.isStaying() && !feetTaken.getAsBoolean())
@@ -833,11 +1249,238 @@ public class SkillingController
 			session.targetTile, session.targetMax, next, here, client.getTickCount());
 		// The step back moved the seat; the tick would catch up, but a
 		// release in between must let go of where the follower now is.
-		WorldPoint moved = company.seatMoved();
-		if (moved != null)
+		syncTheSeat();
+	}
+
+	/** The notes taken at a session's end, put away once the feet are let go. */
+	private void letGoOfTheNotes()
+	{
+		if (endNoteOut)
 		{
-			seat = moved;
+			endNoteOut = false;
+			company.putScrollAway();
 		}
+	}
+
+	// ------------------------------------------------------------------ trap
+
+	/**
+	 * An object on the player's tile a moment after the lay animation is the
+	 * trap. The follower stands two tiles off it, facing it, and stays while
+	 * the player goes about their other traps - the first laid, only.
+	 */
+	private boolean maybeTheTrap(int id, WorldPoint min, WorldPoint max)
+	{
+		int now = client.getTickCount();
+		Player local = client.getLocalPlayer();
+		WorldPoint here = local == null ? null : local.getWorldLocation();
+		if (now - layTick > LAY_SETTLE_TICKS || here == null || !covers(min, max, here))
+		{
+			return false;
+		}
+		layTick = -1000;
+		if (bankTrip || fireSeat != null || feetTaken.getAsBoolean() || inCombat.getAsBoolean()
+			|| !follower.isSpawned())
+		{
+			return true;
+		}
+		WorldPoint from = follower.getWorldLocation();
+		List<WorldPoint> ring = ring(min, max, TRAP_WATCH_TILES, here.getPlane());
+		ring.removeIf(here::equals);
+		if (from != null)
+		{
+			ring.sort((a, b) -> Integer.compare(a.distanceTo(from), b.distanceTo(from)));
+		}
+		for (WorldPoint candidate : ring)
+		{
+			if (follower.stayAt(candidate))
+			{
+				trapTile = min;
+				trapId = id;
+				trapSeat = candidate;
+				trapAway = false;
+				trapUntil = now + TRAP_WATCH_TICKS;
+				trapLookTicks = 0;
+				follower.setStayFaceTile(min);
+				log.debug("Watching the trap at {} from {}", min, candidate);
+				return true;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Every tick the trap is watched: the player back within three tiles
+	 * after being away, two minutes, a fight, or the leash snapping (the
+	 * stay is simply gone) all end it. The glance at the player when the
+	 * trap changes runs down here, back to the trap.
+	 */
+	private void watchTheTrap(int now, WorldPoint here)
+	{
+		if (trapSeat == null)
+		{
+			return;
+		}
+		if (!follower.isStaying() || !follower.isSpawned() || feetTaken.getAsBoolean())
+		{
+			dropTheTrap(false);
+			return;
+		}
+		if (inCombat.getAsBoolean() || here.getPlane() != trapTile.getPlane())
+		{
+			dropTheTrap(true);
+			return;
+		}
+		boolean near = here.distanceTo(trapTile) <= WALK_OFF_TILES;
+		if (!near)
+		{
+			trapAway = true;
+		}
+		if (now >= trapUntil || (near && trapAway))
+		{
+			dropTheTrap(true);
+			return;
+		}
+		if (trapLookTicks > 0 && --trapLookTicks == 0)
+		{
+			follower.setStayFaceTile(trapTile);
+		}
+	}
+
+	/** @param release whether to hand the feet back, when they are still ours */
+	private void dropTheTrap(boolean release)
+	{
+		if (trapSeat == null)
+		{
+			return;
+		}
+		trapSeat = null;
+		trapTile = null;
+		trapLookTicks = 0;
+		if (release && follower.isStaying() && !feetTaken.getAsBoolean())
+		{
+			follower.resumeFollowing();
+		}
+	}
+
+	// ------------------------------------------------------------- fire line
+
+	/**
+	 * A fire lit within three tiles of where the player just stood is one
+	 * of theirs. Every fourth, the follower walks over, warms its hands and
+	 * catches up on foot - and one time in fifty, the errand's too-close gag
+	 * instead. Braziers and campfires are not fires.
+	 */
+	private void maybeTheFire(int id, WorldPoint min, WorldPoint max)
+	{
+		if (previousHere == null || min.getPlane() != previousHere.getPlane()
+			|| min.distanceTo(previousHere) > FIRE_LINE_TILES
+			|| !"Fire".equals(ErrandController.objectName(client, id)))
+		{
+			return;
+		}
+		int now = client.getTickCount();
+		if (now - lastFireTick > FIRE_LINE_LAPSE_TICKS)
+		{
+			fires = 0;
+		}
+		lastFireTick = now;
+		fires++;
+		if (fires % FIRE_LINE_EVERY != 0 || fireSeat != null || trapSeat != null || bankTrip
+			|| feetTaken.getAsBoolean() || inCombat.getAsBoolean() || !follower.isSpawned())
+		{
+			return;
+		}
+		if (errands != null && random.nextInt(FIRE_GAG_ONE_IN) == 0)
+		{
+			errands.accept("firedeath", false);
+			return;
+		}
+		WorldPoint from = follower.getWorldLocation();
+		List<WorldPoint> beside = ring(min, max, 1, min.getPlane());
+		beside.removeIf(c -> c.getX() != min.getX() && c.getY() != min.getY());
+		if (from != null)
+		{
+			beside.sort((a, b) -> Integer.compare(a.distanceTo(from), b.distanceTo(from)));
+		}
+		for (WorldPoint candidate : beside)
+		{
+			if (follower.stayAt(candidate))
+			{
+				fireSeat = candidate;
+				follower.setStayFaceTile(min);
+				int walk = from == null ? FIRE_LINE_TILES : from.distanceTo(candidate);
+				fireWarmAt = now + walk + 2;
+				fireLeaveAt = 0;
+				log.debug("The fourth fire, at {}; going over", min);
+				return;
+			}
+		}
+	}
+
+	/** Once there, the hands to the flames; three seconds later, back on foot. */
+	private void watchTheFireLine(int now, WorldPoint here)
+	{
+		if (fireSeat == null)
+		{
+			return;
+		}
+		if (!follower.isStaying() || !follower.isSpawned() || feetTaken.getAsBoolean())
+		{
+			dropTheFireLine(false);
+			return;
+		}
+		if (inCombat.getAsBoolean() || here.getPlane() != fireSeat.getPlane())
+		{
+			dropTheFireLine(true);
+			return;
+		}
+		if (fireWarmAt > 0 && now >= fireWarmAt)
+		{
+			fireWarmAt = 0;
+			fireLeaveAt = now + FIRE_WARM_TICKS;
+			follower.playAnimation(KeepingCompany.WARM_HANDS);
+		}
+		else if (fireLeaveAt > 0 && now >= fireLeaveAt)
+		{
+			dropTheFireLine(true);
+		}
+	}
+
+	/** @param release whether to hand the feet back, when they are still ours */
+	private void dropTheFireLine(boolean release)
+	{
+		if (fireSeat == null)
+		{
+			return;
+		}
+		fireSeat = null;
+		fireWarmAt = 0;
+		fireLeaveAt = 0;
+		if (release && follower.isStaying() && !feetTaken.getAsBoolean())
+		{
+			follower.resumeFollowing();
+		}
+	}
+
+	/** The tiles exactly so far from a footprint, nearest corner first. */
+	private static List<WorldPoint> ring(WorldPoint min, WorldPoint max, int radius, int plane)
+	{
+		WorldPoint far = max == null ? min : max;
+		List<WorldPoint> ring = new ArrayList<>();
+		for (int x = min.getX() - radius; x <= far.getX() + radius; x++)
+		{
+			for (int y = min.getY() - radius; y <= far.getY() + radius; y++)
+			{
+				int cx = Math.max(min.getX(), Math.min(far.getX(), x));
+				int cy = Math.max(min.getY(), Math.min(far.getY(), y));
+				if (Math.max(Math.abs(x - cx), Math.abs(y - cy)) == radius)
+				{
+					ring.add(new WorldPoint(x, y, plane));
+				}
+			}
+		}
+		return ring;
 	}
 
 	// ------------------------------------------------------------- bank trip
@@ -925,29 +1568,189 @@ public class SkillingController
 	 */
 	private void takeSeat(WorldPoint player)
 	{
-		if ("thieving".equals(session.activity))
+		KeepingCompany.Mode mode = modeFor(player);
+		if ("prayer".equals(session.activity))
+		{
+			// The kneel at the altar is the altar errand's; no seat.
+			return;
+		}
+		if ("thieving".equals(session.activity) && mode != KeepingCompany.Mode.STALL)
 		{
 			// The thieving session already keeps the follower off at a
 			// distance, and a seat at the mark's elbow is the opposite of
-			// what that was tuned for. Its own watch comes later.
+			// what that was tuned for. Only a stall earns the watch.
 			return;
 		}
-		List<WorldPoint> reserved = reservedTiles();
-		for (WorldPoint candidate : seatCandidates(player, session.targetTile,
-			session.targetMax, reserved, session.activity))
+		List<WorldPoint> candidates;
+		NPC guard = null;
+		WorldPoint face = faceTile();
+		if (mode == KeepingCompany.Mode.STALL)
+		{
+			guard = nearestGuard(player);
+			WorldPoint post = guard == null ? null : guard.getWorldLocation();
+			if (post == null)
+			{
+				return;
+			}
+			candidates = stallCandidates(player, post, session.targetTile, session.targetMax);
+			face = post;
+		}
+		else
+		{
+			candidates = seatCandidates(player, session.targetTile, session.targetMax,
+				reservedTiles(), variantFor(mode, session.activity));
+		}
+		for (WorldPoint candidate : candidates)
 		{
 			if (follower.stayAt(candidate))
 			{
 				seat = candidate;
-				follower.setStayFaceTile(faceTile());
+				follower.setStayFaceTile(face);
+				company.watch(guard);
 				company.seated(seat, faceTile());
-				log.debug("Seated at {} facing {}", seat, session.targetTile);
+				log.debug("Seated at {} facing {}", seat, face);
 				return;
 			}
 		}
 		seat = null;
 		company.unseated();
 		log.debug("No seat by {} for {}; following instead", player, session.targetName);
+	}
+
+	/**
+	 * The shape of the seat the session's work wants; see the modes. A
+	 * cook at a fire and a cook at a range sit differently, and so on.
+	 */
+	KeepingCompany.Mode modeFor(WorldPoint here)
+	{
+		if (session == null)
+		{
+			return KeepingCompany.Mode.NONE;
+		}
+		String name = session.targetName.toLowerCase(Locale.ROOT);
+		switch (session.activity)
+		{
+			case "cooking":
+				return "fire".equals(name) ? KeepingCompany.Mode.FIRESIDE
+					: KeepingCompany.Mode.RANGE;
+			case "smithing":
+				return "anvil".equals(name) ? KeepingCompany.Mode.ANVIL : KeepingCompany.Mode.NONE;
+			case "crafting":
+				if (session.standing)
+				{
+					return KeepingCompany.Mode.STANDING;
+				}
+				return name.contains("wheel") || name.contains("loom")
+					? KeepingCompany.Mode.WHEEL : KeepingCompany.Mode.NONE;
+			case "fletching":
+			case "herblore":
+				return session.standing ? KeepingCompany.Mode.STANDING : KeepingCompany.Mode.NONE;
+			case "runecraft":
+				return KeepingCompany.Mode.ALTAR;
+			case "thieving":
+				return "Steal-from".equalsIgnoreCase(session.option)
+					? KeepingCompany.Mode.STALL : KeepingCompany.Mode.NONE;
+			case "farming":
+				return name.contains("patch") ? KeepingCompany.Mode.PATCH : KeepingCompany.Mode.NONE;
+			case "construction":
+			{
+				WorldView view = client.getTopLevelWorldView();
+				return view != null && view.isInstance()
+					? KeepingCompany.Mode.FOREMAN : KeepingCompany.Mode.NONE;
+			}
+			case "firemaking":
+				return here != null && COLD_REGIONS.contains(here.getRegionID())
+					? KeepingCompany.Mode.BRAZIER : KeepingCompany.Mode.NONE;
+			default:
+				return KeepingCompany.Mode.NONE;
+		}
+	}
+
+	/** The geometry {@link #seatCandidates} is asked for, by mode. */
+	static String variantFor(KeepingCompany.Mode mode, String activity)
+	{
+		switch (mode)
+		{
+			case FIRESIDE:
+			case ANVIL:
+			case PATCH:
+				return "across";
+			case RANGE:
+			case WHEEL:
+				return "beside";
+			case FOREMAN:
+			case BRAZIER:
+				return "ring";
+			default:
+				return activity;
+		}
+	}
+
+	/** The nearest guard by name within the watch's reach, or null. */
+	private NPC nearestGuard(WorldPoint player)
+	{
+		WorldView view = client.getTopLevelWorldView();
+		if (view == null)
+		{
+			return null;
+		}
+		NPC best = null;
+		int bestDistance = Integer.MAX_VALUE;
+		for (NPC npc : view.npcs())
+		{
+			WorldPoint at = npc == null ? null : npc.getWorldLocation();
+			if (at == null || at.getPlane() != player.getPlane()
+				|| !Arrays.asList(GUARD_NAMES).contains(npc.getName()))
+			{
+				continue;
+			}
+			int distance = at.distanceTo(player);
+			if (distance <= GUARD_TILES && distance < bestDistance)
+			{
+				bestDistance = distance;
+				best = npc;
+			}
+		}
+		return best;
+	}
+
+	/**
+	 * The stall watch: five tiles off the player toward the guard - four or
+	 * six when five is refused, and one to either side of the five - never
+	 * on the stall, never past the guard.
+	 */
+	static List<WorldPoint> stallCandidates(WorldPoint player, WorldPoint guard,
+		WorldPoint min, WorldPoint max)
+	{
+		List<WorldPoint> candidates = new ArrayList<>();
+		int gx = guard.getX() - player.getX();
+		int gy = guard.getY() - player.getY();
+		int length = Math.max(Math.abs(gx), Math.abs(gy));
+		if (length < 2)
+		{
+			return candidates;
+		}
+		int px = -Integer.signum(gy);
+		int py = Integer.signum(gx);
+		for (int reach : new int[]{STALL_WATCH_TILES, STALL_WATCH_TILES - 1, STALL_WATCH_TILES + 1})
+		{
+			int along = Math.min(reach, length - 1);
+			int x = player.getX() + (int) Math.round(along * (double) gx / length);
+			int y = player.getY() + (int) Math.round(along * (double) gy / length);
+			int[][] offsets = reach == STALL_WATCH_TILES
+				? new int[][]{{0, 0}, {px, py}, {-px, -py}} : new int[][]{{0, 0}};
+			for (int[] offset : offsets)
+			{
+				WorldPoint c = new WorldPoint(x + offset[0], y + offset[1], player.getPlane());
+				if (!candidates.contains(c) && !covers(min, max, c) && !c.equals(player)
+					&& !c.equals(guard) && c.distanceTo(player) >= 2
+					&& c.distanceTo(player) < length)
+				{
+					candidates.add(c);
+				}
+			}
+		}
+		return candidates;
 	}
 
 	/** The middle of the footprint, so a big tree is looked at, not past. */
@@ -979,7 +1782,11 @@ public class SkillingController
 	 * The same, shaped to the work: a miner's company sits diagonal-behind,
 	 * two back, where the swing is in view and the rock is not; an angler's
 	 * on the bank beside the spot, the nearest bank tile that is not the
-	 * player's, so it looks at the water rather than at a back.
+	 * player's, so it looks at the water rather than at a back. Three more
+	 * shapes by name: "across" (the far side of a fire, an anvil, a patch),
+	 * "beside" (one tile along the side of a range or a wheel) and "ring"
+	 * (three tiles off a hotspot or a brazier). Every shape falls back to
+	 * the flank when the ground refuses it.
 	 */
 	static List<WorldPoint> seatCandidates(WorldPoint player, WorldPoint min, WorldPoint max,
 		Collection<WorldPoint> reserved, String activity)
@@ -999,6 +1806,62 @@ public class SkillingController
 
 		Set<WorldPoint> avoid = new HashSet<>(reserved);
 		List<WorldPoint> candidates = new ArrayList<>();
+		Predicate<WorldPoint> allowed = c -> !candidates.contains(c) && !avoid.contains(c)
+			&& !covers(min, max, c) && !c.equals(player) && !onTheLine(player, nx, ny, c)
+			&& c.distanceTo(player) >= 2;
+
+		if ("across".equals(activity))
+		{
+			// The player mirrored through the footprint: the tile just past
+			// its far edge, then the two along that edge, then one further.
+			int fx = player.getX() < min.getX() ? max.getX() + 1
+				: player.getX() > max.getX() ? min.getX() - 1 : player.getX();
+			int fy = player.getY() < min.getY() ? max.getY() + 1
+				: player.getY() > max.getY() ? min.getY() - 1 : player.getY();
+			if (fx == player.getX() && fy == player.getY())
+			{
+				fy = max.getY() + 1;
+			}
+			int[][] far = {{fx, fy}, {fx + px, fy + py}, {fx - px, fy - py}, {fx + dx, fy + dy}};
+			for (int[] at : far)
+			{
+				WorldPoint c = new WorldPoint(at[0], at[1], player.getPlane());
+				if (allowed.test(c))
+				{
+					candidates.add(c);
+				}
+			}
+		}
+		else if ("beside".equals(activity))
+		{
+			// Alongside the footprint: the tiles that touch one of its edges
+			// square on, not at a corner, nearest the player first.
+			List<WorldPoint> sides = new ArrayList<>();
+			for (WorldPoint c : ring(min, max, 1, player.getPlane()))
+			{
+				boolean xIn = c.getX() >= min.getX() && c.getX() <= max.getX();
+				boolean yIn = c.getY() >= min.getY() && c.getY() <= max.getY();
+				if ((xIn || yIn) && allowed.test(c))
+				{
+					sides.add(c);
+				}
+			}
+			sides.sort((a, b) -> Integer.compare(square(a, player), square(b, player)));
+			candidates.addAll(sides);
+		}
+		else if ("ring".equals(activity))
+		{
+			List<WorldPoint> around = new ArrayList<>();
+			for (WorldPoint c : ring(min, max, 3, player.getPlane()))
+			{
+				if (allowed.test(c))
+				{
+					around.add(c);
+				}
+			}
+			around.sort((a, b) -> Integer.compare(square(a, player), square(b, player)));
+			candidates.addAll(around);
+		}
 
 		if ("fishing".equals(activity))
 		{
@@ -1090,7 +1953,7 @@ public class SkillingController
 		WorldPoint min = session.targetTile;
 		WorldPoint max = session.targetMax;
 		WorldView view = client.getTopLevelWorldView();
-		if (view == null)
+		if (view == null || session.standing)
 		{
 			return reserved;
 		}

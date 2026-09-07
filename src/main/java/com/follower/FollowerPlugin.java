@@ -568,7 +568,7 @@ public class FollowerPlugin extends Plugin
 			// work session, where the seat has the feet, nor while the seat
 			// is kept through a bank trip after one.
 			() -> dialog.isOpen() || follower.isNpcSlaved() || minutesState != 0
-				|| (skilling != null && (skilling.isWorking() || skilling.holdsTheFeet())),
+				|| (skilling != null && skilling.blocksErrands()),
 			hands);
 		flourish = new com.follower.follower.PropFlourish(follower, hands);
 		// A SUPPLIER, not the context itself: the engine replaces its context
@@ -588,6 +588,10 @@ public class FollowerPlugin extends Plugin
 			() -> thrallNpc != null || thrallLimbo || thrallExitPendingTicks > 0
 				|| thrallExitTicks > 0 || (spectate != null && spectate.holdsTheFeet()),
 			() -> client.getWidget(net.runelite.api.gameval.InterfaceID.BANKMAIN, 0) != null);
+		// The prayer at the altar and the fire line borrow two of the errands.
+		skilling.setErrands(errands::force);
+		// And in return no errand of the follower's own starts mid-session.
+		errands.setSession(skilling::isWorking);
 
 		// On a fresh client boot the LOGIN_SCREEN transition can happen before
 		// this plugin subscribes, so the first login would not read as fresh.
@@ -5967,13 +5971,16 @@ public class FollowerPlugin extends Plugin
 
 	/**
 	 * Scenery coming and going, handed to the skilling company by footprint.
-	 * A chunk load raises one of these per object in the scene, so nothing is
-	 * done unless a session is on - and the company itself keeps only what
-	 * touches its target's tile.
+	 * A chunk load raises one of these per object in the scene, so a despawn
+	 * is only handed over during a session, and a spawn only while the
+	 * company keeps company at all - it wants the trap the player just laid
+	 * and the fire they just lit, session or none - and the company itself
+	 * drops everything a load shuffles and keeps only what touches its tiles.
 	 */
 	private void noteObjectChange(net.runelite.api.GameObject object, boolean spawned)
 	{
-		if (skilling == null || !skilling.isWorking() || object == null)
+		if (skilling == null || object == null
+			|| (spawned ? !config.keepsCompany() : !skilling.isWorking()))
 		{
 			return;
 		}
@@ -6016,6 +6023,12 @@ public class FollowerPlugin extends Plugin
 
 		speechEngine.dispatch(TriggerEvent.chat(
 			event.getMessage(), event.getType().getType(), event.getName()));
+
+		if (skilling != null)
+		{
+			// The stun, the empty rune pouch, the slayer task: silent reactions.
+			skilling.noteChatMessage(event.getMessage(), event.getType());
+		}
 
 		// Two game messages worth parsing rather than merely matching: the
 		// tail is a NAME a line can say, which a plain chatMessage rule can
@@ -6415,6 +6428,11 @@ public class FollowerPlugin extends Plugin
 		}
 		int graphicId = spotAnim.getId();
 		int graphicHeight = spotAnim.getHeight();
+		if (skilling != null)
+		{
+			// The thieving stun's stars, which land before its message.
+			skilling.noteGraphic(graphicId);
+		}
 		if (watchAnimations)
 		{
 			sendStatus("Graphic " + graphicId + " at height " + graphicHeight
@@ -6946,7 +6964,8 @@ public class FollowerPlugin extends Plugin
 		if (skilling != null)
 		{
 			skilling.noteMenuOption(
-				com.follower.follower.SkillingController.plainOption(event.getMenuOption()));
+				com.follower.follower.SkillingController.plainOption(event.getMenuOption()),
+				com.follower.follower.SkillingController.plainOption(event.getMenuTarget()));
 		}
 		noteWorkClick(event);
 

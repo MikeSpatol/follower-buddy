@@ -11051,6 +11051,107 @@
       ]
     },
     {
+      "id": "bury-along",
+      "note": "Buries along with you. 827 is HUMAN_PICKUPFLOOR, the bend the bury uses, proven on the follower by the bootlace and cat errands. A one-shot, so mirrored as an emote; the chance keeps it from copying every bone in the pile.",
+      "group": "mimic",
+      "priority": 18,
+      "cooldownMs": 3000,
+      "delayTicks": 1,
+      "delayTicksMax": 3,
+      "mirrorAnimation": true,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "animationSelf",
+            "ids": [
+              827
+            ]
+          },
+          {
+            "type": "chance",
+            "percent": 30
+          }
+        ]
+      }
+    },
+    {
+      "id": "casting-along",
+      "note": "Casts along with you, rarely. The utility spells only: low and high alchemy 712/713, the three enchants 719-721, superheat 725 and charge orb 726, all HUMAN_CAST one-shots from the cache. The graphic copies through the mirror's twelve-tick window. Five percent with a minute between, so it reads as joining in once, not as a second caster.",
+      "group": "mimic",
+      "priority": 18,
+      "cooldownMs": 60000,
+      "mirrorAnimation": true,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "animationSelf",
+            "ids": [
+              712,
+              713,
+              719,
+              720,
+              721,
+              725,
+              726
+            ]
+          },
+          {
+            "type": "chance",
+            "percent": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "burnt",
+      "note": "A shake of the head at a run of burnt food. The game says \"You accidentally burn the shrimps.\" and every third of those, while a cooking session is on, earns 856 (EMOTE_NO, proven by the answered-no rule). Silent: the head says it. The working condition comes first so the count only runs during the session.",
+      "group": "reactions",
+      "priority": 20,
+      "cooldownMs": 30000,
+      "animation": 856,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "working",
+            "is": "cooking"
+          },
+          {
+            "type": "chatMessage",
+            "is": "GAMEMESSAGE",
+            "contains": "accidentally burn",
+            "every": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "counting-batches",
+      "note": "Counts your batches: every fifth fletching animation earns a nod, 855 (EMOTE_YES, in the mirrored emotes). 1248 is HUMAN_FLETCHING, the one the mime-loops rule already holds; the server restarts it per bow, and each restart is one animation event. Only while the fletching session is on.",
+      "group": "reactions",
+      "priority": 18,
+      "cooldownMs": 3000,
+      "animation": 855,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "working",
+            "is": "fletching"
+          },
+          {
+            "type": "animationSelf",
+            "ids": [
+              1248
+            ],
+            "every": 5
+          }
+        ]
+      }
+    },
+    {
       "id": "offer-game",
       "note": "Guarded with none/asking so it cannot replace a question already waiting for an answer. Without that, offering a game silently withdraws the outing and the player answers a question nothing is listening for.",
       "group": "idle",

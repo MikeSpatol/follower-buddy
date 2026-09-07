@@ -58,6 +58,7 @@ public final class FakeGame
 
 	private int[] mapRegions = {12850};
 	private int[] equipment = new int[12];
+	private boolean instanced;
 
 	private final List<Player> others = new ArrayList<>();
 
@@ -445,6 +446,23 @@ public final class FakeGame
 	}
 
 	/**
+	 * An NPC's pose animation - its walk, its stir - against an idle pose of
+	 * zero; the same number is standing still.
+	 */
+	public FakeGame npcPosing(NPC npc, int poseAnimation)
+	{
+		npcAnswers.get(npc).put("getPoseAnimation", poseAnimation);
+		return this;
+	}
+
+	/** Whether the top-level world view is an instance - a house, a raid. */
+	public FakeGame instanced(boolean instanced)
+	{
+		this.instanced = instanced;
+		return this;
+	}
+
+	/**
 	 * A real fight: both sides squared up at each other.
 	 *
 	 * <p>This used to set only the player's side, on the reasoning that
@@ -495,7 +513,7 @@ public final class FakeGame
 		answers.put("getBaseY", (Answer) args -> 0);
 		answers.put("getSizeX", (Answer) args -> net.runelite.api.Perspective.SCENE_SIZE);
 		answers.put("getSizeY", (Answer) args -> net.runelite.api.Perspective.SCENE_SIZE);
-		answers.put("isInstance", (Answer) args -> false);
+		answers.put("isInstance", (Answer) args -> instanced);
 		answers.put("getCollisionMaps", (Answer) args -> collisionFlags == null
 			? null
 			: new CollisionData[]{proxyCollision(), proxyCollision(),

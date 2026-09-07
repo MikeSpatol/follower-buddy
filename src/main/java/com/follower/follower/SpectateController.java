@@ -41,6 +41,52 @@ public class SpectateController
 	private static final int WATCH_DISTANCE = 4;
 
 	/**
+	 * The superior slayer monsters, by name, in one place. The spectator
+	 * stands {@link #SUPERIOR_EXTRA_TILES} further from one of these than
+	 * from anything else, and panics once at the sight of it.
+	 */
+	public static final java.util.Set<String> SUPERIOR_NAMES = new java.util.HashSet<>(
+		java.util.Arrays.asList(
+			"Crushing hand", "Chasm Crawler", "Screaming banshee",
+			"Screaming twisted banshee", "Giant rockslug", "Cockathrice",
+			"Flaming pyrelord", "Monstrous basilisk", "Malevolent Mage",
+			"Insatiable Bloodveld", "Insatiable Mutated Bloodveld", "Vitreous Jelly",
+			"Vitreous warped Jelly", "Cave abomination", "Abhorrent spectre",
+			"Repugnant spectre", "Basilisk Sentinel", "Choke devil", "King kurask",
+			"Marble gargoyle", "Nechryarch", "Greater abyssal demon", "Night beast",
+			"Nuclear smoke devil", "Shadow Wyrm", "Guardian Drake", "Colossal Hydra"));
+
+	static final int SUPERIOR_EXTRA_TILES = 2;
+
+	/** EMOTE_PANIC, proven on the follower by the mirror rules. */
+	static final int PANIC = 2105;
+
+	/**
+	 * A superior is being fought and the panic has not played: it waits for
+	 * the follower to be settled at its seat, since movement would cut it off.
+	 */
+	private boolean panicDue;
+	private boolean panicked;
+
+	/**
+	 * Whether the seat was chosen for a superior, two tiles further out: the
+	 * one that spawns mid-task is attacked from the ordinary seat, which is
+	 * then the wrong distance.
+	 */
+	private boolean seatedForSuperior;
+
+	/**
+	 * The superior is part of the skilling company, so the Skilling master
+	 * switch turns it off along with the rest: with it off a superior is
+	 * watched like any other fight.
+	 */
+	private boolean isSuperior(Actor target)
+	{
+		return config.keepsCompany() && target != null && target.getName() != null
+			&& SUPERIOR_NAMES.contains(target.getName());
+	}
+
+	/**
 	 * How far the follower may drift from its watching spot before it is moved
 	 * again. Without this it would re-path every tick as the player shuffles.
 	 *
@@ -244,6 +290,16 @@ public class SpectateController
 			holdPosition();
 		}
 
+		// The panic, once stood still at the seat: an emote begun while the
+		// feet are still moving is cancelled by the very next movement frame.
+		if (panicDue && follower.isStaying() && follower.isSettled())
+		{
+			panicDue = false;
+			panicked = true;
+			follower.playAnimation(PANIC);
+			log.debug("A superior; panicking, once");
+		}
+
 		maybeCastShield();
 	}
 
@@ -286,6 +342,8 @@ public class SpectateController
 		spectating = false;
 		watchTile = null;
 		unseatedTicks = 0;
+		panicDue = false;
+		panicked = false;
 
 		// Finishing the spell is its own moment: drop the channelled pose, play
 		// the closing animation where it stands, and only walk back once it has
@@ -354,7 +412,8 @@ public class SpectateController
 		// was un-seated, whoever did it: take the seat again.
 		if (!follower.isStaying()
 			|| watchTile.distanceTo(local.getWorldLocation()) > RESEAT_DISTANCE
-			|| watchTile.getPlane() != local.getWorldLocation().getPlane())
+			|| watchTile.getPlane() != local.getWorldLocation().getPlane()
+			|| isSuperior(local.getInteracting()) != seatedForSuperior)
 		{
 			moveClear();
 		}
@@ -388,6 +447,16 @@ public class SpectateController
 		Actor target = local.getInteracting();
 		WorldPoint threat = target == null ? null : target.getWorldLocation();
 
+		// A superior is worth two more tiles of distance, and a panic once
+		// the follower has stopped where it is going.
+		boolean superior = isSuperior(target);
+		seatedForSuperior = superior;
+		int watch = WATCH_DISTANCE + (superior ? SUPERIOR_EXTRA_TILES : 0);
+		if (superior && !panicked)
+		{
+			panicDue = true;
+		}
+
 		int dx;
 		int dy;
 		if (threat == null || threat.equals(player))
@@ -419,7 +488,7 @@ public class SpectateController
 
 		for (int[] direction : offsets)
 		{
-			for (int distance = WATCH_DISTANCE; distance >= 2; distance--)
+			for (int distance = watch; distance >= 2; distance--)
 			{
 				WorldPoint candidate = new WorldPoint(
 					player.getX() + direction[0] * distance,
@@ -441,7 +510,7 @@ public class SpectateController
 		// place where "behind the player" is stone. In a fight the goal is not
 		// underfoot, and any tile at a distance that is not next to the threat
 		// serves it. The full ring, nearest first, before giving up.
-		for (int distance = 2; distance <= WATCH_DISTANCE; distance++)
+		for (int distance = 2; distance <= watch; distance++)
 		{
 			for (int ox = -distance; ox <= distance; ox++)
 			{

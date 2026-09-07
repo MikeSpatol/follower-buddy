@@ -1564,6 +1564,31 @@ public class EveryConditionTypeTest
 		eighth.dispatch(TriggerEvent.xpDrop("Woodcutting", 8));
 		assertFired(eighth, "xpDrop every eighth");
 
+		// "every" on the two that have no count of their own: the third burn
+		// message, the fifth fletching animation.
+		Harness third = harnessFor("{\"type\": \"chatMessage\", \"contains\": \"accidentally burn\","
+			+ " \"every\": 3}");
+		third.gameTicks(1);
+		for (int i = 0; i < 2; i++)
+		{
+			third.dispatch(TriggerEvent.chat("You accidentally burn the shrimps.",
+				net.runelite.api.ChatMessageType.GAMEMESSAGE.getType(), ""));
+		}
+		assertQuiet(third, "two burns is not three");
+		third.dispatch(TriggerEvent.chat("You accidentally burn the shrimps.",
+			net.runelite.api.ChatMessageType.GAMEMESSAGE.getType(), ""));
+		assertFired(third, "chatMessage every third");
+
+		Harness fifth = harnessFor("{\"type\": \"animationSelf\", \"ids\": [1248], \"every\": 5}");
+		fifth.gameTicks(1);
+		for (int i = 0; i < 4; i++)
+		{
+			fifth.dispatch(TriggerEvent.animation(1248));
+		}
+		assertQuiet(fifth, "four is not five");
+		fifth.dispatch(TriggerEvent.animation(1248));
+		assertFired(fifth, "animationSelf every fifth");
+
 		fires("{\"type\": \"workEnded\"}", TriggerEvent.workEnd("woodcutting", "Yew tree"));
 		quiet("{\"type\": \"workEnded\", \"names\": [\"mining\"]}",
 			TriggerEvent.workEnd("woodcutting", "Yew tree"));
