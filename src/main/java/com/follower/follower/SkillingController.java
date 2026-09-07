@@ -153,6 +153,14 @@ public class SkillingController
 	/** The look at the player that goes with the send-off, off the seat. */
 	private static final int BEAT_GLANCE_MS = 1800;
 
+	/**
+	 * How much longer than the grace a send-off will wait for the player to
+	 * stand still. Movement cancels an emote, and a player who has just
+	 * walked away from a tree is usually still walking, so a bow played the
+	 * instant the grace lapsed was a bow nobody saw.
+	 */
+	static final int BEAT_WAIT_TICKS = 100;
+
 	/** EMOTE_CLAP, proven by the mirror rules: the task ledger's applause. */
 	static final int CLAP = 865;
 	private static final int CLAP_TICKS = 3;
@@ -226,6 +234,9 @@ public class SkillingController
 	/** Ticks a borrowed tool is kept between sessions, and the work it is for. */
 	private int graceTicks;
 	private String graceActivity;
+
+	/** Ticks already spent waiting for a still moment to bow in. */
+	private int beatWait;
 
 	/**
 	 * When the current run of one kind of work began. The send-off is for
@@ -1328,6 +1339,7 @@ public class SkillingController
 		{
 			graceTicks = TOOL_GRACE_TICKS;
 			graceActivity = done.activity;
+			beatWait = 0;
 		}
 		boolean beat = !silent && !carry && withBeat && borrow.isHolding();
 		if (carry)
@@ -1401,10 +1413,27 @@ public class SkillingController
 			// the seat is being kept, and so is what is in the hand.
 			return;
 		}
-		if (--graceTicks <= 0)
+		if (--graceTicks > 0)
 		{
-			dropTheGrace(true);
+			return;
 		}
+		// A send-off that is owed waits for somewhere to land: a player still
+		// on the move would cancel the bow and be handed the tool back with
+		// nothing to see. It does not wait for ever.
+		if (owedTheSendOff() && !follower.isSettled() && beatWait < BEAT_WAIT_TICKS)
+		{
+			beatWait++;
+			graceTicks = 1;
+			return;
+		}
+		dropTheGrace(true);
+	}
+
+	/** Whether a kept tool has earned its bow on the way back. */
+	private boolean owedTheSendOff()
+	{
+		return borrow.isHolding()
+			&& client.getTickCount() - stintStart >= BEAT_AFTER_TICKS;
 	}
 
 	/**
@@ -1425,8 +1454,7 @@ public class SkillingController
 		}
 		Player local = client.getLocalPlayer();
 		WorldPoint here = local == null ? null : local.getWorldLocation();
-		if (earned && client.getTickCount() - stintStart >= BEAT_AFTER_TICKS
-			&& follower.isSettled() && here != null)
+		if (earned && owedTheSendOff() && follower.isSettled() && here != null)
 		{
 			follower.glanceAt(here, BEAT_GLANCE_MS);
 			borrow.giveBack(true);

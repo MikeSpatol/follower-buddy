@@ -62,10 +62,13 @@ public class SkillingSessionTest
 			return spawned;
 		}
 
+		/** False while the follower is taken to be still catching up. */
+		boolean settled = true;
+
 		@Override
 		public boolean isSettled()
 		{
-			return true;
+			return settled;
 		}
 
 		@Override
@@ -781,6 +784,44 @@ public class SkillingSessionTest
 		assertEquals("the work really was over", 0, held);
 		assertEquals("and the stint earned its bow",
 			Collections.singletonList(858), follower.animations);
+	}
+
+	@Test
+	public void theSendOffWaitsForThePlayerToStandStill()
+	{
+		// A bow played while the follower is still hurrying after the player
+		// is cancelled by the movement, so it waits for somewhere to land.
+		game.wearing(6739);
+		workTheTree();
+		tick(SkillingController.BEAT_AFTER_TICKS);
+		follower.animations.clear();
+
+		follower.settled = false;
+		game.at(56, 50, 0);
+		tick(2 + SkillingController.TOOL_GRACE_TICKS);
+		assertEquals("still holding it, waiting for a still moment", 6739, held);
+		assertTrue("and nothing played into the walk", follower.animations.isEmpty());
+
+		follower.settled = true;
+		tick(1);
+		assertEquals("the bow, once there is somewhere to put it",
+			Collections.singletonList(858), follower.animations);
+		assertEquals(0, held);
+	}
+
+	@Test
+	public void aSendOffWithNowhereToLandGivesUpRatherThanHoldingForEver()
+	{
+		game.wearing(6739);
+		workTheTree();
+		tick(SkillingController.BEAT_AFTER_TICKS);
+		follower.animations.clear();
+
+		follower.settled = false;
+		game.at(56, 50, 0);
+		tick(2 + SkillingController.TOOL_GRACE_TICKS + SkillingController.BEAT_WAIT_TICKS);
+		assertEquals("the tool goes back regardless", 0, held);
+		assertTrue("quietly, since there was never a moment", follower.animations.isEmpty());
 	}
 
 	@Test
