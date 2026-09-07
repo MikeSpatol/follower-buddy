@@ -69,6 +69,13 @@ public class MomentsTest
 			return stayingAt != null ? stayingAt : new WorldPoint(49, 49, 0);
 		}
 
+		/** Every tile is ground here; no test in this class blocks any. */
+		@Override
+		boolean standable(WorldPoint at)
+		{
+			return at != null;
+		}
+
 		@Override
 		public boolean stayAt(WorldPoint target)
 		{

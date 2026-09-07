@@ -17,6 +17,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -81,6 +82,12 @@ public class SkillingSessionTest
 		public WorldPoint getWorldLocation()
 		{
 			return stayingAt != null ? stayingAt : new WorldPoint(49, 49, 0);
+		}
+
+		@Override
+		boolean standable(WorldPoint at)
+		{
+			return at != null && (walled == null || !walled.test(at));
 		}
 
 		@Override
@@ -2099,6 +2106,47 @@ public class SkillingSessionTest
 
 	/** HUMAN_PICKPOCKET. */
 	private static final int PICKPOCKET = 881;
+
+	@Test
+	public void aFireLitOnTheSeatMovesTheFollowerOffIt()
+	{
+		// Lighting a line of fires is how this shows: the follower is given a
+		// tile, the next fire goes up on it, and a stay persists by design, so
+		// without this it stands in the flames until the session ends.
+		workTheTree();
+		WorldPoint seat = follower.stayingAt;
+		assertNotNull(seat);
+
+		follower.walled = tile -> tile.equals(seat);
+		tick(3);
+		assertNotEquals("not left standing in it", seat, follower.stayingAt);
+		assertTrue("and it found somewhere else or simply followed",
+			follower.stayingAt != null || follower.following);
+	}
+
+	@Test
+	public void aFireLitOnTheFireLineSpotLetsTheVisitGo()
+	{
+		game.at(50, 50, 0);
+		tick(1);
+		game.at(51, 50, 0);
+		tick(1);
+		for (int i = 0; i < SkillingController.FIRE_LINE_EVERY; i++)
+		{
+			game.placeObject(26185, "Fire", 51, 50, 0);
+			skilling.objectSpawned(26185, new WorldPoint(51, 50, 0), null);
+		}
+		WorldPoint visit = follower.stayingAt;
+		if (visit == null)
+		{
+			return;
+		}
+
+		follower.walled = tile -> tile.equals(visit);
+		tick(2);
+		assertTrue("the visit is given up rather than stood out in the fire",
+			follower.stayingAt == null || !visit.equals(follower.stayingAt));
+	}
 
 	@Test
 	public void aStallWithNoGuardStillEarnsASeatAndKeepsIt()

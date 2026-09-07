@@ -1082,6 +1082,7 @@ public class SkillingController
 		{
 			watchTheGrace();
 		}
+		watchTheGroundUnderfoot(now);
 		if (bankTrip)
 		{
 			watchTheBankTrip(now, here);
@@ -1427,6 +1428,41 @@ public class SkillingController
 			return;
 		}
 		dropTheGrace(true);
+	}
+
+	/**
+	 * Ground that has turned into scenery under a parked follower. Lighting
+	 * a line of fires is the way to see it: the follower is given a tile, a
+	 * fire goes up on it, and nothing moves it off, because a stay persists
+	 * by design and the follower is not the one who lit it. Only the spots
+	 * the company chose are second-guessed here; a follower standing
+	 * somewhere odd of its own accord is usually there on purpose.
+	 */
+	private void watchTheGroundUnderfoot(int now)
+	{
+		if (fireSeat != null && !follower.standable(fireSeat))
+		{
+			dropTheFireLine(true);
+		}
+		if (trapSeat != null && !follower.standable(trapSeat))
+		{
+			dropTheTrap(true);
+		}
+		if (seat == null || follower.standable(seat))
+		{
+			return;
+		}
+		// Chosen again from scratch rather than nudged one tile: whatever went
+		// up there may well have taken the neighbours with it.
+		seat = null;
+		reseat = false;
+		seatDueTick = now + 1;
+		if (follower.isStaying() && !feetTaken.getAsBoolean())
+		{
+			// Off it now, in case there is nowhere better to be given.
+			follower.resumeFollowing();
+		}
+		log.debug("The seat is not ground any more; choosing again");
 	}
 
 	/** Whether a kept tool has earned its bow on the way back. */
