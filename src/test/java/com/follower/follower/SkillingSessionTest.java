@@ -734,9 +734,94 @@ public class SkillingSessionTest
 
 		tick(SkillingController.BEAT_AFTER_TICKS);
 		game.at(50, 54, 0);
-		tick(1);
+		tick(1 + SkillingController.TOOL_GRACE_TICKS);
 		assertEquals("a bow for a tool", Collections.singletonList(858), follower.animations);
 		assertEquals(0, held);
+	}
+
+	@Test
+	public void theToolStaysInHandFromOneTreeToTheNext()
+	{
+		// One tree is not the work. Walking to the next one used to hand the
+		// axe back, bow and all, and take it straight out again.
+		game.wearing(6739);
+		workTheTree();
+		assertEquals(6739, held);
+		tick(SkillingController.BEAT_AFTER_TICKS);
+		follower.animations.clear();
+
+		game.at(56, 50, 0);
+		tick(2);
+		assertFalse("the session let go", skilling.isWorking());
+		assertEquals("the axe did not", 6739, held);
+		assertTrue("and nothing was played at it", follower.animations.isEmpty());
+
+		skilling.noteClick("Chop down", "Yew tree", TREE_ID + 2,
+			new WorldPoint(58, 50, 0), null, null);
+		game.animating(CHOP);
+		tick(1);
+		assertTrue("the next tree is work again", skilling.isWorking());
+		assertEquals("with the same axe, never handed back", 6739, held);
+		assertTrue(follower.animations.isEmpty());
+	}
+
+	@Test
+	public void aToolKeptAndNotUsedAgainGoesBackWithTheStintsSendOff()
+	{
+		game.wearing(6739);
+		workTheTree();
+		tick(SkillingController.BEAT_AFTER_TICKS);
+		follower.animations.clear();
+
+		game.at(56, 50, 0);
+		tick(2);
+		assertEquals("held while they might only be moving along", 6739, held);
+
+		tick(SkillingController.TOOL_GRACE_TICKS);
+		assertEquals("the work really was over", 0, held);
+		assertEquals("and the stint earned its bow",
+			Collections.singletonList(858), follower.animations);
+	}
+
+	@Test
+	public void aShortStintGetsNoSendOffAtTheEndOfTheGrace()
+	{
+		workTheTree();
+		assertEquals(1351, held);
+		game.at(56, 50, 0);
+		tick(2 + SkillingController.TOOL_GRACE_TICKS);
+		assertEquals(0, held);
+		assertTrue("a minute of chopping is not a ceremony", follower.animations.isEmpty());
+	}
+
+	@Test
+	public void differentWorkSwapsTheKeptTool()
+	{
+		workTheTree();
+		assertEquals(1351, held);
+		game.at(56, 50, 0);
+		tick(2);
+		assertEquals("kept for the moment", 1351, held);
+
+		skilling.noteClick("Mine", "Rocks", ROCK_ID, new WorldPoint(58, 50, 0), null, null);
+		game.animating(MINE);
+		tick(1);
+		tick(SkillingController.SEAT_AFTER_TICKS);
+		assertEquals("an axe is no good at a rock", 1265, held);
+	}
+
+	@Test
+	public void aFightDuringTheGracePutsTheToolStraightBack()
+	{
+		workTheTree();
+		game.at(56, 50, 0);
+		tick(2);
+		assertEquals(1351, held);
+
+		inCombat = true;
+		tick(1);
+		assertEquals("nobody to hand it to mid-fight", 0, held);
+		assertTrue(follower.animations.isEmpty());
 	}
 
 	@Test
@@ -778,22 +863,24 @@ public class SkillingSessionTest
 	}
 
 	@Test
-	public void aLongSessionEarnsABowOnTheWayOut()
+	public void aLongStintEarnsABowWhenTheWorkIsReallyOver()
 	{
+		// The send-off belongs to the stint, not to the last tree of it, so
+		// it waits out the walk that might have been to the next one.
 		workTheTree();
 		tick(SkillingController.BEAT_AFTER_TICKS);
 		game.at(50, 54, 0);
 		tick(1);
 
-		assertEquals("the bow", Collections.singletonList(858), follower.animations);
-		assertEquals("and the axe went back on the same call", 0, held);
-		assertEquals("facing the player for it", new WorldPoint(50, 54, 0), follower.facing);
-		assertTrue("the feet stay still while it plays", skilling.holdsTheFeet());
-		assertFalse(follower.following);
+		assertFalse("the session let go", skilling.isWorking());
+		assertTrue("but nothing is played yet", follower.animations.isEmpty());
+		assertEquals("and the axe is still in hand", 1351, held);
 
-		tick(3);
-		assertTrue("then the follower comes back", follower.following);
-		assertFalse(skilling.holdsTheFeet());
+		tick(SkillingController.TOOL_GRACE_TICKS);
+		assertEquals("the bow, once they are plainly done",
+			Collections.singletonList(858), follower.animations);
+		assertEquals("and the axe went back on the same call", 0, held);
+		assertTrue("the follower was following all through it", follower.following);
 	}
 
 	@Test
@@ -802,7 +889,7 @@ public class SkillingSessionTest
 		workTheTree();
 		tick(20);
 		game.at(50, 54, 0);
-		tick(1);
+		tick(1 + SkillingController.TOOL_GRACE_TICKS);
 
 		assertTrue(follower.animations.isEmpty());
 		assertEquals(0, held);
@@ -1604,7 +1691,7 @@ public class SkillingSessionTest
 		assertEquals("the seat is kept", seat, follower.stayingAt);
 		assertTrue("and is still the company's, not a Stay", skilling.holdsTheFeet());
 		assertEquals("facing the way they went", new WorldPoint(55, 50, 0), follower.facing);
-		assertEquals("the axe went back", 0, held);
+		assertEquals("and so is the axe, for the same reason", 1351, held);
 
 		game.at(59, 50, 0);
 		tick(10);

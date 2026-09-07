@@ -142,6 +142,17 @@ public class SkillingController
 	/** The cold-stamp-feet rule's regions: the Wintertodt camp and the snows. */
 	static final Set<Integer> COLD_REGIONS = new HashSet<>(Arrays.asList(10553, 8253, 6462));
 
+	/**
+	 * How long a borrowed tool stays in the hand once a session ends. One
+	 * tree is not the work; the walk to the next one is part of it, and
+	 * handing an axe back twice a minute to take it straight out again
+	 * reads as a fault rather than as company.
+	 */
+	static final int TOOL_GRACE_TICKS = 50;
+
+	/** The look at the player that goes with the send-off, off the seat. */
+	private static final int BEAT_GLANCE_MS = 1800;
+
 	/** EMOTE_CLAP, proven by the mirror rules: the task ledger's applause. */
 	static final int CLAP = 865;
 	private static final int CLAP_TICKS = 3;
@@ -211,6 +222,17 @@ public class SkillingController
 
 	/** A tool the hands declined this session, so it is not asked for on every drop. */
 	private int refusedTool;
+
+	/** Ticks a borrowed tool is kept between sessions, and the work it is for. */
+	private int graceTicks;
+	private String graceActivity;
+
+	/**
+	 * When the current run of one kind of work began. The send-off is for
+	 * the whole stint, so an hour of chopping earns its bow even though no
+	 * single tree lasted two minutes.
+	 */
+	private int stintStart;
 	private int ticksSinceLoading = 1000;
 
 	/**
@@ -362,7 +384,12 @@ public class SkillingController
 		}
 		if (session == null)
 		{
-			return pending == null ? "no work" : "waiting on a swing at " + pending.targetName;
+			String waiting = pending == null
+				? "no work" : "waiting on a swing at " + pending.targetName;
+			return graceTicks > 0
+				? waiting + ", still holding " + borrow.heldItem()
+					+ " for " + graceTicks + " more ticks"
+				: waiting;
 		}
 		int worked = client.getTickCount() - session.startTick;
 		return (session.activity == null ? "work" : session.activity)
@@ -848,6 +875,7 @@ public class SkillingController
 		dropTheBankTrip(true);
 		dropTheTrap(true);
 		dropTheFireLine(true);
+		dropTheGrace(false);
 		letGoOfTheNotes();
 		ledger.abort();
 		ledgerAt = 0;
@@ -1003,6 +1031,7 @@ public class SkillingController
 			dropTheBankTrip(true);
 			dropTheTrap(true);
 			dropTheFireLine(true);
+			dropTheGrace(false);
 			letGoOfTheNotes();
 			ledger.abort();
 			ledgerAt = 0;
@@ -1032,11 +1061,16 @@ public class SkillingController
 			dropTheBankTrip(true);
 			dropTheTrap(true);
 			dropTheFireLine(true);
+			dropTheGrace(false);
 			previousHere = null;
 			return;
 		}
 
 		int now = client.getTickCount();
+		if (graceTicks > 0)
+		{
+			watchTheGrace();
+		}
 		if (bankTrip)
 		{
 			watchTheBankTrip(now, here);
@@ -1239,6 +1273,21 @@ public class SkillingController
 		dropTheFireLine(true);
 		letGoOfTheNotes();
 		session = opened;
+		if (graceTicks > 0)
+		{
+			if (graceActivity != null && opened.activity != null
+				&& !graceActivity.equals(opened.activity))
+			{
+				// Different work: the old tool goes back before the new one.
+				dropTheGrace(true);
+			}
+			else
+			{
+				// The next tree along: the tool simply stays in the hand.
+				graceTicks = 0;
+				graceActivity = null;
+			}
+		}
 		seat = null;
 		reseat = false;
 		refusedTool = 0;
@@ -1265,8 +1314,30 @@ public class SkillingController
 		// A sitting follower stands first, on a proper end; an abort simply
 		// lets the pose go.
 		int standUp = company.end(!silent);
-		boolean beat = !silent && withBeat && borrow.isHolding();
-		if (beat)
+		// Walking to the next tree is not the end of the work, so the tool
+		// stays in the hand while the player repositions and the send-off
+		// waits to see whether they start again. Only an abort - a fight, a
+		// plane change, somebody else taking the follower - puts it straight
+		// back, because then there is nobody to hand it to.
+		// The patch inspector writes its notes at the end, and the scroll and
+		// a tool share the one hand, so that end really is the end.
+		boolean notes = !silent && "farming".equals(done.activity)
+			&& seat != null && !bankTrip && follower.isStaying();
+		boolean carry = !silent && !notes && borrow.isHolding();
+		if (carry)
+		{
+			graceTicks = TOOL_GRACE_TICKS;
+			graceActivity = done.activity;
+		}
+		boolean beat = !silent && !carry && withBeat && borrow.isHolding();
+		if (carry)
+		{
+			if (standUp > 0)
+			{
+				follower.playAnimation(standUp);
+			}
+		}
+		else if (beat)
 		{
 			// The bow is to the player, not to the tree.
 			Player local = client.getLocalPlayer();
@@ -1288,8 +1359,7 @@ public class SkillingController
 		{
 			seat = null;
 			// The patch inspector's notes, at the end and only then.
-			int note = !silent && "farming".equals(done.activity) && follower.isStaying()
-				? company.endNote() : 0;
+			int note = notes ? company.endNote() : 0;
 			endNoteOut = note > 0;
 			if (beat || standUp > 0 || note > 0)
 			{
@@ -1311,6 +1381,60 @@ public class SkillingController
 		}
 		log.debug("Work session over: {} on {}{}", done.option, done.targetName,
 			silent ? " (aborted)" : "");
+	}
+
+	/**
+	 * The kept tool, between sessions. It goes back when the player turns
+	 * out to have finished rather than moved along, and straight back if
+	 * anything else claims the follower first.
+	 */
+	private void watchTheGrace()
+	{
+		if (inCombat.getAsBoolean() || feetTaken.getAsBoolean() || !follower.isSpawned())
+		{
+			dropTheGrace(false);
+			return;
+		}
+		if (bankTrip)
+		{
+			// A trip to the bank is the most obvious not-finished there is:
+			// the seat is being kept, and so is what is in the hand.
+			return;
+		}
+		if (--graceTicks <= 0)
+		{
+			dropTheGrace(true);
+		}
+	}
+
+	/**
+	 * Gives a kept tool back.
+	 *
+	 * @param earned whether the send-off is allowed: the work really
+	 * finished, rather than being interrupted. It still only plays for a
+	 * stint long enough to deserve it, and only when the follower is
+	 * standing still enough for it to be seen.
+	 */
+	private void dropTheGrace(boolean earned)
+	{
+		graceTicks = 0;
+		graceActivity = null;
+		if (!borrow.isHolding())
+		{
+			return;
+		}
+		Player local = client.getLocalPlayer();
+		WorldPoint here = local == null ? null : local.getWorldLocation();
+		if (earned && client.getTickCount() - stintStart >= BEAT_AFTER_TICKS
+			&& follower.isSettled() && here != null)
+		{
+			follower.glanceAt(here, BEAT_GLANCE_MS);
+			borrow.giveBack(true);
+		}
+		else
+		{
+			borrow.abort();
+		}
 	}
 
 	private void depleted()
@@ -2182,6 +2306,9 @@ public class SkillingController
 			}
 			if (borrow.start(item))
 			{
+				// A fresh borrow starts the stint the send-off is measured on;
+				// a tool carried from the last tree keeps the one it had.
+				stintStart = client.getTickCount();
 				return;
 			}
 			refusedTool = item;
