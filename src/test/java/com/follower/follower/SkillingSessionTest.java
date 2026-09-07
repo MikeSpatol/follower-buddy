@@ -723,24 +723,30 @@ public class SkillingSessionTest
 	}
 
 	@Test
-	public void aFullOutfitLendsItsHatAndEarnsASalute()
+	public void theToolIsPreferredToTheOutfitHat()
 	{
-		// The whole lumberjack set and a dragon axe: the hat is the thing.
+		// The hands hold one thing, and between your axe and your hat the axe
+		// is the half that reads as joining in. The hat is for the work that
+		// lends no tool, which BorrowTest covers at the table.
 		game.wearing(6739, 10941, 10939, 10940, 10933);
 		workTheTree();
-		assertEquals("the hat, not the axe", 10941, held);
+		assertEquals("the axe, not the hat", 6739, held);
 
 		tick(SkillingController.BEAT_AFTER_TICKS);
 		game.at(50, 54, 0);
 		tick(1);
-		assertEquals("a salute for a hat", Collections.singletonList(2112), follower.animations);
+		assertEquals("a bow for a tool", Collections.singletonList(858), follower.animations);
 		assertEquals(0, held);
+	}
 
-		// Three pieces of it is a player in a hat, and the axe is borrowed.
-		setUp();
-		game.wearing(6739, 10941, 10939, 10940);
+	@Test
+	public void aFellingAxeIsBorrowedAsItself()
+	{
+		// A short tier list read a dragon felling axe as a bronze axe, which
+		// is the one thing a borrow must never get wrong.
+		game.wearing(28217);
 		workTheTree();
-		assertEquals(6739, held);
+		assertEquals("the felling axe the player wears", 28217, held);
 	}
 
 	@Test

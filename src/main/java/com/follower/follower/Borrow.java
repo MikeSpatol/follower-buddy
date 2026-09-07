@@ -32,13 +32,28 @@ public class Borrow
 	/** Proven by the mirror rules, which copy it onto the follower. */
 	static final int SALUTE_ANIMATION = 2112;
 
-	// Bronze first in each tiered list: it is the fallback when nothing is worn.
+	// Bronze first in each list: it is the fallback when nothing is worn.
+	// Every wieldable axe and pickaxe in the cache, ornament and inactive
+	// variants included, taken from docs/data/wearable-items.tsv - a short
+	// list meant a dragon felling axe borrowed as a bronze one. Refresh them
+	// from the dumper when a new tier lands; the combat axes are left out
+	// because nothing is felled with a soulreaper.
 	static final int[] AXES = {
-		1351, 1349, 1353, 1361, 1355, 1357, 1359, 6739, 13241, 23673, 20011,
+		1351, 1349, 1353, 1361, 1355, 1357, 1359,
+		6739, 25378, 30352,
+		13241, 13242, 25066, 25371, 30347, 30348,
+		23673, 23675, 23862,
+		20011, 23279, 10491, 23821, 25110,
+		28196, 28199, 28202, 28205, 28208, 28211, 28214, 28217, 28220, 28223, 28226,
 	};
 
 	static final int[] PICKAXES = {
-		1265, 1267, 1269, 12297, 1273, 1271, 1275, 11920, 13243, 23680, 20014,
+		1265, 1267, 1269, 12297, 1273, 1271, 1275,
+		11920, 12797, 23677, 25376, 30351,
+		13243, 13244, 25063, 25369, 30345, 30346,
+		23680, 23682, 23863,
+		20014, 23276, 23822, 25112,
+		11719, 11720, 11721,
 	};
 
 	static final int[] HARPOONS = {311, 10129};

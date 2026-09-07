@@ -330,6 +330,30 @@ public class SkillingController
 	 * through the return beat. Registered beside the errand and spectate
 	 * owners so a seat never reads as a Stay the player asked for.
 	 */
+	/**
+	 * One line of what the company is doing, for {@code ::follower status}:
+	 * enough to tell a session that never opened from one that opened on
+	 * the wrong thing, which is the difference between the follower doing
+	 * nothing and the follower doing nothing yet.
+	 */
+	public String describe()
+	{
+		if (!config.keepsCompany())
+		{
+			return "off in the settings";
+		}
+		if (session == null)
+		{
+			return pending == null ? "no work" : "waiting on a swing at " + pending.targetName;
+		}
+		int worked = client.getTickCount() - session.startTick;
+		return (session.activity == null ? "work" : session.activity)
+			+ " on " + session.targetName
+			+ ", " + worked + " ticks, " + session.xpDrops + " drops"
+			+ ", seat " + (seat == null ? "none yet" : seat.getX() + "," + seat.getY())
+			+ ", holding " + (borrow.isHolding() ? String.valueOf(borrow.heldItem()) : "nothing");
+	}
+
 	public boolean holdsTheFeet()
 	{
 		return seat != null || releaseTicks > 0 || trapSeat != null || fireSeat != null
@@ -2106,13 +2130,14 @@ public class SkillingController
 		{
 			return;
 		}
-		// The hat of a full skilling outfit first - the rarer thing to have
-		// noticed - and the tool when there is no outfit, or the hat is
-		// declined; the hands hold one thing.
+		// The tool first. The hands hold one thing, and the tool is the half
+		// of the borrow that reads as joining in - a hat instead of your
+		// pickaxe is a worse trade than no hat. The outfit's hat is what the
+		// work with no tool of its own gets: thieving, agility.
 		Set<Integer> worn = Borrow.wornItems(local.getPlayerComposition());
 		int[] wanted = {
-			Borrow.hatFor(session.activity, worn),
 			Borrow.toolFor(session.activity, session.lastAnimation, worn),
+			Borrow.hatFor(session.activity, worn),
 		};
 		for (int item : wanted)
 		{

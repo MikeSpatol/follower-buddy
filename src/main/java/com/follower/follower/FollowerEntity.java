@@ -2286,8 +2286,13 @@ public class FollowerEntity
 			return false;
 		}
 
+		net.runelite.api.WorldView view = client.getTopLevelWorldView();
+		if (view == null)
+		{
+			return false;
+		}
 		int own = modelHeight(object == null ? null : object.getModel());
-		for (net.runelite.api.NPC npc : client.getTopLevelWorldView().npcs())
+		for (net.runelite.api.NPC npc : view.npcs())
 		{
 			if (npc == null || npc == thrallNpc)
 			{
@@ -2330,6 +2335,13 @@ public class FollowerEntity
 			}
 		}
 		return false;
+	}
+
+	/** The top-level plane, or 0 while there is no world view to ask. */
+	private int plane()
+	{
+		net.runelite.api.WorldView view = client.getTopLevelWorldView();
+		return view == null ? 0 : view.getPlane();
 	}
 
 	/** Collision flags for a tile, or null when no data covers it. */
@@ -3213,11 +3225,12 @@ public class FollowerEntity
 		int own = modelHeight(object == null ? null : object.getModel());
 		lines.add("follower height " + own + ", hides at "
 			+ Math.round(own * OVERLAP_HEIGHT_FRACTION) + " and above");
-		if (tile == null)
+		net.runelite.api.WorldView view = client.getTopLevelWorldView();
+		if (tile == null || view == null)
 		{
 			return lines;
 		}
-		for (net.runelite.api.NPC npc : client.getTopLevelWorldView().npcs())
+		for (net.runelite.api.NPC npc : view.npcs())
 		{
 			if (npc == null || npc.getWorldLocation() == null
 				|| npc.getWorldLocation().distanceTo(tile) > 3)
@@ -3608,8 +3621,7 @@ public class FollowerEntity
 		// composited INTO the actor model and drawn through the sorted path.
 		graphic.setRenderMode(net.runelite.api.Renderable.RENDERMODE_SORTED_NO_DEPTH);
 		graphic.setModel(lit);
-		graphic.setLocation(lastRenderedLocation,
-			tile != null ? tile.getPlane() : client.getTopLevelWorldView().getPlane());
+		graphic.setLocation(lastRenderedLocation, tile != null ? tile.getPlane() : plane());
 		// Aligned with the follower from the very first frame; render() keeps it
 		// aligned every frame after.
 		graphic.setZ(lastRenderedZ);

@@ -213,9 +213,16 @@ public class BorrowTest
 		assertEquals(1351, Borrow.toolFor("woodcutting", 879, none));
 		assertEquals(6739, Borrow.toolFor("woodcutting", 879, worn(6739)));
 		assertEquals("every tier is known", 23673, Borrow.toolFor("woodcutting", 879, worn(23673)));
+		assertEquals("the felling axes too", 28217, Borrow.toolFor("woodcutting", 879, worn(28217)));
+		assertEquals("and the ornament kits", 25378, Borrow.toolFor("woodcutting", 879, worn(25378)));
 		assertEquals(1265, Borrow.toolFor("mining", 625, none));
 		assertEquals(11920, Borrow.toolFor("mining", 625, worn(11920)));
 		assertEquals(20014, Borrow.toolFor("mining", 625, worn(20014)));
+		assertEquals("the ornament pickaxes too", 23677, Borrow.toolFor("mining", 625, worn(23677)));
+
+		// Work with no tool of its own is what the outfit's hat is for.
+		assertEquals(0, Borrow.toolFor("thieving", -1, none));
+		assertEquals(5554, Borrow.hatFor("thieving", worn(5554, 5553, 5555, 5557)));
 
 		// Fishing goes by the animation, since "Fish" says nothing about the hand.
 		assertEquals(311, Borrow.toolFor("fishing", 618, none));

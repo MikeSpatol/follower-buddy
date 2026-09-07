@@ -1047,9 +1047,15 @@ public class ErrandController
 		{
 			return null;
 		}
-		Scene scene = client.getTopLevelWorldView().getScene();
+		net.runelite.api.WorldView view = client.getTopLevelWorldView();
+		if (view == null)
+		{
+			// Between worlds, or mid-login: there is no scene to search.
+			return null;
+		}
+		Scene scene = view.getScene();
 		Tile[][][] tiles = scene.getTiles();
-		int plane = client.getTopLevelWorldView().getPlane();
+		int plane = view.getPlane();
 		int sx = lp.getSceneX();
 		int sy = lp.getSceneY();
 
@@ -1134,9 +1140,14 @@ public class ErrandController
 		{
 			return null;
 		}
+		net.runelite.api.WorldView view = client.getTopLevelWorldView();
+		if (view == null)
+		{
+			return null;
+		}
 		WorldPoint best = null;
 		int bestDistance = Integer.MAX_VALUE;
-		for (NPC npc : client.getTopLevelWorldView().npcs())
+		for (NPC npc : view.npcs())
 		{
 			if (npc == null || npc.getName() == null || !nameMatch.test(npc.getName()))
 			{

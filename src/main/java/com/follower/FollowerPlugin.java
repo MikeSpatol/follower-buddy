@@ -921,6 +921,13 @@ public class FollowerPlugin extends Plugin
 			}
 
 			log.info("Indexed {} of {} wearable items by slot", index.size(), ids.size());
+			if (index.isEmpty())
+			{
+				// The item stats were not ready. This runs during login, and an
+				// index of nothing would leave the picker unfiltered for the whole
+				// session, so it is dropped and ensureCatalogues asks again.
+				return;
+			}
 			slotIndex = index;
 			if (panel != null)
 			{
@@ -1446,8 +1453,13 @@ public class FollowerPlugin extends Plugin
 	private WorldPoint pickDistraction(Player local, WorldPoint from, int nearest)
 	{
 		List<WorldPoint> candidates = new ArrayList<>();
+		net.runelite.api.WorldView view = client.getTopLevelWorldView();
+		if (view == null)
+		{
+			return null;
+		}
 
-		for (NPC npc : client.getTopLevelWorldView().npcs())
+		for (NPC npc : view.npcs())
 		{
 			// The thrall is the follower's own body in thrall mode, and
 			// wandering is suppressed then anyway.
@@ -1458,7 +1470,7 @@ public class FollowerPlugin extends Plugin
 			addIfNear(candidates, npc.getWorldLocation(), from, nearest);
 		}
 
-		for (Player other : client.getTopLevelWorldView().players())
+		for (Player other : view.players())
 		{
 			if (other == null || other == local)
 			{
@@ -3767,6 +3779,12 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void ensureCatalogues()
 	{
+		if (modelRepository.isLoaded() && slotIndex.isEmpty())
+		{
+			// An index that came back empty on an earlier pass, from a login
+			// that beat the item stats to it.
+			buildSlotIndexAsync();
+		}
 		if (!modelRepository.isLoaded())
 		{
 			modelRepository.loadFromClient(client);
@@ -4143,7 +4161,12 @@ public class FollowerPlugin extends Plugin
 	/** Adopts a thrall already in the scene when the varbit beats its spawn event. */
 	private void adoptExistingThrall()
 	{
-		for (NPC npc : client.getTopLevelWorldView().npcs())
+		net.runelite.api.WorldView view = client.getTopLevelWorldView();
+		if (view == null)
+		{
+			return;
+		}
+		for (NPC npc : view.npcs())
 		{
 			if (npc != null && thrallStyleFor(npc.getId()) != null)
 			{
@@ -5210,7 +5233,12 @@ public class FollowerPlugin extends Plugin
 			return;
 		}
 
-		net.runelite.api.Tile sceneTile = client.getTopLevelWorldView().getSelectedSceneTile();
+		net.runelite.api.WorldView view = client.getTopLevelWorldView();
+		if (view == null)
+		{
+			return;
+		}
+		net.runelite.api.Tile sceneTile = view.getSelectedSceneTile();
 		if (sceneTile == null)
 		{
 			return;
@@ -8220,7 +8248,9 @@ public class FollowerPlugin extends Plugin
 				// hands out, so it cannot drift from what the player sees.
 				java.util.Map<String, String> found = new java.util.TreeMap<>();
 				int scanned = 0;
-				for (NPC npc : client.getTopLevelWorldView().npcs())
+				net.runelite.api.WorldView view = client.getTopLevelWorldView();
+				for (NPC npc : view == null
+					? java.util.Collections.<NPC>emptyList() : view.npcs())
 				{
 					net.runelite.api.NPCComposition composition =
 						npc.getTransformedComposition() != null
@@ -8352,6 +8382,7 @@ public class FollowerPlugin extends Plugin
 				sendStatus("Models: " + modelRepository.getStatus()
 					+ " | Rules: " + ruleLoader.getStatus()
 					+ " | Follower " + (follower.isSpawned() ? "spawned" : "not spawned"));
+				sendStatus("Skilling: " + skilling.describe());
 				sendStatus("Region " + speechEngine.getContext().getRegionId()
 					+ " at " + speechEngine.getContext().getLocation());
 				break;

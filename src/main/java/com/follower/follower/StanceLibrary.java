@@ -297,7 +297,13 @@ public class StanceLibrary
 	 */
 	public void observe(Client client)
 	{
-		for (Player player : client.getTopLevelWorldView().players())
+		net.runelite.api.WorldView view = client.getTopLevelWorldView();
+		if (view == null)
+		{
+			// Between worlds: nobody to watch this tick.
+			return;
+		}
+		for (Player player : view.players())
 		{
 			if (player == null)
 			{

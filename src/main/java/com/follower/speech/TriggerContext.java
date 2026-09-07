@@ -2553,7 +2553,13 @@ public final class TriggerContext
 	 */
 	private void refreshLoadedRegions()
 	{
-		int[] regions = client.getTopLevelWorldView().getMapRegions();
+		net.runelite.api.WorldView view = client.getTopLevelWorldView();
+		if (view == null)
+		{
+			// Between worlds: the regions we last knew about still stand.
+			return;
+		}
+		int[] regions = view.getMapRegions();
 		if (Arrays.equals(regions, lastRegionIds))
 		{
 			return;
@@ -2696,7 +2702,15 @@ public final class TriggerContext
 	public boolean isNpcNearby(java.util.function.Predicate<NPC> predicate, int within,
 		boolean requireVisible)
 	{
-		for (NPC npc : client.getTopLevelWorldView().npcs())
+		net.runelite.api.WorldView view = client.getTopLevelWorldView();
+		if (view == null)
+		{
+			// Mid-login the scene is not there to search, and a rule that
+			// throws here is disabled for the session - an expensive way to
+			// answer a question whose honest answer is no.
+			return false;
+		}
+		for (NPC npc : view.npcs())
 		{
 			if (npc == null || !predicate.test(npc))
 			{
@@ -2765,9 +2779,10 @@ public final class TriggerContext
 
 		int found = 0;
 		Player local = client.getLocalPlayer();
-		if (location != null)
+		net.runelite.api.WorldView view = client.getTopLevelWorldView();
+		if (location != null && view != null)
 		{
-			for (Player other : client.getTopLevelWorldView().players())
+			for (Player other : view.players())
 			{
 				if (other == null || other == local)
 				{
