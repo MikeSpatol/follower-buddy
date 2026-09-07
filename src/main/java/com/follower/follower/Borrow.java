@@ -66,6 +66,9 @@ public class Borrow
 
 	private int held;
 
+	/** True while the borrowed item is out of the hands, but still on loan. */
+	private boolean aside;
+
 	public Borrow(FollowerEntity follower, ErrandController.Hands hands)
 	{
 		this.follower = follower;
@@ -143,7 +146,52 @@ public class Borrow
 		}
 		log.debug("Returned item {}{}", held, withBeat ? " with a beat" : "");
 		held = 0;
+		if (aside)
+		{
+			// Set aside: what is in the hands belongs to somebody else, and
+			// releasing it here would take their scroll away.
+			aside = false;
+			return;
+		}
 		hands.release();
+	}
+
+	/**
+	 * Puts the borrowed item down for a moment so the hands can hold
+	 * something else - the scroll, for a read of the notes - without giving
+	 * it back. The session still has it on loan, and {@link #takeBack}
+	 * returns it to the hand.
+	 *
+	 * @return whether there was something in the hands to put down
+	 */
+	public boolean setAside()
+	{
+		if (held == 0 || aside)
+		{
+			return false;
+		}
+		aside = true;
+		hands.release();
+		log.debug("Item {} set aside", held);
+		return true;
+	}
+
+	/** Takes a set-aside item back, once whatever borrowed the hands is done. */
+	public void takeBack()
+	{
+		if (held == 0 || !aside)
+		{
+			return;
+		}
+		aside = false;
+		hands.hold(held);
+		if (!hands.isHolding())
+		{
+			// Refused on the way back, which the outward hold makes unlikely;
+			// the loan is over rather than pending forever.
+			log.debug("Item {} was not taken back", held);
+			held = 0;
+		}
 	}
 
 	/** The silent release, for every abort path. Safe with nothing held. */

@@ -3864,6 +3864,13 @@ public class FollowerPlugin extends Plugin
 		}
 		if (propSlot != null)
 		{
+			// A prop in the weapon hand takes the shield with it. Nobody reads
+			// a scroll or swings a borrowed axe with a shield still strapped on,
+			// and the hand the prop goes in is the one the shield argues with.
+			if (propSlot == KitType.WEAPON)
+			{
+				outfit.clear(KitType.SHIELD);
+			}
 			outfit.setItem(propSlot, propItemId);
 		}
 		return outfit;

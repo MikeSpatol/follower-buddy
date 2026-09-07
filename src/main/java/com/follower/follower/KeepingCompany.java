@@ -215,6 +215,9 @@ class KeepingCompany
 	private int tallyJitter;
 	/** Whether the scroll is out, and the ticks it has left. */
 	private boolean scrollOut;
+
+	/** Whether a borrowed tool was put down to free the hand for the scroll. */
+	private boolean toolAside;
 	private int scrollTicks;
 	private int lastDropTick;
 	private boolean fast;
@@ -311,6 +314,7 @@ class KeepingCompany
 		tallyJitter = random.nextInt(3) - 1;
 		scrollOut = false;
 		scrollTicks = 0;
+		toolAside = false;
 		lastDropTick = -1;
 		fast = false;
 		lastNodDrop = 0;
@@ -1015,18 +1019,22 @@ class KeepingCompany
 	{
 		if (noteTicks > 0)
 		{
-			// The notes may be read without the scroll, over a held tool.
 			noteTicks = 0;
 			follower.setPoseOverride(0);
 		}
-		if (!scrollOut)
+		if (scrollOut)
 		{
-			return;
+			scrollOut = false;
+			scrollTicks = 0;
+			follower.setPoseOverride(0);
+			hands.release();
 		}
-		scrollOut = false;
-		scrollTicks = 0;
-		follower.setPoseOverride(0);
-		hands.release();
+		if (toolAside)
+		{
+			// Whatever the hands were freed for has finished with them.
+			toolAside = false;
+			borrow.takeBack();
+		}
 	}
 
 	// ------------------------------------------------------------- gathering
@@ -1201,7 +1209,11 @@ class KeepingCompany
 		looks.clear();
 		currentLook = target;
 		currentLookTicks = TALLY_TICKS + 1;
-		if (!borrow.isHolding() && !hands.isHolding())
+		// The scroll belongs in the hand for this one: the pose is a reading of
+		// it. A borrowed tool is put down for the read and taken back after,
+		// and the weapon hand the scroll takes drops the shield with it.
+		toolAside = borrow.setAside();
+		if (!hands.isHolding())
 		{
 			hands.hold(ErrandController.SCROLL_PROP);
 			scrollOut = hands.isHolding();

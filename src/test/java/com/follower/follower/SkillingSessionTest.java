@@ -1473,17 +1473,35 @@ public class SkillingSessionTest
 	}
 
 	@Test
-	public void theNotesAreReadOverAPickaxeWithoutTheScroll()
+	public void theNotesAreReadWithTheScrollAndThePickaxeComesBack()
 	{
+		// The pose is a reading of the notes, so the notes have to be in the
+		// hand: the pickaxe is put down for it and picked up again after.
 		workTheRock();
 		assertEquals(1265, held);
 		tick(KeepingCompany.GERALD_AFTER_TICKS);
 		assertEquals(KeepingCompany.NOTE_POSE, follower.poseOverride);
-		assertEquals("the pickaxe keeps the hand", 1265, held);
+		assertEquals("a reader holds the scroll, not the pickaxe",
+			ErrandController.SCROLL_PROP, held);
 		tick(KeepingCompany.TALLY_TICKS);
 		assertEquals(0, follower.poseOverride);
-		assertEquals(1265, held);
+		assertEquals("and the pickaxe is back in the hand after", 1265, held);
 		assertEquals(Collections.singletonList(KeepingCompany.HEAD_SHAKE), follower.animations);
+	}
+
+	@Test
+	public void aSessionEndingMidReadStillGivesThePickaxeBack()
+	{
+		// The tool is on loan while it is set aside, so an end that lands
+		// between the scroll coming out and going away must not lose it.
+		workTheRock();
+		tick(KeepingCompany.GERALD_AFTER_TICKS);
+		assertEquals(ErrandController.SCROLL_PROP, held);
+
+		inCombat = true;
+		tick(1);
+		assertFalse("the session let go", skilling.isWorking());
+		assertEquals("and the hands are empty", 0, held);
 	}
 
 	@Test

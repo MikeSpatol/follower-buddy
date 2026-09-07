@@ -57,4 +57,24 @@ public class DisarmKeepsBorrowedToolTest
 		Outfit dressed = FollowerPlugin.dressForRender(armed(), false, KitType.WEAPON, 1351);
 		assertEquals(1351, dressed.itemId(KitType.WEAPON));
 	}
+
+	@Test
+	public void aPropInTheWeaponHandTakesTheShieldWithIt()
+	{
+		// The scroll is read two-handed and a tool is swung with the arm the
+		// shield is on, so the shield goes whether or not anything disarmed.
+		Outfit reading = FollowerPlugin.dressForRender(armed(), false, KitType.WEAPON, 10485);
+		assertEquals("the scroll is in the hand", 10485, reading.itemId(KitType.WEAPON));
+		assertFalse("and the shield is off the arm", reading.isItem(KitType.SHIELD));
+	}
+
+	@Test
+	public void aPropInAnotherSlotLeavesTheHandsAlone()
+	{
+		// A borrowed hat is not an argument with the shield.
+		Outfit dressed = FollowerPlugin.dressForRender(armed(), false, KitType.HEAD, 10941);
+		assertEquals(10941, dressed.itemId(KitType.HEAD));
+		assertEquals("the weapon stays", 4151, dressed.itemId(KitType.WEAPON));
+		assertEquals("and so does the shield", 1540, dressed.itemId(KitType.SHIELD));
+	}
 }
