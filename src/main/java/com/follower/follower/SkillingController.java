@@ -1833,12 +1833,19 @@ public class SkillingController
 		{
 			guard = nearestGuard(player);
 			WorldPoint post = guard == null ? null : guard.getWorldLocation();
-			if (post == null)
+			if (post != null)
 			{
-				return;
+				candidates = stallCandidates(player, post, session.targetTile, session.targetMax);
+				face = post;
 			}
-			candidates = stallCandidates(player, post, session.targetTile, session.targetMax);
-			face = post;
+			else
+			{
+				// No guard worth watching, but a seat still beats the alternative:
+				// with none taken the thieving drift owns the feet, and that was
+				// written to keep moving rather than to settle anywhere.
+				candidates = seatCandidates(player, session.targetTile, session.targetMax,
+					reservedTiles(), variantFor(mode, session.activity));
+			}
 		}
 		else
 		{

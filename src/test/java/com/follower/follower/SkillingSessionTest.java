@@ -2101,6 +2101,26 @@ public class SkillingSessionTest
 	private static final int PICKPOCKET = 881;
 
 	@Test
+	public void aStallWithNoGuardStillEarnsASeatAndKeepsIt()
+	{
+		// With no seat taken the thieving drift owns the feet and moves the
+		// follower every few seconds, which at a stall reads as pacing.
+		WorldPoint stall = new WorldPoint(51, 50, 0);
+		skilling.noteClick("Steal-from", "Baker's stall", 11730, stall, null, null);
+		game.animating(PICKPOCKET);
+		tick(1 + SkillingController.SEAT_AFTER_TICKS);
+
+		WorldPoint seat = follower.stayingAt;
+		assertNotNull("a seat, guard or no guard", seat);
+		assertTrue("and it is the company's, so the drift is off", skilling.holdsTheFeet());
+
+		int stays = follower.stays.size();
+		tick(60);
+		assertEquals("and it stays put", seat, follower.stayingAt);
+		assertEquals("without being sent anywhere again", stays, follower.stays.size());
+	}
+
+	@Test
 	public void theStallWatchStandsBetweenThePlayerAndTheGuard()
 	{
 		WorldPoint stall = new WorldPoint(51, 50, 0);
@@ -2128,13 +2148,16 @@ public class SkillingSessionTest
 	}
 
 	@Test
-	public void aStallWithNoGuardAboutIsNoSeat()
+	public void pickingAPocketStillKeepsItsDistanceRatherThanSitting()
 	{
-		skilling.noteClick("Steal-from", "Baker's stall", 11730, new WorldPoint(51, 50, 0), null, null);
-		game.animating(PICKPOCKET);
-		tick(1 + SkillingController.SEAT_AFTER_TICKS + 5);
+		// A stall earns a seat now, guard or no guard, but a pocket does
+		// not: the drift that keeps the follower off the mark's elbow was
+		// tuned for exactly that and still owns the feet.
+		pickAPocket();
+		tick(SkillingController.SEAT_AFTER_TICKS + 5);
 		assertTrue(skilling.isWorking());
-		assertTrue(follower.following);
+		assertTrue("no seat at the mark's elbow", follower.following);
+		assertFalse(skilling.holdsTheFeet());
 	}
 
 	private void pickAPocket()
