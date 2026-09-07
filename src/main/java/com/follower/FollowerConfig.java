@@ -1200,6 +1200,22 @@ public interface FollowerConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "reachAnimation",
+		name = "Reaching for something",
+		description = "Animation played as the follower takes something out -"
+			+ " its scroll, or a tool it is borrowing - so the thing does not"
+			+ " simply appear in its hand. Default 827 is the bend the errands"
+			+ " already use. Others worth a look: 832, 5207, 895, 1649, 6217."
+			+ " Preview with ::follower anim <id>. Blank or 0 for none.",
+		section = shieldSection,
+		position = 13
+	)
+	default String reachAnimation()
+	{
+		return "827";
+	}
+
+	@ConfigItem(
 		keyName = "disabledGroups",
 		name = "Silence groups or phrase ids by name",
 		description = "Comma-separated group names or single phrase ids to silence,"
@@ -1207,7 +1223,7 @@ public interface FollowerConfig extends Config
 			+ " shows its group name in brackets; phrase ids are shown in the"
 			+ " Messages window.",
 		section = shieldSection,
-		position = 13
+		position = 14
 	)
 	default String disabledGroups()
 	{

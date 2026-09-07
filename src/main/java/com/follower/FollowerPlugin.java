@@ -542,6 +542,17 @@ public class FollowerPlugin extends Plugin
 					propSlot = slot;
 					propItemId = itemId;
 					rebuildFollower();
+					// The reach that puts it there, so the thing does not simply
+					// appear in the hand. Every prop the follower takes out comes
+					// through here, so one clip covers the scroll, the borrowed
+					// tools and the flourishes. An emote already playing owns the
+					// body and is left alone, and the rebuild goes first because a
+					// rebuild restarts a clip from its first frame.
+					int[] reach = parseAnimationIds(config.reachAnimation());
+					if (reach.length > 0 && !follower.isEmotePlaying())
+					{
+						follower.playAnimations(reach);
+					}
 				}
 
 				@Override
