@@ -1264,22 +1264,42 @@ Thrall mode and the spectator beat it.
 
 **Borrowing** (`Borrow`). One item at a time through the same transient-prop
 hands as the scroll (they share the weapon slot, so the tally scroll is skipped
-while a tool is held), started at seat time and returned on session end - with
-a bow, or a salute for a hat, when the session ran two minutes or more, silently
-otherwise and on every abort path. The mirror rules' disarm keeps a borrowed
-item in hand. What is borrowed:
+while a tool is held), started at seat time. The mirror rules' disarm keeps a
+borrowed item in hand, and every prop the follower takes out plays the reach in
+`reachAnimation` on the way, so the thing does not appear in its fist.
+
+**The hand is asked before the table.** A table of item ids cannot help but
+fall behind the game: the first version of this borrowed a dragon felling axe
+as a bronze one, and completing the table did not fix it. So the player's
+weapon slot is read and matched by NAME - an axe that is not a battleaxe, a
+greataxe, a thrownaxe or a pickaxe; a pickaxe; a harpoon or a rod - and only
+when the tool is in the bag rather than the hand do the tables below answer.
+The tool is preferred to a skilling outfit's hat, because the hands hold one
+thing and a hat instead of your pickaxe is the worse trade.
+
+**One tree is not the work.** A session that ends without being interrupted
+keeps the tool in hand for `TOOL_GRACE_TICKS`, so walking to the next tree
+carries on with what it is holding rather than handing it back and taking it
+straight out again; different work swaps it, and a bank trip holds it for as
+long as it holds the seat. The send-off is measured on the whole stint rather
+than the last target, so an hour of chopping earns its bow though no single
+tree lasted two minutes, and it waits until the player is plainly finished. A
+fight, a plane change or anything else taking the follower puts the tool
+straight back, since there is then nobody to hand it to. Farming is the one
+exception: the patch inspector's notes need the hand the tool is in, so its end
+is a real end. What is borrowed when the hand cannot answer:
 
 | Work | Item |
 |---|---|
-| Woodcutting | the worn axe (bronze 1351 through dragon 6739, infernal 13241, crystal 23673, 3rd age 20011), or bronze |
-| Mining | the worn pickaxe (bronze 1265 through dragon 11920, infernal 13243, crystal 23680, 3rd age 20014), or bronze |
+| Woodcutting | the worn axe off the table (every wieldable tier in the cache, felling axes and ornament kits included), or bronze 1351 |
+| Mining | the worn pickaxe off the table (likewise), or bronze 1265 |
 | Fishing | by the animation: harpoon 311 or barb-tail 10129 with 618; fishing rod 307 or fly rod 309 with 622/623; nets and cages get nothing |
 | Farming | secateurs 5329 |
 | Construction | saw 8794 |
 | Firemaking | torch 8987, if the cache says it is wearable |
 | Smithing | rock hammer 4162, likewise |
 | Hunter | butterfly net 10010 |
-| Any of the above, in the full skilling outfit | the outfit's hat instead of the tool: lumberjack 10941, prospector 12013, angler 13258, farmer's 13646, pyromancer 20708, rogue 5554, carpenter's 24872 |
+| Work with no tool of its own, in the full skilling outfit | the outfit's hat: lumberjack 10941, prospector 12013, angler 13258, farmer's 13646, pyromancer 20708, rogue 5554, carpenter's 24872 |
 
 **The moments** (`Moments`), outside any session: a level is clapped (bowed, in
 the first two days; every third level is walked over for, and 99 gets the boss
