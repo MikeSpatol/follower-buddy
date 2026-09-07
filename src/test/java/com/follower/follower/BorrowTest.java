@@ -214,6 +214,19 @@ public class BorrowTest
 		assertEquals(6739, Borrow.toolFor("woodcutting", 879, worn(6739)));
 		assertEquals("every tier is known", 23673, Borrow.toolFor("woodcutting", 879, worn(23673)));
 		assertEquals("the felling axes too", 28217, Borrow.toolFor("woodcutting", 879, worn(28217)));
+
+		// The hand beats the table, because the table always falls behind the
+		// game: an axe nobody has heard of is still the axe in the hand.
+		assertEquals("an unknown axe in the hand is the axe",
+			99001, Borrow.toolFor("woodcutting", 879, none, 99001, "Obsidian felling axe"));
+		assertEquals("an unknown pickaxe likewise",
+			99002, Borrow.toolFor("mining", 625, none, 99002, "Obsidian pickaxe"));
+		assertEquals("a battleaxe is not a felling axe",
+			1351, Borrow.toolFor("woodcutting", 879, none, 1373, "Rune battleaxe"));
+		assertEquals("nor is a pickaxe",
+			1351, Borrow.toolFor("woodcutting", 879, none, 11920, "Dragon pickaxe"));
+		assertEquals("an unreadable name falls back to the table",
+			6739, Borrow.toolFor("woodcutting", 879, worn(6739), 6739, null));
 		assertEquals("and the ornament kits", 25378, Borrow.toolFor("woodcutting", 879, worn(25378)));
 		assertEquals(1265, Borrow.toolFor("mining", 625, none));
 		assertEquals(11920, Borrow.toolFor("mining", 625, worn(11920)));

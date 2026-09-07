@@ -2,6 +2,7 @@ package com.follower.follower;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.PlayerComposition;
@@ -220,11 +221,58 @@ public class Borrow
 	}
 
 	/**
-	 * Which of the player's tools a session would borrow, or 0 for none.
+	 * Which of the player's tools a session would borrow, or 0 for none,
+	 * preferring whatever is actually in their weapon hand.
 	 *
-	 * <p>The worn one when it is worn, the bronze one when it is not; the
-	 * fishing tools go by the animation, since "Fish" says nothing about what
-	 * is in the hand.
+	 * <p>The id tables below cannot help but fall behind the game: a dragon
+	 * felling axe was borrowed as a bronze one for exactly that reason. So
+	 * the hand is asked first, by NAME, which no update can invalidate, and
+	 * the tables are what answers when the tool is in the bag rather than
+	 * the hand. A battleaxe is not a felling axe, whatever it ends in.
+	 *
+	 * @param wornWeapon the item in the player's weapon slot, or 0
+	 * @param wornWeaponName that item's name, or null when it cannot be read
+	 */
+	public static int toolFor(String activity, int animationId, Set<Integer> worn,
+		int wornWeapon, String wornWeaponName)
+	{
+		if (wornWeapon > 0 && wornWeaponName != null && activity != null)
+		{
+			String name = wornWeaponName.toLowerCase(Locale.ROOT);
+			boolean pickaxe = name.contains("pickaxe");
+			boolean fighting = name.contains("battleaxe") || name.contains("greataxe")
+				|| name.contains("thrownaxe") || name.contains("poleaxe");
+			switch (activity)
+			{
+				case "woodcutting":
+					if (name.endsWith("axe") && !pickaxe && !fighting)
+					{
+						return wornWeapon;
+					}
+					break;
+				case "mining":
+					if (pickaxe)
+					{
+						return wornWeapon;
+					}
+					break;
+				case "fishing":
+					if (name.contains("harpoon") || name.contains("rod"))
+					{
+						return wornWeapon;
+					}
+					break;
+				default:
+					break;
+			}
+		}
+		return toolFor(activity, animationId, worn);
+	}
+
+	/**
+	 * The same question with nothing known about the hand: the worn one off
+	 * the tables when it is worn, the bronze one when it is not. The fishing
+	 * tools go by the animation, since "Fish" says nothing about the hand.
 	 */
 	public static int toolFor(String activity, int animationId, Set<Integer> worn)
 	{
@@ -328,6 +376,22 @@ public class Borrow
 			}
 		}
 		return fallback;
+	}
+
+	/**
+	 * The item in the player's weapon hand, or 0 when the hand is empty or
+	 * the composition is not there to ask.
+	 */
+	public static int wornWeapon(PlayerComposition composition)
+	{
+		if (composition == null)
+		{
+			return 0;
+		}
+		int raw = composition.getEquipmentId(net.runelite.api.kit.KitType.WEAPON);
+		// getEquipmentId already takes the offset off; a kit id or an empty
+		// hand comes back as 0 or -1.
+		return raw > 0 ? raw : 0;
 	}
 
 	/** Worn item ids off a composition, the way the trigger context reads them. */

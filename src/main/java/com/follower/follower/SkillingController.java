@@ -336,6 +336,24 @@ public class SkillingController
 	 * the wrong thing, which is the difference between the follower doing
 	 * nothing and the follower doing nothing yet.
 	 */
+	/** An item's name off the live cache, or null when it cannot be read. */
+	private String itemName(int itemId)
+	{
+		if (itemId <= 0)
+		{
+			return null;
+		}
+		try
+		{
+			net.runelite.api.ItemComposition item = client.getItemDefinition(itemId);
+			return item == null ? null : item.getName();
+		}
+		catch (RuntimeException notInTheCache)
+		{
+			return null;
+		}
+	}
+
 	public String describe()
 	{
 		if (!config.keepsCompany())
@@ -351,7 +369,23 @@ public class SkillingController
 			+ " on " + session.targetName
 			+ ", " + worked + " ticks, " + session.xpDrops + " drops"
 			+ ", seat " + (seat == null ? "none yet" : seat.getX() + "," + seat.getY())
-			+ ", holding " + (borrow.isHolding() ? String.valueOf(borrow.heldItem()) : "nothing");
+			+ ", holding " + (borrow.isHolding() ? String.valueOf(borrow.heldItem()) : "nothing")
+			+ describeHand();
+	}
+
+	/** What the player's own hand reports, which is what a borrow reads. */
+	private String describeHand()
+	{
+		Player local = client.getLocalPlayer();
+		if (local == null || session == null)
+		{
+			return "";
+		}
+		int hand = Borrow.wornWeapon(local.getPlayerComposition());
+		Set<Integer> worn = Borrow.wornItems(local.getPlayerComposition());
+		return " | your hand " + (hand == 0 ? "empty" : hand + " " + itemName(hand))
+			+ ", would borrow "
+			+ Borrow.toolFor(session.activity, session.lastAnimation, worn, hand, itemName(hand));
 	}
 
 	public boolean holdsTheFeet()
@@ -2135,8 +2169,9 @@ public class SkillingController
 		// pickaxe is a worse trade than no hat. The outfit's hat is what the
 		// work with no tool of its own gets: thieving, agility.
 		Set<Integer> worn = Borrow.wornItems(local.getPlayerComposition());
+		int held = Borrow.wornWeapon(local.getPlayerComposition());
 		int[] wanted = {
-			Borrow.toolFor(session.activity, session.lastAnimation, worn),
+			Borrow.toolFor(session.activity, session.lastAnimation, worn, held, itemName(held)),
 			Borrow.hatFor(session.activity, worn),
 		};
 		for (int item : wanted)
