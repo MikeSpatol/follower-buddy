@@ -191,9 +191,65 @@ public class Borrow
 				return SAW;
 			case "firemaking":
 				return TORCH;
+			case "smithing":
+				return ROCK_HAMMER;
+			case "hunter":
+				return BUTTERFLY_NET;
 			default:
 				return 0;
 		}
+	}
+
+	/**
+	 * The skilling outfits, each as the hat and then the three pieces that
+	 * make it a full set with it: the body, the legs, the boots. Lumberjack,
+	 * prospector, angler, farmer's, pyromancer, rogue, carpenter's, graceful.
+	 */
+	static final int[][] OUTFITS = {
+		{10941, 10939, 10940, 10933},
+		{12013, 12014, 12015, 12016},
+		{13258, 13259, 13260, 13261},
+		{13646, 13642, 13640, 13644},
+		{20708, 20704, 20706, 20710},
+		{5554, 5553, 5555, 5557},
+		{24872, 24874, 24876, 24878},
+		{11850, 11854, 11856, 11860},
+	};
+
+	/** The work each outfit is for, in the same order; graceful is for none of it. */
+	private static final String[] OUTFIT_WORK = {
+		"woodcutting", "mining", "fishing", "farming", "firemaking", "thieving",
+		"construction", "agility",
+	};
+
+	/**
+	 * The hat a session would borrow, or 0: the hat of the skilling outfit
+	 * for that work, when the player has the whole set on. Only the hat -
+	 * the rest stays where it is - and it takes the place of the tool, since
+	 * the hands hold one thing.
+	 */
+	public static int hatFor(String activity, Set<Integer> worn)
+	{
+		if (activity == null || worn == null)
+		{
+			return 0;
+		}
+		for (int i = 0; i < OUTFITS.length; i++)
+		{
+			if (!OUTFIT_WORK[i].equals(activity))
+			{
+				continue;
+			}
+			for (int piece : OUTFITS[i])
+			{
+				if (!worn.contains(piece))
+				{
+					return 0;
+				}
+			}
+			return OUTFITS[i][0];
+		}
+		return 0;
 	}
 
 	private static int wornOr(Set<Integer> worn, int[] tiers, int fallback)

@@ -756,6 +756,20 @@ class KeepingCompany
 		emote(animationId);
 	}
 
+	/** The same for a chain - the level-up's send-off - stood up first when sitting. */
+	void gesture(int[] animationIds)
+	{
+		if (!sitting)
+		{
+			follower.playAnimations(animationIds);
+			return;
+		}
+		int[] chain = new int[animationIds.length + 1];
+		chain[0] = STAND_UP;
+		System.arraycopy(animationIds, 0, chain, 1, animationIds.length);
+		follower.playAnimations(chain);
+	}
+
 	/**
 	 * A look at a tile for the controller's own reactions: the face on the
 	 * seat, or a glance straight away off it - the queue only runs during a

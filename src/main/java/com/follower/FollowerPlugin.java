@@ -285,6 +285,9 @@ public class FollowerPlugin extends Plugin
 	/** The skilling company: the seat, the borrowed tool, the session the rules read. */
 	private com.follower.follower.SkillingController skilling;
 
+	/** The moments: a level, the pet, second wind, a stranger for the player. */
+	private com.follower.follower.Moments moments;
+
 	private Path dataDir;
 	private WorldPoint lastPlayerTile;
 	private int lastRegionId = -1;
@@ -568,7 +571,8 @@ public class FollowerPlugin extends Plugin
 			// work session, where the seat has the feet, nor while the seat
 			// is kept through a bank trip after one.
 			() -> dialog.isOpen() || follower.isNpcSlaved() || minutesState != 0
-				|| (skilling != null && skilling.blocksErrands()),
+				|| (skilling != null && skilling.blocksErrands())
+				|| (moments != null && moments.holdsTheFeet()),
 			hands);
 		flourish = new com.follower.follower.PropFlourish(follower, hands);
 		// A SUPPLIER, not the context itself: the engine replaces its context
@@ -592,6 +596,15 @@ public class FollowerPlugin extends Plugin
 		skilling.setErrands(errands::force);
 		// And in return no errand of the follower's own starts mid-session.
 		errands.setSession(skilling::isWorking);
+		// The moments excuse the seat for themselves; everything else that
+		// owns the feet - thrall work, the spectator, an errand under way -
+		// beats them.
+		moments = new com.follower.follower.Moments(client, follower, config, skilling,
+			() -> thrallNpc != null || thrallLimbo || thrallExitPendingTicks > 0
+				|| thrallExitTicks > 0 || (spectate != null && spectate.holdsTheFeet())
+				|| errands.isBusy(),
+			() -> speechEngine.getContext().isInCombat(),
+			() -> speechEngine.getContext().getDaysKnown());
 
 		// On a fresh client boot the LOGIN_SCREEN transition can happen before
 		// this plugin subscribes, so the first login would not read as fresh.
@@ -660,6 +673,10 @@ public class FollowerPlugin extends Plugin
 		if (skilling != null)
 		{
 			skilling.reset();
+		}
+		if (moments != null)
+		{
+			moments.reset();
 		}
 		// The scroll must not survive a disable either.
 		endMinutes(false);
@@ -1230,6 +1247,11 @@ public class FollowerPlugin extends Plugin
 	 */
 	private int wanderRadius()
 	{
+		if (moments != null && moments.keepsClose())
+		{
+			// The ten minutes after a pet: it stays by the new arrival.
+			return Math.max(2, WANDER_RADIUS - 2);
+		}
 		String band = speechEngine.getContext().getMoodBand();
 		if ("low".equals(band) || "down".equals(band))
 		{
@@ -1273,6 +1295,7 @@ public class FollowerPlugin extends Plugin
 			|| dialog.isOpen()
 			|| emoteHold
 			|| (skilling != null && skilling.holdsTheFeet())
+			|| (moments != null && moments.holdsTheFeet())
 			|| resting;
 
 		// Thieving wanders too, and does not wait to be invited. The idle gate
@@ -2993,6 +3016,10 @@ public class FollowerPlugin extends Plugin
 		{
 			// The session, the seat and the borrowed tool all belonged to it.
 			skilling.reset();
+		}
+		if (moments != null)
+		{
+			moments.reset();
 		}
 		// Same for the minute-taking: the meeting went with the scene.
 		endMinutes(false);
@@ -5546,6 +5573,11 @@ public class FollowerPlugin extends Plugin
 			skilling.tick();
 			skilling.describeTo(speechEngine.getContext());
 		}
+		if (moments != null)
+		{
+			// After the seat, which it excuses itself from.
+			moments.tick();
+		}
 
 		// After errands, so an errand in progress owns the feet: a follower
 		// halfway to a bank should finish the trip rather than be yanked
@@ -5694,7 +5726,8 @@ public class FollowerPlugin extends Plugin
 			errands != null && errands.isBusy(),
 			spectate != null && spectate.holdsTheFeet(),
 			emoteHold, minutesState != 0,
-			skilling != null && skilling.holdsTheFeet());
+			(skilling != null && skilling.holdsTheFeet())
+				|| (moments != null && moments.holdsTheFeet()));
 		speechEngine.getContext().setFollowerStaying(stayCommanded);
 		if (stayCommanded != stayReported)
 		{
@@ -5886,6 +5919,10 @@ public class FollowerPlugin extends Plugin
 		{
 			skilling.npcSpawned(npc);
 		}
+		if (moments != null)
+		{
+			moments.npcSpawned(npc);
+		}
 
 		// A chunk load raises one of these for every NPC in the new scene, and
 		// each costs a pass over every rule. Only pay it when something listens.
@@ -5930,6 +5967,10 @@ public class FollowerPlugin extends Plugin
 		if (skilling != null)
 		{
 			skilling.npcDespawned(npc);
+		}
+		if (moments != null)
+		{
+			moments.npcDespawned(npc);
 		}
 		// As with spawns: the whole scene despawns on a chunk load, and no
 		// bundled rule listens for it at all.
@@ -6028,6 +6069,11 @@ public class FollowerPlugin extends Plugin
 		{
 			// The stun, the empty rune pouch, the slayer task: silent reactions.
 			skilling.noteChatMessage(event.getMessage(), event.getType());
+		}
+		if (moments != null)
+		{
+			// The pet drop: the walk over to see it.
+			moments.noteChatMessage(event.getMessage(), event.getType());
 		}
 
 		// Two game messages worth parsing rather than merely matching: the
@@ -6724,6 +6770,11 @@ public class FollowerPlugin extends Plugin
 		{
 			speechEngine.getContext().tallyBoth("levels");
 			speechEngine.dispatch(TriggerEvent.levelUp(skill.getName(), level));
+			if (moments != null)
+			{
+				// The clap, or the walk over for it; the line is the rules'.
+				moments.levelUp(level);
+			}
 		}
 
 		// A rise in XP is a drop, whatever the level did. The work session

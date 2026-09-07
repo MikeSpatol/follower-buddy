@@ -723,6 +723,55 @@ public class SkillingSessionTest
 	}
 
 	@Test
+	public void aFullOutfitLendsItsHatAndEarnsASalute()
+	{
+		// The whole lumberjack set and a dragon axe: the hat is the thing.
+		game.wearing(6739, 10941, 10939, 10940, 10933);
+		workTheTree();
+		assertEquals("the hat, not the axe", 10941, held);
+
+		tick(SkillingController.BEAT_AFTER_TICKS);
+		game.at(50, 54, 0);
+		tick(1);
+		assertEquals("a salute for a hat", Collections.singletonList(2112), follower.animations);
+		assertEquals(0, held);
+
+		// Three pieces of it is a player in a hat, and the axe is borrowed.
+		setUp();
+		game.wearing(6739, 10941, 10939, 10940);
+		workTheTree();
+		assertEquals(6739, held);
+	}
+
+	@Test
+	public void anExcusedSeatIsNeitherRetakenNorHabitedUntilHandedBack()
+	{
+		workTheTree();
+		WorldPoint seat = skilling.getSeat();
+		int stays = follower.stays.size();
+
+		// A moment takes the follower off the seat and excuses it.
+		skilling.setExcused(true);
+		follower.stayingAt = null;
+		tick(5);
+		assertEquals("not retaken while excused", stays, follower.stays.size());
+		assertEquals("but the seat is kept in mind", seat, skilling.getSeat());
+		assertTrue("and stays the company's, so no Stay line", skilling.holdsTheFeet());
+		assertTrue("the session goes on underneath", skilling.isWorking());
+
+		skilling.setExcused(false);
+		tick(1);
+		assertEquals("retaken the tick it is handed back", seat, follower.stayingAt);
+
+		// A session that ends while excused still lets everything go.
+		skilling.setExcused(true);
+		game.at(50, 54, 0);
+		tick(1);
+		assertFalse(skilling.isWorking());
+		assertNull(skilling.getSeat());
+	}
+
+	@Test
 	public void aLongSessionEarnsABowOnTheWayOut()
 	{
 		workTheTree();

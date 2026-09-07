@@ -494,6 +494,16 @@ public final class FakeGame
 		return this;
 	}
 
+	/**
+	 * An NPC turning to the player, who has not turned to it: a random
+	 * event arriving, a pet catching up. The other one-way case.
+	 */
+	public FakeGame npcFacingPlayer(NPC npc)
+	{
+		npcAnswers.get(npc).put("getInteracting", player);
+		return this;
+	}
+
 	// ---------------------------------------------------------------- plumbing
 
 	private PlayerComposition composition()

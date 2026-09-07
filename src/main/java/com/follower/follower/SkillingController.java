@@ -213,6 +213,13 @@ public class SkillingController
 	private int refusedTool;
 	private int ticksSinceLoading = 1000;
 
+	/**
+	 * The seat excused for a moment of the follower's own - a level, the
+	 * pet - by {@link Moments}: not retaken, and the company's habits paused,
+	 * until the moment hands the feet back.
+	 */
+	private boolean excused;
+
 	private int lastFreeSlots = -1;
 	private boolean halfArmed = true;
 
@@ -336,6 +343,27 @@ public class SkillingController
 	 * under way must also pass; the errands' own session gate keeps every
 	 * unforced start out of the prayer session too.
 	 */
+	/**
+	 * Excuses the seat for a moment, or hands it back. Excused, the seat is
+	 * kept in mind but not retaken - the moment has the feet - and the
+	 * company's habits wait; handed back, the next tick retakes it.
+	 */
+	public void setExcused(boolean excused)
+	{
+		this.excused = excused;
+	}
+
+	/**
+	 * A one-shot of somebody else's - the level-up's clap - played the
+	 * seat's way: a look at the player first, and up off the sit before it.
+	 * Off the seat it is a glance and the emote, which is all it would be.
+	 */
+	public void gesture(int[] animationIds, WorldPoint player)
+	{
+		company.lookAt(player, CLAP_TICKS);
+		company.gesture(animationIds);
+	}
+
 	public boolean blocksErrands()
 	{
 		return holdsTheFeet() || (session != null && !"prayer".equals(session.activity));
@@ -767,6 +795,7 @@ public class SkillingController
 		ledgerAt = 0;
 		pending = null;
 		releaseTicks = 0;
+		excused = false;
 		lastFreeSlots = -1;
 		halfArmed = true;
 		ticksSinceLoading = 1000;
@@ -1034,6 +1063,12 @@ public class SkillingController
 			return;
 		}
 
+		if (excused)
+		{
+			// Off on a moment of its own: the seat waits, and so do the habits.
+			syncTheSeat();
+			return;
+		}
 		if (seat == null || reseat)
 		{
 			// Not before the player has been at it, and not every tick when
@@ -1464,7 +1499,7 @@ public class SkillingController
 	}
 
 	/** The tiles exactly so far from a footprint, nearest corner first. */
-	private static List<WorldPoint> ring(WorldPoint min, WorldPoint max, int radius, int plane)
+	static List<WorldPoint> ring(WorldPoint min, WorldPoint max, int radius, int plane)
 	{
 		WorldPoint far = max == null ? min : max;
 		List<WorldPoint> ring = new ArrayList<>();
@@ -2071,11 +2106,25 @@ public class SkillingController
 		{
 			return;
 		}
-		int tool = Borrow.toolFor(session.activity, session.lastAnimation,
-			Borrow.wornItems(local.getPlayerComposition()));
-		if (tool > 0 && tool != refusedTool && !borrow.start(tool))
+		// The hat of a full skilling outfit first - the rarer thing to have
+		// noticed - and the tool when there is no outfit, or the hat is
+		// declined; the hands hold one thing.
+		Set<Integer> worn = Borrow.wornItems(local.getPlayerComposition());
+		int[] wanted = {
+			Borrow.hatFor(session.activity, worn),
+			Borrow.toolFor(session.activity, session.lastAnimation, worn),
+		};
+		for (int item : wanted)
 		{
-			refusedTool = tool;
+			if (item <= 0 || item == refusedTool)
+			{
+				continue;
+			}
+			if (borrow.start(item))
+			{
+				return;
+			}
+			refusedTool = item;
 		}
 	}
 

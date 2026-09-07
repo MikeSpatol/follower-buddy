@@ -51,6 +51,13 @@ automated, and the follower cannot be interacted with.
 - **Errands** - every so often the follower visits a nearby bank, prays at an altar,
   warms its hands at a fire (usually), attends to cats, and returns by foot or by
   teleport. All lines editable; frequency and per-errand toggles in config.
+- **Skilling company** - while you work a tree, a rock, a spot, a fire, an anvil
+  or a patch it takes a seat off your flank facing the work, borrows the tool
+  (or the hat of a full skilling outfit) for the session and gives it back with a
+  bow, and keeps the small habits of somebody keeping you company: a tally on
+  the scroll, a nod, a sit for the long haul. Outside a session it claps a level,
+  goes to see a new pet, and peers at a stranger who turns up for you. Two
+  settings under Skilling; see [Skilling company](#skilling-company).
 
 ---
 
@@ -346,11 +353,11 @@ mood stretches or shortens on top.
 | `prayerBelow` / `prayerAbove` | `percent`, `requirePrayerActive` |
 | `inRegion` / `regionEnter` | `regions`, `anyLoadedRegion` |
 | `inArea` | `x1`, `y1`, `x2`, `y2`, `plane` |
-| `chatMessage` | `contains` or `regex`; `from` (`player`/`others`) and `is` (a `ChatMessageType` name, exactly as `::follower chatwatch` prints it) |
+| `chatMessage` | `contains` or `regex`; `from` (`player`/`others`) and `is` (a `ChatMessageType` name, exactly as `::follower chatwatch` prints it); optional `every` - the nth matching message, counted for life |
 | `answered` | `is` - the token on the branch the player picked, in a rule marked `asks`. Any plain word: `yes`/`no` for a question, `left`/`right` for a game |
 | `asking` | - a question is already waiting for an answer; optional `is` names the tree. **Every `asks` rule needs this inside a `none`**, or opening a second question silently withdraws the first |
 | `varbitEquals` / `varbitChanged` | `varbit`, `value` |
-| `animationSelf` | `ids` |
+| `animationSelf` | `ids`; optional `every` - the nth time one of them plays, counted for life |
 | `levelUp` | `names` (skill names, `*` ok) |
 | `damageTaken` | `minimum` |
 | `itemEquipped` | `ids` |
@@ -408,6 +415,11 @@ mood stretches or shortens on top.
 | `examinedThing` | optional `names` (wildcards ok) - the player examined something; the follower also turns to look. `{target}` |
 | `attendedAgain` | - the player is back from a long absence the follower came round to check on |
 | `minutesTaken` | - the follower finished minuting one of the player's NPC dialogs |
+| `working` | optional `is` (a skill, lowercased as the game names it: `woodcutting`) and `contains` (part of the target's name) - a work session is on; see [Skilling company](#skilling-company) |
+| `xpDrop` | optional `names` (skill names, `*` ok) and `every` - fires on the tick an XP drop lands; `every: 10` on the tenth drop of the session and every tenth after, and never outside a session. `{skill}`, `{count}` |
+| `workEnded` | optional `names` (activities) - the tick a work session ends, once. `{activity}`, `{target}` |
+| `targetDepleted` | - the session's target changed id or went: the stump, the empty rock, the spot that moved. `{target}` |
+| `bagFull` / `bagHalf` | - the last inventory slot went, or fourteen were left; once per fill |
 | `login`, `always` | - |
 | `chance` | `percent`, rolled each evaluation |
 
@@ -1203,6 +1215,86 @@ visually in the way during a kill is problem enough.
   settings, not constants: unlike a weapon's swing, which the game answers
   definitively, "what a protective shield looks like" has nothing to measure - 
   so pick by eye with `::follower gfx <id>` and `::follower anim <id>`.
+
+## Skilling company
+
+`com.follower.follower.SkillingController` keeps the follower company while the
+player works. It is about the body and position, not words: nothing in it
+speaks, and the plugin's rules hear of it only through a few events and the
+trigger context (`working`, `xpDrop`, `workEnded`, `targetDepleted`, `bagFull`,
+`bagHalf` in the condition table). Two settings, under **Skilling**:
+`keepsCompany` ("Keeps you company while you skill", the master switch for the
+seat and everything below) and `borrowsTools` ("Borrows your tools"). The pure
+mirror rules that came with it (`bury-along`, `casting-along`) sit in the
+`mimic` group, so the Mimicry toggle governs them.
+
+**The session** (`WorkSession`). Three signals make one: the player's click on a
+work option (Chop down, Mine, Fish, Net, Harpoon, Cage, Bait, Lure, Cook, Smith,
+Smelt, Craft, Spin, Weave, Pray-at, Craft-rune, Rake, Plant, Harvest,
+Check-health, Pick, Steal-from, Pickpocket, Build, Light, Burn, Bury, Lay,
+Set-trap, Catch, Use, Feed), which names the target, its tile and its
+footprint; the repeating animation; and the XP drops. A click alone opens
+nothing - it waits up to 50 ticks for the animation or the drop that proves it
+turned into work, and the first drop's skill overrides the guess the option word
+made (a "Use" click could be anything). Fletching, herblore and crafting with
+nothing to click open on their first drop, standing. A session ends when the
+player walks more than 3 tiles from where they worked, goes 25 ticks with no
+animation and no drop, opens a bank (unless the bank is within 40 tiles, when
+the seat is kept for the trip, capped at 3 minutes), starts a fight, changes
+plane or logs out. Ending releases the seat, gives the tool back and clears the
+session. Object and NPC events are read only for the target's own tile - a
+change of id there is the depletion, the interacted spot despawning is the spot
+moving - and ignored during scene loads and for 2 ticks after.
+
+**The seat.** Two tiles off the player's flank, never on the straight line
+between them and the target, never on the target's footprint, never on a
+same-name neighbour within 2 tiles (the likely next click), and only where the
+existing pathing will take it (`stayAt` refusing means plain following, retried
+every 10 ticks). Taken once the player has been at it 6 ticks, so a single
+click never moves the follower; faced at the middle of the target; chosen again
+when the player shifts to the next tree. Per-activity shapes: a miner's company
+sits diagonal-behind, an angler's on the bank beside the spot, a cook's across
+the fire (or along the range's side), a smith's across the anvil with the notes
+out, a crafter's beside the wheel, sat down, a thief's five tiles off toward the
+nearest guard, a foreman three tiles off the hotspot. The seat owns the feet:
+`holdsTheFeet()` is registered beside the errand and spectate owners in
+`stayIsPlayerCommanded`, so no Stay line fires because of it, and
+`blocksErrands()` keeps the follower's own errands from starting mid-session.
+Thrall mode and the spectator beat it.
+
+**Borrowing** (`Borrow`). One item at a time through the same transient-prop
+hands as the scroll (they share the weapon slot, so the tally scroll is skipped
+while a tool is held), started at seat time and returned on session end - with
+a bow, or a salute for a hat, when the session ran two minutes or more, silently
+otherwise and on every abort path. The mirror rules' disarm keeps a borrowed
+item in hand. What is borrowed:
+
+| Work | Item |
+|---|---|
+| Woodcutting | the worn axe (bronze 1351 through dragon 6739, infernal 13241, crystal 23673, 3rd age 20011), or bronze |
+| Mining | the worn pickaxe (bronze 1265 through dragon 11920, infernal 13243, crystal 23680, 3rd age 20014), or bronze |
+| Fishing | by the animation: harpoon 311 or barb-tail 10129 with 618; fishing rod 307 or fly rod 309 with 622/623; nets and cages get nothing |
+| Farming | secateurs 5329 |
+| Construction | saw 8794 |
+| Firemaking | torch 8987, if the cache says it is wearable |
+| Smithing | rock hammer 4162, likewise |
+| Hunter | butterfly net 10010 |
+| Any of the above, in the full skilling outfit | the outfit's hat instead of the tool: lumberjack 10941, prospector 12013, angler 13258, farmer's 13646, pyromancer 20708, rogue 5554, carpenter's 24872 |
+
+**The moments** (`Moments`), outside any session: a level is clapped (bowed, in
+the first two days; every third level is walked over for, and 99 gets the boss
+send-off chain); the pet-drop message sends it to stand beside the new pet, bend
+to look, and come back, then keeps its wander close for ten minutes; run
+turning off under 10% energy sends it ahead to look back once per low stretch;
+an NPC with no combat level that spawns and turns to the player (a random
+event) is faced, stepped back from and peered at until it goes. A moment
+excuses a held seat and the seat is retaken after; thrall work, the spectator
+and an errand under way beat a moment. So does the long-haul sit: a level is
+then clapped from the seat (up off the sit and back down), and the walks are
+not taken, since the rest pose would sit it down wherever it arrived.
+
+**Not in scope.** The agility course spectator (it needs a course table) and
+the sailing deckhand (no verified deck stays). Both left out on purpose.
 
 ## Weapon stance coverage - PARKED, not a release blocker (2026-08-06)
 

@@ -52,6 +52,15 @@ altar, a fire, a cat, or something curious it wants to write up in its scroll -
 and comes back on foot or by teleport. Tell it to Stay and it holds the post,
 notices when you come back, and updates its notes while it waits.
 
+**It keeps you company.** Start on a tree, a rock or a fishing spot and it takes
+a seat off to one side, facing the work and out of the way of your next click.
+It borrows your axe or your pickaxe for the session (the one you are wearing, or
+a bronze one; the hat, if you have the whole outfit on) and gives it back with
+a bow when you are done. In between it keeps a tally on its scroll, looks up
+when a tree comes down, steps back from an empty rock, warms its hands at your
+fire, and sits down for the long haul. It claps a level, goes to see the pet,
+and if a stranger turns up to talk to you it stands off and has a good look.
+
 **Talk-to.** A proper NPC-style dialog box with a chathead. Ask how today went
 and it summarises the session; ask how it's been and it answers by mood; give
 it the thing it asked for. When it has asked you something itself - an outing,
@@ -107,7 +116,8 @@ Follow me, Mute, Chattiness, Hide in PvP areas), Movement, Speech (the chatbox
 tick, overhead text colour and height, how long a line stays up, reading
 speed), Sounds (play attached sounds, volume), Phrases (a toggle per subject,
 named as in Messages), Thrall mode, Errands (a toggle per errand and a
-frequency), Combat, Advanced: animations and graphics (closed by default: the
+frequency), Skilling (keeps you company while you skill, borrows your tools),
+Combat, Advanced: animations and graphics (closed by default: the
 animation and graphic ids, and a box that silences groups or phrase ids by
 name) and Developer (closed by default).
 
@@ -162,9 +172,10 @@ Developer section, and typing one while it is off says so.
   incoming text is validated and sanitised before it reaches a rule file, the
   chatbox or a dialog; see `com.follower.share.PackFile` and the two test
   classes that attack it.
-- The test suite (783 tests) covers the rule engine, the follower's movement
-  and errand refusals, the dialog structure, hostile share packs, and every
-  bundled rule's integrity; see `docs/testing-strategy.md`.
+- The test suite (933 tests) covers the rule engine, the follower's movement
+  and errand refusals, the skilling seat and its moments, the dialog
+  structure, hostile share packs, and every bundled rule's integrity; see
+  `docs/testing-strategy.md`.
 
 ## Documentation
 

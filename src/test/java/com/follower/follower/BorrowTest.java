@@ -227,9 +227,45 @@ public class BorrowTest
 		assertEquals(5329, Borrow.toolFor("farming", -1, none));
 		assertEquals(8794, Borrow.toolFor("construction", -1, none));
 		assertEquals(8987, Borrow.toolFor("firemaking", -1, none));
+		assertEquals("the hammer for the anvil", 4162, Borrow.toolFor("smithing", 898, none));
+		assertEquals("the net for the hunt", 10010, Borrow.toolFor("hunter", -1, none));
 		assertEquals("cooking holds nothing", 0, Borrow.toolFor("cooking", 896, none));
 		assertEquals(0, Borrow.toolFor("", 879, worn(6739)));
 		assertEquals(0, Borrow.toolFor(null, 879, none));
+	}
+
+	@Test
+	public void theHatOfAFullOutfitAndOnlyThat()
+	{
+		// The whole lumberjack set on: the hat, for a woodcutting session.
+		Set<Integer> lumberjack = worn(10941, 10939, 10940, 10933);
+		assertEquals(10941, Borrow.hatFor("woodcutting", lumberjack));
+		assertEquals("the outfit is for the one skill", 0, Borrow.hatFor("mining", lumberjack));
+
+		// Three pieces of four is not the outfit.
+		assertEquals(0, Borrow.hatFor("woodcutting", worn(10941, 10939, 10940)));
+		assertEquals("the hat alone is a hat", 0, Borrow.hatFor("woodcutting", worn(10941)));
+
+		// Every set is known, and the hat is always the first of it.
+		assertEquals(12013, Borrow.hatFor("mining", worn(12013, 12014, 12015, 12016)));
+		assertEquals(13258, Borrow.hatFor("fishing", worn(13258, 13259, 13260, 13261)));
+		assertEquals(13646, Borrow.hatFor("farming", worn(13646, 13642, 13640, 13644)));
+		assertEquals(20708, Borrow.hatFor("firemaking", worn(20708, 20704, 20706, 20710)));
+		assertEquals(5554, Borrow.hatFor("thieving", worn(5554, 5553, 5555, 5557)));
+		assertEquals(24872, Borrow.hatFor("construction", worn(24872, 24874, 24876, 24878)));
+		for (int[] outfit : Borrow.OUTFITS)
+		{
+			assertTrue("the hat is what earns the salute", Borrow.HATS.contains(outfit[0]));
+		}
+
+		// Graceful is worn everywhere and is for none of this work.
+		Set<Integer> graceful = worn(11850, 11854, 11856, 11860);
+		for (String work : new String[]{"woodcutting", "mining", "fishing", "thieving"})
+		{
+			assertEquals(work, 0, Borrow.hatFor(work, graceful));
+		}
+		assertEquals(0, Borrow.hatFor(null, lumberjack));
+		assertEquals(0, Borrow.hatFor("woodcutting", null));
 	}
 
 	@Test
