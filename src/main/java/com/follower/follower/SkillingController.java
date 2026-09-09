@@ -199,6 +199,7 @@ public class SkillingController
 	private final BooleanSupplier feetTaken;
 	private final BooleanSupplier bankOpen;
 	private final Borrow borrow;
+	private final ErrandController.Hands hands;
 
 	/** Every counter's jitter comes from here; a test may seed it. */
 	final Random random = new Random();
@@ -230,6 +231,7 @@ public class SkillingController
 
 	/** A tool the hands declined this session, so it is not asked for on every drop. */
 	private int refusedTool;
+	private int refusedHat;
 
 	/** Ticks a borrowed tool is kept between sessions, and the work it is for. */
 	private int graceTicks;
@@ -324,6 +326,7 @@ public class SkillingController
 		this.feetTaken = feetTaken;
 		this.bankOpen = bankOpen;
 		this.borrow = new Borrow(follower, hands);
+		this.hands = hands;
 		this.company = new KeepingCompany(client, follower, config, hands, borrow, random);
 		this.ledger = new PropFlourish(follower, hands);
 	}
@@ -408,6 +411,7 @@ public class SkillingController
 			+ ", " + worked + " ticks, " + session.xpDrops + " drops"
 			+ ", seat " + (seat == null ? "none yet" : seat.getX() + "," + seat.getY())
 			+ ", holding " + (borrow.isHolding() ? String.valueOf(borrow.heldItem()) : "nothing")
+			+ (borrow.hasHat() ? ", wearing " + borrow.hatWorn() : "")
 			+ describeHand();
 	}
 
@@ -1303,6 +1307,7 @@ public class SkillingController
 		seat = null;
 		reseat = false;
 		refusedTool = 0;
+		refusedHat = 0;
 		seatDueTick = now + SEAT_AFTER_TICKS;
 		company.begin(now);
 		company.aimAt(faceTile(), session.activity, modeFor(session.workSpot), now);
@@ -1335,14 +1340,14 @@ public class SkillingController
 		// a tool share the one hand, so that end really is the end.
 		boolean notes = !silent && "farming".equals(done.activity)
 			&& seat != null && !bankTrip && follower.isStaying();
-		boolean carry = !silent && !notes && borrow.isHolding();
+		boolean carry = !silent && !notes && borrow.isBorrowing();
 		if (carry)
 		{
 			graceTicks = TOOL_GRACE_TICKS;
 			graceActivity = done.activity;
 			beatWait = 0;
 		}
-		boolean beat = !silent && !carry && withBeat && borrow.isHolding();
+		boolean beat = !silent && !carry && withBeat && borrow.isBorrowing();
 		if (carry)
 		{
 			if (standUp > 0)
@@ -1468,7 +1473,7 @@ public class SkillingController
 	/** Whether a kept tool has earned its bow on the way back. */
 	private boolean owedTheSendOff()
 	{
-		return borrow.isHolding()
+		return borrow.isBorrowing()
 			&& client.getTickCount() - stintStart >= BEAT_AFTER_TICKS;
 	}
 
@@ -1484,7 +1489,7 @@ public class SkillingController
 	{
 		graceTicks = 0;
 		graceActivity = null;
-		if (!borrow.isHolding())
+		if (!borrow.isBorrowing())
 		{
 			return;
 		}
@@ -2350,7 +2355,7 @@ public class SkillingController
 	 */
 	private void maybeBorrow()
 	{
-		if (session == null || borrow.isHolding() || !config.borrowsTools())
+		if (session == null || !config.borrowsTools())
 		{
 			return;
 		}
@@ -2359,30 +2364,30 @@ public class SkillingController
 		{
 			return;
 		}
-		// The tool first. The hands hold one thing, and the tool is the half
-		// of the borrow that reads as joining in - a hat instead of your
-		// pickaxe is a worse trade than no hat. The outfit's hat is what the
-		// work with no tool of its own gets: thieving, agility.
+		// The tool in the hand and the outfit's hat on the head, both, since
+		// they are different slots; that is what the player looks like. A hand
+		// that is busy with the scroll is not a refusal and is asked again on
+		// the next drop; a thing the hands decline outright is not.
 		Set<Integer> worn = Borrow.wornItems(local.getPlayerComposition());
-		int held = Borrow.wornWeapon(local.getPlayerComposition());
-		int[] wanted = {
-			Borrow.toolFor(session.activity, session.lastAnimation, worn, held, itemName(held)),
-			Borrow.hatFor(session.activity, worn),
-		};
-		for (int item : wanted)
+		int inHand = Borrow.wornWeapon(local.getPlayerComposition());
+		boolean fresh = !borrow.isBorrowing();
+		int tool = Borrow.toolFor(session.activity, session.lastAnimation, worn, inHand,
+			itemName(inHand));
+		if (tool > 0 && tool != refusedTool && !borrow.isHolding()
+			&& !borrow.start(tool) && !hands.isHolding())
 		{
-			if (item <= 0 || item == refusedTool)
-			{
-				continue;
-			}
-			if (borrow.start(item))
-			{
-				// A fresh borrow starts the stint the send-off is measured on;
-				// a tool carried from the last tree keeps the one it had.
-				stintStart = client.getTickCount();
-				return;
-			}
-			refusedTool = item;
+			refusedTool = tool;
+		}
+		int hat = Borrow.hatFor(session.activity, worn);
+		if (hat > 0 && hat != refusedHat && !borrow.hasHat() && !borrow.wearHat(hat))
+		{
+			refusedHat = hat;
+		}
+		if (fresh && borrow.isBorrowing())
+		{
+			// A fresh borrow starts the stint the send-off is measured on; one
+			// carried from the last tree keeps the one it had.
+			stintStart = client.getTickCount();
 		}
 	}
 

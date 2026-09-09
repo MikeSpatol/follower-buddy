@@ -184,6 +184,9 @@ public class SkillingSessionTest
 	private boolean keepsCompany = true;
 	private boolean borrowsTools = true;
 	private int held;
+
+	/** What the fake hands have put on, or 0. */
+	private int worn;
 	private int tick;
 
 	@Before
@@ -200,6 +203,7 @@ public class SkillingSessionTest
 		keepsCompany = true;
 		borrowsTools = true;
 		held = 0;
+		worn = 0;
 		tick = 0;
 		skilling = new SkillingController(game.client, follower, new FollowerConfig()
 		{
@@ -232,6 +236,24 @@ public class SkillingSessionTest
 			public boolean isHolding()
 			{
 				return held != 0;
+			}
+
+			@Override
+			public void wear(int itemId)
+			{
+				worn = itemId;
+			}
+
+			@Override
+			public void takeOff()
+			{
+				worn = 0;
+			}
+
+			@Override
+			public boolean isWearing()
+			{
+				return worn != 0;
 			}
 		}, dispatched::add, () -> inCombat, () -> feetTaken, () -> bankOpen);
 	}
@@ -733,20 +755,32 @@ public class SkillingSessionTest
 	}
 
 	@Test
-	public void theToolIsPreferredToTheOutfitHat()
+	public void theToolAndTheOutfitHatAreBothTaken()
 	{
-		// The hands hold one thing, and between your axe and your hat the axe
-		// is the half that reads as joining in. The hat is for the work that
-		// lends no tool, which BorrowTest covers at the table.
+		// The hand and the head are different slots, so the follower looks
+		// the way the player does: axe in hand, hat on. A tool earns the bow.
 		game.wearing(6739, 10941, 10939, 10940, 10933);
 		workTheTree();
-		assertEquals("the axe, not the hat", 6739, held);
+		assertEquals("the axe in the hand", 6739, held);
+		assertEquals("and the hat on the head", 10941, worn);
 
 		tick(SkillingController.BEAT_AFTER_TICKS);
 		game.at(50, 54, 0);
 		tick(1 + SkillingController.TOOL_GRACE_TICKS);
 		assertEquals("a bow for a tool", Collections.singletonList(858), follower.animations);
 		assertEquals(0, held);
+		assertEquals("the hat comes off with it", 0, worn);
+	}
+
+	@Test
+	public void theAnglerSetAndTheNetAreBothTaken()
+	{
+		// The report: a full angler set and a small net, and the hat only
+		// sometimes. Now the net is in the hand and the hat is on, every time.
+		game.wearing(13258, 13259, 13260, 13261);
+		workTheSpot();
+		assertEquals("the net in the hand", 303, held);
+		assertEquals("the angler hat on", 13258, worn);
 	}
 
 	@Test

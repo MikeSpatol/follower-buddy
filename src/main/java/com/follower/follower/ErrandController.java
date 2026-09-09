@@ -175,6 +175,25 @@ public class ErrandController
 		 * the flourish skips its scroll over a tool, the borrow skips its
 		 * tool over a scroll. Default false for hands that never say.
 		 */
+		/**
+		 * Puts something on, in a slot other than the hand: the hat of a
+		 * skilling outfit while the tool stays in the hand. Hands that only
+		 * know the hand wear nothing, and say so through {@link #isWearing}.
+		 */
+		default void wear(int itemId)
+		{
+		}
+
+		/** Takes off whatever {@link #wear} put on. Idempotent. */
+		default void takeOff()
+		{
+		}
+
+		default boolean isWearing()
+		{
+			return false;
+		}
+
 		default boolean isHolding()
 		{
 			return false;

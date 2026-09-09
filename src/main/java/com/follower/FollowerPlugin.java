@@ -574,6 +574,41 @@ public class FollowerPlugin extends Plugin
 				{
 					return propSlot != null;
 				}
+
+				@Override
+				public void wear(int itemId)
+				{
+					// The second prop is anything but the hand, so a hat can be
+					// worn over a held tool. Something that resolves to the hand
+					// belongs to hold(), and is declined here rather than fought over.
+					KitType slot = resolveSlot(itemId);
+					if (slot == null || slot == KitType.WEAPON || slot == KitType.SHIELD)
+					{
+						log.debug("Prop {} is not something to wear", itemId);
+						return;
+					}
+					wornSlot = slot;
+					wornItemId = itemId;
+					rebuildFollower();
+				}
+
+				@Override
+				public void takeOff()
+				{
+					if (wornSlot == null)
+					{
+						return;
+					}
+					wornSlot = null;
+					wornItemId = 0;
+					rebuildFollower();
+				}
+
+				@Override
+				public boolean isWearing()
+				{
+					return wornSlot != null;
+				}
 			};
 		errands = new com.follower.follower.ErrandController(client, follower, config,
 			speechEngine::dispatch, spotAnimRepository,
@@ -3351,7 +3386,8 @@ public class FollowerPlugin extends Plugin
 		// The prop is skipped in thrall mode, whose override is a shared object
 		// and whose conscript has no time to read.
 		Outfit outfit = dressForRender(resolveOutfit(), spectateDisarmed || emoteDisarmed,
-			outfitOverride == null ? propSlot : null, propItemId);
+			outfitOverride == null ? propSlot : null, propItemId,
+			outfitOverride == null ? wornSlot : null, wornItemId);
 
 		appearanceService.request(outfit, com.follower.appearance.ModelSource.DUMP_ONLY, appearance ->
 		{
@@ -3852,6 +3888,10 @@ public class FollowerPlugin extends Plugin
 	private KitType propSlot;
 	private int propItemId;
 
+	/** The second transient prop, worn rather than held: a borrowed hat. */
+	private KitType wornSlot;
+	private int wornItemId;
+
 	private Outfit resolveOutfit()
 	{
 		// Thrall mode dresses the follower without touching the configured
@@ -3886,6 +3926,16 @@ public class FollowerPlugin extends Plugin
 	 */
 	static Outfit dressForRender(Outfit outfit, boolean disarmed, KitType propSlot, int propItemId)
 	{
+		return dressForRender(outfit, disarmed, propSlot, propItemId, null, 0);
+	}
+
+	/**
+	 * As above, with a second prop that is worn rather than held - the hat of
+	 * a skilling outfit over the tool - laid on after the hand's.
+	 */
+	static Outfit dressForRender(Outfit outfit, boolean disarmed, KitType propSlot, int propItemId,
+		KitType wornSlot, int wornItemId)
+	{
 		if (disarmed)
 		{
 			outfit.clear(KitType.WEAPON);
@@ -3901,6 +3951,10 @@ public class FollowerPlugin extends Plugin
 				outfit.clear(KitType.SHIELD);
 			}
 			outfit.setItem(propSlot, propItemId);
+		}
+		if (wornSlot != null)
+		{
+			outfit.setItem(wornSlot, wornItemId);
 		}
 		return outfit;
 	}

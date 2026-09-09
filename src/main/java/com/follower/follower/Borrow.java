@@ -57,8 +57,16 @@ public class Borrow
 		11719, 11720, 11721,
 	};
 
-	static final int[] HARPOONS = {311, 10129};
-	static final int[] RODS = {307, 309};
+	static final int[] HARPOONS = {311, 10129, 21028, 21031, 23762, 23864};
+	static final int[] RODS = {307, 309, 11323, 22842};
+
+	// The nets, the pot and the vessel are not equipment, but the cache
+	// carries a worn model for each, which is all the hands need. One the
+	// hands decline is simply not held.
+	static final int SMALL_NET = 303;
+	static final int BIG_NET = 305;
+	static final int LOBSTER_POT = 301;
+	static final int KARAMBWAN_VESSEL = 3157;
 
 	static final int ROCK_HAMMER = 4162;
 	static final int SECATEURS = 5329;
@@ -72,15 +80,22 @@ public class Borrow
 	static final Set<Integer> HATS = new HashSet<>(Arrays.asList(
 		10941, 12013, 13258, 13646, 11850, 20708, 5554, 24872));
 
-	/** The harpoon's animation, and the two rods'. */
+	/** The fishing animations, one per tool, from the mime rules' measured list. */
 	private static final int HARPOON_ANIMATION = 618;
+	private static final int CAGE_ANIMATION = 619;
+	private static final int BIG_NET_ANIMATION = 620;
+	private static final int NET_ANIMATION = 621;
 	private static final int ROD_ANIMATION = 622;
 	private static final int FLY_ROD_ANIMATION = 623;
+	private static final int KARAMBWAN_ANIMATION = 1193;
 
 	private final FollowerEntity follower;
 	private final ErrandController.Hands hands;
 
 	private int held;
+
+	/** The hat worn alongside, or 0: the second prop, which is not the hand. */
+	private int hat;
 
 	/** True while the borrowed item is out of the hands, but still on loan. */
 	private boolean aside;
@@ -91,6 +106,7 @@ public class Borrow
 		this.hands = hands;
 	}
 
+	/** Whether the hand has a tool in it; a hat alone is not holding. */
 	public boolean isHolding()
 	{
 		return held != 0;
@@ -99,6 +115,44 @@ public class Borrow
 	public int heldItem()
 	{
 		return held;
+	}
+
+	public boolean hasHat()
+	{
+		return hat != 0;
+	}
+
+	public int hatWorn()
+	{
+		return hat;
+	}
+
+	/** Whether anything at all is on loan, in the hand or on the head. */
+	public boolean isBorrowing()
+	{
+		return held != 0 || hat != 0;
+	}
+
+	/**
+	 * Puts the hat on. Its own slot, so it goes over a held tool and never
+	 * argues with the scroll.
+	 *
+	 * @return whether it is now worn; false when the hands decline it
+	 */
+	public boolean wearHat(int itemId)
+	{
+		if (itemId <= 0 || hat != 0 || hands.isWearing())
+		{
+			return false;
+		}
+		hands.wear(itemId);
+		if (!hands.isWearing())
+		{
+			return false;
+		}
+		hat = itemId;
+		log.debug("Borrowed hat {}", itemId);
+		return true;
 	}
 
 	/**
@@ -128,8 +182,8 @@ public class Borrow
 	 * Gives the item back.
 	 *
 	 * @param withBeat whether the session was long enough to be worth a bow -
-	 * a salute for a hat. The release lands on the same frame as the emote
-	 * starts; the caller keeps the feet still while it plays
+	 * a salute when only a hat was borrowed. The release lands on the same
+	 * frame as the emote starts; the caller keeps the feet still while it plays
 	 */
 	public void giveBack(boolean withBeat)
 	{
@@ -144,13 +198,14 @@ public class Borrow
 	 */
 	public void giveBack(boolean withBeat, int leadIn)
 	{
-		if (held == 0)
+		if (held == 0 && hat == 0)
 		{
 			return;
 		}
 		if (withBeat)
 		{
-			int beat = HATS.contains(held) ? SALUTE_ANIMATION : BOW_ANIMATION;
+			// A tool is handed back with a bow; a hat on its own is saluted.
+			int beat = held == 0 ? SALUTE_ANIMATION : BOW_ANIMATION;
 			if (leadIn > 0)
 			{
 				follower.playAnimations(new int[]{leadIn, beat});
@@ -160,7 +215,13 @@ public class Borrow
 				follower.playAnimation(beat);
 			}
 		}
-		log.debug("Returned item {}{}", held, withBeat ? " with a beat" : "");
+		log.debug("Returned item {} and hat {}{}", held, hat, withBeat ? " with a beat" : "");
+		if (hat != 0)
+		{
+			hat = 0;
+			hands.takeOff();
+		}
+		boolean hadTool = held != 0;
 		held = 0;
 		if (aside)
 		{
@@ -169,7 +230,10 @@ public class Borrow
 			aside = false;
 			return;
 		}
-		hands.release();
+		if (hadTool)
+		{
+			hands.release();
+		}
 	}
 
 	/**
@@ -213,7 +277,7 @@ public class Borrow
 	/** The silent release, for every abort path. Safe with nothing held. */
 	public void abort()
 	{
-		if (held == 0)
+		if (held == 0 && hat == 0)
 		{
 			return;
 		}
@@ -294,6 +358,22 @@ public class Borrow
 				if (animationId == ROD_ANIMATION || animationId == FLY_ROD_ANIMATION)
 				{
 					return wornOr(worn, RODS, RODS[0]);
+				}
+				if (animationId == NET_ANIMATION)
+				{
+					return SMALL_NET;
+				}
+				if (animationId == BIG_NET_ANIMATION)
+				{
+					return BIG_NET;
+				}
+				if (animationId == CAGE_ANIMATION)
+				{
+					return LOBSTER_POT;
+				}
+				if (animationId == KARAMBWAN_ANIMATION)
+				{
+					return KARAMBWAN_VESSEL;
 				}
 				return 0;
 			case "farming":

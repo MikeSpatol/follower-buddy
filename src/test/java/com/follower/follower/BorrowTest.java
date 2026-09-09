@@ -96,6 +96,29 @@ public class BorrowTest
 		{
 			return held != 0;
 		}
+
+		int worn;
+
+		@Override
+		public void wear(int itemId)
+		{
+			if (!unwearable.contains(itemId))
+			{
+				worn = itemId;
+			}
+		}
+
+		@Override
+		public void takeOff()
+		{
+			worn = 0;
+		}
+
+		@Override
+		public boolean isWearing()
+		{
+			return worn != 0;
+		}
 	}
 
 	private RecordingFollower follower;
@@ -163,10 +186,24 @@ public class BorrowTest
 	@Test
 	public void aHatEarnsASaluteInstead()
 	{
-		borrow.start(10941);
+		// A hat is worn, not held: its own slot, over whatever is in the hand.
+		// On its own it is returned with a salute; with a tool, the tool's bow.
+		assertTrue(borrow.wearHat(10941));
+		assertTrue(borrow.hasHat());
+		assertFalse("a hat is not something held", borrow.isHolding());
+		assertEquals(10941, hands.worn);
 		borrow.giveBack(true);
-		assertEquals(Collections.singletonList(Borrow.SALUTE_ANIMATION), follower.animations);
+		assertEquals(Collections.singletonList(2112), follower.animations);
+		assertEquals(0, hands.worn);
+
+		follower.animations.clear();
+		assertTrue(borrow.start(1351));
+		assertTrue(borrow.wearHat(10941));
+		assertTrue("both at once", borrow.isHolding() && borrow.hasHat());
+		borrow.giveBack(true);
+		assertEquals("the tool's bow wins", Collections.singletonList(858), follower.animations);
 		assertEquals(0, hands.held);
+		assertEquals(0, hands.worn);
 	}
 
 	@Test
@@ -242,7 +279,9 @@ public class BorrowTest
 		assertEquals(10129, Borrow.toolFor("fishing", 618, worn(10129)));
 		assertEquals(307, Borrow.toolFor("fishing", 622, none));
 		assertEquals(309, Borrow.toolFor("fishing", 623, worn(309)));
-		assertEquals("a net or a cage gets no prop", 0, Borrow.toolFor("fishing", 621, none));
+		assertEquals("a small net is a net", 303, Borrow.toolFor("fishing", 621, none));
+		assertEquals("a big net likewise", 305, Borrow.toolFor("fishing", 620, none));
+		assertEquals("and a cage is a pot", 301, Borrow.toolFor("fishing", 619, none));
 
 		assertEquals(5329, Borrow.toolFor("farming", -1, none));
 		assertEquals(8794, Borrow.toolFor("construction", -1, none));
