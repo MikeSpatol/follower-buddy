@@ -430,6 +430,18 @@ public class SkillingController
 			+ Borrow.toolFor(session.activity, session.lastAnimation, worn, hand, itemName(hand));
 	}
 
+	/**
+	 * Whether a mirrored pose may play from where the follower stands. During
+	 * a session the answer is only from the seat: a cast copied while the
+	 * follower is still trailing the player lands on dry ground, which is the
+	 * fishing-the-grass the mimic was seen doing. With no session on, the
+	 * mimic keeps its old freedom.
+	 */
+	public boolean mirrorsFromHere()
+	{
+		return session == null || seat != null;
+	}
+
 	public boolean holdsTheFeet()
 	{
 		return seat != null || releaseTicks > 0 || trapSeat != null || fireSeat != null

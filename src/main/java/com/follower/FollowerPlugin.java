@@ -8728,7 +8728,12 @@ public class FollowerPlugin extends Plugin
 		if (rule != null && Boolean.TRUE.equals(rule.mirrorPose)
 			&& utterance.animationId > 0)
 		{
-			startPoseMirror(utterance.animationId);
+			// Mid-session the copy is made from the seat or not at all: a
+			// fishing cast copied while trailing the player fishes the grass.
+			if (skilling == null || skilling.mirrorsFromHere())
+			{
+				startPoseMirror(utterance.animationId);
+			}
 			return;
 		}
 

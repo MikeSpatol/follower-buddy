@@ -773,6 +773,21 @@ public class SkillingSessionTest
 	}
 
 	@Test
+	public void theMimicOnlyCopiesACastFromTheSeat()
+	{
+		assertTrue("no session: the mimic is free", skilling.mirrorsFromHere());
+		follower.walled = tile -> true;
+		workTheSpot();
+		assertNull("no seat could be had", follower.stayingAt);
+		assertFalse("so a cast is not copied from the grass", skilling.mirrorsFromHere());
+
+		setUp();
+		workTheSpot();
+		assertNotNull(follower.stayingAt);
+		assertTrue("from the seat it is", skilling.mirrorsFromHere());
+	}
+
+	@Test
 	public void theAnglerSetAndTheNetAreBothTaken()
 	{
 		// The report: a full angler set and a small net, and the hat only
