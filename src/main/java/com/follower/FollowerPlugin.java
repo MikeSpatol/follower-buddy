@@ -641,7 +641,7 @@ public class FollowerPlugin extends Plugin
 		// The prayer at the altar and the fire line borrow two of the errands.
 		skilling.setErrands(errands::force);
 		// And in return no errand of the follower's own starts mid-session.
-		errands.setSession(skilling::isWorking);
+		errands.setSession(() -> skilling.isWorking() || inCutscene());
 		// The moments excuse the seat for themselves; everything else that
 		// owns the feet - thrall work, the spectator, an errand under way -
 		// beats them.
@@ -1058,6 +1058,16 @@ public class FollowerPlugin extends Plugin
 	private static final long MINUTES_COOLDOWN_MS = 480_000;
 	private long lastMinutesMs;
 
+	/**
+	 * Whether a cutscene has the camera. The follower keeps its place and
+	 * looks where the player looks, so the scene has one audience of two,
+	 * and still mirrors an emote - the mimic is the part that reads best.
+	 */
+	private boolean inCutscene()
+	{
+		return client.getVarbitValue(net.runelite.api.gameval.VarbitID.CUTSCENE_STATUS) != 0;
+	}
+
 	/** Whether any NPC-dialog interface is up (heads or the options menu). */
 	private boolean npcDialogOpen()
 	{
@@ -1349,6 +1359,7 @@ public class FollowerPlugin extends Plugin
 			|| emoteHold
 			|| (skilling != null && skilling.holdsTheFeet())
 			|| (moments != null && moments.holdsTheFeet())
+			|| inCutscene()
 			|| resting;
 
 		// Thieving wanders too, and does not wait to be invited. The idle gate
@@ -5654,6 +5665,7 @@ public class FollowerPlugin extends Plugin
 		commitAttackSighting();
 		expireKillClaims();
 		updateWander();
+		follower.setWatchingWithThePlayer(inCutscene());
 		updateMinutes();
 		updateWelfare();
 		updateRest();
@@ -8667,22 +8679,32 @@ public class FollowerPlugin extends Plugin
 
 	private void speakNow(Utterance utterance)
 	{
-		String text = utterance.text;
 		SpeechOutput output = utterance.output;
 		SpeechRule rule = utterance.rule;
 		int animationId = utterance.animationId;
+
+		// Somebody else has the floor. While an NPC dialogue is up the words
+		// are dropped outright - not deferred, since a remark about the tree
+		// two minutes after the tree is worse than no remark - and nothing
+		// downstream of the words happens either: no latch, no journal entry,
+		// no sound. The body carries on, which is why an emote still mirrors.
+		boolean hushed = !utterance.text.isEmpty() && npcDialogOpen();
+		String text = hushed ? "" : utterance.text;
 
 		// The engine's said-conditional state latches here and nowhere else:
 		// this is the single door every utterance that survives the queue goes
 		// through, so a line the queue drops - stale, displaced, cleared with
 		// the scene - opens nothing. A wish nobody heard used to leave a gift
 		// option sitting in the Talk-to box with no ask behind it.
-		if (utterance.onSaid != null)
+		if (utterance.onSaid != null && !hushed)
 		{
 			utterance.onSaid.run();
 		}
 
-		journal.spoke(rule, text);
+		if (!hushed)
+		{
+			journal.spoke(rule, text);
+		}
 
 		// The line's own voice, if the player has given it one. After the
 		// journal so a sounded line is recorded like any other, and before

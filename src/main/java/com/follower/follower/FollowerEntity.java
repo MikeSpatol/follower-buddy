@@ -1636,7 +1636,15 @@ public class FollowerEntity
 		}
 		else if (!moving && !glance())
 		{
-			watchTheWork(local);
+			if (watchingWithThePlayer)
+			{
+				// A cutscene: the same way the player is turned, animating or not.
+				dstYaw = local.getOrientation() & 0x7ff;
+			}
+			else
+			{
+				watchTheWork(local);
+			}
 		}
 
 		StanceLibrary.Stance stance = stance();
@@ -3694,6 +3702,14 @@ public class FollowerEntity
 	 * <p>Only while they are animating. Standing about is not work, and the
 	 * follower goes back to facing them, which is the attentive default.
 	 */
+	/** True while a cutscene has the camera; the follower looks where the player looks. */
+	private boolean watchingWithThePlayer;
+
+	public void setWatchingWithThePlayer(boolean watching)
+	{
+		watchingWithThePlayer = watching;
+	}
+
 	private void watchTheWork(Player local)
 	{
 		if (local.getAnimation() == -1)
