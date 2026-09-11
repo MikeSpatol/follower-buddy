@@ -559,17 +559,22 @@ class KeepingCompany
 		watchForTheStop(now, here, animating);
 
 		int worked = now - startTick;
-		if (!paced && worked >= paceAt)
+		// Not while the follower is off the seat peering over the shoulder:
+		// a walk begun from the player's front tile wins over the peer's
+		// return, and the seat is then wherever the walk ended. The walks are
+		// not lost, only late; their flags stay down until the peer is over.
+		boolean onTheSeat = peerTicks == 0;
+		if (onTheSeat && !paced && worked >= paceAt)
 		{
 			paced = true;
 			pace();
 		}
-		else if (!stretched && worked >= stretchAt)
+		else if (onTheSeat && !stretched && worked >= stretchAt)
 		{
 			stretched = true;
 			stretch(here, false);
 		}
-		else if (!stretchedAgain && worked >= stretchAgainAt)
+		else if (onTheSeat && !stretchedAgain && worked >= stretchAgainAt)
 		{
 			stretchedAgain = true;
 			stretch(here, true);

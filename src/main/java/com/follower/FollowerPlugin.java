@@ -1077,16 +1077,18 @@ public class FollowerPlugin extends Plugin
 	}
 
 	/**
-	 * Attends the player's meetings, occasionally: when an NPC dialog opens,
-	 * the follower steps one tile to the player's side, faces the meeting,
-	 * takes the scroll out and writes until the box closes. The physical tell
-	 * is the whole joke - the errand's own documenting stance, solemnly
-	 * applied to your chat with a banker - so no line is needed, though the
-	 * rare one rides the MINUTES_TAKEN event that fires when the box closes.
+	 * Attends the player's meetings. When an NPC dialog opens the follower
+	 * takes a spot over the player's shoulder and looks at whoever they are
+	 * talking to, and stays there until the box closes. Occasionally it also
+	 * takes the scroll out and writes: the errand's own documenting stance,
+	 * solemnly applied to your chat with a banker, which is the whole joke -
+	 * so no line is needed, though the rare one rides the MINUTES_TAKEN event
+	 * that fires when a written meeting closes.
 	 *
-	 * <p>Heavily gated: one roll per dialog, a long cooldown between
-	 * performances, and everything that owns the feet (thrall work, errands,
-	 * spectating, a player-commanded Stay, combat) declines it outright.
+	 * <p>The spot is taken every time; the writing is one roll per dialog
+	 * with a long cooldown. Everything that owns the feet (thrall work,
+	 * errands, spectating, a player-commanded Stay, combat, a work session)
+	 * declines both outright.
 	 */
 	private void updateMinutes()
 	{
@@ -1122,13 +1124,16 @@ public class FollowerPlugin extends Plugin
 				{
 					minutesConsidered = true;
 					if (!busy && !follower.isStaying() && follower.isSpawned()
-						&& local != null
-						&& System.currentTimeMillis() - lastMinutesMs >= MINUTES_COOLDOWN_MS
-						&& java.util.concurrent.ThreadLocalRandom.current().nextInt(100) < 35
-						&& stepAsideForMinutes(local))
+						&& local != null && standOverTheShoulder(local))
 					{
-						lastMinutesMs = System.currentTimeMillis();
-						minutesState = 1;
+						// Over the shoulder every time; the scroll now and then.
+						boolean writes = System.currentTimeMillis() - lastMinutesMs >= MINUTES_COOLDOWN_MS
+							&& java.util.concurrent.ThreadLocalRandom.current().nextInt(100) < 35;
+						if (writes)
+						{
+							lastMinutesMs = System.currentTimeMillis();
+						}
+						minutesState = writes ? 1 : 3;
 					}
 				}
 				break;
@@ -1149,6 +1154,7 @@ public class FollowerPlugin extends Plugin
 				break;
 
 			case 2:
+			case 3:
 				if (busy || local == null
 					|| follower.getWorldLocation() == null
 					|| local.getWorldLocation() == null
@@ -1158,7 +1164,8 @@ public class FollowerPlugin extends Plugin
 				}
 				else if (over)
 				{
-					endMinutes(true);
+					// Only a written meeting is minuted; attending is not.
+					endMinutes(minutesState == 2);
 				}
 				break;
 
@@ -1167,23 +1174,41 @@ public class FollowerPlugin extends Plugin
 		}
 	}
 
-	/** Flank tile pick: one tile to the player's side, facing the meeting. */
-	private boolean stepAsideForMinutes(Player local)
+	/**
+	 * Over the shoulder: a tile diagonally behind the player, on either side,
+	 * facing whoever the player is talking to. The NPC itself when the client
+	 * still says who that is; otherwise the tile the player is turned toward,
+	 * which is where the NPC stood when the box opened. Behind first, then the
+	 * flanks, then straight behind, whichever the ground allows.
+	 */
+	private boolean standOverTheShoulder(Player local)
 	{
 		WorldPoint p = local.getWorldLocation();
 		if (p == null)
 		{
 			return false;
 		}
-		int jau = local.getCurrentOrientation();
-		double radians = (jau / 2048.0) * 2.0 * Math.PI;
-		int fx = (int) Math.round(-Math.sin(radians));
-		int fy = (int) Math.round(-Math.cos(radians));
-		// The meeting is where the player is facing; the follower faces it too.
-		WorldPoint front = new WorldPoint(
-			p.getX() + fx, p.getY() + fy, p.getPlane());
-		// The two perpendiculars, tried in a random order so the follower has
-		// no favourite side.
+		WorldPoint at = null;
+		if (local.getInteracting() instanceof NPC)
+		{
+			at = local.getInteracting().getWorldLocation();
+		}
+		int fx;
+		int fy;
+		if (at != null && at.getPlane() == p.getPlane() && !at.equals(p))
+		{
+			fx = Integer.signum(at.getX() - p.getX());
+			fy = Integer.signum(at.getY() - p.getY());
+		}
+		else
+		{
+			double radians = (local.getCurrentOrientation() / 2048.0) * 2.0 * Math.PI;
+			fx = (int) Math.round(-Math.sin(radians));
+			fy = (int) Math.round(-Math.cos(radians));
+			at = new WorldPoint(p.getX() + fx, p.getY() + fy, p.getPlane());
+		}
+		// The two perpendiculars, in a random order so there is no favourite
+		// shoulder.
 		int sx = -fy;
 		int sy = fx;
 		if (java.util.concurrent.ThreadLocalRandom.current().nextBoolean())
@@ -1191,15 +1216,18 @@ public class FollowerPlugin extends Plugin
 			sx = -sx;
 			sy = -sy;
 		}
-		WorldPoint[] flanks = {
+		WorldPoint[] spots = {
+			new WorldPoint(p.getX() - fx + sx, p.getY() - fy + sy, p.getPlane()),
+			new WorldPoint(p.getX() - fx - sx, p.getY() - fy - sy, p.getPlane()),
 			new WorldPoint(p.getX() + sx, p.getY() + sy, p.getPlane()),
 			new WorldPoint(p.getX() - sx, p.getY() - sy, p.getPlane()),
+			new WorldPoint(p.getX() - fx, p.getY() - fy, p.getPlane()),
 		};
-		for (WorldPoint flank : flanks)
+		for (WorldPoint spot : spots)
 		{
-			if (follower.stayAt(flank))
+			if (!spot.equals(at) && follower.stayAt(spot))
 			{
-				follower.setStayFaceTile(front);
+				follower.setStayFaceTile(at);
 				return true;
 			}
 		}
