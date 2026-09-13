@@ -8476,6 +8476,104 @@
       ]
     },
     {
+      "id": "noticed-valuable",
+      "note": "A drop of yours worth having that you walked away from. The follower has gone to stand by it; this is the one line. Only a thing that is still there and on screen, checked the tick it sets off.",
+      "group": "reactions",
+      "priority": 62,
+      "cooldownMs": 60000,
+      "delayTicks": 2,
+      "delayTicksMax": 4,
+      "output": "overhead",
+      "when": {
+        "type": "noticed",
+        "is": "valuable"
+      },
+      "say": [
+        "You've left {thing} here.",
+        "The {thing}. It's still on the ground.",
+        "I'll stand by the {thing} until you notice it.",
+        "That's a {thing} you're walking away from."
+      ]
+    },
+    {
+      "id": "noticed-nest",
+      "note": "A bird's nest on the ground the player has not picked up.",
+      "group": "reactions",
+      "priority": 60,
+      "cooldownMs": 60000,
+      "delayTicks": 2,
+      "delayTicksMax": 4,
+      "output": "overhead",
+      "when": {
+        "type": "noticed",
+        "is": "nest"
+      },
+      "say": [
+        "A nest. Under the tree, where nests go.",
+        "There's a nest here. Something fell out of it, I expect.",
+        "You've left a nest. I've noted where."
+      ]
+    },
+    {
+      "id": "noticed-impling",
+      "note": "An impling within sight. The follower steps toward it; it will not wait, and neither will the line.",
+      "group": "reactions",
+      "priority": 60,
+      "cooldownMs": 60000,
+      "delayTicks": 1,
+      "delayTicksMax": 3,
+      "output": "overhead",
+      "when": {
+        "type": "noticed",
+        "is": "impling"
+      },
+      "say": [
+        "There's a {thing}. It won't wait.",
+        "{thing}. Over here, while it's here.",
+        "A {thing}, if you're quick.",
+        "I see a {thing}. I'm not catching it for you."
+      ]
+    },
+    {
+      "id": "noticed-star",
+      "note": "A crashed star, walked over to and written up. A date worth having.",
+      "group": "reactions",
+      "priority": 64,
+      "cooldownMs": 600000,
+      "delayTicks": 4,
+      "delayTicksMax": 6,
+      "output": "overhead",
+      "when": {
+        "type": "noticed",
+        "is": "star"
+      },
+      "say": [
+        "A star. In the ground. I have the date and the place.",
+        "That fell out of the sky. I'm putting that on its own page.",
+        "A crashed star. I've drawn it, badly."
+      ]
+    },
+    {
+      "id": "noticed-landmark",
+      "note": "The player stopped beside a signpost, a statue, a plaque, and the scribe went to read it, notes out. The joke is the seriousness; the line stays dry.",
+      "group": "reactions",
+      "priority": 58,
+      "cooldownMs": 120000,
+      "delayTicks": 4,
+      "delayTicksMax": 8,
+      "output": "overhead",
+      "when": {
+        "type": "noticed",
+        "is": "landmark"
+      },
+      "say": [
+        "It says something. I'm copying it out.",
+        "A {thing}. Somebody meant this to be read, so I'm reading it.",
+        "Hold on. I want the wording of this {thing} exactly.",
+        "Everything on a {thing} is on the record now."
+      ]
+    },
+    {
       "id": "away-a-day",
       "note": "A day or more. Higher priority so it wins over away-a-while.",
       "group": "misc",

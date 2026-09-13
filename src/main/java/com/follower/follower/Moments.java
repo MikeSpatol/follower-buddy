@@ -37,7 +37,7 @@ import net.runelite.api.gameval.VarPlayerID;
  * the ones that are meant to be rare (the walk over, the notes) stay rare.
  */
 @Slf4j
-public class Moments
+public class Moments implements Noticing.Looker
 {
 	/** EMOTE_CLAP and EMOTE_BOW, both proven on the follower by the rules. */
 	static final int CLAP = 865;
@@ -487,6 +487,7 @@ public class Moments
 	 *
 	 * @return whether it set off; false leaves nothing changed
 	 */
+	@Override
 	public boolean goAndLook(WorldPoint at, int steps, boolean writes, int holdTicks)
 	{
 		WorldPoint from = follower.getWorldLocation();
@@ -518,6 +519,7 @@ public class Moments
 	}
 
 	/** Whether the follower is off looking at something, or writing it up. */
+	@Override
 	public boolean isLooking()
 	{
 		return doing == Doing.LOOK;

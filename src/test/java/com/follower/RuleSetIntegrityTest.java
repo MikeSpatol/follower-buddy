@@ -69,6 +69,7 @@ public class RuleSetIntegrityTest
 		"challenging", "challengemet", "challengefailed",
 		"unattended", "underfoot",
 		"milestone", "levelgap", "killcount", "grateful", "lasttime", "farewell",
+		"noticed",
 		"dateis", "worldhop", "gameupdated", "notesedited",
 		"musicunlock", "collectionadd", "questcomplete", "geoffer",
 		"channeljoined", "channelleft", "npcshout", "musictrack",
@@ -617,6 +618,7 @@ public class RuleSetIntegrityTest
 		byType.put("levelgap", gapExtras);
 		byType.put("killcount", new HashSet<>(Arrays.asList("boss", "count", "ordinal", "lastCount")));
 		byType.put("lasttime", new HashSet<>(Arrays.asList("lastTime")));
+		byType.put("noticed", new HashSet<>(Arrays.asList("kind", "thing")));
 		byType.put("chatmessage", new HashSet<>(Arrays.asList("message")));
 		byType.put("varbitchanged", new HashSet<>(Arrays.asList("value")));
 		byType.put("thrallstart", new HashSet<>(Arrays.asList("style")));

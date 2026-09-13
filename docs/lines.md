@@ -1,6 +1,6 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 466 rules, 2301 spoken lines, 2 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 471 rules, 2319 spoken lines, 2 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
@@ -8,7 +8,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (42 rules, 190 lines)
 - [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (36 rules, 222 lines)
-- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (35 rules, 273 lines)
+- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (40 rules, 291 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 114 lines)
 - [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 72 lines)
 - [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (21 rules, 109 lines)
@@ -1242,6 +1242,64 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Do you think it likes me? Don't answer that.
 - Does it have a name, or shall I invent one?
 - Who's a good... anyway.
+
+### `noticed-valuable`
+
+> A drop of yours worth having that you walked away from. The follower has gone to stand by it; this is the one line. Only a thing that is still there and on screen, checked the tick it sets off.
+
+- **when:** noticed
+- **pacing:** priority 62, cooldown 1m, delay 2-4 ticks, overhead
+
+- You've left {thing} here.
+- The {thing}. It's still on the ground.
+- I'll stand by the {thing} until you notice it.
+- That's a {thing} you're walking away from.
+
+### `noticed-nest`
+
+> A bird's nest on the ground the player has not picked up.
+
+- **when:** noticed
+- **pacing:** priority 60, cooldown 1m, delay 2-4 ticks, overhead
+
+- A nest. Under the tree, where nests go.
+- There's a nest here. Something fell out of it, I expect.
+- You've left a nest. I've noted where.
+
+### `noticed-impling`
+
+> An impling within sight. The follower steps toward it; it will not wait, and neither will the line.
+
+- **when:** noticed
+- **pacing:** priority 60, cooldown 1m, delay 1-3 ticks, overhead
+
+- There's a {thing}. It won't wait.
+- {thing}. Over here, while it's here.
+- A {thing}, if you're quick.
+- I see a {thing}. I'm not catching it for you.
+
+### `noticed-star`
+
+> A crashed star, walked over to and written up. A date worth having.
+
+- **when:** noticed
+- **pacing:** priority 64, cooldown 10m, delay 4-6 ticks, overhead
+
+- A star. In the ground. I have the date and the place.
+- That fell out of the sky. I'm putting that on its own page.
+- A crashed star. I've drawn it, badly.
+
+### `noticed-landmark`
+
+> The player stopped beside a signpost, a statue, a plaque, and the scribe went to read it, notes out. The joke is the seriousness; the line stays dry.
+
+- **when:** noticed
+- **pacing:** priority 58, cooldown 2m, delay 4-8 ticks, overhead
+
+- It says something. I'm copying it out.
+- A {thing}. Somebody meant this to be read, so I'm reading it.
+- Hold on. I want the wording of this {thing} exactly.
+- Everything on a {thing} is on the record now.
 
 ### `fail-burnt-food`
 

@@ -288,6 +288,12 @@ public class FollowerPlugin extends Plugin
 	/** The moments: a level, the pet, second wind, a stranger for the player. */
 	private com.follower.follower.Moments moments;
 
+	/** Where the follower looks when nothing else owns its head. */
+	private com.follower.follower.Gaze gaze;
+
+	/** What it notices that the player has not, and goes to look at. */
+	private com.follower.follower.Noticing noticing;
+
 	private Path dataDir;
 	private WorldPoint lastPlayerTile;
 	private int lastRegionId = -1;
@@ -653,6 +659,28 @@ public class FollowerPlugin extends Plugin
 			() -> speechEngine.getContext().getDaysKnown(),
 			flourish,
 			() -> speechEngine.getContext().isGrateful());
+		// The head: the cursor, the camera and the look round. Busy is anything
+		// that owns the head or the feet; the seat's own looks are its own.
+		gaze = new com.follower.follower.Gaze(client, follower, config,
+			client::getCameraYaw,
+			() -> speechEngine.getContext().getIdleTicks(),
+			() -> thrallNpc != null || errands.isBusy() || spectate.holdsTheFeet()
+				|| dialog.isOpen() || emoteHold || minutesState != 0 || resting
+				|| skilling.holdsTheFeet() || moments.holdsTheFeet() || flourish.isActive()
+				|| speechEngine.getContext().isInCombat() || inCutscene(),
+			() -> speechEngine.getContext().feelsAbout("disliked") ? "disliked"
+				: speechEngine.getContext().feelsAbout("liked") ? "liked" : "",
+			() -> thingsNearby(com.follower.follower.Gaze.AROUND_FAR + 2),
+			new java.util.Random());
+		// The eyes for things: the walk is the moments', the feet theirs.
+		noticing = new com.follower.follower.Noticing(client, follower, config, moments,
+			speechEngine::dispatch,
+			() -> thrallNpc != null || errands.isBusy() || spectate.holdsTheFeet()
+				|| dialog.isOpen() || emoteHold || minutesState != 0
+				|| skilling.holdsTheFeet() || moments.holdsTheFeet() || flourish.isActive()
+				|| speechEngine.getContext().isInCombat() || inCutscene(),
+			() -> speechEngine.getContext().getIdleTicks(),
+			this::landmarksNearby);
 
 		// On a fresh client boot the LOGIN_SCREEN transition can happen before
 		// this plugin subscribes, so the first login would not read as fresh.
@@ -800,6 +828,14 @@ public class FollowerPlugin extends Plugin
 		hoveredThisTick = false;
 		hoverTicks = 0;
 		hopped = false;
+		if (gaze != null)
+		{
+			gaze.reset();
+		}
+		if (noticing != null)
+		{
+			noticing.reset();
+		}
 		strandedLandingTicks = 0;
 
 		scanTicksLeft = 0;
@@ -1569,6 +1605,102 @@ public class FollowerPlugin extends Plugin
 		return candidates.isEmpty() ? null
 			: candidates.get(java.util.concurrent.ThreadLocalRandom.current()
 				.nextInt(candidates.size()));
+	}
+
+	/**
+	 * The tiles of the NPCs and other players within so many tiles of the
+	 * follower, nearest first, for the look round. The same population as
+	 * the wander's distraction and for the same reason: they are what the
+	 * client already lists.
+	 */
+	private List<WorldPoint> thingsNearby(int radius)
+	{
+		List<WorldPoint> found = new ArrayList<>();
+		WorldPoint from = follower.getWorldLocation();
+		net.runelite.api.WorldView view = client.getTopLevelWorldView();
+		Player local = client.getLocalPlayer();
+		if (from == null || view == null)
+		{
+			return found;
+		}
+		for (NPC npc : view.npcs())
+		{
+			if (npc != null && npc != thrallNpc)
+			{
+				addIfNear(found, npc.getWorldLocation(), from, radius, 1);
+			}
+		}
+		for (Player other : view.players())
+		{
+			if (other != null && other != local)
+			{
+				addIfNear(found, other.getWorldLocation(), from, radius, 1);
+			}
+		}
+		found.sort((a, b) -> Integer.compare(a.distanceTo(from), b.distanceTo(from)));
+		return found;
+	}
+
+	/**
+	 * The signposts, statues and plaques within a few tiles of the player,
+	 * name and tile. A seven by seven scan of the scene, run only while the
+	 * player has stood still a while, so its cost is nothing in play.
+	 */
+	private List<java.util.Map.Entry<String, WorldPoint>> landmarksNearby()
+	{
+		List<java.util.Map.Entry<String, WorldPoint>> found = new ArrayList<>();
+		Player local = client.getLocalPlayer();
+		net.runelite.api.coords.LocalPoint lp = local == null ? null : local.getLocalLocation();
+		net.runelite.api.WorldView view = client.getTopLevelWorldView();
+		if (lp == null || view == null || view.getScene() == null)
+		{
+			return found;
+		}
+		net.runelite.api.Tile[][][] tiles = view.getScene().getTiles();
+		int plane = view.getPlane();
+		int reach = com.follower.follower.Noticing.LANDMARK_WITHIN + 1;
+		for (int dx = -reach; dx <= reach; dx++)
+		{
+			for (int dy = -reach; dy <= reach; dy++)
+			{
+				int x = lp.getSceneX() + dx;
+				int y = lp.getSceneY() + dy;
+				if (plane < 0 || plane >= tiles.length || x < 0 || y < 0
+					|| x >= tiles[plane].length || y >= tiles[plane][x].length
+					|| tiles[plane][x][y] == null)
+				{
+					continue;
+				}
+				for (net.runelite.api.GameObject object : tiles[plane][x][y].getGameObjects())
+				{
+					if (object == null)
+					{
+						continue;
+					}
+					String name = com.follower.follower.ErrandController.objectName(
+						client, object.getId());
+					if (com.follower.follower.Noticing.isLandmark(name))
+					{
+						found.add(new java.util.AbstractMap.SimpleImmutableEntry<>(
+							name, object.getWorldLocation()));
+					}
+				}
+			}
+		}
+		return found;
+	}
+
+	private static void addIfNear(List<WorldPoint> into, WorldPoint at, WorldPoint from,
+		int radius, int nearest)
+	{
+		if (at != null && at.getPlane() == from.getPlane())
+		{
+			int distance = at.distanceTo(from);
+			if (distance <= radius && distance >= nearest)
+			{
+				into.add(at);
+			}
+		}
 	}
 
 	/**
@@ -5406,6 +5538,11 @@ public class FollowerPlugin extends Plugin
 	@Subscribe
 	public void onClientTick(net.runelite.api.events.ClientTick event)
 	{
+		if (gaze != null)
+		{
+			gaze.noteHover(com.follower.follower.Gaze.read(client, follower));
+		}
+
 		boolean over = !client.isMenuOpen() && follower.isSpawned()
 			&& follower.isUnderMouse(client.getMouseCanvasPosition());
 
@@ -5706,6 +5843,10 @@ public class FollowerPlugin extends Plugin
 		commitAttackSighting();
 		expireKillClaims();
 		updateWander();
+		if (gaze != null)
+		{
+			gaze.tick();
+		}
 		follower.setWatchingWithThePlayer(inCutscene());
 		updateMinutes();
 		updateWelfare();
@@ -5730,6 +5871,11 @@ public class FollowerPlugin extends Plugin
 		{
 			// After the seat, which it excuses itself from.
 			moments.tick();
+		}
+		if (noticing != null)
+		{
+			// After the moments, whose feet it borrows for the walk.
+			noticing.tick();
 		}
 
 		// After errands, so an errand in progress owns the feet: a follower
@@ -6168,13 +6314,34 @@ public class FollowerPlugin extends Plugin
 	@Subscribe
 	public void onItemSpawned(net.runelite.api.events.ItemSpawned event)
 	{
-		if (skilling == null || !skilling.isWorking() || event.getItem() == null
-			|| event.getTile() == null)
+		if (event.getItem() == null || event.getTile() == null)
+		{
+			return;
+		}
+		// A chunk load raises one of these per item already lying about;
+		// none of those is a drop the player just walked away from.
+		if (noticing != null && ticksSinceLoading > 2)
+		{
+			int id = event.getItem().getId();
+			noticing.itemSpawned(event.getItem(), event.getTile().getWorldLocation(),
+				itemManager.getItemComposition(id).getName(),
+				(long) itemManager.getItemPrice(id) * event.getItem().getQuantity());
+		}
+		if (skilling == null || !skilling.isWorking())
 		{
 			return;
 		}
 		skilling.itemSpawned(itemManager.getItemComposition(event.getItem().getId()).getName(),
 			event.getTile().getWorldLocation());
+	}
+
+	@Subscribe
+	public void onItemDespawned(net.runelite.api.events.ItemDespawned event)
+	{
+		if (noticing != null && event.getItem() != null && event.getTile() != null)
+		{
+			noticing.itemDespawned(event.getItem(), event.getTile().getWorldLocation());
+		}
 	}
 
 	/**
@@ -6187,6 +6354,20 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void noteObjectChange(net.runelite.api.GameObject object, boolean spawned)
 	{
+		// A star landing. Names are only looked up outside a chunk load,
+		// which raises one of these per object in the scene.
+		if (noticing != null && object != null && ticksSinceLoading > 2)
+		{
+			String name = com.follower.follower.ErrandController.objectName(client, object.getId());
+			if (spawned)
+			{
+				noticing.objectSpawned(name, object.getWorldLocation());
+			}
+			else
+			{
+				noticing.objectDespawned(name, object.getWorldLocation());
+			}
+		}
 		if (skilling == null || object == null
 			|| (spawned ? !config.keepsCompany() : !skilling.isWorking()))
 		{

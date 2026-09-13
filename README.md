@@ -63,7 +63,11 @@ and if a stranger turns up to talk to you it stands off and has a good look.
 A good drop gets the scroll out; a great one it walks over to and writes up on
 the spot, then looks up at you and nods. It knows a ninety-two is halfway, a
 first ninety-nine from a third, and how long that level took. It waves when
-you open the logout tab.
+you open the logout tab. It looks where you look: at whatever your cursor
+rests on, the way you turn the camera, and round at what is nearby while you
+stand about. And it notices what you have not, and goes to look: a drop of
+yours you walked away from, a nest, an impling, a crashed star, the signpost
+you stopped beside.
 
 **Talk-to.** A proper NPC-style dialog box with a chathead. Ask how today went
 and it summarises the session; ask how it's been and it answers by mood; give

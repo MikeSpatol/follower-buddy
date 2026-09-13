@@ -72,6 +72,8 @@ public final class TriggerEvent
 		KILL_COUNT,
 		/** The logout tab opened. */
 		FAREWELL,
+		/** The follower noticed something and went to look. */
+		NOTICED,
 	}
 
 	/**
@@ -499,6 +501,21 @@ public final class TriggerEvent
 		event.placeholders.put("ninesOrdinal", Words.ordinal(masteries));
 		event.placeholders.put("sinceLast", sinceLastMs < 0 ? "" : Words.duration(sinceLastMs));
 		event.placeholders.put("sinceAny", sinceAnyMs < 0 ? "" : Words.duration(sinceAnyMs));
+		return event;
+	}
+
+	/**
+	 * The follower noticed something the player had not, and set off to look
+	 * at it. {kind} is what sort of thing (valuable, nest, impling, star,
+	 * landmark) and {thing} names it.
+	 */
+	public static TriggerEvent noticed(String kind, String thing)
+	{
+		TriggerEvent event = new TriggerEvent(Type.NOTICED);
+		event.name = kind == null ? "" : kind;
+		event.message = thing == null ? "" : thing;
+		event.placeholders.put("kind", event.name);
+		event.placeholders.put("thing", event.message);
 		return event;
 	}
 

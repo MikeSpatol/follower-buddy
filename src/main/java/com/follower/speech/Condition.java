@@ -445,6 +445,15 @@ public class Condition
 			// What the two of them were doing when the last session ended, for
 			// the greeting. Login only, and only when there is something to
 			// say; {lastTime} says it.
+			// The follower noticed something and went to look at it. "is" is
+			// the kind (valuable, nest, impling, star, landmark); "contains"
+			// narrows on the thing's name. {kind}, {thing}.
+			case "noticed":
+				return event.getType() == TriggerEvent.Type.NOTICED
+					&& (is == null || is.equalsIgnoreCase(event.getName()))
+					&& (contains == null || event.getMessage().toLowerCase(Locale.ROOT)
+						.contains(contains.toLowerCase(Locale.ROOT)));
+
 			// The logout tab opening. The body waves; this is the rare word.
 			case "farewell":
 				return event.getType() == TriggerEvent.Type.FAREWELL;

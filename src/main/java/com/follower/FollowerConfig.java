@@ -75,9 +75,17 @@ public interface FollowerConfig extends Config
 	String skillingSection = "skilling";
 
 	@ConfigSection(
+		name = "Company",
+		description = "The small habits of somebody keeping you company: where it"
+			+ " looks, what it notices, how it walks with you",
+		position = 8
+	)
+	String companySection = "company";
+
+	@ConfigSection(
 		name = "Combat",
 		description = "What the follower does while you are fighting",
-		position = 8
+		position = 9
 	)
 	String combatSection = "combat";
 
@@ -87,7 +95,7 @@ public interface FollowerConfig extends Config
 			+ " ::follower gfx <id> or ::follower pose <id>; with Developer commands"
 			+ " on, ::follower watch prints ids as they play. The defaults look"
 			+ " right; nothing here needs changing.",
-		position = 9,
+		position = 10,
 		closedByDefault = true
 	)
 	String shieldSection = "shield";
@@ -95,7 +103,7 @@ public interface FollowerConfig extends Config
 	@ConfigSection(
 		name = "Developer",
 		description = "Diagnostic chat commands used to build the plugin",
-		position = 10,
+		position = 11,
 		closedByDefault = true
 	)
 	String developerSection = "developer";
@@ -818,6 +826,36 @@ public interface FollowerConfig extends Config
 		position = 1
 	)
 	default boolean borrowsTools()
+	{
+		return true;
+	}
+
+	// ---------------------------------------------------------------- company
+
+	@ConfigItem(
+		keyName = "paysAttention",
+		name = "Looks where you look",
+		description = "Turns its head to whatever your cursor rests on and to where"
+			+ " you turn the camera, and looks round at what is nearby while you"
+			+ " stand about. Head only; it never moves its feet for this.",
+		section = companySection,
+		position = 0
+	)
+	default boolean paysAttention()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "noticesThings",
+		name = "Notices things",
+		description = "Goes to look at a drop of yours you walked away from, a bird's"
+			+ " nest, an impling, a crashed star, or a signpost or statue you stop"
+			+ " beside, and says so once. Only things it can see, and each once.",
+		section = companySection,
+		position = 1
+	)
+	default boolean noticesThings()
 	{
 		return true;
 	}

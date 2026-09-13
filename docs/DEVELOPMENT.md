@@ -1358,6 +1358,41 @@ session ends, so it is a turn to face the player and a wave, from the seat
 the seat's way, not twice in five minutes; the `farewell` condition carries
 the rare line.
 
+**The gaze** (`Gaze`, the Company section's *Looks where you look*). Where
+the follower looks when nothing else owns its head, and head only: a real
+facing (a seat, a goal, an errand at its business) outranks a glance. Three
+sources, each pacing itself. The cursor: the menu the client would open says
+what is under the mouse, and after it has rested on an NPC, a player, a piece
+of scenery or a ground item for two ticks the head turns to it, once per
+thing until the cursor leaves it. The camera: a swing of more than two
+hundred JAU that then settles for two ticks, with the player standing still,
+is a look shared four tiles the way the camera looks (camera yaw is the
+actor circle a half turn round: yaw 0 sits south and looks north). And the
+look round: standing about, every twenty to forty seconds it glances at
+something nearby, an NPC or a player or failing that a direction, and then
+back at the player, which is the attentive default. Somewhere it likes the
+looks are slow and long; somewhere it dislikes, quick and often and always
+at the nearest thing that moves. The research behind it is the plainest
+there is: a robot that followed people's gaze was rated more likeable and
+preferred three to one, without anybody being able to say why.
+
+**Noticing** (`Noticing`, *Notices things*). What the follower notices that
+the player has not, and goes to look at through the moments' walk, with one
+line each through the `noticed` condition (`{kind}`, `{thing}`): a drop of
+the player's own worth twenty thousand or more that they have walked five
+tiles from (ownership off the tile item, so somebody else's is not their
+business), a bird's nest on the ground, an impling in sight the player is
+not already on, a crashed star (walked to and written up), and a signpost,
+statue or plaque the player has stood beside for fifteen ticks (read with
+the notes out - Elizabeth's points of interest, driven by where the player
+stops rather than by a roll; the list is `Noticing.LANDMARKS`). Naughty
+Dog's rule for Ellie's callouts is the whole design: a callout about a thing
+the player cannot see reflects badly on the companion, so everything here is
+checked to still be there and within ten tiles on the tick the follower sets
+off, each thing is noticed once, and each kind keeps its own cooldown.
+Ground items and objects that arrive with a chunk load are ignored, since
+none of them is a drop the player just walked away from.
+
 **Not in scope.** The agility course spectator (it needs a course table) and
 the sailing deckhand (no verified deck stays). Both left out on purpose.
 

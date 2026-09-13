@@ -1602,6 +1602,11 @@ public class EveryConditionTypeTest
 	{
 		note("milestone", "levelGap", "killCount", "grateful", "lastTime", "farewell");
 		fires("{\"type\": \"farewell\"}", TriggerEvent.simple(TriggerEvent.Type.FAREWELL));
+		note("noticed");
+		fires("{\"type\": \"noticed\", \"is\": \"impling\", \"contains\": \"dragon\"}",
+			TriggerEvent.noticed("impling", "Dragon impling"));
+		quiet("{\"type\": \"noticed\", \"is\": \"nest\"}",
+			TriggerEvent.noticed("impling", "Dragon impling"));
 
 		long day = 24L * 60 * 60_000L;
 		fires("{\"type\": \"milestone\", \"is\": \"halfway\"}",
