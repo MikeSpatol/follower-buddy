@@ -179,5 +179,88 @@
         }
       ]
     }
+    ,
+    {
+      "id": "nickname-offer",
+      "note": "Opened by the ask-nickname rule, whose overhead line said the name. A tree is fixed text, so the name itself lives in that line and in the answer lines outside; in here the follower asks whether the player minds. yes makes it the nickname, no strikes it through for good, later leaves it in pencil.",
+      "start": "start",
+      "nodes": [
+        {
+          "id": "start",
+          "says": [
+            "Ah. Good. About the name."
+          ],
+          "next": "ask"
+        },
+        {
+          "id": "ask",
+          "says": [
+            "I've been using one for you in the notes. You'll have heard it just now. Do you mind?"
+          ],
+          "choices": [
+            { "label": "No, I like it.", "next": "yes-q" },
+            { "label": "Which name?", "next": "what-q" },
+            { "label": "Yes, I mind.", "next": "no-q" },
+            { "label": "Ask me later.", "next": "later-q" }
+          ]
+        },
+        {
+          "id": "yes-q",
+          "you": [
+            "No, I like it."
+          ],
+          "next": "yes-a"
+        },
+        {
+          "id": "yes-a",
+          "says": [
+            "Then it stays. I'll write it properly this time."
+          ],
+          "answer": "yes"
+        },
+        {
+          "id": "what-q",
+          "you": [
+            "Which name?"
+          ],
+          "next": "what-a"
+        },
+        {
+          "id": "what-a",
+          "says": [
+            "The one I called you a moment ago. It's in the notes. I'd rather you heard it than read it."
+          ],
+          "next": "ask"
+        },
+        {
+          "id": "no-q",
+          "you": [
+            "Yes, I mind."
+          ],
+          "next": "no-a"
+        },
+        {
+          "id": "no-a",
+          "says": [
+            "Fair enough. Struck through, and I won't offer it again."
+          ],
+          "answer": "no"
+        },
+        {
+          "id": "later-q",
+          "you": [
+            "Ask me later."
+          ],
+          "next": "later-a"
+        },
+        {
+          "id": "later-a",
+          "says": [
+            "I'll keep it in pencil, then."
+          ],
+          "answer": "later"
+        }
+      ]
+    }
   ]
 }

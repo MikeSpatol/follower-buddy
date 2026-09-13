@@ -257,8 +257,15 @@ public final class TriggerEvent
 	 */
 	public static TriggerEvent answered(String answer)
 	{
+		return answered(answer, "");
+	}
+
+	/** The same, naming the tree that was answered, for a rule's {@code of}. */
+	public static TriggerEvent answered(String answer, String tree)
+	{
 		TriggerEvent event = new TriggerEvent(Type.ANSWERED);
 		event.name = answer == null ? "" : answer;
+		event.message = tree == null ? "" : tree;
 		event.placeholders.put("answer", event.name);
 		return event;
 	}

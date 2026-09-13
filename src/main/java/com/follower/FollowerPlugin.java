@@ -1930,6 +1930,10 @@ public class FollowerPlugin extends Plugin
 
 		/** What the two of them were doing when the session ended, for the greeting. */
 		String lastThing;
+
+		/** The name the player agreed to be called, and the ones they turned down. */
+		String nickname;
+		java.util.List<String> refusedNicknames;
 	}
 
 	/**
@@ -1985,6 +1989,7 @@ public class FollowerPlugin extends Plugin
 			context.setMetWearingValue(saved.metWearingValue);
 			context.restoreLevelStamps(saved.levelStamps);
 			context.restoreLastThing(saved.lastThing);
+			context.restoreNickname(saved.nickname, saved.refusedNicknames);
 			if (saved.deathPlane >= 0)
 			{
 				context.restoreDeathSpot(new WorldPoint(
@@ -2050,6 +2055,9 @@ public class FollowerPlugin extends Plugin
 		saved.levelStamps = context.getLevelStamps().isEmpty() ? null
 			: new java.util.HashMap<>(context.getLevelStamps());
 		saved.lastThing = context.getLastThing().isEmpty() ? null : context.getLastThing();
+		saved.nickname = context.getNickname().isEmpty() ? null : context.getNickname();
+		saved.refusedNicknames = context.getRefusedNicknames().isEmpty() ? null
+			: new java.util.ArrayList<>(new java.util.TreeSet<>(context.getRefusedNicknames()));
 		WorldPoint died = context.getDeathLocation();
 		if (died != null)
 		{
@@ -5021,9 +5029,28 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void answerQuestion(String answer)
 	{
-		speechEngine.getContext().noteAnswered();
-		speechEngine.dispatch(TriggerEvent.answered(answer));
+		TriggerContext context = speechEngine.getContext();
+		String tree = context.getAskedTree();
+		// The nickname is the one question whose answer changes the follower's
+		// own state rather than the rules'; settled before the rules hear, so
+		// the thank-you can say the name.
+		if (NICKNAME_TREE.equals(tree))
+		{
+			if ("yes".equals(answer))
+			{
+				context.acceptNickname(context.getEarnedNickname());
+			}
+			else if ("no".equals(answer))
+			{
+				context.refuseNickname(context.getEarnedNickname());
+			}
+		}
+		context.noteAnswered();
+		speechEngine.dispatch(TriggerEvent.answered(answer, tree));
 	}
+
+	/** The tree in dialogs.json that asks whether the earned name may be used. */
+	static final String NICKNAME_TREE = "nickname-offer";
 
 	/**
 	 * The everyday Talk-to conversation.

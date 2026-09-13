@@ -811,11 +811,11 @@ public class EveryConditionTypeTest
 		stale.gameTicks(1);
 		stale.engine.getContext().noteBoundary("bank");
 		stale.gameTicks(20);      // well past the ten-tick window
-		stale.answers("yes");
+		stale.answers("yes", "want-outing");
 		assertQuiet(stale, "a twelve-second-old ending is not a breather");
 		stale.engine.getContext().noteBoundary("bank");
 		stale.gameTicks(2);
-		stale.answers("yes");
+		stale.answers("yes", "want-outing");
 		assertFired(stale, "a fresh ending is");
 	}
 
@@ -1004,15 +1004,15 @@ public class EveryConditionTypeTest
 		yes.playerSays("yes");
 		assertQuiet(yes, "a word typed in chat is no longer an answer");
 
-		yes.answers("no");
+		yes.answers("no", "want-outing");
 		assertQuiet(yes, "no is not yes");
 
-		yes.answers("yes");
+		yes.answers("yes", "want-outing");
 		assertFired(yes, "answered yes");
 
 		Harness no = harnessFor("{\"type\": \"answered\", \"is\": \"no\"}");
 		no.gameTicks(1);
-		no.answers("no");
+		no.answers("no", "want-outing");
 		assertFired(no, "answered no");
 
 		Harness hovered = harnessFor("{\"type\": \"hovered\", \"ticks\": 4}");
@@ -1411,9 +1411,9 @@ public class EveryConditionTypeTest
 	@Test
 	public void theNameYouEarnAndTheGearYouOutgrew() throws IOException
 	{
-		note("nicknamed", "outgrew");
+		note("nicknamed", "nicknameEarned", "outgrew");
 
-		Harness h = harnessFor("{\"type\": \"nicknamed\"}");
+		Harness h = harnessFor("{\"type\": \"nicknameEarned\"}");
 		java.util.Map<String, String> names = new java.util.LinkedHashMap<>();
 		names.put("deaths", "the gravedigger");
 		names.put("kills", "the local menace");
@@ -1426,17 +1426,26 @@ public class EveryConditionTypeTest
 			h.engine.getContext().tally("deaths");
 		}
 		h.gameTicks(1);
-		assertFired(h, "nicknamed");
+		assertFired(h, "nicknameEarned");
 		assertEquals("the biggest tally names you",
-			"the gravedigger", h.engine.getContext().getNickname());
+			"the gravedigger", h.engine.getContext().getEarnedNickname());
+		assertEquals("but it is a candidate until agreed", "", h.engine.getContext().getNickname());
 
-		// And it MOVES. A name earned by dying is not kept once you mostly kill.
+		// Agreed, it is the name; and it MOVES. A name earned by dying is
+		// not kept once you mostly kill - the new one is offered afresh.
+		Harness named = harnessFor("{\"type\": \"nicknamed\"}");
+		named.engine.getContext().setNicknames(names);
+		named.gameTicks(2);
+		assertQuiet(named, "nothing agreed");
+		named.engine.getContext().acceptNickname("the gravedigger");
+		named.gameTicks(1);
+		assertFired(named, "nicknamed");
 		for (int i = 0; i < 60; i++)
 		{
 			h.engine.getContext().tally("kills");
 		}
-		assertEquals("the name follows what you actually do",
-			"the local menace", h.engine.getContext().getNickname());
+		assertEquals("the candidate follows what you actually do",
+			"the local menace", h.engine.getContext().getEarnedNickname());
 
 		Harness rich = harnessFor("{\"type\": \"outgrew\", \"minimum\": 10}");
 		rich.engine.getContext().setWornValue(500_000);

@@ -55,6 +55,8 @@ public class MemorySurvivesRestartTest
 		context.restoreDeathSpot(new WorldPoint(3200, 3200, 1));
 		context.noteLevel("Fishing", 70, 1_700_000_000_000L);
 		context.noteDoing("fighting Vorkath");
+		context.acceptNickname("the swot");
+		context.refuseNickname("the gravedigger");
 		return context;
 	}
 
@@ -81,6 +83,9 @@ public class MemorySurvivesRestartTest
 			after.getLevelStamps().get("fishing"));
 		assertEquals("what you were doing last time", "fighting Vorkath",
 			after.getLastTime());
+		assertEquals("the name you agreed to", "the swot", after.getNickname());
+		assertTrue("and the one you turned down",
+			after.getRefusedNicknames().contains("the gravedigger"));
 
 		// The one that would be silent if it broke.
 		assertTrue("a spent introduction has to survive a restart",

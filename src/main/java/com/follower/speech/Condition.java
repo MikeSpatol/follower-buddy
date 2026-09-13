@@ -344,9 +344,12 @@ public class Condition
 			// vocabulary, so there is nothing to misread: yes and no from the
 			// question trees, and the handful of named acts the everyday
 			// script can perform - "gift" being the first.
+			// "of" names the tree the answer belongs to, so a yes to the
+			// nickname is not a yes to the outing.
 			case "answered":
 				return event.getType() == TriggerEvent.Type.ANSWERED
-					&& (is == null || is.equalsIgnoreCase(event.getName()));
+					&& (is == null || is.equalsIgnoreCase(event.getName()))
+					&& (of == null || of.equalsIgnoreCase(event.getMessage()));
 
 			case "varbitequals":
 				return varbit != null && ctx.getClient().getVarbitValue(varbit) == orDefault(value, 1);
@@ -465,6 +468,11 @@ public class Condition
 			// aside at the last tick.
 			case "steppedaside":
 				return event.getType() == TriggerEvent.Type.STEPPED_ASIDE;
+
+			// An earned name the player has not been asked about yet. {candidate}
+			// says it; the asking rule is what turns it into a nickname.
+			case "nicknameearned":
+				return ctx.hasNicknameToOffer();
 
 			// The player is addressing the follower: within a tile and turned
 			// toward it. What makes an emote a reply rather than an echo.

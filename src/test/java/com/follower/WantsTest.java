@@ -90,7 +90,7 @@ public class WantsTest
 		for (int i = 0; i < 20 && !h.engine.getContext().isWanting(); i++)
 		{
 			h.engine.getContext().noteQuestion("want-outing");
-			h.answers("yes");
+			h.answers("yes", "want-outing");
 			h.gameTicks(5);
 		}
 		assertTrue("saying yes should get the follower to name somewhere",

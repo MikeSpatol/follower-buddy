@@ -1794,13 +1794,18 @@ public final class TriggerContext
 
 	/**
 	 * What the follower has taken to calling you, earned from whatever you do
-	 * most.
+	 * most - and then PROPOSED, not simply used. The earned name is the
+	 * candidate; the follower asks, through Talk-to, whether it may, and only
+	 * an accepted name is the one the lines say. A refused name is remembered
+	 * and never offered again; a new candidate, when the play moves on, is
+	 * offered afresh.
 	 *
 	 * <p>It counts everything already; this is the one place it draws a
 	 * conclusion from the counting. The name moves as your play moves, which
 	 * makes it a mirror rather than a label - and being called the gravedigger
 	 * for a fortnight is a fact about you that no line written in advance could
-	 * have known.
+	 * have known. Animal Crossing's villagers ask before they call you
+	 * something, and the asking is most of why the name lands.
 	 */
 	private final java.util.Map<String, String> nicknamesFor = new java.util.LinkedHashMap<>();
 
@@ -1817,7 +1822,8 @@ public final class TriggerContext
 	/** How much of a lead a tally needs before it earns you the name. */
 	private static final int NICKNAME_AT = 25;
 
-	public String getNickname()
+	/** The name the tallies would give you today, accepted or not. */
+	public String getEarnedNickname()
 	{
 		String best = "";
 		int most = NICKNAME_AT;
@@ -1833,9 +1839,68 @@ public final class TriggerContext
 		return best;
 	}
 
+	private String acceptedNickname = "";
+	private final java.util.Set<String> refusedNicknames = new java.util.HashSet<>();
+
+	/** The name the player agreed to, or empty. What {nickname} says. */
+	public String getNickname()
+	{
+		return acceptedNickname;
+	}
+
 	public boolean hasNickname()
 	{
-		return !getNickname().isEmpty();
+		return !acceptedNickname.isEmpty();
+	}
+
+	/** Whether there is an earned name the player has not been asked about. */
+	public boolean hasNicknameToOffer()
+	{
+		String earned = getEarnedNickname();
+		return !earned.isEmpty() && !earned.equals(acceptedNickname)
+			&& !refusedNicknames.contains(earned);
+	}
+
+	public void acceptNickname(String name)
+	{
+		if (name == null || name.isEmpty())
+		{
+			return;
+		}
+		acceptedNickname = name;
+		refusedNicknames.remove(name);
+		countersDirty = true;
+	}
+
+	public void refuseNickname(String name)
+	{
+		if (name == null || name.isEmpty())
+		{
+			return;
+		}
+		refusedNicknames.add(name);
+		if (name.equals(acceptedNickname))
+		{
+			acceptedNickname = "";
+		}
+		countersDirty = true;
+	}
+
+	public java.util.Set<String> getRefusedNicknames()
+	{
+		return refusedNicknames;
+	}
+
+	public void restoreNickname(String accepted, java.util.Collection<String> refused)
+	{
+		if (accepted != null)
+		{
+			acceptedNickname = accepted;
+		}
+		if (refused != null)
+		{
+			refusedNicknames.addAll(refused);
+		}
 	}
 
 	// ---------------------------------------------------------- the levels

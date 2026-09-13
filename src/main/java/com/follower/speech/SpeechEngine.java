@@ -1112,6 +1112,7 @@ public class SpeechEngine
 		values.putIfAbsent("wish", ctx.getWishLabel());
 		values.putIfAbsent("here", ctx.getPlaceMemory());
 		values.putIfAbsent("nickname", ctx.getNickname());
+		values.putIfAbsent("candidate", ctx.getEarnedNickname());
 		values.putIfAbsent("lastTime", ctx.getLastTime());
 		values.putIfAbsent("left", Integer.toString(ctx.getChallengeLeft()));
 		values.putIfAbsent("days", Integer.toString(ctx.getDaysKnown()));

@@ -10082,7 +10082,8 @@
           },
           {
             "type": "answered",
-            "is": "yes"
+            "is": "yes",
+            "of": "want-outing"
           },
           {
             "type": "none",
@@ -10132,7 +10133,8 @@
           },
           {
             "type": "answered",
-            "is": "yes"
+            "is": "yes",
+            "of": "want-outing"
           },
           {
             "type": "none",
@@ -10182,7 +10184,8 @@
           },
           {
             "type": "answered",
-            "is": "yes"
+            "is": "yes",
+            "of": "want-outing"
           },
           {
             "type": "none",
@@ -12772,7 +12775,7 @@
     },
     {
       "id": "nickname-earned",
-      "note": "Drawn from whichever tally is highest, so it moves as your play moves. The names live at the top of this file, not in the code.",
+      "note": "Drawn from whichever tally is highest, so it moves as your play moves, and said only once the player has AGREED to it through the ask-nickname question. The names live at the top of this file, not in the code.",
       "group": "memory",
       "priority": 26,
       "cooldownMs": 1800000,
@@ -12800,6 +12803,163 @@
         "It's official. The index says {nickname}.",
         "History gets a say, and it says {nickname}.",
         "{nickname}. Cross-referenced and everything."
+      ]
+    },
+    {
+      "id": "ask-nickname",
+      "note": "The earned name, proposed rather than used. The overhead line says the candidate; the tree in dialogs.json asks whether the player minds, and only a yes makes it the nickname the other lines say. A no is remembered and that name is never offered again. Every asks rule needs the none/asking guard.",
+      "group": "memory",
+      "priority": 27,
+      "cooldownMs": 1800000,
+      "output": "overhead",
+      "asks": "nickname-offer",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "nicknameEarned"
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "repeating"
+              }
+            ]
+          },
+          {
+            "type": "idle",
+            "ticks": 40
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 400
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "wanting"
+              },
+              {
+                "type": "asking"
+              }
+            ]
+          },
+          {
+            "type": "chance",
+            "percent": 10
+          }
+        ]
+      },
+      "say": [
+        "I've been calling you {candidate} in the notes. Tell me if that's all right.",
+        "{candidate}, I've been calling you in the index. Talk to me if you object.",
+        "A name for your file: {candidate}. Talk to me if that's all right."
+      ]
+    },
+    {
+      "id": "nickname-accepted",
+      "note": "A yes to the nickname question. The name is settled before this fires, so {nickname} is the one just agreed.",
+      "group": "memory",
+      "priority": 80,
+      "cooldownMs": 10000,
+      "delayTicks": 2,
+      "delayTicksMax": 4,
+      "output": "overhead",
+      "mood": 6,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "answered",
+            "is": "yes",
+            "of": "nickname-offer"
+          },
+          {
+            "type": "nicknamed"
+          }
+        ]
+      },
+      "say": [
+        "{nickname} it is. Underlined.",
+        "Good. {nickname} goes on the spine.",
+        "Then that's settled. {nickname}."
+      ]
+    },
+    {
+      "id": "nickname-refused",
+      "note": "A no to the nickname question. Struck through and never offered again; a different name earned later is asked about afresh.",
+      "group": "memory",
+      "priority": 80,
+      "cooldownMs": 10000,
+      "delayTicks": 2,
+      "delayTicksMax": 4,
+      "output": "overhead",
+      "mood": -2,
+      "when": {
+        "type": "answered",
+        "is": "no",
+        "of": "nickname-offer"
+      },
+      "say": [
+        "Fair enough. Struck through.",
+        "Then it stays off the record. I'll think of another.",
+        "Noted. The file goes back to your proper name."
+      ]
+    },
+    {
+      "id": "nickname-later",
+      "note": "Ask me later. The candidate stays a candidate and the question comes round again after its cooldown.",
+      "group": "memory",
+      "priority": 80,
+      "cooldownMs": 10000,
+      "delayTicks": 2,
+      "delayTicksMax": 4,
+      "output": "overhead",
+      "when": {
+        "type": "answered",
+        "is": "later",
+        "of": "nickname-offer"
+      },
+      "say": [
+        "In pencil, then.",
+        "I'll ask again. I'm patient; it's most of the job.",
+        "Later it is. The index can wait."
+      ]
+    },
+    {
+      "id": "login-nickname",
+      "note": "The greeting with the agreed name in it, some of the time. Outranks the plain greeting by one; the chance roll keeps that one in play.",
+      "group": "misc",
+      "priority": 91,
+      "output": "overhead",
+      "delayTicks": 8,
+      "cooldownMs": 60000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "login"
+          },
+          {
+            "type": "nicknamed"
+          },
+          {
+            "type": "daysKnown",
+            "minimum": 3
+          },
+          {
+            "type": "chance",
+            "percent": 45
+          }
+        ]
+      },
+      "say": [
+        "There you are, {nickname}. Ready when you are.",
+        "{nickname}. Back again. Good.",
+        "Morning, {nickname}. Or whatever it is where you are.",
+        "The file says {nickname}. The file is pleased."
       ]
     },
     {

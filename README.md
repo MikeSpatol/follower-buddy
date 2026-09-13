@@ -43,7 +43,8 @@ others (and won't be argued out of two of them), remembers one incident and
 brings it up, asks you for small things (a feather, some papyrus) that you
 can hand over through Talk-to, makes predictions about drops and has to live
 with being wrong, and greets you more formally in the first days than after a
-month together.
+month together. When your play has earned you a name in its notes, it asks
+before it uses it.
 
 **It has a life.** Between events it copies your emotes, has a go at whatever
 you're skilling, wanders when you stand still and sits down when you stand

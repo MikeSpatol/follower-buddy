@@ -354,7 +354,7 @@ mood stretches or shortens on top.
 | `inRegion` / `regionEnter` | `regions`, `anyLoadedRegion` |
 | `inArea` | `x1`, `y1`, `x2`, `y2`, `plane` |
 | `chatMessage` | `contains` or `regex`; `from` (`player`/`others`) and `is` (a `ChatMessageType` name, exactly as `::follower chatwatch` prints it); optional `every` - the nth matching message, counted for life |
-| `answered` | `is` - the token on the branch the player picked, in a rule marked `asks`. Any plain word: `yes`/`no` for a question, `left`/`right` for a game |
+| `answered` | `is` - the token on the branch the player picked, in a rule marked `asks`. Any plain word: `yes`/`no` for a question, `left`/`right` for a game. Optional `of` names the tree, so a yes to the nickname is not a yes to the outing |
 | `asking` | - a question is already waiting for an answer; optional `is` names the tree. **Every `asks` rule needs this inside a `none`**, or opening a second question silently withdraws the first |
 | `varbitEquals` / `varbitChanged` | `varbit`, `value` |
 | `animationSelf` | `ids`; optional `every` - the nth time one of them plays, counted for life |
@@ -397,7 +397,8 @@ mood stretches or shortens on top.
 | `daysKnown` | `minimum`/`maximum` days since the first meeting. `{days}` |
 | `anniversary` | - today is the same day of the year as the first meeting |
 | `outgrew` | `minimum` - times better dressed than the day you met |
-| `nicknamed` | - a name has been earned; `{nickname}` says it. Optional `is` |
+| `nicknamed` | - a name has been AGREED to through the nickname question; `{nickname}` says it. Optional `is` |
+| `nicknameEarned` | - the tallies have produced a name the player has not been asked about yet; `{candidate}` says it. The `ask-nickname` rule turns it into a question |
 | `challenging` / `challengeMet` / `challengeFailed` | - a wager on the player. `{challenge}`, `{left}` |
 | `unattended` | `ticks` since the camera last moved. **Not** `idle`: a player at a furnace is idle and present |
 | `underfoot` | - you clicked the tile the follower was standing on |
@@ -451,7 +452,8 @@ just lost - guard with `carrying` or `souvenirLost`), `{here}` (guard with
 `{nines}` and `{ninesOrdinal}` (how many skills are at 99 now, and "third"), and
 `{sinceLast}` / `{sinceAny}` (guard with `levelGap`: they are empty until the
 follower has a stamp to measure from). On `killCount`: `{boss}`, `{count}`,
-`{ordinal}` and `{lastCount}`. `{lastTime}` (guard with `lastTime`).
+`{ordinal}` and `{lastCount}`. `{lastTime}` (guard with `lastTime`). `{candidate}`
+(guard with `nicknameEarned`, or an `answered` of the nickname tree).
 
 ### Other rule fields
 
@@ -669,6 +671,23 @@ Each place a want can ask for has its own arrival line saying **why** it likes
 it, above the generic one. Thanking you for going somewhere is politeness;
 saying why *that* place is a preference, and a preference is the part that reads
 as a mind.
+
+### The name it asks to call you
+
+The tallies produce a name (`nicknames` at the top of phrases.json: the
+gravedigger for deaths, the local menace for kills, the swot for levels) and
+the first version simply used it. Now it is proposed. `nicknameEarned` is
+true while there is a candidate the player has not been asked about; the
+`ask-nickname` rule says it in its overhead line (`{candidate}`) and opens the
+`nickname-offer` tree, which cannot say the name itself - a tree is fixed
+text - so it asks whether the player minds. Yes makes it the nickname the
+other lines say (`nicknamed`, `{nickname}`); no strikes that name through for
+good; later leaves it in pencil for the next cooldown. Both the agreed name
+and the refused ones are kept between sessions, and a different name earned
+later is offered afresh while the agreed one stands. Animal Crossing's
+villagers ask before they call you something, and the asking is most of why
+the name lands; Mikkelson's observation that "a name really was all it took"
+cuts both ways.
 
 ### Taking the floor
 

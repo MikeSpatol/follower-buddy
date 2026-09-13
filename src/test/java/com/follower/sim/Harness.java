@@ -141,8 +141,14 @@ public final class Harness
 	 */
 	public Harness answers(String yesOrNo)
 	{
+		return answers(yesOrNo, "");
+	}
+
+	/** The same, naming the tree the answer belongs to. */
+	public Harness answers(String answer, String tree)
+	{
 		engine.getContext().noteAnswered();
-		engine.dispatch(TriggerEvent.answered(yesOrNo));
+		engine.dispatch(TriggerEvent.answered(answer, tree));
 		return this;
 	}
 

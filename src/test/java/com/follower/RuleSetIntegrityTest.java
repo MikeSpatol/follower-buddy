@@ -69,7 +69,7 @@ public class RuleSetIntegrityTest
 		"challenging", "challengemet", "challengefailed",
 		"unattended", "underfoot",
 		"milestone", "levelgap", "killcount", "grateful", "lasttime", "farewell",
-		"noticed", "hesitated", "steppedaside", "addressed",
+		"noticed", "hesitated", "steppedaside", "addressed", "nicknameearned",
 		"dateis", "worldhop", "gameupdated", "notesedited",
 		"musicunlock", "collectionadd", "questcomplete", "geoffer",
 		"channeljoined", "channelleft", "npcshout", "musictrack",
@@ -653,6 +653,8 @@ public class RuleSetIntegrityTest
 		byType.put("souvenirlost", new HashSet<>(Arrays.asList("souvenir")));
 		byType.put("happenedhere", new HashSet<>(Arrays.asList("here")));
 		byType.put("nicknamed", new HashSet<>(Arrays.asList("nickname")));
+		byType.put("nicknameearned", new HashSet<>(Arrays.asList("candidate")));
+		byType.put("answered", new HashSet<>(Arrays.asList("answer", "candidate")));
 		byType.put("heeded", new HashSet<>(Arrays.asList("advice")));
 		byType.put("ignored", new HashSet<>(Arrays.asList("advice")));
 		byType.put("challengemet", new HashSet<>(Arrays.asList("challenge")));

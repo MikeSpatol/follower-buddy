@@ -45,7 +45,7 @@ public class GrindGuardTest
 		// A hundred and twenty ticks of the same swing: a real grind.
 		h.game.animating(879);
 		h.gameTicks(120);
-		h.answers("yes");
+		h.answers("yes", "want-outing");
 		h.gameTicks(2);
 		assertTrue("nothing demanding opens mid-grind", h.spoken.isEmpty());
 
@@ -53,7 +53,7 @@ public class GrindGuardTest
 		// opener lands in the calm after the work rather than never.
 		h.game.animating(-1);
 		h.gameTicks(6);
-		h.answers("yes");
+		h.answers("yes", "want-outing");
 		h.gameTicks(2);
 		assertEquals("the calm after the grind is fair game",
 			1, h.firedBy("probe").size());
@@ -69,7 +69,7 @@ public class GrindGuardTest
 
 		h.game.animating(879);
 		h.gameTicks(40);
-		h.answers("yes");
+		h.answers("yes", "want-outing");
 		h.gameTicks(2);
 		assertEquals("forty ticks of work is not a grind",
 			1, h.firedBy("probe").size());

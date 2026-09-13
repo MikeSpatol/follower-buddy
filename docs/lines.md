@@ -1,17 +1,17 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 496 rules, 2332 spoken lines, 2 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 501 rules, 2348 spoken lines, 3 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
 ## Contents
 
-- [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (42 rules, 190 lines)
+- [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (43 rules, 194 lines)
 - [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (36 rules, 222 lines)
 - [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (43 rules, 304 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 114 lines)
 - [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 72 lines)
-- [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (21 rules, 109 lines)
+- [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (25 rules, 121 lines)
 - [area](#area) - Places: named lines, tastes, earned verdicts, the defences (67 rules, 222 lines)
 - [errand](#errand) - Its little trips: bank, altar, fire, cat, studies, explores (44 rules, 155 lines)
 - [souvenir](#souvenir) - Wishes, gifts, the pocket, and what it carries (17 rules, 84 lines)
@@ -22,7 +22,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - [quest](#quest) - Famous quest figures nearby (44 rules, 131 lines)
 - [thrall](#thrall) - When it stands in for a thrall (3 rules, 18 lines)
 - [mimic](#mimic) - Copying your emotes (30 rules, 16 lines)
-- [dialogs](#dialogs) - the conversations it starts (2 trees)
+- [dialogs](#dialogs) - the conversations it starts (3 trees)
 - [talk-to](#talk-to) - the everyday Talk-to script (in code)
 
 ## misc
@@ -486,6 +486,18 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - This is officially the longest day we've had. {value} minutes.
 - {value} minutes and counting. A personal best, this.
 - New record: {value} minutes out. The old one was {previous}.
+
+### `login-nickname`
+
+> The greeting with the agreed name in it, some of the time. Outranks the plain greeting by one; the chance roll keeps that one in play.
+
+- **when:** on login AND nickname earned AND known 3+ days AND a 45% roll
+- **pacing:** priority 91, cooldown 1m, delay 8 ticks, overhead
+
+- There you are, {nickname}. Ready when you are.
+- {nickname}. Back again. Good.
+- Morning, {nickname}. Or whatever it is where you are.
+- The file says {nickname}. The file is pleased.
 
 ### `world-hop`
 
@@ -2405,7 +2417,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `nickname-earned`
 
-> Drawn from whichever tally is highest, so it moves as your play moves. The names live at the top of this file, not in the code.
+> Drawn from whichever tally is highest, so it moves as your play moves, and said only once the player has AGREED to it through the ask-nickname question. The names live at the top of this file, not in the code.
 
 - **when:** nickname earned AND standing still 80+ ticks AND a 5% roll
 - **pacing:** priority 26, cooldown 30m, overhead
@@ -2416,6 +2428,53 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - It's official. The index says {nickname}.
 - History gets a say, and it says {nickname}.
 - {nickname}. Cross-referenced and everything.
+
+### `ask-nickname`
+
+> The earned name, proposed rather than used. The overhead line says the candidate; the tree in dialogs.json asks whether the player minds, and only a yes makes it the nickname the other lines say. A no is remembered and that name is never offered again. Every asks rule needs the none/asking guard.
+
+- **when:** nicknameearned AND NOT (repeating one action 100+ ticks) AND standing still 40+ ticks AND standing still under 400 ticks AND NOT (wanting somewhere OR a question open) AND a 10% roll
+- **does:** opens question `nickname-offer`
+- **pacing:** priority 27, cooldown 30m, overhead
+
+- I've been calling you {candidate} in the notes. Tell me if that's all right.
+- {candidate}, I've been calling you in the index. Talk to me if you object.
+- A name for your file: {candidate}. Talk to me if that's all right.
+
+### `nickname-accepted`
+
+> A yes to the nickname question. The name is settled before this fires, so {nickname} is the one just agreed.
+
+- **when:** the player answering 'yes' AND nickname earned
+- **does:** mood +6
+- **pacing:** priority 80, cooldown 10s, delay 2-4 ticks, overhead
+
+- {nickname} it is. Underlined.
+- Good. {nickname} goes on the spine.
+- Then that's settled. {nickname}.
+
+### `nickname-refused`
+
+> A no to the nickname question. Struck through and never offered again; a different name earned later is asked about afresh.
+
+- **when:** the player answering 'no'
+- **does:** mood -2
+- **pacing:** priority 80, cooldown 10s, delay 2-4 ticks, overhead
+
+- Fair enough. Struck through.
+- Then it stays off the record. I'll think of another.
+- Noted. The file goes back to your proper name.
+
+### `nickname-later`
+
+> Ask me later. The candidate stays a candidate and the question comes round again after its cooldown.
+
+- **when:** the player answering 'later'
+- **pacing:** priority 80, cooldown 10s, delay 2-4 ticks, overhead
+
+- In pencil, then.
+- I'll ask again. I'm patient; it's most of the job.
+- Later it is. The index can wait.
 
 ### `grateful-idle`
 
@@ -6610,6 +6669,31 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
   - You: Not now.
 - **no-a (answers 'nogame')**
   - Follower: Fair enough. They'll both still be here later.
+
+### `nickname-offer`
+
+> Opened by the ask-nickname rule, whose overhead line said the name. A tree is fixed text, so the name itself lives in that line and in the answer lines outside; in here the follower asks whether the player minds. yes makes it the nickname, no strikes it through for good, later leaves it in pencil.
+
+- **start**
+  - Follower: Ah. Good. About the name.
+- **ask**
+  - Follower: I've been using one for you in the notes. You'll have heard it just now. Do you mind?
+- **yes-q**
+  - You: No, I like it.
+- **yes-a (answers 'yes')**
+  - Follower: Then it stays. I'll write it properly this time.
+- **what-q**
+  - You: Which name?
+- **what-a**
+  - Follower: The one I called you a moment ago. It's in the notes. I'd rather you heard it than read it.
+- **no-q**
+  - You: Yes, I mind.
+- **no-a (answers 'no')**
+  - Follower: Fair enough. Struck through, and I won't offer it again.
+- **later-q**
+  - You: Ask me later.
+- **later-a (answers 'later')**
+  - Follower: I'll keep it in pencil, then.
 
 ## talk-to
 

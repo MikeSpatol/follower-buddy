@@ -99,7 +99,7 @@ public class IgnoredOverturesTest
 
 		// The player answers something - the next question, say, opened
 		// through Talk-to. Engagement is what the back-off was waiting for.
-		h.answers("yes");
+		h.answers("yes", "want-outing");
 
 		ask(h);
 		assertEquals("answering forgives the ignored one and lifts the pause",
