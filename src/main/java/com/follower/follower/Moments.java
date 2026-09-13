@@ -31,6 +31,10 @@ import net.runelite.api.gameval.VarPlayerID;
  * in for the long haul, since walking off would leave the rest pose to sit it
  * back down wherever it arrived. Silent throughout; the level-up and pet-drop
  * lines are the rules' and stay theirs.
+ *
+ * <p>Every gesture goes through the {@link Gestures} ledger, so no body
+ * beat repeats within its own cooldown whatever the rules are doing, and
+ * the ones that are meant to be rare (the walk over, the notes) stay rare.
  */
 @Slf4j
 public class Moments
@@ -63,6 +67,53 @@ public class Moments
 	static final int BEND = 827;
 	private static final int BEND_TICKS = 3;
 
+	/** EMOTE_YES: the look up from the notes. EMOTE_WAVE: the farewell. */
+	static final int NOD = KeepingCompany.NOD;
+	static final int WAVE = 863;
+
+	/**
+	 * The rarity ladder for a drop, in gp. The research point is that a
+	 * response only counts as one when it is proportionate to the news: a
+	 * routine drop gets a glance, a good one gets the scroll out, a great
+	 * one is walked over to and written up on the spot. The same numbers as
+	 * the loot rules use, so the words and the body agree about what is big.
+	 */
+	static final int BIG_DROP = 1_000_000;
+	static final int NICE_DROP = 100_000;
+	static final int SMALL_DROP = 10_000;
+
+	/** Ticks the notes stay out for a write-up, in place and on the spot. */
+	static final int NOTES_TICKS = 5;
+	static final int NOTES_ON_THE_SPOT_TICKS = 7;
+	private static final int GLANCE_MS = 2400;
+	private static final int LOOK_UP_MS = 1800;
+	private static final int LOOT_REACH_TILES = 12;
+
+	/** How much of an occasion something is. */
+	public enum Tier
+	{
+		/** A glance at it. */
+		SMALL,
+		/** The notes out, from where it stands. */
+		MEDIUM,
+		/** Walked over to and written up on the spot, then a look up and a nod. */
+		BIG
+	}
+
+	/** The tier a drop of this value earns, or null for nothing at all. */
+	public static Tier tierFor(long value)
+	{
+		if (value >= BIG_DROP)
+		{
+			return Tier.BIG;
+		}
+		if (value >= NICE_DROP)
+		{
+			return Tier.MEDIUM;
+		}
+		return value >= SMALL_DROP ? Tier.SMALL : null;
+	}
+
 	/** Ten minutes of keeping close after the pet. */
 	static final int PET_CLOSE_TICKS = 1000;
 	private static final int PET_REACH_TILES = 15;
@@ -81,7 +132,9 @@ public class Moments
 	/** Which moment has the feet, if any. */
 	private enum Doing
 	{
-		NOTHING, LEVEL, PET, WIND, STRANGER
+		NOTHING, LEVEL, PET, WIND, STRANGER,
+		/** Gone to look at something: a drop, a nest, a signpost. */
+		LOOK
 	}
 
 	private final Client client;
@@ -93,6 +146,15 @@ public class Moments
 	private final BooleanSupplier feetTaken;
 	private final BooleanSupplier inCombat;
 	private final IntSupplier daysKnown;
+	/** The scroll and the pose, for a write-up; null in a harness without hands. */
+	private final PropFlourish flourish;
+	private final Gestures gestures;
+
+	/** The look under way: where, and what happens on arrival. */
+	private WorldPoint lookingAt;
+	private boolean lookWrites;
+	private int lookHoldTicks;
+	private int lookUpAt;
 
 	private Doing doing = Doing.NOTHING;
 	private int arriveAt;
@@ -119,6 +181,18 @@ public class Moments
 		SkillingController skilling, BooleanSupplier feetTaken, BooleanSupplier inCombat,
 		IntSupplier daysKnown)
 	{
+		this(client, follower, config, skilling, feetTaken, inCombat, daysKnown, null, () -> false);
+	}
+
+	/**
+	 * @param flourish the scroll-and-pose flourish for a write-up, or null
+	 * @param grateful whether the follower owes the player one just now,
+	 * which halves every gesture's cooldown
+	 */
+	public Moments(Client client, FollowerEntity follower, FollowerConfig config,
+		SkillingController skilling, BooleanSupplier feetTaken, BooleanSupplier inCombat,
+		IntSupplier daysKnown, PropFlourish flourish, BooleanSupplier grateful)
+	{
 		this.client = client;
 		this.follower = follower;
 		this.config = config;
@@ -126,6 +200,13 @@ public class Moments
 		this.feetTaken = feetTaken;
 		this.inCombat = inCombat;
 		this.daysKnown = daysKnown;
+		this.flourish = flourish;
+		this.gestures = new Gestures(client::getTickCount, grateful);
+	}
+
+	public Gestures getGestures()
+	{
+		return gestures;
 	}
 
 	/**
@@ -297,6 +378,151 @@ public class Moments
 		skilling.setExcused(false);
 	}
 
+	// ------------------------------------------------------------ the news
+
+	/**
+	 * Something worth a reaction: a drop, a first-ever item. The tier says
+	 * how much of one. Big news with a tile is walked over to and written
+	 * up on the spot, then a look up at the player and a nod - the scribe's
+	 * clap; in character, a great thing is written down, not cheered.
+	 * Medium news gets the notes out where it stands, facing the thing;
+	 * small news a glance. Each through the ledger, so the notes cannot come
+	 * out for every drop in a good hour: once they are spent the tier below
+	 * stands in.
+	 *
+	 * @param at where the thing is, or null for something in the bag, which
+	 * is reacted to facing the player
+	 */
+	public void noteworthy(Tier tier, WorldPoint at)
+	{
+		if (!config.keepsCompany() || tier == null)
+		{
+			return;
+		}
+		Player local = client.getLocalPlayer();
+		WorldPoint here = local == null ? null : local.getWorldLocation();
+		if (here == null || !follower.isSpawned())
+		{
+			return;
+		}
+		WorldPoint from = follower.getWorldLocation();
+		boolean reachable = at != null && from != null && at.getPlane() == from.getPlane()
+			&& at.distanceTo(from) <= LOOT_REACH_TILES;
+		WorldPoint facing = at == null ? here : at;
+
+		if (tier == Tier.BIG && reachable && free()
+			&& gestures.may(Gestures.Gesture.WALK_OVER) && gestures.may(Gestures.Gesture.NOTES)
+			&& goAndLook(at, 1, true, NOTES_ON_THE_SPOT_TICKS))
+		{
+			gestures.spent(Gestures.Gesture.WALK_OVER);
+			gestures.spent(Gestures.Gesture.NOTES);
+			log.debug("Big news at {}: going over to write it up", at);
+			return;
+		}
+		if (tier != Tier.SMALL && writeUpInPlace(facing))
+		{
+			return;
+		}
+		if (gestures.take(Gestures.Gesture.GLANCE))
+		{
+			follower.glanceAt(facing, GLANCE_MS);
+		}
+	}
+
+	/**
+	 * The notes out where it stands, facing the thing, a beat of writing,
+	 * then the look up at the player with a nod. With the hands full (a
+	 * borrowed tool) or the follower sat down for the long haul the scroll
+	 * cannot come out, and it is the look and the nod on their own.
+	 */
+	private boolean writeUpInPlace(WorldPoint facing)
+	{
+		if (!gestures.may(Gestures.Gesture.NOTES))
+		{
+			return false;
+		}
+		gestures.spent(Gestures.Gesture.NOTES);
+		int now = client.getTickCount();
+		boolean canWrite = flourish != null && doing == Doing.NOTHING && !skilling.isSitting()
+			&& !feetTaken.getAsBoolean() && !inCombat.getAsBoolean()
+			&& follower.isSettled();
+		if (canWrite && flourish.start(ErrandController.SCROLL_PROP,
+			ErrandController.READ_SCROLL_POSE, NOTES_TICKS))
+		{
+			follower.glanceAt(facing, NOTES_TICKS * 600);
+			lookUpAt = now + NOTES_TICKS - 1;
+			log.debug("News: the notes out, facing {}", facing);
+			return true;
+		}
+		Player local = client.getLocalPlayer();
+		WorldPoint here = local == null ? null : local.getWorldLocation();
+		skilling.gesture(new int[]{NOD}, here);
+		return true;
+	}
+
+	/**
+	 * The player opened the logout tab. The last thing on screen before a
+	 * session ends is the thing that gets remembered, so it is a turn to
+	 * face them and a wave - from the seat, the seat's way. Not twice in
+	 * five minutes, for the player who keeps the tab open.
+	 */
+	public void farewell()
+	{
+		Player local = client.getLocalPlayer();
+		WorldPoint here = local == null ? null : local.getWorldLocation();
+		if (here == null || !follower.isSpawned() || feetTaken.getAsBoolean()
+			|| inCombat.getAsBoolean() || !gestures.take(Gestures.Gesture.WAVE))
+		{
+			return;
+		}
+		skilling.gesture(new int[]{WAVE}, here);
+		log.debug("The logout tab: a wave");
+	}
+
+	/**
+	 * Goes to look at something: a tile so many steps from it, the nearest
+	 * the follower can reach, faced at it, held for a while, and the feet
+	 * handed back. With {@code writes} the notes come out on arrival and
+	 * the hold ends with a look up at the player and a nod.
+	 *
+	 * @return whether it set off; false leaves nothing changed
+	 */
+	public boolean goAndLook(WorldPoint at, int steps, boolean writes, int holdTicks)
+	{
+		WorldPoint from = follower.getWorldLocation();
+		if (at == null || from == null || !free() || at.getPlane() != from.getPlane())
+		{
+			return false;
+		}
+		int now = client.getTickCount();
+		List<WorldPoint> spots = SkillingController.ring(at, at, Math.max(1, steps), at.getPlane());
+		spots.sort((a, b) -> Integer.compare(a.distanceTo(from), b.distanceTo(from)));
+		skilling.setExcused(true);
+		for (WorldPoint spot : spots)
+		{
+			if (follower.stayAt(spot))
+			{
+				doing = Doing.LOOK;
+				lookingAt = at;
+				lookWrites = writes;
+				lookHoldTicks = Math.max(1, holdTicks);
+				follower.setStayFaceTile(at);
+				arriveAt = now + from.distanceTo(spot) + 2;
+				leaveAt = 0;
+				lookUpAt = 0;
+				return true;
+			}
+		}
+		skilling.setExcused(false);
+		return false;
+	}
+
+	/** Whether the follower is off looking at something, or writing it up. */
+	public boolean isLooking()
+	{
+		return doing == Doing.LOOK;
+	}
+
 	// ------------------------------------------------------------------ tick
 
 	/** Call once per game tick, on the client thread, after the seat's own tick. */
@@ -314,6 +540,14 @@ public class Moments
 		}
 		watchTheWind(now, here, local);
 		watchForStrangers(now, local);
+		// The look up from an in-place write-up: the notes are still out,
+		// and the nod goes to the player.
+		if (lookUpAt > 0 && now >= lookUpAt && doing == Doing.NOTHING)
+		{
+			lookUpAt = 0;
+			follower.glanceAt(here, LOOK_UP_MS);
+			follower.playAnimation(NOD);
+		}
 		switch (doing)
 		{
 			case LEVEL:
@@ -351,6 +585,35 @@ public class Moments
 					arriveAt = 0;
 					follower.playAnimation(BEND);
 					leaveAt = now + BEND_TICKS;
+				}
+				else if (leaveAt > 0 && now >= leaveAt)
+				{
+					letGo(true);
+				}
+				break;
+			case LOOK:
+				if (interrupted() || !follower.isStaying())
+				{
+					letGo(false);
+				}
+				else if (arriveAt > 0 && now >= arriveAt)
+				{
+					arriveAt = 0;
+					if (lookWrites && flourish != null && flourish.start(
+						ErrandController.SCROLL_PROP, ErrandController.READ_SCROLL_POSE,
+						lookHoldTicks))
+					{
+						// The flourish planted it where it stands, which is the
+						// spot; the look up comes a beat before the notes go away.
+						lookUpAt = now + lookHoldTicks - 1;
+					}
+					leaveAt = now + lookHoldTicks;
+				}
+				else if (lookUpAt > 0 && now >= lookUpAt)
+				{
+					lookUpAt = 0;
+					follower.glanceAt(here, LOOK_UP_MS);
+					follower.playAnimation(NOD);
 				}
 				else if (leaveAt > 0 && now >= leaveAt)
 				{
@@ -479,6 +742,8 @@ public class Moments
 		wasRunning = false;
 		windArmed = false;
 		closeUntil = 0;
+		lookUpAt = 0;
+		gestures.reset();
 	}
 
 	/**
@@ -512,8 +777,17 @@ public class Moments
 		beat = null;
 		pet = null;
 		stranger = null;
+		lookingAt = null;
 		arriveAt = 0;
 		leaveAt = 0;
+		if (was == Doing.LOOK)
+		{
+			lookUpAt = 0;
+			if (flourish != null && flourish.isActive())
+			{
+				flourish.abort();
+			}
+		}
 		if (was == Doing.STRANGER)
 		{
 			follower.setPoseOverride(0);

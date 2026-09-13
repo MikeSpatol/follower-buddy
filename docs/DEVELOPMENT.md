@@ -28,7 +28,7 @@ automated, and the follower cannot be interacted with.
 - **Alive between the events** - copies your emotes, joins you when you eat, and
   has a go at whatever you have been mining or chopping or fishing for the last
   half minute; fidgets when you stand about, sits down to rest after five minutes
-  idle, cheers big drops, waves at cats and passing pets, and remembers this
+  idle, writes big drops up in its scroll, waves at cats and passing pets, and remembers this
   session's death spot and the places you keep coming back to.
 - **Somebody who was there** - keeps ONE incident in mind and brings it up
   unprompted ("careful, I have not forgotten how close that was"), picks up a
@@ -1330,6 +1330,33 @@ excuses a held seat and the seat is retaken after; thrall work, the spectator
 and an errand under way beat a moment. So does the long-haul sit: a level is
 then clapped from the seat (up off the sit and back down), and the walks are
 not taken, since the rest pose would sit it down wherever it arrived.
+
+**The news** (`Moments.noteworthy`). A drop, or a first-ever item, gets a
+reaction sized to it, and the sizes are the loot rules' own numbers so the
+words and the body agree about what is big: ten thousand is a glance at the
+pile, a hundred thousand is the notes out where it stands facing the pile
+and then a look up at the player with a nod, a million is walked over to and
+written up on the spot before the look and the nod. In character a great
+thing is written down rather than cheered, so the cheer and the clap the loot
+rules used to carry have gone and the clap is for levels. A collection log
+entry is medium news whatever it sells for, and it is in the bag, so the
+write-up faces the player. With the hands full (a borrowed tool) or the
+follower sat down for the long haul the scroll cannot come out and it is the
+look and the nod on their own.
+
+**The ledger** (`Gestures`). Every body beat the moments make - the glance,
+the notes, the walk over, the peer, the wave - goes through a cooldown of its
+own first, so no gesture repeats inside its stretch whatever the rules are
+doing, and the ones meant to be rare stay rare; when one is spent the tier
+below stands in. The lines have had this from the start; the body did not,
+and a gesture that repeats is worse than a line that does. For the half hour
+after the player did what the follower asked (`TriggerContext.isGrateful`)
+every wait is halved: the favour is paid back in attentiveness.
+
+**The farewell.** The logout tab opening is the last thing on screen before a
+session ends, so it is a turn to face the player and a wave, from the seat
+the seat's way, not twice in five minutes; the `farewell` condition carries
+the rare line.
 
 **Not in scope.** The agility course spectator (it needs a course table) and
 the sailing deckhand (no verified deck stays). Both left out on purpose.

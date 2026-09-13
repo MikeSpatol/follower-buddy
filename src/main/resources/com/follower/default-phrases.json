@@ -7415,7 +7415,7 @@
       "id": "loot-big",
       "occasion": true,
       "markHere": "you got that drop",
-      "note": "A drop worth a million or more. The cheer is 862.",
+      "note": "A drop worth a million or more. The body's reaction is the moments': walked over to and written up on the spot, then a look up and a nod. In character a great thing is written down, not cheered, so the cheer this used to carry has gone.",
       "group": "reactions",
       "priority": 80,
       "cooldownMs": 60000,
@@ -7425,7 +7425,6 @@
         "type": "lootWorth",
         "minimum": 1000000
       },
-      "animation": 862,
       "say": [
         "The {item}! LOOK at it!",
         "A {item}! I need to sit down.",
@@ -7440,7 +7439,7 @@
     },
     {
       "id": "loot-nice",
-      "note": "A solid drop, 100k up. Rarer than it could be, so it stays a treat.",
+      "note": "A drop worth a hundred thousand or more. The body takes the notes out where it stands (see Moments); the clap this used to carry has gone, since the clap is for levels.",
       "group": "reactions",
       "priority": 75,
       "cooldownMs": 180000,
@@ -7459,7 +7458,6 @@
           }
         ]
       },
-      "animation": 865,
       "say": [
         "Ooh. {value}. Not bad at all.",
         "That {item} will sell nicely.",
@@ -8448,6 +8446,33 @@
         "There you are. We left off {lastTime}, if the notes are right.",
         "Hello again. I still have the page open from {lastTime}.",
         "You're back. I was going over the notes on {lastTime}."
+      ]
+    },
+    {
+      "id": "farewell",
+      "note": "The logout tab opened. The body turns and waves on its own (the moments, five minutes between waves); this is the rare word to go with it, and it must be short, because the click is coming.",
+      "group": "misc",
+      "priority": 60,
+      "cooldownMs": 600000,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "farewell"
+          },
+          {
+            "type": "chance",
+            "percent": 35
+          }
+        ]
+      },
+      "say": [
+        "Off, then? I'll finish the page.",
+        "Go on. I'll be here.",
+        "Same time tomorrow, I expect.",
+        "Mind how you go.",
+        "I'll write up the rest myself."
       ]
     },
     {

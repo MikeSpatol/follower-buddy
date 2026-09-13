@@ -70,6 +70,8 @@ public final class TriggerEvent
 		BAG_HALF,
 		/** A boss kill count the game reported in chat. */
 		KILL_COUNT,
+		/** The logout tab opened. */
+		FAREWELL,
 	}
 
 	/**

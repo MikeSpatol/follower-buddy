@@ -445,6 +445,10 @@ public class Condition
 			// What the two of them were doing when the last session ended, for
 			// the greeting. Login only, and only when there is something to
 			// say; {lastTime} says it.
+			// The logout tab opening. The body waves; this is the rare word.
+			case "farewell":
+				return event.getType() == TriggerEvent.Type.FAREWELL;
+
 			case "lasttime":
 				return event.getType() == TriggerEvent.Type.LOGIN && !ctx.getLastTime().isEmpty();
 

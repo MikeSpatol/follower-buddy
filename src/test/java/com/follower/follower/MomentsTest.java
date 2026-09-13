@@ -161,6 +161,9 @@ public class MomentsTest
 	private boolean keepsCompany = true;
 	private int daysKnown = 30;
 	private int tick;
+	private PropFlourish flourish;
+	private int held;
+	private boolean grateful;
 
 	@Before
 	public void setUp()
@@ -194,8 +197,29 @@ public class MomentsTest
 				{
 				}
 			}, event -> { }, () -> inCombat, () -> feetTaken, () -> false);
+		ErrandController.Hands hands = new ErrandController.Hands()
+		{
+			@Override
+			public void hold(int itemId)
+			{
+				held = itemId;
+			}
+
+			@Override
+			public void release()
+			{
+				held = 0;
+			}
+
+			@Override
+			public boolean isHolding()
+			{
+				return held != 0;
+			}
+		};
+		flourish = new PropFlourish(follower, hands);
 		moments = new Moments(game.client, follower, config, skilling,
-			() -> feetTaken, () -> inCombat, () -> daysKnown);
+			() -> feetTaken, () -> inCombat, () -> daysKnown, flourish, () -> grateful);
 	}
 
 	private void tick(int count)
@@ -204,6 +228,7 @@ public class MomentsTest
 		{
 			game.tick(++tick);
 			skilling.tick();
+			flourish.tick();
 			moments.tick();
 		}
 	}
@@ -587,5 +612,156 @@ public class MomentsTest
 		moments.reset();
 		assertEquals(0, follower.poseOverride);
 		assertFalse(moments.holdsTheFeet());
+	}
+	// --------------------------------------------------------------- the news
+
+	private static final WorldPoint DROP = new WorldPoint(54, 50, 0);
+
+	@Test
+	public void aBigDropIsWalkedOverToAndWrittenUpOnTheSpot()
+	{
+		tick(1);
+		moments.noteworthy(Moments.Tier.BIG, DROP);
+		assertNotNull("walked over", follower.stayingAt);
+		assertEquals("to a tile beside it", 1, follower.stayingAt.distanceTo(DROP));
+		assertEquals("facing it", DROP, follower.facing);
+		assertTrue(moments.holdsTheFeet());
+		assertTrue(moments.isLooking());
+		assertEquals("nothing in hand on the way", 0, held);
+
+		tick(follower.stayingAt.distanceTo(new WorldPoint(49, 49, 0)) + 2);
+		assertEquals("the scroll out on arrival", ErrandController.SCROLL_PROP, held);
+		assertEquals(ErrandController.READ_SCROLL_POSE, follower.poseOverride);
+
+		tick(Moments.NOTES_ON_THE_SPOT_TICKS - 1);
+		assertTrue("the look up at the player", follower.glances.contains(PLAYER));
+		assertTrue("and the nod", follower.animations.contains(Moments.NOD));
+
+		tick(2);
+		assertFalse("the feet handed back", moments.holdsTheFeet());
+		assertEquals("the scroll put away", 0, held);
+		assertEquals(0, follower.poseOverride);
+	}
+
+	@Test
+	public void aNiceDropTakesTheNotesOutWhereItStands()
+	{
+		tick(1);
+		moments.noteworthy(Moments.Tier.MEDIUM, DROP);
+		assertFalse("no walk for a medium one", moments.isLooking());
+		assertEquals("the scroll out at once", ErrandController.SCROLL_PROP, held);
+		assertTrue("facing the drop", follower.glances.contains(DROP));
+
+		tick(Moments.NOTES_TICKS - 1);
+		assertTrue("the look up", follower.glances.contains(PLAYER));
+		assertTrue(follower.animations.contains(Moments.NOD));
+		tick(2);
+		assertEquals("put away", 0, held);
+	}
+
+	@Test
+	public void somethingInTheBagIsWrittenUpFacingThePlayer()
+	{
+		tick(1);
+		moments.noteworthy(Moments.Tier.MEDIUM, null);
+		assertEquals(ErrandController.SCROLL_PROP, held);
+		assertTrue(follower.glances.contains(PLAYER));
+	}
+
+	@Test
+	public void aSmallDropGetsAGlanceAndTheLedgerStopsTheNextOne()
+	{
+		tick(1);
+		moments.noteworthy(Moments.Tier.SMALL, DROP);
+		assertEquals(Collections.singletonList(DROP), follower.glances);
+		assertEquals("no scroll for a small one", 0, held);
+
+		moments.noteworthy(Moments.Tier.SMALL, DROP);
+		assertEquals("not twice inside the glance's cooldown", 1, follower.glances.size());
+
+		tick(Gestures.Gesture.GLANCE.cooldownTicks + 1);
+		moments.noteworthy(Moments.Tier.SMALL, DROP);
+		assertEquals(2, follower.glances.size());
+	}
+
+	@Test
+	public void theNotesDoNotComeOutTwiceInAStretch()
+	{
+		tick(1);
+		moments.noteworthy(Moments.Tier.MEDIUM, DROP);
+		assertEquals(ErrandController.SCROLL_PROP, held);
+		tick(Moments.NOTES_TICKS + 2);
+		assertEquals(0, held);
+
+		follower.glances.clear();
+		moments.noteworthy(Moments.Tier.MEDIUM, DROP);
+		assertEquals("the tier below stands in: a glance", Collections.singletonList(DROP),
+			follower.glances);
+		assertEquals(0, held);
+
+		// And a big one, with the notes spent, is not walked over for either.
+		moments.noteworthy(Moments.Tier.BIG, DROP);
+		assertFalse(moments.isLooking());
+	}
+
+	@Test
+	public void goodwillHalvesEveryWait()
+	{
+		tick(1);
+		grateful = true;
+		moments.noteworthy(Moments.Tier.MEDIUM, DROP);
+		tick(Moments.NOTES_TICKS + 2);
+		tick(Gestures.Gesture.NOTES.cooldownTicks / 2 + 1);
+		moments.noteworthy(Moments.Tier.MEDIUM, DROP);
+		assertEquals("half the cooldown is enough while it owes you one",
+			ErrandController.SCROLL_PROP, held);
+	}
+
+	@Test
+	public void withTheHandsFullTheWriteUpIsANod()
+	{
+		tick(1);
+		held = 1351;
+		moments.noteworthy(Moments.Tier.MEDIUM, DROP);
+		assertEquals("the axe stays", 1351, held);
+		assertEquals("the nod on its own", Collections.singletonList(Moments.NOD),
+			follower.animations);
+	}
+
+	@Test
+	public void theFarewellIsAWaveAndNotTwiceInFiveMinutes()
+	{
+		tick(1);
+		moments.farewell();
+		assertEquals(Collections.singletonList(Moments.WAVE), follower.animations);
+		assertTrue("facing the player for it", follower.glances.contains(PLAYER));
+
+		moments.farewell();
+		assertEquals("the tab left open is not a second goodbye", 1, follower.animations.size());
+
+		tick(Gestures.Gesture.WAVE.cooldownTicks + 1);
+		moments.farewell();
+		assertEquals(2, follower.animations.size());
+	}
+
+	@Test
+	public void theLadderMatchesTheLootRules()
+	{
+		assertNull(Moments.tierFor(9_999));
+		assertEquals(Moments.Tier.SMALL, Moments.tierFor(10_000));
+		assertEquals(Moments.Tier.MEDIUM, Moments.tierFor(100_000));
+		assertEquals(Moments.Tier.BIG, Moments.tierFor(1_000_000));
+	}
+
+	@Test
+	public void nothingIsWrittenUpWithTheCompanySwitchedOff()
+	{
+		keepsCompany = false;
+		tick(1);
+		moments.noteworthy(Moments.Tier.BIG, DROP);
+		moments.noteworthy(Moments.Tier.SMALL, DROP);
+		assertEquals(0, held);
+		assertTrue(follower.glances.isEmpty());
+		assertNull(follower.stayingAt);
 	}
 }

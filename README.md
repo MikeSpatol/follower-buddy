@@ -60,6 +60,10 @@ a bow when you are done. In between it keeps a tally on its scroll, looks up
 when a tree comes down, steps back from an empty rock, warms its hands at your
 fire, and sits down for the long haul. It claps a level, goes to see the pet,
 and if a stranger turns up to talk to you it stands off and has a good look.
+A good drop gets the scroll out; a great one it walks over to and writes up on
+the spot, then looks up at you and nods. It knows a ninety-two is halfway, a
+first ninety-nine from a third, and how long that level took. It waves when
+you open the logout tab.
 
 **Talk-to.** A proper NPC-style dialog box with a chathead. Ask how today went
 and it summarises the session; ask how it's been and it answers by mood; give

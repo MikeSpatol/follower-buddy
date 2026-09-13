@@ -650,7 +650,9 @@ public class FollowerPlugin extends Plugin
 				|| thrallExitTicks > 0 || (spectate != null && spectate.holdsTheFeet())
 				|| errands.isBusy(),
 			() -> speechEngine.getContext().isInCombat(),
-			() -> speechEngine.getContext().getDaysKnown());
+			() -> speechEngine.getContext().getDaysKnown(),
+			flourish,
+			() -> speechEngine.getContext().isGrateful());
 
 		// On a fresh client boot the LOGIN_SCREEN transition can happen before
 		// this plugin subscribes, so the first login would not read as fresh.
@@ -5878,7 +5880,9 @@ public class FollowerPlugin extends Plugin
 			spectate != null && spectate.holdsTheFeet(),
 			emoteHold, minutesState != 0,
 			(skilling != null && skilling.holdsTheFeet())
-				|| (moments != null && moments.holdsTheFeet()));
+				|| (moments != null && moments.holdsTheFeet())
+				// A write-up plants the follower for the length of the notes.
+				|| (flourish != null && flourish.isActive()));
 		speechEngine.getContext().setFollowerStaying(stayCommanded);
 		if (stayCommanded != stayReported)
 		{
@@ -5969,6 +5973,18 @@ public class FollowerPlugin extends Plugin
 		if (group == net.runelite.api.gameval.InterfaceID.QUESTSCROLL)
 		{
 			noteQuestScroll();
+			return;
+		}
+
+		// The logout tab: the last thing on screen before the session ends,
+		// so a turn to face them and a wave, and the rare line to go with it.
+		if (group == net.runelite.api.gameval.InterfaceID.LOGOUT)
+		{
+			if (moments != null)
+			{
+				moments.farewell();
+			}
+			speechEngine.dispatch(TriggerEvent.simple(TriggerEvent.Type.FAREWELL));
 			return;
 		}
 
@@ -6246,6 +6262,12 @@ public class FollowerPlugin extends Plugin
 			{
 				speechEngine.getContext().tally("collections");
 				speechEngine.dispatch(TriggerEvent.collectionAdd(parsed));
+				if (moments != null)
+				{
+					// A first-ever thing is news whatever it sells for; it is
+					// in the bag, so the write-up faces the player.
+					moments.noteworthy(com.follower.follower.Moments.Tier.MEDIUM, null);
+				}
 			}
 			noteKillCount(event.getMessage());
 		}
@@ -6928,16 +6950,20 @@ public class FollowerPlugin extends Plugin
 	@Subscribe
 	public void onNpcLootReceived(net.runelite.client.events.NpcLootReceived event)
 	{
-		dispatchLoot(event.getItems());
+		dispatchLoot(event.getItems(),
+			event.getNpc() == null ? null : event.getNpc().getWorldLocation());
 	}
 
 	@Subscribe
 	public void onPlayerLootReceived(net.runelite.client.events.PlayerLootReceived event)
 	{
-		dispatchLoot(event.getItems());
+		dispatchLoot(event.getItems(),
+			event.getPlayer() == null ? null : event.getPlayer().getWorldLocation());
 	}
 
-	private void dispatchLoot(java.util.Collection<net.runelite.client.game.ItemStack> items)
+	/** @param at where the drop landed, for the body to look at; null if unknown */
+	private void dispatchLoot(java.util.Collection<net.runelite.client.game.ItemStack> items,
+		WorldPoint at)
 	{
 		long total = 0;
 		String best = null;
@@ -6960,6 +6986,11 @@ public class FollowerPlugin extends Plugin
 			// remembering it had money on it.
 			speechEngine.getContext().settleBet(worth);
 			speechEngine.dispatch(TriggerEvent.loot(worth, best));
+			if (moments != null)
+			{
+				// The body's share: a glance, the notes, or the walk over.
+				moments.noteworthy(com.follower.follower.Moments.tierFor(total), at);
+			}
 		}
 	}
 

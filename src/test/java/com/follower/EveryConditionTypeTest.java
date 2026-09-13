@@ -1600,7 +1600,8 @@ public class EveryConditionTypeTest
 	@Test
 	public void theMilestonesTheCountsAndTheDebt() throws IOException
 	{
-		note("milestone", "levelGap", "killCount", "grateful", "lastTime");
+		note("milestone", "levelGap", "killCount", "grateful", "lastTime", "farewell");
+		fires("{\"type\": \"farewell\"}", TriggerEvent.simple(TriggerEvent.Type.FAREWELL));
 
 		long day = 24L * 60 * 60_000L;
 		fires("{\"type\": \"milestone\", \"is\": \"halfway\"}",

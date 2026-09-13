@@ -68,7 +68,7 @@ public class RuleSetIntegrityTest
 		"daysknown", "anniversary", "outgrew", "nicknamed",
 		"challenging", "challengemet", "challengefailed",
 		"unattended", "underfoot",
-		"milestone", "levelgap", "killcount", "grateful", "lasttime",
+		"milestone", "levelgap", "killcount", "grateful", "lasttime", "farewell",
 		"dateis", "worldhop", "gameupdated", "notesedited",
 		"musicunlock", "collectionadd", "questcomplete", "geoffer",
 		"channeljoined", "channelleft", "npcshout", "musictrack",

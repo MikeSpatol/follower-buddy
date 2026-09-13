@@ -1,12 +1,12 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 465 rules, 2296 spoken lines, 2 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 466 rules, 2301 spoken lines, 2 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
 ## Contents
 
-- [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (41 rules, 185 lines)
+- [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (42 rules, 190 lines)
 - [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (36 rules, 222 lines)
 - [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (35 rules, 273 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 114 lines)
@@ -384,6 +384,19 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - There you are. We left off {lastTime}, if the notes are right.
 - Hello again. I still have the page open from {lastTime}.
 - You're back. I was going over the notes on {lastTime}.
+
+### `farewell`
+
+> The logout tab opened. The body turns and waves on its own (the moments, five minutes between waves); this is the rare word to go with it, and it must be short, because the click is coming.
+
+- **when:** farewell AND a 35% roll
+- **pacing:** priority 60, cooldown 10m, overhead
+
+- Off, then? I'll finish the page.
+- Go on. I'll be here.
+- Same time tomorrow, I expect.
+- Mind how you go.
+- I'll write up the rest myself.
 
 ### `away-a-day`
 
@@ -1167,10 +1180,10 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `loot-big`
 
-> A drop worth a million or more. The cheer is 862.
+> A drop worth a million or more. The body's reaction is the moments': walked over to and written up on the spot, then a look up and a nod. In character a great thing is written down, not cheered, so the cheer this used to carry has gone.
 
 - **when:** loot worth 1000000+
-- **does:** mood +20; occasion (never held back); marks this place: 'you got that drop'; animation 862
+- **does:** mood +20; occasion (never held back); marks this place: 'you got that drop'
 - **pacing:** priority 80, cooldown 1m, delay 2 ticks
 
 - The {item}! LOOK at it!
@@ -1185,10 +1198,10 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `loot-nice`
 
-> A solid drop, 100k up. Rarer than it could be, so it stays a treat.
+> A drop worth a hundred thousand or more. The body takes the notes out where it stands (see Moments); the clap this used to carry has gone, since the clap is for levels.
 
 - **when:** loot worth 100000+ AND a 60% roll
-- **does:** mood +10; animation 865
+- **does:** mood +10
 - **pacing:** priority 75, cooldown 3m, delay 2 ticks
 
 - Ooh. {value}. Not bad at all.
