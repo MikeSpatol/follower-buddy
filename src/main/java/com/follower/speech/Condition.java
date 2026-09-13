@@ -360,7 +360,93 @@ public class Condition
 					&& everyNth();
 
 			case "levelup":
-				return event.getType() == TriggerEvent.Type.LEVEL_UP && matchesText(event.getName());
+				return event.getType() == TriggerEvent.Type.LEVEL_UP && matchesText(event.getName())
+					&& event.getValue() >= orDefault(minimum, 1)
+					&& (maximum == null || event.getValue() <= maximum);
+
+			// A level that means something beyond being the next one. "is"
+			// picks which: halfway (92, half the experience to 99), round (a
+			// multiple of ten, from "minimum" up, fifty by default), mastery
+			// (99, with "minimum"/"maximum" on how many that makes), total
+			// (the total level crossing a multiple of "every", a hundred by
+			// default, from "minimum" up) and base (every skill now at
+			// "minimum" or better, the tick that became true).
+			case "milestone":
+			{
+				if (event.getType() != TriggerEvent.Type.LEVEL_UP || is == null)
+				{
+					return false;
+				}
+				int level = event.getValue();
+				switch (is.toLowerCase(Locale.ROOT))
+				{
+					case "halfway":
+						return level == 92;
+					case "round":
+						return level % 10 == 0 && level >= orDefault(minimum, 50)
+							&& (maximum == null || level <= maximum);
+					case "mastery":
+						return level == 99 && event.getCount() >= orDefault(minimum, 1)
+							&& (maximum == null || event.getCount() <= maximum);
+					case "total":
+					{
+						int step = Math.max(1, orDefault(every, 100));
+						return event.getTotal() >= orDefault(minimum, 0)
+							&& event.getTotal() / step > event.getPreviousTotal() / step;
+					}
+					case "base":
+						return minimum != null && event.getBase() >= minimum
+							&& event.getPreviousBase() < minimum;
+					default:
+						return false;
+				}
+			}
+
+			// How long it had been since the last level in that skill, in
+			// minutes - the gap the {sinceLast} placeholder says. Only when the
+			// follower has a stamp to measure from: a first level in a skill
+			// since it started keeping them is not a gap of any size.
+			case "levelgap":
+			{
+				if (event.getType() != TriggerEvent.Type.LEVEL_UP || event.getSinceMs() < 0)
+				{
+					return false;
+				}
+				long gap = event.getSinceMs() / 60_000L;
+				return gap >= orDefault(minimum, 0) && (maximum == null || gap <= maximum);
+			}
+
+			// The game announcing a kill count - the account's own number, not
+			// the follower's tally, which is why it can say "your forty-first"
+			// on the first day they met. "names" narrows the boss, "every"
+			// fires on multiples, and is: round fires on the counts a person
+			// would say out loud (1, 5, 10, 25, 50, 75, the hundreds, then
+			// every five hundred).
+			case "killcount":
+			{
+				if (event.getType() != TriggerEvent.Type.KILL_COUNT)
+				{
+					return false;
+				}
+				int n = event.getCount();
+				return (names == null || matchesAnyName(event.getName()))
+					&& n >= orDefault(minimum, 1)
+					&& (maximum == null || n <= maximum)
+					&& (every == null || every <= 0 || n % every == 0)
+					&& (is == null || !"round".equalsIgnoreCase(is) || isRoundCount(n));
+			}
+
+			// The half hour after the player did something the follower asked
+			// for. Reciprocity: a favour is owed, and the body pays it back
+			// (closer attention, quicker gestures); this is the rules' share.
+			case "grateful":
+				return ctx.isGrateful();
+
+			// What the two of them were doing when the last session ended, for
+			// the greeting. Login only, and only when there is something to
+			// say; {lastTime} says it.
+			case "lasttime":
+				return event.getType() == TriggerEvent.Type.LOGIN && !ctx.getLastTime().isEmpty();
 
 			case "damagetaken":
 				return event.getType() == TriggerEvent.Type.DAMAGE_TAKEN
@@ -1196,6 +1282,20 @@ public class Condition
 			}
 		}
 		return false;
+	}
+
+	/** The counts a person says out loud, rather than every one. */
+	static boolean isRoundCount(int n)
+	{
+		if (n <= 0)
+		{
+			return false;
+		}
+		if (n == 1 || n == 5 || n == 10 || n == 25 || n == 50 || n == 75)
+		{
+			return true;
+		}
+		return n < 1000 ? n % 100 == 0 : n % 500 == 0;
 	}
 
 	private static int orDefault(Integer boxed, int fallback)

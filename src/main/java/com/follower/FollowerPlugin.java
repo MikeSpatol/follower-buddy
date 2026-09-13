@@ -1728,6 +1728,12 @@ public class FollowerPlugin extends Plugin
 
 		/** What the player was wearing then, so an upgrade has something to beat. */
 		int metWearingValue = -1;
+
+		/** When each skill last went up, so the next level knows how long it took. */
+		java.util.Map<String, Long> levelStamps;
+
+		/** What the two of them were doing when the session ended, for the greeting. */
+		String lastThing;
 	}
 
 	/**
@@ -1781,6 +1787,8 @@ public class FollowerPlugin extends Plugin
 			context.restoreLineWear(saved.lineWear);
 			context.setMetOnDay(saved.metOnDay);
 			context.setMetWearingValue(saved.metWearingValue);
+			context.restoreLevelStamps(saved.levelStamps);
+			context.restoreLastThing(saved.lastThing);
 			if (saved.deathPlane >= 0)
 			{
 				context.restoreDeathSpot(new WorldPoint(
@@ -1843,6 +1851,9 @@ public class FollowerPlugin extends Plugin
 		saved.lineWear = context.getLineWear();
 		saved.metOnDay = context.getMetOnDay();
 		saved.metWearingValue = metWearing;
+		saved.levelStamps = context.getLevelStamps().isEmpty() ? null
+			: new java.util.HashMap<>(context.getLevelStamps());
+		saved.lastThing = context.getLastThing().isEmpty() ? null : context.getLastThing();
 		WorldPoint died = context.getDeathLocation();
 		if (died != null)
 		{
@@ -6236,7 +6247,58 @@ public class FollowerPlugin extends Plugin
 				speechEngine.getContext().tally("collections");
 				speechEngine.dispatch(TriggerEvent.collectionAdd(parsed));
 			}
+			noteKillCount(event.getMessage());
 		}
+	}
+
+	/**
+	 * The game's own count after a boss: "Your Vorkath kill count is: 41.",
+	 * "Your completed Chambers of Xeric count is: 5.", "Your Barrows chest
+	 * count is: 12." The account's number rather than the follower's tally,
+	 * which is what lets it say "your forty-first" on the day they met.
+	 */
+	private static final java.util.regex.Pattern KILL_COUNT = java.util.regex.Pattern.compile(
+		"^Your (?:completed |subdued )?(.+?)(?: kill| chest| completion| success)? count is:? ?([\\d,]+)");
+
+	/** The boss and the number out of a kill-count message, or null for any other message. */
+	static java.util.Map.Entry<String, Integer> parseKillCount(String message)
+	{
+		if (message == null)
+		{
+			return null;
+		}
+		java.util.regex.Matcher m = KILL_COUNT.matcher(message.replaceAll("<[^>]*>", "").trim());
+		if (!m.find())
+		{
+			return null;
+		}
+		try
+		{
+			return new java.util.AbstractMap.SimpleImmutableEntry<>(
+				m.group(1).trim(), Integer.parseInt(m.group(2).replace(",", "")));
+		}
+		catch (NumberFormatException e)
+		{
+			return null;
+		}
+	}
+
+	private void noteKillCount(String message)
+	{
+		java.util.Map.Entry<String, Integer> parsed = parseKillCount(message);
+		if (parsed == null)
+		{
+			return;
+		}
+		String boss = parsed.getKey();
+		int count = parsed.getValue();
+		TriggerContext context = speechEngine.getContext();
+		// A record rather than a tally: the game's count only ever goes up,
+		// and what the follower keeps is the highest it has heard.
+		String key = "kc:" + boss.toLowerCase(Locale.ROOT);
+		int last = context.getRecord(key);
+		context.noteRecord(key, count);
+		speechEngine.dispatch(TriggerEvent.killCount(boss, count, last));
 	}
 
 	/**
@@ -6324,6 +6386,7 @@ public class FollowerPlugin extends Plugin
 				return;
 			}
 			speechEngine.getContext().tally("quests");
+			speechEngine.getContext().noteDoing("finishing " + quest);
 			speechEngine.dispatch(TriggerEvent.questComplete(quest));
 		});
 	}
@@ -6908,8 +6971,32 @@ public class FollowerPlugin extends Plugin
 		Integer previous = knownLevels.put(skill, level);
 		if (previous != null && level > previous)
 		{
-			speechEngine.getContext().tallyBoth("levels");
-			speechEngine.dispatch(TriggerEvent.levelUp(skill.getName(), level));
+			TriggerContext context = speechEngine.getContext();
+			context.tallyBoth("levels");
+			// The wider ledger, for the milestone rules: where the total and
+			// the lowest skill stood before this level and after it, how many
+			// skills are maxed now, and how long this one took.
+			int total = 0;
+			int base = Integer.MAX_VALUE;
+			int previousBase = Integer.MAX_VALUE;
+			int masteries = 0;
+			for (Skill each : Skill.values())
+			{
+				int real = each == skill ? level : client.getRealSkillLevel(each);
+				total += real;
+				base = Math.min(base, real);
+				previousBase = Math.min(previousBase, each == skill ? previous : real);
+				if (real >= 99)
+				{
+					masteries++;
+				}
+			}
+			long now = System.currentTimeMillis();
+			long sinceAny = context.sinceAnyLevel(now);
+			long sinceLast = context.noteLevel(skill.getName(), level, now);
+			speechEngine.dispatch(TriggerEvent.levelUp(skill.getName(), level,
+				total, total - (level - previous), base, previousBase, masteries,
+				sinceLast, sinceAny));
 			if (moments != null)
 			{
 				// The clap, or the walk over for it; the line is the rules'.

@@ -420,6 +420,11 @@ mood stretches or shortens on top.
 | `workEnded` | optional `names` (activities) - the tick a work session ends, once. `{activity}`, `{target}` |
 | `targetDepleted` | - the session's target changed id or went: the stump, the empty rock, the spot that moved. `{target}` |
 | `bagFull` / `bagHalf` | - the last inventory slot went, or fourteen were left; once per fill |
+| `milestone` | `is` - `halfway` (level 92, half the experience to 99), `round` (a multiple of ten from `minimum` up, 50 by default), `mastery` (99; `minimum`/`maximum` on how many skills that makes, this one included), `total` (the total level crossing a multiple of `every`, 100 by default, from `minimum` up) or `base` (every skill now at `minimum` or better, the level that made it so). On the level-up event; `{total}`, `{base}`, `{nines}`, `{ninesOrdinal}` |
+| `levelGap` | `minimum`/`maximum` minutes since the last level in that skill - the follower stamps every level it sees and keeps the stamps between sessions. Never true for a skill with no stamp yet. `{sinceLast}` and `{sinceAny}` say the gaps in words ("eleven days") |
+| `killCount` | the game's own count after a boss ("Your Vorkath kill count is: 41"), read out of chat. Optional `names`, `minimum`/`maximum`, `every`; `is: round` fires on the counts a person says out loud (1, 5, 10, 25, 50, 75, the hundreds, then every five hundred). `{boss}`, `{count}`, `{ordinal}` ("forty-first"), `{lastCount}` |
+| `grateful` | - the half hour after the player did what the follower asked: went where it wanted, brought what it wished for |
+| `lastTime` | - login only: the follower remembers what the two of you were doing when the last session ended. `{lastTime}` says it: "the woodcutting", "fighting Vorkath", "getting Fishing to 70", "finishing Dragon Slayer" |
 | `login`, `always` | - |
 | `chance` | `percent`, rolled each evaluation |
 
@@ -437,7 +442,11 @@ and `wantExpired`), `{memory}` (the incident on its mind - guard the rule with
 `remembers` or it prints nothing), `{souvenir}` (what it is carrying, or has
 just lost - guard with `carrying` or `souvenirLost`), `{here}` (guard with
 `happenedHere`), `{nickname}` (guard with `nicknamed`), `{days}` (guard with
-`daysKnown`), `{advice}` and `{challenge}`.
+`daysKnown`), `{advice}` and `{challenge}`. On a level-up: `{total}`, `{base}`,
+`{nines}` and `{ninesOrdinal}` (how many skills are at 99 now, and "third"), and
+`{sinceLast}` / `{sinceAny}` (guard with `levelGap`: they are empty until the
+follower has a stamp to measure from). On `killCount`: `{boss}`, `{count}`,
+`{ordinal}` and `{lastCount}`. `{lastTime}` (guard with `lastTime`).
 
 ### Other rule fields
 
@@ -608,6 +617,15 @@ out and every crash would otherwise look like an absence.
 
 A quick relog is not an absence. `-1` means it has no idea - a first run, or a
 cleared config - and never reads as "just now".
+
+**The levels and the last thing outlive it as well.** Every level the follower
+sees is stamped with the time (`levelStamps`, keyed by skill), so the next
+level in that skill can say how long it took - "eleven days since the last
+one" is a memory, and only somebody who was there for the last one can have
+it. And the last nameable thing the two of them did - the work, a boss, a
+level, a quest - goes out as `lastThing` and comes back at login as the
+`lastTime` condition, so the greeting can be about last time rather than
+about the clock. A session that names nothing carries the old one forward.
 
 **Counts and records outlive the session too.** The tallies the follower keeps
 (`kill:<name>`, `deaths`, `levels`) and the records it holds (`hit`, `session`)

@@ -1,24 +1,24 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 452 rules, 2246 spoken lines, 2 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 465 rules, 2296 spoken lines, 2 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
 ## Contents
 
-- [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (32 rules, 149 lines)
+- [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (41 rules, 185 lines)
 - [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (36 rules, 222 lines)
 - [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (35 rules, 273 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 114 lines)
 - [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 72 lines)
-- [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (20 rules, 106 lines)
+- [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (21 rules, 109 lines)
 - [area](#area) - Places: named lines, tastes, earned verdicts, the defences (67 rules, 222 lines)
 - [errand](#errand) - Its little trips: bank, altar, fire, cat, studies, explores (44 rules, 155 lines)
 - [souvenir](#souvenir) - Wishes, gifts, the pocket, and what it carries (17 rules, 84 lines)
 - [bet](#bet) - Its predictions about drops (3 rules, 20 lines)
 - [clock](#clock) - The hour and how long we have been at it (9 rules, 39 lines)
 - [gear](#gear) - What you put on (62 rules, 121 lines)
-- [boss](#boss) - Bosses sighted and fought (52 rules, 504 lines)
+- [boss](#boss) - Bosses sighted and fought (55 rules, 515 lines)
 - [quest](#quest) - Famous quest figures nearby (44 rules, 131 lines)
 - [thrall](#thrall) - When it stands in for a thrall (3 rules, 18 lines)
 - [mimic](#mimic) - Copying your emotes (8 rules, 16 lines)
@@ -86,6 +86,109 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - There's the {skill}. Level {level} suits you.
 - {level} in {skill}. At this rate I'll need a thicker book.
 - Another {skill} level. I acted surprised in the notes.
+
+### `level-halfway`
+
+> Ninety-two is half the experience to ninety-nine, which most people do not know and a scribe would. Outranks the plain level line on the one level where there is more to say.
+
+- **when:** milestone
+- **does:** mood +8
+- **pacing:** priority 48, cooldown 1m
+
+- Ninety-two. Half the experience to ninety-nine, whatever the number says.
+- {skill} 92. That's the true halfway. I've ruled a line under it.
+- Halfway to ninety-nine in {skill}, by experience. Most people don't know that.
+- Ninety-two in {skill}. The second half is the same size as the first. Sorry.
+- The halfway mark in {skill}. I've turned the page over.
+
+### `level-round`
+
+> A multiple of ten from fifty up: the levels people tell each other about. A chance roll so the plain level line still gets some of them.
+
+- **when:** milestone AND a 70% roll
+- **does:** mood +6
+- **pacing:** priority 44, cooldown 1m
+
+- {skill} {level}. A round number. Those get a box round them.
+- Level {level} in {skill}. I like a round one; it fills the margin nicely.
+- {level} in {skill}. That's a milestone, and I've stopped for it.
+- A round {level} in {skill}. I've underlined it twice.
+- {skill}, {level}. The kind of number you tell people.
+
+### `level-mastery-first`
+
+> The first ninety-nine the follower has seen on this account - maximum 1 means the count of maxed skills, this one included, is one. Once ever. The body does the send-off chain; this is the words.
+
+- **when:** milestone
+- **does:** mood +20; once ever; holds the floor 8s
+- **pacing:** priority 90, cooldown 1m
+
+- Your first ninety-nine. I had a page reserved and never believed I'd use it.
+- Ninety-nine {skill}. The first. I'm going to need a better pen.
+- That's a ninety-nine. Your first. I've written the date next to it.
+
+### `level-mastery-again`
+
+> The second ninety-nine and every one after. {nines} is how many now; {ninesOrdinal} says it.
+
+- **when:** milestone
+- **does:** mood +18; holds the floor 8s
+- **pacing:** priority 89, cooldown 1m
+
+- That's {nines} at ninety-nine. The {ninesOrdinal}, and I'm counting.
+- Ninety-nine {skill}. Your {ninesOrdinal}. The reserved pages are running out.
+- {skill} to ninety-nine, your {ninesOrdinal}. It gets no smaller a thing.
+- The {ninesOrdinal} ninety-nine. I've had to start a second index.
+
+### `level-total`
+
+> The total level crossing a hundred, from five hundred up. The line carries the skill too, since it outranks the plain level line.
+
+- **when:** milestone
+- **does:** mood +6
+- **pacing:** priority 46, cooldown 1m
+
+- {skill} {level}, which makes {total} in total. I checked the sum twice.
+- Total level {total} with that one. I've ruled off the column.
+- That's {total} across the lot. A round total gets its own line in the book.
+- {total} total. I keep the running sum on the inside cover.
+
+### `level-base`
+
+> The lowest skill catching up: the tick every skill became fifty, sixty, seventy, eighty or ninety or better. One rule over the five thresholds, since {base} says which.
+
+- **when:** (milestone OR milestone OR milestone OR milestone OR milestone)
+- **does:** mood +8
+- **pacing:** priority 49, cooldown 1m
+
+- Every skill at {base} or better now. The lowest column has caught up.
+- Nothing under {base} any more. I've retired the page I kept for it.
+- That was the laggard. Base {base}, all round.
+- {skill} was the one holding the base down. Not any more: {base} across the board.
+
+### `level-after-a-gap`
+
+> A level in a skill the player had left alone for a week or more. {sinceLast} is the gap in words; levelGap is the guard that makes it a number worth printing.
+
+- **when:** levelgap
+- **does:** mood +6
+- **pacing:** priority 47, cooldown 1m
+
+- {skill} again, after {sinceLast}. I'd stopped leaving the page open.
+- {sinceLast} since the last {skill} level. I'd wondered.
+- Back to {skill} after {sinceLast}. The ink had dried on that page.
+- A {skill} level, the first in {sinceLast}. Duly noted, and slightly surprised.
+
+### `level-quick`
+
+> The other end: a second level in the same skill inside ten minutes. Low priority and a chance roll, so it is an occasional aside rather than a commentary on fast experience.
+
+- **when:** levelgap AND a 40% roll
+- **pacing:** priority 43, cooldown 5m
+
+- Another {skill} level, {sinceLast} after the last. I can barely keep up.
+- {sinceLast} since the last one. The page for {skill} is getting crowded.
+- Two {skill} levels in {sinceLast}. I've had to write smaller.
 
 ### `first-meeting`
 
@@ -268,6 +371,19 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - A few hours by my count. The count is reliable.
 - You missed nothing. I double-checked.
 - Nothing happened. I wrote that down, too.
+
+### `last-time`
+
+> The greeting that remembers what you were doing rather than how long it has been. lastTime is the last nameable thing the two of you did - the work, a boss, a level, a quest - carried across the logout. An hour away or more, and a chance roll so the plain away lines keep a share.
+
+- **when:** lasttime AND away 60+ minutes AND a 60% roll
+- **does:** mood +4
+- **pacing:** priority 71, cooldown 5s, delay 6-10 ticks, both
+
+- Back, then. Last time it was {lastTime}, as I recall.
+- There you are. We left off {lastTime}, if the notes are right.
+- Hello again. I still have the page open from {lastTime}.
+- You're back. I was going over the notes on {lastTime}.
 
 ### `away-a-day`
 
@@ -2192,6 +2308,17 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - It's official. The index says {nickname}.
 - History gets a say, and it says {nickname}.
 - {nickname}. Cross-referenced and everything.
+
+### `grateful-idle`
+
+> The half hour after the player did what the follower asked - went where it wanted, brought what it wished for. The body pays the favour back on its own (closer attention, quicker gestures); this is the rare line that says so.
+
+- **when:** grateful AND standing still 100+ ticks AND a 5% roll
+- **pacing:** priority 24, cooldown 20m, overhead
+
+- Still in your debt from earlier. I'm keeping a closer eye today.
+- I haven't forgotten the favour. Consider me attentive.
+- You did the thing I asked. I've been standing a little straighter since.
 
 ### `outgrew-the-gear`
 
@@ -5429,6 +5556,44 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - {npc} down! That was magnificent.
 - You were unbelievable just then.
 - That is going to be the best thing I see all week.
+
+### `kill-count-first`
+
+> The game's own count reaching one: the first kill of a boss on this account, whoever was watching. The delay lets the kill line land first.
+
+- **when:** killcount
+- **does:** mood +12
+- **pacing:** priority 75, cooldown 30s, delay 3-5 ticks
+
+- Your first {boss}. It goes in the book with the date.
+- One {boss}. The first of, I suspect, many.
+- {boss}, once. A new page. I've been saving a good one.
+
+### `kill-count-round`
+
+> The counts a person says out loud - five, ten, twenty-five, fifty, seventy-five, the hundreds, then every five hundred. The account's number rather than the follower's tally, so it can say forty-first on the day they met. Acknowledging the cycle is what makes the fiftieth trip feel watched rather than repeated.
+
+- **when:** killcount
+- **does:** mood +8
+- **pacing:** priority 72, cooldown 1m, delay 3-5 ticks
+
+- {count} of {boss}. I've stopped bringing the notes; I know how it goes.
+- Your {ordinal} {boss}. The pages are getting thin.
+- {ordinal} time. I could draw {boss} from memory now.
+- That makes {count} {boss}. The ledger has a column just for it.
+- {count}. I remember the first {boss} as if it were an hour ago. It was longer.
+
+### `kill-count-thousand`
+
+> A thousand of one boss, and every thousand after. Outranks the round line.
+
+- **when:** killcount
+- **does:** mood +14; holds the floor 6s
+- **pacing:** priority 76, cooldown 1m, delay 3-5 ticks
+
+- {count} {boss}. I've bound a new volume for it.
+- A thousand. If {boss} keeps a book on you, it is a long one.
+- Your {ordinal} {boss}. I ran out of room in the margin around the six hundredth.
 
 ## quest
 

@@ -136,6 +136,7 @@ public final class TriggerContext
 		checkWishLapse();
 		refreshAttention();
 		driftMood();
+		noteWhatWeAreDoing();
 	}
 
 	// ------------------------------------------------------------------ combat
@@ -1835,6 +1836,142 @@ public final class TriggerContext
 	public boolean hasNickname()
 	{
 		return !getNickname().isEmpty();
+	}
+
+	// ---------------------------------------------------------- the levels
+
+	/**
+	 * When each skill last went up, as epoch milliseconds keyed by the skill
+	 * name in lower case. Kept between sessions, because the gap is the
+	 * point: "eleven days since the last one" is something only somebody
+	 * who was there for the last one can say.
+	 */
+	private final java.util.Map<String, Long> levelStamps = new java.util.HashMap<>();
+
+	/**
+	 * Files a level and returns how long it had been since the last one in
+	 * that skill, or -1 when there is no stamp to measure from.
+	 */
+	public long noteLevel(String skill, int level, long nowMs)
+	{
+		if (skill == null || skill.isEmpty())
+		{
+			return -1;
+		}
+		Long previous = levelStamps.put(skill.toLowerCase(java.util.Locale.ROOT), nowMs);
+		countersDirty = true;
+		noteDoing("getting " + skill + " to " + level);
+		return previous == null || previous > nowMs ? -1 : nowMs - previous;
+	}
+
+	/** How long since any skill went up, or -1 with nothing on record. */
+	public long sinceAnyLevel(long nowMs)
+	{
+		long latest = -1;
+		for (long stamp : levelStamps.values())
+		{
+			latest = Math.max(latest, stamp);
+		}
+		return latest < 0 || latest > nowMs ? -1 : nowMs - latest;
+	}
+
+	public java.util.Map<String, Long> getLevelStamps()
+	{
+		return levelStamps;
+	}
+
+	public void restoreLevelStamps(java.util.Map<String, Long> saved)
+	{
+		if (saved != null)
+		{
+			saved.forEach((skill, stamp) -> levelStamps.merge(skill, stamp, Math::max));
+		}
+	}
+
+	// ------------------------------------------------------------- goodwill
+
+	/** Half an hour of owing the player one. */
+	public static final int FAVOUR_TICKS = 3000;
+
+	private int favourUntilTick;
+
+	/**
+	 * The player did the thing the follower asked for - went where it wanted,
+	 * handed over what it wished for. People expect a favour returned, from
+	 * software as readily as from anybody, and feel it when it is; so for a
+	 * while after, the follower is visibly more attentive. The body reads
+	 * {@link #isGrateful} for that; the rules read it as a condition.
+	 */
+	public void noteFavour()
+	{
+		favourUntilTick = client.getTickCount() + FAVOUR_TICKS;
+	}
+
+	public boolean isGrateful()
+	{
+		return client.getTickCount() < favourUntilTick;
+	}
+
+	// ------------------------------------------------------------ last time
+
+	/**
+	 * The last thing the two of them were doing, in words a greeting can use:
+	 * "the woodcutting", "fighting Vorkath", "getting Fishing to 70". The
+	 * current session's goes to disk; the previous session's comes back at
+	 * login as {@link #getLastTime}, which is what makes the greeting about
+	 * last time rather than about the clock.
+	 */
+	private String lastThing = "";
+	private String lastTime = "";
+
+	public void noteDoing(String what)
+	{
+		if (what == null || what.isEmpty() || what.equals(lastThing))
+		{
+			return;
+		}
+		lastThing = what;
+		countersDirty = true;
+	}
+
+	/** What is going to disk: the latest thing this session, or last session's if nothing yet. */
+	public String getLastThing()
+	{
+		return lastThing;
+	}
+
+	/** What the previous session ended on, for the login greeting. */
+	public String getLastTime()
+	{
+		return lastTime;
+	}
+
+	public void restoreLastThing(String saved)
+	{
+		if (saved == null || saved.isEmpty())
+		{
+			return;
+		}
+		lastTime = saved;
+		// Carried forward too, so a session in which nothing nameable
+		// happens does not wipe the memory on its way out.
+		if (lastThing.isEmpty())
+		{
+			lastThing = saved;
+		}
+	}
+
+	/** The two things the context can see for itself: the work, and a boss. */
+	private void noteWhatWeAreDoing()
+	{
+		if (isWorking() && !workActivity.isEmpty())
+		{
+			noteDoing("the " + workActivity);
+		}
+		else if (isInCombat() && isBossFight() && !combatTarget.isEmpty())
+		{
+			noteDoing("fighting " + combatTarget);
+		}
 	}
 
 	// -------------------------------------------------------- the challenge

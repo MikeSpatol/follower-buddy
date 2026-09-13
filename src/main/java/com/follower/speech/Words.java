@@ -1,0 +1,149 @@
+package com.follower.speech;
+
+/**
+ * Numbers the way a scribe writes them in a sentence.
+ *
+ * <p>A line that says "41 Vorkath" is a counter with a face; one that says
+ * "your forty-first Vorkath" is somebody keeping count. The same goes for
+ * time: "eleven days since the last one" is a memory, "15840 minutes" is a
+ * log. Everything here is words up to where words stop reading naturally,
+ * and digits after.
+ */
+public final class Words
+{
+	private static final String[] ONES = {
+		"zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+		"ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen",
+		"seventeen", "eighteen", "nineteen",
+	};
+
+	private static final String[] TENS = {
+		"", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety",
+	};
+
+	private static final String[] ORDINAL_ONES = {
+		"zeroth", "first", "second", "third", "fourth", "fifth", "sixth", "seventh",
+		"eighth", "ninth", "tenth", "eleventh", "twelfth", "thirteenth", "fourteenth",
+		"fifteenth", "sixteenth", "seventeenth", "eighteenth", "nineteenth",
+	};
+
+	private static final String[] ORDINAL_TENS = {
+		"", "", "twentieth", "thirtieth", "fortieth", "fiftieth", "sixtieth",
+		"seventieth", "eightieth", "ninetieth",
+	};
+
+	private Words()
+	{
+	}
+
+	/** One to ninety-nine in words; anything else as digits. */
+	public static String number(int n)
+	{
+		if (n < 0 || n >= 100)
+		{
+			return Integer.toString(n);
+		}
+		if (n < 20)
+		{
+			return ONES[n];
+		}
+		return n % 10 == 0 ? TENS[n / 10] : TENS[n / 10] + "-" + ONES[n % 10];
+	}
+
+	/**
+	 * "first", "forty-first", and "101st" past where the words stop. A
+	 * hundredth or a thousandth is worth its word, being the kind of count
+	 * that gets said out loud.
+	 */
+	public static String ordinal(int n)
+	{
+		if (n < 0)
+		{
+			return Integer.toString(n);
+		}
+		if (n < 20)
+		{
+			return ORDINAL_ONES[n];
+		}
+		if (n < 100)
+		{
+			return n % 10 == 0 ? ORDINAL_TENS[n / 10] : TENS[n / 10] + "-" + ORDINAL_ONES[n % 10];
+		}
+		if (n == 100)
+		{
+			return "hundredth";
+		}
+		if (n == 1000)
+		{
+			return "thousandth";
+		}
+		int last = n % 100;
+		String suffix = "th";
+		if (last < 11 || last > 13)
+		{
+			switch (n % 10)
+			{
+				case 1:
+					suffix = "st";
+					break;
+				case 2:
+					suffix = "nd";
+					break;
+				case 3:
+					suffix = "rd";
+					break;
+				default:
+					break;
+			}
+		}
+		return n + suffix;
+	}
+
+	/**
+	 * A stretch of time as somebody would say it: "a minute", "forty
+	 * minutes", "an hour", "eleven days", "three weeks", "a year". Never more
+	 * precise than the unit it picks, because "eleven days" is the memory and
+	 * "eleven days and four hours" is the log.
+	 */
+	public static String duration(long ms)
+	{
+		long minutes = Math.max(0, ms) / 60_000L;
+		if (minutes < 2)
+		{
+			return "a minute";
+		}
+		if (minutes < 60)
+		{
+			return number((int) minutes) + " minutes";
+		}
+		long hours = minutes / 60;
+		if (hours < 2)
+		{
+			return "an hour";
+		}
+		if (hours < 36)
+		{
+			return number((int) hours) + " hours";
+		}
+		long days = hours / 24;
+		if (days < 2)
+		{
+			return "a day";
+		}
+		if (days < 14)
+		{
+			return number((int) days) + " days";
+		}
+		if (days < 56)
+		{
+			return number((int) (days / 7)) + " weeks";
+		}
+		if (days < 365)
+		{
+			long months = days / 30;
+			return months < 2 ? "a month" : number((int) months) + " months";
+		}
+		long years = days / 365;
+		return years < 2 ? "a year" : number((int) years) + " years";
+	}
+}

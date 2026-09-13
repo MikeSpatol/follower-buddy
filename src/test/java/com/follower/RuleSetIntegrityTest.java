@@ -68,6 +68,7 @@ public class RuleSetIntegrityTest
 		"daysknown", "anniversary", "outgrew", "nicknamed",
 		"challenging", "challengemet", "challengefailed",
 		"unattended", "underfoot",
+		"milestone", "levelgap", "killcount", "grateful", "lasttime",
 		"dateis", "worldhop", "gameupdated", "notesedited",
 		"musicunlock", "collectionadd", "questcomplete", "geoffer",
 		"channeljoined", "channelleft", "npcshout", "musictrack",
@@ -605,7 +606,17 @@ public class RuleSetIntegrityTest
 		byType.put("combatstart", new HashSet<>(Arrays.asList("npc")));
 		byType.put("combatend", new HashSet<>(Arrays.asList("npc")));
 		byType.put("lootworth", new HashSet<>(Arrays.asList("item", "value")));
-		byType.put("levelup", new HashSet<>(Arrays.asList("skill", "level")));
+		Set<String> levelExtras = new HashSet<>(Arrays.asList("skill", "level",
+			"total", "base", "nines", "ninesOrdinal"));
+		byType.put("levelup", levelExtras);
+		byType.put("milestone", levelExtras);
+		// The gaps are empty strings until there is a stamp to measure from,
+		// so levelGap is the guard that makes them printable.
+		Set<String> gapExtras = new HashSet<>(levelExtras);
+		gapExtras.addAll(Arrays.asList("sinceLast", "sinceAny"));
+		byType.put("levelgap", gapExtras);
+		byType.put("killcount", new HashSet<>(Arrays.asList("boss", "count", "ordinal", "lastCount")));
+		byType.put("lasttime", new HashSet<>(Arrays.asList("lastTime")));
 		byType.put("chatmessage", new HashSet<>(Arrays.asList("message")));
 		byType.put("varbitchanged", new HashSet<>(Arrays.asList("value")));
 		byType.put("thrallstart", new HashSet<>(Arrays.asList("style")));

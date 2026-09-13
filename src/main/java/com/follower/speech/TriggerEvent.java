@@ -68,6 +68,8 @@ public final class TriggerEvent
 		TARGET_DEPLETED,
 		BAG_FULL,
 		BAG_HALF,
+		/** A boss kill count the game reported in chat. */
+		KILL_COUNT,
 	}
 
 	/**
@@ -393,6 +395,13 @@ public final class TriggerEvent
 	/** How many times this has happened before, where the raiser counts. */
 	private int count;
 	private int previousValue;
+	/** The level-up's wider ledger: the total and the base, before and after. */
+	private int total;
+	private int previousTotal;
+	private int base;
+	private int previousBase;
+	/** Milliseconds since the last level in this skill, or -1 for none known. */
+	private long sinceMs = -1;
 	private String message = "";
 	private int chatTypeId = -1;
 
@@ -452,11 +461,62 @@ public final class TriggerEvent
 
 	public static TriggerEvent levelUp(String skill, int level)
 	{
+		return levelUp(skill, level, 0, 0, 0, 0, 0, -1, -1);
+	}
+
+	/**
+	 * A level, with everything a milestone rule wants to know beside the
+	 * number: the total level before and after, the lowest skill before and
+	 * after, how many skills are at ninety-nine now (this one included, if
+	 * it is), and how long it has been - since the last level in this
+	 * skill, and since the last level at all. Either gap is -1 when the
+	 * follower has no record to measure from.
+	 *
+	 * <p>{skill}, {level}, {total}, {base}, {nines}, {ninesOrdinal},
+	 * {sinceLast} and {sinceAny}. The two gaps are empty strings rather
+	 * than a number when unknown, so a rule that prints them guards with
+	 * levelGap.
+	 */
+	public static TriggerEvent levelUp(String skill, int level, int total, int previousTotal,
+		int base, int previousBase, int masteries, long sinceLastMs, long sinceAnyMs)
+	{
 		TriggerEvent event = new TriggerEvent(Type.LEVEL_UP);
 		event.name = skill == null ? "" : skill;
 		event.value = level;
+		event.total = total;
+		event.previousTotal = previousTotal;
+		event.base = base;
+		event.previousBase = previousBase;
+		event.count = masteries;
+		event.sinceMs = sinceLastMs;
 		event.placeholders.put("skill", event.name);
 		event.placeholders.put("level", Integer.toString(level));
+		event.placeholders.put("total", Integer.toString(total));
+		event.placeholders.put("base", Integer.toString(base));
+		event.placeholders.put("nines", Integer.toString(masteries));
+		event.placeholders.put("ninesOrdinal", Words.ordinal(masteries));
+		event.placeholders.put("sinceLast", sinceLastMs < 0 ? "" : Words.duration(sinceLastMs));
+		event.placeholders.put("sinceAny", sinceAnyMs < 0 ? "" : Words.duration(sinceAnyMs));
+		return event;
+	}
+
+	/**
+	 * The game said what the kill count is. {boss} names it, {count} is
+	 * the number, {ordinal} says it ("forty-first"), and {lastCount} is the
+	 * highest count the follower had seen before - zero for a boss it has
+	 * never heard the number for.
+	 */
+	public static TriggerEvent killCount(String boss, int count, int lastCount)
+	{
+		TriggerEvent event = new TriggerEvent(Type.KILL_COUNT);
+		event.name = boss == null ? "" : boss;
+		event.count = count;
+		event.value = count;
+		event.previousValue = lastCount;
+		event.placeholders.put("boss", event.name);
+		event.placeholders.put("count", Integer.toString(count));
+		event.placeholders.put("ordinal", Words.ordinal(count));
+		event.placeholders.put("lastCount", Integer.toString(lastCount));
 		return event;
 	}
 
@@ -511,6 +571,31 @@ public final class TriggerEvent
 	public int getPreviousValue()
 	{
 		return previousValue;
+	}
+
+	public int getTotal()
+	{
+		return total;
+	}
+
+	public int getPreviousTotal()
+	{
+		return previousTotal;
+	}
+
+	public int getBase()
+	{
+		return base;
+	}
+
+	public int getPreviousBase()
+	{
+		return previousBase;
+	}
+
+	public long getSinceMs()
+	{
+		return sinceMs;
 	}
 
 	public String getMessage()

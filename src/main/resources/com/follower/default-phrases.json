@@ -2832,6 +2832,201 @@
       ]
     },
     {
+      "id": "level-halfway",
+      "note": "Ninety-two is half the experience to ninety-nine, which most people do not know and a scribe would. Outranks the plain level line on the one level where there is more to say.",
+      "group": "misc",
+      "priority": 48,
+      "cooldownMs": 60000,
+      "mood": 8,
+      "when": {
+        "type": "milestone",
+        "is": "halfway"
+      },
+      "say": [
+        "Ninety-two. Half the experience to ninety-nine, whatever the number says.",
+        "{skill} 92. That's the true halfway. I've ruled a line under it.",
+        "Halfway to ninety-nine in {skill}, by experience. Most people don't know that.",
+        "Ninety-two in {skill}. The second half is the same size as the first. Sorry.",
+        "The halfway mark in {skill}. I've turned the page over."
+      ]
+    },
+    {
+      "id": "level-round",
+      "note": "A multiple of ten from fifty up: the levels people tell each other about. A chance roll so the plain level line still gets some of them.",
+      "group": "misc",
+      "priority": 44,
+      "cooldownMs": 60000,
+      "mood": 6,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "milestone",
+            "is": "round",
+            "minimum": 50
+          },
+          {
+            "type": "chance",
+            "percent": 70
+          }
+        ]
+      },
+      "say": [
+        "{skill} {level}. A round number. Those get a box round them.",
+        "Level {level} in {skill}. I like a round one; it fills the margin nicely.",
+        "{level} in {skill}. That's a milestone, and I've stopped for it.",
+        "A round {level} in {skill}. I've underlined it twice.",
+        "{skill}, {level}. The kind of number you tell people."
+      ]
+    },
+    {
+      "id": "level-mastery-first",
+      "note": "The first ninety-nine the follower has seen on this account - maximum 1 means the count of maxed skills, this one included, is one. Once ever. The body does the send-off chain; this is the words.",
+      "group": "misc",
+      "priority": 90,
+      "cooldownMs": 60000,
+      "once": true,
+      "hushMs": 8000,
+      "mood": 20,
+      "when": {
+        "type": "milestone",
+        "is": "mastery",
+        "maximum": 1
+      },
+      "say": [
+        "Your first ninety-nine. I had a page reserved and never believed I'd use it.",
+        "Ninety-nine {skill}. The first. I'm going to need a better pen.",
+        "That's a ninety-nine. Your first. I've written the date next to it."
+      ]
+    },
+    {
+      "id": "level-mastery-again",
+      "note": "The second ninety-nine and every one after. {nines} is how many now; {ninesOrdinal} says it.",
+      "group": "misc",
+      "priority": 89,
+      "cooldownMs": 60000,
+      "hushMs": 8000,
+      "mood": 18,
+      "when": {
+        "type": "milestone",
+        "is": "mastery",
+        "minimum": 2
+      },
+      "say": [
+        "That's {nines} at ninety-nine. The {ninesOrdinal}, and I'm counting.",
+        "Ninety-nine {skill}. Your {ninesOrdinal}. The reserved pages are running out.",
+        "{skill} to ninety-nine, your {ninesOrdinal}. It gets no smaller a thing.",
+        "The {ninesOrdinal} ninety-nine. I've had to start a second index."
+      ]
+    },
+    {
+      "id": "level-total",
+      "note": "The total level crossing a hundred, from five hundred up. The line carries the skill too, since it outranks the plain level line.",
+      "group": "misc",
+      "priority": 46,
+      "cooldownMs": 60000,
+      "mood": 6,
+      "when": {
+        "type": "milestone",
+        "is": "total",
+        "every": 100,
+        "minimum": 500
+      },
+      "say": [
+        "{skill} {level}, which makes {total} in total. I checked the sum twice.",
+        "Total level {total} with that one. I've ruled off the column.",
+        "That's {total} across the lot. A round total gets its own line in the book.",
+        "{total} total. I keep the running sum on the inside cover."
+      ]
+    },
+    {
+      "id": "level-base",
+      "note": "The lowest skill catching up: the tick every skill became fifty, sixty, seventy, eighty or ninety or better. One rule over the five thresholds, since {base} says which.",
+      "group": "misc",
+      "priority": 49,
+      "cooldownMs": 60000,
+      "mood": 8,
+      "when": {
+        "type": "any",
+        "conditions": [
+          {
+            "type": "milestone",
+            "is": "base",
+            "minimum": 50
+          },
+          {
+            "type": "milestone",
+            "is": "base",
+            "minimum": 60
+          },
+          {
+            "type": "milestone",
+            "is": "base",
+            "minimum": 70
+          },
+          {
+            "type": "milestone",
+            "is": "base",
+            "minimum": 80
+          },
+          {
+            "type": "milestone",
+            "is": "base",
+            "minimum": 90
+          }
+        ]
+      },
+      "say": [
+        "Every skill at {base} or better now. The lowest column has caught up.",
+        "Nothing under {base} any more. I've retired the page I kept for it.",
+        "That was the laggard. Base {base}, all round.",
+        "{skill} was the one holding the base down. Not any more: {base} across the board."
+      ]
+    },
+    {
+      "id": "level-after-a-gap",
+      "note": "A level in a skill the player had left alone for a week or more. {sinceLast} is the gap in words; levelGap is the guard that makes it a number worth printing.",
+      "group": "misc",
+      "priority": 47,
+      "cooldownMs": 60000,
+      "mood": 6,
+      "when": {
+        "type": "levelGap",
+        "minimum": 10080
+      },
+      "say": [
+        "{skill} again, after {sinceLast}. I'd stopped leaving the page open.",
+        "{sinceLast} since the last {skill} level. I'd wondered.",
+        "Back to {skill} after {sinceLast}. The ink had dried on that page.",
+        "A {skill} level, the first in {sinceLast}. Duly noted, and slightly surprised."
+      ]
+    },
+    {
+      "id": "level-quick",
+      "note": "The other end: a second level in the same skill inside ten minutes. Low priority and a chance roll, so it is an occasional aside rather than a commentary on fast experience.",
+      "group": "misc",
+      "priority": 43,
+      "cooldownMs": 300000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "levelGap",
+            "maximum": 10
+          },
+          {
+            "type": "chance",
+            "percent": 40
+          }
+        ]
+      },
+      "say": [
+        "Another {skill} level, {sinceLast} after the last. I can barely keep up.",
+        "{sinceLast} since the last one. The page for {skill} is getting crowded.",
+        "Two {skill} levels in {sinceLast}. I've had to write smaller."
+      ]
+    },
+    {
       "id": "first-meeting",
       "note": "The very first login, ever. First of the four arrival-arc lines: the moments where the follower has no history to draw on, which is exactly the window in which a new player decides whether to keep the plugin. Beats login-greeting on priority. The sessionCount gate is belt and braces behind once, so a lost memory still cannot introduce the follower twice.",
       "group": "misc",
@@ -7839,6 +8034,68 @@
       ]
     },
     {
+      "id": "kill-count-first",
+      "note": "The game's own count reaching one: the first kill of a boss on this account, whoever was watching. The delay lets the kill line land first.",
+      "group": "boss",
+      "priority": 75,
+      "cooldownMs": 30000,
+      "delayTicks": 3,
+      "delayTicksMax": 5,
+      "mood": 12,
+      "when": {
+        "type": "killCount",
+        "minimum": 1,
+        "maximum": 1
+      },
+      "say": [
+        "Your first {boss}. It goes in the book with the date.",
+        "One {boss}. The first of, I suspect, many.",
+        "{boss}, once. A new page. I've been saving a good one."
+      ]
+    },
+    {
+      "id": "kill-count-round",
+      "note": "The counts a person says out loud - five, ten, twenty-five, fifty, seventy-five, the hundreds, then every five hundred. The account's number rather than the follower's tally, so it can say forty-first on the day they met. Acknowledging the cycle is what makes the fiftieth trip feel watched rather than repeated.",
+      "group": "boss",
+      "priority": 72,
+      "cooldownMs": 60000,
+      "delayTicks": 3,
+      "delayTicksMax": 5,
+      "mood": 8,
+      "when": {
+        "type": "killCount",
+        "is": "round",
+        "minimum": 5
+      },
+      "say": [
+        "{count} of {boss}. I've stopped bringing the notes; I know how it goes.",
+        "Your {ordinal} {boss}. The pages are getting thin.",
+        "{ordinal} time. I could draw {boss} from memory now.",
+        "That makes {count} {boss}. The ledger has a column just for it.",
+        "{count}. I remember the first {boss} as if it were an hour ago. It was longer."
+      ]
+    },
+    {
+      "id": "kill-count-thousand",
+      "note": "A thousand of one boss, and every thousand after. Outranks the round line.",
+      "group": "boss",
+      "priority": 76,
+      "cooldownMs": 60000,
+      "delayTicks": 3,
+      "delayTicksMax": 5,
+      "hushMs": 6000,
+      "mood": 14,
+      "when": {
+        "type": "killCount",
+        "every": 1000
+      },
+      "say": [
+        "{count} {boss}. I've bound a new volume for it.",
+        "A thousand. If {boss} keeps a book on you, it is a long one.",
+        "Your {ordinal} {boss}. I ran out of room in the margin around the six hundredth."
+      ]
+    },
+    {
       "id": "mimic-emote-loops",
       "note": "Holds your emote for as long as you do. The game splits a held emote in two - an entry clip, which mimic-emotes copies, and a loop it plays until you stop. The loop is mirrored as a POSE rather than an emote, because a pose loops by nature and is released when your animation changes; playing it as an emote would wait forever for a finish that never comes.",
       "group": "mimic",
@@ -8158,6 +8415,39 @@
         "A few hours by my count. The count is reliable.",
         "You missed nothing. I double-checked.",
         "Nothing happened. I wrote that down, too."
+      ]
+    },
+    {
+      "id": "last-time",
+      "note": "The greeting that remembers what you were doing rather than how long it has been. lastTime is the last nameable thing the two of you did - the work, a boss, a level, a quest - carried across the logout. An hour away or more, and a chance roll so the plain away lines keep a share.",
+      "group": "misc",
+      "priority": 71,
+      "cooldownMs": 5000,
+      "delayTicks": 6,
+      "delayTicksMax": 10,
+      "output": "both",
+      "mood": 4,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "lastTime"
+          },
+          {
+            "type": "awayFor",
+            "minimum": 60
+          },
+          {
+            "type": "chance",
+            "percent": 60
+          }
+        ]
+      },
+      "say": [
+        "Back, then. Last time it was {lastTime}, as I recall.",
+        "There you are. We left off {lastTime}, if the notes are right.",
+        "Hello again. I still have the page open from {lastTime}.",
+        "You're back. I was going over the notes on {lastTime}."
       ]
     },
     {
@@ -11792,6 +12082,35 @@
         "It's official. The index says {nickname}.",
         "History gets a say, and it says {nickname}.",
         "{nickname}. Cross-referenced and everything."
+      ]
+    },
+    {
+      "id": "grateful-idle",
+      "note": "The half hour after the player did what the follower asked - went where it wanted, brought what it wished for. The body pays the favour back on its own (closer attention, quicker gestures); this is the rare line that says so.",
+      "group": "memory",
+      "priority": 24,
+      "cooldownMs": 1200000,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "grateful"
+          },
+          {
+            "type": "idle",
+            "ticks": 100
+          },
+          {
+            "type": "chance",
+            "percent": 5
+          }
+        ]
+      },
+      "say": [
+        "Still in your debt from earlier. I'm keeping a closer eye today.",
+        "I haven't forgotten the favour. Consider me attentive.",
+        "You did the thing I asked. I've been standing a little straighter since."
       ]
     },
     {

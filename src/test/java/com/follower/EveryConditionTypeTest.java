@@ -1597,6 +1597,65 @@ public class EveryConditionTypeTest
 		fires("{\"type\": \"bagHalf\"}", TriggerEvent.simple(TriggerEvent.Type.BAG_HALF));
 	}
 
+	@Test
+	public void theMilestonesTheCountsAndTheDebt() throws IOException
+	{
+		note("milestone", "levelGap", "killCount", "grateful", "lastTime");
+
+		long day = 24L * 60 * 60_000L;
+		fires("{\"type\": \"milestone\", \"is\": \"halfway\"}",
+			TriggerEvent.levelUp("Fishing", 92, 1500, 1499, 40, 40, 0, day, day));
+		quiet("{\"type\": \"milestone\", \"is\": \"halfway\"}",
+			TriggerEvent.levelUp("Fishing", 91, 1500, 1499, 40, 40, 0, day, day));
+		fires("{\"type\": \"milestone\", \"is\": \"round\"}",
+			TriggerEvent.levelUp("Fishing", 70, 1500, 1499, 40, 40, 0, day, day));
+		quiet("{\"type\": \"milestone\", \"is\": \"round\"}",
+			TriggerEvent.levelUp("Fishing", 40, 1500, 1499, 40, 40, 0, day, day));
+		fires("{\"type\": \"milestone\", \"is\": \"mastery\", \"minimum\": 2}",
+			TriggerEvent.levelUp("Fishing", 99, 1500, 1499, 40, 40, 2, day, day));
+		quiet("{\"type\": \"milestone\", \"is\": \"mastery\", \"minimum\": 2}",
+			TriggerEvent.levelUp("Fishing", 99, 1500, 1499, 40, 40, 1, day, day));
+		fires("{\"type\": \"milestone\", \"is\": \"total\", \"every\": 100}",
+			TriggerEvent.levelUp("Fishing", 70, 1500, 1499, 40, 40, 0, day, day));
+		quiet("{\"type\": \"milestone\", \"is\": \"total\", \"every\": 100}",
+			TriggerEvent.levelUp("Fishing", 70, 1501, 1500, 40, 40, 0, day, day));
+		fires("{\"type\": \"milestone\", \"is\": \"base\", \"minimum\": 50}",
+			TriggerEvent.levelUp("Fishing", 50, 1500, 1499, 50, 49, 0, day, day));
+		quiet("{\"type\": \"milestone\", \"is\": \"base\", \"minimum\": 50}",
+			TriggerEvent.levelUp("Fishing", 51, 1500, 1499, 50, 50, 0, day, day));
+
+		fires("{\"type\": \"levelGap\", \"minimum\": 10080}",
+			TriggerEvent.levelUp("Fishing", 70, 1500, 1499, 40, 40, 0, 8 * day, day));
+		quiet("{\"type\": \"levelGap\", \"minimum\": 10080}",
+			TriggerEvent.levelUp("Fishing", 70, 1500, 1499, 40, 40, 0, 6 * day, day));
+		quiet("{\"type\": \"levelGap\", \"maximum\": 10}",
+			TriggerEvent.levelUp("Fishing", 70, 1500, 1499, 40, 40, 0, -1, -1));
+
+		fires("{\"type\": \"killCount\", \"names\": [\"Vork*\"], \"is\": \"round\"}",
+			TriggerEvent.killCount("Vorkath", 50, 49));
+		quiet("{\"type\": \"killCount\", \"names\": [\"Zulrah\"]}",
+			TriggerEvent.killCount("Vorkath", 50, 49));
+		quiet("{\"type\": \"killCount\", \"is\": \"round\"}",
+			TriggerEvent.killCount("Vorkath", 51, 50));
+		fires("{\"type\": \"killCount\", \"every\": 100}",
+			TriggerEvent.killCount("Vorkath", 300, 299));
+
+		Harness owed = harnessFor("{\"type\": \"grateful\"}");
+		owed.gameTicks(2);
+		assertQuiet(owed, "nothing owed");
+		owed.engine.getContext().noteFavour();
+		owed.gameTicks(1);
+		assertFired(owed, "grateful");
+
+		Harness last = harnessFor("{\"type\": \"lastTime\"}");
+		last.gameTicks(1);
+		last.dispatch(TriggerEvent.simple(TriggerEvent.Type.LOGIN));
+		assertQuiet(last, "no last time on record");
+		last.engine.getContext().restoreLastThing("the mining");
+		last.dispatch(TriggerEvent.simple(TriggerEvent.Type.LOGIN));
+		assertFired(last, "lastTime");
+	}
+
 	// ------------------------------------------------------------- coverage
 
 	@Test
@@ -1642,6 +1701,7 @@ public class EveryConditionTypeTest
 		underfootAndGoneFromTheKeyboard();
 		theScribeNoticesTheWiderWorld();
 		theSkillingCompany();
+		theMilestonesTheCountsAndTheDebt();
 
 		List<String> missing = new ArrayList<>(new TreeSet<>(RuleSetIntegrityTest.KNOWN_TYPES));
 		missing.removeAll(exercised);

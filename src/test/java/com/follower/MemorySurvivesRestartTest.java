@@ -53,6 +53,8 @@ public class MemorySurvivesRestartTest
 		context.setMetOnDay(20_400L);
 		context.setMetWearingValue(1_234);
 		context.restoreDeathSpot(new WorldPoint(3200, 3200, 1));
+		context.noteLevel("Fishing", 70, 1_700_000_000_000L);
+		context.noteDoing("fighting Vorkath");
 		return context;
 	}
 
@@ -75,6 +77,10 @@ public class MemorySurvivesRestartTest
 		assertEquals("what you were wearing when it met you", 1_234, metWearing);
 		assertEquals("where you died", new WorldPoint(3200, 3200, 1),
 			after.getDeathLocation());
+		assertEquals("when Fishing last went up", Long.valueOf(1_700_000_000_000L),
+			after.getLevelStamps().get("fishing"));
+		assertEquals("what you were doing last time", "fighting Vorkath",
+			after.getLastTime());
 
 		// The one that would be silent if it broke.
 		assertTrue("a spent introduction has to survive a restart",

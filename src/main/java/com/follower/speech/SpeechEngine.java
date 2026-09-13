@@ -285,6 +285,11 @@ public class SpeechEngine
 			// and lives in phrases.json with everything else.
 			context.tally(outcome == TriggerContext.WantOutcome.FULFILLED
 				? "want:kept" : "want:missed");
+			if (outcome == TriggerContext.WantOutcome.FULFILLED)
+			{
+				// A favour done is a favour owed.
+				context.noteFavour();
+			}
 			dispatch(TriggerEvent.want(
 				outcome == TriggerContext.WantOutcome.FULFILLED
 					? TriggerEvent.Type.WANT_FULFILLED
@@ -1019,6 +1024,7 @@ public class SpeechEngine
 		if (Boolean.TRUE.equals(rule.grantsWish) && !text.isEmpty())
 		{
 			getContext().clearWish();
+			getContext().noteFavour();
 		}
 		if (rule.bet != null && rule.bet.threshold != null && !text.isEmpty())
 		{
@@ -1106,6 +1112,7 @@ public class SpeechEngine
 		values.putIfAbsent("wish", ctx.getWishLabel());
 		values.putIfAbsent("here", ctx.getPlaceMemory());
 		values.putIfAbsent("nickname", ctx.getNickname());
+		values.putIfAbsent("lastTime", ctx.getLastTime());
 		values.putIfAbsent("left", Integer.toString(ctx.getChallengeLeft()));
 		values.putIfAbsent("days", Integer.toString(ctx.getDaysKnown()));
 		values.putIfAbsent("hp", Integer.toString(ctx.getHitpoints()));
