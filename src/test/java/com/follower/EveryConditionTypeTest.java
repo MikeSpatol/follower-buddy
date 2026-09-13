@@ -1607,6 +1607,12 @@ public class EveryConditionTypeTest
 			TriggerEvent.noticed("impling", "Dragon impling"));
 		quiet("{\"type\": \"noticed\", \"is\": \"nest\"}",
 			TriggerEvent.noticed("impling", "Dragon impling"));
+		note("hesitated", "steppedAside");
+		fires("{\"type\": \"hesitated\", \"is\": \"monster\"}",
+			TriggerEvent.hesitated("monster", "Hill Giant"));
+		quiet("{\"type\": \"hesitated\", \"is\": \"wilderness\"}",
+			TriggerEvent.hesitated("monster", "Hill Giant"));
+		fires("{\"type\": \"steppedAside\"}", TriggerEvent.simple(TriggerEvent.Type.STEPPED_ASIDE));
 
 		long day = 24L * 60 * 60_000L;
 		fires("{\"type\": \"milestone\", \"is\": \"halfway\"}",

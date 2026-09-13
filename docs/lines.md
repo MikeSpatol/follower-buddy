@@ -1,6 +1,6 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 471 rules, 2319 spoken lines, 2 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 474 rules, 2332 spoken lines, 2 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
@@ -8,7 +8,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (42 rules, 190 lines)
 - [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (36 rules, 222 lines)
-- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (40 rules, 291 lines)
+- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (43 rules, 304 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 114 lines)
 - [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 72 lines)
 - [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (21 rules, 109 lines)
@@ -1300,6 +1300,43 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - A {thing}. Somebody meant this to be read, so I'm reading it.
 - Hold on. I want the wording of this {thing} exactly.
 - Everything on a {thing} is on the record now.
+
+### `hesitated-wilderness`
+
+> Sent across the ditch from the safe side. It has walked to the edge and turned to look at the player; it is not going over. Trico's beat of reluctance, with the honesty that it cannot cross anyway.
+
+- **when:** hesitated
+- **pacing:** priority 66, cooldown 30s, delay 2-4 ticks, overhead
+
+- Not over that. I'll wait here.
+- The ditch is where my courage ends. I'll keep the notes safe this side.
+- You go on. Somebody has to be able to write down what happened.
+- I'll watch from here. It's a good view of {thing}, from here.
+
+### `hesitated-monster`
+
+> Sent to a spot beside something twenty levels over the player. It stops three tiles short, looks back for a beat, and then goes. Not a refusal: the beat before yes.
+
+- **when:** hesitated
+- **pacing:** priority 65, cooldown 30s, delay 1-3 ticks, overhead
+
+- Next to the {thing}? All right. Give me a moment.
+- I'm going. I'm just not hurrying, with that {thing} there.
+- Right beside the {thing}. If you say so.
+- One second. I want to be sure the {thing} has seen me and decided against it.
+
+### `stepped-aside`
+
+> The player walked straight at the parked follower and it stepped aside at the last tick. Ellie's rule: not preemptively, and with a word about personal space, which is what made players respect her.
+
+- **when:** steppedaside AND a 70% roll
+- **pacing:** priority 50, cooldown 1m, overhead
+
+- Mind.
+- I was here first, you know.
+- Excuse me.
+- Go on, then. Don't mind me.
+- There's a whole field.
 
 ### `fail-burnt-food`
 

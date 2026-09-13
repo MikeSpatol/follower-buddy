@@ -1393,6 +1393,27 @@ off, each thing is noticed once, and each kind keeps its own cooldown.
 Ground items and objects that arrive with a chunk load are ignored, since
 none of them is a drop the player just walked away from.
 
+**The will** (`Will`). The beat before yes. A Send with a misgiving in it -
+across the Wilderness ditch from the safe side, or to a spot within two
+tiles of an NPC twenty combat levels over the player - is walked to its edge
+first (the row south of the ditch; three tiles short of the monster, on the
+follower's side), where the follower turns to look at the player for three
+ticks and the `hesitated` condition carries the line (`{misgiving}` is the
+kind, `{thing}` the Wilderness or the monster's name). Then it goes on if it
+can: it cannot cross the ditch, so it waits at the edge; beside the monster
+it goes, not hurrying. Once per ditch and per monster. And a parked
+follower - a wander, a player's Stay, never a seat or a moment or an errand
+- that the player walks straight at steps one tile aside at the last tick,
+not before, and `steppedAside` carries the word about it. Ellie's dodge
+rule, which the studio credits with making players respect her. Nothing
+here refuses: a companion that refuses is an escort quest.
+
+**Taste in the feet.** The wander already scaled its radius by mood; taste
+now comes first. Somewhere the follower dislikes it keeps within two tiles
+and, instead of going to look at things, keeps to the player's far side from
+whatever is nearest; somewhere it likes it strays a tile further than usual.
+The gaze does the rest (quick nervous looks, or slow long ones).
+
 **Not in scope.** The agility course spectator (it needs a course table) and
 the sailing deckhand (no verified deck stays). Both left out on purpose.
 

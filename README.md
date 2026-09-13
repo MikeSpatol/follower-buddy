@@ -67,7 +67,10 @@ you open the logout tab. It looks where you look: at whatever your cursor
 rests on, the way you turn the camera, and round at what is nearby while you
 stand about. And it notices what you have not, and goes to look: a drop of
 yours you walked away from, a nest, an impling, a crashed star, the signpost
-you stopped beside.
+you stopped beside. Send it somewhere it has misgivings about, across the
+ditch or up to something that could kill it, and it stops at the edge and
+looks back at you first. Walk straight at it while it is parked and it steps
+aside at the last tick, with a word.
 
 **Talk-to.** A proper NPC-style dialog box with a chathead. Ask how today went
 and it summarises the session; ask how it's been and it answers by mood; give

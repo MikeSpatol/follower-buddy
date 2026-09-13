@@ -294,6 +294,9 @@ public class FollowerPlugin extends Plugin
 	/** What it notices that the player has not, and goes to look at. */
 	private com.follower.follower.Noticing noticing;
 
+	/** The beat before yes: a Send with a misgiving, the late step aside. */
+	private com.follower.follower.Will will;
+
 	private Path dataDir;
 	private WorldPoint lastPlayerTile;
 	private int lastRegionId = -1;
@@ -681,6 +684,12 @@ public class FollowerPlugin extends Plugin
 				|| speechEngine.getContext().isInCombat() || inCutscene(),
 			() -> speechEngine.getContext().getIdleTicks(),
 			this::landmarksNearby);
+		// A park that is plainly a park - a wander, a player's Stay - may be
+		// stepped out of; a seat, a moment or an errand has its own reasons.
+		will = new com.follower.follower.Will(client, follower, speechEngine::dispatch,
+			() -> thrallNpc == null && !errands.isBusy() && !spectate.holdsTheFeet()
+				&& !skilling.holdsTheFeet() && !moments.holdsTheFeet() && !flourish.isActive()
+				&& minutesState == 0 && !emoteHold);
 
 		// On a fresh client boot the LOGIN_SCREEN transition can happen before
 		// this plugin subscribes, so the first login would not read as fresh.
@@ -835,6 +844,10 @@ public class FollowerPlugin extends Plugin
 		if (noticing != null)
 		{
 			noticing.reset();
+		}
+		if (will != null)
+		{
+			will.reset();
 		}
 		strandedLandingTicks = 0;
 
@@ -1381,6 +1394,16 @@ public class FollowerPlugin extends Plugin
 			// The ten minutes after a pet: it stays by the new arrival.
 			return Math.max(2, WANDER_RADIUS - 2);
 		}
+		// Taste before mood: somewhere it dislikes it keeps close whatever
+		// it is feeling, and somewhere it likes it strays a tile further.
+		if (speechEngine.getContext().feelsAbout("disliked"))
+		{
+			return Math.max(2, WANDER_RADIUS - 2);
+		}
+		if (speechEngine.getContext().feelsAbout("liked"))
+		{
+			return WANDER_RADIUS + 1;
+		}
 		String band = speechEngine.getContext().getMoodBand();
 		if ("low".equals(band) || "down".equals(band))
 		{
@@ -1474,7 +1497,17 @@ public class FollowerPlugin extends Plugin
 		// something underfoot, or it would inspect its way straight back into
 		// the way.
 		int nearest = thieving ? THIEVING_KEEP_MIN : 0;
-		if (driftToward(pickDistraction(local, from, nearest)))
+		// Somewhere it dislikes there is no going to look at things: it
+		// keeps to the player's far side from whatever is nearest.
+		if (!thieving && speechEngine.getContext().feelsAbout("disliked"))
+		{
+			List<WorldPoint> things = thingsNearby(DISTRACTION_RADIUS);
+			if (!things.isEmpty() && keepToTheFarSide(from, things.get(0)))
+			{
+				return;
+			}
+		}
+		else if (driftToward(pickDistraction(local, from, nearest)))
 		{
 			return;
 		}
@@ -1549,6 +1582,33 @@ public class FollowerPlugin extends Plugin
 				return;
 			}
 		}
+	}
+
+	/**
+	 * The tile beside the player on the side away from the thing, or the
+	 * next one out. Where the follower stands somewhere it would rather not
+	 * be: close, and with the player between it and whatever that is.
+	 */
+	private boolean keepToTheFarSide(WorldPoint player, WorldPoint thing)
+	{
+		int dx = Integer.signum(player.getX() - thing.getX());
+		int dy = Integer.signum(player.getY() - thing.getY());
+		if (dx == 0 && dy == 0)
+		{
+			dy = 1;
+		}
+		for (int step = 1; step <= 2; step++)
+		{
+			WorldPoint spot = new WorldPoint(player.getX() + dx * step,
+				player.getY() + dy * step, player.getPlane());
+			if (follower.stayAt(spot))
+			{
+				wandered = true;
+				follower.setStayFaceTile(null);
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -5517,7 +5577,10 @@ public class FollowerPlugin extends Plugin
 				showRedCross();
 				clientThread.invoke(() ->
 				{
-					if (!follower.stayAt(target))
+					// Through the will, which stops at an edge it has misgivings
+					// about before going on.
+					boolean sent = will != null ? will.send(target) : follower.stayAt(target);
+					if (!sent)
 					{
 						speak("I can't get to that spot from here!",
 							com.follower.speech.SpeechOutput.OVERHEAD, null, -1, null);
@@ -5876,6 +5939,10 @@ public class FollowerPlugin extends Plugin
 		{
 			// After the moments, whose feet it borrows for the walk.
 			noticing.tick();
+		}
+		if (will != null)
+		{
+			will.tick();
 		}
 
 		// After errands, so an errand in progress owns the feet: a follower

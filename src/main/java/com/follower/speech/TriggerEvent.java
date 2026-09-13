@@ -74,6 +74,10 @@ public final class TriggerEvent
 		FAREWELL,
 		/** The follower noticed something and went to look. */
 		NOTICED,
+		/** A Send with a misgiving in it: the follower stopped at the edge first. */
+		HESITATED,
+		/** The player walked straight at the parked follower and it stepped aside. */
+		STEPPED_ASIDE,
 	}
 
 	/**
@@ -515,6 +519,21 @@ public final class TriggerEvent
 		event.name = kind == null ? "" : kind;
 		event.message = thing == null ? "" : thing;
 		event.placeholders.put("kind", event.name);
+		event.placeholders.put("thing", event.message);
+		return event;
+	}
+
+	/**
+	 * Sent somewhere with a misgiving about it. {misgiving} is the kind
+	 * (wilderness, monster) and {thing} what it is about: "the Wilderness",
+	 * or the monster's name.
+	 */
+	public static TriggerEvent hesitated(String misgiving, String thing)
+	{
+		TriggerEvent event = new TriggerEvent(Type.HESITATED);
+		event.name = misgiving == null ? "" : misgiving;
+		event.message = thing == null ? "" : thing;
+		event.placeholders.put("misgiving", event.name);
 		event.placeholders.put("thing", event.message);
 		return event;
 	}

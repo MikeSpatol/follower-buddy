@@ -454,6 +454,18 @@ public class Condition
 					&& (contains == null || event.getMessage().toLowerCase(Locale.ROOT)
 						.contains(contains.toLowerCase(Locale.ROOT)));
 
+			// A Send the follower had misgivings about: it has stopped at the
+			// edge and turned to the player. "is" is the kind (wilderness,
+			// monster); {misgiving}, {thing}.
+			case "hesitated":
+				return event.getType() == TriggerEvent.Type.HESITATED
+					&& (is == null || is.equalsIgnoreCase(event.getName()));
+
+			// The player walked straight at the parked follower and it stepped
+			// aside at the last tick.
+			case "steppedaside":
+				return event.getType() == TriggerEvent.Type.STEPPED_ASIDE;
+
 			// The logout tab opening. The body waves; this is the rare word.
 			case "farewell":
 				return event.getType() == TriggerEvent.Type.FAREWELL;

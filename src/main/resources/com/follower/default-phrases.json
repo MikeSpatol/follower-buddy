@@ -8574,6 +8574,73 @@
       ]
     },
     {
+      "id": "hesitated-wilderness",
+      "note": "Sent across the ditch from the safe side. It has walked to the edge and turned to look at the player; it is not going over. Trico's beat of reluctance, with the honesty that it cannot cross anyway.",
+      "group": "reactions",
+      "priority": 66,
+      "cooldownMs": 30000,
+      "delayTicks": 2,
+      "delayTicksMax": 4,
+      "output": "overhead",
+      "when": {
+        "type": "hesitated",
+        "is": "wilderness"
+      },
+      "say": [
+        "Not over that. I'll wait here.",
+        "The ditch is where my courage ends. I'll keep the notes safe this side.",
+        "You go on. Somebody has to be able to write down what happened.",
+        "I'll watch from here. It's a good view of {thing}, from here."
+      ]
+    },
+    {
+      "id": "hesitated-monster",
+      "note": "Sent to a spot beside something twenty levels over the player. It stops three tiles short, looks back for a beat, and then goes. Not a refusal: the beat before yes.",
+      "group": "reactions",
+      "priority": 65,
+      "cooldownMs": 30000,
+      "delayTicks": 1,
+      "delayTicksMax": 3,
+      "output": "overhead",
+      "when": {
+        "type": "hesitated",
+        "is": "monster"
+      },
+      "say": [
+        "Next to the {thing}? All right. Give me a moment.",
+        "I'm going. I'm just not hurrying, with that {thing} there.",
+        "Right beside the {thing}. If you say so.",
+        "One second. I want to be sure the {thing} has seen me and decided against it."
+      ]
+    },
+    {
+      "id": "stepped-aside",
+      "note": "The player walked straight at the parked follower and it stepped aside at the last tick. Ellie's rule: not preemptively, and with a word about personal space, which is what made players respect her.",
+      "group": "reactions",
+      "priority": 50,
+      "cooldownMs": 60000,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "steppedAside"
+          },
+          {
+            "type": "chance",
+            "percent": 70
+          }
+        ]
+      },
+      "say": [
+        "Mind.",
+        "I was here first, you know.",
+        "Excuse me.",
+        "Go on, then. Don't mind me.",
+        "There's a whole field."
+      ]
+    },
+    {
       "id": "away-a-day",
       "note": "A day or more. Higher priority so it wins over away-a-while.",
       "group": "misc",
