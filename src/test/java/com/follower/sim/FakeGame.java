@@ -143,6 +143,14 @@ public final class FakeGame
 		return this;
 	}
 
+	/** Turns the player: the actor circle, 0 south, 512 west, 1024 north, 1536 east. */
+	public FakeGame turned(int jau)
+	{
+		playerAnswers.put("getOrientation", jau);
+		playerAnswers.put("getCurrentOrientation", jau);
+		return this;
+	}
+
 	/** Nudges the camera, which is what somebody being at the keyboard looks like. */
 	public FakeGame cameraMoved()
 	{

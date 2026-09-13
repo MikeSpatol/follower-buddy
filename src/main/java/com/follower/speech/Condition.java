@@ -466,6 +466,11 @@ public class Condition
 			case "steppedaside":
 				return event.getType() == TriggerEvent.Type.STEPPED_ASIDE;
 
+			// The player is addressing the follower: within a tile and turned
+			// toward it. What makes an emote a reply rather than an echo.
+			case "addressed":
+				return ctx.isAddressingFollower();
+
 			// The logout tab opening. The body waves; this is the rare word.
 			case "farewell":
 				return event.getType() == TriggerEvent.Type.FAREWELL;

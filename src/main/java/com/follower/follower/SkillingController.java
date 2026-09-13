@@ -56,6 +56,9 @@ public class SkillingController
 	/** Ticks the player has to be at it before the seat is taken. */
 	static final int SEAT_AFTER_TICKS = 6;
 
+	/** While a favour is owed the seat is taken in half the time. */
+	static final int GRATEFUL_SEAT_AFTER_TICKS = SEAT_AFTER_TICKS / 2;
+
 	/** A session with no animation and no drop for this long is over. */
 	static final int QUIET_END_TICKS = 25;
 
@@ -476,6 +479,20 @@ public class SkillingController
 		company.gesture(animationIds);
 	}
 
+	/** Whether the follower owes the player one just now; null means never. */
+	private java.util.function.BooleanSupplier grateful;
+
+	public void setGrateful(java.util.function.BooleanSupplier grateful)
+	{
+		this.grateful = grateful;
+	}
+
+	/** Ticks into the work before the seat is taken: fewer while a favour is owed. */
+	int seatAfter()
+	{
+		return grateful != null && grateful.getAsBoolean() ? GRATEFUL_SEAT_AFTER_TICKS : SEAT_AFTER_TICKS;
+	}
+
 	public boolean blocksErrands()
 	{
 		return holdsTheFeet() || (session != null && !"prayer".equals(session.activity));
@@ -640,7 +657,7 @@ public class SkillingController
 			// target or on it, is chosen again from scratch once they are at it.
 			session.settling = true;
 			reseat = true;
-			seatDueTick = now + SEAT_AFTER_TICKS;
+			seatDueTick = now + seatAfter();
 			company.aimAt(faceTile(), session.activity, modeFor(here), now);
 			log.debug("Work moved to {} at {}", name, min);
 			return;
@@ -754,7 +771,7 @@ public class SkillingController
 		session.xpDrops++;
 		session.lastDropTick = now;
 		session.lastEvidenceTick = now;
-		if (now - session.startTick >= SEAT_AFTER_TICKS)
+		if (now - session.startTick >= seatAfter())
 		{
 			// The drop may be what named the activity, and so the tool.
 			maybeBorrow();
@@ -1161,7 +1178,7 @@ public class SkillingController
 				session.settling = false;
 				if (!here.equals(session.workSpot))
 				{
-					seatDueTick = now + SEAT_AFTER_TICKS;
+					seatDueTick = now + seatAfter();
 				}
 				session.workSpot = here;
 			}
@@ -1320,7 +1337,7 @@ public class SkillingController
 		reseat = false;
 		refusedTool = 0;
 		refusedHat = 0;
-		seatDueTick = now + SEAT_AFTER_TICKS;
+		seatDueTick = now + seatAfter();
 		company.begin(now);
 		company.aimAt(faceTile(), session.activity, modeFor(session.workSpot), now);
 		log.debug("Work session: {} on {} at {}", session.option, session.targetName,

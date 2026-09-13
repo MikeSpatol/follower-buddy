@@ -1614,6 +1614,18 @@ public class EveryConditionTypeTest
 			TriggerEvent.hesitated("monster", "Hill Giant"));
 		fires("{\"type\": \"steppedAside\"}", TriggerEvent.simple(TriggerEvent.Type.STEPPED_ASIDE));
 
+		note("addressed");
+		Harness at = harnessFor("{\"type\": \"addressed\"}");
+		at.game.at(50, 50, 0).turned(0);
+		at.engine.getContext().setFollowerLocation(new WorldPoint(50, 49, 0));
+		at.gameTicks(1);
+		assertFired(at, "addressed: a tile south, facing south");
+		Harness away = harnessFor("{\"type\": \"addressed\"}");
+		away.game.at(50, 50, 0).turned(1024);
+		away.engine.getContext().setFollowerLocation(new WorldPoint(50, 49, 0));
+		away.gameTicks(1);
+		assertQuiet(away, "facing north, with it to the south");
+
 		long day = 24L * 60 * 60_000L;
 		fires("{\"type\": \"milestone\", \"is\": \"halfway\"}",
 			TriggerEvent.levelUp("Fishing", 92, 1500, 1499, 40, 40, 0, day, day));

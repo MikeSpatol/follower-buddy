@@ -1974,6 +1974,50 @@ public final class TriggerContext
 		}
 	}
 
+	// ------------------------------------------------------------ addressed
+
+	/**
+	 * Where the follower is standing, fed by the plugin each tick, so a
+	 * condition can ask whether the player is addressing it: within a tile
+	 * and turned toward it. An emote done AT the follower is a different
+	 * thing from an emote done near it, and the difference is the difference
+	 * between an echo and a reply.
+	 */
+	private WorldPoint followerLocation;
+
+	/** Within this much of the exact bearing counts as facing it. */
+	static final int FACING_TOLERANCE = 300;
+
+	public void setFollowerLocation(WorldPoint at)
+	{
+		followerLocation = at;
+	}
+
+	public boolean isAddressingFollower()
+	{
+		Player local = client.getLocalPlayer();
+		WorldPoint here = local == null ? null : local.getWorldLocation();
+		if (here == null || followerLocation == null || here.getPlane() != followerLocation.getPlane()
+			|| here.distanceTo(followerLocation) != 1)
+		{
+			return false;
+		}
+		int toward = bearing(followerLocation.getX() - here.getX(),
+			followerLocation.getY() - here.getY());
+		int d = (local.getOrientation() - toward) & 0x7ff;
+		return Math.min(d, 2048 - d) <= FACING_TOLERANCE;
+	}
+
+	/**
+	 * The orientation that faces (dx, dy), on the actor circle: 0 south, 512
+	 * west, 1024 north, 1536 east - the inverse of the facing vector
+	 * (-sin, -cos) the entity uses.
+	 */
+	public static int bearing(int dx, int dy)
+	{
+		return (int) Math.round(Math.atan2(-dx, -dy) / (2.0 * Math.PI) * 2048.0) & 0x7ff;
+	}
+
 	// -------------------------------------------------------- the challenge
 
 	/**

@@ -1,6 +1,6 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 474 rules, 2332 spoken lines, 2 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 496 rules, 2332 spoken lines, 2 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
@@ -21,7 +21,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - [boss](#boss) - Bosses sighted and fought (55 rules, 515 lines)
 - [quest](#quest) - Famous quest figures nearby (44 rules, 131 lines)
 - [thrall](#thrall) - When it stands in for a thrall (3 rules, 18 lines)
-- [mimic](#mimic) - Copying your emotes (8 rules, 16 lines)
+- [mimic](#mimic) - Copying your emotes (30 rules, 16 lines)
 - [dialogs](#dialogs) - the conversations it starts (2 trees)
 - [talk-to](#talk-to) - the everyday Talk-to script (in code)
 
@@ -6248,6 +6248,226 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** your animation 855, 856, 857, 858, 859, 860, 861, 862, 863, 864, 865, 866, 868, 870, 872, 874, 1128, 1129, 1130, 1131, 1374, 1481, 1482, 1483, 1484, 1485, 1708, 2105, 2106, 2107, 2108, 2109, 2110, 2111, 2112, 2113, 2709, 2836, 3544, 3859, 4275, 4276, 4278, 4280, 4751, 5059, 5312, 5313, 5315, 5316, 5693, 5694, 5695, 5696, 5697, 5698, 5699, 5700, 6111, 7131, 7278, 7751, 8331, 8332, 8536, 8537, 8541, 8792, 8855, 8917, 9208, 9831, 9832, 9833, 9834, 9835, 10031, 10038, 10051, 10053, 10503, 10678, 10781, 10796, 11526, 12514, 13801, 13803
 - **does:** mirrors you
 - **pacing:** priority 40, cooldown 2s, delay 1-4 ticks
+
+- *(no lines - animation or effect only)*
+
+### `answer-yes`
+
+> An emote done AT the follower - within a tile and facing it - is answered rather than copied: a yes back. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.
+
+- **when:** your animation 855 AND addressed
+- **does:** animation 855
+- **pacing:** priority 45, cooldown 3s, delay 2-3 ticks
+
+- *(no lines - animation or effect only)*
+
+### `answer-no`
+
+> An emote done AT the follower - within a tile and facing it - is answered rather than copied: a no gets a think. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.
+
+- **when:** your animation 856 AND addressed
+- **does:** animation 857
+- **pacing:** priority 45, cooldown 3s, delay 2-3 ticks
+
+- *(no lines - animation or effect only)*
+
+### `answer-think`
+
+> An emote done AT the follower - within a tile and facing it - is answered rather than copied: a think gets a shrug. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.
+
+- **when:** your animation 857 AND addressed
+- **does:** animation 2113
+- **pacing:** priority 45, cooldown 3s, delay 2-3 ticks
+
+- *(no lines - animation or effect only)*
+
+### `answer-bow`
+
+> An emote done AT the follower - within a tile and facing it - is answered rather than copied: a bow gets a bow. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.
+
+- **when:** your animation 858 AND addressed
+- **does:** animation 858
+- **pacing:** priority 45, cooldown 3s, delay 2-3 ticks
+
+- *(no lines - animation or effect only)*
+
+### `answer-angry`
+
+> An emote done AT the follower - within a tile and facing it - is answered rather than copied: anger gets a shrug. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.
+
+- **when:** your animation 859 AND addressed
+- **does:** animation 2113
+- **pacing:** priority 45, cooldown 3s, delay 2-3 ticks
+
+- *(no lines - animation or effect only)*
+
+### `answer-cry`
+
+> An emote done AT the follower - within a tile and facing it - is answered rather than copied: crying gets a think. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.
+
+- **when:** your animation 860 AND addressed
+- **does:** animation 857
+- **pacing:** priority 45, cooldown 3s, delay 2-3 ticks
+
+- *(no lines - animation or effect only)*
+
+### `answer-laugh`
+
+> An emote done AT the follower - within a tile and facing it - is answered rather than copied: a laugh is caught. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.
+
+- **when:** your animation 861 AND addressed
+- **does:** animation 861
+- **pacing:** priority 45, cooldown 3s, delay 2-3 ticks
+
+- *(no lines - animation or effect only)*
+
+### `answer-cheer`
+
+> An emote done AT the follower - within a tile and facing it - is answered rather than copied: a cheer gets a clap. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.
+
+- **when:** your animation 862 AND addressed
+- **does:** animation 865
+- **pacing:** priority 45, cooldown 3s, delay 2-3 ticks
+
+- *(no lines - animation or effect only)*
+
+### `answer-wave`
+
+> An emote done AT the follower - within a tile and facing it - is answered rather than copied: a wave gets a wave. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.
+
+- **when:** your animation 863 AND addressed
+- **does:** animation 863
+- **pacing:** priority 45, cooldown 3s, delay 2-3 ticks
+
+- *(no lines - animation or effect only)*
+
+### `answer-beckon`
+
+> An emote done AT the follower - within a tile and facing it - is answered rather than copied: a beckon gets a yes. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.
+
+- **when:** your animation 864 AND addressed
+- **does:** animation 855
+- **pacing:** priority 45, cooldown 3s, delay 2-3 ticks
+
+- *(no lines - animation or effect only)*
+
+### `answer-clap`
+
+> An emote done AT the follower - within a tile and facing it - is answered rather than copied: applause gets a bow. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.
+
+- **when:** your animation 865 AND addressed
+- **does:** animation 858
+- **pacing:** priority 45, cooldown 3s, delay 2-3 ticks
+
+- *(no lines - animation or effect only)*
+
+### `answer-dance`
+
+> An emote done AT the follower - within a tile and facing it - is answered rather than copied: a dance gets a dance, a beat behind. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.
+
+- **when:** your animation 866 AND addressed
+- **does:** animation 866
+- **pacing:** priority 45, cooldown 3s, delay 2-3 ticks
+
+- *(no lines - animation or effect only)*
+
+### `answer-jump-for-joy`
+
+> An emote done AT the follower - within a tile and facing it - is answered rather than copied: a jump for joy gets a cheer. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.
+
+- **when:** your animation 2109 AND addressed
+- **does:** animation 862
+- **pacing:** priority 45, cooldown 3s, delay 2-3 ticks
+
+- *(no lines - animation or effect only)*
+
+### `answer-salute`
+
+> An emote done AT the follower - within a tile and facing it - is answered rather than copied: a salute is returned. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.
+
+- **when:** your animation 2112 AND addressed
+- **does:** animation 2112
+- **pacing:** priority 45, cooldown 3s, delay 2-3 ticks
+
+- *(no lines - animation or effect only)*
+
+### `answer-shrug`
+
+> An emote done AT the follower - within a tile and facing it - is answered rather than copied: a shrug gets a shrug. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.
+
+- **when:** your animation 2113 AND addressed
+- **does:** animation 2113
+- **pacing:** priority 45, cooldown 3s, delay 2-3 ticks
+
+- *(no lines - animation or effect only)*
+
+### `answer-yawn`
+
+> An emote done AT the follower - within a tile and facing it - is answered rather than copied: a yawn is catching. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.
+
+- **when:** your animation 2111 AND addressed
+- **does:** animation 2111
+- **pacing:** priority 45, cooldown 3s, delay 2-3 ticks
+
+- *(no lines - animation or effect only)*
+
+### `answer-blow-kiss`
+
+> An emote done AT the follower - within a tile and facing it - is answered rather than copied: a blown kiss gets a bow. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.
+
+- **when:** your animation 1374 AND addressed
+- **does:** animation 858
+- **pacing:** priority 45, cooldown 3s, delay 2-3 ticks
+
+- *(no lines - animation or effect only)*
+
+### `answer-raspberry`
+
+> An emote done AT the follower - within a tile and facing it - is answered rather than copied: a raspberry gets anger. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.
+
+- **when:** your animation 2110 AND addressed
+- **does:** animation 859
+- **pacing:** priority 45, cooldown 3s, delay 2-3 ticks
+
+- *(no lines - animation or effect only)*
+
+### `answer-panic`
+
+> An emote done AT the follower - within a tile and facing it - is answered rather than copied: panic gets a think. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.
+
+- **when:** your animation 2105 AND addressed
+- **does:** animation 857
+- **pacing:** priority 45, cooldown 3s, delay 2-3 ticks
+
+- *(no lines - animation or effect only)*
+
+### `answer-jig`
+
+> An emote done AT the follower - within a tile and facing it - is answered rather than copied: a jig gets a jig. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.
+
+- **when:** your animation 2106 AND addressed
+- **does:** animation 2106
+- **pacing:** priority 45, cooldown 3s, delay 2-3 ticks
+
+- *(no lines - animation or effect only)*
+
+### `answer-spin`
+
+> An emote done AT the follower - within a tile and facing it - is answered rather than copied: a spin gets a spin. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.
+
+- **when:** your animation 2107 AND addressed
+- **does:** animation 2107
+- **pacing:** priority 45, cooldown 3s, delay 2-3 ticks
+
+- *(no lines - animation or effect only)*
+
+### `answer-headbang`
+
+> An emote done AT the follower - within a tile and facing it - is answered rather than copied: a headbang gets a headbang. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.
+
+- **when:** your animation 2108 AND addressed
+- **does:** animation 2108
+- **pacing:** priority 45, cooldown 3s, delay 2-3 ticks
 
 - *(no lines - animation or effect only)*
 

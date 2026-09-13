@@ -649,6 +649,8 @@ public class FollowerPlugin extends Plugin
 			() -> client.getWidget(net.runelite.api.gameval.InterfaceID.BANKMAIN, 0) != null);
 		// The prayer at the altar and the fire line borrow two of the errands.
 		skilling.setErrands(errands::force);
+		// The seat is taken sooner for the half hour after a favour.
+		skilling.setGrateful(() -> speechEngine.getContext().isGrateful());
 		// And in return no errand of the follower's own starts mid-session.
 		errands.setSession(() -> skilling.isWorking() || inCutscene());
 		// The moments excuse the seat for themselves; everything else that
@@ -5783,6 +5785,8 @@ public class FollowerPlugin extends Plugin
 		}
 
 		updateTrail(local);
+		// Where the follower stands, for the addressed condition.
+		speechEngine.getContext().setFollowerLocation(follower.getWorldLocation());
 
 		// Learn weapon stances from everyone on screen, including ourselves.
 		stanceLibrary.observe(client);
@@ -6903,6 +6907,9 @@ public class FollowerPlugin extends Plugin
 			log.info("WATCH self animation {}", animationId);
 		}
 
+		// The follower's tile as of this event, not the last tick's: an emote
+		// done at it is judged on where it is.
+		speechEngine.getContext().setFollowerLocation(follower.getWorldLocation());
 		speechEngine.dispatch(TriggerEvent.animation(animationId));
 	}
 

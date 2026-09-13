@@ -2742,4 +2742,14 @@ public class SkillingSessionTest
 			}
 		}
 	}
+	@Test
+	public void whileAFavourIsOwedTheSeatIsTakenSooner()
+	{
+		skilling.setGrateful(() -> true);
+		clickTheTree();
+		game.animating(CHOP);
+		tick(1);
+		tick(SkillingController.GRATEFUL_SEAT_AFTER_TICKS);
+		assertNotNull("the seat, in half the time", skilling.getSeat());
+	}
 }

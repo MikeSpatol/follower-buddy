@@ -70,7 +70,9 @@ yours you walked away from, a nest, an impling, a crashed star, the signpost
 you stopped beside. Send it somewhere it has misgivings about, across the
 ditch or up to something that could kill it, and it stops at the edge and
 looks back at you first. Walk straight at it while it is parked and it steps
-aside at the last tick, with a word.
+aside at the last tick, with a word. Do an emote at it, a tile away and
+facing it, and it answers rather than copies: a bow gets a bow, a cheer a
+clap, a dance a dance a beat behind.
 
 **Talk-to.** A proper NPC-style dialog box with a chathead. Ask how today went
 and it summarises the session; ask how it's been and it answers by mood; give

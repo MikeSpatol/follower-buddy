@@ -425,6 +425,11 @@ mood stretches or shortens on top.
 | `killCount` | the game's own count after a boss ("Your Vorkath kill count is: 41"), read out of chat. Optional `names`, `minimum`/`maximum`, `every`; `is: round` fires on the counts a person says out loud (1, 5, 10, 25, 50, 75, the hundreds, then every five hundred). `{boss}`, `{count}`, `{ordinal}` ("forty-first"), `{lastCount}` |
 | `grateful` | - the half hour after the player did what the follower asked: went where it wanted, brought what it wished for |
 | `lastTime` | - login only: the follower remembers what the two of you were doing when the last session ended. `{lastTime}` says it: "the woodcutting", "fighting Vorkath", "getting Fishing to 70", "finishing Dragon Slayer" |
+| `farewell` | - the logout tab opened. The body waves on its own; this is the rare word |
+| `noticed` | `is` - `valuable`, `nest`, `impling`, `star` or `landmark`; optional `contains` on the thing's name. The follower noticed it and set off to look. `{kind}`, `{thing}` |
+| `hesitated` | `is` - `wilderness` or `monster`: a Send the follower had misgivings about; it has stopped at the edge and turned to the player. `{misgiving}`, `{thing}` |
+| `steppedAside` | - the player walked straight at the parked follower and it stepped aside at the last tick |
+| `addressed` | - the player is within a tile of the follower and turned toward it; what makes an emote a reply rather than an echo |
 | `login`, `always` | - |
 | `chance` | `percent`, rolled each evaluation |
 
@@ -1413,6 +1418,23 @@ now comes first. Somewhere the follower dislikes it keeps within two tiles
 and, instead of going to look at things, keeps to the player's far side from
 whatever is nearest; somewhere it likes it strays a tile further than usual.
 The gaze does the rest (quick nervous looks, or slow long ones).
+
+**Answering an emote** (the `answer-*` rules in the mimic group, and the
+`addressed` condition). An emote done AT the follower - within a tile and
+turned toward it, which `TriggerContext.isAddressingFollower` reads off the
+player's orientation against the bearing to the follower's tile - is
+answered rather than copied: a bow gets a bow, a cheer a clap, a clap a
+bow, a dance a dance a beat behind, a raspberry anger, a yawn a yawn. The
+answers outrank the mimic by priority for that one event, so the copy never
+plays on top, and they are rules, so the table lives in phrases.json and a
+new answer is a rule and not a code change. Every reply is an id the mimic
+list already proves on the follower. The difference between an echo and a
+reply is the difference between a mirror and company, and it is the closest
+OSRS gets to petting the dog.
+
+**Goodwill in the body.** For the half hour after the player does what the
+follower asked (`isGrateful`), the gestures' cooldowns are halved and the
+seat is taken in half the time (`SkillingController.seatAfter`).
 
 **Not in scope.** The agility course spectator (it needs a course table) and
 the sailing deckhand (no verified deck stays). Both left out on purpose.
