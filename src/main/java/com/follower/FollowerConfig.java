@@ -860,6 +860,20 @@ public interface FollowerConfig extends Config
 		return true;
 	}
 
+	@ConfigItem(
+		keyName = "walksBeside",
+		name = "Walks beside you on open ground",
+		description = "On a long run it draws level and walks at your shoulder instead of"
+			+ " trailing behind, and drops back the moment the ground narrows."
+			+ " Untick to keep it at your heel.",
+		section = companySection,
+		position = 2
+	)
+	default boolean walksBeside()
+	{
+		return true;
+	}
+
 	// ------------------------------------------------------------ rule groups
 
 	@ConfigItem(

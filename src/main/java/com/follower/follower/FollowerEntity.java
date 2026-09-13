@@ -108,6 +108,133 @@ public class FollowerEntity
 	private WorldPoint lastSeenPlayerTile;
 	private boolean playerRunning;
 
+	// ----------------------------------------------------- walking beside
+
+	/**
+	 * On a long run over open ground the follower draws level and walks at
+	 * the player's shoulder instead of trailing a tile behind. Pets trail;
+	 * friends walk alongside. The follow tile is the only thing that
+	 * changes - the path model, the releases and the speeds are untouched -
+	 * and it changes only after this many continuous steps, only while the
+	 * flank tile is open ground the player could step to, and never while a
+	 * stay pose or a goal has the feet. Two blocked flanks in a row drop it
+	 * back behind, where it stays for a few steps before trying again, so a
+	 * hedge-lined path does not have it hopping in and out.
+	 */
+	static final int BESIDE_AFTER_STEPS = 10;
+	static final int BESIDE_RETRY_STEPS = 8;
+	static final int BESIDE_MISSES = 2;
+	/** A pause in the player's steps longer than this ends the run. */
+	static final long BESIDE_PAUSE_MS = 1500;
+
+	/** Set by the plugin: the setting is on and nothing else has the follower. */
+	private boolean besideAllowed;
+	private int stepStreak;
+	private int besideMisses;
+	private boolean beside;
+	private int besideSide = 1;
+	private long lastStepMs;
+
+	public void setWalksBeside(boolean allowed)
+	{
+		besideAllowed = allowed;
+		if (!allowed)
+		{
+			beside = false;
+			stepStreak = 0;
+		}
+	}
+
+	/** Whether the follower is currently walking at the player's shoulder. */
+	public boolean isWalkingBeside()
+	{
+		return beside;
+	}
+
+	/**
+	 * Where to follow to this observation: the tile behind, or the flank
+	 * once the run has gone on long enough and the flank is open.
+	 *
+	 * @param previous the player's tile before this step
+	 * @param current their tile now
+	 * @param behind the trailing follow tile already worked out
+	 * @param steps how many server steps this observation covered
+	 */
+	WorldPoint followTileFor(WorldPoint previous, WorldPoint current, WorldPoint behind,
+		int steps, long nowMs)
+	{
+		if (lastStepMs > 0 && nowMs - lastStepMs > BESIDE_PAUSE_MS)
+		{
+			// They stopped for a moment: the run starts again from nothing.
+			stepStreak = 0;
+			beside = false;
+		}
+		lastStepMs = nowMs;
+		stepStreak += Math.max(1, steps);
+		if (!besideAllowed || stayTile != null || goalTile != null)
+		{
+			beside = false;
+			return behind;
+		}
+		if (!beside)
+		{
+			if (stepStreak < BESIDE_AFTER_STEPS)
+			{
+				return behind;
+			}
+			beside = true;
+			besideMisses = 0;
+			besideSide = sideOf(previous, current, tile);
+		}
+		WorldPoint flank = flankTile(previous, current, besideSide);
+		if (flank != null && standable(flank)
+			&& canStep(current, flank.getX() - current.getX(), flank.getY() - current.getY()))
+		{
+			besideMisses = 0;
+			return flank;
+		}
+		if (++besideMisses >= BESIDE_MISSES)
+		{
+			// Hedged in: back behind, and a few steps before it tries again.
+			beside = false;
+			stepStreak = BESIDE_AFTER_STEPS - BESIDE_RETRY_STEPS;
+		}
+		return behind;
+	}
+
+	/**
+	 * The tile at the player's shoulder: one step to the side of the line
+	 * they are walking, on the given side (1 left, -1 right of travel).
+	 */
+	static WorldPoint flankTile(WorldPoint previous, WorldPoint current, int side)
+	{
+		if (previous == null || current == null)
+		{
+			return null;
+		}
+		int vx = Integer.signum(current.getX() - previous.getX());
+		int vy = Integer.signum(current.getY() - previous.getY());
+		if (vx == 0 && vy == 0)
+		{
+			return null;
+		}
+		return new WorldPoint(current.getX() - vy * side, current.getY() + vx * side,
+			current.getPlane());
+	}
+
+	/** Which side of the line of travel the follower is already on; left when it is on the line. */
+	static int sideOf(WorldPoint previous, WorldPoint current, WorldPoint follower)
+	{
+		if (previous == null || current == null || follower == null)
+		{
+			return 1;
+		}
+		int vx = Integer.signum(current.getX() - previous.getX());
+		int vy = Integer.signum(current.getY() - previous.getY());
+		int cross = vx * (follower.getY() - current.getY()) - vy * (follower.getX() - current.getX());
+		return cross < 0 ? -1 : 1;
+	}
+
 	private int activePose = -1;
 	private boolean animatable;
 	private boolean emotePlaying;
@@ -1064,7 +1191,9 @@ public class FollowerEntity
 		{
 			behind = stepToward(behind, current, true);
 		}
-		playerFollowTile = behind;
+		// Or the shoulder, on a long run over open ground.
+		playerFollowTile = followTileFor(lastSeenPlayerTile, current, behind, ticksObserved,
+			System.currentTimeMillis());
 		lastSeenPlayerTile = current;
 
 		// Extend the path IMMEDIATELY rather than waiting for it to empty, so a

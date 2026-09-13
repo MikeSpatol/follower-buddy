@@ -5942,6 +5942,12 @@ public class FollowerPlugin extends Plugin
 			gaze.tick();
 		}
 		follower.setWatchingWithThePlayer(inCutscene());
+		// The shoulder is for open ground and nothing else going on: not a
+		// fight, not a pocket being worked, not thrall work.
+		follower.setWalksBeside(config.walksBeside() && thrallNpc == null
+			&& !speechEngine.getContext().isInCombat()
+			&& !speechEngine.getContext().isInThievingSession()
+			&& (skilling == null || !skilling.isWorking()));
 		updateMinutes();
 		updateWelfare();
 		updateRest();

@@ -1455,6 +1455,19 @@ OSRS gets to petting the dog.
 follower asked (`isGrateful`), the gestures' cooldowns are halved and the
 seat is taken in half the time (`SkillingController.seatAfter`).
 
+**Walking beside** (`FollowerEntity.followTileFor`, *Walks beside you on
+open ground*). Pets trail; friends walk alongside. After ten continuous
+steps the follow tile becomes the tile at the player's shoulder - one to the
+side of the line of travel, on whichever side the follower already is -
+for as long as that tile is ground the player could step to. Two blocked
+flanks in a row drop it back behind for eight steps before it tries again,
+so a hedged path does not have it hopping in and out; a pause of more than
+a second and a half ends the run; a stay pose or a goal, a fight, a pocket
+being worked, a work session or thrall work keep it behind. Only the choice
+of follow tile changes: the path model, the releases and the speeds under
+it are the ones the trace sessions verified and are untouched, which is
+the reason this is a tile choice and not a second follow model.
+
 **Not in scope.** The agility course spectator (it needs a course table) and
 the sailing deckhand (no verified deck stays). Both left out on purpose.
 
