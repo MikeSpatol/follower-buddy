@@ -44,6 +44,7 @@ import net.runelite.api.events.BeforeRender;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.CommandExecuted;
 import net.runelite.api.events.GameStateChanged;
+import net.runelite.client.events.ProfileChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.GraphicChanged;
 import net.runelite.api.events.HitsplatApplied;
@@ -1370,7 +1371,8 @@ public class FollowerPlugin extends Plugin
 	 * ordinary pauses are under a minute; the drift should start only once
 	 * the stop has proven to be a stay.
 	 */
-	private static final int WANDER_AFTER_TICKS = 80;
+	/** The default of the Wander after setting, in ticks; the setting is in seconds. */
+	static final int WANDER_AFTER_TICKS = 80;
 
 	/** Ticks between drifts, picked fresh each time so it never reads as a metronome. */
 	private static final int WANDER_MIN_GAP = 25;
@@ -1460,7 +1462,7 @@ public class FollowerPlugin extends Plugin
 		// never climbs and the follower would stand there for the whole run.
 		boolean thieving = speechEngine.getContext().isInThievingSession();
 		boolean canWander = wanderAllowed(config.wanderWhenIdle(), busy,
-			follower.isSpawned(), thieving, idle);
+			follower.isSpawned(), thieving, idle, config.wanderAfterSeconds() * 100 / 60);
 
 		if (!canWander)
 		{
@@ -1856,6 +1858,10 @@ public class FollowerPlugin extends Plugin
 
 	private void touchLastSeen()
 	{
+		if (!onMemoryProfile())
+		{
+			return;
+		}
 		configManager.setConfiguration(FollowerConfig.GROUP, "lastSeenMs",
 			Long.toString(System.currentTimeMillis()));
 	}
@@ -1949,6 +1955,70 @@ public class FollowerPlugin extends Plugin
 	{
 		metWearingValue = restoreMemory(speechEngine.getContext(), config.counters(),
 			gson, metWearingValue);
+		memoryProfileId = currentProfileId();
+	}
+
+	/**
+	 * The RuneLite profile the follower's memory and outfit were read from,
+	 * or -1 before anything has been read.
+	 *
+	 * <p>Config is per profile, and a profile switch announces every changed
+	 * key one by one with the NEW profile already current. Anything that
+	 * wrote on those events, or on the periodic save, or on a shutdown
+	 * caused by the switch, wrote the OLD profile's state into the new one -
+	 * and the outfit auto-save did it the other way round, filing the new
+	 * profile's stale outfit under the old profile's outfit name. Play
+	 * report (issue #1): a brief switch and back lost the memory and put a
+	 * two-day-old outfit on. So every write of state checks it is still on
+	 * the profile the state came from, and a switch re-reads from the new one.
+	 */
+	private long memoryProfileId = -1;
+
+	private long currentProfileId()
+	{
+		net.runelite.client.config.ConfigProfile profile = configManager.getProfile();
+		return profile == null ? -1 : profile.getId();
+	}
+
+	/** Whether the follower's state belongs to the profile that is current now. */
+	private boolean onMemoryProfile()
+	{
+		return belongsToProfile(memoryProfileId, currentProfileId());
+	}
+
+	/** State read from one profile is never written into another, and unread state is never written at all. */
+	static boolean belongsToProfile(long readFrom, long current)
+	{
+		return readFrom >= 0 && readFrom == current;
+	}
+
+	/**
+	 * The RuneLite profile changed under the plugin. The changed keys have
+	 * already been announced and applied; what the follower knows and wears
+	 * belongs to the profile it was read from, so it is read again from this
+	 * one rather than written over it. A switch is a session boundary: the
+	 * old profile's mood, wants and counters go with it.
+	 */
+	@Subscribe
+	public void onProfileChanged(ProfileChanged event)
+	{
+		clientThread.invoke(() ->
+		{
+			log.debug("Profile changed to {}; re-reading the follower's memory", currentProfileId());
+			speechEngine.reset();
+			metWearingValue = -1;
+			readCounters();
+			noteFirstMeeting();
+			speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
+			readTraits();
+			if (panel != null)
+			{
+				restoreActiveProfile();
+			}
+			appearanceService.invalidate();
+			rebuildFollower();
+			syncPanel();
+		});
 	}
 
 	/**
@@ -2029,6 +2099,11 @@ public class FollowerPlugin extends Plugin
 
 	private void writeCounters()
 	{
+		if (!onMemoryProfile())
+		{
+			log.debug("Not writing the memory: it belongs to another profile");
+			return;
+		}
 		TriggerContext context = speechEngine.getContext();
 		configManager.setConfiguration(FollowerConfig.GROUP, "counters",
 			snapshotMemory(context, metWearingValue, gson));
@@ -2682,6 +2757,13 @@ public class FollowerPlugin extends Plugin
 			activeProfile = null;
 			return;
 		}
+		// Mid-switch the outfit key already belongs to the other RuneLite
+		// profile; filing it under this profile's outfit name is how a
+		// two-day-old outfit came back (issue #1).
+		if (!onMemoryProfile())
+		{
+			return;
+		}
 		String current = config.customOutfit();
 		if (!stored.equals(current))
 		{
@@ -3182,13 +3264,14 @@ public class FollowerPlugin extends Plugin
 
 					// How long it has been, worked out before the greeting so a
 					// rule can choose a different one for a long absence.
-					readTimeAway();
-
 					// Everything the follower remembers, also before the
 					// greeting: a session count is only worth mentioning as
 					// part of hello, and the tallies want to be whole before
 					// the first kill of the session lands on top of them.
+					// Read first, so the profile the stamp below is written to
+					// is known to be the one it came from.
 					readCounters();
+					readTimeAway();
 					speechEngine.getContext().clearDailyTallies();
 					noteFirstMeeting();
 					speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
@@ -5942,6 +6025,7 @@ public class FollowerPlugin extends Plugin
 			gaze.tick();
 		}
 		follower.setWatchingWithThePlayer(inCutscene());
+		follower.setFollowDistance(config.followDistance());
 		// The shoulder is for open ground and nothing else going on: not a
 		// fight, not a pocket being worked, not thrall work.
 		follower.setWalksBeside(config.walksBeside() && thrallNpc == null
@@ -9557,11 +9641,11 @@ public class FollowerPlugin extends Plugin
 	 * gate has a name and a test rather than living inline in the glue.
 	 */
 	static boolean wanderAllowed(boolean enabled, boolean busy, boolean spawned,
-		boolean thieving, int idleTicks)
+		boolean thieving, int idleTicks, int afterTicks)
 	{
 		return enabled && !busy && spawned
 			&& (thieving
-				|| (idleTicks >= WANDER_AFTER_TICKS && idleTicks < REST_AFTER_TICKS));
+				|| (idleTicks >= Math.max(1, afterTicks) && idleTicks < REST_AFTER_TICKS));
 	}
 
 	/**

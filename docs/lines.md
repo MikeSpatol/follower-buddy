@@ -8,7 +8,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (43 rules, 194 lines)
 - [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (36 rules, 222 lines)
-- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (43 rules, 304 lines)
+- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (42 rules, 280 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 114 lines)
 - [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 72 lines)
 - [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (25 rules, 121 lines)
@@ -17,7 +17,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - [souvenir](#souvenir) - Wishes, gifts, the pocket, and what it carries (17 rules, 84 lines)
 - [bet](#bet) - Its predictions about drops (3 rules, 20 lines)
 - [clock](#clock) - The hour and how long we have been at it (9 rules, 39 lines)
-- [gear](#gear) - What you put on (62 rules, 121 lines)
+- [gear](#gear) - What you put on (63 rules, 145 lines)
 - [boss](#boss) - Bosses sighted and fought (55 rules, 515 lines)
 - [quest](#quest) - Famous quest figures nearby (44 rules, 131 lines)
 - [thrall](#thrall) - When it stands in for a thrall (3 rules, 18 lines)
@@ -1581,39 +1581,6 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - The page for {want} stays half written.
 - {want} will keep. Everything keeps.
 - Maybe next time, {want}.
-
-### `bag-nearly-full`
-
-> A WARNING rather than a report. Two slots left, not none: reacting before is the thing that reads as a mind paying attention, and reacting after is only narration. Counted by walking the container, so it is right whichever way round size() and count() are.
-
-- **when:** 2 or fewer free slots AND NOT (repeating one action 30+ ticks) AND standing still under 100 ticks
-- **does:** advises: the bag
-- **pacing:** priority 54, cooldown 10m, overhead
-
-- You're nearly out of room, you know.
-- Two slots left. Just so you've heard it from someone.
-- Bag's about full. Might want to do something about that.
-- Bag check: nearly full. That's the whole report.
-- You're down to your last two slots.
-- The bag is not getting any emptier.
-- Almost out of room. Noting it for the record.
-- Space is getting scarce in there.
-- Whatever you pick up next had better be worth a slot.
-- The bag and I agree: something has to go.
-- Nearly full. I'll stop mentioning it eventually.
-- How attached are you to everything in there?
-- Everything in there was essential at the time.
-- You're two items from a difficult decision.
-- That bag has ambitions above its size.
-- Consider this the polite version of running out.
-- I'm keeping a list of what you won't part with.
-- The bank, then? I'll allow it this once.
-- There's space for two more mistakes.
-- Something in there will have to become a memory.
-- The bag's at the stage where I'd start choosing.
-- The ground is always an option. A poor one.
-- I'd hate for the next good thing to have nowhere to go.
-- Shall I pretend I didn't see the bag?
 
 ### `want-fulfilled-lumbridge`
 
@@ -4748,6 +4715,39 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 30, cooldown 5s, delay 2 ticks, overhead
 
 - A dragon scimitar. Sixty Attack and a dream.
+
+### `bag-nearly-full`
+
+> A WARNING rather than a report. Two slots left, not none: reacting before is the thing that reads as a mind paying attention, and reacting after is only narration. Counted by walking the container, so it is right whichever way round size() and count() are. In the gear group, which the settings call Items: that is where a player looks for it.
+
+- **when:** 2 or fewer free slots AND NOT (repeating one action 30+ ticks) AND standing still under 100 ticks
+- **does:** advises: the bag
+- **pacing:** priority 54, cooldown 10m, overhead
+
+- You're nearly out of room, you know.
+- Two slots left. Just so you've heard it from someone.
+- Bag's about full. Might want to do something about that.
+- Bag check: nearly full. That's the whole report.
+- You're down to your last two slots.
+- The bag is not getting any emptier.
+- Almost out of room. Noting it for the record.
+- Space is getting scarce in there.
+- Whatever you pick up next had better be worth a slot.
+- The bag and I agree: something has to go.
+- Nearly full. I'll stop mentioning it eventually.
+- How attached are you to everything in there?
+- Everything in there was essential at the time.
+- You're two items from a difficult decision.
+- That bag has ambitions above its size.
+- Consider this the polite version of running out.
+- I'm keeping a list of what you won't part with.
+- The bank, then? I'll allow it this once.
+- There's space for two more mistakes.
+- Something in there will have to become a memory.
+- The bag's at the stage where I'd start choosing.
+- The ground is always an option. A poor one.
+- I'd hate for the next good thing to have nowhere to go.
+- Shall I pretend I didn't see the bag?
 
 ## boss
 

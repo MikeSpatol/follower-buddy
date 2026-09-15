@@ -108,6 +108,77 @@ public class FollowerEntity
 	private WorldPoint lastSeenPlayerTile;
 	private boolean playerRunning;
 
+	// ----------------------------------------------------- follow distance
+
+	/**
+	 * How many steps behind the player the follower walks and stops. One is
+	 * the game's own pet distance and the path model this was tuned on; two
+	 * and three follow the same model with the follow tile taken further
+	 * back along the player's own trail, so the follower still walks the
+	 * tiles the player walked and simply stops further off when they stop.
+	 * Play report: "awkwardly standing one tile behind me when we stop".
+	 */
+	static final int MAX_FOLLOW_DISTANCE = 3;
+	private static final int TRAIL_KEPT = 8;
+	private int followDistance = 1;
+	private final Deque<WorldPoint> playerTrail = new ArrayDeque<>();
+
+	public void setFollowDistance(int tiles)
+	{
+		followDistance = Math.max(1, Math.min(MAX_FOLLOW_DISTANCE, tiles));
+	}
+
+	/** The player stepped onto this tile; the trail remembers the last few. */
+	void recordTrail(WorldPoint stepped)
+	{
+		if (stepped == null)
+		{
+			return;
+		}
+		if (!playerTrail.isEmpty() && (playerTrail.peekLast().equals(stepped)
+			|| playerTrail.peekLast().getPlane() != stepped.getPlane()))
+		{
+			if (playerTrail.peekLast().equals(stepped))
+			{
+				return;
+			}
+			playerTrail.clear();
+		}
+		playerTrail.addLast(stepped);
+		while (playerTrail.size() > TRAIL_KEPT)
+		{
+			playerTrail.pollFirst();
+		}
+	}
+
+	void clearTrailOfPlayer()
+	{
+		playerTrail.clear();
+	}
+
+	/**
+	 * The tile so many of the player's steps back along their trail, the
+	 * last entry being where they stand now; {@code behind} when the trail
+	 * is too short to say, which is also the answer at distance one.
+	 */
+	WorldPoint behindBy(int steps, WorldPoint behind)
+	{
+		if (steps <= 1 || playerTrail.size() <= steps)
+		{
+			return behind;
+		}
+		int index = playerTrail.size() - 1 - steps;
+		int i = 0;
+		for (WorldPoint tile : playerTrail)
+		{
+			if (i++ == index)
+			{
+				return tile;
+			}
+		}
+		return behind;
+	}
+
 	// ----------------------------------------------------- walking beside
 
 	/**
@@ -1169,6 +1240,8 @@ public class FollowerEntity
 			}
 			lastSeenPlayerTile = current;
 			playerFollowTile = current;
+			clearTrailOfPlayer();
+			recordTrail(current);
 			return;
 		}
 
@@ -1187,13 +1260,17 @@ public class FollowerEntity
 
 		// followX/followZ: one step behind the player's current tile along the path.
 		WorldPoint behind = lastSeenPlayerTile;
+		recordTrail(lastSeenPlayerTile);
 		for (int i = 0; i < distance - 1; i++)
 		{
 			behind = stepToward(behind, current, true);
+			recordTrail(behind);
 		}
-		// Or the shoulder, on a long run over open ground.
-		playerFollowTile = followTileFor(lastSeenPlayerTile, current, behind, ticksObserved,
-			System.currentTimeMillis());
+		recordTrail(current);
+		// Further back along the same trail at a wider follow distance, or
+		// the shoulder, on a long run over open ground.
+		playerFollowTile = followTileFor(lastSeenPlayerTile, current,
+			behindBy(followDistance, behind), ticksObserved, System.currentTimeMillis());
 		lastSeenPlayerTile = current;
 
 		// Extend the path IMMEDIATELY rather than waiting for it to empty, so a

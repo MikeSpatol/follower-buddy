@@ -212,4 +212,16 @@ public class MemorySurvivesRestartTest
 			assertTrue(id + " was lost across the restart", after.hasSaidOnce(id));
 		}
 	}
+	@Test
+	public void memoryIsOnlyEverWrittenToTheProfileItCameFrom()
+	{
+		// Issue #1: a RuneLite profile switch announces its changed keys with
+		// the new profile already current, and every write in that window
+		// filed the old profile's state under the new one. Unread state is
+		// never written either: there is nothing to write.
+		assertTrue(FollowerPlugin.belongsToProfile(7L, 7L));
+		assertFalse("another profile is current", FollowerPlugin.belongsToProfile(7L, 8L));
+		assertFalse("nothing read yet", FollowerPlugin.belongsToProfile(-1L, -1L));
+		assertFalse(FollowerPlugin.belongsToProfile(-1L, 3L));
+	}
 }

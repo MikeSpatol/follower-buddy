@@ -10353,8 +10353,8 @@
         "room": true,
         "minutes": 3
       },
-      "note": "A WARNING rather than a report. Two slots left, not none: reacting before is the thing that reads as a mind paying attention, and reacting after is only narration. Counted by walking the container, so it is right whichever way round size() and count() are.",
-      "group": "reactions",
+      "note": "A WARNING rather than a report. Two slots left, not none: reacting before is the thing that reads as a mind paying attention, and reacting after is only narration. Counted by walking the container, so it is right whichever way round size() and count() are. In the gear group, which the settings call Items: that is where a player looks for it.",
+      "group": "gear",
       "priority": 54,
       "cooldownMs": 600000,
       "output": "overhead",

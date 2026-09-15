@@ -74,7 +74,8 @@ looks back at you first. Walk straight at it while it is parked and it steps
 aside at the last tick, with a word. Do an emote at it, a tile away and
 facing it, and it answers rather than copies: a bow gets a bow, a cheer a
 clap, a dance a dance a beat behind. On a long run over open ground it
-draws level and walks at your shoulder.
+draws level and walks at your shoulder. Movement settings set how far
+behind it follows and how long you stand still before it wanders.
 
 **Talk-to.** A proper NPC-style dialog box with a chathead. Ask how today went
 and it summarises the session; ask how it's been and it answers by mood; give

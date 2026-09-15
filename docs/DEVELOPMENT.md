@@ -634,6 +634,19 @@ level, a quest - goes out as `lastThing` and comes back at login as the
 `lastTime` condition, so the greeting can be about last time rather than
 about the clock. A session that names nothing carries the old one forward.
 
+**Memory belongs to the RuneLite profile it was read from.** Config is per
+profile, and a profile switch announces every changed key one by one with
+the new profile already current, then posts `ProfileChanged`. Issue #1 was
+the result: a write in that window (the periodic save, a shutdown caused by
+the switch, the outfit auto-save answering the `customOutfit` change) filed
+one profile's state under the other, and a brief switch and back came home
+to no memory and a two-day-old outfit. So the plugin remembers the profile
+id its memory came from (`memoryProfileId`, set by `readCounters`), every
+write of state checks it is still on that profile and otherwise does nothing
+(`writeCounters`, `touchLastSeen`, `autoSaveActiveProfile`), and
+`onProfileChanged` treats the switch as a session boundary: the engine is
+reset and memory, traits and the outfit are read again from the new profile.
+
 **Counts and records outlive the session too.** The tallies the follower keeps
 (`kill:<name>`, `deaths`, `levels`) and the records it holds (`hit`, `session`)
 go into the config alongside the timestamp, on the same once-a-minute timer and

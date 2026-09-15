@@ -931,7 +931,8 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "groupGear",
 		name = "Items",
-		description = "Comments when you equip notable items (group \"gear\")."
+		description = "Comments when you equip notable items, and the warning that"
+			+ " your bag is nearly full (group \"gear\")."
 			+ " Editable under Items in Messages.",
 		section = groupsSection,
 		position = 0
@@ -1049,6 +1050,36 @@ public interface FollowerConfig extends Config
 	default boolean wanderWhenIdle()
 	{
 		return true;
+	}
+
+	@ConfigItem(
+		keyName = "wanderAfterSeconds",
+		name = "Wander after (seconds)",
+		description = "How long you stand still before it starts drifting about."
+			+ " Forty-eight seconds by default, so sorting a bank tab does not"
+			+ " read as a stay; set it low to have it potter almost at once.",
+		section = movementSection,
+		position = 2
+	)
+	@Range(min = 3, max = 240)
+	default int wanderAfterSeconds()
+	{
+		return 48;
+	}
+
+	@ConfigItem(
+		keyName = "followDistance",
+		name = "Follow distance (tiles)",
+		description = "How many steps behind you it walks and stops. One is the"
+			+ " game's own pet distance; two or three keep it out from under"
+			+ " your feet when you stop.",
+		section = movementSection,
+		position = 3
+	)
+	@Range(min = 1, max = 3)
+	default int followDistance()
+	{
+		return 1;
 	}
 
 	@ConfigItem(

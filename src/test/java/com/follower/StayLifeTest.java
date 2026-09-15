@@ -125,19 +125,19 @@ public class StayLifeTest
 		// once the rest has taken over. Thieving overrides it entirely,
 		// because there the follower being underfoot IS the problem.
 		assertTrue("a settled stop earns the drift",
-			FollowerPlugin.wanderAllowed(true, false, true, false, 80));
+			FollowerPlugin.wanderAllowed(true, false, true, false, 80, FollowerPlugin.WANDER_AFTER_TICKS));
 		assertTrue("but not before it has proven to be a stay",
-			!FollowerPlugin.wanderAllowed(true, false, true, false, 79));
+			!FollowerPlugin.wanderAllowed(true, false, true, false, 79, FollowerPlugin.WANDER_AFTER_TICKS));
 		assertTrue("and not once the rest has taken over",
-			!FollowerPlugin.wanderAllowed(true, false, true, false, 500));
+			!FollowerPlugin.wanderAllowed(true, false, true, false, 500, FollowerPlugin.WANDER_AFTER_TICKS));
 		assertTrue("thieving wanders without waiting to be invited",
-			FollowerPlugin.wanderAllowed(true, false, true, true, 0));
+			FollowerPlugin.wanderAllowed(true, false, true, true, 0, FollowerPlugin.WANDER_AFTER_TICKS));
 		assertTrue("busy always wins",
-			!FollowerPlugin.wanderAllowed(true, true, true, true, 200));
+			!FollowerPlugin.wanderAllowed(true, true, true, true, 200, FollowerPlugin.WANDER_AFTER_TICKS));
 		assertTrue("no follower, no drift",
-			!FollowerPlugin.wanderAllowed(true, false, false, false, 200));
+			!FollowerPlugin.wanderAllowed(true, false, false, false, 200, FollowerPlugin.WANDER_AFTER_TICKS));
 		assertTrue("and the setting is the law",
-			!FollowerPlugin.wanderAllowed(false, false, true, false, 200));
+			!FollowerPlugin.wanderAllowed(false, false, true, false, 200, FollowerPlugin.WANDER_AFTER_TICKS));
 	}
 
 	@Test
