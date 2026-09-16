@@ -185,7 +185,8 @@ public class MemoryDialog extends JDialog
 		// the file key beside it is what makes it legible out of context.
 		rows.add(header("THE INCIDENT"));
 		rows.add(c.hasIncident()
-			? row("Keeps bringing up", "\"" + c.getIncidentPhrase() + "\" ("
+			? row("Keeps bringing up", "\"" + c.getIncidentPhrase() + c.getMemoryWhere()
+				+ ", " + c.getMemoryWhen(System.currentTimeMillis()) + "\" ("
 				+ c.getIncidentKey() + ", x" + c.getIncidentCount() + ")")
 			: remark("Nothing has stuck yet."));
 

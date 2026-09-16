@@ -654,6 +654,13 @@ public class Condition
 					&& (is == null || is.equalsIgnoreCase(ctx.getIncidentKey()))
 					&& ctx.getIncidentCount() >= orDefault(minimum, 1);
 
+			// Standing where the incident happened, and the thing it was with
+			// being nearby again: the two moments a memory is worth jogging.
+			case "memoryhere":
+				return ctx.isAtTheIncident();
+			case "memoryfoenearby":
+				return ctx.isIncidentFoeNearby(orDefault(within, 12));
+
 			// You clicked the tile the follower was standing on.
 			case "underfoot":
 				return event.getType() == TriggerEvent.Type.UNDERFOOT;

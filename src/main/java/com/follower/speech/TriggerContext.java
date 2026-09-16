@@ -1039,12 +1039,43 @@ public final class TriggerContext
 	private int incidentCount;
 
 	/**
+	 * The particulars: where it happened (a region id), when (epoch ms) and
+	 * who was involved (an NPC name), so a recall can jog the player's memory
+	 * rather than allude to it. "How close that was" is a hint; "how close
+	 * that was with the Hill Giant, in Edgeville, three days ago" is a
+	 * memory two people share.
+	 */
+	private int incidentWhere;
+	private long incidentWhenMs;
+	private String incidentWho = "";
+
+	/** Place names by region id, from the Locations rules; for {memoryWhere}. */
+	private java.util.Map<Integer, String> regionNames = java.util.Collections.emptyMap();
+
+	public void setRegionNames(java.util.Map<Integer, String> names)
+	{
+		regionNames = names == null ? java.util.Collections.emptyMap() : names;
+	}
+
+	/**
 	 * Files an incident, or counts another of the same.
 	 *
 	 * @param key   what happened, for a rule to recognise
 	 * @param phrase how to refer to it out loud - "that chicken"
 	 */
 	public void noteIncident(String key, String phrase)
+	{
+		noteIncident(key, phrase, "", System.currentTimeMillis());
+	}
+
+	/**
+	 * The same with the particulars. Another of the same kind keeps the
+	 * count and takes the newest particulars: the memory it brings up is the
+	 * freshest one, and the count is what makes "again" honest.
+	 *
+	 * @param who the NPC involved, or empty
+	 */
+	public void noteIncident(String key, String phrase, String who, long nowMs)
 	{
 		if (key == null || key.isEmpty())
 		{
@@ -1057,11 +1088,98 @@ public final class TriggerContext
 		else
 		{
 			incidentKey = key;
-			incidentPhrase = phrase == null ? "" : phrase;
 			incidentCount = 1;
 		}
+		incidentPhrase = phrase == null ? "" : phrase;
+		incidentWhere = regionId;
+		incidentWhenMs = nowMs;
+		incidentWho = who == null ? "" : who;
 		countersDirty = true;
-		log.debug("Incident: {} ({}), now {}", key, incidentPhrase, incidentCount);
+		log.debug("Incident: {} ({}) in {} with '{}', now {}", key, incidentPhrase,
+			incidentWhere, incidentWho, incidentCount);
+	}
+
+	public int getIncidentWhere()
+	{
+		return incidentWhere;
+	}
+
+	public long getIncidentWhenMs()
+	{
+		return incidentWhenMs;
+	}
+
+	public String getIncidentWho()
+	{
+		return incidentWho;
+	}
+
+	/**
+	 * The place the incident happened, as the Locations rules name it, cut
+	 * to its first clause ("Varrock: west bank, centre and palace" is
+	 * Varrock). Empty when the region has no name or no incident is held.
+	 */
+	public String getIncidentPlace()
+	{
+		return placeName(incidentWhere);
+	}
+
+	public String placeName(int region)
+	{
+		String name = region == 0 ? null : regionNames.get(region);
+		if (name == null)
+		{
+			return "";
+		}
+		int cut = name.length();
+		for (String stop : new String[]{":", ",", " - ", " ("})
+		{
+			int at = name.indexOf(stop);
+			if (at > 0 && at < cut)
+			{
+				cut = at;
+			}
+		}
+		return name.substring(0, cut).trim();
+	}
+
+	/** " in Edgeville", ready to follow the memory in a line; empty when unknown. */
+	public String getMemoryWhere()
+	{
+		String place = getIncidentPlace();
+		return place.isEmpty() ? "" : " in " + place;
+	}
+
+	/** "just now", "three days ago", or "a while ago" for a memory with no date. */
+	public String getMemoryWhen(long nowMs)
+	{
+		if (!hasIncident())
+		{
+			return "";
+		}
+		if (incidentWhenMs <= 0 || incidentWhenMs > nowMs)
+		{
+			return "a while ago";
+		}
+		long ago = nowMs - incidentWhenMs;
+		return ago < 120_000L ? "just now" : Words.duration(ago) + " ago";
+	}
+
+	/** Standing in the region the incident happened in. */
+	public boolean isAtTheIncident()
+	{
+		return hasIncident() && incidentWhere != 0 && incidentWhere == regionId;
+	}
+
+	/** Whether the NPC the incident was with has one of its kind within so many tiles. */
+	public boolean isIncidentFoeNearby(int within)
+	{
+		if (!hasIncident() || incidentWho.isEmpty())
+		{
+			return false;
+		}
+		return isNpcNearby(npc -> npc.getName() != null && npc.getName().equalsIgnoreCase(incidentWho),
+			within);
 	}
 
 	public boolean hasIncident()
@@ -1088,6 +1206,12 @@ public final class TriggerContext
 	/** Puts back the incident a previous session was still thinking about. */
 	public void restoreIncident(String key, String phrase, int count)
 	{
+		restoreIncident(key, phrase, count, 0, 0L, "");
+	}
+
+	public void restoreIncident(String key, String phrase, int count, int where, long whenMs,
+		String who)
+	{
 		if (key == null || key.isEmpty())
 		{
 			return;
@@ -1095,6 +1219,9 @@ public final class TriggerContext
 		incidentKey = key;
 		incidentPhrase = phrase == null ? "" : phrase;
 		incidentCount = Math.max(1, count);
+		incidentWhere = where;
+		incidentWhenMs = whenMs;
+		incidentWho = who == null ? "" : who;
 	}
 
 	// ---------------------------------------------------------------- traits

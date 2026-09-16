@@ -384,6 +384,8 @@ mood stretches or shortens on top.
 | `wantFulfilled` / `wantExpired` | - `{want}` names the place it asked for |
 | `feelsAbout` | `is` - `liked` or `disliked`, about the region you are standing in |
 | `remembers` | the incident on its mind; optional `is` names it, `minimum` how many times it has happened. `{memory}` says it out loud |
+| `memoryHere` | - standing in the region the incident happened in. `{memory}`, `{memoryWhere}`, `{memoryWhen}` |
+| `memoryFoeNearby` | `within` - one of the things the incident was with is this close (12 by default). `{memoryWho}` names it |
 | `carrying` | - it is holding a souvenir. `{souvenir}` names it |
 | `souvenirLost` | - the thing it was carrying is gone |
 | `betting` | - a prediction is outstanding; normally used inside a `none` |
@@ -519,7 +521,7 @@ follower has a stamp to measure from). On `killCount`: `{boss}`, `{count}`,
   are authored loops (`frameStep >= 0`) and hang forever if played as a one-shot,
   while cooking, smithing, herblore and firemaking are one-shots the server
   restarts each cycle. `::follower animinfo` prints the `frameStep`.
-- `remember` - `{"key": "close-call", "as": "how close that was"}`. Files what
+- `remember` - `{"key": "close-call", "as": "how close that was with the {foe}", "plain": "how close that was"}`. Files what
   just happened as the incident the follower keeps coming back to; `remembers`
   conditions match on the key and `{memory}` says the phrase. Filed whether or
   not the line was heard: the thing happened either way.
@@ -743,9 +745,25 @@ A tally makes "your four hundredth yew" possible, which is data delivered well.
 It does not make "careful, I have seen what a chicken can do to you" possible,
 and only one of those sounds like somebody who was there.
 
-So the follower keeps exactly one incident: a key, a phrase, and a count. A rule
-files it with `remember`; later rules match on the key with `remembers` and say
-the phrase with `{memory}`. One is the right number. A follower with a list is
+So the follower keeps exactly one incident: a key, a phrase, a count, and the
+particulars - where it happened (a region id), when (a timestamp) and who it
+was with (an NPC name). A rule files it with `remember`; the `as` phrase has
+its placeholders filled in at the moment of filing, from the event and the
+state ("how close that was with the {foe}, {hp} hitpoints left" becomes "how
+close that was with the Hill Giant, 6 hitpoints left"), and `plain` is what
+is filed instead when a placeholder has nothing to say. Later rules match on
+the key with `remembers` and say it with `{memory}`, `{memoryWhere}` (" in
+Edgeville", the Locations rule's name cut to its first clause, empty when
+unnamed), `{memoryWhen}` ("just now", "three days ago", "a while ago" for a
+record with no date) and `{memoryWho}` (guard with `memoryFoeNearby`). Two
+conditions jog the memory at the right moment: `memoryHere`, standing in the
+region it happened in, and `memoryFoeNearby`, one of the things it was with
+within `within` tiles. "How close that was" is a hint; the particulars are
+what make it a memory two people share.
+
+An incident is filed by every rule that rises, winner or not: the remember
+rules sit under the reaction lines on purpose, and filing only from the
+winner meant the drop and the boss were almost never remembered. One is the right number. A follower with a list is
 running a database, and the thing that makes a memory feel like a memory is that
 it crowds out the others.
 

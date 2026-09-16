@@ -300,7 +300,13 @@ public class SpeechRule
 	public static final class Incident
 	{
 		public String key;
+		/**
+		 * How to refer to it, with the event's and the moment's placeholders
+		 * filled in when it is filed: "how close that was with the {foe}".
+		 */
 		public String as;
+		/** What to file instead when a placeholder in {@link #as} has nothing to say. */
+		public String plain;
 	}
 
 	/**

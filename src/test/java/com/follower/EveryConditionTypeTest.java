@@ -1051,7 +1051,29 @@ public class EveryConditionTypeTest
 	@Test
 	public void theIncidentItKeepsBringingUp() throws IOException
 	{
-		note("remembers");
+		note("remembers", "memoryHere", "memoryFoeNearby");
+
+		Harness here = harnessFor("{\"type\": \"memoryHere\"}");
+		here.game.regions(12850).at(3222, 3218, 0);
+		here.gameTicks(1);
+		here.engine.getContext().noteIncident("the-death", "the way that went");
+		here.game.at(3300, 3300, 0);
+		here.gameTicks(2);
+		assertQuiet(here, "somewhere else");
+		here.game.at(3222, 3218, 0);
+		here.gameTicks(1);
+		assertFired(here, "memoryHere");
+
+		Harness foe = harnessFor("{\"type\": \"memoryFoeNearby\", \"within\": 12}");
+		foe.engine.getContext().noteIncident("the-death", "the way that went with the Hill Giant",
+			"Hill Giant", 1000L);
+		foe.gameTicks(2);
+		assertQuiet(foe, "none about");
+		NPC giant = foe.game.spawnNpc(2098, "Hill Giant", 28);
+		foe.game.moveNpc(giant, foe.game.player.getWorldLocation().getX() + 5,
+			foe.game.player.getWorldLocation().getY(), 0);
+		foe.gameTicks(1);
+		assertFired(foe, "memoryFoeNearby");
 
 		Harness any = harnessFor("{\"type\": \"remembers\"}");
 		any.gameTicks(2);

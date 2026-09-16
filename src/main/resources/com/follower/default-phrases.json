@@ -10624,14 +10624,15 @@
     },
     {
       "id": "memory-close-call",
-      "note": "Filed when you come out the far side of nearly dying. The follower does not need to say anything at the time - critical-hp already does - it just needs to remember, so it can bring it up later.",
+      "note": "Filed when you come out the far side of nearly dying. The follower does not need to say anything at the time - critical-hp already does - it just needs to remember, so it can bring it up later. The particulars (who, how many hitpoints, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.",
       "group": "memory",
       "priority": 30,
       "cooldownMs": 300000,
       "output": "overhead",
       "remember": {
         "key": "close-call",
-        "as": "how close that was"
+        "as": "how close that was with the {foe}, {hp} hitpoints left",
+        "plain": "how close that was, {hp} hitpoints left"
       },
       "when": {
         "type": "all",
@@ -10660,14 +10661,15 @@
         "pose": 5354,
         "ticks": 8
       },
-      "note": "The obvious one. Filed on every death, so the count is what makes the recall land: once is bad luck, four times is a habit.",
+      "note": "The obvious one. Filed on every death, so the count is what makes the recall land: once is bad luck, four times is a habit. The particulars (who, how many hitpoints, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.",
       "group": "memory",
       "priority": 30,
       "cooldownMs": 5000,
       "output": "overhead",
       "remember": {
         "key": "the-death",
-        "as": "the way that went"
+        "as": "the way that went with the {foe}",
+        "plain": "the way that went"
       },
       "delayTicks": 6,
       "delayTicksMax": 12,
@@ -10693,14 +10695,15 @@
         "pose": 5354,
         "ticks": 8
       },
-      "note": "Filed on a drop big enough to still be talking about an hour later. Above the loot-celebrate threshold so the celebration wins the event and this one only files - two lines about one drop is one too many, and the recall is the part that matters here.",
+      "note": "Filed on a drop big enough to still be talking about an hour later. Above the loot-celebrate threshold so the celebration wins the event and this one only files - two lines about one drop is one too many, and the recall is the part that matters here. The particulars (who, how many hitpoints, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.",
       "group": "memory",
       "priority": 20,
       "cooldownMs": 600000,
       "output": "overhead",
       "remember": {
         "key": "big-drop",
-        "as": "that drop"
+        "as": "the {item} that dropped",
+        "plain": "that drop"
       },
       "when": {
         "type": "lootWorth",
@@ -10720,14 +10723,15 @@
         "pose": 5354,
         "ticks": 8
       },
-      "note": "Filed when something with a combat level in three figures stops moving. Low priority so the celebration rules win the kill.",
+      "note": "Filed when something with a combat level in three figures stops moving. Low priority so the celebration rules win the kill. The particulars (who, how many hitpoints, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.",
       "group": "memory",
       "priority": 20,
       "cooldownMs": 600000,
       "output": "overhead",
       "remember": {
         "key": "the-boss",
-        "as": "the size of that thing"
+        "as": "the {npc} going down",
+        "plain": "the size of that thing"
       },
       "when": {
         "type": "npcKill",
@@ -10768,13 +10772,10 @@
         ]
       },
       "say": [
-        "I keep thinking about {memory}.",
-        "I've not stopped thinking about {memory}, if I'm honest.",
-        "Do you ever think about {memory}? I do.",
-        "It's quiet. So naturally I'm thinking about {memory}.",
-        "The notes keep opening at {memory}. Odd, that.",
-        "{memory}. No reason. It just visits.",
-        "Quiet enough to hear myself think about {memory}."
+        "I keep thinking about {memory}{memoryWhere}.",
+        "I've not stopped thinking about {memory}, if I'm honest. That was {memoryWhen}.",
+        "Do you ever think about {memory}? I do. It was only {memoryWhen}.",
+        "It's quiet. So naturally I'm thinking about {memory}{memoryWhere}, {memoryWhen}."
       ]
     },
     {
@@ -10835,11 +10836,66 @@
       },
       "say": [
         "Careful. I've not forgotten {memory}.",
-        "Before you start. Remember {memory}?",
-        "Go on then. But I'm watching, after {memory}.",
-        "Mind how you go. {memory} is still fresh ink.",
-        "A thought, before you start: {memory}.",
-        "The book says {memory}. The book has a point."
+        "Before you start. Remember {memory}? That was {memoryWhen}.",
+        "Go on then. But I'm watching, after {memory}{memoryWhere}.",
+        "Mind how you go. {memory} is still fresh ink."
+      ]
+    },
+    {
+      "id": "recall-here",
+      "note": "Back in the region the incident happened in. The rule is state, so it fires once on the rising edge, which is the moment of arriving; the cooldown keeps a day at the same spot to one remark.",
+      "group": "memory",
+      "priority": 40,
+      "cooldownMs": 1800000,
+      "delayTicks": 3,
+      "delayTicksMax": 6,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "memoryHere"
+          },
+          {
+            "type": "chance",
+            "percent": 60
+          }
+        ]
+      },
+      "say": [
+        "This is the place. I still think about {memory}.",
+        "Here again. {memory} was {memoryWhen}, and I have not forgotten.",
+        "I know this spot. This is where I wrote down {memory}.",
+        "Right about here, {memoryWhen}: {memory}. The page is still creased."
+      ]
+    },
+    {
+      "id": "recall-foe",
+      "note": "One of the things the incident was with, back in sight. {memoryWho} is the NPC's name off the record; memoryFoeNearby guarantees it is there to print.",
+      "group": "memory",
+      "priority": 45,
+      "cooldownMs": 1200000,
+      "delayTicks": 2,
+      "delayTicksMax": 4,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "memoryFoeNearby",
+            "within": 12
+          },
+          {
+            "type": "chance",
+            "percent": 50
+          }
+        ]
+      },
+      "say": [
+        "That's a {memoryWho}. Last time it was {memory}.",
+        "A {memoryWho}. I remember {memory}, {memoryWhen}.",
+        "Mind. {memoryWho}. I have a page on those and it is not a kind one.",
+        "There's the {memoryWho}. {memory}, {memoryWhere}. I was there."
       ]
     },
     {

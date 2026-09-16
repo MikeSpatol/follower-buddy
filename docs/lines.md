@@ -1,6 +1,6 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 501 rules, 2348 spoken lines, 3 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 503 rules, 2351 spoken lines, 3 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
@@ -11,7 +11,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (42 rules, 280 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 114 lines)
 - [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 72 lines)
-- [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (25 rules, 121 lines)
+- [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (27 rules, 124 lines)
 - [area](#area) - Places: named lines, tastes, earned verdicts, the defences (67 rules, 222 lines)
 - [errand](#errand) - Its little trips: bank, altar, fire, cat, studies, explores (44 rules, 155 lines)
 - [souvenir](#souvenir) - Wishes, gifts, the pocket, and what it carries (17 rules, 84 lines)
@@ -2152,10 +2152,10 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `memory-close-call`
 
-> Filed when you come out the far side of nearly dying. The follower does not need to say anything at the time - critical-hp already does - it just needs to remember, so it can bring it up later.
+> Filed when you come out the far side of nearly dying. The follower does not need to say anything at the time - critical-hp already does - it just needs to remember, so it can bring it up later. The particulars (who, how many hitpoints, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.
 
 - **when:** HP under 8% AND in a fight
-- **does:** files incident `close-call` as 'how close that was'
+- **does:** files incident `close-call` as 'how close that was with the {foe}, {hp} hitpoints left'
 - **pacing:** priority 30, cooldown 5m, overhead
 
 - I'm not going to forget that one.
@@ -2166,10 +2166,10 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `memory-death`
 
-> The obvious one. Filed on every death, so the count is what makes the recall land: once is bad luck, four times is a habit.
+> The obvious one. Filed on every death, so the count is what makes the recall land: once is bad luck, four times is a habit. The particulars (who, how many hitpoints, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.
 
 - **when:** on your death
-- **does:** files incident `the-death` as 'the way that went'; prop item 10485, pose 5354
+- **does:** files incident `the-death` as 'the way that went with the {foe}'; prop item 10485, pose 5354
 - **pacing:** priority 30, cooldown 5s, delay 6-12 ticks, overhead
 
 - That's going in the book.
@@ -2184,10 +2184,10 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `memory-big-drop`
 
-> Filed on a drop big enough to still be talking about an hour later. Above the loot-celebrate threshold so the celebration wins the event and this one only files - two lines about one drop is one too many, and the recall is the part that matters here.
+> Filed on a drop big enough to still be talking about an hour later. Above the loot-celebrate threshold so the celebration wins the event and this one only files - two lines about one drop is one too many, and the recall is the part that matters here. The particulars (who, how many hitpoints, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.
 
 - **when:** loot worth 1000000+
-- **does:** files incident `big-drop` as 'that drop'; prop item 10485, pose 5354
+- **does:** files incident `big-drop` as 'the {item} that dropped'; prop item 10485, pose 5354
 - **pacing:** priority 20, cooldown 10m, overhead
 
 - I'm still not over that.
@@ -2197,10 +2197,10 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `memory-boss`
 
-> Filed when something with a combat level in three figures stops moving. Low priority so the celebration rules win the kill.
+> Filed when something with a combat level in three figures stops moving. Low priority so the celebration rules win the kill. The particulars (who, how many hitpoints, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.
 
 - **when:** a kill
-- **does:** files incident `the-boss` as 'the size of that thing'; prop item 10485, pose 5354
+- **does:** files incident `the-boss` as 'the {npc} going down'; prop item 10485, pose 5354
 - **pacing:** priority 20, cooldown 10m, overhead
 
 - I want that written down somewhere.
@@ -2215,13 +2215,10 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** standing still 120+ ticks AND standing still under 600 ticks AND an incident remembered AND a 4% roll
 - **pacing:** priority 24, cooldown 15m, overhead
 
-- I keep thinking about {memory}.
-- I've not stopped thinking about {memory}, if I'm honest.
-- Do you ever think about {memory}? I do.
-- It's quiet. So naturally I'm thinking about {memory}.
-- The notes keep opening at {memory}. Odd, that.
-- {memory}. No reason. It just visits.
-- Quiet enough to hear myself think about {memory}.
+- I keep thinking about {memory}{memoryWhere}.
+- I've not stopped thinking about {memory}, if I'm honest. That was {memoryWhen}.
+- Do you ever think about {memory}? I do. It was only {memoryWhen}.
+- It's quiet. So naturally I'm thinking about {memory}{memoryWhere}, {memoryWhen}.
 
 ### `recall-death-again`
 
@@ -2247,11 +2244,33 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 52, cooldown 10m, overhead
 
 - Careful. I've not forgotten {memory}.
-- Before you start. Remember {memory}?
-- Go on then. But I'm watching, after {memory}.
+- Before you start. Remember {memory}? That was {memoryWhen}.
+- Go on then. But I'm watching, after {memory}{memoryWhere}.
 - Mind how you go. {memory} is still fresh ink.
-- A thought, before you start: {memory}.
-- The book says {memory}. The book has a point.
+
+### `recall-here`
+
+> Back in the region the incident happened in. The rule is state, so it fires once on the rising edge, which is the moment of arriving; the cooldown keeps a day at the same spot to one remark.
+
+- **when:** memoryhere AND a 60% roll
+- **pacing:** priority 40, cooldown 30m, delay 3-6 ticks, overhead
+
+- This is the place. I still think about {memory}.
+- Here again. {memory} was {memoryWhen}, and I have not forgotten.
+- I know this spot. This is where I wrote down {memory}.
+- Right about here, {memoryWhen}: {memory}. The page is still creased.
+
+### `recall-foe`
+
+> One of the things the incident was with, back in sight. {memoryWho} is the NPC's name off the record; memoryFoeNearby guarantees it is there to print.
+
+- **when:** memoryfoenearby AND a 50% roll
+- **pacing:** priority 45, cooldown 20m, delay 2-4 ticks, overhead
+
+- That's a {memoryWho}. Last time it was {memory}.
+- A {memoryWho}. I remember {memory}, {memoryWhen}.
+- Mind. {memoryWho}. I have a page on those and it is not a kind one.
+- There's the {memoryWho}. {memory}, {memoryWhere}. I was there.
 
 ### `favour-remembered`
 

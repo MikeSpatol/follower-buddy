@@ -60,7 +60,7 @@ public class RuleSetIntegrityTest
 		"inventoryfree", "playersnearby",
 		"wanting", "wantfulfilled", "wantexpired", "feelsabout", "wishing",
 		"wishitemheld", "rolledfeeling", "boundary", "staying", "inwilderness",
-		"remembers", "carrying", "souvenirlost",
+		"remembers", "memoryhere", "memoryfoenearby", "carrying", "souvenirlost",
 		"betting", "betwon", "betlost",
 		"timeofday", "sessionminutes", "asking",
 		"placescore", "happenedhere",
@@ -647,7 +647,12 @@ public class RuleSetIntegrityTest
 		// something to read, and an empty one leaves a hole in the sentence
 		// ("I keep thinking about ."). Listing them as conditional rather than
 		// ambient is what makes the guard compulsory.
-		byType.put("remembers", new HashSet<>(Arrays.asList("memory")));
+		Set<String> memoryExtras = new HashSet<>(Arrays.asList("memory", "memoryWhere", "memoryWhen"));
+		byType.put("remembers", memoryExtras);
+		byType.put("memoryhere", memoryExtras);
+		Set<String> foeExtras = new HashSet<>(memoryExtras);
+		foeExtras.add("memoryWho");
+		byType.put("memoryfoenearby", foeExtras);
 		byType.put("carrying", new HashSet<>(Arrays.asList("souvenir")));
 		byType.put("wishing", new HashSet<>(Arrays.asList("wish")));
 		byType.put("souvenirlost", new HashSet<>(Arrays.asList("souvenir")));

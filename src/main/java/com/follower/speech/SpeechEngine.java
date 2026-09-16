@@ -744,6 +744,16 @@ public class SpeechEngine
 
 			boolean rising = rule.risingEdge(matching);
 
+			// A memory is filed by every rule that rose, not only the one that
+			// gets to speak: the remember rules sit under the reaction lines
+			// on purpose (the reaction is the line worth hearing), and filing
+			// only from the winner meant the drop and the boss were almost
+			// never remembered. Not while primed, when nothing is news yet.
+			if (rising && isActive(rule) && primeTicksLeft == 0)
+			{
+				file(rule, event);
+			}
+
 			if (!rising || !isActive(rule) || !rule.offCooldown(now))
 			{
 				continue;
@@ -985,18 +995,6 @@ public class SpeechEngine
 			}
 		};
 
-		// An incident is filed whether or not the line was heard: the chicken
-		// killed you regardless of whether the follower got a word in.
-		if (rule.remember != null && rule.remember.key != null)
-		{
-			getContext().noteIncident(rule.remember.key, rule.remember.as);
-		}
-
-		// And the same moment against the place, when the rule says so.
-		if (rule.markHere != null && !rule.markHere.isEmpty())
-		{
-			getContext().notePlaceMemory(rule.markHere);
-		}
 
 		// Picking something up and betting on something both need to have been
 		// SAID, like the want - a souvenir nobody was told about is invisible,
@@ -1084,6 +1082,37 @@ public class SpeechEngine
 			text.isEmpty() ? "(animation " + animation + ")" : text);
 	}
 
+	/** What a rule writes down when it rises: the incident, and the place. */
+	private void file(SpeechRule rule, TriggerEvent event)
+	{
+		// An incident is filed whether or not the line was heard: the chicken
+		// killed you regardless of whether the follower got a word in.
+		if (rule.remember != null && rule.remember.key != null)
+		{
+			// The particulars are filled in NOW, while the event and the
+			// moment still know them; a placeholder with nothing to say drops
+			// the phrase back to its plain form rather than filing a hole.
+			boolean[] incomplete = {false};
+			String phrase = substitute(rule.remember.as, event, incomplete);
+			if (incomplete[0] && rule.remember.plain != null)
+			{
+				phrase = substitute(rule.remember.plain, event, null);
+			}
+			String who = event.getPlaceholders().getOrDefault("npc", "");
+			if (who.isEmpty())
+			{
+				who = getContext().getCombatTarget();
+			}
+			getContext().noteIncident(rule.remember.key, phrase, who, System.currentTimeMillis());
+		}
+
+		// And the same moment against the place, when the rule says so.
+		if (rule.markHere != null && !rule.markHere.isEmpty())
+		{
+			getContext().notePlaceMemory(rule.markHere);
+		}
+	}
+
 	private boolean isActive(SpeechRule rule)
 	{
 		if (!rule.isEnabled() || (rule.isOnce() && getContext().hasSaidOnce(rule.id)))
@@ -1098,6 +1127,12 @@ public class SpeechEngine
 	/** Replaces {@code {placeholder}} tokens from the event and the state snapshot. */
 	private String substitute(String template, TriggerEvent event)
 	{
+		return substitute(template, event, null);
+	}
+
+	/** @param incomplete set to true at [0] when a known placeholder resolved to nothing */
+	private String substitute(String template, TriggerEvent event, boolean[] incomplete)
+	{
 		if (template == null || template.indexOf('{') < 0)
 		{
 			return template == null ? "" : template;
@@ -1108,6 +1143,10 @@ public class SpeechEngine
 		// Available wherever the state is: a callback line wants {memory}
 		// whatever event happened to trigger it.
 		values.putIfAbsent("memory", ctx.getIncidentPhrase());
+		values.putIfAbsent("memoryWhere", ctx.getMemoryWhere());
+		values.putIfAbsent("memoryWhen", ctx.getMemoryWhen(System.currentTimeMillis()));
+		values.putIfAbsent("memoryWho", ctx.getIncidentWho());
+		values.putIfAbsent("foe", ctx.getCombatTarget());
 		values.putIfAbsent("souvenir", ctx.getSouvenir());
 		values.putIfAbsent("wish", ctx.getWishLabel());
 		values.putIfAbsent("here", ctx.getPlaceMemory());
@@ -1146,6 +1185,10 @@ public class SpeechEngine
 
 			String key = template.substring(i + 1, close);
 			String replacement = values.get(key);
+			if (incomplete != null && (replacement == null || replacement.isEmpty()))
+			{
+				incomplete[0] = true;
+			}
 			out.append(replacement == null ? template.substring(i, close + 1) : replacement);
 			i = close + 1;
 		}

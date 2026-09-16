@@ -59,7 +59,7 @@ public class MemorySurfaceTest
 		assertTrue(surface.contains("kill:goblin: 2"));
 		assertTrue(surface.contains("hit: 42"));
 		assertTrue("the incident quoted as its words, filed under its key: " + surface,
-			surface.contains("\"that chicken\" (chicken-death, x1)"));
+			surface.contains("\"that chicken, just now\" (chicken-death, x1)"));
 		assertTrue("the place, its feeling and its memory: " + surface,
 			surface.contains("+45 - the drop"));
 		// A region the Locations rules name is shown with its name; one they

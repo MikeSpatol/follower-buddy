@@ -728,6 +728,7 @@ public class FollowerPlugin extends Plugin
 				readCounters();
 				noteFirstMeeting();
 				speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
+				speechEngine.getContext().setRegionNames(ruleLoader.getRegionNames());
 				readTraits();
 				rebuildFollower();
 			});
@@ -1891,6 +1892,10 @@ public class FollowerPlugin extends Plugin
 		String incidentKey;
 		String incidentPhrase;
 		int incidentCount;
+		/** Where (a region id), when (epoch ms) and who it was with. */
+		int incidentWhere;
+		long incidentWhenMs;
+		String incidentWho;
 
 		/**
 		 * Where the last death happened. Session-scoped memory made
@@ -2013,6 +2018,7 @@ public class FollowerPlugin extends Plugin
 			readCounters();
 			noteFirstMeeting();
 			speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
+				speechEngine.getContext().setRegionNames(ruleLoader.getRegionNames());
 			readTraits();
 			if (panel != null)
 			{
@@ -2054,7 +2060,7 @@ public class FollowerPlugin extends Plugin
 			context.restoreCounters(saved.tallies, saved.records);
 			context.setSessionCount(saved.sessions);
 			context.restoreIncident(saved.incidentKey, saved.incidentPhrase,
-				saved.incidentCount);
+				saved.incidentCount, saved.incidentWhere, saved.incidentWhenMs, saved.incidentWho);
 			context.restorePlaces(saved.placeScores, saved.placeMemories);
 			context.restoreSpokenOnce(saved.spokenOnce);
 			context.restoreLineWear(saved.lineWear);
@@ -2124,6 +2130,9 @@ public class FollowerPlugin extends Plugin
 		saved.incidentKey = context.getIncidentKey();
 		saved.incidentPhrase = context.getIncidentPhrase();
 		saved.incidentCount = context.getIncidentCount();
+		saved.incidentWhere = context.getIncidentWhere();
+		saved.incidentWhenMs = context.getIncidentWhenMs();
+		saved.incidentWho = context.getIncidentWho().isEmpty() ? null : context.getIncidentWho();
 		saved.placeScores = context.getPlaceScores();
 		saved.placeMemories = context.getPlaceMemories();
 		saved.spokenOnce = new java.util.ArrayList<>(context.getSpokenOnce());
@@ -2570,6 +2579,7 @@ public class FollowerPlugin extends Plugin
 			speakingUntilMs = 0;
 			speechEngine.reset();
 			speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
+				speechEngine.getContext().setRegionNames(ruleLoader.getRegionNames());
 			metWearingValue = -1;
 			sessionMinutes = 0;
 			sessionRecordSaid = false;
@@ -3278,6 +3288,7 @@ public class FollowerPlugin extends Plugin
 					speechEngine.getContext().clearDailyTallies();
 					noteFirstMeeting();
 					speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
+				speechEngine.getContext().setRegionNames(ruleLoader.getRegionNames());
 					readTraits();
 					TriggerContext counted = speechEngine.getContext();
 					counted.setSessionCount(counted.getSessionCount() + 1);
@@ -4993,7 +5004,8 @@ public class FollowerPlugin extends Plugin
 			context.getTally("levels:today"),
 			context.getTally("deaths:today"),
 			context.getMoodBand(),
-			context.hasIncident() ? context.getIncidentPhrase() : null);
+			context.hasIncident() ? context.getIncidentPhrase() + context.getMemoryWhere()
+				+ ", " + context.getMemoryWhen(System.currentTimeMillis()) : null);
 	}
 
 	/**
@@ -6166,6 +6178,7 @@ public class FollowerPlugin extends Plugin
 				// away, and the exemption that lets it speak is by identity.
 				speechEngine.clearFloor();
 				speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
+				speechEngine.getContext().setRegionNames(ruleLoader.getRegionNames());
 				sendStatus("Reloaded " + ruleLoader.getStatus());
 				reportRuleErrors();
 
@@ -7591,6 +7604,7 @@ public class FollowerPlugin extends Plugin
 	{
 		ruleLoader.reload();
 		speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
+				speechEngine.getContext().setRegionNames(ruleLoader.getRegionNames());
 		// The sounds file is one of ours on disk too, and the command
 		// reads as "re-read my files". Leaving it out meant an
 		// attachment edited by hand - or removed by hand - only took

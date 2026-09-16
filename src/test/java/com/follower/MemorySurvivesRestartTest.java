@@ -43,7 +43,7 @@ public class MemorySurvivesRestartTest
 		context.noteRecord("hit", 42);
 		context.noteRecord("session", 238);
 		context.setSessionCount(36);
-		context.noteIncident("chicken-death", "that chicken");
+		context.noteIncident("chicken-death", "that chicken", "Chicken", 1_700_000_000_000L);
 		context.notePlaceFeeling(10);
 		context.notePlaceMemory("the drop");
 		context.noteSaidOnce("first-meeting");
@@ -75,6 +75,8 @@ public class MemorySurvivesRestartTest
 		assertEquals("records", 238, after.getRecord("session"));
 		assertEquals("sessions", 36, after.getSessionCount());
 		assertEquals("the incident", "that chicken", after.getIncidentPhrase());
+		assertEquals("who it was with", "Chicken", after.getIncidentWho());
+		assertEquals("when", 1_700_000_000_000L, after.getIncidentWhenMs());
 		assertEquals("the first meeting", 20_400L, after.getMetOnDay());
 		assertEquals("what you were wearing when it met you", 1_234, metWearing);
 		assertEquals("where you died", new WorldPoint(3200, 3200, 1),
