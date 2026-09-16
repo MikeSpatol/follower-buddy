@@ -318,6 +318,9 @@ public class FollowerPlugin extends Plugin
 	/** Whether a wish was open last tick, to spot the moment one opens. */
 	private boolean wasWishing;
 
+	/** Whether the follower was absent (thrall-only mode) last tick. */
+	private boolean wasAbsent;
+
 	/** The track playing last tick; null until the first read seeds it. */
 	private String lastMusicTrack;
 
@@ -3748,6 +3751,16 @@ public class FollowerPlugin extends Plugin
 			}
 			else
 			{
+				if (thrallNpc != null)
+				{
+					// Materialising as the thrall (thrall-only mode): on the
+					// thrall's tile, with the thrall's own burst and no arrival
+					// puff or spawn animation of its own.
+					follower.setSpawnAnimation(new int[0]);
+					WorldPoint at = thrallNpc.getWorldLocation();
+					follower.spawn(appearance, at != null ? at : local.getWorldLocation(), null, 0);
+					return;
+				}
 				follower.setSpawnAnimation(parseAnimationIds(config.spawnAnimation()));
 
 				// Arrive on a free tile behind the player rather than inside them.
@@ -4745,7 +4758,27 @@ public class FollowerPlugin extends Plugin
 	 */
 	private boolean shouldHide()
 	{
-		return config.hideInPvp() && client.getVarbitValue(VarbitID.INSIDE_WILDERNESS) == 1;
+		return (config.hideInPvp() && client.getVarbitValue(VarbitID.INSIDE_WILDERNESS) == 1)
+			|| absentUntilSummoned(config.thrallOnly(), thrallBusiness());
+	}
+
+	/**
+	 * Whether a thrall has the follower in any way: possessed, in limbo
+	 * across a load, waiting out a resummon, or mid-exit.
+	 */
+	private boolean thrallBusiness()
+	{
+		return thrallNpc != null || thrallLimbo || thrallExitPendingTicks > 0 || thrallExitTicks > 0;
+	}
+
+	/**
+	 * Thrall only: the follower exists while a thrall does and not otherwise.
+	 * Some people want the thrall transmog and nothing else, and the honest
+	 * shape of that is absence rather than a mute follower at their heel.
+	 */
+	static boolean absentUntilSummoned(boolean thrallOnly, boolean thrallBusiness)
+	{
+		return thrallOnly && !thrallBusiness;
 	}
 
 	@Subscribe
@@ -6090,16 +6123,30 @@ public class FollowerPlugin extends Plugin
 		}
 
 		// Stage two of the exit flourish: home, redressed, shimmering back in.
+		// In thrall-only mode there is no home to go to: the phase-out was
+		// the whole exit, and the follower is simply gone until the next
+		// summon.
 		if (thrallExitTicks > 0 && --thrallExitTicks == 0)
 		{
 			outfitOverride = null;
-			clientThread.invoke(() ->
+			if (config.thrallOnly())
 			{
-				follower.resumeFollowing();
-				follower.releaseNpcSlave();
-				rebuildFollower();
-				follower.playSpotAnim(spotAnimRepository.get(THRALL_RETURN_SPOTANIM));
-			});
+				clientThread.invoke(() ->
+				{
+					follower.releaseNpcSlave();
+					follower.despawn();
+				});
+			}
+			else
+			{
+				clientThread.invoke(() ->
+				{
+					follower.resumeFollowing();
+					follower.releaseNpcSlave();
+					rebuildFollower();
+					follower.playSpotAnim(spotAnimRepository.get(THRALL_RETURN_SPOTANIM));
+				});
+			}
 		}
 
 		if (++reloadPollTicks >= 2)
@@ -6172,7 +6219,15 @@ public class FollowerPlugin extends Plugin
 				: TriggerEvent.Type.THIEVING_END));
 			wasThieving = thievingNow;
 		}
-		speechEngine.setMuted(config.muted() || thievingNow);
+		// Absent in thrall-only mode is absent: nothing said, and nothing kept
+		// back to be said the moment a thrall appears.
+		boolean absentNow = absentUntilSummoned(config.thrallOnly(), thrallBusiness());
+		if (absentNow && !wasAbsent)
+		{
+			speechQueue.clear();
+		}
+		wasAbsent = absentNow;
+		speechEngine.setMuted(config.muted() || thievingNow || absentNow);
 
 		// The bank has no close event of its own; watched by widget presence.
 		// Closing it is an ending (R6) - the restock is done, the breather is

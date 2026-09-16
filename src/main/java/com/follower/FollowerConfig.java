@@ -611,13 +611,28 @@ public interface FollowerConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "thrallOnly",
+		name = "Thrall only",
+		description = "The follower is absent until you summon a thrall, takes its"
+			+ " place while it lasts, and when the thrall goes it phases out and"
+			+ " is gone until the next summon. No following, no talking, nothing"
+			+ " else: for people who only want the thrall replacement.",
+		section = thrallSection,
+		position = 1
+	)
+	default boolean thrallOnly()
+	{
+		return false;
+	}
+
+	@ConfigItem(
 		keyName = "thrallMeleeProfile",
 		name = "Melee outfit profile",
 		description = "Outfit profile it wears in place of a zombie (melee) thrall."
 			+ " Type a name from OUTFIT PROFILES in the side panel, or pick it"
 			+ " there; if no profile has that name the ready-made Melee one is used.",
 		section = thrallSection,
-		position = 1
+		position = 2
 	)
 	default String thrallMeleeProfile()
 	{
@@ -631,7 +646,7 @@ public interface FollowerConfig extends Config
 			+ " Type a name from OUTFIT PROFILES in the side panel, or pick it"
 			+ " there; if no profile has that name the ready-made Ranged one is used.",
 		section = thrallSection,
-		position = 2
+		position = 3
 	)
 	default String thrallRangedProfile()
 	{
@@ -645,7 +660,7 @@ public interface FollowerConfig extends Config
 			+ " Type a name from OUTFIT PROFILES in the side panel, or pick it"
 			+ " there; if no profile has that name the ready-made Magic one is used.",
 		section = thrallSection,
-		position = 3
+		position = 4
 	)
 	default String thrallMagicProfile()
 	{

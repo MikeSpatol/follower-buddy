@@ -84,7 +84,10 @@ a guessing game - Talk-to opens that conversation instead.
 
 **Thrall mode.** Summon an Arceuus thrall and the follower takes its place,
 with a per-style outfit, the summoning circle, and the real thrall hidden
-client-side.
+client-side. **Thrall only**, in the same
+settings section, makes that the whole plugin: the follower is absent until
+you summon a thrall, takes its place while it lasts, phases out when it goes,
+and says nothing in between.
 
 ## Making it yours
 

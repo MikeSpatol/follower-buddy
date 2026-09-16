@@ -280,4 +280,16 @@ public class ConfigDefaultsTest
 		assertFalse("a blank spawn setting would read as no animation at all",
 			spawn.trim().isEmpty());
 	}
+	@Test
+	public void thrallOnlyIsOptInAndAbsenceFollowsTheThrall()
+	{
+		// Nobody installs a follower to see nothing: the thrall-only mode is
+		// something a player chooses. And in that mode the follower exists
+		// exactly while a thrall has it.
+		assertTrue("thrall replacement itself stays on", config.thrallMode());
+		assertTrue("but thrall-only is opt in", !config.thrallOnly());
+		assertTrue(FollowerPlugin.absentUntilSummoned(true, false));
+		assertTrue(!FollowerPlugin.absentUntilSummoned(true, true));
+		assertTrue(!FollowerPlugin.absentUntilSummoned(false, false));
+	}
 }

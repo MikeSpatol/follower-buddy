@@ -1220,6 +1220,15 @@ and talks; it never acts on the player's behalf.
   `renderable != thrallNpc`, which is a single reference comparison against the
   thrall currently possessed and nothing while none is. It uses the same
   `RenderableDrawListener` the core Entity Hider plugin does.
+- **Thrall only.** The `thrallOnly` setting makes the possession the whole
+  plugin: `shouldHide` answers true whenever no thrall has the follower
+  (possessed, in limbo across a load, waiting out a resummon, or mid-exit),
+  so it is never spawned until a summon adopts it, and then it materialises
+  on the thrall's tile with the thrall's own burst and no arrival puff. The
+  exit's stage one is unchanged (the per-style phase-out where it stands);
+  stage two despawns instead of bringing it home. While absent the speech
+  engine is muted and the queue is cleared, so nothing is said and nothing
+  is saved up for the next summon. Off by default.
 - **Two API notes.** `Hooks.registerRenderableDrawListener` is deprecated with
   no replacement registration path yet, and core's Entity Hider uses the same
   one. `Perspective.getClickbox` is marked internal; it backs
