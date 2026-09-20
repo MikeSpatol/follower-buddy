@@ -298,6 +298,9 @@ public class FollowerPlugin extends Plugin
 	/** The beat before yes: a Send with a misgiving, the late step aside. */
 	private com.follower.follower.Will will;
 
+	/** Walkable ground nobody walks on: the lit fires in the scene. */
+	private com.follower.follower.HotGround hotGround;
+
 	private Path dataDir;
 	private WorldPoint lastPlayerTile;
 	private int lastRegionId = -1;
@@ -623,6 +626,9 @@ public class FollowerPlugin extends Plugin
 					return wornSlot != null;
 				}
 			};
+		// Before every mover: the feet consult this on each step they plan.
+		hotGround = new com.follower.follower.HotGround(client);
+		follower.setHotGround(hotGround::hot);
 		errands = new com.follower.follower.ErrandController(client, follower, config,
 			speechEngine::dispatch, spotAnimRepository,
 			// Minutes-taking counts as busy: an errand must not set off with
@@ -3348,6 +3354,12 @@ public class FollowerPlugin extends Plugin
 				// a lost tick of movement - which is what made it stop and then snap.
 				// A real teleport is caught by the distance check in updateTrail.
 				follower.markNeedsReattach();
+				if (hotGround != null)
+				{
+					// The scene is rebuilt from here; its fires are announced
+					// again as it loads, so the old set is only ever stale.
+					hotGround.clear();
+				}
 				if (skilling != null)
 				{
 					// Objects and NPCs dropped around a load are shuffling,
@@ -3408,6 +3420,10 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void tearDownScene()
 	{
+		if (hotGround != null)
+		{
+			hotGround.clear();
+		}
 		ensureCatalogues();
 		resetThrallQuietly();
 		// Actor references from a scene that is going away.
@@ -6610,6 +6626,32 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void noteObjectChange(net.runelite.api.GameObject object, boolean spawned)
 	{
+		// The fires, first and ungated: a chunk load raises one of these per
+		// object in the scene, and that IS how the set is built - the tiles
+		// the follower walks round have to be known before it takes a step,
+		// whatever the company settings say.
+		if (hotGround != null && object != null)
+		{
+			net.runelite.api.WorldView fires = client.getTopLevelWorldView();
+			net.runelite.api.Point from = object.getSceneMinLocation();
+			net.runelite.api.Point to = object.getSceneMaxLocation();
+			if (fires != null && from != null && to != null)
+			{
+				WorldPoint low = WorldPoint.fromScene(fires, from.getX(), from.getY(),
+					object.getPlane());
+				WorldPoint high = WorldPoint.fromScene(fires, to.getX(), to.getY(),
+					object.getPlane());
+				if (spawned)
+				{
+					hotGround.objectSpawned(object.getId(), low, high);
+				}
+				else
+				{
+					hotGround.objectDespawned(object.getId(), low, high);
+				}
+			}
+		}
+
 		// A star landing. Names are only looked up outside a chunk load,
 		// which raises one of these per object in the scene.
 		if (noticing != null && object != null && ticksSinceLoading > 2)

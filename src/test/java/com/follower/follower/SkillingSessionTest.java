@@ -52,9 +52,18 @@ public class SkillingSessionTest
 		/** Tiles the ground refuses; null means everywhere is standable. */
 		java.util.function.Predicate<WorldPoint> walled;
 
+		/**
+		 * Tiles with a lit fire on them. Walkable by the map and refused by
+		 * the follower, which is what a fire actually is - so these are NOT
+		 * walls, and a test that makes one a wall is testing something else.
+		 */
+		final java.util.Set<WorldPoint> fires = new java.util.HashSet<>();
+
 		RecordingFollower()
 		{
 			super(null, null);
+			// Wired as FollowerPlugin wires the real one.
+			setHotGround(fires::contains);
 		}
 
 		@Override
@@ -1947,6 +1956,75 @@ public class SkillingSessionTest
 		assertEquals("not once they stop", before, warmed());
 	}
 
+	/**
+	 * The report, in one test: the player lights a campfire, cooks on it, and
+	 * the follower stands in the flames. The seat across a fire is precisely
+	 * the tile the next fire in a line goes on, and a fire is walkable ground,
+	 * so nothing in the plugin had any reason to refuse it.
+	 */
+	@Test
+	public void theCookIsNeverSeatedInTheFlames()
+	{
+		follower.fires.add(FIRE);
+		follower.fires.add(new WorldPoint(53, 50, 0));   // the seat, lit
+		workTheFire();
+
+		WorldPoint seat = follower.stayingAt;
+		assertNotNull("somewhere else to sit, not nowhere at all", seat);
+		assertFalse("and not in a fire", follower.fires.contains(seat));
+		assertTrue("still at the fireside", seat.distanceTo(FIRE) <= 2);
+		for (WorldPoint sent : follower.stays)
+		{
+			assertFalse("nor sent into one on the way", follower.fires.contains(sent));
+		}
+	}
+
+	@Test
+	public void aCampfireIsCookedAtLikeAnyOtherFire()
+	{
+		// A Forestry campfire is cooked on exactly as a fire is. Sitting the
+		// follower on a range's flank for one was simply wrong, and the flank
+		// of a campfire is where the next one gets lit.
+		skilling.noteClick("Cook", "Forester's Campfire", 43475, FIRE, null, null);
+		game.animating(COOK);
+		tick(1);
+		assertTrue("the session never started", skilling.isWorking());
+		tick(SkillingController.SEAT_AFTER_TICKS);
+
+		assertEquals("across it, as at any fire",
+			new WorldPoint(53, 50, 0), follower.stayingAt);
+		assertEquals("facing the flames", FIRE, follower.facing);
+		assertTrue("hands to them", warmed() >= 1);
+	}
+
+	/**
+	 * The other half of the report: "moves erratically". Between batches the
+	 * player lights the next fire, and that firemaking experience renamed the
+	 * work, re-shaped the seat and moved the follower - then the next fish
+	 * renamed it back and moved it again, every few seconds, all session.
+	 */
+	@Test
+	public void firemakingBetweenBatchesDoesNotMoveTheCook()
+	{
+		workTheFire();
+		skilling.noteXpDrop(Skill.COOKING);
+		WorldPoint seat = follower.stayingAt;
+		assertNotNull(seat);
+		int stays = follower.stays.size();
+
+		skilling.noteXpDrop(Skill.FIREMAKING);
+		tick(4);
+		skilling.noteXpDrop(Skill.COOKING);
+		tick(4);
+		skilling.noteXpDrop(Skill.FIREMAKING);
+		tick(4);
+
+		assertEquals("the work is still the cook",
+			"cooking", skilling.getSession().getActivity());
+		assertEquals("and the follower has not been moved", seat, follower.stayingAt);
+		assertEquals("nor sent anywhere at all", stays, follower.stays.size());
+	}
+
 	@Test
 	public void theCookAtARangeIsOneTileAlongItsSide()
 	{
@@ -2161,12 +2239,14 @@ public class SkillingSessionTest
 	{
 		// Lighting a line of fires is how this shows: the follower is given a
 		// tile, the next fire goes up on it, and a stay persists by design, so
-		// without this it stands in the flames until the session ends.
+		// without this it stands in the flames until the session ends. The
+		// fire is a real one here - open ground the follower refuses - because
+		// a fire faked as a wall proves nothing about fires.
 		workTheTree();
 		WorldPoint seat = follower.stayingAt;
 		assertNotNull(seat);
 
-		follower.walled = tile -> tile.equals(seat);
+		follower.fires.add(seat);
 		tick(3);
 		assertNotEquals("not left standing in it", seat, follower.stayingAt);
 		assertTrue("and it found somewhere else or simply followed",
@@ -2191,7 +2271,7 @@ public class SkillingSessionTest
 			return;
 		}
 
-		follower.walled = tile -> tile.equals(visit);
+		follower.fires.add(visit);
 		tick(2);
 		assertTrue("the visit is given up rather than stood out in the fire",
 			follower.stayingAt == null || !visit.equals(follower.stayingAt));

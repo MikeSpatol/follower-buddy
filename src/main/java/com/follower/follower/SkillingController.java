@@ -140,6 +140,9 @@ public class SkillingController
 
 	/** Three seconds at the fire once there. */
 	static final int FIRE_WARM_TICKS = 5;
+
+	/** How long the walk to it is given before the visit is written off. */
+	static final int FIRE_ARRIVAL_PATIENCE = 10;
 	private static final int FIRE_GAG_ONE_IN = 50;
 
 	/** The cold-stamp-feet rule's regions: the Wintertodt camp and the snows. */
@@ -749,7 +752,14 @@ public class SkillingController
 		{
 			return 0;
 		}
-		if (skill != null)
+		// The FIRST drop names the work, and only the first. A cook at a
+		// fire lights the next one between batches, and firemaking experience
+		// landing mid-session renamed the work, re-shaped the seat and moved
+		// the follower - then the next fish renamed it back and moved it
+		// again. Play report: "moves erratically to try and cook with the
+		// player". One naming was always the intent; the code simply did not
+		// say so.
+		if (skill != null && session.xpDrops == 0)
 		{
 			String named = skill.getName().toLowerCase(Locale.ROOT);
 			if (!named.equals(session.activity))
@@ -1474,20 +1484,20 @@ public class SkillingController
 	 */
 	private void watchTheGroundUnderfoot(int now)
 	{
-		if (fireSeat != null && !follower.standable(fireSeat))
+		if (fireSeat != null && !follower.goodGround(fireSeat))
 		{
 			dropTheFireLine(true);
 		}
-		if (trapSeat != null && !follower.standable(trapSeat))
+		if (trapSeat != null && !follower.goodGround(trapSeat))
 		{
 			dropTheTrap(true);
 		}
-		if (seat == null || follower.standable(seat))
+		if (seat == null || follower.goodGround(seat))
 		{
 			return;
 		}
 		// Chosen again from scratch rather than nudged one tile: whatever went
-		// up there may well have taken the neighbours with it.
+		// up there - a wall, a fire - may well have taken the neighbours too.
 		seat = null;
 		reseat = false;
 		seatDueTick = now + 1;
@@ -1608,7 +1618,7 @@ public class SkillingController
 		}
 		for (WorldPoint candidate : ring)
 		{
-			if (follower.stayAt(candidate))
+			if (!follower.hot(candidate) && follower.stayAt(candidate))
 			{
 				trapTile = min;
 				trapId = id;
@@ -1684,7 +1694,10 @@ public class SkillingController
 	 * A fire lit within three tiles of where the player just stood is one
 	 * of theirs. Every fourth, the follower walks over, warms its hands and
 	 * catches up on foot - and one time in fifty, the errand's too-close gag
-	 * instead. Braziers and campfires are not fires.
+	 * instead. A brazier is not one of these, and neither is a campfire:
+	 * this is the player's own line of fires, and that is what it is for.
+	 * Where the follower may STAND is a separate question, and a campfire
+	 * counts there - see {@link HotGround}.
 	 */
 	private void maybeTheFire(int id, WorldPoint min, WorldPoint max)
 	{
@@ -1720,7 +1733,10 @@ public class SkillingController
 		}
 		for (WorldPoint candidate : beside)
 		{
-			if (follower.stayAt(candidate))
+			// A line of fires is lit along a row, so the tile beside the new
+			// one is very often the last one - and the nearest, which is how
+			// the follower came to warm its hands from inside a fire.
+			if (!follower.hot(candidate) && follower.stayAt(candidate))
 			{
 				fireSeat = candidate;
 				follower.setStayFaceTile(min);
@@ -1752,7 +1768,20 @@ public class SkillingController
 		}
 		if (fireWarmAt > 0 && now >= fireWarmAt)
 		{
+			// Arrived, or near enough. The walk was timed by counting tiles,
+			// which is a guess: a corner to round or a tile refused and the
+			// hands went to the flames from halfway there. Waits for the
+			// follower to actually stop, and gives up if it never does.
+			if (!follower.isSettled() && now < fireWarmAt + FIRE_ARRIVAL_PATIENCE)
+			{
+				return;
+			}
 			fireWarmAt = 0;
+			if (!follower.isSettled())
+			{
+				dropTheFireLine(true);
+				return;
+			}
 			fireLeaveAt = now + FIRE_WARM_TICKS;
 			follower.playAnimation(KeepingCompany.WARM_HANDS);
 		}
@@ -1924,7 +1953,11 @@ public class SkillingController
 		}
 		for (WorldPoint candidate : candidates)
 		{
-			if (follower.stayAt(candidate))
+			// The fire is asked about BEFORE the walk, not only by the
+			// pathing: the seat is written down here, and a seat recorded on
+			// a tile the follower will not stand on is one it gets dropped
+			// from and re-takes, tick after tick.
+			if (!follower.hot(candidate) && follower.stayAt(candidate))
 			{
 				seat = candidate;
 				follower.setStayFaceTile(face);
@@ -1953,7 +1986,10 @@ public class SkillingController
 		switch (session.activity)
 		{
 			case "cooking":
-				return "fire".equals(name) ? KeepingCompany.Mode.FIRESIDE
+				// Any of the fires, not just the one named "Fire": a Forestry
+				// campfire is cooked at exactly the same way, and sitting it on
+				// a range's flank instead was simply wrong.
+				return HotGround.isFire(name) ? KeepingCompany.Mode.FIRESIDE
 					: KeepingCompany.Mode.RANGE;
 			case "smithing":
 				return "anvil".equals(name) ? KeepingCompany.Mode.ANVIL : KeepingCompany.Mode.NONE;

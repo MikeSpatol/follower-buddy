@@ -1344,6 +1344,36 @@ nearest guard, a foreman three tiles off the hotspot. The seat owns the feet:
 `blocksErrands()` keeps the follower's own errands from starting mid-session.
 Thrall mode and the spectator beat it.
 
+**Hot ground** (`HotGround`). A lit fire has no collision: the game lets you
+walk straight over one, so every check the follower had - `standable`,
+`canStep`, the pathing, the seat - read a fire as open ground and put the
+follower in the flames. `HotGround` keeps the set of tiles that are walkable
+and not walked on, built from the object spawn and despawn events the client
+already raises (a chunk load raises one per object, which is how the set fills
+on arrival), cleared on every scene change. It is fed before anything else in
+`noteObjectChange` and regardless of the company settings, because the feet
+consult it on every step they plan. The names are `Fire`, `Campfire`,
+`Forester's Campfire` and `Bonfire`, matched case-insensitively, on a footprint
+of at most 4 tiles; ids are cached so a scene load costs one name lookup per
+distinct id. `FollowerEntity.hot` answers for a tile, `goodGround` is
+`standable` and not hot, and `canStep` refuses the tile being stepped ONTO - so
+the breadth-first search routes around a fire rather than merely declining to
+stop on it, and `landingTile` cannot snap into one either. Stepping OFF one is
+untouched, and `updateFrame` takes one step out of the flames if a fire is lit
+underneath a settled follower. The one exception is `insistOn`, which the
+FIREDEATH errand uses to walk into a fire on purpose for the gag; it lasts
+exactly as long as the destination it was granted for. Nothing is hot until
+something says so, so the thrall path and every test that does not light a fire
+are unaffected.
+
+**One naming per session.** The first XP drop names the work and no later drop
+does. A cook at a fire lights the next one between batches, and that firemaking
+experience used to rename the activity, re-shape the seat and move the
+follower - then the next fish renamed it back and moved it again, every few
+seconds, all session. A click on a differently named target starts a fresh
+session anyway, so the drop rename only ever needed to cover a click that said
+nothing ("Use").
+
 **Borrowing** (`Borrow`). One item at a time through the same transient-prop
 hands as the scroll (they share the weapon slot, so the tally scroll is skipped
 while a tool is held), started at seat time. The mirror rules' disarm keeps a

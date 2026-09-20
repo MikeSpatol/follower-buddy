@@ -286,4 +286,74 @@ public class WallPathingTest
 		assertFalse("on land the same reading is not a reason to move",
 			followerOn(land).deckSceneryUnderfoot(new WorldPoint(10, 10, 0), land.player));
 	}
+
+	// ----------------------------------------------------------- the fires
+
+	/**
+	 * A lit fire has no collision at all. The game lets players walk straight
+	 * over one, so every check the follower had was blind to it, and the
+	 * follower walked over them too. Play report: it stood in a campfire while
+	 * the player cooked on it.
+	 */
+	@Test
+	public void aFireIsWalkedRoundRatherThanThrough()
+	{
+		FakeGame game = new FakeGame().withCollision();
+		FollowerEntity follower = followerOn(game);
+		WorldPoint fire = new WorldPoint(11, 11, 0);
+		follower.setHotGround(fire::equals);
+
+		WorldPoint from = new WorldPoint(10, 10, 0);
+		assertTrue("the ground under a fire is open - that is the whole problem",
+			follower.standable(fire));
+		assertFalse("and the follower will not step onto it even so",
+			follower.canStep(from, 1, 1));
+		assertFalse("nor be left standing on it", follower.goodGround(fire));
+
+		WorldPoint step = follower.stepToward(from, new WorldPoint(13, 12, 0), false);
+		assertNotNull("a fire in the way is no reason to stand still", step);
+		assertFalse("it went round, not through", fire.equals(step));
+	}
+
+	@Test
+	public void steppingOutOfAFireIsAlwaysAllowed()
+	{
+		// Only the tile being stepped ONTO is asked about. A fire lit under the
+		// follower has to be leavable, or refusing would trap it in the flames.
+		FakeGame game = new FakeGame().withCollision();
+		FollowerEntity follower = followerOn(game);
+		WorldPoint fire = new WorldPoint(10, 10, 0);
+		follower.setHotGround(fire::equals);
+
+		assertTrue("out of it, east", follower.canStep(fire, 1, 0));
+		assertTrue("and every other way", follower.canStep(fire, 0, 1));
+	}
+
+	@Test
+	public void aSnapNeverLandsInAFire()
+	{
+		// A teleport puts the follower one tile west of the player by
+		// arithmetic, and the player may well have lit that tile.
+		FakeGame game = new FakeGame().withCollision();
+		FollowerEntity follower = followerOn(game);
+		WorldPoint wanted = new WorldPoint(9, 10, 0);
+		follower.setHotGround(wanted::equals);
+
+		WorldPoint landing = follower.landingTile(wanted, new WorldPoint(10, 10, 0));
+		assertFalse("beside the fire, not in it", wanted.equals(landing));
+		assertTrue("and somewhere it could have walked to",
+			follower.goodGround(landing));
+	}
+
+	@Test
+	public void nothingIsHotUntilSomethingSaysSo()
+	{
+		// The default, and the reason none of the rest of the plugin had to
+		// learn about any of this.
+		FollowerEntity follower = followerOn(new FakeGame().withCollision());
+		WorldPoint open = new WorldPoint(10, 10, 0);
+
+		assertTrue(follower.goodGround(open));
+		assertTrue(follower.canStep(open, 1, 0));
+	}
 }

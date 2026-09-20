@@ -591,9 +591,7 @@ public class ErrandController
 				return startTravelErrand(errand, findObject(name -> name.equals("Altar")));
 			case FIRE:
 			{
-				WorldPoint fire = findObject(
-					name -> name.equals("Fire") || name.equals("Campfire")
-						|| name.equals("Forester's Campfire"));
+				WorldPoint fire = findObject(HotGround::isFire);
 				if (fire == null)
 				{
 					return false;
@@ -610,9 +608,7 @@ public class ErrandController
 			case FIREDEATH:
 				// Only rolled from FIRE naturally; reachable directly by the
 				// force command for testing. Walks straight INTO the flames.
-				return startTravelErrand(errand, findObject(
-					name -> name.equals("Fire") || name.equals("Campfire")
-						|| name.equals("Forester's Campfire")));
+				return startTravelErrand(errand, findObject(HotGround::isFire));
 			case CAT:
 				// NPCs don't block either; standing ON the cat ruins the moment.
 				return startAdjacentErrand(errand, findNpc(
@@ -783,7 +779,11 @@ public class ErrandController
 
 	private boolean startTravelErrand(Errand errand, WorldPoint target)
 	{
-		if (target == null || !follower.stayAt(target))
+		// The one thing in the plugin that walks INTO a fire on purpose is
+		// the gag that does it for the laugh. The feet refuse every other
+		// route onto one, so this trip has to say so outright.
+		if (target == null || !(errand == Errand.FIREDEATH
+			? follower.insistOn(target) : follower.stayAt(target)))
 		{
 			return false;
 		}

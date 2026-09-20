@@ -258,7 +258,7 @@ public class FollowerEntity
 			besideSide = sideOf(previous, current, tile);
 		}
 		WorldPoint flank = flankTile(previous, current, besideSide);
-		if (flank != null && standable(flank)
+		if (flank != null && goodGround(flank)
 			&& canStep(current, flank.getX() - current.getX(), flank.getY() - current.getY()))
 		{
 			besideMisses = 0;
@@ -694,6 +694,7 @@ public class FollowerEntity
 	{
 		stayTile = null;
 		stayFaceTile = null;
+		insistedTile = null;
 	}
 
 	/**
@@ -849,6 +850,57 @@ public class FollowerEntity
 		}
 		net.runelite.api.WorldView mine = local.getWorldView();
 		return mine != null && !mine.isTopLevel() && !standable(standing);
+	}
+
+	/**
+	 * Tiles the map calls walkable that the follower walks round rather
+	 * than onto: a lit fire, chiefly. Supplied by the plugin from the
+	 * objects the client announces; nothing is hot until something says
+	 * so, which is why the tests and the thrall path are untouched.
+	 */
+	private java.util.function.Predicate<WorldPoint> hotGround = at -> false;
+
+	public void setHotGround(java.util.function.Predicate<WorldPoint> hot)
+	{
+		hotGround = hot == null ? at -> false : hot;
+	}
+
+	/**
+	 * The one tile the follower has been told to walk onto anyway. The
+	 * fire gag walks INTO the flames on purpose and is the only thing in
+	 * the plugin that does, so it is the only exception the feet keep.
+	 */
+	private WorldPoint insistedTile;
+
+	/**
+	 * Walk onto it even so. Goes through {@link #stayAt} rather than round
+	 * it, so there is still one way to give the follower a spot.
+	 */
+	public boolean insistOn(WorldPoint target)
+	{
+		insistedTile = target;
+		boolean went = stayAt(target);
+		if (!went)
+		{
+			insistedTile = null;
+		}
+		return went;
+	}
+
+	/** Whether the follower walks round this tile rather than onto it. */
+	boolean hot(WorldPoint at)
+	{
+		return at != null && !at.equals(insistedTile) && hotGround.test(at);
+	}
+
+	/**
+	 * Whether the follower would CHOOSE to stand here: the map allows it,
+	 * and it is not a tile a person steps round. Every spot the follower is
+	 * given should be asked about this rather than about collision alone.
+	 */
+	public boolean goodGround(WorldPoint at)
+	{
+		return standable(at) && !hot(at);
 	}
 
 	/** Whether the follower could stand on this tile at all. */
@@ -1139,10 +1191,23 @@ public class FollowerEntity
 	 * @return false only when nothing near the target is reachable at all, or
 	 * the send would immediately trip the stay leash
 	 */
+	/**
+	 * Every spot the follower is given comes through here - the seat, the
+	 * errands, the wander, the moments, a Send - so this is where a fire is
+	 * refused once, for all of them. The callers that offer a list of
+	 * candidates move on to the next, which is what each already does when
+	 * the ground refuses a tile.
+	 */
 	public boolean stayAt(WorldPoint target)
 	{
+		// The exception lives exactly as long as the destination it was
+		// granted for; any other destination ends it.
+		if (insistedTile != null && !insistedTile.equals(target))
+		{
+			insistedTile = null;
+		}
 		if (!spawned || tile == null || target == null
-			|| target.getPlane() != tile.getPlane())
+			|| target.getPlane() != tile.getPlane() || hot(target))
 		{
 			return false;
 		}
@@ -1740,6 +1805,16 @@ public class FollowerEntity
 		{
 			snapBeside(playerTile);
 			return;
+		}
+
+		// A fire lit under its feet - which is most of a firemaking line,
+		// since the follower stands on the tile the player just left. One
+		// step off, not a snap: somebody whose ground catches moves aside,
+		// they do not appear elsewhere. Whatever owns the feet then chooses
+		// properly at its own pace - the seat is re-taken a tick later.
+		if (isSettled() && hot(tile))
+		{
+			stepOffTheFire();
 		}
 
 		// Watchdog: if anything at all has left the object hidden while the player
@@ -2358,6 +2433,15 @@ public class FollowerEntity
 
 		Integer fromFlags = flagAt(from);
 		WorldPoint to = new WorldPoint(from.getX() + dx, from.getY() + dy, from.getPlane());
+		if (hot(to))
+		{
+			// A fire is walkable ground and nobody walks on it. Refused here
+			// rather than at the destination, so the BFS routes AROUND one
+			// instead of merely declining to stop on it - and so the greedy
+			// stepper does too. Stepping OFF a fire is unaffected: only the
+			// tile being stepped onto is asked about.
+			return false;
+		}
 		Integer toFlags = flagAt(to);
 		if (fromFlags == null || toFlags == null)
 		{
@@ -2676,6 +2760,38 @@ public class FollowerEntity
 		return candidate.getX() != against.getX()
 			? candidate.getX() < against.getX()
 			: candidate.getY() < against.getY();
+	}
+
+	/**
+	 * Out of the flames by the shortest honest route: one step to open
+	 * ground, cardinals first because a straight step reads as moving
+	 * aside where a diagonal reads as drifting. A held stay keeps its
+	 * post, one tile over; a following follower takes it as a goal, which
+	 * the player's next step clears on its own.
+	 */
+	private void stepOffTheFire()
+	{
+		int[][] steps = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {-1, 1}, {1, -1}, {-1, -1}};
+		for (int[] step : steps)
+		{
+			WorldPoint off = new WorldPoint(
+				tile.getX() + step[0], tile.getY() + step[1], tile.getPlane());
+			if (!goodGround(off) || !canStep(tile, step[0], step[1]))
+			{
+				continue;
+			}
+			log.debug("Standing in a fire at {}; stepping to {}", tile, off);
+			if (stayTile != null)
+			{
+				stayAt(off);
+			}
+			else
+			{
+				goalTile = off;
+				serverPath.clear();
+			}
+			return;
+		}
 	}
 
 	/** Re-places the follower beside the player after a teleport or plane change. */

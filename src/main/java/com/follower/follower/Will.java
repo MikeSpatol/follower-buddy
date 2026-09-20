@@ -109,6 +109,9 @@ public class Will
 	{
 		pending = null;
 		misgiving = null;
+		// A tile with a fire on it: the player means over there, not into
+		// that, so the Send lands beside it rather than being refused.
+		target = beside(target);
 		WorldPoint from = follower.getWorldLocation();
 		Player local = client.getLocalPlayer();
 		WorldPoint here = local == null ? null : local.getWorldLocation();
@@ -150,6 +153,32 @@ public class Will
 		events.accept(TriggerEvent.hesitated(about.key, thing));
 		log.debug("Sent to {} with a misgiving ({}); stopping at {} first", target, about, edge);
 		return true;
+	}
+
+	/**
+	 * The tile itself when the follower would stand on it, and the nearest
+	 * tile round it that it would when it would not. Unchanged when there
+	 * is nowhere better: refusing outright is the caller's business.
+	 */
+	private WorldPoint beside(WorldPoint target)
+	{
+		WorldPoint from = follower.getWorldLocation();
+		if (target == null || follower.goodGround(target))
+		{
+			return target;
+		}
+		WorldPoint best = target;
+		int nearest = Integer.MAX_VALUE;
+		for (WorldPoint spot : SkillingController.ring(target, target, 1, target.getPlane()))
+		{
+			int away = from == null ? 0 : spot.distanceTo(from);
+			if (follower.goodGround(spot) && away < nearest)
+			{
+				nearest = away;
+				best = spot;
+			}
+		}
+		return best;
 	}
 
 	/** Whether the tile is on the surface Wilderness's side of the ditch. */
