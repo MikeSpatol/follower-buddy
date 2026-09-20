@@ -1364,7 +1364,39 @@ underneath a settled follower. The one exception is `insistOn`, which the
 FIREDEATH errand uses to walk into a fire on purpose for the gag; it lasts
 exactly as long as the destination it was granted for. Nothing is hot until
 something says so, so the thrall path and every test that does not light a fire
-are unaffected.
+are unaffected. `::follower fires` prints the scene's fires against the set and
+what the feet are aiming at, which is the only way to see a missed event from
+outside; `gradlew runFireAudit` in the cache dumper checks the names against
+the game, because a name that matches nothing fails silently.
+
+**Four ways onto a fire, all of them closed.** The first pass of the work above
+left the follower standing in every fire after the first, and the four causes
+are worth naming because none of them is about fires as such.
+
+- *The escape aimed at the player.* `stepOffTheFire` tried east, then west.
+  Lighting a line runs east to west, so from the second fire on, east is the
+  fire lit a moment ago and west is the player, who is standing where they
+  just lit it. A player's tile is not in the collision map and is not hot, so
+  it passed every test the escape had.
+- *And the route refuses to walk there.* `playerTileToAvoid` is handed to the
+  pathfinder as the one tile to go around, so the escape it had just chosen
+  could not be reached from anywhere.
+- *And the stay settled for where it already was.* An unreachable destination
+  comes back from closest-approach as an empty path, and `stayAt` read that as
+  "as near as I could get", which is the tile underfoot. It anchored the stay
+  ON the fire and returned success. That is what made it stick: every frame
+  re-chose the same unreachable tile and re-pinned the follower to the flames,
+  with nothing anywhere reporting a problem.
+- *And the way in was a plan made before the fire existed.* Steps are checked
+  as they are appended to `serverPath` and never again, and the follow tile is
+  the tile the player last stepped from - which on a fire line is the tile
+  they just lit.
+
+So: the escape never picks the player's tile and tries the next way out when
+one is refused; `stayAt` refuses rather than settling for a hot tile, which
+sends every caller to its next candidate exactly as they already do when the
+ground says no; `releaseSteps` asks again as a step is committed; and
+`followTileFor` never hands back a tile that is alight.
 
 **One naming per session.** The first XP drop names the work and no later drop
 does. A cook at a fire lights the next one between batches, and that firemaking

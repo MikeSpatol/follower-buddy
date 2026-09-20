@@ -7558,7 +7558,7 @@ public class FollowerPlugin extends Plugin
 		"priorities", "palette", "harvest", "hidden",
 		"pitchsweep", "headsweep", "head", "followtrace",
 		"wraplerp", "wrapauto", "wrapearly",
-		"animinfo", "animtrace", "errandscan", "cachecheck", "stanceaudit",
+		"animinfo", "animtrace", "errandscan", "cachecheck", "stanceaudit", "fires",
 		"watch", "stance", "spectate", "shield", "centre", "center", "loot",
 		"scan", "heights", "mood", "chatwatch", "examinewatch", "fire", "want", "transcript",
 		"boat",
@@ -9097,6 +9097,34 @@ public class FollowerPlugin extends Plugin
 				dumpBoat();
 				break;
 
+			case "fires":
+			{
+				// Stand where the follower is misbehaving and run this. It
+				// answers the only question that matters: does the follower
+				// KNOW about the fire it is standing in.
+				clientThread.invoke(() ->
+				{
+					net.runelite.api.Player me = client.getLocalPlayer();
+					WorldPoint here = me == null ? null : me.getWorldLocation();
+					for (String line : hotGround.describe(here, 12))
+					{
+						sendStatus(line);
+						log.info("FIRES {}", line);
+					}
+					for (String line : follower.describeFeet())
+					{
+						sendStatus(line);
+						log.info("FIRES {}", line);
+					}
+					if (skilling != null)
+					{
+						sendStatus("Skilling: " + skilling.describe());
+						log.info("FIRES skilling {}", skilling.describe());
+					}
+				});
+				break;
+			}
+
 			case "where":
 				// Split from status: every place that advertises this command
 				// promises the region id, which used to arrive buried after a
@@ -9124,6 +9152,7 @@ public class FollowerPlugin extends Plugin
 						+ "pitchsweep | headsweep | head <...> | followtrace | boat | "
 						+ "wraplerp | wrapauto | wrapearly | animinfo | "
 						+ "animtrace | errandscan | cachecheck | stanceaudit | examinewatch | "
+						+ "fires | "
 						+ "mood [0-100] | chatwatch | sniffanims | finditem <name> | "
 						+ "prop <itemId> | propoffset <x y z> | fire <rule-id> | want | "
 						+ "spectate | shield | centre <x y z> | loot <value> | "

@@ -102,6 +102,88 @@ public class HotGround
 		return tiles.size();
 	}
 
+	/**
+	 * What the scene holds against what this does, for {@code ::follower
+	 * fires}. The set is built from events, and a missed event or a tile
+	 * worked out wrongly is invisible from the inside: the follower simply
+	 * walks into something. This is the only way to see it, so it reads the
+	 * scene the long way round on purpose.
+	 *
+	 * @param centre the player's tile
+	 * @param within how far to look, in tiles
+	 */
+	public List<String> describe(WorldPoint centre, int within)
+	{
+		List<String> lines = new java.util.ArrayList<>();
+		lines.add("HotGround holds " + tiles.size() + " tile(s), "
+			+ known.size() + " id(s) resolved");
+		net.runelite.api.Player local = client.getLocalPlayer();
+		net.runelite.api.coords.LocalPoint lp = local == null ? null : local.getLocalLocation();
+		net.runelite.api.WorldView view = client.getTopLevelWorldView();
+		if (centre == null || lp == null || view == null)
+		{
+			lines.add("no scene to read");
+			return lines;
+		}
+
+		Set<WorldPoint> inTheScene = new HashSet<>();
+		net.runelite.api.Scene scene = view.getScene();
+		net.runelite.api.Tile[][][] grid = scene.getTiles();
+		int plane = view.getPlane();
+		for (int dx = -within; dx <= within; dx++)
+		{
+			for (int dy = -within; dy <= within; dy++)
+			{
+				int x = lp.getSceneX() + dx;
+				int y = lp.getSceneY() + dy;
+				if (x < 0 || y < 0 || x >= grid[plane].length || y >= grid[plane][x].length)
+				{
+					continue;
+				}
+				net.runelite.api.Tile tile = grid[plane][x][y];
+				if (tile == null)
+				{
+					continue;
+				}
+				for (net.runelite.api.GameObject object : tile.getGameObjects())
+				{
+					if (object == null)
+					{
+						continue;
+					}
+					String name = ErrandController.objectName(client, object.getId());
+					if (!isFire(name))
+					{
+						continue;
+					}
+					// BOTH readings: the one the events are built from, and
+					// the one every other part of the plugin uses. If these
+					// ever disagree the set is keyed on the wrong tiles.
+					net.runelite.api.Point min = object.getSceneMinLocation();
+					WorldPoint fromScene = min == null ? null
+						: WorldPoint.fromScene(view, min.getX(), min.getY(), object.getPlane());
+					WorldPoint fromObject = object.getWorldLocation();
+					inTheScene.add(fromScene == null ? fromObject : fromScene);
+					lines.add(String.format("  %s id %d at %s (object says %s) - %s",
+						name, object.getId(), fromScene, fromObject,
+						hot(fromScene) ? "hot" : "NOT IN THE SET"));
+				}
+			}
+		}
+		if (inTheScene.isEmpty())
+		{
+			lines.add("  no fire within " + within + " tiles");
+		}
+		for (WorldPoint held : tiles)
+		{
+			if (held.distanceTo(centre) <= within && !inTheScene.contains(held))
+			{
+				lines.add("  STALE: " + held + " is held but the scene has no fire on it");
+			}
+		}
+		return lines;
+	}
+
 	/** A hop, a logout, a shutdown: the scene is gone and so is what was in it. */
 	public void clear()
 	{

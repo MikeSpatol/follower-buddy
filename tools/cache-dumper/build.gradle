@@ -85,6 +85,16 @@ tasks.register('runSceneAudit', JavaExec) {
     mainClass = 'com.follower.tools.SceneNameAudit'
 }
 
+// Every object in the game that can be set light to, and whether HotGround
+// would know to walk the follower round it. A name-based match fails silently.
+//   gradlew runFireAudit
+tasks.register('runFireAudit', JavaExec) {
+    group = 'verification'
+    description = 'Audits the hot-ground fire names against the cache'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.follower.tools.FireAudit'
+}
+
 // Checks that every NPC name and item id the rules key on actually exists.
 // A name that matches nothing is a rule that can never fire, and says nothing.
 //   gradlew runTargetAudit --args="<phrases.json> [cacheDir]"

@@ -224,7 +224,9 @@ public class FollowerEntity
 
 	/**
 	 * Where to follow to this observation: the tile behind, or the flank
-	 * once the run has gone on long enough and the flank is open.
+	 * once the run has gone on long enough and the flank is open. Never a
+	 * tile that is alight - the tile the player last stepped from is the
+	 * one they just lit, for the whole of a firemaking line.
 	 *
 	 * @param previous the player's tile before this step
 	 * @param current their tile now
@@ -245,13 +247,13 @@ public class FollowerEntity
 		if (!besideAllowed || stayTile != null || goalTile != null)
 		{
 			beside = false;
-			return behind;
+			return coolFollowTile(behind);
 		}
 		if (!beside)
 		{
 			if (stepStreak < BESIDE_AFTER_STEPS)
 			{
-				return behind;
+				return coolFollowTile(behind);
 			}
 			beside = true;
 			besideMisses = 0;
@@ -270,7 +272,58 @@ public class FollowerEntity
 			beside = false;
 			stepStreak = BESIDE_AFTER_STEPS - BESIDE_RETRY_STEPS;
 		}
-		return behind;
+		return coolFollowTile(behind);
+	}
+
+	/**
+	 * The follow tile, or the nearest tile beside it that is not alight.
+	 *
+	 * <p>The follow tile is the tile the player last stepped from, and on
+	 * a firemaking line that tile is on fire - every single time, for the
+	 * whole session. Left as it was, the follower was given a destination
+	 * it would never walk onto and the pathing quietly settled for
+	 * whatever it could reach, which made arriving, being stranded and
+	 * being settled all mean something other than what they say.
+	 *
+	 * <p>Never the player's own tile: that is the one tile every route is
+	 * told to walk around, so choosing it is choosing nowhere.
+	 */
+	private WorldPoint coolFollowTile(WorldPoint wanted)
+	{
+		if (wanted == null || !hot(wanted))
+		{
+			return wanted;
+		}
+		WorldPoint player = playerTileToAvoid();
+		WorldPoint from = simTile != null ? simTile : tile;
+		WorldPoint best = null;
+		int nearest = Integer.MAX_VALUE;
+		for (int dx = -1; dx <= 1; dx++)
+		{
+			for (int dy = -1; dy <= 1; dy++)
+			{
+				if (dx == 0 && dy == 0)
+				{
+					continue;
+				}
+				WorldPoint beside = new WorldPoint(wanted.getX() + dx,
+					wanted.getY() + dy, wanted.getPlane());
+				if (beside.equals(player) || !goodGround(beside))
+				{
+					continue;
+				}
+				int away = from == null ? 0 : beside.distanceTo(from);
+				// Coordinates break ties so the choice cannot jitter between
+				// frames on the iteration order.
+				if (best == null || away < nearest
+					|| (away == nearest && comesFirst(beside, best)))
+				{
+					nearest = away;
+					best = beside;
+				}
+			}
+		}
+		return best == null ? wanted : best;
 	}
 
 	/**
@@ -1229,7 +1282,18 @@ public class FollowerEntity
 		}
 
 		// Closest-approach may legitimately stop short of the clicked tile.
-		stayTile = path.isEmpty() ? from : path.get(path.size() - 1);
+		// What it must never settle for is the fire the follower is already
+		// standing in: an unreachable destination comes back as an empty
+		// path, whose "as near as I could get" is the tile underfoot. That
+		// was returned as SUCCESS, so the escape from a fire anchored the
+		// stay ON the fire, and the next frame did it again. Refusing sends
+		// the caller to its next candidate, which is what they all do.
+		WorldPoint settled = path.isEmpty() ? from : path.get(path.size() - 1);
+		if (hot(settled))
+		{
+			return false;
+		}
+		stayTile = settled;
 		goalTile = null;
 		serverPath.clear();
 		serverPath.addAll(path);
@@ -1640,7 +1704,18 @@ public class FollowerEntity
 		int steps = two ? 2 : 1;
 		for (int i = 0; i < steps && !serverPath.isEmpty(); i++)
 		{
-			WorldPoint next = serverPath.pollFirst();
+			WorldPoint next = serverPath.peekFirst();
+			if (hot(next))
+			{
+				// Queued while the tile was open and set alight since. Steps
+				// are checked as they are PLANNED and never again, and on a
+				// line of fires the tile being walked to is, by construction,
+				// the tile the player is about to light. Drop what is queued;
+				// the next observation paths again, knowing about the fire.
+				serverPath.clear();
+				break;
+			}
+			serverPath.pollFirst();
 			route.addLast(next);
 			routeRun.addLast(two);
 			simTile = next;
@@ -2768,30 +2843,76 @@ public class FollowerEntity
 	 * aside where a diagonal reads as drifting. A held stay keeps its
 	 * post, one tile over; a following follower takes it as a goal, which
 	 * the player's next step clears on its own.
+	 *
+	 * <p>Never onto the player. Lighting a line of fires puts them on the
+	 * tile beside the one they just lit, so their tile is the second thing
+	 * tried - and it is also the one tile every route is told to walk
+	 * AROUND, so the escape could not be walked at all. Play report: the
+	 * follower leaves the first fire and stands in every fire after it.
+	 *
+	 * <p>And a refused escape tries the next way out rather than none at
+	 * all: one geometric candidate the feet would not take used to end the
+	 * attempt, leaving the follower exactly where it was.
 	 */
 	private void stepOffTheFire()
 	{
+		WorldPoint player = playerTileToAvoid();
+		boolean staying = stayTile != null;
 		int[][] steps = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {-1, 1}, {1, -1}, {-1, -1}};
 		for (int[] step : steps)
 		{
 			WorldPoint off = new WorldPoint(
 				tile.getX() + step[0], tile.getY() + step[1], tile.getPlane());
-			if (!goodGround(off) || !canStep(tile, step[0], step[1]))
+			if (off.equals(player) || !goodGround(off)
+				|| !canStep(tile, step[0], step[1]))
 			{
 				continue;
 			}
-			log.debug("Standing in a fire at {}; stepping to {}", tile, off);
-			if (stayTile != null)
+			if (staying)
 			{
-				stayAt(off);
+				if (!stayAt(off))
+				{
+					continue;
+				}
 			}
 			else
 			{
 				goalTile = off;
 				serverPath.clear();
 			}
+			log.debug("Standing in a fire at {}; stepping to {}", tile, off);
 			return;
 		}
+	}
+
+	/**
+	 * Where the feet are and what owns them, for {@code ::follower fires}.
+	 * Every one of these is a route onto a tile, so a fire showing up in any
+	 * of them is the answer.
+	 */
+	public java.util.List<String> describeFeet()
+	{
+		java.util.List<String> lines = new java.util.ArrayList<>();
+		lines.add("Follower at " + tile + (hot(tile) ? " - STANDING IN A FIRE" : "")
+			+ " sim " + simTile + (isSettled() ? " settled" : " walking"));
+		lines.add("  stay " + stayTile + hotness(stayTile)
+			+ " | goal " + goalTile + hotness(goalTile)
+			+ " | follow " + playerFollowTile + hotness(playerFollowTile)
+			+ " | insisted " + insistedTile);
+		lines.add("  path " + serverPath.size() + " route " + route.size()
+			+ " beside " + beside + " stranded " + strandedTicks);
+		StringBuilder queued = new StringBuilder();
+		for (WorldPoint step : serverPath)
+		{
+			queued.append(step).append(hotness(step)).append(' ');
+		}
+		lines.add("  queued: " + (queued.length() == 0 ? "(nothing)" : queued.toString()));
+		return lines;
+	}
+
+	private String hotness(WorldPoint at)
+	{
+		return at != null && hot(at) ? " [FIRE]" : "";
 	}
 
 	/** Re-places the follower beside the player after a teleport or plane change. */
