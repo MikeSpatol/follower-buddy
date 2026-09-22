@@ -1406,6 +1406,26 @@ seconds, all session. A click on a differently named target starts a fresh
 session anyway, so the drop rename only ever needed to cover a click that said
 nothing ("Use").
 
+**Joining in.** The `mime-loops` rule copies the player's work animation as a
+held pose, for as long as they keep it up, and `mime-caught` occasionally says
+so out loud. The copy used to be made from the seat, and the seat is placed
+against the PLAYER - two tiles off their flank, off the line to the work and
+never on it - so a chop copied from it was an axe swung at open air two or
+three tiles from the trunk. Play report: "sometimes the follower will chop a
+tree but not be up against the tree". It now walks over first. `joinIn()`
+answers the plugin's mirror-pose branch: yes when the follower is already
+within reach of the work's footprint, no otherwise, and on a no it sets off
+for a free tile beside the work, which is the same short trip it makes to warm
+its hands at a fire. `FollowerPlugin` holds the copy in `pendingMime` until
+`joinedIn()` says it has arrived, then starts the pose; `stopPoseMirror` ends
+the trip and the seat, still on the books, is retaken on the next tick. The
+walk is refused outright when anything else has the feet - a trap, a fire
+visit, a bank trip, an errand - because the copying is a flourish and a
+flourish does not interrupt. It is given up if the follower has not arrived
+within `JOIN_ARRIVAL_PATIENCE` ticks of the walk's length. With no session on,
+the mimic keeps its old freedom; with a session but no seat it is refused, as
+before, because a cast copied while trailing the player fishes the grass.
+
 **Borrowing** (`Borrow`). One item at a time through the same transient-prop
 hands as the scroll (they share the weapon slot, so the tally scroll is skipped
 while a tool is held), started at seat time. The mirror rules' disarm keeps a

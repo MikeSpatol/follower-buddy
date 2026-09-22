@@ -451,7 +451,7 @@ public class SkillingController
 	public boolean holdsTheFeet()
 	{
 		return seat != null || releaseTicks > 0 || trapSeat != null || fireSeat != null
-			|| ledger.isActive();
+			|| joinTile != null || ledger.isActive();
 	}
 
 	/**
@@ -1132,6 +1132,7 @@ public class SkillingController
 		}
 		watchTheTrap(now, here);
 		watchTheFireLine(now, here);
+		watchTheJoin(now);
 		ledger.tick();
 		if (ledgerAt > 0 && now >= ledgerAt)
 		{
@@ -1363,6 +1364,7 @@ public class SkillingController
 	 */
 	private void end(boolean silent, boolean withBeat, boolean announce)
 	{
+		dropTheJoin();
 		WorkSession done = session;
 		session = null;
 		reseat = false;
@@ -1686,6 +1688,153 @@ public class SkillingController
 		{
 			follower.resumeFollowing();
 		}
+	}
+
+	// ------------------------------------------------------------ joining in
+
+	/** Where the follower went so it could copy the work from arm's reach. */
+	private WorldPoint joinTile;
+
+	/** The tick the walk over is given until before the copy is given up. */
+	private int joinBy;
+
+	/** How long the walk over to copy the work is given. */
+	static final int JOIN_ARRIVAL_PATIENCE = 10;
+
+	/**
+	 * The follower wants to copy what the player is doing. Whether it may
+	 * start now, and a walk over so that it can when it may not.
+	 *
+	 * <p>The seat is placed against the PLAYER - two tiles off their flank
+	 * and off the line to the work - so a copy made from the seat is an axe
+	 * swung at open air two tiles from the trunk. Play report: "sometimes
+	 * the follower will chop a tree but not be up against the tree". The
+	 * copying is done from arm's reach of the work or not at all, and the
+	 * way to get there is the same short trip it already makes to warm its
+	 * hands at a fire.
+	 *
+	 * @return true to copy now, false to wait for {@link #joinedIn()}
+	 */
+	public boolean joinIn()
+	{
+		if (!mirrorsFromHere())
+		{
+			return false;
+		}
+		if (session == null)
+		{
+			// Nothing to stand against: the mimic keeps its old freedom.
+			return true;
+		}
+		if (againstTheWork(follower.getWorldLocation()))
+		{
+			return true;
+		}
+		startTheJoin();
+		return false;
+	}
+
+	/** Whether the follower is on its way over to copy the work. */
+	public boolean joiningIn()
+	{
+		return joinTile != null;
+	}
+
+	/** Whether it has got there, so the copying may start. */
+	public boolean joinedIn()
+	{
+		return joinTile != null && follower.isSettled()
+			&& joinTile.equals(follower.getWorldLocation());
+	}
+
+	/**
+	 * The copy is over, or was never going to happen: back to the seat, which
+	 * is still on the books and is retaken on the next tick.
+	 */
+	public void dropTheJoin()
+	{
+		if (joinTile == null)
+		{
+			return;
+		}
+		joinTile = null;
+		joinBy = 0;
+		if (follower.isStaying() && !feetTaken.getAsBoolean())
+		{
+			follower.resumeFollowing();
+		}
+	}
+
+	/**
+	 * Off to the work. Refused quietly when anything else has the feet: the
+	 * copying is a flourish, and a flourish does not interrupt an errand, a
+	 * trap, a fire visit or a bank trip.
+	 */
+	private void startTheJoin()
+	{
+		if (joinTile != null || seat == null || bankTrip || fireSeat != null
+			|| trapSeat != null || feetTaken.getAsBoolean() || inCombat.getAsBoolean()
+			|| !follower.isSpawned() || session.targetTile == null)
+		{
+			return;
+		}
+		Player local = client.getLocalPlayer();
+		WorldPoint player = local == null ? null : local.getWorldLocation();
+		WorldPoint from = follower.getWorldLocation();
+		WorldPoint max = session.targetMax == null ? session.targetTile : session.targetMax;
+		List<WorldPoint> beside = ring(session.targetTile, max, 1,
+			session.targetTile.getPlane());
+		beside.removeIf(c -> c.equals(player));
+		if (from != null)
+		{
+			beside.sort((a, b) -> Integer.compare(a.distanceTo(from), b.distanceTo(from)));
+		}
+		for (WorldPoint candidate : beside)
+		{
+			if (!follower.hot(candidate) && follower.stayAt(candidate))
+			{
+				joinTile = candidate;
+				follower.setStayFaceTile(faceTile());
+				int walk = from == null ? JOIN_ARRIVAL_PATIENCE : from.distanceTo(candidate);
+				joinBy = client.getTickCount() + walk + JOIN_ARRIVAL_PATIENCE;
+				log.debug("Going over to join in at {} by {}", candidate, session.targetName);
+				return;
+			}
+		}
+	}
+
+	/** Gave up on the walk over, or something took the feet while it walked. */
+	private void watchTheJoin(int now)
+	{
+		if (joinTile == null)
+		{
+			return;
+		}
+		if (session == null || !follower.isSpawned() || feetTaken.getAsBoolean()
+			|| inCombat.getAsBoolean() || !follower.isStaying()
+			|| !follower.goodGround(joinTile)
+			|| (joinBy > 0 && now > joinBy && !joinedIn()))
+		{
+			dropTheJoin();
+		}
+	}
+
+	/** Whether the tile is within reach of the work's footprint. */
+	private boolean againstTheWork(WorldPoint at)
+	{
+		if (at == null || session == null || session.targetTile == null)
+		{
+			return false;
+		}
+		WorldPoint min = session.targetTile;
+		WorldPoint max = session.targetMax == null ? min : session.targetMax;
+		if (at.getPlane() != min.getPlane())
+		{
+			return false;
+		}
+		int cx = Math.max(min.getX(), Math.min(max.getX(), at.getX()));
+		int cy = Math.max(min.getY(), Math.min(max.getY(), at.getY()));
+		return Math.max(Math.abs(at.getX() - cx), Math.abs(at.getY() - cy)) <= 1;
 	}
 
 	// ------------------------------------------------------------- fire line

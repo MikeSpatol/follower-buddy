@@ -841,6 +841,7 @@ public class FollowerPlugin extends Plugin
 		emoteDisarmed = false;
 		emoteHold = false;
 		mirroredPose = 0;
+		pendingMime = 0;
 		wasThieving = false;
 		resting = false;
 		wandered = false;
@@ -4374,6 +4375,9 @@ public class FollowerPlugin extends Plugin
 	 */
 	private int mirroredPose;
 
+	/** A copy waiting on the follower to walk over to the work first. */
+	private int pendingMime;
+
 	private void startPoseMirror(int animationId)
 	{
 		mirroredPose = animationId;
@@ -4383,6 +4387,12 @@ public class FollowerPlugin extends Plugin
 
 	private void stopPoseMirror()
 	{
+		pendingMime = 0;
+		if (skilling != null)
+		{
+			// Whatever it walked over for is finished; back to the seat.
+			skilling.dropTheJoin();
+		}
 		if (mirroredPose == 0)
 		{
 			return;
@@ -5889,6 +5899,19 @@ public class FollowerPlugin extends Plugin
 		if (local == null)
 		{
 			return;
+		}
+		if (pendingMime != 0)
+		{
+			// Arrived beside the work: now the copying reads as joining in.
+			if (skilling == null || !skilling.joiningIn())
+			{
+				pendingMime = 0;
+			}
+			else if (skilling.joinedIn())
+			{
+				startPoseMirror(pendingMime);
+				pendingMime = 0;
+			}
 		}
 		if (config.developerMode())
 		{
@@ -9408,11 +9431,19 @@ public class FollowerPlugin extends Plugin
 		if (rule != null && Boolean.TRUE.equals(rule.mirrorPose)
 			&& utterance.animationId > 0)
 		{
-			// Mid-session the copy is made from the seat or not at all: a
-			// fishing cast copied while trailing the player fishes the grass.
-			if (skilling == null || skilling.mirrorsFromHere())
+			// Mid-session the copy is made from against the WORK, not from
+			// the seat: the seat is placed against the PLAYER, so a chop
+			// copied from it is an axe swung at open air two tiles from the
+			// trunk. The walk over is the controller's; the copy waits here
+			// until it has got there. A cast copied while trailing the player
+			// still fishes the grass, and is still refused outright.
+			if (skilling == null || skilling.joinIn())
 			{
 				startPoseMirror(utterance.animationId);
+			}
+			else if (skilling.joiningIn())
+			{
+				pendingMime = utterance.animationId;
 			}
 			return;
 		}

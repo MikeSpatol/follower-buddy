@@ -796,6 +796,113 @@ public class SkillingSessionTest
 		assertTrue("from the seat it is", skilling.mirrorsFromHere());
 	}
 
+	/** Whether the tile touches the tree's footprint. */
+	private static boolean againstTheTree(WorldPoint at)
+	{
+		if (at == null)
+		{
+			return false;
+		}
+		int cx = Math.max(TREE_MIN.getX(), Math.min(TREE_MAX.getX(), at.getX()));
+		int cy = Math.max(TREE_MIN.getY(), Math.min(TREE_MAX.getY(), at.getY()));
+		return Math.max(Math.abs(at.getX() - cx), Math.abs(at.getY() - cy)) <= 1;
+	}
+
+	/**
+	 * The seat is placed against the PLAYER and never on the line to the
+	 * work, so it is two or three tiles off the trunk. A chop copied from
+	 * there is an axe swung at open air. Play report: "sometimes the
+	 * follower will chop a tree but not be up against the tree".
+	 */
+	@Test
+	public void theCopyIsMadeFromAgainstTheWorkAndNotFromTheSeat()
+	{
+		workTheTree();
+		WorldPoint seat = follower.stayingAt;
+		assertNotNull(seat);
+		assertFalse("the seat itself is not within reach of the tree",
+			againstTheTree(seat));
+
+		assertFalse("so the copying does not start from it", skilling.joinIn());
+		assertTrue("it goes over instead", skilling.joiningIn());
+		assertTrue("to somewhere within reach of the tree",
+			againstTheTree(follower.stayingAt));
+		assertTrue("and once there, that is when the copying starts",
+			skilling.joinedIn());
+	}
+
+	@Test
+	public void theCopyingOverDoesNotStandOnThePlayer()
+	{
+		workTheTree();
+		skilling.joinIn();
+		assertNotEquals("their tile is theirs", PLAYER, follower.stayingAt);
+	}
+
+	@Test
+	public void theTripBackToTheSeatComesAfterTheCopying()
+	{
+		workTheTree();
+		WorldPoint seat = follower.stayingAt;
+		skilling.joinIn();
+		assertNotEquals("off the seat while it copies", seat, follower.stayingAt);
+
+		skilling.dropTheJoin();
+		assertFalse(skilling.joiningIn());
+		tick(2);
+		assertEquals("and back on it afterwards", seat, follower.stayingAt);
+	}
+
+	@Test
+	public void nothingIsCopiedWithNowhereToSit()
+	{
+		// No seat means the follower is trailing the player, and a cast
+		// copied from there fishes the grass. Unchanged by the walk over.
+		follower.walled = tile -> true;
+		workTheSpot();
+		assertNull("no seat could be had", follower.stayingAt);
+		assertFalse(skilling.joinIn());
+		assertFalse("and it does not set off either", skilling.joiningIn());
+	}
+
+	@Test
+	public void withNoWorkOnTheMimicKeepsItsFreedom()
+	{
+		assertTrue("nothing to stand against", skilling.joinIn());
+		assertFalse(skilling.joiningIn());
+	}
+
+	@Test
+	public void theCopyIsGivenUpWhenSomethingElseTakesTheFeet()
+	{
+		workTheTree();
+		skilling.joinIn();
+		assertTrue(skilling.joiningIn());
+
+		follower.settled = false;
+		feetTaken = true;
+		tick(1);
+		assertFalse("the copy is given up rather than left hanging",
+			skilling.joiningIn());
+	}
+
+	@Test
+	public void theWalkOverIsGivenUpWhenItNeverGetsThere()
+	{
+		workTheTree();
+		skilling.joinIn();
+		assertTrue(skilling.joiningIn());
+
+		// Still walking, and still walking. Nothing has taken the feet and
+		// the work is still on, so only the walk's own patience can end it.
+		follower.settled = false;
+		tick(SkillingController.JOIN_ARRIVAL_PATIENCE * 3);
+
+		assertTrue("the session is still on", skilling.isWorking());
+		assertFalse("so this is the walk over being given up, and nothing else",
+			skilling.joiningIn());
+	}
+
 	@Test
 	public void theAnglerSetAndTheNetAreBothTaken()
 	{
