@@ -18,6 +18,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
+import net.runelite.api.Quest;
 import net.runelite.api.gameval.SpriteID;
 import net.runelite.client.game.SpriteManager;
 import net.runelite.client.input.KeyListener;
@@ -46,7 +47,7 @@ import net.runelite.client.ui.overlay.OverlayPosition;
  * <p>Input follows the dialog: a mouse listener that consumes every press
  * inside the window and lets a press outside it fall through to the game,
  * which closes the window the way any click closes a real interface; the
- * wheel scrolls whichever side it is over; Escape closes.
+ * wheel scrolls whichever side it is over; the thumbs drag; Escape closes.
  */
 @Slf4j
 @Singleton
@@ -60,6 +61,10 @@ public class ChronicleWindow extends Overlay
 	static final String[][] TAB_KINDS = {
 		{"quest"}, {"boss"}, {"enemy"}, {"location"}, {"faction", "world"},
 	};
+
+	private static final int DRAG_NONE = 0;
+	private static final int DRAG_LIST = 1;
+	private static final int DRAG_PAGE = 2;
 
 	private final Client client;
 	private final MouseManager mouseManager;
@@ -76,9 +81,15 @@ public class ChronicleWindow extends Overlay
 	private volatile int pageScroll;
 	private volatile String selectedId;
 
+	/** A thumb being dragged, and where on it the mouse took hold. */
+	private volatile int dragging = DRAG_NONE;
+	private volatile int dragGrab;
+
 	/** Where the window was last drawn, in canvas pixels; the hit region. */
 	private final Rectangle bounds = new Rectangle();
 	private Rectangle[] tabRects = new Rectangle[0];
+	private final Rectangle listThumb = new Rectangle();
+	private final Rectangle pageThumb = new Rectangle();
 	private List<ChronicleEntry> listed = new ArrayList<>();
 	private List<ChronicleLayout.Line> pageLines = new ArrayList<>();
 	private String pageLinesFor;
@@ -139,6 +150,7 @@ public class ChronicleWindow extends Overlay
 	public void close()
 	{
 		open = false;
+		dragging = DRAG_NONE;
 	}
 
 	/** Opens straight onto one page, for the follower to show something it wrote. */
@@ -223,25 +235,89 @@ public class ChronicleWindow extends Overlay
 			}
 			if (ChronicleLayout.LIST_SCROLL.contains(x, y))
 			{
-				scrollList(arrowStep(ChronicleLayout.LIST_SCROLL, y));
+				pressOnBar(ChronicleLayout.LIST_SCROLL, listThumb, DRAG_LIST, y, listed.size(),
+					ChronicleLayout.visibleRows());
 				return event;
 			}
 			if (ChronicleLayout.PAGE_SCROLL.contains(x, y))
 			{
-				scrollPage(arrowStep(ChronicleLayout.PAGE_SCROLL, y));
+				pressOnBar(ChronicleLayout.PAGE_SCROLL, pageThumb, DRAG_PAGE, y, pageLines.size(),
+					Math.max(1, pageVisibleLines));
+			}
+			return event;
+		}
+
+		@Override
+		public MouseEvent mouseDragged(MouseEvent event)
+		{
+			if (!open || dragging == DRAG_NONE)
+			{
+				return event;
+			}
+			event.consume();
+			int y = event.getY() - bounds.y;
+			if (dragging == DRAG_LIST)
+			{
+				Rectangle bar = ChronicleLayout.LIST_SCROLL;
+				listScroll = ChronicleLayout.scrollForThumb(bar, y - bar.y - dragGrab, listed.size(),
+					ChronicleLayout.visibleRows());
+			}
+			else
+			{
+				Rectangle bar = ChronicleLayout.PAGE_SCROLL;
+				pageScroll = ChronicleLayout.scrollForThumb(bar, y - bar.y - dragGrab, pageLines.size(),
+					Math.max(1, pageVisibleLines));
+			}
+			return event;
+		}
+
+		@Override
+		public MouseEvent mouseReleased(MouseEvent event)
+		{
+			if (dragging != DRAG_NONE)
+			{
+				dragging = DRAG_NONE;
+				event.consume();
 			}
 			return event;
 		}
 	};
 
-	/** Up one on the top arrow, down one on the bottom, nothing on the track. */
-	private static int arrowStep(Rectangle bar, int y)
+	/**
+	 * A press on a scrollbar: the arrows step, the thumb takes hold for a
+	 * drag, and the track either side of it moves a page toward the press.
+	 */
+	private void pressOnBar(Rectangle bar, Rectangle thumb, int which, int y, int total, int visible)
 	{
 		if (y < bar.y + 16)
 		{
-			return -1;
+			scroll(which, -1, total, visible);
 		}
-		return y >= bar.y + bar.height - 16 ? 1 : 0;
+		else if (y >= bar.y + bar.height - 16)
+		{
+			scroll(which, 1, total, visible);
+		}
+		else if (y >= thumb.y && y < thumb.y + thumb.height)
+		{
+			dragging = which;
+			dragGrab = y - thumb.y;
+		}
+		else
+		{
+			scroll(which, y < thumb.y ? -visible : visible, total, visible);
+		}
+	}
+
+	private void scroll(int which, int by, int total, int visible)
+	{
+		if (which == DRAG_LIST)
+		{
+			listScroll = ChronicleLayout.clampScroll(listScroll + by, total, visible);
+		}
+		else
+		{
+			pageScroll = ChronicleLayout.clampScroll(pageScroll + by, total, visible);
+		}
 	}
 
 	private final MouseWheelListener wheelAdapter = new MouseWheelListener()
@@ -258,11 +334,11 @@ public class ChronicleWindow extends Overlay
 			int step = event.getWheelRotation() > 0 ? 1 : -1;
 			if (x < ChronicleLayout.SPLIT_X)
 			{
-				scrollList(step);
+				scroll(DRAG_LIST, step, listed.size(), ChronicleLayout.visibleRows());
 			}
 			else
 			{
-				scrollPage(step * 3);
+				scroll(DRAG_PAGE, step * 3, pageLines.size(), Math.max(1, pageVisibleLines));
 			}
 			return event;
 		}
@@ -290,18 +366,6 @@ public class ChronicleWindow extends Overlay
 			}
 		}
 	};
-
-	private void scrollList(int by)
-	{
-		listScroll = ChronicleLayout.clampScroll(listScroll + by, listed.size(),
-			ChronicleLayout.visibleRows());
-	}
-
-	private void scrollPage(int by)
-	{
-		pageScroll = ChronicleLayout.clampScroll(pageScroll + by, pageLines.size(),
-			Math.max(1, pageVisibleLines));
-	}
 
 	// --------------------------------------------------------------- drawing
 
@@ -471,14 +535,15 @@ public class ChronicleWindow extends Overlay
 
 		// The divider between the title band and the tabs, rim to rim.
 		int dy = ChronicleLayout.DIVIDER_TOP;
+		int span = ChronicleLayout.CONTENT_RIGHT + 1 - ChronicleLayout.CONTENT_LEFT;
 		if (divider == null)
 		{
 			g.setColor(new Color(ChronicleLayout.STEEL));
-			g.fillRect(ChronicleLayout.CONTENT_LEFT, dy, ChronicleLayout.CONTENT_RIGHT + 1 - ChronicleLayout.CONTENT_LEFT, edge);
+			g.fillRect(ChronicleLayout.CONTENT_LEFT, dy, span, edge);
 		}
 		else
 		{
-			g.clipRect(ChronicleLayout.CONTENT_LEFT, dy, ChronicleLayout.CONTENT_RIGHT + 1 - ChronicleLayout.CONTENT_LEFT, edge);
+			g.clipRect(ChronicleLayout.CONTENT_LEFT, dy, span, edge);
 			for (int tx = ChronicleLayout.DIVIDER_PHASE_X - divider.getWidth(); tx < w; tx += divider.getWidth())
 			{
 				g.drawImage(divider, tx, dy, null);
@@ -600,7 +665,7 @@ public class ChronicleWindow extends Overlay
 				colour, false);
 		}
 		g.setClip(clip);
-		drawScrollbar(g, ChronicleLayout.LIST_SCROLL, listScroll, listed.size(), visible);
+		drawScrollbar(g, ChronicleLayout.LIST_SCROLL, listThumb, listScroll, listed.size(), visible);
 	}
 
 	private void drawPage(Graphics2D g, ChronicleEntry entry, GameFont body, GameFont bold, GameFont small)
@@ -626,30 +691,21 @@ public class ChronicleWindow extends Overlay
 		labelled(g, small, left, ChronicleLayout.HEADER_LINE3_BASELINE, "Written when: ",
 			unlockLabel(entry), ChronicleLayout.BODY_WHITE);
 
-		// The body, wrapped once per page and cached until the page changes.
+		// The body, laid out once per page and cached until the page or its
+		// state changes: the page itself, or the reason it cannot be read
+		// yet and, for a creature, where to find one.
 		int bodyTop = ChronicleLayout.BODY_TOP;
 		int bodyHeight = ChronicleLayout.CONTENT_BOTTOM - bodyTop;
 		pageVisibleLines = Math.max(1, bodyHeight / ChronicleLayout.LINE_HEIGHT);
-		if (!readable)
+		String key = entry.id + (readable ? "" : ":locked");
+		if (!key.equals(pageLinesFor))
 		{
-			pageLines = new ArrayList<>();
-			pageLinesFor = null;
-			List<String> hint = ChronicleLayout.wrap(unwrittenHint(entry), width,
-				s -> measure(g, body, false, s));
-			int hy = bodyTop + ChronicleLayout.LINE_HEIGHT;
-			for (String line : hint)
-			{
-				text(g, body, false, line, left, hy, ChronicleLayout.NOTE_PALE, false);
-				hy += ChronicleLayout.LINE_HEIGHT;
-			}
-			drawScrollbar(g, ChronicleLayout.PAGE_SCROLL, 0, 0, 1);
-			return;
-		}
-		if (!entry.id.equals(pageLinesFor))
-		{
-			pageLines = ChronicleLayout.page(entry, width,
-				s -> measure(g, body, false, s), s -> measure(g, bold, true, s));
-			pageLinesFor = entry.id;
+			pageLines = readable
+				? ChronicleLayout.page(entry, width,
+					s -> measure(g, body, false, s), s -> measure(g, bold, true, s))
+				: ChronicleLayout.lockedPage(entry, unwrittenHint(entry), width,
+					s -> measure(g, body, false, s), s -> measure(g, bold, true, s));
+			pageLinesFor = key;
 			pageScroll = 0;
 		}
 		pageScroll = ChronicleLayout.clampScroll(pageScroll, pageLines.size(), pageVisibleLines);
@@ -677,13 +733,14 @@ public class ChronicleWindow extends Overlay
 					text(g, body, false, line.text, left, ly, ChronicleLayout.NOTE_PALE, false);
 					break;
 				default:
-					text(g, body, false, line.text, left, ly, ChronicleLayout.BODY_WHITE, false);
+					text(g, body, false, line.text, left, ly,
+						readable ? ChronicleLayout.BODY_WHITE : ChronicleLayout.NOTE_PALE, false);
 					break;
 			}
 			ly += ChronicleLayout.LINE_HEIGHT;
 		}
 		g.setClip(clip);
-		drawScrollbar(g, ChronicleLayout.PAGE_SCROLL, pageScroll, pageLines.size(), pageVisibleLines);
+		drawScrollbar(g, ChronicleLayout.PAGE_SCROLL, pageThumb, pageScroll, pageLines.size(), pageVisibleLines);
 	}
 
 	/** An orange label with its value after it, the game's own header idiom. */
@@ -693,7 +750,14 @@ public class ChronicleWindow extends Overlay
 		text(g, font, false, value, x + measure(g, font, false, label), baseline, valueColour, false);
 	}
 
-	/** What writes the page, in a few words. */
+	/** The quest's name as the game gives it, or the data's word for it. */
+	static String questName(String constant)
+	{
+		Quest quest = ChronicleProgress.questNamed(constant);
+		return quest == null ? constant : quest.getName();
+	}
+
+	/** What writes the page, in a few words, naming the quest where there is one. */
 	static String unlockLabel(ChronicleEntry entry)
 	{
 		ChronicleEntry.ChronicleUnlock unlock = entry.unlock;
@@ -701,30 +765,31 @@ public class ChronicleWindow extends Overlay
 		{
 			return "never";
 		}
+		List<String> parts = new ArrayList<>();
 		if (unlock.always)
 		{
-			return "from the start";
+			parts.add("from the start");
 		}
 		if (unlock.quest != null)
 		{
-			return "the quest is done";
+			parts.add(questName(unlock.quest) + " is done");
 		}
 		if (unlock.questBegun != null)
 		{
-			return "the quest is under way";
+			parts.add(questName(unlock.questBegun) + " is under way");
 		}
 		if (unlock.npcs != null && !unlock.npcs.isEmpty())
 		{
-			return "one is met";
+			parts.add("boss".equals(entry.kindOrEmpty()) ? "the boss is met" : "one is met");
 		}
 		if (unlock.regions != null && !unlock.regions.isEmpty())
 		{
-			return "you go there";
+			parts.add("you go there");
 		}
-		return "never";
+		return parts.isEmpty() ? "never" : String.join(", or ", parts);
 	}
 
-	/** What the locked page says instead of its text. */
+	/** What the page says instead of its text while it cannot be read. */
 	static String unwrittenHint(ChronicleEntry entry)
 	{
 		ChronicleEntry.ChronicleUnlock unlock = entry.unlock;
@@ -732,23 +797,41 @@ public class ChronicleWindow extends Overlay
 		{
 			return "The scribe has nothing on this yet.";
 		}
-		if (unlock.quest != null)
+		boolean byQuest = unlock.quest != null || unlock.questBegun != null;
+		boolean byNpc = unlock.npcs != null && !unlock.npcs.isEmpty();
+		boolean byRegion = unlock.regions != null && !unlock.regions.isEmpty();
+		if (byNpc && !byQuest && !byRegion)
 		{
-			return "The scribe will write this up once the quest is done.";
+			return "boss".equals(entry.kindOrEmpty())
+				? "The scribe has not met this boss yet."
+				: "The scribe has not met one of these yet.";
 		}
-		if (unlock.questBegun != null)
-		{
-			return "The scribe will write this up once the quest is under way.";
-		}
-		if (unlock.npcs != null && !unlock.npcs.isEmpty())
-		{
-			return "The scribe has not met one yet.";
-		}
-		if (unlock.regions != null && !unlock.regions.isEmpty())
+		if (byRegion && !byQuest && !byNpc)
 		{
 			return "The scribe has not been there yet.";
 		}
-		return "The scribe has nothing on this yet.";
+		List<String> parts = new ArrayList<>();
+		if (unlock.quest != null)
+		{
+			parts.add(questName(unlock.quest) + " is done");
+		}
+		if (unlock.questBegun != null)
+		{
+			parts.add(questName(unlock.questBegun) + " is under way");
+		}
+		if (byNpc)
+		{
+			parts.add("boss".equals(entry.kindOrEmpty()) ? "this boss has been met" : "one of these has been met");
+		}
+		if (byRegion)
+		{
+			parts.add("you have been there");
+		}
+		if (parts.isEmpty())
+		{
+			return "The scribe has nothing on this yet.";
+		}
+		return "The scribe will write this up once " + String.join(", or once ", parts) + ".";
 	}
 
 	static String kindLabel(String kind)
@@ -772,7 +855,12 @@ public class ChronicleWindow extends Overlay
 		}
 	}
 
-	private void drawScrollbar(Graphics2D g, Rectangle bar, int offset, int total, int visible)
+	/**
+	 * A scrollbar: the track, the thumb on it, the arrows over its ends.
+	 * The thumb's pieces are clipped to its own height, because the middle
+	 * tiles in fives and the last one used to hang out below the cap.
+	 */
+	private void drawScrollbar(Graphics2D g, Rectangle bar, Rectangle thumbOut, int offset, int total, int visible)
 	{
 		BufferedImage up = sprite(SpriteID.ScrollbarV2.ARROW_UP);
 		BufferedImage down = sprite(SpriteID.ScrollbarV2.ARROW_DOWN);
@@ -781,7 +869,6 @@ public class ChronicleWindow extends Overlay
 		BufferedImage thumbMid = sprite(SpriteID.ScrollbarDraggerV2.MIDDLE);
 		BufferedImage thumbBottom = sprite(SpriteID.ScrollbarDraggerV2.BOTTOM);
 
-		// The track, then the thumb on it, then the arrows over its ends.
 		Shape clip = g.getClip();
 		g.clipRect(bar.x, bar.y + 16, bar.width, bar.height - 32);
 		if (track == null)
@@ -799,6 +886,9 @@ public class ChronicleWindow extends Overlay
 		int[] thumb = ChronicleLayout.thumb(bar, offset, total, visible);
 		int top = bar.y + thumb[0];
 		int height = thumb[1];
+		thumbOut.setBounds(bar.x, top, bar.width, height);
+		g.setClip(clip);
+		g.clipRect(bar.x, top, bar.width, height);
 		if (thumbMid == null || thumbTop == null || thumbBottom == null)
 		{
 			g.setColor(new Color(0x6a5c43));

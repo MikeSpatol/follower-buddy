@@ -83,7 +83,7 @@ public final class ChronicleLayout
 	public static final int TITLE_ORANGE = 0xff981f;
 	public static final int TAB_LABEL_SELECTED = 0xffa82f;
 	public static final int READABLE_GREEN = 0x0dc10d;
-	public static final int LOCKED_RED = 0xcc2c2c;
+	public static final int LOCKED_RED = 0xff0000;
 	public static final int BODY_WHITE = 0xffffff;
 	public static final int NOTE_PALE = 0xdfdfdf;
 	public static final int SELECTED_ROW = 0x70695f;
@@ -144,8 +144,62 @@ public final class ChronicleLayout
 		}
 		int height = Math.max(10, trackHeight * visible / total);
 		int travel = trackHeight - height;
-		int top = trackTop + travel * offset / Math.max(1, total - visible);
+		// Rounded, as the inverse is, so a thumb put back where it was drawn
+		// reads as the offset it was drawn for.
+		int top = trackTop + (int) Math.round(travel * (double) offset / Math.max(1, total - visible));
 		return new int[]{top, height};
+	}
+
+	/**
+	 * The scroll offset that puts the thumb's top at {@code thumbTop}, in the
+	 * bar's own pixels: the inverse of {@link #thumb}, for dragging it.
+	 */
+	public static int scrollForThumb(Rectangle bar, int thumbTop, int total, int visible)
+	{
+		if (total <= visible || total <= 0)
+		{
+			return 0;
+		}
+		int trackTop = 16;
+		int trackHeight = bar.height - 32;
+		int height = thumb(bar, 0, total, visible)[1];
+		int travel = trackHeight - height;
+		if (travel <= 0)
+		{
+			return 0;
+		}
+		int along = Math.max(0, Math.min(thumbTop - trackTop, travel));
+		return (int) Math.round(along * (double) (total - visible) / travel);
+	}
+
+	/**
+	 * What a page shows while it cannot be read: the reason, and for a
+	 * creature the section that says where to find it, so the book is a
+	 * guide to filling itself rather than a list of blanks.
+	 */
+	public static List<Line> lockedPage(ChronicleEntry entry, String reason, int width,
+		ToIntFunction<String> bodyWidth, ToIntFunction<String> headingWidth)
+	{
+		List<Line> lines = new ArrayList<>();
+		if (entry == null)
+		{
+			return lines;
+		}
+		paragraphs(lines, reason, width, bodyWidth, Style.BODY, 0);
+		String kind = entry.kindOrEmpty();
+		if (!kind.equals("boss") && !kind.equals("enemy"))
+		{
+			return lines;
+		}
+		for (ChronicleEntry.Section section : entry.sectionsOrEmpty())
+		{
+			if (section.heading != null && section.heading.equalsIgnoreCase("Where it is found"))
+			{
+				heading(lines, section.heading, width, headingWidth);
+				paragraphs(lines, section.body, width, bodyWidth, Style.BODY, 0);
+			}
+		}
+		return lines;
 	}
 
 	/**

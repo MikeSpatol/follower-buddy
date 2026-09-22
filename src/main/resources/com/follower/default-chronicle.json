@@ -356,7 +356,11 @@
       "sections": [
         {
           "heading": "What it is",
-          "body": "Examine \"A very large elemental adversary.\" Three variants: level 86 (111 hitpoints, max hit 11), level 104 and level 109. Aggressive, 5-tick attacks, immune to burn effects, weak to water magic. No Slayer level is needed but Slayer masters assign them. Notable drops include the rune scimitar (1 in 128), fire battlestaff, steel axe, mithril square shield, fire and chaos runes and the gem table.\n\nFound in the Waterfall Dungeon (11 spawns, guarding Baxtorian's western passage and chalice room), Brimhaven Dungeon, Catacombs of Kourend, Charred Dungeon, Deep Wilderness Dungeon, Giants' Den, Isle of Souls Dungeon, Karuulm Slayer Dungeon, Smoke Dungeon and Stronghold Slayer Dungeon. Most spots have safespots; Charred Dungeon is the only multicombat one."
+          "body": "Examine \"A very large elemental adversary.\" Three variants: level 86 (111 hitpoints, max hit 11), level 104 and level 109. Aggressive, 5-tick attacks, immune to burn effects, weak to water magic. No Slayer level is needed but Slayer masters assign them. Notable drops include the rune scimitar (1 in 128), fire battlestaff, steel axe, mithril square shield, fire and chaos runes and the gem table."
+        },
+        {
+          "heading": "Where it is found",
+          "body": "The Waterfall Dungeon has eleven, guarding Baxtorian's western passage and the chalice room. Also the Brimhaven Dungeon, the Catacombs of Kourend, the Charred Dungeon, the Deep Wilderness Dungeon, the Giants' Den, the Isle of Souls Dungeon, the Karuulm Slayer Dungeon, the Smoke Dungeon and the Stronghold Slayer Dungeon.\n\nMost spots have safespots; the Charred Dungeon is the only multicombat one."
         }
       ],
       "people": [],
@@ -387,6 +391,10 @@
         {
           "heading": "What it is",
           "body": "Examine \"An evil human cleric.\" Found at levels 17, 22, 23, 30 and 45. Their bones are the guaranteed drop; Zamorak monk robe tops and bottoms are 1 in 20. Free players often train magic on the caged one in Varrock Palace with the Curse spell.\n\nAt Paterdomus they occupied the ground floor and everything above during Priest in Peril, aiming to destroy the Salve's barrier. The hooded level 30 monk impersonated Drezel at the door, had you kill the Temple Guardian, and dropped the golden key. The temple monks regenerate quickly and give only 25 percent of normal combat experience. They were cleared out of the temple for good in The Blood Moon Rises."
+        },
+        {
+          "heading": "Where it is found",
+          "body": "Paterdomus, the temple on the River Salve, all through Priest in Peril. Otherwise the Chaos Temple in Asgarnia, the cage under the stairs in Varrock Palace, Taverley Dungeon and the Deep Wilderness Dungeon."
         }
       ],
       "people": [
@@ -421,6 +429,10 @@
         {
           "heading": "What it is",
           "body": "Examine \"Looks like a big ugly dog.\" Combat level 30, 45 hitpoints, max hit 3, stab attacks every 4 ticks. Immune to magic and dwarf cannons, immune to poison and venom, Slayer category dogs. It can be killed with rings of recoil as long as you land at least one hit yourself. It does not respawn.\n\nKing Roald says it guarded the mausoleum entrance and the source of the Salve, and that with it dead anyone could sabotage the river's blessing. He called it Spots and, per the wiki trivia, a pedigree light beast, or was it dark beast. Before 2007 Dark beasts looked like a brown version of it."
+        },
+        {
+          "heading": "Where it is found",
+          "body": "The mausoleum under Paterdomus, down the trapdoor north of the temple, during Priest in Peril. It is killed in the course of the quest and never comes back."
         }
       ],
       "people": [
@@ -452,6 +464,10 @@
         {
           "heading": "What it is",
           "body": "Examine \"Bigger than your average moss giant.\" Combat level 84, 120 hitpoints, max hit 14, attacks every 6 ticks. Each attack rolls normal melee first and, if that misses, rolls again against your magic defence, so Protect from Melee stops only the first part. Attack, Strength and Defence 60 each. Three spawn in Glarial's Tomb and nowhere else. Always aggressive.\n\nThe tomb admits no weapons, armour, runes or ammunition, so they are fought with fists, food and potions. Drops are big bones and, during Roving Elves, the consecration seed."
+        },
+        {
+          "heading": "Where it is found",
+          "body": "Glarial's Tomb, south-east of Baxtorian Falls and north-west of the Fishing Guild, under a tombstone. Three of them, and nowhere else. The tomb admits no weapons, armour, runes or ammunition, so they are met with bare hands."
         }
       ],
       "people": [

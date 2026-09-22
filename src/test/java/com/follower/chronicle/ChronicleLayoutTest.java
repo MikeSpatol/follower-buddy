@@ -109,6 +109,37 @@ public class ChronicleLayoutTest
 	}
 
 	@Test
+	public void draggingTheThumbBackToWhereItWasDrawnGivesTheSameOffset()
+	{
+		// The thumb's top for an offset, fed back in, must give that offset:
+		// otherwise a drag that does not move the mouse still scrolls.
+		Rectangle bar = new Rectangle(0, 0, 16, 204);
+		// Exact wherever the thumb moves at least a pixel a row.
+		for (int total : new int[]{17, 40, 100})
+		{
+			for (int offset = 0; offset <= total - 14; offset += 3)
+			{
+				int top = ChronicleLayout.thumb(bar, offset, total, 14)[0];
+				assertEquals("total " + total + " offset " + offset, offset,
+					ChronicleLayout.scrollForThumb(bar, top, total, 14));
+			}
+		}
+		// A page longer than the track has pixels: several rows share a
+		// pixel, so the round trip can only be as close as that allows.
+		int rowsPerPixel = (350 - 14) / (204 - 32 - 10) + 1;
+		for (int offset = 0; offset <= 336; offset += 7)
+		{
+			int top = ChronicleLayout.thumb(bar, offset, 350, 14)[0];
+			int back = ChronicleLayout.scrollForThumb(bar, top, 350, 14);
+			assertTrue("offset " + offset + " came back as " + back,
+				Math.abs(back - offset) <= rowsPerPixel);
+		}
+		assertEquals("above the track is the top", 0, ChronicleLayout.scrollForThumb(bar, -50, 100, 14));
+		assertEquals("below it is the bottom", 86, ChronicleLayout.scrollForThumb(bar, 999, 100, 14));
+		assertEquals("nothing to drag when it all fits", 0, ChronicleLayout.scrollForThumb(bar, 40, 10, 14));
+	}
+
+	@Test
 	public void wrappingBreaksOnSpacesAndNeverLosesAWord()
 	{
 		List<String> lines = ChronicleLayout.wrap("the quick brown fox jumps over the lazy dog", 60,
