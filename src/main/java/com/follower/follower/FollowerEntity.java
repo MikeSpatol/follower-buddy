@@ -925,6 +925,9 @@ public class FollowerEntity
 	 */
 	private WorldPoint insistedTile;
 
+	/** Whether the last frame found the follower standing in a fire. */
+	private boolean inAFire;
+
 	/**
 	 * Walk onto it even so. Goes through {@link #stayAt} rather than round
 	 * it, so there is still one way to give the follower a spot.
@@ -1882,14 +1885,39 @@ public class FollowerEntity
 			return;
 		}
 
+		// The follow tile is worked out when the player steps, and the tile
+		// they stepped from is lit AFTER they stop on the next one - so by
+		// the time anything acts on it, it is on fire and was not when it
+		// was chosen. Asked again here, where it is used.
+		playerFollowTile = coolFollowTile(playerFollowTile);
+
 		// A fire lit under its feet - which is most of a firemaking line,
 		// since the follower stands on the tile the player just left. One
 		// step off, not a snap: somebody whose ground catches moves aside,
 		// they do not appear elsewhere. Whatever owns the feet then chooses
 		// properly at its own pace - the seat is re-taken a tick later.
-		if (isSettled() && hot(tile))
+		if (hot(tile))
 		{
-			stepOffTheFire();
+			if (!inAFire)
+			{
+				inAFire = true;
+				// Once per entry, not per frame. Standing in a fire is not
+				// supposed to happen at all, so when it does the whole state
+				// of the feet is worth having without asking anyone to catch
+				// it with a command.
+				for (String line : describeFeet())
+				{
+					log.info("FIRES walked in: {}", line);
+				}
+			}
+			if (isSettled())
+			{
+				stepOffTheFire();
+			}
+		}
+		else
+		{
+			inAFire = false;
 		}
 
 		// Watchdog: if anything at all has left the object hidden while the player
