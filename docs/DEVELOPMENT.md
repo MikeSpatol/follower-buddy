@@ -51,6 +51,10 @@ automated, and the follower cannot be interacted with.
 - **Errands** - every so often the follower visits a nearby bank, prays at an altar,
   warms its hands at a fire (usually), attends to cats, and returns by foot or by
   teleport. All lines editable; frequency and per-errand toggles in config.
+- **The chronicle** - a lore book opened from the follower's right-click menu,
+  drawn to look like the Collection Log: quests done, bosses and creatures met,
+  places walked into, factions and lands. Pages are data in
+  `default-chronicle.json`; see [The chronicle](#the-chronicle).
 - **Skilling company** - while you work a tree, a rock, a spot, a fire, an anvil
   or a patch it takes a seat off your flank facing the work, borrows the tool
   (or the hat of a full skilling outfit) for the session and gives it back with a
@@ -1297,6 +1301,57 @@ visually in the way during a kill is problem enough.
   settings, not constants: unlike a weapon's swing, which the game answers
   definitively, "what a protective shield looks like" has nothing to measure - 
   so pick by eye with `::follower gfx <id>` and `::follower anim <id>`.
+
+## The chronicle
+
+`com.follower.chronicle` is the scribe's book: a window opened from the
+follower's right-click menu (the `Chronicle` option, just below Talk-to) that
+reads like the game's Collection Log and holds lore rather than drops. The
+examine text has always called the follower a travelling scribe, always writing
+something down; this is what it has been writing.
+
+**The pages** (`ChronicleEntry`, `default-chronicle.json`). One entry per page:
+an id (`quest-cooks-assistant`), a kind (`quest`, `boss`, `enemy`, `location`,
+`faction`, `world`), the name as the game spells it, an unlock, a summary, headed
+sections (What happened, Who was involved, Where it took place, Worth knowing),
+and short lists of people, places and particulars. The text was researched from
+the OSRS wiki and is plain ASCII by law: the window draws it with the game's own
+bitmap glyphs, which index by the low byte of each character, so a curly quote
+or an em dash would come out as some other glyph with no error.
+`ChronicleIntegrityTest` enforces that, the unique ids, the kinds, and that every
+unlock names something the code can check. A `chronicle.json` in the data
+directory replaces the bundled file outright, the same override as the fonts.
+The starting set is three quests (Cook's Assistant, Priest in Peril, Waterfall
+Quest) and the pages around them.
+
+**Unlocks** (`ChronicleProgress`). Two kinds of knowing. A quest page asks the
+client (`Quest.getState`), so it is right from the first login, quests done long
+before the plugin included; `quest` means finished, `questBegun` means started or
+finished, for the places and creatures a quest introduces. A creature met (an
+NPC of that name in the scene, or killed) or a place walked into (a map region)
+is something only the follower saw, so `noteNpc` and `noteRegion` write the page
+id into the memory's `chronicled` set, which is saved and restored with the rest
+of the memory under the same profile guard. Quest states are script calls, so
+they are read once per tick while the window is open and again on opening, never
+from a render. The title's count is pages readable over pages there are.
+
+**The window** (`ChronicleWindow`, `ChronicleLayout`). An overlay above the
+widgets at high priority, 500 by 314 like the Collection Log, centred over the
+3D view. It is built from the client's own sprites: the steel rim (`Steelborder`
+corners, `Steelborder2` edges, the bottom and left being the top and right
+flipped, since the game ships no others), the stone backing (`TRADEBACKING`,
+tiled), the steel close button and the V2 scrollbars. Colours were sampled off
+the real window: the orange title, green for a page that can be read, grey for
+one that cannot, the selected row's highlight. Text is Bold 12 for the title
+and headings and Plain 12 for everything else, which is why `p12_full` joined
+the bundled fonts. `ChronicleLayout` holds every rectangle and the page maths
+(wrapping, scroll clamping, the thumb, the flattening of a page into styled
+lines) so it can be tested without a canvas; the window's render is drawing and
+hit-testing only. Input follows the dialog: a mouse listener consumes every
+press inside the window and lets one outside fall through to the game, which
+closes the book the way any click closes a real interface; the wheel scrolls the
+side it is over; Escape closes; a step closes it too. Sprites load a frame late,
+so every piece has a flat stand-in for the first frames.
 
 ## Skilling company
 

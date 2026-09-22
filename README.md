@@ -53,6 +53,16 @@ altar, a fire, a cat, or something curious it wants to write up in its scroll -
 and comes back on foot or by teleport. Tell it to Stay and it holds the post,
 notices when you come back, and updates its notes while it waits.
 
+**It keeps a chronicle.** Right-click it and choose Chronicle to open the
+scribe's book, drawn to look like the game's own Collection Log. It has a page
+for each quest you have finished, telling what happened, who was involved,
+where it took place and what is worth knowing about it, and pages for the
+bosses and creatures you have met, the places you have walked into, and the
+factions and lands behind them. Quests fill in from the game's own record, so
+one finished years ago is already written; a creature or a place is written the
+first time the scribe sees it, and stays written. It starts small: three quests
+and a handful of pages around them.
+
 **It keeps you company.** Start on a tree, a rock or a fishing spot and it takes
 a seat off to one side, facing the work and out of the way of your next click.
 It borrows your axe or your pickaxe for the session (the one you are wearing, or

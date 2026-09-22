@@ -238,6 +238,15 @@ public class FollowerPlugin extends Plugin
 	private com.follower.speech.FollowerDialog dialog;
 
 	@Inject
+	private com.follower.chronicle.ChronicleLoader chronicle;
+
+	@Inject
+	private com.follower.chronicle.ChronicleWindow chronicleWindow;
+
+	/** Which chronicle pages can be read; built on the memory in startUp. */
+	private com.follower.chronicle.ChronicleProgress chronicleProgress;
+
+	@Inject
 	private com.follower.follower.StanceLibrary stanceLibrary;
 
 	@Inject
@@ -498,6 +507,7 @@ public class FollowerPlugin extends Plugin
 		modelRepository.load(dataDir);
 		spotAnimRepository.load(dataDir);
 		gameFontRepository.load(dataDir);
+		chronicle.load(dataDir);
 		// With merging: an existing install's files gain the rules and trees
 		// this build added, which otherwise never reach it (the starter files
 		// are only written when missing - a tester's file from 1.0.0 had no
@@ -712,8 +722,16 @@ public class FollowerPlugin extends Plugin
 		overlayManager.add(overlay);
 		overlayManager.add(followDebugOverlay);
 		overlayManager.add(dialog);
+		overlayManager.add(chronicleWindow);
 		overlayManager.add(crossOverlay);
 		dialog.register();
+		// The chronicle reads quests from the game and the rest from the
+		// follower's memory, so it is built on the same context the memory
+		// lives in and is saved with it.
+		chronicleProgress = new com.follower.chronicle.ChronicleProgress(client, chronicle,
+			() -> speechEngine.getContext());
+		chronicleWindow.attach(chronicleProgress);
+		chronicleWindow.register();
 		mouseManager.registerMouseListener(shiftClickAdapter);
 		dialog.setFollowerOutfit(() -> OutfitParser.parse(config.customOutfit()));
 		addPanel();
@@ -757,8 +775,11 @@ public class FollowerPlugin extends Plugin
 		overlayManager.remove(overlay);
 		overlayManager.remove(followDebugOverlay);
 		overlayManager.remove(dialog);
+		overlayManager.remove(chronicleWindow);
 		overlayManager.remove(crossOverlay);
 		dialog.unregister();
+		chronicleWindow.unregister();
+		chronicleWindow.close();
 		mouseManager.unregisterMouseListener(shiftClickAdapter);
 		dialog.close();
 		overlay.clear();
@@ -1928,6 +1949,8 @@ public class FollowerPlugin extends Plugin
 		 * are only ever as many entries as there are firsts worth marking.
 		 */
 		java.util.List<String> spokenOnce;
+		/** Chronicle pages written so far, by entry id. */
+		java.util.List<String> chronicled;
 
 		/**
 		 * How worn each line is - times actually said, keyed by the template's
@@ -2070,6 +2093,7 @@ public class FollowerPlugin extends Plugin
 				saved.incidentCount, saved.incidentWhere, saved.incidentWhenMs, saved.incidentWho);
 			context.restorePlaces(saved.placeScores, saved.placeMemories);
 			context.restoreSpokenOnce(saved.spokenOnce);
+			context.restoreChronicled(saved.chronicled);
 			context.restoreLineWear(saved.lineWear);
 			context.setMetOnDay(saved.metOnDay);
 			context.setMetWearingValue(saved.metWearingValue);
@@ -2143,6 +2167,7 @@ public class FollowerPlugin extends Plugin
 		saved.placeScores = context.getPlaceScores();
 		saved.placeMemories = context.getPlaceMemories();
 		saved.spokenOnce = new java.util.ArrayList<>(context.getSpokenOnce());
+		saved.chronicled = new java.util.ArrayList<>(context.getChronicled());
 		saved.lineWear = context.getLineWear();
 		saved.metOnDay = context.getMetOnDay();
 		saved.metWearingValue = metWearing;
@@ -5693,6 +5718,7 @@ public class FollowerPlugin extends Plugin
 					com.follower.speech.SpeechOutput.OVERHEAD, null, -1, null);
 			}
 		});
+		addFollowerMenuEntry(com.follower.chronicle.ChronicleWindow.NAME, chronicleWindow::open);
 		addFollowerMenuEntry(talkOption(), this::startTalking);
 	}
 
@@ -5928,6 +5954,10 @@ public class FollowerPlugin extends Plugin
 		// dismiss) resolve here, one tick after the input - the same beat a
 		// real dialog takes for its server round trip.
 		dialog.tick();
+		if (chronicleProgress != null && chronicleWindow.isOpen())
+		{
+			chronicleProgress.refresh(client.getTickCount());
+		}
 
 		// Watchdog: a slaved chain waits on the player's next stage; if that
 		// never arrives (desync, logout race), release the follower rather than
@@ -6363,6 +6393,10 @@ public class FollowerPlugin extends Plugin
 		{
 			int previous = lastRegionId;
 			lastRegionId = region;
+			if (chronicleProgress != null)
+			{
+				chronicleProgress.noteRegion(region);
+			}
 			if (panel != null)
 			{
 				panel.setRegionId(region);
@@ -6393,6 +6427,10 @@ public class FollowerPlugin extends Plugin
 			if (dialog.isOpen() && lastPlayerTile != null && !lastPlayerTile.equals(tile))
 			{
 				dialog.close();
+			}
+			if (chronicleWindow.isOpen() && lastPlayerTile != null && !lastPlayerTile.equals(tile))
+			{
+				chronicleWindow.close();
 			}
 			lastPlayerTile = tile;
 		}
@@ -6522,6 +6560,11 @@ public class FollowerPlugin extends Plugin
 	public void onNpcSpawned(NpcSpawned event)
 	{
 		NPC npc = event.getNpc();
+		if (chronicleProgress != null)
+		{
+			// The scribe writes up a creature the first time it is in view.
+			chronicleProgress.noteNpc(npc.getName());
+		}
 		maybeAdoptThrall(npc);
 		if (skilling != null)
 		{
@@ -7437,6 +7480,10 @@ public class FollowerPlugin extends Plugin
 					"kill:" + name.toLowerCase(Locale.ROOT));
 				speechEngine.dispatch(TriggerEvent.kill(
 					npc.getId(), name, npc.getCombatLevel(), count));
+				if (chronicleProgress != null)
+				{
+					chronicleProgress.noteNpc(name);
+				}
 			}
 			return;
 		}

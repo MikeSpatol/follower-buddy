@@ -95,6 +95,16 @@ tasks.register('runFireAudit', JavaExec) {
     mainClass = 'com.follower.tools.FireAudit'
 }
 
+// The pixel size of interface sprites, and a PNG of each, straight from the
+// cache. The API names them but not their sizes.
+//   gradlew runSpriteProbe --args="--out <dir> 310 311 312 313"
+tasks.register('runSpriteProbe', JavaExec) {
+    group = 'verification'
+    description = 'Prints the size of the given sprite ids and writes them as PNGs'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.follower.tools.SpriteProbe'
+}
+
 // Checks that every NPC name and item id the rules key on actually exists.
 // A name that matches nothing is a rule that can never fire, and says nothing.
 //   gradlew runTargetAudit --args="<phrases.json> [cacheDir]"

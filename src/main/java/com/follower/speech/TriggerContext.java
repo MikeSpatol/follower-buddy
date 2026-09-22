@@ -947,6 +947,47 @@ public final class TriggerContext
 		}
 	}
 
+	// -------------------------------------------------------------- chronicle
+
+	/**
+	 * The chronicle pages the scribe has been able to write: ids of the
+	 * entries whose unlock has been met at least once. Quests are not kept
+	 * here, the game remembers those itself; this is for the things only
+	 * the follower saw, a boss met or a place walked into. Memory, so it
+	 * lives with the rest of the memory and is saved and restored with it.
+	 */
+	private final java.util.Set<String> chronicled = new java.util.HashSet<>();
+
+	public boolean isChronicled(String entryId)
+	{
+		return entryId != null && chronicled.contains(entryId);
+	}
+
+	/** Writes the page; true the first time, so the caller can say so. */
+	public boolean noteChronicled(String entryId)
+	{
+		if (entryId != null && chronicled.add(entryId))
+		{
+			countersDirty = true;
+			return true;
+		}
+		return false;
+	}
+
+	/** Live set, for the plugin to write out. Read-only by convention. */
+	public java.util.Set<String> getChronicled()
+	{
+		return chronicled;
+	}
+
+	public void restoreChronicled(java.util.Collection<String> saved)
+	{
+		if (saved != null)
+		{
+			chronicled.addAll(saved);
+		}
+	}
+
 	// -------------------------------------------------------------- repeating
 
 	/**

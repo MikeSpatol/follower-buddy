@@ -18,7 +18,7 @@ import static org.junit.Assert.assertTrue;
  * <p>Development machines have their own fonts.json in the data directory,
  * which takes precedence, so the bundled copy is the one path that is never
  * exercised while working on the plugin - and the one every hub user gets. The
- * dump is trimmed to the two fonts the plugin draws with, and nothing else
+ * dump is trimmed to the three fonts the plugin draws with, and nothing else
  * would notice if that trim took one too many.
  */
 public class BundledFontsTest
@@ -42,13 +42,15 @@ public class BundledFontsTest
 	}
 
 	@Test
-	public void bothFontsThePluginDrawsWithArePresent() throws IOException
+	public void theFontsThePluginDrawsWithArePresent() throws IOException
 	{
 		GameFontRepository fonts = loadAsAFreshInstall();
 
 		assertNotNull("font 497 is FollowerDialog's DIALOG_FONT_ID", fonts.get(497));
 		assertNotNull("b12_full is what FollowerOverlay draws the overhead line with",
 			fonts.getByName("b12_full"));
+		assertNotNull("p12_full is what the chronicle's lists and pages are set in",
+			fonts.getByName("p12_full"));
 	}
 
 	@Test
@@ -57,7 +59,7 @@ public class BundledFontsTest
 		GameFontRepository fonts = loadAsAFreshInstall();
 		// Not a correctness requirement, a size one: if a font creeps back in,
 		// the jar grows by tens of kilobytes for glyphs nothing asks for.
-		for (int id : new int[]{494, 495, 645, 646, 764, 819, 1442, 1447, 6315})
+		for (int id : new int[]{494, 645, 646, 764, 819, 1442, 1447, 6315})
 		{
 			assertEquals("font " + id + " is bundled but never drawn with",
 				null, fonts.get(id));

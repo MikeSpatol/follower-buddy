@@ -1,0 +1,283 @@
+package com.follower.chronicle;
+
+import com.follower.ui.GameFont;
+import com.follower.ui.GameFontRepository;
+import com.google.gson.Gson;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import net.runelite.api.Quest;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+/**
+ * The bundled chronicle, as every install reads it.
+ *
+ * <p>The same law as the rule file: every page must load, be unique, name
+ * an unlock the code can actually check, and be made of characters the
+ * game's bitmap fonts can draw. A page that fails any of these fails
+ * silently in play - a name that never unlocks, a dash drawn as some other
+ * glyph - so it fails here instead.
+ */
+public class ChronicleIntegrityTest
+{
+	@Rule
+	public final TemporaryFolder folder = new TemporaryFolder();
+
+	private static final Pattern SMART_PUNCTUATION = Pattern.compile("[\\u2010-\\u2015\\u2018\\u2019\\u201c\\u201d\\u2026]");
+
+	private ChronicleLoader loadAsAFreshInstall() throws IOException
+	{
+		ChronicleLoader loader = new ChronicleLoader(new Gson());
+		loader.load(folder.newFolder().toPath());
+		return loader;
+	}
+
+	private static String bundledText() throws IOException
+	{
+		try (InputStream in = ChronicleLoader.class.getResourceAsStream(ChronicleLoader.BUNDLED))
+		{
+			assertNotNull("missing bundled resource " + ChronicleLoader.BUNDLED, in);
+			return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+		}
+	}
+
+	@Test
+	public void theBundledChronicleLoadsClean() throws IOException
+	{
+		ChronicleLoader loader = loadAsAFreshInstall();
+		assertTrue("did not load: " + loader.getStatus(), loader.isLoaded());
+		assertTrue("problems: " + loader.getErrors(), loader.getErrors().isEmpty());
+	}
+
+	@Test
+	public void theFirstThreeQuestsAreThere() throws IOException
+	{
+		ChronicleLoader loader = loadAsAFreshInstall();
+		List<String> quests = new ArrayList<>();
+		for (ChronicleEntry entry : loader.ofKind("quest"))
+		{
+			quests.add(entry.name);
+		}
+		assertTrue(quests.toString(), quests.contains("Cook's Assistant"));
+		assertTrue(quests.toString(), quests.contains("Priest in Peril"));
+		assertTrue(quests.toString(), quests.contains("Waterfall Quest"));
+	}
+
+	@Test
+	public void everyPageIsWellFormed() throws IOException
+	{
+		ChronicleLoader loader = loadAsAFreshInstall();
+		List<String> problems = new ArrayList<>();
+		Set<String> ids = new HashSet<>();
+		for (ChronicleEntry entry : loader.getEntries())
+		{
+			String at = entry.id;
+			if (!entry.id.matches("[a-z0-9]+(-[a-z0-9]+)*"))
+			{
+				problems.add(at + ": id is not lowercase-with-hyphens");
+			}
+			if (!ids.add(entry.id))
+			{
+				problems.add(at + ": duplicate id");
+			}
+			if (!entry.id.startsWith(entry.kindOrEmpty() + "-"))
+			{
+				problems.add(at + ": id does not start with its kind");
+			}
+			if (entry.summary == null || entry.summary.trim().isEmpty())
+			{
+				problems.add(at + ": no summary");
+			}
+			if (entry.sectionsOrEmpty().isEmpty())
+			{
+				problems.add(at + ": no sections");
+			}
+			for (ChronicleEntry.Section section : entry.sectionsOrEmpty())
+			{
+				if (section.heading == null || section.heading.isEmpty()
+					|| section.body == null || section.body.isEmpty())
+				{
+					problems.add(at + ": a section is missing its heading or body");
+				}
+			}
+		}
+		assertTrue("malformed pages:\n  " + String.join("\n  ", problems), problems.isEmpty());
+	}
+
+	@Test
+	public void everyUnlockIsOneTheCodeCanCheck() throws IOException
+	{
+		ChronicleLoader loader = loadAsAFreshInstall();
+		List<String> problems = new ArrayList<>();
+		for (ChronicleEntry entry : loader.getEntries())
+		{
+			String at = entry.id;
+			ChronicleEntry.ChronicleUnlock unlock = entry.unlock;
+			if (unlock == null)
+			{
+				problems.add(at + ": no unlock, so it could never be read");
+				continue;
+			}
+			boolean any = unlock.always;
+			for (String quest : new String[]{unlock.quest, unlock.questBegun})
+			{
+				if (quest == null)
+				{
+					continue;
+				}
+				any = true;
+				if (ChronicleProgress.questNamed(quest) == null)
+				{
+					problems.add(at + ": " + quest + " is not a net.runelite.api.Quest");
+				}
+			}
+			if (unlock.npcs != null)
+			{
+				any |= !unlock.npcs.isEmpty();
+				for (String npc : unlock.npcs)
+				{
+					if (npc == null || npc.trim().isEmpty())
+					{
+						problems.add(at + ": a blank NPC name");
+					}
+				}
+			}
+			if (unlock.regions != null)
+			{
+				any |= !unlock.regions.isEmpty();
+				for (Integer region : unlock.regions)
+				{
+					if (region == null || region <= 0)
+					{
+						problems.add(at + ": region " + region + " is not a map region");
+					}
+				}
+			}
+			if (!any)
+			{
+				problems.add(at + ": unlock names nothing, so it could never be read");
+			}
+		}
+		assertTrue("unlocks the code cannot check:\n  " + String.join("\n  ", problems),
+			problems.isEmpty());
+	}
+
+	@Test
+	public void theQuestsUnlockOnTheRightQuest() throws IOException
+	{
+		ChronicleLoader loader = loadAsAFreshInstall();
+		assertEquals(Quest.COOKS_ASSISTANT,
+			ChronicleProgress.questNamed(loader.get("quest-cooks-assistant").unlock.quest));
+		assertEquals(Quest.PRIEST_IN_PERIL,
+			ChronicleProgress.questNamed(loader.get("quest-priest-in-peril").unlock.quest));
+		assertEquals(Quest.WATERFALL_QUEST,
+			ChronicleProgress.questNamed(loader.get("quest-waterfall-quest").unlock.quest));
+	}
+
+	@Test
+	public void theTextIsPlainAsciiThroughout() throws IOException
+	{
+		// The bitmap fonts index glyphs by the low byte of each char, so a
+		// curly quote or an em dash draws as some other glyph with no error.
+		String text = bundledText();
+		Matcher smart = SMART_PUNCTUATION.matcher(text);
+		assertTrue("smart punctuation in the chronicle at " + (smart.find() ? smart.start() : -1),
+			!smart.find(0));
+		List<String> problems = new ArrayList<>();
+		for (int i = 0; i < text.length(); i++)
+		{
+			char c = text.charAt(i);
+			if (c > 0x7E || (c < 0x20 && c != '\n' && c != '\r' && c != '\t'))
+			{
+				problems.add("char U+" + Integer.toHexString(c) + " at " + i);
+				if (problems.size() > 10)
+				{
+					break;
+				}
+			}
+		}
+		assertTrue("not plain ASCII:\n  " + String.join("\n  ", problems), problems.isEmpty());
+	}
+
+	@Test
+	public void everyCharacterUsedHasAGlyphInTheFontsThatDrawIt() throws IOException
+	{
+		GameFontRepository fonts = new GameFontRepository(new Gson());
+		fonts.load(folder.newFolder().toPath());
+		GameFont[] used = {fonts.getByName("p12_full"), fonts.getByName("b12_full")};
+		for (GameFont font : used)
+		{
+			assertNotNull("a chronicle font is not bundled: " + fonts.getStatus(), font);
+		}
+
+		Set<Character> distinct = new HashSet<>();
+		for (char c : bundledText().toCharArray())
+		{
+			if (c > ' ' && c <= 0x7E)
+			{
+				distinct.add(c);
+			}
+		}
+		List<String> blank = new ArrayList<>();
+		BufferedImage scratch = new BufferedImage(40, 40, BufferedImage.TYPE_INT_ARGB);
+		for (GameFont font : used)
+		{
+			for (char c : distinct)
+			{
+				java.awt.Graphics2D g = scratch.createGraphics();
+				g.setComposite(java.awt.AlphaComposite.Clear);
+				g.fillRect(0, 0, 40, 40);
+				g.setComposite(java.awt.AlphaComposite.SrcOver);
+				font.drawTop(g, String.valueOf(c), 4, 4, 0xffffff, false);
+				g.dispose();
+				boolean drawn = false;
+				for (int y = 0; y < 40 && !drawn; y++)
+				{
+					for (int x = 0; x < 40; x++)
+					{
+						if ((scratch.getRGB(x, y) >>> 24) != 0)
+						{
+							drawn = true;
+							break;
+						}
+					}
+				}
+				if (!drawn)
+				{
+					blank.add("'" + c + "'");
+				}
+			}
+		}
+		assertTrue("characters with no glyph: " + blank, blank.isEmpty());
+	}
+
+	@Test
+	public void aBrokenFileLeavesTheChronicleEmptyRatherThanThrowing() throws IOException
+	{
+		for (String broken : new String[]{"", "   ", "null", "{", "[]", "not json at all",
+			"{\"version\": 999}", "{\"entries\": [{\"id\": \"x\"}]}"})
+		{
+			java.nio.file.Path dir = folder.newFolder().toPath();
+			java.nio.file.Files.write(dir.resolve(ChronicleLoader.FILE_NAME),
+				broken.getBytes(StandardCharsets.UTF_8));
+			ChronicleLoader loader = new ChronicleLoader(new Gson());
+			loader.load(dir);
+			// A bad override falls back to the bundled pages; a syntactically
+			// fine but empty one reads as empty. Neither throws.
+			assertNotNull(loader.getStatus());
+		}
+	}
+}

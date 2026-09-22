@@ -1,0 +1,726 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "quest-cooks-assistant",
+      "kind": "quest",
+      "name": "Cook's Assistant",
+      "unlock": {
+        "quest": "COOKS_ASSISTANT"
+      },
+      "summary": "The head cook of Lumbridge Castle forgot to buy the ingredients for Duke Horacio's birthday cake and roped in the first adventurer through the kitchen door. You fetched him an egg, a bucket of milk and a pot of flour, and he kept his job. In thanks he let you use his special range, the Cook-o-matic 100.",
+      "sections": [
+        {
+          "heading": "What happened",
+          "body": "You walked into the kitchen on the ground floor of Lumbridge Castle and found the head cook in a panic. It was the Duke of Lumbridge's birthday, the cook was supposed to be baking the cake, and he had forgotten to buy the ingredients. He was certain the Duke would sack him, and he had four children and a goat to feed. He asked you to bring back a bucket of milk, an egg and a pot of flour, and pointed you to Millie Miller at Mill Lane Mill for the flour, Gillie Groats at the cow field across the river for the milk, and the Groats' farm or any chicken for the egg.\n\nFor the egg you went east from the castle and north up the path to the chicken coop north-west of Farmer Fred's house and picked one up. For the milk you took an empty bucket (one spawns in the castle cellar, or the general store sells them) into the cow field and used it on a dairy cow, the one wearing a cowbell. Gillie Groats will explain milking if asked. For the flour you took an empty pot (one spawns on the kitchen table) to the wheat field, picked grain, carried it into Mill Lane Mill, tipped it into the hopper on the top floor, pulled the lever, then filled the pot from the flour bin on the ground floor. Millie Miller inside the mill explains how it works.\n\nYou brought all three back to the cook, who declared himself saved. When you asked whether you could come to the Duke's party he told you only important people dine with nobility, and that perhaps one day you would be one of them, though he doubted it. He then let you use his range, which he calls the Cook-o-matic 100 and which burns fewer foods than an ordinary range.\n\nRewards: 1 quest point, 300 Cooking experience and use of the Cook-o-matic 100. This was the first quest ever released, on 4 January 2001, one of six available at launch, written by Paul Gower to make new players explore Lumbridge."
+        },
+        {
+          "heading": "Who was involved",
+          "body": "Cook (Lumbridge): the head cook of Lumbridge Castle, examine text \"The head cook of Lumbridge castle.\" He needed an egg, milk and flour for the Duke's cake and feared being sacked. He keeps his job and later asks for your help again in Recipe for Disaster. He claims a wife, four children and a goat, which Bob the cat contradicts, and admits he has burned every cake he has ever tried to bake.\n\nDuke Horacio: the Duke of Lumbridge, whose birthday it is. He is never seen during the quest; he lives on the first floor of the castle. He is a direct descendant of Polonius, the first Duke.\n\nGillie Groats: the milkmaid at the cow field across the River Lum. Optional; she explains how to milk a cow.\n\nMillie Miller: at Mill Lane Mill. Optional; she explains how grain becomes flour.\n\nFarmer Fred: not spoken to; his house is the landmark for the chicken coop."
+        },
+        {
+          "heading": "Where it took place",
+          "body": "Lumbridge Castle kitchen, ground floor: the cook, his range and the pot spawn on the centre table.\n\nLumbridge Castle cellar, down the kitchen trapdoor: a bucket spawn.\n\nThe chicken coop north-west of Farmer Fred's house: the egg.\n\nThe Lumbridge cow field: the dairy cow with the cowbell; Gillie Groats stands across the River Lum.\n\nThe wheat field south-west of the cow field: the grain.\n\nMill Lane Mill: hopper and lever on the top floor, flour bin on the ground floor, Millie Miller inside.\n\nLumbridge General Store: sells buckets and pots if you have none."
+        },
+        {
+          "heading": "Worth knowing",
+          "body": "Lumbridge was settled in 1937 of the Fourth Age by human nomads who bridged the River Lum, which is where the name comes from. Polonius was the first Duke, given the land by King Claudius of Varrock; he replaced the original wooden fort with Lumbridge Castle, and Duke Horacio is his direct descendant. Caves beneath the town sheltered a lost goblin tribe during the God Wars. The town is named after Cambridge, where the Gower brothers grew up; the Duke's real-world counterpart would be the Duke of Cambridge.\n\nThe cook's ancestor Franizzard Van Lumbcook won the post of head cook for life a century ago by impressing the Lumbridge council with a banquet. In Recipe for Disaster (the 100th quest, released 15 March 2006, which requires Cook's Assistant) the cook tries to recreate that banquet for the council's ten-yearly meeting, and the Culinaromancer, a hostile cook trapped in another dimension a hundred years earlier, crashes the feast.\n\nIn Death to the Dorgeshuun, when you introduce Zanik to the cook he tries to offer her the very same errand (eggs, flour and milk for the Duke's birthday cake). You tell him she has no time and he says it was worth a try. The wiki takes this to mean he asks every newcomer.\n\nDuring the 20th Anniversary event it came out that the cook has tried and failed to bake a cake countless times, which is why he keeps needing new adventurers. The cook at the Servants' Guild in Ardougne complains that she was fired overnight and replaced by a fool who cannot bake a cake without help.\n\nThe Cook-o-matic 100 is the cook's own name for the range; players call it the Lumbridge Castle range. It lowers the burn chance on many foods, from bread and shrimps up to anglerfish and admiral pie, and is especially good for mushroom and botanical pies. It is free to play. Bob the cat praises the cook's old fashioned seafood gumbo, an old family recipe.\n\nPlayers who are not Ironmen can buy all three ingredients on the Grand Exchange before talking to the cook and finish the quest in seconds."
+        }
+      ],
+      "people": [
+        "Cook (Lumbridge) - head cook who forgot the ingredients",
+        "Duke Horacio - Duke of Lumbridge, the birthday celebrant",
+        "Gillie Groats - milkmaid at the cow field",
+        "Millie Miller - miller at Mill Lane Mill",
+        "Farmer Fred - his house marks the chicken coop"
+      ],
+      "places": [
+        "Lumbridge Castle - kitchen and cellar",
+        "Chicken coop - north-west of Farmer Fred's house",
+        "Lumbridge cow field - dairy cow with a cowbell",
+        "Wheat field - south-west of the cow field",
+        "Mill Lane Mill - hopper upstairs, flour bin below",
+        "Lumbridge General Store - buckets and pots",
+        "River Lum - Gillie Groats stands across it"
+      ],
+      "details": [
+        "The first quest ever released, 4 January 2001, by Paul Gower",
+        "The cook tries to give Zanik the same errand in Death to the Dorgeshuun",
+        "He has failed to bake a cake countless times (20th Anniversary event)",
+        "The Ardougne Servants' Guild cook says she was replaced by him",
+        "The Cook-o-matic 100 is best known as the Lumbridge range",
+        "The cook's ancestor Franizzard Van Lumbcook sets up Recipe for Disaster",
+        "Lumbridge and Duke Horacio nod to Cambridge and its Duke"
+      ]
+    },
+    {
+      "id": "quest-priest-in-peril",
+      "kind": "quest",
+      "name": "Priest in Peril",
+      "unlock": {
+        "quest": "PRIEST_IN_PERIL"
+      },
+      "summary": "King Roald sent you to check on Drezel, the priest of Paterdomus on the River Salve, because the temple had gone silent. Monks of Zamorak had seized it, and they tricked you into killing the Temple Guardian so they could poison the river. You freed Drezel, sealed a vampyre in its coffin with blessed water and soaked the poison out of the Salve with rune essence, and Drezel opened the way into Morytania.",
+      "sections": [
+        {
+          "heading": "What happened",
+          "body": "King Roald, in the south-east room of Varrock Palace, told you contact had been lost with the temple to Saradomin on Misthalin's eastern border. That temple, Paterdomus, guards the only passage into the vampyre-infested land of Morytania, and the blessed waters of the River Salve beneath it are what keep the vampyres out. The priest there, Drezel, is descended from the warriors who blessed the river, and nobody had heard from him. Roald asked you to go and check on him.\n\nYou went north-east through Silvarea, past the Earth altar, to the temple door. A voice asked who you were and what you wanted. When you said the King had sent you, a second voice introduced itself as Drevil, then hurriedly corrected that to Drezel. This so-called Drezel said a horrible big dog-like thing had moved into the mausoleum outside and asked you to get rid of it.\n\nYou went down the trapdoor north of the temple and killed the Temple Guardian, a level 30 dog. It is immune to magic and dwarf cannons, never respawns, and can be killed with rings of recoil so long as you deal at least one point of damage yourself.\n\nWhen you reported back, King Roald was furious. The dog was no pest: it guarded the mausoleum entrance and the source of the Salve, and with it dead anyone could sabotage the river's blessing and leave the whole of Misthalin open to the vampyres. He called it treason and threatened to have you beheaded, then relented and ordered you to put it right. You picked up a bucket (the palace bedroom has one, or the general store sells them for 2 coins) and went back.\n\nInside the temple you fought the hooded level 30 Monk of Zamorak, who casts spells and can be safespotted between the pews, and took the golden key he dropped. Upstairs you found the real Drezel locked in a cell. Through the bars he told you Zamorakians had attacked the temple, meaning to desecrate the blessing the Seven Priestly Warriors had placed on the holy River Salve and leave Misthalin defenceless against the vampyres of Morytania. They had also brought a trapped vampyre up into a coffin near his cell. The golden key did not fit his door; the Zamorakians had hidden the real one somewhere.\n\nBack in the mausoleum, the golden key opened a southern gate into a room with seven monuments around a well. Searching the monuments turned up the iron key, which you swapped for the golden one. (The other monuments hold a golden pot, feather, candle, tinderbox, needle and hammer, which can be swapped once as souvenirs before Drezel moves.) You filled the bucket with murky water from the well.\n\nThe iron key opened Drezel's cell. He blessed the water and you poured it over the coffin outside his cell, sealing the vampyre inside. Drezel then asked you to meet him below, in the mausoleum, to help repair what the Zamorakians had done.\n\nIn the north-east passage under the temple, Drezel explained that the Zamorakians had used a potion to pollute the River Salve. While he worked on reinforcing the barrier between Morytania and Misthalin, he needed you to soak up the evil magic the potion had released into the water. You brought him fifty rune essence or pure essence, in one trip with pouches or several without. Using the essence on him skips the dialogue; the game says you give the priest your blank runes.\n\nWhen it was done he thanked you and gave you Wolfbane, a silver dagger passed down through his family for generations and imbued with the power of Saradomin, and blessed you to pass the barrier, warning of the vampyres and werewolves beyond and mentioning the Myreque resistance. To actually cross you must ask him for permission to pass and wait for his blessing. Rewards: 1 quest point, 1,406 Prayer experience, Wolfbane, the way into Canifis and Morytania, and 5 Kudos from Historian Minas at the Varrock Museum."
+        },
+        {
+          "heading": "Who was involved",
+          "body": "King Roald: King Roald Remanis III, ruler of Misthalin, in Varrock Palace; married to Queen Ellamaria. He sent you to check on Drezel, threatened you with execution when the guardian died, then gave you the chance to fix it. The wiki calls him a straightforward, stable ruler under whom Varrock has prospered. Per the Temple Guardian page he called the dog Spots and a pedigree light beast, or possibly dark beast.\n\nDrezel: examine \"A holy man.\" Priest of Saradomin and the temple's only monk, descended from one of the Seven Priestly Warriors. The Zamorakians locked him in a cell on the top floor. After the quest he lives in the passage beneath Paterdomus, where he starts Nature Spirit, replaces lost Wolfbane daggers, blesses players to cross the river, and later works with the Myreque in In Aid of the Myreque, Darkness of Hallowvale and Sins of the Father. Using a spare iron key on his old cell door makes him ask what you are trying to lock him back in for.\n\nMonk of Zamorak (hooded, level 30): the impostor at the door who slipped and said Drevil, tricked you into killing the guardian, and dropped the golden key. Examine \"An evil human cleric.\" The other monks in the temple regenerate quickly and give only 25 percent of normal combat experience.\n\nTemple Guardian: examine \"Looks like a big ugly dog.\" Level 30, 45 hitpoints, max hit 3, stab attacks. It guarded the mausoleum entrance and the source of the Salve. It does not respawn.\n\nThe coffin vampyre: one of the vampyres caught on the Misthalin side when the Salve was blessed, too weak to be a threat but impossible to kill, so the Saradominists kept it sealed in a coffin. You sealed it again with blessed water.\n\nHistorian Minas: at the Varrock Museum, gives 5 Kudos for the quest."
+        },
+        {
+          "heading": "Where it took place",
+          "body": "Varrock Palace: King Roald's audience room in the south-east corner by the main entrance; a bucket spawns in the palace bedroom.\n\nSilvarea: the mountain pass in north-east Misthalin, past the Earth altar, ending at the temple.\n\nPaterdomus: the temple on the River Salve; an altar on the ground floor, monks of Zamorak above, Drezel's cell and the coffin on the top floor, more coffins outside.\n\nThe mausoleum: down the trapdoor north of the temple; the guardian's chamber, the seven-monument room with the well, and the north-east passage where Drezel settles.\n\nThe River Salve: the blessed river that forms Misthalin's border with Morytania; the temple bridge is the only crossing.\n\nMorytania and Canifis: the werewolf town just east of the temple, opened by the quest.\n\nVarrock Museum: Historian Minas and the Kudos."
+        },
+        {
+          "heading": "Worth knowing",
+          "body": "Paterdomus is Latin pater (father) plus domus (house), roughly House of the Father, for Saradomin. It stands in eastern Silvarea on the River Salve and was built on the site of the last battle of the Misthalin-Morytania War, over the graves of the warriors who blessed the river. The Silvarea page adds that the warriors rest under the temple, which was built in their honour.\n\nThe Misthalin-Morytania War ran from about 1100 to 1200 of the Fourth Age. Lord Lowerniel Vergidiyad Drakan, vampyre ruler of Morytania, crossed the Salve to expand west and pushed towards Varrock. The Temple Knights sent the Seven Priestly Warriors (Ivandis Seergaze, Iriandul Caistlyn, Sarl Dunegun, Derygull Templeton, Erysail the Pious, Friar Twiblick and Essiandar Gar) to secure the river and, secretly, to research haemalchemy for a weakness in the vampyres. At the river's source they performed a blood ritual as the vampyres attacked; Derygull fell first, the rest followed, and only Ivandis survived. He laid them to rest around the well where the ritual was done, and the temple was later built around it. The warriors hid the profane nature of the ritual from the soldiers and presented it as a holy consecration; later accounts say it sealed the vengeful power of Saradomin in the river. Ivandis, showing signs of vampyrification, refused to become the thing he had fought and made a suicide run at Drakan; he died and was laid in a coffin in tunnels beneath the Hollows in Morytania. He came from what is now Lumbridge, and Ivan Strom is his last living descendant.\n\nThe blessed water burns creatures of Zamorak on contact and keeps vampyres from crossing. Any vampyres already on the Misthalin side were left severely weakened but could not be killed, so they were sealed in coffins outside the temple. Werewolves can still cross, and do, kidnapping people and smuggling for the vampyres; some have got as far as beneath the Champions' Guild. The Salve flows past where Senntisten, the old Zarosian capital, once stood; the Digsite excavations reach its bank. Blessed water seeping through the rock of the Mort Ridge Mine forms Salve shards, crystals with power over evil. After Drakan's defeat he banished his brother Draynor, likely because of the weakness the blessed river imposed.\n\nMorytania was once the Hallowland, a peaceful Saradominist kingdom ruled by the Icyene queen Efaritay. Drakan, a true-born vampyre brought from Vampyrium by Zaros in the Second Age, sided with Zamorak in exchange for these lands and conquered them in the Third Age with vampyres and werewolves, capturing Efaritay's husband Ascertes (who became the vampyre Vanstrom Klause) and turning the kingdom into a blood farm. He built the capital Darkmeyer on Hallowvale's ruins and made Meiyerditch a blood-tithed ghetto; Burgh de Rott is the last free human town and home of the Myreque resistance. He rules with his siblings Vanescula and Ranis. The wiki says the region was originally to be named Transilvania and its name may pun on Mauritania and memento mori.\n\nCanifis, just east of the temple, was the Zarosian fortress Kharyrll before the God Wars; werewolves settled it in year 23 of the Fifth Age and pay blood tithes like everyone else in Morytania. Its twenty citizens turn into level 88 werewolves when attacked unless you wield Wolfbane. The name is probably from canis, the wolf genus. Mazchna the Slayer master and Roavar the barman live there.\n\nWolfbane: \"A silver dagger that can prevent werewolves changing form.\" It has mithril dagger stats plus a 5 Prayer bonus, cannot be poisoned, and as a silver weapon works on tier 1 vampyres. You can only hold one; Drezel replaces it. Killing a Canifis citizen with it counts for the Easy Morytania Diary. The Wolfbane page dates the quest to 29 June 2004.\n\nDrezel next sends you into Mort Myre Swamp with meat and apple pies for the druid Filliman Tarlock in Nature Spirit (which also needs The Restless Ghost). Priest in Peril is required for Animal Magnetism, Creature of Fenkenstrain, Desert Treasure I, Ghosts Ahoy, Haunted Mine, His Faithful Servants, Making History, Nature Spirit, Rum Deal, Shades of Mort'ton and Wanted!. The monks of Zamorak were finally driven out of Paterdomus for good in The Blood Moon Rises, the quest in which Drakan is slain.\n\nBefore 2007, Dark beasts looked like a brown version of the Temple Guardian. If you carry a clue scroll that needs Drezel, talking to him in the mausoleum triggers the clue before the quest continues."
+        }
+      ],
+      "people": [
+        "King Roald - King Roald Remanis III of Misthalin, sends you",
+        "Drezel - priest of Saradomin, imprisoned at Paterdomus",
+        "Monk of Zamorak - hooded impostor who drops the golden key",
+        "Temple Guardian - the dog you were tricked into killing",
+        "Historian Minas - gives 5 Kudos at the Varrock Museum",
+        "Ivandis Seergaze - only survivor of the Seven Priestly Warriors",
+        "Lord Drakan - vampyre ruler of Morytania, in the backstory",
+        "Queen Ellamaria - Roald's wife, not met"
+      ],
+      "places": [
+        "Varrock Palace - south-east room, the quest start",
+        "Silvarea - the pass past the Earth altar",
+        "Paterdomus - the temple on the River Salve",
+        "Mausoleum - trapdoor north of the temple, well and monuments",
+        "River Salve - blessed border with Morytania",
+        "Canifis - werewolf town opened by the quest",
+        "Morytania - the vampyre lands beyond",
+        "Varrock Museum - Kudos from Historian Minas"
+      ],
+      "details": [
+        "The impostor at the door slips and calls himself Drevil",
+        "King Roald's nickname for the Temple Guardian was Spots",
+        "Paterdomus means House of the Father in Latin",
+        "Only Ivandis survived the ritual; he died charging Drakan",
+        "Vampyres stranded west of the Salve were sealed in coffins",
+        "The Salve flows past the ruins of Senntisten",
+        "Canifis was the Zarosian fortress Kharyrll",
+        "Wolfbane is mithril dagger stats plus a Prayer bonus",
+        "Dark beasts once looked like a brown Temple Guardian",
+        "The monks were finally cleared out in The Blood Moon Rises"
+      ]
+    },
+    {
+      "id": "quest-waterfall-quest",
+      "kind": "quest",
+      "name": "Waterfall Quest",
+      "unlock": {
+        "quest": "WATERFALL_QUEST"
+      },
+      "summary": "Almera asked you to fetch her son Hudon back from treasure hunting on the river at Baxtorian Falls. You never did get him home, but you learned the legend of the elven king Baxtorian and his lost queen Glarial, took her amulet and urn from her tomb, and carried her ashes into Baxtorian's sealed home under the falls. Tipping the ashes into the Chalice of Eternity gave up his treasure.",
+      "sections": [
+        {
+          "heading": "What happened",
+          "body": "Almera, in her house north-east of Baxtorian Falls and south of the Barbarian Outpost, was worried about her son Hudon, who had gone looking for treasure on the river behind the house even though he cannot swim and had already fallen in three times. You took her log raft, which wrecked on a small island, and found Hudon there. He refused to come home, said he would find the treasure soon, and turned down your help because you would only steal it.\n\nYou swam south and washed ashore near a large building with a fisherman, Gerald, outside: the Tourist Information Centre where Hadley works. Upstairs, the southernmost bookcase on the east wall held the Book on Baxtorian, which you had to read. It told you that Baxtorian and Glarial were elves, that a treasure lay under the falls, and that Glarial's pebble, the key to her tomb, had been taken by a gnome family over a century ago whose descendants might still keep it in their cave beneath the Tree Gnome Village. Gerald and Hadley tell the same story: an ancient elven king who shut himself in his secret home under the waterfall after his wife was captured and killed by invaders.\n\nYou went to the Tree Gnome Village south-west of Ardougne, through the hedge maze past the hobgoblins and down the ladder into the dungeon. In the east room a key sat in a differently coloured crate in the south-east corner. In the west room the gnome Golrie had locked himself in to keep the hobgoblins off his family's heirlooms, and had left the key outside. You let him out and he handed over Glarial's pebble as a bit of old elven junk, keeping the key so he could lock up again.\n\nGlarial's Tomb lies south-east of the falls and north-west of the Fishing Guild, under a tombstone that says Glarial, wife of Baxtorian and a true friend of nature, rests knowing only visitors with peaceful intent may enter. So the pebble only opens it if you carry no weapons, armour, runes or ammunition. Inside, three level 84 Moss Guardians roam alongside zombies and skeletons. You took Glarial's amulet from the chest in the west chamber and Glarial's urn, holding her ashes, from the coffin in the south chamber. You need both to leave.\n\nBack at Almera's you took the raft again and wrecked again. You tied your rope to the big grey rock downstream, then used it on a dead tree to climb up to the doors on the waterfall ledge. Wearing Glarial's amulet is what stops the door washing you out. The eastern passage, past level 52 Shadow spiders, level 45 Skeletons and level 16 Skeleton Mages, had a key in the northernmost crate. The western passage led past level 86 Fire giants to a locked door and the chalice room.\n\nThe final chamber holds six pillars, two statues and the Chalice of Eternity, floating in the air. You used one air, one water and one earth rune on each of the six pillars, Glarial's amulet on the statue of Glarial, and the urn on the chalice, tipping her ashes in. The ground rose and Baxtorian's treasure was yours: 2 diamonds, 2 gold bars and 40 mithril seeds, with 13,750 Attack and 13,750 Strength experience and 1 quest point. Trying to simply take the treasure without the ritual washes you out of the cavern and loses the amulet and urn.\n\nHudon was never rescued. After the quest he still has not found anything and insists you owe him a share, since he showed you where the treasure was."
+        },
+        {
+          "heading": "Who was involved",
+          "body": "Almera: examine \"Nice hair.\" Hudon's mother; lives at the falls south of the Barbarian Outpost; the quest's start. She shares her examine text with Speedy Keith.\n\nHudon: examine \"Looks young.\" Ran away to hunt for treasure under the falls. He cannot be rescued, despite that being the whole errand, and afterwards accuses you of stealing his treasure.\n\nGerald: examine \"Looks suspiciously like a fisherman.\" Fishes trout and salmon south of the falls by the River Dougne. He knows the story of the treasure said to have been left by the elven king Baxtorian about 200 years earlier at the end of the Fourth Age, and that many adventurers have searched for his tomb and failed.\n\nHadley: examine \"Could do with losing a bit of weight.\" The tourist guide at the Tourist Information Centre by Lake Baxtorian, where the Book on Baxtorian is kept upstairs. He later helps find the Shadow Dungeon in Desert Treasure I.\n\nGolrie: examine \"He seems to be in a spot of bother.\" A gnome in the Tree Gnome Village dungeon, grandson of King Bolrie and grand-nephew of King Bolren. Locked himself in against the hobgoblins after leaving the key outside. Gives Glarial's pebble and replacements. After Roving Elves the hobgoblins are the ones locked up and his examine becomes \"No longer locked in his own cage.\" He returns in The Path of Glouphrie.\n\nBaxtorian: Lord Baxtorian Cadarn, formerly King Baxtorian, the Fourth Age elven king who led the Cadarn clan east through Arandar to found a kingdom in what is now Kandarin; husband of Glarial, father of Eirlys. He sealed himself under the falls in grief. Not met in this quest. In Song of the Elves he turns out to be alive, turned to stone in hope of one day reuniting with Glarial, is freed, and reluctantly becomes elder of the Cadarn clan.\n\nGlarial: Queen Glarial, Baxtorian's wife, mother of Eirlys and grandmother of Islwyn. After Seren shattered herself she and Baxtorian were entrusted with leading the elves. She ruled the eastern kingdom while Baxtorian marched on Prifddinas, was captured when it fell, and was never recovered alive; elves later buried her ashes in the tomb under the protection of the Moss Guardians. Taking her urn leaves her spirit restless until Roving Elves.\n\nMoss Guardians: examine \"Bigger than your average moss giant.\" The guardian spirits of Glarial's Tomb, level 84, 120 hitpoints, max hit 14, six-tick attacks that roll melee first and then magic. Fought unarmed. Killed again in Roving Elves for a consecration seed.\n\nFire giants: examine \"A very large elemental adversary.\" Level 86 in the Waterfall Dungeon, max hit 11, eleven spawns; the strongest of the ordinary giants.\n\nAlso met: Shadow spiders (level 52, drain Prayer, hidden on the minimap), Skeletons (45) and Skeleton Mages (16) in the dungeon, hobgoblins (28) in the gnome dungeon."
+        },
+        {
+          "heading": "Where it took place",
+          "body": "Almera's house: north-east of Baxtorian Falls, south of the Barbarian Outpost, with the raft beside it.\n\nBaxtorian Falls: rapids running south from the Lunar Sea to the River Dougne, north-west of Ardougne and east of the Tree Gnome Stronghold, named for Baxtorian; the small island where the raft wrecks.\n\nThe Tourist Information Centre: just south of the falls by Lake Baxtorian; Hadley inside, Gerald fishing outside, the Book on Baxtorian upstairs.\n\nTree Gnome Village: south-east of East Ardougne and north of Yanille, hidden inside a hedge maze.\n\nTree Gnome Village Dungeon: under the maze; east room with the key crate, zombies and giant bats, west room with Golrie and the hobgoblins.\n\nGlarial's Tomb: south-east of the falls, north-west of the Fishing Guild, under a tombstone; the west chest and the south coffin.\n\nWaterfall Dungeon: the connected caverns under the falls; the ledge doors, the eastern passage with spiders, skeletons and the key crate, the western passage with fire giants, and the Chalice of Eternity in the northernmost cavern.\n\nBarbarian Outpost and Fishing Guild: landmarks either side of the falls."
+        },
+        {
+          "heading": "Worth knowing",
+          "body": "The book's own title is The Missing Relics; its examine is \"A book on elven history in northern Gielinor.\" It says many elven relics were lost when the elves left in the Fourth Age and that dwarf miners may have taken Baxtorian's treasure early in the Fifth Age. It holds a sonnet of the love between Baxtorian and Glarial, which lasted over a century while they taught the laws of nature; a section on their power over nature, commanding trees to grow, hills to rise and rivers to flood, with Baxtorian a master of rune lore who used stones to control water, earth and air (hence the runes on the pillars); and Baxtorian's own Ode to Eternity. It says only Baxtorian and Glarial had the power to enter the falls and the enchantment has kept everyone else out. Its text was rewritten in July 2019 to fit later elven lore, and it can be displayed in a player-owned house or read in the Grand Library of Prifddinas.\n\nThe Elven Civil War: after the God Wars Seren shattered herself and Baxtorian led the Cadarn clan, the military clan, east through the Arandar pass, making non-aggression pacts with the gnomes and humans; the kingdom prospered for nearly 1,900 years. Around 1930 of the Fourth Age contact with Tirannwn ceased. The Iorwerth clan had seized Prifddinas while most of the army was away, leaving thousands dead, and had become obsessed with a Dark Lord, who elves believed was Zamorak but who turns out to be a fragment of Seren. Baxtorian spent five years besieging the city, whose walls Seren had built to withstand gods. His soldiers found a secret entrance and rescued the imprisoned clan elders, but meanwhile his eastern kingdom fell to invaders, most of his people were slaughtered and Glarial was taken. He chased her captors into caves south of the ruined kingdom, into what was clearly a trap, and lost his remaining soldiers. Broken, he sealed himself in the home he had built for Glarial beneath the falls, and the other elders reverted Prifddinas to a crystal seed. Lletya was founded as a refuge under Arianwyn. The war ended in year 169 of the Fifth Age with Song of the Elves, where Baxtorian is freed, Prifddinas is restored, and Lord Iorwerth dies. The Glarial page calls her captors unknown enemies; the Elven Civil War page says human invaders, and Islwyn in Roving Elves blames humans for her death.\n\nRoving Elves (needs Waterfall Quest and Regicide): Islwyn, Glarial's grumpy grandson, and the kind young elf Eluned scout for the rebel elves in Isafdar. Glarial's spirit is restless because you took her urn, so you fetch a consecration seed by killing a Moss Guardian unarmed in her tomb and consecrate her new resting place in the Waterfall Dungeon. Golrie gives a new pebble if yours is lost, and after the quest starts he and the hobgoblins swap places.\n\nWaterfall Quest is required for Desert Treasure I, Legends' Quest, Roving Elves, The Path of Glouphrie and the Medium Kandarin Diary. In Biohazard, King Lathas claims his brother Tyras was corrupted when the Dark Lord forced him to drink from the Chalice; the wiki says this is a lie to turn you against Tyras and there is no evidence the Chalice has anything to do with the Dark Lord.\n\nThe barrel at the falls that drops into the dungeon is a nod to Niagara Falls daredevils. A second waterfall flows east out of the lake. Rasolo the merchant sells overpriced goods south of the falls by the Tourist Information Centre. Rumours say dwarven miners found Baxtorian's treasure years ago. Glarial's amulet looks identical to the gnome amulet, and the pebble, amulet and urn were all renamed from Glarials to Glarial's in October 2004; the empty urn got its own name in July 2019. A statue of Baxtorian stands at the falls monument.\n\nGolrie's great-uncle King Bolren rules the Tree Gnome Village and fights General Khazard's army in the Tree Gnome Village quest.\n\nThe quest has no skill requirements and can be done at combat level 3; the experience takes Attack and Strength from 1 to 30 and combat to 22. Released 24 September 2002, lead developer Mod Tom. The dungeon's fire giants are the classic Ironman source of rune scimitars, at 1 in 128. As of September 2025 no rope is needed once you have both the quest and the medium Kandarin Diary."
+        }
+      ],
+      "people": [
+        "Almera - Hudon's worried mother, the quest start",
+        "Hudon - her son, treasure hunting and never rescued",
+        "Gerald - fisherman below the falls who knows the legend",
+        "Hadley - tourist guide whose bookcase holds the book",
+        "Golrie - gnome locked in his own room, gives the pebble",
+        "Baxtorian - Lord Baxtorian Cadarn, the sealed elven king",
+        "Glarial - his queen, whose ashes you carry",
+        "Moss Guardian - guardian spirits of the tomb",
+        "Fire giant - level 86 guards of the western passage",
+        "Islwyn - Glarial's grandson, met later in Roving Elves"
+      ],
+      "places": [
+        "Almera's house - north-east of the falls, raft outside",
+        "Baxtorian Falls - rapids from the Lunar Sea to the River Dougne",
+        "Tourist Information Centre - south of the falls, book upstairs",
+        "Tree Gnome Village - hedge maze south-west of Ardougne",
+        "Tree Gnome Village Dungeon - key crate east, Golrie west",
+        "Glarial's Tomb - tombstone north-west of the Fishing Guild",
+        "Waterfall Dungeon - caverns under the falls",
+        "Chalice of Eternity - floating in the northernmost cavern"
+      ],
+      "details": [
+        "Hudon cannot be rescued and later claims you stole his treasure",
+        "The tomb only admits visitors with peaceful intent, so no weapons",
+        "Baxtorian's rune lore explains the air, water and earth runes on the pillars",
+        "Baxtorian is later found alive, turned to stone, in Song of the Elves",
+        "Taking Glarial's urn leaves her spirit restless until Roving Elves",
+        "King Lathas lies about the Chalice and the Dark Lord in Biohazard",
+        "The dungeon barrel nods to Niagara Falls daredevils",
+        "Doable at combat level 3; rewards take Attack and Strength to 30",
+        "Fire giants here are the Ironman rune scimitar source"
+      ]
+    },
+    {
+      "id": "boss-giant-mole",
+      "kind": "boss",
+      "name": "Giant Mole",
+      "unlock": {
+        "npcs": [
+          "Giant Mole"
+        ]
+      },
+      "summary": "A mole the size of a hay cart living in tunnels beneath Falador Park. Wyson the gardener grew it by accident with a bottle of growth potion. Players dig into the mole hills with a spade to reach it.",
+      "sections": [
+        {
+          "heading": "What it is",
+          "body": "The Giant Mole (Talpidae wysonian) is a fairly simple boss of combat level 230 with a 3x3 footprint. Examine: Holy Mole-y!\n\nIts main trick is to burrow away through the tunnels when hurt. Any candle, torch or oil lamp you carry is put out if it comes up within melee range."
+        },
+        {
+          "heading": "Where it is found",
+          "body": "In the Mole Hole under Falador Park. Dig with a spade on one of the mole hills in the park to drop in.\n\nThe tunnels are dark. Without a light source you take damage while moving through them."
+        },
+        {
+          "heading": "Worth knowing",
+          "body": "The wiki records its origin as a slight accident: Wyson the gardener poured a bottle of Malignius-Mortifer's-Super-Ultra-Flora-Growth-Potion on his plants.\n\nIt always drops a mole skin and a mole claw, which Wyson trades for bird nests. Killing it once is a hard Falador Diary task. Released 7 March 2006."
+        }
+      ],
+      "people": [
+        "Wyson the gardener - the Falador Park gardener whose potion accident created it; trades mole skins and claws for bird nests",
+        "Malignius Mortifer - source of the growth potion that caused the accident"
+      ],
+      "places": [
+        "Falador Park - the mole hills on the surface are the way in",
+        "Mole Hole - the tunnels beneath the park where the fight happens"
+      ],
+      "details": [
+        "Scientific name Talpidae wysonian, named after Wyson",
+        "Retreats through the tunnels when damaged; follow the falling dirt",
+        "Extinguishes candles, torches and oil lamps when it surfaces within melee range",
+        "Guaranteed mole skin and mole claw drops",
+        "One kill completes a hard Falador Diary task",
+        "Released 7 March 2006"
+      ]
+    },
+    {
+      "id": "boss-king-black-dragon",
+      "kind": "boss",
+      "name": "King Black Dragon",
+      "unlock": {
+        "npcs": [
+          "King Black Dragon"
+        ]
+      },
+      "summary": "A three-headed black dragon and one of the biggest, meanest dragons around. It was the strongest monster in the game's earliest days. Its lair sits behind a lever in the deep Wilderness.",
+      "sections": [
+        {
+          "heading": "What it is",
+          "body": "Combat level 276, three heads, 5x5 in size. Examine: One of the biggest, meanest dragons around.\n\nIt uses four breath attacks: ordinary dragonfire plus shock, ice and poison. It is aggressive, its bite poisons, and it has a weakness to water spells."
+        },
+        {
+          "heading": "Where it is found",
+          "body": "The King Black Dragon Lair, reached through the deep Wilderness near the Lava Maze. Climb down the ladder near the lesser demons, then pull a lever surrounded by poisonous spiders. The lair itself is not counted as Wilderness.\n\nCommon routes in: a burning amulet to the Lava Maze, the lever north-west of Ardougne Castle to the Deserted Keep, the Edgeville canoe, or the Wilderness obelisks. 50,000 coins buys a private instance."
+        },
+        {
+          "heading": "Worth knowing",
+          "body": "Released 24 September 2002. It was the strongest monster in RuneScape Classic and kept that title until the Kalphite Queen arrived.\n\nIt can talk. In A Tail of Two Cats it holds a conversation with Bob the cat before being interrupted. Rare drops include the KBD heads, the dragon pickaxe, the draconic visage and the prince black dragon pet."
+        }
+      ],
+      "people": [
+        "Bob the cat - talks with the dragon in A Tail of Two Cats",
+        "Krystilia - black dragon tasks from her do not count the King Black Dragon"
+      ],
+      "places": [
+        "King Black Dragon Lair - the fight itself, outside the Wilderness proper",
+        "Lava Maze - the deep Wilderness approach, with the ladder near the lesser demons",
+        "Deserted Keep - reached by the Ardougne lever, a fast way north",
+        "Edgeville - the canoe route starts here"
+      ],
+      "details": [
+        "Three heads, four breath types: dragonfire, shock, ice and poison",
+        "Strongest monster in RuneScape Classic until the Kalphite Queen",
+        "Speaks in A Tail of Two Cats",
+        "KBD heads 1/128, dragon pickaxe 1/1,000, prince black dragon pet 1/3,000, draconic visage 1/5,000",
+        "Always drops dragon bones and two black dragonhide",
+        "Instance costs 50,000 coins",
+        "Released 24 September 2002"
+      ]
+    },
+    {
+      "id": "enemy-goblin",
+      "kind": "enemy",
+      "name": "Goblin",
+      "unlock": {
+        "npcs": [
+          "Goblin"
+        ]
+      },
+      "summary": "One of the most common low-level monsters in Gielinor, and the first thing most new adventurers fight. Goblins are a race brought to the world by the war god Bandos. Their main village in Asgarnia is run by two generals who cannot agree on anything.",
+      "sections": [
+        {
+          "heading": "What it is",
+          "body": "Goblins are one of the most common, low-level monsters found around Gielinor. Examine: An ugly green creature.\n\nMost are combat level 2 with 5 hitpoints; armed versions are level 5, and the tougher sort level 13. They are popularly killed by low-level players training combat."
+        },
+        {
+          "heading": "Where it is found",
+          "body": "Everywhere near the start: Lumbridge has over a hundred spawns, and more sit between Lumbridge and Varrock, west of Varrock, at the Digsite, Port Sarim, Draynor Village and Lumbridge Swamp.\n\nMembers find them further afield too, in the Goblin Cave, near the Fishing Guild, the Tree Gnome Village maze, the Clock Tower Dungeon, Hosidius, the Kebos Lowlands, the Hollows, the Observatory Dungeon and the Underground Pass."
+        },
+        {
+          "heading": "Worth knowing",
+          "body": "Goblins follow Bandos, the Big High War God. Bandos arrived on Gielinor during the Second Age to wage war, bringing armies of goblins, ogres, orks and ourgs. Goblins are not strong, but they make up for it with numbers.\n\nGoblin Village in Asgarnia is ruled by General Bentnoze of the Thorobshuun tribe and General Wartface of the Garagorshuun tribe, who butt heads over trivial things such as armour colours. Settling one such argument is the quest Goblin Diplomacy. The Dorgeshuun cave goblins rejected Bandos' doctrines and returned to the cooperative ways of their Yu'biusk past."
+        }
+      ],
+      "people": [
+        "General Bentnoze - Thorobshuun general of Goblin Village",
+        "General Wartface - Garagorshuun general of Goblin Village",
+        "Bandos - the war god the goblins follow"
+      ],
+      "places": [
+        "Lumbridge - the biggest concentration of goblins, over a hundred spawns",
+        "Goblin Village - the main goblin settlement in Asgarnia",
+        "Dorgesh-Kaan - home of the Dorgeshuun cave goblins who turned away from Bandos"
+      ],
+      "details": [
+        "Released 4 January 2001, launch content",
+        "Combat levels 2, 5 and 13 depending on gear",
+        "Bandos brought goblins to Gielinor in the Second Age",
+        "Weak individually, dangerous in numbers",
+        "Goblin Diplomacy is about the generals' armour colour argument",
+        "The Dorgeshuun reject Bandos' teachings"
+      ]
+    },
+    {
+      "id": "enemy-hill-giant",
+      "kind": "enemy",
+      "name": "Hill Giant",
+      "unlock": {
+        "npcs": [
+          "Hill Giant"
+        ]
+      },
+      "summary": "A very large foe found in dungeons and hills across Gielinor. Hill giants are the weakest of the three giant kinds available to free players. Their giant keys open the door to Obor, the Hill Titan.",
+      "sections": [
+        {
+          "heading": "What it is",
+          "body": "A Hill Giant is a type of giant, combat level 28. Examine: A very large foe. The Kourend version examines as a very large foe that has been corrupted by the Dark Altar.\n\nThey always drop big bones, and sometimes a giant key, which opens the fight with Obor, or a giant champion scroll for the Champions' Challenge."
+        },
+        {
+          "heading": "Where it is found",
+          "body": "For free players the Edgeville Dungeon has the most spawns. For members the Shayzien Giant Pit has many more.\n\nAlso in the Giants' Den, the Catacombs of Kourend, the Giants' Plateau, Taverley Dungeon, the Deep Wilderness Dungeon, the Lava Maze, the Gnome Maze, north of the Observatory, south-west of the Tree Gnome Stronghold, the Bone Yard, and the Avium Savannah."
+        },
+        {
+          "heading": "Worth knowing",
+          "body": "They were once just called Giants, renamed by Jagex to avoid confusion with the other giant kinds. The name was explained in a Postbag from the Hedge: their arm muscles resemble hills.\n\nDespite the name, most of them live in dungeons. Some carry cleavers, weapons from Recipe for Disaster. They are one of three giant kinds on free worlds, alongside moss giants and ice giants."
+        }
+      ],
+      "people": [
+        "Obor - the Hill Titan, reached with a giant key dropped by hill giants"
+      ],
+      "places": [
+        "Edgeville Dungeon - the biggest free-to-play spawn, 12 giants",
+        "Giant Pit - the members' spawn in Shayzien, 13 giants",
+        "Catacombs of Kourend - home of the Dark Altar corrupted version",
+        "Giants' Plateau - a members' spawn with its own variant"
+      ],
+      "details": [
+        "Combat level 28",
+        "Originally named just Giants",
+        "Named for arm muscles that look like hills, per Postbag from the Hedge",
+        "Always drop big bones",
+        "Drop giant keys for Obor and giant champion scrolls",
+        "Some wield cleavers from Recipe for Disaster",
+        "One of three free-to-play giant kinds with moss and ice giants"
+      ]
+    },
+    {
+      "id": "enemy-fire-giant",
+      "kind": "enemy",
+      "name": "Fire giant",
+      "unlock": {
+        "npcs": [
+          "Fire giant"
+        ]
+      },
+      "summary": "The strongest of the ordinary giants, a huge elemental brute found in the Waterfall Dungeon and a dozen other caves. A favourite Slayer and Ranged target, and the classic Ironman source of a rune scimitar.",
+      "sections": [
+        {
+          "heading": "What it is",
+          "body": "Examine \"A very large elemental adversary.\" Three variants: level 86 (111 hitpoints, max hit 11), level 104 and level 109. Aggressive, 5-tick attacks, immune to burn effects, weak to water magic. No Slayer level is needed but Slayer masters assign them. Notable drops include the rune scimitar (1 in 128), fire battlestaff, steel axe, mithril square shield, fire and chaos runes and the gem table.\n\nFound in the Waterfall Dungeon (11 spawns, guarding Baxtorian's western passage and chalice room), Brimhaven Dungeon, Catacombs of Kourend, Charred Dungeon, Deep Wilderness Dungeon, Giants' Den, Isle of Souls Dungeon, Karuulm Slayer Dungeon, Smoke Dungeon and Stronghold Slayer Dungeon. Most spots have safespots; Charred Dungeon is the only multicombat one."
+        }
+      ],
+      "people": [],
+      "places": [
+        "Waterfall Dungeon - 11 spawns",
+        "Brimhaven Dungeon",
+        "Catacombs of Kourend",
+        "Stronghold Slayer Dungeon",
+        "Karuulm Slayer Dungeon"
+      ],
+      "details": [
+        "Strongest standard giant",
+        "Rune scimitar at 1 in 128",
+        "Immune to burns, weak to water spells"
+      ]
+    },
+    {
+      "id": "enemy-monk-of-zamorak",
+      "kind": "enemy",
+      "name": "Monk of Zamorak",
+      "unlock": {
+        "npcs": [
+          "Monk of Zamorak"
+        ]
+      },
+      "summary": "Evil human clerics of Zamorak, god of chaos. Weak on paper but they switch between melee and magic and hit harder than their level suggests. A band of them seized Paterdomus in Priest in Peril and poisoned the River Salve.",
+      "sections": [
+        {
+          "heading": "What it is",
+          "body": "Examine \"An evil human cleric.\" Found at levels 17, 22, 23, 30 and 45. Their bones are the guaranteed drop; Zamorak monk robe tops and bottoms are 1 in 20. Free players often train magic on the caged one in Varrock Palace with the Curse spell.\n\nAt Paterdomus they occupied the ground floor and everything above during Priest in Peril, aiming to destroy the Salve's barrier. The hooded level 30 monk impersonated Drezel at the door, had you kill the Temple Guardian, and dropped the golden key. The temple monks regenerate quickly and give only 25 percent of normal combat experience. They were cleared out of the temple for good in The Blood Moon Rises."
+        }
+      ],
+      "people": [
+        "Drezel - the priest they imprisoned",
+        "Zamorak - the god they serve"
+      ],
+      "places": [
+        "Paterdomus - occupied during Priest in Peril",
+        "Chaos Temple in Asgarnia",
+        "Varrock Palace - one in a cage under the stairs",
+        "Taverley Dungeon",
+        "Deep Wilderness Dungeon"
+      ],
+      "details": [
+        "Temple monks give only 25 percent experience",
+        "Zamorak monk robes at 1 in 20",
+        "Removed from Paterdomus after The Blood Moon Rises"
+      ]
+    },
+    {
+      "id": "enemy-temple-guardian",
+      "kind": "enemy",
+      "name": "Temple Guardian",
+      "unlock": {
+        "npcs": [
+          "Temple Guardian"
+        ],
+        "questBegun": "PRIEST_IN_PERIL"
+      },
+      "summary": "A big dog that lived in the mausoleum under Paterdomus and guarded the source of the River Salve. The monks of Zamorak tricked you into killing it during Priest in Peril, and it never comes back.",
+      "sections": [
+        {
+          "heading": "What it is",
+          "body": "Examine \"Looks like a big ugly dog.\" Combat level 30, 45 hitpoints, max hit 3, stab attacks every 4 ticks. Immune to magic and dwarf cannons, immune to poison and venom, Slayer category dogs. It can be killed with rings of recoil as long as you land at least one hit yourself. It does not respawn.\n\nKing Roald says it guarded the mausoleum entrance and the source of the Salve, and that with it dead anyone could sabotage the river's blessing. He called it Spots and, per the wiki trivia, a pedigree light beast, or was it dark beast. Before 2007 Dark beasts looked like a brown version of it."
+        }
+      ],
+      "people": [
+        "King Roald - its owner, who called it Spots",
+        "Monk of Zamorak - the impostor who had you kill it"
+      ],
+      "places": [
+        "Mausoleum under Paterdomus - its only home"
+      ],
+      "details": [
+        "Never respawns",
+        "Immune to magic",
+        "Roald's nickname for it was Spots",
+        "Old Dark beast model was a brown recolour of it"
+      ]
+    },
+    {
+      "id": "enemy-moss-guardian",
+      "kind": "enemy",
+      "name": "Moss Guardian",
+      "unlock": {
+        "npcs": [
+          "Moss Guardian"
+        ],
+        "questBegun": "WATERFALL_QUEST"
+      },
+      "summary": "The guardian spirits of Glarial's Tomb, far bigger and stronger than ordinary moss giants. You slipped past them unarmed for Glarial's amulet and urn, and in Roving Elves you must kill one bare-handed for a consecration seed.",
+      "sections": [
+        {
+          "heading": "What it is",
+          "body": "Examine \"Bigger than your average moss giant.\" Combat level 84, 120 hitpoints, max hit 14, attacks every 6 ticks. Each attack rolls normal melee first and, if that misses, rolls again against your magic defence, so Protect from Melee stops only the first part. Attack, Strength and Defence 60 each. Three spawn in Glarial's Tomb and nowhere else. Always aggressive.\n\nThe tomb admits no weapons, armour, runes or ammunition, so they are fought with fists, food and potions. Drops are big bones and, during Roving Elves, the consecration seed."
+        }
+      ],
+      "people": [
+        "Glarial - the queen whose tomb they guard",
+        "Islwyn and Eluned - send you back to kill one in Roving Elves"
+      ],
+      "places": [
+        "Glarial's Tomb - their only location"
+      ],
+      "details": [
+        "Fought unarmed by tomb rule",
+        "Two-roll attack: melee then magic",
+        "Drops the consecration seed in Roving Elves"
+      ]
+    },
+    {
+      "id": "location-lumbridge",
+      "kind": "location",
+      "name": "Lumbridge",
+      "unlock": {
+        "regions": [
+          12850
+        ]
+      },
+      "summary": "A large town in Misthalin where every adventurer begins, and where the dead return. It is named for the bridge over the River Lum. Duke Horacio rules from the castle.",
+      "sections": [
+        {
+          "heading": "What it is",
+          "body": "Lumbridge is a large town in the kingdom of Misthalin where players begin their journey. New players arrive here from Tutorial Island, and it is the default respawn point for the dead.\n\nDuke Horacio rules from Lumbridge Castle. He is a direct descendant of Polonius, the first Duke."
+        },
+        {
+          "heading": "Where it is found",
+          "body": "South of Varrock, east of Draynor Village, west of Al Kharid, with Lumbridge Swamp to the south. Free to play, present since launch on 4 January 2001.\n\nLandmarks: the castle, the church of Saradomin, the cow field, the general store and the swamp with its caves."
+        },
+        {
+          "heading": "Worth knowing",
+          "body": "In the year 1937 of the Fourth Age, long after the God Wars, migrating human nomads settled on the River Lum. They built a bridge across it, which is why the town is called Lumbridge.\n\nFather Aereck keeps the 230-year-old church of Saradomin. An unassuming shed in the swamp leads to the fairy city of Zanaris after Lost City. Quests that start here include Cook's Assistant, The Restless Ghost, Sheep Shearer and Rune Mysteries. Out of game, the name nods to Cambridge, where Jagex is based."
+        }
+      ],
+      "people": [
+        "Duke Horacio - ruler of Lumbridge, descendant of Polonius",
+        "Polonius - the first Duke of Lumbridge",
+        "Father Aereck - priest of the Saradomin church",
+        "The Lumbridge Guide - helps new players and appears in several quests"
+      ],
+      "places": [
+        "Lumbridge Castle - the Duke's seat and the town's landmark",
+        "Church of Lumbridge - a Saradomin church over 230 years old",
+        "River Lum - the river the bridge crosses",
+        "Lumbridge Swamp - south of town, with the shed to Zanaris",
+        "Zanaris - the fairy city reached from the swamp shed after Lost City"
+      ],
+      "details": [
+        "Founded in year 1937 of the Fourth Age by human nomads",
+        "Named for the bridge over the River Lum",
+        "Default respawn point for players",
+        "Where Tutorial Island sends new players",
+        "Starting point of Cook's Assistant, The Restless Ghost, Sheep Shearer and Rune Mysteries",
+        "Name is a nod to Cambridge, home of Jagex",
+        "Released 4 January 2001, free to play"
+      ]
+    },
+    {
+      "id": "location-varrock",
+      "kind": "location",
+      "name": "Varrock",
+      "unlock": {
+        "regions": [
+          12597,
+          12853,
+          12854
+        ]
+      },
+      "summary": "The capital of Misthalin and the largest city open to free players. It began as Avarrocka, a tribal settlement named for a boy who drove off goblins. King Roald rules from the palace at its heart.",
+      "sections": [
+        {
+          "heading": "What it is",
+          "body": "Varrock (vah-ROCK) is the capital of the kingdom of Misthalin and one of the largest cities in the game, the largest available to free players. King Roald resides in Varrock Palace, the city's focal point.\n\nIt holds the Grand Exchange, the Varrock Museum, the Champions' Guild, the Blue Moon Inn, a Saradomin church, a Zamorakian chapel, and the sewers beneath, where Scurrius and Bryophyta lurk."
+        },
+        {
+          "heading": "Where it is found",
+          "body": "Central Misthalin. The Wilderness lies to the north, Barbarian Village to the north-west, the Digsite to the east and Lumbridge to the south. Free to play, present since launch on 4 January 2001."
+        },
+        {
+          "heading": "Worth knowing",
+          "body": "The city was founded as Avarrocka in year 700 of the Fourth Age. A nomadic tribe found a boy of exceptional strength and settled in the forest there. Ten years later goblins attacked; the boy defeated them and became known as Arrav, and as Arrav grew, so did Avarrocka.\n\nZemouregal, a Zamorakian Mahjarrat necromancer, later invaded with an army of zombies. His forces were beaten but Arrav fell and was taken as an undead servant. The city rebuilt, grew into the kingdom of Misthalin, and became a monarchy. The Shield of Arrav still figures in city lore. Quests starting here include Demon Slayer, Dragon Slayer I, Romeo & Juliet, Shield of Arrav, Defender of Varrock, Family Crest and Priest in Peril."
+        }
+      ],
+      "people": [
+        "King Roald - ruler of Misthalin, resides in Varrock Palace",
+        "Arrav - the boy hero the city is named after, later raised as Zemouregal's undead servant",
+        "Zemouregal - Zamorakian Mahjarrat necromancer who invaded Avarrocka"
+      ],
+      "places": [
+        "Varrock Palace - King Roald's seat and the city's focal point",
+        "Grand Exchange - the great trading floor",
+        "Varrock Museum - natural history displays and quiz",
+        "Champions' Guild - sells rune weapons and green dragonhide",
+        "Blue Moon Inn - the most popular pub in Varrock",
+        "Varrock Sewers - home of Scurrius and Bryophyta"
+      ],
+      "details": [
+        "Originally called Avarrocka, founded in year 700 of the Fourth Age",
+        "Named for Arrav, who as a boy defeated attacking goblins",
+        "Zemouregal's zombie invasion killed Arrav and raised him undead",
+        "Grew into the kingdom of Misthalin and became a monarchy",
+        "The Shield of Arrav is central to the city's lore",
+        "Both a Saradomin church and a Zamorakian chapel inside the walls",
+        "Released 4 January 2001, free to play"
+      ]
+    },
+    {
+      "id": "location-paterdomus",
+      "kind": "location",
+      "name": "Paterdomus",
+      "unlock": {
+        "questBegun": "PRIEST_IN_PERIL"
+      },
+      "summary": "The temple of Saradomin on the River Salve at the eastern edge of Misthalin, the only gate into Morytania. It was built over the graves of the Seven Priestly Warriors on the spot where they blessed the river.",
+      "sections": [
+        {
+          "heading": "What it is",
+          "body": "The name is Latin pater plus domus, House of the Father, for Saradomin. It stands in eastern Silvarea with four floors: an altar on the ground floor, monks of Zamorak above, Drezel's old cell and a vampyre coffin at the top, and a basement mausoleum reached by a trapdoor to the north that holds the guardian's chamber, a well ringed by seven monuments, a hidden library and the passage where Drezel now lives. Outside are more coffins of vampyres stranded west of the river, a statue of Saradomin by the water, and a railing shortcut at 65 Agility. Its bridge is the only crossing of the Salve; Drezel's blessing is needed to use it.\n\nDuring the Misthalin-Morytania War the Seven Priestly Warriors held Drakan's horde here and performed the blood ritual that blessed the Salve. Six died; Ivandis Seergaze buried them around the well and the temple rose over the site. It features in Priest in Peril, Nature Spirit, In Aid of the Myreque, Darkness of Hallowvale, Sins of the Father, Devious Minds and The Blood Moon Rises, and is the finish line of Temple Trekking."
+        }
+      ],
+      "people": [
+        "Drezel - the temple's only monk",
+        "Seven Priestly Warriors - buried beneath it",
+        "Monks of Zamorak - occupied it until The Blood Moon Rises"
+      ],
+      "places": [
+        "Silvarea - the pass leading to it",
+        "River Salve - flows beneath the bridge",
+        "Mausoleum - the basement",
+        "Canifis - just across the river"
+      ],
+      "details": [
+        "Latin for House of the Father",
+        "Built over the warriors' graves at the ritual well",
+        "Coffins outside hold vampyres too weak to move but impossible to kill"
+      ]
+    },
+    {
+      "id": "location-baxtorian-falls",
+      "kind": "location",
+      "name": "Baxtorian Falls",
+      "unlock": {
+        "questBegun": "WATERFALL_QUEST"
+      },
+      "summary": "Rapids in Kandarin running south from the Lunar Sea to the River Dougne, north-west of Ardougne, named for the elven king who sealed himself beneath them. Almera's raft, Glarial's tomb and the Waterfall Dungeon are all here.",
+      "sections": [
+        {
+          "heading": "What it is",
+          "body": "The falls sit east of the Tree Gnome Stronghold and south of the Barbarian Outpost, reachable by games necklace or on foot from Seers' Village. Almera and Hudon live at the top; Hadley's Tourist Information Centre and Gerald the fisherman are just south; Rasolo the overpriced merchant is nearby. A raft by Almera's house drops you on the island in the river, and a rope on the rock and dead tree leads to the Waterfall Dungeon, Baxtorian's sealed home with its fire giants and the Chalice of Eternity. Glarial's Tomb is a short way south-east under a tombstone. A monument here has a statue of Baxtorian. A second waterfall flows east from the lake.\n\nThe area is also home to leaping-fish Barbarian fishing on the west bank, and the whirlpool into the Ancient Cavern after Barbarian Training. The barrel that leads down into the dungeon is a nod to Niagara Falls daredevils. Released 24 September 2002."
+        }
+      ],
+      "people": [
+        "Almera - lives at the top of the falls",
+        "Hudon - stuck on the island",
+        "Hadley - Tourist Information Centre",
+        "Gerald - fisherman on the bank",
+        "Rasolo - overpriced merchant",
+        "Baxtorian - the king it is named after"
+      ],
+      "places": [
+        "Waterfall Dungeon - beneath the falls",
+        "Glarial's Tomb - south-east",
+        "Barbarian Outpost - north",
+        "Tree Gnome Stronghold - west",
+        "Ancient Cavern - via the whirlpool"
+      ],
+      "details": [
+        "Named for Lord Baxtorian Cadarn",
+        "The barrel references Niagara daredevils",
+        "Fast Fishing training with a Barbarian rod"
+      ]
+    },
+    {
+      "id": "faction-seven-priestly-warriors",
+      "kind": "faction",
+      "name": "Seven Priestly Warriors",
+      "unlock": {
+        "quest": "PRIEST_IN_PERIL"
+      },
+      "summary": "Seven Temple Knights of the Fourth Age who stopped Lord Drakan's vampyres at the River Salve and blessed the river so no vampyre could cross. Six died doing it; the last, Ivandis Seergaze, buried them where Paterdomus now stands.",
+      "sections": [
+        {
+          "heading": "Who they were",
+          "body": "Ivandis Seergaze, Iriandul Caistlyn, Sarl Dunegun, Derygull Templeton, Erysail the Pious, Friar Twiblick and Essiandar Gar, active around 1200 of the Fourth Age during the Misthalin-Morytania War. The Temple Knights sent them to secure the Salve and, secretly, to research haemalchemy, which their leaders believed held the key to beating vampyres. Their savants designed a blood ritual to bar vampyres from the river, and the warriors hid its profane nature from the soldiers, calling it a holy consecration by Saradomin.\n\nAt the river's source the vampyres attacked mid-ritual. Derygull fell first and the others one by one; only Ivandis survived. He laid them to rest around the ritual well and the temple was built around it. Showing signs of vampyrification, he refused to become what they had sworn to destroy and charged into Morytania to kill Drakan, dying in the attempt; his coffin lies in caves beneath the Hollows. Later histories say the blessing sealed the vengeful power of Saradomin in the river. Drezel of Paterdomus is descended from one of the seven, and Ivan Strom is Ivandis's last living descendant."
+        }
+      ],
+      "people": [
+        "Ivandis Seergaze - the only survivor, from what is now Lumbridge",
+        "Derygull Templeton - the first to fall",
+        "Drezel - descendant of one of the seven",
+        "Ivan Strom - Ivandis's last descendant",
+        "Lord Drakan - the enemy they held back"
+      ],
+      "places": [
+        "River Salve - blessed at its source",
+        "Paterdomus - built over their graves",
+        "Silvarea - site of the last battle"
+      ],
+      "details": [
+        "The blessing was a blood ritual dressed up as a holy rite",
+        "Six of seven died in one battle",
+        "Ivandis died in a suicide run at Drakan"
+      ]
+    },
+    {
+      "id": "world-morytania",
+      "kind": "world",
+      "name": "Morytania",
+      "unlock": {
+        "quest": "PRIEST_IN_PERIL",
+        "regions": [
+          13878,
+          14131,
+          14646
+        ]
+      },
+      "summary": "A land of evil in the far east of Gielinor, ruled by vampyres under Lord Drakan. It was once the Saradominist kingdom of Hallowvale, drained into swamp and used as a blood farm. Only the blessed River Salve keeps the vampyres out of Misthalin.",
+      "sections": [
+        {
+          "heading": "What it is",
+          "body": "Morytania (mor-ee-TAY-nee-ah) is a members-only region in the easternmost part of Gielinor, full of aggressive creatures and ruled over by the vampyres. Lord Lowerniel Vergidiyad Drakan leads them; his siblings Vanescula and Ranis handle the running of things. Darkmeyer is the capital.\n\nIts towns: Canifis, home to werewolves; Port Phasmatys, a cursed port of ghosts; Mort'ton, plague-stricken; Burgh de Rott, the last free human settlement; Slepe, a Zamorakian town; and Meiyerditch, a blood farm for the vampyres. Mort Myre Swamp, the Haunted Woods and the Barrows lie between them."
+        },
+        {
+          "heading": "Where it is found",
+          "body": "East of Misthalin, across the River Salve. The way in is the temple Paterdomus on the river, and players must complete Priest in Peril to pass. Canifis is the first town east of the temple. Released 29 June 2004, members only."
+        },
+        {
+          "heading": "Worth knowing",
+          "body": "Before the God Wars this was Hallowvale, a Saradominist kingdom ruled by the Icyene Queen Efaritay. In the Third Age the vampyre Lord Drakan conquered it and turned the fertile land into swamp, keeping its people as a blood farm.\n\nAround year 1100 of the Fourth Age the Seven Priestly Warriors, led by Ivandis Seergaze, held Misthalin against Drakan's invasion and blessed the River Salve, raising a barrier vampyres cannot cross to this day. The Barrows brothers, empowered by the Mahjarrat Sliske, tried to liberate the land but were betrayed, their powers stripped at the gates of Darkmeyer, and slaughtered. The Myreque now fight to throw off vampyre rule."
+        }
+      ],
+      "people": [
+        "Lord Lowerniel Vergidiyad Drakan - vampyre lord who conquered Hallowvale and rules Morytania",
+        "Vanescula Drakan - his sister, handles administration",
+        "Ranis Drakan - his brother, likewise",
+        "Queen Efaritay - Icyene queen of Hallowvale before the vampyres",
+        "Ivandis Seergaze - leader of the Seven Priestly Warriors, blessed the Salve",
+        "The Barrows brothers - six heroes betrayed by Sliske at Darkmeyer",
+        "Sliske - the Mahjarrat who empowered and then betrayed the brothers",
+        "The Myreque - the resistance against Drakan"
+      ],
+      "places": [
+        "Paterdomus - the temple on the River Salve, the gateway from Misthalin",
+        "River Salve - the blessed river vampyres cannot cross",
+        "Canifis - werewolf town just east of the temple",
+        "Darkmeyer - the vampyre capital",
+        "Meiyerditch - the blood farm city",
+        "Port Phasmatys - the cursed port of ghosts",
+        "Mort Myre Swamp - the drained heart of the old kingdom",
+        "Barrows - the mounds of the six brothers",
+        "Burgh de Rott - the last free human settlement",
+        "Mort'ton - plague-stricken village",
+        "Slepe - Zamorakian town",
+        "Haunted Woods - forest between the towns"
+      ],
+      "details": [
+        "Once the Saradominist kingdom of Hallowvale under Queen Efaritay",
+        "Drakan conquered it in the Third Age and made it a swamp and blood farm",
+        "The Seven Priestly Warriors blessed the River Salve around year 1100 of the Fourth Age",
+        "The barrier on the Salve still holds",
+        "The Barrows brothers were Sliske's champions, betrayed at Darkmeyer's gates",
+        "Entry requires Priest in Peril",
+        "Released 29 June 2004, members only"
+      ]
+    }
+  ]
+}
