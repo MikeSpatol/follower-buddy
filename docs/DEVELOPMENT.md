@@ -1339,12 +1339,19 @@ from a render. The title's count is pages readable over pages there are.
 widgets at high priority, 500 by 314 like the Collection Log, centred over the
 3D view. It is built from the client's own sprites: the steel rim (`Steelborder`
 corners, `Steelborder2` edges, the bottom and left being the top and right
-flipped, since the game ships no others), the stone backing (`TRADEBACKING`,
-tiled), the steel close button and the V2 scrollbars. Colours were sampled off
-the real window: the orange title, green for a page that can be read, grey for
-one that cannot, the selected row's highlight. Text is Bold 12 for the title
-and headings and Plain 12 for everything else, which is why `p12_full` joined
-the bundled fonts. `ChronicleLayout` holds every rectangle and the page maths
+the left and bottom being the `Miscgraphics` rivet strips, since a flipped
+edge is not what the game draws), the stone backing (`TRADEBACKING`, tiled
+from the corner under everything), the `SteelborderDivider` under the title,
+the `CloseButtons` pair the Collection Log uses and the V2 scrollbars. The
+thin lines that box the panes and the two pixel bar between them are drawn.
+Every position and colour was measured off the real window and confirmed
+against the cache sprites: the orange title, green for a page that can be read
+and the Collection Log's red for one that cannot, striped rows, the selected
+row's band, the tabs' outline with its stepped corners. Text is Bold 12 for the
+title and headings, Plain 12 for tabs, rows and the page, and Plain 11 for the
+small header lines, which is why `p12_full` and `p11_full` joined the bundled
+fonts. `gradlew runSpriteProbe --args="--out <dir> 310 311"` in the cache
+dumper prints any sprite's size and writes it out, for the next window. `ChronicleLayout` holds every rectangle and the page maths
 (wrapping, scroll clamping, the thumb, the flattening of a page into styled
 lines) so it can be tested without a canvas; the window's render is drawing and
 hit-testing only. Input follows the dialog: a mouse listener consumes every

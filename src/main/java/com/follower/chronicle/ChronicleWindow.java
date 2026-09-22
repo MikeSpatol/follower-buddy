@@ -36,9 +36,10 @@ import net.runelite.client.ui.overlay.OverlayPosition;
  * Collection Log.
  *
  * <p>Drawn as an overlay above the widgets, from the client's own sprites
- * (the steel rim, the stone backing, the close button and the scrollbars)
- * and its own bitmap fonts, because a plugin cannot open a real interface
- * and anything less than the real pieces reads as a mod. Sprites arrive a
+ * (the steel rim, the stone backing, the divider, the close button and the
+ * scrollbars) and its own bitmap fonts, because a plugin cannot open a real
+ * interface and anything less than the real pieces reads as a mod. Every
+ * position and colour was measured off the real window. Sprites arrive a
  * frame or two after they are asked for, so every piece has a flat stand-in
  * for the first frames, as the dialog does with the chatbox.
  *
@@ -208,7 +209,7 @@ public class ChronicleWindow extends Overlay
 			}
 			if (ChronicleLayout.LIST.contains(x, y))
 			{
-				int row = (y - ChronicleLayout.LIST.y) / ChronicleLayout.ROW_HEIGHT + listScroll;
+				int row = (y - ChronicleLayout.ROW_BAND_TOP) / ChronicleLayout.ROW_HEIGHT + listScroll;
 				if (row >= 0 && row < listed.size())
 				{
 					String id = listed.get(row).id;
@@ -222,18 +223,26 @@ public class ChronicleWindow extends Overlay
 			}
 			if (ChronicleLayout.LIST_SCROLL.contains(x, y))
 			{
-				scrollList(y < ChronicleLayout.LIST_SCROLL.y + 16 ? -1
-					: y >= ChronicleLayout.LIST_SCROLL.y + ChronicleLayout.LIST_SCROLL.height - 16 ? 1 : 0);
+				scrollList(arrowStep(ChronicleLayout.LIST_SCROLL, y));
 				return event;
 			}
 			if (ChronicleLayout.PAGE_SCROLL.contains(x, y))
 			{
-				scrollPage(y < ChronicleLayout.PAGE_SCROLL.y + 16 ? -1
-					: y >= ChronicleLayout.PAGE_SCROLL.y + ChronicleLayout.PAGE_SCROLL.height - 16 ? 1 : 0);
+				scrollPage(arrowStep(ChronicleLayout.PAGE_SCROLL, y));
 			}
 			return event;
 		}
 	};
+
+	/** Up one on the top arrow, down one on the bottom, nothing on the track. */
+	private static int arrowStep(Rectangle bar, int y)
+	{
+		if (y < bar.y + 16)
+		{
+			return -1;
+		}
+		return y >= bar.y + bar.height - 16 ? 1 : 0;
+	}
 
 	private final MouseWheelListener wheelAdapter = new MouseWheelListener()
 	{
@@ -247,7 +256,7 @@ public class ChronicleWindow extends Overlay
 			event.consume();
 			int x = event.getX() - bounds.x;
 			int step = event.getWheelRotation() > 0 ? 1 : -1;
-			if (x < ChronicleLayout.PAGE.x)
+			if (x < ChronicleLayout.SPLIT_X)
 			{
 				scrollList(step);
 			}
@@ -320,16 +329,22 @@ public class ChronicleWindow extends Overlay
 		{
 			GameFont body = gameFonts.getByName("p12_full");
 			GameFont bold = gameFonts.getByName("b12_full");
+			GameFont small = gameFonts.getByName("p11_full");
+			if (small == null)
+			{
+				small = body;
+			}
 			listed = currentList();
 			ChronicleEntry selected = currentPage();
 
 			drawBacking(graphics);
 			drawRim(graphics);
+			drawLines(graphics);
 			drawTitle(graphics, bold);
 			drawCloseButton(graphics);
 			drawTabs(graphics, body);
 			drawList(graphics, body);
-			drawPage(graphics, selected, body, bold);
+			drawPage(graphics, selected, body, bold, small);
 		}
 		finally
 		{
@@ -382,63 +397,70 @@ public class ChronicleWindow extends Overlay
 		}
 	}
 
+	/** The stone backing, tiled from the window's corner under everything. */
 	private void drawBacking(Graphics2D g)
 	{
 		BufferedImage tile = sprite(SpriteID.TRADEBACKING);
-		int inner = ChronicleLayout.EDGE;
-		Shape clip = g.getClip();
-		g.clipRect(inner, inner, ChronicleLayout.WIDTH - inner * 2, ChronicleLayout.HEIGHT - inner * 2);
 		if (tile == null)
 		{
 			g.setColor(new Color(ChronicleLayout.BACKING));
 			g.fillRect(0, 0, ChronicleLayout.WIDTH, ChronicleLayout.HEIGHT);
+			return;
 		}
-		else
+		Shape clip = g.getClip();
+		g.clipRect(0, 0, ChronicleLayout.WIDTH, ChronicleLayout.HEIGHT);
+		for (int ty = 0; ty < ChronicleLayout.HEIGHT; ty += tile.getHeight())
 		{
-			for (int ty = 0; ty < ChronicleLayout.HEIGHT; ty += tile.getHeight())
+			for (int tx = 0; tx < ChronicleLayout.WIDTH; tx += tile.getWidth())
 			{
-				for (int tx = 0; tx < ChronicleLayout.WIDTH; tx += tile.getWidth())
-				{
-					g.drawImage(tile, tx, ty, null);
-				}
+				g.drawImage(tile, tx, ty, null);
 			}
 		}
 		g.setClip(clip);
 	}
 
+	/**
+	 * The steel rim and the divider under the title. The edges go down
+	 * first and the corners over them, so the tile phase can only ever be
+	 * wrong under a corner. The left and bottom strips are their own rivet
+	 * sprites: the right and top ones flipped are not what the game draws.
+	 */
 	private void drawRim(Graphics2D g)
 	{
 		int w = ChronicleLayout.WIDTH;
 		int h = ChronicleLayout.HEIGHT;
 		int cw = ChronicleLayout.CORNER_W;
 		int ch = ChronicleLayout.CORNER_H;
+		int edge = ChronicleLayout.EDGE;
 		BufferedImage top = sprite(SpriteID.Steelborder2.EDGE_TOP);
 		BufferedImage right = sprite(SpriteID.Steelborder2.EDGE_RIGHT);
-		if (top == null || right == null)
+		BufferedImage left = sprite(SpriteID.Miscgraphics.IRON_RIVETS_VERTICAL);
+		BufferedImage bottom = sprite(SpriteID.Miscgraphics.IRON_RIVETS_HORIZONTAL);
+		BufferedImage divider = sprite(SpriteID.SteelborderDivider._0);
+
+		Shape clip = g.getClip();
+		if (top == null || right == null || left == null || bottom == null)
 		{
-			g.setColor(new Color(0x2d2b24));
-			g.fillRect(0, 0, w, ChronicleLayout.EDGE);
-			g.fillRect(0, h - ChronicleLayout.EDGE, w, ChronicleLayout.EDGE);
-			g.fillRect(0, 0, ChronicleLayout.EDGE, h);
-			g.fillRect(w - ChronicleLayout.EDGE, 0, ChronicleLayout.EDGE, h);
+			g.setColor(new Color(ChronicleLayout.STEEL));
+			g.fillRect(0, 0, w, edge);
+			g.fillRect(0, h - edge, w, edge);
+			g.fillRect(0, 0, edge, h);
+			g.fillRect(w - edge, 0, edge, h);
 		}
 		else
 		{
-			Shape clip = g.getClip();
-			// Top and bottom strips between the corners; the bottom is the
-			// top flipped, there being no bottom sprite in the game.
 			g.clipRect(cw, 0, w - cw * 2, h);
 			for (int tx = cw; tx < w - cw; tx += top.getWidth())
 			{
 				g.drawImage(top, tx, 0, null);
-				g.drawImage(top, tx, h, top.getWidth(), -top.getHeight(), null);
+				g.drawImage(bottom, tx, h - edge, null);
 			}
 			g.setClip(clip);
 			g.clipRect(0, ch, w, h - ch * 2);
-			for (int ty = ch; ty < h - ch; ty += right.getHeight())
+			for (int ty = ChronicleLayout.RIM_PHASE_Y - right.getHeight(); ty < h; ty += right.getHeight())
 			{
-				g.drawImage(right, w - right.getWidth(), ty, null);
-				g.drawImage(right, right.getWidth(), ty, -right.getWidth(), right.getHeight(), null);
+				g.drawImage(right, w - edge, ty, null);
+				g.drawImage(left, 0, ty, null);
 			}
 			g.setClip(clip);
 		}
@@ -446,6 +468,40 @@ public class ChronicleWindow extends Overlay
 		drawAt(g, SpriteID.Steelborder.TOP_RIGHT, w - cw, 0);
 		drawAt(g, SpriteID.Steelborder.BOTTOM_LEFT, 0, h - ch);
 		drawAt(g, SpriteID.Steelborder.BOTTOM_RIGHT, w - cw, h - ch);
+
+		// The divider between the title band and the tabs, rim to rim.
+		int dy = ChronicleLayout.DIVIDER_TOP;
+		if (divider == null)
+		{
+			g.setColor(new Color(ChronicleLayout.STEEL));
+			g.fillRect(ChronicleLayout.CONTENT_LEFT, dy, ChronicleLayout.CONTENT_RIGHT + 1 - ChronicleLayout.CONTENT_LEFT, edge);
+		}
+		else
+		{
+			g.clipRect(ChronicleLayout.CONTENT_LEFT, dy, ChronicleLayout.CONTENT_RIGHT + 1 - ChronicleLayout.CONTENT_LEFT, edge);
+			for (int tx = ChronicleLayout.DIVIDER_PHASE_X - divider.getWidth(); tx < w; tx += divider.getWidth())
+			{
+				g.drawImage(divider, tx, dy, null);
+			}
+			g.setClip(clip);
+		}
+	}
+
+	/** The thin lines that box the list and the page, and the bar between them. */
+	private void drawLines(Graphics2D g)
+	{
+		int l = ChronicleLayout.CONTENT_LEFT;
+		int r = ChronicleLayout.CONTENT_RIGHT;
+		int t = ChronicleLayout.CONTENT_TOP;
+		int b = ChronicleLayout.CONTENT_BOTTOM;
+		g.setColor(new Color(ChronicleLayout.LINE));
+		g.fillRect(l, t, r - l + 1, 1);
+		g.fillRect(l, b, r - l + 1, 1);
+		g.fillRect(l, t, 1, b - t + 1);
+		g.fillRect(r, t, 1, b - t + 1);
+		g.fillRect(ChronicleLayout.SPLIT_X, t, 2, b - t + 1);
+		g.fillRect(ChronicleLayout.PAGE.x, ChronicleLayout.HEADER_RULE_Y, r - ChronicleLayout.PAGE.x, 1);
+		g.fillRect(ChronicleLayout.PAGE.x, ChronicleLayout.HEADER_RULE_Y + 2, r - ChronicleLayout.PAGE.x, 1);
 	}
 
 	private void drawAt(Graphics2D g, int spriteId, int x, int y)
@@ -469,8 +525,7 @@ public class ChronicleWindow extends Overlay
 	{
 		Rectangle close = ChronicleLayout.CLOSE;
 		boolean hover = hovered(close);
-		BufferedImage image = sprite(hover
-			? SpriteID.SteelborderCloseButton._1 : SpriteID.SteelborderCloseButton._0);
+		BufferedImage image = sprite(hover ? SpriteID.CloseButtons.HOVERED : SpriteID.CloseButtons.BUTTON);
 		if (image != null)
 		{
 			g.drawImage(image, close.x, close.y, null);
@@ -482,6 +537,11 @@ public class ChronicleWindow extends Overlay
 		}
 	}
 
+	/**
+	 * The tabs: a flat face with a one pixel outline whose top corners step
+	 * in over four rows, no line along the bottom, sat on the line under
+	 * the strip. The chosen one is lighter with a warmer label.
+	 */
 	private void drawTabs(Graphics2D g, GameFont body)
 	{
 		tabRects = ChronicleLayout.tabs(TAB_NAMES.length);
@@ -491,13 +551,25 @@ public class ChronicleWindow extends Overlay
 			boolean selected = i == tab;
 			g.setColor(new Color(selected ? ChronicleLayout.TAB_FACE_SELECTED : ChronicleLayout.TAB_FACE));
 			g.fillRect(r.x, r.y, r.width, r.height);
-			g.setColor(new Color(ChronicleLayout.TAB_EDGE));
-			g.drawRect(r.x, r.y, r.width - 1, r.height - 1);
-			int colour = hovered(r) && !selected ? ChronicleLayout.HOVER_WHITE : ChronicleLayout.TITLE_ORANGE;
+			g.setColor(new Color(ChronicleLayout.TAB_OUTLINE));
+			// The stair: the outline begins three in on the top row, two in
+			// on the next, one in for two rows, then runs straight down.
+			int[] inset = {3, 2, 1, 1};
+			for (int row = 0; row < inset.length; row++)
+			{
+				int in = inset[row];
+				g.fillRect(r.x + in, r.y + row, 1, 1);
+				g.fillRect(r.x + r.width - 1 - in, r.y + row, 1, 1);
+			}
+			g.fillRect(r.x + 3, r.y, r.width - 6, 1);
+			g.fillRect(r.x, r.y + inset.length, 1, r.height - inset.length);
+			g.fillRect(r.x + r.width - 1, r.y + inset.length, 1, r.height - inset.length);
+			int colour = selected ? ChronicleLayout.TAB_LABEL_SELECTED : ChronicleLayout.TITLE_ORANGE;
 			text(g, body, false, TAB_NAMES[i], r.x + r.width / 2, r.y + 14, colour, true);
 		}
 	}
 
+	/** The list: striped rows, the chosen one lit, green when written and red when not. */
 	private void drawList(Graphics2D g, GameFont body)
 	{
 		int visible = ChronicleLayout.visibleRows();
@@ -505,55 +577,58 @@ public class ChronicleWindow extends Overlay
 		Shape clip = g.getClip();
 		g.clipRect(ChronicleLayout.LIST.x, ChronicleLayout.LIST.y, ChronicleLayout.LIST.width,
 			ChronicleLayout.LIST.height);
-		for (int i = 0; i < visible && i + listScroll < listed.size(); i++)
+		// One more than fits, so a part of the next row shows below, as in
+		// the game.
+		for (int i = 0; i <= visible && i + listScroll < listed.size(); i++)
 		{
 			ChronicleEntry entry = listed.get(i + listScroll);
 			Rectangle row = ChronicleLayout.row(i);
 			boolean selected = entry.id.equals(selectedId);
-			if (selected)
+			if (selected || hovered(row))
 			{
 				g.setColor(new Color(ChronicleLayout.SELECTED_ROW));
 				g.fillRect(row.x, row.y, row.width, row.height);
 			}
+			else if (i % 2 == 0)
+			{
+				g.setColor(new Color(ChronicleLayout.ROW_STRIPE));
+				g.fillRect(row.x, row.y, row.width, row.height);
+			}
 			boolean readable = progress != null && progress.isReadable(entry);
-			int colour = hovered(row) ? ChronicleLayout.HOVER_WHITE
-				: readable ? ChronicleLayout.READABLE_GREEN : ChronicleLayout.LOCKED_GREY;
-			text(g, body, false, entry.name, row.x + 3, row.y + 12, colour, false);
+			int colour = readable ? ChronicleLayout.READABLE_GREEN : ChronicleLayout.LOCKED_RED;
+			text(g, body, false, entry.name, ChronicleLayout.LIST_TEXT_X, row.y + ChronicleLayout.ROW_BASELINE,
+				colour, false);
 		}
 		g.setClip(clip);
 		drawScrollbar(g, ChronicleLayout.LIST_SCROLL, listScroll, listed.size(), visible);
 	}
 
-	private void drawPage(Graphics2D g, ChronicleEntry entry, GameFont body, GameFont bold)
+	private void drawPage(Graphics2D g, ChronicleEntry entry, GameFont body, GameFont bold, GameFont small)
 	{
-		Rectangle page = ChronicleLayout.PAGE;
-		int left = page.x + ChronicleLayout.PAGE_PAD;
-		int width = page.width - ChronicleLayout.PAGE_PAD * 2;
+		int left = ChronicleLayout.PAGE_TEXT_X;
+		int width = ChronicleLayout.PAGE_TEXT_RIGHT - left;
 		if (entry == null)
 		{
 			text(g, body, false, "Nothing written here yet.", left, ChronicleLayout.HEADER_BASELINE,
-				ChronicleLayout.LOCKED_GREY, false);
+				ChronicleLayout.LOCKED_RED, false);
 			pageLines = new ArrayList<>();
 			pageLinesFor = null;
 			return;
 		}
 
-		// The header: the name, then what it is and whether it is written.
+		// The header block: the name, what it is and whether it is written,
+		// and what writes it, in the small face the game uses for these.
 		boolean readable = progress != null && progress.isReadable(entry);
 		text(g, bold, true, entry.name, left, ChronicleLayout.HEADER_BASELINE, ChronicleLayout.TITLE_ORANGE, false);
-		int y = ChronicleLayout.HEADER_BASELINE + ChronicleLayout.LINE_HEIGHT;
-		String kind = kindLabel(entry.kindOrEmpty());
-		text(g, body, false, kind + ": ", left, y, ChronicleLayout.TITLE_ORANGE, false);
-		int after = left + measure(g, body, false, kind + ": ");
-		text(g, body, false, readable ? "Written" : "Not yet written", after, y,
-			readable ? ChronicleLayout.READABLE_GREEN : ChronicleLayout.LOCKED_GREY, false);
-		y += 6;
-		g.setColor(new Color(ChronicleLayout.DIVIDER));
-		g.fillRect(page.x, y, page.width, 1);
-		int bodyTop = y + 4;
+		labelled(g, small, left, ChronicleLayout.HEADER_LINE2_BASELINE, kindLabel(entry.kindOrEmpty()) + ": ",
+			readable ? "Written" : "Not yet written",
+			readable ? ChronicleLayout.READABLE_GREEN : ChronicleLayout.LOCKED_RED);
+		labelled(g, small, left, ChronicleLayout.HEADER_LINE3_BASELINE, "Written when: ",
+			unlockLabel(entry), ChronicleLayout.BODY_WHITE);
 
 		// The body, wrapped once per page and cached until the page changes.
-		int bodyHeight = page.y + page.height - bodyTop;
+		int bodyTop = ChronicleLayout.BODY_TOP;
+		int bodyHeight = ChronicleLayout.CONTENT_BOTTOM - bodyTop;
 		pageVisibleLines = Math.max(1, bodyHeight / ChronicleLayout.LINE_HEIGHT);
 		if (!readable)
 		{
@@ -564,7 +639,7 @@ public class ChronicleWindow extends Overlay
 			int hy = bodyTop + ChronicleLayout.LINE_HEIGHT;
 			for (String line : hint)
 			{
-				text(g, body, false, line, left, hy, ChronicleLayout.LOCKED_GREY, false);
+				text(g, body, false, line, left, hy, ChronicleLayout.NOTE_PALE, false);
 				hy += ChronicleLayout.LINE_HEIGHT;
 			}
 			drawScrollbar(g, ChronicleLayout.PAGE_SCROLL, 0, 0, 1);
@@ -580,7 +655,7 @@ public class ChronicleWindow extends Overlay
 		pageScroll = ChronicleLayout.clampScroll(pageScroll, pageLines.size(), pageVisibleLines);
 
 		Shape clip = g.getClip();
-		g.clipRect(page.x, bodyTop, page.width, bodyHeight);
+		g.clipRect(ChronicleLayout.PAGE.x, bodyTop, ChronicleLayout.PAGE.width, bodyHeight);
 		int ly = bodyTop + ChronicleLayout.LINE_HEIGHT - 2;
 		for (int i = pageScroll; i < pageLines.size(); i++)
 		{
@@ -589,7 +664,7 @@ public class ChronicleWindow extends Overlay
 			{
 				ly += line.gapAbove;
 			}
-			if (ly - ChronicleLayout.LINE_HEIGHT > page.y + page.height)
+			if (ly - ChronicleLayout.LINE_HEIGHT > ChronicleLayout.CONTENT_BOTTOM)
 			{
 				break;
 			}
@@ -609,6 +684,44 @@ public class ChronicleWindow extends Overlay
 		}
 		g.setClip(clip);
 		drawScrollbar(g, ChronicleLayout.PAGE_SCROLL, pageScroll, pageLines.size(), pageVisibleLines);
+	}
+
+	/** An orange label with its value after it, the game's own header idiom. */
+	private void labelled(Graphics2D g, GameFont font, int x, int baseline, String label, String value, int valueColour)
+	{
+		text(g, font, false, label, x, baseline, ChronicleLayout.TITLE_ORANGE, false);
+		text(g, font, false, value, x + measure(g, font, false, label), baseline, valueColour, false);
+	}
+
+	/** What writes the page, in a few words. */
+	static String unlockLabel(ChronicleEntry entry)
+	{
+		ChronicleEntry.ChronicleUnlock unlock = entry.unlock;
+		if (unlock == null)
+		{
+			return "never";
+		}
+		if (unlock.always)
+		{
+			return "from the start";
+		}
+		if (unlock.quest != null)
+		{
+			return "the quest is done";
+		}
+		if (unlock.questBegun != null)
+		{
+			return "the quest is under way";
+		}
+		if (unlock.npcs != null && !unlock.npcs.isEmpty())
+		{
+			return "one is met";
+		}
+		if (unlock.regions != null && !unlock.regions.isEmpty())
+		{
+			return "you go there";
+		}
+		return "never";
 	}
 
 	/** What the locked page says instead of its text. */
@@ -653,7 +766,7 @@ public class ChronicleWindow extends Overlay
 			case "faction":
 				return "Faction";
 			case "world":
-				return "The world";
+				return "Land";
 			default:
 				return "Page";
 		}
@@ -668,7 +781,7 @@ public class ChronicleWindow extends Overlay
 		BufferedImage thumbMid = sprite(SpriteID.ScrollbarDraggerV2.MIDDLE);
 		BufferedImage thumbBottom = sprite(SpriteID.ScrollbarDraggerV2.BOTTOM);
 
-		// The track, then the arrows over its ends.
+		// The track, then the thumb on it, then the arrows over its ends.
 		Shape clip = g.getClip();
 		g.clipRect(bar.x, bar.y + 16, bar.width, bar.height - 32);
 		if (track == null)

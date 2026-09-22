@@ -32,18 +32,22 @@ public class ChronicleLayoutTest
 	}
 
 	@Test
-	public void theTabsFillTheStripEdgeToEdgeWithoutOverlapping()
+	public void theTabsSitWhereTheGamesDo()
 	{
+		// Measured off the Collection Log: five tabs of 94 at x = 6, 103,
+		// 200, 297 and 394, three pixels of tile between each.
 		Rectangle[] tabs = ChronicleLayout.tabs(5);
 		assertEquals(5, tabs.length);
-		assertEquals(ChronicleLayout.TABS_LEFT, tabs[0].x);
-		Rectangle last = tabs[4];
-		assertEquals("flush with the right edge", ChronicleLayout.TABS_RIGHT, last.x + last.width);
-		for (int i = 1; i < tabs.length; i++)
+		int[] lefts = {6, 103, 200, 297, 394};
+		for (int i = 0; i < tabs.length; i++)
 		{
-			assertEquals("a gap, no overlap", ChronicleLayout.TAB_GAP,
-				tabs[i].x - (tabs[i - 1].x + tabs[i - 1].width));
+			assertEquals("tab " + i, lefts[i], tabs[i].x);
+			assertEquals(94, tabs[i].width);
+			assertEquals(20, tabs[i].height);
+			assertEquals(35, tabs[i].y);
 		}
+		Rectangle last = tabs[4];
+		assertTrue("inside the rim", last.x + last.width <= ChronicleLayout.CONTENT_RIGHT);
 	}
 
 	@Test
@@ -57,10 +61,15 @@ public class ChronicleLayoutTest
 		assertTrue(listBar.x + listBar.width <= page.x);
 		assertEquals(page.x + page.width, pageBar.x);
 		assertTrue("inside the rim", pageBar.x + pageBar.width <= ChronicleLayout.WIDTH - ChronicleLayout.EDGE);
-		assertTrue(list.y >= ChronicleLayout.TABS_TOP + ChronicleLayout.TABS_HEIGHT);
-		assertTrue(list.y + list.height <= ChronicleLayout.HEIGHT - ChronicleLayout.EDGE);
-		assertTrue("the close button is in the top right corner",
-			ChronicleLayout.CLOSE.x + ChronicleLayout.CLOSE.width <= ChronicleLayout.WIDTH - ChronicleLayout.EDGE + 1);
+		assertTrue(list.y > ChronicleLayout.CONTENT_TOP);
+		assertEquals("the list runs down to the line above the rim",
+			ChronicleLayout.CONTENT_BOTTOM, list.y + list.height);
+		assertTrue("the split bar lies between the list's bar and the page",
+			listBar.x + listBar.width <= ChronicleLayout.SPLIT_X && ChronicleLayout.SPLIT_X + 2 <= page.x);
+		assertEquals("the page's bar starts under the header rules",
+			ChronicleLayout.BODY_TOP, pageBar.y);
+		assertEquals("the close button is one pixel in from the rim on both sides",
+			new Rectangle(473, 7, 21, 21), ChronicleLayout.CLOSE);
 	}
 
 	@Test
@@ -70,8 +79,9 @@ public class ChronicleLayoutTest
 		assertTrue(visible >= 15);
 		Rectangle first = ChronicleLayout.row(0);
 		Rectangle last = ChronicleLayout.row(visible - 1);
-		assertEquals(ChronicleLayout.LIST.y, first.y);
-		assertTrue(last.y + last.height <= ChronicleLayout.LIST.y + ChronicleLayout.LIST.height);
+		assertEquals("the first band sits under the top line", ChronicleLayout.ROW_BAND_TOP, first.y);
+		assertEquals(15, first.height);
+		assertTrue(last.y + last.height <= ChronicleLayout.CONTENT_BOTTOM);
 	}
 
 	@Test

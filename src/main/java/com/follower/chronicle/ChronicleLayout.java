@@ -7,96 +7,120 @@ import java.util.List;
 import java.util.function.ToIntFunction;
 
 /**
- * The geometry of the chronicle window, measured off the game's own
- * Collection Log, and the page maths - wrapping, scrolling, hit rectangles -
- * kept apart from the drawing so it can be tested without a canvas.
+ * The geometry of the chronicle window, measured pixel by pixel off the
+ * game's own Collection Log, and the page maths - wrapping, scrolling, hit
+ * rectangles - kept apart from the drawing so it can be tested without a
+ * canvas.
  *
  * <p>Everything is in the window's own pixels with (0, 0) at its top-left
  * corner; the overlay adds where the window sits on the canvas. The window
- * is the Collection Log's 500 by 314: a steel rim of 25 by 30 corners and
- * 6 pixel edges round a tiled stone backing, the title across the top, the
- * close button top right, a strip of tabs, a list down the left with its
- * scrollbar, and the page on the right with its own.
+ * is the Collection Log's 500 by 314: a 6 pixel steel rim with 25 by 30
+ * riveted corners round a tiled stone backing, the title on its band, a
+ * steel divider, a strip of five tabs, a list down the left with its
+ * scrollbar, and the page on the right with a header block and its own.
+ * Every number here was confirmed against the real window's pixels.
  */
 public final class ChronicleLayout
 {
 	public static final int WIDTH = 500;
 	public static final int HEIGHT = 314;
 
-	/** The rim: corner sprites and the strip between them. */
+	/** The rim: corner sprites and the 6 pixel strips between them. */
 	public static final int CORNER_W = 25;
 	public static final int CORNER_H = 30;
 	public static final int EDGE = 6;
 
-	/** The title's baseline and the close button's square. */
-	public static final int TITLE_BASELINE = 24;
-	public static final Rectangle CLOSE = new Rectangle(WIDTH - 6 - 22, 7, 21, 21);
+	/** The vertical rim strips repeat on this phase; the divider on the other. */
+	public static final int RIM_PHASE_Y = 12;
+	public static final int DIVIDER_PHASE_X = 23;
 
-	/** The tab strip. */
-	public static final int TABS_TOP = 36;
+	/** The title's baseline, centred on the window, and the close button. */
+	public static final int TITLE_BASELINE = 22;
+	public static final Rectangle CLOSE = new Rectangle(473, 7, 21, 21);
+
+	/** The steel divider under the title band: 6 high, rim to rim. */
+	public static final int DIVIDER_TOP = 29;
+
+	/** The tab strip: five tabs of 94, three pixels apart, sat on the line below. */
+	public static final int TABS_TOP = 35;
 	public static final int TABS_HEIGHT = 20;
-	public static final int TABS_LEFT = 8;
-	public static final int TABS_RIGHT = WIDTH - 8;
-	public static final int TAB_GAP = 2;
+	public static final int TABS_LEFT = 6;
+	public static final int TAB_WIDTH = 94;
+	public static final int TAB_GAP = 3;
 
-	/** The list and its scrollbar. */
-	public static final Rectangle LIST = new Rectangle(8, 58, 182, 248);
+	/** The thin lines that box the content: under the tabs, above the bottom rim, the sides. */
+	public static final int CONTENT_TOP = 55;
+	public static final int CONTENT_BOTTOM = 307;
+	public static final int CONTENT_LEFT = 6;
+	public static final int CONTENT_RIGHT = 493;
+
+	/** The two pixel bar between the list and the page. */
+	public static final int SPLIT_X = 205;
+
+	/** The list: its text column, its rows, its scrollbar. */
+	public static final Rectangle LIST = new Rectangle(7, 56, 182, 251);
+	public static final int LIST_TEXT_X = 9;
 	public static final int ROW_HEIGHT = 15;
+	public static final int ROW_BAND_TOP = 55;
+	public static final int ROW_BASELINE = 12;
 	public static final int SCROLLBAR_W = 16;
-	public static final Rectangle LIST_SCROLL = new Rectangle(LIST.x + LIST.width, LIST.y, SCROLLBAR_W, LIST.height);
+	public static final Rectangle LIST_SCROLL = new Rectangle(189, 56, SCROLLBAR_W, 251);
 
-	/** The page: the header block, a divider, then the scrolling body. */
-	public static final Rectangle PAGE = new Rectangle(210, 58, WIDTH - 210 - 8 - SCROLLBAR_W, 248);
-	public static final Rectangle PAGE_SCROLL = new Rectangle(PAGE.x + PAGE.width, PAGE.y, SCROLLBAR_W, PAGE.height);
-	public static final int PAGE_PAD = 6;
-	public static final int HEADER_BASELINE = PAGE.y + 12;
+	/** The page: the header block, two lines under it, then the scrolling body. */
+	public static final Rectangle PAGE = new Rectangle(207, 56, 270, 251);
+	public static final int PAGE_TEXT_X = 214;
+	public static final int PAGE_TEXT_RIGHT = 470;
+	public static final int HEADER_BASELINE = 69;
+	public static final int HEADER_LINE2_BASELINE = 83;
+	public static final int HEADER_LINE3_BASELINE = 95;
+	public static final int HEADER_RULE_Y = 100;
+	public static final int BODY_TOP = 103;
+	public static final Rectangle PAGE_SCROLL = new Rectangle(477, BODY_TOP, SCROLLBAR_W, CONTENT_BOTTOM - BODY_TOP);
 	public static final int LINE_HEIGHT = 14;
 	public static final int PARAGRAPH_GAP = 6;
 
-	/** The vanilla colours, sampled off the real window. */
+	/** The vanilla colours, confirmed by pixel count on the real window. */
 	public static final int TITLE_ORANGE = 0xff981f;
+	public static final int TAB_LABEL_SELECTED = 0xffa82f;
 	public static final int READABLE_GREEN = 0x0dc10d;
-	public static final int LOCKED_GREY = 0x8f8f8f;
-	public static final int HOVER_WHITE = 0xffffff;
+	public static final int LOCKED_RED = 0xcc2c2c;
 	public static final int BODY_WHITE = 0xffffff;
-	public static final int NOTE_PALE = 0xd8d0c0;
+	public static final int NOTE_PALE = 0xdfdfdf;
 	public static final int SELECTED_ROW = 0x70695f;
+	public static final int ROW_STRIPE = 0x564c42;
 	public static final int TAB_FACE = 0x28251e;
 	public static final int TAB_FACE_SELECTED = 0x3e3529;
-	public static final int TAB_EDGE = 0x1a1813;
+	public static final int TAB_OUTLINE = 0x5d5848;
 	public static final int BACKING = 0x483e33;
-	public static final int DIVIDER = 0x585040;
+	public static final int LINE = 0x585040;
 	public static final int TRACK = 0x252019;
+	public static final int STEEL = 0x2d2b24;
 
 	private ChronicleLayout()
 	{
 	}
 
-	/** The tabs, left to right, evenly across the strip. */
+	/** The tabs, left to right: fixed width, fixed pitch, as the game lays them. */
 	public static Rectangle[] tabs(int count)
 	{
 		Rectangle[] out = new Rectangle[count];
-		int span = TABS_RIGHT - TABS_LEFT - TAB_GAP * (count - 1);
-		int x = TABS_LEFT;
 		for (int i = 0; i < count; i++)
 		{
-			int w = span / count + (i < span % count ? 1 : 0);
-			out[i] = new Rectangle(x, TABS_TOP, w, TABS_HEIGHT);
-			x += w + TAB_GAP;
+			out[i] = new Rectangle(TABS_LEFT + i * (TAB_WIDTH + TAB_GAP), TABS_TOP, TAB_WIDTH, TABS_HEIGHT);
 		}
 		return out;
 	}
 
-	/** How many rows the list shows at once. */
+	/** How many whole rows the list shows; a part of one more peeks below. */
 	public static int visibleRows()
 	{
 		return LIST.height / ROW_HEIGHT;
 	}
 
-	/** The rectangle of the nth visible row. */
+	/** The band of the nth visible row; the first sits just under the top line. */
 	public static Rectangle row(int visibleIndex)
 	{
-		return new Rectangle(LIST.x, LIST.y + visibleIndex * ROW_HEIGHT, LIST.width, ROW_HEIGHT);
+		return new Rectangle(LIST.x, ROW_BAND_TOP + visibleIndex * ROW_HEIGHT, LIST.width, ROW_HEIGHT);
 	}
 
 	/** A scroll offset, kept inside what there is to scroll to. */
@@ -253,8 +277,6 @@ public final class ChronicleLayout
 		{
 			return;
 		}
-		// A section already headed the same way in the data is not headed
-		// twice: the summary lists are the short form of the long sections.
 		heading(lines, title, width, headingWidth);
 		for (String item : items)
 		{
