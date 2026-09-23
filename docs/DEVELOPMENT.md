@@ -1317,7 +1317,13 @@ sections (What happened, Who was involved, Where it took place, Worth knowing),
 and short lists of people, places and particulars. The text was researched from
 the OSRS wiki and then written in the scribe's own voice, the one the phrase
 file speaks in: a fact first, then a short remark, "you" and "I", British
-spelling, never gushing. Every fact stays; the remarks are the scribe's. The
+spelling, never gushing. Every fact stays; the remarks are the scribe's. It is
+also in-world: the scribe lives in Gielinor and knows nothing outside it, so
+there are no release dates, developers, wikis or "players" (adventurers), and
+a mechanic is put in plain words ("hits up to 14", "there are eleven of them",
+"a corner it cannot reach you in") rather than named as one; a description an
+adventurer would see is quoted as what people say of the thing. A test refuses
+the words that only exist outside the world. The
 headings are fixed per kind so a reader always knows where to look ("What
 happened", "Who was there", "Where it took us", "Worth knowing" for a quest;
 "What it is", "Where it is found", "Worth knowing" for a creature or a place),

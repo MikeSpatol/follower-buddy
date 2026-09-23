@@ -212,6 +212,44 @@ public class ChronicleIntegrityTest
 		assertTrue("not plain ASCII:\n  " + String.join("\n  ", problems), problems.isEmpty());
 	}
 
+	/**
+	 * The scribe lives in Gielinor and knows nothing outside it. A release
+	 * date, a developer, a wiki or a "player" on a page breaks that at once,
+	 * so the words that only exist outside the world are refused here.
+	 */
+	@Test
+	public void theTextStaysInTheWorld() throws IOException
+	{
+		String text = bundledText();
+		String[] outside = {
+			// "released on", "released in": a date. The verb on its own is a
+			// potion into a river, and "classic" the adjective is in the world;
+			// RuneScape Classic is caught by its first word.
+			"\\bplayers?\\b", "\\bwiki\\b", "\\breleased (on|in) \\b", "\\brelease date\\b",
+			"\\bexamine\\b", "\\bcombat level\\b",
+			"\\bJagex\\b", "\\bGower\\b", "\\bMod [A-Z]", "\\bCambridge\\b", "\\bRuneScape\\b",
+			"\\bAnniversary\\b", "\\bPostbag\\b", "\\b20[0-3][0-9]\\b",
+			"\\bmembers\\b", "\\bfree to play\\b", "\\bIronm", "\\brespawn", "\\bspawns?\\b",
+			"\\bsafespot", "\\bmulticombat\\b", "\\bticks?\\b", "\\bfootprint\\b", "\\b\\dx\\d\\b",
+			"\\bin-game\\b", "\\bthe game\\b", "\\breal-world\\b", "\\bdeveloper\\b", "\\bmax hit\\b",
+			"\\binstance\\b", "\\bplayer-owned\\b", "\\bout of game\\b", "\\bin game\\b",
+		};
+		List<String> problems = new ArrayList<>();
+		for (String pattern : outside)
+		{
+			Matcher m = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE).matcher(text);
+			int shown = 0;
+			while (m.find() && shown < 3)
+			{
+				int from = Math.max(0, m.start() - 40);
+				int to = Math.min(text.length(), m.end() + 40);
+				problems.add(pattern + ": ..." + text.substring(from, to).replace("\n", " ") + "...");
+				shown++;
+			}
+		}
+		assertTrue("words from outside the world:\n  " + String.join("\n  ", problems), problems.isEmpty());
+	}
+
 	@Test
 	public void everyCharacterUsedHasAGlyphInTheFontsThatDrawIt() throws IOException
 	{
