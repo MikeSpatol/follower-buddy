@@ -1315,9 +1315,17 @@ an id (`quest-cooks-assistant`), a kind (`quest`, `boss`, `enemy`, `location`,
 `faction`, `world`), the name as the game spells it, an unlock, a summary, headed
 sections (What happened, Who was involved, Where it took place, Worth knowing),
 and short lists of people, places and particulars. The text was researched from
-the OSRS wiki and is plain ASCII by law: the window draws it with the game's own
-bitmap glyphs, which index by the low byte of each character, so a curly quote
-or an em dash would come out as some other glyph with no error.
+the OSRS wiki and then written in the scribe's own voice, the one the phrase
+file speaks in: a fact first, then a short remark, "you" and "I", British
+spelling, never gushing. Every fact stays; the remarks are the scribe's. The
+headings are fixed per kind so a reader always knows where to look ("What
+happened", "Who was there", "Where it took us", "Worth knowing" for a quest;
+"What it is", "Where it is found", "Worth knowing" for a creature or a place),
+and "Where it is found" is load-bearing: the window shows that section on its
+own while a creature is unmet, as directions. It is plain ASCII by law: the
+window draws it with the game's own bitmap glyphs, which index by the low byte
+of each character, so a curly quote or an em dash would come out as some other
+glyph with no error.
 `ChronicleIntegrityTest` enforces that, the unique ids, the kinds, and that every
 unlock names something the code can check. A `chronicle.json` in the data
 directory replaces the bundled file outright, the same override as the fonts.
