@@ -5718,7 +5718,7 @@ public class FollowerPlugin extends Plugin
 					com.follower.speech.SpeechOutput.OVERHEAD, null, -1, null);
 			}
 		});
-		addFollowerMenuEntry(com.follower.chronicle.ChronicleWindow.NAME, chronicleWindow::open);
+		addFollowerMenuEntry(com.follower.chronicle.ChronicleWindow.NAME, chronicleWindow::openNextTick);
 		addFollowerMenuEntry(talkOption(), this::startTalking);
 	}
 
@@ -5954,6 +5954,7 @@ public class FollowerPlugin extends Plugin
 		// dismiss) resolve here, one tick after the input - the same beat a
 		// real dialog takes for its server round trip.
 		dialog.tick();
+		chronicleWindow.tick();
 		if (chronicleProgress != null && chronicleWindow.isOpen())
 		{
 			chronicleProgress.refresh(client.getTickCount());

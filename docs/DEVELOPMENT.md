@@ -1357,8 +1357,13 @@ lines) so it can be tested without a canvas; the window's render is drawing and
 hit-testing only. Input follows the dialog: a mouse listener consumes every
 press inside the window and lets one outside fall through to the game, which
 closes the book the way any click closes a real interface; the wheel scrolls the
-side it is over; Escape closes; a step closes it too. Sprites load a frame late,
-so every piece has a flat stand-in for the first frames.
+side it is over; the thumbs drag and a press on the track pages toward it;
+Escape closes; a step closes it too. The buttons wait for the tick as the
+game's do: a tab, a row, the close button and the menu op itself go through a
+`TickGate`, land on the next game tick, and a second press before then is
+ignored, exactly as the dialog's continue and options do. Scrolling is not
+gated, because in the game a scrollbar is the client's own. Sprites load a
+frame late, so every piece has a flat stand-in for the first frames.
 
 ## Skilling company
 

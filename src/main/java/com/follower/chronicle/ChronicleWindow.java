@@ -48,6 +48,10 @@ import net.runelite.client.ui.overlay.OverlayPosition;
  * inside the window and lets a press outside it fall through to the game,
  * which closes the window the way any click closes a real interface; the
  * wheel scrolls whichever side it is over; the thumbs drag; Escape closes.
+ * And the buttons wait for the tick, as the game's do: a tab, a row or the
+ * close button takes effect on the next game tick through a {@link
+ * TickGate}, and a second press before then is ignored. Scrolling is not
+ * gated, because in the game a scrollbar is the client's own.
  */
 @Slf4j
 @Singleton
@@ -80,6 +84,9 @@ public class ChronicleWindow extends Overlay
 	private volatile int listScroll;
 	private volatile int pageScroll;
 	private volatile String selectedId;
+
+	/** The buttons' wait for the tick. */
+	private final TickGate gate = new TickGate();
 
 	/** A thumb being dragged, and where on it the mouse took hold. */
 	private volatile int dragging = DRAG_NONE;
@@ -151,6 +158,19 @@ public class ChronicleWindow extends Overlay
 	{
 		open = false;
 		dragging = DRAG_NONE;
+		gate.clear();
+	}
+
+	/** Opens on the next game tick, as a right-click op on a real thing would. */
+	public void openNextTick()
+	{
+		gate.offer(this::open);
+	}
+
+	/** The game tick: whatever button was pressed since the last one lands now. */
+	public void tick()
+	{
+		gate.tick();
 	}
 
 	/** Opens straight onto one page, for the follower to show something it wrote. */
@@ -188,9 +208,10 @@ public class ChronicleWindow extends Overlay
 			}
 			if (!bounds.contains(event.getPoint()))
 			{
-				// As any click away from a real interface: it closes, and the
-				// click still does whatever it was aimed at.
-				close();
+				// As any click away from a real interface: it closes, on the
+				// tick the click's own action processes, and the click still
+				// does whatever it was aimed at.
+				gate.offer(ChronicleWindow.this::close);
 				return event;
 			}
 			event.consume();
@@ -200,22 +221,19 @@ public class ChronicleWindow extends Overlay
 			}
 			int x = event.getX() - bounds.x;
 			int y = event.getY() - bounds.y;
+			// The buttons: one press in flight at a time, landing on the tick.
+			// The scrollbars below are not buttons and answer at once.
 			if (ChronicleLayout.CLOSE.contains(x, y))
 			{
-				close();
+				gate.offer(ChronicleWindow.this::close);
 				return event;
 			}
 			for (int i = 0; i < tabRects.length; i++)
 			{
 				if (tabRects[i].contains(x, y))
 				{
-					if (tab != i)
-					{
-						tab = i;
-						listScroll = 0;
-						pageScroll = 0;
-						selectedId = null;
-					}
+					final int chosen = i;
+					gate.offer(() -> showTab(chosen));
 					return event;
 				}
 			}
@@ -224,12 +242,8 @@ public class ChronicleWindow extends Overlay
 				int row = (y - ChronicleLayout.ROW_BAND_TOP) / ChronicleLayout.ROW_HEIGHT + listScroll;
 				if (row >= 0 && row < listed.size())
 				{
-					String id = listed.get(row).id;
-					if (!id.equals(selectedId))
-					{
-						selectedId = id;
-						pageScroll = 0;
-					}
+					final String id = listed.get(row).id;
+					gate.offer(() -> showPage(id));
 				}
 				return event;
 			}
@@ -282,6 +296,26 @@ public class ChronicleWindow extends Overlay
 			return event;
 		}
 	};
+
+	private void showTab(int which)
+	{
+		if (tab != which)
+		{
+			tab = which;
+			listScroll = 0;
+			pageScroll = 0;
+			selectedId = null;
+		}
+	}
+
+	private void showPage(String id)
+	{
+		if (!id.equals(selectedId))
+		{
+			selectedId = id;
+			pageScroll = 0;
+		}
+	}
 
 	/**
 	 * A press on a scrollbar: the arrows step, the thumb takes hold for a
