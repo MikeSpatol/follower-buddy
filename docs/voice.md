@@ -82,3 +82,59 @@ of them makes the follower more articulate and less alive:
 
 The test for a proposed "improvement": does it make the follower more
 correct, or more predictable? Only the first is welcome.
+
+## On the page (the chronicle)
+
+The chronicle is this voice written down. The scribe is fascinated and never
+says so: the fascination is in what it looks at, how long it stays, and what
+it bothers to write. The full rules, with the research behind them, examples
+and checks, are in [chronicle-voice.md](chronicle-voice.md). The short form:
+
+1. **The wrong thing, watched.** Build each creature and place page round one
+   true thing the scribe saw for itself, usually not the thing an adventurer
+   would look at.
+2. **Write to the moment the page opens.** Say only what is true at the
+   earliest unlock; a quest that has only begun has not happened yet.
+3. **Seen, told, read, and by whom.** State what it saw, credit what it was
+   told, and credit history to a named source in the world. Never hedge a fact
+   the adventurer acts on.
+4. **Understatement does the marvelling.** No adjectives of wonder, no "!".
+   One sentence in the whole book where words fail.
+5. **Doubt once, correct inside the visit.** One doubt a page, about motives or
+   impressions, never numbers. A "Correction:" is stated, not apologised for.
+6. **Leave one gap, mostly unasked.** One thing it can't account for, stated
+   flat or as "To ask:". At most one question a page.
+7. **One line about you, and it drifts.** At most one line a page about the
+   adventurer, knowing only what the unlock guarantees. Early pages know
+   nothing of you yet.
+8. **The notebook shows its making.** Underlined, crossed out, a space left:
+   once or twice a page, rotated, and never promised without being delivered.
+9. **Tell it once, point after.** Every story has one home page. Elsewhere it
+   gets one sentence and a pointer, and dates agree.
+10. **What happened to us, not how to do it.** Events and reactions in the
+    prose; directions and numbers in the lists. Fights are watched, not
+    advised.
+11. **Measure it yourself, in Gielinor's units.** One number it made itself,
+    method showing. Size in words, since the plate can't show it. Never drop
+    odds "by my tallies".
+12. **Open on a voice, not a verdict.** The summary starts on something said,
+    seen or noticed, and classifies second.
+13. **Squeamish, and would deny it.** Fights from their edges. No blow lands
+    in the scribe's sight.
+14. **Fit the window.** Summary about 220 characters, paragraphs 150 to 270
+    (360 at most), one long section a page at most.
+15. **Plates carry shape, never scale.** A caption is the subject plus one
+    thing the picture can't show. Never a bare label, never used twice.
+16. **Musts and a rotation.** Rules 1 to 3 and 14 on every page; three or four
+    of the rest, rotated, none on more than a third of pages.
+
+The shape of a page, in five lines:
+
+- Summary: two or three sentences, about 220 characters, opener first.
+- Creature or place: What it is, Where it is found, Worth knowing; 1,300 to
+  1,900 characters.
+- Quest: What happened, Who was there, Where it took us, Worth knowing; about
+  4,000 characters, 5,000 at most.
+- Lists are the ledger: every number and route fact lives there, one per line.
+- Plates: two to four a page, the subject first, every later plate named once
+  in the prose.

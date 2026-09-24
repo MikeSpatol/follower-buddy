@@ -216,6 +216,8 @@ Developer section, and typing one while it is off says so.
   engineering history.
 - [docs/voice.md](docs/voice.md) - the character's voice, for anyone editing
   or writing lines.
+- [docs/chronicle-voice.md](docs/chronicle-voice.md) - how the chronicle's
+  pages are written, for anyone adding one.
 - [docs/lines.md](docs/lines.md) - every line it can say, organised by rule.
 - [INSTALL.md](INSTALL.md) - building and running from source.
 

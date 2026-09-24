@@ -1316,13 +1316,15 @@ an id (`quest-cooks-assistant`), a kind (`quest`, `boss`, `enemy`, `location`,
 sections (What happened, Who was involved, Where it took place, Worth knowing),
 and short lists of people, places and particulars. The text was researched from
 the OSRS wiki and then written in the scribe's own voice, the one the phrase
-file speaks in: a fact first, then a short remark, "you" and "I", British
-spelling, never gushing. Every fact stays; the remarks are the scribe's. It is
+file speaks in. How a page is written, and how to check one, is in
+[chronicle-voice.md](chronicle-voice.md): sixteen rules drawn from field
+notebooks, travel writing and game codices, and the shape of each kind of page.
+Every fact stays; under those rules numbers and directions belong in the lists,
+and the prose is what happened and what the scribe made of it. It is
 also in-world: the scribe lives in Gielinor and knows nothing outside it, so
 there are no release dates, developers, wikis or "players" (adventurers), and
-a mechanic is put in plain words ("hits up to 14", "there are eleven of them",
-"a corner it cannot reach you in") rather than named as one; a description an
-adventurer would see is quoted as what people say of the thing. A test refuses
+a mechanic is put in plain words ("hits up to 14", "there are eleven of them")
+rather than named as one. A test refuses
 the words that only exist outside the world. The
 headings are fixed per kind so a reader always knows where to look ("What
 happened", "Who was there", "Where it took us", "Worth knowing" for a quest;
@@ -1407,14 +1409,19 @@ its caption line to turn them; captions are numbered as a book numbers plates
   usually, is the scribe. Sketches are kept as small PNGs under
   `chronicle-sketches/<account>/` in the data directory, one folder per account
   (the RuneLite RS profile key), shared by every page that shows the same
-  place, and made once. Until then the plate is bare paper, "Not yet sketched."
+  place, and made once. Until then the plate is bare paper marked "Not yet
+  sketched.", captioned "I'll draw it when we're there." A place can have
+  several views, each its own sketch with its own regions (Varrock's square,
+  its palace end and the Exchange), so walking round a place fills its page.
 
 The sketch regions were checked against the game's own world map with the
 cache dumper's region audit, like every other region id in the plugin.
 `ChronicleIntegrityTest` holds every plate to being drawable (an NPC id, or a
 named sketch with regions that agree wherever it is used), every creature page
 to having a portrait and every place to having a sketch, and every caption to
-fitting its line in the font it is drawn in.
+fitting its line in the font it is drawn in. `everyCaptionIsItsOwn` refuses a
+bare label and a caption another plate already uses; what a caption should say
+is rule 15 of chronicle-voice.md.
 
 ## Skilling company
 
