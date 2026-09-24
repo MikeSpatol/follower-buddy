@@ -74,6 +74,8 @@ public final class TriggerEvent
 		FAREWELL,
 		/** The follower noticed something and went to look. */
 		NOTICED,
+		/** A chronicle page was written for the first time. */
+		PAGE_WRITTEN,
 		/** A Send with a misgiving in it: the follower stopped at the edge first. */
 		HESITATED,
 		/** The player walked straight at the parked follower and it stepped aside. */
@@ -158,6 +160,21 @@ public final class TriggerEvent
 		TriggerEvent event = new TriggerEvent(Type.MUSIC_UNLOCK);
 		event.name = track == null ? "" : track;
 		event.placeholders.put("track", event.name);
+		return event;
+	}
+
+	/**
+	 * A page of the chronicle was written for the first time. {page} is the
+	 * page's name. What a rule's "is" narrows to is the page's kind (boss,
+	 * enemy, location, faction, world) when it was met or walked into, and
+	 * "quest" for any page a quest begun or finished opened, which the
+	 * follower has not seen for itself.
+	 */
+	public static TriggerEvent pageWritten(String kind, String page)
+	{
+		TriggerEvent event = new TriggerEvent(Type.PAGE_WRITTEN);
+		event.name = kind == null ? "" : kind;
+		event.placeholders.put("page", page == null ? "" : page);
 		return event;
 	}
 

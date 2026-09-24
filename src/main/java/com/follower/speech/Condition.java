@@ -69,6 +69,7 @@ import net.runelite.api.NPC;
  *   <tr><td>musicTrack</td><td>optional {@code names} (wildcards ok) — the playing track changed; {@code {track}}</td></tr>
  *   <tr><td>collectionAdd</td><td>no fields; {@code {item}} is the new collection log entry</td></tr>
  *   <tr><td>questComplete</td><td>no fields; {@code {quest}} names the quest just finished</td></tr>
+ *   <tr><td>pageWritten</td><td>optional {@code is} boss|enemy|location|faction|world for a page met or walked into, quest for one a quest opened; {@code {page}} names the chronicle page just written</td></tr>
  *   <tr><td>geOffer</td><td>{@code is} bought|sold; {@code {item}} and {@code {value}}</td></tr>
  *   <tr><td>channelJoined / channelLeft</td><td>no fields; {@code {name}} says who</td></tr>
  *   <tr><td>npcShout</td><td>{@code names} (wildcards ok) and/or {@code contains}; {@code {npc}} and {@code {message}}</td></tr>
@@ -850,6 +851,13 @@ public class Condition
 
 			case "questcomplete":
 				return event.getType() == TriggerEvent.Type.QUEST_COMPLETE;
+
+			// A chronicle page was written for the first time. "is" narrows it
+			// to one kind of page met or walked into (boss, enemy, location,
+			// faction, world), or "quest" for any page a quest opened.
+			case "pagewritten":
+				return event.getType() == TriggerEvent.Type.PAGE_WRITTEN
+					&& (is == null || is.equalsIgnoreCase(event.getName()));
 
 			// A Grand Exchange offer finished; "is" narrows to bought or sold.
 			case "geoffer":

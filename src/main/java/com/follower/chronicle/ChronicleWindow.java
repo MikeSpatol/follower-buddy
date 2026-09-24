@@ -12,8 +12,11 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.image.BufferedImage;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
+import java.util.function.ToIntFunction;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
@@ -65,7 +68,7 @@ public class ChronicleWindow extends Overlay
 	public static final String NAME = "Chronicle";
 
 	/** The tabs, in order, and the kinds behind them. */
-	static final String[] TAB_NAMES = {"Quests", "Bosses", "Enemies", "Places", "World"};
+	static final String[] TAB_NAMES = {"Quests", "Beasts", "Enemies", "Places", "World"};
 	static final String[][] TAB_KINDS = {
 		{"quest"}, {"boss"}, {"enemy"}, {"location"}, {"faction", "world"},
 	};
@@ -94,6 +97,9 @@ public class ChronicleWindow extends Overlay
 
 	private ChronicleProgress progress;
 	private SketchBook sketches;
+
+	/** Whose book it is: the follower's name, from its settings. */
+	private Supplier<String> owner = () -> null;
 	private final ChroniclePortraits portraits;
 
 	/** Which of a page's plates is showing, and the arrows that turn them. */
@@ -157,6 +163,12 @@ public class ChronicleWindow extends Overlay
 	public void attach(SketchBook sketches)
 	{
 		this.sketches = sketches;
+	}
+
+	/** The follower's name, for the title: the book is signed. */
+	public void setOwner(Supplier<String> owner)
+	{
+		this.owner = owner == null ? () -> null : owner;
 	}
 
 	public void register()
@@ -724,9 +736,73 @@ public class ChronicleWindow extends Overlay
 	private void drawTitle(Graphics2D g, GameFont bold)
 	{
 		int[] tally = progress == null ? new int[]{0, loader.getEntries().size()} : progress.tally();
-		String title = NAME + " - " + tally[0] + "/" + tally[1];
+		String title = title(owner.get(), tally[0], tally[1], s -> measure(g, bold, true, s));
 		text(g, bold, true, title, ChronicleLayout.WIDTH / 2, ChronicleLayout.TITLE_BASELINE,
 			ChronicleLayout.TITLE_ORANGE, true);
+	}
+
+	/**
+	 * "Bartholomew's Chronicle - 5/17": the book signed with the follower's
+	 * name, or plain "Chronicle" when it has none or a name too long to sit
+	 * centred clear of the close button.
+	 */
+	static String title(String owner, int written, int all, ToIntFunction<String> width)
+	{
+		String count = " - " + written + "/" + all;
+		String name = owner == null ? "" : owner.trim();
+		if (!name.isEmpty())
+		{
+			String signed = name + "'s " + NAME + count;
+			if (width.applyAsInt(signed) <= ChronicleLayout.TITLE_ROOM)
+			{
+				return signed;
+			}
+		}
+		return NAME + count;
+	}
+
+	/**
+	 * When a written page went into the book, for the header's status line
+	 * after its kind: "Written on the 17th of Ire of Phyrrys, year 169", the
+	 * real day in the world's own calendar, giving up the year if the line
+	 * has no room for it.
+	 */
+	static String writtenOn(long epochDay, String label, ToIntFunction<String> width, int room)
+	{
+		String written = "Written on " + GielinorCalendar.date(LocalDate.ofEpochDay(epochDay));
+		String withYear = written + ", year " + GielinorCalendar.YEAR;
+		return width.applyAsInt(label + withYear) <= room ? withYear : written;
+	}
+
+	/** The header's label for where a page was written, on the line under its date. */
+	static final String WRITTEN_AT = "Written at: ";
+
+	/**
+	 * A place as a page header names it: the Locations rules describe their
+	 * places ("Lumbridge town and castle", "The Grand Exchange plaza"), and a
+	 * header has room only for the name ("Lumbridge", "the Grand Exchange").
+	 */
+	static String shortPlace(String place)
+	{
+		String name = place.trim();
+		int and = name.indexOf(" and ");
+		if (and > 0)
+		{
+			name = name.substring(0, and);
+		}
+		if (name.startsWith("The "))
+		{
+			name = "the " + name.substring(4);
+		}
+		for (String tail : new String[]{" town", " plaza", " mounds", " lobby area", " camp"})
+		{
+			if (name.endsWith(tail) && name.length() > tail.length() + 4)
+			{
+				name = name.substring(0, name.length() - tail.length());
+				break;
+			}
+		}
+		return name;
 	}
 
 	private void drawCloseButton(Graphics2D g)
@@ -829,11 +905,25 @@ public class ChronicleWindow extends Overlay
 		// and what writes it, in the small face the game uses for these.
 		boolean readable = progress != null && progress.isReadable(entry);
 		text(g, bold, true, entry.name, left, ChronicleLayout.HEADER_BASELINE, ChronicleLayout.TITLE_ORANGE, false);
-		labelled(g, small, left, ChronicleLayout.HEADER_LINE2_BASELINE, kindLabel(entry.kindOrEmpty()) + ": ",
-			readable ? "Written" : "Not yet written",
+		// A written page says when it was written, if the book kept the date,
+		// and where, if the place has a name; any other says what will write it.
+		Long on = readable ? progress.writtenOn(entry) : null;
+		String kind = kindLabel(entry.kindOrEmpty()) + ": ";
+		labelled(g, small, left, ChronicleLayout.HEADER_LINE2_BASELINE, kind,
+			on != null ? writtenOn(on, kind, s -> measure(g, small, false, s), width)
+				: readable ? "Written" : "Not yet written",
 			readable ? ChronicleLayout.READABLE_GREEN : ChronicleLayout.LOCKED_RED);
-		labelled(g, small, left, ChronicleLayout.HEADER_LINE3_BASELINE, "Written when: ",
-			unlockLabel(entry), ChronicleLayout.BODY_WHITE);
+		String at = on == null ? "" : progress.writtenAt(entry);
+		if (!at.isEmpty())
+		{
+			labelled(g, small, left, ChronicleLayout.HEADER_LINE3_BASELINE, WRITTEN_AT,
+				shortPlace(at), ChronicleLayout.BODY_WHITE);
+		}
+		else
+		{
+			labelled(g, small, left, ChronicleLayout.HEADER_LINE3_BASELINE, "Written when: ",
+				unlockLabel(entry), ChronicleLayout.BODY_WHITE);
+		}
 
 		// The body, laid out once per page and cached until the page or its
 		// state changes: the page itself, or the reason it cannot be read

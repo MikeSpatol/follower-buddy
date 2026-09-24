@@ -1,11 +1,16 @@
 package com.follower.chronicle;
 
 import com.follower.speech.TriggerContext;
+import java.time.Clock;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import net.runelite.api.Client;
 import net.runelite.api.Quest;
@@ -23,6 +28,14 @@ import net.runelite.api.QuestState;
  *
  * <p>Quest states are a script call each, so they are read once per game
  * tick at most and never from a render.
+ *
+ * <p>And when each page was written. A creature or place page is written the
+ * moment it is met; a quest page the moment its quest is seen to begin or
+ * end, by comparing what can be read with the last look. Either way the page
+ * is dated and placed, and the follower told, so it can say so. The first
+ * look of a session only takes stock: a page readable then was written
+ * before, perhaps before the book kept dates, and is left undated rather
+ * than dated today.
  */
 public class ChronicleProgress
 {
@@ -33,6 +46,25 @@ public class ChronicleProgress
 	/** Quest states as of the last refresh, by enum name. */
 	private final Map<String, QuestState> questStates = new HashMap<>();
 	private int refreshedOnTick = -1;
+
+	/** Pages readable at the last look, and whether this session has had one. */
+	private final Set<String> readableAtLastLook = new HashSet<>();
+	private boolean looked;
+
+	/**
+	 * Pages met or walked into before this session's first look, and where:
+	 * until the quests have been read, a page a quest already opened looks
+	 * new, so the first look decides.
+	 */
+	private final Map<String, String> undecided = new HashMap<>();
+
+	private BiConsumer<ChronicleEntry, Boolean> onWritten = (entry, byQuest) ->
+	{
+	};
+	private Clock clock = Clock.systemDefaultZone();
+
+	/** Whose quests these are; quest pages are dated per account. */
+	private Supplier<String> account = () -> null;
 
 	public ChronicleProgress(Client client, ChronicleLoader loader, Supplier<TriggerContext> memory)
 	{
@@ -63,6 +95,157 @@ public class ChronicleProgress
 			readQuest(entry.unlock.quest);
 			readQuest(entry.unlock.questBegun);
 		}
+		// A read that failed stands in as not started; comparing with it
+		// would find every finished quest newly finished on the next look.
+		if (refreshedOnTick == tick)
+		{
+			look();
+		}
+	}
+
+	/**
+	 * Told of each page the moment it is written, once, and whether a quest
+	 * wrote it (begun or finished) rather than something met or walked into.
+	 */
+	public void setOnWritten(BiConsumer<ChronicleEntry, Boolean> onWritten)
+	{
+		this.onWritten = onWritten == null ? (entry, byQuest) ->
+		{
+		} : onWritten;
+	}
+
+	/**
+	 * The account playing. The follower's memory belongs to the RuneLite
+	 * profile and so to every account on it, but quests belong to each
+	 * account, so a quest page's date is kept under the account's key.
+	 */
+	public void setAccount(Supplier<String> account)
+	{
+		this.account = account == null ? () -> null : account;
+	}
+
+	/** The day as the tests set it. */
+	void setClock(Clock clock)
+	{
+		this.clock = clock;
+	}
+
+	/** A new session, or another account: nothing seen yet. */
+	public void reset()
+	{
+		questStates.clear();
+		refreshedOnTick = -1;
+		readableAtLastLook.clear();
+		looked = false;
+		undecided.clear();
+	}
+
+	/**
+	 * What can be read now against the last look: a page readable now and not
+	 * then has just been written. The first look of a session takes stock.
+	 */
+	void look()
+	{
+		Set<String> now = new HashSet<>();
+		for (ChronicleEntry entry : loader.getEntries())
+		{
+			if (!isReadable(entry))
+			{
+				continue;
+			}
+			now.add(entry.id);
+			if (looked && !readableAtLastLook.contains(entry.id))
+			{
+				// Readable now and not then, and not met or walked into: a
+				// quest begun or finished since the last look wrote it.
+				written(entry, here(), true);
+			}
+		}
+		if (!looked)
+		{
+			// The quests are read at last: a page met before now is new only
+			// if no quest had already opened it.
+			for (Map.Entry<String, String> met : undecided.entrySet())
+			{
+				ChronicleEntry entry = loader.get(met.getKey());
+				if (entry != null && !byQuest(entry))
+				{
+					written(entry, met.getValue(), false);
+				}
+			}
+			undecided.clear();
+		}
+		readableAtLastLook.clear();
+		readableAtLastLook.addAll(now);
+		looked = true;
+	}
+
+	/** Whether a quest's state alone makes the page readable. */
+	private boolean byQuest(ChronicleEntry entry)
+	{
+		ChronicleEntry.ChronicleUnlock unlock = entry.unlock;
+		if (unlock == null)
+		{
+			return false;
+		}
+		if (unlock.quest != null && questStates.get(unlock.quest) == QuestState.FINISHED)
+		{
+			return true;
+		}
+		QuestState begun = unlock.questBegun == null ? null : questStates.get(unlock.questBegun);
+		return begun == QuestState.IN_PROGRESS || begun == QuestState.FINISHED;
+	}
+
+	/** The key a quest page's date is kept under for this account. */
+	private String accountKey(String entryId)
+	{
+		String who = account.get();
+		return who == null || who.isEmpty() ? entryId : entryId + "@" + who;
+	}
+
+	/**
+	 * The epoch day the page was written, or null for one written before the
+	 * book kept dates: this account's date for it first, as a quest wrote it,
+	 * then the one it was met or walked into on.
+	 */
+	public Long writtenOn(ChronicleEntry entry)
+	{
+		TriggerContext context = memory.get();
+		if (context == null || entry == null)
+		{
+			return null;
+		}
+		Long mine = context.chronicledOn(accountKey(entry.id));
+		return mine != null ? mine : context.chronicledOn(entry.id);
+	}
+
+	/** Where it was written, or empty, found the same way. */
+	public String writtenAt(ChronicleEntry entry)
+	{
+		TriggerContext context = memory.get();
+		if (context == null || entry == null)
+		{
+			return "";
+		}
+		String key = accountKey(entry.id);
+		return context.chronicledOn(key) != null ? context.chronicledAt(key) : context.chronicledAt(entry.id);
+	}
+
+	private String here()
+	{
+		TriggerContext context = memory.get();
+		return context == null ? "" : context.placeName(context.getRegionId());
+	}
+
+	private void written(ChronicleEntry entry, String place, boolean byQuest)
+	{
+		TriggerContext context = memory.get();
+		if (context != null)
+		{
+			context.stampChronicled(byQuest ? accountKey(entry.id) : entry.id,
+				LocalDate.now(clock).toEpochDay(), place);
+		}
+		onWritten.accept(entry, byQuest);
 	}
 
 	private void readQuest(String name)
@@ -194,7 +377,7 @@ public class ChronicleProgress
 			{
 				if (name != null && name.toLowerCase(Locale.ROOT).equals(wanted))
 				{
-					if (write(entry))
+					if (write(entry, here()))
 					{
 						written.add(entry);
 					}
@@ -216,7 +399,8 @@ public class ChronicleProgress
 			{
 				continue;
 			}
-			if (write(entry))
+			TriggerContext context = memory.get();
+			if (write(entry, context == null ? "" : context.placeName(regionId)))
 			{
 				written.add(entry);
 			}
@@ -224,9 +408,32 @@ public class ChronicleProgress
 		return written;
 	}
 
-	private boolean write(ChronicleEntry entry)
+	/**
+	 * Writes the page into the follower's memory. It is dated, placed and
+	 * spoken of only if it could not be read already, as a creature page a
+	 * quest opened first could be.
+	 */
+	private boolean write(ChronicleEntry entry, String place)
 	{
 		TriggerContext context = memory.get();
-		return context != null && context.noteChronicled(entry.id);
+		if (context == null)
+		{
+			return false;
+		}
+		boolean before = isReadable(entry);
+		if (!context.noteChronicled(entry.id))
+		{
+			return false;
+		}
+		readableAtLastLook.add(entry.id);
+		if (!looked)
+		{
+			undecided.putIfAbsent(entry.id, place);
+		}
+		else if (!before)
+		{
+			written(entry, place, false);
+		}
+		return true;
 	}
 }

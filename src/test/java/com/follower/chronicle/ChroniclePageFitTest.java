@@ -13,6 +13,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -201,6 +202,63 @@ public class ChroniclePageFitTest
 			}
 		}
 		assertTrue(String.join("\n", problems), problems.isEmpty());
+	}
+
+	@Test
+	public void theBookIsSignedWithTheFollowersNameWhenItFits()
+	{
+		assertEquals("Bartholomew's Chronicle - 5/17",
+			ChronicleWindow.title("Bartholomew", 5, 17, bold::stringWidth));
+		assertEquals("no name, no signature", "Chronicle - 5/17",
+			ChronicleWindow.title("  ", 5, 17, bold::stringWidth));
+		assertEquals("Chronicle - 5/17", ChronicleWindow.title(null, 5, 17, bold::stringWidth));
+		String longName = "Sir Reginald Fortescue-Smythe the Unusually Thorough";
+		assertEquals("a name too long for the title bar leaves the book unsigned", "Chronicle - 5/17",
+			ChronicleWindow.title(longName, 5, 17, bold::stringWidth));
+		assertTrue(bold.stringWidth(ChronicleWindow.title("Bartholomew", 150, 150, bold::stringWidth))
+			<= ChronicleLayout.TITLE_ROOM);
+	}
+
+	@Test
+	public void aWrittenPageSaysWhenInTheWorldsCalendarAndWhereOnTheLineBelow() throws IOException
+	{
+		long day = java.time.LocalDate.of(2026, 3, 22).toEpochDay();
+		assertEquals("Written on the 4th of Bennath, year 169",
+			ChronicleWindow.writtenOn(day, "Enemy: ", small::stringWidth, WIDTH));
+		assertEquals("Written on Moevyng Day, year 169", ChronicleWindow.writtenOn(
+			java.time.LocalDate.of(2028, 2, 29).toEpochDay(), "Place: ", small::stringWidth, WIDTH));
+
+		// Every kind on its longest day: the year goes before the line runs over.
+		long longest = java.time.LocalDate.of(2026, 10, 17).toEpochDay();
+		for (String kind : new String[]{"quest", "boss", "enemy", "location", "faction", "world"})
+		{
+			String label = ChronicleWindow.kindLabel(kind) + ": ";
+			String line = ChronicleWindow.writtenOn(longest, label, small::stringWidth, WIDTH);
+			assertTrue(line, small.stringWidth(label + line) <= WIDTH);
+			assertTrue(line, line.startsWith("Written on the 40th of Ire of Phyrrys"));
+		}
+
+		// Play review: the Locations rules name places descriptively, and
+		// "Lumbridge town and castle" never fitted beside a date.
+		com.follower.speech.RuleLoader rules = new com.follower.speech.RuleLoader(new Gson());
+		rules.initialise(folder.newFolder().toPath());
+		com.follower.speech.TriggerContext names = new com.follower.speech.TriggerContext(null);
+		names.setRegionNames(rules.getRegionNames());
+		assertEquals("Lumbridge", ChronicleWindow.shortPlace(names.placeName(12850)));
+		assertEquals("the Grand Exchange", ChronicleWindow.shortPlace("The Grand Exchange plaza"));
+		assertEquals("East Ardougne", ChronicleWindow.shortPlace("East Ardougne and its market"));
+		assertEquals("the Barrows", ChronicleWindow.shortPlace("The Barrows mounds"));
+		assertEquals("Fishing Guild", ChronicleWindow.shortPlace("Fishing Guild"));
+		List<String> problems = new ArrayList<>();
+		for (Integer region : rules.getRegionNames().keySet())
+		{
+			String line = ChronicleWindow.WRITTEN_AT + ChronicleWindow.shortPlace(names.placeName(region));
+			if (small.stringWidth(line) > WIDTH)
+			{
+				problems.add(region + ": " + line);
+			}
+		}
+		assertTrue(String.join(", ", problems), problems.isEmpty());
 	}
 
 	@Test

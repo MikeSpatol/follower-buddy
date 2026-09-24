@@ -54,7 +54,9 @@ and comes back on foot or by teleport. Tell it to Stay and it holds the post,
 notices when you come back, and updates its notes while it waits.
 
 **It keeps a chronicle.** Right-click it and choose Chronicle to open the
-scribe's book, drawn to look like the game's own Collection Log. It has a page
+scribe's book, signed with its name and drawn to look like the game's own
+Collection Log. When it writes a new page it says so, and each page records
+the day it was written, in the world's own calendar, and where. It has a page
 for each quest you have finished, telling what happened, who was involved,
 where it took place and what is worth knowing about it, and pages for the
 bosses and creatures you have met, the places you have walked into, and the

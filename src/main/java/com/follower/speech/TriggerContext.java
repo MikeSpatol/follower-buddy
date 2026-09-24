@@ -988,6 +988,69 @@ public final class TriggerContext
 		}
 	}
 
+	/**
+	 * When and where each page went into the book: the real day (an epoch
+	 * day, turned into the world's calendar when it is shown) and the name of
+	 * the place you were standing. Quest pages too, which the game remembers
+	 * but the date of whose writing only the follower saw. A page written
+	 * before the book kept dates has neither, and says nothing rather than
+	 * guess.
+	 */
+	private final java.util.Map<String, Long> chronicledOn = new java.util.HashMap<>();
+	private final java.util.Map<String, String> chronicledAt = new java.util.HashMap<>();
+
+	/** Dates the page, once; a page is written only once. */
+	public void stampChronicled(String entryId, long epochDay, String place)
+	{
+		if (entryId == null || chronicledOn.containsKey(entryId))
+		{
+			return;
+		}
+		chronicledOn.put(entryId, epochDay);
+		if (place != null && !place.isEmpty())
+		{
+			chronicledAt.put(entryId, place);
+		}
+		countersDirty = true;
+	}
+
+	/** The epoch day the page was written, or null for an undated one. */
+	public Long chronicledOn(String entryId)
+	{
+		return entryId == null ? null : chronicledOn.get(entryId);
+	}
+
+	/** Where it was written, or empty. */
+	public String chronicledAt(String entryId)
+	{
+		String place = entryId == null ? null : chronicledAt.get(entryId);
+		return place == null ? "" : place;
+	}
+
+	/** Live maps, for the plugin to write out. Read-only by convention. */
+	public java.util.Map<String, Long> getChronicledOn()
+	{
+		return chronicledOn;
+	}
+
+	public java.util.Map<String, String> getChronicledAt()
+	{
+		return chronicledAt;
+	}
+
+	/** The saved dates win: a stamp made before they were read was made on a blank memory. */
+	public void restoreChronicledStamps(java.util.Map<String, Long> on, java.util.Map<String, String> at)
+	{
+		if (on != null)
+		{
+			chronicledOn.putAll(on);
+		}
+		if (at != null)
+		{
+			chronicledAt.putAll(at);
+		}
+	}
+
 	// -------------------------------------------------------------- repeating
 
 	/**

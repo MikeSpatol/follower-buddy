@@ -437,7 +437,15 @@ public class EveryConditionTypeTest
 		note("worldHop", "gameUpdated", "notesEdited", "musicUnlock",
 			"collectionAdd", "questComplete", "geOffer", "channelJoined",
 			"channelLeft", "npcShout", "dateIs", "musicTrack", "examinedThing",
-			"attendedAgain", "minutesTaken");
+			"attendedAgain", "minutesTaken", "pageWritten");
+
+		fires("{\"type\": \"pageWritten\"}", TriggerEvent.pageWritten("enemy", "Goblin"));
+		fires("{\"type\": \"pageWritten\", \"is\": \"boss\"}",
+			TriggerEvent.pageWritten("boss", "Giant Mole"));
+		Harness wrongKind = harnessFor("{\"type\": \"pageWritten\", \"is\": \"boss\"}");
+		wrongKind.gameTicks(1);
+		wrongKind.dispatch(TriggerEvent.pageWritten("location", "Lumbridge"));
+		assertQuiet(wrongKind, "a place page is not a boss page");
 
 		fires("{\"type\": \"attendedAgain\"}",
 			TriggerEvent.simple(TriggerEvent.Type.ATTENDED_AGAIN));

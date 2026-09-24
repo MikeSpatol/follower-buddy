@@ -49,6 +49,7 @@ public class MemorySurvivesRestartTest
 		context.noteSaidOnce("first-meeting");
 		context.noteSaidOnce("first-page");
 		context.noteChronicled("boss-giant-mole");
+		context.stampChronicled("boss-giant-mole", 20_720L, "Falador");
 		context.noteLineSaid("A line said twice.");
 		context.noteLineSaid("A line said twice.");
 		context.setMetOnDay(20_400L);
@@ -99,6 +100,8 @@ public class MemorySurvivesRestartTest
 		assertTrue("a chronicle page once written stays written",
 			after.isChronicled("boss-giant-mole"));
 		assertFalse(after.isChronicled("boss-king-black-dragon"));
+		assertEquals("and the day it was written", Long.valueOf(20_720L), after.chronicledOn("boss-giant-mole"));
+		assertEquals("and where", "Falador", after.chronicledAt("boss-giant-mole"));
 
 		// Line wear resetting every restart would make retirement (R17) a
 		// per-session mechanism, which is to say no mechanism at all.

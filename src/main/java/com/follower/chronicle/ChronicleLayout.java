@@ -38,6 +38,9 @@ public final class ChronicleLayout
 	public static final int TITLE_BASELINE = 22;
 	public static final Rectangle CLOSE = new Rectangle(473, 7, 21, 21);
 
+	/** How wide the centred title may be and stay clear of the close button either side. */
+	public static final int TITLE_ROOM = 2 * (473 - WIDTH / 2 - 4);
+
 	/** The steel divider under the title band: 6 high, rim to rim. */
 	public static final int DIVIDER_TOP = 29;
 

@@ -504,6 +504,21 @@ public class SpeechEngine
 	}
 
 	/**
+	 * Whether the follower has the floor: nothing waiting its turn, the login
+	 * baseline taken, not muted or hushed, and the gap since the last line
+	 * run out. For news that can wait, such as a chronicle page written. Sent
+	 * at the moment it happens, it met the reaction to the same moment and
+	 * lost: a region's arrival line outranks it on the same event, and a
+	 * boss's own line speaks first and leaves it inside the gap.
+	 */
+	public boolean isQuiet()
+	{
+		long now = now();
+		return pending.isEmpty() && primeTicksLeft == 0 && !muted
+			&& now - lastSpokeMs >= moodScaledGap() && now >= hushUntilMs;
+	}
+
+	/**
 	 * Whether this rule is allowed to say its line right now.
 	 *
 	 * <p>The mute and the global window throttle SPEECH; a rule that only plays

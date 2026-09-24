@@ -616,8 +616,9 @@ a description, and the museum case marked as having no information yet.
 
 ## Not until the code exists
 
-`TriggerContext.chronicled` stores which pages are written, not when, and
-pages are static. So none of these get written until the code for them is
+Pages are static. The book now knows when and where each page was written
+(from the day dates were added; older pages are undated), but nothing else
+about the time since. So none of these get written until the code for them is
 built, and none of them get built unasked:
 
 - "Later." notes at thresholds a player actually reaches (about 100 for a
@@ -626,7 +627,7 @@ built, and none of them get built unasked:
 - Hearsay captions for unseen plates, such as "From Wyson's account." in place
   of "Not yet seen.".
 - Tally placeholders in page text.
-- In-world dates on notes.
+- Dated notes within a page, such as a "Correction:" added on a later visit.
 - An item plate, for quests whose key thing is an object (Glarial's urn, the
   Cook-o-matic).
 

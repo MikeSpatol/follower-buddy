@@ -416,6 +416,7 @@ mood stretches or shortens on top.
 | `musicTrack` | optional `names` (wildcards ok) - the playing track changed. `{track}` |
 | `collectionAdd` | - a new collection log entry (needs the game's own log notification on). `{item}`; tally `collections` |
 | `questComplete` | - the quest reward scroll appeared. `{quest}` names it; tally `quests` |
+| `pageWritten` | optional `is` - a chronicle page was written for the first time: `boss`, `enemy`, `location`, `faction` or `world` for one met or walked into, `quest` for any page a quest begun or finished opened. `{page}` names it. The plugin holds the event until the follower has the floor, so it follows the moment's own reaction |
 | `geOffer` | `is` `bought` or `sold` - a Grand Exchange offer finished. `{item}`, `{value}` |
 | `channelJoined` / `channelLeft` | - somebody arrived in or left your friends chat or clan channel. `{name}` |
 | `npcShout` | `names` (wildcards ok) and/or `contains` - a named NPC said something overhead. `{npc}`, `{message}` |
@@ -1349,8 +1350,36 @@ NPC of that name in the scene, or killed) or a place walked into (a map region)
 is something only the follower saw, so `noteNpc` and `noteRegion` write the page
 id into the memory's `chronicled` set, which is saved and restored with the rest
 of the memory under the same profile guard. Quest states are script calls, so
-they are read once per tick while the window is open and again on opening, never
-from a render. The title's count is pages readable over pages there are.
+they are read once per tick while the window is open, every ten ticks while it is
+shut, and never from a render. The title's count is pages readable over pages
+there are, and the title is signed with the follower's name from its settings
+("Bartholomew's Chronicle"), left plain when the name is blank or too long to sit
+clear of the close button.
+
+**When and where a page was written.** A creature or place page is written the
+moment it is met; a quest page the moment its quest is seen to begin or end,
+which the regular look at quest states catches by comparing what can be read
+with the last look. Either way the page is stamped in the memory
+(`chronicledOn`, an epoch day, and `chronicledAt`, the place name the Locations
+rules give the region you stood in), and the plugin queues a `pageWritten`
+event, sent once the follower has the floor (`SpeechEngine.isQuiet`) and
+dropped after a minute, so the follower says so in its own voice from the
+`chronicle-page-*` rules; sent at the moment itself, the boss's own line or
+a place's arrival line always won. A quest page's date is kept per account
+(the memory belongs to the RuneLite profile, but quests to each account),
+and a creature or place met before the session's first look at the quests
+waits for that look, so a page a quest had already opened is not announced
+again. The header shortens the place to its name ("Lumbridge town and
+castle" is "Lumbridge", "The Grand Exchange plaza" "the Grand Exchange"). The header of a written, dated page then reads
+"Place: Written on the 17th of Ire of Phyrrys, year 169" over "Written at:
+Lumbridge": the real date in the world's own calendar (`GielinorCalendar`,
+the ten months Reldo gives in Postbag from the Hedge 21, with the leap day as
+Moevyng Day), the year given up when the line has no room for it, and the
+place on the line below where "Written when:" stands on an undated page. The first look
+of each session only takes stock, so a page already readable then (a quest
+done before the book kept dates, or while the plugin was off) is left undated
+rather than dated today, and keeps "Written when:" in its header. The tab for
+bosses is "Beasts", a word the scribe would use.
 
 **The window** (`ChronicleWindow`, `ChronicleLayout`). An overlay above the
 widgets at high priority, 500 by 314 like the Collection Log, centred over the

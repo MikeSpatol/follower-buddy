@@ -1,12 +1,12 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 503 rules, 2351 spoken lines, 3 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 508 rules, 2365 spoken lines, 3 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
 ## Contents
 
-- [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (43 rules, 194 lines)
+- [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (48 rules, 208 lines)
 - [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (36 rules, 222 lines)
 - [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (42 rules, 280 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 114 lines)
@@ -541,6 +541,60 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 45, cooldown 10m, delay 2 ticks
 
 - Fifty songs since we met. The catalogue wants a second volume.
+
+### `chronicle-page-boss`
+
+> A boss's chronicle page was just written, the first time the scribe set eyes on it. The plugin holds the news until the follower has the floor, so it comes after the boss's own line rather than into it.
+
+- **when:** pagewritten
+- **pacing:** priority 40, cooldown 1m
+
+- {page} gets a page. I'll write it up from further away.
+- That's {page} in the book. The handwriting may be shaky.
+- A page for {page}. I'll want the good ink for this one.
+
+### `chronicle-page-enemy`
+
+> A creature's chronicle page was just written, the first time one came into view. Held until the follower has the floor.
+
+- **when:** pagewritten
+- **pacing:** priority 30, cooldown 1m
+
+- {page}. That one gets a page. Filed.
+- New page: {page}. Unflattering, but accurate.
+- {page}, then. A page to itself, from today.
+
+### `chronicle-page-place`
+
+> A place's chronicle page was just written, the first time you walked into it. Held until the follower has the floor, so the arrival line goes first. Its sketch comes later, when you stand still there.
+
+- **when:** pagewritten
+- **pacing:** priority 30, cooldown 1m
+
+- {page} gets a page. I'll sketch it when we stop.
+- New page: {page}. I've written the name at the top. It's a start.
+- {page}. Page opened. I'll need you to stand still for the drawing.
+
+### `chronicle-page-lore`
+
+> A faction or world page was just written by walking into its land. Pages a quest opens come as 'quest' instead.
+
+- **when:** (pagewritten OR pagewritten)
+- **pacing:** priority 30, cooldown 1m
+
+- {page}. That gets a page, and a careful one.
+- A page for {page}. I'll keep my voice down while I write it.
+
+### `chronicle-page-quest`
+
+> A quest begun or finished opened a chronicle page: the quest's own page, or a place, creature or history it introduces. Nothing has been seen yet, so these claim no sighting and promise no sketch. A quest can open several pages at once; the cooldown lets one line speak for them.
+
+- **when:** pagewritten
+- **pacing:** priority 30, cooldown 1m
+
+- {page} gets a page. The quest saw to that.
+- A page for {page}. You've given me plenty to write, for once.
+- {page}. New page. I'll fill it in as we go.
 
 ### `collection-add`
 

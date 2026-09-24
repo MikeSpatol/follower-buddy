@@ -86,6 +86,32 @@ public class FollowerPlugin extends Plugin
 	/** Game ticks to let the client rebuild a changed player model before reading it. */
 	private static final int MODEL_REBUILD_TICKS = 4;
 
+	/** How often the chronicle looks at quest states while the book is shut: six seconds. */
+	private static final int CHRONICLE_LOOK_TICKS = 10;
+
+	/** How long a page written waits for the follower to have the floor before it goes unsaid: a minute. */
+	private static final int PAGE_NEWS_TICKS = 100;
+
+	/** A page written, waiting to be mentioned. */
+	private static final class PageNews
+	{
+		final TriggerEvent event;
+		final int tick;
+
+		PageNews(TriggerEvent event, int tick)
+		{
+			this.event = event;
+			this.tick = tick;
+		}
+	}
+
+	/**
+	 * Pages written and not yet mentioned, oldest first. Said the moment they
+	 * were written they met the reaction to the same moment and lost - the
+	 * boss's own line, a place's arrival line - so they wait for quiet.
+	 */
+	private final java.util.ArrayDeque<PageNews> pageNews = new java.util.ArrayDeque<>();
+
 
 
 	@Inject
@@ -741,6 +767,16 @@ public class FollowerPlugin extends Plugin
 		chronicleProgress = new com.follower.chronicle.ChronicleProgress(client, chronicle,
 			() -> speechEngine.getContext());
 		chronicleWindow.attach(chronicleProgress);
+		// A page written is a page the follower mentions, once it has the
+		// floor: its own rules say what, from the page's kind and name, or
+		// "quest" for a page a quest opened, which the follower has not seen.
+		chronicleProgress.setOnWritten((entry, byQuest) -> pageNews.add(new PageNews(
+			TriggerEvent.pageWritten(byQuest ? "quest" : entry.kindOrEmpty(), entry.name),
+			client.getTickCount())));
+		// Quest pages are per account, where the memory is per profile.
+		chronicleProgress.setAccount(() -> configManager.getRSProfileKey());
+		// The book is the follower's, and signed with its name.
+		chronicleWindow.setOwner(config::followerName);
 		sketchBook = new com.follower.chronicle.SketchBook(dataDir);
 		chronicleWindow.attach(sketchBook);
 		// The scribe sketches the places it has pages for, when you stand
@@ -778,6 +814,13 @@ public class FollowerPlugin extends Plugin
 			clientThread.invoke(() ->
 			{
 				readCounters();
+				if (chronicleProgress != null)
+				{
+					// A tick can land before this restore, on the blank memory;
+					// anything the book made of that is taken stock of again.
+					chronicleProgress.reset();
+				}
+				pageNews.clear();
 				noteFirstMeeting();
 				speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
 				speechEngine.getContext().setRegionNames(ruleLoader.getRegionNames());
@@ -1979,6 +2022,9 @@ public class FollowerPlugin extends Plugin
 		java.util.List<String> spokenOnce;
 		/** Chronicle pages written so far, by entry id. */
 		java.util.List<String> chronicled;
+		/** And when (an epoch day) and where each was written, where known. */
+		java.util.Map<String, Long> chronicledOn;
+		java.util.Map<String, String> chronicledAt;
 
 		/**
 		 * How worn each line is - times actually said, keyed by the template's
@@ -2074,6 +2120,13 @@ public class FollowerPlugin extends Plugin
 			speechEngine.reset();
 			metWearingValue = -1;
 			readCounters();
+			if (chronicleProgress != null)
+			{
+				// Another profile's memory: its pages are taken stock of, not
+				// compared with the last profile's and announced.
+				chronicleProgress.reset();
+			}
+			pageNews.clear();
 			noteFirstMeeting();
 			speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
 				speechEngine.getContext().setRegionNames(ruleLoader.getRegionNames());
@@ -2122,6 +2175,7 @@ public class FollowerPlugin extends Plugin
 			context.restorePlaces(saved.placeScores, saved.placeMemories);
 			context.restoreSpokenOnce(saved.spokenOnce);
 			context.restoreChronicled(saved.chronicled);
+			context.restoreChronicledStamps(saved.chronicledOn, saved.chronicledAt);
 			context.restoreLineWear(saved.lineWear);
 			context.setMetOnDay(saved.metOnDay);
 			context.setMetWearingValue(saved.metWearingValue);
@@ -2196,6 +2250,10 @@ public class FollowerPlugin extends Plugin
 		saved.placeMemories = context.getPlaceMemories();
 		saved.spokenOnce = new java.util.ArrayList<>(context.getSpokenOnce());
 		saved.chronicled = new java.util.ArrayList<>(context.getChronicled());
+		saved.chronicledOn = context.getChronicledOn().isEmpty() ? null
+			: new java.util.HashMap<>(context.getChronicledOn());
+		saved.chronicledAt = context.getChronicledAt().isEmpty() ? null
+			: new java.util.HashMap<>(context.getChronicledAt());
 		saved.lineWear = context.getLineWear();
 		saved.metOnDay = context.getMetOnDay();
 		saved.metWearingValue = metWearing;
@@ -3349,6 +3407,14 @@ public class FollowerPlugin extends Plugin
 					{
 						sketchBook.openFor(configManager.getRSProfileKey());
 					}
+					if (chronicleProgress != null)
+					{
+						// A new session, perhaps another account: what the book
+						// can read is taken stock of afresh, not compared with
+						// the last character's.
+						chronicleProgress.reset();
+					}
+					pageNews.clear();
 					speechEngine.getContext().clearDailyTallies();
 					noteFirstMeeting();
 					speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
@@ -3448,6 +3514,11 @@ public class FollowerPlugin extends Plugin
 				{
 					sketching.reset();
 				}
+				if (chronicleProgress != null)
+				{
+					chronicleProgress.reset();
+				}
+				pageNews.clear();
 				// A session really ending. What the follower was feeling, what
 				// it was hoping for and the question it was waiting on all
 				// belonged to that session.
@@ -6024,7 +6095,11 @@ public class FollowerPlugin extends Plugin
 		{
 			sketching.tick();
 		}
-		if (chronicleProgress != null && chronicleWindow.isOpen())
+		// Every tick while the book is open, and every few otherwise, so a
+		// quest begun or finished is seen soon after and its pages dated then
+		// and there.
+		if (chronicleProgress != null
+			&& (chronicleWindow.isOpen() || client.getTickCount() % CHRONICLE_LOOK_TICKS == 0))
 		{
 			chronicleProgress.refresh(client.getTickCount());
 		}
@@ -6484,6 +6559,18 @@ public class FollowerPlugin extends Plugin
 		}
 
 		speechEngine.dispatch(TriggerEvent.tick());
+
+		// A page written gets its mention after this tick's own events have
+		// been heard, and only when nothing else is being said.
+		int now = client.getTickCount();
+		while (!pageNews.isEmpty() && now - pageNews.peek().tick > PAGE_NEWS_TICKS)
+		{
+			pageNews.poll();
+		}
+		if (!pageNews.isEmpty() && speechEngine.isQuiet())
+		{
+			speechEngine.dispatch(pageNews.poll().event);
+		}
 	}
 
 	private void updateTrail(Player local)
@@ -6534,6 +6621,12 @@ public class FollowerPlugin extends Plugin
 				moments.farewell();
 			}
 			speechEngine.dispatch(TriggerEvent.simple(TriggerEvent.Type.FAREWELL));
+			// The logout tab: a last look, so a quest finished just now is
+			// dated before the session ends.
+			if (chronicleProgress != null)
+			{
+				chronicleProgress.refresh(client.getTickCount());
+			}
 			return;
 		}
 
@@ -6999,6 +7092,10 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void noteQuestScroll()
 	{
+		if (chronicleProgress != null)
+		{
+			chronicleProgress.refresh(client.getTickCount());
+		}
 		clientThread.invokeLater(() ->
 		{
 			net.runelite.api.widgets.Widget title = client.getWidget(

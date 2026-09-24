@@ -73,7 +73,7 @@ public class RuleSetIntegrityTest
 		"dateis", "worldhop", "gameupdated", "notesedited",
 		"musicunlock", "collectionadd", "questcomplete", "geoffer",
 		"channeljoined", "channelleft", "npcshout", "musictrack",
-		"examinedthing", "attendedagain", "minutestaken",
+		"examinedthing", "attendedagain", "minutestaken", "pagewritten",
 		"working", "xpdrop", "workended", "targetdepleted", "bagfull", "baghalf"));
 
 	private static JsonObject bundled(String resource) throws IOException
@@ -637,6 +637,7 @@ public class RuleSetIntegrityTest
 		byType.put("examinedthing", new HashSet<>(Arrays.asList("target")));
 		byType.put("collectionadd", new HashSet<>(Arrays.asList("item")));
 		byType.put("questcomplete", new HashSet<>(Arrays.asList("quest")));
+		byType.put("pagewritten", new HashSet<>(Arrays.asList("page")));
 		byType.put("geoffer", new HashSet<>(Arrays.asList("item", "value")));
 		byType.put("channeljoined", new HashSet<>(Arrays.asList("name")));
 		byType.put("channelleft", new HashSet<>(Arrays.asList("name")));

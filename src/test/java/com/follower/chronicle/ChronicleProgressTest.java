@@ -4,6 +4,11 @@ import com.follower.sim.FakeGame;
 import com.follower.speech.TriggerContext;
 import com.google.gson.Gson;
 import java.io.IOException;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import net.runelite.api.QuestState;
 import org.junit.Before;
@@ -13,6 +18,7 @@ import org.junit.rules.TemporaryFolder;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -136,5 +142,166 @@ public class ChronicleProgressTest
 		assertEquals(1, progress.tally("quest")[0]);
 		assertEquals(3, progress.tally("quest")[1]);
 		assertEquals(1, progress.tally("enemy")[0]);
+	}
+
+	// ------------------------------------------------ when and where written
+
+	private static final LocalDate TODAY = LocalDate.of(2026, 9, 24);
+
+	/** The pages the follower is told of, in order. */
+	private List<String> told()
+	{
+		List<String> ids = new ArrayList<>();
+		progress.setOnWritten((entry, byQuest) -> ids.add(entry.id + (byQuest ? " by quest" : "")));
+		progress.setClock(Clock.fixed(TODAY.atStartOfDay().toInstant(ZoneOffset.UTC), ZoneOffset.UTC));
+		memory.setRegionNames(Collections.singletonMap(12850, "Lumbridge: castle and the bridge"));
+		return ids;
+	}
+
+	@Test
+	public void aPlaceWalkedIntoIsDatedPlacedAndSpokenOfOnce()
+	{
+		List<String> told = told();
+		progress.look();
+		progress.noteRegion(12850);
+		ChronicleEntry lumbridge = loader.get("location-lumbridge");
+		assertEquals(Long.valueOf(TODAY.toEpochDay()), progress.writtenOn(lumbridge));
+		assertEquals("the place's name, to its first clause", "Lumbridge", progress.writtenAt(lumbridge));
+		assertEquals(Collections.singletonList("location-lumbridge"), told);
+		progress.noteRegion(12850);
+		assertEquals("once", 1, told.size());
+	}
+
+	@Test
+	public void aCreatureMetSomewhereUnnamedIsDatedWithoutAPlace()
+	{
+		List<String> told = told();
+		progress.look();
+		progress.noteNpc("Goblin");
+		ChronicleEntry goblin = loader.get("enemy-goblin");
+		assertEquals(Long.valueOf(TODAY.toEpochDay()), progress.writtenOn(goblin));
+		assertEquals("", progress.writtenAt(goblin));
+		assertEquals(Collections.singletonList("enemy-goblin"), told);
+	}
+
+	@Test
+	public void aQuestPageIsDatedWhenItsQuestIsSeenToFinish()
+	{
+		List<String> told = told();
+		progress.setQuestState("COOKS_ASSISTANT", QuestState.IN_PROGRESS);
+		progress.look();
+		assertTrue("taking stock tells nothing", told.isEmpty());
+		progress.setQuestState("COOKS_ASSISTANT", QuestState.FINISHED);
+		progress.look();
+		assertEquals(Collections.singletonList("quest-cooks-assistant by quest"), told);
+		assertEquals(Long.valueOf(TODAY.toEpochDay()), progress.writtenOn(loader.get("quest-cooks-assistant")));
+		progress.look();
+		assertEquals("and only the once", 1, told.size());
+	}
+
+	@Test
+	public void aPageAlreadyWrittenAtTheFirstLookIsLeftUndated()
+	{
+		// A quest done before the book kept dates, or before the plugin: the
+		// book does not know when, so it does not say.
+		List<String> told = told();
+		progress.setQuestState("COOKS_ASSISTANT", QuestState.FINISHED);
+		progress.look();
+		progress.look();
+		assertTrue(told.isEmpty());
+		assertNull(progress.writtenOn(loader.get("quest-cooks-assistant")));
+	}
+
+	@Test
+	public void aPageAQuestOpenedIsNotWrittenAgainWhenItsCreatureIsMet()
+	{
+		List<String> told = told();
+		progress.setQuestState("PRIEST_IN_PERIL", QuestState.IN_PROGRESS);
+		progress.look();
+		progress.noteNpc("Temple Guardian");
+		assertTrue("already readable, so nothing new to say", told.isEmpty());
+		progress.look();
+		assertTrue("nor on the next look", told.isEmpty());
+	}
+
+	@Test
+	public void aNewSessionTakesStockAfresh()
+	{
+		List<String> told = told();
+		progress.look();
+		progress.reset();
+		progress.setQuestState("COOKS_ASSISTANT", QuestState.FINISHED);
+		progress.look();
+		assertTrue("finished before this session's first look, as far as the book knows", told.isEmpty());
+	}
+
+	@Test
+	public void aPageAQuestOpensIsToldAsTheQuestsNotAsASighting()
+	{
+		// Starting Priest in Peril opens the dog's page and the temple's
+		// before either is seen: the follower must not claim it saw them.
+		List<String> told = told();
+		progress.look();
+		progress.setQuestState("PRIEST_IN_PERIL", QuestState.IN_PROGRESS);
+		progress.look();
+		assertTrue(told.toString(), told.contains("enemy-temple-guardian by quest"));
+		assertTrue(told.toString(), told.contains("location-paterdomus by quest"));
+	}
+
+	@Test
+	public void aQuestPagesDateBelongsToTheAccountThatDidTheQuest()
+	{
+		// One RuneLite profile, two accounts: the memory is shared, the
+		// quests are not.
+		told();
+		String[] who = {"main"};
+		progress.setAccount(() -> who[0]);
+		ChronicleEntry cooks = loader.get("quest-cooks-assistant");
+		progress.look();
+		progress.setQuestState("COOKS_ASSISTANT", QuestState.FINISHED);
+		progress.look();
+		assertEquals(Long.valueOf(TODAY.toEpochDay()), progress.writtenOn(cooks));
+		who[0] = "alt";
+		assertNull("the alt's Cook's Assistant was not written today", progress.writtenOn(cooks));
+
+		// A creature met is the follower's own, shared by both.
+		progress.noteNpc("Goblin");
+		who[0] = "main";
+		assertEquals(Long.valueOf(TODAY.toEpochDay()), progress.writtenOn(loader.get("enemy-goblin")));
+	}
+
+	@Test
+	public void aCreatureMetBeforeTheFirstLookWaitsForItToDecide()
+	{
+		// At login the quests are not read yet, so a creature whose page a
+		// quest had already opened would look new.
+		List<String> told = told();
+		progress.noteNpc("Temple Guardian");
+		progress.noteNpc("Goblin");
+		assertTrue("nothing said before the quests are read", told.isEmpty());
+		progress.setQuestState("PRIEST_IN_PERIL", QuestState.IN_PROGRESS);
+		progress.look();
+		assertEquals("the goblin was new; the dog's page the quest had opened already",
+			Collections.singletonList("enemy-goblin"), told);
+		assertNull(progress.writtenOn(loader.get("enemy-temple-guardian")));
+	}
+
+	@Test
+	public void anotherProfilesMemoryIsTakenStockOfNotAnnounced()
+	{
+		// Switching RuneLite profile swaps the memory under the book; the
+		// plugin resets the book when it does.
+		List<String> told = told();
+		memory.noteChronicled("enemy-goblin");
+		progress.look();
+		memory = new TriggerContext(game.client);
+		progress.reset();
+		progress.look();
+		memory.noteChronicled("boss-giant-mole");
+		progress.reset();
+		progress.look();
+		progress.look();
+		assertTrue(told.toString(), told.isEmpty());
+		assertNull(progress.writtenOn(loader.get("boss-giant-mole")));
 	}
 }
