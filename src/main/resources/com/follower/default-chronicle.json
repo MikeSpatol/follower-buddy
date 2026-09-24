@@ -64,6 +64,10 @@
             12850
           ],
           "caption": "Lumbridge, where it began."
+        },
+        {
+          "npc": 4627,
+          "caption": "Millie, explaining the lever."
         }
       ]
     },
@@ -135,6 +139,14 @@
             13622
           ],
           "caption": "Paterdomus, on the Salve."
+        },
+        {
+          "npc": 528,
+          "caption": "Drevil, as he nearly was."
+        },
+        {
+          "npc": 7620,
+          "caption": "Spots, before we knew."
         }
       ]
     },
@@ -208,6 +220,10 @@
             10038
           ],
           "caption": "Baxtorian Falls, loudly."
+        },
+        {
+          "npc": 4182,
+          "caption": "Hudon, not in the least lost."
         }
       ]
     },
@@ -254,6 +270,17 @@
         {
           "npc": 5779,
           "caption": "Drawn from life. Briefly."
+        },
+        {
+          "npc": 5422,
+          "caption": "Wyson, who started it."
+        },
+        {
+          "sketch": "falador",
+          "regions": [
+            11828
+          ],
+          "caption": "Falador, with a mole under it."
         }
       ]
     },
@@ -351,6 +378,14 @@
         {
           "npc": 3029,
           "caption": "A goblin, mid-complaint."
+        },
+        {
+          "npc": 669,
+          "caption": "Bentnoze, disagreeing."
+        },
+        {
+          "npc": 670,
+          "caption": "Wartface, also disagreeing."
         }
       ]
     },
@@ -633,7 +668,7 @@
           "regions": [
             12850
           ],
-          "caption": "Lumbridge."
+          "caption": "Lumbridge, done in a hurry."
         },
         {
           "npc": 815,
@@ -690,17 +725,29 @@
       ],
       "plates": [
         {
-          "sketch": "varrock",
+          "sketch": "varrock-square",
           "regions": [
-            12597,
-            12853,
+            12853
+          ],
+          "caption": "The square. Only we stood still."
+        },
+        {
+          "sketch": "varrock-palace",
+          "regions": [
             12854
           ],
-          "caption": "Varrock, busy as ever."
+          "caption": "The palace end. Best behaviour."
         },
         {
           "npc": 1399,
-          "caption": "King Roald of Misthalin."
+          "caption": "King Roald. I bowed, to be safe."
+        },
+        {
+          "sketch": "grand-exchange",
+          "regions": [
+            12598
+          ],
+          "caption": "The Exchange. I bought nothing."
         }
       ]
     },
@@ -755,7 +802,7 @@
         },
         {
           "npc": 9636,
-          "caption": "Drezel, its only monk."
+          "caption": "Drezel. The King asked after him."
         }
       ]
     },
@@ -807,7 +854,7 @@
           "regions": [
             10038
           ],
-          "caption": "Baxtorian Falls, loudly."
+          "caption": "The falls. The ink ran."
         },
         {
           "npc": 4181,

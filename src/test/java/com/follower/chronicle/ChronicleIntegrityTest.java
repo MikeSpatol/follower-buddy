@@ -340,6 +340,36 @@ public class ChronicleIntegrityTest
 		assertTrue("plates that cannot be drawn:\n  " + String.join("\n  ", problems), problems.isEmpty());
 	}
 
+	/**
+	 * docs/chronicle-voice.md, "Plates carry shape, never scale": a caption
+	 * is the subject plus one thing the picture cannot show, so it is never a
+	 * bare label ("Lumbridge.") and never one another plate already uses.
+	 */
+	@Test
+	public void everyCaptionIsItsOwn() throws IOException
+	{
+		ChronicleLoader loader = loadAsAFreshInstall();
+		List<String> problems = new ArrayList<>();
+		java.util.Map<String, String> usedOn = new java.util.HashMap<>();
+		for (ChronicleEntry entry : loader.getEntries())
+		{
+			for (ChronicleEntry.Plate plate : entry.platesOrEmpty())
+			{
+				String caption = plate.caption == null ? "" : plate.caption.trim();
+				if (caption.split("\\s+").length < 2 || caption.equalsIgnoreCase(entry.name + "."))
+				{
+					problems.add(entry.id + ": a bare label: " + caption);
+				}
+				String before = usedOn.putIfAbsent(caption, entry.id);
+				if (before != null)
+				{
+					problems.add(entry.id + ": the same caption as a plate on " + before + ": " + caption);
+				}
+			}
+		}
+		assertTrue("captions that say nothing of their own:\n  " + String.join("\n  ", problems), problems.isEmpty());
+	}
+
 	@Test
 	public void everyCharacterUsedHasAGlyphInTheFontsThatDrawIt() throws IOException
 	{

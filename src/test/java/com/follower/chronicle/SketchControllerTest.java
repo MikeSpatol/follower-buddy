@@ -34,7 +34,10 @@ public class SketchControllerTest
 		ChronicleLoader loader = loader();
 		Set<String> have = new HashSet<>();
 		assertEquals("lumbridge", SketchController.wanted(loader.getEntries(), 12850, have::contains));
-		assertEquals("varrock", SketchController.wanted(loader.getEntries(), 12853, have::contains));
+		assertEquals("varrock-square", SketchController.wanted(loader.getEntries(), 12853, have::contains));
+		assertEquals("varrock-palace", SketchController.wanted(loader.getEntries(), 12854, have::contains));
+		assertEquals("grand-exchange", SketchController.wanted(loader.getEntries(), 12598, have::contains));
+		assertEquals("falador", SketchController.wanted(loader.getEntries(), 11828, have::contains));
 		assertEquals("paterdomus", SketchController.wanted(loader.getEntries(), 13622, have::contains));
 		assertEquals("baxtorian-falls", SketchController.wanted(loader.getEntries(), 10038, have::contains));
 		assertEquals("morytania", SketchController.wanted(loader.getEntries(), 14131, have::contains));
