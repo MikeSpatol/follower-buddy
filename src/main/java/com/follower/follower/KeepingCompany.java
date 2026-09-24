@@ -1001,11 +1001,13 @@ class KeepingCompany
 	 * The scroll, through the same hands as the errand's, for a few ticks -
 	 * or until put away, for none. Skipped over a borrowed tool (they share
 	 * the weapon slot), over a scroll already out for something else, while
-	 * sitting, and off the seat.
+	 * sitting, off the seat, and over the player's shoulder: a tally due on
+	 * the tick of a look took the scroll out in front of the player and read
+	 * it for the whole look, which was never seen.
 	 */
 	private void takeOutTheScroll(int ticks)
 	{
-		if (seat == null || sitting || walking || scrollOut
+		if (seat == null || sitting || walking || scrollOut || peerTicks > 0
 			|| borrow.isHolding() || hands.isHolding())
 		{
 			return;

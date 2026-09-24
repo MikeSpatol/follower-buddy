@@ -2229,6 +2229,42 @@ public class SkillingSessionTest
 	private static final WorldPoint FRONT = new WorldPoint(50, 49, 0);
 
 	@Test
+	public void aTallyDueMidLookWaitsRatherThanSpoilingIt()
+	{
+		// The look over the shoulder and the tally both come at random. On
+		// about one draw in forty a drop's tally fell on the very tick of the
+		// look, took the scroll out in front of the player and read it for the
+		// whole look, so the look was never seen. The first three hundred
+		// draws, each its own seed, all get their look, with the scroll away.
+		java.util.List<Integer> missed = new java.util.ArrayList<>();
+		for (int seed = 0; seed < 300; seed++)
+		{
+			setUp();
+			skilling.random.setSeed(seed);
+			game.animating(FLETCH);
+			tick(1);
+			skilling.noteXpDrop(Skill.FLETCHING);
+			tick(SkillingController.SEAT_AFTER_TICKS);
+			boolean looked = false;
+			for (int i = 1; i <= KeepingCompany.SHOULDER_AFTER_TICKS + 130 && !looked; i++)
+			{
+				tick(1);
+				if (i % 3 == 0)
+				{
+					skilling.noteXpDrop(Skill.FLETCHING);
+				}
+				looked = follower.poseOverride == KeepingCompany.PEER
+					&& held != ErrandController.SCROLL_PROP;
+			}
+			if (!looked)
+			{
+				missed.add(seed);
+			}
+		}
+		assertTrue("seeds whose look never came: " + missed, missed.isEmpty());
+	}
+
+	@Test
 	public void fletchingOpensOnItsFirstDropAndEarnsALookOverTheShoulder()
 	{
 		game.animating(FLETCH);
