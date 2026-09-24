@@ -117,7 +117,11 @@ public class IncidentTest
 		h.game.regions(12850).at(3222, 3218, 0);
 		h.gameTicks(2);
 		h.game.regions(12342).at(3090, 3490, 0);
-		h.gameTicks(12);
+		// Both recalls are a coin toss each tick after a short delay, and the
+		// chance draws from a random a test cannot seed, so they are given
+		// long enough that missing every toss is not a thing that happens.
+		// Twelve and eight ticks missed about one run in sixteen.
+		h.gameTicks(40);
 		String line = said(h, "recall-here");
 		assertTrue("the memory in full: " + line, line.contains("Hill Giant"));
 
@@ -131,7 +135,7 @@ public class IncidentTest
 		NPC giant = foe.game.spawnNpc(2098, "Hill Giant", 28);
 		foe.game.moveNpc(giant, foe.game.player.getWorldLocation().getX() + 4,
 			foe.game.player.getWorldLocation().getY(), 0);
-		foe.gameTicks(8);
+		foe.gameTicks(40);
 		String seen = said(foe, "recall-foe");
 		assertTrue("names the thing or the memory: " + seen,
 			seen.contains("Hill Giant"));
