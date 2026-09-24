@@ -523,7 +523,8 @@ that neighbours close differently.
 The window is 500 by 314. The page column shows 14 body lines, and the plate
 and caption take 9 of them, so about 5 summary lines show when a page opens.
 `ChronicleLayout.page` fixes the order: plate and caption, summary, headed
-sections, then the people, places and details lists.
+sections, then the people, places and details lists, headed People,
+Places and Particulars in the window.
 
 - **Summary.** At most about 220 characters, in two or three sentences.
   Sentence one is the opener (rule 12). Sentence two says what the subject is.
@@ -667,8 +668,6 @@ like this:
 - Do pure route facts (the palace bucket, 2 coins at the general store, the
   southernmost bookcase) count as facts that must stay, or as walkthrough the
   book may drop?
-- The details list prints under the heading "Worth knowing", the same words
-  as the section above it. "Particulars" would be a one-word code fix.
 - The locked-page hint speaks of "The scribe" in the third person ("The
   scribe has not met one of these yet.") in a book otherwise written in the
   first person.
@@ -677,27 +676,24 @@ like this:
 
 ## Where the first pages stand
 
-Measured on 2026-09-24, against the 17 pages then in the book. None of these
-were changed when the rules landed, so they are the list to work through when
-the pages are brought in line.
+Measured on 2026-09-24, after the redundancy pass that cut the repeats out
+of the 17 pages. That pass fixed what was redundant and nothing else: the
+retellings became pointers, the lists became a ledger, the Seven's date now
+agrees, "by my tallies", "suicide run" and the unkept footnote promise are
+gone, the spoilers went from the pages that open when a quest starts, and
+no paragraph passes 360 characters. What is left to bring in line:
 
-- **Rule 2.** Four `questBegun` pages narrate what happens later in their
-  quest: Temple Guardian, Moss Guardian, Paterdomus and Baxtorian Falls. The
-  monk page, opened by sight, says he had you kill the Temple Guardian.
-- **Rule 9.** The Seven's page dates them around 1200, and the Morytania page
-  says around 1100. The wiki has about 1200 of the Fourth Age. Their story is
-  told at length on four pages.
-- **Rule 11.** "By my tallies" sits next to a drop rate on four pages,
-  including one in 5,000.
-- **Rule 12.** "Described" is used 17 times on 8 pages. "One of the" opens the
-  goblin's summary and its first section.
+- **Rule 10.** Cook's Assistant runs about 4,500 characters of prose, Priest
+  in Peril about 5,200 and Waterfall Quest about 9,200, against a 5,000
+  ceiling. What remains is the story and its history, not repetition.
+  Priest in Peril still gives a safespot as advice ("a spot between the pews
+  he cannot reach you in").
+- **Rule 12.** "Described" is used 12 times on 7 pages, and "One of the" is
+  still in the King Black Dragon's prose.
 - **Rules 1 and 16.** The goblin, fire giant, monk and moss guardian pages
-  have no first-person "I". The fire giant page is the weakest in the book;
-  the Giant Mole page is the best.
+  have no first-person "I". The fire giant page is still the weakest in the
+  book; the Giant Mole page is the best.
 - **Voice.** The pages carry no contractions at all.
-- **Rule 10.** The quest pages run 6,049 to 12,536 characters of prose,
-  against a 5,000 ceiling, much of it step order and reward tables.
-- **Rule 14.** Summaries run 190 to 440 characters, and 43 of 213 paragraphs
-  pass 360, nearly all on the quest pages.
-- **Rule 13.** "Suicide run" appears twice, once on the Seven's own page.
-- **Rule 8.** The King Black Dragon page promises footnotes and has none.
+- **Rule 14.** Summaries run 110 to 226 characters; three pass 220 by a few.
+- **Rule 3.** Some history paragraphs, on the Waterfall and goblin pages
+  among them, have no source in the world.

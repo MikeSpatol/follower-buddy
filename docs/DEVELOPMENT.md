@@ -1313,8 +1313,9 @@ something down; this is what it has been writing.
 **The pages** (`ChronicleEntry`, `default-chronicle.json`). One entry per page:
 an id (`quest-cooks-assistant`), a kind (`quest`, `boss`, `enemy`, `location`,
 `faction`, `world`), the name as the game spells it, an unlock, a summary, headed
-sections (What happened, Who was involved, Where it took place, Worth knowing),
-and short lists of people, places and particulars. The text was researched from
+sections, and short lists printed under their own headings, People, Places and
+Particulars; the particulars are the page's ledger of levels, drops, rewards and
+requirements, so the prose need not carry them. The text was researched from
 the OSRS wiki and then written in the scribe's own voice, the one the phrase
 file speaks in. How a page is written, and how to check one, is in
 [chronicle-voice.md](chronicle-voice.md): sixteen rules drawn from field

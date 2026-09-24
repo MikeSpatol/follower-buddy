@@ -417,9 +417,11 @@ public final class ChronicleLayout
 			heading(lines, section.heading, width, headingWidth);
 			paragraphs(lines, section.body, width, bodyWidth, Style.BODY, 0);
 		}
-		list(lines, "Who was involved", entry.peopleOrEmpty(), width, bodyWidth, headingWidth);
-		list(lines, "Where", entry.placesOrEmpty(), width, bodyWidth, headingWidth);
-		list(lines, "Worth knowing", entry.detailsOrEmpty(), width, bodyWidth, headingWidth);
+		// Headed apart from every section above them: "Worth knowing" twice on
+		// one page read as a recap, and got written as one.
+		list(lines, "People", entry.peopleOrEmpty(), width, bodyWidth, headingWidth);
+		list(lines, "Places", entry.placesOrEmpty(), width, bodyWidth, headingWidth);
+		list(lines, "Particulars", entry.detailsOrEmpty(), width, bodyWidth, headingWidth);
 		return lines;
 	}
 

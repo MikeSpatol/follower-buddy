@@ -192,9 +192,9 @@ public class ChronicleLayoutTest
 		assertEquals("BODY:First paragraph.", lines.get(2).toString());
 		assertEquals("BODY:Second paragraph.", lines.get(3).toString());
 		assertTrue("a paragraph break is a gap, not a blank line", lines.get(3).gapAbove > 0);
-		assertEquals("HEADING:Who was involved", lines.get(4).toString());
+		assertEquals("HEADING:People", lines.get(4).toString());
 		assertEquals("NOTE:- Someone - did a thing", lines.get(5).toString());
-		assertEquals("an empty list gets no heading", "HEADING:Worth knowing", lines.get(6).toString());
+		assertEquals("an empty list gets no heading", "HEADING:Particulars", lines.get(6).toString());
 		assertEquals("NOTE:- A detail", lines.get(7).toString());
 		assertEquals(8, lines.size());
 	}
