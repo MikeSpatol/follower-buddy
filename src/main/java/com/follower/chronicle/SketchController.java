@@ -8,6 +8,8 @@ import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
@@ -66,6 +68,14 @@ public class SketchController
 	private final SketchBook book;
 	private final DrawManager drawManager;
 	private final Executor executor;
+
+	/**
+	 * Places being drawn up off the client thread and not yet in the book.
+	 * Drawing two sizes takes long enough that you could still be standing
+	 * there when the scroll is put away, and the place must not be wanted
+	 * again, and drawn twice, before the first drawing is filed.
+	 */
+	private final Set<String> drawing = ConcurrentHashMap.newKeySet();
 	private final BooleanSupplier busy;
 	private final IntSupplier idleTicks;
 	private final IntSupplier region;
@@ -158,7 +168,8 @@ public class SketchController
 		{
 			return;
 		}
-		String here = wanted(loader.getEntries(), region.getAsInt(), book::has);
+		String here = wanted(loader.getEntries(), region.getAsInt(),
+			name -> book.hasBoth(name) || drawing.contains(name));
 		if (here == null)
 		{
 			return;
@@ -229,16 +240,25 @@ public class SketchController
 		{
 			g.dispose();
 		}
+		drawing.add(filing);
 		executor.execute(() ->
 		{
 			try
 			{
-				book.put(filing, SketchStyle.draw(copy, ChronicleLayout.PLATE_W - 4,
-					ChronicleLayout.PLATE_H - 4, seed));
+				// Twice from the one view: the page's plate, and the plate
+				// opened across the window, each drawn at its own size so the
+				// ink stays a pen's width in both.
+				book.put(filing,
+					SketchStyle.draw(copy, ChronicleLayout.PLATE_W - 4, ChronicleLayout.PLATE_H - 4, seed),
+					SketchStyle.draw(copy, ChronicleLayout.BIG_PLATE_W - 4, ChronicleLayout.BIG_PLATE_H - 4, seed));
 			}
 			catch (RuntimeException e)
 			{
 				log.warn("Could not draw the sketch of {}", filing, e);
+			}
+			finally
+			{
+				drawing.remove(filing);
 			}
 		});
 	}

@@ -595,7 +595,8 @@ a description, and the museum case marked as having no information yet.
   caption has to be true wherever in it the scribe happened to draw. Check
   every region and NPC id against the cache before it ships (`runAudit` for
   regions, `runNpcFind` for NPCs); a wrong one fails silently and the scribe
-  simply never draws the place.
+  simply never draws the place. Every portrait also carries its NPC's
+  standing animation as `idle`, which `runChronicleAudit` prints and checks.
 - **Captions.** One line, about 30 characters. The subject plus one thing the
   picture can't show:
   - how it was drawn: "Drawn from life. Briefly."

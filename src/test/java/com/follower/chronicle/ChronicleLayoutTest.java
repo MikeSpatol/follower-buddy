@@ -159,6 +159,17 @@ public class ChronicleLayoutTest
 	}
 
 	@Test
+	public void aHyphenatedWordLongerThanTheColumnBreaksAfterItsHyphens()
+	{
+		// Play feedback: Malignius-Mortifer's-Super-Ultra-Flora-Growth-Potion
+		// ran off the side of the Giant Mole's page.
+		List<String> lines = ChronicleLayout.wrap("a Super-Ultra-Flora-Growth b", 40, ChronicleLayoutTest::width);
+		assertEquals(Arrays.asList("a", "Super-", "Ultra-", "Flora-", "Growth", "b"), lines);
+		assertEquals("a word that fits keeps its hyphens whole",
+			Arrays.asList("well-known"), ChronicleLayout.wrap("well-known", 80, ChronicleLayoutTest::width));
+	}
+
+	@Test
 	public void aPageReadsSummaryThenSectionsThenTheLists()
 	{
 		ChronicleEntry entry = new ChronicleEntry();
@@ -225,6 +236,26 @@ public class ChronicleLayoutTest
 		assertEquals("I", ChronicleLayout.roman(1));
 		assertEquals("IV", ChronicleLayout.roman(4));
 		assertEquals("VIII", ChronicleLayout.roman(8));
+	}
+
+	@Test
+	public void theEnlargedPlateFillsTheBoxUnderTheTabs()
+	{
+		Rectangle big = ChronicleLayout.BIG_PLATE;
+		Rectangle box = new Rectangle(ChronicleLayout.CONTENT_LEFT + 1, ChronicleLayout.CONTENT_TOP + 1,
+			ChronicleLayout.CONTENT_RIGHT - ChronicleLayout.CONTENT_LEFT - 1,
+			ChronicleLayout.CONTENT_BOTTOM - ChronicleLayout.CONTENT_TOP - 1);
+		assertTrue("inside the box", box.contains(big));
+		assertEquals("centred across the window", ChronicleLayout.WIDTH - big.x - big.width, big.x);
+		assertTrue("the name sits above the picture", ChronicleLayout.BIG_NAME_BASELINE + 4 < big.y);
+		assertTrue("and clear of the tabs", ChronicleLayout.BIG_NAME_BASELINE - 12 > ChronicleLayout.CONTENT_TOP);
+		assertTrue("the caption under it", ChronicleLayout.BIG_CAPTION_BASELINE - 10 > big.y + big.height);
+		assertTrue("inside the box", ChronicleLayout.BIG_CAPTION_BASELINE + 4 < ChronicleLayout.CONTENT_BOTTOM);
+		// The same view larger: a sketch keeps its shape.
+		double small = (ChronicleLayout.PLATE_W - 4) / (double) (ChronicleLayout.PLATE_H - 4);
+		double large = (big.width - 4) / (double) (big.height - 4);
+		assertEquals(small, large, small * 0.01);
+		assertTrue("and it is bigger by most of twice", big.width - 4 >= (ChronicleLayout.PLATE_W - 4) * 1.8);
 	}
 
 	@Test

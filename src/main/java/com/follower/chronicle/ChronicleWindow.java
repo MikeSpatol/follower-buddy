@@ -52,6 +52,10 @@ import net.runelite.client.ui.overlay.OverlayPosition;
  * close button takes effect on the next game tick through a {@link
  * TickGate}, and a second press before then is ignored. Scrolling is not
  * gated, because in the game a scrollbar is the client's own.
+ *
+ * <p>A press on a page's plate opens it across the whole of the window
+ * below the tabs, to be looked at properly; a press anywhere on it, a tab,
+ * or Escape puts it back.
  */
 @Slf4j
 @Singleton
@@ -74,6 +78,9 @@ public class ChronicleWindow extends Overlay
 	private static final int PORTRAIT_FOOT = 0xbfa97f;
 	private static final int BARE_PAPER = 0xcbb994;
 
+	/** How much a plate under the mouse lightens, out of 255. */
+	private static final int HOVER_ALPHA = 28;
+
 	private static final int DRAG_NONE = 0;
 	private static final int DRAG_LIST = 1;
 	private static final int DRAG_PAGE = 2;
@@ -94,6 +101,10 @@ public class ChronicleWindow extends Overlay
 	private String plateIndexFor;
 	private final Rectangle platePrev = new Rectangle();
 	private final Rectangle plateNext = new Rectangle();
+
+	/** The plate opened across the window, and the part of the page's plate a press can land on. */
+	private volatile boolean enlarged;
+	private final Rectangle plateShown = new Rectangle();
 
 	private volatile boolean open;
 	private volatile int tab;
@@ -180,6 +191,7 @@ public class ChronicleWindow extends Overlay
 	public void close()
 	{
 		open = false;
+		enlarged = false;
 		dragging = DRAG_NONE;
 		gate.clear();
 	}
@@ -220,7 +232,7 @@ public class ChronicleWindow extends Overlay
 
 	// ----------------------------------------------------------------- input
 
-	private final MouseAdapter clickAdapter = new MouseAdapter()
+	final MouseAdapter clickAdapter = new MouseAdapter()
 	{
 		@Override
 		public MouseEvent mousePressed(MouseEvent event)
@@ -268,6 +280,18 @@ public class ChronicleWindow extends Overlay
 			if (plateNext.contains(x, y))
 			{
 				gate.offer(() -> turnPlate(1));
+				return event;
+			}
+			if (enlarged)
+			{
+				// Everything but the tabs, the arrows and the close button is
+				// the picture's now; a press anywhere on it puts it back.
+				gate.offer(() -> enlarged = false);
+				return event;
+			}
+			if (plateShown.contains(x, y))
+			{
+				gate.offer(() -> enlarged = true);
 				return event;
 			}
 			if (ChronicleLayout.LIST.contains(x, y))
@@ -332,6 +356,7 @@ public class ChronicleWindow extends Overlay
 
 	private void showTab(int which)
 	{
+		enlarged = false;
 		if (tab != which)
 		{
 			tab = which;
@@ -348,6 +373,7 @@ public class ChronicleWindow extends Overlay
 
 	private void showPage(String id)
 	{
+		enlarged = false;
 		if (!id.equals(selectedId))
 		{
 			selectedId = id;
@@ -374,6 +400,16 @@ public class ChronicleWindow extends Overlay
 			dragging = which;
 			dragGrab = y - thumb.y;
 		}
+		else if (which == DRAG_PAGE)
+		{
+			// A page at a time, as far as the screen shows whole lines, so
+			// no line is passed over unseen between one screen and the next.
+			List<ChronicleLayout.Line> lines = pageLines;
+			int body = ChronicleLayout.CONTENT_BOTTOM - ChronicleLayout.BODY_TOP;
+			scroll(which, y < thumb.y
+				? -ChronicleLayout.linesAbove(lines, pageScroll, body)
+				: ChronicleLayout.linesThatFit(lines, pageScroll, body), total, visible);
+		}
 		else
 		{
 			scroll(which, y < thumb.y ? -visible : visible, total, visible);
@@ -392,7 +428,7 @@ public class ChronicleWindow extends Overlay
 		}
 	}
 
-	private final MouseWheelListener wheelAdapter = new MouseWheelListener()
+	final MouseWheelListener wheelAdapter = new MouseWheelListener()
 	{
 		@Override
 		public MouseWheelEvent mouseWheelMoved(MouseWheelEvent event)
@@ -402,6 +438,10 @@ public class ChronicleWindow extends Overlay
 				return event;
 			}
 			event.consume();
+			if (enlarged)
+			{
+				return event;
+			}
 			int x = event.getX() - bounds.x;
 			int step = event.getWheelRotation() > 0 ? 1 : -1;
 			if (x < ChronicleLayout.SPLIT_X)
@@ -416,7 +456,7 @@ public class ChronicleWindow extends Overlay
 		}
 	};
 
-	private final KeyListener keyAdapter = new KeyListener()
+	final KeyListener keyAdapter = new KeyListener()
 	{
 		@Override
 		public void keyTyped(KeyEvent e)
@@ -433,7 +473,15 @@ public class ChronicleWindow extends Overlay
 		{
 			if (open && e.getKeyCode() == KeyEvent.VK_ESCAPE)
 			{
-				close();
+				// Out of the enlarged plate first, as backing out of any view.
+				if (enlarged)
+				{
+					enlarged = false;
+				}
+				else
+				{
+					close();
+				}
 				e.consume();
 			}
 		}
@@ -472,15 +520,33 @@ public class ChronicleWindow extends Overlay
 			}
 			listed = currentList();
 			ChronicleEntry selected = currentPage();
+			boolean big = enlarged && selected != null && !selected.platesOrEmpty().isEmpty();
 
 			drawBacking(graphics);
 			drawRim(graphics);
-			drawLines(graphics);
+			drawLines(graphics, !big);
 			drawTitle(graphics, bold);
 			drawCloseButton(graphics);
 			drawTabs(graphics, body);
-			drawList(graphics, body);
-			drawPage(graphics, selected, body, bold, small);
+			// Where this frame's plate and arrows can be pressed, handed to
+			// the mouse together once the frame is drawn: cleared at the top
+			// and set again after the slow drawing, a press between the two
+			// would find nothing there and fall through to whatever is under.
+			Rectangle prev = new Rectangle();
+			Rectangle next = new Rectangle();
+			Rectangle shown = new Rectangle();
+			if (big)
+			{
+				drawEnlarged(graphics, selected, bold, small, prev, next);
+			}
+			else
+			{
+				drawList(graphics, body);
+				drawPage(graphics, selected, body, bold, small, prev, next, shown);
+			}
+			platePrev.setBounds(prev);
+			plateNext.setBounds(next);
+			plateShown.setBounds(shown);
 		}
 		finally
 		{
@@ -625,7 +691,7 @@ public class ChronicleWindow extends Overlay
 	}
 
 	/** The thin lines that box the list and the page, and the bar between them. */
-	private void drawLines(Graphics2D g)
+	private void drawLines(Graphics2D g, boolean panes)
 	{
 		int l = ChronicleLayout.CONTENT_LEFT;
 		int r = ChronicleLayout.CONTENT_RIGHT;
@@ -636,6 +702,11 @@ public class ChronicleWindow extends Overlay
 		g.fillRect(l, b, r - l + 1, 1);
 		g.fillRect(l, t, 1, b - t + 1);
 		g.fillRect(r, t, 1, b - t + 1);
+		if (!panes)
+		{
+			// An enlarged plate has the whole box to itself.
+			return;
+		}
 		g.fillRect(ChronicleLayout.SPLIT_X, t, 2, b - t + 1);
 		g.fillRect(ChronicleLayout.PAGE.x, ChronicleLayout.HEADER_RULE_Y, r - ChronicleLayout.PAGE.x, 1);
 		g.fillRect(ChronicleLayout.PAGE.x, ChronicleLayout.HEADER_RULE_Y + 2, r - ChronicleLayout.PAGE.x, 1);
@@ -740,7 +811,8 @@ public class ChronicleWindow extends Overlay
 		drawScrollbar(g, ChronicleLayout.LIST_SCROLL, listThumb, listScroll, listed.size(), visible);
 	}
 
-	private void drawPage(Graphics2D g, ChronicleEntry entry, GameFont body, GameFont bold, GameFont small)
+	private void drawPage(Graphics2D g, ChronicleEntry entry, GameFont body, GameFont bold, GameFont small,
+		Rectangle prev, Rectangle next, Rectangle shown)
 	{
 		int left = ChronicleLayout.PAGE_TEXT_X;
 		int width = ChronicleLayout.PAGE_TEXT_RIGHT - left;
@@ -768,7 +840,6 @@ public class ChronicleWindow extends Overlay
 		// yet and, for a creature, where to find one.
 		int bodyTop = ChronicleLayout.BODY_TOP;
 		int bodyHeight = ChronicleLayout.CONTENT_BOTTOM - bodyTop;
-		pageVisibleLines = Math.max(1, bodyHeight / ChronicleLayout.LINE_HEIGHT);
 		String key = entry.id + (readable ? "" : ":locked");
 		if (!key.equals(pageLinesFor))
 		{
@@ -780,6 +851,9 @@ public class ChronicleWindow extends Overlay
 			pageLinesFor = key;
 			pageScroll = 0;
 		}
+		// What a screen holds, as the scrollbar counts it: every line less the
+		// ones scrolled past at the furthest the page goes, gaps allowed for.
+		pageVisibleLines = Math.max(1, pageLines.size() - ChronicleLayout.lastScroll(pageLines, bodyHeight));
 		pageScroll = ChronicleLayout.clampScroll(pageScroll, pageLines.size(), pageVisibleLines);
 
 		Shape clip = g.getClip();
@@ -790,8 +864,6 @@ public class ChronicleWindow extends Overlay
 			plateIndexFor = entry.id;
 			plateIndex = 0;
 		}
-		platePrev.setBounds(0, 0, 0, 0);
-		plateNext.setBounds(0, 0, 0, 0);
 		ChronicleEntry.Plate plate = null;
 		if (!plates.isEmpty())
 		{
@@ -800,7 +872,11 @@ public class ChronicleWindow extends Overlay
 			int plateTop = bodyTop + 2 - pageScroll * ChronicleLayout.LINE_HEIGHT;
 			if (plateTop + ChronicleLayout.PLATE_H > bodyTop)
 			{
-				drawPlate(g, plate, left, plateTop, readable, small);
+				// Only the part scrolled into view takes a press.
+				shown.setBounds(new Rectangle(left, plateTop, ChronicleLayout.PLATE_W, ChronicleLayout.PLATE_H)
+					.intersection(new Rectangle(ChronicleLayout.PAGE.x, bodyTop, ChronicleLayout.PAGE.width, bodyHeight)));
+				drawPlate(g, plate, left, plateTop, ChronicleLayout.PLATE_W, ChronicleLayout.PLATE_H,
+					readable, small, false, hovered(shown));
 			}
 		}
 		int ly = bodyTop + ChronicleLayout.LINE_HEIGHT - 2;
@@ -820,7 +896,7 @@ public class ChronicleWindow extends Overlay
 				case PLATE:
 					break;
 				case CAPTION:
-					drawCaption(g, small, plate, plates.size(), readable, left, width, ly);
+					drawCaption(g, small, plate, plates.size(), readable, left, width, ly, prev, next);
 					break;
 				case HEADING:
 					text(g, bold, true, line.text, left, ly, ChronicleLayout.TITLE_ORANGE, false);
@@ -841,15 +917,16 @@ public class ChronicleWindow extends Overlay
 
 	/**
 	 * A plate: a thin dark frame, and inside it the picture. A creature or a
-	 * person is drawn from its own model, turning; one not yet met is its
-	 * outline in ink. A place is the scribe's sketch, or bare paper until the
-	 * scribe has been there and stood still long enough to draw it.
+	 * person is drawn from its own model, turning, in its idle; one not yet
+	 * met is its outline in ink. A place is the scribe's sketch, or bare
+	 * paper until the scribe has been there and stood still long enough to
+	 * draw it. Enlarged, a sketch is the copy drawn at that size. Under the
+	 * mouse it lightens a touch, as the game's own pictures that take a
+	 * press do.
 	 */
-	private void drawPlate(Graphics2D g, ChronicleEntry.Plate plate, int x, int y, boolean seen,
-		GameFont small)
+	private void drawPlate(Graphics2D g, ChronicleEntry.Plate plate, int x, int y, int w, int h,
+		boolean seen, GameFont small, boolean big, boolean hover)
 	{
-		int w = ChronicleLayout.PLATE_W;
-		int h = ChronicleLayout.PLATE_H;
 		g.setColor(new Color(PLATE_EDGE));
 		g.drawRect(x, y, w - 1, h - 1);
 		g.setColor(new Color(ChronicleLayout.LINE));
@@ -866,31 +943,86 @@ public class ChronicleWindow extends Overlay
 				g.setColor(new Color(SketchStyle.mix(PORTRAIT_TOP, PORTRAIT_FOOT, row / (double) ih)));
 				g.fillRect(ix, iy + row, iw, 1);
 			}
-			BufferedImage portrait = portraits.draw(plate.npc, iw, ih,
-				ChroniclePortraits.yawAt(System.currentTimeMillis()), !seen);
+			long now = System.currentTimeMillis();
+			BufferedImage portrait = portraits.draw(plate.npc, plate.idle, iw, ih,
+				ChroniclePortraits.yawAt(now), now, !seen);
 			if (portrait != null)
 			{
 				g.drawImage(portrait, ix, iy, null);
 			}
-			return;
 		}
-		BufferedImage sketch = sketches == null ? null : sketches.get(plate.sketch);
-		if (sketch != null)
+		else if (!drawSketch(g, plate.sketch, ix, iy, iw, ih, big))
 		{
-			g.drawImage(sketch, ix, iy, iw, ih, null);
-			return;
+			g.setColor(new Color(BARE_PAPER));
+			g.fillRect(ix, iy, iw, ih);
+			String blank = "Not yet sketched.";
+			if (small != null)
+			{
+				small.drawCenteredBaseline(g, blank, ix + iw / 2, iy + ih / 2 + 4, SketchStyle.INK, false);
+			}
+			else
+			{
+				text(g, null, false, blank, ix + iw / 2, iy + ih / 2 + 4, SketchStyle.INK, true);
+			}
 		}
-		g.setColor(new Color(BARE_PAPER));
-		g.fillRect(ix, iy, iw, ih);
-		String blank = "Not yet sketched.";
-		if (small != null)
+		if (hover)
 		{
-			small.drawCenteredBaseline(g, blank, ix + iw / 2, iy + ih / 2 + 4, SketchStyle.INK, false);
+			g.setColor(new Color(255, 255, 255, HOVER_ALPHA));
+			g.fillRect(ix, iy, iw, ih);
 		}
-		else
+	}
+
+	/**
+	 * The scribe's sketch of a place, if it has one: enlarged, the copy it
+	 * drew at that size. A sketch made before there were two sizes has only
+	 * the small one, stretched smoothly until the scribe draws it again.
+	 */
+	private boolean drawSketch(Graphics2D g, String name, int x, int y, int w, int h, boolean big)
+	{
+		if (sketches == null)
 		{
-			text(g, null, false, blank, ix + iw / 2, iy + ih / 2 + 4, SketchStyle.INK, true);
+			return false;
 		}
+		BufferedImage sketch = big && sketches.has(name) ? sketches.getLarge(name) : null;
+		if (sketch == null)
+		{
+			sketch = sketches.get(name);
+		}
+		if (sketch == null)
+		{
+			return false;
+		}
+		if (sketch.getWidth() == w && sketch.getHeight() == h)
+		{
+			g.drawImage(sketch, x, y, null);
+			return true;
+		}
+		Object before = g.getRenderingHint(RenderingHints.KEY_INTERPOLATION);
+		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		g.drawImage(sketch, x, y, w, h, null);
+		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+			before != null ? before : RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+		return true;
+	}
+
+	/**
+	 * A plate opened across the window: the page's name over it and its
+	 * caption, with the arrows, under it, the same plate the page was
+	 * showing.
+	 */
+	private void drawEnlarged(Graphics2D g, ChronicleEntry entry, GameFont bold, GameFont small,
+		Rectangle prev, Rectangle next)
+	{
+		List<ChronicleEntry.Plate> plates = entry.platesOrEmpty();
+		plateIndex = Math.floorMod(plateIndex, plates.size());
+		ChronicleEntry.Plate plate = plates.get(plateIndex);
+		boolean readable = progress != null && progress.isReadable(entry);
+		text(g, bold, true, entry.name, ChronicleLayout.WIDTH / 2, ChronicleLayout.BIG_NAME_BASELINE,
+			ChronicleLayout.TITLE_ORANGE, true);
+		Rectangle frame = ChronicleLayout.BIG_PLATE;
+		drawPlate(g, plate, frame.x, frame.y, frame.width, frame.height, readable, small, true, hovered(frame));
+		drawCaption(g, small, plate, plates.size(), readable, frame.x, frame.width,
+			ChronicleLayout.BIG_CAPTION_BASELINE, prev, next);
 	}
 
 	/**
@@ -898,7 +1030,7 @@ public class ChronicleWindow extends Overlay
 	 * the scribe's caption; arrows either side when there is more than one.
 	 */
 	private void drawCaption(Graphics2D g, GameFont small, ChronicleEntry.Plate plate, int count,
-		boolean seen, int left, int width, int baseline)
+		boolean seen, int left, int width, int baseline, Rectangle prev, Rectangle next)
 	{
 		if (plate == null)
 		{
@@ -910,12 +1042,12 @@ public class ChronicleWindow extends Overlay
 		if (count > 1)
 		{
 			int top = baseline - 10;
-			platePrev.setBounds(left, top, 14, 13);
-			plateNext.setBounds(left + width - 14, top, 14, 13);
+			prev.setBounds(left, top, 14, 13);
+			next.setBounds(left + width - 14, top, 14, 13);
 			text(g, small, false, "<", left + 4, baseline,
-				hovered(platePrev) ? ChronicleLayout.BODY_WHITE : ChronicleLayout.TITLE_ORANGE, false);
+				hovered(prev) ? ChronicleLayout.BODY_WHITE : ChronicleLayout.TITLE_ORANGE, false);
 			text(g, small, false, ">", left + width - 10, baseline,
-				hovered(plateNext) ? ChronicleLayout.BODY_WHITE : ChronicleLayout.TITLE_ORANGE, false);
+				hovered(next) ? ChronicleLayout.BODY_WHITE : ChronicleLayout.TITLE_ORANGE, false);
 		}
 	}
 
@@ -965,9 +1097,12 @@ public class ChronicleWindow extends Overlay
 		{
 			parts.add(questName(unlock.quest) + " is done");
 		}
+		// Short, because the header has one line of the column for it: the
+		// two-way pages ran off the window as "is under way" and "you go
+		// there". The locked page's own line says it in full.
 		if (unlock.questBegun != null)
 		{
-			parts.add(questName(unlock.questBegun) + " is under way");
+			parts.add(questName(unlock.questBegun) + " starts");
 		}
 		if (unlock.npcs != null && !unlock.npcs.isEmpty())
 		{
@@ -975,7 +1110,7 @@ public class ChronicleWindow extends Overlay
 		}
 		if (unlock.regions != null && !unlock.regions.isEmpty())
 		{
-			parts.add("you go there");
+			parts.add("you visit");
 		}
 		return parts.isEmpty() ? "never" : String.join(", or ", parts);
 	}

@@ -45,14 +45,14 @@ public class ChronicleWordingTest
 			ChronicleWindow.unlockLabel(loader.get("quest-cooks-assistant")));
 		assertEquals("Priest in Peril is done",
 			ChronicleWindow.unlockLabel(loader.get("faction-seven-priestly-warriors")));
-		assertEquals("Waterfall Quest is under way",
+		assertEquals("Waterfall Quest starts",
 			ChronicleWindow.unlockLabel(loader.get("location-baxtorian-falls")));
 	}
 
 	@Test
 	public void twoWaysInAreBothNamed()
 	{
-		assertEquals("Priest in Peril is done, or you go there",
+		assertEquals("Priest in Peril is done, or you visit",
 			ChronicleWindow.unlockLabel(loader.get("world-morytania")));
 		assertEquals("The scribe will write this up once Priest in Peril is done, or once you have been there.",
 			ChronicleWindow.unwrittenHint(loader.get("world-morytania")));

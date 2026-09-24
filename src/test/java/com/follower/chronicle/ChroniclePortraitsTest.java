@@ -112,7 +112,11 @@ public class ChroniclePortraitsTest
 
 	private static void fillsThePlate(Model model, String what)
 	{
-		int[] frame = ChroniclePortraits.fit(model, W, H);
+		fillsThePlate(model, ChroniclePortraits.fit(model, W, H), W, H, what);
+	}
+
+	private static void fillsThePlate(Model model, int[] frame, int W, int H, String what)
+	{
 		assertNotNull(what + " could not be framed", frame);
 		for (int yaw = 0; yaw < 2048; yaw += 128)
 		{
@@ -146,6 +150,98 @@ public class ChroniclePortraitsTest
 	public void aWideThingFitsAcrossAtEveryAngle()
 	{
 		fillsThePlate(box(300, 120), "a mole-sized box");
+	}
+
+	@Test
+	public void measuringWithoutDrawingFindsTheEdgesTheDrawingHas()
+	{
+		// The framing projects instead of drawing; it must agree with what
+		// is drawn, to the pixel, or a portrait is cut off or left small.
+		int w = 900;
+		int h = 700;
+		for (Model model : new Model[]{box(20, 90), box(300, 120), box(400, 700)})
+		{
+			int zoom = model.getVerticesY()[4] < -500 ? 4000 : 1500;
+			for (int yaw = 0; yaw < 2048; yaw += 128)
+			{
+				BufferedImage image = ChatheadRenderer.render(model, null, w, h, yaw, ChroniclePortraits.PITCH,
+					zoom, 1.0, w / 2, h / 2 + 150);
+				int[] drawn = drawn(image);
+				int[] measured = ChatheadRenderer.drawnBounds(model, yaw, ChroniclePortraits.PITCH, zoom, w / 2, h / 2 + 150);
+				assertNotNull(measured);
+				String at = "yaw " + yaw + ": drawn " + java.util.Arrays.toString(drawn)
+					+ " measured " + java.util.Arrays.toString(measured);
+				assertTrue(at, drawn[0] > 0 && drawn[1] > 0 && drawn[2] < w - 1 && drawn[3] < h - 1);
+				assertTrue(at, Math.abs(drawn[0] - measured[0]) <= 1);
+				assertTrue(at, Math.abs(drawn[1] - measured[1]) <= 1);
+				assertTrue(at, Math.abs(drawn[2] + 1 - measured[2]) <= 1);
+				assertTrue(at, Math.abs(drawn[3] + 1 - measured[3]) <= 1);
+			}
+		}
+	}
+
+	@Test
+	public void theEnlargedPlateIsFramedForItsOwnSize()
+	{
+		int w = ChronicleLayout.BIG_PLATE_W - 4;
+		int h = ChronicleLayout.BIG_PLATE_H - 4;
+		Model model = box(400, 700);
+		fillsThePlate(model, ChroniclePortraits.fit(model, w, h), w, h, "a dragon-sized box, enlarged");
+	}
+
+	@Test
+	public void theFramingHoldsEveryPoseOfTheIdle()
+	{
+		// At rest a goblin-sized box; partway through its idle it stretches a
+		// third taller, as an arm goes up or wings open. Framed at rest only,
+		// the stretch runs off the plate; framed over the poses, it does not.
+		Model rest = box(20, 90);
+		Model stretched = box(20, 120);
+		int[] restOnly = ChroniclePortraits.fit(rest, W, H);
+		BufferedImage cut = ChatheadRenderer.render(stretched, null, W, H, 0, ChroniclePortraits.PITCH,
+			restOnly[0], 1.0, restOnly[1], restOnly[2]);
+		int[] box = drawn(cut);
+		assertTrue("framed at rest, the stretch leaves the plate", box[1] <= 0 || box[3] >= H - 1);
+
+		int[] both = ChroniclePortraits.fit(rest, java.util.Arrays.asList(() -> rest, () -> stretched), W, H);
+		fillsThePlate(stretched, both, W, H, "the stretched pose");
+	}
+
+	@Test
+	public void anIdleLoopsOnTheWallClockInClientCycles()
+	{
+		// Frames of 2, 3 and 5 cycles of 20ms: a 200ms loop.
+		int[] lengths = {2, 3, 5};
+		assertEquals(0, ChroniclePortraits.frameAt(false, 0, lengths, 0));
+		assertEquals(0, ChroniclePortraits.frameAt(false, 0, lengths, 39));
+		assertEquals(1, ChroniclePortraits.frameAt(false, 0, lengths, 40));
+		assertEquals(1, ChroniclePortraits.frameAt(false, 0, lengths, 99));
+		assertEquals(2, ChroniclePortraits.frameAt(false, 0, lengths, 100));
+		assertEquals(2, ChroniclePortraits.frameAt(false, 0, lengths, 199));
+		assertEquals("and round again", 0, ChroniclePortraits.frameAt(false, 0, lengths, 200));
+		assertEquals("a frame of no length still shows", 1, ChroniclePortraits.frameAt(false, 0, new int[]{1, 0, 1}, 20));
+		assertEquals("nothing to play is the first frame", 0, ChroniclePortraits.frameAt(false, 0, null, 12345));
+	}
+
+	@Test
+	public void aNewerAnimationIsAddressedByTheCycle()
+	{
+		assertEquals(29, ChroniclePortraits.frameAt(true, 30, null, 29 * 20));
+		assertEquals(0, ChroniclePortraits.frameAt(true, 30, null, 30 * 20));
+		assertEquals(0, ChroniclePortraits.frameAt(true, 0, null, 500));
+	}
+
+	@Test
+	public void theFramingSamplesPosesSpreadThroughTheIdle()
+	{
+		// An older idle has few frames, and every one is measured; a newer
+		// one is counted in cycles, and a spread of them is.
+		assertEquals("[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]", java.util.Arrays.toString(
+			ChroniclePortraits.sampledFrames(false, 0, new int[12])));
+		assertEquals("[0, 6, 12, 18, 25, 31, 37, 43, 50, 56, 62, 68, 75, 81, 87, 93]",
+			java.util.Arrays.toString(ChroniclePortraits.sampledFrames(true, 100, null)));
+		assertEquals("[0, 1]", java.util.Arrays.toString(ChroniclePortraits.sampledFrames(false, 0, new int[2])));
+		assertEquals("[0]", java.util.Arrays.toString(ChroniclePortraits.sampledFrames(false, 0, null)));
 	}
 
 	@Test

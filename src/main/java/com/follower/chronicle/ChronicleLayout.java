@@ -87,6 +87,17 @@ public final class ChronicleLayout
 	public static final int PLATE_W = PAGE_TEXT_RIGHT - PAGE_TEXT_X;
 	public static final int PLATE_H = PLATE_ROWS * LINE_HEIGHT - 8;
 
+	/**
+	 * A plate opened across the window: the whole box under the tabs, the
+	 * page's name above the picture and the caption line below. The picture
+	 * keeps the page plate's shape, so a sketch is the same view larger.
+	 */
+	public static final int BIG_PLATE_W = 472;
+	public static final int BIG_PLATE_H = 190;
+	public static final Rectangle BIG_PLATE = new Rectangle((WIDTH - BIG_PLATE_W) / 2, 84, BIG_PLATE_W, BIG_PLATE_H);
+	public static final int BIG_NAME_BASELINE = 76;
+	public static final int BIG_CAPTION_BASELINE = 84 + BIG_PLATE_H + 14;
+
 	/** The vanilla colours, confirmed by pixel count on the real window. */
 	public static final int TITLE_ORANGE = 0xff981f;
 	public static final int TAB_LABEL_SELECTED = 0xffa82f;
@@ -129,6 +140,75 @@ public final class ChronicleLayout
 	public static Rectangle row(int visibleIndex)
 	{
 		return new Rectangle(LIST.x, ROW_BAND_TOP + visibleIndex * ROW_HEIGHT, LIST.width, ROW_HEIGHT);
+	}
+
+	/** How far the page's glyphs and their shadow reach below a baseline. */
+	public static final int DESCENT = 4;
+
+	/**
+	 * The furthest a page scrolls: the first line from which everything to
+	 * the end, the gaps above headings and paragraphs included, fits the
+	 * body with the last line's descenders inside it. The page scrolls in
+	 * whole lines, but the gaps are not lines, so counting lines alone left
+	 * the last few out of reach.
+	 */
+	public static int lastScroll(List<Line> lines, int bodyHeight)
+	{
+		// From the first line shown, the last one's baseline sits the first
+		// baseline's depth down plus a line and a gap for every line after.
+		int room = bodyHeight - 1 - (LINE_HEIGHT - 2) - DESCENT;
+		int first = lines.size() - 1;
+		int used = 0;
+		while (first > 0 && used + LINE_HEIGHT + lines.get(first).gapAbove <= room)
+		{
+			used += LINE_HEIGHT + lines.get(first).gapAbove;
+			first--;
+		}
+		return Math.max(0, first);
+	}
+
+	/**
+	 * How many lines, from the one at the top, the body shows whole: a page
+	 * down moves by this many, so the line half off the foot of one screen is
+	 * the top of the next and no line is passed over unseen.
+	 */
+	public static int linesThatFit(List<Line> lines, int first, int bodyHeight)
+	{
+		int room = bodyHeight - 1 - (LINE_HEIGHT - 2) - DESCENT;
+		int used = 0;
+		int count = 1;
+		for (int i = first + 1; i < lines.size(); i++)
+		{
+			used += LINE_HEIGHT + lines.get(i).gapAbove;
+			if (used > room)
+			{
+				break;
+			}
+			count++;
+		}
+		return count;
+	}
+
+	/** And a page up: as many lines as fit whole ending just above the top one. */
+	public static int linesAbove(List<Line> lines, int first, int bodyHeight)
+	{
+		int room = bodyHeight - 1 - (LINE_HEIGHT - 2) - DESCENT;
+		int used = 0;
+		int count = 0;
+		for (int top = Math.min(first, lines.size()) - 1; top >= 0; top--)
+		{
+			if (count > 0)
+			{
+				// The line below this one moves down by a line and its gap.
+				used += LINE_HEIGHT + lines.get(top + 1).gapAbove;
+				if (used > room)
+				{
+					break;
+				}
+			}
+			count++;
+		}
+		return count;
 	}
 
 	/** A scroll offset, kept inside what there is to scroll to. */
@@ -213,9 +293,16 @@ public final class ChronicleLayout
 
 	/**
 	 * Greedy word wrap measured with the game's own advances, the dialog's
-	 * recipe: a single word longer than the column is left to overflow.
+	 * recipe. A word longer than the column breaks after its hyphens, as a
+	 * printer would break it; one with no hyphen is left to overflow.
 	 */
 	public static List<String> wrap(String text, int maxWidth, ToIntFunction<String> width)
+	{
+		return wrap(text, maxWidth, maxWidth, width);
+	}
+
+	/** The same, with the lines after the first narrower, for a hanging indent. */
+	public static List<String> wrap(String text, int firstWidth, int restWidth, ToIntFunction<String> width)
 	{
 		List<String> out = new ArrayList<>();
 		if (text == null)
@@ -225,15 +312,24 @@ public final class ChronicleLayout
 		StringBuilder line = new StringBuilder();
 		for (String word : text.split(" "))
 		{
-			String candidate = line.length() == 0 ? word : line + " " + word;
-			if (width.applyAsInt(candidate) > maxWidth && line.length() > 0)
+			String[] pieces = width.applyAsInt(word) > Math.min(firstWidth, restWidth)
+				? word.split("(?<=-)(?=.)")
+				: new String[]{word};
+			for (int p = 0; p < pieces.length; p++)
 			{
-				out.add(line.toString());
-				line = new StringBuilder(word);
-			}
-			else
-			{
-				line = new StringBuilder(candidate);
+				// The pieces of one word join with no space between them.
+				String piece = pieces[p];
+				String candidate = line.length() == 0 ? piece : line + (p > 0 ? "" : " ") + piece;
+				int maxWidth = out.isEmpty() ? firstWidth : restWidth;
+				if (width.applyAsInt(candidate) > maxWidth && line.length() > 0)
+				{
+					out.add(line.toString());
+					line = new StringBuilder(piece);
+				}
+				else
+				{
+					line = new StringBuilder(candidate);
+				}
 			}
 		}
 		if (line.length() > 0)
@@ -367,10 +463,12 @@ public final class ChronicleLayout
 			return;
 		}
 		heading(lines, title, width, headingWidth);
+		// Lines after an item's first sit under its text, so they have that much less room.
+		int indent = bodyWidth.applyAsInt("  ");
 		for (String item : items)
 		{
 			boolean first = true;
-			for (String wrapped : wrap("- " + item, width, bodyWidth))
+			for (String wrapped : wrap("- " + item, width, width - indent, bodyWidth))
 			{
 				lines.add(new Line(first ? wrapped : "  " + wrapped, Style.NOTE, 0));
 				first = false;

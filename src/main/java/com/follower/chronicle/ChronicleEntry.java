@@ -58,6 +58,13 @@ public class ChronicleEntry
 		/** An NPC id, drawn from the game's own model. */
 		public Integer npc;
 
+		/**
+		 * The NPC's standing animation, which the portrait plays. The API has
+		 * no way to ask an NPC id for it, so it is looked up in the cache and
+		 * written here; the cache dumper's runChronicleAudit checks it.
+		 */
+		public Integer idle;
+
 		/** The name a sketch is filed under; pages sharing a place share it. */
 		public String sketch;
 

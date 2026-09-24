@@ -291,10 +291,19 @@ public class ChronicleIntegrityTest
 					{
 						problems.add(at + ": NPC id " + plate.npc);
 					}
+					// Its standing animation, from the cache: gradlew runChronicleAudit.
+					if (plate.idle == null || plate.idle < 0)
+					{
+						problems.add(at + ": portrait of " + plate.npc + " has no idle animation");
+					}
 				}
 				else
 				{
 					sketch = true;
+					if (plate.idle != null)
+					{
+						problems.add(at + ": a sketch has no idle to play");
+					}
 					if (!plate.sketch.matches("[a-z0-9]+(-[a-z0-9]+)*"))
 					{
 						problems.add(at + ": sketch name " + plate.sketch);

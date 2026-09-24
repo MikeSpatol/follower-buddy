@@ -539,6 +539,83 @@ public final class ChatheadRenderer
 	 * it to the camera distance, orbit the camera to its pitch, then divide by
 	 * depth. Returns screen x, screen y and camera-space depth.
 	 */
+	/**
+	 * The pixels {@link #render} would cover, without drawing them: the same
+	 * camera, the same integer projection, the same faces kept and turned
+	 * away, the whole model ({@code headFraction} 1). minX, minY, maxX, maxY
+	 * with the maxima exclusive, unclipped by any canvas, or null when
+	 * nothing faces the camera. For framing, which measures a model at many
+	 * angles and poses: drawing it each time to find its edges cost far more
+	 * than the drawing being framed.
+	 */
+	public static int[] drawnBounds(Model model, int yaw, int cameraPitch, int zoom, int anchorX, int anchorY)
+	{
+		if (model == null)
+		{
+			return null;
+		}
+		float[] vx = model.getVerticesX();
+		float[] vy = model.getVerticesY();
+		float[] vz = model.getVerticesZ();
+		int[] fa = model.getFaceIndices1();
+		int[] fb = model.getFaceIndices2();
+		int[] fc = model.getFaceIndices3();
+		int[] hidden = model.getFaceColors3();
+		if (vx == null || vy == null || vz == null || fa == null || fb == null || fc == null)
+		{
+			return null;
+		}
+		int verts = Math.min(model.getVerticesCount(), vx.length);
+		double yawAngle = yaw / 2048.0 * 2.0 * Math.PI;
+		double yawSin = Math.sin(yawAngle);
+		double yawCos = Math.cos(yawAngle);
+		double pitchAngle = cameraPitch / 2048.0 * 2.0 * Math.PI;
+		double pitchSin = Math.sin(pitchAngle);
+		double pitchCos = Math.cos(pitchAngle);
+		double eyeY = pitchSin * zoom;
+		double eyeZ = pitchCos * zoom;
+
+		int[] sx = new int[verts];
+		int[] sy = new int[verts];
+		boolean[] behind = new boolean[verts];
+		for (int i = 0; i < verts; i++)
+		{
+			double[] p = project(vx[i], vy[i], vz[i], yawSin, yawCos, pitchSin, pitchCos, eyeY, eyeZ);
+			behind[i] = p[2] < 0;
+			sx[i] = anchorX + (int) (p[0] * FOCAL_LENGTH);
+			sy[i] = anchorY + (int) (p[1] * FOCAL_LENGTH);
+		}
+
+		int minX = Integer.MAX_VALUE;
+		int minY = Integer.MAX_VALUE;
+		int maxX = Integer.MIN_VALUE;
+		int maxY = Integer.MIN_VALUE;
+		for (int face = 0; face < fa.length; face++)
+		{
+			if (hidden != null && face < hidden.length && hidden[face] == -2)
+			{
+				continue;
+			}
+			int a = fa[face];
+			int b = fb[face];
+			int c = fc[face];
+			if (a >= verts || b >= verts || c >= verts || a < 0 || b < 0 || c < 0
+				|| behind[a] || behind[b] || behind[c])
+			{
+				continue;
+			}
+			if ((sx[a] - sx[b]) * (sy[c] - sy[b]) - (sy[a] - sy[b]) * (sx[c] - sx[b]) <= 0)
+			{
+				continue;
+			}
+			minX = Math.min(minX, Math.min(sx[a], Math.min(sx[b], sx[c])));
+			maxX = Math.max(maxX, Math.max(sx[a], Math.max(sx[b], sx[c])));
+			minY = Math.min(minY, Math.min(sy[a], Math.min(sy[b], sy[c])));
+			maxY = Math.max(maxY, Math.max(sy[a], Math.max(sy[b], sy[c])));
+		}
+		return minX > maxX ? null : new int[]{minX, minY, maxX + 1, maxY + 1};
+	}
+
 	private static double[] project(double vx, double vy, double vz,
 		double yawSin, double yawCos, double pitchSin, double pitchCos,
 		double eyeY, double eyeZ)

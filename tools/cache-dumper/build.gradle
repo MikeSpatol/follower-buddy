@@ -124,6 +124,16 @@ tasks.register('runAudit', JavaExec) {
 
 // Looks a name up in the cache, for when a question about an NPC deserves an
 // answer from the game rather than from memory.
+// Every portrait in the chronicle: a real NPC, and its idle the NPC's own
+// standing animation, which the plugin cannot look up at runtime.
+//   gradlew runChronicleAudit
+tasks.register('runChronicleAudit', JavaExec) {
+    group = 'verification'
+    description = 'Audits the chronicle portraits and their idle animations against the cache'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.follower.tools.ChronicleAudit'
+}
+
 //   gradlew runNpcFind --args="brutus"
 tasks.register('runNpcFind', JavaExec) {
     group = 'verification'

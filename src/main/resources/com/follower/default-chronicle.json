@@ -56,6 +56,7 @@
       "plates": [
         {
           "npc": 4626,
+          "idle": 808,
           "caption": "The cook, in his kitchen."
         },
         {
@@ -67,6 +68,7 @@
         },
         {
           "npc": 4627,
+          "idle": 808,
           "caption": "Millie, explaining the lever."
         }
       ]
@@ -131,6 +133,7 @@
       "plates": [
         {
           "npc": 9636,
+          "idle": 808,
           "caption": "Drezel, out of his cell."
         },
         {
@@ -142,10 +145,12 @@
         },
         {
           "npc": 528,
+          "idle": 808,
           "caption": "Drevil, as he nearly was."
         },
         {
           "npc": 7620,
+          "idle": 17,
           "caption": "Spots, before we knew."
         }
       ]
@@ -212,6 +217,7 @@
       "plates": [
         {
           "npc": 4181,
+          "idle": 808,
           "caption": "Almera, still waiting."
         },
         {
@@ -223,6 +229,7 @@
         },
         {
           "npc": 4182,
+          "idle": 2331,
           "caption": "Hudon, not in the least lost."
         }
       ]
@@ -269,10 +276,12 @@
       "plates": [
         {
           "npc": 5779,
+          "idle": 3309,
           "caption": "Drawn from life. Briefly."
         },
         {
           "npc": 5422,
+          "idle": 808,
           "caption": "Wyson, who started it."
         },
         {
@@ -329,6 +338,7 @@
       "plates": [
         {
           "npc": 239,
+          "idle": 90,
           "caption": "All three heads. I counted."
         }
       ]
@@ -377,14 +387,17 @@
       "plates": [
         {
           "npc": 3029,
+          "idle": 6181,
           "caption": "A goblin, mid-complaint."
         },
         {
           "npc": 669,
+          "idle": 6203,
           "caption": "Bentnoze, disagreeing."
         },
         {
           "npc": 670,
+          "idle": 6203,
           "caption": "Wartface, also disagreeing."
         }
       ]
@@ -434,6 +447,7 @@
       "plates": [
         {
           "npc": 2098,
+          "idle": 4650,
           "caption": "To scale, roughly."
         }
       ]
@@ -478,6 +492,7 @@
       "plates": [
         {
           "npc": 2075,
+          "idle": 4662,
           "caption": "From a safe distance."
         }
       ]
@@ -525,6 +540,7 @@
       "plates": [
         {
           "npc": 528,
+          "idle": 808,
           "caption": "Hood up, as ever."
         }
       ]
@@ -570,6 +586,7 @@
       "plates": [
         {
           "npc": 7620,
+          "idle": 17,
           "caption": "Spots, as the King had it."
         }
       ]
@@ -614,6 +631,7 @@
       "plates": [
         {
           "npc": 891,
+          "idle": 4656,
           "caption": "Bigger than it looks here."
         }
       ]
@@ -672,6 +690,7 @@
         },
         {
           "npc": 815,
+          "idle": 808,
           "caption": "Duke Horacio, at home."
         }
       ]
@@ -740,6 +759,7 @@
         },
         {
           "npc": 1399,
+          "idle": 808,
           "caption": "King Roald. I bowed, to be safe."
         },
         {
@@ -802,6 +822,7 @@
         },
         {
           "npc": 9636,
+          "idle": 808,
           "caption": "Drezel. The King asked after him."
         }
       ]
@@ -858,6 +879,7 @@
         },
         {
           "npc": 4181,
+          "idle": 808,
           "caption": "Almera, who lives above it."
         }
       ]

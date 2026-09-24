@@ -1373,7 +1373,10 @@ lines) so it can be tested without a canvas; the window's render is drawing and
 hit-testing only. Input follows the dialog: a mouse listener consumes every
 press inside the window and lets one outside fall through to the game, which
 closes the book the way any click closes a real interface; the wheel scrolls the
-side it is over; the thumbs drag and a press on the track pages toward it;
+side it is over; the thumbs drag and a press on the track pages toward it
+(the page scrolls in whole lines, and how far it goes is measured with the
+gaps above headings and paragraphs counted, `ChronicleLayout.lastScroll`, so
+the last line always comes into view);
 Escape closes; a step closes it too. The buttons wait for the tick as the
 game's do: a tab, a row, the close button and the menu op itself go through a
 `TickGate`, land on the next game tick, and a second press before then is
@@ -1384,32 +1387,48 @@ frame late, so every piece has a flat stand-in for the first frames.
 **Plates** (`ChroniclePortraits`, `SketchBook`, `SketchStyle`, `SketchController`).
 Every page opens with a picture, and a page with more than one has arrows on
 its caption line to turn them; captions are numbered as a book numbers plates
-("Plate II."). A plate is one of two things, named in the page's `plates`:
+("Plate II."). A press on a plate opens it across the window below the tabs,
+nearly twice the size, with the page's name over it and its caption and
+arrows under it; a press anywhere on it, a tab, or Escape puts it back, and
+the press waits for the tick like the other buttons. A plate is one of two
+things, named in the page's `plates`:
 
 - *A portrait* (`npc`): the creature or person drawn from its own model in the
   game's cache, built the way the game builds an NPC (parts merged, recoloured,
   scaled, lit) and drawn by `ChatheadRenderer`, the same port of the client's
   rasterizer that draws the follower's face in the dialog, so a goblin on the
   page is the goblin in the world. It turns slowly, once every fourteen seconds,
-  on a paper backdrop (a black dragon on a dark one is not a picture of anything).
-  The framing is measured, not guessed: the model is drawn round a full turn and
-  the bounds of what was drawn set the camera distance and the centre, which is
-  right for a goblin and a dragon alike. A creature not yet met is its outline
-  in flat ink, "Not yet seen", as a hint rather than a spoiler.
+  on a paper backdrop (a black dragon on a dark one is not a picture of anything),
+  and stands in its own idle: the plate names the NPC's standing animation
+  (`idle`), because the API cannot ask an NPC id for it, and the model is posed
+  at the idle's frame for the moment with `applyTransformations`, as the
+  dialog's head is. `gradlew runChronicleAudit` in the cache dumper checks every
+  portrait's NPC and idle against the cache and prints the right idle for a new
+  one. The framing is measured, not guessed: the model is projected round a
+  full turn and through up to sixteen poses of its idle, with the renderer's
+  own projection and no drawing (`ChatheadRenderer.drawnBounds`, held to the
+  drawn pixels by a test), and the bounds set the camera distance and the
+  centre, which is right for a goblin and a dragon alike and takes about a
+  millisecond. A creature not yet met is its outline in flat ink, "Not yet
+  seen", as a hint rather than a spoiler.
 - *A sketch* (`sketch`, `regions`): a place the scribe draws itself. The first
   time you stand still for three ticks in one of the sketch's regions, with
   nothing else going on and no window open over the view, the follower takes
   out its scroll; three ticks later the next frame is taken, cropped round you
   at the plate's shape and clear of the minimap, side panel and chat, and drawn
-  up off the client thread as a watercolour: an edge-keeping smoothing that
+  up off the client thread as a watercolour, twice, at the page plate's size
+  and at the enlarged plate's, so the ink is a pen's width in both: an
+  edge-keeping smoothing that
   flattens texture into washes, the colours lightened and warmed by the paper,
   ink lines on the strongest edges found at twice the plate's size, paper grain
   and a darkened corner. Then it puts the scroll away and says one line, after,
   so its words are not in the picture. You are in the middle of it, and so,
-  usually, is the scribe. Sketches are kept as small PNGs under
-  `chronicle-sketches/<account>/` in the data directory, one folder per account
-  (the RuneLite RS profile key), shared by every page that shows the same
-  place, and made once. Until then the plate is bare paper marked "Not yet
+  usually, is the scribe. Sketches are kept as PNGs under
+  `chronicle-sketches/<account>/` in the data directory, `<name>.png` and
+  `<name>.large.png`, one folder per account (the RuneLite RS profile key),
+  shared by every page that shows the same place, and made once; a place drawn
+  before there were two sizes is drawn again the next time you stand there,
+  and shows the small one stretched until then. Until then the plate is bare paper marked "Not yet
   sketched.", captioned "I'll draw it when we're there." A place can have
   several views, each its own sketch with its own regions (Varrock's square,
   its palace end and the Exchange), so walking round a place fills its page.

@@ -43,7 +43,7 @@ public class SketchBookTest
 		Path data = folder.newFolder().toPath();
 		SketchBook before = new SketchBook(data);
 		before.openFor("account-one");
-		before.put("lumbridge", picture(0x8a6a40));
+		before.put("lumbridge", picture(0x8a6a40), picture(0x9a7a50));
 		assertTrue(before.has("lumbridge"));
 
 		SketchBook after = new SketchBook(data);
@@ -51,6 +51,26 @@ public class SketchBookTest
 		BufferedImage back = after.get("lumbridge");
 		assertNotNull("kept on disk", back);
 		assertEquals(0x8a6a40, back.getRGB(3, 3) & 0xffffff);
+		assertEquals("and its large copy beside it", 0x9a7a50, after.getLarge("lumbridge").getRGB(3, 3) & 0xffffff);
+		assertTrue(after.hasBoth("lumbridge"));
+	}
+
+	@Test
+	public void aPlaceDrawnBeforeThereWereTwoSizesIsWantedAgain() throws IOException
+	{
+		// The first sketches were filed small only; the plate opened across
+		// the window needs the large copy, so the scribe draws the place again.
+		Path data = folder.newFolder().toPath();
+		Path acct = data.resolve(SketchBook.DIR_NAME).resolve("acct");
+		Files.createDirectories(acct);
+		javax.imageio.ImageIO.write(picture(0x707070), "png", acct.resolve("lumbridge.png").toFile());
+
+		SketchBook book = new SketchBook(data);
+		book.openFor("acct");
+		assertTrue("the old one still shows", book.has("lumbridge"));
+		assertNull(book.getLarge("lumbridge"));
+		assertFalse("but it is drawn again", book.hasBoth("lumbridge"));
+		assertEquals("the large file is not a place of its own", null, book.get("lumbridge" + SketchBook.LARGE));
 	}
 
 	@Test
@@ -59,7 +79,7 @@ public class SketchBookTest
 		Path data = folder.newFolder().toPath();
 		SketchBook book = new SketchBook(data);
 		book.openFor("account-one");
-		book.put("varrock", picture(0x505050));
+		book.put("varrock", picture(0x505050), picture(0x606060));
 
 		book.openFor("account-two");
 		assertFalse("the second character has not been there", book.has("varrock"));
@@ -74,7 +94,7 @@ public class SketchBookTest
 		Path data = folder.newFolder().toPath();
 		SketchBook book = new SketchBook(data);
 		book.openFor("acct");
-		book.put("paterdomus", picture(0x303030));
+		book.put("paterdomus", picture(0x303030), picture(0x404040));
 		Files.write(data.resolve(SketchBook.DIR_NAME).resolve("acct").resolve("morytania.png"),
 			"not a picture".getBytes(StandardCharsets.UTF_8));
 
