@@ -45,6 +45,34 @@ public class ChronicleEntry
 	/** The particulars worth knowing, a line each. */
 	public List<String> details;
 
+	/** The pictures at the head of the page, in the order they are turned. */
+	public List<Plate> plates;
+
+	/**
+	 * A picture on a page. Exactly one of {@link #npc} and {@link #sketch} is
+	 * set: a creature or a person is drawn from its own model, turning; a
+	 * place is sketched by the scribe the first time you stand still there.
+	 */
+	public static class Plate
+	{
+		/** An NPC id, drawn from the game's own model. */
+		public Integer npc;
+
+		/** The name a sketch is filed under; pages sharing a place share it. */
+		public String sketch;
+
+		/** The map regions the sketch can be made in. */
+		public List<Integer> regions;
+
+		/** The line under the picture, in the scribe's hand. */
+		public String caption;
+	}
+
+	public List<Plate> platesOrEmpty()
+	{
+		return plates == null ? new ArrayList<>() : plates;
+	}
+
 	/** A headed run of paragraphs; paragraphs are separated by a blank line. */
 	public static class Section
 	{

@@ -1379,6 +1379,43 @@ ignored, exactly as the dialog's continue and options do. Scrolling is not
 gated, because in the game a scrollbar is the client's own. Sprites load a
 frame late, so every piece has a flat stand-in for the first frames.
 
+**Plates** (`ChroniclePortraits`, `SketchBook`, `SketchStyle`, `SketchController`).
+Every page opens with a picture, and a page with more than one has arrows on
+its caption line to turn them; captions are numbered as a book numbers plates
+("Plate II."). A plate is one of two things, named in the page's `plates`:
+
+- *A portrait* (`npc`): the creature or person drawn from its own model in the
+  game's cache, built the way the game builds an NPC (parts merged, recoloured,
+  scaled, lit) and drawn by `ChatheadRenderer`, the same port of the client's
+  rasterizer that draws the follower's face in the dialog, so a goblin on the
+  page is the goblin in the world. It turns slowly, once every fourteen seconds,
+  on a paper backdrop (a black dragon on a dark one is not a picture of anything).
+  The framing is measured, not guessed: the model is drawn round a full turn and
+  the bounds of what was drawn set the camera distance and the centre, which is
+  right for a goblin and a dragon alike. A creature not yet met is its outline
+  in flat ink, "Not yet seen", as a hint rather than a spoiler.
+- *A sketch* (`sketch`, `regions`): a place the scribe draws itself. The first
+  time you stand still for three ticks in one of the sketch's regions, with
+  nothing else going on and no window open over the view, the follower takes
+  out its scroll; three ticks later the next frame is taken, cropped round you
+  at the plate's shape and clear of the minimap, side panel and chat, and drawn
+  up off the client thread as a watercolour: an edge-keeping smoothing that
+  flattens texture into washes, the colours lightened and warmed by the paper,
+  ink lines on the strongest edges found at twice the plate's size, paper grain
+  and a darkened corner. Then it puts the scroll away and says one line, after,
+  so its words are not in the picture. You are in the middle of it, and so,
+  usually, is the scribe. Sketches are kept as small PNGs under
+  `chronicle-sketches/<account>/` in the data directory, one folder per account
+  (the RuneLite RS profile key), shared by every page that shows the same
+  place, and made once. Until then the plate is bare paper, "Not yet sketched."
+
+The sketch regions were checked against the game's own world map with the
+cache dumper's region audit, like every other region id in the plugin.
+`ChronicleIntegrityTest` holds every plate to being drawable (an NPC id, or a
+named sketch with regions that agree wherever it is used), every creature page
+to having a portrait and every place to having a sketch, and every caption to
+fitting its line in the font it is drawn in.
+
 ## Skilling company
 
 `com.follower.follower.SkillingController` keeps the follower company while the

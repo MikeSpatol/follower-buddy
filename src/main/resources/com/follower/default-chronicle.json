@@ -52,6 +52,19 @@
         "The Cook-o-matic 100 is his name for it; best known as the Lumbridge range",
         "The cook's ancestor Franizzard Van Lumbcook sets up Recipe for Disaster",
         "All three ingredients are on the Grand Exchange, and the quest takes seconds"
+      ],
+      "plates": [
+        {
+          "npc": 4626,
+          "caption": "The cook, in his kitchen."
+        },
+        {
+          "sketch": "lumbridge",
+          "regions": [
+            12850
+          ],
+          "caption": "Lumbridge, where it began."
+        }
       ]
     },
     {
@@ -110,6 +123,19 @@
         "Canifis was the Zarosian fortress Kharyrll",
         "Wolfbane strikes like a mithril dagger, with a Prayer bonus on top",
         "The monks were finally cleared out in The Blood Moon Rises"
+      ],
+      "plates": [
+        {
+          "npc": 9636,
+          "caption": "Drezel, out of his cell."
+        },
+        {
+          "sketch": "paterdomus",
+          "regions": [
+            13622
+          ],
+          "caption": "Paterdomus, on the Salve."
+        }
       ]
     },
     {
@@ -170,6 +196,19 @@
         "The barrel at the falls drops you straight into the dungeon",
         "Doable at level 3, and the rewards take Attack and Strength to 30",
         "Fire giants here drop rune scimitars, about one in a hundred and twenty-eight by my tallies"
+      ],
+      "plates": [
+        {
+          "npc": 4181,
+          "caption": "Almera, still waiting."
+        },
+        {
+          "sketch": "baxtorian-falls",
+          "regions": [
+            10038
+          ],
+          "caption": "Baxtorian Falls, loudly."
+        }
       ]
     },
     {
@@ -210,6 +249,12 @@
         "Puts out candles, torches and oil lamps when it surfaces close by",
         "Always drops a mole skin and a mole claw",
         "One kill completes a hard Falador Diary task"
+      ],
+      "plates": [
+        {
+          "npc": 5779,
+          "caption": "Drawn from life. Briefly."
+        }
       ]
     },
     {
@@ -253,6 +298,12 @@
         "KBD heads about one in 128, dragon pickaxe one in 1,000, prince black dragon pet one in 3,000, draconic visage one in 5,000, by my tallies",
         "Always drops dragon bones and two black dragonhide",
         "Lair to yourself, 50,000 coins"
+      ],
+      "plates": [
+        {
+          "npc": 239,
+          "caption": "All three heads. I counted."
+        }
       ]
     },
     {
@@ -295,6 +346,12 @@
         "Weak on their own, dangerous in numbers",
         "Goblin Diplomacy is about the generals' armour colour argument",
         "The Dorgeshuun reject Bandos' teachings"
+      ],
+      "plates": [
+        {
+          "npc": 3029,
+          "caption": "A goblin, mid-complaint."
+        }
       ]
     },
     {
@@ -338,6 +395,12 @@
         "Drop giant keys for Obor and giant champion scrolls",
         "Some wield cleavers from Recipe for Disaster",
         "One of the three giant kinds adventurers meet first, with moss and ice giants"
+      ],
+      "plates": [
+        {
+          "npc": 2098,
+          "caption": "To scale, roughly."
+        }
       ]
     },
     {
@@ -376,6 +439,12 @@
         "Strongest of the standard giants",
         "Rune scimitar, about one in a hundred and twenty-eight by my tallies",
         "Cannot be burned, weak to water spells"
+      ],
+      "plates": [
+        {
+          "npc": 2075,
+          "caption": "From a safe distance."
+        }
       ]
     },
     {
@@ -417,6 +486,12 @@
         "Temple monks give only 25 percent experience",
         "Zamorak monk robes, top and bottom, about one in twenty by my tallies",
         "Gone from Paterdomus for good after The Blood Moon Rises"
+      ],
+      "plates": [
+        {
+          "npc": 528,
+          "caption": "Hood up, as ever."
+        }
       ]
     },
     {
@@ -456,6 +531,12 @@
         "Immune to magic, and to dwarf cannons",
         "Roald's name for it was Spots",
         "Dark beasts once looked like it, only brown, or so it is said"
+      ],
+      "plates": [
+        {
+          "npc": 7620,
+          "caption": "Spots, as the King had it."
+        }
       ]
     },
     {
@@ -494,6 +575,12 @@
         "Fought unarmed, by tomb rule",
         "Two tries per blow: melee, then magic if the melee misses",
         "Drops the consecration seed in Roving Elves"
+      ],
+      "plates": [
+        {
+          "npc": 891,
+          "caption": "Bigger than it looks here."
+        }
       ]
     },
     {
@@ -539,6 +626,19 @@
         "Where the dead come back to, unless they have arranged otherwise",
         "Where Tutorial Island sends new adventurers",
         "Starting point of Cook's Assistant, The Restless Ghost, Sheep Shearer and Rune Mysteries"
+      ],
+      "plates": [
+        {
+          "sketch": "lumbridge",
+          "regions": [
+            12850
+          ],
+          "caption": "Lumbridge."
+        },
+        {
+          "npc": 815,
+          "caption": "Duke Horacio, at home."
+        }
       ]
     },
     {
@@ -587,6 +687,21 @@
         "Grew into the kingdom of Misthalin and became a monarchy",
         "The Shield of Arrav is central to the city's lore",
         "A Saradomin church and a Zamorakian chapel, both inside the walls"
+      ],
+      "plates": [
+        {
+          "sketch": "varrock",
+          "regions": [
+            12597,
+            12853,
+            12854
+          ],
+          "caption": "Varrock, busy as ever."
+        },
+        {
+          "npc": 1399,
+          "caption": "King Roald of Misthalin."
+        }
       ]
     },
     {
@@ -629,6 +744,19 @@
         "The bridge is the only crossing of the Salve",
         "Railing shortcut at 65 Agility",
         "Finish line of Temple Trekking"
+      ],
+      "plates": [
+        {
+          "sketch": "paterdomus",
+          "regions": [
+            13622
+          ],
+          "caption": "The temple on the Salve."
+        },
+        {
+          "npc": 9636,
+          "caption": "Drezel, its only monk."
+        }
       ]
     },
     {
@@ -672,6 +800,19 @@
         "Named for Lord Baxtorian Cadarn",
         "A barrel leads down into the dungeon",
         "Fast Fishing training with a Barbarian rod"
+      ],
+      "plates": [
+        {
+          "sketch": "baxtorian-falls",
+          "regions": [
+            10038
+          ],
+          "caption": "Baxtorian Falls, loudly."
+        },
+        {
+          "npc": 4181,
+          "caption": "Almera, who lives above it."
+        }
       ]
     },
     {
@@ -712,6 +853,15 @@
         "Ivandis died in a suicide run at Drakan",
         "Haemalchemy research was the secret half of the mission",
         "Later histories say the blessing sealed Saradomin's vengeful power in the river"
+      ],
+      "plates": [
+        {
+          "sketch": "paterdomus",
+          "regions": [
+            13622
+          ],
+          "caption": "The temple over their graves."
+        }
       ]
     },
     {
@@ -772,6 +922,17 @@
         "The barrier on the Salve still holds",
         "The Barrows brothers were Sliske's champions, betrayed at Darkmeyer's gates",
         "Entry requires Priest in Peril"
+      ],
+      "plates": [
+        {
+          "sketch": "morytania",
+          "regions": [
+            13878,
+            14131,
+            14646
+          ],
+          "caption": "Morytania. I kept moving."
+        }
       ]
     }
   ]

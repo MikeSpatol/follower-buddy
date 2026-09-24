@@ -60,8 +60,11 @@ where it took place and what is worth knowing about it, and pages for the
 bosses and creatures you have met, the places you have walked into, and the
 factions and lands behind them. Quests fill in from the game's own record, so
 one finished years ago is already written; a creature or a place is written the
-first time the scribe sees it, and stays written. It starts small: three quests
-and a handful of pages around them.
+first time the scribe sees it, and stays written. Every page has pictures: the
+creatures and people are drawn from their own models, turning slowly, as an
+outline in ink until you meet them; the places are sketched by the scribe itself,
+the first time you stand still there, with you in the middle of the drawing. It
+starts small: three quests and a handful of pages around them.
 
 **It keeps you company.** Start on a tree, a rock or a fishing spot and it takes
 a seat off to one side, facing the work and out of the way of your next click.

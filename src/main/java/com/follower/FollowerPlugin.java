@@ -246,6 +246,16 @@ public class FollowerPlugin extends Plugin
 	/** Which chronicle pages can be read; built on the memory in startUp. */
 	private com.follower.chronicle.ChronicleProgress chronicleProgress;
 
+	/** The scribe's sketches of places, and the habit of making them. */
+	private com.follower.chronicle.SketchBook sketchBook;
+	private com.follower.chronicle.SketchController sketching;
+
+	@Inject
+	private net.runelite.client.ui.DrawManager drawManager;
+
+	@Inject
+	private java.util.concurrent.ScheduledExecutorService executor;
+
 	@Inject
 	private com.follower.follower.StanceLibrary stanceLibrary;
 
@@ -731,6 +741,24 @@ public class FollowerPlugin extends Plugin
 		chronicleProgress = new com.follower.chronicle.ChronicleProgress(client, chronicle,
 			() -> speechEngine.getContext());
 		chronicleWindow.attach(chronicleProgress);
+		sketchBook = new com.follower.chronicle.SketchBook(dataDir);
+		chronicleWindow.attach(sketchBook);
+		// The scribe sketches the places it has pages for, when you stand
+		// still in one: never mid-fight, mid-errand, mid-conversation, or
+		// with any window open over the view, since the view is the picture.
+		sketching = new com.follower.chronicle.SketchController(client, follower, hands, chronicle,
+			sketchBook, drawManager, executor,
+			() -> thrallNpc != null || errands.isBusy() || spectate.holdsTheFeet()
+				|| dialog.isOpen() || chronicleWindow.isOpen() || emoteHold || minutesState != 0
+				|| skilling.holdsTheFeet() || moments.holdsTheFeet() || flourish.isActive()
+				|| speechEngine.getContext().isInCombat() || inCutscene() || windowOverTheView(),
+			() -> speechEngine.getContext().getIdleTicks(),
+			() -> speechEngine.getContext().getRegionId(),
+			line -> speak(line, com.follower.speech.SpeechOutput.OVERHEAD, null, -1, null));
+		if (client.getGameState() == GameState.LOGGED_IN)
+		{
+			sketchBook.openFor(configManager.getRSProfileKey());
+		}
 		chronicleWindow.register();
 		mouseManager.registerMouseListener(shiftClickAdapter);
 		dialog.setFollowerOutfit(() -> OutfitParser.parse(config.customOutfit()));
@@ -3317,6 +3345,10 @@ public class FollowerPlugin extends Plugin
 					// is known to be the one it came from.
 					readCounters();
 					readTimeAway();
+					if (sketchBook != null)
+					{
+						sketchBook.openFor(configManager.getRSProfileKey());
+					}
 					speechEngine.getContext().clearDailyTallies();
 					noteFirstMeeting();
 					speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
@@ -3412,6 +3444,10 @@ public class FollowerPlugin extends Plugin
 				// the death that usually prompts the logout, and any once-ever
 				// line said in that window, which then said itself again.
 				writeCountersIfChanged();
+				if (sketching != null)
+				{
+					sketching.reset();
+				}
 				// A session really ending. What the follower was feeling, what
 				// it was hoping for and the question it was waiting on all
 				// belonged to that session.
@@ -5839,6 +5875,35 @@ public class FollowerPlugin extends Plugin
 		}
 	}
 
+	/**
+	 * Whether an interface - the bank, a shop, a quest journal - is open over
+	 * the game view: the main modal slot of whichever layout is in use has
+	 * something in it. A sketch of the view with the bank in it is a sketch
+	 * of the bank.
+	 */
+	private boolean windowOverTheView()
+	{
+		int[] slots = {
+			net.runelite.api.gameval.InterfaceID.Toplevel.MAINMODAL,
+			net.runelite.api.gameval.InterfaceID.ToplevelOsrsStretch.MAINMODAL,
+			net.runelite.api.gameval.InterfaceID.ToplevelPreEoc.MAINMODAL,
+		};
+		for (int slot : slots)
+		{
+			net.runelite.api.widgets.Widget modal = client.getWidget(slot);
+			if (modal == null || modal.isHidden())
+			{
+				continue;
+			}
+			net.runelite.api.widgets.Widget[] inside = modal.getNestedChildren();
+			if (inside != null && inside.length > 0)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private void addFollowerMenuEntry(String option, Runnable action)
 	{
 		client.getMenu().createMenuEntry(-1)
@@ -5955,6 +6020,10 @@ public class FollowerPlugin extends Plugin
 		// real dialog takes for its server round trip.
 		dialog.tick();
 		chronicleWindow.tick();
+		if (sketching != null)
+		{
+			sketching.tick();
+		}
 		if (chronicleProgress != null && chronicleWindow.isOpen())
 		{
 			chronicleProgress.refresh(client.getTickCount());

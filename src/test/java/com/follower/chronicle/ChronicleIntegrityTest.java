@@ -250,6 +250,96 @@ public class ChronicleIntegrityTest
 		assertTrue("words from outside the world:\n  " + String.join("\n  ", problems), problems.isEmpty());
 	}
 
+	/**
+	 * Every page has a picture, and every picture can be drawn: a creature
+	 * or a person by an NPC id, a place by a sketch filed under one name and
+	 * made in fixed map regions. The regions were checked against the game's
+	 * own world map with the cache dumper's region audit; a wrong one fails
+	 * silently, the scribe simply never draws the place.
+	 */
+	@Test
+	public void everyPageHasPlatesThatCanBeDrawn() throws IOException
+	{
+		ChronicleLoader loader = loadAsAFreshInstall();
+		GameFontRepository fonts = new GameFontRepository(new Gson());
+		fonts.load(folder.newFolder().toPath());
+		GameFont small = fonts.getByName("p11_full");
+		assertNotNull("the caption font is not bundled", small);
+
+		List<String> problems = new ArrayList<>();
+		java.util.Map<String, List<Integer>> sketchRegions = new java.util.HashMap<>();
+		for (ChronicleEntry entry : loader.getEntries())
+		{
+			String at = entry.id;
+			if (entry.platesOrEmpty().isEmpty())
+			{
+				problems.add(at + ": no plates");
+			}
+			boolean portrait = false;
+			boolean sketch = false;
+			for (ChronicleEntry.Plate plate : entry.platesOrEmpty())
+			{
+				if ((plate.npc == null) == (plate.sketch == null))
+				{
+					problems.add(at + ": a plate must be a portrait or a sketch, exactly one");
+					continue;
+				}
+				if (plate.npc != null)
+				{
+					portrait = true;
+					if (plate.npc <= 0)
+					{
+						problems.add(at + ": NPC id " + plate.npc);
+					}
+				}
+				else
+				{
+					sketch = true;
+					if (!plate.sketch.matches("[a-z0-9]+(-[a-z0-9]+)*"))
+					{
+						problems.add(at + ": sketch name " + plate.sketch);
+					}
+					if (plate.regions == null || plate.regions.isEmpty())
+					{
+						problems.add(at + ": sketch " + plate.sketch + " has nowhere it can be made");
+					}
+					else
+					{
+						List<Integer> before = sketchRegions.putIfAbsent(plate.sketch, plate.regions);
+						if (before != null && !before.equals(plate.regions))
+						{
+							problems.add(at + ": sketch " + plate.sketch + " is made in " + plate.regions
+								+ " here and " + before + " elsewhere");
+						}
+					}
+				}
+				if (plate.caption == null || plate.caption.trim().isEmpty())
+				{
+					problems.add(at + ": a plate with no caption");
+				}
+				else
+				{
+					// The longest numbering and the arrows either side.
+					int width = small.stringWidth("Plate VIII. " + plate.caption);
+					if (width > ChronicleLayout.PLATE_W - 32)
+					{
+						problems.add(at + ": caption too wide (" + width + "px): " + plate.caption);
+					}
+				}
+			}
+			String kind = entry.kindOrEmpty();
+			if ((kind.equals("boss") || kind.equals("enemy")) && !portrait)
+			{
+				problems.add(at + ": a creature's page without its portrait");
+			}
+			if ((kind.equals("location") || kind.equals("world")) && !sketch)
+			{
+				problems.add(at + ": a place's page without a sketch of it");
+			}
+		}
+		assertTrue("plates that cannot be drawn:\n  " + String.join("\n  ", problems), problems.isEmpty());
+	}
+
 	@Test
 	public void everyCharacterUsedHasAGlyphInTheFontsThatDrawIt() throws IOException
 	{

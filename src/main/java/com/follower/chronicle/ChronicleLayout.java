@@ -79,6 +79,14 @@ public final class ChronicleLayout
 	public static final int LINE_HEIGHT = 14;
 	public static final int PARAGRAPH_GAP = 6;
 
+	/**
+	 * The plate at the head of a page: the text column's width, and a whole
+	 * number of lines tall so it scrolls with the text in the same steps.
+	 */
+	public static final int PLATE_ROWS = 8;
+	public static final int PLATE_W = PAGE_TEXT_RIGHT - PAGE_TEXT_X;
+	public static final int PLATE_H = PLATE_ROWS * LINE_HEIGHT - 8;
+
 	/** The vanilla colours, confirmed by pixel count on the real window. */
 	public static final int TITLE_ORANGE = 0xff981f;
 	public static final int TAB_LABEL_SELECTED = 0xffa82f;
@@ -185,6 +193,7 @@ public final class ChronicleLayout
 		{
 			return lines;
 		}
+		plate(lines, entry);
 		paragraphs(lines, reason, width, bodyWidth, Style.BODY, 0);
 		String kind = entry.kindOrEmpty();
 		if (!kind.equals("boss") && !kind.equals("enemy"))
@@ -262,7 +271,32 @@ public final class ChronicleLayout
 
 	public enum Style
 	{
-		HEADING, BODY, NOTE
+		HEADING, BODY, NOTE,
+		/** Room held for the plate, drawn as one picture over all its rows. */
+		PLATE,
+		/** The line under the plate; the window fills in which plate it is. */
+		CAPTION
+	}
+
+	/** The plate's rows and its caption line, when the page has pictures. */
+	private static void plate(List<Line> lines, ChronicleEntry entry)
+	{
+		if (entry.platesOrEmpty().isEmpty())
+		{
+			return;
+		}
+		for (int i = 0; i < PLATE_ROWS; i++)
+		{
+			lines.add(new Line("", Style.PLATE, 0));
+		}
+		lines.add(new Line("", Style.CAPTION, 0));
+	}
+
+	/** Plate numbers as a book has them. */
+	public static String roman(int n)
+	{
+		String[] numerals = {"I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"};
+		return n >= 1 && n <= numerals.length ? numerals[n - 1] : String.valueOf(n);
 	}
 
 	/**
@@ -280,6 +314,7 @@ public final class ChronicleLayout
 		{
 			return lines;
 		}
+		plate(lines, entry);
 		paragraphs(lines, entry.summary, width, bodyWidth, Style.BODY, 0);
 		for (ChronicleEntry.Section section : entry.sectionsOrEmpty())
 		{

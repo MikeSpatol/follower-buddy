@@ -77,19 +77,38 @@ public class ChronicleWordingTest
 		ChronicleEntry mole = loader.get("boss-giant-mole");
 		List<ChronicleLayout.Line> lines = ChronicleLayout.lockedPage(mole,
 			ChronicleWindow.unwrittenHint(mole), 2000, ChronicleWordingTest::width, ChronicleWordingTest::width);
-		assertEquals("BODY:The scribe has not met this boss yet.", lines.get(0).toString());
-		assertEquals("HEADING:Where it is found", lines.get(1).toString());
-		assertTrue(lines.get(2).toString(), lines.get(2).text.contains("Falador Park"));
+		int words = ChronicleLayout.PLATE_ROWS + 1;
+		assertEquals("BODY:The scribe has not met this boss yet.", lines.get(words).toString());
+		assertEquals("HEADING:Where it is found", lines.get(words + 1).toString());
+		assertTrue(lines.get(words + 2).toString(), lines.get(words + 2).text.contains("Falador Park"));
 	}
 
 	@Test
-	public void aLockedQuestPageGivesOnlyTheReason()
+	public void aLockedQuestPageGivesOnlyTheReasonUnderItsPlate()
 	{
 		ChronicleEntry cooks = loader.get("quest-cooks-assistant");
 		List<ChronicleLayout.Line> lines = ChronicleLayout.lockedPage(cooks,
 			ChronicleWindow.unwrittenHint(cooks), 2000, ChronicleWordingTest::width, ChronicleWordingTest::width);
-		assertEquals(1, lines.size());
-		assertEquals("BODY:The scribe will write this up once Cook's Assistant is done.", lines.get(0).toString());
+		int words = ChronicleLayout.PLATE_ROWS + 1;
+		assertEquals(words + 1, lines.size());
+		assertEquals("BODY:The scribe will write this up once Cook's Assistant is done.",
+			lines.get(words).toString());
+	}
+
+	@Test
+	public void aPlatesCaptionIsEarned()
+	{
+		ChronicleEntry.Plate goblin = loader.get("enemy-goblin").plates.get(0);
+		assertEquals("Plate I. Not yet seen.", ChronicleWindow.caption(goblin, 0, false, false));
+		assertEquals("Plate I. " + goblin.caption, ChronicleWindow.caption(goblin, 0, true, false));
+
+		ChronicleEntry.Plate lumbridge = loader.get("location-lumbridge").plates.get(0);
+		assertEquals("Plate I. I'll draw it when we're there.",
+			ChronicleWindow.caption(lumbridge, 0, true, false));
+		assertEquals("Plate I. " + lumbridge.caption, ChronicleWindow.caption(lumbridge, 0, false, true));
+		ChronicleEntry.Plate duke = loader.get("location-lumbridge").plates.get(1);
+		assertEquals("the second plate is II", "Plate II. " + duke.caption,
+			ChronicleWindow.caption(duke, 1, true, false));
 	}
 
 	@Test
@@ -102,7 +121,8 @@ public class ChronicleWordingTest
 			{
 				List<ChronicleLayout.Line> lines = ChronicleLayout.lockedPage(entry, "x", 2000,
 					ChronicleWordingTest::width, ChronicleWordingTest::width);
-				assertTrue(entry.id + " has no Where it is found section", lines.size() > 1);
+				assertTrue(entry.id + " has no Where it is found section",
+					lines.size() > ChronicleLayout.PLATE_ROWS + 2);
 			}
 		}
 	}

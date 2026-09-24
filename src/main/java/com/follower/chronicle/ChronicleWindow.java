@@ -66,6 +66,14 @@ public class ChronicleWindow extends Overlay
 		{"quest"}, {"boss"}, {"enemy"}, {"location"}, {"faction", "world"},
 	};
 
+	/** The plate's frame, a portrait's backdrop top to foot, and paper not yet drawn on. */
+	private static final int PLATE_EDGE = 0x0e0c09;
+	// Paper, as the sketches are: a black dragon on a dark backdrop is not a
+	// picture of anything, and every plate reads as drawn in the same book.
+	private static final int PORTRAIT_TOP = 0xe3d4b0;
+	private static final int PORTRAIT_FOOT = 0xbfa97f;
+	private static final int BARE_PAPER = 0xcbb994;
+
 	private static final int DRAG_NONE = 0;
 	private static final int DRAG_LIST = 1;
 	private static final int DRAG_PAGE = 2;
@@ -78,6 +86,14 @@ public class ChronicleWindow extends Overlay
 	private final ChronicleLoader loader;
 
 	private ChronicleProgress progress;
+	private SketchBook sketches;
+	private final ChroniclePortraits portraits;
+
+	/** Which of a page's plates is showing, and the arrows that turn them. */
+	private volatile int plateIndex;
+	private String plateIndexFor;
+	private final Rectangle platePrev = new Rectangle();
+	private final Rectangle plateNext = new Rectangle();
 
 	private volatile boolean open;
 	private volatile int tab;
@@ -112,6 +128,7 @@ public class ChronicleWindow extends Overlay
 		this.spriteManager = spriteManager;
 		this.gameFonts = gameFonts;
 		this.loader = loader;
+		this.portraits = new ChroniclePortraits(client);
 		setPosition(OverlayPosition.DYNAMIC);
 		setLayer(OverlayLayer.ABOVE_WIDGETS);
 		// Above the dialog, which sits at the default: a book opened over a
@@ -123,6 +140,12 @@ public class ChronicleWindow extends Overlay
 	public void attach(ChronicleProgress progress)
 	{
 		this.progress = progress;
+	}
+
+	/** And the sketches, which live with the rest of the follower's files. */
+	public void attach(SketchBook sketches)
+	{
+		this.sketches = sketches;
 	}
 
 	public void register()
@@ -237,6 +260,16 @@ public class ChronicleWindow extends Overlay
 					return event;
 				}
 			}
+			if (platePrev.contains(x, y))
+			{
+				gate.offer(() -> turnPlate(-1));
+				return event;
+			}
+			if (plateNext.contains(x, y))
+			{
+				gate.offer(() -> turnPlate(1));
+				return event;
+			}
 			if (ChronicleLayout.LIST.contains(x, y))
 			{
 				int row = (y - ChronicleLayout.ROW_BAND_TOP) / ChronicleLayout.ROW_HEIGHT + listScroll;
@@ -306,6 +339,11 @@ public class ChronicleWindow extends Overlay
 			pageScroll = 0;
 			selectedId = null;
 		}
+	}
+
+	private void turnPlate(int by)
+	{
+		plateIndex += by;
 	}
 
 	private void showPage(String id)
@@ -746,6 +784,25 @@ public class ChronicleWindow extends Overlay
 
 		Shape clip = g.getClip();
 		g.clipRect(ChronicleLayout.PAGE.x, bodyTop, ChronicleLayout.PAGE.width, bodyHeight);
+		List<ChronicleEntry.Plate> plates = entry.platesOrEmpty();
+		if (!entry.id.equals(plateIndexFor))
+		{
+			plateIndexFor = entry.id;
+			plateIndex = 0;
+		}
+		platePrev.setBounds(0, 0, 0, 0);
+		plateNext.setBounds(0, 0, 0, 0);
+		ChronicleEntry.Plate plate = null;
+		if (!plates.isEmpty())
+		{
+			plateIndex = Math.floorMod(plateIndex, plates.size());
+			plate = plates.get(plateIndex);
+			int plateTop = bodyTop + 2 - pageScroll * ChronicleLayout.LINE_HEIGHT;
+			if (plateTop + ChronicleLayout.PLATE_H > bodyTop)
+			{
+				drawPlate(g, plate, left, plateTop, readable, small);
+			}
+		}
 		int ly = bodyTop + ChronicleLayout.LINE_HEIGHT - 2;
 		for (int i = pageScroll; i < pageLines.size(); i++)
 		{
@@ -760,6 +817,11 @@ public class ChronicleWindow extends Overlay
 			}
 			switch (line.style)
 			{
+				case PLATE:
+					break;
+				case CAPTION:
+					drawCaption(g, small, plate, plates.size(), readable, left, width, ly);
+					break;
 				case HEADING:
 					text(g, bold, true, line.text, left, ly, ChronicleLayout.TITLE_ORANGE, false);
 					break;
@@ -775,6 +837,101 @@ public class ChronicleWindow extends Overlay
 		}
 		g.setClip(clip);
 		drawScrollbar(g, ChronicleLayout.PAGE_SCROLL, pageThumb, pageScroll, pageLines.size(), pageVisibleLines);
+	}
+
+	/**
+	 * A plate: a thin dark frame, and inside it the picture. A creature or a
+	 * person is drawn from its own model, turning; one not yet met is its
+	 * outline in ink. A place is the scribe's sketch, or bare paper until the
+	 * scribe has been there and stood still long enough to draw it.
+	 */
+	private void drawPlate(Graphics2D g, ChronicleEntry.Plate plate, int x, int y, boolean seen,
+		GameFont small)
+	{
+		int w = ChronicleLayout.PLATE_W;
+		int h = ChronicleLayout.PLATE_H;
+		g.setColor(new Color(PLATE_EDGE));
+		g.drawRect(x, y, w - 1, h - 1);
+		g.setColor(new Color(ChronicleLayout.LINE));
+		g.drawRect(x + 1, y + 1, w - 3, h - 3);
+		int ix = x + 2;
+		int iy = y + 2;
+		int iw = w - 4;
+		int ih = h - 4;
+		if (plate.npc != null)
+		{
+			// Paper, a shade darker at the foot, as a thing stands on the ground.
+			for (int row = 0; row < ih; row++)
+			{
+				g.setColor(new Color(SketchStyle.mix(PORTRAIT_TOP, PORTRAIT_FOOT, row / (double) ih)));
+				g.fillRect(ix, iy + row, iw, 1);
+			}
+			BufferedImage portrait = portraits.draw(plate.npc, iw, ih,
+				ChroniclePortraits.yawAt(System.currentTimeMillis()), !seen);
+			if (portrait != null)
+			{
+				g.drawImage(portrait, ix, iy, null);
+			}
+			return;
+		}
+		BufferedImage sketch = sketches == null ? null : sketches.get(plate.sketch);
+		if (sketch != null)
+		{
+			g.drawImage(sketch, ix, iy, iw, ih, null);
+			return;
+		}
+		g.setColor(new Color(BARE_PAPER));
+		g.fillRect(ix, iy, iw, ih);
+		String blank = "Not yet sketched.";
+		if (small != null)
+		{
+			small.drawCenteredBaseline(g, blank, ix + iw / 2, iy + ih / 2 + 4, SketchStyle.INK, false);
+		}
+		else
+		{
+			text(g, null, false, blank, ix + iw / 2, iy + ih / 2 + 4, SketchStyle.INK, true);
+		}
+	}
+
+	/**
+	 * The line under the plate: its number, as a book numbers plates, and
+	 * the scribe's caption; arrows either side when there is more than one.
+	 */
+	private void drawCaption(Graphics2D g, GameFont small, ChronicleEntry.Plate plate, int count,
+		boolean seen, int left, int width, int baseline)
+	{
+		if (plate == null)
+		{
+			return;
+		}
+		String said = caption(plate, plateIndex, seen, sketches != null && sketches.has(plate.sketch));
+		int centre = left + width / 2;
+		text(g, small, false, said, centre, baseline, ChronicleLayout.NOTE_PALE, true);
+		if (count > 1)
+		{
+			int top = baseline - 10;
+			platePrev.setBounds(left, top, 14, 13);
+			plateNext.setBounds(left + width - 14, top, 14, 13);
+			text(g, small, false, "<", left + 4, baseline,
+				hovered(platePrev) ? ChronicleLayout.BODY_WHITE : ChronicleLayout.TITLE_ORANGE, false);
+			text(g, small, false, ">", left + width - 10, baseline,
+				hovered(plateNext) ? ChronicleLayout.BODY_WHITE : ChronicleLayout.TITLE_ORANGE, false);
+		}
+	}
+
+	/** "Plate II. The cook, in his kitchen." - or what stands in for it before it is earned. */
+	static String caption(ChronicleEntry.Plate plate, int index, boolean seen, boolean sketched)
+	{
+		String number = "Plate " + ChronicleLayout.roman(index + 1) + ". ";
+		if (plate.npc != null && !seen)
+		{
+			return number + "Not yet seen.";
+		}
+		if (plate.sketch != null && !sketched)
+		{
+			return number + "I'll draw it when we're there.";
+		}
+		return number + (plate.caption == null ? "" : plate.caption);
 	}
 
 	/** An orange label with its value after it, the game's own header idiom. */

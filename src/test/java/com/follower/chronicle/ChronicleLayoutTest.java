@@ -189,6 +189,45 @@ public class ChronicleLayoutTest
 	}
 
 	@Test
+	public void aPageWithPicturesOpensWithThePlateAndItsCaption()
+	{
+		ChronicleEntry entry = new ChronicleEntry();
+		entry.id = "enemy-x";
+		entry.kind = "enemy";
+		entry.name = "X";
+		entry.summary = "One two.";
+		ChronicleEntry.Plate plate = new ChronicleEntry.Plate();
+		plate.npc = 3029;
+		plate.caption = "A goblin.";
+		entry.plates = Arrays.asList(plate);
+
+		List<ChronicleLayout.Line> lines = ChronicleLayout.page(entry, 600,
+			ChronicleLayoutTest::width, ChronicleLayoutTest::width);
+		for (int i = 0; i < ChronicleLayout.PLATE_ROWS; i++)
+		{
+			assertEquals("row " + i + " is held for the plate", ChronicleLayout.Style.PLATE, lines.get(i).style);
+		}
+		assertEquals(ChronicleLayout.Style.CAPTION, lines.get(ChronicleLayout.PLATE_ROWS).style);
+		ChronicleLayout.Line summary = lines.get(ChronicleLayout.PLATE_ROWS + 1);
+		assertEquals("BODY:One two.", summary.toString());
+		assertTrue("a gap between the caption and the words", summary.gapAbove > 0);
+		assertTrue("the plate fits the rows it is given",
+			ChronicleLayout.PLATE_H <= ChronicleLayout.PLATE_ROWS * ChronicleLayout.LINE_HEIGHT);
+
+		entry.plates = null;
+		assertEquals("no pictures, no room held", "BODY:One two.",
+			ChronicleLayout.page(entry, 600, ChronicleLayoutTest::width, ChronicleLayoutTest::width).get(0).toString());
+	}
+
+	@Test
+	public void platesAreNumberedAsABookNumbersThem()
+	{
+		assertEquals("I", ChronicleLayout.roman(1));
+		assertEquals("IV", ChronicleLayout.roman(4));
+		assertEquals("VIII", ChronicleLayout.roman(8));
+	}
+
+	@Test
 	public void aLongListItemWrapsUnderItsDash()
 	{
 		ChronicleEntry entry = new ChronicleEntry();
