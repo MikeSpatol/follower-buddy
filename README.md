@@ -74,8 +74,9 @@ a seat off to one side, facing the work and out of the way of your next click.
 It borrows your axe or your pickaxe for the session (the one you are wearing, or
 a bronze one; the hat, if you have the whole outfit on) and gives it back with
 a bow when you are done. In between it keeps a tally on its scroll, looks up
-when a tree comes down, steps back from an empty rock, warms its hands at your
-fire, and sits down for the long haul. It claps a level, goes to see the pet,
+when a tree comes down and warms its hands at your fire. At a tree, a rock or a
+fishing spot it stays put, reading, and only gets up to join in; elsewhere it
+sits down for the long haul. It claps a level, goes to see the pet,
 and if a stranger turns up to talk to you it stands off and has a good look.
 A good drop gets the scroll out; a great one it walks over to and writes up on
 the spot, then looks up at you and nods. It knows a ninety-two is halfway, a

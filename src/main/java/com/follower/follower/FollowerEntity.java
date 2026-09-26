@@ -1312,27 +1312,12 @@ public class FollowerEntity
 		{
 			insistedTile = null;
 		}
-		if (!spawned || tile == null || target == null
-			|| target.getPlane() != tile.getPlane() || hot(target))
-		{
-			return false;
-		}
-
-		// A destination near the leash edge would snap-and-release the moment
-		// the follower set off; refuse it as out of range instead.
-		Player local = client.getLocalPlayer();
-		if (local == null || local.getWorldLocation() == null
-			|| target.distanceTo(local.getWorldLocation()) > STAY_LEASH - 2)
-		{
-			return false;
-		}
-
-		WorldPoint from = simTile != null ? simTile : tile;
-		java.util.List<WorldPoint> path = findPath(from, target, true, playerTileToAvoid());
+		java.util.List<WorldPoint> path = stayRoute(target);
 		if (path == null)
 		{
 			return false;
 		}
+		WorldPoint from = simTile != null ? simTile : tile;
 
 		// Closest-approach may legitimately stop short of the clicked tile.
 		// What it must never settle for is the fire the follower is already
@@ -1351,6 +1336,47 @@ public class FollowerEntity
 		serverPath.clear();
 		serverPath.addAll(path);
 		return true;
+	}
+
+	/**
+	 * Whether a stay here would end ON the tile rather than beside it, asked
+	 * without setting off. Closest approach calls stopping beside a rock, or
+	 * at the water's edge, arriving; a caller choosing among tiles needs to
+	 * know that before it commits the walk, or every tile it turns down is
+	 * still walked to.
+	 */
+	public boolean arrivesAt(WorldPoint target)
+	{
+		java.util.List<WorldPoint> path = stayRoute(target);
+		if (path == null)
+		{
+			return false;
+		}
+		WorldPoint from = simTile != null ? simTile : tile;
+		WorldPoint settled = path.isEmpty() ? from : path.get(path.size() - 1);
+		return settled.equals(target) && !hot(settled);
+	}
+
+	/** The walk a stay would take to a tile, or null where it is refused outright. */
+	private java.util.List<WorldPoint> stayRoute(WorldPoint target)
+	{
+		if (!spawned || tile == null || target == null
+			|| target.getPlane() != tile.getPlane() || hot(target))
+		{
+			return null;
+		}
+
+		// A destination near the leash edge would snap-and-release the moment
+		// the follower set off; refuse it as out of range instead.
+		Player local = client.getLocalPlayer();
+		if (local == null || local.getWorldLocation() == null
+			|| target.distanceTo(local.getWorldLocation()) > STAY_LEASH - 2)
+		{
+			return null;
+		}
+
+		WorldPoint from = simTile != null ? simTile : tile;
+		return findPath(from, target, true, playerTileToAvoid());
 	}
 
 	/** Drops queued route steps. */
@@ -3238,6 +3264,12 @@ public class FollowerEntity
 	{
 		poseOverride = animationId;
 		activePose = -1;
+	}
+
+	/** The forced pose held now, or 0. */
+	public int getPoseOverride()
+	{
+		return poseOverride;
 	}
 
 	/** Lets go of a forced pose, unless something else has put its own on since. */

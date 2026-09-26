@@ -61,6 +61,13 @@ public class SkillingSessionTest
 		/** Tiles with a fence along the edge toward the work. */
 		final java.util.Set<WorldPoint> fenced = new java.util.HashSet<>();
 
+		/**
+		 * Rock, as the real pathing sees it: not ground to stand on, and yet
+		 * a walk to it "arrives" - closest approach stops beside it, on
+		 * {@link #shortOf}, and reports success. Unlike {@link #walled}.
+		 */
+		final java.util.Set<WorldPoint> solid = new java.util.HashSet<>();
+
 		@Override
 		boolean walledToward(WorldPoint at, int dx, int dy)
 		{
@@ -114,7 +121,7 @@ public class SkillingSessionTest
 		@Override
 		boolean standable(WorldPoint at)
 		{
-			return at != null && (walled == null || !walled.test(at));
+			return at != null && (walled == null || !walled.test(at)) && !solid.contains(at);
 		}
 
 		@Override
@@ -135,6 +142,19 @@ public class SkillingSessionTest
 		public WorldPoint getStayTile()
 		{
 			return stayingAt;
+		}
+
+		@Override
+		public boolean arrivesAt(WorldPoint target)
+		{
+			return target != null && (walled == null || !walled.test(target))
+				&& !shortOf.containsKey(target);
+		}
+
+		@Override
+		public int getPoseOverride()
+		{
+			return poseOverride;
 		}
 
 		@Override
@@ -327,6 +347,12 @@ public class SkillingSessionTest
 		tick(1);
 		assertTrue("the session never started", skilling.isWorking());
 		tick(SkillingController.SEAT_AFTER_TICKS);
+	}
+
+	/** The tool on loan, in the hand or set down under a gatherer's scroll. */
+	private int onLoan()
+	{
+		return skilling.getBorrow().heldItem();
 	}
 
 	private int count(TriggerEvent.Type type)
@@ -548,7 +574,7 @@ public class SkillingSessionTest
 	public void aBlockedTileIsSkippedForTheNextCandidate()
 	{
 		// The whole flank is wall; the seat lands on a candidate that is not,
-		// and still obeys the rules. stayAt is the pathing's own refusal.
+		// and still obeys the rules. The ground is asked before the walk.
 		follower.walled = tile -> tile.getX() == PLAYER.getX();
 		workTheTree();
 
@@ -568,9 +594,9 @@ public class SkillingSessionTest
 		assertTrue("still working", skilling.isWorking());
 		assertTrue("and simply following", follower.following);
 		assertFalse(skilling.holdsTheFeet());
-		int attempts = follower.stayAttempts;
-		tick(10);
-		assertTrue("it looks again now and then", follower.stayAttempts > attempts);
+		follower.walled = null;
+		tick(11);
+		assertNotNull("it looks again now and then, and finds one", follower.stayingAt);
 	}
 
 	@Test
@@ -739,7 +765,7 @@ public class SkillingSessionTest
 			setUp();
 			game.wearing(6739);
 			workTheTree();
-			assertEquals(abort + ": the axe should be borrowed by now", 6739, held);
+			assertEquals(abort + ": the axe should be borrowed by now", 6739, onLoan());
 			// Long enough that a natural end would have earned the bow.
 			tick(SkillingController.BEAT_AFTER_TICKS);
 
@@ -814,16 +840,16 @@ public class SkillingSessionTest
 	{
 		game.wearing(6739);
 		workTheTree();
-		assertEquals("the dragon axe the player wears", 6739, held);
+		assertEquals("the dragon axe the player wears", 6739, onLoan());
 
 		setUp();
 		workTheTree();
-		assertEquals("a bronze one when none is worn", 1351, held);
+		assertEquals("a bronze one when none is worn", 1351, onLoan());
 
 		setUp();
 		borrowsTools = false;
 		workTheTree();
-		assertEquals("nothing with the setting off", 0, held);
+		assertEquals("nothing with the setting off", 0, onLoan());
 	}
 
 	@Test
@@ -833,7 +859,7 @@ public class SkillingSessionTest
 		// the way the player does: axe in hand, hat on. A tool earns the bow.
 		game.wearing(6739, 10941, 10939, 10940, 10933);
 		workTheTree();
-		assertEquals("the axe in the hand", 6739, held);
+		assertEquals("the axe on loan", 6739, onLoan());
 		assertEquals("and the hat on the head", 10941, worn);
 
 		tick(SkillingController.BEAT_AFTER_TICKS);
@@ -1080,6 +1106,23 @@ public class SkillingSessionTest
 		assertEquals("without a step", stays, follower.stays.size());
 		assertEquals("turned to the anvil", anvil, follower.facing);
 		assertTrue("and then the copy is made from the seat", skilling.joinedIn());
+	}
+
+	@Test
+	public void theAnvilsNotesStayOutThroughACopy()
+	{
+		// The smith's company studies its notes for the whole session; only a
+		// gatherer's parked scroll is put down to join in.
+		WorldPoint anvil = new WorldPoint(53, 50, 0);
+		game.at(52, 50, 0);
+		borrowsTools = false;
+		skilling.noteClick("Smith", "Anvil", 2097, anvil, anvil, null);
+		game.animating(898);
+		tick(1 + SkillingController.SEAT_AFTER_TICKS);
+		assertEquals("the notes out", ErrandController.SCROLL_PROP, held);
+
+		skilling.joinIn();
+		assertEquals("and still out for the copy", ErrandController.SCROLL_PROP, held);
 	}
 
 	@Test
@@ -1338,7 +1381,7 @@ public class SkillingSessionTest
 		// sometimes. Now the net is in the hand and the hat is on, every time.
 		game.wearing(13258, 13259, 13260, 13261);
 		workTheSpot();
-		assertEquals("the net in the hand", 303, held);
+		assertEquals("the net on loan", 303, onLoan());
 		assertEquals("the angler hat on", 13258, worn);
 	}
 
@@ -1349,7 +1392,7 @@ public class SkillingSessionTest
 		// axe back, bow and all, and take it straight out again.
 		game.wearing(6739);
 		workTheTree();
-		assertEquals(6739, held);
+		assertEquals(6739, onLoan());
 		tick(SkillingController.BEAT_AFTER_TICKS);
 		follower.animations.clear();
 
@@ -1428,7 +1471,7 @@ public class SkillingSessionTest
 	public void aShortStintGetsNoSendOffAtTheEndOfTheGrace()
 	{
 		workTheTree();
-		assertEquals(1351, held);
+		assertEquals(1351, onLoan());
 		game.at(56, 50, 0);
 		tick(2 + SkillingController.TOOL_GRACE_TICKS);
 		assertEquals(0, held);
@@ -1439,7 +1482,7 @@ public class SkillingSessionTest
 	public void differentWorkSwapsTheKeptTool()
 	{
 		workTheTree();
-		assertEquals(1351, held);
+		assertEquals(1351, onLoan());
 		game.at(56, 50, 0);
 		tick(2);
 		assertEquals("kept for the moment", 1351, held);
@@ -1448,7 +1491,7 @@ public class SkillingSessionTest
 		game.animating(MINE);
 		tick(1);
 		tick(SkillingController.SEAT_AFTER_TICKS);
-		assertEquals("an axe is no good at a rock", 1265, held);
+		assertEquals("an axe is no good at a rock", 1265, onLoan());
 	}
 
 	@Test
@@ -1472,7 +1515,7 @@ public class SkillingSessionTest
 		// is the one thing a borrow must never get wrong.
 		game.wearing(28217);
 		workTheTree();
-		assertEquals("the felling axe the player wears", 28217, held);
+		assertEquals("the felling axe the player wears", 28217, onLoan());
 	}
 
 	@Test
@@ -1730,18 +1773,73 @@ public class SkillingSessionTest
 		assertTrue("came out on drop " + out, out >= 11 && out <= 13);
 	}
 
+	/**
+	 * Play report: the follower walked between the tile at the player's
+	 * side and the one behind them, and "it looks off". A gatherer's
+	 * company is parked: the scroll out over the tool on loan, and left out.
+	 */
 	@Test
-	public void aToolInHandMeansNoScroll()
+	public void aGatherersScrollIsParkedOverTheToolOnLoan()
 	{
 		workTheTree();
-		assertEquals(1351, held);
+		assertEquals("the scroll in the hand", ErrandController.SCROLL_PROP, held);
+		assertEquals("the axe on loan, set down for it", 1351, onLoan());
+		assertEquals(ErrandController.READ_SCROLL_POSE, follower.poseOverride);
 		for (int i = 0; i < 20; i++)
 		{
 			tick(4);
 			skilling.noteXpDrop(Skill.WOODCUTTING);
-			assertEquals("the axe keeps the weapon slot", 1351, held);
+			assertEquals("and left out, drop after drop", ErrandController.SCROLL_PROP, held);
 		}
+		assertEquals(ErrandController.READ_SCROLL_POSE, follower.poseOverride);
+		assertEquals("never a step", 1, follower.stays.size());
+	}
+
+	@Test
+	public void aGatheringSeatIsNeverPacedStretchedOrSatOn()
+	{
+		workTheRock();
+		WorldPoint seat = follower.stayingAt;
+		tick(KeepingCompany.STRETCH_AGAIN_TICKS + 400);
+		assertTrue("the work went on", skilling.isWorking());
+		assertEquals("not a step in over two hours", 1, follower.stays.size());
+		assertEquals(seat, follower.stayingAt);
+		assertFalse("and never sat down", skilling.isSitting());
+		assertEquals("still reading", ErrandController.SCROLL_PROP, held);
+		assertEquals(ErrandController.READ_SCROLL_POSE, follower.poseOverride);
+	}
+
+	@Test
+	public void joiningInPutsTheScrollDownAndTheToolBackInTheHand()
+	{
+		workTheTree();
+		assertEquals(ErrandController.SCROLL_PROP, held);
+		skilling.joinIn();
+		assertEquals("the copy swings the axe, not the scroll", 1351, held);
 		assertEquals(0, follower.poseOverride);
+
+		skilling.dropTheJoin();
+		tick(1);
+		assertEquals("and back on the seat the scroll comes out again",
+			ErrandController.SCROLL_PROP, held);
+		assertEquals(ErrandController.READ_SCROLL_POSE, follower.poseOverride);
+	}
+
+	@Test
+	public void aFullBagAtAGatheringSeatIsNoStepBankward()
+	{
+		game.placeObject(9030, "Bank booth", 60, 50, 0);
+		workTheRock();
+		game.inventoryUsing(27);
+		tick(1);
+		game.inventoryUsing(28);
+		tick(1);
+		assertEquals("the shrug", Collections.singletonList(2113), follower.animations);
+		assertEquals("the scroll down for the look at the player", 1265, held);
+		tick(10);
+		assertEquals("but it stays parked", 1, follower.stays.size());
+		assertEquals("and the scroll comes back out after the look",
+			ErrandController.SCROLL_PROP, held);
 	}
 
 	@Test
@@ -2111,6 +2209,139 @@ public class SkillingSessionTest
 		assertEquals(newSpot, follower.facing);
 	}
 
+	/** Twenty ticks on the one seat: not a step, not a moment following. */
+	private void assertParked(WorldPoint seat)
+	{
+		for (int i = 0; i < 20; i++)
+		{
+			tick(1);
+			assertEquals("parked, tick " + i, seat, follower.stayingAt);
+			assertTrue("and the company's, tick " + i, skilling.holdsTheFeet());
+			assertFalse(follower.following);
+		}
+		for (WorldPoint stay : follower.stays)
+		{
+			assertEquals("never sent anywhere else", seat, stay);
+		}
+	}
+
+	/**
+	 * Play report, at Motherlode: the follower "will walk back and fourth
+	 * between the tile to my side and the tile behind me". The first seat
+	 * was rock; closest approach stopped behind the player and called it
+	 * arriving, so the rock was written down as the seat, found not to be
+	 * ground on the next tick, dropped, and taken again the tick after.
+	 */
+	@Test
+	public void aSeatOnRockIsNeverTakenSoItIsNeverDroppedAndRetaken()
+	{
+		WorldPoint rock = new WorldPoint(48, 51, 0);
+		follower.solid.add(rock);
+		follower.shortOf.put(rock, new WorldPoint(49, 50, 0));
+		workTheRock();
+		WorldPoint seat = follower.stayingAt;
+		assertNotNull(seat);
+		assertNotEquals("not the rock", rock, skilling.getSeat());
+		assertEquals("the seat is where it stands", seat, skilling.getSeat());
+		assertParked(seat);
+	}
+
+	@Test
+	public void anAnglersSeatIsNeverTakenInTheWater()
+	{
+		WorldPoint water = new WorldPoint(52, 49, 0);
+		follower.solid.add(water);
+		follower.shortOf.put(water, new WorldPoint(51, 50, 0));
+		workTheSpot();
+		WorldPoint seat = follower.stayingAt;
+		assertNotNull(seat);
+		assertNotEquals("not the water", water, skilling.getSeat());
+		assertParked(seat);
+	}
+
+	@Test
+	public void aSeatThePathingOnlyGetsNearIsNoSeat()
+	{
+		// Good ground, but the far side of a fence: closest approach stops a
+		// tile short and calls it arriving. The seat is the next one instead.
+		follower.shortOf.put(new WorldPoint(48, 51, 0), new WorldPoint(49, 50, 0));
+		workTheRock();
+		assertEquals(new WorldPoint(48, 49, 0), skilling.getSeat());
+		assertEquals("and it stands on it", skilling.getSeat(), follower.stayingAt);
+	}
+
+	@Test
+	public void anywhereItCanOnlyGetNearIsNowhereToSit()
+	{
+		for (WorldPoint c : SkillingController.seatCandidates(PLAYER, ROCK, ROCK,
+			Collections.emptyList(), "mining"))
+		{
+			follower.shortOf.put(c, new WorldPoint(49, 50, 0));
+		}
+		workTheRock();
+		assertNull(skilling.getSeat());
+		assertTrue("following, not left standing short", follower.following);
+		assertTrue("and no tile it turned down was walked to", follower.stays.isEmpty());
+	}
+
+	@Test
+	public void aSeatThatIsNoSeatForTheNextSpotIsLetGoNotLeftStanding()
+	{
+		workTheSpot();
+		assertNotNull(follower.stayingAt);
+
+		// The spot moves up the bank to where it is water all round, and the
+		// old seat is too far back to keep.
+		WorldPoint moved = new WorldPoint(53, 53, 0);
+		WorldPoint player = new WorldPoint(52, 53, 0);
+		follower.walled = tile -> tile.distanceTo(moved) == 1 && !tile.equals(player);
+		NPC spot = game.spawnNpc(1530, "Fishing spot", 0);
+		game.moveNpc(spot, moved.getX(), moved.getY(), 0);
+		skilling.noteClick("Net", "Fishing spot", 1530, moved, moved, spot);
+		game.at(player.getX(), player.getY(), 0);
+		tick(SkillingController.SEAT_AFTER_TICKS + 2);
+
+		assertTrue("the same session", skilling.isWorking());
+		assertNull("no seat by the new spot", skilling.getSeat());
+		assertTrue("and not left standing on the old one", follower.following);
+		assertNotEquals("nor reading on the move", ErrandController.SCROLL_PROP, held);
+	}
+
+	@Test
+	public void aReadingPoseSomethingElseLetGoOfIsPutBack()
+	{
+		workTheTree();
+		assertEquals(ErrandController.READ_SCROLL_POSE, follower.poseOverride);
+
+		// A stranger's peer, a held emote copied: somebody else's pose on top.
+		follower.setPoseOverride(KeepingCompany.PEER);
+		tick(2);
+		assertEquals("theirs, while they have it", KeepingCompany.PEER, follower.poseOverride);
+
+		// And let go of, leaving the scroll in the hand.
+		follower.setPoseOverride(0);
+		tick(1);
+		assertEquals("reading it again", ErrandController.READ_SCROLL_POSE, follower.poseOverride);
+	}
+
+	@Test
+	public void theNextRockFromTheSameSpotKeepsTheSeat()
+	{
+		workTheRock();
+		WorldPoint seat = follower.stayingAt;
+		assertEquals(new WorldPoint(48, 51, 0), seat);
+
+		// A rock on the other side, clicked without a step: the old seat is a
+		// fair seat for it still, though not the one it would choose fresh.
+		WorldPoint next = new WorldPoint(50, 48, 0);
+		skilling.noteClick("Mine", "Rocks", ROCK_ID, next, null, null);
+		tick(SkillingController.SEAT_AFTER_TICKS + 2);
+		assertTrue("the same session", skilling.isWorking());
+		assertEquals("not a step", seat, follower.stayingAt);
+		assertEquals("facing the new rock", next, follower.facing);
+		assertParked(seat);
+	}
+
 	@Test
 	public void theMinersSeatIsDiagonalBehindTwoBack()
 	{
@@ -2123,7 +2354,7 @@ public class SkillingSessionTest
 	}
 
 	@Test
-	public void anEmptiedRockIsAStepBackAndThreeLooks()
+	public void anEmptiedRockIsThreeLooksAndNoStep()
 	{
 		WorldPoint next = new WorldPoint(52, 53, 0);
 		game.placeObject(ROCK_ID + 1, "Rocks", next.getX(), next.getY(), 0);
@@ -2131,13 +2362,11 @@ public class SkillingSessionTest
 		tick(KeepingCompany.ROCK_AFTER_TICKS);
 		WorldPoint seat = follower.stayingAt;
 
-		// The empty rock takes the tile.
+		// The empty rock takes the tile. A gatherer's company stays parked.
 		skilling.objectSpawned(ROCK_ID + 2, ROCK, null);
-		assertEquals("one step back", 2, follower.stays.size());
-		WorldPoint back = follower.stayingAt;
-		assertEquals(1, back.distanceTo(seat));
-		assertTrue("away from the rock", back.distanceTo(ROCK) > seat.distanceTo(ROCK));
-		assertEquals("the seat moved with it", back, skilling.getSeat());
+		assertEquals("no step back", 1, follower.stays.size());
+		assertEquals(seat, follower.stayingAt);
+		assertEquals(seat, skilling.getSeat());
 
 		tick(1);
 		assertEquals("the empty rock", ROCK, follower.facing);
@@ -2186,56 +2415,19 @@ public class SkillingSessionTest
 	}
 
 	@Test
-	public void threeMinutesAtOneRockIsAReadOfTheNotes()
-	{
-		borrowsTools = false;
-		workTheRock();
-		tick(KeepingCompany.GERALD_AFTER_TICKS);
-		assertEquals("the note pose", KeepingCompany.NOTE_POSE, follower.poseOverride);
-		assertEquals("with the scroll", ErrandController.SCROLL_PROP, held);
-		assertEquals("turned to the rock", ROCK, follower.facing);
-		assertTrue(follower.animations.isEmpty());
-
-		tick(KeepingCompany.TALLY_TICKS);
-		assertEquals(0, follower.poseOverride);
-		assertEquals(0, held);
-		assertEquals("one shake of the head",
-			Collections.singletonList(KeepingCompany.HEAD_SHAKE), follower.animations);
-
-		tick(KeepingCompany.GERALD_AFTER_TICKS);
-		assertEquals("once per rock", 1, follower.animations.size());
-	}
-
-	@Test
-	public void theNotesAreReadWithTheScrollAndThePickaxeComesBack()
-	{
-		// The pose is a reading of the notes, so the notes have to be in the
-		// hand: the pickaxe is put down for it and picked up again after.
-		workTheRock();
-		assertEquals(1265, held);
-		tick(KeepingCompany.GERALD_AFTER_TICKS);
-		assertEquals(KeepingCompany.NOTE_POSE, follower.poseOverride);
-		assertEquals("a reader holds the scroll, not the pickaxe",
-			ErrandController.SCROLL_PROP, held);
-		tick(KeepingCompany.TALLY_TICKS);
-		assertEquals(0, follower.poseOverride);
-		assertEquals("and the pickaxe is back in the hand after", 1265, held);
-		assertEquals(Collections.singletonList(KeepingCompany.HEAD_SHAKE), follower.animations);
-	}
-
-	@Test
 	public void aSessionEndingMidReadStillGivesThePickaxeBack()
 	{
-		// The tool is on loan while it is set aside, so an end that lands
-		// between the scroll coming out and going away must not lose it.
+		// The tool is on loan while it is set down under the scroll, so an end
+		// that lands while the scroll is out must not lose it.
 		workTheRock();
-		tick(KeepingCompany.GERALD_AFTER_TICKS);
 		assertEquals(ErrandController.SCROLL_PROP, held);
+		assertEquals(1265, onLoan());
 
 		inCombat = true;
 		tick(1);
 		assertFalse("the session let go", skilling.isWorking());
 		assertEquals("and the hands are empty", 0, held);
+		assertEquals("the pickaxe given back", 0, onLoan());
 	}
 
 	@Test
@@ -2250,10 +2442,8 @@ public class SkillingSessionTest
 		skilling.objectDespawned(TREE_ID, TREE_MIN, TREE_MAX);
 		assertEquals("the flinch", Collections.singletonList(KeepingCompany.FLINCH),
 			follower.animations);
-		assertEquals("one step clear of the stump", 2, follower.stays.size());
-		WorldPoint away = follower.stayingAt;
-		assertEquals(1, away.distanceTo(seat));
-		assertTrue(away.distanceTo(TREE_MIN) > seat.distanceTo(TREE_MIN));
+		assertEquals("no step clear of the stump: it stays parked", 1, follower.stays.size());
+		assertEquals(seat, follower.stayingAt);
 
 		tick(1);
 		assertEquals("then the player", PLAYER, follower.facing);
@@ -2343,10 +2533,69 @@ public class SkillingSessionTest
 		assertEquals("kept through the banking", seat, follower.stayingAt);
 		assertTrue(skilling.holdsTheFeet());
 
+		// Back within three tiles, and no work taken up: a gatherer's seat
+		// waits a moment for the first swing, then lets go.
+		game.animating(-1);
 		game.at(50, 51, 0);
 		tick(1);
-		assertTrue("back within three tiles: following again", follower.following);
+		assertEquals("waiting for the swing", seat, follower.stayingAt);
+		tick(SkillingController.BANK_BACK_TICKS);
+		assertTrue("none came: following again", follower.following);
 		assertFalse(skilling.holdsTheFeet());
+	}
+
+	/**
+	 * Back from the bank to the same tree: the follower used to walk off its
+	 * seat to meet the player, and six ticks into the chopping walk straight
+	 * back to it. The seat is carried into the new session instead.
+	 */
+	@Test
+	public void backFromTheBankToTheSameTreeTheSeatIsNeverLeft()
+	{
+		WorldPoint seat = walkOffToTheBank();
+		game.animating(-1);
+		game.at(59, 50, 0);
+		tick(10);
+		bankOpen = true;
+		tick(1);
+		bankOpen = false;
+		tick(20);
+
+		game.at(52, 50, 0);
+		tick(1);
+		game.at(PLAYER.getX(), PLAYER.getY(), 0);
+		clickTheTree();
+		game.animating(CHOP);
+		for (int i = 0; i < SkillingController.SEAT_AFTER_TICKS + 3; i++)
+		{
+			tick(1);
+			assertTrue("at it again, tick " + i, skilling.isWorking());
+			assertFalse("never let go to follow, tick " + i, follower.following);
+			assertEquals("never off the seat, tick " + i, seat, follower.stayingAt);
+		}
+		assertEquals("the same seat", seat, skilling.getSeat());
+		for (WorldPoint stay : follower.stays)
+		{
+			assertEquals("never sent anywhere else", seat, stay);
+		}
+		assertEquals("and reading again", ErrandController.SCROLL_PROP, held);
+	}
+
+	@Test
+	public void aSeatBesideThePlayerIsKeptForTheNextVeinAlong()
+	{
+		workTheRock();
+		WorldPoint seat = follower.stayingAt;
+		assertEquals(new WorldPoint(48, 51, 0), seat);
+
+		// A step along the wall to the next rock: the seat is beside them now.
+		WorldPoint next = new WorldPoint(51, 52, 0);
+		skilling.noteClick("Mine", "Rocks", ROCK_ID, next, null, null);
+		game.at(49, 52, 0);
+		tick(SkillingController.SEAT_AFTER_TICKS + 2);
+		assertTrue(skilling.isWorking());
+		assertEquals("not a step", seat, follower.stayingAt);
+		assertParked(seat);
 	}
 
 	@Test
@@ -3083,6 +3332,23 @@ public class SkillingSessionTest
 		tick(1);
 		assertTrue(follower.following);
 		assertFalse(skilling.holdsTheFeet());
+	}
+
+	@Test
+	public void aTrapIsNotWatchedFromRock()
+	{
+		// The same ground question as the seat's, before the walk: a watch
+		// from a rock the pathing stopped beside was dropped the next tick.
+		WorldPoint rock = new WorldPoint(48, 48, 0);
+		follower.solid.add(rock);
+		follower.shortOf.put(rock, new WorldPoint(49, 49, 0));
+		layATrap(PLAYER);
+		WorldPoint seat = follower.stayingAt;
+		assertNotNull(seat);
+		tick(3);
+		assertTrue("still watching it", skilling.holdsTheFeet());
+		assertEquals(seat, follower.stayingAt);
+		assertNotEquals(rock, seat);
 	}
 
 	@Test

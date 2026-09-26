@@ -102,10 +102,6 @@ class KeepingCompany
 	 */
 	static final int NEST_LOOK = 832;
 
-	/** Three minutes at one rock earns a read of the notes: a pose, new to the follower. */
-	static final int GERALD_AFTER_TICKS = 300;
-	static final int NOTE_POSE = 4549;
-
 	/** Two depletions closer than this share the one look for the next. */
 	static final int NEXT_LOOK_GAP_TICKS = 15;
 	private static final int PLAYER_BEAT_TICKS = 3;
@@ -182,6 +178,11 @@ class KeepingCompany
 		FOREMAN,
 		/** The brazier in the cold: three tiles off, stamping the feet. */
 		BRAZIER,
+		/**
+		 * Mining, woodcutting, fishing, hunting: parked near the player with
+		 * the scroll out, and not a step taken. It gets up only to join in.
+		 */
+		GATHERING,
 	}
 
 	/** One tile to look at for so many ticks; the reactions are queues of these. */
@@ -257,13 +258,8 @@ class KeepingCompany
 	private WorldPoint currentLook;
 	private int currentLookTicks;
 
-	private int targetSince;
 	private int lastDepletionTick;
 	private int waterLookAt;
-	private boolean geraldDone;
-
-	/** Ticks the note pose has left; the head shake follows it. */
-	private int noteTicks;
 
 	private Mode mode = Mode.NONE;
 	private String activity = "";
@@ -344,7 +340,6 @@ class KeepingCompany
 		currentLook = null;
 		currentLookTicks = 0;
 		lastDepletionTick = -1;
-		noteTicks = 0;
 		mode = Mode.NONE;
 		activity = "";
 		guard = null;
@@ -390,6 +385,8 @@ class KeepingCompany
 
 	void unseated()
 	{
+		// Not reading on the move: the parked scroll goes with the seat.
+		putScrollAway();
 		seat = null;
 		facing = null;
 		legs.clear();
@@ -490,8 +487,6 @@ class KeepingCompany
 		this.target = target;
 		this.activity = activity == null ? "" : activity;
 		this.mode = mode == null ? Mode.NONE : mode;
-		targetSince = now;
-		geraldDone = false;
 		waterLookAt = now + jitter(WATER_LOOK_TICKS, WATER_LOOK_SPREAD);
 		shoulderAt = now + jitter(SHOULDER_AFTER_TICKS, SHOULDER_SPREAD);
 		stampAt = now + jitter(STAMP_EVERY_TICKS, STAMP_SPREAD);
@@ -529,14 +524,6 @@ class KeepingCompany
 		{
 			putScrollAway();
 		}
-		if (noteTicks > 0 && --noteTicks == 0)
-		{
-			// The pose first, by hand: the notes may have been read over a
-			// tool, with no scroll for putScrollAway to take the pose with.
-			follower.setPoseOverride(0);
-			putScrollAway();
-			emote(HEAD_SHAKE);
-		}
 		if (lookTicks > 0)
 		{
 			lookTicks--;
@@ -564,7 +551,14 @@ class KeepingCompany
 		// return, and the seat is then wherever the walk ended. The walks are
 		// not lost, only late; their flags stay down until the peer is over.
 		boolean onTheSeat = peerTicks == 0;
-		if (onTheSeat && !paced && worked >= paceAt)
+		if (mode == Mode.GATHERING)
+		{
+			// Play report: walking between the tile at the player's side and
+			// the one behind them "looks off". Gathering is parked: the scroll
+			// out, and no pace, stretch or sit.
+			parkTheScroll();
+		}
+		else if (onTheSeat && !paced && worked >= paceAt)
 		{
 			paced = true;
 			pace();
@@ -584,11 +578,7 @@ class KeepingCompany
 			sit();
 		}
 
-		if ("mining".equals(activity) && !geraldDone && now - targetSince >= GERALD_AFTER_TICKS)
-		{
-			readTheNotes();
-		}
-		else if ("fishing".equals(activity) && now >= waterLookAt)
+		if ("fishing".equals(activity) && now >= waterLookAt)
 		{
 			waterLookAt = now + jitter(WATER_LOOK_TICKS, WATER_LOOK_SPREAD);
 			look(waterTile(), WATER_GAZE_TICKS);
@@ -719,7 +709,7 @@ class KeepingCompany
 		{
 			return currentLook;
 		}
-		boolean studying = mode == Mode.ANVIL || mode == Mode.FOREMAN;
+		boolean studying = mode == Mode.ANVIL || mode == Mode.FOREMAN || mode == Mode.GATHERING;
 		if ((scrollOut && !studying) || playerLookTicks > 0)
 		{
 			return here;
@@ -1022,13 +1012,49 @@ class KeepingCompany
 		scrollTicks = ticks;
 	}
 
+	/**
+	 * The gatherer's company, parked: the scroll out and left out, over a
+	 * borrowed tool set down for it. Put away to join in - the copy swings
+	 * the tool - and out again once back on the seat.
+	 */
+	private void parkTheScroll()
+	{
+		if (seat == null || sitting || walking || peerTicks > 0 || playerLookTicks > 0)
+		{
+			return;
+		}
+		if (scrollOut)
+		{
+			// Something else let go of the pose over it - a stranger's peer,
+			// a held emote copied and done - and left the scroll in the hand:
+			// back to reading it, rather than holding it at the side.
+			if (follower.getPoseOverride() == 0)
+			{
+				follower.setPoseOverride(ErrandController.READ_SCROLL_POSE);
+			}
+			return;
+		}
+		if (borrow.isHolding() && !toolAside)
+		{
+			toolAside = borrow.setAside();
+		}
+		if (hands.isHolding())
+		{
+			// Something else is in the hand; not the scroll's to take.
+			return;
+		}
+		hands.hold(ErrandController.SCROLL_PROP);
+		if (!hands.isHolding())
+		{
+			return;
+		}
+		follower.setPoseOverride(ErrandController.READ_SCROLL_POSE);
+		scrollOut = true;
+		scrollTicks = 0;
+	}
+
 	void putScrollAway()
 	{
-		if (noteTicks > 0)
-		{
-			noteTicks = 0;
-			follower.setPoseOverride(0);
-		}
 		if (scrollOut)
 		{
 			scrollOut = false;
@@ -1104,17 +1130,17 @@ class KeepingCompany
 
 	/**
 	 * The target went. A tree worked long enough falls, and the follower
-	 * flinches and steps clear of the stump before looking at the player; a
-	 * rock worked long enough empties, and the follower steps back and looks
-	 * at the empty rock, at the next full one, then at the player. Anything
+	 * flinches before looking at the player; a rock worked long enough
+	 * empties, and the follower looks at the empty rock, at the next full
+	 * one, then at the player. No step clear: a gatherer's company stays
+	 * parked where it is. Anything
 	 * quicker is a look at the player and then at where the next one is -
 	 * unless the last depletion was moments ago, when once was enough.
 	 *
 	 * @param worked ticks this target was worked
 	 * @param next the nearest same-name target, or null when there is none
 	 */
-	void depleted(String activity, int worked, WorldPoint min, WorldPoint max, WorldPoint next,
-		WorldPoint here, int now)
+	void depleted(String activity, int worked, WorldPoint next, WorldPoint here, int now)
 	{
 		boolean recent = lastDepletionTick >= 0 && now - lastDepletionTick < NEXT_LOOK_GAP_TICKS;
 		lastDepletionTick = now;
@@ -1125,14 +1151,12 @@ class KeepingCompany
 		if ("woodcutting".equals(activity) && worked >= TIMBER_AFTER_TICKS)
 		{
 			emote(FLINCH);
-			stepAwayFrom(min, max);
 			look(here, PLAYER_BEAT_TICKS);
 			look(next, NEXT_LOOK_TICKS);
 			return;
 		}
 		if ("mining".equals(activity) && worked >= ROCK_AFTER_TICKS)
 		{
-			stepAwayFrom(min, max);
 			look(target, EMPTY_LOOK_TICKS);
 			look(next, NEXT_LOOK_TICKS);
 			look(here, PLAYER_BEAT_TICKS);
@@ -1200,36 +1224,6 @@ class KeepingCompany
 			target.getY() + dy * reach + dx * side, target.getPlane());
 	}
 
-	/**
-	 * Three minutes at the one rock: a turn to it, the notes read for four
-	 * seconds - with the scroll when the hands are free, over the pickaxe
-	 * otherwise - and one shake of the head. Once per rock.
-	 */
-	private void readTheNotes()
-	{
-		if (sitting || scrollOut || noteTicks > 0)
-		{
-			return;
-		}
-		geraldDone = true;
-		// The turn is now, not next tick: the pose must not open on the player.
-		looks.clear();
-		currentLook = target;
-		currentLookTicks = TALLY_TICKS + 1;
-		// The scroll belongs in the hand for this one: the pose is a reading of
-		// it. A borrowed tool is put down for the read and taken back after,
-		// and the weapon hand the scroll takes drops the shield with it.
-		toolAside = borrow.setAside();
-		if (!hands.isHolding())
-		{
-			hands.hold(ErrandController.SCROLL_PROP);
-			scrollOut = hands.isHolding();
-		}
-		follower.setPoseOverride(NOTE_POSE);
-		noteTicks = TALLY_TICKS;
-		log.debug("Reading the notes on this rock");
-	}
-
 	// ------------------------------------------------------------------- bag
 
 	/** Fourteen slots left: a note. Not for a player dropping as they go. */
@@ -1244,7 +1238,8 @@ class KeepingCompany
 	/**
 	 * The last slot gone: up, a look at the player, a shrug, and one step
 	 * toward the nearest bank booth if there is one close and the ground
-	 * allows it. Not for a player dropping as they go.
+	 * allows it - not from a gathering seat, which stays parked. Not for a
+	 * player dropping as they go.
 	 */
 	void bagFull(String lastOption, WorldPoint here)
 	{
@@ -1261,7 +1256,7 @@ class KeepingCompany
 
 		WorldPoint bank = SkillingController.nearestObject(client, here, BANK_TILES,
 			name -> "Bank booth".equals(name) || "Bank chest".equals(name));
-		if (bank != null)
+		if (bank != null && mode != Mode.GATHERING)
 		{
 			step = new WorldPoint(seat.getX() + Integer.signum(bank.getX() - seat.getX()),
 				seat.getY() + Integer.signum(bank.getY() - seat.getY()), seat.getPlane());

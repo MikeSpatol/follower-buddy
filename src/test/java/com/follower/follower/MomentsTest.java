@@ -90,6 +90,25 @@ public class MomentsTest
 		}
 
 		@Override
+		public WorldPoint getStayTile()
+		{
+			return stayingAt;
+		}
+
+		/** Every walk arrives here, as stayAt does. */
+		@Override
+		public boolean arrivesAt(WorldPoint target)
+		{
+			return target != null;
+		}
+
+		@Override
+		public int getPoseOverride()
+		{
+			return poseOverride;
+		}
+
+		@Override
 		public void stayHere()
 		{
 			stayingAt = getWorldLocation();
@@ -543,8 +562,12 @@ public class MomentsTest
 	@Test
 	public void aMomentDoesNotGetItUpFromTheLongHaulSit()
 	{
-		takeTheSeat();
+		// A cook's seat: a gatherer's stays parked with the scroll and never sits.
+		skilling.noteClick("Cook", "Range", 9020, TREE, null, null);
+		game.animating(896);
+		tick(1 + SkillingController.SEAT_AFTER_TICKS);
 		WorldPoint seat = skilling.getSeat();
+		assertNotNull("the seat was never taken", seat);
 		tick(KeepingCompany.SIT_AFTER_TICKS + 70);
 		assertTrue(skilling.isSitting());
 		int sit = follower.poseOverride;

@@ -117,6 +117,9 @@ public class SkillingController
 	/** Three minutes: the most a bank trip holds the seat once the bank opened. */
 	static final int BANK_TRIP_CAP_TICKS = 300;
 
+	/** Back from the bank, a gatherer's seat waits this long for the first swing. */
+	static final int BANK_BACK_TICKS = 10;
+
 	/** How far the next same-name target is looked for after a depletion. */
 	private static final int NEXT_TARGET_TILES = 10;
 
@@ -294,6 +297,9 @@ public class SkillingController
 
 	/** Whether the player has been away from the seat, so that coming back counts. */
 	private boolean bankTripAway;
+
+	/** Whether the seat kept for the trip is a gatherer's, carried into the next session. */
+	private boolean bankTripGathering;
 
 	/** Whether a player has been seen playing the nest look, so it is safe to. */
 	private boolean nestLookProven;
@@ -1368,12 +1374,26 @@ public class SkillingController
 			end(false, now - session.startTick >= BEAT_AFTER_TICKS, true);
 		}
 		// A seat kept for a bank trip, a trap watched, a fire visited: let go,
-		// the new work seats itself.
-		dropTheBankTrip(true);
+		// the new work seats itself - except a gatherer's seat that is still a
+		// seat for the new work, which is carried over and re-seated where it
+		// is, without a step.
+		WorldPoint carried = bankTrip ? seat : null;
 		dropTheTrap(true);
 		dropTheFireLine(true);
 		letGoOfTheNotes();
 		session = opened;
+		boolean carry = carried != null && modeFor(opened.workSpot) == KeepingCompany.Mode.GATHERING
+			&& carried.equals(follower.getStayTile())
+			&& stillASeat(opened.workSpot, opened.targetTile, opened.targetMax, reservedTiles(), carried);
+		if (carry)
+		{
+			bankTrip = false;
+			bankTripConfirmed = false;
+		}
+		else
+		{
+			dropTheBankTrip(true);
+		}
 		if (graceTicks > 0)
 		{
 			if (graceActivity != null && opened.activity != null
@@ -1389,8 +1409,8 @@ public class SkillingController
 				graceActivity = null;
 			}
 		}
-		seat = null;
-		reseat = false;
+		seat = carry ? carried : null;
+		reseat = carry;
 		refusedTool = 0;
 		refusedHat = 0;
 		seatDueTick = now + seatAfter();
@@ -1618,10 +1638,7 @@ public class SkillingController
 		Player local = client.getLocalPlayer();
 		WorldPoint here = local == null ? null : local.getWorldLocation();
 		company.depleted(session.activity, client.getTickCount() - session.targetSinceTick,
-			session.targetTile, session.targetMax, next, here, client.getTickCount());
-		// The step back moved the seat; the tick would catch up, but a
-		// release in between must let go of where the follower now is.
-		syncTheSeat();
+			next, here, client.getTickCount());
 	}
 
 	/** The notes taken at a session's end, put away once the feet are let go. */
@@ -1665,7 +1682,7 @@ public class SkillingController
 		}
 		for (WorldPoint candidate : ring)
 		{
-			if (!follower.hot(candidate) && follower.stayAt(candidate))
+			if (follower.goodGround(candidate) && follower.stayAt(candidate))
 			{
 				trapTile = min;
 				trapId = id;
@@ -1783,6 +1800,7 @@ public class SkillingController
 			joinTile = at;
 			joinBy = client.getTickCount() + JOIN_ARRIVAL_PATIENCE;
 			faceTheWork();
+			putTheParkedScrollAway();
 			return false;
 		}
 		startTheJoin();
@@ -1884,41 +1902,36 @@ public class SkillingController
 		{
 			beside.sort((a, b) -> Integer.compare(square(a, from), square(b, from)));
 		}
-		boolean moved = false;
 		for (WorldPoint candidate : beside)
 		{
-			if (follower.hot(candidate) || !follower.goodGround(candidate)
+			// Closest approach stops short - water, a wall - and a copy from
+			// short of the tile is a copy from the wrong one. Asked before
+			// the walk, so a tile turned down is not walked to.
+			if (!follower.goodGround(candidate) || !follower.arrivesAt(candidate)
 				|| !follower.stayAt(candidate))
 			{
 				continue;
 			}
-			moved = true;
-			if (!candidate.equals(follower.getStayTile()))
-			{
-				// Closest approach stopped short - water, a wall - and a copy
-				// from short of the tile is a copy from the wrong one.
-				continue;
-			}
 			joinTile = candidate;
 			faceTheWork();
+			putTheParkedScrollAway();
 			int walk = from == null ? JOIN_ARRIVAL_PATIENCE : from.distanceTo(candidate);
 			joinBy = client.getTickCount() + walk + JOIN_ARRIVAL_PATIENCE;
 			log.debug("Going over to join in at {} by {}", candidate, session.targetName);
 			return;
 		}
-		if (!moved)
+	}
+
+	/**
+	 * A gatherer's parked scroll down and the tool back in the hand: the copy
+	 * swings the tool. Only a gatherer's - the anvil's notes are the seat's
+	 * for the whole session, and put away they did not come back.
+	 */
+	private void putTheParkedScrollAway()
+	{
+		if (modeFor(session.workSpot) == KeepingCompany.Mode.GATHERING)
 		{
-			return;
-		}
-		// Every try was refused on arrival; back to the seat, or let go so
-		// the seat is looked at afresh rather than kept on a short tile.
-		if (follower.stayAt(seat))
-		{
-			follower.setStayFaceTile(faceTile());
-		}
-		else
-		{
-			follower.resumeFollowing();
+			company.putScrollAway();
 		}
 	}
 
@@ -2148,6 +2161,7 @@ public class SkillingController
 		bankTrip = true;
 		bankTripConfirmed = banking;
 		bankTripAway = false;
+		bankTripGathering = modeFor(here) == KeepingCompany.Mode.GATHERING;
 		bankTripUntil = now + (banking ? BANK_TRIP_CAP_TICKS : BANK_WALK_TICKS);
 		follower.setStayFaceTile(here);
 		log.debug("A bank trip; the seat at {} is kept", seat);
@@ -2187,7 +2201,20 @@ public class SkillingController
 			// seat's side, and then there is no coming back to end it on.
 			bankTripAway = true;
 		}
-		if (now >= bankTripUntil || (near && bankTripAway))
+		if (near && bankTripAway && bankTripGathering)
+		{
+			// Back from the bank to the same rock or tree: kept a moment for
+			// the first swing, which carries the seat into the new session
+			// (see open), rather than walked off to meet the player and
+			// straight back to it six ticks later.
+			bankTripUntil = Math.min(bankTripUntil, now + BANK_BACK_TICKS);
+		}
+		else if (near && bankTripAway)
+		{
+			dropTheBankTrip(true);
+			return;
+		}
+		if (now >= bankTripUntil)
 		{
 			dropTheBankTrip(true);
 		}
@@ -2258,25 +2285,75 @@ public class SkillingController
 			candidates = seatCandidates(player, session.targetTile, session.targetMax,
 				reservedTiles(), variantFor(mode, session.activity));
 		}
+		// The seat already held stays while it is still a seat for the next
+		// rock or tree: the next one clicked from the same spot, or a step
+		// along the wall to the next vein, is no reason to get up. Only for
+		// the same kind of work - a seat taken before the drop named it is
+		// the wrong shape for the work it turned out to be.
+		WorldPoint held = seat;
+		if (mode == KeepingCompany.Mode.GATHERING && held != null
+			&& held.equals(follower.getStayTile()) && follower.goodGround(held)
+			&& stillASeat(player, session.targetTile, session.targetMax, reservedTiles(), held))
+		{
+			follower.setStayFaceTile(face);
+			company.seated(seat, faceTile());
+			log.debug("Kept the seat at {} for {}", seat, session.targetName);
+			return;
+		}
 		for (WorldPoint candidate : candidates)
 		{
-			// The fire is asked about BEFORE the walk, not only by the
-			// pathing: the seat is written down here, and a seat recorded on
+			// The ground is asked BEFORE the walk, and so is whether the walk
+			// arrives: the seat is written down here, and a seat recorded on
 			// a tile the follower will not stand on is one it gets dropped
-			// from and re-takes, tick after tick.
-			if (!follower.hot(candidate) && follower.stayAt(candidate))
+			// from and re-takes, tick after tick. Closest approach calls
+			// stopping beside a rock, or at the water's edge, arriving - and
+			// that was the follower walking between two tiles at the player's
+			// side for as long as they mined. Asked without setting off, so a
+			// tile turned down is not walked to either.
+			if (!follower.goodGround(candidate) || !follower.arrivesAt(candidate)
+				|| !follower.stayAt(candidate))
 			{
-				seat = candidate;
-				follower.setStayFaceTile(face);
-				company.watch(guard);
-				company.seated(seat, faceTile());
-				log.debug("Seated at {} facing {}", seat, face);
-				return;
+				continue;
 			}
+			seat = candidate;
+			follower.setStayFaceTile(face);
+			company.watch(guard);
+			company.seated(seat, faceTile());
+			log.debug("Seated at {} facing {}", seat, face);
+			return;
+		}
+		if (held != null && held.equals(follower.getStayTile()) && !feetTaken.getAsBoolean())
+		{
+			// The seat it had is no seat for this: off it, rather than left
+			// standing there with nothing to say whose the stay is.
+			follower.resumeFollowing();
 		}
 		seat = null;
 		company.unseated();
 		log.debug("No seat by {} for {}; following instead", player, session.targetName);
+	}
+
+	/** A gathering seat kept for the next target is no further than this from the player. */
+	static final int SEAT_KEEP_TILES = 3;
+
+	/**
+	 * Whether a seat already held is still a fair one for new work: the
+	 * rules a fresh seat is chosen by - off the footprint, off the player's
+	 * tile and the straight line to the work, off a same-name neighbour -
+	 * and near the player, no more than three tiles off. A tile beside them
+	 * will do: the player stepping along the wall to the next vein is no
+	 * reason to get up.
+	 */
+	static boolean stillASeat(WorldPoint player, WorldPoint min, WorldPoint max,
+		Collection<WorldPoint> reserved, WorldPoint seat)
+	{
+		WorldPoint far = max == null ? min : max;
+		int nx = Math.max(min.getX(), Math.min(far.getX(), player.getX()));
+		int ny = Math.max(min.getY(), Math.min(far.getY(), player.getY()));
+		int distance = seat.distanceTo(player);
+		return seat.getPlane() == player.getPlane() && distance >= 1
+			&& distance <= SEAT_KEEP_TILES && !covers(min, far, seat) && !reserved.contains(seat)
+			&& !onTheLine(player, nx, ny, seat);
 	}
 
 	/**
@@ -2292,6 +2369,11 @@ public class SkillingController
 		String name = session.targetName.toLowerCase(Locale.ROOT);
 		switch (session.activity)
 		{
+			case "mining":
+			case "woodcutting":
+			case "fishing":
+			case "hunter":
+				return KeepingCompany.Mode.GATHERING;
 			case "cooking":
 				// Any of the fires, not just the one named "Fire": a Forestry
 				// campfire is cooked at exactly the same way, and sitting it on

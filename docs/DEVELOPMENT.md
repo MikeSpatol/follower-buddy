@@ -59,7 +59,9 @@ automated, and the follower cannot be interacted with.
   or a patch it takes a seat off your flank facing the work, borrows the tool
   (or the hat of a full skilling outfit) for the session and gives it back with a
   bow, and keeps the small habits of somebody keeping you company: a tally on
-  the scroll, a nod, a sit for the long haul. Outside a session it claps a level,
+  the scroll, a nod, a sit for the long haul. At a tree, a rock or a spot it
+  stays parked with its scroll out and only gets up to join in. Outside a
+  session it claps a level,
   goes to see a new pet, and peers at a stranger who turns up for you. Two
   settings under Skilling; see [Skilling company](#skilling-company).
 
@@ -1511,11 +1513,37 @@ moving - and ignored during scene loads and for 2 ticks after.
 
 **The seat.** Two tiles off the player's flank, never on the straight line
 between them and the target, never on the target's footprint, never on a
-same-name neighbour within 2 tiles (the likely next click), and only where the
-existing pathing will take it (`stayAt` refusing means plain following, retried
-every 10 ticks). Taken once the player has been at it 6 ticks, so a single
-click never moves the follower; faced at the middle of the target; chosen again
-when the player shifts to the next tree. Per-activity shapes: a miner's company
+same-name neighbour within 2 tiles (the likely next click), and only on ground
+the follower would choose (`goodGround`) that the pathing actually reaches:
+the tile it was sent to, not wherever closest approach stopped. That is asked
+without setting off (`FollowerEntity.arrivesAt`), so a tile turned down is not
+walked to either. Refused all round means plain following, retried every 10
+ticks, and a seat held going in that is no seat for the new work is let go
+rather than left standing with nothing to say whose the stay is. That check once came after
+the walk and only asked about fire, so a seat on the rock beside a Motherlode
+vein was taken, found not to be ground on the next tick, dropped, and taken
+again on the one after: the follower walked between the tile at the player's
+side and the one behind them for as long as they mined. Taken once the player
+has been at it 6 ticks, so a single click never moves the follower; faced at the
+middle of the target; chosen again when the player shifts to the next tree,
+except that a gathering seat is kept while it is still a fair seat for the
+next one (`stillASeat`: off the footprint, the player's tile, the line to the
+work and a same-name neighbour, and no more than three tiles off - a tile
+beside the player will do, so a step along the wall to the next vein is no
+reason to get up). One kept through a bank trip waits `BANK_BACK_TICKS` for the
+first swing when the player comes back and is carried into the new session,
+rather than walked off to meet them and straight back.
+
+**Gathering** (`Mode.GATHERING`: mining, woodcutting, fishing, hunter) is
+parked. The follower takes its seat, sets a borrowed tool down and reads the
+scroll, and takes no step: no pace, no half circle, no sit, no step clear of a
+fallen tree or an emptied rock, no step toward the bank on a full bag. It gets
+up only to join in, when the scroll goes away and the tool comes back to the
+hand for the copy, and the scroll comes out again once it is back on the seat.
+A pose something else put on over it and let go of - a stranger's peer, a held
+emote copied - leaves the scroll in the hand, and the reading pose is put back.
+Looks still turn it where it stands - the water, a fallen tree, the next rock,
+the player stopping. Per-activity shapes: a miner's company
 sits diagonal-behind, an angler's on the bank beside the spot, a cook's across
 the fire (or along the range's side), a smith's across the anvil with the notes
 out, a crafter's beside the wheel, sat down, a thief's five tiles off toward the
@@ -1642,7 +1670,8 @@ emote copies are not `atTheWork` and keep their freedom.
 
 **Borrowing** (`Borrow`). One item at a time through the same transient-prop
 hands as the scroll (they share the weapon slot, so the tally scroll is skipped
-while a tool is held), started at seat time. The mirror rules' disarm keeps a
+while a tool is held; a gatherer's parked scroll sets the tool down for itself,
+and it goes back in the hand to join in), started at seat time. The mirror rules' disarm keeps a
 borrowed item in hand, and every prop the follower takes out plays the reach in
 `reachAnimation` on the way, so the thing does not appear in its fist.
 
