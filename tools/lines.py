@@ -227,6 +227,8 @@ def effects(r):
         out.append("holds the floor %ds" % (r["hushMs"] // 1000))
     if r.get("holdStill"):
         out.append("holds still")
+    if r.get("atTheWork"):
+        out.append("only from beside the work")
     return out
 
 

@@ -934,6 +934,8 @@ public class FollowerPlugin extends Plugin
 		emoteHold = false;
 		mirroredPose = 0;
 		pendingMime = 0;
+		pendingOneShot = false;
+		copyAtWork = false;
 		wasThieving = false;
 		resting = false;
 		wandered = false;
@@ -4510,6 +4512,12 @@ public class FollowerPlugin extends Plugin
 	/** A copy waiting on the follower to walk over to the work first. */
 	private int pendingMime;
 
+	/** Whether the waiting copy is a one-shot - a hammer blow - rather than a held loop. */
+	private boolean pendingOneShot;
+
+	/** Whether the copy under way is of the work, and so lasts only while beside it. */
+	private boolean copyAtWork;
+
 	private void startPoseMirror(int animationId)
 	{
 		mirroredPose = animationId;
@@ -4520,6 +4528,7 @@ public class FollowerPlugin extends Plugin
 	private void stopPoseMirror()
 	{
 		pendingMime = 0;
+		copyAtWork = false;
 		if (skilling != null)
 		{
 			// Whatever it walked over for is finished; back to the seat.
@@ -4529,8 +4538,10 @@ public class FollowerPlugin extends Plugin
 		{
 			return;
 		}
+		int held = mirroredPose;
 		mirroredPose = 0;
-		clientThread.invoke(() -> follower.setPoseOverride(0));
+		// Only its own: a moment that stepped in may have put a pose of its own on.
+		clientThread.invoke(() -> follower.clearPoseOverride(held));
 		refreshEmoteDisarm(follower.isEmotePlaying());
 	}
 
@@ -6069,10 +6080,24 @@ public class FollowerPlugin extends Plugin
 			{
 				pendingMime = 0;
 			}
+			else if (!pendingOneShot && local.getAnimation() != pendingMime)
+			{
+				// Stopped while it walked over, and no animation event said so.
+				stopPoseMirror();
+			}
 			else if (skilling.joinedIn())
 			{
-				startPoseMirror(pendingMime);
+				int copy = pendingMime;
 				pendingMime = 0;
+				copyAtWork = true;
+				if (pendingOneShot)
+				{
+					clientThread.invoke(() -> follower.playAnimation(copy));
+				}
+				else
+				{
+					startPoseMirror(copy);
+				}
 			}
 		}
 		if (config.developerMode())
@@ -6309,6 +6334,15 @@ public class FollowerPlugin extends Plugin
 		{
 			skilling.tick();
 			skilling.describeTo(speechEngine.getContext());
+			// A copy of the work lasts while the follower is beside it: moved
+			// off it, or the work over, and the copy stops there and then,
+			// rather than carrying on wherever it was taken. A one-shot is
+			// over when its swing is, and back to the seat it goes.
+			if (copyAtWork && (!skilling.stillJoined()
+				|| (mirroredPose == 0 && !follower.isEmotePlaying())))
+			{
+				stopPoseMirror();
+			}
 		}
 		if (moments != null)
 		{
@@ -7354,6 +7388,11 @@ public class FollowerPlugin extends Plugin
 		// A held emote ends the moment the player's animation becomes anything
 		// else, which is the only signal there is that they have stopped.
 		if (mirroredPose != 0 && animationId != mirroredPose)
+		{
+			stopPoseMirror();
+		}
+		// Stopped before the follower got over there: no copy on arrival.
+		else if (pendingMime != 0 && !pendingOneShot && animationId != pendingMime)
 		{
 			stopPoseMirror();
 		}
@@ -9640,31 +9679,47 @@ public class FollowerPlugin extends Plugin
 				rule.prop.ticks == null ? 8 : rule.prop.ticks));
 		}
 
+		// A copy of the work is made from beside the WORK, not from the
+		// seat: the seat is placed against the PLAYER, so a chop copied from
+		// it is an axe swung at open air two tiles from the trunk. The walk
+		// over is the controller's; the copy waits here until it has got
+		// there, and is refused outright when there is no work to stand at.
+		boolean atTheWork = rule != null && Boolean.TRUE.equals(rule.atTheWork)
+			&& utterance.animationId > 0;
+		if (atTheWork)
+		{
+			// A loop is copied only while the player is still at it: the rule
+			// can fire on the last few ticks' memory of the swing, after the
+			// tree has fallen and the player has stopped.
+			Player local = client.getLocalPlayer();
+			boolean stopped = Boolean.TRUE.equals(rule.mirrorPose)
+				&& (local == null || local.getAnimation() != utterance.animationId);
+			if (stopped || skilling == null || !skilling.joinIn())
+			{
+				if (skilling != null && skilling.joiningIn())
+				{
+					pendingMime = utterance.animationId;
+					pendingOneShot = !Boolean.TRUE.equals(rule.mirrorPose);
+				}
+				return;
+			}
+			copyAtWork = true;
+		}
+
 		// A held emote takes the pose path instead of playing anything: the
 		// follower matches the loop for as long as the player keeps it up.
 		if (rule != null && Boolean.TRUE.equals(rule.mirrorPose)
 			&& utterance.animationId > 0)
 		{
-			// Mid-session the copy is made from against the WORK, not from
-			// the seat: the seat is placed against the PLAYER, so a chop
-			// copied from it is an axe swung at open air two tiles from the
-			// trunk. The walk over is the controller's; the copy waits here
-			// until it has got there. A cast copied while trailing the player
-			// still fishes the grass, and is still refused outright.
-			if (skilling == null || skilling.joinIn())
-			{
-				startPoseMirror(utterance.animationId);
-			}
-			else if (skilling.joiningIn())
-			{
-				pendingMime = utterance.animationId;
-			}
+			startPoseMirror(utterance.animationId);
 			return;
 		}
 
 		// Plant it first, so the animation starts against a follower that is
 		// already stopped rather than one that stops a tick into the clip.
-		if (rule != null && Boolean.TRUE.equals(rule.holdStill) && rule.hasAnimationAction())
+		// Not at the work, where the walk over already holds the feet.
+		if (rule != null && Boolean.TRUE.equals(rule.holdStill) && rule.hasAnimationAction()
+			&& !atTheWork)
 		{
 			emoteHold = true;
 			clientThread.invoke(follower::stayHere);

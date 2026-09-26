@@ -6625,20 +6625,20 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `mime-loops`
 
-> Held as a POSE, because these all loop: mining 624-629/642/3873/4482 (frameStep 8), woodcutting 867-879/2117/2846/5383 (frameStep 6), fishing 618-623 (frameStep 42/44/2) and fletching 1248 (frameStep 15), all measured. The pose is released when your animation changes, which is what joining in until you stop actually means. holdStill keeps the follower planted, since movement beats an animation and it would otherwise mime for half a tick.
+> Held as a POSE, because these all loop: mining 624-629/642/3873/4482 (frameStep 8), woodcutting 867-879/2117/2846/5383 (frameStep 6), fishing 618-623 (frameStep 42/44/2) and fletching 1248 (frameStep 15), all measured. The pose is released when your animation changes, which is what joining in until you stop actually means. atTheWork has it walk over first and copy from a tile the game would let you work from, facing the middle of the tree or rock, and stop the moment it is moved off it.
 
 - **when:** repeating one action 30+ ticks AND a 35% roll
-- **does:** mirrors you; holds still
+- **does:** mirrors you; holds still; only from beside the work
 - **pacing:** priority 18, cooldown 3m
 
 - *(no lines - animation or effect only)*
 
 ### `mime-oneshots`
 
-> The same idea for the animations the cache says are ONE-SHOTS (frameStep -1): cooking 896/897, smithing 898/6712, herblore 4969, firemaking 4975, crafting 1249. The server restarts these every cycle, so the follower having a single go and stopping is right; held as a pose they would loop wrong.
+> The same idea for the animations the cache says are ONE-SHOTS (frameStep -1): cooking 896/897, smithing 898/6712, crafting 1249. The server restarts these every cycle, so the follower having a single go and stopping is right; held as a pose they would loop wrong. atTheWork makes the go from beside the range or anvil, facing it, and then back to its seat. 4969 and 4975 used to be listed here as herblore and firemaking; they are the skill-cape emotes, not work.
 
 - **when:** repeating one action 30+ ticks AND a 35% roll
-- **does:** mirrors you; holds still
+- **does:** mirrors you; holds still; only from beside the work
 - **pacing:** priority 18, cooldown 3m
 
 - *(no lines - animation or effect only)*

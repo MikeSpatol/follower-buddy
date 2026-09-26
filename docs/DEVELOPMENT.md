@@ -526,6 +526,12 @@ follower has a stamp to measure from). On `killCount`: `{boss}`, `{count}`,
   are authored loops (`frameStep >= 0`) and hang forever if played as a one-shot,
   while cooking, smithing, herblore and firemaking are one-shots the server
   restarts each cycle. `::follower animinfo` prints the `frameStep`.
+- `atTheWork` - a copy of the player's work, made only from beside the thing
+  being worked: the follower walks to a tile the game would let the player work
+  it from (square on, never a corner), turns to face the exact middle of it, and
+  only then copies. Moved off that tile for any reason, the copy stops. With no
+  work session on there is nothing to stand against, so there is no copy.
+  `mime-loops` and `mime-oneshots` use it; emote copies do not.
 - `remember` - `{"key": "close-call", "as": "how close that was with the {foe}", "plain": "how close that was"}`. Files what
   just happened as the incident the follower keeps coming back to; `remembers`
   conditions match on the key and `{memory}` says the phrase. Filed whether or
@@ -1485,7 +1491,8 @@ mirror rules that came with it (`bury-along`, `casting-along`) sit in the
 `mimic` group, so the Mimicry toggle governs them.
 
 **The session** (`WorkSession`). Three signals make one: the player's click on a
-work option (Chop down, Mine, Fish, Net, Harpoon, Cage, Bait, Lure, Cook, Smith,
+work option (Chop down, Chop, Chop-down, Cut, Cut down, Mine, Fish, Net, Small
+Net, Big Net, Use-rod, Harpoon, Cage, Bait, Lure, Cook, Smith,
 Smelt, Craft, Spin, Weave, Pray-at, Craft-rune, Rake, Plant, Harvest,
 Check-health, Pick, Steal-from, Pickpocket, Build, Light, Burn, Bury, Lay,
 Set-trap, Catch, Use, Feed), which names the target, its tile and its
@@ -1586,19 +1593,52 @@ so out loud. The copy used to be made from the seat, and the seat is placed
 against the PLAYER - two tiles off their flank, off the line to the work and
 never on it - so a chop copied from it was an axe swung at open air two or
 three tiles from the trunk. Play report: "sometimes the follower will chop a
-tree but not be up against the tree". It now walks over first. `joinIn()`
-answers the plugin's mirror-pose branch: yes when the follower is already
-within reach of the work's footprint, no otherwise, and on a no it sets off
-for a free tile beside the work, which is the same short trip it makes to warm
-its hands at a fire. `FollowerPlugin` holds the copy in `pendingMime` until
-`joinedIn()` says it has arrived, then starts the pose; `stopPoseMirror` ends
-the trip and the seat, still on the books, is retaken on the next tick. The
-walk is refused outright when anything else has the feet - a trap, a fire
-visit, a bank trip, an errand - because the copying is a flourish and a
-flourish does not interrupt. It is given up if the follower has not arrived
-within `JOIN_ARRIVAL_PATIENCE` ticks of the walk's length. With no session on,
-the mimic keeps its old freedom; with a session but no seat it is refused, as
-before, because a cast copied while trailing the player fishes the grass.
+tree but not be up against the tree". It now walks over first. Every rule
+marked `atTheWork` (`mime-loops`, and `mime-oneshots` for the cook and the
+anvil) goes through `joinIn()`: yes when the follower already stands on a tile
+the work could be done from, no otherwise, and on a no it sets off for one.
+
+Where the work can be done from is the game's rule, read off the cache: a tile
+square on to one edge of the footprint, never off a corner and never on it,
+with no fence along the edge between. A few stations are worked from one side
+only - most ranges and ovens, Doric's anvil, a handful of rocks - and the cache
+records which, but the client drops it on load, so `ONE_SIDED` holds their ids
+as read off the cache; at those it is the player's side, the side that is open.
+The player's own tile is never
+taken, and a walk that closest approach leaves short of the tile is not a
+join - water, the far side of a fence - so on a straight shore, where the only
+dry tile square on to a fishing spot is the player's, nothing is copied.
+
+The follower faces the exact middle of the footprint, as the player does:
+`FollowerEntity.setStayFaceArea` works in half tiles, so the middle of a
+two-by-two tree is the corner its four tiles share rather than the south-west
+tile's centre, which was up to 27 degrees wide of the trunk. `joinedIn()` is
+only true once it has stopped dead on the tile it was sent to and finished
+turning - even from a seat already square on, since a new facing is only taken
+up on the next frame. `FollowerPlugin` holds the copy in `pendingMime` until
+then, and drops a loop if the player is no longer playing it. A loop is never
+started for a player who has already stopped: the rule can fire on the last
+few ticks' memory of the swing, after the tree has fallen. No copy is made
+against a depleted target, or while a moment has excused the seat. Standing
+work (a knife on logs) has nothing in the world to stand against, so it is
+copied from the seat, without a walk.
+
+The copy lasts while the follower is still on that tile (`stillJoined()`,
+checked every tick after the controller): moved off it by anything - a moment,
+the session ending, a nudge - and the pose is released there and then rather
+than carried on wherever it was taken, and only the copy's own pose is
+cleared, not one a moment has put on since. A one-shot is over when its swing
+is.
+While it is over at the work, `KeepingCompany`'s habits wait, so no look round,
+pace or scroll turns the swing away mid-copy. `dropTheJoin` puts the follower
+straight back on the seat rather than letting go, which cost a tick of
+following in between; and when something else moved it off, the feet are
+theirs and are left alone. The walk is refused outright when anything else has
+the feet - a trap, a fire visit, a bank trip, an errand - because the copying
+is a flourish and a flourish does not interrupt. It is given up if the follower
+has not arrived within `JOIN_ARRIVAL_PATIENCE` ticks of the walk's length. With
+no session on there is nothing to stand against, so no work is copied at all;
+emote copies are not `atTheWork` and keep their freedom.
 
 **Borrowing** (`Borrow`). One item at a time through the same transient-prop
 hands as the scroll (they share the weapon slot, so the tally scroll is skipped

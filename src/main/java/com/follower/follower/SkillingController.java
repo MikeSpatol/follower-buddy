@@ -46,12 +46,31 @@ public class SkillingController
 	/** The option words that start work, matched whole after tag stripping. */
 	private static final String[] WORK_OPTIONS = {
 		"Chop down", "Mine", "Fish", "Net", "Harpoon", "Cage", "Bait", "Lure",
+		// Read off the cache: the same work under other words.
+		"Chop", "Chop-down", "Cut", "Cut down", "Cut-Down",
+		"Small Net", "Big Net", "Use-rod",
 		"Cook", "Smith", "Smelt", "Craft", "Spin", "Weave", "Pray-at", "Craft-rune",
 		"Rake", "Plant", "Harvest", "Check-health", "Pick", "Steal-from", "Pickpocket",
 		"Build", "Light", "Burn", "Bury", "Lay", "Set-trap", "Catch", "Use",
 		// The Wintertodt brazier is fed, not lit, once it is burning.
 		"Feed",
 	};
+
+	/**
+	 * The work the game lets a player do from one side only: every object
+	 * with a work option whose cache definition carries an access mask. The
+	 * client drops that mask when it loads the definition, so it cannot be
+	 * read at run time; this is it, read off the cache. Everything else is
+	 * worked from any side a fence does not close.
+	 */
+	private static final Set<Integer> ONE_SIDED = new HashSet<>(Arrays.asList(
+		// Ranges, ovens, a stove and a gnome cooker.
+		114, 8750, 16641, 7183, 7184, 9682, 12102, 12611, 25730, 26181, 50563, 54049,
+		21792, 27516, 47925, 48169, 27517, 27724, 31631, 59682, 39391, 39458, 39490,
+		7421, 52647, 54449, 57332, 57333, 10377, 12269, 17131,
+		// Doric's anvil, rocks and a tree or two.
+		2031, 25422, 48921, 51485, 51486, 51487, 51488, 51489, 51490, 51491, 51492,
+		10048, 25425));
 
 	/** Ticks the player has to be at it before the seat is taken. */
 	static final int SEAT_AFTER_TICKS = 6;
@@ -562,6 +581,11 @@ public class SkillingController
 		switch (plainOption(option).toLowerCase(Locale.ROOT))
 		{
 			case "chop down":
+			case "chop":
+			case "chop-down":
+			case "cut":
+			case "cut down":
+			case "cut-down":
 				return "woodcutting";
 			case "mine":
 				return "mining";
@@ -571,6 +595,9 @@ public class SkillingController
 			case "cage":
 			case "bait":
 			case "lure":
+			case "small net":
+			case "big net":
+			case "use-rod":
 				return "fishing";
 			case "cook":
 				return "cooking";
@@ -786,7 +813,11 @@ public class SkillingController
 			// The drop may be what named the activity, and so the tool.
 			maybeBorrow();
 		}
-		company.drop(session.xpDrops, now);
+		if (joinTile == null)
+		{
+			// Not the tally scroll into the hand mid-swing.
+			company.drop(session.xpDrops, now);
+		}
 		return session.xpDrops;
 	}
 
@@ -1247,6 +1278,14 @@ public class SkillingController
 		}
 
 		// The company, last: the session goes on and the seat is settled.
+		if (joinTile != null)
+		{
+			// Over at the work copying it: a look round, a pace, the notes
+			// or a stretch would turn the swing away from it or walk off
+			// mid-swing.
+			bagEdge = null;
+			return;
+		}
 		if (bagEdge == TriggerEvent.Type.BAG_HALF)
 		{
 			company.bagHalf(lastOption);
@@ -1278,9 +1317,15 @@ public class SkillingController
 			return;
 		}
 		int now = client.getTickCount();
+		// Where they work is where they stand at the first swing, not where
+		// they clicked from: a click from across the clearing, as every one
+		// back from the bank is, read as having walked off on the swing.
+		Player local = client.getLocalPlayer();
+		WorldPoint at = local == null || local.getWorldLocation() == null
+			? pending.workSpot : local.getWorldLocation();
 		WorkSession opened = new WorkSession(pending.option, pending.activity,
 			pending.targetName, pending.targetId, pending.targetTile, pending.targetMax,
-			pending.targetNpc, pending.workSpot, now);
+			pending.targetNpc, at, now);
 		opened.lastAnimation = pending.lastAnimation;
 		pending = null;
 		open(opened, now);
@@ -1713,25 +1758,46 @@ public class SkillingController
 	 * way to get there is the same short trip it already makes to warm its
 	 * hands at a fire.
 	 *
+	 * <p>With no session there is nothing to stand against, so there is no
+	 * copy: a swing with no tree in front of it is the very thing this is
+	 * here to stop.
+	 *
 	 * @return true to copy now, false to wait for {@link #joinedIn()}
 	 */
 	public boolean joinIn()
 	{
-		if (!mirrorsFromHere())
+		// A stump or an emptied rock is not the work any more; and a moment
+		// that has excused the seat has the feet, and the facing, for now.
+		if (session == null || !mirrorsFromHere() || session.depleted || excused)
 		{
 			return false;
 		}
-		if (session == null)
+		WorldPoint at = follower.getWorldLocation();
+		if (joinTile == null && at != null && at.equals(follower.getStayTile())
+			&& workableFrom(at))
 		{
-			// Nothing to stand against: the mimic keeps its old freedom.
-			return true;
-		}
-		if (againstTheWork(follower.getWorldLocation()))
-		{
-			return true;
+			// The seat is square on to the work already, as an anvil's is:
+			// the copy is made from it, once it has turned to the work. Not
+			// straight away - the new facing is only taken up on the next
+			// frame - so the copy waits a tick for joinedIn like any other.
+			joinTile = at;
+			joinBy = client.getTickCount() + JOIN_ARRIVAL_PATIENCE;
+			faceTheWork();
+			return false;
 		}
 		startTheJoin();
 		return false;
+	}
+
+	/**
+	 * Whether the copy may be made from this tile. Standing work - a knife
+	 * on logs - has nothing in the world to stand against, so from the seat
+	 * and nowhere else; everything else from a tile the work could be done
+	 * from.
+	 */
+	private boolean workableFrom(WorldPoint at)
+	{
+		return session.standing ? at.equals(seat) : againstTheWork(at);
 	}
 
 	/** Whether the follower is on its way over to copy the work. */
@@ -1740,11 +1806,26 @@ public class SkillingController
 		return joinTile != null;
 	}
 
-	/** Whether it has got there, so the copying may start. */
+	/**
+	 * Whether it has got there, so the copying may start: stopped dead on
+	 * the tile it was sent to, not wherever closest approach left it, and
+	 * turned to the work.
+	 */
 	public boolean joinedIn()
 	{
-		return joinTile != null && follower.isSettled()
-			&& joinTile.equals(follower.getWorldLocation());
+		return stillJoined() && follower.isSettled() && follower.isTurned();
+	}
+
+	/**
+	 * Whether the follower is still where the copy is made from. Anything
+	 * that has moved it since - a moment, a nudge, the session ending - and
+	 * the copy is being made from somewhere else.
+	 */
+	public boolean stillJoined()
+	{
+		return joinTile != null && session != null
+			&& joinTile.equals(follower.getWorldLocation())
+			&& joinTile.equals(follower.getStayTile());
 	}
 
 	/**
@@ -1757,9 +1838,21 @@ public class SkillingController
 		{
 			return;
 		}
+		boolean ours = joinTile.equals(follower.getStayTile());
 		joinTile = null;
 		joinBy = 0;
-		if (follower.isStaying() && !feetTaken.getAsBoolean())
+		if (!ours || feetTaken.getAsBoolean() || excused)
+		{
+			// Somebody else moved it on: their feet now, not ours to let go.
+			return;
+		}
+		// Straight back to the seat. Let go instead, the follower set off
+		// after the player for the tick before the seat was retaken.
+		if (seat != null && follower.stayAt(seat))
+		{
+			follower.setStayFaceTile(faceTile());
+		}
+		else
 		{
 			follower.resumeFollowing();
 		}
@@ -1774,7 +1867,7 @@ public class SkillingController
 	{
 		if (joinTile != null || seat == null || bankTrip || fireSeat != null
 			|| trapSeat != null || feetTaken.getAsBoolean() || inCombat.getAsBoolean()
-			|| !follower.isSpawned() || session.targetTile == null)
+			|| !follower.isSpawned() || session.targetTile == null || session.standing)
 		{
 			return;
 		}
@@ -1782,25 +1875,58 @@ public class SkillingController
 		WorldPoint player = local == null ? null : local.getWorldLocation();
 		WorldPoint from = follower.getWorldLocation();
 		WorldPoint max = session.targetMax == null ? session.targetTile : session.targetMax;
+		// Square on, as the player works it: a corner is not within reach
+		// of anything in the game, so a swing from one misses the trunk.
 		List<WorldPoint> beside = ring(session.targetTile, max, 1,
 			session.targetTile.getPlane());
-		beside.removeIf(c -> c.equals(player));
+		beside.removeIf(c -> c.equals(player) || !againstTheWork(c));
 		if (from != null)
 		{
-			beside.sort((a, b) -> Integer.compare(a.distanceTo(from), b.distanceTo(from)));
+			beside.sort((a, b) -> Integer.compare(square(a, from), square(b, from)));
 		}
+		boolean moved = false;
 		for (WorldPoint candidate : beside)
 		{
-			if (!follower.hot(candidate) && follower.stayAt(candidate))
+			if (follower.hot(candidate) || !follower.goodGround(candidate)
+				|| !follower.stayAt(candidate))
 			{
-				joinTile = candidate;
-				follower.setStayFaceTile(faceTile());
-				int walk = from == null ? JOIN_ARRIVAL_PATIENCE : from.distanceTo(candidate);
-				joinBy = client.getTickCount() + walk + JOIN_ARRIVAL_PATIENCE;
-				log.debug("Going over to join in at {} by {}", candidate, session.targetName);
-				return;
+				continue;
 			}
+			moved = true;
+			if (!candidate.equals(follower.getStayTile()))
+			{
+				// Closest approach stopped short - water, a wall - and a copy
+				// from short of the tile is a copy from the wrong one.
+				continue;
+			}
+			joinTile = candidate;
+			faceTheWork();
+			int walk = from == null ? JOIN_ARRIVAL_PATIENCE : from.distanceTo(candidate);
+			joinBy = client.getTickCount() + walk + JOIN_ARRIVAL_PATIENCE;
+			log.debug("Going over to join in at {} by {}", candidate, session.targetName);
+			return;
 		}
+		if (!moved)
+		{
+			return;
+		}
+		// Every try was refused on arrival; back to the seat, or let go so
+		// the seat is looked at afresh rather than kept on a short tile.
+		if (follower.stayAt(seat))
+		{
+			follower.setStayFaceTile(faceTile());
+		}
+		else
+		{
+			follower.resumeFollowing();
+		}
+	}
+
+	/** Faces the middle of the work's footprint, exactly, as the player does. */
+	private void faceTheWork()
+	{
+		follower.setStayFaceArea(session.targetTile,
+			session.targetMax == null ? session.targetTile : session.targetMax);
 	}
 
 	/** Gave up on the walk over, or something took the feet while it walked. */
@@ -1810,16 +1936,27 @@ public class SkillingController
 		{
 			return;
 		}
+		if (joinedIn())
+		{
+			// Got there: the walk's patience is spent, and the copy runs on.
+			joinBy = 0;
+		}
 		if (session == null || !follower.isSpawned() || feetTaken.getAsBoolean()
-			|| inCombat.getAsBoolean() || !follower.isStaying()
-			|| !follower.goodGround(joinTile)
+			|| inCombat.getAsBoolean() || excused || session.depleted
+			|| !joinTile.equals(follower.getStayTile())
+			|| !follower.goodGround(joinTile) || !workableFrom(joinTile)
 			|| (joinBy > 0 && now > joinBy && !joinedIn()))
 		{
 			dropTheJoin();
 		}
 	}
 
-	/** Whether the tile is within reach of the work's footprint. */
+	/**
+	 * Whether the work could be done from this tile: square on to the
+	 * footprint, with no fence along the edge between. A range worked from
+	 * one side only (see {@link #ONE_SIDED}) is worked from the player's
+	 * side, the side that is open, as a second cook would stand.
+	 */
 	private boolean againstTheWork(WorldPoint at)
 	{
 		if (at == null || session == null || session.targetTile == null)
@@ -1828,13 +1965,34 @@ public class SkillingController
 		}
 		WorldPoint min = session.targetTile;
 		WorldPoint max = session.targetMax == null ? min : session.targetMax;
-		if (at.getPlane() != min.getPlane())
+		if (at.getPlane() != min.getPlane() || !squareOn(min, max, at))
 		{
 			return false;
 		}
-		int cx = Math.max(min.getX(), Math.min(max.getX(), at.getX()));
-		int cy = Math.max(min.getY(), Math.min(max.getY(), at.getY()));
-		return Math.max(Math.abs(at.getX() - cx), Math.abs(at.getY() - cy)) <= 1;
+		boolean xIn = at.getX() >= min.getX() && at.getX() <= max.getX();
+		int dx = xIn ? 0 : at.getX() < min.getX() ? 1 : -1;
+		int dy = !xIn ? 0 : at.getY() < min.getY() ? 1 : -1;
+		if (follower.walledToward(at, dx, dy))
+		{
+			return false;
+		}
+		WorldPoint player = session.workSpot;
+		return !ONE_SIDED.contains(session.targetId)
+			|| (at.getX() == player.getX() && !xIn) || (at.getY() == player.getY() && xIn);
+	}
+
+	/**
+	 * Whether a tile touches one edge of a footprint square on: beside it,
+	 * not on it and not off a corner. The game works everything from these
+	 * tiles and no others - a tree, a rock, an anvil, a range.
+	 */
+	static boolean squareOn(WorldPoint min, WorldPoint max, WorldPoint at)
+	{
+		boolean xIn = at.getX() >= min.getX() && at.getX() <= max.getX();
+		boolean yIn = at.getY() >= min.getY() && at.getY() <= max.getY();
+		boolean xNext = at.getX() == min.getX() - 1 || at.getX() == max.getX() + 1;
+		boolean yNext = at.getY() == min.getY() - 1 || at.getY() == max.getY() + 1;
+		return (xIn && yNext) || (yIn && xNext);
 	}
 
 	// ------------------------------------------------------------- fire line

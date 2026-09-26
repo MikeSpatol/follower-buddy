@@ -724,6 +724,18 @@ public class FollowerEntity
 		return stayTile != null;
 	}
 
+	/** Where the stay pose holds it, or null: closest approach may stop short of the ask. */
+	public WorldPoint getStayTile()
+	{
+		return stayTile;
+	}
+
+	/** Whether it has finished turning to the way it means to face. */
+	public boolean isTurned()
+	{
+		return yaw == dstYaw;
+	}
+
 	/**
 	 * True when the follower has fully stopped: no queued route, and its fine
 	 * position rests at its tile's centre. An emote started before this is
@@ -747,6 +759,7 @@ public class FollowerEntity
 	{
 		stayTile = null;
 		stayFaceTile = null;
+		stayFaceMax = null;
 		insistedTile = null;
 	}
 
@@ -757,9 +770,25 @@ public class FollowerEntity
 	 */
 	private WorldPoint stayFaceTile;
 
+	/** The far corner when the face is a footprint rather than a tile; null for a tile. */
+	private WorldPoint stayFaceMax;
+
 	public void setStayFaceTile(WorldPoint tile)
 	{
 		stayFaceTile = tile;
+		stayFaceMax = null;
+	}
+
+	/**
+	 * Faces the exact middle of a footprint, as the player does when they
+	 * work it. The middle of a two-by-two tree is the corner its four tiles
+	 * share, not any one tile's centre: facing its south-west tile instead
+	 * swung the axe up to 27 degrees wide of the trunk.
+	 */
+	public void setStayFaceArea(WorldPoint min, WorldPoint max)
+	{
+		stayFaceTile = min;
+		stayFaceMax = max;
 	}
 
 	/** The stay pose's idle facing: the face tile when set, the player otherwise. */
@@ -767,8 +796,10 @@ public class FollowerEntity
 	{
 		if (stayFaceTile != null && tile != null)
 		{
-			int dx = tile.getX() - stayFaceTile.getX();
-			int dy = tile.getY() - stayFaceTile.getY();
+			// In half tiles, so the middle of an even footprint is exact.
+			WorldPoint far = stayFaceMax == null ? stayFaceTile : stayFaceMax;
+			int dx = 2 * tile.getX() - stayFaceTile.getX() - far.getX();
+			int dy = 2 * tile.getY() - stayFaceTile.getY() - far.getY();
 			if (dx != 0 || dy != 0)
 			{
 				dstYaw = (int) Math.round(Math.atan2(dx, dy) * 325.949) & 0x7ff;
@@ -957,6 +988,25 @@ public class FollowerEntity
 	public boolean goodGround(WorldPoint at)
 	{
 		return standable(at) && !hot(at);
+	}
+
+	/**
+	 * Whether a wall or fence runs along this tile's edge on the given side:
+	 * a tree behind a fence is square on to the tile across it, and still
+	 * not worked from there.
+	 */
+	boolean walledToward(WorldPoint at, int dx, int dy)
+	{
+		Integer flags = flagAt(at);
+		if (flags == null)
+		{
+			return false;
+		}
+		int wall = dx > 0 ? CollisionDataFlag.BLOCK_MOVEMENT_EAST
+			: dx < 0 ? CollisionDataFlag.BLOCK_MOVEMENT_WEST
+			: dy > 0 ? CollisionDataFlag.BLOCK_MOVEMENT_NORTH
+			: CollisionDataFlag.BLOCK_MOVEMENT_SOUTH;
+		return (flags & wall) != 0;
 	}
 
 	/** Whether the follower could stand on this tile at all. */
@@ -3188,6 +3238,15 @@ public class FollowerEntity
 	{
 		poseOverride = animationId;
 		activePose = -1;
+	}
+
+	/** Lets go of a forced pose, unless something else has put its own on since. */
+	public void clearPoseOverride(int animationId)
+	{
+		if (poseOverride == animationId)
+		{
+			setPoseOverride(0);
+		}
 	}
 
 	/**

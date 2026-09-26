@@ -52,6 +52,24 @@ public class SkillingSessionTest
 		/** Tiles the ground refuses; null means everywhere is standable. */
 		java.util.function.Predicate<WorldPoint> walled;
 
+		/** Asked for one tile, closest approach stops on another: these. */
+		final java.util.Map<WorldPoint, WorldPoint> shortOf = new java.util.HashMap<>();
+
+		/** False while it is still coming round to face where it was told. */
+		boolean turned = true;
+
+		/** Tiles with a fence along the edge toward the work. */
+		final java.util.Set<WorldPoint> fenced = new java.util.HashSet<>();
+
+		@Override
+		boolean walledToward(WorldPoint at, int dx, int dy)
+		{
+			return fenced.contains(at);
+		}
+
+		/** The far corner of a footprint it was told to face the middle of, or null. */
+		WorldPoint facingMax;
+
 		/**
 		 * Tiles with a lit fire on them. Walkable by the map and refused by
 		 * the follower, which is what a fire actually is - so these are NOT
@@ -107,10 +125,22 @@ public class SkillingSessionTest
 			{
 				return false;
 			}
-			stayingAt = target;
+			stayingAt = shortOf.getOrDefault(target, target);
 			following = false;
 			stays.add(target);
 			return true;
+		}
+
+		@Override
+		public WorldPoint getStayTile()
+		{
+			return stayingAt;
+		}
+
+		@Override
+		public boolean isTurned()
+		{
+			return turned;
 		}
 
 		@Override
@@ -132,6 +162,14 @@ public class SkillingSessionTest
 		public void setStayFaceTile(WorldPoint tile)
 		{
 			facing = tile;
+			facingMax = null;
+		}
+
+		@Override
+		public void setStayFaceArea(WorldPoint min, WorldPoint max)
+		{
+			facing = min;
+			facingMax = max;
 		}
 
 		@Override
@@ -330,6 +368,31 @@ public class SkillingSessionTest
 
 		assertFalse("a click is intent, not work", skilling.isWorking());
 		assertTrue("and the follower stays at heel", follower.following);
+	}
+
+	@Test
+	public void aTreeClickedFromAcrossTheClearingStillGetsCompany()
+	{
+		// Release review: the click remembered the tile it was made from as
+		// where the player works, so a click from more than three tiles off -
+		// every return from the bank - ended the session on its first swing,
+		// the player being "walked off" from a tile they had only passed.
+		game.at(PLAYER.getX() - 7, PLAYER.getY(), 0);
+		tick(1);
+		clickTheTree();
+		for (int x = PLAYER.getX() - 6; x <= PLAYER.getX(); x++)
+		{
+			game.at(x, PLAYER.getY(), 0);
+			tick(1);
+		}
+		game.animating(CHOP);
+		tick(1);
+		assertTrue("the first swing opens the session", skilling.isWorking());
+		tick(SkillingController.SEAT_AFTER_TICKS + 2);
+		assertTrue("and it lasts", skilling.isWorking());
+		assertNotNull("with a seat by the tree", follower.stayingAt);
+		assertTrue("near where the player works, not where they clicked from",
+			follower.stayingAt.distanceTo(PLAYER) <= 3);
 	}
 
 	@Test
@@ -866,9 +929,10 @@ public class SkillingSessionTest
 	}
 
 	@Test
-	public void withNoWorkOnTheMimicKeepsItsFreedom()
+	public void withNoWorkOnThereIsNoCopyOfIt()
 	{
-		assertTrue("nothing to stand against", skilling.joinIn());
+		// A swing with no tree in front of it is what the walk over is for.
+		assertFalse("nothing to stand against", skilling.joinIn());
 		assertFalse(skilling.joiningIn());
 	}
 
@@ -901,6 +965,370 @@ public class SkillingSessionTest
 		assertTrue("the session is still on", skilling.isWorking());
 		assertFalse("so this is the walk over being given up, and nothing else",
 			skilling.joiningIn());
+	}
+
+	/** Whether the tile touches the tree's footprint square on, as the game works it. */
+	private static boolean squareOnTheTree(WorldPoint at)
+	{
+		boolean xIn = at.getX() >= TREE_MIN.getX() && at.getX() <= TREE_MAX.getX();
+		boolean yIn = at.getY() >= TREE_MIN.getY() && at.getY() <= TREE_MAX.getY();
+		return (xIn && (at.getY() == TREE_MIN.getY() - 1 || at.getY() == TREE_MAX.getY() + 1))
+			|| (yIn && (at.getX() == TREE_MIN.getX() - 1 || at.getX() == TREE_MAX.getX() + 1));
+	}
+
+	@Test
+	public void onlyTheTilesSquareOnToTheWorkCount()
+	{
+		for (int x = 50; x <= 57; x++)
+		{
+			for (int y = 47; y <= 54; y++)
+			{
+				WorldPoint at = new WorldPoint(x, y, 0);
+				assertEquals(at.toString(), squareOnTheTree(at),
+					SkillingController.squareOn(TREE_MIN, TREE_MAX, at));
+			}
+		}
+		assertFalse("a corner is not", SkillingController.squareOn(TREE_MIN, TREE_MAX,
+			new WorldPoint(52, 49, 0)));
+		assertFalse("the trunk is not", SkillingController.squareOn(TREE_MIN, TREE_MAX,
+			new WorldPoint(53, 50, 0)));
+		assertTrue("the side is", SkillingController.squareOn(TREE_MIN, TREE_MAX,
+			new WorldPoint(52, 51, 0)));
+	}
+
+	/**
+	 * Play report: the follower chops, mines and smiths, "but not against
+	 * the appropriate skilling items". The game works a tree only from a
+	 * tile square on to it, facing the exact middle of it.
+	 */
+	@Test
+	public void theCopyIsMadeFromSquareOnToTheTreeFacingItsMiddle()
+	{
+		workTheTree();
+		skilling.joinIn();
+		assertTrue("square on, not off a corner: " + follower.stayingAt,
+			squareOnTheTree(follower.stayingAt));
+		assertEquals("facing the middle of all four tiles, not the one",
+			TREE_MIN, follower.facing);
+		assertEquals(TREE_MAX, follower.facingMax);
+	}
+
+	@Test
+	public void aCornerOfTheTreeIsNeverWhereTheCopyIsMadeFrom()
+	{
+		workTheTree();
+		WorldPoint seat = follower.stayingAt;
+		follower.walled = SkillingSessionTest::squareOnTheTree;
+
+		assertFalse(skilling.joinIn());
+		assertFalse("the corners are open, and still it does not go", skilling.joiningIn());
+		assertEquals("it keeps its seat", seat, follower.stayingAt);
+	}
+
+	@Test
+	public void aWalkThatStopsShortOfTheTileIsNotAJoin()
+	{
+		workTheTree();
+		WorldPoint seat = follower.stayingAt;
+		WorldPoint open = new WorldPoint(55, 51, 0);
+		for (WorldPoint c : SkillingController.ring(TREE_MIN, TREE_MAX, 1, 0))
+		{
+			if (!c.equals(open))
+			{
+				// Behind a fence: closest approach leaves it a step short.
+				follower.shortOf.put(c, new WorldPoint(51, 52, 0));
+			}
+		}
+		assertFalse(skilling.joinIn());
+		assertTrue(skilling.joiningIn());
+		assertEquals("the one tile it can actually reach", open, follower.stayingAt);
+
+		skilling.dropTheJoin();
+		follower.shortOf.put(open, new WorldPoint(51, 52, 0));
+		assertFalse(skilling.joinIn());
+		assertFalse("none it can reach, so no copy", skilling.joiningIn());
+		assertEquals("and back on the seat, not left short", seat, follower.stayingAt);
+	}
+
+	@Test
+	public void theCopyWaitsUntilItHasTurnedToTheWork()
+	{
+		workTheTree();
+		follower.turned = false;
+		skilling.joinIn();
+		assertTrue(skilling.joiningIn());
+		assertFalse("there, but still coming round", skilling.joinedIn());
+
+		follower.turned = true;
+		assertTrue(skilling.joinedIn());
+	}
+
+	@Test
+	public void fromASeatAlreadySquareOnTheCopyIsMadeWhereItSits()
+	{
+		// An anvil worked from the west: the seat is across it, square on.
+		WorldPoint anvil = new WorldPoint(53, 50, 0);
+		game.at(52, 50, 0);
+		skilling.noteClick("Smith", "Anvil", 2097, anvil, anvil, null);
+		game.animating(898);
+		tick(1 + SkillingController.SEAT_AFTER_TICKS);
+		assertEquals("across the anvil", new WorldPoint(54, 50, 0), follower.stayingAt);
+		int stays = follower.stays.size();
+
+		assertFalse("not in the same breath: the turn to it comes first", skilling.joinIn());
+		assertTrue(skilling.joiningIn());
+		assertEquals("without a step", stays, follower.stays.size());
+		assertEquals("turned to the anvil", anvil, follower.facing);
+		assertTrue("and then the copy is made from the seat", skilling.joinedIn());
+	}
+
+	@Test
+	public void anOvenOpenOnEverySideIsWorkedFromAnyOfThem()
+	{
+		// The Hosidius clay oven: one tile, open all round but for a wall.
+		WorldPoint oven = new WorldPoint(53, 50, 0);
+		game.at(53, 49, 0);
+		skilling.noteClick("Cook", "Clay oven", 21302, oven, oven, null);
+		game.animating(COOK);
+		tick(1 + SkillingController.SEAT_AFTER_TICKS);
+		follower.fenced.add(new WorldPoint(53, 51, 0));
+
+		skilling.joinIn();
+		assertTrue(skilling.joiningIn());
+		WorldPoint at = follower.stayingAt;
+		assertTrue("beside it on the west or east: " + at,
+			at.getY() == 50 && Math.abs(at.getX() - 53) == 1);
+	}
+
+	@Test
+	public void noCopyAgainstAStump()
+	{
+		workTheTree();
+		skilling.objectDespawned(TREE_ID, TREE_MIN, TREE_MAX);
+		assertTrue(skilling.getSession().isDepleted());
+		assertFalse(skilling.joinIn());
+		assertFalse("the tree is down; nothing to go over to", skilling.joiningIn());
+	}
+
+	@Test
+	public void theTreeFallingEndsACopyUnderWay()
+	{
+		workTheTree();
+		skilling.joinIn();
+		assertTrue(skilling.joiningIn());
+		skilling.objectDespawned(TREE_ID, TREE_MIN, TREE_MAX);
+		tick(1);
+		assertFalse(skilling.joiningIn());
+	}
+
+	@Test
+	public void aMomentThatHasTheFeetKeepsThem()
+	{
+		workTheTree();
+		skilling.setExcused(true);
+		WorldPoint momentsSpot = new WorldPoint(48, 50, 0);
+		follower.stayAt(momentsSpot);
+
+		assertFalse(skilling.joinIn());
+		assertFalse("no walk over in the middle of the moment", skilling.joiningIn());
+		assertEquals(momentsSpot, follower.stayingAt);
+	}
+
+	@Test
+	public void aMomentStartingMidCopyEndsItAndIsLeftAlone()
+	{
+		workTheTree();
+		skilling.joinIn();
+		WorldPoint joined = follower.stayingAt;
+		skilling.setExcused(true);
+		tick(1);
+		assertFalse(skilling.joiningIn());
+		assertEquals("not pulled back to the seat under the moment", joined, follower.stayingAt);
+	}
+
+	@Test
+	public void standingWorkIsCopiedFromTheSeat()
+	{
+		// A knife on logs has nothing in the world to stand against: the
+		// copy is made where the follower sits, not at the tile in front of
+		// the player.
+		game.animating(FLETCH);
+		tick(1);
+		skilling.noteXpDrop(Skill.FLETCHING);
+		tick(SkillingController.SEAT_AFTER_TICKS);
+		WorldPoint seat = follower.stayingAt;
+		assertNotNull(seat);
+		int stays = follower.stays.size();
+
+		skilling.joinIn();
+		assertTrue(skilling.joiningIn());
+		assertEquals("not a step", stays, follower.stays.size());
+		assertEquals(seat, follower.stayingAt);
+		assertTrue(skilling.joinedIn());
+	}
+
+	@Test
+	public void aTreeBehindAFenceIsNotWorkedAcrossIt()
+	{
+		workTheTree();
+		// The west and south sides are fenced, as the Edgeville yew's are.
+		for (WorldPoint c : SkillingController.ring(TREE_MIN, TREE_MAX, 1, 0))
+		{
+			if (c.getX() < TREE_MIN.getX() || c.getY() < TREE_MIN.getY())
+			{
+				follower.fenced.add(c);
+			}
+		}
+		skilling.joinIn();
+		assertTrue(skilling.joiningIn());
+		WorldPoint at = follower.stayingAt;
+		assertTrue("the open north or east side: " + at,
+			squareOnTheTree(at) && (at.getX() > TREE_MAX.getX() || at.getY() > TREE_MAX.getY()));
+	}
+
+	/** A one-by-two range worked from the west, as the Lumbridge one is. */
+	private static final WorldPoint LONG_RANGE_MIN = new WorldPoint(53, 50, 0);
+	private static final WorldPoint LONG_RANGE_MAX = new WorldPoint(53, 51, 0);
+
+	private void workTheRangeFromItsSide()
+	{
+		game.at(52, 50, 0);
+		skilling.noteClick("Cook", "Range", 114, LONG_RANGE_MIN, LONG_RANGE_MAX, null);
+		game.animating(COOK);
+		tick(1 + SkillingController.SEAT_AFTER_TICKS);
+		assertNotNull(follower.stayingAt);
+	}
+
+	@Test
+	public void atARangeTheCopyIsMadeFromThePlayersSide()
+	{
+		workTheRangeFromItsSide();
+		assertEquals("the seat is round the back", new WorldPoint(54, 50, 0), follower.stayingAt);
+
+		assertFalse("and a range is not worked from its back", skilling.joinIn());
+		assertTrue(skilling.joiningIn());
+		assertEquals("beside the player, the one side certain to be open",
+			new WorldPoint(52, 51, 0), follower.stayingAt);
+		assertEquals(LONG_RANGE_MIN, follower.facing);
+		assertEquals("the middle of both tiles", LONG_RANGE_MAX, follower.facingMax);
+	}
+
+	@Test
+	public void noTallyScrollMidSwing()
+	{
+		workTheRangeFromItsSide();
+		skilling.joinIn();
+		assertTrue(skilling.joinedIn());
+		assertEquals("never out while it copies", -1, dropsUntilTheScroll(4, 12));
+
+		skilling.dropTheJoin();
+		assertTrue("and out again once it is back", dropsUntilTheScroll(4, 12) > 0);
+	}
+
+	@Test
+	public void theOtherWordsForTheSameWorkAreWork()
+	{
+		for (String word : new String[]{"Chop", "Chop-down", "Cut", "Cut down", "Cut-Down"})
+		{
+			assertTrue(word, SkillingController.isWorkOption(word));
+			assertEquals(word, "woodcutting", SkillingController.activityFor(word));
+		}
+		for (String word : new String[]{"Small Net", "Small net", "Big Net", "Use-rod"})
+		{
+			assertTrue(word, SkillingController.isWorkOption(word));
+			assertEquals(word, "fishing", SkillingController.activityFor(word));
+		}
+		// Two spots say it, and so does every spell cast on something.
+		assertFalse("a spell is not fishing", SkillingController.isWorkOption("Cast"));
+	}
+
+	@Test
+	public void droppingTheCopyGoesStraightBackToTheSeat()
+	{
+		workTheTree();
+		WorldPoint seat = follower.stayingAt;
+		skilling.joinIn();
+		skilling.dropTheJoin();
+		assertEquals("no tick spent following in between", seat, follower.stayingAt);
+		assertFalse(follower.following);
+	}
+
+	@Test
+	public void movedOffTheWorkTheCopyIsOverAndTheFeetAreNotTakenBack()
+	{
+		workTheTree();
+		skilling.joinIn();
+		assertTrue(skilling.stillJoined());
+
+		// A moment's walk to the front, say.
+		WorldPoint elsewhere = new WorldPoint(48, 50, 0);
+		follower.stayAt(elsewhere);
+		assertFalse("copying from somewhere else is not copying", skilling.stillJoined());
+		tick(1);
+		assertFalse(skilling.joiningIn());
+		assertEquals("whoever moved it keeps it", elsewhere, follower.stayingAt);
+	}
+
+	@Test
+	public void theCopyEndsWithTheWork()
+	{
+		workTheTree();
+		skilling.joinIn();
+		assertTrue(skilling.stillJoined());
+		game.at(50, 55, 0);
+		tick(1);
+		assertFalse(skilling.isWorking());
+		assertFalse(skilling.stillJoined());
+	}
+
+	@Test
+	public void overAtTheWorkTheCompanyKeepsItsHabitsToItself()
+	{
+		// The angler's company looks over the water now and then; not while
+		// it is casting.
+		workTheSpot();
+		skilling.joinIn();
+		assertTrue(skilling.joinedIn());
+		WorldPoint at = follower.stayingAt;
+		int stays = follower.stays.size();
+
+		tick(160);
+		assertTrue("the work went on", skilling.isWorking());
+		assertEquals("never moved off it", at, follower.stayingAt);
+		assertEquals("never sent anywhere", stays, follower.stays.size());
+		assertEquals("never turned from the spot", SPOT, follower.facing);
+		assertEquals(SPOT, follower.facingMax);
+	}
+
+	@Test
+	public void theCopyStopsWhenTheWorkMovesOn()
+	{
+		workTheSpot();
+		skilling.joinIn();
+		assertTrue(skilling.stillJoined());
+
+		// The spot moves two tiles up the bank and the player clicks it there.
+		WorldPoint newSpot = new WorldPoint(53, 52, 0);
+		NPC moved = game.spawnNpc(1530, "Fishing spot", 0);
+		game.moveNpc(moved, newSpot.getX(), newSpot.getY(), 0);
+		skilling.noteClick("Net", "Fishing spot", 1530, newSpot, newSpot, moved);
+		tick(1);
+		assertTrue("the same session", skilling.isWorking());
+		assertFalse("not casting at where the spot was", skilling.joiningIn());
+	}
+
+	@Test
+	public void aCastIsNotCopiedFromTheWater()
+	{
+		workTheSpot();
+		WorldPoint seat = follower.stayingAt;
+		// A straight bank: everything from the spot east is water, so the
+		// only dry tile square on to the spot is the player's own.
+		follower.walled = tile -> tile.getX() >= SPOT.getX();
+
+		assertFalse(skilling.joinIn());
+		assertFalse("not from the corner of the bank either", skilling.joiningIn());
+		assertEquals(seat, follower.stayingAt);
 	}
 
 	@Test

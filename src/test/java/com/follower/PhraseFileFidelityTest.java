@@ -102,6 +102,7 @@ public class PhraseFileFidelityTest
 			assertEquals("delay changed on " + a.id, a.delayTicks, b.delayTicks);
 			assertEquals("delay range changed on " + a.id, a.delayTicksMax, b.delayTicksMax);
 			assertEquals("holdStill changed on " + a.id, a.holdStill, b.holdStill);
+			assertEquals("atTheWork changed on " + a.id, a.atTheWork, b.atTheWork);
 			assertEquals("mirroring changed on " + a.id, a.mirrorAnimation, b.mirrorAnimation);
 			assertEquals("vanish changed on " + a.id, a.vanishAfter, b.vanishAfter);
 			assertEquals("sync changed on " + a.id, a.syncToPlayer, b.syncToPlayer);

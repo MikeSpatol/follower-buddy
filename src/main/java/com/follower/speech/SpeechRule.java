@@ -119,6 +119,16 @@ public class SpeechRule
 	public Boolean holdStill;
 
 	/**
+	 * A copy of the player's WORK - a chop, a swing of the pick, a hammer at
+	 * the anvil - made from beside the thing being worked and facing it, or
+	 * not made at all. The follower first walks to a tile the game would let
+	 * the player work from, and the copy stops the moment it is moved off
+	 * it. With no work on there is nothing to stand against, so no copy: an
+	 * axe swung at open air is what this is here to stop.
+	 */
+	public Boolean atTheWork;
+
+	/**
 	 * How much this firing moves the follower's mood, positive or negative.
 	 *
 	 * <p>This is the whole mechanism by which anything affects mood: there is
