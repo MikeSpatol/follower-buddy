@@ -1,16 +1,25 @@
 package com.follower;
 
 import com.follower.sim.Harness;
+import com.follower.speech.Condition;
 import com.follower.speech.SpeechRule;
+import com.follower.speech.TriggerContext;
 import com.follower.speech.TriggerEvent;
+import com.google.gson.Gson;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.TreeSet;
+import net.runelite.api.NPC;
+import net.runelite.api.coords.WorldPoint;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -34,6 +43,8 @@ public class EngineSoakTest
 {
 	@Rule
 	public final TemporaryFolder folder = new TemporaryFolder();
+
+	private static final Gson GSON = new Gson();
 
 	private static final String[] CONDITIONS = {
 		"{\"type\": \"always\"}",
@@ -63,7 +74,122 @@ public class EngineSoakTest
 		"{\"type\": \"rolledFeeling\", \"is\": \"disliked\"}",
 		"{\"type\": \"daysKnown\", \"minimum\": 0, \"maximum\": 3}",
 		"{\"type\": \"none\", \"conditions\": [{\"type\": \"repeating\"}]}",
+		// The rest of the vocabulary, older than the pool's last look. The
+		// scene, the body and the bag first: state the driver moves.
+		"{\"type\": \"npcDespawn\", \"names\": [\"Goblin\"]}",
+		"{\"type\": \"petNearby\", \"within\": 5}",
+		"{\"type\": \"prayerBelow\", \"percent\": 30}",
+		"{\"type\": \"prayerAbove\", \"percent\": 30}",
+		"{\"type\": \"inArea\", \"x1\": 3200, \"y1\": 3200, \"x2\": 3250, \"y2\": 3250, \"plane\": 0}",
+		"{\"type\": \"regionEnter\", \"regions\": [12850]}",
+		"{\"type\": \"returnVisit\", \"minimum\": 1}",
+		"{\"type\": \"varbitEquals\", \"varbit\": 5963, \"value\": 1}",
+		"{\"type\": \"varbitChanged\", \"varbit\": 5963, \"value\": 1}",
+		"{\"type\": \"poisoned\"}",
+		"{\"type\": \"venomed\"}",
+		"{\"type\": \"skulled\"}",
+		"{\"type\": \"idleBelow\", \"ticks\": 20}",
+		"{\"type\": \"nearDeathSpot\", \"within\": 5}",
+		"{\"type\": \"bossFight\"}",
+		"{\"type\": \"thieving\"}",
+		"{\"type\": \"inventoryFree\", \"maximum\": 2}",
+		"{\"type\": \"playersNearby\", \"minimum\": 2, \"within\": 5}",
+		"{\"type\": \"hovered\", \"ticks\": 4}",
+		"{\"type\": \"unattended\", \"ticks\": 30}",
+		"{\"type\": \"mood\", \"minimum\": 60}",
+		// Events that arrive and are gone.
+		"{\"type\": \"chatMessage\", \"contains\": \"hello\", \"every\": 2}",
+		"{\"type\": \"levelUp\", \"names\": [\"Cooking\"]}",
+		"{\"type\": \"combatEnd\"}",
+		"{\"type\": \"thrallStart\"}",
+		"{\"type\": \"thrallSwitch\"}",
+		"{\"type\": \"thrallEnd\"}",
+		"{\"type\": \"errandStart\", \"names\": [\"bank\"]}",
+		"{\"type\": \"errandEnd\"}",
+		"{\"type\": \"thievingStart\"}",
+		"{\"type\": \"thievingEnd\"}",
+		"{\"type\": \"personalBest\"}",
+		"{\"type\": \"sessionCount\", \"every\": 2}",
+		"{\"type\": \"awayFor\", \"minimum\": 60}",
+		"{\"type\": \"answered\", \"is\": \"yes\"}",
+		"{\"type\": \"examined\"}",
+		"{\"type\": \"worldHop\"}",
+		"{\"type\": \"gameUpdated\"}",
+		"{\"type\": \"notesEdited\"}",
+		"{\"type\": \"musicUnlock\"}",
+		"{\"type\": \"musicTrack\", \"names\": [\"Sea Shanty*\"]}",
+		"{\"type\": \"collectionAdd\"}",
+		"{\"type\": \"questComplete\"}",
+		"{\"type\": \"geOffer\", \"is\": \"sold\"}",
+		"{\"type\": \"channelJoined\"}",
+		"{\"type\": \"channelLeft\"}",
+		"{\"type\": \"npcShout\", \"names\": [\"Town crier\"]}",
+		"{\"type\": \"examinedThing\"}",
+		"{\"type\": \"attendedAgain\"}",
+		"{\"type\": \"minutesTaken\"}",
+		// The follower's own ledger, opened by the driver and closed by the
+		// engine: the want lapses, the souvenir drops, the bet settles.
+		"{\"type\": \"tally\", \"of\": \"kills\", \"minimum\": 26}",
+		"{\"type\": \"wanting\"}",
+		"{\"type\": \"wantFulfilled\"}",
+		"{\"type\": \"wantExpired\"}",
+		"{\"type\": \"wishing\"}",
+		"{\"type\": \"wishItemHeld\"}",
+		"{\"type\": \"feelsAbout\", \"is\": \"liked\"}",
+		"{\"type\": \"remembers\"}",
+		"{\"type\": \"carrying\"}",
+		"{\"type\": \"souvenirLost\"}",
+		"{\"type\": \"betting\"}",
+		"{\"type\": \"betWon\"}",
+		"{\"type\": \"betLost\"}",
+		"{\"type\": \"asking\"}",
+		"{\"type\": \"placeScore\", \"maximum\": -50}",
+		"{\"type\": \"happenedHere\"}",
+		"{\"type\": \"advising\"}",
+		"{\"type\": \"heeded\"}",
+		"{\"type\": \"ignored\"}",
+		"{\"type\": \"challenging\"}",
+		"{\"type\": \"challengeMet\"}",
+		"{\"type\": \"challengeFailed\"}",
+		"{\"type\": \"underfoot\"}",
+		"{\"type\": \"anniversary\"}",
+		"{\"type\": \"outgrew\", \"minimum\": 10}",
+		"{\"type\": \"nicknamed\"}",
+		"{\"type\": \"sessionMinutes\", \"minimum\": 60}",
+		// The player's own wall clock and calendar. Nothing a driver can
+		// flip, so these are constants for the length of a run.
+		"{\"type\": \"timeOfDay\", \"minimum\": 0, \"maximum\": 23}",
+		"{\"type\": \"dateIs\", \"month\": 1, \"day\": 1, \"untilMonth\": 12, \"untilDay\": 31}",
+		// Everything since 2026-08-12: the milestones, the companion's
+		// reactions and the skilling company.
+		"{\"type\": \"milestone\", \"is\": \"round\"}",
+		"{\"type\": \"milestone\", \"is\": \"total\", \"every\": 100}",
+		"{\"type\": \"milestone\", \"is\": \"mastery\"}",
+		"{\"type\": \"levelGap\", \"minimum\": 10080}",
+		"{\"type\": \"levelGap\", \"maximum\": 10}",
+		"{\"type\": \"killCount\", \"is\": \"round\"}",
+		"{\"type\": \"grateful\"}",
+		"{\"type\": \"lastTime\"}",
+		"{\"type\": \"farewell\"}",
+		"{\"type\": \"noticed\", \"is\": \"impling\"}",
+		"{\"type\": \"hesitated\", \"is\": \"monster\"}",
+		"{\"type\": \"steppedAside\"}",
+		"{\"type\": \"addressed\"}",
+		"{\"type\": \"nicknameEarned\"}",
+		"{\"type\": \"memoryHere\"}",
+		"{\"type\": \"memoryFoeNearby\", \"within\": 12}",
+		"{\"type\": \"pageWritten\", \"is\": \"boss\"}",
+		"{\"type\": \"working\", \"is\": \"woodcutting\"}",
+		"{\"type\": \"xpDrop\", \"every\": 2}",
+		"{\"type\": \"workEnded\"}",
+		"{\"type\": \"targetDepleted\"}",
+		"{\"type\": \"bagFull\"}",
+		"{\"type\": \"bagHalf\"}",
 	};
+
+	/** Types that are the same for the whole of a run, whatever the driver does. */
+	private static final Set<String> CONSTANTS = new HashSet<>(Arrays.asList(
+		"always", "timeofday", "dateis"));
 
 	private static String condition(Random random, int depth)
 	{
@@ -114,12 +240,89 @@ public class EngineSoakTest
 			out.append(", \"when\": ").append(condition(random, 2))
 				.append(", \"say\": [\"line ").append(i).append("\"]}");
 		}
+		// And every pool entry as a rule of its own, in a group that is always
+		// switched off: evaluated against every event like the rest, so a
+		// condition that throws is caught whether or not the dice put it in
+		// a rule this seed, and never able to speak over the rules under test.
+		for (int i = 0; i < CONDITIONS.length; i++)
+		{
+			out.append(",{\"id\": \"probe").append(i).append("\", \"group\": \"probe\"")
+				.append(", \"cooldownMs\": 0, \"when\": ").append(CONDITIONS[i])
+				.append(", \"say\": [\"probe ").append(i).append("\"]}");
+		}
 		return out.append("]}").toString();
+	}
+
+	/**
+	 * A pool entry, noting whether it ever came true after being false: the
+	 * difference between an entry the driver reaches and one that only sits
+	 * in the pool, never exercising the half of its code that could throw.
+	 */
+	private static final class Probe extends Condition
+	{
+		private final Condition entry;
+		private Boolean last;
+		private boolean rose;
+
+		Probe(Condition entry)
+		{
+			this.entry = entry;
+		}
+
+		@Override
+		public boolean matches(TriggerContext ctx, TriggerEvent event)
+		{
+			boolean now = entry.matches(ctx, event);
+			rose |= now && Boolean.FALSE.equals(last);
+			last = now;
+			return now;
+		}
+	}
+
+	// --------------------------------------------------------------- the world
+
+	/** The two places the driver walks between: Lumbridge, and north-east of it. */
+	private static final WorldPoint HOME = new WorldPoint(3222, 3218, 0);
+	private static final WorldPoint AWAY = new WorldPoint(3300, 3300, 0);
+
+	private NPC goblin;
+	private NPC boss;
+	private boolean away;
+	private int killCount;
+
+	/**
+	 * What the driver plays with: a goblin to fight and a boss to fear, both
+	 * left behind at home with a pet; a temperament that likes home and not
+	 * the other place; the nicknames, with both tallies a little short of
+	 * earning one; and a first-meeting outfit to have outgrown.
+	 */
+	private void stage(Harness h)
+	{
+		goblin = h.game.spawnNpc(3029, "Goblin", 5);
+		boss = h.game.spawnNpc(2042, "Zulrah", 725);
+		h.game.spawnNpc(5591, "Trotters", 0, true);
+		away = false;
+		killCount = 0;
+
+		TriggerContext ctx = h.engine.getContext();
+		ctx.setTraits(new HashSet<>(Collections.singletonList(HOME.getRegionID())),
+			new HashSet<>(Collections.singletonList(AWAY.getRegionID())));
+		Map<String, String> nicknames = new HashMap<>();
+		nicknames.put("deaths", "the gravedigger");
+		nicknames.put("kills", "the local menace");
+		ctx.setNicknames(nicknames);
+		for (int i = 0; i < 24; i++)
+		{
+			ctx.tallyBoth("deaths");
+			ctx.tallyBoth("kills");
+		}
+		ctx.setMetWearingValue(1_000);
 	}
 
 	private void randomEvent(Harness h, Random random)
 	{
-		switch (random.nextInt(14))
+		TriggerContext ctx = h.engine.getContext();
+		switch (random.nextInt(76))
 		{
 			case 0:
 				h.dispatch(TriggerEvent.npc(TriggerEvent.Type.NPC_SPAWN, 3029, "Goblin"));
@@ -128,12 +331,21 @@ public class EngineSoakTest
 				h.dispatch(TriggerEvent.animation(862));
 				break;
 			case 2:
-				h.dispatch(TriggerEvent.loot(random.nextInt(200000), "Bones"));
+			{
+				// The plugin settles an open bet on the loot it was about.
+				int worth = random.nextInt(200000);
+				ctx.settleBet(worth);
+				h.dispatch(TriggerEvent.loot(worth, "Bones"));
 				break;
+			}
 			case 3:
+				ctx.tallyBoth("kills");
 				h.dispatch(TriggerEvent.kill(1, "Goblin", random.nextInt(800)));
 				break;
 			case 4:
+				// Where and how often, as the plugin notes a death.
+				ctx.noteDeath(h.game.player.getWorldLocation());
+				ctx.tallyBoth("deaths");
 				h.dispatch(TriggerEvent.death());
 				break;
 			case 5:
@@ -143,6 +355,14 @@ public class EngineSoakTest
 				h.dispatch(TriggerEvent.combat(TriggerEvent.Type.COMBAT_START, "Goblin"));
 				break;
 			case 7:
+				// With what a login brings: the count, the time away, and now
+				// and then what the two of them were doing last time.
+				ctx.setSessionCount(1 + random.nextInt(4));
+				ctx.setMinutesAway(new long[]{-1L, 30L, 600L}[random.nextInt(3)]);
+				if (random.nextBoolean())
+				{
+					ctx.restoreLastThing("the mining");
+				}
 				h.dispatch(TriggerEvent.simple(TriggerEvent.Type.LOGIN));
 				break;
 			case 8:
@@ -159,7 +379,279 @@ public class EngineSoakTest
 				h.engine.getContext().setFollowerStaying(random.nextBoolean());
 				break;
 			case 12:
-				h.game.varbit(5963, random.nextInt(2));
+			{
+				// The ditch, as the varbit and as the event the change raises.
+				int wilderness = random.nextInt(2);
+				h.game.varbit(5963, wilderness);
+				h.dispatch(TriggerEvent.varbit(5963, wilderness, 1 - wilderness));
+				break;
+			}
+			case 13:
+				h.dispatch(TriggerEvent.npc(TriggerEvent.Type.NPC_DESPAWN, 3029, "Goblin"));
+				break;
+			case 14:
+			{
+				// A walk between the two places, raised as the plugin raises it.
+				// Everything tied to a place - the area, the incident, the death
+				// spot, the taste, the NPCs left at home - opens and closes.
+				WorldPoint from = away ? AWAY : HOME;
+				away = !away;
+				WorldPoint to = away ? AWAY : HOME;
+				h.game.at(to.getX(), to.getY(), to.getPlane());
+				h.dispatch(TriggerEvent.regionChange(to.getRegionID(), from.getRegionID()));
+				break;
+			}
+			case 15:
+				h.playerSays("hello there");
+				break;
+			case 16:
+			{
+				// A level with the ledger the milestones read: sometimes round,
+				// the total sometimes crossing a hundred, now and then a
+				// ninety-nine, and a gap that is unknown, quick or over a week.
+				int level = new int[]{50, 70, 91, 92, 99}[random.nextInt(5)];
+				int total = 1495 + random.nextInt(10);
+				long gap = new long[]{-1L, 5 * 60_000L, 8 * 24 * 3_600_000L}[random.nextInt(3)];
+				h.dispatch(TriggerEvent.levelUp("Cooking", level, total, total - 1,
+					50, 49 + random.nextInt(2), level == 99 ? 1 + random.nextInt(2) : 0, gap, gap));
+				break;
+			}
+			case 17:
+				h.game.prayer(random.nextInt(100), 99);
+				break;
+			case 18:
+				h.game.varp(net.runelite.api.gameval.VarPlayerID.POISON,
+					new int[]{0, 12, 1_000_050}[random.nextInt(3)]);
+				break;
+			case 19:
+				h.game.skulled(random.nextBoolean());
+				break;
+			case 20:
+				h.game.fighting(new NPC[]{null, goblin, boss}[random.nextInt(3)]);
+				break;
+			case 21:
+				h.dispatch(TriggerEvent.combat(TriggerEvent.Type.COMBAT_END, "Goblin"));
+				break;
+			case 22:
+				h.dispatch(new TriggerEvent[]{
+					TriggerEvent.thrall(TriggerEvent.Type.THRALL_START, "melee"),
+					TriggerEvent.thrallSwitch("melee", "magic"),
+					TriggerEvent.thrall(TriggerEvent.Type.THRALL_END, "magic")}[random.nextInt(3)]);
+				break;
+			case 23:
+				h.dispatch(TriggerEvent.errand(random.nextBoolean()
+					? TriggerEvent.Type.ERRAND_START : TriggerEvent.Type.ERRAND_END, "bank"));
+				break;
+			case 24:
+				h.dispatch(TriggerEvent.simple(random.nextBoolean()
+					? TriggerEvent.Type.THIEVING_START : TriggerEvent.Type.THIEVING_END));
+				break;
+			case 25:
+				// A pickpocket; the default case below puts it down again.
+				h.game.animating(881);
+				break;
+			case 26:
+				ctx.adjustMood(random.nextBoolean() ? 15 : -15);
+				break;
+			case 27:
+				h.dispatch(TriggerEvent.record("hit", 42, 30));
+				break;
+			case 28:
+				ctx.noteQuestion("want-outing");
+				break;
+			case 29:
+				h.answers(random.nextBoolean() ? "yes" : "no", "want-outing");
+				break;
+			case 30:
+				ctx.setHoverTicks(random.nextInt(9));
+				break;
+			case 31:
+				h.dispatch(TriggerEvent.simple(TriggerEvent.Type.EXAMINED));
+				break;
+			case 32:
+				if (random.nextBoolean())
+				{
+					h.game.inventoryUsing(20 + random.nextInt(9));
+				}
+				else
+				{
+					h.game.inventoryContaining(314);
+				}
+				break;
+			case 33:
+				// A pair of passers-by, or nobody.
+				if (random.nextBoolean())
+				{
+					h.game.spawnPlayer(1, 0);
+					h.game.spawnPlayer(0, 2);
+				}
+				else
+				{
+					h.game.clearPlayers();
+				}
+				break;
+			case 34:
+				// Wanting the other place: walking there keeps it, a minute
+				// without lets it lapse, and the engine announces either.
+				ctx.setWant((away ? HOME : AWAY).getRegionID(), "the walk", 1);
+				break;
+			case 35:
+				ctx.setWish("a feather", 1, Collections.singletonList(314));
+				break;
+			case 36:
+				ctx.noteIncident("the-death", "the way that went", "Goblin",
+					System.currentTimeMillis());
+				break;
+			case 37:
+				ctx.pickUp("a nice flat rock", 1);
+				break;
+			case 38:
+				ctx.placeBet(random.nextBoolean(), 50_000, 1);
+				break;
+			case 39:
+				ctx.adviseOn("food", new HashSet<>(Collections.singletonList(829)), false, 1);
+				break;
+			case 40:
+				// Eating, which is what the food advice was asking for.
+				h.dispatch(TriggerEvent.animation(829));
+				break;
+			case 41:
+				ctx.setChallenge("a kill", "kills", 1, 1);
+				break;
+			case 42:
+				ctx.noteUnderfoot();
+				break;
+			case 43:
+				h.game.cameraMoved();
+				break;
+			case 44:
+				ctx.notePlaceFeeling(random.nextBoolean() ? 25 : -25);
+				if (random.nextBoolean())
+				{
+					ctx.notePlaceMemory("you got that drop");
+				}
+				break;
+			case 45:
+			{
+				long today = LocalDate.now().toEpochDay();
+				ctx.setMetOnDay(new long[]{0L, today - 1, today - 400,
+					LocalDate.now().minusYears(2).toEpochDay()}[random.nextInt(4)]);
+				break;
+			}
+			case 46:
+				ctx.setWornValue(random.nextBoolean() ? 500_000 : 2_000);
+				break;
+			case 47:
+				// The player saying yes to the name on offer.
+				ctx.acceptNickname(ctx.getEarnedNickname());
+				break;
+			case 48:
+				ctx.noteFavour();
+				break;
+			case 49:
+			{
+				// The follower a tile to the south, which the player faces, or
+				// a few tiles off where nothing done is done at it.
+				WorldPoint here = h.game.player.getWorldLocation();
+				ctx.setFollowerLocation(random.nextBoolean()
+					? new WorldPoint(here.getX(), here.getY() - 1, here.getPlane())
+					: new WorldPoint(here.getX() + 4, here.getY(), here.getPlane()));
+				break;
+			}
+			case 50:
+				ctx.setWork(random.nextBoolean(), "woodcutting", "Yew tree", null, 10, 0,
+					Integer.MAX_VALUE);
+				break;
+			case 51:
+				h.dispatch(TriggerEvent.xpDrop("Woodcutting", 1 + random.nextInt(8)));
+				break;
+			case 52:
+				h.dispatch(TriggerEvent.workEnd("woodcutting", "Yew tree"));
+				break;
+			case 53:
+				h.dispatch(TriggerEvent.targetDepleted("Yew tree"));
+				break;
+			case 54:
+				h.dispatch(TriggerEvent.simple(random.nextBoolean()
+					? TriggerEvent.Type.BAG_FULL : TriggerEvent.Type.BAG_HALF));
+				break;
+			case 55:
+				killCount++;
+				h.dispatch(TriggerEvent.killCount("Vorkath", killCount, killCount - 1));
+				break;
+			case 56:
+				h.dispatch(TriggerEvent.simple(TriggerEvent.Type.FAREWELL));
+				break;
+			case 57:
+				h.dispatch(random.nextBoolean()
+					? TriggerEvent.noticed("impling", "Dragon impling")
+					: TriggerEvent.noticed("nest", "Bird nest"));
+				break;
+			case 58:
+				h.dispatch(random.nextBoolean()
+					? TriggerEvent.hesitated("monster", "Hill Giant")
+					: TriggerEvent.hesitated("wilderness", "the Wilderness"));
+				break;
+			case 59:
+				h.dispatch(TriggerEvent.simple(TriggerEvent.Type.STEPPED_ASIDE));
+				break;
+			case 60:
+				h.dispatch(TriggerEvent.pageWritten(
+					new String[]{"boss", "enemy", "location", "quest"}[random.nextInt(4)],
+					"Giant Mole"));
+				break;
+			case 61:
+				ctx.setSessionMinutes(random.nextInt(120));
+				break;
+			case 62:
+				if (random.nextBoolean())
+				{
+					h.game.wearing(4151);
+				}
+				else
+				{
+					h.game.wearing();
+				}
+				break;
+			// The wider world: things that happen and are gone, with no state
+			// behind them for anything to read.
+			case 63:
+				h.dispatch(TriggerEvent.worldHop(302));
+				break;
+			case 64:
+				h.dispatch(TriggerEvent.simple(TriggerEvent.Type.GAME_UPDATE));
+				break;
+			case 65:
+				h.dispatch(TriggerEvent.simple(TriggerEvent.Type.NOTES_EDITED));
+				break;
+			case 66:
+				h.dispatch(TriggerEvent.musicUnlock("Sea Shanty 2"));
+				break;
+			case 67:
+				h.dispatch(TriggerEvent.trackChange(random.nextBoolean() ? "Sea Shanty 2" : "Harmony"));
+				break;
+			case 68:
+				h.dispatch(TriggerEvent.collectionAdd("Bandos chestplate"));
+				break;
+			case 69:
+				h.dispatch(TriggerEvent.questComplete("The Restless Ghost"));
+				break;
+			case 70:
+				h.dispatch(TriggerEvent.geOffer(random.nextBoolean(), "Yew logs", 40_000));
+				break;
+			case 71:
+				h.dispatch(TriggerEvent.channel(random.nextBoolean()
+					? TriggerEvent.Type.CHANNEL_JOIN : TriggerEvent.Type.CHANNEL_LEAVE, "Bob"));
+				break;
+			case 72:
+				h.dispatch(TriggerEvent.npcShout("Town crier", "Hear ye! Hear ye!"));
+				break;
+			case 73:
+				h.dispatch(TriggerEvent.examinedThing("Scarecrow"));
+				break;
+			case 74:
+				h.dispatch(TriggerEvent.simple(random.nextBoolean()
+					? TriggerEvent.Type.ATTENDED_AGAIN : TriggerEvent.Type.MINUTES_TAKEN));
 				break;
 			default:
 				h.game.animating(random.nextBoolean() ? 879 : -1);
@@ -168,27 +660,73 @@ public class EngineSoakTest
 	}
 
 	@Test
+	public void everyConditionTypeIsInThePool()
+	{
+		// The fuzzer was three features behind once before anybody looked. The
+		// combinators are written by condition() itself; every other type has
+		// to be drawable, or no random rule set will ever contain it.
+		Set<String> pooled = new TreeSet<>(Arrays.asList("all", "any", "none"));
+		for (String entry : CONDITIONS)
+		{
+			collectTypes(GSON.fromJson(entry, Condition.class), pooled);
+		}
+		Set<String> missing = new TreeSet<>(RuleSetIntegrityTest.KNOWN_TYPES);
+		missing.removeAll(pooled);
+		assertTrue("condition types the fuzzer never draws: " + missing, missing.isEmpty());
+	}
+
+	private static void collectTypes(Condition condition, Set<String> into)
+	{
+		into.add(condition.type.toLowerCase(java.util.Locale.ROOT));
+		if (condition.conditions != null)
+		{
+			for (Condition child : condition.conditions)
+			{
+				collectTypes(child, into);
+			}
+		}
+	}
+
+	@Test
 	public void randomRuleSetsUnderRandomEventsKeepTheirPromises() throws IOException
 	{
+		boolean[] rose = new boolean[CONDITIONS.length];
+
 		for (int seed = 0; seed < 40; seed++)
 		{
 			Random random = new Random(seed);
 			Harness h = new Harness(folder.newFolder().toPath(), rules(random, 25));
 
 			Set<String> disabled = new HashSet<>();
+			disabled.add("probe");
 			if (random.nextBoolean())
 			{
 				disabled.add("g" + random.nextInt(4));
 			}
 			h.engine.setDisabledGroups(disabled);
-			h.game.spawnNpc(3029, "Goblin", 5);
+			stage(h);
+
+			// Each rule's condition as written, for the failure message, and
+			// the probes put in place over their pool entries.
+			Map<String, String> written = new HashMap<>();
+			Probe[] probes = new Probe[CONDITIONS.length];
+			for (SpeechRule rule : h.loader.getRules())
+			{
+				written.put(rule.id, GSON.toJson(rule.when));
+				if (rule.id.startsWith("probe"))
+				{
+					int index = Integer.parseInt(rule.id.substring("probe".length()));
+					probes[index] = new Probe(rule.when);
+					rule.when = probes[index];
+				}
+			}
 
 			Map<String, Long> lastSpokeAt = new HashMap<>();
 			int before = 0;
 
 			for (int step = 0; step < 300; step++)
 			{
-				if (random.nextInt(3) == 0)
+				if (random.nextBoolean())
 				{
 					randomEvent(h, random);
 				}
@@ -217,11 +755,40 @@ public class EngineSoakTest
 				before = h.spoken.size();
 			}
 
+			// The silent failure: a condition that throws disables its rule for
+			// good, and the only symptom is a line nobody ever hears again.
+			for (SpeechRule rule : h.loader.getRules())
+			{
+				assertTrue("seed " + seed + ": '" + rule.id + "' was disabled by a"
+						+ " condition that threw: " + written.get(rule.id),
+					rule.isEnabled());
+			}
+
+			for (int i = 0; i < probes.length; i++)
+			{
+				rose[i] |= probes[i].rose;
+			}
+
 			// Still alive and answering after all that.
 			h.clear();
 			h.game.hitpoints(1, 99);
 			h.gameTicks(5);
 		}
+
+		// And the driver reaches the whole pool: every entry came true after
+		// being false somewhere in the run. One that never does has an event
+		// nobody raises or a state nobody flips, and whatever it would throw
+		// on its true side, nothing above would ever see.
+		List<String> unreached = new ArrayList<>();
+		for (int i = 0; i < CONDITIONS.length; i++)
+		{
+			String type = GSON.fromJson(CONDITIONS[i], Condition.class).type;
+			if (!rose[i] && !CONSTANTS.contains(type.toLowerCase(java.util.Locale.ROOT)))
+			{
+				unreached.add(CONDITIONS[i]);
+			}
+		}
+		assertTrue("pool entries the driver never made true: " + unreached, unreached.isEmpty());
 	}
 
 	@Test
@@ -236,6 +803,7 @@ public class EngineSoakTest
 				"{\"version\": 1, \"rules\": [{\"id\": \"slow\", \"group\": \"t\","
 					+ " \"cooldownMs\": 0, \"delayTicks\": 10,"
 					+ " \"when\": {\"type\": \"playerDeath\"}, \"say\": [\"a\"]}]}");
+			stage(h);
 
 			h.gameTicks(1);
 			h.dispatch(TriggerEvent.death());
