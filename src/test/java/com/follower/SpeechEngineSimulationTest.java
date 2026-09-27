@@ -1,6 +1,7 @@
 package com.follower;
 
 import com.follower.sim.Harness;
+import com.follower.speech.SpeechOutput;
 import com.follower.speech.SpeechRule;
 import com.follower.speech.TriggerEvent;
 import java.io.IOException;
@@ -501,5 +502,44 @@ public class SpeechEngineSimulationTest
 
 		assertTrue("the silenced rule stays silent", h.firedBy("one").isEmpty());
 		assertFalse("its group-mate carries on", h.firedBy("two").isEmpty());
+	}
+
+	/**
+	 * A line of the follower's own that no rule wrote - the remark after a
+	 * sketch - went straight to the overhead, past the mute and the output
+	 * setting.
+	 */
+	@Test
+	public void aLineNoRuleWroteKeepsTheMuteAndGoesWhereSpeechGoes() throws IOException
+	{
+		Harness h = new Harness(scratch(), "{\"version\": 1, \"rules\": []}");
+		h.engine.setDefaultOutput(SpeechOutput.CHATBOX);
+		h.engine.remark("Sketched. The light did most of the work.");
+		assertEquals(1, h.spoken.size());
+		assertEquals("where the settings put speech", SpeechOutput.CHATBOX, h.spoken.get(0).output);
+
+		h.spoken.clear();
+		h.engine.setMuted(true);
+		h.engine.remark("Sketched. The light did most of the work.");
+		assertTrue("and not at all under the mute", h.spoken.isEmpty());
+	}
+
+	@Test
+	public void aChatMessageBeforeTheGameLoadsDisablesNothing() throws IOException
+	{
+		// At client start a plugin's chat message is dispatched before the
+		// game has loaded its varbits. A condition that throws then is
+		// disabled for the whole session - the two Wilderness rules were.
+		Harness h = new Harness(scratch());
+		h.game.starting();
+		h.dispatch(TriggerEvent.chat("Plugin started.",
+			net.runelite.api.ChatMessageType.GAMEMESSAGE.getType(), ""));
+
+		assertTrue(h.rule("enter-wilderness").isEnabled());
+		assertTrue(h.rule("wilderness-crossing").isEnabled());
+		for (SpeechRule rule : h.loader.getRules())
+		{
+			assertTrue("rule '" + rule.id + "' was disabled at client start", rule.isEnabled());
+		}
 	}
 }

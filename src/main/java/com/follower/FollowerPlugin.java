@@ -787,10 +787,11 @@ public class FollowerPlugin extends Plugin
 			() -> thrallNpc != null || errands.isBusy() || spectate.holdsTheFeet()
 				|| dialog.isOpen() || chronicleWindow.isOpen() || emoteHold || minutesState != 0
 				|| skilling.holdsTheFeet() || moments.holdsTheFeet() || flourish.isActive()
-				|| speechEngine.getContext().isInCombat() || inCutscene() || windowOverTheView(),
+				|| speechEngine.getContext().isInCombat() || inCutscene() || windowOverTheView(client),
 			() -> speechEngine.getContext().getIdleTicks(),
 			() -> speechEngine.getContext().getRegionId(),
-			line -> speak(line, com.follower.speech.SpeechOutput.OVERHEAD, null, -1, null));
+			// Through the engine, so the mute and the output setting hold.
+			speechEngine::remark);
 		if (client.getGameState() == GameState.LOGGED_IN)
 		{
 			sketchBook.openFor(configManager.getRSProfileKey());
@@ -5996,17 +5997,25 @@ public class FollowerPlugin extends Plugin
 	}
 
 	/**
-	 * Whether an interface - the bank, a shop, a quest journal - is open over
-	 * the game view: the main modal slot of whichever layout is in use has
-	 * something in it. A sketch of the view with the bank in it is a sketch
-	 * of the bank.
+	 * Whether an interface - the bank, a shop, a quest journal, the world
+	 * map - is open over the game view: a slot of whichever layout is in use
+	 * has something in it. The bank and its like open in the main modal slot;
+	 * the world map, the settings and the collection log in the floater slot,
+	 * which stays open as you walk; and the world map made full screen in a
+	 * layout of its own. A sketch of the view with the bank in it is a sketch
+	 * of the bank - and the Falador sketch came out a picture of the world
+	 * map, tooltip and all, while only the main modal slot was looked in.
 	 */
-	private boolean windowOverTheView()
+	static boolean windowOverTheView(Client client)
 	{
 		int[] slots = {
 			net.runelite.api.gameval.InterfaceID.Toplevel.MAINMODAL,
 			net.runelite.api.gameval.InterfaceID.ToplevelOsrsStretch.MAINMODAL,
 			net.runelite.api.gameval.InterfaceID.ToplevelPreEoc.MAINMODAL,
+			net.runelite.api.gameval.InterfaceID.Toplevel.FLOATER,
+			net.runelite.api.gameval.InterfaceID.ToplevelOsrsStretch.FLOATER,
+			net.runelite.api.gameval.InterfaceID.ToplevelPreEoc.FLOATER,
+			net.runelite.api.gameval.InterfaceID.ToplevelDisplay.DISPLAYMODAL,
 		};
 		for (int slot : slots)
 		{

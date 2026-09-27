@@ -352,8 +352,13 @@ public class Condition
 					&& (is == null || is.equalsIgnoreCase(event.getName()))
 					&& (of == null || of.equalsIgnoreCase(event.getMessage()));
 
+			// No player, no answer: at client start a chat message can arrive
+			// before the game has loaded its varbits, the client's own lookup
+			// throws, and a rule that throws is disabled for the session - the
+			// two Wilderness rules were, in five logs.
 			case "varbitequals":
-				return varbit != null && ctx.getClient().getVarbitValue(varbit) == orDefault(value, 1);
+				return varbit != null && ctx.getClient().getLocalPlayer() != null
+					&& ctx.getClient().getVarbitValue(varbit) == orDefault(value, 1);
 			case "varbitchanged":
 				return event.getType() == TriggerEvent.Type.VARBIT
 					&& varbit != null && event.getId() == varbit

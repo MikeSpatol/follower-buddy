@@ -888,6 +888,21 @@ public class SpeechEngine
 	}
 
 	/**
+	 * Says a line of the follower's own that no rule wrote - the remark after
+	 * a sketch - where the settings put speech, and not at all under the
+	 * mute. {@link #say} is the player's own command and speaks through the
+	 * mute on purpose; a line nobody asked for has no such excuse, and went
+	 * straight to the overhead, muted or not.
+	 */
+	public void remark(String text)
+	{
+		if (!muted)
+		{
+			say(text, null);
+		}
+	}
+
+	/**
 	 * Says a rule this instant, whatever its conditions, cooldown and the mute
 	 * have to say about it.
 	 *

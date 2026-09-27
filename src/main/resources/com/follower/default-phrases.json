@@ -3346,7 +3346,7 @@
     },
     {
       "id": "login-greeting",
-      "note": "A hello a couple of seconds after the follower teleports in on login. Spawn happens ~4 ticks after login; delayTicks 8 lands the line ~2.5s after the puff. The cooldown stops quick world hops re-greeting.",
+      "note": "A hello a couple of seconds after the follower teleports in on login. Spawn happens ~4 ticks after login; delayTicks 8 lands the line ~2.5s after the puff. The cooldown stops quick world hops re-greeting. It steps aside after three hours away, for the away lines: one login has one line, and at a higher priority it won every one of them, so they never said a word.",
       "group": "misc",
       "priority": 90,
       "output": "overhead",
@@ -3361,6 +3361,15 @@
           {
             "type": "daysKnown",
             "minimum": 7
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "awayFor",
+                "minimum": 180
+              }
+            ]
           }
         ]
       },

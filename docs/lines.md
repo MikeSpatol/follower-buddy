@@ -341,9 +341,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `login-greeting`
 
-> A hello a couple of seconds after the follower teleports in on login. Spawn happens ~4 ticks after login; delayTicks 8 lands the line ~2.5s after the puff. The cooldown stops quick world hops re-greeting.
+> A hello a couple of seconds after the follower teleports in on login. Spawn happens ~4 ticks after login; delayTicks 8 lands the line ~2.5s after the puff. The cooldown stops quick world hops re-greeting. It steps aside after three hours away, for the away lines: one login has one line, and at a higher priority it won every one of them, so they never said a word.
 
-- **when:** on login AND known 7+ days
+- **when:** on login AND known 7+ days AND NOT (away 180+ minutes)
 - **pacing:** priority 90, cooldown 1m, delay 8 ticks, overhead
 
 - There you are! Right on schedule.

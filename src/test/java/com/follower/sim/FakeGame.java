@@ -314,6 +314,22 @@ public final class FakeGame
 		return this;
 	}
 
+	/**
+	 * The client at startup, before the game has loaded: no player, no scene,
+	 * and a varbit read throws inside the client itself - the real one says
+	 * "Cannot read the array length because client.ax is null".
+	 */
+	public FakeGame starting()
+	{
+		loggedOut();
+		clientAnswers.put("getTopLevelWorldView", null);
+		clientAnswers.put("getVarbitValue", (Answer) args ->
+		{
+			throw new NullPointerException("varbits not loaded");
+		});
+		return this;
+	}
+
 	/** Run energy in the client's own units: hundredths of a percent, 0-10000. */
 	public FakeGame energy(int hundredthsOfAPercent)
 	{
