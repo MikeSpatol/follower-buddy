@@ -106,6 +106,44 @@ public class NicknameTest
 		assertFalse(h.engine.getContext().hasNickname());
 	}
 
+	/** Answers through the plugin's own answerQuestion, which the tests above stand in for. */
+	private static void answer(Harness h, String answer) throws ReflectiveOperationException
+	{
+		FollowerPlugin plugin = new FollowerPlugin();
+		java.lang.reflect.Field engine = FollowerPlugin.class.getDeclaredField("speechEngine");
+		engine.setAccessible(true);
+		engine.set(plugin, h.engine);
+		java.lang.reflect.Method door = FollowerPlugin.class.getDeclaredMethod("answerQuestion", String.class);
+		door.setAccessible(true);
+		door.invoke(plugin, answer);
+	}
+
+	@Test
+	public void thePluginsOwnDoorSettlesTheNameOnlyForItsOwnQuestion()
+		throws IOException, ReflectiveOperationException
+	{
+		// The tests above settle the name by hand, the way answerQuestion
+		// does, so a door that settled it on any yes at all would pass every
+		// one of them. This goes through the real door.
+		Harness outing = earned("deaths", 30);
+		TriggerContext context = outing.engine.getContext();
+		context.noteQuestion("want-outing");
+		answer(outing, "yes");
+		assertFalse("a yes to the outing is not a yes to the name", context.hasNickname());
+		assertTrue("and the name is still to be asked about", context.hasNicknameToOffer());
+
+		Harness yes = earned("deaths", 30);
+		yes.engine.getContext().noteQuestion(FollowerPlugin.NICKNAME_TREE);
+		answer(yes, "yes");
+		assertEquals("the gravedigger", yes.engine.getContext().getNickname());
+
+		Harness no = earned("deaths", 30);
+		no.engine.getContext().noteQuestion(FollowerPlugin.NICKNAME_TREE);
+		answer(no, "no");
+		assertFalse(no.engine.getContext().hasNickname());
+		assertFalse("struck through", no.engine.getContext().hasNicknameToOffer());
+	}
+
 	@Test
 	public void anAgreedNameThatThePlayHasMovedOnFromIsOfferedAgain() throws IOException
 	{

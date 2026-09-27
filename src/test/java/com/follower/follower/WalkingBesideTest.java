@@ -1,5 +1,6 @@
 package com.follower.follower;
 
+import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.Set;
 import net.runelite.api.coords.WorldPoint;
@@ -74,6 +75,64 @@ public class WalkingBesideTest
 		assertTrue(follower.isWalkingBeside());
 		assertEquals("level with them", 3400 + FollowerEntity.BESIDE_AFTER_STEPS, at.getY());
 		assertEquals("one to the side", 1, Math.abs(at.getX() - 3200));
+	}
+
+	/** The entity's own state, which the stubs here have no other way to set. */
+	private void set(String name, Object value)
+	{
+		try
+		{
+			Field field = FollowerEntity.class.getDeclaredField(name);
+			field.setAccessible(true);
+			field.set(follower, value);
+		}
+		catch (ReflectiveOperationException e)
+		{
+			throw new AssertionError(name, e);
+		}
+	}
+
+	@Test
+	public void itDrawsLevelOnWhicheverSideItIsAlreadyOn()
+	{
+		// Walking north with the follower a tile east of the line: the right
+		// shoulder. Crossing behind the player to reach the left one is the
+		// hop the side choice is there to spare it.
+		set("tile", new WorldPoint(3201, 3400, 0));
+		WorldPoint at = null;
+		for (int i = 1; i <= FollowerEntity.BESIDE_AFTER_STEPS; i++)
+		{
+			at = stepNorth(3400 + i);
+		}
+		assertTrue(follower.isWalkingBeside());
+		assertEquals("the east shoulder", 3201, at.getX());
+	}
+
+	@Test
+	public void aStayOrAGoalKeepsItBehindHoweverLongTheRun()
+	{
+		// Only the follow tile changes, and only while nothing else has the
+		// feet: a stay or a goal owns them, and the shoulder must not pull
+		// against either.
+		set("stayTile", new WorldPoint(3200, 3390, 0));
+		for (int i = 1; i <= 3 * FollowerEntity.BESIDE_AFTER_STEPS; i++)
+		{
+			assertEquals("a stay, step " + i, 3200, stepNorth(3400 + i).getX());
+		}
+		assertFalse(follower.isWalkingBeside());
+
+		set("stayTile", null);
+		set("goalTile", new WorldPoint(3205, 3460, 0));
+		for (int i = 1; i <= 3 * FollowerEntity.BESIDE_AFTER_STEPS; i++)
+		{
+			assertEquals("a goal, step " + i, 3200, stepNorth(3430 + i).getX());
+		}
+		assertFalse(follower.isWalkingBeside());
+
+		// Let go, and the run was long enough all along.
+		set("goalTile", null);
+		assertEquals(1, Math.abs(stepNorth(3461).getX() - 3200));
+		assertTrue(follower.isWalkingBeside());
 	}
 
 	@Test

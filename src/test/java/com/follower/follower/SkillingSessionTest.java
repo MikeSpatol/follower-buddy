@@ -3577,6 +3577,76 @@ public class SkillingSessionTest
 	}
 
 	@Test
+	public void aWalkDoesNotSetOffWhileALookOverTheShoulderIsUnderWay()
+	{
+		// The pace and the look over the shoulder both come at random. On a
+		// few draws in a hundred the pace fell due while the follower was off
+		// its seat peering, and the walk set off from the player's front tile
+		// with the peer still held. The walks now wait for a peer under way
+		// to be over: late, never lost. The first three hundred draws, each
+		// its own seed: no leg of a walk is asked for once a peer has been
+		// held a whole tick, every draw still paces, and some draws really
+		// did have the pace waiting on a peer - without those this would
+		// prove nothing.
+		//
+		// The other order is not pinned here: a peer that begins on the very
+		// tick a walk does (seed 245) still goes ahead, and the walk's first
+		// leg follows it a tick later.
+		List<Integer> spoiled = new ArrayList<>();
+		List<Integer> unpaced = new ArrayList<>();
+		int waited = 0;
+		for (int seed = 0; seed < 300; seed++)
+		{
+			setUp();
+			skilling.random.setSeed(seed);
+			game.animating(FLETCH);
+			tick(1);
+			skilling.noteXpDrop(Skill.FLETCHING);
+			tick(SkillingController.SEAT_AFTER_TICKS);
+			WorldPoint seat = follower.stayingAt;
+			int peerHeld = 0;
+			int peerOver = -1;
+			int paced = -1;
+			for (int i = 1; i <= KeepingCompany.PACE_AFTER_TICKS + 80 && paced < 0; i++)
+			{
+				int asked = follower.stays.size();
+				tick(1);
+				if (i % 3 == 0)
+				{
+					skilling.noteXpDrop(Skill.FLETCHING);
+				}
+				for (WorldPoint stay : follower.stays.subList(asked, follower.stays.size()))
+				{
+					if (!stay.equals(seat))
+					{
+						paced = i;
+					}
+				}
+				if (paced == i && peerHeld >= 2)
+				{
+					spoiled.add(seed);
+				}
+				if (peerHeld > 0 && follower.poseOverride != KeepingCompany.PEER)
+				{
+					peerOver = i;
+				}
+				peerHeld = follower.poseOverride == KeepingCompany.PEER ? peerHeld + 1 : 0;
+			}
+			if (paced < 0)
+			{
+				unpaced.add(seed);
+			}
+			else if (peerOver >= 0 && paced - peerOver <= 3)
+			{
+				waited++;
+			}
+		}
+		assertTrue("a walk set off mid-peer on seeds " + spoiled, spoiled.isEmpty());
+		assertTrue("the pace is late, never lost; none on seeds " + unpaced, unpaced.isEmpty());
+		assertTrue("no draw had the pace waiting on a peer, so nothing was proved", waited > 0);
+	}
+
+	@Test
 	public void nothingInTheWorldCanDepleteStandingWork()
 	{
 		skilling.noteXpDrop(Skill.HERBLORE);

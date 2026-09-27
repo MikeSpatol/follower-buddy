@@ -667,6 +667,22 @@ public class MomentsTest
 	}
 
 	@Test
+	public void aBigDropTooFarOffIsWrittenUpFromWhereItStands()
+	{
+		// A dozen tiles is as far as the follower goes for news. A pile
+		// further off than that - a kill at range, across a river - is still
+		// big news, so the notes come out where it stands, facing the pile;
+		// only the walk is too far.
+		tick(1);
+		WorldPoint far = new WorldPoint(69, 49, 0);
+		moments.noteworthy(Moments.Tier.BIG, far);
+		assertFalse("not walked to", moments.isLooking());
+		assertTrue("no tile asked for", follower.stays.isEmpty());
+		assertEquals("written up in place", ErrandController.SCROLL_PROP, held);
+		assertTrue("facing the pile", follower.glances.contains(far));
+	}
+
+	@Test
 	public void aNiceDropTakesTheNotesOutWhereItStands()
 	{
 		tick(1);

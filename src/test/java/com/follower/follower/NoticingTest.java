@@ -171,6 +171,27 @@ public class NoticingTest
 	}
 
 	@Test
+	public void aSecondDropWaitsOutTheKindsClock()
+	{
+		// A good kill leaves two piles. Each is a thing of its own and gets
+		// its look, but not one straight after the other: a pile of drops in
+		// a good hour is one remark, not a commentary.
+		tick(1);
+		noticing.itemSpawned(item(4151, TileItem.OWNERSHIP_SELF), DROP, "Abyssal whip", 1_500_000);
+		noticing.itemSpawned(item(11840, TileItem.OWNERSHIP_SELF), new WorldPoint(50, 52, 0),
+			"Dragon boots", 200_000);
+		walkAway();
+		tick(Noticing.LEFT_AFTER_TICKS + 1);
+		assertEquals(1, looker.looks.size());
+
+		looker.looking = false;
+		tick(Noticing.Kind.VALUABLE.cooldownTicks - 5);
+		assertEquals("the kind's clock holds the second", 1, looker.looks.size());
+		tick(10);
+		assertEquals("and lets it go once it has run", 2, looker.looks.size());
+	}
+
+	@Test
 	public void somebodyElsesDropAndACheapOneAreNotYourBusiness()
 	{
 		tick(1);

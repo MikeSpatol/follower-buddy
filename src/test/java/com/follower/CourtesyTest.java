@@ -96,6 +96,9 @@ public class CourtesyTest
 		assertTrue("east is inside the tolerance", context.isAddressingFollower());
 		context.setFollowerLocation(new WorldPoint(49, 49, 0));
 		assertFalse("south-west is not", context.isAddressingFollower());
+		// A quarter turn off is looking past it: the emote was for somebody else.
+		context.setFollowerLocation(new WorldPoint(49, 51, 0));
+		assertFalse("north-west is a quarter turn off", context.isAddressingFollower());
 	}
 
 	@Test

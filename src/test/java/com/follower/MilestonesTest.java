@@ -187,7 +187,8 @@ public class MilestonesTest
 		assertFalse("the first", h.firedBy("kill-count-first").isEmpty());
 		assertTrue(h.firedBy("kill-count-round").isEmpty());
 
-		for (int n : new int[]{2, 3, 4, 6, 11, 26, 51, 99, 150})
+		// Past a thousand the hundreds stop being worth saying: 1100 is quiet.
+		for (int n : new int[]{2, 3, 4, 6, 11, 26, 51, 99, 150, 1100})
 		{
 			Harness quiet = bundled();
 			quiet.dispatch(TriggerEvent.killCount("Vorkath", n, n - 1));
@@ -239,6 +240,31 @@ public class MilestonesTest
 		h.clear();
 		h.gameTicks(1);
 		assertTrue("the debt lapses", h.firedBy("probe").isEmpty());
+	}
+
+	@Test
+	public void aWantKeptAndAWishGrantedAreTheFavours() throws IOException
+	{
+		// The debt above is set by hand. These are the two doors it is
+		// meant to come through, and a door that stopped opening it would
+		// leave the goodwill in the body with nothing to earn it.
+		Harness kept = new Harness(folder.newFolder().toPath());
+		kept.game.at(3000, 3000, 0);
+		kept.gameTicks(2);
+		kept.engine.getContext().setWant(12850, "Lumbridge", 20);
+		assertFalse(kept.engine.getContext().isGrateful());
+		kept.game.at(12850 >> 8 << 6, (12850 & 0xFF) << 6, 0);
+		kept.gameTicks(3);
+		assertTrue("taken where it wanted to go", kept.engine.getContext().isGrateful());
+
+		Harness given = new Harness(folder.newFolder().toPath());
+		given.gameTicks(1);
+		assertTrue(given.engine.force("wish-feather"));
+		given.game.inventoryContaining(314);
+		assertFalse(given.engine.getContext().isGrateful());
+		given.answers("gift");
+		given.gameTicks(3);
+		assertTrue("handed the thing it wished for", given.engine.getContext().isGrateful());
 	}
 
 	// ----------------------------------------------------------- last time

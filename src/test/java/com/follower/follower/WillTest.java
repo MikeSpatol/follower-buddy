@@ -192,6 +192,23 @@ public class WillTest
 	}
 
 	@Test
+	public void theMonsterAlreadyBeingFoughtIsNoMisgiving()
+	{
+		// Sent beside the thing the player is fighting: that fight is on
+		// already, and a beat of reluctance about it now is a follower
+		// dithering in the middle of it.
+		NPC giant = game.spawnNpc(2098, "Hill Giant", 28);
+		game.moveNpc(giant, 3210, 3401, 0);
+		game.fighting(giant);
+		tick(1);
+		WorldPoint beside = new WorldPoint(3209, 3401, 0);
+		assertTrue(will.send(beside));
+		assertFalse(will.isHesitating());
+		assertTrue(events.isEmpty());
+		assertEquals("straight there", beside, follower.stayingAt);
+	}
+
+	@Test
 	public void somethingThePlayerCanHandleIsNoMisgiving()
 	{
 		NPC goblin = game.spawnNpc(3029, "Goblin", 2);

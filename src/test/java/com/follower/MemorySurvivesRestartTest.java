@@ -63,6 +63,23 @@ public class MemorySurvivesRestartTest
 	}
 
 	@Test
+	public void theIncidentKeepsWhereItHappened()
+	{
+		// Where is what the standing-there recall and the Memory window's
+		// "in Edgeville" both read. The fixture above files its incident
+		// before the context has seen a region, so it is asked here of one
+		// filed somewhere.
+		TriggerContext before = new TriggerContext(new FakeGame().at(3090, 3490, 0).client);
+		before.refresh();
+		before.noteIncident("close-call", "how close that was", "Hill Giant", 1_700_000_000_000L);
+		assertEquals("filed in Edgeville", 12342, before.getIncidentWhere());
+
+		TriggerContext after = fresh();
+		FollowerPlugin.restoreMemory(after, FollowerPlugin.snapshotMemory(before, 0, gson), gson, 0);
+		assertEquals("and still there after a restart", 12342, after.getIncidentWhere());
+	}
+
+	@Test
 	public void everythingWrittenComesBack()
 	{
 		TriggerContext before = lived();

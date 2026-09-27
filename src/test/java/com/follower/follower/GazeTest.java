@@ -251,6 +251,34 @@ public class GazeTest
 	}
 
 	@Test
+	public void aSharedLookStartsTheLookRoundsWaitAgain()
+	{
+		// Two turns of the head a tick apart read as a twitch, not as
+		// attention. Left alone, this draw looks round on a known tick; with
+		// the cursor resting on something just before it, the look round
+		// starts its wait again from nothing and is a whole wait away.
+		nearby = Collections.singletonList(new WorldPoint(53, 50, 0));
+		idle = Gaze.IDLE_BEFORE_AROUND_TICKS;
+		for (int i = 0; i < Gaze.AROUND_MAX_TICKS + 2 && follower.glances.isEmpty(); i++)
+		{
+			tick(1);
+		}
+		assertEquals("left alone, it looks round", 1, follower.glances.size());
+		int due = tick;
+
+		setUp();
+		tick = 0;
+		tick(due - 3);
+		gaze.noteHover(thing("npc:4", 55, 50));
+		tick(2);
+		assertEquals("the shared look, a tick before the look round was due",
+			Collections.singletonList(new WorldPoint(55, 50, 0)), follower.glances);
+		gaze.noteHover(null);
+		tick(Gaze.AROUND_MIN_TICKS - 1);
+		assertEquals("and no look round straight after it", 1, follower.glances.size());
+	}
+
+	@Test
 	public void nothingWhileBusyOrSwitchedOff()
 	{
 		busy = true;

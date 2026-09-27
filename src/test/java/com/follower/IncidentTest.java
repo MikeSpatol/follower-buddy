@@ -62,6 +62,22 @@ public class IncidentTest
 	}
 
 	@Test
+	public void whatIsAlreadyTrueAtLoginIsNotFiled() throws IOException
+	{
+		// Logging back in mid-fight at six hitpoints - after a disconnect,
+		// say - is not a close call the follower saw. Just after login the
+		// engine primes its edges so standing state reads as already true,
+		// and a memory filed then would be about nothing that happened.
+		Harness h = new Harness(folder.newFolder().toPath());
+		h.game.regions(12342).at(3090, 3490, 0).hitpoints(6, 99);
+		NPC giant = h.game.spawnNpc(2098, "Hill Giant", 28);
+		h.game.fighting(giant);
+		h.engine.primeEdgesOnNextTick();
+		h.gameTicks(3);
+		assertFalse(h.engine.getContext().hasIncident());
+	}
+
+	@Test
 	public void aPlaceholderWithNothingToSayFilesThePlainForm() throws IOException
 	{
 		// A death with no combat target on record: "the way that went with
