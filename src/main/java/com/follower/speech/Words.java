@@ -1,5 +1,8 @@
 package com.follower.speech;
 
+import java.util.Locale;
+import java.util.Set;
+
 /**
  * Numbers the way a scribe writes them in a sentence.
  *
@@ -31,6 +34,21 @@ public final class Words
 		"", "", "twentieth", "thirtieth", "fortieth", "fiftieth", "sixtieth",
 		"seventieth", "eightieth", "ninetieth",
 	};
+
+	/** Vowel letters said with a consonant: a unicorn, a one-eyed rat, a useful thing. */
+	private static final String[] SAID_WITH_A = {
+		"one", "once", "unic", "unif", "unit", "univ", "use", "usu", "eu",
+	};
+
+	/** And the h that is not said: an hour, an honest mistake. */
+	private static final String[] SAID_WITH_AN = {"hour", "honest", "honour", "heir"};
+
+	/** Things had by the heap, not the piece: soft clay, never a soft clay. */
+	private static final Set<String> HEAPS = Set.of(
+		"clay", "charcoal", "coal", "essence", "flour", "meat", "papyrus", "sand", "wool");
+
+	/** Endings of words that end in s and still mean one: Cerberus, a Nylocas Hagios, a Cyclops. */
+	private static final String[] ONE_DESPITE_THE_S = {"ss", "us", "is", "as", "os", "cyclops", "lens"};
 
 	private Words()
 	{
@@ -145,5 +163,83 @@ public final class Words
 		}
 		long years = days / 365;
 		return years < 2 ? "a year" : number((int) years) + " years";
+	}
+
+	/**
+	 * "a" or "an", by how the name sounds said aloud: an Eclectic impling, a
+	 * unicorn, an hour, an 80, an 18. The vowel letters and a few known
+	 * exceptions, not a pronouncing dictionary.
+	 */
+	public static String article(String name)
+	{
+		String s = name.trim().toLowerCase(Locale.ROOT);
+		if (s.isEmpty())
+		{
+			return "a";
+		}
+		char first = s.charAt(0);
+		if (Character.isDigit(first))
+		{
+			String digits = s.replaceAll("\\D.*", "");
+			return first == '8' || digits.equals("11") || digits.equals("18") ? "an" : "a";
+		}
+		for (String h : SAID_WITH_AN)
+		{
+			if (s.startsWith(h))
+			{
+				return "an";
+			}
+		}
+		if ("aeiou".indexOf(first) < 0)
+		{
+			return "a";
+		}
+		for (String y : SAID_WITH_A)
+		{
+			if (s.startsWith(y))
+			{
+				return "a";
+			}
+		}
+		return "an";
+	}
+
+	/**
+	 * Whether the name takes no "a" at all: Coins, Dragon bones, soft clay,
+	 * The Leviathan. Judged on the head word - the one before "of" when there
+	 * is one, so a Jar of souls keeps its article - with a trailing "(e)"
+	 * ignored. A word ending in s is plural unless its ending says otherwise,
+	 * which keeps Cerberus, Venenatis, the Nylocas and a Cyclops singular.
+	 */
+	public static boolean takesNoArticle(String name)
+	{
+		String s = name.trim().toLowerCase(Locale.ROOT);
+		if (s.startsWith("the "))
+		{
+			return true;
+		}
+		s = s.replaceAll("\\s*\\(.*\\)$", "");
+		int of = s.indexOf(" of ");
+		if (of > 0)
+		{
+			s = s.substring(0, of);
+		}
+		String head = s.substring(s.lastIndexOf(' ') + 1);
+		if (HEAPS.contains(head))
+		{
+			return true;
+		}
+		if (!head.endsWith("s"))
+		{
+			return false;
+		}
+		for (String one : ONE_DESPITE_THE_S)
+		{
+			if (head.endsWith(one))
+			{
+				return false;
+			}
+		}
+		return true;
 	}
 }

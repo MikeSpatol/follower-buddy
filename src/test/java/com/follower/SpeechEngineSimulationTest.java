@@ -296,6 +296,113 @@ public class SpeechEngineSimulationTest
 		assertEquals("hello {nonsense}", h.spoken.get(0).text);
 	}
 
+	@Test
+	public void aLineThatOpensOnANameOpensOnACapital() throws IOException
+	{
+		// A souvenir, an earned name, a stretch of time: the values are written
+		// for the middle of a sentence ("a feather", "the local menace", "two
+		// minutes"), so a sentence that opens on one opened in lower case. Only
+		// an opening is touched: mid-sentence, and after an ellipsis, it stays.
+		Harness h = new Harness(scratch(), rules(
+			"{\"id\": \"lost\", \"group\": \"t\", \"cooldownMs\": 0,"
+				+ " \"when\": {\"type\": \"souvenirLost\"},"
+				+ " \"say\": [\"{souvenir}, gone. Why? {souvenir} was the good one... {souvenir}, of all things.\"]}"));
+
+		h.gameTicks(1);
+		h.dispatch(TriggerEvent.souvenirLost("a feather"));
+
+		assertEquals("A feather, gone. Why? A feather was the good one... a feather, of all things.",
+			h.spoken.get(0).text);
+	}
+
+	@Test
+	public void aPlayerNameOpeningALineKeepsItsOwnSpelling() throws IOException
+	{
+		Harness h = new Harness(scratch(), rules(
+			"{\"id\": \"in\", \"group\": \"t\", \"cooldownMs\": 0,"
+				+ " \"when\": {\"type\": \"channelJoined\"}, \"say\": [\"{name}, present. Noted.\"]}"));
+
+		h.gameTicks(1);
+		h.dispatch(TriggerEvent.channel(TriggerEvent.Type.CHANNEL_JOIN, "iron btw"));
+
+		assertEquals("iron btw, present. Noted.", h.spoken.get(0).text);
+
+		// Review: whoever spoke in chat is a player's name too.
+		Harness chat = new Harness(scratch(), rules(
+			"{\"id\": \"heard\", \"group\": \"t\", \"cooldownMs\": 0,"
+				+ " \"when\": {\"type\": \"chatMessage\", \"contains\": \"hello\"},"
+				+ " \"say\": [\"{speaker} again. Noted.\"]}"));
+		chat.gameTicks(1);
+		chat.dispatch(TriggerEvent.chat("hello", 2, "iron btw"));
+
+		assertEquals("iron btw again. Noted.", chat.spoken.get(0).text);
+	}
+
+	/** What a one-line rule says to one event: the template, filled. */
+	private String says(String when, String line, TriggerEvent event) throws IOException
+	{
+		Harness h = new Harness(scratch(), rules(
+			"{\"id\": \"t\", \"group\": \"t\", \"cooldownMs\": 0, \"when\": " + when
+				+ ", \"say\": [\"" + line + "\"]}"));
+		h.gameTicks(1);
+		h.dispatch(event);
+		assertEquals(1, h.spoken.size());
+		return h.spoken.get(0).text;
+	}
+
+	@Test
+	public void anArticleBeforeAPlaceholderAgreesWithWhatFillsIt() throws IOException
+	{
+		// Straight from the transcripts: the lines as shipped, the names as met.
+		String impling = "{\"type\": \"noticed\", \"is\": \"impling\"}";
+		assertEquals("There's an Eclectic impling. It won't wait.", says(impling,
+			"There's a {thing}. It won't wait.", TriggerEvent.noticed("impling", "Eclectic impling")));
+		assertEquals("An Essence impling, if you're quick.", says(impling,
+			"A {thing}, if you're quick.", TriggerEvent.noticed("impling", "Essence impling")));
+		assertEquals("I see an Earth impling. I'm not catching it for you.", says(impling,
+			"I see a {thing}. I'm not catching it for you.", TriggerEvent.noticed("impling", "Earth impling")));
+		assertEquals("A Young impling, if you're quick.", says(impling,
+			"A {thing}, if you're quick.", TriggerEvent.noticed("impling", "Young impling")));
+
+		String hit = "{\"type\": \"personalBest\", \"names\": [\"hit\"]}";
+		assertEquals("An 80! Underline it. Twice.", says(hit,
+			"A {value}! Underline it. Twice.", TriggerEvent.record("hit", 80, 62)));
+	}
+
+	@Test
+	public void aPluralOrAHeapLosesTheArticleRatherThanWearingItWrong() throws IOException
+	{
+		String loot = "{\"type\": \"lootWorth\", \"minimum\": 1000000}";
+		assertEquals("That's Coins. That's Coins!", says(loot,
+			"That's a {item}. That's a {item}!", TriggerEvent.loot(1_500_000, "Coins")));
+		assertEquals("Dragon claws! I need to sit down.", says(loot,
+			"A {item}! I need to sit down.", TriggerEvent.loot(1_500_000, "Dragon claws")));
+
+		String examine = "{\"type\": \"examinedThing\"}";
+		assertEquals("I looked where you looked. I saw Soft clay.", says(examine,
+			"I looked where you looked. I saw a {target}.", TriggerEvent.examinedThing("Soft clay")));
+		String left = "{\"type\": \"noticed\", \"is\": \"valuable\"}";
+		assertEquals("You're walking away from Coins.", says(left,
+			"You're walking away from a {thing}.", TriggerEvent.noticed("valuable", "Coins")));
+		assertEquals("You're walking away from an Abyssal whip.", says(left,
+			"You're walking away from a {thing}.", TriggerEvent.noticed("valuable", "Abyssal whip")));
+		// A name that only looks plural keeps what it had.
+		assertEquals("Very much a Brutus.", says(examine,
+			"Very much a {target}.", TriggerEvent.examinedThing("Brutus")));
+	}
+
+	@Test
+	public void anArticleInFrontOfADescribingPlaceholderStays() throws IOException
+	{
+		// "A {skill} level": the article belongs to "level", so Hitpoints keeps
+		// it, and only the sound of the skill picks a or an.
+		String level = "{\"type\": \"levelUp\", \"names\": [\"*\"]}";
+		assertEquals("A Hitpoints level, noted.", says(level,
+			"A {skill} level, noted.", TriggerEvent.levelUp("Hitpoints", 50)));
+		assertEquals("An Agility level, noted.", says(level,
+			"A {skill} level, noted.", TriggerEvent.levelUp("Agility", 50)));
+	}
+
 	// -------------------------------------------------------------- mirroring
 
 	@Test

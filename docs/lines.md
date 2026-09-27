@@ -1319,7 +1319,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - You've left {thing} here.
 - The {thing}. It's still on the ground.
 - I'll stand by the {thing} until you notice it.
-- That's a {thing} you're walking away from.
+- You're walking away from a {thing}.
 
 ### `noticed-nest`
 
@@ -2324,7 +2324,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - That's a {memoryWho}. Last time it was {memory}.
 - A {memoryWho}. I remember {memory}, {memoryWhen}.
 - Mind. {memoryWho}. I have a page on those and it is not a kind one.
-- There's the {memoryWho}. {memory}, {memoryWhere}. I was there.
+- There's the {memoryWho}. {memory}{memoryWhere}. I was there.
 
 ### `favour-remembered`
 

@@ -144,6 +144,32 @@ public class PhraseQualityTest
 		assertTrue(String.join("\n  ", problems), problems.isEmpty());
 	}
 
+	@Test
+	public void theWhereOfAMemoryFollowsItsWordDirectly() throws IOException
+	{
+		// {memoryWhere} brings its own space - " in Mining Guild", or nothing
+		// when the place is not known - so it goes straight after the word it
+		// belongs to. "{memory}, {memoryWhere}" said "the way that went with
+		// the Dwarf,  in Mining Guild", and would have said ", ." without one.
+		List<String> problems = new ArrayList<>();
+		for (SpeechRule rule : shipped())
+		{
+			if (rule.say == null)
+			{
+				continue;
+			}
+			for (String line : rule.say)
+			{
+				int at = line.indexOf("{memoryWhere}");
+				if (at > 0 && (line.charAt(at - 1) == ' ' || line.charAt(at - 1) == ','))
+				{
+					problems.add(rule.id + ": \"" + line + "\"");
+				}
+			}
+		}
+		assertTrue(String.join("\n  ", problems), problems.isEmpty());
+	}
+
 	/**
 	 * A group that speaks should have more than a couple of things to say.
 	 *

@@ -467,7 +467,10 @@ follower has a stamp to measure from). On `killCount`: `{boss}`, `{count}`,
 
 ### Other rule fields
 
-- `output` - `overhead`, `chatbox`, or `both`. Falls back to the config default.
+- `output` - `overhead`, `chatbox`, or `both`. Only the overhead half counts:
+  `chatbox` means no overhead line. Every line reaches the chatbox when **Also
+  show lines in the chatbox** is on, and none does when it is off. Falls back
+  to the config default.
 - `group` - used by the **Phrases** config section to silence whole categories.
   The built-in toggles cover `boss`, `health`, `area`, `idle`, `gear`, `quest`,
   `combat`, `mimic`, `memory`, `souvenir`, `bet` and `clock`; anything else goes

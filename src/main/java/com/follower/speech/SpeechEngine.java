@@ -118,6 +118,9 @@ public class SpeechEngine
 	/** The wind-down stops growing here: never rarer than one per this many gaps. */
 	private static final long TRAIL_CAP_GAPS = 200;
 
+	/** The placeholders that hold a player's name: the player's own, whoever came or went, whoever spoke. */
+	private static final Set<String> PLAYER_NAMES = Set.of("player", "name", "speaker");
+
 	private boolean isIdleRemark(SpeechRule rule)
 	{
 		return rule.when != null && rule.when.usesType("idle") && !rule.isOccasion();
@@ -945,7 +948,7 @@ public class SpeechEngine
 	{
 		String template = rule.pickPhrase(recentLineSet,
 			line -> getContext().lineWear(line));
-		String text = substitute(template, event);
+		String text = substitute(template, event, null, true);
 		Integer animation = rule.resolveAnimation(event);
 
 		// A mirroring rule triggered by something OTHER than an animation event
@@ -1123,10 +1126,10 @@ public class SpeechEngine
 			// moment still know them; a placeholder with nothing to say drops
 			// the phrase back to its plain form rather than filing a hole.
 			boolean[] incomplete = {false};
-			String phrase = substitute(rule.remember.as, event, incomplete);
+			String phrase = substitute(rule.remember.as, event, incomplete, false);
 			if (incomplete[0] && rule.remember.plain != null)
 			{
-				phrase = substitute(rule.remember.plain, event, null);
+				phrase = substitute(rule.remember.plain, event, null, false);
 			}
 			String who = event.getPlaceholders().getOrDefault("npc", "");
 			if (who.isEmpty())
@@ -1157,11 +1160,14 @@ public class SpeechEngine
 	/** Replaces {@code {placeholder}} tokens from the event and the state snapshot. */
 	private String substitute(String template, TriggerEvent event)
 	{
-		return substitute(template, event, null);
+		return substitute(template, event, null, false);
 	}
 
-	/** @param incomplete set to true at [0] when a known placeholder resolved to nothing */
-	private String substitute(String template, TriggerEvent event, boolean[] incomplete)
+	/**
+	 * @param incomplete set to true at [0] when a known placeholder resolved to nothing
+	 * @param spoken whether this is a line to be said, whose sentences open on a capital
+	 */
+	private String substitute(String template, TriggerEvent event, boolean[] incomplete, boolean spoken)
 	{
 		if (template == null || template.indexOf('{') < 0)
 		{
@@ -1219,10 +1225,80 @@ public class SpeechEngine
 			{
 				incomplete[0] = true;
 			}
+			if (replacement != null && !replacement.isEmpty())
+			{
+				// "a {x} level" describes the level; "a {x}." is the x itself.
+				boolean endsPhrase = close + 2 >= template.length()
+					|| template.charAt(close + 1) != ' '
+					|| !Character.isLetter(template.charAt(close + 2));
+				replacement = agreeArticle(out, replacement, endsPhrase);
+			}
+			// The values are written for the middle of a sentence - "a feather",
+			// "the local menace", "two minutes" - so one that opens a sentence
+			// takes the capital the template left for it. A player's name is
+			// spelled as its owner chose, so it keeps its own case.
+			if (spoken && replacement != null && !replacement.isEmpty()
+				&& !PLAYER_NAMES.contains(key) && opensSentence(template, i))
+			{
+				replacement = Character.toUpperCase(replacement.charAt(0)) + replacement.substring(1);
+			}
 			out.append(replacement == null ? template.substring(i, close + 1) : replacement);
 			i = close + 1;
 		}
 
 		return out.toString();
+	}
+
+	/**
+	 * Makes an "a" the template wrote before a placeholder fit what filled it:
+	 * an Eclectic impling, an 80. When the value ends the phrase and takes no
+	 * article at all - Coins, soft clay - the article goes, and its capital
+	 * moves onto the value. Returns the value to append.
+	 */
+	private static String agreeArticle(StringBuilder out, String value, boolean endsPhrase)
+	{
+		int space = out.length() - 1;
+		if (space < 1 || out.charAt(space) != ' ')
+		{
+			return value;
+		}
+		int start = space;
+		while (start > 0 && Character.isLetter(out.charAt(start - 1)))
+		{
+			start--;
+		}
+		String written = out.substring(start, space);
+		if (!written.equalsIgnoreCase("a") && !written.equalsIgnoreCase("an"))
+		{
+			return value;
+		}
+		boolean capital = Character.isUpperCase(written.charAt(0));
+		if (endsPhrase && Words.takesNoArticle(value))
+		{
+			out.setLength(start);
+			return capital ? Character.toUpperCase(value.charAt(0)) + value.substring(1) : value;
+		}
+		String fits = Words.article(value);
+		out.replace(start, space, capital ? Character.toUpperCase(fits.charAt(0)) + fits.substring(1) : fits);
+		return value;
+	}
+
+	/**
+	 * Whether the placeholder at {@code at} opens a sentence: the start of the
+	 * line, or after a full stop, a question or an exclamation. Not after an
+	 * ellipsis, which trails a sentence off rather than ending it.
+	 */
+	private static boolean opensSentence(String template, int at)
+	{
+		if (at == 0)
+		{
+			return true;
+		}
+		if (at < 2 || template.charAt(at - 1) != ' ')
+		{
+			return false;
+		}
+		char end = template.charAt(at - 2);
+		return end == '!' || end == '?' || (end == '.' && (at < 3 || template.charAt(at - 3) != '.'));
 	}
 }

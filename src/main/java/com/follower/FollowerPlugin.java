@@ -7085,10 +7085,18 @@ public class FollowerPlugin extends Plugin
 		{
 			return null;
 		}
+		String boss = m.group(1).trim();
+		// The agility courses and the herbiboar are counted in the same words,
+		// "Your Varrock Rooftop lap count is: 25.", and a lap is not a kill:
+		// the boss lines made it "That makes 25 Varrock Rooftop lap."
+		if (boss.endsWith(" lap") || boss.endsWith(" harvest") || boss.endsWith(" Total Ticket"))
+		{
+			return null;
+		}
 		try
 		{
 			return new java.util.AbstractMap.SimpleImmutableEntry<>(
-				m.group(1).trim(), Integer.parseInt(m.group(2).replace(",", "")));
+				boss, Integer.parseInt(m.group(2).replace(",", "")));
 		}
 		catch (NumberFormatException e)
 		{
@@ -7307,7 +7315,10 @@ public class FollowerPlugin extends Plugin
 			return;
 		}
 		NPC npc = (NPC) event.getActor();
-		if (npc.getName() == null || event.getOverheadText() == null)
+		// An NPC with no name of its own answers "null", and the follower
+		// took dictation from it: "Noted, null. Volume down next time."
+		if (npc.getName() == null || "null".equals(npc.getName())
+			|| event.getOverheadText() == null)
 		{
 			return;
 		}
@@ -9651,13 +9662,13 @@ public class FollowerPlugin extends Plugin
 	}
 
 	/**
-	 * Whether a line goes to the chatbox: the mirror setting sends every line
-	 * there, and a rule whose output names the chatbox goes regardless. One
-	 * test, so one post.
+	 * Whether a line goes to the chatbox: the mirror setting alone decides,
+	 * as it did in 1.4.0. A rule's output only chooses the overhead, so with
+	 * the setting off a "both" line stays out of the chatbox.
 	 */
 	static boolean postsToChatbox(boolean mirrorToChat, SpeechOutput output)
 	{
-		return mirrorToChat || output.showsChatbox();
+		return mirrorToChat;
 	}
 
 	private void speakNow(Utterance utterance)

@@ -150,7 +150,7 @@ public class GiftTest
 
 		assertEquals("the trade, in words", 1, h.firedBy("gifted-swap").size());
 		assertTrue("naming what goes out",
-			h.firedBy("gifted-swap").get(0).text.contains("a nice flat rock"));
+			h.firedBy("gifted-swap").get(0).text.contains("nice flat rock"));
 		assertEquals("the gift took the pocket",
 			"the feather you found me", h.engine.getContext().getSouvenir());
 		assertFalse("and the wish is spent, so the option finally goes away",
@@ -185,7 +185,7 @@ public class GiftTest
 		boolean mentioned = false;
 		for (Harness.Spoken s : h.spoken)
 		{
-			mentioned |= s.text.contains("the feather you found me");
+			mentioned |= s.text.contains("feather you found me");
 		}
 		assertTrue("a mention reads as the gift by label alone", mentioned);
 	}

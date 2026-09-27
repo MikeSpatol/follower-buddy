@@ -111,7 +111,8 @@ public class MilestonesTest
 		h.dispatch(TriggerEvent.levelUp("Agility", 71, 1501, 1500, 40, 40, 0, 11 * DAY, 2 * DAY));
 		h.gameTicks(3);
 		String line = said(h, "level-after-a-gap");
-		assertTrue("eleven days, in words: " + line, line.contains("eleven days"));
+		assertTrue("eleven days, in words: " + line,
+			line.toLowerCase(java.util.Locale.ROOT).contains("eleven days"));
 
 		// No stamp to measure from is not a gap of any size.
 		Harness first = bundled();
@@ -157,6 +158,24 @@ public class MilestonesTest
 			"Your subdued Wintertodt count is: 1,024.").getValue());
 		assertNull(FollowerPlugin.parseKillCount("Your Slayer task is complete."));
 		assertNull(FollowerPlugin.parseKillCount("You have 41 kills."));
+	}
+
+	@Test
+	public void aLapIsNotAKill()
+	{
+		// The agility courses count in the boss's own words - "Your Varrock
+		// Rooftop lap count is: 25." - and the boss lines answered it with
+		// "That makes 25 Varrock Rooftop lap."
+		assertNull(FollowerPlugin.parseKillCount(
+			"Your Varrock Rooftop lap count is: <col=ff0000>25</col>."));
+		assertNull(FollowerPlugin.parseKillCount(
+			"Your Draynor Village Rooftop lap count is: <col=ff0000>100</col>."));
+		assertNull(FollowerPlugin.parseKillCount(
+			"Your Gnome Stronghold Agility lap count is: 12."));
+		assertNull(FollowerPlugin.parseKillCount(
+			"Your Herbiboar harvest count is: 5."));
+		assertEquals("Vorkath", FollowerPlugin.parseKillCount(
+			"Your Vorkath kill count is: <col=ff0000>41</col>.").getKey());
 	}
 
 	@Test

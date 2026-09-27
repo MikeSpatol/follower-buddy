@@ -3,6 +3,8 @@ package com.follower.speech;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Numbers and stretches of time in words: the difference between a counter
@@ -59,5 +61,54 @@ public class WordsTest
 		assertEquals("four months", Words.duration(130 * 24 * 60 * minute));
 		assertEquals("a year", Words.duration(400L * 24 * 60 * minute));
 		assertEquals("two years", Words.duration(800L * 24 * 60 * minute));
+	}
+
+	@Test
+	public void theArticleGoesBySoundNotSpelling()
+	{
+		assertEquals("an", Words.article("Eclectic impling"));
+		assertEquals("an", Words.article("Earth impling"));
+		assertEquals("an", Words.article("Essence impling"));
+		assertEquals("a", Words.article("Young impling"));
+		assertEquals("a", Words.article("Dwarf"));
+		assertEquals("an", Words.article("Agility"));
+		assertEquals("an", Words.article("Uncut onyx"));
+		assertEquals("a", Words.article("Unicorn"));
+		assertEquals("a", Words.article("One-eyed rat"));
+		assertEquals("an", Words.article("hour"));
+		assertEquals("an", Words.article("8"));
+		assertEquals("an", Words.article("80"));
+		assertEquals("an", Words.article("11"));
+		assertEquals("an", Words.article("18"));
+		assertEquals("a", Words.article("31"));
+		assertEquals("a", Words.article("110"));
+	}
+
+	@Test
+	public void pluralsHeapsAndTheNamedTakeNoArticle()
+	{
+		assertTrue(Words.takesNoArticle("Coins"));
+		assertTrue(Words.takesNoArticle("Dragon bones"));
+		assertTrue(Words.takesNoArticle("Onyx bolts (e)"));
+		assertTrue(Words.takesNoArticle("Soft clay"));
+		assertTrue(Words.takesNoArticle("charcoal"));
+		assertTrue(Words.takesNoArticle("Hanging meat"));
+		assertTrue(Words.takesNoArticle("The Leviathan"));
+		assertFalse(Words.takesNoArticle("Cerberus"));
+		assertFalse(Words.takesNoArticle("Scurrius"));
+		assertFalse(Words.takesNoArticle("Venenatis"));
+		assertFalse(Words.takesNoArticle("Tempoross"));
+		assertFalse(Words.takesNoArticle("Jar of souls"));
+		assertFalse(Words.takesNoArticle("ball of wool"));
+		assertFalse(Words.takesNoArticle("Clue scroll (elite)"));
+		assertFalse(Words.takesNoArticle("Eclectic impling"));
+		assertFalse(Words.takesNoArticle("80"));
+		// Review: one of a kind despite the s, and glass had by the piece.
+		assertFalse(Words.takesNoArticle("Cyclops"));
+		assertFalse(Words.takesNoArticle("Nylocas Ischyros"));
+		assertFalse(Words.takesNoArticle("Nylocas Vasilias"));
+		assertFalse(Words.takesNoArticle("Lantern lens"));
+		assertFalse(Words.takesNoArticle("Beer glass"));
+		assertFalse(Words.takesNoArticle("Magnifying glass"));
 	}
 }

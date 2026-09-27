@@ -66,7 +66,7 @@ public class NicknameTest
 		assertEquals("the gravedigger", context.getNickname());
 		assertFalse(context.hasNicknameToOffer());
 		assertEquals(1, h.firedBy("nickname-accepted").size());
-		assertTrue(h.firedBy("nickname-accepted").get(0).text.contains("the gravedigger"));
+		assertTrue(h.firedBy("nickname-accepted").get(0).text.contains("The gravedigger"));
 		assertTrue(h.firedBy("nickname-refused").isEmpty());
 		assertTrue("and a yes to the name is not a yes to an outing",
 			h.spoken.stream().noneMatch(spoken -> spoken.rule.id.startsWith("want-")));
