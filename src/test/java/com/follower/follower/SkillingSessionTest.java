@@ -1495,6 +1495,33 @@ public class SkillingSessionTest
 	}
 
 	@Test
+	public void theStintIsTheWholeRunOfTreesNotTheLastOne()
+	{
+		// An hour of chopping earns its bow though no single tree lasted two
+		// minutes: the stint runs from the first borrow, and the axe carried
+		// to the next tree does not start it again.
+		workTheTree();
+		tick(SkillingController.BEAT_AFTER_TICKS / 2);
+		game.at(56, 50, 0);
+		tick(2);
+		assertFalse("the first tree let go", skilling.isWorking());
+
+		skilling.noteClick("Chop down", "Yew tree", TREE_ID + 2,
+			new WorldPoint(58, 50, 0), null, null);
+		game.animating(CHOP);
+		tick(1 + SkillingController.SEAT_AFTER_TICKS);
+		assertTrue("the next tree is work", skilling.isWorking());
+		tick(SkillingController.BEAT_AFTER_TICKS / 2);
+		follower.animations.clear();
+
+		game.at(62, 50, 0);
+		tick(2 + SkillingController.TOOL_GRACE_TICKS);
+		assertEquals("neither tree took two minutes, the two together did",
+			Collections.singletonList(858), follower.animations);
+		assertEquals(0, held);
+	}
+
+	@Test
 	public void differentWorkSwapsTheKeptTool()
 	{
 		workTheTree();
@@ -2567,6 +2594,8 @@ public class SkillingSessionTest
 		tick(100);
 		assertEquals("kept through the banking", seat, follower.stayingAt);
 		assertTrue(skilling.holdsTheFeet());
+		assertEquals("and the axe with it, long past the grace a walk to the next tree gets",
+			1351, held);
 
 		// Back within three tiles, and no work taken up: a gatherer's seat
 		// waits a moment for the first swing, then lets go.
@@ -2717,6 +2746,20 @@ public class SkillingSessionTest
 		game.at(55, 50, 0);
 		tick(1);
 		assertTrue("forty-five tiles is not a bank trip", follower.following);
+		assertFalse(skilling.holdsTheFeet());
+	}
+
+	@Test
+	public void goingQuietByABankIsNoTripToIt()
+	{
+		// A walk-off or the bank opening is the trip. The player simply
+		// stopping is neither, bank or no bank, and the seat goes at once.
+		game.placeObject(9030, "Bank booth", BOOTH.getX(), BOOTH.getY(), 0);
+		workTheTree();
+		game.animating(-1);
+		tick(SkillingController.QUIET_END_TICKS + 1);
+		assertFalse(skilling.isWorking());
+		assertTrue("let go, not kept for a trip nobody is making", follower.following);
 		assertFalse(skilling.holdsTheFeet());
 	}
 
@@ -3183,6 +3226,24 @@ public class SkillingSessionTest
 		tick(2);
 		assertNotEquals("off the player's new tile", at, follower.stayingAt);
 		assertTrue("to another side of the same yew", squareOnTheTree(follower.stayingAt));
+	}
+
+	@Test
+	public void somebodyElseStandingAtTheTreeKeepsTheirTile()
+	{
+		chopAlongside();
+		WorldPoint first = follower.stayingAt;
+		assertTrue(squareOnTheTree(first));
+
+		// The same yew with another player on the side it chose.
+		setUp();
+		game.at(52, 50, 0);
+		game.spawnPlayer(first.getX() - 52, first.getY() - 50);
+		chopAlongside();
+		tick(1);
+		assertNotEquals("their tile is theirs", first, follower.stayingAt);
+		assertTrue("another side of the same yew", squareOnTheTree(follower.stayingAt));
+		assertEquals(CHOP, follower.poseOverride);
 	}
 
 	@Test
@@ -4169,6 +4230,26 @@ public class SkillingSessionTest
 		assertEquals("the saw, not the notes", Borrow.SAW, held);
 	}
 
+	@Test
+	public void aHandBusyAtTheSeatIsAskedAgainOnTheNextDrop()
+	{
+		// The scroll out for something else when the seat is taken is not the
+		// saw refused. A refusal is remembered for the session; a busy hand
+		// only until the next drop.
+		WorldPoint hotspot = new WorldPoint(52, 50, 0);
+		skilling.noteClick("Build", "Chair space", 15410, hotspot, null, null);
+		game.animating(HAMMER);
+		tick(1);
+		held = ErrandController.SCROLL_PROP;
+		tick(SkillingController.SEAT_AFTER_TICKS);
+		assertNotNull(follower.stayingAt);
+		assertEquals("no saw over somebody else's scroll", ErrandController.SCROLL_PROP, held);
+
+		held = 0;
+		skilling.noteXpDrop(Skill.CONSTRUCTION);
+		assertEquals("the hand free again, and the saw in it", Borrow.SAW, held);
+	}
+
 	// ------------------------------------------------------------- firemaking
 
 	private static final int FIRE_ID = 26185;
@@ -4203,6 +4284,29 @@ public class SkillingSessionTest
 		tick(SkillingController.FIRE_WARM_TICKS);
 		assertTrue("and back on foot", follower.following);
 		assertFalse(skilling.holdsTheFeet());
+	}
+
+	@Test
+	public void aLinePickedUpAgainAfterABreakCountsFromOne()
+	{
+		// The count is of one line of fires. Three, a break of over a minute,
+		// and the next is the first of a new line rather than the fourth.
+		game.placeObject(FIRE_ID, "Fire", 0, 0, 0);
+		tick(1);
+		for (int i = 0; i < 3; i++)
+		{
+			lightAFire(50 - i);
+		}
+		tick(120);
+		for (int i = 3; i < 6; i++)
+		{
+			lightAFire(50 - i);
+			assertTrue("fire " + (i - 2) + " of the new line is nobody's business",
+				follower.following);
+		}
+		game.at(43, 50, 0);
+		skilling.objectSpawned(FIRE_ID, new WorldPoint(44, 50, 0), null);
+		assertNotNull("its fourth: over to it", follower.stayingAt);
 	}
 
 	@Test

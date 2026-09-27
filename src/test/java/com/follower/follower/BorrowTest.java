@@ -326,6 +326,10 @@ public class BorrowTest
 		assertEquals("a small net is a net", 303, Borrow.toolFor("fishing", 621, none));
 		assertEquals("a big net likewise", 305, Borrow.toolFor("fishing", 620, none));
 		assertEquals("and a cage is a pot", 301, Borrow.toolFor("fishing", 619, none));
+		assertEquals("an unknown harpoon in the hand is the harpoon",
+			99003, Borrow.toolFor("fishing", 618, none, 99003, "Obsidian harpoon"));
+		assertEquals("and an unknown rod the rod",
+			99004, Borrow.toolFor("fishing", 622, none, 99004, "Obsidian fishing rod"));
 
 		assertEquals(5329, Borrow.toolFor("farming", -1, none));
 		assertEquals(8794, Borrow.toolFor("construction", -1, none));
