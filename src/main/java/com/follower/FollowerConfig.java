@@ -820,9 +820,10 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "keepsCompany",
 		name = "Keeps you company while you skill",
-		description = "While you work a tree, a rock or a fishing spot it takes a seat"
-			+ " off to your side, facing the work, and stays out of the way of"
-			+ " your next click. Untick to keep it at your heel.",
+		description = "While you chop, mine or fish it works alongside you: the same"
+			+ " tree, rock or spot when there is room, the next one along when"
+			+ " there is not. At a farming patch it works the patch with you. Now"
+			+ " and then it stops for its notes. Untick to keep it at your heel.",
 		section = skillingSection,
 		position = 0
 	)
@@ -834,9 +835,10 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "borrowsTools",
 		name = "Borrows your tools",
-		description = "Holds a copy of your axe or pickaxe for the session - the one"
-			+ " you are wearing, or a bronze one - and gives it back with a bow"
-			+ " when you are done.",
+		description = "Holds a copy of the tool the work wants for the session - your"
+			+ " axe or pickaxe (the one you are wearing, or a bronze one), a net,"
+			+ " a rod, a rake - and gives it back with a bow when you are done."
+			+ " Without it, it keeps you company with its notes instead.",
 		section = skillingSection,
 		position = 1
 	)

@@ -6,6 +6,7 @@ import com.follower.speech.TriggerEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -16,13 +17,17 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.Animation;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
 import net.runelite.api.GameObject;
 import net.runelite.api.NPC;
+import net.runelite.api.NPCComposition;
+import net.runelite.api.ObjectComposition;
 import net.runelite.api.Player;
 import net.runelite.api.Skill;
 import net.runelite.api.Tile;
+import net.runelite.api.WallObject;
 import net.runelite.api.WorldView;
 import net.runelite.api.coords.WorldPoint;
 
@@ -102,6 +107,18 @@ public class SkillingController
 	/** Same-name neighbours this close are the player's likely next click. */
 	private static final int NEIGHBOUR_TILES = 2;
 
+	/** How far off the player the follower looks for something of its own to work. */
+	static final int ALONGSIDE_TILES = 6;
+
+	/** Work tiles asked of the pathing, best first, before it settles for a seat. */
+	static final int ALONGSIDE_PATH_ASKS = 6;
+
+	/** Steps beyond the straight line it will walk to reach one. */
+	static final int ALONGSIDE_DETOUR_STEPS = 4;
+
+	/** Its own work gone, a look at where it was before it chooses again. */
+	static final int WORK_GONE_TICKS = 3;
+
 	/** A moved fishing spot turns up about this far from the old one. */
 	private static final int NEW_SPOT_TILES = 8;
 
@@ -151,6 +168,9 @@ public class SkillingController
 	/** The trap watcher stands two tiles off the trap, for two minutes at most. */
 	static final int TRAP_WATCH_TILES = 2;
 	static final int TRAP_WATCH_TICKS = 200;
+
+	/** A trap run is over once the player is this far from its first trap. */
+	static final int TRAP_RUN_TILES = 10;
 	private static final int TRAP_LOOK_TICKS = 3;
 
 	/** A fire lit within this of where the player just stood is theirs. */
@@ -313,12 +333,18 @@ public class SkillingController
 	 * seat two tiles off it.
 	 */
 	private int layTick = -1000;
+	/** Where the player stood to lay it: the trap turns up there, after they step off. */
+	private WorldPoint layTile;
 	private WorldPoint trapTile;
 	private int trapId;
 	private WorldPoint trapSeat;
-	private boolean trapAway;
 	private int trapUntil;
 	private int trapLookTicks;
+
+	/** The trap watcher's notes: out now and then over a run, and when next. */
+	private boolean trapReading;
+	private int trapReadAt;
+	private int trapReadUntil;
 
 	/** The fire line: fires counted, and the visit to every fourth. */
 	private int fires;
@@ -493,6 +519,11 @@ public class SkillingController
 	 */
 	public void setExcused(boolean excused)
 	{
+		if (excused && !this.excused && session != null)
+		{
+			// The moment has the feet: a gatherer's scroll and swing stop too.
+			company.excuse();
+		}
 		this.excused = excused;
 	}
 
@@ -542,8 +573,8 @@ public class SkillingController
 
 	/**
 	 * The same with the option's target, tags off. Compost goes on a patch
-	 * as "Use" with the compost named in the target, and the patch inspector
-	 * steps back from it.
+	 * as "Use" with the compost named in the target, and the follower turns
+	 * away from it where it stands.
 	 */
 	public void noteMenuOption(String plain, String target)
 	{
@@ -552,8 +583,7 @@ public class SkillingController
 			&& "Use".equalsIgnoreCase(lastOption) && target != null
 			&& target.toLowerCase(Locale.ROOT).contains("compost"))
 		{
-			company.compost(session.targetTile, session.targetMax);
-			syncTheSeat();
+			company.compost();
 		}
 	}
 
@@ -673,13 +703,22 @@ public class SkillingController
 		String name = targetName == null ? "" : targetName;
 		int now = client.getTickCount();
 
-		if (session != null && !session.standing && name.equals(session.targetName)
+		// The same patch whatever its crop is called now and whatever is done to
+		// it; anything else is the same work only by the same option - a net
+		// at a spot where the player harpooned is new work, with its own tool.
+		boolean samePatch = session != null && targetId == session.targetId
+			&& min.equals(session.targetTile);
+		if (session != null && !session.standing
+			&& (name.equals(session.targetName) && plain.equalsIgnoreCase(session.option)
+				|| samePatch)
 			&& min.getPlane() == session.targetTile.getPlane()
 			&& (min.distanceTo(session.targetTile) <= WALK_OFF_TILES
 				|| (session.depleted && "fishing".equals(session.activity)
 					&& min.distanceTo(session.targetTile) <= NEW_SPOT_TILES)))
 		{
+			boolean moved = !min.equals(session.targetTile);
 			session.targetId = targetId;
+			session.targetName = name;
 			session.targetTile = min;
 			session.targetMax = max == null ? min : max;
 			session.targetNpc = npc;
@@ -694,7 +733,12 @@ public class SkillingController
 			session.settling = true;
 			reseat = true;
 			seatDueTick = now + seatAfter();
-			company.aimAt(faceTile(), session.activity, modeFor(here), now);
+			if (moved)
+			{
+				// Not for the same target: the compost's turn away, queued a
+				// moment ago by the same click, would be wiped with the looks.
+				company.aimAt(faceTile(), session.activity, modeFor(here), now);
+			}
 			log.debug("Work moved to {} at {}", name, min);
 			return;
 		}
@@ -715,6 +759,8 @@ public class SkillingController
 		{
 			// The trap object turns up on the player's tile a moment later.
 			layTick = client.getTickCount();
+			Player local = client.getLocalPlayer();
+			layTile = local == null ? null : local.getWorldLocation();
 		}
 		// A click parked during a session is the player moving on to
 		// something else; the swing that follows is its proof, and the old
@@ -773,6 +819,11 @@ public class SkillingController
 	public int noteXpDrop(Skill skill)
 	{
 		int now = client.getTickCount();
+		if (skill == Skill.HUNTER && trapSeat != null)
+		{
+			// A catch: the run is still on.
+			trapUntil = now + TRAP_WATCH_TICKS;
+		}
 		if (pending != null)
 		{
 			startPending();
@@ -846,7 +897,12 @@ public class SkillingController
 		}
 		if (trapTile != null)
 		{
-			if (id != trapId && covers(min, max, trapTile))
+			if (!covers(min, max, trapTile))
+			{
+				// The next trap of the run: it goes on, the follower where it is.
+				maybeTheTrap(id, min, max);
+			}
+			else if (id != trapId)
 			{
 				// The trap sprang, or fell: a glance at the player.
 				trapId = id;
@@ -888,6 +944,12 @@ public class SkillingController
 	/** The interacted NPC going - a fishing spot moving - is its depletion. */
 	public void npcDespawned(NPC npc)
 	{
+		if (alongside != null && npc != null && npc == alongside.npc
+			&& ticksSinceLoading > LOAD_SETTLE_TICKS)
+		{
+			// The spot it was fishing moved on.
+			loseTheWork(client.getTickCount());
+		}
 		if (session == null || npc == null || npc != session.targetNpc
 			|| ticksSinceLoading <= LOAD_SETTLE_TICKS)
 		{
@@ -973,11 +1035,13 @@ public class SkillingController
 		pending = null;
 		releaseTicks = 0;
 		excused = false;
+		alongside = null;
 		lastFreeSlots = -1;
 		halfArmed = true;
 		ticksSinceLoading = 1000;
 		previousHere = null;
 		layTick = -1000;
+		layTile = null;
 	}
 
 	// ---------------------------------------------------------------- words
@@ -1218,6 +1282,7 @@ public class SkillingController
 		{
 			session.lastAnimation = local.getAnimation();
 			session.lastEvidenceTick = now;
+			noteTheWorkPose(local.getAnimation(), now);
 			if (session.settling)
 			{
 				// The first swing at the moved target: this is where they
@@ -1262,6 +1327,11 @@ public class SkillingController
 			{
 				reseat = false;
 				seatDueTick = now + SEAT_RETRY_TICKS;
+				if (gathering())
+				{
+					// Whether it can work alongside is whether it has the tool.
+					maybeBorrow();
+				}
 				takeSeat(here);
 				maybeBorrow();
 			}
@@ -1273,14 +1343,33 @@ public class SkillingController
 			// Not while the company is off it on purpose, peering.
 			if (follower.stayAt(seat))
 			{
-				follower.setStayFaceTile(faceTile());
-				company.seated(seat, faceTile());
+				seatTheCompany(now);
 			}
 			else
 			{
 				seat = null;
 				company.unseated();
 			}
+		}
+
+		// Working alongside: the player coming to work from its tile moves it
+		// over, and its own tree, rock or spot going is a look and a choice.
+		Alongside at = work();
+		if (at != null && farmingPatch())
+		{
+			// The rake to rake, the dibber to plant, bare hands to pick.
+			borrow.swap(Borrow.farmingTool(session.workPose));
+		}
+		if (at != null && here.equals(seat) && local.getAnimation() != -1 && !session.settling)
+		{
+			// Now, not when the retarget that brought them here would have
+			// re-seated it: the two stood on one tile for six ticks.
+			reseat = true;
+			seatDueTick = Math.min(seatDueTick, now);
+		}
+		else if (at != null && !reseat && !stillLive(at))
+		{
+			loseTheWork(now);
 		}
 
 		// The company, last: the session goes on and the seat is settled.
@@ -1301,7 +1390,8 @@ public class SkillingController
 			company.bagFull(lastOption, here);
 		}
 		bagEdge = null;
-		company.tick(now, here, local.getAnimation() != -1, session.activity);
+		company.tick(now, here, local.getAnimation() != -1, session.activity, session.workPose,
+			farmingPatch() && Borrow.farmingTool(session.workPose) == 0);
 		syncTheSeat();
 	}
 
@@ -1382,13 +1472,20 @@ public class SkillingController
 		dropTheFireLine(true);
 		letGoOfTheNotes();
 		session = opened;
+		boolean workCarried = carried != null && alongside != null && alongside.from.equals(carried)
+			&& !carried.equals(opened.workSpot) && stillLive(alongside);
 		boolean carry = carried != null && modeFor(opened.workSpot) == KeepingCompany.Mode.GATHERING
 			&& carried.equals(follower.getStayTile())
-			&& stillASeat(opened.workSpot, opened.targetTile, opened.targetMax, reservedTiles(), carried);
+			&& (workCarried || stillASeat(opened.workSpot, opened.targetTile, opened.targetMax,
+				reservedTiles(), carried));
 		if (carry)
 		{
 			bankTrip = false;
 			bankTripConfirmed = false;
+			if (!workCarried)
+			{
+				alongside = null;
+			}
 		}
 		else
 		{
@@ -1482,6 +1579,7 @@ public class SkillingController
 		if (seat != null && !bankTrip)
 		{
 			seat = null;
+			alongside = null;
 			// The patch inspector's notes, at the end and only then.
 			int note = notes ? company.endNote() : 0;
 			endNoteOut = note > 0;
@@ -1637,6 +1735,12 @@ public class SkillingController
 		}
 		Player local = client.getLocalPlayer();
 		WorldPoint here = local == null ? null : local.getWorldLocation();
+		Alongside at = work();
+		if (at != null && !at.min.equals(session.targetTile))
+		{
+			// Working its own, next along: it keeps at it.
+			return;
+		}
 		company.depleted(session.activity, client.getTickCount() - session.targetSinceTick,
 			next, here, client.getTickCount());
 	}
@@ -1663,11 +1767,43 @@ public class SkillingController
 		int now = client.getTickCount();
 		Player local = client.getLocalPlayer();
 		WorldPoint here = local == null ? null : local.getWorldLocation();
-		if (now - layTick > LAY_SETTLE_TICKS || here == null || !covers(min, max, here))
+		WorldPoint laidAt = layTile != null ? layTile : here;
+		if (now - layTick > LAY_SETTLE_TICKS || here == null || laidAt == null
+			|| !covers(min, max, laidAt))
 		{
 			return false;
 		}
 		layTick = -1000;
+		if (trapSeat != null)
+		{
+			// Another trap of the run: the run goes on. Only a trap laid where
+			// the follower stands moves it, and then once, still by the first.
+			trapUntil = now + TRAP_WATCH_TICKS;
+			if (covers(min, max, trapSeat))
+			{
+				// Not reading on the move, and not across the traps: the nearest.
+				putTheTrapNotesAway();
+				WorldPoint from = follower.getWorldLocation();
+				List<WorldPoint> ring = ring(trapTile, trapTile, TRAP_WATCH_TILES, here.getPlane());
+				if (from != null)
+				{
+					ring.sort((a, b) -> Integer.compare(square(a, from), square(b, from)));
+				}
+				for (WorldPoint candidate : ring)
+				{
+					if (!candidate.equals(here) && !covers(min, max, candidate)
+						&& follower.goodGround(candidate) && follower.arrivesAt(candidate)
+						&& follower.stayAt(candidate))
+					{
+						trapSeat = candidate;
+						follower.setStayFaceTile(trapTile);
+						log.debug("A trap underfoot; over to {}", candidate);
+						break;
+					}
+				}
+			}
+			return true;
+		}
 		if (bankTrip || fireSeat != null || feetTaken.getAsBoolean() || inCombat.getAsBoolean()
 			|| !follower.isSpawned())
 		{
@@ -1687,9 +1823,11 @@ public class SkillingController
 				trapTile = min;
 				trapId = id;
 				trapSeat = candidate;
-				trapAway = false;
 				trapUntil = now + TRAP_WATCH_TICKS;
 				trapLookTicks = 0;
+				trapReading = false;
+				trapReadAt = now + jitter(KeepingCompany.WORK_STRETCH_TICKS,
+					KeepingCompany.WORK_STRETCH_SPREAD);
 				follower.setStayFaceTile(min);
 				log.debug("Watching the trap at {} from {}", min, candidate);
 				return true;
@@ -1699,10 +1837,12 @@ public class SkillingController
 	}
 
 	/**
-	 * Every tick the trap is watched: the player back within three tiles
-	 * after being away, two minutes, a fight, or the leash snapping (the
-	 * stay is simply gone) all end it. The glance at the player when the
-	 * trap changes runs down here, back to the trap.
+	 * Every tick the trap run is watched, from the one seat by its first
+	 * trap: the player more than ten tiles off it, two minutes with no trap
+	 * laid and no catch, a fight, or the leash snapping (the stay is simply
+	 * gone) end it. Play request: park it, not a walk from trap to trap. The
+	 * glance at the player when the trap changes runs down here, back to the
+	 * trap, and now and then the notes come out.
 	 */
 	private void watchTheTrap(int now, WorldPoint here)
 	{
@@ -1720,12 +1860,7 @@ public class SkillingController
 			dropTheTrap(true);
 			return;
 		}
-		boolean near = here.distanceTo(trapTile) <= WALK_OFF_TILES;
-		if (!near)
-		{
-			trapAway = true;
-		}
-		if (now >= trapUntil || (near && trapAway))
+		if (now >= trapUntil || here.distanceTo(trapTile) > TRAP_RUN_TILES)
 		{
 			dropTheTrap(true);
 			return;
@@ -1734,6 +1869,57 @@ public class SkillingController
 		{
 			follower.setStayFaceTile(trapTile);
 		}
+		readAtTheTraps(now);
+	}
+
+	/** Mostly watching the traps; now and then the notes, where it stands. */
+	private void readAtTheTraps(int now)
+	{
+		if (excused)
+		{
+			// A moment has the follower: not reading through it.
+			putTheTrapNotesAway();
+			return;
+		}
+		if (trapReading)
+		{
+			if (now >= trapReadUntil)
+			{
+				putTheTrapNotesAway();
+				trapReadAt = now + jitter(KeepingCompany.WORK_STRETCH_TICKS,
+					KeepingCompany.WORK_STRETCH_SPREAD);
+			}
+			return;
+		}
+		if (now < trapReadAt || trapLookTicks > 0 || hands.isHolding() || !follower.isSettled()
+			|| !trapSeat.equals(follower.getWorldLocation()) || follower.getPoseOverride() != 0)
+		{
+			return;
+		}
+		hands.hold(ErrandController.SCROLL_PROP);
+		if (hands.isHolding())
+		{
+			follower.setPoseOverride(ErrandController.READ_SCROLL_POSE);
+			trapReading = true;
+			trapReadUntil = now + jitter(KeepingCompany.WORK_BREAK_TICKS,
+				KeepingCompany.WORK_BREAK_SPREAD);
+		}
+	}
+
+	private void putTheTrapNotesAway()
+	{
+		if (!trapReading)
+		{
+			return;
+		}
+		trapReading = false;
+		follower.clearPoseOverride(ErrandController.READ_SCROLL_POSE);
+		hands.release();
+	}
+
+	private int jitter(int base, int spread)
+	{
+		return base + random.nextInt(2 * spread + 1) - spread;
 	}
 
 	/** @param release whether to hand the feet back, when they are still ours */
@@ -1743,6 +1929,7 @@ public class SkillingController
 		{
 			return;
 		}
+		putTheTrapNotesAway();
 		trapSeat = null;
 		trapTile = null;
 		trapLookTicks = 0;
@@ -1785,8 +1972,10 @@ public class SkillingController
 	{
 		// A stump or an emptied rock is not the work any more; and a moment
 		// that has excused the seat has the feet, and the facing, for now.
-		if (session == null || !mirrorsFromHere() || session.depleted || excused)
+		if (session == null || !mirrorsFromHere() || session.depleted || excused
+			|| work() != null)
 		{
+			// Working alongside already: the copy is its own, not a walk over.
 			return false;
 		}
 		WorldPoint at = follower.getWorldLocation();
@@ -2006,6 +2195,498 @@ public class SkillingController
 		boolean xNext = at.getX() == min.getX() - 1 || at.getX() == max.getX() + 1;
 		boolean yNext = at.getY() == min.getY() - 1 || at.getY() == max.getY() + 1;
 		return (xIn && yNext) || (yIn && xNext);
+	}
+
+	// -------------------------------------------------------- work alongside
+
+	/**
+	 * What the follower works, alongside the player: the player's own tree,
+	 * rock or spot when there is room at it, else the next one along of the
+	 * same kind. Play request: at Motherlode, where the player's vein leaves
+	 * no room, "look like they are harvesting some other ore vein". A vein
+	 * is a wall, worked from the one tile across it.
+	 */
+	static final class Alongside
+	{
+		final int id;
+		/** The fishing spot, or null for scenery. */
+		final NPC npc;
+		final boolean wall;
+		final WorldPoint min;
+		final WorldPoint max;
+		/** The tile it works from, which is its seat. */
+		final WorldPoint from;
+		/** A patch: the same patch while it stands, whatever its crop is called now. */
+		final boolean anyState;
+
+		Alongside(int id, NPC npc, boolean wall, WorldPoint min, WorldPoint max, WorldPoint from)
+		{
+			this(id, npc, wall, min, max, from, false);
+		}
+
+		Alongside(int id, NPC npc, boolean wall, WorldPoint min, WorldPoint max, WorldPoint from,
+			boolean anyState)
+		{
+			this.id = id;
+			this.npc = npc;
+			this.wall = wall;
+			this.min = min;
+			this.max = max;
+			this.from = from;
+			this.anyState = anyState;
+		}
+	}
+
+	private Alongside alongside;
+
+	/** The id last seen and found not to loop, so it is not asked about every tick. */
+	private int notAWorkPose;
+
+	/** Its work, while it is seated at it; null when the seat is only a seat. */
+	private Alongside work()
+	{
+		return alongside != null && seat != null && alongside.from.equals(seat) ? alongside : null;
+	}
+
+	private boolean gathering()
+	{
+		return session != null && ("mining".equals(session.activity)
+			|| "woodcutting".equals(session.activity) || "fishing".equals(session.activity));
+	}
+
+	/**
+	 * Whether it works alongside rather than sits: gathering, with the work
+	 * seen and the tool in hand. A target called just "Rocks" is an emptied
+	 * rock, which keeps its "Mine" in the cache; nothing to work there.
+	 */
+	private boolean worksAlongside()
+	{
+		if (session == null || session.standing || session.workPose <= 0)
+		{
+			return false;
+		}
+		if (farmingPatch())
+		{
+			// Bare hands or the tool the work wants; borrowed as it goes.
+			return config.borrowsTools();
+		}
+		return gathering() && !"Rocks".equals(session.targetName) && borrow.isHolding();
+	}
+
+	/**
+	 * Whether it is working the patch with bare hands just now - picking - so
+	 * its own weapon and shield are not left on through the arms.
+	 */
+	public boolean worksBareHanded()
+	{
+		return work() != null && farmingPatch() && Borrow.farmingTool(session.workPose) == 0;
+	}
+
+	/** A visit to a patch, which is worked alongside at the patch itself. */
+	private boolean farmingPatch()
+	{
+		return session != null && "farming".equals(session.activity)
+			&& modeFor(session.workSpot) == KeepingCompany.Mode.PATCH;
+	}
+
+	/**
+	 * The work is the player's LOOPING animation - a swing of the axe, a cast -
+	 * not whatever they played last, which can be a bite to eat. The first
+	 * one seen while only seated moves it to the work.
+	 */
+	private void noteTheWorkPose(int animationId, int now)
+	{
+		boolean farming = "farming".equals(session.activity);
+		if (!gathering() && !farming || animationId == session.workPose
+			|| animationId == notAWorkPose)
+		{
+			return;
+		}
+		if (farming ? !Borrow.farmingWork(animationId) : !loops(animationId))
+		{
+			notAWorkPose = animationId;
+			return;
+		}
+		boolean first = session.workPose == 0;
+		session.workPose = animationId;
+		if (first && seat != null && work() == null)
+		{
+			reseat = true;
+			seatDueTick = now;
+		}
+	}
+
+	/** Whether an animation is an authored loop: the work, not a one-off. */
+	private boolean loops(int animationId)
+	{
+		Animation animation = client.loadAnimation(animationId);
+		return animation != null && animation.getFrameStep() >= 0;
+	}
+
+	/** The company seated the work's way when it has work, the seat's way when not. */
+	private void seatTheCompany(int now)
+	{
+		Alongside at = work();
+		if (at != null)
+		{
+			follower.setStayFaceArea(at.min, at.max);
+			company.seatedAtWork(seat, faceTile(), at.min, at.max, now);
+		}
+		else
+		{
+			follower.setStayFaceTile(faceTile());
+			company.seated(seat, faceTile());
+		}
+	}
+
+	/** Its work went: the swing stops, a look, and a choice again a moment later. */
+	private void loseTheWork(int now)
+	{
+		alongside = null;
+		company.workGone(now);
+		reseat = true;
+		seatDueTick = now + WORK_GONE_TICKS;
+	}
+
+	/**
+	 * Somewhere to work from: the player's own target first, then the next
+	 * one along, near the player and best two tiles off them, a tile it is
+	 * already on before any it would walk to. Only a few are asked of the
+	 * pathing, and only one it arrives on without a long way round.
+	 */
+	private Alongside chooseAlongside(WorldPoint player)
+	{
+		WorldView view = client.getTopLevelWorldView();
+		WorldPoint at = follower.getWorldLocation();
+		if (view == null || at == null)
+		{
+			return null;
+		}
+		Comparator<Alongside> byPlace = Comparator
+			.comparingInt((Alongside a) -> alongsideRank(a.from, player))
+			.thenComparingInt(a -> square(a.from, at));
+		List<Alongside> ranked = ownWork();
+		ranked.sort(byPlace);
+		List<Alongside> others = farmingPatch() ? new ArrayList<>() : neighbours(view, player);
+		others.sort(byPlace);
+		ranked.addAll(others);
+		Set<WorldPoint> taken = othersTiles(view);
+		ranked.removeIf(a -> a.from.equals(player) || taken.contains(a.from)
+			|| a.from.getPlane() != player.getPlane() || a.from.distanceTo(player) > ALONGSIDE_TILES);
+		// A stable sort: one it already stands on first, the order otherwise kept.
+		ranked.sort(Comparator.comparingInt(a -> a.from.equals(at) ? 0 : 1));
+		Set<WorldPoint> asked = new HashSet<>();
+		for (Alongside a : ranked)
+		{
+			if (!asked.add(a.from))
+			{
+				continue;
+			}
+			if (asked.size() > ALONGSIDE_PATH_ASKS)
+			{
+				break;
+			}
+			int steps = follower.stepsTo(a.from);
+			if (steps >= 0 && steps <= at.distanceTo(a.from) + ALONGSIDE_DETOUR_STEPS
+				&& follower.stayAt(a.from))
+			{
+				return a;
+			}
+		}
+		return null;
+	}
+
+	/** Best two tiles off the player, then further; beside them last of all. */
+	static int alongsideRank(WorldPoint tile, WorldPoint player)
+	{
+		int distance = tile.distanceTo(player);
+		return distance >= 2 ? distance : ALONGSIDE_TILES + 1;
+	}
+
+	/**
+	 * The work tiles of the player's own target, while it stands. Never a
+	 * vein's: its one work tile, across its wall, is the player's own.
+	 */
+	private List<Alongside> ownWork()
+	{
+		List<Alongside> found = new ArrayList<>();
+		if (session.depleted || session.targetTile == null)
+		{
+			return found;
+		}
+		WorldPoint min = session.targetTile;
+		WorldPoint max = session.targetMax == null ? min : session.targetMax;
+		boolean patch = farmingPatch();
+		if (!stillLive(new Alongside(session.targetId, session.targetNpc, false, min, max, min,
+			patch)))
+		{
+			// Felled, emptied or moved on before any event said so - or a
+			// wall, which this is not asked about.
+			return found;
+		}
+		for (WorldPoint c : ring(min, max, 1, min.getPlane()))
+		{
+			if (follower.goodGround(c) && againstTheWork(c))
+			{
+				found.add(new Alongside(session.targetId, session.targetNpc, false, min, max, c,
+					patch));
+			}
+		}
+		return found;
+	}
+
+	/**
+	 * The live ones of the same kind near the player, and the tiles each is
+	 * worked from: trees and rocks by their footprint, veins across their
+	 * wall, spots by the NPC. Not the player's own target.
+	 */
+	private List<Alongside> neighbours(WorldView view, WorldPoint player)
+	{
+		List<Alongside> found = new ArrayList<>();
+		int reach = ALONGSIDE_TILES + 1;
+		if (session.targetNpc != null)
+		{
+			for (NPC npc : view.npcs())
+			{
+				WorldPoint at = npc == null ? null : npc.getWorldLocation();
+				if (at == null || npc == session.targetNpc || at.getPlane() != player.getPlane()
+					|| at.distanceTo(player) > reach || !liveNpc(npc))
+				{
+					continue;
+				}
+				int size = npc.getComposition() == null ? 1
+					: Math.max(1, npc.getComposition().getSize());
+				WorldPoint far = new WorldPoint(at.getX() + size - 1, at.getY() + size - 1,
+					at.getPlane());
+				for (WorldPoint c : workTilesOf(at, far, npc.getId()))
+				{
+					found.add(new Alongside(npc.getId(), npc, false, at, far, c));
+				}
+			}
+			return found;
+		}
+		Tile[][][] tiles = view.getScene() == null ? null : view.getScene().getTiles();
+		int plane = player.getPlane();
+		if (tiles == null || plane < 0 || plane >= tiles.length)
+		{
+			return found;
+		}
+		WorldPoint min = session.targetTile;
+		WorldPoint max = session.targetMax == null ? min : session.targetMax;
+		for (int x = player.getX() - reach; x <= player.getX() + reach; x++)
+		{
+			for (int y = player.getY() - reach; y <= player.getY() + reach; y++)
+			{
+				int sx = x - view.getBaseX();
+				int sy = y - view.getBaseY();
+				if (sx < 0 || sy < 0 || sx >= tiles[plane].length || sy >= tiles[plane][sx].length
+					|| tiles[plane][sx][sy] == null)
+				{
+					continue;
+				}
+				Tile tile = tiles[plane][sx][sy];
+				WorldPoint here = new WorldPoint(x, y, plane);
+				WallObject wall = tile.getWallObject();
+				if (wall != null && !covers(min, max, here) && liveKind(resolved(wall.getId())))
+				{
+					WorldPoint from = acrossTheWall(here, wall.getOrientationA());
+					if (from != null && follower.goodGround(from))
+					{
+						found.add(new Alongside(wall.getId(), null, true, here, here, from));
+					}
+				}
+				for (GameObject object : tile.getGameObjects())
+				{
+					if (object == null)
+					{
+						continue;
+					}
+					WorldPoint[] footprint = footprintOf(view, object);
+					// Once per object, on its south-west tile; never the player's own.
+					if (footprint[0] == null || !footprint[0].equals(here)
+						|| covers(footprint[0], footprint[1], min)
+						|| !liveKind(resolved(object.getId())))
+					{
+						continue;
+					}
+					for (WorldPoint c : workTilesOf(footprint[0], footprint[1], object.getId()))
+					{
+						found.add(new Alongside(object.getId(), null, false, footprint[0],
+							footprint[1], c));
+					}
+				}
+			}
+		}
+		return found;
+	}
+
+	/** Square on to a footprint, ground to stand on, no fence between. */
+	private List<WorldPoint> workTilesOf(WorldPoint min, WorldPoint max, int id)
+	{
+		List<WorldPoint> tiles = new ArrayList<>();
+		if (ONE_SIDED.contains(id))
+		{
+			// Worked from one side the client cannot tell: not a neighbour's.
+			return tiles;
+		}
+		for (WorldPoint c : ring(min, max, 1, min.getPlane()))
+		{
+			if (!squareOn(min, max, c) || !follower.goodGround(c))
+			{
+				continue;
+			}
+			boolean xIn = c.getX() >= min.getX() && c.getX() <= max.getX();
+			int dx = xIn ? 0 : c.getX() < min.getX() ? 1 : -1;
+			int dy = !xIn ? 0 : c.getY() < min.getY() ? 1 : -1;
+			if (!follower.walledToward(c, dx, dy))
+			{
+				tiles.add(c);
+			}
+		}
+		return tiles;
+	}
+
+	/**
+	 * The tile a wall is worked from: across the edge it stands on. The wall's
+	 * own edge flag is the vein itself, so it is not a fence here.
+	 *
+	 * @param orientationA 1 west, 2 north, 4 east, 8 south; anything else, none
+	 */
+	static WorldPoint acrossTheWall(WorldPoint wallTile, int orientationA)
+	{
+		switch (orientationA)
+		{
+			case 1:
+				return new WorldPoint(wallTile.getX() - 1, wallTile.getY(), wallTile.getPlane());
+			case 2:
+				return new WorldPoint(wallTile.getX(), wallTile.getY() + 1, wallTile.getPlane());
+			case 4:
+				return new WorldPoint(wallTile.getX() + 1, wallTile.getY(), wallTile.getPlane());
+			case 8:
+				return new WorldPoint(wallTile.getX(), wallTile.getY() - 1, wallTile.getPlane());
+			default:
+				return null;
+		}
+	}
+
+	/**
+	 * The same kind as the player's work, and still to be worked: the same
+	 * name AND the clicked option on offer. The name alone lets in a tree
+	 * that is only scenery; the option alone lets in an emptied rock.
+	 */
+	private boolean liveKind(ObjectComposition composition)
+	{
+		return composition != null && liveKind(composition.getName(), composition.getActions(),
+			session.targetName, session.option);
+	}
+
+	static boolean liveKind(String name, String[] actions, String targetName, String option)
+	{
+		return name != null && !"Rocks".equals(targetName) && name.equals(targetName)
+			&& offers(actions, option);
+	}
+
+	private boolean liveNpc(NPC npc)
+	{
+		NPCComposition composition = npc.getTransformedComposition() != null
+			? npc.getTransformedComposition() : npc.getComposition();
+		return composition != null && session.targetName.equals(npc.getName())
+			&& offers(composition.getActions(), session.option);
+	}
+
+	static boolean offers(String[] actions, String option)
+	{
+		if (actions == null || option == null)
+		{
+			return false;
+		}
+		for (String action : actions)
+		{
+			if (action != null && plainOption(action).equalsIgnoreCase(option))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/** A definition as it stands now: a multiloc's current state, not its base. */
+	private ObjectComposition resolved(int id)
+	{
+		ObjectComposition composition = client.getObjectDefinition(id);
+		if (composition != null && composition.getImpostorIds() != null)
+		{
+			try
+			{
+				return composition.getImpostor();
+			}
+			catch (RuntimeException e)
+			{
+				return null;
+			}
+		}
+		return composition;
+	}
+
+	/** Whether what it works is still there, and still to be worked. */
+	private boolean stillLive(Alongside a)
+	{
+		if (a.npc != null)
+		{
+			return a.min.equals(a.npc.getWorldLocation()) && liveNpc(a.npc);
+		}
+		Tile tile = sceneTile(a.min);
+		if (tile == null)
+		{
+			return false;
+		}
+		if (a.wall)
+		{
+			WallObject wall = tile.getWallObject();
+			return wall != null && wall.getId() == a.id && liveKind(resolved(a.id));
+		}
+		for (GameObject object : tile.getGameObjects())
+		{
+			if (object != null && object.getId() == a.id)
+			{
+				return a.anyState || liveKind(resolved(a.id));
+			}
+		}
+		return false;
+	}
+
+	private Tile sceneTile(WorldPoint at)
+	{
+		WorldView view = client.getTopLevelWorldView();
+		Tile[][][] tiles = view == null || view.getScene() == null ? null : view.getScene().getTiles();
+		if (tiles == null || at == null)
+		{
+			return null;
+		}
+		int plane = at.getPlane();
+		int sx = at.getX() - view.getBaseX();
+		int sy = at.getY() - view.getBaseY();
+		if (plane < 0 || plane >= tiles.length || sx < 0 || sy < 0
+			|| sx >= tiles[plane].length || sy >= tiles[plane][sx].length)
+		{
+			return null;
+		}
+		return tiles[plane][sx][sy];
+	}
+
+	/** Where the other players stand: their tiles are theirs. */
+	private Set<WorldPoint> othersTiles(WorldView view)
+	{
+		Set<WorldPoint> tiles = new HashSet<>();
+		Player local = client.getLocalPlayer();
+		for (Player other : view.players())
+		{
+			if (other != null && other != local && other.getWorldLocation() != null)
+			{
+				tiles.add(other.getWorldLocation());
+			}
+		}
+		return tiles;
 	}
 
 	// ------------------------------------------------------------- fire line
@@ -2230,6 +2911,7 @@ public class SkillingController
 		bankTrip = false;
 		bankTripConfirmed = false;
 		seat = null;
+		alongside = null;
 		if (release && follower.isStaying() && !feetTaken.getAsBoolean())
 		{
 			follower.resumeFollowing();
@@ -2259,6 +2941,32 @@ public class SkillingController
 			// what that was tuned for. Only a stall earns the watch.
 			return;
 		}
+		if (worksAlongside())
+		{
+			// Keep at what it has while it is still there and near.
+			Alongside kept = work();
+			if (kept != null && seat.equals(follower.getStayTile()) && follower.goodGround(seat)
+				&& !seat.equals(player) && seat.distanceTo(player) <= ALONGSIDE_TILES
+				&& stillLive(kept) && (!kept.anyState || kept.min.equals(session.targetTile)))
+			{
+				if (!company.isAtWork())
+				{
+					seatTheCompany(client.getTickCount());
+				}
+				return;
+			}
+			Alongside chosen = chooseAlongside(player);
+			if (chosen != null)
+			{
+				alongside = chosen;
+				seat = chosen.from;
+				company.watch(null);
+				seatTheCompany(client.getTickCount());
+				log.debug("Working alongside at {}, from {}", chosen.min, seat);
+				return;
+			}
+		}
+		alongside = null;
 		List<WorldPoint> candidates;
 		NPC guard = null;
 		WorldPoint face = faceTile();
@@ -2398,7 +3106,11 @@ public class SkillingController
 				return "Steal-from".equalsIgnoreCase(session.option)
 					? KeepingCompany.Mode.STALL : KeepingCompany.Mode.NONE;
 			case "farming":
-				return name.contains("patch") ? KeepingCompany.Mode.PATCH : KeepingCompany.Mode.NONE;
+				// A grown patch is named for its crop - "Ranarr weed", "Potato"
+				// - so the patch is known by being a multiloc, which a crop in
+				// a field is not.
+				return name.contains("patch") || multiloc() ? KeepingCompany.Mode.PATCH
+					: KeepingCompany.Mode.NONE;
 			case "construction":
 			{
 				WorldView view = client.getTopLevelWorldView();
@@ -2411,6 +3123,17 @@ public class SkillingController
 			default:
 				return KeepingCompany.Mode.NONE;
 		}
+	}
+
+	/** Whether the target is scenery that changes as it grows: a patch. */
+	private boolean multiloc()
+	{
+		if (session.targetNpc != null)
+		{
+			return false;
+		}
+		ObjectComposition composition = client.getObjectDefinition(session.targetId);
+		return composition != null && composition.getImpostorIds() != null;
 	}
 
 	/** The geometry {@link #seatCandidates} is asked for, by mode. */
@@ -2827,6 +3550,12 @@ public class SkillingController
 		boolean fresh = !borrow.isBorrowing();
 		int tool = Borrow.toolFor(session.activity, session.lastAnimation, worn, inHand,
 			itemName(inHand));
+		if (tool > 0 && "fishing".equals(session.activity) && borrow.isHolding()
+			&& borrow.heldItem() != tool)
+		{
+			// The harpoon kept from the last spot is no net for this one.
+			borrow.swap(tool);
+		}
 		if (tool > 0 && tool != refusedTool && !borrow.isHolding()
 			&& !borrow.start(tool) && !hands.isHolding())
 		{

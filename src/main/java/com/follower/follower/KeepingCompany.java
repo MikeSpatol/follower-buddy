@@ -102,6 +102,17 @@ class KeepingCompany
 	 */
 	static final int NEST_LOOK = 832;
 
+	/**
+	 * Working alongside: a stretch at the work between scroll breaks, counted
+	 * in ticks actually spent working - about a minute and a quarter - and
+	 * the break itself, about nine seconds. Mostly the work, now and then
+	 * the notes.
+	 */
+	static final int WORK_STRETCH_TICKS = 120;
+	static final int WORK_STRETCH_SPREAD = 40;
+	static final int WORK_BREAK_TICKS = 15;
+	static final int WORK_BREAK_SPREAD = 5;
+
 	/** Two depletions closer than this share the one look for the next. */
 	static final int NEXT_LOOK_GAP_TICKS = 15;
 	private static final int PLAYER_BEAT_TICKS = 3;
@@ -172,15 +183,21 @@ class KeepingCompany
 		ALTAR,
 		/** The stall watch: off between the player and the guard, facing the guard. */
 		STALL,
-		/** The far edge of a patch; the notes only once the session ends. */
+		/**
+		 * A farming patch: kept like a gatherer's seat - not a step taken,
+		 * working the patch alongside the player when there is room at it,
+		 * reading otherwise - and the notes at the end of the visit.
+		 */
 		PATCH,
 		/** The foreman: three tiles off the hotspot, notes out, a nod per hammer. */
 		FOREMAN,
 		/** The brazier in the cold: three tiles off, stamping the feet. */
 		BRAZIER,
 		/**
-		 * Mining, woodcutting, fishing, hunting: parked near the player with
-		 * the scroll out, and not a step taken. It gets up only to join in.
+		 * Mining, woodcutting, fishing, hunting: not a step taken. Working
+		 * alongside the player when the seat is a work tile - the work pose
+		 * most of the time, the scroll now and then - and parked with the
+		 * scroll out when it is only a seat.
 		 */
 		GATHERING,
 	}
@@ -261,6 +278,24 @@ class KeepingCompany
 	private int lastDepletionTick;
 	private int waterLookAt;
 
+	/** The footprint the follower works, or null when the seat is only a seat. */
+	private WorldPoint workMin;
+	private WorldPoint workMax;
+
+	/** The work pose it holds now, or 0. */
+	private int working;
+
+	/** Its work went - felled, emptied, moved on - until it is chosen again. */
+	private boolean workGone;
+
+	/** Whether it was last turned to its work, and the tick it was. */
+	private boolean facingTheWork;
+	private int facedAt;
+
+	/** Ticks worked since the last break, and the stretch's length (0: not drawn yet). */
+	private int workTicks;
+	private int stretch;
+
 	private Mode mode = Mode.NONE;
 	private String activity = "";
 
@@ -340,6 +375,14 @@ class KeepingCompany
 		currentLook = null;
 		currentLookTicks = 0;
 		lastDepletionTick = -1;
+		workMin = null;
+		workMax = null;
+		working = 0;
+		workGone = false;
+		facingTheWork = false;
+		facedAt = 0;
+		workTicks = 0;
+		stretch = 0;
 		mode = Mode.NONE;
 		activity = "";
 		guard = null;
@@ -359,6 +402,11 @@ class KeepingCompany
 	 */
 	void seated(WorldPoint seat, WorldPoint target)
 	{
+		letGoOfTheWork();
+		workMin = null;
+		workMax = null;
+		workGone = false;
+		facingTheWork = false;
 		this.seat = seat;
 		this.target = target;
 		this.facing = target;
@@ -385,12 +433,67 @@ class KeepingCompany
 
 	void unseated()
 	{
-		// Not reading on the move: the parked scroll goes with the seat.
+		// Not reading on the move: the parked scroll goes with the seat, and
+		// the swing with the work.
 		putScrollAway();
+		letGoOfTheWork();
+		workMin = null;
+		workMax = null;
 		seat = null;
 		facing = null;
 		legs.clear();
 		walking = false;
+	}
+
+	/**
+	 * The seat is a work tile: the follower works its own tree, rock or spot
+	 * from it, alongside the player - the player's own when there was room,
+	 * the next one along when there was not - and faces its middle.
+	 */
+	void seatedAtWork(WorldPoint seat, WorldPoint target, WorldPoint min, WorldPoint max, int now)
+	{
+		seated(seat, target);
+		workMin = min;
+		workMax = max;
+		faceTheWork(now);
+	}
+
+	boolean isAtWork()
+	{
+		return workMin != null;
+	}
+
+	/**
+	 * Its own work went: the swing stops, and a look at where it was - unless
+	 * the depletion that took it has had its looks this tick already.
+	 */
+	void workGone(int now)
+	{
+		if (workMin == null || workGone)
+		{
+			return;
+		}
+		workGone = true;
+		letGoOfTheWork();
+		if (lastDepletionTick != now)
+		{
+			look(workMin, EMPTY_LOOK_TICKS);
+		}
+	}
+
+	/**
+	 * A moment has the feet: a gatherer's scroll and swing both stop, and
+	 * come back when the seat is handed back.
+	 */
+	void excuse()
+	{
+		if (!parked())
+		{
+			return;
+		}
+		putScrollAway();
+		letGoOfTheWork();
+		facingTheWork = false;
 	}
 
 	/** The stall watch's guard; the seat faces it and watches it stir. */
@@ -452,6 +555,11 @@ class KeepingCompany
 			look(awayTile(), FUMES_TICKS);
 		}
 
+		if (workMin != null)
+		{
+			// Working alongside: eyes on its own work, not a look at theirs.
+			return;
+		}
 		if (drops - lastNodDrop >= nodGap)
 		{
 			lastNodDrop = drops;
@@ -505,7 +613,12 @@ class KeepingCompany
 	 *
 	 * @param animating whether the player is mid-animation this tick
 	 */
-	void tick(int now, WorldPoint here, boolean animating, String activity)
+	/**
+	 * @param workPose the work to hold when working alongside, or 0
+	 * @param bareHanded whether that work is done with nothing in the hand
+	 */
+	void tick(int now, WorldPoint here, boolean animating, String activity, int workPose,
+		boolean bareHanded)
 	{
 		lookOn();
 		if (seat == null)
@@ -551,12 +664,19 @@ class KeepingCompany
 		// return, and the seat is then wherever the walk ended. The walks are
 		// not lost, only late; their flags stay down until the peer is over.
 		boolean onTheSeat = peerTicks == 0;
-		if (mode == Mode.GATHERING)
+		if (parked())
 		{
 			// Play report: walking between the tile at the player's side and
-			// the one behind them "looks off". Gathering is parked: the scroll
-			// out, and no pace, stretch or sit.
-			parkTheScroll();
+			// the one behind them "looks off". Gathering takes no step: at a
+			// work tile it works alongside, and on a plain seat it reads.
+			if (workMin != null)
+			{
+				keepAtTheWork(now, workPose, bareHanded);
+			}
+			else
+			{
+				parkTheScroll(0);
+			}
 		}
 		else if (onTheSeat && !paced && worked >= paceAt)
 		{
@@ -578,7 +698,7 @@ class KeepingCompany
 			sit();
 		}
 
-		if ("fishing".equals(activity) && now >= waterLookAt)
+		if ("fishing".equals(activity) && workMin == null && now >= waterLookAt)
 		{
 			waterLookAt = now + jitter(WATER_LOOK_TICKS, WATER_LOOK_SPREAD);
 			look(waterTile(), WATER_GAZE_TICKS);
@@ -590,7 +710,19 @@ class KeepingCompany
 			// Off the seat, in front of the player: the seat's facing is theirs.
 			return;
 		}
-		face(wantedFace(here));
+		WorldPoint wanted = wantedFace(here);
+		if (workMin != null && (wanted == null || wanted.equals(target)))
+		{
+			// "The work", at a work tile, is its own: the middle of it.
+			if (!facingTheWork)
+			{
+				faceTheWork(now);
+			}
+		}
+		else
+		{
+			face(wanted);
+		}
 	}
 
 	/**
@@ -709,7 +841,7 @@ class KeepingCompany
 		{
 			return currentLook;
 		}
-		boolean studying = mode == Mode.ANVIL || mode == Mode.FOREMAN || mode == Mode.GATHERING;
+		boolean studying = mode == Mode.ANVIL || mode == Mode.FOREMAN || parked();
 		if ((scrollOut && !studying) || playerLookTicks > 0)
 		{
 			return here;
@@ -738,14 +870,13 @@ class KeepingCompany
 		return new WorldPoint(base.getX() + dx, base.getY() + dy, base.getPlane());
 	}
 
-	/** The compost went on: one step back and two seconds facing the other way. */
-	void compost(WorldPoint min, WorldPoint max)
+	/** The compost went on: two seconds facing the other way, where it stands. */
+	void compost()
 	{
 		if (walking)
 		{
 			return;
 		}
-		stepAwayFrom(min, max);
 		look(awayTile(), COMPOST_TICKS);
 	}
 
@@ -815,6 +946,86 @@ class KeepingCompany
 		{
 			follower.setStayFaceTile(tile);
 			facing = tile;
+			facingTheWork = false;
+		}
+	}
+
+	/** Turned to the middle of its own work, exactly, as the player is to theirs. */
+	private void faceTheWork(int now)
+	{
+		follower.setStayFaceArea(workMin, workMax);
+		facing = null;
+		facingTheWork = true;
+		facedAt = now;
+	}
+
+	/**
+	 * At work: the work pose held most of the time, a break with the scroll
+	 * now and then. The swing waits until the follower stands on its tile,
+	 * turned to the work, a tick after the turn began; it stops for a look,
+	 * for the player stopping, and for the work going. Somebody else's pose
+	 * over it - a stranger's peer, a held emote copied - is waited out rather
+	 * than fought.
+	 */
+	private void keepAtTheWork(int now, int pose, boolean bareHanded)
+	{
+		if (scrollOut && scrollTicks > 0)
+		{
+			// On a break; puts the reading pose back if it was let go of.
+			parkTheScroll(0);
+			return;
+		}
+		if (scrollOut)
+		{
+			// A plain seat's scroll, carried onto a work tile: the work now.
+			// Left out, it was read at the vein for the rest of the session.
+			putScrollAway();
+		}
+		boolean ready = pose > 0 && !workGone && !stopped && !sitting && currentLook == null
+			&& playerLookTicks == 0 && (bareHanded || borrow.isHolding() && !toolAside)
+			&& seat.equals(follower.getWorldLocation()) && follower.isSettled()
+			&& follower.isTurned() && facingTheWork && now > facedAt;
+		if (!ready)
+		{
+			letGoOfTheWork();
+			return;
+		}
+		int held = follower.getPoseOverride();
+		if (held != 0 && held != working)
+		{
+			return;
+		}
+		if (held != pose)
+		{
+			follower.setPoseOverride(pose);
+			working = pose;
+		}
+		if (stretch == 0)
+		{
+			stretch = jitter(WORK_STRETCH_TICKS, WORK_STRETCH_SPREAD);
+		}
+		if (++workTicks >= stretch)
+		{
+			letGoOfTheWork();
+			workTicks = 0;
+			stretch = 0;
+			parkTheScroll(jitter(WORK_BREAK_TICKS, WORK_BREAK_SPREAD));
+		}
+	}
+
+	/** A gatherer's seat or a patch's: kept without a step, working or reading. */
+	private boolean parked()
+	{
+		return mode == Mode.GATHERING || mode == Mode.PATCH;
+	}
+
+	/** The swing stops; only its own pose is cleared. */
+	private void letGoOfTheWork()
+	{
+		if (working != 0)
+		{
+			follower.clearPoseOverride(working);
+			working = 0;
 		}
 	}
 
@@ -1017,7 +1228,7 @@ class KeepingCompany
 	 * borrowed tool set down for it. Put away to join in - the copy swings
 	 * the tool - and out again once back on the seat.
 	 */
-	private void parkTheScroll()
+	private void parkTheScroll(int ticks)
 	{
 		if (seat == null || sitting || walking || peerTicks > 0 || playerLookTicks > 0)
 		{
@@ -1050,7 +1261,7 @@ class KeepingCompany
 		}
 		follower.setPoseOverride(ErrandController.READ_SCROLL_POSE);
 		scrollOut = true;
-		scrollTicks = 0;
+		scrollTicks = ticks;
 	}
 
 	void putScrollAway()
@@ -1170,29 +1381,6 @@ class KeepingCompany
 		look(next, NEXT_LOOK_TICKS);
 	}
 
-	/** One tile further from the nearest point of a footprint, ground allowing. */
-	private void stepAwayFrom(WorldPoint min, WorldPoint max)
-	{
-		if (seat == null)
-		{
-			return;
-		}
-		int nx = Math.max(min.getX(), Math.min(max.getX(), seat.getX()));
-		int ny = Math.max(min.getY(), Math.min(max.getY(), seat.getY()));
-		int dx = Integer.signum(seat.getX() - nx);
-		int dy = Integer.signum(seat.getY() - ny);
-		if (dx == 0 && dy == 0)
-		{
-			return;
-		}
-		WorldPoint away = new WorldPoint(seat.getX() + dx, seat.getY() + dy, seat.getPlane());
-		if (follower.stayAt(away))
-		{
-			seat = away;
-			seatMoved = away;
-		}
-	}
-
 	/**
 	 * A bird's nest at the player's feet: a look at it, and the peer when a
 	 * player has been seen doing it - it is new to the follower's skeleton.
@@ -1256,7 +1444,7 @@ class KeepingCompany
 
 		WorldPoint bank = SkillingController.nearestObject(client, here, BANK_TILES,
 			name -> "Bank booth".equals(name) || "Bank chest".equals(name));
-		if (bank != null && mode != Mode.GATHERING)
+		if (bank != null && !parked())
 		{
 			step = new WorldPoint(seat.getX() + Integer.signum(bank.getX() - seat.getX()),
 				seat.getY() + Integer.signum(bank.getY() - seat.getY()), seat.getPlane());
@@ -1276,6 +1464,9 @@ class KeepingCompany
 	int end(boolean natural)
 	{
 		putScrollAway();
+		letGoOfTheWork();
+		workMin = null;
+		workMax = null;
 		legs.clear();
 		walking = false;
 		if (peerTicks > 0)

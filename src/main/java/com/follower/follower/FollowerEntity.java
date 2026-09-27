@@ -1347,14 +1347,25 @@ public class FollowerEntity
 	 */
 	public boolean arrivesAt(WorldPoint target)
 	{
+		return stepsTo(target) >= 0;
+	}
+
+	/**
+	 * The steps a stay here would take, when it ends ON the tile: 0 for the
+	 * tile underfoot, -1 when it would stop beside it or is refused. Asked
+	 * without setting off, like {@link #arrivesAt}, so a caller weighing
+	 * several tiles can take the one that is least walk.
+	 */
+	public int stepsTo(WorldPoint target)
+	{
 		java.util.List<WorldPoint> path = stayRoute(target);
 		if (path == null)
 		{
-			return false;
+			return -1;
 		}
 		WorldPoint from = simTile != null ? simTile : tile;
 		WorldPoint settled = path.isEmpty() ? from : path.get(path.size() - 1);
-		return settled.equals(target) && !hot(settled);
+		return settled.equals(target) && !hot(settled) ? path.size() : -1;
 	}
 
 	/** The walk a stay would take to a tile, or null where it is refused outright. */

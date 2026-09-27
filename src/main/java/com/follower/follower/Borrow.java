@@ -1,8 +1,10 @@
 package com.follower.follower;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.PlayerComposition;
@@ -79,6 +81,53 @@ public class Borrow
 	/** The skilling outfit hats. The smiths' tunic is a body, so it is not here. */
 	static final Set<Integer> HATS = new HashSet<>(Arrays.asList(
 		10941, 12013, 13258, 13646, 11850, 20708, 5554, 24872));
+
+	/**
+	 * The farming work, by animation, and what it is done with - 0 for bare
+	 * hands, the picking. Read off the cache's names for the animations: a
+	 * rake to rake, secateurs to prune, a dibber to plant, a bucket to pour.
+	 */
+	static final Map<Integer, Integer> FARMING_TOOLS = farmingTools();
+
+	private static Map<Integer, Integer> farmingTools()
+	{
+		Map<Integer, Integer> tools = new HashMap<>();
+		tools.put(2272, 5325);
+		tools.put(11121, 5325);
+		tools.put(2273, 5341);
+		for (int pruning = 2274; pruning <= 2279; pruning++)
+		{
+			tools.put(pruning, SECATEURS);
+		}
+		for (int fairy = 3337; fairy <= 3342; fairy++)
+		{
+			tools.put(fairy, 7409);
+		}
+		for (int picking : new int[]{2280, 2281, 2282, 2292})
+		{
+			tools.put(picking, 0);
+		}
+		tools.put(2283, 1925);
+		tools.put(8197, 22997);
+		tools.put(2288, 6036);
+		tools.put(2291, 5343);
+		tools.put(2293, 5340);
+		tools.put(830, 952);
+		tools.put(831, 952);
+		return tools;
+	}
+
+	/** Whether an animation is farming work: the patch's own, not a bite to eat. */
+	static boolean farmingWork(int animationId)
+	{
+		return FARMING_TOOLS.containsKey(animationId);
+	}
+
+	/** The tool for a farming animation; secateurs when it is not one we know. */
+	static int farmingTool(int animationId)
+	{
+		return FARMING_TOOLS.getOrDefault(animationId, SECATEURS);
+	}
 
 	/** The fishing animations, one per tool, from the mime rules' measured list. */
 	private static final int HARPOON_ANIMATION = 618;
@@ -256,6 +305,35 @@ public class Borrow
 		return true;
 	}
 
+	/**
+	 * Changes the tool in the hand to another - the rake for the dibber as
+	 * the work at the patch moves on - or empties the hand for 0. While it is
+	 * set aside the hand is somebody else's, so only the loan changes, and
+	 * the right tool - or none - comes back with {@link #takeBack}.
+	 */
+	public void swap(int itemId)
+	{
+		if (held == itemId)
+		{
+			return;
+		}
+		if (aside)
+		{
+			held = Math.max(itemId, 0);
+			aside = held != 0;
+			return;
+		}
+		if (held != 0)
+		{
+			held = 0;
+			hands.release();
+		}
+		if (itemId > 0)
+		{
+			start(itemId);
+		}
+	}
+
 	/** Takes a set-aside item back, once whatever borrowed the hands is done. */
 	public void takeBack()
 	{
@@ -377,7 +455,7 @@ public class Borrow
 				}
 				return 0;
 			case "farming":
-				return SECATEURS;
+				return farmingTool(animationId);
 			case "construction":
 				return SAW;
 			case "firemaking":

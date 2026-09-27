@@ -71,6 +71,13 @@ public final class WorkSession
 	/** The last animation the player played during it, or -1. */
 	int lastAnimation = -1;
 
+	/**
+	 * The last LOOPING animation seen: the work itself, which the follower
+	 * holds when it works alongside. Not {@link #lastAnimation}, which is
+	 * whatever the player played last - a bite to eat, a special attack.
+	 */
+	int workPose;
+
 	/** The target has changed id or gone, and that has been said once. */
 	boolean depleted;
 

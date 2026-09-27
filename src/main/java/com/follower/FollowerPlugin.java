@@ -595,7 +595,7 @@ public class FollowerPlugin extends Plugin
 				@Override
 				public void hold(int itemId)
 				{
-					KitType slot = resolveSlot(itemId);
+					KitType slot = handSlot(itemId);
 					if (slot == null)
 					{
 						log.warn("Prop {} has no wearable slot", itemId);
@@ -3318,6 +3318,43 @@ public class FollowerPlugin extends Plugin
 			: null;
 	}
 
+	/**
+	 * Where a prop goes when it is HELD: its wear slot, or the hand for a tool
+	 * the game never lets anyone wear. A fishing rod, a net, a harpoon, a rake
+	 * have a worn model but no wear position - the game puts them in the hand
+	 * for the work animation only - so the follower fished with nothing in
+	 * its hands ("Prop 307 has no wearable slot").
+	 */
+	private KitType handSlot(int itemId)
+	{
+		KitType slot = resolveSlot(itemId);
+		if (slot != null)
+		{
+			return slot;
+		}
+		ModelRepository.Entry entry = modelRepository.item(itemId);
+		return entry != null && hasWornModel(entry) ? KitType.WEAPON : null;
+	}
+
+	private static boolean hasWornModel(ModelRepository.Entry entry)
+	{
+		for (int[] models : new int[][]{entry.m, entry.f})
+		{
+			if (models == null)
+			{
+				continue;
+			}
+			for (int model : models)
+			{
+				if (model >= 0)
+				{
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	private static KitType slotFromEquipmentIndex(int slot)
 	{
 		// Equipment container indices are NOT contiguous and do NOT line up with
@@ -4562,7 +4599,8 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void refreshEmoteDisarm(boolean emoting)
 	{
-		boolean wanted = (emoting || mirroredPose != 0) && thrallNpc == null;
+		boolean wanted = (emoting || mirroredPose != 0
+			|| skilling != null && skilling.worksBareHanded()) && thrallNpc == null;
 		if (wanted == emoteDisarmed)
 		{
 			return;
@@ -6334,6 +6372,8 @@ public class FollowerPlugin extends Plugin
 		{
 			skilling.tick();
 			skilling.describeTo(speechEngine.getContext());
+			// Picking by hand at a patch: the hands emptied of its own gear.
+			refreshEmoteDisarm(follower.isEmotePlaying());
 			// A copy of the work lasts while the follower is beside it: moved
 			// off it, or the work over, and the copy stops there and then,
 			// rather than carrying on wherever it was taken. A one-shot is

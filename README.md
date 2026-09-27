@@ -69,14 +69,17 @@ sketched by the scribe itself, the first time you stand still there, with you in
 the middle of the drawing. Click any picture to see it larger. It
 starts small: three quests and a handful of pages around them.
 
-**It keeps you company.** Start on a tree, a rock or a fishing spot and it takes
-a seat off to one side, facing the work and out of the way of your next click.
-It borrows your axe or your pickaxe for the session (the one you are wearing, or
-a bronze one; the hat, if you have the whole outfit on) and gives it back with
-a bow when you are done. In between it keeps a tally on its scroll, looks up
-when a tree comes down and warms its hands at your fire. At a tree, a rock or a
-fishing spot it stays put, reading, and only gets up to join in; elsewhere it
-sits down for the long haul. It claps a level, goes to see the pet,
+**It keeps you company.** Start on a tree, a rock or a fishing spot and it works
+alongside you: the same one when there is room, the next one along when there is
+not, so at Motherlode it mines the vein beside yours. At a farming patch it works
+the patch with you. It
+borrows the tool for the session (the axe or pickaxe you are wearing, or a
+bronze one; a net, a rod or a rake; the hat, if you have the whole outfit on)
+and gives it back with a bow when you are done, and now and then it stops for
+its notes. On a trap run it keeps to one spot by your traps and watches them.
+Anywhere else it takes a seat off to one side, keeps a tally on its scroll,
+warms its hands at your fire and sits down for the long haul. It claps a level,
+goes to see the pet,
 and if a stranger turns up to talk to you it stands off and has a good look.
 A good drop gets the scroll out; a great one it walks over to and writes up on
 the spot, then looks up at you and nods. It knows a ninety-two is halfway, a

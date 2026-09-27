@@ -123,9 +123,51 @@ public final class FakeGame
 			}
 			Map<String, Object> answers = new HashMap<>();
 			answers.put("getName", name);
+			answers.put("getActions", objectActions.get((Integer) args[0]));
 			answers.put("getImpostorIds", null);
-			return proxy(net.runelite.api.ObjectComposition.class, answers);
+			net.runelite.api.ObjectComposition composition =
+				proxy(net.runelite.api.ObjectComposition.class, answers);
+			if (multilocs.contains((Integer) args[0]))
+			{
+				// A multiloc: its current state is itself, as far as a test cares.
+				answers.put("getImpostorIds", new int[]{(Integer) args[0]});
+				answers.put("getImpostor", composition);
+			}
+			return composition;
 		});
+		clientAnswers.put("loadAnimation", (Answer) args ->
+		{
+			Integer frameStep = frameSteps.get((Integer) args[0]);
+			if (frameStep == null)
+			{
+				return null;
+			}
+			Map<String, Object> answers = new HashMap<>();
+			answers.put("getFrameStep", frameStep);
+			return proxy(net.runelite.api.Animation.class, answers);
+		});
+	}
+
+	/** Objects that change as they grow - a farming patch - by id. */
+	private final java.util.Set<Integer> multilocs = new java.util.HashSet<>();
+
+	public FakeGame multiloc(int id)
+	{
+		multilocs.add(id);
+		return this;
+	}
+
+	/** Animations the client can load, by id: their frame step, -1 for a one-shot. */
+	private final Map<Integer, Integer> frameSteps = new HashMap<>();
+
+	/**
+	 * Makes an animation loadable: {@code frameStep} 0 or more for an authored
+	 * loop - a swing of the axe, a cast - and -1 for a one-shot, a bite to eat.
+	 */
+	public FakeGame animation(int id, int frameStep)
+	{
+		frameSteps.put(id, frameStep);
+		return this;
 	}
 
 	private int[] levels(Object skill)
@@ -173,6 +215,67 @@ public final class FakeGame
 	/** Scene objects by tile, keyed plane:x:y; see {@link #placeObject}. */
 	private final Map<String, List<net.runelite.api.GameObject>> placedObjects = new HashMap<>();
 	private final Map<Integer, String> objectNames = new HashMap<>();
+	private final Map<Integer, String[]> objectActions = new HashMap<>();
+
+	/** Walls by tile, keyed plane:x:y; see {@link #placeWall}. */
+	private final Map<String, net.runelite.api.WallObject> placedWalls = new HashMap<>();
+
+	/**
+	 * A named object with its options, over a footprint from the south-west
+	 * corner to the north-east one. It answers its scene corners the way a
+	 * real one does and is found on every tile it covers.
+	 */
+	public FakeGame placeObject(int id, String name, String[] actions, int minX, int minY,
+		int maxX, int maxY, int plane)
+	{
+		objectNames.put(id, name);
+		objectActions.put(id, actions);
+		Map<String, Object> answers = new HashMap<>();
+		answers.put("getId", id);
+		answers.put("getPlane", plane);
+		answers.put("getWorldLocation", new WorldPoint(minX, minY, plane));
+		answers.put("getSceneMinLocation", new net.runelite.api.Point(minX, minY));
+		answers.put("getSceneMaxLocation", new net.runelite.api.Point(maxX, maxY));
+		net.runelite.api.GameObject object = proxy(net.runelite.api.GameObject.class, answers);
+		for (int x = minX; x <= maxX; x++)
+		{
+			for (int y = minY; y <= maxY; y++)
+			{
+				placedObjects.computeIfAbsent(plane + ":" + x + ":" + y, k -> new ArrayList<>())
+					.add(object);
+			}
+		}
+		return this;
+	}
+
+	/** Takes every object with this id off the tiles it covered: felled, emptied. */
+	public FakeGame removeObject(int id)
+	{
+		for (List<net.runelite.api.GameObject> here : placedObjects.values())
+		{
+			here.removeIf(object -> object.getId() == id);
+		}
+		return this;
+	}
+
+	/**
+	 * A wall on a tile - a Motherlode vein - with its options. The wall faces
+	 * the edge the game's orientation names: 1 west, 2 north, 4 east, 8 south.
+	 * Placing another on the same tile replaces it, as a vein emptying does.
+	 */
+	public FakeGame placeWall(int id, String name, String[] actions, int x, int y, int plane,
+		int orientationA)
+	{
+		objectNames.put(id, name);
+		objectActions.put(id, actions);
+		Map<String, Object> answers = new HashMap<>();
+		answers.put("getId", id);
+		answers.put("getPlane", plane);
+		answers.put("getWorldLocation", new WorldPoint(x, y, plane));
+		answers.put("getOrientationA", orientationA);
+		placedWalls.put(plane + ":" + x + ":" + y, proxy(net.runelite.api.WallObject.class, answers));
+		return this;
+	}
 
 	/**
 	 * Puts a named object into the scene, the way the errand scanner sees one.
@@ -253,6 +356,7 @@ public final class FakeGame
 		composition.put("getName", name);
 		composition.put("getId", id);
 		composition.put("getSize", 1);
+		composition.put("getActions", (Answer) args -> npcActions.get(id));
 
 		Map<String, Object> answers = new HashMap<>();
 		answers.put("getId", id);
@@ -265,6 +369,15 @@ public final class FakeGame
 		npcs.add(npc);
 		npcAnswers.put(npc, answers);
 		return npc;
+	}
+
+	/** Options offered by NPCs of this id: a fishing spot's Net and Bait. */
+	private final Map<Integer, String[]> npcActions = new HashMap<>();
+
+	public FakeGame npcActions(int id, String... actions)
+	{
+		npcActions.put(id, actions);
+		return this;
 	}
 
 	/** Empties the scene. */
@@ -591,6 +704,7 @@ public final class FakeGame
 							// was built still appear; empty rather than null
 							// because the errand scanner iterates it bare.
 							String key = plane + ":" + x + ":" + y;
+							tile.put("getWallObject", (Answer) callArgs -> placedWalls.get(key));
 							tile.put("getGameObjects", (Answer) callArgs ->
 							{
 								List<net.runelite.api.GameObject> here =

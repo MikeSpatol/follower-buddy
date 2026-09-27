@@ -143,6 +143,50 @@ public class BorrowTest
 	}
 
 	@Test
+	public void farmingBorrowsTheToolTheWorkWants()
+	{
+		Set<Integer> none = new HashSet<>();
+		assertEquals("a rake to rake", 5341, Borrow.toolFor("farming", 2273, none));
+		assertEquals("a dibber to plant", 5343, Borrow.toolFor("farming", 2291, none));
+		assertEquals("bare hands to pick", 0, Borrow.toolFor("farming", 2282, none));
+		assertEquals("secateurs when the work is not one we know", Borrow.SECATEURS,
+			Borrow.toolFor("farming", -1, none));
+		assertTrue(Borrow.farmingWork(2273));
+		assertFalse("a bite to eat is not farming", Borrow.farmingWork(829));
+	}
+
+	@Test
+	public void aSwapChangesTheToolAndNothingEmptiesTheHand()
+	{
+		assertTrue(borrow.start(5341));
+		borrow.swap(5343);
+		assertEquals(5343, hands.held);
+		assertEquals(5343, borrow.heldItem());
+		borrow.swap(0);
+		assertEquals("bare hands", 0, hands.held);
+		assertFalse(borrow.isHolding());
+		borrow.swap(5341);
+		assertEquals(5341, hands.held);
+
+		// Set down under the scroll, the hand is not the swap's to change; the
+		// loan is, so the right tool is the one that comes back.
+		assertTrue(borrow.setAside());
+		hands.hold(ErrandController.SCROLL_PROP);
+		borrow.swap(5343);
+		assertEquals("the scroll untouched", ErrandController.SCROLL_PROP, hands.held);
+		hands.release();
+		borrow.takeBack();
+		assertEquals("the dibber back, not the rake", 5343, hands.held);
+
+		// And nothing to come back when the work turned bare-handed meanwhile.
+		assertTrue(borrow.setAside());
+		borrow.swap(0);
+		borrow.takeBack();
+		assertEquals(0, hands.held);
+		assertFalse(borrow.isHolding());
+	}
+
+	@Test
 	public void oneThingAtATime()
 	{
 		assertTrue(borrow.start(1351));

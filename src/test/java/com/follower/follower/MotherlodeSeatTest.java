@@ -148,6 +148,111 @@ public class MotherlodeSeatTest
 		assertTrue("no seat to be had", skilling.getSeat() == null);
 	}
 
+	private static final String[] MINE = {"Mine", null, null, null, "Examine"};
+	private static final String[] NOTHING = {null, null, null, null, "Examine"};
+
+	/**
+	 * The mine as the game has it: veins in the tunnel's east wall, each worked
+	 * from the tile across it, which carries the vein's own edge.
+	 */
+	private void veins(int... ys)
+	{
+		tunnel();
+		game.animation(MINE_THE_WALL, 74);
+		for (int y : ys)
+		{
+			game.placeWall(26661, "Ore vein", MINE, VEIN.getX(), y, 0, 1);
+			game.wallAt(EAST, y, CollisionDataFlag.BLOCK_MOVEMENT_EAST);
+		}
+	}
+
+	private void tickOnce(SkillingController skilling, int[] tick)
+	{
+		game.tick(++tick[0]);
+		skilling.tick();
+		frame();
+	}
+
+	/**
+	 * Play request: "if im in motherloade mine then i would want them to look
+	 * like they are harvesting some other ore vein". The player's vein has no
+	 * room - its one work tile is theirs - so the company mines the next one
+	 * along, from across its wall, facing it, with the pickaxe.
+	 */
+	@Test
+	public void withNoRoomAtItsVeinTheCompanyMinesTheNextOneAlong()
+	{
+		veins(VEIN.getY(), 54);
+		walkIn(new WorldPoint(EAST, 49, 0), new WorldPoint(EAST, 50, 0), new WorldPoint(EAST, 51, 0));
+		SkillingController skilling = startMining();
+		int[] tick = {1};
+		WorldPoint seat = settle(skilling, tick);
+		assertEquals("across the next vein's wall", new WorldPoint(EAST, 54, 0), seat);
+		assertEquals("facing it", new WorldPoint(53, 54, 0), get("stayFaceTile"));
+
+		tickOnce(skilling, tick);
+		assertEquals("mining it", MINE_THE_WALL, follower.getPoseOverride());
+		assertEquals("with the pickaxe", 1265, held[0]);
+		for (int t = 0; t < 30; t++)
+		{
+			tickOnce(skilling, tick);
+			assertEquals("not a step, tick " + tick[0], seat, tile());
+		}
+	}
+
+	@Test
+	public void whenItsVeinEmptiesItStopsThenMinesAnotherLiveOne()
+	{
+		veins(VEIN.getY(), 54, 57);
+		walkIn(new WorldPoint(EAST, 49, 0), new WorldPoint(EAST, 50, 0), new WorldPoint(EAST, 51, 0));
+		SkillingController skilling = startMining();
+		int[] tick = {1};
+		settle(skilling, tick);
+		tickOnce(skilling, tick);
+		assertEquals(MINE_THE_WALL, follower.getPoseOverride());
+
+		game.placeWall(26665, "Depleted vein", NOTHING, VEIN.getX(), 54, 0, 1);
+		tickOnce(skilling, tick);
+		assertEquals("the swing stops with the vein", 0, follower.getPoseOverride());
+
+		WorldPoint next = new WorldPoint(EAST, 57, 0);
+		for (int t = 0; t < 20 && !(next.equals(tile()) && follower.getPoseOverride() == MINE_THE_WALL); t++)
+		{
+			tickOnce(skilling, tick);
+		}
+		assertEquals("over to the next live vein", next, tile());
+		assertEquals("never the emptied one", new WorldPoint(53, 57, 0), get("stayFaceTile"));
+		assertEquals("and at it", MINE_THE_WALL, follower.getPoseOverride());
+	}
+
+	@Test
+	public void thePlayerTakingItsVeinSendsItToAnother()
+	{
+		veins(VEIN.getY(), 54);
+		walkIn(new WorldPoint(EAST, 49, 0), new WorldPoint(EAST, 50, 0), new WorldPoint(EAST, 51, 0));
+		SkillingController skilling = startMining();
+		int[] tick = {1};
+		WorldPoint seat = settle(skilling, tick);
+		assertEquals(new WorldPoint(EAST, 54, 0), seat);
+
+		// The player clicks the follower's vein and steps along to work it.
+		skilling.noteClick("Mine", "Ore vein", 26661, new WorldPoint(53, 54, 0),
+			new WorldPoint(53, 54, 0), null);
+		game.at(EAST, 53, 0);
+		watchPlayer();
+		tickOnce(skilling, tick);
+		game.at(EAST, 54, 0);
+		watchPlayer();
+		for (int t = 0; t < 20 && !(new WorldPoint(EAST, 52, 0).equals(tile())
+			&& follower.getPoseOverride() == MINE_THE_WALL); t++)
+		{
+			tickOnce(skilling, tick);
+		}
+		assertEquals("to the vein the player left", new WorldPoint(EAST, 52, 0), tile());
+		assertEquals(VEIN, get("stayFaceTile"));
+		assertEquals(MINE_THE_WALL, follower.getPoseOverride());
+	}
+
 	/** Rock all round but for the tunnel, two tiles wide. */
 	private void tunnel()
 	{

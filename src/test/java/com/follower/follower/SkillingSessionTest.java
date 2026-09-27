@@ -20,6 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -149,6 +150,21 @@ public class SkillingSessionTest
 		{
 			return target != null && (walled == null || !walled.test(target))
 				&& !shortOf.containsKey(target);
+		}
+
+		@Override
+		public int stepsTo(WorldPoint target)
+		{
+			return arrivesAt(target) ? getWorldLocation().distanceTo(target) : -1;
+		}
+
+		@Override
+		public void clearPoseOverride(int id)
+		{
+			if (poseOverride == id)
+			{
+				poseOverride = 0;
+			}
 		}
 
 		@Override
@@ -2683,6 +2699,489 @@ public class SkillingSessionTest
 		assertEquals(2, follower.stays.size());
 	}
 
+	// ---------------------------------------------------- working alongside
+
+	private static final String[] CHOP_DOWN = {"Chop down", null, null, null, "Examine"};
+
+	/** HUMAN_EAT: a one-shot the player plays in the middle of the work. */
+	private static final int EAT = 829;
+
+	/** The yew worked from its west side, as the game has the player do, and chopped. */
+	private void chopAlongside()
+	{
+		game.animation(CHOP, 6);
+		game.placeObject(TREE_ID, "Yew tree", CHOP_DOWN, TREE_MIN.getX(), TREE_MIN.getY(),
+			TREE_MAX.getX(), TREE_MAX.getY(), 0);
+		game.at(52, 50, 0);
+		clickTheTree();
+		game.animating(CHOP);
+		tick(1 + SkillingController.SEAT_AFTER_TICKS);
+	}
+
+	/**
+	 * Play request: "most of the time look like they are doing the activity
+	 * with the player". With room at the tree, it chops the same tree from
+	 * another side, facing its middle, with the axe.
+	 */
+	@Test
+	public void withRoomAtTheTreeTheCompanyChopsItFromAnotherSide()
+	{
+		chopAlongside();
+		WorldPoint at = follower.stayingAt;
+		assertTrue("square on to the yew: " + at, squareOnTheTree(at));
+		assertNotEquals("not the player's tile", new WorldPoint(52, 50, 0), at);
+		assertEquals("facing the middle of it", TREE_MIN, follower.facing);
+		assertEquals(TREE_MAX, follower.facingMax);
+
+		tick(1);
+		assertEquals("chopping", CHOP, follower.poseOverride);
+		assertEquals("with the axe in the hand", 1351, held);
+	}
+
+	@Test
+	public void theSwingWaitsUntilItHasTurnedToTheTree()
+	{
+		follower.turned = false;
+		chopAlongside();
+		tick(3);
+		assertNotEquals("not while still coming round", CHOP, follower.poseOverride);
+		follower.turned = true;
+		tick(1);
+		assertEquals(CHOP, follower.poseOverride);
+	}
+
+	/** "Only sometimes be tending to their scroll." */
+	@Test
+	public void mostOfTheTimeItWorksAndNowAndThenItReads()
+	{
+		chopAlongside();
+		int chopping = 0;
+		int breaks = 0;
+		boolean reading = false;
+		for (int i = 0; i < 600; i++)
+		{
+			tick(1);
+			if (follower.poseOverride == CHOP)
+			{
+				chopping++;
+				assertEquals("the axe in the hand while it chops", 1351, held);
+			}
+			boolean nowReading = follower.poseOverride == ErrandController.READ_SCROLL_POSE;
+			if (nowReading)
+			{
+				assertEquals("the scroll in the hand while it reads", ErrandController.SCROLL_PROP, held);
+			}
+			if (nowReading && !reading)
+			{
+				breaks++;
+			}
+			reading = nowReading;
+		}
+		assertTrue("chopping most of the time: " + chopping + " of 600", chopping >= 480);
+		assertTrue("with a few breaks for the scroll: " + breaks, breaks >= 3 && breaks <= 7);
+		assertEquals("and never a step", 1, follower.stays.size());
+	}
+
+	@Test
+	public void theNextTreeAlongIsChoppedWhenItsOwnHasNoRoom()
+	{
+		game.animation(CHOP, 6);
+		WorldPoint own = new WorldPoint(53, 50, 0);
+		WorldPoint next = new WorldPoint(53, 54, 0);
+		game.placeObject(TREE_ID, "Tree", CHOP_DOWN, 53, 50, 53, 50, 0);
+		game.placeObject(TREE_ID + 1, "Tree", CHOP_DOWN, 53, 54, 53, 54, 0);
+		WorldPoint player = new WorldPoint(52, 50, 0);
+		follower.walled = t -> t.distanceTo(own) == 1 && !t.equals(player);
+		game.at(player.getX(), player.getY(), 0);
+		skilling.noteClick("Chop down", "Tree", TREE_ID, own, own, null);
+		game.animating(CHOP);
+		tick(2 + SkillingController.SEAT_AFTER_TICKS);
+
+		assertEquals("the next one along", next, follower.facing);
+		assertEquals(next, follower.facingMax);
+		assertEquals("from beside it", 1, follower.stayingAt.distanceTo(next));
+		assertEquals(CHOP, follower.poseOverride);
+	}
+
+	@Test
+	public void thePlayersTreeFallingLeavesItsOwnStanding()
+	{
+		game.animation(CHOP, 6);
+		WorldPoint own = new WorldPoint(53, 50, 0);
+		WorldPoint next = new WorldPoint(53, 54, 0);
+		game.placeObject(TREE_ID, "Tree", CHOP_DOWN, 53, 50, 53, 50, 0);
+		game.placeObject(TREE_ID + 1, "Tree", CHOP_DOWN, 53, 54, 53, 54, 0);
+		WorldPoint player = new WorldPoint(52, 50, 0);
+		follower.walled = t -> t.distanceTo(own) == 1 && !t.equals(player);
+		game.at(player.getX(), player.getY(), 0);
+		skilling.noteClick("Chop down", "Tree", TREE_ID, own, own, null);
+		game.animating(CHOP);
+		tick(2 + SkillingController.SEAT_AFTER_TICKS);
+		assertEquals(next, follower.facing);
+		tick(KeepingCompany.TIMBER_AFTER_TICKS);
+
+		// The player's tree comes down; the follower's does not.
+		game.removeObject(TREE_ID);
+		skilling.objectDespawned(TREE_ID, own, own);
+		assertFalse("no flinch for somebody else's tree",
+			follower.animations.contains(KeepingCompany.FLINCH));
+		tick(1);
+		assertEquals("still chopping its own", CHOP, follower.poseOverride);
+		assertEquals(next, follower.facing);
+	}
+
+	@Test
+	public void aStumpScenerOrAnotherKindIsNoNeighbour()
+	{
+		game.animation(CHOP, 6);
+		WorldPoint own = new WorldPoint(53, 50, 0);
+		game.placeObject(TREE_ID, "Tree", CHOP_DOWN, 53, 50, 53, 50, 0);
+		game.placeObject(TREE_ID + 1, "Tree stump", new String[]{null, null, null, null, "Examine"},
+			53, 54, 53, 54, 0);
+		game.placeObject(TREE_ID + 2, "Tree", new String[]{null, null, null, null, "Examine"},
+			55, 52, 55, 52, 0);
+		game.placeObject(TREE_ID + 3, "Oak tree", CHOP_DOWN, 50, 54, 50, 54, 0);
+		WorldPoint player = new WorldPoint(52, 50, 0);
+		follower.walled = t -> t.distanceTo(own) == 1 && !t.equals(player);
+		game.at(player.getX(), player.getY(), 0);
+		skilling.noteClick("Chop down", "Tree", TREE_ID, own, own, null);
+		game.animating(CHOP);
+		tick(2 + SkillingController.SEAT_AFTER_TICKS);
+
+		assertNotEquals("nothing of its own to chop", CHOP, follower.poseOverride);
+		assertEquals("so it reads, parked", ErrandController.SCROLL_PROP, held);
+		assertEquals(ErrandController.READ_SCROLL_POSE, follower.poseOverride);
+	}
+
+	/**
+	 * Review finding: a plain seat's scroll carried onto a work tile was never
+	 * put away, and the follower read at its tree for the rest of the session.
+	 */
+	@Test
+	public void aScrollFromAPlainSeatIsPutAwayForTheWork()
+	{
+		game.animation(CHOP, 6);
+		WorldPoint own = new WorldPoint(53, 50, 0);
+		game.placeObject(TREE_ID, "Tree", CHOP_DOWN, 53, 50, 53, 50, 0);
+		WorldPoint player = new WorldPoint(52, 50, 0);
+		follower.walled = t -> t.distanceTo(own) == 1 && !t.equals(player);
+		game.at(player.getX(), player.getY(), 0);
+		skilling.noteClick("Chop down", "Tree", TREE_ID, own, own, null);
+		game.animating(CHOP);
+		tick(2 + SkillingController.SEAT_AFTER_TICKS);
+		assertEquals("nothing to work: a plain seat, reading",
+			ErrandController.SCROLL_PROP, held);
+
+		// The next tree along, clicked and chopped from its south side.
+		WorldPoint next = new WorldPoint(50, 53, 0);
+		game.placeObject(TREE_ID + 1, "Tree", CHOP_DOWN, 50, 53, 50, 53, 0);
+		skilling.noteClick("Chop down", "Tree", TREE_ID + 1, next, next, null);
+		game.at(50, 52, 0);
+		tick(3 + SkillingController.SEAT_AFTER_TICKS);
+		assertEquals("working it now", CHOP, follower.poseOverride);
+		assertEquals("with the axe, not the scroll", 1351, held);
+		assertEquals(next, follower.facing);
+	}
+
+	/**
+	 * Review finding: the player clicking the follower's tree and stepping onto
+	 * its tile shared the tile for six ticks, the retarget's own re-seat
+	 * holding back the move.
+	 */
+	@Test
+	public void thePlayerClickingItsTreeAndSteppingOntoItsTileMovesItAtOnce()
+	{
+		game.animation(CHOP, 6);
+		WorldPoint own = new WorldPoint(53, 50, 0);
+		WorldPoint next = new WorldPoint(53, 53, 0);
+		game.placeObject(TREE_ID, "Tree", CHOP_DOWN, 53, 50, 53, 50, 0);
+		game.placeObject(TREE_ID + 1, "Tree", CHOP_DOWN, 53, 53, 53, 53, 0);
+		WorldPoint player = new WorldPoint(52, 50, 0);
+		follower.walled = t -> t.distanceTo(own) == 1 && !t.equals(player);
+		game.at(player.getX(), player.getY(), 0);
+		skilling.noteClick("Chop down", "Tree", TREE_ID, own, own, null);
+		game.animating(CHOP);
+		tick(2 + SkillingController.SEAT_AFTER_TICKS);
+		WorldPoint at = follower.stayingAt;
+		assertEquals("chopping the next tree along", next, follower.facing);
+
+		skilling.noteClick("Chop down", "Tree", TREE_ID + 1, next, next, null);
+		game.at(at.getX(), at.getY(), 0);
+		tick(2);
+		assertNotEquals("off the player's tile", at, follower.stayingAt);
+		assertEquals("to another side of the same tree", 1, follower.stayingAt.distanceTo(next));
+	}
+
+	@Test
+	public void aClickOnTheNextPatchSendsItThere()
+	{
+		String[] rake = {"Rake", "Inspect", null, "Guide", null};
+		game.placeObject(8150, "Herb patch", rake, 53, 50, 54, 51, 0);
+		game.placeObject(8152, "Herb patch", rake, 53, 53, 54, 54, 0);
+		game.at(52, 50, 0);
+		skilling.noteClick("Rake", "Herb patch", 8150, new WorldPoint(53, 50, 0),
+			new WorldPoint(54, 51, 0), null);
+		game.animating(2273);
+		tick(2 + SkillingController.SEAT_AFTER_TICKS);
+		assertEquals(new WorldPoint(53, 50, 0), follower.facing);
+
+		WorldPoint min = new WorldPoint(53, 53, 0);
+		WorldPoint max = new WorldPoint(54, 54, 0);
+		skilling.noteClick("Rake", "Herb patch", 8152, min, max, null);
+		game.at(52, 53, 0);
+		tick(3 + SkillingController.SEAT_AFTER_TICKS);
+		assertEquals("raking the patch the player is at", min, follower.facing);
+		assertTrue(SkillingController.squareOn(min, max, follower.stayingAt));
+		assertEquals(2273, follower.poseOverride);
+	}
+
+	/**
+	 * Review finding: the compost's turn-away was queued by the menu option
+	 * and wiped a moment later by the same click's retarget.
+	 */
+	@Test
+	public void theCompostTurnAwaySurvivesTheClickThatPutsItOn()
+	{
+		WorldPoint min = new WorldPoint(53, 50, 0);
+		WorldPoint max = new WorldPoint(54, 51, 0);
+		game.placeObject(8150, "Herb patch", new String[]{"Rake", "Inspect", null, "Guide", null},
+			53, 50, 54, 51, 0);
+		game.at(52, 50, 0);
+		skilling.noteClick("Rake", "Herb patch", 8150, min, max, null);
+		game.animating(2273);
+		tick(2 + SkillingController.SEAT_AFTER_TICKS);
+		WorldPoint seat = follower.stayingAt;
+
+		// The plugin's own order: the option first, then the click.
+		skilling.noteMenuOption("Use", "Compost -> Herb patch");
+		skilling.noteClick("Use", "Herb patch", 8150, min, max, null);
+		tick(1);
+		assertTrue("facing away from the patch",
+			follower.facing.distanceTo(min) > seat.distanceTo(min));
+	}
+
+	/**
+	 * Review finding: a net at a spot where the player had harpooned kept the
+	 * harpoon spots and the harpoon.
+	 */
+	@Test
+	public void aNetWhereTheyHarpoonedIsNewWorkWithItsOwnTool()
+	{
+		game.animation(618, 4);
+		game.animation(621, 44);
+		game.npcActions(1530, "Cage", "Harpoon");
+		game.npcActions(1531, "Net", "Bait");
+		game.at(BANK_SIDE.getX(), BANK_SIDE.getY(), 0);
+		NPC harpoonSpot = game.spawnNpc(1530, "Fishing spot", 0);
+		game.moveNpc(harpoonSpot, SPOT.getX(), SPOT.getY(), 0);
+		skilling.noteClick("Harpoon", "Fishing spot", 1530, SPOT, SPOT, harpoonSpot);
+		game.animating(618);
+		tick(2 + SkillingController.SEAT_AFTER_TICKS);
+		assertEquals("harpooning", 618, follower.poseOverride);
+		assertEquals(311, held);
+
+		WorldPoint netAt = new WorldPoint(53, 52, 0);
+		NPC netSpot = game.spawnNpc(1531, "Fishing spot", 0);
+		game.moveNpc(netSpot, netAt.getX(), netAt.getY(), 0);
+		skilling.noteClick("Net", "Fishing spot", 1531, netAt, netAt, netSpot);
+		game.at(52, 52, 0);
+		game.animating(621);
+		tick(3 + SkillingController.SEAT_AFTER_TICKS);
+		assertEquals("netting", 621, follower.poseOverride);
+		assertEquals("with the net", Borrow.SMALL_NET, held);
+		assertEquals("at the net spot", netAt, follower.facing);
+	}
+
+	@Test
+	public void aVeinIsWorkedFromTheTileAcrossItsWall()
+	{
+		WorldPoint vein = new WorldPoint(53, 52, 0);
+		assertEquals(new WorldPoint(52, 52, 0), SkillingController.acrossTheWall(vein, 1));
+		assertEquals(new WorldPoint(53, 53, 0), SkillingController.acrossTheWall(vein, 2));
+		assertEquals(new WorldPoint(54, 52, 0), SkillingController.acrossTheWall(vein, 4));
+		assertEquals(new WorldPoint(53, 51, 0), SkillingController.acrossTheWall(vein, 8));
+		assertNull("a corner is not worked across", SkillingController.acrossTheWall(vein, 3));
+	}
+
+	@Test
+	public void onlyALiveOneOfTheSameKindCounts()
+	{
+		String[] mine = {"Mine", null, null, null, "Examine"};
+		assertTrue(SkillingController.liveKind("Ore vein", mine, "Ore vein", "Mine"));
+		assertFalse("emptied", SkillingController.liveKind("Depleted vein",
+			new String[]{null, null, null, null, "Examine"}, "Ore vein", "Mine"));
+		assertFalse("an emptied rock keeps its Mine",
+			SkillingController.liveKind("Rocks", mine, "Rocks", "Mine"));
+		assertFalse("scenery", SkillingController.liveKind("Tree",
+			new String[]{null, null, null, null, "Examine"}, "Tree", "Chop down"));
+		assertFalse("another kind", SkillingController.liveKind("Oak tree", CHOP_DOWN,
+			"Yew tree", "Chop down"));
+		assertTrue("the option read with its tags off",
+			SkillingController.offers(new String[]{"<col=ff9040>Net</col>"}, "Net"));
+	}
+
+	@Test
+	public void twoTilesOffThePlayerIsBestAndBesideThemIsLast()
+	{
+		WorldPoint player = new WorldPoint(50, 50, 0);
+		int two = SkillingController.alongsideRank(new WorldPoint(52, 50, 0), player);
+		int three = SkillingController.alongsideRank(new WorldPoint(53, 50, 0), player);
+		int beside = SkillingController.alongsideRank(new WorldPoint(51, 50, 0), player);
+		assertTrue(two < three);
+		assertTrue(three < beside);
+	}
+
+	@Test
+	public void atWorkThereIsNoWalkOverToJoinIn()
+	{
+		chopAlongside();
+		tick(1);
+		int stays = follower.stays.size();
+		assertFalse(skilling.joinIn());
+		assertFalse(skilling.joiningIn());
+		assertEquals("working already: nothing to walk over for", stays, follower.stays.size());
+		assertEquals(CHOP, follower.poseOverride);
+	}
+
+	@Test
+	public void thePlayerStoppingStopsTheSwingAndStartingAgainStartsIt()
+	{
+		chopAlongside();
+		tick(1);
+		assertEquals(CHOP, follower.poseOverride);
+		game.animating(-1);
+		tick(KeepingCompany.STOP_AFTER_TICKS + 1);
+		assertNotEquals("the player stood still: so does it", CHOP, follower.poseOverride);
+		game.animating(CHOP);
+		tick(2);
+		assertEquals("and back at it with them", CHOP, follower.poseOverride);
+	}
+
+	@Test
+	public void somebodyElsesPoseIsWaitedOutAndTheSwingComesBack()
+	{
+		chopAlongside();
+		tick(1);
+		follower.setPoseOverride(KeepingCompany.PEER);
+		tick(3);
+		assertEquals("theirs while they have it", KeepingCompany.PEER, follower.poseOverride);
+		follower.setPoseOverride(0);
+		tick(1);
+		assertEquals(CHOP, follower.poseOverride);
+	}
+
+	@Test
+	public void aMomentTakesTheSwingAndItComesBackAfter()
+	{
+		chopAlongside();
+		tick(1);
+		skilling.setExcused(true);
+		assertEquals("the moment has it", 0, follower.poseOverride);
+		tick(3);
+		skilling.setExcused(false);
+		tick(2);
+		assertEquals(CHOP, follower.poseOverride);
+	}
+
+	@Test
+	public void whenItsTreeFallsItStopsAndWithNoMoreItReadsWhereItIs()
+	{
+		chopAlongside();
+		tick(1);
+		WorldPoint at = follower.stayingAt;
+		game.removeObject(TREE_ID);
+		skilling.objectDespawned(TREE_ID, TREE_MIN, TREE_MAX);
+		tick(1);
+		assertNotEquals("the swing stops", CHOP, follower.poseOverride);
+
+		tick(SkillingController.WORK_GONE_TICKS + 2);
+		assertEquals("no more yews: it stays where it is", at, follower.stayingAt);
+		assertEquals("and reads", ErrandController.SCROLL_PROP, held);
+		assertEquals(1, follower.stays.size());
+	}
+
+	@Test
+	public void aTreeGoneWithoutAWordIsNotWorkedAgain()
+	{
+		// A tree that changes state without an event - a multiloc turning
+		// over - is gone all the same; its tiles are not offered again.
+		chopAlongside();
+		tick(1);
+		game.removeObject(TREE_ID);
+		tick(SkillingController.WORK_GONE_TICKS + 3);
+		assertNotEquals(CHOP, follower.poseOverride);
+		assertEquals("it reads where it is instead", ErrandController.SCROLL_PROP, held);
+	}
+
+	@Test
+	public void aBiteToEatIsNotTakenForTheWork()
+	{
+		game.animation(EAT, -1);
+		chopAlongside();
+		tick(1);
+		game.animating(EAT);
+		tick(1);
+		assertEquals("still chopping, not eating", CHOP, follower.poseOverride);
+		game.animating(CHOP);
+		tick(1);
+		assertEquals(CHOP, follower.poseOverride);
+	}
+
+	@Test
+	public void withoutToolsToBorrowItReadsAsBefore()
+	{
+		borrowsTools = false;
+		chopAlongside();
+		tick(3);
+		assertEquals(ErrandController.SCROLL_PROP, held);
+		assertEquals(ErrandController.READ_SCROLL_POSE, follower.poseOverride);
+	}
+
+	@Test
+	public void thePlayerTakingItsTileMovesItOver()
+	{
+		chopAlongside();
+		tick(1);
+		WorldPoint at = follower.stayingAt;
+		game.at(at.getX(), at.getY(), 0);
+		tick(2);
+		assertNotEquals("off the player's new tile", at, follower.stayingAt);
+		assertTrue("to another side of the same yew", squareOnTheTree(follower.stayingAt));
+	}
+
+	@Test
+	public void theAnglerNetsTheSpotFromAnotherSideWithTheNet()
+	{
+		game.animation(621, 44);
+		game.npcActions(1530, "Net", "Bait");
+		workTheSpot();
+		tick(1);
+		WorldPoint at = follower.stayingAt;
+		assertEquals("beside the spot, square on", 1, at.distanceTo(SPOT));
+		assertTrue(at.getX() == SPOT.getX() || at.getY() == SPOT.getY());
+		assertNotEquals(BANK_SIDE, at);
+		assertEquals("facing it", SPOT, follower.facing);
+		assertEquals("netting", 621, follower.poseOverride);
+		assertEquals("with the small net", Borrow.SMALL_NET, held);
+	}
+
+	@Test
+	public void aSpotThatOffersSomethingElseIsNoNeighbour()
+	{
+		game.animation(621, 44);
+		game.npcActions(1530, "Net", "Bait");
+		game.npcActions(1531, "Cage", "Harpoon");
+		NPC other = game.spawnNpc(1531, "Fishing spot", 0);
+		game.moveNpc(other, 53, 53, 0);
+		// No room at the player's own spot.
+		follower.walled = t -> t.distanceTo(SPOT) == 1 && !t.equals(BANK_SIDE);
+		workTheSpot();
+		tick(1);
+		assertNotEquals("a cage spot is not a net spot", 621, follower.poseOverride);
+		assertNotEquals("nor sent to it", new WorldPoint(53, 53, 0), follower.facing);
+		assertTrue(follower.stays.isEmpty());
+	}
+
 	// ----------------------------------------------------------- the words
 
 	@Test
@@ -3238,34 +3737,38 @@ public class SkillingSessionTest
 	// ---------------------------------------------------------------- farming
 
 	@Test
-	public void thePatchInspectorSitsAtTheFarEdgeAndKeepsItsNotesForTheEnd()
+	public void aPatchIsWorkedAlongsideWithTheToolTheWorkWants()
 	{
-		WorldPoint min = new WorldPoint(52, 50, 0);
-		WorldPoint max = new WorldPoint(54, 52, 0);
+		// A herb patch, two by two as the game has it, raked from its west side.
+		WorldPoint min = new WorldPoint(53, 50, 0);
+		WorldPoint max = new WorldPoint(54, 51, 0);
+		game.placeObject(8150, "Herb patch", new String[]{"Rake", "Inspect", null, "Guide", null},
+			53, 50, 54, 51, 0);
+		game.at(52, 50, 0);
 		skilling.noteClick("Rake", "Herb patch", 8150, min, max, null);
 		game.animating(2273);
-		tick(1 + SkillingController.SEAT_AFTER_TICKS);
+		tick(2 + SkillingController.SEAT_AFTER_TICKS);
 		WorldPoint seat = follower.stayingAt;
-		assertEquals("just past the far edge", new WorldPoint(55, 50, 0), seat);
-		assertEquals("secateurs in hand", Borrow.SECATEURS, held);
+		assertTrue("beside the patch, square on: " + seat,
+			SkillingController.squareOn(min, max, seat));
+		assertNotEquals(new WorldPoint(52, 50, 0), seat);
+		assertEquals("facing its middle", min, follower.facing);
+		assertEquals(max, follower.facingMax);
+		assertEquals("raking", 2273, follower.poseOverride);
+		assertEquals("with the rake", 5341, held);
 
-		for (int i = 0; i < 20; i++)
-		{
-			tick(3);
-			skilling.noteXpDrop(Skill.FARMING);
-		}
-		assertEquals("no notes mid-session", Borrow.SECATEURS, held);
+		// Picking: the hands empty for it.
+		game.animating(2282);
+		tick(2);
+		assertEquals("picking", 2282, follower.poseOverride);
+		assertEquals("with bare hands", 0, held);
 
-		// The compost goes on: a step back and a turn away, then the work.
+		// The compost goes on: a turn away where it stands, and no step.
 		skilling.noteMenuOption("Use", "Compost -> Herb patch");
-		assertEquals("one step back", 2, follower.stays.size());
-		assertEquals(1, follower.stayingAt.distanceTo(seat));
-		assertTrue("away from the patch", follower.stayingAt.getX() > seat.getX());
-		assertEquals("the seat moved with it", follower.stayingAt, skilling.getSeat());
 		tick(1);
-		assertTrue("facing the other way", follower.facing.getX() > follower.stayingAt.getX());
-		tick(3);
-		assertEquals("then the patch again", new WorldPoint(53, 51, 0), follower.facing);
+		assertEquals("no step", 1, follower.stays.size());
+		assertTrue("facing away from the patch",
+			follower.facing.distanceTo(min) > seat.distanceTo(min));
 
 		game.at(50, 56, 0);
 		tick(1);
@@ -3278,6 +3781,74 @@ public class SkillingSessionTest
 		assertEquals(0, follower.poseOverride);
 		assertTrue(follower.following);
 		assertFalse(skilling.holdsTheFeet());
+	}
+
+	@Test
+	public void aGrownPatchIsAPatchByWhatItIsNotByItsName()
+	{
+		// A patch grown into its crop is named for the crop.
+		WorldPoint min = new WorldPoint(53, 50, 0);
+		WorldPoint max = new WorldPoint(54, 51, 0);
+		game.placeObject(8151, "Ranarr weed", new String[]{"Harvest", "Inspect", null, "Guide", null},
+			53, 50, 54, 51, 0);
+		game.multiloc(8151);
+		game.at(52, 50, 0);
+		skilling.noteClick("Harvest", "Ranarr weed", 8151, min, max, null);
+		game.animating(2282);
+		tick(2 + SkillingController.SEAT_AFTER_TICKS);
+		assertTrue(SkillingController.squareOn(min, max, follower.stayingAt));
+		assertEquals("picking alongside", 2282, follower.poseOverride);
+		tick(KeepingCompany.SIT_AFTER_TICKS + 100);
+		assertFalse("and a patch is never sat at", skilling.isSitting());
+		assertEquals("nor walked from", 1, follower.stays.size());
+	}
+
+	@Test
+	public void aHarvestAndItsCompostAreOneVisit()
+	{
+		WorldPoint min = new WorldPoint(53, 50, 0);
+		WorldPoint max = new WorldPoint(54, 51, 0);
+		game.placeObject(8151, "Ranarr weed", new String[]{"Harvest", "Inspect", null, "Guide", null},
+			53, 50, 54, 51, 0);
+		game.multiloc(8151);
+		game.at(52, 50, 0);
+		skilling.noteClick("Harvest", "Ranarr weed", 8151, min, max, null);
+		game.animating(2282);
+		tick(2 + SkillingController.SEAT_AFTER_TICKS);
+		Object visit = skilling.getSession();
+		WorldPoint seat = follower.stayingAt;
+
+		// Picked clean, the same patch is a herb patch again, and the compost goes on it.
+		skilling.noteClick("Use", "Herb patch", 8151, min, max, null);
+		game.animating(2283);
+		tick(2 + SkillingController.SEAT_AFTER_TICKS);
+		assertSame("the same visit", visit, skilling.getSession());
+		assertEquals("the patch's name as it is now", "Herb patch", skilling.getSession().getTargetName());
+		assertEquals("and the same place to work it from", seat, follower.stayingAt);
+		assertEquals("pouring", 2283, follower.poseOverride);
+		assertEquals("from the bucket", 1925, held);
+	}
+
+	@Test
+	public void aFullBagAtAPatchIsNoStepBankward()
+	{
+		game.placeObject(9030, "Bank booth", 60, 50, 0);
+		WorldPoint min = new WorldPoint(53, 50, 0);
+		WorldPoint max = new WorldPoint(54, 51, 0);
+		game.placeObject(8151, "Ranarr weed", new String[]{"Harvest", "Inspect", null, "Guide", null},
+			53, 50, 54, 51, 0);
+		game.multiloc(8151);
+		game.at(52, 50, 0);
+		skilling.noteClick("Harvest", "Ranarr weed", 8151, min, max, null);
+		game.animating(2282);
+		tick(2 + SkillingController.SEAT_AFTER_TICKS);
+		WorldPoint seat = follower.stayingAt;
+		game.inventoryUsing(27);
+		tick(1);
+		game.inventoryUsing(28);
+		tick(10);
+		assertEquals("it stays at the patch", seat, follower.stayingAt);
+		assertEquals(1, follower.stays.size());
 	}
 
 	@Test
@@ -3327,10 +3898,149 @@ public class SkillingSessionTest
 		tick(3);
 		assertEquals(PLAYER, follower.facing);
 
-		// Back within three tiles: following again.
+		// Back among the traps: the run goes on, from the same seat.
 		game.at(52, 50, 0);
 		tick(1);
+		assertEquals(seat, follower.stayingAt);
+		assertTrue(skilling.holdsTheFeet());
+
+		// Off more than ten tiles from its first trap: the run is over.
+		game.at(PLAYER.getX() + SkillingController.TRAP_RUN_TILES + 1, 50, 0);
+		tick(1);
 		assertTrue(follower.following);
+		assertFalse(skilling.holdsTheFeet());
+	}
+
+	/**
+	 * Play request: "park farming patches and trap runs too". One seat by the
+	 * first trap for the whole run, however many go down, mostly watching and
+	 * now and then the notes.
+	 */
+	@Test
+	public void aTrapRunIsOneSeatWithTheNotesNowAndThen()
+	{
+		skilling.random.setSeed(7);
+		layATrap(PLAYER);
+		WorldPoint seat = follower.stayingAt;
+		assertNotNull(seat);
+		boolean read = false;
+		for (int i = 0; i < 6; i++)
+		{
+			WorldPoint next = new WorldPoint(PLAYER.getX() + 2 + i % 3, 47 + i, 0);
+			game.at(next.getX(), next.getY(), 0);
+			for (int t = 0; t < 60; t++)
+			{
+				if (t == 20)
+				{
+					layATrap(next);
+				}
+				tick(1);
+				read |= held == ErrandController.SCROLL_PROP
+					&& follower.poseOverride == ErrandController.READ_SCROLL_POSE;
+			}
+			skilling.noteXpDrop(Skill.HUNTER);
+		}
+		assertEquals("one seat for the whole run", seat, follower.stayingAt);
+		assertEquals("and no other walk", 1, follower.stays.size());
+		assertTrue("the notes came out at some point", read);
+		assertTrue(skilling.holdsTheFeet());
+	}
+
+	@Test
+	public void aTrapLaidWhereItStandsMovesItOnceStillByTheFirst()
+	{
+		layATrap(PLAYER);
+		WorldPoint seat = follower.stayingAt;
+		game.at(seat.getX(), seat.getY(), 0);
+		tick(2);
+		layATrap(seat);
+		WorldPoint moved = follower.stayingAt;
+		assertNotEquals("off the new trap", seat, moved);
+		assertEquals("still watching the first", SkillingController.TRAP_WATCH_TILES,
+			moved.distanceTo(PLAYER));
+		assertEquals("the nearest tile, not across the traps", 1, moved.distanceTo(seat));
+		assertEquals(2, follower.stays.size());
+	}
+
+	@Test
+	public void aCatchKeepsTheRunGoing()
+	{
+		layATrap(PLAYER);
+		WorldPoint seat = follower.stayingAt;
+		for (int i = 0; i < 3; i++)
+		{
+			tick(SkillingController.TRAP_WATCH_TICKS - 50);
+			skilling.noteXpDrop(Skill.HUNTER);
+		}
+		assertTrue("catches coming in, and nothing new laid: still the run",
+			skilling.holdsTheFeet());
+		assertEquals(seat, follower.stayingAt);
+	}
+
+	@Test
+	public void aTrapIsFoundWhereItWasLaidNotWhereThePlayerSteppedTo()
+	{
+		skilling.noteAnimation(SkillingController.LAY_TRAP);
+		tick(1);
+		// The player steps off before the trap turns up.
+		game.at(PLAYER.getX() - 1, PLAYER.getY(), 0);
+		skilling.objectSpawned(9380, PLAYER, null);
+		assertTrue("a trap run all the same", skilling.holdsTheFeet());
+		assertEquals(SkillingController.TRAP_WATCH_TILES, follower.stayingAt.distanceTo(PLAYER));
+	}
+
+	@Test
+	public void aTrapUnderfootMovesItToTheNearestTileNotTheFirstInLine()
+	{
+		// Only the north-east corner of the watch ring is open ground.
+		follower.walled = t -> t.distanceTo(PLAYER) == SkillingController.TRAP_WATCH_TILES
+			&& !(t.getX() >= 51 && t.getY() >= 51);
+		layATrap(PLAYER);
+		WorldPoint seat = follower.stayingAt;
+		assertEquals(new WorldPoint(51, 52, 0), seat);
+		game.at(seat.getX(), seat.getY(), 0);
+		tick(2);
+		layATrap(seat);
+		assertEquals("the tile next to it, not the next in the list",
+			new WorldPoint(52, 52, 0), follower.stayingAt);
+	}
+
+	@Test
+	public void aMomentPutsTheTrapNotesAway()
+	{
+		layATrap(PLAYER);
+		boolean read = false;
+		for (int t = 0; t < KeepingCompany.WORK_STRETCH_TICKS + KeepingCompany.WORK_STRETCH_SPREAD + 2
+			&& !read; t++)
+		{
+			tick(1);
+			read = held == ErrandController.SCROLL_PROP;
+		}
+		assertTrue(read);
+		skilling.setExcused(true);
+		tick(1);
+		assertEquals("not reading through the moment", 0, held);
+		assertEquals(0, follower.poseOverride);
+		tick(KeepingCompany.WORK_STRETCH_TICKS * 2);
+		assertEquals("nor taking them out during it", 0, held);
+	}
+
+	@Test
+	public void theNotesGoAwayWithTheRun()
+	{
+		layATrap(PLAYER);
+		boolean read = false;
+		for (int t = 0; t < KeepingCompany.WORK_STRETCH_TICKS + KeepingCompany.WORK_STRETCH_SPREAD + 2
+			&& !read; t++)
+		{
+			tick(1);
+			read = held == ErrandController.SCROLL_PROP;
+		}
+		assertTrue("reading", read);
+		inCombat = true;
+		tick(1);
+		assertEquals("put away with the run", 0, held);
+		assertEquals(0, follower.poseOverride);
 		assertFalse(skilling.holdsTheFeet());
 	}
 

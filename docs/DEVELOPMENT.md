@@ -59,8 +59,9 @@ automated, and the follower cannot be interacted with.
   or a patch it takes a seat off your flank facing the work, borrows the tool
   (or the hat of a full skilling outfit) for the session and gives it back with a
   bow, and keeps the small habits of somebody keeping you company: a tally on
-  the scroll, a nod, a sit for the long haul. At a tree, a rock or a spot it
-  stays parked with its scroll out and only gets up to join in. Outside a
+  the scroll, a nod, a sit for the long haul. At a tree, a rock, a spot or a
+  patch it works alongside you, from a free side or the next one along, and
+  now and then reads its notes; it never walks about there. Outside a
   session it claps a level,
   goes to see a new pet, and peers at a stranger who turns up for you. Two
   settings under Skilling; see [Skilling company](#skilling-company).
@@ -1534,16 +1535,61 @@ reason to get up). One kept through a bank trip waits `BANK_BACK_TICKS` for the
 first swing when the player comes back and is carried into the new session,
 rather than walked off to meet them and straight back.
 
-**Gathering** (`Mode.GATHERING`: mining, woodcutting, fishing, hunter) is
-parked. The follower takes its seat, sets a borrowed tool down and reads the
-scroll, and takes no step: no pace, no half circle, no sit, no step clear of a
-fallen tree or an emptied rock, no step toward the bank on a full bag. It gets
-up only to join in, when the scroll goes away and the tool comes back to the
-hand for the copy, and the scroll comes out again once it is back on the seat.
-A pose something else put on over it and let go of - a stranger's peer, a held
-emote copied - leaves the scroll in the hand, and the reading pose is put back.
-Looks still turn it where it stands - the water, a fallen tree, the next rock,
-the player stopping. Per-activity shapes: a miner's company
+**Gathering** (`Mode.GATHERING`: mining, woodcutting, fishing, hunter) and
+**patches** (`Mode.PATCH`) take no step: no pace, no half circle, no sit, no
+step clear of a fallen tree or an emptied rock, no step toward the bank on a
+full bag, no step back from the compost.
+
+**Working alongside.** Play request: "most of the time look like they are doing
+the activity with the player and only sometimes be tending to their scroll",
+and at Motherlode "look like they are harvesting some other ore vein". For
+mining, woodcutting and fishing with the tool on loan, and for a patch, the
+seat is a work tile (`SkillingController.chooseAlongside`): square on to the
+player's own target when there is room, else to the nearest live one of the
+same kind within `ALONGSIDE_TILES` (never for a patch, which is the player's
+own). Live is the same name and the clicked option on offer (`liveKind`): an
+emptied rock keeps its "Mine" and scenery trees have none, so neither passes.
+A Motherlode vein is a wall, worked from the one tile across its edge
+(`acrossTheWall`, `getOrientationA` 1 west, 2 north, 4 east, 8 south); its own
+edge flag is the vein, not a fence. Best two tiles off the player, then further,
+beside them last; a tile it already stands on first; only
+`ALONGSIDE_PATH_ASKS` asked of the pathing, and none it only gets beside
+(`stepsTo`). It faces the exact middle of its own work.
+
+The work pose is the player's own looping animation (`WorkSession.workPose`,
+an id whose `frameStep` is 0 or more - so every tool tier and the wall swings
+come for free, and a bite to eat is not taken for the work); for a patch, one
+of `Borrow.FARMING_TOOLS`, whose tool is swapped into the hand as the work
+changes (bare hands to pick). `KeepingCompany.keepAtTheWork` holds it once the
+follower stands on its tile, turned to the work, a tick after the turn began;
+a look, the player stopping or the work going pauses it, and somebody else's
+pose over it - a stranger's peer, a held emote copied - is waited out. Every
+`WORK_STRETCH_TICKS` of actual work (about 120, jittered) it takes a break of
+`WORK_BREAK_TICKS` (about 15) with the scroll, the tool set down for it. Its
+own tree, rock, vein or spot is checked every tick (`stillLive`, one tile
+read); gone, it looks at where it was and chooses again `WORK_GONE_TICKS`
+later. The player coming to work from its tile moves it on at once, whatever
+else was due. The player's own
+target going is not its business while it works another. At work the old walk
+over to join in (`joinIn`) is refused: the copy is its own. Nothing to work -
+no tool, no room, nothing of the kind near - and the seat is only a seat: the
+scroll out, parked, as before.
+
+A patch is known by being a multiloc as well as by name, since a grown patch is
+named for its crop, and one visit - harvest, compost, plant - is one session:
+a click on the same id at the same tile is the same patch whatever it is called
+now or whatever is done to it. Anything else is the same work only by the same
+option: a net at a spot where the player harpooned is new work, with its own
+tool. A retarget onto the same tile does not re-aim the company, which would
+wipe the compost's turn-away queued by the same click.
+
+**Trap runs** keep one seat by the first trap for the whole run: each later
+trap (matched where it was laid, not where the player stepped to) and each
+Hunter drop keeps it going, and it ends when the player is `TRAP_RUN_TILES`
+off the first trap, after `TRAP_WATCH_TICKS` with neither, in a fight, or when
+something else takes the feet. A trap laid under the follower moves it once,
+still by the first. Mostly it watches, glancing at the player when a trap
+changes; now and then the notes come out where it stands. Per-activity shapes: a miner's company
 sits diagonal-behind, an angler's on the bank beside the spot, a cook's across
 the fire (or along the range's side), a smith's across the anvil with the notes
 out, a crafter's beside the wheel, sat down, a thief's five tiles off toward the
@@ -1700,13 +1746,21 @@ is a real end. What is borrowed when the hand cannot answer:
 |---|---|
 | Woodcutting | the worn axe off the table (every wieldable tier in the cache, felling axes and ornament kits included), or bronze 1351 |
 | Mining | the worn pickaxe off the table (likewise), or bronze 1265 |
-| Fishing | by the animation: harpoon 311 or barb-tail 10129 with 618; fishing rod 307 or fly rod 309 with 622/623; nets and cages get nothing |
-| Farming | secateurs 5329 |
+| Fishing | by the animation: harpoon 311 or barb-tail 10129 with 618; fishing rod 307 or fly rod 309 with 622/623; small net 303, big net 305, lobster pot 301 |
+| Farming | by the animation (`Borrow.FARMING_TOOLS`): rake 5341, secateurs 5329 (magic 7409 for the fairy prune), seed dibber 5343, bucket 1925, plant cure 6036, watering can 5340, spade 952, trowel 5325, bare hands to pick; secateurs otherwise |
 | Construction | saw 8794 |
 | Firemaking | torch 8987, if the cache says it is wearable |
 | Smithing | rock hammer 4162, likewise |
 | Hunter | butterfly net 10010 |
 | Work with no tool of its own, in the full skilling outfit | the outfit's hat: lumberjack 10941, prospector 12013, angler 13258, farmer's 13646, pyromancer 20708, rogue 5554, carpenter's 24872 |
+
+Tools the game never lets anyone wear - a net, a rod, a plain harpoon, a rake -
+have a worn model but no wear position, and the hands used to refuse them
+("Prop 307 has no wearable slot"), so the follower fished with nothing in its
+hands. `FollowerPlugin.handSlot` puts anything with a worn model and no wear
+position in the hand, as the game's own work animations do. Picking by hand at
+a patch holds nothing, so the follower's own weapon and shield come off for it
+(`SkillingController.worksBareHanded`, in the plugin's disarm).
 
 **The moments** (`Moments`), outside any session: a level is clapped (bowed, in
 the first two days; every third level is walked over for, and 99 gets the boss
