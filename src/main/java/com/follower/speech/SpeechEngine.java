@@ -121,6 +121,12 @@ public class SpeechEngine
 	/** The placeholders that hold a player's name: the player's own, whoever came or went, whoever spoke. */
 	private static final Set<String> PLAYER_NAMES = Set.of("player", "name", "speaker");
 
+	/** Someone's own name or words: the article step leaves them as written, "The" and all. */
+	private static final Set<String> AS_WRITTEN = Set.of("player", "name", "speaker", "message");
+
+	/** Words that already point at the thing, so a name's own "The" goes: that Leviathan, the first Leviathan. */
+	private static final Set<String> POINTING = Set.of("the", "that", "this", "another", "one", "first", "more");
+
 	private boolean isIdleRemark(SpeechRule rule)
 	{
 		return rule.when != null && rule.when.usesType("idle") && !rule.isOccasion();
@@ -1225,7 +1231,7 @@ public class SpeechEngine
 			{
 				incomplete[0] = true;
 			}
-			if (replacement != null && !replacement.isEmpty())
+			if (replacement != null && !replacement.isEmpty() && !AS_WRITTEN.contains(key))
 			{
 				// "a {x} level" describes the level; "a {x}." is the x itself.
 				boolean endsPhrase = close + 2 >= template.length()
@@ -1250,10 +1256,13 @@ public class SpeechEngine
 	}
 
 	/**
-	 * Makes an "a" the template wrote before a placeholder fit what filled it:
-	 * an Eclectic impling, an 80. When the value ends the phrase and takes no
-	 * article at all - Coins, soft clay - the article goes, and its capital
-	 * moves onto the value. Returns the value to append.
+	 * Makes the word the template wrote before a placeholder fit what filled
+	 * it. An "a" goes by sound: an Eclectic impling, an 80. When the value
+	 * ends the phrase and takes no article at all - Coins, soft clay - the
+	 * article goes, and its capital moves onto the value. And a name that
+	 * brings its own "The" gives it up to the word already pointing at it -
+	 * the Leviathan, that Leviathan, the first Leviathan, never the The
+	 * Leviathan - an "a" becoming that "the". Returns the value to append.
 	 */
 	private static String agreeArticle(StringBuilder out, String value, boolean endsPhrase)
 	{
@@ -1268,11 +1277,24 @@ public class SpeechEngine
 			start--;
 		}
 		String written = out.substring(start, space);
-		if (!written.equalsIgnoreCase("a") && !written.equalsIgnoreCase("an"))
+		boolean article = written.equalsIgnoreCase("a") || written.equalsIgnoreCase("an");
+		if (!article && !POINTING.contains(written.toLowerCase(Locale.ROOT)))
 		{
 			return value;
 		}
 		boolean capital = Character.isUpperCase(written.charAt(0));
+		if (value.length() > 4 && value.regionMatches(true, 0, "the ", 0, 4))
+		{
+			if (article)
+			{
+				out.replace(start, space, capital ? "The" : "the");
+			}
+			return value.substring(4);
+		}
+		if (!article)
+		{
+			return value;
+		}
 		if (endsPhrase && Words.takesNoArticle(value))
 		{
 			out.setLength(start);

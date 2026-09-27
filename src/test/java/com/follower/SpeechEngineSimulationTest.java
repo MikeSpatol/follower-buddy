@@ -403,6 +403,40 @@ public class SpeechEngineSimulationTest
 			"A {skill} level, noted.", TriggerEvent.levelUp("Agility", 50)));
 	}
 
+	@Test
+	public void aNameThatBringsItsOwnTheGivesItToTheWordBeforeIt() throws IOException
+	{
+		// "Careful with the The Leviathan." The name's own "The" goes to the
+		// word already pointing at it, an "a" becoming that "the"; with nothing
+		// pointing at it, the name stays as the game spells it.
+		String kill = "{\"type\": \"npcKill\", \"minimum\": 1}";
+		TriggerEvent leviathan = TriggerEvent.kill(12214, "The Leviathan", 723);
+		assertEquals("Careful with the Leviathan.", says(kill, "Careful with the {npc}.", leviathan));
+		assertEquals("The Leviathan has filed its complaint.", says(kill,
+			"The {npc} has filed its complaint.", leviathan));
+		assertEquals("That's the Leviathan. Take your time.", says(kill,
+			"That's a {npc}. Take your time.", leviathan));
+		assertEquals("The Leviathan. I'll stand well back.", says(kill,
+			"A {npc}. I'll stand well back.", leviathan));
+		assertEquals("That Leviathan never stood a chance.", says(kill,
+			"That {npc} never stood a chance.", leviathan));
+		assertEquals("I remember the first Leviathan.", says(kill,
+			"I remember the first {npc}.", leviathan));
+		assertEquals("You beat The Leviathan!", says(kill, "You beat {npc}!", leviathan));
+
+		// Only a whole "The" is given up.
+		assertEquals("Careful with the Thermonuclear smoke devil.", says(kill,
+			"Careful with the {npc}.", TriggerEvent.kill(499, "Thermonuclear smoke devil", 301)));
+		assertEquals("Careful with the Dwarf.", says(kill,
+			"Careful with the {npc}.", TriggerEvent.kill(290, "Dwarf", 7)));
+
+		// Review: a player's name and someone's own words keep their "The".
+		assertEquals("Is that The Old Nite? Pull up a chair.", says("{\"type\": \"channelJoined\"}",
+			"Is that {name}? Pull up a chair.", TriggerEvent.channel(TriggerEvent.Type.CHANNEL_JOIN, "The Old Nite")));
+		assertEquals("You said that the bank is shut?", says("{\"type\": \"chatMessage\", \"contains\": \"bank\"}",
+			"You said that {message}?", TriggerEvent.chat("the bank is shut", 2, "iron btw")));
+	}
+
 	// -------------------------------------------------------------- mirroring
 
 	@Test
