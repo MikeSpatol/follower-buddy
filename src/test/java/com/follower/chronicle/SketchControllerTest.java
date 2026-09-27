@@ -1,15 +1,22 @@
 package com.follower.chronicle;
 
+import com.follower.follower.ErrandController;
+import com.follower.follower.FollowerEntity;
 import com.google.gson.Gson;
 import java.awt.Rectangle;
 import java.io.IOException;
+import java.lang.reflect.Proxy;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import net.runelite.api.Client;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -98,6 +105,131 @@ public class SketchControllerTest
 		Rectangle crop = SketchController.crop(clear, 150, 30, aspect);
 		assertTrue(clear.contains(crop));
 		assertEquals(aspect, crop.width / (double) crop.height, 0.1);
+	}
+
+	// ------------------------------------------------- the moment it sketches
+
+	private boolean busy;
+	private int idle;
+	private boolean holding;
+	private final List<String> said = new ArrayList<>();
+	private FollowerEntity follower;
+
+	/**
+	 * The scribe in Lumbridge, which wants a sketch, with the view and the
+	 * hands under the test's control. There is no player to crop round, so
+	 * nothing is drawn; the line said after is what shows the view was taken.
+	 */
+	private SketchController scribe() throws IOException
+	{
+		Client client = (Client) Proxy.newProxyInstance(Client.class.getClassLoader(), new Class<?>[]{Client.class},
+			(proxy, method, args) ->
+			{
+				Class<?> type = method.getReturnType();
+				return type == int.class ? 0 : type == boolean.class ? false : null;
+			});
+		follower = new FollowerEntity(null, null)
+		{
+			@Override
+			public boolean isSpawned()
+			{
+				return true;
+			}
+
+			@Override
+			public boolean isSettled()
+			{
+				return true;
+			}
+		};
+		ErrandController.Hands hands = new ErrandController.Hands()
+		{
+			@Override
+			public void hold(int itemId)
+			{
+				holding = true;
+			}
+
+			@Override
+			public void release()
+			{
+				holding = false;
+			}
+
+			@Override
+			public boolean isHolding()
+			{
+				return holding;
+			}
+		};
+		return new SketchController(client, follower, hands, loader(), new SketchBook(null), null, null,
+			() -> busy, () -> idle, () -> 12850, said::add);
+	}
+
+	private static void tick(SketchController scribe, int times)
+	{
+		for (int i = 0; i < times; i++)
+		{
+			scribe.tick();
+		}
+	}
+
+	@Test
+	public void itSketchesOnceYouStandStillAndSpeaksOnlyWhenTheScrollIsAway() throws IOException
+	{
+		SketchController scribe = scribe();
+		idle = SketchController.IDLE_TICKS - 1;
+		scribe.tick();
+		assertFalse("not while you might still be moving off", scribe.isSketching());
+
+		idle = SketchController.IDLE_TICKS;
+		scribe.tick();
+		assertTrue(scribe.isSketching());
+		assertTrue("the scroll is out", holding);
+		assertEquals(ErrandController.READ_SCROLL_POSE, follower.getPoseOverride());
+
+		tick(scribe, SketchController.HOLD_TICKS + SketchController.PUT_AWAY_TICKS - 1);
+		assertTrue("nothing said while the view could still be taken", said.isEmpty());
+		scribe.tick();
+		assertEquals(1, said.size());
+		assertFalse("and the scroll put away", holding);
+		assertEquals(0, follower.getPoseOverride());
+	}
+
+	@Test
+	public void aWindowOpenedMidSketchSpoilsItAndItWaitsBeforeTryingAgain() throws IOException
+	{
+		// The view is the picture: a bank opened over it, or a fight, is
+		// not a sketch of the place.
+		SketchController scribe = scribe();
+		idle = SketchController.IDLE_TICKS;
+		scribe.tick();
+		busy = true;
+		scribe.tick();
+		assertFalse(scribe.isSketching());
+		assertFalse(holding);
+
+		busy = false;
+		tick(scribe, SketchController.HOLD_TICKS + SketchController.PUT_AWAY_TICKS);
+		assertTrue("nothing taken, so nothing said", said.isEmpty());
+		tick(scribe, SketchController.RETRY_TICKS - SketchController.HOLD_TICKS - SketchController.PUT_AWAY_TICKS);
+		assertFalse("a while before it tries again", scribe.isSketching());
+		scribe.tick();
+		assertTrue(scribe.isSketching());
+	}
+
+	@Test
+	public void walkingOffMidSketchSpoilsItToo() throws IOException
+	{
+		SketchController scribe = scribe();
+		idle = SketchController.IDLE_TICKS;
+		scribe.tick();
+		idle = 0;
+		scribe.tick();
+		assertFalse(scribe.isSketching());
+		idle = SketchController.IDLE_TICKS;
+		tick(scribe, SketchController.HOLD_TICKS + SketchController.PUT_AWAY_TICKS);
+		assertTrue(said.isEmpty());
 	}
 
 	@Test

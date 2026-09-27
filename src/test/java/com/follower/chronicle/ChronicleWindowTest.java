@@ -161,6 +161,34 @@ public class ChronicleWindowTest
 		assertFalse(enlarged());
 	}
 
+	/** A press alone, before the tick it waits for. */
+	private void pressOnly(int x, int y)
+	{
+		window.clickAdapter.mousePressed(new MouseEvent(canvas, MouseEvent.MOUSE_PRESSED, 0,
+			InputEvent.BUTTON1_DOWN_MASK, x, y, 1, false, MouseEvent.BUTTON1));
+	}
+
+	@Test
+	public void aTabChangesOnTheTickAndASecondPressBeforeItIsIgnored() throws Exception
+	{
+		java.awt.Rectangle[] tabs = ChronicleLayout.tabs(5);
+		pressOnly(tabs[1].x + 10, tabs[1].y + 10);
+		pressOnly(tabs[2].x + 10, tabs[2].y + 10);
+		assertEquals("not before the tick", 0, field("tab"));
+		window.tick();
+		assertEquals("the first press, as the game takes it", 1, field("tab"));
+	}
+
+	@Test
+	public void pressingTheTabYouAreOnKeepsYourPlace() throws Exception
+	{
+		press(ChronicleLayout.LIST.x + 20, ChronicleLayout.ROW_BAND_TOP + ChronicleLayout.ROW_HEIGHT + 7);
+		assertEquals("the second quest", "quest-priest-in-peril", field("selectedId"));
+		java.awt.Rectangle quests = ChronicleLayout.tabs(5)[0];
+		press(quests.x + 10, quests.y + 10);
+		assertEquals("still on it", "quest-priest-in-peril", field("selectedId"));
+	}
+
 	@Test
 	public void escapeBacksOutOfThePlateBeforeItClosesTheBook() throws Exception
 	{

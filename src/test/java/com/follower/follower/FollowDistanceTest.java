@@ -77,7 +77,7 @@ public class FollowDistanceTest
 	}
 
 	@Test
-	public void theDistanceIsClampedToWhatTheModelSupports()
+	public void theDistanceIsClampedToWhatTheModelSupports() throws Exception
 	{
 		FollowerEntity follower = new FollowerEntity(null, null);
 		follower.setFollowDistance(9);
@@ -85,6 +85,14 @@ public class FollowDistanceTest
 		{
 			follower.recordTrail(at(10, y));
 		}
-		assertEquals(at(10, 6 - FollowerEntity.MAX_FOLLOW_DISTANCE + 1), follower.behindBy(FollowerEntity.MAX_FOLLOW_DISTANCE, at(10, 6)));
+		assertEquals(at(10, 6 - FollowerEntity.MAX_FOLLOW_DISTANCE + 1), follower.behindBy(followDistance(follower), at(10, 6)));
+	}
+
+	/** The distance as the setting left it, which is what the follow step walks by. */
+	private static int followDistance(FollowerEntity follower) throws Exception
+	{
+		java.lang.reflect.Field field = FollowerEntity.class.getDeclaredField("followDistance");
+		field.setAccessible(true);
+		return field.getInt(follower);
 	}
 }

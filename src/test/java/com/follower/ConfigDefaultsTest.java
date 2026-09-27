@@ -200,6 +200,47 @@ public class ConfigDefaultsTest
 	}
 
 	@Test
+	public void theErrandFrequencyQuotesTheScheduleTheErrandsRun() throws Exception
+	{
+		// The description gives minutes and the errands count ticks, in two
+		// files; a comment on each asked for them to be changed together.
+		String description = FollowerConfig.class.getMethod("errandFrequency")
+			.getAnnotation(ConfigItem.class).description();
+		Method base = com.follower.follower.ErrandController.class.getDeclaredMethod("baseScheduleTicks");
+		base.setAccessible(true);
+		for (FollowerConfig.ErrandFrequency frequency : FollowerConfig.ErrandFrequency.values())
+		{
+			FollowerConfig chosen = new FollowerConfig()
+			{
+				@Override
+				public FollowerConfig.ErrandFrequency errandFrequency()
+				{
+					return frequency;
+				}
+			};
+			com.follower.follower.ErrandController errands = new com.follower.follower.ErrandController(
+				null, null, chosen, event ->
+				{
+				}, null, () -> false, new com.follower.follower.ErrandController.Hands()
+				{
+					@Override
+					public void hold(int itemId)
+					{
+					}
+
+					@Override
+					public void release()
+					{
+					}
+				});
+			// 0.6 seconds a tick.
+			long minutes = Math.round((int) base.invoke(errands) * 0.6 / 60);
+			assertTrue(frequency + " runs about every " + minutes + " minutes: " + description,
+				description.matches(".*\\b" + minutes + " (minutes )?on " + frequency + "\\b.*"));
+		}
+	}
+
+	@Test
 	public void everySettingIsInASectionAndHasSomethingToSay()
 	{
 		List<String> problems = new ArrayList<>();

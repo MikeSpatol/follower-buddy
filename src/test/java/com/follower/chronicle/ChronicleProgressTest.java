@@ -8,6 +8,7 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import net.runelite.api.QuestState;
@@ -68,6 +69,14 @@ public class ChronicleProgressTest
 		assertFalse(progress.isReadable(falls));
 		progress.setQuestState("WATERFALL_QUEST", QuestState.IN_PROGRESS);
 		assertTrue("the falls are on the map from the start of the quest", progress.isReadable(falls));
+		progress.setQuestState("WATERFALL_QUEST", QuestState.FINISHED);
+		assertTrue("and stay there once it is done", progress.isReadable(falls));
+
+		// A quest finished before the plugin was installed is only ever seen
+		// finished, never begun.
+		setUp0();
+		progress.setQuestState("PRIEST_IN_PERIL", QuestState.FINISHED);
+		assertTrue(progress.isReadable(loader.get("location-paterdomus")));
 	}
 
 	@Test
@@ -170,6 +179,21 @@ public class ChronicleProgressTest
 		assertEquals(Collections.singletonList("location-lumbridge"), told);
 		progress.noteRegion(12850);
 		assertEquals("once", 1, told.size());
+	}
+
+	@Test
+	public void aPageMetBetweenLooksIsNotToldAgainByTheNextLook()
+	{
+		// The book looks at the quests every few ticks. A page a sighting
+		// wrote since the last look is readable now and was not then, but it
+		// is the sighting's news, not a quest's, and it has been told.
+		List<String> told = told();
+		progress.look();
+		progress.noteNpc("Goblin");
+		progress.noteRegion(12850);
+		progress.look();
+		progress.look();
+		assertEquals(Arrays.asList("enemy-goblin", "location-lumbridge"), told);
 	}
 
 	@Test
@@ -283,6 +307,15 @@ public class ChronicleProgressTest
 		progress.look();
 		assertEquals("the goblin was new; the dog's page the quest had opened already",
 			Collections.singletonList("enemy-goblin"), told);
+		assertNull(progress.writtenOn(loader.get("enemy-temple-guardian")));
+
+		// The same with the quest long finished, as it is for most who log in.
+		setUp0();
+		told = told();
+		progress.noteNpc("Temple Guardian");
+		progress.setQuestState("PRIEST_IN_PERIL", QuestState.FINISHED);
+		progress.look();
+		assertTrue(told.toString(), told.isEmpty());
 		assertNull(progress.writtenOn(loader.get("enemy-temple-guardian")));
 	}
 

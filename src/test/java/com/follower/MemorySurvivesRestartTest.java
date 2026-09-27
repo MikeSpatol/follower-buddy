@@ -167,6 +167,20 @@ public class MemorySurvivesRestartTest
 	}
 
 	@Test
+	public void aPagesSavedDateWinsOverOneStampedBeforeTheRead()
+	{
+		// Enabled mid-session, a tick can land before the memory is read, and
+		// the book dates what it sees against the blank memory. The page was
+		// written long before; the saved day is the true one.
+		String blob = FollowerPlugin.snapshotMemory(lived(), 1_234, gson);
+		TriggerContext after = fresh();
+		after.stampChronicled("boss-giant-mole", 20_900L, "Lumbridge");
+		FollowerPlugin.restoreMemory(after, blob, gson, 0);
+		assertEquals(Long.valueOf(20_720L), after.chronicledOn("boss-giant-mole"));
+		assertEquals("Falador", after.chronicledAt("boss-giant-mole"));
+	}
+
+	@Test
 	public void aFollowerThatHasDoneNothingSavesAndLoadsCleanly()
 	{
 		String blob = FollowerPlugin.snapshotMemory(fresh(), 0, gson);

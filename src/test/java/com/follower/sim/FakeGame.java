@@ -541,6 +541,23 @@ public final class FakeGame
 		return this;
 	}
 
+	/**
+	 * Aboard, with the water past the hull resolving to no view at all, as
+	 * past the edge of what the client has loaded. No data reads as open
+	 * everywhere else.
+	 */
+	public FakeGame seaUnmapped()
+	{
+		Answer aboard = (Answer) clientAnswers.get("findWorldViewFromWorldPoint");
+		WorldView sea = (WorldView) clientAnswers.get("getTopLevelWorldView");
+		clientAnswers.put("findWorldViewFromWorldPoint", (Answer) args ->
+		{
+			Object view = aboard.get(args);
+			return view == sea ? null : view;
+		});
+		return this;
+	}
+
 	/** Solid on the boat's map only: a rail, a mast, a cannon, a workbench. */
 	public FakeGame boatBlocksTile(int x, int y)
 	{

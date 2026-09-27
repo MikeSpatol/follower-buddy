@@ -138,6 +138,13 @@ public class StayLifeTest
 			!FollowerPlugin.wanderAllowed(true, false, false, false, 200, FollowerPlugin.WANDER_AFTER_TICKS));
 		assertTrue("and the setting is the law",
 			!FollowerPlugin.wanderAllowed(false, false, true, false, 200, FollowerPlugin.WANDER_AFTER_TICKS));
+
+		// Wander after, set to its shortest: three seconds is five ticks.
+		assertTrue("a shorter wait opens the window sooner",
+			FollowerPlugin.wanderAllowed(true, false, true, false, 5, 5));
+		assertTrue(!FollowerPlugin.wanderAllowed(true, false, true, false, 4, 5));
+		assertTrue("and never on the tick the player stops",
+			!FollowerPlugin.wanderAllowed(true, false, true, false, 0, 0));
 	}
 
 	@Test

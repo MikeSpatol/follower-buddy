@@ -258,6 +258,11 @@ public class WallPathingTest
 			follower.canStep(new WorldPoint(FakeGame.BOAT_WIDTH - 1, 8, 0), 1, 0));
 		assertTrue("the deck itself is still fine",
 			follower.standable(new WorldPoint(FakeGame.BOAT_WIDTH - 1, 8, 0)));
+
+		FollowerEntity unmapped = followerOn(new FakeGame().withCollision().aboardBoat().seaUnmapped());
+		assertFalse("nor where the sea has no map at all",
+			unmapped.standable(new WorldPoint(FakeGame.BOAT_WIDTH, 8, 0)));
+		assertTrue(unmapped.standable(new WorldPoint(FakeGame.BOAT_WIDTH - 1, 8, 0)));
 	}
 
 	/**
