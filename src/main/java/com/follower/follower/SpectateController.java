@@ -44,14 +44,23 @@ public class SpectateController
 	 * The superior slayer monsters, by name, in one place. The spectator
 	 * stands {@link #SUPERIOR_EXTRA_TILES} further from one of these than
 	 * from anything else, and panics once at the sight of it.
+	 *
+	 * <p>Matched exactly, capitals and all, and the capitals are the game's
+	 * own, which it does not keep straight: the superior warped jelly (7400)
+	 * is "Vitreous Warped Jelly" and a stronger copy of it (12457) "Vitreous
+	 * warped Jelly", so both are here. The other way round, the superior
+	 * basilisk (7395) is "Monstrous basilisk", while 9287 and 9288, "Monstrous
+	 * Basilisk", are filed with the ordinary basilisks, not the superiors -
+	 * which is why this stays exact. runTargetAudit checks every name here
+	 * against the cache.
 	 */
 	public static final java.util.Set<String> SUPERIOR_NAMES = new java.util.HashSet<>(
 		java.util.Arrays.asList(
 			"Crushing hand", "Chasm Crawler", "Screaming banshee",
 			"Screaming twisted banshee", "Giant rockslug", "Cockathrice",
 			"Flaming pyrelord", "Monstrous basilisk", "Malevolent Mage",
-			"Insatiable Bloodveld", "Insatiable Mutated Bloodveld", "Vitreous Jelly",
-			"Vitreous warped Jelly", "Cave abomination", "Abhorrent spectre",
+			"Insatiable Bloodveld", "Insatiable mutated Bloodveld", "Vitreous Jelly",
+			"Vitreous Warped Jelly", "Vitreous warped Jelly", "Cave abomination", "Abhorrent spectre",
 			"Repugnant spectre", "Basilisk Sentinel", "Choke devil", "King kurask",
 			"Marble gargoyle", "Nechryarch", "Greater abyssal demon", "Night beast",
 			"Nuclear smoke devil", "Shadow Wyrm", "Guardian Drake", "Colossal Hydra"));

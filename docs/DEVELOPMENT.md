@@ -2039,6 +2039,22 @@ All twelve errand names and all seven `PlayerPose` constants resolve
 (2026-08-08). An errand looking for an object the game does not have would
 simply never happen, with nothing logged either way.
 
+`runTargetAudit` also checks four lists the plugin's own Java keeps - the
+superior slayer monsters, the stall guards, the bank names and the scribe's
+landmarks - read straight from the source, so it checks what ships, and each
+matched the way its call site matches: the superiors and guards exactly,
+capitals and all. Its first run (2026-09-27) found the superiors one capital
+out twice: "Insatiable Mutated Bloodveld" matched nothing (the game says
+"Insatiable mutated Bloodveld", 7398), and "Vitreous warped Jelly" matched a
+stronger copy (12457) but not the superior itself, "Vitreous Warped Jelly"
+(7400). The bank names were exact too, and blind to the game's own "Bank
+Booth" (Burgh de Rott) and "Bank Chest" (Fossil Island and two more); they
+now match in any case. The superiors stay exact on purpose, since "Monstrous
+Basilisk" (9287, 9288) is filed with the ordinary basilisks. Three landmarks
+are still never read: "Noticeboard" and "Portrait" exist only as wall
+decorations, which the landmark scan never looks at, and the game has no
+"Sundial".
+
 ## Known limitations
 
 These are inherent to the approach, not bugs to be filed:

@@ -107,12 +107,14 @@ tasks.register('runSpriteProbe', JavaExec) {
 
 // Checks that every NPC name and item id the rules key on actually exists.
 // A name that matches nothing is a rule that can never fire, and says nothing.
+// The plugin's own name lists are read from its source and checked too.
 //   gradlew runTargetAudit --args="<phrases.json> [cacheDir]"
 tasks.register('runTargetAudit', JavaExec) {
     group = 'verification'
-    description = 'Audits rule NPC names and item ids against the cache'
+    description = 'Audits rule NPC names and item ids, and the plugin name lists, against the cache'
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'com.follower.tools.RuleTargetAudit'
+    systemProperty 'follower.source', file('../../src/main/java').absolutePath
 }
 
 tasks.register('runAudit', JavaExec) {

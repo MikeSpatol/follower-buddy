@@ -1443,7 +1443,7 @@ class KeepingCompany
 		follower.setPoseOverride(0);
 
 		WorldPoint bank = SkillingController.nearestObject(client, here, BANK_TILES,
-			name -> "Bank booth".equals(name) || "Bank chest".equals(name));
+			SkillingController.BANK_NAMES);
 		if (bank != null && !parked())
 		{
 			step = new WorldPoint(seat.getX() + Integer.signum(bank.getX() - seat.getX()),

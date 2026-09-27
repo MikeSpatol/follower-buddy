@@ -140,9 +140,13 @@ public class SkillingController
 	/** How far the next same-name target is looked for after a depletion. */
 	private static final int NEXT_TARGET_TILES = 10;
 
-	/** Which scenery counts as the bank, for the trip and the bag's step. */
+	/**
+	 * Which scenery counts as the bank, for the trip and the bag's step. In
+	 * any case: the game capitalises a few of its own, "Bank Booth" at Burgh
+	 * de Rott and "Bank Chest" on Fossil Island among them.
+	 */
 	static final Predicate<String> BANK_NAMES =
-		name -> "Bank booth".equals(name) || "Bank chest".equals(name);
+		name -> "Bank booth".equalsIgnoreCase(name) || "Bank chest".equalsIgnoreCase(name);
 
 	/** The stall watch stands this far off the player, toward the guard. */
 	static final int STALL_WATCH_TILES = 5;

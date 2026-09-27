@@ -2055,6 +2055,20 @@ public class SkillingSessionTest
 		assertEquals("the seat moved with it", step, skilling.getSeat());
 	}
 
+	/** The step knows the same banks the trip does, capitals and all. */
+	@Test
+	public void theStepBankwardFindsABankTheGameCapitalises()
+	{
+		game.placeObject(9030, "Bank Chest", 60, 50, 0);
+		workTheRange();
+		WorldPoint seat = follower.stayingAt;
+		game.inventoryUsing(27);
+		tick(1);
+		game.inventoryUsing(28);
+		tick(5);
+		assertEquals("one step toward it", 1, follower.stayingAt.distanceTo(seat));
+	}
+
 	@Test
 	public void noBoothMeansTheShrugAlone()
 	{
@@ -2521,7 +2535,12 @@ public class SkillingSessionTest
 	/** Works the tree with a bank ten tiles off, then walks off toward it. */
 	private WorldPoint walkOffToTheBank()
 	{
-		game.placeObject(9030, "Bank booth", BOOTH.getX(), BOOTH.getY(), 0);
+		return walkOffToTheBank("Bank booth");
+	}
+
+	private WorldPoint walkOffToTheBank(String bank)
+	{
+		game.placeObject(9030, bank, BOOTH.getX(), BOOTH.getY(), 0);
 		workTheTree();
 		WorldPoint seat = follower.stayingAt;
 		game.at(55, 50, 0);
@@ -2558,6 +2577,23 @@ public class SkillingSessionTest
 		tick(SkillingController.BANK_BACK_TICKS);
 		assertTrue("none came: following again", follower.following);
 		assertFalse(skilling.holdsTheFeet());
+	}
+
+	/**
+	 * The game capitalises a few banks its own way - "Bank Booth" at Burgh de
+	 * Rott, "Bank Chest" on Fossil Island - and an exact match walked past
+	 * them as if there were no bank at all.
+	 */
+	@Test
+	public void aBankTheGameCapitalisesIsStillABank()
+	{
+		for (String bank : new String[]{"Bank Booth", "Bank Chest", "Bank chest"})
+		{
+			setUp();
+			WorldPoint seat = walkOffToTheBank(bank);
+			assertEquals(bank + ": the seat is kept", seat, follower.stayingAt);
+			assertTrue(bank, skilling.holdsTheFeet());
+		}
 	}
 
 	/**

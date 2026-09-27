@@ -429,6 +429,46 @@ public class SpectateSimulationTest
 		assertEquals(1, panics());
 	}
 
+	/** How far off the named NPC is watched from, one fight in. */
+	private int watchedFrom(String name, int level)
+	{
+		NPC target = fight(name, level);
+		game.moveNpc(target, 3210, 3218, 0);
+		tick(2);
+		assertTrue("it never moved", follower.stayingAt != null);
+		return follower.stayingAt.distanceTo(new WorldPoint(3222, 3218, 0));
+	}
+
+	/**
+	 * The names are matched exactly, so they are the cache's spelling: these
+	 * two were one capital out (7398, 7400) and fought like anything else.
+	 */
+	@Test
+	public void theMutatedBloodveldIsASuperiorAsTheGameSpellsIt()
+	{
+		assertEquals(6, watchedFrom("Insatiable mutated Bloodveld", 278));
+		assertEquals(1, panics());
+	}
+
+	@Test
+	public void theWarpedJellyIsASuperiorAsTheGameSpellsIt()
+	{
+		assertEquals(6, watchedFrom("Vitreous Warped Jelly", 241));
+		assertEquals(1, panics());
+	}
+
+	/**
+	 * And the exactness is kept on purpose: 9287 and 9288 are "Monstrous
+	 * Basilisk", filed with the ordinary basilisks, one capital off the
+	 * superior's "Monstrous basilisk".
+	 */
+	@Test
+	public void theOtherMonstrousBasiliskIsNotASuperior()
+	{
+		assertEquals(4, watchedFrom("Monstrous Basilisk", 135));
+		assertEquals(0, panics());
+	}
+
 	@Test
 	public void withTheCompanySwitchedOffASuperiorIsJustAnotherFight()
 	{

@@ -18,13 +18,17 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import net.runelite.cache.ConfigType;
 import net.runelite.cache.IndexType;
 import net.runelite.cache.definitions.ItemDefinition;
 import net.runelite.cache.definitions.NpcDefinition;
+import net.runelite.cache.definitions.ObjectDefinition;
 import net.runelite.cache.definitions.loaders.ItemLoader;
 import net.runelite.cache.definitions.loaders.NpcLoader;
+import net.runelite.cache.definitions.loaders.ObjectLoader;
 import net.runelite.cache.fs.Archive;
 import net.runelite.cache.fs.ArchiveFiles;
 import net.runelite.cache.fs.FSFile;
@@ -44,6 +48,12 @@ import net.runelite.cache.fs.Store;
  * <p>Names are matched the way the plugin matches them: case-insensitively,
  * whole, with {@code *} as a wildcard. So this asks exactly the question the
  * plugin will ask at runtime, against the same cache it will ask it of.
+ *
+ * <p>The plugin's own Java keeps name lists with the same risk - the superior
+ * slayer monsters, the stall guards, the bank, the landmarks - and some of
+ * them match exactly, capitals and all, so a name one capital out is just as
+ * dead. Those are read from the plugin's source, not copied here, so this
+ * checks the list that ships. Each is matched the way its call site matches.
  *
  * <pre>
  *   gradlew runTargetAudit --args="&lt;phrases.json&gt; [cacheDir]"
@@ -67,6 +77,8 @@ public class RuleTargetAudit
 		Set<String> npcNames = new HashSet<>();
 		Map<Integer, String> items = new TreeMap<>();
 		Set<Integer> npcIds = new HashSet<>();
+		Map<String, List<Integer>> npcsByName = new TreeMap<>();
+		Map<String, List<ObjectDefinition>> objectsByName = new TreeMap<>();
 
 		try (Store store = new Store(cacheDir.toFile()))
 		{
@@ -84,6 +96,20 @@ public class RuleTargetAudit
 				{
 					npcNames.add(normalise(npc.name));
 					npcIds.add(npc.id);
+					npcsByName.computeIfAbsent(npc.name, key -> new ArrayList<>()).add(npc.id);
+				}
+			}
+
+			Archive objectArchive = configs.getArchive(ConfigType.OBJECT.getId());
+			ArchiveFiles objectFiles = objectArchive.getFiles(storage.loadArchive(objectArchive));
+			ObjectLoader objectLoader = new ObjectLoader();
+			for (FSFile file : objectFiles.getFiles())
+			{
+				ObjectDefinition object = objectLoader.load(file.getFileId(), file.getContents());
+				if (object.getName() != null && !"null".equals(object.getName()))
+				{
+					objectsByName.computeIfAbsent(object.getName(), key -> new ArrayList<>())
+						.add(object);
 				}
 			}
 
@@ -167,6 +193,181 @@ public class RuleTargetAudit
 			"these rules watch for an item that does not exist");
 		report("NPC ids", checkedNpcIds, deadNpcIds,
 			"these rules watch for an NPC id that does not exist");
+
+		String source = System.getProperty("follower.source");
+		if (source == null)
+		{
+			System.out.println("the plugin's own lists were NOT audited: run this through"
+				+ " gradlew runTargetAudit, which says where the plugin source is");
+			return;
+		}
+		// Each list is matched as its call site matches it: SpectateController
+		// isSuperior and SkillingController nearestGuard exactly, BANK_NAMES
+		// and Noticing.isLandmark in any case. Change one, change both.
+		Path java = Paths.get(source, "com", "follower", "follower");
+		List<String> deadLists = new ArrayList<>();
+		int checkedLists = 0;
+		checkedLists += auditNpcs("SpectateController.SUPERIOR_NAMES",
+			literals(java.resolve("SpectateController.java"), "SUPERIOR_NAMES"),
+			npcsByName, deadLists);
+		checkedLists += auditNpcs("SkillingController.GUARD_NAMES",
+			literals(java.resolve("SkillingController.java"), "GUARD_NAMES"),
+			npcsByName, deadLists);
+		checkedLists += auditObjects("SkillingController.BANK_NAMES",
+			literals(java.resolve("SkillingController.java"), "BANK_NAMES"),
+			objectsByName, deadLists);
+		checkedLists += auditObjects("Noticing.LANDMARKS",
+			literals(java.resolve("Noticing.java"), "LANDMARKS"),
+			objectsByName, deadLists);
+		report("plugin list names", checkedLists, deadLists,
+			"the plugin looks for these and can never find them");
+	}
+
+	/**
+	 * The quoted names in one field's declaration in the plugin source, up to
+	 * its semicolon. Finding none is an error, never an empty pass.
+	 */
+	private static List<String> literals(Path source, String field) throws IOException
+	{
+		String text = new String(Files.readAllBytes(source), StandardCharsets.UTF_8);
+		int start = text.indexOf(field + " =");
+		if (start < 0)
+		{
+			throw new IllegalStateException(field + " is no longer declared in " + source);
+		}
+		List<String> names = new ArrayList<>();
+		Matcher quoted = Pattern.compile("\"([^\"]*)\"")
+			.matcher(text.substring(start, text.indexOf(';', start)));
+		while (quoted.find())
+		{
+			names.add(quoted.group(1));
+		}
+		if (names.isEmpty())
+		{
+			throw new IllegalStateException(field + " holds no quoted names in " + source);
+		}
+		return names;
+	}
+
+	/**
+	 * Names the plugin compares with equals against NPC.getName(): exact,
+	 * capitals and all. The game does not always capitalise one name the same
+	 * way twice, so the other spellings the list does not carry are shown:
+	 * those NPCs are missed, which may or may not be wanted.
+	 */
+	private static int auditNpcs(String list, List<String> names,
+		Map<String, List<Integer>> npcsByName, List<String> dead)
+	{
+		System.out.println(list + " (NPC names, exact case):");
+		for (String name : names)
+		{
+			List<String> others = new ArrayList<>();
+			for (Map.Entry<String, List<Integer>> entry : npcsByName.entrySet())
+			{
+				if (entry.getKey().equalsIgnoreCase(name) && !names.contains(entry.getKey()))
+				{
+					others.add("\"" + entry.getKey() + "\" " + ids(entry.getValue()));
+				}
+			}
+			String unmatched = others.isEmpty() ? "" : "; not matched: " + String.join(", ", others);
+			List<Integer> found = npcsByName.get(name);
+			if (found != null)
+			{
+				System.out.printf("  %-32s found %s%s%n", name, ids(found), unmatched);
+				continue;
+			}
+			System.out.printf("  %-32s NOT IN THE GAME%s%n", name, unmatched);
+			dead.add(String.format("%-36s \"%s\"", list, name));
+		}
+		System.out.println();
+		return names.size();
+	}
+
+	private static String ids(List<Integer> ids)
+	{
+		return ids.size() <= 8 ? ids.toString() : "(" + ids.size() + " ids)";
+	}
+
+	/**
+	 * Names the plugin compares against a scene object's name in any case.
+	 * Both scans read only the tile's game objects, so a name the cache only
+	 * models as a wall, a wall decoration or a ground decoration is never seen
+	 * by them either.
+	 */
+	private static int auditObjects(String list, List<String> names,
+		Map<String, List<ObjectDefinition>> objectsByName, List<String> dead)
+	{
+		System.out.println(list + " (object names, any case, game objects only):");
+		for (String name : names)
+		{
+			int matched = 0;
+			int gameObjects = 0;
+			Set<String> shapes = new TreeSet<>();
+			Set<String> near = new TreeSet<>();
+			for (Map.Entry<String, List<ObjectDefinition>> entry : objectsByName.entrySet())
+			{
+				String candidate = entry.getKey();
+				if (!candidate.equalsIgnoreCase(name))
+				{
+					if (candidate.toLowerCase(Locale.ROOT).contains(name.toLowerCase(Locale.ROOT)))
+					{
+						near.add("\"" + candidate + "\"");
+					}
+					continue;
+				}
+				for (ObjectDefinition object : entry.getValue())
+				{
+					String shape = shape(object.getObjectTypes());
+					matched++;
+					shapes.add(shape);
+					if (shape.contains("game object"))
+					{
+						gameObjects++;
+					}
+				}
+			}
+			if (gameObjects > 0)
+			{
+				System.out.printf("  %-32s found, %d of %d as game objects%n",
+					name, gameObjects, matched);
+				continue;
+			}
+			if (matched > 0)
+			{
+				System.out.printf("  %-32s NEVER SEEN BY THE SCAN: %d modelled only as %s%n",
+					name, matched, String.join(", ", shapes));
+			}
+			else
+			{
+				List<String> some = new ArrayList<>(near).subList(0, Math.min(8, near.size()));
+				System.out.printf("  %-32s NOT IN THE GAME%s%n", name, near.isEmpty() ? ""
+					: ", nearest " + String.join(", ", some) + (near.size() > 8 ? " ..." : ""));
+			}
+			dead.add(String.format("%-36s \"%s\"", list, name));
+		}
+		System.out.println();
+		return names.size();
+	}
+
+	/**
+	 * Where an object can stand, from the shapes the cache has models for. No
+	 * shape list means the one default model, a centrepiece's. Walls are 0-3,
+	 * wall decorations 4-8 (all drawn from shape 4), game objects 9-21, ground
+	 * decorations 22.
+	 */
+	private static String shape(int[] types)
+	{
+		if (types == null)
+		{
+			return "game object";
+		}
+		Set<String> kinds = new TreeSet<>();
+		for (int type : types)
+		{
+			kinds.add(type <= 3 ? "wall" : type <= 8 ? "wall decoration"
+				: type <= 21 ? "game object" : "ground decoration");
+		}
+		return String.join("/", kinds);
 	}
 
 	private static void report(String what, int checked, List<String> dead, String why)
