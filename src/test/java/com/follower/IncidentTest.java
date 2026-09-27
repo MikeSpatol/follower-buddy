@@ -85,6 +85,26 @@ public class IncidentTest
 	}
 
 	@Test
+	public void turningReminiscingOffQuietensTheTalkNotTheMemory() throws IOException
+	{
+		// The setting promises it "does not stop it remembering", but the
+		// memory rules sit in its group and silencing the group stopped them
+		// filing. Silenced by group or by id, the memory is still kept.
+		Harness h = new Harness(folder.newFolder().toPath());
+		h.engine.setDisabledGroups(Collections.singleton("memory"));
+		h.gameTicks(1);
+		h.dispatch(TriggerEvent.loot(2_000_000, "Abyssal whip"));
+		assertEquals("the Abyssal whip that dropped", h.engine.getContext().getIncidentPhrase());
+
+		Harness byId = new Harness(folder.newFolder().toPath());
+		byId.engine.setDisabledGroups(Collections.singleton("memory-death"));
+		byId.gameTicks(1);
+		byId.dispatch(TriggerEvent.death());
+		assertEquals("the way that went", byId.engine.getContext().getIncidentPhrase());
+		assertTrue("and silenced means silent", byId.firedBy("memory-death").isEmpty());
+	}
+
+	@Test
 	public void whenAndWhereReadAsSomebodyWouldSayThem()
 	{
 		TriggerContext context = new TriggerContext(new com.follower.sim.FakeGame().client);

@@ -773,7 +773,10 @@ public class SpeechEngine
 			// on purpose (the reaction is the line worth hearing), and filing
 			// only from the winner meant the drop and the boss were almost
 			// never remembered. Not while primed, when nothing is news yet.
-			if (rising && isActive(rule) && primeTicksLeft == 0)
+			// And whatever is silenced: turning a group off quietens what the
+			// follower says, as the Reminiscing setting promises, not what it
+			// remembers - the Memory window is where remembering is undone.
+			if (rising && rule.isEnabled() && primeTicksLeft == 0)
 			{
 				file(rule, event);
 			}
