@@ -2,6 +2,8 @@ package com.follower;
 
 import com.follower.sim.Harness;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -155,6 +157,62 @@ public class GiftTest
 			"the feather you found me", h.engine.getContext().getSouvenir());
 		assertFalse("and the wish is spent, so the option finally goes away",
 			h.engine.getContext().isWishing());
+	}
+
+	@Test
+	public void aGiftIsNotLostToASouvenirStillQueued() throws IOException
+	{
+		// A rock found a moment before, still waiting behind the overhead box
+		// while the Talk-to box is open, is carried only once its line lands.
+		// Both thank-yous read the pocket, so the guard held them back for
+		// the rock - and the answer that brings them is never given again.
+		// The box had already said "that's the one", and nothing followed:
+		// no thanks, the wish still open, the gift option back in the box.
+		Harness h = wishingAndHolding();
+		List<String> handedOver = new ArrayList<>();
+		List<Runnable> held = new ArrayList<>();
+		h.engine.setSink((text, output, rule, animationId, onSaid) ->
+		{
+			handedOver.add(rule.id);
+			held.add(onSaid);
+		});
+		assertTrue(h.engine.force("souvenir-rock"));
+		Runnable rockLands = held.get(0);
+
+		h.answers("gift");
+		h.gameTicks(3);
+		assertTrue("the gift is thanked for: " + handedOver,
+			handedOver.contains("gifted-accept") || handedOver.contains("gifted-swap"));
+		assertFalse("and the wish is spent", h.engine.getContext().isWishing());
+		assertEquals("the gift took the pocket",
+			"the feather you found me", h.engine.getContext().getSouvenir());
+
+		rockLands.run();
+		assertEquals("and the rock landing after it does not take it back",
+			"the feather you found me", h.engine.getContext().getSouvenir());
+	}
+
+	@Test
+	public void aSouvenirLandingBeforeTheThankYouStillGivesWayToTheGift() throws IOException
+	{
+		// The same, with the rock's line landing in the two ticks the
+		// thank-you waits. Chosen on empty hands, the thank-you picked the
+		// gift up rather than trading for it, and the pocket refuses a second
+		// thing: the wish was thanked for and spent, and the rock kept.
+		Harness h = wishingAndHolding();
+		List<Runnable> held = new ArrayList<>();
+		h.engine.setSink((text, output, rule, animationId, onSaid) -> held.add(onSaid));
+		assertTrue(h.engine.force("souvenir-rock"));
+		Runnable rockLands = held.get(0);
+
+		h.answers("gift");
+		rockLands.run();
+		assertEquals("a nice flat rock", h.engine.getContext().getSouvenir());
+		h.gameTicks(3);
+
+		assertFalse("the wish is spent", h.engine.getContext().isWishing());
+		assertEquals("and the gift outranks the rock",
+			"the feather you found me", h.engine.getContext().getSouvenir());
 	}
 
 	@Test

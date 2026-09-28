@@ -811,7 +811,12 @@ public class SpeechEngine
 				file(rule, event);
 			}
 
-			if (!rising || !isActive(rule) || !rule.offCooldown(now) || awaitsALanding(rule, now))
+			// Except the gift. The answer that brings it is given once, so a
+			// gift held back is a gift lost; and it trades whatever the pocket
+			// holds when it is thanked for, so a rock still on its way only
+			// changes the words.
+			if (!rising || !isActive(rule) || !rule.offCooldown(now)
+				|| (!Boolean.TRUE.equals(rule.grantsWish) && awaitsALanding(rule, now)))
 			{
 				continue;
 			}
@@ -1209,9 +1214,9 @@ public class SpeechEngine
 	/**
 	 * Whether the rule reads a state that a line still on its way will set.
 	 * Those states latch when the line lands, so judged now, "none advising"
-	 * would open a dare over advice waiting in the queue, and "none carrying"
-	 * would take a gift into hands a rock is about to fill. The rule waits
-	 * until the line lands or can no longer land.
+	 * would open a dare over advice waiting in the queue. The rule is held
+	 * back until the line lands or can no longer land, and gets its turn when
+	 * its trigger comes round again. The gift's never does, so it is not held.
 	 */
 	private boolean awaitsALanding(SpeechRule rule, long now)
 	{
@@ -1238,8 +1243,10 @@ public class SpeechEngine
 		}
 		// A swap rule replaces what is carried - it said the exchange out
 		// loud, which is what the refuse-if-carrying guard exists to require.
+		// So does a gift, which outranks a rock the follower found itself: it
+		// is spent at the win, and a rock still queued can land either side.
 		int minutes = rule.pickUp.minutes == null ? 20 : rule.pickUp.minutes;
-		if (Boolean.TRUE.equals(rule.pickUp.swap))
+		if (Boolean.TRUE.equals(rule.pickUp.swap) || Boolean.TRUE.equals(rule.grantsWish))
 		{
 			getContext().tradeFor(souvenir, minutes);
 		}
