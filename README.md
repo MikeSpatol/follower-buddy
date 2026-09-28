@@ -15,7 +15,7 @@ the way a real follower does. Right-click it for Talk-to, Stay, Follow,
 Step-in-front and a couple of emotes, or hold Shift and right-click any tile
 to Send it there.
 
-**It talks.** Over 2,200 lines across 448 rules, chosen by what's happening:
+**It talks.** Over 2,300 lines across 508 rules, chosen by what's happening:
 bosses sighted and fought, levels, deaths, drops, low HP and prayer, the
 places you visit, the gear you put on, things you examine, famous quest NPCs
 nearby, and long stretches of nothing at all. Lines appear overhead, in the
@@ -156,7 +156,8 @@ tick, overhead text colour and height, how long a line stays up, reading
 speed), Sounds (play attached sounds, volume), Phrases (a toggle per subject,
 named as in Messages), Thrall mode, Errands (a toggle per errand and a
 frequency), Skilling (keeps you company while you skill, borrows your tools),
-Combat, Advanced: animations and graphics (closed by default: the
+Company (looks where you look, notices things, walks beside you on open
+ground), Combat, Advanced: animations and graphics (closed by default: the
 animation and graphic ids, and a box that silences groups or phrase ids by
 name) and Developer (closed by default).
 
@@ -195,7 +196,9 @@ Developer section, and typing one while it is off says so.
 
 - The plugin uses `Client#createRuneLiteObject` for the follower and a
   standard overlay for the dialog box; its right-click options are added on
-  `MenuOpened` via `Menu#createMenuEntry`.
+  `MenuOpened` via `Menu#createMenuEntry`, and Talk-to is also added on
+  `ClientTick` while the follower is hovered, so it is the left-click action,
+  as in 1.4.0.
 - Worn-item and body-kit models are composed at runtime from `ItemComposition`
   and kit data via `loadModelData` / `mergeModels`, so any item works and the
   model animates.

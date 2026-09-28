@@ -143,7 +143,7 @@ speech by group. That turns "feels chattier lately" into a diff.
 
 ## The in-game smoke list
 
-Ten minutes, before any push a stranger might install. Everything here has
+Fifteen minutes, before any push a stranger might install. Everything here has
 a force-path, so none of it waits on luck:
 
 1. Fresh login: the greeting arrives a beat after the spawn, in the era the
@@ -155,7 +155,8 @@ a force-path, so none of it waits on luck:
 4. `::follower errand study` and one of bank/altar/fire: trip out and back,
    nothing left posed or held.
 5. Right-click Stay, walk out of sight, come back: the post is acknowledged
-   and the reunion noticed. Follow releases it.
+   and the reunion noticed. Relog while it stays: it comes back parked,
+   since Stay is saved. Follow releases it.
 6. Open a bank, close it, linger: the breather is possible (chance-gated -
    absence is not failure, but a line here is a pass).
 7. Side panel, Memory...: the window reads true against the session; the
@@ -166,3 +167,9 @@ a force-path, so none of it waits on luck:
    anything said mid-task that should have waited for a boundary.
 10. Toggle the plugin off and on: clean shutdown, clean return, memory
     intact.
+11. Click a tree from a few tiles away and chop: it walks up, takes a seat,
+    borrows the axe and works alongside now and then; stop, and it hands
+    the axe back with a bow, nothing left held or posed.
+12. Right-click, Chronicle: the book opens, and Escape or a click outside
+    closes it. Stand still somewhere not yet sketched with nothing open:
+    the scroll comes out and one line follows.

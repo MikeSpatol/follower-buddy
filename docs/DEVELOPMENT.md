@@ -19,7 +19,7 @@ automated, and the follower cannot be interacted with.
 - **Authentic follower** - pet-style following on the game's own mechanics, learned
   weapon stances, game-exact dialog boxes with chatheads, right-click menu, shift-hover
   and click cross exactly as a real NPC.
-- **Speech system** - 349 bundled rules across editable groups (bosses, player
+- **Speech system** - 508 bundled rules across editable groups (bosses, player
   statuses, locations, item equips, quest NPCs, thrall, errands, combat,
   mimicry, reactions, memory, souvenirs, predictions, the clock, misc), hot-reloaded
   from `phrases.json` within a second. The Messages window, under Talking in
@@ -984,6 +984,7 @@ gated ones once Developer commands is on; both read `EVERYDAY_COMMANDS` and
 | `::follower cachecheck` **[dev]** | Diff the live cache parse against the offline dump, field by field |
 | `::follower stanceaudit` **[dev]** | Validate every animation id the stance library names, and report weapon coverage |
 | `::follower chatwatch` **[dev]** | Print every chat line with its `ChatMessageType`, for writing `chatMessage` rules |
+| `::follower fires` **[dev]** | List the fires the follower knows about within 12 tiles, where its feet are and what owns them, and the skilling session, for when it stands in a fire |
 | `::follower mood [0-100]` **[dev]** | Read or set the mood |
 | `::follower fire <rule-id>` **[dev]** | Say a rule now, whatever its conditions, cooldown and the mute say |
 | `::follower want` **[dev]** | What the follower is hoping for, and whether a question is open |
@@ -1729,7 +1730,8 @@ fall behind the game: the first version of this borrowed a dragon felling axe
 as a bronze one, and completing the table did not fix it. So the player's
 weapon slot is read and matched by NAME - an axe that is not a battleaxe, a
 greataxe, a thrownaxe or a pickaxe; a pickaxe; a harpoon or a rod - and only
-when the tool is in the bag rather than the hand do the tables below answer.
+when the hand holds no such tool do the tables below answer. They read what is
+worn, not the bag, so an axe carried in the bag gets the bronze one.
 The tool is preferred to a skilling outfit's hat, because the hands hold one
 thing and a hat instead of your pickaxe is the worse trade.
 
