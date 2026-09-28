@@ -2178,9 +2178,10 @@ These are inherent to the approach, not bugs to be filed:
 - **Captured models don't animate.** By construction; see the table above.
 - **Capture mode borrows the shared actor model cache.** `Actor#getModel()` returns a
   reference into a cache the client recycles between actors, so a naively held model
-  turns into whichever nearby NPC or player reused the slot. The capture path merges
-  the model to detach it, but this is inherent fragility in the approach - the cache
-  dump path composes its own geometry and is immune. Prefer it.
+  turns into whichever nearby NPC or player reused the slot. The capture path merged
+  the model to detach it until RuneLite 1.13 removed the Model merge; with no way to
+  detach, a capture now finishes with null. The cache dump path composes its own
+  geometry and is immune. Prefer it.
 - **Equipment-based conditions miss rings and ammo.** `itemEquipped` reads the player
   composition, which only covers slots with a visible model.
 - The region ids in the starter rules are **examples**. Verify with `::follower where`.
@@ -2207,7 +2208,9 @@ static poses via `applyTransformations` with an unpacked index, loop target
 replicating `loop()`'s `frames - frameStep` rule) and lerps vertices between them
 using the same elapsed-tick clock. The wrap becomes indistinguishable from any
 other frame boundary. Guards: pose-blend and Maya animations fall through to the
-client; shared-vertex-array detection disables the lerp rather than corrupt models.
+client; a posed model that is the base, or shares its vertex arrays, is never written
+and the frame falls through to the client; a posed model that does not match the
+endpoints vertex for vertex disables the lerp rather than corrupt models.
 
 `::follower wraplerp off` reverts to the frame-trim workaround for comparison; the
 trim machinery (`wrapearly` / `wrapauto`) is retained as the fallback, and takes
@@ -2216,8 +2219,11 @@ back over automatically if the lerp's safety guard ever trips.
 Verified in game 2026-08-02: idle, walk and run all loop smoothly with Animation
 Smoothing on, full frame count, no trim. One implementation note that cost a
 debugging round: `applyTransformations` returns a model backed by the client's
-shared animation scratch buffer - snapshot its vertices immediately and render
-into a mergeModels-detached copy, never hold references to its output.
+shared animation scratch buffer - snapshot its vertices immediately and never hold
+references to its output. The blend used to render into a mergeModels-detached
+copy; RuneLite 1.13 removed the Model merge, so it is now written into the temp the
+render-time `applyTransformations` hands back and that temp is returned, exactly as
+the client's own controller returns it.
 
 **Superseded history** (the trim era):
 

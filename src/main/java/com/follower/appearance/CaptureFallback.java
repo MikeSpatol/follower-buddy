@@ -21,6 +21,9 @@ import net.runelite.api.PlayerComposition;
  *       current, so it can't be re-animated — see {@link ComposedAppearance}.</li>
  * </ul>
  *
+ * <p>Since RuneLite 1.13 the stolen model cannot be detached from the client's
+ * shared cache, so every capture finishes with null; see {@link #tick()}.
+ *
  * <p>All methods must be called on the client thread. {@link #tick()} drives the
  * one-frame delay and should be called from a per-frame event.
  */
@@ -41,6 +44,7 @@ public class CaptureFallback
 	private Consumer<Model> callback;
 	private int[] savedEquipment;
 	private int framesWaited;
+	private boolean noDetachLogged;
 
 	@Inject
 	public CaptureFallback(Client client)
@@ -89,39 +93,21 @@ public class CaptureFallback
 			return;
 		}
 
-		Model captured = null;
-		Player local = client.getLocalPlayer();
-		if (local != null)
+		// Actor#getModel hands back a reference into the client's shared actor
+		// model cache. That slot gets recycled for other actors, so holding the
+		// reference makes the follower visibly turn into whichever nearby NPC or
+		// player reused it. A single-model merge used to detach a copy, but
+		// RuneLite 1.13 removed the Model merge with nothing in its place, so
+		// there is no copy to hand back and the capture comes back empty.
+		if (!noDetachLogged)
 		{
-			try
-			{
-				Model live = local.getModel();
-				if (live != null)
-				{
-
-					// Actor#getModel hands back a reference into the client's shared
-					// actor model cache. That slot gets recycled for other actors, so
-					// holding the reference makes the follower visibly turn into
-					// whichever nearby NPC or player reused it. Merging produces a new
-					// Model with its own geometry, detaching us from the cache.
-					Model detached = client.mergeModels(new Model[]{live}, 1);
-					captured = detached != null && detached != live ? detached : live;
-
-					if (captured == live)
-					{
-						log.warn("mergeModels returned the shared instance; captured model may "
-							+ "still be recycled by other actors. Prefer the cache dump path.");
-					}
-				}
-			}
-			catch (RuntimeException e)
-			{
-				log.warn("Failed to capture player model", e);
-			}
+			noDetachLogged = true;
+			log.debug("Capture has no way to detach the player model from the shared cache; "
+				+ "capturing nothing. Use the cache dump path.");
 		}
 
 		swapOut();
-		finish(captured);
+		finish(null);
 	}
 
 	/** Restores the player's real appearance. Safe to call at any time. */

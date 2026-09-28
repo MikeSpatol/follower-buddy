@@ -9018,11 +9018,6 @@ public class FollowerPlugin extends Plugin
 						net.runelite.api.Model temp =
 							client.applyTransformations(base, idle, 0, null, 0);
 						logPriorities("animated temp", temp);
-						if (temp != null)
-						{
-							logPriorities("detached merge of temp",
-								client.mergeModels(new net.runelite.api.Model[]{temp}, 1));
-						}
 					}
 				});
 				break;
