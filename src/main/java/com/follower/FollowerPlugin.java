@@ -5004,7 +5004,7 @@ public class FollowerPlugin extends Plugin
 
 	private void maybeAdoptThrall(NPC npc)
 	{
-		if (!config.thrallMode() || npc == thrallNpc)
+		if (!replacesThralls(config.thrallMode(), config.thrallOnly()) || npc == thrallNpc)
 		{
 			return;
 		}
@@ -5277,6 +5277,17 @@ public class FollowerPlugin extends Plugin
 	static boolean absentUntilSummoned(boolean thrallOnly, boolean thrallBusiness)
 	{
 		return thrallOnly && !thrallBusiness;
+	}
+
+	/**
+	 * Whether a summon is taken at all. Thrall only is the replacement and
+	 * nothing else, so it brings the replacement with it; otherwise, ticked
+	 * with Replace thralls off, it hides the follower until a summon that is
+	 * never taken.
+	 */
+	static boolean replacesThralls(boolean thrallMode, boolean thrallOnly)
+	{
+		return thrallMode || thrallOnly;
 	}
 
 	@Subscribe
@@ -7459,7 +7470,8 @@ public class FollowerPlugin extends Plugin
 		// attack/block cycle owns the animation slot), but this rises
 		// regardless. Its FALL is just the ten-second cooldown ending and
 		// means nothing for the thrall's life.
-		if (event.getVarbitId() == THRALL_SUMMONED_VARBIT && config.thrallMode()
+		if (event.getVarbitId() == THRALL_SUMMONED_VARBIT
+			&& replacesThralls(config.thrallMode(), config.thrallOnly())
 			&& event.getValue() == 1)
 		{
 			log.debug("Thrall summoned (cooldown varbit up)");

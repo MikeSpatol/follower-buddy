@@ -1,11 +1,14 @@
 package com.follower;
 
+import com.follower.appearance.OutfitProfileStore;
 import com.follower.sim.FakeGame;
 import com.follower.sim.Harness;
+import com.google.gson.Gson;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.List;
 import net.runelite.api.NPC;
+import net.runelite.client.callback.ClientThread;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -84,6 +87,54 @@ public class ThrallOnlyTest
 		FollowerPlugin loading = plugin(true);
 		set(loading, "thrallLimbo", true);
 		assertFalse("a scene load drops the thrall NPC, not the thrall", hidden(loading));
+	}
+
+	@Test
+	public void thrallOnlyTakesTheThrallEvenWithReplaceThrallsOff() throws Exception
+	{
+		// Thrall only is the replacement and nothing else, so it brings the
+		// replacement with it. With Replace thralls off as well, no summon was
+		// ever taken, and the follower was hidden for good with no word why.
+		FakeGame game = new FakeGame().varbit(12290, 1);
+		NPC thrall = game.spawnNpc(10886, "Greater Zombified Spawn", 0);
+		Harness h = new Harness(folder.newFolder().toPath());
+		h.gameTicks(2);
+
+		FollowerPlugin plugin = new FollowerPlugin();
+		set(plugin, "client", game.client);
+		set(plugin, "config", new FollowerConfig()
+		{
+			@Override
+			public boolean thrallMode()
+			{
+				return false;
+			}
+
+			@Override
+			public boolean thrallOnly()
+			{
+				return true;
+			}
+		});
+		set(plugin, "speechEngine", h.engine);
+		set(plugin, "profileStore", new OutfitProfileStore(new Gson()));
+		// The body's part runs on the client thread; only the taking is asked about.
+		set(plugin, "clientThread", new ClientThread()
+		{
+			@Override
+			public void invoke(Runnable r)
+			{
+			}
+		});
+		assertTrue(hidden(plugin));
+
+		Method adopt = FollowerPlugin.class.getDeclaredMethod("maybeAdoptThrall", NPC.class);
+		adopt.setAccessible(true);
+		adopt.invoke(plugin, thrall);
+		assertFalse("the summon brings it", hidden(plugin));
+
+		assertTrue("the varbit's path asks the same question", FollowerPlugin.replacesThralls(false, true));
+		assertFalse("and with both off no thrall is ever taken", FollowerPlugin.replacesThralls(false, false));
 	}
 
 	/**

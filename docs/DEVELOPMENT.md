@@ -1271,7 +1271,8 @@ and talks; it never acts on the player's behalf.
   exit's stage one is unchanged (the per-style phase-out where it stands);
   stage two despawns instead of bringing it home. While absent the speech
   engine is muted and the queue is cleared, so nothing is said and nothing
-  is saved up for the next summon. Off by default.
+  is saved up for the next summon. It takes summons whether or not Replace
+  thralls is on, since the replacement is the whole of it. Off by default.
 - **Two API notes.** `Hooks.registerRenderableDrawListener` is deprecated with
   no replacement registration path yet, and core's Entity Hider uses the same
   one. `Perspective.getClickbox` is marked internal; it backs
