@@ -135,4 +135,21 @@ public class LifecycleGlueTest
 		assertTrue("shutting down must reset the sketch",
 			method("protected void shutDown()").contains("sketching.reset();"));
 	}
+
+	@Test
+	public void theSketchBookOpensWhenTheAccountsProfileArrives() throws IOException
+	{
+		// An account's first login makes its profile after the login itself,
+		// so the book opened at the login had no folder, and every sketch
+		// drawn that session was gone at the logout. A logout posts no
+		// profile, and must not reopen the book, or a sketch still being
+		// drawn would lose the folder it was begun for.
+		assertTrue("the plugin must hear the profile arrive", source().contains(
+			"@Subscribe\n\tpublic void onRuneScapeProfileChanged(RuneScapeProfileChanged event)"));
+		String arrived = method("public void onRuneScapeProfileChanged(RuneScapeProfileChanged event)");
+		assertTrue("the book opens for the new profile",
+			arrived.contains("sketchBook.openFor(event.getNewProfile());"));
+		assertTrue("but not for a logout's empty one",
+			arrived.contains("event.getNewProfile() != null"));
+	}
 }

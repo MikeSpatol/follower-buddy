@@ -45,6 +45,7 @@ import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.CommandExecuted;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.client.events.ProfileChanged;
+import net.runelite.client.events.RuneScapeProfileChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.GraphicChanged;
 import net.runelite.api.events.HitsplatApplied;
@@ -6135,6 +6136,19 @@ public class FollowerPlugin extends Plugin
 			// auto-harvest once the client has rebuilt the model. Duplicate colour
 			// sets are deduplicated in the store, so gear swaps cost nothing.
 			autoHarvestTicks = MODEL_REBUILD_TICKS;
+		}
+	}
+
+	@Subscribe
+	public void onRuneScapeProfileChanged(RuneScapeProfileChanged event)
+	{
+		// An account's first login makes its profile after the login itself,
+		// so the book opened then had nowhere to keep what it drew. A logout
+		// brings no profile and is left alone: a sketch still being drawn
+		// belongs in the folder it was begun for.
+		if (sketchBook != null && event.getNewProfile() != null)
+		{
+			sketchBook.openFor(event.getNewProfile());
 		}
 	}
 
