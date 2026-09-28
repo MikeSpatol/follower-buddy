@@ -133,6 +133,28 @@ public class LifecycleGlueTest
 	}
 
 	@Test
+	public void theConversationClosesWithTheScene() throws IOException
+	{
+		// Left open at a logout, the Talk-to box was not drawn at the login
+		// screen but took the presses in the chatbox, came back at the next
+		// login, and at the first step gave the last session's comfort, gift
+		// or bluff to the one just read. Closing delivers what the box had
+		// reached, so where the close sits decides where that lands: in the
+		// scene's own session, with what it says cleared with the scene.
+		String leaving = method("private void tearDownScene()");
+		int close = leaving.indexOf("dialog.close();");
+		assertTrue("leaving a scene must close the conversation", close >= 0);
+		assertTrue("before the bubble and the queue are cleared of the answer's reply",
+			close < leaving.indexOf("overlay.clear();") && close < leaving.indexOf("speechQueue.clear();"));
+		String source = source();
+		String loggedOut = source.substring(source.indexOf("case LOGIN_SCREEN:"),
+			source.indexOf("case HOPPING:"));
+		assertTrue("and at a logout before the engine lets the session go",
+			loggedOut.indexOf("tearDownScene();") >= 0
+				&& loggedOut.indexOf("tearDownScene();") < loggedOut.indexOf(RESET));
+	}
+
+	@Test
 	public void aDisablePutsTheSketchingScrollAway() throws IOException
 	{
 		// The sketch sets the reading pose on the follower, which outlives a

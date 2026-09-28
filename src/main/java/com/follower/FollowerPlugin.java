@@ -3709,6 +3709,12 @@ public class FollowerPlugin extends Plugin
 		{
 			will.reset();
 		}
+		// The conversation too. Left open at a logout it took the presses in
+		// the chatbox at the login screen, and at the next login the first
+		// step closed it and gave the last session's answer to this one.
+		// Closed here, the answer lands in the session it was chosen in, and
+		// what it says goes with the scene, as every line in flight does.
+		dialog.close();
 		// Same for the minute-taking: the meeting went with the scene.
 		endMinutes(false);
 		welfareChecked = false;
