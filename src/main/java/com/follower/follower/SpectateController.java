@@ -63,7 +63,10 @@ public class SpectateController
 			"Vitreous Warped Jelly", "Vitreous warped Jelly", "Cave abomination", "Abhorrent spectre",
 			"Repugnant spectre", "Basilisk Sentinel", "Choke devil", "King kurask",
 			"Marble gargoyle", "Nechryarch", "Greater abyssal demon", "Night beast",
-			"Nuclear smoke devil", "Shadow Wyrm", "Guardian Drake", "Colossal Hydra"));
+			"Nuclear smoke devil", "Shadow Wyrm", "Guardian Drake", "Colossal Hydra",
+			"Infernal pyrelord", "Spiked Turoth", "Mutated Terrorbird", "Mutated Tortoise",
+			"Dreadborn Araxyte", "Ancient Custodian", "Dire gryphon", "Vitreous Chilled Jelly",
+			"Elder aquanite", "Magma strykewyrm", "Blood-starved venator"));
 
 	static final int SUPERIOR_EXTRA_TILES = 2;
 
