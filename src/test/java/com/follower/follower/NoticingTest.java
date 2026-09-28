@@ -356,6 +356,74 @@ public class NoticingTest
 		assertTrue(looker.looks.isEmpty());
 	}
 
+	// ------------------------------------------------------- the force-path
+
+	@Test
+	public void theForcedNoticeTakesTheDropAtYourFeetWithoutWaiting()
+	{
+		// Not walked away from, not lain three ticks: the tick would wait on
+		// both, and a play test waits on neither.
+		tick(1);
+		noticing.itemSpawned(item(4151, TileItem.OWNERSHIP_SELF), DROP, "Abyssal whip", 1_500_000);
+		assertEquals("Went to look at the Abyssal whip (valuable).", noticing.forceNotice());
+		assertEquals(Collections.singletonList(DROP), looker.looks);
+		assertEquals("and the line, as the tick gives it", 1, events.size());
+		assertEquals("valuable", events.get(0).getPlaceholders().get("kind"));
+
+		// The same whip again at once: seen, and the kind on its clock.
+		looker.looking = false;
+		noticing.forceNotice();
+		assertEquals("neither the seen list nor the clock holds a force", 2, looker.looks.size());
+	}
+
+	@Test
+	public void theForcedNoticeReadsALandmarkWithoutTheStandingAbout()
+	{
+		landmarks = Collections.singletonList(
+			new AbstractMap.SimpleImmutableEntry<>("Signpost", new WorldPoint(51, 50, 0)));
+		idle = 0;
+		assertEquals("Went to look at the Signpost (landmark).", noticing.forceNotice());
+		assertTrue("read with the notes out", looker.writes.get(0));
+	}
+
+	@Test
+	public void theForcedNoticeSaysWhyNothingCame()
+	{
+		assertEquals("Nothing to notice in view.", noticing.forceNotice());
+
+		NPC impling = game.spawnNpc(1635, "Dragon impling", 0);
+		game.moveNpc(impling, 54, 52, 0);
+		looker.refuses = true;
+		assertEquals("Saw the Dragon impling (impling) but could not go and look.",
+			noticing.forceNotice());
+		assertTrue("a refused walk is no line", events.isEmpty());
+
+		looker.refuses = false;
+		busy = true;
+		assertEquals("The follower is busy.", noticing.forceNotice());
+		busy = false;
+		looker.looking = true;
+		assertEquals("one look at a time, forced or not", "The follower is busy.", noticing.forceNotice());
+		looker.looking = false;
+		notices = false;
+		assertEquals("Notices things is off in the settings.", noticing.forceNotice());
+		assertTrue(looker.looks.isEmpty());
+	}
+
+	@Test
+	public void aForcedNoticeLeavesTheTicksClocksAsTheyWere()
+	{
+		// The force waives the waits for itself only: the tick after it
+		// still keeps the kind's clock, the seen list and the walk away.
+		tick(1);
+		noticing.itemSpawned(item(4151, TileItem.OWNERSHIP_SELF), DROP, "Abyssal whip", 1_500_000);
+		noticing.forceNotice();
+		looker.looking = false;
+		walkAway();
+		tick(Noticing.LEFT_AFTER_TICKS + 2);
+		assertEquals("the whip is seen now, and the kind on its clock", 1, looker.looks.size());
+	}
+
 	@Test
 	public void aLookTheFeetRefuseLeavesTheThingForLater()
 	{

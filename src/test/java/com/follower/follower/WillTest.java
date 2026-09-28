@@ -274,6 +274,72 @@ public class WillTest
 			Will.edgeShortOf(new WorldPoint(10, 10, 0), new WorldPoint(0, 20, 0), 3));
 	}
 
+	// ------------------------------------------------------- the force-path
+
+	@Test
+	public void aForcedSendHesitatesOverAnyNpcBesideItsSpot()
+	{
+		// A goblin is nothing to the player, so the tick would wait for a
+		// strong monster to happen to stand by the spot.
+		NPC goblin = game.spawnNpc(3029, "Goblin", 2);
+		game.moveNpc(goblin, 3210, 3401, 0);
+		tick(1);
+		will.forceHesitate();
+		WorldPoint beside = new WorldPoint(3209, 3401, 0);
+		assertTrue(will.send(beside));
+		assertEquals("the real edge, three short", new WorldPoint(3206, 3400, 0), follower.stayingAt);
+		assertTrue(will.isHesitating());
+		assertEquals("monster", events.get(0).getPlaceholders().get("misgiving"));
+		assertEquals("named, as the line needs", "Goblin", events.get(0).getPlaceholders().get("thing"));
+
+		tick(6 + Will.HESITATE_TICKS + 1);
+		assertEquals("then it goes, as it would", beside, follower.stayingAt);
+
+		// Spent by that Send: the next is a plain one again.
+		events.clear();
+		assertTrue(will.send(new WorldPoint(3211, 3401, 0)));
+		assertTrue(events.isEmpty());
+	}
+
+	@Test
+	public void aForcedSendHesitatesAgainOverOneItHesitatedOverBefore()
+	{
+		NPC giant = game.spawnNpc(2098, "Hill Giant", 28);
+		game.moveNpc(giant, 3210, 3401, 0);
+		tick(1);
+		assertTrue(will.send(new WorldPoint(3209, 3401, 0)));
+		tick(6 + Will.HESITATE_TICKS + 1);
+		follower.tile = new WorldPoint(3200, 3400, 0);
+		events.clear();
+
+		will.forceHesitate();
+		assertTrue(will.send(new WorldPoint(3211, 3401, 0)));
+		assertTrue("the once-per-monster list does not hold a force", will.isHesitating());
+		assertEquals(1, events.size());
+	}
+
+	@Test
+	public void aForcedSendKeepsTheFightAndTheScene()
+	{
+		// The thing being fought is still no misgiving, forced or not, and a
+		// hop or a logout drops the force with the rest of the scene.
+		NPC giant = game.spawnNpc(2098, "Hill Giant", 28);
+		game.moveNpc(giant, 3210, 3401, 0);
+		game.fighting(giant);
+		tick(1);
+		will.forceHesitate();
+		assertTrue(will.send(new WorldPoint(3209, 3401, 0)));
+		assertFalse(will.isHesitating());
+
+		NPC goblin = game.spawnNpc(3029, "Goblin", 2);
+		game.moveNpc(goblin, 3190, 3401, 0);
+		will.forceHesitate();
+		will.reset();
+		assertTrue(will.send(new WorldPoint(3191, 3401, 0)));
+		assertFalse(will.isHesitating());
+		assertTrue(events.isEmpty());
+	}
+
 	// -------------------------------------------------------- the step aside
 
 	private void parkAt(int x, int y)

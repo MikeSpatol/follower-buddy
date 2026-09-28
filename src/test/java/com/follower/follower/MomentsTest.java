@@ -842,6 +842,70 @@ public class MomentsTest
 		assertEquals("the player's park, not handed back to following", post, follower.stayingAt);
 	}
 
+	// ------------------------------------------------------- the force-path
+
+	@Test
+	public void aForcedDropGetsWhatItsTierEarnsWithTheNotesSpent()
+	{
+		// Straight after one write-up the ledger would give a big drop a
+		// glance; the force shows the rung the value earns.
+		tick(1);
+		moments.noteworthy(Moments.Tier.MEDIUM, DROP);
+		tick(Moments.NOTES_TICKS + 2);
+		assertEquals(0, held);
+
+		assertEquals("the walk over to write it up", moments.forceNoteworthy(Moments.Tier.BIG, PLAYER));
+		assertTrue(moments.isLooking());
+		assertEquals("to a tile beside the player's feet", 1, follower.stayingAt.distanceTo(PLAYER));
+	}
+
+	@Test
+	public void eachForcedRungSaysWhatTheBodyDid()
+	{
+		tick(1);
+		assertEquals("the notes out where it stands", moments.forceNoteworthy(Moments.Tier.MEDIUM, PLAYER));
+		tick(Moments.NOTES_TICKS + 2);
+		assertEquals("a glance", moments.forceNoteworthy(Moments.Tier.SMALL, PLAYER));
+		assertEquals("and again at once", "a glance", moments.forceNoteworthy(Moments.Tier.SMALL, PLAYER));
+		held = 1351;
+		assertEquals("the hands full: the nod", "a nod", moments.forceNoteworthy(Moments.Tier.MEDIUM, PLAYER));
+	}
+
+	@Test
+	public void aForcedDropKeepsTheFightAndThePark()
+	{
+		tick(1);
+		inCombat = true;
+		assertEquals("no walk and no scroll mid-fight: the nod stands in", "a nod",
+			moments.forceNoteworthy(Moments.Tier.BIG, PLAYER));
+		assertFalse(moments.isLooking());
+		assertEquals(0, held);
+
+		inCombat = false;
+		follower.stayHere();
+		parked = true;
+		moments.forceNoteworthy(Moments.Tier.BIG, PLAYER);
+		assertFalse("not walked off a park the player gave", moments.isLooking());
+		assertEquals(0, held);
+	}
+
+	@Test
+	public void theForcedWaveComesHoweverLatelyTheLastOneWas()
+	{
+		tick(1);
+		assertTrue(moments.farewell());
+		assertFalse("the tick's own second wave waits", moments.farewell());
+		assertTrue("the force does not", moments.forceFarewell());
+		assertEquals(Arrays.asList(Moments.WAVE, Moments.WAVE), follower.animations);
+
+		inCombat = true;
+		assertFalse("but never mid-fight", moments.forceFarewell());
+		inCombat = false;
+		feetTaken = true;
+		assertFalse("or with the feet somebody else's", moments.forceFarewell());
+		assertEquals(2, follower.animations.size());
+	}
+
 	@Test
 	public void theLadderMatchesTheLootRules()
 	{

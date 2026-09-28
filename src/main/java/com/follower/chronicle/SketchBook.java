@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.imageio.ImageIO;
@@ -131,6 +133,44 @@ public class SketchBook
 		{
 			log.warn("Could not save the sketch of {}", key, e);
 		}
+	}
+
+	/**
+	 * Copies what is on disk for a sketch to a backup beside it, before the
+	 * place is drawn again on purpose: {@code name.png.bak}, or
+	 * {@code name.png.1.bak} and on when that is taken, so no file, sketch
+	 * or backup, is ever written over. The book does not read them back;
+	 * they are there to be put back by hand.
+	 *
+	 * @return the backups' file names, empty when nothing was on disk
+	 * @throws IOException when one could not be made, so nothing is drawn over it
+	 */
+	public List<String> backUp(String key) throws IOException
+	{
+		List<String> kept = new ArrayList<>();
+		Path in = folder;
+		if (key == null || in == null)
+		{
+			return kept;
+		}
+		for (String name : new String[]{safe(key) + LARGE + ".png", safe(key) + ".png"})
+		{
+			Path file = in.resolve(name);
+			if (!Files.isRegularFile(file))
+			{
+				continue;
+			}
+			Path backup = in.resolve(name + ".bak");
+			for (int n = 1; Files.exists(backup); n++)
+			{
+				backup = in.resolve(name + "." + n + ".bak");
+			}
+			// No REPLACE_EXISTING: a backup that somehow appeared first fails
+			// the copy rather than being lost to it.
+			Files.copy(file, backup);
+			kept.add(backup.getFileName().toString());
+		}
+		return kept;
 	}
 
 	/** A name that is a file name on every system: letters, digits, hyphens. */

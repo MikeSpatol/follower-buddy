@@ -987,6 +987,15 @@ gated ones once Developer commands is on; both read `EVERYDAY_COMMANDS` and
 | `::follower fires` **[dev]** | List the fires the follower knows about within 12 tiles, where its feet are and what owns them, and the skilling session, for when it stands in a fire |
 | `::follower mood [0-100]` **[dev]** | Read or set the mood |
 | `::follower fire <rule-id>` **[dev]** | Say a rule now, whatever its conditions, cooldown and the mute say |
+| `::follower force` **[dev]** | List the force-paths below |
+| `::follower force look [camera\|cursor]` **[dev]** | Looks where you look: the look round now, or a look the way the camera is turned or at what the cursor rests on |
+| `::follower force notice` **[dev]** | Noticing: the best thing in view now (a drop of yours, a nest, an impling, a star, a landmark beside you), walked to, looked at and named, whatever its kind's cooldown and whether it was noticed before |
+| `::follower force hesitate` **[dev]** | The will: the next Send hesitates over any NPC within two tiles of its spot as over one that outclasses you, even one it hesitated over before |
+| `::follower force shoulder` **[dev]** | The minute-taker's spot over your shoulder, as if an NPC dialogue had just opened; let go when you step off or after twelve seconds |
+| `::follower force cutscene on\|off` **[dev]** | Hold the cutscene behaviour as if one were playing: no wander, look round, noticing, sketch or errand of its own, and it looks where you look |
+| `::follower force wave` **[dev]** | The logout tab's wave now, however lately the last one was |
+| `::follower force drop <gp> [item name]` **[dev]** | The drop ladder's body reaction to a drop of that value at your feet (glance, nod, scroll, walk over) and the loot line's words; only the gestures' cooldowns are skipped |
+| `::follower force sketch` **[dev]** | The chronicle sketch of this view now, without the stand-still wait or the retry wait; a place already drawn is drawn again, its old files kept as `.bak` first |
 | `::follower want` **[dev]** | What the follower is hoping for, and whether a question is open |
 
 `::follower fire` is how you test a rule you cannot conveniently provoke - several
@@ -996,6 +1005,17 @@ than testing. It runs the **whole** rule, not just the words: the animation, the
 mood nudge, `asks` and `want` all take effect, which is the point. Placeholders
 that come from an event (`{npc}`, `{want}`, `{value}`) have no event to come from
 and will print literally.
+
+`::follower force` is the same idea for the body. `fire` says a rule's words;
+`force` runs a feature's own code now - the look round, the walk to a drop, the
+beat before a Send, the shoulder, the wave, the drop ladder, the sketch - with
+only what leaves it to luck skipped: a timer, a roll, a cooldown. The gates
+that keep it safe are never skipped and stay each feature's own, so a fight, a
+Stay or a follower already busy refuses it as it would the real thing, and it
+says so in one line. `force sketch` never loses a
+picture: whatever is on disk for the place is copied to `<name>.png.bak` (or
+`<name>.png.1.bak` and on) before it is drawn again, and the reply names the
+copies.
 
 `animtrace` is the useful one for animation problems: it prints both models' frame
 sequences collapsed into `frame xHeld` runs, so a stall shows as an oversized hold, a

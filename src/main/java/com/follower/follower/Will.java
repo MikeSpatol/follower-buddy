@@ -83,6 +83,9 @@ public class Will
 	private int goOnAt;
 	private final Set<String> hesitatedAt = new HashSet<>();
 
+	/** Set by ::follower force hesitate: the next Send is wary of any NPC beside its spot. */
+	private boolean wary;
+
 	private WorldPoint lastPlayerTile;
 	private int steppedAsideAt = -1000;
 
@@ -107,6 +110,8 @@ public class Will
 	 */
 	public boolean send(WorldPoint target)
 	{
+		boolean forced = wary;
+		wary = false;
 		pending = null;
 		misgiving = null;
 		// A tile with a fire on it: the player means over there, not into
@@ -132,7 +137,7 @@ public class Will
 		}
 		else
 		{
-			NPC monster = monsterBeside(target, local);
+			NPC monster = monsterBeside(target, local, forced);
 			if (monster != null)
 			{
 				about = Misgiving.MONSTER;
@@ -141,7 +146,8 @@ public class Will
 				key = "monster:" + monster.getIndex();
 			}
 		}
-		if (about == null || edge == null || hesitatedAt.contains(key) || !follower.stayAt(edge))
+		if (about == null || edge == null || (hesitatedAt.contains(key) && !forced)
+			|| !follower.stayAt(edge))
 		{
 			return follower.stayAt(target);
 		}
@@ -189,8 +195,11 @@ public class Will
 			&& tile.getY() >= WILDERNESS_MIN_Y && tile.getY() < WILDERNESS_MAX_Y;
 	}
 
-	/** An NPC beside the target that outclasses the player, or null. */
-	private NPC monsterBeside(WorldPoint target, Player local)
+	/**
+	 * An NPC beside the target that outclasses the player, or null; with
+	 * {@code anyLevel}, any NPC beside it, as the force-path asks.
+	 */
+	private NPC monsterBeside(WorldPoint target, Player local, boolean anyLevel)
 	{
 		net.runelite.api.WorldView view = client.getTopLevelWorldView();
 		if (view == null || local == null)
@@ -201,7 +210,8 @@ public class Will
 		for (NPC npc : view.npcs())
 		{
 			WorldPoint at = npc == null ? null : npc.getWorldLocation();
-			if (at == null || npc == local.getInteracting() || npc.getCombatLevel() < level + MONSTER_MARGIN
+			if (at == null || npc == local.getInteracting()
+				|| (npc.getCombatLevel() < level + MONSTER_MARGIN && !anyLevel)
 				|| at.getPlane() != target.getPlane() || at.distanceTo(target) > MONSTER_WITHIN)
 			{
 				continue;
@@ -235,6 +245,19 @@ public class Will
 			}
 		}
 		return best;
+	}
+
+	/**
+	 * ::follower force hesitate: the next Send hesitates over any NPC beside
+	 * its spot as it would over one that outclassed the player, even one it
+	 * has hesitated over before. The edge, the beat and the line are the
+	 * real ones; only the level margin and the once-each list are waived.
+	 * Spent by that Send, whether or not an NPC was there, and dropped with
+	 * the scene.
+	 */
+	public void forceHesitate()
+	{
+		wary = true;
 	}
 
 	/** Whether a Send is paused at its edge. */
@@ -338,6 +361,7 @@ public class Will
 		pending = null;
 		misgiving = null;
 		hesitatedAt.clear();
+		wary = false;
 		lastPlayerTile = null;
 		steppedAsideAt = -1000;
 	}

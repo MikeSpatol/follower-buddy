@@ -6,6 +6,7 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -186,6 +187,70 @@ public class SketchController
 		key = here;
 		stage = Stage.HOLDING;
 		ticks = 0;
+	}
+
+	/**
+	 * ::follower force sketch: this view sketched now, without the
+	 * stand-still wait or a spoiled attempt's wait to try again. A place
+	 * already drawn is drawn again, and whatever is on disk for it is
+	 * backed up first, never written over; if the backup cannot be made,
+	 * nothing is drawn. The gates stay: a fight, a window over the view,
+	 * anything with the feet or the hands, and moving off mid-sketch.
+	 *
+	 * @return what it did, or why not, for the chat line
+	 */
+	public String forceSketch()
+	{
+		if (stage != Stage.WAITING)
+		{
+			return "Already sketching.";
+		}
+		if (busy.getAsBoolean() || !follower.isSpawned() || !follower.isSettled())
+		{
+			return "The follower is busy.";
+		}
+		if (hands.isHolding())
+		{
+			return "The follower's hands are full.";
+		}
+		int regionId = region.getAsInt();
+		String here = wanted(loader.getEntries(), regionId,
+			name -> book.hasBoth(name) || drawing.contains(name));
+		if (here == null)
+		{
+			// Drawn already: the first plate here, to be drawn again.
+			here = wanted(loader.getEntries(), regionId, name -> false);
+		}
+		if (here == null)
+		{
+			return "No page sketches this place (region " + regionId + ").";
+		}
+		if (drawing.contains(here))
+		{
+			return "Still drawing the last sketch of " + here + ".";
+		}
+		List<String> kept;
+		try
+		{
+			kept = book.backUp(here);
+		}
+		catch (IOException | RuntimeException e)
+		{
+			log.warn("Could not back up the sketch of {}", here, e);
+			return "Could not back up the old sketch of " + here + ", so it is left alone.";
+		}
+		hands.hold(ErrandController.SCROLL_PROP);
+		if (!hands.isHolding())
+		{
+			return "The scroll would not come out.";
+		}
+		follower.setPoseOverride(ErrandController.READ_SCROLL_POSE);
+		key = here;
+		stage = Stage.HOLDING;
+		ticks = 0;
+		cooldown = 0;
+		return "Sketching " + here + (kept.isEmpty() ? "."
+			: "; the old one is kept as " + String.join(", ", kept) + ".");
 	}
 
 	/** Drops everything, as a logout or a hop does. */

@@ -278,6 +278,58 @@ public class GazeTest
 		assertEquals("and no look round straight after it", 1, follower.glances.size());
 	}
 
+	// ------------------------------------------------------- the force-path
+
+	@Test
+	public void theForcedLookRoundComesAtOnceWithoutStandingAbout()
+	{
+		// Idle for no ticks at all: the tick would wait for standing about
+		// and then a whole wait between looks, which is luck to a play test.
+		nearby = Arrays.asList(new WorldPoint(53, 50, 0), new WorldPoint(50, 45, 0));
+		String said = gaze.forceLook(null);
+		assertEquals(1, follower.glances.size());
+		assertTrue("at something nearby, as the tick looks", nearby.contains(follower.glances.get(0)));
+		assertEquals(Gaze.AROUND_MS, (int) follower.holds.get(0));
+		assertTrue(said, said.startsWith("A look round at"));
+
+		feeling = "disliked";
+		gaze.forceLook(null);
+		assertEquals("the place's feeling holds, as in the tick: the nearest",
+			new WorldPoint(53, 50, 0), follower.glances.get(1));
+		assertEquals(Gaze.DISLIKED_MS, (int) follower.holds.get(1));
+	}
+
+	@Test
+	public void theForcedCameraAndCursorLooksAreTheSharedOnes()
+	{
+		yaw = 512;
+		gaze.forceLook("camera");
+		assertEquals("four tiles the way the camera looks, with no swing to settle",
+			Gaze.lookTile(HERE, 512, Gaze.CAMERA_LOOK_TILES), follower.glances.get(0));
+		assertEquals(Gaze.CAMERA_GLANCE_MS, (int) follower.holds.get(0));
+
+		assertEquals("The cursor is not resting on anything to look at.", gaze.forceLook("cursor"));
+		gaze.noteHover(thing("npc:4", 55, 50));
+		gaze.forceLook("cursor");
+		assertEquals("at once, not after a rest", new WorldPoint(55, 50, 0), follower.glances.get(1));
+		assertEquals(Gaze.HOVER_GLANCE_MS, (int) follower.holds.get(1));
+
+		assertTrue(gaze.forceLook("sideways").startsWith("Look how?"));
+		assertEquals(2, follower.glances.size());
+	}
+
+	@Test
+	public void theForcedLookKeepsTheGates()
+	{
+		nearby = Collections.singletonList(new WorldPoint(53, 50, 0));
+		busy = true;
+		assertEquals("The follower is busy.", gaze.forceLook(null));
+		busy = false;
+		attentive = false;
+		assertEquals("Looks where you look is off in the settings.", gaze.forceLook("camera"));
+		assertTrue(follower.glances.isEmpty());
+	}
+
 	@Test
 	public void nothingWhileBusyOrSwitchedOff()
 	{

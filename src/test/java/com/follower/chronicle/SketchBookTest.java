@@ -116,6 +116,47 @@ public class SketchBookTest
 	}
 
 	@Test
+	public void aBackupKeepsEveryFileAndNeverWritesOverAnother() throws IOException
+	{
+		// ::follower force sketch draws a place again on purpose; what was
+		// there must survive it, and so must the backup of a force before.
+		Path data = folder.newFolder().toPath();
+		Path acct = data.resolve(SketchBook.DIR_NAME).resolve("acct");
+		SketchBook book = new SketchBook(data);
+		book.openFor("acct");
+		book.put("lumbridge", picture(0x8a6a40), picture(0x9a7a50));
+		byte[] small = Files.readAllBytes(acct.resolve("lumbridge.png"));
+		byte[] large = Files.readAllBytes(acct.resolve("lumbridge.large.png"));
+
+		assertEquals(java.util.Arrays.asList("lumbridge.large.png.bak", "lumbridge.png.bak"),
+			book.backUp("lumbridge"));
+		assertTrue(java.util.Arrays.equals(small, Files.readAllBytes(acct.resolve("lumbridge.png.bak"))));
+		assertTrue(java.util.Arrays.equals(large, Files.readAllBytes(acct.resolve("lumbridge.large.png.bak"))));
+		assertTrue("the sketch itself stays until it is drawn over", book.hasBoth("lumbridge"));
+
+		book.put("lumbridge", picture(0x101010), picture(0x202020));
+		assertEquals(java.util.Arrays.asList("lumbridge.large.png.1.bak", "lumbridge.png.1.bak"),
+			book.backUp("lumbridge"));
+		assertTrue("the first backup is untouched",
+			java.util.Arrays.equals(small, Files.readAllBytes(acct.resolve("lumbridge.png.bak"))));
+
+		SketchBook again = new SketchBook(data);
+		again.openFor("acct");
+		assertEquals("a backup is not read back as a place", 0x101010,
+			again.get("lumbridge").getRGB(3, 3) & 0xffffff);
+		assertNull(again.get("lumbridge.png"));
+	}
+
+	@Test
+	public void nothingOnDiskIsNothingToBackUp() throws IOException
+	{
+		SketchBook book = new SketchBook(folder.newFolder().toPath());
+		book.openFor("acct");
+		assertTrue(book.backUp("lumbridge").isEmpty());
+		assertTrue(new SketchBook(null).backUp("lumbridge").isEmpty());
+	}
+
+	@Test
 	public void anAccountKeyIsAlwaysAFileName()
 	{
 		assertEquals("rsprofile_abc_123", SketchBook.safe("rsprofile.abc:123"));

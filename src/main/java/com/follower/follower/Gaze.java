@@ -337,6 +337,14 @@ public class Gaze
 			return;
 		}
 		aroundIn = -1;
+		lookRoundNow(from, feeling);
+	}
+
+	/** The look round itself, at something nearby or nothing in particular: where, or null. */
+	private WorldPoint lookRoundNow(WorldPoint from, String feeling)
+	{
+		boolean disliked = "disliked".equals(feeling);
+		boolean liked = "liked".equals(feeling);
 		List<WorldPoint> things = nearby.get();
 		WorldPoint at = null;
 		if (things != null && !things.isEmpty())
@@ -354,10 +362,58 @@ public class Gaze
 		}
 		if (at.equals(from))
 		{
-			return;
+			return null;
 		}
 		follower.glanceAt(at, disliked ? DISLIKED_MS : liked ? LIKED_MS : AROUND_MS);
 		log.debug("A look round at {} ({})", at, feeling.isEmpty() ? "nothing felt" : feeling);
+		return at;
+	}
+
+	/**
+	 * ::follower force look: a look now, without the standing about or the
+	 * wait between looks. The look round by default, as the tick makes it;
+	 * "camera" looks the way the camera is turned and "cursor" at what the
+	 * mouse rests on, as a settled swing or a rest would. The gates stay:
+	 * Looks where you look off, or anything else with the head or the feet.
+	 *
+	 * @param how null for the look round, or "camera" or "cursor"
+	 * @return what it did, or why not, for the chat line
+	 */
+	public String forceLook(String how)
+	{
+		if (how != null && !"camera".equals(how) && !"cursor".equals(how))
+		{
+			return "Look how? camera, cursor, or nothing for the look round.";
+		}
+		if (!config.paysAttention())
+		{
+			return "Looks where you look is off in the settings.";
+		}
+		WorldPoint from = follower.getWorldLocation();
+		if (!follower.isSpawned() || from == null || busy.getAsBoolean())
+		{
+			return "The follower is busy.";
+		}
+		if ("camera".equals(how))
+		{
+			follower.glanceAt(lookTile(from, cameraYaw.getAsInt() & 0x7ff, CAMERA_LOOK_TILES),
+				CAMERA_GLANCE_MS);
+			return "A look the way the camera is turned.";
+		}
+		if ("cursor".equals(how))
+		{
+			WorldPoint at = hoverNow == null ? null : hoverNow.where();
+			if (at == null || at.getPlane() != from.getPlane() || at.equals(from))
+			{
+				return "The cursor is not resting on anything to look at.";
+			}
+			follower.glanceAt(at, HOVER_GLANCE_MS);
+			return "A look at what the cursor is on.";
+		}
+		aroundIn = -1;
+		WorldPoint at = lookRoundNow(from, placeFeeling.get());
+		return at == null ? "Nowhere to look round at."
+			: "A look round at " + at.getX() + ", " + at.getY() + ".";
 	}
 
 	private int between(int min, int max)

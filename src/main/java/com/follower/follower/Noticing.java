@@ -140,6 +140,10 @@ public class Noticing
 	private final Set<String> seen = new HashSet<>();
 	private final List<Map.Entry<String, WorldPoint>> stars = new ArrayList<>();
 
+	/** Only while ::follower force notice runs: no clocks, and what it found, for the chat line. */
+	private boolean forcing;
+	private String forced;
+
 	public Noticing(Client client, FollowerEntity follower, FollowerConfig config, Looker looker,
 		Consumer<TriggerEvent> events, BooleanSupplier busy, IntSupplier idleTicks,
 		Supplier<List<Map.Entry<String, WorldPoint>>> landmarksNearby)
@@ -244,25 +248,82 @@ public class Noticing
 		}
 	}
 
+	/**
+	 * ::follower force notice: the best thing in view noticed now, walked
+	 * to, looked at and named, as the tick would - but with no kind's clock,
+	 * no seen list, and no waiting for the player to walk off from a drop or
+	 * to have stood by a landmark a while. The gates stay: Notices things
+	 * off, the follower busy or already off looking, and whatever the walk
+	 * itself refuses, a park the player gave among them.
+	 *
+	 * @return what it noticed, or why nothing, for the chat line
+	 */
+	public String forceNotice()
+	{
+		if (!config.noticesThings() || !config.keepsCompany())
+		{
+			return "Notices things is off in the settings.";
+		}
+		int now = client.getTickCount();
+		Player local = client.getLocalPlayer();
+		WorldPoint here = local == null ? null : local.getWorldLocation();
+		WorldPoint from = follower.getWorldLocation();
+		if (here == null || from == null || !follower.isSpawned() || looker.isLooking()
+			|| busy.getAsBoolean())
+		{
+			return "The follower is busy.";
+		}
+		forcing = true;
+		forced = null;
+		try
+		{
+			// In the tick's order, with the scan's cadence dropped as well.
+			if (noticeADrop(now, here, from) || noticeAnImpling(now, local, here, from)
+				|| noticeAStar(now, from) || noticeALandmark(now, here, from))
+			{
+				return forced;
+			}
+			// Nothing gone to; a refusal found on the way is the better answer.
+			return forced == null ? "Nothing to notice in view." : forced;
+		}
+		finally
+		{
+			forcing = false;
+			forced = null;
+		}
+	}
+
 	private boolean off(Kind kind, int now)
 	{
 		Integer last = lastAt.get(kind);
-		return last == null || now - last >= kind.cooldownTicks;
+		return forcing || last == null || now - last >= kind.cooldownTicks;
 	}
 
 	private boolean look(Kind kind, String what, WorldPoint at, WorldPoint from, int now,
 		int steps, boolean writes, int holdTicks)
 	{
 		String key = kind.key + ":" + at.getX() + "," + at.getY() + ":" + what;
-		if (seen.contains(key) || at.getPlane() != from.getPlane()
-			|| at.distanceTo(from) > VISIBLE_TILES || !looker.goAndLook(at, steps, writes, holdTicks))
+		if ((seen.contains(key) && !forcing) || at.getPlane() != from.getPlane()
+			|| at.distanceTo(from) > VISIBLE_TILES)
 		{
+			return false;
+		}
+		if (!looker.goAndLook(at, steps, writes, holdTicks))
+		{
+			if (forcing)
+			{
+				forced = "Saw the " + what + " (" + kind.key + ") but could not go and look.";
+			}
 			return false;
 		}
 		seen.add(key);
 		lastAt.put(kind, now);
 		events.accept(TriggerEvent.noticed(kind.key, what));
 		log.debug("Noticed a {}: {} at {}", kind.key, what, at);
+		if (forcing)
+		{
+			forced = "Went to look at the " + what + " (" + kind.key + ").";
+		}
 		return true;
 	}
 
@@ -280,13 +341,13 @@ public class Noticing
 				it.remove();
 				continue;
 			}
-			if (tile.distanceTo(here) < WALKED_AWAY_TILES)
+			if (tile.distanceTo(here) < WALKED_AWAY_TILES && !forcing)
 			{
 				continue;
 			}
 			for (Drop drop : entry.getValue())
 			{
-				if (now - drop.since < LEFT_AFTER_TICKS)
+				if (now - drop.since < LEFT_AFTER_TICKS && !forcing)
 				{
 					continue;
 				}
@@ -353,7 +414,8 @@ public class Noticing
 	 */
 	private boolean noticeALandmark(int now, WorldPoint here, WorldPoint from)
 	{
-		if (!off(Kind.LANDMARK, now) || idleTicks.getAsInt() < LANDMARK_AFTER_IDLE_TICKS)
+		if (!off(Kind.LANDMARK, now)
+			|| (idleTicks.getAsInt() < LANDMARK_AFTER_IDLE_TICKS && !forcing))
 		{
 			return false;
 		}

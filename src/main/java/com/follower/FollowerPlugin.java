@@ -991,6 +991,7 @@ public class FollowerPlugin extends Plugin
 		watchOthers = false;
 		watchChat = false;
 		watchExamine = false;
+		cutsceneForced = false;
 	}
 
 	/*
@@ -1280,6 +1281,9 @@ public class FollowerPlugin extends Plugin
 		return !handFull && sinceLastMs >= MINUTES_COOLDOWN_MS && roll < 35;
 	}
 
+	/** ::follower force cutscene: held on as if one were playing, until turned off. */
+	private boolean cutsceneForced;
+
 	/**
 	 * Whether a cutscene has the camera. The follower keeps its place and
 	 * looks where the player looks, so the scene has one audience of two,
@@ -1287,7 +1291,8 @@ public class FollowerPlugin extends Plugin
 	 */
 	private boolean inCutscene()
 	{
-		return client.getVarbitValue(net.runelite.api.gameval.VarbitID.CUTSCENE_STATUS) != 0;
+		return cutsceneForced
+			|| client.getVarbitValue(net.runelite.api.gameval.VarbitID.CUTSCENE_STATUS) != 0;
 	}
 
 	/** Whether any NPC-dialog interface is up (heads or the options menu). */
@@ -1314,7 +1319,7 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void updateMinutes()
 	{
-		boolean open = npcDialogOpen();
+		boolean open = npcDialogOpen() || pretendMeeting();
 		if (open)
 		{
 			dialogGoneTicks = 0;
@@ -1475,10 +1480,71 @@ public class FollowerPlugin extends Plugin
 			follower.resumeFollowing();
 		}
 		minutesState = 0;
+		shoulderForcedTicks = 0;
 		if (wrote)
 		{
 			speechEngine.dispatch(TriggerEvent.simple(TriggerEvent.Type.MINUTES_TAKEN));
 		}
+	}
+
+	/** How long the meeting ::follower force shoulder pretends lasts, at most: twelve seconds. */
+	static final int SHOULDER_FORCE_TICKS = 20;
+
+	/** The pretend meeting's ticks left, and the tile the player stood on for it. */
+	private int shoulderForcedTicks;
+	private WorldPoint shoulderForcedAt;
+
+	/**
+	 * ::follower force shoulder: the shoulder taken as if an NPC dialog had
+	 * just opened, through the same step the minutes take for a real one,
+	 * and let go as a real one is once the pretend meeting ends: at the
+	 * player's first step off the tile, or after SHOULDER_FORCE_TICKS. The
+	 * gates are the real ones: a Stay, a fight, anything with the feet. The
+	 * scroll stays on its own roll.
+	 */
+	String forceShoulder()
+	{
+		Player local = client.getLocalPlayer();
+		if (minutesState != 0)
+		{
+			return "Already over your shoulder.";
+		}
+		if (local == null || local.getWorldLocation() == null)
+		{
+			return "No player to stand behind.";
+		}
+		shoulderForcedTicks = SHOULDER_FORCE_TICKS;
+		shoulderForcedAt = local.getWorldLocation();
+		minutesConsidered = false;
+		updateMinutes();
+		if (minutesState != 0)
+		{
+			return "Over your shoulder, as for a meeting, until you step off or twelve seconds pass.";
+		}
+		shoulderForcedTicks = 0;
+		return follower.isStaying() && !wandered ? "The follower is staying put."
+			: "The follower is busy, or there is no ground over your shoulder.";
+	}
+
+	/**
+	 * Whether the meeting ::follower force shoulder pretends is still on,
+	 * counted down once a call: over at the player's first step off the
+	 * tile they stood on for it, or when its time runs out.
+	 */
+	private boolean pretendMeeting()
+	{
+		if (shoulderForcedTicks <= 0)
+		{
+			return false;
+		}
+		Player local = client.getLocalPlayer();
+		WorldPoint at = local == null ? null : local.getWorldLocation();
+		if (--shoulderForcedTicks <= 0 || at == null || !at.equals(shoulderForcedAt))
+		{
+			shoulderForcedTicks = 0;
+			return false;
+		}
+		return true;
 	}
 
 	// --------------------------------------------------------- welfare check
@@ -8277,7 +8343,7 @@ public class FollowerPlugin extends Plugin
 		"animinfo", "animtrace", "errandscan", "cachecheck", "stanceaudit", "fires",
 		"watch", "stance", "spectate", "shield", "centre", "center", "loot",
 		"scan", "heights", "mood", "chatwatch", "examinewatch", "fire", "want", "transcript",
-		"boat",
+		"boat", "force",
 		"thieftargets", "sniffanims", "finditem", "prop", "propoffset"));
 
 	/** The errand keys ::follower errand accepts, read from the enum itself. */
@@ -8334,7 +8400,27 @@ public class FollowerPlugin extends Plugin
 			command("chatwatch", "print every chat line with its type, for chatMessage rules"),
 			command("mood [0-100]", "read or set the mood"),
 			command("fire <rule-id>", "say a rule now, whatever its conditions"),
+			command("force <what> [args]", "a feature's body now: look, notice, hesitate, shoulder,"
+				+ " cutscene, wave, drop, sketch"),
 			command("want", "what it is hoping for, and whether a question is open")));
+
+	/**
+	 * The force-paths, as (usage, effect) pairs: each feature's body
+	 * behaviour now, through its own code, for the play session that would
+	 * otherwise wait on luck. ::follower force lists them; ForceCommandsTest
+	 * holds each to a case in forceNow, a place in the help above and a row
+	 * in docs/DEVELOPMENT.md.
+	 */
+	static final java.util.List<java.util.Map.Entry<String, String>> FORCE_COMMANDS =
+		java.util.Collections.unmodifiableList(java.util.Arrays.asList(
+			command("look [camera|cursor]", "the look round now, or a look where the camera or cursor is"),
+			command("notice", "the best thing in view noticed now: the walk, the look and the line"),
+			command("hesitate", "the next Send hesitates over any NPC beside its spot"),
+			command("shoulder", "the dialogue shoulder, as if an NPC dialogue had just opened"),
+			command("cutscene on|off", "hold the cutscene behaviour as if one were playing"),
+			command("wave", "the logout wave now"),
+			command("drop <gp> [item name]", "the drop ladder's reaction to a drop at your feet"),
+			command("sketch", "the chronicle sketch of this view now; an old one is kept as .bak")));
 
 	/** The panel's command listing: the everyday commands, and the developer ones once they are on. */
 	private java.util.List<String> commandLines()
@@ -8441,6 +8527,104 @@ public class FollowerPlugin extends Plugin
 		errands.force(key);
 		sendStatus("Will run the " + (key == null ? "next" : key)
 			+ " errand at the next quiet moment.");
+	}
+
+	/**
+	 * ::follower force: one force-path now, on the client thread, and one
+	 * line saying what it did or why it could not. Each goes through the
+	 * feature's own code and skips only what leaves it to luck - a timer, a
+	 * roll, a cooldown - never the gates that keep it safe, which stay the
+	 * feature's own: a fight, a Stay, a follower already busy.
+	 */
+	String forceNow(String[] args)
+	{
+		String what = args[1].toLowerCase(Locale.ROOT);
+		String arg = args.length > 2 ? args[2].toLowerCase(Locale.ROOT) : null;
+		java.util.List<String> names = new java.util.ArrayList<>();
+		for (java.util.Map.Entry<String, String> entry : FORCE_COMMANDS)
+		{
+			names.add(entry.getKey().split(" ")[0]);
+		}
+		if (!names.contains(what))
+		{
+			return "No force called '" + what + "'. Try: " + String.join(", ", names);
+		}
+		// The hold and the note for the next Send move nothing now. The rest
+		// move the body, which has to be out, and is not theirs in a fight.
+		if (!"cutscene".equals(what) && !"hesitate".equals(what))
+		{
+			if (!follower.isSpawned())
+			{
+				return "The follower is not out.";
+			}
+			if (speechEngine.getContext().isInCombat())
+			{
+				return "Not in a fight.";
+			}
+		}
+		switch (what)
+		{
+			case "look":
+				return gaze.forceLook(arg);
+			case "notice":
+				return noticing.forceNotice();
+			case "hesitate":
+				will.forceHesitate();
+				return "The next Send hesitates over any NPC beside its spot, as over a strong one.";
+			case "shoulder":
+				return forceShoulder();
+			case "cutscene":
+				if ("on".equals(arg) || "off".equals(arg))
+				{
+					cutsceneForced = "on".equals(arg);
+					return cutsceneForced
+						? "Holding the cutscene: it keeps its place and looks where you look."
+						: "The cutscene hold is off.";
+				}
+				return "::follower force cutscene on|off - the hold is " + (cutsceneForced ? "on." : "off.");
+			case "wave":
+				return moments.forceFarewell() ? "A wave, as at the logout tab." : "The follower is busy.";
+			case "drop":
+				return forceDrop(args);
+			case "sketch":
+				return sketching.forceSketch();
+			default:
+				// Listed and never dispatched; ForceCommandsTest keeps it from shipping.
+				return "The force '" + what + "' is not wired up.";
+		}
+	}
+
+	/**
+	 * ::follower force drop: the drop ladder's reaction to a drop of that
+	 * worth at the player's feet, as the loot would get once out of the
+	 * fight's grace, and its words as ::follower loot says them. The bet
+	 * is left unsettled: nothing was really won.
+	 */
+	private String forceDrop(String[] args)
+	{
+		int value;
+		try
+		{
+			value = Integer.parseInt(args.length > 2 ? args[2] : "");
+		}
+		catch (NumberFormatException e)
+		{
+			return "::follower force drop <gp> [item name] - e.g. ::follower force drop 2500000 Dragon warhammer";
+		}
+		if (!config.keepsCompany())
+		{
+			return "Keeps you company is off in the settings.";
+		}
+		String item = args.length > 3
+			? String.join(" ", java.util.Arrays.copyOfRange(args, 3, args.length))
+			: "Coins";
+		Player local = client.getLocalPlayer();
+		WorldPoint feet = local == null ? null : local.getWorldLocation();
+		com.follower.follower.Moments.Tier tier = com.follower.follower.Moments.tierFor(value);
+		speechEngine.dispatch(TriggerEvent.loot(value, item));
+		String did = tier == null ? null : moments.forceNoteworthy(tier, feet);
+		return item + " worth " + value + " at your feet: "
+			+ (tier == null ? "too small for the ladder, so nothing." : did == null ? "nothing." : did + ".");
 	}
 
 	/**
@@ -9779,6 +9963,23 @@ public class FollowerPlugin extends Plugin
 				break;
 			}
 
+			// Fire says a rule's words; this does a feature's body, through
+			// the feature's own code, for the ones that wait on luck.
+			case "force":
+			{
+				if (args.length < 2)
+				{
+					sendStatus("::follower force <what>:");
+					for (java.util.Map.Entry<String, String> entry : FORCE_COMMANDS)
+					{
+						sendStatus("  " + entry.getKey() + " - " + entry.getValue());
+					}
+					break;
+				}
+				clientThread.invoke(() -> sendStatus(forceNow(args)));
+				break;
+			}
+
 			// What the follower is currently hoping for, which is otherwise
 			// only visible by going there and seeing whether it notices.
 			case "want":
@@ -9870,7 +10071,7 @@ public class FollowerPlugin extends Plugin
 						+ "animtrace | errandscan | cachecheck | stanceaudit | examinewatch | "
 						+ "fires | "
 						+ "mood [0-100] | chatwatch | sniffanims | finditem <name> | "
-						+ "prop <itemId> | propoffset <x y z> | fire <rule-id> | want | "
+						+ "prop <itemId> | propoffset <x y z> | fire <rule-id> | force <what> | want | "
 						+ "spectate | shield | centre <x y z> | loot <value> | "
 						+ "scan | heights | transcript | thieftargets");
 				}

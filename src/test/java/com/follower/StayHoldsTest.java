@@ -512,6 +512,88 @@ public class StayHoldsTest
 		assertEquals(0, feet.released);
 	}
 
+	// ---------------------------------------------------------- the force-paths
+
+	@Test
+	public void aForcedShoulderIsTakenAndLetGoAtThePlayersFirstStep() throws ReflectiveOperationException
+	{
+		// No dialog up at all: the minutes take the shoulder as for one that
+		// had just opened, and let it go as they would at its close.
+		String reply = (String) call("forceShoulder");
+		assertNotEquals("taken to the shoulder: " + reply, 0, get("minutesState"));
+		WorldPoint shoulder = feet.stay;
+		for (int i = 0; i < 5; i++)
+		{
+			call("updateMinutes");
+		}
+		assertEquals("held while the player stands there", shoulder, feet.stay);
+		assertEquals(0, feet.released);
+
+		playerSteps();
+		for (int i = 0; i < 3; i++)
+		{
+			call("updateMinutes");
+		}
+		assertEquals("let go a beat after the step, as after a page flip", 0, get("minutesState"));
+		assertEquals(1, feet.released);
+	}
+
+	@Test
+	public void aForcedShoulderEndsAfterItsTime() throws ReflectiveOperationException
+	{
+		call("forceShoulder");
+		for (int i = 0; i < FollowerPlugin.SHOULDER_FORCE_TICKS - 5; i++)
+		{
+			call("updateMinutes");
+		}
+		assertNotEquals("still at the shoulder", 0, get("minutesState"));
+		for (int i = 0; i < 8; i++)
+		{
+			call("updateMinutes");
+		}
+		assertEquals("the pretend meeting is over", 0, get("minutesState"));
+		assertEquals(1, feet.released);
+	}
+
+	@Test
+	public void aForcedShoulderLeavesThePlayersParkAlone() throws ReflectiveOperationException
+	{
+		call("applyFollowEnabled", false);
+		WorldPoint post = feet.stay;
+		assertEquals("The follower is staying put.", call("forceShoulder"));
+		assertEquals(0, get("minutesState"));
+		assertEquals(post, feet.stay);
+		assertEquals("and nothing is left pretending", 0, get("shoulderForcedTicks"));
+	}
+
+	@Test
+	public void aForcedCutsceneHoldsTheFeetAsARealOneDoes() throws ReflectiveOperationException
+	{
+		assertEquals("Holding the cutscene: it keeps its place and looks where you look.",
+			call("forceNow", (Object) new String[]{"force", "cutscene", "on"}));
+		assertTrue((Boolean) call("inCutscene"));
+		standStill(100);
+		call("updateWander");
+		assertFalse("no drift while it is held", (Boolean) get("wandered"));
+
+		call("forceNow", (Object) new String[]{"force", "cutscene", "off"});
+		assertFalse((Boolean) call("inCutscene"));
+		call("updateWander");
+		assertTrue("and the drift once it is let go", (Boolean) get("wandered"));
+	}
+
+	@Test
+	public void noForceMovesTheBodyInAFight() throws ReflectiveOperationException
+	{
+		h.engine.getContext().noteDamageDealt();
+		for (String what : new String[]{"look", "notice", "shoulder", "wave", "drop", "sketch"})
+		{
+			assertEquals(what, "Not in a fight.", call("forceNow", (Object) new String[]{"force", what}));
+		}
+		assertEquals("No force called 'fly'. Try: look, notice, hesitate, shoulder, cutscene, wave, drop, sketch",
+			call("forceNow", (Object) new String[]{"force", "fly"}));
+	}
+
 	// ---------------------------------------------------------------- the glue
 
 	/**

@@ -111,6 +111,7 @@ public class SketchControllerTest
 
 	private boolean busy;
 	private int idle;
+	private int region = 12850;
 	private boolean holding;
 	private final List<String> said = new ArrayList<>();
 	private FollowerEntity follower;
@@ -121,6 +122,11 @@ public class SketchControllerTest
 	 * nothing is drawn; the line said after is what shows the view was taken.
 	 */
 	private SketchController scribe() throws IOException
+	{
+		return scribe(new SketchBook(null));
+	}
+
+	private SketchController scribe(SketchBook book) throws IOException
 	{
 		Client client = (Client) Proxy.newProxyInstance(Client.class.getClassLoader(), new Class<?>[]{Client.class},
 			(proxy, method, args) ->
@@ -162,8 +168,8 @@ public class SketchControllerTest
 				return holding;
 			}
 		};
-		return new SketchController(client, follower, hands, loader(), new SketchBook(null), null, null,
-			() -> busy, () -> idle, () -> 12850, said::add);
+		return new SketchController(client, follower, hands, loader(), book, null, null,
+			() -> busy, () -> idle, () -> region, said::add);
 	}
 
 	private static void tick(SketchController scribe, int times)
@@ -268,6 +274,100 @@ public class SketchControllerTest
 		assertFalse("the scroll put away", holding);
 		assertEquals("and the reading pose with it", 0, follower.getPoseOverride());
 		assertTrue("nothing said for a sketch never taken", said.isEmpty());
+	}
+
+	// ------------------------------------------------------- the force-path
+
+	@Test
+	public void theForcedSketchComesWithoutTheStandStillWait() throws IOException
+	{
+		SketchController scribe = scribe();
+		idle = 1;
+		assertEquals("Sketching lumbridge.", scribe.forceSketch());
+		assertTrue(scribe.isSketching());
+		assertTrue("the scroll is out", holding);
+		tick(scribe, SketchController.HOLD_TICKS + SketchController.PUT_AWAY_TICKS);
+		assertEquals("the real hold, the real line after", 1, said.size());
+		assertFalse(holding);
+	}
+
+	@Test
+	public void theForcedSketchDoesNotWaitOutASpoiledAttempt() throws IOException
+	{
+		SketchController scribe = scribe();
+		idle = SketchController.IDLE_TICKS;
+		scribe.tick();
+		busy = true;
+		scribe.tick();
+		busy = false;
+		scribe.tick();
+		assertFalse("the tick waits a while after a spoiled one", scribe.isSketching());
+		scribe.forceSketch();
+		assertTrue("the force does not", scribe.isSketching());
+	}
+
+	@Test
+	public void aPlaceAlreadyDrawnIsDrawnAgainWithItsFilesKeptFirst() throws IOException
+	{
+		java.nio.file.Path data = folder.newFolder().toPath();
+		SketchBook book = new SketchBook(data);
+		book.openFor("acct");
+		java.awt.image.BufferedImage old = new java.awt.image.BufferedImage(4, 4,
+			java.awt.image.BufferedImage.TYPE_INT_RGB);
+		book.put("lumbridge", old, old);
+		SketchController scribe = scribe(book);
+		idle = 1;
+		assertNull("the tick would not draw it again",
+			SketchController.wanted(loader().getEntries(), 12850, book::hasBoth));
+
+		String reply = scribe.forceSketch();
+		assertEquals("Sketching lumbridge; the old one is kept as lumbridge.large.png.bak,"
+			+ " lumbridge.png.bak.", reply);
+		java.nio.file.Path acct = data.resolve(SketchBook.DIR_NAME).resolve("acct");
+		assertTrue(java.nio.file.Files.isRegularFile(acct.resolve("lumbridge.png.bak")));
+		assertTrue(java.nio.file.Files.isRegularFile(acct.resolve("lumbridge.large.png.bak")));
+		assertTrue(scribe.isSketching());
+	}
+
+	@Test
+	public void noBackupNoSketch() throws IOException
+	{
+		SketchController scribe = scribe(new SketchBook(null)
+		{
+			@Override
+			public List<String> backUp(String key) throws IOException
+			{
+				throw new IOException("disk full");
+			}
+		});
+		idle = 1;
+		assertEquals("Could not back up the old sketch of lumbridge, so it is left alone.",
+			scribe.forceSketch());
+		assertFalse(scribe.isSketching());
+		assertFalse("the scroll never came out", holding);
+	}
+
+	@Test
+	public void theForcedSketchKeepsTheGates() throws IOException
+	{
+		SketchController scribe = scribe();
+		idle = 1;
+		busy = true;
+		assertEquals("The follower is busy.", scribe.forceSketch());
+		busy = false;
+		holding = true;
+		assertEquals("The follower's hands are full.", scribe.forceSketch());
+		holding = false;
+		region = 9999;
+		assertEquals("No page sketches this place (region 9999).", scribe.forceSketch());
+		assertFalse(scribe.isSketching());
+
+		region = 12850;
+		scribe.forceSketch();
+		assertEquals("Already sketching.", scribe.forceSketch());
+		idle = 0;
+		scribe.tick();
+		assertFalse("moving off still spoils a forced one", scribe.isSketching());
 	}
 
 	@Test
