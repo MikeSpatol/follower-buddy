@@ -812,7 +812,10 @@ class KeepingCompany
 			return;
 		}
 		Player local = client.getLocalPlayer();
-		if (sitting || scrollOut || local == null)
+		// Walking is only seen here on the tick a walk begins; a look then
+		// would go to the front tile and the walk set off from there with the
+		// peer held.
+		if (sitting || scrollOut || walking || local == null)
 		{
 			// Busy with something; the next tick, not the next five minutes.
 			return;

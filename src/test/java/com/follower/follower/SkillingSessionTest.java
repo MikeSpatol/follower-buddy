@@ -3587,14 +3587,13 @@ public class SkillingSessionTest
 		// its seat peering, and the walk set off from the player's front tile
 		// with the peer still held. The walks now wait for a peer under way
 		// to be over: late, never lost. The first three hundred draws, each
-		// its own seed: no leg of a walk is asked for once a peer has been
-		// held a whole tick, every draw still paces, and some draws really
-		// did have the pace waiting on a peer - without those this would
-		// prove nothing.
+		// its own seed: no leg of a walk is asked for while a peer is held,
+		// every draw still paces, and some draws really did have the pace
+		// waiting on a peer - without those this would prove nothing.
 		//
-		// The other order is not pinned here: a peer that begins on the very
-		// tick a walk does (seed 245) still goes ahead, and the walk's first
-		// leg follows it a tick later.
+		// The other order too: a peer could begin on the very tick a walk
+		// did (seed 245), and the walk's first leg followed it a tick later.
+		// A look now waits for a walk just begun as well.
 		List<Integer> spoiled = new ArrayList<>();
 		List<Integer> unpaced = new ArrayList<>();
 		int waited = 0;
@@ -3625,7 +3624,7 @@ public class SkillingSessionTest
 						paced = i;
 					}
 				}
-				if (paced == i && peerHeld >= 2)
+				if (paced == i && peerHeld >= 1)
 				{
 					spoiled.add(seed);
 				}
@@ -3647,6 +3646,58 @@ public class SkillingSessionTest
 		assertTrue("a walk set off mid-peer on seeds " + spoiled, spoiled.isEmpty());
 		assertTrue("the pace is late, never lost; none on seeds " + unpaced, unpaced.isEmpty());
 		assertTrue("no draw had the pace waiting on a peer, so nothing was proved", waited > 0);
+	}
+
+	@Test
+	public void theHoursStretchIsNotWalkedPeeringOverTheShoulder()
+	{
+		// The sit keeps the look waiting a tick at a time, so by the hour it
+		// is long overdue, and the stretch stands the follower up on the very
+		// tick the look is free to go. It went, to the player's front tile,
+		// and the half circle was walked from there with the peer held at
+		// every leg. Not a chance draw: every hour's stretch after a sit.
+		skilling.random.setSeed(0);
+		game.animating(FLETCH);
+		tick(1);
+		skilling.noteXpDrop(Skill.FLETCHING);
+		tick(SkillingController.SEAT_AFTER_TICKS);
+		WorldPoint seat = follower.stayingAt;
+		boolean sat = false;
+		List<Integer> spoiled = new ArrayList<>();
+		int legs = 0;
+		int lastLeg = -1;
+		int lastPeer = -1;
+		for (int i = 1; i <= KeepingCompany.STRETCH_AFTER_TICKS + 350; i++)
+		{
+			boolean peering = follower.poseOverride == KeepingCompany.PEER;
+			int asked = follower.stays.size();
+			tick(1);
+			if (i % 3 == 0)
+			{
+				skilling.noteXpDrop(Skill.FLETCHING);
+			}
+			sat |= skilling.isSitting();
+			for (WorldPoint stay : follower.stays.subList(asked, follower.stays.size()))
+			{
+				if (!stay.equals(seat))
+				{
+					legs++;
+					lastLeg = i;
+					if (peering)
+					{
+						spoiled.add(i);
+					}
+				}
+			}
+			if (follower.poseOverride == KeepingCompany.PEER)
+			{
+				lastPeer = i;
+			}
+		}
+		assertTrue("it sat before the hour, which is what holds the look", sat);
+		assertEquals("the pace out, then the half circle", 4, legs);
+		assertTrue("legs walked with the peer held, at ticks " + spoiled, spoiled.isEmpty());
+		assertTrue("the look is late, never lost", lastPeer > lastLeg);
 	}
 
 	@Test
