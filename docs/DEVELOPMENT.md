@@ -1119,8 +1119,12 @@ plumbing, and the right-click menu fronts all of it.
    can never steal Walk here's left-click). While posed the follow tile is never
    pathed, the arrival stance faces the player, and the leash widens to 40 tiles
    - any forced relocation (plane change, leash snap, scene recovery, despawn)
-   releases the pose. Animation and speech remain commands (`anim`, `say`) plus
-   the Wave/Dance menu entries.
+   releases the pose. A park the player gave (Stay, Send, Follow me off) is
+   theirs until Follow: the wander, the seat, the moments, the spectator, the
+   errands and a holdStill plant all read it as the feet taken, and one that
+   had the feet when it was given stands down, the follower parked on the same
+   spot again as it lets go (`parkedByPlayer`, `keepThePlayersPark`). Animation
+   and speech remain commands (`anim`, `say`) plus the Wave/Dance menu entries.
 
    Posed routes come from `findPath` - the client's own Walk-here pathfinder
    (`tryMove`), ported structurally verbatim: a scene-wide BFS recording the
@@ -1601,7 +1605,7 @@ nearest guard, a foreman three tiles off the hotspot. The seat owns the feet:
 `holdsTheFeet()` is registered beside the errand and spectate owners in
 `stayIsPlayerCommanded`, so no Stay line fires because of it, and
 `blocksErrands()` keeps the follower's own errands from starting mid-session.
-Thrall mode and the spectator beat it.
+Thrall mode, the spectator and a player's Stay beat it.
 
 **Hot ground** (`HotGround`). A lit fire has no collision: the game lets you
 walk straight over one, so every check the follower had - `standable`,
@@ -1774,8 +1778,9 @@ to look, and come back, then keeps its wander close for ten minutes; run
 turning off under 10% energy sends it ahead to look back once per low stretch;
 an NPC with no combat level that spawns and turns to the player (a random
 event) is faced, stepped back from and peered at until it goes. A moment
-excuses a held seat and the seat is retaken after; thrall work, the spectator
-and an errand under way beat a moment. So does the long-haul sit: a level is
+excuses a held seat and the seat is retaken after; thrall work, the spectator,
+an errand under way and a player's Stay beat a moment, which on a Stay is a
+clap or a nod where it stands. So does the long-haul sit: a level is
 then clapped from the seat (up off the sit and back down), and the walks are
 not taken, since the rest pose would sit it down wherever it arrived.
 

@@ -352,6 +352,19 @@ public class FollowerPlugin extends Plugin
 	private int lastRegionId = -1;
 	/** The player-commanded stay state last handed to onStayStateChanged. */
 	private boolean stayReported;
+	/**
+	 * A park the player gave - right-click Stay, a Send, Follow me off - held
+	 * until they say Follow. Nothing of the follower's own takes the feet
+	 * from it: the wander, the seat, the moments, the spectator and the
+	 * errands all read it as their feet taken.
+	 */
+	private boolean parkedByPlayer;
+	/**
+	 * A park given while something of the follower's own had the feet: that
+	 * stands down, and the follower is parked here again once it has let go.
+	 * Null when nothing is waiting.
+	 */
+	private WorldPoint parkWhenFree;
 	/** Told as the player-commanded stay starts or ends; the side panel's button reads it. */
 	private java.util.function.Consumer<Boolean> onStayStateChanged;
 	private int reloadPollTicks;
@@ -677,15 +690,7 @@ public class FollowerPlugin extends Plugin
 		hotGround = new com.follower.follower.HotGround(client);
 		follower.setHotGround(hotGround::hot);
 		errands = new com.follower.follower.ErrandController(client, follower, config,
-			speechEngine::dispatch, spotAnimRepository,
-			// Minutes-taking counts as busy: an errand must not set off with
-			// the scroll already out over somebody's meeting. Nor during a
-			// work session, where the seat has the feet, nor while the seat
-			// is kept through a bank trip after one.
-			() -> dialog.isOpen() || follower.isNpcSlaved() || minutesState != 0
-				|| (skilling != null && skilling.blocksErrands())
-				|| (moments != null && moments.holdsTheFeet()),
-			hands);
+			speechEngine::dispatch, spotAnimRepository, this::errandBusy, hands);
 		flourish = new com.follower.follower.PropFlourish(follower, hands);
 		// A SUPPLIER, not the context itself: the engine replaces its context
 		// on every reset, and a controller holding the original object read a
@@ -695,14 +700,10 @@ public class FollowerPlugin extends Plugin
 		spectate = new com.follower.follower.SpectateController(client, follower, config,
 			speechEngine::getContext, spotAnimRepository, speechEngine::dispatch,
 			this::setSpectateDisarmed);
-		// Thrall work and the spectator both beat the seat, so their whole
-		// ownership window - the exit flourish included - is the "feet taken"
-		// the company watches.
 		skilling = new com.follower.follower.SkillingController(client, follower, config,
 			hands, speechEngine::dispatch,
 			() -> speechEngine.getContext().isInCombat(),
-			() -> thrallNpc != null || thrallLimbo || thrallExitPendingTicks > 0
-				|| thrallExitTicks > 0 || (spectate != null && spectate.holdsTheFeet()),
+			this::seatFeetTaken,
 			() -> client.getWidget(net.runelite.api.gameval.InterfaceID.BANKMAIN, 0) != null);
 		// The prayer at the altar and the fire line borrow two of the errands.
 		skilling.setErrands(errands::force);
@@ -710,13 +711,8 @@ public class FollowerPlugin extends Plugin
 		skilling.setGrateful(() -> speechEngine.getContext().isGrateful());
 		// And in return no errand of the follower's own starts mid-session.
 		errands.setSession(() -> skilling.isWorking() || inCutscene());
-		// The moments excuse the seat for themselves; everything else that
-		// owns the feet - thrall work, the spectator, an errand under way -
-		// beats them.
 		moments = new com.follower.follower.Moments(client, follower, config, skilling,
-			() -> thrallNpc != null || thrallLimbo || thrallExitPendingTicks > 0
-				|| thrallExitTicks > 0 || (spectate != null && spectate.holdsTheFeet())
-				|| errands.isBusy(),
+			this::momentFeetTaken,
 			() -> speechEngine.getContext().isInCombat(),
 			() -> speechEngine.getContext().getDaysKnown(),
 			flourish,
@@ -953,6 +949,8 @@ public class FollowerPlugin extends Plugin
 		resting = false;
 		wandered = false;
 		wanderCountdown = 0;
+		parkedByPlayer = false;
+		parkWhenFree = null;
 		damagedByPlayer.clear();
 		mirrorGraphicsUntilTick = -1;
 		hoveredThisTick = false;
@@ -1334,7 +1332,9 @@ public class FollowerPlugin extends Plugin
 				else if (open && !minutesConsidered)
 				{
 					minutesConsidered = true;
-					if (!busy && !follower.isStaying() && follower.isSpawned()
+					// The wander's drift gives way to the shoulder; any other
+					// stay is somebody's, the player's first of all.
+					if (!busy && (!follower.isStaying() || wandered) && follower.isSpawned()
 						&& local != null && standOverTheShoulder(local))
 					{
 						// Over the shoulder every time; the scroll now and then.
@@ -1611,7 +1611,10 @@ public class FollowerPlugin extends Plugin
 			|| (skilling != null && skilling.holdsTheFeet())
 			|| (moments != null && moments.holdsTheFeet())
 			|| inCutscene()
-			|| resting;
+			|| resting
+			// A long dialog must not walk the minute-taker off the shoulder.
+			|| minutesState != 0
+			|| parkedByPlayer;
 
 		// Thieving wanders too, and does not wait to be invited. The idle gate
 		// exists so the follower does not drift while the player is busy, but
@@ -1626,7 +1629,13 @@ public class FollowerPlugin extends Plugin
 		{
 			if (wandered)
 			{
-				follower.resumeFollowing();
+				// Only its own drift is let go of. Something that took the
+				// feet from it since - a moment, the minutes, the seat - owns
+				// that stay now and hands it back itself.
+				if (!feetBorrowed())
+				{
+					follower.resumeFollowing();
+				}
 				wandered = false;
 			}
 			wanderCountdown = 0;
@@ -3845,12 +3854,15 @@ public class FollowerPlugin extends Plugin
 	}
 
 	/**
-	 * Whether a Follow me value needs applying: only when the follower is not
-	 * already in that state, so the right-click ops' own write changes nothing.
+	 * Whether a Follow me value needs applying: only when the player's park is
+	 * not already in that state, so the right-click ops' own write changes
+	 * nothing. The player's park, not any stay: the wander, the seat and an
+	 * errand park the follower too, and Stay here pressed over one of them
+	 * has to take.
 	 */
-	static boolean followToggleNeedsAction(boolean followEnabled, boolean staying)
+	static boolean followToggleNeedsAction(boolean followEnabled, boolean parkedByPlayer)
 	{
-		return followEnabled == staying;
+		return followEnabled == parkedByPlayer;
 	}
 
 	/**
@@ -3861,17 +3873,127 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void applyFollowEnabled(boolean wantFollow)
 	{
-		if (followToggleNeedsAction(wantFollow, follower.isStaying()))
+		if (followToggleNeedsAction(wantFollow, parkedByPlayer))
 		{
 			if (wantFollow)
 			{
-				follower.resumeFollowing();
+				followAgain();
 			}
 			else
 			{
 				follower.stayHere();
+				parkedByThePlayer();
 			}
 		}
+	}
+
+	/**
+	 * A park the player gave has just been taken, and is theirs until they
+	 * say Follow. The wander's drift is handed over rather than let go under
+	 * it. Anything else of the follower's own that has the feet reads this
+	 * park as its feet taken and stands down, and the follower is parked on
+	 * the same spot again as it lets go.
+	 */
+	private void parkedByThePlayer()
+	{
+		parkedByPlayer = true;
+		wandered = false;
+		parkWhenFree = feetBorrowed() ? follower.getStayTile() : null;
+	}
+
+	/** The player said Follow: the park is over, whoever had the feet. */
+	private void followAgain()
+	{
+		parkedByPlayer = false;
+		parkWhenFree = null;
+		follower.resumeFollowing();
+	}
+
+	/**
+	 * Once a tick, after everything that borrows the feet. A park given while
+	 * one of them had them is taken again once it has let go. A park the
+	 * follower was taken off by force - the leash, a teleport, thrall work -
+	 * is over, since those bring it along to the player.
+	 */
+	private void keepThePlayersPark()
+	{
+		if (parkWhenFree != null && !feetBorrowed())
+		{
+			WorldPoint post = parkWhenFree;
+			parkWhenFree = null;
+			if (!follower.isStaying() && !follower.stayAt(post))
+			{
+				follower.stayHere();
+			}
+		}
+		if (parkWhenFree == null && !follower.isStaying())
+		{
+			parkedByPlayer = false;
+		}
+	}
+
+	/**
+	 * Whether something of the follower's own has its feet: thrall work, an
+	 * errand, the spectator, a planted emote, the minutes, the seat, a moment
+	 * or a write-up. Each hands them back itself when it is done.
+	 */
+	private boolean feetBorrowed()
+	{
+		return thrallBusiness()
+			|| (errands != null && errands.isBusy())
+			|| (spectate != null && spectate.holdsTheFeet())
+			|| emoteHold || minutesState != 0
+			|| (skilling != null && skilling.holdsTheFeet())
+			|| (moments != null && moments.holdsTheFeet())
+			|| (flourish != null && flourish.isActive());
+	}
+
+	/**
+	 * What an errand stands aside for. Minutes-taking counts: an errand must
+	 * not set off with the scroll already out over somebody's meeting. Nor
+	 * during a work session, where the seat has the feet, nor while the seat
+	 * is kept through a bank trip after one. And one under way stands down
+	 * for a park the player gave.
+	 */
+	private boolean errandBusy()
+	{
+		return dialog.isOpen() || follower.isNpcSlaved() || minutesState != 0
+			|| (skilling != null && skilling.blocksErrands())
+			|| (moments != null && moments.holdsTheFeet())
+			|| parkedByPlayer;
+	}
+
+	/**
+	 * What beats the seat. Thrall work and the spectator, over their whole
+	 * ownership window - the exit flourish included - and a park the player
+	 * gave, which no work nearby takes the follower off.
+	 */
+	private boolean seatFeetTaken()
+	{
+		return thrallBusiness() || (spectate != null && spectate.holdsTheFeet())
+			|| parkedByPlayer;
+	}
+
+	/**
+	 * What beats a moment. The moments excuse the seat for themselves;
+	 * everything else that beats the seat beats them, and so does an errand
+	 * under way. On a park the player gave, a level is clapped where it
+	 * stands and the news is nodded at; nothing is walked over to.
+	 */
+	private boolean momentFeetTaken()
+	{
+		return seatFeetTaken() || (errands != null && errands.isBusy());
+	}
+
+	/**
+	 * What the spectator keeps out of the way for: thrall work and its whole
+	 * exit, an errand in progress, and a park the player gave, which a fight
+	 * nearby does not take the follower off.
+	 */
+	private boolean spectateBusy()
+	{
+		return thrallBusiness() || (errands != null && errands.isBusy())
+			|| parkedByPlayer;
 	}
 
 	/**
@@ -4109,6 +4231,7 @@ public class FollowerPlugin extends Plugin
 				if (!config.followEnabled())
 				{
 					follower.stayHere();
+					parkedByThePlayer();
 				}
 			}
 		});
@@ -5971,7 +6094,7 @@ public class FollowerPlugin extends Plugin
 		{
 			addFollowerMenuEntry("Follow", () ->
 			{
-				follower.resumeFollowing();
+				followAgain();
 				setFollowEnabled(true);
 			});
 		}
@@ -5980,6 +6103,7 @@ public class FollowerPlugin extends Plugin
 			addFollowerMenuEntry("Stay", () ->
 			{
 				follower.stayHere();
+				parkedByThePlayer();
 				setFollowEnabled(false);
 				// Stay is the moment positional control has been asked for, so
 				// the one place Send is taught is the first of these clicks.
@@ -6076,6 +6200,10 @@ public class FollowerPlugin extends Plugin
 					{
 						speak("I can't get to that spot from here!",
 							com.follower.speech.SpeechOutput.OVERHEAD, null, -1, null);
+					}
+					else
+					{
+						parkedByThePlayer();
 					}
 				});
 			});
@@ -6361,6 +6489,7 @@ public class FollowerPlugin extends Plugin
 			if (!config.followEnabled())
 			{
 				follower.stayHere();
+				parkedByThePlayer();
 			}
 		}
 
@@ -6557,10 +6686,11 @@ public class FollowerPlugin extends Plugin
 		// thrall mode, wards at the player's side, no stepping away.
 		if (spectate != null)
 		{
-			spectate.tick(thrallNpc != null || thrallLimbo
-				|| thrallExitPendingTicks > 0 || thrallExitTicks > 0
-				|| (errands != null && errands.isBusy()));
+			spectate.tick(spectateBusy());
 		}
+		// After everything that borrows the feet, so a park the player gave
+		// is taken again on the tick they are let go.
+		keepThePlayersPark();
 
 		// The spawn-in burst waits one tick so the follower has already been
 		// rendered standing at the thrall's spot when it plays.
@@ -9916,9 +10046,11 @@ public class FollowerPlugin extends Plugin
 
 		// Plant it first, so the animation starts against a follower that is
 		// already stopped rather than one that stops a tick into the clip.
-		// Not at the work, where the walk over already holds the feet.
+		// Not at the work, where the walk over already holds the feet, and
+		// not on a park the player gave: the clip plays at the post, and the
+		// plant's release at its end would hand the follower back to following.
 		if (rule != null && Boolean.TRUE.equals(rule.holdStill) && rule.hasAnimationAction()
-			&& !atTheWork)
+			&& !atTheWork && !parkedByPlayer)
 		{
 			emoteHold = true;
 			clientThread.invoke(follower::stayHere);
