@@ -872,6 +872,11 @@ public class FollowerPlugin extends Plugin
 		{
 			moments.reset();
 		}
+		if (sketching != null)
+		{
+			// Its reading pose is set on the follower, which outlives a disable.
+			sketching.reset();
+		}
 		// The scroll must not survive a disable either.
 		endMinutes(false);
 		voices.close();

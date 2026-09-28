@@ -253,6 +253,24 @@ public class SketchControllerTest
 	}
 
 	@Test
+	public void aResetMidSketchTakesThePoseOffAndSaysNothing() throws IOException
+	{
+		// A disable or a logout with the scroll out. The pose is set on the
+		// follower, which outlives both, so the reset is the one thing that
+		// takes it off.
+		SketchController scribe = scribe();
+		idle = SketchController.IDLE_TICKS;
+		scribe.tick();
+		assertTrue(scribe.isSketching());
+
+		scribe.reset();
+		assertFalse("the sketch is over", scribe.isSketching());
+		assertFalse("the scroll put away", holding);
+		assertEquals("and the reading pose with it", 0, follower.getPoseOverride());
+		assertTrue("nothing said for a sketch never taken", said.isEmpty());
+	}
+
+	@Test
 	public void theLineItSaysIsSaidAfterAndIsTheScribes()
 	{
 		for (String line : SketchController.DONE)

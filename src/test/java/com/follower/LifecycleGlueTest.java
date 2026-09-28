@@ -125,4 +125,14 @@ public class LifecycleGlueTest
 		assertTrue("and the old follower's queued lines go with it",
 			switched.contains("speechQueue.clear();"));
 	}
+
+	@Test
+	public void aDisablePutsTheSketchingScrollAway() throws IOException
+	{
+		// The sketch sets the reading pose on the follower, which outlives a
+		// toggle, and only the sketch's own reset takes it off. Switched off
+		// with the scroll out, the follower came back reading nothing.
+		assertTrue("shutting down must reset the sketch",
+			method("protected void shutDown()").contains("sketching.reset();"));
+	}
 }
