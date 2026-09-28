@@ -483,7 +483,13 @@ public class ErrandController
 		{
 			Player walker = client.getLocalPlayer();
 			WorldPoint here = walker == null ? null : walker.getWorldLocation();
-			if (here == null || !here.equals(lastPlayerTile))
+			// A tool kept between trees is still in the hand, and every errand
+			// lets go of the hand when it ends. It goes back within the minute,
+			// so the look waits for it, and for the bow, rather than being lost
+			// to it. A session's own tool is no such pause: that look is lost
+			// to the work, as ever.
+			if (here == null || !here.equals(lastPlayerTile)
+				|| (hands.isHolding() && !session.getAsBoolean()))
 			{
 				arrivalSettleTicks = ARRIVAL_SETTLE_TICKS;
 			}

@@ -697,6 +697,14 @@ class KeepingCompany
 		{
 			sit();
 		}
+		else if (sitting && follower.getPoseOverride() == 0
+			&& seat.equals(follower.getWorldLocation()))
+		{
+			// Something else put its pose over the sit - a copy of the work
+			// made from the seat, an emote loop copied - and let go of it:
+			// back down, rather than stood while it still counts as sitting.
+			sit();
+		}
 
 		if ("fishing".equals(activity) && workMin == null && now >= waterLookAt)
 		{

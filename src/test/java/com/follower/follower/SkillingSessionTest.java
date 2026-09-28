@@ -2038,6 +2038,44 @@ public class SkillingSessionTest
 	}
 
 	@Test
+	public void aCopyMadeOverTheSitSitsBackDownAfter()
+	{
+		// Standing work is copied from the seat, and the copy's pose takes the
+		// sit's place. When it let go at the end of the batch the follower
+		// stood for the rest of the session while the company still counted
+		// it sitting: never another look over the shoulder, and a stand-up
+		// played from standing before every emote.
+		skilling.random.setSeed(0);
+		game.animating(FLETCH);
+		tick(1);
+		skilling.noteXpDrop(Skill.FLETCHING);
+		tick(SkillingController.SEAT_AFTER_TICKS + KeepingCompany.SIT_AFTER_TICKS + 70);
+		WorldPoint seat = follower.stayingAt;
+		assertTrue(skilling.isSitting());
+		assertEquals("the rest pose", 10061, follower.poseOverride);
+
+		skilling.joinIn();
+		assertTrue("copied from the seat", skilling.joinedIn());
+		follower.setPoseOverride(FLETCH);
+		tick(5);
+		// The batch over: the copy lets go of its own pose, and of the join.
+		follower.clearPoseOverride(FLETCH);
+		skilling.dropTheJoin();
+		tick(1);
+		assertEquals(seat, follower.stayingAt);
+		assertTrue(skilling.isSitting());
+		assertEquals("back down, as it still counts itself", 10061, follower.poseOverride);
+
+		// One of the emote loops the mimic copies is its own while it lasts.
+		follower.setPoseOverride(189);
+		tick(3);
+		assertEquals("not sat through", 189, follower.poseOverride);
+		follower.clearPoseOverride(189);
+		tick(1);
+		assertEquals("and the sit after it", 10061, follower.poseOverride);
+	}
+
+	@Test
 	public void stretchingItsLegsAtTheHourAndAgainAtTwo()
 	{
 		workTheRange();

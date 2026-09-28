@@ -367,6 +367,35 @@ public class BorrowTest
 	}
 
 	@Test
+	public void eachFishingToolAnswersForItsWholeFamilyOfSwingsAndNoOther()
+	{
+		// Most swings are ones the tables never name, a dragon harpoon's or a
+		// pearl rod's, so the one kind of tool must not answer for the other's
+		// just because the tables do not know them.
+		Set<Integer> dragon = worn(21028);
+		assertEquals("a harpoon kept on at a barbarian rod spot is no rod",
+			0, Borrow.toolFor("fishing", 9350, dragon, 21028, "Dragon harpoon"));
+		assertEquals("nor through a pearl rod's cast from the bag",
+			0, Borrow.toolFor("fishing", 8188, dragon, 21028, "Dragon harpoon"));
+		assertEquals("and a pearl rod kept on is no dragon harpoon",
+			0, Borrow.toolFor("fishing", 7401, worn(22846), 22846, "Pearl fishing rod"));
+
+		// Nor is a weapon that happens to be called a rod any kind of rod.
+		assertEquals("the rod of ivandis at a fly spot",
+			307, Borrow.toolFor("fishing", 623, worn(7639), 7639, "Rod of ivandis (10)"));
+		assertEquals("the silvthrill rod at a bait spot",
+			307, Borrow.toolFor("fishing", 622, worn(7637), 7637, "Silvthrill rod"));
+		assertEquals("nor a cattleprod",
+			307, Borrow.toolFor("fishing", 622, worn(278), 278, "Cattleprod"));
+
+		// The rest of each family is still the hand.
+		assertEquals(22842, Borrow.toolFor("fishing", 8190, worn(22842), 22842, "Pearl barbarian rod"));
+		assertEquals(21031, Borrow.toolFor("fishing", 7402, worn(21031), 21031, "Infernal harpoon"));
+		assertEquals("the ornament kit's swing too",
+			25373, Borrow.toolFor("fishing", 88, worn(25373), 25373, "Dragon harpoon (or)"));
+	}
+
+	@Test
 	public void theHatOfAFullOutfitAndOnlyThat()
 	{
 		// The whole lumberjack set on: the hat, for a woodcutting session.

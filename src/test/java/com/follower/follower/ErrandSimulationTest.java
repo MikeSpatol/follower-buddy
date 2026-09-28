@@ -172,6 +172,12 @@ public class ErrandSimulationTest
 				{
 					heldProp = 0;
 				}
+
+				@Override
+				public boolean isHolding()
+				{
+					return heldProp != 0;
+				}
 			});
 	}
 
@@ -495,6 +501,43 @@ public class ErrandSimulationTest
 		errands.noticeArrival();
 		tick(12);
 		assertTrue("the next arrival still gets its look", started("explore-chest"));
+	}
+
+	@Test
+	public void anArrivalWaitsOutAToolKeptBetweenTrees()
+	{
+		// A tool kept in the hand between two trees holds the errands up,
+		// since every errand lets go of the hand when it ends. It goes back
+		// within the minute, so a look at somewhere new waits for it rather
+		// than being lost to it, as a look is lost to the work itself.
+		errands.setSession(() -> working);
+		game.at(50, 50, 0);
+		follower.where = new WorldPoint(50, 51, 0);
+		game.placeObject(9001, "Chest", 53, 50, 0);
+
+		working = true;
+		busy = true;
+		heldProp = 1351;
+		errands.noticeArrival();
+		tick(12);
+		working = false;
+		busy = false;
+		heldProp = 0;
+		tick(12);
+		assertFalse("the session's own tool is no pause", started("explore-chest"));
+
+		busy = true;
+		heldProp = 1351;
+		errands.noticeArrival();
+		tick(30);
+		assertFalse("not over the kept axe", errands.isBusy());
+
+		busy = false;
+		heldProp = 0;
+		tick(7);
+		assertFalse("a moment for the bow that gave it back", errands.isBusy());
+		tick(1);
+		assertTrue("then the look it waited for", started("explore-chest"));
 	}
 
 	@Test

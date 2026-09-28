@@ -138,6 +138,16 @@ public class Borrow
 	private static final int FLY_ROD_ANIMATION = 623;
 	private static final int KARAMBWAN_ANIMATION = 1193;
 
+	/**
+	 * Every harpoon swing and every rod cast the cache names, the tables' own
+	 * and the rest, a dragon harpoon's or a pearl rod's. From
+	 * docs/data/animation-ids.tsv.
+	 */
+	private static final Set<Integer> HARPOONING = new HashSet<>(Arrays.asList(
+		88, HARPOON_ANIMATION, 5108, 7401, 7402, 8336, 8784));
+	private static final Set<Integer> ROD_FISHING = new HashSet<>(Arrays.asList(
+		ROD_ANIMATION, FLY_ROD_ANIMATION, 6932, 8188, 8189, 8190, 8191, 8192, 8193, 9350));
+
 	private final FollowerEntity follower;
 	private final ErrandController.Hands hands;
 
@@ -400,12 +410,14 @@ public class Borrow
 					break;
 				case "fishing":
 					// A harpoon left on through a cage or a net is still called
-					// a harpoon, so the name answers only for its own work, or
-					// for a swing the tables do not know, as a dragon harpoon's is.
-					boolean unknown = toolFor(activity, animationId, worn) == 0;
-					if ((name.contains("harpoon") && (unknown || animationId == HARPOON_ANIMATION))
-						|| (name.contains("rod") && (unknown || animationId == ROD_ANIMATION
-							|| animationId == FLY_ROD_ANIMATION)))
+					// a harpoon, so the name answers only for its own kind of
+					// swing, or for one nothing here knows at all. A weapon
+					// called a rod, the rod of ivandis, is no fishing rod.
+					boolean rod = name.contains("fishing rod") || name.contains("barbarian rod");
+					boolean unknown = toolFor(activity, animationId, worn) == 0
+						&& !HARPOONING.contains(animationId) && !ROD_FISHING.contains(animationId);
+					if ((name.contains("harpoon") && (unknown || HARPOONING.contains(animationId)))
+						|| (rod && (unknown || ROD_FISHING.contains(animationId))))
 					{
 						return wornWeapon;
 					}
