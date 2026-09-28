@@ -1158,6 +1158,10 @@ public class FollowerPlugin extends Plugin
 
 	private boolean resting;
 
+	/** The sit the rest put on: the one it lets go of, even if the Rest pose
+	 * setting has changed since. */
+	private int restPose;
+
 	/**
 	 * Sits the follower down once the player has been still a long while, and
 	 * stands it back up the moment anything happens.
@@ -1189,11 +1193,27 @@ public class FollowerPlugin extends Plugin
 		resting = wantRest;
 		if (wantRest)
 		{
-			follower.setPoseOverride(config.restAnimation());
+			restPose = config.restAnimation();
+			follower.setPoseOverride(restPose);
 		}
 		else
 		{
-			follower.setPoseOverride(0);
+			letGoOfTheSit(follower, restPose);
+		}
+	}
+
+	/**
+	 * Lets go of the sit, and stands up only from the sit. The rest lets go
+	 * a tick after whatever ended it, and an errand with no trip can start
+	 * on the seated follower in that tick: its reading pose, or its bend,
+	 * is on by then and keeps going.
+	 */
+	static void letGoOfTheSit(FollowerEntity follower, int sitPose)
+	{
+		boolean sitting = follower.getPoseOverride() == sitPose && !follower.isEmotePlaying();
+		follower.clearPoseOverride(sitPose);
+		if (sitting)
+		{
 			// Cancelled harmlessly by the next movement frame if the follower
 			// is already walking, which is the usual reason rest ended.
 			follower.playAnimation(REST_STAND_UP);
