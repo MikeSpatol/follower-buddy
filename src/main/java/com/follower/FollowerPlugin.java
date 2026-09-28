@@ -2123,11 +2123,13 @@ public class FollowerPlugin extends Plugin
 		metWearingValue = restoreMemory(speechEngine.getContext(), config.counters(),
 			gson, metWearingValue);
 		memoryProfileId = currentProfileId();
+		outfitProfileId = memoryProfileId;
 	}
 
 	/**
-	 * The RuneLite profile the follower's memory and outfit were read from,
-	 * or -1 before anything has been read.
+	 * The RuneLite profile the follower's memory was read from, or -1 while
+	 * it holds none: before anything has been read, and after a logout or
+	 * a shutdown.
 	 *
 	 * <p>Config is per profile, and a profile switch announces every changed
 	 * key one by one with the NEW profile already current. Anything that
@@ -2140,6 +2142,13 @@ public class FollowerPlugin extends Plugin
 	 * the profile the state came from, and a switch re-reads from the new one.
 	 */
 	private long memoryProfileId = -1;
+
+	/**
+	 * The same, for the outfit, and never let go of. A logout drops the
+	 * memory but not the outfit, which is still worn and still this
+	 * profile's: an edit made at the login screen belongs under its name.
+	 */
+	private long outfitProfileId = -1;
 
 	private long currentProfileId()
 	{
@@ -2982,7 +2991,7 @@ public class FollowerPlugin extends Plugin
 		// Mid-switch the outfit key already belongs to the other RuneLite
 		// profile; filing it under this profile's outfit name is how a
 		// two-day-old outfit came back (issue #1).
-		if (!onMemoryProfile())
+		if (!belongsToProfile(outfitProfileId, currentProfileId()))
 		{
 			return;
 		}

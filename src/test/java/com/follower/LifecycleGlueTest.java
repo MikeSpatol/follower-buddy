@@ -9,6 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.junit.Test;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -169,6 +170,23 @@ public class LifecycleGlueTest
 		assertTrue("and at a logout before the engine lets the session go",
 			loggedOut.indexOf("tearDownScene();") >= 0
 				&& loggedOut.indexOf("tearDownScene();") < loggedOut.indexOf(RESET));
+	}
+
+	@Test
+	public void aLogoutLetsTheMemoryGoButNotTheOutfit() throws IOException
+	{
+		// Forgetting whose memory it was at a logout shut the outfit's
+		// auto-save as well, since it asked the same question. An edit made
+		// at the login screen was never filed under its named outfit, and
+		// picking another outfit and back after the login lost it. The
+		// outfit is still worn after a logout, and still that profile's.
+		String filing = method("private void autoSaveActiveProfile()");
+		assertTrue("the outfit is filed on the profile it was read with",
+			filing.contains("belongsToProfile(outfitProfileId, currentProfileId())"));
+		assertFalse("not on the memory's, which a logout lets go of",
+			filing.contains("onMemoryProfile()"));
+		assertFalse("and nothing lets the outfit's go",
+			source().contains("\toutfitProfileId = -1;"));
 	}
 
 	@Test
