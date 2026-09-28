@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import net.runelite.api.NPC;
+import net.runelite.api.events.VarbitChanged;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.events.ConfigChanged;
 import org.junit.Rule;
@@ -144,6 +145,50 @@ public class ThrallOnlyTest
 			Collections.singletonList(own), asked);
 	}
 
+	/**
+	 * A thrall-only plugin in a game with a thrall beside the player,
+	 * speaking through the harness's engine.
+	 */
+	private static FollowerPlugin summoning(FakeGame game, Harness h, boolean replaceThralls)
+		throws ReflectiveOperationException
+	{
+		FollowerPlugin plugin = new FollowerPlugin();
+		set(plugin, "client", game.client);
+		set(plugin, "config", new FollowerConfig()
+		{
+			@Override
+			public boolean thrallMode()
+			{
+				return replaceThralls;
+			}
+
+			@Override
+			public boolean thrallOnly()
+			{
+				return true;
+			}
+		});
+		set(plugin, "speechEngine", h.engine);
+		set(plugin, "ruleLoader", h.loader);
+		set(plugin, "profileStore", new OutfitProfileStore(new Gson()));
+		// The body's part runs on the client thread; only the taking is asked about.
+		set(plugin, "clientThread", new ClientThread()
+		{
+			@Override
+			public void invoke(Runnable r)
+			{
+			}
+		});
+		return plugin;
+	}
+
+	private static void adopt(FollowerPlugin plugin, NPC thrall) throws ReflectiveOperationException
+	{
+		Method adopt = FollowerPlugin.class.getDeclaredMethod("maybeAdoptThrall", NPC.class);
+		adopt.setAccessible(true);
+		adopt.invoke(plugin, thrall);
+	}
+
 	@Test
 	public void thrallOnlyTakesTheThrallEvenWithReplaceThrallsOff() throws Exception
 	{
@@ -155,61 +200,52 @@ public class ThrallOnlyTest
 		Harness h = new Harness(folder.newFolder().toPath());
 		h.gameTicks(2);
 
-		FollowerPlugin plugin = new FollowerPlugin();
-		set(plugin, "client", game.client);
-		set(plugin, "config", new FollowerConfig()
-		{
-			@Override
-			public boolean thrallMode()
-			{
-				return false;
-			}
-
-			@Override
-			public boolean thrallOnly()
-			{
-				return true;
-			}
-		});
-		set(plugin, "speechEngine", h.engine);
-		set(plugin, "profileStore", new OutfitProfileStore(new Gson()));
-		// The body's part runs on the client thread; only the taking is asked about.
-		set(plugin, "clientThread", new ClientThread()
-		{
-			@Override
-			public void invoke(Runnable r)
-			{
-			}
-		});
+		FollowerPlugin plugin = summoning(game, h, false);
 		assertTrue(hidden(plugin));
 
-		Method adopt = FollowerPlugin.class.getDeclaredMethod("maybeAdoptThrall", NPC.class);
-		adopt.setAccessible(true);
-		adopt.invoke(plugin, thrall);
+		adopt(plugin, thrall);
 		assertFalse("the summon brings it", hidden(plugin));
 
-		assertTrue("the varbit's path asks the same question", FollowerPlugin.replacesThralls(false, true));
 		assertFalse("and with both off no thrall is ever taken", FollowerPlugin.replacesThralls(false, false));
 	}
 
+	@Test
+	public void theVarbitTakesTheThrallEvenWithReplaceThrallsOff() throws Exception
+	{
+		// A thrall that spawns before the varbit rises is turned away at the
+		// spawn, and only the varbit's path can take it. That path asked
+		// Replace thralls alone too.
+		FakeGame game = new FakeGame();
+		game.spawnNpc(10886, "Greater Zombified Spawn", 0);
+		Harness h = new Harness(folder.newFolder().toPath());
+		h.gameTicks(2);
+
+		FollowerPlugin plugin = summoning(game, h, false);
+		assertTrue(hidden(plugin));
+
+		game.varbit(12290, 1);
+		VarbitChanged risen = new VarbitChanged();
+		risen.setVarbitId(12290);
+		risen.setValue(1);
+		plugin.onVarbitChanged(risen);
+		assertFalse("the varbit brings it", hidden(plugin));
+	}
+
 	/**
-	 * Announces a summon the way adoptThrall does, on an engine the absent
-	 * ticks left muted; what was said.
+	 * Summons a thrall into thrall-only mode's absence, on an engine the
+	 * absent ticks left muted; what was said.
 	 */
 	private List<Harness.Spoken> summonedFromAbsence(boolean thieving) throws Exception
 	{
+		FakeGame game = new FakeGame().varbit(12290, 1);
+		NPC thrall = game.spawnNpc(10886, "Greater Zombified Spawn", 0);
 		Harness h = new Harness(folder.newFolder().toPath());
 		h.gameTicks(2);
 		h.engine.setMuted(true);
 
-		FollowerPlugin plugin = plugin(true);
-		set(plugin, "speechEngine", h.engine);
+		FollowerPlugin plugin = summoning(game, h, true);
 		set(plugin, "wasThieving", thieving);
-		// adoptThrall has taken the thrall before it says hello.
-		set(plugin, "thrallNpc", new FakeGame().spawnNpc(10886, "Greater Zombified Spawn", 0));
-		Method announce = FollowerPlugin.class.getDeclaredMethod("announceSummon", String.class);
-		announce.setAccessible(true);
-		announce.invoke(plugin, "melee");
+		adopt(plugin, thrall);
 		return h.firedBy("thrall-start");
 	}
 
