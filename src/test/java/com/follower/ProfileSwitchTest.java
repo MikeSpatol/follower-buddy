@@ -1,7 +1,10 @@
 package com.follower;
 
+import com.follower.sim.FakeGame;
 import com.follower.sim.Harness;
+import com.follower.speech.TriggerContext;
 import com.follower.speech.TriggerEvent;
+import com.google.gson.Gson;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
@@ -89,6 +92,45 @@ public class ProfileSwitchTest
 
 		assertTrue("nothing that was true before the switch is news after it",
 			h.firedBy("gear").isEmpty());
+	}
+
+	@Test
+	public void aSwitchAtTheLoginScreenIsNotReadAgainByTheLogin()
+	{
+		// The switch reads the new profile's memory in, and nothing between
+		// it and the login lets it go. The login read it again on top, and
+		// the tallies and the line wear merge by adding: every count doubled
+		// and was saved that way at once, and again at every switch made at
+		// the login screen after it.
+		Gson gson = new Gson();
+		TriggerContext kept = new TriggerContext(new FakeGame().client);
+		for (int i = 0; i < 40; i++)
+		{
+			kept.tally("kill:goblin");
+		}
+		kept.noteLineSaid("A line said once.");
+		String stored = FollowerPlugin.snapshotMemory(kept, 0, gson);
+		long profile = 7L;
+
+		// Logged out: the memory is blank and nobody's.
+		TriggerContext context = new TriggerContext(new FakeGame().client);
+		long readFrom = -1L;
+		assertTrue("a login after a logout reads it",
+			FollowerPlugin.loginReadsTheMemory(readFrom, profile));
+
+		// The switch at the login screen reads this profile's.
+		FollowerPlugin.restoreMemory(context, stored, gson, 0);
+		readFrom = profile;
+
+		// Then the login, in the plugin's order.
+		if (FollowerPlugin.loginReadsTheMemory(readFrom, profile))
+		{
+			FollowerPlugin.restoreMemory(context, stored, gson, 0);
+		}
+		assertEquals("counted once", 40, context.getTally("kill:goblin"));
+		assertEquals("and worn once", 1, context.lineWear("A line said once."));
+		assertEquals("so what the login saves is what was stored",
+			stored, FollowerPlugin.snapshotMemory(context, 0, gson));
 	}
 
 	@Test

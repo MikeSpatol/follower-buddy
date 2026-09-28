@@ -150,6 +150,22 @@ public class LifecycleGlueTest
 	}
 
 	@Test
+	public void aLoginDoesNotReadAgainWhatASwitchAlreadyRead() throws IOException
+	{
+		// A switch at the login screen reads the new profile's memory, and
+		// the login read it again on top: every tally and every line's wear
+		// doubled, and was saved that way. ProfileSwitchTest holds the
+		// decision; this holds the glue to it.
+		String login = method("public void onGameStateChanged(GameStateChanged event)");
+		int read = login.indexOf("readCounters();");
+		assertTrue("the login reads the memory", read >= 0);
+		assertTrue("and in one place only", read == login.lastIndexOf("readCounters();"));
+		assertTrue("unless it already holds this profile's",
+			login.contains("if (loginReadsTheMemory(memoryProfileId, currentProfileId()))\n"
+				+ "\t\t\t\t\t{\n\t\t\t\t\t\treadCounters();"));
+	}
+
+	@Test
 	public void aStopIsKnownToWorkStillQueued() throws IOException
 	{
 		// A switch to a profile with the plugin off stops it on the Swing

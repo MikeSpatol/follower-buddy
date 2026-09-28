@@ -2257,6 +2257,17 @@ public class FollowerPlugin extends Plugin
 	}
 
 	/**
+	 * Whether a login reads the follower's memory in. Not when it already
+	 * holds this profile's, which only a switch at the login screen leaves
+	 * it doing: the tallies and the line wear merge by adding, and a second
+	 * read doubled them.
+	 */
+	static boolean loginReadsTheMemory(long readFrom, long current)
+	{
+		return !belongsToProfile(readFrom, current);
+	}
+
+	/**
 	 * Puts a saved blob back into a context, and returns the gear value the
 	 * follower first met the player wearing.
 	 *
@@ -3552,8 +3563,12 @@ public class FollowerPlugin extends Plugin
 					// part of hello, and the tallies want to be whole before
 					// the first kill of the session lands on top of them.
 					// Read first, so the profile the stamp below is written to
-					// is known to be the one it came from.
-					readCounters();
+					// is known to be the one it came from. Not again after a
+					// switch at the login screen, which has already read it.
+					if (loginReadsTheMemory(memoryProfileId, currentProfileId()))
+					{
+						readCounters();
+					}
 					readTimeAway();
 					if (sketchBook != null)
 					{
