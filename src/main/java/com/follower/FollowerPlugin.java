@@ -844,6 +844,9 @@ public class FollowerPlugin extends Plugin
 		// would keep speaking into a dead plugin instance.
 		speechEngine.setSink(null);
 		speechEngine.reset();
+		// As at a logout: the blank left behind is not the stored memory, and
+		// a toggle off and on again at the login screen would save it there.
+		memoryProfileId = -1;
 		overlayManager.remove(overlay);
 		overlayManager.remove(followDebugOverlay);
 		overlayManager.remove(dialog);
@@ -3603,6 +3606,10 @@ public class FollowerPlugin extends Plugin
 				// it was hoping for and the question it was waiting on all
 				// belonged to that session.
 				speechEngine.reset();
+				// The blank left behind is nobody's memory until a login reads
+				// one back. Switching the plugin off here saved it over the
+				// real one, and the follower met you again as a stranger.
+				memoryProfileId = -1;
 				break;
 
 			case HOPPING:
