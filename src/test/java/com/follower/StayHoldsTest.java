@@ -4,6 +4,7 @@ import com.follower.follower.ErrandController;
 import com.follower.follower.FollowerEntity;
 import com.follower.follower.Moments;
 import com.follower.follower.SkillingController;
+import com.follower.follower.Will;
 import com.follower.sim.Harness;
 import com.follower.speech.SpeechOutput;
 import com.follower.speech.SpeechRule;
@@ -19,6 +20,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import net.runelite.api.Client;
+import net.runelite.api.NPC;
 import net.runelite.api.Player;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.gameval.InterfaceID;
@@ -113,6 +115,12 @@ public class StayHoldsTest
 		public void stayHere()
 		{
 			stay = at;
+		}
+
+		@Override
+		public boolean goodGround(WorldPoint tile)
+		{
+			return true;
 		}
 
 		@Override
@@ -416,6 +424,37 @@ public class StayHoldsTest
 		feet.at = new WorldPoint(3224, 3222, 0);
 		call("keepThePlayersPark");
 		assertEquals("gone to the Send's tile", sentTo, feet.stay);
+		assertTrue(parked());
+	}
+
+	@Test
+	public void aSendThatPausedShortOfAMonsterStillGoesOnOnceFree()
+		throws ReflectiveOperationException
+	{
+		// Sent beside something that outclasses the player, the follower
+		// stops short of it first, and the park was recorded on that edge.
+		// Let go by what had the feet, the pause was dropped as a Follow,
+		// and the follower was parked at the edge for good, three tiles
+		// short of where it was sent.
+		set("will", new Will(h.game.client, feet, event -> { }, () -> true));
+		NPC giant = h.game.spawnNpc(2098, "Hill Giant", 28);
+		h.game.moveNpc(giant, 3232, 3218, 0);
+		WorldPoint sentTo = new WorldPoint(3231, 3218, 0);
+		feet.stayHere();
+		set("emoteHold", true);
+		h.gameTick();
+		call("sendTo", sentTo);
+		assertEquals("stopped short first", new WorldPoint(3228, 3218, 0), feet.stay);
+
+		set("emoteHold", false);
+		feet.resumeFollowing();
+		for (int i = 0; i < 12; i++)
+		{
+			h.gameTick();
+			((Will) get("will")).tick();
+			call("keepThePlayersPark");
+		}
+		assertEquals("gone on to where it was sent", sentTo, feet.stay);
 		assertTrue(parked());
 	}
 

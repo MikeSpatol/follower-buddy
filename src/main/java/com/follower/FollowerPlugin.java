@@ -6260,7 +6260,10 @@ public class FollowerPlugin extends Plugin
 		}
 		else
 		{
-			parkedByThePlayer(follower.getStayTile());
+			// Where the Send ends, not where it pauses: let go by something
+			// that had the feet, the pause is over, and the follower parked on
+			// the edge stayed three tiles short of a monster for good.
+			parkedByThePlayer(will != null ? will.endsAt() : follower.getStayTile());
 		}
 	}
 

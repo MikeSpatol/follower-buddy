@@ -243,6 +243,16 @@ public class Will
 		return pending != null;
 	}
 
+	/**
+	 * Where the Send just given ends: the spot itself past a monster, which
+	 * the pause at the edge only delays, and the edge at the ditch, which it
+	 * does not go on from.
+	 */
+	public WorldPoint endsAt()
+	{
+		return pending != null && misgiving == Misgiving.MONSTER ? pending : follower.getStayTile();
+	}
+
 	// ------------------------------------------------------------- the tick
 
 	/** Call once per game tick, on the client thread. */

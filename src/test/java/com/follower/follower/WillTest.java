@@ -54,6 +54,12 @@ public class WillTest
 		}
 
 		@Override
+		public WorldPoint getStayTile()
+		{
+			return stayingAt;
+		}
+
+		@Override
 		public boolean isSettled()
 		{
 			return settled;
@@ -229,6 +235,31 @@ public class WillTest
 		tick(2);
 		assertFalse(will.isHesitating());
 		assertEquals("and it does not set off again on its own", 1, follower.stays.size());
+	}
+
+	@Test
+	public void aSendEndsPastAMonsterButAtTheDitch()
+	{
+		// What a park taken again after something else let go walks to. The
+		// pause short of a monster is only a pause; the edge of the ditch is
+		// where that Send ends, and nothing may walk it on across.
+		WorldPoint there = new WorldPoint(3205, 3405, 0);
+		assertTrue(will.send(there));
+		assertEquals("a plain Send ends where it went", there, will.endsAt());
+
+		NPC giant = game.spawnNpc(2098, "Hill Giant", 28);
+		game.moveNpc(giant, 3210, 3401, 0);
+		tick(1);
+		WorldPoint beside = new WorldPoint(3209, 3401, 0);
+		assertTrue(will.send(beside));
+		assertTrue(will.isHesitating());
+		assertEquals("past the pause", beside, will.endsAt());
+
+		game.at(3200, 3515, 0);
+		follower.tile = new WorldPoint(3200, 3514, 0);
+		assertTrue(will.send(new WorldPoint(3200, 3530, 0)));
+		assertTrue(will.isHesitating());
+		assertEquals("at the edge", new WorldPoint(3200, Will.DITCH_SOUTH_Y, 0), will.endsAt());
 	}
 
 	@Test
