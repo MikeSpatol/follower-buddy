@@ -150,6 +150,23 @@ public class LifecycleGlueTest
 	}
 
 	@Test
+	public void forgettingTakesTheBaselineAgain() throws IOException
+	{
+		// Forget resets the engine too, and on the next tick the gear worn
+		// and the place stood in rose as news, as after a switch. The same
+		// cure, and the same exception at the login screen, where the login
+		// takes its own after the hello.
+		String forget = method("private void forgetEverything()");
+		int reset = forget.indexOf(RESET);
+		assertTrue("Forget resets the engine", reset >= 0);
+		assertTrue("so the edges are primed after the reset clears them",
+			forget.indexOf("speechEngine.primeEdgesOnNextTick();", reset) > reset);
+		assertTrue("unless a login is coming to take its own",
+			forget.contains("if (switchTakesTheBaseline(freshLogin))\n\t\t\t{\n"
+				+ "\t\t\t\tspeechEngine.primeEdgesOnNextTick();"));
+	}
+
+	@Test
 	public void anEnableInTheWorldTakesTheBaseline() throws IOException
 	{
 		// The rules start an enable with every edge cleared, and no login is

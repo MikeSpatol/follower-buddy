@@ -2253,10 +2253,10 @@ public class FollowerPlugin extends Plugin
 	}
 
 	/**
-	 * Whether a profile switch takes the baseline itself. Not while a login
-	 * is still to come: that login says hello first and primes after, and a
-	 * window opened at the login screen, with no ticks there to run it down,
-	 * was still open for the hello and swallowed it.
+	 * Whether a profile switch, or Forget, takes the baseline itself. Not
+	 * while a login is still to come: that login says hello first and primes
+	 * after, and a window opened at the login screen, with no ticks there to
+	 * run it down, was still open for the hello and swallowed it.
 	 */
 	static boolean switchTakesTheBaseline(boolean loginComing)
 	{
@@ -2829,6 +2829,14 @@ public class FollowerPlugin extends Plugin
 			speechQueue.clear();
 			speakingUntilMs = 0;
 			speechEngine.reset();
+			// The reset clears every rule's edge, so the gear worn and the
+			// place stood in would rise as news on the next tick. Same cure
+			// as a switch: baseline, unless a login is coming to take its own.
+			// The stranger still introduces itself at the next login.
+			if (switchTakesTheBaseline(freshLogin))
+			{
+				speechEngine.primeEdgesOnNextTick();
+			}
 			speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
 				speechEngine.getContext().setRegionNames(ruleLoader.getRegionNames());
 			metWearingValue = -1;
