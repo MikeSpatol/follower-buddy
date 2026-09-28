@@ -3688,6 +3688,10 @@ public class FollowerPlugin extends Plugin
 		follower.despawn();
 		appearanceService.invalidate();
 		overlay.clear();
+		// The book shuts with the scene, as the game's own windows do. Left
+		// open at a logout it was not drawn, but it still took the presses
+		// where it had been, over the login screen's buttons.
+		chronicleWindow.close();
 		// Anything still waiting its turn belongs to the scene that just went;
 		// it must not surface in the next one.
 		speechQueue.clear();

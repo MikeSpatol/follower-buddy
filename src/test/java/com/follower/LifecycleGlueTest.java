@@ -98,4 +98,14 @@ public class LifecycleGlueTest
 			assertTrue("leaving a scene must call " + reset, leaving.contains(reset));
 		}
 	}
+
+	@Test
+	public void theBookClosesWithTheScene() throws IOException
+	{
+		// Left open at a logout with no tick to close it, the chronicle was
+		// not drawn at the login screen but still took every press where it
+		// had last been drawn, over the Existing User and Login buttons.
+		assertTrue("leaving a scene must close the book, as the game closes its own windows",
+			method("private void tearDownScene()").contains("chronicleWindow.close();"));
+	}
 }
