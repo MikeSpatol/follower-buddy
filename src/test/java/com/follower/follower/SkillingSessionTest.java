@@ -3540,6 +3540,9 @@ public class SkillingSessionTest
 	@Test
 	public void fletchingOpensOnItsFirstDropAndEarnsALookOverTheShoulder()
 	{
+		// The look and the notes around it are rolled; seeded, the window
+		// below is measured rather than lucky.
+		skilling.random.setSeed(7);
 		game.animating(FLETCH);
 		tick(1);
 		assertFalse("an animation alone, with nothing clicked, is not work", skilling.isWorking());
