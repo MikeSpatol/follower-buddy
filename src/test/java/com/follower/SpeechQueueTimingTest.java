@@ -1,7 +1,13 @@
 package com.follower;
 
+import com.follower.sim.Harness;
+import com.follower.speech.SpeechRule;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import static org.junit.Assert.assertTrue;
 
@@ -27,6 +33,9 @@ import static org.junit.Assert.assertTrue;
  */
 public class SpeechQueueTimingTest
 {
+	@Rule
+	public final TemporaryFolder folder = new TemporaryFolder();
+
 	private static long constant(String name) throws Exception
 	{
 		Field field = FollowerPlugin.class.getDeclaredField(name);
@@ -44,6 +53,29 @@ public class SpeechQueueTimingTest
 			+ " queue throws work away after " + stale + "ms, so anything queued"
 			+ " behind the longest line is dropped before it can ever be said",
 			stale > longestHold);
+	}
+
+	@Test
+	public void aFirstWaitingInTheQueueCannotBeHandedOverAgain() throws Exception
+	{
+		// A first is spent when it lands, not when the engine hands it over,
+		// so a copy still waiting in the queue has not spent it yet. Only the
+		// rule's cooldown stops it winning a second time meanwhile, so the
+		// cooldown has to outlast the longest a line can wait.
+		long stale = constant("SPEECH_STALE_MS");
+		Harness h = new Harness(folder.newFolder().toPath());
+		List<String> problems = new ArrayList<>();
+		for (SpeechRule rule : h.loader.getRules())
+		{
+			if (rule.isOnce() && rule.cooldownMs <= stale)
+			{
+				problems.add(rule.id + " cools down in " + rule.cooldownMs + "ms");
+			}
+		}
+		assertTrue("a first could be queued twice and said twice, since a queued"
+			+ " line may wait " + stale + "ms: " + problems, problems.isEmpty());
+		assertTrue("no firsts found at all - the scan broke, not the rules",
+			h.loader.getRules().stream().anyMatch(SpeechRule::isOnce));
 	}
 
 	@Test

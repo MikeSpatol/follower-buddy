@@ -1097,7 +1097,9 @@ public class SpeechEngine
 			// A first is only spent once it has been heard. A line the mute,
 			// the queue or the dialogue hush swallowed was never said, and
 			// burning the one chance the follower had to say it would be the
-			// worst possible place to be strict.
+			// worst possible place to be strict. While a copy waits in the
+			// queue, the rule's cooldown keeps it from winning again; a lint
+			// holds every first's cooldown longer than the queue's wait.
 			if (rule.isOnce() && !text.isEmpty())
 			{
 				getContext().noteSaidOnce(rule.id);
