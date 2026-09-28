@@ -1,14 +1,24 @@
 package com.follower;
 
+import com.follower.appearance.AppearanceService;
+import com.follower.appearance.ComposedAppearance;
+import com.follower.appearance.ModelSource;
+import com.follower.appearance.Outfit;
+import com.follower.appearance.OutfitParser;
 import com.follower.appearance.OutfitProfileStore;
+import com.follower.follower.FollowerEntity;
 import com.follower.sim.FakeGame;
 import com.follower.sim.Harness;
 import com.google.gson.Gson;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 import net.runelite.api.NPC;
 import net.runelite.client.callback.ClientThread;
+import net.runelite.client.events.ConfigChanged;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -87,6 +97,51 @@ public class ThrallOnlyTest
 		FollowerPlugin loading = plugin(true);
 		set(loading, "thrallLimbo", true);
 		assertFalse("a scene load drops the thrall NPC, not the thrall", hidden(loading));
+	}
+
+	@Test
+	public void turningItOffBuildsTheFollowerAfreshInItsOwnOutfit() throws Exception
+	{
+		// The mode's login builds no model at all, and its exit leaves the
+		// thrall's behind. Turned off, the follower has to come back now, not
+		// at the next loading screen, and in its own outfit, not the thrall's.
+		FollowerPlugin plugin = plugin(false);
+		set(plugin, "speechEngine", new Harness(folder.newFolder().toPath()).engine);
+		set(plugin, "follower", new FollowerEntity(null, null));
+		set(plugin, "clientThread", new ClientThread()
+		{
+			@Override
+			public void invoke(Runnable r)
+			{
+				r.run();
+			}
+		});
+		List<Outfit> asked = new ArrayList<>();
+		set(plugin, "appearanceService", new AppearanceService(null, null)
+		{
+			@Override
+			public void invalidate()
+			{
+				// No capture runs here to abort.
+			}
+
+			@Override
+			public void request(Outfit outfit, ModelSource source, Consumer<ComposedAppearance> onReady)
+			{
+				asked.add(outfit);
+			}
+		});
+
+		ConfigChanged changed = new ConfigChanged();
+		changed.setGroup(FollowerConfig.GROUP);
+		changed.setKey("thrallOnly");
+		plugin.onConfigChanged(changed);
+
+		Outfit own = OutfitParser.parse(new FollowerConfig()
+		{
+		}.customOutfit());
+		assertEquals("a model is asked for, in its own outfit",
+			Collections.singletonList(own), asked);
 	}
 
 	@Test

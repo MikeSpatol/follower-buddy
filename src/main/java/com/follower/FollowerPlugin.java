@@ -3845,6 +3845,17 @@ public class FollowerPlugin extends Plugin
 					config.thrallRangedProfile(), config.thrallMagicProfile());
 			}
 		}
+		if ("thrallOnly".equals(key))
+		{
+			// Turned off, the follower comes back now and in its own outfit:
+			// the mode's login built it no model, and its exit left the
+			// thrall's behind. Turned on, the same rebuild hides it.
+			clientThread.invoke(() ->
+			{
+				appearanceService.invalidate();
+				rebuildFollower();
+			});
+		}
 		if ("customOutfit".equals(key) || "verticalOffset".equals(key))
 		{
 			clientThread.invoke(() ->
