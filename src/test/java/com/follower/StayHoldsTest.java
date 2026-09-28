@@ -196,6 +196,19 @@ public class StayHoldsTest
 		set("follower", feet);
 		set("speechEngine", h.engine);
 		set("dialog", new com.follower.speech.FollowerDialog(null, null, null, null, null, null, null, null));
+		// Empty hands: the minutes ask whether a kept tool is in them.
+		set("hands", new ErrandController.Hands()
+		{
+			@Override
+			public void hold(int itemId)
+			{
+			}
+
+			@Override
+			public void release()
+			{
+			}
+		});
 	}
 
 	private static Object nothing(Class<?> type)
