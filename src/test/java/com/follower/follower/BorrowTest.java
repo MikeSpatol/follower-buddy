@@ -342,6 +342,31 @@ public class BorrowTest
 	}
 
 	@Test
+	public void aHarpoonInTheHandIsOnlyTheToolForHarpooning()
+	{
+		// A harpoon left on through a cage or a net is still called a
+		// harpoon; the animation is what says which work it is.
+		Set<Integer> dragon = worn(21028);
+		assertEquals("a harpoon kept on through a cage is no pot",
+			301, Borrow.toolFor("fishing", 619, dragon, 21028, "Dragon harpoon"));
+		assertEquals("nor a net", 303, Borrow.toolFor("fishing", 621, dragon, 21028, "Dragon harpoon"));
+		assertEquals("nor a big net", 305, Borrow.toolFor("fishing", 620, dragon, 21028, "Dragon harpoon"));
+		assertEquals("nor a vessel", Borrow.KARAMBWAN_VESSEL,
+			Borrow.toolFor("fishing", 1193, dragon, 21028, "Dragon harpoon"));
+		assertEquals("nor a fly rod", 307, Borrow.toolFor("fishing", 623, dragon, 21028, "Dragon harpoon"));
+		assertEquals("a rod that is a weapon is no net",
+			303, Borrow.toolFor("fishing", 621, worn(7639), 7639, "Rod of ivandis (10)"));
+
+		// Its own work, and its own swing the tables do not know, are still the hand.
+		assertEquals("a rod's own fly cast",
+			99005, Borrow.toolFor("fishing", 623, worn(), 99005, "Obsidian fly fishing rod"));
+		assertEquals("its own swing is still the hand",
+			21028, Borrow.toolFor("fishing", 7401, dragon, 21028, "Dragon harpoon"));
+		assertEquals("a pearl rod's own cast likewise",
+			22846, Borrow.toolFor("fishing", 8188, worn(22846), 22846, "Pearl fishing rod"));
+	}
+
+	@Test
 	public void theHatOfAFullOutfitAndOnlyThat()
 	{
 		// The whole lumberjack set on: the hat, for a woodcutting session.

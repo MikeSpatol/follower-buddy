@@ -399,7 +399,13 @@ public class Borrow
 					}
 					break;
 				case "fishing":
-					if (name.contains("harpoon") || name.contains("rod"))
+					// A harpoon left on through a cage or a net is still called
+					// a harpoon, so the name answers only for its own work, or
+					// for a swing the tables do not know, as a dragon harpoon's is.
+					boolean unknown = toolFor(activity, animationId, worn) == 0;
+					if ((name.contains("harpoon") && (unknown || animationId == HARPOON_ANIMATION))
+						|| (name.contains("rod") && (unknown || animationId == ROD_ANIMATION
+							|| animationId == FLY_ROD_ANIMATION)))
 					{
 						return wornWeapon;
 					}
