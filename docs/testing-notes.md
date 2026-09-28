@@ -337,3 +337,97 @@ The adversarial-persistence sweep found the ground already held:
 corrupt counter blobs fall back rather than throw, a broken phrases.json
 mid-session keeps the working rules and reports why, and a repaired file
 is noticed rather than remembered as already-read. No gaps.
+
+## Seventh pass: the release campaign, 2026-09-27
+
+Everything since 1.4.0 (c82e360), about sixty commits in seven batches: the
+boat and overhead fixes, the settings and panel regroup, skilling company,
+dialogue and cutscene manners, the reactions batch (milestones, news sizing,
+gaze and noticing, the will, emotes, the earned name, walk-beside,
+incidents), Thrall only, and the chronicle. Run by the trigger table's
+"before a Hub release" row, all four layers at once.
+
+**The fuzzer had stopped looking.** Its pool was about eighty condition types
+behind, and it never checked for a rule disabled by a throwing condition at
+all: making `grateful` throw left all seven soak tests green. The pool now
+carries every type in `KNOWN_TYPES`, a lint fails when one is missing, every
+pool entry also runs as a rule of its own so a throw is caught whether or not
+a random rule drew it, and the run fails naming any entry the driver never
+made true. That last check found three entries that had never once been
+true since they were added (`itemEquipped`, `rolledFeeling`, `daysKnown`),
+which the notes above had said the driver flipped. It did not. A sweep made
+each new type throw in turn: all twenty were caught.
+
+**The soak had stopped levelling.** Since the milestone work, `levelUp`
+needs a level of at least its minimum, and the soak's level-ups carried
+none, so three of the four soaks never heard a level line and the talk-rate
+driver lost a quarter of its output without anything going red. Found by
+re-measuring, not by a test; the driver now carries a level and the soak
+asserts the level lines fire.
+
+**Mutations: 58 across the seven batches, 22 killed on first contact, 35
+survivors, 1 equivalent.** Every survivor was a weak test, and each now dies
+to a new or tightened one. The survivors cluster where the harness never
+reached: most of the reactions batch's new behaviour lives in the plugin
+glue (the dialogue hush, the nickname answer, what counts as a thrall's
+business), and those decisions are now reached directly in
+`DialogueHushTest` and `ThrallOnlyTest`. `NicknameTest` had been testing a
+hand-written copy of `answerQuestion` rather than the method.
+
+**The interaction map found the release's worst bugs, and they were all
+between features.** A player's Stay did not hold: the idle wander, the
+spectator, the moments, Noticing and a skilling seat could each take the
+feet of a parked follower and then release it into following, while Follow
+me stayed unticked. The panel's Stay and Follow did nothing while the wander
+or a seat held the feet. Errands, the sketch and the minute-taker took the
+hand from a tool Borrow still believed it held. Rest let go a tick late and
+wiped whatever pose had just been put on. The glue read-through found the
+worst single one: toggling the plugin at the login screen saved a blank
+memory over the real one.
+
+**What was fixed.** The readers and the mutation pass turned up twenty-six
+findings; a skeptic tried to refute each before anything was changed.
+Twenty-four were real. Two were not: the level-base milestone's supposed
+zero-level Overall is not in the pinned API's list of skills, and a cutscene
+NPC facing the player within five ticks of spawning could not be shown to
+happen. Each fix went round the same loop - a test that fails for the bug,
+the smallest fix, the fix reverted to watch the test go red - and then an
+adversarial review of the fix itself, which found sixteen more problems in
+the fixes, most of them tests that did not reach the real path. Then the
+five fix branches were merged and reviewed again together, which found
+seven more between them, all fixed: among them the doubled tallies the lifecycle
+fixer had only suspected (a profile switch at the login screen read the
+memory, the login read it again, and the tallies add), a gift the new
+landing guard held back for good behind a queued souvenir line, and a park
+still pending when the scene went, applied to the next spawn.
+
+Two rules came out of it worth keeping. A player's park (right-click Stay, a
+Send, Follow me unticked) is a latched fact, `parkedByPlayer`, that every
+system reading the feet checks - not something inferred each tick from
+whether the follower happens to be staying, which is what let the wander's
+own stay pass for the player's. And a line's latches split cleanly: what a
+line leaves behind waits for it to land, except the gift, whose exchange is
+confirmed in the Talk-to box and is spent at the win. The first fix moved
+the gift too, and reopened the parked-wish bug 8b87f6d had closed; the
+fix's own review flagged it, from that commit's message.
+
+**Cost and talk rate at 508 rules**, measured the way the fourth pass did
+(the soak driver, three seeds; its record fits 3 x 20,000 ticks, ten hours
+in all). Before the level fix: 196 lines an hour against 256, all of it the
+lost level lines, with repeats within a dozen at 0 to 2 per 2,000 lines.
+With the level carried: 250 lines an hour, 4 repeats in 7,508.
+Idle-chatter deals all 38 of its variants, mean repeat distance 25 to 36.
+DispatchCostTest's cold pass is 120 to 146 us, the same as the old tree on
+the same machine (it is the JIT, not the rules); the warm pass is 28 to 34
+us against 21 to 24, about 60 to 70 ns a rule, still under 4% of the
+millisecond budget.
+
+**Name lists checked against the cache.** `runTargetAudit` now also reads
+the plugin's own lists (the superior slayer names, the guard and bank
+names, the landmarks) from the source and matches them the way each call
+site does. It found the superior mutated Bloodveld and the Vitreous warped
+Jelly spelled as the wiki spells them, not the game, bank booths the game
+capitalises (the bank errand had its own copy of the same miss), and eleven
+superiors the cache files that the list did not know. Three landmarks
+(Noticeboard, Portrait, Sundial) match nothing the scan can see and wait
+on a decision.
