@@ -292,6 +292,20 @@ public class ErrandSimulationTest
 	private boolean working;
 
 	@Test
+	public void theBankErrandFindsABoothTheGameCapitalises()
+	{
+		// Burgh de Rott's is a "Bank Booth", Fossil Island's a "Bank Chest".
+		game.at(50, 50, 0);
+		game.placeObject(9002, "Bank Booth", 54, 50, 0);
+		errands.force("bank");
+		tick(1);
+
+		assertTrue("the errand never started", errands.isBusy());
+		assertTrue("sent to the booth", follower.where != null
+			&& follower.where.distanceTo(new WorldPoint(54, 50, 0)) <= 2);
+	}
+
+	@Test
 	public void aGlanceSendsItAShortWayAndBringsItBack()
 	{
 		errands.force("glance");

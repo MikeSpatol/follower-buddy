@@ -578,7 +578,7 @@ public class ErrandController
 				// Most banks have booth/chest OBJECTS; the Grand Exchange has
 				// only banker NPCs (measured by scan - no booth object there).
 				WorldPoint bank = findObject(
-					name -> name.equals("Bank booth") || name.equals("Bank chest")
+					name -> SkillingController.BANK_NAMES.test(name)
 						|| name.equals("Grand Exchange booth"));
 				if (bank == null)
 				{
