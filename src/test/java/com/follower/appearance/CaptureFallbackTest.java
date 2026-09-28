@@ -1,16 +1,16 @@
 package com.follower.appearance;
 
 import java.lang.reflect.Proxy;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 import net.runelite.api.Client;
 import net.runelite.api.Model;
 import net.runelite.api.Player;
 import net.runelite.api.PlayerComposition;
 import net.runelite.api.kit.KitType;
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -25,6 +25,16 @@ import static org.junit.Assert.assertTrue;
  */
 public class CaptureFallbackTest
 {
+	private final int[] equipment = new int[Outfit.SLOTS];
+	private int[] worn;
+	private int hashes;
+	private Model live;
+	private CaptureFallback capture;
+	private final Outfit outfit = new Outfit();
+
+	private boolean answered;
+	private Model captured;
+
 	/** Answers {@code method} with {@code answer}, and everything else with nothing. */
 	private static Object proxy(Class<?> type, String method, Object answer)
 	{
@@ -40,18 +50,32 @@ public class CaptureFallbackTest
 			});
 	}
 
-	@Test
-	public void aCaptureNeverHandsBackTheSharedModel()
+	@Before
+	public void wearOwnGear()
 	{
-		int[] equipment = new int[Outfit.SLOTS];
 		for (int i = 0; i < equipment.length; i++)
 		{
 			equipment[i] = 256 + i;
 		}
-		int[] worn = equipment.clone();
+		worn = equipment.clone();
 
-		Model live = (Model) proxy(Model.class, "toString", "the live model");
-		PlayerComposition composition = (PlayerComposition) proxy(PlayerComposition.class, "getEquipmentIds", equipment);
+		live = (Model) proxy(Model.class, "toString", "the live model");
+		PlayerComposition composition = (PlayerComposition) Proxy.newProxyInstance(
+			PlayerComposition.class.getClassLoader(), new Class<?>[]{PlayerComposition.class},
+			(self, called, args) ->
+			{
+				switch (called.getName())
+				{
+					case "getEquipmentIds":
+						return equipment;
+					case "setHash":
+						hashes++;
+						return null;
+					default:
+						Class<?> returns = called.getReturnType();
+						return returns == int.class ? 0 : returns == boolean.class ? false : null;
+				}
+			});
 		Player player = (Player) Proxy.newProxyInstance(Player.class.getClassLoader(), new Class<?>[]{Player.class},
 			(self, called, args) ->
 			{
@@ -68,25 +92,47 @@ public class CaptureFallbackTest
 			});
 		Client client = (Client) proxy(Client.class, "getLocalPlayer", player);
 
-		Outfit outfit = new Outfit();
 		outfit.setItem(KitType.WEAPON, 4151);
+		captured = live;
+		capture = new CaptureFallback(client);
+	}
 
-		AtomicBoolean answered = new AtomicBoolean();
-		AtomicReference<Model> captured = new AtomicReference<>(live);
-		CaptureFallback capture = new CaptureFallback(client);
+	private void request()
+	{
 		capture.request(outfit, model ->
 		{
-			answered.set(true);
-			captured.set(model);
+			answered = true;
+			captured = model;
 		});
-		assertTrue("the outfit went on", capture.isBusy());
+	}
 
+	@Test
+	public void aCaptureNeverHandsBackTheSharedModel()
+	{
+		request();
 		capture.tick();
 		capture.tick();
 
-		assertTrue(answered.get());
-		assertNull("nothing from the shared cache", captured.get());
+		assertTrue(answered);
+		assertNull("nothing from the shared cache", captured);
 		assertFalse(capture.isBusy());
 		assertArrayEquals("the player's own gear goes back", worn, equipment);
+	}
+
+	/**
+	 * With nothing to take back, the swap would only show the follower's outfit
+	 * on the player for a frame, and again on every request after, since an
+	 * empty answer is not remembered.
+	 */
+	@Test
+	public void aCaptureNeverPutsTheOutfitOnThePlayer()
+	{
+		request();
+
+		assertArrayEquals("the player's own gear never came off", worn, equipment);
+		assertEquals("the player's look was never rebuilt", 0, hashes);
+		assertTrue("answered at once", answered);
+		assertNull(captured);
+		assertFalse(capture.isBusy());
 	}
 }

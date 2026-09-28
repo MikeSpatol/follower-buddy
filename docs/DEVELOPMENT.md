@@ -2180,8 +2180,8 @@ These are inherent to the approach, not bugs to be filed:
   reference into a cache the client recycles between actors, so a naively held model
   turns into whichever nearby NPC or player reused the slot. The capture path merged
   the model to detach it until RuneLite 1.13 removed the Model merge; with no way to
-  detach, a capture now finishes with null. The cache dump path composes its own
-  geometry and is immune. Prefer it.
+  detach, a capture is now answered with null before the outfit is put on. The cache
+  dump path composes its own geometry and is immune. Prefer it.
 - **Equipment-based conditions miss rings and ammo.** `itemEquipped` reads the player
   composition, which only covers slots with a visible model.
 - The region ids in the starter rules are **examples**. Verify with `::follower where`.
