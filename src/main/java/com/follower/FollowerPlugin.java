@@ -3775,6 +3775,13 @@ public class FollowerPlugin extends Plugin
 		knownXp.clear();
 		lastPlayerTile = null;
 		lastRegionId = -1;
+		// A park goes with the scene, as one already taken does with the
+		// despawn: a Send still waiting for the feet was walked to after the
+		// next spawn, from the last world or the last session. Follow me off
+		// parks the follower again as it spawns.
+		parkedByPlayer = false;
+		parkWhenFree = false;
+		sentWhenFree = null;
 	}
 
 	@Subscribe

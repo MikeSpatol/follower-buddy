@@ -101,6 +101,22 @@ public class LifecycleGlueTest
 	}
 
 	@Test
+	public void aParkWaitingForTheFeetGoesWithTheScene() throws IOException
+	{
+		// A Send given while thrall work had the feet waits to be walked to
+		// once they are let go. A hop or a logout ended the thrall work and
+		// left the Send waiting, so with Follow me on the next spawn walked
+		// off to a tile from the last world or the last session, or, too far
+		// to walk, was parked beside the player straight after the login.
+		String leaving = method("private void tearDownScene()");
+		for (String let : new String[]{"parkedByPlayer = false;", "parkWhenFree = false;",
+			"sentWhenFree = null;"})
+		{
+			assertTrue("leaving a scene must let go of the park: " + let, leaving.contains(let));
+		}
+	}
+
+	@Test
 	public void theBookClosesWithTheScene() throws IOException
 	{
 		// Left open at a logout with no tick to close it, the chronicle was
