@@ -1,238 +1,236 @@
 package com.follower.follower;
 
 import java.lang.reflect.Proxy;
+import java.util.Arrays;
+import java.util.function.BiFunction;
 import java.util.function.IntPredicate;
 import java.util.function.IntSupplier;
 import net.runelite.api.Animation;
 import net.runelite.api.Client;
 import net.runelite.api.Model;
+import org.junit.Before;
 import org.junit.Test;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 /**
- * The loop-wrap lerp, against a client that poses every animated model into
- * one shared temp the way the real one does.
+ * Where the loop-wrap lerp writes its blend.
  *
- * <p>RuneLite 1.13 took away the Model merge the lerp used to own its output
- * with. It writes its blend into the client's per-frame temp now, which is safe
- * only while that temp is not the follower's own base model: a write there would
- * stay in the follower for good.
+ * <p>The client hands every animated frame to the renderer in one shared
+ * per-frame temp, and the base controller returns that temp, so the lerp writes
+ * into it the same way. But a frame with no transform can come back as the
+ * follower's base model itself, or as a model sharing its vertex arrays, and a
+ * write there would bend the base for good. These pin both halves: the blend
+ * lands in the temp, and the base is never written. Nor is a temp posed from a
+ * model the snapshotted endpoints no longer fit.
  */
 public class WrapLerpControllerTest
 {
-	private static final int[] LENGTHS = {4, 4, 4};
-	private static final int LAST = LENGTHS.length - 1;
+	private static final int FRAMES = 3;
+	private static final int FRAME_LENGTH = 4;
+	private static final int VERTICES = 5;
 
-	private static final float[] X = {1, 2, 3};
-	private static final float[] Y = {4, 5, 6};
-	private static final float[] Z = {7, 8, 9};
+	private static final float BASE = 1f;
+	private static final float LAST_POSE = 10f;
+	private static final float LOOP_POSE = 20f;
+	private static final float OTHER_POSE = 30f;
 
-	/** What the client hands back for the last frame. */
-	private enum LastFrame
+	private Model base;
+	/** The client's shared per-frame temp: one set of arrays, reposed every call. */
+	private Model temp;
+	/** How many vertices the temp holds: as many as the model last posed into it. */
+	private int tempCount;
+	/** What the render-time call hands back instead of the temp, or null for the temp. */
+	private Model renderReturns;
+
+	private Client client;
+	private Animation animation;
+
+	@Before
+	public void setUp()
 	{
-		/** The shared temp, posed, as for any frame with a transform. */
-		TEMP,
-		/** The base itself, as for a frame with no transform. */
-		BASE,
-		/** A different model that shares the base's vertex arrays. */
-		SHARED,
-	}
-
-	/**
-	 * A client that poses into one temp. Frame f moves every vertex 10 * (f + 1)
-	 * along each axis, so the loop target (frame 0) is +10, the last frame is
-	 * +30, and halfway between them is +20.
-	 */
-	private static final class Game
-	{
-		final LastFrame lastFrame;
-		final Model base = model(X.clone(), Y.clone(), Z.clone(), () -> X.length);
-		final Model shared = model(base.getVerticesX(), base.getVerticesY(), base.getVerticesZ(), () -> X.length);
-		/** Longer than the model, as the client's are: it allocates count + 100. */
-		final Model temp = model(new float[X.length + 100], new float[X.length + 100], new float[X.length + 100],
-			() -> this.tempCount);
-		int tempCount;
-		int lastFrameArgument;
-
-		final Client client = (Client) Proxy.newProxyInstance(Client.class.getClassLoader(),
-			new Class<?>[]{Client.class}, (proxy, method, args) ->
-			{
-				switch (method.getName())
-				{
-					case "getAnimationInterpolationFilter":
-						return (IntPredicate) id -> true;
-					case "applyTransformations":
-						return pose((Model) args[0], (Integer) args[2]);
-					default:
-						return defaultFor(method.getReturnType());
-				}
-			});
-
-		Game(LastFrame lastFrame)
+		base = model(filled(BASE), filled(BASE), filled(BASE));
+		temp = model(new float[VERTICES], new float[VERTICES], new float[VERTICES], () -> tempCount);
+		client = fake(Client.class, (name, args) ->
 		{
-			this.lastFrame = lastFrame;
-		}
-
-		Model pose(Model model, int packed)
-		{
-			lastFrameArgument = packed;
-			int frame = packed < 0 ? packed & 0xFFFF : packed;
-			if (frame == LAST && lastFrame == LastFrame.BASE)
+			switch (name)
 			{
-				return model;
+				case "getAnimationInterpolationFilter":
+					return (IntPredicate) id -> true;
+				case "applyTransformations":
+					return transform((Model) args[0], (int) args[2]);
+				default:
+					throw new UnsupportedOperationException(name);
 			}
-			if (frame == LAST && lastFrame == LastFrame.SHARED)
-			{
-				return shared;
-			}
-
-			tempCount = model.getVerticesCount();
-			float shift = 10 * (frame + 1);
-			for (int i = 0; i < tempCount; i++)
-			{
-				temp.getVerticesX()[i] = model.getVerticesX()[i] + shift;
-				temp.getVerticesY()[i] = model.getVerticesY()[i] + shift;
-				temp.getVerticesZ()[i] = model.getVerticesZ()[i] + shift;
-			}
-			return temp;
-		}
-
-		static Model model(float[] x, float[] y, float[] z, IntSupplier count)
+		});
+		animation = fake(Animation.class, (name, args) ->
 		{
-			return (Model) Proxy.newProxyInstance(Model.class.getClassLoader(), new Class<?>[]{Model.class},
-				(proxy, method, args) ->
-				{
-					switch (method.getName())
-					{
-						case "getVerticesX":
-							return x;
-						case "getVerticesY":
-							return y;
-						case "getVerticesZ":
-							return z;
-						case "getVerticesCount":
-							return count.getAsInt();
-						case "equals":
-							return proxy == args[0];
-						case "hashCode":
-							return System.identityHashCode(proxy);
-						default:
-							return defaultFor(method.getReturnType());
-					}
-				});
-		}
-	}
-
-	private static Animation animation()
-	{
-		return (Animation) Proxy.newProxyInstance(Animation.class.getClassLoader(), new Class<?>[]{Animation.class},
-			(proxy, method, args) ->
+			switch (name)
 			{
-				switch (method.getName())
-				{
-					case "getId":
-						return 808;
-					case "getFrameLengths":
-						return LENGTHS;
-					case "getDuration":
-					case "getFrameStep":
-						return LENGTHS.length;
-					default:
-						return defaultFor(method.getReturnType());
-				}
-			});
-	}
-
-	private static Object defaultFor(Class<?> type)
-	{
-		return type == int.class ? 0 : type == boolean.class ? false : null;
-	}
-
-	/** Parked half way through the last frame, where only the lerp draws. */
-	private static WrapLerpController halfwayThroughTheLastFrame(Game game)
-	{
-		WrapLerpController lerp = new WrapLerpController(game.client, animation());
-		lerp.setFrame(LAST);
-		lerp.tick(LENGTHS[LAST] / 2);
-		return lerp;
-	}
-
-	private static void assertUntouched(Model base)
-	{
-		for (int i = 0; i < X.length; i++)
-		{
-			assertEquals("base x " + i, X[i], base.getVerticesX()[i], 0f);
-			assertEquals("base y " + i, Y[i], base.getVerticesY()[i], 0f);
-			assertEquals("base z " + i, Z[i], base.getVerticesZ()[i], 0f);
-		}
+				case "getId":
+					return 808;
+				case "isMayaAnim":
+					return false;
+				case "getFrameLengths":
+					int[] lengths = new int[FRAMES];
+					Arrays.fill(lengths, FRAME_LENGTH);
+					return lengths;
+				case "getFrameStep":
+					return -1;
+				case "getDuration":
+					return FRAMES;
+				default:
+					throw new UnsupportedOperationException(name);
+			}
+		});
 	}
 
 	@Test
-	public void theWrapIsBlendedIntoTheFrameTemp()
+	public void blendLandsInTheRenderTemp()
 	{
-		Game game = new Game(LastFrame.TEMP);
-		WrapLerpController lerp = halfwayThroughTheLastFrame(game);
+		WrapLerpController controller = onFinalFrame();
+		Model drawn = controller.animate(base, null);
 
-		Model drawn = lerp.animate(game.base, null);
-
-		assertSame("the client's own temp is what gets drawn", game.temp, drawn);
-		for (int i = 0; i < X.length; i++)
-		{
-			assertEquals("x " + i, X[i] + 20, drawn.getVerticesX()[i], 0.001f);
-			assertEquals("y " + i, Y[i] + 20, drawn.getVerticesY()[i], 0.001f);
-			assertEquals("z " + i, Z[i] + 20, drawn.getVerticesZ()[i], 0.001f);
-		}
-		assertUntouched(game.base);
-		assertFalse(lerp.isDisabled());
+		assertSame("the lerp returns the client's own temp", temp, drawn);
+		float halfway = (LAST_POSE + LOOP_POSE) / 2;
+		assertArrayEquals(filled(halfway), drawn.getVerticesX(), 0f);
+		assertArrayEquals(filled(halfway), drawn.getVerticesY(), 0f);
+		assertArrayEquals(filled(halfway), drawn.getVerticesZ(), 0f);
+		assertBaseUntouched();
+		assertFalse(controller.isDisabled());
 	}
 
 	@Test
-	public void aFrameWhoseTempIsTheBaseFallsBack()
+	public void neverWritesTheBaseWhenTheTempIsTheBase()
 	{
-		Game game = new Game(LastFrame.BASE);
-		WrapLerpController lerp = halfwayThroughTheLastFrame(game);
+		renderReturns = base;
+		WrapLerpController controller = onFinalFrame();
 
-		Model drawn = lerp.animate(game.base, null);
-
-		assertUntouched(game.base);
-		assertSame("whatever the client's own controller would draw", game.base, drawn);
-		assertTrue("asked the way the client's own controller asks, packed",
-			game.lastFrameArgument < 0);
-		assertFalse("only this frame falls back", lerp.isDisabled());
+		assertSame(base, controller.animate(base, null));
+		assertBaseUntouched();
+		assertTrue("the measured wrap trim takes over", controller.isDisabled());
 	}
 
 	@Test
-	public void aTempSharingTheBaseVerticesIsNeverWritten()
+	public void neverWritesTheBaseThroughSharedArrays()
 	{
-		Game game = new Game(LastFrame.SHARED);
-		WrapLerpController lerp = halfwayThroughTheLastFrame(game);
+		Model alias = model(base.getVerticesX(), base.getVerticesY(), base.getVerticesZ());
+		renderReturns = alias;
+		WrapLerpController controller = onFinalFrame();
 
-		Model drawn = lerp.animate(game.base, null);
-
-		assertSame(game.shared, drawn);
-		assertUntouched(game.base);
-		assertFalse(lerp.isDisabled());
+		assertSame(alias, controller.animate(base, null));
+		assertBaseUntouched();
+		assertTrue("the measured wrap trim takes over", controller.isDisabled());
 	}
 
 	@Test
 	public void aModelThatNoLongerMatchesTheEndpointsSwitchesTheLerpOff()
 	{
-		Game game = new Game(LastFrame.TEMP);
-		WrapLerpController lerp = halfwayThroughTheLastFrame(game);
-		lerp.animate(game.base, null);
+		WrapLerpController controller = onFinalFrame();
+		controller.animate(base, null);
 
-		// A different base under the same animation: the endpoints were taken from
-		// the first one, and blending them into this one would scramble it.
-		Model smaller = Game.model(new float[]{1, 2}, new float[]{4, 5}, new float[]{7, 8}, () -> 2);
-		Model drawn = lerp.animate(smaller, null);
+		// A different model under the same animation: the endpoints were taken from
+		// the base, and blending them into this one would scramble it.
+		Model smaller = model(new float[2], new float[2], new float[2]);
+		Model drawn = controller.animate(smaller, null);
 
-		assertTrue("the trim takes back over", lerp.isDisabled());
-		assertSame(game.temp, drawn);
-		assertEquals("posed by the client, not blended", 1 + 30, drawn.getVerticesX()[0], 0f);
-		assertUntouched(game.base);
+		assertSame(temp, drawn);
+		assertEquals("posed by the client, not blended", LAST_POSE, drawn.getVerticesX()[0], 0f);
+		assertBaseUntouched();
+		assertTrue("the measured wrap trim takes over", controller.isDisabled());
+	}
+
+	/** Halfway through the final frame, so the blend differs from both endpoints. */
+	private WrapLerpController onFinalFrame()
+	{
+		WrapLerpController controller = new WrapLerpController(client, animation);
+		controller.setFrame(FRAMES - 1);
+		controller.tick(FRAME_LENGTH / 2);
+		return controller;
+	}
+
+	/**
+	 * Stands in for Client#applyTransformations. The endpoint snapshots ask with a
+	 * plain frame index; the render call arrives packed (high bit set while
+	 * smoothing accepts the animation), which is where a test swaps in the base or
+	 * an alias of it.
+	 */
+	private Model transform(Model posed, int frame)
+	{
+		if (frame < 0 && renderReturns != null)
+		{
+			return renderReturns;
+		}
+		int index = frame & 0xFFFF;
+		float pose = index == FRAMES - 1 ? LAST_POSE : index == 0 ? LOOP_POSE : OTHER_POSE;
+		tempCount = posed.getVerticesCount();
+		Arrays.fill(temp.getVerticesX(), 0, tempCount, pose);
+		Arrays.fill(temp.getVerticesY(), 0, tempCount, pose);
+		Arrays.fill(temp.getVerticesZ(), 0, tempCount, pose);
+		return temp;
+	}
+
+	private void assertBaseUntouched()
+	{
+		assertArrayEquals("base x", filled(BASE), base.getVerticesX(), 0f);
+		assertArrayEquals("base y", filled(BASE), base.getVerticesY(), 0f);
+		assertArrayEquals("base z", filled(BASE), base.getVerticesZ(), 0f);
+	}
+
+	private static float[] filled(float value)
+	{
+		float[] out = new float[VERTICES];
+		Arrays.fill(out, value);
+		return out;
+	}
+
+	private static Model model(float[] x, float[] y, float[] z)
+	{
+		return model(x, y, z, () -> x.length);
+	}
+
+	private static Model model(float[] x, float[] y, float[] z, IntSupplier count)
+	{
+		return fake(Model.class, (name, args) ->
+		{
+			switch (name)
+			{
+				case "getVerticesCount":
+					return count.getAsInt();
+				case "getVerticesX":
+					return x;
+				case "getVerticesY":
+					return y;
+				case "getVerticesZ":
+					return z;
+				default:
+					throw new UnsupportedOperationException(name);
+			}
+		});
+	}
+
+	/** Answers only what the lerp should ask; anything else fails loudly. */
+	@SuppressWarnings("unchecked")
+	private static <T> T fake(Class<T> type, BiFunction<String, Object[], Object> answers)
+	{
+		return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[]{type},
+			(proxy, method, args) ->
+			{
+				switch (method.getName())
+				{
+					case "equals":
+						return proxy == args[0];
+					case "hashCode":
+						return System.identityHashCode(proxy);
+					case "toString":
+						return type.getSimpleName() + "@fake";
+					default:
+						return answers.apply(method.getName(), args);
+				}
+			});
 	}
 }

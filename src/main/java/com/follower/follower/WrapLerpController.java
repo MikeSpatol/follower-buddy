@@ -48,11 +48,14 @@ public class WrapLerpController extends AnimationController
 	 */
 	private float[] lastXyz;
 	private float[] targetXyz;
+
 	private int cachedAnimationId = -1;
 
 	/**
-	 * Set when the posed model does not match the endpoints vertex for vertex; the
-	 * lerp disables rather than corrupt models.
+	 * Set when the render temp is not safe to write; the lerp disables rather than
+	 * corrupt models, and the measured trim takes over. Leaving just that frame to
+	 * the client would not do: the same last frame comes round every loop, and it
+	 * would hold and snap each time with no trim to hide it.
 	 */
 	private boolean unsafe;
 
@@ -106,28 +109,31 @@ public class WrapLerpController extends AnimationController
 			return super.animate(model, other);
 		}
 
-		// The blend goes into the client's per-frame temp: the model
-		// applyTransformations poses into, which the base controller hands to the
-		// renderer for every animated frame. Posed at the last frame first, so
-		// everything but the vertices is already right. A frame with no transform
-		// can hand back the base itself, and writing there would bend the
-		// follower's own model for good, so the base, or anything sharing its
-		// vertex arrays, is left to the client.
-		Model temp = client.applyTransformations(model, animation, frame, null, 0);
-		if (temp == null || temp == model || sharesVertices(temp, model))
+		// The blend is written into the model the base controller returns: the
+		// client's shared per-frame temp, which the client itself hands straight to
+		// the renderer for every animated frame. Never into the base, though - a
+		// frame with no transform can come back as the base itself, or sharing its
+		// vertex arrays, and writing there would bend the follower's model for good.
+		Model temp = super.animate(model, other);
+		if (temp == null)
 		{
-			return super.animate(model, other);
+			return null;
 		}
 
-		if (temp.getVerticesCount() * 3 != lastXyz.length || lastXyz.length != targetXyz.length)
+		boolean separate = temp != model
+			&& temp.getVerticesX() != model.getVerticesX()
+			&& temp.getVerticesY() != model.getVerticesY()
+			&& temp.getVerticesZ() != model.getVerticesZ();
+		boolean sized = temp.getVerticesCount() * 3 == lastXyz.length
+			&& lastXyz.length == targetXyz.length;
+		if (!separate || !sized)
 		{
-			log.warn("Posed model does not match the wrap endpoints ({} vertices, {} and {} "
-				+ "snapshotted); wrap interpolation disabled for this session",
-				temp.getVerticesCount(), lastXyz.length / 3, targetXyz.length / 3);
+			log.warn("Render temp is not safe to write (separate={}, sized={}); "
+				+ "wrap interpolation disabled for this session", separate, sized);
 			unsafe = true;
 			lastXyz = null;
 			targetXyz = null;
-			return super.animate(model, other);
+			return temp;
 		}
 
 		float t = Math.min(1f, elapsedInFrame / (float) Math.max(1, lengths[frame]));
@@ -172,13 +178,6 @@ public class WrapLerpController extends AnimationController
 		lastXyz = snapshot(client.applyTransformations(base, animation, frames - 1, null, 0));
 		targetXyz = snapshot(client.applyTransformations(base, animation,
 			loopTargetFrame(animation, frames), null, 0));
-	}
-
-	private static boolean sharesVertices(Model posed, Model base)
-	{
-		return posed.getVerticesX() == base.getVerticesX()
-			|| posed.getVerticesY() == base.getVerticesY()
-			|| posed.getVerticesZ() == base.getVerticesZ();
 	}
 
 	/** Flattens a posed model's vertices into an owned array, or null. */

@@ -2208,9 +2208,9 @@ static poses via `applyTransformations` with an unpacked index, loop target
 replicating `loop()`'s `frames - frameStep` rule) and lerps vertices between them
 using the same elapsed-tick clock. The wrap becomes indistinguishable from any
 other frame boundary. Guards: pose-blend and Maya animations fall through to the
-client; a posed model that is the base, or shares its vertex arrays, is never written
-and the frame falls through to the client; a posed model that does not match the
-endpoints vertex for vertex disables the lerp rather than corrupt models.
+client; a posed model that is the base, shares its vertex arrays, or does not match
+the endpoints vertex for vertex is never written, and disables the lerp rather than
+corrupt models.
 
 `::follower wraplerp off` reverts to the frame-trim workaround for comparison; the
 trim machinery (`wrapearly` / `wrapauto`) is retained as the fallback, and takes
