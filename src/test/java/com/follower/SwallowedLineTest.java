@@ -297,4 +297,24 @@ public class SwallowedLineTest
 		assertFalse("and the advice nobody heard is not outstanding",
 			h.engine.getContext().isAdvising());
 	}
+
+	@Test
+	public void aProfileSwitchTakesTheQueuedLinesWithIt() throws IOException
+	{
+		// What a line leaves behind is spent in the memory that is current
+		// when it lands. A switch reads the new profile's memory in, so a
+		// first still queued from the old one was spent in the new one and
+		// owed in the old one for good. The switch is plugin glue the harness
+		// cannot reach, so its source is read instead.
+		String source = new String(java.nio.file.Files.readAllBytes(
+			java.nio.file.Paths.get("src/main/java/com/follower/FollowerPlugin.java")),
+			java.nio.charset.StandardCharsets.UTF_8);
+		int start = source.indexOf("public void onProfileChanged(ProfileChanged event)");
+		assertTrue("the switch handler was not found", start >= 0);
+		String switched = source.substring(start, source.indexOf("\n\t}", start));
+		assertTrue("the old profile's queued lines go with it",
+			switched.contains("speechQueue.clear();"));
+		assertTrue("and the floor they were waiting for",
+			switched.contains("speakingUntilMs = 0;"));
+	}
 }
