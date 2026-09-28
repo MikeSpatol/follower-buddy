@@ -37,19 +37,6 @@ public class GesturesTest
 	}
 
 	@Test
-	public void theForcePathForgetsOnlyTheGesturesItNames()
-	{
-		// ::follower force must not wait out a cooldown, and must not hand
-		// every other gesture a fresh one on the way.
-		Gestures gestures = new Gestures(() -> tick, () -> grateful);
-		gestures.spent(Gestures.Gesture.WAVE);
-		gestures.spent(Gestures.Gesture.NOTES);
-		gestures.forget(Gestures.Gesture.WAVE);
-		assertTrue("the wave at once", gestures.may(Gestures.Gesture.WAVE));
-		assertFalse("the notes still on their clock", gestures.may(Gestures.Gesture.NOTES));
-	}
-
-	@Test
 	public void aResetForgetsTheSession()
 	{
 		Gestures gestures = new Gestures(() -> tick, () -> grateful);

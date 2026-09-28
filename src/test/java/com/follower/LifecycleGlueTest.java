@@ -101,6 +101,17 @@ public class LifecycleGlueTest
 	}
 
 	@Test
+	public void aForcedCutsceneGoesWithTheScene() throws IOException
+	{
+		// ::follower force cutscene on held the follower still and facing
+		// where the player faced through every logout and hop after, with
+		// nothing on screen to say why, until the plugin was toggled. A real
+		// cutscene ends with the scene; the forced one has to as well.
+		assertTrue("leaving a scene must let go of the forced cutscene",
+			method("private void tearDownScene()").contains("cutsceneForced = false;"));
+	}
+
+	@Test
 	public void aParkWaitingForTheFeetGoesWithTheScene() throws IOException
 	{
 		// A Send given while thrall work had the feet waits to be walked to

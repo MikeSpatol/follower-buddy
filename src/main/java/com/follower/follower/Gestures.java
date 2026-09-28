@@ -93,19 +93,6 @@ public class Gestures
 		return true;
 	}
 
-	/**
-	 * Forgets the gestures were ever made, so the next of each may come at
-	 * once. For a force-path only: ::follower force must not wait out a
-	 * cooldown to show what the body does.
-	 */
-	public void forget(Gesture... gestures)
-	{
-		for (Gesture gesture : gestures)
-		{
-			lastAt.remove(gesture);
-		}
-	}
-
 	/** Logout, hop: the ledger belongs to the session. */
 	public void reset()
 	{

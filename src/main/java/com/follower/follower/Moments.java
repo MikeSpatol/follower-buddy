@@ -406,6 +406,29 @@ public class Moments implements Noticing.Looker
 	 */
 	public String noteworthy(Tier tier, WorldPoint at)
 	{
+		return noteworthy(tier, at, false);
+	}
+
+	/**
+	 * ::follower force drop: the ladder's reaction to news of this tier now,
+	 * whatever the ledger says of the gestures it uses, so the body does
+	 * what the tier earns rather than what is left of the stretch. What it
+	 * does is spent as ever, and nothing else in the ledger is touched, so
+	 * the real ones after it wait as they would. The gates stay as
+	 * {@link #noteworthy} keeps them: a fight, a park the player gave or
+	 * anything else with the feet still keeps the walk and the scroll away,
+	 * and the tier below stands in.
+	 *
+	 * @return what the body did, or null for nothing
+	 */
+	public String forceNoteworthy(Tier tier, WorldPoint at)
+	{
+		return noteworthy(tier, at, true);
+	}
+
+	/** @param forced whether the ledger's waits are waived for this one reaction */
+	private String noteworthy(Tier tier, WorldPoint at, boolean forced)
+	{
 		if (!config.keepsCompany() || tier == null)
 		{
 			return null;
@@ -422,7 +445,7 @@ public class Moments implements Noticing.Looker
 		WorldPoint facing = at == null ? here : at;
 
 		if (tier == Tier.BIG && reachable && free()
-			&& gestures.may(Gestures.Gesture.WALK_OVER) && gestures.may(Gestures.Gesture.NOTES)
+			&& (forced || gestures.may(Gestures.Gesture.WALK_OVER) && gestures.may(Gestures.Gesture.NOTES))
 			&& goAndLook(at, 1, true, NOTES_ON_THE_SPOT_TICKS))
 		{
 			gestures.spent(Gestures.Gesture.WALK_OVER);
@@ -430,33 +453,18 @@ public class Moments implements Noticing.Looker
 			log.debug("Big news at {}: going over to write it up", at);
 			return "the walk over to write it up";
 		}
-		String wrote = tier != Tier.SMALL ? writeUpInPlace(facing) : null;
+		String wrote = tier != Tier.SMALL ? writeUpInPlace(facing, forced) : null;
 		if (wrote != null)
 		{
 			return wrote;
 		}
-		if (gestures.take(Gestures.Gesture.GLANCE))
+		if (forced || gestures.may(Gestures.Gesture.GLANCE))
 		{
+			gestures.spent(Gestures.Gesture.GLANCE);
 			follower.glanceAt(facing, GLANCE_MS);
 			return "a glance";
 		}
 		return null;
-	}
-
-	/**
-	 * ::follower force drop: the ladder's reaction to news of this tier now,
-	 * with the waits of the gestures it uses forgotten, so the body does
-	 * what the tier earns rather than what is left of the stretch. The gates
-	 * stay as {@link #noteworthy} keeps them: a fight, a park the player
-	 * gave or anything else with the feet still keeps the walk and the
-	 * scroll away, and the tier below stands in.
-	 *
-	 * @return what the body did, or null for nothing
-	 */
-	public String forceNoteworthy(Tier tier, WorldPoint at)
-	{
-		gestures.forget(Gestures.Gesture.WALK_OVER, Gestures.Gesture.NOTES, Gestures.Gesture.GLANCE);
-		return noteworthy(tier, at);
 	}
 
 	/**
@@ -467,9 +475,9 @@ public class Moments implements Noticing.Looker
 	 *
 	 * @return what the body did, or null when the notes are not due
 	 */
-	private String writeUpInPlace(WorldPoint facing)
+	private String writeUpInPlace(WorldPoint facing, boolean forced)
 	{
-		if (!gestures.may(Gestures.Gesture.NOTES))
+		if (!forced && !gestures.may(Gestures.Gesture.NOTES))
 		{
 			return null;
 		}
@@ -502,28 +510,36 @@ public class Moments implements Noticing.Looker
 	 */
 	public boolean farewell()
 	{
-		Player local = client.getLocalPlayer();
-		WorldPoint here = local == null ? null : local.getWorldLocation();
-		if (here == null || !follower.isSpawned() || feetTaken.getAsBoolean()
-			|| inCombat.getAsBoolean() || !gestures.take(Gestures.Gesture.WAVE))
-		{
-			return false;
-		}
-		skilling.gesture(new int[]{WAVE}, here);
-		log.debug("The logout tab: a wave");
-		return true;
+		return farewell(false);
 	}
 
 	/**
 	 * ::follower force wave: the logout tab's wave now, however lately the
-	 * last one was. The gates stay: a fight, or somebody else with the feet.
+	 * last one was. The wave is spent as ever, and nothing else, so the
+	 * tab's next one waits as it would. The gates stay: a fight, or
+	 * somebody else with the feet.
 	 *
 	 * @return whether it waved
 	 */
 	public boolean forceFarewell()
 	{
-		gestures.forget(Gestures.Gesture.WAVE);
-		return farewell();
+		return farewell(true);
+	}
+
+	/** @param forced whether the wave's wait is waived for this one */
+	private boolean farewell(boolean forced)
+	{
+		Player local = client.getLocalPlayer();
+		WorldPoint here = local == null ? null : local.getWorldLocation();
+		if (here == null || !follower.isSpawned() || feetTaken.getAsBoolean()
+			|| inCombat.getAsBoolean() || !(forced || gestures.may(Gestures.Gesture.WAVE)))
+		{
+			return false;
+		}
+		gestures.spent(Gestures.Gesture.WAVE);
+		skilling.gesture(new int[]{WAVE}, here);
+		log.debug("The logout tab: a wave");
+		return true;
 	}
 
 	/**

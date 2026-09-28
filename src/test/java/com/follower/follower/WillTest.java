@@ -295,9 +295,12 @@ public class WillTest
 		tick(6 + Will.HESITATE_TICKS + 1);
 		assertEquals("then it goes, as it would", beside, follower.stayingAt);
 
-		// Spent by that Send: the next is a plain one again.
+		// Spent by that Send: the next is a plain one again. From far enough
+		// off to have an edge, or there is nothing to hesitate at either way.
+		follower.tile = new WorldPoint(3200, 3400, 0);
 		events.clear();
 		assertTrue(will.send(new WorldPoint(3211, 3401, 0)));
+		assertFalse(will.isHesitating());
 		assertTrue(events.isEmpty());
 	}
 

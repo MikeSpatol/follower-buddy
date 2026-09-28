@@ -1281,7 +1281,11 @@ public class FollowerPlugin extends Plugin
 		return !handFull && sinceLastMs >= MINUTES_COOLDOWN_MS && roll < 35;
 	}
 
-	/** ::follower force cutscene: held on as if one were playing, until turned off. */
+	/**
+	 * ::follower force cutscene: held on as if one were playing, until turned
+	 * off, until Developer commands are, or until the scene goes, as a real
+	 * one does.
+	 */
 	private boolean cutsceneForced;
 
 	/**
@@ -3878,6 +3882,10 @@ public class FollowerPlugin extends Plugin
 		parkedByPlayer = false;
 		parkWhenFree = false;
 		sentWhenFree = null;
+		// A forced cutscene ends with the scene, as a real one does. Left on,
+		// it held the follower still through logouts and hops with nothing
+		// to say so.
+		cutsceneForced = false;
 	}
 
 	@Subscribe
@@ -3891,6 +3899,13 @@ public class FollowerPlugin extends Plugin
 		applyConfig();
 
 		String key = event.getKey();
+		// The force hold goes with the commands that set it: once they are
+		// off, ::follower force cutscene off is refused, and nothing else
+		// would ever let it go.
+		if ("developerMode".equals(key) && !config.developerMode())
+		{
+			cutsceneForced = false;
+		}
 		if ("muted".equals(key) && panel != null)
 		{
 			panel.setMuted(config.muted());

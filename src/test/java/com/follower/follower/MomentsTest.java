@@ -907,6 +907,35 @@ public class MomentsTest
 	}
 
 	@Test
+	public void aForcedDropLeavesTheRealLaddersWaitsAlone()
+	{
+		// The force used to wipe the ledger's walk-over and notes on its way
+		// in, whatever rung it then got, so a real big drop soon after a real
+		// write-up was walked over to again, minutes early.
+		tick(1);
+		assertEquals("the walk over to write it up", moments.noteworthy(Moments.Tier.BIG, DROP));
+		tick(Moments.NOTES_ON_THE_SPOT_TICKS + 20);
+		assertFalse(moments.holdsTheFeet());
+
+		assertEquals("a glance", moments.forceNoteworthy(Moments.Tier.SMALL, DROP));
+		assertNull("the real one still waits out the real write-up",
+			moments.noteworthy(Moments.Tier.BIG, DROP));
+		assertFalse(moments.isLooking());
+	}
+
+	@Test
+	public void aForcedWaveRefusedLeavesTheTabsWaitAlone()
+	{
+		tick(1);
+		assertTrue(moments.farewell());
+		feetTaken = true;
+		assertFalse(moments.forceFarewell());
+		feetTaken = false;
+		assertFalse("the tab's next wave still waits out the last real one", moments.farewell());
+		assertEquals(1, follower.animations.size());
+	}
+
+	@Test
 	public void theLadderMatchesTheLootRules()
 	{
 		assertNull(Moments.tierFor(9_999));

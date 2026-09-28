@@ -359,12 +359,26 @@ public class NoticingTest
 	// ------------------------------------------------------- the force-path
 
 	@Test
-	public void theForcedNoticeTakesTheDropAtYourFeetWithoutWaiting()
+	public void theForcedNoticeLeavesADropStillAtYourFeet()
 	{
-		// Not walked away from, not lain three ticks: the tick would wait on
-		// both, and a play test waits on neither.
+		// The line is "You've left it here" or "You're walking away from
+		// it", so the force still waits for the walk away, and says so. It
+		// used to go and say one to a player stood on the drop.
 		tick(1);
 		noticing.itemSpawned(item(4151, TileItem.OWNERSHIP_SELF), DROP, "Abyssal whip", 1_500_000);
+		assertEquals("A drop is within " + Noticing.WALKED_AWAY_TILES + " tiles of you, and its line is"
+			+ " for one you walked away from: step off first.", noticing.forceNotice());
+		assertTrue(looker.looks.isEmpty());
+		assertTrue(events.isEmpty());
+	}
+
+	@Test
+	public void theForcedNoticeTakesADropYouStepOffWithoutWaiting()
+	{
+		// Not lain three ticks: the tick would wait, and a play test does not.
+		tick(1);
+		noticing.itemSpawned(item(4151, TileItem.OWNERSHIP_SELF), DROP, "Abyssal whip", 1_500_000);
+		walkAway();
 		assertEquals("Went to look at the Abyssal whip (valuable).", noticing.forceNotice());
 		assertEquals(Collections.singletonList(DROP), looker.looks);
 		assertEquals("and the line, as the tick gives it", 1, events.size());
@@ -414,12 +428,12 @@ public class NoticingTest
 	public void aForcedNoticeLeavesTheTicksClocksAsTheyWere()
 	{
 		// The force waives the waits for itself only: the tick after it
-		// still keeps the kind's clock, the seen list and the walk away.
+		// still keeps the kind's clock and the seen list.
 		tick(1);
 		noticing.itemSpawned(item(4151, TileItem.OWNERSHIP_SELF), DROP, "Abyssal whip", 1_500_000);
+		walkAway();
 		noticing.forceNotice();
 		looker.looking = false;
-		walkAway();
 		tick(Noticing.LEFT_AFTER_TICKS + 2);
 		assertEquals("the whip is seen now, and the kind on its clock", 1, looker.looks.size());
 	}

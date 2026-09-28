@@ -989,10 +989,10 @@ gated ones once Developer commands is on; both read `EVERYDAY_COMMANDS` and
 | `::follower fire <rule-id>` **[dev]** | Say a rule now, whatever its conditions, cooldown and the mute say |
 | `::follower force` **[dev]** | List the force-paths below |
 | `::follower force look [camera\|cursor]` **[dev]** | Looks where you look: the look round now, or a look the way the camera is turned or at what the cursor rests on |
-| `::follower force notice` **[dev]** | Noticing: the best thing in view now (a drop of yours, a nest, an impling, a star, a landmark beside you), walked to, looked at and named, whatever its kind's cooldown and whether it was noticed before |
+| `::follower force notice` **[dev]** | Noticing: the best thing in view now (a drop of yours, a nest, an impling, a star, a landmark beside you), walked to, looked at and named, whatever its kind's cooldown and whether it was noticed before; a drop still wants you five tiles off it first, since its line says you walked away |
 | `::follower force hesitate` **[dev]** | The will: the next Send hesitates over any NPC within two tiles of its spot as over one that outclasses you, even one it hesitated over before |
 | `::follower force shoulder` **[dev]** | The minute-taker's spot over your shoulder, as if an NPC dialogue had just opened; let go when you step off or after twelve seconds |
-| `::follower force cutscene on\|off` **[dev]** | Hold the cutscene behaviour as if one were playing: no wander, look round, noticing, sketch or errand of its own, and it looks where you look |
+| `::follower force cutscene on\|off` **[dev]** | Hold the cutscene behaviour as if one were playing: no wander, look round, noticing, sketch or errand of its own, and it looks where you look; let go by `off`, by unticking Developer commands, or with the scene at a logout or hop |
 | `::follower force wave` **[dev]** | The logout tab's wave now, however lately the last one was |
 | `::follower force drop <gp> [item name]` **[dev]** | The drop ladder's body reaction to a drop of that value at your feet (glance, nod, scroll, walk over) and the loot line's words; only the gestures' cooldowns are skipped |
 | `::follower force sketch` **[dev]** | The chronicle sketch of this view now, without the stand-still wait or the retry wait; a place already drawn is drawn again, its old files kept as `.bak` first |

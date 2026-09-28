@@ -251,10 +251,11 @@ public class Noticing
 	/**
 	 * ::follower force notice: the best thing in view noticed now, walked
 	 * to, looked at and named, as the tick would - but with no kind's clock,
-	 * no seen list, and no waiting for the player to walk off from a drop or
-	 * to have stood by a landmark a while. The gates stay: Notices things
-	 * off, the follower busy or already off looking, and whatever the walk
-	 * itself refuses, a park the player gave among them.
+	 * no seen list, and no waiting for a drop to lie a few ticks or for the
+	 * player to have stood by a landmark a while. The gates stay: Notices
+	 * things off, the follower busy or already off looking, a drop the
+	 * player has not stepped off from, since its line says they have, and
+	 * whatever the walk itself refuses, a park the player gave among them.
 	 *
 	 * @return what it noticed, or why nothing, for the chat line
 	 */
@@ -341,8 +342,15 @@ public class Noticing
 				it.remove();
 				continue;
 			}
-			if (tile.distanceTo(here) < WALKED_AWAY_TILES && !forcing)
+			// Kept when forcing: the lines are about a drop walked away from,
+			// and said to a player standing on it they are wrong.
+			if (tile.distanceTo(here) < WALKED_AWAY_TILES)
 			{
+				if (forcing)
+				{
+					forced = "A drop is within " + WALKED_AWAY_TILES + " tiles of you, and its line is"
+						+ " for one you walked away from: step off first.";
+				}
 				continue;
 			}
 			for (Drop drop : entry.getValue())

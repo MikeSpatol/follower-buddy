@@ -229,6 +229,13 @@ public class SketchController
 		{
 			return "Still drawing the last sketch of " + here + ".";
 		}
+		hands.hold(ErrandController.SCROLL_PROP);
+		if (!hands.isHolding())
+		{
+			return "The scroll would not come out.";
+		}
+		// Backed up once the scroll is out: taken first, the copies of an
+		// attempt that never began were left on disk and never mentioned.
 		List<String> kept;
 		try
 		{
@@ -236,13 +243,9 @@ public class SketchController
 		}
 		catch (IOException | RuntimeException e)
 		{
+			hands.release();
 			log.warn("Could not back up the sketch of {}", here, e);
 			return "Could not back up the old sketch of " + here + ", so it is left alone.";
-		}
-		hands.hold(ErrandController.SCROLL_PROP);
-		if (!hands.isHolding())
-		{
-			return "The scroll would not come out.";
 		}
 		follower.setPoseOverride(ErrandController.READ_SCROLL_POSE);
 		key = here;

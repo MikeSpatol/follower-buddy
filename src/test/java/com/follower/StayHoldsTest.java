@@ -1,13 +1,19 @@
 package com.follower;
 
+import com.follower.chronicle.ChronicleLoader;
+import com.follower.chronicle.SketchBook;
+import com.follower.chronicle.SketchController;
 import com.follower.follower.ErrandController;
 import com.follower.follower.FollowerEntity;
+import com.follower.follower.Gaze;
 import com.follower.follower.Moments;
+import com.follower.follower.Noticing;
 import com.follower.follower.SkillingController;
 import com.follower.follower.Will;
 import com.follower.sim.Harness;
 import com.follower.speech.SpeechOutput;
 import com.follower.speech.SpeechRule;
+import com.google.gson.Gson;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -18,13 +24,16 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import net.runelite.api.Client;
 import net.runelite.api.NPC;
 import net.runelite.api.Player;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.widgets.Widget;
+import net.runelite.client.events.ConfigChanged;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -594,6 +603,75 @@ public class StayHoldsTest
 			call("forceNow", (Object) new String[]{"force", "fly"}));
 	}
 
+	@Test
+	public void aForcedCutsceneEndsWithDeveloperCommands() throws ReflectiveOperationException
+	{
+		// With them unticked, ::follower force cutscene off is refused, and
+		// the hold outlived every scene after until the plugin was toggled.
+		call("forceNow", (Object) new String[]{"force", "cutscene", "on"});
+		assertTrue((Boolean) call("inCutscene"));
+
+		ConfigChanged changed = new ConfigChanged();
+		changed.setGroup(FollowerConfig.GROUP);
+		changed.setKey("developerMode");
+		plugin.onConfigChanged(changed);
+		assertFalse("let go with the commands that set it", (Boolean) call("inCutscene"));
+	}
+
+	@Test
+	public void eachForceReachesItsOwnFeature() throws ReflectiveOperationException
+	{
+		// ForceCommandsTest holds each name to a case; this holds each case
+		// to its feature, by a reply or a move only that feature makes.
+		Moments moments = moments();
+		FollowerConfig config = new FollowerConfig()
+		{
+		};
+		set("gaze", new Gaze(h.game.client, feet, config, () -> 0, () -> 0, () -> false, () -> "",
+			Collections::emptyList, new Random(1)));
+		set("noticing", new Noticing(h.game.client, feet, config, moments, event -> { }, () -> false,
+			() -> 0, Collections::emptyList));
+		set("sketching", new SketchController(h.game.client, feet, (ErrandController.Hands) get("hands"),
+			new ChronicleLoader(new Gson()), new SketchBook(null), null, null, () -> false, () -> 0,
+			() -> 9999, line -> { }));
+		set("will", new Will(h.game.client, feet, event -> { }, () -> true));
+		h.gameTick();
+
+		assertEquals("A look the way the camera is turned.", force("look", "camera"));
+		assertEquals("Nothing to notice in view.", force("notice"));
+		assertEquals("No page sketches this place (region 9999).", force("sketch"));
+
+		// Straight after a real wave, which the tab's own next one waits out.
+		assertTrue(moments.farewell());
+		feet.played.clear();
+		assertEquals("A wave, as at the logout tab.", force("wave"));
+		assertFalse(feet.played.isEmpty());
+
+		// The will's note shows at the next Send: stopped short of a goblin,
+		// which is nothing to the player.
+		NPC goblin = h.game.spawnNpc(3029, "Goblin", 2);
+		h.game.moveNpc(goblin, 3232, 3218, 0);
+		force("hesitate");
+		call("sendTo", new WorldPoint(3231, 3218, 0));
+		assertEquals("stopped short first", new WorldPoint(3228, 3218, 0), feet.stay);
+	}
+
+	@Test
+	public void aForcedDropIsItsRungOfTheLadderAndTheLootsWords() throws ReflectiveOperationException
+	{
+		moments();
+		h.gameTick();
+		assertEquals("Coins worth 5000 at your feet: too small for the ladder, so nothing.",
+			force("drop", "5000"));
+		assertEquals("Coins worth 20000 at your feet: a glance.", force("drop", "20000"));
+		// No scroll to take out here, so the notes are the nod on its own.
+		assertEquals("Coins worth 200000 at your feet: a nod.", force("drop", "200000"));
+		assertEquals("Dragon warhammer worth 2000000 at your feet: the walk over to write it up.",
+			force("drop", "2000000", "Dragon", "warhammer"));
+		assertEquals("and the loot's words, with the item named", "the Dragon warhammer that dropped",
+			h.engine.getContext().getIncidentPhrase());
+	}
+
 	// ---------------------------------------------------------------- the glue
 
 	/**
@@ -764,6 +842,15 @@ public class StayHoldsTest
 		client.setAccessible(true);
 		client.set(thread, h.game.client);
 		return thread;
+	}
+
+	/** ::follower force with these words after it, as the chat command hands them over. */
+	private String force(String... words) throws ReflectiveOperationException
+	{
+		String[] args = new String[words.length + 1];
+		args[0] = "force";
+		System.arraycopy(words, 0, args, 1, words.length);
+		return (String) call("forceNow", (Object) args);
 	}
 
 	private Object call(String name, Object... args) throws ReflectiveOperationException

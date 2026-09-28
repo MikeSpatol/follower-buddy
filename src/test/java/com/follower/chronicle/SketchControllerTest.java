@@ -113,6 +113,8 @@ public class SketchControllerTest
 	private int idle;
 	private int region = 12850;
 	private boolean holding;
+	/** Whether the scroll will not come out when asked for. */
+	private boolean handsRefuse;
 	private final List<String> said = new ArrayList<>();
 	private FollowerEntity follower;
 
@@ -153,7 +155,7 @@ public class SketchControllerTest
 			@Override
 			public void hold(int itemId)
 			{
-				holding = true;
+				holding = !handsRefuse;
 			}
 
 			@Override
@@ -344,7 +346,28 @@ public class SketchControllerTest
 		assertEquals("Could not back up the old sketch of lumbridge, so it is left alone.",
 			scribe.forceSketch());
 		assertFalse(scribe.isSketching());
-		assertFalse("the scroll never came out", holding);
+		assertFalse("the scroll put away again", holding);
+	}
+
+	@Test
+	public void aScrollThatWillNotComeOutLeavesNoCopiesBehind() throws IOException
+	{
+		// The copies were taken before the scroll was asked for, so a
+		// refusal left them on disk and its reply never named them.
+		java.nio.file.Path data = folder.newFolder().toPath();
+		SketchBook book = new SketchBook(data);
+		book.openFor("acct");
+		java.awt.image.BufferedImage old = new java.awt.image.BufferedImage(4, 4,
+			java.awt.image.BufferedImage.TYPE_INT_RGB);
+		book.put("lumbridge", old, old);
+		SketchController scribe = scribe(book);
+		idle = 1;
+		handsRefuse = true;
+		assertEquals("The scroll would not come out.", scribe.forceSketch());
+		assertFalse(scribe.isSketching());
+		java.nio.file.Path acct = data.resolve(SketchBook.DIR_NAME).resolve("acct");
+		assertFalse(java.nio.file.Files.exists(acct.resolve("lumbridge.png.bak")));
+		assertFalse(java.nio.file.Files.exists(acct.resolve("lumbridge.large.png.bak")));
 	}
 
 	@Test
