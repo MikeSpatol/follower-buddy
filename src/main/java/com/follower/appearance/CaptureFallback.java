@@ -22,7 +22,8 @@ import net.runelite.api.PlayerComposition;
  * </ul>
  *
  * <p>Since RuneLite 1.13 the stolen model cannot be detached from the client's
- * shared cache, so every capture finishes with null; see {@link #tick()}.
+ * shared cache, so {@link #request} answers null before the outfit goes on, and
+ * the swap below is not reached; see {@link #tick()}.
  *
  * <p>All methods must be called on the client thread. {@link #tick()} drives the
  * one-frame delay and should be called from a per-frame event.
@@ -70,14 +71,17 @@ public class CaptureFallback
 			return;
 		}
 
-		this.pending = outfit.withDefaultBody();
-		this.callback = onCaptured;
-		this.framesWaited = 0;
-
-		if (!swapIn())
+		// With no way to detach what a swap would capture (see tick), putting the
+		// outfit on would only show it on the player for a frame, and again on
+		// every request after, since an empty answer is not remembered. So the
+		// request is answered empty before anything is worn.
+		if (!noDetachLogged)
 		{
-			finish(null);
+			noDetachLogged = true;
+			log.debug("Capture has no way to detach the player model from the shared cache; "
+				+ "capturing nothing. Use the cache dump path.");
 		}
+		onCaptured.accept(null);
 	}
 
 	public void tick()
@@ -99,13 +103,6 @@ public class CaptureFallback
 		// player reused it. A single-model merge used to detach a copy, but
 		// RuneLite 1.13 removed the Model merge with nothing in its place, so
 		// there is no copy to hand back and the capture comes back empty.
-		if (!noDetachLogged)
-		{
-			noDetachLogged = true;
-			log.debug("Capture has no way to detach the player model from the shared cache; "
-				+ "capturing nothing. Use the cache dump path.");
-		}
-
 		swapOut();
 		finish(null);
 	}
