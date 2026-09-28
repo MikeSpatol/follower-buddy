@@ -98,8 +98,10 @@ public class SwallowedLineTest
 		// The queue and the dialogue hush both drop lines the engine already
 		// handed over. A first nobody heard is still owed, a souvenir nobody
 		// was told about is not carried, and a bet, a dare or advice nobody
-		// heard is not open to be settled. A thank-you nobody heard leaves the
-		// wish open, so the gift can be given again and thanked for.
+		// heard is not open to be settled. The gift is the exception: it was
+		// confirmed in the Talk-to box, so it is spent though the thank-you
+		// was dropped, and the gift option does not come back for an item
+		// already handed over.
 		Harness h = new Harness(folder.newFolder().toPath(), LATCHES);
 		h.gameTicks(1);
 		h.engine.getContext().setWish("soft clay", 5);
@@ -116,8 +118,8 @@ public class SwallowedLineTest
 		assertFalse("nor a bet placed", h.engine.getContext().isBetting());
 		assertFalse("nor a dare set", h.engine.getContext().isChallenging());
 		assertFalse("nor advice given", h.engine.getContext().isAdvising());
-		assertTrue("nor the wish granted", h.engine.getContext().isWishing());
-		assertFalse("nor a favour owed", h.engine.getContext().isGrateful());
+		assertFalse("but the gift is spent: the wish is closed", h.engine.getContext().isWishing());
+		assertTrue("and the favour owed", h.engine.getContext().isGrateful());
 
 		// Still owed, so the next time it rises it is said, and spent then.
 		h.engine.setSink((text, output, rule, animationId, onSaid) -> onSaid.run());
@@ -143,7 +145,7 @@ public class SwallowedLineTest
 			h.engine.getContext().hasSaidOnce("first"));
 		assertFalse(h.engine.getContext().isCarrying());
 		assertFalse(h.engine.getContext().isBetting());
-		assertTrue(h.engine.getContext().isWishing());
+		assertFalse("the gift alone is spent at the win", h.engine.getContext().isWishing());
 
 		held.forEach(Runnable::run);
 		assertTrue("the moment it lands, the first is spent",

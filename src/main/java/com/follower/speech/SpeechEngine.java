@@ -1049,6 +1049,18 @@ public class SpeechEngine
 		// wish is certainly still open.
 		String souvenir = rule.pickUp != null && rule.pickUp.what != null && !text.isEmpty()
 			? substitute(rule.pickUp.what, event) : null;
+		// The gift is the one thing spent at the win. The exchange was
+		// confirmed in the Talk-to box the player is reading, and a thank-you
+		// the queue dropped must not leave the wish open and the gift option
+		// back in the box for an item already handed over.
+		boolean gift = Boolean.TRUE.equals(rule.grantsWish) && !text.isEmpty();
+		if (gift)
+		{
+			pocket(rule, souvenir);
+			// AFTER the pocketing, which may still need the wish's name.
+			getContext().clearWish();
+			getContext().noteFavour();
+		}
 		// Until it lands, a rule reading what it leaves behind waits for it.
 		java.util.Set<String> leaves = text.isEmpty()
 			? java.util.Collections.emptySet() : leavesBehind(rule);
@@ -1081,28 +1093,9 @@ public class SpeechEngine
 			// Picking something up and betting on something both need to have
 			// been SAID, like the want - a souvenir nobody was told about is
 			// invisible, and a silent prediction can only ever be right.
-			if (souvenir != null)
+			if (!gift)
 			{
-				// A swap rule replaces what is carried - it said the exchange out
-				// loud, which is what the refuse-if-carrying guard exists to
-				// require.
-				int minutes = rule.pickUp.minutes == null ? 20 : rule.pickUp.minutes;
-				if (Boolean.TRUE.equals(rule.pickUp.swap))
-				{
-					getContext().tradeFor(souvenir, minutes);
-				}
-				else
-				{
-					getContext().pickUp(souvenir, minutes);
-				}
-			}
-			// AFTER the pickUp, which may still need the wish's name. The wish
-			// closes on a SPOKEN thank-you only: the follower acknowledging the
-			// gift is what spends it.
-			if (Boolean.TRUE.equals(rule.grantsWish) && !text.isEmpty())
-			{
-				getContext().clearWish();
-				getContext().noteFavour();
+				pocket(rule, souvenir);
 			}
 			if (rule.bet != null && rule.bet.threshold != null && !text.isEmpty())
 			{
@@ -1236,9 +1229,33 @@ public class SpeechEngine
 		return false;
 	}
 
-	/** What a line latches when it lands, named as the conditions that read it. */
+	/** Carries the souvenir a line names, if it names one. */
+	private void pocket(SpeechRule rule, String souvenir)
+	{
+		if (souvenir == null)
+		{
+			return;
+		}
+		// A swap rule replaces what is carried - it said the exchange out
+		// loud, which is what the refuse-if-carrying guard exists to require.
+		int minutes = rule.pickUp.minutes == null ? 20 : rule.pickUp.minutes;
+		if (Boolean.TRUE.equals(rule.pickUp.swap))
+		{
+			getContext().tradeFor(souvenir, minutes);
+		}
+		else
+		{
+			getContext().pickUp(souvenir, minutes);
+		}
+	}
+
+	/**
+	 * What a line latches when it lands, named as the conditions that read
+	 * it. Not the gift's pocket and wish: those are spent at the win.
+	 */
 	private static java.util.Set<String> leavesBehind(SpeechRule rule)
 	{
+		boolean gift = Boolean.TRUE.equals(rule.grantsWish);
 		java.util.Set<String> states = new java.util.HashSet<>();
 		if (rule.asks != null && !rule.asks.isEmpty())
 		{
@@ -1248,11 +1265,11 @@ public class SpeechEngine
 		{
 			states.add("wanting");
 		}
-		if ((rule.wish != null && rule.wish.what != null) || Boolean.TRUE.equals(rule.grantsWish))
+		if (rule.wish != null && rule.wish.what != null)
 		{
 			states.add("wishing");
 		}
-		if (rule.pickUp != null && rule.pickUp.what != null)
+		if (!gift && rule.pickUp != null && rule.pickUp.what != null)
 		{
 			states.add("carrying");
 		}
