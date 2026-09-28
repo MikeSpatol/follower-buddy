@@ -5113,6 +5113,19 @@ public class FollowerPlugin extends Plugin
 			follower.setThrallCircleFromNpcModel(thrallCircleModelId(npc));
 			rebuildFollower();
 		});
+		announceSummon(style);
+	}
+
+	/**
+	 * The hello. In thrall-only mode the summon ends an absence the tick keeps
+	 * muted, but it arrives between ticks, before the tick can lift that mute;
+	 * so the mute is set again here from the thrall just taken, the way the
+	 * thieving lines are said with theirs lifted.
+	 */
+	private void announceSummon(String style)
+	{
+		speechEngine.setMuted(config.muted() || wasThieving
+			|| absentUntilSummoned(config.thrallOnly(), thrallBusiness()));
 		speechEngine.dispatch(TriggerEvent.thrall(TriggerEvent.Type.THRALL_START, style));
 	}
 

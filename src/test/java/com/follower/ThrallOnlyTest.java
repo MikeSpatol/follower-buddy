@@ -1,11 +1,16 @@
 package com.follower;
 
 import com.follower.sim.FakeGame;
+import com.follower.sim.Harness;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.List;
 import net.runelite.api.NPC;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -19,6 +24,9 @@ import static org.junit.Assert.assertTrue;
  */
 public class ThrallOnlyTest
 {
+	@Rule
+	public final TemporaryFolder folder = new TemporaryFolder();
+
 	private static FollowerPlugin plugin(boolean thrallOnly) throws ReflectiveOperationException
 	{
 		FollowerPlugin plugin = new FollowerPlugin();
@@ -76,5 +84,38 @@ public class ThrallOnlyTest
 		FollowerPlugin loading = plugin(true);
 		set(loading, "thrallLimbo", true);
 		assertFalse("a scene load drops the thrall NPC, not the thrall", hidden(loading));
+	}
+
+	/**
+	 * Announces a summon the way adoptThrall does, on an engine the absent
+	 * ticks left muted; what was said.
+	 */
+	private List<Harness.Spoken> summonedFromAbsence(boolean thieving) throws Exception
+	{
+		Harness h = new Harness(folder.newFolder().toPath());
+		h.gameTicks(2);
+		h.engine.setMuted(true);
+
+		FollowerPlugin plugin = plugin(true);
+		set(plugin, "speechEngine", h.engine);
+		set(plugin, "wasThieving", thieving);
+		// adoptThrall has taken the thrall before it says hello.
+		set(plugin, "thrallNpc", new FakeGame().spawnNpc(10886, "Greater Zombified Spawn", 0));
+		Method announce = FollowerPlugin.class.getDeclaredMethod("announceSummon", String.class);
+		announce.setAccessible(true);
+		announce.invoke(plugin, "melee");
+		return h.firedBy("thrall-start");
+	}
+
+	@Test
+	public void theSummonIsGreetedAlthoughTheAbsenceMutedTheEngine() throws Exception
+	{
+		// The summon arrives between ticks, while the mute the last absent
+		// tick set is still on. Said under that mute, the hello was lost on
+		// every summon and only the goodbye was ever heard.
+		assertEquals("the summon ends the absence, and the hello is said",
+			1, summonedFromAbsence(false).size());
+		assertTrue("but a pocket being worked keeps its silence",
+			summonedFromAbsence(true).isEmpty());
 	}
 }
