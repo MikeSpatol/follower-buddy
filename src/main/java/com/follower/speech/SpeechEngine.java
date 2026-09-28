@@ -37,7 +37,8 @@ public class SpeechEngine
 	 * it drops. The engine hangs the states that OPEN something - a question,
 	 * a want, a wish - on this, because each of those later puts an
 	 * interaction in front of the player that only makes sense if the opening
-	 * line was seen.
+	 * line was seen. Everything else a line leaves behind hangs here too: a
+	 * first spent, a souvenir, a bet, a dare, advice, a granted wish.
 	 */
 	public interface Sink
 	{
@@ -1008,10 +1009,17 @@ public class SpeechEngine
 		// wish, and "said" is the sink's moment, not this method's: the plugin
 		// queues lines behind the overhead box, and a queued line can still be
 		// dropped - aged out, displaced by a full queue, cleared with the
-		// scene. Each of these three later puts an interaction in front of the
-		// player (a conversation, a thank-you, a gift option in the Talk-to
-		// box), so opening them on a line nobody saw leaves that interaction
-		// unexplained. They latch when the sink says the line landed.
+		// scene, hushed by an NPC dialogue. Each of these three later puts an
+		// interaction in front of the player (a conversation, a thank-you, a
+		// gift option in the Talk-to box), so opening them on a line nobody saw
+		// leaves that interaction unexplained. They latch when the sink says the
+		// line landed, and so does everything else a line leaves behind.
+		//
+		// A souvenir is substituted like a spoken line, so it can be named after
+		// the wish it grants: "the {wish} you found me". Named here, while that
+		// wish is certainly still open.
+		String souvenir = rule.pickUp != null && rule.pickUp.what != null && !text.isEmpty()
+			? substitute(rule.pickUp.what, event) : null;
 		Runnable onSaid = () ->
 		{
 			// The wear ledger counts what was HEARD, not what was queued -
@@ -1035,61 +1043,69 @@ public class SpeechEngine
 					rule.wish.minutes == null ? 45 : rule.wish.minutes,
 					rule.wish.items);
 			}
+
+			// Picking something up and betting on something both need to have
+			// been SAID, like the want - a souvenir nobody was told about is
+			// invisible, and a silent prediction can only ever be right.
+			if (souvenir != null)
+			{
+				// A swap rule replaces what is carried - it said the exchange out
+				// loud, which is what the refuse-if-carrying guard exists to
+				// require.
+				int minutes = rule.pickUp.minutes == null ? 20 : rule.pickUp.minutes;
+				if (Boolean.TRUE.equals(rule.pickUp.swap))
+				{
+					getContext().tradeFor(souvenir, minutes);
+				}
+				else
+				{
+					getContext().pickUp(souvenir, minutes);
+				}
+			}
+			// AFTER the pickUp, which may still need the wish's name. The wish
+			// closes on a SPOKEN thank-you only: the follower acknowledging the
+			// gift is what spends it.
+			if (Boolean.TRUE.equals(rule.grantsWish) && !text.isEmpty())
+			{
+				getContext().clearWish();
+				getContext().noteFavour();
+			}
+			if (rule.bet != null && rule.bet.threshold != null && !text.isEmpty())
+			{
+				getContext().placeBet(Boolean.TRUE.equals(rule.bet.rich),
+					rule.bet.threshold, rule.bet.minutes == null ? 5 : rule.bet.minutes);
+			}
+			if (rule.challenge != null && rule.challenge.tally != null && !text.isEmpty())
+			{
+				getContext().setChallenge(
+					rule.challenge.about,
+					rule.challenge.tally,
+					rule.challenge.target == null ? 10 : rule.challenge.target,
+					rule.challenge.minutes == null ? 5 : rule.challenge.minutes);
+			}
+			if (rule.advise != null && rule.advise.about != null && !text.isEmpty())
+			{
+				getContext().adviseOn(
+					rule.advise.about,
+					rule.advise.ids == null
+						? java.util.Collections.emptySet()
+						: new java.util.HashSet<>(rule.advise.ids),
+					Boolean.TRUE.equals(rule.advise.room),
+					rule.advise.minutes == null ? 1 : rule.advise.minutes);
+			}
+
+			// A first is only spent once it has been heard. A line the mute,
+			// the queue or the dialogue hush swallowed was never said, and
+			// burning the one chance the follower had to say it would be the
+			// worst possible place to be strict.
+			if (rule.isOnce() && !text.isEmpty())
+			{
+				getContext().noteSaidOnce(rule.id);
+			}
 		};
 
-
-		// Picking something up and betting on something both need to have been
-		// SAID, like the want - a souvenir nobody was told about is invisible,
-		// and a silent prediction can only ever be right.
-		if (rule.pickUp != null && rule.pickUp.what != null && !text.isEmpty())
-		{
-			// Substituted like a spoken line, so a souvenir can be named after
-			// the wish it grants: "the {wish} you found me". A swap rule
-			// replaces what is carried - it said the exchange out loud, which
-			// is what the refuse-if-carrying guard exists to require.
-			String what = substitute(rule.pickUp.what, event);
-			int minutes = rule.pickUp.minutes == null ? 20 : rule.pickUp.minutes;
-			if (Boolean.TRUE.equals(rule.pickUp.swap))
-			{
-				getContext().tradeFor(what, minutes);
-			}
-			else
-			{
-				getContext().pickUp(what, minutes);
-			}
-		}
-		// AFTER the pickUp, which may still need the wish's name. The wish
-		// closes on a SPOKEN thank-you only: the follower acknowledging the
-		// gift is what spends it.
-		if (Boolean.TRUE.equals(rule.grantsWish) && !text.isEmpty())
-		{
-			getContext().clearWish();
-			getContext().noteFavour();
-		}
-		if (rule.bet != null && rule.bet.threshold != null && !text.isEmpty())
-		{
-			getContext().placeBet(Boolean.TRUE.equals(rule.bet.rich),
-				rule.bet.threshold, rule.bet.minutes == null ? 5 : rule.bet.minutes);
-		}
-		if (rule.challenge != null && rule.challenge.tally != null && !text.isEmpty())
-		{
-			getContext().setChallenge(
-				rule.challenge.about,
-				rule.challenge.tally,
-				rule.challenge.target == null ? 10 : rule.challenge.target,
-				rule.challenge.minutes == null ? 5 : rule.challenge.minutes);
-		}
-		if (rule.advise != null && rule.advise.about != null && !text.isEmpty())
-		{
-			getContext().adviseOn(
-				rule.advise.about,
-				rule.advise.ids == null
-					? java.util.Collections.emptySet()
-					: new java.util.HashSet<>(rule.advise.ids),
-				Boolean.TRUE.equals(rule.advise.room),
-				rule.advise.minutes == null ? 1 : rule.advise.minutes);
-		}
-
+		// The pacing is charged at the win, heard or not: it only spaces the
+		// lines out, and a hushed line costing its gap does no harm.
 		if (!text.isEmpty())
 		{
 			// Only actual speech resets the global window; an animation-only
@@ -1102,16 +1118,6 @@ public class SpeechEngine
 			{
 				idleStretchSpoken++;
 				lastIdleRemarkMs = now;
-			}
-
-			// A first is only spent once it has been heard. Marked here rather
-			// than at the win for the same reason as the question and the want:
-			// a line the mute swallowed was never said, and burning the one
-			// chance the follower had to say it would be the worst possible
-			// place to be strict.
-			if (rule.isOnce())
-			{
-				getContext().noteSaidOnce(rule.id);
 			}
 		}
 

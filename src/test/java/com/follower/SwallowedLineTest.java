@@ -22,7 +22,9 @@ import static org.junit.Assert.assertTrue;
  * wish the moment it handed the line over, so a dropped ask left its state
  * open anyway - which is how a gift option turned up in the Talk-to box for
  * a soft clay nobody ever heard wished for. The sink now owns the moment of
- * saying, and these three latch only when it reports the line landed.
+ * saying, and these three latch only when it reports the line landed. So does
+ * everything else a line leaves behind: a first spent, a souvenir, a bet, a
+ * dare, advice and a granted wish.
  */
 public class SwallowedLineTest
 {
@@ -39,6 +41,94 @@ public class SwallowedLineTest
 		+ "{\"id\": \"wanter\", \"group\": \"t\", \"cooldownMs\": 0,"
 		+ " \"want\": {\"region\": 10553, \"label\": \"the guild\", \"minutes\": 5},"
 		+ " \"when\": {\"type\": \"playerDeath\"}, \"say\": [\"can we go?\"]}]}";
+
+	/**
+	 * One of each line that leaves something behind once said: a first, a
+	 * souvenir, a bet, a challenge, a piece of advice and a thank-you.
+	 */
+	private static final String LATCHES = "{\"version\": 1, \"rules\": ["
+		+ "{\"id\": \"first\", \"group\": \"t\", \"cooldownMs\": 0, \"once\": true,"
+		+ " \"when\": {\"type\": \"examined\"}, \"say\": [\"we have not met\"]},"
+		+ "{\"id\": \"keeper\", \"group\": \"t\", \"cooldownMs\": 0,"
+		+ " \"pickUp\": {\"what\": \"a flat rock\", \"minutes\": 20},"
+		+ " \"when\": {\"type\": \"playerDeath\"}, \"say\": [\"I'm keeping this rock\"]},"
+		+ "{\"id\": \"better\", \"group\": \"t\", \"cooldownMs\": 0,"
+		+ " \"bet\": {\"rich\": true, \"threshold\": 1000, \"minutes\": 5},"
+		+ " \"when\": {\"type\": \"playerDeath\"}, \"say\": [\"a thousand says the next one's good\"]},"
+		+ "{\"id\": \"darer\", \"group\": \"t\", \"cooldownMs\": 0,"
+		+ " \"challenge\": {\"about\": \"ten kills\", \"tally\": \"kills\", \"target\": 10, \"minutes\": 5},"
+		+ " \"when\": {\"type\": \"playerDeath\"}, \"say\": [\"ten kills in five minutes?\"]},"
+		+ "{\"id\": \"adviser\", \"group\": \"t\", \"cooldownMs\": 0,"
+		+ " \"advise\": {\"about\": \"food\", \"ids\": [829], \"minutes\": 1},"
+		+ " \"when\": {\"type\": \"playerDeath\"}, \"say\": [\"eat something\"]},"
+		+ "{\"id\": \"thanker\", \"group\": \"t\", \"cooldownMs\": 0, \"grantsWish\": true,"
+		+ " \"when\": {\"type\": \"playerDeath\"}, \"say\": [\"thank you for the clay\"]}]}";
+
+	private static final String[] LATCHING = {"first", "keeper", "better", "darer", "adviser", "thanker"};
+
+	@Test
+	public void aDroppedLineSpendsNothing() throws IOException
+	{
+		// The queue and the dialogue hush both drop lines the engine already
+		// handed over. A first nobody heard is still owed, a souvenir nobody
+		// was told about is not carried, and a bet, a dare or advice nobody
+		// heard is not open to be settled. A thank-you nobody heard leaves the
+		// wish open, so the gift can be given again and thanked for.
+		Harness h = new Harness(folder.newFolder().toPath(), LATCHES);
+		h.gameTicks(1);
+		h.engine.getContext().setWish("soft clay", 5);
+
+		h.engine.setSink((text, output, rule, animationId, onSaid) -> { });
+		for (String id : LATCHING)
+		{
+			h.engine.force(id);
+		}
+
+		assertFalse("a first nobody heard is not spent",
+			h.engine.getContext().hasSaidOnce("first"));
+		assertFalse("nor is a rock picked up", h.engine.getContext().isCarrying());
+		assertFalse("nor a bet placed", h.engine.getContext().isBetting());
+		assertFalse("nor a dare set", h.engine.getContext().isChallenging());
+		assertFalse("nor advice given", h.engine.getContext().isAdvising());
+		assertTrue("nor the wish granted", h.engine.getContext().isWishing());
+		assertFalse("nor a favour owed", h.engine.getContext().isGrateful());
+
+		// Still owed, so the next time it rises it is said, and spent then.
+		h.engine.setSink((text, output, rule, animationId, onSaid) -> onSaid.run());
+		h.gameTicks(1);
+		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.EXAMINED));
+		assertTrue(h.engine.getContext().hasSaidOnce("first"));
+	}
+
+	@Test
+	public void aQueuedLineSpendsItsLatchesWhenItLands() throws IOException
+	{
+		Harness h = new Harness(folder.newFolder().toPath(), LATCHES);
+		h.gameTicks(1);
+		h.engine.getContext().setWish("soft clay", 5);
+
+		List<Runnable> held = new ArrayList<>();
+		h.engine.setSink((text, output, rule, animationId, onSaid) -> held.add(onSaid));
+		for (String id : LATCHING)
+		{
+			h.engine.force(id);
+		}
+		assertFalse("waiting its turn is not yet said",
+			h.engine.getContext().hasSaidOnce("first"));
+		assertFalse(h.engine.getContext().isCarrying());
+		assertFalse(h.engine.getContext().isBetting());
+		assertTrue(h.engine.getContext().isWishing());
+
+		held.forEach(Runnable::run);
+		assertTrue("the moment it lands, the first is spent",
+			h.engine.getContext().hasSaidOnce("first"));
+		assertEquals("the rock is carried", "a flat rock", h.engine.getContext().getSouvenir());
+		assertTrue("the bet is on", h.engine.getContext().isBetting());
+		assertTrue("the dare is set", h.engine.getContext().isChallenging());
+		assertTrue("the advice is given", h.engine.getContext().isAdvising());
+		assertFalse("and the wish is granted", h.engine.getContext().isWishing());
+		assertTrue(h.engine.getContext().isGrateful());
+	}
 
 	@Test
 	public void aDroppedLineOpensNothing() throws IOException

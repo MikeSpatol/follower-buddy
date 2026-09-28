@@ -17,7 +17,8 @@ import static org.junit.Assert.assertTrue;
 /**
  * While an NPC dialogue is up the follower's words are dropped, and nothing
  * downstream of them happens: the latch a line carries - the question it
- * asks, the want, the wish, the wear - never closes on a line nobody heard.
+ * asks, the want, the wish, the wear, a first spent, a souvenir, a bet -
+ * never closes on a line nobody heard.
  *
  * <p>The drop happens at the plugin's one door for speech, which no harness
  * drives, so this goes through that door on a bare plugin the way the entity
