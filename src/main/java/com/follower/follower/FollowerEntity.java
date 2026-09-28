@@ -532,6 +532,8 @@ public class FollowerEntity
 		}
 		activeGraphics.clear();
 		stayTile = null;
+		stayFaceTile = null;
+		stayFaceMax = null;
 		goalTile = null;
 		route.clear();
 		routeRun.clear();
@@ -695,7 +697,11 @@ public class FollowerEntity
 		}
 
 		// Face-me replaces a stay pose: the follower is being called over.
+		// The pose's face goes with it, or it would arrive facing whatever
+		// the stay was looking at.
 		stayTile = null;
+		stayFaceTile = null;
+		stayFaceMax = null;
 		goalTile = front;
 		serverPath.clear();
 		return true;
@@ -857,6 +863,8 @@ public class FollowerEntity
 		thrallNpc = npc;
 		lastThrallTile = null;
 		stayTile = null;
+		stayFaceTile = null;
+		stayFaceMax = null;
 		goalTile = null;
 		route.clear();
 		routeRun.clear();
@@ -3036,8 +3044,11 @@ public class FollowerEntity
 		WorldPoint beside = landingTile(new WorldPoint(
 			playerTile.getX() - 1, playerTile.getY(), playerTile.getPlane()), playerTile);
 
-		// A forced relocation ends any pose - the tile it was holding is gone.
+		// A forced relocation ends any pose - the tile it was holding is gone,
+		// and the way the pose faced with it.
 		stayTile = null;
+		stayFaceTile = null;
+		stayFaceMax = null;
 		goalTile = null;
 		route.clear();
 		routeRun.clear();
