@@ -819,7 +819,7 @@ public interface FollowerConfig extends Config
 		keyName = "errandExplore",
 		name = "Exploring",
 		description = "Noses at whatever the place offers - a chest, a trapdoor,"
-			+ " a noticeboard - and notes it down, especially somewhere it has"
+			+ " a signpost - and notes it down, especially somewhere it has"
 			+ " just arrived (::follower errand explore)",
 		section = errandSection,
 		position = 10
@@ -882,7 +882,7 @@ public interface FollowerConfig extends Config
 		name = "Notices things",
 		description = "Goes to look at a drop of yours you walked away from, a bird's"
 			+ " nest, an impling, a crashed star, or a signpost or statue you stop"
-			+ " beside, and says so once. Only things it can see, and each once.",
+			+ " beside, and says so once.",
 		section = companySection,
 		position = 1
 	)
@@ -1016,9 +1016,9 @@ public interface FollowerConfig extends Config
 		keyName = "groupMemory",
 		name = "Reminiscing",
 		description = "It brings up things that happened and keeps score of the outings"
-			+ " it was and was not taken on (group \"memory\"). Does not stop it"
-			+ " remembering; the Memory window in the side panel does that."
-			+ " Editable under Reminiscing in Messages.",
+			+ " it was and was not taken on (group \"memory\"). Turning it off does"
+			+ " not stop it remembering; Forget everything in the Memory window"
+			+ " erases what it remembers. Editable under Reminiscing in Messages.",
 		section = groupsSection,
 		position = 8
 	)
