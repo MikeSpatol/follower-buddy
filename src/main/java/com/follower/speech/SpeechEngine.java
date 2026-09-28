@@ -378,6 +378,8 @@ public class SpeechEngine
 	{
 		lastSpokeMs = 0L;
 		pending.clear();
+		// The plugin clears its queue with the scene, so those lines never land.
+		unlanded.clear();
 		// An announcement waiting on the old scene's prime window belongs to
 		// that scene, not to the one arriving.
 		afterPriming.clear();
@@ -402,6 +404,7 @@ public class SpeechEngine
 		idleStretchSpoken = 0;
 		lastIdleRemarkMs = 0L;
 		pending.clear();
+		unlanded.clear();
 		// A held floor must not outlive the thing that held it: toggling the
 		// plugin mid-hush would otherwise leave the follower mute for it.
 		hushUntilMs = 0L;
@@ -431,6 +434,32 @@ public class SpeechEngine
 	}
 
 	private final java.util.List<PendingSpeech> pending = new java.util.ArrayList<>();
+
+	/**
+	 * A line handed to the sink that leaves something behind when it lands,
+	 * and has not landed yet. The states it will set are named by the
+	 * conditions that read them.
+	 */
+	private static final class Unlanded
+	{
+		final java.util.Set<String> states;
+		final long handedOverMs;
+
+		Unlanded(java.util.Set<String> states, long handedOverMs)
+		{
+			this.states = states;
+			this.handedOverMs = handedOverMs;
+		}
+	}
+
+	private final java.util.List<Unlanded> unlanded = new java.util.ArrayList<>();
+
+	/**
+	 * The longest a line handed to the plugin can wait before it lands or is
+	 * dropped as stale. Past this it never lands, so nothing waits on it. A
+	 * test holds it above the plugin queue's stale window.
+	 */
+	private static final long LONGEST_WAIT_MS = 16_000L;
 
 	/**
 	 * Set at login: evaluations record every rule's edge state without firing
@@ -782,7 +811,7 @@ public class SpeechEngine
 				file(rule, event);
 			}
 
-			if (!rising || !isActive(rule) || !rule.offCooldown(now))
+			if (!rising || !isActive(rule) || !rule.offCooldown(now) || awaitsALanding(rule, now))
 			{
 				continue;
 			}
@@ -1020,8 +1049,13 @@ public class SpeechEngine
 		// wish is certainly still open.
 		String souvenir = rule.pickUp != null && rule.pickUp.what != null && !text.isEmpty()
 			? substitute(rule.pickUp.what, event) : null;
+		// Until it lands, a rule reading what it leaves behind waits for it.
+		java.util.Set<String> leaves = text.isEmpty()
+			? java.util.Collections.emptySet() : leavesBehind(rule);
+		Unlanded landing = leaves.isEmpty() ? null : new Unlanded(leaves, now);
 		Runnable onSaid = () ->
 		{
+			unlanded.remove(landing);
 			// The wear ledger counts what was HEARD, not what was queued -
 			// a line the queue dropped has not worn out its welcome.
 			if (!text.isEmpty())
@@ -1126,6 +1160,11 @@ public class SpeechEngine
 		SpeechOutput output = SpeechOutput.parse(rule.output, defaultOutput);
 		if (sink != null)
 		{
+			// Before the hand-over, since a sink with the floor free lands it at once.
+			if (landing != null)
+			{
+				unlanded.add(landing);
+			}
 			sink.speak(text, output, rule, animation == null ? -1 : animation, onSaid);
 		}
 		log.debug("Rule '{}' fired: {}", rule.describe(),
@@ -1172,6 +1211,64 @@ public class SpeechEngine
 		String group = rule.group == null ? "misc" : rule.group.toLowerCase(Locale.ROOT);
 		return !disabledGroups.contains(group)
 			&& !(rule.id != null && disabledGroups.contains(rule.id.toLowerCase(Locale.ROOT)));
+	}
+
+	/**
+	 * Whether the rule reads a state that a line still on its way will set.
+	 * Those states latch when the line lands, so judged now, "none advising"
+	 * would open a dare over advice waiting in the queue, and "none carrying"
+	 * would take a gift into hands a rock is about to fill. The rule waits
+	 * until the line lands or can no longer land.
+	 */
+	private boolean awaitsALanding(SpeechRule rule, long now)
+	{
+		unlanded.removeIf(line -> now - line.handedOverMs > LONGEST_WAIT_MS);
+		for (Unlanded line : unlanded)
+		{
+			for (String state : line.states)
+			{
+				if (rule.when.usesType(state))
+				{
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	/** What a line latches when it lands, named as the conditions that read it. */
+	private static java.util.Set<String> leavesBehind(SpeechRule rule)
+	{
+		java.util.Set<String> states = new java.util.HashSet<>();
+		if (rule.asks != null && !rule.asks.isEmpty())
+		{
+			states.add("asking");
+		}
+		if (rule.want != null && rule.want.region != null)
+		{
+			states.add("wanting");
+		}
+		if ((rule.wish != null && rule.wish.what != null) || Boolean.TRUE.equals(rule.grantsWish))
+		{
+			states.add("wishing");
+		}
+		if (rule.pickUp != null && rule.pickUp.what != null)
+		{
+			states.add("carrying");
+		}
+		if (rule.bet != null && rule.bet.threshold != null)
+		{
+			states.add("betting");
+		}
+		if (rule.challenge != null && rule.challenge.tally != null)
+		{
+			states.add("challenging");
+		}
+		if (rule.advise != null && rule.advise.about != null)
+		{
+			states.add("advising");
+		}
+		return states;
 	}
 
 	/** Replaces {@code {placeholder}} tokens from the event and the state snapshot. */

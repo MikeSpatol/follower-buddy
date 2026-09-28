@@ -66,6 +66,32 @@ public class SwallowedLineTest
 
 	private static final String[] LATCHING = {"first", "keeper", "better", "darer", "adviser", "thanker"};
 
+	/**
+	 * Advice and a rock, and the rules that read them: a dare that will not
+	 * talk over advice still outstanding, a gift pocketed only while the
+	 * hands are empty, and a word about the rock once it is carried.
+	 */
+	private static final String GUARDS = "{\"version\": 1, \"rules\": ["
+		+ "{\"id\": \"adviser\", \"group\": \"t\", \"cooldownMs\": 0,"
+		+ " \"advise\": {\"about\": \"food\", \"ids\": [829], \"minutes\": 1},"
+		+ " \"when\": {\"type\": \"playerDeath\"}, \"say\": [\"eat something\"]},"
+		+ "{\"id\": \"keeper\", \"group\": \"t\", \"cooldownMs\": 0,"
+		+ " \"pickUp\": {\"what\": \"a flat rock\", \"minutes\": 20},"
+		+ " \"when\": {\"type\": \"login\"}, \"say\": [\"I'm keeping this rock\"]},"
+		+ "{\"id\": \"darer\", \"group\": \"t\", \"cooldownMs\": 0,"
+		+ " \"challenge\": {\"about\": \"ten kills\", \"tally\": \"kills\", \"target\": 10, \"minutes\": 5},"
+		+ " \"when\": {\"type\": \"all\", \"conditions\": [{\"type\": \"examined\"},"
+		+ " {\"type\": \"none\", \"conditions\": [{\"type\": \"advising\"}]}]},"
+		+ " \"say\": [\"ten kills in five minutes?\"]},"
+		+ "{\"id\": \"pocketer\", \"group\": \"t\", \"cooldownMs\": 0,"
+		+ " \"pickUp\": {\"what\": \"the clay you found me\", \"minutes\": 20},"
+		+ " \"when\": {\"type\": \"all\", \"conditions\": [{\"type\": \"underfoot\"},"
+		+ " {\"type\": \"none\", \"conditions\": [{\"type\": \"carrying\"}]}]},"
+		+ " \"say\": [\"the clay goes in the good pocket\"]},"
+		+ "{\"id\": \"mentioner\", \"group\": \"t\", \"cooldownMs\": 0,"
+		+ " \"when\": {\"type\": \"all\", \"conditions\": [{\"type\": \"notesEdited\"},"
+		+ " {\"type\": \"carrying\"}]}, \"say\": [\"still got the rock\"]}]}";
+
 	@Test
 	public void aDroppedLineSpendsNothing() throws IOException
 	{
@@ -201,5 +227,74 @@ public class SwallowedLineTest
 		assertEquals("and the question", "want-outing",
 			h.engine.getContext().getAskedTree());
 		assertTrue("and the want", h.engine.getContext().isWanting());
+	}
+
+	@Test
+	public void aGuardWaitsForTheLineItGuardsAgainst() throws IOException
+	{
+		// The advice and the rock latch when their lines land, so while they
+		// wait in the queue a guard reading them sees nothing yet. Judged then,
+		// the dare opened over the advice and the gift went into hands the
+		// rock was about to fill, and both played back to back.
+		long[] now = {1_000_000L};
+		Harness h = new Harness(folder.newFolder().toPath(), GUARDS);
+		h.engine.setClock(() -> now[0]);
+		h.gameTicks(1);
+
+		List<String> handedOver = new ArrayList<>();
+		List<Runnable> held = new ArrayList<>();
+		h.engine.setSink((text, output, rule, animationId, onSaid) ->
+		{
+			handedOver.add(rule.id);
+			held.add(onSaid);
+		});
+		h.engine.force("adviser");
+		h.engine.force("keeper");
+
+		now[0] += 5_000L;
+		h.gameTicks(1);
+		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.EXAMINED));
+		h.gameTicks(1);
+		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.UNDERFOOT));
+		assertEquals("nothing opens over a line still on its way",
+			java.util.Arrays.asList("adviser", "keeper"), handedOver);
+
+		held.forEach(Runnable::run);
+		assertTrue("landed, the advice answers the guard itself",
+			h.engine.getContext().isAdvising());
+		assertEquals("a flat rock", h.engine.getContext().getSouvenir());
+
+		// And a landed line is waited on no longer: the rock can be talked about.
+		h.gameTicks(1);
+		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.NOTES_EDITED));
+		assertEquals("mentioner", handedOver.get(handedOver.size() - 1));
+	}
+
+	@Test
+	public void aDroppedLineIsNotWaitedOnOnceItCanNoLongerLand() throws IOException
+	{
+		// A line the queue dropped never lands. Once it is older than any line
+		// the queue will still say, the guard stops waiting and reads the
+		// state as it is.
+		long[] now = {1_000_000L};
+		Harness h = new Harness(folder.newFolder().toPath(), GUARDS);
+		h.engine.setClock(() -> now[0]);
+		h.gameTicks(1);
+
+		List<String> handedOver = new ArrayList<>();
+		h.engine.setSink((text, output, rule, animationId, onSaid) -> handedOver.add(rule.id));
+		h.engine.force("adviser");
+
+		now[0] += 5_000L;
+		h.gameTicks(1);
+		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.EXAMINED));
+		assertFalse("still able to land, so still waited on", handedOver.contains("darer"));
+
+		now[0] += 20_000L;
+		h.gameTicks(1);
+		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.EXAMINED));
+		assertTrue("past landing, the dare is free to open", handedOver.contains("darer"));
+		assertFalse("and the advice nobody heard is not outstanding",
+			h.engine.getContext().isAdvising());
 	}
 }

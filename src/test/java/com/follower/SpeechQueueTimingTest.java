@@ -56,6 +56,22 @@ public class SpeechQueueTimingTest
 	}
 
 	@Test
+	public void aGuardWaitsAsLongAsALineCanStillLand() throws Exception
+	{
+		// A rule reading a state a queued line will set waits for that line,
+		// and stops waiting once the line is too old to land. Shorter than the
+		// queue's own wait, a line could land after the guard let go, and the
+		// dare would open over the advice after all.
+		Field field = com.follower.speech.SpeechEngine.class.getDeclaredField("LONGEST_WAIT_MS");
+		field.setAccessible(true);
+		long waited = ((Number) field.get(null)).longValue();
+		long stale = constant("SPEECH_STALE_MS");
+
+		assertTrue("the engine stops waiting on a line after " + waited + "ms, but the"
+			+ " queue can still say it at " + stale + "ms", waited > stale);
+	}
+
+	@Test
 	public void aFirstWaitingInTheQueueCannotBeHandedOverAgain() throws Exception
 	{
 		// A first is spent when it lands, not when the engine hands it over,
