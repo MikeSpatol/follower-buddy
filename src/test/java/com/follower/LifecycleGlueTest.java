@@ -108,4 +108,21 @@ public class LifecycleGlueTest
 		assertTrue("leaving a scene must close the book, as the game closes its own windows",
 			method("private void tearDownScene()").contains("chronicleWindow.close();"));
 	}
+
+	@Test
+	public void aProfileSwitchTakesTheBaselineAgain() throws IOException
+	{
+		// A switch resets every rule's edge, so on the next tick the gear worn
+		// and the place stood in rose as news: a gear line as if it had just
+		// gone on. The same cure as a login and a reload. And a line the old
+		// profile's follower queued would have opened its wish or want in the
+		// new one's memory at delivery.
+		String switched = method("public void onProfileChanged(ProfileChanged event)");
+		int reset = switched.indexOf(RESET);
+		assertTrue("the switch resets the engine", reset >= 0);
+		assertTrue("so the edges are primed after the reset clears them",
+			switched.indexOf("speechEngine.primeEdgesOnNextTick();", reset) > reset);
+		assertTrue("and the old follower's queued lines go with it",
+			switched.contains("speechQueue.clear();"));
+	}
 }

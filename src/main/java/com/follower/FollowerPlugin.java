@@ -2163,7 +2163,15 @@ public class FollowerPlugin extends Plugin
 		clientThread.invoke(() ->
 		{
 			log.debug("Profile changed to {}; re-reading the follower's memory", currentProfileId());
+			// Lines the old profile's follower queued go with it: delivered,
+			// a wish or a want they ask would open in the new one's memory.
+			speechQueue.clear();
+			speakingUntilMs = 0;
 			speechEngine.reset();
+			// The reset clears every rule's edge, so the gear worn and the
+			// place stood in would rise as news on the next tick. Same cure
+			// as login: they are baseline.
+			speechEngine.primeEdgesOnNextTick();
 			metWearingValue = -1;
 			readCounters();
 			if (chronicleProgress != null)
