@@ -41,6 +41,7 @@ public class CaptureFallback
 	private Consumer<Model> callback;
 	private int[] savedEquipment;
 	private int framesWaited;
+	private boolean loggedNoDetach;
 
 	@Inject
 	public CaptureFallback(Client client)
@@ -89,39 +90,21 @@ public class CaptureFallback
 			return;
 		}
 
-		Model captured = null;
-		Player local = client.getLocalPlayer();
-		if (local != null)
+		// Actor#getModel hands back a reference into the client's shared actor
+		// model cache. That slot gets recycled for other actors, so holding the
+		// reference makes the follower visibly turn into whichever nearby NPC or
+		// player reused it. The client no longer offers a way to detach a Model
+		// copy from it (mergeModels takes ModelData only), so there is nothing safe
+		// to hand back: capture nothing and let the caller carry on without it.
+		if (!loggedNoDetach)
 		{
-			try
-			{
-				Model live = local.getModel();
-				if (live != null)
-				{
-
-					// Actor#getModel hands back a reference into the client's shared
-					// actor model cache. That slot gets recycled for other actors, so
-					// holding the reference makes the follower visibly turn into
-					// whichever nearby NPC or player reused it. Merging produces a new
-					// Model with its own geometry, detaching us from the cache.
-					Model detached = client.mergeModels(new Model[]{live}, 1);
-					captured = detached != null && detached != live ? detached : live;
-
-					if (captured == live)
-					{
-						log.warn("mergeModels returned the shared instance; captured model may "
-							+ "still be recycled by other actors. Prefer the cache dump path.");
-					}
-				}
-			}
-			catch (RuntimeException e)
-			{
-				log.warn("Failed to capture player model", e);
-			}
+			loggedNoDetach = true;
+			log.debug("Capture fallback cannot detach the live model on this client; "
+				+ "nothing captured. Prefer the cache dump path.");
 		}
 
 		swapOut();
-		finish(captured);
+		finish(null);
 	}
 
 	/** Restores the player's real appearance. Safe to call at any time. */

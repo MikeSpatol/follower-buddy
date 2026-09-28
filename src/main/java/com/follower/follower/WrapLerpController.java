@@ -49,15 +49,12 @@ public class WrapLerpController extends AnimationController
 	private float[] lastXyz;
 	private float[] targetXyz;
 
-	/**
-	 * Output model owned by this controller: a single-model mergeModels detaches a
-	 * copy with its own geometry from the shared buffer (the same trick the capture
-	 * path uses), making it safe to overwrite per render.
-	 */
-	private Model out;
 	private int cachedAnimationId = -1;
 
-	/** Set when detachment fails; the lerp disables rather than corrupt models. */
+	/**
+	 * Set when the render temp is not safe to write; the lerp disables rather than
+	 * corrupt models.
+	 */
 	private boolean unsafe;
 
 	public WrapLerpController(Client client, Animation animation)
@@ -105,14 +102,41 @@ public class WrapLerpController extends AnimationController
 		}
 
 		ensureEndpoints(model, animation, lengths.length);
-		if (lastXyz == null || targetXyz == null || out == null)
+		if (lastXyz == null || targetXyz == null)
 		{
 			return super.animate(model, other);
 		}
 
+		// The blend is written into the model the base controller returns: the
+		// client's shared per-frame temp, which the client itself hands straight to
+		// the renderer for every animated frame. Never into the base, though - a
+		// frame with no transform can come back as the base itself, or sharing its
+		// vertex arrays, and writing there would bend the follower's model for good.
+		Model temp = super.animate(model, other);
+		if (temp == null)
+		{
+			return null;
+		}
+
+		boolean separate = temp != model
+			&& temp.getVerticesX() != model.getVerticesX()
+			&& temp.getVerticesY() != model.getVerticesY()
+			&& temp.getVerticesZ() != model.getVerticesZ();
+		boolean sized = temp.getVerticesCount() * 3 == lastXyz.length
+			&& lastXyz.length == targetXyz.length;
+		if (!separate || !sized)
+		{
+			log.warn("Render temp is not safe to write (separate={}, sized={}); "
+				+ "wrap interpolation disabled for this session", separate, sized);
+			unsafe = true;
+			lastXyz = null;
+			targetXyz = null;
+			return temp;
+		}
+
 		float t = Math.min(1f, elapsedInFrame / (float) Math.max(1, lengths[frame]));
-		lerpInto(out, lastXyz, targetXyz, t);
-		return out;
+		lerpInto(temp, lastXyz, targetXyz, t);
+		return temp;
 	}
 
 	/** True when the safety guard has switched the lerp off for this session. */
@@ -146,34 +170,12 @@ public class WrapLerpController extends AnimationController
 		cachedAnimationId = animation.getId();
 		lastXyz = null;
 		targetXyz = null;
-		out = null;
 
 		// Snapshot each endpoint IMMEDIATELY - the next applyTransformations call
 		// (ours or any animating actor's) overwrites the shared scratch buffer.
 		lastXyz = snapshot(client.applyTransformations(base, animation, frames - 1, null, 0));
 		targetXyz = snapshot(client.applyTransformations(base, animation,
 			loopTargetFrame(animation, frames), null, 0));
-
-		Model scratch = client.applyTransformations(base, animation, frames - 1, null, 0);
-		out = scratch == null ? null : client.mergeModels(new Model[]{scratch}, 1);
-
-		if (lastXyz == null || targetXyz == null || out == null)
-		{
-			return;
-		}
-
-		boolean detached = scratch.getVerticesX() != out.getVerticesX();
-		boolean sized = out.getVerticesCount() * 3 == lastXyz.length
-			&& lastXyz.length == targetXyz.length;
-		if (!detached || !sized)
-		{
-			log.warn("Could not detach an owned output model (detached={}, sized={}); "
-				+ "wrap interpolation disabled for this session", detached, sized);
-			unsafe = true;
-			lastXyz = null;
-			targetXyz = null;
-			out = null;
-		}
 	}
 
 	/** Flattens a posed model's vertices into an owned array, or null. */
