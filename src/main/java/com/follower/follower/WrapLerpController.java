@@ -53,7 +53,9 @@ public class WrapLerpController extends AnimationController
 
 	/**
 	 * Set when the render temp is not safe to write; the lerp disables rather than
-	 * corrupt models.
+	 * corrupt models, and the measured trim takes over. Leaving just that frame to
+	 * the client would not do: the same last frame comes round every loop, and it
+	 * would hold and snap each time with no trim to hide it.
 	 */
 	private boolean unsafe;
 

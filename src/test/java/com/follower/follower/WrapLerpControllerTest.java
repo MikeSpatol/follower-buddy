@@ -4,6 +4,7 @@ import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.function.BiFunction;
 import java.util.function.IntPredicate;
+import java.util.function.IntSupplier;
 import net.runelite.api.Animation;
 import net.runelite.api.Client;
 import net.runelite.api.Model;
@@ -11,6 +12,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
@@ -23,7 +25,8 @@ import static org.junit.Assert.assertTrue;
  * into it the same way. But a frame with no transform can come back as the
  * follower's base model itself, or as a model sharing its vertex arrays, and a
  * write there would bend the base for good. These pin both halves: the blend
- * lands in the temp, and the base is never written.
+ * lands in the temp, and the base is never written. Nor is a temp posed from a
+ * model the snapshotted endpoints no longer fit.
  */
 public class WrapLerpControllerTest
 {
@@ -39,6 +42,8 @@ public class WrapLerpControllerTest
 	private Model base;
 	/** The client's shared per-frame temp: one set of arrays, reposed every call. */
 	private Model temp;
+	/** How many vertices the temp holds: as many as the model last posed into it. */
+	private int tempCount;
 	/** What the render-time call hands back instead of the temp, or null for the temp. */
 	private Model renderReturns;
 
@@ -49,7 +54,7 @@ public class WrapLerpControllerTest
 	public void setUp()
 	{
 		base = model(filled(BASE), filled(BASE), filled(BASE));
-		temp = model(new float[VERTICES], new float[VERTICES], new float[VERTICES]);
+		temp = model(new float[VERTICES], new float[VERTICES], new float[VERTICES], () -> tempCount);
 		client = fake(Client.class, (name, args) ->
 		{
 			switch (name)
@@ -57,7 +62,7 @@ public class WrapLerpControllerTest
 				case "getAnimationInterpolationFilter":
 					return (IntPredicate) id -> true;
 				case "applyTransformations":
-					return transform((int) args[2]);
+					return transform((Model) args[0], (int) args[2]);
 				default:
 					throw new UnsupportedOperationException(name);
 			}
@@ -122,6 +127,23 @@ public class WrapLerpControllerTest
 		assertTrue("the measured wrap trim takes over", controller.isDisabled());
 	}
 
+	@Test
+	public void aModelThatNoLongerMatchesTheEndpointsSwitchesTheLerpOff()
+	{
+		WrapLerpController controller = onFinalFrame();
+		controller.animate(base, null);
+
+		// A different model under the same animation: the endpoints were taken from
+		// the base, and blending them into this one would scramble it.
+		Model smaller = model(new float[2], new float[2], new float[2]);
+		Model drawn = controller.animate(smaller, null);
+
+		assertSame(temp, drawn);
+		assertEquals("posed by the client, not blended", LAST_POSE, drawn.getVerticesX()[0], 0f);
+		assertBaseUntouched();
+		assertTrue("the measured wrap trim takes over", controller.isDisabled());
+	}
+
 	/** Halfway through the final frame, so the blend differs from both endpoints. */
 	private WrapLerpController onFinalFrame()
 	{
@@ -137,7 +159,7 @@ public class WrapLerpControllerTest
 	 * smoothing accepts the animation), which is where a test swaps in the base or
 	 * an alias of it.
 	 */
-	private Model transform(int frame)
+	private Model transform(Model posed, int frame)
 	{
 		if (frame < 0 && renderReturns != null)
 		{
@@ -145,9 +167,10 @@ public class WrapLerpControllerTest
 		}
 		int index = frame & 0xFFFF;
 		float pose = index == FRAMES - 1 ? LAST_POSE : index == 0 ? LOOP_POSE : OTHER_POSE;
-		Arrays.fill(temp.getVerticesX(), pose);
-		Arrays.fill(temp.getVerticesY(), pose);
-		Arrays.fill(temp.getVerticesZ(), pose);
+		tempCount = posed.getVerticesCount();
+		Arrays.fill(temp.getVerticesX(), 0, tempCount, pose);
+		Arrays.fill(temp.getVerticesY(), 0, tempCount, pose);
+		Arrays.fill(temp.getVerticesZ(), 0, tempCount, pose);
 		return temp;
 	}
 
@@ -167,12 +190,17 @@ public class WrapLerpControllerTest
 
 	private static Model model(float[] x, float[] y, float[] z)
 	{
+		return model(x, y, z, () -> x.length);
+	}
+
+	private static Model model(float[] x, float[] y, float[] z, IntSupplier count)
+	{
 		return fake(Model.class, (name, args) ->
 		{
 			switch (name)
 			{
 				case "getVerticesCount":
-					return VERTICES;
+					return count.getAsInt();
 				case "getVerticesX":
 					return x;
 				case "getVerticesY":

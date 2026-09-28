@@ -21,6 +21,9 @@ import net.runelite.api.PlayerComposition;
  *       current, so it can't be re-animated — see {@link ComposedAppearance}.</li>
  * </ul>
  *
+ * <p>Since RuneLite 1.13 the stolen model cannot be detached from the client's
+ * shared cache, so every capture finishes with null; see {@link #tick()}.
+ *
  * <p>All methods must be called on the client thread. {@link #tick()} drives the
  * one-frame delay and should be called from a per-frame event.
  */
@@ -41,7 +44,7 @@ public class CaptureFallback
 	private Consumer<Model> callback;
 	private int[] savedEquipment;
 	private int framesWaited;
-	private boolean loggedNoDetach;
+	private boolean noDetachLogged;
 
 	@Inject
 	public CaptureFallback(Client client)
@@ -93,14 +96,14 @@ public class CaptureFallback
 		// Actor#getModel hands back a reference into the client's shared actor
 		// model cache. That slot gets recycled for other actors, so holding the
 		// reference makes the follower visibly turn into whichever nearby NPC or
-		// player reused it. The client no longer offers a way to detach a Model
-		// copy from it (mergeModels takes ModelData only), so there is nothing safe
-		// to hand back: capture nothing and let the caller carry on without it.
-		if (!loggedNoDetach)
+		// player reused it. A single-model merge used to detach a copy, but
+		// RuneLite 1.13 removed the Model merge with nothing in its place, so
+		// there is no copy to hand back and the capture comes back empty.
+		if (!noDetachLogged)
 		{
-			loggedNoDetach = true;
-			log.debug("Capture fallback cannot detach the live model on this client; "
-				+ "nothing captured. Prefer the cache dump path.");
+			noDetachLogged = true;
+			log.debug("Capture has no way to detach the player model from the shared cache; "
+				+ "capturing nothing. Use the cache dump path.");
 		}
 
 		swapOut();
