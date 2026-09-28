@@ -133,6 +133,23 @@ public class LifecycleGlueTest
 	}
 
 	@Test
+	public void aStopIsKnownToWorkStillQueued() throws IOException
+	{
+		// A switch to a profile with the plugin off stops it on the Swing
+		// thread while the switch's own work waits on the client thread. The
+		// work ran after the stop, read that profile's memory into the engine,
+		// and the next start read its own on top of it. ProfileSwitchTest
+		// holds the work to the flag; this holds the flag to the lifecycle.
+		String starting = method("protected void startUp() throws Exception");
+		assertTrue("the start sets the flag once everything is up",
+			starting.trim().endsWith("started = true;"));
+		String stopping = method("protected void shutDown() throws Exception");
+		assertTrue("the stop clears it before anything else",
+			stopping.replaceAll("\\s*//[^\n]*", "").startsWith(
+				"protected void shutDown() throws Exception\n\t{\n\t\tstarted = false;"));
+	}
+
+	@Test
 	public void theConversationClosesWithTheScene() throws IOException
 	{
 		// Left open at a logout, the Talk-to box was not drawn at the login

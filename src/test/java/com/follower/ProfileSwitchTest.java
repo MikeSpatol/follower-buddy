@@ -3,16 +3,23 @@ package com.follower;
 import com.follower.sim.Harness;
 import com.follower.speech.TriggerEvent;
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Proxy;
+import net.runelite.api.Client;
+import net.runelite.client.callback.ClientThread;
+import net.runelite.client.events.ProfileChanged;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 /**
  * A RuneLite profile switch: the old profile's session goes, and the new
- * one's memory is read. What the switch does to the engine.
+ * one's memory is read. What the switch does to the engine, and when it
+ * must do nothing at all.
  */
 public class ProfileSwitchTest
 {
@@ -82,5 +89,47 @@ public class ProfileSwitchTest
 
 		assertTrue("nothing that was true before the switch is news after it",
 			h.firedBy("gear").isEmpty());
+	}
+
+	@Test
+	public void aSwitchThatReachesAStoppedPluginDoesNothing() throws Exception
+	{
+		// Switched to a profile where the plugin is off, RuneLite stops it on
+		// the Swing thread while the switch's own work waits on the client
+		// thread, and the stop can come first. The work then read the new
+		// profile's memory into the engine the stop had just cleared, and the
+		// next start read its own on top: two memories added together, and
+		// saved that way. This plugin was never started and nothing else in
+		// it is filled in, so a switch that goes ahead falls over on the
+		// first thing it needs.
+		Harness h = harness(LOGIN_RULES);
+		FollowerPlugin plugin = new FollowerPlugin();
+		set(plugin, "clientThread", onTheClientThread());
+		set(plugin, "speechEngine", h.engine);
+		Object before = h.engine.getContext();
+
+		plugin.onProfileChanged(new ProfileChanged());
+
+		assertSame("the engine is left as the stop left it", before, h.engine.getContext());
+	}
+
+	/** A client thread that runs what it is given at once, as on the client thread itself. */
+	private static ClientThread onTheClientThread() throws ReflectiveOperationException
+	{
+		Client client = (Client) Proxy.newProxyInstance(Client.class.getClassLoader(),
+			new Class<?>[]{Client.class},
+			(proxy, method, args) -> method.getName().equals("isClientThread") ? Boolean.TRUE : null);
+		ClientThread thread = new ClientThread();
+		Field field = ClientThread.class.getDeclaredField("client");
+		field.setAccessible(true);
+		field.set(thread, client);
+		return thread;
+	}
+
+	private static void set(Object target, String name, Object value) throws ReflectiveOperationException
+	{
+		Field field = FollowerPlugin.class.getDeclaredField(name);
+		field.setAccessible(true);
+		field.set(target, value);
 	}
 }

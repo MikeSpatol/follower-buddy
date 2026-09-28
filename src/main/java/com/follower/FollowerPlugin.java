@@ -830,11 +830,14 @@ public class FollowerPlugin extends Plugin
 				rebuildFollower();
 			});
 		}
+		started = true;
 	}
 
 	@Override
 	protected void shutDown() throws Exception
 	{
+		// First, so work already queued for the client thread finds it gone.
+		started = false;
 		journal.flush();
 		renderCallbacks.unregister(thrallHider);
 		resetThrallQuietly();
@@ -2157,6 +2160,12 @@ public class FollowerPlugin extends Plugin
 	}
 
 	/**
+	 * Between startUp and shutDown. Work queued for the client thread can
+	 * run after a stop on the Swing thread, and must then do nothing.
+	 */
+	private volatile boolean started;
+
+	/**
 	 * The RuneLite profile changed under the plugin. The changed keys have
 	 * already been announced and applied; what the follower knows and wears
 	 * belongs to the profile it was read from, so it is read again from this
@@ -2168,6 +2177,14 @@ public class FollowerPlugin extends Plugin
 	{
 		clientThread.invoke(() ->
 		{
+			// Switched to a profile where the plugin is off, the stop runs on
+			// the Swing thread and can come first. This then read that
+			// profile's memory into the engine the stop had just cleared, and
+			// the next start read its own on top: two memories added together.
+			if (!started)
+			{
+				return;
+			}
 			log.debug("Profile changed to {}; re-reading the follower's memory", currentProfileId());
 			// Lines the old profile's follower queued go with it: delivered,
 			// a wish or a want they ask would open in the new one's memory.
