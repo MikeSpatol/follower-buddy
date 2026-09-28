@@ -805,6 +805,13 @@ public class FollowerPlugin extends Plugin
 
 		if (client.getGameState() == GameState.LOGGED_IN)
 		{
+			// Every rule starts with its edges cleared and no login is coming
+			// to prime them, so the gear worn and the place stood in would rise
+			// as news on the first tick. They are baseline, as at a login. Set
+			// here, before any tick, rather than in the restore below, which a
+			// tick can beat.
+			speechEngine.primeEdgesOnNextTick();
+
 			// Enabled while already in the world, so no login is coming and the
 			// one path that restores the follower's memory would never run.
 			// That alone would be forgetfulness; what made it destructive is

@@ -150,6 +150,24 @@ public class LifecycleGlueTest
 	}
 
 	@Test
+	public void anEnableInTheWorldTakesTheBaseline() throws IOException
+	{
+		// The rules start an enable with every edge cleared, and no login is
+		// coming to prime them, so the first tick took the gear worn all
+		// along and the place stood in as news. Primed before the restore is
+		// queued: a tick can run before that, and a line it left waiting out
+		// its delay would not be stopped by a window opened after it.
+		String start = method("protected void startUp() throws Exception");
+		int read = start.indexOf("readCounters();");
+		int inWorld = start.lastIndexOf("if (client.getGameState() == GameState.LOGGED_IN)", read);
+		assertTrue("the plugin no longer restores the memory in the world on an enable",
+			read >= 0 && inWorld >= 0);
+		int prime = start.indexOf("speechEngine.primeEdgesOnNextTick();", inWorld);
+		assertTrue("an enable in the world must take the baseline", prime > inWorld && prime < read);
+		assertTrue("before the restore is queued", prime < start.indexOf("clientThread.invoke(", inWorld));
+	}
+
+	@Test
 	public void aLoginDoesNotReadAgainWhatASwitchAlreadyRead() throws IOException
 	{
 		// A switch at the login screen reads the new profile's memory, and
