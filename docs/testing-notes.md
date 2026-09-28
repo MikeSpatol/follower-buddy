@@ -427,7 +427,8 @@ the plugin's own lists (the superior slayer names, the guard and bank
 names, the landmarks) from the source and matches them the way each call
 site does. It found the superior mutated Bloodveld and the Vitreous warped
 Jelly spelled as the wiki spells them, not the game, bank booths the game
-capitalises (the bank errand had its own copy of the same miss), and eleven
-superiors the cache files that the list did not know. Three landmarks
-(Noticeboard, Portrait, Sundial) match nothing the scan can see and wait
-on a decision.
+capitalises (the bank errand had its own copy of the same miss), and forty
+superiors the cache files that the list did not know: eleven newer ones and
+the Bloodthirsty set, one of them spelled "Bloodthirst rockslug" by the game.
+Three landmarks (Noticeboard, Portrait, Sundial) matched nothing the scan can
+see and are dropped.

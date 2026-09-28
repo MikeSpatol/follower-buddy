@@ -459,6 +459,14 @@ public class SpectateSimulationTest
 		assertEquals(1, panics());
 	}
 
+	/** The Bloodthirsty rockslug (12561), missing its y in the game's own spelling. */
+	@Test
+	public void theBloodthirstRockslugIsASuperiorAsTheGameSpellsIt()
+	{
+		assertEquals(6, watchedFrom("Bloodthirst rockslug", 86));
+		assertEquals(1, panics());
+	}
+
 	/**
 	 * And the exactness is kept on purpose: 9287 and 9288 are "Monstrous
 	 * Basilisk", filed with the ordinary basilisks, one capital off the

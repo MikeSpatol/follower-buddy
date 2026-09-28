@@ -2065,10 +2065,12 @@ stronger copy (12457) but not the superior itself, "Vitreous Warped Jelly"
 (7400). The bank names were exact too, and blind to the game's own "Bank
 Booth" (Burgh de Rott) and "Bank Chest" (Fossil Island and two more); they
 now match in any case. The superiors stay exact on purpose, since "Monstrous
-Basilisk" (9287, 9288) is filed with the ordinary basilisks. Three landmarks
-are still never read: "Noticeboard" and "Portrait" exist only as wall
-decorations, which the landmark scan never looks at, and the game has no
-"Sundial".
+Basilisk" (9287, 9288) is filed with the ordinary basilisks. The superiors
+now also carry every other name in the game's superior category (980): eleven
+newer ones and the Bloodthirsty set, one of which the game spells "Bloodthirst
+rockslug". Three landmarks could never be read and are dropped: "Noticeboard"
+and "Portrait" exist only as wall decorations, which the landmark scan never
+looks at, and the game has no "Sundial".
 
 ## Known limitations
 

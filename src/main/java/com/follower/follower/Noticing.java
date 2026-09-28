@@ -94,10 +94,15 @@ public class Noticing
 	/** The scans that walk lists run this often. */
 	static final int SCAN_EVERY_TICKS = 5;
 
-	/** The things the scribe stops to read when the player stops beside one. */
+	/**
+	 * The things the scribe stops to read when the player stops beside one.
+	 * Game objects only, since that is what the scan looks at: the game's
+	 * "Noticeboard" and "Portrait" are wall decorations, and it has no
+	 * sundial, so none of those are here.
+	 */
 	public static final String[] LANDMARKS = {
-		"Signpost", "Noticeboard", "Notice board", "Statue", "Painting", "Portrait",
-		"Plaque", "Monument", "Memorial", "Map", "Sundial",
+		"Signpost", "Notice board", "Statue", "Painting", "Plaque", "Monument",
+		"Memorial", "Map",
 	};
 
 	/** A drop lying on the ground that might be worth a look. */

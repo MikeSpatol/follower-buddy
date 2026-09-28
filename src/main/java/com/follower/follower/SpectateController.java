@@ -51,7 +51,9 @@ public class SpectateController
 	 * warped Jelly", so both are here. The other way round, the superior
 	 * basilisk (7395) is "Monstrous basilisk", while 9287 and 9288, "Monstrous
 	 * Basilisk", are filed with the ordinary basilisks, not the superiors -
-	 * which is why this stays exact. runTargetAudit checks every name here
+	 * which is why this stays exact. The Bloodthirsty ones are the game's
+	 * category of superiors too (980), one of them spelled "Bloodthirst
+	 * rockslug" by the game itself. runTargetAudit checks every name here
 	 * against the cache.
 	 */
 	public static final java.util.Set<String> SUPERIOR_NAMES = new java.util.HashSet<>(
@@ -66,7 +68,17 @@ public class SpectateController
 			"Nuclear smoke devil", "Shadow Wyrm", "Guardian Drake", "Colossal Hydra",
 			"Infernal pyrelord", "Spiked Turoth", "Mutated Terrorbird", "Mutated Tortoise",
 			"Dreadborn Araxyte", "Ancient Custodian", "Dire gryphon", "Vitreous Chilled Jelly",
-			"Elder aquanite", "Magma strykewyrm", "Blood-starved venator"));
+			"Elder aquanite", "Magma strykewyrm", "Blood-starved venator",
+			"Bloodthirsty hand", "Bloodthirsty Crawler", "Bloodthirsty banshee",
+			"Bloodthirsty twisted banshee", "Bloodthirst rockslug", "Bloodthirsty Cockathrice",
+			"Bloodthirsty pyrelord", "Bloodthirsty Infernal pyrelord", "Bloodthirsty basilisk",
+			"Bloodthirsty Basilisk Sentinel", "Bloodthirsty Mage", "Bloodthirsty Bloodveld",
+			"Bloodthirsty mutated Bloodveld", "Bloodthirsty Jelly", "Bloodthirsty Warped Jelly",
+			"Bloodthirsty abomination", "Bloodthirsty spectre", "Bloodthirsty Repugnant spectre",
+			"Bloodthirsty choke devil", "Bloodthirsty kurask", "Bloodthirsty smoke devil",
+			"Bloodthirsty gargoyle", "Bloodthirsty Night beast", "Bloodthirsty abyssal demon",
+			"Bloodthirsty Nechryarch", "Bloodthirsty Turoth", "Bloodthirsty Shadow Wyrm",
+			"Bloodthirsty Drake", "Bloodthirsty Hydra"));
 
 	static final int SUPERIOR_EXTRA_TILES = 2;
 
