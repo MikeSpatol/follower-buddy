@@ -1248,6 +1248,16 @@ public class FollowerPlugin extends Plugin
 	private long lastMinutesMs;
 
 	/**
+	 * Whether a meeting is written up rather than only attended: now and
+	 * then, and only into an empty hand. A tool kept between trees is still
+	 * in it after the work stops, and the scroll would take its place.
+	 */
+	static boolean minutesWritten(boolean handFull, long sinceLastMs, int roll)
+	{
+		return !handFull && sinceLastMs >= MINUTES_COOLDOWN_MS && roll < 35;
+	}
+
+	/**
 	 * Whether a cutscene has the camera. The follower keeps its place and
 	 * looks where the player looks, so the scene has one audience of two,
 	 * and still mirrors an emote - the mimic is the part that reads best.
@@ -1316,8 +1326,9 @@ public class FollowerPlugin extends Plugin
 						&& local != null && standOverTheShoulder(local))
 					{
 						// Over the shoulder every time; the scroll now and then.
-						boolean writes = System.currentTimeMillis() - lastMinutesMs >= MINUTES_COOLDOWN_MS
-							&& java.util.concurrent.ThreadLocalRandom.current().nextInt(100) < 35;
+						boolean writes = minutesWritten(hands.isHolding(),
+							System.currentTimeMillis() - lastMinutesMs,
+							java.util.concurrent.ThreadLocalRandom.current().nextInt(100));
 						if (writes)
 						{
 							lastMinutesMs = System.currentTimeMillis();

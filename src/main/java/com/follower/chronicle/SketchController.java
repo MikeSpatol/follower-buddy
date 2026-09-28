@@ -163,7 +163,9 @@ public class SketchController
 			cooldown--;
 			return;
 		}
-		if (busy.getAsBoolean() || idleTicks.getAsInt() < IDLE_TICKS
+		// A tool kept between trees is still in the hand, and the scroll
+		// would take its place: whichever is out first keeps it.
+		if (busy.getAsBoolean() || hands.isHolding() || idleTicks.getAsInt() < IDLE_TICKS
 			|| !follower.isSpawned() || !follower.isSettled())
 		{
 			return;

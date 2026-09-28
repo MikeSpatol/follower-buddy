@@ -219,6 +219,26 @@ public class SketchControllerTest
 	}
 
 	@Test
+	public void theScrollWaitsForAnEmptyHand() throws IOException
+	{
+		// A tool kept between trees is still in the hand once the work stops.
+		// The scroll would take its place, and putting it away would let go
+		// of both while the loan still thinks the tool is held.
+		SketchController scribe = scribe();
+		holding = true;
+		idle = SketchController.IDLE_TICKS;
+		scribe.tick();
+		assertFalse("not over the tool", scribe.isSketching());
+		tick(scribe, SketchController.HOLD_TICKS + SketchController.PUT_AWAY_TICKS);
+		assertTrue("which is still in the hand", holding);
+		assertTrue(said.isEmpty());
+
+		holding = false;
+		scribe.tick();
+		assertTrue("once it is given back, the sketch", scribe.isSketching());
+	}
+
+	@Test
 	public void walkingOffMidSketchSpoilsItToo() throws IOException
 	{
 		SketchController scribe = scribe();

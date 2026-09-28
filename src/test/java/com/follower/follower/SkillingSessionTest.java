@@ -1552,6 +1552,26 @@ public class SkillingSessionTest
 	}
 
 	@Test
+	public void noErrandTakesTheHandFromAToolKeptBetweenTrees()
+	{
+		// Every errand lets go of the hand when it ends, and the documenting
+		// ones take the scroll out into it: over a kept axe, that is the axe
+		// gone while the loan still thinks it is held.
+		workTheTree();
+		assertEquals(1351, onLoan());
+		game.at(56, 50, 0);
+		tick(2);
+		assertFalse("the session let go", skilling.isWorking());
+		assertFalse("and the feet", skilling.holdsTheFeet());
+		assertEquals(1351, held);
+		assertTrue("but not the hand", skilling.blocksErrands());
+
+		tick(SkillingController.TOOL_GRACE_TICKS);
+		assertEquals("given back", 0, held);
+		assertFalse("and the errands are free again", skilling.blocksErrands());
+	}
+
+	@Test
 	public void aFellingAxeIsBorrowedAsItself()
 	{
 		// A short tier list read a dragon felling axe as a bronze axe, which

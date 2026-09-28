@@ -558,7 +558,10 @@ public class SkillingController
 
 	public boolean blocksErrands()
 	{
-		return holdsTheFeet() || (session != null && !"prayer".equals(session.activity));
+		// A tool kept between trees is still in the hand, and every errand
+		// lets go of the hand when it ends.
+		return holdsTheFeet() || borrow.isHolding()
+			|| (session != null && !"prayer".equals(session.activity));
 	}
 
 	/** Whether the follower is sitting in for the long haul. */
