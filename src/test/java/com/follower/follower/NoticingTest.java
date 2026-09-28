@@ -277,6 +277,21 @@ public class NoticingTest
 		assertEquals("the kind's cooldown holds the next", 1, looker.looks.size());
 	}
 
+	@Test
+	public void aSceneLeftBehindTakesItsDropsAndStarsWithIt()
+	{
+		// No despawn comes for a scene thrown away at a hop or a logout, so
+		// the reset is all that stops the follower walking to empty ground in
+		// the next world and naming what was there.
+		tick(1);
+		noticing.itemSpawned(item(4151, TileItem.OWNERSHIP_SELF), DROP, "Abyssal whip", 1_500_000);
+		noticing.objectSpawned("Crashed star", new WorldPoint(55, 55, 0));
+		noticing.reset();
+		walkAway();
+		tick(Noticing.LEFT_AFTER_TICKS + Noticing.SCAN_EVERY_TICKS + 2);
+		assertTrue("nothing from the last scene is looked at", looker.looks.isEmpty());
+	}
+
 	// ---------------------------------------------------------- the landmark
 
 	@Test

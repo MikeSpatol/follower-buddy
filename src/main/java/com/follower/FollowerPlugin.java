@@ -3666,6 +3666,21 @@ public class FollowerPlugin extends Plugin
 		{
 			moments.reset();
 		}
+		// What was noticed, looked at and hesitated over was all in this
+		// scene. No despawn comes for a scene thrown away, so a drop or a star
+		// left behind was walked to and named in the next world.
+		if (noticing != null)
+		{
+			noticing.reset();
+		}
+		if (gaze != null)
+		{
+			gaze.reset();
+		}
+		if (will != null)
+		{
+			will.reset();
+		}
 		// Same for the minute-taking: the meeting went with the scene.
 		endMinutes(false);
 		welfareChecked = false;

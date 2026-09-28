@@ -32,6 +32,15 @@ public class LifecycleGlueTest
 		return new String(Files.readAllBytes(PLUGIN), StandardCharsets.UTF_8).replace("\r\n", "\n");
 	}
 
+	/** One method, from its signature to the brace that closes it at the class's own depth. */
+	private static String method(String signature) throws IOException
+	{
+		String source = source();
+		int start = source.indexOf(signature);
+		assertTrue("the plugin has no " + signature + " - the lint has lost its place", start >= 0);
+		return source.substring(start, source.indexOf("\n\t}\n", start));
+	}
+
 	/** The last method signature before a point in the source, to say where a fault is. */
 	private static String methodAt(String source, int at)
 	{
@@ -73,5 +82,20 @@ public class LifecycleGlueTest
 			offset += member.length() + "\n\t}\n".length();
 		}
 		assertTrue("no engine resets found at all - the scan broke, not the plugin", resets > 0);
+	}
+
+	@Test
+	public void leavingASceneForgetsWhatWasNoticedInIt() throws IOException
+	{
+		// Noticing, the look round and the will each promise "Logout, hop" on
+		// their reset, and only a plugin toggle ever called it. No despawn
+		// comes for a scene that is thrown away, so a drop or a crashed star
+		// outlived the world it was in, and after a hop the follower walked
+		// to the empty ground and named it.
+		String leaving = method("private void tearDownScene()");
+		for (String reset : new String[]{"noticing.reset();", "gaze.reset();", "will.reset();"})
+		{
+			assertTrue("leaving a scene must call " + reset, leaving.contains(reset));
+		}
 	}
 }
