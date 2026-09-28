@@ -5173,7 +5173,7 @@ public class FollowerPlugin extends Plugin
 	private void announceSummon(String style)
 	{
 		speechEngine.setMuted(config.muted() || wasThieving
-			|| absentUntilSummoned(config.thrallOnly(), thrallBusiness()));
+			|| absentUntilSummoned(config.thrallOnly(), thrallBusiness()) || thrallQuiet());
 		speechEngine.dispatch(TriggerEvent.thrall(TriggerEvent.Type.THRALL_START, style));
 	}
 
@@ -5336,6 +5336,21 @@ public class FollowerPlugin extends Plugin
 	static boolean replacesThralls(boolean thrallMode, boolean thrallOnly)
 	{
 		return thrallMode || thrallOnly;
+	}
+
+	/**
+	 * Whether the follower keeps quiet as the thrall: Mute the thrall asks for
+	 * silence from the hello to the goodbye, the phase-out included. Otherwise
+	 * the thrall talks whenever the follower may.
+	 */
+	static boolean thrallKeepsQuiet(boolean muteThrall, boolean thrallBusiness)
+	{
+		return muteThrall && thrallBusiness;
+	}
+
+	private boolean thrallQuiet()
+	{
+		return thrallKeepsQuiet(config.muteThrall(), thrallBusiness());
 	}
 
 	@Subscribe
@@ -6880,7 +6895,7 @@ public class FollowerPlugin extends Plugin
 		boolean thievingNow = speechEngine.getContext().isInThievingSession();
 		if (thievingNow != wasThieving)
 		{
-			speechEngine.setMuted(config.muted());
+			speechEngine.setMuted(config.muted() || thrallQuiet());
 			if (thievingNow)
 			{
 				// Anything queued from before belongs to the moment before the
@@ -6901,7 +6916,7 @@ public class FollowerPlugin extends Plugin
 			speechQueue.clear();
 		}
 		wasAbsent = absentNow;
-		speechEngine.setMuted(config.muted() || thievingNow || absentNow);
+		speechEngine.setMuted(config.muted() || thievingNow || absentNow || thrallQuiet());
 
 		// The bank has no close event of its own; watched by widget presence.
 		// Closing it is an ending (R6) - the restock is done, the breather is

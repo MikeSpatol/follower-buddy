@@ -615,12 +615,26 @@ public interface FollowerConfig extends Config
 		name = "Thrall only",
 		description = "The follower is absent until you summon a thrall, takes its"
 			+ " place while it lasts, and when the thrall goes it phases out and"
-			+ " is gone until the next summon. No following, no talking, nothing"
-			+ " else: for people who only want the thrall replacement.",
+			+ " is gone until the next summon: for people who only want the thrall"
+			+ " replacement. It talks as the thrall unless Mute the thrall is ticked.",
 		section = thrallSection,
 		position = 1
 	)
 	default boolean thrallOnly()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+		keyName = "muteThrall",
+		name = "Mute the thrall",
+		description = "While the follower is your thrall it says nothing: no hello"
+			+ " when you summon it, no remarks while it fights, no goodbye when it"
+			+ " goes. The rest of the time it talks as usual.",
+		section = thrallSection,
+		position = 2
+	)
+	default boolean muteThrall()
 	{
 		return false;
 	}
@@ -632,7 +646,7 @@ public interface FollowerConfig extends Config
 			+ " Type a name from OUTFIT PROFILES in the side panel, or pick it"
 			+ " there; if no profile has that name the ready-made Melee one is used.",
 		section = thrallSection,
-		position = 2
+		position = 3
 	)
 	default String thrallMeleeProfile()
 	{
@@ -646,7 +660,7 @@ public interface FollowerConfig extends Config
 			+ " Type a name from OUTFIT PROFILES in the side panel, or pick it"
 			+ " there; if no profile has that name the ready-made Ranged one is used.",
 		section = thrallSection,
-		position = 3
+		position = 4
 	)
 	default String thrallRangedProfile()
 	{
@@ -660,7 +674,7 @@ public interface FollowerConfig extends Config
 			+ " Type a name from OUTFIT PROFILES in the side panel, or pick it"
 			+ " there; if no profile has that name the ready-made Magic one is used.",
 		section = thrallSection,
-		position = 4
+		position = 5
 	)
 	default String thrallMagicProfile()
 	{

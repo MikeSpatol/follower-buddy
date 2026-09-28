@@ -10,8 +10,12 @@ import com.follower.follower.FollowerEntity;
 import com.follower.sim.FakeGame;
 import com.follower.sim.Harness;
 import com.google.gson.Gson;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -24,6 +28,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -247,6 +252,83 @@ public class ThrallOnlyTest
 		set(plugin, "wasThieving", thieving);
 		adopt(plugin, thrall);
 		return h.firedBy("thrall-start");
+	}
+
+	/** A thrall-mode plugin, Thrall only or not, with Mute the thrall as given. */
+	private static FollowerPlugin thrallMode(FakeGame game, Harness h, boolean thrallOnly, boolean muteThrall)
+		throws ReflectiveOperationException
+	{
+		FollowerPlugin plugin = summoning(game, h, true);
+		set(plugin, "config", new FollowerConfig()
+		{
+			@Override
+			public boolean thrallOnly()
+			{
+				return thrallOnly;
+			}
+
+			@Override
+			public boolean muteThrall()
+			{
+				return muteThrall;
+			}
+		});
+		return plugin;
+	}
+
+	/** Summons, then lets the thrall go ten seconds later; what each end said. */
+	private int[] helloAndGoodbye(boolean thrallOnly, boolean muteThrall) throws Exception
+	{
+		long[] now = {1_000_000L};
+		FakeGame game = new FakeGame().varbit(12290, 1);
+		NPC thrall = game.spawnNpc(10886, "Greater Zombified Spawn", 0);
+		Harness h = new Harness(folder.newFolder().toPath());
+		h.engine.setClock(() -> now[0]);
+		h.gameTicks(2);
+		// Thrall only's absent ticks leave the engine muted; the everyday
+		// follower's leave it talking.
+		h.engine.setMuted(thrallOnly);
+
+		FollowerPlugin plugin = thrallMode(game, h, thrallOnly, muteThrall);
+		adopt(plugin, thrall);
+		now[0] += 10_000L;
+		Method exit = FollowerPlugin.class.getDeclaredMethod("performThrallExit", String.class);
+		exit.setAccessible(true);
+		exit.invoke(plugin, "melee");
+		return new int[]{h.firedBy("thrall-start").size(), h.firedBy("thrall-end").size()};
+	}
+
+	@Test
+	public void theThrallTalksWheneverTheFollowerMay() throws Exception
+	{
+		assertArrayEquals("Replace thralls: hello and goodbye", new int[]{1, 1}, helloAndGoodbye(false, false));
+		assertArrayEquals("Thrall only: the same", new int[]{1, 1}, helloAndGoodbye(true, false));
+	}
+
+	@Test
+	public void muteTheThrallKeepsItQuietFromHelloToGoodbye() throws Exception
+	{
+		assertArrayEquals("Replace thralls, muted: neither end", new int[]{0, 0}, helloAndGoodbye(false, true));
+		assertArrayEquals("Thrall only, muted: neither end", new int[]{0, 0}, helloAndGoodbye(true, true));
+
+		// And only as the thrall: the rest of the time it talks as usual.
+		assertTrue(FollowerPlugin.thrallKeepsQuiet(true, true));
+		assertFalse(FollowerPlugin.thrallKeepsQuiet(true, false));
+		assertFalse(FollowerPlugin.thrallKeepsQuiet(false, true));
+	}
+
+	@Test
+	public void theTickKeepsTheThrallQuietBetweenItsEnds() throws IOException
+	{
+		// What the thrall says while it fights goes through the tick's mute,
+		// glue no harness drives; the tick has to ask, as the thieving lift
+		// that says the thieving lines does.
+		String source = new String(Files.readAllBytes(
+			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8);
+		assertTrue("the tick's mute asks",
+			source.contains("speechEngine.setMuted(config.muted() || thievingNow || absentNow || thrallQuiet());"));
+		assertTrue("and so does the thieving lift",
+			source.contains("speechEngine.setMuted(config.muted() || thrallQuiet());"));
 	}
 
 	@Test

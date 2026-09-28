@@ -1273,6 +1273,10 @@ and talks; it never acts on the player's behalf.
   engine is muted and the queue is cleared, so nothing is said and nothing
   is saved up for the next summon. It takes summons whether or not Replace
   thralls is on, since the replacement is the whole of it. Off by default.
+- **Mute the thrall.** `muteThrall` keeps the follower quiet while a thrall
+  has it, from the summon's hello to the phase-out's goodbye, in either mode:
+  `thrallKeepsQuiet` joins the tick's mute, the summon's and the thieving
+  lift's. Off by default, so the thrall talks whenever the follower may.
 - **Two API notes.** `Hooks.registerRenderableDrawListener` is deprecated with
   no replacement registration path yet, and core's Entity Hider uses the same
   one. `Perspective.getClickbox` is marked internal; it backs

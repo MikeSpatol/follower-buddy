@@ -107,7 +107,8 @@ with a per-style outfit, the summoning circle, and the real thrall hidden
 client-side. **Thrall only**, in the same
 settings section, makes that the whole plugin: the follower is absent until
 you summon a thrall, takes its place while it lasts, phases out when it goes,
-and says nothing in between.
+and says nothing in between. As the thrall it talks whenever the follower
+may; tick **Mute the thrall** and it keeps quiet while it is the thrall.
 
 ## Making it yours
 
@@ -214,7 +215,7 @@ Developer section, and typing one while it is off says so.
   incoming text is validated and sanitised before it reaches a rule file, the
   chatbox or a dialog; see `com.follower.share.PackFile` and the two test
   classes that attack it.
-- The test suite (1386 tests) covers the rule engine, the follower's movement
+- The test suite (1389 tests) covers the rule engine, the follower's movement
   and errand refusals, the skilling seat and its moments, the dialog
   structure, hostile share packs, and every bundled rule's integrity; see
   `docs/testing-strategy.md`.
