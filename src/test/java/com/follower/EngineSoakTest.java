@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicLong;
 import net.runelite.api.NPC;
 import net.runelite.api.coords.WorldPoint;
 import org.junit.Rule;
@@ -724,8 +725,16 @@ public class EngineSoakTest
 			Map<String, Long> lastSpokeAt = new HashMap<>();
 			int before = 0;
 
+			// A fake clock, a game tick a step, so a cooldown runs out and comes
+			// round again inside the run. On the real one three hundred steps
+			// take less than a second, and no rule with a cooldown ever got to
+			// speak twice for the check below to measure.
+			AtomicLong clock = new AtomicLong(1_700_000_000_000L);
+			h.engine.setClock(clock::get);
+
 			for (int step = 0; step < 300; step++)
 			{
+				clock.addAndGet(600L);
 				if (random.nextBoolean())
 				{
 					randomEvent(h, random);
@@ -741,14 +750,22 @@ public class EngineSoakTest
 							+ " disabled group '" + rule.group + "'",
 						!disabled.contains(rule.group));
 
-					// Never twice inside its own cooldown.
+					// Never twice inside its own cooldown. The engine charges it
+					// when a line is said, and at the win too for one delayed or
+					// held back, so the next line waits a full cooldown after the
+					// last. The harness has the global gap off; it could only
+					// spread them further. The clock moves only between steps, so
+					// this reads the "now" each line was charged at, and the
+					// longest delay here, six ticks, is under the shortest
+					// cooldown, so a rule never has two firings in flight.
 					Long previous = lastSpokeAt.get(rule.id);
-					long now = System.currentTimeMillis();
+					long now = clock.get();
 					if (previous != null && rule.cooldownMs > 0)
 					{
 						assertTrue("seed " + seed + ": '" + rule.id + "' spoke twice"
-								+ " inside its " + rule.cooldownMs + "ms cooldown",
-							now - previous >= 0);
+								+ " inside its " + rule.cooldownMs + "ms cooldown, "
+								+ (now - previous) + "ms apart",
+							now - previous >= rule.cooldownMs);
 					}
 					lastSpokeAt.put(rule.id, now);
 				}

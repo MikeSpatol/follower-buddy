@@ -62,9 +62,16 @@ public class LongSoakTest
 		return h;
 	}
 
+	/** What the driver levels up in, for the level lines to name. */
+	private static final String[] SKILLS = {"Attack", "Cooking", "Mining", "Woodcutting"};
+
 	/** Drives ticks and a spread of realistic events, advancing the fake clock. */
-	private void play(Harness h, int ticks, Random random)
+	private void play(Harness h, int ticks, long seed)
 	{
+		Random random = new Random(seed);
+		// The skill and level of each level-up, drawn apart so the stream of
+		// events is the one every seed has always played.
+		Random levels = new Random(seed + 1);
 		for (int i = 0; i < ticks; i++)
 		{
 			clock.addAndGet(TICK_MS);
@@ -89,7 +96,8 @@ public class LongSoakTest
 			}
 			else if (roll < 20)
 			{
-				h.dispatch(TriggerEvent.simple(TriggerEvent.Type.LEVEL_UP));
+				h.dispatch(TriggerEvent.levelUp(SKILLS[levels.nextInt(SKILLS.length)],
+					2 + levels.nextInt(98)));
 			}
 		}
 	}
@@ -103,7 +111,7 @@ public class LongSoakTest
 		h.gameTicks(3);
 		h.clear();
 
-		play(h, TICKS, new Random(20260810L));
+		play(h, TICKS, 20260810L);
 
 		List<Harness.Spoken> spoken = new ArrayList<>(h.spoken);
 		List<String> lines = new ArrayList<>();
@@ -137,10 +145,13 @@ public class LongSoakTest
 		assertTrue("the spent-line set grew past the rules that can fill it",
 			h.engine.getContext().getSpokenOnce().size() <= 8);
 
-		// 5. The follower is still capable of speech at the end - the failure
+		// 5. The level-ups were answered, the plain line and a milestone both.
+		assertLevelsSpoke(rulesOf(spoken));
+
+		// 6. The follower is still capable of speech at the end - the failure
 		//    where some window latches shut and everything afterwards is silent.
 		h.clear();
-		play(h, 600, new Random(7L));
+		play(h, 600, 7L);
 		assertFalse("the follower went permanently quiet by the end", h.spoken.isEmpty());
 	}
 
@@ -209,6 +220,35 @@ public class LongSoakTest
 				+ " only " + fewest + " across " + said.size() + " firings, which is"
 				+ " not a bag dealing evenly", most - fewest <= 1);
 		}
+	}
+
+	/**
+	 * A level-up line and a level milestone both came out. The driver once
+	 * raised every level-up at level nought, which no level rule answers since
+	 * levelUp asks for level one at least, and three soaks went on passing
+	 * without a level line in them.
+	 */
+	private static void assertLevelsSpoke(List<SpeechRule> said)
+	{
+		boolean levelUp = false;
+		boolean milestone = false;
+		for (SpeechRule rule : said)
+		{
+			levelUp |= rule != null && rule.when.usesType("levelUp");
+			milestone |= rule != null && rule.when.usesType("milestone");
+		}
+		assertTrue("hours of level-ups and not one level-up line", levelUp);
+		assertTrue("hours of level-ups and not one level milestone", milestone);
+	}
+
+	private static List<SpeechRule> rulesOf(List<Harness.Spoken> spoken)
+	{
+		List<SpeechRule> rules = new ArrayList<>();
+		for (Harness.Spoken s : spoken)
+		{
+			rules.add(s.rule);
+		}
+		return rules;
 	}
 
 	private static void assertOnceIsOnce(List<Harness.Spoken> spoken)
@@ -472,7 +512,7 @@ public class LongSoakTest
 		// And still capable of speech at the end.
 		h.engine.getContext().setFollowerStaying(false);
 		h.clear();
-		play(h, 600, new Random(7L));
+		play(h, 600, 7L);
 		assertFalse("the follower went permanently quiet by the end",
 			h.spoken.isEmpty());
 	}
@@ -487,16 +527,18 @@ public class LongSoakTest
 		h.clear();
 
 		List<Long> spokenAt = new ArrayList<>();
+		List<SpeechRule> said = new ArrayList<>();
 		h.engine.setSink((text, output, rule, animationId, onSaid) ->
 		{
 			onSaid.run();
 			if (!text.isEmpty())
 			{
 				spokenAt.add(clock.get());
+				said.add(rule);
 			}
 		});
 
-		play(h, TICKS, new Random(99L));
+		play(h, TICKS, 99L);
 
 		assertTrue("far too little came out of three hours: " + spokenAt.size(),
 			spokenAt.size() > 20);
@@ -520,6 +562,9 @@ public class LongSoakTest
 			+ Math.round(perHour) + " an hour with only " + longQuiets + " silences"
 			+ " past 25 seconds; the rest period is not taking hold",
 			longQuiets > 5);
+
+		// And the level-ups were answered in among it.
+		assertLevelsSpoke(said);
 	}
 
 	@Test
@@ -540,9 +585,10 @@ public class LongSoakTest
 		});
 
 		h.engine.getContext().setSessionCount(1);       // settling damper live too
-		play(h, TICKS, new Random(4242L));
+		play(h, TICKS, 4242L);
 
 		assertTrue("the director held back lines it must never hold: " + heldOccasions,
 			heldOccasions.isEmpty());
+		assertLevelsSpoke(rulesOf(h.spoken));
 	}
 }
