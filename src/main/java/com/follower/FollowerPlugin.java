@@ -2177,7 +2177,10 @@ public class FollowerPlugin extends Plugin
 			// The reset clears every rule's edge, so the gear worn and the
 			// place stood in would rise as news on the next tick. Same cure
 			// as login: they are baseline.
-			speechEngine.primeEdgesOnNextTick();
+			if (switchTakesTheBaseline(freshLogin))
+			{
+				speechEngine.primeEdgesOnNextTick();
+			}
 			metWearingValue = -1;
 			readCounters();
 			if (chronicleProgress != null)
@@ -2199,6 +2202,17 @@ public class FollowerPlugin extends Plugin
 			rebuildFollower();
 			syncPanel();
 		});
+	}
+
+	/**
+	 * Whether a profile switch takes the baseline itself. Not while a login
+	 * is still to come: that login says hello first and primes after, and a
+	 * window opened at the login screen, with no ticks there to run it down,
+	 * was still open for the hello and swallowed it.
+	 */
+	static boolean switchTakesTheBaseline(boolean loginComing)
+	{
+		return !loginComing;
 	}
 
 	/**

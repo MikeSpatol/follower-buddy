@@ -122,6 +122,12 @@ public class LifecycleGlueTest
 		assertTrue("the switch resets the engine", reset >= 0);
 		assertTrue("so the edges are primed after the reset clears them",
 			switched.indexOf("speechEngine.primeEdgesOnNextTick();", reset) > reset);
+		// But not at the login screen, where no tick ran the window down and
+		// it swallowed the next login's hello and the week's update line.
+		// ProfileSwitchTest holds the decision; this holds the glue to it.
+		assertTrue("unless a login is coming to take its own",
+			switched.contains("if (switchTakesTheBaseline(freshLogin))\n\t\t\t{\n"
+				+ "\t\t\t\tspeechEngine.primeEdgesOnNextTick();"));
 		assertTrue("and the old follower's queued lines go with it",
 			switched.contains("speechQueue.clear();"));
 	}
