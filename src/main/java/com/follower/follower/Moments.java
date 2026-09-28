@@ -144,6 +144,12 @@ public class Moments implements Noticing.Looker
 
 	/** Thrall work, the spectator or an errand: they all beat a moment. */
 	private final BooleanSupplier feetTaken;
+	/**
+	 * A park the player gave. It beats every moment that walks or plants
+	 * the follower, as the above do; the wave at the logout tab moves
+	 * nothing, and is waved from the post.
+	 */
+	private final BooleanSupplier parked;
 	private final BooleanSupplier inCombat;
 	private final IntSupplier daysKnown;
 	/** The scroll and the pose, for a write-up; null in a harness without hands. */
@@ -181,23 +187,27 @@ public class Moments implements Noticing.Looker
 		SkillingController skilling, BooleanSupplier feetTaken, BooleanSupplier inCombat,
 		IntSupplier daysKnown)
 	{
-		this(client, follower, config, skilling, feetTaken, inCombat, daysKnown, null, () -> false);
+		this(client, follower, config, skilling, feetTaken, inCombat, daysKnown, null, () -> false,
+			() -> false);
 	}
 
 	/**
 	 * @param flourish the scroll-and-pose flourish for a write-up, or null
 	 * @param grateful whether the follower owes the player one just now,
 	 * which halves every gesture's cooldown
+	 * @param parked whether the player has parked the follower
 	 */
 	public Moments(Client client, FollowerEntity follower, FollowerConfig config,
 		SkillingController skilling, BooleanSupplier feetTaken, BooleanSupplier inCombat,
-		IntSupplier daysKnown, PropFlourish flourish, BooleanSupplier grateful)
+		IntSupplier daysKnown, PropFlourish flourish, BooleanSupplier grateful,
+		BooleanSupplier parked)
 	{
 		this.client = client;
 		this.follower = follower;
 		this.config = config;
 		this.skilling = skilling;
 		this.feetTaken = feetTaken;
+		this.parked = parked;
 		this.inCombat = inCombat;
 		this.daysKnown = daysKnown;
 		this.flourish = flourish;
@@ -444,7 +454,7 @@ public class Moments implements Noticing.Looker
 		gestures.spent(Gestures.Gesture.NOTES);
 		int now = client.getTickCount();
 		boolean canWrite = flourish != null && doing == Doing.NOTHING && !skilling.isSitting()
-			&& !feetTaken.getAsBoolean() && !inCombat.getAsBoolean()
+			&& !feetTakenOrParked() && !inCombat.getAsBoolean()
 			&& follower.isSettled();
 		if (canWrite && flourish.start(ErrandController.SCROLL_PROP,
 			ErrandController.READ_SCROLL_POSE, NOTES_TICKS))
@@ -756,14 +766,20 @@ public class Moments implements Noticing.Looker
 	 */
 	private boolean free()
 	{
-		return doing == Doing.NOTHING && !feetTaken.getAsBoolean() && !inCombat.getAsBoolean()
+		return doing == Doing.NOTHING && !feetTakenOrParked() && !inCombat.getAsBoolean()
 			&& follower.isSpawned() && !skilling.isSitting();
 	}
 
 	/** Somebody else took the feet mid-moment, or the follower went. */
 	private boolean interrupted()
 	{
-		return feetTaken.getAsBoolean() || inCombat.getAsBoolean() || !follower.isSpawned();
+		return feetTakenOrParked() || inCombat.getAsBoolean() || !follower.isSpawned();
+	}
+
+	/** Whether the feet are not the moments' to take: somebody else has them, or the player. */
+	private boolean feetTakenOrParked()
+	{
+		return feetTaken.getAsBoolean() || parked.getAsBoolean();
 	}
 
 	/**
@@ -796,7 +812,7 @@ public class Moments implements Noticing.Looker
 		}
 		if (was != Doing.NOTHING)
 		{
-			if (release && follower.isStaying() && !feetTaken.getAsBoolean())
+			if (release && follower.isStaying() && !feetTakenOrParked())
 			{
 				follower.resumeFollowing();
 			}

@@ -13,6 +13,11 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import net.runelite.api.Client;
 import net.runelite.api.Player;
 import net.runelite.api.coords.WorldPoint;
@@ -34,6 +39,8 @@ import static org.junit.Assert.assertTrue;
  * it: not the wander, the seat, a moment, the spectator, an errand or a
  * planted emote. And the player's own word acts whatever of those has the
  * feet at the time, instead of being taken for a stay already in place.
+ * The fight is still announced at both ends and the logout tab still waved
+ * at: neither moves the feet.
  *
  * <p>All of it is the plugin's glue, which no harness drives, so this goes
  * through a bare plugin the way the entity tests reach private state: the
@@ -51,6 +58,7 @@ public class StayHoldsTest
 		WorldPoint stay;
 		int released;
 		int sent;
+		final List<Integer> played = new ArrayList<>();
 
 		Feet()
 		{
@@ -132,6 +140,10 @@ public class StayHoldsTest
 		@Override
 		public void playAnimations(int[] ids)
 		{
+			for (int id : ids)
+			{
+				played.add(id);
+			}
 		}
 
 		@Override
@@ -242,8 +254,7 @@ public class StayHoldsTest
 	{
 		drift();
 		WorldPoint sentTo = new WorldPoint(3230, 3220, 0);
-		feet.stayAt(sentTo);
-		call("parkedByThePlayer");
+		call("sendTo", sentTo);
 
 		playerSteps();
 		call("updateWander");
@@ -262,10 +273,28 @@ public class StayHoldsTest
 			assertFalse(gate + " with nothing going on", (Boolean) call(gate));
 		}
 		call("applyFollowEnabled", false);
-		for (String gate : new String[]{"seatFeetTaken", "momentFeetTaken", "errandBusy", "spectateBusy"})
+		for (String gate : new String[]{"seatFeetTaken", "errandBusy"})
 		{
 			assertTrue(gate + " on a park the player gave", (Boolean) call(gate));
 		}
+		// The moments and the spectator are handed the park apart, since
+		// the wave and the fight's announcements do not move the feet.
+		for (String gate : new String[]{"momentFeetTaken", "spectateBusy"})
+		{
+			assertFalse(gate + " is not the park", (Boolean) call(gate));
+		}
+	}
+
+	@Test
+	public void theLogoutTabIsWavedAtFromThePost() throws ReflectiveOperationException
+	{
+		Moments moments = moments();
+		call("applyFollowEnabled", false);
+		WorldPoint post = feet.stay;
+
+		moments.farewell();
+		assertFalse("the wave, where it stands", feet.played.isEmpty());
+		assertEquals(post, feet.stay);
 	}
 
 	@Test
@@ -337,6 +366,47 @@ public class StayHoldsTest
 	}
 
 	@Test
+	public void aStayGivenWhileSomethingHadTheFeetParksWhereThatLeftIt()
+		throws ReflectiveOperationException
+	{
+		// Stay here pressed during thrall work, or an errand far off: what
+		// lets go sends the follower home to the player's side. It used to
+		// be walked back from there to wherever the Stay was pressed.
+		set("thrallExitTicks", 2);
+		call("applyFollowEnabled", false);
+		WorldPoint pressedAt = feet.stay;
+
+		set("thrallExitTicks", 0);
+		feet.resumeFollowing();
+		WorldPoint home = new WorldPoint(3224, 3222, 0);
+		feet.at = home;
+		call("keepThePlayersPark");
+		assertEquals("parked at the player's side", home, feet.stay);
+		assertNotEquals(pressedAt, feet.stay);
+		assertEquals("not walked back", 0, feet.sent);
+		assertTrue(parked());
+	}
+
+	@Test
+	public void aSendGivenWhileSomethingHadTheFeetIsWalkedToOnceFree()
+		throws ReflectiveOperationException
+	{
+		// A Send is a tile the player pointed at, not where the follower
+		// happened to be, so it is gone to however it was let go.
+		feet.stayHere();
+		set("emoteHold", true);
+		WorldPoint sentTo = new WorldPoint(3230, 3220, 0);
+		call("sendTo", sentTo);
+
+		set("emoteHold", false);
+		feet.resumeFollowing();
+		feet.at = new WorldPoint(3224, 3222, 0);
+		call("keepThePlayersPark");
+		assertEquals("gone to the Send's tile", sentTo, feet.stay);
+		assertTrue(parked());
+	}
+
+	@Test
 	public void aParkTakenOffByForceIsOver() throws ReflectiveOperationException
 	{
 		// The leash snap and a teleport bring the follower along to the
@@ -390,6 +460,78 @@ public class StayHoldsTest
 		assertEquals(0, feet.released);
 	}
 
+	// ---------------------------------------------------------------- the glue
+
+	/**
+	 * Every park the player gives is marked as theirs, which is what the
+	 * wander, the seat, the moments, the spectator and the errands read.
+	 * The menu ops and the spawns are glue no harness drives, so this reads
+	 * them out of the source: a menu op that stays the follower, and a spawn
+	 * that parks it for Follow me off, each has to say so. Without it a
+	 * right-click Stay with Follow me already off raised no change event,
+	 * and the wander took the post again.
+	 */
+	@Test
+	public void everyParkThePlayerGivesIsMarkedAsTheirs() throws IOException
+	{
+		String source = new String(Files.readAllBytes(
+			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8);
+		List<String> unmarked = new ArrayList<>();
+		int ops = 0;
+		for (String marker : new String[]{"addFollowerMenuEntry(", ".onClick("})
+		{
+			for (String op : balancedAfter(source, marker, '(', ')'))
+			{
+				if (op.contains("stayHere") || op.contains("stayAt("))
+				{
+					ops++;
+					if (!op.contains("parkedByThePlayer("))
+					{
+						unmarked.add(op);
+					}
+				}
+			}
+		}
+		int spawns = 0;
+		for (String spawn : balancedAfter(source, "if (!config.followEnabled())", '{', '}'))
+		{
+			spawns++;
+			if (!spawn.contains("parkedByThePlayer("))
+			{
+				unmarked.add(spawn);
+			}
+		}
+		assertTrue("no menu op stays the follower - the scan broke, not the glue", ops > 0);
+		assertTrue("no spawn parks it for Follow me off - the scan broke, not the glue", spawns > 0);
+		assertTrue("parks the player gave that nothing reads as theirs:\n"
+			+ String.join("\n", unmarked), unmarked.isEmpty());
+	}
+
+	/** From each marker, the source up to the close matching the first open at or after it. */
+	private static List<String> balancedAfter(String source, String marker, char open, char close)
+	{
+		List<String> found = new ArrayList<>();
+		for (int at = source.indexOf(marker); at >= 0; at = source.indexOf(marker, at + 1))
+		{
+			int depth = 0;
+			int end = source.indexOf(open, at);
+			for (; end < source.length(); end++)
+			{
+				char c = source.charAt(end);
+				if (c == open)
+				{
+					depth++;
+				}
+				else if (c == close && --depth == 0)
+				{
+					break;
+				}
+			}
+			found.add(source.substring(at, Math.min(end + 1, source.length())));
+		}
+		return found;
+	}
+
 	// ---------------------------------------------------------------- helpers
 
 	/** Stands still long enough for the wander, and lets it drift once. */
@@ -413,7 +555,7 @@ public class StayHoldsTest
 		h.gameTick();
 	}
 
-	/** The moments on these feet, wired to the plugin's own gate as the plugin wires them. */
+	/** The moments on these feet, wired to the plugin's own gate and park as the plugin wires them. */
 	private Moments moments() throws ReflectiveOperationException
 	{
 		ErrandController.Hands hands = new ErrandController.Hands()
@@ -434,7 +576,8 @@ public class StayHoldsTest
 		SkillingController skilling = new SkillingController(h.game.client, feet, config, hands,
 			event -> { }, () -> false, () -> false, () -> false);
 		Moments moments = new Moments(h.game.client, feet, config, skilling,
-			() -> gate("momentFeetTaken"), () -> false, () -> 30);
+			() -> gate("momentFeetTaken"), () -> false, () -> 30, null, () -> false,
+			() -> field("parkedByPlayer"));
 		set("moments", moments);
 		return moments;
 	}
@@ -454,6 +597,18 @@ public class StayHoldsTest
 	private boolean parked() throws ReflectiveOperationException
 	{
 		return (Boolean) get("parkedByPlayer");
+	}
+
+	private boolean field(String name)
+	{
+		try
+		{
+			return (Boolean) get(name);
+		}
+		catch (ReflectiveOperationException e)
+		{
+			throw new AssertionError(e);
+		}
 	}
 
 	private void speak(SpeechRule rule) throws ReflectiveOperationException

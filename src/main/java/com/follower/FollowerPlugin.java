@@ -361,10 +361,14 @@ public class FollowerPlugin extends Plugin
 	private boolean parkedByPlayer;
 	/**
 	 * A park given while something of the follower's own had the feet: that
-	 * stands down, and the follower is parked here again once it has let go.
-	 * Null when nothing is waiting.
+	 * stands down, and the follower is parked again once it has let go.
 	 */
-	private WorldPoint parkWhenFree;
+	private boolean parkWhenFree;
+	/**
+	 * Where a Send given then pointed, walked to once free. Null for a Stay,
+	 * which parks where the follower then stands.
+	 */
+	private WorldPoint sentWhenFree;
 	/** Told as the player-commanded stay starts or ends; the side panel's button reads it. */
 	private java.util.function.Consumer<Boolean> onStayStateChanged;
 	private int reloadPollTicks;
@@ -716,7 +720,8 @@ public class FollowerPlugin extends Plugin
 			() -> speechEngine.getContext().isInCombat(),
 			() -> speechEngine.getContext().getDaysKnown(),
 			flourish,
-			() -> speechEngine.getContext().isGrateful());
+			() -> speechEngine.getContext().isGrateful(),
+			() -> parkedByPlayer);
 		// The head: the cursor, the camera and the look round. Busy is anything
 		// that owns the head or the feet; the seat's own looks are its own.
 		gaze = new com.follower.follower.Gaze(client, follower, config,
@@ -950,7 +955,8 @@ public class FollowerPlugin extends Plugin
 		wandered = false;
 		wanderCountdown = 0;
 		parkedByPlayer = false;
-		parkWhenFree = null;
+		parkWhenFree = false;
+		sentWhenFree = null;
 		damagedByPlayer.clear();
 		mirrorGraphicsUntilTick = -1;
 		hoveredThisTick = false;
@@ -3882,7 +3888,7 @@ public class FollowerPlugin extends Plugin
 			else
 			{
 				follower.stayHere();
-				parkedByThePlayer();
+				parkedByThePlayer(null);
 			}
 		}
 	}
@@ -3891,42 +3897,51 @@ public class FollowerPlugin extends Plugin
 	 * A park the player gave has just been taken, and is theirs until they
 	 * say Follow. The wander's drift is handed over rather than let go under
 	 * it. Anything else of the follower's own that has the feet reads this
-	 * park as its feet taken and stands down, and the follower is parked on
-	 * the same spot again as it lets go.
+	 * park as its feet taken and stands down, and the follower is parked
+	 * again as it lets go.
+	 *
+	 * @param sentTo the tile a Send settled on, or null for a Stay
 	 */
-	private void parkedByThePlayer()
+	private void parkedByThePlayer(WorldPoint sentTo)
 	{
 		parkedByPlayer = true;
 		wandered = false;
-		parkWhenFree = feetBorrowed() ? follower.getStayTile() : null;
+		parkWhenFree = feetBorrowed();
+		sentWhenFree = parkWhenFree ? sentTo : null;
 	}
 
 	/** The player said Follow: the park is over, whoever had the feet. */
 	private void followAgain()
 	{
 		parkedByPlayer = false;
-		parkWhenFree = null;
+		parkWhenFree = false;
+		sentWhenFree = null;
 		follower.resumeFollowing();
 	}
 
 	/**
 	 * Once a tick, after everything that borrows the feet. A park given while
-	 * one of them had them is taken again once it has let go. A park the
-	 * follower was taken off by force - the leash, a teleport, thrall work -
-	 * is over, since those bring it along to the player.
+	 * one of them had them is taken again once it has let go: a Stay where
+	 * the follower then stands, which is beside the player when what let go
+	 * sent it home, and a Send on its tile. Walking a Stay back to where it
+	 * was given, after an errand or thrall work snapped it home, read as the
+	 * follower popping over and trotting off again. A park the follower was
+	 * taken off by force - the leash, a teleport, thrall work - is over,
+	 * since those bring it along to the player.
 	 */
 	private void keepThePlayersPark()
 	{
-		if (parkWhenFree != null && !feetBorrowed())
+		if (parkWhenFree && !feetBorrowed())
 		{
-			WorldPoint post = parkWhenFree;
-			parkWhenFree = null;
-			if (!follower.isStaying() && !follower.stayAt(post))
+			parkWhenFree = false;
+			if (!follower.isStaying()
+				&& (sentWhenFree == null || !follower.stayAt(sentWhenFree)))
 			{
 				follower.stayHere();
 			}
+			sentWhenFree = null;
 		}
-		if (parkWhenFree == null && !follower.isStaying())
+		if (!parkWhenFree && !follower.isStaying())
 		{
 			parkedByPlayer = false;
 		}
@@ -3975,25 +3990,27 @@ public class FollowerPlugin extends Plugin
 	}
 
 	/**
-	 * What beats a moment. The moments excuse the seat for themselves;
-	 * everything else that beats the seat beats them, and so does an errand
-	 * under way. On a park the player gave, a level is clapped where it
-	 * stands and the news is nodded at; nothing is walked over to.
+	 * What beats a moment. The moments excuse the seat for themselves; thrall
+	 * work, the spectator and an errand under way beat them. A park the
+	 * player gave is handed to them apart: it beats everything that walks or
+	 * plants the follower, so a level is clapped where it stands and the news
+	 * is nodded at, but not the wave at the logout tab, which moves nothing.
 	 */
 	private boolean momentFeetTaken()
 	{
-		return seatFeetTaken() || (errands != null && errands.isBusy());
+		return thrallBusiness() || (spectate != null && spectate.holdsTheFeet())
+			|| (errands != null && errands.isBusy());
 	}
 
 	/**
 	 * What the spectator keeps out of the way for: thrall work and its whole
-	 * exit, an errand in progress, and a park the player gave, which a fight
-	 * nearby does not take the follower off.
+	 * exit, and an errand in progress. A park the player gave is handed to it
+	 * apart: the fight is still announced at both ends, but watched from the
+	 * post.
 	 */
 	private boolean spectateBusy()
 	{
-		return thrallBusiness() || (errands != null && errands.isBusy())
-			|| parkedByPlayer;
+		return thrallBusiness() || (errands != null && errands.isBusy());
 	}
 
 	/**
@@ -4231,7 +4248,7 @@ public class FollowerPlugin extends Plugin
 				if (!config.followEnabled())
 				{
 					follower.stayHere();
-					parkedByThePlayer();
+					parkedByThePlayer(null);
 				}
 			}
 		});
@@ -6103,7 +6120,7 @@ public class FollowerPlugin extends Plugin
 			addFollowerMenuEntry("Stay", () ->
 			{
 				follower.stayHere();
-				parkedByThePlayer();
+				parkedByThePlayer(null);
 				setFollowEnabled(false);
 				// Stay is the moment positional control has been asked for, so
 				// the one place Send is taught is the first of these clicks.
@@ -6191,22 +6208,25 @@ public class FollowerPlugin extends Plugin
 			.onClick(e ->
 			{
 				showRedCross();
-				clientThread.invoke(() ->
-				{
-					// Through the will, which stops at an edge it has misgivings
-					// about before going on.
-					boolean sent = will != null ? will.send(target) : follower.stayAt(target);
-					if (!sent)
-					{
-						speak("I can't get to that spot from here!",
-							com.follower.speech.SpeechOutput.OVERHEAD, null, -1, null);
-					}
-					else
-					{
-						parkedByThePlayer();
-					}
-				});
+				clientThread.invoke(() -> sendTo(target));
 			});
+	}
+
+	/** The Send op's move, on the client thread. */
+	private void sendTo(WorldPoint target)
+	{
+		// Through the will, which stops at an edge it has misgivings
+		// about before going on.
+		boolean sent = will != null ? will.send(target) : follower.stayAt(target);
+		if (!sent)
+		{
+			speak("I can't get to that spot from here!",
+				com.follower.speech.SpeechOutput.OVERHEAD, null, -1, null);
+		}
+		else
+		{
+			parkedByThePlayer(follower.getStayTile());
+		}
 	}
 
 	/**
@@ -6489,7 +6509,7 @@ public class FollowerPlugin extends Plugin
 			if (!config.followEnabled())
 			{
 				follower.stayHere();
-				parkedByThePlayer();
+				parkedByThePlayer(null);
 			}
 		}
 
@@ -6686,7 +6706,7 @@ public class FollowerPlugin extends Plugin
 		// thrall mode, wards at the player's side, no stepping away.
 		if (spectate != null)
 		{
-			spectate.tick(spectateBusy());
+			spectate.tick(spectateBusy(), parkedByPlayer);
 		}
 		// After everything that borrows the feet, so a park the player gave
 		// is taken again on the tick they are let go.

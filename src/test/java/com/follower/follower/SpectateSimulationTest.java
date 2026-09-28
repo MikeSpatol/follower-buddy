@@ -142,6 +142,8 @@ public class SpectateSimulationTest
 	private List<TriggerEvent> spoken;
 	private List<Boolean> disarms;
 	private int tick;
+	/** Whether the player has parked the follower, as the plugin tells it. */
+	private boolean parked;
 
 	@Before
 	public void setUp() throws IOException
@@ -174,7 +176,7 @@ public class SpectateSimulationTest
 			game.tick(++tick);
 			context.refresh();
 			follower.advance();
-			spectate.tick(false);
+			spectate.tick(false, parked);
 		}
 	}
 
@@ -249,7 +251,7 @@ public class SpectateSimulationTest
 			game.tick(++tick);
 			live[0].refresh();          // the plugin refreshes the LIVE one
 			follower.advance();
-			spectate.tick(false);
+			spectate.tick(false, false);
 		}
 
 		assertTrue("the fight after a relog must still be spectated",
@@ -490,7 +492,7 @@ public class SpectateSimulationTest
 			game.tick(++tick);
 			context.refresh();
 			follower.advance();
-			plain.tick(false);
+			plain.tick(false, false);
 		}
 
 		assertTrue(follower.stayingAt != null);
@@ -525,10 +527,74 @@ public class SpectateSimulationTest
 		game.tick(++tick);
 		context.refresh();
 		follower.advance();
-		spectate.tick(true);
+		spectate.tick(true, false);
 
 		assertFalse("spectating must yield to whatever else has the follower",
 			spectate.isSpectating());
+	}
+
+	// ---------------------------------------------------- the player's park
+
+	@Test
+	public void aFightNearThePlayersParkIsAnnouncedButWatchedFromThePost()
+	{
+		// The park used to count as busy, which kept the follower on its post
+		// and every fight near it unannounced: no combat line, no wager, no
+		// breather after it, for as long as Follow me stayed off.
+		WorldPoint post = new WorldPoint(3215, 3218, 0);
+		follower.stayingAt = post;
+		follower.following = false;
+		parked = true;
+		fight("Zulrah", 725);
+		tick(10);
+
+		assertTrue("the fight is announced", spoke(TriggerEvent.Type.COMBAT_START));
+		assertEquals("never sent anywhere", 0, follower.stayAttempts);
+		assertTrue("no ward cast at the post", follower.chains.isEmpty());
+		assertFalse("the feet are the player's", spectate.holdsTheFeet());
+
+		game.fighting(null);
+		tick(15);
+		assertEquals("the end is announced too", 1, said(TriggerEvent.Type.COMBAT_END));
+		assertEquals("and the post kept", post, follower.stayingAt);
+	}
+
+	@Test
+	public void aStayGivenMidFightIsNotTheFightEnding()
+	{
+		// Stay here pressed while the follower stood clear: the park counted
+		// as busy, so the spectator stood down and said its goodbye with the
+		// fight still going.
+		fight("Zulrah", 725);
+		tick(6);
+		assertFalse("the ward is up", disarms.isEmpty());
+		WorldPoint seat = follower.stayingAt;
+
+		parked = true;
+		tick(3);
+		assertEquals("no goodbye mid-fight", 0, said(TriggerEvent.Type.COMBAT_END));
+		assertEquals("parked where it stood", seat, follower.stayingAt);
+		assertEquals("the ward dropped", 0, follower.poseOverride);
+		assertEquals("and the weapon back", Boolean.FALSE, disarms.get(disarms.size() - 1));
+		assertFalse(spectate.holdsTheFeet());
+
+		game.fighting(null);
+		tick(15);
+		assertEquals("said once, at the end", 1, said(TriggerEvent.Type.COMBAT_END));
+		assertEquals("and the post kept", seat, follower.stayingAt);
+	}
+
+	private int said(TriggerEvent.Type type)
+	{
+		int count = 0;
+		for (TriggerEvent event : spoken)
+		{
+			if (event.getType() == type)
+			{
+				count++;
+			}
+		}
+		return count;
 	}
 
 	@Test
@@ -605,7 +671,7 @@ public class SpectateSimulationTest
 						game.tick(++tick);
 						context.refresh();
 						follower.advance();
-						spectate.tick(true);
+						spectate.tick(true, false);
 					}
 					break;
 				case "despawned":
@@ -703,7 +769,7 @@ public class SpectateSimulationTest
 			game.tick(++tick);
 			context.refresh();
 			follower.advance();
-			disabled.tick(false);
+			disabled.tick(false, false);
 		}
 
 		assertFalse("the setting is off", disabled.isSpectating());

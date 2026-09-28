@@ -154,6 +154,13 @@ public class SpectateController
 	/** Whether the follower is currently standing aside for a fight. */
 	private boolean spectating;
 
+	/**
+	 * Whether the player has parked the follower themselves. A fight is then
+	 * announced at both ends as ever, but watched from the post: nothing here
+	 * moves it, casts at it or lets it go, and the feet are not held.
+	 */
+	private boolean parked;
+
 	private WorldPoint watchTile;
 
 	/**
@@ -219,11 +226,12 @@ public class SpectateController
 	 * it is for a few ticks, so the closing cast is not cut off by walking
 	 * away. Through that gap the follower is parked and no longer counted as
 	 * spectating, which is indistinguishable from a Stay the player asked for
-	 * unless somebody asks this instead.
+	 * unless somebody asks this instead. A fight watched from the player's
+	 * park holds nothing: the feet are theirs.
 	 */
 	public boolean holdsTheFeet()
 	{
-		return spectateOwnsTheFeet(spectating, releaseTicks);
+		return spectateOwnsTheFeet(spectating && !parked, releaseTicks);
 	}
 
 	/** The above as a decision, so it can be tested without a controller. */
@@ -242,6 +250,7 @@ public class SpectateController
 	{
 		return "spectate: setting=" + config.spectateCombat()
 			+ " busy=" + busy
+			+ " parked=" + parked
 			+ " spawned=" + follower.isSpawned()
 			+ " inCombat=" + context().isInCombat()
 			+ " target='" + context().getCombatTarget() + "' level=" + context().getCombatTargetLevel()
@@ -258,9 +267,11 @@ public class SpectateController
 	/**
 	 * @param busy true when something else owns the follower's feet - thrall
 	 * mode or an errand - in which case spectating stays out of the way
+	 * @param parked true when the player has parked the follower
 	 */
-	public void tick(boolean busy)
+	public void tick(boolean busy, boolean parked)
 	{
+		this.parked = parked;
 		// A dispel in progress owns the feet until its animation has played.
 		// The weapon comes back at the same moment, for the same reason: the
 		// rebuild that returns it would otherwise cut the closing cast short.
@@ -297,9 +308,18 @@ public class SpectateController
 		{
 			start(true);
 		}
+		else if (parked)
+		{
+			letTheSeatGo();
+		}
 		else
 		{
 			holdPosition();
+		}
+		if (parked)
+		{
+			// Watched from the post: no panic and no ward there.
+			return;
 		}
 
 		// The panic, once stood still at the seat: an emote begun while the
@@ -325,7 +345,11 @@ public class SpectateController
 		announced = announce;
 		releaseTicks = 0;
 		unseatedTicks = 0;
-		if (!moveClear())
+		if (parked)
+		{
+			log.debug("Parked by the player; watching from the post");
+		}
+		else if (!moveClear())
 		{
 			// Nowhere to go is not a reason to keep announcing a fight; the
 			// follower simply carries on following.
@@ -379,7 +403,11 @@ public class SpectateController
 			{
 				disarm.accept(false);
 			}
-			follower.resumeFollowing();
+			// A park the player gave is theirs to end, not the fight's.
+			if (!parked)
+			{
+				follower.resumeFollowing();
+			}
 		}
 
 		// Only a fight says goodbye. A thieving stand-clear ended is the
@@ -390,6 +418,22 @@ public class SpectateController
 				context().getCombatTarget()));
 		}
 		announced = false;
+	}
+
+	/**
+	 * The player parked the follower mid-fight, where it stands, and the post
+	 * is theirs now: the seat is forgotten without being let go, and a ward
+	 * held on it is dropped, weapon back, since nothing is cast at the post.
+	 */
+	private void letTheSeatGo()
+	{
+		if (shield != Shield.NONE)
+		{
+			dropChannel("parked");
+			disarm.accept(false);
+		}
+		watchTile = null;
+		panicDue = false;
 	}
 
 	/** Re-seats the follower only once it has been left well behind. */

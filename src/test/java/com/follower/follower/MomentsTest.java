@@ -177,6 +177,7 @@ public class MomentsTest
 	private Moments moments;
 	private boolean inCombat;
 	private boolean feetTaken;
+	private boolean parked;
 	private boolean keepsCompany = true;
 	private int daysKnown = 30;
 	private int tick;
@@ -238,7 +239,7 @@ public class MomentsTest
 		};
 		flourish = new PropFlourish(follower, hands);
 		moments = new Moments(game.client, follower, config, skilling,
-			() -> feetTaken, () -> inCombat, () -> daysKnown, flourish, () -> grateful);
+			() -> feetTaken, () -> inCombat, () -> daysKnown, flourish, () -> grateful, () -> parked);
 	}
 
 	private void tick(int count)
@@ -781,6 +782,64 @@ public class MomentsTest
 		tick(Gestures.Gesture.WAVE.cooldownTicks + 1);
 		moments.farewell();
 		assertEquals(2, follower.animations.size());
+	}
+
+	@Test
+	public void aParkThePlayerGaveBeatsTheWalksButNotTheWave()
+	{
+		// The park is handed over apart from the feet somebody else has:
+		// nothing may walk the follower off it or plant it on it, but a
+		// wave where it stands moves nothing, and was lost with the rest.
+		tick(1);
+		follower.stayHere();
+		WorldPoint post = follower.stayingAt;
+		parked = true;
+
+		assertFalse("not off to look", moments.goAndLook(DROP, 1, false, 4));
+		for (int level = 10; level < 13; level++)
+		{
+			moments.levelUp(level);
+		}
+		assertEquals("the third level clapped where it stands", 0, follower.movedToFront);
+		moments.noteworthy(Moments.Tier.MEDIUM, DROP);
+		assertEquals("the news nodded at, the notes left away", 0, held);
+		assertEquals(post, follower.stayingAt);
+
+		follower.animations.clear();
+		moments.farewell();
+		assertEquals("and the logout tab still waved at",
+			Collections.singletonList(Moments.WAVE), follower.animations);
+	}
+
+	@Test
+	public void aParkGivenMidMomentStandsItDownWhereItIs()
+	{
+		tick(1);
+		assertTrue(moments.goAndLook(DROP, 1, false, 4));
+		follower.stayHere();
+		WorldPoint post = follower.stayingAt;
+		parked = true;
+
+		tick(1);
+		assertFalse("stood down on the next tick", moments.isLooking());
+		assertEquals("and not handed back to following", post, follower.stayingAt);
+	}
+
+	@Test
+	public void aParkGivenMidMomentIsNotLetGoAsTheMomentEnds()
+	{
+		tick(1);
+		assertTrue(moments.goAndLook(DROP, 1, false, 4));
+		follower.stayHere();
+		WorldPoint post = follower.stayingAt;
+		parked = true;
+
+		// Ended by the company switched off, which lets go before anything
+		// asks whether the moment was interrupted.
+		keepsCompany = false;
+		tick(1);
+		assertFalse(moments.isLooking());
+		assertEquals("the player's park, not handed back to following", post, follower.stayingAt);
 	}
 
 	@Test

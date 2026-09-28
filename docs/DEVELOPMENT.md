@@ -1122,8 +1122,11 @@ plumbing, and the right-click menu fronts all of it.
    releases the pose. A park the player gave (Stay, Send, Follow me off) is
    theirs until Follow: the wander, the seat, the moments, the spectator, the
    errands and a holdStill plant all read it as the feet taken, and one that
-   had the feet when it was given stands down, the follower parked on the same
-   spot again as it lets go (`parkedByPlayer`, `keepThePlayersPark`). Animation
+   had the feet when it was given stands down, the follower parked again as it
+   lets go: a Stay where it then stands, which is the player's side when what
+   let go sent it home, a Send on its tile (`parkedByPlayer`,
+   `keepThePlayersPark`). What does not move the feet still happens: a fight
+   nearby is announced at both ends, and the logout tab is waved at. Animation
    and speech remain commands (`anim`, `say`) plus the Wave/Dance menu entries.
 
    Posed routes come from `findPath` - the client's own Walk-here pathfinder
@@ -1308,7 +1311,9 @@ visually in the way during a kill is problem enough.
 - **Who owns the feet.** Thrall mode is exempt, being in the fight by
   definition, and an errand in progress wins too - a follower halfway to a bank
   finishes the trip rather than being yanked sideways because something
-  attacked.
+  attacked. A park the player gave is watched from: the fight is announced at
+  both ends as ever, but the follower keeps its post and raises no ward there,
+  and a seat it had when the park came is given up where it stands.
 - **What it says.** Nothing special: the ordinary rule system never stopped
   running, so health and prayer warnings arrive as they always did. The
   `combat`, `bossFight`, `combatStart` and `combatEnd` conditions simply let a
@@ -1780,9 +1785,9 @@ an NPC with no combat level that spawns and turns to the player (a random
 event) is faced, stepped back from and peered at until it goes. A moment
 excuses a held seat and the seat is retaken after; thrall work, the spectator,
 an errand under way and a player's Stay beat a moment, which on a Stay is a
-clap or a nod where it stands. So does the long-haul sit: a level is
-then clapped from the seat (up off the sit and back down), and the walks are
-not taken, since the rest pose would sit it down wherever it arrived.
+clap, a nod or the logout wave where it stands. So does the long-haul sit: a
+level is then clapped from the seat (up off the sit and back down), and the
+walks are not taken, since the rest pose would sit it down wherever it arrived.
 
 **The news** (`Moments.noteworthy`). A drop, or a first-ever item, gets a
 reaction sized to it, and the sizes are the loot rules' own numbers so the

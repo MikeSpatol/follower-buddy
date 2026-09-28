@@ -370,8 +370,43 @@ public class RuleSetIntegrityTest
 	public void everyFlourishIsPlayableAsWritten() throws IOException
 	{
 		Harness h = new Harness(folder.newFolder().toPath());
+		List<String> broken = unplayableFlourishes(h.loader.getRules());
+		assertTrue("flourishes that cannot play as written:\n  "
+			+ String.join("\n  ", broken), broken.isEmpty());
+	}
+
+	/**
+	 * Only a flourish that needs the Stay is refused on it. One kept off the
+	 * Stay - staying under a none - is exactly the one that plays, and the
+	 * check once flagged it too, since it asked only whether staying was
+	 * named anywhere in the tree.
+	 */
+	@Test
+	public void aFlourishKeptOffTheStayIsPlayable() throws IOException
+	{
+		String prop = "\"prop\": {\"item\": 10485, \"pose\": 5354, \"ticks\": 10},"
+			+ " \"group\": \"t\", \"say\": [\"Notes.\"],";
+		Harness h = new Harness(folder.newFolder().toPath(),
+			"{\"version\": 1, \"rules\": ["
+				+ "{\"id\": \"off-the-post\", " + prop
+				+ " \"when\": {\"type\": \"all\", \"conditions\": [{\"type\": \"chance\","
+				+ " \"percent\": 2}, {\"type\": \"none\", \"conditions\": [{\"type\": \"staying\"}]}]}},"
+				+ "{\"id\": \"either-way\", " + prop
+				+ " \"when\": {\"type\": \"any\", \"conditions\": [{\"type\": \"staying\"},"
+				+ " {\"type\": \"idle\"}]}},"
+				+ "{\"id\": \"at-the-post\", " + prop
+				+ " \"when\": {\"type\": \"all\", \"conditions\": [{\"type\": \"staying\"},"
+				+ " {\"type\": \"chance\", \"percent\": 2}]}}]}");
+		assertEquals(3, h.loader.getRules().size());
+		assertEquals(java.util.Collections.singletonList(
+			"at-the-post: the flourish is refused on a Stay, so the prop never shows"),
+			unplayableFlourishes(h.loader.getRules()));
+	}
+
+	private static List<String> unplayableFlourishes(List<SpeechRule> rules)
+	{
 		List<String> broken = new ArrayList<>();
-		for (SpeechRule rule : h.loader.getRules())
+		for (SpeechRule rule : rules)
 		{
 			if (rule.prop == null)
 			{
@@ -403,13 +438,56 @@ public class RuleSetIntegrityTest
 			}
 			// The flourish plants the follower and lets it go at the end, which
 			// would end a Stay, so it is refused on one: the prop never shows.
-			if (rule.when != null && rule.when.usesType("staying"))
+			if (requiresType(rule.when, "staying"))
 			{
 				broken.add(rule.id + ": the flourish is refused on a Stay, so the prop never shows");
 			}
 		}
-		assertTrue("flourishes that cannot play as written:\n  "
-			+ String.join("\n  ", broken), broken.isEmpty());
+		return broken;
+	}
+
+	/**
+	 * Whether a when-block can only match with this type true: the type
+	 * itself, any branch of an all, or every branch of an any. Nothing under
+	 * a none, which asks for the opposite.
+	 */
+	private static boolean requiresType(Condition condition, String type)
+	{
+		if (condition == null)
+		{
+			return false;
+		}
+		if (type.equalsIgnoreCase(condition.type))
+		{
+			return true;
+		}
+		if (condition.conditions == null || condition.conditions.isEmpty())
+		{
+			return false;
+		}
+		if ("all".equalsIgnoreCase(condition.type))
+		{
+			for (Condition child : condition.conditions)
+			{
+				if (requiresType(child, type))
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+		if ("any".equalsIgnoreCase(condition.type))
+		{
+			for (Condition child : condition.conditions)
+			{
+				if (!requiresType(child, type))
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+		return false;
 	}
 
 	/**
