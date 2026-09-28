@@ -2,7 +2,9 @@ package com.follower;
 
 import com.follower.follower.ErrandController;
 import com.follower.follower.FollowerEntity;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.junit.Test;
 
@@ -48,7 +50,36 @@ public class StandingUpFromRestTest
 		follower.setPoseOverride(SIT);
 		FollowerPlugin.letGoOfTheSit(follower, SIT);
 		assertEquals(0, follower.getPoseOverride());
-		assertEquals("the sit's own stand-up", 1, played.size());
+		assertEquals("the sit's own stand-up", Collections.singletonList(FollowerPlugin.REST_STAND_UP), played);
+	}
+
+	/** Sits down through the plugin's own rest, then stands with the setting now at the given pose. */
+	private void sitThenStandWithTheSettingAt(int restAnimation) throws ReflectiveOperationException
+	{
+		FollowerPlugin plugin = new FollowerPlugin();
+		Field field = FollowerPlugin.class.getDeclaredField("follower");
+		field.setAccessible(true);
+		field.set(plugin, follower);
+		plugin.sitOrStand(true, SIT);
+		plugin.sitOrStand(false, restAnimation);
+	}
+
+	@Test
+	public void aRestPoseTurnedOffMidSitStillLetsGoOfTheSit() throws ReflectiveOperationException
+	{
+		// Turning the setting off is itself what ends the rest.
+		sitThenStandWithTheSettingAt(0);
+		assertEquals("the old sit is gone", 0, follower.getPoseOverride());
+		assertEquals("and stood up from", Collections.singletonList(FollowerPlugin.REST_STAND_UP), played);
+	}
+
+	@Test
+	public void aRestPoseChangedMidSitStillLetsGoOfTheOldSit() throws ReflectiveOperationException
+	{
+		// Another pose does not end the rest by itself; the player moving does.
+		sitThenStandWithTheSettingAt(SIT + 1);
+		assertEquals("the old sit is gone", 0, follower.getPoseOverride());
+		assertEquals("and stood up from", Collections.singletonList(FollowerPlugin.REST_STAND_UP), played);
 	}
 
 	@Test

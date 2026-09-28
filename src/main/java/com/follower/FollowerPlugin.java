@@ -1150,7 +1150,7 @@ public class FollowerPlugin extends Plugin
 	 * Its partner rather than a generic getting-up animation, so the two read
 	 * as one gesture the way they do when a player performs it.
 	 */
-	private static final int REST_STAND_UP = 10053;
+	static final int REST_STAND_UP = 10053;
 
 	/** Matches idle-long's five minutes, so the sitting and the "we live here
 	 * now" lines arrive as one mood rather than two systems coinciding. */
@@ -1191,9 +1191,18 @@ public class FollowerPlugin extends Plugin
 			return;
 		}
 		resting = wantRest;
-		if (wantRest)
+		sitOrStand(wantRest, config.restAnimation());
+	}
+
+	/**
+	 * Sits down on the Rest pose, or lets go of the sit it put on. Pulled out
+	 * of updateRest so a test can change the setting mid-sit.
+	 */
+	void sitOrStand(boolean sit, int restAnimation)
+	{
+		if (sit)
 		{
-			restPose = config.restAnimation();
+			restPose = restAnimation;
 			follower.setPoseOverride(restPose);
 		}
 		else
