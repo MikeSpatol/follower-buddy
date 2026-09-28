@@ -401,6 +401,12 @@ public class RuleSetIntegrityTest
 				broken.add(rule.id + ": a silent flourish is a follower stopping"
 					+ " for no visible reason");
 			}
+			// The flourish plants the follower and lets it go at the end, which
+			// would end a Stay, so it is refused on one: the prop never shows.
+			if (rule.when != null && rule.when.usesType("staying"))
+			{
+				broken.add(rule.id + ": the flourish is refused on a Stay, so the prop never shows");
+			}
 		}
 		assertTrue("flourishes that cannot play as written:\n  "
 			+ String.join("\n  ", broken), broken.isEmpty());

@@ -269,10 +269,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `stay-fidget`
 
-> R25: the notes come out at the post. Same verified scroll-and-pose pair the errands use.
+> R25: said at the post. No scroll: a flourish is refused on a Stay, since its release at the end would end the Stay.
 
 - **when:** on a player-commanded Stay AND a 2% roll
-- **does:** prop item 10485, pose 5354
 - **pacing:** priority 25, cooldown 5m, overhead
 
 - Might as well update the notes while I wait.

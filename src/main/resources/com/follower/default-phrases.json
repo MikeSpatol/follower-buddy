@@ -3195,12 +3195,7 @@
     },
     {
       "id": "stay-fidget",
-      "prop": {
-        "item": 10485,
-        "pose": 5354,
-        "ticks": 10
-      },
-      "note": "R25: the notes come out at the post. Same verified scroll-and-pose pair the errands use.",
+      "note": "R25: said at the post. No scroll: a flourish is refused on a Stay, since its release at the end would end the Stay.",
       "group": "misc",
       "priority": 25,
       "output": "overhead",
