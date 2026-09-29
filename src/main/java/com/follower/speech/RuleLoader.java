@@ -41,6 +41,12 @@ public class RuleLoader
 	public static final String FILE_NAME = "phrases.json";
 	private static final String BUNDLED_DEFAULT = "/com/follower/default-phrases.json";
 
+	/**
+	 * The rules 1.4.0 shipped, a base for some files that have none; see
+	 * {@link #unrecordedBase}.
+	 */
+	static final String UNRECORDED_BASE = "/com/follower/seen/1.4.0-phrases.json";
+
 	private final Gson gson;
 
 	@Getter
@@ -154,9 +160,14 @@ public class RuleLoader
 				return;
 			}
 
-			// Null the first time this version runs: there is no record of what
-			// shipped before, and mergeRule says what it does about that.
+			// The record of what shipped last time, or for a file that never
+			// merged, what can be told of where it came from. A rule missing
+			// from it is judged by mergeRule without one.
 			com.google.gson.JsonObject base = readBase(pretty);
+			if (base == null)
+			{
+				base = unrecordedBase(pretty, ours);
+			}
 
 			Set<String> known = new HashSet<>();
 			for (com.google.gson.JsonElement element : ours.getAsJsonArray("rules"))
@@ -267,7 +278,9 @@ public class RuleLoader
 	}
 
 	/**
-	 * The first run under this version, with no record of what shipped before.
+	 * A rule with no record of what shipped before: one the base does not
+	 * hold, which for a file with no record is most of what
+	 * {@link #unrecordedBase} leaves out.
 	 *
 	 * <p>Nothing can be deduced about deletions, so the only honest signal left
 	 * is whether the player has written into the rule at all. If every line in
@@ -307,6 +320,83 @@ public class RuleLoader
 	private static Map<String, com.google.gson.JsonObject> byId(com.google.gson.JsonObject file)
 	{
 		return ThreeWay.byId(ThreeWay.array(file, "rules"));
+	}
+
+	/**
+	 * A base for a file with no record, as far as its origin can be told.
+	 *
+	 * <p>Up to 1.4.0 a fresh install wrote its starter file without recording
+	 * it, and the record only arrived with the next start's merge, which
+	 * guessed; so a file started just once reaches this version with none, and
+	 * guessing puts back the lines its player deleted. A file that holds every
+	 * rule 1.4.0 shipped was written by 1.4.0 or 1.3.0, which shipped the same
+	 * rules, and each of its rules that still matches 1.4.0 outside its lines
+	 * and its switch is judged against 1.4.0: a deleted line stays deleted. The
+	 * rest are left out, to mergeRule's guess, which brings an untouched rule up
+	 * to date: 1.3.0's two rules that 1.4.0 retuned, and every rule of a file
+	 * older than 1.3.0, which lacks rules 1.4.0 added. Null when nothing fits.
+	 */
+	private com.google.gson.JsonObject unrecordedBase(Gson pretty, com.google.gson.JsonObject ours)
+	{
+		com.google.gson.JsonObject shipped;
+		try (InputStream in = RuleLoader.class.getResourceAsStream(UNRECORDED_BASE))
+		{
+			if (in == null)
+			{
+				return null;
+			}
+			shipped = pretty.fromJson(new java.io.InputStreamReader(in, StandardCharsets.UTF_8),
+				com.google.gson.JsonObject.class);
+		}
+		catch (Exception e)
+		{
+			log.warn("Could not read {}, merging without a base", UNRECORDED_BASE, e);
+			return null;
+		}
+
+		Map<String, com.google.gson.JsonObject> mine = byId(ours);
+		Set<String> known = new HashSet<>(mine.keySet());
+		if (ours.has("removed") && ours.get("removed").isJsonArray())
+		{
+			for (com.google.gson.JsonElement element : ours.getAsJsonArray("removed"))
+			{
+				if (element.isJsonPrimitive())
+				{
+					known.add(element.getAsString());
+				}
+			}
+		}
+		com.google.gson.JsonArray kept = new com.google.gson.JsonArray();
+		for (com.google.gson.JsonElement element : shipped.getAsJsonArray("rules"))
+		{
+			String id = idOf(element);
+			if (id == null || !known.contains(id))
+			{
+				// Older than 1.3.0: the guess serves it as it always did.
+				return null;
+			}
+			com.google.gson.JsonObject held = mine.get(id);
+			if (held != null && sameOutsideLines(held, element.getAsJsonObject()))
+			{
+				kept.add(element);
+			}
+		}
+		com.google.gson.JsonObject base = new com.google.gson.JsonObject();
+		base.add("rules", kept);
+		return base;
+	}
+
+	/** Whether two copies of a rule differ only in their lines and whether it is on. */
+	private static boolean sameOutsideLines(com.google.gson.JsonObject a, com.google.gson.JsonObject b)
+	{
+		com.google.gson.JsonObject x = a.deepCopy();
+		com.google.gson.JsonObject y = b.deepCopy();
+		for (String key : new String[]{"say", "enabled"})
+		{
+			x.remove(key);
+			y.remove(key);
+		}
+		return x.equals(y);
 	}
 
 	/** The defaults as they stood at the last merge, or null if never written. */
@@ -671,6 +761,21 @@ public class RuleLoader
 		catch (IOException e)
 		{
 			log.warn("Could not write default rules to {}", file, e);
+			return;
+		}
+		// Recorded at once, so the first update merges against what was
+		// written rather than against a guess.
+		try (InputStream in = RuleLoader.class.getResourceAsStream(BUNDLED_DEFAULT))
+		{
+			if (in != null && baseFile != null)
+			{
+				Files.copy(in, baseFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+			}
+		}
+		catch (IOException e)
+		{
+			// Only costs the first update a merge against 1.4.0's defaults.
+			log.warn("Could not record the starter rules in {}", baseFile, e);
 		}
 	}
 }

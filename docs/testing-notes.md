@@ -432,3 +432,36 @@ superiors the cache files that the list did not know: eleven newer ones and
 the Bloodthirsty set, one of them spelled "Bloodthirst rockslug" by the game.
 Three landmarks (Noticeboard, Portrait, Sundial) matched nothing the scan can
 see and are dropped.
+
+## Eighth pass: the upgrade from 1.4.0, played, 2026-09-28
+
+The first play session on the release checklist installed 1.4.0 fresh on a
+new profile (from the 1.13 hotfix branch, since c82e360 no longer compiles),
+edited two rules in Messages (one line deleted from the axe rule, one harpoon
+line rewritten), then started the release build on the same files.
+
+**The find: the upgrade put a deleted line back.** The three-way merge needs
+a record of the defaults as they last stood, and only a merge ever wrote one:
+a fresh install copied the starter file and recorded nothing, so its first
+merge had no base and guessed, and a rule holding only shipped lines looked
+untouched and was replaced by the new default. The rewritten harpoon rule
+survived only because it held a line of the player's own. In 1.4.0 that first
+merge is simply the second start, so every 1.4.0 player who deleted a line in
+their first session already got it back then; the play test met it at the
+upgrade only because its install had started once.
+
+**The fix.** A fresh install records what it wrote, for the rules and the
+conversation trees alike, so from this version there is no first merge to
+guess on. A file that still has no record (an install started once) is judged
+against the defaults 1.4.0 shipped, bundled under `seen/`, but only when it
+holds every rule 1.4.0 shipped, and only for the rules that match 1.4.0 apart
+from their lines: the adversarial review ran the merge on every released file
+and found that judging a 1.2.0 or 1.3.0 file against 1.4.0 would have taken
+their untouched rules for edited ones, and kept back 99 lines and the boss
+send-off fix for good. With the narrowing, an untouched 1.1.0 or 1.2.0 file
+merges as before, a 1.3.0 file comes out exactly the current defaults, and the
+play test's own 1.4.0 files keep the deleted axe line and the harpoon edit.
+The guess still leaves two recall rules a line behind on the oldest files, as
+it always did. ThreeWayMergeTest and DialogMergeTest build their no-record
+cases from the real 1.4.0 files; mutating either condition of the narrowing
+fails a test.

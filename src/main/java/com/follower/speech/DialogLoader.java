@@ -43,6 +43,9 @@ public class DialogLoader
 		new java.util.HashSet<>(java.util.Arrays.asList("says", "id"));
 	private static final String BUNDLED_DEFAULT = "/com/follower/default-dialogs.json";
 
+	/** The trees 1.4.0 shipped, the base for a file that has none; see RuleLoader. */
+	static final String UNRECORDED_BASE = "/com/follower/seen/1.4.0-dialogs.json";
+
 	private static final int SUPPORTED_VERSION = 1;
 
 	private final Gson gson;
@@ -325,12 +328,29 @@ public class DialogLoader
 		return out;
 	}
 
-	/** The trees as they shipped at the last merge, or null if never written. */
+	/**
+	 * The trees as they shipped at the last merge; for a file that never
+	 * merged, the ones 1.4.0 wrote; null only if even that cannot be read.
+	 */
 	private com.google.gson.JsonObject readBase(Gson pretty)
 	{
-		if (baseFile == null || !Files.exists(baseFile))
+		if (baseFile == null)
 		{
 			return null;
+		}
+		if (!Files.exists(baseFile))
+		{
+			try (InputStream in = DialogLoader.class.getResourceAsStream(UNRECORDED_BASE))
+			{
+				return in == null ? null : pretty.fromJson(
+					new java.io.InputStreamReader(in, java.nio.charset.StandardCharsets.UTF_8),
+					com.google.gson.JsonObject.class);
+			}
+			catch (Exception e)
+			{
+				log.warn("Could not read {}, merging without a base", UNRECORDED_BASE, e);
+				return null;
+			}
 		}
 		try
 		{
@@ -509,6 +529,21 @@ public class DialogLoader
 		catch (IOException e)
 		{
 			log.warn("Could not write default dialogs to {}", file, e);
+			return;
+		}
+		// Recorded at once, so the first update merges against what was
+		// written rather than against a guess.
+		try (InputStream in = DialogLoader.class.getResourceAsStream(BUNDLED_DEFAULT))
+		{
+			if (in != null && baseFile != null)
+			{
+				Files.copy(in, baseFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+			}
+		}
+		catch (IOException e)
+		{
+			// Only costs the first update a merge against 1.4.0's trees.
+			log.warn("Could not record the starter dialogs in {}", baseFile, e);
 		}
 	}
 

@@ -250,31 +250,60 @@ public class DialogMergeTest
 		assertEquals(once, twice);
 	}
 
-	@Test
-	public void withNoBaseAnUntouchedTreeIsBroughtUpToDate() throws Exception
+	/**
+	 * The trees exactly as 1.4.0 wrote them on a fresh install, which recorded
+	 * nothing, so its first update had no base.
+	 */
+	private static JsonObject freshFrom140()
 	{
-		JsonObject merged = merge(previousVersion(), null);
-
-		String t = firstTreeId(merged);
-		assertEquals("a tree nobody edited is brought up to date",
-			says(node(shipped(), t, firstNodeId(shipped(), t))),
-			says(node(merged, t, firstNodeId(merged, t))));
+		try (InputStream in = DialogLoader.class
+			.getResourceAsStream("/com/follower/seen/1.4.0-dialogs.json"))
+		{
+			return GSON.fromJson(new InputStreamReader(in, StandardCharsets.UTF_8),
+				JsonObject.class);
+		}
+		catch (Exception e)
+		{
+			throw new AssertionError(e);
+		}
 	}
 
 	@Test
-	public void withNoBaseATreeThePlayerWroteIntoIsLeftAlone() throws Exception
+	public void aFreshInstallFrom140ThatNobodyEditedBecomesTheNewDefaults() throws Exception
 	{
-		JsonObject theirs = previousVersion();
+		JsonObject merged = merge(freshFrom140(), null);
+
+		for (JsonElement e : shipped().getAsJsonArray("trees"))
+		{
+			String id = e.getAsJsonObject().get("id").getAsString();
+			assertEquals("every tree as it ships now: " + id, e, tree(merged, id));
+		}
+	}
+
+	@Test
+	public void aLineDeletedOnAFreshInstallFrom140StaysDeleted() throws Exception
+	{
+		JsonObject theirs = freshFrom140();
 		String t = firstTreeId(theirs);
-		String id = firstNodeId(theirs, t);
-		List<String> plus = new ArrayList<>(says(node(theirs, t, id)));
-		plus.add("A line of my own.");
-		setSays(node(theirs, t, id), plus);
+		JsonObject n = node(theirs, t, firstNodeId(theirs, t));
+		List<String> fewer = new ArrayList<>(says(n));
+		String deleted = fewer.remove(fewer.size() - 1);
+		setSays(n, fewer);
 
 		JsonObject merged = merge(theirs, null);
 
-		assertEquals("without a base, their tree is not ours to touch",
-			plus, says(node(merged, t, id)));
+		assertFalse(says(node(merged, t, firstNodeId(merged, t))).contains(deleted));
+	}
+
+	@Test
+	public void aFreshInstallRecordsWhatItWrote() throws Exception
+	{
+		Path dir = folder.newFolder().toPath();
+		new DialogLoader(GSON).initialise(dir, true);
+
+		assertEquals(shipped(), GSON.fromJson(new String(
+			Files.readAllBytes(dir.resolve(DialogLoader.BASE_FILE)), StandardCharsets.UTF_8),
+			JsonObject.class));
 	}
 
 	@Test

@@ -215,7 +215,7 @@ Developer section, and typing one while it is off says so.
   incoming text is validated and sanitised before it reaches a rule file, the
   chatbox or a dialog; see `com.follower.share.PackFile` and the two test
   classes that attack it.
-- The test suite (1443 tests) covers the rule engine, the follower's movement
+- The test suite (1448 tests) covers the rule engine, the follower's movement
   and errand refusals, the skilling seat and its moments, the dialog
   structure, hostile share packs, and every bundled rule's integrity; see
   `docs/testing-strategy.md`.

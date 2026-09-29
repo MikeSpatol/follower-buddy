@@ -258,42 +258,195 @@ public class ThreeWayMergeTest
 
 	// ------------------------------------------------------- the first run
 
-	@Test
-	public void withNoBaseAnUntouchedRuleIsBroughtUpToDate() throws Exception
+	/**
+	 * The rules exactly as 1.4.0 wrote them on a fresh install. Up to 1.4.0 a
+	 * fresh install recorded nothing, so its first update had no base.
+	 */
+	private static JsonObject freshFrom140()
 	{
-		JsonObject merged = merge(previousVersion(), null);
-
-		assertEquals("a year of tuning finally lands", 24,
-			say(merged, "examine-echo").size());
-		assertEquals(70, chance(merged, "examine-echo"));
+		try (InputStream in = RuleLoader.class
+			.getResourceAsStream("/com/follower/seen/1.4.0-phrases.json"))
+		{
+			return GSON.fromJson(new InputStreamReader(in, StandardCharsets.UTF_8),
+				JsonObject.class);
+		}
+		catch (Exception e)
+		{
+			throw new AssertionError(e);
+		}
 	}
 
+	/**
+	 * Play test, 28 Sep: a fresh 1.4.0 install with one line deleted from the
+	 * axe rule and one harpoon line rewritten. The upgrade had no base and put
+	 * the deleted axe line back, because a rule holding only shipped lines
+	 * looked untouched.
+	 */
 	@Test
-	public void withNoBaseARuleThePlayerWroteIntoIsLeftAlone() throws Exception
+	public void aFreshInstallFrom140KeepsTheLinesItDeletedAndTheOnesItWrote() throws Exception
 	{
-		JsonObject theirs = previousVersion();
-		List<String> plus = new ArrayList<>(say(theirs, "examine-echo"));
-		plus.add("A line of my own.");
-		setSay(theirs, "examine-echo", plus);
+		JsonObject theirs = freshFrom140();
+		List<String> axe = new ArrayList<>(say(theirs, "gear-axe"));
+		String deleted = axe.remove(1);
+		setSay(theirs, "gear-axe", axe);
+		List<String> harpoon = new ArrayList<>(say(theirs, "gear-harpoon"));
+		String rewritten = harpoon.set(1, "TEST!");
+		setSay(theirs, "gear-harpoon", harpoon);
 
 		JsonObject merged = merge(theirs, null);
 
-		assertEquals("without a base, their rule is not ours to touch",
-			5, say(merged, "examine-echo").size());
-		assertEquals(30, chance(merged, "examine-echo"));
+		assertFalse("the deleted line stays deleted", say(merged, "gear-axe").contains(deleted));
+		assertTrue(say(merged, "gear-harpoon").contains("TEST!"));
+		assertFalse("and the line it replaced stays gone", say(merged, "gear-harpoon").contains(rewritten));
 	}
 
 	@Test
-	public void withNoBaseARuleSwitchedOffStaysOff() throws Exception
+	public void aFreshInstallFrom140ThatNobodyEditedBecomesTheNewDefaults() throws Exception
 	{
-		JsonObject theirs = previousVersion();
+		JsonObject merged = merge(freshFrom140(), null);
+
+		for (JsonElement e : shipped().getAsJsonArray("rules"))
+		{
+			String id = e.getAsJsonObject().get("id").getAsString();
+			// New lines join the end of the old ones; a line is picked at
+			// random, so only which lines there are matters.
+			assertEquals("every rule's lines as it ships now: " + id,
+				String.valueOf(lines(e.getAsJsonObject())), String.valueOf(lines(rule(merged, id))));
+			JsonObject want = e.getAsJsonObject().deepCopy();
+			JsonObject got = rule(merged, id).deepCopy();
+			want.remove("say");
+			got.remove("say");
+			assertEquals("and everything else: " + id, want, got);
+		}
+	}
+
+	/** A rule's lines as a sorted set, or null for a rule that says nothing of its own. */
+	private static java.util.TreeSet<String> lines(JsonObject rule)
+	{
+		if (!rule.has("say"))
+		{
+			return null;
+		}
+		java.util.TreeSet<String> out = new java.util.TreeSet<>();
+		rule.getAsJsonArray("say").forEach(line -> out.add(line.getAsString()));
+		return out;
+	}
+
+	@Test
+	public void aRuleSwitchedOffOnAFreshInstallFrom140StaysOff() throws Exception
+	{
+		JsonObject theirs = freshFrom140();
 		rule(theirs, "examine-echo").addProperty("enabled", false);
 
 		JsonObject merged = merge(theirs, null);
 
 		assertFalse(rule(merged, "examine-echo").get("enabled").getAsBoolean());
-		assertEquals("brought up to date in every other respect", 24,
-			say(merged, "examine-echo").size());
+		assertEquals("brought up to date in every other respect",
+			say(shipped(), "examine-echo"), say(merged, "examine-echo"));
+	}
+
+	/**
+	 * A rule 1.4.0 never shipped has no record to be judged against, so it is
+	 * judged by its lines, as every rule once was: one the player wrote into
+	 * is theirs.
+	 */
+	@Test
+	public void aRuleTheRecordNeverHadIsLeftAloneOnceWrittenInto() throws Exception
+	{
+		JsonObject theirs = freshFrom140();
+		JsonObject newer = null;
+		for (JsonElement e : shipped().getAsJsonArray("rules"))
+		{
+			if (rule(theirs, e.getAsJsonObject().get("id").getAsString()) == null)
+			{
+				newer = e.getAsJsonObject().deepCopy();
+				break;
+			}
+		}
+		assertTrue("the current defaults have rules 1.4.0 did not", newer != null);
+		String id = newer.get("id").getAsString();
+		theirs.getAsJsonArray("rules").add(newer);
+		List<String> plus = new ArrayList<>(say(theirs, id));
+		plus.add("A line of my own.");
+		setSay(theirs, id, plus);
+
+		JsonObject merged = merge(theirs, null);
+
+		assertEquals(plus, say(merged, id));
+	}
+
+	/**
+	 * Review, 28 Sep: a file older than 1.4.0 must not be judged against 1.4.0,
+	 * or everything 1.3.0 and 1.4.0 added to its untouched rules looks like
+	 * the player deleted it, and never arrives. A 1.2.0 file lacks rules 1.4.0
+	 * added, so it is still brought up to date by its lines, as before.
+	 */
+	@Test
+	public void aFileOlderThan130IsStillBroughtUpToDate() throws Exception
+	{
+		// As 1.2.0 was: without a rule 1.3.0 added, and with fewer lines in a
+		// rule 1.3.0 wrote more for without retuning it (eight such rules).
+		JsonObject theirs = freshFrom140();
+		JsonArray older = new JsonArray();
+		for (JsonElement e : theirs.getAsJsonArray("rules"))
+		{
+			if (!"boss-brutus".equals(e.getAsJsonObject().get("id").getAsString()))
+			{
+				older.add(e);
+			}
+		}
+		theirs.add("rules", older);
+		setSay(theirs, "gear-axe", say(theirs, "gear-axe").subList(0, 1));
+
+		JsonObject merged = merge(theirs, null);
+
+		assertEquals("the lines written since arrive",
+			say(shipped(), "gear-axe"), say(merged, "gear-axe"));
+	}
+
+	/**
+	 * 1.3.0 shipped the same rules as 1.4.0, and 1.4.0 retuned two of them. A
+	 * 1.3.0 copy of such a rule no longer matches 1.4.0 outside its lines, so
+	 * it is brought up to date by its lines rather than judged as tuned.
+	 */
+	@Test
+	public void aRuleRetunedSince130StillArrives() throws Exception
+	{
+		JsonObject theirs = freshFrom140();
+		rule(theirs, "examine-echo").addProperty("cooldownMs", 123456);
+
+		JsonObject merged = merge(theirs, null);
+
+		assertEquals(rule(shipped(), "examine-echo").get("cooldownMs"),
+			rule(merged, "examine-echo").get("cooldownMs"));
+	}
+
+	/** From this version on a fresh install records what it wrote, so there is never a first run to guess on. */
+	@Test
+	public void aFreshInstallRecordsWhatItWrote() throws Exception
+	{
+		Path dir = folder.newFolder().toPath();
+		new RuleLoader(GSON).initialise(dir, true);
+
+		assertEquals(shipped(), GSON.fromJson(new String(
+			Files.readAllBytes(dir.resolve(RuleLoader.BASE_FILE)), StandardCharsets.UTF_8),
+			JsonObject.class));
+
+		JsonObject theirs = GSON.fromJson(new String(
+			Files.readAllBytes(dir.resolve(RuleLoader.FILE_NAME)), StandardCharsets.UTF_8),
+			JsonObject.class);
+		List<String> axe = new ArrayList<>(say(theirs, "gear-axe"));
+		String deleted = axe.remove(1);
+		setSay(theirs, "gear-axe", axe);
+		Files.write(dir.resolve(RuleLoader.FILE_NAME),
+			GSON.toJson(theirs).getBytes(StandardCharsets.UTF_8));
+
+		new RuleLoader(GSON).initialise(dir, true);
+
+		JsonObject after = GSON.fromJson(new String(
+			Files.readAllBytes(dir.resolve(RuleLoader.FILE_NAME)), StandardCharsets.UTF_8),
+			JsonObject.class);
+		assertFalse(say(after, "gear-axe").contains(deleted));
 	}
 
 	@Test
