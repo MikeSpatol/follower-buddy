@@ -596,7 +596,7 @@ public class FollowerPlugin extends Plugin
 		}
 		paletteHarvest.load(dataDir);
 		wrapTrimStore.load(dataDir, follower);
-		profileStore.load(dataDir);
+		loadOutfitProfiles();
 
 		speechEngine.setSink(this::speak);
 		applyConfig();
@@ -2312,6 +2312,9 @@ public class FollowerPlugin extends Plugin
 			speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
 				speechEngine.getContext().setRegionNames(ruleLoader.getRegionNames());
 			readTraits();
+			// This profile's own outfits, read before its outfit is restored
+			// from them: the last profile's list must not dress this one.
+			loadOutfitProfiles();
 			if (panel != null)
 			{
 				restoreActiveProfile();
@@ -3025,6 +3028,26 @@ public class FollowerPlugin extends Plugin
 		configManager.setConfiguration(FollowerConfig.GROUP, "activeProfile",
 			name == null ? "" : name);
 	}
+
+	/**
+	 * This RuneLite profile's own outfit profiles, kept in its settings. One
+	 * list shared by every profile let two of them on the same name write over
+	 * each other's outfit, and a switch put the other profile's on this one.
+	 */
+	private void loadOutfitProfiles()
+	{
+		profileStore.load(dataDir, config.outfitProfiles(), config.activeProfile(), config.customOutfit(),
+			json -> configManager.setConfiguration(FollowerConfig.GROUP, "outfitProfiles", json));
+		outfitListProfileId = currentProfileId();
+	}
+
+	/**
+	 * The RuneLite profile the outfit list was read for. A switch announces
+	 * the new profile's settings before the switch itself, while the list is
+	 * still the last profile's; a thrall outfit named only in the new one's
+	 * list is not unknown, just not read yet.
+	 */
+	private long outfitListProfileId = -1;
 
 	/**
 	 * Picks the profile a session starts in: the one last worn, else the first
@@ -3953,7 +3976,8 @@ public class FollowerPlugin extends Plugin
 				: "thrallRangedProfile".equals(key) ? config.thrallRangedProfile()
 				: config.thrallMagicProfile();
 			String name = typed == null ? "" : typed.trim();
-			if (!name.isEmpty() && profileStore.get(name) == null)
+			if (!name.isEmpty() && profileStore.get(name) == null
+				&& belongsToProfile(outfitListProfileId, currentProfileId()))
 			{
 				sendStatus(unknownProfileMessage(name));
 			}

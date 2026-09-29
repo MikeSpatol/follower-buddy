@@ -211,8 +211,9 @@ public class PhraseFileFidelityTest
 	public void outfitProfilesSurviveASaveAndReload() throws IOException
 	{
 		Path dir = folder.newFolder().toPath();
+		java.util.concurrent.atomic.AtomicReference<String> kept = new java.util.concurrent.atomic.AtomicReference<>("");
 		OutfitProfileStore first = new OutfitProfileStore(new Gson());
-		first.load(dir);
+		first.load(dir, kept.get(), null, null, kept::set);
 
 		Outfit outfit = new Outfit();
 		outfit.setItem(net.runelite.api.kit.KitType.WEAPON, 4151);
@@ -222,7 +223,7 @@ public class PhraseFileFidelityTest
 		first.put("My costume", outfit.toString());
 
 		OutfitProfileStore second = new OutfitProfileStore(new Gson());
-		second.load(dir);
+		second.load(dir, kept.get(), null, null, kept::set);
 
 		String stored = second.get("My costume");
 		assertNotNull("the profile did not survive the round trip", stored);
@@ -247,13 +248,14 @@ public class PhraseFileFidelityTest
 	public void deletingAProfileSticksAcrossAReload() throws IOException
 	{
 		Path dir = folder.newFolder().toPath();
+		java.util.concurrent.atomic.AtomicReference<String> kept = new java.util.concurrent.atomic.AtomicReference<>("");
 		OutfitProfileStore first = new OutfitProfileStore(new Gson());
-		first.load(dir);
+		first.load(dir, kept.get(), null, null, kept::set);
 		first.put("Temporary", "weapon=item:4151");
 		assertTrue(first.remove("Temporary"));
 
 		OutfitProfileStore second = new OutfitProfileStore(new Gson());
-		second.load(dir);
+		second.load(dir, kept.get(), null, null, kept::set);
 		assertEquals("a deleted profile came back", null, second.get("Temporary"));
 	}
 

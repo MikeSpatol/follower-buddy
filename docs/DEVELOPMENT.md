@@ -1264,9 +1264,11 @@ and talks; it never acts on the player's behalf.
 - **It never sends input or packets.** Nothing invokes a menu action, writes to
   a packet buffer or synthesises a key press. The menu entries it adds are
   ordinary `createMenuEntry` options the player clicks themselves.
-- **Files stay in `~/.runelite/follower`** - phrases, learned weapon stances,
-  outfit profiles and measured animation trims. Sound files the player supplies
-  live in the `sounds` subfolder beside them.
+- **Files stay in `~/.runelite/follower`** - phrases, learned weapon stances
+  and measured animation trims. Sound files the player supplies live in the
+  `sounds` subfolder beside them. Named outfit profiles are kept in each
+  RuneLite profile's own settings; the `outfit-profiles.json` earlier versions
+  shared between profiles is only read, as where a profile's list starts.
 - **Two paths the player chooses themselves.** Sharing exports a `.zip` to a
   location picked in a `JFileChooser`, and imports one from the same. Those are
   the only reads or writes outside the profile folder, both are initiated by a

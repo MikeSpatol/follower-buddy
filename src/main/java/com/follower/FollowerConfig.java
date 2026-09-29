@@ -1218,6 +1218,17 @@ public interface FollowerConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "outfitProfiles",
+		name = "Outfit profiles",
+		description = "This profile's own named outfits; managed by the plugin",
+		hidden = true
+	)
+	default String outfitProfiles()
+	{
+		return "";
+	}
+
+	@ConfigItem(
 		keyName = "parkedAt",
 		name = "Parked at",
 		description = "The tile the follower was told to wait on, so it is there again"

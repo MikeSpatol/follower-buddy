@@ -16,9 +16,10 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Named outfit profiles: profile name -> the same outfit string the config
- * panel edits. Stored as outfit-profiles.json in the plugin's data directory,
- * saved on every mutation, insertion order preserved so the dropdown lists
- * profiles in the order they were created.
+ * panel edits. Kept in each RuneLite profile's own settings, saved on every
+ * mutation, insertion order preserved so the dropdown lists profiles in the
+ * order they were created. The outfit-profiles.json earlier versions shared
+ * between profiles is only read, as where a profile's list starts.
  */
 @Slf4j
 @Singleton
@@ -28,7 +29,8 @@ public class OutfitProfileStore
 
 	private final Gson gson;
 
-	private Path file;
+	/** Where the list is kept: the RuneLite profile's own setting. */
+	private java.util.function.Consumer<String> writer = json -> { };
 	private Map<String, String> profiles = new LinkedHashMap<>();
 
 	@Inject
@@ -63,43 +65,95 @@ public class OutfitProfileStore
 				+ "JAW=kit:296,gender=female");
 	}
 
+	/** Without a RuneLite profile to keep them in: the shared list and the defaults, nothing written. */
 	public void load(Path dataDir)
 	{
-		file = dataDir.resolve(FILE_NAME);
+		load(dataDir, null, null, null, null);
+	}
+
+	/**
+	 * Loads this RuneLite profile's own outfit profiles.
+	 *
+	 * <p>Each RuneLite profile keeps its list in its own settings,
+	 * {@code stored}, written back through {@code writer}. Up to this version
+	 * one list in outfit-profiles.json was shared by every profile, every
+	 * outfit change saved into the selected name, and two profiles on the same
+	 * name wrote over each other's outfit. A profile the old version ran, with
+	 * no list of its own yet, starts from that shared file as it stands, which
+	 * from then on is only read, and the entry it has selected takes the outfit
+	 * it is wearing: another profile may already have written over the shared
+	 * one. Any other profile with no list starts from the defaults.
+	 */
+	public void load(Path dataDir, String stored, String active, String worn,
+		java.util.function.Consumer<String> writer)
+	{
+		this.writer = writer == null ? json -> { } : writer;
 		profiles = new LinkedHashMap<>();
-		if (Files.isRegularFile(file))
+		Map<String, String> own = stored == null || stored.trim().isEmpty() ? null : parse(stored, "the profile's own list");
+		boolean first = own == null;
+		// Only a profile the old version ran has the shared list to start
+		// from: that version always recorded the outfit it had selected. One
+		// reset to defaults, or made since, starts from the defaults rather
+		// than from the shared list as it stood on the day of the upgrade.
+		boolean ranTheOldVersion = active != null && !active.trim().isEmpty();
+		Map<String, String> read = !first ? own : ranTheOldVersion ? readShared(dataDir) : null;
+		boolean fromShared = first && read != null;
+		if (read != null)
 		{
-			try
-			{
-				String json = new String(Files.readAllBytes(file), StandardCharsets.UTF_8);
-				Map<String, String> parsed = gson.fromJson(json,
-					new TypeToken<LinkedHashMap<String, String>>() { }.getType());
-				if (parsed != null)
-				{
-					profiles = parsed;
-				}
-				log.info("Loaded {} outfit profiles", profiles.size());
-			}
-			catch (IOException | RuntimeException e)
-			{
-				log.warn("Could not read {}", file, e);
-			}
+			profiles = read;
+		}
+		boolean changed = first;
+		if (first && active != null && worn != null && profiles.containsKey(active.trim()))
+		{
+			profiles.put(active.trim(), worn);
 		}
 
 		// The style profiles double as the thrall-mode outfits, so a missing
 		// one is restored on load. Same-name edits are kept; only absence heals.
-		boolean seeded = false;
 		for (Map.Entry<String, String> entry : DEFAULTS.entrySet())
 		{
 			if (!profiles.containsKey(entry.getKey()))
 			{
 				profiles.put(entry.getKey(), entry.getValue());
-				seeded = true;
+				changed = true;
 			}
 		}
-		if (seeded)
+		if (changed)
 		{
 			save();
+		}
+		log.info("Loaded {} outfit profiles{}", profiles.size(), fromShared ? " (from the shared list)" : "");
+	}
+
+	/** The list every profile shared before this version, or null. */
+	private Map<String, String> readShared(Path dataDir)
+	{
+		Path file = dataDir == null ? null : dataDir.resolve(FILE_NAME);
+		if (file == null || !Files.isRegularFile(file))
+		{
+			return null;
+		}
+		try
+		{
+			return parse(new String(Files.readAllBytes(file), StandardCharsets.UTF_8), file.toString());
+		}
+		catch (IOException e)
+		{
+			log.warn("Could not read {}", file, e);
+			return null;
+		}
+	}
+
+	private Map<String, String> parse(String json, String what)
+	{
+		try
+		{
+			return gson.fromJson(json, new TypeToken<LinkedHashMap<String, String>>() { }.getType());
+		}
+		catch (RuntimeException e)
+		{
+			log.warn("Could not read {}", what, e);
+			return null;
 		}
 	}
 
@@ -159,19 +213,6 @@ public class OutfitProfileStore
 
 	private void save()
 	{
-		if (file == null)
-		{
-			return;
-		}
-		try
-		{
-			String json = gson.newBuilder().setPrettyPrinting().disableHtmlEscaping().create()
-				.toJson(profiles);
-			Files.write(file, (json + "\n").getBytes(StandardCharsets.UTF_8));
-		}
-		catch (IOException e)
-		{
-			log.warn("Could not write {}", file, e);
-		}
+		writer.accept(gson.newBuilder().disableHtmlEscaping().create().toJson(profiles));
 	}
 }
