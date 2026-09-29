@@ -1218,6 +1218,18 @@ public interface FollowerConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "parkedAt",
+		name = "Parked at",
+		description = "The tile the follower was told to wait on, so it is there again"
+			+ " after a relog; managed by the plugin",
+		hidden = true
+	)
+	default String parkedAt()
+	{
+		return "";
+	}
+
+	@ConfigItem(
 		keyName = "firstSpawnNoticeShown",
 		name = "First spawn notice shown",
 		description = "Whether the one-time client-side notice and ::follower hint"

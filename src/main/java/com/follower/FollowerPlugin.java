@@ -4039,6 +4039,78 @@ public class FollowerPlugin extends Plugin
 		sentWhenFree = parkWhenFree ? sentTo : null;
 	}
 
+	/**
+	 * Where a follower that was left waiting arrives again: the tile it was
+	 * left on, when that is on the player's floor and within the reach a Send
+	 * has, since any further and its leash would snap it straight back to
+	 * them. Null when it should arrive beside the player.
+	 */
+	static WorldPoint parkToReturnTo(String kept, WorldPoint player)
+	{
+		if (kept == null || player == null)
+		{
+			return null;
+		}
+		String[] parts = kept.split(",");
+		if (parts.length != 3)
+		{
+			return null;
+		}
+		WorldPoint post;
+		try
+		{
+			post = new WorldPoint(Integer.parseInt(parts[0].trim()), Integer.parseInt(parts[1].trim()),
+				Integer.parseInt(parts[2].trim()));
+		}
+		catch (NumberFormatException e)
+		{
+			return null;
+		}
+		if (post.getPlane() != player.getPlane()
+			|| post.distanceTo(player) > FollowerEntity.STAY_LEASH - 2)
+		{
+			return null;
+		}
+		return post;
+	}
+
+	/**
+	 * What to keep of the player's park across a relog: its tile while it
+	 * holds, what was kept while it waits to be taken again, and nothing once
+	 * it is over. Only while the follower stands in the world: the teardown
+	 * that ends a scene ends the park with it, and that is not the player
+	 * saying Follow.
+	 */
+	static String parkToKeep(boolean spawned, boolean parkedByPlayer, boolean waitingToPark,
+		WorldPoint stayTile, String kept)
+	{
+		if (!spawned)
+		{
+			return kept;
+		}
+		if (!parkedByPlayer)
+		{
+			return "";
+		}
+		if (waitingToPark || stayTile == null)
+		{
+			return kept;
+		}
+		return stayTile.getX() + "," + stayTile.getY() + "," + stayTile.getPlane();
+	}
+
+	/** Once a tick, after the park is kept: records where it holds, for the next spawn. */
+	private void rememberThePark()
+	{
+		String kept = config.parkedAt();
+		String now = parkToKeep(follower.isSpawned(), parkedByPlayer, parkWhenFree,
+			follower.isStaying() ? follower.getStayTile() : null, kept);
+		if (!now.equals(kept))
+		{
+			configManager.setConfiguration(FollowerConfig.GROUP, "parkedAt", now);
+		}
+	}
+
 	/** The player said Follow: the park is over, whoever had the feet. */
 	private void followAgain()
 	{
@@ -4357,10 +4429,13 @@ public class FollowerPlugin extends Plugin
 				}
 				follower.setSpawnAnimation(parseAnimationIds(config.spawnAnimation()));
 
-				// Arrive on a free tile behind the player rather than inside them.
-				WorldPoint behind = follower.restingTileBehind(local, 2);
+				// Arrive on a free tile behind the player rather than inside
+				// them, or back on the post it was left waiting on.
+				WorldPoint post = config.followEnabled() ? null
+					: parkToReturnTo(config.parkedAt(), local.getWorldLocation());
+				WorldPoint behind = post != null ? post : follower.restingTileBehind(local, 2);
 				follower.spawn(appearance, behind != null ? behind : local.getWorldLocation(),
-					spawnGraphic(), config.spawnGraphicHeight());
+					spawnGraphic(), config.spawnGraphicHeight(), post != null);
 
 				// The very first spawn ever is the one moment naming is cheap
 				// and natural. THIS is the spawn a login takes - the queued
@@ -6668,8 +6743,11 @@ public class FollowerPlugin extends Plugin
 		}
 		else if (!follower.isSpawned() && appearanceService.getCurrent() != null)
 		{
-			follower.spawn(appearanceService.getCurrent(), local.getWorldLocation(),
-				spawnGraphic(), config.spawnGraphicHeight());
+			// Back on its post if it was left waiting, as the rebuild does.
+			WorldPoint post = config.followEnabled() ? null
+				: parkToReturnTo(config.parkedAt(), local.getWorldLocation());
+			follower.spawn(appearanceService.getCurrent(), post != null ? post : local.getWorldLocation(),
+				spawnGraphic(), config.spawnGraphicHeight(), post != null);
 
 			if (!config.namePrompted())
 			{
@@ -6882,6 +6960,7 @@ public class FollowerPlugin extends Plugin
 		// After everything that borrows the feet, so a park the player gave
 		// is taken again on the tick they are let go.
 		keepThePlayersPark();
+		rememberThePark();
 
 		// The spawn-in burst waits one tick so the follower has already been
 		// rendered standing at the thrall's spot when it plays.

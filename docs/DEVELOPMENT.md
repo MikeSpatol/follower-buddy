@@ -1145,9 +1145,17 @@ plumbing, and the right-click menu fronts all of it.
    had the feet when it was given stands down, the follower parked again as it
    lets go: a Stay where it then stands, which is the player's side when what
    let go sent it home, a Send on its tile (`parkedByPlayer`,
-   `keepThePlayersPark`). What does not move the feet still happens: a fight
-   nearby is announced at both ends, and the logout tab is waved at. Animation
-   and speech remain commands (`anim`, `say`) plus the Wave/Dance menu entries.
+   `keepThePlayersPark`). The park outlasts the session: its tile is kept in
+   the hidden `parkedAt` setting while it holds (`rememberThePark`, only while
+   the follower is spawned, so a logout or hop tearing the scene down is not
+   read as Follow), and a spawn with Follow me off lands back on it when the
+   follower could stand there and walk to it from the player within the
+   leash (`parkToReturnTo`, `FollowerEntity.arrivalTile`); anywhere else it
+   arrives beside the player, parked, and that is the new post. Follow, a
+   leash snap or anything else that ends the park forgets the tile. What does
+   not move the feet still happens: a fight nearby is announced at both ends,
+   and the logout tab is waved at. Animation and speech remain commands
+   (`anim`, `say`) plus the Wave/Dance menu entries.
 
    Posed routes come from `findPath` - the client's own Walk-here pathfinder
    (`tryMove`), ported structurally verbatim: a scene-wide BFS recording the

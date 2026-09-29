@@ -413,6 +413,17 @@ public class FollowerEntity
 	public void spawn(ComposedAppearance appearance, WorldPoint at,
 		SpotAnimRepository.Entry arrival, int arrivalHeight)
 	{
+		spawn(appearance, at, arrival, arrivalHeight, false);
+	}
+
+	/**
+	 * @param post whether {@code at} is a tile the follower was left waiting
+	 * on, which it comes back to rather than landing beside the player; see
+	 * {@link #arrivalTile}
+	 */
+	public void spawn(ComposedAppearance appearance, WorldPoint at,
+		SpotAnimRepository.Entry arrival, int arrivalHeight, boolean post)
+	{
 		despawn();
 
 		if (appearance == null || appearance.getModel() == null)
@@ -454,7 +465,7 @@ public class FollowerEntity
 		Player spawnAnchor = client.getLocalPlayer();
 		if (spawnAnchor != null && spawnAnchor.getWorldLocation() != null)
 		{
-			at = landingTile(at, spawnAnchor.getWorldLocation());
+			at = arrivalTile(at, spawnAnchor.getWorldLocation(), post);
 		}
 
 		tile = at;
@@ -723,7 +734,7 @@ public class FollowerEntity
 	 * point of posing is walking away from the follower - but well inside the
 	 * loaded scene, so the object never strands off the edge.
 	 */
-	private static final int STAY_LEASH = 40;
+	public static final int STAY_LEASH = 40;
 
 	public boolean isStaying()
 	{
@@ -2900,6 +2911,28 @@ public class FollowerEntity
 
 	/** How far around the player a snap may look for somewhere legal to land. */
 	private static final int LANDING_SEARCH_RADIUS = 2;
+
+	/**
+	 * Where an arrival puts the follower. An ordinary one goes through
+	 * {@link #landingTile}, which draws it back beside the player. A post it
+	 * was left waiting on is taken as given where it could stand and walk to
+	 * it from the player within its stay leash, since coming back to it is the
+	 * point; anywhere else it lands beside the player like any arrival.
+	 */
+	WorldPoint arrivalTile(WorldPoint wanted, WorldPoint anchor, boolean post)
+	{
+		if (post && wanted != null && anchor != null && wanted.getPlane() == anchor.getPlane()
+			&& wanted.distanceTo(anchor) <= STAY_LEASH - 2 && goodGround(wanted))
+		{
+			java.util.List<WorldPoint> path = findPath(anchor, wanted, false);
+			if (path != null && (path.isEmpty() ? anchor.equals(wanted)
+				: path.get(path.size() - 1).equals(wanted)))
+			{
+				return wanted;
+			}
+		}
+		return landingTile(wanted, anchor);
+	}
 
 	/**
 	 * Where a snap actually puts the follower.
