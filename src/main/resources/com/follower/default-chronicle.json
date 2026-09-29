@@ -24,7 +24,7 @@
         },
         {
           "heading": "Worth knowing",
-          "body": "The errand sends you all round Lumbridge. A shopping list doing the work of a map. It works.\n\nThe cook has form. It came out later that he has tried and failed to bake a cake countless times. In Death to the Dorgeshuun, when you introduce Zanik to him, he tries to offer her the very same errand. You tell him she has no time and he says it was worth a try.\n\nThe histories take this to mean he asks every newcomer. I take it the same way. The cook at the Servants' Guild in Ardougne complains that she was fired overnight and replaced by a fool who cannot bake a cake without help. The description fits.\n\nThe kitchen has history. The cook's ancestor Franizzard Van Lumbcook won the post of head cook for life a century ago by impressing the Lumbridge council with a banquet.\n\nRecipe for Disaster follows on from this one. The cook tries to recreate that banquet for the council's ten-yearly meeting, and the Culinaromancer, a hostile cook trapped in another dimension a hundred years earlier, crashes the feast.\n\nLumbridge itself was settled by human nomads who bridged the River Lum, which is where the name comes from. The rest, from the first Duke to the goblins in the caves below, is on the Lumbridge page. Nobody in the kitchen brought it up.\n\nOn the range. Adventurers call it the Lumbridge Castle range. The foods it burns less often run from bread and shrimps up to salmon, and it is especially good for mushroom and botanical pies.\n\nBob the cat praises the cook's old fashioned seafood gumbo, an old family recipe. So the man can cook. He cannot bake, which is a different complaint.\n\nOne last note. You can buy all three ingredients on the Grand Exchange before talking to the cook and finish the quest in seconds. Which rather defeats the map."
+          "body": "The errand sends you all round Lumbridge. A shopping list doing the work of a map. It works.\n\nThe cook has form. It came out later that he has tried and failed to bake a cake countless times.\n\n{done:DEATH_TO_THE_DORGESHUUN} In Death to the Dorgeshuun, when you introduce Zanik to him, he tries to offer her the very same errand. You tell him she has no time and he says it was worth a try.\n\nThe histories take this to mean he asks every newcomer. I take it the same way. The cook at the Servants' Guild in Ardougne complains that she was fired overnight and replaced by a fool who cannot bake a cake without help. The description fits.\n\n{done:RECIPE_FOR_DISASTER__ANOTHER_COOKS_QUEST} The kitchen has history. The cook's ancestor Franizzard Van Lumbcook won the post of head cook for life a century ago by impressing the Lumbridge council with a banquet.\n\n{done:RECIPE_FOR_DISASTER} Recipe for Disaster follows on from this one. The cook tries to recreate that banquet for the council's ten-yearly meeting, and the Culinaromancer, a hostile cook trapped in another dimension a hundred years earlier, crashes the feast.\n\nLumbridge itself was settled by human nomads who bridged the River Lum, which is where the name comes from. The rest, from the first Duke onward, is on the Lumbridge page. Nobody in the kitchen brought it up.\n\nOn the range. Adventurers call it the Lumbridge Castle range. The foods it burns less often run from bread and shrimps up to salmon, and it is especially good for mushroom and botanical pies.\n\nBob the cat praises the cook's old fashioned seafood gumbo, an old family recipe. So the man can cook. He cannot bake, which is a different complaint.\n\nOne last note. You can buy all three ingredients on the Grand Exchange before talking to the cook and finish the quest in seconds. Which rather defeats the map."
         }
       ],
       "people": [
@@ -48,7 +48,8 @@
           "regions": [
             12850
           ],
-          "caption": "Lumbridge, where it began."
+          "caption": "Lumbridge, where it began.",
+          "hint": "Stop in Lumbridge and I'll draw it."
         },
         {
           "npc": 4627,
@@ -72,7 +73,7 @@
         },
         {
           "heading": "Who was there",
-          "body": "King Roald: King Roald Remanis III, ruler of Misthalin, in Varrock Palace, married to Queen Ellamaria, who calls the dog Spots. The histories call him a straightforward, stable ruler under whom Varrock has prospered.\n\nDrezel: described, and briefly, as \"A holy man.\" A priest of Saradomin, descended from one of the Seven Priestly Warriors, who later works with the Myreque in In Aid of the Myreque, Darkness of Hallowvale and Sins of the Father. Use a spare iron key on his old cell door and he asks what you are trying to lock him back in for, which is a fair question."
+          "body": "King Roald: King Roald Remanis III, ruler of Misthalin, in Varrock Palace, married to Queen Ellamaria, who calls the dog Spots. The histories call him a straightforward, stable ruler under whom Varrock has prospered.\n\nDrezel: described, and briefly, as \"A holy man.\" A priest of Saradomin, descended from one of the Seven Priestly Warriors. Use a spare iron key on his old cell door and he asks what you are trying to lock him back in for, which is a fair question.\n\n{done:IN_AID_OF_THE_MYREQUE,DARKNESS_OF_HALLOWVALE,SINS_OF_THE_FATHER} Drezel later works with the Myreque in In Aid of the Myreque, Darkness of Hallowvale and Sins of the Father."
         },
         {
           "heading": "Where it took us",
@@ -80,7 +81,7 @@
         },
         {
           "heading": "Worth knowing",
-          "body": "The blessing on the Salve was not what the soldiers were told. The Seven Priestly Warriors have their own page, where I wrote their names out in full, and Morytania has its own, history and all.\n\nWolfbane: \"A silver dagger that can prevent werewolves changing form.\" The citizens of Canifis turn into werewolves when attacked, unless you wield it. It cannot be poisoned, you can only hold one, and Drezel replaces it.\n\nDrezel next sends you into Mort Myre Swamp with meat and apple pies for the druid Filliman Tarlock, in Nature Spirit.\n\nOne loose end. If you carry a clue scroll that wants Drezel, he sees to the clue in the mausoleum before he gets on with the quest. It does not matter much. It is true, so it stays."
+          "body": "The Seven Priestly Warriors have their own page, where I wrote their names out in full, and Morytania has its own, history and all.\n\n{done:THE_BLOOD_MOON_RISES} The blessing on the Salve was not what the soldiers were told.\n\nWolfbane: \"A silver dagger that can prevent werewolves changing form.\" The citizens of Canifis turn into werewolves when attacked, unless you wield it. It cannot be poisoned, you can only hold one, and Drezel replaces it.\n\n{done:NATURE_SPIRIT} Drezel next sends you into Mort Myre Swamp with meat and apple pies for the druid Filliman Tarlock, in Nature Spirit.\n\nOne loose end. If you carry a clue scroll that wants Drezel, he sees to the clue in the mausoleum before he gets on with the quest. It does not matter much. It is true, so it stays."
         }
       ],
       "people": [
@@ -115,7 +116,8 @@
           "regions": [
             13622
           ],
-          "caption": "Paterdomus, on the Salve."
+          "caption": "Paterdomus, on the Salve.",
+          "hint": "Stop by the temple and I'll draw it."
         },
         {
           "npc": 528,
@@ -144,7 +146,7 @@
         },
         {
           "heading": "Who was there",
-          "body": "Almera: described, and fairly, as \"Nice hair.\" Speedy Keith gets the very same words. I checked twice.\n\nHudon: described as \"Looks young.\" I have not warmed to him.\n\nGerald: described as \"Looks suspiciously like a fisherman.\" Fishes trout and salmon by the River Dougne. He knows the story of the treasure said to have been left by Baxtorian about 200 years earlier, at the end of the Fourth Age, and that many adventurers have searched for his tomb and failed. He was glad of someone to tell it to.\n\nHadley: described, not by me, as \"Could do with losing a bit of weight.\" The tourist guide at the Tourist Information Centre. He turns up again in Desert Treasure I, helping to find the Shadow Dungeon.\n\nGolrie: described as \"He seems to be in a spot of bother.\" A gnome, grandson of King Bolrie and grand-nephew of King Bolren, who rules the Tree Gnome Village and fights General Khazard's army in the quest of that name.\n\nBaxtorian: Lord Baxtorian Cadarn, formerly King Baxtorian, father of Eirlys. You do not meet him in this quest. In Song of the Elves he turns out to be alive, turned to stone in the hope of one day reuniting with Glarial; he is freed and, reluctantly, becomes elder of the Cadarn clan.\n\nGlarial: Queen Glarial, mother of Eirlys. The elves later buried her ashes in the tomb under the protection of the Moss Guardians. Taking her urn leaves her spirit restless until Roving Elves, and that one is on us."
+          "body": "Almera: described, and fairly, as \"Nice hair.\" Speedy Keith gets the very same words. I checked twice.\n\nHudon: described as \"Looks young.\" I have not warmed to him.\n\nGerald: described as \"Looks suspiciously like a fisherman.\" Fishes trout and salmon by the River Dougne. He knows the story of the treasure said to have been left by Baxtorian about 200 years earlier, at the end of the Fourth Age, and that many adventurers have searched for his tomb and failed. He was glad of someone to tell it to.\n\nHadley: described, not by me, as \"Could do with losing a bit of weight.\" The tourist guide at the Tourist Information Centre.\n\n{done:DESERT_TREASURE_I} He turns up again in Desert Treasure I, helping to find the Shadow Dungeon.\n\nGolrie: described as \"He seems to be in a spot of bother.\" A gnome of the Tree Gnome Village, and the current keeper of his family's heirlooms, Glarial's pebble among them until you came along.\n\n{done:TREE_GNOME_VILLAGE,THE_PATH_OF_GLOUPHRIE} Golrie is the grandson of King Bolrie and grand-nephew of King Bolren, who rules the Tree Gnome Village and fights General Khazard's army in the quest of that name.\n\nBaxtorian: King Baxtorian, the elven king under the falls, and Glarial's husband. You do not meet him.\n\n{done:SONG_OF_THE_ELVES} In Song of the Elves he turns out to be alive, turned to stone in the hope of one day reuniting with Glarial; he is freed and, reluctantly, becomes elder of the Cadarn clan. He is Lord Baxtorian Cadarn now. He and Glarial had a daughter, Eirlys.\n\nGlarial: Queen Glarial, wife of Baxtorian. The elves later buried her ashes in the tomb under the protection of the Moss Guardians.\n\n{done:ROVING_ELVES} Taking her urn left her spirit restless until Roving Elves, and that one is on us."
         },
         {
           "heading": "Where it took us",
@@ -152,7 +154,7 @@
         },
         {
           "heading": "Worth knowing",
-          "body": "The reason for the sealed door is the Elven Civil War. After the God Wars Seren shattered herself, and Baxtorian and Glarial were entrusted with leading the elves. Baxtorian took the Cadarn clan, the military clan, east through the Arandar pass to found a kingdom in what is now Kandarin.\n\nHe made non-aggression pacts with the gnomes and humans, and the kingdom prospered for nearly 1,900 years. Around 1930 of the Fourth Age, contact with Tirannwn ceased. The Iorwerth clan had seized Prifddinas while most of the army was away, leaving thousands dead.\n\nThey had become obsessed with a Dark Lord, who the elves believed was Zamorak but who turns out to be a fragment of Seren. Baxtorian spent five years besieging the city, whose walls Seren had built to withstand gods. His soldiers found a secret entrance and rescued the imprisoned clan elders.\n\nMeanwhile his eastern kingdom, which Glarial ruled while he marched on Prifddinas, fell to invaders. Most of his people were slaughtered, and Glarial was taken and never recovered alive. He chased her captors into caves south of the ruined kingdom, into what was clearly a trap, and lost his remaining soldiers.\n\nBroken, he sealed himself in the home he had built for Glarial beneath the falls. The other elders reverted Prifddinas to a crystal seed, and Lletya was founded as a refuge under Arianwyn.\n\nThe war ended in year 169 of the Fifth Age with Song of the Elves, where Prifddinas is restored and Lord Iorwerth dies. On who took Glarial, the accounts disagree. The account of Glarial calls her captors unknown enemies, the account of the war says human invaders, and Islwyn in Roving Elves blames humans for her death. I have kept all three.\n\nThe book deserves its own note. Its own title is The Missing Relics, and it is described as \"A book on elven history in northern Gielinor.\" It says many elven relics were lost when the elves left in the Fourth Age.\n\nIt also says dwarf miners may have taken Baxtorian's treasure early in the Fifth Age, and rumours say the same. And it says only Baxtorian and Glarial had the power to enter the falls, and the enchantment has kept everyone else out.\n\nInside is a sonnet on the love between Baxtorian and Glarial, which lasted over a century while they taught the laws of nature. There is also Baxtorian's own Ode to Eternity, on which I offer no opinion. The book can be displayed in your own house or read in the Grand Library of Prifddinas.\n\nThere is a section on their power over nature, commanding trees to grow, hills to rise and rivers to flood, with Baxtorian a master of rune lore who used stones to control water, earth and air. That is why the pillars take air, water and earth runes.\n\nRoving Elves picks the story up. Glarial gets a new resting place in the Waterfall Dungeon, consecrated with a seed from a Moss Guardian, which has its own page. Islwyn, her grumpy grandson, and the kind young elf Eluned scout for the rebel elves in Isafdar.\n\nGolrie hands out a new pebble if yours is lost, and turns up again in The Path of Glouphrie. Once Roving Elves starts, he and the hobgoblins swap places, and the word on him becomes \"No longer locked in his own cage.\"\n\nThe Chalice comes up again in Biohazard, where King Lathas claims his brother Tyras was corrupted when the Dark Lord forced him to drink from it. That is a lie, and I have it written down as one, told to turn you against Tyras. There is no evidence the Chalice has anything to do with the Dark Lord.\n\nOdds and ends from the margin. Glarial's amulet looks identical to the gnome amulet, and the dungeon's fire giants are the old reliable source of rune scimitars. For the minutes: once you have both the quest and the medium Kandarin Diary behind you, no rope is needed."
+          "body": "{done:SONG_OF_THE_ELVES} The reason for the sealed door is the Elven Civil War. After the God Wars Seren shattered herself, and Baxtorian and Glarial were entrusted with leading the elves. Baxtorian took the Cadarn clan, the military clan, east through the Arandar pass to found a kingdom in what is now Kandarin.\n\n{done:SONG_OF_THE_ELVES} He made non-aggression pacts with the gnomes and humans, and the kingdom prospered for nearly 1,900 years. Around 1930 of the Fourth Age, contact with Tirannwn ceased. The Iorwerth clan had seized Prifddinas while most of the army was away, leaving thousands dead.\n\n{done:SONG_OF_THE_ELVES} They had become obsessed with a Dark Lord, who the elves believed was Zamorak but who turns out to be a fragment of Seren. Baxtorian spent five years besieging the city, whose walls Seren had built to withstand gods. His soldiers found a secret entrance and rescued the imprisoned clan elders.\n\n{done:SONG_OF_THE_ELVES} Meanwhile his eastern kingdom, which Glarial ruled while he marched on Prifddinas, fell to invaders. Most of his people were slaughtered, and Glarial was taken and never recovered alive. He chased her captors into caves south of the ruined kingdom, into what was clearly a trap, and lost his remaining soldiers.\n\n{done:MOURNINGS_END_PART_I,SONG_OF_THE_ELVES} Broken, he sealed himself in the home he had built for Glarial beneath the falls. The other elders reverted Prifddinas to a crystal seed, and Lletya was founded as a refuge under Arianwyn.\n\n{done:ROVING_ELVES,SONG_OF_THE_ELVES} The war ended in year 169 of the Fifth Age with Song of the Elves, where Prifddinas is restored and Lord Iorwerth dies. On who took Glarial, the accounts disagree. The account of Glarial calls her captors unknown enemies, the account of the war says human invaders, and Islwyn in Roving Elves blames humans for her death. I have kept all three.\n\nThe book deserves its own note. Its own title is The Missing Relics, and it is described as \"A book on elven history in northern Gielinor.\" It says many elven relics were lost when the elves left in the Fourth Age.\n\nIt also says dwarf miners may have taken Baxtorian's treasure early in the Fifth Age, and rumours say the same. And it says only Baxtorian and Glarial had the power to enter the falls, and the enchantment has kept everyone else out.\n\nInside is a sonnet on the love between Baxtorian and Glarial, which lasted over a century while they taught the laws of nature. There is also Baxtorian's own Ode to Eternity, on which I offer no opinion. The book can be displayed in your own house.\n\n{done:SONG_OF_THE_ELVES} The book can also be read in the Grand Library of Prifddinas.\n\nThere is a section on their power over nature, commanding trees to grow, hills to rise and rivers to flood, with Baxtorian a master of rune lore who used stones to control water, earth and air. That is why the pillars take air, water and earth runes.\n\n{done:ROVING_ELVES} Roving Elves picks the story up. Glarial gets a new resting place in the Waterfall Dungeon, consecrated with a seed from a Moss Guardian, which has its own page. Islwyn, her grumpy grandson, and the kind young elf Eluned scout for the rebel elves in Isafdar.\n\nGolrie hands out a new pebble if yours is lost, and turns up again in The Path of Glouphrie.\n\n{done:ROVING_ELVES} Once Roving Elves starts, he and the hobgoblins swap places, and the word on him becomes \"No longer locked in his own cage.\"\n\n{done:BIOHAZARD,REGICIDE} The Chalice comes up again in Biohazard, where King Lathas claims his brother Tyras was corrupted when the Dark Lord forced him to drink from it. That is a lie, and I have it written down as one, told to turn you against Tyras. There is no evidence the Chalice has anything to do with the Dark Lord.\n\nOdds and ends from the margin. Glarial's amulet looks identical to the gnome amulet, and the dungeon's fire giants are the old reliable source of rune scimitars. For the minutes: once you have both the quest and the medium Kandarin Diary behind you, no rope is needed."
         }
       ],
       "people": [
@@ -184,7 +186,8 @@
           "regions": [
             10038
           ],
-          "caption": "Baxtorian Falls, loudly."
+          "caption": "Baxtorian Falls, loudly.",
+          "hint": "Stop by the falls and I'll draw it."
         },
         {
           "npc": 4182,
@@ -241,7 +244,8 @@
           "regions": [
             11828
           ],
-          "caption": "Falador, with a mole under it."
+          "caption": "Falador, with a mole under it.",
+          "hint": "Stop in west Falador; I'll draw it."
         }
       ]
     },
@@ -266,7 +270,7 @@
         },
         {
           "heading": "Worth knowing",
-          "body": "It was the strongest creature anyone had met until the Kalphite Queen turned up. I have that in the margin, underlined.\n\nIt can talk. In A Tail of Two Cats it holds a conversation with Bob the cat, and gets interrupted before it finishes. I would have liked the minutes of that one."
+          "body": "It was the strongest creature anyone had met until the Kalphite Queen turned up. I have that in the margin, underlined.\n\n{done:A_TAIL_OF_TWO_CATS} It can talk. In A Tail of Two Cats it holds a conversation with Bob the cat, and gets interrupted before it finishes. I would have liked the minutes of that one."
         }
       ],
       "people": [
@@ -309,7 +313,7 @@
         },
         {
           "heading": "Worth knowing",
-          "body": "Goblins follow Bandos, the Big High War God. He arrived on Gielinor in the Second Age to wage war, and brought armies of goblins, ogres, orks and ourgs with him. Goblins are not strong. They make up for it with numbers, which is the oldest trick there is.\n\nThe generals of Goblin Village are Bentnoze and Wartface. They butt heads over trivial things, armour colours among them. Settling one such argument is the whole of the quest Goblin Diplomacy. Diplomacy is a generous word for it.\n\nNot all goblins went along with it. The Dorgeshuun cave goblins rejected Bandos' doctrines and went back to the cooperative ways of their Yu'biusk past. Sensible, and rare."
+          "body": "Goblins follow Bandos, the Big High War God. He arrived on Gielinor in the Second Age to wage war, and brought armies of goblins, ogres, orks and ourgs with him. Goblins are not strong. They make up for it with numbers, which is the oldest trick there is.\n\nThe generals of Goblin Village are Bentnoze and Wartface. They butt heads over trivial things, armour colours among them.\n\n{done:GOBLIN_DIPLOMACY} Settling that argument is the whole of the quest Goblin Diplomacy. Diplomacy is a generous word for it.\n\n{done:THE_LOST_TRIBE,LAND_OF_THE_GOBLINS} Not all goblins stayed loyal to Bandos. The Dorgeshuun cave goblins rejected his doctrines and went back to the cooperative ways of their Yu'biusk past. Sensible, and rare."
         }
       ],
       "people": [
@@ -317,7 +321,7 @@
         "General Wartface - of the Garagorshuun tribe. The other half."
       ],
       "places": [
-        "Dorgesh-Kaan - home of the Dorgeshuun cave goblins"
+        "{done:THE_LOST_TRIBE,DEATH_TO_THE_DORGESHUUN} Dorgesh-Kaan - home of the Dorgeshuun cave goblins"
       ],
       "details": [
         "Most are level 2, with 5 hitpoints",
@@ -363,7 +367,7 @@
         },
         {
           "heading": "Worth knowing",
-          "body": "The old histories just call them Giants. The hill was put on the front of the name to keep them apart from the other giant kinds, and it is said the hill is for their arm muscles, which resemble hills. I have looked. I suppose they do.\n\nDespite the name, most of them live in dungeons. Some carry cleavers, which are weapons from Recipe for Disaster. The other two of the three kinds are moss giants and ice giants."
+          "body": "The old histories just call them Giants. The hill was put on the front of the name to keep them apart from the other giant kinds, and it is said the hill is for their arm muscles, which resemble hills. I have looked. I suppose they do.\n\nDespite the name, most of them live in dungeons. Some carry cleavers. The other two of the three kinds are moss giants and ice giants.\n\n{done:RECIPE_FOR_DISASTER} The cleavers some hill giants carry are weapons from Recipe for Disaster."
         }
       ],
       "people": [],
@@ -396,7 +400,7 @@
           "Fire giant"
         ]
       },
-      "summary": "The strongest of the ordinary giants, an elemental brute living in the Waterfall Dungeon and a dozen other caves. A favourite Slayer and Ranged target, and the classic source of a rune scimitar. Everyone goes back eventually.",
+      "summary": "The strongest of the ordinary giants, an elemental brute living in the Brimhaven Dungeon and a good many other caves. A favourite Slayer and Ranged target, and the classic source of a rune scimitar. Everyone goes back eventually.",
       "sections": [
         {
           "heading": "What it is",
@@ -404,7 +408,7 @@
         },
         {
           "heading": "Where it is found",
-          "body": "The Waterfall Dungeon has eleven. They guard Baxtorian's western passage and the chalice room.\n\nAlso the Brimhaven Dungeon, the Catacombs of Kourend, the Charred Dungeon, the Deep Wilderness Dungeon, the Giants' Den, the Isle of Souls Dungeon, the Karuulm Slayer Dungeon, the Smoke Dungeon and the Stronghold Slayer Dungeon.\n\nMost of those spots have a corner it cannot reach you in. The Charred Dungeon is the only one where more than one can set on you at once, so mind yourself there."
+          "body": "{done:WATERFALL_QUEST} The Waterfall Dungeon has eleven. They guard Baxtorian's western passage and the chalice room.\n\nThe Brimhaven Dungeon, the Catacombs of Kourend, the Charred Dungeon, the Deep Wilderness Dungeon, the Giants' Den, the Isle of Souls Dungeon, the Karuulm Slayer Dungeon, the Smoke Dungeon and the Stronghold Slayer Dungeon all keep them.\n\nMost of those spots have a corner it cannot reach you in. The Charred Dungeon is the only one where more than one can set on you at once, so mind yourself there."
         },
         {
           "heading": "Worth knowing",
@@ -436,7 +440,7 @@
           "Monk of Zamorak"
         ]
       },
-      "summary": "Evil human clerics of Zamorak. Weak on paper, but the paper is wrong. A band of them seized Paterdomus in Priest in Peril and poisoned the River Salve, which tells you the sort.",
+      "summary": "Evil human clerics of Zamorak. Weak on paper, but the paper is wrong.\n\n{done:PRIEST_IN_PERIL} A band of them seized Paterdomus in Priest in Peril and poisoned the River Salve, which tells you the sort.",
       "sections": [
         {
           "heading": "What it is",
@@ -444,11 +448,11 @@
         },
         {
           "heading": "Where it is found",
-          "body": "Paterdomus, the temple on the River Salve, all through Priest in Peril; they had the run of the place. Otherwise the Chaos Temple in Asgarnia, the cage under the stairs in Varrock Palace, Taverley Dungeon and the Deep Wilderness Dungeon."
+          "body": "The Chaos Temple in Asgarnia, the cage under the stairs in Varrock Palace, Taverley Dungeon and the Deep Wilderness Dungeon.\n\n{done:PRIEST_IN_PERIL} Paterdomus too, the temple on the River Salve, all through Priest in Peril; they had the run of the place."
         },
         {
           "heading": "Worth knowing",
-          "body": "At Paterdomus the hooded one at the door passed himself off as Drezel, the priest they had imprisoned. The rest is on the Priest in Peril page.\n\nThe ones in the temple heal quickly and are poor value, and they were cleared out for good in The Blood Moon Rises, which took a while. Many an adventurer trains magic on the caged one in Varrock Palace with the Curse spell. He is in no position to object."
+          "body": "{done:PRIEST_IN_PERIL} At Paterdomus the hooded one at the door passed himself off as Drezel, the priest they had imprisoned. The rest is on the Priest in Peril page.\n\n{done:PRIEST_IN_PERIL,THE_BLOOD_MOON_RISES} The ones at Paterdomus heal quickly and are poor value, and they were cleared out for good in The Blood Moon Rises, which took a while.\n\nMany an adventurer trains magic on the caged one in Varrock Palace with the Curse spell. He is in no position to object."
         }
       ],
       "people": [
@@ -456,10 +460,11 @@
       ],
       "places": [],
       "details": [
-        "Levels 17, 22, 23, 30 and 45 - the hooded one at Paterdomus is 30",
+        "Levels 17, 22, 23, 30 and 45",
+        "{done:PRIEST_IN_PERIL} The hooded one at Paterdomus - level 30",
         "Bones - always",
         "Zamorak monk top and bottom - about one in twenty each",
-        "Temple monks - 25 percent of normal combat experience"
+        "{done:PRIEST_IN_PERIL} Paterdomus monks - 25 percent of normal combat experience"
       ],
       "plates": [
         {
@@ -479,7 +484,7 @@
         ],
         "questBegun": "PRIEST_IN_PERIL"
       },
-      "summary": "A big dog in the mausoleum under Paterdomus, on the River Salve. It never comes back. Worth a page, I thought.",
+      "summary": "A big dog in the mausoleum under Paterdomus, on the River Salve. Worth a page, I thought.",
       "sections": [
         {
           "heading": "What it is",
@@ -487,15 +492,15 @@
         },
         {
           "heading": "Where it is found",
-          "body": "The mausoleum under Paterdomus, down the trapdoor north of the temple, during Priest in Peril. It never comes back. Found once, then."
+          "body": "Below Paterdomus, the temple on Misthalin's eastern border, down the trapdoor north of it. It turns up only during Priest in Peril. Found once, then."
         },
         {
           "heading": "Worth knowing",
-          "body": "By King Roald's account it guarded the way into the mausoleum and the river's source. The rest belongs to Priest in Peril, which has its own page.\n\nRoald called it Spots. He also called it a pedigree light beast, or was it dark beast. His words, not mine. It is said that Dark beasts once looked much like it, only brown. Make of that what you will."
+          "body": "{done:PRIEST_IN_PERIL} By King Roald's account it guarded the way into the mausoleum and the river's source. The rest belongs to Priest in Peril, which has its own page.\n\n{done:PRIEST_IN_PERIL} Roald called it Spots. He also called it a pedigree light beast, or was it dark beast. His words, not mine.\n\nIt is said that Dark beasts once looked much like it, only brown. Make of that what you will."
         }
       ],
       "people": [
-        "King Roald - its owner"
+        "{done:PRIEST_IN_PERIL} King Roald - its owner"
       ],
       "places": [],
       "details": [
@@ -507,7 +512,7 @@
         {
           "npc": 7620,
           "idle": 17,
-          "caption": "Spots, as the King had it."
+          "caption": "The mausoleum's tenant."
         }
       ]
     },
@@ -521,7 +526,7 @@
         ],
         "questBegun": "WATERFALL_QUEST"
       },
-      "summary": "The guardian spirits of Glarial's Tomb, and a good deal stronger than the ordinary moss giant. In Roving Elves, Islwyn and Eluned send you to kill one bare-handed for a consecration seed. Bare-handed, noted.",
+      "summary": "The guardian spirits of Glarial's Tomb, and a good deal stronger than the ordinary moss giant.\n\n{done:ROVING_ELVES} In Roving Elves, Islwyn and Eluned send you to kill one bare-handed for a consecration seed. Bare-handed, noted.",
       "sections": [
         {
           "heading": "What it is",
@@ -529,7 +534,7 @@
         },
         {
           "heading": "Where it is found",
-          "body": "Glarial's Tomb, south-east of Baxtorian Falls and north-west of the Fishing Guild, under a tombstone. Three of them, and nowhere else. The tomb admits no weapons, armour, runes or ammunition, so they are met with bare hands. Bring food, and potions."
+          "body": "Glarial's Tomb, south-east of Baxtorian Falls and north-west of the Fishing Guild, under a tombstone. Three of them, and nowhere else.\n\n{done:WATERFALL_QUEST} The tomb admits no weapons, armour, runes or ammunition, so they are met with bare hands. Bring food, and potions."
         },
         {
           "heading": "Worth knowing",
@@ -541,7 +546,8 @@
       "details": [
         "Level 84 - 120 hitpoints, hits up to 14",
         "Attack, Strength and Defence - 60 each",
-        "Drops - big bones, and the consecration seed during Roving Elves"
+        "Drops - big bones",
+        "{done:ROVING_ELVES} Consecration seed - dropped only during Roving Elves"
       ],
       "plates": [
         {
@@ -572,7 +578,7 @@
         },
         {
           "heading": "Worth knowing",
-          "body": "During the God Wars, the caves beneath what is now the town sheltered a lost goblin tribe. Long after, migrating human nomads settled on the River Lum. They built a bridge across it, then named the town after the bridge. Practical people. Good bridge.\n\nFather Aereck keeps the church of Saradomin, which is over 230 years old and still standing. An unassuming shed in the swamp leads to the fairy city of Zanaris. I would not have guessed from the shed. Four quests start here too: four scrolls from one town with one bridge."
+          "body": "{done:THE_LOST_TRIBE} During the God Wars, the caves beneath what is now the town sheltered a lost goblin tribe.\n\nLong after the God Wars, migrating human nomads settled on the River Lum. They built a bridge across it, then named the town after the bridge. Practical people. Good bridge.\n\nFather Aereck keeps the church of Saradomin, which is over 230 years old and still standing. Four quests start here too: four scrolls from one town with one bridge.\n\n{done:LOST_CITY} An unassuming shed in the swamp leads to the fairy city of Zanaris. I would not have guessed from the shed."
         }
       ],
       "people": [
@@ -581,7 +587,7 @@
       "places": [],
       "details": [
         "Founded - the year 1937 of the Fourth Age",
-        "The shed to Zanaris - opens once Lost City is done",
+        "{done:LOST_CITY} The shed to Zanaris - opens once Lost City is done",
         "Quests - Cook's Assistant, The Restless Ghost, Sheep Shearer, Rune Mysteries"
       ],
       "plates": [
@@ -590,7 +596,8 @@
           "regions": [
             12850
           ],
-          "caption": "Lumbridge, done in a hurry."
+          "caption": "Lumbridge, done in a hurry.",
+          "hint": "Stop in Lumbridge and I'll draw it."
         },
         {
           "npc": 815,
@@ -610,7 +617,7 @@
           12854
         ]
       },
-      "summary": "The capital of Misthalin and one of the largest cities in Gielinor. It began as Avarrocka, named for a boy who drove off goblins. Loud, busy, and I am fond of it.",
+      "summary": "The capital of Misthalin and one of the largest cities in Gielinor. It began as Avarrocka, a forest camp. Loud, busy, and I am fond of it.",
       "sections": [
         {
           "heading": "What it is",
@@ -622,7 +629,7 @@
         },
         {
           "heading": "Worth knowing",
-          "body": "Avarrocka began when a nomadic tribe found a boy of exceptional strength and settled in the forest there. Ten years later goblins attacked. The boy defeated them and became known as Arrav, and as Arrav grew, so did Avarrocka. The name has shortened since. The boy has not been forgotten.\n\nZemouregal, a Zamorakian Mahjarrat necromancer, later invaded with an army of zombies. His forces were beaten, but Arrav fell and was taken as an undead servant. A poor ending for the boy. The city rebuilt, grew into the kingdom of Misthalin and became a monarchy.\n\nThe Shield of Arrav still figures in city lore. Seven quests start here. A busy notice board, and I have stood at it a while."
+          "body": "Avarrocka began when a nomadic tribe found a boy of exceptional strength, took him for a good omen and settled in the forest there. The boy was Arrav, and as he grew, so did Avarrocka.\n\n{done:DEFENDER_OF_VARROCK} Ten years after the founding, goblins attacked. The boy defeated them, and that is where the name Arrav comes from.\n\n{done:SHIELD_OF_ARRAV,DEFENDER_OF_VARROCK} Zemouregal, a Zamorakian Mahjarrat necromancer, later invaded with an army of zombies. His forces were beaten, but Arrav fell and was taken as an undead servant. A poor ending for the boy. The city rebuilt, grew into the kingdom of Misthalin and became a monarchy.\n\nAvarrocka has shortened to Varrock, and the boy has not been forgotten. The Shield of Arrav still figures in city lore. Seven quests start here. A busy notice board, and I have stood at it a while."
         }
       ],
       "people": [
@@ -646,14 +653,16 @@
           "regions": [
             12853
           ],
-          "caption": "The square. Only we stood still."
+          "caption": "The square. Only we stood still.",
+          "hint": "Stop in the square and I'll draw it."
         },
         {
           "sketch": "varrock-palace",
           "regions": [
             12854
           ],
-          "caption": "The palace end. Best behaviour."
+          "caption": "The palace end. Best behaviour.",
+          "hint": "Stop by the palace and I'll draw it."
         },
         {
           "npc": 1399,
@@ -665,7 +674,8 @@
           "regions": [
             12598
           ],
-          "caption": "The Exchange. I bought nothing."
+          "caption": "The Exchange. I bought nothing.",
+          "hint": "Stop at the Exchange; I'll draw it."
         }
       ]
     },
@@ -676,11 +686,11 @@
       "unlock": {
         "questBegun": "PRIEST_IN_PERIL"
       },
-      "summary": "The temple of Saradomin on the River Salve, at Misthalin's eastern edge. It is the only gate into Morytania, and it stands over the graves of the Seven Priestly Warriors. I lower my voice in there.",
+      "summary": "The temple of Saradomin on the River Salve, at Misthalin's eastern edge. It is the only gate into Morytania.\n\n{done:PRIEST_IN_PERIL} It stands over the graves of the Seven Priestly Warriors. I lower my voice in there.",
       "sections": [
         {
           "heading": "What it is",
-          "body": "The name comes from an old tongue, pater plus domus. House of the Father, meaning Saradomin. You need Drezel's blessing to cross its bridge, and he is the temple's only monk, so there is no one else to ask.\n\nFour floors: an altar on the ground floor, a cell and a vampyre coffin at the top, and monks of Zamorak on every floor from the ground up. Not what you expect in a house of Saradomin, but there it is.\n\nA trapdoor to the north leads down to the basement mausoleum: the guardian's chamber, a well ringed by seven monuments, a hidden library, and a passage to the north-east.\n\nOutside are more coffins. They hold vampyres stranded west of the river, too weak to move and impossible to kill, which is a combination I do not care for. There is a statue of Saradomin by the water, and a railing shortcut."
+          "body": "The name comes from an old tongue, pater plus domus. House of the Father, meaning Saradomin.\n\n{done:PRIEST_IN_PERIL} You need Drezel's blessing to cross its bridge, and he is the temple's only priest, so there is no one else to ask.\n\n{done:PRIEST_IN_PERIL} Four floors: an altar on the ground floor, a cell and a vampyre coffin at the top, and monks of Zamorak on every floor from the ground up. Not what you expect in a house of Saradomin, but there it is.\n\n{done:PRIEST_IN_PERIL} Outside are more coffins. They hold vampyres stranded west of the river, too weak to move and impossible to kill, which is a combination I do not care for.\n\nThere is a statue of Saradomin by the water, and a railing shortcut. A trapdoor to the north leads down to the basement mausoleum.\n\n{done:PRIEST_IN_PERIL} Down there are the guardian's chamber, a well ringed by seven monuments, and a passage to the north-east.\n\n{done:PRIEST_IN_PERIL,IN_AID_OF_THE_MYREQUE} There is a hidden library down there as well."
         },
         {
           "heading": "Where it is found",
@@ -688,7 +698,7 @@
         },
         {
           "heading": "Worth knowing",
-          "body": "The Seven Priestly Warriors blessed the Salve here, and the temple was built in their honour. Six of them lie round the well in the mausoleum, so I mind where I stand. They have their own page.\n\nIt features in Priest in Peril, Nature Spirit, In Aid of the Myreque, Darkness of Hallowvale, Sins of the Father, Devious Minds and The Blood Moon Rises. A great many scrolls pass through this door. Mine included."
+          "body": "{done:PRIEST_IN_PERIL} The Seven Priestly Warriors blessed the Salve here, and the temple was built in their honour. The monuments round the well in the mausoleum are theirs, so I mind where I stand. They have their own page.\n\nIt features in Priest in Peril, Nature Spirit, In Aid of the Myreque, Darkness of Hallowvale, Sins of the Father, Devious Minds and The Blood Moon Rises. A great many scrolls pass through this door. Mine included."
         }
       ],
       "people": [],
@@ -703,7 +713,8 @@
           "regions": [
             13622
           ],
-          "caption": "The temple on the Salve."
+          "caption": "The temple on the Salve.",
+          "hint": "Stop by the temple and I'll draw it."
         },
         {
           "npc": 9636,
@@ -723,7 +734,7 @@
       "sections": [
         {
           "heading": "What it is",
-          "body": "A stretch of rapids with a great deal packed around it, starting with Almera, who lives at the top, and her son Hudon, out on the island after treasure. Hadley's Tourist Information Centre and Gerald the fisherman are just south. Rasolo the merchant is by the centre, and overpriced. I checked.\n\nGlarial's Tomb is a short way south-east, under a tombstone. There is a monument with a statue of Baxtorian, and a second waterfall that flows east from the lake. The west bank is for leaping-fish Barbarian fishing, and the whirlpool takes you down into the Ancient Cavern. On purpose, I am assured."
+          "body": "A stretch of rapids with a great deal packed around it, starting with Almera, who lives at the top, and her son Hudon, out on the island after treasure. Hadley's Tourist Information Centre and Gerald the fisherman are just south. Rasolo the merchant is by the centre, and overpriced. I checked.\n\nThere is a second waterfall that flows east from the lake. The west bank is for leaping-fish Barbarian fishing, and the whirlpool takes you down into the Ancient Cavern. On purpose, I am assured.\n\n{done:WATERFALL_QUEST} Glarial's Tomb is a short way south-east, under a tombstone."
         },
         {
           "heading": "Where it is found",
@@ -731,7 +742,7 @@
         },
         {
           "heading": "Worth knowing",
-          "body": "The king in question is Lord Baxtorian Cadarn. The Waterfall Dungeon beneath the falls is his home, and he locked the door from the inside."
+          "body": "{done:SONG_OF_THE_ELVES} The king in question goes by Lord Baxtorian Cadarn these days, and he is no longer under the falls."
         }
       ],
       "people": [],
@@ -739,7 +750,7 @@
       "details": [
         "Barbarian fishing - fast Fishing training, with a Barbarian rod",
         "Ancient Cavern whirlpool - after Barbarian Training",
-        "Barrel - straight down into the dungeon, if you are the sort"
+        "Barrel - off the ledge and down the river, if you are the sort"
       ],
       "plates": [
         {
@@ -747,7 +758,8 @@
           "regions": [
             10038
           ],
-          "caption": "The falls. The ink ran."
+          "caption": "The falls. The ink ran.",
+          "hint": "Stop by the falls and I'll draw it."
         },
         {
           "npc": 4181,
@@ -763,19 +775,19 @@
       "unlock": {
         "quest": "PRIEST_IN_PERIL"
       },
-      "summary": "Seven Temple Knights of the Fourth Age, who held Lord Drakan's vampyres at the River Salve and blessed it so no vampyre could cross. Six died doing it. The last, Ivandis Seergaze, buried the others where Paterdomus now stands.",
+      "summary": "Seven priestly warriors of Saradomin in the Fourth Age, who held Lord Drakan's vampyres at the River Salve and blessed it so no vampyre could cross. It cost them their lives. Paterdomus now stands on the ground they held.\n\n{done:THE_BLOOD_MOON_RISES} They were Temple Knights, and only six of them died in the fight itself.",
       "sections": [
         {
           "heading": "What it is",
-          "body": "Their names: Ivandis Seergaze, Iriandul Caistlyn, Sarl Dunegun, Derygull Templeton, Erysail the Pious, Friar Twiblick and Essiandar Gar. I have written all seven names out in full. They earned that much.\n\nThey were active around 1200 of the Fourth Age, in the Misthalin-Morytania War, when Drakan had crossed the Salve and pushed west towards Varrock. The Temple Knights sent them to secure the river. Secretly, they were also to research haemalchemy, which their leaders believed held the key to beating vampyres.\n\nTheir savants designed a blood ritual to bar vampyres from the river. The warriors hid its profane nature from the soldiers and called it a holy consecration by Saradomin. A blood rite with a clean name. It worked, which is the uncomfortable part."
+          "body": "Their names: Ivandis Seergaze, Iriandul Caistlyn, Sarl Dunegun, Derygull Templeton, Erysail the Pious, Friar Twiblick and Essiandar Gar. I have written all seven names out in full. They earned that much.\n\nThey were active around 1200 of the Fourth Age, in the Misthalin-Morytania War, when Drakan had crossed the Salve and pushed west towards Varrock.\n\n{done:THE_BLOOD_MOON_RISES} The Temple Knights sent them to secure the river. Secretly, they were also to research haemalchemy, which their leaders believed held the key to beating vampyres.\n\n{done:THE_BLOOD_MOON_RISES} Their savants designed a blood ritual to bar vampyres from the river. The warriors hid its profane nature from the soldiers and called it a holy consecration by Saradomin. A blood rite with a clean name. It worked, which is the uncomfortable part."
         },
         {
           "heading": "Worth knowing",
-          "body": "At the river's source the vampyres attacked mid-ritual. Derygull fell first, then the others, one by one, until only Ivandis was left. He laid the six to rest around the ritual well.\n\nIvandis was showing signs of vampyrification. He refused to become what they had sworn to destroy, and charged into Morytania to kill Drakan. He died in the attempt, and his coffin lies in caves beneath the Hollows. I have no remark for that one.\n\nLater histories say the blessing sealed the vengeful power of Saradomin in the river. Drezel of Paterdomus is descended from one of the seven, and Ivan Strom is Ivandis's last living descendant. That last part should be better known."
+          "body": "{done:THE_BLOOD_MOON_RISES} At the river's source the vampyres attacked mid-ritual. Derygull fell first, then the others, one by one, until only Ivandis was left. He laid the six to rest around the ritual well.\n\n{done:THE_BLOOD_MOON_RISES,IN_AID_OF_THE_MYREQUE} Ivandis was showing signs of vampyrification. He refused to become what they had sworn to destroy, and charged into Morytania to kill Drakan. He died in the attempt, and his coffin lies in caves beneath the Hollows. I have no remark for that one.\n\nLater histories say the blessing sealed the vengeful power of Saradomin in the river. Drezel of Paterdomus is descended from one of the seven.\n\n{done:SINS_OF_THE_FATHER} Ivan Strom is Ivandis's last living descendant. That should be better known."
         }
       ],
       "people": [
-        "Ivandis Seergaze - from what is now Lumbridge"
+        "{done:IN_AID_OF_THE_MYREQUE} Ivandis Seergaze - from what is now Lumbridge"
       ],
       "places": [
         "Silvarea - site of the last battle"
@@ -789,7 +801,8 @@
           "regions": [
             13622
           ],
-          "caption": "The temple over their graves."
+          "caption": "The temple over their graves.",
+          "hint": "Stop by the temple and I'll draw it."
         }
       ]
     },
@@ -805,11 +818,11 @@
           14646
         ]
       },
-      "summary": "A land of evil in the far east of Gielinor, ruled by vampyres under Lord Drakan. It was the kingdom of Hallowvale once. Only the blessed River Salve keeps the vampyres out of Misthalin, and I am fond of that river.",
+      "summary": "A land of evil in the far east of Gielinor, ruled by Lord Drakan's vampyres. Only the blessed River Salve keeps the vampyres out of Misthalin, and I am fond of that river.",
       "sections": [
         {
           "heading": "What it is",
-          "body": "The name is said mor-ee-TAY-nee-ah. The land is full of aggressive creatures; Lord Lowerniel Vergidiyad Drakan rules it, and his sister Vanescula and brother Ranis handle the running of things. None of the towns is restful, and the walks between them are no better than the stops."
+          "body": "The name is said mor-ee-TAY-nee-ah. The land is full of aggressive creatures, and Lord Drakan's vampyres rule it. None of the towns is restful, and the walks between them are no better than the stops.\n\n{done:DARKNESS_OF_HALLOWVALE,A_TASTE_OF_HOPE,SINS_OF_THE_FATHER} Drakan's sister Vanescula calls him Lowerniel. She and their brother Ranis once ran things for him. Ranis is dead now, and Vanescula turned against him."
         },
         {
           "heading": "Where it is found",
@@ -817,7 +830,7 @@
         },
         {
           "heading": "Worth knowing",
-          "body": "Before the God Wars this was Hallowvale, or the Hallowland, a Saradominist kingdom under the Icyene Queen Efaritay. In the Third Age Lord Drakan conquered it with vampyres and werewolves. He turned the fertile land into swamp and kept its people as a blood farm. That is the history of the place in three sentences, and none of them get better.\n\nDrakan himself is a true-born vampyre, brought from Vampyrium by Zaros in the Second Age, who sided with Zamorak in exchange for these lands. He captured Efaritay's husband Ascertes, who became the vampyre Vanstrom Klause.\n\nThe Salve was blessed against Drakan's invasion by the Seven Priestly Warriors, who have their own page. Its water burns creatures of Zamorak on contact, and no vampyre can cross it. I check, every time.\n\nWerewolves can still cross, and do, kidnapping people and smuggling for the vampyres; some have got as far as beneath the Champions' Guild. After Drakan's defeat, he banished his brother Draynor, likely because of the weakness the river imposed.\n\nThe Salve flows past where Senntisten, the old Zarosian capital, once stood, and the Digsite excavations reach its bank. Blessed water seeping through the rock of the Mort Ridge Mine forms Salve shards, crystals with power over evil. The river has more history than most kingdoms.\n\nThe Barrows brothers, empowered by the Mahjarrat Sliske, tried to liberate the land. He betrayed them, stripping their powers at the gates of Darkmeyer, and they were slaughtered. The Myreque now fight to throw off vampyre rule. I hope they get a longer page than the brothers did."
+          "body": "{done:IN_AID_OF_THE_MYREQUE,DARKNESS_OF_HALLOWVALE,SINS_OF_THE_FATHER} Before the God Wars this was Hallowvale, or the Hallowland, a Saradominist kingdom under the Icyene Queen Efaritay. In the Third Age Lord Drakan conquered it with vampyres and werewolves. He turned the fertile land into swamp and kept its people as a blood farm. That is the history of the place in three sentences, and none of them get better.\n\n{done:IN_SEARCH_OF_THE_MYREQUE,DARKNESS_OF_HALLOWVALE,SINS_OF_THE_FATHER} Drakan himself is a true-born vampyre, brought from Vampyrium by Zaros in the Second Age, who sided with Zamorak in exchange for these lands. He captured Efaritay's husband Ascertes, who became the vampyre Vanstrom Klause.\n\nThe Salve was blessed against Drakan's invasion by the Seven Priestly Warriors, who have their own page. Its water burns creatures of Zamorak on contact, and no vampyre can cross it. I check, every time.\n\nWerewolves can still cross, and do, kidnapping people and smuggling for the vampyres; some have got as far as beneath the Champions' Guild. Roavar says Drakan's brother Draynor ended up trapped on the Misthalin side of the river.\n\n{done:SINS_OF_THE_FATHER} Vanescula says Draynor was weak even before the Salve trapped him, and a coward as well. There was a reason, she says, that Lowerniel had him banished.\n\nThe Salve flows past where Senntisten once stood, and the Digsite excavations reach its bank. The river has more history than most kingdoms.\n\n{done:HAUNTED_MINE} Blessed water seeping through the rock of the Mort Ridge Mine forms Salve shards, crystals with power over evil. The Salve amulet is made from one, and the undead do not care for it.\n\nThe Barrows brothers tried to liberate the land, and died for it. The Myreque now fight to throw off vampyre rule. I hope they get a longer page than the brothers did."
         }
       ],
       "people": [
@@ -826,23 +839,24 @@
       ],
       "places": [
         "Canifis - werewolf town just east of the temple, do not stare at the teeth",
-        "Darkmeyer - the vampyre capital, built on the ruins of Hallowvale",
-        "Meiyerditch - the blood farm city, a blood-tithed ghetto",
+        "{done:SINS_OF_THE_FATHER} Darkmeyer - the vampyre capital, built on the ruins of Hallowvale",
+        "{done:DARKNESS_OF_HALLOWVALE} Meiyerditch - the blood farm city, a blood-tithed ghetto",
         "Port Phasmatys - the cursed port of ghosts",
-        "Mort Myre Swamp - the drained heart of the old kingdom",
+        "Mort Myre Swamp - the great swamp south of Canifis",
         "Barrows - the mounds of the six brothers",
-        "Burgh de Rott - the last free human settlement, home of the Myreque",
+        "{done:IN_SEARCH_OF_THE_MYREQUE,IN_AID_OF_THE_MYREQUE} Burgh de Rott - the last free human settlement, home of the Myreque",
         "Mort'ton - plague-stricken village",
         "Slepe - Zamorakian town",
         "Haunted Woods - forest between the towns"
       ],
       "details": [
         "Entry - Priest in Peril",
-        "Canifis - the Zarosian fortress Kharyrll, before the God Wars",
+        "{done:DESERT_TREASURE_I} Canifis - the Zarosian fortress Kharyrll, before the God Wars",
+        "{done:DESERT_TREASURE_II__THE_FALLEN_EMPIRE} Senntisten - the old Zarosian capital",
         "Canifis - settled by werewolves in year 23 of the Fifth Age",
         "Canifis - twenty citizens, who become level 88 werewolves when attacked",
         "Canifis - pays blood tithes; the name is probably from canis, the old word for a wolf",
-        "Drakan - slain in The Blood Moon Rises"
+        "{done:THE_BLOOD_MOON_RISES} Drakan - slain in The Blood Moon Rises"
       ],
       "plates": [
         {
@@ -852,7 +866,8 @@
             14131,
             14646
           ],
-          "caption": "Morytania. I kept moving."
+          "caption": "Morytania. I kept moving.",
+          "hint": "Stop in Canifis and I'll draw it."
         }
       ]
     }

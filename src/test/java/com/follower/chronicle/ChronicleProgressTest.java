@@ -50,6 +50,16 @@ public class ChronicleProgressTest
 	}
 
 	@Test
+	public void aGatedPassageWaitsForItsQuestToBeFinished()
+	{
+		assertFalse("nothing known yet", progress.isDone("RECIPE_FOR_DISASTER"));
+		progress.setQuestState("RECIPE_FOR_DISASTER", QuestState.IN_PROGRESS);
+		assertFalse("begun is not done", progress.isDone("RECIPE_FOR_DISASTER"));
+		progress.setQuestState("RECIPE_FOR_DISASTER", QuestState.FINISHED);
+		assertTrue(progress.isDone("RECIPE_FOR_DISASTER"));
+	}
+
+	@Test
 	public void aQuestPageOpensWhenTheQuestIsFinishedAndNotBefore()
 	{
 		ChronicleEntry cooks = loader.get("quest-cooks-assistant");

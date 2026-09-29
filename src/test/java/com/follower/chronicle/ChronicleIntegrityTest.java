@@ -175,6 +175,92 @@ public class ChronicleIntegrityTest
 			problems.isEmpty());
 	}
 
+	/**
+	 * docs/chronicle-voice.md, "No quest before its time": a passage that
+	 * gives a later quest away waits on it. A gate that names no quest the
+	 * code knows never opens, and one anywhere but the head of a paragraph or
+	 * a list item is read out as it stands, so both fail here.
+	 */
+	@Test
+	public void everyGateWaitsOnAQuestTheCodeCanCheck() throws IOException
+	{
+		ChronicleLoader loader = loadAsAFreshInstall();
+		List<String> problems = new ArrayList<>();
+		int gated = 0;
+		for (ChronicleEntry entry : loader.getEntries())
+		{
+			for (String passage : entry.passages())
+			{
+				List<String> quests = ChronicleEntry.gateOf(passage);
+				if (!quests.isEmpty())
+				{
+					gated++;
+				}
+				for (String quest : quests)
+				{
+					if (ChronicleProgress.questNamed(quest) == null)
+					{
+						problems.add(entry.id + ": " + quest + " is not a net.runelite.api.Quest");
+					}
+				}
+				if (ChronicleEntry.ungated(passage).trim().isEmpty())
+				{
+					problems.add(entry.id + ": a gate with nothing after it");
+				}
+			}
+		}
+		Matcher anywhere = Pattern.compile("\\{done:").matcher(bundledText());
+		int written = 0;
+		while (anywhere.find())
+		{
+			written++;
+		}
+		if (written != gated)
+		{
+			problems.add(written + " gates written but only " + gated
+				+ " open a paragraph or a list item; the rest would be read out");
+		}
+		assertTrue("gates that cannot work:\n  " + String.join("\n  ", problems), problems.isEmpty());
+	}
+
+	/**
+	 * Gates keep things back, never the whole page: with no quest done the
+	 * summary still says what the page is about, and a creature's locked
+	 * page still says where to find one.
+	 */
+	@Test
+	public void noGateLeavesAPageWithNothingToSay() throws IOException
+	{
+		ChronicleLoader loader = loadAsAFreshInstall();
+		List<String> problems = new ArrayList<>();
+		for (ChronicleEntry entry : loader.getEntries())
+		{
+			ChronicleEntry early = entry.readAs(quest -> false);
+			if (early.summary == null || early.summary.trim().isEmpty())
+			{
+				problems.add(entry.id + ": the whole summary waits on a quest");
+			}
+			if (early.sectionsOrEmpty().isEmpty())
+			{
+				problems.add(entry.id + ": every section waits on a quest");
+			}
+			String kind = entry.kindOrEmpty();
+			if (kind.equals("boss") || kind.equals("enemy"))
+			{
+				boolean found = false;
+				for (ChronicleEntry.Section section : early.sectionsOrEmpty())
+				{
+					found |= "Where it is found".equalsIgnoreCase(section.heading);
+				}
+				if (!found)
+				{
+					problems.add(entry.id + ": where to find it waits on a quest");
+				}
+			}
+		}
+		assertTrue("pages a gate empties:\n  " + String.join("\n  ", problems), problems.isEmpty());
+	}
+
 	@Test
 	public void theQuestsUnlockOnTheRightQuest() throws IOException
 	{
@@ -220,7 +306,7 @@ public class ChronicleIntegrityTest
 	@Test
 	public void theTextStaysInTheWorld() throws IOException
 	{
-		String text = bundledText();
+		String text = bundledText().replaceAll("\\{done:[A-Z0-9_,]+\\}", "");
 		String[] outside = {
 			// "released on", "released in": a date. The verb on its own is a
 			// potion into a river, and "classic" the adjective is in the world;
@@ -268,6 +354,7 @@ public class ChronicleIntegrityTest
 
 		List<String> problems = new ArrayList<>();
 		java.util.Map<String, List<Integer>> sketchRegions = new java.util.HashMap<>();
+		java.util.Map<String, String> sketchHints = new java.util.HashMap<>();
 		for (ChronicleEntry entry : loader.getEntries())
 		{
 			String at = entry.id;
@@ -335,6 +422,33 @@ public class ChronicleIntegrityTest
 						problems.add(at + ": caption too wide (" + width + "px): " + plate.caption);
 					}
 				}
+				// Until a place is drawn its plate says what the scribe means
+				// to draw, so you know where to stand still for it.
+				if (plate.sketch == null)
+				{
+					if (plate.hint != null)
+					{
+						problems.add(at + ": a portrait waits for no sketch, so it takes no hint");
+					}
+				}
+				else if (plate.hint == null || plate.hint.trim().isEmpty())
+				{
+					problems.add(at + ": sketch " + plate.sketch + " does not say what it waits for");
+				}
+				else
+				{
+					int width = small.stringWidth("Plate VIII. " + plate.hint);
+					if (width > ChronicleLayout.PLATE_W - 32)
+					{
+						problems.add(at + ": hint too wide (" + width + "px): " + plate.hint);
+					}
+					String before = sketchHints.putIfAbsent(plate.sketch, plate.hint);
+					if (before != null && !before.equals(plate.hint))
+					{
+						problems.add(at + ": sketch " + plate.sketch + " is hinted as \"" + plate.hint
+							+ "\" here and \"" + before + "\" elsewhere");
+					}
+				}
 			}
 			String kind = entry.kindOrEmpty();
 			if ((kind.equals("boss") || kind.equals("enemy")) && !portrait)
@@ -390,8 +504,9 @@ public class ChronicleIntegrityTest
 			assertNotNull("a chronicle font is not bundled: " + fonts.getStatus(), font);
 		}
 
+		// The gates are for the code; the page never draws them.
 		Set<Character> distinct = new HashSet<>();
-		for (char c : bundledText().toCharArray())
+		for (char c : bundledText().replaceAll("\\{done:[A-Z0-9_,]+\\}", "").toCharArray())
 		{
 			if (c > ' ' && c <= 0x7E)
 			{

@@ -1403,6 +1403,15 @@ there are, and the title is signed with the follower's name from its settings
 ("Bartholomew's Chronicle"), left plain when the name is blank or too long to sit
 clear of the close button.
 
+**Later quests** (`ChronicleEntry.readAs`). A passage that would give away a
+quest the reader may not have finished waits for it: a paragraph or list item
+that opens with `{done:RECIPE_FOR_DISASTER}` (Quest constant names,
+comma-separated, all needed) is left off the page until the quest is finished,
+and a section left with nothing loses its heading. `ChronicleProgress` reads the
+gated quests with the rest, and the window lays a page out as the quests done
+so far allow, and again when one of them is finished. The rule for writing
+them is in chronicle-voice.md, rule 2.
+
 **When and where a page was written.** A creature or place page is written the
 moment it is met; a quest page the moment its quest is seen to begin or end,
 which the regular look at quest states catches by comparing what can be read
@@ -1506,7 +1515,8 @@ things, named in the page's `plates`:
   shared by every page that shows the same place, and made once; a place drawn
   before there were two sizes is drawn again the next time you stand there,
   and shows the small one stretched until then. Until then the plate is bare paper marked "Not yet
-  sketched.", captioned "I'll draw it when we're there." A place can have
+  sketched.", captioned with its `hint`, what the scribe means to draw and so
+  where to stop: "Stop in Lumbridge and I'll draw it." A place can have
   several views, each its own sketch with its own regions (Varrock's square,
   its palace end and the Exchange), so walking round a place fills its page.
 

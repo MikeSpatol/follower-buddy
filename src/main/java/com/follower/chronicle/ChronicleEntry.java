@@ -1,8 +1,14 @@
 package com.follower.chronicle;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
+import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * One page of the chronicle: a quest, a boss, an enemy, a place, a faction
@@ -73,6 +79,12 @@ public class ChronicleEntry
 
 		/** The line under the picture, in the scribe's hand. */
 		public String caption;
+
+		/**
+		 * A sketch's line until it is drawn: what the scribe means to draw,
+		 * and so where to stand still for it.
+		 */
+		public String hint;
 	}
 
 	public List<Plate> platesOrEmpty()
@@ -136,5 +148,155 @@ public class ChronicleEntry
 	public List<String> detailsOrEmpty()
 	{
 		return details == null ? new ArrayList<>() : details;
+	}
+
+	/**
+	 * No quest before its time. A paragraph or a list item that would give a
+	 * later quest away opens with {@code {done:RECIPE_FOR_DISASTER}}, several
+	 * quests comma-separated, and stays off the page until every one of them
+	 * is done. See docs/chronicle-voice.md.
+	 */
+	private static final Pattern GATE = Pattern.compile("^\\{done:([A-Z0-9_]+(?:,[A-Z0-9_]+)*)\\}\\s*");
+
+	/** Paragraphs are separated by a blank line, as the layout splits them. */
+	private static final String PARAGRAPH_BREAK = "\n\\s*\n";
+
+	/** The quests a passage waits on, by Quest constant name; none when it waits on nothing. */
+	public static List<String> gateOf(String passage)
+	{
+		Matcher gate = passage == null ? null : GATE.matcher(passage);
+		if (gate == null || !gate.find())
+		{
+			return Collections.emptyList();
+		}
+		List<String> quests = new ArrayList<>();
+		Collections.addAll(quests, gate.group(1).split(","));
+		return quests;
+	}
+
+	/** The passage as it is read, without its gate. */
+	public static String ungated(String passage)
+	{
+		return passage == null ? null : GATE.matcher(passage).replaceFirst("");
+	}
+
+	/**
+	 * Every passage that can carry a gate, in page order: the summary's
+	 * paragraphs, each section's paragraphs, then the people, places and
+	 * particulars.
+	 */
+	List<String> passages()
+	{
+		List<String> passages = new ArrayList<>();
+		addParagraphs(passages, summary);
+		for (Section section : sectionsOrEmpty())
+		{
+			addParagraphs(passages, section.body);
+		}
+		passages.addAll(peopleOrEmpty());
+		passages.addAll(placesOrEmpty());
+		passages.addAll(detailsOrEmpty());
+		return passages;
+	}
+
+	private static void addParagraphs(List<String> out, String text)
+	{
+		if (text != null && !text.isEmpty())
+		{
+			Collections.addAll(out, text.split(PARAGRAPH_BREAK));
+		}
+	}
+
+	/** Every quest a passage on this page waits on. */
+	public Set<String> gateQuests()
+	{
+		Set<String> quests = new LinkedHashSet<>();
+		for (String passage : passages())
+		{
+			quests.addAll(gateOf(passage));
+		}
+		return quests;
+	}
+
+	/**
+	 * The page as it reads to someone who has finished the quests
+	 * {@code done} says yes to: every passage still waiting is left off, a
+	 * section left with nothing is left off heading and all, and the gates
+	 * are not read out. The book itself is not touched.
+	 */
+	public ChronicleEntry readAs(Predicate<String> done)
+	{
+		ChronicleEntry shown = new ChronicleEntry();
+		shown.id = id;
+		shown.kind = kind;
+		shown.name = name;
+		shown.unlock = unlock;
+		shown.plates = plates;
+		shown.summary = shownParagraphs(summary, done);
+		if (sections != null)
+		{
+			shown.sections = new ArrayList<>();
+			for (Section section : sections)
+			{
+				String body = shownParagraphs(section.body, done);
+				if (body != null && !body.isEmpty())
+				{
+					Section kept = new Section();
+					kept.heading = section.heading;
+					kept.body = body;
+					shown.sections.add(kept);
+				}
+			}
+		}
+		shown.people = shownItems(people, done);
+		shown.places = shownItems(places, done);
+		shown.details = shownItems(details, done);
+		return shown;
+	}
+
+	private static boolean open(String passage, Predicate<String> done)
+	{
+		for (String quest : gateOf(passage))
+		{
+			if (!done.test(quest))
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private static String shownParagraphs(String text, Predicate<String> done)
+	{
+		if (text == null || text.isEmpty())
+		{
+			return text;
+		}
+		List<String> kept = new ArrayList<>();
+		for (String paragraph : text.split(PARAGRAPH_BREAK))
+		{
+			if (open(paragraph, done))
+			{
+				kept.add(ungated(paragraph));
+			}
+		}
+		return String.join("\n\n", kept);
+	}
+
+	private static List<String> shownItems(List<String> items, Predicate<String> done)
+	{
+		if (items == null)
+		{
+			return null;
+		}
+		List<String> kept = new ArrayList<>();
+		for (String item : items)
+		{
+			if (open(item, done))
+			{
+				kept.add(ungated(item));
+			}
+		}
+		return kept;
 	}
 }

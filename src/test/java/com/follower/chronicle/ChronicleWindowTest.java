@@ -11,7 +11,13 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import net.runelite.api.Client;
+import net.runelite.api.QuestState;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -38,11 +44,13 @@ public class ChronicleWindowTest
 
 	private final Canvas canvas = new Canvas();
 	private ChronicleWindow window;
+	private Client client;
+	private GameFontRepository fonts;
 
 	@Before
 	public void setUp() throws IOException
 	{
-		Client client = (Client) Proxy.newProxyInstance(Client.class.getClassLoader(), new Class<?>[]{Client.class},
+		client = (Client) Proxy.newProxyInstance(Client.class.getClassLoader(), new Class<?>[]{Client.class},
 			(proxy, method, args) ->
 			{
 				switch (method.getName())
@@ -62,7 +70,7 @@ public class ChronicleWindowTest
 						return type == int.class ? 0 : type == boolean.class ? false : null;
 				}
 			});
-		GameFontRepository fonts = new GameFontRepository(new Gson());
+		fonts = new GameFontRepository(new Gson());
 		fonts.load(folder.newFolder().toPath());
 		ChronicleLoader loader = new ChronicleLoader(new Gson());
 		loader.load(folder.newFolder().toPath());
@@ -209,5 +217,50 @@ public class ChronicleWindowTest
 		press(ChronicleLayout.PAGE_TEXT_RIGHT - 7, baseline - 4);
 		assertEquals(1, field("plateIndex"));
 		assertFalse(enlarged());
+	}
+
+	private List<String> pageTexts() throws Exception
+	{
+		List<String> texts = new ArrayList<>();
+		@SuppressWarnings("unchecked")
+		List<ChronicleLayout.Line> lines = (List<ChronicleLayout.Line>) field("pageLines");
+		for (ChronicleLayout.Line line : lines)
+		{
+			texts.add(line.text);
+		}
+		return texts;
+	}
+
+	/**
+	 * No quest before its time, on the page itself: a passage waiting on a
+	 * quest stays off the open page until the quest is done, then is there
+	 * without the page being turned, and its gate is never drawn.
+	 */
+	@Test
+	public void aPassageWaitingOnAQuestAppearsOnTheOpenPageOnceItIsDone() throws Exception
+	{
+		Path data = folder.newFolder().toPath();
+		Files.write(data.resolve(ChronicleLoader.FILE_NAME), ("{\"version\": 1, \"entries\": [{"
+			+ "\"id\": \"quest-x\", \"kind\": \"quest\", \"name\": \"X\", \"unlock\": {\"always\": true},"
+			+ "\"summary\": \"Before.\\n\\n{done:RECIPE_FOR_DISASTER} After.\","
+			+ "\"sections\": [{\"heading\": \"What happened\", \"body\": \"Things.\"}]}]}")
+			.getBytes(StandardCharsets.UTF_8));
+		ChronicleLoader loader = new ChronicleLoader(new Gson());
+		loader.load(data);
+		ChronicleProgress progress = new ChronicleProgress(client, loader, () -> null);
+		window = new ChronicleWindow(client, null, null, null, fonts, loader);
+		window.attach(progress);
+		window.openAt("quest-x");
+		draw();
+		assertTrue(pageTexts().toString(), pageTexts().contains("Before."));
+		assertFalse("not before its quest: " + pageTexts(), pageTexts().contains("After."));
+
+		progress.setQuestState("RECIPE_FOR_DISASTER", QuestState.FINISHED);
+		draw();
+		assertTrue("there once it is done: " + pageTexts(), pageTexts().contains("After."));
+		for (String text : pageTexts())
+		{
+			assertFalse("a gate drawn on the page: " + text, text.contains("{done"));
+		}
 	}
 }

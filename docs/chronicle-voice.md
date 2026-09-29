@@ -100,11 +100,28 @@ under them.
 Priest in Peril." That can be read the moment King Roald sends you out,
 before there is a dog, a monk or a trick.
 
+**Later quests.** The same holds for every other quest, not only the page's
+own. A passage that gives away a quest the reader may not have finished (its
+plot, a twist, who someone really is, how it ends, or a person, place or piece
+of lore it introduces) is either left out or waits for that quest. To make it
+wait, start the paragraph or list item with `{done:RECIPE_FOR_DISASTER}`
+(`net.runelite.api.Quest` constant names; several, comma-separated, all
+needed). It stays off the page until the quest is done, a section left with
+nothing loses its heading, and the gate is never drawn. Naming a quest in a
+list of what it leads to or where it starts gives nothing away. Plate captions
+cannot wait, so a caption is safe from the page's earliest unlock. The summary,
+and a creature's "Where it is found", which shows even on its locked page, each
+keep at least one passage with no gate.
+
 **Check.** Read each page as it stands at its earliest unlock. On
 `questBegun` pages, refuse "you killed", "you took", "you freed", "tricked
 you", "you slipped" and "had you". On pages unlocked by sight, flag any
 sentence that puts a quest's name next to "you". Refuse "Later." and " since "
-in page prose until threshold code exists.
+in page prose until threshold code exists. Then read it again with no other
+quest done, and each gated passage as it lands after its quest. Tested: every
+gate names a quest the code knows and opens its passage
+(`everyGateWaitsOnAQuestTheCodeCanCheck`), and no gate empties a summary or a
+creature's where-to-find (`noGateLeavesAPageWithNothingToSay`).
 
 ### 3. Seen, told, read, and by whom
 
@@ -575,8 +592,9 @@ Every page opens with a plate, and a test holds it to that. A creature or
 person is its own game model, turning, framed to fill the plate. A place is a
 watercolour the scribe makes the first time you stand still in one of its
 regions, with you in the middle. Before then, a portrait shows as an ink
-outline captioned "Not yet seen." and a sketch as bare paper captioned "I'll
-draw it when we're there." That already matches the research: Audubon's
+outline captioned "Not yet seen." and a sketch as bare paper captioned with
+its hint, what the scribe means to draw: "Stop in Lumbridge and I'll draw
+it." That already matches the research: Audubon's
 plates marked as drawn from nature, the medieval bestiary artist working from
 a description, and the museum case marked as having no information yet.
 
@@ -598,6 +616,11 @@ a description, and the museum case marked as having no information yet.
   regions, `runNpcFind` for NPCs); a wrong one fails silently and the scribe
   simply never draws the place. Every portrait also carries its NPC's
   standing animation as `idle`, which `runChronicleAudit` prints and checks.
+- **Every sketch says what it waits for.** A sketch plate carries a `hint`,
+  its caption until it is drawn: what the scribe will draw and where to stop
+  for it, true anywhere in the plate's regions, and the same on every page
+  that shares the sketch. Tested: it fits the caption's width, and every
+  sketch has one.
 - **Captions.** One line, about 30 characters. The subject plus one thing the
   picture can't show:
   - how it was drawn: "Drawn from life. Briefly."

@@ -63,8 +63,10 @@ public class ChroniclePageFitTest
 		List<List<ChronicleLayout.Line>> out = new ArrayList<>();
 		for (ChronicleEntry entry : loader.getEntries())
 		{
-			out.add(ChronicleLayout.page(entry, WIDTH, body::stringWidth, bold::stringWidth));
-			out.add(ChronicleLayout.lockedPage(entry, "The scribe has not met one of these yet.", WIDTH,
+			// Every quest done: the longest each page gets, with nothing held back.
+			ChronicleEntry whole = entry.readAs(quest -> true);
+			out.add(ChronicleLayout.page(whole, WIDTH, body::stringWidth, bold::stringWidth));
+			out.add(ChronicleLayout.lockedPage(whole, "The scribe has not met one of these yet.", WIDTH,
 				body::stringWidth, bold::stringWidth));
 		}
 		return out;

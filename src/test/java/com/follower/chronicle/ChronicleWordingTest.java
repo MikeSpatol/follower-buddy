@@ -75,7 +75,7 @@ public class ChronicleWordingTest
 	public void aLockedBossPageSaysWhereToFindIt()
 	{
 		ChronicleEntry mole = loader.get("boss-giant-mole");
-		List<ChronicleLayout.Line> lines = ChronicleLayout.lockedPage(mole,
+		List<ChronicleLayout.Line> lines = ChronicleLayout.lockedPage(mole.readAs(quest -> false),
 			ChronicleWindow.unwrittenHint(mole), 2000, ChronicleWordingTest::width, ChronicleWordingTest::width);
 		int words = ChronicleLayout.PLATE_ROWS + 1;
 		assertEquals("BODY:The scribe has not met this boss yet.", lines.get(words).toString());
@@ -103,7 +103,10 @@ public class ChronicleWordingTest
 		assertEquals("Plate I. " + goblin.caption, ChronicleWindow.caption(goblin, 0, true, false));
 
 		ChronicleEntry.Plate lumbridge = loader.get("location-lumbridge").plates.get(0);
-		assertEquals("Plate I. I'll draw it when we're there.",
+		assertEquals("until it is drawn, what the scribe means to draw", "Plate I. " + lumbridge.hint,
+			ChronicleWindow.caption(lumbridge, 0, true, false));
+		lumbridge.hint = null;
+		assertEquals("a book without hints still says something", "Plate I. I'll draw it when we're there.",
 			ChronicleWindow.caption(lumbridge, 0, true, false));
 		assertEquals("Plate I. " + lumbridge.caption, ChronicleWindow.caption(lumbridge, 0, false, true));
 		ChronicleEntry.Plate duke = loader.get("location-lumbridge").plates.get(1);
@@ -119,7 +122,7 @@ public class ChronicleWordingTest
 		{
 			for (ChronicleEntry entry : loader.ofKind(kind))
 			{
-				List<ChronicleLayout.Line> lines = ChronicleLayout.lockedPage(entry, "x", 2000,
+				List<ChronicleLayout.Line> lines = ChronicleLayout.lockedPage(entry.readAs(quest -> false), "x", 2000,
 					ChronicleWordingTest::width, ChronicleWordingTest::width);
 				assertTrue(entry.id + " has no Where it is found section",
 					lines.size() > ChronicleLayout.PLATE_ROWS + 2);

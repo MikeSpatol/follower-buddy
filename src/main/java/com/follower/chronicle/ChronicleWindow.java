@@ -15,6 +15,8 @@ import java.awt.image.BufferedImage;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Supplier;
 import java.util.function.ToIntFunction;
 import javax.inject.Inject;
@@ -927,16 +929,26 @@ public class ChronicleWindow extends Overlay
 
 		// The body, laid out once per page and cached until the page or its
 		// state changes: the page itself, or the reason it cannot be read
-		// yet and, for a creature, where to find one.
+		// yet and, for a creature, where to find one. Either way only what the
+		// quests done so far allow; a quest finished opens its passages.
 		int bodyTop = ChronicleLayout.BODY_TOP;
 		int bodyHeight = ChronicleLayout.CONTENT_BOTTOM - bodyTop;
-		String key = entry.id + (readable ? "" : ":locked");
+		Set<String> done = new TreeSet<>();
+		for (String quest : entry.gateQuests())
+		{
+			if (progress != null && progress.isDone(quest))
+			{
+				done.add(quest);
+			}
+		}
+		String key = entry.id + (readable ? "" : ":locked") + done;
 		if (!key.equals(pageLinesFor))
 		{
+			ChronicleEntry asRead = entry.readAs(done::contains);
 			pageLines = readable
-				? ChronicleLayout.page(entry, width,
+				? ChronicleLayout.page(asRead, width,
 					s -> measure(g, body, false, s), s -> measure(g, bold, true, s))
-				: ChronicleLayout.lockedPage(entry, unwrittenHint(entry), width,
+				: ChronicleLayout.lockedPage(asRead, unwrittenHint(entry), width,
 					s -> measure(g, body, false, s), s -> measure(g, bold, true, s));
 			pageLinesFor = key;
 			pageScroll = 0;
@@ -1151,7 +1163,8 @@ public class ChronicleWindow extends Overlay
 		}
 		if (plate.sketch != null && !sketched)
 		{
-			return number + "I'll draw it when we're there.";
+			return number + (plate.hint == null || plate.hint.trim().isEmpty()
+				? "I'll draw it when we're there." : plate.hint);
 		}
 		return number + (plate.caption == null ? "" : plate.caption);
 	}

@@ -94,6 +94,10 @@ public class ChronicleProgress
 			}
 			readQuest(entry.unlock.quest);
 			readQuest(entry.unlock.questBegun);
+			for (String quest : entry.gateQuests())
+			{
+				readQuest(quest);
+			}
 		}
 		// A read that failed stands in as not started; comparing with it
 		// would find every finished quest newly finished on the next look.
@@ -294,6 +298,12 @@ public class ChronicleProgress
 		{
 			return null;
 		}
+	}
+
+	/** Whether a quest was finished at the last read; what a gated passage waits on. */
+	public boolean isDone(String quest)
+	{
+		return questStates.get(quest) == QuestState.FINISHED;
 	}
 
 	/** Whether the page can be read now. */
