@@ -758,6 +758,23 @@ public class StayHoldsTest
 			+ String.join("\n", unmarked), unmarked.isEmpty());
 	}
 
+	/**
+	 * Play test, 29 Sep: mid-fight the right-click offered only Follow. The
+	 * choice read any stay, and the spectator standing clear to watch holds
+	 * one, as the seat and the wander do, so the player could not give a Stay
+	 * over any of them. It reads the player's own park.
+	 */
+	@Test
+	public void theMenuOffersStayUnlessThePlayerParkedIt() throws IOException
+	{
+		String source = new String(Files.readAllBytes(
+			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8);
+		int follow = source.indexOf("addFollowerMenuEntry(\"Follow\"");
+		assertTrue("the Follow entry has moved - the scan broke, not the glue", follow >= 0);
+		int branch = source.lastIndexOf("if (", follow);
+		assertEquals("if (parkedByPlayer)", source.substring(branch, source.indexOf(')', branch) + 1));
+	}
+
 	/** From each marker, the source up to the close matching the first open at or after it. */
 	private static List<String> balancedAfter(String source, String marker, char open, char close)
 	{

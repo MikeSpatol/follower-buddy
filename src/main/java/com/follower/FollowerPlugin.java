@@ -6376,7 +6376,10 @@ public class FollowerPlugin extends Plugin
 				speechEngine.dispatch(TriggerEvent.simple(TriggerEvent.Type.EXAMINED));
 			});
 
-		if (follower.isStaying())
+		// The player's own park decides, not any stay: standing clear to watch
+		// a fight, the seat and the wander hold the follower too, and a Stay
+		// given over one of them has to be on offer.
+		if (parkedByPlayer)
 		{
 			addFollowerMenuEntry("Follow", () ->
 			{
