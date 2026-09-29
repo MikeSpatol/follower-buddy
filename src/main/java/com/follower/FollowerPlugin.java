@@ -3905,6 +3905,8 @@ public class FollowerPlugin extends Plugin
 		parkedByPlayer = false;
 		parkWhenFree = false;
 		sentWhenFree = null;
+		// A logout tab still up when the next scene starts is not a goodbye.
+		logoutTabOpen = true;
 		// A forced cutscene ends with the scene, as a real one does. Left on,
 		// it held the follower still through logouts and hops with nothing
 		// to say so.
@@ -6985,6 +6987,7 @@ public class FollowerPlugin extends Plugin
 		// is taken again on the tick they are let go.
 		keepThePlayersPark();
 		rememberThePark();
+		noticeTheLogoutTab();
 
 		// The spawn-in burst waits one tick so the follower has already been
 		// rendered standing at the thrall's spot when it plays.
@@ -7245,6 +7248,42 @@ public class FollowerPlugin extends Plugin
 	 * currently renders. The measuring dumps that produced the baked-in layout
 	 * constants have been retired; only the silent adoption remains.
 	 */
+	/**
+	 * The logout tab, opened: the last thing on screen before the session
+	 * ends, so a turn to face them and a wave, the rare line to go with it,
+	 * and a last look at the quests, so one finished just now is dated before
+	 * the session ends. The panel is loaded once, at login, and a tab press
+	 * only shows it, so the load never came with the press (play test, 29
+	 * Sep): it is watched once a tick instead, as the panel coming into view.
+	 */
+	private void noticeTheLogoutTab()
+	{
+		net.runelite.api.widgets.Widget panel =
+			client.getWidget(net.runelite.api.gameval.InterfaceID.LOGOUT, 0);
+		boolean open = panel != null && !panel.isHidden();
+		boolean opened = open && !logoutTabOpen;
+		logoutTabOpen = open;
+		if (!opened)
+		{
+			return;
+		}
+		if (moments != null)
+		{
+			moments.farewell();
+		}
+		speechEngine.dispatch(TriggerEvent.simple(TriggerEvent.Type.FAREWELL));
+		if (chronicleProgress != null)
+		{
+			chronicleProgress.refresh(client.getTickCount());
+		}
+	}
+
+	/**
+	 * Whether the logout tab was on show at the last look. True between
+	 * sessions, so a tab still up as one starts is not taken for a goodbye.
+	 */
+	private boolean logoutTabOpen = true;
+
 	@Subscribe
 	public void onWidgetLoaded(net.runelite.api.events.WidgetLoaded event)
 	{
@@ -7255,24 +7294,6 @@ public class FollowerPlugin extends Plugin
 		if (group == net.runelite.api.gameval.InterfaceID.QUESTSCROLL)
 		{
 			noteQuestScroll();
-			return;
-		}
-
-		// The logout tab: the last thing on screen before the session ends,
-		// so a turn to face them and a wave, and the rare line to go with it.
-		if (group == net.runelite.api.gameval.InterfaceID.LOGOUT)
-		{
-			if (moments != null)
-			{
-				moments.farewell();
-			}
-			speechEngine.dispatch(TriggerEvent.simple(TriggerEvent.Type.FAREWELL));
-			// The logout tab: a last look, so a quest finished just now is
-			// dated before the session ends.
-			if (chronicleProgress != null)
-			{
-				chronicleProgress.refresh(client.getTickCount());
-			}
 			return;
 		}
 

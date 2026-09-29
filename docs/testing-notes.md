@@ -465,3 +465,13 @@ The guess still leaves two recall rules a line behind on the oldest files, as
 it always did. ThreeWayMergeTest and DialogMergeTest build their no-record
 cases from the real 1.4.0 files; mutating either condition of the narrowing
 fails a test.
+
+**Also found in play, 29 Sep.** Profile switches put one profile's outfit on
+another: the named outfits were one list shared by every RuneLite profile,
+every change saved into the selected name and a switch reloaded it (issue
+#1's other half); each profile now keeps its own list. And opening the logout
+tab never waved: the panel is loaded once, at login, and a tab press only
+shows it, so the load the wave listened for never came with the press; it is
+now watched as the panel coming into view. Neither had been seen in play
+before; the tests drove the pieces directly. A Stay's tile is now also
+remembered across a relog or hop, asked for after the Stay check.

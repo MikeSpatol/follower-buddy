@@ -181,6 +181,8 @@ public class StayHoldsTest
 	private Feet feet;
 	/** Whether the NPC chat box is up, for the minute-taking. */
 	private boolean npcDialogUp;
+	/** Whether the logout tab is the side panel on show. */
+	private boolean logoutUp;
 
 	@Before
 	public void setUp() throws IOException, ReflectiveOperationException
@@ -191,11 +193,19 @@ public class StayHoldsTest
 		Client game = h.game.client;
 		Widget box = (Widget) Proxy.newProxyInstance(Widget.class.getClassLoader(),
 			new Class<?>[]{Widget.class}, (proxy, method, args) -> nothing(method.getReturnType()));
+		// Loaded once at login and only shown or hidden after, as the game does.
+		Widget logoutPanel = (Widget) Proxy.newProxyInstance(Widget.class.getClassLoader(),
+			new Class<?>[]{Widget.class}, (proxy, method, args) -> method.getName().equals("isHidden")
+				? !logoutUp : nothing(method.getReturnType()));
 		set("client", Proxy.newProxyInstance(Client.class.getClassLoader(), new Class<?>[]{Client.class},
 			(proxy, method, args) ->
 			{
 				if (method.getName().equals("getWidget") && args != null && args.length == 2)
 				{
+					if ((Integer) args[0] == InterfaceID.LOGOUT)
+					{
+						return logoutPanel;
+					}
 					return npcDialogUp && (Integer) args[0] == InterfaceID.CHAT_LEFT ? box : null;
 				}
 				try
@@ -325,6 +335,35 @@ public class StayHoldsTest
 		moments.farewell();
 		assertFalse("the wave, where it stands", feet.played.isEmpty());
 		assertEquals(post, feet.stay);
+	}
+
+	/**
+	 * Play test, 29 Sep: opening the logout tab never waved. The panel is
+	 * loaded once, at login, and a tab press only shows it, so the load the
+	 * wave waited for never came with the press. It is watched instead, as
+	 * the panel coming into view.
+	 */
+	@Test
+	public void openingTheLogoutTabWavesEachTimeItComesIntoView() throws ReflectiveOperationException
+	{
+		moments();
+		call("noticeTheLogoutTab");
+		assertTrue("nothing while another tab is up", feet.played.isEmpty());
+		logoutUp = true;
+		call("noticeTheLogoutTab");
+		assertFalse("the tab opened: a wave", feet.played.isEmpty());
+		int waved = feet.played.size();
+		call("noticeTheLogoutTab");
+		assertEquals("still open is not opened again", waved, feet.played.size());
+	}
+
+	@Test
+	public void aLogoutTabAlreadyUpAtLoginIsNotAGoodbye() throws ReflectiveOperationException
+	{
+		moments();
+		logoutUp = true;
+		call("noticeTheLogoutTab");
+		assertTrue("the session is starting, not ending", feet.played.isEmpty());
 	}
 
 	@Test
