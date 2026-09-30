@@ -268,8 +268,10 @@ public class SketchController
 
 	private void putAway(String line)
 	{
-		hands.release();
+		// The pose first, as every other put-away: it is only a field, and the
+		// release rebuilds the model, the part that can fail.
 		follower.setPoseOverride(0);
+		hands.release();
 		stage = Stage.WAITING;
 		key = null;
 		ticks = 0;

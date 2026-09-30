@@ -274,7 +274,82 @@ public class LifecycleGlueTest
 		// toggle, and only the sketch's own reset takes it off. Switched off
 		// with the scroll out, the follower came back reading nothing.
 		assertTrue("shutting down must reset the sketch",
-			method("protected void shutDown()").contains("sketching.reset();"));
+			method("protected void shutDown()").contains("sketchingNow.reset();"));
+	}
+
+	@Test
+	public void aDisableLetsGoOfTheFollowerOnTheClientThread() throws IOException
+	{
+		// Play test, 29 Sep: RuneLite stops a plugin on the Swing thread, and
+		// putting a scroll or a tool away rebuilds the follower, which reads
+		// the client. Only the client thread may, and the client's check
+		// throws on every build. Switched off mid-sketch, the stop threw
+		// there: the reading pose stayed on for good, and the despawn, the
+		// saves and the sidebar button's removal never ran. A borrowed tool,
+		// the notes, the minutes or a thrall did the same. So everything that
+		// lets go of the follower goes over in the stop's one invoke, with
+		// this session's controllers, not a quick re-enable's new ones.
+		String stopping = method("protected void shutDown() throws Exception");
+		int over = stopping.indexOf("clientThread.invoke(");
+		assertTrue("the stop hands its follower work to the client thread", over >= 0);
+		String swing = stopping.substring(0, over);
+		String client = stopping.substring(over, stopping.indexOf("\n\t\t});", over));
+		for (String call : new String[]{"resetThrallQuietly();", "dialog.close();", "flourishNow.abort();",
+			"skillingNow.reset();", "momentsNow.reset();", "sketchingNow.reset();", "errandsNow.reset();",
+			"endMinutes(false);", "follower.setPoseOverride(0);", "follower.despawn();"})
+		{
+			assertTrue("the stop must call " + call + " on the client thread", client.contains(call));
+		}
+		// The code alone, and the engine's own reset, which is only fields.
+		String left = swing.replaceAll("//[^\n]*", "").replace("speechEngine.reset(", "");
+		for (String call : new String[]{"resetThrallQuietly\\(", "dialog\\.close\\(", "\\.abort\\(",
+			"\\.reset\\(", "endMinutes\\(", "(?<![.\\w])follower\\."})
+		{
+			assertFalse("the stop reaches the follower from the Swing thread: " + call,
+				Pattern.compile(call).matcher(left).find());
+		}
+	}
+
+	@Test
+	public void aShiftClickTalksOnTheClientThread() throws IOException
+	{
+		// Play test, 29 Sep: the mouse is heard on the Swing thread, and the
+		// Talk-to box reads the bag for a wished item, which only the client
+		// thread may. While a wish was open a shift-click threw and the box
+		// never opened; the right-click Talk-to, on the client thread, was fine.
+		String source = source();
+		int at = source.indexOf("shiftClickAdapter =");
+		assertTrue("the plugin has no shift-click adapter - the lint has lost its place", at >= 0);
+		String adapter = source.substring(at, source.indexOf("\n\t};\n", at));
+		int over = adapter.indexOf("clientThread.invoke(");
+		assertTrue("a shift-click must open the box on the client thread", over >= 0
+			&& adapter.indexOf("startTalking();", over) > over);
+		assertFalse("and only there", adapter.substring(0, over).contains("startTalking("));
+		// Asked again there: the box opens on the next tick, so a second
+		// click queued before it would otherwise start the talk over.
+		String there = adapter.substring(over);
+		assertTrue("and only while no talk is open and the plugin is still on",
+			there.indexOf("!dialog.isOpen()") >= 0 && there.indexOf("started") >= 0
+				&& there.indexOf("!dialog.isOpen()") < there.indexOf("startTalking();"));
+	}
+
+	@Test
+	public void aStopLetsGoOfThePropsWithoutARebuild() throws IOException
+	{
+		// Review, 29 Sep: the stop's queued block puts the scroll or the tool
+		// away after the Swing side has unloaded the model data, and the
+		// rebuild that followed failed and told the chat the install had no
+		// equipment models. After a stop the block despawns anyway.
+		String starting = method("protected void startUp() throws Exception");
+		for (String letGo : new String[]{"public void release()", "public void takeOff()"})
+		{
+			int at = starting.indexOf(letGo);
+			assertTrue("the hands have no " + letGo + " - the lint has lost its place", at >= 0);
+			String body = starting.substring(at, starting.indexOf("\n\t\t\t\t}\n", at));
+			int rebuild = body.indexOf("rebuildFollower();");
+			assertTrue(letGo + " rebuilds only while the plugin is on",
+				rebuild > 0 && body.lastIndexOf("if (started)", rebuild) > 0);
+		}
 	}
 
 	@Test

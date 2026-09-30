@@ -115,6 +115,8 @@ public class SketchControllerTest
 	private boolean holding;
 	/** Whether the scroll will not come out when asked for. */
 	private boolean handsRefuse;
+	/** Whether putting it away fails, as a model rebuild off the client thread does. */
+	private boolean releaseFails;
 	private final List<String> said = new ArrayList<>();
 	private FollowerEntity follower;
 
@@ -161,6 +163,10 @@ public class SketchControllerTest
 			@Override
 			public void release()
 			{
+				if (releaseFails)
+				{
+					throw new IllegalStateException("must be called on client thread");
+				}
 				holding = false;
 			}
 
@@ -276,6 +282,31 @@ public class SketchControllerTest
 		assertFalse("the scroll put away", holding);
 		assertEquals("and the reading pose with it", 0, follower.getPoseOverride());
 		assertTrue("nothing said for a sketch never taken", said.isEmpty());
+	}
+
+	@Test
+	public void aPutAwayThatFailsStillTakesThePoseOff() throws IOException
+	{
+		// Play test, 29 Sep: switched off mid-sketch, the put-away rebuilt
+		// the model from the Swing thread and threw. The scroll had gone, but
+		// the pose was set after it and never came off: the follower went on
+		// reading an empty hand after the plugin came back. The pose is only
+		// a field, so it goes first.
+		SketchController scribe = scribe();
+		idle = SketchController.IDLE_TICKS;
+		scribe.tick();
+		assertEquals(ErrandController.READ_SCROLL_POSE, follower.getPoseOverride());
+
+		releaseFails = true;
+		try
+		{
+			scribe.reset();
+		}
+		catch (IllegalStateException expected)
+		{
+			// The failure itself is the stop's to avoid; see LifecycleGlueTest.
+		}
+		assertEquals("the reading pose is off whatever the hands did", 0, follower.getPoseOverride());
 	}
 
 	// ------------------------------------------------------- the force-path

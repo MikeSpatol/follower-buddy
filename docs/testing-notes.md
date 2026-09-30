@@ -475,3 +475,17 @@ shows it, so the load the wave listened for never came with the press; it is
 now watched as the panel coming into view. Neither had been seen in play
 before; the tests drove the pieces directly. A Stay's tile is now also
 remembered across a relog or hop, asked for after the Stay check.
+
+Switching the plugin off mid-sketch left the follower in the reading pose
+with an empty hand. RuneLite stops a plugin on the Swing thread, and putting
+the scroll away rebuilt the follower, which reads the client; the client's
+check throws there on every build, not only the test client's. The pose was
+set after the scroll went, so it stayed, and the rest of the stop never ran.
+A thread audit found the same trap in a borrowed tool, the notes, the
+minutes, a trap reading and a thrall, and three poses (a copied work loop,
+the rest, the shield's channel) that outlived a stop even without a throw.
+All of it now goes over to the client thread with the despawn, and the pose
+comes off with it. The same audit found a shift-click Talk-to that threw, and
+never opened the box, for the whole of a wish; it is now opened on the client
+thread too. LifecycleGlueTest pins both, and a sketch test pins the pose
+coming off first; undoing any part of it fails a test.

@@ -234,7 +234,16 @@ public class FollowerPlugin extends Plugin
 
 			crossPoint = event.getPoint();
 			crossStartMs = System.currentTimeMillis();
-			startTalking();
+			// The mouse is heard on the Swing thread, and the box reads the
+			// bag for a wished item, which only the client thread may. Asked
+			// again there: a second click can queue before the first opens it.
+			clientThread.invoke(() ->
+			{
+				if (started && !dialog.isOpen())
+				{
+					startTalking();
+				}
+			});
 			event.consume();
 			return event;
 		}
@@ -646,7 +655,12 @@ public class FollowerPlugin extends Plugin
 					}
 					propSlot = null;
 					propItemId = 0;
-					rebuildFollower();
+					// Let go by a stop, the model data is already unloaded and a
+					// rebuild could only fail, out loud; the stop despawns anyway.
+					if (started)
+					{
+						rebuildFollower();
+					}
 				}
 
 				@Override
@@ -681,7 +695,11 @@ public class FollowerPlugin extends Plugin
 					}
 					wornSlot = null;
 					wornItemId = 0;
-					rebuildFollower();
+					// As release: after a stop there is nothing to rebuild.
+					if (started)
+					{
+						rebuildFollower();
+					}
 				}
 
 				@Override
@@ -848,7 +866,6 @@ public class FollowerPlugin extends Plugin
 		started = false;
 		journal.flush();
 		renderCallbacks.unregister(thrallHider);
-		resetThrallQuietly();
 		// Before the engine is reset: an orderly shutdown is the one chance to
 		// save what the last few ticks counted.
 		writeCounters();
@@ -868,29 +885,9 @@ public class FollowerPlugin extends Plugin
 		chronicleWindow.unregister();
 		chronicleWindow.close();
 		mouseManager.unregisterMouseListener(shiftClickAdapter);
-		dialog.close();
 		overlay.clear();
 		speechQueue.clear();
 		speakingUntilMs = 0;
-		if (flourish != null)
-		{
-			flourish.abort();
-		}
-		if (skilling != null)
-		{
-			skilling.reset();
-		}
-		if (moments != null)
-		{
-			moments.reset();
-		}
-		if (sketching != null)
-		{
-			// Its reading pose is set on the follower, which outlives a disable.
-			sketching.reset();
-		}
-		// The scroll must not survive a disable either.
-		endMinutes(false);
 		voices.close();
 
 		if (navButton != null)
@@ -915,8 +912,49 @@ public class FollowerPlugin extends Plugin
 			voiceDialog = null;
 		}
 
+		// RuneLite calls this on the Swing thread, and letting go of the
+		// follower reads the client, which only the client thread may: the
+		// sketch's scroll, put away from here, threw and left the reading pose
+		// on for good, and the rest of this never ran. So all of it goes over,
+		// with the controllers of this session, not any a quick re-enable
+		// has built since.
+		com.follower.follower.PropFlourish flourishNow = flourish;
+		com.follower.follower.SkillingController skillingNow = skilling;
+		com.follower.follower.Moments momentsNow = moments;
+		com.follower.chronicle.SketchController sketchingNow = sketching;
+		com.follower.follower.ErrandController errandsNow = errands;
 		clientThread.invoke(() ->
 		{
+			resetThrallQuietly();
+			// An answer latched in the box is told to the rules, which may
+			// read the client.
+			dialog.close();
+			if (flourishNow != null)
+			{
+				flourishNow.abort();
+			}
+			if (skillingNow != null)
+			{
+				skillingNow.reset();
+			}
+			if (momentsNow != null)
+			{
+				momentsNow.reset();
+			}
+			if (sketchingNow != null)
+			{
+				sketchingNow.reset();
+			}
+			if (errandsNow != null)
+			{
+				errandsNow.reset();
+			}
+			// The scroll must not survive a disable either.
+			endMinutes(false);
+			// The follower outlives a disable, and so does a pose left on it by
+			// what the resets above do not own: a mirrored loop, the rest, the
+			// shield's channel. The new session would never know to take it off.
+			follower.setPoseOverride(0);
 			captureFallback.abort();
 			colorHarvester.abort();
 			follower.despawn();
