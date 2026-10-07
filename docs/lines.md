@@ -1802,7 +1802,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - {target}, examined. We're being thorough today.
 - Ah, the {target}. I have opinions.
 - {target}. Write it down, we might be tested.
-- You examined the {target}. I looked too. We are a team.
+- You looked, so I looked. Teamwork.
 - Is the {target} interesting? Be honest.
 - A {target}, apparently. The game insists.
 - I would have guessed {target} without reading it.
@@ -1810,13 +1810,13 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - The {target}. Riveting stuff.
 - {target}. Noted. Filed. Forgotten by lunch.
 - Looking closely at the {target}, are we?
-- I did not need to read that to know it was a {target}.
+- I didn't need to read that to know it was a {target}.
 - The {target}. Somebody wrote that description with real effort.
 - {target}. There. Now we both know.
 - The {target}. Yes. Very much a {target}.
-- Careful with the {target}. Or do not. It is only a {target}.
-- One more {target} examined and I am putting it in the notebook.
-- You read everything, do you not.
+- Careful with that {target}. Actually, it's a {target}. You'll be fine.
+- One more {target} and it's going in the notebook.
+- You really do read everything, don't you?
 - Go on then. What did it say?
 - I looked where you looked. I saw a {target}.
 - You do like reading the small print.

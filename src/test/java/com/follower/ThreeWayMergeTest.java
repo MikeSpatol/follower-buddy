@@ -336,13 +336,13 @@ public class ThreeWayMergeTest
 	public void aRuleSwitchedOffOnAFreshInstallFrom140StaysOff() throws Exception
 	{
 		JsonObject theirs = freshFrom140();
-		rule(theirs, "examine-echo").addProperty("enabled", false);
+		rule(theirs, "idle-chatter").addProperty("enabled", false);
 
 		JsonObject merged = merge(theirs, null);
 
-		assertFalse(rule(merged, "examine-echo").get("enabled").getAsBoolean());
+		assertFalse(rule(merged, "idle-chatter").get("enabled").getAsBoolean());
 		assertEquals("brought up to date in every other respect",
-			say(shipped(), "examine-echo"), say(merged, "examine-echo"));
+			say(shipped(), "idle-chatter"), say(merged, "idle-chatter"));
 	}
 
 	/**
@@ -413,12 +413,12 @@ public class ThreeWayMergeTest
 	public void aRuleRetunedSince130StillArrives() throws Exception
 	{
 		JsonObject theirs = freshFrom140();
-		rule(theirs, "examine-echo").addProperty("cooldownMs", 123456);
+		rule(theirs, "idle-chatter").addProperty("cooldownMs", 123456);
 
 		JsonObject merged = merge(theirs, null);
 
-		assertEquals(rule(shipped(), "examine-echo").get("cooldownMs"),
-			rule(merged, "examine-echo").get("cooldownMs"));
+		assertEquals(rule(shipped(), "idle-chatter").get("cooldownMs"),
+			rule(merged, "idle-chatter").get("cooldownMs"));
 	}
 
 	/** From this version on a fresh install records what it wrote, so there is never a first run to guess on. */
