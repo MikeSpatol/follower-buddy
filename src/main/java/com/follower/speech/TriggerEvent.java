@@ -133,6 +133,14 @@ public final class TriggerEvent
 		return event;
 	}
 
+	/** As {@link #examinedThing}, for a creature: {target} is a creature's name. */
+	public static TriggerEvent examinedCreature(String target)
+	{
+		TriggerEvent event = examinedThing(target);
+		event.creatures.add("target");
+		return event;
+	}
+
 	/**
 	 * The game's music changed to another track - the local song, as against
 	 * {@link Type#MUSIC_UNLOCK}, which is hearing one for the first time ever.
@@ -357,6 +365,7 @@ public final class TriggerEvent
 		TriggerEvent event = new TriggerEvent(type);
 		event.name = npcName == null ? "" : npcName;
 		event.placeholders.put("npc", event.name);
+		event.creatures.add("npc");
 		return event;
 	}
 
@@ -419,6 +428,9 @@ public final class TriggerEvent
 	private final Type type;
 	private final Map<String, String> placeholders = new HashMap<>();
 
+	/** The placeholders that hold a creature's name, which reads lower case after an article. */
+	private final java.util.Set<String> creatures = new java.util.HashSet<>();
+
 	/** Generic payload; meaning depends on {@link #type}. */
 	private String name = "";
 	private int id = -1;
@@ -454,6 +466,7 @@ public final class TriggerEvent
 		event.name = npcName == null ? "" : npcName;
 		event.placeholders.put("npc", event.name);
 		event.placeholders.put("npcId", Integer.toString(npcId));
+		event.creatures.add("npc");
 		return event;
 	}
 
@@ -673,5 +686,10 @@ public final class TriggerEvent
 	public Map<String, String> getPlaceholders()
 	{
 		return placeholders;
+	}
+
+	public java.util.Set<String> getCreatureKeys()
+	{
+		return creatures;
 	}
 }

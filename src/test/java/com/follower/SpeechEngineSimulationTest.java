@@ -427,7 +427,7 @@ public class SpeechEngineSimulationTest
 		// Only a whole "The" is given up.
 		assertEquals("Careful with the Thermonuclear smoke devil.", says(kill,
 			"Careful with the {npc}.", TriggerEvent.kill(499, "Thermonuclear smoke devil", 301)));
-		assertEquals("Careful with the Dwarf.", says(kill,
+		assertEquals("Careful with the dwarf.", says(kill,
 			"Careful with the {npc}.", TriggerEvent.kill(290, "Dwarf", 7)));
 
 		// Review: a player's name and someone's own words keep their "The".
@@ -435,6 +435,36 @@ public class SpeechEngineSimulationTest
 			"Is that {name}? Pull up a chair.", TriggerEvent.channel(TriggerEvent.Type.CHANNEL_JOIN, "The Old Nite")));
 		assertEquals("You said that the bank is shut?", says("{\"type\": \"chatMessage\", \"contains\": \"bank\"}",
 			"You said that {message}?", TriggerEvent.chat("the bank is shut", 2, "iron btw")));
+	}
+
+	@Test
+	public void aCreatureAfterAnArticleIsACommonNoun() throws IOException
+	{
+		// Play test, 7 Oct: "Careful with the Guard." The game capitalises
+		// every name; in the middle of a sentence a guard is a guard.
+		String examine = "{\"type\": \"examinedThing\"}";
+		assertEquals("Careful with that guard. Actually, it's a guard. You'll be fine.", says(examine,
+			"Careful with that {target}. Actually, it's a {target}. You'll be fine.",
+			TriggerEvent.examinedCreature("Guard")));
+		assertEquals("Guard. There. Now we both know.", says(examine,
+			"{target}. There. Now we both know.", TriggerEvent.examinedCreature("Guard")));
+		assertEquals("The monk of Zamorak. Noted, reluctantly.", says(examine,
+			"The {target}. Noted, reluctantly.", TriggerEvent.examinedCreature("Monk of Zamorak")));
+		// A thing examined is not a creature: an item's name can open on a god's.
+		assertEquals("I saw a Bandos chestplate.", says(examine,
+			"I saw a {target}.", TriggerEvent.examinedThing("Bandos chestplate")));
+
+		String kill = "{\"type\": \"npcKill\", \"minimum\": 1}";
+		assertEquals("That's a goblin down.", says(kill, "That's a {npc} down.",
+			TriggerEvent.kill(3029, "Goblin", 2)));
+		// Without anything pointing at it, it is the name.
+		assertEquals("Goblin, down.", says(kill, "{npc}, down.", TriggerEvent.kill(3029, "Goblin", 2)));
+		assertEquals("You beat Goblin!", says(kill, "You beat {npc}!", TriggerEvent.kill(3029, "Goblin", 2)));
+		// Names in their own right keep their capitals.
+		assertEquals("Careful with the Hill Giant.", says(kill, "Careful with the {npc}.",
+			TriggerEvent.kill(2098, "Hill Giant", 28)));
+		assertEquals("Careful with the Obor.", says(kill, "Careful with the {npc}.",
+			TriggerEvent.kill(7416, "Obor", 106)));
 	}
 
 	// -------------------------------------------------------------- mirroring

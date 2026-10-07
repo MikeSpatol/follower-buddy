@@ -111,4 +111,17 @@ public class WordsTest
 		assertFalse(Words.takesNoArticle("Beer glass"));
 		assertFalse(Words.takesNoArticle("Magnifying glass"));
 	}
+
+	@Test
+	public void aPlainNameBecomesACommonNounAndANameInItsOwnRightDoesNot()
+	{
+		assertEquals("guard", Words.asCommonNoun("Guard"));
+		assertEquals("monk of Zamorak", Words.asCommonNoun("Monk of Zamorak"));
+		assertEquals("thermonuclear smoke devil", Words.asCommonNoun("Thermonuclear smoke devil"));
+		assertEquals("goblin (level-2)", Words.asCommonNoun("Goblin (level-2)"));
+		assertEquals("Hill Giant", Words.asCommonNoun("Hill Giant"));
+		assertEquals("King Black Dragon", Words.asCommonNoun("King Black Dragon"));
+		assertEquals("TzHaar-Ket", Words.asCommonNoun("TzHaar-Ket"));
+		assertEquals("guard", Words.asCommonNoun("guard"));
+	}
 }

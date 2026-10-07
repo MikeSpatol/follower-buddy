@@ -205,6 +205,35 @@ public final class Words
 	}
 
 	/**
+	 * A creature's name as the middle of a sentence has it: the guard, a
+	 * goblin, a monk of Zamorak. The game capitalises every name's first
+	 * letter; one shaped like a plain noun, a capital to open it and none
+	 * after until any "of", gives it up. One with more capitals is a name in
+	 * its own right and keeps them: Hill Giant, King Black Dragon, TzHaar-Ket.
+	 */
+	public static String asCommonNoun(String name)
+	{
+		if (name == null || name.length() < 2 || !Character.isUpperCase(name.charAt(0)))
+		{
+			return name;
+		}
+		String head = name.replaceAll("\\s*\\(.*\\)$", "");
+		int of = head.indexOf(" of ");
+		if (of > 0)
+		{
+			head = head.substring(0, of);
+		}
+		for (int i = 1; i < head.length(); i++)
+		{
+			if (Character.isUpperCase(head.charAt(i)))
+			{
+				return name;
+			}
+		}
+		return Character.toLowerCase(name.charAt(0)) + name.substring(1);
+	}
+
+	/**
 	 * Whether the name takes no "a" at all: Coins, Dragon bones, soft clay,
 	 * The Leviathan. Judged on the head word - the one before "of" when there
 	 * is one, so a Jar of souls keeps its article - with a trailing "(e)"

@@ -8952,6 +8952,7 @@ public class FollowerPlugin extends Plugin
 		}
 		String target = null;
 		WorldPoint at = null;
+		boolean creature = false;
 		net.runelite.api.WorldView view = client.getTopLevelWorldView();
 		if (watchExamine)
 		{
@@ -8967,6 +8968,7 @@ public class FollowerPlugin extends Plugin
 				{
 					target = npc.getName();
 					at = npc.getWorldLocation();
+					creature = true;
 				}
 				break;
 			}
@@ -9044,8 +9046,9 @@ public class FollowerPlugin extends Plugin
 		}
 		if (target != null && !target.isEmpty() && !"null".equals(target))
 		{
-			speechEngine.dispatch(TriggerEvent.examinedThing(
-				target.replaceAll("<[^>]*>", "")));
+			String named = target.replaceAll("<[^>]*>", "");
+			speechEngine.dispatch(creature ? TriggerEvent.examinedCreature(named)
+				: TriggerEvent.examinedThing(named));
 		}
 	}
 

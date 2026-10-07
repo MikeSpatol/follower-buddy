@@ -1369,7 +1369,17 @@ public class SpeechEngine
 				boolean endsPhrase = close + 2 >= template.length()
 					|| template.charAt(close + 1) != ' '
 					|| !Character.isLetter(template.charAt(close + 2));
+				// A name that brings its own "The" is a proper one.
+				boolean named = replacement.regionMatches(true, 0, "the ", 0, 4);
 				replacement = agreeArticle(out, replacement, endsPhrase);
+				// After a pointing word a creature is a common noun: the guard,
+				// a goblin, that monk of Zamorak. Bosses keep their capitals.
+				if ((event.getCreatureKeys().contains(key) || "foe".equals(key)) && !named
+					&& afterAnArticle(out) && !ctx.isBoss(replacement,
+						event.getType() == TriggerEvent.Type.NPC_KILL ? event.getValue() : 0))
+				{
+					replacement = Words.asCommonNoun(replacement);
+				}
 			}
 			// The values are written for the middle of a sentence - "a feather",
 			// "the local menace", "two minutes" - so one that opens a sentence
@@ -1435,6 +1445,23 @@ public class SpeechEngine
 		String fits = Words.article(value);
 		out.replace(start, space, capital ? Character.toUpperCase(fits.charAt(0)) + fits.substring(1) : fits);
 		return value;
+	}
+
+	/** Whether the text so far ends on a word that points at a thing: a, the, that and the rest. */
+	private static boolean afterAnArticle(StringBuilder out)
+	{
+		int space = out.length() - 1;
+		if (space < 1 || out.charAt(space) != ' ')
+		{
+			return false;
+		}
+		int start = space;
+		while (start > 0 && Character.isLetter(out.charAt(start - 1)))
+		{
+			start--;
+		}
+		String word = out.substring(start, space).toLowerCase(Locale.ROOT);
+		return word.equals("a") || word.equals("an") || POINTING.contains(word);
 	}
 
 	/**
