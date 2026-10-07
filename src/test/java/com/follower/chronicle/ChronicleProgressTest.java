@@ -259,6 +259,17 @@ public class ChronicleProgressTest
 	}
 
 	@Test
+	public void onlyACreatureWithAPageStillToWriteIsWorthALook()
+	{
+		told();
+		assertTrue(progress.wantsToMeet("Monk of Zamorak"));
+		assertTrue("as the game spells it, any case", progress.wantsToMeet("monk of zamorak"));
+		assertFalse("no page names it", progress.wantsToMeet("Cow"));
+		progress.noteNpc("Monk of Zamorak");
+		assertFalse("written already", progress.wantsToMeet("Monk of Zamorak"));
+	}
+
+	@Test
 	public void aNewSessionTakesStockAfresh()
 	{
 		List<String> told = told();

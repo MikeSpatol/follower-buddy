@@ -6721,6 +6721,7 @@ public class FollowerPlugin extends Plugin
 		{
 			return;
 		}
+		noteCreaturesInSight(local);
 		if (pendingMime != 0)
 		{
 			// Arrived beside the work: now the copying reads as joining in.
@@ -7441,11 +7442,63 @@ public class FollowerPlugin extends Plugin
 	@Subscribe
 	public void onInteractingChanged(net.runelite.api.events.InteractingChanged event)
 	{
+		// Talked to, fought, or set upon: met, however far off it stands.
+		Player me = client.getLocalPlayer();
+		if (chronicleProgress != null && me != null)
+		{
+			if (event.getSource() == me && event.getTarget() instanceof NPC)
+			{
+				chronicleProgress.noteNpc(event.getTarget().getName());
+			}
+			else if (event.getTarget() == me && event.getSource() instanceof NPC)
+			{
+				chronicleProgress.noteNpc(event.getSource().getName());
+			}
+		}
 		if (dialog.isOpen()
 			&& event.getSource() == client.getLocalPlayer()
 			&& event.getTarget() != null)
 		{
 			dialog.close();
+		}
+	}
+
+	/** How close a creature has to be, in clear sight, to count as met: eight tiles. */
+	static final int MEET_TILES = 8;
+
+	/**
+	 * Play test, 7 Oct: a page was written for every creature loaded within
+	 * about 15 tiles, through walls and floors, so walking in to see King
+	 * Roald wrote the Monk of Zamorak's from its cage under the stairs,
+	 * unseen. Met now means close, on the same floor, with nothing in the
+	 * way, or talked to, fought or examined.
+	 */
+	static boolean closeEnoughToMeet(int creaturePlane, int myPlane, int distance)
+	{
+		return creaturePlane == myPlane && distance <= MEET_TILES;
+	}
+
+	/** Writes up the creatures with a page waiting that are in clear sight now. */
+	private void noteCreaturesInSight(Player me)
+	{
+		net.runelite.api.WorldView view = client.getTopLevelWorldView();
+		net.runelite.api.coords.WorldArea mine = me.getWorldArea();
+		if (chronicleProgress == null || view == null || mine == null)
+		{
+			return;
+		}
+		for (NPC npc : view.npcs())
+		{
+			if (npc == null || !chronicleProgress.wantsToMeet(npc.getName()))
+			{
+				continue;
+			}
+			net.runelite.api.coords.WorldArea theirs = npc.getWorldArea();
+			if (theirs != null && closeEnoughToMeet(theirs.getPlane(), mine.getPlane(), theirs.distanceTo(mine))
+				&& theirs.hasLineOfSightTo(view, mine))
+			{
+				chronicleProgress.noteNpc(npc.getName());
+			}
 		}
 	}
 
@@ -7455,11 +7508,8 @@ public class FollowerPlugin extends Plugin
 	public void onNpcSpawned(NpcSpawned event)
 	{
 		NPC npc = event.getNpc();
-		if (chronicleProgress != null)
-		{
-			// The scribe writes up a creature the first time it is in view.
-			chronicleProgress.noteNpc(npc.getName());
-		}
+		// Not written up here: a spawn is anything loaded within about 15
+		// tiles, through walls and floors. See noteCreaturesInSight.
 		maybeAdoptThrall(npc);
 		if (skilling != null)
 		{
@@ -8853,6 +8903,12 @@ public class FollowerPlugin extends Plugin
 	@Subscribe
 	public void onMenuOptionClicked(MenuOptionClicked event)
 	{
+		// Examined: met, at any distance.
+		if (chronicleProgress != null && event.getMenuAction() == net.runelite.api.MenuAction.EXAMINE_NPC
+			&& event.getMenuEntry().getNpc() != null)
+		{
+			chronicleProgress.noteNpc(event.getMenuEntry().getNpc().getName());
+		}
 		noteIntentFrom(event.getMenuOption());
 		noteExamine(event);
 		speechEngine.getContext().noteMenuOption(

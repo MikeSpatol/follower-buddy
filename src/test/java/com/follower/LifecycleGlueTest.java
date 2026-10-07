@@ -311,6 +311,24 @@ public class LifecycleGlueTest
 	}
 
 	@Test
+	public void aCreatureIsMetInSightOrByDealingWithItNotByLoading() throws IOException
+	{
+		// Play test, 7 Oct: a spawn is anything loaded within about 15 tiles,
+		// through walls and floors, and writing pages there wrote the caged
+		// Monk of Zamorak's on the way to King Roald, unseen.
+		assertFalse("a spawn must not write a page",
+			method("public void onNpcSpawned(NpcSpawned event)").contains("noteNpc("));
+		assertTrue("seen close, in clear sight, each tick",
+			method("public void onGameTick(GameTick event)").contains("noteCreaturesInSight(local);"));
+		assertTrue("talked to, fought or set upon",
+			method("public void onInteractingChanged(").contains("chronicleProgress.noteNpc("));
+		assertTrue("examined", method("public void onMenuOptionClicked(MenuOptionClicked event)")
+			.contains("EXAMINE_NPC"));
+		assertTrue("and in sight means a clear line", method("private void noteCreaturesInSight(Player me)")
+			.contains("hasLineOfSightTo(view, mine)"));
+	}
+
+	@Test
 	public void aShiftClickTalksOnTheClientThread() throws IOException
 	{
 		// Play test, 29 Sep: the mouse is heard on the Swing thread, and the

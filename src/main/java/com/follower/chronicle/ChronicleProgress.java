@@ -398,6 +398,30 @@ public class ChronicleProgress
 		return written;
 	}
 
+	/** Whether a page waits on meeting an NPC of this name: worth a look at it. */
+	public boolean wantsToMeet(String npcName)
+	{
+		TriggerContext context = memory.get();
+		if (npcName == null || npcName.isEmpty() || context == null)
+		{
+			return false;
+		}
+		for (ChronicleEntry entry : loader.getEntries())
+		{
+			if (entry.unlock != null && entry.unlock.npcs != null && !context.isChronicled(entry.id))
+			{
+				for (String name : entry.unlock.npcs)
+				{
+					if (npcName.equalsIgnoreCase(name))
+					{
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+
 	/** The player is standing in this map region. Same contract as {@link #noteNpc}. */
 	public List<ChronicleEntry> noteRegion(int regionId)
 	{
