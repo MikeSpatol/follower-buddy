@@ -482,7 +482,7 @@
         "npcs": [
           "Temple Guardian"
         ],
-        "questBegun": "PRIEST_IN_PERIL"
+        "quest": "PRIEST_IN_PERIL"
       },
       "summary": "A big dog in the mausoleum under Paterdomus, on the River Salve. Worth a page, I thought.",
       "sections": [
@@ -524,7 +524,7 @@
         "npcs": [
           "Moss Guardian"
         ],
-        "questBegun": "WATERFALL_QUEST"
+        "quest": "WATERFALL_QUEST"
       },
       "summary": "The guardian spirits of Glarial's Tomb, and a good deal stronger than the ordinary moss giant.\n\n{done:ROVING_ELVES} In Roving Elves, Islwyn and Eluned send you to kill one bare-handed for a consecration seed. Bare-handed, noted.",
       "sections": [

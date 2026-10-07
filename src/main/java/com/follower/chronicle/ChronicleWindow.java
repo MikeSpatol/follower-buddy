@@ -1196,7 +1196,7 @@ public class ChronicleWindow extends Overlay
 		{
 			parts.add("from the start");
 		}
-		if (unlock.quest != null)
+		if (unlock.quest != null && !metOnly(entry))
 		{
 			parts.add(questName(unlock.quest) + " is done");
 		}
@@ -1218,6 +1218,18 @@ public class ChronicleWindow extends Overlay
 		return parts.isEmpty() ? "never" : String.join(", or ", parts);
 	}
 
+	/**
+	 * A creature written when it is met. Its quest, finished, writes it too,
+	 * for the accounts that met it before there was a book; the quest cannot
+	 * be done without the meeting, so the meeting is all the page says.
+	 */
+	private static boolean metOnly(ChronicleEntry entry)
+	{
+		String kind = entry.kindOrEmpty();
+		return entry.unlock.npcs != null && !entry.unlock.npcs.isEmpty()
+			&& ("enemy".equals(kind) || "boss".equals(kind) || "beast".equals(kind));
+	}
+
 	/** What the page says instead of its text while it cannot be read. */
 	static String unwrittenHint(ChronicleEntry entry)
 	{
@@ -1226,7 +1238,7 @@ public class ChronicleWindow extends Overlay
 		{
 			return "The scribe has nothing on this yet.";
 		}
-		boolean byQuest = unlock.quest != null || unlock.questBegun != null;
+		boolean byQuest = (unlock.quest != null && !metOnly(entry)) || unlock.questBegun != null;
 		boolean byNpc = unlock.npcs != null && !unlock.npcs.isEmpty();
 		boolean byRegion = unlock.regions != null && !unlock.regions.isEmpty();
 		if (byNpc && !byQuest && !byRegion)
@@ -1240,7 +1252,7 @@ public class ChronicleWindow extends Overlay
 			return "The scribe has not been there yet.";
 		}
 		List<String> parts = new ArrayList<>();
-		if (unlock.quest != null)
+		if (unlock.quest != null && !metOnly(entry))
 		{
 			parts.add(questName(unlock.quest) + " is done");
 		}

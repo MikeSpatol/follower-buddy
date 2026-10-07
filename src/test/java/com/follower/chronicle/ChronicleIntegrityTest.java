@@ -118,6 +118,26 @@ public class ChronicleIntegrityTest
 	}
 
 	@Test
+	public void aCreatureIsWrittenWhenItIsMetNotWhenItsQuestBegins() throws IOException
+	{
+		// Play test, 7 Oct: starting Priest in Peril wrote the Temple
+		// Guardian's page before it had been seen. A creature's page waits for
+		// the meeting, or for the quest finished, which cannot be done without
+		// it.
+		List<String> early = new ArrayList<>();
+		for (ChronicleEntry entry : loadAsAFreshInstall().getEntries())
+		{
+			String kind = entry.kindOrEmpty();
+			if (("enemy".equals(kind) || "boss".equals(kind) || "beast".equals(kind))
+				&& entry.unlock != null && entry.unlock.questBegun != null)
+			{
+				early.add(entry.id);
+			}
+		}
+		assertTrue("written when the quest begins, before anyone met it: " + early, early.isEmpty());
+	}
+
+	@Test
 	public void everyUnlockIsOneTheCodeCanCheck() throws IOException
 	{
 		ChronicleLoader loader = loadAsAFreshInstall();

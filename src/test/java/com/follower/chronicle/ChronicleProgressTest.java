@@ -250,7 +250,7 @@ public class ChronicleProgressTest
 	public void aPageAQuestOpenedIsNotWrittenAgainWhenItsCreatureIsMet()
 	{
 		List<String> told = told();
-		progress.setQuestState("PRIEST_IN_PERIL", QuestState.IN_PROGRESS);
+		progress.setQuestState("PRIEST_IN_PERIL", QuestState.FINISHED);
 		progress.look();
 		progress.noteNpc("Temple Guardian");
 		assertTrue("already readable, so nothing new to say", told.isEmpty());
@@ -272,14 +272,18 @@ public class ChronicleProgressTest
 	@Test
 	public void aPageAQuestOpensIsToldAsTheQuestsNotAsASighting()
 	{
-		// Starting Priest in Peril opens the dog's page and the temple's
-		// before either is seen: the follower must not claim it saw them.
+		// Starting Priest in Peril opens the temple's page before it is
+		// seen: the follower must not claim it saw it. The dog's waits to be
+		// met (play test, 7 Oct).
 		List<String> told = told();
 		progress.look();
 		progress.setQuestState("PRIEST_IN_PERIL", QuestState.IN_PROGRESS);
 		progress.look();
-		assertTrue(told.toString(), told.contains("enemy-temple-guardian by quest"));
 		assertTrue(told.toString(), told.contains("location-paterdomus by quest"));
+		assertFalse(told.toString(), told.toString().contains("enemy-temple-guardian"));
+		progress.noteNpc("Temple Guardian");
+		assertTrue("met on the quest, it is the follower's own sighting",
+			told.contains("enemy-temple-guardian"));
 	}
 
 	@Test
@@ -315,9 +319,8 @@ public class ChronicleProgressTest
 		assertTrue("nothing said before the quests are read", told.isEmpty());
 		progress.setQuestState("PRIEST_IN_PERIL", QuestState.IN_PROGRESS);
 		progress.look();
-		assertEquals("the goblin was new; the dog's page the quest had opened already",
-			Collections.singletonList("enemy-goblin"), told);
-		assertNull(progress.writtenOn(loader.get("enemy-temple-guardian")));
+		assertTrue("both new: a quest under way does not open the dog's page", told.containsAll(
+			java.util.Arrays.asList("enemy-goblin", "enemy-temple-guardian")));
 
 		// The same with the quest long finished, as it is for most who log in.
 		setUp0();
