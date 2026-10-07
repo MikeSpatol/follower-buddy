@@ -94,10 +94,11 @@ public class FollowerPlugin extends Plugin
 	private static final int PAGE_NEWS_TICKS = 100;
 
 	/** A page written, waiting to be mentioned. */
-	private static final class PageNews
+	static final class PageNews
 	{
 		final TriggerEvent event;
-		final int tick;
+		/** When its minute began: the writing, or the close of a dialogue it waited out. */
+		int tick;
 
 		PageNews(TriggerEvent event, int tick)
 		{
@@ -7252,15 +7253,38 @@ public class FollowerPlugin extends Plugin
 
 		// A page written gets its mention after this tick's own events have
 		// been heard, and only when nothing else is being said.
-		int now = client.getTickCount();
-		while (!pageNews.isEmpty() && now - pageNews.peek().tick > PAGE_NEWS_TICKS)
+		TriggerEvent news = nextPageNews(pageNews, client.getTickCount(), speechEngine.isQuiet(),
+			npcDialogOpen());
+		if (news != null)
 		{
-			pageNews.poll();
+			speechEngine.dispatch(news);
 		}
-		if (!pageNews.isEmpty() && speechEngine.isQuiet())
+	}
+
+	/**
+	 * The page to mention now, or null: the oldest still inside its minute,
+	 * once the follower has the floor. Play test, 7 Oct: a quest begun in
+	 * conversation writes its pages with the box still up, and a line said
+	 * over a dialogue is dropped, so starting Priest in Peril with King Roald
+	 * was never mentioned. While a dialogue is up the news waits, and its
+	 * minute starts again when the box closes.
+	 */
+	static TriggerEvent nextPageNews(java.util.Deque<PageNews> news, int now, boolean quiet,
+		boolean dialogueOpen)
+	{
+		if (dialogueOpen)
 		{
-			speechEngine.dispatch(pageNews.poll().event);
+			for (PageNews waiting : news)
+			{
+				waiting.tick = now;
+			}
+			return null;
 		}
+		while (!news.isEmpty() && now - news.peek().tick > PAGE_NEWS_TICKS)
+		{
+			news.poll();
+		}
+		return !news.isEmpty() && quiet ? news.poll().event : null;
 	}
 
 	private void updateTrail(Player local)
