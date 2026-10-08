@@ -1055,8 +1055,8 @@ public class FollowerPanel extends PluginPanel
 		body.add(javax.swing.Box.createVerticalStrut(6));
 
 		JPanel film = buttonColumn(1);
-		film.add(button("Film a scene...",
-			"A window to pose it, turn it and give it lines while you record",
+		film.add(button("Advanced posing...",
+			"A window to pose it, turn it and give it lines",
 			() -> onFilm.run()));
 		body.add(film);
 	}

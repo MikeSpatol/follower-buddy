@@ -91,7 +91,7 @@ public class FilmDialog extends JDialog
 	 */
 	public FilmDialog(Crew crew, Consumer<Runnable> clientThread)
 	{
-		super((java.awt.Frame) null, "Follower Buddy - Film", false);
+		super((java.awt.Frame) null, "Follower Buddy - Advanced posing", false);
 		this.crew = crew;
 		this.clientThread = clientThread;
 		setDefaultCloseOperation(HIDE_ON_CLOSE);
@@ -151,7 +151,7 @@ public class FilmDialog extends JDialog
 	{
 		setVisible(true);
 		toFront();
-		act(Crew::start, "Filming. It holds still and keeps quiet until you close this window.");
+		act(Crew::start, "Posing. It holds still and keeps quiet until you close this window.");
 	}
 
 	/** A word from outside the window, such as a Send it could not walk. Swing thread. */

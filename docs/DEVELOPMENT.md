@@ -946,7 +946,7 @@ rather than failing silently.
 | `::follower status` / `where` | Model + rule status, current region id and coordinates |
 | `::follower gfx <id>` | Preview a graphic on the follower |
 | `::follower pose <id>` | Hold a looping pose (0 to release) |
-| `::follower film` | Open the film window: the follower holds still and keeps quiet while you pose it, turn it and type its lines and yours; close the window to end the scene |
+| `::follower posing` | Open the advanced posing window: the follower holds still and keeps quiet while you pose it, turn it and type its lines and yours; close the window to let it go |
 | `::follower sketch` | Pose for the chronicle's sketch of this place, as right-click Sketch on the follower: the scribe counts you in and draws you a moment into the first emote you do, or at the end of the count if you stand still; a place already drawn is drawn again, its old files kept as `.bak` first |
 | `::follower height <n>` | Ground clearance, if the feet clip into terrain |
 

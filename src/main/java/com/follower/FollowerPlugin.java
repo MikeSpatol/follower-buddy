@@ -4273,7 +4273,7 @@ public class FollowerPlugin extends Plugin
 		// to its own business.
 		if (filming)
 		{
-			tellTheFilm("The scene ended when you left the world. Press anything here to start it again.");
+			tellTheFilm("Posing ended when you left the world. Press anything here to start again.");
 		}
 		endFilming();
 		welfareChecked = false;
@@ -9085,7 +9085,7 @@ public class FollowerPlugin extends Plugin
 			command("anim <id...>", "preview an animation on it"),
 			command("gfx <id>", "preview a graphic on it"),
 			command("pose <id>", "hold a looping pose, 0 to release"),
-			command("film", "the film window: pose it and give it lines while you record"),
+			command("posing", "the advanced posing window: pose it, turn it and give it lines"),
 			command("sketch", "pose for the chronicle's sketch of this place, as right-click Sketch"),
 			command("height <n>", "lift or lower it"),
 			command("errand [" + String.join("|", ERRAND_KEYS) + "]", "an errand now"),
@@ -9698,7 +9698,7 @@ public class FollowerPlugin extends Plugin
 				placeHere();
 				break;
 
-			case "film":
+			case "posing":
 				openFilmDialog();
 				break;
 

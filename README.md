@@ -146,12 +146,12 @@ that, EQUIPMENT (click a slot to change it, right-click to clear it) and BODY
 
 **Behaviour.** A **Stay here** / **Follow me** button, the same switch as
 right-click Stay and Follow on the follower; **Come here**; a **Go on
-errands** tick; a dropdown of errands with **Go now**; and **Film a
-scene...**, a window for recording. While it is open the follower holds still
+errands** tick; a dropdown of errands with **Go now**; and **Advanced
+posing...**, a window for posing it. While it is open the follower holds still
 and keeps quiet, and you pose it, turn it to a compass point or the camera,
 and type the lines it says. Lines you type for yourself show over your own
 head on your screen only: nothing is sent, and nobody else sees them. Close
-the window to end the scene.
+the window when you are done.
 
 **Commands.** **Bring it here**, **Fix if it vanished** and **Reload phrase
 and sound files**, the list of everyday chat commands, and your current region
@@ -174,7 +174,7 @@ within a second of saving.
 
 Chat commands: type `::follower` on its own for the list. The everyday ones are
 `say <text>`, `here`, `fix`, `rebuild`, `copy`, `outfit <name>`,
-`anim <id...>`, `gfx <id>`, `pose <id>`, `film`, `sketch`, `height <n>`,
+`anim <id...>`, `gfx <id>`, `pose <id>`, `posing`, `sketch`, `height <n>`,
 `errand [<name>]`, `reload`, `status` and `where`. The diagnostic commands
 (`watch`, `stance`, `mood`, `fire` and the rest) are gated behind **Developer
 commands** in the Developer section, and typing one while it is off says so.
