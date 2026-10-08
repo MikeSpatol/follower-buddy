@@ -339,6 +339,19 @@ public class FilmSet
 	}
 
 	/**
+	 * The held pose whose props {@link #hands()} gives, or 0: none is held,
+	 * it has given way to a walk, or a one-shot is on over it. The body is
+	 * fitted to a seat only in a held pose, which sits on it from start to
+	 * end. A one-shot can leave it - Sit (drunk fall) falls off the chair to
+	 * the floor - and lowered for the chair, the body would sink into the
+	 * floor.
+	 */
+	public int heldPose()
+	{
+		return playing == 0 && !walking ? held : 0;
+	}
+
+	/**
 	 * Each frame, after the follower's own. The follower shows a held pose
 	 * only while it stands, so the pose's props come off when it sets off, or
 	 * it would walk to a Send with the chair in its hand and the chair's

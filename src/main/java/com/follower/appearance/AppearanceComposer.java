@@ -5,6 +5,7 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.Animation;
 import net.runelite.api.Client;
 import net.runelite.api.Model;
 import net.runelite.api.ModelData;
@@ -122,6 +123,30 @@ public class AppearanceComposer
 	private static final java.util.Map<Integer, int[]> FEMALE_FROM_MALE =
 		java.util.Collections.singletonMap(31829, new int[]{0, 7, -1});
 
+	/**
+	 * How far over the seat a body is put, in model units: where a man sits
+	 * on a wooden chair, which is the body the sitting clips were made for.
+	 */
+	private static final int SEAT_CLEARANCE = 3;
+
+	/**
+	 * The smallest flat top, in square model units, that is a seat. Under it
+	 * is a cup's base or a vial's; the smallest chair seat is over 1,400.
+	 */
+	private static final float SEAT_AREA = 1000;
+
+	/**
+	 * How far below the seat the body still counts as sitting on it. Lower
+	 * down is the shins in front of it, not the thighs on it.
+	 */
+	private static final int SEAT_REACH = 20;
+
+	/**
+	 * The most a body is lowered onto a seat. The most any pose needs is 14,
+	 * a woman in Elven legwear on a stool.
+	 */
+	private static final int MOST_SEAT_DROP = 24;
+
 	@Inject
 	public AppearanceComposer(Client client, ModelRepository repository)
 	{
@@ -143,6 +168,9 @@ public class AppearanceComposer
 		Outfit resolved = outfit.withDefaultBody();
 		List<ModelData> parts = new ArrayList<>();
 		List<String> missing = new ArrayList<>();
+
+		// Which of the parts are an animation's hand props, for the seat.
+		java.util.BitSet propParts = new java.util.BitSet();
 
 		// Body kits hidden by the gear on top of them.
 		java.util.Set<KitType> hidden = hiddenSlots(resolved);
@@ -201,6 +229,11 @@ public class AppearanceComposer
 					parts.set(i, nudged);
 				}
 			}
+
+			if (resolved.isProp(slot))
+			{
+				propParts.set(before, parts.size());
+			}
 		}
 
 		if (!missing.isEmpty())
@@ -211,6 +244,17 @@ public class AppearanceComposer
 		if (parts.isEmpty())
 		{
 			return null;
+		}
+
+		// Sat on a prop, the body is lowered onto it, and what its hands carry
+		// with it; the seat stays put.
+		int drop = seatDrop(parts, propParts, resolved.getSeatPose());
+		if (drop > 0)
+		{
+			for (int i = propParts.nextClearBit(0); i < parts.size(); i = propParts.nextClearBit(i + 1))
+			{
+				parts.set(i, parts.get(i).cloneVertices().translate(0, drop, 0));
+			}
 		}
 
 		ModelData merged = client.mergeModels(parts.toArray(new ModelData[0]));
@@ -237,6 +281,186 @@ public class AppearanceComposer
 		// vertices - it belongs in world space alongside the terrain height, and this
 		// keeps the composed model reusable across positions.
 		return merged.light(AMBIENT, CONTRAST, LIGHT_X, LIGHT_Y, LIGHT_Z);
+	}
+
+	/**
+	 * How far to lower the body onto the seat the held pose has in its hand,
+	 * or 0 to leave it where it is.
+	 *
+	 * <p>A sitting clip drops the whole body by a fixed amount - Sit on a
+	 * wooden chair (4073) moves every body label by (0, 51, -68) - and never
+	 * moves the chair, whose labels no frame touches. The drop was made for a
+	 * man's hips, and a woman's are modelled higher: her legs kit's hips are 7
+	 * above his, and a woman's Elven legwear sits higher again. So she sits
+	 * above the seat, as she does in the game: a man is 3 over a wooden chair,
+	 * a woman in Elven legwear 9. A man is 3 into a stool, whose woman's model
+	 * is set 6 lower besides; a woman is 9 over it, 17 in Elven legwear.
+	 *
+	 * <p>So the body is posed as the clip poses it, measured against the seat,
+	 * and lowered to sit as far over it as a man's does. Lowered before the
+	 * pose, the clip's pivots go down with it, so the pose is the same, only
+	 * lower, and the chair stays on the ground. What the other hand carries
+	 * goes down with the hand: Sit drunk on a chair (2339) holds a beer glass,
+	 * which left with the chair would be up to 13 off Rombie's hand. A man's
+	 * body is already there and is left alone. The game shows women the gap;
+	 * this does better, as the quill does.
+	 *
+	 * @param props the parts that are an animation's hand props; left marking
+	 *              only the ones the clip leaves still, the seat's, which stay
+	 *              where they are
+	 * @param animationId the held pose they are sat on, or 0
+	 */
+	private int seatDrop(List<ModelData> parts, java.util.BitSet props, int animationId)
+	{
+		Animation animation = animationId == 0 || props.isEmpty() ? null : client.loadAnimation(animationId);
+		if (animation == null)
+		{
+			return 0;
+		}
+
+		// A chair stands still while the clip sits the body on it. A prop the
+		// clip moves is no seat: the beer in the other hand or a lobster pot
+		// goes where the hand goes, so down with the body, and a rocking
+		// chair rocks, leaving nothing to measure against.
+		List<ModelData> bodyParts = new ArrayList<>();
+		List<ModelData> stillParts = new ArrayList<>();
+		for (int i = 0; i < parts.size(); i++)
+		{
+			if (!props.get(i))
+			{
+				bodyParts.add(parts.get(i));
+			}
+			else if (still(parts.get(i), animation))
+			{
+				stillParts.add(parts.get(i));
+			}
+			else
+			{
+				props.clear(i);
+			}
+		}
+
+		// Posed at the clip's first frame; a sitting clip keeps the body at
+		// much the same height over the seat throughout.
+		float[] seat = stillParts.isEmpty() ? null : seat(lit(stillParts));
+		Model bodyLit = seat == null || bodyParts.isEmpty() ? null : lit(bodyParts);
+		Model body = bodyLit == null ? null : client.applyTransformations(bodyLit, animation, 0, null, 0);
+		if (body == null)
+		{
+			return 0;
+		}
+
+		// The lowest of the body over the seat. y is down, so the largest.
+		float[] xs = body.getVerticesX();
+		float[] ys = body.getVerticesY();
+		float[] zs = body.getVerticesZ();
+		float under = -Float.MAX_VALUE;
+		for (int v = 0; v < body.getVerticesCount(); v++)
+		{
+			if (xs[v] >= seat[1] && xs[v] <= seat[2] && zs[v] >= seat[3] && zs[v] <= seat[4]
+				&& ys[v] <= seat[0] + SEAT_REACH)
+			{
+				under = Math.max(under, ys[v]);
+			}
+		}
+		if (under == -Float.MAX_VALUE)
+		{
+			return 0;
+		}
+
+		int drop = Math.round(seat[0] - under) - SEAT_CLEARANCE;
+		return drop > 0 && drop <= MOST_SEAT_DROP ? drop : 0;
+	}
+
+	/**
+	 * Whether the clip's first frame leaves every vertex of the part where it
+	 * is. The posed model is the client's shared one, so it is read before
+	 * anything else is posed.
+	 */
+	private boolean still(ModelData part, Animation animation)
+	{
+		Model model = lit(java.util.Collections.singletonList(part));
+		Model posed = model == null ? null : client.applyTransformations(model, animation, 0, null, 0);
+		if (posed == null)
+		{
+			return false;
+		}
+
+		float[] x0 = model.getVerticesX();
+		float[] y0 = model.getVerticesY();
+		float[] z0 = model.getVerticesZ();
+		float[] xs = posed.getVerticesX();
+		float[] ys = posed.getVerticesY();
+		float[] zs = posed.getVerticesZ();
+		for (int v = 0; v < model.getVerticesCount(); v++)
+		{
+			if (xs[v] != x0[v] || ys[v] != y0[v] || zs[v] != z0[v])
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * The seat among the props the clip leaves still: the height and the x
+	 * and z bounds of their largest flat top, as {y, min x, max x, min z,
+	 * max z}; null when there is none, or it is too small to sit on.
+	 */
+	private float[] seat(Model still)
+	{
+		if (still == null)
+		{
+			return null;
+		}
+
+		float[] xs = still.getVerticesX();
+		float[] ys = still.getVerticesY();
+		float[] zs = still.getVerticesZ();
+
+		// Flat faces by height: {y, min x, max x, min z, max z, area}.
+		java.util.Map<Float, float[]> tops = new java.util.HashMap<>();
+		int[] as = still.getFaceIndices1();
+		int[] bs = still.getFaceIndices2();
+		int[] cs = still.getFaceIndices3();
+		for (int f = 0; f < still.getFaceCount(); f++)
+		{
+			int a = as[f];
+			int b = bs[f];
+			int c = cs[f];
+			if (ys[a] != ys[b] || ys[a] != ys[c])
+			{
+				continue;
+			}
+
+			float[] top = tops.computeIfAbsent(ys[a], y -> new float[]{y,
+				Float.MAX_VALUE, -Float.MAX_VALUE, Float.MAX_VALUE, -Float.MAX_VALUE, 0});
+			for (int v : new int[]{a, b, c})
+			{
+				top[1] = Math.min(top[1], xs[v]);
+				top[2] = Math.max(top[2], xs[v]);
+				top[3] = Math.min(top[3], zs[v]);
+				top[4] = Math.max(top[4], zs[v]);
+			}
+			top[5] += Math.abs((xs[b] - xs[a]) * (zs[c] - zs[a]) - (xs[c] - xs[a]) * (zs[b] - zs[a])) / 2;
+		}
+
+		float[] seat = null;
+		for (float[] top : tops.values())
+		{
+			if (seat == null || top[5] > seat[5])
+			{
+				seat = top;
+			}
+		}
+		return seat == null || seat[5] < SEAT_AREA ? null : seat;
+	}
+
+	/** Parts merged and lit as the follower's model is, ready to pose. */
+	private Model lit(List<ModelData> parts)
+	{
+		ModelData merged = client.mergeModels(parts.toArray(new ModelData[0]));
+		return merged == null ? null : merged.light(AMBIENT, CONTRAST, LIGHT_X, LIGHT_Y, LIGHT_Z);
 	}
 
 	/**

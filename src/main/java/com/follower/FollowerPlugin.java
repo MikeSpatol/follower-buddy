@@ -4843,6 +4843,11 @@ public class FollowerPlugin extends Plugin
 			outfitOverride == null ? propSlot : null, propItemId,
 			outfitOverride == null ? wornSlot : null, wornItemId);
 		dressForPose(outfit, filmHands);
+		if (filmHands != null)
+		{
+			// The held pose, so the composer can sit the body on its seat.
+			outfit.setSeatPose(filmSet.heldPose());
+		}
 
 		appearanceService.request(outfit, com.follower.appearance.ModelSource.DUMP_ONLY, appearance ->
 		{

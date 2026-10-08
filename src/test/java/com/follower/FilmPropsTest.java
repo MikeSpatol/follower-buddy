@@ -72,9 +72,13 @@ public class FilmPropsTest
 	private static final int GODSWORD = 11802;
 	private static final int BANANA = 3177;
 	private static final int CHAIR = 8798;
+	/** What Sit (drunk fall) holds: a chair in the left hand, a beer in the right. */
+	private static final int DRUNK_CHAIR = 6122;
+	private static final int BEER_GLASS = 6123;
 
 	private static final int WRITE_WITH_A_QUILL = 13302;
 	private static final int SIT_ON_A_WOODEN_CHAIR = 4073;
+	private static final int DRUNK_FALL = 2340;
 
 	/** The follower as the film sees it: what each animation holds, and whether it emotes or walks. */
 	private static final class Feet extends FollowerEntity
@@ -138,7 +142,9 @@ public class FilmPropsTest
 			+ "\"" + GODSWORD + "\":{\"n\":\"Armadyl godsword\",\"wp1\":3,\"wp2\":5,"
 			+ "\"m\":[60005,-1,-1],\"f\":[60005,-1,-1]},"
 			+ "\"" + BANANA + "\":{\"n\":\"null\",\"m\":[60006,-1,-1],\"f\":[60006,-1,-1]},"
-			+ "\"" + CHAIR + "\":{\"n\":\"null\",\"wp1\":3,\"m\":[60007,-1,-1],\"f\":[60007,-1,-1]}"
+			+ "\"" + CHAIR + "\":{\"n\":\"null\",\"wp1\":3,\"m\":[60007,-1,-1],\"f\":[60007,-1,-1]},"
+			+ "\"" + DRUNK_CHAIR + "\":{\"n\":\"A chair\",\"wp1\":5,\"m\":[60008,-1,-1],\"f\":[60008,-1,-1]},"
+			+ "\"" + BEER_GLASS + "\":{\"n\":\"Beer glass\",\"wp1\":3,\"m\":[60009,-1,-1],\"f\":[60009,-1,-1]}"
 			+ "},\"kits\":{}}").getBytes(StandardCharsets.UTF_8));
 		models = new ModelRepository(new Gson());
 		models.load(dir);
@@ -294,6 +300,33 @@ public class FilmPropsTest
 		film.frame();
 		assertEquals("the chair again once it stands", CHAIR, lastBuilt().itemId(KitType.WEAPON));
 		assertFalse(lastBuilt().isItem(KitType.SHIELD));
+	}
+
+	/**
+	 * The composer lowers the body onto the seat as the held pose sits it,
+	 * which it can only do when it is told the pose. A one-shot is not: the
+	 * drunk fall sits on its chair, then falls off it to the floor, where a
+	 * body lowered for the chair would sink in.
+	 */
+	@Test
+	public void onlyAHeldPoseIsFittedToItsSeat() throws ReflectiveOperationException
+	{
+		filmOnThePlugin();
+		feet.hands.put(SIT_ON_A_WOODEN_CHAIR, new int[]{FilmSet.EMPTY, CHAIR});
+		feet.hands.put(DRUNK_FALL, new int[]{DRUNK_CHAIR, BEER_GLASS});
+		film.hold(SIT_ON_A_WOODEN_CHAIR);
+		assertEquals("fitted to the chair as that pose sits on it", SIT_ON_A_WOODEN_CHAIR, lastBuilt().getSeatPose());
+
+		feet.moving = true;
+		film.frame();
+		assertEquals("no chair for the walk, so no seat", 0, lastBuilt().getSeatPose());
+		feet.moving = false;
+		film.frame();
+		assertEquals("and the seat again where it stops", SIT_ON_A_WOODEN_CHAIR, lastBuilt().getSeatPose());
+
+		film.once(DRUNK_FALL);
+		assertEquals("the fall's chair in hand", DRUNK_CHAIR, lastBuilt().itemId(KitType.SHIELD));
+		assertEquals("but no seat for a one-shot", 0, lastBuilt().getSeatPose());
 	}
 
 	/**
