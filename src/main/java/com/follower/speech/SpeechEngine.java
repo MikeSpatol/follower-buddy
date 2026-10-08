@@ -423,6 +423,8 @@ public class SpeechEngine
 		/** The wait as drawn at the win - kept for the log, since a ranged delay is not on the rule. */
 		final int delay;
 		int ticksLeft;
+		/** Ticks an occasion has spent waiting out the gap after another line. */
+		int waited;
 
 		PendingSpeech(SpeechRule rule, TriggerEvent event, int ticksLeft)
 		{
@@ -434,6 +436,21 @@ public class SpeechEngine
 	}
 
 	private final java.util.List<PendingSpeech> pending = new java.util.ArrayList<>();
+
+	/**
+	 * How long an occasion waits for the gap after another line, in ticks:
+	 * six seconds. Play test, 7 Oct: Waterfall Quest's reward levelled
+	 * Attack, the level line went first, and the quest-complete line two
+	 * seconds behind it met the gap and was dropped. The gap is there to keep
+	 * chatter apart, not to cost a quest its one line.
+	 */
+	static final int OCCASION_WAIT_TICKS = 10;
+
+	/** Whether a firing held up for this reason waits a tick and tries again rather than being dropped. */
+	static boolean waitsOutTheGap(SpeechRule rule, String held, int waited)
+	{
+		return "gap".equals(held) && rule.isOccasion() && waited < OCCASION_WAIT_TICKS;
+	}
 
 	/**
 	 * A line handed to the sink that leaves something behind when it lands,
@@ -764,8 +781,14 @@ public class SpeechEngine
 				PendingSpeech delayed = it.next();
 				if (--delayed.ticksLeft <= 0)
 				{
-					it.remove();
 					String held = blockedBy(delayed.rule, now);
+					if (waitsOutTheGap(delayed.rule, held, delayed.waited))
+					{
+						delayed.waited++;
+						delayed.ticksLeft = 1;
+						continue;
+					}
+					it.remove();
 					if (held == null)
 					{
 						log.debug("rule '{}' fired after its {}-tick delay",
@@ -908,6 +931,12 @@ public class SpeechEngine
 		}
 
 		String blocked = blockedBy(winner, now);
+		if (waitsOutTheGap(winner, blocked, 0))
+		{
+			winner.markFired(now);
+			pending.add(new PendingSpeech(winner, event, 1));
+			return;
+		}
 		if (blocked != null)
 		{
 			// Still charge the cooldown so a suppressed rule doesn't fire the instant

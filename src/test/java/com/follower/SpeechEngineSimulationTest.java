@@ -221,6 +221,38 @@ public class SpeechEngineSimulationTest
 	}
 
 	@Test
+	public void anOccasionWaitsOutTheGapWhereChatterIsDropped() throws IOException
+	{
+		// Play test, 7 Oct: Waterfall Quest's reward levelled Attack. The
+		// level line went first, the quest-complete line came two seconds
+		// behind it, met the gap and was never said.
+		for (boolean occasion : new boolean[]{true, false})
+		{
+			Harness h = new Harness(scratch(), rules(
+				"{\"id\": \"level\", \"group\": \"t\", \"cooldownMs\": 0,"
+					+ " \"when\": {\"type\": \"levelUp\", \"names\": [\"*\"]}, \"say\": [\"Attack 30.\"]}",
+				"{\"id\": \"quest\", \"group\": \"t\", \"cooldownMs\": 0, \"delayTicks\": 3,"
+					+ (occasion ? " \"occasion\": true," : "")
+					+ " \"when\": {\"type\": \"questComplete\"}, \"say\": [\"Done and witnessed.\"]}"));
+			// Game time: 600 ms a tick, so the three-second gap can pass.
+			long[] ms = {1_000_000L};
+			h.engine.setClock(() -> ms[0]);
+			h.engine.setGlobalCooldownMs(3000L);
+			h.gameTicks(1);
+			h.dispatch(TriggerEvent.levelUp("Attack", 30));
+			h.dispatch(TriggerEvent.questComplete("Waterfall Quest"));
+			for (int tick = 0; tick < 15; tick++)
+			{
+				ms[0] += 600;
+				h.gameTick();
+			}
+			assertEquals("the level line either way", 1, h.firedBy("level").size());
+			assertEquals(occasion ? "an occasion is said once the gap has passed" : "chatter is still dropped",
+				occasion ? 1 : 0, h.firedBy("quest").size());
+		}
+	}
+
+	@Test
 	public void muteSilencesSpeechButNotAnimation() throws IOException
 	{
 		Harness h = new Harness(scratch(), rules(
