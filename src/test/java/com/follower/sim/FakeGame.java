@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import net.runelite.api.Client;
 import net.runelite.api.CollisionData;
+import net.runelite.api.GameState;
 import net.runelite.api.IndexedObjectSet;
 import net.runelite.api.Item;
 import net.runelite.api.ItemContainer;
@@ -90,6 +91,7 @@ public final class FakeGame
 		playerAnswers.put("getPlayerComposition", composition());
 
 		clientAnswers.put("getLocalPlayer", player);
+		clientAnswers.put("getGameState", GameState.LOGGED_IN);
 		clientAnswers.put("getEnergy", 10000);
 		clientAnswers.put("getTickCount", 0);
 		WorldView view = worldView();
@@ -456,6 +458,13 @@ public final class FakeGame
 		{
 			inventory[i] = i < ids.length ? new Item(ids[i], 1) : new Item(-1, 0);
 		}
+		return this;
+	}
+
+	/** The game state the client reports: logged in unless a test says otherwise. */
+	public FakeGame gameState(GameState state)
+	{
+		clientAnswers.put("getGameState", state);
 		return this;
 	}
 

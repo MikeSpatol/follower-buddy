@@ -2,6 +2,7 @@ package com.follower.follower;
 
 import com.follower.sim.FakeGame;
 import net.runelite.api.CollisionDataFlag;
+import net.runelite.api.GameState;
 import net.runelite.api.coords.WorldPoint;
 import org.junit.Test;
 
@@ -270,8 +271,7 @@ public class WallPathingTest
 	 * follower lands the instant the player's coordinates change, and the
 	 * deck's facilities reach the map over the ticks after, so the tile it
 	 * landed on can turn into a cannon underneath it. Aboard, that is a
-	 * reason to move. On land a follower standing where the map says it
-	 * cannot is there on purpose, and stays.
+	 * reason to move. So it is on land (play test, 7 Oct: a bank booth).
 	 */
 	@Test
 	public void aboardABoatAFacilityArrivingUnderfootIsAReasonToMove()
@@ -281,15 +281,63 @@ public class WallPathingTest
 		WorldPoint landed = new WorldPoint(3, 8, 0);
 
 		assertFalse("an open deck tile is fine to stand on",
-			follower.deckSceneryUnderfoot(landed, game.player));
+			follower.blockedUnderfoot(landed, game.player));
 		game.boatBlocksTile(3, 8);
 		assertTrue("until the facility arrives on it",
-			follower.deckSceneryUnderfoot(landed, game.player));
+			follower.blockedUnderfoot(landed, game.player));
+	}
 
-		FakeGame land = new FakeGame().withCollision();
-		land.blockTile(10, 10);
-		assertFalse("on land the same reading is not a reason to move",
-			followerOn(land).deckSceneryUnderfoot(new WorldPoint(10, 10, 0), land.player));
+	/**
+	 * Play test, 7 Oct: the follower was found standing in a bank booth,
+	 * twice. Placed while the area was still loading, it read a map that did
+	 * not show the booth, and on land nothing ever looked at its own tile
+	 * again.
+	 */
+	@Test
+	public void aFollowerLeftInABankBoothIsMovedOut()
+	{
+		FakeGame game = new FakeGame().withCollision().at(10, 10, 0);
+		for (int y = 7; y <= 13; y++)
+		{
+			// The row of booths, west of the player.
+			game.wallAt(9, y, CollisionDataFlag.BLOCK_MOVEMENT_OBJECT);
+		}
+		FollowerEntity follower = followerOn(game);
+		WorldPoint player = new WorldPoint(10, 10, 0);
+		WorldPoint booth = new WorldPoint(9, 10, 0);
+
+		assertFalse("a booth is not floor", follower.standable(booth));
+		assertTrue("so standing in one is a reason to move", follower.blockedUnderfoot(booth, game.player));
+		WorldPoint out = follower.landingTile(booth, player);
+		assertTrue("and where it moves to is floor: " + out, follower.standable(out));
+
+		game.gameState(GameState.LOADING);
+		assertFalse("but not judged from a map still loading", follower.blockedUnderfoot(booth, game.player));
+		game.gameState(GameState.LOGGED_IN);
+		game.wallAt(10, 10, CollisionDataFlag.BLOCK_MOVEMENT_OBJECT);
+		assertFalse("and never moved off the player's own tile", follower.blockedUnderfoot(player, game.player));
+	}
+
+	/**
+	 * The placements made from the frame callback, which runs while an area
+	 * is still loading too, wait for it to load: then the map is the new
+	 * area's, and a booth beside the player reads as a booth. The frame loop
+	 * needs a live client, so the guards are read out of the source.
+	 */
+	@Test
+	public void noPlacementIsMadeFromAMapStillLoading() throws java.io.IOException
+	{
+		String source = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(
+			"src/main/java/com/follower/follower/FollowerEntity.java")),
+			java.nio.charset.StandardCharsets.UTF_8).replace("\r\n", "\n");
+		String loaded = "client.getGameState() == GameState.LOGGED_IN";
+		assertTrue("the teleport landing waits for the area to load",
+			source.contains("if (" + loaded + " && (landed || now - vanishedAtMs > 8000))"));
+		assertTrue("so does the leash and plane snap",
+			source.contains("if (client.getGameState() != GameState.LOGGED_IN)\n\t\t\t{\n"
+				+ "\t\t\t\t// Snapped from real data once the area has loaded.\n\t\t\t\treturn;"));
+		assertTrue("and the hidden-object watchdog",
+			source.contains("if (!object.isActive() && !hiddenForNpcOverlap && " + loaded + ")"));
 	}
 
 	// ----------------------------------------------------------- the fires

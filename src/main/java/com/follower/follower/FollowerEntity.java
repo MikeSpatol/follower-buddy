@@ -940,19 +940,23 @@ public class FollowerEntity
 	}
 
 	/**
-	 * Aboard a boat, whether the tile under the follower has become scenery.
-	 * Only aboard: on land a follower standing where the map says it cannot is
-	 * there on purpose - the player's own retraced path, a thrall's exit spot -
-	 * and those exceptions stay.
+	 * Whether the follower is standing where a player could not: on scenery,
+	 * a bank booth, a deck facility that arrived after it landed.
+	 *
+	 * <p>Play test, 7 Oct: it was found standing in a bank booth, twice. A
+	 * placement made while a new area is still loading reads a map that does
+	 * not describe it yet, so the tile beside the player can read open when it
+	 * is a booth, and nothing on land ever looked again. Every step of its own
+	 * is checked as it is planned, so this only ever catches a placement. Not
+	 * from a map still loading, and never off the player's own tile, which is
+	 * where a boxed-in follower is put on purpose.
 	 */
-	boolean deckSceneryUnderfoot(WorldPoint standing, Player local)
+	boolean blockedUnderfoot(WorldPoint standing, Player local)
 	{
-		if (standing == null || local == null)
-		{
-			return false;
-		}
-		net.runelite.api.WorldView mine = local.getWorldView();
-		return mine != null && !mine.isTopLevel() && !standable(standing);
+		return standing != null && local != null
+			&& client.getGameState() == GameState.LOGGED_IN
+			&& !standing.equals(local.getWorldLocation())
+			&& !standable(standing);
 	}
 
 	/**
@@ -1814,7 +1818,9 @@ public class FollowerEntity
 		for (int i = 0; i < steps && !serverPath.isEmpty(); i++)
 		{
 			WorldPoint next = serverPath.peekFirst();
-			if (hot(next))
+			// Or blocked since it was planned: a walk worked out on a map
+			// still loading must not pass through a booth.
+			if (hot(next) || !standable(next))
 			{
 				// Queued while the tile was open and set alight since. Steps
 				// are checked as they are PLANNED and never again, and on a
@@ -1927,7 +1933,9 @@ public class FollowerEntity
 			WorldPoint where = local.getWorldLocation();
 			boolean landed = where != null && vanishPlayerTile != null
 				&& !where.equals(vanishPlayerTile);
-			if (landed || now - vanishedAtMs > 8000)
+			// Not while the area it landed in is still loading: the map then
+			// is not the new one's, and a booth beside the player reads open.
+			if (client.getGameState() == GameState.LOGGED_IN && (landed || now - vanishedAtMs > 8000))
 			{
 				vanished = false;
 				lastSeenPlayerTile = null;
@@ -1972,6 +1980,11 @@ public class FollowerEntity
 		if (playerTile.getPlane() != tile.getPlane()
 			|| tile.distanceTo(playerTile) > leash)
 		{
+			if (client.getGameState() != GameState.LOGGED_IN)
+			{
+				// Snapped from real data once the area has loaded.
+				return;
+			}
 			stayTile = null;
 			if (!snapBeside(playerTile))
 			{
@@ -1980,12 +1993,10 @@ public class FollowerEntity
 			return;
 		}
 
-		// Boarding is a jump into a world whose map is still filling in: the
-		// deck's facilities arrive over the ticks after the landing snap, so
-		// the tile the follower landed on can turn out to be a cannon. Aboard,
-		// a settled follower whose own tile now reads blocked hops to the spot
-		// beside the player.
-		if (isSettled() && deckSceneryUnderfoot(tile, local))
+		// A settled follower whose own tile reads blocked hops to the spot
+		// beside the player: a booth it was placed in while the area loaded,
+		// or a deck facility that arrived after the boarding snap.
+		if (isSettled() && blockedUnderfoot(tile, local))
 		{
 			snapBeside(playerTile);
 			return;
@@ -2029,7 +2040,7 @@ public class FollowerEntity
 		// Watchdog: if anything at all has left the object hidden while the player
 		// is on screen, put it back. A deliberate hide (an NPC sharing the
 		// tile) is not a fault and must not trigger a recovery snap.
-		if (!object.isActive() && !hiddenForNpcOverlap)
+		if (!object.isActive() && !hiddenForNpcOverlap && client.getGameState() == GameState.LOGGED_IN)
 		{
 			recoverPosition(local, playerTile);
 		}
