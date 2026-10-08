@@ -559,9 +559,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** pagewritten
 - **pacing:** priority 30, cooldown 1m
 
-- {page}. That one gets a page. Filed.
-- New page: {page}. Unflattering, but accurate.
-- {page}, then. A page to itself, from today.
+- Got a good look at that one. New page: {page}.
+- {page}. I'll be writing that one up, and I won't be kind.
+- That's {page} in the book now. Seen it with my own eyes.
 
 ### `chronicle-page-place`
 
@@ -570,9 +570,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** pagewritten
 - **pacing:** priority 30, cooldown 1m
 
-- {page} gets a page. I'll sketch it when we stop.
-- New page: {page}. I've written the name at the top. It's a start.
-- {page}. Page opened. I'll need you to stand still for the drawing.
+- {page} has a page now. Stop somewhere and I'll sketch it.
+- Starting a page on {page}. I've got the name down, at least.
+- New page for {page}. Stand still a moment and I'll do the drawing.
 
 ### `chronicle-page-lore`
 
@@ -591,9 +591,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** pagewritten
 - **pacing:** priority 30, cooldown 1m
 
-- {page} gets a page. The quest saw to that.
-- A page for {page}. You've given me plenty to write, for once.
-- {page}. New page. I'll fill it in as we go.
+- That's {page} in the book. I'll write it up properly tonight.
+- {page} has its own page now. You gave me plenty to write.
+- New page in the book: {page}. I'll fill in the rest as we go.
 
 ### `collection-add`
 
