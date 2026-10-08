@@ -82,13 +82,6 @@ public final class Outfit
 	 */
 	private int props;
 
-	/**
-	 * The held pose its props are sat on, or 0. The composer lowers the body
-	 * onto the seat as that pose holds it, so the same chair under another
-	 * pose is another model.
-	 */
-	private int seatPose;
-
 	public Outfit()
 	{
 	}
@@ -210,17 +203,6 @@ public final class Outfit
 		return (props & 1 << slot.getIndex()) != 0;
 	}
 
-	/** The held pose its props are sat on, by animation id, or 0 for none. */
-	public void setSeatPose(int animationId)
-	{
-		seatPose = animationId;
-	}
-
-	public int getSeatPose()
-	{
-		return seatPose;
-	}
-
 	public boolean isItem(KitType slot)
 	{
 		return equipment[slot.getIndex()] >= ITEM_OFFSET;
@@ -271,7 +253,6 @@ public final class Outfit
 		System.arraycopy(other.colors, 0, colors, 0, colors.length);
 		gender = other.gender;
 		props = other.props;
-		seatPose = other.seatPose;
 	}
 
 	/**
@@ -337,7 +318,6 @@ public final class Outfit
 		// A prop shows where the same item worn might be hidden, so it is another model.
 		return gender == other.gender
 			&& props == other.props
-			&& seatPose == other.seatPose
 			&& Arrays.equals(equipment, other.equipment)
 			&& Arrays.equals(colors, other.colors);
 	}
@@ -345,8 +325,7 @@ public final class Outfit
 	@Override
 	public int hashCode()
 	{
-		return 31 * (31 * (31 * (31 * Arrays.hashCode(equipment) + Arrays.hashCode(colors)) + gender) + props)
-			+ seatPose;
+		return 31 * (31 * (31 * Arrays.hashCode(equipment) + Arrays.hashCode(colors)) + gender) + props;
 	}
 
 	@Override

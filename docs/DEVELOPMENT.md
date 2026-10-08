@@ -2190,24 +2190,6 @@ moved by (0, 7, -1), which is exactly where the woman's sits. Every other item
 the list puts in a hand was checked against the cache: none has its two
 models on different arms.
 
-A held pose's seat is fitted to the body. The sitting clips drop the body by a
-fixed amount made for a man's hips (Sit on a wooden chair, 4073, moves every
-body label by (0, 51, -68)) and never move the chair. A woman's hips are
-modelled higher, so she sits above the seat, as she does in the game: a man
-sits 3 units over a wooden chair, a woman in Elven legwear 9; on a stool, whose
-woman's model is set 6 lower, a man is 3 into it and a woman 9 over it, 17 in
-Elven legwear. `AppearanceComposer.seatDrop` poses the body at the clip's first
-frame, finds the seat (the largest flat top of the props that the clip leaves
-where they are, at least 1,000 square units), and lowers the body before the
-merge until it sits 3 over the seat, as a man's does, by no more than 24. The
-chair stays on the ground; a prop the clip moves goes down with the body, so
-the beer glass Sit drunk on a chair holds stays in the hand. The rebuild passes
-the pose on the outfit (`Outfit.setSeatPose`, from `FilmSet.heldPose`), so the
-same chair in another pose is another model. A one-shot is never fitted: Sit
-(drunk fall) leaves its chair for the floor, where a body lowered for the chair
-would sink in. Rocking chairs move with their clips, so they have no seat to
-measure.
-
 ## Known limitations
 
 These are inherent to the approach, not bugs to be filed:
