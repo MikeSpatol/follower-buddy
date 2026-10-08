@@ -773,7 +773,7 @@ public class FollowerPlugin extends Plugin
 				&& !skilling.holdsTheFeet() && !moments.holdsTheFeet() && !flourish.isActive()
 				&& minutesState == 0 && !emoteHold && !filming);
 		filmSet = new com.follower.follower.FilmSet(follower, this::rebuildFollower,
-			graphicId -> follower.playSpotAnim(spotAnimRepository.get(graphicId)));
+			(graphicId, height) -> follower.playSpotAnim(spotAnimRepository.get(graphicId), height));
 
 		// On a fresh client boot the LOGIN_SCREEN transition can happen before
 		// this plugin subscribes, so the first login would not read as fresh.
@@ -9204,7 +9204,7 @@ public class FollowerPlugin extends Plugin
 			command("copy", "dress it in your gear (also a panel button)"),
 			command("outfit <name>", "wear a saved profile (also in the panel)"),
 			command("anim <id...>", "preview an animation on it"),
-			command("gfx <id>", "preview a graphic on it"),
+			command("gfx <id> [height]", "preview a graphic on it, that far up its body"),
 			command("pose <id>", "hold a looping pose, 0 to release"),
 			command("posing", "the advanced posing window: pose it, turn it and give it lines"),
 			command("sketch", "pose for the chronicle's sketch of this place, as right-click Sketch"),
@@ -10571,26 +10571,33 @@ public class FollowerPlugin extends Plugin
 				if (args.length < 2)
 				{
 					sendStatus("::follower gfx <graphicId> - play a spotanim on the follower");
+					sendStatus("::follower gfx <graphicId> <height> - that far up its body");
 					sendStatus("::follower gfx <graphicId> set - and keep it as the shield");
 					break;
 				}
 				try
 				{
 					int id = Integer.parseInt(args[1]);
+					// The third word keeps it as the shield, or lifts it: a
+					// graphic built to sit on the body - a teleport's swirl, a
+					// book's turning page - shows at the feet without the
+					// height the game sends with it, which watch prints.
+					boolean keep = args.length > 2 && "set".equalsIgnoreCase(args[2]);
+					int height = args.length > 2 && !keep ? Integer.parseInt(args[2]) : 0;
 					com.follower.appearance.SpotAnimRepository.Entry fx = spotAnimRepository.get(id);
 					if (fx == null)
 					{
 						sendStatus("No graphic " + id + " in the cache.");
 						break;
 					}
-					clientThread.invoke(() -> follower.playSpotAnim(fx));
+					clientThread.invoke(() -> follower.playSpotAnim(fx, height));
 
 					// Auditioning is only useful if the winner can be kept
 					// without going hunting through the settings. All three
 					// stages are set together: "the shield particle" is one
 					// idea, and the stages differ by animation, not by effect.
 					// Per-stage graphics remain available in the settings.
-					if (args.length > 2 && "set".equalsIgnoreCase(args[2]))
+					if (keep)
 					{
 						configManager.setConfiguration(FollowerConfig.GROUP,
 							"spectateShieldGraphic", id);
@@ -10601,6 +10608,10 @@ public class FollowerPlugin extends Plugin
 						sendStatus("Graphic " + id
 							+ " is now the shield effect for summon, channel and finish.");
 					}
+					else if (height != 0)
+					{
+						sendStatus("Playing graphic " + id + " on the follower at height " + height + ".");
+					}
 					else
 					{
 						sendStatus("Playing graphic " + id + " on the follower."
@@ -10609,7 +10620,7 @@ public class FollowerPlugin extends Plugin
 				}
 				catch (NumberFormatException e)
 				{
-					sendStatus("Numbers only: ::follower gfx <graphicId> [set]");
+					sendStatus("Numbers only: ::follower gfx <graphicId> [height|set]");
 				}
 				break;
 			}

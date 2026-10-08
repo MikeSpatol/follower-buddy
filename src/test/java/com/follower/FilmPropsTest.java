@@ -186,7 +186,7 @@ public class FilmPropsTest
 			{
 				throw new AssertionError(e);
 			}
-		}, graphic ->
+		}, (graphic, height) ->
 		{
 		});
 		set("filmSet", film);
@@ -310,7 +310,7 @@ public class FilmPropsTest
 		String start = source.substring(source.indexOf("protected void startUp() throws Exception"));
 		assertTrue("startUp builds the film with the plugin's rebuild and the follower's graphics", start.contains(
 			"filmSet = new com.follower.follower.FilmSet(follower, this::rebuildFollower,\n"
-				+ "\t\t\tgraphicId -> follower.playSpotAnim(spotAnimRepository.get(graphicId)));"));
+				+ "\t\t\t(graphicId, height) -> follower.playSpotAnim(spotAnimRepository.get(graphicId), height));"));
 		assertTrue("the follower's emote end reaches updateEmoteDisarm",
 			source.contains("follower.setOnEmoteStateChanged(this::updateEmoteDisarm);"));
 		String render = source.substring(source.indexOf("public void onBeforeRender(BeforeRender event)"));

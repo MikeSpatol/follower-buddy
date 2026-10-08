@@ -23,7 +23,8 @@ import static org.junit.Assert.assertTrue;
  * camera turn it the way they say, a pose is held or played and only the
  * film's own is let go of, and the player's line is given its time. A
  * pose is dressed with what its animation holds, before it starts, and only
- * for as long as it is on; a paired graphic plays as it starts.
+ * for as long as it is on; a paired graphic plays as it starts, at the
+ * height it was built for.
  *
  * <p>The frame that turns the follower cannot run headless, so the turn is
  * read off the stay's own facing step, which the frame calls.
@@ -90,6 +91,9 @@ public class FilmSetTest
 	/** Each graphic the film played. */
 	private final List<Integer> graphics = new ArrayList<>();
 
+	/** How far up the body each was drawn. */
+	private final List<Integer> heights = new ArrayList<>();
+
 	@Before
 	public void setUp() throws ReflectiveOperationException
 	{
@@ -100,6 +104,8 @@ public class FilmSetTest
 			.animation(10061, 8, FilmSet.EMPTY, FilmSet.EMPTY)
 			.animation(10062, 4, FilmSet.EMPTY, FilmSet.EMPTY)
 			.animation(1350, 5, FilmSet.EMPTY, 3850)
+			.animation(3140, 5, FilmSet.EMPTY, 3850)
+			.animation(3141, 5, FilmSet.EMPTY, 3850)
 			.animation(4073, 9, FilmSet.EMPTY, 8798)
 			.animation(13302, -1, 31829, 31830)
 			.animation(13993, -1, FilmSet.KEEP, FilmSet.KEEP)
@@ -113,7 +119,11 @@ public class FilmSetTest
 		set("stayTile", HERE);
 		film = new FilmSet(follower,
 			() -> dressed.add(Arrays.toString(film.hands()) + " over pose " + follower.getPoseOverride()),
-			graphics::add);
+			(graphic, height) ->
+			{
+				graphics.add(graphic);
+				heights.add(height);
+			});
 	}
 
 	@Test
@@ -302,6 +312,20 @@ public class FilmSetTest
 		assertEquals("the held idea's lightbulb", Arrays.asList(1239, 712), graphics);
 		film.once(863);
 		assertEquals("a wave has none", 2, graphics.size());
+		assertEquals("both at the feet", Arrays.asList(0, 0), heights);
+	}
+
+	@Test
+	public void theTurningPageIsDrawnOnTheBook()
+	{
+		// The page is the book's left page as the pose holds it, built 92
+		// lower: at the feet it turned at the waist, under the book.
+		film.hold(3140);
+		film.hold(3141);
+		assertEquals(Arrays.asList(548, 549), graphics);
+		assertEquals(Arrays.asList(92, 92), heights);
+		assertEquals("the pose list still pairs them", 548, FilmSet.pose(3140).graphic);
+		assertEquals(549, FilmSet.pose(3141).graphic);
 	}
 
 	@Test

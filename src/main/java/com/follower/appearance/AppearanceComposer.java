@@ -103,6 +103,25 @@ public class AppearanceComposer
 				+ " y=" + adjustY + " z=" + adjustZ;
 	}
 
+	/**
+	 * Women's worn models that Jagex rigged to the wrong arm, by item id, with
+	 * how far the woman's model sits from the man's.
+	 *
+	 * <p>An animation moves a model by the labels on its vertices, so a model
+	 * labelled for one arm goes wherever that arm goes. The charting quill's
+	 * woman's model (59225) is the man's (59224) moved by (0, 7, -1), vertex
+	 * for vertex, but labelled for the right hand (27) where the man's is
+	 * labelled for the left hand (161). Writing with a quill (13302) writes
+	 * with the left hand and holds the scroll still in the right, so on a woman
+	 * the quill stayed by the scroll while the empty hand wrote; a woman in the
+	 * game gets the same. The man's model is drawn instead, moved to where the
+	 * woman's sits, which is her quill on his labels. Every other item a pose
+	 * puts in a hand was checked against the cache: none has its two models on
+	 * different arms. Both models of the quill sit at offset 0.
+	 */
+	private static final java.util.Map<Integer, int[]> FEMALE_FROM_MALE =
+		java.util.Collections.singletonMap(31829, new int[]{0, 7, -1});
+
 	@Inject
 	public AppearanceComposer(Client client, ModelRepository repository)
 	{
@@ -157,7 +176,16 @@ public class AppearanceComposer
 			// Parts stay in their authored source colours; body colouring happens
 			// post-merge via the palette tables, exactly as the client does it.
 			int before = parts.size();
-			addPart(parts, entry, resolved.getGender());
+			// A woman's model rigged to the wrong arm is drawn from the man's.
+			int[] rerig = item && resolved.getGender() == 1 ? FEMALE_FROM_MALE.get(id) : null;
+			addPart(parts, entry, rerig != null ? 0 : resolved.getGender());
+			if (rerig != null)
+			{
+				for (int i = before; i < parts.size(); i++)
+				{
+					parts.set(i, parts.get(i).cloneVertices().translate(rerig[0], rerig[1], rerig[2]));
+				}
+			}
 
 			// The nudge, applied to every model this item contributed. After
 			// the colour clones and before the merge: a merged model shares

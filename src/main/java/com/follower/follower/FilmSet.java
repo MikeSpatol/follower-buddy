@@ -12,7 +12,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.IntConsumer;
+import java.util.function.BiConsumer;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Player;
 import net.runelite.api.coords.WorldPoint;
@@ -176,8 +176,8 @@ public class FilmSet
 	/** Builds the follower's model again, dressed as {@link #hands()} says. */
 	private final Runnable redress;
 
-	/** Shows a graphic on the follower, by spotanim id. */
-	private final IntConsumer graphic;
+	/** Shows a graphic on the follower: a spotanim id, and how far up the body. */
+	private final BiConsumer<Integer, Integer> graphic;
 
 	/** The pose the film put on, or 0. */
 	private int held;
@@ -208,7 +208,7 @@ public class FilmSet
 	{
 		this(follower, () ->
 		{
-		}, id ->
+		}, (id, height) ->
 		{
 		});
 	}
@@ -216,9 +216,10 @@ public class FilmSet
 	/**
 	 * @param redress builds the follower's model again, dressed as
 	 *                {@link #hands()} says
-	 * @param graphic shows a graphic on the follower, by spotanim id
+	 * @param graphic shows a graphic on the follower: a spotanim id, and how
+	 *                far up the body it is drawn, from {@link #GRAPHIC_HEIGHTS}
 	 */
-	public FilmSet(FollowerEntity follower, Runnable redress, IntConsumer graphic)
+	public FilmSet(FollowerEntity follower, Runnable redress, BiConsumer<Integer, Integer> graphic)
 	{
 		this.follower = follower;
 		this.redress = redress;
@@ -358,13 +359,27 @@ public class FilmSet
 		}
 	}
 
+	/**
+	 * How far up the body a pose's graphic is drawn, by spotanim id, in the
+	 * model units of a spotanim's height; any other is drawn at the feet.
+	 *
+	 * <p>Every graphic the list pairs is built to be drawn at the feet but the
+	 * page turns. 548 and 549 are the left page and spine of the book as Read
+	 * a book, turning the page (3140 and 3141) holds it, vertex for vertex,
+	 * built 92 lower: at the feet the page turned at the follower's waist,
+	 * under the book. 92 is measured on a man's body, which the page was built
+	 * against; a woman's book sits 6 lower, its own offset, so on her the page
+	 * is a little above it.
+	 */
+	static final Map<Integer, Integer> GRAPHIC_HEIGHTS = Map.of(548, 92, 549, 92);
+
 	/** The pose's paired graphic, played once as it starts. */
 	private void graphicFor(int animationId)
 	{
 		Pose pose = pose(animationId);
 		if (pose != null && pose.graphic > 0)
 		{
-			graphic.accept(pose.graphic);
+			graphic.accept(pose.graphic, GRAPHIC_HEIGHTS.getOrDefault(pose.graphic, 0));
 		}
 	}
 

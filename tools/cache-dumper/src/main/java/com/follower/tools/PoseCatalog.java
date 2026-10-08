@@ -136,7 +136,10 @@ public class PoseCatalog
 	 * alone, which {@link #CACHE_PAIRED} lists and {@link #graphics()} checks.
 	 * A pairing is left out where neither settles it: the Premier Club shield
 	 * has a bronze, a silver and a gold graphic, and Hitpoints has a man's and
-	 * a woman's (the man's is taken).
+	 * a woman's (the man's is taken). The plugin draws each at the feet except
+	 * the page turns of 3140 and 3141, which are built to sit up on the body
+	 * and are lifted by its FilmSet.GRAPHIC_HEIGHTS; a new pair built like
+	 * them needs its height there too.
 	 */
 	static final Object[][] GRAPHICS = {
 		{4276, "EMOTE_LIGHTBULB", 712, "EMOTE_LIGHTBULB_SPOT"},

@@ -944,7 +944,7 @@ rather than failing silently.
 | `::follower rebuild` | Rebuild the model from scratch |
 | `::follower fix` | Re-attach the follower to the scene if it has vanished |
 | `::follower status` / `where` | Model + rule status, current region id and coordinates |
-| `::follower gfx <id>` | Preview a graphic on the follower |
+| `::follower gfx <id> [height]` | Preview a graphic on the follower, at its feet or lifted by a height, such as the one `::follower watch` prints for a graphic on you |
 | `::follower pose <id>` | Hold a looping pose (0 to release) |
 | `::follower posing` | Open the advanced posing window: the follower holds still and keeps quiet while you pose it, turn it and type its lines and yours; close the window to let it go |
 | `::follower sketch` | Pose for the chronicle's sketch of this place, as right-click Sketch on the follower: the scribe counts you in and draws you a moment into the first emote you do, or at the end of the count if you stand still; a place already drawn is drawn again, its old files kept as `.bak` first |
@@ -2159,6 +2159,10 @@ Graphics are paired only where Jagex's names or the cache pair them
 (`PoseCatalog.GRAPHICS`, each checked by name): the names pair all but the
 Trick emote's bats, whose graphic's own animation, 10504, is numbered just
 after the emote, and `CACHE_PAIRED` has that checked against the cache too.
+Every paired graphic is drawn at the feet except the page turns of Read a
+book (548 and 549), which are the book's left page and spine as 3140 and 3141
+hold it, vertex for vertex, built 92 lower; `FilmSet.GRAPHIC_HEIGHTS` lifts
+them by 92, measured on a man's body (a woman's book sits 6 lower).
 
 `--check` tests the shipped file against the cache after a game update, and
 so does `gradlew test` in `tools/cache-dumper`, which skips without a local
@@ -2176,6 +2180,15 @@ them: a felling axe hides the shield slot when worn, and the two-handed chop
 holds its axe in that slot. A held pose only shows while the follower stands,
 so its props come off when it sets off on a Send or a Follow me and go back
 on where it stops (`FilmSet.frame`, each frame).
+
+One prop is drawn from the other gender's model. Jagex labelled the woman's
+charting quill (item 31829, model 59225) for the right hand, where the
+man's (59224) is labelled for the left hand, so in Write with a quill (13302)
+a woman's quill stayed by the still scroll while her left hand wrote, as it
+does in the game. `AppearanceComposer.FEMALE_FROM_MALE` draws the man's model
+moved by (0, 7, -1), which is exactly where the woman's sits. Every other item
+the list puts in a hand was checked against the cache: none has its two
+models on different arms.
 
 ## Known limitations
 
