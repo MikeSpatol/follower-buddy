@@ -367,6 +367,9 @@ public class FollowerEntity
 	private int poseOverride;
 	private int wrapTrim = 1;
 
+	/** Whether the last frame had it on the move, which a forced pose gives way to. */
+	private boolean onTheMove;
+
 	/** Per-animation trim overrides, tuned by eye. */
 	private final java.util.Map<Integer, Integer> wrapTrims = new java.util.HashMap<>();
 
@@ -2123,6 +2126,7 @@ public class FollowerEntity
 
 		boolean moving = !route.isEmpty()
 			|| fineWX != tile.getX() * 128L + 64 || fineWY != tile.getY() * 128L + 64;
+		onTheMove = moving;
 
 		// Movement always wins over an emote - a dancing follower gliding along
 		// behind you looks broken, and the real game drops emotes on movement too.
@@ -3342,6 +3346,15 @@ public class FollowerEntity
 		return poseOverride;
 	}
 
+	/**
+	 * Whether it was on the move at the last frame. A forced pose only shows
+	 * while it stands, so this is also whether the walk has it instead.
+	 */
+	public boolean isMoving()
+	{
+		return onTheMove;
+	}
+
 	/** Lets go of a forced pose, unless something else has put its own on since. */
 	public void clearPoseOverride(int animationId)
 	{
@@ -3938,6 +3951,18 @@ public class FollowerEntity
 		}
 		AnimationController controller = object.getAnimationController();
 		return controller == null ? null : controller.getAnimation();
+	}
+
+	/**
+	 * What an animation puts in each hand, as the client gives it: left then
+	 * right, each -1 to keep what that hand holds, -512 to empty it, or an
+	 * item id. Null when the animation does not load.
+	 */
+	public int[] handItems(int animationId)
+	{
+		Animation animation = client.loadAnimation(animationId);
+		return animation == null ? null
+			: new int[]{animation.getLeftHandItem(), animation.getRightHandItem()};
 	}
 
 	/** Plays a one-shot animation, then resumes the walk/idle pose. */

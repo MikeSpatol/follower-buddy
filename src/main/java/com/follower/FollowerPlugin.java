@@ -772,7 +772,8 @@ public class FollowerPlugin extends Plugin
 			() -> thrallNpc == null && !errands.isBusy() && !spectate.holdsTheFeet()
 				&& !skilling.holdsTheFeet() && !moments.holdsTheFeet() && !flourish.isActive()
 				&& minutesState == 0 && !emoteHold && !filming);
-		filmSet = new com.follower.follower.FilmSet(follower);
+		filmSet = new com.follower.follower.FilmSet(follower, this::rebuildFollower,
+			graphicId -> follower.playSpotAnim(spotAnimRepository.get(graphicId)));
 
 		// On a fresh client boot the LOGIN_SCREEN transition can happen before
 		// this plugin subscribes, so the first login would not read as fresh.
@@ -3324,7 +3325,7 @@ public class FollowerPlugin extends Plugin
 			@Override
 			public void cut()
 			{
-				// The weapon comes back with the tick's own look at the hands.
+				// The pose's props go with it, and its own gear comes back.
 				endFilming();
 			}
 		};
@@ -3950,8 +3951,25 @@ public class FollowerPlugin extends Plugin
 		{
 			return slot;
 		}
+		return handSlot(itemId, false);
+	}
+
+	/**
+	 * Where an animation's own prop goes: the hand it is named for, whatever
+	 * the item is worn as. The game draws an animation's left-hand item in the
+	 * shield slot and its right-hand item in the weapon slot, so the quill of
+	 * the charting write is in the shield slot and its scroll in the weapon
+	 * slot, not both fighting over the weapon hand. Null for an item with no
+	 * worn model: the game draws nothing in that hand.
+	 */
+	private KitType handSlot(int itemId, boolean leftHand)
+	{
 		ModelRepository.Entry entry = modelRepository.item(itemId);
-		return entry != null && hasWornModel(entry) ? KitType.WEAPON : null;
+		if (entry == null || !hasWornModel(entry))
+		{
+			return null;
+		}
+		return leftHand ? KitType.SHIELD : KitType.WEAPON;
 	}
 
 	private static boolean hasWornModel(ModelRepository.Entry entry)
@@ -4818,10 +4836,13 @@ public class FollowerPlugin extends Plugin
 		}
 
 		// The prop is skipped in thrall mode, whose override is a shared object
-		// and whose conscript has no time to read.
-		Outfit outfit = dressForRender(resolveOutfit(), spectateDisarmed || emoteDisarmed,
+		// and whose conscript has no time to read. So are the film's pose's
+		// hands, which stand in for the emote disarm while they are on.
+		int[] filmHands = outfitOverride == null && filmSet != null ? filmSet.hands() : null;
+		Outfit outfit = dressForRender(resolveOutfit(), spectateDisarmed || emoteDisarmed && filmHands == null,
 			outfitOverride == null ? propSlot : null, propItemId,
 			outfitOverride == null ? wornSlot : null, wornItemId);
+		dressForPose(outfit, filmHands);
 
 		appearanceService.request(outfit, com.follower.appearance.ModelSource.DUMP_ONLY, appearance ->
 		{
@@ -4837,6 +4858,8 @@ public class FollowerPlugin extends Plugin
 			follower.setWeapon(outfit.isItem(KitType.WEAPON)
 				? outfit.itemId(KitType.WEAPON)
 				: com.follower.follower.StanceLibrary.UNARMED);
+			// A staff is swung one-handed when the other hand holds a shield.
+			followerHoldsShield = outfit.isItem(KitType.SHIELD);
 
 
 			if (follower.isSpawned())
@@ -5407,6 +5430,42 @@ public class FollowerPlugin extends Plugin
 		return outfit;
 	}
 
+	/**
+	 * The film's pose dressed as the game dresses it, laid on last: each hand
+	 * as its animation names it, left then right. -1 keeps what the hand
+	 * holds, Peer's sword and all; any other negative empties it; an item goes
+	 * in that hand's slot, or empties it when the item has no worn model,
+	 * since the game draws nothing there either. An item goes in as a prop,
+	 * drawn whatever the gear hides, as the game draws it.
+	 *
+	 * @param hands from {@link com.follower.follower.FilmSet#hands()}, or null
+	 *              to leave the outfit as it is
+	 */
+	private void dressForPose(Outfit outfit, int[] hands)
+	{
+		if (hands == null)
+		{
+			return;
+		}
+		dressHand(outfit, hands[0], true);
+		dressHand(outfit, hands[1], false);
+	}
+
+	private void dressHand(Outfit outfit, int item, boolean leftHand)
+	{
+		if (item == com.follower.follower.FilmSet.KEEP)
+		{
+			return;
+		}
+		KitType slot = item >= 0 ? handSlot(item, leftHand) : null;
+		if (slot == null)
+		{
+			outfit.clear(leftHand ? KitType.SHIELD : KitType.WEAPON);
+			return;
+		}
+		outfit.setProp(slot, item);
+	}
+
 	/** True while the shield channel has the follower's weapon and shield put away. */
 	private boolean spectateDisarmed;
 
@@ -5488,18 +5547,25 @@ public class FollowerPlugin extends Plugin
 			emoteHold = false;
 			follower.resumeFollowing();
 		}
+		if (!emoting && filmSet != null)
+		{
+			// A one-shot of the film's is over: its props come off.
+			filmSet.onceOver();
+		}
 		refreshEmoteDisarm(emoting);
 	}
 
 	/**
 	 * Empties the follower's hands while it is emoting AT ALL - a one-shot copy
-	 * or a held pose, the film's included. Both are emotes as far as a player
-	 * is concerned, so both put the weapon away.
+	 * or a held pose. Both are emotes as far as a player is concerned, so both
+	 * put the weapon away. Not the film's poses, which hold what the game's own
+	 * animation names for each hand, or keep what is there.
 	 */
 	private void refreshEmoteDisarm(boolean emoting)
 	{
-		boolean wanted = (emoting || mirroredPose != 0 || filmSet != null && filmSet.isHolding()
-			|| skilling != null && skilling.worksBareHanded()) && thrallNpc == null;
+		boolean wanted = (emoting || mirroredPose != 0
+			|| skilling != null && skilling.worksBareHanded()) && thrallNpc == null
+			&& (filmSet == null || !filmSet.isPosing());
 		if (wanted == emoteDisarmed)
 		{
 			return;
@@ -5853,28 +5919,60 @@ public class FollowerPlugin extends Plugin
 	private static final int GENERIC_RANGED_ATTACK = 426;
 	private static final int GENERIC_MAGIC_ATTACK = 1162;
 
+	/** Whether the follower's current outfit has something in the shield slot. */
+	private boolean followerHoldsShield;
+
 	/**
-	 * What the follower swings, matched to what it is actually holding: the
-	 * learned attack animation for its own weapon when one has been observed,
-	 * else a generic swing for the style. A scimitar should not slash like a
-	 * godsword just because both are melee.
+	 * What the follower swings, matched to what it is actually holding: its
+	 * own weapon's swing for the kind of blow the player's style deals, when
+	 * that is known, else a generic swing for the style. A scimitar should not
+	 * slash like a godsword just because both are melee.
 	 */
 	private int thrallAttackAnimation()
 	{
-		int learned = stanceLibrary.attackFor(follower.getWeaponItemId(), attackStyle());
-		if (learned > 0)
+		return thrallSwing(stanceLibrary, thrallStyle, follower.getWeaponItemId(),
+			client.getVarbitValue(VarbitID.COMBAT_WEAPON_CATEGORY), attackStyle(), followerHoldsShield);
+	}
+
+	/**
+	 * {@link #thrallSwing(String, int, int)} for the follower's weapon: the
+	 * kind of blow the player's style deals with their own weapon category,
+	 * thrown with the follower's weapon, one-handed when the follower holds a
+	 * shield.
+	 *
+	 * @param weaponCategory the player's weapon category (VarbitID.COMBAT_WEAPON_CATEGORY)
+	 * @param style the player's selected style button (COM_MODE)
+	 * @param shield whether the follower's outfit has something in the shield slot
+	 */
+	static int thrallSwing(com.follower.follower.StanceLibrary library, String thrallStyle,
+		int weapon, int weaponCategory, int style, boolean shield)
+	{
+		int kind = library.attackKind(weaponCategory, style);
+		return thrallSwing(thrallStyle, library.castFor(weapon),
+			com.follower.follower.StanceLibrary.withShield(
+				library.attackFor(weapon, style, kind), shield));
+	}
+
+	/**
+	 * The swing for a thrall's style. A magic thrall casts: a staff's own
+	 * swing is its melee bash, and the shipped stances know that bash for
+	 * every staff, so the weapon's attack would have the caster club its
+	 * target. Melee and ranged take the weapon's swing, else a plain one.
+	 *
+	 * @param cast a cast that goes with the weapon, or 0
+	 * @param swing the weapon's swing, or 0
+	 */
+	static int thrallSwing(String thrallStyle, int cast, int swing)
+	{
+		if (!"melee".equals(thrallStyle) && !"ranged".equals(thrallStyle))
 		{
-			return learned;
+			return cast > 0 ? cast : GENERIC_MAGIC_ATTACK;
 		}
-		switch (thrallStyle)
+		if (swing > 0)
 		{
-			case "melee":
-				return GENERIC_MELEE_ATTACK;
-			case "ranged":
-				return GENERIC_RANGED_ATTACK;
-			default:
-				return GENERIC_MAGIC_ATTACK;
+			return swing;
 		}
+		return "melee".equals(thrallStyle) ? GENERIC_MELEE_ATTACK : GENERIC_RANGED_ATTACK;
 	}
 
 	/**
@@ -5943,6 +6041,11 @@ public class FollowerPlugin extends Plugin
 		appearanceService.tick();
 		colorHarvester.tick();
 		follower.updateFrame();
+		if (filmSet != null)
+		{
+			// A held film pose's props come off for a walk and back on after it.
+			filmSet.frame();
+		}
 
 		if (animTraceRemaining > 0)
 		{
@@ -8482,6 +8585,24 @@ public class FollowerPlugin extends Plugin
 	}
 
 	/**
+	 * What {@code ::follower stance <weaponId>} reports: the weapon's own
+	 * stance, and the swing the follower actually uses with it. That swing can
+	 * be the shipped one while the weapon's learned record knows none.
+	 */
+	static String stanceStatus(com.follower.follower.StanceLibrary library, String name, int weaponId)
+	{
+		com.follower.follower.StanceLibrary.Stance known = library.describe(weaponId);
+		int attack = library.attackFor(weaponId);
+		return known == null
+			? (name == null ? "Item " + weaponId : name)
+				+ ": no stance known - it will stand unarmed"
+			: (name == null ? "Item " + weaponId : name)
+				+ ": idle " + known.idle + ", walk " + known.walk
+				+ ", run " + known.run
+				+ ", attack " + (attack > 0 ? attack : "unknown");
+	}
+
+	/**
 	 * Which attack style the player has selected, as the game numbers them.
 	 *
 	 * <p>Deliberately not translated into stab, slash or crush: what a style
@@ -10522,16 +10643,7 @@ public class FollowerPlugin extends Plugin
 					int weaponId = Integer.parseInt(args[1]);
 					if (args.length < 5)
 					{
-						com.follower.follower.StanceLibrary.Stance known =
-							stanceLibrary.describe(weaponId);
-						String name = modelRepository.itemName(weaponId);
-						sendStatus(known == null
-							? (name == null ? "Item " + weaponId : name)
-								+ ": no stance known - it will stand unarmed"
-							: (name == null ? "Item " + weaponId : name)
-								+ ": idle " + known.idle + ", walk " + known.walk
-								+ ", run " + known.run
-								+ ", attack " + (known.attack > 0 ? known.attack : "unknown"));
+						sendStatus(stanceStatus(stanceLibrary, modelRepository.itemName(weaponId), weaponId));
 						break;
 					}
 					stanceLibrary.setManual(weaponId,

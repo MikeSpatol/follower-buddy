@@ -7,14 +7,18 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.Player;
 import net.runelite.api.PlayerComposition;
+import net.runelite.api.gameval.AnimationID;
 import net.runelite.api.kit.KitType;
 
 /**
@@ -30,12 +34,21 @@ import net.runelite.api.kit.KitType;
  * <p>Your own character is the main teacher: equip a weapon and its stances are
  * learned immediately. Crowded areas fill the library quickly. Results persist to
  * {@code stances.json}.
+ *
+ * <p>What ships with the plugin and what this install learned are kept apart.
+ * The shipped library is rebuilt by {@code tools/cache-dumper} from learned
+ * stances, Weapon Animation Replacer's data and the game cache; only what was
+ * learned here is ever written back, so a fix to the shipped data reaches every
+ * install instead of hiding behind an old copy of itself.
  */
 @Slf4j
 @Singleton
 public class StanceLibrary
 {
 	public static final String FILE_NAME = "stances.json";
+
+	/** Where {@link #backUp} keeps the learned file as it was before the first trim. */
+	static final String BACKUP_NAME = FILE_NAME + ".pre-split";
 
 	/** Weapon item id used for "nothing wielded". */
 	public static final int UNARMED = 0;
@@ -87,6 +100,20 @@ public class StanceLibrary
 		 */
 		public int[] attackByStyle;
 
+		/**
+		 * The swing for each KIND of blow, in {@link StanceLibrary#STAB},
+		 * {@link StanceLibrary#SLASH}, {@link StanceLibrary#CRUSH} order, 0 where
+		 * the weapon deals no blow of that kind.
+		 *
+		 * <p>Shipped only. It comes from Weapon Animation Replacer's sets, which
+		 * name a weapon's swings by kind rather than by style button, and which
+		 * button deals which kind depends on the weapon. The game's own combat
+		 * tab table answers that for the weapon the player is holding (see
+		 * {@link StanceLibrary#attackKind}), so the follower throws the same kind of blow the
+		 * player has chosen, with its own weapon's swing for it.
+		 */
+		public int[] attackByType;
+
 		public Stance()
 		{
 		}
@@ -107,6 +134,62 @@ public class StanceLibrary
 		boolean isComplete()
 		{
 			return idle > 0 && walk > 0 && run > 0;
+		}
+
+		/** How the weapon is carried, without anything about how it is swung. */
+		Stance posesOnly()
+		{
+			return new Stance(idle, walk, run, walkBack, walkLeft, walkRight, turnLeft, turnRight);
+		}
+
+		/** How the weapon is swung, without anything about how it is carried. */
+		Stance swingsOnly()
+		{
+			Stance swings = new Stance();
+			swings.attack = attack;
+			swings.attackByStyle = attackByStyle;
+			return swings;
+		}
+
+		/**
+		 * Whether every pose this learned record knows is the shipped one's.
+		 * Such poses are a copy of an older bundle written out by an older
+		 * save, and keeping them would hide every later correction to that
+		 * weapon.
+		 */
+		boolean carriedAs(Stance shipped)
+		{
+			int[] mine = {idle, walk, run, walkBack, walkLeft, walkRight, turnLeft, turnRight};
+			int[] theirs = {shipped.idle, shipped.walk, shipped.run, shipped.walkBack,
+				shipped.walkLeft, shipped.walkRight, shipped.turnLeft, shipped.turnRight};
+			for (int i = 0; i < mine.length; i++)
+			{
+				if (mine[i] != 0 && mine[i] != theirs[i])
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+
+		/** Whether this learned record knows a swing the shipped one does not. */
+		boolean swingsUnlike(Stance shipped)
+		{
+			if (attack != 0 && attack != shipped.attack)
+			{
+				return true;
+			}
+			if (attackByStyle != null)
+			{
+				for (int styled : attackByStyle)
+				{
+					if (styled != 0)
+					{
+						return true;
+					}
+				}
+			}
+			return false;
 		}
 
 		boolean sameAs(Stance other)
@@ -130,11 +213,37 @@ public class StanceLibrary
 		}
 	}
 
+	/** The kinds of blow, in the order of {@link Stance#attackByType}. */
+	public static final int STAB = 0;
+	public static final int SLASH = 1;
+	public static final int CRUSH = 2;
+
+	/** Shipped beside the stances: what is not an attack, and what each style button deals. */
+	public static final String KINDS_FILE = "attack-kinds.json";
+
+	/** The shape of {@link #KINDS_FILE}, written by tools/cache-dumper. */
+	private static final class AttackKinds
+	{
+		/** Blocks, defends and specials: never a weapon's ordinary swing. */
+		int[] notAttacks;
+		/** Spell casts, by Jagex's names for them. */
+		int[] casts;
+		/** Combat tab weapon category -> the kind of blow each style button deals, -1 for none. */
+		Map<String, int[]> styleKinds;
+	}
+
 	private final Gson gson;
 	private final com.follower.appearance.ModelRepository models;
 
-	/** weapon item id -> stance set. */
-	private final Map<Integer, Stance> stances = new HashMap<>();
+	/** weapon item id -> stance set, as shipped. */
+	private final Map<Integer, Stance> bundled = new HashMap<>();
+
+	/** weapon item id -> stance set, as learned by this install. The only part saved. */
+	private final Map<Integer, Stance> learned = new HashMap<>();
+
+	private Set<Integer> notAttacks = Collections.emptySet();
+	private Set<Integer> casts = Collections.emptySet();
+	private Map<String, int[]> styleKinds = Collections.emptyMap();
 
 	/** base item name -> a weapon id known to have that name's stance. */
 	private Map<String, Integer> byBaseName;
@@ -157,7 +266,7 @@ public class StanceLibrary
 		this.gson = gson;
 		this.models = models;
 		// Unarmed is known and never needs learning.
-		stances.put(UNARMED, new Stance(PlayerPose.IDLE, PlayerPose.WALK, PlayerPose.RUN,
+		bundled.put(UNARMED, new Stance(PlayerPose.IDLE, PlayerPose.WALK, PlayerPose.RUN,
 			PlayerPose.TURN_180, PlayerPose.SIDESTEP_LEFT, PlayerPose.SIDESTEP_RIGHT,
 			PlayerPose.IDLE_TURN, PlayerPose.IDLE_TURN));
 	}
@@ -184,7 +293,7 @@ public class StanceLibrary
 			if (in != null)
 			{
 				int added = read(new java.io.BufferedReader(
-					new java.io.InputStreamReader(in, StandardCharsets.UTF_8)));
+					new java.io.InputStreamReader(in, StandardCharsets.UTF_8)), bundled);
 				log.info("Loaded {} bundled weapon stances", added);
 			}
 		}
@@ -192,6 +301,7 @@ public class StanceLibrary
 		{
 			log.warn("Could not read the bundled stance library", e);
 		}
+		loadKinds();
 
 		if (!Files.isRegularFile(file))
 		{
@@ -200,16 +310,113 @@ public class StanceLibrary
 		try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8))
 		{
 			// Local observations win: this client saw them first-hand.
-			log.info("Loaded {} learned weapon stances", read(reader));
+			log.info("Loaded {} learned weapon stances", read(reader, learned));
 		}
 		catch (IOException | RuntimeException e)
 		{
 			log.warn("Could not read {}", file, e);
 		}
+
+		// Older saves wrote the whole library, shipped stances included, so the
+		// learned file still holds copies of an older bundle, some with a swing
+		// learned on top. The copied poses go, any swing of its own stays, and
+		// the file is rewritten that way at the next save.
+		int copies = 0;
+		for (java.util.Iterator<Map.Entry<Integer, Stance>> it = learned.entrySet().iterator(); it.hasNext(); )
+		{
+			Map.Entry<Integer, Stance> entry = it.next();
+			Stance mine = entry.getValue();
+			Stance shipped = bundled.get(entry.getKey());
+			if (shipped == null || !mine.carriedAs(shipped))
+			{
+				continue;
+			}
+			if (!mine.swingsUnlike(shipped))
+			{
+				it.remove();
+				copies++;
+			}
+			else if (mine.isComplete())
+			{
+				entry.setValue(mine.swingsOnly());
+				copies++;
+			}
+		}
+		if (copies > 0)
+		{
+			backUp();
+			dirty = true;
+			log.info("Trimmed {} learned stance(s) the shipped library already holds", copies);
+		}
+	}
+
+	/**
+	 * Keeps the learned file as it was, once, before the trim rewrites it. An
+	 * older build of the plugin ships a smaller library and reads only this
+	 * file, so after a rollback the weapons it knew from those copies would
+	 * be gone, and its own next save would make that permanent. Renaming the
+	 * backup over the file brings them back.
+	 */
+	private void backUp()
+	{
+		Path backup = file.resolveSibling(BACKUP_NAME);
+		if (Files.exists(backup))
+		{
+			return;
+		}
+		try
+		{
+			Files.copy(file, backup);
+		}
+		catch (IOException e)
+		{
+			log.warn("Could not back up {} to {}", file, backup, e);
+		}
+	}
+
+	private void loadKinds()
+	{
+		try (java.io.InputStream in = StanceLibrary.class
+			.getResourceAsStream("/com/follower/" + KINDS_FILE))
+		{
+			if (in == null)
+			{
+				return;
+			}
+			AttackKinds kinds = gson.fromJson(new java.io.InputStreamReader(in, StandardCharsets.UTF_8),
+				AttackKinds.class);
+			if (kinds == null)
+			{
+				return;
+			}
+			notAttacks = toSet(kinds.notAttacks);
+			casts = toSet(kinds.casts);
+			if (kinds.styleKinds != null)
+			{
+				styleKinds = kinds.styleKinds;
+			}
+		}
+		catch (IOException | RuntimeException e)
+		{
+			log.warn("Could not read {}", KINDS_FILE, e);
+		}
+	}
+
+	private static Set<Integer> toSet(int[] ids)
+	{
+		Set<Integer> out = new HashSet<>();
+		if (ids != null)
+		{
+			for (int id : ids)
+			{
+				out.add(id);
+			}
+		}
+		return out;
 	}
 
 	/** @return how many entries were taken from this source. */
-	private int read(Reader reader)
+	private int read(Reader reader, Map<Integer, Stance> stances)
 	{
 		Map<String, Stance> loaded = gson.fromJson(reader,
 			new com.google.gson.reflect.TypeToken<Map<String, Stance>>()
@@ -248,11 +455,15 @@ public class StanceLibrary
 	public void clearLearnedAttacks()
 	{
 		int cleared = 0;
-		for (Stance stance : stances.values())
+		for (Stance stance : learned.values())
 		{
-			if (stance.attack > 0)
+			// The styled slots were learned the same way and are just as
+			// suspect - a block filed under style 1 flinches as surely as one
+			// filed as the generic swing.
+			if (stance.attack > 0 || stance.attackByStyle != null)
 			{
 				stance.attack = 0;
+				stance.attackByStyle = null;
 				cleared++;
 			}
 		}
@@ -270,8 +481,10 @@ public class StanceLibrary
 			return;
 		}
 
+		// Only what this install learned: the shipped stances come from the
+		// plugin, and a copy of them here would outlive every fix to them.
 		Map<String, Stance> out = new HashMap<>();
-		for (Map.Entry<Integer, Stance> entry : stances.entrySet())
+		for (Map.Entry<Integer, Stance> entry : learned.entrySet())
 		{
 			out.put(Integer.toString(entry.getKey()), entry.getValue());
 		}
@@ -340,19 +553,22 @@ public class StanceLibrary
 			return;
 		}
 
-		Stance known = stances.get(weaponId);
-		if (known != null && known.sameAs(observed))
+		Stance known = learned.get(weaponId);
+		// A learned record holding only a swing is carried as shipped.
+		Stance reference = known != null && known.isComplete() ? known : bundled.get(weaponId);
+		if (reference != null && reference.sameAs(observed))
 		{
 			return;
 		}
 		if (known != null)
 		{
-			// Poses changed but the attack did not: carry it across rather
+			// Poses changed but the swings did not: carry them across rather
 			// than throwing away a hard-won observation.
 			observed.attack = known.attack;
+			observed.attackByStyle = known.attackByStyle;
 		}
 
-		stances.put(weaponId, observed);
+		learned.put(weaponId, observed);
 		dirty = true;
 		log.debug("Learned stance for weapon {}: idle={} walk={} run={} back={} left={} right={}",
 			weaponId, observed.idle, observed.walk, observed.run,
@@ -392,11 +608,24 @@ public class StanceLibrary
 		int raw = composition.getEquipmentId(KitType.WEAPON);
 		int weaponId = raw <= 0 ? UNARMED : raw;
 
-		Stance stance = stances.get(weaponId);
-		if (stance == null || stance.attack == animationId)
+		Stance stance = learned.get(weaponId);
+		if (stance == null)
 		{
-			// No pose set yet means the weapon is brand new to us; observe()
-			// creates it on the next tick and the attack lands then.
+			Stance shipped = bundled.get(weaponId);
+			if (shipped == null || shipped.attack == animationId)
+			{
+				// No pose set yet means the weapon is brand new to us; observe()
+				// creates it on the next tick and the attack lands then.
+				return;
+			}
+			// Carried as shipped, swung as seen: the learned record holds the
+			// swing alone. A copy of the shipped poses here would outlive
+			// every later fix to them.
+			stance = new Stance();
+			learned.put(weaponId, stance);
+		}
+		if (stance.attack == animationId)
+		{
 			return;
 		}
 		if (style >= 0 && style < STYLES)
@@ -470,8 +699,9 @@ public class StanceLibrary
 	 * the same way.
 	 *
 	 * <p>The borrow is what keeps this practical. Nobody owns every weapon, but
-	 * weapons of a kind share a pose set, so seeing ONE scimitar swung covers
-	 * every scimitar in the game.
+	 * weapons of a kind share a pose set, so seeing ONE whip swung covers every
+	 * whip in the game. Not every class names a kind, though: see
+	 * {@link #isPlainHuman}.
 	 *
 	 * <p>Matching the pose class alone is not enough, though. It groups by how
 	 * a weapon is carried, and melee and ranged weapons can be carried alike,
@@ -484,7 +714,7 @@ public class StanceLibrary
 	 */
 	public int attackFor(int weaponItemId)
 	{
-		return attackFor(weaponItemId, -1);
+		return attackFor(weaponItemId, -1, -1);
 	}
 
 	/** How many attack styles the game numbers, for the per-style slots. */
@@ -496,29 +726,60 @@ public class StanceLibrary
 	 */
 	public int attackFor(int weaponItemId, int style)
 	{
-		// forWeapon already resolves a trim variant to its plain original.
-		Stance stance = forWeapon(weaponItemId);
-		if (stance == null)
+		return attackFor(weaponItemId, style, -1);
+	}
+
+	/**
+	 * The swing for a weapon, most trusted answer first:
+	 * <ol>
+	 * <li>the shipped swing for the kind of blow being thrown;</li>
+	 * <li>the swing this install saw in that style, unless it was really a
+	 * block, a special or a spell;</li>
+	 * <li>the weapon's shipped swing;</li>
+	 * <li>its learned swing, unless that was really a block or special;</li>
+	 * <li>the same four for the weapon it inherits by name;</li>
+	 * <li>a borrow from its weapon class.</li>
+	 * </ol>
+	 * The shipped data goes first because what was learned includes blocks,
+	 * casts and skilling swings filed as attacks, while the shipped swings
+	 * were checked against Weapon Animation Replacer's sets and the cache.
+	 *
+	 * <p>A real weapon never gets the unarmed punch or kick. A weapon nothing is
+	 * known about falls back to the unarmed stance to stand and walk with, and
+	 * it used to fall back to the unarmed punch to fight with as well, so a
+	 * corrupted bow punched. 0 instead lets the caller pick a plain swing for
+	 * the style.
+	 *
+	 * @param style the style button the player has selected (COM_MODE, 0-3), or -1
+	 * @param kind the kind of blow that style deals, {@link #STAB}, {@link #SLASH}
+	 * or {@link #CRUSH} (see {@link #attackKind}), or -1 when it is not a melee blow
+	 */
+	public int attackFor(int weaponItemId, int style, int kind)
+	{
+		int id = weaponItemId <= 0 ? UNARMED : weaponItemId;
+		boolean realWeapon = id != UNARMED;
+		int own = ownAttack(id, style, kind, realWeapon);
+		if (own > 0)
 		{
-			return 0;
+			return own;
 		}
-		// The style the player actually has selected wins when this weapon has
-		// been swung in it. Not borrowed across the class: a style number means
-		// different things on different weapon types, so another weapon's slot
-		// 2 is not this weapon's slot 2.
-		if (style >= 0 && style < STYLES && stance.attackByStyle != null
-			&& stance.attackByStyle[style] > 0)
+		// Then the weapon it inherits by name, even when it has a record of
+		// its own: a variant seen carried but never swung knows how it stands
+		// and nothing about how it fights, and its plain version may.
+		int donor = realWeapon ? donorFor(id) : UNARMED;
+		if (donor != UNARMED)
 		{
-			return stance.attackByStyle[style];
-		}
-		if (stance.attack > 0)
-		{
-			return stance.attack;
+			int inherited = ownAttack(donor, style, kind, true);
+			if (inherited > 0)
+			{
+				return inherited;
+			}
 		}
 
+		Stance stance = forWeapon(weaponItemId);
 		int usage = styleSource == null
 			? StyleSource.UNKNOWN : styleSource.usageOf(weaponItemId);
-		if (usage == StyleSource.UNKNOWN)
+		if (usage == StyleSource.UNKNOWN || isPlainHuman(stance))
 		{
 			return 0;
 		}
@@ -537,16 +798,16 @@ public class StanceLibrary
 		// and lower-numbered one.
 		Map<Integer, Integer> agreement = new HashMap<>();
 		Map<Integer, Integer> lowestDonor = new HashMap<>();
-		for (Map.Entry<Integer, Stance> entry : stances.entrySet())
+		for (int other : knownIds())
 		{
-			Stance other = entry.getValue();
-			if (other.attack <= 0 || !other.sameClassAs(stance)
-				|| styleSource.usageOf(entry.getKey()) != usage)
+			int attack = genericAttack(other, true);
+			if (attack <= 0 || !stanceOf(other).sameClassAs(stance)
+				|| styleSource.usageOf(other) != usage)
 			{
 				continue;
 			}
-			agreement.merge(other.attack, 1, Integer::sum);
-			lowestDonor.merge(other.attack, entry.getKey(), Math::min);
+			agreement.merge(attack, 1, Integer::sum);
+			lowestDonor.merge(attack, other, Math::min);
 		}
 
 		int best = 0;
@@ -561,6 +822,156 @@ public class StanceLibrary
 			}
 		}
 		return best;
+	}
+
+	/** The first four steps of {@link #attackFor}, from one weapon's own records, or 0. */
+	private int ownAttack(int key, int style, int kind, boolean realWeapon)
+	{
+		Stance shipped = bundled.get(key);
+		Stance mine = learned.get(key);
+		if (shipped != null && shipped.attackByType != null && kind >= 0
+			&& kind < shipped.attackByType.length
+			&& swingable(shipped.attackByType[kind], realWeapon))
+		{
+			return shipped.attackByType[kind];
+		}
+		// The style the player actually has selected, when this weapon has
+		// been swung in it. Not borrowed across the class: a style number
+		// means different things on different weapon types, so another
+		// weapon's slot 2 is not this weapon's slot 2.
+		if (mine != null && style >= 0 && mine.attackByStyle != null
+			&& style < mine.attackByStyle.length)
+		{
+			int styled = mine.attackByStyle[style];
+			if (swingable(styled, realWeapon) && !notAttacks.contains(styled)
+				&& !casts.contains(styled))
+			{
+				return styled;
+			}
+		}
+		return genericAttack(key, realWeapon);
+	}
+
+	/**
+	 * A weapon's swing when nothing says which kind of blow: the shipped one,
+	 * else the learned one if it is not really a block or special.
+	 */
+	private int genericAttack(int key, boolean realWeapon)
+	{
+		Stance shipped = bundled.get(key);
+		if (shipped != null && swingable(shipped.attack, realWeapon))
+		{
+			return shipped.attack;
+		}
+		Stance mine = learned.get(key);
+		if (mine != null && swingable(mine.attack, realWeapon) && !notAttacks.contains(mine.attack))
+		{
+			return mine.attack;
+		}
+		return 0;
+	}
+
+	/** Whether an animation can be a weapon's swing at all. */
+	private static boolean swingable(int animation, boolean realWeapon)
+	{
+		return animation > 0 && !(realWeapon
+			&& (animation == AnimationID.HUMAN_UNARMEDPUNCH || animation == AnimationID.HUMAN_UNARMEDKICK));
+	}
+
+	/**
+	 * Whether a stance is how a person with nothing in particular stands and
+	 * moves, so its class names no weapon type and must not lend a swing.
+	 *
+	 * <p>Decided by Jagex's own names. A class is normally named for its weapon -
+	 * HUMAN_STAFFREADY, XBOWS_HUMAN_READY, SLAYER_ABYSSAL_WHIP_WALK - and borrowing
+	 * inside it stays inside one kind of weapon. HUMAN_READY with HUMAN_WALK_F and
+	 * HUMAN_RUNNING is the plain human stance instead, which unarmed shares with
+	 * every one-handed sword, mace, axe, dagger, pickaxe, claw, bow and dart. A
+	 * borrow there gave daggers, maces and warhammers a sword's slash and claws
+	 * the macuahuitl's crush. Any other name in the three keeps the borrow: the
+	 * whip only walks differently, and that is enough to name it.
+	 */
+	private static boolean isPlainHuman(Stance stance)
+	{
+		return stance.idle == AnimationID.HUMAN_READY && stance.walk == AnimationID.HUMAN_WALK_F
+			&& stance.run == AnimationID.HUMAN_RUNNING;
+	}
+
+	/**
+	 * Which kind of blow a style button deals, from the game's own combat tab
+	 * table.
+	 *
+	 * @param weaponCategory the player's weapon category (VarbitID.COMBAT_WEAPON_CATEGORY)
+	 * @param style the selected style button (COM_MODE)
+	 * @return {@link #STAB}, {@link #SLASH} or {@link #CRUSH}, or -1 when the
+	 * button deals none of them or is not known
+	 */
+	public int attackKind(int weaponCategory, int style)
+	{
+		int[] kinds = styleKinds.get(Integer.toString(weaponCategory));
+		return kinds == null || style < 0 || style >= kinds.length ? -1 : kinds[style];
+	}
+
+	/**
+	 * A spell cast to go with this weapon, for a follower that fights with
+	 * magic: one learned with it, else its shipped swing when that is a cast,
+	 * as a powered staff's is.
+	 *
+	 * <p>Not {@link #attackFor}: a staff's swing is its melee bash, and a
+	 * caster should cast. Like a swing, a cast comes from the weapon's own
+	 * records first and then from the weapon it inherits by name, never from
+	 * the unarmed record for a real weapon.
+	 *
+	 * @return 0 when there is none, leaving the caller to cast its default
+	 */
+	public int castFor(int weaponItemId)
+	{
+		int id = weaponItemId <= 0 ? UNARMED : weaponItemId;
+		int cast = ownCast(id);
+		if (cast > 0 || id == UNARMED)
+		{
+			return cast;
+		}
+		int donor = donorFor(id);
+		return donor == UNARMED ? 0 : ownCast(donor);
+	}
+
+	private int ownCast(int key)
+	{
+		Stance mine = learned.get(key);
+		if (mine != null)
+		{
+			if (casts.contains(mine.attack))
+			{
+				return mine.attack;
+			}
+			if (mine.attackByStyle != null)
+			{
+				for (int styled : mine.attackByStyle)
+				{
+					if (casts.contains(styled))
+					{
+						return styled;
+					}
+				}
+			}
+		}
+		Stance shipped = bundled.get(key);
+		return shipped != null && casts.contains(shipped.attack) ? shipped.attack : 0;
+	}
+
+	/**
+	 * A staff's bash as the follower should play it: without a shield the
+	 * game swings with both hands, with one it uses the one-handed chop.
+	 * Weapon Animation Replacer records this for both staff sets - 419, or 414
+	 * for the second staff set, without a shield and 393 with one. Not yet
+	 * confirmed in game: four of the five staves this plugin learned swinging
+	 * used 393, which fits, but whether a shield was worn is not recorded.
+	 */
+	public static int withShield(int attack, boolean shield)
+	{
+		return shield && (attack == AnimationID.HUMAN_STAFFORB_PUMMEL || attack == AnimationID.HUMAN_STAFF_PUMMEL)
+			? AnimationID.HUMAN_AXE_CHOP : attack;
 	}
 
 	/**
@@ -579,11 +990,20 @@ public class StanceLibrary
 	public void setManual(int weaponItemId, int idle, int walk, int run, int attack)
 	{
 		int id = weaponItemId <= 0 ? UNARMED : weaponItemId;
-		Stance stance = stances.get(id);
-		if (stance == null)
+		Stance stance = learned.get(id);
+		if (stance == null || !stance.isComplete())
 		{
-			stance = new Stance();
-			stances.put(id, stance);
+			// Keep any turns and side-steps the shipped stance knows, and any
+			// swing already learned.
+			Stance shipped = bundled.get(id);
+			Stance poses = shipped != null ? shipped.posesOnly() : new Stance();
+			if (stance != null)
+			{
+				poses.attack = stance.attack;
+				poses.attackByStyle = stance.attackByStyle;
+			}
+			stance = poses;
+			learned.put(id, stance);
 		}
 		stance.idle = idle;
 		stance.walk = walk;
@@ -599,16 +1019,50 @@ public class StanceLibrary
 			id, idle, walk, run, stance.attack);
 	}
 
-	/** A weapon's stance exactly as stored, or null when never seen or set. */
+	/** A weapon's own stance, learned poses over shipped, or null when never seen or set. */
 	public Stance describe(int weaponItemId)
 	{
-		return stances.get(weaponItemId <= 0 ? UNARMED : weaponItemId);
+		return stanceOf(weaponItemId <= 0 ? UNARMED : weaponItemId);
 	}
 
-	/** Every stance as stored, for auditing what the library actually holds. */
+	/** Every weapon's own stance, learned poses over shipped, for auditing what the library actually holds. */
 	public Map<Integer, Stance> all()
 	{
-		return java.util.Collections.unmodifiableMap(stances);
+		Map<Integer, Stance> all = new HashMap<>();
+		for (int id : knownIds())
+		{
+			all.put(id, stanceOf(id));
+		}
+		return Collections.unmodifiableMap(all);
+	}
+
+	/**
+	 * A learned record's poses when it has them, else the shipped stance. A
+	 * learned record can hold just a swing, seen with a weapon carried exactly
+	 * as shipped.
+	 */
+	private Stance stanceOf(int id)
+	{
+		Stance mine = learned.get(id);
+		return mine != null && mine.isComplete() ? mine : bundled.get(id);
+	}
+
+	private boolean known(int id)
+	{
+		return stanceOf(id) != null;
+	}
+
+	private Set<Integer> knownIds()
+	{
+		Set<Integer> ids = new HashSet<>(bundled.keySet());
+		for (Map.Entry<Integer, Stance> entry : learned.entrySet())
+		{
+			if (entry.getValue().isComplete())
+			{
+				ids.add(entry.getKey());
+			}
+		}
+		return ids;
 	}
 
 	/**
@@ -635,13 +1089,13 @@ public class StanceLibrary
 	public Stance forWeapon(int weaponItemId)
 	{
 		int id = weaponItemId <= 0 ? UNARMED : weaponItemId;
-		Stance stance = stances.get(id);
+		Stance stance = stanceOf(id);
 		if (stance != null)
 		{
 			return stance;
 		}
-		Stance inherited = stances.get(donorFor(id));
-		return inherited != null ? inherited : stances.get(UNARMED);
+		Stance inherited = stanceOf(donorFor(id));
+		return inherited != null ? inherited : stanceOf(UNARMED);
 	}
 
 	/** The weapon this one inherits its stance from, or 0 when there is none. */
@@ -653,7 +1107,7 @@ public class StanceLibrary
 			return cached;
 		}
 
-		if (byBaseName == null || indexedSize != stances.size())
+		if (byBaseName == null || indexedSize != size())
 		{
 			buildNameIndex();
 		}
@@ -690,7 +1144,7 @@ public class StanceLibrary
 	{
 		byBaseName = new HashMap<>();
 		byTierName = new HashMap<>();
-		for (Integer known : stances.keySet())
+		for (Integer known : knownIds())
 		{
 			String name = models.itemName(known);
 			String base = baseName(name);
@@ -705,7 +1159,7 @@ public class StanceLibrary
 				byTierName.merge(tierBase, known, Math::min);
 			}
 		}
-		indexedSize = stances.size();
+		indexedSize = size();
 		// Names may have arrived since the last resolution failed.
 		donors.clear();
 	}
@@ -800,11 +1254,19 @@ public class StanceLibrary
 	public boolean knows(int weaponItemId)
 	{
 		int id = weaponItemId <= 0 ? UNARMED : weaponItemId;
-		return stances.containsKey(id) || donorFor(id) > 0;
+		return known(id) || donorFor(id) > 0;
 	}
 
 	public int size()
 	{
-		return stances.size();
+		int size = bundled.size();
+		for (Integer id : learned.keySet())
+		{
+			if (!bundled.containsKey(id))
+			{
+				size++;
+			}
+		}
+		return size;
 	}
 }

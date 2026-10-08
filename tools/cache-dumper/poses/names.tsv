@@ -1,0 +1,234 @@
+# Tier A of the posing list: names written by hand. id, name, group (one of PoseCatalog.GROUPS).
+# Everything else about a row - its loop, its hands, its graphic - is read from the cache.
+id	name	group
+855	Yes	Emotes
+189	Yes	Emotes
+856	No	Emotes
+190	No	Emotes
+858	Bow	Emotes
+192	Bow	Emotes
+859	Angry	Emotes
+193	Angry	Emotes
+857	Think	Emotes
+191	Think	Emotes
+863	Wave	Emotes
+197	Wave	Emotes
+2113	Shrug	Emotes
+12056	Shrug	Emotes
+862	Cheer	Emotes
+196	Cheer	Emotes
+864	Beckon	Emotes
+2691	Beckon	Emotes
+861	Laugh	Emotes
+195	Laugh	Emotes
+2109	Jump for joy	Emotes
+12051	Jump for joy	Emotes
+2111	Yawn	Emotes
+12053	Yawn	Emotes
+866	Dance	Emotes
+10048	Dance	Emotes
+2106	Jig	Emotes
+10049	Jig	Emotes
+2107	Spin	Emotes
+12085	Spin	Emotes
+2108	Headbang	Emotes
+10050	Headbang	Emotes
+860	Cry	Emotes
+194	Cry	Emotes
+1374	Blow kiss	Emotes
+3803	Blow kiss	Emotes
+2105	Panic	Emotes
+12050	Panic	Emotes
+2110	Raspberry	Emotes
+12052	Raspberry	Emotes
+865	Clap	Emotes
+3193	Clap	Emotes
+2112	Salute	Emotes
+12055	Salute	Emotes
+2127	Goblin bow	Emotes
+12082	Goblin bow	Emotes
+2128	Goblin salute	Emotes
+12074	Goblin salute	Emotes
+1131	Glass box	Emotes
+12068	Glass box	Emotes
+1130	Climb rope	Emotes
+12067	Climb rope	Emotes
+1129	Lean	Emotes
+10062	Lean	Emotes
+1128	Glass wall	Emotes
+12066	Glass wall	Emotes
+4276	Idea	Emotes
+12072	Idea	Emotes
+4278	Stamp	Emotes
+12080	Stamp	Emotes
+4280	Flap	Emotes
+12073	Flap	Emotes
+4275	Slap head	Emotes
+12071	Slap head	Emotes
+3544	Zombie walk	Emotes
+12070	Zombie walk	Emotes
+3543	Zombie dance	Emotes
+12069	Zombie dance	Emotes
+2836	Scared	Emotes
+12075	Scared	Emotes
+6111	Rabbit hop	Emotes
+12057	Rabbit hop	Emotes
+874	Sit-ups	Emotes
+12061	Sit-ups	Emotes
+872	Push-ups	Emotes
+12060	Push-ups	Emotes
+870	Star jumps	Emotes
+12059	Star jumps	Emotes
+868	Jog	Emotes
+12058	Jog	Emotes
+8917	Flex	Emotes
+12064	Flex	Emotes
+1708	Zombie hand	Emotes
+7131	Hypermobile drinker	Emotes
+12062	Hypermobile drinker	Emotes
+4751	Air guitar	Emotes
+7533	Smooth dance	Emotes
+7536	Crazy dance (style)	Emotes
+12083	Crazy dance (style)	Emotes
+7537	Crazy dance (lasso)	Emotes
+12084	Crazy dance (lasso)	Emotes
+7751	Premier shield	Emotes
+8541	Explore	Emotes
+12063	Explore	Emotes
+8524	Unlock a relic	Emotes
+10031	Party	Emotes
+12065	Party	Emotes
+10503	Trick	Emotes
+10796	Fortis salute	Emotes
+10797	Fortis salute	Emotes
+10051	Crab dance	Emotes
+10052	Crab dance	Emotes
+10053	Get up off the floor	Emotes
+10061	Sit	Emotes
+7278	Uri's briefcase	Emotes
+4959	Attack cape	Skill capes
+4961	Defence cape	Skill capes
+4981	Strength cape	Skill capes
+4971	Hitpoints cape	Skill capes
+4973	Ranged cape	Skill capes
+4979	Prayer cape	Skill capes
+4939	Magic cape	Skill capes
+4955	Cooking cape	Skill capes
+4957	Woodcutting cape	Skill capes
+4937	Fletching cape	Skill capes
+4951	Fishing cape	Skill capes
+4975	Firemaking cape	Skill capes
+4949	Crafting cape	Skill capes
+4943	Smithing cape	Skill capes
+4941	Mining cape	Skill capes
+4969	Herblore cape	Skill capes
+4977	Agility cape	Skill capes
+4965	Thieving cape	Skill capes
+4967	Slayer cape	Skill capes
+4963	Farming cape	Skill capes
+4947	Runecraft cape	Skill capes
+5158	Hunter cape	Skill capes
+4953	Construction cape	Skill capes
+4945	Quest cape	Skill capes
+13077	Sailing cape	Skill capes
+7121	Max cape	Skill capes
+2709	Achievement diary cape	Skill capes
+1350	Read a book	Reading and writing
+3140	Read a book, turning the page right	Reading and writing
+3141	Read a book, turning the page left	Reading and writing
+2059	Read a fancy book	Reading and writing
+5354	Read a scroll	Reading and writing
+7403	Read a scroll, then put it away	Reading and writing
+4549	Read a dossier and shake your head	Reading and writing
+909	Draw a map	Reading and writing
+13302	Write with a quill	Reading and writing
+12019	Read a prayer scroll	Reading and writing
+3864	Open a teleport scroll	Reading and writing
+5864	Pray from a prayer book	Reading and writing
+1335	Preach from the holy book	Reading and writing
+1336	Preach from the unholy book	Reading and writing
+1337	Preach from the book of balance	Reading and writing
+7153	Preach from the book of war	Reading and writing
+7154	Preach from the book of law	Reading and writing
+7155	Preach from the book of darkness	Reading and writing
+11115	Read the Book of egg	Reading and writing
+4073	Sit on a wooden chair	Sitting and resting
+4111	Sit on a throne	Sitting and resting
+4089	Sit on a dining chair	Sitting and resting
+4141	Eat at a table	Sitting and resting
+1351	Sit on a stool	Sitting and resting
+1352	Sit on a stool, scratching your head	Sitting and resting
+1353	Sit on a stool, thinking	Sitting and resting
+1354	Sit on a stool, fidgeting	Sitting and resting
+10083	Sit with a cup of tea	Sitting and resting
+9022	Sit at a table with a drink	Sitting and resting
+9024	Sit on a barstool	Sitting and resting
+2339	Sit drunk on a chair	Sitting and resting
+4851	Sit cross-legged	Sitting and resting
+2378	Sit on the floor (Quiz Master)	Sitting and resting
+9056	Lie unconscious	Sitting and resting
+9434	Barely conscious	Sitting and resting
+6936	Fly a magic carpet	Sitting and resting
+829	Eat	Eating and drinking
+1322	Hold a tankard	Eating and drinking
+1330	Drink from a keg	Eating and drinking
+3702	Sip from a teacup	Eating and drinking
+1194	Drink rum	Eating and drinking
+1191	Eat a banana	Eating and drinking
+5827	Pour and drink tea	Eating and drinking
+2343	Clink glasses	Eating and drinking
+14510	Drink from a bottle	Eating and drinking
+1321	Play the lyre	Music and play
+1878	Charm snakes with a flute	Music and play
+1457	Yo-yo: up and down	Music and play
+1458	Yo-yo: around the world	Music and play
+1459	Yo-yo: walk the dog	Music and play
+1902	Spin a plate	Music and play
+5759	Juggle	Music and play
+918	Play with a toy horsey	Music and play
+3413	Play with a lion toy	Music and play
+2780	Play with a pet fish	Music and play
+5063	Throw a snowball	Music and play
+7388	Shake a snow globe	Music and play
+3006	Make a marionette dance	Music and play
+621	Fish with a small net	Skilling
+620	Fish with a big net	Skilling
+618	Fish with a harpoon	Skilling
+619	Fish with a lobster pot	Skilling
+622	Cast a fishing rod	Skilling
+623	Wait for a bite	Skilling
+879	Chop a tree	Skilling
+625	Mine a rock	Skilling
+733	Light a fire with a tinderbox	Skilling
+897	Cook on a fire	Skilling
+896	Cook on a range	Skilling
+898	Smith at an anvil	Skilling
+1248	Fletch logs with a knife	Skilling
+1249	Sew leather	Skilling
+884	Blow glass	Skilling
+888	Cut a gem	Skilling
+363	Mix a potion	Skilling
+364	Grind with a pestle and mortar	Skilling
+2273	Rake a patch	Skilling
+2291	Plant seeds with a dibber	Skilling
+2293	Water the plants	Skilling
+830	Dig with a spade	Skilling
+893	Shear a sheep	Skilling
+3676	Build with a hammer	Skilling
+3655	Paint at an easel	Skilling
+883	Throw a pot on the wheel	Skilling
+2305	Milk a cow	Skilling
+2794	Churn butter	Skilling
+10565	Tend a campfire	Skilling
+827	Pick something up	Skilling
+645	Pray	Magic and prayer
+179	Pray	Magic and prayer
+714	Cast a teleport	Magic and prayer
+4069	Break a teleport tablet	Magic and prayer
+3649	Look through a telescope	Looking around
+6840	Look around and search	Looking around
+6384	Ponder a painting	Looking around
+13993	Peer into the distance	Looking around
+4195	Listen at a door	Looking around
+4368	Raise a lantern and look	Looking around
+5821	Whistle	Looking around

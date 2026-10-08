@@ -13,6 +13,7 @@ import org.junit.rules.TemporaryFolder;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -59,7 +60,7 @@ public class StanceInheritanceTest
 	 * Two invented pose classes and an item id range the game does not use.
 	 *
 	 * <p>{@link StanceLibrary#load} always reads the SHIPPED library first, so
-	 * a test naming a real weapon is really testing the 191 stances that come
+	 * a test naming a real weapon is really testing the stances that come
 	 * with the plugin. Worse, real pose ids overlap the unarmed set, which
 	 * would make "borrowed correctly" and "fell back to unarmed" look identical.
 	 * Made-up numbers keep the question being asked an honest one.
@@ -318,11 +319,24 @@ public class StanceInheritanceTest
 	public void withNoStyleSourceNothingIsBorrowed()
 	{
 		observe(BASE + 14, "Steel scimitar", SCIMITAR, 390);
-		names.name(BASE + 17, "Adamant scimitar");
+		// Not another metal's scimitar: that would inherit the swing by name,
+		// which needs no style, and this is about the class borrow.
+		names.name(BASE + 17, "Brine sabre");
 		library.setManual(BASE + 17, SCIMITAR[0], SCIMITAR[1], SCIMITAR[2], 0);
 
 		assertEquals("without knowing the style, refuse rather than guess",
 			0, library.attackFor(BASE + 17));
+	}
+
+	@Test
+	public void aWeaponSeenCarriedButNeverSwungStillSwingsAsItsOtherMetalDoes()
+	{
+		// Before it was seen it inherited the Steel scimitar's swing by metal;
+		// seeing it carried gave it a record of its own with no swing in it.
+		observe(BASE + 14, "Steel scimitar", SCIMITAR, 390);
+		observe(BASE + 17, "Adamant scimitar", SCIMITAR, 0);
+
+		assertEquals(390, library.attackFor(BASE + 17));
 	}
 
 	@Test
@@ -392,12 +406,17 @@ public class StanceInheritanceTest
 		// come from the composition, not from a moment of combat, and losing
 		// them would strip walk and idle from every weapon ever seen.
 		observe(BASE + 40, "Rune scimitar", SCIMITAR, 424);
-		assertEquals(424, library.attackFor(BASE + 40));
+		library.forWeapon(BASE + 40).attackByStyle = new int[]{424, 0, 0, 0};
+		// Stored, though no longer swung: the shipped list of blocks keeps
+		// attackFor from using it, and the file still needs repairing.
+		assertEquals(424, library.forWeapon(BASE + 40).attack);
 
 		library.clearLearnedAttacks();
 
 		assertEquals("the block was still remembered as an attack",
 			0, library.forWeapon(BASE + 40).attack);
+		assertNull("the block was still remembered as a styled attack",
+			library.forWeapon(BASE + 40).attackByStyle);
 		assertEquals("the weapon forgot how it is held, not just how it swings",
 			SCIMITAR[0], library.forWeapon(BASE + 40).idle);
 	}

@@ -149,7 +149,10 @@ right-click Stay and Follow on the follower; **Come here**; a **Go on
 errands** tick; a dropdown of errands with **Go now**; and **Advanced
 posing...**, a window for posing it. While it is open the follower holds still
 and keeps quiet, and you pose it, turn it to a compass point or the camera,
-and type the lines it says. Lines you type for yourself show over your own
+and type the lines it says. Find a pose by name or animation id, or pick a
+group; **Show all** adds the quest, cutscene and creature animations that also
+fit the follower. A pose marked [prop] puts its book, quill or chair in the
+follower's hands while it lasts. Lines you type for yourself show over your own
 head on your screen only: nothing is sent, and nobody else sees them. Close
 the window when you are done.
 
@@ -243,3 +246,7 @@ commands** in the Developer section, and typing one while it is off says so.
 
 Built by MikeS. Not affiliated with Jagex or RuneLite. Old School RuneScape
 is a trademark of Jagex Ltd.
+
+Many of the weapon stances and attack animations come from Weapon Animation
+Replacer by geheur, used under its BSD 2-Clause License. See
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).

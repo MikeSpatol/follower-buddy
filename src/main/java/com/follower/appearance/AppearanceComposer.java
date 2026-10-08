@@ -342,6 +342,12 @@ public class AppearanceComposer
 	 * <p>This replaces a single hardcoded rule - "a torso item hides the arms" - which
 	 * covered one case out of many and left helmets rendering hair straight through
 	 * themselves.
+	 *
+	 * <p>An animation's hand prop ({@link Outfit#isProp}) is outside the rule: the
+	 * game lays it over the gear after the gear has decided what it covers. A felling
+	 * axe declares the shield slot hidden, and the axe of a two-handed chop is drawn
+	 * in that very slot; the banana a follower eats goes in the shield slot its own
+	 * godsword hides.
 	 */
 	java.util.Set<KitType> hiddenSlots(Outfit outfit)
 	{
@@ -350,7 +356,7 @@ public class AppearanceComposer
 
 		for (KitType slot : slots)
 		{
-			if (!outfit.isItem(slot))
+			if (!outfit.isItem(slot) || outfit.isProp(slot))
 			{
 				continue;
 			}
@@ -370,6 +376,7 @@ public class AppearanceComposer
 			}
 		}
 
+		hidden.removeIf(outfit::isProp);
 		return hidden;
 	}
 

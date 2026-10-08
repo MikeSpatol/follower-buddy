@@ -1,0 +1,641 @@
+# How the words of Jagex's animation names read in the posing list. token, kind, text.
+# drop: never shown, and ignored when telling two moves apart (HUMAN, technical markers).
+# metal, gender: shown, except on a row that also stands for its other metals or genders.
+# verb: leads the name, the other words following it in brackets ("Chop a tree (dragon axe)").
+# place: a quest's or an area's code, shown in brackets at the end.
+# pose: shown only when no verb leads (a sit is already idle).
+# pose: shown only when no verb leads (a sit is already idle).
+# pose: shown only when no verb leads (a sit is already idle).
+# word: shown as written. A token not listed is shown in lower case.
+# A key of several tokens joined by _ is one phrase, matched longest first.
+# A key of several tokens joined by _ is one phrase, matched longest first.
+# A key of several tokens joined by _ is one phrase, matched longest first.
+HUMAN	drop
+PLAYER	drop
+PLAYERANIM	drop
+ANIM	drop
+EMOTE	drop
+QIP	drop
+NPC	drop
+WALKMERGE	drop
+NOREACHFORWARD	drop
+NOHELD	drop
+RESTART	drop
+NORESTART	drop
+PRIORITY	drop
+LOWPRIO	drop
+WITHSOUND	drop
+SILENT	drop
+LOUD	drop
+DELAYANIM	drop
+MERGE	drop
+NODELAY	drop
+NOSTALL	drop
+NOREPLACE	drop
+NOLOOP	drop
+PVN	drop
+UPDATE	drop
+CUTSCENE	drop
+MISC	drop
+BRONZE	metal	bronze
+IRON	metal	iron
+STEEL	metal	steel
+BLACK	metal	black
+WHITE	metal	white
+MITHRIL	metal	mithril
+ADAMANT	metal	adamant
+RUNE	metal	rune
+DRAGON	metal	dragon
+GILDED	metal	gilded
+CRYSTAL	metal	crystal
+INFERNAL	metal	infernal
+3A	metal	3rd age
+TRAILBLAZER	metal	trailblazer
+RELOADED	metal	reloaded
+LEAGUE	metal	league
+ZALCANO	metal	Zalcano
+BLURITE	metal	blurite
+SILVER	metal	silver
+AMETHYST	metal	amethyst
+INACTIVE	metal	inactive
+MALE	gender	male
+FEMALE	gender	female
+WOMAN	gender	female
+2H	word	two-handed
+F	word	forward
+B	word	back
+L	word	left
+R	word	right
+READY	pose	idle
+IDLE	pose	idle
+LOOP	drop
+LOOPED	drop
+LOOPING	drop
+WALK	word	walk
+RUN	word	run
+RUNNING	word	run
+TURN	word	turn
+TURNONSPOT	word	turn on the spot
+SIDESTEP	word	sidestep
+SIDESTEPL	word	sidestep left
+WALL	word	wall
+SPECIAL	word	special
+SPEC	word	special
+DEF	word	defend
+DEFEND	word	defend
+TRANSDEF	word	moving defend
+TRANSSLASH	word	moving slash
+TRANS	word	moving
+DDAGGER	word	dragon dagger
+DSPEAR	word	dragon spear
+DHSWORD	word	two-handed sword
+XBOWS	word	crossbow
+XBOW	word	crossbow
+UNARMEDPUNCH	word	punch
+UNARMEDKICK	word	kick
+UNARMEDBLOCK	word	block
+UNARMED	word	unarmed
+NO	word	no
+WITH	word	with
+AND	word	and
+TO	word	to
+ON	word	on
+OF	word	of
+THE	word	the
+A	word	a
+UP	word	up
+DOWN	word	down
+IN	word	in
+OUT	word	out
+OFF	word	off
+OVER	word	over
+INTO	word	into
+FROM	word	from
+AT	word	at
+THEN	word	then
+POH	word	house
+WOODCUTTING	verb	Chop a tree
+MINING	verb	Mine
+SMITHING	verb	Smith at an anvil
+FIRECOOKING	verb	Cook on a fire
+COOKING	verb	Cook
+FLETCHING	verb	Fletch
+CRAFTING	verb	Craft
+HERBING	verb	Make a potion
+HARPOON	verb	Fish with a harpoon
+LOBSTER	verb	Fish with a lobster pot
+LARGENET	verb	Fish with a big net
+SMALLNET	verb	Fish with a small net
+FISHING	verb	Fish
+PICKPOCKET	verb	Pick a pocket
+POTTERYWHEEL	verb	Throw a pot on the wheel
+SHEARING	verb	Shear a sheep
+CREATEFIRE	verb	Light a fire
+RUNECRAFT	verb	Craft runes
+PRAY	verb	Pray
+DIG	verb	Dig
+EAT	verb	Eat
+DRINK	verb	Drink
+SAPPHIRECUTTING	verb	Cut a sapphire
+EMERALDCUTTING	verb	Cut an emerald
+RUBYCUTTING	verb	Cut a ruby
+DIAMONDCUTTING	verb	Cut a diamond
+DRAGONSTONECUTTING	verb	Cut a dragonstone
+ONYXCUTTING	verb	Cut an onyx
+ZENYTECUTTING	verb	Cut a zenyte
+OPALCUTTING	verb	Cut an opal
+JADECUTTING	verb	Cut a jade
+REDTOPAZCUTTING	verb	Cut a red topaz
+AMETHYSTCUTTING	verb	Cut amethyst
+LIMESTONECUTTING	verb	Cut limestone
+SNAILSHELLCUTTING	verb	Cut a snail shell
+CASTTELEPORT	verb	Cast a teleport
+CASTSTRIKE	verb	Cast a strike spell
+CASTWAVE	verb	Cast a wave spell
+CASTCONFUSE	verb	Cast Confuse
+CASTWEAKEN	verb	Cast Weaken
+CASTCURSE	verb	Cast Curse
+CASTENFEEBLE	verb	Cast Enfeeble
+CASTSTUN	verb	Cast Stun
+CASTENTANGLE	verb	Cast Entangle
+CASTHEAL	verb	Cast a healing spell
+CASTZAP	verb	Cast a zap
+CASTIBANBLAST	verb	Cast Iban Blast
+CASTLOWLVLALCHEMY	verb	Cast Low Alchemy
+CASTHIGHLVLALCHEMY	verb	Cast High Alchemy
+CASTBONESTOBANANAS	verb	Cast Bones to Bananas
+CASTTELEGRAB	verb	Cast Telekinetic Grab
+CASTCRUMBLEUNDEAD	verb	Cast Crumble Undead
+CASTSUPERHEATITEM	verb	Cast Superheat Item
+CASTCHARGEORB	verb	Charge an orb
+ENCHANTAMULETLVL	verb	Enchant an amulet
+WGS	place	While Guthix Sleeps
+DS2	place	Dragon Slayer II
+SOTE	place	Song of the Elves
+DTTD	place	Death to the Dorgeshuun
+TOG	place	Tears of Guthix
+ANMA	place	Animal Magnetism
+MDAUGHTER	place	Mountain Daughter
+TBW	place	Tai Bwo Wannai
+TOA	place	Tombs of Amascut
+TOB	place	Theatre of Blood
+GODWARS	place	God Wars
+BARBASSAULT	place	Barbarian Assault
+II	place	Impetuous Impulses
+VM	place	Varlamore
+KR	place	Kourend
+NO_INFERNAL	metal
+GZ	drop
+FORESTRY	drop
+SAILING	word	sailing
+X	word	x
+SKILLCAPE	word	skill cape
+SKILLCAPES	word	skill cape
+BANNERREADY	word	banner idle
+BANNERWALK	word	banner walk
+BANNERTURNONSPOT	word	banner turn on the spot
+BANNERRUNNING	word	banner run
+HALBERDWALK	word	halberd walk
+HALBERDTURNONSPOT	word	halberd turn on the spot
+HALBERDRUNNING	word	halberd run
+WALKANDREADY	word	walk and idle
+STAFFREADY	word	staff idle
+TRANSREADY	word	moving idle
+TRANSWALK	word	moving walk
+WALK_F	word	walk forward
+WALK_B	word	walk back
+WALK_L	word	walk left
+WALK_R	word	walk right
+GET_UP	verb	Get up
+GETUP	verb	Get up
+SIT_TO_STAND	verb	Stand up
+READBOOK	verb	Read a book
+POSH	word	fancy
+TURNLEFT	word	turning the page left
+TURNRIGHT	word	turning the page right
+GETOUTBED	verb	Get out of bed
+GETINBED	verb	Get into bed
+TELECOPE	word	telescope
+WOM	word	Wise Old Man's
+USE	verb	Use
+SITTINGDOWN	verb	Sit
+SITTING	verb	Sit
+SIT	verb	Sit
+CHAIR	word	chair
+DININGCHAIRS	word	dining chair
+DH	word	Dharok's
+HM	word	hard mode
+WWF	word	toy
+ORN	word	ornament
+IBANS	word	Iban's
+PIPESQUEEZE	word	squeeze through a pipe
+PIPEUNSQUEEZE	word	come out of a pipe
+DOUBLEPIPESQUEEZE	word	squeeze through a double pipe
+LOGBALANCE	word	log balance
+OPENINGCHEST	verb	Open a chest
+OPENCHEST	verb	Open a chest
+CLOSECHEST	verb	Close a chest
+LOCKEDCHEST	verb	Try a locked chest
+OPENHEAVYCHEST	verb	Open a heavy chest
+OPENCUPBOARD	verb	Open a cupboard
+CLOSECUPBOARD	verb	Close a cupboard
+LOCKEDCUPBOARD	verb	Try a locked cupboard
+OPENHIGHCUPBOARD	verb	Open a high cupboard
+CLOSEHIGHCUPBOARD	verb	Close a high cupboard
+LOCKEDHIGHCUPBOARD	verb	Try a locked high cupboard
+OPENBIGCUPBOARD	verb	Open a big cupboard
+CLOSEBIGCUPBOARD	verb	Close a big cupboard
+LOCKEDBIGCUPBOARD	verb	Try a locked big cupboard
+OPENDOOR	verb	Open a door
+OPENDOORL	verb	Open a door to the left
+OPENDOORR	verb	Open a door to the right
+CLOSEDOORL	verb	Close a door to the left
+CLOSEDOORR	verb	Close a door to the right
+OPENDESERTDOOR	verb	Open a desert door
+GOTHROUGHDESERTDOOR	verb	Go through a desert door
+CRYSTALBALL	word	crystal ball
+SPEARTRAP	word	spear trap
+TOADCANNON	word	toad cannon
+ZAMORAKSPEAR	word	Zamorak spear
+ZAMORAKSPEAR_WALKRIGHT	word	Zamorak spear walk right
+ZAMORAKSPEAR_WALKLEFT	word	Zamorak spear walk left
+AGILITYARENA	word	Agility Arena
+HUNTINGBOLTS	word	hunting bolts
+SPINNINGWHEEL	verb	Spin on a wheel
+BUTTERFLYNET	word	butterfly net
+BUTTERFLYNET_SWING	verb	Swing a butterfly net
+BOTTOMLESSBUCKET	word	bottomless bucket
+PLANTPOT	word	plant pot
+USELOOM	verb	Use a loom
+ELECTRICSHOCK	word	electric shock
+LOWWALL	word	low wall
+PICKUPTROLLWEISS	verb	Pick up trollweiss
+TWOCATS	word	two cats
+SPIKEDVAMBRACES	word	spiked vambraces
+JUMPDOWN	word	jump down
+ROPESWING	verb	Swing on a rope
+THROWROPE	verb	Throw a rope
+WOBBLEANDFALL	word	wobble and fall
+SWINGINGBOULDERTRAP	word	swinging boulder trap
+FALLL	word	fall left
+COMBATRING	word	combat ring
+FARMERSFORK	word	farmer's fork
+TKNIVES	word	throwing knives
+TKNIFE	word	throwing knife
+TAXE	word	throwing axe
+DHUNTER	word	dragon hunter
+DINHS	word	Dinh's
+CASTING	word	casting
+SPELLCAST	verb	Cast a spell
+CAST	verb	Cast a spell
+CAST2	verb	Cast a spell
+TELE	word	teleport
+TELE_BLOCK	word	Tele Block
+SMOKEPUFF	word	smoke puff
+FISHSIZE	verb	Measure a fish
+MACHETTE	word	machete
+DWH	word	dragon warhammer
+UPASS	place	Underground Pass
+ONSPOT	word	on the spot
+FISH_ONSPOT	verb	Wait for a bite
+FISHING_ONSPOT	verb	Wait for a bite
+FISHING_CASTING	verb	Cast a fishing rod
+CHOMPYBIRD	word	chompy bird
+OGREBELLOWS	word	ogre bellows
+ENCHANTTALISMAN	verb	Enchant a talisman
+CAST_ENCHANTRING	verb	Enchant a ring
+CANOEING_CARVE	verb	Carve a canoe
+CANOEING	word	canoe
+BRUT	word	barbarian
+WOODCRAFTING	verb	Carve wood
+TRAWLER	place	Fishing Trawler
+TRAWLER_HACK	verb	Hack at the trawler net
+HACK	word	hack
+CAMPFIRE_BURNING	verb	Tend a campfire
+OAK	metal	oak
+WILLOW	metal	willow
+MAPLE	metal	maple
+YEW	metal	yew
+TEAK	metal	teak
+MAHOGANY	metal	mahogany
+REDWOOD	metal	redwood
+ACHEY	metal	achey
+ARCTIC_PINE	metal	arctic pine
+IRONWOOD	metal	ironwood
+JATOBA	metal	jatoba
+ROSEWOOD	metal	rosewood
+CAMPHOR	metal	camphor
+BLISTERWOOD	metal	blisterwood
+GENERIC	drop
+TREE_LOGS	word	logs
+LOGS	word	logs
+LOG	word	logs
+PLAYHORSEY	verb	Play with a toy horsey
+BROWN	metal	brown
+GREY	metal	grey
+BLUE	metal	blue
+GREEN	metal	green
+RED	metal	red
+YELLOW	metal	yellow
+ORANGE	metal	orange
+BEIGE	metal	beige
+DARKGREEN	metal	dark green
+POWDERGREY	metal	powder grey
+THROW_PUMPKIN	verb	Throw a pumpkin
+THROW_EGG	verb	Throw an egg
+THROW_HOOP	verb	Throw a hoop
+THROW_DART	verb	Throw a dart
+THROW_ARROW	verb	Throw an arrow
+PLAY_WITH_PET_FISH	verb	Play with a pet fish
+FEED_PET_FISH	verb	Feed a pet fish
+TALK_TO_PET_FISH	verb	Talk to a pet fish
+SPINE	metal	spine
+MAYOR	metal	mayor
+PLAY_SHELL	verb	Play a shell
+PLAY	verb	Play
+WALL_BEAST	word	wall beast
+SPECIALATTACK	word	special attack
+STUMBLE_AND_HANG	word	stumble and hang
+STUMBLE_BACK	word	stumble back
+STUMBLE	word	stumble
+HANG	word	hang
+DRINK_FROM_TEACUP	verb	Sip from a teacup
+DRINK_FROM_VIAL	verb	Drink from a vial
+CLAY	metal	clay
+CHINA	metal	china
+GILTCHINA	metal	gilt china
+DRINK_RUM	verb	Drink rum
+DRINK_RED_RUM	verb	Drink red rum
+DRINK_BLUE_RUM	verb	Drink blue rum
+EAT_BANANA	verb	Eat a banana
+SIT_EAT	verb	Eat sitting down
+DIAG	word	diagonal
+DIAGONAL	word	diagonal
+PICKUPFLOOR	verb	Pick something up
+PICKUPTABLE	verb	Take something from a table
+REACHFORLADDER	verb	Reach for a ladder
+REACHFORLADDERTOP	verb	Reach for the top of a ladder
+LEVERDOWN	verb	Pull a lever down
+LEVERUP	verb	Push a lever up
+PULL_LEVER	verb	Pull a lever
+BOXLEVER	verb	Pull a box lever
+WALK_STYLE	word	walk with style
+WALK_CRUMBLEDWALL	verb	Walk over a crumbled wall
+WALK_FENCE_NORTH	verb	Walk along a fence
+WALK_LOGBALANCE	verb	Balance on a log
+WALK_TANKARD	word	tankard walk
+STEPPINGSTONEJUMP	verb	Jump across stepping stones
+JUMP_STONES	verb	Jump across stones
+JUMP_HURDLE	verb	Jump a hurdle
+SPOT_JUMP	verb	Jump on the spot
+LONGJUMP	verb	Make a long jump
+MONKEYBARS	word	monkey bars
+INTO_SIDESTEP	word	step aside
+INTO_SIDESTEPL	word	step aside left
+OUTOF_SIDESTEP	word	step back in
+OUTOF_SIDESTEPL	word	step back in from the left
+WALK_SIDESTEP	word	sidestep
+WALK_SIDESTEPL	word	sidestep left
+READY_SIDESTEP	word	sidestep idle
+READY_SIDESTEPL	word	sidestep left idle
+SIDESTEP_FALL	word	sidestep fall
+SIDESTEP_FALLL	word	sidestep fall left
+LEDGE_ON_LEFT	word	step onto a ledge left
+LEDGE_OFF_LEFT	word	step off a ledge left
+LEDGE_ON_RIGHT	word	step onto a ledge right
+LEDGE_OFF_RIGHT	word	step off a ledge right
+LEDGE_WALK_LEFT	word	ledge walk left
+LEDGE_WALK_RIGHT	word	ledge walk right
+GNOME_TACKLE	word	gnome ball tackle
+THROW_GNOMEBALL	verb	Throw a gnome ball
+REAL_SWIMMING	word	swimming
+SWIM	verb	Swim
+WADING	verb	Wade
+CRAWLING	verb	Crawl
+CRAWL	verb	Crawl
+LONGCRAWL	verb	Crawl a long way
+CRAWLING_LONG	verb	Crawl a long way
+CLIMBING	verb	Climb
+CLIMBING_DOWN	verb	Climb down
+CLIMBING_FALL	verb	Fall while climbing
+CLIMB_TRELLIS	verb	Climb a trellis
+PICK_WALL	verb	Pick a wall
+PICKLOCK	verb	Pick a lock
+FORCELOCK	verb	Force a lock
+CAGEDOOR	word	cage door
+INWATER	word	in water
+DEATH_BACKWARDS	word	death falling backwards
+TRANSDEATH	word	death while moving
+DEATH	word	death
+DEAD	word	dead
+FALL_FROM_SKY	verb	Fall from the sky
+FALL_AND_GET_UP	verb	Fall and get up
+FALLING	verb	Fall
+FALL	word	fall
+KNOCKDOWN	verb	Get knocked down
+STUNNED	verb	Stand stunned
+UNCONSCIOUS	word	unconscious
+BLOWN	word	blown back
+BLOWN_START	verb	Get blown back
+BLOWN_MIDDLE	verb	Fly back
+BLOWN_END	verb	Land after being blown back
+BLOWN_END_GETUP	verb	Land and get up
+TROLL_FLYBACK	verb	Get knocked flying
+MM_FLYBACK	verb	Get knocked flying
+WOODCUTTING_DEMONIC_PACT	verb	Chop a tree (demonic pact)
+MINING_DEMONIC_PACT	verb	Mine (demonic pact)
+PRETTY	word	fancy
+HET	word	Het
+CHOPPING	verb	Chop
+CHOP	word	chop
+AXE	word	axe
+PICKAXE	word	pickaxe
+PICKAXE_POWER_SWING	verb	Swing a pickaxe hard
+HAMMER_HIT	verb	Hit with a hammer
+HAMMER	word	hammer
+IMCANDO	word	Imcando
+POH_BUILD	verb	Build
+POH_BUILD_FLOOR	verb	Build on the floor
+POH_BUILD_WALL	verb	Build on a wall
+FLETCHING_ADD_BOLT_FEATHERS	verb	Feather bolts
+FLETCHING_ADD_BOLT_TIPS	verb	Tip bolts
+FLETCHING_ADD_DART_FEATHERS	verb	Feather darts
+FLETCHING_ADD_ARROW_TIPS	verb	Tip arrows
+FLETCHING_ADD_FEATHER	verb	Feather arrow shafts
+STRINGING	verb	String a bow
+SHIELD_CRAFTING	verb	Craft a shield
+DHIDE	word	dragonhide
+BATTLESTAFF_CRAFTING	verb	Make a battlestaff
+LEATHER_CRAFTING	verb	Sew leather
+CUTTING	verb	Cut
+CUTTING_KNIFE	verb	Cut with a knife
+KNIFE_CHOP	verb	Chop with a knife
+KNIFE_SLASH	verb	Slash with a knife
+FARMING	verb	Farm
+PRUNING	verb	Prune
+PICKING	verb	Pick
+BREWING	verb	Brew
+BIRDHOUSE	word	bird house
+BIRDHOUSE_MAKE	verb	Make a bird house
+HUNTING	verb	Hunt
+NOOSE	word	noose
+LAYTRAP	verb	Lay a trap
+HUNTING_DISMANTLE_NET	verb	Take down a net trap
+MILK	verb	Milk
+MILKIT	verb	Milk a cow
+GLASSBLOWING	verb	Blow glass
+FURNACE	verb	Smelt at a furnace
+APPLECRUSH	verb	Crush apples
+COLLECT_SAP	verb	Collect sap
+GRAPE_STOMP	verb	Stomp grapes
+MAKE_WINE	verb	Make wine
+WINE_JUG_POUR	verb	Pour from a wine jug
+POUR_POT	verb	Pour a pot
+SCULPT_CLAY	verb	Sculpt clay
+CLAY_STITCHING	verb	Stitch clay
+FILLBUCKET_SANDPIT	verb	Fill a bucket with sand
+SHOVEL_COKE	verb	Shovel coke
+BULLROARER	verb	Swing a bullroarer
+MAPPING	verb	Draw a map
+JUGGLING	verb	Juggle
+DANCING	verb	Dance
+CHICKEN_DANCE	verb	Do the chicken dance
+RUBBER_CHICKEN	word	rubber chicken
+SKIPPING	verb	Skip
+SKI	word	ski
+APE	word	ape
+FALCONER	word	falconer
+MOONCLAN	word	Moon Clan
+SALAMANDER	word	salamander
+CHINCHOMPA	word	chinchompa
+FUNGICIDE_PUMP	word	fungicide spray
+ELDER_MAUL	word	elder maul
+DINHS_BULWARK	word	Dinh's bulwark
+CARROT_SWORD	word	carrot sword
+NIGHTMARE_STAFF	word	Nightmare staff
+SPELLSPEAR	word	spell spear
+WEAPONS	drop
+WEAPON	drop
+BLUNT	word	blunt weapon
+STAKE	verb	Stake
+TRANSFORM	verb	Transform
+CHANGE_INTO_FROG	verb	Turn into a frog
+FROG_KISS	verb	Kiss a frog
+LIGHT_TORCH	verb	Light a torch
+USE_INSECT_REPELLANT	verb	Use insect repellent
+EGG_ROLL	verb	Roll an egg
+SHRINK	verb	Shrink
+LEVITATE	verb	Levitate
+FADE_OUT	verb	Fade out
+FADE_IN	verb	Fade in
+WALK_APPEAR	verb	Walk into view
+TURN_IRON_WINCH	verb	Turn an iron winch
+INHALE_PUFFERFISH	verb	Inhale a pufferfish
+FAIL_PUFFERFISH	verb	Fail with a pufferfish
+GENI	word	genie
+GENI_BOWING	verb	Bow like a genie
+PUSH	verb	Push
+SQUEEZE	verb	Squeeze through
+ROCKFALL	verb	Get hit by falling rocks
+WHIRLPOOL	verb	Get caught in a whirlpool
+SPRINGTRAP	verb	Set off a spring trap
+DROWNING	verb	Drown
+TACKLED	verb	Get tackled
+SUSPECTING	word	suspicious
+WIPE_HEAD	verb	Wipe your brow
+STRAIGHTEN_UP	verb	Straighten up
+PICKUPFLOOR_AND_WAVE	verb	Pick something up and wave
+CUT_FOOD	verb	Cut food
+REPAIRKIT	verb	Use a repair kit
+CRATE_SQUAT	verb	Squat by a crate
+CRATE_SURVEY	verb	Look over a crate
+QUETZAL_HEADPAT	verb	Pat a quetzal's head
+QUETZAL_WHISTLE	verb	Whistle for a quetzal
+QUETZAL_TAME	verb	Tame a quetzal
+CHAIR_SIT_READY	verb	Sit
+CHAIR_READY	verb	Sit
+CHAIR_SIT	verb	Sit
+CHAIR_EAT	verb	Eat at a table
+CHAIR_GET_UP	verb	Get up from a chair
+CHAIR_1	metal	chair 1
+CHAIR_2	metal	chair 2
+CHAIR_3	metal	chair 3
+CHAIR_4	metal	chair 4
+CHAIR_5	metal	chair 5
+CHAIR_6	metal	chair 6
+CHAIR_7	metal	chair 7
+DININGCHAIRS_1	metal	dining chair 1
+DININGCHAIRS_2	metal	dining chair 2
+DININGCHAIRS_3	metal	dining chair 3
+DININGCHAIRS_4	metal	dining chair 4
+DININGCHAIRS_5	metal	dining chair 5
+DININGCHAIRS_6	metal	dining chair 6
+DININGCHAIRS_7	metal	dining chair 7
+THRONE_1	metal	throne 1
+THRONE_2	metal	throne 2
+THRONE_3	metal	throne 3
+THRONE_4	metal	throne 4
+THRONE_5	metal	throne 5
+THRONE_6	metal	throne 6
+THRONE_7	metal	throne 7
+THRONE_8	metal	throne 8
+STOOL_1	metal	stool 1
+STOOL_2	metal	stool 2
+ROCKING_CHAIR_3	metal	rocking chair
+GARDEN_BENCH_GNOME	metal	gnome bench
+GARDEN_BENCH_MARBLE	metal	marble bench
+GARDEN_BENCH_OBSIDIAN	metal	obsidian bench
+GARDEN_BENCH_TEAK	metal	teak bench
+DELAYOFFSET	drop
+STAFFORB	word	orb staff
+MYQ	place	Myreque
+EXPLODINGVIAL	word	exploding vial
+MINDTRICK	word	mind trick
+WALKFORWARD	word	walk forward
+WALKOTHER	word	walk
+WALKL	word	walk left
+WALKR	word	walk right
+STEPLEFT	word	step left
+STEPRIGHT	word	step right
+KANDARIN	word	Kandarin
+PIZZAOVEN	word	pizza oven
+TOOLRACK	word	tool rack
+WINDCHIMES	word	wind chimes
+HILLSLIDE	word	hill slide
+ROOFCOLLAPSE	word	roof collapse
+HITANDSTUMBLE	word	hit and stumble
+LOGFALL	word	log fall
+DARTDUCK	word	dart duck
+SPIKEDBACK	word	spiked back
+DODGE	verb	Dodge
+RF_A	word	1
+RF_B	word	2
+RF_C	word	3
+RF_D	word	4
+RF_E	word	5
+RF_F	word	6
+UNFERTH	word	Unferth
+ARMADYLEAN	word	Armadylean
+SELFIMBUE	word	self imbue
+VILEVIGOUR	word	vile vigour
+SHADOWVEIL	word	shadow veil
+WITHSTAFF	word	with a staff
+GIANTSOUL	word	giantsoul
+SARA	word	Saradomin
+ZAM	word	Zamorak
+GUTHIX	word	Guthix
+ZOMBIE_WALK	verb	Walk like a zombie
+SHEARING_UNFERTH	verb	Shear a sheep (Unferth)
+INQUISITORS	word	inquisitor's
+OSMUMTENS	word	Osmumten's
+POTTERYOVEN	verb	Fire pottery in an oven
+ULTRACOMPOST	verb	Make ultracompost
+APOTHECARY_CREATE_POTION	verb	Make a potion at the apothecary
+MAGICTRAINING	word	Magic Training Arena
+MYQ_3	place	Myreque
+MYQ_4	place	Myreque
+MYQ_5	place	Myreque
+MYQ_6	place	Myreque
+VMQ_3	place	Varlamore
+VMQ_4	place	Varlamore
+HIGHPRIORITY	drop

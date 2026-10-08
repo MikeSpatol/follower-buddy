@@ -75,6 +75,13 @@ public final class Outfit
 	private final int[] colors = new int[5];
 	private int gender;
 
+	/**
+	 * The slots that hold an animation's own hand props, a bit per slot index.
+	 * The game lays an animation's hand items over the gear once the gear has
+	 * settled what it covers, so nothing hides them and they hide nothing.
+	 */
+	private int props;
+
 	public Outfit()
 	{
 	}
@@ -180,6 +187,22 @@ public final class Outfit
 		equipment[slot.getIndex()] = 0;
 	}
 
+	/**
+	 * An animation's hand prop in a slot, drawn as the game draws one: over the
+	 * gear, whatever the gear covers, and covering nothing itself.
+	 */
+	public void setProp(KitType slot, int itemId)
+	{
+		setItem(slot, itemId);
+		props |= 1 << slot.getIndex();
+	}
+
+	/** Whether the slot holds an animation's hand prop. */
+	public boolean isProp(KitType slot)
+	{
+		return (props & 1 << slot.getIndex()) != 0;
+	}
+
 	public boolean isItem(KitType slot)
 	{
 		return equipment[slot.getIndex()] >= ITEM_OFFSET;
@@ -229,6 +252,7 @@ public final class Outfit
 		System.arraycopy(other.equipment, 0, equipment, 0, SLOTS);
 		System.arraycopy(other.colors, 0, colors, 0, colors.length);
 		gender = other.gender;
+		props = other.props;
 	}
 
 	/**
@@ -291,7 +315,9 @@ public final class Outfit
 			return false;
 		}
 		Outfit other = (Outfit) o;
+		// A prop shows where the same item worn might be hidden, so it is another model.
 		return gender == other.gender
+			&& props == other.props
 			&& Arrays.equals(equipment, other.equipment)
 			&& Arrays.equals(colors, other.colors);
 	}
@@ -299,7 +325,7 @@ public final class Outfit
 	@Override
 	public int hashCode()
 	{
-		return 31 * (31 * Arrays.hashCode(equipment) + Arrays.hashCode(colors)) + gender;
+		return 31 * (31 * (31 * Arrays.hashCode(equipment) + Arrays.hashCode(colors)) + gender) + props;
 	}
 
 	@Override

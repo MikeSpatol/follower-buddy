@@ -2134,6 +2134,49 @@ rockslug". Three landmarks could never be read and are dropped: "Noticeboard"
 and "Portrait" exist only as wall decorations, which the landmark scan never
 looks at, and the game has no "Sundial".
 
+## Posing list - BUILT from the cache (2026-10-08)
+
+The Advanced posing window lists every animation that moves the player's
+skeleton, 3,957 of them, from `src/main/resources/com/follower/poses.tsv`:
+
+```bash
+cd tools/cache-dumper && gradlew runPoseCatalog
+cd tools/cache-dumper && gradlew runPoseCatalog --args="--check"
+```
+
+`PoseCatalog` reads each animation's skeleton (the head of its first frame
+archive; anything not on skeleton 0 is left out), its frame step, its last
+frame's length and what it puts in each hand, and names it in three tiers:
+A by hand in `tools/cache-dumper/poses/names.tsv` (the emotes, skill capes,
+reading, sitting and the like), B from Jagex's gameval names through the
+words in `poses/words.tsv`, with the metal tiers of one tool and the male and
+female copies of one move merged into one row, and C, everything else, shown
+only under Show all. Rows that would read the same in the window are numbered
+(2), (3) whatever their tiers, the named row keeping its name. A row is held
+when the game loops it or names it a stance (READY, IDLE), unless its last
+frame lasts a minute or more: the 57 deaths and knockdowns are played once.
+Graphics are paired only where Jagex's names or the cache pair them
+(`PoseCatalog.GRAPHICS`, each checked by name): the names pair all but the
+Trick emote's bats, whose graphic's own animation, 10504, is numbered just
+after the emote, and `CACHE_PAIRED` has that checked against the cache too.
+
+`--check` tests the shipped file against the cache after a game update, and
+so does `gradlew test` in `tools/cache-dumper`, which skips without a local
+cache. Run one of them before a release: the plugin's own tests cannot read
+the cache, so they cannot tell an animation on the player's skeleton from a
+creature's that would twist the follower out of shape.
+
+The hands are read again at runtime, from the loaded animation: -1 keeps what
+the hand holds, -512 empties it, anything else is the item. The left hand is
+the shield slot and the right the weapon slot, whatever the item is worn as;
+the film's pose dresses the follower that way in place of the emote disarm,
+and the model is rebuilt before the pose starts. The props are laid over the
+gear as the game lays them (`Outfit.setProp`), so no item's wearPos hides
+them: a felling axe hides the shield slot when worn, and the two-handed chop
+holds its axe in that slot. A held pose only shows while the follower stands,
+so its props come off when it sets off on a Send or a Follow me and go back
+on where it stops (`FilmSet.frame`, each frame).
+
 ## Known limitations
 
 These are inherent to the approach, not bugs to be filed:
@@ -2151,7 +2194,7 @@ These are inherent to the approach, not bugs to be filed:
   RuneLite's GameTick event instead of per-frame inference - one observation
   per genuine server tick would replace the "3-4 tiles = 2 ticks" heuristics
   with ground truth, and is the likeliest route to an exact-feel follower.
-- **Pose animations come from observation, and cannot come from anywhere else.**
+- **Pose animations come from observation, and cannot come from the cache.**
   `StanceLibrary` learns a weapon's idle/walk/run (and now its attack) by watching
   real players. This is not laziness - it was measured. Weapon animations are **not**
   in the cache as data: item params hold the combat stat block, item `category`
@@ -2160,12 +2203,31 @@ These are inherent to the approach, not bugs to be filed:
   equip time. Both probes are kept as `gradlew runProbe` and `runStructProbe` in
   `tools/cache-dumper` so the conclusion can be re-tested after a game update.
 
+  The shipped library is built from observation too, ours and someone else's.
+  `gradlew runStanceMerge --args="--war <checkout>"` in `tools/cache-dumper`
+  merges the learned `stances.json` with Weapon Animation Replacer's sets and the
+  pose tuples its author recorded in game (BSD-2-Clause, credited in
+  `THIRD-PARTY-NOTICES.md`), checks every id against the cache's player skeleton,
+  and writes `stances.json` and `attack-kinds.json` into the resources plus
+  `docs/weapon-stance-sources.md`, the list of disagreements worth a look in game.
+  Learned poses win; Weapon Animation Replacer's swings win over learned ones,
+  which include blocks and spell casts filed as attacks. Only what this install
+  learns is saved back, so a fix to the shipped data is never hidden by an old
+  copy of it: a swing seen with a weapon carried as shipped is saved without the
+  poses, and on load any learned poses that match the shipped ones are dropped.
+  The first load that trims the learned file keeps it as it was in
+  `stances.json.pre-split`; an older build rolled back to needs that renamed
+  over `stances.json`, since its own smaller library would otherwise forget
+  every weapon the trim took out.
+
   Three things make observation cheap in practice. A starter library ships in the
-  jar, so a fresh install already knows ~190 weapons. Every player in the scene
+  jar, so a fresh install already knows about 1,060 weapons. Every player in the scene
   teaches passively - a few minutes anywhere busy fills it out. And weapons cluster
-  hard: those 190 weapons collapse into just **32 stance classes**, two of which
-  cover 69% of them, so an unknown weapon's attack can be borrowed from a weapon of
-  the same class. Seeing one scimitar swung covers every scimitar in the game.
+  hard: the shipped weapons collapse into just **70 stance classes**, two of which
+  cover 71% of them, so an unknown weapon's attack can be borrowed from a weapon of
+  the same class. Seeing one whip swung covers every whip in the game. The bigger
+  of those two classes is the exception: it is the plain human stance, which lends
+  no swing (see below).
 
   Variant markers are stripped generally rather than from a known list. The list
   rotted silently - it knew `(p)` but not `(kp)`, so every karambwan-poisoned
@@ -2192,11 +2254,14 @@ These are inherent to the approach, not bugs to be filed:
   refused outright when either weapon's style can't be established. Poses have no
   such problem: the class *is* the carry, which is why they borrow freely.
 
-  Note that attacks start empty - the shipped library carries stances only, since
-  attacks are learned from players seen swinging while interacting, and only a
-  weapon actually used in combat records one. Until a class has been seen fighting,
-  its weapons fall back to a generic swing for their combat style.
-  `::follower stanceaudit` reports exactly where that stands.
+  The shipped library carries attacks as well: a swing for each kind of blow,
+  stab, slash and crush, from Weapon Animation Replacer, and the game's own combat
+  tab table says which kind the player's chosen style deals, so the follower
+  throws the same kind of blow with its own weapon. The plain human class
+  (HUMAN_READY, HUMAN_WALK_F, HUMAN_RUNNING by Jagex's names) never lends a swing,
+  since every one-handed weapon type shares it, and a real weapon never gets the
+  unarmed punch. A weapon nothing is known about falls back to a generic swing
+  for its combat style. `::follower stanceaudit` reports exactly where that stands.
 
   There is deliberately no setting for this. Three per-style attack pickers used to
   exist and were removed once the library could match the animation to the weapon in

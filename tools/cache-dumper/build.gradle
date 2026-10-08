@@ -17,6 +17,18 @@ dependencies {
     implementation group: 'net.runelite', name: 'cache', version: 'latest.release'
     implementation 'com.google.code.gson:gson:2.10.1'
     implementation 'org.slf4j:slf4j-simple:1.7.36'
+    // For ItemVariationMapping only: the stance merge expands a weapon to its
+    // variants exactly the way Weapon Animation Replacer does, with RuneLite's
+    // own variation table. Its gson and guava are already here via the cache.
+    implementation(group: 'net.runelite', name: 'client', version: 'latest.release') {
+        transitive = false
+    }
+    // Jagex's own animation names (gameval), which mark the blocks, specials
+    // and spell casts. The cache library only has this at runtime.
+    implementation group: 'net.runelite', name: 'runelite-api', version: 'latest.release'
+    // PoseCatalogTest checks the shipped posing list against this machine's
+    // game cache, as runPoseCatalog --check does, and skips without one.
+    testImplementation 'junit:junit:4.13.2'
 }
 
 java {
@@ -152,4 +164,37 @@ tasks.register('runWeaponAnims', JavaExec) {
     description = 'Prints item params and category for named weapons'
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'com.follower.tools.WeaponAnimProbe'
+}
+
+// Rebuilds the shipped stance library from the sources the plugin may ship:
+// the stances this plugin has learned, Weapon Animation Replacer's data
+// (BSD-2-Clause, credited in THIRD-PARTY-NOTICES.md) and the game cache. It
+// writes src/main/resources/com/follower/stances.json and attack-kinds.json,
+// and lists what needs a look in game in docs/weapon-stance-sources.md.
+//   gradlew runStanceMerge --args="--war <weapon-animation-replacer checkout>"
+tasks.register('runStanceMerge', JavaExec) {
+    group = 'build'
+    description = 'Merges learned stances, Weapon Animation Replacer data and the cache into the bundle'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.follower.tools.StanceMerge'
+    workingDir = file('../..')
+}
+
+// The Advanced posing window's list: every animation on the player's
+// skeleton, with its loop, the item in each hand and a paired graphic, named
+// from tools/cache-dumper/poses and Jagex's gameval names. Writes
+// src/main/resources/com/follower/poses.tsv; --check tests the shipped list
+// against the cache after a game update.
+//   gradlew runPoseCatalog [--args="--check"]
+tasks.register('runPoseCatalog', JavaExec) {
+    group = 'build'
+    description = 'Builds the posing window list from the cache and gameval names'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.follower.tools.PoseCatalog'
+    workingDir = file('../..')
+}
+
+// The tests read the shipped files from the repository root, as the tools do.
+tasks.named('test') {
+    workingDir = file('../..')
 }

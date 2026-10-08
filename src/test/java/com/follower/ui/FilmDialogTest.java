@@ -1,24 +1,32 @@
 package com.follower.ui;
 
+import com.follower.follower.FilmSet;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
- * The film window's typed lines, and its one door to the follower.
+ * The film window's pose list, its typed lines, and its one door to the
+ * follower.
  *
- * <p>A line the game's overhead font cannot draw is refused before it is
- * said, and a long one is said with a warning, since overhead text never
- * wraps. The window itself cannot be built headless, so the threading it
- * promises is read out of its source, as LifecycleGlueTest reads the
- * plugin's.
+ * <p>The list narrows to a search, a group and, unless Show all is ticked,
+ * the named poses. A line the game's overhead font cannot draw is refused
+ * before it is said, and a long one is said with a warning, since overhead
+ * text never wraps. The window itself cannot be built headless, so the
+ * threading it promises is read out of its source, as LifecycleGlueTest
+ * reads the plugin's.
  */
 public class FilmDialogTest
 {
@@ -49,6 +57,67 @@ public class FilmDialogTest
 		assertEquals("Said. At 81 characters it may run off the screen: overhead text never wraps.",
 			FilmDialog.done("Said.", longer));
 		assertNull("warned, not refused", FilmDialog.refusal(longer));
+	}
+
+	@Test
+	public void theSearchFindsEveryWordOfANameOrAnId()
+	{
+		List<FilmSet.Pose> found = FilmDialog.filter(FilmSet.POSES, "  Book READ ", FilmDialog.ALL_GROUPS, false);
+		assertTrue(ids(found).contains(1350));
+		for (FilmSet.Pose pose : found)
+		{
+			String name = pose.name.toLowerCase();
+			assertTrue(pose.name, name.contains("book") && name.contains("read"));
+		}
+		assertEquals(Collections.singletonList(4751),
+			ids(FilmDialog.filter(FilmSet.POSES, "4751", FilmDialog.ALL_GROUPS, false)));
+		assertTrue(FilmDialog.filter(FilmSet.POSES, "no pose is called this", FilmDialog.ALL_GROUPS, true).isEmpty());
+	}
+
+	@Test
+	public void aGroupNarrowsTheListToItself()
+	{
+		List<FilmSet.Pose> capes = FilmDialog.filter(FilmSet.POSES, "", "Skill capes", false);
+		assertTrue(ids(capes).containsAll(Arrays.asList(4959, 4961, 7121)));
+		for (FilmSet.Pose pose : capes)
+		{
+			assertEquals(pose.name, "Skill capes", pose.group);
+		}
+		assertTrue("nothing to read in the capes", FilmDialog.filter(FilmSet.POSES, "book", "Skill capes", true).isEmpty());
+	}
+
+	@Test
+	public void showAllAddsTheRestAndOnlyThat()
+	{
+		List<FilmSet.Pose> named = FilmDialog.filter(FilmSet.POSES, "", FilmDialog.ALL_GROUPS, false);
+		for (FilmSet.Pose pose : named)
+		{
+			assertTrue(pose.name + " is only for Show all", pose.tier != 'C');
+		}
+		assertTrue(named.size() > 1000);
+		assertEquals(FilmSet.POSES, FilmDialog.filter(FilmSet.POSES, "", FilmDialog.ALL_GROUPS, true));
+		assertFalse("a jaguar's death is not offered first",
+			ids(FilmDialog.filter(FilmSet.POSES, "jaguar death", FilmDialog.ALL_GROUPS, false)).contains(10849));
+		assertTrue(ids(FilmDialog.filter(FilmSet.POSES, "jaguar death", FilmDialog.ALL_GROUPS, true)).contains(10849));
+	}
+
+	@Test
+	public void aRowSaysWhetherItHoldsAndWhetherItHoldsSomething()
+	{
+		assertEquals("Read a book  [hold]  [prop]", FilmDialog.row(FilmSet.pose(1350)));
+		assertEquals("Wave  [once]", FilmDialog.row(FilmSet.pose(863)));
+		assertEquals("a snowball the game draws nothing for is no prop",
+			"Throw a snowball  [once]", FilmDialog.row(FilmSet.pose(5063)));
+	}
+
+	private static List<Integer> ids(List<FilmSet.Pose> poses)
+	{
+		List<Integer> out = new ArrayList<>();
+		for (FilmSet.Pose pose : poses)
+		{
+			out.add(pose.id);
+		}
+		return out;
 	}
 
 	@Test

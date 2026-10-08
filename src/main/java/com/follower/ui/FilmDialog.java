@@ -5,12 +5,17 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridLayout;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -20,6 +25,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
 
@@ -77,6 +84,9 @@ public class FilmDialog extends JDialog
 	/** Past this a line may run off the screen: the game never wraps overhead text. */
 	static final int LONG_LINE = 80;
 
+	/** The group dropdown's first choice, which leaves every group in. */
+	static final String ALL_GROUPS = "All groups";
+
 	/** The compass, as it sits on the grid, with each point's actor orientation. */
 	private static final String[] POINTS = {"NW", "N", "NE", "W", "Me", "E", "SW", "S", "SE"};
 	private static final int[] ORIENTATIONS = {768, 1024, 1280, 512, -1, 1536, 256, 0, 1792};
@@ -85,6 +95,12 @@ public class FilmDialog extends JDialog
 	private final Consumer<Runnable> clientThread;
 	private final JLabel status = new JLabel(" ");
 	private final JTextField customId = new JTextField(6);
+	private final JTextField search = new JTextField();
+	private final JComboBox<String> group = new JComboBox<>();
+	private final JCheckBox showAll = new JCheckBox("Show all");
+	private final DefaultListModel<String> rows = new DefaultListModel<>();
+	/** The poses the list shows now, row for row. */
+	private List<FilmSet.Pose> shown = new ArrayList<>();
 
 	/**
 	 * @param clientThread runs a task on the client thread
@@ -141,7 +157,7 @@ public class FilmDialog extends JDialog
 		root.add(lines, BorderLayout.SOUTH);
 
 		setContentPane(root);
-		setPreferredSize(new Dimension(600, 640));
+		setPreferredSize(new Dimension(680, 720));
 		pack();
 		setLocationRelativeTo(null);
 	}
@@ -178,23 +194,76 @@ public class FilmDialog extends JDialog
 		});
 	}
 
-	/** The pose list, Again and Stand normally, Copy my emote and the custom id. */
+	/**
+	 * The pose list with its search, group and Show all, then Again and Stand
+	 * normally, Copy my emote and the custom id.
+	 */
 	private JPanel poses()
 	{
 		JPanel panel = column();
 		panel.add(heading("POSE"));
 
-		String[] rows = new String[FilmSet.POSES.size()];
-		for (int i = 0; i < rows.length; i++)
+		search.setToolTipText("Find a pose by its name or its animation id");
+		search.getDocument().addDocumentListener(new DocumentListener()
 		{
-			FilmSet.Pose pose = FilmSet.POSES.get(i);
-			rows[i] = pose.name + (pose.hold ? "  [hold]" : "  [once]");
+			@Override
+			public void insertUpdate(DocumentEvent e)
+			{
+				refilter();
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e)
+			{
+				refilter();
+			}
+
+			@Override
+			public void changedUpdate(DocumentEvent e)
+			{
+				refilter();
+			}
+		});
+		JPanel find = new JPanel(new BorderLayout(6, 0));
+		find.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		find.setAlignmentX(LEFT_ALIGNMENT);
+		find.setMaximumSize(new Dimension(Integer.MAX_VALUE, 26));
+		JLabel findLabel = new JLabel("Find");
+		findLabel.setFont(FontManager.getRunescapeSmallFont());
+		findLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+		find.add(findLabel, BorderLayout.WEST);
+		find.add(search, BorderLayout.CENTER);
+		panel.add(find);
+		panel.add(javax.swing.Box.createVerticalStrut(4));
+
+		group.addItem(ALL_GROUPS);
+		for (String name : FilmSet.GROUPS)
+		{
+			group.addItem(name);
 		}
+		group.addActionListener(e -> refilter());
+		showAll.setToolTipText("Also list the quest, cutscene and creature animations that fit the follower");
+		showAll.setFont(FontManager.getRunescapeSmallFont());
+		showAll.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+		showAll.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		showAll.setFocusPainted(false);
+		showAll.addActionListener(e -> refilter());
+		JPanel filters = new JPanel(new BorderLayout(6, 0));
+		filters.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		filters.setAlignmentX(LEFT_ALIGNMENT);
+		filters.setMaximumSize(new Dimension(Integer.MAX_VALUE, 26));
+		filters.add(group, BorderLayout.CENTER);
+		filters.add(showAll, BorderLayout.EAST);
+		panel.add(filters);
+		panel.add(javax.swing.Box.createVerticalStrut(4));
+
 		JList<String> list = new JList<>(rows);
 		list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		list.setFont(FontManager.getRunescapeSmallFont());
 		list.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 		list.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+		list.setToolTipText("[hold] holds the pose until you choose another or Stand normally,"
+			+ " [once] plays it through, [prop] puts something in its hands");
 		// A click, not a change of selection, so the same row clicked again
 		// strikes the pose again.
 		list.addMouseListener(new java.awt.event.MouseAdapter()
@@ -203,9 +272,9 @@ public class FilmDialog extends JDialog
 			public void mouseClicked(java.awt.event.MouseEvent e)
 			{
 				int index = list.locationToIndex(e.getPoint());
-				if (index >= 0 && list.getCellBounds(index, index).contains(e.getPoint()))
+				if (index >= 0 && index < shown.size() && list.getCellBounds(index, index).contains(e.getPoint()))
 				{
-					FilmSet.Pose pose = FilmSet.POSES.get(index);
+					FilmSet.Pose pose = shown.get(index);
 					act(c -> pose.hold ? c.hold(pose.id) : c.once(pose.id),
 						(pose.hold ? "Holding: " : "Playing: ") + pose.name + ".");
 				}
@@ -215,8 +284,9 @@ public class FilmDialog extends JDialog
 		scroll.setBorder(BorderFactory.createEmptyBorder());
 		scroll.getVerticalScrollBar().setUnitIncrement(16);
 		scroll.setAlignmentX(LEFT_ALIGNMENT);
-		scroll.setPreferredSize(new Dimension(260, 210));
+		scroll.setPreferredSize(new Dimension(260, 230));
 		panel.add(scroll);
+		refilter();
 
 		JPanel pair = grid(1, 2);
 		pair.add(button("Again", () -> act(Crew::again, "Again.")));
@@ -245,6 +315,66 @@ public class FilmDialog extends JDialog
 		panel.add(javax.swing.Box.createVerticalStrut(4));
 		panel.add(custom);
 		return panel;
+	}
+
+	/** The list again, as the search, the group and Show all now have it. Swing thread. */
+	private void refilter()
+	{
+		shown = filter(FilmSet.POSES, search.getText(), (String) group.getSelectedItem(), showAll.isSelected());
+		rows.clear();
+		List<String> lines = new ArrayList<>(shown.size());
+		for (FilmSet.Pose pose : shown)
+		{
+			lines.add(row(pose));
+		}
+		rows.addAll(lines);
+	}
+
+	/** A pose as its row reads: its name, whether it holds or plays once, and whether it holds a prop. */
+	static String row(FilmSet.Pose pose)
+	{
+		return pose.name + (pose.hold ? "  [hold]" : "  [once]") + (pose.holdsItem() ? "  [prop]" : "");
+	}
+
+	/**
+	 * The poses that match: every word of the search in the name, or the
+	 * search as the animation id; in the group chosen, or any for
+	 * {@link #ALL_GROUPS}; and only the first two tiers unless Show all is
+	 * ticked.
+	 */
+	static List<FilmSet.Pose> filter(List<FilmSet.Pose> poses, String search, String group, boolean showAll)
+	{
+		String text = search == null ? "" : search.trim().toLowerCase(Locale.ROOT);
+		String[] words = text.isEmpty() ? new String[0] : text.split("\\s+");
+		List<FilmSet.Pose> out = new ArrayList<>();
+		for (FilmSet.Pose pose : poses)
+		{
+			if (!showAll && pose.tier == 'C')
+			{
+				continue;
+			}
+			if (group != null && !group.equals(ALL_GROUPS) && !group.equals(pose.group))
+			{
+				continue;
+			}
+			if (text.equals(String.valueOf(pose.id)) || containsAll(pose.name.toLowerCase(Locale.ROOT), words))
+			{
+				out.add(pose);
+			}
+		}
+		return out;
+	}
+
+	private static boolean containsAll(String name, String[] words)
+	{
+		for (String word : words)
+		{
+			if (!name.contains(word))
+			{
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/** The compass, Camera, and Hold here or Follow me. */

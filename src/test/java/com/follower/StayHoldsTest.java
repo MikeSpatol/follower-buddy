@@ -170,6 +170,13 @@ public class StayHoldsTest
 			once.add(id);
 		}
 
+		/** No client to load an animation from, so no props to put in the hands. */
+		@Override
+		public int[] handItems(int animationId)
+		{
+			return null;
+		}
+
 		@Override
 		public void playAnimations(int[] ids)
 		{
@@ -818,8 +825,6 @@ public class StayHoldsTest
 		PropFlourish flourish = new PropFlourish(feet, (ErrandController.Hands) get("hands"));
 		set("flourish", flourish);
 		assertTrue(flourish.start(ErrandController.SCROLL_PROP, ErrandController.READ_SCROLL_POSE, 8));
-		// The weapon already away, so the hold asks for no rebuild.
-		set("emoteDisarmed", true);
 		FilmDialog.Crew crew = (FilmDialog.Crew) call("filmCrew");
 		assertNull(crew.start());
 		assertFalse("put away as the scene starts", flourish.isActive());
@@ -850,7 +855,6 @@ public class StayHoldsTest
 		}
 		assertEquals("the entry under way", ErrandController.READ_SCROLL_POSE, feet.pose);
 
-		set("emoteDisarmed", true);
 		FilmDialog.Crew crew = (FilmDialog.Crew) call("filmCrew");
 		assertNull(crew.start());
 		assertNull(crew.hold(10061));
@@ -1038,7 +1042,10 @@ public class StayHoldsTest
 		String animation = source.substring(source.indexOf("public void onAnimationChanged(AnimationChanged event)"));
 		assertTrue("the player's animations are kept for Copy my emote",
 			animation.substring(0, animation.indexOf("\n\t}\n")).contains("filmSet.notePlayerAnimation(animationId);"));
-		assertTrue("a held film pose puts the weapon away", source.contains("filmSet != null && filmSet.isHolding()"));
+		assertTrue("the film's pose holds its own props, so the emote disarm stands down for it",
+			source.contains("&& (filmSet == null || !filmSet.isPosing());"));
+		assertTrue("and the model is dressed with them",
+			source.contains("dressForPose(outfit, filmHands);"));
 	}
 
 	// ------------------------------------------------------- the posed sketch
@@ -1366,7 +1373,11 @@ public class StayHoldsTest
 
 	// ---------------------------------------------------------------- helpers
 
-	/** The film's own pieces on the bare plugin, as startUp builds them. */
+	/**
+	 * The film's own pieces on the bare plugin. Its rebuild and its graphics
+	 * go nowhere, since these tests are about who holds the feet; FilmPropsTest
+	 * builds it with the plugin's own rebuild, as startUp does.
+	 */
 	private void film() throws ReflectiveOperationException
 	{
 		set("overlay", new FollowerOverlay(null, null, null, null));

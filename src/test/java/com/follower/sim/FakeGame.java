@@ -146,6 +146,9 @@ public final class FakeGame
 			}
 			Map<String, Object> answers = new HashMap<>();
 			answers.put("getFrameStep", frameStep);
+			int[] hands = handItems.getOrDefault((Integer) args[0], new int[]{-1, -1});
+			answers.put("getLeftHandItem", hands[0]);
+			answers.put("getRightHandItem", hands[1]);
 			return proxy(net.runelite.api.Animation.class, answers);
 		});
 	}
@@ -170,6 +173,20 @@ public final class FakeGame
 	{
 		frameSteps.put(id, frameStep);
 		return this;
+	}
+
+	/** What each loadable animation puts in each hand; unset, it leaves both alone. */
+	private final Map<Integer, int[]> handItems = new HashMap<>();
+
+	/**
+	 * Makes an animation loadable with what it puts in each hand, as the
+	 * client's getters give it: -1 keeps the hand, -512 empties it, and
+	 * anything else is an item id.
+	 */
+	public FakeGame animation(int id, int frameStep, int leftHand, int rightHand)
+	{
+		handItems.put(id, new int[]{leftHand, rightHand});
+		return animation(id, frameStep);
 	}
 
 	private int[] levels(Object skill)

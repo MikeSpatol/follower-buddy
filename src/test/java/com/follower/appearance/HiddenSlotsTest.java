@@ -203,6 +203,51 @@ public class HiddenSlotsTest
 		assertTrue(composer.hiddenSlots(outfit).contains(KitType.TORSO));
 	}
 
+	@Test
+	public void anAnimationsPropIsNeverHiddenAndHidesNothing() throws IOException
+	{
+		// Both two-handers declare the shield slot hidden, as every felling
+		// axe and godsword in the cache does. An animation's own props are
+		// laid over the gear after the gear has settled what it covers.
+		AppearanceComposer composer = composerWith(
+			"\"28196\": {\"n\": \"Bronze felling axe\", \"wp1\": " + slot(KitType.WEAPON)
+				+ ", \"wp2\": " + slot(KitType.SHIELD) + "},"
+				+ "\"11802\": {\"n\": \"Armadyl godsword\", \"wp1\": " + slot(KitType.WEAPON)
+				+ ", \"wp2\": " + slot(KitType.SHIELD) + "},"
+				+ "\"3177\": {\"n\": \"Banana\"},"
+				+ "\"1187\": {\"n\": \"Dragon sq shield\", \"wp1\": " + slot(KitType.SHIELD) + "}");
+
+		Outfit chopping = new Outfit();
+		chopping.setProp(KitType.SHIELD, 28196);
+		assertFalse("the axe of a two-handed chop does not hide itself",
+			composer.hiddenSlots(chopping.withDefaultBody()).contains(KitType.SHIELD));
+
+		Outfit eating = new Outfit();
+		eating.setItem(KitType.WEAPON, 11802);
+		eating.setProp(KitType.SHIELD, 3177);
+		assertFalse("nor does the follower's own godsword hide the banana",
+			composer.hiddenSlots(eating).contains(KitType.SHIELD));
+
+		Outfit carving = new Outfit();
+		carving.setProp(KitType.WEAPON, 28196);
+		carving.setItem(KitType.SHIELD, 1187);
+		assertFalse("and a prop in the weapon hand hides nothing of the gear's",
+			composer.hiddenSlots(carving).contains(KitType.SHIELD));
+
+		Outfit worn = new Outfit();
+		worn.setItem(KitType.WEAPON, 11802);
+		worn.setItem(KitType.SHIELD, 1187);
+		assertTrue("worn, a two-hander still hides the shield",
+			composer.hiddenSlots(worn).contains(KitType.SHIELD));
+
+		Outfit wornBanana = new Outfit();
+		wornBanana.setItem(KitType.WEAPON, 11802);
+		wornBanana.setItem(KitType.SHIELD, 3177);
+		assertFalse("the same items with a prop in hand are another model, not the cached one",
+			wornBanana.equals(eating));
+		assertEquals("a copy keeps its props", eating, new Outfit(eating));
+	}
+
 	/**
 	 * The {@code ::follower hidden} report walks the same wearPos fields in its
 	 * own copy of the loop, so it can drift from the renderer and then describe

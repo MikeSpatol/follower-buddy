@@ -1,8 +1,19 @@
 package com.follower.follower;
 
-import java.util.Arrays;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.IntConsumer;
+import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Player;
 import net.runelite.api.coords.WorldPoint;
 
@@ -13,80 +24,146 @@ import net.runelite.api.coords.WorldPoint;
  * <p>Only what it put on itself is ever let go of, so the end of a scene
  * never takes off a pose or a face that something else owns. Client thread
  * only: every call reaches the follower or the player.
+ *
+ * <p>A pose is dressed as the game dresses it: whatever the animation names
+ * for each hand - a book, a quill and a scroll, a chair - is put there for as
+ * long as the pose is on show, and a hand it names nothing for keeps what the
+ * follower holds. The model is rebuilt before the pose starts, since a rebuild
+ * starts a clip again from its first frame. A held pose gives way to the walk
+ * while the follower moves, for a Send or a Follow me, and its props come off
+ * for the walk and go back on where it stops.
  */
+@Slf4j
 public class FilmSet
 {
 	/** One row of the window's pose list. */
 	public static final class Pose
 	{
-		public final String name;
 		public final int id;
+		public final String name;
+		/** The window's group, such as Emotes or Skilling. */
+		public final String group;
 		/** Held until let go, rather than played once. */
 		public final boolean hold;
+		/** What it shows in each hand: {@link #KEEP}, {@link #EMPTY}, or an item id. */
+		public final int left;
+		public final int right;
+		/** A graphic played once as it starts, or 0. */
+		public final int graphic;
+		/** A named by hand, B named from the game's own names, C only under Show all. */
+		public final char tier;
 
-		Pose(String name, int id, boolean hold)
+		Pose(int id, String name, String group, boolean hold, int left, int right, int graphic, char tier)
 		{
-			this.name = name;
 			this.id = id;
+			this.name = name;
+			this.group = group;
 			this.hold = hold;
+			this.left = left;
+			this.right = right;
+			this.graphic = graphic;
+			this.tier = tier;
+		}
+
+		/** Whether it puts something in a hand that the game draws. */
+		public boolean holdsItem()
+		{
+			return left >= 0 || right >= 0;
 		}
 	}
 
+	/** A hand the animation leaves alone, as the client's getters give it. */
+	public static final int KEEP = -1;
+
+	/** A hand the animation empties. */
+	public static final int EMPTY = -512;
+
 	/**
-	 * The poses on offer, all the game's own emotes. The holds are the loops
-	 * the mimic-emote-loops rule already plays on the follower, so each is
-	 * known to sit on its skeleton. No entry clip is paired with a loop: the
-	 * sit's loop sits down by itself, and the clip the sit emote is named
-	 * after is in fact its stand-up.
+	 * Every animation that moves the player's skeleton, which is every one the
+	 * follower can strike, in the window's order. Built from the game cache by
+	 * tools/cache-dumper (runPoseCatalog), which also checks each against it.
 	 */
-	public static final List<Pose> POSES = Collections.unmodifiableList(Arrays.asList(
-		new Pose("Sit", 10061, true),
-		new Pose("Lean", 10062, true),
-		new Pose("Read a scroll", 5354, true),
-		new Pose("Read a book", 1350, true),
-		new Pose("Peer", 13993, true),
-		new Pose("Pray", 179, true),
-		new Pose("Dance", 10048, true),
-		new Pose("Clap", 3193, true),
-		new Pose("Beckon", 2691, true),
-		new Pose("Blow kiss", 3803, true),
-		new Pose("Panic", 12050, true),
-		new Pose("Yes", 189, true),
-		new Pose("No", 190, true),
-		new Pose("Think", 191, true),
-		new Pose("Bow", 192, true),
-		new Pose("Angry", 193, true),
-		new Pose("Cry", 194, true),
-		new Pose("Laugh", 195, true),
-		new Pose("Cheer", 196, true),
-		new Pose("Wave", 197, true),
-		new Pose("Yes", 855, false),
-		new Pose("No", 856, false),
-		new Pose("Think", 857, false),
-		new Pose("Bow", 858, false),
-		new Pose("Angry", 859, false),
-		new Pose("Cry", 860, false),
-		new Pose("Laugh", 861, false),
-		new Pose("Cheer", 862, false),
-		new Pose("Wave", 863, false),
-		new Pose("Beckon", 864, false),
-		new Pose("Clap", 865, false),
-		new Pose("Dance", 866, false),
-		new Pose("Blow kiss", 1374, false),
-		new Pose("Panic", 2105, false),
-		new Pose("Jig", 2106, false),
-		new Pose("Spin", 2107, false),
-		new Pose("Headbang", 2108, false),
-		new Pose("Jump for joy", 2109, false),
-		new Pose("Raspberry", 2110, false),
-		new Pose("Yawn", 2111, false),
-		new Pose("Salute", 2112, false),
-		new Pose("Shrug", 2113, false),
-		new Pose("Slap head", 4275, false),
-		new Pose("Idea", 4276, false),
-		new Pose("Stamp", 4278, false),
-		new Pose("Air guitar", 4751, false),
-		new Pose("Flex", 8917, false)));
+	public static final List<Pose> POSES = Collections.unmodifiableList(load());
+
+	/** The groups in the order the list first shows them. */
+	public static final List<String> GROUPS = Collections.unmodifiableList(groups(POSES));
+
+	private static final Map<Integer, Pose> BY_ID = byId(POSES);
+
+	/** The catalog's row for an animation, or null when it has none. */
+	public static Pose pose(int animationId)
+	{
+		return BY_ID.get(animationId);
+	}
+
+	private static List<Pose> load()
+	{
+		try (InputStream in = FilmSet.class.getResourceAsStream("/com/follower/poses.tsv"))
+		{
+			if (in != null)
+			{
+				return read(new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8)));
+			}
+		}
+		catch (IOException | RuntimeException e)
+		{
+			log.warn("Could not read the posing list", e);
+		}
+		return new ArrayList<>();
+	}
+
+	/**
+	 * The catalog's lines: id, name, group, hold or once, left, right,
+	 * graphic and tier, tab separated, after a header and # comments.
+	 */
+	static List<Pose> read(BufferedReader reader) throws IOException
+	{
+		List<Pose> out = new ArrayList<>();
+		for (String line = reader.readLine(); line != null; line = reader.readLine())
+		{
+			if (line.isEmpty() || line.startsWith("#") || line.startsWith("id\t"))
+			{
+				continue;
+			}
+			String[] cells = line.split("\t");
+			out.add(new Pose(Integer.parseInt(cells[0]), cells[1], cells[2], cells[3].equals("hold"),
+				hand(cells[4]), hand(cells[5]), Integer.parseInt(cells[6]), cells[7].charAt(0)));
+		}
+		return out;
+	}
+
+	private static int hand(String cell)
+	{
+		switch (cell)
+		{
+			case "keep":
+				return KEEP;
+			case "empty":
+				return EMPTY;
+			default:
+				return Integer.parseInt(cell);
+		}
+	}
+
+	private static List<String> groups(List<Pose> poses)
+	{
+		Set<String> groups = new LinkedHashSet<>();
+		for (Pose pose : poses)
+		{
+			groups.add(pose.group);
+		}
+		return new ArrayList<>(groups);
+	}
+
+	private static Map<Integer, Pose> byId(List<Pose> poses)
+	{
+		Map<Integer, Pose> out = new HashMap<>();
+		for (Pose pose : poses)
+		{
+			out.put(pose.id, pose);
+		}
+		return out;
+	}
 
 	/**
 	 * How far off the tile it faces lies. Far enough that a Send of a few
@@ -96,11 +173,29 @@ public class FilmSet
 
 	private final FollowerEntity follower;
 
+	/** Builds the follower's model again, dressed as {@link #hands()} says. */
+	private final Runnable redress;
+
+	/** Shows a graphic on the follower, by spotanim id. */
+	private final IntConsumer graphic;
+
 	/** The pose the film put on, or 0. */
 	private int held;
 
+	/** What the held pose shows in each hand, or null when it would not load. */
+	private int[] heldHands;
+
+	/** The pose being played once, until it ends, or 0. */
+	private int playing;
+
+	/** What the pose being played once shows in each hand. */
+	private int[] playingHands;
+
 	/** The last pose played once, for Again; 0 before the first. */
 	private int lastOnce;
+
+	/** Whether the follower was on the move at the last frame, so the held pose was not on show. */
+	private boolean walking;
 
 	/** The orientation the film turned it to, or -1 while it faces the player. */
 	private int facing = -1;
@@ -108,24 +203,63 @@ public class FilmSet
 	/** The player's last animation, for Copy my emote; -1 before the first. */
 	private int lastPlayerAnimation = -1;
 
+	/** A film that dresses nothing and shows no graphics, for a follower with no model to build. */
 	public FilmSet(FollowerEntity follower)
 	{
+		this(follower, () ->
+		{
+		}, id ->
+		{
+		});
+	}
+
+	/**
+	 * @param redress builds the follower's model again, dressed as
+	 *                {@link #hands()} says
+	 * @param graphic shows a graphic on the follower, by spotanim id
+	 */
+	public FilmSet(FollowerEntity follower, Runnable redress, IntConsumer graphic)
+	{
 		this.follower = follower;
+		this.redress = redress;
+		this.graphic = graphic;
 	}
 
 	/** Holds a looping pose until let go, over any one-shot still playing. */
 	public void hold(int animationId)
 	{
+		held = animationId;
+		heldHands = follower.handItems(animationId);
+		playing = 0;
+		playingHands = null;
+		redress.run();
 		follower.cancelEmote();
 		follower.setPoseOverride(animationId);
-		held = animationId;
+		graphicFor(animationId);
 	}
 
 	/** Plays a pose once; a held pose comes back when it ends. */
 	public void once(int animationId)
 	{
-		follower.playAnimation(animationId);
 		lastOnce = animationId;
+		int[] hands = follower.handItems(animationId);
+		if (hands == null)
+		{
+			// Nothing will play, so nothing is put in its hands either.
+			return;
+		}
+		playing = animationId;
+		playingHands = hands;
+		redress.run();
+		follower.playAnimation(animationId);
+		if (!follower.isEmotePlaying())
+		{
+			// It never started - no model to play it on - so it would never
+			// end and hand the props back either.
+			onceOver();
+			return;
+		}
+		graphicFor(animationId);
 	}
 
 	/** @return false when nothing has been played once yet */
@@ -135,24 +269,103 @@ public class FilmSet
 		{
 			return false;
 		}
-		follower.playAnimation(lastOnce);
+		once(lastOnce);
 		return true;
 	}
 
-	/** Lets go of the film's held pose, and of nothing else. */
+	/**
+	 * The follower's one-shot has ended, or been cut short by a walk or a
+	 * hold: the held pose's props come back, or its own gear.
+	 */
+	public void onceOver()
+	{
+		if (playing != 0)
+		{
+			playing = 0;
+			playingHands = null;
+			redress.run();
+		}
+	}
+
+	/**
+	 * Lets go of the film's held pose and stops its one-shot, and of nothing
+	 * else. A death or a knockdown lies still on its last frame for a minute
+	 * or more, and this is how it gets up.
+	 */
 	public void standNormally()
 	{
+		boolean posing = isPosing();
 		if (held != 0)
 		{
 			follower.clearPoseOverride(held);
 			held = 0;
+			heldHands = null;
+		}
+		if (playing != 0)
+		{
+			playing = 0;
+			playingHands = null;
+			follower.cancelEmote();
+		}
+		if (posing)
+		{
+			redress.run();
 		}
 	}
 
-	/** Whether a pose of the film's is held: the weapon goes away for it, as for a mirrored loop. */
-	public boolean isHolding()
+	/**
+	 * Whether a pose of the film's is on. It dresses the hands itself, so the
+	 * emote disarm stands down for it.
+	 */
+	public boolean isPosing()
 	{
-		return held != 0;
+		return held != 0 || playing != 0;
+	}
+
+	/**
+	 * What the film's pose on show puts in each hand, left then right, each
+	 * {@link #KEEP}, {@link #EMPTY} or an item id; null when no pose of the
+	 * film's is on show - none is on, or the held one has given way to a walk -
+	 * or its animation would not load.
+	 */
+	public int[] hands()
+	{
+		if (playing != 0)
+		{
+			return playingHands;
+		}
+		return held != 0 && !walking ? heldHands : null;
+	}
+
+	/**
+	 * Each frame, after the follower's own. The follower shows a held pose
+	 * only while it stands, so the pose's props come off when it sets off, or
+	 * it would walk to a Send with the chair in its hand and the chair's
+	 * stance, and go back on when it stops and strikes the pose again. A
+	 * one-shot needs nothing here: a walk cuts it short.
+	 */
+	public void frame()
+	{
+		boolean moving = follower.isMoving();
+		if (moving == walking)
+		{
+			return;
+		}
+		walking = moving;
+		if (held != 0 && playing == 0)
+		{
+			redress.run();
+		}
+	}
+
+	/** The pose's paired graphic, played once as it starts. */
+	private void graphicFor(int animationId)
+	{
+		Pose pose = pose(animationId);
+		if (pose != null && pose.graphic > 0)
+		{
+			graphic.accept(pose.graphic);
+		}
 	}
 
 	/**
