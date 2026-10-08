@@ -565,14 +565,14 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `chronicle-page-place`
 
-> A place's chronicle page was just written, the first time you walked into it. Held until the follower has the floor, so the arrival line goes first. Its sketch comes later, when you stand still there.
+> A place's chronicle page was just written, the first time you walked into it. Held until the follower has the floor, so the arrival line goes first. Its sketch comes later, when you pose for it there.
 
 - **when:** pagewritten
 - **pacing:** priority 30, cooldown 1m
 
-- {page} has a page now. Stop somewhere and I'll sketch it.
+- {page} has a page now. Find me a good spot and pose for me.
 - Starting a page on {page}. I've got the name down, at least.
-- New page for {page}. Stand still a moment and I'll do the drawing.
+- New page for {page}. Show me the best view of it and strike a pose.
 
 ### `chronicle-page-lore`
 

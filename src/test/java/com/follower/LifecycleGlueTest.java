@@ -311,6 +311,51 @@ public class LifecycleGlueTest
 	}
 
 	@Test
+	public void aSceneBeingFilmedEndsWithTheScene() throws IOException
+	{
+		// The film's park and pose belong to the scene; its window does not,
+		// and the next press in it starts the scene again in the new one.
+		String leaving = method("private void tearDownScene()");
+		int ended = leaving.indexOf("endFilming();");
+		assertTrue("leaving a scene must end the film", ended >= 0);
+		assertTrue("while the follower is still there to let go of",
+			ended < leaving.indexOf("follower.despawn();"));
+	}
+
+	@Test
+	public void aSceneEndedByLeavingTheWorldIsToldToTheWindow() throws IOException
+	{
+		// After a hop the window still said the scene was on, while the
+		// follower chatted and wandered again. A scene under way is told
+		// to the window before it is ended, and only one under way.
+		String leaving = method("private void tearDownScene()");
+		int ended = leaving.indexOf("endFilming();");
+		int told = leaving.indexOf("tellTheFilm(");
+		assertTrue("leaving a scene must tell the film window it ended", told >= 0 && told < ended);
+		assertTrue("only when a scene was being filmed",
+			leaving.lastIndexOf("if (filming)", told) > leaving.lastIndexOf(";", told));
+	}
+
+	@Test
+	public void aDisableClosesTheFilmWindowAndForgetsTheScene() throws IOException
+	{
+		// Shut on the Swing thread, where it was opened. Disposing is not
+		// closing, so no cut reaches the client thread after the stop: the
+		// stop's own block takes every pose off, and the flags go with the
+		// transient state.
+		String stopping = method("protected void shutDown() throws Exception");
+		int over = stopping.indexOf("clientThread.invoke(");
+		int disposed = stopping.indexOf("filmDialog.dispose();");
+		assertTrue("the stop must dispose the film window on the Swing thread", disposed >= 0 && disposed < over);
+		String reset = method("private void resetTransientState()");
+		assertTrue(reset.contains("filming = false;"));
+		assertTrue(reset.contains("filmParked = false;"));
+		String opening = method("private void openFilmDialog()");
+		assertTrue("the window is built on the Swing thread and handed the client thread",
+			opening.contains("javax.swing.SwingUtilities.invokeLater(") && opening.contains("clientThread::invoke"));
+	}
+
+	@Test
 	public void aCreatureIsMetInSightOrByDealingWithItNotByLoading() throws IOException
 	{
 		// Play test, 7 Oct: a spawn is anything loaded within about 15 tiles,

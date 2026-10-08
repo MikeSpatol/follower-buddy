@@ -808,10 +808,14 @@ public class FollowerEntity
 		stayFaceMax = max;
 	}
 
-	/** The stay pose's idle facing: the face tile when set, the player otherwise. */
+	/**
+	 * The stay pose's idle facing: the face tile when set, the player
+	 * otherwise. Counting you in for a sketch it is you, even from a drift
+	 * over to something that it would otherwise go on looking at.
+	 */
 	private void faceStayAnchor()
 	{
-		if (stayFaceTile != null && tile != null)
+		if (stayFaceTile != null && tile != null && !facingThePlayer)
 		{
 			// In half tiles, so the middle of an even footprint is exact.
 			WorldPoint far = stayFaceMax == null ? stayFaceTile : stayFaceMax;
@@ -4338,9 +4342,17 @@ public class FollowerEntity
 		watchingWithThePlayer = watching;
 	}
 
+	/** True while it counts you in for a sketch: your emote is the pose, not work to watch. */
+	private boolean facingThePlayer;
+
+	public void setFacingThePlayer(boolean facing)
+	{
+		facingThePlayer = facing;
+	}
+
 	private void watchTheWork(Player local)
 	{
-		if (local.getAnimation() == -1)
+		if (local.getAnimation() == -1 || facingThePlayer)
 		{
 			facePlayer();
 			return;

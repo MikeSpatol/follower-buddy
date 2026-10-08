@@ -2,15 +2,24 @@ package com.follower.chronicle;
 
 import com.follower.follower.ErrandController;
 import com.follower.follower.FollowerEntity;
+import com.follower.sim.FakeGame;
 import com.google.gson.Gson;
 import java.awt.Rectangle;
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import net.runelite.api.Client;
+import net.runelite.api.Player;
+import net.runelite.api.coords.LocalPoint;
+import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.gameval.AnimationID;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -21,7 +30,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Which place the scribe sketches, and which part of the view it keeps.
+ * Which place the scribe sketches, which part of the view it keeps, and
+ * the pose it is asked for.
  */
 public class SketchControllerTest
 {
@@ -107,7 +117,7 @@ public class SketchControllerTest
 		assertEquals(aspect, crop.width / (double) crop.height, 0.1);
 	}
 
-	// ------------------------------------------------- the moment it sketches
+	// ------------------------------------------------- posing for a sketch
 
 	private boolean busy;
 	private int idle;
@@ -117,13 +127,28 @@ public class SketchControllerTest
 	private boolean handsRefuse;
 	/** Whether putting it away fails, as a model rebuild off the client thread does. */
 	private boolean releaseFails;
+	/** Your tile, and what you are playing: -1 for nothing. */
+	private WorldPoint tile = new WorldPoint(3222, 3218, 0);
+	private int animation = -1;
+	/** Whether a right-click menu is open over the view. */
+	private boolean menuOpen;
+	/** Said through the engine, which the mute holds back. */
 	private final List<String> said = new ArrayList<>();
+	/** Of those, the ones said ahead of whatever is waiting. */
+	private final List<String> saidNext = new ArrayList<>();
+	/** Shown straight over its head whatever the mute; null each time it was cleared. */
+	private final List<String> overhead = new ArrayList<>();
+	/** How often it turned to you. */
+	private int faced;
+	/** Whether it is held facing you, over watching what you do. */
+	private boolean facingYou;
 	private FollowerEntity follower;
 
 	/**
-	 * The scribe in Lumbridge, which wants a sketch, with the view and the
-	 * hands under the test's control. There is no player to crop round, so
-	 * nothing is drawn; the line said after is what shows the view was taken.
+	 * The scribe in Lumbridge, which has a plate, with the view, your tile
+	 * and the hands under the test's control. There is no player to crop
+	 * round, so nothing is drawn; the overhead cleared for the picture and
+	 * the line said after are what show the view was taken.
 	 */
 	private SketchController scribe() throws IOException
 	{
@@ -135,6 +160,10 @@ public class SketchControllerTest
 		Client client = (Client) Proxy.newProxyInstance(Client.class.getClassLoader(), new Class<?>[]{Client.class},
 			(proxy, method, args) ->
 			{
+				if (method.getName().equals("isMenuOpen"))
+				{
+					return menuOpen;
+				}
 				Class<?> type = method.getReturnType();
 				return type == int.class ? 0 : type == boolean.class ? false : null;
 			});
@@ -151,7 +180,25 @@ public class SketchControllerTest
 			{
 				return true;
 			}
+
+			@Override
+			public void facePlayer()
+			{
+				faced++;
+			}
+
+			@Override
+			public void setFacingThePlayer(boolean facing)
+			{
+				facingYou = facing;
+			}
 		};
+		return scribe(book, client);
+	}
+
+	/** The scribe on {@link #follower}, in the given game. */
+	private SketchController scribe(SketchBook book, Client client) throws IOException
+	{
 		ErrandController.Hands hands = new ErrandController.Hands()
 		{
 			@Override
@@ -177,7 +224,12 @@ public class SketchControllerTest
 			}
 		};
 		return new SketchController(client, follower, hands, loader(), book, null, null,
-			() -> busy, () -> idle, () -> region, said::add);
+			() -> busy, () -> idle, () -> region, () -> tile, () -> animation, said::add,
+			line ->
+			{
+				said.add(line);
+				saidNext.add(line);
+			}, overhead::add);
 	}
 
 	private static void tick(SketchController scribe, int times)
@@ -188,100 +240,366 @@ public class SketchControllerTest
 		}
 	}
 
-	@Test
-	public void itSketchesOnceYouStandStillAndSpeaksOnlyWhenTheScrollIsAway() throws IOException
+	private static String last(List<String> lines)
 	{
-		SketchController scribe = scribe();
-		idle = SketchController.IDLE_TICKS - 1;
-		scribe.tick();
-		assertFalse("not while you might still be moving off", scribe.isSketching());
+		return lines.get(lines.size() - 1);
+	}
 
-		idle = SketchController.IDLE_TICKS;
-		scribe.tick();
-		assertTrue(scribe.isSketching());
-		assertTrue("the scroll is out", holding);
-		assertEquals(ErrandController.READ_SCROLL_POSE, follower.getPoseOverride());
+	/** The start of the count and each line of it, as shown before the picture. */
+	private static List<String> theCount()
+	{
+		List<String> count = new ArrayList<>();
+		count.add(SketchController.START);
+		count.addAll(Arrays.asList(SketchController.COUNT));
+		return count;
+	}
 
-		tick(scribe, SketchController.HOLD_TICKS + SketchController.PUT_AWAY_TICKS - 1);
-		assertTrue("nothing said while the view could still be taken", said.isEmpty());
-		scribe.tick();
-		assertEquals(1, said.size());
-		assertFalse("and the scroll put away", holding);
-		assertEquals(0, follower.getPoseOverride());
+	/** A book with Lumbridge already in it, at both sizes. */
+	private SketchBook drawnBook(java.nio.file.Path data)
+	{
+		SketchBook book = new SketchBook(data);
+		book.openFor("acct");
+		java.awt.image.BufferedImage old = new java.awt.image.BufferedImage(4, 4,
+			java.awt.image.BufferedImage.TYPE_INT_RGB);
+		book.put("lumbridge", old, old);
+		return book;
 	}
 
 	@Test
-	public void aWindowOpenedMidSketchSpoilsItAndItWaitsBeforeTryingAgain() throws IOException
+	public void nothingIsDrawnUnaskedButAnEmptyPlateIsPointedOutOnceASession() throws IOException
+	{
+		// Play test: a sketch taken while nobody posed is a picture of
+		// someone walking past. Now it says so and waits to be asked.
+		SketchController scribe = scribe();
+		idle = SketchController.IDLE_TICKS - 1;
+		scribe.tick();
+		assertTrue("not while you might still be moving off", said.isEmpty());
+
+		idle = SketchController.IDLE_TICKS;
+		tick(scribe, 20);
+		assertEquals("pointed out, once", Collections.singletonList(SketchController.INVITE), said);
+		assertTrue("waiting its turn, as any line of its own", saidNext.isEmpty());
+		assertFalse("and nothing drawn unasked", scribe.isSketching());
+		assertFalse("no scroll out for it", holding);
+		assertTrue(overhead.isEmpty());
+
+		region = 12853;
+		scribe.tick();
+		assertEquals("the square's plate is its own", 2, said.size());
+		region = 12850;
+		tick(scribe, 20);
+		assertEquals("Lumbridge's is not pointed out again", 2, said.size());
+
+		scribe.reset();
+		scribe.tick();
+		assertEquals("the next session points it out again", 3, said.size());
+	}
+
+	@Test
+	public void aPlaceAlreadyDrawnIsNotPointedOutButStillOffersSketch() throws IOException
+	{
+		SketchController scribe = scribe(drawnBook(folder.newFolder().toPath()));
+		idle = SketchController.IDLE_TICKS;
+		busy = true;
+		scribe.tick();
+		busy = false;
+		tick(scribe, 20);
+		assertTrue("nothing to point out", said.isEmpty());
+		assertTrue("but Sketch is offered, for a retake", scribe.hasPlateHere());
+		region = 9999;
+		assertFalse("and only where a page has a plate", scribe.hasPlateHere());
+	}
+
+	@Test
+	public void notPointedOutWithAToolStillInTheHand() throws IOException
+	{
+		// Between trees the axe is kept a while with nothing else holding
+		// the feet. Pointed out then, Sketch was refused for full hands, and
+		// the one time a session it is pointed out was spent.
+		SketchController scribe = scribe();
+		idle = SketchController.IDLE_TICKS;
+		holding = true;
+		tick(scribe, 20);
+		assertTrue(said.isEmpty());
+		holding = false;
+		scribe.tick();
+		assertEquals("once the hand is empty", Collections.singletonList(SketchController.INVITE), said);
+	}
+
+	@Test
+	public void notPointedOutMidFight() throws IOException
+	{
+		SketchController scribe = scribe();
+		idle = SketchController.IDLE_TICKS;
+		busy = true;
+		tick(scribe, 20);
+		assertTrue(said.isEmpty());
+		busy = false;
+		scribe.tick();
+		assertEquals(1, said.size());
+	}
+
+	@Test
+	public void askingTakesOutTheScrollTurnsToYouAndCountsYouIn() throws IOException
+	{
+		SketchController scribe = scribe();
+		assertNull(scribe.askForSketch());
+		assertTrue(scribe.isSketching());
+		assertTrue("other lines wait", scribe.isPosing());
+		assertTrue("the scroll is out", holding);
+		assertEquals(ErrandController.READ_SCROLL_POSE, follower.getPoseOverride());
+		assertEquals("turned to you", 1, faced);
+		assertTrue("and held on you, whatever you do", facingYou);
+		assertEquals(Collections.singletonList(SketchController.START), overhead);
+		assertTrue("the count is not said through the engine, so the mute does not hold it", said.isEmpty());
+	}
+
+	@Test
+	public void itKeepsFacingYouThroughThePose() throws IOException, ReflectiveOperationException
+	{
+		// Following and standing, it watches your work: while you animate
+		// it is turned the way you are turned. The emote is the pose, and it
+		// was drawn side-on to you, or with its back to you. The frame that
+		// turns it cannot run headless, so its own step is called.
+		FakeGame game = new FakeGame().at(50, 50, 0);
+		LocalPoint itsSpot = game.player.getLocalLocation();
+		// You three tiles south of it, turned east.
+		game.at(50, 47, 0).turned(1536);
+		follower = new FollowerEntity(game.client, null)
+		{
+			@Override
+			public boolean isSpawned()
+			{
+				return true;
+			}
+
+			@Override
+			public boolean isSettled()
+			{
+				return true;
+			}
+		};
+		Field drawnAt = FollowerEntity.class.getDeclaredField("lastRenderedLocation");
+		drawnAt.setAccessible(true);
+		drawnAt.set(follower, itsSpot);
+		Method watchTheWork = FollowerEntity.class.getDeclaredMethod("watchTheWork", Player.class);
+		watchTheWork.setAccessible(true);
+		Field dstYaw = FollowerEntity.class.getDeclaredField("dstYaw");
+		dstYaw.setAccessible(true);
+
+		SketchController scribe = scribe(new SketchBook(null), game.client);
+		assertNull(scribe.askForSketch());
+		game.animating(AnimationID.EMOTE_DANCE);
+		watchTheWork.invoke(follower, game.player);
+		assertEquals("still facing you, to its south", 0, dstYaw.get(follower));
+
+		// Asked for where the wander had taken it to look at something to
+		// its north: the drift is kept through the pose, and so was the look.
+		Field tile = FollowerEntity.class.getDeclaredField("tile");
+		tile.setAccessible(true);
+		tile.set(follower, new WorldPoint(50, 50, 0));
+		follower.setStayFaceTile(new WorldPoint(50, 53, 0));
+		Method faceStayAnchor = FollowerEntity.class.getDeclaredMethod("faceStayAnchor");
+		faceStayAnchor.setAccessible(true);
+		faceStayAnchor.invoke(follower);
+		assertEquals("you, not what it drifted over to", 0, dstYaw.get(follower));
+
+		scribe.abort();
+		watchTheWork.invoke(follower, game.player);
+		assertEquals("the scroll away, it watches what you do again", 1536, dstYaw.get(follower));
+		faceStayAnchor.invoke(follower);
+		assertEquals("and at the thing again", 1024, dstYaw.get(follower));
+	}
+
+	@Test
+	public void standingStillIsTakenAtTheEndOfTheCountWithNoWordsInThePicture() throws IOException
+	{
+		SketchController scribe = scribe();
+		scribe.askForSketch();
+		tick(scribe, SketchController.COUNT_TICKS - 1);
+		assertEquals("counted in", theCount(), overhead);
+		assertTrue(scribe.isPosing());
+
+		scribe.tick();
+		assertNull("cleared for the picture, which is the next frame", last(overhead));
+		assertTrue("nothing said into it", said.isEmpty());
+		assertTrue("and other lines still held", scribe.isPosing());
+
+		scribe.tick();
+		assertEquals("then the word, after", SketchController.THERE, last(overhead));
+		assertTrue(said.isEmpty());
+		assertTrue("still facing you", facingYou);
+
+		scribe.tick();
+		assertEquals(1, said.size());
+		assertTrue("the usual line for a pose held still", Arrays.asList(SketchController.DONE).contains(said.get(0)));
+		assertEquals("said next, ahead of what waited through the pose", said, saidNext);
+		assertFalse("the scroll put away", holding);
+		assertEquals(0, follower.getPoseOverride());
+		assertFalse("free to watch what you do again", facingYou);
+		assertFalse(scribe.isPosing());
+
+		double seconds = (SketchController.COUNT_TICKS + 1) * 0.6;
+		assertTrue("about five seconds from the ask to the word: " + seconds, seconds >= 4 && seconds <= 6);
+	}
+
+	@Test
+	public void anEmoteIsTakenAMomentInAndEndsTheCount() throws IOException
+	{
+		SketchController scribe = scribe();
+		scribe.askForSketch();
+		scribe.tick();
+		animation = AnimationID.EMOTE_DANCE;
+		// An emote zeroes the stand-still count, which spoiled every
+		// sketch it was done in. The pose is held on the tile instead.
+		idle = 0;
+		scribe.tick();
+		assertTrue(scribe.isSketching());
+		tick(scribe, SketchController.POSE_DELAY - 1);
+		assertFalse("not on its first frames", overhead.contains(null));
+		assertEquals("and no more counting once you pose", Collections.singletonList(SketchController.START),
+			overhead);
+
+		scribe.tick();
+		assertNull("taken", last(overhead));
+		scribe.tick();
+		assertEquals(SketchController.THERE, last(overhead));
+		scribe.tick();
+		assertEquals("a word about the pose", Collections.singletonList(
+			SketchController.POSED.get(AnimationID.EMOTE_DANCE)), said);
+	}
+
+	@Test
+	public void anEmoteItHasNoWordForGetsTheUsualLine() throws IOException
+	{
+		SketchController scribe = scribe();
+		scribe.askForSketch();
+		animation = AnimationID.EMOTE_JUMP_WITH_JOY;
+		tick(scribe, 1 + SketchController.POSE_DELAY + SketchController.PUT_AWAY_TICKS);
+		assertEquals(1, said.size());
+		assertTrue(Arrays.asList(SketchController.DONE).contains(said.get(0)));
+	}
+
+	@Test
+	public void steppingOffYourTileSpoilsItAndItSaysSo() throws IOException
+	{
+		SketchController scribe = scribe();
+		scribe.askForSketch();
+		scribe.tick();
+		tile = tile.dx(1);
+		scribe.tick();
+		assertFalse(scribe.isSketching());
+		assertFalse("the scroll put away", holding);
+		assertEquals(0, follower.getPoseOverride());
+		assertFalse("and its eyes free again", facingYou);
+		assertEquals(SketchController.MOVED, last(overhead));
+		assertFalse("never taken", overhead.contains(null));
+		tick(scribe, SketchController.COUNT_TICKS);
+		assertTrue("so nothing said after", said.isEmpty());
+	}
+
+	@Test
+	public void aFightOrAWindowOpeningSpoilsItToo() throws IOException
 	{
 		// The view is the picture: a bank opened over it, or a fight, is
 		// not a sketch of the place.
 		SketchController scribe = scribe();
-		idle = SketchController.IDLE_TICKS;
+		scribe.askForSketch();
 		scribe.tick();
 		busy = true;
 		scribe.tick();
 		assertFalse(scribe.isSketching());
 		assertFalse(holding);
+		assertFalse(facingYou);
+		assertEquals(SketchController.CAME_UP, last(overhead));
+		assertTrue(said.isEmpty());
+	}
 
+	@Test
+	public void aRightClickMenuOpenOverTheViewIsWaitedOut() throws IOException
+	{
+		SketchController scribe = scribe();
+		scribe.askForSketch();
+		menuOpen = true;
+		tick(scribe, SketchController.COUNT_TICKS + 3);
+		assertFalse("not taken with the menu in it", overhead.contains(null));
+		assertTrue(scribe.isPosing());
+		menuOpen = false;
+		scribe.tick();
+		assertNull("taken once it is shut", last(overhead));
+	}
+
+	@Test
+	public void aRetakeKeepsTheOldDrawingFirst() throws IOException
+	{
+		java.nio.file.Path data = folder.newFolder().toPath();
+		SketchController scribe = scribe(drawnBook(data));
+		assertNull(scribe.askForSketch());
+		java.nio.file.Path acct = data.resolve(SketchBook.DIR_NAME).resolve("acct");
+		assertTrue(java.nio.file.Files.isRegularFile(acct.resolve("lumbridge.png.bak")));
+		assertTrue(java.nio.file.Files.isRegularFile(acct.resolve("lumbridge.large.png.bak")));
+		assertTrue(scribe.isPosing());
+	}
+
+	@Test
+	public void askedAtABadMomentItSaysWhyAndTheScrollStaysAway() throws IOException
+	{
+		SketchController scribe = scribe();
+		busy = true;
+		assertEquals(SketchController.NOT_NOW, scribe.askForSketch());
 		busy = false;
-		tick(scribe, SketchController.HOLD_TICKS + SketchController.PUT_AWAY_TICKS);
-		assertTrue("nothing taken, so nothing said", said.isEmpty());
-		tick(scribe, SketchController.RETRY_TICKS - SketchController.HOLD_TICKS - SketchController.PUT_AWAY_TICKS);
-		assertFalse("a while before it tries again", scribe.isSketching());
-		scribe.tick();
-		assertTrue(scribe.isSketching());
-	}
-
-	@Test
-	public void theScrollWaitsForAnEmptyHand() throws IOException
-	{
-		// A tool kept between trees is still in the hand once the work stops.
-		// The scroll would take its place, and putting it away would let go
-		// of both while the loan still thinks the tool is held.
-		SketchController scribe = scribe();
 		holding = true;
-		idle = SketchController.IDLE_TICKS;
-		scribe.tick();
-		assertFalse("not over the tool", scribe.isSketching());
-		tick(scribe, SketchController.HOLD_TICKS + SketchController.PUT_AWAY_TICKS);
-		assertTrue("which is still in the hand", holding);
-		assertTrue(said.isEmpty());
-
+		assertEquals("a tool kept between trees is still in the hand", SketchController.HANDS_FULL,
+			scribe.askForSketch());
 		holding = false;
-		scribe.tick();
-		assertTrue("once it is given back, the sketch", scribe.isSketching());
-	}
-
-	@Test
-	public void walkingOffMidSketchSpoilsItToo() throws IOException
-	{
-		SketchController scribe = scribe();
-		idle = SketchController.IDLE_TICKS;
-		scribe.tick();
-		idle = 0;
-		scribe.tick();
+		region = 9999;
+		assertEquals(SketchController.NOTHING_HERE, scribe.askForSketch());
+		region = 12850;
+		handsRefuse = true;
+		assertEquals(SketchController.NOT_NOW, scribe.askForSketch());
+		handsRefuse = false;
 		assertFalse(scribe.isSketching());
-		idle = SketchController.IDLE_TICKS;
-		tick(scribe, SketchController.HOLD_TICKS + SketchController.PUT_AWAY_TICKS);
-		assertTrue(said.isEmpty());
+		assertFalse(holding);
+		assertTrue("a refusal is the caller's to say", overhead.isEmpty() && said.isEmpty());
+
+		assertNull(scribe.askForSketch());
+		assertEquals("one at a time", SketchController.NOT_NOW, scribe.askForSketch());
 	}
 
 	@Test
-	public void aResetMidSketchTakesThePoseOffAndSaysNothing() throws IOException
+	public void noBackupNoPose() throws IOException
+	{
+		SketchController scribe = scribe(new SketchBook(null)
+		{
+			@Override
+			public List<String> backUp(String key) throws IOException
+			{
+				throw new IOException("disk full");
+			}
+		});
+		assertEquals(SketchController.NO_BACKUP, scribe.askForSketch());
+		assertFalse(scribe.isSketching());
+		assertFalse("the scroll put away again", holding);
+		assertTrue(overhead.isEmpty());
+	}
+
+	@Test
+	public void aResetMidPoseTakesThePoseOffAndSaysNothing() throws IOException
 	{
 		// A disable or a logout with the scroll out. The pose is set on the
 		// follower, which outlives both, so the reset is the one thing that
 		// takes it off.
 		SketchController scribe = scribe();
-		idle = SketchController.IDLE_TICKS;
-		scribe.tick();
+		scribe.askForSketch();
 		assertTrue(scribe.isSketching());
 
 		scribe.reset();
 		assertFalse("the sketch is over", scribe.isSketching());
 		assertFalse("the scroll put away", holding);
 		assertEquals("and the reading pose with it", 0, follower.getPoseOverride());
+		assertFalse("and the hold on its facing", facingYou);
 		assertTrue("nothing said for a sketch never taken", said.isEmpty());
+		assertEquals(Collections.singletonList(SketchController.START), overhead);
 	}
 
 	@Test
@@ -293,8 +611,7 @@ public class SketchControllerTest
 		// reading an empty hand after the plugin came back. The pose is only
 		// a field, so it goes first.
 		SketchController scribe = scribe();
-		idle = SketchController.IDLE_TICKS;
-		scribe.tick();
+		scribe.askForSketch();
 		assertEquals(ErrandController.READ_SCROLL_POSE, follower.getPoseOverride());
 
 		releaseFails = true;
@@ -309,48 +626,62 @@ public class SketchControllerTest
 		assertEquals("the reading pose is off whatever the hands did", 0, follower.getPoseOverride());
 	}
 
+	@Test
+	public void aPutAwayLeavesAPoseSomethingElsePutOnSince() throws IOException
+	{
+		SketchController scribe = scribe();
+		scribe.askForSketch();
+		follower.setPoseOverride(10061);
+		tile = tile.dx(1);
+		scribe.tick();
+		assertFalse(scribe.isSketching());
+		assertEquals("only the scroll's own pose comes off", 10061, follower.getPoseOverride());
+	}
+
+	@Test
+	public void aSceneStartingPutsItAwayWithoutAWordAndKeepsWhatWasPointedOut() throws IOException
+	{
+		SketchController scribe = scribe();
+		idle = SketchController.IDLE_TICKS;
+		scribe.tick();
+		assertEquals(1, said.size());
+		assertNull(scribe.askForSketch());
+
+		scribe.abort();
+		assertFalse(scribe.isSketching());
+		assertFalse(holding);
+		assertEquals(0, follower.getPoseOverride());
+		assertFalse("the film faces it its own way", facingYou);
+		assertEquals("nothing over the take", Collections.singletonList(SketchController.START), overhead);
+		tick(scribe, 20);
+		assertEquals("and not pointed out again this session", 1, said.size());
+	}
+
 	// ------------------------------------------------------- the force-path
 
 	@Test
-	public void theForcedSketchComesWithoutTheStandStillWait() throws IOException
+	public void theForcedSketchComesWithoutTheCount() throws IOException
 	{
 		SketchController scribe = scribe();
 		idle = 1;
 		assertEquals("Sketching lumbridge.", scribe.forceSketch());
 		assertTrue(scribe.isSketching());
+		assertFalse("lines are not held for it", scribe.isPosing());
 		assertTrue("the scroll is out", holding);
 		tick(scribe, SketchController.HOLD_TICKS + SketchController.PUT_AWAY_TICKS);
 		assertEquals("the real hold, the real line after", 1, said.size());
 		assertFalse(holding);
-	}
-
-	@Test
-	public void theForcedSketchDoesNotWaitOutASpoiledAttempt() throws IOException
-	{
-		SketchController scribe = scribe();
-		idle = SketchController.IDLE_TICKS;
-		scribe.tick();
-		busy = true;
-		scribe.tick();
-		busy = false;
-		scribe.tick();
-		assertFalse("the tick waits a while after a spoiled one", scribe.isSketching());
-		scribe.forceSketch();
-		assertTrue("the force does not", scribe.isSketching());
+		assertEquals("no count: only cleared for the picture", Collections.singletonList((String) null), overhead);
 	}
 
 	@Test
 	public void aPlaceAlreadyDrawnIsDrawnAgainWithItsFilesKeptFirst() throws IOException
 	{
 		java.nio.file.Path data = folder.newFolder().toPath();
-		SketchBook book = new SketchBook(data);
-		book.openFor("acct");
-		java.awt.image.BufferedImage old = new java.awt.image.BufferedImage(4, 4,
-			java.awt.image.BufferedImage.TYPE_INT_RGB);
-		book.put("lumbridge", old, old);
+		SketchBook book = drawnBook(data);
 		SketchController scribe = scribe(book);
 		idle = 1;
-		assertNull("the tick would not draw it again",
+		assertNull("the invitation would not ask for it again",
 			SketchController.wanted(loader().getEntries(), 12850, book::hasBoth));
 
 		String reply = scribe.forceSketch();
@@ -386,12 +717,7 @@ public class SketchControllerTest
 		// The copies were taken before the scroll was asked for, so a
 		// refusal left them on disk and its reply never named them.
 		java.nio.file.Path data = folder.newFolder().toPath();
-		SketchBook book = new SketchBook(data);
-		book.openFor("acct");
-		java.awt.image.BufferedImage old = new java.awt.image.BufferedImage(4, 4,
-			java.awt.image.BufferedImage.TYPE_INT_RGB);
-		book.put("lumbridge", old, old);
-		SketchController scribe = scribe(book);
+		SketchController scribe = scribe(drawnBook(data));
 		idle = 1;
 		handsRefuse = true;
 		assertEquals("The scroll would not come out.", scribe.forceSketch());
@@ -425,12 +751,19 @@ public class SketchControllerTest
 	}
 
 	@Test
-	public void theLineItSaysIsSaidAfterAndIsTheScribes()
+	public void everyLineItSaysIsTheScribesAndFits()
 	{
-		for (String line : SketchController.DONE)
+		List<String> lines = new ArrayList<>(Arrays.asList(SketchController.DONE));
+		lines.addAll(SketchController.POSED.values());
+		lines.addAll(theCount());
+		lines.addAll(Arrays.asList(SketchController.INVITE, SketchController.THERE, SketchController.MOVED,
+			SketchController.CAME_UP, SketchController.NOT_NOW, SketchController.HANDS_FULL,
+			SketchController.NOTHING_HERE, SketchController.NO_BACKUP));
+		for (String line : lines)
 		{
 			assertTrue(line, line.length() <= 85);
 			assertTrue(line, line.chars().allMatch(c -> c >= 0x20 && c < 0x7f));
 		}
+		assertEquals("a word for each pose it knows", 6, SketchController.POSED.size());
 	}
 }

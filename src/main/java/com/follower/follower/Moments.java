@@ -606,12 +606,17 @@ public class Moments implements Noticing.Looker
 		watchTheWind(now, here, local);
 		watchForStrangers(now, local);
 		// The look up from an in-place write-up: the notes are still out,
-		// and the nod goes to the player.
+		// and the nod goes to the player. Not once something has taken the
+		// feet since: a scene being filmed puts the notes away as it starts,
+		// and the nod would come into the take.
 		if (lookUpAt > 0 && now >= lookUpAt && doing == Doing.NOTHING)
 		{
 			lookUpAt = 0;
-			follower.glanceAt(here, LOOK_UP_MS);
-			follower.playAnimation(NOD);
+			if (!feetTaken.getAsBoolean())
+			{
+				follower.glanceAt(here, LOOK_UP_MS);
+				follower.playAnimation(NOD);
+			}
 		}
 		switch (doing)
 		{
@@ -861,7 +866,9 @@ public class Moments implements Noticing.Looker
 		}
 		if (was == Doing.STRANGER)
 		{
-			follower.setPoseOverride(0);
+			// Only its own peer: the film can put a pose on in the very tick
+			// it interrupts the moment.
+			follower.clearPoseOverride(PEER);
 		}
 		if (was != Doing.NOTHING)
 		{

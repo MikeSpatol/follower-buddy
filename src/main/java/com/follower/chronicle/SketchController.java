@@ -7,7 +7,13 @@ import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,38 +22,51 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.Perspective;
 import net.runelite.api.Player;
 import net.runelite.api.Point;
 import net.runelite.api.coords.LocalPoint;
+import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.gameval.AnimationID;
 import net.runelite.client.ui.DrawManager;
 
 /**
- * The scribe sketches the places it has a page for. The first time you
- * stand still somewhere that wants a sketch, the follower takes out its
- * scroll, the view is taken - you in the middle of it - and drawn up in ink
- * and wash for the page. Then it puts the scroll away and says so, after,
- * so its words are not in the picture.
+ * The scribe sketches the places it has a page for, when you pose for it.
+ * Nothing is drawn unasked: somewhere whose plate is still empty it says so
+ * once a session, and waits for right-click Sketch or ::follower sketch.
+ * Then the scroll comes out, the scribe turns to you and counts you in, and
+ * the view is taken - you in the middle of it - a moment into the first
+ * emote you do, or at the end of the count if you stand still. It is drawn
+ * up in ink and wash for the page, and the scroll put away with a word
+ * about the pose, after, so no words are in the picture.
  *
- * <p>One sketch per place, kept; a moment spoiled by your moving off, a
- * fight or a window opening waits a while and tries again.
+ * <p>A place already drawn is drawn again when asked, its old drawing kept
+ * beside it. Moving off your tile, a fight or a window opening spoils the
+ * pose, and the scribe says so.
  */
 @Slf4j
 public class SketchController
 {
-	/** Standing still this long before it starts: it is not going to chase you. */
+	/** Standing still this long before an empty plate is pointed out: it is not going to chase you. */
 	static final int IDLE_TICKS = 3;
 
-	/** The scroll out this long before the picture is taken. */
+	/** The forced sketch's scroll out this long before the picture is taken. */
 	static final int HOLD_TICKS = 3;
+
+	/** A line of the count every this many ticks. */
+	static final int COUNT_STEP = 3;
+
+	/** The end of the count, where a pose held still is taken: with the word after, about five seconds. */
+	static final int COUNT_TICKS = 8;
+
+	/** An emote is taken this long after it is first seen: mid-move, not its first frame. */
+	static final int POSE_DELAY = 2;
 
 	/** And this long after, before it goes away. */
 	static final int PUT_AWAY_TICKS = 2;
-
-	/** A spoiled attempt waits this long. */
-	static final int RETRY_TICKS = 100;
 
 	/** Said once the sketch is in the book; never before, or it is in the picture. */
 	static final String[] DONE = {
@@ -57,9 +76,51 @@ public class SketchController
 		"Got it. Hold still longer next time and I'll do hands.",
 	};
 
+	/** Said instead for a pose it knows, keyed by the emote. */
+	static final Map<Integer, String> POSED;
+
+	static
+	{
+		Map<Integer, String> posed = new HashMap<>();
+		posed.put(AnimationID.EMOTE_DANCE, "Drawn mid-dance. I guessed at the feet.");
+		posed.put(AnimationID.EMOTE_BOW, "A bow, for posterity. Very proper.");
+		posed.put(AnimationID.EMOTE_WAVE, "Waving at whoever reads the book. Friendly of you.");
+		posed.put(AnimationID.EMOTE_CHEER, "Mid-cheer. I've toned it down for the book.");
+		posed.put(AnimationID.EMOTE_LAUGH, "Laughing, in ink. I left out whatever was funny.");
+		posed.put(AnimationID.EMOTE_THINK, "Deep in thought, on paper. I've made you look wise.");
+		POSED = Collections.unmodifiableMap(posed);
+	}
+
+	/** Once a session where a plate is empty; the mute holds it back, as any line of its own. */
+	static final String INVITE = "This place wants a plate. Right-click me and pick Sketch when you're ready.";
+
+	/** The count, over its head whatever the mute: it was asked for. */
+	static final String START = "Pose for me. Any emote will do.";
+
+	static final String[] COUNT = {"Hold it...", "Hold it..."};
+
+	/** The end of the count, once the picture is taken; never before, or it is in it. */
+	static final String THERE = "There.";
+
+	/** A pose spoiled by your stepping off. */
+	static final String MOVED = "You moved! Ask again when you're set.";
+
+	/** A pose spoiled by a fight, a window or anything else that begins. */
+	static final String CAME_UP = "Something came up. Ask again.";
+
+	/** Asked at a bad moment: busy, still walking, or still drawing the last one. */
+	static final String NOT_NOW = "Not just now. Ask me again in a moment.";
+
+	static final String HANDS_FULL = "My hands are full just now.";
+
+	/** Asked somewhere no page has a plate for, which only the command can be. */
+	static final String NOTHING_HERE = "There's no plate for this place in the book.";
+
+	static final String NO_BACKUP = "I couldn't keep the old drawing safe, so I've left it alone.";
+
 	enum Stage
 	{
-		WAITING, HOLDING, TAKEN
+		WAITING, HOLDING, POSING, TAKEN
 	}
 
 	private final Client client;
@@ -80,17 +141,44 @@ public class SketchController
 	private final BooleanSupplier busy;
 	private final IntSupplier idleTicks;
 	private final IntSupplier region;
+	private final Supplier<WorldPoint> playerTile;
+	private final IntSupplier playerAnimation;
 	private final Consumer<String> say;
+
+	/**
+	 * The word after the picture: held by the mute as the invitation is, but
+	 * said next, ahead of the lines that waited through the pose, so it
+	 * follows "There." and is not put back or pushed out by them.
+	 */
+	private final Consumer<String> sayNext;
+
+	/** Straight over its head, the mute or not; null clears it, for the picture. */
+	private final Consumer<String> overhead;
 	private final Random random = new Random();
+
+	/** The plates pointed out this session, each once. */
+	private final Set<String> invited = new HashSet<>();
 
 	private Stage stage = Stage.WAITING;
 	private String key;
 	private int ticks;
-	private int cooldown;
+
+	/** Whether this sketch was asked for, and so counted in, rather than forced. */
+	private boolean asked;
+
+	/** Your tile when you asked: the pose is held on it. */
+	private WorldPoint spot;
+
+	/** The count's tick the picture is taken on. */
+	private int snapAt;
+
+	/** The first emote you did while posing, or -1. */
+	private int pose = -1;
 
 	public SketchController(Client client, FollowerEntity follower, ErrandController.Hands hands,
 		ChronicleLoader loader, SketchBook book, DrawManager drawManager, Executor executor,
-		BooleanSupplier busy, IntSupplier idleTicks, IntSupplier region, Consumer<String> say)
+		BooleanSupplier busy, IntSupplier idleTicks, IntSupplier region, Supplier<WorldPoint> playerTile,
+		IntSupplier playerAnimation, Consumer<String> say, Consumer<String> sayNext, Consumer<String> overhead)
 	{
 		this.client = client;
 		this.follower = follower;
@@ -102,7 +190,11 @@ public class SketchController
 		this.busy = busy;
 		this.idleTicks = idleTicks;
 		this.region = region;
+		this.playerTile = playerTile;
+		this.playerAnimation = playerAnimation;
 		this.say = say;
+		this.sayNext = sayNext;
+		this.overhead = overhead;
 	}
 
 	/**
@@ -130,6 +222,25 @@ public class SketchController
 		return stage != Stage.WAITING;
 	}
 
+	/**
+	 * Whether you are posing for one, from the ask until the scroll is put
+	 * away: the overhead is the count's, and any other line waits, or it
+	 * would be in the picture or said over the count.
+	 */
+	public boolean isPosing()
+	{
+		return asked && stage != Stage.WAITING;
+	}
+
+	/**
+	 * Whether a page has a plate for this place, drawn or not: where
+	 * right-click Sketch is offered, so seeing it says a sketch can be made.
+	 */
+	public boolean hasPlateHere()
+	{
+		return wanted(loader.getEntries(), region.getAsInt(), name -> false) != null;
+	}
+
 	/** Once a game tick. */
 	public void tick()
 	{
@@ -140,7 +251,6 @@ public class SketchController
 				{
 					// You moved off, or something else began. Another time.
 					putAway(null);
-					cooldown = RETRY_TICKS;
 					return;
 				}
 				if (++ticks >= HOLD_TICKS)
@@ -150,50 +260,113 @@ public class SketchController
 					ticks = 0;
 				}
 				return;
+			case POSING:
+				holdThePose();
+				return;
 			case TAKEN:
-				if (++ticks >= PUT_AWAY_TICKS)
+				ticks++;
+				if (asked && ticks == 1)
 				{
-					putAway(DONE[random.nextInt(DONE.length)]);
+					// The frame was drawn without it; now it can be said.
+					overhead.accept(THERE);
+				}
+				if (ticks >= PUT_AWAY_TICKS)
+				{
+					String posed = POSED.get(pose);
+					putAway(posed != null ? posed : DONE[random.nextInt(DONE.length)]);
 				}
 				return;
 			default:
 				break;
 		}
-		if (cooldown > 0)
-		{
-			cooldown--;
-			return;
-		}
-		// A tool kept between trees is still in the hand, and the scroll
-		// would take its place: whichever is out first keeps it.
+		// Nothing is drawn unasked. A place with a plate still empty is
+		// pointed out, once a session, and drawn when you pose for it. Not
+		// with a tool kept between trees still in the hand: Sketch would be
+		// refused, and the one time it is pointed out spent on nothing.
 		if (busy.getAsBoolean() || hands.isHolding() || idleTicks.getAsInt() < IDLE_TICKS
 			|| !follower.isSpawned() || !follower.isSettled())
 		{
 			return;
 		}
 		String here = wanted(loader.getEntries(), region.getAsInt(),
-			name -> book.hasBoth(name) || drawing.contains(name));
-		if (here == null)
+			name -> book.hasBoth(name) || drawing.contains(name) || invited.contains(name));
+		if (here != null)
 		{
-			return;
+			invited.add(here);
+			say.accept(INVITE);
 		}
-		hands.hold(ErrandController.SCROLL_PROP);
-		if (!hands.isHolding())
-		{
-			cooldown = RETRY_TICKS;
-			return;
-		}
-		follower.setPoseOverride(ErrandController.READ_SCROLL_POSE);
-		key = here;
-		stage = Stage.HOLDING;
-		ticks = 0;
 	}
 
 	/**
-	 * ::follower force sketch: this view sketched now, without the
-	 * stand-still wait or a spoiled attempt's wait to try again. A place
-	 * already drawn is drawn again, and whatever is on disk for it is
-	 * backed up first, never written over; if the backup cannot be made,
+	 * A tick of the pose. Your tile is watched, not how long you have stood
+	 * still: an emote resets that, and the emote is the pose.
+	 */
+	private void holdThePose()
+	{
+		if (busy.getAsBoolean() || !follower.isSpawned())
+		{
+			putAway(null);
+			overhead.accept(CAME_UP);
+			return;
+		}
+		if (!Objects.equals(spot, playerTile.get()))
+		{
+			putAway(null);
+			overhead.accept(MOVED);
+			return;
+		}
+		ticks++;
+		int animation = playerAnimation.getAsInt();
+		if (pose == -1 && animation != -1)
+		{
+			// The first emote is the pose: taken a moment in, mid-move, and
+			// the count is over.
+			pose = animation;
+			snapAt = ticks + POSE_DELAY;
+		}
+		// A right-click menu open over the view would be in the picture.
+		if (ticks >= snapAt && !client.isMenuOpen())
+		{
+			capture();
+			stage = Stage.TAKEN;
+			ticks = 0;
+		}
+		else if (pose == -1 && ticks % COUNT_STEP == 0 && ticks / COUNT_STEP <= COUNT.length)
+		{
+			overhead.accept(COUNT[ticks / COUNT_STEP - 1]);
+		}
+	}
+
+	/**
+	 * Right-click Sketch, or ::follower sketch: the scroll out, the scribe
+	 * turned to you and the count begun. The gates are the forced sketch's,
+	 * and so is the backup of a place already drawn.
+	 *
+	 * @return why not, in the scribe's words, or null once the count is on
+	 */
+	public String askForSketch()
+	{
+		String refused = takeOutTheScroll(true, new ArrayList<>());
+		if (refused != null)
+		{
+			return refused;
+		}
+		stage = Stage.POSING;
+		spot = playerTile.get();
+		snapAt = COUNT_TICKS;
+		// Held on you until the scroll is away. Turned once, a follower that
+		// is following turned the way you were turned the moment you began
+		// the emote, as it does to watch your work, and was drawn side-on.
+		follower.setFacingThePlayer(true);
+		follower.facePlayer();
+		overhead.accept(START);
+		return null;
+	}
+
+	/**
+	 * ::follower force sketch: this view sketched now, without the count.
+	 * A place already drawn is drawn again, and whatever is on disk for it
+	 * is backed up first, never written over; if the backup cannot be made,
 	 * nothing is drawn. The gates stay: a fight, a window over the view,
 	 * anything with the feet or the hands, and moving off mid-sketch.
 	 *
@@ -201,17 +374,40 @@ public class SketchController
 	 */
 	public String forceSketch()
 	{
+		List<String> kept = new ArrayList<>();
+		String refused = takeOutTheScroll(false, kept);
+		if (refused != null)
+		{
+			return refused;
+		}
+		stage = Stage.HOLDING;
+		return "Sketching " + key + (kept.isEmpty() ? "."
+			: "; the old one is kept as " + String.join(", ", kept) + ".");
+	}
+
+	/**
+	 * The scroll out and the place chosen, for either way of asking, each
+	 * refusal in its own words: the scribe's when you asked, the chat
+	 * line's when forced.
+	 *
+	 * @param kept filled with the backups' names
+	 * @return why not, or null with the scroll out and the place chosen
+	 */
+	private String takeOutTheScroll(boolean asking, List<String> kept)
+	{
 		if (stage != Stage.WAITING)
 		{
-			return "Already sketching.";
+			return asking ? NOT_NOW : "Already sketching.";
 		}
 		if (busy.getAsBoolean() || !follower.isSpawned() || !follower.isSettled())
 		{
-			return "The follower is busy.";
+			return asking ? NOT_NOW : "The follower is busy.";
 		}
+		// A tool kept between trees is still in the hand, and the scroll
+		// would take its place: whichever is out first keeps it.
 		if (hands.isHolding())
 		{
-			return "The follower's hands are full.";
+			return asking ? HANDS_FULL : "The follower's hands are full.";
 		}
 		int regionId = region.getAsInt();
 		String here = wanted(loader.getEntries(), regionId,
@@ -223,61 +419,75 @@ public class SketchController
 		}
 		if (here == null)
 		{
-			return "No page sketches this place (region " + regionId + ").";
+			return asking ? NOTHING_HERE : "No page sketches this place (region " + regionId + ").";
 		}
 		if (drawing.contains(here))
 		{
-			return "Still drawing the last sketch of " + here + ".";
+			return asking ? NOT_NOW : "Still drawing the last sketch of " + here + ".";
 		}
 		hands.hold(ErrandController.SCROLL_PROP);
 		if (!hands.isHolding())
 		{
-			return "The scroll would not come out.";
+			return asking ? NOT_NOW : "The scroll would not come out.";
 		}
 		// Backed up once the scroll is out: taken first, the copies of an
 		// attempt that never began were left on disk and never mentioned.
-		List<String> kept;
 		try
 		{
-			kept = book.backUp(here);
+			kept.addAll(book.backUp(here));
 		}
 		catch (IOException | RuntimeException e)
 		{
 			hands.release();
 			log.warn("Could not back up the sketch of {}", here, e);
-			return "Could not back up the old sketch of " + here + ", so it is left alone.";
+			return asking ? NO_BACKUP : "Could not back up the old sketch of " + here + ", so it is left alone.";
 		}
 		follower.setPoseOverride(ErrandController.READ_SCROLL_POSE);
 		key = here;
-		stage = Stage.HOLDING;
 		ticks = 0;
-		cooldown = 0;
-		return "Sketching " + here + (kept.isEmpty() ? "."
-			: "; the old one is kept as " + String.join(", ", kept) + ".");
+		asked = asking;
+		pose = -1;
+		return null;
 	}
 
-	/** Drops everything, as a logout or a hop does. */
-	public void reset()
+	/**
+	 * Puts a sketch under way away without a word, as a scene being filmed
+	 * starts: its count and its line after are not the film's. The plates
+	 * already pointed out stay pointed out.
+	 */
+	public void abort()
 	{
 		if (stage != Stage.WAITING)
 		{
 			putAway(null);
 		}
-		cooldown = 0;
+	}
+
+	/** Drops everything, as a logout does, and the session's invitations with it. */
+	public void reset()
+	{
+		abort();
+		invited.clear();
 	}
 
 	private void putAway(String line)
 	{
 		// The pose first, as every other put-away: it is only a field, and the
-		// release rebuilds the model, the part that can fail.
-		follower.setPoseOverride(0);
+		// release rebuilds the model, the part that can fail. Only the scroll's
+		// own, so a pose something else has put on since stays. The facing
+		// is only a field too.
+		follower.clearPoseOverride(ErrandController.READ_SCROLL_POSE);
+		follower.setFacingThePlayer(false);
 		hands.release();
 		stage = Stage.WAITING;
 		key = null;
 		ticks = 0;
+		asked = false;
+		spot = null;
+		pose = -1;
 		if (line != null)
 		{
-			say.accept(line);
+			sayNext.accept(line);
 		}
 	}
 
@@ -288,6 +498,9 @@ public class SketchController
 	 */
 	private void capture()
 	{
+		// Nothing over its head in the picture: the frame asked for is the
+		// next drawn, and the count's last line could still be up.
+		overhead.accept(null);
 		String filing = key;
 		Rectangle crop = cropAroundYou();
 		if (filing == null || crop == null)

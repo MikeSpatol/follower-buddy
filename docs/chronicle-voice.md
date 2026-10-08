@@ -590,11 +590,11 @@ Places and Particulars in the window.
 
 Every page opens with a plate, and a test holds it to that. A creature or
 person is its own game model, turning, framed to fill the plate. A place is a
-watercolour the scribe makes the first time you stand still in one of its
-regions, with you in the middle. Before then, a portrait shows as an ink
-outline captioned "Not yet seen." and a sketch as bare paper captioned with
-its hint, what the scribe means to draw: "Stop in Lumbridge and I'll draw
-it." That already matches the research: Audubon's
+watercolour the scribe makes when you pose for it in one of its regions, with
+you in the middle; it draws nothing unasked. Before then, a portrait shows as
+an ink outline captioned "Not yet seen." and a sketch as bare paper captioned
+with its hint, what the scribe means to draw: "Pose for me in Lumbridge."
+That already matches the research: Audubon's
 plates marked as drawn from nature, the medieval bestiary artist working from
 a description, and the museum case marked as having no information yet.
 
@@ -617,10 +617,10 @@ a description, and the museum case marked as having no information yet.
   simply never draws the place. Every portrait also carries its NPC's
   standing animation as `idle`, which `runChronicleAudit` prints and checks.
 - **Every sketch says what it waits for.** A sketch plate carries a `hint`,
-  its caption until it is drawn: what the scribe will draw and where to stop
-  for it, true anywhere in the plate's regions, and the same on every page
-  that shares the sketch. Tested: it fits the caption's width, and every
-  sketch has one.
+  its caption until it is drawn: what the scribe will draw and where to pose
+  for it, in the form "Pose for me in Lumbridge.", true anywhere in the
+  plate's regions, and the same on every page that shares the sketch. Tested:
+  it fits the caption's width, and every sketch has one.
 - **Captions.** One line, about 30 characters. The subject plus one thing the
   picture can't show:
   - how it was drawn: "Drawn from life. Briefly."

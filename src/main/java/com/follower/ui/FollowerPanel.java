@@ -125,6 +125,14 @@ public class FollowerPanel extends PluginPanel
 		this.onShowMemory = onShowMemory;
 	}
 
+	/** Opens the film window; set by the plugin after construction. */
+	private Runnable onFilm = () -> { };
+
+	public void setOnFilm(Runnable onFilm)
+	{
+		this.onFilm = onFilm;
+	}
+
 	/** Opens the conversation editor; set by the plugin after construction. */
 	private Runnable onEditDialogs = () -> { };
 
@@ -1044,6 +1052,13 @@ public class FollowerPanel extends PluginPanel
 			}
 		}), BorderLayout.EAST);
 		body.add(row);
+		body.add(javax.swing.Box.createVerticalStrut(6));
+
+		JPanel film = buttonColumn(1);
+		film.add(button("Film a scene...",
+			"A window to pose it, turn it and give it lines while you record",
+			() -> onFilm.run()));
+		body.add(film);
 	}
 
 	private void buildCommands(JPanel body)

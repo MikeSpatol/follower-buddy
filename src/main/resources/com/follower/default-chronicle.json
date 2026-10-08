@@ -49,7 +49,7 @@
             12850
           ],
           "caption": "Lumbridge, where it began.",
-          "hint": "Stop in Lumbridge and I'll draw it."
+          "hint": "Pose for me in Lumbridge."
         },
         {
           "npc": 4627,
@@ -117,7 +117,7 @@
             13622
           ],
           "caption": "Paterdomus, on the Salve.",
-          "hint": "Stop by the temple and I'll draw it."
+          "hint": "Pose for me by the temple."
         },
         {
           "npc": 528,
@@ -187,7 +187,7 @@
             10038
           ],
           "caption": "Baxtorian Falls, loudly.",
-          "hint": "Stop by the falls and I'll draw it."
+          "hint": "Pose for me by the falls."
         },
         {
           "npc": 4182,
@@ -245,7 +245,7 @@
             11828
           ],
           "caption": "Falador, with a mole under it.",
-          "hint": "Stop in west Falador; I'll draw it."
+          "hint": "Pose for me in west Falador."
         }
       ]
     },
@@ -597,7 +597,7 @@
             12850
           ],
           "caption": "Lumbridge, done in a hurry.",
-          "hint": "Stop in Lumbridge and I'll draw it."
+          "hint": "Pose for me in Lumbridge."
         },
         {
           "npc": 815,
@@ -654,7 +654,7 @@
             12853
           ],
           "caption": "The square. Only we stood still.",
-          "hint": "Stop in the square and I'll draw it."
+          "hint": "Pose for me in the square."
         },
         {
           "sketch": "varrock-palace",
@@ -662,7 +662,7 @@
             12854
           ],
           "caption": "The palace end. Best behaviour.",
-          "hint": "Stop by the palace and I'll draw it."
+          "hint": "Pose for me by the palace."
         },
         {
           "npc": 1399,
@@ -675,7 +675,7 @@
             12598
           ],
           "caption": "The Exchange. I bought nothing.",
-          "hint": "Stop at the Exchange; I'll draw it."
+          "hint": "Pose for me at the Exchange."
         }
       ]
     },
@@ -714,7 +714,7 @@
             13622
           ],
           "caption": "The temple on the Salve.",
-          "hint": "Stop by the temple and I'll draw it."
+          "hint": "Pose for me by the temple."
         },
         {
           "npc": 9636,
@@ -759,7 +759,7 @@
             10038
           ],
           "caption": "The falls. The ink ran.",
-          "hint": "Stop by the falls and I'll draw it."
+          "hint": "Pose for me by the falls."
         },
         {
           "npc": 4181,
@@ -802,7 +802,7 @@
             13622
           ],
           "caption": "The temple over their graves.",
-          "hint": "Stop by the temple and I'll draw it."
+          "hint": "Pose for me by the temple."
         }
       ]
     },
@@ -867,7 +867,7 @@
             14646
           ],
           "caption": "Morytania. I kept moving.",
-          "hint": "Stop in Canifis and I'll draw it."
+          "hint": "Pose for me in Canifis."
         }
       ]
     }

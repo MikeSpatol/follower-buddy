@@ -749,7 +749,8 @@ public class FollowerPlugin extends Plugin
 			() -> thrallNpc != null || errands.isBusy() || spectate.holdsTheFeet()
 				|| dialog.isOpen() || emoteHold || minutesState != 0 || resting
 				|| skilling.holdsTheFeet() || moments.holdsTheFeet() || flourish.isActive()
-				|| speechEngine.getContext().isInCombat() || inCutscene(),
+				|| speechEngine.getContext().isInCombat() || inCutscene() || filming
+				|| (sketching != null && sketching.isSketching()),
 			() -> speechEngine.getContext().feelsAbout("disliked") ? "disliked"
 				: speechEngine.getContext().feelsAbout("liked") ? "liked" : "",
 			() -> thingsNearby(com.follower.follower.Gaze.AROUND_FAR + 2),
@@ -760,15 +761,18 @@ public class FollowerPlugin extends Plugin
 			() -> thrallNpc != null || errands.isBusy() || spectate.holdsTheFeet()
 				|| dialog.isOpen() || emoteHold || minutesState != 0
 				|| skilling.holdsTheFeet() || moments.holdsTheFeet() || flourish.isActive()
-				|| speechEngine.getContext().isInCombat() || inCutscene(),
+				|| speechEngine.getContext().isInCombat() || inCutscene() || filming
+				|| (sketching != null && sketching.isSketching()),
 			() -> speechEngine.getContext().getIdleTicks(),
 			this::landmarksNearby);
 		// A park that is plainly a park - a wander, a player's Stay - may be
-		// stepped out of; a seat, a moment or an errand has its own reasons.
+		// stepped out of; a seat, a moment or an errand has its own reasons,
+		// and so does a scene being filmed.
 		will = new com.follower.follower.Will(client, follower, speechEngine::dispatch,
 			() -> thrallNpc == null && !errands.isBusy() && !spectate.holdsTheFeet()
 				&& !skilling.holdsTheFeet() && !moments.holdsTheFeet() && !flourish.isActive()
-				&& minutesState == 0 && !emoteHold);
+				&& minutesState == 0 && !emoteHold && !filming);
+		filmSet = new com.follower.follower.FilmSet(follower);
 
 		// On a fresh client boot the LOGIN_SCREEN transition can happen before
 		// this plugin subscribes, so the first login would not read as fresh.
@@ -800,19 +804,26 @@ public class FollowerPlugin extends Plugin
 		chronicleWindow.setOwner(config::followerName);
 		sketchBook = new com.follower.chronicle.SketchBook(dataDir);
 		chronicleWindow.attach(sketchBook);
-		// The scribe sketches the places it has pages for, when you stand
-		// still in one: never mid-fight, mid-errand, mid-conversation, or
-		// with any window open over the view, since the view is the picture.
+		// The scribe sketches the places it has pages for, when you pose for
+		// it: never mid-fight, mid-errand, mid-conversation, or with any
+		// window open over the view, since the view is the picture.
 		sketching = new com.follower.chronicle.SketchController(client, follower, hands, chronicle,
 			sketchBook, drawManager, executor,
 			() -> thrallNpc != null || errands.isBusy() || spectate.holdsTheFeet()
 				|| dialog.isOpen() || chronicleWindow.isOpen() || emoteHold || minutesState != 0
 				|| skilling.holdsTheFeet() || moments.holdsTheFeet() || flourish.isActive()
-				|| speechEngine.getContext().isInCombat() || inCutscene() || windowOverTheView(client),
+				|| speechEngine.getContext().isInCombat() || inCutscene() || windowOverTheView(client)
+				|| filming,
 			() -> speechEngine.getContext().getIdleTicks(),
 			() -> speechEngine.getContext().getRegionId(),
+			() -> client.getLocalPlayer() == null ? null : client.getLocalPlayer().getWorldLocation(),
+			() -> client.getLocalPlayer() == null ? -1 : client.getLocalPlayer().getAnimation(),
 			// Through the engine, so the mute and the output setting hold.
-			speechEngine::remark);
+			speechEngine::remark,
+			// The same, ahead of what waited through the pose.
+			this::sketchSaysNext,
+			// The count was asked for, so it is shown whatever the mute.
+			this::sketchCount);
 		if (client.getGameState() == GameState.LOGGED_IN)
 		{
 			sketchBook.openFor(configManager.getRSProfileKey());
@@ -911,6 +922,14 @@ public class FollowerPlugin extends Plugin
 		{
 			voiceDialog.dispose();
 			voiceDialog = null;
+		}
+		// Disposing is not closing, so no cut is sent: the block below takes
+		// the film's pose off with every other, and the scene's flags go with
+		// the transient state at the end.
+		if (filmDialog != null)
+		{
+			filmDialog.dispose();
+			filmDialog = null;
 		}
 
 		// RuneLite calls this on the Swing thread, and letting go of the
@@ -1021,6 +1040,8 @@ public class FollowerPlugin extends Plugin
 			will.reset();
 		}
 		strandedLandingTicks = 0;
+		filming = false;
+		filmParked = false;
 
 		scanTicksLeft = 0;
 		animTraceRemaining = 0;
@@ -1090,6 +1111,7 @@ public class FollowerPlugin extends Plugin
 			}
 		});
 		panel.setOnComeHere(this::placeHere);
+		panel.setOnFilm(this::openFilmDialog);
 		panel.setFollowerName(config.followerName());
 		// The too-close fire variant is the scheduler's own roll, not a
 		// choice to offer.
@@ -1242,7 +1264,9 @@ public class FollowerPlugin extends Plugin
 			|| (spectate != null && spectate.isSpectating())
 			|| dialog.isOpen()
 			// A long dialog must not sit the minute-taker down mid-sentence.
-			|| minutesState != 0;
+			|| minutesState != 0
+			// Nor sit down over a pose the film has it holding.
+			|| filming;
 		boolean wantRest = config.restWhenIdle()
 			&& config.restAnimation() > 0
 			&& !busy
@@ -1724,6 +1748,14 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void updateWander()
 	{
+		// A sketch under way: no drift starts, and none is let go of. A drift
+		// let go of walked the scribe back to you mid-count with the scroll
+		// out, asked for where it had drifted to; the release below runs once
+		// the scroll is away.
+		if (sketching != null && sketching.isSketching())
+		{
+			return;
+		}
 		int idle = speechEngine.getContext().getIdleTicks();
 		boolean busy = thrallNpc != null
 			|| (errands != null && errands.isBusy())
@@ -1736,7 +1768,10 @@ public class FollowerPlugin extends Plugin
 			|| resting
 			// A long dialog must not walk the minute-taker off the shoulder.
 			|| minutesState != 0
-			|| parkedByPlayer;
+			|| parkedByPlayer
+			// The park covers a scene held still; this covers one walked with
+			// Follow me, where the player stops to type a line.
+			|| filming;
 
 		// Thieving wanders too, and does not wait to be invited. The idle gate
 		// exists so the follower does not drift while the player is busy, but
@@ -2983,6 +3018,318 @@ public class FollowerPlugin extends Plugin
 		});
 	}
 
+	// ------------------------------------------------------------------ filming
+
+	/**
+	 * Whether a scene is being filmed: the follower stands where it is told,
+	 * strikes the poses it is given and says only the lines typed for it.
+	 * Nothing of its own - no chatter, errands, wander, rest, sketch, look
+	 * round, noticing, moments, step-aside or copied emote.
+	 */
+	private boolean filming;
+
+	/**
+	 * Whether the film parked the follower, rather than finding it parked by
+	 * the player. Only then does the end of the scene hand it back to following.
+	 */
+	private boolean filmParked;
+
+	/** The film's hold on the follower's pose and facing; built in startUp. */
+	private com.follower.follower.FilmSet filmSet;
+
+	private com.follower.ui.FilmDialog filmDialog;
+
+	/** The film window, from the panel's Film a scene or ::follower film. */
+	private void openFilmDialog()
+	{
+		javax.swing.SwingUtilities.invokeLater(() ->
+		{
+			if (filmDialog == null)
+			{
+				filmDialog = new com.follower.ui.FilmDialog(filmCrew(), clientThread::invoke);
+			}
+			filmDialog.open();
+		});
+	}
+
+	/**
+	 * The scene starts: the follower stops where it stands and goes quiet.
+	 * Anything waiting to be said goes, as at a silence. The park is the
+	 * player's own, so everything that reads one stands down for it.
+	 */
+	private void startFilming()
+	{
+		filming = true;
+		speechQueue.clear();
+		overlay.clear();
+		// A scroll still out is put away before the film puts anything on.
+		// Left to run out, its end takes off the pose the film has put on
+		// since, and hands the follower back to following, facing and all.
+		if (flourish != null)
+		{
+			flourish.abort();
+		}
+		if (skilling != null)
+		{
+			skilling.putTheLedgerAway();
+		}
+		// A sketch being posed for goes too, without a word: its count and
+		// its line after would be said over the take.
+		if (sketching != null)
+		{
+			sketching.abort();
+		}
+		// A Send paused at a monster's edge would go on into the take.
+		if (will != null)
+		{
+			will.reset();
+		}
+		if (!parkedByPlayer)
+		{
+			follower.stayHere();
+			parkForTheFilm(null);
+		}
+	}
+
+	/**
+	 * The scene is over: the film's pose and facing are let go of, and the
+	 * follower follows again if the film was what parked it. A park the
+	 * player gave before filming is theirs, and stays.
+	 */
+	private void endFilming()
+	{
+		if (!filming)
+		{
+			return;
+		}
+		filming = false;
+		filmSet.letGo();
+		if (filmParked && config.followEnabled())
+		{
+			followAgain();
+		}
+		filmParked = false;
+	}
+
+	/**
+	 * Every film action starts here, so a scene that a logout or a hop ended
+	 * starts again with the next press in the window. A press queued just
+	 * before a stop finds the plugin off, as a queued shift-click does.
+	 *
+	 * @return why nothing can be filmed, or null
+	 */
+	private String ensureFilming()
+	{
+		if (!started || !follower.isSpawned())
+		{
+			return "The follower is not out right now.";
+		}
+		if (!filming)
+		{
+			startFilming();
+		}
+		return null;
+	}
+
+	/**
+	 * A park for the film, given as the player's own, which everything that
+	 * would take the feet reads as theirs taken. Marked as the film's when
+	 * the follower had been following, so the end of the scene hands it back.
+	 */
+	private void parkForTheFilm(WorldPoint sentTo)
+	{
+		if (!parkedByPlayer)
+		{
+			filmParked = true;
+		}
+		parkedByThePlayer(sentTo);
+	}
+
+	/** Choosing a facing holds it still, or the follow would turn it straight back. */
+	private void holdStillForTheFilm()
+	{
+		if (!follower.isStaying())
+		{
+			follower.stayHere();
+			parkForTheFilm(null);
+		}
+	}
+
+	/** A film action once the scene is sure to be under way. */
+	private String film(Runnable action)
+	{
+		String refused = ensureFilming();
+		if (refused == null)
+		{
+			action.run();
+		}
+		return refused;
+	}
+
+	/** A word for the film window's status line, from the client thread. */
+	private void tellTheFilm(String text)
+	{
+		javax.swing.SwingUtilities.invokeLater(() ->
+		{
+			if (filmDialog != null)
+			{
+				filmDialog.status(text);
+			}
+		});
+	}
+
+	/** What the film window asks for, each on the client thread. */
+	private com.follower.ui.FilmDialog.Crew filmCrew()
+	{
+		return new com.follower.ui.FilmDialog.Crew()
+		{
+			@Override
+			public String start()
+			{
+				return ensureFilming();
+			}
+
+			@Override
+			public String hold(int animationId)
+			{
+				return film(() ->
+				{
+					filmSet.hold(animationId);
+					refreshEmoteDisarm(follower.isEmotePlaying());
+				});
+			}
+
+			@Override
+			public String once(int animationId)
+			{
+				return film(() -> filmSet.once(animationId));
+			}
+
+			@Override
+			public String again()
+			{
+				String refused = ensureFilming();
+				if (refused != null)
+				{
+					return refused;
+				}
+				return filmSet.again() ? null : "Nothing has been played once yet.";
+			}
+
+			@Override
+			public String standNormally()
+			{
+				return film(() ->
+				{
+					filmSet.standNormally();
+					refreshEmoteDisarm(follower.isEmotePlaying());
+				});
+			}
+
+			@Override
+			public int lastPlayerAnimation()
+			{
+				return filmSet.getLastPlayerAnimation();
+			}
+
+			@Override
+			public String face(int orientation)
+			{
+				return film(() ->
+				{
+					holdStillForTheFilm();
+					filmSet.face(orientation);
+				});
+			}
+
+			@Override
+			public String faceMe()
+			{
+				return film(() ->
+				{
+					holdStillForTheFilm();
+					filmSet.faceMe();
+				});
+			}
+
+			@Override
+			public String faceCamera()
+			{
+				return film(() ->
+				{
+					holdStillForTheFilm();
+					filmSet.face(com.follower.follower.FilmSet.cameraFacing(client.getCameraYaw()));
+				});
+			}
+
+			@Override
+			public String holdHere()
+			{
+				return film(() ->
+				{
+					follower.stayHere();
+					parkForTheFilm(null);
+					filmSet.reaim();
+				});
+			}
+
+			@Override
+			public String followMe()
+			{
+				// As right-click Follow: the park is over, whoever gave it.
+				// The facing went with the stay.
+				return film(() ->
+				{
+					followAgain();
+					setFollowEnabled(true);
+					filmSet.faceMe();
+				});
+			}
+
+			@Override
+			public String followerSays(String text)
+			{
+				String refused = ensureFilming();
+				if (refused != null)
+				{
+					return refused;
+				}
+				if (npcDialogOpen())
+				{
+					return "It keeps quiet while a dialogue box is open.";
+				}
+				// Straight away, over whatever is up. No rule, so the film's
+				// own gate lets it through, with its voice and the chatbox
+				// mirror as any line has them.
+				speechQueue.clear();
+				speakingUntilMs = 0;
+				speak(text, com.follower.speech.SpeechOutput.OVERHEAD, null, -1, null);
+				return null;
+			}
+
+			@Override
+			public String playerSays(String text)
+			{
+				Player me = client.getLocalPlayer();
+				if (me == null)
+				{
+					return "You are not in the game.";
+				}
+				// Over the player's own head whether the follower is out or not.
+				ensureFilming();
+				filmSet.playerSays(me, text, readingTimeMs(text));
+				return null;
+			}
+
+			@Override
+			public void cut()
+			{
+				// The weapon comes back with the tick's own look at the hands.
+				endFilming();
+			}
+		};
+	}
+
 	/**
 	 * The Share choice: export what the player has written, or take on a
 	 * pack. The Messages window's Share button and the panel's Share lines
@@ -3920,6 +4267,15 @@ public class FollowerPlugin extends Plugin
 		dialog.close();
 		// Same for the minute-taking: the meeting went with the scene.
 		endMinutes(false);
+		// And the film. Its window stays open, and the next press in it
+		// starts the scene again in the new one. The window says so, or it
+		// would go on saying a scene is under way while the follower is back
+		// to its own business.
+		if (filming)
+		{
+			tellTheFilm("The scene ended when you left the world. Press anything here to start it again.");
+		}
+		endFilming();
 		welfareChecked = false;
 		captureFallback.abort();
 		follower.despawn();
@@ -4234,14 +4590,16 @@ public class FollowerPlugin extends Plugin
 	 * not set off with the scroll already out over somebody's meeting. Nor
 	 * during a work session, where the seat has the feet, nor while the seat
 	 * is kept through a bank trip after one. And one under way stands down
-	 * for a park the player gave.
+	 * for a park the player gave, or for a scene being filmed, which may be
+	 * a walk with Follow me and no park at all, or for a sketch.
 	 */
 	private boolean errandBusy()
 	{
 		return dialog.isOpen() || follower.isNpcSlaved() || minutesState != 0
 			|| (skilling != null && skilling.blocksErrands())
 			|| (moments != null && moments.holdsTheFeet())
-			|| parkedByPlayer;
+			|| parkedByPlayer || filming
+			|| (sketching != null && sketching.isSketching());
 	}
 
 	/**
@@ -4261,22 +4619,27 @@ public class FollowerPlugin extends Plugin
 	 * player gave is handed to them apart: it beats everything that walks or
 	 * plants the follower, so a level is clapped where it stands and the news
 	 * is nodded at, but not the wave at the logout tab, which moves nothing.
+	 * A scene being filmed beats them all, the wave included. The clap and
+	 * the nod are played where the follower stands, past this gate, so in a
+	 * take the level and the news are not handed to the moments at all. A
+	 * sketch beats them too: a walk off would leave the picture it is in.
 	 */
 	private boolean momentFeetTaken()
 	{
 		return thrallBusiness() || (spectate != null && spectate.holdsTheFeet())
-			|| (errands != null && errands.isBusy());
+			|| (errands != null && errands.isBusy()) || filming
+			|| (sketching != null && sketching.isSketching());
 	}
 
 	/**
 	 * What the spectator keeps out of the way for: thrall work and its whole
-	 * exit, and an errand in progress. A park the player gave is handed to it
-	 * apart: the fight is still announced at both ends, but watched from the
-	 * post.
+	 * exit, an errand in progress, and a scene being filmed. A park the
+	 * player gave is handed to it apart: the fight is still announced at
+	 * both ends, but watched from the post.
 	 */
 	private boolean spectateBusy()
 	{
-		return thrallBusiness() || (errands != null && errands.isBusy());
+		return thrallBusiness() || (errands != null && errands.isBusy()) || filming;
 	}
 
 	/**
@@ -5130,12 +5493,12 @@ public class FollowerPlugin extends Plugin
 
 	/**
 	 * Empties the follower's hands while it is emoting AT ALL - a one-shot copy
-	 * or a held pose. Both are emotes as far as a player is concerned, so both
-	 * put the weapon away.
+	 * or a held pose, the film's included. Both are emotes as far as a player
+	 * is concerned, so both put the weapon away.
 	 */
 	private void refreshEmoteDisarm(boolean emoting)
 	{
-		boolean wanted = (emoting || mirroredPose != 0
+		boolean wanted = (emoting || mirroredPose != 0 || filmSet != null && filmSet.isHolding()
 			|| skilling != null && skilling.worksBareHanded()) && thrallNpc == null;
 		if (wanted == emoteDisarmed)
 		{
@@ -6453,6 +6816,13 @@ public class FollowerPlugin extends Plugin
 					com.follower.speech.SpeechOutput.OVERHEAD, null, -1, null);
 			}
 		});
+		// Only where a page has a plate for the place, so the option showing
+		// is itself the sign a sketch can be made here; not over one already
+		// under way, nor in a scene being filmed.
+		if (sketching != null && !filming && !sketching.isSketching() && sketching.hasPlateHere())
+		{
+			addFollowerMenuEntry("Sketch", this::askForSketch);
+		}
 		addFollowerMenuEntry(com.follower.chronicle.ChronicleWindow.NAME, chronicleWindow::openNextTick);
 		addFollowerMenuEntry(talkOption(), this::startTalking);
 	}
@@ -6526,6 +6896,19 @@ public class FollowerPlugin extends Plugin
 	/** The Send op's move, on the client thread. */
 	private void sendTo(WorldPoint target)
 	{
+		if (filming)
+		{
+			// Straight there, with no beat before it: the scene has a
+			// director. A refusal goes to the window, out of the shot.
+			if (!follower.stayAt(target))
+			{
+				tellTheFilm("It can't get to that spot from here.");
+				return;
+			}
+			parkForTheFilm(follower.getStayTile());
+			filmSet.reaim();
+			return;
+		}
 		// Through the will, which stops at an edge it has misgivings
 		// about before going on.
 		boolean sent = will != null ? will.send(target) : follower.stayAt(target);
@@ -6541,6 +6924,75 @@ public class FollowerPlugin extends Plugin
 			// the edge stayed three tiles short of a monster for good.
 			parkedByThePlayer(will != null ? will.endsAt() : follower.getStayTile());
 		}
+	}
+
+	/**
+	 * Right-click Sketch and ::follower sketch, on the client thread. A
+	 * refusal is one line over its head, as Step-in-front's is; in a scene
+	 * being filmed it goes to the chat instead, out of the shot. Asked again
+	 * mid-sketch, as only the command can be, nothing is said: the sketch
+	 * under way is the answer, and a refusal held through the count was said
+	 * after the picture, as if the sketch just taken had been refused.
+	 */
+	private void askForSketch()
+	{
+		if (sketching == null || sketching.isSketching())
+		{
+			return;
+		}
+		String refused = sketching.askForSketch();
+		if (refused == null)
+		{
+			return;
+		}
+		if (filming)
+		{
+			sendStatus(refused);
+		}
+		else
+		{
+			speak(refused, com.follower.speech.SpeechOutput.OVERHEAD, null, -1, null);
+		}
+	}
+
+	/**
+	 * A line of the sketch's count shows at least this long, and is gone
+	 * before the next, so the count reads as a count.
+	 */
+	private static final long SKETCH_COUNT_MS = 1_100L;
+
+	/**
+	 * The sketch's count, straight over the follower's head: asked for, so
+	 * the mute does not hold it back, and holding the floor as a line does,
+	 * so nothing queued lands on it. Null clears it, for the picture.
+	 */
+	private void sketchCount(String line)
+	{
+		if (line == null)
+		{
+			overlay.clear();
+			return;
+		}
+		long showFor = Math.min(MAX_SPEECH_MS, Math.max(SKETCH_COUNT_MS,
+			(long) line.length() * 1000L / Math.max(1, config.readingSpeed())));
+		overlay.show(line, showFor);
+		speakingUntilMs = System.currentTimeMillis() + showFor + SPEECH_GAP_MS;
+	}
+
+	/**
+	 * The sketch's word after the picture, through the engine so the mute
+	 * and the output setting hold, and next in line. "There." still has the
+	 * floor when it comes, and queued behind the lines held through the pose
+	 * it was said seconds late, after some unrelated remark, or dropped with
+	 * three waiting. The queue is emptied for the moment it goes in, and
+	 * what waited goes back in behind it, in its order.
+	 */
+	private void sketchSaysNext(String line)
+	{
+		List<Utterance> waiting = new ArrayList<>(speechQueue);
+		speechQueue.clear();
+		speechEngine.remark(line);
+		speechQueue.addAll(waiting);
 	}
 
 	/**
@@ -7146,7 +7598,10 @@ public class FollowerPlugin extends Plugin
 			speechQueue.clear();
 		}
 		wasAbsent = absentNow;
-		speechEngine.setMuted(config.muted() || thievingNow || absentNow || thrallQuiet());
+		// A take is a silence too. Muted, a rule's line is held back in the
+		// engine, as under the Mute, rather than counted as said and then
+		// dropped at the film's gate on its way out.
+		speechEngine.setMuted(config.muted() || thievingNow || absentNow || thrallQuiet() || filming);
 
 		// The bank has no close event of its own; watched by widget presence.
 		// Closing it is an ending (R6) - the restock is done, the breather is
@@ -7722,9 +8177,10 @@ public class FollowerPlugin extends Plugin
 		speechEngine.dispatch(TriggerEvent.chat(
 			event.getMessage(), event.getType().getType(), event.getName()));
 
-		if (skilling != null)
+		if (skilling != null && !filming)
 		{
-			// The stun, the empty rune pouch, the slayer task: silent reactions.
+			// The stun, the empty rune pouch, the slayer task: silent reactions,
+			// and none in a take, where they would turn and gesture over the pose.
 			skilling.noteChatMessage(event.getMessage(), event.getType());
 		}
 		if (moments != null)
@@ -7752,7 +8208,7 @@ public class FollowerPlugin extends Plugin
 			{
 				speechEngine.getContext().tally("collections");
 				speechEngine.dispatch(TriggerEvent.collectionAdd(parsed));
-				if (moments != null)
+				if (moments != null && !filming)
 				{
 					// A first-ever thing is news whatever it sells for; it is
 					// in the bag, so the write-up faces the player.
@@ -8121,6 +8577,8 @@ public class FollowerPlugin extends Plugin
 		}
 
 		int animationId = event.getActor().getAnimation();
+		// The last thing the player did, for the film window's Copy my emote.
+		filmSet.notePlayerAnimation(animationId);
 
 		if (skilling != null)
 		{
@@ -8164,6 +8622,13 @@ public class FollowerPlugin extends Plugin
 			sendStatus("Animation " + animationId
 				+ "  (::follower anim " + animationId + " to replay it)");
 			log.info("WATCH self animation {}", animationId);
+		}
+
+		// An emote while it sketches is the pose: not copied over the scroll,
+		// and not answered while the view is being taken.
+		if (sketching != null && sketching.isSketching())
+		{
+			return;
 		}
 
 		// The follower's tile as of this event, not the last tick's: an emote
@@ -8213,7 +8678,7 @@ public class FollowerPlugin extends Plugin
 		}
 		int graphicId = spotAnim.getId();
 		int graphicHeight = spotAnim.getHeight();
-		if (skilling != null)
+		if (skilling != null && !filming)
 		{
 			// The thieving stun's stars, which land before its message.
 			skilling.noteGraphic(graphicId);
@@ -8504,7 +8969,7 @@ public class FollowerPlugin extends Plugin
 			// remembering it had money on it.
 			speechEngine.getContext().settleBet(worth);
 			speechEngine.dispatch(TriggerEvent.loot(worth, best));
-			if (moments != null)
+			if (moments != null && !filming)
 			{
 				// The body's share: a glance, the notes, or the walk over.
 				moments.noteworthy(com.follower.follower.Moments.tierFor(total), at);
@@ -8546,7 +9011,7 @@ public class FollowerPlugin extends Plugin
 			speechEngine.dispatch(TriggerEvent.levelUp(skill.getName(), level,
 				total, total - (level - previous), base, previousBase, masteries,
 				sinceLast, sinceAny));
-			if (moments != null)
+			if (moments != null && !filming)
 			{
 				// The clap, or the walk over for it; the line is the rules'.
 				moments.levelUp(level);
@@ -8620,6 +9085,8 @@ public class FollowerPlugin extends Plugin
 			command("anim <id...>", "preview an animation on it"),
 			command("gfx <id>", "preview a graphic on it"),
 			command("pose <id>", "hold a looping pose, 0 to release"),
+			command("film", "the film window: pose it and give it lines while you record"),
+			command("sketch", "pose for the chronicle's sketch of this place, as right-click Sketch"),
 			command("height <n>", "lift or lower it"),
 			command("errand [" + String.join("|", ERRAND_KEYS) + "]", "an errand now"),
 			command("reload", "re-read the phrase and sound files"),
@@ -9229,6 +9696,14 @@ public class FollowerPlugin extends Plugin
 
 			case "here":
 				placeHere();
+				break;
+
+			case "film":
+				openFilmDialog();
+				break;
+
+			case "sketch":
+				clientThread.invoke(this::askForSketch);
 				break;
 
 			case "rebuild":
@@ -10426,6 +10901,17 @@ public class FollowerPlugin extends Plugin
 	private void speak(String text, SpeechOutput output, SpeechRule rule, int animationId,
 		Runnable onSaid)
 	{
+		if (cutForTheFilm(filming, rule))
+		{
+			return;
+		}
+		// Nor a silent rule's gesture while a sketch is under way: an idle
+		// fidget played over the scroll, and could be in the picture. It is
+		// body language, not worth playing late, so it goes.
+		if (rule != null && text.isEmpty() && sketching != null && sketching.isSketching())
+		{
+			return;
+		}
 		// A silent rule - an emote mirror, a fidget - contends for nothing:
 		// the queue exists to serialise the overhead text box, and holding an
 		// emote back until a line finishes would have the follower wave at
@@ -10433,6 +10919,17 @@ public class FollowerPlugin extends Plugin
 		if (text.isEmpty())
 		{
 			speakNow(new Utterance(text, output, rule, animationId, onSaid));
+			return;
+		}
+		// Posing for a sketch, the overhead is the count's, and a line said
+		// now would be in the picture. Held, as in a conversation, and said
+		// once the scroll is away.
+		if (sketching != null && sketching.isPosing())
+		{
+			if (speechQueue.size() < SPEECH_QUEUE_LIMIT)
+			{
+				speechQueue.addLast(new Utterance(text, output, rule, animationId, onSaid));
+			}
 			return;
 		}
 
@@ -10459,6 +10956,11 @@ public class FollowerPlugin extends Plugin
 		// Held, not dropped - the stale sweep below decides what survives
 		// a long conversation, same as any other wait.
 		if (dialog.isOpen())
+		{
+			return;
+		}
+		// Nor over a sketch's count, nor into its picture: held the same way.
+		if (sketching != null && sketching.isPosing())
 		{
 			return;
 		}
@@ -10508,6 +11010,17 @@ public class FollowerPlugin extends Plugin
 	static boolean postsToChatbox(boolean mirrorToChat, SpeechOutput output)
 	{
 		return mirrorToChat;
+	}
+
+	/**
+	 * Whether a line is cut while a scene is filmed: anything a rule says,
+	 * and with it the rule's emote copies, plants and chains, which all come
+	 * through here. A line with no rule is the player's own - typed in the
+	 * film window, or ::follower say - and is said.
+	 */
+	static boolean cutForTheFilm(boolean filming, SpeechRule rule)
+	{
+		return filming && rule != null;
 	}
 
 	private void speakNow(Utterance utterance)

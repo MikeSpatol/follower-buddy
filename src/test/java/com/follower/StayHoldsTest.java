@@ -4,15 +4,19 @@ import com.follower.chronicle.ChronicleLoader;
 import com.follower.chronicle.SketchBook;
 import com.follower.chronicle.SketchController;
 import com.follower.follower.ErrandController;
+import com.follower.follower.FilmSet;
 import com.follower.follower.FollowerEntity;
 import com.follower.follower.Gaze;
 import com.follower.follower.Moments;
 import com.follower.follower.Noticing;
+import com.follower.follower.PropFlourish;
 import com.follower.follower.SkillingController;
 import com.follower.follower.Will;
 import com.follower.sim.Harness;
+import com.follower.speech.FollowerOverlay;
 import com.follower.speech.SpeechOutput;
 import com.follower.speech.SpeechRule;
+import com.follower.ui.FilmDialog;
 import com.google.gson.Gson;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -24,13 +28,18 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
 import net.runelite.api.NPC;
 import net.runelite.api.Player;
+import net.runelite.api.Skill;
 import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.events.ChatMessage;
+import net.runelite.api.events.StatChanged;
 import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.events.ConfigChanged;
@@ -42,6 +51,7 @@ import org.junit.rules.TemporaryFolder;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -69,7 +79,11 @@ public class StayHoldsTest
 		WorldPoint stay;
 		int released;
 		int sent;
+		/** The last pose put on, or 0. */
+		int pose;
 		final List<Integer> played = new ArrayList<>();
+		/** Each one-shot played on its own, as the seat's reactions play theirs. */
+		final List<Integer> once = new ArrayList<>();
 
 		Feet()
 		{
@@ -147,11 +161,13 @@ public class StayHoldsTest
 		@Override
 		public void setPoseOverride(int id)
 		{
+			pose = id;
 		}
 
 		@Override
 		public void playAnimation(int id)
 		{
+			once.add(id);
 		}
 
 		@Override
@@ -173,6 +189,11 @@ public class StayHoldsTest
 		{
 			stay = null;
 			return true;
+		}
+
+		@Override
+		public void facePlayer()
+		{
 		}
 	}
 
@@ -672,7 +693,7 @@ public class StayHoldsTest
 			() -> 0, Collections::emptyList));
 		set("sketching", new SketchController(h.game.client, feet, (ErrandController.Hands) get("hands"),
 			new ChronicleLoader(new Gson()), new SketchBook(null), null, null, () -> false, () -> 0,
-			() -> 9999, line -> { }));
+			() -> 9999, () -> feet.at, () -> -1, line -> { }, line -> { }, line -> { }));
 		set("will", new Will(h.game.client, feet, event -> { }, () -> true));
 		h.gameTick();
 
@@ -709,6 +730,549 @@ public class StayHoldsTest
 			force("drop", "2000000", "Dragon", "warhammer"));
 		assertEquals("and the loot's words, with the item named", "the Dragon warhammer that dropped",
 			h.engine.getContext().getIncidentPhrase());
+	}
+
+	// ---------------------------------------------------------------- the film
+
+	@Test
+	public void filmingParksTheFollowerAndTheEndHandsItBack() throws ReflectiveOperationException
+	{
+		film();
+		assertNull("the scene starts", call("ensureFilming"));
+		assertTrue((Boolean) get("filming"));
+		assertEquals("stopped where it stood", feet.at, feet.stay);
+		assertTrue("as the player's park, which everything reads", parked());
+
+		call("endFilming");
+		assertFalse((Boolean) get("filming"));
+		assertFalse("following again", feet.isStaying());
+		assertFalse(parked());
+	}
+
+	@Test
+	public void aParkThePlayerGaveBeforeFilmingOutlastsTheScene() throws ReflectiveOperationException
+	{
+		film();
+		WorldPoint sentTo = new WorldPoint(3230, 3220, 0);
+		call("sendTo", sentTo);
+		call("ensureFilming");
+		call("endFilming");
+		assertEquals("still where it was sent", sentTo, feet.stay);
+		assertEquals(0, feet.released);
+		assertTrue(parked());
+	}
+
+	@Test
+	public void aSendWhileFilmingGoesStraightThereAndIsTheFilms() throws ReflectiveOperationException
+	{
+		// No beat at the edge for a monster: the scene has a director.
+		film();
+		set("will", new Will(h.game.client, feet, event -> { }, () -> true));
+		NPC giant = h.game.spawnNpc(2098, "Hill Giant", 28);
+		h.game.moveNpc(giant, 3232, 3218, 0);
+		h.gameTick();
+		call("ensureFilming");
+		WorldPoint sentTo = new WorldPoint(3231, 3218, 0);
+		call("sendTo", sentTo);
+		assertEquals(sentTo, feet.stay);
+
+		// The film parked it from a follow, so the end hands it back.
+		call("endFilming");
+		assertFalse(feet.isStaying());
+	}
+
+	@Test
+	public void aSendPausedAtAMonsterBeforeTheSceneDoesNotGoOnIntoIt() throws ReflectiveOperationException
+	{
+		// Sent beside the giant just before the window opened: the beat at
+		// the edge ran out mid-take, and the follower left the film's spot
+		// for the giant's.
+		film();
+		Will will = new Will(h.game.client, feet, event -> { }, () -> true);
+		set("will", will);
+		NPC giant = h.game.spawnNpc(2098, "Hill Giant", 28);
+		h.game.moveNpc(giant, 3232, 3218, 0);
+		h.gameTick();
+		call("sendTo", new WorldPoint(3231, 3218, 0));
+		assertTrue("paused at the edge", will.isHesitating());
+
+		call("ensureFilming");
+		WorldPoint filmsSpot = new WorldPoint(3225, 3216, 0);
+		call("sendTo", filmsSpot);
+		for (int i = 0; i < 12; i++)
+		{
+			h.gameTick();
+			will.tick();
+			call("keepThePlayersPark");
+		}
+		assertEquals("still where the film sent it", filmsSpot, feet.stay);
+	}
+
+	@Test
+	public void aFlourishUnderWayWhenTheSceneStartsIsPutAwayFirst() throws ReflectiveOperationException
+	{
+		// A rule's scroll, or the notes, still out as the window opened:
+		// run out under the film's sit, it stood the follower up and handed
+		// it back to following, and the park it came back to faced you.
+		film();
+		PropFlourish flourish = new PropFlourish(feet, (ErrandController.Hands) get("hands"));
+		set("flourish", flourish);
+		assertTrue(flourish.start(ErrandController.SCROLL_PROP, ErrandController.READ_SCROLL_POSE, 8));
+		// The weapon already away, so the hold asks for no rebuild.
+		set("emoteDisarmed", true);
+		FilmDialog.Crew crew = (FilmDialog.Crew) call("filmCrew");
+		assertNull(crew.start());
+		assertFalse("put away as the scene starts", flourish.isActive());
+		assertNull(crew.hold(10061));
+		int released = feet.released;
+		for (int i = 0; i < 12; i++)
+		{
+			flourish.tick();
+			call("keepThePlayersPark");
+		}
+		assertEquals("still sitting", 10061, feet.pose);
+		assertEquals("never handed back to following", released, feet.released);
+		assertTrue(feet.isStaying());
+	}
+
+	@Test
+	public void theSlayerLedgerUnderWayWhenTheSceneStartsIsPutAwayFirst() throws ReflectiveOperationException
+	{
+		film();
+		SkillingController skilling = skilling();
+		h.gameTick();
+		skilling.noteChatMessage("You've completed 26 tasks; return to a Slayer master.",
+			ChatMessageType.GAMEMESSAGE);
+		for (int i = 0; i < 3; i++)
+		{
+			h.gameTick();
+			skilling.tick();
+		}
+		assertEquals("the entry under way", ErrandController.READ_SCROLL_POSE, feet.pose);
+
+		set("emoteDisarmed", true);
+		FilmDialog.Crew crew = (FilmDialog.Crew) call("filmCrew");
+		assertNull(crew.start());
+		assertNull(crew.hold(10061));
+		int released = feet.released;
+		for (int i = 0; i < 12; i++)
+		{
+			h.gameTick();
+			skilling.tick();
+			call("keepThePlayersPark");
+		}
+		assertEquals("still sitting", 10061, feet.pose);
+		assertEquals("never handed back to following", released, feet.released);
+	}
+
+	@Test
+	public void aLedgerEntryStillDueWhenTheSceneStartsIsNotMade() throws ReflectiveOperationException
+	{
+		// The applause was played and the scroll was a beat away.
+		film();
+		SkillingController skilling = skilling();
+		h.gameTick();
+		skilling.noteChatMessage("You've completed 26 tasks; return to a Slayer master.",
+			ChatMessageType.GAMEMESSAGE);
+		h.gameTick();
+		skilling.tick();
+		assertNull(((FilmDialog.Crew) call("filmCrew")).start());
+		for (int i = 0; i < 12; i++)
+		{
+			h.gameTick();
+			skilling.tick();
+			assertFalse("no scroll out in the take", skilling.holdsTheFeet());
+		}
+	}
+
+	@Test
+	public void aLevelOrAGameMessageInATakeIsNotReactedTo() throws ReflectiveOperationException
+	{
+		// None of these comes through a line, so the film's cut never saw
+		// them: the clap for a level, the nod at a new collection log item,
+		// the slayer task's applause and the scratch of the head at no
+		// runes each turned the follower and played over the film's pose.
+		film();
+		moments();
+		skilling();
+		h.gameTick();
+		plugin.onStatChanged(new StatChanged(Skill.ATTACK, 0, 10, 10));
+		set("filming", true);
+		levelAndMessages(11);
+		assertTrue("nothing played in the take: " + feet.played + feet.once,
+			feet.played.isEmpty() && feet.once.isEmpty());
+
+		// The probe: once the scene is over, each of them is played.
+		set("filming", false);
+		levelAndMessages(12);
+		assertEquals("the clap and the nod", Arrays.asList(865, 855), feet.played);
+		assertEquals("the applause and the think", Arrays.asList(865, 857), feet.once);
+	}
+
+	@Test
+	public void aSendTheFilmCannotWalkIsNotSaidOverhead() throws ReflectiveOperationException
+	{
+		film();
+		call("ensureFilming");
+		call("sendTo", (Object) null);
+		assertEquals("nothing overhead to spoil the take", 0L, get("speakingUntilMs"));
+	}
+
+	@Test
+	public void choosingAFacingInAWalkingShotHoldsItStill() throws ReflectiveOperationException
+	{
+		film();
+		FilmDialog.Crew crew = (FilmDialog.Crew) call("filmCrew");
+		assertNull(crew.start());
+		call("followAgain");
+		assertFalse(feet.isStaying());
+
+		assertNull(crew.face(1024));
+		assertTrue("stopped to face north", feet.isStaying());
+		assertTrue(parked());
+		call("endFilming");
+		assertFalse("and the film's stop is handed back", feet.isStaying());
+	}
+
+	@Test
+	public void aPressAfterTheSceneEndedStartsItAgain() throws ReflectiveOperationException
+	{
+		// A logout ends the scene and leaves the window open.
+		film();
+		FilmDialog.Crew crew = (FilmDialog.Crew) call("filmCrew");
+		crew.start();
+		call("endFilming");
+		assertNull(crew.holdHere());
+		assertTrue((Boolean) get("filming"));
+		assertTrue(parked());
+	}
+
+	@Test
+	public void aPressQueuedBeforeAStopFindsThePluginOff() throws ReflectiveOperationException
+	{
+		film();
+		set("started", false);
+		assertEquals("The follower is not out right now.", call("ensureFilming"));
+		assertFalse((Boolean) get("filming"));
+		assertFalse(feet.isStaying());
+	}
+
+	@Test
+	public void nothingOfItsOwnTakesTheFeetInAWalkingShot() throws ReflectiveOperationException
+	{
+		// Follow me in the film window: no park, and still nothing of its own.
+		set("filming", true);
+		for (String gate : new String[]{"momentFeetTaken", "spectateBusy", "errandBusy"})
+		{
+			assertTrue(gate + " while filming", (Boolean) call(gate));
+		}
+		standStill(100);
+		call("updateWander");
+		assertFalse("no drift while the player stops to type", (Boolean) get("wandered"));
+		assertEquals(0, feet.sent);
+	}
+
+	@Test
+	public void aRulesLineAndEmoteAreCutWhileFilmingButATypedLineIsSaid()
+		throws ReflectiveOperationException
+	{
+		SpeechRule rule = new SpeechRule();
+		assertFalse(FollowerPlugin.cutForTheFilm(false, rule));
+		assertTrue("a rule's line, copy or plant", FollowerPlugin.cutForTheFilm(true, rule));
+		assertFalse("the film's own line has no rule", FollowerPlugin.cutForTheFilm(true, null));
+
+		// And the gate is where every line comes in.
+		set("clientThread", clientThread());
+		SpeechRule cheer = new SpeechRule();
+		cheer.id = "hands-won";
+		cheer.holdStill = true;
+		cheer.animation = 862;
+		call("speak", "", SpeechOutput.CHATBOX, cheer, 862, null);
+		assertTrue("the probe reaches the plant", (Boolean) get("emoteHold"));
+		set("emoteHold", false);
+		set("filming", true);
+		call("speak", "", SpeechOutput.CHATBOX, cheer, 862, null);
+		assertFalse("nothing copied while filming", (Boolean) get("emoteHold"));
+	}
+
+	/**
+	 * What no harness drives is read out of the source: the look round,
+	 * noticing, the sketch, the will's step aside, the rest and the mute
+	 * each stand down for the film, the reactions played where it stands
+	 * are not asked for in a take, and the player's animations are kept
+	 * for Copy my emote.
+	 */
+	@Test
+	public void everythingOfItsOwnReadsTheFilm() throws IOException
+	{
+		String source = new String(Files.readAllBytes(
+			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8)
+			.replace("\r\n", "\n");
+		String start = source.substring(source.indexOf("protected void startUp() throws Exception"));
+		for (String built : new String[]{"gaze = new", "noticing = new", "sketching = new", "will = new"})
+		{
+			int at = start.indexOf(built);
+			assertTrue("startUp no longer builds " + built + " - the lint has lost its place", at >= 0);
+			String construction = start.substring(at, start.indexOf(");\n", at));
+			assertTrue(built + " ... must stand down while filming", construction.contains("filming"));
+		}
+		String rest = source.substring(source.indexOf("private void updateRest()"));
+		assertTrue("the rest must not sit it down over the film's pose",
+			rest.substring(0, rest.indexOf("boolean wantRest")).contains("|| filming"));
+		assertTrue("a take is muted, so a rule's line is not counted as said", source.contains(
+			"speechEngine.setMuted(config.muted() || thievingNow || absentNow || thrallQuiet() || filming);"));
+		// The drop's and the graphic's way in, which no test here drives:
+		// each reaction is asked for only outside a take.
+		for (String reaction : new String[]{"skilling.noteChatMessage(", "skilling.noteGraphic(",
+			"moments.levelUp(", "moments.noteworthy("})
+		{
+			int found = 0;
+			for (int at = source.indexOf(reaction); at >= 0; at = source.indexOf(reaction, at + 1))
+			{
+				found++;
+				String guard = source.substring(source.lastIndexOf("if (", at), at);
+				assertTrue(reaction + " ... must not be asked for while filming", guard.contains("&& !filming)"));
+			}
+			assertTrue("no " + reaction + " - the lint has lost its place", found > 0);
+		}
+		String animation = source.substring(source.indexOf("public void onAnimationChanged(AnimationChanged event)"));
+		assertTrue("the player's animations are kept for Copy my emote",
+			animation.substring(0, animation.indexOf("\n\t}\n")).contains("filmSet.notePlayerAnimation(animationId);"));
+		assertTrue("a held film pose puts the weapon away", source.contains("filmSet != null && filmSet.isHolding()"));
+	}
+
+	// ------------------------------------------------------- the posed sketch
+
+	@Test
+	public void aPoseHoldsEveryOtherLineTillTheScrollIsAway() throws ReflectiveOperationException, IOException
+	{
+		// A line said over the count would be in the picture, or talk over
+		// the count. Held, as in a conversation, and said after.
+		film();
+		set("clientThread", clientThread());
+		set("config", new FollowerConfig()
+		{
+			@Override
+			public boolean voiceEnabled()
+			{
+				return false;
+			}
+		});
+		// Muted: the count was asked for, so it shows anyway.
+		h.engine.setMuted(true);
+		List<String> said = new ArrayList<>();
+		SketchController scribe = posedSketch(said);
+		assertNull(scribe.askForSketch());
+		String start = shown();
+		assertTrue("the count starts over its head", start != null && !start.isEmpty());
+
+		set("speakingUntilMs", 0L);
+		call("speak", "a rule's line", SpeechOutput.OVERHEAD, null, -1, null);
+		call("drainSpeechQueue");
+		assertEquals("held, not said over the count", start, shown());
+		for (int i = 0; i < 20 && shown() != null; i++)
+		{
+			// The game tick's order: the sketch, then the queue, with each
+			// count line's time over by then, as an emote's quick picture
+			// can find it.
+			scribe.tick();
+			set("speakingUntilMs", 0L);
+			call("drainSpeechQueue");
+			assertNotEquals("nothing else said into the picture", "a rule's line", shown());
+		}
+		assertNull("the overhead clear for the picture", shown());
+
+		scribe.tick();
+		String there = shown();
+		assertTrue("the word after the picture", there != null && !there.equals("a rule's line"));
+		assertTrue("and it holds the floor as a line does",
+			(Long) get("speakingUntilMs") > System.currentTimeMillis());
+		set("speakingUntilMs", 0L);
+		call("drainSpeechQueue");
+		assertEquals("still held while the scroll is out", there, shown());
+
+		scribe.tick();
+		call("drainSpeechQueue");
+		assertFalse("the scroll away", scribe.isSketching());
+		assertEquals("then what waited is said", "a rule's line", shown());
+	}
+
+	@Test
+	public void aPoseIsNotWalkedOutOf() throws ReflectiveOperationException, IOException
+	{
+		SketchController scribe = posedSketch(new ArrayList<>());
+		assertNull(scribe.askForSketch());
+		for (String gate : new String[]{"momentFeetTaken", "errandBusy"})
+		{
+			assertTrue(gate + " while posing", (Boolean) call(gate));
+		}
+		standStill(100);
+		call("updateWander");
+		assertFalse("no drift out of the picture", (Boolean) get("wandered"));
+		assertEquals(0, feet.sent);
+	}
+
+	@Test
+	public void aDriftAlreadyTakenIsNotLetGoOfMidPose() throws ReflectiveOperationException, IOException
+	{
+		// Asked for where it had drifted to: the pose shut the wander's
+		// window, and the emote reset the stand-still count, so the drift
+		// was let go of and the scribe walked back to you, scroll out.
+		drift();
+		WorldPoint drifted = feet.stay;
+		SketchController scribe = posedSketch(new ArrayList<>());
+		assertNull(scribe.askForSketch());
+		h.game.animating(866);
+		h.gameTick();
+		assertEquals("the emote resets the count", 0, h.engine.getContext().getIdleTicks());
+		call("updateWander");
+		assertEquals("still where it drifted to", drifted, feet.stay);
+		assertEquals("never handed back to following", 0, feet.released);
+
+		// The scroll away, the drift is let go of as it would have been.
+		for (int i = 0; i < 20 && scribe.isSketching(); i++)
+		{
+			scribe.tick();
+		}
+		assertFalse(scribe.isSketching());
+		call("updateWander");
+		assertEquals(1, feet.released);
+		assertFalse((Boolean) get("wandered"));
+	}
+
+	@Test
+	public void theWordAfterThePoseIsSaidNextAheadOfWhatWaited() throws ReflectiveOperationException, IOException
+	{
+		// "There." still has the floor when the word after comes. Queued
+		// behind the lines held through the pose, it came after some
+		// unrelated remark, seconds late, or not at all with three waiting.
+		film();
+		set("clientThread", clientThread());
+		set("config", new FollowerConfig()
+		{
+			@Override
+			public boolean voiceEnabled()
+			{
+				return false;
+			}
+		});
+		speakThroughThePlugin();
+		List<String> said = new ArrayList<>();
+		SketchController scribe = posedSketch(said);
+		assertNull(scribe.askForSketch());
+		call("speak", "a rule's line", SpeechOutput.OVERHEAD, null, -1, null);
+		for (int i = 0; i < 20 && shown() != null; i++)
+		{
+			scribe.tick();
+			set("speakingUntilMs", 0L);
+			call("drainSpeechQueue");
+		}
+		assertNull("taken", shown());
+
+		scribe.tick();
+		String there = shown();
+		// Put away while it still has the floor, as it always does.
+		scribe.tick();
+		assertFalse(scribe.isSketching());
+		assertEquals("the word after", 1, said.size());
+		call("drainSpeechQueue");
+		assertEquals(there, shown());
+		set("speakingUntilMs", 0L);
+		call("drainSpeechQueue");
+		assertEquals("the word after, straight after it", said.get(0), shown());
+		set("speakingUntilMs", 0L);
+		call("drainSpeechQueue");
+		assertEquals("then what waited", "a rule's line", shown());
+	}
+
+	@Test
+	public void aFidgetIsNotPlayedOverTheScroll() throws ReflectiveOperationException, IOException
+	{
+		// Setting up the camera for the picture is standing still, long
+		// enough for the silent fidgets, which no mute or hold stops: one
+		// played over the scroll, and could be in the picture.
+		set("clientThread", onTheClientThread());
+		SpeechRule think = h.rule("idle-fidget-think");
+		call("speak", "", SpeechOutput.OVERHEAD, think, 857, null);
+		assertEquals("the probe: played", Collections.singletonList(857), feet.once);
+		feet.once.clear();
+
+		SketchController scribe = posedSketch(new ArrayList<>());
+		assertNull(scribe.askForSketch());
+		call("speak", "", SpeechOutput.OVERHEAD, think, 857, null);
+		assertTrue("nothing played over the scroll", feet.once.isEmpty());
+	}
+
+	@Test
+	public void askingAgainMidCountSaysNothing() throws ReflectiveOperationException, IOException
+	{
+		// Only ::follower sketch can, as the menu hides Sketch meanwhile.
+		// Its refusal was held through the count and said after the
+		// picture, as if the sketch just taken had been refused.
+		SketchController scribe = posedSketch(new ArrayList<>());
+		call("askForSketch");
+		assertTrue(scribe.isPosing());
+		call("askForSketch");
+		assertTrue("no refusal waiting", ((java.util.Deque<?>) get("speechQueue")).isEmpty());
+	}
+
+	@Test
+	public void aSceneStartingPutsAPoseAwayWithoutAWord() throws ReflectiveOperationException, IOException
+	{
+		film();
+		List<String> said = new ArrayList<>();
+		SketchController scribe = posedSketch(said);
+		assertNull(scribe.askForSketch());
+		assertNull(((FilmDialog.Crew) call("filmCrew")).start());
+		assertFalse("put away as the scene starts", scribe.isSketching());
+		for (int i = 0; i < 12; i++)
+		{
+			scribe.tick();
+			assertNull("nothing over the take", shown());
+		}
+		assertTrue("nor said after it", said.isEmpty());
+	}
+
+	/**
+	 * What no harness drives is read out of the source: the menu offers
+	 * Sketch only where a plate is and never in a take, the command asks on
+	 * the client thread, an emote while sketching is the pose and not
+	 * answered, and the look round and noticing stand aside for it.
+	 */
+	@Test
+	public void theSketchIsAskedForAndStoodAsideFor() throws IOException
+	{
+		String source = new String(Files.readAllBytes(
+			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8)
+			.replace("\r\n", "\n");
+		int entry = source.indexOf("addFollowerMenuEntry(\"Sketch\", this::askForSketch);");
+		assertTrue("the Sketch entry has moved - the scan broke, not the glue", entry >= 0);
+		String offered = source.substring(source.lastIndexOf("if (", entry), entry);
+		assertTrue("offered only where a plate is", offered.contains("sketching.hasPlateHere()"));
+		assertTrue("and never in a take", offered.contains("!filming"));
+		assertTrue("::follower sketch asks on the client thread",
+			source.contains("case \"sketch\":\n\t\t\t\tclientThread.invoke(this::askForSketch);"));
+
+		String animation = source.substring(source.indexOf("public void onAnimationChanged(AnimationChanged event)"));
+		animation = animation.substring(0, animation.indexOf("\n\t}\n"));
+		int skip = animation.indexOf("if (sketching != null && sketching.isSketching())\n\t\t{\n\t\t\treturn;");
+		assertTrue("an emote while sketching is not answered or copied",
+			skip >= 0 && skip < animation.indexOf("speechEngine.dispatch(TriggerEvent.animation(animationId));"));
+		assertTrue("but the film still keeps it for Copy my emote",
+			animation.indexOf("filmSet.notePlayerAnimation(animationId);") < skip);
+
+		String start = source.substring(source.indexOf("protected void startUp() throws Exception"));
+		for (String built : new String[]{"gaze = new", "noticing = new"})
+		{
+			int at = start.indexOf(built);
+			assertTrue("startUp no longer builds " + built + " - the lint has lost its place", at >= 0);
+			String construction = start.substring(at, start.indexOf(");\n", at));
+			assertTrue(built + " ... must stand aside for a sketch", construction.contains("sketching.isSketching()"));
+		}
+		int built = start.indexOf("sketching = new");
+		String sketching = start.substring(built, start.indexOf(");\n", built));
+		assertTrue("the done line and the invitation hold to the mute", sketching.contains("speechEngine::remark"));
+		assertTrue("the count is shown whatever the mute", sketching.contains("this::sketchCount"));
 	}
 
 	// ---------------------------------------------------------------- the glue
@@ -801,6 +1365,112 @@ public class StayHoldsTest
 	}
 
 	// ---------------------------------------------------------------- helpers
+
+	/** The film's own pieces on the bare plugin, as startUp builds them. */
+	private void film() throws ReflectiveOperationException
+	{
+		set("overlay", new FollowerOverlay(null, null, null, null));
+		set("filmSet", new FilmSet(feet));
+		set("started", true);
+	}
+
+	/**
+	 * A posed sketch in Lumbridge on these feet, its count shown and its word
+	 * after said the plugin's own way. What it says is recorded in {@code said}.
+	 */
+	private SketchController posedSketch(List<String> said) throws ReflectiveOperationException, IOException
+	{
+		boolean[] holding = {false};
+		ErrandController.Hands hands = new ErrandController.Hands()
+		{
+			@Override
+			public void hold(int itemId)
+			{
+				holding[0] = true;
+			}
+
+			@Override
+			public void release()
+			{
+				holding[0] = false;
+			}
+
+			@Override
+			public boolean isHolding()
+			{
+				return holding[0];
+			}
+		};
+		ChronicleLoader loader = new ChronicleLoader(new Gson());
+		loader.load(folder.newFolder().toPath());
+		if (get("overlay") == null)
+		{
+			set("overlay", new FollowerOverlay(null, null, null, null));
+		}
+		SketchController sketching = new SketchController(h.game.client, feet, hands, loader, new SketchBook(null),
+			null, null, () -> false, () -> 0, () -> 12850, () -> feet.at, () -> -1, said::add,
+			line ->
+			{
+				said.add(line);
+				try
+				{
+					call("sketchSaysNext", line);
+				}
+				catch (ReflectiveOperationException e)
+				{
+					throw new AssertionError(e);
+				}
+			},
+			line ->
+			{
+				try
+				{
+					call("sketchCount", line);
+				}
+				catch (ReflectiveOperationException e)
+				{
+					throw new AssertionError(e);
+				}
+			});
+		set("sketching", sketching);
+		return sketching;
+	}
+
+	/** What is over the follower's head now, or null. */
+	private String shown() throws ReflectiveOperationException
+	{
+		Field message = FollowerOverlay.class.getDeclaredField("message");
+		message.setAccessible(true);
+		return (String) message.get(get("overlay"));
+	}
+
+	/** The seat on these feet and the plugin's hands, with nothing else taking them. */
+	private SkillingController skilling() throws ReflectiveOperationException
+	{
+		SkillingController skilling = new SkillingController(h.game.client, feet, new FollowerConfig()
+		{
+		}, (ErrandController.Hands) get("hands"), event -> { }, () -> false, () -> false, () -> false);
+		set("skilling", skilling);
+		return skilling;
+	}
+
+	/** A level up to this, a new collection log item, a slayer task done and no runes. */
+	private void levelAndMessages(int level)
+	{
+		plugin.onStatChanged(new StatChanged(Skill.ATTACK, 0, level, level));
+		plugin.onChatMessage(gameMessage("New item added to your collection log: Bronze med helm"));
+		plugin.onChatMessage(gameMessage("You've completed 26 tasks; return to a Slayer master."));
+		plugin.onChatMessage(gameMessage("You do not have enough Fire Runes to cast this spell."));
+	}
+
+	private static ChatMessage gameMessage(String text)
+	{
+		ChatMessage message = new ChatMessage();
+		message.setType(ChatMessageType.GAMEMESSAGE);
+		message.setName("");
+		message.setMessage(text);
+		return message;
+	}
 
 	/** Stands still long enough for the wander, and lets it drift once. */
 	private void drift() throws ReflectiveOperationException
@@ -898,6 +1568,34 @@ public class StayHoldsTest
 		client.setAccessible(true);
 		client.set(thread, h.game.client);
 		return thread;
+	}
+
+	/** A client thread that runs what it is given at once, as on the client thread itself. */
+	private static Object onTheClientThread() throws ReflectiveOperationException
+	{
+		Client client = (Client) Proxy.newProxyInstance(Client.class.getClassLoader(), new Class<?>[]{Client.class},
+			(proxy, method, args) -> method.getName().equals("isClientThread") ? Boolean.TRUE : null);
+		net.runelite.client.callback.ClientThread thread = new net.runelite.client.callback.ClientThread();
+		Field field = thread.getClass().getDeclaredField("client");
+		field.setAccessible(true);
+		field.set(thread, client);
+		return thread;
+	}
+
+	/** The engine's lines into the plugin's own queue, as startUp wires them. */
+	private void speakThroughThePlugin()
+	{
+		h.engine.setSink((text, output, rule, animationId, onSaid) ->
+		{
+			try
+			{
+				call("speak", text, output, rule, animationId, onSaid);
+			}
+			catch (ReflectiveOperationException e)
+			{
+				throw new AssertionError(e);
+			}
+		});
 	}
 
 	/** ::follower force with these words after it, as the chat command hands them over. */

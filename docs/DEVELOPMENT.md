@@ -946,6 +946,8 @@ rather than failing silently.
 | `::follower status` / `where` | Model + rule status, current region id and coordinates |
 | `::follower gfx <id>` | Preview a graphic on the follower |
 | `::follower pose <id>` | Hold a looping pose (0 to release) |
+| `::follower film` | Open the film window: the follower holds still and keeps quiet while you pose it, turn it and type its lines and yours; close the window to end the scene |
+| `::follower sketch` | Pose for the chronicle's sketch of this place, as right-click Sketch on the follower: the scribe counts you in and draws you a moment into the first emote you do, or at the end of the count if you stand still; a place already drawn is drawn again, its old files kept as `.bak` first |
 | `::follower height <n>` | Ground clearance, if the feet clip into terrain |
 
 The side panel's Commands section lists these same everyday commands, and the
@@ -995,7 +997,7 @@ gated ones once Developer commands is on; both read `EVERYDAY_COMMANDS` and
 | `::follower force cutscene on\|off` **[dev]** | Hold the cutscene behaviour as if one were playing: no wander, look round, noticing, sketch or errand of its own, and it looks where you look; let go by `off`, by unticking Developer commands, or with the scene at a logout or hop |
 | `::follower force wave` **[dev]** | The logout tab's wave now, however lately the last one was |
 | `::follower force drop <gp> [item name]` **[dev]** | The drop ladder's body reaction to a drop of that value at your feet (glance, nod, scroll, walk over) and the loot line's words; only the gestures' cooldowns are skipped |
-| `::follower force sketch` **[dev]** | The chronicle sketch of this view now, without the stand-still wait or the retry wait; a place already drawn is drawn again, its old files kept as `.bak` first |
+| `::follower force sketch` **[dev]** | The chronicle sketch of this view now, without the count; a place already drawn is drawn again, its old files kept as `.bak` first |
 | `::follower want` **[dev]** | What the follower is hoping for, and whether a question is open |
 
 `::follower fire` is how you test a rule you cannot conveniently provoke - several
@@ -1507,28 +1509,48 @@ things, named in the page's `plates`:
   centre, which is right for a goblin and a dragon alike and takes about a
   millisecond. A creature not yet met is its outline in flat ink, "Not yet
   seen", as a hint rather than a spoiler.
-- *A sketch* (`sketch`, `regions`): a place the scribe draws itself. The first
-  time you stand still for three ticks in one of the sketch's regions, with
-  nothing else going on and no window open over the view, the follower takes
-  out its scroll; three ticks later the next frame is taken, cropped round you
-  at the plate's shape and clear of the minimap, side panel and chat, and drawn
-  up off the client thread as a watercolour, twice, at the page plate's size
-  and at the enlarged plate's, so the ink is a pen's width in both: an
-  edge-keeping smoothing that
+- *A sketch* (`sketch`, `regions`): a place the scribe draws itself, when you
+  pose for it. Nothing is drawn unasked: the first time in a session you stand
+  still for three ticks in one of a sketch's regions while its plate is empty,
+  with nothing else going on and nothing in its hands, the follower says once
+  that the place wants a plate (held back by the mute, as any line of its own).
+  Right-click Sketch on the follower, offered only where a page has a plate for
+  the place, or `::follower sketch`, takes out its scroll, turns it to you,
+  keeps it facing you whatever you do, and counts you in over its head: a start
+  line, then "Hold it..." twice, shown even when it is muted, since you asked;
+  asking again meanwhile is not answered. The next frame is taken two ticks
+  into the first emote you do, or at the end of the count, about five seconds,
+  if you stand still; a right-click menu open over the view is waited out. The
+  overhead is cleared for the frame, and every other line waits until the
+  scroll is away, so no words are in the picture; an emote you do is not copied
+  or answered, and an idle fidget is not played. Your tile is watched, not how
+  long you have stood still, which an emote resets: stepping off it spoils the
+  pose, and so do a fight, a window opening over the view or anything else that
+  takes the follower, and it says which. The look round, noticing, errands and
+  the moments stand aside meanwhile, the wander neither drifts nor lets go of a
+  drift it took before the ask, and a scene being filmed puts the scroll away
+  without a word. The frame is cropped round you at the plate's shape and clear
+  of the minimap, side panel and chat, and drawn up off the client thread as a
+  watercolour, twice, at the page plate's size and at the enlarged plate's, so
+  the ink is a pen's width in both: an edge-keeping smoothing that
   flattens texture into washes, the colours lightened and warmed by the paper,
   ink lines on the strongest edges found at twice the plate's size, paper grain
-  and a darkened corner. Then it puts the scroll away and says one line, after,
-  so its words are not in the picture. You are in the middle of it, and so,
-  usually, is the scribe. Sketches are kept as PNGs under
-  `chronicle-sketches/<account>/` in the data directory, `<name>.png` and
+  and a darkened corner. Then it says "There.", puts the scroll away and says
+  one line, about the pose for a dance, a bow, a wave, a cheer, a laugh or a
+  think, and one of the usual ones otherwise, next, ahead of the lines that
+  waited. You are in the middle of it, and so, usually, is the scribe.
+  Sketches are kept as PNGs under `chronicle-sketches/<account>/` in the data
+  directory, `<name>.png` and
   `<name>.large.png`, one folder per account (the RuneLite RS profile key),
-  shared by every page that shows the same place, and made once; a place drawn
-  before there were two sizes is drawn again the next time you stand there,
-  and shows the small one stretched until then. Until then the plate is bare paper marked "Not yet
-  sketched.", captioned with its `hint`, what the scribe means to draw and so
-  where to stop: "Stop in Lumbridge and I'll draw it." A place can have
+  shared by every page that shows the same place. Asked for again, a place is
+  drawn again, and whatever is on disk for it is copied to `<name>.png.bak` (or
+  `<name>.png.1.bak` and on) first, as `force sketch` does; a place drawn
+  before there were two sizes is pointed out again, and shows the small one
+  stretched until it is drawn again. Until it is drawn the plate is bare paper
+  marked "Not yet sketched.", captioned with its `hint`, what the scribe means
+  to draw and so where to pose: "Pose for me in Lumbridge." A place can have
   several views, each its own sketch with its own regions (Varrock's square,
-  its palace end and the Exchange), so walking round a place fills its page.
+  its palace end and the Exchange), so posing in each one fills its page.
 
 The sketch regions were checked against the game's own world map with the
 cache dumper's region audit, like every other region id in the plugin.

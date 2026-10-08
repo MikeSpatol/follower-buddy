@@ -57,7 +57,7 @@ public class ChronicleEntry
 	/**
 	 * A picture on a page. Exactly one of {@link #npc} and {@link #sketch} is
 	 * set: a creature or a person is drawn from its own model, turning; a
-	 * place is sketched by the scribe the first time you stand still there.
+	 * place is sketched by the scribe when you pose for it there.
 	 */
 	public static class Plate
 	{
@@ -82,7 +82,7 @@ public class ChronicleEntry
 
 		/**
 		 * A sketch's line until it is drawn: what the scribe means to draw,
-		 * and so where to stand still for it.
+		 * and so where to pose for it.
 		 */
 		public String hint;
 	}

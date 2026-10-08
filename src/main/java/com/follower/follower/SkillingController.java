@@ -1162,6 +1162,17 @@ public class SkillingController
 		}
 	}
 
+	/**
+	 * A scene starts being filmed: the ledger's scroll goes away now, and an
+	 * entry still due is not made. Left to run out, its end takes off the
+	 * pose the film has put on since and hands the follower back to following.
+	 */
+	public void putTheLedgerAway()
+	{
+		ledger.abort();
+		ledgerAt = 0;
+	}
+
 	/** A new task: a shrug. Whatever it is, it is a lot of them. */
 	private void newTask(int now)
 	{

@@ -443,7 +443,7 @@ public class ChronicleIntegrityTest
 					}
 				}
 				// Until a place is drawn its plate says what the scribe means
-				// to draw, so you know where to stand still for it.
+				// to draw, so you know where to pose for it.
 				if (plate.sketch == null)
 				{
 					if (plate.hint != null)

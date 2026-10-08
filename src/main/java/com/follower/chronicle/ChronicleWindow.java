@@ -1021,8 +1021,8 @@ public class ChronicleWindow extends Overlay
 	 * A plate: a thin dark frame, and inside it the picture. A creature or a
 	 * person is drawn from its own model, turning, in its idle; one not yet
 	 * met is its outline in ink. A place is the scribe's sketch, or bare
-	 * paper until the scribe has been there and stood still long enough to
-	 * draw it. Enlarged, a sketch is the copy drawn at that size. Under the
+	 * paper until you have posed for it there. Enlarged, a sketch is the
+	 * copy drawn at that size. Under the
 	 * mouse it lightens a touch, as the game's own pictures that take a
 	 * press do.
 	 */
@@ -1164,7 +1164,7 @@ public class ChronicleWindow extends Overlay
 		if (plate.sketch != null && !sketched)
 		{
 			return number + (plate.hint == null || plate.hint.trim().isEmpty()
-				? "I'll draw it when we're there." : plate.hint);
+				? "Pose for me when we're there." : plate.hint);
 		}
 		return number + (plate.caption == null ? "" : plate.caption);
 	}

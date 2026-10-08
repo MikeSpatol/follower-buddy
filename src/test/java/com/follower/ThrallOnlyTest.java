@@ -326,7 +326,7 @@ public class ThrallOnlyTest
 		String source = new String(Files.readAllBytes(
 			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8);
 		assertTrue("the tick's mute asks",
-			source.contains("speechEngine.setMuted(config.muted() || thievingNow || absentNow || thrallQuiet());"));
+			source.contains("speechEngine.setMuted(config.muted() || thievingNow || absentNow || thrallQuiet()"));
 		assertTrue("and so does the thieving lift",
 			source.contains("speechEngine.setMuted(config.muted() || thrallQuiet());"));
 	}

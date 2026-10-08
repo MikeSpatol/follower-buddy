@@ -151,6 +151,15 @@ public class MomentsTest
 		}
 
 		@Override
+		public void clearPoseOverride(int id)
+		{
+			if (poseOverride == id)
+			{
+				poseOverride = 0;
+			}
+		}
+
+		@Override
 		public void glanceAt(WorldPoint at, int ms)
 		{
 			glances.add(at);
@@ -637,6 +646,24 @@ public class MomentsTest
 		assertEquals(0, follower.poseOverride);
 		assertFalse(moments.holdsTheFeet());
 	}
+
+	@Test
+	public void aPeerLetGoLeavesAPosePutOnSinceAlone()
+	{
+		// The film interrupts a moment on the tick after it starts, and a
+		// pose clicked in the window in that tick was wiped with the peer.
+		tick(1);
+		NPC genie = strangerAt(52, 50, 0, false);
+		game.npcFacingPlayer(genie);
+		tick(1);
+		assertEquals(Moments.PEER, follower.poseOverride);
+
+		follower.setPoseOverride(10061);
+		feetTaken = true;
+		tick(1);
+		assertFalse("interrupted", moments.holdsTheFeet());
+		assertEquals("the sit put on since is kept", 10061, follower.poseOverride);
+	}
 	// --------------------------------------------------------------- the news
 
 	private static final WorldPoint DROP = new WorldPoint(54, 50, 0);
@@ -697,6 +724,25 @@ public class MomentsTest
 		assertTrue(follower.animations.contains(Moments.NOD));
 		tick(2);
 		assertEquals("put away", 0, held);
+	}
+
+	@Test
+	public void theLookUpIsNotNoddedOnceTheFeetAreTakenFromTheNotes()
+	{
+		// A scene filmed from mid-write-up puts the notes away as it starts,
+		// and the look up and the nod still due came into the take.
+		tick(1);
+		moments.noteworthy(Moments.Tier.MEDIUM, DROP);
+		assertEquals(ErrandController.SCROLL_PROP, held);
+		flourish.abort();
+		feetTaken = true;
+		tick(Moments.NOTES_TICKS + 2);
+		assertFalse("no look up", follower.glances.contains(PLAYER));
+		assertFalse("and no nod", follower.animations.contains(Moments.NOD));
+
+		feetTaken = false;
+		tick(2);
+		assertFalse("nor once the feet are back", follower.animations.contains(Moments.NOD));
 	}
 
 	@Test

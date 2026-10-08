@@ -172,4 +172,7 @@ a force-path, so none of it waits on luck:
     the axe back with a bow, nothing left held or posed.
 12. Right-click, Chronicle: the book opens, and Escape or a click outside
     closes it. Stand still somewhere not yet sketched with nothing open:
-    the scroll comes out and one line follows.
+    it says once that the place wants a plate, and draws nothing. Right-click
+    Sketch: the scroll comes out, it turns to you and counts you in. Do an
+    emote: it is taken a moment in, then "There." and a line about the pose.
+    Sketch a place already drawn: the old files are kept as `.bak` first.

@@ -65,8 +65,10 @@ one finished years ago is already written; a creature or a place is written the
 first time the scribe sees it, and stays written. Every page has pictures: the
 creatures and people are drawn from their own models, turning slowly in their
 own idle animation, as an outline in ink until you meet them; the places are
-sketched by the scribe itself, the first time you stand still there, with you in
-the middle of the drawing. Click any picture to see it larger. It
+sketched by the scribe itself, with you in the middle of the drawing: where a
+page has a picture of the place, right-click the follower, pick Sketch and
+strike any emote during its count, or just stand still. Ask again for a
+retake; the old drawing is kept. Click any picture to see it larger. It
 starts small: three quests and a handful of pages around them.
 
 **It keeps you company.** Start on a tree, a rock or a fishing spot and it works
@@ -144,7 +146,12 @@ that, EQUIPMENT (click a slot to change it, right-click to clear it) and BODY
 
 **Behaviour.** A **Stay here** / **Follow me** button, the same switch as
 right-click Stay and Follow on the follower; **Come here**; a **Go on
-errands** tick; and a dropdown of errands with **Go now**.
+errands** tick; a dropdown of errands with **Go now**; and **Film a
+scene...**, a window for recording. While it is open the follower holds still
+and keeps quiet, and you pose it, turn it to a compass point or the camera,
+and type the lines it says. Lines you type for yourself show over your own
+head on your screen only: nothing is sent, and nobody else sees them. Close
+the window to end the scene.
 
 **Commands.** **Bring it here**, **Fix if it vanished** and **Reload phrase
 and sound files**, the list of everyday chat commands, and your current region
@@ -167,10 +174,10 @@ within a second of saving.
 
 Chat commands: type `::follower` on its own for the list. The everyday ones are
 `say <text>`, `here`, `fix`, `rebuild`, `copy`, `outfit <name>`,
-`anim <id...>`, `gfx <id>`, `pose <id>`, `height <n>`, `errand [<name>]`,
-`reload`, `status` and `where`. The diagnostic commands (`watch`, `stance`,
-`mood`, `fire` and the rest) are gated behind **Developer commands** in the
-Developer section, and typing one while it is off says so.
+`anim <id...>`, `gfx <id>`, `pose <id>`, `film`, `sketch`, `height <n>`,
+`errand [<name>]`, `reload`, `status` and `where`. The diagnostic commands
+(`watch`, `stance`, `mood`, `fire` and the rest) are gated behind **Developer
+commands** in the Developer section, and typing one while it is off says so.
 
 ## Privacy and safety
 
@@ -215,7 +222,7 @@ Developer section, and typing one while it is off says so.
   incoming text is validated and sanitised before it reaches a rule file, the
   chatbox or a dialog; see `com.follower.share.PackFile` and the two test
   classes that attack it.
-- The test suite (1474 tests) covers the rule engine, the follower's movement
+- The test suite (1535 tests) covers the rule engine, the follower's movement
   and errand refusals, the skilling seat and its moments, the dialog
   structure, hostile share packs, and every bundled rule's integrity; see
   `docs/testing-strategy.md`.
