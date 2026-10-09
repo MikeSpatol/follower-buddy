@@ -1261,7 +1261,7 @@ public class StayHoldsTest
 		int entry = source.indexOf("addFollowerMenuEntry(\"Sketch\", this::askForSketch);");
 		assertTrue("the Sketch entry has moved - the scan broke, not the glue", entry >= 0);
 		String offered = source.substring(source.lastIndexOf("if (", entry), entry);
-		assertTrue("offered only where a plate is", offered.contains("sketching.hasPlateHere()"));
+		assertTrue("offered only where asking would start one", offered.contains("sketching.canSketchNow()"));
 		assertTrue("and never in a take", offered.contains("!filming"));
 		assertTrue("::follower sketch asks on the client thread",
 			source.contains("case \"sketch\":\n\t\t\t\tclientThread.invoke(this::askForSketch);"));

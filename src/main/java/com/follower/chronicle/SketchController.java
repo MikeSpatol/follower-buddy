@@ -233,12 +233,26 @@ public class SketchController
 	}
 
 	/**
-	 * Whether a page has a plate for this place, drawn or not: where
-	 * right-click Sketch is offered, so seeing it says a sketch can be made.
+	 * Whether asking now would start a sketch: the same gates the asking
+	 * passes, with nothing taken out. Play test, 8 Oct: right-click Sketch
+	 * was offered wherever a page had a plate, and pressing it while the
+	 * follower was busy, walking or holding something only got a refusal.
 	 */
-	public boolean hasPlateHere()
+	public boolean canSketchNow()
 	{
-		return wanted(loader.getEntries(), region.getAsInt(), name -> false) != null;
+		if (stage != Stage.WAITING || busy.getAsBoolean() || !follower.isSpawned()
+			|| !follower.isSettled() || hands.isHolding())
+		{
+			return false;
+		}
+		int regionId = region.getAsInt();
+		String here = wanted(loader.getEntries(), regionId,
+			name -> book.hasBoth(name) || drawing.contains(name));
+		if (here == null)
+		{
+			here = wanted(loader.getEntries(), regionId, name -> false);
+		}
+		return here != null && !drawing.contains(here);
 	}
 
 	/** Once a game tick. */

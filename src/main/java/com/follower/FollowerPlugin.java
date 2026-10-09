@@ -6046,6 +6046,7 @@ public class FollowerPlugin extends Plugin
 		appearanceService.tick();
 		colorHarvester.tick();
 		follower.updateFrame();
+		shiftHoverTooltip();
 		if (filmSet != null)
 		{
 			// A held film pose's props come off for a walk and back on after it.
@@ -6927,7 +6928,7 @@ public class FollowerPlugin extends Plugin
 		// Only where a page has a plate for the place, so the option showing
 		// is itself the sign a sketch can be made here; not over one already
 		// under way, nor in a scene being filmed.
-		if (sketching != null && !filming && !sketching.isSketching() && sketching.hasPlateHere())
+		if (sketching != null && !filming && sketching.canSketchNow())
 		{
 			addFollowerMenuEntry("Sketch", this::askForSketch);
 		}
@@ -7134,10 +7135,19 @@ public class FollowerPlugin extends Plugin
 		}
 
 		addFollowerMenuEntry(talkOption(), this::startTalking);
+	}
 
-		// Shift-hover: the same little action tooltip a real NPC gets, drawn
-		// by RuneLite's own tooltip component so the styling is identical.
-		if (client.isKeyPressed(net.runelite.api.KeyCode.KC_SHIFT))
+	/**
+	 * Shift-hover: the same little action tooltip a real NPC gets, drawn by
+	 * RuneLite's own tooltip component so the styling is identical. Added
+	 * every frame, because the tooltips are cleared after every frame drawn;
+	 * added once a client tick it was missing from every frame past fifty a
+	 * second, and flickered (play test, 8 Oct).
+	 */
+	private void shiftHoverTooltip()
+	{
+		if (client.isKeyPressed(net.runelite.api.KeyCode.KC_SHIFT) && !client.isMenuOpen()
+			&& follower.isSpawned() && follower.isUnderMouse(client.getMouseCanvasPosition()))
 		{
 			tooltipManager.add(new net.runelite.client.ui.overlay.tooltip.Tooltip(
 				talkOption() + " <col=ffff00>" + config.followerName() + "</col>"));

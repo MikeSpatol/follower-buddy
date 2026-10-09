@@ -374,6 +374,24 @@ public class LifecycleGlueTest
 	}
 
 	@Test
+	public void theShiftHoverTooltipIsAddedEveryFrame() throws IOException
+	{
+		// Play test, 8 Oct: added once a client tick, the tooltip was missing
+		// from every frame past fifty a second and flickered.
+		assertTrue("the frame callback adds it",
+			method("public void onBeforeRender(BeforeRender event)").contains("shiftHoverTooltip();"));
+		assertFalse("and not once a client tick",
+			method("public void onClientTick(").contains("tooltipManager"));
+	}
+
+	@Test
+	public void sketchIsOfferedOnlyWhenItWouldStart() throws IOException
+	{
+		assertTrue("the menu asks whether a sketch could start now", source()
+			.contains("if (sketching != null && !filming && sketching.canSketchNow())"));
+	}
+
+	@Test
 	public void aShiftClickTalksOnTheClientThread() throws IOException
 	{
 		// Play test, 29 Sep: the mouse is heard on the Swing thread, and the

@@ -305,9 +305,28 @@ public class SketchControllerTest
 		busy = false;
 		tick(scribe, 20);
 		assertTrue("nothing to point out", said.isEmpty());
-		assertTrue("but Sketch is offered, for a retake", scribe.hasPlateHere());
+		assertTrue("but Sketch is offered, for a retake", scribe.canSketchNow());
 		region = 9999;
-		assertFalse("and only where a page has a plate", scribe.hasPlateHere());
+		assertFalse("and only where a page has a plate", scribe.canSketchNow());
+	}
+
+	/**
+	 * Play test, 8 Oct: Sketch was offered where pressing it only got a
+	 * refusal. It is offered only when asking would start one.
+	 */
+	@Test
+	public void sketchIsOfferedOnlyWhenAskingWouldStartOne() throws IOException
+	{
+		SketchController scribe = scribe();
+		assertTrue("a plate here, nothing in the way", scribe.canSketchNow());
+		busy = true;
+		assertFalse("not while something else has it", scribe.canSketchNow());
+		busy = false;
+		holding = true;
+		assertFalse("not with its hands full", scribe.canSketchNow());
+		holding = false;
+		assertNull("and when it is offered, asking starts one", scribe.askForSketch());
+		assertFalse("not while one is under way", scribe.canSketchNow());
 	}
 
 	@Test
