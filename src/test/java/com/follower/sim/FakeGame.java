@@ -336,6 +336,24 @@ public final class FakeGame
 		return this;
 	}
 
+	/** As {@link #furniture}, but a named object with options: a crop with Pick, say. */
+	public FakeGame furniture(int x, int y, int plane, int type, int bottom, int top,
+		int id, String name, String[] actions)
+	{
+		objectNames.put(id, name);
+		objectActions.put(id, actions);
+		furniture(x, y, plane, type, bottom, top);
+		List<net.runelite.api.GameObject> here = placedObjects.get(plane + ":" + x + ":" + y);
+		net.runelite.api.GameObject plain = here.remove(here.size() - 1);
+		Map<String, Object> answers = new HashMap<>();
+		answers.put("getId", id);
+		answers.put("getWorldLocation", plain.getWorldLocation());
+		answers.put("getConfig", plain.getConfig());
+		answers.put("getRenderable", plain.getRenderable());
+		here.add(proxy(net.runelite.api.GameObject.class, answers));
+		return this;
+	}
+
 	public FakeGame animating(int id)
 	{
 		playerAnswers.put("getAnimation", id);

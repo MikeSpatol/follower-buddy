@@ -625,6 +625,21 @@ public class WallPathingTest
 		assertFalse("and bare floor", follower.furnished(new WorldPoint(10, 5, 0)));
 	}
 
+	/** Wheat is walked into by everyone: a crop with Pick is no furniture, a booth still is. */
+	@Test
+	public void aCropWithPickIsNoFurniture()
+	{
+		FakeGame game = new FakeGame().withCollision().at(10, 10, 0)
+			.furniture(10, 12, 0, 10, 0, 110, 15506, "Wheat", new String[]{"Pick", null, null, null, null})
+			.furniture(11, 12, 0, 10, 0, 224, 18491, "Bank booth", new String[]{"Bank", "Collect", null, null, null});
+		FollowerEntity follower = followerOn(game);
+		standOn(follower, new WorldPoint(11, 9, 0));
+
+		assertFalse("wheat", follower.furnished(new WorldPoint(10, 12, 0)));
+		assertTrue("a booth", follower.furnished(new WorldPoint(11, 12, 0)));
+		assertTrue("so it may stop in the wheat", follower.stayAt(new WorldPoint(10, 12, 0)));
+	}
+
 	/**
 	 * Plants and crops count as furniture too, since nothing tells them from
 	 * a booth. A player standing in a flowerbed still gets the follower

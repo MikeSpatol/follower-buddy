@@ -1094,6 +1094,32 @@ public class FollowerEntity
 	private static final int CHEST_HEIGHT = 128;
 
 	/**
+	 * Whether the object is a crop: anything with a Pick option, as it is now
+	 * if it changes with a varbit. Review, 8 Oct: a Send into a wheat field
+	 * was refused as if the field were a table.
+	 */
+	private boolean isCrop(int objectId)
+	{
+		net.runelite.api.ObjectComposition composition = client.getObjectDefinition(objectId);
+		if (composition != null && composition.getImpostorIds() != null)
+		{
+			composition = composition.getImpostor();
+		}
+		String[] actions = composition == null ? null : composition.getActions();
+		if (actions != null)
+		{
+			for (String action : actions)
+			{
+				if ("Pick".equalsIgnoreCase(action))
+				{
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * Whether furniture fills this tile though the map may call it open.
 	 *
 	 * <p>Play test, 8 Oct: logging in at the top-floor bank of Lumbridge
@@ -1107,10 +1133,10 @@ public class FollowerEntity
 	 * Walls, doors, wall decorations, roofs and ground objects are other
 	 * types and never count.
 	 *
-	 * <p>Tall plants and crops count too; nothing tells them from a booth.
-	 * So this is asked only where the follower is put or chooses to stop,
-	 * never by the route search, which may follow the player's own trail
-	 * through a wheat field.
+	 * <p>Crops with a Pick option - wheat, flax, potatoes - are walked into
+	 * by everyone and are left out ({@link #isCrop}); other tall plants
+	 * still count. This is asked only where the follower is put or chooses
+	 * to stop, never by the route search.
 	 */
 	public boolean furnished(WorldPoint at)
 	{
@@ -1150,7 +1176,7 @@ public class FollowerEntity
 			net.runelite.api.Renderable renderable = object.getRenderable();
 			// Players and NPCs are put in the same arrays as they are drawn.
 			if ((type != 10 && type != 11) || renderable == null
-				|| renderable instanceof net.runelite.api.Actor)
+				|| renderable instanceof net.runelite.api.Actor || isCrop(object.getId()))
 			{
 				continue;
 			}
