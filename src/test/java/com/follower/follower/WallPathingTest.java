@@ -340,17 +340,17 @@ public class WallPathingTest
 			source.contains("if (!object.isActive() && !hiddenForNpcOverlap && " + loaded + ")"));
 	}
 
+	/** The two open booths of the Lumbridge row; see {@link #lumbridgeBank}. */
+	private static final java.util.List<WorldPoint> BOOTHS = java.util.Arrays.asList(
+		new WorldPoint(9, 11, 0), new WorldPoint(10, 11, 0));
+
 	/**
-	 * Play test, 8 Oct: logging in at the top-floor bank of Lumbridge castle
-	 * put the follower inside a bank booth, on a fully loaded map. Two booths
-	 * in that row ignore collision and the floor under them is not blocked,
-	 * so the map reads them open while the booth's model fills the tile.
-	 * Laid out as the dump found it, on one floor here: the player south of
-	 * the row, the closed booths at either end solid, the two open ones
-	 * between them, and the floor behind the row blocked.
+	 * The top-floor bank of Lumbridge castle, laid out as the dump found it,
+	 * on one floor here: the player at (10,10) south of the row, the closed
+	 * booths at either end solid, the two open ones between them, and the
+	 * floor behind the row blocked.
 	 */
-	@Test
-	public void aBoothTheMapCallsOpenIsStillNoPlaceToBePut()
+	private static FakeGame lumbridgeBank()
 	{
 		FakeGame game = new FakeGame().withCollision().at(10, 10, 0);
 		game.blockTile(8, 11).blockTile(11, 11);
@@ -359,13 +359,23 @@ public class WallPathingTest
 			game.blockTile(x, 12);
 		}
 		// The Bank booth and its neighbour: placed as type 10, 224 tall.
-		game.furniture(9, 11, 0, 10, 0, 224).furniture(10, 11, 0, 10, 0, 224);
+		return game.furniture(9, 11, 0, 10, 0, 224).furniture(10, 11, 0, 10, 0, 224);
+	}
+
+	/**
+	 * Play test, 8 Oct: logging in at the top-floor bank of Lumbridge castle
+	 * put the follower inside a bank booth, on a fully loaded map. Two booths
+	 * in that row ignore collision and the floor under them is not blocked,
+	 * so the map reads them open while the booth's model fills the tile.
+	 */
+	@Test
+	public void aBoothTheMapCallsOpenIsStillNoPlaceToBePut()
+	{
+		FakeGame game = lumbridgeBank();
 		FollowerEntity follower = followerOn(game);
 		WorldPoint player = new WorldPoint(10, 10, 0);
-		java.util.List<WorldPoint> booths = java.util.Arrays.asList(
-			new WorldPoint(9, 11, 0), new WorldPoint(10, 11, 0));
 
-		assertTrue("the map really does call the booth open", follower.standable(booths.get(1)));
+		assertTrue("the map really does call the booth open", follower.standable(BOOTHS.get(1)));
 
 		// Facing south, as after a login, behind is the booth straight north;
 		// facing south-east it is the other one.
@@ -373,16 +383,225 @@ public class WallPathingTest
 		{
 			WorldPoint behind = follower.restingTileBehind(game.turned(jau).player, 2);
 			assertNotNull(behind);
-			assertFalse("facing " + jau + " it was put in a booth: " + behind, booths.contains(behind));
+			assertFalse("facing " + jau + " it was put in a booth: " + behind, BOOTHS.contains(behind));
 			assertTrue(follower.standable(behind));
 		}
 
-		for (WorldPoint booth : booths)
+		for (WorldPoint booth : BOOTHS)
 		{
 			WorldPoint landing = follower.landingTile(booth, player);
-			assertFalse("told to land in a booth, it landed in one: " + landing, booths.contains(landing));
+			assertFalse("told to land in a booth, it landed in one: " + landing, BOOTHS.contains(landing));
 			assertTrue(follower.standable(landing));
 			assertFalse("and not on the player", player.equals(landing));
+		}
+	}
+
+	/**
+	 * Play test, 8 Oct, the same bank: with the placement kept out of the
+	 * booth, the follower wandered into it. Everything that picks somewhere
+	 * for it to stand ends in a stay - the wander and its drift over to the
+	 * banker behind the counter, the seats, the errands, the moments - and
+	 * the look over the shoulder and the welfare check walk to the tile in
+	 * front of the player, which at a bank is the booth they face.
+	 */
+	@Test
+	public void nothingTheFollowerPicksForItselfEndsInTheBooth()
+	{
+		FakeGame game = lumbridgeBank();
+		FollowerEntity follower = followerOn(game);
+		// Following, at rest beside the player.
+		standOn(follower, new WorldPoint(11, 9, 0));
+
+		// Every tile a wander or a drift could aim at: the drift goes beside
+		// something within six tiles, and the wander six at the most. A stay
+		// is planned, not walked, so each starts from the same place.
+		for (int x = 10 - 7; x <= 10 + 7; x++)
+		{
+			for (int y = 10 - 7; y <= 10 + 7; y++)
+			{
+				WorldPoint target = new WorldPoint(x, y, 0);
+				if (follower.stayAt(target))
+				{
+					assertFalse("sent to " + target + ", it came to rest in the booth at "
+						+ follower.getStayTile(), BOOTHS.contains(follower.getStayTile()));
+				}
+			}
+		}
+		for (WorldPoint booth : BOOTHS)
+		{
+			assertFalse("a seat chosen by the steps it takes", follower.arrivesAt(booth));
+		}
+
+		assertFalse("facing the booth, in front of them is no place to stand",
+			follower.moveToFront(game.turned(1024).player));
+	}
+
+	/**
+	 * A Send at the booth is the player's own choice, and their rule is the
+	 * same: they mean over there, not into that, so it lands beside the
+	 * booth as it does beside a fire, rather than being refused.
+	 */
+	@Test
+	public void aSendAtTheBoothLandsBesideIt()
+	{
+		FakeGame game = lumbridgeBank();
+		FollowerEntity follower = followerOn(game);
+		standOn(follower, new WorldPoint(11, 9, 0));
+		Will will = new Will(game.client, follower, event -> { }, () -> true);
+
+		for (WorldPoint booth : BOOTHS)
+		{
+			assertTrue("sent at the booth at " + booth + ", it goes", will.send(booth));
+			assertFalse("but not into it: " + follower.getStayTile(),
+				BOOTHS.contains(follower.getStayTile()));
+		}
+	}
+
+	/**
+	 * Crops count as furniture, and a field is nothing else. Sent from among
+	 * them to the field's edge, the tiles round the spot nearest the follower
+	 * are crops too; it is the open ground past them that it lands on.
+	 */
+	@Test
+	public void aSendToTheEdgeOfAFieldLandsClearOfTheCrops()
+	{
+		FakeGame game = new FakeGame().withCollision().at(10, 10, 0);
+		for (int x = 12; x <= 16; x++)
+		{
+			for (int y = 8; y <= 12; y++)
+			{
+				game.furniture(x, y, 0, 10, 0, 90);
+			}
+		}
+		FollowerEntity follower = followerOn(game);
+		standOn(follower, new WorldPoint(14, 10, 0));
+		Will will = new Will(game.client, follower, event -> { }, () -> true);
+
+		assertTrue("sent to the field's edge, it goes", will.send(new WorldPoint(16, 10, 0)));
+		assertFalse("and stops out of the crops: " + follower.getStayTile(),
+			follower.furnished(follower.getStayTile()));
+	}
+
+	/**
+	 * The bank errand walks to the booth itself, and closest approach stops
+	 * it in front. A booth the map calls open is walked into instead, which
+	 * the feet refuse, and the errand was lost at that bank; it stands in
+	 * front of the booth there too.
+	 */
+	@Test
+	public void theBankErrandStandsInFrontOfABoothTheMapCallsOpen()
+	{
+		FakeGame game = lumbridgeBank().placeObject(9030, "Bank booth", 9, 11, 0);
+		FollowerEntity follower = followerOn(game);
+		standOn(follower, new WorldPoint(11, 9, 0));
+		ErrandController errands = new ErrandController(game.client, follower,
+			new com.follower.FollowerConfig()
+			{
+			}, event -> { }, null, () -> false, new ErrandController.Hands()
+			{
+				@Override
+				public void hold(int itemId)
+				{
+				}
+
+				@Override
+				public void release()
+				{
+				}
+			});
+
+		errands.force("bank");
+		errands.tick();
+
+		assertTrue("the errand never started", errands.isBusy());
+		assertNotNull(follower.getStayTile());
+		assertFalse("it went into the booth: " + follower.getStayTile(),
+			BOOTHS.contains(follower.getStayTile()));
+	}
+
+	/**
+	 * The fire gag walks into the flames on purpose, and a fire is an object
+	 * placed the way furniture is. The one tile the follower is told to walk
+	 * onto anyway is let off the furniture as it is the fire.
+	 */
+	@Test
+	public void theTileItInsistsOnMayBeFurnished()
+	{
+		WorldPoint fire = new WorldPoint(12, 10, 0);
+		FakeGame game = new FakeGame().withCollision().at(10, 10, 0)
+			.furniture(fire.getX(), fire.getY(), 0, 10, 0, 100);
+		FollowerEntity follower = followerOn(game);
+		standOn(follower, new WorldPoint(11, 9, 0));
+		follower.setHotGround(fire::equals);
+
+		assertTrue(follower.furnished(fire));
+		assertTrue("it walks into the fire it was told to", follower.insistOn(fire));
+		assertEquals(fire, follower.getStayTile());
+	}
+
+	/**
+	 * Where the player stops, the follow tile is where the follower comes to
+	 * rest. It is the tile they last stepped from, which may be the booth,
+	 * since the map lets them into it, and on a long walk the flank, which
+	 * along the row is the next booth.
+	 */
+	@Test
+	public void theFollowTileIsNeverTheBooth()
+	{
+		FakeGame game = lumbridgeBank();
+		WorldPoint player = new WorldPoint(10, 10, 0);
+
+		FollowerEntity follower = followerOn(game);
+		// At their east shoulder, where the nearest tile round the west booth
+		// is the east one.
+		standOn(follower, new WorldPoint(11, 10, 0));
+		for (WorldPoint booth : BOOTHS)
+		{
+			WorldPoint follow = follower.followTileFor(booth, player, booth, 1, 10_000);
+			assertFalse("stepped out of the booth, it was followed into it", BOOTHS.contains(follow));
+			assertTrue(follower.standable(follow));
+			assertFalse("and not onto the player", player.equals(follow));
+		}
+
+		// Walking east along the row until it draws level, and stopping at
+		// the booth: the shoulder on the row's side is the other one.
+		FollowerEntity beside = followerOn(game);
+		beside.setWalksBeside(true);
+		WorldPoint follow = null;
+		long now = 10_000;
+		for (int x = 10 - FollowerEntity.BESIDE_AFTER_STEPS + 1; x <= 10; x++)
+		{
+			now += 600;
+			follow = beside.followTileFor(new WorldPoint(x - 1, 10, 0), new WorldPoint(x, 10, 0),
+				new WorldPoint(x - 1, 10, 0), 1, now);
+		}
+		assertTrue("it had drawn level", beside.isWalkingBeside());
+		assertFalse("stopped at the booth, it was beside them in the next: " + follow,
+			BOOTHS.contains(follow));
+		assertTrue(beside.standable(follow));
+	}
+
+	/**
+	 * Spawned and at rest on a tile, as following leaves it. The frame that
+	 * puts it there needs a live client, so this is the entity's own state.
+	 */
+	private static void standOn(FollowerEntity follower, WorldPoint at)
+	{
+		try
+		{
+			for (String name : new String[]{"tile", "simTile"})
+			{
+				java.lang.reflect.Field field = FollowerEntity.class.getDeclaredField(name);
+				field.setAccessible(true);
+				field.set(follower, at);
+			}
+			java.lang.reflect.Field spawned = FollowerEntity.class.getDeclaredField("spawned");
+			spawned.setAccessible(true);
+			spawned.set(follower, true);
+		}
+		catch (ReflectiveOperationException e)
+		{
+			throw new AssertionError("FollowerEntity's fields have moved", e);
 		}
 	}
 

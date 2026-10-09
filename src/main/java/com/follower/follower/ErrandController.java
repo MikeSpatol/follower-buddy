@@ -591,7 +591,10 @@ public class ErrandController
 					bank = findNpc(name -> name.equals("Banker")
 						|| name.equals("Grand Exchange Clerk"));
 				}
-				return startTravelErrand(errand, bank);
+				// Closest approach stops the walk in front of a booth, but one
+				// the map calls open floor is walked into, and the feet refuse
+				// to stop in that: the tile beside it then, as at a fire.
+				return startTravelErrand(errand, bank) || startAdjacentErrand(errand, bank);
 			}
 			case ALTAR:
 				return startTravelErrand(errand, findObject(name -> name.equals("Altar")));

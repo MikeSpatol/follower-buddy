@@ -42,6 +42,12 @@ public class WalkingBesideTest
 			return (dx != 0 || dy != 0)
 				&& !blocked.contains(new WorldPoint(from.getX() + dx, from.getY() + dy, from.getPlane()));
 		}
+
+		@Override
+		public boolean furnished(WorldPoint at)
+		{
+			return false;
+		}
 	}
 
 	private OpenGroundFollower follower;

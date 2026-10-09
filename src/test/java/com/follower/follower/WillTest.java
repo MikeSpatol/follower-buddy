@@ -78,6 +78,12 @@ public class WillTest
 		}
 
 		@Override
+		public boolean furnished(WorldPoint at)
+		{
+			return false;
+		}
+
+		@Override
 		public boolean stayAt(WorldPoint target)
 		{
 			if (target == null)

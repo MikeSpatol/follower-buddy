@@ -147,6 +147,12 @@ public class StayHoldsTest
 		}
 
 		@Override
+		public boolean furnished(WorldPoint tile)
+		{
+			return false;
+		}
+
+		@Override
 		public void resumeFollowing()
 		{
 			stay = null;

@@ -56,6 +56,18 @@ public class PostArrivalTest
 		assertTrue(follower.arrivalTile(POST, PLAYER, true).distanceTo(PLAYER) <= 2);
 	}
 
+	/**
+	 * A bank booth the map calls open floor: a post kept there from before
+	 * the feet refused one would put it back inside at every login.
+	 */
+	@Test
+	public void aPostInABoothIsNot()
+	{
+		FakeGame game = new FakeGame().withCollision().furniture(POST.getX(), POST.getY(), 0, 10, 0, 224);
+
+		assertTrue(followerOn(game).arrivalTile(POST, PLAYER, true).distanceTo(PLAYER) <= 2);
+	}
+
 	@Test
 	public void aPostWalledOffFromThePlayerIsNot()
 	{

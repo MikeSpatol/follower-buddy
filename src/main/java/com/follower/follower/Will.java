@@ -114,8 +114,9 @@ public class Will
 		wary = false;
 		pending = null;
 		misgiving = null;
-		// A tile with a fire on it: the player means over there, not into
-		// that, so the Send lands beside it rather than being refused.
+		// A tile with a fire on it, or a booth or table in it that the map
+		// calls open floor: the player means over there, not into that, so
+		// the Send lands beside it rather than being refused.
 		target = beside(target);
 		WorldPoint from = follower.getWorldLocation();
 		Player local = client.getLocalPlayer();
@@ -169,7 +170,7 @@ public class Will
 	private WorldPoint beside(WorldPoint target)
 	{
 		WorldPoint from = follower.getWorldLocation();
-		if (target == null || follower.goodGround(target))
+		if (target == null || (follower.goodGround(target) && !follower.furnished(target)))
 		{
 			return target;
 		}
@@ -178,7 +179,7 @@ public class Will
 		for (WorldPoint spot : SkillingController.ring(target, target, 1, target.getPlane()))
 		{
 			int away = from == null ? 0 : spot.distanceTo(from);
-			if (follower.goodGround(spot) && away < nearest)
+			if (follower.goodGround(spot) && !follower.furnished(spot) && away < nearest)
 			{
 				nearest = away;
 				best = spot;

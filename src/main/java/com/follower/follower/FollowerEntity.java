@@ -226,7 +226,9 @@ public class FollowerEntity
 	 * Where to follow to this observation: the tile behind, or the flank
 	 * once the run has gone on long enough and the flank is open. Never a
 	 * tile that is alight - the tile the player last stepped from is the
-	 * one they just lit, for the whole of a firemaking line.
+	 * one they just lit, for the whole of a firemaking line - nor one that
+	 * furniture fills, since wherever the player stops, the follow tile is
+	 * where the follower comes to rest.
 	 *
 	 * @param previous the player's tile before this step
 	 * @param current their tile now
@@ -247,21 +249,25 @@ public class FollowerEntity
 		if (!besideAllowed || stayTile != null || goalTile != null)
 		{
 			beside = false;
-			return coolFollowTile(behind);
+			return coolFollowTile(behind, true);
 		}
 		if (!beside)
 		{
 			if (stepStreak < BESIDE_AFTER_STEPS)
 			{
-				return coolFollowTile(behind);
+				return coolFollowTile(behind, true);
 			}
 			beside = true;
 			besideMisses = 0;
 			besideSide = sideOf(previous, current, tile);
 		}
 		WorldPoint flank = flankTile(previous, current, besideSide);
+		// A booth the map leaves open is open ground to the map, and a player
+		// walking along the row and stopping at it would leave the follower
+		// standing in the next. Asked last, being the one that reads the scene.
 		if (flank != null && goodGround(flank)
-			&& canStep(current, flank.getX() - current.getX(), flank.getY() - current.getY()))
+			&& canStep(current, flank.getX() - current.getX(), flank.getY() - current.getY())
+			&& !furnished(flank))
 		{
 			besideMisses = 0;
 			return flank;
@@ -272,7 +278,7 @@ public class FollowerEntity
 			beside = false;
 			stepStreak = BESIDE_AFTER_STEPS - BESIDE_RETRY_STEPS;
 		}
-		return coolFollowTile(behind);
+		return coolFollowTile(behind, true);
 	}
 
 	/**
@@ -287,10 +293,20 @@ public class FollowerEntity
 	 *
 	 * <p>Never the player's own tile: that is the one tile every route is
 	 * told to walk around, so choosing it is choosing nowhere.
+	 *
+	 * <p>Nor, where it is chosen, a tile furniture fills: a booth the map
+	 * calls open floor, which the player may have stepped out of. The tile
+	 * beside it then, out of the furniture too, or the tile itself where
+	 * there is none, in a field of crops, rather than nowhere to go.
+	 *
+	 * @param chosen whether this is the step the tile is chosen on, which
+	 * also asks after furniture. The frame asks again only about fire, which
+	 * goes up after the tile was chosen; furniture was there already, and
+	 * asking every frame would read the scene every frame.
 	 */
-	private WorldPoint coolFollowTile(WorldPoint wanted)
+	private WorldPoint coolFollowTile(WorldPoint wanted, boolean chosen)
 	{
-		if (wanted == null || !hot(wanted))
+		if (wanted == null || (!hot(wanted) && !(chosen && furnished(wanted))))
 		{
 			return wanted;
 		}
@@ -308,7 +324,8 @@ public class FollowerEntity
 				}
 				WorldPoint beside = new WorldPoint(wanted.getX() + dx,
 					wanted.getY() + dy, wanted.getPlane());
-				if (beside.equals(player) || !goodGround(beside))
+				if (beside.equals(player) || !goodGround(beside)
+					|| (chosen && furnished(beside)))
 				{
 					continue;
 				}
@@ -691,8 +708,9 @@ public class FollowerEntity
 	 * Sends the follower to the open tile in front of the player, facing them on
 	 * arrival. Following pauses until it arrives or the player moves.
 	 *
-	 * @return false when no legal, reachable tile exists in front - the caller
-	 * should have the follower say so rather than shoving into a wall
+	 * @return false when no legal, reachable tile exists in front, or
+	 * furniture fills it - the caller should have the follower say so rather
+	 * than shoving into a wall
 	 */
 	public boolean moveToFront(Player local)
 	{
@@ -715,8 +733,13 @@ public class FollowerEntity
 			facePlayer();
 			return true;
 		}
+		// Nor into furniture the map leaves open. In front of a player at a
+		// bank is the booth they face, so a look over the shoulder while
+		// they work at it, or the welfare check while they stand there,
+		// would walk straight in.
 		if (!canStep(playerTile, dx, dy)
-			|| !reachableFrom(playerTile, 3).contains(front))
+			|| !reachableFrom(playerTile, 3).contains(front)
+			|| furnished(front))
 		{
 			return false;
 		}
@@ -1085,10 +1108,11 @@ public class FollowerEntity
 	 * types and never count.
 	 *
 	 * <p>Tall plants and crops count too; nothing tells them from a booth.
-	 * So this is asked only where the follower is put, never by the route
-	 * search, which may follow the player's own trail through a wheat field.
+	 * So this is asked only where the follower is put or chooses to stop,
+	 * never by the route search, which may follow the player's own trail
+	 * through a wheat field.
 	 */
-	boolean furnished(WorldPoint at)
+	public boolean furnished(WorldPoint at)
 	{
 		net.runelite.api.WorldView view = at == null ? null : client.findWorldViewFromWorldPoint(at);
 		if (view == null || view.getScene() == null)
@@ -1429,10 +1453,10 @@ public class FollowerEntity
 	 */
 	/**
 	 * Every spot the follower is given comes through here - the seat, the
-	 * errands, the wander, the moments, a Send - so this is where a fire is
-	 * refused once, for all of them. The callers that offer a list of
-	 * candidates move on to the next, which is what each already does when
-	 * the ground refuses a tile.
+	 * errands, the wander, the moments, a Send - so this is where a fire, and
+	 * furniture the map calls open floor, are refused once, for all of them.
+	 * The callers that offer a list of candidates move on to the next, which
+	 * is what each already does when the ground refuses a tile.
 	 */
 	public boolean stayAt(WorldPoint target)
 	{
@@ -1457,7 +1481,7 @@ public class FollowerEntity
 		// stay ON the fire, and the next frame did it again. Refusing sends
 		// the caller to its next candidate, which is what they all do.
 		WorldPoint settled = path.isEmpty() ? from : path.get(path.size() - 1);
-		if (hot(settled))
+		if (!restsOn(settled))
 		{
 			return false;
 		}
@@ -1495,7 +1519,28 @@ public class FollowerEntity
 		}
 		WorldPoint from = simTile != null ? simTile : tile;
 		WorldPoint settled = path.isEmpty() ? from : path.get(path.size() - 1);
-		return settled.equals(target) && !hot(settled) ? path.size() : -1;
+		return settled.equals(target) && restsOn(settled) ? path.size() : -1;
+	}
+
+	/**
+	 * Whether a stay may end on this tile: not in a fire, and not inside
+	 * furniture the map calls open floor.
+	 *
+	 * <p>Play test, 8 Oct: with the placement kept out of the Lumbridge
+	 * booth, the follower wandered into it. The wander, its drift over to
+	 * the banker, the seats, the errands and the moments all end in a stay,
+	 * and the booth reads open, so any of them could aim at it, or settle
+	 * on it by closest approach to a blocked tile behind the counter. Asked
+	 * of where the stay ends, which covers both, and once a stay: the walk
+	 * there may still pass through.
+	 *
+	 * <p>The tile the follower was told to walk onto anyway is let off the
+	 * furniture as it is the fire. A fire is an object placed the way
+	 * furniture is and may well read as one, and the gag walks into it.
+	 */
+	private boolean restsOn(WorldPoint settled)
+	{
+		return !hot(settled) && (settled.equals(insistedTile) || !furnished(settled));
 	}
 
 	/** The walk a stay would take to a tile, or null where it is refused outright. */
@@ -2113,7 +2158,7 @@ public class FollowerEntity
 		// they stepped from is lit AFTER they stop on the next one - so by
 		// the time anything acts on it, it is on fire and was not when it
 		// was chosen. Asked again here, where it is used.
-		playerFollowTile = coolFollowTile(playerFollowTile);
+		playerFollowTile = coolFollowTile(playerFollowTile, false);
 
 		// A fire lit under its feet - which is most of a firemaking line,
 		// since the follower stands on the tile the player just left. One
@@ -3037,11 +3082,15 @@ public class FollowerEntity
 	 * was left waiting on is taken as given where it could stand and walk to
 	 * it from the player within its stay leash, since coming back to it is the
 	 * point; anywhere else it lands beside the player like any arrival.
+	 *
+	 * <p>Nor in furniture the map calls open floor: a post kept from before
+	 * the feet refused to stop in a booth would put it back in one at every
+	 * login.
 	 */
 	WorldPoint arrivalTile(WorldPoint wanted, WorldPoint anchor, boolean post)
 	{
 		if (post && wanted != null && anchor != null && wanted.getPlane() == anchor.getPlane()
-			&& wanted.distanceTo(anchor) <= STAY_LEASH - 2 && goodGround(wanted))
+			&& wanted.distanceTo(anchor) <= STAY_LEASH - 2 && goodGround(wanted) && !furnished(wanted))
 		{
 			java.util.List<WorldPoint> path = findPath(anchor, wanted, false);
 			if (path != null && (path.isEmpty() ? anchor.equals(wanted)
