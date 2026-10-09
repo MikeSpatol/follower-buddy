@@ -738,7 +738,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Still here. Still standing.
 - Is this the plan, then? Standing?
 - I could carry something, if you like.
-- Someone walked past. That was the excitement.
+- Someone walked past. That's been the most exciting event in a while.
 - I'm not complaining. Just noting.
 - I'll be here. Obviously.
 - Any minute now.
