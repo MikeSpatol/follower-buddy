@@ -60,6 +60,27 @@ public class ThreeWayMergeTest
 		}
 	}
 
+	/**
+	 * A rule 1.4.0 shipped exactly as it ships now, with a cooldown, for the
+	 * tests that need one nobody has touched. Found rather than named: two
+	 * named ones were reworded later and broke these tests each time.
+	 */
+	private static String unchangedSince140()
+	{
+		JsonObject now = shipped();
+		for (JsonElement e : freshFrom140().getAsJsonArray("rules"))
+		{
+			JsonObject was = e.getAsJsonObject();
+			String id = was.get("id").getAsString();
+			if (was.equals(rule(now, id)) && was.has("cooldownMs") && was.has("say")
+				&& (!was.has("enabled") || was.get("enabled").getAsBoolean()))
+			{
+				return id;
+			}
+		}
+		throw new AssertionError("no rule is the same as in 1.4.0");
+	}
+
 	private static JsonObject rule(JsonObject file, String id)
 	{
 		for (JsonElement e : file.getAsJsonArray("rules"))
@@ -335,14 +356,15 @@ public class ThreeWayMergeTest
 	@Test
 	public void aRuleSwitchedOffOnAFreshInstallFrom140StaysOff() throws Exception
 	{
+		String id = unchangedSince140();
 		JsonObject theirs = freshFrom140();
-		rule(theirs, "idle-chatter").addProperty("enabled", false);
+		rule(theirs, id).addProperty("enabled", false);
 
 		JsonObject merged = merge(theirs, null);
 
-		assertFalse(rule(merged, "idle-chatter").get("enabled").getAsBoolean());
+		assertFalse(rule(merged, id).get("enabled").getAsBoolean());
 		assertEquals("brought up to date in every other respect",
-			say(shipped(), "idle-chatter"), say(merged, "idle-chatter"));
+			say(shipped(), id), say(merged, id));
 	}
 
 	/**
@@ -412,13 +434,14 @@ public class ThreeWayMergeTest
 	@Test
 	public void aRuleRetunedSince130StillArrives() throws Exception
 	{
+		String id = unchangedSince140();
 		JsonObject theirs = freshFrom140();
-		rule(theirs, "idle-chatter").addProperty("cooldownMs", 123456);
+		rule(theirs, id).addProperty("cooldownMs", 123456);
 
 		JsonObject merged = merge(theirs, null);
 
-		assertEquals(rule(shipped(), "idle-chatter").get("cooldownMs"),
-			rule(merged, "idle-chatter").get("cooldownMs"));
+		assertEquals(rule(shipped(), id).get("cooldownMs"),
+			rule(merged, id).get("cooldownMs"));
 	}
 
 	/** From this version on a fresh install records what it wrote, so there is never a first run to guess on. */

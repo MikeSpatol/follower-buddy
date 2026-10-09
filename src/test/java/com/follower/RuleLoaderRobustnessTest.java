@@ -404,6 +404,10 @@ public class RuleLoaderRobustnessTest
 			("{\"version\": 1, \"rules\": [{\"id\": \"hurt\", \"group\": \"t\","
 				+ " \"cooldownMs\": 0, \"when\": {\"type\": \"healthBelow\", \"percent\": 50},"
 				+ " \"say\": [\"b\"]}]}").getBytes(StandardCharsets.UTF_8));
+		// A change is noticed by its modified time; a write within the same
+		// tick of the clock as the first load would look like no change.
+		Files.setLastModifiedTime(dir.resolve(RuleLoader.FILE_NAME),
+			java.nio.file.attribute.FileTime.fromMillis(System.currentTimeMillis() + 5000));
 		assertTrue(h.loader.reloadIfChanged());
 		h.gameTicks(2);
 
