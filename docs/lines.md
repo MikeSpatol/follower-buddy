@@ -1,6 +1,6 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 508 rules, 2365 spoken lines, 3 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 512 rules, 2377 spoken lines, 3 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
@@ -19,7 +19,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - [clock](#clock) - The hour and how long we have been at it (9 rules, 39 lines)
 - [gear](#gear) - What you put on (63 rules, 145 lines)
 - [boss](#boss) - Bosses sighted and fought (55 rules, 515 lines)
-- [quest](#quest) - Famous quest figures nearby (44 rules, 131 lines)
+- [quest](#quest) - Famous quest figures nearby (48 rules, 143 lines)
 - [thrall](#thrall) - When it stands in for a thrall (3 rules, 18 lines)
 - [mimic](#mimic) - Copying your emotes (30 rules, 16 lines)
 - [dialogs](#dialogs) - the conversations it starts (3 trees)
@@ -6299,6 +6299,50 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Ernest. He went into the manor a man and spent a while as a chicken.
 - The manor did that to him. The manor does that to people.
 - Fully recovered. Mostly. No more feathers, anyway.
+
+### `quest-alina-noah`
+
+> Alina and Noah, waiting for the delegation in Varrock Square.
+
+- **when:** Alina, Noah within 5 tiles, in sight
+- **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
+
+- Alina and Noah. One's excited, and you can guess which.
+- She's heard the news before Varrock has. He'd rather not hear it at all.
+- Alina's always got news. Noah's always got somewhere else to be.
+
+### `quest-sergeant-tobyn`
+
+> Sergeant Tobyn, keeping order in Varrock Square, and later on the palace roof.
+
+- **when:** Sergeant Tobyn within 5 tiles, in sight
+- **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
+
+- Sergeant Tobyn keeps order round here, when order lets him.
+- A sergeant with a very straight face. Varrock tests it daily.
+- Tobyn's seen it all, he'd tell you. I'd leave him thinking so.
+
+### `quest-itzla`
+
+> Prince Itzla Arkan, heir to the throne of Varlamore. NOTE: his versions in later quests share the name and will match too.
+
+- **when:** Prince Itzla Arkan within 5 tiles, in sight
+- **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
+
+- Prince Itzla Arkan, who'll give you the full title if you've got a minute.
+- Royalty, at arm's length. I've straightened my collar.
+- Heir to the Sun Throne, and never far from a commotion.
+
+### `quest-regulus-cento`
+
+> Regulus Cento and his quetzal, outside Varrock's east gate and in Civitas illa Fortis.
+
+- **when:** Regulus Cento within 5 tiles, in sight
+- **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
+
+- Regulus Cento keeps the bird that goes between Varrock and Varlamore.
+- The bird does the flying and he does the talking. A fair split.
+- He dresses well. The bird dresses better.
 
 ### `quest-complete`
 

@@ -197,6 +197,77 @@
       ]
     },
     {
+      "id": "quest-children-of-the-sun",
+      "kind": "quest",
+      "name": "Children of the Sun",
+      "unlock": {
+        "quest": "CHILDREN_OF_THE_SUN"
+      },
+      "summary": "Alina had the news first: Varlamore, shut away for hundreds of years, was sending a delegation to Varrock. Then a guard left the palace with a very large bag. You followed it, and four bandits were arrested.",
+      "sections": [
+        {
+          "heading": "What happened",
+          "body": "The gossip first. Alina was thrilled that Varlamore was opening to outsiders after hundreds of years. Noah asked why he should be excited about a place he'd never heard of, which I thought fair. Then the delegation arrived. I counted ten, twice.\n\nWhile everyone watched the delegation, a guard left the palace with an oversized bag, told Sergeant Tobyn it was supplies, and was waved on. Noah noticed the bag. You followed it to a small building beside Aubury's and listened at the window.\n\nInside, four bandits planned to change into stolen guards' uniforms and strike as the delegation left the palace. The bag was the uniforms. Tobyn admitted he hadn't known the man who carried it. Varrock gets through guards so quickly, he said, that he can't keep up. I wrote that down without comment, which took some doing.\n\nFour of the ten guards on watch were wrong in small ways. You marked them, Tobyn signalled, and they were quickly arrested. Up at the cell on the palace roof, Prince Itzla joined us from the politics downstairs and asked one bandit about local customs, then chickens, then mentioned a small fire.\n\nThe bandit told him all he knew: someone who didn't look local had paid them, and the target was the priest. Itzla said Varlamore is too civilised to burn anyone; they cut out the heart instead, while it still beats. You couldn't tell if he was joking. Nor could I, so that line is in pencil."
+        },
+        {
+          "heading": "Who was there",
+          "body": "Alina: the excited one. She had it all from travellers of the College of Bards, from the floating city of Tempestus, who stopped a night at the Blue Moon Inn on their way to Morytania and talked for hours.\n\nNoah: wanted no part of any adventure, and said Varlamore sounded like a prison. He said the bag was too big before anyone else did, and nobody thanked him. I'm doing it here.\n\nSergeant Tobyn: keeps order round the square. He wouldn't warn the delegation, for fear of a panic, but he listened to you, which is more than most sergeants manage.\n\nPrince Itzla Arkan: \"Crown Prince Itzla Arkan, heir to the Sun Throne, at your service.\" He drops Varlamorian words into his talk as he goes, and doesn't stop to translate.\n\nServius, Teokan of Ralos: Alina said Teokan means High Priest. He never spoke in our hearing, and he was the one the bandits were paid to strike at.\n\n{done:TWILIGHTS_PROMISE} He is also Itzla's father, which nobody mentioned on the day. Itzla calls the arrangement a convoluted mess, and I can't improve on that.\n\nThe six knights and the two others in fine dress went unnamed in Varrock. They stood very straight and said nothing at all.\n\n{done:TWILIGHTS_PROMISE} The two were Furia and Ennius Tullus, twins. Itzla says they did the delegation's admin work, and Ennius says they organised the whole thing.\n\n{done:THE_HEART_OF_DARKNESS} I'd have watched the twins more closely, had I known. I watched the knights instead, which was no use to anyone."
+        },
+        {
+          "heading": "Where it took us",
+          "body": "Varrock Square: Alina and Noah on the east side, behind Eliza's stall. The fountain where the King waited. Sergeant Tobyn on the north side, by the way up to the palace.\n\nSouth-east Varrock: the tail runs past Lowe's Archery Emporium and Old Man Yarlo's house. It ends at a small building just east of Aubury's Rune Shop.\n\nThe east road: from the square to the east bank. The guards on watch stood along it and about the square.\n\nVarrock Palace roof: the cell, on the west side. One bandit is in it yet, and Tobyn is still up there minding him.\n\nThe east gate: Regulus Cento waits just outside it, to the south, once it's over. The bird beside him is hard to miss."
+        },
+        {
+          "heading": "Worth knowing",
+          "body": "The title seems to be Alina's. She called the delegation the children of the sun as it walked into the square, and nobody has thought of a better name.\n\nOnce the papers are signed, anyone may travel to Varlamore, and Itzla wants you there to find who paid. Regulus Cento and his bird are the only way in at first. Varlamore has its own page, written when we get there.\n\n{done:TWILIGHTS_PROMISE} Twilight's Promise takes up who paid. You reasoned it had to be a Varlamorian who'd reached the mainland before the treaty, and Itzla said that left only the delegation: the ten I counted at the fountain. I'd counted them for no reason at the time.\n\nTobyn said this would be an interesting report to write. I'd read it, if only for the chickens."
+        }
+      ],
+      "people": [
+        "King Roald - met the delegation at the fountain",
+        "Aeonisig Raispher - Roald's advisor, at his side",
+        "Knights of Varlamore - six, in the escort",
+        "{done:TWILIGHTS_PROMISE} The knights, by name - Arrun, Claudia, Nel, Velam, Azali and Mezan",
+        "Bandits - four in borrowed uniforms, and the man who borrowed them"
+      ],
+      "places": [],
+      "details": [
+        "Start - Alina or Noah, east side of Varrock Square",
+        "Requirements - none; nothing to bring and nothing to fight",
+        "Rewards - 1 quest point and the way to Varlamore; no experience",
+        "Tailing - stay unseen and keep up; fail, and start again from Alina or Noah",
+        "The four - hands on hips, no helmet, a mace, leaning with arms folded",
+        "Needed for - Twilight's Promise, At First Light, Death on the Isle, Meat and Greet",
+        "Needed for - Ethically Acquired Antiquities, Shadows of Custodia, Scrambled!",
+        "Needed for - The Ribbiting Tale of a Lily Pad Labour Dispute, Vale Totems (a miniquest)",
+        "Through Twilight's Promise - Perilous Moons, The Heart of Darkness, The Final Dawn"
+      ],
+      "plates": [
+        {
+          "npc": 12644,
+          "idle": 808,
+          "caption": "Alina, first with the news."
+        },
+        {
+          "sketch": "varrock-square",
+          "regions": [
+            12853
+          ],
+          "caption": "The square, on a busy day.",
+          "hint": "Pose for me in the square."
+        },
+        {
+          "npc": 12662,
+          "idle": 10683,
+          "caption": "A guard, by the uniform only."
+        },
+        {
+          "npc": 12650,
+          "idle": 808,
+          "caption": "Itzla, up from the politics."
+        }
+      ]
+    },
+    {
       "id": "boss-giant-mole",
       "kind": "boss",
       "name": "Giant Mole",
@@ -868,6 +939,63 @@
           ],
           "caption": "Morytania. I kept moving.",
           "hint": "Pose for me in Canifis."
+        }
+      ]
+    },
+    {
+      "id": "world-varlamore",
+      "kind": "world",
+      "name": "Varlamore",
+      "unlock": {
+        "regions": [
+          6705
+        ]
+      },
+      "summary": "Regulus Cento's bird lands beside the Sunrise Palace gardens, which is where I started counting statues. Varlamore is the kingdom across the western sea, south of Great Kourend, and Civitas illa Fortis is its capital.",
+      "sections": [
+        {
+          "heading": "What it is",
+          "body": "The palace garden has Queen Zyanyi in the middle of it, in stone, and the way in has Prince Itzla on either side. Past him are the queen again and three heroes I'd never heard of: Xerna, Marhuitz and Taur.\n\n{done:CHILDREN_OF_THE_SUN} On a palace roof in Varrock I watched the prince question a bandit, and enjoy it. The sculptor has given him a graver face.\n\nAlina, in Varrock Square, had it from travelling bards that the kingdom was closed for hundreds of years, that a Sun Queen rules it from the capital, and that its people worship the sun and the moon. Nothing I've seen here says she was wrong. I'd like to see it at sunrise, given what they named the palace."
+        },
+        {
+          "heading": "Where it is found",
+          "body": "West over the sea from the mainland, south of Great Kourend and past the mountains. The way in is Regulus Cento, outside Varrock's east gate with his quetzal, Primio. Every other road in opens only after that first flight."
+        },
+        {
+          "heading": "Worth knowing",
+          "body": "Primio is \"A big pretty bird\" by common account, and nobody is wrong. I paced round him while Regulus wasn't looking: three paces a side, and the bird let me. Regulus keeps him, and so keeps the door.\n\n{done:TWILIGHTS_PROMISE} The queen in the garden is Itzla's mother, which explains the two of him on the way in.\n\nPeople here mostly say Fortis and keep the full name for maps and visitors. Nobody has told me what the rest of it means. The quest that opened the kingdom, Children of the Sun, has its own page."
+        }
+      ],
+      "people": [
+        "Regulus Cento - Primio's keeper, at both ends of the flight",
+        "Queen Zyanyi - the Sun Queen; two statues of her at the palace"
+      ],
+      "places": [
+        "Civitas illa Fortis - the capital; Fortis, to its own people",
+        "Sunrise Palace - the royal residence, statues and all",
+        "Bazaar - the market, south of where the bird lands",
+        "Fortis Colosseum - on the cliffs at the east end of the city",
+        "Hunter Guild - south-west of the city"
+      ],
+      "details": [
+        "Way in - Regulus Cento and Primio, outside Varrock's east gate, after Children of the Sun",
+        "Other routes - fairy rings, charter ships and the rest, only after that first flight",
+        "{done:TWILIGHTS_PROMISE} Teleport - Civitas illa Fortis Teleport, at 54 Magic"
+      ],
+      "plates": [
+        {
+          "sketch": "civitas-illa-fortis",
+          "regions": [
+            6704,
+            6705
+          ],
+          "caption": "Fortis. More statues than I drew.",
+          "hint": "Pose for me in Civitas illa Fortis."
+        },
+        {
+          "npc": 12889,
+          "idle": 10945,
+          "caption": "Primio, at the Fortis end."
         }
       ]
     }

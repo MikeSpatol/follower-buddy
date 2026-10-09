@@ -5194,6 +5194,95 @@
       ]
     },
     {
+      "id": "quest-alina-noah",
+      "note": "Alina and Noah, waiting for the delegation in Varrock Square.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Alina",
+          "Noah"
+        ]
+      },
+      "say": [
+        "Alina and Noah. One's excited, and you can guess which.",
+        "She's heard the news before Varrock has. He'd rather not hear it at all.",
+        "Alina's always got news. Noah's always got somewhere else to be."
+      ]
+    },
+    {
+      "id": "quest-sergeant-tobyn",
+      "note": "Sergeant Tobyn, keeping order in Varrock Square, and later on the palace roof.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Sergeant Tobyn"
+        ]
+      },
+      "say": [
+        "Sergeant Tobyn keeps order round here, when order lets him.",
+        "A sergeant with a very straight face. Varrock tests it daily.",
+        "Tobyn's seen it all, he'd tell you. I'd leave him thinking so."
+      ]
+    },
+    {
+      "id": "quest-itzla",
+      "note": "Prince Itzla Arkan, heir to the throne of Varlamore. NOTE: his versions in later quests share the name and will match too.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Prince Itzla Arkan"
+        ]
+      },
+      "say": [
+        "Prince Itzla Arkan, who'll give you the full title if you've got a minute.",
+        "Royalty, at arm's length. I've straightened my collar.",
+        "Heir to the Sun Throne, and never far from a commotion."
+      ]
+    },
+    {
+      "id": "quest-regulus-cento",
+      "note": "Regulus Cento and his quetzal, outside Varrock's east gate and in Civitas illa Fortis.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Regulus Cento"
+        ]
+      },
+      "say": [
+        "Regulus Cento keeps the bird that goes between Varrock and Varlamore.",
+        "The bird does the flying and he does the talking. A fair split.",
+        "He dresses well. The bird dresses better."
+      ]
+    },
+    {
       "id": "gear-staves",
       "note": "Equip reactions fire once per equip (rising edge). Ids: battlestaff, lava battlestaff, air/water/earth/fire staves.",
       "group": "gear",
