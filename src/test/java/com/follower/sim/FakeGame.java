@@ -313,6 +313,29 @@ public final class FakeGame
 		return this;
 	}
 
+	/**
+	 * Something standing on one tile: an object placed as the given location
+	 * type (10 for a booth, a table, a chair; 0 to 3 for walls) whose model
+	 * reaches from {@code bottom} to {@code top} model units above the floor.
+	 * Collision is left to the test, because the furniture that matters is
+	 * the kind the map leaves open.
+	 */
+	public FakeGame furniture(int x, int y, int plane, int type, int bottom, int top)
+	{
+		Map<String, Object> model = new HashMap<>();
+		// Y runs negative upward, as in a real model.
+		model.put("getVerticesY", new float[]{-bottom, -top});
+		model.put("getVerticesCount", 2);
+		Map<String, Object> answers = new HashMap<>();
+		answers.put("getWorldLocation", new WorldPoint(x, y, plane));
+		answers.put("getConfig", type | (2 << 6));
+		answers.put("getRenderable", proxy(net.runelite.api.Model.class, model));
+		placedObjects
+			.computeIfAbsent(plane + ":" + x + ":" + y, k -> new ArrayList<>())
+			.add(proxy(net.runelite.api.GameObject.class, answers));
+		return this;
+	}
+
 	public FakeGame animating(int id)
 	{
 		playerAnswers.put("getAnimation", id);
@@ -759,6 +782,7 @@ public final class FakeGame
 							tile.put("getPlane", plane);
 							tile.put("getSceneLocation",
 								new net.runelite.api.Point(x, y));
+							tile.put("getWorldLocation", new WorldPoint(x, y, plane));
 							// Read fresh, so objects placed after the grid
 							// was built still appear; empty rather than null
 							// because the errand scanner iterates it bare.

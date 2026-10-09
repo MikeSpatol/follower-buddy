@@ -340,6 +340,98 @@ public class WallPathingTest
 			source.contains("if (!object.isActive() && !hiddenForNpcOverlap && " + loaded + ")"));
 	}
 
+	/**
+	 * Play test, 8 Oct: logging in at the top-floor bank of Lumbridge castle
+	 * put the follower inside a bank booth, on a fully loaded map. Two booths
+	 * in that row ignore collision and the floor under them is not blocked,
+	 * so the map reads them open while the booth's model fills the tile.
+	 * Laid out as the dump found it, on one floor here: the player south of
+	 * the row, the closed booths at either end solid, the two open ones
+	 * between them, and the floor behind the row blocked.
+	 */
+	@Test
+	public void aBoothTheMapCallsOpenIsStillNoPlaceToBePut()
+	{
+		FakeGame game = new FakeGame().withCollision().at(10, 10, 0);
+		game.blockTile(8, 11).blockTile(11, 11);
+		for (int x = 8; x <= 11; x++)
+		{
+			game.blockTile(x, 12);
+		}
+		// The Bank booth and its neighbour: placed as type 10, 224 tall.
+		game.furniture(9, 11, 0, 10, 0, 224).furniture(10, 11, 0, 10, 0, 224);
+		FollowerEntity follower = followerOn(game);
+		WorldPoint player = new WorldPoint(10, 10, 0);
+		java.util.List<WorldPoint> booths = java.util.Arrays.asList(
+			new WorldPoint(9, 11, 0), new WorldPoint(10, 11, 0));
+
+		assertTrue("the map really does call the booth open", follower.standable(booths.get(1)));
+
+		// Facing south, as after a login, behind is the booth straight north;
+		// facing south-east it is the other one.
+		for (int jau : new int[]{0, 1792})
+		{
+			WorldPoint behind = follower.restingTileBehind(game.turned(jau).player, 2);
+			assertNotNull(behind);
+			assertFalse("facing " + jau + " it was put in a booth: " + behind, booths.contains(behind));
+			assertTrue(follower.standable(behind));
+		}
+
+		for (WorldPoint booth : booths)
+		{
+			WorldPoint landing = follower.landingTile(booth, player);
+			assertFalse("told to land in a booth, it landed in one: " + landing, booths.contains(landing));
+			assertTrue(follower.standable(landing));
+			assertFalse("and not on the player", player.equals(landing));
+		}
+	}
+
+	/** The band is a body standing on the tile; the types are how furniture is placed. */
+	@Test
+	public void onlyFurnitureAtBodyHeightIsFurniture()
+	{
+		FakeGame game = new FakeGame().withCollision()
+			.furniture(5, 5, 0, 10, 0, 18)
+			.furniture(6, 5, 0, 10, 512, 600)
+			.furniture(7, 5, 0, 0, 0, 224)
+			.furniture(8, 5, 0, 10, 128, 200)
+			.furniture(9, 5, 0, 11, 0, 144);
+		FollowerEntity follower = followerOn(game);
+
+		assertFalse("a mark on the floor", follower.furnished(new WorldPoint(5, 5, 0)));
+		assertFalse("a model hung overhead", follower.furnished(new WorldPoint(6, 5, 0)));
+		assertFalse("a booth placed as a wall is stood in front of", follower.furnished(new WorldPoint(7, 5, 0)));
+		assertTrue("a cupboard on the wall", follower.furnished(new WorldPoint(8, 5, 0)));
+		assertTrue("a chair set diagonally", follower.furnished(new WorldPoint(9, 5, 0)));
+		assertFalse("and bare floor", follower.furnished(new WorldPoint(10, 5, 0)));
+	}
+
+	/**
+	 * Plants and crops count as furniture too, since nothing tells them from
+	 * a booth. A player standing in a flowerbed still gets the follower
+	 * beside them in it rather than on top of them.
+	 */
+	@Test
+	public void ringedByFurnitureItStillLandsBesideThePlayer()
+	{
+		FakeGame game = new FakeGame().withCollision().at(10, 10, 0);
+		for (int dx = -2; dx <= 2; dx++)
+		{
+			for (int dy = -2; dy <= 2; dy++)
+			{
+				game.furniture(10 + dx, 10 + dy, 0, 10, 0, 90);
+			}
+		}
+		FollowerEntity follower = followerOn(game);
+
+		WorldPoint wanted = new WorldPoint(9, 10, 0);
+		assertEquals(wanted, follower.landingTile(wanted, new WorldPoint(10, 10, 0)));
+
+		// The login spawn too: no tile behind would send it to the player's
+		// own, which the landing then keeps.
+		assertEquals(new WorldPoint(10, 12, 0), follower.restingTileBehind(game.player, 2));
+	}
+
 	// ----------------------------------------------------------- the fires
 
 	/**

@@ -614,6 +614,7 @@ public class FollowerEntity
 		// Try directly behind first, then progressively wider angles either side, so
 		// the follower ends up as close to "behind" as the terrain allows.
 		int[] offsets = {0, 256, -256, 512, -512, 768, -768, 1024};
+		WorldPoint furnishedOnly = null;
 		for (int offset : offsets)
 		{
 			double a = radians + (offset / 2048.0) * 2.0 * Math.PI;
@@ -628,12 +629,22 @@ public class FollowerEntity
 
 				if (!candidate.equals(playerTile) && reachable.contains(candidate))
 				{
-					return candidate;
+					// Nor inside furniture the map leaves open; see furnished.
+					if (!furnished(candidate))
+					{
+						return candidate;
+					}
+					// Unless that is all there is, as landingTile allows: null
+					// here spawns it on the player's own tile.
+					if (furnishedOnly == null)
+					{
+						furnishedOnly = candidate;
+					}
 				}
 			}
 		}
 
-		return null;
+		return furnishedOnly;
 	}
 
 	/**
@@ -1047,6 +1058,95 @@ public class FollowerEntity
 		// same reading canStep takes, so this never freezes it out of a place
 		// the game simply has not described.
 		return flags == null || (flags & CollisionDataFlag.BLOCK_MOVEMENT_FULL) == 0;
+	}
+
+	/**
+	 * Furniture is a model that passes through someone standing on its tile
+	 * between knee and chest, in model units above the floor. Measured from
+	 * the cache: a booth runs 0 to 224, counters 103 to 184 tall, a chair
+	 * 144, and a cupboard on the wall starts at 128. Daisies (42), marks on
+	 * the floor (0 to 18) and anything hung overhead miss the band.
+	 */
+	private static final int KNEE_HEIGHT = 64;
+	private static final int CHEST_HEIGHT = 128;
+
+	/**
+	 * Whether furniture fills this tile though the map may call it open.
+	 *
+	 * <p>Play test, 8 Oct: logging in at the top-floor bank of Lumbridge
+	 * castle put the follower inside a bank booth. Two booths in that row
+	 * are made to ignore collision and the floor under them is not blocked,
+	 * so their tiles read 0 - by the map a player could stand in them - and
+	 * the placement took one. Nothing the client says about an object tells
+	 * whether it was meant to be solid, so this looks at what is there: an
+	 * object placed as a centrepiece (location type 10 or 11, as booths,
+	 * counters, tables and chairs are) whose model crosses the band above.
+	 * Walls, doors, wall decorations, roofs and ground objects are other
+	 * types and never count.
+	 *
+	 * <p>Tall plants and crops count too; nothing tells them from a booth.
+	 * So this is asked only where the follower is put, never by the route
+	 * search, which may follow the player's own trail through a wheat field.
+	 */
+	boolean furnished(WorldPoint at)
+	{
+		net.runelite.api.WorldView view = at == null ? null : client.findWorldViewFromWorldPoint(at);
+		if (view == null || view.getScene() == null)
+		{
+			return false;
+		}
+		LocalPoint local = LocalPoint.fromWorld(view, at);
+		net.runelite.api.Tile[][][] tiles = view.getScene().getTiles();
+		if (local == null || tiles == null || at.getPlane() >= tiles.length)
+		{
+			return false;
+		}
+		net.runelite.api.Tile[][] plane = tiles[at.getPlane()];
+		int x = local.getSceneX();
+		int y = local.getSceneY();
+		if (x < 0 || y < 0 || x >= plane.length || y >= plane[x].length)
+		{
+			return false;
+		}
+		// The tile has to be the one asked about. Aboard a boat the scene
+		// may not be laid out like the collision map, and a misread must
+		// find no furniture rather than furniture on the wrong tile.
+		net.runelite.api.Tile tile = plane[x][y];
+		if (tile == null || !at.equals(tile.getWorldLocation()))
+		{
+			return false;
+		}
+		for (net.runelite.api.GameObject object : tile.getGameObjects())
+		{
+			if (object == null)
+			{
+				continue;
+			}
+			int type = object.getConfig() & 0x1F;
+			net.runelite.api.Renderable renderable = object.getRenderable();
+			// Players and NPCs are put in the same arrays as they are drawn.
+			if ((type != 10 && type != 11) || renderable == null
+				|| renderable instanceof net.runelite.api.Actor)
+			{
+				continue;
+			}
+			Model model = renderable instanceof Model ? (Model) renderable : renderable.getModel();
+			float[] ys = model == null ? null : model.getVerticesY();
+			int count = ys == null ? 0 : Math.min(model.getVerticesCount(), ys.length);
+			float top = Float.NEGATIVE_INFINITY;
+			float bottom = Float.POSITIVE_INFINITY;
+			for (int i = 0; i < count; i++)
+			{
+				// Y runs negative upward.
+				top = Math.max(top, -ys[i]);
+				bottom = Math.min(bottom, -ys[i]);
+			}
+			if (bottom <= CHEST_HEIGHT && top >= KNEE_HEIGHT)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/** The thrall's summoning circle: a looping ground graphic riding the follower. */
@@ -2977,6 +3077,15 @@ public class FollowerEntity
 		}
 
 		java.util.Set<WorldPoint> reachable = reachableFrom(anchor, LANDING_SEARCH_RADIUS);
+		// Nor inside furniture the map leaves open, unless that is all there
+		// is: a player standing in a flowerbed still gets the follower beside
+		// them in it, not on top of them.
+		java.util.Set<WorldPoint> clear = new java.util.HashSet<>(reachable);
+		clear.removeIf(at -> !at.equals(anchor) && furnished(at));
+		if (clear.size() > 1)
+		{
+			reachable = clear;
+		}
 		if (wanted != null && reachable.contains(wanted))
 		{
 			return wanted;
