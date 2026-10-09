@@ -121,13 +121,31 @@ public class IgnoredOverturesTest
 		assertEquals("a lapsed wish rests the wishing",
 			1, h.firedBy("wisher").size());
 
-		h.gameTicks(9_001);            // ninety minutes on, it may hope again
+		h.gameTicks(9_001);            // ninety minutes on, the lapse is forgiven
+		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.PLAYER_DEATH));
+		assertEquals("but a wish still waits its day", 1, h.firedBy("wisher").size());
+
+		aDayPasses(h);
 		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.PLAYER_DEATH));
 		assertEquals(2, h.firedBy("wisher").size());
 	}
 
+	/** The day's rest after a wish, as if it were asked for a day ago. */
+	private static void aDayPasses(Harness h)
+	{
+		h.engine.getContext().setLastWishMs(System.currentTimeMillis()
+			- com.follower.speech.TriggerContext.WISH_REST_MS - 1);
+		// And a tick, as there always is between two deaths, so the rule sees a new edge.
+		h.gameTicks(1);
+	}
+
+	/**
+	 * Play test, 8 Oct: asked several times a day, the wishes had started to
+	 * feel like chores. A granted wish is not punished with the lapse's
+	 * back-off, but the next one still waits its day.
+	 */
 	@Test
-	public void aGrantedWishInvitesTheNextFreely() throws IOException
+	public void aGrantedWishWaitsOnlyItsDay() throws IOException
 	{
 		Harness h = fresh();
 		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.PLAYER_DEATH));
@@ -138,7 +156,25 @@ public class IgnoredOverturesTest
 		h.gameTicks(5);
 
 		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.PLAYER_DEATH));
-		assertEquals("generosity is not punished with silence",
-			2, h.firedBy("wisher").size());
+		assertEquals("not another the same day", 1, h.firedBy("wisher").size());
+
+		aDayPasses(h);
+		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.PLAYER_DEATH));
+		assertEquals("and no longer than that", 2, h.firedBy("wisher").size());
+	}
+
+	/** The day's rest is kept with the memory, so a relog or a restart does not reset it. */
+	@Test
+	public void theDaysRestSurvivesARestart() throws IOException
+	{
+		Harness h = fresh();
+		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.PLAYER_DEATH));
+		com.google.gson.Gson gson = new com.google.gson.Gson();
+		String saved = FollowerPlugin.snapshotMemory(h.engine.getContext(), 0, gson);
+
+		Harness restarted = fresh();
+		FollowerPlugin.restoreMemory(restarted.engine.getContext(), saved, gson, 0);
+		restarted.dispatch(TriggerEvent.simple(TriggerEvent.Type.PLAYER_DEATH));
+		assertEquals("the new session remembers it asked", 0, restarted.firedBy("wisher").size());
 	}
 }

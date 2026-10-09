@@ -2265,6 +2265,9 @@ public class FollowerPlugin extends Plugin
 		/** What the player was wearing then, so an upgrade has something to beat. */
 		int metWearingValue = -1;
 
+		/** When the follower last asked for something, so the next ask waits a day. */
+		long lastWishMs;
+
 		/** When each skill last went up, so the next level knows how long it took. */
 		java.util.Map<String, Long> levelStamps;
 
@@ -2459,6 +2462,7 @@ public class FollowerPlugin extends Plugin
 			context.restoreChronicledStamps(saved.chronicledOn, saved.chronicledAt);
 			context.restoreLineWear(saved.lineWear);
 			context.setMetOnDay(saved.metOnDay);
+			context.setLastWishMs(saved.lastWishMs);
 			context.setMetWearingValue(saved.metWearingValue);
 			context.restoreLevelStamps(saved.levelStamps);
 			context.restoreLastThing(saved.lastThing);
@@ -2537,6 +2541,7 @@ public class FollowerPlugin extends Plugin
 			: new java.util.HashMap<>(context.getChronicledAt());
 		saved.lineWear = context.getLineWear();
 		saved.metOnDay = context.getMetOnDay();
+		saved.lastWishMs = context.getLastWishMs();
 		saved.metWearingValue = metWearing;
 		saved.levelStamps = context.getLevelStamps().isEmpty() ? null
 			: new java.util.HashMap<>(context.getLevelStamps());

@@ -1653,6 +1653,7 @@ public final class TriggerContext
 			? java.util.Collections.emptySet()
 			: new java.util.HashSet<>(itemIds);
 		wishDeadlineTick = client.getTickCount() + Math.max(1, minutes) * 100;
+		lastWishMs = System.currentTimeMillis();
 		log.info("Wish opened: {} for {} minutes, granted by {}", label, minutes, wishItems);
 	}
 
@@ -2791,6 +2792,18 @@ public final class TriggerContext
 	/** Ninety minutes of not wishing after a wish lapses unfulfilled. */
 	private static final int WISH_BACKOFF_TICKS = 9_000;
 
+	/**
+	 * How long after asking for something the follower waits before asking
+	 * again, whatever came of it: about a day. Play test, 8 Oct: five wish
+	 * rules on their own cooldowns asked several times an hour, and the
+	 * asking had started to feel like a chore. Kept with the memory, so a
+	 * relog or a restart does not reset it.
+	 */
+	public static final long WISH_REST_MS = 20L * 60 * 60 * 1000;
+
+	/** When the follower last asked for something, as epoch millis, or 0. */
+	private long lastWishMs;
+
 	private int ignoredAsks;
 	private int askBackoffUntilTick;
 	private int wishBackoffUntilTick;
@@ -2806,10 +2819,25 @@ public final class TriggerContext
 			|| client.getTickCount() < askBackoffUntilTick;
 	}
 
-	/** Whether the wishing should rest, after a wish lapsed unfulfilled. */
+	/**
+	 * Whether the wishing should rest: a wish lapsed unfulfilled lately, or
+	 * one was asked for less than {@link #WISH_REST_MS} ago.
+	 */
 	public boolean isWishBackedOff()
 	{
-		return client.getTickCount() < wishBackoffUntilTick;
+		return client.getTickCount() < wishBackoffUntilTick
+			|| (lastWishMs > 0 && System.currentTimeMillis() - lastWishMs < WISH_REST_MS);
+	}
+
+	public long getLastWishMs()
+	{
+		return lastWishMs;
+	}
+
+	/** From the stored memory: when the follower last asked for something. */
+	public void setLastWishMs(long epochMs)
+	{
+		lastWishMs = Math.max(0, epochMs);
 	}
 
 	// ------------------------------------------------------------------- mood
