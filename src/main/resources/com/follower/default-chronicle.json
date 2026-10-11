@@ -268,6 +268,76 @@
       ]
     },
     {
+      "id": "quest-rune-mysteries",
+      "kind": "quest",
+      "name": "Rune Mysteries",
+      "unlock": {
+        "quest": "RUNE_MYSTERIES"
+      },
+      "summary": "Duke Horacio found an old talisman in his cellar and sent you to the Wizards' Tower with it. It had once been to an essence mine the wizards had lost, and it helped them find the way back.",
+      "sections": [
+        {
+          "heading": "What happened",
+          "body": "Duke Horacio had nothing he'd call a quest, but his people had turned up an old talisman while sorting the cellar. The Order of Wizards had been after magical oddments lately, so he sent it to them, by you, and told you to ask for Sedridor.\n\nIn the tower basement a wizard welcomed you to the Order's home and asked what you wanted with Sedridor, as if Sedridor were someone else. It was him. Soon he'd said your name too, which you hadn't given. I left a space in the notes for how.\n\nHe called it a plain air talisman, then murmured over it and it glowed. It had been to the lost essence mine so often that the mine had marked it. The words that take you there burned with the first tower, and the Order had been short of essence from that day on.\n\nHe kept the talisman to study and sent you to Varrock with a package for Aubury, who could hardly believe Sedridor had trusted a stranger with it. Aubury read the notes, very nearly said they'd done it, then stopped himself and sent his own notes back instead.\n\nThen he offered you tea. It sends people out of his shop at a run, I noticed. Nobody offered me any.\n\nBack in the basement, Sedridor found the incantation in Aubury's notes. The Order has its mine again, and he'll send you there whenever you ask. He gave the talisman back, too, and said it would lead you to the Air Altar if you got lost."
+        },
+        {
+          "heading": "Who was there",
+          "body": "Duke Horacio: the Duke of Lumbridge. He found a thing he didn't understand and handed it to people who might, which is rarer than it should be. Lumbridge has its own page.\n\nArchmage Sedridor: head of the Order of Wizards, who had spent a long time looking for one spell and was very pleased to find it. The name trick he put down to being the Archmage, and said no more about it.\n\nAubury: keeps the rune shop in south-east Varrock. \"Runes are his passion,\" people say, and the shelves bear it out. Sedridor calls him not much of a wizard, but an expert on runecrafting. I haven't passed that on."
+        },
+        {
+          "heading": "Where it took us",
+          "body": "Lumbridge Castle: the Duke's room on the first floor. The talisman came up from the cellar, two floors below him.\n\nThe Wizards' Tower: south of Draynor Village, over the bridge, then down the ladder from the ground floor to Sedridor's rooms. The tower has its own page.\n\nAubury's Rune Shop: south-east Varrock, just south of the east bank. A mugger works the street outside, and doesn't follow anyone in.\n\nThe rune essence mine: on no road at all. Sedridor or Aubury says the words and you are there, among the rocks, and a portal beside them takes you back to whoever sent you. Where the mine actually is, I couldn't tell you."
+        },
+        {
+          "heading": "Worth knowing",
+          "body": "Sedridor dates the Order to the rediscovery of runecrafting, just under two hundred years ago, which he says began the Fifth Age. How the first tower burned is on the Wizards' Tower page.\n\nBefore the talisman turned up, the Order bought its essence from people who would sell it but wouldn't say where they found it. Sedridor didn't name them, and I'd like to know who they are.\n\n{done:ENTER_THE_ABYSS} The Zamorakians wanted the mine as well. In Enter the Abyss you carried their scrying orb there from three different teleporters so they could work the spell out, and they let you into the Abyss in exchange.\n\n{done:THE_LOST_TRIBE} The Duke's cellar had more to give. In The Lost Tribe a wall down there gave way, the Duke put it down to an earthquake, and it was nothing of the kind.\n\nEvery one of the teleporters shouts the same three words as you go: \"Senventior disthine molenko!\" I've spelled them as best I could, and I won't be trying them."
+        }
+      ],
+      "people": [
+        "Wizard Cromperty - East Ardougne; knows the words",
+        "Brimstail - a gnome, in a cave in the Tree Gnome Stronghold; knows the words",
+        "Wizard Distentor - head of the Wizards' Guild in Yanille; knows the words"
+      ],
+      "places": [],
+      "details": [
+        "Start - Duke Horacio, first floor of Lumbridge Castle",
+        "Requirements - none; nothing to bring and nothing to fight",
+        "Rewards - 1 quest point, an air talisman, and the run of the essence mine",
+        "Also - lamps and books of knowledge can go on Runecraft afterwards",
+        "Air Altar - south of Falador; take the talisman and some essence",
+        "Lost the talisman, package or notes - whoever gave it to you has another",
+        "Aubury's tea - optional, and you'd be wrong to refuse it",
+        "Needed for - Enter the Abyss (a miniquest), The Lost Tribe, One Small Favour",
+        "And for - Lunar Diplomacy, What Lies Below",
+        "Further on - Temple of the Eye, through Enter the Abyss"
+      ],
+      "plates": [
+        {
+          "npc": 815,
+          "idle": 808,
+          "caption": "The Duke, who sent it on."
+        },
+        {
+          "sketch": "wizards-tower",
+          "regions": [
+            12337
+          ],
+          "caption": "The tower, the second of them.",
+          "hint": "Pose for me by the tower."
+        },
+        {
+          "npc": 11433,
+          "idle": 813,
+          "caption": "Sedridor, who knew your name."
+        },
+        {
+          "npc": 11435,
+          "idle": 808,
+          "caption": "Aubury, with the kettle on."
+        }
+      ]
+    },
+    {
       "id": "boss-giant-mole",
       "kind": "boss",
       "name": "Giant Mole",
@@ -836,6 +906,64 @@
           "npc": 4181,
           "idle": 808,
           "caption": "Almera, who lives above it."
+        }
+      ]
+    },
+    {
+      "id": "location-wizards-tower",
+      "kind": "location",
+      "name": "Wizards' Tower",
+      "unlock": {
+        "regions": [
+          12337,
+          12437
+        ]
+      },
+      "summary": "There's an eye on the front of the Wizards' Tower, facing the bridge, and it was the first thing I noticed. The tower is the home of the Order of Wizards, on its own island south of Draynor Village.",
+      "sections": [
+        {
+          "heading": "What it is",
+          "body": "Anyone crossing the bridge gets a good look at the eye, and it at them. I stood under it a while and couldn't decide whether it was meant as a welcome or a warning. Nobody inside has told me what it's an eye of.\n\nInside, the ground floor is a library and a good many wizards in blue. Wizard Traiborn keeps the first floor. The second keeps a lesser demon in a cage, which it bears better than I would.\n\nArchmage Sedridor, who leads the Order, works down a ladder in the basement. He tells visitors to take care, since they're standing on the ruins of an older tower. He says it kindly, which doesn't help."
+        },
+        {
+          "heading": "Where it is found",
+          "body": "South of Draynor Village, across a bridge from the mainland, with Port Sarim to the west and Lumbridge Swamp to the east. The fairy ring DIS sets down just south of the tower, and a necklace of passage at the bridge."
+        },
+        {
+          "heading": "Worth knowing",
+          "body": "{done:RUNE_MYSTERIES} Sedridor says the first tower went up when runecrafting was found again, at the start of the Fifth Age, and that the Order's own Zamorakian wizards burnt it down. The basement is all that's left of it, and he still works there. Rune Mysteries has its own page.\n\n{done:ENTER_THE_ABYSS} The Zamorakians tell it another way. One of theirs made a breakthrough in teleport magic, they say, the Order stole it, and a ritual built on it went wrong and burnt the place down. Sedridor calls that hearsay. I've written down both and taken no side.\n\n{done:TEMPLE_OF_THE_EYE} A portal in the basement now leads to the Temple of the Eye, where the Order and the Guardians of the Rift hold back the Abyss. The first tower knew the Eye well enough to borrow its symbol for the Order, Sedridor says, and nobody does now. I take that to be the eye by the bridge."
+        }
+      ],
+      "people": [
+        "Archmage Sedridor - head of the Order of Wizards, in the basement",
+        "Wizard Traiborn - first floor, mislaying things",
+        "Wizard Mizgog - second floor, next door to the demon"
+      ],
+      "places": [
+        "Library - the ground floor, bookcases and all",
+        "Basement - Sedridor's rooms, down the ladder from the ground floor",
+        "{done:TEMPLE_OF_THE_EYE} Temple of the Eye - through the portal in the basement"
+      ],
+      "details": [
+        "Ways in - the fairy ring DIS, or a necklace of passage to the bridge",
+        "Wizards' Guild - its east portal comes here, at 66 Magic",
+        "Lesser demon - level 82, caged; only spells and ranged attacks reach it",
+        "Quests - Rune Mysteries, Imp Catcher, The Restless Ghost, Demon Slayer",
+        "{done:RUNE_MYSTERIES} Essence mine - Sedridor sends you on request"
+      ],
+      "plates": [
+        {
+          "sketch": "wizards-tower",
+          "regions": [
+            12337
+          ],
+          "caption": "The tower, and the eye on it.",
+          "hint": "Pose for me by the tower."
+        },
+        {
+          "npc": 11432,
+          "idle": 813,
+          "caption": "Sedridor, under it all."
         }
       ]
     },

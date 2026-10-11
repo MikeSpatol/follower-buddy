@@ -6010,7 +6010,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** Aubury within 5 tiles, in sight
 - **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
 
-- Aubury. Sells runes, keeps secrets, teleports on request.
+- Aubury. Sells runes, and knows a good deal more about them than he lets on.
 - There's more to that little shop than runes. Ask him about essence sometime.
 - The most powerful shopkeeper in Varrock, and it isn't close.
 
@@ -6021,7 +6021,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** *Sedridor within 5 tiles, in sight
 - **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
 
-- Sedridor, head wizard of the tower. The essence mine was his secret first.
+- Sedridor, head wizard of the tower. He works from the basement, under all the others.
 - The tower burned down once, you know. Wizards don't take a hint.
 - He studies the runes that move the world. And answers letters. Busy man.
 
