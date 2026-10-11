@@ -8488,15 +8488,17 @@ public class FollowerPlugin extends Plugin
 
 	/**
 	 * The text after a known game-message prefix, stripped of colour tags and
-	 * trailing punctuation; null when the message is not that one.
+	 * trailing punctuation; null when the message is not that one. The game's
+	 * own @tag@ colours too: every music unlock came as "@mes_hl_red@Expanse",
+	 * and was said that way, tag and all.
 	 */
-	private static String parseTailAfter(String message, String prefix)
+	static String parseTailAfter(String message, String prefix)
 	{
 		if (message == null)
 		{
 			return null;
 		}
-		String plain = message.replaceAll("<[^>]*>", "").trim();
+		String plain = message.replaceAll("<[^>]*>|@[a-z0-9_]+@", "").trim();
 		if (!plain.startsWith(prefix))
 		{
 			return null;

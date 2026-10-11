@@ -161,6 +161,21 @@ public class MilestonesTest
 	}
 
 	@Test
+	public void aTracksNameComesWithoutTheGamesColourTag()
+	{
+		// Every music unlock in the transcripts was said tag and all:
+		// "Another one for the catalogue: @mes_hl_red@Children of the Sun."
+		assertEquals("Children of the Sun", FollowerPlugin.parseTailAfter(
+			"You have unlocked a new music track: @mes_hl_red@Children of the Sun.",
+			"You have unlocked a new music track:"));
+		assertEquals("the collection log's own colour goes as before", "Bronze med helm",
+			FollowerPlugin.parseTailAfter("New item added to your collection log: <col=ef1020>Bronze med helm</col>",
+				"New item added to your collection log:"));
+		assertNull(FollowerPlugin.parseTailAfter("You have unlocked a new music track:",
+			"You have unlocked a new music track:"));
+	}
+
+	@Test
 	public void aLapIsNotAKill()
 	{
 		// The agility courses count in the boss's own words - "Your Varrock
