@@ -771,7 +771,7 @@ public class FollowerPlugin extends Plugin
 		will = new com.follower.follower.Will(client, follower, speechEngine::dispatch,
 			() -> thrallNpc == null && !errands.isBusy() && !spectate.holdsTheFeet()
 				&& !skilling.holdsTheFeet() && !moments.holdsTheFeet() && !flourish.isActive()
-				&& minutesState == 0 && !emoteHold && !filming);
+				&& minutesState == 0 && !emoteHold && !filming && !sceneHolds());
 		filmSet = new com.follower.follower.FilmSet(follower, this::rebuildFollower,
 			(graphicId, height) -> follower.playSpotAnim(spotAnimRepository.get(graphicId), height));
 
@@ -1053,6 +1053,10 @@ public class FollowerPlugin extends Plugin
 		watchChat = false;
 		watchExamine = false;
 		cutsceneForced = false;
+		sceneOn = false;
+		sceneGoneTicks = 0;
+		quietUntilTick = 0;
+		speechEngine.setSceneQuiet(false);
 	}
 
 	/*
@@ -1352,15 +1356,82 @@ public class FollowerPlugin extends Plugin
 	 */
 	private boolean cutsceneForced;
 
+	/** A cutscene seen, and not yet three clean ticks gone (noticeTheScene). */
+	private boolean sceneOn;
+	private int sceneGoneTicks;
+
 	/**
-	 * Whether a cutscene has the camera. The follower keeps its place and
-	 * looks where the player looks, so the scene has one audience of two,
-	 * and still mirrors an emote - the mimic is the part that reads best.
+	 * How long the follower keeps quiet after a scene ends, in ticks: fifteen
+	 * seconds. Play test, 9 Oct (Children of the Sun): lines landed straight
+	 * after the scene, and the ask was a little quiet once a cutscene is over.
+	 */
+	static final int SCENE_QUIET_TICKS = 25;
+
+	/** The tick the quiet after the last scene ends. */
+	private int quietUntilTick;
+
+	/**
+	 * Whether a cutscene has the camera, or had it under three ticks ago: a beat
+	 * between two shots is not the end of the scene. While it does, the follower
+	 * is an extra: it keeps to where it stands, gives way to the cast, looks
+	 * where the player looks and says nothing. It still mirrors an emote - the
+	 * mimic is the part that reads best.
 	 */
 	private boolean inCutscene()
 	{
-		return cutsceneForced
+		return cutsceneForced || sceneOn;
+	}
+
+	/** A scene, or the quiet after one: nothing is said that the player did not ask for. */
+	private boolean sceneQuiet()
+	{
+		return inCutscene() || client.getTickCount() < quietUntilTick;
+	}
+
+	/** Whether the scene keeps the follower: not the player's park, a film's, or thrall work. */
+	private boolean sceneHolds()
+	{
+		return inCutscene() && !parkedByPlayer && !filming && !thrallBusiness();
+	}
+
+	/**
+	 * Reads the cutscene once a tick, before the load wait, so a scene that
+	 * opens with an area load is one from its first tick. Play test, 9 Oct
+	 * (Children of the Sun): the follower walked to the player's shoulder and
+	 * back on every line of the scene and stood in the cast.
+	 */
+	private void noticeTheScene()
+	{
+		boolean up = cutsceneForced
 			|| client.getVarbitValue(net.runelite.api.gameval.VarbitID.CUTSCENE_STATUS) != 0;
+		sceneGoneTicks = up ? 0 : Math.min(sceneGoneTicks + 1, 1000);
+		boolean on = up || (sceneOn && sceneGoneTicks <= 2);
+		if (on != sceneOn)
+		{
+			sceneOn = on;
+			// The cause at the start: at the end a forced scene's force is
+			// already off.
+			journal.scene(on, !on ? "-" : cutsceneForced ? "forced" : "542");
+			if (on)
+			{
+				// What was about to be said belongs to the moment before.
+				speechQueue.clear();
+				overlay.clear();
+				speakingUntilMs = 0;
+			}
+			else
+			{
+				if (!parkedByPlayer && !filming && !thrallBusiness())
+				{
+					follower.resumeFollowing();
+				}
+				// Not off on a wander on the idle time the scene ran up.
+				wanderCountdown = WANDER_MIN_GAP;
+				quietUntilTick = client.getTickCount() + SCENE_QUIET_TICKS;
+			}
+		}
+		follower.setWatchingWithThePlayer(sceneHolds());
+		speechEngine.setSceneQuiet(sceneQuiet());
 	}
 
 	/** Whether any NPC-dialog interface is up (heads or the options menu). */
@@ -1405,7 +1476,9 @@ public class FollowerPlugin extends Plugin
 			|| (spectate != null && spectate.isSpectating())
 			|| dialog.isOpen()
 			|| (skilling != null && skilling.isWorking())
-			|| speechEngine.getContext().isInCombat();
+			|| speechEngine.getContext().isInCombat()
+			// A scene's lines are its own: no trip to the shoulder for each.
+			|| inCutscene();
 
 		Player local = client.getLocalPlayer();
 		switch (minutesState)
@@ -4329,6 +4402,10 @@ public class FollowerPlugin extends Plugin
 		// it held the follower still through logouts and hops with nothing
 		// to say so.
 		cutsceneForced = false;
+		sceneOn = false;
+		sceneGoneTicks = 0;
+		quietUntilTick = 0;
+		speechEngine.setSceneQuiet(false);
 	}
 
 	@Subscribe
@@ -4614,7 +4691,8 @@ public class FollowerPlugin extends Plugin
 	 * during a work session, where the seat has the feet, nor while the seat
 	 * is kept through a bank trip after one. And one under way stands down
 	 * for a park the player gave, or for a scene being filmed, which may be
-	 * a walk with Follow me and no park at all, or for a sketch.
+	 * a walk with Follow me and no park at all, or for a sketch, or for a
+	 * cutscene.
 	 */
 	private boolean errandBusy()
 	{
@@ -4622,18 +4700,20 @@ public class FollowerPlugin extends Plugin
 			|| (skilling != null && skilling.blocksErrands())
 			|| (moments != null && moments.holdsTheFeet())
 			|| parkedByPlayer || filming
-			|| (sketching != null && sketching.isSketching());
+			|| (sketching != null && sketching.isSketching())
+			|| inCutscene();
 	}
 
 	/**
 	 * What beats the seat. Thrall work and the spectator, over their whole
 	 * ownership window - the exit flourish included - and a park the player
-	 * gave, which no work nearby takes the follower off.
+	 * gave, which no work nearby takes the follower off. And a cutscene: a
+	 * seat taken again after the scene's catch-up walked it back and forth.
 	 */
 	private boolean seatFeetTaken()
 	{
 		return thrallBusiness() || (spectate != null && spectate.holdsTheFeet())
-			|| parkedByPlayer;
+			|| parkedByPlayer || inCutscene();
 	}
 
 	/**
@@ -4646,23 +4726,25 @@ public class FollowerPlugin extends Plugin
 	 * the nod are played where the follower stands, past this gate, so in a
 	 * take the level and the news are not handed to the moments at all. A
 	 * sketch beats them too: a walk off would leave the picture it is in.
+	 * And a cutscene: no peering at the cast as it turns to the player.
 	 */
 	private boolean momentFeetTaken()
 	{
 		return thrallBusiness() || (spectate != null && spectate.holdsTheFeet())
 			|| (errands != null && errands.isBusy()) || filming
-			|| (sketching != null && sketching.isSketching());
+			|| (sketching != null && sketching.isSketching())
+			|| inCutscene();
 	}
 
 	/**
 	 * What the spectator keeps out of the way for: thrall work and its whole
-	 * exit, an errand in progress, and a scene being filmed. A park the
-	 * player gave is handed to it apart: the fight is still announced at
-	 * both ends, but watched from the post.
+	 * exit, an errand in progress, a scene being filmed, and a cutscene, a
+	 * boss's intro among them. A park the player gave is handed to it apart:
+	 * the fight is still announced at both ends, but watched from the post.
 	 */
 	private boolean spectateBusy()
 	{
-		return thrallBusiness() || (errands != null && errands.isBusy()) || filming;
+		return thrallBusiness() || (errands != null && errands.isBusy()) || filming || inCutscene();
 	}
 
 	/**
@@ -7082,6 +7164,12 @@ public class FollowerPlugin extends Plugin
 			overlay.clear();
 			return;
 		}
+		// No count runs in a scene, which puts the scroll away: what would be
+		// said is the word for the sketch broken off, over the scene.
+		if (inCutscene())
+		{
+			return;
+		}
 		long showFor = Math.min(MAX_SPEECH_MS, Math.max(SKETCH_COUNT_MS,
 			(long) line.length() * 1000L / Math.max(1, config.readingSpeed())));
 		overlay.show(line, showFor);
@@ -7360,6 +7448,7 @@ public class FollowerPlugin extends Plugin
 		logPoseComparison(local);
 		autoHarvest(local);
 
+		noticeTheScene();
 		if (spawnDelayTicks > 0)
 		{
 			spawnDelayTicks--;
@@ -7531,7 +7620,6 @@ public class FollowerPlugin extends Plugin
 		{
 			gaze.tick();
 		}
-		follower.setWatchingWithThePlayer(inCutscene());
 		follower.setFollowDistance(config.followDistance());
 		// The shoulder is for open ground and nothing else going on: not a
 		// fight, not a pocket being worked, not thrall work.
@@ -7763,7 +7851,9 @@ public class FollowerPlugin extends Plugin
 			(skilling != null && skilling.holdsTheFeet())
 				|| (moments != null && moments.holdsTheFeet())
 				// A write-up plants the follower for the length of the notes.
-				|| (flourish != null && flourish.isActive()));
+				|| (flourish != null && flourish.isActive())
+				// A scene holds it where it stands.
+				|| sceneHolds());
 		speechEngine.getContext().setFollowerStaying(stayCommanded);
 		if (stayCommanded != stayReported)
 		{
@@ -7828,7 +7918,7 @@ public class FollowerPlugin extends Plugin
 		// A page written gets its mention after this tick's own events have
 		// been heard, and only when nothing else is being said.
 		TriggerEvent news = nextPageNews(pageNews, client.getTickCount(), speechEngine.isQuiet(),
-			npcDialogOpen());
+			npcDialogOpen() || sceneQuiet());
 		if (news != null)
 		{
 			speechEngine.dispatch(news);
@@ -7841,12 +7931,13 @@ public class FollowerPlugin extends Plugin
 	 * conversation writes its pages with the box still up, and a line said
 	 * over a dialogue is dropped, so starting Priest in Peril with King Roald
 	 * was never mentioned. While a dialogue is up the news waits, and its
-	 * minute starts again when the box closes.
+	 * minute starts again when the box closes. A cutscene and the quiet after
+	 * it hold it the same way: a page a scene writes is mentioned after.
 	 */
 	static TriggerEvent nextPageNews(java.util.Deque<PageNews> news, int now, boolean quiet,
-		boolean dialogueOpen)
+		boolean waits)
 	{
-		if (dialogueOpen)
+		if (waits)
 		{
 			for (PageNews waiting : news)
 			{
@@ -8417,6 +8508,15 @@ public class FollowerPlugin extends Plugin
 	@Subscribe
 	public void onVarbitChanged(VarbitChanged event)
 	{
+		// A scene's first tick is read on the game tick, after this tick's
+		// messages: quiet from the varbit itself, so a line fired alongside
+		// it is held. noticeTheScene still owns the edges.
+		if (event.getVarbitId() == net.runelite.api.gameval.VarbitID.CUTSCENE_STATUS
+			&& event.getValue() != 0)
+		{
+			speechEngine.setSceneQuiet(true);
+		}
+
 		// Only pay the full rule pass when something actually listens for
 		// varbit EVENTS - varbit floods (login inits) are otherwise free.
 		// State-based varbitEquals rules evaluate on the tick heartbeat.

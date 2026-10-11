@@ -503,6 +503,47 @@ public class ErrandSimulationTest
 		assertTrue("the next arrival still gets its look", started("explore-chest"));
 	}
 
+	/**
+	 * Play test, 9 Oct: tailing the guard in Children of the Sun, a quest
+	 * instance where the player stands still at each hiding spot, the
+	 * follower went off to a chest. An instance's region id is new on every
+	 * visit, so it is not somewhere new.
+	 */
+	@Test
+	public void anInstanceIsNotSomewhereNew()
+	{
+		game.at(50, 50, 0);
+		follower.where = new WorldPoint(50, 51, 0);
+		game.placeObject(9001, "Chest", 53, 50, 0);
+
+		game.instanced(true);
+		errands.noticeArrival();
+		tick(12);
+		assertFalse("no look round a quest's instance", started("explore-chest"));
+
+		game.instanced(false);
+		errands.noticeArrival();
+		tick(12);
+		assertTrue("the open world still earns one", started("explore-chest"));
+	}
+
+	@Test
+	public void aLookPendingFromTheRegionLeftGoesWithIt()
+	{
+		// Entering the instance only restarted the count of a look armed
+		// in the region before it, and the look fired inside.
+		game.at(50, 50, 0);
+		follower.where = new WorldPoint(50, 51, 0);
+		game.placeObject(9001, "Chest", 53, 50, 0);
+
+		errands.noticeArrival();
+		tick(3);
+		game.instanced(true);
+		errands.noticeArrival();
+		tick(12);
+		assertFalse(started("explore-chest"));
+	}
+
 	@Test
 	public void anArrivalWaitsOutAToolKeptBetweenTrees()
 	{

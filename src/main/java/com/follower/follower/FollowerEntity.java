@@ -817,6 +817,92 @@ public class FollowerEntity
 		insistedTile = null;
 	}
 
+	/** The tick the scene was last kept, so the frame loop acts once a tick: NPC tiles move on ticks. */
+	private int sceneTick = -1;
+	private WorldPoint scenePlayer;
+	private int scenePlayerStill;
+	/** Let go to walk over to the player after the scene moved them; held again once there. */
+	private boolean catchingUp;
+
+	/**
+	 * A cutscene: where it stands is its mark. It gives way to an actor that
+	 * comes onto it, and when the scene has put the player down more than
+	 * three tiles off it walks over once, after they stop, rather than
+	 * trailing a scripted walk through the cast.
+	 */
+	private void keepToTheScene(WorldPoint player)
+	{
+		int now = client.getTickCount();
+		if (now == sceneTick)
+		{
+			return;
+		}
+		sceneTick = now;
+		scenePlayerStill = player.equals(scenePlayer) ? scenePlayerStill + 1 : 0;
+		scenePlayer = player;
+
+		if (stayTile == null)
+		{
+			// Held where it stands. A step under way ends on its tile; a walk
+			// over to the player is finished first.
+			if (!catchingUp || isSettled())
+			{
+				catchingUp = false;
+				stayHere();
+			}
+			return;
+		}
+		if (!isSettled())
+		{
+			return;
+		}
+		java.util.Map<WorldPoint, net.runelite.api.NPC> taken = npcFootprints();
+		if (taken.containsKey(tile) || tile.equals(player))
+		{
+			giveWay(taken, player);
+		}
+		else if (scenePlayerStill >= 2 && tile.distanceTo(player) > 3)
+		{
+			resumeFollowing();
+			catchingUp = true;
+		}
+	}
+
+	/**
+	 * One tile across the way of the actor on the follower's tile: never where
+	 * it is heading, never back into it, never onto anybody. Boxed in, it keeps
+	 * the tile, and the render hide covers an actor that stops there.
+	 */
+	private void giveWay(java.util.Map<WorldPoint, net.runelite.api.NPC> taken, WorldPoint player)
+	{
+		net.runelite.api.NPC actor = taken.get(tile);
+		int fx = 0;
+		int fy = 0;
+		if (actor != null)
+		{
+			// The way it faces is the way it is walking (as standOverTheShoulder reads it).
+			double radians = actor.getOrientation() / 2048.0 * 2.0 * Math.PI;
+			fx = (int) Math.round(-Math.sin(radians));
+			fy = (int) Math.round(-Math.cos(radians));
+		}
+		int[][] steps = {{-fy, fx}, {fy, -fx},
+			{1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {-1, 1}, {1, -1}, {-1, -1}};
+		for (int[] step : steps)
+		{
+			if ((step[0] == 0 && step[1] == 0) || (step[0] == fx && step[1] == fy)
+				|| (step[0] == -fx && step[1] == -fy && actor != null))
+			{
+				continue;
+			}
+			WorldPoint off = new WorldPoint(tile.getX() + step[0], tile.getY() + step[1], tile.getPlane());
+			if (!off.equals(player) && !taken.containsKey(off) && goodGround(off)
+				&& canStep(tile, step[0], step[1]) && stayAt(off))
+			{
+				return;
+			}
+		}
+	}
+
 	/**
 	 * While holding a stay pose, face this tile instead of the player - an
 	 * errand faces its business: the booth, the altar, the cat. Cleared with
@@ -2223,6 +2309,12 @@ public class FollowerEntity
 			recoverPosition(local, playerTile);
 		}
 
+		// A cutscene keeps the follower as an extra (keepToTheScene).
+		if (watchingWithThePlayer && client.getGameState() == GameState.LOGGED_IN)
+		{
+			keepToTheScene(playerTile);
+		}
+
 		// A stay pose owns movement outright: path to the spot, then hold it -
 		// facing the player attentively - until explicitly released. The player
 		// walking away does NOT end it; watchPlayer skips the follow pathing
@@ -2309,22 +2401,20 @@ public class FollowerEntity
 		// Idle facing: the follow op interacts with its target, and an
 		// interacting entity keeps facing it while standing - turning in place
 		// with the turn pose as the player circles around. A stay pose with a
-		// face tile (an errand at its business) faces that instead.
-		if (!moving && faceLocked())
+		// face tile (an errand at its business) faces that instead. A
+		// cutscene comes first: its hold is a stay, and would face the player.
+		if (!moving && watchingWithThePlayer)
+		{
+			// A cutscene: the same way the player is turned, animating or not.
+			dstYaw = local.getOrientation() & 0x7ff;
+		}
+		else if (!moving && faceLocked())
 		{
 			faceStayAnchor();
 		}
 		else if (!moving && !glance())
 		{
-			if (watchingWithThePlayer)
-			{
-				// A cutscene: the same way the player is turned, animating or not.
-				dstYaw = local.getOrientation() & 0x7ff;
-			}
-			else
-			{
-				watchTheWork(local);
-			}
+			watchTheWork(local);
 		}
 
 		StanceLibrary.Stance stance = stance();
@@ -3034,6 +3124,38 @@ public class FollowerEntity
 		return false;
 	}
 
+	/**
+	 * Every tile an NPC stands on, by its whole footprint (a giant's four, not
+	 * only the south-west one it is placed by), with the NPC on it. The
+	 * possessed thrall is not counted, as in npcOnTile.
+	 */
+	java.util.Map<WorldPoint, net.runelite.api.NPC> npcFootprints()
+	{
+		java.util.Map<WorldPoint, net.runelite.api.NPC> taken = new java.util.HashMap<>();
+		net.runelite.api.WorldView view = client.getTopLevelWorldView();
+		if (view == null)
+		{
+			return taken;
+		}
+		for (net.runelite.api.NPC npc : view.npcs())
+		{
+			WorldPoint at = npc == null || npc == thrallNpc ? null : npc.getWorldLocation();
+			if (at == null)
+			{
+				continue;
+			}
+			int size = npc.getComposition() == null ? 1 : Math.max(1, npc.getComposition().getSize());
+			for (int dx = 0; dx < size; dx++)
+			{
+				for (int dy = 0; dy < size; dy++)
+				{
+					taken.put(new WorldPoint(at.getX() + dx, at.getY() + dy, at.getPlane()), npc);
+				}
+			}
+		}
+		return taken;
+	}
+
 	/** The top-level plane, or 0 while there is no world view to ask. */
 	private int plane()
 	{
@@ -3152,11 +3274,12 @@ public class FollowerEntity
 		}
 
 		java.util.Set<WorldPoint> reachable = reachableFrom(anchor, LANDING_SEARCH_RADIUS);
-		// Nor inside furniture the map leaves open, unless that is all there
-		// is: a player standing in a flowerbed still gets the follower beside
-		// them in it, not on top of them.
+		// Nor inside furniture the map leaves open, or inside an NPC, unless
+		// that is all there is: a player standing in a flowerbed still gets
+		// the follower beside them in it, not on top of them.
 		java.util.Set<WorldPoint> clear = new java.util.HashSet<>(reachable);
-		clear.removeIf(at -> !at.equals(anchor) && furnished(at));
+		java.util.Map<WorldPoint, net.runelite.api.NPC> taken = npcFootprints();
+		clear.removeIf(at -> !at.equals(anchor) && (furnished(at) || taken.containsKey(at)));
 		if (clear.size() > 1)
 		{
 			reachable = clear;
@@ -4543,12 +4666,21 @@ public class FollowerEntity
 	 * <p>Only while they are animating. Standing about is not work, and the
 	 * follower goes back to facing them, which is the attentive default.
 	 */
-	/** True while a cutscene has the camera; the follower looks where the player looks. */
+	/**
+	 * True while a cutscene keeps the follower: it holds its tile, gives way to
+	 * the cast and looks where the player looks.
+	 */
 	private boolean watchingWithThePlayer;
 
 	public void setWatchingWithThePlayer(boolean watching)
 	{
 		watchingWithThePlayer = watching;
+		if (!watching)
+		{
+			// The next scene starts from where it finds the follower.
+			catchingUp = false;
+			scenePlayer = null;
+		}
 	}
 
 	/** True while it counts you in for a sketch: your emote is the pose, not work to watch. */

@@ -213,6 +213,41 @@ public class SpeechJournalTest
 	}
 
 	@Test
+	public void aSceneIsMarkedAtBothEnds() throws IOException
+	{
+		// So the lines held "scene" read against the cutscene that held them,
+		// and the next play test shows the scene's edges from the record.
+		Path dir = folder.newFolder().toPath();
+		SpeechJournal journal = journalIn(dir);
+		journal.setRegionSource(() -> 51403);
+
+		journal.scene(true, "542");
+		journal.flush();
+		assertFalse("nothing while the journal is off", Files.exists(journal.getFile()));
+
+		journal.toggle();
+		journal.scene(true, "542");
+		journal.scene(false, "-");
+		journal.flush();
+		List<String> rows = new java.util.ArrayList<>();
+		for (String line : Files.readAllLines(journal.getFile(), StandardCharsets.UTF_8))
+		{
+			if (line.contains("\tscene\t"))
+			{
+				rows.add(line);
+			}
+		}
+		assertEquals("one row at each end", 2, rows.size());
+		String[] start = rows.get(0).split("\t");
+		assertEquals("six columns, as every row has", 6, start.length);
+		assertEquals("start", start[2]);
+		assertEquals("-", start[3]);
+		assertEquals("r51403", start[4]);
+		assertEquals("542", start[5]);
+		assertEquals("end", rows.get(1).split("\t")[2]);
+	}
+
+	@Test
 	public void theEngineReportsWhyALineWasHeldBack() throws IOException
 	{
 		// The half of the story the player never sees, and the reason the

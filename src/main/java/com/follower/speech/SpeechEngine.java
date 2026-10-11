@@ -178,6 +178,14 @@ public class SpeechEngine
 	private boolean muted;
 
 	/**
+	 * A cutscene, or the quiet after one, set by the plugin each tick. Lines
+	 * are held as under the mute, but an occasion waits it out rather than
+	 * being lost to it (SCENE_WAIT_TICKS).
+	 */
+	@Setter
+	private boolean sceneQuiet;
+
+	/**
 	 * Where "now" comes from.
 	 *
 	 * <p>Every window in this class is wall-clock - the speech gap, the held
@@ -425,6 +433,8 @@ public class SpeechEngine
 		int ticksLeft;
 		/** Ticks an occasion has spent waiting out the gap after another line. */
 		int waited;
+		/** Ticks an occasion has spent waiting out a scene, its quiet and the gap after, apart from the gap's ten. */
+		int sceneWaited;
 
 		PendingSpeech(SpeechRule rule, TriggerEvent event, int ticksLeft)
 		{
@@ -450,6 +460,28 @@ public class SpeechEngine
 	static boolean waitsOutTheGap(SpeechRule rule, String held, int waited)
 	{
 		return "gap".equals(held) && rule.isOccasion() && waited < OCCASION_WAIT_TICKS;
+	}
+
+	/**
+	 * How long an occasion waits out a cutscene and the quiet after it, in
+	 * ticks: five minutes. Play test, 9 Oct: a line was said over the
+	 * opening of Children of the Sun's cutscene. Everything is held there
+	 * now, and an occasion - a quest's end, a boss - is said once the scene
+	 * is over rather than lost to it. Past this it is old news.
+	 */
+	static final int SCENE_WAIT_TICKS = 500;
+
+	/**
+	 * Whether a firing held up by a scene waits a tick and tries again rather
+	 * than being dropped, and the gap or the floor after another line once
+	 * the scene is over: two occasions held by one scene are said one after
+	 * the other at any chattiness, where the ten-tick wait lost the second to
+	 * a gap of 45 seconds.
+	 */
+	static boolean waitsOutTheScene(SpeechRule rule, String held, int waited)
+	{
+		return rule.isOccasion() && waited < SCENE_WAIT_TICKS
+			&& ("scene".equals(held) || (waited > 0 && ("gap".equals(held) || "hush".equals(held))));
 	}
 
 	/**
@@ -604,11 +636,15 @@ public class SpeechEngine
 		}
 		if (rule == hushOwner && now < hushUntilMs)
 		{
-			return muted ? "muted" : null;
+			return muted ? "muted" : sceneQuiet ? "scene" : null;
 		}
 		if (muted)
 		{
 			return "muted";
+		}
+		if (sceneQuiet)
+		{
+			return "scene";
 		}
 		// Before the gap, because when both apply the director is the honest
 		// answer: the gap is three seconds and would be gone by the next tick,
@@ -782,6 +818,12 @@ public class SpeechEngine
 				if (--delayed.ticksLeft <= 0)
 				{
 					String held = blockedBy(delayed.rule, now);
+					if (waitsOutTheScene(delayed.rule, held, delayed.sceneWaited))
+					{
+						delayed.sceneWaited++;
+						delayed.ticksLeft = 1;
+						continue;
+					}
 					if (waitsOutTheGap(delayed.rule, held, delayed.waited))
 					{
 						delayed.waited++;
@@ -913,7 +955,9 @@ public class SpeechEngine
 		// out. A rule with a delay would otherwise leave its own gap open: the
 		// want-fulfilled line waits a few ticks, and the region-change line
 		// that arrives later in the same tick would walk straight into it.
-		if (winner.hushMs != null && winner.hushMs > 0 && winner.hasSpeech())
+		// Not at a win the scene holds: the floor of a line never said would
+		// outlast the quiet and cost the occasions waiting it out.
+		if (winner.hushMs != null && winner.hushMs > 0 && winner.hasSpeech() && !sceneQuiet)
 		{
 			hushUntilMs = now + winner.hushMs;
 			hushOwner = winner;
@@ -931,7 +975,7 @@ public class SpeechEngine
 		}
 
 		String blocked = blockedBy(winner, now);
-		if (waitsOutTheGap(winner, blocked, 0))
+		if (waitsOutTheGap(winner, blocked, 0) || waitsOutTheScene(winner, blocked, 0))
 		{
 			winner.markFired(now);
 			pending.add(new PendingSpeech(winner, event, 1));
@@ -966,13 +1010,14 @@ public class SpeechEngine
 	/**
 	 * Says a line of the follower's own that no rule wrote - the remark after
 	 * a sketch - where the settings put speech, and not at all under the
-	 * mute. {@link #say} is the player's own command and speaks through the
-	 * mute on purpose; a line nobody asked for has no such excuse, and went
-	 * straight to the overhead, muted or not.
+	 * mute, or in a scene and the quiet after it. {@link #say} is the
+	 * player's own command and speaks through the mute on purpose; a line
+	 * nobody asked for has no such excuse, and went straight to the
+	 * overhead, muted or not.
 	 */
 	public void remark(String text)
 	{
-		if (!muted)
+		if (!muted && !sceneQuiet)
 		{
 			say(text, null);
 		}

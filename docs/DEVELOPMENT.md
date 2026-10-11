@@ -994,7 +994,7 @@ gated ones once Developer commands is on; both read `EVERYDAY_COMMANDS` and
 | `::follower force notice` **[dev]** | Noticing: the best thing in view now (a drop of yours, a nest, an impling, a star, a landmark beside you), walked to, looked at and named, whatever its kind's cooldown and whether it was noticed before; a drop still wants you five tiles off it first, since its line says you walked away |
 | `::follower force hesitate` **[dev]** | The will: the next Send hesitates over any NPC within two tiles of its spot as over one that outclasses you, even one it hesitated over before |
 | `::follower force shoulder` **[dev]** | The minute-taker's spot over your shoulder, as if an NPC dialogue had just opened; let go when you step off or after twelve seconds |
-| `::follower force cutscene on\|off` **[dev]** | Hold the cutscene behaviour as if one were playing: no wander, look round, noticing, sketch or errand of its own, and it looks where you look; let go by `off`, by unticking Developer commands, or with the scene at a logout or hop |
+| `::follower force cutscene on\|off` **[dev]** | Hold the cutscene behaviour as if one were playing. The follower stands where it is, steps aside for NPCs that come onto it, walks over once if you are moved more than 3 tiles, and looks where you look. It says nothing and starts nothing of its own, and keeps quiet for 15 seconds after; an occasion (a quest's end, a boss) waits and is said after the quiet, up to 5 minutes. Let go 3 ticks after `off`, by unticking Developer commands, or with the scene at a logout or hop |
 | `::follower force wave` **[dev]** | The logout tab's wave now, however lately the last one was |
 | `::follower force drop <gp> [item name]` **[dev]** | The drop ladder's body reaction to a drop of that value at your feet (glance, nod, scroll, walk over) and the loot line's words; only the gestures' cooldowns are skipped |
 | `::follower force sketch` **[dev]** | The chronicle sketch of this view now, without the count; a place already drawn is drawn again, its old files kept as `.bak` first |
@@ -1352,10 +1352,11 @@ visually in the way during a kill is problem enough.
   both ends as ever, but the follower keeps its post and raises no ward there,
   and a seat it had when the park came is given up where it stands.
 - **What it says.** Nothing special: the ordinary rule system never stopped
-  running, so health and prayer warnings arrive as they always did. The
-  `combat`, `bossFight`, `combatStart` and `combatEnd` conditions simply let a
-  rule ask about a fight the way it asks about anything else, and the bundled
-  `combat` group uses them for encouragement.
+  running, so health and prayer warnings arrive as they always did, except in
+  a cutscene (a boss's intro) and the 15 seconds after one, which they wait
+  out. The `combat`, `bossFight`, `combatStart` and `combatEnd` conditions
+  simply let a rule ask about a fight the way it asks about anything else, and
+  the bundled `combat` group uses them for encouragement.
 - **The shield flourish.** While watching a boss it occasionally plays a casting
   animation with a graphic over it, as though warding itself. Both ids are
   settings, not constants: unlike a weapon's swing, which the game answers
@@ -1431,7 +1432,8 @@ with the last look. Either way the page is stamped in the memory
 (`chronicledOn`, an epoch day, and `chronicledAt`, the place name the Locations
 rules give the region you stood in), and the plugin queues a `pageWritten`
 event, sent once the follower has the floor (`SpeechEngine.isQuiet`) and
-dropped after a minute, so the follower says so in its own voice from the
+dropped after a minute (a dialogue, a cutscene or the quiet after one holds it
+and starts its minute again), so the follower says so in its own voice from the
 `chronicle-page-*` rules; sent at the moment itself, the boss's own line or
 a place's arrival line always won. A quest page's date is kept per account
 (the memory belongs to the RuneLite profile, but quests to each account),
@@ -1528,8 +1530,9 @@ things, named in the page's `plates`:
   pose, and so do a fight, a window opening over the view or anything else that
   takes the follower, and it says which. The look round, noticing, errands and
   the moments stand aside meanwhile, the wander neither drifts nor lets go of a
-  drift it took before the ask, and a scene being filmed puts the scroll away
-  without a word. The frame is cropped round you at the plate's shape and clear
+  drift it took before the ask, and a scene being filmed, or a cutscene, puts
+  the scroll away without a word. The frame is cropped round you at the
+  plate's shape and clear
   of the minimap, side panel and chat, and drawn up off the client thread as a
   watercolour, twice, at the page plate's size and at the enlarged plate's, so
   the ink is a pen's width in both: an edge-keeping smoothing that

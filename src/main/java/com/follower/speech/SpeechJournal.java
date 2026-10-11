@@ -192,6 +192,19 @@ public class SpeechJournal
 			String.valueOf(rule.group), where(), reason));
 	}
 
+	/**
+	 * A cutscene's edges, so the lines held "scene" read as the scene's: between
+	 * them, and for the quiet after the end.
+	 */
+	public void scene(boolean on, String why)
+	{
+		if (!enabled)
+		{
+			return;
+		}
+		append(String.join("\t", stamp(), "scene", on ? "start" : "end", "-", where(), why));
+	}
+
 	private static void bump(Map<String, Integer> counts, String key)
 	{
 		counts.merge(key, 1, Integer::sum);

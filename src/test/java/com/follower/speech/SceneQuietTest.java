@@ -1,0 +1,226 @@
+package com.follower.speech;
+
+import com.follower.sim.Harness;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+/**
+ * Nothing said in a cutscene, or for a little while after one. Play test,
+ * 9 Oct: a line was said over the opening of Children of the Sun's first
+ * cutscene, and the player asked for the follower to keep quiet for a bit
+ * once a scene is over too.
+ *
+ * <p>Chatter is dropped there, as under the mute. An occasion - a quest's
+ * end, a boss, a pet - is the one line the moment has, so it waits the
+ * scene out and is said after, within reason.
+ */
+public class SceneQuietTest
+{
+	@Rule
+	public final TemporaryFolder folder = new TemporaryFolder();
+
+	/** Game time: 600 ms a tick, so the gap between two lines can pass. */
+	private final long[] ms = {1_000_000L};
+
+	private final List<String> held = new ArrayList<>();
+
+	private Harness harness(String... bodies) throws IOException
+	{
+		Harness h = new Harness(folder.newFolder().toPath(),
+			"{\"version\": 1, \"rules\": [" + String.join(",", bodies) + "]}");
+		h.engine.setClock(() -> ms[0]);
+		h.engine.setGlobalCooldownMs(3000L);
+		h.engine.setOnSuppressed((rule, why) -> held.add(rule.describe() + ":" + why));
+		h.gameTicks(1);
+		return h;
+	}
+
+	private static final String CHATTY = "{\"id\": \"chatty\", \"group\": \"t\", \"cooldownMs\": 0,"
+		+ " \"when\": {\"type\": \"healthBelow\", \"percent\": 50}, \"say\": [\"ouch\"]}";
+
+	private static final String QUEST = "{\"id\": \"quest\", \"group\": \"t\", \"cooldownMs\": 0,"
+		+ " \"occasion\": true, \"when\": {\"type\": \"questComplete\"}, \"say\": [\"Done and witnessed.\"]}";
+
+	private static final String LEVEL = "{\"id\": \"level\", \"group\": \"t\", \"cooldownMs\": 0,"
+		+ " \"occasion\": true, \"when\": {\"type\": \"levelUp\", \"names\": [\"*\"]}, \"say\": [\"Attack 30.\"]}";
+
+	private void ticks(Harness h, int count)
+	{
+		for (int i = 0; i < count; i++)
+		{
+			ms[0] += 600;
+			h.gameTick();
+		}
+	}
+
+	@Test
+	public void chatterInTheQuietIsDroppedForTheScene() throws IOException
+	{
+		Harness h = harness(CHATTY);
+		h.engine.setSceneQuiet(true);
+		h.game.hitpoints(10, 99);
+		ticks(h, 2);
+		assertTrue("nothing said in the quiet", h.firedBy("chatty").isEmpty());
+		assertEquals("and the transcript says why", "chatty:scene", held.get(0));
+
+		h.engine.setSceneQuiet(false);
+		ticks(h, 20);
+		assertTrue("dropped, not kept for after", h.firedBy("chatty").isEmpty());
+	}
+
+	@Test
+	public void theMuteStillSaysMuted() throws IOException
+	{
+		Harness h = harness(CHATTY);
+		h.engine.setMuted(true);
+		h.engine.setSceneQuiet(true);
+		h.game.hitpoints(10, 99);
+		ticks(h, 2);
+		assertEquals("the setting is the reason first", "chatty:muted", held.get(0));
+	}
+
+	@Test
+	public void theRuleHoldingTheFloorIsHeldToo() throws IOException
+	{
+		// The holder speaks through its own hush; a scene silences it as well.
+		Harness h = harness("{\"id\": \"floor\", \"group\": \"t\", \"cooldownMs\": 0, \"hushMs\": 10000,"
+			+ " \"when\": {\"type\": \"healthBelow\", \"percent\": 50}, \"say\": [\"ouch\"]}");
+		h.engine.setSceneQuiet(true);
+		h.game.hitpoints(10, 99);
+		ticks(h, 2);
+		assertTrue(h.firedBy("floor").isEmpty());
+		assertEquals("floor:scene", held.get(0));
+	}
+
+	@Test
+	public void anOccasionInASceneIsSaidAfterTheQuietAndNotBefore() throws IOException
+	{
+		Harness h = harness(QUEST);
+		h.engine.setSceneQuiet(true);
+		h.dispatch(TriggerEvent.questComplete("Children of the Sun"));
+		ticks(h, 100);
+		assertTrue("not over the scene", h.firedBy("quest").isEmpty());
+
+		h.engine.setSceneQuiet(false);
+		ticks(h, 1);
+		assertEquals("said once it is over", 1, h.firedBy("quest").size());
+		ticks(h, 20);
+		assertEquals("and only once", 1, h.firedBy("quest").size());
+	}
+
+	@Test
+	public void twoOccasionsInOneSceneAreBothSaidAfterIt() throws IOException
+	{
+		// The scene's wait is counted apart from the gap's, so the second
+		// still has its gap to wait out after the first is said.
+		Harness h = harness(QUEST, LEVEL);
+		h.engine.setSceneQuiet(true);
+		h.dispatch(TriggerEvent.questComplete("Children of the Sun"));
+		h.dispatch(TriggerEvent.levelUp("Attack", 30));
+		ticks(h, 50);
+		assertTrue(h.spoken.isEmpty());
+
+		h.engine.setSceneQuiet(false);
+		ticks(h, 1);
+		assertEquals("one at a time", 1, h.spoken.size());
+		ticks(h, 15);
+		assertEquals("both said", 1, h.firedBy("quest").size());
+		assertEquals(1, h.firedBy("level").size());
+	}
+
+	/**
+	 * At the quietest chattiness the gap is 45 seconds, and the ten ticks an
+	 * occasion waits for a gap lost the second of two every time.
+	 */
+	@Test
+	public void twoOccasionsInOneSceneAreBothSaidAtAnyChattiness() throws IOException
+	{
+		Harness h = harness(QUEST, LEVEL);
+		h.engine.setGlobalCooldownMs(45_000L);
+		h.engine.setSceneQuiet(true);
+		h.dispatch(TriggerEvent.questComplete("Children of the Sun"));
+		h.dispatch(TriggerEvent.levelUp("Attack", 30));
+		ticks(h, 50);
+
+		h.engine.setSceneQuiet(false);
+		ticks(h, 1);
+		assertEquals("one at a time", 1, h.spoken.size());
+		ticks(h, 100);
+		assertEquals("both said", 2, h.spoken.size());
+		assertTrue("nothing dropped", held.isEmpty());
+	}
+
+	@Test
+	public void aLineHeldInTheQuietTakesNoFloor() throws IOException
+	{
+		// Its hush would outlast the quiet and cost the occasion waiting.
+		Harness h = harness(QUEST, "{\"id\": \"floor\", \"group\": \"t\", \"cooldownMs\": 0,"
+			+ " \"hushMs\": 10000, \"when\": {\"type\": \"healthBelow\", \"percent\": 50}, \"say\": [\"ouch\"]}");
+		h.engine.setSceneQuiet(true);
+		h.dispatch(TriggerEvent.questComplete("Children of the Sun"));
+		ticks(h, 50);
+		h.game.hitpoints(10, 99);
+		ticks(h, 2);
+		assertEquals("floor:scene", held.get(0));
+
+		h.engine.setSceneQuiet(false);
+		ticks(h, 1);
+		assertEquals("said as the quiet ends", 1, h.firedBy("quest").size());
+	}
+
+	@Test
+	public void anOccasionAfterTheSceneWaitsOutAFloorTakenAfterIt() throws IOException
+	{
+		// The first is said, a line with a floor wins in its gap, and the
+		// second waits for the floor as for the gap.
+		Harness h = harness(QUEST, LEVEL, "{\"id\": \"floor\", \"group\": \"t\", \"cooldownMs\": 0,"
+			+ " \"hushMs\": 10000, \"when\": {\"type\": \"healthBelow\", \"percent\": 50}, \"say\": [\"ouch\"]}");
+		h.engine.setSceneQuiet(true);
+		h.dispatch(TriggerEvent.questComplete("Children of the Sun"));
+		h.dispatch(TriggerEvent.levelUp("Attack", 30));
+		ticks(h, 10);
+
+		h.engine.setSceneQuiet(false);
+		ticks(h, 1);
+		assertEquals(1, h.spoken.size());
+		h.game.hitpoints(10, 99);
+		ticks(h, 40);
+		assertEquals("both occasions said", 1, h.firedBy("quest").size());
+		assertEquals(1, h.firedBy("level").size());
+	}
+
+	@Test
+	public void aRemarkIsNotMadeInTheQuiet() throws IOException
+	{
+		// The word after a sketch, and its invite, are nobody's asking.
+		Harness h = harness(CHATTY);
+		h.engine.setSceneQuiet(true);
+		h.engine.remark("There.");
+		assertTrue(h.spoken.isEmpty());
+
+		h.engine.setSceneQuiet(false);
+		h.engine.remark("There.");
+		assertEquals(1, h.spoken.size());
+	}
+
+	@Test
+	public void anOccasionKeptPastTheSceneWaitIsOldNews() throws IOException
+	{
+		Harness h = harness(QUEST);
+		h.engine.setSceneQuiet(true);
+		h.dispatch(TriggerEvent.questComplete("Children of the Sun"));
+		ticks(h, SpeechEngine.SCENE_WAIT_TICKS + 5);
+		assertTrue("given up on", held.contains("quest:scene"));
+
+		h.engine.setSceneQuiet(false);
+		ticks(h, 20);
+		assertTrue("and not said after", h.firedBy("quest").isEmpty());
+	}
+}

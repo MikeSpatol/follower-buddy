@@ -112,6 +112,57 @@ public class LifecycleGlueTest
 	}
 
 	@Test
+	public void aSceneGoesWithTheScene() throws IOException
+	{
+		// A real cutscene, and the quiet after it, as the forced one: a logout
+		// or hop mid-scene must not leave the next world held or silent.
+		for (String signature : new String[]{"private void tearDownScene()", "private void resetTransientState()"})
+		{
+			String leaving = method(signature);
+			for (String let : new String[]{"sceneOn = false;", "quietUntilTick = 0;",
+				"speechEngine.setSceneQuiet(false);"})
+			{
+				assertTrue(signature + " must let go of the scene: " + let, leaving.contains(let));
+			}
+		}
+	}
+
+	@Test
+	public void theSceneIsReadBeforeTheLoadWait() throws IOException
+	{
+		// A scene that opens with an area load is a scene from its first
+		// tick, and the hold is given from that one reading only.
+		String tick = method("public void onGameTick(GameTick event)");
+		int read = tick.indexOf("noticeTheScene();");
+		assertTrue("the scene is read before the load wait",
+			read >= 0 && read < tick.indexOf("if (spawnDelayTicks > 0)"));
+		assertFalse("and the hold is set nowhere else in the tick", tick.contains("setWatchingWithThePlayer"));
+	}
+
+	@Test
+	public void aSceneIsASilence() throws IOException
+	{
+		// Play test, 9 Oct: a line said over the opening of a cutscene. The
+		// engine is told of the scene and its quiet, and a page written in
+		// one waits for both to be over.
+		assertTrue("the engine is told of the scene and the quiet after it",
+			method("private void noticeTheScene()").contains("speechEngine.setSceneQuiet(sceneQuiet());"));
+		assertTrue("the page news waits for the quiet",
+			method("public void onGameTick(GameTick event)").contains(
+				"nextPageNews(pageNews, client.getTickCount(), speechEngine.isQuiet(),\n"
+					+ "\t\t\tnpcDialogOpen() || sceneQuiet());"));
+	}
+
+	@Test
+	public void theWillStepsNothingAsideInAScene() throws IOException
+	{
+		// The scene's hold is a stay, and a plain one to the will: walked at
+		// by a scripted walk it stepped into the cast or along the walk.
+		assertTrue(method("protected void startUp()").contains(
+			"&& minutesState == 0 && !emoteHold && !filming && !sceneHolds());"));
+	}
+
+	@Test
 	public void aParkWaitingForTheFeetGoesWithTheScene() throws IOException
 	{
 		// A Send given while thrall work had the feet waits to be walked to

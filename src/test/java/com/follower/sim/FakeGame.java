@@ -52,6 +52,8 @@ public final class FakeGame
 	private final List<NPC> npcs = new ArrayList<>();
 	/** Each NPC's answer map, so a spawned one can still be moved about. */
 	private final Map<NPC, Map<String, Object>> npcAnswers = new HashMap<>();
+	/** And its composition's, so a spawned one can be made a giant. */
+	private final Map<NPC, Map<String, Object>> npcCompositions = new HashMap<>();
 
 	private final Map<Integer, Integer> varbits = new HashMap<>();
 	private final Map<Integer, Integer> varps = new HashMap<>();
@@ -444,7 +446,22 @@ public final class FakeGame
 		NPC npc = proxy(NPC.class, answers);
 		npcs.add(npc);
 		npcAnswers.put(npc, answers);
+		npcCompositions.put(npc, composition);
 		return npc;
+	}
+
+	/** How many tiles a side an NPC stands on: one for a person, two for a giant. */
+	public FakeGame npcSize(NPC npc, int size)
+	{
+		npcCompositions.get(npc).put("getSize", size);
+		return this;
+	}
+
+	/** Which way an NPC faces: 0 south, 512 west, 1024 north, 1536 east. */
+	public FakeGame npcTurned(NPC npc, int orientation)
+	{
+		npcAnswers.get(npc).put("getOrientation", orientation);
+		return this;
 	}
 
 	/** Options offered by NPCs of this id: a fishing spot's Net and Bait. */

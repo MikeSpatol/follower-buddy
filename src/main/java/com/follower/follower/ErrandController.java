@@ -296,7 +296,12 @@ public class ErrandController
 	 */
 	public void noticeArrival()
 	{
-		arrivalWatched = true;
+		// An instance's region id names a slot, not a place: a quest scene, a house
+		// or a raid is "somewhere new" on every visit. Play test, 9 Oct: tailing the
+		// guard in Children of the Sun, the follower went off to a chest. A look
+		// still pending from the region left goes with it.
+		net.runelite.api.WorldView view = client.getTopLevelWorldView();
+		arrivalWatched = view == null || !view.isInstance();
 		arrivalSettleTicks = ARRIVAL_SETTLE_TICKS;
 	}
 

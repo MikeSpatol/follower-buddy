@@ -40,6 +40,7 @@ import net.runelite.api.Skill;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.StatChanged;
+import net.runelite.api.events.VarbitChanged;
 import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.events.ConfigChanged;
@@ -190,6 +191,17 @@ public class StayHoldsTest
 			{
 				played.add(id);
 			}
+		}
+
+		/** Whether a cutscene holds it now, and whether one ever has. */
+		boolean watching;
+		boolean everWatched;
+
+		@Override
+		public void setWatchingWithThePlayer(boolean watching)
+		{
+			this.watching = watching;
+			everWatched |= watching;
 		}
 
 		@Override
@@ -689,6 +701,153 @@ public class StayHoldsTest
 		changed.setKey("developerMode");
 		plugin.onConfigChanged(changed);
 		assertFalse("let go with the commands that set it", (Boolean) call("inCutscene"));
+	}
+
+	// ------------------------------------------------------------ a cutscene
+
+	@Test
+	public void aCutsceneKeepsTheFollowerUntilThreeCleanTicks() throws ReflectiveOperationException
+	{
+		scene(true);
+		assertTrue((Boolean) call("inCutscene"));
+		assertTrue("held as an extra", feet.watching);
+
+		// A beat between two shots is not the end of the scene.
+		scene(false);
+		scene(false);
+		assertTrue((Boolean) call("inCutscene"));
+		assertEquals(0, feet.released);
+
+		scene(false);
+		assertFalse((Boolean) call("inCutscene"));
+		assertEquals("let go once, on the third clean tick", 1, feet.released);
+		assertFalse(feet.watching);
+	}
+
+	@Test
+	public void aPlayersParkIsLeftToThePlayer() throws ReflectiveOperationException
+	{
+		call("applyFollowEnabled", false);
+		WorldPoint post = feet.stay;
+		scene(true);
+		for (int i = 0; i < 3; i++)
+		{
+			scene(false);
+		}
+		assertFalse("the post is the player's, not the scene's", feet.everWatched);
+		assertEquals(0, feet.released);
+		assertEquals(post, feet.stay);
+	}
+
+	/**
+	 * Play test, 9 Oct, Children of the Sun: the follower walked to the
+	 * player's shoulder and back for each of the scene's dozen lines, since
+	 * a pause between two of them ends a meeting.
+	 */
+	@Test
+	public void aSceneDialogueSendsNobodyToTheShoulder() throws ReflectiveOperationException
+	{
+		scene(true);
+		npcDialogUp = true;
+		call("updateMinutes");
+		assertEquals(0, get("minutesState"));
+		assertEquals("not walked anywhere", 0, feet.sent);
+	}
+
+	@Test
+	public void nothingOfItsOwnTakesTheFeetInAScene() throws ReflectiveOperationException
+	{
+		String[] gates = {"errandBusy", "momentFeetTaken", "spectateBusy", "seatFeetTaken"};
+		scene(true);
+		for (String gate : gates)
+		{
+			assertTrue(gate + " in a scene", (Boolean) call(gate));
+		}
+		for (int i = 0; i < 3; i++)
+		{
+			scene(false);
+		}
+		for (String gate : gates)
+		{
+			assertFalse(gate + " once it is over", (Boolean) call(gate));
+		}
+	}
+
+	@Test
+	public void theSceneStartsQuietAndDoesNotWanderStraightAfter() throws ReflectiveOperationException
+	{
+		set("speakingUntilMs", Long.MAX_VALUE);
+		call("speak", "a line from before", SpeechOutput.OVERHEAD, null, -1, null);
+		assertFalse("waiting its turn", ((java.util.Collection<?>) get("speechQueue")).isEmpty());
+
+		standStill(100);
+		scene(true);
+		assertTrue("what was about to be said goes", ((java.util.Collection<?>) get("speechQueue")).isEmpty());
+		assertTrue("and the engine keeps quiet", engineQuiet());
+		assertEquals("nothing waits behind the line that went", 0L, get("speakingUntilMs"));
+
+		for (int i = 0; i < 3; i++)
+		{
+			scene(false);
+		}
+		int gap = (Integer) get("WANDER_MIN_GAP");
+		for (int i = 1; i < gap; i++)
+		{
+			call("updateWander");
+			assertFalse("no wander on the idle time the scene ran up", (Boolean) get("wandered"));
+		}
+		call("updateWander");
+		assertTrue("one in its own time", (Boolean) get("wandered"));
+	}
+
+	/**
+	 * Asked for after the Children of the Sun play test: nothing said for a
+	 * little while once a cutscene is over. A page the scene wrote waits for
+	 * the quiet, its minute starting again once it is over.
+	 */
+	@Test
+	public void theQuietOutlastsTheSceneAndThePageWaitsForIt() throws ReflectiveOperationException
+	{
+		// A tick between each clean read, so the quiet counts from the third.
+		scene(true);
+		for (int i = 0; i < 3; i++)
+		{
+			h.gameTick();
+			scene(false);
+		}
+		java.util.Deque<FollowerPlugin.PageNews> news = new java.util.ArrayDeque<>();
+		com.follower.speech.TriggerEvent page =
+			com.follower.speech.TriggerEvent.pageWritten("quest", "Children of the Sun");
+		news.add(new FollowerPlugin.PageNews(page, h.game.client.getTickCount()));
+		for (int i = 0; i < FollowerPlugin.SCENE_QUIET_TICKS; i++)
+		{
+			assertTrue("still the quiet", (Boolean) call("sceneQuiet"));
+			call("noticeTheScene");
+			assertTrue(engineQuiet());
+			assertNull("the page waits", FollowerPlugin.nextPageNews(news, h.game.client.getTickCount(), true,
+				(Boolean) call("sceneQuiet")));
+			h.gameTick();
+		}
+		assertFalse((Boolean) call("sceneQuiet"));
+		call("noticeTheScene");
+		assertFalse("the engine may speak again", engineQuiet());
+		assertEquals("and the page is mentioned", page, FollowerPlugin.nextPageNews(news,
+			h.game.client.getTickCount(), true, (Boolean) call("sceneQuiet")));
+	}
+
+	/**
+	 * The scene is read on the game tick, after that tick's messages: a line
+	 * fired alongside the varbit's rise is held by the varbit itself.
+	 */
+	@Test
+	public void theSceneIsQuietFromTheVarbit() throws ReflectiveOperationException
+	{
+		set("ruleLoader", h.loader);
+		VarbitChanged risen = new VarbitChanged();
+		risen.setVarbitId(net.runelite.api.gameval.VarbitID.CUTSCENE_STATUS);
+		risen.setValue(1);
+		plugin.onVarbitChanged(risen);
+		assertTrue(engineQuiet());
 	}
 
 	@Test
@@ -1487,6 +1646,25 @@ public class StayHoldsTest
 		message.setName("");
 		message.setMessage(text);
 		return message;
+	}
+
+	/** One tick's reading of the cutscene, through the real varbit. */
+	private void scene(boolean on) throws ReflectiveOperationException
+	{
+		if (get("overlay") == null)
+		{
+			set("overlay", new FollowerOverlay(null, null, null, null));
+		}
+		h.game.varbit(net.runelite.api.gameval.VarbitID.CUTSCENE_STATUS, on ? 1 : 0);
+		call("noticeTheScene");
+	}
+
+	/** Whether the engine has been told to keep quiet for a scene. */
+	private boolean engineQuiet() throws ReflectiveOperationException
+	{
+		Field quiet = com.follower.speech.SpeechEngine.class.getDeclaredField("sceneQuiet");
+		quiet.setAccessible(true);
+		return (Boolean) quiet.get(h.engine);
 	}
 
 	/** Stands still long enough for the wander, and lets it drift once. */

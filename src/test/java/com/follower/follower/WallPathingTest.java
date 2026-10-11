@@ -216,6 +216,54 @@ public class WallPathingTest
 	}
 
 	/**
+	 * Play test, 9 Oct: entering the instance of a Children of the Sun scene
+	 * snapped the follower to the tile west of the player, where the scene's
+	 * Alina stood. No landing goes inside an NPC, a giant's outer tiles
+	 * included.
+	 */
+	@Test
+	public void aLandingIsNeverInsideAnNpc()
+	{
+		FakeGame game = new FakeGame().withCollision().at(10, 10, 0);
+		game.moveNpc(game.spawnNpc(12645, "Alina", 0), 9, 10, 0);
+		net.runelite.api.NPC giant = game.spawnNpc(2098, "Hill Giant", 28);
+		game.moveNpc(giant, 10, 11, 0).npcSize(giant, 2);
+		FollowerEntity follower = followerOn(game);
+
+		WorldPoint player = new WorldPoint(10, 10, 0);
+		WorldPoint landing = follower.landingTile(new WorldPoint(9, 10, 0), player);
+		assertFalse("not in Alina", new WorldPoint(9, 10, 0).equals(landing));
+		assertFalse("not in the giant: " + landing,
+			landing.getX() >= 10 && landing.getX() <= 11 && landing.getY() >= 11 && landing.getY() <= 12);
+		assertFalse("nor on the player", player.equals(landing));
+		assertTrue(follower.standable(landing));
+	}
+
+	@Test
+	public void aCrowdOnEveryTileStillLands()
+	{
+		// Unless that is all there is, as with furniture: a crowd round the
+		// player still gets the follower beside them, not on top of them.
+		FakeGame game = new FakeGame().withCollision().at(10, 10, 0);
+		for (int dx = -2; dx <= 2; dx++)
+		{
+			for (int dy = -2; dy <= 2; dy++)
+			{
+				if (dx != 0 || dy != 0)
+				{
+					game.moveNpc(game.spawnNpc(3000, "Bandit", 0), 10 + dx, 10 + dy, 0);
+				}
+			}
+		}
+		FollowerEntity follower = followerOn(game);
+
+		WorldPoint player = new WorldPoint(10, 10, 0);
+		WorldPoint landing = follower.landingTile(new WorldPoint(9, 10, 0), player);
+		assertFalse("not on the player", player.equals(landing));
+		assertTrue(follower.standable(landing));
+	}
+
+	/**
 	 * Aboard a boat the player is in a sub-world laid over the sea, with its
 	 * own collision map, and that map is padded: the client stores scene
 	 * (x, y) at [x + 1][y + 1]. Read unshifted, every tile answers for its
@@ -338,6 +386,23 @@ public class WallPathingTest
 				+ "\t\t\t\t// Snapped from real data once the area has loaded.\n\t\t\t\treturn;"));
 		assertTrue("and the hidden-object watchdog",
 			source.contains("if (!object.isActive() && !hiddenForNpcOverlap && " + loaded + ")"));
+	}
+
+	/**
+	 * A cutscene's hold is a stay, and a stay faces the player: asked second,
+	 * the follower stared at the player all scene instead of looking where
+	 * they look. The facing needs a live client, so the order is read.
+	 */
+	@Test
+	public void aSceneIsLookedAtBeforeAStayIsFaced() throws java.io.IOException
+	{
+		String source = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(
+			"src/main/java/com/follower/follower/FollowerEntity.java")),
+			java.nio.charset.StandardCharsets.UTF_8).replace("\r\n", "\n");
+		int scene = source.indexOf("if (!moving && watchingWithThePlayer)");
+		int stay = source.indexOf("else if (!moving && faceLocked())");
+		assertTrue("the lint has lost its place", scene >= 0 && stay >= 0);
+		assertTrue("the scene is asked first", scene < stay);
 	}
 
 	/** The two open booths of the Lumbridge row; see {@link #lumbridgeBank}. */
