@@ -168,4 +168,14 @@ public class OccasionGuaranteeTest
 		}
 		assertTrue("boss advice that could be held back: " + missing, missing.isEmpty());
 	}
+
+	@Test
+	public void aTrackUnlockedInACutsceneIsSaidAfterIt() throws IOException
+	{
+		// Play test, 9 Oct: Children of the Sun unlocks its track as the
+		// delegation's scene opens, and the scene's quiet dropped the line.
+		// An occasion waits the quiet out instead.
+		Harness h = new Harness(folder.newFolder().toPath());
+		assertTrue(h.rule("music-unlock").isOccasion());
+	}
 }

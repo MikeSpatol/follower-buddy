@@ -527,6 +527,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > A music track unlocked - somewhere new enough to have its own song. The tally 'music' counts unlocks since install.
 
 - **when:** musicunlock AND a 50% roll
+- **does:** occasion (never held back)
 - **pacing:** priority 24, cooldown 10m, delay 2 ticks
 
 - Another one for the catalogue: {track}.

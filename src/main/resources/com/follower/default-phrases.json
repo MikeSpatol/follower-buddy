@@ -13412,6 +13412,7 @@
     },
     {
       "id": "music-unlock",
+      "occasion": true,
       "note": "A music track unlocked - somewhere new enough to have its own song. The tally 'music' counts unlocks since install.",
       "group": "misc",
       "priority": 24,
