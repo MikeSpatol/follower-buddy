@@ -9,6 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -151,6 +152,17 @@ public class LifecycleGlueTest
 			method("public void onGameTick(GameTick event)").contains(
 				"nextPageNews(pageNews, client.getTickCount(), speechEngine.isQuiet(),\n"
 					+ "\t\t\tnpcDialogOpen() || sceneQuiet());"));
+	}
+
+	@Test
+	public void theQuietAfterASceneStartsNothing() throws IOException
+	{
+		// Play test, 13 Oct: hold the activities through the quiet too. No
+		// errand, look round or noticing of its own until it is over.
+		String src = source();
+		assertTrue("errands", src.contains("errands.setSession(() -> skilling.isWorking() || sceneQuiet());"));
+		assertEquals("the look round and the noticing", 2, src.split(
+			"isInCombat\\(\\) \\|\\| sceneQuiet\\(\\) \\|\\| filming", -1).length - 1);
 	}
 
 	@Test

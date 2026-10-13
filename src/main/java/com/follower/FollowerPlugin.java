@@ -732,8 +732,9 @@ public class FollowerPlugin extends Plugin
 		skilling.setErrands(errands::force);
 		// The seat is taken sooner for the half hour after a favour.
 		skilling.setGrateful(() -> speechEngine.getContext().isGrateful());
-		// And in return no errand of the follower's own starts mid-session.
-		errands.setSession(() -> skilling.isWorking() || inCutscene());
+		// And in return no errand of the follower's own starts mid-session,
+		// or in a scene or the quiet after one.
+		errands.setSession(() -> skilling.isWorking() || sceneQuiet());
 		moments = new com.follower.follower.Moments(client, follower, config, skilling,
 			this::momentFeetTaken,
 			() -> speechEngine.getContext().isInCombat(),
@@ -749,7 +750,7 @@ public class FollowerPlugin extends Plugin
 			() -> thrallNpc != null || errands.isBusy() || spectate.holdsTheFeet()
 				|| dialog.isOpen() || emoteHold || minutesState != 0 || resting
 				|| skilling.holdsTheFeet() || moments.holdsTheFeet() || flourish.isActive()
-				|| speechEngine.getContext().isInCombat() || inCutscene() || filming
+				|| speechEngine.getContext().isInCombat() || sceneQuiet() || filming
 				|| (sketching != null && sketching.isSketching()),
 			() -> speechEngine.getContext().feelsAbout("disliked") ? "disliked"
 				: speechEngine.getContext().feelsAbout("liked") ? "liked" : "",
@@ -761,7 +762,7 @@ public class FollowerPlugin extends Plugin
 			() -> thrallNpc != null || errands.isBusy() || spectate.holdsTheFeet()
 				|| dialog.isOpen() || emoteHold || minutesState != 0
 				|| skilling.holdsTheFeet() || moments.holdsTheFeet() || flourish.isActive()
-				|| speechEngine.getContext().isInCombat() || inCutscene() || filming
+				|| speechEngine.getContext().isInCombat() || sceneQuiet() || filming
 				|| (sketching != null && sketching.isSketching()),
 			() -> speechEngine.getContext().getIdleTicks(),
 			this::landmarksNearby);
@@ -1382,7 +1383,12 @@ public class FollowerPlugin extends Plugin
 		return cutsceneForced || sceneOn;
 	}
 
-	/** A scene, or the quiet after one: nothing is said that the player did not ask for. */
+	/**
+	 * A scene, or the quiet after one: nothing is said that the player did not
+	 * ask for, and nothing of its own is started - no errand, look round,
+	 * noticing or moment. Play test, 13 Oct: hold the activities through the
+	 * quiet too, not only the words.
+	 */
 	private boolean sceneQuiet()
 	{
 		return inCutscene() || client.getTickCount() < quietUntilTick;
@@ -4726,14 +4732,15 @@ public class FollowerPlugin extends Plugin
 	 * the nod are played where the follower stands, past this gate, so in a
 	 * take the level and the news are not handed to the moments at all. A
 	 * sketch beats them too: a walk off would leave the picture it is in.
-	 * And a cutscene: no peering at the cast as it turns to the player.
+	 * And a cutscene and the quiet after it: no peering at the cast as it
+	 * turns to the player, and nothing begun the moment the scene lets go.
 	 */
 	private boolean momentFeetTaken()
 	{
 		return thrallBusiness() || (spectate != null && spectate.holdsTheFeet())
 			|| (errands != null && errands.isBusy()) || filming
 			|| (sketching != null && sketching.isSketching())
-			|| inCutscene();
+			|| sceneQuiet();
 	}
 
 	/**

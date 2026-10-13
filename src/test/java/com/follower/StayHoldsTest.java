@@ -767,10 +767,17 @@ public class StayHoldsTest
 		{
 			scene(false);
 		}
-		for (String gate : gates)
+		for (String gate : new String[]{"errandBusy", "spectateBusy", "seatFeetTaken"})
 		{
 			assertFalse(gate + " once it is over", (Boolean) call(gate));
 		}
+		// Play test, 13 Oct: no moment begun in the quiet after the scene.
+		for (int i = 0; i < FollowerPlugin.SCENE_QUIET_TICKS; i++)
+		{
+			assertTrue("momentFeetTaken in the quiet", (Boolean) call("momentFeetTaken"));
+			h.gameTick();
+		}
+		assertFalse("momentFeetTaken once the quiet is over", (Boolean) call("momentFeetTaken"));
 	}
 
 	@Test
