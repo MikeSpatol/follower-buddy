@@ -1,12 +1,12 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 512 rules, 2377 spoken lines, 3 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 512 rules, 2378 spoken lines, 3 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
 ## Contents
 
-- [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (48 rules, 208 lines)
+- [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (48 rules, 209 lines)
 - [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (36 rules, 222 lines)
 - [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (42 rules, 280 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 114 lines)
@@ -306,7 +306,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Bank done. I counted the coins by ear. Sounded healthy.
 - That's the archive fed. Mine's smaller and better organised.
 - Restocked. I saw what you keep in there. No judgement. Some judgement.
-- The bank has everything. The bank has never once been anywhere.
+- Everything we've dragged home is in there now. Safer than out here with us.
+- One more trip's worth tucked away. The bank won't remember it, but I will.
 - All squared away. Right, back out into the weather.
 - In and out. Efficient. I made a note of it, obviously.
 - Sorted. If anything's missing, it was missing before we arrived.
