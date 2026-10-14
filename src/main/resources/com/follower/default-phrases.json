@@ -4397,7 +4397,7 @@
       },
       "say": [
         "Fred the Farmer. Do NOT mention the shears.",
-        "He guards those sheep like they're made of gold. The wool, technically, is.",
+        "He guards those sheep like they're made of gold. They're wool, mostly.",
         "Twenty balls of wool. That request outlives us all."
       ]
     },
@@ -5281,6 +5281,113 @@
         "Regulus Cento keeps the bird that goes between Varrock and Varlamore.",
         "The bird does the flying and he does the talking. A fair split.",
         "He dresses well. The bird dresses better."
+      ]
+    },
+    {
+      "id": "quest-boy",
+      "note": "The boy by the witch's hedge in north Taverley, who starts Witch's House. He is the only NPC named Boy.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Boy"
+        ]
+      },
+      "say": [
+        "Every village has a boy who kicks things over hedges. Taverley has this one.",
+        "He stands by that hedge as if it owes him something.",
+        "People call him sad-looking. I'd have said patient."
+      ]
+    },
+    {
+      "id": "quest-nora-t-hagg",
+      "note": "Nora T. Hagg, the witch, walking her hedged garden in north Taverley.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Nora T. Hagg"
+        ]
+      },
+      "say": [
+        "Nora T. Hagg. Say it quickly and you'll hear why I don't.",
+        "She walks that lawn like a sentry nobody ever relieves.",
+        "She has a long garden and, I'd guess, a short temper."
+      ]
+    },
+    {
+      "id": "quest-veos",
+      "note": "Veos, the Kourend treasure hunter, at the Port Sarim and Port Piscarilius docks. NOTE: his copies in quests and cutscenes share the name and will match too.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Veos"
+        ]
+      },
+      "say": [
+        "Kourend's his home, and Veos does like to mention it.",
+        "A treasure hunter with his own ship. Most of them make do with a spade."
+      ]
+    },
+    {
+      "id": "quest-leenz",
+      "note": "Leenz, who keeps the general store in Port Piscarilius.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Leenz"
+        ]
+      },
+      "say": [
+        "Leenz keeps the general store, and greets every customer in rhyme.",
+        "Leenz takes her rhymes seriously. I'd advise against marking her work."
+      ]
+    },
+    {
+      "id": "quest-regath",
+      "note": "Regath, who keeps Regath's Wares in Arceuus.",
+      "group": "quest",
+      "priority": 35,
+      "output": "overhead",
+      "delayTicks": 2,
+      "cooldownMs": 3600000,
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Regath"
+        ]
+      },
+      "say": [
+        "Regath deals in many things, he says. Mostly runes, from what I've seen.",
+        "Regath talks as if every sentence is going in a book. Some of them will."
       ]
     },
     {

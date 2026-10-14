@@ -1399,8 +1399,9 @@ glyph with no error.
 `ChronicleIntegrityTest` enforces that, the unique ids, the kinds, and that every
 unlock names something the code can check. A `chronicle.json` in the data
 directory replaces the bundled file outright, the same override as the fonts.
-The starting set is five quests (Cook's Assistant, Priest in Peril, Waterfall
-Quest, Children of the Sun, Rune Mysteries) and the pages around them.
+The starting set is nine quests (Cook's Assistant, Priest in Peril, Waterfall
+Quest, Children of the Sun, Rune Mysteries, Sheep Shearer, Witch's House,
+X Marks the Spot, Client of Kourend) and the pages around them.
 
 **Unlocks** (`ChronicleProgress`). Two kinds of knowing. A quest page asks the
 client (`Quest.getState`), so it is right from the first login, quests done long

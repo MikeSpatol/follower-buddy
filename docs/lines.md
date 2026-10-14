@@ -1,6 +1,6 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 512 rules, 2378 spoken lines, 3 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 517 rules, 2390 spoken lines, 3 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
@@ -19,7 +19,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - [clock](#clock) - The hour and how long we have been at it (9 rules, 39 lines)
 - [gear](#gear) - What you put on (63 rules, 145 lines)
 - [boss](#boss) - Bosses sighted and fought (55 rules, 515 lines)
-- [quest](#quest) - Famous quest figures nearby (48 rules, 143 lines)
+- [quest](#quest) - Famous quest figures nearby (53 rules, 155 lines)
 - [thrall](#thrall) - When it stands in for a thrall (3 rules, 18 lines)
 - [mimic](#mimic) - Copying your emotes (30 rules, 16 lines)
 - [dialogs](#dialogs) - the conversations it starts (3 trees)
@@ -5903,7 +5903,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
 
 - Fred the Farmer. Do NOT mention the shears.
-- He guards those sheep like they're made of gold. The wool, technically, is.
+- He guards those sheep like they're made of gold. They're wool, mostly.
 - Twenty balls of wool. That request outlives us all.
 
 ### `quest-doric`
@@ -6345,6 +6345,58 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Regulus Cento keeps the bird that goes between Varrock and Varlamore.
 - The bird does the flying and he does the talking. A fair split.
 - He dresses well. The bird dresses better.
+
+### `quest-boy`
+
+> The boy by the witch's hedge in north Taverley, who starts Witch's House. He is the only NPC named Boy.
+
+- **when:** Boy within 5 tiles, in sight
+- **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
+
+- Every village has a boy who kicks things over hedges. Taverley has this one.
+- He stands by that hedge as if it owes him something.
+- People call him sad-looking. I'd have said patient.
+
+### `quest-nora-t-hagg`
+
+> Nora T. Hagg, the witch, walking her hedged garden in north Taverley.
+
+- **when:** Nora T. Hagg within 5 tiles, in sight
+- **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
+
+- Nora T. Hagg. Say it quickly and you'll hear why I don't.
+- She walks that lawn like a sentry nobody ever relieves.
+- She has a long garden and, I'd guess, a short temper.
+
+### `quest-veos`
+
+> Veos, the Kourend treasure hunter, at the Port Sarim and Port Piscarilius docks. NOTE: his copies in quests and cutscenes share the name and will match too.
+
+- **when:** Veos within 5 tiles, in sight
+- **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
+
+- Kourend's his home, and Veos does like to mention it.
+- A treasure hunter with his own ship. Most of them make do with a spade.
+
+### `quest-leenz`
+
+> Leenz, who keeps the general store in Port Piscarilius.
+
+- **when:** Leenz within 5 tiles, in sight
+- **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
+
+- Leenz keeps the general store, and greets every customer in rhyme.
+- Leenz takes her rhymes seriously. I'd advise against marking her work.
+
+### `quest-regath`
+
+> Regath, who keeps Regath's Wares in Arceuus.
+
+- **when:** Regath within 5 tiles, in sight
+- **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
+
+- Regath deals in many things, he says. Mostly runes, from what I've seen.
+- Regath talks as if every sentence is going in a book. Some of them will.
 
 ### `quest-complete`
 

@@ -338,6 +338,281 @@
       ]
     },
     {
+      "id": "quest-sheep-shearer",
+      "kind": "quest",
+      "name": "Sheep Shearer",
+      "unlock": {
+        "quest": "SHEEP_SHEARER"
+      },
+      "summary": "Fred the Farmer wanted to know what you were doing on his land, and then he wanted twenty balls of wool. His sheep had the wool, Lumbridge Castle had the spinning wheel, and you did the walking.",
+      "sections": [
+        {
+          "heading": "What happened",
+          "body": "Fred's second question came before you'd answered his first: whether you were the one who keeps leaving his gates open. You said you were looking for a quest, which answers neither, and he let it pass. His sheep were \"getting mighty woolly\", he said, and he wanted twenty balls of wool off them, spun.\n\nThen he brought up The Thing. Nobody has ever seen it, which is why it's called that. Some say it's a shapeshifter after the souls of decent folk like Fred, and some say it's a sheep. He told it with relish, then said he hadn't all day to stand about gossiping. I put a mark in the margin by that.\n\nAnyone who turns up without shears gets a pair from Fred, and a warning: some of the sheep don't like it, and \"persistence is the key\". In practice the plain sheep all stand still for it, and persistence does nothing for the one that doesn't. The rams look \"a little too violent to shear\". I kept to the fence.\n\nThe wool went up to the spinning wheel in Lumbridge Castle and came back as balls. Fred took them in whatever handfuls you brought and told you each time how many more he needed. On the last one he said he supposed he'd better pay you. He did, and I counted the coins out of habit."
+        },
+        {
+          "heading": "Who was there",
+          "body": "Fred the Farmer: keeps sheep, chickens and a suspicion of anyone who sets foot on his land. Every conversation with him opens the same way, and no answer has settled it yet.\n\nThe Thing: one sheep in the pen, and the word on it is \"A Sheep?\", question mark and all. It won't be sheared; it just gets away. It's also the one sheep you can try to talk to, and anyone who tries concludes, sensibly, that they can't talk to sheep.\n\nTell Fred you've seen it and he's telling you to run for the hills and grab the chickens before you can explain. Tell him it's two penguins dressed as a sheep, and he asks, \"Have you been out in the sun too long?\"\n\n{done:COLD_WAR} The penguins were operatives, as it turns out, posted in the field to watch humans and report on them. All the shearing made them suspect Fred of working for the other side. Fred, if you warn him, says he's heard that one before."
+        },
+        {
+          "heading": "Where it took us",
+          "body": "Fred's farmhouse: north-west of Lumbridge Castle. Fred is inside, and there's a pair of shears on his table. For Lumbridge, he says, follow the road east and south.\n\nThe sheep pen: built against the east side of the house. It holds the sheep, a few rams and The Thing, behind gates Fred would like kept shut.\n\nLumbridge Castle: the spinning wheel is on the first floor, in the room beside Duke Horacio's. Lumbridge has its own page, with the rest of the castle."
+        },
+        {
+          "heading": "Worth knowing",
+          "body": "Bring twenty balls of wool to the very first conversation and the errand is over at once. Fred asks whether you've been shearing his sheep without permission, warns you not to come at him with the shears, and takes the wool.\n\n{done:ONE_SMALL_FAVOUR} Fred turns up again in One Small Favour. The leader of H.A.M. was holding Jimmy the Chisel, said Jimmy was related to Fred, and wanted a month's supply of chickens to let him go. Fred was dismayed, hadn't enough, and sent you to Seth Groats, who had loads.\n\nWho keeps leaving Fred's gates open, nobody has told me. He asks every stranger who turns up, so I'd guess he doesn't know either. I've been shutting them behind us."
+        }
+      ],
+      "people": [
+        "Sheep - most of the pen; shear one and the wool grows back",
+        "Ram - level 2; refuses the shears, and the easiest thing in the pen to start a fight with"
+      ],
+      "places": [],
+      "details": [
+        "Start - Fred the Farmer, in his farmhouse north-west of Lumbridge Castle",
+        "Requirements - none; the shears are provided",
+        "Bring - 20 balls of wool, unnoted, in one trip or several",
+        "Rewards - 1 quest point, 150 Crafting experience and 60 coins",
+        "Spinning your own - 50 more Crafting experience, from the wheel",
+        "Needed for - no other quest"
+      ],
+      "plates": [
+        {
+          "npc": 732,
+          "idle": 813,
+          "caption": "Fred, suspicious of us both."
+        },
+        {
+          "sketch": "lumbridge",
+          "regions": [
+            12850
+          ],
+          "caption": "Lumbridge, with a wheel upstairs.",
+          "hint": "Pose for me in Lumbridge."
+        },
+        {
+          "npc": 731,
+          "idle": 3569,
+          "caption": "The Thing, or just a sheep."
+        }
+      ]
+    },
+    {
+      "id": "quest-witchs-house",
+      "kind": "quest",
+      "name": "Witch's House",
+      "unlock": {
+        "quest": "WITCHS_HOUSE"
+      },
+      "summary": "A boy in Taverley kicked his ball over the wrong hedge, and the witch behind it locked it in her shed. Getting it back took two keys, a magnet, a mouse and a fight that wouldn't stay finished.",
+      "sections": [
+        {
+          "heading": "What happened",
+          "body": "The boy was in tears by the hedge. His ball had gone over it into the garden of an old lady he found scary, and she'd locked it in her wooden shed. You said you'd see what you could do, and he stopped crying on the spot. I've known grown men take longer.\n\nThe front door was locked, and the key was under the flower pot beside it, which is where everyone keeps theirs. The witch's diary lay on her table. I read it. Nobody stopped me. Much of it is about an experiment, some of it about locks, and one whole day is about sausages.\n\nHer back door shows no lock and no handle, and answers to a mouse instead. Cheese fetched one out of the wall, you stuck the basement magnet to its harness, and when it went home something whirred over the door and the door gave. I wrote it all down and still don't follow it.\n\nThe garden was the slow part. The witch walks up and down the middle, so you kept behind the hedges all the way to the fountain, where the shed key was hidden. \"No one will ever look there!\" she'd written, in the diary she leaves on the table.\n\nIn the shed the ball sat on a crate, and the experiment sat with it. You had to beat it four times over, in a new shape each time. I kept my eyes on the door frame. I've given the experiment a page to itself.\n\nThen out again without being caught, which would have cost you the ball, and back to the boy, who was very pleased. You told him it had been much harder than you'd thought. He didn't ask how."
+        },
+        {
+          "heading": "Who was there",
+          "body": "The boy: the diary calls him \"That pesky kid\" and says this wasn't the first time the ball came over. He called you mister, and I've let it stand.\n\nNora T. Hagg: the witch. We never spoke. She has a spell for anyone she finds in her garden, and shouts \"Stop! Thief!\" before she casts it, which I couldn't argue with. Her diary swears by Zamorak.\n\nThe mouse: \"Deceptively mouse-shaped,\" people say. It wears a harness, works the back door for the witch, and asks nothing for it but cheese. I'd have paid it more.\n\n{done:GRIM_TALES} Princess Miazrqa calls the witch her second cousin, twice removed. She says the ball made the witch furious, that she wouldn't let it drop, and that she even turned her own hair green."
+        },
+        {
+          "heading": "Where it took us",
+          "body": "Taverley: the north-east of the village, by the gate, where the boy stands just outside the witch's hedge, a short walk from the house portal.\n\nThe witch's house: the front door is on the west side, with the key under the pot. The diary is on the ground floor, the mouse hole in the small southern room, and the ladder down in the north room.\n\nThe basement: a gate that shocks bare hands, so gloves on first, and behind it the cupboard with the magnet. There's a piano down there too. Anyone who tries it thinks better of it, with the witch within earshot.\n\nThe garden: a long lawn between hedges, with the witch walking it. The fountain stands in a courtyard at the house end, and the shed is at the far east end."
+        },
+        {
+          "heading": "Worth knowing",
+          "body": "Both locks are Professor Oddenstein's work, by the diary's account: the basement first, then the back door. He told her it was cutting edge. She called it contrived, and used it anyway.\n\nOnce it's over, the house is shut to you. Try the door and you'll decide it would be rude to break in, which it always was.\n\n{done:GRIM_TALES} The door opened again for Grim Tales, on a house that had kept busy without us. The piano opened to the right tune, the mouse hole took anyone small enough to fit, and a gnome sat caged under the house. The diary had gone on past the 9th of Pentember, too.\n\nThe boy has his ball back. The hedge is exactly where it was."
+        }
+      ],
+      "people": [
+        "Witch's experiment - levels 19, 30, 42 and 53, one after another, in the shed"
+      ],
+      "places": [],
+      "details": [
+        "Start - the boy, by the witch's hedge at the north end of Taverley",
+        "Requirements - none to start; then four fights in a row, levels 19 to 53",
+        "Bring - cheese, and gloves for the basement gate; leather ones will do",
+        "Rewards - 4 quest points and 6,325 Hitpoints experience",
+        "Afterwards - the experiment, all four shapes, in the Nightmare Zone",
+        "Caught in the garden - out by the boy again, minus the ball if you had it",
+        "Leaving the shed mid-fight - it starts again from the first shape",
+        "Basement boxes - gloves eventually, cabbages rather sooner",
+        "Needed for - Grim Tales, and Recipe for Disaster (the Lumbridge Guide)"
+      ],
+      "plates": [
+        {
+          "npc": 3994,
+          "idle": 2331,
+          "caption": "The boy, waiting by the hedge."
+        },
+        {
+          "sketch": "taverley",
+          "regions": [
+            11573,
+            11574
+          ],
+          "caption": "Taverley, where the ball landed.",
+          "hint": "Pose for me in Taverley."
+        },
+        {
+          "npc": 3995,
+          "idle": 808,
+          "caption": "Nora, from behind a hedge."
+        },
+        {
+          "npc": 4000,
+          "idle": 242,
+          "caption": "The mouse, between mouthfuls."
+        }
+      ]
+    },
+    {
+      "id": "quest-x-marks-the-spot",
+      "kind": "quest",
+      "name": "X Marks the Spot",
+      "unlock": {
+        "quest": "X_MARKS_THE_SPOT"
+      },
+      "summary": "Veos, a treasure hunter from Great Kourend, had a scroll that brought him as far as Lumbridge and no further. You dug where it pointed, four times, and he took the casket without saying what was in it.",
+      "sections": [
+        {
+          "heading": "What happened",
+          "body": "Veos was in the Sheared Ram with a scroll he'd found back home in Great Kourend, across the sea to the far west. It had led him to Lumbridge and stopped making sense there, because he didn't know the area. He reckoned you would, and handed it over on that guess.\n\nThe first clue was about a man named Bob, who walks out of his door, takes fourteen steps in four directions, and buries his treasure. I paced it after you and counted. It comes to four west and six north of his door, which the scroll could have said in fewer words.\n\nThe second was a map with an X behind the castle, by the kitchen's back door. Veos' advice on it, to anyone who asked, was that the X probably marked where to go. He was right, and that was all the help he gave. What came up there was an orb that runs warmer the nearer you get to the next spot, and it walked us to Draynor.\n\nThe orb's spot was just east of the village, a short way from the jail, whose guards wander. I stayed on your far side while you dug. That hole held another scroll, in cipher: ESBZOPS QJH QFO. I worked it out in the margin, every letter moved one along, and kept quiet, which was harder than the cipher.\n\nIt said Draynor pig pen. In the middle of the pen you dug up an ancient casket, and as you did there was a faint whispering. You decided it must have been the wind. I can't do better than the wind, and I've tried.\n\nThe casket went to Veos at his ship, on the northernmost pier in Port Sarim. Asked what was in it, he said \"Oh err... nothing important,\" only something that might be of use back in Great Kourend. I doubt the first part. He did pay you, as promised."
+        },
+        {
+          "heading": "Who was there",
+          "body": "Veos: \"An experienced treasure hunter,\" and experienced enough to let you do the digging. He'd come a long way on someone else's scroll, in a ship he sails between Port Sarim and Kourend.\n\nBob: the axe seller. The scroll used his door as a starting line, and he stayed behind his counter throughout, none the wiser.\n\n{done:CLIENT_OF_KOUREND} Veos took on a client after this, from the mainland, he said, who wanted to know about Kourend. By the end of Client of Kourend the client was speaking through him, and once it let him go he remembered none of what he'd asked of you."
+        },
+        {
+          "heading": "Where it took us",
+          "body": "The Sheared Ram: a pub next to the general store, where Veos waited with his scroll. A beer is two coins.\n\nBob's Brilliant Axes: the south end of Lumbridge. The first hole is just outside the north-west window of the house joined onto the shop.\n\nBehind Lumbridge Castle: the kitchen's back door, with a large crate beside it. The second hole is just south-west of the crate.\n\nEast of Draynor Village: north-west of the jail and south of the wheat field, near Leela. The third hole is four steps north of a bush, where the orb runs hottest.\n\nThe Draynor pig pen: just north of the market, with Martin the Master Gardener beside it. The casket was in the middle.\n\nPort Sarim: Veos' ship, on the northernmost pier, just south of the Rusty Anchor Inn."
+        },
+        {
+          "heading": "Worth knowing",
+          "body": "Veos offered to sail you to Great Kourend whenever you like, as an extra thank you. He was going home himself, and expected to be back before long, treasure being what it is.\n\nBy the time we left his pier, Veos had an amulet on. He wasn't wearing one in the Sheared Ram, and I'd have noticed. He hasn't mentioned it, and I haven't asked.\n\nWho wrote the scroll, nobody has told me. Veos found it in Kourend, and it sent him across the sea to a pig pen in Draynor. It's a long way to go to hide something.\n\n{done:A_KINGDOM_DIVIDED} In A Kingdom Divided, Xamphur told his lord that he had planted the seeds that led a treasure hunter to him. I know one treasure hunter, and I watched you dig for him."
+        }
+      ],
+      "people": [
+        "The bartender - the Sheared Ram; had Veos down as a rumour",
+        "Arthur the Clue Hunter - also in the Sheared Ram; explains clue scrolls",
+        "Leela - stands near the third hole, on business of her own",
+        "Martin the Master Gardener - beside the pig pen in the market"
+      ],
+      "places": [],
+      "details": [
+        "Start - Veos, in the Sheared Ram, Lumbridge",
+        "Requirements - none; bring a spade, and nothing needs fighting",
+        "Rewards - 1 quest point, 200 coins, and a lamp worth 300 experience in any skill",
+        "Also - a beginner scroll box, and clue scrolls come as scroll boxes from now on",
+        "Scroll boxes - two of each tier at a time to start with; scroll cases raise it to five",
+        "Hints - Veos has one for each clue, in the pub or at his ship",
+        "Lost the scroll or the orb - Veos will have come across it",
+        "The lamp - won't go in the bank; Veos has another if it's lost",
+        "Needed for - Client of Kourend",
+        "Further on - the rest of the Great Kourend quests, up to A Kingdom Divided"
+      ],
+      "plates": [
+        {
+          "npc": 10723,
+          "idle": 813,
+          "caption": "Veos, back at his ship."
+        },
+        {
+          "sketch": "lumbridge",
+          "regions": [
+            12850
+          ],
+          "caption": "Lumbridge, paced out.",
+          "hint": "Pose for me in Lumbridge."
+        },
+        {
+          "npc": 10619,
+          "idle": 808,
+          "caption": "Bob, who was never asked."
+        },
+        {
+          "sketch": "draynor-village",
+          "regions": [
+            12338,
+            12339
+          ],
+          "caption": "Draynor, the last stop but one.",
+          "hint": "Pose for me in Draynor Village."
+        }
+      ]
+    },
+    {
+      "id": "quest-client-of-kourend",
+      "kind": "quest",
+      "name": "Client of Kourend",
+      "unlock": {
+        "quest": "CLIENT_OF_KOUREND"
+      },
+      "summary": "Veos' client wanted to know how Great Kourend is run, so you toured its five cities with a scroll that stayed blank. Then came an orb for the Dark Altar, and the client said thank you in Veos' voice.",
+      "sections": [
+        {
+          "heading": "What happened",
+          "body": "The client wanted Kourend's hierarchy, and how it differs from the mainland's, gathered on the quiet. The scroll saw to the quiet. Touch a feather to it and you have a quill; write with that, and the client reads every word elsewhere while the scroll stays blank. No ink needed, Veos said. I took that personally.\n\nVeos said general store owners know their cities and like a chat, and both held. Leenz gave you Piscarilius in rhyme until you caught a verse that didn't, then asked if you'd prefer the gruff version of her. Horace was proud of the vinery, Jennifer of the soldiers, and Munty of his smiths, though he admits the sulphur mine isn't pretty work.\n\nRegath, in Arceuus, asked why he should trust you, and you told him you were a journalist from the mainland. I let that stand. When he got to the Dark Altar, the quill and scroll glowed and burned your hand. You said you'd caught your finger, and he advised you to hold your scroll more carefully.\n\nAfter the last shop a whisper sent you back to Veos, who had heard it too. The burn wasn't intentional, he passed on; something you'd said had \"provoked emotion\", namely the altar. Then there was an orb to activate beside it. You asked why. It was best you didn't, said Veos.\n\nBy the altar you held the orb up and it shattered, and a whisper thanked you. Back at the port, Veos said the last he'd spoken to you was on the crossing. Then he cried out, and someone else carried on in his voice. I took a step back for that part."
+        },
+        {
+          "heading": "Who was there",
+          "body": "Veos: a treasure hunter from Kourend, whose ship crosses from Port Sarim. You'd already dug up a casket for him in a Draynor pig pen, and he called what was in it nothing important. Asked whether you were spying, he said not exactly. At the end he remembered none of it.\n\nVeos' Client: Veos only ever called it his client, so that's where I've filed it. It thanked you, promised no harm would come to Veos, and would not say who it was. \"Knowledge can be a curse,\" it said, to a scribe.\n\nThe shopkeepers: each named their city's leader for the scroll, and Leenz called hers ruthless with some pride. All five names are on the Great Kourend page, which also covers what the cities are for."
+        },
+        {
+          "heading": "Where it took us",
+          "body": "Port Sarim: Veos' ship, at the northernmost pier. He hopes you don't get seasick, and says it's a long voyage.\n\nPort Piscarilius: where the ship comes in and Veos waits on the dock. Leenz's store is further up the town.\n\nHosidius, Shayzien and Lovakengj: a general store in each, and a minecart between them for anyone who would rather not walk it.\n\nArceuus: Regath's Wares, on the south-east side of the city. It's the shop I remember best.\n\nThe Dark Altar: north of Arceuus, in a field of dark crystals, with Tyss beside it. I stayed at the edge of the crystals, and I'd do the same again."
+        },
+        {
+          "heading": "Worth knowing",
+          "body": "Veos paid you in lamps and an old book he'd bought at auction. It belonged, he says, to the daughter of King Kharedst IV, the last king before the Council, and most of its pages are missing. I'd have taken it for the missing pages alone.\n\n{done:A_KINGDOM_DIVIDED} The client wasn't done with Veos. After the earthquake Veos wandered off in a trance, Cabin Boy Herbert says, and you found him with Xamphur, who addressed him as his lord. Xamphur once served Xeric, by Lord Arceuus' account, and the Tasakaal confirmed it. Nobody said the client's name aloud, so I haven't written it either."
+        }
+      ],
+      "people": [
+        "Leenz - general store, Port Piscarilius; speaks in rhyme, mostly",
+        "Horace - general store, Hosidius",
+        "Jennifer - general store, Shayzien",
+        "Munty - general store, Lovakengj",
+        "Regath - Regath's Wares, Arceuus; runes, mostly, whatever the map says",
+        "Tyss - keeps the Dark Altar, and kept out of it"
+      ],
+      "places": [],
+      "details": [
+        "Start - Veos, on the dock at Port Piscarilius; his ship sails from Port Sarim",
+        "Requirements - X Marks the Spot, and a feather to make the quill",
+        "Rewards - 1 quest point, two lamps of 500 experience each, Kharedst's memoirs",
+        "Also - the Kourend Castle Teleport spell, at 48 Magic",
+        "Lost the scroll or orb - Veos has more; a lost quill is just another feather",
+        "Minecarts - 20 coins a ride between the cities",
+        "Needed for - The Queen of Thieves, The Depths of Despair, The Ascent of Arceuus",
+        "And for - The Forsaken Tower, Tale of the Righteous, Dragon Slayer II",
+        "Further on - A Kingdom Divided, once all five house quests are done"
+      ],
+      "plates": [
+        {
+          "npc": 10727,
+          "idle": 813,
+          "caption": "Veos, on his own account."
+        },
+        {
+          "sketch": "dark-altar",
+          "regions": [
+            6716
+          ],
+          "caption": "The altar, kept at a distance.",
+          "hint": "Pose for me by the Dark Altar."
+        },
+        {
+          "npc": 7056,
+          "idle": 8201,
+          "caption": "Regath, checking credentials."
+        },
+        {
+          "npc": 2850,
+          "idle": 813,
+          "caption": "Veos, to look at."
+        }
+      ]
+    },
+    {
       "id": "boss-giant-mole",
       "kind": "boss",
       "name": "Giant Mole",
@@ -699,6 +974,54 @@
       ]
     },
     {
+      "id": "enemy-witchs-experiment",
+      "kind": "enemy",
+      "name": "Witch's experiment",
+      "unlock": {
+        "npcs": [
+          "Witch's experiment",
+          "Witch's experiment (second form)",
+          "Witch's experiment (third form)",
+          "Witch's experiment (fourth form)"
+        ],
+        "quest": "WITCHS_HOUSE"
+      },
+      "summary": "The name says whose it is. Nora T. Hagg keeps it in her locked garden shed in Taverley, and it doesn't care for visitors.",
+      "sections": [
+        {
+          "heading": "What it is",
+          "body": "I met it from the shed doorway, which is as far in as I go. The witch's diary had warned me: she raised it on fungus, tar and clay, and moved it out of the house when it began breaking things. Not clever yet, she wrote, but with \"a really mean stare\".\n\n{done:WITCHS_HOUSE} It won't keep a shape. Beat it and it gets up as a spider, then a bear, then a wolf, and only the wolf stays down. I counted the floorboards it covered each time: by the end, four times what it started on.\n\n{done:WITCHS_HOUSE} The stare is real. Reach for the ball while it's about and it only looks at you, and you come away weaker. Nobody has told me how a look does that."
+        },
+        {
+          "heading": "Where it is found",
+          "body": "The wooden shed at the east end of Nora T. Hagg's garden, in north Taverley, behind a locked door. Once Witch's House is done it can be met again in the Nightmare Zone at Yanille, as one of Dominic Onion's dreams."
+        },
+        {
+          "heading": "Worth knowing",
+          "body": "The quest is written up under Witch's House. On the 9th of Pentember the witch still hadn't settled on a name for it: Fritz, probably, though Lucy, she wrote, reminded her of her mother.\n\n{done:GRIM_TALES} Fritz it was. Later pages of the diary mourn him by name, blame \"a wretched adventurer\" and promise revenge. She also admits to some anomalies with him that worried her, and leaves it there.\n\n{done:GRIM_TALES} She didn't stop at one. The next lot live in the sewers under her house and came out, she wrote, as more than one creature apiece. I haven't been down to look."
+        }
+      ],
+      "people": [
+        "Nora T. Hagg - made it, fed it and keeps it in the shed"
+      ],
+      "places": [],
+      "details": [
+        "Level 19 - 21 hitpoints, hits up to 2, and always aggressive",
+        "{done:WITCHS_HOUSE} After that - levels 30, 42 and 53, hitting up to 3, 4 and 5",
+        "{done:WITCHS_HOUSE} All four shapes - 144 hitpoints between them; melee attacks only",
+        "{done:WITCHS_HOUSE} Leave mid-fight - it starts again from the first shape",
+        "Dwarf cannons - can't be set up in the shed",
+        "Nightmare Zone - a normal version and a hard one, after the quest"
+      ],
+      "plates": [
+        {
+          "npc": 3996,
+          "idle": 257,
+          "caption": "Fritz, or possibly Lucy."
+        }
+      ]
+    },
+    {
       "id": "location-lumbridge",
       "kind": "location",
       "name": "Lumbridge",
@@ -719,7 +1042,7 @@
         },
         {
           "heading": "Worth knowing",
-          "body": "{done:THE_LOST_TRIBE} During the God Wars, the caves beneath what is now the town sheltered a lost goblin tribe.\n\nLong after the God Wars, migrating human nomads settled on the River Lum. They built a bridge across it, then named the town after the bridge. Practical people. Good bridge.\n\nFather Aereck keeps the church of Saradomin, which is over 230 years old and still standing. Four quests start here too: four scrolls from one town with one bridge.\n\n{done:LOST_CITY} An unassuming shed in the swamp leads to the fairy city of Zanaris. I would not have guessed from the shed."
+          "body": "{done:THE_LOST_TRIBE} During the God Wars, the caves beneath what is now the town sheltered a lost goblin tribe.\n\nLong after the God Wars, migrating human nomads settled on the River Lum. They built a bridge across it, then named the town after the bridge. Practical people. Good bridge.\n\nFather Aereck keeps the church of Saradomin, which is over 230 years old and still standing. Several quests start here too: a lot of scrolls from one town with one bridge.\n\n{done:LOST_CITY} An unassuming shed in the swamp leads to the fairy city of Zanaris. I would not have guessed from the shed."
         }
       ],
       "people": [
@@ -729,7 +1052,8 @@
       "details": [
         "Founded - the year 1937 of the Fourth Age",
         "{done:LOST_CITY} The shed to Zanaris - opens once Lost City is done",
-        "Quests - Cook's Assistant, The Restless Ghost, Sheep Shearer, Rune Mysteries"
+        "Quests - Cook's Assistant, The Restless Ghost, Sheep Shearer, Rune Mysteries",
+        "Also from here - X Marks the Spot, in the Sheared Ram"
       ],
       "plates": [
         {
@@ -1124,6 +1448,68 @@
           "npc": 12889,
           "idle": 10945,
           "caption": "Primio, at the Fortis end."
+        }
+      ]
+    },
+    {
+      "id": "world-great-kourend",
+      "kind": "world",
+      "name": "Great Kourend",
+      "unlock": {
+        "regions": [
+          7225,
+          7226
+        ]
+      },
+      "summary": "\"Beware of the thieves,\" Veos says of Port Piscarilius, where his ship puts in. Great Kourend is five cities under five ruling houses, and this port is one of them.",
+      "sections": [
+        {
+          "heading": "What it is",
+          "body": "On his word I carried the book under my arm all the way up the quay, and I watched every hand I passed. Nobody tried for it. I've decided that was the arm. Leenz, at the general store further up, says hello in rhyme. I checked my pockets after that too.\n\nVeos gives the cities in order from the port. West is Arceuus, where they study magic at the Grand Library, and further west Lovakengj, mining and smithing to arm the Shayzien soldiers in the south-west. South is Hosidius, which farms for the lot of them.\n\nA king or queen once ruled all five, Veos says. The last king died twenty years ago, and the Kourend Council has run the kingdom in the meantime. Who sits on it, he didn't say."
+        },
+        {
+          "heading": "Where it is found",
+          "body": "Across the sea to the west of the mainland, with Varlamore to the south; Varlamore has its own page. Veos' ship sails from the northernmost pier in Port Sarim to Port Piscarilius, or to Land's End in the south-west."
+        },
+        {
+          "heading": "Worth knowing",
+          "body": "{done:CLIENT_OF_KOUREND} The shopkeepers named the five leaders for us: Shauna Piscarilius, Kandur Hosidius, Shiro Shayzien, Vulcana Lovakengj and Trobin Arceuus. How we came to ask is on the Client of Kourend page.\n\n{done:THE_QUEEN_OF_THIEVES} The Queen of Thieves, who leads the biggest gang in the port, told us herself that she is Lady Shauna Piscarilius. I've stopped carrying the book under my arm in her port. It wouldn't help.\n\n{done:THE_ASCENT_OF_ARCEUUS} The people of Arceuus have been immortal for a thousand years, Mori says, and the Dark Altar keeps them so. Lord Arceuus is credited with the secret, though his son Asteros says the discovery was not his.\n\n{done:A_KINGDOM_DIVIDED} The Council is finished. Lord Shayzien charged the councillors with murdering King Kharedst and his daughter. Kandur Hosidius was crowned in their place and killed before the day was out, and Commander Fullore says his son Artur is king now."
+        }
+      ],
+      "people": [
+        "Veos - treasure hunter; his ship is the way over",
+        "Leenz - general store, Port Piscarilius, in verse"
+      ],
+      "places": [
+        "Port Piscarilius - fishing, trade, and the thieves Veos means",
+        "Arceuus - magic and the Grand Library, west of the port",
+        "Lovakengj - mines and forges, in the north-west",
+        "Shayzien - the soldiers, in the south-west",
+        "Hosidius - the farms, in the south",
+        "Dark Altar - north of Arceuus, among dark crystals"
+      ],
+      "details": [
+        "Way in - Veos' ship from Port Sarim, to Port Piscarilius or Land's End",
+        "Getting about - the Lovakengj minecarts, 20 coins a ride",
+        "{done:THE_FORSAKEN_TOWER} Minecarts - free, after The Forsaken Tower",
+        "{done:CLIENT_OF_KOUREND} Teleport - Kourend Castle Teleport, at 48 Magic",
+        "Quests - X Marks the Spot, then Client of Kourend",
+        "Then - the house quests, and A Kingdom Divided last"
+      ],
+      "plates": [
+        {
+          "sketch": "port-piscarilius",
+          "regions": [
+            7225,
+            7226
+          ],
+          "caption": "The port, drawn one-handed.",
+          "hint": "Pose for me in Port Piscarilius."
+        },
+        {
+          "npc": 6986,
+          "idle": 808,
+          "caption": "Leenz, mid-couplet."
         }
       ]
     }

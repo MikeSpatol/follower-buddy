@@ -69,7 +69,7 @@ sketched by the scribe itself, with you in the middle of the drawing: where a
 page has a picture of the place, right-click the follower, pick Sketch and
 strike any emote during its count, or just stand still. Ask again for a
 retake; the old drawing is kept. Click any picture to see it larger. It
-starts small: five quests and a handful of pages around them.
+starts small: nine quests and a handful of pages around them.
 
 **It keeps you company.** Start on a tree, a rock or a fishing spot and it works
 alongside you: the same one when there is room, the next one along when there is
