@@ -5,7 +5,7 @@ import com.follower.speech.TriggerEvent;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.Random;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
@@ -354,9 +354,20 @@ public class ErrandController
 
 	private final Hands hands;
 
+	/** Every roll the errands make: the schedule, the order, the details. */
+	private final Random random;
+
 	public ErrandController(Client client, FollowerEntity follower, FollowerConfig config,
 		Consumer<TriggerEvent> dispatch, com.follower.appearance.SpotAnimRepository spotAnims,
 		BooleanSupplier busy, Hands hands)
+	{
+		this(client, follower, config, dispatch, spotAnims, busy, hands, new Random());
+	}
+
+	/** As above, with the rolls seeded, so a long simulation plays out the same every run. */
+	ErrandController(Client client, FollowerEntity follower, FollowerConfig config,
+		Consumer<TriggerEvent> dispatch, com.follower.appearance.SpotAnimRepository spotAnims,
+		BooleanSupplier busy, Hands hands, Random random)
 	{
 		this.client = client;
 		this.follower = follower;
@@ -365,6 +376,7 @@ public class ErrandController
 		this.spotAnims = spotAnims;
 		this.busy = busy;
 		this.hands = hands;
+		this.random = random;
 		reset();
 	}
 
@@ -610,7 +622,7 @@ public class ErrandController
 				{
 					return false;
 				}
-				if (ThreadLocalRandom.current().nextInt(100) < FIRE_DEATH_PERCENT)
+				if (random.nextInt(100) < FIRE_DEATH_PERCENT)
 				{
 					// The rare version, in which warming the hands goes
 					// catastrophically wrong.
@@ -645,7 +657,7 @@ public class ErrandController
 				// Whatever notable fixture the scene has closest; a scene with
 				// none of them simply produces no study today.
 				List<String> names = new ArrayList<>(java.util.Arrays.asList(STUDY_TARGETS));
-				Collections.shuffle(names);
+				Collections.shuffle(names, random);
 				for (String name : names)
 				{
 					WorldPoint found = findObject(name::equals);
@@ -661,7 +673,7 @@ public class ErrandController
 				// Same hunt, different register: whatever curiosity the scene
 				// offers, or no exploring here today.
 				List<String> names = new ArrayList<>(java.util.Arrays.asList(EXPLORE_TARGETS));
-				Collections.shuffle(names);
+				Collections.shuffle(names, random);
 				for (String name : names)
 				{
 					WorldPoint found = findObject(name::equals);
@@ -683,7 +695,7 @@ public class ErrandController
 				takeOutTheScroll();
 				announce(TriggerEvent.errand(TriggerEvent.Type.ERRAND_START, errand.key));
 				state = State.DOING;
-				waitTicks = 12 + ThreadLocalRandom.current().nextInt(8);
+				waitTicks = 12 + random.nextInt(8);
 				log.debug("Errand started: {}", errand.key);
 				return true;
 			}
@@ -696,7 +708,7 @@ public class ErrandController
 				}
 				WorldPoint p = local.getWorldLocation();
 				int[][] dirs = {{3, 0}, {-3, 0}, {0, 3}, {0, -3}};
-				int[] dir = dirs[ThreadLocalRandom.current().nextInt(dirs.length)];
+				int[] dir = dirs[random.nextInt(dirs.length)];
 				return startTravelErrand(errand,
 					new WorldPoint(p.getX() + dir[0], p.getY() + dir[1], p.getPlane()));
 			}
@@ -829,14 +841,14 @@ public class ErrandController
 				// Look, then write. The whole visit runs about twelve seconds:
 				// four of honest looking, the rest with the scroll out.
 				studyLookTicks = 4;
-				waitTicks = 18 + ThreadLocalRandom.current().nextInt(5);
+				waitTicks = 18 + random.nextInt(5);
 				break;
 			case EXPLORE:
 				// Look, then note it down - everything explored is for
 				// posterity. Same beat as the study, a touch brisker: the
 				// scribe writes a report, the explorer jots an entry.
 				studyLookTicks = 4;
-				waitTicks = 14 + ThreadLocalRandom.current().nextInt(5);
+				waitTicks = 14 + random.nextInt(5);
 				break;
 			case ALTAR:
 				follower.playAnimation(PRAY_ANIMATION);
@@ -1240,7 +1252,7 @@ public class ErrandController
 	 */
 	private void orderByStaleness(List<Errand> candidates)
 	{
-		Collections.shuffle(candidates);
+		Collections.shuffle(candidates, random);
 		candidates.sort(java.util.Comparator.comparingInt(
 			errand -> lastRun.getOrDefault(errand, Integer.MIN_VALUE)));
 	}
@@ -1249,7 +1261,7 @@ public class ErrandController
 	{
 		// 60%..140% of the base, so errands never feel metronomic.
 		return (int) (baseScheduleTicks()
-			* (0.6 + ThreadLocalRandom.current().nextDouble() * 0.8));
+			* (0.6 + random.nextDouble() * 0.8));
 	}
 
 	// FollowerConfig.errandFrequency()'s description quotes these as minutes

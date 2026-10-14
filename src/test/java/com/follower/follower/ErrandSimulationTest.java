@@ -8,6 +8,7 @@ import com.google.gson.Gson;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import net.runelite.api.coords.WorldPoint;
 import org.junit.Before;
 import org.junit.Rule;
@@ -147,6 +148,9 @@ public class ErrandSimulationTest
 	private boolean busy;
 	private int tick;
 
+	/** The errands' rolls, fixed so a long run plays out the same every time. */
+	private static final long SEED = 20261014L;
+
 	@Before
 	public void setUp() throws IOException
 	{
@@ -178,7 +182,7 @@ public class ErrandSimulationTest
 				{
 					return heldProp != 0;
 				}
-			});
+			}, new Random(SEED));
 	}
 
 	/** What the hands are holding; 0 for nothing. */
@@ -860,6 +864,14 @@ public class ErrandSimulationTest
 			+ " off its own back", starts > 0);
 		assertTrue("errands fired " + starts + " times in 20,000 ticks, which is"
 			+ " far more often than the interval allows", starts <= 20);
+
+		// The last tick can fall mid-errand, when the follower is posed on
+		// purpose. That errand has to finish and hand the follower back.
+		for (int i = 0; i < 60 && errands.isBusy(); i++)
+		{
+			tick(1);
+		}
+		assertFalse("the last errand never finished", errands.isBusy());
 		assertTrue("it should be back at heel at the end", follower.following);
 	}
 
