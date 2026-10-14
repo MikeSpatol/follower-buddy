@@ -1570,7 +1570,7 @@
     {
       "id": "enter-wilderness",
       "occasion": true,
-      "note": "Fires on crossing into the Wilderness, via the wilderness varbit.",
+      "note": "Fires on crossing into the Wilderness, via the wilderness varbit (5963, INSIDE_WILDERNESS). Read as state, not as a change: a varbitChanged rule anywhere in the set switches the varbit flood back on. Dialogue check, 14 Oct: it took in the lines of wilderness-crossing, which rose on the same tick, lost to it every time and so was never heard.",
       "group": "area",
       "priority": 110,
       "output": "both",
@@ -1587,7 +1587,13 @@
         "Everything north of that ditch wants your items. Everything.",
         "If someone waves at you out here, they are not being friendly.",
         "The revenants used to be worse, if you can believe it.",
-        "Don't bring anything you'd cry about losing. Too late now, I suppose."
+        "Don't bring anything you'd cry about losing. Too late now, I suppose.",
+        "You've crossed. You know what that means.",
+        "Right. Wilderness. Everyone here can kill you now.",
+        "Oh, we're doing this. Fine. I'm staying close.",
+        "That's the ditch behind us. No takebacks.",
+        "Past the ditch. Speak softly and count your escapes.",
+        "North it is. I'll keep the notes brief and the eyes open."
       ]
     },
     {
@@ -10683,30 +10689,6 @@
       ]
     },
     {
-      "id": "wilderness-crossing",
-      "note": "Varbit 5963 is INSIDE_WILDERNESS, verified against the cache - much better than a guessed coordinate for the ditch. Read as STATE rather than as a change: a varbitChanged rule anywhere in the shipped set switches the varbit flood back on, and every login then pays a full rule pass per varbit initialised. The state is first true on the tick you cross, so the crossing is still what gets said; the long cooldown is what stops it being said again while you are still down there.",
-      "group": "area",
-      "priority": 76,
-      "cooldownMs": 1800000,
-      "delayTicks": 1,
-      "output": "overhead",
-      "animation": 2105,
-      "mood": -12,
-      "when": {
-        "type": "varbitEquals",
-        "varbit": 5963,
-        "value": 1
-      },
-      "say": [
-        "You've crossed. You know what that means.",
-        "Right. Wilderness. Everyone here can kill you now.",
-        "Oh, we're doing this. Fine. I'm staying close.",
-        "That's the ditch behind us. No takebacks.",
-        "Past the ditch. Speak softly and count your escapes.",
-        "North it is. I'll keep the notes brief and the eyes open."
-      ]
-    },
-    {
       "id": "flinch-big-hit",
       "note": "A flinch, and nothing else. Animation 424 is HUMAN_UNARMEDBLOCK, 1.26s, the unarmed defensive recoil. Silent on purpose: a body that reacts before the mouth does is most of what makes something look like it is watching, and a line here would be one more thing said during a fight that is already noisy.",
       "group": "combat",
@@ -10980,8 +10962,35 @@
       ]
     },
     {
+      "id": "recall-death-third",
+      "note": "The third death exactly, so the count is true when it is said. The death being spoken of is filed after the line is chosen, so the count read here is the deaths before it: two. Outranks recall-death-again, which takes over from the fourth.",
+      "group": "memory",
+      "priority": 93,
+      "cooldownMs": 120000,
+      "output": "overhead",
+      "delayTicks": 10,
+      "delayTicksMax": 16,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "playerDeath"
+          },
+          {
+            "type": "remembers",
+            "is": "the-death",
+            "minimum": 2,
+            "maximum": 2
+          }
+        ]
+      },
+      "say": [
+        "That's three. I've started keeping count, and I wish I hadn't."
+      ]
+    },
+    {
       "id": "recall-death-again",
-      "note": "Named rather than generic, because the count is the joke and only this incident has a count worth making one of.",
+      "note": "Named rather than generic, because the count is the joke and only this incident has a count worth making one of. The count read is the deaths before this one, so a minimum of 2 is the third death on.",
       "group": "memory",
       "priority": 92,
       "cooldownMs": 120000,
@@ -10997,12 +11006,11 @@
           {
             "type": "remembers",
             "is": "the-death",
-            "minimum": 3
+            "minimum": 2
           }
         ]
       },
       "say": [
-        "That's three. I've started keeping count, and I wish I hadn't.",
         "I'm starting to see a pattern, and I don't like it.",
         "We've done this before. Several times. Recently.",
         "Same ending, new page.",

@@ -11,8 +11,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (42 rules, 280 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 114 lines)
 - [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 72 lines)
-- [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (27 rules, 124 lines)
-- [area](#area) - Places: named lines, tastes, earned verdicts, the defences (67 rules, 222 lines)
+- [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (28 rules, 124 lines)
+- [area](#area) - Places: named lines, tastes, earned verdicts, the defences (66 rules, 222 lines)
 - [errand](#errand) - Its little trips: bank, altar, fire, cat, studies, explores (44 rules, 155 lines)
 - [souvenir](#souvenir) - Wishes, gifts, the pocket, and what it carries (17 rules, 84 lines)
 - [bet](#bet) - Its predictions about drops (3 rules, 20 lines)
@@ -2275,14 +2275,22 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Do you ever think about {memory}? I do. It was only {memoryWhen}.
 - It's quiet, so naturally my mind goes back to {memory}.
 
+### `recall-death-third`
+
+> The third death exactly, so the count is true when it is said. The death being spoken of is filed after the line is chosen, so the count read here is the deaths before it: two. Outranks recall-death-again, which takes over from the fourth.
+
+- **when:** on your death AND an incident remembered
+- **pacing:** priority 93, cooldown 2m, delay 10-16 ticks, overhead
+
+- That's three. I've started keeping count, and I wish I hadn't.
+
 ### `recall-death-again`
 
-> Named rather than generic, because the count is the joke and only this incident has a count worth making one of.
+> Named rather than generic, because the count is the joke and only this incident has a count worth making one of. The count read is the deaths before this one, so a minimum of 2 is the third death on.
 
 - **when:** on your death AND an incident remembered
 - **pacing:** priority 92, cooldown 2m, delay 10-16 ticks, overhead
 
-- That's three. I've started keeping count, and I wish I hadn't.
 - I'm starting to see a pattern, and I don't like it.
 - We've done this before. Several times. Recently.
 - Same ending, new page.
@@ -2560,7 +2568,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `enter-wilderness`
 
-> Fires on crossing into the Wilderness, via the wilderness varbit.
+> Fires on crossing into the Wilderness, via the wilderness varbit (5963, INSIDE_WILDERNESS). Read as state, not as a change: a varbitChanged rule anywhere in the set switches the varbit flood back on. Dialogue check, 14 Oct: it took in the lines of wilderness-crossing, which rose on the same tick, lost to it every time and so was never heard.
 
 - **when:** varbit 5963 = 1
 - **does:** occasion (never held back)
@@ -2572,6 +2580,12 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - If someone waves at you out here, they are not being friendly.
 - The revenants used to be worse, if you can believe it.
 - Don't bring anything you'd cry about losing. Too late now, I suppose.
+- You've crossed. You know what that means.
+- Right. Wilderness. Everyone here can kill you now.
+- Oh, we're doing this. Fine. I'm staying close.
+- That's the ditch behind us. No takebacks.
+- Past the ditch. Speak softly and count your escapes.
+- North it is. I'll keep the notes brief and the eyes open.
 
 ### `area-lumbridge`
 
@@ -3243,21 +3257,6 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - A crowd. My notes prefer them at a distance.
 - Mind your pockets. Mine are already minded.
 - All these people, and not one of them taking notes.
-
-### `wilderness-crossing`
-
-> Varbit 5963 is INSIDE_WILDERNESS, verified against the cache - much better than a guessed coordinate for the ditch. Read as STATE rather than as a change: a varbitChanged rule anywhere in the shipped set switches the varbit flood back on, and every login then pays a full rule pass per varbit initialised. The state is first true on the tick you cross, so the crossing is still what gets said; the long cooldown is what stops it being said again while you are still down there.
-
-- **when:** varbit 5963 = 1
-- **does:** mood -12; animation 2105
-- **pacing:** priority 76, cooldown 30m, delay 1 ticks, overhead
-
-- You've crossed. You know what that means.
-- Right. Wilderness. Everyone here can kill you now.
-- Oh, we're doing this. Fine. I'm staying close.
-- That's the ditch behind us. No takebacks.
-- Past the ditch. Speak softly and count your escapes.
-- North it is. I'll keep the notes brief and the eyes open.
 
 ### `place-earned-dislike`
 

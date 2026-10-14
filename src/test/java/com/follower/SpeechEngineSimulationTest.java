@@ -424,6 +424,19 @@ public class SpeechEngineSimulationTest
 	}
 
 	@Test
+	public void aValueThatOpensASentenceTakesItsCapital() throws IOException
+	{
+		// Dialogue check, 14 Oct: lines such as "{style} it is." read as if
+		// they would start lowercase. The value takes the capital wherever it
+		// opens a sentence: at the start, and after a full stop.
+		String left = "{\"type\": \"noticed\", \"is\": \"valuable\"}";
+		assertEquals("Soft clay, right there.", says(left,
+			"{thing}, right there.", TriggerEvent.noticed("valuable", "soft clay")));
+		assertEquals("Look. Soft clay, right there.", says(left,
+			"Look. {thing}, right there.", TriggerEvent.noticed("valuable", "soft clay")));
+	}
+
+	@Test
 	public void anArticleInFrontOfADescribingPlaceholderStays() throws IOException
 	{
 		// "A {skill} level": the article belongs to "level", so Hitpoints keeps
@@ -732,14 +745,13 @@ public class SpeechEngineSimulationTest
 	{
 		// At client start a plugin's chat message is dispatched before the
 		// game has loaded its varbits. A condition that throws then is
-		// disabled for the whole session - the two Wilderness rules were.
+		// disabled for the whole session - the Wilderness rules were.
 		Harness h = new Harness(scratch());
 		h.game.starting();
 		h.dispatch(TriggerEvent.chat("Plugin started.",
 			net.runelite.api.ChatMessageType.GAMEMESSAGE.getType(), ""));
 
 		assertTrue(h.rule("enter-wilderness").isEnabled());
-		assertTrue(h.rule("wilderness-crossing").isEnabled());
 		for (SpeechRule rule : h.loader.getRules())
 		{
 			assertTrue("rule '" + rule.id + "' was disabled at client start", rule.isEnabled());

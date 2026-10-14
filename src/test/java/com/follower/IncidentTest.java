@@ -92,6 +92,31 @@ public class IncidentTest
 	}
 
 	@Test
+	public void thatsThreeIsSaidOnTheThirdDeathOnly() throws IOException
+	{
+		// Dialogue check, 14 Oct: "That's three" was said from the fourth
+		// death on - the death is filed after its line is chosen, so the
+		// count read was one behind. It has the third to itself now.
+		Harness h = new Harness(folder.newFolder().toPath());
+		h.gameTicks(1);
+		for (int death = 1; death <= 4; death++)
+		{
+			h.dispatch(TriggerEvent.death());
+			h.gameTicks(400);
+			if (death == 2)
+			{
+				assertTrue("nothing to count yet", h.firedBy("recall-death-third").isEmpty());
+			}
+			if (death == 3)
+			{
+				assertEquals("said on the third", 1, h.firedBy("recall-death-third").size());
+			}
+		}
+		assertEquals("and not again on the fourth", 1, h.firedBy("recall-death-third").size());
+		assertEquals("which has the other lines", 1, h.firedBy("recall-death-again").size());
+	}
+
+	@Test
 	public void aDropIsRememberedByName() throws IOException
 	{
 		Harness h = new Harness(folder.newFolder().toPath());

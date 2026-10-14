@@ -654,11 +654,13 @@ public class Condition
 			// alongside something that picks the moment to say it.
 			// The incident the follower is still thinking about. "is" names a
 			// particular one; without it, any incident will do - which is what
-			// a generic "I still think about {memory}" line wants.
+			// a generic "I still think about {memory}" line wants. A maximum
+			// holds a line to the counts it is true for: "That's three".
 			case "remembers":
 				return ctx.hasIncident()
 					&& (is == null || is.equalsIgnoreCase(ctx.getIncidentKey()))
-					&& ctx.getIncidentCount() >= orDefault(minimum, 1);
+					&& ctx.getIncidentCount() >= orDefault(minimum, 1)
+					&& (maximum == null || ctx.getIncidentCount() <= maximum);
 
 			// Standing where the incident happened, and the thing it was with
 			// being nearby again: the two moments a memory is worth jogging.

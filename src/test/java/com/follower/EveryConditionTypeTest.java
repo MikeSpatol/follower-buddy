@@ -1110,6 +1110,24 @@ public class EveryConditionTypeTest
 		twice.engine.getContext().noteIncident("chicken-death", "that chicken");
 		twice.gameTicks(1);
 		assertFired(twice, "remembers twice");
+
+		// And a maximum, so "That's three" is said on the third and only then
+		// (dialogue check, 14 Oct).
+		String third = "{\"type\": \"remembers\", \"is\": \"chicken-death\", \"minimum\": 3, \"maximum\": 3}";
+		Harness thrice = harnessFor(third);
+		for (int i = 0; i < 3; i++)
+		{
+			thrice.engine.getContext().noteIncident("chicken-death", "that chicken");
+		}
+		thrice.gameTicks(1);
+		assertFired(thrice, "remembers exactly three times");
+		Harness fourth = harnessFor(third);
+		for (int i = 0; i < 4; i++)
+		{
+			fourth.engine.getContext().noteIncident("chicken-death", "that chicken");
+		}
+		fourth.gameTicks(2);
+		assertQuiet(fourth, "the fourth is no longer three");
 	}
 
 	@Test
