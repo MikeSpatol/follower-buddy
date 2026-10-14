@@ -83,7 +83,10 @@ public final class ThreeWay
 	 * An array of strings, merged as a set with a history. What the update
 	 * added arrives; what it removed goes, unless the player had already
 	 * removed it; everything else - their own lines, their own rewordings - is
-	 * left exactly where it is.
+	 * left exactly where it is. A list the player never touched takes the
+	 * update's whole, in the update's order: a dialog node's lines are said in
+	 * order, and a reworded first line appended at the end had the follower
+	 * say "Lead on." before its answer (dialogue check, 14 Oct).
 	 *
 	 * @return how many lines moved
 	 */
@@ -97,6 +100,26 @@ public final class ThreeWay
 		Set<String> was = new HashSet<>(strings(base, key));
 		Set<String> now = new HashSet<>(shipped);
 		int changes = 0;
+
+		List<String> mine = strings(held, key);
+		if (base != null && mine.equals(strings(base, key)) && !mine.equals(shipped))
+		{
+			for (String line : was)
+			{
+				changes += now.contains(line) ? 0 : 1;
+			}
+			for (String line : now)
+			{
+				changes += was.contains(line) ? 0 : 1;
+			}
+			JsonArray out = new JsonArray();
+			for (String line : shipped)
+			{
+				out.add(line);
+			}
+			held.add(key, out);
+			return Math.max(changes, 1);
+		}
 
 		List<String> kept = new ArrayList<>();
 		for (String line : strings(held, key))
