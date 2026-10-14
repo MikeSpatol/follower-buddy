@@ -188,7 +188,7 @@
         {
           "id": "start",
           "says": [
-            "Ah. Good. About the name."
+            "Ah, good. I wanted a word about the name."
           ],
           "next": "ask"
         },
@@ -200,7 +200,7 @@
           "choices": [
             { "label": "No, I like it.", "next": "yes-q" },
             { "label": "Which name?", "next": "what-q" },
-            { "label": "Yes, I mind.", "next": "no-q" },
+            { "label": "I'd rather you didn't.", "next": "no-q" },
             { "label": "Ask me later.", "next": "later-q" }
           ]
         },
@@ -235,7 +235,7 @@
         {
           "id": "no-q",
           "you": [
-            "Yes, I mind."
+            "I'd rather you didn't."
           ],
           "next": "no-a"
         },

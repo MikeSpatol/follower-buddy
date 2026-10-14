@@ -247,7 +247,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Go on. Me and this spot have an arrangement.
 - Staying. If anything moves, I'll describe it thoroughly.
 - Right you are. I'll stay put with the notebook for company.
-- Stay it is. I'll guard the spot and the spot will guard me.
+- Stay it is. Notebook open, eyes on everything.
 - Fine. Off you go. This square and I will get acquainted.
 - Understood. Not moving. Possibly not blinking either.
 
@@ -262,7 +262,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - All quiet at my post. Suspiciously quiet.
 - The view hasn't changed. I've checked twice.
 - Nothing to report. Not one incident all shift.
-- Haven't moved. The grass hasn't done anything suspicious either.
+- Haven't moved. Neither has the grass. I've been watching it.
 - Nobody's tried anything. I'd have written it down.
 - Holding position. Morale: adequate. Snacks: none.
 - Spot's still mine. I'm quite good at this, it turns out.
@@ -305,7 +305,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Vault fed. Where next?
 - Bank done. I counted the coins by ear. Sounded healthy.
 - That's the archive fed. Mine's smaller and better organised.
-- Restocked. I saw what you keep in there. No judgement. Some judgement.
+- I saw what you keep in there. No judgement. Some judgement.
 - Everything we've dragged home is in there now. Safer than out here with us.
 - One more trip's worth tucked away. The bank won't remember it, but I will.
 - All squared away. Right, back out into the weather.
@@ -337,7 +337,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - There you are. The waiting is becoming a habit of mine.
 - Welcome back. I kept notes while you were gone. Short ones.
 - You're here. This is turning into a routine.
-- Morning, or whatever it is. I've stopped checking. We work on your clock.
+- Morning, or whatever it is. We work on your clock.
 
 ### `login-greeting`
 
@@ -346,7 +346,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** on login AND known 7+ days AND NOT (away 180+ minutes)
 - **pacing:** priority 90, cooldown 1m, delay 8 ticks, overhead
 
-- There you are! Right on schedule.
+- Ah, there you are. I'd only just sat down.
 - Welcome back, {player}. I kept your spot warm.
 - You made it. It was getting quiet without you.
 - Back again? Excellent. Where to today?
@@ -364,7 +364,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **does:** mood +4
 - **pacing:** priority 70, cooldown 5s, delay 6-10 ticks, both
 
-- There you are. It's been a few hours.
+- It's been a few hours. The notebook kept me company.
 - Back, then. I did wonder.
 - Afternoon. Or evening. I've rather lost track.
 - You were gone a while. Everything's where you left it.
@@ -407,7 +407,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 74, cooldown 5s, delay 6-10 ticks, both
 
 - Days, this time. I counted.
-- You're back! I'd started talking to the scenery.
+- Ah, good. I'd started talking to the scenery.
 - That was a long one. Good to see you.
 - I was beginning to think you'd found a better follower.
 - You've been gone days. The entries got very short.
@@ -424,7 +424,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - You came back. I wasn't sure you would.
 - It's been weeks. Weeks! Where do I start.
-- Look who it is. I kept your spot.
+- Look who it is. Your page had gone a bit yellow.
 - I'd lost count of the days. Welcome back.
 - Weeks. I re-read the whole book waiting.
 - Long absence, short reunion speech: hello.
@@ -494,9 +494,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** on login AND nickname earned AND known 3+ days AND a 45% roll
 - **pacing:** priority 91, cooldown 1m, delay 8 ticks, overhead
 
-- There you are, {nickname}. Ready when you are.
+- There you are, {nickname}. I've saved you a fresh page.
 - {nickname}. Back again. Good.
-- Morning, {nickname}. Or whatever it is where you are.
+- Ah, {nickname}. I was hoping it'd be you.
 - The file says {nickname}. The file is pleased.
 
 ### `world-hop`
@@ -551,7 +551,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 40, cooldown 1m
 
 - {page} goes in the book. I'll write it up from further away.
-- That's {page} in the book. The handwriting may be shaky.
+- {page}, written up. The handwriting's a bit shaky.
 - A page for {page}. I'll want the good ink for this one.
 
 ### `chronicle-page-enemy`
@@ -563,7 +563,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - Got a good look at that one. It goes in under {page}.
 - {page}. I'll be writing that one up, and I won't be kind.
-- That's {page} in the book now. Seen it with my own eyes.
+- {page} goes in the book. And I saw it myself.
 
 ### `chronicle-page-place`
 
@@ -574,7 +574,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - {page} has a page now. Find me a good spot and pose for me.
 - Starting a page on {page}. I've got the name down, at least.
-- New page for {page}. Show me the best view of it and strike a pose.
+- New page for {page}. I'll want a sketch, so stand somewhere nice.
 
 ### `chronicle-page-lore`
 
@@ -617,7 +617,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - Bought the {item}. The ledger balances.
 - Word's come through. The {item} is yours.
-- The {item} came through. I signed for it in spirit.
+- The {item}'s arrived. I signed for it in spirit.
 
 ### `ge-sold`
 
@@ -682,7 +682,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Do you ever miss anywhere? You look like you might.
 - What's the plan this week? Rough shape only. I'll fill in the margins.
 - Were you always like this, or did the adventuring do it?
-- What do you do when I'm not here? Practise standing, I assume.
+- What do you do when I'm not here? Sleep, I suppose. I've never seen you do it.
 - Are we staying long? Not a complaint. The notes want to know.
 - Who taught you to fight like that? Somebody must answer for it.
 - Ever think about settling down somewhere? No, me neither. Onward.
@@ -718,11 +718,11 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Not one of them has looked at me. Ideal conditions for a scribe.
 - Everyone here looks busy. I'm noting which ones only look it.
 - Which one's your favourite? I picked mine in about a minute.
-- Someone walked through me mid-sentence. The handwriting shows it.
+- Someone walked through me mid-sentence. There's a wobble in the ink.
 - I've started a page for strangers. It's filling up nicely.
-- The one in the green hat is up to something. I'd stake a page on it.
+- One of this lot is up to something. I'd stake a page on it.
 - I could stand inside any of them and nobody would object.
-- Someone's dancing over there. I've recorded it without comment.
+- If anyone here starts dancing, I'll record it without comment.
 - You're the only one here who can see me. Do try to look pleased.
 - I was going to write about the crowd, but I keep watching it instead.
 - Nothing's happening here, but it's happening to a lot of people.
@@ -736,11 +736,11 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - Are we doing anything, or...
 - I could be at the Grand Exchange right now.
-- Nice spot. Very afk.
+- Nice spot for doing nothing in.
 - Still here. Still standing.
 - Is this the plan, then? Standing?
 - I could carry something, if you like.
-- Someone walked past. That's been the most exciting event in a while.
+- Someone walked past. Biggest thing to happen in ages.
 - I'm not complaining. Just noting.
 - I'll be here. Obviously.
 - Any minute now.
@@ -756,7 +756,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - If something wandered past, I'd notice. Probably.
 - I've memorised this view.
 - Quiet, isn't it.
-- I could hold that for you.
+- Need a hand? I've got two doing nothing.
 - Do you ever wonder what's over there?
 - I'd whistle, but I never learned.
 - This is peaceful. I'll allow it.
@@ -789,12 +789,12 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - If you've fallen asleep, blink twice.
 - I'll keep watch. Not that there's anything to watch.
 - Someone will come along eventually.
-- Made peace with it, some time ago.
+- I made my peace with this some time ago.
 - Still standing, in case you were wondering.
 - There have been worse afternoons.
 - Long day, this.
 - Stopped expecting anything a while back.
-- Wake me for the good part.
+- Tell me when the good part starts.
 - A lesser scribe would have wandered off by now.
 - The sun's moved. I checked against a fence post.
 - Day's not getting any younger. Neither am I.
@@ -852,7 +852,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Rhythm's good. I'd clap along, but no.
 - You've found your pace. Or it's found you.
 - That's the sound of industry, that is.
-- Somewhere a ledger fills itself. Carry on.
+- This is how ledgers get filled. Carry on.
 
 ### `repeating-a-long-while`
 
@@ -863,7 +863,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 34, cooldown 10m, overhead
 
 - You've been doing this a very long time.
-- I've started naming them. That one's Geoffrey.
+- I've started giving them names. I'm running out of names.
 - I want you to know I'm still here. Fading, but here.
 - At what point does this become a lifestyle?
 - I've had time to think. I have some concerns.
@@ -1054,7 +1054,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - I've thought of a game. Come and talk to me.
 - Talk to me a minute. I want to try something.
 - I'm bored. Come here, I've had an idea.
-- Got a minute? I want to test something on you.
+- Got a minute? Pick a hand. Come and see.
 - A quick game, if you're willing. Come talk to me.
 - Fancy a game? You know where I am.
 
@@ -1072,7 +1072,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Correct. I had it there the whole time.
 - Yes. Annoyingly, yes.
 - You read me like a page.
-- Correct again. I need better hands.
+- That's the one. I need better hands.
 
 ### `game-hands-lost`
 
@@ -1128,7 +1128,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - You did it, {challenge} with time to spare.
 - All right, that was impressive. I'll say it once.
 - Done, and I'm out of pocket. Worth it.
-- Done and done. I'll adjust my expectations upward.
+- That's ten. I'll have to expect more of you now.
 - Well. That's me told.
 - Paid in full. That's a win for you in the book.
 
@@ -1140,9 +1140,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Time. You didn't get there.
 - That's five minutes. I win, and I'm insufferable about it.
 - Time, I'm afraid. Closer than I expected, mind.
-- Short of the mark. The mark sends its regards.
+- Short of the mark. I'll try not to bring it up.
 - Time's up. You've lost the bet, but not your dignity.
-- Not this time. The book is gentle about it.
+- Not this time. We'll call it a near thing.
 
 ### `gone-away`
 
@@ -1158,8 +1158,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Off making tea, I expect. Reasonable.
 - Gone quiet up there. I'll mind the shop.
 - I'll use the time to tidy my notes. They're immaculate.
-- Still gone. The scenery and I are getting acquainted.
-- Take your time. The notes on your absence are brief.
+- Still gone. The scenery's had my full attention.
+- The notes on your absence are brief so far.
 - Nothing's happened. I've got it down in some detail.
 - Two of us here, if you count the notebook.
 - Gone long enough to be a paragraph.
@@ -1221,11 +1221,11 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - This is not how it ends. Go. Come back.
 - I never know what to do at this part.
 - I hate this. I hate watching this.
-- Go, then. I am right behind you.
-- Wherever you land, I am coming with you.
+- Go, then. I'm right behind you.
+- Wherever you land, I'm coming with you.
 - Not like this. Not here.
-- I will mark the place. Go.
-- It is all right. I have seen where you land.
+- I'll mark the place. Go.
+- It's all right. I've seen where you land.
 - Up. Please. The page can wait.
 - I looked away and I still saw it.
 
@@ -1240,7 +1240,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - I remember this spot. I'd rather not.
 - Walk carefully. This place has taken you once.
 - I stood right here, after. For a while.
-- Feels colder here. Maybe that is just me.
+- Feels colder here. Maybe that's just me.
 - Here again. The grass has grown back, at least.
 - The page for this place has a black corner.
 - We both know what this spot is.
@@ -1261,7 +1261,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - {value}. In one drop. Write it down.
 - Stop. Look at what you're holding.
 - That's a page all to itself, that is.
-- {value}! I need to write this down twice.
+- {value}! I'd better count the noughts again.
 
 ### `loot-nice`
 
@@ -1289,14 +1289,14 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **does:** animation 863
 - **pacing:** priority 20, cooldown 15m, delay 2 ticks
 
-- A cat! Hello, cat.
-- Oh, who is this then?
+- Oh! Hello, you. Yes, you.
+- Oh, and who's this, then?
 - Hello there, little one.
 - I like this one. Can we keep it?
 - We should get one of those.
 - Look at it. Just look at it.
 - Someone is very well looked after.
-- We are stopping for this. Briefly. Or longer.
+- We're stopping for this. Briefly. Or longer.
 - Business can wait. There's an animal.
 - I keep a page for good creatures. This one's in.
 - It has no idea what it's done to me.
@@ -1353,7 +1353,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 64, cooldown 10m, delay 4-6 ticks, overhead
 
 - A star. In the ground. I have the date and the place.
-- That fell out of the sky. I'm putting that on its own page.
+- That fell out of the sky. It's getting a page of its own.
 - A crashed star. I've drawn it, badly.
 
 ### `noticed-landmark`
@@ -1448,7 +1448,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Go on. I've got the corner.
 - Eyes open. I'll whistle if anyone looks twice.
 - You work, I'll watch. Same as always.
-- I'll take the far side. Whistle if it goes wrong.
+- I'll take the far side. Cough if it goes wrong.
 - Nobody's looking. Nobody who matters, anyway.
 - Right. I don't know you, you don't know me.
 - Take your time. I'm just admiring the architecture.
@@ -1474,7 +1474,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Right, that's enough larceny for one afternoon.
 - Whatever that was, I was somewhere else at the time.
 - Pockets full, consciences clear enough.
-- A tidy afternoon's redistribution.
+- A tidy bit of redistribution, that.
 - We'll split it later. By which I mean you keep it.
 - History will remember us kindly. It won't hear about this.
 
@@ -1519,7 +1519,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Another {skill} level. The column barely fits.
 - Up again. You collect these like feathers.
 - More {skill}. I'm running out of margin.
-- That's plenty of levels for one lifetime. Apparently not yours.
+- Most people would call that enough levels. Not you, apparently.
 - That's another one written down. My wrist's starting to ache.
 
 ### `greet-back`
@@ -1536,7 +1536,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Hey yourself.
 - Present and accounted for.
 - Afternoon. Or whatever it is.
-- Yes, hello, still listening.
+- Yes, hello. Still here.
 - At your service. Within reason.
 
 ### `laugh-along`
@@ -1569,7 +1569,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - You're welcome. I'll be smug about it all day.
 - Careful. I'll come to expect gratitude.
 - I'll file that under rare events.
-- Well now. Manners. Lovely.
+- Well now, manners. How lovely.
 
 ### `hovered`
 
@@ -1646,7 +1646,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 80, cooldown 1m, delay 2-5 ticks, overhead
 
 - Lumbridge. Everyone's first steps happen here. Mine were with you.
-- This is where it all starts, for everyone. I like standing where that happened.
+- The first page of everyone's story is set here. I like rereading it.
 - The castle, the river, the old stone. Nothing happens here. That's the appeal.
 - Thank you. Nobody's in a hurry in Lumbridge. Look at it.
 
@@ -1813,7 +1813,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - That's the {target} noted, filed and forgotten by lunch.
 - Looking closely at the {target}, are we?
 - A {target}. I'd hoped for more, honestly.
-- The {target}. Somebody wrote that description with real effort.
+- Somebody put real effort into describing the {target}.
 - {target}. There. Now we both know.
 - The {target}. Yes. Very much a {target}.
 - Careful with that {target}. Oh, it's only a {target}. Carry on.
@@ -1868,7 +1868,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Right. Room to swing.
 - Giving you space.
 - I'll be over here if it goes badly.
-- Right. Best of luck to the other one.
+- Best of luck to the other one.
 - I'll narrate quietly from here.
 - Opening move's yours. It usually is.
 - Deep breath. Now go and hit it.
@@ -1917,7 +1917,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Go on, finish it.
 - You're making short work of it.
 - Form's holding.
-- Keep the feet moving.
+- Keep moving. Don't stand still for it.
 - You've done harder.
 - There's the opening.
 - Won't be long now.
@@ -1937,7 +1937,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Right, where were we?
 - Good. I can stop hiding.
 - And breathe. All done.
-- Add one more to the record.
+- That's one more for the record.
 - The quiet after a fight is my favourite part.
 - Still in one piece. Both of us, even.
 - Another chore ticked off, by the look of you.
@@ -2014,7 +2014,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - That's {count}, and I'd like it noted that I never once complained.
 - {count}. Some scribes record wars smaller than this.
 - {count}. I had to start a second page.
-- {count}, and my quill is filing a grievance.
+- {count}, and my quill would like a word.
 
 ### `record-hit`
 
@@ -2024,7 +2024,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **does:** mood +12; marks this place: 'you hit harder than you ever had'; animation 862
 - **pacing:** priority 68, cooldown 20s, overhead
 
-- {value}! That's the hardest I've ever seen you hit. Old best was {previous}.
+- {value}! Hardest I've ever seen you hit, and I was there for the {previous}.
 - {value} damage. You'd never got past {previous} before.
 - Did you see that? {value}. New best.
 - {value}. The old record was {previous}. Was.
@@ -2040,7 +2040,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 52, cooldown 4m, overhead
 
 - That thing is very large and very close.
-- I'd like it noted that I've seen what's standing over there.
+- You have seen what's standing over there? Just checking.
 - We're stood very close to something that could end this quickly.
 - Are we meant to be this close to that?
 - Official measurement: enormous.
@@ -2090,7 +2090,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - TELEPORT. NOW.
 - {hp} HP! Get out!
 - This is the dangerous kind of low. Move!
-- Eat, teleport, run, pick one, quickly!
+- Eat, teleport or run. Pick one, quickly!
 - {hp} left. I'm officially worried.
 - Whatever you're doing, it can wait. LIVE first.
 - That health bar is a rumour at this point. Go!
@@ -2114,7 +2114,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Down to {prayer} prayer points. Your overheads won't last.
 - The faith is strong. The points, less so.
 - Keep those prayers fed or let them rest, friend.
-- An altar or a potion. Either. Soon.
+- An altar or a potion, I don't mind which. Soon, though.
 - Running dry impresses no god. {prayer} left.
 
 ### `status-poisoned`
@@ -2132,7 +2132,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - You're dripping green numbers. I hate the green numbers.
 - Poisoned again? Sip the antipoison, hero.
 - It'll keep biting until you deal with it.
-- Poison's patient. Be less patient than it.
+- Poison's patient. You don't need to be.
 - One little vial of antipoison and this all goes away.
 - Remind me to pack more antipoison next time.
 
@@ -2145,11 +2145,11 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 115, cooldown 30s, both
 
 - That's VENOM, not poison. It gets worse. Fix it!
-- Anti-venom. Not antipoison. The strong stuff!
+- Anti-venom, not antipoison. You need the strong stuff!
 - The numbers are climbing. Venom does that. Cure it!
 - Whatever bit you meant it. Anti-venom, quickly.
 - Green and getting greener. This one won't stop on its own.
-- Venom eats faster the longer you wait.
+- Venom bites harder the longer you wait.
 - This is the serious green. Please respect the serious green.
 - Cure that before it hits harder than the monster does.
 - I can smell it from here. Anti-venom, now!
@@ -2181,13 +2181,13 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** run energy under 15%
 - **pacing:** priority 15, cooldown 4m, overhead
 
-- Out of breath already? We've places to be.
+- Out of breath already? We've got places to be.
 - Have a rest. I'll pretend I'm not judging.
 - Your legs called. They'd like a word.
 - Energy's spent. Walk it off, literally.
 - A stamina potion would change your life, you know.
 - We can walk. Walking is dignified. Sort of.
-- All that gear and no wind. Happens to the best.
+- All that gear and no wind. Happens to the best of us.
 - Agility training pays off eventually. Allegedly.
 - Catch your breath. The scenery's nice enough.
 - I could carry you. I won't. But I could.
@@ -2271,7 +2271,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 24, cooldown 15m, overhead
 
 - I keep thinking about {memory}{memoryWhere}.
-- I've not stopped thinking about {memory}, if I'm honest. That was {memoryWhen}.
+- I was rereading the entry on {memory}. That was {memoryWhen}.
 - Do you ever think about {memory}? I do. It was only {memoryWhen}.
 - It's quiet, so naturally my mind goes back to {memory}.
 
@@ -2318,10 +2318,10 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** memoryhere AND a 60% roll
 - **pacing:** priority 40, cooldown 30m, delay 3-6 ticks, overhead
 
-- This is the place. I still think about {memory}.
+- This is the place. The notes on {memory} start right here.
 - Here again, and I've not forgotten {memory}. That was {memoryWhen}.
 - I know this spot. This is where I wrote down {memory}.
-- Right about here, {memoryWhen}: {memory}. The page is still creased.
+- It was right about here, {memoryWhen}. The page on {memory} is still creased.
 
 ### `recall-foe`
 
@@ -2344,7 +2344,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 26, cooldown 1h, overhead
 
 - You've humoured my outings. I've filed that somewhere safe.
-- Every time I've asked to go somewhere, we went. Not everyone would.
+- I ask for an outing and off we go. Not everyone would.
 - No complaints. That's not something I say lightly.
 - For the record, you keep your promises.
 - Everywhere I ask to go, we go. Don't think I haven't noticed.
@@ -2358,7 +2358,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **does:** mood -4
 - **pacing:** priority 26, cooldown 1h, overhead
 
-- That's three times I've asked to go somewhere. I'm not sulking.
+- That's a few times I've asked to go somewhere. I'm not sulking.
 - I ask less than I used to. You may have noticed.
 - Next time I ask to go somewhere, I'll set my hopes low first.
 - The requests column has a lot of blank replies.
@@ -2383,7 +2383,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** advice:ignored count at 10+ AND standing still 100+ ticks AND a 8% roll
 - **pacing:** priority 28, cooldown 45m, overhead
 
-- Ten times I've told you something and ten times you've done as you liked.
+- At least ten times I've told you something, and you did as you liked.
 - Stopped counting how often you ignore me. That's a lie. I know exactly.
 - You never listen. I've decided that's part of your charm.
 - My advice does its best work as background noise.
@@ -2413,9 +2413,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 27, cooldown 1h, overhead
 
 - A week now, you and me. Settling in nicely.
-- Seven days I've been following you about. Nothing to report.
+- {days} days I've been following you about. Nothing to report.
 - One week in. The notes are getting personal.
-- Seven days. Long enough to learn your walk.
+- {days} days. Long enough to learn your walk.
 
 ### `known-a-month`
 
@@ -2435,7 +2435,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - {days} days I've known you. That's a proper stretch, that is.
 - Over a hundred days. I've seen you at your best and the other thing.
 - {days} days. The notebook needed a second volume.
-- A hundred days and change. I remember the first one clearly.
+- A hundred days and change. You've not got rid of me yet.
 
 ### `known-a-year`
 
@@ -2522,7 +2522,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 80, cooldown 10s, delay 2-4 ticks, overhead
 
 - In pencil, then.
-- I'll ask again. I'm patient; it's most of the job.
+- I'll ask again. Patience is most of the job.
 - Later it is. The index can wait.
 
 ### `grateful-idle`
@@ -2577,7 +2577,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Wilderness. Don't get skulled.
 - We're in the Wildy. Stay sharp.
 - Everything north of that ditch wants your items. Everything.
-- If someone waves at you out here, they are not being friendly.
+- If someone waves at you out here, they're not being friendly.
 - The revenants used to be worse, if you can believe it.
 - Don't bring anything you'd cry about losing. Too late now, I suppose.
 - You've crossed. You know what that means.
@@ -2608,7 +2608,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** in region 12598
 - **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
 
-- The Grand Exchange. Fortunes made and lost before lunch.
+- The Grand Exchange. Somebody's getting rich in there right now.
 - Listen to them shout numbers at each other. Magnificent.
 - Careful with your coin here. The clerks never sleep.
 - This was a plain old field once, they say. Now look at it.
@@ -2675,7 +2675,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - Draynor Village. Keep a hand on your coin pouch.
 - The Wise Old Man robbed the bank here in broad daylight. I almost admire it.
-- That manor up the road? People go in the front door and leave out the back. Always.
+- That manor up the road? Folk go in the front door and come out the back, running.
 
 ### `area-al-kharid`
 
@@ -2827,7 +2827,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** in region 10553
 - **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
 
-- Rellekka. Fremennik country, best not mention magic.
+- Rellekka. Fremennik country, so best not mention magic.
 - Everything here is earned. Names included.
 - The longhall ale flows all night. So does the singing, unfortunately.
 
@@ -2954,7 +2954,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** in region 11316
 - **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
 
-- Entrana. Holy ground, the monks took ALL the weapons.
+- Entrana. Holy ground. The monks made us leave ALL the weapons behind.
 - The law altar's here. Fitting, with all these rules.
 - Deep breath. No fighting. It's actually rather nice.
 
@@ -3194,7 +3194,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - I could walk this place blind by now.
 - Again? There are other places, you know.
 - Ah. Here. Of course.
-- This place again. The entry's mostly ditto marks.
+- The entry for this place is mostly ditto marks by now.
 - We do keep ending up here.
 
 ### `cold-stamp-feet`
@@ -3305,7 +3305,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Good things happen here. I've kept count, and they do.
 - I like this place, and for once I can tell you exactly why.
 - We've had some luck here. Long may it continue.
-- The tally for this place runs firmly in its favour.
+- This place's tally is well in the black.
 - This spot's earned its good name with me, fair and square.
 
 ### `place-remembers`
@@ -3335,7 +3335,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - One second, I need to sort my bank. It's a disaster in there.
 - Hold on, quick bank stop. Don't wander off.
-- The bank calls. My gold misses me.
+- Quick trip to the bank. My gold gets lonely.
 - My own bank run, for once. Won't be a moment.
 - Two minutes with my vault. It's mostly receipts.
 
@@ -3399,7 +3399,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 85, cooldown 1s, overhead
 
 - Better. Carry on.
-- Toasty. Right, where were we?
+- Toasty. Off we go, then.
 - I regret nothing. My hands agree.
 - I can feel my fingers again. Onward.
 - Warm now. The quill thanks the fire.
@@ -3492,9 +3492,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 85, cooldown 1s, overhead
 
 - Hold on. This needs writing down.
-- One moment. Posterity calls.
+- One moment. This one's for posterity.
 - Stop a second. This goes in the record.
-- Wait there. The scroll wants an entry.
+- Wait there. I'm getting the scroll out.
 - If I don't write this down now, it never happened.
 
 ### `errand-document-end`
@@ -3504,7 +3504,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - There. Recorded for the ages.
 - All dated and filed. I do enjoy that bit.
-- The record grows. Onward.
+- The record's a little longer now.
 - That's in ink now. No taking it back.
 - Done. Future scholars, you're welcome.
 
@@ -3533,7 +3533,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - A trapdoor. I'll just see where it goes. From up here.
 - Hold on, trapdoor. I want a look. A careful one.
-- One moment. Floors with doors in them deserve attention.
+- A door in the floor. I'm not walking past that.
 
 ### `errand-explore-trapdoor-end`
 
@@ -3551,7 +3551,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - A signpost. Let's see if it agrees with me.
 - Hold on, checking the sign. I like to know my exits.
-- One second. The sign might know something I don't.
+- That sign might know something I don't. Back in a moment.
 
 ### `errand-explore-signpost-end`
 
@@ -3569,7 +3569,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - A noticeboard. I'll just see what the locals are on about.
 - Hold on. Noticeboards are gossip with structure.
-- One moment, catching up on the local news.
+- Let me catch up on the local news. Won't be long.
 
 ### `errand-explore-noticeboard-end`
 
@@ -3589,7 +3589,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Hold on. Someone should read the old names.
 - One moment at the stone. Manners cost nothing.
 - A grave. I'll read it and say nothing clever. That's the rule.
-- Hold on. Somebody's under there and nobody's stopped in a while.
+- Somebody's under there, and nobody's stopped by in a while.
 
 ### `errand-explore-gravestone-end`
 
@@ -3598,7 +3598,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - Couldn't read the name. Weather got there first.
 - Rest easy, whoever. We're just passing.
-- Old stone, older story. Right, onward.
+- Old stone, older story. We can go now.
 - Someone cared enough to carve it. That's worth a line in the book.
 - Read what I could. Wrote down less. Some things stay theirs.
 
@@ -3634,7 +3634,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** errand end: explore-web
 - **pacing:** priority 85, cooldown 1s, overhead
 
-- Big web. Bigger spider, somewhere. Stay alert.
+- Big web. Which means a bigger spider, somewhere about.
 - No spider in residence. That's worse, if anything.
 - Lovely web. I'll be watching the ceilings for a while.
 
@@ -3660,7 +3660,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 85, cooldown 1s, overhead
 
 - A furnace. Hold on, I want the details down.
-- One second. I take an interest in furnaces.
+- Excuse me. I take a professional interest in furnaces.
 
 ### `errand-study-furnace-end`
 
@@ -3675,7 +3675,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** errand start: study-well
 - **pacing:** priority 85, cooldown 1s, overhead
 
-- A well. The depths want documenting.
+- A well. I'd like to know how deep it goes.
 - Hold on. Wells have histories, you know.
 
 ### `errand-study-well-end`
@@ -3724,7 +3724,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 85, cooldown 1s, overhead
 
 - A bookcase. Let's see what they read round here.
-- One moment. I audit other people's shelves.
+- I always look at other people's shelves. Can't help it.
 
 ### `errand-study-bookcase-end`
 
@@ -3815,8 +3815,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 22, cooldown 30m, overhead
 
 - That pebble's lucky. I can tell. Give me a second.
-- This one's lucky. I'm taking it and you can't stop me.
-- Round, smooth, promising. In it goes.
+- Finders keepers. This pebble's coming with me.
+- Look how smooth this is. I'm having it.
 - A pebble like this doesn't come along twice.
 
 ### `souvenir-feather`
@@ -3840,7 +3840,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **does:** picks up 'a bent nail' (50 min)
 - **pacing:** priority 22, cooldown 30m, overhead
 
-- Somebody's dropped a nail. Bent, but a nail.
+- There's a nail here. Bent, but a nail.
 - A bent nail. That'll come in useful one day.
 - One bent nail, slightly historic. Mine now.
 - You'd be amazed what a nail can fix. Not this one. Still.
@@ -3851,7 +3851,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **does:** wishes for feather (45 min)
 - **pacing:** priority 24, cooldown 45m, overhead
 
-- A feather would be useful, if one turns up.
+- I could do with a feather, if one turns up.
 - Quills wear out. Keep an eye open for a feather.
 - If a bird's been careless anywhere near you, I'd take the feather.
 - A feather would do. The old quill's more stump than quill.
@@ -3867,7 +3867,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Running low on papyrus. The good pages go fast.
 - The margins are doing overtime. Papyrus, if you see any.
 - If you see papyrus, think of me. Then pick it up.
-- Papyrus, should any wander past. I write small, but not that small.
+- I write small, but not that small. I'll need more papyrus.
 
 ### `wish-ball-of-wool`
 
@@ -3902,7 +3902,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Charcoal, if any crosses your path. For the rough sketches.
 - A bit of charcoal would be welcome. Some things get drawn, not written.
 - If charcoal turns up, I'll take it. The sketches are getting faint.
-- Charcoal, should you find any. Somebody has to draw the crates.
+- Somebody has to draw the crates. I'll need charcoal for that.
 - A stick of charcoal would do. I've been sketching with a burnt twig.
 
 ### `gifted-accept`
@@ -3914,19 +3914,19 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 50, cooldown 10s, delay 2 ticks, overhead
 
 - That {wish}. Exactly what I needed.
-- The {wish}! You remembered. I notice, you know.
+- The {wish}! You remembered. I won't forget that.
 - Perfect. The {wish} goes in the good pocket.
 - You actually found the {wish}. The ledger tips your way.
 - My old {wish} for your new one. You come out even, which is how I like it.
-- Take my worn {wish} in exchange. It has years left in it yet.
-- A trade rather than a gift. You keep a {wish}, I keep a {wish}.
+- Take my worn {wish} in exchange. It's got years left in it.
+- A trade rather than a gift. You keep my old {wish}, I keep yours.
 - The {wish} is mine now and my old one's yours. Nobody's poorer.
 - Here, have my tired old {wish}. It's still good for something.
 - Even trade, {wish} for {wish}. You'll hardly notice, but I very much will.
 - I took the fresh {wish} and left you my old one. That's only manners.
-- You've still got a {wish}. I'm not in the business of leaving you short.
+- You've still got my old {wish}. I'm not in the business of leaving you short.
 - The old {wish} is yours. Don't look at it too closely.
-- Straight swap: my worn {wish} for your good one, and thank you.
+- Thank you. My worn {wish} is yours, if you want it.
 
 ### `gifted-swap`
 
@@ -4268,7 +4268,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 30, cooldown 5s, delay 2 ticks, overhead
 
 - Dragon claws. Four hits, and not one of them polite.
-- Scratch first, apologise never.
+- Very sharp. I'll keep my hands in my pockets.
 
 ### `gear-abyssal-tentacle`
 
@@ -4318,7 +4318,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 30, cooldown 5s, delay 2 ticks, overhead
 
 - Mind the arc, I walk behind you, remember.
-- A vampyre's scythe. Sweep them all at once.
+- A vampyre's scythe. I'd love to know whose it was.
 
 ### `gear-ghrazi-rapier`
 
@@ -4328,7 +4328,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 30, cooldown 5s, delay 2 ticks, overhead
 
 - The pointy end goes in very fast, I take it.
-- Elegant. Deadly. Slightly showy.
+- Elegant, deadly, and it knows it.
 
 ### `gear-osmumtens-fang`
 
@@ -4387,7 +4387,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** equipping 27275, 27277
 - **pacing:** priority 30, cooldown 5s, delay 2 ticks, overhead
 
-- A staff of pure shadow. Kindly don't point it at me.
+- A staff of pure shadow. I'd rather it didn't notice me.
 - It hums with the sun god's power. Sounds expensive.
 
 ### `gear-dinhs-bulwark`
@@ -4408,7 +4408,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 30, cooldown 5s, delay 2 ticks, overhead
 
 - Bandos armour. You could stop a battering ram in that.
-- The Big High War God's finest plate.
+- Plate fit for the Big High War God. He'll want it back.
 
 ### `gear-armadyl-armour`
 
@@ -4427,7 +4427,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** equipping 21018, 21021, 21024, 25518, 27193, 27194
 - **pacing:** priority 30, cooldown 5s, delay 2 ticks, overhead
 
-- Those robes hum with old magic.
+- There's more old magic in those robes than in most libraries.
 - Very stylish. Very purple. Very expensive.
 
 ### `gear-justiciar`
@@ -4488,7 +4488,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 30, cooldown 5s, delay 2 ticks, overhead
 
 - An avernic defender. The cyclopes could never.
-- Forged in the Theatre. Fancy.
+- From the Theatre of Blood. I won't ask what it cost you.
 
 ### `gear-crystal-armour`
 
@@ -4507,7 +4507,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** equipping 13235, 13237, 13239, 23644
 - **pacing:** priority 30, cooldown 5s, delay 2 ticks, overhead
 
-- Cerberus gave those up reluctantly, I imagine.
+- Boots off Cerberus. I'd check them for dog hair.
 - Fancy footwear. Mind the puddles.
 
 ### `gear-dragon-boots`
@@ -4589,7 +4589,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - Full graceful. Off to run laps, are we?
 - Marks well spent. Very aerodynamic.
-- Light as air. I still have to walk, though.
+- All that grace, and I still have to walk.
 
 ### `gear-set-void`
 
@@ -4608,7 +4608,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** equipping 4716, 4880, 4881, 4882, 4883, 4884, 23639 AND equipping 4720, 4892, 4893, 4894, 4895, 4896, 25515 AND equipping 4722, 4898, 4899, 4900, 4901, 4902, 23633 AND equipping 4718, 4886, 4887, 4888, 4889, 4890, 25516
 - **pacing:** priority 35, cooldown 5s, delay 2 ticks, overhead
 
-- Full Dharok's. Please stay healthy. Or don't, that's the point.
+- Full Dharok's, so I'm meant to want you hurt. I don't.
 - The lower your health, the harder you hit. I hate the maths.
 
 ### `gear-set-rune`
@@ -4689,7 +4689,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 30, cooldown 5s, delay 2 ticks, overhead
 
 - Ava's finest. Mind the magnetism, I have metal bits.
-- It catches your arrows. What a time to be alive.
+- It fetches your arrows back. Better trained than most dogs.
 
 ### `gear-partyhat`
 
@@ -4709,7 +4709,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** equipping 1050, 13343, 13344, 21859
 - **pacing:** priority 30, cooldown 5s, delay 2 ticks, overhead
 
-- A santa hat. Festive AND wealthy.
+- A santa hat. Festive, and worth a small village.
 - Ho ho... hang on, it isn't even snowing.
 
 ### `gear-halloween-mask`
@@ -4812,7 +4812,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Everything in there was essential at the time.
 - You're two items from a difficult decision.
 - That bag has ambitions above its size.
-- Consider this the polite version of running out.
+- Consider this the polite warning. The bag won't give one.
 - I'm keeping a list of what you won't part with.
 - The bank, then? I'll allow it this once.
 - There's space for two more mistakes.
@@ -4844,9 +4844,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **does:** occasion (never held back)
 - **pacing:** priority 90, cooldown 1h, both
 
-- The great bear. Watch the shockwave hop, it flings you like a rag doll.
+- The great bear. Mind the shockwave, it throws you about like a rag doll.
 - His roar rattles your prayers right off. Re-pray fast.
-- A bear twisted huge and mean by the Wilderness itself.
+- Bears don't get this big on their own. Something out here helped.
 - They say hunters made him this way. The hunters are not available for comment.
 - All claw, all grudge, no hibernation.
 - The Wilderness grows everything wrong. Exhibit A, this bear.
@@ -4866,9 +4866,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - The spider queen. Pray Magic, her web spit stings worst.
 - She drinks your prayer through the webs. Restores, plural.
 - Mind the sticky ground. Stuck is dead out here.
-- A spider the size of a house. The Wilderness grows them wrong.
+- Look at the size of her. I'd hoped the bear was the worst of it.
 - Her brood carpets the ground when she calls. Charming family.
-- Eight legs, eight thousand opinions about you.
+- Eight legs, and she knows exactly what to do with all of them.
 - The webs came before the ruins. Think about that.
 - Every strand out here leads back to her.
 - She's patient the way only spiders are.
@@ -4884,7 +4884,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - Vet'ion. He gets back up once, so you're beating him twice.
 - The hellhounds come midway. Down them or juggle them.
-- His slam cracks the very ground. Don't stand in the cracks.
+- His slam splits the ground open. Don't stand in the cracks.
 - The last squire of a dead king, still on duty.
 - He mourns a kingdom nobody else remembers.
 - Bones held together by loyalty and spite.
@@ -4984,8 +4984,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Three heads means three opinions, all about eating you.
 - Adventurers measured themselves against him for generations.
 - The lair smells of ash and old victories. His.
-- Black dragonhide starts here, one way or another.
-- He was the endgame once. He didn't get the memo.
+- Half the black dragonhide in Gielinor started out down here.
+- He was the most feared thing out here once. Nobody's told him otherwise.
 - Bow before the king. Then loose the bow.
 
 ### `boss-corp`
@@ -5021,9 +5021,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Wyson swears the growth potion wasn't his fault.
 - Malignius Mortifer's potion, Wyson's garden, and now it's Falador's problem.
 - She's just a mole. A mole the size of a hay cart.
-- The park above has NO idea what maintains those tunnels.
+- Nobody in the park above has any idea what's under the lawn.
 - All she wants is to dig. All you want is her fur. Impasse.
-- The tunnels go everywhere. She made them all. Respect.
+- The tunnels go everywhere, and she dug every one. You have to admire that.
 - Whack the mole. The classic, at scale.
 
 ### `boss-kq`
@@ -5038,11 +5038,11 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - She flies at half. New form, new rules, new prayers.
 - Her overhead prayers block whole styles. Fight what she isn't blocking.
 - The hive mother herself. The workers were the welcome mat.
-- Kalphites descend from the scarabs of the old desert gods. She's their masterpiece.
+- Kalphites go back to the old desert gods' scarabs, they say. She's the best of them.
 - Two forms, both furious.
 - There's a lance made just for her hide, they say. Or her hide for it. I forget.
-- The hive builds itself around her will.
-- Desert heat above, chitin fury below. Lovely region.
+- The whole hive's built around what she wants.
+- Heat up top, angry kalphites underneath. Lovely part of the world.
 - Sting, claw, wing. The full royal treatment.
 
 ### `boss-sarachnis`
@@ -5072,12 +5072,12 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **does:** occasion (never held back)
 - **pacing:** priority 90, cooldown 1h, both
 
-- Scurrius. Mind the falling masonry, the sewer disagrees with the fight.
+- Scurrius. Mind the falling masonry, the sewer roof wasn't built for this.
 - His rats nibble at your feet. Clear them out.
 - The ratfolk of the sewers crowned themselves a king.
 - A giant rat with a crown of scrap. Aspirational, honestly.
 - Varrock flushed its problems downstream. They organised.
-- He's the humble start of many a fighter's tale.
+- Plenty of fighters got their start on him.
 - The tail swipe stings more than you'd expect.
 - Every sewer has a king. This one has a THRONE.
 - The bones make fine trophies. He'd say the same of yours.
@@ -5096,7 +5096,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Dodge the falling rock, she shakes the ceiling when she's cross.
 - A demon the elves bound into living stone.
 - The crystal city keeps its monster in the basement.
-- She predates the city above. The elves built anyway. Elves.
+- The elves sealed her in down here and went back to their singing.
 - The one fight where mining fast IS the combat style.
 - Stone skin, magma heart, zero patience for miners.
 - Every swing of the pick offends her personally.
@@ -5115,7 +5115,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Match your prayers to what it throws. It telegraphs, briefly.
 - The nightmare with legs. Eight of them.
 - Morytania keeps its worst under the ground. Mostly.
-- The webs down here predate the swamp above.
+- Fresh webs. Whatever spun them is still at home.
 - Its brood NEVER stops. Neither should your feet.
 - Spiders sense fear. This one farms it.
 - The lair breathes. Try not to think about that.
@@ -5133,10 +5133,10 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Spikes burst from the ice. Keep those feet moving.
 - When it puts its shield up, that's what the darts are for.
 - A muspah from Jhallan's dreams. His nightmares, technically.
-- The Mahjarrat dreamed monsters so vividly one stayed.
+- It doesn't move like anything that was ever born. Watch the edges of it.
 - Ghorrock's ice kept it quiet for an age. You woke it. Well done.
 - Part memory, part monster, all hostile.
-- The frozen north keeps receipts. This is one.
+- The frozen north forgets nothing. This is one of the things it kept.
 - It flickers between shapes like it can't decide how to end you.
 - Dream logic with claws.
 
@@ -5151,7 +5151,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - The Nightmare. She shows you every attack well in advance. They still hurt.
 - The totems charge as she sleeps deeper. Feed them.
 - When the floor blooms, be elsewhere. The spores are hers.
-- She feeds on the sleepers of Slepe. Literally. That's the diet.
+- Nobody in Slepe wakes up rested. Now you know why.
 - She crossed the sea from Ashihama for richer dreams.
 - The sisters of Slepe pray over the sleepers. She has other plans for them.
 - A whole town sleeps so she can have her dinner.
@@ -5190,7 +5190,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Dodge the volleys, the pattern is strict until it isn't.
 - When it stirs up the abyssal ones, cut them down fast.
 - The Scar kept it fed. The sea kept it secret.
-- A leftover of the abyss, grown vast in the dark water.
+- Something left over from the abyss, with a long time in the dark to grow.
 - It circles like it has all the time in the world. It does.
 - The Scar's where the gods drown their mistakes. Not all the way, it seems.
 - Scales like shield walls. Aim between the walls.
@@ -5207,7 +5207,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - The Whisperer. The lantern is your line back from the shadow realm. Mind it.
 - When the hush falls, don't be where you were standing.
-- The shadow realm shows the truth of her attacks. Peek wisely.
+- Duck into the shadow realm and you'll see what's really coming.
 - A siren, drowned in shadow, still singing after a fashion.
 - The sunken city listens to her. So do your worst instincts.
 - Her song pulls at the edges of you. Hold your shape.
@@ -5229,11 +5229,11 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - The strangler tendrils grab, break them before they squeeze.
 - A champion kept alive by the very thing devouring him.
 - The Stranglewood grows through him. He'd object if he could.
-- Once Zaros's finest blade. The wood took the rest.
+- He was Zaros's best swordsman once. The wood took the rest.
 - He fights the plant and you at once. Respect the effort.
 - The swings are his. The will behind them mostly isn't.
 - The forest whispers through his teeth.
-- Pity and axes. That's the whole encounter.
+- Hard not to feel sorry for him. Harder with an axe coming.
 
 ### `boss-jad`
 
@@ -5245,14 +5245,14 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - Jad. Rears up tall, pray Magic. Slams down, pray Ranged. Nothing else matters.
 - The healers come at half. Tag them away, don't brawl them.
-- Watch the animation, not your nerves.
+- Watch how he moves, not your nerves.
 - Sixty-two waves were just the queue for this.
 - The TzHaar's champion. Everything they name seems to mean fire.
 - Born in lava, raised on challengers.
 - The fire cape is woven from wins like this.
 - It's a chimney with teeth and a schedule.
 - One mistake is the whole exam. No pressure.
-- The Fight Caves save their best joke for last. Laugh later.
+- The Fight Caves kept the worst till last. Here he is.
 
 ### `boss-zuk`
 
@@ -5287,7 +5287,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - You're trapped in there with it. It thinks the same about you.
 - The Gauntlet feeds it challengers. It's never once been full.
 - Everything in that maze was practice. This is the test.
-- Crystal tonics and courage. That's the whole kit.
+- You go in with crystal tonics and nerve, and not much else.
 - It was here before the city sang. It'll outlast the song.
 - The elves hardly mention it. I think that's on purpose.
 - Prepared beats brave, in there. Be both.
@@ -5308,7 +5308,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - The mountain is its shell. You're in the shell.
 - Old, vast, and slow to wake. Awake now, though. You managed that.
 - Every raid ends at those claws or not at all.
-- It watches with a patience mountains understand.
+- It's in no hurry. It's never once needed to be.
 - The olmlet is cuter. Marginally.
 
 ### `boss-verzik`
@@ -5399,10 +5399,10 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - He punishes greed. Take the openings he gives you, not the ones you want.
 - The shield bash rearranges the brave. Stay sharp on the swaps.
 - The Colosseum's final word, and he enunciates.
-- Varlamore's champion of champions. The crowd adores him. The crowd is safe.
+- Varlamore's champion of champions. The crowd adores him from a safe distance.
 - He fights fair. Relentlessly, exhaustingly fair.
 - Other cities have a river in the middle. Fortis has HIM.
-- The sun crest isn't decoration. He earned the sky.
+- The sun crest isn't for show. He earned that.
 - Win, and the city remembers your name. He'll remember it first.
 - Salute him. He notices. Then he tests you anyway.
 
@@ -5422,7 +5422,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - It's all feathers and fury, and the size of a cathedral.
 - It shed its patience ages ago. The scales too, occasionally.
 - The hills shake when it stirs. The hills have learned to cope.
-- A serpent the size of a river, and about as calm as the rapids.
+- It moves like a flood and it's about as easy to argue with.
 - Majestic from a distance. We are not at a distance.
 
 ### `boss-amoxliatl`
@@ -5491,7 +5491,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 90, cooldown 1h, both
 
 - K'ril. Pray Melee, but his roar breaks through and empties it. Keep a restore up.
-- Have a super restore ready. He cheats.
+- He doesn't fight fair. Nobody in this dungeon does.
 - Mind the poison off those halberd swings.
 - Zamorak's general. A greater demon with a title, and the title does a lot of work.
 - His bodyguards take their jobs very seriously. Briefly.
@@ -5511,7 +5511,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - Zilyana. Pray Magic, the lightning is the killer, not the sword.
 - She is FAST. Don't stand there admiring the wings.
-- An Icyene, one of the last. Saradomin's finest.
+- An Icyene, one of the last left. Saradomin keeps her close.
 - She fought in the God Wars and never really stopped.
 - All grace and glowing swords until the lightning starts.
 - A unicorn, a lion and a wolf guard her. Saradomin collects odd friends.
@@ -5536,7 +5536,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - The feathers drift down like snow. Sharp snow.
 - His flock follows him into every fight. Loyal to the last feather.
 - The skies belonged to the aviansie once. He remembers.
-- Mind the draft. The draft has opinions.
+- Mind the draft. It doesn't care whose side you're on.
 - All those wings and he still won't leave the room. Principles.
 
 ### `boss-nex`
@@ -5555,7 +5555,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Zaros's finest general. The other gods teamed up just to contain her.
 - Four elements, then pure darkness. She saves the worst for last.
 - The Ancient Prison held for millennia. We let her out for sport.
-- Armies died sealing her in. Next time, leave the door shut.
+- Armies died putting her away. Seems a shame to waste that.
 - Not an ounce of mercy in her. A fair bit of chill, though.
 
 ### `boss-zulrah`
@@ -5572,7 +5572,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - It surfaces where it pleases. Learn its moods and be elsewhere.
 - The serpent god of Zul-Andra. The villagers worship it AND fight it. Complicated.
 - Sacrifices kept it calm for generations. You are not a sacrifice. Probably.
-- Venom given form, with a shrine to its name.
+- Venom with a shrine of its own. Somebody's idea of worship.
 - The swamp belongs to it. We're just visiting.
 - It has three moods and all of them are hostile.
 - Toxic doesn't begin to cover this relationship.
@@ -5592,7 +5592,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - He's a big boy, and he's being polite about it.
 - Keep your distance. Big animals don't need a reason.
 - He's waiting for someone. I'd rather it not be me.
-- There's more to him than level 30. I can tell.
+- He's holding something back. You can see it in the shoulders.
 - A pen this size is a suggestion, not a wall.
 - Say hello. Quietly.
 
@@ -5650,7 +5650,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - She belongs to the Key Master, and his keys are soul-shaped.
 - Good dog. Terrible circumstances.
 - She howls and the ghosts come running. Rude of them.
-- Somewhere under the fire and hate, she just wants the door guarded.
+- Under all that fire and hate, she's only doing her job.
 - Fetch has a very different meaning down here.
 
 ### `boss-kraken`
@@ -5663,10 +5663,10 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - The Kraken. Disturb the little pools first or the big one sulks below.
 - Magic only, blades and arrows flop in the water.
-- The tentacles are the welcome party. The head is the argument.
-- It's mostly tentacle. The rest is grudge.
+- The tentacles keep you busy while the head does the real work.
+- It's mostly tentacle. I haven't found the rest yet.
 - Fishermen's tales got this one right, unfortunately.
-- The whirlpool is not decorative. Respect the whirlpool.
+- That whirlpool isn't there for decoration. Keep out of it.
 - Deep water hides deep problems. This one has arms.
 - It naps under the surface. You're the alarm.
 - Calamari the size of a house, and it fights back.
@@ -5688,7 +5688,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Breathe shallow, hit deep.
 - It's less a creature, more a weather condition with teeth.
 - The slayer masters mention it quietly, like a bad memory.
-- All that smoke and not one campfire story worth telling.
+- All this smoke and no fire anywhere. That's not how smoke works.
 - If your eyes are watering, you're doing it right.
 
 ### `boss-hydra`
@@ -5701,13 +5701,13 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - The Hydra. Lure it over the vents, it only drops its guard once it's doused.
 - New head, new attack. Swap your prayer when it swaps its mood.
-- Poison, lightning, then flame. It escalates. So should you.
+- It starts nasty and finishes worse. Keep up with it.
 - The chemists under Karuulm MADE this. On purpose. With funding.
 - Alchemy gave it heads. Nobody gave it manners.
 - Mind the floor, it redecorates with hazards.
 - Cut off one head and it grows an attitude.
 - The Lovakengj call it research. The research bites.
-- Somewhere a Karuulm chemist is very proud and very fired.
+- Some Karuulm chemist is very proud of this, and very fired.
 - Green means poison. Blue means lightning. Red means regret.
 
 ### `boss-sire`
@@ -5725,7 +5725,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Every whip started life down here. Think on that.
 - The Nexus hums when it stirs. The hum is a warning.
 - It's an ecosystem with a temper.
-- Wake it politely. It ignores politeness, but still.
+- Knock first. It won't care, but I'll feel better.
 - The spawn have their father's everything. Tragically.
 - One day the abyss will explain itself. Not today.
 
@@ -5740,12 +5740,12 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - The Guardians. Dawn flies where a blade can't reach her. Bring a bow.
 - When the ceiling starts falling, watch your feet, not the fight.
 - Dawn heals if you let her feed. Don't let her feed.
-- Dusk hits like the roof he lives on. Respect the fists.
-- Gargoyles that outgrew the gutter. Literally.
+- Dusk hits like the roof he lives on. Hard, and all at once.
+- Gargoyles who got too big for the gutters.
 - They dance this rooftop every night. You're cutting in.
 - Stone by day, murder by night.
 - Two of them, one of you. I don't really count...
-- The tower keeps its worst on the roof. Landlords, eh.
+- Most towers keep their trouble in the basement. This one put it upstairs.
 - Mind the orbs, mind the rubble, mind the everything.
 
 ### `boss-skotizo`
@@ -5789,7 +5789,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - YES! You did it!
 - {npc} is down! I knew you had it!
 - That was incredible. Absolutely incredible.
-- You beat {npc}! Do you know how few people can say that?
+- You beat {npc}! Not that I ever doubted it.
 - I was never worried. Well. Barely worried.
 - Look at you. Champion.
 - I'm telling everyone about this.
@@ -5818,7 +5818,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 72, cooldown 1m, delay 3-5 ticks
 
 - {boss}, {count} times. I've stopped bringing the notes; I know how it goes.
-- Your {ordinal} {boss}. The pages are getting thin.
+- Your {ordinal} {boss}. That page is filling up.
 - {ordinal} time. I could draw {boss} from memory now.
 - That makes {count} {boss}. The ledger has a column just for it.
 - {count}. Hard to believe there was ever a first {boss}.
@@ -5869,7 +5869,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
 
 - Duke Horacio himself. Lovely man. Bit preoccupied with dragons.
-- The Duke's been handing out anti-dragon shields for years. Stock never runs dry.
+- The Duke's handed out anti-dragon shields for years and never once run out.
 - Rules all of Lumbridge from one room. Efficient, really.
 
 ### `quest-cook`
@@ -5890,7 +5890,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** Father Aereck within 5 tiles, in sight
 - **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
 
-- Father Aereck. Keeps the church, minds the graveyard. Busy man, sadly.
+- Father Aereck. Between the church and the graveyard, he's never short of work.
 - He'll want help with the restless sort. The buried restless sort.
 - A good shepherd, even when the flock includes ghosts.
 
@@ -6111,7 +6111,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
 
 - Hetty of Rimmington. Her potions improve your magic and your humility.
-- She asked someone for a rat's tail once. They brought it. Magic happened.
+- She asked someone for a rat's tail once, and they actually brought her one.
 - Cauldron's always on. Best not to ask what's in it.
 
 ### `quest-morgan`
@@ -6145,7 +6145,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - Luthas runs the banana plantation. Don't ask about the crates.
 - Honest work, banana picking. You'll smell of fruit for a week.
-- Ten bananas a crate, no peeking inside. Deal.
+- Ten bananas to a crate. He'll want it full, and he'll check.
 
 ### `quest-zanik`
 
@@ -6176,7 +6176,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** Hazelmere within 5 tiles, in sight
 - **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
 
-- Hazelmere. One of the oldest, wisest gnomes alive. Speaks in signs.
+- Hazelmere. One of the oldest, wisest gnomes alive, and he talks in signs.
 - He lives alone with his thoughts, and his thoughts are worth the trip.
 - The Grand Tree trusts him. That should settle any doubts.
 
@@ -6287,8 +6287,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
 
 - The Oracle of Ice Mountain. Speaks in riddles, means every word.
-- People climb all this way for wisdom. She dispenses confusion. Same thing.
-- Ask about the dragon. The answer will be a poem. It's always a poem.
+- People climb all this way for wisdom and come down confused. Same thing, really.
+- Ask her about the dragon and she'll answer in verse. Bring paper.
 
 ### `quest-ernest`
 
@@ -6408,7 +6408,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - {quest}, done and witnessed. That deserves a full page.
 - That's {quest} closed. Their scroll is nice. Mine has footnotes.
 - {quest}. Signed, sealed, filed.
-- At last, a world that hands out paperwork properly.
+- A reward scroll. Somebody here does paperwork properly.
 
 ### `quest-milestone-10`
 
@@ -6750,7 +6750,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - I'm joining in. You carry on.
 - It looked easy when you were doing it.
 - I could do this. Given the tools. And the levels.
-- You caught me. My only regret is the timing.
+- Yes, I'm copying you. No, I won't be stopping.
 - In my defence, it looked fun. It was fun.
 - Purely observational. Ignore the arms.
 - My hands are empty, but the technique's all there.
@@ -6844,7 +6844,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Opened by the ask-nickname rule, whose overhead line said the name. A tree is fixed text, so the name itself lives in that line and in the answer lines outside; in here the follower asks whether the player minds. yes makes it the nickname, no strikes it through for good, later leaves it in pencil.
 
 - **start**
-  - Follower: Ah. Good. About the name.
+  - Follower: Ah, good. I wanted a word about the name.
 - **ask**
   - Follower: I've been using one for you in the notes. You'll have heard it just now. Do you mind?
 - **yes-q**
@@ -6856,7 +6856,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **what-a**
   - Follower: The one I said just now. Saying it again feels like deciding for you.
 - **no-q**
-  - You: Yes, I mind.
+  - You: I'd rather you didn't.
 - **no-a (answers 'no')**
   - Follower: Understood. That one's gone, and I won't bring it up again.
 - **later-q**
