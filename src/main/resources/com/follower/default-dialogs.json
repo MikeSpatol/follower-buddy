@@ -62,7 +62,7 @@
         {
           "id": "yes-a",
           "says": [
-            "Give me a moment. I'll think of somewhere."
+            "I've got a few in mind. Give me a moment to pick one."
           ],
           "answer": "yes"
         },
@@ -77,7 +77,7 @@
         {
           "id": "no-a",
           "says": [
-            "No bother. It'll keep.",
+            "That's all right. It'll keep.",
             "Lead on."
           ],
           "answer": "no"
@@ -92,7 +92,7 @@
         {
           "id": "start",
           "says": [
-            "Hold on. Stop a minute.",
+            "Right, stand there. This won't take long.",
             "Both hands behind my back. One of them's got something in it."
           ],
           "next": "ask"
@@ -173,7 +173,7 @@
         {
           "id": "no-a",
           "says": [
-            "Fair enough. They'll both still be here later."
+            "Pity. I was sure you'd go left."
           ],
           "answer": "nogame"
         }
@@ -228,7 +228,7 @@
         {
           "id": "what-a",
           "says": [
-            "The one I called you a moment ago. It's in the notes. I'd rather you heard it than read it."
+            "The one I said just now. Saying it again feels like deciding for you."
           ],
           "next": "ask"
         },
@@ -242,7 +242,7 @@
         {
           "id": "no-a",
           "says": [
-            "Fair enough. Struck through, and I won't offer it again."
+            "Understood. That one's gone, and I won't bring it up again."
           ],
           "answer": "no"
         },
@@ -256,7 +256,7 @@
         {
           "id": "later-a",
           "says": [
-            "I'll keep it in pencil, then."
+            "No rush. I'll leave it where it is for now."
           ],
           "answer": "later"
         }
