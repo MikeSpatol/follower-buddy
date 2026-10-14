@@ -61,10 +61,10 @@ public class ChronicleWordingTest
 	@Test
 	public void aBossIsCalledABoss()
 	{
-		assertEquals("the boss is met", ChronicleWindow.unlockLabel(loader.get("boss-giant-mole")));
+		assertEquals("you meet it", ChronicleWindow.unlockLabel(loader.get("boss-giant-mole")));
 		assertEquals("The scribe has not met this boss yet.",
 			ChronicleWindow.unwrittenHint(loader.get("boss-giant-mole")));
-		assertEquals("one is met", ChronicleWindow.unlockLabel(loader.get("enemy-goblin")));
+		assertEquals("you meet one", ChronicleWindow.unlockLabel(loader.get("enemy-goblin")));
 		assertEquals("The scribe has not met one of these yet.",
 			ChronicleWindow.unwrittenHint(loader.get("enemy-goblin")));
 		assertEquals("The scribe has not been there yet.",

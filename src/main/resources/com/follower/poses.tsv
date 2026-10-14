@@ -168,7 +168,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 4851	Sit cross-legged	Sitting and resting	hold	empty	empty	0	A	500	5
 2378	Sit on the floor (Quiz Master)	Sitting and resting	hold	empty	empty	0	A	2	35
 9056	Lie unconscious	Sitting and resting	hold	empty	empty	0	A	1	5
-9434	Barely conscious	Sitting and resting	hold	empty	empty	0	A	6	17
+9434	Lie barely conscious	Sitting and resting	hold	empty	empty	0	A	6	17
 6936	Fly a magic carpet	Sitting and resting	hold	empty	5614	0	A	11	5
 829	Eat	Eating and drinking	once	empty	empty	0	A	-1	4
 1322	Hold a tankard	Eating and drinking	hold	empty	3803	0	A	-1	21
@@ -234,20 +234,20 @@ id	name	group	play	left	right	graphic	tier	restart	last
 4368	Raise a lantern and look	Looking around	once	9065	keep	0	A	-1	8
 5821	Whistle	Looking around	once	empty	empty	0	A	-1	3
 12514	Stand up	Emotes	once	empty	empty	0	B	-1	5
-9831	Trick or treat 0	Emotes	once	27463	keep	0	B	-1	4
-9832	Trick or treat 1	Emotes	once	27465	keep	0	B	-1	4
-9833	Trick or treat 2	Emotes	once	27467	keep	0	B	-1	4
-9834	Trick or treat 3	Emotes	once	27469	keep	0	B	-1	4
-9835	Trick or treat 4	Emotes	once	27471	keep	0	B	-1	4
+9831	Trick or treat	Emotes	once	27463	keep	0	B	-1	4
+9832	Trick or treat (2)	Emotes	once	27465	keep	0	B	-1	4
+9833	Trick or treat (3)	Emotes	once	27467	keep	0	B	-1	4
+9834	Trick or treat (4)	Emotes	once	27469	keep	0	B	-1	4
+9835	Trick or treat (5)	Emotes	once	27471	keep	0	B	-1	4
 7279	Uri invisible	Emotes	hold	keep	keep	0	B	1	365
 10678	Yawn short	Emotes	once	empty	empty	0	B	-1	1
 12054	Yawn short	Emotes	hold	empty	empty	0	B	18	1
-13074	Skill cape sailing	Skill capes	once	empty	9896	3473	B	-1	4
+13074	Sailing cape (2)	Skill capes	once	empty	9896	3473	B	-1	4
 12022	Female prayer scroll read deadeye	Reading and writing	once	empty	30642	0	B	-1	5
 12023	Female prayer scroll read mystic vigour	Reading and writing	once	empty	30643	0	B	-1	5
 12020	Male prayer scroll read mystic vigour	Reading and writing	once	empty	30643	0	B	-1	5
-3143	Read a book (fancy turning the page left)	Reading and writing	hold	empty	4705	0	B	5	15
-3142	Read a book (fancy turning the page right)	Reading and writing	hold	empty	4705	0	B	5	15
+3143	Read a fancy book, turning the page left	Reading and writing	hold	empty	4705	0	B	5	15
+3142	Read a fancy book, turning the page right	Reading and writing	hold	empty	4705	0	B	5	15
 13304	Sailing charting duck pickup	Reading and writing	once	empty	31827	0	B	-1	1
 13305	Sailing charting duck place	Reading and writing	once	empty	31827	0	B	-1	21
 13301	Sailing charting telescope	Reading and writing	once	empty	31826	0	B	-1	5
@@ -323,14 +323,14 @@ id	name	group	play	left	right	graphic	tier	restart	last
 14507	Play a shell (5)	Music and play	once	34595	empty	0	B	-1	5
 14508	Play a shell (6)	Music and play	once	34596	empty	0	B	-1	5
 14509	Play a shell (7)	Music and play	once	34597	empty	0	B	-1	5
-1460	Yoyo advanced	Music and play	once	empty	4080	0	B	-1	4
+1460	Yo-yo: advanced	Music and play	once	empty	4080	0	B	-1	4
 393	Axe chop	Skilling	once	keep	keep	0	B	-1	4
 4859	Blow glass	Skilling	hold	keep	keep	0	B	-1	5
 11743	Brew (add ingredient)	Skilling	once	empty	empty	0	B	-1	4
 11741	Brew (fill glass)	Skilling	once	empty	1919	0	B	-1	3
 11739	Brew (pour water)	Skilling	once	empty	1925	0	B	-1	4
 11742	Brew (turn valve)	Skilling	once	keep	keep	0	B	-1	6
-10046	Build (dragon warhammer bh corrupted)	Skilling	once	empty	28035	0	B	-1	5
+10046	Build (corrupted dragon warhammer)	Skilling	once	empty	28035	0	B	-1	5
 9351	Build (dragon warhammer ornament)	Skilling	once	empty	26710	0	B	-1	5
 7049	Build (dragon warhammer)	Skilling	once	empty	13576	0	B	-1	5
 11128	Build (elder maul ornament)	Skilling	once	empty	27100	0	B	-1	5
@@ -400,7 +400,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 890	Cut an opal	Skilling	once	empty	1609	0	B	-1	4
 1309	Cut limestone	Skilling	once	empty	empty	0	B	-1	4
 10937	Cut with a knife	Skilling	once	empty	946	0	B	-1	4
-10045	Dig (easter 23 spade)	Skilling	once	empty	27873	0	B	-1	5
+10045	Dig (Easter 2023 spade)	Skilling	once	empty	27873	0	B	-1	5
 831	Dig (long)	Skilling	hold	empty	952	0	B	8	10
 10543	Dryad despawn	Skilling	once	keep	keep	0	B	-1	1867
 10541	Dryad idle	Skilling	hold	keep	keep	0	B	12	20
@@ -414,11 +414,11 @@ id	name	group	play	left	right	graphic	tier	restart	last
 2288	Farm (plant cure)	Skilling	once	empty	6036	0	B	-1	2
 8197	Farm (pour water bottomless bucket)	Skilling	once	empty	22997	0	B	-1	4
 2283	Farm (pour water)	Skilling	once	empty	1925	0	B	-1	4
-10721	Farm (seed dibbing nodib)	Skilling	once	empty	empty	0	B	-1	2
+10721	Farm (plant seeds without a dibber)	Skilling	once	empty	empty	0	B	-1	2
 2269	Farm (slice watermelon)	Skilling	once	5982	946	0	B	-1	4
 2271	Farm (trowel dig)	Skilling	hold	empty	empty	0	B	5	4
 2272	Farm (trowel digging)	Skilling	once	empty	5325	0	B	-1	4
-11121	Farm (trowel shortdig)	Skilling	once	empty	5325	0	B	-1	4
+11121	Farm (trowel short dig)	Skilling	once	empty	5325	0	B	-1	4
 2286	Farm (turn valve)	Skilling	once	keep	keep	0	B	-1	6
 2270	Farm (use a loom)	Skilling	once	empty	empty	0	B	-1	8
 8481	Feather arrow shafts	Skilling	once	empty	24107	0	B	-1	1
@@ -481,7 +481,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 8916	Make a bird house (Imcando hammer)	Skilling	once	1511	25644	0	B	-1	5
 14416	Make a potion (vial only)	Skilling	once	229	empty	0	B	-1	6
 3283	Make a potion at the apothecary	Skilling	once	229	empty	0	B	-1	6
-7699	Make ultracompost (make)	Skilling	once	empty	empty	0	B	-1	7
+7699	Make ultracompost	Skilling	once	empty	empty	0	B	-1	7
 802	Measure a fish	Skilling	once	empty	empty	0	B	-1	4
 11086	Milk (buffalo)	Skilling	once	5732	1925	0	B	-1	3
 13869	Mine (demonic pact)	Skilling	once	keep	keep	0	B	-1	4
@@ -629,10 +629,10 @@ id	name	group	play	left	right	graphic	tier	restart	last
 11604	Alchemy mill interact	Magic and prayer	once	empty	30034	0	B	-1	5
 3705	Bone sacrifice	Magic and prayer	once	keep	keep	0	B	-1	5
 709	Cast a healing spell	Magic and prayer	once	empty	empty	0	B	-1	4
-6575	Cast a spell (arceuus teleport)	Magic and prayer	hold	keep	keep	0	B	1	5
+6575	Cast a spell (Arceuus teleport)	Magic and prayer	hold	keep	keep	0	B	1	5
 8980	Cast a spell (degrime)	Magic and prayer	once	keep	keep	0	B	-1	4
 8977	Cast a spell (demonbane)	Magic and prayer	once	keep	keep	0	B	-1	4
-9158	Cast a spell (dmm)	Magic and prayer	once	keep	keep	0	B	-1	3
+9158	Cast a spell (Deadman)	Magic and prayer	once	keep	keep	0	B	-1	3
 8972	Cast a spell (grasp)	Magic and prayer	once	keep	keep	0	B	-1	5
 13828	Cast a spell (Iban's ornament sea)	Magic and prayer	once	keep	keep	0	B	-1	4
 13829	Cast a spell (Iban's ornament swamp)	Magic and prayer	once	keep	keep	0	B	-1	4
@@ -675,8 +675,8 @@ id	name	group	play	left	right	graphic	tier	restart	last
 717	Cast Weaken	Magic and prayer	once	empty	empty	0	B	-1	6
 1164	Cast Weaken (staff)	Magic and prayer	once	empty	keep	0	B	-1	6
 811	Casting	Magic and prayer	once	keep	keep	0	B	-1	4
-1819	Casting Tele Block	Magic and prayer	once	empty	empty	0	B	-1	20
-1820	Casting Tele Block staff	Magic and prayer	once	empty	keep	0	B	-1	20
+1819	Cast Tele Block	Magic and prayer	once	empty	empty	0	B	-1	20
+1820	Cast Tele Block (staff)	Magic and prayer	once	empty	keep	0	B	-1	20
 726	Charge an orb	Magic and prayer	once	empty	empty	0	B	-1	4
 13811	Cowboss teleport	Magic and prayer	hold	empty	empty	0	B	1	25
 4462	Crossbow enchant arrowtip	Magic and prayer	once	empty	empty	0	B	-1	4
@@ -714,7 +714,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 11119	Spell spear stab	Magic and prayer	once	keep	keep	0	B	-1	4
 8321	Sun prayer	Magic and prayer	once	empty	empty	0	B	-1	5
 12016	Teleport giantsoul amulet	Magic and prayer	hold	empty	empty	0	B	1	3
-1818	Teleport other casting	Magic and prayer	once	empty	empty	0	B	-1	4
+1818	Cast Teleport Other	Magic and prayer	once	empty	empty	0	B	-1	4
 1816	Teleport other impact	Magic and prayer	once	empty	empty	0	B	-1	2000
 3651	Use (crystal ball)	Magic and prayer	once	keep	keep	0	B	-1	4
 3645	Use (scrying pool)	Magic and prayer	once	keep	keep	0	B	-1	4
@@ -834,7 +834,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 13754	Karambit special	Combat	once	keep	keep	0	B	-1	4
 423	Kick	Combat	once	keep	keep	0	B	-1	10
 11737	Kick quick	Combat	once	keep	keep	0	B	-1	9
-6838	Kicks chest open	Combat	once	keep	keep	0	B	-1	4
+6838	Kick a chest open	Combat	once	keep	keep	0	B	-1	4
 13761	Lithic sceptre special	Combat	once	keep	33259	0	B	-1	4
 3630	Man trap hit	Combat	once	keep	keep	0	B	-1	4
 3639	Marble trap hit	Combat	once	keep	keep	0	B	-1	8
@@ -870,14 +870,14 @@ id	name	group	play	left	right	graphic	tier	restart	last
 428	Spear spike	Combat	once	keep	keep	0	B	-1	4
 432	Spear throw	Combat	once	keep	keep	0	B	-1	3
 8184	Spear wall special	Combat	once	keep	keep	0	B	-1	3
-9961	Special accursed	Combat	once	keep	keep	0	B	-1	5
-11060	Special atlatl	Combat	once	keep	keep	0	B	-1	2
-11812	Special khopesh	Combat	once	keep	keep	0	B	-1	5
-9962	Special ursine	Combat	once	keep	keep	0	B	-1	5
-9963	Special ursine (2)	Combat	once	keep	keep	0	B	-1	5
-11240	Special voidwaker	Combat	once	keep	keep	0	B	-1	5
-11275	Special voidwaker (2)	Combat	once	keep	keep	0	B	-1	5
-9964	Special webweaver	Combat	once	keep	keep	0	B	-1	5
+9961	Accursed sceptre special	Combat	once	keep	keep	0	B	-1	5
+11060	Atlatl special	Combat	once	keep	keep	0	B	-1	2
+11812	Khopesh special	Combat	once	keep	keep	0	B	-1	5
+9962	Ursine chainmace special	Combat	once	keep	keep	0	B	-1	5
+9963	Ursine chainmace special (2)	Combat	once	keep	keep	0	B	-1	5
+11240	Voidwaker special	Combat	once	keep	keep	0	B	-1	5
+11275	Voidwaker special (2)	Combat	once	keep	keep	0	B	-1	5
+9964	Webweaver bow special	Combat	once	keep	keep	0	B	-1	5
 3626	Spike trap hit	Combat	once	keep	keep	0	B	-1	4
 3627	Spike trap miss	Combat	once	keep	keep	0	B	-1	4
 415	Staff block	Combat	once	keep	keep	0	B	-1	4
@@ -893,7 +893,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 392	Sword lunge	Combat	once	keep	keep	0	B	-1	4
 391	Sword moving slash	Combat	once	keep	keep	0	B	-1	3
 390	Sword slash	Combat	once	keep	keep	0	B	-1	3
-8638	Sword slash withdagger	Combat	once	keep	1207	0	B	-1	3
+8638	Sword slash with a dagger	Combat	once	keep	1207	0	B	-1	3
 386	Sword stab	Combat	once	keep	keep	0	B	-1	4
 385	Throw	Combat	once	keep	empty	0	B	-1	4
 3605	Throw a dart (1)	Combat	once	empty	7684	0	B	-1	2
@@ -925,7 +925,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 1811	Wall beast special attack end	Combat	once	keep	keep	0	B	-1	2
 1810	Wall beast special attack idle	Combat	hold	keep	keep	0	B	2	12
 1809	Wall beast special attack start	Combat	once	keep	keep	0	B	-1	2
-13700	Xmas 25 christmas dinner attack	Combat	once	keep	keep	0	B	-1	10
+13700	Christmas dinner attack	Combat	once	keep	keep	0	B	-1	10
 1709	Zamorak spear block	Combat	once	keep	keep	0	B	-1	4
 1710	Zamorak spear lunge	Combat	once	keep	keep	0	B	-1	3
 1712	Zamorak spear slash	Combat	once	keep	keep	0	B	-1	4
@@ -1034,7 +1034,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 13823	Iban's ornament walk right	Standing and walking	once	keep	keep	0	B	-1	6
 808	Idle	Standing and walking	hold	keep	keep	0	B	-1	21
 11092	Idle alt	Standing and walking	hold	keep	keep	0	B	-1	21
-825	Idle Dharok's	Standing and walking	hold	keep	keep	0	B	-1	20
+825	Dharok's idle (2)	Standing and walking	hold	keep	keep	0	B	-1	20
 6297	Idle fan	Standing and walking	hold	keep	keep	0	B	-1	5
 5246	Idle salamander	Standing and walking	hold	keep	keep	0	B	-1	20
 847	Idle scythe	Standing and walking	hold	keep	keep	0	B	-1	21
@@ -1125,7 +1125,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 8462	Walk back long	Standing and walking	once	keep	keep	0	B	-1	5
 11090	Walk back quick	Standing and walking	once	keep	keep	0	B	-1	5
 819	Walk forward	Standing and walking	once	keep	keep	0	B	-1	6
-826	Walk forward Dharok's	Standing and walking	once	keep	keep	0	B	-1	5
+826	Dharok's walk forward	Standing and walking	once	keep	keep	0	B	-1	5
 7629	Walk forward fan	Standing and walking	once	keep	keep	0	B	-1	5
 11089	Walk forward quick	Standing and walking	once	keep	keep	0	B	-1	5
 5245	Walk forward salamander	Standing and walking	once	keep	keep	0	B	-1	6
@@ -1139,10 +1139,10 @@ id	name	group	play	left	right	graphic	tier	restart	last
 7632	Walk right fan	Standing and walking	once	keep	keep	0	B	-1	5
 5248	Walk salamander	Standing and walking	once	keep	keep	0	B	-1	6
 839	Walk with style	Standing and walking	once	empty	empty	0	B	-1	6
-13696	Xmas 25 christmas dinner idle	Standing and walking	hold	keep	keep	0	B	-1	21
-13699	Xmas 25 christmas dinner run	Standing and walking	once	keep	keep	0	B	-1	4
-13698	Xmas 25 christmas dinner walk back	Standing and walking	once	keep	keep	0	B	-1	6
-13697	Xmas 25 christmas dinner walk forward	Standing and walking	once	keep	keep	0	B	-1	6
+13696	Christmas dinner idle	Standing and walking	hold	keep	keep	0	B	-1	21
+13699	Christmas dinner run	Standing and walking	once	keep	keep	0	B	-1	4
+13698	Christmas dinner walk back	Standing and walking	once	keep	keep	0	B	-1	6
+13697	Christmas dinner walk forward	Standing and walking	once	keep	keep	0	B	-1	6
 1713	Zamorak spear idle	Standing and walking	hold	keep	keep	0	B	-1	20
 1707	Zamorak spear run	Standing and walking	once	keep	keep	0	B	-1	2
 1702	Zamorak spear turn on the spot	Standing and walking	once	keep	keep	0	B	-1	3
@@ -1159,11 +1159,11 @@ id	name	group	play	left	right	graphic	tier	restart	last
 1110	Agility Arena dart duck	Climbing and agility	once	empty	empty	0	B	-1	20
 1115	Agility Arena dive	Climbing and agility	once	keep	keep	0	B	-1	1
 1117	Agility Arena handholds first	Climbing and agility	once	empty	empty	0	B	-1	20000
-1121	Agility Arena handholds firstreverse	Climbing and agility	once	empty	empty	0	B	-1	20000
+1121	Agility Arena handholds first (reverse)	Climbing and agility	once	empty	empty	0	B	-1	20000
 1120	Agility Arena handholds last	Climbing and agility	once	empty	empty	0	B	-1	50
-1124	Agility Arena handholds lastreverse	Climbing and agility	once	empty	empty	0	B	-1	2
+1124	Agility Arena handholds last (reverse)	Climbing and agility	once	empty	empty	0	B	-1	2
 1118	Agility Arena handholds middle	Climbing and agility	once	empty	empty	0	B	-1	20000
-1122	Agility Arena handholds middlereverse	Climbing and agility	once	empty	empty	0	B	-1	20000
+1122	Agility Arena handholds middle (reverse)	Climbing and agility	once	empty	empty	0	B	-1	20000
 1116	Agility Arena land	Climbing and agility	once	keep	keep	0	B	-1	4
 1113	Agility Arena spiked	Climbing and agility	hold	keep	keep	0	B	11	2
 1114	Agility Arena spiked back	Climbing and agility	once	keep	keep	0	B	-1	1
@@ -1232,12 +1232,12 @@ id	name	group	play	left	right	graphic	tier	restart	last
 749	Squeeze through a double pipe	Climbing and agility	once	empty	empty	0	B	-1	4
 746	Squeeze through a pipe	Climbing and agility	once	empty	empty	0	B	-1	4
 747	Squeeze through a pipe idle	Climbing and agility	hold	empty	empty	0	B	-1	4
-7188	Starjump short	Climbing and agility	once	empty	empty	0	B	-1	4
+7188	Star jump (short)	Climbing and agility	once	empty	empty	0	B	-1	4
 850	Step off a ledge left	Climbing and agility	once	empty	empty	0	B	-1	4
 852	Step off a ledge right	Climbing and agility	once	empty	empty	0	B	-1	4
 849	Step onto a ledge left	Climbing and agility	once	empty	empty	0	B	-1	10
 851	Step onto a ledge right	Climbing and agility	once	empty	empty	0	B	-1	10
-797	Stumble and hang climbup	Climbing and agility	once	keep	keep	0	B	-1	20
+797	Stumble and hang (climb up)	Climbing and agility	once	keep	keep	0	B	-1	20
 772	Swim	Climbing and agility	once	empty	empty	0	B	-1	4
 773	Swim	Climbing and agility	hold	empty	empty	0	B	-1	21
 7702	Swim (cavewall)	Climbing and agility	once	keep	keep	0	B	-1	5
@@ -1251,7 +1251,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 7708	Swim (steal fail)	Climbing and agility	once	keep	keep	0	B	-1	5
 7709	Swim (steal success)	Climbing and agility	once	keep	keep	0	B	-1	5
 7707	Swim (steal)	Climbing and agility	once	keep	keep	0	B	-1	5
-3415	Swimming	Climbing and agility	once	empty	empty	0	B	-1	3
+3415	Swim (2)	Climbing and agility	once	empty	empty	0	B	-1	3
 3422	Swimming bombdive	Climbing and agility	once	empty	empty	0	B	-1	10
 3421	Swimming climb anchor	Climbing and agility	once	empty	empty	0	B	-1	10
 3418	Swimming idle	Climbing and agility	hold	empty	empty	0	B	-1	5
@@ -1269,11 +1269,11 @@ id	name	group	play	left	right	graphic	tier	restart	last
 14479	Triple jump middle	Climbing and agility	once	keep	keep	0	B	-1	5
 776	Wade	Climbing and agility	once	empty	empty	0	B	-1	5
 777	Wade	Climbing and agility	hold	empty	empty	0	B	-1	11
-12196	Yama shortjump	Climbing and agility	once	keep	keep	0	B	-1	4
+12196	Yama short jump	Climbing and agility	once	keep	keep	0	B	-1	4
 1601	Zipline bite	Climbing and agility	once	empty	4181	0	B	-1	50
 1602	Zipline slide	Climbing and agility	hold	empty	4181	0	B	9	3
-1119	Agility Arena handholds middlefall	Falls and deaths	hold	empty	empty	0	B	8	1
-1123	Agility Arena handholds middlefallreverse	Falls and deaths	hold	empty	empty	0	B	8	1
+1119	Agility Arena handholds middle (fall)	Falls and deaths	hold	empty	empty	0	B	8	1
+1123	Agility Arena handholds middle (fall, reverse)	Falls and deaths	hold	empty	empty	0	B	8	1
 1125	Agility Arena roof collapse hit and stumble	Falls and deaths	once	empty	empty	0	B	-1	4
 3068	Agility pyramid gap jump fall	Falls and deaths	hold	keep	keep	0	B	1	5
 3055	Agility pyramid ledge fall left	Falls and deaths	once	keep	keep	0	B	-1	5
@@ -1294,7 +1294,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 10873	Doom scorpion death	Falls and deaths	hold	empty	empty	0	B	1	50
 766	Fall	Falls and deaths	once	empty	empty	0	B	-1	2
 11285	Fall	Falls and deaths	hold	keep	keep	0	B	1	8
-768	Fall (4)	Falls and deaths	once	empty	empty	0	B	-1	2
+768	Fall (2)	Falls and deaths	once	empty	empty	0	B	-1	2
 767	Fall (end)	Falls and deaths	once	keep	keep	0	B	-1	5
 3640	Fall from the sky	Falls and deaths	once	keep	keep	0	B	-1	8
 3641	Fall from the sky (water)	Falls and deaths	once	keep	keep	0	B	-1	20
@@ -1308,7 +1308,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 1379	Get knocked flying	Falls and deaths	hold	empty	empty	0	B	1	20
 12213	Get knocked flying (abort)	Falls and deaths	once	empty	empty	0	B	-1	4
 779	Get tackled	Falls and deaths	once	empty	empty	0	B	-1	12
-11441	Get up (fall and)	Falls and deaths	once	keep	keep	0	B	-1	4
+11441	Fall and get up	Falls and deaths	once	keep	keep	0	B	-1	4
 8503	Jormungand stun	Falls and deaths	once	empty	24273	0	B	-1	40
 7245	Land after being blown back	Falls and deaths	hold	keep	keep	0	B	1	10
 736	Land and get up	Falls and deaths	once	keep	keep	0	B	-1	5
@@ -1318,23 +1318,23 @@ id	name	group	play	left	right	graphic	tier	restart	last
 761	Sidestep fall left	Falls and deaths	once	empty	empty	0	B	-1	2
 2340	Sit (drunk fall)	Falls and deaths	once	6122	6123	0	B	-1	50
 848	Stand stunned	Falls and deaths	once	keep	keep	0	B	-1	2
-8504	Stand stunned (jormungand)	Falls and deaths	once	empty	24273	0	B	-1	40
-8505	Stand stunned (jormungand) (2)	Falls and deaths	once	empty	24274	0	B	-1	40
-8506	Stand stunned (jormungand) (3)	Falls and deaths	once	empty	24275	0	B	-1	40
+8504	Stand stunned (Jormungand)	Falls and deaths	once	empty	24273	0	B	-1	40
+8505	Stand stunned (Jormungand) (2)	Falls and deaths	once	empty	24274	0	B	-1	40
+8506	Stand stunned (Jormungand) (3)	Falls and deaths	once	empty	24275	0	B	-1	40
 3419	Swimming death	Falls and deaths	once	empty	empty	0	B	-1	2000
 14410	Sword defend then die	Falls and deaths	once	keep	keep	0	B	-1	20000
 14412	Sword defend then die quick	Falls and deaths	once	keep	keep	0	B	-1	20000
 14409	Sword slash then defend then die	Falls and deaths	once	keep	keep	0	B	-1	20000
 14411	Sword slash then defend then die quick	Falls and deaths	once	keep	keep	0	B	-1	20000
 838	Unconscious	Falls and deaths	once	empty	empty	0	B	-1	20000
-9057	Unconscious transition	Falls and deaths	hold	empty	empty	0	B	1	5
-9433	Unconscious transition barely conscious	Falls and deaths	once	empty	empty	0	B	-1	17
+9057	Fall unconscious	Falls and deaths	hold	empty	empty	0	B	1	5
+9433	Fall barely conscious	Falls and deaths	once	empty	empty	0	B	-1	17
 770	Wobble and fall left	Falls and deaths	once	keep	keep	0	B	-1	2
 771	Wobble and fall right	Falls and deaths	once	keep	keep	0	B	-1	2
 2581	Wobble and fall short left	Falls and deaths	once	keep	keep	0	B	-1	4
 2582	Wobble and fall short right	Falls and deaths	once	keep	keep	0	B	-1	4
 12152	Yama portal fall on face	Falls and deaths	once	keep	keep	0	B	-1	1
-12149	Yama portalfall	Falls and deaths	hold	keep	keep	0	B	1	9
+12149	Yama portal fall	Falls and deaths	hold	keep	keep	0	B	1	9
 11602	Aldarin worker wobblewalk	Other	once	keep	keep	0	B	-1	6
 11511	Aranea boots wade	Other	once	keep	keep	0	B	-1	1
 14095	Aranei magic made sword sheath	Other	once	keep	keep	0	B	-1	5
@@ -1343,7 +1343,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 1422	Banner walk forward	Other	once	keep	keep	0	B	-1	6
 1424	Banner walk left	Other	once	keep	keep	0	B	-1	6
 1425	Banner walk right	Other	once	keep	keep	0	B	-1	6
-9435	Barely conscious (2)	Other	hold	empty	empty	0	B	6	17
+9435	Lie barely conscious (2)	Other	hold	empty	empty	0	B	6	17
 7934	Bobrun	Other	hold	empty	6565	0	B	15	2
 2149	Bow like a genie	Other	once	keep	keep	0	B	-1	3
 9861	Bow venator step left	Other	once	keep	keep	0	B	-1	3
@@ -1374,13 +1374,13 @@ id	name	group	play	left	right	graphic	tier	restart	last
 1700	Dodge (5)	Other	hold	empty	empty	0	B	1	30
 1701	Dodge (6)	Other	hold	empty	empty	0	B	1	44
 8194	Dragon knife	Other	once	keep	22804	0	B	-1	4
-8195	Dragon knife p	Other	once	keep	22806	0	B	-1	4
+8195	Dragon knife (poisoned)	Other	once	keep	22806	0	B	-1	4
 14478	Drop one floor	Other	once	keep	keep	0	B	-1	5
 765	Drown	Other	once	empty	empty	0	B	-1	5
-3071	Dwarf recieve	Other	once	empty	empty	0	B	-1	6
-4905	Elem 2 corkscrew	Other	once	keep	keep	0	B	-1	5
-4911	Elem 2 lever 3 way left	Other	once	keep	keep	0	B	-1	5
-4909	Elem 2 lever 3 way right	Other	once	keep	keep	0	B	-1	5
+3071	Dwarf receive	Other	once	empty	empty	0	B	-1	6
+4905	Elemental Workshop II corkscrew	Other	once	keep	keep	0	B	-1	5
+4911	Elemental Workshop II three-way lever left	Other	once	keep	keep	0	B	-1	5
+4909	Elemental Workshop II three-way lever right	Other	once	keep	keep	0	B	-1	5
 365	Exploding vial	Other	once	empty	796	0	B	-1	4
 12397	Eye of ayak normal	Other	once	keep	keep	0	B	-1	4
 12216	Fade in	Other	once	keep	keep	0	B	-1	5
@@ -1399,14 +1399,14 @@ id	name	group	play	left	right	graphic	tier	restart	last
 5762	Fris talk	Other	once	keep	10840	0	B	-1	5
 3335	Fungicide pick zygomite	Other	once	keep	empty	0	B	-1	4
 528	Get caught in a whirlpool	Other	once	empty	empty	0	B	-1	5
-3690	Get over combat ring bluegloves	Other	once	empty	7673	0	B	-1	2
-3688	Get over combat ring nogloves	Other	once	empty	empty	0	B	-1	3
-3689	Get over combat ring redgloves	Other	once	empty	7671	0	B	-1	2
+3690	Get over the combat ring (blue gloves)	Other	once	empty	7673	0	B	-1	2
+3688	Get over the combat ring (no gloves)	Other	once	empty	empty	0	B	-1	3
+3689	Get over the combat ring (red gloves)	Other	once	empty	7671	0	B	-1	2
 534	Get up	Other	once	keep	keep	0	B	-1	4
 8328	Get up (10)	Other	once	keep	keep	0	B	-1	4
 11286	Get up (from slip)	Other	hold	keep	keep	0	B	1	4
 7122	Get up (max)	Other	once	empty	empty	0	B	-1	5
-2760	Get up (situps)	Other	once	empty	empty	0	B	-1	5
+2760	Get up (sit-ups)	Other	once	empty	empty	0	B	-1	5
 778	Gnome ball tackle	Other	once	empty	empty	0	B	-1	4
 780	Gnome ball tackle fail	Other	once	keep	keep	0	B	-1	4
 549	Go through a desert door	Other	once	keep	empty	0	B	-1	4
@@ -1416,7 +1416,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 14459	Golem chisel end	Other	once	34047	empty	0	B	-1	20
 14455	Golem despawn	Other	hold	keep	keep	0	B	1	5
 10097	Grind	Other	once	empty	empty	0	B	-1	7
-9159	Guardian dmm	Other	once	empty	empty	0	B	-1	5
+9159	Guardian (Deadman)	Other	once	empty	empty	0	B	-1	5
 11513	Halberd virulence	Other	once	keep	keep	0	B	-1	4
 11514	Halberd virulence (2)	Other	once	empty	keep	0	B	-1	5
 11515	Halberd virulence (3)	Other	once	keep	keep	0	B	-1	4
@@ -1450,11 +1450,11 @@ id	name	group	play	left	right	graphic	tier	restart	last
 1106	Low wall fail	Other	once	keep	keep	0	B	-1	4
 805	Mind trick	Other	once	keep	empty	0	B	-1	10
 2148	Minecart	Other	once	empty	empty	0	B	-1	5
-4348	Mixing dyes	Other	once	9060	9062	0	B	-1	5
+4348	Mix dyes	Other	once	9060	9062	0	B	-1	5
 841	Moving walk forward	Other	once	keep	keep	0	B	-1	6
 8583	Nightmare wake	Other	once	keep	keep	0	B	-1	3
 1193	Octopus pot	Other	hold	empty	3157	0	B	44	4
-10044	Onfloor	Other	hold	keep	keep	0	B	1	4
+10044	On the floor	Other	hold	keep	keep	0	B	1	4
 545	Open a big cupboard	Other	once	empty	empty	0	B	-1	4
 536	Open a chest	Other	once	empty	empty	0	B	-1	4
 2095	Open a chest (end)	Other	once	empty	empty	0	B	-1	4
@@ -1486,13 +1486,13 @@ id	name	group	play	left	right	graphic	tier	restart	last
 798	Pull a box lever	Other	once	keep	empty	0	B	-1	10
 3611	Pull a lever	Other	once	keep	keep	0	B	-1	4
 834	Pull a lever down	Other	once	empty	keep	0	B	-1	4
-2710	Pull magearena lever	Other	once	empty	empty	0	B	-1	4
+2710	Pull a Mage Arena lever	Other	once	empty	empty	0	B	-1	4
 3624	Pump sink	Other	hold	empty	empty	0	B	1	5
 3625	Pump sink kettle	Other	hold	empty	7688	0	B	1	5
 810	Push	Other	once	keep	keep	0	B	-1	4
 835	Push a lever up	Other	once	empty	keep	0	B	-1	4
-11103	Pushup	Other	once	empty	empty	0	B	-1	4
-7189	Pushup short	Other	once	empty	empty	0	B	-1	7
+11103	Push-up	Other	once	empty	empty	0	B	-1	4
+7189	Push-up (short)	Other	once	empty	empty	0	B	-1	7
 828	Reach for a ladder	Other	once	empty	empty	0	B	-1	4
 833	Reach for the top of a ladder	Other	once	empty	empty	0	B	-1	4
 1774	Roll an egg	Other	once	keep	keep	0	B	-1	5
@@ -1503,13 +1503,13 @@ id	name	group	play	left	right	graphic	tier	restart	last
 2333	Secret ghost moving walk forward	Other	once	keep	keep	0	B	-1	6
 533	Set off a spring trap	Other	once	empty	empty	0	B	-1	20
 2442	Shovel coke (down)	Other	hold	empty	6448	0	B	1	16
-2443	Shovel coke (fin)	Other	hold	empty	952	0	B	1	4
+2443	Shovel coke (finish)	Other	hold	empty	952	0	B	1	4
 2441	Shovel coke (up)	Other	hold	empty	952	0	B	1	10
 3041	Shrink	Other	once	empty	empty	0	B	-1	20000
 3622	Sink activate	Other	hold	empty	empty	0	B	1	30
-3623	Sink stepback	Other	once	empty	empty	0	B	-1	5
-7190	Situp short	Other	once	empty	empty	0	B	-1	5
-2758	Situps getdown	Other	once	empty	empty	0	B	-1	6
+3623	Sink step back	Other	once	empty	empty	0	B	-1	5
+7190	Sit-up (short)	Other	once	empty	empty	0	B	-1	5
+2758	Sit-ups (get down)	Other	once	empty	empty	0	B	-1	6
 532	Spear trap	Other	once	empty	empty	0	B	-1	20
 9406	Squat by a crate	Other	once	keep	keep	0	B	-1	30
 806	Stake	Other	once	keep	empty	0	B	-1	4
@@ -1542,10 +1542,10 @@ id	name	group	play	left	right	graphic	tier	restart	last
 3656	Use (banner stand)	Other	once	empty	7756	0	B	-1	5
 3675	Use (chapel organ)	Other	once	keep	keep	0	B	-1	4
 3660	Use (house barrel 1)	Other	once	empty	7742	0	B	-1	35
-3662	Use (house barrel 2 asgarnian ale)	Other	once	empty	7744	0	B	-1	5
+3662	Use (house barrel 2 Asgarnian ale)	Other	once	empty	7744	0	B	-1	5
 3666	Use (house barrel 2 cider)	Other	once	empty	7752	0	B	-1	5
 3664	Use (house barrel 2 dragon bitter)	Other	once	empty	7748	0	B	-1	5
-3663	Use (house barrel 2 greenmans ale)	Other	once	empty	7746	0	B	-1	5
+3663	Use (house barrel 2 Greenman's ale)	Other	once	empty	7746	0	B	-1	5
 3665	Use (house barrel 2 moonlight mead)	Other	once	empty	7750	0	B	-1	5
 3667	Use (house bell crude)	Other	once	keep	keep	0	B	-1	5
 3668	Use (house bell fancy)	Other	once	keep	keep	0	B	-1	5
@@ -1555,10 +1555,10 @@ id	name	group	play	left	right	graphic	tier	restart	last
 13252	Use a repair kit	Other	once	empty	empty	0	B	-1	8
 2394	Use insect repellent	Other	once	keep	empty	0	B	-1	4
 13948	Venator screech impact	Other	hold	empty	empty	0	B	2	4
-6842	Wakes up goblin	Other	once	keep	keep	0	B	-1	4
+6842	Wake up a goblin	Other	once	keep	keep	0	B	-1	4
 3945	Wilderness portal	Other	once	empty	empty	0	B	-1	2000
-12195	Wipe your brow (1)	Other	once	30874	keep	0	B	-1	6
-1196	Wretch	Other	once	keep	keep	0	B	-1	4
+12195	Wipe your brow	Other	once	30874	keep	0	B	-1	6
+1196	Retch	Other	once	keep	keep	0	B	-1	4
 14238	Wyrd roll (Myreque)	Other	once	empty	empty	0	B	-1	1
 7541	Bday 17 balloon attack	Emotes	once	keep	keep	0	C	-1	4
 7538	Bday 17 balloon idle	Emotes	hold	keep	keep	0	C	-1	5
@@ -1595,7 +1595,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 10167	Book chuck (2)	Reading and writing	once	keep	keep	0	C	-1	4
 6299	Dream spellbook swap	Reading and writing	once	empty	empty	0	C	-1	4
 4616	Ds reading crystal ball	Reading and writing	hold	keep	keep	0	C	6	10
-11114	Easter 24 preach seq	Reading and writing	once	29433	empty	0	C	-1	50
+11114	Easter 24 preach	Reading and writing	once	29433	empty	0	C	-1	50
 4551	Exploding dossier	Reading and writing	once	empty	empty	0	C	-1	8
 1670	Favour preach	Reading and writing	once	keep	keep	0	C	-1	6
 1671	Favour preach 2	Reading and writing	once	keep	keep	0	C	-1	10
@@ -1622,7 +1622,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 9812	Speedrun scroll read	Reading and writing	once	empty	27416	0	C	-1	8
 6866	Town crier show book	Reading and writing	once	keep	keep	0	C	-1	5
 7551	Watchtower stop reading scroll	Reading and writing	once	empty	10485	0	C	-1	8
-1769	Absail lean (Mountain Daughter)	Sitting and resting	once	empty	empty	0	C	-1	8
+1769	Abseil lean (Mountain Daughter)	Sitting and resting	once	empty	empty	0	C	-1	8
 1656	Ahoy lean centre	Sitting and resting	once	keep	keep	0	C	-1	4
 1655	Ahoy lean left	Sitting and resting	once	keep	keep	0	C	-1	40
 1654	Ahoy lean right	Sitting and resting	once	keep	keep	0	C	-1	40
@@ -1663,8 +1663,8 @@ id	name	group	play	left	right	graphic	tier	restart	last
 7093	Eat at a table (throne 6)	Sitting and resting	hold	empty	8824	0	C	9	8
 7094	Eat at a table (throne 7)	Sitting and resting	hold	empty	8825	0	C	9	8
 13904	Eat at a table (throne 8)	Sitting and resting	hold	empty	33436	0	C	9	8
-4885	Elem 2 extractor chair electrocution	Sitting and resting	once	empty	empty	0	C	-1	5
-4884	Elem 2 extractor chair whole	Sitting and resting	once	empty	empty	0	C	-1	5
+4885	Elemental Workshop II extractor chair electrocution	Sitting and resting	once	empty	empty	0	C	-1	5
+4884	Elemental Workshop II extractor chair whole	Sitting and resting	once	empty	empty	0	C	-1	5
 2044	Lean back bowl (Tears of Guthix)	Sitting and resting	once	keep	keep	0	C	-1	10
 2043	Lean forward bowl (Tears of Guthix)	Sitting and resting	hold	keep	keep	0	C	5	10
 12250	Metzli kneel down (Varlamore)	Sitting and resting	hold	keep	keep	0	C	1	10
@@ -1697,7 +1697,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 4097	Sit (dining chair 5)	Sitting and resting	hold	empty	8816	0	C	9	8
 4099	Sit (dining chair 6)	Sitting and resting	hold	empty	8817	0	C	9	8
 4101	Sit (dining chair 7)	Sitting and resting	hold	empty	8818	0	C	9	8
-6288	Sit (dream cyrisus recieve food)	Sitting and resting	once	keep	keep	0	C	-1	5
+6288	Sit (dream cyrisus receive food)	Sitting and resting	once	keep	keep	0	C	-1	5
 7187	Sit (dream cyrisus up transition reverse)	Sitting and resting	once	keep	keep	0	C	-1	5
 6283	Sit (dream cyrisus up transition)	Sitting and resting	once	keep	keep	0	C	-1	5
 6284	Sit (dream cyrisus up)	Sitting and resting	hold	keep	keep	0	C	66	5
@@ -2289,7 +2289,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 3547	Cast a spell (burgh holding)	Magic and prayer	once	keep	keep	0	C	-1	9
 12261	Cast a spell (cultist magic water) (Varlamore)	Magic and prayer	once	keep	keep	0	C	-1	4
 12265	Cast a spell (cultist magic water) (Varlamore) (2)	Magic and prayer	once	keep	keep	0	C	-1	2
-10655	Cast a spell (dmm) (2)	Magic and prayer	once	empty	empty	0	C	-1	3
+10655	Cast a spell (Deadman) (2)	Magic and prayer	once	empty	empty	0	C	-1	3
 12277	Cast a spell (ennius) (Varlamore)	Magic and prayer	once	keep	keep	0	C	-1	3
 13727	Cast a spell (evil eye)	Magic and prayer	once	empty	empty	0	C	-1	30
 2575	Cast a spell (garden well)	Magic and prayer	hold	307	307	0	C	2	15
@@ -2318,8 +2318,8 @@ id	name	group	play	left	right	graphic	tier	restart	last
 10413	Cast Curse (staff) (2)	Magic and prayer	once	empty	keep	0	C	-1	15
 11426	Cast Weaken (2)	Magic and prayer	once	empty	empty	0	C	-1	6
 11427	Cast Weaken (staff) (2)	Magic and prayer	once	empty	keep	0	C	-1	6
-7754	Casting Tele Block staff (2)	Magic and prayer	once	empty	keep	0	C	-1	20
-10093	Casting Tele Block staff (3)	Magic and prayer	once	empty	keep	0	C	-1	20
+7754	Cast Tele Block (staff) (2)	Magic and prayer	once	empty	keep	0	C	-1	20
+10093	Cast Tele Block (staff) (3)	Magic and prayer	once	empty	keep	0	C	-1	20
 9117	Combat achievements teleport female tier 1	Magic and prayer	hold	25926	25938	0	C	1	28
 9120	Combat achievements teleport female tier 2	Magic and prayer	hold	25928	25941	0	C	1	28
 9123	Combat achievements teleport female tier 3	Magic and prayer	hold	25930	25944	0	C	1	28
@@ -2443,7 +2443,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 6601	Teleport (Impetuous Impulses)	Magic and prayer	hold	keep	keep	0	C	1	6
 3869	Teleport cabbage	Magic and prayer	hold	keep	keep	0	C	1	42
 3872	Teleport nardah	Magic and prayer	hold	keep	keep	0	C	1	5
-14426	Teleport other casting (2)	Magic and prayer	once	empty	empty	0	C	-1	4
+14426	Cast Teleport Other (2)	Magic and prayer	once	empty	empty	0	C	-1	4
 14425	Teleport other impact (2)	Magic and prayer	once	empty	empty	0	C	-1	2000
 3867	Teleport rune	Magic and prayer	hold	keep	keep	0	C	1	5
 3874	Teleport slime	Magic and prayer	hold	keep	keep	0	C	1	10
@@ -2599,7 +2599,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 2580	Garden slap hit	Combat	once	keep	keep	0	C	-1	4
 8145	Ghrazi rapier attack	Combat	once	keep	keep	0	C	-1	5
 8209	Golden tench attack	Combat	once	keep	keep	0	C	-1	2
-6528	Grim kicking gramaphone	Combat	once	keep	keep	0	C	-1	7
+6528	Grim kicking gramophone	Combat	once	keep	keep	0	C	-1	7
 10394	Hit (Song of the Elves)	Combat	once	keep	keep	0	C	-1	20
 11276	Hit by darts (While Guthix Sleeps)	Combat	once	keep	keep	0	C	-1	3
 11759	Hw 24 marika throw	Combat	once	keep	keep	0	C	-1	12
@@ -2820,8 +2820,8 @@ id	name	group	play	left	right	graphic	tier	restart	last
 3996	Elemental equip left idle	Standing and walking	hold	empty	keep	0	C	-1	21
 2911	Elid choc ice seller idle	Standing and walking	hold	keep	keep	0	C	-1	21
 2912	Elid choc ice walk	Standing and walking	once	keep	keep	0	C	-1	6
-12260	Fadein (Varlamore)	Standing and walking	once	keep	keep	0	C	-1	3
-12259	Fadeout (Varlamore)	Standing and walking	hold	keep	keep	0	C	1	3
+12260	Fade in (Varlamore)	Standing and walking	once	keep	keep	0	C	-1	3
+12259	Fade out (Varlamore)	Standing and walking	hold	keep	keep	0	C	1	3
 5800	Fai varrock broom idle	Standing and walking	hold	keep	keep	0	C	2	25
 6379	Fai varrock drunk idle	Standing and walking	hold	keep	keep	0	C	-1	5
 6378	Fai varrock drunk walk	Standing and walking	once	keep	keep	0	C	-1	2
@@ -3024,11 +3024,11 @@ id	name	group	play	left	right	graphic	tier	restart	last
 2818	Zombie head walk	Standing and walking	once	keep	keep	0	C	-1	6
 2816	Zombie torso idle	Standing and walking	hold	keep	keep	0	C	-1	6
 2815	Zombie torso walk	Standing and walking	once	keep	keep	0	C	-1	6
-1770	Absail jump (Mountain Daughter)	Climbing and agility	once	empty	empty	0	C	-1	4
+1770	Abseil jump (Mountain Daughter)	Climbing and agility	once	empty	empty	0	C	-1	4
 7133	Agility shortcut wall jump down (2)	Climbing and agility	once	keep	keep	0	C	-1	3
-2589	Agilty shortcut enter hole	Climbing and agility	once	keep	keep	0	C	-1	2000
-2591	Agilty shortcut exit hole	Climbing and agility	once	keep	keep	0	C	-1	4
-2590	Agilty shortcut tunnel walk	Climbing and agility	hold	keep	keep	0	C	1	4
+2589	Agility shortcut enter hole	Climbing and agility	once	keep	keep	0	C	-1	2000
+2591	Agility shortcut exit hole	Climbing and agility	once	keep	keep	0	C	-1	4
+2590	Agility shortcut tunnel walk	Climbing and agility	hold	keep	keep	0	C	1	4
 4720	Area sanguine outer wall climb (Myreque)	Climbing and agility	once	keep	keep	0	C	-1	3
 3595	Balance beam bash	Climbing and agility	once	keep	keep	0	C	-1	1
 3596	Balance beam block	Climbing and agility	once	keep	keep	0	C	-1	5
@@ -3101,7 +3101,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 3195	Plaguecity squeeze through a double pipe	Climbing and agility	once	empty	empty	0	C	-1	4
 10430	Pog grapple swing	Climbing and agility	once	keep	keep	0	C	-1	3
 1766	Pole vault (Mountain Daughter)	Climbing and agility	once	empty	4500	0	C	-1	4
-4382	Quest lunar dreamland hurdle shock spotanimation	Climbing and agility	once	keep	keep	0	C	-1	8
+4382	Quest lunar dreamland hurdle shock	Climbing and agility	once	keep	keep	0	C	-1	8
 3191	Rope tie	Climbing and agility	once	keep	keep	0	C	-1	4
 4722	Shelf climb (Myreque)	Climbing and agility	hold	keep	keep	0	C	1	9
 3844	Squeeze through (railing)	Climbing and agility	once	empty	empty	0	C	-1	5
@@ -3284,8 +3284,8 @@ id	name	group	play	left	right	graphic	tier	restart	last
 3370	100 sir freeze	Other	once	keep	keep	0	C	-1	10000
 3371	100 sir froze	Other	hold	keep	keep	0	C	1	9
 3372	100 sir unfreeze	Other	once	keep	keep	0	C	-1	2000
-1772	Absail combi (Mountain Daughter)	Other	once	empty	empty	0	C	-1	6
-1771	Absail combi old (Mountain Daughter)	Other	once	empty	empty	0	C	-1	8
+1772	Abseil combi (Mountain Daughter)	Other	once	empty	empty	0	C	-1	6
+1771	Abseil combi old (Mountain Daughter)	Other	once	empty	empty	0	C	-1	8
 10955	Afl hunter lying down	Other	once	keep	keep	0	C	-1	5
 4352	Aggie dye making	Other	once	keep	keep	0	C	-1	4
 1649	Ahoy bone dump	Other	once	empty	keep	0	C	-1	5
@@ -3392,14 +3392,14 @@ id	name	group	play	left	right	graphic	tier	restart	last
 11334	Dark squall shapeshift part (While Guthix Sleeps)	Other	hold	keep	keep	0	C	1	35
 11335	Dark squall shapeshift part (While Guthix Sleeps)	Other	once	keep	keep	0	C	-1	5
 8699	Darkm prisoner caged	Other	hold	keep	keep	0	C	14	15
-2812	Deal fillbucket stagnent	Other	once	empty	1925	0	C	-1	4
+2812	Deal fill bucket stagnant	Other	once	empty	1925	0	C	-1	4
 2810	Deal smite control	Other	once	keep	6714	0	C	-1	4
 2811	Deal wrench flourish	Other	once	keep	6714	0	C	-1	4
 4597	Demon silverlight open	Other	hold	keep	keep	0	C	1	21
 4598	Demon silverlight take	Other	once	keep	keep	0	C	-1	4
 1539	Demon spawn fly	Other	once	keep	keep	0	C	-1	3
 2888	Denath leave	Other	once	keep	keep	0	C	-1	20000
-2092	Desease rough	Other	once	keep	keep	0	C	-1	8
+2092	Disease rough	Other	once	keep	keep	0	C	-1	8
 2999	Devious whetstone	Other	once	empty	1315	0	C	-1	5
 4592	Digisite rockpick	Other	once	empty	675	0	C	-1	4
 4593	Digsite panning	Other	once	empty	677	0	C	-1	5
@@ -3422,7 +3422,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 6287	Dream cyrisus admire himself	Other	once	keep	keep	0	C	-1	5
 6282	Dream cyrisus barely conscious	Other	hold	keep	keep	0	C	24	5
 6281	Dream cyrisus barely conscious transition	Other	once	keep	keep	0	C	-1	6
-6292	Dream cyrisus recieve food standing	Other	once	empty	keep	0	C	-1	4
+6292	Dream cyrisus receive food standing	Other	once	empty	keep	0	C	-1	4
 6286	Dream cyrisus stand up transition	Other	once	keep	keep	0	C	-1	5
 6301	Dream cyrisus stomp	Other	once	keep	keep	0	C	-1	6
 6290	Dream feed cyrisus lying	Other	once	empty	empty	0	C	-1	5
@@ -3444,7 +3444,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 4606	Ds presenting silverlight start	Other	once	keep	keep	0	C	-1	10
 4608	Ds presenting sword end	Other	once	keep	keep	0	C	-1	5
 4607	Ds presenting sword middle	Other	once	keep	keep	0	C	-1	5
-4604	Ds recieving silverlight	Other	once	keep	2402	0	C	-1	5
+4604	Ds receiving silverlight	Other	once	keep	2402	0	C	-1	5
 4603	Ds wally	Other	once	keep	keep	0	C	-1	5
 11698	Dwarf summon orb	Other	hold	keep	keep	0	C	15	5
 11699	Dwarf summon orb end	Other	once	keep	keep	0	C	-1	5
@@ -3478,7 +3478,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 1634	Fenk poke short	Other	once	empty	empty	0	C	-1	4
 1895	Feud hot sauce poisoning	Other	once	empty	keep	0	C	-1	4
 3134	Fever load cannon 1	Other	once	7119	empty	0	C	-1	4
-3133	Fever load cannon 1 cannister	Other	once	7118	empty	0	C	-1	4
+3133	Fever load cannon 1 canister	Other	once	7118	empty	0	C	-1	4
 3135	Fever load cannon 2	Other	once	empty	empty	0	C	-1	4
 3137	Fever nail plank	Other	once	7121	2347	0	C	-1	4
 8927	Fever nail plank Imcando hammer	Other	once	7121	25644	0	C	-1	4
@@ -3517,7 +3517,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 9364	Gotr light lantern	Other	once	empty	590	0	C	-1	4
 4001	Grab evil twin getting grab	Other	once	keep	keep	0	C	-1	5
 4004	Grab evil twin reaching control	Other	once	empty	empty	0	C	-1	5
-6527	Grim gramaphone windup	Other	once	keep	keep	0	C	-1	5
+6527	Grim gramophone wind-up	Other	once	keep	keep	0	C	-1	5
 6530	Grim growing	Other	once	empty	empty	0	C	-1	5
 6529	Grim shrinking	Other	once	keep	11204	0	C	-1	5
 6525	Grim spitting	Other	once	keep	keep	0	C	-1	5
@@ -3534,7 +3534,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 7622	Hammer gong blackwarhammer (God Wars)	Other	once	empty	1341	0	C	-1	3
 7619	Hammer gong bronzewarhammer (God Wars)	Other	once	empty	1337	0	C	-1	3
 7215	Hammer gong dragon warhammer (God Wars)	Other	once	empty	13576	0	C	-1	3
-10047	Hammer gong dragon warhammer bh corrupted (God Wars)	Other	once	empty	28035	0	C	-1	3
+10047	Hammer gong corrupted dragon warhammer (God Wars)	Other	once	empty	28035	0	C	-1	3
 9352	Hammer gong dragon warhammer ornament (God Wars)	Other	once	empty	26710	0	C	-1	3
 11129	Hammer gong elder maul (God Wars)	Other	once	empty	21003	0	C	-1	3
 11130	Hammer gong elder maul ornament (God Wars)	Other	once	empty	27100	0	C	-1	3
@@ -3620,8 +3620,8 @@ id	name	group	play	left	right	graphic	tier	restart	last
 4190	Mcannon hammer	Other	once	empty	2347	0	C	-1	5
 8922	Mcannon hammer Imcando hammer	Other	once	empty	25644	0	C	-1	5
 12253	Metzli standup (Varlamore)	Other	once	keep	keep	0	C	-1	5
-4350	Mixing dyes blue yellow	Other	once	9061	9063	0	C	-1	5
-4349	Mixing dyes red yellow	Other	once	9060	9063	0	C	-1	5
+4350	Mix dyes blue yellow	Other	once	9061	9063	0	C	-1	5
+4349	Mix dyes red yellow	Other	once	9060	9063	0	C	-1	5
 6083	Molanisk ring bell	Other	once	keep	10952	0	C	-1	3
 2332	Mourning tickle	Other	once	empty	314	0	C	-1	4
 6391	Museum guard gate (Varlamore)	Other	once	keep	keep	0	C	-1	5
@@ -3646,7 +3646,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 4771	Neck bitten (Myreque)	Other	once	keep	keep	0	C	-1	4
 8557	Nightmare parasite vomit	Other	once	keep	keep	0	C	-1	3
 4345	Ntk tomb open	Other	once	empty	empty	0	C	-1	7
-6839	Observatory wakes up goblin	Other	hold	keep	keep	0	C	1	4
+6839	Observatory wake up a goblin	Other	hold	keep	keep	0	C	1	4
 11279	Old druid drop (While Guthix Sleeps)	Other	once	keep	keep	0	C	-1	3
 14106	On knees (Myreque)	Other	once	empty	empty	0	C	-1	21
 9959	Open a door (2)	Other	once	keep	keep	0	C	-1	4
@@ -3702,7 +3702,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 4471	Quest ahoy filling bucket	Other	once	keep	1925	0	C	-1	4
 4432	Quest lunar cure plant	Other	once	keep	keep	0	C	-1	8
 4367	Quest lunar landing on face	Other	once	empty	empty	0	C	-1	7
-4411	Quest lunar pushing magic animation	Other	once	keep	keep	0	C	-1	5
+4411	Quest lunar pushing magic	Other	once	keep	keep	0	C	-1	5
 4406	Quest lunar staff ruins	Other	once	empty	772	0	C	-1	4
 4191	Quest lunar stand from face down	Other	once	empty	empty	0	C	-1	7
 6382	Quiz celebration (Varlamore)	Other	once	empty	empty	0	C	-1	5
@@ -3718,7 +3718,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 3621	Reach forward high	Other	once	keep	keep	0	C	-1	5
 4184	Ref duck	Other	once	keep	keep	0	C	-1	5
 11274	Regaining consciousness (While Guthix Sleeps)	Other	once	empty	empty	0	C	-1	8
-1240	Regicide catapault trigger	Other	once	empty	empty	0	C	-1	3
+1240	Regicide catapult trigger	Other	once	empty	empty	0	C	-1	3
 1239	Regicide catapultwind	Other	once	empty	empty	0	C	-1	5
 1236	Regicide stepover	Other	once	keep	keep	0	C	-1	1
 1237	Regicide tightfit	Other	once	keep	keep	0	C	-1	5
@@ -3792,8 +3792,8 @@ id	name	group	play	left	right	graphic	tier	restart	last
 2592	Side hurt	Other	hold	empty	empty	0	C	4	4
 2593	Side hurtl	Other	hold	empty	empty	0	C	4	4
 11307	Silif prison injured (While Guthix Sleeps)	Other	once	keep	keep	0	C	-1	5
-6919	Sincalir family pacing (Kourend)	Other	once	keep	keep	0	C	-1	1
-6926	Sinclair family pacing male tweaked (Kourend)	Other	once	keep	keep	0	C	-1	1
+6919	Sinclair family pacing (Kourend)	Other	once	keep	keep	0	C	-1	1
+6926	Sinclair family pacing male (Kourend)	Other	once	keep	keep	0	C	-1	1
 2759	Situps	Other	hold	empty	empty	0	C	5	6
 2763	Situps 5	Other	once	empty	empty	0	C	-1	5
 5524	Skeleton become skeleton	Other	once	keep	keep	0	C	-1	100
@@ -3927,7 +3927,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 1914	Vampire summonbats	Other	once	keep	keep	0	C	-1	2
 3114	Vampireslayer arise	Other	once	keep	keep	0	C	-1	2001
 3115	Vampireslayer travel	Other	once	keep	keep	0	C	-1	4
-4719	Vanstrom klause regaining conciousness (Myreque)	Other	once	empty	empty	0	C	-1	8
+4719	Vanstrom klause regaining consciousness (Myreque)	Other	once	empty	empty	0	C	-1	8
 6478	Varrock granny rocking	Other	once	keep	keep	0	C	-1	6
 5419	Vending arm pull (Barbarian Assault)	Other	once	keep	keep	0	C	-1	4
 5400	Vial scoop (Barbarian Assault)	Other	once	empty	10544	0	C	-1	4

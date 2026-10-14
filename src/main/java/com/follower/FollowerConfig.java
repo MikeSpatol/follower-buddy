@@ -44,7 +44,7 @@ public interface FollowerConfig extends Config
 	String soundsSection = "sounds";
 
 	@ConfigSection(
-		name = "Phrases",
+		name = "Messages",
 		description = "Turn whole subjects on or off. To read or edit the lines"
 			+ " themselves, open Messages in the Follower Buddy side panel.",
 		position = 4
@@ -150,7 +150,7 @@ public interface FollowerConfig extends Config
 	@Range(min = 0)
 	@ConfigItem(
 		keyName = "spectateShieldAnimation",
-		name = "Summon animation",
+		name = "Shield summon animation",
 		description = "Animation as the shield goes up. 0 for none."
 			+ " Preview any id with ::follower anim <id>.",
 		section = shieldSection,
@@ -164,7 +164,7 @@ public interface FollowerConfig extends Config
 	@Range(min = 0)
 	@ConfigItem(
 		keyName = "spectateShieldGraphic",
-		name = "Summon graphic",
+		name = "Shield summon graphic",
 		description = "Graphic laid over the summon. 0 for none."
 			+ " Audition ids with ::follower gfx <id>.",
 		section = shieldSection,
@@ -179,7 +179,7 @@ public interface FollowerConfig extends Config
 	@Range(min = 0)
 	@ConfigItem(
 		keyName = "spectateShieldChannelStart",
-		name = "Sit down animation",
+		name = "Shield channel start animation",
 		description = "Played once as the follower settles into the channel, before the"
 			+ " looping pose takes over. 0 for none.",
 		section = shieldSection,
@@ -200,7 +200,7 @@ public interface FollowerConfig extends Config
 	@Range(min = 0)
 	@ConfigItem(
 		keyName = "spectateShieldChannelEnd",
-		name = "Stand up animation",
+		name = "Shield channel end animation",
 		description = "Played as the channel ends, before the finishing cast. 0 for none.",
 		section = shieldSection,
 		position = 10
@@ -214,7 +214,7 @@ public interface FollowerConfig extends Config
 	@Range(min = 0)
 	@ConfigItem(
 		keyName = "spectateShieldChannelAnimation",
-		name = "Channel animation",
+		name = "Shield channel animation",
 		description = "Looping pose held after the summon, for as long as the follower stands"
 			+ " and the fight lasts. Unlike the others this one repeats, so pick something"
 			+ " that reads as sustained effort. 0 for none.",
@@ -234,7 +234,7 @@ public interface FollowerConfig extends Config
 	@Range(min = 0)
 	@ConfigItem(
 		keyName = "spectateShieldChannelGraphic",
-		name = "Channel graphic",
+		name = "Shield channel graphic",
 		description = "Renewed every ~30s while channelling, since a looping pose shows no"
 			+ " particles of its own. 0 for none.",
 		section = shieldSection,
@@ -248,7 +248,7 @@ public interface FollowerConfig extends Config
 	@Range(min = 0)
 	@ConfigItem(
 		keyName = "spectateShieldEndAnimation",
-		name = "Finish animation",
+		name = "Shield finish animation",
 		description = "Played as the fight ends and the spell is completed. The follower"
 			+ " waits for it to finish before walking back. 0 for none.",
 		section = shieldSection,
@@ -264,7 +264,7 @@ public interface FollowerConfig extends Config
 	@Range(min = 0)
 	@ConfigItem(
 		keyName = "spectateShieldEndGraphic",
-		name = "Finish graphic",
+		name = "Shield finish graphic",
 		description = "Graphic as the spell is completed. 0 for none.",
 		section = shieldSection,
 		position = 12
@@ -397,7 +397,7 @@ public interface FollowerConfig extends Config
 
 	@ConfigItem(
 		keyName = "spawnAnimation",
-		name = "Spawn animation",
+		name = "Arrival animation",
 		description = "Animation played as the follower arrives. Default 715 is the"
 			+ " teleport arrival. Comma-separate to chain clips, e.g. \"6723,4191\""
 			+ " for a landing followed by a get-up; preview with"
@@ -731,7 +731,7 @@ public interface FollowerConfig extends Config
 
 	@ConfigItem(
 		keyName = "errandAltar",
-		name = "Quick prayers",
+		name = "Altar visits",
 		description = "A moment at a nearby altar (::follower errand altar)",
 		section = errandSection,
 		position = 3
@@ -1354,10 +1354,10 @@ public interface FollowerConfig extends Config
 
 	@ConfigItem(
 		keyName = "disabledGroups",
-		name = "Silence groups or phrase ids by name",
-		description = "Comma-separated group names or single phrase ids to silence,"
-			+ " beyond the toggles in the Phrases section. Each Phrases toggle"
-			+ " shows its group name in brackets; phrase ids are shown in the"
+		name = "Silence groups or rule ids by name",
+		description = "Comma-separated group names or single rule ids to silence,"
+			+ " beyond the toggles in the Messages section. Each of those toggles"
+			+ " shows its group name in brackets; rule ids are shown in the"
 			+ " Messages window.",
 		section = shieldSection,
 		position = 14

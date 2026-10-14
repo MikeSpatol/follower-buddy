@@ -37,7 +37,7 @@ public class ErrandController
 	private enum Errand
 	{
 		BANK("bank", "Bank visit"),
-		ALTAR("altar", "Quick prayer"),
+		ALTAR("altar", "Altar visit"),
 		FIRE("fire", "Warming up"),
 		/** The 10% fire variant: walks INTO it. Announces itself as FIRE. */
 		FIREDEATH("firedeath", "Warming up, too close"),

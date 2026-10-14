@@ -11,11 +11,12 @@ it, it sends nothing to the game, and it never acts on your behalf.
 **A follower rendered as a player model.** It wears any gear you choose from
 the side panel - full equipment slots, body styles, hair and skin colours -
 and follows using the game's own pet mechanics, so it walks, runs and turns
-the way a real follower does. Right-click it for Talk-to, Stay, Follow,
+the way a real follower does, carrying its weapon the way a player would.
+Right-click it for Talk-to, Stay, Follow,
 Step-in-front and a couple of emotes, or hold Shift and right-click any tile
 to Send it there.
 
-**It talks.** Over 2,300 lines across 508 rules, chosen by what's happening:
+**It talks.** Over 2,300 lines across 517 rules, chosen by what's happening:
 bosses sighted and fought, levels, deaths, drops, low HP and prayer, the
 places you visit, the gear you put on, things you examine, famous quest NPCs
 nearby, and long stretches of nothing at all. Lines appear overhead, in the
@@ -65,9 +66,11 @@ one finished years ago is already written; a creature or a place is written the
 first time the scribe sees it, and stays written. Every page has pictures: the
 creatures and people are drawn from their own models, turning slowly in their
 own idle animation, as an outline in ink until you meet them; the places are
-sketched by the scribe itself, with you in the middle of the drawing: where a
-page has a picture of the place, right-click the follower, pick Sketch and
-strike any emote during its count, or just stand still. Ask again for a
+sketched by the scribe itself, with you in the middle of the drawing. Stand
+somewhere a page wants a drawing of, right-click the follower and pick
+Sketch, then strike any emote while it counts you in, or just stand still.
+Sketch is only on the menu when the follower is settled and its hands are
+free. Ask again for a
 retake; the old drawing is kept. Click any picture to see it larger. It
 starts small: nine quests and a handful of pages around them.
 
@@ -83,6 +86,8 @@ Anywhere else it takes a seat off to one side, keeps a tally on its scroll,
 warms its hands at your fire and sits down for the long haul. It claps a level,
 goes to see the pet,
 and if a stranger turns up to talk to you it stands off and has a good look.
+In a cutscene it stays where it is, keeps quiet and watches with you, and
+anything worth saying waits until the scene is over.
 A good drop gets the scroll out; a great one it walks over to and writes up on
 the spot, then looks up at you and nods. It knows a ninety-two is halfway, a
 first ninety-nine from a third, and how long that level took. It waves when
@@ -102,12 +107,12 @@ behind it follows and how long you stand still before it wanders.
 **Talk-to.** A proper NPC-style dialog box with a chathead. Ask how today went
 and it summarises the session; ask how it's been and it answers by mood; give
 it the thing it asked for. When it has asked you something itself - an outing,
-a guessing game - Talk-to opens that conversation instead.
+a guessing game - Talk-to becomes Answer and opens that conversation.
 
 **Thrall mode.** Summon an Arceuus thrall and the follower takes its place,
 with a per-style outfit, the summoning circle, and the real thrall hidden
-client-side. **Thrall only**, in the same
-settings section, makes that the whole plugin: the follower is absent until
+client-side. **Thrall only**, in the Thrall mode
+settings, makes that the whole plugin: the follower is absent until
 you summon a thrall, takes its place while it lasts, phases out when it goes,
 and says nothing in between. As the thrall it talks whenever the follower
 may; tick **Mute the thrall** and it keeps quiet while it is the thrall.
@@ -156,7 +161,7 @@ follower's hands while it lasts. Lines you type for yourself show over your own
 head on your screen only: nothing is sent, and nobody else sees them. Close
 the window when you are done.
 
-**Commands.** **Bring it here**, **Fix if it vanished** and **Reload phrase
+**Commands.** **Come here**, **Fix if it vanished** and **Reload message
 and sound files**, the list of everyday chat commands, and your current region
 id for writing Locations rules.
 
@@ -164,12 +169,12 @@ The follower's name is not in the panel. It is in the plugin's settings, under
 Follower, with the rest of the settings in these sections: Follower (name,
 Follow me, Mute, Chattiness, Hide in PvP areas), Movement, Speech (the chatbox
 tick, overhead text colour and height, how long a line stays up, reading
-speed), Sounds (play attached sounds, volume), Phrases (a toggle per subject,
-named as in Messages), Thrall mode, Errands (a toggle per errand and a
+speed), Sounds (play attached sounds, volume), Messages (a toggle per subject,
+named as in the Messages window), Thrall mode, Errands (a toggle per errand and a
 frequency), Skilling (keeps you company while you skill, borrows your tools),
 Company (looks where you look, notices things, walks beside you on open
 ground), Combat, Advanced: animations and graphics (closed by default: the
-animation and graphic ids, and a box that silences groups or phrase ids by
+animation and graphic ids, and a box that silences groups or rule ids by
 name) and Developer (closed by default).
 
 Everything it says lives in `.runelite/follower/phrases.json`, hot-reloaded
@@ -191,6 +196,10 @@ commands** in the Developer section, and typing one while it is off says so.
 - What it remembers (tallies, bests, the incident, places, the day it met you)
   is stored in your RuneLite profile config and nowhere else. The Memory
   window shows all of it and erases it in one click.
+- Sketches are only taken when you ask for one. Each is a picture of the
+  game view, saved as a PNG in `.runelite/follower/chronicle-sketches` on
+  your own machine. Forget everything does not delete them; delete that
+  folder if you want them gone.
 - Item, animation and object identities come from the game cache and the
   RuneLite API; no external service is contacted.
 - Sounds are files you put in your own folder. Nothing is bundled and nothing
@@ -209,7 +218,7 @@ commands** in the Developer section, and typing one while it is off says so.
   standard overlay for the dialog box; its right-click options are added on
   `MenuOpened` via `Menu#createMenuEntry`, and Talk-to is also added on
   `ClientTick` while the follower is hovered, so it is the left-click action,
-  as in 1.4.0.
+  unchanged since 1.4.0.
 - Worn-item and body-kit models are composed at runtime from `ItemComposition`
   and kit data via `loadModelData` / `mergeModels`, so any item works and the
   model animates.
@@ -225,7 +234,7 @@ commands** in the Developer section, and typing one while it is off says so.
   incoming text is validated and sanitised before it reaches a rule file, the
   chatbox or a dialog; see `com.follower.share.PackFile` and the two test
   classes that attack it.
-- The test suite (1535 tests) covers the rule engine, the follower's movement
+- The test suite (1681 tests) covers the rule engine, the follower's movement
   and errand refusals, the skilling seat and its moments, the dialog
   structure, hostile share packs, and every bundled rule's integrity; see
   `docs/testing-strategy.md`.

@@ -682,7 +682,7 @@ public class StayHoldsTest
 		h.engine.getContext().noteDamageDealt();
 		for (String what : new String[]{"look", "notice", "shoulder", "wave", "drop", "sketch"})
 		{
-			assertEquals(what, "Not in a fight.", call("forceNow", (Object) new String[]{"force", what}));
+			assertEquals(what, "Not during a fight.", call("forceNow", (Object) new String[]{"force", what}));
 		}
 		assertEquals("No force called 'fly'. Try: look, notice, hesitate, shoulder, cutscene, wave, drop, sketch",
 			call("forceNow", (Object) new String[]{"force", "fly"}));

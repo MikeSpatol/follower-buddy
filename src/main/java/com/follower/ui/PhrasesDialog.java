@@ -410,7 +410,7 @@ public class PhrasesDialog extends JDialog
 
 		hint.setText("<html>" + HOW_TO + "<br>" + category.hint + "</html>");
 		addLocation.setVisible(category.structural);
-		setStatus(count + " message sets loaded", false);
+		setStatus(count + " rules loaded", false);
 		applyFind();
 		list.revalidate();
 		list.repaint();

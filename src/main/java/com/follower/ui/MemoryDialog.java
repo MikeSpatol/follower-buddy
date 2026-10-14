@@ -149,7 +149,7 @@ public class MemoryDialog extends JDialog
 		rows.add(header("THE BASICS"));
 		rows.add(row("First met", c.getMetOnDay() > 0
 			? java.time.LocalDate.ofEpochDay(c.getMetOnDay())
-				+ " (" + c.getDaysKnown() + " days ago)"
+				+ " (" + daysAgo(c.getDaysKnown()) + ")"
 			: "not recorded yet"));
 		rows.add(row("Sessions together", Integer.toString(c.getSessionCount())));
 		rows.add(row("Mood right now", c.getMoodBand()));
@@ -251,10 +251,20 @@ public class MemoryDialog extends JDialog
 		}
 
 		rows.add(header("BOOKKEEPING"));
-		rows.add(row("Firsts already said", Integer.toString(c.getSpokenOnce().size())));
-		rows.add(row("Lines wear-tracked", Integer.toString(c.getLineWear().size())));
+		rows.add(row("One-time lines already said", Integer.toString(c.getSpokenOnce().size())));
+		rows.add(row("Lines counted, to vary them", Integer.toString(c.getLineWear().size())));
 
 		return rows;
+	}
+
+	/** "today", "1 day ago" or "N days ago". */
+	static String daysAgo(int days)
+	{
+		if (days <= 0)
+		{
+			return "today";
+		}
+		return days == 1 ? "1 day ago" : days + " days ago";
 	}
 
 	private static String[] header(String text)

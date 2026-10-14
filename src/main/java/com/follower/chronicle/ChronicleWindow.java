@@ -70,7 +70,7 @@ public class ChronicleWindow extends Overlay
 	public static final String NAME = "Chronicle";
 
 	/** The tabs, in order, and the kinds behind them. */
-	static final String[] TAB_NAMES = {"Quests", "Beasts", "Enemies", "Places", "World"};
+	static final String[] TAB_NAMES = {"Quests", "Bosses", "Enemies", "Places", "World"};
 	static final String[][] TAB_KINDS = {
 		{"quest"}, {"boss"}, {"enemy"}, {"location"}, {"faction", "world"},
 	};
@@ -1209,7 +1209,7 @@ public class ChronicleWindow extends Overlay
 		}
 		if (unlock.npcs != null && !unlock.npcs.isEmpty())
 		{
-			parts.add("boss".equals(entry.kindOrEmpty()) ? "the boss is met" : "one is met");
+			parts.add("boss".equals(entry.kindOrEmpty()) ? "you meet it" : "you meet one");
 		}
 		if (unlock.regions != null && !unlock.regions.isEmpty())
 		{
@@ -1262,7 +1262,7 @@ public class ChronicleWindow extends Overlay
 		}
 		if (byNpc)
 		{
-			parts.add("boss".equals(entry.kindOrEmpty()) ? "this boss has been met" : "one of these has been met");
+			parts.add("boss".equals(entry.kindOrEmpty()) ? "you have met this boss" : "you have met one of these");
 		}
 		if (byRegion)
 		{

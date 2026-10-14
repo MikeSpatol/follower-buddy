@@ -117,11 +117,11 @@ public class DialogsDialog extends JDialog
 		root.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
 		JLabel hint = new JLabel("<html>These are the conversations the follower"
-			+ " <b>starts</b>. While it is waiting for an answer, right-clicking Talk-to"
-			+ " opens the tree it asked through instead of the everyday one.<br>"
-			+ "<b>Says</b> and <b>You</b> are one page per line. <b>Choices</b> are one"
+			+ " <b>starts</b>. While it is waiting for an answer, its Talk-to option becomes"
+			+ " Answer and opens the conversation it asked about instead of the everyday one.<br>"
+			+ "<b>Says</b> is one page per line, spoken by whoever is picked beside the node. <b>Choices</b> are one"
 			+ " per line, written <code>label -&gt; node-id</code>. <b>Answer</b> is what"
-			+ " reaching that node tells the rules.</html>");
+			+ " reaching that node records as your reply.</html>");
 		hint.setFont(FontManager.getRunescapeSmallFont());
 		hint.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
 

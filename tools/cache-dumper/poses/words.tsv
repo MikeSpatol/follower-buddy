@@ -278,7 +278,7 @@ THROWROPE	verb	Throw a rope
 WOBBLEANDFALL	word	wobble and fall
 SWINGINGBOULDERTRAP	word	swinging boulder trap
 FALLL	word	fall left
-COMBATRING	word	combat ring
+COMBATRING	word	the combat ring
 FARMERSFORK	word	farmer's fork
 TKNIVES	word	throwing knives
 TKNIFE	word	throwing knife
@@ -639,3 +639,91 @@ MYQ_6	place	Myreque
 VMQ_3	place	Varlamore
 VMQ_4	place	Varlamore
 HIGHPRIORITY	drop
+FIRSTREVERSE	word	first (reverse)
+LASTREVERSE	word	last (reverse)
+MIDDLEREVERSE	word	middle (reverse)
+MIDDLEFALL	word	middle (fall)
+MIDDLEFALLREVERSE	word	middle (fall, reverse)
+CLIMBUP	word	(climb up)
+STARJUMP_SHORT	word	star jump (short)
+YAMA_SHORTJUMP	word	Yama short jump
+PORTALFALL	word	portal fall
+WITHDAGGER	word	with a dagger
+KICKS_CHEST_OPEN	word	kick a chest open
+SPECIAL_ACCURSED	word	Accursed sceptre special
+SPECIAL_ATLATL	word	Atlatl special
+SPECIAL_KHOPESH	word	Khopesh special
+SPECIAL_URSINE	word	Ursine chainmace special
+SPECIAL_02_URSINE	word	Ursine chainmace special
+SPECIAL_VOIDWAKER	word	Voidwaker special
+SPECIAL_02_VOIDWAKER	word	Voidwaker special
+SPECIAL_01_WEBWEAVER	word	Webweaver bow special
+XMAS_25	word	
+TREAT_0	word	treat
+TREAT_1	word	treat
+TREAT_2	word	treat
+TREAT_3	word	treat
+TREAT_4	word	treat
+FALLING_4	verb	Fall
+FALL_AND_GET	word	fall and get
+UNCONSCIOUS_TRANSITION	word	fall unconscious
+UNCONSCIOUS_TRANSITION_BARELY	word	fall barely
+BARELY_CONSCIOUS	word	lie barely conscious
+CYRISUS_BARELY_CONSCIOUS	word	cyrisus barely conscious
+JORMUNGAND	word	Jormungand
+CASTING_TELE_BLOCK	verb	Cast Tele Block
+TELEPORT_OTHER_CASTING	verb	Cast Teleport Other
+SPELLCAST_DMM	verb	Cast a spell (Deadman)
+GUARDIAN_DMM	word	guardian (Deadman)
+SPELLCAST_ARCEUUS_TELEPORT	verb	Cast a spell (Arceuus teleport)
+YOYO_ADVANCED	word	yo-yo: advanced
+RECIEVE	word	receive
+RECIEVING	word	receiving
+KNIFE_P	word	knife (poisoned)
+ELEM_2	word	Elemental Workshop II
+LEVER_3_WAY	word	three-way lever
+BLUEGLOVES	word	(blue gloves)
+NOGLOVES	word	(no gloves)
+REDGLOVES	word	(red gloves)
+SITUPS_GETUP	verb	Get up (sit-ups)
+SITUPS_GETDOWN	word	sit-ups (get down)
+SITUP_SHORT	word	sit-up (short)
+PUSHUP	word	push-up
+PUSHUP_SHORT	word	push-up (short)
+MIXING_DYES	word	mix dyes
+ONFLOOR	word	on the floor
+PULL_MAGEARENA_LEVER	word	pull a Mage Arena lever
+SINK_STEPBACK	word	sink step back
+SHOVEL_COKE_FIN	verb	Shovel coke (finish)
+WAKES_UP_GOBLIN	word	wake up a goblin
+WIPE_HEAD_1	verb	Wipe your brow
+WRETCH	word	retch
+ASGARNIAN	word	Asgarnian
+GREENMANS	word	Greenman's
+READBOOK_POSH_TURNLEFT	verb	Read a fancy book, turning the page left
+READBOOK_POSH_TURNRIGHT	verb	Read a fancy book, turning the page right
+SKILLCAPES_SAILING	word	Sailing cape
+DWH_BH_CORRUPTED	word	corrupted dragon warhammer
+SEED_DIBBING_NODIB	word	plant seeds without a dibber
+SHORTDIG	word	short dig
+ULTRACOMPOST_MAKE	verb	Make ultracompost
+EASTER_23	word	Easter 2023
+READY_DH	word	Dharok's idle (2)
+WALK_F_DH	word	Dharok's walk forward
+AGILTY	word	agility
+DESEASE	word	disease
+DEAL_FILLBUCKET	word	deal fill bucket
+STAGNENT	word	stagnant
+SINCALIR	word	sinclair
+TWEAKED	word	
+GRAMAPHONE	word	gramophone
+WINDUP	word	wind-up
+CATAPAULT	word	catapult
+CONCIOUSNESS	word	consciousness
+CANNISTER	word	canister
+PREACH_SEQ	word	preach
+MAGIC_ANIMATION	word	magic
+SHOCK_SPOTANIMATION	word	shock
+ABSAIL	word	abseil
+FADEIN	word	fade in
+FADEOUT	word	fade out

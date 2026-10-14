@@ -19,11 +19,11 @@ automated, and the follower cannot be interacted with.
 - **Authentic follower** - pet-style following on the game's own mechanics, learned
   weapon stances, game-exact dialog boxes with chatheads, right-click menu, shift-hover
   and click cross exactly as a real NPC.
-- **Speech system** - 508 bundled rules across editable groups (bosses, player
+- **Speech system** - 517 bundled rules across editable groups (bosses, player
   statuses, locations, item equips, quest NPCs, thrall, errands, combat,
   mimicry, reactions, memory, souvenirs, predictions, the clock, misc), hot-reloaded
   from `phrases.json` within a second. The Messages window, under Talking in
-  the side panel, edits them one category per group; the Phrases section of
+  the side panel, edits them one category per group; the Messages section of
   the settings has a toggle per group.
 - **Alive between the events** - copies your emotes, joins you when you eat, and
   has a go at whatever you have been mining or chopping or fishing for the last
@@ -471,10 +471,10 @@ follower has a stamp to measure from). On `killCount`: `{boss}`, `{count}`,
   `chatbox` means no overhead line. Every line reaches the chatbox when **Also
   show lines in the chatbox** is on, and none does when it is off. Falls back
   to the config default.
-- `group` - used by the **Phrases** config section to silence whole categories.
+- `group` - used by the **Messages** config section to silence whole categories.
   The built-in toggles cover `boss`, `health`, `area`, `idle`, `gear`, `quest`,
   `combat`, `mimic`, `memory`, `souvenir`, `bet` and `clock`; anything else goes
-  in the *Silence groups or phrase ids by name* box under **Advanced:
+  in the *Silence groups or rule ids by name* box under **Advanced:
   animations and graphics** (rule ids work there too, and the Messages window
   shows each rule's id beside its title).
 - `animation` - optional emote animation id played alongside the line.
@@ -1450,7 +1450,7 @@ place on the line below where "Written when:" stands on an undated page. The fir
 of each session only takes stock, so a page already readable then (a quest
 done before the book kept dates, or while the plugin was off) is left undated
 rather than dated today, and keeps "Written when:" in its header. The tab for
-bosses is "Beasts", a word the scribe would use.
+bosses is "Bosses".
 
 **The window** (`ChronicleWindow`, `ChronicleLayout`). An overlay above the
 widgets at high priority, 500 by 314 like the Collection Log, centred over the

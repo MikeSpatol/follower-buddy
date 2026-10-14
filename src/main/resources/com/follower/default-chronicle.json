@@ -146,7 +146,7 @@
         },
         {
           "heading": "Who was there",
-          "body": "Almera: described, and fairly, as \"Nice hair.\" Speedy Keith gets the very same words. I checked twice.\n\nHudon: \"Looks young.\" I haven't warmed to him.\n\nGerald: \"Looks suspiciously like a fisherman,\" and he is one. He fishes trout and salmon by the River Dougne. He knows the story of Baxtorian's treasure, left about 200 years back at the end of the Fourth Age, and of all the adventurers who've looked for the tomb and failed. He was glad of someone to tell it to.\n\nHadley: described, not by me, as \"Could do with losing a bit of weight.\" The tourist guide at the Tourist Information Centre.\n\n{done:DESERT_TREASURE_I} He turns up again in Desert Treasure I, helping to find the Shadow Dungeon.\n\nGolrie: \"He seems to be in a spot of bother,\" and he was. A gnome of the Tree Gnome Village, and the current keeper of his family's heirlooms, Glarial's pebble among them until you came along.\n\n{done:TREE_GNOME_VILLAGE,THE_PATH_OF_GLOUPHRIE} Golrie's grandfather was King Bolrie, and his great-uncle is King Bolren, who rules the Tree Gnome Village and holds off General Khazard's army in the quest of that name.\n\nBaxtorian: King Baxtorian, the elven king under the falls, and Glarial's husband. You do not meet him.\n\n{done:SONG_OF_THE_ELVES} In Song of the Elves he turns out to be alive, turned to stone in the hope of one day reuniting with Glarial; he is freed and, reluctantly, becomes elder of the Cadarn clan. He is Lord Baxtorian Cadarn now. He and Glarial had a daughter, Eirlys.\n\nGlarial: Queen Glarial, wife of Baxtorian. The elves later buried her ashes in the tomb under the protection of the Moss Guardians.\n\n{done:ROVING_ELVES} Taking her urn left her spirit restless until Roving Elves, and that one is on us."
+          "body": "Almera: described, and fairly, as \"Nice hair.\" Speedy Keith gets the very same words. I checked twice.\n\nHudon: \"Looks young.\" I haven't warmed to him.\n\nGerald: \"Looks suspiciously like a fisherman,\" and he is one. He fishes trout and salmon by the River Dougne. He knows the story of Baxtorian's treasure, left about 200 years back at the end of the Fourth Age, and of all the adventurers who've looked for the tomb and failed. He was glad of someone to tell it to.\n\nHadley: described, not by me, as \"Could do with losing a bit of weight.\" The tourist guide at the Tourist Information Centre.\n\n{done:DESERT_TREASURE_I} He turns up again in Desert Treasure I, helping to find the Shadow Dungeon.\n\nGolrie: \"He seems to be in a spot of bother,\" which undersells being locked in. A gnome of the Tree Gnome Village, and the current keeper of his family's heirlooms, Glarial's pebble among them until you came along.\n\n{done:TREE_GNOME_VILLAGE,THE_PATH_OF_GLOUPHRIE} Golrie's grandfather was King Bolrie, and his great-uncle is King Bolren, who rules the Tree Gnome Village and holds off General Khazard's army in the quest of that name.\n\nBaxtorian: King Baxtorian, the elven king under the falls, and Glarial's husband. You do not meet him.\n\n{done:SONG_OF_THE_ELVES} In Song of the Elves he turns out to be alive, turned to stone in the hope of one day reuniting with Glarial; he is freed and, reluctantly, becomes elder of the Cadarn clan. He is Lord Baxtorian Cadarn now. He and Glarial had a daughter, Eirlys.\n\nGlarial: Queen Glarial, wife of Baxtorian. The elves later buried her ashes in the tomb under the protection of the Moss Guardians.\n\n{done:ROVING_ELVES} Taking her urn left her spirit restless until Roving Elves, and that one is on us."
         },
         {
           "heading": "Where it took us",
@@ -674,7 +674,7 @@
           "King Black Dragon"
         ]
       },
-      "summary": "It's the size of a house, and in the old days nothing anyone knew of was stronger. Its lair sits behind a lever in the deep Wilderness, which tells you most of what you need to know.",
+      "summary": "It's the size of a house, and in the old days nothing anyone knew of was stronger. Its lair sits behind a lever in the deep Wilderness, and the walk there is the first test.",
       "sections": [
         {
           "heading": "What it is",
@@ -686,7 +686,7 @@
         },
         {
           "heading": "Worth knowing",
-          "body": "Then the Kalphite Queen turned up and took the title. I have that in the margin, underlined.\n\n{done:A_TAIL_OF_TWO_CATS} It can talk. In A Tail of Two Cats it holds a conversation with Bob the cat, and gets interrupted before it finishes. I'd have liked the minutes of that one."
+          "body": "It lost the title of strongest when the Kalphite Queen turned up. I have that in the margin, underlined.\n\n{done:A_TAIL_OF_TWO_CATS} It can talk. In A Tail of Two Cats it holds a conversation with Bob the cat, and gets interrupted before it finishes. I'd have liked the minutes of that one."
         }
       ],
       "people": [
@@ -771,7 +771,7 @@
           "Hill Giant"
         ]
       },
-      "summary": "\"A very large foe,\" people say, and dungeons and hills are full of them. Of the three giant kinds most adventurers meet first it's the weakest, which isn't the same as weak. Their giant keys open the door to Obor, the Hill Titan.",
+      "summary": "Dungeons and hills are full of them, each \"A very large foe\". Of the three giant kinds most adventurers meet first it's the weakest, which isn't the same as weak. Their giant keys open the door to Obor, the Hill Titan.",
       "sections": [
         {
           "heading": "What it is",
@@ -820,7 +820,7 @@
       "sections": [
         {
           "heading": "What it is",
-          "body": "The common verdict is \"A very large elemental adversary,\" which is putting it mildly. There are three sorts, all of them aggressive and none of them quick to swing. Nothing burns it, and water magic bites. No surprises on either count."
+          "body": "\"A very large elemental adversary\" is the usual description, and it's the heat you notice first. There are three sorts, all of them aggressive and none of them quick to swing. Nothing burns it, and water magic bites. No surprises on either count."
         },
         {
           "heading": "Where it is found",
@@ -860,7 +860,7 @@
       "sections": [
         {
           "heading": "What it is",
-          "body": "\"An evil human cleric\" is how they're known, and that about covers it. They switch between melee and magic and hit harder than their level suggests."
+          "body": "Everyone has them down as \"An evil human cleric.\" They switch between melee and magic and hit harder than their level suggests."
         },
         {
           "heading": "Where it is found",
@@ -904,7 +904,7 @@
       "sections": [
         {
           "heading": "What it is",
-          "body": "The word on it is \"Looks like a big ugly dog.\" I can't argue. It stabs, and quickly. Rings of recoil will do the job, so long as you land at least one hit yourself."
+          "body": "Everyone puts it the same way: \"Looks like a big ugly dog.\" It stabs, and quickly. Rings of recoil will do the job, so long as you land at least one hit yourself."
         },
         {
           "heading": "Where it is found",
@@ -1247,7 +1247,7 @@
       "sections": [
         {
           "heading": "What it is",
-          "body": "Anyone crossing the bridge gets a good look at the eye, and it at them. I stood under it a while and couldn't decide whether it was meant as a welcome or a warning. I haven't found out yet what it's an eye of.\n\nInside, the ground floor is a library and a good many wizards in blue. Wizard Traiborn keeps the first floor. The second keeps a lesser demon in a cage, which it bears better than I would.\n\nArchmage Sedridor, who leads the Order, works down a ladder in the basement. He tells visitors to take care, because they're standing on the ruins of an older tower. He says it kindly, which doesn't help."
+          "body": "Anyone crossing the bridge gets a good look at the eye, and it at them. I stood under it a while and couldn't decide whether it was meant as a welcome or a warning. What it's an eye of is anyone's guess, mine included.\n\nInside, the ground floor is a library and a good many wizards in blue. Wizard Traiborn keeps the first floor. The second keeps a lesser demon in a cage, which it bears better than I would.\n\nArchmage Sedridor, who leads the Order, works down a ladder in the basement. He tells visitors to take care, because they're standing on the ruins of an older tower. He says it kindly, which doesn't help."
         },
         {
           "heading": "Where it is found",
@@ -1415,7 +1415,7 @@
         },
         {
           "heading": "Worth knowing",
-          "body": "People call Primio \"A big pretty bird\", and they're not wrong. I paced round him while Regulus wasn't looking: three paces a side, and the bird let me. Regulus keeps him, and so keeps the door.\n\n{done:TWILIGHTS_PROMISE} The queen in the garden is Itzla's mother, which explains the two of him on the way in.\n\nPeople here mostly say Fortis and keep the full name for maps and visitors. I don't know yet what the rest of it means. The quest that opened the kingdom, Children of the Sun, has its own page."
+          "body": "Primio is \"A big pretty bird\" to everyone who meets him. I paced round him while Regulus wasn't looking: three paces a side, and the bird let me. Regulus keeps him, and so keeps the door.\n\n{done:TWILIGHTS_PROMISE} The queen in the garden is Itzla's mother, which explains the two of him on the way in.\n\nPeople here mostly say Fortis and keep the full name for maps and visitors. I don't know yet what the rest of it means. The quest that opened the kingdom, Children of the Sun, has its own page."
         }
       ],
       "people": [

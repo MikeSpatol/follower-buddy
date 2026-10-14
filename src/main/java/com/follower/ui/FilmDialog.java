@@ -377,7 +377,7 @@ public class FilmDialog extends JDialog
 		return true;
 	}
 
-	/** The compass, Camera, and Hold here or Follow me. */
+	/** The compass, Camera, and Stay here or Follow me. */
 	private JPanel placing()
 	{
 		JPanel panel = column();
@@ -394,14 +394,14 @@ public class FilmDialog extends JDialog
 		}
 		panel.add(compass);
 		JButton camera = button("Camera", () -> act(Crew::faceCamera, "Facing the camera."));
-		camera.setToolTipText("Turns it to face the way the camera looks from");
+		camera.setToolTipText("Turns it to face the camera");
 		JPanel cameraRow = grid(1, 1);
 		cameraRow.add(camera);
 		panel.add(cameraRow);
 
 		panel.add(heading("POSITION"));
 		JPanel position = grid(1, 2);
-		position.add(button("Hold here", () -> act(Crew::holdHere, "Holding here.")));
+		position.add(button("Stay here", () -> act(Crew::holdHere, "Staying here.")));
 		position.add(button("Follow me", () -> act(Crew::followMe, "Following you, and still quiet.")));
 		panel.add(position);
 		return panel;

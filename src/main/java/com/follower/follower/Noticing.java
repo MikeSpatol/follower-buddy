@@ -263,7 +263,7 @@ public class Noticing
 	{
 		if (!config.noticesThings() || !config.keepsCompany())
 		{
-			return "Notices things is off in the settings.";
+			return "Notices things, or Keeps you company while you skill, is off in the settings.";
 		}
 		int now = client.getTickCount();
 		Player local = client.getLocalPlayer();

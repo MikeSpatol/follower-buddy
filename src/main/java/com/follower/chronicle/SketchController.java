@@ -92,7 +92,7 @@ public class SketchController
 	}
 
 	/** Once a session where a plate is empty; the mute holds it back, as any line of its own. */
-	static final String INVITE = "This place wants a plate. Right-click me and pick Sketch when you're ready.";
+	static final String INVITE = "This place wants a sketch in the book. Right-click me and pick Sketch when ready.";
 
 	/** The count, over its head whatever the mute: it was asked for. */
 	static final String START = "Pose for me. Any emote will do.";
@@ -114,9 +114,9 @@ public class SketchController
 	static final String HANDS_FULL = "My hands are full just now.";
 
 	/** Asked somewhere no page has a plate for, which only the command can be. */
-	static final String NOTHING_HERE = "There's no plate for this place in the book.";
+	static final String NOTHING_HERE = "Nothing in the book wants this place sketched.";
 
-	static final String NO_BACKUP = "I couldn't keep the old drawing safe, so I've left it alone.";
+	static final String NO_BACKUP = "I couldn't save a copy of the old drawing, so I haven't drawn over it.";
 
 	enum Stage
 	{

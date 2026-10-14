@@ -6403,26 +6403,26 @@ public class FollowerPlugin extends Plugin
 		switch (moodBand == null ? "" : moodBand)
 		{
 			case "low":
-				pages.add("I have had better days, if I am honest.");
+				pages.add("I've had better days, if I'm honest.");
 				break;
 			case "down":
-				pages.add("Not our finest, but we are still walking.");
+				pages.add("Not our finest, but we're still walking.");
 				break;
 			case "good":
-				pages.add("A good day, that. I would take another like it.");
+				pages.add("A good day, that. I'd take another like it.");
 				break;
 			case "high":
 				pages.add("One of the good ones. I mean that.");
 				break;
 			default:
-				pages.add("An ordinary day. There is nothing wrong with those.");
+				pages.add("An ordinary day. There's nothing wrong with those.");
 				break;
 		}
 
 		// And the one thing it has not let go of.
 		if (incident != null && !incident.isEmpty())
 		{
-			pages.add("I am still thinking about " + incident + ".");
+			pages.add("I'm still thinking about " + incident + ".");
 		}
 		return pages.toArray(new String[0]);
 	}
@@ -6751,7 +6751,7 @@ public class FollowerPlugin extends Plugin
 			.then("do-follow-b"));
 		script.put("do-follow-b", says(
 			"Tell me to Stay and I'll hold the spot until you want me back.",
-			"Or shift-click a tile and Send me, and I'll walk there myself.")
+			"Or hold Shift, right-click a tile and pick Send. I'll walk there myself.")
 			.then("do-menu"));
 
 		script.put("do-fight-q", you("What do you do when I'm fighting?").then("do-fight-a"));
@@ -7010,7 +7010,7 @@ public class FollowerPlugin extends Plugin
 			}
 			if (!follower.moveToFront(local))
 			{
-				speak("There's no room in front of you for me to stand!",
+				speak("There's no room in front of you for me to stand.",
 					com.follower.speech.SpeechOutput.OVERHEAD, null, -1, null);
 			}
 		});
@@ -7112,7 +7112,7 @@ public class FollowerPlugin extends Plugin
 		boolean sent = will != null ? will.send(target) : follower.stayAt(target);
 		if (!sent)
 		{
-			speak("I can't get to that spot from here!",
+			speak("I can't get to that spot from here.",
 				com.follower.speech.SpeechOutput.OVERHEAD, null, -1, null);
 		}
 		else
@@ -9330,13 +9330,13 @@ public class FollowerPlugin extends Plugin
 			command("anim <id...>", "preview an animation on it"),
 			command("gfx <id> [height]", "preview a graphic on it, that far up its body"),
 			command("pose <id>", "hold a looping pose, 0 to release"),
-			command("posing", "the advanced posing window: pose it, turn it and give it lines"),
+			command("posing", "the Advanced posing window: pose it, turn it and give it lines"),
 			command("sketch", "pose for the chronicle's sketch of this place, as right-click Sketch"),
 			command("height <n>", "lift or lower it"),
 			command("errand [" + String.join("|", ERRAND_KEYS) + "]", "an errand now"),
 			command("reload", "re-read the phrase and sound files"),
 			command("status", "models, rules and spawn state"),
-			command("where", "your region id, for the Locations editor")));
+			command("where", "your region id, for Locations in the Messages window")));
 
 	private static java.util.Map.Entry<String, String> command(String name, String effect)
 	{
@@ -9525,7 +9525,7 @@ public class FollowerPlugin extends Plugin
 			}
 			if (speechEngine.getContext().isInCombat())
 			{
-				return "Not in a fight.";
+				return "Not during a fight.";
 			}
 		}
 		switch (what)
@@ -9579,7 +9579,7 @@ public class FollowerPlugin extends Plugin
 		}
 		if (!config.keepsCompany())
 		{
-			return "Keeps you company is off in the settings.";
+			return "Keeps you company while you skill is off in the settings.";
 		}
 		String item = args.length > 3
 			? String.join(" ", java.util.Arrays.copyOfRange(args, 3, args.length))
@@ -11028,7 +11028,7 @@ public class FollowerPlugin extends Plugin
 				// model report nobody asked for.
 				sendStatus("Region " + speechEngine.getContext().getRegionId()
 					+ " at " + speechEngine.getContext().getLocation()
-					+ " - use this id in the Locations editor.");
+					+ " - use this id under Locations in the Messages window.");
 				break;
 
 			default:
@@ -11052,7 +11052,7 @@ public class FollowerPlugin extends Plugin
 						+ "fires | "
 						+ "mood [0-100] | chatwatch | sniffanims | finditem <name> | "
 						+ "prop <itemId> | propoffset <x y z> | fire <rule-id> | force <what> | want | "
-						+ "spectate | shield | centre <x y z> | loot <value> | "
+						+ "spectate | shield | centre [units] | loot <value> | "
 						+ "scan | heights | transcript | thieftargets");
 				}
 			// ::follower interp was removed: the interpolation filter is keyed on
@@ -11452,8 +11452,8 @@ public class FollowerPlugin extends Plugin
 	private String modelHint()
 	{
 		return modelRepository.isLoaded()
-			? "The dump is loaded (" + modelRepository.getStatus() + ") but has no data for these slots."
-			: "No equipment-models.json found - run tools/cache-dumper, or set Model source to \"Capture only\".";
+			? "The item list is loaded (" + modelRepository.getStatus() + ") but has no data for these slots."
+			: "The game cache hasn't been read yet. Log in, then try ::follower rebuild.";
 	}
 
 	/**

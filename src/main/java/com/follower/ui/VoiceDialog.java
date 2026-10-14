@@ -130,7 +130,7 @@ public class VoiceDialog extends JDialog
 		JLabel hint = new JLabel("<html><body style='width:480px'>"
 			+ "A sound plays when the follower says that line, and the line still"
 			+ " appears as usual. Put your own files in the folder below and they"
-			+ " turn up in these lists. Java plays <b>WAV, AIFF and AU</b> only -"
+			+ " turn up in these lists. Only <b>WAV, AIFF and AU</b> files will play -"
 			+ " an MP3 will simply stay silent.</body></html>");
 		hint.setFont(FontManager.getRunescapeSmallFont());
 		hint.setForeground(ColorScheme.LIGHT_GRAY_COLOR);

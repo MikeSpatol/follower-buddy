@@ -264,7 +264,7 @@ public class FollowerPanel extends PluginPanel
 	{
 		SwingUtilities.invokeLater(() -> behaviourCaption.setText(
 			"<html><body style='width:180px'>Right-click " + escapeHtml(name)
-				+ " in game for Talk-to, Stay, Dance, Wave and Step-in-front."
+				+ " in game for Talk-to, Stay, Dance, Wave, Step-in-front and Chronicle."
 				+ " Hold Shift and right-click any tile to send it there.</body></html>"));
 	}
 
@@ -783,7 +783,7 @@ public class FollowerPanel extends PluginPanel
 	private void buildTalking(JPanel body)
 	{
 		body.add(caption("What it says and when. Messages holds every line;"
-			+ " Conversations the Talk-to trees."));
+			+ " Conversations the talks it starts itself."));
 
 		styleTick(muteBox, "The follower stops talking. All your other"
 			+ " speech settings are kept. Same switch as Mute in settings.");
@@ -828,8 +828,8 @@ public class FollowerPanel extends PluginPanel
 				+ " combat, statuses, quest NPCs and errands - viewable and editable",
 			() -> onEditMessages.run()));
 		buttons.add(button("Conversations...",
-			"View and edit the conversations the follower STARTS -"
-				+ " the ones that replace Talk-to while it is waiting on an answer",
+			"View and edit the conversations the follower starts itself -"
+				+ " the ones its Answer option opens while it waits for your reply",
 			() -> onEditDialogs.run()));
 		buttons.add(button("Attach sounds...",
 			"Where sound files go, and how to attach one to a line",
@@ -1064,12 +1064,12 @@ public class FollowerPanel extends PluginPanel
 	private void buildCommands(JPanel body)
 	{
 		JPanel buttons = buttonColumn(3);
-		buttons.add(button("Bring it here", "Places the follower at your feet",
+		buttons.add(button("Come here", "Places the follower at your feet",
 			() -> onComeHere.run()));
 		buttons.add(button("Fix if it vanished",
 			"Re-attaches the follower to the scene, then rebuilds it from the outfit",
 			() -> onFix.run()));
-		buttons.add(button("Reload phrase and sound files",
+		buttons.add(button("Reload message and sound files",
 			"Re-reads phrases.json and the attached sounds from disk",
 			() -> onReload.run()));
 		body.add(buttons);

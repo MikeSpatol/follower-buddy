@@ -69,8 +69,27 @@ public class MemorySurfaceTest
 		assertTrue(surface.contains("region 10553\n"));
 		assertTrue("the open wish says how to hand it over: " + surface,
 			surface.contains("Hoping for: feather (right-click the follower and Talk-to to hand it over)"));
-		assertTrue(surface.contains("Firsts already said: 1"));
-		assertTrue(surface.contains("Lines wear-tracked: 1"));
+		assertTrue(surface.contains("One-time lines already said: 1"));
+		assertTrue(surface.contains("Lines counted, to vary them: 1"));
+	}
+
+	@Test
+	public void firstMetCountsTodayAndOneDayPlainly()
+	{
+		TriggerContext context = new TriggerContext(new FakeGame().client);
+		long today = LocalDate.now().toEpochDay();
+
+		context.setMetOnDay(today);
+		assertTrue(flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap()))
+			.contains("First met: " + LocalDate.ofEpochDay(today) + " (today)\n"));
+
+		context.setMetOnDay(today - 1);
+		assertTrue(flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap()))
+			.contains("First met: " + LocalDate.ofEpochDay(today - 1) + " (1 day ago)\n"));
+
+		context.setMetOnDay(today - 2);
+		assertTrue(flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap()))
+			.contains("First met: " + LocalDate.ofEpochDay(today - 2) + " (2 days ago)\n"));
 	}
 
 	@Test
@@ -87,7 +106,7 @@ public class MemorySurfaceTest
 		assertTrue(surface.contains("Opinions held: 0"));
 		assertTrue(surface.contains("nowhere in particular"));
 		assertTrue(surface.contains("Nothing in hand."));
-		assertTrue(surface.contains("Firsts already said: 0"));
+		assertTrue(surface.contains("One-time lines already said: 0"));
 
 		// The other direction of honesty: no leftover-looking claims.
 		assertFalse(surface.contains("x1"));
