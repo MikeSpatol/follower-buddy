@@ -863,7 +863,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 34, cooldown 10m, overhead
 
 - You've been doing this a very long time.
-- I've started giving them names. I'm running out of names.
+- I stopped counting a while back. It was for my own good.
 - I want you to know I'm still here. Fading, but here.
 - At what point does this become a lifestyle?
 - I've had time to think. I have some concerns.
