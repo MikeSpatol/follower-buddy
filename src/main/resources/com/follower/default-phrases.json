@@ -9,7 +9,9 @@
   "rules": [
     {
       "id": "boss-spawn-inferno-wave",
+      "title": "Inferno creatures",
       "note": "Wildcard example: every Inferno NPC name starts with Jal-.",
+      "about": "Any Inferno creature whose name starts with Jal.",
       "group": "boss",
       "priority": 70,
       "cooldownMs": 30000,
@@ -82,6 +84,7 @@
     },
     {
       "id": "boss-vetion",
+      "title": "Vet'ion",
       "occasion": true,
       "note": "Vet'ion and Calvar'ion, the skeletal champions.",
       "group": "boss",
@@ -137,6 +140,7 @@
     },
     {
       "id": "boss-chaos-elemental",
+      "title": "Chaos Elemental",
       "occasion": true,
       "note": "The Chaos Elemental near the Rogues Castle.",
       "group": "boss",
@@ -164,6 +168,7 @@
     },
     {
       "id": "boss-chaos-fanatic",
+      "title": "Chaos Fanatic",
       "occasion": true,
       "note": "The Chaos Fanatic on the Wilderness cliffs.",
       "group": "boss",
@@ -191,6 +196,7 @@
     },
     {
       "id": "boss-crazy-arch",
+      "title": "Crazy Archaeologist",
       "occasion": true,
       "note": "The Crazy Archaeologist among the Wilderness ruins.",
       "group": "boss",
@@ -218,6 +224,7 @@
     },
     {
       "id": "boss-kbd",
+      "title": "King Black Dragon",
       "occasion": true,
       "note": "The King Black Dragon.",
       "group": "boss",
@@ -245,6 +252,7 @@
     },
     {
       "id": "boss-corp",
+      "title": "Corporeal Beast",
       "occasion": true,
       "note": "The Corporeal Beast.",
       "group": "boss",
@@ -272,6 +280,7 @@
     },
     {
       "id": "boss-mole",
+      "title": "Giant Mole",
       "occasion": true,
       "note": "The Giant Mole under Falador Park.",
       "group": "boss",
@@ -299,6 +308,7 @@
     },
     {
       "id": "boss-kq",
+      "title": "Kalphite Queen",
       "occasion": true,
       "note": "The Kalphite Queen in the desert hive.",
       "group": "boss",
@@ -434,6 +444,7 @@
     },
     {
       "id": "boss-muspah",
+      "title": "Phantom Muspah",
       "occasion": true,
       "note": "The Phantom Muspah beneath the Ghorrock ruins.",
       "group": "boss",
@@ -461,6 +472,7 @@
     },
     {
       "id": "boss-nightmare",
+      "title": "The Nightmare",
       "occasion": true,
       "note": "The Nightmare of Ashihama, and Phosani's Nightmare.",
       "group": "boss",
@@ -489,6 +501,7 @@
     },
     {
       "id": "boss-duke",
+      "title": "Duke Sucellus",
       "occasion": true,
       "note": "Duke Sucellus in the Ghorrock depths.",
       "group": "boss",
@@ -516,6 +529,7 @@
     },
     {
       "id": "boss-leviathan",
+      "title": "The Leviathan",
       "occasion": true,
       "note": "The Leviathan in the Scar.",
       "group": "boss",
@@ -543,6 +557,7 @@
     },
     {
       "id": "boss-whisperer",
+      "title": "The Whisperer",
       "occasion": true,
       "note": "The Whisperer in the drowned city of the Scar.",
       "group": "boss",
@@ -597,6 +612,7 @@
     },
     {
       "id": "boss-jad",
+      "title": "TzTok-Jad",
       "occasion": true,
       "note": "TzTok-Jad atop the Fight Caves.",
       "group": "boss",
@@ -624,6 +640,7 @@
     },
     {
       "id": "boss-zuk",
+      "title": "TzKal-Zuk",
       "occasion": true,
       "note": "TzKal-Zuk at the floor of the Inferno.",
       "group": "boss",
@@ -651,6 +668,7 @@
     },
     {
       "id": "boss-hunllef",
+      "title": "The Hunllef",
       "occasion": true,
       "note": "The Hunllef in the Gauntlet.",
       "group": "boss",
@@ -679,6 +697,7 @@
     },
     {
       "id": "boss-olm",
+      "title": "Great Olm",
       "occasion": true,
       "note": "The Great Olm at the end of the Chambers of Xeric.",
       "group": "boss",
@@ -706,6 +725,7 @@
     },
     {
       "id": "boss-verzik",
+      "title": "Verzik Vitur",
       "occasion": true,
       "note": "Verzik Vitur, finale of the Theatre of Blood.",
       "group": "boss",
@@ -733,6 +753,7 @@
     },
     {
       "id": "boss-wardens",
+      "title": "The Wardens",
       "occasion": true,
       "note": "The Wardens, finale of the Tombs of Amascut.",
       "group": "boss",
@@ -815,6 +836,7 @@
     },
     {
       "id": "boss-sol",
+      "title": "Sol Heredit",
       "occasion": true,
       "note": "Sol Heredit, finale of the Fortis Colosseum.",
       "group": "boss",
@@ -842,6 +864,7 @@
     },
     {
       "id": "boss-hueycoatl",
+      "title": "The Hueycoatl",
       "occasion": true,
       "note": "The Hueycoatl in the Varlamore hills.",
       "group": "boss",
@@ -923,6 +946,7 @@
     },
     {
       "id": "boss-graardor",
+      "title": "General Graardor",
       "occasion": true,
       "note": "General Graardor, Bandos general.",
       "group": "boss",
@@ -950,6 +974,7 @@
     },
     {
       "id": "boss-kril",
+      "title": "K'ril Tsutsaroth",
       "occasion": true,
       "note": "K'ril Tsutsaroth, Zamorak general.",
       "group": "boss",
@@ -977,6 +1002,7 @@
     },
     {
       "id": "boss-zilyana",
+      "title": "Commander Zilyana",
       "occasion": true,
       "note": "Commander Zilyana, Saradomin general.",
       "group": "boss",
@@ -1004,6 +1030,7 @@
     },
     {
       "id": "boss-kreearra",
+      "title": "Kree'arra",
       "occasion": true,
       "note": "Kree'arra, Armadyl general.",
       "group": "boss",
@@ -1087,6 +1114,7 @@
       "id": "boss-brutus",
       "occasion": true,
       "note": "Brutus in his pen, before the turn. Cache ids 15626-15627, combat 30.",
+      "about": "Brutus in his pen, before he turns.",
       "group": "boss",
       "priority": 90,
       "output": "both",
@@ -1112,8 +1140,10 @@
     },
     {
       "id": "boss-brutus-demonic",
+      "title": "Demonic Brutus",
       "occasion": true,
       "note": "Demonic Brutus, the turned form. Cache ids 15628-15629, combat 1224.",
+      "about": "Demonic Brutus, after he turns.",
       "group": "boss",
       "priority": 90,
       "output": "both",
@@ -1220,6 +1250,7 @@
     },
     {
       "id": "boss-thermy",
+      "title": "Thermonuclear smoke devil",
       "occasion": true,
       "note": "The Thermonuclear smoke devil.",
       "group": "boss",
@@ -1247,6 +1278,7 @@
     },
     {
       "id": "boss-hydra",
+      "title": "Alchemical Hydra",
       "occasion": true,
       "note": "The Alchemical Hydra beneath Mount Karuulm.",
       "group": "boss",
@@ -1274,6 +1306,7 @@
     },
     {
       "id": "boss-sire",
+      "title": "Abyssal Sire",
       "occasion": true,
       "note": "The Abyssal Sire in the Abyssal Nexus.",
       "group": "boss",
@@ -1301,6 +1334,7 @@
     },
     {
       "id": "boss-grotesque",
+      "title": "Grotesque Guardians",
       "occasion": true,
       "note": "The Grotesque Guardians, Dusk and Dawn, on the Slayer Tower roof.",
       "group": "boss",
@@ -1531,6 +1565,7 @@
     {
       "id": "status-low-energy",
       "note": "Speaks when run energy crosses under 15 percent. Long cooldown so it never nags.",
+      "about": "When your run energy drops below 15 percent. Said rarely, so it never nags.",
       "group": "health",
       "priority": 15,
       "output": "overhead",
@@ -1571,6 +1606,7 @@
       "id": "enter-wilderness",
       "occasion": true,
       "note": "Fires on crossing into the Wilderness, via the wilderness varbit (5963, INSIDE_WILDERNESS). Read as state, not as a change: a varbitChanged rule anywhere in the set switches the varbit flood back on. Dialogue check, 14 Oct: it took in the lines of wilderness-crossing, which rose on the same tick, lost to it every time and so was never heard.",
+      "about": "When you cross into the Wilderness.",
       "group": "area",
       "priority": 110,
       "output": "both",
@@ -1621,6 +1657,7 @@
     },
     {
       "id": "area-grand-exchange",
+      "title": "Grand Exchange",
       "note": "The Grand Exchange plaza.",
       "group": "area",
       "priority": 40,
@@ -1713,7 +1750,9 @@
     },
     {
       "id": "area-ferox-enclave",
+      "title": "Ferox Enclave",
       "note": "Ferox Enclave, the Wilderness safe haven. Higher priority than the wilderness line.",
+      "about": "Ferox Enclave, the safe haven in the Wilderness. Said instead of the Wilderness line.",
       "group": "area",
       "priority": 45,
       "output": "overhead",
@@ -1754,6 +1793,7 @@
     },
     {
       "id": "area-al-kharid",
+      "title": "Al Kharid",
       "note": "Al Kharid.",
       "group": "area",
       "priority": 40,
@@ -1774,6 +1814,7 @@
     },
     {
       "id": "area-port-sarim",
+      "title": "Port Sarim",
       "note": "Port Sarim.",
       "group": "area",
       "priority": 40,
@@ -1873,6 +1914,7 @@
     },
     {
       "id": "area-seers-camelot",
+      "title": "Seers' Village and Camelot",
       "note": "Seers' Village and Camelot castle.",
       "group": "area",
       "priority": 40,
@@ -1894,6 +1936,7 @@
     },
     {
       "id": "area-east-ardougne",
+      "title": "East Ardougne",
       "note": "East Ardougne and its market.",
       "group": "area",
       "priority": 40,
@@ -1915,6 +1958,7 @@
     },
     {
       "id": "area-west-ardougne",
+      "title": "West Ardougne",
       "note": "West Ardougne, behind the wall.",
       "group": "area",
       "priority": 40,
@@ -1956,6 +2000,7 @@
     },
     {
       "id": "area-castle-wars",
+      "title": "Castle Wars",
       "note": "Castle Wars lobby area.",
       "group": "area",
       "priority": 40,
@@ -1976,6 +2021,7 @@
     },
     {
       "id": "area-gnome-stronghold",
+      "title": "Gnome Stronghold",
       "note": "Tree Gnome Stronghold.",
       "group": "area",
       "priority": 40,
@@ -1997,6 +2043,7 @@
     },
     {
       "id": "area-barbarian-village",
+      "title": "Barbarian Village",
       "note": "Barbarian Village.",
       "group": "area",
       "priority": 40,
@@ -2077,6 +2124,7 @@
     },
     {
       "id": "area-port-phasmatys",
+      "title": "Port Phasmatys",
       "note": "Port Phasmatys.",
       "group": "area",
       "priority": 40,
@@ -2097,6 +2145,7 @@
     },
     {
       "id": "area-lunar-isle",
+      "title": "Lunar Isle",
       "note": "Lunar Isle.",
       "group": "area",
       "priority": 40,
@@ -2155,6 +2204,7 @@
     },
     {
       "id": "area-mor-ul-rek",
+      "title": "Mor Ul Rek",
       "note": "Mor Ul Rek, the TzHaar city.",
       "group": "area",
       "priority": 40,
@@ -2194,6 +2244,7 @@
     },
     {
       "id": "area-musa-point",
+      "title": "Musa Point",
       "note": "Musa Point, Karamja.",
       "group": "area",
       "priority": 40,
@@ -2214,6 +2265,7 @@
     },
     {
       "id": "area-shilo-village",
+      "title": "Shilo Village",
       "note": "Shilo Village.",
       "group": "area",
       "priority": 40,
@@ -2272,6 +2324,7 @@
     },
     {
       "id": "area-ape-atoll",
+      "title": "Ape Atoll",
       "note": "Ape Atoll.",
       "group": "area",
       "priority": 40,
@@ -2330,6 +2383,7 @@
     },
     {
       "id": "area-fossil-island",
+      "title": "Fossil Island",
       "note": "Fossil Island, museum camp side.",
       "group": "area",
       "priority": 40,
@@ -2349,6 +2403,7 @@
     },
     {
       "id": "area-god-wars",
+      "title": "God Wars Dungeon",
       "note": "The God Wars Dungeon.",
       "group": "area",
       "priority": 40,
@@ -2369,6 +2424,7 @@
     },
     {
       "id": "area-taverley-dungeon",
+      "title": "Taverley Dungeon",
       "note": "Taverley Dungeon.",
       "group": "area",
       "priority": 40,
@@ -2388,6 +2444,7 @@
     },
     {
       "id": "area-catacombs",
+      "title": "Catacombs of Kourend",
       "note": "Catacombs of Kourend.",
       "group": "area",
       "priority": 40,
@@ -2407,6 +2464,7 @@
     },
     {
       "id": "area-warriors-guild",
+      "title": "Warriors' Guild",
       "note": "Warriors' Guild.",
       "group": "area",
       "priority": 40,
@@ -2426,6 +2484,7 @@
     },
     {
       "id": "area-fishing-guild",
+      "title": "Fishing Guild",
       "note": "Fishing Guild.",
       "group": "area",
       "priority": 40,
@@ -2465,6 +2524,7 @@
     },
     {
       "id": "area-motherlode-mine",
+      "title": "Motherlode Mine",
       "note": "Motherlode Mine.",
       "group": "area",
       "priority": 40,
@@ -2484,6 +2544,7 @@
     },
     {
       "id": "area-mining-guild",
+      "title": "Mining Guild",
       "note": "Mining Guild, under Falador.",
       "group": "area",
       "priority": 40,
@@ -2503,6 +2564,7 @@
     },
     {
       "id": "area-woodcutting-guild",
+      "title": "Woodcutting Guild",
       "note": "Woodcutting Guild, Hosidius.",
       "group": "area",
       "priority": 40,
@@ -2522,6 +2584,7 @@
     },
     {
       "id": "area-farming-guild",
+      "title": "Farming Guild",
       "note": "Farming Guild.",
       "group": "area",
       "priority": 40,
@@ -2541,6 +2604,7 @@
     },
     {
       "id": "area-pest-control",
+      "title": "Pest Control",
       "note": "Void Knights' Outpost.",
       "group": "area",
       "priority": 40,
@@ -2560,6 +2624,7 @@
     },
     {
       "id": "area-barbarian-assault",
+      "title": "Barbarian Assault",
       "note": "Barbarian Assault.",
       "group": "area",
       "priority": 40,
@@ -2697,6 +2762,7 @@
     },
     {
       "id": "boss-while-low",
+      "title": "Low health at a boss",
       "occasion": true,
       "note": "Combinator example: only complains if a boss is near AND you're hurt.",
       "group": "boss",
@@ -2791,6 +2857,7 @@
     {
       "id": "level-up-new",
       "note": "R16, days 0-2: congratulations from someone still being polite about it. The familiar sibling takes over from day 3.",
+      "about": "A level in your first two days together, while it is still being polite. A warmer version takes over from day three.",
       "group": "misc",
       "priority": 40,
       "cooldownMs": 3000,
@@ -2878,6 +2945,7 @@
     {
       "id": "level-round",
       "note": "A multiple of ten from fifty up: the levels people tell each other about. A chance roll so the plain level line still gets some of them.",
+      "about": "A level that is a multiple of ten, from fifty up. Only some of the time, so the plain level line still gets a turn.",
       "group": "misc",
       "priority": 44,
       "cooldownMs": 60000,
@@ -2927,6 +2995,7 @@
     {
       "id": "level-mastery-again",
       "note": "The second ninety-nine and every one after. {nines} is how many now; {ninesOrdinal} says it.",
+      "about": "Your second level 99, and every one after. {nines} is how many you have; {ninesOrdinal} says it as first, second and so on.",
       "group": "misc",
       "priority": 89,
       "cooldownMs": 60000,
@@ -2967,6 +3036,7 @@
     {
       "id": "level-base",
       "note": "The lowest skill catching up: the tick every skill became fifty, sixty, seventy, eighty or ninety or better. One rule over the five thresholds, since {base} says which.",
+      "about": "When your lowest skill reaches 50, 60, 70, 80 or 90. {base} is the level.",
       "group": "misc",
       "priority": 49,
       "cooldownMs": 60000,
@@ -3011,6 +3081,7 @@
     {
       "id": "level-after-a-gap",
       "note": "A level in a skill the player had left alone for a week or more. {sinceLast} is the gap in words; levelGap is the guard that makes it a number worth printing.",
+      "about": "A level in a skill you had left alone for a week or more. {sinceLast} is how long it was.",
       "group": "misc",
       "priority": 47,
       "cooldownMs": 60000,
@@ -3029,6 +3100,7 @@
     {
       "id": "level-quick",
       "note": "The other end: a second level in the same skill inside ten minutes. Low priority and a chance roll, so it is an occasional aside rather than a commentary on fast experience.",
+      "about": "A second level in the same skill within ten minutes. Only now and then.",
       "group": "misc",
       "priority": 43,
       "cooldownMs": 300000,
@@ -3054,6 +3126,7 @@
     {
       "id": "first-meeting",
       "note": "The very first login, ever. First of the four arrival-arc lines: the moments where the follower has no history to draw on, which is exactly the window in which a new player decides whether to keep the plugin. Beats login-greeting on priority. The sessionCount gate is belt and braces behind once, so a lost memory still cannot introduce the follower twice.",
+      "about": "The very first time you log in with it. Said once, ever.",
       "group": "misc",
       "priority": 95,
       "once": true,
@@ -3171,6 +3244,7 @@
     {
       "id": "stay-start",
       "note": "R25: taking the post. Rises once on the staying edge, so one per Stay.",
+      "about": "When you tell it to Stay.",
       "group": "misc",
       "priority": 55,
       "output": "overhead",
@@ -3192,6 +3266,7 @@
     {
       "id": "stay-watch",
       "note": "R25: the sentry mutter. The chance flicker re-arms the edge, the cooldown paces it to roughly one remark per long wait.",
+      "about": "Now and then while it waits at its post.",
       "group": "misc",
       "priority": 25,
       "output": "overhead",
@@ -3222,6 +3297,7 @@
     {
       "id": "stay-fidget",
       "note": "R25: said at the post. No scroll: a flourish is refused on a Stay, since its release at the end would end the Stay.",
+      "about": "Said at its post while it waits.",
       "group": "misc",
       "priority": 25,
       "output": "overhead",
@@ -3249,6 +3325,7 @@
     {
       "id": "stay-reunion",
       "note": "R25: the absence ended - the player walked out of sight of the post and came back to it. The plugin marks it as a reunion boundary.",
+      "about": "When you come back to it after walking out of sight of its post.",
       "group": "misc",
       "priority": 60,
       "output": "overhead",
@@ -3275,6 +3352,7 @@
     {
       "id": "breather-bank",
       "note": "R6: the bank closing is an ending, and the moment after it is a boundary - the restock is done, nothing is mid-task, a remark is company rather than interruption.",
+      "about": "Just after you close the bank.",
       "group": "misc",
       "priority": 30,
       "output": "overhead",
@@ -3311,6 +3389,7 @@
     {
       "id": "login-greeting-new",
       "note": "R16, days 0-2: the same hello, before it has earned any warmth. The formality is carried by the grammar - full sentences, no contractions - rather than announced.",
+      "about": "The hello in your first two days together, before it has warmed to you.",
       "group": "misc",
       "priority": 90,
       "output": "overhead",
@@ -3340,6 +3419,7 @@
     {
       "id": "login-greeting-settling",
       "note": "R16, days 3-6: the thaw. Contractions start creeping in, which is the point.",
+      "about": "The hello in days three to six, as it starts to relax.",
       "group": "misc",
       "priority": 90,
       "output": "overhead",
@@ -3369,6 +3449,7 @@
     {
       "id": "login-greeting",
       "note": "A hello a couple of seconds after the follower teleports in on login. Spawn happens ~4 ticks after login; the login is raised once the baseline is taken, a couple of ticks in, so delayTicks 8 lands the line a few seconds after the puff. The cooldown stops quick world hops re-greeting. It steps aside after three hours away, for the away lines: one login has one line, and at a higher priority it won every one of them, so they never said a word.",
+      "about": "A hello a couple of seconds after it arrives when you log in. After three hours or more away, the welcome back lines are said instead.",
       "group": "misc",
       "priority": 90,
       "output": "overhead",
@@ -3422,6 +3503,7 @@
     {
       "id": "thrall-start",
       "note": "Fires when the follower takes a thrall's place. {style} is melee, ranged or magic.",
+      "about": "When it takes a thrall's place. {style} is melee, ranged or magic.",
       "group": "thrall",
       "priority": 95,
       "output": "overhead",
@@ -3441,6 +3523,7 @@
     {
       "id": "thrall-switch",
       "note": "Fires when a new thrall is summoned while the follower is already one. {style} is the new type, {from} the one it just left.",
+      "about": "When you summon a different thrall while it is already one. {style} is the new kind and {from} the one it left.",
       "group": "thrall",
       "priority": 95,
       "output": "overhead",
@@ -3478,6 +3561,7 @@
     },
     {
       "id": "quest-wise-old-man",
+      "title": "Wise Old Man",
       "note": "The Wise Old Man of Draynor.",
       "group": "quest",
       "priority": 35,
@@ -3755,6 +3839,7 @@
     {
       "id": "errand-document-start",
       "note": "The documenting errand: stops where it stands, takes out the quill and the scroll (items 31829 and 31830, transient props) and writes in it (pose 13302, the Write with a quill of the Advanced posing window). The scribe caught doing the job title.",
+      "about": "The note-taking errand: it stops, takes out its quill and scroll, and writes.",
       "group": "errand",
       "priority": 85,
       "output": "overhead",
@@ -4353,6 +4438,7 @@
     },
     {
       "id": "quest-duke-horacio",
+      "title": "Duke Horacio",
       "note": "Duke Horacio of Lumbridge.",
       "group": "quest",
       "priority": 35,
@@ -4376,6 +4462,7 @@
     {
       "id": "quest-cook",
       "note": "The Lumbridge cook. NOTE: other NPCs named Cook exist and will match too.",
+      "about": "The Lumbridge cook. Anyone else called Cook counts too.",
       "group": "quest",
       "priority": 35,
       "output": "overhead",
@@ -4397,6 +4484,7 @@
     },
     {
       "id": "quest-father-aereck",
+      "title": "Father Aereck",
       "note": "Father Aereck of the Lumbridge church.",
       "group": "quest",
       "priority": 35,
@@ -4419,6 +4507,7 @@
     },
     {
       "id": "quest-fred-the-farmer",
+      "title": "Fred the Farmer",
       "note": "Fred the Farmer of Lumbridge.",
       "group": "quest",
       "priority": 35,
@@ -4529,6 +4618,7 @@
     },
     {
       "id": "quest-gypsy-aris",
+      "title": "Gypsy Aris",
       "note": "Gypsy Aris of Varrock Square.",
       "group": "quest",
       "priority": 35,
@@ -4551,6 +4641,7 @@
     },
     {
       "id": "quest-sir-amik",
+      "title": "Sir Amik Varze",
       "note": "Sir Amik Varze of the White Knights.",
       "group": "quest",
       "priority": 35,
@@ -4573,6 +4664,7 @@
     },
     {
       "id": "quest-sir-tiffy",
+      "title": "Sir Tiffy Cashien",
       "note": "Sir Tiffy Cashien in Falador Park.",
       "group": "quest",
       "priority": 35,
@@ -4595,6 +4687,7 @@
     },
     {
       "id": "quest-king-roald",
+      "title": "King Roald",
       "note": "King Roald of Misthalin.",
       "group": "quest",
       "priority": 35,
@@ -4727,6 +4820,7 @@
     },
     {
       "id": "quest-romeo-juliet",
+      "title": "Romeo and Juliet",
       "note": "Romeo and Juliet of Varrock.",
       "group": "quest",
       "priority": 35,
@@ -4882,6 +4976,7 @@
     },
     {
       "id": "quest-redbeard-frank",
+      "title": "Redbeard Frank",
       "note": "Redbeard Frank of Port Sarim.",
       "group": "quest",
       "priority": 35,
@@ -5102,6 +5197,7 @@
     },
     {
       "id": "quest-king-lathas",
+      "title": "King Lathas",
       "note": "King Lathas of East Ardougne.",
       "group": "quest",
       "priority": 35,
@@ -5124,6 +5220,7 @@
     },
     {
       "id": "quest-sir-prysin",
+      "title": "Sir Prysin",
       "note": "Sir Prysin of Varrock Palace.",
       "group": "quest",
       "priority": 35,
@@ -5146,6 +5243,7 @@
     },
     {
       "id": "quest-evil-dave",
+      "title": "Evil Dave",
       "note": "Evil Dave of Edgeville. Well, of his mum's basement.",
       "group": "quest",
       "priority": 35,
@@ -5168,6 +5266,7 @@
     },
     {
       "id": "quest-ali-morrisane",
+      "title": "Ali Morrisane",
       "note": "Ali Morrisane of Al Kharid.",
       "group": "quest",
       "priority": 35,
@@ -5234,6 +5333,7 @@
     },
     {
       "id": "quest-alina-noah",
+      "title": "Alina and Noah",
       "note": "Alina and Noah, waiting for the delegation in Varrock Square.",
       "group": "quest",
       "priority": 35,
@@ -5257,6 +5357,7 @@
     },
     {
       "id": "quest-sergeant-tobyn",
+      "title": "Sergeant Tobyn",
       "note": "Sergeant Tobyn, keeping order in Varrock Square, and later on the palace roof.",
       "group": "quest",
       "priority": 35,
@@ -5279,7 +5380,9 @@
     },
     {
       "id": "quest-itzla",
+      "title": "Prince Itzla Arkan",
       "note": "Prince Itzla Arkan, heir to the throne of Varlamore. NOTE: his versions in later quests share the name and will match too.",
+      "about": "Prince Itzla Arkan, heir to the throne of Varlamore. His appearances in later quests count too.",
       "group": "quest",
       "priority": 35,
       "output": "overhead",
@@ -5301,6 +5404,7 @@
     },
     {
       "id": "quest-regulus-cento",
+      "title": "Regulus Cento",
       "note": "Regulus Cento and his quetzal, outside Varrock's east gate and in Civitas illa Fortis.",
       "group": "quest",
       "priority": 35,
@@ -5324,6 +5428,7 @@
     {
       "id": "quest-boy",
       "note": "The boy by the witch's hedge in north Taverley, who starts Witch's House. He is the only NPC named Boy.",
+      "about": "The boy by the hedge in north Taverley who starts Witch's House.",
       "group": "quest",
       "priority": 35,
       "output": "overhead",
@@ -5345,6 +5450,7 @@
     },
     {
       "id": "quest-nora-t-hagg",
+      "title": "Nora T. Hagg",
       "note": "Nora T. Hagg, the witch, walking her hedged garden in north Taverley.",
       "group": "quest",
       "priority": 35,
@@ -5368,6 +5474,7 @@
     {
       "id": "quest-veos",
       "note": "Veos, the Kourend treasure hunter, at the Port Sarim and Port Piscarilius docks. NOTE: his copies in quests and cutscenes share the name and will match too.",
+      "about": "Veos, the Kourend treasure hunter, at the Port Sarim and Port Piscarilius docks. His appearances in quests and cutscenes count too.",
       "group": "quest",
       "priority": 35,
       "output": "overhead",
@@ -5431,6 +5538,7 @@
     {
       "id": "gear-staves",
       "note": "Equip reactions fire once per equip (rising edge). Ids: battlestaff, lava battlestaff, air/water/earth/fire staves.",
+      "about": "Battlestaves, lava battlestaves, and air, water, earth and fire staves.",
       "group": "gear",
       "priority": 30,
       "output": "overhead",
@@ -5453,6 +5561,7 @@
     },
     {
       "id": "gear-dfs",
+      "title": "Dragonfire shield",
       "group": "gear",
       "priority": 30,
       "output": "overhead",
@@ -5470,6 +5579,7 @@
     },
     {
       "id": "gear-rogue",
+      "title": "Rogue equipment",
       "group": "gear",
       "priority": 30,
       "output": "overhead",
@@ -5715,6 +5825,7 @@
     },
     {
       "id": "gear-bofa",
+      "title": "Bow of faerdhinen",
       "note": "Bow of faerdhinen, incl. corrupted and recolours.",
       "group": "gear",
       "priority": 30,
@@ -5745,6 +5856,7 @@
     },
     {
       "id": "gear-scythe",
+      "title": "Scythe of vitur",
       "note": "Scythe of vitur, incl. holy and sanguine variants.",
       "group": "gear",
       "priority": 30,
@@ -5793,6 +5905,7 @@
     },
     {
       "id": "gear-osmumtens-fang",
+      "title": "Osmumten's fang",
       "note": "Osmumten's fang, incl. ornament variant.",
       "group": "gear",
       "priority": 30,
@@ -5905,6 +6018,7 @@
     },
     {
       "id": "gear-tumekens-shadow",
+      "title": "Tumeken's shadow",
       "note": "Tumeken's shadow.",
       "group": "gear",
       "priority": 30,
@@ -5925,6 +6039,7 @@
     },
     {
       "id": "gear-dinhs-bulwark",
+      "title": "Dinh's bulwark",
       "note": "Dinh's bulwark.",
       "group": "gear",
       "priority": 30,
@@ -5989,6 +6104,7 @@
     },
     {
       "id": "gear-ancestral",
+      "title": "Ancestral robes",
       "note": "Any ancestral piece: hat, robe top, robe bottom.",
       "group": "gear",
       "priority": 30,
@@ -6034,6 +6150,7 @@
     },
     {
       "id": "gear-black-dhide",
+      "title": "Black d'hide",
       "note": "Black d'hide body or chaps, incl. trimmed variants.",
       "group": "gear",
       "priority": 30,
@@ -6284,6 +6401,7 @@
     },
     {
       "id": "gear-fury",
+      "title": "Amulet of fury",
       "note": "Amulet of fury, incl. ornament variant.",
       "group": "gear",
       "priority": 30,
@@ -6305,6 +6423,7 @@
     },
     {
       "id": "gear-torture",
+      "title": "Amulet of torture",
       "note": "Amulet of torture, incl. ornament variant.",
       "group": "gear",
       "priority": 30,
@@ -6326,6 +6445,7 @@
     },
     {
       "id": "gear-anguish",
+      "title": "Necklace of anguish",
       "note": "Necklace of anguish, incl. ornament variant.",
       "group": "gear",
       "priority": 30,
@@ -6347,6 +6467,7 @@
     },
     {
       "id": "gear-occult",
+      "title": "Occult necklace",
       "note": "Occult necklace, incl. ornament variant.",
       "group": "gear",
       "priority": 30,
@@ -6368,6 +6489,7 @@
     },
     {
       "id": "gear-glory",
+      "title": "Amulet of glory",
       "note": "Amulet of glory, any charge, incl. trimmed variants.",
       "group": "gear",
       "priority": 30,
@@ -6664,6 +6786,7 @@
     },
     {
       "id": "gear-set-dharok",
+      "title": "Full Dharok's (set)",
       "note": "Full Dharok's: helm, platebody, platelegs and greataxe, any repair state.",
       "group": "gear",
       "priority": 35,
@@ -6947,6 +7070,7 @@
     },
     {
       "id": "gear-skillcape",
+      "title": "Skill cape",
       "note": "Any skillcape, trimmed or not.",
       "group": "gear",
       "priority": 30,
@@ -7013,6 +7137,7 @@
     },
     {
       "id": "gear-avas",
+      "title": "Ava's device",
       "note": "Ava's attractor, accumulator or assembler.",
       "group": "gear",
       "priority": 30,
@@ -7351,6 +7476,7 @@
     {
       "id": "mirror-teleport",
       "note": "Mirrors the player's teleport cast, then vanishes and reappears beside them. holdStill plants the follower for the duration: without it, a teleport that happens while the follower is off on an idle distraction interrupts its own cast. The player animating resets the idle counter, the wander is released the same tick, and the follower abandons the animation to run back to somebody who is no longer there. The hold also keeps updateWander out - it treats a held emote as busy.",
+      "about": "Copies your teleport, then vanishes and reappears beside you.",
       "group": "reactions",
       "priority": 60,
       "cooldownMs": 3000,
@@ -7369,6 +7495,7 @@
     {
       "id": "mirror-home-teleport",
       "note": "ANY home teleport, default or a cosmetic override the follower doesn't own, plays the DEFAULT home teleport on the follower, rune-circle graphics and all (stage pairing measured in game: animations 4847/4850/4853/4855/4857 with graphics 800/-/802/803/804). Trigger ids are each variant's FIRST stage; the chain carries the rest, and the long cooldown stops later stages retriggering it. For a new variant, add its first stage id here (::follower watch announces it).",
+      "about": "Copies any home teleport with the standard one, rune circle and all.",
       "group": "reactions",
       "priority": 70,
       "cooldownMs": 15000,
@@ -7403,6 +7530,7 @@
     {
       "id": "mimic-emotes",
       "note": "Copies your emote. Every animation in RuneLite's constants with EMOTE in its name that is a ONE-SHOT, measured from the cache. Matching on the EMOTE_ prefix alone missed HUMAN_EMOTE_CRABDANCE and others, which is why the crab dance never mirrored. The authored loops are in mimic-emote-loops instead: a chain ends when the animation controller finishes, which a looping clip never does.",
+      "about": "Copies an emote you do.",
       "group": "mimic",
       "priority": 40,
       "delayTicks": 1,
@@ -7494,6 +7622,7 @@
     {
       "id": "answer-yes",
       "note": "An emote done AT the follower - within a tile and facing it - is answered rather than copied: a yes back. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.",
+      "about": "An emote done at it, from within a tile and facing it, gets an answer instead of a copy: a yes back.",
       "group": "mimic",
       "priority": 45,
       "cooldownMs": 3000,
@@ -7518,6 +7647,7 @@
     {
       "id": "answer-no",
       "note": "An emote done AT the follower - within a tile and facing it - is answered rather than copied: a no gets a think. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.",
+      "about": "An emote done at it, from within a tile and facing it, gets an answer instead of a copy: a no gets a think.",
       "group": "mimic",
       "priority": 45,
       "cooldownMs": 3000,
@@ -7542,6 +7672,7 @@
     {
       "id": "answer-think",
       "note": "An emote done AT the follower - within a tile and facing it - is answered rather than copied: a think gets a shrug. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.",
+      "about": "An emote done at it, from within a tile and facing it, gets an answer instead of a copy: a think gets a shrug.",
       "group": "mimic",
       "priority": 45,
       "cooldownMs": 3000,
@@ -7566,6 +7697,7 @@
     {
       "id": "answer-bow",
       "note": "An emote done AT the follower - within a tile and facing it - is answered rather than copied: a bow gets a bow. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.",
+      "about": "An emote done at it, from within a tile and facing it, gets an answer instead of a copy: a bow gets a bow.",
       "group": "mimic",
       "priority": 45,
       "cooldownMs": 3000,
@@ -7590,6 +7722,7 @@
     {
       "id": "answer-angry",
       "note": "An emote done AT the follower - within a tile and facing it - is answered rather than copied: anger gets a shrug. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.",
+      "about": "An emote done at it, from within a tile and facing it, gets an answer instead of a copy: anger gets a shrug.",
       "group": "mimic",
       "priority": 45,
       "cooldownMs": 3000,
@@ -7614,6 +7747,7 @@
     {
       "id": "answer-cry",
       "note": "An emote done AT the follower - within a tile and facing it - is answered rather than copied: crying gets a think. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.",
+      "about": "An emote done at it, from within a tile and facing it, gets an answer instead of a copy: crying gets a think.",
       "group": "mimic",
       "priority": 45,
       "cooldownMs": 3000,
@@ -7638,6 +7772,7 @@
     {
       "id": "answer-laugh",
       "note": "An emote done AT the follower - within a tile and facing it - is answered rather than copied: a laugh is caught. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.",
+      "about": "An emote done at it, from within a tile and facing it, gets an answer instead of a copy: a laugh is caught.",
       "group": "mimic",
       "priority": 45,
       "cooldownMs": 3000,
@@ -7662,6 +7797,7 @@
     {
       "id": "answer-cheer",
       "note": "An emote done AT the follower - within a tile and facing it - is answered rather than copied: a cheer gets a clap. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.",
+      "about": "An emote done at it, from within a tile and facing it, gets an answer instead of a copy: a cheer gets a clap.",
       "group": "mimic",
       "priority": 45,
       "cooldownMs": 3000,
@@ -7686,6 +7822,7 @@
     {
       "id": "answer-wave",
       "note": "An emote done AT the follower - within a tile and facing it - is answered rather than copied: a wave gets a wave. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.",
+      "about": "An emote done at it, from within a tile and facing it, gets an answer instead of a copy: a wave gets a wave.",
       "group": "mimic",
       "priority": 45,
       "cooldownMs": 3000,
@@ -7710,6 +7847,7 @@
     {
       "id": "answer-beckon",
       "note": "An emote done AT the follower - within a tile and facing it - is answered rather than copied: a beckon gets a yes. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.",
+      "about": "An emote done at it, from within a tile and facing it, gets an answer instead of a copy: a beckon gets a yes.",
       "group": "mimic",
       "priority": 45,
       "cooldownMs": 3000,
@@ -7734,6 +7872,7 @@
     {
       "id": "answer-clap",
       "note": "An emote done AT the follower - within a tile and facing it - is answered rather than copied: applause gets a bow. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.",
+      "about": "An emote done at it, from within a tile and facing it, gets an answer instead of a copy: applause gets a bow.",
       "group": "mimic",
       "priority": 45,
       "cooldownMs": 3000,
@@ -7758,6 +7897,7 @@
     {
       "id": "answer-dance",
       "note": "An emote done AT the follower - within a tile and facing it - is answered rather than copied: a dance gets a dance, a beat behind. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.",
+      "about": "An emote done at it, from within a tile and facing it, gets an answer instead of a copy: a dance gets a dance, a beat behind.",
       "group": "mimic",
       "priority": 45,
       "cooldownMs": 3000,
@@ -7782,6 +7922,7 @@
     {
       "id": "answer-jump-for-joy",
       "note": "An emote done AT the follower - within a tile and facing it - is answered rather than copied: a jump for joy gets a cheer. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.",
+      "about": "An emote done at it, from within a tile and facing it, gets an answer instead of a copy: a jump for joy gets a cheer.",
       "group": "mimic",
       "priority": 45,
       "cooldownMs": 3000,
@@ -7806,6 +7947,7 @@
     {
       "id": "answer-salute",
       "note": "An emote done AT the follower - within a tile and facing it - is answered rather than copied: a salute is returned. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.",
+      "about": "An emote done at it, from within a tile and facing it, gets an answer instead of a copy: a salute is returned.",
       "group": "mimic",
       "priority": 45,
       "cooldownMs": 3000,
@@ -7830,6 +7972,7 @@
     {
       "id": "answer-shrug",
       "note": "An emote done AT the follower - within a tile and facing it - is answered rather than copied: a shrug gets a shrug. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.",
+      "about": "An emote done at it, from within a tile and facing it, gets an answer instead of a copy: a shrug gets a shrug.",
       "group": "mimic",
       "priority": 45,
       "cooldownMs": 3000,
@@ -7854,6 +7997,7 @@
     {
       "id": "answer-yawn",
       "note": "An emote done AT the follower - within a tile and facing it - is answered rather than copied: a yawn is catching. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.",
+      "about": "An emote done at it, from within a tile and facing it, gets an answer instead of a copy: a yawn is catching.",
       "group": "mimic",
       "priority": 45,
       "cooldownMs": 3000,
@@ -7878,6 +8022,7 @@
     {
       "id": "answer-blow-kiss",
       "note": "An emote done AT the follower - within a tile and facing it - is answered rather than copied: a blown kiss gets a bow. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.",
+      "about": "An emote done at it, from within a tile and facing it, gets an answer instead of a copy: a blown kiss gets a bow.",
       "group": "mimic",
       "priority": 45,
       "cooldownMs": 3000,
@@ -7902,6 +8047,7 @@
     {
       "id": "answer-raspberry",
       "note": "An emote done AT the follower - within a tile and facing it - is answered rather than copied: a raspberry gets anger. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.",
+      "about": "An emote done at it, from within a tile and facing it, gets an answer instead of a copy: a raspberry gets anger.",
       "group": "mimic",
       "priority": 45,
       "cooldownMs": 3000,
@@ -7926,6 +8072,7 @@
     {
       "id": "answer-panic",
       "note": "An emote done AT the follower - within a tile and facing it - is answered rather than copied: panic gets a think. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.",
+      "about": "An emote done at it, from within a tile and facing it, gets an answer instead of a copy: panic gets a think.",
       "group": "mimic",
       "priority": 45,
       "cooldownMs": 3000,
@@ -7950,6 +8097,7 @@
     {
       "id": "answer-jig",
       "note": "An emote done AT the follower - within a tile and facing it - is answered rather than copied: a jig gets a jig. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.",
+      "about": "An emote done at it, from within a tile and facing it, gets an answer instead of a copy: a jig gets a jig.",
       "group": "mimic",
       "priority": 45,
       "cooldownMs": 3000,
@@ -7974,6 +8122,7 @@
     {
       "id": "answer-spin",
       "note": "An emote done AT the follower - within a tile and facing it - is answered rather than copied: a spin gets a spin. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.",
+      "about": "An emote done at it, from within a tile and facing it, gets an answer instead of a copy: a spin gets a spin.",
       "group": "mimic",
       "priority": 45,
       "cooldownMs": 3000,
@@ -7998,6 +8147,7 @@
     {
       "id": "answer-headbang",
       "note": "An emote done AT the follower - within a tile and facing it - is answered rather than copied: a headbang gets a headbang. Outranks the mimic by priority for that one event, so the copy never plays on top. The closest OSRS gets to petting the dog: an interaction pointed at it, replied to.",
+      "about": "An emote done at it, from within a tile and facing it, gets an answer instead of a copy: a headbang gets a headbang.",
       "group": "mimic",
       "priority": 45,
       "cooldownMs": 3000,
@@ -8022,6 +8172,7 @@
     {
       "id": "mimic-eat",
       "note": "Eats when you eat. 829 covers most food, 1191 bananas, 1194 rum, 1327 tankards; add more ids via ::follower watch.",
+      "about": "Eats when you eat.",
       "group": "mimic",
       "priority": 40,
       "cooldownMs": 8000,
@@ -8114,6 +8265,7 @@
       "occasion": true,
       "markHere": "it went wrong for you",
       "note": "The moment you die. Highest priority there is - nothing talks over this.",
+      "about": "The moment you die.",
       "group": "reactions",
       "priority": 90,
       "cooldownMs": 60000,
@@ -8228,6 +8380,7 @@
     {
       "id": "cats-and-pets",
       "note": "Greets a pet or cat standing nearby. petNearby matches the game's own isFollower flag, which covers all 228 pets in the cache and any added later without naming one of them. The name list is only for cats that are NOT followers - ordinary scenery NPCs like Trotters, which no pet list would ever catch. Proximity, not npcSpawn: a spawn fires once when the NPC enters the scene, so walking up to one already standing there triggered nothing.",
+      "about": "Greets a pet or a cat standing nearby.",
       "group": "reactions",
       "priority": 20,
       "cooldownMs": 900000,
@@ -8478,6 +8631,7 @@
     {
       "id": "wonders-about-you",
       "note": "R26: the attention turns around. Deliberately no asks field - a real answer would make it a form, and the not-needing-one is the warmth. The trail-off throttles it like all idle speech.",
+      "about": "Now and then, when things are quiet, it wonders about you.",
       "group": "idle",
       "priority": 16,
       "output": "overhead",
@@ -8515,6 +8669,7 @@
     {
       "id": "idle-chatter-wilds",
       "note": "R18: the idle pool in the Wilderness. Same trigger shape as idle-chatter, different register - clipped and watchful, because standing about is a decision here.",
+      "about": "Idle chatter in the Wilderness: clipped and watchful.",
       "group": "idle",
       "priority": 10,
       "cooldownMs": 300000,
@@ -8546,6 +8701,7 @@
     {
       "id": "idle-chatter-town",
       "note": "R18: the idle pool in a crowd - people-watching instead of foot-tapping. Guarded off in the Wilderness, where a crowd means something else entirely.",
+      "about": "Idle chatter in a crowd: people-watching.",
       "group": "idle",
       "priority": 10,
       "cooldownMs": 300000,
@@ -8719,6 +8875,7 @@
     {
       "id": "kill-cheer",
       "note": "Sometimes cheers a kill. maximum 99 keeps this to ordinary monsters, leaving anything at the boss line to kill-boss-celebrate. holdStill plants the follower for the 2.4s cheer, since walking cancels an emote and it is usually chasing you to the next target.",
+      "about": "Sometimes cheers when you kill an ordinary monster.",
       "group": "combat",
       "priority": 55,
       "cooldownMs": 40000,
@@ -8765,6 +8922,7 @@
       "occasion": true,
       "markHere": "you put that thing down",
       "note": "A proper celebration for a boss kill: cheer, dance, then a jump for joy (862/866/2109, 7.4s in total). The 6-8 tick delay lets the fight formally end and the spectating ward wind down first, so the celebration follows the fight instead of colliding with it - the ward's own release is 4 ticks, which this clears. It was 13-16, which cleared the ward three times over and left an eight second hole between the kill and the cheer. namedBoss: true keeps it for the bosses named in the boss rules: play test, 14 Oct, it had worn out on every level-100 Slayer demon of a task.",
+      "about": "A proper celebration when you kill a named boss: a cheer, a dance and a jump for joy.",
       "group": "boss",
       "priority": 70,
       "cooldownMs": 30000,
@@ -8819,6 +8977,7 @@
     {
       "id": "kill-count-round",
       "note": "The counts a person says out loud - five, ten, twenty-five, fifty, seventy-five, the hundreds, then every five hundred. The account's number rather than the follower's tally, so it can say forty-first on the day they met. Acknowledging the cycle is what makes the fiftieth trip feel watched rather than repeated.",
+      "about": "Your boss kill count at the numbers people say out loud: 5, 10, 25, 50, 75, the hundreds, then every 500. {boss} is the boss and {count} the count.",
       "group": "boss",
       "priority": 72,
       "cooldownMs": 60000,
@@ -8861,6 +9020,7 @@
     {
       "id": "mimic-emote-loops",
       "note": "Holds your emote for as long as you do. The game splits a held emote in two - an entry clip, which mimic-emotes copies, and a loop it plays until you stop. The loop is mirrored as a POSE rather than an emote, because a pose loops by nature and is released when your animation changes; playing it as an emote would wait forever for a finish that never comes.",
+      "about": "Holds an emote for as long as you hold yours.",
       "group": "mimic",
       "priority": 40,
       "cooldownMs": 600,
@@ -9006,6 +9166,7 @@
     {
       "id": "mood-recovering",
       "note": "A note after climbing out of a bad stretch. It used to trigger on a BOSS kill, which is the one kill that already has kill-boss-celebrate sitting on it at priority 70 - so whenever this matched, that matched too and outranked it, and this could only ever have fired in the celebration's cooldown gap. Two boss kills inside thirty seconds is not a thing, so it never fired at all. Ordinary kills now, where the big moment is not already spoken for, and above kill-cheer: the day turning is worth more than a generic cheer.",
+      "about": "After a kill, once its mood has climbed out of a bad stretch.",
       "group": "combat",
       "priority": 60,
       "cooldownMs": 180000,
@@ -9038,6 +9199,7 @@
     {
       "id": "kill-tally",
       "note": "Notices the count. 'every': 25 fires on the twenty-fifth of THAT npc and every twenty-fifth after, with {count} carrying the number and {npc} the name. Nothing says paying attention like a tally.",
+      "about": "Every 25th kill of the same monster. {count} is the number and {npc} the name.",
       "group": "combat",
       "priority": 58,
       "cooldownMs": 20000,
@@ -9069,6 +9231,7 @@
         "ticks": 8
       },
       "note": "The bigger milestone, at every hundredth of one npc. Higher priority than kill-tally so the round number wins when both come up together.",
+      "about": "Every 100th kill of the same monster.",
       "group": "combat",
       "priority": 71,
       "cooldownMs": 20000,
@@ -9093,6 +9256,7 @@
     {
       "id": "repeating-a-while",
       "note": "Notices the same animation running for about two minutes. Knows nothing about the skill - a repeating animation IS the activity, which covers every one of them at once, including ones added later.",
+      "about": "When you have been doing the same thing for about two minutes.",
       "group": "idle",
       "priority": 30,
       "cooldownMs": 240000,
@@ -9126,6 +9290,7 @@
     {
       "id": "repeating-a-long-while",
       "note": "The same, much later - about eight minutes of one activity. Higher priority so it wins over the shorter one once it is due.",
+      "about": "When you have been doing the same thing for about eight minutes.",
       "group": "idle",
       "priority": 34,
       "cooldownMs": 600000,
@@ -9184,6 +9349,7 @@
     {
       "id": "last-time",
       "note": "The greeting that remembers what you were doing rather than how long it has been. lastTime is the last nameable thing the two of you did - the work, a boss, a level, a quest - carried across the logout. An hour away or more, and a chance roll so the plain away lines keep a share.",
+      "about": "A welcome back that remembers what you were last doing together, after an hour or more away. {lastTime} is that thing.",
       "group": "misc",
       "priority": 79,
       "cooldownMs": 5000,
@@ -9254,6 +9420,7 @@
     {
       "id": "noticed-valuable",
       "note": "A drop of yours worth having that you walked away from. The follower has gone to stand by it; this is the one line. Only a thing that is still there and on screen, checked the tick it sets off.",
+      "about": "A drop worth having that you walked away from. It goes and stands by it. {thing} is the drop.",
       "group": "reactions",
       "priority": 62,
       "cooldownMs": 60000,
@@ -9392,6 +9559,7 @@
     {
       "id": "stepped-aside",
       "note": "The player walked straight at the parked follower and it stepped aside at the last tick. Ellie's rule: not preemptively, and with a word about personal space, which is what made players respect her.",
+      "about": "When you walk straight at it while it stands still, it steps aside at the last moment.",
       "group": "reactions",
       "priority": 50,
       "cooldownMs": 60000,
@@ -9419,6 +9587,7 @@
     {
       "id": "away-a-day",
       "note": "A day or more. Higher priority so it wins over away-a-while.",
+      "about": "Welcome back after a day or more away.",
       "group": "misc",
       "priority": 74,
       "cooldownMs": 5000,
@@ -9444,6 +9613,7 @@
     {
       "id": "away-a-long-time",
       "note": "A week or more. The warmest of the three, and the highest priority.",
+      "about": "Welcome back after a week or more away.",
       "group": "misc",
       "priority": 78,
       "cooldownMs": 5000,
@@ -9517,6 +9687,7 @@
     {
       "id": "cold-stamp-feet",
       "note": "Stamps its feet in the snow. Silent on purpose - a physical tell says more than a line about being cold. Animation 4278 is EMOTE_STAMPFEET, measured from the cache; the regions are ones RegionAudit has confirmed.",
+      "about": "Stamps its feet in the snow. No words.",
       "group": "area",
       "priority": 25,
       "cooldownMs": 45000,
@@ -9602,6 +9773,7 @@
     {
       "id": "thieving-lookout",
       "note": "Keeping watch while the player works. Animation 6840 is GENERIC_LOOK_AND_SEARCH, a look about that starts and ends standing, 3.4 ticks. The distant idle it replaced moved too little to read as anything. Silent by design - the whole session is muted, and an animation-only rule is movement rather than chatter so it plays anyway.",
+      "about": "Keeps watch while you steal. No words.",
       "group": "reactions",
       "priority": 20,
       "cooldownMs": 12000,
@@ -9621,6 +9793,7 @@
     },
     {
       "id": "idle-mood-low-13997",
+      "title": "Low mood (disgruntled)",
       "note": "Idle posture for a low mood (disgruntled, concerned). Silent: this is the mood being SHOWN rather than said, which is the half that does not wear thin. Same trigger as the plain fidgets, with a mood band on top.",
       "group": "idle",
       "priority": 7,
@@ -9650,6 +9823,7 @@
     },
     {
       "id": "idle-mood-low-13994",
+      "title": "Low mood (concerned)",
       "note": "Idle posture for a low mood (disgruntled, concerned). Silent: this is the mood being SHOWN rather than said, which is the half that does not wear thin. Same trigger as the plain fidgets, with a mood band on top.",
       "group": "idle",
       "priority": 8,
@@ -9679,6 +9853,7 @@
     },
     {
       "id": "idle-mood-down-13994",
+      "title": "Down mood (concerned)",
       "note": "Idle posture for a down mood (concerned, distant). Silent: this is the mood being SHOWN rather than said, which is the half that does not wear thin. Same trigger as the plain fidgets, with a mood band on top.",
       "group": "idle",
       "priority": 9,
@@ -9708,6 +9883,7 @@
     },
     {
       "id": "idle-mood-down-13993",
+      "title": "Down mood (distant)",
       "note": "Idle posture for a down mood (concerned, distant). Silent: this is the mood being SHOWN rather than said, which is the half that does not wear thin. Same trigger as the plain fidgets, with a mood band on top.",
       "group": "idle",
       "priority": 10,
@@ -9737,6 +9913,7 @@
     },
     {
       "id": "idle-mood-even-13993",
+      "title": "Even mood (distant)",
       "note": "Idle posture for a even mood (distant, confused). Silent: this is the mood being SHOWN rather than said, which is the half that does not wear thin. Same trigger as the plain fidgets, with a mood band on top.",
       "group": "idle",
       "priority": 11,
@@ -9766,6 +9943,7 @@
     },
     {
       "id": "idle-mood-even-14001",
+      "title": "Even mood (confused)",
       "note": "Idle posture for a even mood (distant, confused). Silent: this is the mood being SHOWN rather than said, which is the half that does not wear thin. Same trigger as the plain fidgets, with a mood band on top.",
       "group": "idle",
       "priority": 12,
@@ -9795,6 +9973,7 @@
     },
     {
       "id": "idle-mood-good-13995",
+      "title": "Good mood (pleased)",
       "note": "Idle posture for a good mood (pleased, determined). Silent: this is the mood being SHOWN rather than said, which is the half that does not wear thin. Same trigger as the plain fidgets, with a mood band on top.",
       "group": "idle",
       "priority": 13,
@@ -9824,6 +10003,7 @@
     },
     {
       "id": "idle-mood-good-13999",
+      "title": "Good mood (determined)",
       "note": "Idle posture for a good mood (pleased, determined). Silent: this is the mood being SHOWN rather than said, which is the half that does not wear thin. Same trigger as the plain fidgets, with a mood band on top.",
       "group": "idle",
       "priority": 14,
@@ -9853,6 +10033,7 @@
     },
     {
       "id": "idle-mood-high-13995",
+      "title": "High mood (pleased)",
       "note": "Idle posture for a high mood (pleased, smug). Silent: this is the mood being SHOWN rather than said, which is the half that does not wear thin. Same trigger as the plain fidgets, with a mood band on top.",
       "group": "idle",
       "priority": 15,
@@ -9882,6 +10063,7 @@
     },
     {
       "id": "idle-mood-high-14000",
+      "title": "High mood (smug)",
       "note": "Idle posture for a high mood (pleased, smug). Silent: this is the mood being SHOWN rather than said, which is the half that does not wear thin. Same trigger as the plain fidgets, with a mood band on top.",
       "group": "idle",
       "priority": 16,
@@ -9913,6 +10095,7 @@
       "id": "session-10",
       "occasion": true,
       "note": "The 10th time the follower has been started up with this player. Pinned to the exact number with minimum and maximum, so the line can name it - 'every 25th' would have to stay vague. The count lives in the config and survives a logout, which is the whole point: a session counter that resets is not a memory.",
+      "about": "The 10th time you have played together.",
       "group": "misc",
       "priority": 92,
       "cooldownMs": 60000,
@@ -9934,6 +10117,7 @@
       "id": "session-50",
       "occasion": true,
       "note": "The 50th time the follower has been started up with this player. Pinned to the exact number with minimum and maximum, so the line can name it - 'every 25th' would have to stay vague. The count lives in the config and survives a logout, which is the whole point: a session counter that resets is not a memory.",
+      "about": "The 50th time you have played together.",
       "group": "misc",
       "priority": 92,
       "cooldownMs": 60000,
@@ -9955,6 +10139,7 @@
       "id": "session-100",
       "occasion": true,
       "note": "The 100th time the follower has been started up with this player. Pinned to the exact number with minimum and maximum, so the line can name it - 'every 25th' would have to stay vague. The count lives in the config and survives a logout, which is the whole point: a session counter that resets is not a memory.",
+      "about": "The 100th time you have played together.",
       "group": "misc",
       "priority": 92,
       "cooldownMs": 60000,
@@ -9976,6 +10161,7 @@
       "id": "session-365",
       "occasion": true,
       "note": "The 365th time the follower has been started up with this player. Pinned to the exact number with minimum and maximum, so the line can name it - 'every 25th' would have to stay vague. The count lives in the config and survives a logout, which is the whole point: a session counter that resets is not a memory.",
+      "about": "The 365th time you have played together.",
       "group": "misc",
       "priority": 92,
       "cooldownMs": 60000,
@@ -9997,6 +10183,7 @@
       "id": "record-hit",
       "markHere": "you hit harder than you ever had",
       "note": "A new biggest hit. {value} is the new mark and {previous} the one it beat, which is what makes it land - a record without the old number is just a number. The first hit after an install seeds the record silently and says nothing, so this cannot fire on day one.",
+      "about": "Your biggest hit yet. {value} is the new best and {previous} the one it beat. Never on the first day.",
       "group": "combat",
       "priority": 68,
       "cooldownMs": 20000,
@@ -10021,6 +10208,7 @@
     {
       "id": "record-session",
       "note": "The longest we have ever been out. Said once, on the minute it crosses - the plugin stores the mark every minute but only announces the crossing, or it would be a clock rather than a compliment.",
+      "about": "Your longest time out together yet, said the minute it is beaten. {value} is the minutes.",
       "group": "misc",
       "priority": 60,
       "cooldownMs": 600000,
@@ -10196,6 +10384,7 @@
     {
       "id": "hovered",
       "note": "Being LOOKED at. The mouse resting on the follower for eight ticks is attention; a cursor crossing the screen is not, which is what the tick count is for. Costs nothing to know - the clickbox is already projected every client tick to draw the hover hint.",
+      "about": "When your mouse rests on it for a few seconds.",
       "group": "reactions",
       "priority": 30,
       "cooldownMs": 120000,
@@ -10253,6 +10442,7 @@
     {
       "id": "ask-outing",
       "note": "A question, which is a different thing from a remark. asks names a tree in dialogs.json; while the question is open, right-clicking Talk-to opens THAT conversation instead of the everyday one, and picking a branch is the answer. It used to want a word typed into public chat, which asked the player to know a magic word and asked the follower to listen to the whole street. The window is opened by SAYING it, so a question the mute swallowed leaves nothing waiting.",
+      "about": "Asks you a question. Talk to it to answer.",
       "group": "idle",
       "priority": 26,
       "cooldownMs": 900000,
@@ -10317,6 +10507,7 @@
     {
       "id": "want-lumbridge",
       "note": "The follower asking for something, which is the only thing in the whole rule set that runs the other way round: everything else is a reaction to what you did, and this makes the next few minutes an answer to what IT said. Going to region 12850 within twenty minutes fulfils it; the deadline passing expires it. Three of these at descending priority with a chance roll, so the place asked for varies - only one want can be open at a time.",
+      "about": "Asks to go to Lumbridge. Take it there within twenty minutes and it is pleased.",
       "group": "idle",
       "priority": 74,
       "cooldownMs": 1200000,
@@ -10368,6 +10559,7 @@
     {
       "id": "want-grand-exchange",
       "note": "The follower asking for something, which is the only thing in the whole rule set that runs the other way round: everything else is a reaction to what you did, and this makes the next few minutes an answer to what IT said. Going to region 12598 within twenty minutes fulfils it; the deadline passing expires it. Three of these at descending priority with a chance roll, so the place asked for varies - only one want can be open at a time.",
+      "about": "Asks to go to the Grand Exchange. Take it there within twenty minutes and it is pleased.",
       "group": "idle",
       "priority": 73,
       "cooldownMs": 1200000,
@@ -10419,6 +10611,7 @@
     {
       "id": "want-fishing-guild",
       "note": "The follower asking for something, which is the only thing in the whole rule set that runs the other way round: everything else is a reaction to what you did, and this makes the next few minutes an answer to what IT said. Going to region 10293 within twenty minutes fulfils it; the deadline passing expires it. Three of these at descending priority with a chance roll, so the place asked for varies - only one want can be open at a time.",
+      "about": "Asks to go to the Fishing Guild. Take it there within twenty minutes and it is pleased.",
       "group": "idle",
       "priority": 72,
       "cooldownMs": 1200000,
@@ -10495,6 +10688,7 @@
       "id": "want-fulfilled",
       "occasion": true,
       "note": "The player actually went. This is the payoff for the whole want mechanism and the biggest single mood swing in the file: a thing with desires that can be SATISFIED reads as alive in a way no amount of commentary manages. {want} names the place it asked for.",
+      "about": "When you take it where it asked to go. {want} is the place.",
       "group": "reactions",
       "priority": 78,
       "cooldownMs": 60000,
@@ -10542,6 +10736,7 @@
     {
       "id": "place-liked",
       "note": "Somewhere THIS follower is fond of. The set is rolled once per character from the regions the rule set already has opinions about, then kept for good - so two people do not get the same follower, and the mood stops being weather and becomes a temperament you can learn.",
+      "about": "Somewhere this follower is fond of. Each follower has its own favourites, picked once and kept.",
       "group": "area",
       "priority": 24,
       "cooldownMs": 3600000,
@@ -10613,6 +10808,7 @@
         "minutes": 3
       },
       "note": "A WARNING rather than a report. Two slots left, not none: reacting before is the thing that reads as a mind paying attention, and reacting after is only narration. Counted by walking the container, so it is right whichever way round size() and count() are. In the gear group, which the settings call Items: that is where a player looks for it.",
+      "about": "A warning when your bag has two slots left.",
       "group": "gear",
       "priority": 54,
       "cooldownMs": 600000,
@@ -10744,6 +10940,7 @@
     {
       "id": "flinch-big-hit",
       "note": "A flinch, and nothing else. Animation 424 is HUMAN_UNARMEDBLOCK, 1.26s, the unarmed defensive recoil. Silent on purpose: a body that reacts before the mouth does is most of what makes something look like it is watching, and a line here would be one more thing said during a fight that is already noisy.",
+      "about": "Flinches when you take a big hit. No words.",
       "group": "combat",
       "priority": 48,
       "cooldownMs": 8000,
@@ -10757,6 +10954,7 @@
       "id": "want-fulfilled-lumbridge",
       "occasion": true,
       "note": "Arriving where it asked, with the REASON. The generic line thanks you for coming; this says why that place and not another, which is the difference between a companion that is pleased and one that has a preference. Above the generic want-fulfilled at 78, which stays as the fallback for any want without a line of its own. hushMs takes the floor for 10 seconds: the region change raises an area line at the same instant, and two lines about one arrival is one too many.",
+      "about": "When you take it to Lumbridge as it asked, it says why it wanted to go.",
       "group": "reactions",
       "priority": 80,
       "cooldownMs": 60000,
@@ -10792,6 +10990,7 @@
       "id": "want-fulfilled-grand-exchange",
       "occasion": true,
       "note": "Arriving where it asked, with the REASON. The generic line thanks you for coming; this says why that place and not another, which is the difference between a companion that is pleased and one that has a preference. Above the generic want-fulfilled at 78, which stays as the fallback for any want without a line of its own. hushMs takes the floor for 10 seconds: the region change raises an area line at the same instant, and two lines about one arrival is one too many.",
+      "about": "When you take it to the Grand Exchange as it asked, it says why it wanted to go.",
       "group": "reactions",
       "priority": 80,
       "cooldownMs": 60000,
@@ -10827,6 +11026,7 @@
       "id": "want-fulfilled-fishing-guild",
       "occasion": true,
       "note": "Arriving where it asked, with the REASON. The generic line thanks you for coming; this says why that place and not another, which is the difference between a companion that is pleased and one that has a preference. Above the generic want-fulfilled at 78, which stays as the fallback for any want without a line of its own. hushMs takes the floor for 10 seconds: the region change raises an area line at the same instant, and two lines about one arrival is one too many.",
+      "about": "When you take it to the Fishing Guild as it asked, it says why it wanted to go.",
       "group": "reactions",
       "priority": 80,
       "cooldownMs": 60000,
@@ -10861,6 +11061,7 @@
     {
       "id": "memory-close-call",
       "note": "Filed when you come out the far side of nearly dying. The follower does not need to say anything at the time - critical-hp already does - it just needs to remember, so it can bring it up later. The particulars (who, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.",
+      "about": "Remembers when you nearly die, to bring up later.",
       "group": "memory",
       "priority": 30,
       "cooldownMs": 300000,
@@ -10928,6 +11129,7 @@
         "ticks": 8
       },
       "note": "Filed on a drop big enough to still be talking about an hour later. Above the loot-celebrate threshold so the celebration wins the event and this one only files - two lines about one drop is one too many, and the recall is the part that matters here. The particulars (who, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.",
+      "about": "Remembers a really big drop, to bring up later.",
       "group": "memory",
       "priority": 20,
       "cooldownMs": 600000,
@@ -10957,6 +11159,7 @@
         "ticks": 8
       },
       "note": "Filed when something with a combat level in three figures stops moving. Low priority so the celebration rules win the kill. The particulars (who, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.",
+      "about": "Remembers a kill of something level 100 or higher, to bring up later.",
       "group": "memory",
       "priority": 20,
       "cooldownMs": 600000,
@@ -11105,6 +11308,7 @@
     {
       "id": "recall-here",
       "note": "Back in the region the incident happened in. The rule is state, so it fires once on the rising edge, which is the moment of arriving; the cooldown keeps a day at the same spot to one remark.",
+      "about": "Back in the place where the thing it keeps bringing up happened. {memory} is that thing.",
       "group": "memory",
       "priority": 40,
       "cooldownMs": 1800000,
@@ -11133,6 +11337,7 @@
     {
       "id": "recall-foe",
       "note": "One of the things the incident was with, back in sight. {memoryWho} is the NPC's name off the record; memoryFoeNearby guarantees it is there to print.",
+      "about": "When a creature from the thing it keeps bringing up is in sight. {memoryWho} is its name and {memory} the thing.",
       "group": "memory",
       "priority": 45,
       "cooldownMs": 1200000,
@@ -11702,6 +11907,7 @@
     {
       "id": "gifted-accept",
       "note": "The player picked 'Found you that <wish>.' AND the thing is really in their bag - checked, because play testing produced the bluff within minutes. Nothing is consumed (client-side), but presence is honest.",
+      "about": "When you hand over the thing it wished for and it really is in your bag. {wish} is the thing.",
       "group": "souvenir",
       "priority": 50,
       "output": "overhead",
@@ -11756,6 +11962,7 @@
     {
       "id": "gifted-swap",
       "note": "The wish granted while the pocket already holds a souvenir: the follower trades up, out loud. A gift outranks a rock it found itself, and a SPOKEN swap is honest where a silent one was the thing the old deferral rule existed to prevent. Deferring instead parked the option for the length of a ninety-minute carry, which play testing read as the option refusing to go away.",
+      "about": "When you hand over its wish while it already carries something, and it swaps them. {souvenir} is what it puts down.",
       "group": "souvenir",
       "priority": 60,
       "output": "overhead",
@@ -11797,6 +12004,7 @@
     {
       "id": "gifted-bluff",
       "note": "The empty-bag claim, already caught IN the dialog box - the script branches on the bag, because a neutral box read as the follower not looking. This is the dry coda afterwards, not a second telling-off, so it needs no {wish} and no bag re-check.",
+      "about": "After you claimed to have its wish with nothing in your bag.",
       "group": "souvenir",
       "priority": 70,
       "output": "overhead",
@@ -12272,6 +12480,7 @@
     {
       "id": "mime-loops",
       "note": "Held as a POSE, because these all loop: mining 624-629/642/3873/4482 (frameStep 8), woodcutting 867-879/2117/2846/5383 (frameStep 6), fishing 618-623 (frameStep 42/44/2) and fletching 1248 (frameStep 15), all measured. The pose is released when your animation changes, which is what joining in until you stop actually means. atTheWork has it walk over first and copy from a tile the game would let you work from, facing the middle of the tree or rock, and stop the moment it is moved off it.",
+      "about": "Joins in when you mine, cut trees, fish or fletch, until you stop.",
       "group": "mimic",
       "priority": 18,
       "cooldownMs": 180000,
@@ -12323,6 +12532,7 @@
     {
       "id": "mime-oneshots",
       "note": "The same idea for the animations the cache says are ONE-SHOTS (frameStep -1): cooking 896/897, smithing 898/6712, crafting 1249. The server restarts these every cycle, so the follower having a single go and stopping is right; held as a pose they would loop wrong. atTheWork makes the go from beside the range or anvil, facing it, and then back to its seat. 4969 and 4975 used to be listed here as herblore and firemaking; they are the skill-cape emotes, not work.",
+      "about": "Has a go when you cook, smith or craft.",
       "group": "mimic",
       "priority": 18,
       "cooldownMs": 180000,
@@ -12353,6 +12563,7 @@
     {
       "id": "mime-caught",
       "note": "Said occasionally instead of silently copying you, so the joining in reads as deliberate rather than as a rendering bug. Priority above the two mimes so it takes the tick when it wins.",
+      "about": "Now and then, instead of copying you quietly, it owns up.",
       "group": "mimic",
       "priority": 19,
       "cooldownMs": 900000,
@@ -12392,6 +12603,7 @@
     {
       "id": "bury-along",
       "note": "Buries along with you. 827 is HUMAN_PICKUPFLOOR, the bend the bury uses, proven on the follower by the bootlace and cat errands. A one-shot, so mirrored as an emote; the chance keeps it from copying every bone in the pile.",
+      "about": "Sometimes buries bones along with you.",
       "group": "mimic",
       "priority": 18,
       "cooldownMs": 3000,
@@ -12417,6 +12629,7 @@
     {
       "id": "casting-along",
       "note": "Casts along with you, rarely. The utility spells only: low and high alchemy 712/713, the three enchants 719-721, superheat 725 and charge orb 726, all HUMAN_CAST one-shots from the cache. The graphic copies through the mirror's twelve-tick window. Five percent with a minute between, so it reads as joining in once, not as a second caster.",
+      "about": "Now and then casts along with you: alchemy, enchanting, superheat and charging orbs.",
       "group": "mimic",
       "priority": 18,
       "cooldownMs": 60000,
@@ -12446,6 +12659,7 @@
     {
       "id": "burnt",
       "note": "A shake of the head at a run of burnt food. The game says \"You accidentally burn the shrimps.\" and every third of those, while a cooking session is on, earns 856 (EMOTE_NO, proven by the answered-no rule). Silent: the head says it. The working condition comes first so the count only runs during the session.",
+      "about": "Shakes its head at every third burnt food while you cook.",
       "group": "reactions",
       "priority": 20,
       "cooldownMs": 30000,
@@ -12469,6 +12683,7 @@
     {
       "id": "counting-batches",
       "note": "Counts your batches: every fifth fletching animation earns a nod, 855 (EMOTE_YES, in the mirrored emotes). 1248 is HUMAN_FLETCHING, the one the mime-loops rule already holds; the server restarts it per bow, and each restart is one animation event. Only while the fletching session is on.",
+      "about": "Nods at every fifth item you fletch.",
       "group": "reactions",
       "priority": 18,
       "cooldownMs": 3000,
@@ -12552,6 +12767,7 @@
     {
       "id": "game-hands-won",
       "note": "Half of the coin flip. This one is gated on chance 50 and sits above the losing rule, so a failed roll falls through to it: one winner per event by priority is what makes that a fair fifty-fifty rather than two rules both firing.",
+      "about": "The guessing game: you picked the right hand.",
       "group": "idle",
       "priority": 70,
       "cooldownMs": 1000,
@@ -12596,6 +12812,7 @@
     {
       "id": "game-hands-lost",
       "note": "The other half. No chance gate: it fires whenever the winning rule did not, which is exactly half the time.",
+      "about": "The guessing game: you picked the wrong hand.",
       "group": "idle",
       "priority": 68,
       "cooldownMs": 1000,
@@ -12649,6 +12866,7 @@
     {
       "id": "place-earned-dislike",
       "note": "A score is a running total of what the rules said moments here were worth, so this only reaches -80 after several bad ones. Priority above place-disliked, which would otherwise win with a milder line.",
+      "about": "A place where enough has gone wrong that it has come to hate it.",
       "group": "area",
       "priority": 30,
       "cooldownMs": 900000,
@@ -12785,6 +13003,7 @@
     {
       "id": "place-remembers",
       "note": "What the place itself holds, via markHere on the rules that won those moments. Waits for you to come back to it, which is the whole difference from the incident: that one follows you about.",
+      "about": "Back somewhere something memorable happened. {here} is what happened.",
       "group": "area",
       "priority": 32,
       "cooldownMs": 1200000,
@@ -13074,6 +13293,7 @@
       "id": "anniversary",
       "occasion": true,
       "note": "The same day of the year as the first one, the first year only: every line says a year. Priority high enough to beat the everyday chatter, because it happens once.",
+      "about": "A year to the day since you first met.",
       "group": "memory",
       "priority": 68,
       "cooldownMs": 7200000,
@@ -13144,6 +13364,7 @@
     {
       "id": "ask-nickname",
       "note": "The earned name, proposed rather than used. The overhead line says the candidate; the tree in dialogs.json asks whether the player minds, and only a yes makes it the nickname the other lines say. A no is remembered and that name is never offered again. Every asks rule needs the none/asking guard.",
+      "about": "Suggests a nickname for you. Talk to it to say yes or no. {candidate} is the name.",
       "group": "memory",
       "priority": 27,
       "cooldownMs": 1800000,
@@ -13197,6 +13418,7 @@
     {
       "id": "nickname-accepted",
       "note": "A yes to the nickname question. The name is settled before this fires, so {nickname} is the one just agreed.",
+      "about": "When you say yes to the nickname. {nickname} is the name.",
       "group": "memory",
       "priority": 80,
       "cooldownMs": 10000,
@@ -13247,6 +13469,7 @@
     {
       "id": "nickname-later",
       "note": "Ask me later. The candidate stays a candidate and the question comes round again after its cooldown.",
+      "about": "When you ask it to suggest the nickname another time.",
       "group": "memory",
       "priority": 80,
       "cooldownMs": 10000,
@@ -13267,6 +13490,7 @@
     {
       "id": "login-nickname",
       "note": "The greeting with the agreed name in it, some of the time. Outranks the plain greeting by one; the chance roll keeps that one in play.",
+      "about": "A hello with your nickname in it, some of the time.",
       "group": "misc",
       "priority": 91,
       "output": "overhead",
@@ -13573,6 +13797,7 @@
     {
       "id": "notes-edited",
       "note": "phrases.json changed on disk and hot-reloaded. In-world, somebody wrote in the scribe's own book. Long cooldown so an editing session earns one remark.",
+      "about": "When you save changes to its lines in this window.",
       "group": "memory",
       "priority": 40,
       "cooldownMs": 1800000,
@@ -13650,6 +13875,7 @@
     {
       "id": "chronicle-page-boss",
       "note": "A boss's chronicle page was just written, the first time the scribe set eyes on it. The plugin holds the news until the follower has the floor, so it comes after the boss's own line rather than into it.",
+      "about": "When a boss earns a page in the Chronicle, the first time it sees one. {page} is the page.",
       "group": "misc",
       "priority": 40,
       "cooldownMs": 60000,
@@ -13726,6 +13952,7 @@
     {
       "id": "chronicle-page-quest",
       "note": "A quest begun or finished opened a chronicle page: the quest's own page, or a place, creature or history it introduces. Nothing has been seen yet, so these claim no sighting and promise no sketch. A quest can open several pages at once; the cooldown lets one line speak for them.",
+      "about": "When a quest you start or finish opens a page in the Chronicle. {page} is the page.",
       "group": "misc",
       "priority": 30,
       "cooldownMs": 60000,
@@ -13743,6 +13970,7 @@
     {
       "id": "collection-add",
       "note": "A new collection log entry - the OTHER ledger, the bank-rival canon's cousin. Only fires when the game's own log notification setting is on.",
+      "about": "A new collection log item. Needs the game's collection log notifications on. {item} is the item.",
       "group": "misc",
       "priority": 26,
       "cooldownMs": 600000,
@@ -13911,7 +14139,9 @@
     },
     {
       "id": "npc-dictation",
+      "title": "Someone shouting nearby",
       "note": "Any named NPC shouting overhead nearby - the town crier, a quest scene, a market stall. Heavy chance gate: busy scenes shout constantly.",
+      "about": "Now and then, when someone nearby shouts something. {npc} is who.",
       "group": "reactions",
       "priority": 12,
       "cooldownMs": 900000,
@@ -13964,6 +14194,7 @@
       "id": "clock-christmas",
       "occasion": true,
       "note": "The 24th through the 26th of December, player's own calendar. Once per session at most; the cooldown keeps a relog from repeating it same day.",
+      "about": "From 24 to 26 December, by your own calendar. Once a session at most.",
       "group": "clock",
       "priority": 62,
       "cooldownMs": 21600000,
@@ -14048,6 +14279,7 @@
     {
       "id": "song-sea-shanty",
       "note": "The one track name certain enough to write a rule for. musicTrack fires on the change TO a track; users add their own opinions in the editor.",
+      "about": "When Sea Shanty 2 starts playing.",
       "group": "misc",
       "priority": 22,
       "cooldownMs": 7200000,
@@ -14121,6 +14353,7 @@
     {
       "id": "minutes-taken",
       "note": "The follower just minuted one of the player's NPC dialogs - stepped aside, wrote through the meeting, put the scroll away as the box closed. The performance is the joke; the line is the rare receipt.",
+      "about": "Sometimes, after it has taken notes during a conversation of yours.",
       "group": "reactions",
       "priority": 30,
       "cooldownMs": 600000,
