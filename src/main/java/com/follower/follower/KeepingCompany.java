@@ -99,11 +99,13 @@ class KeepingCompany
 	static final int HEAD_SHAKE = 856;
 
 	/**
-	 * The peer: AnimationID.LOOKING_INTO, a player bending to look at
-	 * something at their feet. New to the follower, so it is only played
-	 * once a player has been seen doing it.
+	 * The look at a nest at the player's feet: HUMAN_PICKUPFLOOR, the bend to
+	 * the floor the errands and the pet look already use. It was 832,
+	 * HUMAN_PICKUPTABLE, a reach forward at table height into the air in
+	 * front of the follower; the LOOKING_INTO it was named for is no animation
+	 * the game has (QA, 15 Oct). Played once a player has been seen doing it.
 	 */
-	static final int NEST_LOOK = 832;
+	static final int NEST_LOOK = 827;
 
 	/**
 	 * Working alongside: a stretch at the work between scroll breaks, counted
@@ -131,10 +133,12 @@ class KeepingCompany
 	private static final int STUDY_RESUME_TICKS = 3;
 
 	/**
-	 * The peer over the shoulder: HUMAN_DISTANT_IDLE, a player squinting at
-	 * something far off, held as a pose. New to the follower.
+	 * The peer over the shoulder: GENERIC_LOOK_AND_SEARCH, played once when
+	 * the follower stands. It was HUMAN_DISTANT_IDLE held as a pose, which
+	 * moves nothing more than 16 units and read as the follower doing nothing
+	 * (QA, 15 Oct). This one starts and ends on the standing pose, 3.4 ticks.
 	 */
-	static final int PEER = 13993;
+	static final int PEER = 6840;
 	static final int PEER_TICKS = 6;
 
 	/** Three to five minutes between looks over the shoulder. */
@@ -809,7 +813,6 @@ class KeepingCompany
 		{
 			if (--peerTicks == 0)
 			{
-				follower.setPoseOverride(0);
 				if (follower.stayAt(seat))
 				{
 					follower.setStayFaceTile(target);
@@ -838,7 +841,8 @@ class KeepingCompany
 		}
 		peerTicks = PEER_TICKS;
 		facing = null;
-		follower.setPoseOverride(PEER);
+		// On arrival at the front tile: on the way, moving would drop it.
+		follower.playWhenStill(PEER, PEER_TICKS);
 		log.debug("A look over the shoulder");
 	}
 
@@ -1250,8 +1254,8 @@ class KeepingCompany
 		}
 		if (scrollOut)
 		{
-			// Something else let go of the pose over it - a stranger's peer,
-			// a held emote copied and done - and left the scroll in the hand:
+			// Something else let go of the pose over it - a held emote
+			// copied and done - and left the scroll in the hand:
 			// back to reading it, rather than holding it at the side.
 			if (follower.getPoseOverride() == 0)
 			{
@@ -1396,8 +1400,8 @@ class KeepingCompany
 	}
 
 	/**
-	 * A bird's nest at the player's feet: a look at it, and the peer when a
-	 * player has been seen doing it - it is new to the follower's skeleton.
+	 * A bird's nest at the player's feet: a look at it, and the bend to it
+	 * when a player has been seen doing it.
 	 */
 	void nest(WorldPoint tile, boolean peerProven)
 	{
@@ -1483,11 +1487,7 @@ class KeepingCompany
 		workMax = null;
 		legs.clear();
 		walking = false;
-		if (peerTicks > 0)
-		{
-			peerTicks = 0;
-			follower.setPoseOverride(0);
-		}
+		peerTicks = 0;
 		guard = null;
 		int leadIn = 0;
 		if (sitting)

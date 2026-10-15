@@ -124,6 +124,21 @@ public class ErrandSimulationTest
 		}
 
 		@Override
+		public int getPoseOverride()
+		{
+			return poseOverride;
+		}
+
+		@Override
+		public void clearPoseOverride(int id)
+		{
+			if (poseOverride == id)
+			{
+				poseOverride = 0;
+			}
+		}
+
+		@Override
 		public void playAnimation(int id)
 		{
 			animations.add(id);
@@ -272,6 +287,74 @@ public class ErrandSimulationTest
 
 		assertFalse("the errand should have finished", errands.isBusy());
 		assertTrue("and handed the follower back", follower.following);
+	}
+
+	/**
+	 * The altar and the fire need a scene object to walk to, which this
+	 * harness has none of, so each is put in place of a bootlace already at
+	 * its business, the visit timed from there.
+	 */
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	private void doing(String errand) throws ReflectiveOperationException
+	{
+		errands.force("bootlace");
+		tick(1);
+		assertTrue(errands.isBusy());
+		follower.animations.clear();
+		java.lang.reflect.Field current = ErrandController.class.getDeclaredField("current");
+		current.setAccessible(true);
+		current.set(errands, Enum.valueOf((Class) Class.forName(
+			"com.follower.follower.ErrandController$Errand"), errand));
+		java.lang.reflect.Method begin = ErrandController.class.getDeclaredMethod("beginDoing");
+		begin.setAccessible(true);
+		begin.invoke(errands);
+	}
+
+	@Test
+	public void theAltarIsKneltAtForTheVisitAndStoodUpFromAtTheEnd() throws ReflectiveOperationException
+	{
+		// QA, 15 Oct: the one-shot kneel, 645, ended almost upright after 3.9
+		// ticks, and the follower stood idle at the altar for the rest.
+		doing("ALTAR");
+		assertEquals("HUMAN_PRAY_LOOP, held: it kneels and stays down", 179, follower.poseOverride);
+		tick(6);
+		assertEquals("still at prayer", 179, follower.poseOverride);
+		tick(1);
+		assertEquals("up off the knees before the walk home", 0, follower.poseOverride);
+		assertEquals("the rise from the kneel", java.util.Collections.singletonList(FollowerEntity.PRAY_STAND_UP),
+			follower.animations);
+		tick(1);
+		assertFalse(errands.isBusy());
+		assertTrue(follower.following);
+	}
+
+	@Test
+	public void anAltarVisitCutShortStillLetsGoOfTheKneel() throws ReflectiveOperationException
+	{
+		doing("ALTAR");
+		busy = true;
+		tick(1);
+		assertFalse(errands.isBusy());
+		assertEquals(0, follower.poseOverride);
+	}
+
+	@Test
+	public void theHandsAreWarmedAtTheFireForTheWholeVisit() throws ReflectiveOperationException
+	{
+		// QA, 15 Oct: one 3.1-tick kneel to the fire, then four seconds stood
+		// about. Replayed every four ticks, as the fireside seat does it.
+		doing("FIRE");
+		List<Integer> expected = new ArrayList<>(java.util.Collections.singletonList(897));
+		assertEquals(expected, follower.animations);
+		tick(4);
+		expected.add(897);
+		assertEquals(expected, follower.animations);
+		tick(4);
+		expected.add(897);
+		assertEquals(expected, follower.animations);
+		tick(4);
+		assertEquals("none started that the walk home would cut off", expected, follower.animations);
+		assertFalse(errands.isBusy());
 	}
 
 	@Test

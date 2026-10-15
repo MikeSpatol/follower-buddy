@@ -520,7 +520,10 @@ follower has a stamp to measure from). On `killCount`: `{boss}`, `{count}`,
   animation, releasing it when the animation ends. Movement always wins over an
   emote, so anything triggered by a fight is otherwise cut off the instant the
   follower starts walking back to you - which is immediately. `kill-cheer` and
-  `kill-boss-celebrate` both use it.
+  `kill-boss-celebrate` both use it. Without it, a single animation said while
+  the follower is on the move waits up to three ticks for it to stand, and is
+  dropped after that; and none is played while it rests on its sit, though the
+  line is still said.
 - `delayTicks` / `delayTicksMax` - ticks to wait between the trigger and the
   whole firing, line and animation together. Set both and each firing draws a
   fresh wait between them, inclusive; set only `delayTicks` for a fixed one.
@@ -1824,8 +1827,10 @@ emote copies are not `atTheWork` and keep their freedom.
 hands as the scroll (they share the weapon slot, so the tally scroll is skipped
 while a tool is held; a gatherer's parked scroll sets the tool down for itself,
 and it goes back in the hand to join in), started at seat time. The mirror rules' disarm keeps a
-borrowed item in hand, and every prop the follower takes out plays the reach in
-`reachAnimation` on the way, so the thing does not appear in its fist.
+borrowed item in hand, and every single prop the follower takes out plays the
+reach in `reachAnimation` first, the prop coming into the hand halfway through
+it, at the bottom of the bend, so the thing does not appear in its fist. The
+quill and scroll take no reach: Write with a quill lifts them itself.
 
 **The hand is asked before the table.** A table of item ids cannot help but
 fall behind the game: the first version of this borrowed a dragon felling axe

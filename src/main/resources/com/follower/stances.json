@@ -966,6 +966,7 @@
 "28217":{"idle":10075,"walk":10076,"run":10077,"walkBack":10076,"walkLeft":10076,"walkRight":10076,"turnLeft":10076,"turnRight":10076,"seen":true},
 "28220":{"idle":10075,"walk":10076,"run":10077,"walkBack":10076,"walkLeft":10076,"walkRight":10076,"turnLeft":10076,"turnRight":10076,"seen":true},
 "28223":{"idle":10075,"walk":10076,"run":10077,"walkBack":0,"walkLeft":0,"walkRight":0,"turnLeft":0,"turnRight":0,"seen":true},
+"28226":{"idle":10075,"walk":10076,"run":10077,"walkBack":10076,"walkLeft":10076,"walkRight":10076,"turnLeft":10076,"turnRight":10076},
 "28260":{"idle":813,"walk":1205,"run":1210,"walkBack":1206,"walkLeft":1207,"walkRight":1208,"turnLeft":1209,"turnRight":1209,"seen":true},
 "28262":{"idle":813,"walk":1205,"run":1210,"walkBack":1206,"walkLeft":1207,"walkRight":1208,"turnLeft":1209,"turnRight":1209,"seen":true,"attack":1979},
 "28266":{"idle":813,"walk":1205,"run":1210,"walkBack":1206,"walkLeft":1207,"walkRight":1208,"turnLeft":1209,"turnRight":1209,"seen":true},

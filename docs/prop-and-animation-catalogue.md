@@ -38,8 +38,11 @@ synthetic-model fallback before it is usable.
 study at the seat, the notes, the sketch, the rule flourishes) now writes with
 Write with a quill (13302) instead, dressed as the Advanced posing window
 dresses it: the quill (31829) in the shield slot and the scroll (31830) in the
-weapon slot, through `Hands.hold(left, right)`. 13302 is authored to play once;
-held as a pose override it starts again from its first frame each time it ends.
+weapon slot, through `Hands.hold(left, right)`. 13302 is authored to play once,
+with its own lift (frames 0-3) and lowering (18-21). Held as a pose override it
+lifts once and then loops frames 9-15 (frame 16 is frame 9 exactly), and when
+it is let go of with the scroll up the lowering plays from frame 17 before the
+props come away (`FollowerEntity.WRITE_PUT_AWAY`). The pair takes no reach.
 
 All four mime holding something that is not there. In the real game the item
 in your hands comes from your equipment — so the prop is an item, overlaid on

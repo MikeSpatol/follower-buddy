@@ -36,6 +36,7 @@ public class MomentsTest
 		boolean following = true;
 		int poseOverride;
 		int movedToFront;
+		boolean moving;
 		final List<Integer> animations = new ArrayList<>();
 		final List<WorldPoint> stays = new ArrayList<>();
 		final List<WorldPoint> glances = new ArrayList<>();
@@ -55,6 +56,12 @@ public class MomentsTest
 		public boolean isSettled()
 		{
 			return true;
+		}
+
+		@Override
+		public boolean isMoving()
+		{
+			return moving;
 		}
 
 		@Override
@@ -311,6 +318,27 @@ public class MomentsTest
 	}
 
 	@Test
+	public void aLevelGainedOnTheMoveStopsToClap()
+	{
+		// QA, 15 Oct: a level gained mid-course had its clap cancelled on the
+		// first frame, since moving drops an emote. It stops, then claps.
+		tick(1);
+		follower.moving = true;
+		moments.levelUp(41);
+		assertTrue("planted", moments.holdsTheFeet());
+		assertFalse(follower.following);
+		assertTrue("not on the move: the clap would be dropped", follower.animations.isEmpty());
+
+		follower.moving = false;
+		tick(1);
+		assertEquals("clapped once stopped", Collections.singletonList(Moments.CLAP), follower.animations);
+		assertEquals("in place, no walk", 0, follower.movedToFront);
+		tick(3);
+		assertFalse("and the feet handed back after it", moments.holdsTheFeet());
+		assertTrue(follower.following);
+	}
+
+	@Test
 	public void theFormalEraBowsInstead()
 	{
 		daysKnown = 1;
@@ -527,7 +555,8 @@ public class MomentsTest
 		tick(1);
 		assertEquals("one step away from it", new WorldPoint(48, 48, 0), follower.stayingAt);
 		assertEquals("facing it", new WorldPoint(52, 50, 0), follower.facing);
-		assertEquals("the peer, held", Moments.PEER, follower.poseOverride);
+		assertEquals("the peer, once", Collections.singletonList(Moments.PEER), follower.animations);
+		assertEquals("a look, not a pose held", 0, follower.poseOverride);
 		assertTrue(moments.holdsTheFeet());
 
 		game.moveNpc(genie, 51, 49, 0);
@@ -570,7 +599,7 @@ public class MomentsTest
 		NPC genie = strangerAt(48, 52, 0, false);
 		game.npcFacingPlayer(genie);
 		tick(1);
-		assertEquals(Moments.PEER, follower.poseOverride);
+		assertTrue(follower.animations.contains(Moments.PEER));
 		assertFalse("off the seat, a step from it", seat.equals(follower.stayingAt));
 		tick(3);
 		assertFalse("not dragged back while it talks", seat.equals(follower.stayingAt));
@@ -652,7 +681,7 @@ public class MomentsTest
 		NPC genie = strangerAt(52, 50, 0, false);
 		game.npcFacingPlayer(genie);
 		tick(1);
-		assertEquals(Moments.PEER, follower.poseOverride);
+		assertTrue(follower.animations.contains(Moments.PEER));
 
 		moments.reset();
 		assertEquals(0, follower.poseOverride);
@@ -668,7 +697,7 @@ public class MomentsTest
 		NPC genie = strangerAt(52, 50, 0, false);
 		game.npcFacingPlayer(genie);
 		tick(1);
-		assertEquals(Moments.PEER, follower.poseOverride);
+		assertTrue(follower.animations.contains(Moments.PEER));
 
 		follower.setPoseOverride(10061);
 		feetTaken = true;

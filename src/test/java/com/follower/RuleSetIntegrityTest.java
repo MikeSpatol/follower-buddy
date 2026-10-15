@@ -885,6 +885,138 @@ public class RuleSetIntegrityTest
 			h.rule("mimic-emote-loops").when.ids.contains(10052));
 	}
 
+	/**
+	 * Every animation the follower can be made to play from a rule moves the
+	 * player's skeleton. poses.tsv lists every animation that does, so an id
+	 * missing from it is a creature's clip, which bends the follower's human
+	 * model out of shape for its length. A mirror rule plays the id that
+	 * triggered it, so its trigger list counts too: mimic-emotes once carried
+	 * the penguin, Easter egg, party graphic and cow pet emotes (QA, 15 Oct).
+	 */
+	@Test
+	public void everyAnimationARuleCanPlayIsOnThePlayerSkeleton() throws IOException
+	{
+		Set<Integer> playerSkeleton = new HashSet<>();
+		try (InputStream in = RuleSetIntegrityTest.class.getResourceAsStream("/com/follower/poses.tsv");
+			java.io.BufferedReader reader = new java.io.BufferedReader(
+				new InputStreamReader(in, StandardCharsets.UTF_8)))
+		{
+			for (String line = reader.readLine(); line != null; line = reader.readLine())
+			{
+				if (!line.isEmpty() && !line.startsWith("#") && !line.startsWith("id\t"))
+				{
+					playerSkeleton.add(Integer.parseInt(line.split("\t")[0]));
+				}
+			}
+		}
+		assertTrue("poses.tsv looks too short to be every player animation",
+			playerSkeleton.size() > 3000);
+
+		Harness h = new Harness(folder.newFolder().toPath());
+		Set<String> problems = new TreeSet<>();
+		for (SpeechRule rule : h.loader.getRules())
+		{
+			List<Integer> played = new ArrayList<>();
+			if (rule.animation != null)
+			{
+				played.add(rule.animation);
+			}
+			if (rule.animations != null)
+			{
+				played.addAll(rule.animations);
+			}
+			if (rule.prop != null && rule.prop.pose != null)
+			{
+				played.add(rule.prop.pose);
+			}
+			if ((Boolean.TRUE.equals(rule.mirrorAnimation) || Boolean.TRUE.equals(rule.mirrorPose))
+				&& rule.when != null)
+			{
+				collectAnimationSelfIds(rule.when, played);
+			}
+			for (Integer id : played)
+			{
+				if (id != null && id > 0 && !playerSkeleton.contains(id))
+				{
+					problems.add(rule.id + " " + id);
+				}
+			}
+		}
+		assertTrue("animations off the player skeleton: " + problems, problems.isEmpty());
+	}
+
+	private static void collectAnimationSelfIds(Condition condition, List<Integer> out)
+	{
+		if ("animationSelf".equalsIgnoreCase(condition.type) && condition.ids != null)
+		{
+			out.addAll(condition.ids);
+		}
+		if (condition.conditions != null)
+		{
+			for (Condition child : condition.conditions)
+			{
+				if (child != null)
+				{
+					collectAnimationSelfIds(child, out);
+				}
+			}
+		}
+	}
+
+	/**
+	 * A souvenir is picked up, so the follower bends for it, and before the
+	 * rest sit at 500 idle ticks: in the 500-620 window it said it had picked
+	 * something up as it sat down, and its body did nothing (QA, 15 Oct).
+	 */
+	@Test
+	public void aSouvenirIsBentForBeforeTheRestSit() throws IOException
+	{
+		Harness h = new Harness(folder.newFolder().toPath());
+		int souvenirs = 0;
+		for (SpeechRule rule : h.loader.getRules())
+		{
+			if (rule.pickUp == null || !rule.id.startsWith("souvenir-"))
+			{
+				continue;
+			}
+			souvenirs++;
+			assertEquals(rule.id + " bends to the floor for it", Integer.valueOf(827), rule.animation);
+			assertEquals(rule.id + " stands still to", Boolean.TRUE, rule.holdStill);
+			assertTrue(rule.id + " fires on the rest", idleBelow(rule.when) <= 500);
+		}
+		assertTrue(souvenirs >= 5);
+	}
+
+	/** The tightest idleBelow a condition tree's top-level all puts on it, or MAX_VALUE. */
+	private static int idleBelow(Condition condition)
+	{
+		int below = Integer.MAX_VALUE;
+		if ("idleBelow".equalsIgnoreCase(condition.type) && condition.ticks != null)
+		{
+			below = condition.ticks;
+		}
+		if ("all".equalsIgnoreCase(condition.type) && condition.conditions != null)
+		{
+			for (Condition child : condition.conditions)
+			{
+				below = Math.min(below, idleBelow(child));
+			}
+		}
+		return below;
+	}
+
+	@Test
+	public void theStampAndTheAnniversaryWaveAreNotPlayedFromTheRest() throws IOException
+	{
+		// Both can fire past the rest's 500 idle ticks, and a gesture from
+		// the sit popped the follower up with no stand-up (QA, 15 Oct).
+		Harness h = new Harness(folder.newFolder().toPath());
+		for (String id : new String[]{"cold-stamp-feet", "anniversary"})
+		{
+			assertTrue(id + " fires on the rest", idleBelow(h.rule(id).when) <= 500);
+		}
+	}
+
 	@Test
 	public void noRuleAsksToHoldStillWithoutAnimatingAnything() throws IOException
 	{

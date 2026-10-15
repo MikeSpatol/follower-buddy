@@ -1483,7 +1483,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Keeping watch while the player works. Animation 13993 is HUMAN_DISTANT_IDLE, measured from the cache at 5.04s: it reads as glancing about rather than as glaring at somebody, which suits a lookout better than SUSPECTING did. Silent by design - the whole session is muted, and an animation-only rule is movement rather than chatter so it plays anyway.
 
 - **when:** thieving AND a 45% roll
-- **does:** animation 13993
+- **does:** animation 6840
 - **pacing:** priority 20, cooldown 12s
 
 - *(no lines - animation or effect only)*
@@ -2456,7 +2456,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > The same day of the year as the first one, the first year only: every line says a year. Priority high enough to beat the everyday chatter, because it happens once.
 
-- **when:** the anniversary AND known 1-400 days AND standing still 20+ ticks
+- **when:** the anniversary AND known 1-400 days AND standing still 20+ ticks AND standing still under 480 ticks
 - **does:** occasion (never held back); animation 863; holds the floor 8s; holds still
 - **pacing:** priority 68, cooldown 2h, overhead
 
@@ -3203,7 +3203,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Stamps its feet in the snow. Silent on purpose - a physical tell says more than a line about being cold. Animation 4278 is EMOTE_STAMPFEET, measured from the cache; the regions are ones RegionAudit has confirmed.
 
-- **when:** in region 10553, 8253, 6462 AND standing still 30+ ticks AND a 25% roll
+- **when:** in region 10553, 8253, 6462 AND standing still 30+ ticks AND standing still under 480 ticks AND a 25% roll
 - **does:** animation 4278
 - **pacing:** priority 25, cooldown 45s
 
@@ -3786,8 +3786,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Picks something up and carries it about for a while. It only counts if it was SAID - a souvenir nobody was told about is invisible - and it refuses while already carrying something, or the follower silently swaps out an object it has been talking about.
 
-- **when:** standing still 500+ ticks AND standing still under 620 ticks AND NOT (carrying a souvenir) AND a 1% roll
-- **does:** picks up 'a nice flat rock' (50 min)
+- **when:** standing still 380+ ticks AND standing still under 480 ticks AND NOT (carrying a souvenir) AND a 1% roll
+- **does:** picks up 'a nice flat rock' (50 min); animation 827; holds still
 - **pacing:** priority 22, cooldown 30m, overhead
 
 - Hold on. Look at this rock. Perfectly flat.
@@ -3799,8 +3799,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Picks something up and carries it about for a while. It only counts if it was SAID - a souvenir nobody was told about is invisible - and it refuses while already carrying something, or the follower silently swaps out an object it has been talking about.
 
-- **when:** standing still 500+ ticks AND standing still under 620 ticks AND NOT (carrying a souvenir) AND a 1% roll
-- **does:** picks up 'an interesting stick' (50 min)
+- **when:** standing still 380+ ticks AND standing still under 480 ticks AND NOT (carrying a souvenir) AND a 1% roll
+- **does:** picks up 'an interesting stick' (50 min); animation 827; holds still
 - **pacing:** priority 22, cooldown 30m, overhead
 
 - Wait. This stick's interesting. I couldn't tell you why.
@@ -3812,8 +3812,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Picks something up and carries it about for a while. It only counts if it was SAID - a souvenir nobody was told about is invisible - and it refuses while already carrying something, or the follower silently swaps out an object it has been talking about.
 
-- **when:** standing still 500+ ticks AND standing still under 620 ticks AND NOT (carrying a souvenir) AND a 1% roll
-- **does:** picks up 'a lucky-looking pebble' (50 min)
+- **when:** standing still 380+ ticks AND standing still under 480 ticks AND NOT (carrying a souvenir) AND a 1% roll
+- **does:** picks up 'a lucky-looking pebble' (50 min); animation 827; holds still
 - **pacing:** priority 22, cooldown 30m, overhead
 
 - That pebble's lucky. I can tell. Give me a second.
@@ -3825,8 +3825,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Picks something up and carries it about for a while. It only counts if it was SAID - a souvenir nobody was told about is invisible - and it refuses while already carrying something, or the follower silently swaps out an object it has been talking about.
 
-- **when:** standing still 500+ ticks AND standing still under 620 ticks AND NOT (carrying a souvenir) AND a 1% roll
-- **does:** picks up 'a feather' (50 min)
+- **when:** standing still 380+ ticks AND standing still under 480 ticks AND NOT (carrying a souvenir) AND a 1% roll
+- **does:** picks up 'a feather' (50 min); animation 827; holds still
 - **pacing:** priority 22, cooldown 30m, overhead
 
 - A feather. Right. In the pocket it goes.
@@ -3838,8 +3838,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Picks something up and carries it about for a while. It only counts if it was SAID - a souvenir nobody was told about is invisible - and it refuses while already carrying something, or the follower silently swaps out an object it has been talking about.
 
-- **when:** standing still 500+ ticks AND standing still under 620 ticks AND NOT (carrying a souvenir) AND a 1% roll
-- **does:** picks up 'a bent nail' (50 min)
+- **when:** standing still 380+ ticks AND standing still under 480 ticks AND NOT (carrying a souvenir) AND a 1% roll
+- **does:** picks up 'a bent nail' (50 min); animation 827; holds still
 - **pacing:** priority 22, cooldown 30m, overhead
 
 - Look, a nail. Bent, but still a nail.
@@ -6476,7 +6476,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Copies your emote. Every animation in RuneLite's constants with EMOTE in its name that is a ONE-SHOT, measured from the cache. Matching on the EMOTE_ prefix alone missed HUMAN_EMOTE_CRABDANCE and others, which is why the crab dance never mirrored. The authored loops are in mimic-emote-loops instead: a chain ends when the animation controller finishes, which a looping clip never does.
 
-- **when:** your animation 855, 856, 857, 858, 859, 860, 861, 862, 863, 864, 865, 866, 868, 870, 872, 874, 1128, 1129, 1130, 1131, 1374, 1481, 1482, 1483, 1484, 1485, 1708, 2105, 2106, 2107, 2108, 2109, 2110, 2111, 2112, 2113, 2709, 2836, 3544, 3859, 4275, 4276, 4278, 4280, 4751, 5059, 5312, 5313, 5315, 5316, 5693, 5694, 5695, 5696, 5697, 5698, 5699, 5700, 6111, 7131, 7278, 7751, 8331, 8332, 8536, 8537, 8541, 8792, 8855, 8917, 9208, 9831, 9832, 9833, 9834, 9835, 10031, 10038, 10051, 10053, 10503, 10678, 10781, 10796, 11526, 12514, 13801, 13803
+- **when:** your animation 855, 856, 857, 858, 859, 860, 861, 862, 863, 864, 865, 866, 868, 870, 872, 874, 1128, 1129, 1130, 1131, 1374, 1481, 1482, 1483, 1484, 1485, 1708, 2105, 2106, 2107, 2108, 2109, 2110, 2111, 2112, 2113, 2709, 2836, 3544, 3859, 4275, 4276, 4278, 4280, 4751, 5059, 5312, 5313, 5315, 5316, 6111, 7131, 7278, 7751, 8332, 8536, 8537, 8541, 8792, 8855, 8917, 9208, 9831, 9832, 9833, 9834, 9835, 10031, 10051, 10053, 10503, 10678, 10781, 10796, 11526, 12514
 - **does:** mirrors you
 - **pacing:** priority 40, cooldown 2s, delay 1-4 ticks
 
