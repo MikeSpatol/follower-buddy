@@ -83,6 +83,12 @@ public class ChronicleWindow extends Overlay
 	private static final int PORTRAIT_FOOT = 0xbfa97f;
 	private static final int BARE_PAPER = 0xcbb994;
 
+	/** How far above the drawing's foot the pose is pencilled on a page's plate. */
+	static final int POSE_RISE = 4;
+
+	/** How much of the drawing the strip under the pencilled pose hides, out of 255. */
+	private static final int POSE_PAPER_ALPHA = 190;
+
 	/** How much a plate under the mouse lightens, out of 255. */
 	private static final int HOVER_ALPHA = 28;
 
@@ -135,6 +141,7 @@ public class ChronicleWindow extends Overlay
 	private List<ChronicleEntry> listed = new ArrayList<>();
 	private List<ChronicleLayout.Line> pageLines = new ArrayList<>();
 	private String pageLinesFor;
+	private String pageLinesOf;
 	private int pageVisibleLines;
 
 	@Inject
@@ -464,11 +471,29 @@ public class ChronicleWindow extends Overlay
 			}
 			else
 			{
-				scroll(DRAG_PAGE, step * 3, pageLines.size(), Math.max(1, pageVisibleLines));
+				scroll(DRAG_PAGE, step * wheelStep(pageLines, pageScroll), pageLines.size(),
+					Math.max(1, pageVisibleLines));
 			}
 			return event;
 		}
 	};
+
+	/** A page longer than this goes half a screen a notch. */
+	static final int LONG_PAGE_LINES = 100;
+
+	/**
+	 * How far one notch of the wheel moves a page: three lines, or half a
+	 * screen on a long page, which at three took the longest ninety notches.
+	 */
+	static int wheelStep(List<ChronicleLayout.Line> lines, int scroll)
+	{
+		if (lines.size() <= LONG_PAGE_LINES)
+		{
+			return 3;
+		}
+		int body = ChronicleLayout.CONTENT_BOTTOM - ChronicleLayout.BODY_TOP;
+		return Math.max(3, ChronicleLayout.linesThatFit(lines, scroll, body) / 2);
+	}
 
 	final KeyListener keyAdapter = new KeyListener()
 	{
@@ -900,6 +925,7 @@ public class ChronicleWindow extends Overlay
 				ChronicleLayout.LOCKED_RED, false);
 			pageLines = new ArrayList<>();
 			pageLinesFor = null;
+			pageLinesOf = null;
 			return;
 		}
 
@@ -942,20 +968,26 @@ public class ChronicleWindow extends Overlay
 			}
 		}
 		// Your own number under the plate, once the page is written and the
-		// follower has one; and room for the pose when a sketch caught one.
+		// follower has one.
 		String tally = readable ? tallyLine(entry, progress.count(entry)) : null;
-		boolean posed = posed(entry);
-		String key = entry.id + (readable ? "" : ":locked") + done + tally + posed;
+		String page = entry.id + (readable ? "" : ":locked");
+		String key = page + done + tally;
 		if (!key.equals(pageLinesFor))
 		{
 			ChronicleEntry asRead = entry.readAs(done::contains);
+			List<ChronicleLayout.Line> before = pageLines;
 			pageLines = readable
-				? ChronicleLayout.page(asRead, tally, posed, width,
+				? ChronicleLayout.page(asRead, tally, width,
 					s -> measure(g, body, false, s), s -> measure(g, bold, true, s))
-				: ChronicleLayout.lockedPage(asRead, unwrittenHint(entry), posed, width,
+				: ChronicleLayout.lockedPage(asRead, unwrittenHint(entry), width,
 					s -> measure(g, body, false, s), s -> measure(g, bold, true, s));
+			// Another page, or this one just written, opens at the top. The
+			// same page changing under the reader - one more kill, a passage
+			// opening - keeps their place, moved past a number that has just
+			// appeared above it.
+			pageScroll = page.equals(pageLinesOf) ? ChronicleLayout.keptScroll(pageScroll, before, pageLines) : 0;
 			pageLinesFor = key;
-			pageScroll = 0;
+			pageLinesOf = page;
 		}
 		// What a screen holds, as the scrollbar counts it: every line less the
 		// ones scrolled past at the furthest the page goes, gaps allowed for.
@@ -978,9 +1010,13 @@ public class ChronicleWindow extends Overlay
 			int plateTop = bodyTop + 2 - pageScroll * ChronicleLayout.LINE_HEIGHT;
 			if (plateTop + ChronicleLayout.PLATE_H > bodyTop)
 			{
-				// Only the part scrolled into view takes a press.
-				shown.setBounds(new Rectangle(left, plateTop, ChronicleLayout.PLATE_W, ChronicleLayout.PLATE_H)
-					.intersection(new Rectangle(ChronicleLayout.PAGE.x, bodyTop, ChronicleLayout.PAGE.width, bodyHeight)));
+				// Only the part scrolled into view takes a press, and only a
+				// picture: paper not yet sketched on is nothing to open.
+				if (plate.sketch == null || sketches != null && sketches.has(plate.sketch))
+				{
+					shown.setBounds(new Rectangle(left, plateTop, ChronicleLayout.PLATE_W, ChronicleLayout.PLATE_H)
+						.intersection(new Rectangle(ChronicleLayout.PAGE.x, bodyTop, ChronicleLayout.PAGE.width, bodyHeight)));
+				}
 				drawPlate(g, plate, left, plateTop, ChronicleLayout.PLATE_W, ChronicleLayout.PLATE_H,
 					readable, small, false, hovered(shown));
 			}
@@ -1004,14 +1040,14 @@ public class ChronicleWindow extends Overlay
 				case CAPTION:
 					drawCaption(g, small, plate, plates.size(), readable, left, width, ly, prev, next);
 					break;
-				case POSE:
-					drawPose(g, small, plate, left + width / 2, ly);
-					break;
 				case HEADING:
 					text(g, bold, true, line.text, left, ly, ChronicleLayout.TITLE_ORANGE, false);
 					break;
 				case NOTE:
 					text(g, body, false, line.text, left, ly, ChronicleLayout.NOTE_PALE, false);
+					break;
+				case TALLY:
+					drawTally(g, body, line.text, left, ly);
 					break;
 				default:
 					text(g, body, false, line.text, left, ly,
@@ -1029,7 +1065,8 @@ public class ChronicleWindow extends Overlay
 	 * person is drawn from its own model, turning, in its idle; one not yet
 	 * met is its outline in ink. A place is the scribe's sketch, or bare
 	 * paper until you have posed for it there. Enlarged, a sketch is the
-	 * copy drawn at that size. Under the
+	 * copy drawn at that size; on the page, the pose it caught you in is
+	 * pencilled along its foot. Under the
 	 * mouse it lightens a touch, as the game's own pictures that take a
 	 * press do.
 	 */
@@ -1072,6 +1109,26 @@ public class ChronicleWindow extends Overlay
 			else
 			{
 				text(g, null, false, blank, ix + iw / 2, iy + ih / 2 + 4, SketchStyle.INK, true);
+			}
+		}
+		else if (!big && poseLine(plate) != null)
+		{
+			// On the page there is no room under the caption for the pose
+			// without a line held blank under every other plate, so it is
+			// written on the drawing, as a note in pencil at its foot.
+			String said = poseLine(plate);
+			int baseline = iy + ih - POSE_RISE;
+			// On a strip of paper left clear, or the pencil is lost in a busy drawing.
+			int across = measure(g, small, false, said) + 8;
+			g.setColor(new Color(SketchStyle.PAPER | POSE_PAPER_ALPHA << 24, true));
+			g.fillRect(ix + (iw - across) / 2, baseline - 10, across, 13);
+			if (small != null)
+			{
+				small.drawCenteredBaseline(g, said, ix + iw / 2, baseline, SketchStyle.INK, false);
+			}
+			else
+			{
+				text(g, null, false, said, ix + iw / 2, baseline, SketchStyle.INK, true);
 			}
 		}
 		if (hover)
@@ -1146,19 +1203,6 @@ public class ChronicleWindow extends Overlay
 		}
 	}
 
-	/** Whether any sketch on the page caught you in a pose, so the page keeps a line for it. */
-	private boolean posed(ChronicleEntry entry)
-	{
-		for (ChronicleEntry.Plate plate : entry.platesOrEmpty())
-		{
-			if (poseLine(plate) != null)
-			{
-				return true;
-			}
-		}
-		return false;
-	}
-
 	/** The plate's pose in the scribe's words, or null: not a sketch, not drawn, or no pose. */
 	private String poseLine(ChronicleEntry.Plate plate)
 	{
@@ -1213,6 +1257,23 @@ public class ChronicleWindow extends Overlay
 			return null;
 		}
 		return entry.tally.label + ": " + count;
+	}
+
+	/**
+	 * A line of the page's number as the header draws its own: the label
+	 * and its colon, then the number; a line with no number on it is all label.
+	 */
+	static String[] tallyParts(String text)
+	{
+		int colon = text.lastIndexOf(": ");
+		return colon < 0 ? new String[]{text, ""}
+			: new String[]{text.substring(0, colon + 2), text.substring(colon + 2)};
+	}
+
+	private void drawTally(Graphics2D g, GameFont body, String text, int left, int baseline)
+	{
+		String[] parts = tallyParts(text);
+		labelled(g, body, left, baseline, parts[0], parts[1], ChronicleLayout.BODY_WHITE);
 	}
 
 	/**
@@ -1315,7 +1376,7 @@ public class ChronicleWindow extends Overlay
 	{
 		String kind = entry.kindOrEmpty();
 		return entry.unlock.npcs != null && !entry.unlock.npcs.isEmpty()
-			&& ("enemy".equals(kind) || "boss".equals(kind) || "beast".equals(kind));
+			&& ("enemy".equals(kind) || "boss".equals(kind));
 	}
 
 	/** What the page says instead of its text while it cannot be read. */

@@ -16,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import net.runelite.api.Client;
 import net.runelite.api.QuestState;
@@ -319,11 +320,153 @@ public class ChronicleWindowTest
 		memory.tally("kill:goblin");
 		draw();
 		assertEquals("first, before the summary", "Goblins you've killed while I watched: 2", pageTexts().get(0));
-		assertEquals(ChronicleLayout.Style.NOTE, pageStyles().get(0));
+		assertEquals(ChronicleLayout.Style.TALLY, pageStyles().get(0));
 
 		memory.tally("kill:goblin");
 		draw();
 		assertEquals("Goblins you've killed while I watched: 3", pageTexts().get(0));
+	}
+
+	private void set(String name, Object value) throws Exception
+	{
+		Field f = ChronicleWindow.class.getDeclaredField(name);
+		f.setAccessible(true);
+		f.set(window, value);
+	}
+
+	/** The goblin's page with forty short paragraphs, long enough to scroll a good way. */
+	private static String longGoblinPage()
+	{
+		return goblinPageOf(40);
+	}
+
+	private static String goblinPageOf(int paragraphs)
+	{
+		StringBuilder summary = new StringBuilder();
+		for (int i = 1; i <= paragraphs; i++)
+		{
+			summary.append(i > 1 ? "\\n\\n" : "").append("Paragraph ").append(i).append('.');
+		}
+		return GOBLIN_PAGE.replace("\"Green.\"", "\"" + summary + "\"");
+	}
+
+	private String topLine() throws Exception
+	{
+		return pageTexts().get((Integer) field("pageScroll"));
+	}
+
+	/**
+	 * QA: one more goblin killed while the page was open sent it back to
+	 * the top, because the number is part of what the page is laid out from.
+	 */
+	@Test
+	public void aKillWhileYouReadKeepsYourPlace() throws Exception
+	{
+		TriggerContext memory = new TriggerContext(null);
+		memory.tally("kill:goblin");
+		openOn(longGoblinPage(), "enemy-goblin", memory, null);
+		set("pageScroll", 20);
+		draw();
+		String reading = topLine();
+
+		memory.tally("kill:goblin");
+		draw();
+		assertEquals(20, field("pageScroll"));
+		assertEquals(reading, topLine());
+	}
+
+	@Test
+	public void theFirstKillWhileYouReadMovesYouPastItsNewLine() throws Exception
+	{
+		TriggerContext memory = new TriggerContext(null);
+		openOn(longGoblinPage(), "enemy-goblin", memory, null);
+		set("pageScroll", 20);
+		draw();
+		String reading = topLine();
+
+		memory.tally("kill:goblin");
+		draw();
+		assertEquals("the number came in above", "Goblins you've killed while I watched: 1", pageTexts().get(0));
+		assertEquals("and the same line is at the top", reading, topLine());
+	}
+
+	private void wheelDownOnThePage()
+	{
+		window.wheelAdapter.mouseWheelMoved(new java.awt.event.MouseWheelEvent(canvas,
+			java.awt.event.MouseWheelEvent.MOUSE_WHEEL, 0, 0, ChronicleLayout.PAGE_TEXT_X + 20,
+			ChronicleLayout.BODY_TOP + 50, 0, false, java.awt.event.MouseWheelEvent.WHEEL_UNIT_SCROLL, 1, 1));
+	}
+
+	/**
+	 * QA: Waterfall Quest's page is 275 lines, about ninety notches of the
+	 * wheel at three lines a notch. A long page goes half a screen a notch.
+	 */
+	@Test
+	public void theWheelGoesFurtherOnALongPage() throws Exception
+	{
+		openOn(longGoblinPage(), "enemy-goblin", null, null);
+		wheelDownOnThePage();
+		assertEquals("a page of forty paragraphs, three lines a notch", 3, field("pageScroll"));
+
+		openOn(goblinPageOf(ChronicleWindow.LONG_PAGE_LINES + 1), "enemy-goblin", null, null);
+		wheelDownOnThePage();
+		int moved = (Integer) field("pageScroll");
+		assertTrue("half a screen on a long one: " + moved, moved > 3);
+		int body = ChronicleLayout.CONTENT_BOTTOM - ChronicleLayout.BODY_TOP;
+		@SuppressWarnings("unchecked")
+		List<ChronicleLayout.Line> lines = (List<ChronicleLayout.Line>) field("pageLines");
+		assertEquals(ChronicleLayout.linesThatFit(lines, 0, body) / 2, moved);
+	}
+
+	/** The frame as drawn, to look at its pixels. */
+	private BufferedImage picture()
+	{
+		BufferedImage image = new BufferedImage(ChronicleLayout.WIDTH, ChronicleLayout.HEIGHT, BufferedImage.TYPE_INT_RGB);
+		Graphics2D g = image.createGraphics();
+		window.render(g);
+		g.dispose();
+		return image;
+	}
+
+	private static int count(BufferedImage image, java.awt.Rectangle area, int rgb)
+	{
+		int n = 0;
+		for (int y = area.y; y < area.y + area.height; y++)
+		{
+			for (int x = area.x; x < area.x + area.width; x++)
+			{
+				n += (image.getRGB(x, y) & 0xffffff) == rgb ? 1 : 0;
+			}
+		}
+		return n;
+	}
+
+	/**
+	 * QA: the number was drawn in the prose's pale face and read as an odd
+	 * one-line paragraph. It is the header's idiom now: an orange label and
+	 * a white number.
+	 */
+	@Test
+	public void theNumberIsDrawnAsALabelAndItsValue() throws Exception
+	{
+		TriggerContext memory = new TriggerContext(null);
+		memory.tally("kill:goblin");
+		openOn(GOBLIN_PAGE, "enemy-goblin", memory, null);
+		java.awt.Rectangle row = new java.awt.Rectangle(ChronicleLayout.PAGE_TEXT_X, ChronicleLayout.BODY_TOP,
+			ChronicleLayout.PLATE_W, ChronicleLayout.LINE_HEIGHT);
+		BufferedImage image = picture();
+		assertTrue("an orange label", count(image, row, ChronicleLayout.TITLE_ORANGE) > 0);
+		assertTrue("a white number", count(image, row, ChronicleLayout.BODY_WHITE) > 0);
+		assertEquals("no prose face", 0, count(image, row, ChronicleLayout.NOTE_PALE));
+	}
+
+	@Test
+	public void theNumberSplitsAfterItsLabelsColon()
+	{
+		assertEquals(Arrays.asList("Goblins you've killed while I watched: ", "214"),
+			Arrays.asList(ChronicleWindow.tallyParts("Goblins you've killed while I watched: 214")));
+		assertEquals(Arrays.asList("A label run onto two lines", ""),
+			Arrays.asList(ChronicleWindow.tallyParts("A label run onto two lines")));
 	}
 
 	@Test
@@ -362,28 +505,58 @@ public class ChronicleWindowTest
 		+ "\"plates\": [{\"sketch\": \"lumbridge\", \"regions\": [12850], \"caption\": \"Lumbridge, done in a hurry.\","
 		+ "\"hint\": \"Lumbridge, when we're there.\"}]}";
 
+	/** Pencil marks along the foot of the page's plate, where the pose is written. */
+	private int inkAtThePlatesFoot()
+	{
+		int foot = ChronicleLayout.BODY_TOP + 2 + ChronicleLayout.PLATE_H - 2 - ChronicleWindow.POSE_RISE;
+		return count(picture(), new java.awt.Rectangle(ChronicleLayout.PAGE_TEXT_X, foot - 10,
+			ChronicleLayout.PLATE_W, 13), SketchStyle.INK);
+	}
+
 	/**
-	 * A sketch that caught you mid-emote says so on the line under the
-	 * caption, on the page and opened across the window; one drawn with you
-	 * standing still, or before the book kept poses, has no such line.
+	 * A sketch that caught you mid-emote says so, pencilled on the drawing
+	 * on the page and under the caption opened across the window; one drawn
+	 * with you standing still, or before the book kept poses, says nothing.
+	 *
+	 * <p>QA: the pose used to have a line of its own under the caption, held
+	 * on the page whenever any of its sketches had one, so it showed blank
+	 * under every other plate and pushed the summary down the first screen.
 	 */
 	@Test
-	public void aSketchOfYouMidDanceSaysSoUnderItsCaption() throws Exception
+	public void aSketchOfYouMidDanceSaysSoOnTheDrawing() throws Exception
 	{
 		SketchBook book = new SketchBook(folder.newFolder().toPath());
 		book.openFor("acct");
 		book.put("lumbridge", paper(), paper(), "dance");
 		openOn(LUMBRIDGE_PAGE, "location-lumbridge", null, book);
-		int caption = pageStyles().indexOf(ChronicleLayout.Style.CAPTION);
-		assertEquals("the pose under the caption", ChronicleLayout.Style.POSE, pageStyles().get(caption + 1));
-		assertEquals("then the summary", "Home.", pageTexts().get(caption + 2));
+		assertTrue("pencilled on the drawing", inkAtThePlatesFoot() > 0);
+		assertEquals("and the summary straight under the caption", "Home.",
+			pageTexts().get(pageStyles().indexOf(ChronicleLayout.Style.CAPTION) + 1));
 		pressThePlate();
 		assertTrue("and opened across the window, drawn without trouble", enlarged());
 
 		book.put("lumbridge", paper(), paper(), null);
 		escape();
-		assertFalse("drawn again standing still, the pose goes with the old drawing: " + pageStyles(),
-			pageStyles().contains(ChronicleLayout.Style.POSE));
+		assertEquals("drawn again standing still, the pose goes with the old drawing", 0, inkAtThePlatesFoot());
+	}
+
+	/**
+	 * QA: a plate not sketched yet opened across the window as a sheet of
+	 * bare paper, and lit up under the mouse as if it were worth pressing.
+	 */
+	@Test
+	public void paperNotYetSketchedOnDoesNotOpen() throws Exception
+	{
+		SketchBook book = new SketchBook(folder.newFolder().toPath());
+		book.openFor("acct");
+		openOn(LUMBRIDGE_PAGE, "location-lumbridge", null, book);
+		pressThePlate();
+		assertFalse(enlarged());
+
+		book.put("lumbridge", paper(), paper(), null);
+		draw();
+		pressThePlate();
+		assertTrue("once it is drawn, it does", enlarged());
 	}
 
 	@Test
@@ -397,18 +570,18 @@ public class ChronicleWindowTest
 		SketchBook book = new SketchBook(data);
 		book.openFor("acct");
 		openOn(LUMBRIDGE_PAGE, "location-lumbridge", null, book);
-		assertFalse(pageStyles().toString(), pageStyles().contains(ChronicleLayout.Style.POSE));
+		assertEquals(0, inkAtThePlatesFoot());
 		assertEquals("the summary straight under the caption", "Home.",
 			pageTexts().get(pageStyles().indexOf(ChronicleLayout.Style.CAPTION) + 1));
 	}
 
 	@Test
-	public void aPoseItHasNoWordsForAddsNoLine() throws Exception
+	public void aPoseItHasNoWordsForWritesNothing() throws Exception
 	{
 		SketchBook book = new SketchBook(folder.newFolder().toPath());
 		book.openFor("acct");
 		book.put("lumbridge", paper(), paper(), "somersault");
 		openOn(LUMBRIDGE_PAGE, "location-lumbridge", null, book);
-		assertFalse(pageStyles().contains(ChronicleLayout.Style.POSE));
+		assertEquals(0, inkAtThePlatesFoot());
 	}
 }

@@ -107,6 +107,23 @@ public class ChroniclePageFitTest
 	}
 
 	@Test
+	public void noLineInTheBookEndsOnADash()
+	{
+		List<String> problems = new ArrayList<>();
+		for (List<ChronicleLayout.Line> lines : everyPageBothWays())
+		{
+			for (ChronicleLayout.Line line : lines)
+			{
+				if (line.text.endsWith(" -"))
+				{
+					problems.add(line.text);
+				}
+			}
+		}
+		assertTrue(String.join(", ", problems), problems.isEmpty());
+	}
+
+	@Test
 	public void theLastLineOfEveryPageCanBeScrolledIntoView()
 	{
 		List<String> problems = new ArrayList<>();
@@ -304,7 +321,7 @@ public class ChroniclePageFitTest
 			{
 				problems.add(entry.id + ": " + body.stringWidth(line) + "px: " + line);
 			}
-			List<ChronicleLayout.Line> lines = ChronicleLayout.page(entry.readAs(quest -> true), line, false, WIDTH,
+			List<ChronicleLayout.Line> lines = ChronicleLayout.page(entry.readAs(quest -> true), line, WIDTH,
 				body::stringWidth, bold::stringWidth);
 			int margin = entry.platesOrEmpty().isEmpty() ? 0 : ChronicleLayout.PLATE_ROWS + 1;
 			if (!lines.get(margin).text.equals(line))
@@ -317,9 +334,10 @@ public class ChroniclePageFitTest
 	}
 
 	@Test
-	public void everyPoseLineFitsUnderThePlate()
+	public void everyPoseLineFitsOnThePlate()
 	{
-		// The caption's own room, though the pose line has no arrows beside it.
+		// Pencilled on the page's plate, and under the enlarged one's caption:
+		// the caption's own room, clear of the frame either side.
 		List<String> problems = new ArrayList<>();
 		for (String phrase : ChronicleWindow.POSE_PHRASES.values())
 		{
@@ -336,13 +354,13 @@ public class ChroniclePageFitTest
 	}
 
 	@Test
-	public void theLastLineCanStillBeReachedWithTheNumberAndThePose()
+	public void theLastLineCanStillBeReachedWithTheNumber()
 	{
 		List<String> problems = new ArrayList<>();
 		for (ChronicleEntry entry : loader.getEntries())
 		{
 			List<ChronicleLayout.Line> lines = ChronicleLayout.page(entry.readAs(quest -> true),
-				ChronicleWindow.tallyLine(entry, 99999), true, WIDTH, body::stringWidth, bold::stringWidth);
+				ChronicleWindow.tallyLine(entry, 99999), WIDTH, body::stringWidth, bold::stringWidth);
 			int most = ChronicleLayout.lastScroll(lines, BODY_HEIGHT);
 			if (lastBaseline(lines, most) + ChronicleLayout.DESCENT >= BODY_HEIGHT)
 			{

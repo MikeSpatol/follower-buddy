@@ -222,6 +222,36 @@ public final class ChronicleLayout
 	}
 
 	/**
+	 * Where a reader stays when the page they are on is laid out again: in
+	 * the same place, moved on past the page's number if it has just
+	 * appeared above them, so the line they were reading stays at the top.
+	 */
+	public static int keptScroll(int scroll, List<Line> before, List<Line> after)
+	{
+		// The number sits straight under the plate, if the page has one.
+		int at = 0;
+		while (at < after.size() && (after.get(at).style == Style.PLATE || after.get(at).style == Style.CAPTION))
+		{
+			at++;
+		}
+		if (scroll == 0 || scroll < at)
+		{
+			return scroll;
+		}
+		return Math.max(0, scroll + count(after, Style.TALLY) - count(before, Style.TALLY));
+	}
+
+	private static int count(List<Line> lines, Style style)
+	{
+		int n = 0;
+		for (Line line : lines)
+		{
+			n += line.style == style ? 1 : 0;
+		}
+		return n;
+	}
+
+	/**
 	 * Where the thumb sits on a scrollbar whose arrows are 16 high: its top
 	 * and height, in the bar's own pixels, proportional to what is shown.
 	 */
@@ -271,19 +301,12 @@ public final class ChronicleLayout
 	public static List<Line> lockedPage(ChronicleEntry entry, String reason, int width,
 		ToIntFunction<String> bodyWidth, ToIntFunction<String> headingWidth)
 	{
-		return lockedPage(entry, reason, false, width, bodyWidth, headingWidth);
-	}
-
-	/** The same, with the pose line under the caption when a sketch on it has one. */
-	public static List<Line> lockedPage(ChronicleEntry entry, String reason, boolean posed, int width,
-		ToIntFunction<String> bodyWidth, ToIntFunction<String> headingWidth)
-	{
 		List<Line> lines = new ArrayList<>();
 		if (entry == null)
 		{
 			return lines;
 		}
-		plate(lines, entry, posed);
+		plate(lines, entry);
 		paragraphs(lines, reason, width, bodyWidth, Style.BODY, 0);
 		String kind = entry.kindOrEmpty();
 		if (!kind.equals("boss") && !kind.equals("enemy"))
@@ -304,7 +327,9 @@ public final class ChronicleLayout
 	/**
 	 * Greedy word wrap measured with the game's own advances, the dialog's
 	 * recipe. A word longer than the column breaks after its hyphens, as a
-	 * printer would break it; one with no hyphen is left to overflow.
+	 * printer would break it; one with no hyphen is left to overflow. A
+	 * dash standing alone keeps a word either side of it, and a last line of
+	 * one word takes another with it from the line above.
 	 */
 	public static List<String> wrap(String text, int maxWidth, ToIntFunction<String> width)
 	{
@@ -333,8 +358,24 @@ public final class ChronicleLayout
 				int maxWidth = out.isEmpty() ? firstWidth : restWidth;
 				if (width.applyAsInt(candidate) > maxWidth && line.length() > 0)
 				{
-					out.add(line.toString());
-					line = new StringBuilder(piece);
+					// A list's "label - text" separator, left at the end of a
+					// line, reads as if the line ran out, and opening the next
+					// it reads as a new item; it goes down with its label's
+					// last word.
+					String full = line.toString();
+					int cut = p == 0 && full.endsWith(" -") ? full.lastIndexOf(' ', full.length() - 3) : -1;
+					String carried = cut > 0 ? full.substring(cut + 1) + " " + piece : null;
+					if (carried != null && !full.substring(0, cut).equals("-")
+						&& width.applyAsInt(carried) <= restWidth)
+					{
+						out.add(full.substring(0, cut));
+						line = new StringBuilder(carried);
+					}
+					else
+					{
+						out.add(full);
+						line = new StringBuilder(piece);
+					}
 				}
 				else
 				{
@@ -346,7 +387,37 @@ public final class ChronicleLayout
 		{
 			out.add(line.toString());
 		}
+		unorphan(out, restWidth, width);
 		return out;
+	}
+
+	/**
+	 * A paragraph that ends on one word alone takes the last word of the
+	 * line above down with it, if that line has words to spare and the two
+	 * still fit.
+	 */
+	private static void unorphan(List<String> out, int restWidth, ToIntFunction<String> width)
+	{
+		int last = out.size() - 1;
+		if (last < 1 || out.get(last).contains(" "))
+		{
+			return;
+		}
+		String above = out.get(last - 1);
+		int cut = above.lastIndexOf(' ');
+		// Not after a long word broken at its hyphen: its pieces join with no space.
+		if (above.split(" ").length < 3 || above.endsWith("-"))
+		{
+			return;
+		}
+		String kept = above.substring(0, cut);
+		String moved = above.substring(cut + 1) + " " + out.get(last);
+		if (kept.endsWith(" -") || width.applyAsInt(moved) > restWidth)
+		{
+			return;
+		}
+		out.set(last - 1, kept);
+		out.set(last, moved);
 	}
 
 	public static List<String> wrap(String text, int maxWidth, GameFont font)
@@ -378,23 +449,20 @@ public final class ChronicleLayout
 	public enum Style
 	{
 		HEADING, BODY, NOTE,
+		/** The page's own number, drawn as the header's label and value. */
+		TALLY,
 		/** Room held for the plate, drawn as one picture over all its rows. */
 		PLATE,
 		/** The line under the plate; the window fills in which plate it is. */
-		CAPTION,
-		/**
-		 * The line under the caption, on a page with a sketch that caught you
-		 * mid-emote; the window fills in the pose of the plate showing.
-		 */
-		POSE
+		CAPTION
 	}
 
 	/**
-	 * The plate's rows and its caption line, when the page has pictures, and
-	 * the pose line under it when any of its sketches has one. Any, not the
-	 * plate showing: turning the plates must not move the text below them.
+	 * The plate's rows and its caption line, when the page has pictures. A
+	 * sketch's pose is pencilled on the drawing rather than given a line: a
+	 * line kept for it showed blank under every other plate on the page.
 	 */
-	private static void plate(List<Line> lines, ChronicleEntry entry, boolean posed)
+	private static void plate(List<Line> lines, ChronicleEntry entry)
 	{
 		if (entry.platesOrEmpty().isEmpty())
 		{
@@ -405,10 +473,6 @@ public final class ChronicleLayout
 			lines.add(new Line("", Style.PLATE, 0));
 		}
 		lines.add(new Line("", Style.CAPTION, 0));
-		if (posed)
-		{
-			lines.add(new Line("", Style.POSE, 0));
-		}
 	}
 
 	/** Plate numbers as a book has them. */
@@ -428,15 +492,15 @@ public final class ChronicleLayout
 	public static List<Line> page(ChronicleEntry entry, int width,
 		ToIntFunction<String> bodyWidth, ToIntFunction<String> headingWidth)
 	{
-		return page(entry, null, false, width, bodyWidth, headingWidth);
+		return page(entry, null, width, bodyWidth, headingWidth);
 	}
 
 	/**
 	 * The same, with the page's own number under the plate, a note in the
 	 * margin before the summary, when there is one ({@code tally} null when
-	 * not), and the pose line when a sketch on it has one.
+	 * not).
 	 */
-	public static List<Line> page(ChronicleEntry entry, String tally, boolean posed, int width,
+	public static List<Line> page(ChronicleEntry entry, String tally, int width,
 		ToIntFunction<String> bodyWidth, ToIntFunction<String> headingWidth)
 	{
 		List<Line> lines = new ArrayList<>();
@@ -444,8 +508,8 @@ public final class ChronicleLayout
 		{
 			return lines;
 		}
-		plate(lines, entry, posed);
-		paragraphs(lines, tally, width, bodyWidth, Style.NOTE, 0);
+		plate(lines, entry);
+		paragraphs(lines, tally, width, bodyWidth, Style.TALLY, 0);
 		paragraphs(lines, entry.summary, width, bodyWidth, Style.BODY, 0);
 		for (ChronicleEntry.Section section : entry.sectionsOrEmpty())
 		{
