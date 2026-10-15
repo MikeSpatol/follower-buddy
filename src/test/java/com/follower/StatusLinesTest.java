@@ -161,4 +161,16 @@ public class StatusLinesTest
 			rebuild.substring(0, failed).contains("if (!buildFailureTold)"));
 		assertTrue("until a build succeeds", rebuild.substring(failed).contains("buildFailureTold = false;"));
 	}
+
+	/** ::follower hepl printed the whole help, pushing the game's chat off screen. */
+	@Test
+	public void aTypoIsAnsweredWithoutTheWholeList() throws IOException
+	{
+		String source = source();
+		int unknown = source.indexOf("sendStatus(\"Unknown command '\" + sub + \"'.\");");
+		int list = source.indexOf("sendStatus(\"::follower commands:\");");
+		assertTrue("the lint has lost its place", unknown >= 0 && list > unknown);
+		assertTrue("the unknown word stops short of the list",
+			source.substring(unknown, list).contains("break;"));
+	}
 }

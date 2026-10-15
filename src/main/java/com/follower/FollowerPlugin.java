@@ -11204,9 +11204,13 @@ public class FollowerPlugin extends Plugin
 				break;
 
 			default:
+				// One wrong letter used to print the whole list, pushing the
+				// game's own chat off the screen; the list is for asking.
 				if (!"help".equals(sub))
 				{
 					sendStatus("Unknown command '" + sub + "'.");
+					sendStatus("Type ::follower in chat for commands.");
+					break;
 				}
 				sendStatus("::follower commands:");
 				for (java.util.Map.Entry<String, String> entry : EVERYDAY_COMMANDS)
