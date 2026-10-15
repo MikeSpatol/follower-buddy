@@ -10471,6 +10471,11 @@ public class FollowerPlugin extends Plugin
 						sendStatus("Usage: ::follower pose <id>  (0 to release)");
 					}
 				}
+				else
+				{
+					// A bare call answers with its usage, as the others do.
+					sendStatus("Usage: ::follower pose <id>  (0 to release)");
+				}
 				break;
 
 			case "animinfo":

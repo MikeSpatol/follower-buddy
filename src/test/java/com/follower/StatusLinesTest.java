@@ -173,4 +173,17 @@ public class StatusLinesTest
 		assertTrue("the unknown word stops short of the list",
 			source.substring(unknown, list).contains("break;"));
 	}
+
+	/** ::follower pose with no id said nothing; every other command answers with its usage. */
+	@Test
+	public void aBarePoseAnswersWithItsUsage() throws IOException
+	{
+		String source = source();
+		int pose = source.indexOf("case \"pose\":");
+		assertTrue("the lint has lost its place", pose >= 0);
+		String body = source.substring(pose, source.indexOf("\t\t\t\tbreak;", pose));
+		int bare = body.indexOf("else\n");
+		assertTrue("the bare call has a branch of its own", bare >= 0);
+		assertTrue("and it gives the usage", body.substring(bare).contains("sendStatus(\"Usage: ::follower pose"));
+	}
 }
