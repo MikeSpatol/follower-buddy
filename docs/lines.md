@@ -1,6 +1,6 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 560 rules, 2479 spoken lines, 3 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 605 rules, 2581 spoken lines, 3 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
@@ -19,7 +19,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - [clock](#clock) - The hour and how long we have been at it (9 rules, 39 lines)
 - [gear](#gear) - What you put on (63 rules, 147 lines)
 - [boss](#boss) - Bosses sighted and fought (55 rules, 521 lines)
-- [quest](#quest) - Famous quest figures nearby (66 rules, 175 lines)
+- [quest](#quest) - Famous quest figures nearby (111 rules, 277 lines)
 - [thrall](#thrall) - When it stands in for a thrall (3 rules, 18 lines)
 - [mimic](#mimic) - Copying your emotes (30 rules, 16 lines)
 - [dialogs](#dialogs) - the conversations it starts (3 trees)
@@ -6870,6 +6870,513 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - Hans and I have agreed it's a draw. Neither of us has said so.
 - Hans and I passed each other today. We both called it a lap.
+
+### `qm-cooks-assistant-cow-field`
+
+> Cooks Assistant, varp 29 = 1: Reached the dairy cow in the Groats' field with the quest under way (Gillie Groats in sight). Source: cache: quest_progress_get (script 4024) reads %cookquest (varp 29); quest dbrow 17 endstate 2, unstarted 0; so 1 is the only in-progress value. Gillie Groats is NPC 4628 in the cache; the dairy cow itself is an object, not an NPC.
+
+- **when:** questvar AND Gillie Groats within 6 tiles, in sight AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- One cow with a bell on, and every adventurer in Lumbridge brings her a bucket.
+- The dairy cow. She has the look of someone asked for milk a great deal.
+- A milkmaid, a cow and a bucket. The cake's coming together, slowly.
+
+### `qm-cooks-assistant-egg-coop`
+
+> Cooks Assistant, varp 29 = 1: Reached the chickens at the Groats' coop with the quest under way. Source: cache: quest_progress_get (script 4024) reads %cookquest (varp 29); quest dbrow 17 endstate 2, unstarted 0; so 1 is the only in-progress value. Region 12595 computed from the egg spawn at (3177, 3296) in Quest Helper (github.com/Zoinkwiz/quest-helper, master 5f79193, 2026-10-14).
+
+- **when:** questvar AND Chicken within 4 tiles, in sight AND in region 12595 AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- The Duke's cake, at present, is sitting under a chicken.
+- Eggs, straight from the source. The source looks unimpressed.
+
+### `qm-cooks-assistant-mill-top`
+
+> Cooks Assistant, varp 29 = 1: Climbed to the top floor of Mill Lane Mill (hopper floor) with the quest under way. Source: cache: quest_progress_get (script 4024) reads %cookquest (varp 29); quest dbrow 17 endstate 2, unstarted 0; so 1 is the only in-progress value. Area is the millThird zone in Quest Helper (github.com/Zoinkwiz/quest-helper, master 5f79193, 2026-10-14).
+
+- **when:** questvar AND in the area AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- So this is where bread starts. It's noisier than I'd have guessed.
+- Three floors for one pot of flour. Millers don't believe in shortcuts.
+- Top floor of the mill. Everything up here is about to fall downstairs.
+
+### `qm-cooks-assistant-flour-in-bin`
+
+> Cooks Assistant, varbit 4920 = 1-30: Pulled the hopper lever; flour has come down into the bin on the ground floor. Source: varbit 4920 MILL_FLOUR (gameval; cache: varp 203 bits 0-4) = flour waiting in the bin; Quest Helper (github.com/Zoinkwiz/quest-helper, master 5f79193, 2026-10-14) treats MILL_FLOUR == 1 as 'controls used'. Upper bound 30 is the bin's capacity, not verified. (unverified)
+
+- **when:** questvar AND questvar AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; files incident `quest-mill-flour` as 'the Duke's flour coming down at the mill'; animation 865
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- Wheat to flour in one pull of a lever. That wants a page of its own.
+- That's flour. Two floors of falling, and none of it spilled that I saw.
+
+### `qm-sheep-shearer-thing-escaped`
+
+> Sheep Shearer, varp 179 = 1-20: Tried to shear The Thing and it got away. Source: cache: quest_progress_get (script 4024) reads %sheep (varp 179); quest dbrow 131 endstate 21, unstarted 0; 1-20 in progress. Message 'The... whatever it is... manages to get away from you!' from the OSRS Wiki, Transcript:Sheep Shearer. Region 12851 from the sheep pen at (3201, 3268) in Quest Helper (github.com/Zoinkwiz/quest-helper, master 5f79193, 2026-10-14).
+
+- **when:** questvar AND a chat message (manages to get away from you) AND in region 12851
+- **does:** occasion (never held back); once ever; animation 861
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- Every other sheep stood still for it. That one had somewhere to be.
+- It got away. Sheep don't usually look that pleased with themselves.
+
+### `qm-sheep-shearer-ram-fight`
+
+> Sheep Shearer, varp 179 = 1-20: Started a fight with a ram in Fred's pen. Source: cache: quest_progress_get (script 4024) reads %sheep (varp 179); quest dbrow 131 endstate 21, unstarted 0; 1-20 in progress. Ram is NPC 1261-1265, level 2, in the cache. Region as above.
+
+- **when:** questvar AND a fight starting AND in region 12851
+- **does:** occasion (never held back); once ever; animation 856
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- That's a ram. The wool isn't worth this, and neither is the argument.
+
+### `qm-sheep-shearer-first-spin`
+
+> Sheep Shearer, varp 179 = 1-20: Spun the first wool into a ball at the Lumbridge Castle wheel. Source: cache: quest_progress_get (script 4024) reads %sheep (varp 179); quest dbrow 131 endstate 21, unstarted 0; 1-20 in progress. Area is the castleSecond zone (first floor of Lumbridge Castle) in Quest Helper (github.com/Zoinkwiz/quest-helper, master 5f79193, 2026-10-14).
+
+- **when:** questvar AND xpdrop AND in the area
+- **does:** occasion (never held back); once ever; animation 855
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- Wool in, ball out. The wheel does the clever part.
+- There's a rhythm to that wheel. I'm trying not to tap along.
+
+### `qm-sheep-shearer-first-handful`
+
+> Sheep Shearer, varp 179 = 2-10: Handed Fred a first batch of balls, fewer than half. Source: cache: quest_progress_get (script 4024) reads %sheep (varp 179); quest dbrow 131 endstate 21, unstarted 0; 1-20 in progress. Value = 1 + balls handed in, from Quest Helper (github.com/Zoinkwiz/quest-helper, master 5f79193, 2026-10-14) (woolNeeded = 21 - varp). Not checked in game. (unverified)
+
+- **when:** questvar AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 2113
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- Handed over, counted twice, and he still wants more. Farmers.
+- He counted those like he expected to be short-changed.
+
+### `qm-sheep-shearer-past-halfway`
+
+> Sheep Shearer, varp 179 = 11-20: Fred now has at least ten balls, with some still owed. Source: cache: quest_progress_get (script 4024) reads %sheep (varp 179); quest dbrow 131 endstate 21, unstarted 0; 1-20 in progress. Value = 1 + balls handed in, from Quest Helper (github.com/Zoinkwiz/quest-helper, master 5f79193, 2026-10-14). Not checked in game. (unverified)
+
+- **when:** questvar AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 865
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- More than half delivered. Somewhere out there, a sheep feels the draught.
+- Past halfway. The flock's noticeably slimmer than when we arrived.
+
+### `qm-rune-mysteries-tower-arrival`
+
+> Rune Mysteries, varp 63 = 1: Reached the Wizards' Tower with the Duke's talisman, not yet handed over. Source: cache: quest_progress_get (script 4024) reads %runemysteries (varp 63); quest dbrow 125 endstate 6, unstarted 0; 1-5 in progress. 1 = carrying the talisman to Sedridor, from Quest Helper (github.com/Zoinkwiz/quest-helper, master 5f79193, 2026-10-14). Region 12337 is the chronicle's Wizards' Tower plate region. (unverified)
+
+- **when:** questvar AND entering region 12337
+- **does:** occasion (never held back); once ever
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- The Wizards' Tower. Every window, I'd bet, has someone reading behind it.
+- A tower full of wizards, and we're bringing them a trinket from a cellar.
+
+### `qm-rune-mysteries-package-in-hand`
+
+> Rune Mysteries, varbit 13723 = 1: Sedridor has the talisman and has just handed over the research package for Aubury. Source: varbit 13723 RUNEMYSTERIES_PACKAGE (gameval; cache: varp 3404 bit 3). Quest Helper (github.com/Zoinkwiz/quest-helper, master 5f79193, 2026-10-14) reads 0 at varp 3 as 'package not yet taken'. varp 63 = 3 is 'deliver package to Aubury' in the same source. (unverified)
+
+- **when:** questvar AND questvar AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; files incident `quest-aubury-package` as 'the sealed package for Aubury'; animation 2113
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- Courier work, then. I'll note the package was sealed when we got it.
+
+### `qm-rune-mysteries-mugger-street`
+
+> Rune Mysteries, varp 63 = 3-5: Walking past the mugger outside Aubury's shop while carrying the package or the notes. Source: cache: quest_progress_get (script 4024) reads %runemysteries (varp 63); quest dbrow 125 endstate 6, unstarted 0; 1-5 in progress. 3-5 = package or notes in transit, from Quest Helper (github.com/Zoinkwiz/quest-helper, master 5f79193, 2026-10-14). Mugger is NPC 513 and others, level 6. Region 12853 from Aubury at (3253, 3401) in Quest Helper (github.com/Zoinkwiz/quest-helper, master 5f79193, 2026-10-14). The mugger outside is in the chronicle page. (unverified)
+
+- **when:** questvar AND Mugger within 6 tiles, in sight AND in region 12853 AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- A mugger, and us carrying a wizard's post. I'll walk on the inside.
+- That mugger's had a long look at your pockets. Keep walking.
+
+### `qm-rune-mysteries-notes-in-hand`
+
+> Rune Mysteries, varbit 13725 = 1: Aubury has read the package and handed back his own notes for Sedridor (just before the tea offer). Source: varbit 13725 RUNEMYSTERIES_NOTES (gameval; cache: varp 3404 bit 5). Quest Helper (github.com/Zoinkwiz/quest-helper, master 5f79193, 2026-10-14) reads 0 at varp 5 as 'notes not yet received'. (unverified)
+
+- **when:** questvar AND questvar AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 857
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- Notes going the other way now. I'd love to know what's in them.
+- He read it twice and handed us something new. Scholars never just say thanks.
+
+### `qm-rune-mysteries-basement-return`
+
+> Rune Mysteries, varp 63 = 5: Climbed back down into Sedridor's basement with Aubury's notes. Source: cache: quest_progress_get (script 4024) reads %runemysteries (varp 63); quest dbrow 125 endstate 6, unstarted 0; 1-5 in progress. 5 = deliver the notes, from Quest Helper (github.com/Zoinkwiz/quest-helper, master 5f79193, 2026-10-14). Region 12437 computed from the wizardBasement zone in Quest Helper (github.com/Zoinkwiz/quest-helper, master 5f79193, 2026-10-14). varbit 13726 RUNEMYSTERIES_NOTES_GIVEN (varp 3404 bit 6) = 0 means not yet handed in. (unverified)
+
+- **when:** questvar AND entering region 12437 AND questvar AND questvar
+- **does:** occasion (never held back); once ever
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- Back down the ladder. Same basement, rather more to tell him.
+- Down to Sedridor again. Somewhere in these notes is whatever he's after.
+
+### `qm-priest-in-peril-the-voice-at-the-door`
+
+> Priest In Peril, varp 302 = 2: Spoke to 'Drezel' through the temple door and was asked to kill the dog in the mausoleum. Source: Quest Helper (Zoinkwiz/quest-helper on GitHub, master as of 2025-10-23), PriestInPeril.java loadSteps: 1 = go to the temple, 2 = go down and kill the dog (unverified)
+
+- **when:** questvar AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 2113
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- Shy, for a priest. He wouldn't even open the door.
+- A dog in the mausoleum, says the voice behind the door. I'll take its word.
+- Pest control for a temple. Not the job I pictured from the palace.
+
+### `qm-priest-in-peril-the-kings-verdict`
+
+> Priest In Peril, varp 302 = 4: King Roald, furious about his dog, sent the player back to put it right. Source: Quest Helper (Zoinkwiz/quest-helper on GitHub, master as of 2025-10-23), PriestInPeril.java loadSteps: 4 = back to the temple, kill a monk, talk to Drezel. Game cache: the caged Drezel multinpc (9804, on varp 302) first shows at 4
+
+- **when:** questvar AND NOT (questdone) AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 4275
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- In fairness, I only wrote down what the door told us.
+- A king's dog. I'd have liked to know that sooner.
+
+### `qm-priest-in-peril-the-kings-verdict-after-children-of-the-sun`
+
+> Callback: said instead of qm-priest-in-peril-the-kings-verdict when Children Of The Sun is done. Priest In Peril, varp 302 = 4: King Roald, furious about his dog, sent the player back to put it right. Source: Quest Helper (Zoinkwiz/quest-helper on GitHub, master as of 2025-10-23), PriestInPeril.java loadSteps: 4 = back to the temple, kill a monk, talk to Drezel. Game cache: the caged Drezel multinpc (9804, on varp 302) first shows at 4
+
+- **when:** questvar AND questdone AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 2113
+- **pacing:** priority 61, cooldown 10m, delay 2 ticks, overhead
+
+- His own dog, after we caught his bandits. My drawing will need a kinder caption.
+
+### `qm-priest-in-peril-the-monk-falls`
+
+> Priest In Peril, varp 302 = 4: Picked up the golden key from the right Monk of Zamorak inside Paterdomus. Source: Quest Helper (Zoinkwiz/quest-helper on GitHub, master as of 2025-10-23), PriestInPeril.java loadSteps: killMonk is the value-4 step. Region 13622 is the chronicle's Paterdomus plate region and holds Quest Helper's temple zones (x 3408-3419, y 3483-3494). 'Monk of Zamorak' checked in the cache Trigger moved to the golden key (2944, PIPKEY_GOLD) reaching the bag, via inventoryHas, so only the key-carrying monk counts (drafts QA, 15 Oct).
+
+- **when:** questvar AND inventoryhas AND in region 13622 AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 856
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- Spells from a monk, all the way down the aisle. Very unchurchlike.
+
+### `qm-priest-in-peril-the-real-drezel`
+
+> Priest In Peril, varp 302 = 5: Talked to the real Drezel through the bars of his cell on the top floor. Source: Quest Helper (Zoinkwiz/quest-helper on GitHub, master as of 2025-10-23), PriestInPeril.java loadSteps: 5 = find the iron key, fill the bucket, open the cell (unverified)
+
+- **when:** questvar AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 14001
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- So that's the real Drezel. Then who were we talking to at the door?
+- A vampyre in a coffin, in a temple, upstairs. I'd like that noted twice.
+- Locked in his own temple. And the key's somewhere else, naturally.
+
+### `qm-priest-in-peril-the-coffin-sealed`
+
+> Priest In Peril, varp 302 = 7: Poured the blessed water over the vampyre's coffin. Source: Quest Helper (Zoinkwiz/quest-helper on GitHub, master as of 2025-10-23), PriestInPeril.java loadSteps: 6 = bless the water and use it on the coffin, 7 = talk to Drezel again. The cache only shows the caged Drezel leaving at 9 (unverified)
+
+- **when:** questvar AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 855
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- Sealed in. I'd still rather not stand next to it.
+- Holy water on a coffin. It's gone quiet, which I'm taking as a yes.
+- One vampyre, filed under contained. I'll check the lid on the way out.
+
+### `qm-waterfall-quest-hudon-on-his-island`
+
+> Waterfall Quest, varp 65 = 2: Found Hudon on the island after the raft wrecked, and he refused to come home. Source: Quest Helper (Zoinkwiz/quest-helper on GitHub, master as of 2025-10-23), WaterfallQuest.java loadSteps: 1 = raft to Hudon and talk to him, 2 = go and read the book (unverified)
+
+- **when:** questvar AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 2113
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- His mother will want a report. I'm drafting something gentle.
+
+### `qm-waterfall-quest-the-book-on-baxtorian`
+
+> Waterfall Quest, varp 65 = 3: Read the Book on Baxtorian upstairs in the Tourist Information Centre. Source: Quest Helper (Zoinkwiz/quest-helper on GitHub, master as of 2025-10-23), WaterfallQuest.java loadSteps: reading the book is the last action of value 2; 3 and 4 share the pebble-and-tomb step. That reading is what sets 3 is inferred (unverified)
+
+- **when:** questvar AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 857
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- An elf king, a lost queen and a pebble. I'll need more ink.
+- A pebble for a key, kept by gnomes for a century. Of course.
+
+### `qm-waterfall-quest-golries-pebble`
+
+> Waterfall Quest, varbit 9110 = 1: Golrie, let out of his cage, handed over Glarial's pebble. Source: Varbit 9110 is WATERFALL_GOLRIE_CHAT (RuneLite gameval; cache: varp 667 bit 14). Quest Helper commit fc4e126d43 (2025-04-10) read == 1 as 'got the pebble'; its 2025-08 polish switched to checking for the pebble item instead (unverified)
+
+- **when:** questvar AND questvar AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 2113
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- Old elven junk, he says. I'd have checked with an elf first.
+- He handed it over like a button off a coat.
+- A queen's pebble, in a gnome's pocket. It's had quite a century.
+
+### `qm-waterfall-quest-into-glarials-tomb`
+
+> Waterfall Quest, varp 65 = 1-9: Used the pebble on Glarial's tombstone and went down, unarmed. Source: Region 10137 worked out from Quest Helper's glarialTomb zone (x 2524-2557, y 9801-9849). The 1-9 range rests only on the cache end state, 10
+
+- **when:** questvar AND entering region 10137
+- **does:** occasion (never held back); once ever
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- Peaceful intent only, the stone said. I've never had any other kind.
+- A queen's tomb. I'm taking my hat off, figuratively.
+
+### `qm-waterfall-quest-behind-the-falls`
+
+> Waterfall Quest, varp 65 = 1-9: Went through the ledge door, wearing Glarial's amulet, into the Waterfall Dungeon. Source: Region 10394 worked out from Quest Helper's falls, endRoom and end2 zones (x 2556-2608, y 9861-9917). The 1-9 range rests only on the cache end state, 10
+
+- **when:** questvar AND entering region 10394
+- **does:** occasion (never held back); once ever
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- Behind the waterfall. Every story says there's something behind it.
+- It's dry in here. Somebody built this to stay dry.
+- The water let us in. I didn't think it would, and said nothing.
+
+### `qm-waterfall-quest-the-chalice-room`
+
+> Waterfall Quest, varp 65 = 1-9: Walked into the northern cavern with the two statues and the floating Chalice of Eternity. Source: Area is Quest Helper's end2 zone, where its useUrnOnChalice step applies. The 1-9 range rests only on the cache end state, 10
+
+- **when:** questvar AND in the area AND NOT (dialogueopen)
+- **does:** mood +5; occasion (never held back); once ever
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- A cup, floating, and nobody's mentioned it. I'm mentioning it.
+- The air's very still in here. Even the cup's holding its breath.
+
+### `qm-witchs-house-into-the-garden`
+
+> Witchs House, varp 226 = 1-6: Stepped out of the back door into the witch's hedged garden. Source: Area from Quest Helper's garden1/garden2 zones, trimmed to leave out the house. The 1-6 range rests only on the cache end state, 7
+
+- **when:** questvar AND in the area AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- I'll write very softly from here.
+- Every step on this lawn sounds louder than it is.
+
+### `qm-witchs-house-the-experiment`
+
+> Witchs House, varp 226 = 1-6: Opened the shed and found the ball, with the witch's experiment beside it. Source: 'Witch's experiment' checked in the cache (npcs 3996, 6394); later shapes are '(second form)' to '(fourth form)', 3997-3999 and 6395-6397, all matched by the wildcard. The 1-6 range rests only on the cache end state, 7
+
+- **when:** questvar AND Witch's experiment* within 6 tiles, in sight AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 2105
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- So that's the experiment. I'd hoped it was a vegetable.
+- The ball's on the crate. The thing beside it is not a crate.
+- That isn't a ball, and it's between us and the ball.
+
+### `qm-witchs-house-the-experiment-beaten`
+
+> Witchs House, varp 226 = 6: Beat the experiment's last shape in the shed. Source: Quest Helper (Zoinkwiz/quest-helper on GitHub, master as of 2025-10-23), WitchsHouse.java loadSteps: 6 = returnBall (pick up the ball, take it to the boy) (unverified)
+
+- **when:** questvar AND NOT (dialogueopen)
+- **does:** mood -5; occasion (never held back); once ever; files incident `quest-witchs-shed` as 'the thing in the witch's shed'; animation 13994
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- That's the lot, I think. It kept coming back in new clothes.
+- Four of it, and the ball sat there through every one.
+- It's stopped. I'm giving it a moment to be sure.
+
+### `qm-witchs-house-caught-in-the-garden`
+
+> Witchs House, varp 226 = 1-6: The witch spotted the player in her garden, shouted and sent them out. Source: Shout text taken from the chronicle page ('Stop! Thief!'). Not confirmed that it arrives as an overhead NPC line rather than dialogue. The 1-6 range rests only on the cache end state, 7 (unverified)
+
+- **when:** questvar AND npcshout
+- **does:** occasion (never held back); once ever
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- Out on our ear. I'll call that reconnaissance.
+- Thief is a strong word. Trespasser, I'll grant her.
+
+### `qm-children-of-the-sun-the-bag`
+
+> Children Of The Sun, varbit 9632 = 6: The delegation has arrived, a guard has left the palace with a very large bag, and the player has decided to follow him. Source: Quest Helper ChildrenOfTheSun.java (6 = follow the guard); cache: Alina and Noah shown at 0-6, Sergeant Tobyn in the square from 6
+
+- **when:** questvar AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; files incident `quest-guards-bag` as 'the guard with the very large bag'; animation 857
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- Supplies, he said. Supplies don't usually need a bag that size.
+- A kingdom opens its doors, and you follow a bag. I'm not complaining.
+
+### `qm-children-of-the-sun-the-hideout`
+
+> Children Of The Sun, varbit 9632 = 8: The player tailed the guard unseen across south-east Varrock and he went into a small building beside Aubury's. Source: Quest Helper (8 = attempt to enter the house); cache: the bag guard and the four bandits exist only at value 8
+
+- **when:** questvar AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 2113
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- Not the gates, then.
+- He looked round every few steps. With that bag, so would I.
+
+### `qm-children-of-the-sun-overheard`
+
+> Children Of The Sun, varbit 9632 = 10: The window cutscene has ended: four bandits with stolen uniforms plan to strike as the delegation leaves. The player means to tell the sergeant. Source: Quest Helper (10 = talk to Sergeant Tobyn); the cache agrees only that the bandits are gone after 8 (unverified)
+
+- **when:** questvar AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 13994
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- Stolen uniforms. I'm crossing out 'supplies'.
+- They all know the target. Nobody said it aloud, more's the pity.
+- I wrote every word down, and my hand's still shaking. Slightly.
+
+### `qm-children-of-the-sun-spot-the-four`
+
+> Children Of The Sun, varbit 9632 = 12: Sergeant Tobyn has heard the report, refused to warn the delegation, and sent the player to point out four bandits disguised as guards. Source: Quest Helper (12 = mark the guards, with per-guard varbits 9633-9644) (unverified)
+
+- **when:** questvar AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 14001
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- Four of these guards aren't. I'll be polite to all of them, to be safe.
+- Every guard in Varrock looks a bit off to me. That's no help, I know.
+
+### `qm-children-of-the-sun-the-roof`
+
+> Children Of The Sun, varbit 9632 = 16: The four were arrested and Sergeant Tobyn has escorted the player up to the cell on the palace roof for the questioning. Source: Quest Helper (16 = go to the roof); cache: roof Tobyn and the caged bandit appear from 16; roof cell 3205,3471,2 is region 12854
+
+- **when:** questvar AND in region 12854 AND NOT (dialogueopen)
+- **does:** mood +4; occasion (never held back); once ever; animation 13995
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- Questioning. I'll stand at the back and take the minutes.
+- Four arrested and nobody so much as shouted. Varrock's guards, at their best.
+
+### `qm-x-marks-the-spot-the-orb`
+
+> X Marks The Spot, varbit 8063 = 4: Dug at the X behind Lumbridge Castle, by the kitchen door, and found a mysterious orb. Source: Quest Helper (4 = dig in Draynor) (unverified)
+
+- **when:** questvar AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 2113
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- An orb, buried behind a kitchen. I'd have looked for a ladle.
+- Scroll, map, now an orb. Whoever planned this liked variety.
+- A glass ball out of the ground. I'm keeping my hands in my pockets.
+
+### `qm-x-marks-the-spot-the-cipher`
+
+> X Marks The Spot, varbit 8063 = 5: Followed the orb to the spot east of Draynor, near the jail, and dug up a scroll written in cipher. Source: Quest Helper (5 = dig in the pig pen by Martin) (unverified)
+
+- **when:** questvar AND NOT (questdone) AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 857
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- Digging next to a jail. Bold, even for you.
+- Letters that don't spell anything. Yet.
+- I kept an eye on the jail guards while you dug. Someone had to.
+
+### `qm-x-marks-the-spot-the-cipher-after-prince-ali-rescue`
+
+> Callback: said instead of qm-x-marks-the-spot-the-cipher when Prince Ali Rescue is done. X Marks The Spot, varbit 8063 = 5: Followed the orb to the spot east of Draynor, near the jail, and dug up a scroll written in cipher. Source: Quest Helper (5 = dig in the pig pen by Martin) (unverified)
+
+- **when:** questvar AND questdone AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 856
+- **pacing:** priority 61, cooldown 10m, delay 2 ticks, overhead
+
+- That's the jail we got Prince Ali out of. I'd rather not go back in.
+
+### `qm-x-marks-the-spot-the-casket`
+
+> X Marks The Spot, varbit 8063 = 6: Dug up the ancient casket in the Draynor pig pen, heard a faint whisper, and put it down to the wind. Source: Quest Helper (6 = bring Veos the casket) (unverified)
+
+- **when:** questvar AND NOT (dialogueopen)
+- **does:** mood +5; occasion (never held back); once ever; files incident `quest-pig-pen-casket` as 'the whispering casket in the pig pen'; animation 13995
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- A whispering casket. I'm holding the notebook a little further away.
+- Whatever that was, the pigs are keeping it to themselves.
+- Buried in a pig pen. Whoever hid it didn't want visitors.
+- Hole four, by my count, and the only one that whispered.
+
+### `qm-client-of-kourend-regath-burn`
+
+> Client Of Kourend, varbit 5621 = 1: Finished Regath's interview in Arceuus; when he spoke of the Dark Altar the quill and scroll glowed and burned the player's hand. Source: Quest Helper ClientOfKourend.java (talkedToRegath = varbit 5621 at 1); cache gameval names 5620-5624 VEOS_PISCARILIUS / _ARCEUUS / _LOVAKENGJ / _SHAYZIEN / _HOSIDIUS (unverified)
+
+- **when:** questvar AND questvar AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 13994
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- My quill has never once done that. I checked it anyway.
+
+### `qm-client-of-kourend-return-whisper`
+
+> Client Of Kourend, varbit 5619 = 2: Finished the fifth city's interview and heard a whisper: 'Return to Veos...'. Source: Quest Helper (2 = return to Veos, after all five store owners) (unverified)
+
+- **when:** questvar AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 2113
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- A voice in your ear, you say. I heard nothing, and I was right here.
+- Five cities written up, and the scroll's still blank. I'd want a receipt.
+- Return to Veos, it said. Not please, I notice.
+
+### `qm-client-of-kourend-the-orb`
+
+> Client Of Kourend, varbit 5619 = 4: Back with Veos: he took the scroll and quill, passed on the client's apology for the burn, and handed over an orb to activate by the Dark Altar. Source: Quest Helper (4 = take the orb to the altar; 3 is also 'return to Veos', so 3 is probably set inside that same conversation) (unverified)
+
+- **when:** questvar AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 857
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- An orb, for an altar, for a client. I'd like one name in all that.
+- Best you don't ask, he says. I've written the question down anyway.
+- The last task, they assure him. Everyone says that.
+
+### `qm-client-of-kourend-dark-altar`
+
+> Client Of Kourend, varbit 5619 = 4: Arrived at the Dark Altar, north of Arceuus, carrying the orb. Source: Quest Helper (4); region 6716 from the cache map label 'Dark Altar' at 1696,3880 and the chronicle's audited dark-altar sketch (unverified)
+
+- **when:** questvar AND in region 6716 AND NOT (questdone) AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- This is near enough for me. You go on.
+- So this is what upset the scroll.
+- I'll take my notes from here, where the light's better. It isn't.
+- My quill's staying in my pocket here. It's behaved so far.
+
+### `qm-client-of-kourend-dark-altar-after-priest-in-peril`
+
+> Callback: said instead of qm-client-of-kourend-dark-altar when Priest In Peril is done. Client Of Kourend, varbit 5619 = 4: Arrived at the Dark Altar, north of Arceuus, carrying the orb. Source: Quest Helper (4); region 6716 from the cache map label 'Dark Altar' at 1696,3880 and the chronicle's audited dark-altar sketch (unverified)
+
+- **when:** questvar AND in region 6716 AND questdone AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever
+- **pacing:** priority 61, cooldown 10m, delay 2 ticks, overhead
+
+- I've stood by a vampyre's coffin for you. This is worse.
+- A vampyre's coffin was one thing. My quill stays pocketed here, while it behaves.
+
+### `qm-client-of-kourend-orb-shatters`
+
+> Client Of Kourend, varbit 5619 = 5: Activated the orb beside the Dark Altar; it shattered and a whisper said 'Return... to Veos. My thanks...'. Source: Quest Helper (5 = finish the quest with Veos) (unverified)
+
+- **when:** questvar AND NOT (dialogueopen)
+- **does:** mood -5; occasion (never held back); once ever; files incident `quest-dark-altar-orb` as 'the orb breaking at the Dark Altar'; animation 13997
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- It thanked you. I'd rather it hadn't.
+- Glass everywhere, and a thank-you from nobody in particular.
+- Polite, at least. I'm not sure that helps.
 
 ## thrall
 
