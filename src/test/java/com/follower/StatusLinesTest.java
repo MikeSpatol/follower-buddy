@@ -167,7 +167,7 @@ public class StatusLinesTest
 	public void aTypoIsAnsweredWithoutTheWholeList() throws IOException
 	{
 		String source = source();
-		int unknown = source.indexOf("sendStatus(\"Unknown command '\" + sub + \"'.\");");
+		int unknown = source.indexOf("sendStatus(\"Unknown command '\" + sub + \"'. Type ::follower for the list.\");");
 		int list = source.indexOf("sendStatus(\"::follower commands:\");");
 		assertTrue("the lint has lost its place", unknown >= 0 && list > unknown);
 		assertTrue("the unknown word stops short of the list",

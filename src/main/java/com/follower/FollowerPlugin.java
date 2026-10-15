@@ -3789,7 +3789,7 @@ public class FollowerPlugin extends Plugin
 		syncPanel();
 		if (!quiet)
 		{
-			sendStatus("Wearing outfit profile '" + activeProfile + "'");
+			sendStatus("Wearing outfit profile '" + activeProfile + "'.");
 		}
 	}
 
@@ -3845,7 +3845,7 @@ public class FollowerPlugin extends Plugin
 		profileStore.put(name, config.customOutfit());
 		setActiveProfile(name.trim());
 		panel.setProfileNames(profileStore.names(), activeProfile);
-		sendStatus("Outfit profile '" + activeProfile + "' created");
+		sendStatus("Outfit profile '" + activeProfile + "' created.");
 	}
 
 	private void deleteOutfitProfile(String name)
@@ -3862,7 +3862,7 @@ public class FollowerPlugin extends Plugin
 		}
 		if (!profileStore.remove(name))
 		{
-			sendStatus("No outfit profile named '" + name.trim() + "'");
+			sendStatus("No outfit profile named '" + name.trim() + "'.");
 			return;
 		}
 		if (name.trim().equals(activeProfile))
@@ -3872,7 +3872,7 @@ public class FollowerPlugin extends Plugin
 			loadOutfitProfile(profileStore.firstUserProfile());
 		}
 		panel.setProfileNames(profileStore.names(), activeProfile);
-		sendStatus("Outfit profile '" + name.trim() + "' deleted");
+		sendStatus("Outfit profile '" + name.trim() + "' deleted.");
 	}
 
 	/**
@@ -3946,8 +3946,8 @@ public class FollowerPlugin extends Plugin
 			persistOutfit(outfit);
 
 			String name = modelRepository.itemName(itemId);
-			sendStatus("Follower now wearing " + (name == null ? "item " + itemId : name)
-				+ " (" + target.name().toLowerCase(Locale.ROOT) + ")");
+			sendStatus("Now wearing " + (name == null ? "item " + itemId : name)
+				+ " (" + target.name().toLowerCase(Locale.ROOT) + ").");
 
 			// Weapon animations can only be learned by watching a real player
 			// hold one (measured: they are not in the cache as data). Say so
@@ -3957,7 +3957,7 @@ public class FollowerPlugin extends Plugin
 				// The hand-set command is developer-gated, so only offer it to
 				// someone who has that switched on - otherwise this reads as
 				// advice that does not work.
-				sendStatus("No stances learned for that weapon yet - wield it once, or stand"
+				sendStatus("No stances learned for that weapon yet. Wield it once, or stand"
 					+ " near someone who has."
 					+ (config.developerMode()
 						? " For one you cannot get hold of: ::follower stance " + itemId
@@ -4113,8 +4113,9 @@ public class FollowerPlugin extends Plugin
 
 			outfit.setKit(part, choices.get(next));
 			persistOutfit(outfit);
-			sendStatus(part.name().toLowerCase(Locale.ROOT)
-				+ " style " + (next + 1) + " of " + choices.size());
+			String partName = part.name().toLowerCase(Locale.ROOT);
+			sendStatus(Character.toUpperCase(partName.charAt(0)) + partName.substring(1)
+				+ " style " + (next + 1) + " of " + choices.size() + ".");
 		});
 	}
 
@@ -4156,7 +4157,7 @@ public class FollowerPlugin extends Plugin
 				}
 				appearanceComposer.setExactPairs(java.util.Collections.emptyMap());
 				configManager.unsetConfiguration(FollowerConfig.GROUP, EXACT_PALETTE_KEY);
-				sendStatus("Copied colours converted to palette picks - the picker is now in charge.");
+				sendStatus("Copied colours converted to palette picks. The picker's in charge now.");
 			}
 
 			colors[colorSlot] = index;
@@ -7333,29 +7334,6 @@ public class FollowerPlugin extends Plugin
 				speechEngine.dispatch(TriggerEvent.simple(TriggerEvent.Type.EXAMINED));
 			});
 
-		// The player's own park decides, not any stay: standing clear to watch
-		// a fight, the seat and the wander hold the follower too, and a Stay
-		// given over one of them has to be on offer.
-		if (parkedByPlayer)
-		{
-			addFollowerMenuEntry("Follow", () ->
-			{
-				followAgain();
-				setFollowEnabled(true);
-			});
-		}
-		else
-		{
-			addFollowerMenuEntry("Stay", () ->
-			{
-				follower.stayHere();
-				parkedByThePlayer(null);
-				setFollowEnabled(false);
-				// Stay is the moment positional control has been asked for, so
-				// the one place Send is taught is the first of these clicks.
-				maybeSendSendHint();
-			});
-		}
 		addFollowerMenuEntry("Dance", () -> follower.playAnimation(866));
 		addFollowerMenuEntry("Wave", () -> follower.playAnimation(863));
 		addFollowerMenuEntry("Step-in-front", () ->
@@ -7378,7 +7356,31 @@ public class FollowerPlugin extends Plugin
 		{
 			addFollowerMenuEntry("Sketch", this::askForSketch);
 		}
-		addFollowerMenuEntry(com.follower.chronicle.ChronicleWindow.NAME, chronicleWindow::openNextTick);
+		addFollowerMenuEntry("Read-chronicle", chronicleWindow::openNextTick);
+		// Second from the top, under Talk-to: the control a new player needs
+		// most, not buried under the emotes. The player's own park decides, not
+		// any stay: standing clear to watch a fight, the seat and the wander hold
+		// the follower too, and a Stay given over one of them has to be on offer.
+		if (parkedByPlayer)
+		{
+			addFollowerMenuEntry("Follow-me", () ->
+			{
+				followAgain();
+				setFollowEnabled(true);
+			});
+		}
+		else
+		{
+			addFollowerMenuEntry("Stay", () ->
+			{
+				follower.stayHere();
+				parkedByThePlayer(null);
+				setFollowEnabled(false);
+				// Stay is the moment positional control has been asked for, so
+				// the one place Send is taught is the first of these clicks.
+				maybeSendSendHint();
+			});
+		}
 		addFollowerMenuEntry(talkOption(), this::startTalking);
 	}
 
@@ -7399,9 +7401,9 @@ public class FollowerPlugin extends Plugin
 	 * Adds a "Send" entry to a ground tile's menu, so the follower can be posed
 	 * anywhere by pointing at the spot. SHIFT must be held when the menu opens -
 	 * the game's own convention for secondary actions (shift-drop, shift-click
-	 * configs) - so ordinary right-clicks stay uncluttered. Created at index 0 -
-	 * the BOTTOM of the displayed menu - so it can never steal the left-click
-	 * from Walk here. Only menus that actually target the ground (they contain
+	 * configs) - so ordinary right-clicks stay uncluttered. Created at index 1 -
+	 * just above Cancel, which the game keeps last - so it can never steal the
+	 * left-click from Walk here. Only menus that actually target the ground (they contain
 	 * a Walk here entry) get one.
 	 */
 	private void addSendFollowerEntry(net.runelite.api.events.MenuOpened event)
@@ -7428,7 +7430,7 @@ public class FollowerPlugin extends Plugin
 		}
 
 		WorldPoint target = sceneTile.getWorldLocation();
-		client.getMenu().createMenuEntry(0)
+		client.getMenu().createMenuEntry(1)
 			.setOption("Send")
 			.setTarget(followerTarget())
 			.setType(net.runelite.api.MenuAction.RUNELITE)
@@ -8031,7 +8033,7 @@ public class FollowerPlugin extends Plugin
 			configManager.setConfiguration(FollowerConfig.GROUP, "wishHintShown", true);
 			sendStatus("When you have the " + speechEngine.getContext().getWishLabel()
 				+ ", right-click " + followerName()
-				+ " and Talk-to to hand it over.");
+				+ " and choose " + talkOption() + " to hand it over.");
 		}
 		wasWishing = wishingNow;
 		tickScan();
@@ -8152,7 +8154,7 @@ public class FollowerPlugin extends Plugin
 			reloadPollTicks = 0;
 			if (dialogLoader.reloadIfChanged())
 			{
-				sendStatus("Reloaded " + dialogLoader.getStatus());
+				sendStatus("Reloaded " + dialogLoader.getStatus() + ".");
 				for (String problem : dialogLoader.getErrors())
 				{
 					sendStatus("Dialog: " + problem);
@@ -9887,7 +9889,7 @@ public class FollowerPlugin extends Plugin
 			}
 			else
 			{
-				sendStatus("No follower model to place - try ::follower rebuild.");
+				sendStatus("No follower model to place. Try ::follower rebuild.");
 			}
 		});
 	}
@@ -10361,7 +10363,7 @@ public class FollowerPlugin extends Plugin
 
 		if (DEVELOPER_COMMANDS.contains(sub) && !config.developerMode())
 		{
-			sendStatus("'" + sub + "' is a developer command - turn on Developer commands"
+			sendStatus("'" + sub + "' is a developer command. Turn on Developer commands"
 				+ " in the plugin settings to use it."
 				// The campfire errand shares the name; don't send somebody
 				// chasing it into developer mode by accident.
@@ -10601,7 +10603,7 @@ public class FollowerPlugin extends Plugin
 				// every knob is named and tunable live while a dialog is open.
 				if (args.length < 3)
 				{
-					sendStatus("Usage: ::follower head yaw|pitch|crop|talk <value>");
+					sendStatus("Usage: ::follower head yaw|pitch|roll|zoom|crop|cliptop|talk|tune <value>");
 					sendStatus("Currently: yaw " + dialog.getHeadYaw()
 						+ ", pitch " + dialog.getHeadPitch()
 						+ ", crop " + dialog.getHeadFraction()
@@ -10643,7 +10645,7 @@ public class FollowerPlugin extends Plugin
 							dialog.setTalkAnimationId(Integer.parseInt(args[2]));
 							break;
 						default:
-							sendStatus("Usage: ::follower head yaw|pitch|crop|talk <value>");
+							sendStatus("Usage: ::follower head yaw|pitch|roll|zoom|crop|cliptop|talk|tune <value>");
 							return;
 					}
 					sendStatus("Chathead " + knob + " = " + args[2]
@@ -10651,7 +10653,7 @@ public class FollowerPlugin extends Plugin
 				}
 				catch (NumberFormatException e)
 				{
-					sendStatus("Usage: ::follower head yaw|pitch|crop|talk <value>");
+					sendStatus("Usage: ::follower head yaw|pitch|roll|zoom|crop|cliptop|talk|tune <value>");
 				}
 				break;
 			}
@@ -10776,7 +10778,7 @@ public class FollowerPlugin extends Plugin
 				playerTrace.clear();
 				animTraceMarks.clear();
 				lastControllerGeneration = follower.getControllerGeneration();
-				sendStatus("Tracing frames for ~2s - keep the follower doing the thing "
+				sendStatus("Tracing frames for about 8s. Keep the follower doing the thing "
 					+ "that skips.");
 				break;
 
@@ -10940,9 +10942,9 @@ public class FollowerPlugin extends Plugin
 				watchOthers = watchAnimations && args.length > 1
 					&& "all".equalsIgnoreCase(args[1]);
 				sendStatus(watchAnimations
-					? "Watching " + (watchOthers ? "everyone's" : "your")
-						+ " animations and graphics. Perform the one you want and I'll "
-						+ "print its id. ::follower watch again to stop."
+					? "Watching your animations and " + (watchOthers ? "everyone's " : "")
+						+ "graphics. Perform the one you want and its id is printed here."
+						+ " ::follower watch again to stop."
 					: "Stopped watching.");
 				break;
 
@@ -10976,7 +10978,7 @@ public class FollowerPlugin extends Plugin
 				if (errands != null)
 				{
 					errands.debugScan();
-					sendStatus("Errand scan logged");
+					sendStatus("Errand scan logged.");
 				}
 				break;
 			}
@@ -11394,7 +11396,7 @@ public class FollowerPlugin extends Plugin
 				String ruleId = args[1];
 				if (speechEngine.force(ruleId))
 				{
-					sendStatus("Fired '" + ruleId + "'");
+					sendStatus("Fired '" + ruleId + "'.");
 				}
 				else
 				{
@@ -11490,9 +11492,9 @@ public class FollowerPlugin extends Plugin
 				// Split from status: every place that advertises this command
 				// promises the region id, which used to arrive buried after a
 				// model report nobody asked for.
-				sendStatus("Region " + speechEngine.getContext().getRegionId()
-					+ atTile(speechEngine.getContext().getLocation())
-					+ " - use this id under Locations in the Messages window.");
+				sendStatus("You're in region " + speechEngine.getContext().getRegionId()
+					+ onTile(speechEngine.getContext().getLocation())
+					+ ". Use that number under Locations in the Messages window.");
 				break;
 
 			default:
@@ -11500,8 +11502,7 @@ public class FollowerPlugin extends Plugin
 				// game's own chat off the screen; the list is for asking.
 				if (!"help".equals(sub))
 				{
-					sendStatus("Unknown command '" + sub + "'.");
-					sendStatus("Type ::follower in chat for commands.");
+					sendStatus("Unknown command '" + sub + "'. Type ::follower for the list.");
 					break;
 				}
 				sendStatus("::follower commands:");
@@ -11959,7 +11960,7 @@ public class FollowerPlugin extends Plugin
 		reportRuleErrors();
 		for (String problem : dialogLoader.getErrors())
 		{
-			sendStatus("Dialog: " + problem);
+			sendStatus("Problem in dialogs.json: " + problem);
 		}
 	}
 
@@ -11967,7 +11968,11 @@ public class FollowerPlugin extends Plugin
 	{
 		for (String error : ruleLoader.getErrors())
 		{
-			sendStatus("Rule problem: " + error);
+			sendStatus("Problem in phrases.json: " + error);
+		}
+		if (ruleLoader.getRules().isEmpty())
+		{
+			sendStatus("Couldn't read phrases.json, so the follower is quiet until it's fixed.");
 		}
 	}
 
@@ -12305,7 +12310,7 @@ public class FollowerPlugin extends Plugin
 	{
 		final boolean[] named = {false};
 		final boolean[] done = {false};
-		chatboxPanelManager.openTextInput("Your new follower is waiting. What will you call them?")
+		chatboxPanelManager.openTextInput("Your new follower is waiting. What will you call it?")
 			.value("")
 			.charValidator(c -> nameChar((char) c))
 			.onDone((String answer) ->
@@ -12367,6 +12372,13 @@ public class FollowerPlugin extends Plugin
 	{
 		return tile == null ? ""
 			: " at (" + tile.getX() + ", " + tile.getY() + ", " + tile.getPlane() + ")";
+	}
+
+	/** " (x, y, floor p)" for where, or nothing before a place is known. */
+	static String onTile(WorldPoint tile)
+	{
+		return tile == null ? ""
+			: " (" + tile.getX() + ", " + tile.getY() + ", floor " + tile.getPlane() + ")";
 	}
 
 	/**
@@ -12450,7 +12462,7 @@ public class FollowerPlugin extends Plugin
 		}
 		configManager.setConfiguration(FollowerConfig.GROUP, "firstSpawnNoticeShown", true);
 		sendStatus("Only you can see " + followerName()
-			+ ". Everything it does is client-side - nothing is sent to the game.");
+			+ ". Everything it does happens on your screen, and nothing is sent to the game.");
 		sendStatus("Type ::follower in chat for commands.");
 	}
 

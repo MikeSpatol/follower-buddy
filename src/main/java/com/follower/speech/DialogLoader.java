@@ -449,8 +449,8 @@ public class DialogLoader
 				// always a poll landing between an editor truncating the file
 				// and writing it back. Keep what we had and try again.
 				errors = Collections.singletonList(
-					"File is empty; keeping " + trees.size() + " previous trees");
-				status = "empty file, keeping " + trees.size() + " previous trees";
+					"File is empty; keeping " + trees.size() + " previous conversations");
+				status = "empty file, keeping " + trees.size() + " previous conversations";
 				log.warn("dialogs.json read as empty; keeping the previous trees");
 				return;
 			}
@@ -491,7 +491,7 @@ public class DialogLoader
 
 			trees = valid;
 			errors = problems;
-			status = valid.size() + " trees"
+			status = valid.size() + " conversations"
 				+ (problems.isEmpty() ? "" : ", " + problems.size() + " warning(s)");
 			// At INFO like the rule loader: when a conversation does not open,
 			// the first thing worth knowing is whether it loaded at all.
@@ -508,7 +508,7 @@ public class DialogLoader
 			// Keep the previous trees on a syntax error, as with phrases.json.
 			problems.add("JSON error: " + e.getMessage());
 			errors = problems;
-			status = "syntax error, keeping " + trees.size() + " previous trees";
+			status = "syntax error, keeping " + trees.size() + " previous conversations";
 			log.warn("dialogs.json failed to parse", e);
 		}
 	}

@@ -12,7 +12,7 @@ it, it sends nothing to the game, and it never acts on your behalf.
 the side panel - full equipment slots, body styles, hair and skin colours -
 and follows using the game's own pet mechanics, so it walks, runs and turns
 the way a real follower does, carrying its weapon the way a player would.
-Right-click it for Talk-to, Stay, Follow,
+Right-click it for Talk-to, Stay, Follow-me,
 Step-in-front and a couple of emotes, or hold Shift and right-click any tile
 to Send it there.
 
@@ -54,7 +54,7 @@ altar, a fire, a cat, or something curious it wants to write up in its scroll -
 and comes back on foot or by teleport. Tell it to Stay and it holds the post,
 notices when you come back, and updates its notes while it waits.
 
-**It keeps a chronicle.** Right-click it and choose Chronicle to open the
+**It keeps a chronicle.** Right-click it and choose Read-chronicle to open the
 scribe's book, signed with its name and drawn to look like the game's own
 Collection Log. When it writes a new page it says so, and each page records
 the day it was written, in the world's own calendar, and where. It has a page
@@ -150,7 +150,7 @@ that, EQUIPMENT (click a slot to change it, right-click to clear it) and BODY
 (style cyclers per body part, and the game's own colours).
 
 **Behaviour.** A **Stay here** / **Follow me** button, the same switch as
-right-click Stay and Follow on the follower; **Come here**; a **Go on
+right-click Stay and Follow-me on the follower; **Come here**; a **Go on
 errands** tick; a dropdown of errands with **Go now**; and **Advanced
 posing...**, a window for posing it. While it is open the follower holds still
 and keeps quiet, and you pose it, turn it to a compass point or the camera,
@@ -217,8 +217,9 @@ commands** in the Developer section, and typing one while it is off says so.
 - The plugin uses `Client#createRuneLiteObject` for the follower and a
   standard overlay for the dialog box; its right-click options are added on
   `MenuOpened` via `Menu#createMenuEntry`, and Talk-to is also added on
-  `ClientTick` while the follower is hovered, so it is the left-click action,
-  unchanged since 1.4.0.
+  `ClientTick` while the follower is hovered over bare ground, so there it is
+  the left-click action. Over an NPC, object, player or item the left-click
+  stays theirs.
 - Worn-item and body-kit models are composed at runtime from `ItemComposition`
   and kit data via `loadModelData` / `mergeModels`, so any item works and the
   model animates.
