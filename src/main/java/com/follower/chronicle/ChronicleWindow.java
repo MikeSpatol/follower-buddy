@@ -471,11 +471,29 @@ public class ChronicleWindow extends Overlay
 			}
 			else
 			{
-				scroll(DRAG_PAGE, step * 3, pageLines.size(), Math.max(1, pageVisibleLines));
+				scroll(DRAG_PAGE, step * wheelStep(pageLines, pageScroll), pageLines.size(),
+					Math.max(1, pageVisibleLines));
 			}
 			return event;
 		}
 	};
+
+	/** A page longer than this goes half a screen a notch. */
+	static final int LONG_PAGE_LINES = 100;
+
+	/**
+	 * How far one notch of the wheel moves a page: three lines, or half a
+	 * screen on a long page, which at three took the longest ninety notches.
+	 */
+	static int wheelStep(List<ChronicleLayout.Line> lines, int scroll)
+	{
+		if (lines.size() <= LONG_PAGE_LINES)
+		{
+			return 3;
+		}
+		int body = ChronicleLayout.CONTENT_BOTTOM - ChronicleLayout.BODY_TOP;
+		return Math.max(3, ChronicleLayout.linesThatFit(lines, scroll, body) / 2);
+	}
 
 	final KeyListener keyAdapter = new KeyListener()
 	{

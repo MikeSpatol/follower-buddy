@@ -337,8 +337,13 @@ public class ChronicleWindowTest
 	/** The goblin's page with forty short paragraphs, long enough to scroll a good way. */
 	private static String longGoblinPage()
 	{
+		return goblinPageOf(40);
+	}
+
+	private static String goblinPageOf(int paragraphs)
+	{
 		StringBuilder summary = new StringBuilder();
-		for (int i = 1; i <= 40; i++)
+		for (int i = 1; i <= paragraphs; i++)
 		{
 			summary.append(i > 1 ? "\\n\\n" : "").append("Paragraph ").append(i).append('.');
 		}
@@ -383,6 +388,34 @@ public class ChronicleWindowTest
 		draw();
 		assertEquals("the number came in above", "Goblins you've killed while I watched: 1", pageTexts().get(0));
 		assertEquals("and the same line is at the top", reading, topLine());
+	}
+
+	private void wheelDownOnThePage()
+	{
+		window.wheelAdapter.mouseWheelMoved(new java.awt.event.MouseWheelEvent(canvas,
+			java.awt.event.MouseWheelEvent.MOUSE_WHEEL, 0, 0, ChronicleLayout.PAGE_TEXT_X + 20,
+			ChronicleLayout.BODY_TOP + 50, 0, false, java.awt.event.MouseWheelEvent.WHEEL_UNIT_SCROLL, 1, 1));
+	}
+
+	/**
+	 * QA: Waterfall Quest's page is 275 lines, about ninety notches of the
+	 * wheel at three lines a notch. A long page goes half a screen a notch.
+	 */
+	@Test
+	public void theWheelGoesFurtherOnALongPage() throws Exception
+	{
+		openOn(longGoblinPage(), "enemy-goblin", null, null);
+		wheelDownOnThePage();
+		assertEquals("a page of forty paragraphs, three lines a notch", 3, field("pageScroll"));
+
+		openOn(goblinPageOf(ChronicleWindow.LONG_PAGE_LINES + 1), "enemy-goblin", null, null);
+		wheelDownOnThePage();
+		int moved = (Integer) field("pageScroll");
+		assertTrue("half a screen on a long one: " + moved, moved > 3);
+		int body = ChronicleLayout.CONTENT_BOTTOM - ChronicleLayout.BODY_TOP;
+		@SuppressWarnings("unchecked")
+		List<ChronicleLayout.Line> lines = (List<ChronicleLayout.Line>) field("pageLines");
+		assertEquals(ChronicleLayout.linesThatFit(lines, 0, body) / 2, moved);
 	}
 
 	/** The frame as drawn, to look at its pixels. */
