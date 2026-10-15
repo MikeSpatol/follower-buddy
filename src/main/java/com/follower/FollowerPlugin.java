@@ -579,7 +579,10 @@ public class FollowerPlugin extends Plugin
 		// emote mirroring at all, and it looked broken rather than absent).
 		ruleLoader.initialise(dataDir, true);
 		// Chat is not up yet; what the files got wrong is told at the login.
+		// A fresh start tells every problem again, the outfit's included.
 		loadErrorsReported = false;
+		lastOutfitWarning = null;
+		buildFailureTold = false;
 		voices.load(dataDir);
 		journal.initialise(dataDir);
 		journal.setRegionSource(() -> speechEngine.getContext().getRegionId());
@@ -4988,10 +4991,15 @@ public class FollowerPlugin extends Plugin
 			if (appearance == null)
 			{
 				log.warn("Could not build a follower model for {}", outfit);
-				sendStatus("Couldn't build the follower model. " + modelHint());
+				if (!buildFailureTold)
+				{
+					buildFailureTold = true;
+					sendStatus("Couldn't build the follower model. " + modelHint());
+				}
 				follower.despawn();
 				return;
 			}
+			buildFailureTold = false;
 
 			// Stances follow the weapon the FOLLOWER holds, not the one we hold.
 			follower.setWeapon(outfit.isItem(KitType.WEAPON)
@@ -5519,12 +5527,23 @@ public class FollowerPlugin extends Plugin
 		}
 		List<String> errors = new ArrayList<>();
 		Outfit outfit = OutfitParser.parse(config.customOutfit(), errors);
-		if (!errors.isEmpty())
+		String warning = errors.isEmpty() ? null : "Outfit warnings: " + String.join("; ", errors);
+		if (warning != null && !warning.equals(lastOutfitWarning))
 		{
-			sendStatus("Outfit warnings: " + String.join("; ", errors));
+			sendStatus(warning);
 		}
+		lastOutfitWarning = warning;
 		return outfit;
 	}
+
+	/**
+	 * The outfit warning last told, and whether a failed build has been. Every
+	 * settings change and outfit edit rebuilds the follower, so one bad outfit
+	 * string repeated its warning on each unrelated tweak (QA, 15 Oct). Told
+	 * again only when it changes, or comes back after a clean build.
+	 */
+	private String lastOutfitWarning;
+	private boolean buildFailureTold;
 
 	/**
 	 * The last two steps before the model is built: the disarm, then the prop.

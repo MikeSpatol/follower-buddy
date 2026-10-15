@@ -139,4 +139,26 @@ public class StatusLinesTest
 			&& report.contains("dialogLoader.getErrors()"));
 		assertTrue("once per start", report.contains("if (loadErrorsReported)"));
 	}
+
+	/**
+	 * Every settings change and outfit edit rebuilds the follower, and one bad
+	 * outfit string repeated its warning on each of them.
+	 */
+	@Test
+	public void anOutfitWarningIsToldOnceUntilItChanges() throws IOException
+	{
+		String resolve = method("private Outfit resolveOutfit()");
+		int said = resolve.indexOf("sendStatus(warning)");
+		assertTrue("the lint has lost its place", said >= 0);
+		assertTrue("told only when it differs from the last told",
+			resolve.substring(0, said).contains("!warning.equals(lastOutfitWarning)"));
+		assertTrue("and remembered", resolve.substring(said).contains("lastOutfitWarning = warning;"));
+
+		String rebuild = method("private void rebuildFollower()");
+		int failed = rebuild.indexOf("sendStatus(\"Couldn't build the follower model. \"");
+		assertTrue("the lint has lost its place", failed >= 0);
+		assertTrue("a failed build is told once",
+			rebuild.substring(0, failed).contains("if (!buildFailureTold)"));
+		assertTrue("until a build succeeds", rebuild.substring(failed).contains("buildFailureTold = false;"));
+	}
 }
