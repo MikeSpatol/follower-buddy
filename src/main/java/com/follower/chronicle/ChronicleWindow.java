@@ -1358,7 +1358,7 @@ public class ChronicleWindow extends Overlay
 	{
 		String kind = entry.kindOrEmpty();
 		return entry.unlock.npcs != null && !entry.unlock.npcs.isEmpty()
-			&& ("enemy".equals(kind) || "boss".equals(kind) || "beast".equals(kind));
+			&& ("enemy".equals(kind) || "boss".equals(kind));
 	}
 
 	/** What the page says instead of its text while it cannot be read. */
