@@ -212,26 +212,40 @@ public class VoiceDialog extends JDialog
 			}
 		}
 		picker.setPreferredSize(new Dimension(300, 24));
+		JButton play = new JButton("Play");
+		play.setEnabled(fileAt(files, picker.getSelectedIndex()) != null);
 		picker.addActionListener(e ->
 		{
 			int index = picker.getSelectedIndex();
-			voices.attach(line, index <= 0 ? null : files.get(index - 1));
+			play.setEnabled(fileAt(files, index) != null);
+			// The "(missing)" entry sits past the end of the files, so picking
+			// it again puts back the name it stands for. QA, 15 Oct: it read
+			// past the end of the list and threw.
+			voices.attach(line, index > files.size() ? current : fileAt(files, index));
 		});
 		controls.add(picker);
 
-		JButton play = new JButton("Play");
 		play.addActionListener(e ->
 		{
-			int index = picker.getSelectedIndex();
-			if (index > 0 && index - 1 < files.size())
+			String file = fileAt(files, picker.getSelectedIndex());
+			if (file != null)
 			{
-				voices.preview(files.get(index - 1), volume.getAsInt());
+				voices.preview(file, volume.getAsInt());
 			}
 		});
 		controls.add(play);
 
 		row.add(controls);
 		return row;
+	}
+
+	/**
+	 * The file a picker index stands for: none for "(no sound)" at 0, and none
+	 * for the "(missing)" entry that follows the files.
+	 */
+	static String fileAt(List<String> files, int index)
+	{
+		return index > 0 && index <= files.size() ? files.get(index - 1) : null;
 	}
 
 	private void copyFolderPath()

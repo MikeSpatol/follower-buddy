@@ -534,6 +534,9 @@ public class FollowerPanel extends PluginPanel
 	private final java.util.ArrayDeque<ModelRepository.WearableItem> pendingResults =
 		new java.util.ArrayDeque<>();
 
+	/** Names more than one of the current matches share; their rows show the id. */
+	private java.util.Set<String> repeatedNames = java.util.Collections.emptySet();
+
 	/** Rows built per slice - the first fill and each scroll-to-the-end. */
 	private static final int RESULT_CHUNK = 100;
 
@@ -774,7 +777,10 @@ public class FollowerPanel extends PluginPanel
 		JLabel label = new JLabel(text);
 		label.setFont(FontManager.getRunescapeSmallFont());
 		label.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-		label.setPreferredSize(new Dimension(NAME_WIDTH, ROW_CONTENT_HEIGHT));
+		// At least the body rows' column, and wider when the name needs it:
+		// QA, 15 Oct, "Chattiness" was cut to "Chattine...".
+		label.setPreferredSize(new Dimension(Math.max(NAME_WIDTH, label.getPreferredSize().width),
+			ROW_CONTENT_HEIGHT));
 		row.add(label, BorderLayout.WEST);
 		row.add(control, BorderLayout.CENTER);
 		return row;
@@ -934,6 +940,12 @@ public class FollowerPanel extends PluginPanel
 			}
 		});
 		profileButtons.add(profileDelete);
+		// Half the column each is a few px short of both names at the usual
+		// margins; QA, 15 Oct: "Save as ne..." and "Delete profi...".
+		for (java.awt.Component button : profileButtons.getComponents())
+		{
+			((JButton) button).setMargin(new java.awt.Insets(2, 2, 2, 2));
+		}
 		body.add(profileButtons);
 		body.add(buildThrallRow());
 
@@ -1063,9 +1075,7 @@ public class FollowerPanel extends PluginPanel
 
 	private void buildCommands(JPanel body)
 	{
-		JPanel buttons = buttonColumn(3);
-		buttons.add(button("Come here", "Places the follower at your feet",
-			() -> onComeHere.run()));
+		JPanel buttons = buttonColumn(2);
 		buttons.add(button("Fix if it vanished",
 			"Re-attaches the follower to the scene, then rebuilds it from the outfit",
 			() -> onFix.run()));
@@ -1264,7 +1274,7 @@ public class FollowerPanel extends PluginPanel
 	/** Hover preview: a scaled-up sprite so you can see the item before equipping. */
 	private JPanel buildPreview()
 	{
-		JPanel wrapper = new JPanel(new BorderLayout(6, 0));
+		JPanel wrapper = preview;
 		wrapper.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 		wrapper.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
 		wrapper.setAlignmentX(LEFT_ALIGNMENT);
@@ -1287,6 +1297,12 @@ public class FollowerPanel extends PluginPanel
 
 		return wrapper;
 	}
+
+	/**
+	 * The preview box, hidden until an item is hovered: empty, it took 116px
+	 * of the picker to say so, in a column too narrow to say it.
+	 */
+	private final JPanel preview = new JPanel(new BorderLayout(6, 0));
 
 	/** Width the preview's name column is held to, so long names wrap instead of stretch. */
 	private static final int PREVIEW_TEXT_WIDTH = 68;
@@ -1547,7 +1563,6 @@ public class FollowerPanel extends PluginPanel
 		JLabel style = new JLabel(label);
 		style.setFont(FontManager.getRunescapeSmallFont());
 		style.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
-		style.setToolTipText(label);
 		style.setPreferredSize(new Dimension(0, ROW_CONTENT_HEIGHT));
 		style.setHorizontalAlignment(SwingConstants.CENTER);
 		cycle.add(style, BorderLayout.CENTER);
@@ -1571,6 +1586,11 @@ public class FollowerPanel extends PluginPanel
 			int colorSlot = colorSlotFor(part);
 			row.add(swatch(colorSlot, part.name().toLowerCase(),
 				GamePalette.table(colorSlot)), BorderLayout.EAST);
+		}
+		else
+		{
+			// The swatch's room, kept, so the arrows line up down the column.
+			row.add(javax.swing.Box.createRigidArea(new Dimension(20, 20)), BorderLayout.EAST);
 		}
 
 		return row;
@@ -1719,9 +1739,9 @@ public class FollowerPanel extends PluginPanel
 		// who has never heard of the build tooling.
 		if (!repository.isLoaded() || !repository.hasNames())
 		{
-			resultList.add(hint("<html><body style='width:180px'>Item data didn't"
+			resultList.add(hint("Item data didn't"
 				+ " load - try restarting the client. If it keeps happening,"
-				+ " report a bug.</body></html>"));
+				+ " report a bug."));
 		}
 		else
 		{
@@ -1744,6 +1764,8 @@ public class FollowerPanel extends PluginPanel
 				}
 				pendingResults.addLast(item);
 			}
+			repeatedNames = repeated(pendingResults.stream().map(item -> item.name)
+				.collect(java.util.stream.Collectors.toList()));
 
 			if (pendingResults.isEmpty())
 			{
@@ -1808,6 +1830,15 @@ public class FollowerPanel extends PluginPanel
 		name.setPreferredSize(new Dimension(0, 20));
 		row.add(name, BorderLayout.CENTER);
 
+		// Two rows with the same name looked identical; the id tells them apart.
+		if (repeatedNames.contains(item.name))
+		{
+			JLabel id = new JLabel("#" + item.id);
+			id.setFont(FontManager.getRunescapeSmallFont());
+			id.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
+			row.add(id, BorderLayout.EAST);
+		}
+
 		row.addMouseListener(new MouseAdapter()
 		{
 			@Override
@@ -1834,6 +1865,21 @@ public class FollowerPanel extends PluginPanel
 		return row;
 	}
 
+	/** The names that appear more than once. */
+	static java.util.Set<String> repeated(Iterable<String> names)
+	{
+		java.util.Set<String> seen = new java.util.HashSet<>();
+		java.util.Set<String> repeated = new java.util.HashSet<>();
+		for (String name : names)
+		{
+			if (!seen.add(name))
+			{
+				repeated.add(name);
+			}
+		}
+		return repeated;
+	}
+
 	// ------------------------------------------------------------------ preview
 
 	private void showPreview(ModelRepository.WearableItem item)
@@ -1842,6 +1888,7 @@ public class FollowerPanel extends PluginPanel
 		// grows sideways and drags the sidebar's layout with it.
 		previewName.setText("<html><body style='width:" + (PREVIEW_TEXT_WIDTH - 4) + "px'><b>"
 			+ escapeHtml(item.name) + "</b><br>id " + item.id + "</body></html>");
+		preview.setVisible(true);
 
 		AsyncBufferedImage image = itemManager.getImage(item.id);
 		if (image == null)
@@ -1865,11 +1912,13 @@ public class FollowerPanel extends PluginPanel
 	{
 		previewIcon.setIcon(null);
 		previewName.setText("Hover an item to preview it");
+		preview.setVisible(false);
 	}
 
+	/** A grey line in the results, wrapped to the picker's width. */
 	private JLabel hint(String text)
 	{
-		JLabel label = new JLabel(text);
+		JLabel label = new JLabel("<html><body style='width:150px'>" + text + "</body></html>");
 		label.setFont(FontManager.getRunescapeSmallFont());
 		label.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
 		return label;

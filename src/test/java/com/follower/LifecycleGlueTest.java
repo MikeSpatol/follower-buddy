@@ -169,6 +169,33 @@ public class LifecycleGlueTest
 	}
 
 	@Test
+	public void theErrandHelpWrapsBetweenKeys()
+	{
+		// QA, 15 Oct: one unbroken token, so the panel's Commands list split
+		// it mid-word ("docu" / "ment").
+		String errand = null;
+		for (java.util.Map.Entry<String, String> command : FollowerPlugin.EVERYDAY_COMMANDS)
+		{
+			if (command.getKey().startsWith("errand "))
+			{
+				errand = command.getKey();
+			}
+		}
+		assertTrue("the help has no errand line", errand != null);
+		assertTrue(errand, errand.contains("bank | altar"));
+		assertFalse(errand, errand.matches(".*\\w\\|.*|.*\\|\\w.*"));
+	}
+
+	@Test
+	public void thePanelSaysNothingOnceTheItemsAreIn() throws IOException
+	{
+		// QA, 15 Oct: the item and kit counts and the cache date sat under the
+		// profiles for every player, cut off at the sidebar's edge.
+		String sync = method("private void syncPanel()");
+		assertTrue(sync, sync.contains("panel.setStatus(modelRepository.isLoaded()\n\t\t\t? \"\"\n"));
+	}
+
+	@Test
 	public void theQuietAfterASceneStartsNothing() throws IOException
 	{
 		// Play test, 13 Oct: hold the activities through the quiet too. No

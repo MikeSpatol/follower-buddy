@@ -286,6 +286,58 @@ public class ConfigDefaultsTest
 	}
 
 	@Test
+	public void settingsInASectionDoNotFightOverTheSamePosition()
+	{
+		Set<String> seen = new HashSet<>();
+		List<String> clashes = new ArrayList<>();
+		for (Method method : FollowerConfig.class.getDeclaredMethods())
+		{
+			ConfigItem item = method.getAnnotation(ConfigItem.class);
+			if (item != null && !item.section().isEmpty() && item.position() >= 0
+				&& !seen.add(item.section() + "@" + item.position()))
+			{
+				clashes.add(item.keyName());
+			}
+		}
+		assertTrue("settings with the same position order arbitrarily: " + clashes, clashes.isEmpty());
+	}
+
+	@Test
+	public void silencingByNameSitsWithTheMessagesToggles() throws Exception
+	{
+		// QA, 15 Oct: it was in the closed Advanced section, though it is the
+		// only switch for the Messages categories with no toggle of their own.
+		// The key is unchanged, so what players typed in survives the move.
+		ConfigItem item = item("disabledGroups");
+		assertEquals("disabledGroups", item.keyName());
+		assertEquals(FollowerConfig.groupsSection, item.section());
+		assertEquals("after the last toggle", position("groupClock") + 1, item.position());
+	}
+
+	@Test
+	public void movementReadsInOrder() throws Exception
+	{
+		// Follow distance first, then wandering and how soon, then resting.
+		assertTrue(position("followDistance") < position("wanderWhenIdle"));
+		assertEquals(position("wanderWhenIdle") + 1, position("wanderAfterSeconds"));
+		assertTrue(position("wanderAfterSeconds") < position("restWhenIdle"));
+		for (String key : new String[]{"followDistance", "wanderWhenIdle", "wanderAfterSeconds", "restWhenIdle"})
+		{
+			assertEquals(key, FollowerConfig.movementSection, item(key).section());
+		}
+	}
+
+	private static ConfigItem item(String method) throws NoSuchMethodException
+	{
+		return FollowerConfig.class.getDeclaredMethod(method).getAnnotation(ConfigItem.class);
+	}
+
+	private static int position(String method) throws NoSuchMethodException
+	{
+		return item(method).position();
+	}
+
+	@Test
 	public void sectionsDoNotFightOverTheSamePosition()
 	{
 		Set<Integer> seen = new HashSet<>();

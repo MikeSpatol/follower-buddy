@@ -3663,8 +3663,11 @@ public class FollowerPlugin extends Plugin
 		// the active profile needs keeping up to date.
 		autoSaveActiveProfile();
 		panel.setOutfit(OutfitParser.parse(config.customOutfit()));
+		// Once the catalogue is in, nothing to say: the item and kit counts
+		// were developer detail in front of every player (::follower status
+		// still prints them).
 		panel.setStatus(modelRepository.isLoaded()
-			? modelRepository.getStatus()
+			? ""
 			: "reading the game cache...");
 	}
 
@@ -9494,7 +9497,8 @@ public class FollowerPlugin extends Plugin
 			command("posing", "the Advanced posing window: pose it, turn it and give it lines"),
 			command("sketch", "pose for the chronicle's sketch of this place, as right-click Sketch"),
 			command("height <n>", "lift or lower it"),
-			command("errand [" + LISTED_ERRAND_KEYS + "]", "send it on an errand now"),
+			// Spaced, so the list wraps between keys rather than mid-word.
+			command("errand [" + LISTED_ERRAND_KEYS.replace("|", " | ") + "]", "send it on an errand now"),
 			command("reload", "re-read the phrase and sound files"),
 			command("status", "models, rules and spawn state"),
 			command("where", "your region id, for Locations in the Messages window")));

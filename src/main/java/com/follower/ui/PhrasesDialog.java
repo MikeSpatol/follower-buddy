@@ -129,6 +129,7 @@ public class PhrasesDialog extends JDialog
 	private final JTextField find = new JTextField(14);
 	private final JButton addLocation = new JButton("Add location");
 	private final JPanel list = new JPanel();
+	private JScrollPane scroll;
 	private final JLabel status = new JLabel(" ");
 	private final List<Row> rows = new ArrayList<>();
 	private final List<Row> added = new ArrayList<>();
@@ -177,7 +178,8 @@ public class PhrasesDialog extends JDialog
 		final JTextArea say;
 		JPanel panel;
 
-		/** The rule's note, so Find can look through it. */
+		/** The rule's title and note, so Find can look through them. */
+		String title = "";
 		String note = "";
 
 		Row(String id, JTextField name, JCheckBox enabled, JTextField regions, JTextArea say)
@@ -279,7 +281,7 @@ public class PhrasesDialog extends JDialog
 		list.setLayout(new BoxLayout(list, BoxLayout.Y_AXIS));
 		list.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
-		JScrollPane scroll = new JScrollPane(list,
+		scroll = new JScrollPane(list,
 			JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		scroll.setBorder(BorderFactory.createEmptyBorder());
 		scroll.getVerticalScrollBar().setUnitIncrement(16);
@@ -415,6 +417,11 @@ public class PhrasesDialog extends JDialog
 		list.revalidate();
 		list.repaint();
 		dirty = false;
+		// Every say area moves its caret as its text goes in, and each queues
+		// a scroll to bring that caret into view, so the last of them decided
+		// where the list opened. QA, 15 Oct: Messages opened near the bottom.
+		// Queued behind them, this puts the list back at its top.
+		javax.swing.SwingUtilities.invokeLater(() -> scroll.getViewport().setViewPosition(new java.awt.Point(0, 0)));
 	}
 
 	/**
@@ -428,7 +435,7 @@ public class PhrasesDialog extends JDialog
 		for (Row row : rows)
 		{
 			boolean shown = wanted.isEmpty()
-				|| prettyName(row.id).toLowerCase(Locale.ROOT).contains(wanted)
+				|| row.title.toLowerCase(Locale.ROOT).contains(wanted)
 				|| row.id.toLowerCase(Locale.ROOT).contains(wanted)
 				|| row.note.toLowerCase(Locale.ROOT).contains(wanted)
 				|| row.say.getText().toLowerCase(Locale.ROOT).contains(wanted);
@@ -441,6 +448,7 @@ public class PhrasesDialog extends JDialog
 	private JPanel buildRow(JsonObject rule)
 	{
 		String id = optString(rule, "id");
+		String ruleTitle = titleOf(rule);
 
 		JPanel row = rowShell();
 
@@ -448,7 +456,7 @@ public class PhrasesDialog extends JDialog
 		header.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		header.setAlignmentX(LEFT_ALIGNMENT);
 
-		JLabel title = new JLabel(prettyName(id));
+		JLabel title = new JLabel(ruleTitle);
 		title.setFont(FontManager.getRunescapeBoldFont());
 		title.setForeground(Color.WHITE);
 		// The id beside the title is what the settings' silence-by-name box
@@ -489,7 +497,7 @@ public class PhrasesDialog extends JDialog
 				list.remove(row);
 				list.revalidate();
 				list.repaint();
-				setStatus("'" + prettyName(id) + "' will be removed on Save", false);
+				setStatus("'" + ruleTitle + "' will be removed on Save", false);
 				dirty = true;
 			});
 			controls.add(delete);
@@ -498,9 +506,10 @@ public class PhrasesDialog extends JDialog
 		row.add(header);
 
 		String note = optString(rule, "note");
-		if (note != null && !note.isEmpty())
+		String shownNote = aboutOf(rule);
+		if (shownNote != null && !shownNote.isEmpty())
 		{
-			JLabel items = new JLabel("<html><body style='width:430px'>" + escapeHtml(note) + "</body></html>");
+			JLabel items = new JLabel("<html><body style='width:430px'>" + escapeHtml(shownNote) + "</body></html>");
 			items.setFont(FontManager.getRunescapeSmallFont());
 			items.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
 			items.setAlignmentX(LEFT_ALIGNMENT);
@@ -554,14 +563,15 @@ public class PhrasesDialog extends JDialog
 			// the moment it is typed, without saving first.
 			JButton sounds = soundsButton;
 			soundsButton = null;
-			String ruleName = prettyName(id);
+			String ruleName = ruleTitle;
 			sounds.addActionListener(e -> onEditSounds.accept(ruleName,
 				java.util.Arrays.asList(area.getText().split("\\r?\\n"))));
 		}
 
 		Row r = new Row(id, null, enabled, regionsField, area);
 		r.panel = row;
-		r.note = note == null ? "" : note;
+		r.title = ruleTitle;
+		r.note = (note == null ? "" : note) + "\n" + (shownNote == null ? "" : shownNote);
 		rows.add(r);
 		return row;
 	}
@@ -815,7 +825,7 @@ public class PhrasesDialog extends JDialog
 			}
 			else
 			{
-				warnings.add(prettyName(row.id) + " kept its old regions (none given)");
+				warnings.add(row.title + " kept its old regions (none given)");
 			}
 		}
 	}
@@ -865,7 +875,17 @@ public class PhrasesDialog extends JDialog
 
 	private JPanel rowShell()
 	{
-		JPanel row = new JPanel();
+		// Never taller than it needs: the list is a vertical box, which shares
+		// any spare height out between rows that allow it, so a Find leaving
+		// two rows pulled each one's title, controls and lines far apart.
+		JPanel row = new JPanel()
+		{
+			@Override
+			public Dimension getMaximumSize()
+			{
+				return new Dimension(Integer.MAX_VALUE, getPreferredSize().height);
+			}
+		};
 		row.setLayout(new BoxLayout(row, BoxLayout.Y_AXIS));
 		row.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		row.setBorder(BorderFactory.createCompoundBorder(
@@ -965,13 +985,36 @@ public class PhrasesDialog extends JDialog
 
 	private void setStatus(String text, boolean error)
 	{
-		status.setText(text);
+		// An error can run long, and a plain label clips it mid-sentence;
+		// wrapped, it is read whole.
+		status.setText(error ? "<html><body style='width:" + STATUS_WRAP + "px'>"
+			+ escapeHtml(text) + "</body></html>" : text);
 		status.setForeground(error ? ColorScheme.PROGRESS_ERROR_COLOR : ColorScheme.MEDIUM_GRAY_COLOR);
 	}
+
+	/** An error status's wrap width, in the HTML renderer's px (x1.3 on screen). */
+	private static final int STATUS_WRAP = 170;
 
 	private static String optString(JsonObject object, String key)
 	{
 		return object.has(key) && object.get(key).isJsonPrimitive() ? object.get(key).getAsString() : null;
+	}
+
+	/** The rule's own title when it has one, otherwise one made from its id. */
+	static String titleOf(JsonObject rule)
+	{
+		String title = optString(rule, "title");
+		return title == null || title.trim().isEmpty() ? prettyName(optString(rule, "id")) : title.trim();
+	}
+
+	/**
+	 * What the window says about a rule: its "about", written for players,
+	 * when it has one, otherwise its note. The note stays the authors' own.
+	 */
+	static String aboutOf(JsonObject rule)
+	{
+		String about = optString(rule, "about");
+		return about == null || about.trim().isEmpty() ? optString(rule, "note") : about.trim();
 	}
 
 	static String prettyName(String id)
@@ -998,6 +1041,11 @@ public class PhrasesDialog extends JDialog
 		else if (s.startsWith("enter-"))
 		{
 			s = s.substring("enter-".length());
+		}
+		else if (s.startsWith("boss-"))
+		{
+			// The Bosses category says it already, as gear- and area- do.
+			s = s.substring("boss-".length());
 		}
 		s = s.replace('-', ' ');
 		s = Character.toUpperCase(s.charAt(0)) + s.substring(1);

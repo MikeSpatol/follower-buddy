@@ -48,14 +48,14 @@ public class MemoryDialog extends JDialog
 		root.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		root.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-		JLabel hint = new JLabel("<html>Everything the follower currently remembers"
+		JLabel hint = new JLabel(wrapped("Everything the follower currently remembers"
 			+ " about you. It lives on this machine, goes nowhere, and the button"
-			+ " below erases all of it for good.</html>");
+			+ " below erases all of it for good."));
 		hint.setFont(FontManager.getRunescapeSmallFont());
 		hint.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
 
-		JLabel where = new JLabel("<html>The Reminiscing toggle in settings silences the"
-			+ " lines that use this; Forget everything erases it.</html>");
+		JLabel where = new JLabel(wrapped("The Reminiscing toggle in settings silences the"
+			+ " lines that use this; Forget everything erases it."));
 		where.setFont(FontManager.getRunescapeSmallFont());
 		where.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
 		where.setBorder(BorderFactory.createEmptyBorder(4, 0, 0, 0));
@@ -96,6 +96,9 @@ public class MemoryDialog extends JDialog
 
 		setContentPane(root);
 		setMinimumSize(new Dimension(380, 460));
+		// Narrow and tall: the rows wrap at the width below, and the summary
+		// is a list read downwards. QA, 15 Oct: it opened at 743x460.
+		setPreferredSize(new Dimension(420, 640));
 		pack();
 		setLocationRelativeTo(null);
 	}
@@ -117,8 +120,10 @@ public class MemoryDialog extends JDialog
 			}
 			else
 			{
-				JLabel line = new JLabel(row[1].isEmpty()
-					? row[0] : row[0] + ":  " + row[1]);
+				// Wrapped, since a label never wraps by itself and the window
+				// scrolls only downwards: long rows were cut off.
+				JLabel line = new JLabel(wrapped(row[1].isEmpty()
+					? row[0] : row[0] + ":  " + row[1]));
 				line.setFont(FontManager.getRunescapeSmallFont());
 				line.setForeground(row[1].isEmpty()
 					? ColorScheme.MEDIUM_GRAY_COLOR : ColorScheme.LIGHT_GRAY_COLOR);
@@ -164,7 +169,7 @@ public class MemoryDialog extends JDialog
 		tallies.sort(Map.Entry.<String, Integer>comparingByValue().reversed());
 		for (Map.Entry<String, Integer> tally : tallies.subList(0, Math.min(10, tallies.size())))
 		{
-			rows.add(row(tally.getKey(), Integer.toString(tally.getValue())));
+			rows.add(row(keyLabel(tally.getKey()), Integer.toString(tally.getValue())));
 		}
 		if (tallies.size() > 10)
 		{
@@ -177,17 +182,17 @@ public class MemoryDialog extends JDialog
 			rows.add(remark("No records held yet."));
 		}
 		c.getRecords().forEach((what, value) ->
-			rows.add(row(what, Integer.toString(value))));
+			rows.add(row(keyLabel(what), Integer.toString(value))));
 
 		// The phrase is written for the middle of a sentence - "I keep
 		// thinking about {memory}" - so bare in a window it reads as a
-		// riddle ("the way that went"?). Quoting it as its words and naming
-		// the file key beside it is what makes it legible out of context.
+		// riddle ("the way that went"?). Quoting it as its words is what makes
+		// it legible out of context. The file key is left out: QA, 15 Oct.
 		rows.add(header("THE INCIDENT"));
 		rows.add(c.hasIncident()
 			? row("Keeps bringing up", "\"" + c.getIncidentPhrase() + c.getMemoryWhere()
-				+ ", " + c.getMemoryWhen(System.currentTimeMillis()) + "\" ("
-				+ c.getIncidentKey() + ", x" + c.getIncidentCount() + ")")
+				+ ", " + c.getMemoryWhen(System.currentTimeMillis()) + "\" (x"
+				+ c.getIncidentCount() + ")")
 			: remark("Nothing has stuck yet."));
 
 		rows.add(header("PLACES"));
@@ -275,6 +280,85 @@ public class MemoryDialog extends JDialog
 			default:
 				return tree;
 		}
+	}
+
+	/**
+	 * A count's or a best's key in words: the keys are what the plugin files
+	 * them under, and the window showed them raw ("kill:goblin",
+	 * "kills:today", "session: 187"). A key with no words here is shown as
+	 * it is.
+	 */
+	public static String keyLabel(String key)
+	{
+		boolean today = key.endsWith(TriggerContext.TODAY);
+		String base = today ? key.substring(0, key.length() - TriggerContext.TODAY.length()) : key;
+		String label;
+		if (base.startsWith("kill:") && base.length() > "kill:".length())
+		{
+			label = capitalised(base.substring("kill:".length())) + " killed";
+		}
+		else if (base.startsWith("kc:") && base.length() > "kc:".length())
+		{
+			label = capitalised(base.substring("kc:".length())) + " kill count";
+		}
+		else
+		{
+			switch (base)
+			{
+				case "kills":
+					label = "Kills";
+					break;
+				case "deaths":
+					label = "Deaths";
+					break;
+				case "levels":
+					label = "Levels gained";
+					break;
+				case "quests":
+					label = "Quests completed";
+					break;
+				case "music":
+					label = "Music tracks unlocked";
+					break;
+				case "collections":
+					label = "Collection log items";
+					break;
+				case "want:kept":
+					label = "Wishes granted";
+					break;
+				case "want:missed":
+					label = "Wishes missed";
+					break;
+				case "advice:taken":
+					label = "Advice taken";
+					break;
+				case "advice:ignored":
+					label = "Advice ignored";
+					break;
+				case "hit":
+					label = "Biggest hit";
+					break;
+				case "session":
+					label = "Longest session (minutes)";
+					break;
+				default:
+					return key;
+			}
+		}
+		return today ? label + " today" : label;
+	}
+
+	private static String capitalised(String s)
+	{
+		return Character.toUpperCase(s.charAt(0)) + s.substring(1);
+	}
+
+	/** Text that wraps at the window's narrowest, in the HTML renderer's px (x1.3 on screen). */
+	private static String wrapped(String text)
+	{
+		return "<html><body style='width:260px'>"
+			+ text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+			+ "</body></html>";
 	}
 
 	/** "today", "1 day ago" or "N days ago". */

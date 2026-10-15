@@ -326,7 +326,7 @@ public class DialogsDialog extends JDialog
 		final JComboBox<String> speaker = new JComboBox<>(new String[]{"Follower", "You"});
 		final JTextArea pages = new JTextArea(2, 40);
 		final JTextField next = new JTextField();
-		final JTextArea choices = new GhostArea("Yes please -> node-thanks", 2, 40);
+		final GhostArea choices = new GhostArea("Yes please -> node-thanks", 3, 40);
 		final JComboBox<String> answer = new JComboBox<>(new String[]{"(none)", "yes", "no"});
 		boolean deleted;
 		JPanel panel;
@@ -341,6 +341,13 @@ public class DialogsDialog extends JDialog
 	{
 		private final String ghost;
 
+		/**
+		 * The node's Next. A node that goes on by Next, or ends, has no
+		 * choices by design, so the example is shown only while both are
+		 * empty; on every node it read as something missing.
+		 */
+		private JTextField next;
+
 		GhostArea(String ghost, int rows, int columns)
 		{
 			super(rows, columns);
@@ -351,7 +358,7 @@ public class DialogsDialog extends JDialog
 		protected void paintComponent(java.awt.Graphics g)
 		{
 			super.paintComponent(g);
-			if (getText().isEmpty())
+			if (showsGhost(getText(), next == null ? "" : next.getText()))
 			{
 				g.setColor(ColorScheme.MEDIUM_GRAY_COLOR);
 				g.setFont(getFont().deriveFont(java.awt.Font.ITALIC));
@@ -360,6 +367,12 @@ public class DialogsDialog extends JDialog
 					insets.top + g.getFontMetrics().getAscent());
 			}
 		}
+	}
+
+	/** Whether a node's Choices box shows its example: only with no choices and no Next. */
+	static boolean showsGhost(String choices, String next)
+	{
+		return choices.isEmpty() && next.trim().isEmpty();
 	}
 
 	private JPanel buildRow(DialogTree.DialogNode node)
@@ -388,6 +401,27 @@ public class DialogsDialog extends JDialog
 			}
 		}
 		row.choices.setText(choiceText.toString().trim());
+		row.choices.next = row.next;
+		row.next.getDocument().addDocumentListener(new javax.swing.event.DocumentListener()
+		{
+			@Override
+			public void insertUpdate(javax.swing.event.DocumentEvent e)
+			{
+				row.choices.repaint();
+			}
+
+			@Override
+			public void removeUpdate(javax.swing.event.DocumentEvent e)
+			{
+				row.choices.repaint();
+			}
+
+			@Override
+			public void changedUpdate(javax.swing.event.DocumentEvent e)
+			{
+				row.choices.repaint();
+			}
+		});
 
 		JPanel panel = new JPanel(new GridBagLayout());
 		panel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
@@ -637,9 +671,16 @@ public class DialogsDialog extends JDialog
 
 	private void setStatus(String text, boolean bad)
 	{
-		status.setText(text);
+		// An error can run long, and a plain label clips it mid-sentence;
+		// wrapped, it is read whole.
+		status.setText(bad ? "<html><body style='width:" + STATUS_WRAP + "px'>"
+			+ text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+			+ "</body></html>" : text);
 		status.setForeground(bad ? ColorScheme.PROGRESS_ERROR_COLOR : ColorScheme.MEDIUM_GRAY_COLOR);
 	}
+
+	/** An error status's wrap width, in the HTML renderer's px (x1.3 on screen). */
+	private static final int STATUS_WRAP = 300;
 
 	/** Mirrors the on-disk shape so the whole file round-trips, not just one tree. */
 	private static final class DialogFile
