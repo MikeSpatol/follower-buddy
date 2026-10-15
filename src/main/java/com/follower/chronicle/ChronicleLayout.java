@@ -222,6 +222,37 @@ public final class ChronicleLayout
 	}
 
 	/**
+	 * Where a reader stays when the page they are on is laid out again: in
+	 * the same place, moved on past the page's number if it has just
+	 * appeared above them, so the line they were reading stays at the top.
+	 */
+	public static int keptScroll(int scroll, List<Line> before, List<Line> after)
+	{
+		// The number sits straight under the plate, if the page has one.
+		int at = 0;
+		while (at < after.size() && (after.get(at).style == Style.PLATE || after.get(at).style == Style.CAPTION
+			|| after.get(at).style == Style.POSE))
+		{
+			at++;
+		}
+		if (scroll == 0 || scroll < at)
+		{
+			return scroll;
+		}
+		return Math.max(0, scroll + count(after, Style.TALLY) - count(before, Style.TALLY));
+	}
+
+	private static int count(List<Line> lines, Style style)
+	{
+		int n = 0;
+		for (Line line : lines)
+		{
+			n += line.style == style ? 1 : 0;
+		}
+		return n;
+	}
+
+	/**
 	 * Where the thumb sits on a scrollbar whose arrows are 16 high: its top
 	 * and height, in the bar's own pixels, proportional to what is shown.
 	 */

@@ -327,6 +327,64 @@ public class ChronicleWindowTest
 		assertEquals("Goblins you've killed while I watched: 3", pageTexts().get(0));
 	}
 
+	private void set(String name, Object value) throws Exception
+	{
+		Field f = ChronicleWindow.class.getDeclaredField(name);
+		f.setAccessible(true);
+		f.set(window, value);
+	}
+
+	/** The goblin's page with forty short paragraphs, long enough to scroll a good way. */
+	private static String longGoblinPage()
+	{
+		StringBuilder summary = new StringBuilder();
+		for (int i = 1; i <= 40; i++)
+		{
+			summary.append(i > 1 ? "\\n\\n" : "").append("Paragraph ").append(i).append('.');
+		}
+		return GOBLIN_PAGE.replace("\"Green.\"", "\"" + summary + "\"");
+	}
+
+	private String topLine() throws Exception
+	{
+		return pageTexts().get((Integer) field("pageScroll"));
+	}
+
+	/**
+	 * QA: one more goblin killed while the page was open sent it back to
+	 * the top, because the number is part of what the page is laid out from.
+	 */
+	@Test
+	public void aKillWhileYouReadKeepsYourPlace() throws Exception
+	{
+		TriggerContext memory = new TriggerContext(null);
+		memory.tally("kill:goblin");
+		openOn(longGoblinPage(), "enemy-goblin", memory, null);
+		set("pageScroll", 20);
+		draw();
+		String reading = topLine();
+
+		memory.tally("kill:goblin");
+		draw();
+		assertEquals(20, field("pageScroll"));
+		assertEquals(reading, topLine());
+	}
+
+	@Test
+	public void theFirstKillWhileYouReadMovesYouPastItsNewLine() throws Exception
+	{
+		TriggerContext memory = new TriggerContext(null);
+		openOn(longGoblinPage(), "enemy-goblin", memory, null);
+		set("pageScroll", 20);
+		draw();
+		String reading = topLine();
+
+		memory.tally("kill:goblin");
+		draw();
+		assertEquals("the number came in above", "Goblins you've killed while I watched: 1", pageTexts().get(0));
+		assertEquals("and the same line is at the top", reading, topLine());
+	}
+
 	/** The frame as drawn, to look at its pixels. */
 	private BufferedImage picture()
 	{

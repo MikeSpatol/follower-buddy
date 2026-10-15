@@ -135,6 +135,7 @@ public class ChronicleWindow extends Overlay
 	private List<ChronicleEntry> listed = new ArrayList<>();
 	private List<ChronicleLayout.Line> pageLines = new ArrayList<>();
 	private String pageLinesFor;
+	private String pageLinesOf;
 	private int pageVisibleLines;
 
 	@Inject
@@ -900,6 +901,7 @@ public class ChronicleWindow extends Overlay
 				ChronicleLayout.LOCKED_RED, false);
 			pageLines = new ArrayList<>();
 			pageLinesFor = null;
+			pageLinesOf = null;
 			return;
 		}
 
@@ -945,17 +947,24 @@ public class ChronicleWindow extends Overlay
 		// follower has one; and room for the pose when a sketch caught one.
 		String tally = readable ? tallyLine(entry, progress.count(entry)) : null;
 		boolean posed = posed(entry);
-		String key = entry.id + (readable ? "" : ":locked") + done + tally + posed;
+		String page = entry.id + (readable ? "" : ":locked");
+		String key = page + done + tally + posed;
 		if (!key.equals(pageLinesFor))
 		{
 			ChronicleEntry asRead = entry.readAs(done::contains);
+			List<ChronicleLayout.Line> before = pageLines;
 			pageLines = readable
 				? ChronicleLayout.page(asRead, tally, posed, width,
 					s -> measure(g, body, false, s), s -> measure(g, bold, true, s))
 				: ChronicleLayout.lockedPage(asRead, unwrittenHint(entry), posed, width,
 					s -> measure(g, body, false, s), s -> measure(g, bold, true, s));
+			// Another page, or this one just written, opens at the top. The
+			// same page changing under the reader - one more kill, a passage
+			// opening - keeps their place, moved past a number that has just
+			// appeared above it.
+			pageScroll = page.equals(pageLinesOf) ? ChronicleLayout.keptScroll(pageScroll, before, pageLines) : 0;
 			pageLinesFor = key;
-			pageScroll = 0;
+			pageLinesOf = page;
 		}
 		// What a screen holds, as the scrollbar counts it: every line less the
 		// ones scrolled past at the furthest the page goes, gaps allowed for.
