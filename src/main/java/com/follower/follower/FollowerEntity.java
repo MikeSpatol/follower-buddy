@@ -4747,9 +4747,23 @@ public class FollowerEntity
 		if (slavedGraphics != null && slavedIndex < slavedGraphics.length
 			&& slavedGraphics[slavedIndex] != null)
 		{
-			playSpotAnim(slavedGraphics[slavedIndex]);
+			// One graphic at a time, as on the player: the game keeps an actor's
+			// spotanim in one slot, and the next stage's graphic takes the last
+			// one's place. Left to run out instead, the fourth stage's (803, the
+			// book and its glow, opaque to its last frame and 50 client ticks
+			// longer than the stage's own clip) stayed in the hands of a body
+			// already fading out under the fifth's, whose flash (804) has no book.
+			if (stageGraphic != null)
+			{
+				stageGraphic.setActive(false);
+				activeGraphics.remove(stageGraphic);
+			}
+			stageGraphic = showSpotAnim(slavedGraphics[slavedIndex], 0);
 		}
 	}
+
+	/** The graphic the slaved chain's last stage put on, which the next one's replaces. */
+	private RuneLiteObject stageGraphic;
 
 	/** Ends the chain and hands the animation slot back to locomotion. */
 	public void endSlavedChain()
@@ -4799,22 +4813,28 @@ public class FollowerEntity
 	 */
 	public void playSpotAnim(SpotAnimRepository.Entry fx, int height)
 	{
+		showSpotAnim(fx, height);
+	}
+
+	/** As {@link #playSpotAnim(SpotAnimRepository.Entry, int)}, and the graphic shown, or null. */
+	private RuneLiteObject showSpotAnim(SpotAnimRepository.Entry fx, int height)
+	{
 		if (fx == null || object == null || lastRenderedLocation == null)
 		{
-			return;
+			return null;
 		}
 
 		ModelData data = client.loadModelData(fx.modelId());
 		if (data == null)
 		{
-			return;
+			return null;
 		}
 
 		Animation animation = client.loadAnimation(fx.animationId());
 		if (animation == null)
 		{
 			// A frozen first frame with no animation to end it would linger forever.
-			return;
+			return null;
 		}
 
 		// The client's own pipeline order: base model (rotation, colours), then
@@ -4871,6 +4891,7 @@ public class FollowerEntity
 		graphic.setAnimationController(controller);
 		graphic.setActive(true);
 		activeGraphics.add(graphic);
+		return graphic;
 	}
 
 	/**
