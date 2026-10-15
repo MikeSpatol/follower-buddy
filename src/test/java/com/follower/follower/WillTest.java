@@ -221,6 +221,21 @@ public class WillTest
 	}
 
 	@Test
+	public void aMonsterWithNoNameIsNoMisgiving()
+	{
+		// QA, 15 Oct: a nameless monster filled the line with "that" -
+		// "Next to the that?" With nothing to name, it simply goes.
+		NPC nameless = game.spawnNpc(2098, null, 28);
+		game.moveNpc(nameless, 3210, 3401, 0);
+		tick(1);
+		WorldPoint beside = new WorldPoint(3209, 3401, 0);
+		assertTrue(will.send(beside));
+		assertFalse(will.isHesitating());
+		assertTrue(events.isEmpty());
+		assertEquals("straight there", beside, follower.stayingAt);
+	}
+
+	@Test
 	public void somethingThePlayerCanHandleIsNoMisgiving()
 	{
 		NPC goblin = game.spawnNpc(3029, "Goblin", 2);
