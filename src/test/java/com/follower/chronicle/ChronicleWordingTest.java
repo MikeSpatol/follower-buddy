@@ -54,7 +54,7 @@ public class ChronicleWordingTest
 	{
 		assertEquals("Priest in Peril is done, or you visit",
 			ChronicleWindow.unlockLabel(loader.get("world-morytania")));
-		assertEquals("The scribe will write this up once Priest in Peril is done, or once you have been there.",
+		assertEquals("I'll write this up once Priest in Peril is done, or once we've been there.",
 			ChronicleWindow.unwrittenHint(loader.get("world-morytania")));
 	}
 
@@ -62,12 +62,12 @@ public class ChronicleWordingTest
 	public void aBossIsCalledABoss()
 	{
 		assertEquals("you meet it", ChronicleWindow.unlockLabel(loader.get("boss-giant-mole")));
-		assertEquals("The scribe has not met this boss yet.",
+		assertEquals("I haven't met this one yet.",
 			ChronicleWindow.unwrittenHint(loader.get("boss-giant-mole")));
 		assertEquals("you meet one", ChronicleWindow.unlockLabel(loader.get("enemy-goblin")));
-		assertEquals("The scribe has not met one of these yet.",
+		assertEquals("I haven't met one of these yet.",
 			ChronicleWindow.unwrittenHint(loader.get("enemy-goblin")));
-		assertEquals("The scribe has not been there yet.",
+		assertEquals("We haven't been there yet.",
 			ChronicleWindow.unwrittenHint(loader.get("location-lumbridge")));
 	}
 
@@ -78,7 +78,7 @@ public class ChronicleWordingTest
 		List<ChronicleLayout.Line> lines = ChronicleLayout.lockedPage(mole.readAs(quest -> false),
 			ChronicleWindow.unwrittenHint(mole), 2000, ChronicleWordingTest::width, ChronicleWordingTest::width);
 		int words = ChronicleLayout.PLATE_ROWS + 1;
-		assertEquals("BODY:The scribe has not met this boss yet.", lines.get(words).toString());
+		assertEquals("BODY:I haven't met this one yet.", lines.get(words).toString());
 		assertEquals("HEADING:Where it is found", lines.get(words + 1).toString());
 		assertTrue(lines.get(words + 2).toString(), lines.get(words + 2).text.contains("Falador Park"));
 	}
@@ -91,7 +91,7 @@ public class ChronicleWordingTest
 			ChronicleWindow.unwrittenHint(cooks), 2000, ChronicleWordingTest::width, ChronicleWordingTest::width);
 		int words = ChronicleLayout.PLATE_ROWS + 1;
 		assertEquals(words + 1, lines.size());
-		assertEquals("BODY:The scribe will write this up once Cook's Assistant is done.",
+		assertEquals("BODY:Nothing here yet. I'll write it up when it's done.",
 			lines.get(words).toString());
 	}
 
@@ -99,19 +99,22 @@ public class ChronicleWordingTest
 	public void aPlatesCaptionIsEarned()
 	{
 		ChronicleEntry.Plate goblin = loader.get("enemy-goblin").plates.get(0);
-		assertEquals("Plate I. Not yet seen.", ChronicleWindow.caption(goblin, 0, false, false));
-		assertEquals("Plate I. " + goblin.caption, ChronicleWindow.caption(goblin, 0, true, false));
+		assertEquals("Plate I. Not yet seen.", ChronicleWindow.caption("enemy", goblin, 0, false, false));
+		assertEquals("Plate I. " + goblin.caption, ChronicleWindow.caption("enemy", goblin, 0, true, false));
+		ChronicleEntry.Plate cook = loader.get("quest-cooks-assistant").plates.get(0);
+		assertEquals("a quest page's people may have been met mid-quest", "Plate I. Not drawn yet.",
+			ChronicleWindow.caption("quest", cook, 0, false, false));
 
 		ChronicleEntry.Plate lumbridge = loader.get("location-lumbridge").plates.get(0);
 		assertEquals("until it is drawn, what the scribe means to draw", "Plate I. " + lumbridge.hint,
-			ChronicleWindow.caption(lumbridge, 0, true, false));
+			ChronicleWindow.caption("location", lumbridge, 0, true, false));
 		lumbridge.hint = null;
 		assertEquals("a book without hints still says something", "Plate I. Pose for me when we're there.",
-			ChronicleWindow.caption(lumbridge, 0, true, false));
-		assertEquals("Plate I. " + lumbridge.caption, ChronicleWindow.caption(lumbridge, 0, false, true));
+			ChronicleWindow.caption("location", lumbridge, 0, true, false));
+		assertEquals("Plate I. " + lumbridge.caption, ChronicleWindow.caption("location", lumbridge, 0, false, true));
 		ChronicleEntry.Plate duke = loader.get("location-lumbridge").plates.get(1);
 		assertEquals("the second plate is II", "Plate II. " + duke.caption,
-			ChronicleWindow.caption(duke, 1, true, false));
+			ChronicleWindow.caption("location", duke, 1, true, false));
 	}
 
 	@Test

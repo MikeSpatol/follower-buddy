@@ -15,9 +15,6 @@ import java.time.MonthDay;
  */
 public final class GielinorCalendar
 {
-	/** "Presently, we are in the 169th year of the 5th Age." - Reldo. */
-	public static final int YEAR = 169;
-
 	/** The months, and the real day each begins on. */
 	static final String[] MONTHS = {
 		"Rintra", "Moevyng", "Bennath", "Raktuber", "Pentember",

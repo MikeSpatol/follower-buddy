@@ -242,17 +242,16 @@ public class ChroniclePageFitTest
 	public void aWrittenPageSaysWhenInTheWorldsCalendarAndWhereOnTheLineBelow() throws IOException
 	{
 		long day = java.time.LocalDate.of(2026, 3, 22).toEpochDay();
-		assertEquals("Written on the 4th of Bennath, year 169",
-			ChronicleWindow.writtenOn(day, "Enemy: ", small::stringWidth, WIDTH));
-		assertEquals("Written on Moevyng Day, year 169", ChronicleWindow.writtenOn(
-			java.time.LocalDate.of(2028, 2, 29).toEpochDay(), "Place: ", small::stringWidth, WIDTH));
+		assertEquals("Written on the 4th of Bennath", ChronicleWindow.writtenOn(day));
+		assertEquals("Written on Moevyng Day", ChronicleWindow.writtenOn(
+			java.time.LocalDate.of(2028, 2, 29).toEpochDay()));
 
-		// Every kind on its longest day: the year goes before the line runs over.
+		// Every kind on its longest day fits the line.
 		long longest = java.time.LocalDate.of(2026, 10, 17).toEpochDay();
 		for (String kind : new String[]{"quest", "boss", "enemy", "location", "faction", "world"})
 		{
 			String label = ChronicleWindow.kindLabel(kind) + ": ";
-			String line = ChronicleWindow.writtenOn(longest, label, small::stringWidth, WIDTH);
+			String line = ChronicleWindow.writtenOn(longest);
 			assertTrue(line, small.stringWidth(label + line) <= WIDTH);
 			assertTrue(line, line.startsWith("Written on the 40th of Ire of Phyrrys"));
 		}

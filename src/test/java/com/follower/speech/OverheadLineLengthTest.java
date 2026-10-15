@@ -98,7 +98,7 @@ public class OverheadLineLengthTest
 		OVERRIDES.put("noticed-impling", Map.of("thing", "Eclectic impling"));
 		OVERRIDES.put("noticed-landmark", Map.of("thing", "Notice board"));
 		OVERRIDES.put("chronicle-page-boss", Map.of("page", "King Black Dragon"));
-		OVERRIDES.put("chronicle-page-enemy", Map.of("page", "Witch's experiment"));
+		OVERRIDES.put("chronicle-page-enemy", Map.of("page", "Witch's Experiment"));
 		OVERRIDES.put("chronicle-page-place", Map.of("page", "Baxtorian Falls"));
 		OVERRIDES.put("chronicle-page-quest", Map.of("page", "Children of the Sun"));
 	}

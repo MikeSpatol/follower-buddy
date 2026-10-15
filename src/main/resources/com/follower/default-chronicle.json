@@ -33,9 +33,7 @@
       ],
       "places": [],
       "details": [
-        "Reward - 1 quest point",
-        "Reward - 300 Cooking experience",
-        "Reward - the use of the Cook-o-matic 100"
+        "Rewards - 1 quest point, 300 Cooking experience and the use of the Cook-o-matic 100"
       ],
       "plates": [
         {
@@ -69,7 +67,7 @@
       "sections": [
         {
           "heading": "What happened",
-          "body": "Paterdomus is the temple to Saradomin on Misthalin's eastern border. King Roald told you the blessed waters of the River Salve beneath it are what keep the vampyres of Morytania out.\n\nNobody had heard from Drezel, and Roald asked you to go and check on him. I wrote down 'check'. It turned out to be a small word for the job.\n\nAt the temple door a voice asked who you were and what you wanted. When you said the King had sent you, a second voice introduced itself as Drevil, then hurriedly corrected that to Drezel. 'Drevil' went into the notes with a question mark, and nobody consulted them.\n\nThis so-called Drezel said a horrible big dog-like thing had moved into the mausoleum outside and asked you to get rid of it. You killed the Temple Guardian down there, \"a big ugly dog\" by common account. The description was unkind; so, in the end, were we. The dog has its own page.\n\nBack at the palace, King Roald was furious. The dog was no pest: it guarded the mausoleum entrance and the source of the Salve, and with it dead anyone could sabotage the river's blessing.\n\nHe called it treason and threatened to have you beheaded, then relented and ordered you to put it right. I took those minutes very quietly.\n\nBack inside the temple you fought the hooded monk and took the golden key he dropped. He casts spells, though there's a spot between the pews where he can't reach you. The monks have their own page.\n\nUpstairs was the real Drezel, locked in a cell. Through the bars he told you Zamorakians had attacked the temple to desecrate the blessing the Seven Priestly Warriors had placed on the Salve, and had brought a trapped vampyre up into a coffin near his cell. The golden key did not fit his door; the real one was hidden somewhere.\n\nIn the mausoleum again, the golden key opened the room of seven monuments round the well. Searching them turned up the iron key, which you swapped for the golden one. You filled a bucket with murky water from the well, and murky was the polite word.\n\nThe iron key opened Drezel's cell. He blessed the water and you poured it over the coffin outside his cell, sealing the vampyre inside. It did not thank you.\n\nBelow, Drezel explained that the Zamorakians had used a potion to pollute the Salve. While he reinforced the barrier, you were to soak up the evil magic it had released, with essence. Hand him the essence outright and he skips the speech. It goes down as giving the priest your blank runes, and I haven't corrected it.\n\nWhen it was done he gave you Wolfbane, a silver dagger passed down through his family for generations and imbued with the power of Saradomin. The dagger gets its own paragraph further down. It earned it.\n\nHe warned of the vampyres and werewolves beyond and mentioned the Myreque resistance. To cross, you ask him for permission to pass and wait for his blessing; he is a priest, and there is a form."
+          "body": "Paterdomus is the temple to Saradomin on Misthalin's eastern border. King Roald told you the blessed waters of the River Salve beneath it are what keep the vampyres of Morytania out.\n\nNobody had heard from Drezel, and Roald asked you to go and check on him. I wrote down 'check'. It turned out to be a small word for the job.\n\nAt the temple door a voice asked who you were and what you wanted. When you said the King had sent you, a second voice introduced itself as Drevil, then hurriedly corrected that to Drezel. 'Drevil' went into the notes with a question mark, and nobody consulted them.\n\nThis so-called Drezel said a horrible big dog-like thing had moved into the mausoleum outside and asked you to get rid of it. You killed the Temple Guardian down there, \"a big ugly dog\" by common account. The description was unkind; so, in the end, were we. The dog has its own page.\n\nBack at the palace, King Roald was furious. The dog was no pest: it guarded the mausoleum entrance and the source of the Salve, and with it dead anyone could sabotage the river's blessing.\n\nHe called it treason and threatened to have you beheaded, then relented and ordered you to put it right. I took those minutes very quietly.\n\nBack inside the temple you fought the hooded monk and took the golden key he dropped. The monks have their own page.\n\nUpstairs was the real Drezel, locked in a cell. Through the bars he told you Zamorakians had attacked the temple to desecrate the blessing the Seven Priestly Warriors had placed on the Salve, and had brought a trapped vampyre up into a coffin near his cell. The golden key did not fit his door; the real one was hidden somewhere.\n\nIn the mausoleum again, the golden key opened the room of seven monuments round the well. Searching them turned up the iron key, which you swapped for the golden one. You filled a bucket with murky water from the well, and murky was the polite word.\n\nThe iron key opened Drezel's cell. He blessed the water and you poured it over the coffin outside his cell, sealing the vampyre inside. It did not thank you.\n\nBelow, Drezel explained that the Zamorakians had used a potion to pollute the Salve. While he reinforced the barrier, you were to soak up the evil magic it had released, with essence. Hand him the essence outright and he skips the speech. It goes down as giving the priest your blank runes, and I haven't corrected it.\n\nWhen it was done he gave you Wolfbane, a silver dagger passed down through his family for generations and imbued with the power of Saradomin. The dagger gets its own paragraph further down. It earned it.\n\nHe warned of the vampyres and werewolves beyond and mentioned the Myreque resistance. To cross, you ask him for permission to pass and wait for his blessing; he is a priest, and there is a form."
         },
         {
           "heading": "Who was there",
@@ -81,7 +79,7 @@
         },
         {
           "heading": "Worth knowing",
-          "body": "The Seven Priestly Warriors have their own page, where I wrote their names out in full, and Morytania has its own, history and all.\n\n{done:THE_BLOOD_MOON_RISES} The blessing on the Salve was not what the soldiers were told.\n\nWolfbane: \"A silver dagger that can prevent werewolves changing form.\" The citizens of Canifis turn into werewolves when attacked, unless you wield it. It cannot be poisoned, you can only hold one, and Drezel replaces it.\n\n{done:NATURE_SPIRIT} Drezel next sends you into Mort Myre Swamp with meat and apple pies for the druid Filliman Tarlock, in Nature Spirit.\n\nOne loose end. If you carry a clue scroll that wants Drezel, he sees to the clue in the mausoleum before he gets on with the quest. It doesn't matter much, but it's true, so it stays."
+          "body": "The Seven Priestly Warriors have their own page, where I wrote their names out in full, and Morytania has its own, history and all.\n\n{done:THE_BLOOD_MOON_RISES} The blessing on the Salve was not what the soldiers were told.\n\nWolfbane: \"A silver dagger that can prevent werewolves changing form.\" The citizens of Canifis turn into werewolves when attacked, unless you wield it. It cannot be poisoned, you can only hold one, and Drezel replaces it.\n\n{done:NATURE_SPIRIT} Drezel next sends you into Mort Myre Swamp with meat and apple pies for the druid Filliman Tarlock, in Nature Spirit."
         }
       ],
       "people": [
@@ -96,6 +94,8 @@
         "Bucket - 2 coins at the general store",
         "Essence - 50 rune or pure, in one trip with pouches or several without",
         "Monuments - golden pot, feather, candle, tinderbox, needle and hammer",
+        "Monk - casts spells, but can't reach a spot between the pews",
+        "Clue scroll - Drezel sees to it in the mausoleum before the quest",
         "Souvenirs - swap a plain item for a monument's golden one, before Drezel moves",
         "Wolfbane - strikes like a mithril dagger, with a 5 Prayer bonus on top",
         "Wolfbane - a silver weapon, so it works on tier 1 vampyres",
@@ -154,7 +154,7 @@
         },
         {
           "heading": "Worth knowing",
-          "body": "{done:SONG_OF_THE_ELVES} The reason for the sealed door is the Elven Civil War. After the God Wars Seren shattered herself, and Baxtorian and Glarial were entrusted with leading the elves. Baxtorian took the Cadarn clan, the military clan, east through the Arandar pass to found a kingdom in what is now Kandarin.\n\n{done:SONG_OF_THE_ELVES} He made non-aggression pacts with the gnomes and humans, and the kingdom prospered for nearly 1,900 years. Around 1930 of the Fourth Age, word from Tirannwn stopped coming. The Iorwerth clan had seized Prifddinas while most of the army was away, leaving thousands dead.\n\n{done:SONG_OF_THE_ELVES} They had become obsessed with a Dark Lord, who the elves believed was Zamorak but who turns out to be a fragment of Seren. Baxtorian spent five years besieging the city, whose walls Seren had built to withstand gods. His soldiers found a secret entrance and rescued the imprisoned clan elders.\n\n{done:SONG_OF_THE_ELVES} Meanwhile his eastern kingdom, which Glarial ruled while he marched on Prifddinas, fell to invaders. Most of his people were slaughtered, and Glarial was taken and never recovered alive. He chased her captors into caves south of the ruined kingdom, into what was clearly a trap, and lost his remaining soldiers.\n\n{done:MOURNINGS_END_PART_I,SONG_OF_THE_ELVES} Broken, he sealed himself in the home he had built for Glarial beneath the falls. The other elders reverted Prifddinas to a crystal seed, and Lletya was founded as a refuge under Arianwyn.\n\n{done:ROVING_ELVES,SONG_OF_THE_ELVES} The war ended in year 169 of the Fifth Age with Song of the Elves, where Prifddinas is restored and Lord Iorwerth dies. On who took Glarial, the accounts disagree. Glarial's own story calls her captors unknown enemies, the war's says human invaders, and Islwyn in Roving Elves blames humans for her death. I have kept all three.\n\nThe book deserves a note to itself. Its real title is The Missing Relics, \"A book on elven history in northern Gielinor.\" It says many elven relics were lost when the elves left in the Fourth Age.\n\nIt also says dwarf miners may have taken Baxtorian's treasure early in the Fifth Age, and rumours say the same. And it says only Baxtorian and Glarial had the power to enter the falls, and the enchantment has kept everyone else out.\n\nInside is a sonnet on the love between Baxtorian and Glarial, which lasted over a century while they taught the laws of nature. There is also Baxtorian's own Ode to Eternity, on which I offer no opinion. You can keep a copy on a shelf in your own house.\n\n{done:SONG_OF_THE_ELVES} The book can also be read in the Grand Library of Prifddinas.\n\nThere is a section on their power over nature, commanding trees to grow, hills to rise and rivers to flood, with Baxtorian a master of rune lore who used stones to control water, earth and air. That is why the pillars take air, water and earth runes.\n\n{done:ROVING_ELVES} Roving Elves picks the story up. Glarial gets a new resting place in the Waterfall Dungeon, consecrated with a Moss Guardian's seed. The guardians have their own page. Islwyn, her grumpy grandson, and the kind young elf Eluned scout for the rebel elves in Isafdar.\n\nGolrie hands out a new pebble if yours is lost, and turns up again in The Path of Glouphrie.\n\n{done:ROVING_ELVES} Once Roving Elves starts, he and the hobgoblins swap places, and the word on him becomes \"No longer locked in his own cage.\"\n\n{done:BIOHAZARD,REGICIDE} The Chalice comes up again in Biohazard, where King Lathas claims his brother Tyras was corrupted when the Dark Lord forced him to drink from it. It's a lie, told to turn you against Tyras, and I've written it down as one. There is no evidence the Chalice has anything to do with the Dark Lord.\n\nOdds and ends from the margin. Glarial's amulet looks identical to the gnome amulet, and the dungeon's fire giants are the old reliable source of rune scimitars. For the minutes: once you have both the quest and the medium Kandarin Diary behind you, no rope is needed."
+          "body": "{done:SONG_OF_THE_ELVES} The door is sealed because of the Elven Civil War. Baxtorian marched west to take back Prifddinas, and while he was gone his kingdom fell and Glarial was taken, so he came home to nothing and shut himself in beneath the falls. Song of the Elves has the whole of it, and the accounts of who took her don't agree.\n\nThe book deserves a note to itself. Its real title is The Missing Relics, and it says only Baxtorian and Glarial could enter the falls, and that dwarf miners may have taken his treasure early in the Fifth Age.\n\nIt also keeps a sonnet on the two of them, Baxtorian's own Ode to Eternity, on which I offer no opinion, and a section on their power over nature. That's why the pillars take air, water and earth runes.\n\n{done:SONG_OF_THE_ELVES} The book can also be read in the Grand Library of Prifddinas.\n\n{done:ROVING_ELVES} Roving Elves picks the story up. Glarial gets a new resting place in the Waterfall Dungeon, consecrated with a Moss Guardian's seed. The guardians have their own page. Islwyn, her grumpy grandson, and the kind young elf Eluned scout for the rebel elves in Isafdar.\n\nGolrie hands out a new pebble if yours is lost, and turns up again in The Path of Glouphrie.\n\n{done:ROVING_ELVES} Once Roving Elves starts, he and the hobgoblins swap places, and the word on him becomes \"No longer locked in his own cage.\"\n\n{done:BIOHAZARD,REGICIDE} The Chalice comes up again in Biohazard, where King Lathas claims his brother Tyras was corrupted when the Dark Lord forced him to drink from it. It's a lie, told to turn you against Tyras, and I've written it down as one. There is no evidence the Chalice has anything to do with the Dark Lord.\n\nOdds and ends from the margin. Glarial's amulet looks identical to the gnome amulet, and the dungeon's fire giants are the old reliable source of rune scimitars. For the minutes: once you have both the quest and the medium Kandarin Diary behind you, no rope is needed."
         }
       ],
       "people": [
@@ -171,9 +171,10 @@
         "Rewards - 2 diamonds, 2 gold bars, 40 mithril seeds and 1 quest point",
         "Experience - 13,750 Attack and 13,750 Strength, 1 to 30 in both",
         "Level 3 to 22 - what the experience alone does for a new adventurer",
-        "Needed for Desert Treasure I, Legends' Quest and The Path of Glouphrie",
-        "Needed for Roving Elves, along with Regicide",
-        "Needed for the medium Kandarin Diary"
+        "Book - a copy of The Missing Relics can go on a shelf in your own house",
+        "Needed for - Desert Treasure I, Legends' Quest and The Path of Glouphrie",
+        "Needed for - Roving Elves, along with Regicide",
+        "Needed for - the medium Kandarin Diary"
       ],
       "plates": [
         {
@@ -826,7 +827,7 @@
     {
       "id": "enemy-fire-giant",
       "kind": "enemy",
-      "name": "Fire giant",
+      "name": "Fire Giant",
       "unlock": {
         "npcs": [
           "Fire giant"
@@ -836,7 +837,7 @@
         "label": "Fire giants put out while I watched",
         "of": "kill:fire giant"
       },
-      "summary": "The strongest of the ordinary giants, an elemental brute living in the Brimhaven Dungeon and a good many other caves. Slayers and archers favour it, and it's the classic source of a rune scimitar. Everyone goes back eventually.",
+      "summary": "The strongest of the ordinary giants, an elemental brute in the Brimhaven Dungeon and a good many other caves. Slayers and archers favour it, and it's the classic source of a rune scimitar. Everyone goes back eventually.",
       "sections": [
         {
           "heading": "What it is",
@@ -939,14 +940,13 @@
           "body": "{done:PRIEST_IN_PERIL} By King Roald's account it guarded the way into the mausoleum and the river's source. The rest belongs to Priest in Peril, which has its own page.\n\n{done:PRIEST_IN_PERIL} Roald called it Spots. He also called it a pedigree light beast, or was it dark beast. His words, not mine.\n\nDark beasts, I'm told, once looked much like it, only brown. Make of that what you will."
         }
       ],
-      "people": [
-        "{done:PRIEST_IN_PERIL} King Roald - its owner"
-      ],
+      "people": [],
       "places": [],
       "details": [
         "Level 30 - 45 hitpoints, hits up to 3",
         "Immune - magic and dwarf cannons",
-        "Slayer - counts among the dogs, for what that's worth"
+        "Slayer - counts among the dogs, for what that's worth",
+        "{done:PRIEST_IN_PERIL} Owner - King Roald"
       ],
       "plates": [
         {
@@ -1004,7 +1004,7 @@
     {
       "id": "enemy-witchs-experiment",
       "kind": "enemy",
-      "name": "Witch's experiment",
+      "name": "Witch's Experiment",
       "unlock": {
         "npcs": [
           "Witch's experiment",
@@ -1130,9 +1130,7 @@
           "body": "Avarrocka began when a nomadic tribe found a boy of exceptional strength, took him for a good omen and settled in the forest there. The boy was Arrav, and as he grew, so did Avarrocka.\n\n{done:DEFENDER_OF_VARROCK} Ten years after the founding, goblins attacked. The boy beat them off, and that's how he came by the name Arrav.\n\n{done:SHIELD_OF_ARRAV,DEFENDER_OF_VARROCK} Then Zemouregal came, a Mahjarrat necromancer of Zamorak's, with an army of zombies. His forces were beaten, but Arrav fell and was taken as an undead servant. A poor ending for the boy. The city rebuilt and kept growing, and in time it had a king and a kingdom, Misthalin.\n\nAvarrocka has shortened to Varrock, but the boy hasn't been forgotten, and people still talk about the Shield of Arrav. A good many quests start here, which keeps the quill busy."
         }
       ],
-      "people": [
-        "King Roald - ruler of Misthalin"
-      ],
+      "people": [],
       "places": [
         "Grand Exchange - the great trading floor",
         "Varrock Museum - natural history displays and a quiz",
@@ -1141,6 +1139,7 @@
         "Varrock Sewers - home of Scurrius and Bryophyta"
       ],
       "details": [
+        "Ruler - King Roald",
         "Founded - the year 700 of the Fourth Age, as Avarrocka",
         "Quests - Demon Slayer, Dragon Slayer I, Romeo & Juliet, Shield of Arrav",
         "More quests - Defender of Varrock, Family Crest, Priest in Peril"
@@ -1331,11 +1330,11 @@
       "unlock": {
         "quest": "PRIEST_IN_PERIL"
       },
-      "summary": "In the Fourth Age, seven priestly warriors of Saradomin held Lord Drakan's vampyres at the River Salve and blessed it so no vampyre could cross. It cost them their lives. Paterdomus now stands on the ground they held.\n\n{done:THE_BLOOD_MOON_RISES} They were Temple Knights, and only six of them died in the fight itself.",
+      "summary": "In the Fourth Age, seven priestly warriors of Saradomin held Lord Drakan's vampyres at the River Salve and blessed it so no vampyre could cross. It cost them their lives.\n\n{done:THE_BLOOD_MOON_RISES} They were Temple Knights, and only six of them died in the fight itself.",
       "sections": [
         {
           "heading": "What it is",
-          "body": "Their names: Ivandis Seergaze, Iriandul Caistlyn, Sarl Dunegun, Derygull Templeton, Erysail the Pious, Friar Twiblick and Essiandar Gar. I have written all seven names out in full. They earned that much.\n\nThey were active around 1200 of the Fourth Age, in the Misthalin-Morytania War, when Drakan had crossed the Salve and pushed west towards Varrock.\n\n{done:THE_BLOOD_MOON_RISES} The Temple Knights sent them to secure the river. Secretly, they were also to research haemalchemy, which their leaders believed held the key to beating vampyres.\n\n{done:THE_BLOOD_MOON_RISES} Their savants designed a blood ritual to bar vampyres from the river. The warriors told the soldiers it was a holy consecration by Saradomin, and kept quiet about what it really was. A blood rite with a clean name. It worked, which is the uncomfortable part."
+          "body": "Paterdomus now stands on the ground they held. Their names: Ivandis Seergaze, Iriandul Caistlyn, Sarl Dunegun, Derygull Templeton, Erysail the Pious, Friar Twiblick and Essiandar Gar. I have written all seven names out in full. They earned that much.\n\nThey were active around 1200 of the Fourth Age, in the Misthalin-Morytania War, when Drakan had crossed the Salve and pushed west towards Varrock.\n\n{done:THE_BLOOD_MOON_RISES} The Temple Knights sent them to secure the river. Secretly, they were also to research haemalchemy, which their leaders believed held the key to beating vampyres.\n\n{done:THE_BLOOD_MOON_RISES} Their savants designed a blood ritual to bar vampyres from the river. The warriors told the soldiers it was a holy consecration by Saradomin, and kept quiet about what it really was. A blood rite with a clean name. It worked, which is the uncomfortable part."
         },
         {
           "heading": "Worth knowing",
@@ -1345,11 +1344,10 @@
       "people": [
         "{done:IN_AID_OF_THE_MYREQUE} Ivandis Seergaze - from what is now Lumbridge"
       ],
-      "places": [
-        "Silvarea - site of the last battle"
-      ],
+      "places": [],
       "details": [
-        "Misthalin-Morytania War - about 1100 to 1200 of the Fourth Age"
+        "Misthalin-Morytania War - about 1100 to 1200 of the Fourth Age",
+        "Last battle - Silvarea"
       ],
       "plates": [
         {

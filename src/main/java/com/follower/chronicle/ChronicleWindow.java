@@ -773,15 +773,13 @@ public class ChronicleWindow extends Overlay
 
 	/**
 	 * When a written page went into the book, for the header's status line
-	 * after its kind: "Written on the 17th of Ire of Phyrrys, year 169", the
-	 * real day in the world's own calendar, giving up the year if the line
-	 * has no room for it.
+	 * after its kind: "Written on the 17th of Ire of Phyrrys", the real day
+	 * in the world's own calendar. No year: it never changes, and the long
+	 * dates had no room for it.
 	 */
-	static String writtenOn(long epochDay, String label, ToIntFunction<String> width, int room)
+	static String writtenOn(long epochDay)
 	{
-		String written = "Written on " + GielinorCalendar.date(LocalDate.ofEpochDay(epochDay));
-		String withYear = written + ", year " + GielinorCalendar.YEAR;
-		return width.applyAsInt(label + withYear) <= room ? withYear : written;
+		return "Written on " + GielinorCalendar.date(LocalDate.ofEpochDay(epochDay));
 	}
 
 	/** The header's label for where a page was written, on the line under its date. */
@@ -903,7 +901,7 @@ public class ChronicleWindow extends Overlay
 		Long on = readable ? progress.writtenOn(entry) : null;
 		String kind = kindLabel(entry.kindOrEmpty()) + ": ";
 		labelled(g, small, left, ChronicleLayout.HEADER_LINE2_BASELINE, kind,
-			on != null ? writtenOn(on, kind, s -> measure(g, small, false, s), width)
+			on != null ? writtenOn(on)
 				: readable ? "Written" : "Not yet written",
 			readable ? ChronicleLayout.READABLE_GREEN : ChronicleLayout.LOCKED_RED);
 		String at = on == null ? "" : progress.writtenAt(entry);
@@ -914,8 +912,11 @@ public class ChronicleWindow extends Overlay
 		}
 		else
 		{
+			// Written before the book kept dates, or a quest found finished at
+			// the first look: not still waiting, as unlockLabel would read.
 			labelled(g, small, left, ChronicleLayout.HEADER_LINE3_BASELINE, "Written when: ",
-				unlockLabel(entry), ChronicleLayout.BODY_WHITE);
+				readable && on == null ? "before I kept dates" : unlockLabel(entry),
+				ChronicleLayout.BODY_WHITE);
 		}
 
 		// The body, laid out once per page and cached until the page or its
@@ -1003,7 +1004,7 @@ public class ChronicleWindow extends Overlay
 				case PLATE:
 					break;
 				case CAPTION:
-					drawCaption(g, small, plate, plates.size(), readable, left, width, ly, prev, next);
+					drawCaption(g, small, entry, plate, plates.size(), readable, left, width, ly, prev, next);
 					break;
 				case HEADING:
 					text(g, bold, true, line.text, left, ly, ChronicleLayout.TITLE_ORANGE, false);
@@ -1152,7 +1153,7 @@ public class ChronicleWindow extends Overlay
 			ChronicleLayout.TITLE_ORANGE, true);
 		Rectangle frame = ChronicleLayout.BIG_PLATE;
 		drawPlate(g, plate, frame.x, frame.y, frame.width, frame.height, readable, small, true, hovered(frame));
-		drawCaption(g, small, plate, plates.size(), readable, frame.x, frame.width,
+		drawCaption(g, small, entry, plate, plates.size(), readable, frame.x, frame.width,
 			ChronicleLayout.BIG_CAPTION_BASELINE, prev, next);
 		drawPose(g, small, plate, ChronicleLayout.WIDTH / 2,
 			ChronicleLayout.BIG_CAPTION_BASELINE + ChronicleLayout.LINE_HEIGHT);
@@ -1245,14 +1246,15 @@ public class ChronicleWindow extends Overlay
 	 * The line under the plate: its number, as a book numbers plates, and
 	 * the scribe's caption; arrows either side when there is more than one.
 	 */
-	private void drawCaption(Graphics2D g, GameFont small, ChronicleEntry.Plate plate, int count,
+	private void drawCaption(Graphics2D g, GameFont small, ChronicleEntry entry, ChronicleEntry.Plate plate, int count,
 		boolean seen, int left, int width, int baseline, Rectangle prev, Rectangle next)
 	{
 		if (plate == null)
 		{
 			return;
 		}
-		String said = caption(plate, plateIndex, seen, sketches != null && sketches.has(plate.sketch));
+		String said = caption(entry.kindOrEmpty(), plate, plateIndex, seen,
+			sketches != null && sketches.has(plate.sketch));
 		int centre = left + width / 2;
 		text(g, small, false, said, centre, baseline, ChronicleLayout.NOTE_PALE, true);
 		if (count > 1)
@@ -1267,13 +1269,18 @@ public class ChronicleWindow extends Overlay
 		}
 	}
 
-	/** "Plate II. The cook, in his kitchen." - or what stands in for it before it is earned. */
-	static String caption(ChronicleEntry.Plate plate, int index, boolean seen, boolean sketched)
+	/**
+	 * "Plate II. The cook, in his kitchen." - or what stands in for it before
+	 * it is earned. A creature's page opens on sight, so its plate is not yet
+	 * seen; any other page waits on a quest or a visit, and its people may
+	 * well have been met already.
+	 */
+	static String caption(String kind, ChronicleEntry.Plate plate, int index, boolean seen, boolean sketched)
 	{
 		String number = "Plate " + ChronicleLayout.roman(index + 1) + ". ";
 		if (plate.npc != null && !seen)
 		{
-			return number + "Not yet seen.";
+			return number + ("enemy".equals(kind) || "boss".equals(kind) ? "Not yet seen." : "Not drawn yet.");
 		}
 		if (plate.sketch != null && !sketched)
 		{
@@ -1350,20 +1357,32 @@ public class ChronicleWindow extends Overlay
 		ChronicleEntry.ChronicleUnlock unlock = entry.unlock;
 		if (unlock == null)
 		{
-			return "The scribe has nothing on this yet.";
+			return "Nothing here yet.";
 		}
-		boolean byQuest = (unlock.quest != null && !metOnly(entry)) || unlock.questBegun != null;
+		boolean byQuestDone = unlock.quest != null && !metOnly(entry);
+		boolean byQuestBegun = unlock.questBegun != null;
+		boolean byQuest = byQuestDone || byQuestBegun;
 		boolean byNpc = unlock.npcs != null && !unlock.npcs.isEmpty();
 		boolean byRegion = unlock.regions != null && !unlock.regions.isEmpty();
+		// The header already names the quest, so a page waiting on one alone
+		// does not say it again.
+		if (byQuestDone && !byQuestBegun && !byNpc && !byRegion)
+		{
+			return "Nothing here yet. I'll write it up when it's done.";
+		}
+		if (byQuestBegun && !byQuestDone && !byNpc && !byRegion)
+		{
+			return "Nothing here yet. I'll write it up once it's under way.";
+		}
 		if (byNpc && !byQuest && !byRegion)
 		{
 			return "boss".equals(entry.kindOrEmpty())
-				? "The scribe has not met this boss yet."
-				: "The scribe has not met one of these yet.";
+				? "I haven't met this one yet."
+				: "I haven't met one of these yet.";
 		}
 		if (byRegion && !byQuest && !byNpc)
 		{
-			return "The scribe has not been there yet.";
+			return "We haven't been there yet.";
 		}
 		List<String> parts = new ArrayList<>();
 		if (unlock.quest != null && !metOnly(entry))
@@ -1376,17 +1395,17 @@ public class ChronicleWindow extends Overlay
 		}
 		if (byNpc)
 		{
-			parts.add("boss".equals(entry.kindOrEmpty()) ? "you have met this boss" : "you have met one of these");
+			parts.add("boss".equals(entry.kindOrEmpty()) ? "we've met this boss" : "we've met one of these");
 		}
 		if (byRegion)
 		{
-			parts.add("you have been there");
+			parts.add("we've been there");
 		}
 		if (parts.isEmpty())
 		{
-			return "The scribe has nothing on this yet.";
+			return "Nothing here yet.";
 		}
-		return "The scribe will write this up once " + String.join(", or once ", parts) + ".";
+		return "I'll write this up once " + String.join(", or once ", parts) + ".";
 	}
 
 	static String kindLabel(String kind)
