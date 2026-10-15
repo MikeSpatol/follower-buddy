@@ -342,18 +342,29 @@ public final class TriggerEvent
 		return event;
 	}
 
-	/** 1.2M / 214K / 950 - the way a player says an amount, not a ledger. */
+	/** 1.5B / 1.2M / 3M / 214K / 950 - the way a player says an amount, not a ledger. */
 	private static String formatGp(long value)
 	{
+		if (value >= 999_950_000L)
+		{
+			return tenths(value, 1_000_000_000L) + "B";
+		}
 		if (value >= 1_000_000)
 		{
-			return String.format("%.1fM", value / 1_000_000.0);
+			return tenths(value, 1_000_000) + "M";
 		}
 		if (value >= 10_000)
 		{
 			return (value / 1_000) + "K";
 		}
 		return Long.toString(value);
+	}
+
+	/** The amount in units to one decimal place, a round one without its ".0": 1.5, 3. */
+	private static String tenths(long value, long unit)
+	{
+		long tenths = Math.round(value * 10.0 / unit);
+		return tenths % 10 == 0 ? Long.toString(tenths / 10) : (tenths / 10) + "." + (tenths % 10);
 	}
 
 	/**
@@ -538,7 +549,7 @@ public final class TriggerEvent
 		event.placeholders.put("level", Integer.toString(level));
 		event.placeholders.put("total", Integer.toString(total));
 		event.placeholders.put("base", Integer.toString(base));
-		event.placeholders.put("nines", Integer.toString(masteries));
+		event.placeholders.put("nines", Words.number(masteries));
 		event.placeholders.put("ninesOrdinal", Words.ordinal(masteries));
 		event.placeholders.put("sinceLast", sinceLastMs < 0 ? "" : Words.duration(sinceLastMs));
 		event.placeholders.put("sinceAny", sinceAnyMs < 0 ? "" : Words.duration(sinceAnyMs));
