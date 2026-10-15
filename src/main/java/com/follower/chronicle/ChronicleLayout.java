@@ -327,7 +327,9 @@ public final class ChronicleLayout
 	/**
 	 * Greedy word wrap measured with the game's own advances, the dialog's
 	 * recipe. A word longer than the column breaks after its hyphens, as a
-	 * printer would break it; one with no hyphen is left to overflow.
+	 * printer would break it; one with no hyphen is left to overflow. A
+	 * dash standing alone keeps a word either side of it, and a last line of
+	 * one word takes another with it from the line above.
 	 */
 	public static List<String> wrap(String text, int maxWidth, ToIntFunction<String> width)
 	{
@@ -356,8 +358,24 @@ public final class ChronicleLayout
 				int maxWidth = out.isEmpty() ? firstWidth : restWidth;
 				if (width.applyAsInt(candidate) > maxWidth && line.length() > 0)
 				{
-					out.add(line.toString());
-					line = new StringBuilder(piece);
+					// A list's "label - text" separator, left at the end of a
+					// line, reads as if the line ran out, and opening the next
+					// it reads as a new item; it goes down with its label's
+					// last word.
+					String full = line.toString();
+					int cut = p == 0 && full.endsWith(" -") ? full.lastIndexOf(' ', full.length() - 3) : -1;
+					String carried = cut > 0 ? full.substring(cut + 1) + " " + piece : null;
+					if (carried != null && !full.substring(0, cut).equals("-")
+						&& width.applyAsInt(carried) <= restWidth)
+					{
+						out.add(full.substring(0, cut));
+						line = new StringBuilder(carried);
+					}
+					else
+					{
+						out.add(full);
+						line = new StringBuilder(piece);
+					}
 				}
 				else
 				{
@@ -369,7 +387,37 @@ public final class ChronicleLayout
 		{
 			out.add(line.toString());
 		}
+		unorphan(out, restWidth, width);
 		return out;
+	}
+
+	/**
+	 * A paragraph that ends on one word alone takes the last word of the
+	 * line above down with it, if that line has words to spare and the two
+	 * still fit.
+	 */
+	private static void unorphan(List<String> out, int restWidth, ToIntFunction<String> width)
+	{
+		int last = out.size() - 1;
+		if (last < 1 || out.get(last).contains(" "))
+		{
+			return;
+		}
+		String above = out.get(last - 1);
+		int cut = above.lastIndexOf(' ');
+		// Not after a long word broken at its hyphen: its pieces join with no space.
+		if (above.split(" ").length < 3 || above.endsWith("-"))
+		{
+			return;
+		}
+		String kept = above.substring(0, cut);
+		String moved = above.substring(cut + 1) + " " + out.get(last);
+		if (kept.endsWith(" -") || width.applyAsInt(moved) > restWidth)
+		{
+			return;
+		}
+		out.set(last - 1, kept);
+		out.set(last, moved);
 	}
 
 	public static List<String> wrap(String text, int maxWidth, GameFont font)

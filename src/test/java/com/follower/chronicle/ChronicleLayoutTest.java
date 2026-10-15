@@ -170,6 +170,34 @@ public class ChronicleLayoutTest
 	}
 
 	@Test
+	public void aLastLineOfOneWordTakesAnotherFromTheLineAbove()
+	{
+		// QA: 81 paragraphs and list items ended on a word alone ("kept out
+		// of" / "it").
+		assertEquals(Arrays.asList("aaa bbb ccc", "ddd eee"),
+			ChronicleLayout.wrap("aaa bbb ccc ddd eee", 90, ChronicleLayoutTest::width));
+		assertEquals("not when it would leave the line above with one word",
+			Arrays.asList("aaaaaaa bbbbbbb", "ccc"),
+			ChronicleLayout.wrap("aaaaaaa bbbbbbb ccc", 90, ChronicleLayoutTest::width));
+		assertEquals("nor when the two would not fit the narrower lines of a list item",
+			Arrays.asList("- aaa bbb cccccccc", "dddddddd"),
+			ChronicleLayout.wrap("- aaa bbb cccccccc dddddddd", 108, 48, ChronicleLayoutTest::width));
+	}
+
+	@Test
+	public void aDashIsNeverLeftAtTheEndOfALine()
+	{
+		// QA: "- Lost the talisman, package or notes -" / "whoever gave it to
+		// you has another". Opening the next line it would read as a new
+		// item, so it goes down with the last word of its label.
+		List<String> lines = ChronicleLayout.wrap("- aa bb cc - dd ee", 72, ChronicleLayoutTest::width);
+		assertEquals(Arrays.asList("- aa bb", "cc - dd ee"), lines);
+		assertEquals("a label of one word keeps it where it is",
+			Arrays.asList("- aaaaaaaa -", "dd ee"),
+			ChronicleLayout.wrap("- aaaaaaaa - dd ee", 72, ChronicleLayoutTest::width));
+	}
+
+	@Test
 	public void aPageReadsSummaryThenSectionsThenTheLists()
 	{
 		ChronicleEntry entry = new ChronicleEntry();

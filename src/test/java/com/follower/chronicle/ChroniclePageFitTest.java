@@ -107,6 +107,23 @@ public class ChroniclePageFitTest
 	}
 
 	@Test
+	public void noLineInTheBookEndsOnADash()
+	{
+		List<String> problems = new ArrayList<>();
+		for (List<ChronicleLayout.Line> lines : everyPageBothWays())
+		{
+			for (ChronicleLayout.Line line : lines)
+			{
+				if (line.text.endsWith(" -"))
+				{
+					problems.add(line.text);
+				}
+			}
+		}
+		assertTrue(String.join(", ", problems), problems.isEmpty());
+	}
+
+	@Test
 	public void theLastLineOfEveryPageCanBeScrolledIntoView()
 	{
 		List<String> problems = new ArrayList<>();
