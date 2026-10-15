@@ -1247,36 +1247,36 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-fence-book-early`
 
-> Running bit, the fence book: days 3-14 known. Idle window like wonders-about-you, rarer, two-hour cooldown.
+> Running bit, the fence book: days 1-12 after the opener. Idle window like wonders-about-you, rarer, two-hour cooldown.
 
-- **when:** standing still 240+ ticks AND standing still under 600 ticks AND known 3-14 days AND a 6% roll
+- **when:** standing still 240+ ticks AND standing still under 600 ticks AND 1-12 days after `fun-fence-book-start` was said AND a 6% roll
 - **pacing:** priority 17, cooldown 2h, delay 2 ticks, overhead
 
 - The fence book's found its feet. Lots of posts, and a promising stile.
 
 ### `fun-fence-book-middle`
 
-> Running bit, the fence book: days 15-44 known. Idle window like wonders-about-you, rarer, two-hour cooldown.
+> Running bit, the fence book: days 13-42 after the opener. Idle window like wonders-about-you, rarer, two-hour cooldown.
 
-- **when:** standing still 240+ ticks AND standing still under 600 ticks AND known 15-44 days AND a 6% roll
+- **when:** standing still 240+ ticks AND standing still under 600 ticks AND 13-42 days after `fun-fence-book-start` was said AND a 6% roll
 - **pacing:** priority 17, cooldown 2h, delay 2 ticks, overhead
 
 - The fence book's reached gates at last. I read that bit twice.
 
 ### `fun-fence-book-finished`
 
-> Running bit, the fence book: days 45-69 known. Idle window like wonders-about-you, rarer, two-hour cooldown.
+> Running bit, the fence book: days 43-67 after the opener. Idle window like wonders-about-you, rarer, two-hour cooldown.
 
-- **when:** standing still 240+ ticks AND standing still under 600 ticks AND known 45-69 days AND a 6% roll
+- **when:** standing still 240+ ticks AND standing still under 600 ticks AND 43-67 days after `fun-fence-book-start` was said AND a 6% roll
 - **pacing:** priority 17, cooldown 2h, delay 2 ticks, overhead
 
 - Finished the fence book. I miss it, which I didn't expect.
 
 ### `fun-fence-book-sequel`
 
-> Running bit, the fence book: day 100 on known. Idle window like wonders-about-you, rarer, two-hour cooldown.
+> Running bit, the fence book: day 98 on after the opener. Idle window like wonders-about-you, rarer, two-hour cooldown.
 
-- **when:** standing still 240+ ticks AND standing still under 600 ticks AND known 100+ days AND a 6% roll
+- **when:** standing still 240+ ticks AND standing still under 600 ticks AND 98+ days after `fun-fence-book-start` was said AND a 6% roll
 - **pacing:** priority 17, cooldown 2h, delay 2 ticks, overhead
 
 - There's a second volume of the fence book, all walls. I'm pacing myself.
@@ -1987,9 +1987,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-gull-rival-early`
 
-> Running bit, the gull: stage for days 1-20 known. No chance roll (npcNearby is state; a roll would re-arm every tick), so the three-hour cooldown is the pacing.
+> Running bit, the gull: stage for days 1-20 after the opener. No chance roll (npcNearby is state; a roll would re-arm every tick), so the three-hour cooldown is the pacing.
 
-- **when:** known 1-20 days AND Seagull, Gull within 6 tiles, in sight
+- **when:** 1-20 days after `fun-gull-rival-first` was said AND Seagull, Gull within 6 tiles, in sight
 - **pacing:** priority 30, cooldown 3h, delay 2 ticks, overhead
 
 - Watch that gull. It's been reading over my shoulder.
@@ -1997,9 +1997,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-gull-rival-middle`
 
-> Running bit, the gull: stage for days 21-89 known. No chance roll (npcNearby is state; a roll would re-arm every tick), so the three-hour cooldown is the pacing.
+> Running bit, the gull: stage for days 21-89 after the opener. No chance roll (npcNearby is state; a roll would re-arm every tick), so the three-hour cooldown is the pacing.
 
-- **when:** known 21-89 days AND Seagull, Gull within 6 tiles, in sight
+- **when:** 21-89 days after `fun-gull-rival-first` was said AND Seagull, Gull within 6 tiles, in sight
 - **pacing:** priority 30, cooldown 3h, delay 2 ticks, overhead
 
 - That gull took a page off me once. I've rewritten it, out of spite.
@@ -2007,9 +2007,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-gull-rival-late`
 
-> Running bit, the gull: stage for day 90 on known. No chance roll (npcNearby is state; a roll would re-arm every tick), so the three-hour cooldown is the pacing.
+> Running bit, the gull: stage for day 90 on after the opener. No chance roll (npcNearby is state; a roll would re-arm every tick), so the three-hour cooldown is the pacing.
 
-- **when:** known 90+ days AND Seagull, Gull within 6 tiles, in sight
+- **when:** 90+ days after `fun-gull-rival-first` was said AND Seagull, Gull within 6 tiles, in sight
 - **pacing:** priority 30, cooldown 3h, delay 2 ticks, overhead
 
 - The gull and I have come to terms. It stays there, I stay here.
@@ -2017,9 +2017,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-gull-feather`
 
-> Running bit, the gull: the truce, said once. Day 90 on, pocket empty: it picks up a gull's feather (souvenir, 60 min), which the souvenir-mention lines then carry. One point over the late stage, so the peace offering opens it.
+> Running bit, the gull: the truce, said once. Day 90 on after the opener, pocket empty: it picks up a gull's feather (souvenir, 60 min), which the souvenir-mention lines then carry. One point over the late stage, so the peace offering opens it.
 
-- **when:** known 90+ days AND NOT (carrying a souvenir) AND Seagull, Gull within 6 tiles, in sight
+- **when:** 90+ days after `fun-gull-rival-first` was said AND NOT (carrying a souvenir) AND Seagull, Gull within 6 tiles, in sight
 - **does:** mood +3; once ever; picks up 'a gull's feather' (60 min)
 - **pacing:** priority 31, cooldown 10m, delay 2 ticks, overhead
 
@@ -6822,9 +6822,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-hans-race-early`
 
-> Running bit, Hans: days 0-29 known. Same trigger as quest-hans, one point higher, three-hour cooldown; while it cools down the base's lines play.
+> Running bit, Hans: days 0-29 after the opener. Same trigger as quest-hans, one point higher, three-hour cooldown; while it cools down the base's lines play.
 
-- **when:** known 0-29 days AND Hans within 5 tiles, in sight
+- **when:** 0-29 days after `fun-hans-race-first` was said AND Hans within 5 tiles, in sight
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
 
 - Hans is well ahead today. I've been standing still, in fairness.
@@ -6832,9 +6832,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-hans-race-middle`
 
-> Running bit, Hans: days 30-99 known. Same trigger as quest-hans, one point higher, three-hour cooldown; while it cools down the base's lines play.
+> Running bit, Hans: days 30-99 after the opener. Same trigger as quest-hans, one point higher, three-hour cooldown; while it cools down the base's lines play.
 
-- **when:** known 30-99 days AND Hans within 5 tiles, in sight
+- **when:** 30-99 days after `fun-hans-race-first` was said AND Hans within 5 tiles, in sight
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
 
 - Hans gave me a nod. I think he knows about the race now.
@@ -6842,9 +6842,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-hans-race-late`
 
-> Running bit, Hans: day 100 on known. Same trigger as quest-hans, one point higher, three-hour cooldown; while it cools down the base's lines play.
+> Running bit, Hans: day 100 on after the opener. Same trigger as quest-hans, one point higher, three-hour cooldown; while it cools down the base's lines play.
 
-- **when:** known 100+ days AND Hans within 5 tiles, in sight
+- **when:** 100+ days after `fun-hans-race-first` was said AND Hans within 5 tiles, in sight
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
 
 - Hans and I have agreed it's a draw. Neither of us has said so.

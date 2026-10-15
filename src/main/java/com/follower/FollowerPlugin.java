@@ -2440,6 +2440,8 @@ public class FollowerPlugin extends Plugin
 		 * are only ever as many entries as there are firsts worth marking.
 		 */
 		java.util.List<String> spokenOnce;
+		/** And the day (an epoch day) each was said; missing from older saves. */
+		java.util.Map<String, Long> spokenOnceOn;
 		/** Chronicle pages written so far, by entry id. */
 		java.util.List<String> chronicled;
 		/** And when (an epoch day) and where each was written, where known. */
@@ -2656,7 +2658,7 @@ public class FollowerPlugin extends Plugin
 			context.restoreIncident(saved.incidentKey, saved.incidentPhrase,
 				saved.incidentCount, saved.incidentWhere, saved.incidentWhenMs, saved.incidentWho);
 			context.restorePlaces(saved.placeScores, saved.placeMemories);
-			context.restoreSpokenOnce(saved.spokenOnce);
+			context.restoreSpokenOnce(saved.spokenOnce, saved.spokenOnceOn);
 			context.restoreChronicled(saved.chronicled);
 			context.restoreChronicledStamps(saved.chronicledOn, saved.chronicledAt);
 			context.restoreLineWear(saved.lineWear);
@@ -2733,6 +2735,8 @@ public class FollowerPlugin extends Plugin
 		saved.placeScores = context.getPlaceScores();
 		saved.placeMemories = context.getPlaceMemories();
 		saved.spokenOnce = new java.util.ArrayList<>(context.getSpokenOnce());
+		saved.spokenOnceOn = context.getSpokenOnceOn().isEmpty() ? null
+			: new java.util.HashMap<>(context.getSpokenOnceOn());
 		saved.chronicled = new java.util.ArrayList<>(context.getChronicled());
 		saved.chronicledOn = context.getChronicledOn().isEmpty() ? null
 			: new java.util.HashMap<>(context.getChronicledOn());

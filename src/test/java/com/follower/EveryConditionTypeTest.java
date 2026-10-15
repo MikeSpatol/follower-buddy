@@ -1833,6 +1833,30 @@ public class EveryConditionTypeTest
 		assertFired(last, "lastTime");
 	}
 
+	@Test
+	public void howLongSinceAOneTimeLineWasSaid() throws IOException
+	{
+		note("daysSinceSaid");
+
+		String when = "{\"type\": \"daysSinceSaid\", \"rule\": \"opener\", \"minimum\": 10}";
+		Harness never = harnessFor(when);
+		never.engine.getContext().setMetOnDay(java.time.LocalDate.now().toEpochDay() - 400);
+		never.gameTicks(2);
+		assertQuiet(never, "the opener has not been said, however long we have known each other");
+
+		Harness h = harnessFor(when);
+		h.engine.getContext().restoreSpokenOnce(java.util.Collections.singletonList("opener"),
+			java.util.Collections.singletonMap("opener", java.time.LocalDate.now().toEpochDay() - 5));
+		h.gameTicks(2);
+		assertQuiet(h, "five days is not ten");
+
+		Harness later = harnessFor(when);
+		later.engine.getContext().restoreSpokenOnce(java.util.Collections.singletonList("opener"),
+			java.util.Collections.singletonMap("opener", java.time.LocalDate.now().toEpochDay() - 12));
+		later.gameTicks(2);
+		assertFired(later, "daysSinceSaid");
+	}
+
 	// ------------------------------------------------------------- coverage
 
 	@Test
@@ -1876,6 +1900,7 @@ public class EveryConditionTypeTest
 		tasteIsEarnedAndOutranksTheRoll();
 		adviceIsTakenOrIsNot();
 		howLongWeHaveKnownEachOther();
+		howLongSinceAOneTimeLineWasSaid();
 		theNameYouEarnAndTheGearYouOutgrew();
 		theChallengeIsMetOrIsNot();
 		underfootAndGoneFromTheKeyboard();

@@ -74,6 +74,7 @@ public class EngineSoakTest
 		"{\"type\": \"inWilderness\"}",
 		"{\"type\": \"rolledFeeling\", \"is\": \"disliked\"}",
 		"{\"type\": \"daysKnown\", \"minimum\": 0, \"maximum\": 3}",
+		"{\"type\": \"daysSinceSaid\", \"rule\": \"probe\", \"maximum\": 3}",
 		"{\"type\": \"none\", \"conditions\": [{\"type\": \"repeating\"}]}",
 		// The rest of the vocabulary, older than the pool's last look. The
 		// scene, the body and the bag first: state the driver moves.
@@ -555,6 +556,8 @@ public class EngineSoakTest
 				long today = LocalDate.now().toEpochDay();
 				ctx.setMetOnDay(new long[]{0L, today - 1, today - 400,
 					LocalDate.now().minusYears(2).toEpochDay()}[random.nextInt(4)]);
+				// And a one-time line said, for daysSinceSaid to count from.
+				ctx.noteSaidOnce("probe");
 				break;
 			}
 			case 46:

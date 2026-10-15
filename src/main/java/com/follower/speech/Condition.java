@@ -85,6 +85,7 @@ import net.runelite.api.NPC;
  *   <tr><td>workEnded</td><td>optional {@code names} (activities) - the tick a session ends; {@code {activity}} {@code {target}}</td></tr>
  *   <tr><td>targetDepleted</td><td>no fields - the session's target changed id or went; {@code {target}}</td></tr>
  *   <tr><td>bagFull / bagHalf</td><td>no fields - the last slot went, or fourteen were left (once per fill)</td></tr>
+ *   <tr><td>daysSinceSaid</td><td>{@code rule} (a once rule's id), {@code minimum} / {@code maximum} days - false until that rule has been said</td></tr>
  * </table>
  *
  * <p>{@code npcNearby} also takes {@code minimum}/{@code maximum} combat level,
@@ -140,6 +141,8 @@ public class Condition
 	public Integer varp;
 	/** questDone: the quest, by its {@link net.runelite.api.Quest} constant name. */
 	public String quest;
+	/** daysSinceSaid: the id of the one-time rule counted from. */
+	public String rule;
 	public Integer value;
 
 	/** Fire on every Nth occurrence rather than on each one. */
@@ -766,6 +769,14 @@ public class Condition
 			case "daysknown":
 				return ctx.getDaysKnown() >= orDefault(minimum, 1)
 					&& (maximum == null || ctx.getDaysKnown() <= maximum);
+			// Days since a one-time rule was heard: a running bit's stages
+			// count from its opener, and stay quiet until it has been said.
+			case "dayssincesaid":
+			{
+				int days = ctx.daysSinceSaid(rule);
+				return days >= 0 && days >= orDefault(minimum, 0)
+					&& (maximum == null || days <= maximum);
+			}
 			case "anniversary":
 				return ctx.isAnniversary();
 

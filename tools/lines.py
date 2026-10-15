@@ -111,6 +111,7 @@ TYPE_WORDS = {
     "ignored": "advice ignored",
     "advising": "advice outstanding",
     "daysknown": "known {minimum}-{maximum} days",
+    "dayssincesaid": "{minimum}-{maximum} days after `{rule}` was said",
     "anniversary": "the anniversary",
     "nicknamed": "nickname earned",
     "outgrew": "gear outgrown ({minimum}x)",
@@ -159,7 +160,7 @@ def fmt(template, c):
     out = template
     for key in ("percent", "ticks", "names", "within", "minimum", "maximum",
                 "ids", "varbit", "value", "regions", "contains", "is", "of",
-                "every"):
+                "every", "rule"):
         out = out.replace("{" + key + "}", get(key))
     out = out.replace("{vis}", ", in sight" if c.get("visible") else "")
     out = out.replace("{is_kind}", " (%s)" % c["is"] if c.get("is") else "")
