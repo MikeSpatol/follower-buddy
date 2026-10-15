@@ -128,6 +128,30 @@ public class EveryConditionTypeTest
 		assertFired(always, "a hundred percent");
 	}
 
+	/**
+	 * QA, 15 Oct: every NPC spawn is a pass over the rules, and each one
+	 * re-rolled the chance, so a chunk load made a rare state rule close to
+	 * certain. The roll is once a tick: a tick of spawns rises it at most once.
+	 */
+	@Test
+	public void aChanceIsRolledOnceATickNotOncePerPass() throws IOException
+	{
+		Harness h = harnessFor("{\"type\": \"chance\", \"percent\": 50}");
+		int mostInATick = 0;
+		for (int tick = 0; tick < 20; tick++)
+		{
+			h.gameTick();
+			int before = h.firedBy("probe").size();
+			for (int spawn = 0; spawn < 60; spawn++)
+			{
+				h.dispatch(TriggerEvent.npc(TriggerEvent.Type.NPC_SPAWN, 3029, "Goblin"));
+			}
+			mostInATick = Math.max(mostInATick, h.firedBy("probe").size() - before);
+		}
+		assertTrue("risen " + mostInATick + " times in one tick of spawns", mostInATick <= 1);
+		assertFired(h, "and it still rolls tick to tick");
+	}
+
 	// ----------------------------------------------------------------- state
 
 	@Test

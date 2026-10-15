@@ -261,6 +261,8 @@ public class Condition
 	/**
 	 * npcNearby scans the whole NPC list; its answer cannot change within a
 	 * tick, so it is cached per {@link TriggerContext#getRefreshGeneration()}.
+	 * A chance roll is kept the same way (a condition has one type, so the
+	 * two never share these).
 	 */
 	private transient int nearbyGeneration = -1;
 	private transient boolean nearbyCached;
@@ -288,8 +290,19 @@ public class Condition
 			case "always":
 				return true;
 
+			// Rolled once a tick, not once a pass. QA, 15 Oct: with npcSpawn
+			// rules loaded every NPC spawn is a pass, so a chunk load re-rolled
+			// a 4 percent fidget dozens of times in one tick.
 			case "chance":
-				return ThreadLocalRandom.current().nextInt(100) < orDefault(percent, 100);
+			{
+				int generation = ctx.getRefreshGeneration();
+				if (nearbyGeneration != generation)
+				{
+					nearbyGeneration = generation;
+					nearbyCached = ThreadLocalRandom.current().nextInt(100) < orDefault(percent, 100);
+				}
+				return nearbyCached;
+			}
 
 			case "npcspawn":
 				return event.getType() == TriggerEvent.Type.NPC_SPAWN && matchesNpc(event);
