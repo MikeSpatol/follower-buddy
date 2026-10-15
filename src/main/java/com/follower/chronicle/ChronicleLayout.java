@@ -378,6 +378,8 @@ public final class ChronicleLayout
 	public enum Style
 	{
 		HEADING, BODY, NOTE,
+		/** The page's own number, drawn as the header's label and value. */
+		TALLY,
 		/** Room held for the plate, drawn as one picture over all its rows. */
 		PLATE,
 		/** The line under the plate; the window fills in which plate it is. */
@@ -445,7 +447,7 @@ public final class ChronicleLayout
 			return lines;
 		}
 		plate(lines, entry, posed);
-		paragraphs(lines, tally, width, bodyWidth, Style.NOTE, 0);
+		paragraphs(lines, tally, width, bodyWidth, Style.TALLY, 0);
 		paragraphs(lines, entry.summary, width, bodyWidth, Style.BODY, 0);
 		for (ChronicleEntry.Section section : entry.sectionsOrEmpty())
 		{

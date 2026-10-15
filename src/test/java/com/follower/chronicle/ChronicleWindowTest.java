@@ -16,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import net.runelite.api.Client;
 import net.runelite.api.QuestState;
@@ -319,11 +320,62 @@ public class ChronicleWindowTest
 		memory.tally("kill:goblin");
 		draw();
 		assertEquals("first, before the summary", "Goblins you've killed while I watched: 2", pageTexts().get(0));
-		assertEquals(ChronicleLayout.Style.NOTE, pageStyles().get(0));
+		assertEquals(ChronicleLayout.Style.TALLY, pageStyles().get(0));
 
 		memory.tally("kill:goblin");
 		draw();
 		assertEquals("Goblins you've killed while I watched: 3", pageTexts().get(0));
+	}
+
+	/** The frame as drawn, to look at its pixels. */
+	private BufferedImage picture()
+	{
+		BufferedImage image = new BufferedImage(ChronicleLayout.WIDTH, ChronicleLayout.HEIGHT, BufferedImage.TYPE_INT_RGB);
+		Graphics2D g = image.createGraphics();
+		window.render(g);
+		g.dispose();
+		return image;
+	}
+
+	private static int count(BufferedImage image, java.awt.Rectangle area, int rgb)
+	{
+		int n = 0;
+		for (int y = area.y; y < area.y + area.height; y++)
+		{
+			for (int x = area.x; x < area.x + area.width; x++)
+			{
+				n += (image.getRGB(x, y) & 0xffffff) == rgb ? 1 : 0;
+			}
+		}
+		return n;
+	}
+
+	/**
+	 * QA: the number was drawn in the prose's pale face and read as an odd
+	 * one-line paragraph. It is the header's idiom now: an orange label and
+	 * a white number.
+	 */
+	@Test
+	public void theNumberIsDrawnAsALabelAndItsValue() throws Exception
+	{
+		TriggerContext memory = new TriggerContext(null);
+		memory.tally("kill:goblin");
+		openOn(GOBLIN_PAGE, "enemy-goblin", memory, null);
+		java.awt.Rectangle row = new java.awt.Rectangle(ChronicleLayout.PAGE_TEXT_X, ChronicleLayout.BODY_TOP,
+			ChronicleLayout.PLATE_W, ChronicleLayout.LINE_HEIGHT);
+		BufferedImage image = picture();
+		assertTrue("an orange label", count(image, row, ChronicleLayout.TITLE_ORANGE) > 0);
+		assertTrue("a white number", count(image, row, ChronicleLayout.BODY_WHITE) > 0);
+		assertEquals("no prose face", 0, count(image, row, ChronicleLayout.NOTE_PALE));
+	}
+
+	@Test
+	public void theNumberSplitsAfterItsLabelsColon()
+	{
+		assertEquals(Arrays.asList("Goblins you've killed while I watched: ", "214"),
+			Arrays.asList(ChronicleWindow.tallyParts("Goblins you've killed while I watched: 214")));
+		assertEquals(Arrays.asList("A label run onto two lines", ""),
+			Arrays.asList(ChronicleWindow.tallyParts("A label run onto two lines")));
 	}
 
 	@Test

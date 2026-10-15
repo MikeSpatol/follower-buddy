@@ -1013,6 +1013,9 @@ public class ChronicleWindow extends Overlay
 				case NOTE:
 					text(g, body, false, line.text, left, ly, ChronicleLayout.NOTE_PALE, false);
 					break;
+				case TALLY:
+					drawTally(g, body, line.text, left, ly);
+					break;
 				default:
 					text(g, body, false, line.text, left, ly,
 						readable ? ChronicleLayout.BODY_WHITE : ChronicleLayout.NOTE_PALE, false);
@@ -1213,6 +1216,23 @@ public class ChronicleWindow extends Overlay
 			return null;
 		}
 		return entry.tally.label + ": " + count;
+	}
+
+	/**
+	 * A line of the page's number as the header draws its own: the label
+	 * and its colon, then the number; a line with no number on it is all label.
+	 */
+	static String[] tallyParts(String text)
+	{
+		int colon = text.lastIndexOf(": ");
+		return colon < 0 ? new String[]{text, ""}
+			: new String[]{text.substring(0, colon + 2), text.substring(colon + 2)};
+	}
+
+	private void drawTally(Graphics2D g, GameFont body, String text, int left, int baseline)
+	{
+		String[] parts = tallyParts(text);
+		labelled(g, body, left, baseline, parts[0], parts[1], ChronicleLayout.BODY_WHITE);
 	}
 
 	/**
