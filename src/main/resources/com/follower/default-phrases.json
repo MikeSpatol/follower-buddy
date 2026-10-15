@@ -9181,7 +9181,7 @@
       "id": "last-time",
       "note": "The greeting that remembers what you were doing rather than how long it has been. lastTime is the last nameable thing the two of you did - the work, a boss, a level, a quest - carried across the logout. An hour away or more, and a chance roll so the plain away lines keep a share.",
       "group": "misc",
-      "priority": 71,
+      "priority": 79,
       "cooldownMs": 5000,
       "delayTicks": 6,
       "delayTicksMax": 10,

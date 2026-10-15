@@ -74,6 +74,29 @@ public class TimeAwayIsGreetedTest
 		assertTrue("last time is remembered some of the time", heard);
 	}
 
+	/**
+	 * QA, 15 Oct: at 71, last-time lost every absence of a day or more to
+	 * away-a-day (74) and away-a-long-time (78). It sits over them now, and
+	 * its own chance roll is what leaves them their share.
+	 */
+	@Test
+	public void lastTimeIsAlsoRememberedAfterDaysAway() throws IOException
+	{
+		for (long away : new long[]{2000, 20000})
+		{
+			boolean heard = false;
+			boolean plain = false;
+			for (int i = 0; i < 40 && !(heard && plain); i++)
+			{
+				Harness h = login(10, away, "the woodcutting");
+				heard |= !h.firedBy("last-time").isEmpty();
+				plain |= !h.firedBy(away < 10080 ? "away-a-day" : "away-a-long-time").isEmpty();
+			}
+			assertTrue("away " + away + ": last time is remembered some of the time", heard);
+			assertTrue("away " + away + ": and the away line keeps a share", plain);
+		}
+	}
+
 	@Test
 	public void aShortBreakOrNoRecordStillGetsTheHello() throws IOException
 	{

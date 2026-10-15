@@ -378,7 +378,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** lasttime AND away 60+ minutes AND a 60% roll
 - **does:** mood +4
-- **pacing:** priority 71, cooldown 5s, delay 6-10 ticks, both
+- **pacing:** priority 79, cooldown 5s, delay 6-10 ticks, both
 
 - Back, then. Last time it was {lastTime}, as I recall.
 - We finished on {lastTime}, if the notes are right. Shall we carry on?
