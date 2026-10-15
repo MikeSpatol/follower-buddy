@@ -918,6 +918,78 @@ public class RuleSetIntegrityTest
 			problems.isEmpty());
 	}
 
+	/**
+	 * A tally condition with a maximum and no minimum still has one: the
+	 * engine defaults it to 1. QA, 15 Oct: grudge-noted asked for "want:kept"
+	 * at most 0 that way, which no count can be, so it never said a word.
+	 */
+	@Test
+	public void noTallyAsksForACountItCannotHave() throws IOException
+	{
+		JsonArray raw = bundled("/com/follower/default-phrases.json").getAsJsonArray("rules");
+		List<String> problems = new ArrayList<>();
+		for (JsonElement element : raw)
+		{
+			JsonObject rule = element.getAsJsonObject();
+			for (JsonObject tally : conditionsOfType(rule.get("when"), "tally"))
+			{
+				int minimum = tally.has("minimum") ? tally.get("minimum").getAsInt() : 1;
+				if (tally.has("maximum") && tally.get("maximum").getAsInt() < minimum)
+				{
+					problems.add(rule.get("id").getAsString() + " (" + tally + ")");
+				}
+			}
+		}
+		assertTrue("tally ranges no count can fall in: " + problems, problems.isEmpty());
+	}
+
+	/**
+	 * A levelUp with no names, contains or regex matches no level at all:
+	 * the skill is matched as text, and with nothing to match it against the
+	 * answer is no. QA, 15 Oct: levels-many was dead that way.
+	 */
+	@Test
+	public void everyLevelUpNamesTheSkillsItWants() throws IOException
+	{
+		JsonArray raw = bundled("/com/follower/default-phrases.json").getAsJsonArray("rules");
+		List<String> problems = new ArrayList<>();
+		for (JsonElement element : raw)
+		{
+			JsonObject rule = element.getAsJsonObject();
+			for (JsonObject level : conditionsOfType(rule.get("when"), "levelUp"))
+			{
+				if (!level.has("names") && !level.has("contains") && !level.has("regex"))
+				{
+					problems.add(rule.get("id").getAsString());
+				}
+			}
+		}
+		assertTrue("levelUp conditions that can never match: " + problems, problems.isEmpty());
+	}
+
+	/** Every condition of one type in a when-block, however nested. */
+	private static List<JsonObject> conditionsOfType(JsonElement when, String type)
+	{
+		List<JsonObject> found = new ArrayList<>();
+		if (when == null || !when.isJsonObject())
+		{
+			return found;
+		}
+		JsonObject block = when.getAsJsonObject();
+		if (block.has("type") && type.equalsIgnoreCase(block.get("type").getAsString()))
+		{
+			found.add(block);
+		}
+		if (block.has("conditions") && block.get("conditions").isJsonArray())
+		{
+			for (JsonElement child : block.getAsJsonArray("conditions"))
+			{
+				found.addAll(conditionsOfType(child, type));
+			}
+		}
+		return found;
+	}
+
 	@Test
 	public void theBundledAndTheStarterFileAgree() throws IOException
 	{

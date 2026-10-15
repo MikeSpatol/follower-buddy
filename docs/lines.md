@@ -1509,7 +1509,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > A level up when there have been a great many. Same lifetime tally.
 
-- **when:** on a level-up (any) AND levels count at 25+
+- **when:** on a level-up (*) AND levels count at 25+ AND a 30% roll
 - **does:** mood +6
 - **pacing:** priority 42, cooldown 5m, overhead
 
@@ -2356,7 +2356,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > And the other ledger. Not sulking - noting. A follower that forgot the times you said no would not be much of a companion either.
 
-- **when:** want:missed count at 3+ AND want:kept count at 1+ AND standing still 100+ ticks AND a 8% roll
+- **when:** want:missed count at 3+ AND want:kept count at 0+ AND standing still 100+ ticks AND a 8% roll
 - **does:** mood -4
 - **pacing:** priority 26, cooldown 1h, overhead
 

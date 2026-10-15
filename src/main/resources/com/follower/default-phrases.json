@@ -10057,12 +10057,19 @@
         "type": "all",
         "conditions": [
           {
-            "type": "levelUp"
+            "type": "levelUp",
+            "names": [
+              "*"
+            ]
           },
           {
             "type": "tally",
             "of": "levels",
             "minimum": 25
+          },
+          {
+            "type": "chance",
+            "percent": 30
           }
         ]
       },
@@ -12209,6 +12216,7 @@
           {
             "type": "tally",
             "of": "want:kept",
+            "minimum": 0,
             "maximum": 0
           },
           {
