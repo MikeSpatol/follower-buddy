@@ -162,6 +162,76 @@ public class ShadowedRulesTest
 		assertEquals(1, h.firedBy("kill-boss-celebrate").size());
 	}
 
+	private static final int EAST_ARDOUGNE = 10547;
+	private static final int NOWHERE_NAMED = 5432;
+
+	private int region = -1;
+
+	/** Stands in a region for some ticks, raising the region change as the plugin does. */
+	private void stand(Harness h, int in, int forTicks)
+	{
+		h.game.at((in >> 8) * 64 + 32, (in & 0xFF) * 64 + 32, 0);
+		h.game.regions(in);
+		for (int i = 0; i < forTicks; i++)
+		{
+			clock.addAndGet(600L);
+			h.game.tick(tick++);
+			h.engine.refreshContext();
+			if (region != in)
+			{
+				if (region != -1)
+				{
+					h.dispatch(TriggerEvent.regionChange(in, region));
+				}
+				region = in;
+			}
+			h.dispatch(TriggerEvent.tick());
+		}
+	}
+
+	private int tick = 10;
+
+	/** To the bank and back out to work, the trip taking about ten minutes in all. */
+	private void bankTrip(Harness h)
+	{
+		stand(h, EAST_ARDOUGNE, 10);
+		stand(h, NOWHERE_NAMED, 260);
+		clock.addAndGet(10 * 60_000L - 270 * 600L);
+	}
+
+	@Test
+	public void aTownIsNotRetoldOnEveryBankTrip() throws IOException
+	{
+		Harness h = harness();
+		stand(h, NOWHERE_NAMED, 5);
+		for (int trip = 0; trip < 6; trip++)
+		{
+			bankTrip(h);
+		}
+		// Trips at 0, 10, 20, 30, 40 and 50 minutes: the town is told at 0 and 30.
+		assertEquals(2, h.firedBy("area-east-ardougne").size());
+	}
+
+	@Test
+	public void aFifthArrivalCanBeBackAgain() throws IOException
+	{
+		boolean backAgain = false;
+		for (int trial = 0; trial < 30 && !backAgain; trial++)
+		{
+			region = -1;
+			Harness h = harness();
+			stand(h, NOWHERE_NAMED, 5);
+			for (int visit = 1; visit <= 5; visit++)
+			{
+				// Long enough apart that the town's own line is ready each time.
+				clock.addAndGet(31 * 60_000L);
+				bankTrip(h);
+			}
+			backAgain = !h.firedBy("return-visit").isEmpty();
+		}
+		assertTrue("return-visit wins a fifth arrival some of the time", backAgain);
+	}
+
 	@Test
 	public void aGrudgeIsNotedWhenNoWishWasKept() throws IOException
 	{

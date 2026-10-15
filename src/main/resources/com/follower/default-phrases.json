@@ -1603,7 +1603,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -1626,7 +1626,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -1649,7 +1649,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -1673,7 +1673,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -1696,7 +1696,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -1718,7 +1718,7 @@
       "priority": 45,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -1739,7 +1739,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -1759,7 +1759,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -1779,7 +1779,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -1799,7 +1799,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -1818,7 +1818,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -1838,7 +1838,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -1858,7 +1858,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -1878,7 +1878,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -1899,7 +1899,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -1920,7 +1920,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -1941,7 +1941,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -1961,7 +1961,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -1981,7 +1981,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2002,7 +2002,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2022,7 +2022,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2042,7 +2042,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2062,7 +2062,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2082,7 +2082,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2102,7 +2102,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2122,7 +2122,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2141,7 +2141,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2160,7 +2160,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2180,7 +2180,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2199,7 +2199,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2219,7 +2219,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2238,7 +2238,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2257,7 +2257,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2277,7 +2277,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2296,7 +2296,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2316,7 +2316,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2335,7 +2335,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2354,7 +2354,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2374,7 +2374,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2393,7 +2393,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2412,7 +2412,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2431,7 +2431,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2450,7 +2450,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2470,7 +2470,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2489,7 +2489,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2508,7 +2508,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2527,7 +2527,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2546,7 +2546,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2565,7 +2565,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2584,7 +2584,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2603,7 +2603,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2622,7 +2622,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2641,7 +2641,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2660,7 +2660,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -2679,7 +2679,7 @@
       "priority": 40,
       "output": "overhead",
       "delayTicks": 2,
-      "cooldownMs": 180000,
+      "cooldownMs": 1800000,
       "when": {
         "type": "inRegion",
         "regions": [
@@ -8286,7 +8286,7 @@
       "id": "return-visit",
       "note": "Entering somewhere the session has already seen five times. Region ping-pong along a boundary is damped in the counter itself.",
       "group": "area",
-      "priority": 20,
+      "priority": 41,
       "cooldownMs": 900000,
       "when": {
         "type": "all",
