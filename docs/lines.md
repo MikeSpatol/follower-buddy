@@ -199,7 +199,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > The very first login, ever. First of the four arrival-arc lines: the moments where the follower has no history to draw on, which is exactly the window in which a new player decides whether to keep the plugin. Beats login-greeting on priority. The sessionCount gate is belt and braces behind once, so a lost memory still cannot introduce the follower twice.
 
 - **when:** session 1-1
-- **does:** occasion (never held back); once ever; holds the floor 8s
+- **does:** occasion (never held back); once ever; animation 858; holds the floor 8s
 - **pacing:** priority 95, cooldown 1m, delay 8 ticks, overhead
 
 - Right. You go places, I write things down. That's the arrangement.
@@ -244,6 +244,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > R25: taking the post. Rises once on the staying edge, so one per Stay.
 
 - **when:** on a player-commanded Stay
+- **does:** animation 855
 - **pacing:** priority 55, cooldown 1m, overhead
 
 - Right. This spot is mine now.
@@ -424,7 +425,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > A week or more. The warmest of the three, and the highest priority.
 
 - **when:** away 10080+ minutes
-- **does:** mood +12
+- **does:** mood +12; animation 13995
 - **pacing:** priority 78, cooldown 5s, delay 6-10 ticks, both
 
 - You came back. I wasn't sure you would.
@@ -1024,7 +1025,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > A question, which is a different thing from a remark. asks names a tree in dialogs.json; while the question is open, right-clicking Talk-to opens THAT conversation instead of the everyday one, and picking a branch is the answer. It used to want a word typed into public chat, which asked the player to know a magic word and asked the follower to listen to the whole street. The window is opened by SAYING it, so a question the mute swallowed leaves nothing waiting.
 
 - **when:** NOT (repeating one action 100+ ticks) AND NOT (mood is low) AND standing still 60+ ticks AND standing still under 400 ticks AND NOT (wanting somewhere OR a question open) AND a 3% roll
-- **does:** opens question `want-outing`
+- **does:** opens question `want-outing`; animation 864
 - **pacing:** priority 26, cooldown 15m, overhead
 
 - There's something I want to ask you. Talk to me when you have a moment.
@@ -1095,7 +1096,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Guarded with none/asking so it cannot replace a question already waiting for an answer. Without that, offering a game silently withdraws the outing and the player answers a question nothing is listening for.
 
 - **when:** NOT (repeating one action 100+ ticks) AND NOT (mood is low) AND standing still 80+ ticks AND standing still under 400 ticks AND NOT (a question open) AND a 3% roll
-- **does:** opens question `game-hands`
+- **does:** opens question `game-hands`; animation 4276
 - **pacing:** priority 25, cooldown 30m, overhead
 
 - I've thought of a game. Come and talk to me.
@@ -1126,6 +1127,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > The other half. No chance gate: it fires whenever the winning rule did not, which is exactly half the time.
 
 - **when:** (the player answering 'left' OR the player answering 'right')
+- **does:** animation 14000
 - **pacing:** priority 68, cooldown 1s, delay 3-6 ticks, overhead
 
 - Wrong hand. It was the other one.
@@ -1141,6 +1143,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > So that saying no is answered rather than ignored.
 
 - **when:** the player answering 'nogame'
+- **does:** animation 2113
 - **pacing:** priority 66, cooldown 1s, delay 3-6 ticks, overhead
 
 - Suit yourself. One of them's still full.
@@ -1225,6 +1228,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > The player came back from a long AFK during which the follower walked round to peer at them. The check itself was silent (the damper held); this is the payoff, on a present player.
 
 - **when:** attendedagain
+- **does:** animation 863
 - **pacing:** priority 45, cooldown 10m, delay 2 ticks
 
 - Back with us. You had the look of somebody listening at a door.
@@ -1518,6 +1522,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Sent across the ditch from the safe side. It has walked to the edge and turned to look at the player; it is not going over. Trico's beat of reluctance, with the honesty that it cannot cross anyway.
 
 - **when:** hesitated
+- **does:** animation 13994
 - **pacing:** priority 66, cooldown 30s, delay 2-4 ticks, overhead
 
 - Not over that. I'll wait here.
@@ -1555,7 +1560,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Cooking gone wrong. The fragment 'accidentally burn' is confirmed against the live game - it fires. Leave it a fragment rather than the whole sentence: the food's name sits in the middle of it.
 
 - **when:** a chat message (accidentally burn)
-- **does:** mood -1
+- **does:** mood -1; animation 4275
 - **pacing:** priority 52, cooldown 1m, delay 1-4 ticks, overhead
 
 - That was food, once.
@@ -1846,7 +1851,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > The other half of a warning. Until now the follower shouted and then never mentioned it again, whichever way it went, which is the difference between commentary and a conversation.
 
 - **when:** advice taken
-- **does:** mood +5
+- **does:** mood +5; animation 855
 - **pacing:** priority 44, cooldown 5m, delay 2-5 ticks, overhead
 
 - Thank you. That's all I wanted.
@@ -1875,7 +1880,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > And the funnier half.
 
 - **when:** advice ignored
-- **does:** mood -3
+- **does:** mood -3; animation 13997
 - **pacing:** priority 42, cooldown 2m, delay 2-5 ticks, overhead
 
 - Right. I'll stop saying it, then.
@@ -2580,7 +2585,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > The player picked 'You all right?' on a lowish day. Asking is the kindness; this is the lift and one soft overhead coda after the box closes.
 
 - **when:** the player answering 'comforted'
-- **does:** mood +6
+- **does:** mood +6; animation 13995
 - **pacing:** priority 50, cooldown 5m, delay 2 ticks, overhead
 
 - I'm lighter for being asked, oddly enough.
@@ -2591,6 +2596,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > The ledger, the same shape as the outings one: ten pieces of advice into the wind is a fact about the pair of you rather than about any one of them.
 
 - **when:** advice:ignored count at 10+ AND standing still 100+ ticks AND a 8% roll
+- **does:** animation 2113
 - **pacing:** priority 28, cooldown 45m, overhead
 
 - At least ten times I've told you something, and you did as you liked.
@@ -2705,7 +2711,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > A yes to the nickname question. The name is settled before this fires, so {nickname} is the one just agreed.
 
 - **when:** the player answering 'yes' AND nickname earned
-- **does:** mood +6
+- **does:** mood +6; animation 855
 - **pacing:** priority 80, cooldown 10s, delay 2-4 ticks, overhead
 
 - {nickname} it is. Underlined.
@@ -2765,6 +2771,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > phrases.json changed on disk and hot-reloaded. In-world, somebody wrote in the scribe's own book. Long cooldown so an editing session earns one remark.
 
 - **when:** notesedited AND a 75% roll
+- **does:** animation 14001
 - **pacing:** priority 40, cooldown 30m, delay 3 ticks
 
 - This isn't my handwriting.
@@ -4220,7 +4227,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > The player picked 'Found you that <wish>.' AND the thing is really in their bag - checked, because play testing produced the bluff within minutes. Nothing is consumed (client-side), but presence is honest.
 
 - **when:** the player answering 'gift' AND wishing for anything AND the wished item in the bag AND NOT (carrying a souvenir)
-- **does:** mood +10; spends the wish; picks up 'the {wish} you found me' (90 min)
+- **does:** mood +10; spends the wish; picks up 'the {wish} you found me' (90 min); animation 858
 - **pacing:** priority 50, cooldown 10s, delay 2 ticks, overhead
 
 - That {wish}. Exactly what I needed.
@@ -4257,7 +4264,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > The empty-bag claim, already caught IN the dialog box - the script branches on the bag, because a neutral box read as the follower not looking. This is the dry coda afterwards, not a second telling-off, so it needs no {wish} and no bag re-check.
 
 - **when:** the player answering 'bluff'
-- **does:** mood -2
+- **does:** mood -2; animation 856
 - **pacing:** priority 70, cooldown 30s, delay 2 ticks, overhead
 
 - That's going on your record, you know.
@@ -4356,7 +4363,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > The half that makes the other half worth anything.
 
 - **when:** the bet lost
-- **does:** mood -4
+- **does:** mood -4; animation 2113
 - **pacing:** priority 72, cooldown 5s, overhead
 
 - I was wrong. Enjoy it, it doesn't happen often.
@@ -4375,6 +4382,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > minimum and maximum are hours, and the comparison wraps past midnight, so this window is written the way a person says it.
 
 - **when:** time of day (any) AND standing still 100+ ticks AND a 10% roll
+- **does:** animation 2111
 - **pacing:** priority 24, cooldown 45m, overhead
 
 - You do know what time it is.
@@ -4467,7 +4475,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > New Year's Eve into New Year's Day, wrapping past the year end the way the late-night clock window wraps past midnight.
 
 - **when:** dateis AND standing still 20+ ticks
-- **does:** occasion (never held back)
+- **does:** occasion (never held back); animation 855
 - **pacing:** priority 62, cooldown 6h, overhead
 
 - A new year. Next volume, same author.
@@ -4478,7 +4486,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > The 31st of October. The scarecrow canon gets its day.
 
 - **when:** dateis AND standing still 20+ ticks
-- **does:** occasion (never held back)
+- **does:** occasion (never held back); animation 2105
 - **pacing:** priority 62, cooldown 6h, overhead
 
 - All Hallows. Every scarecrow tonight is a suspect.
@@ -6720,7 +6728,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > The quest reward scroll - the one moment the game hands the player literal paperwork, witnessed by a professional. Tally 'quests' counts them.
 
 - **when:** questcomplete
-- **does:** mood +8; occasion (never held back)
+- **does:** mood +8; occasion (never held back); animation 858
 - **pacing:** priority 85, cooldown 1m, delay 3 ticks
 
 - {quest}, done and witnessed. A full page.

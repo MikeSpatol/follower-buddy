@@ -3143,6 +3143,7 @@
       "delayTicks": 8,
       "cooldownMs": 60000,
       "hushMs": 8000,
+      "animation": 858,
       "when": {
         "type": "sessionCount",
         "maximum": 1
@@ -3257,6 +3258,7 @@
       "priority": 55,
       "output": "overhead",
       "cooldownMs": 60000,
+      "animation": 855,
       "when": {
         "type": "staying"
       },
@@ -9539,6 +9541,7 @@
       "delayTicks": 2,
       "delayTicksMax": 4,
       "output": "overhead",
+      "animation": 13994,
       "when": {
         "type": "hesitated",
         "is": "wilderness"
@@ -9635,6 +9638,7 @@
       "delayTicksMax": 10,
       "output": "both",
       "mood": 12,
+      "animation": 13995,
       "when": {
         "type": "awayFor",
         "minimum": 10080
@@ -9659,6 +9663,7 @@
       "delayTicksMax": 4,
       "output": "overhead",
       "mood": -1,
+      "animation": 4275,
       "when": {
         "type": "chatMessage",
         "contains": "accidentally burn"
@@ -10462,6 +10467,7 @@
       "cooldownMs": 900000,
       "output": "overhead",
       "asks": "want-outing",
+      "animation": 864,
       "when": {
         "type": "all",
         "conditions": [
@@ -11935,6 +11941,7 @@
         "what": "the {wish} you found me",
         "minutes": 90
       },
+      "animation": 858,
       "when": {
         "type": "all",
         "conditions": [
@@ -12027,6 +12034,7 @@
       "cooldownMs": 30000,
       "delayTicks": 2,
       "mood": -2,
+      "animation": 856,
       "when": {
         "type": "answered",
         "is": "bluff"
@@ -12232,6 +12240,7 @@
       "cooldownMs": 5000,
       "output": "overhead",
       "mood": -4,
+      "animation": 2113,
       "when": {
         "type": "betLost"
       },
@@ -12251,6 +12260,7 @@
       "priority": 24,
       "cooldownMs": 2700000,
       "output": "overhead",
+      "animation": 2111,
       "when": {
         "type": "all",
         "conditions": [
@@ -12729,6 +12739,7 @@
       "cooldownMs": 1800000,
       "output": "overhead",
       "asks": "game-hands",
+      "animation": 4276,
       "when": {
         "type": "all",
         "conditions": [
@@ -12835,6 +12846,7 @@
       "output": "overhead",
       "delayTicks": 3,
       "delayTicksMax": 6,
+      "animation": 14000,
       "when": {
         "type": "any",
         "conditions": [
@@ -12867,6 +12879,7 @@
       "output": "overhead",
       "delayTicks": 3,
       "delayTicksMax": 6,
+      "animation": 2113,
       "when": {
         "type": "answered",
         "is": "nogame"
@@ -12924,6 +12937,7 @@
       "cooldownMs": 300000,
       "delayTicks": 2,
       "mood": 6,
+      "animation": 13995,
       "when": {
         "type": "answered",
         "is": "comforted"
@@ -13059,6 +13073,7 @@
       "mood": 5,
       "delayTicks": 2,
       "delayTicksMax": 5,
+      "animation": 855,
       "when": {
         "type": "heeded"
       },
@@ -13095,6 +13110,7 @@
       "mood": -3,
       "delayTicks": 2,
       "delayTicksMax": 5,
+      "animation": 13997,
       "when": {
         "type": "ignored"
       },
@@ -13117,6 +13133,7 @@
       "priority": 28,
       "cooldownMs": 2700000,
       "output": "overhead",
+      "animation": 2113,
       "when": {
         "type": "all",
         "conditions": [
@@ -13442,6 +13459,7 @@
       "delayTicksMax": 4,
       "output": "overhead",
       "mood": 6,
+      "animation": 855,
       "when": {
         "type": "all",
         "conditions": [
@@ -13820,6 +13838,7 @@
       "priority": 40,
       "cooldownMs": 1800000,
       "delayTicks": 3,
+      "animation": 14001,
       "when": {
         "type": "all",
         "conditions": [
@@ -14020,6 +14039,7 @@
       "cooldownMs": 60000,
       "delayTicks": 3,
       "mood": 8,
+      "animation": 858,
       "when": {
         "type": "questComplete"
       },
@@ -14248,6 +14268,7 @@
       "priority": 62,
       "cooldownMs": 21600000,
       "output": "overhead",
+      "animation": 855,
       "when": {
         "type": "all",
         "conditions": [
@@ -14277,6 +14298,7 @@
       "priority": 62,
       "cooldownMs": 21600000,
       "output": "overhead",
+      "animation": 2105,
       "when": {
         "type": "all",
         "conditions": [
@@ -14403,6 +14425,7 @@
       "priority": 45,
       "cooldownMs": 600000,
       "delayTicks": 2,
+      "animation": 863,
       "when": {
         "type": "attendedAgain"
       },
