@@ -172,6 +172,14 @@ public class ThrallOnlyTest
 			{
 				return true;
 			}
+
+			// The one-time Replace thralls hint goes to the chat, which this
+			// plugin has none of; it is told already.
+			@Override
+			public boolean thrallHintShown()
+			{
+				return true;
+			}
 		});
 		set(plugin, "speechEngine", h.engine);
 		set(plugin, "ruleLoader", h.loader);

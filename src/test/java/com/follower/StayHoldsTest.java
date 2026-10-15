@@ -1513,7 +1513,7 @@ public class StayHoldsTest
 	{
 		String source = new String(Files.readAllBytes(
 			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8);
-		int follow = source.indexOf("addFollowerMenuEntry(\"Follow\"");
+		int follow = source.indexOf("addFollowerMenuEntry(\"Follow-me\"");
 		assertTrue("the Follow entry has moved - the scan broke, not the glue", follow >= 0);
 		int branch = source.lastIndexOf("if (", follow);
 		assertEquals("if (parkedByPlayer)", source.substring(branch, source.indexOf(')', branch) + 1));
