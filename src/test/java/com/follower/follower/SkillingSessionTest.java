@@ -363,6 +363,15 @@ public class SkillingSessionTest
 		}
 	}
 
+	/**
+	 * Looks over the shoulder played so far. The peer is a one-shot, held
+	 * off the seat for {@link KeepingCompany#PEER_TICKS} from the tick it plays.
+	 */
+	private int peers()
+	{
+		return Collections.frequency(follower.animations, KeepingCompany.PEER);
+	}
+
 	private void clickTheTree()
 	{
 		skilling.noteClick("Chop down", "Yew tree", TREE_ID, TREE_MIN, TREE_MAX, null);
@@ -2616,6 +2625,8 @@ public class SkillingSessionTest
 		skilling.notePlayerAnimation(KeepingCompany.NEST_LOOK);
 		skilling.itemSpawned("Bird nest", PLAYER);
 		assertEquals(Collections.singletonList(KeepingCompany.NEST_LOOK), follower.animations);
+		assertEquals("HUMAN_PICKUPFLOOR, down to the nest, not a reach at table height (QA, 15 Oct)",
+			827, KeepingCompany.NEST_LOOK);
 
 		skilling.itemSpawned("Bird nest", new WorldPoint(60, 60, 0));
 		skilling.itemSpawned("Logs", PLAYER);
@@ -3604,13 +3615,13 @@ public class SkillingSessionTest
 			boolean looked = false;
 			for (int i = 1; i <= KeepingCompany.SHOULDER_AFTER_TICKS + 130 && !looked; i++)
 			{
+				int peers = peers();
 				tick(1);
 				if (i % 3 == 0)
 				{
 					skilling.noteXpDrop(Skill.FLETCHING);
 				}
-				looked = follower.poseOverride == KeepingCompany.PEER
-					&& held != ErrandController.SCROLL_PROP;
+				looked = peers() > peers && held != ErrandController.SCROLL_PROP;
 			}
 			if (!looked)
 			{
@@ -3647,7 +3658,7 @@ public class SkillingSessionTest
 			{
 				skilling.noteXpDrop(Skill.FLETCHING);
 			}
-			if (follower.poseOverride == KeepingCompany.PEER)
+			if (peers() > 0)
 			{
 				at = i;
 			}
@@ -3691,11 +3702,18 @@ public class SkillingSessionTest
 			WorldPoint seat = follower.stayingAt;
 			int peerHeld = 0;
 			int peerOver = -1;
+			int peerStart = -1;
 			int paced = -1;
 			for (int i = 1; i <= KeepingCompany.PACE_AFTER_TICKS + 80 && paced < 0; i++)
 			{
 				int asked = follower.stays.size();
+				int peers = peers();
 				tick(1);
+				if (peers() > peers)
+				{
+					peerStart = i;
+				}
+				boolean peering = peerStart >= 0 && i - peerStart < KeepingCompany.PEER_TICKS;
 				if (i % 3 == 0)
 				{
 					skilling.noteXpDrop(Skill.FLETCHING);
@@ -3711,11 +3729,11 @@ public class SkillingSessionTest
 				{
 					spoiled.add(seed);
 				}
-				if (peerHeld > 0 && follower.poseOverride != KeepingCompany.PEER)
+				if (peerHeld > 0 && !peering)
 				{
 					peerOver = i;
 				}
-				peerHeld = follower.poseOverride == KeepingCompany.PEER ? peerHeld + 1 : 0;
+				peerHeld = peering ? peerHeld + 1 : 0;
 			}
 			if (paced < 0)
 			{
@@ -3750,11 +3768,17 @@ public class SkillingSessionTest
 		int legs = 0;
 		int lastLeg = -1;
 		int lastPeer = -1;
+		int peerStart = -1;
 		for (int i = 1; i <= KeepingCompany.STRETCH_AFTER_TICKS + 350; i++)
 		{
-			boolean peering = follower.poseOverride == KeepingCompany.PEER;
+			boolean peering = peerStart >= 0 && i - 1 - peerStart < KeepingCompany.PEER_TICKS;
 			int asked = follower.stays.size();
+			int peers = peers();
 			tick(1);
+			if (peers() > peers)
+			{
+				peerStart = i;
+			}
 			if (i % 3 == 0)
 			{
 				skilling.noteXpDrop(Skill.FLETCHING);
@@ -3772,7 +3796,7 @@ public class SkillingSessionTest
 					}
 				}
 			}
-			if (follower.poseOverride == KeepingCompany.PEER)
+			if (peerStart >= 0 && i - peerStart < KeepingCompany.PEER_TICKS)
 			{
 				lastPeer = i;
 			}

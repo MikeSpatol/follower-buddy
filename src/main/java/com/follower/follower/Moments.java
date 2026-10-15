@@ -123,8 +123,11 @@ public class Moments implements Noticing.Looker
 	static final int WIND_COOLDOWN_TICKS = 1000;
 	private static final int LOOK_BACK_TICKS = 2;
 
-	/** The peer, held while a stranger has the player's ear. */
+	/** The peer at a stranger who has the player's ear, then a watch on them. */
 	static final int PEER = KeepingCompany.PEER;
+
+	/** How long the peer waits for the step towards the stranger to finish. */
+	private static final int PEER_WAIT_TICKS = 3;
 
 	/** A spawn this fresh that turns to the player is one that came for them. */
 	static final int STRANGER_WINDOW_TICKS = 5;
@@ -811,7 +814,7 @@ public class Moments implements Noticing.Looker
 		doing = Doing.STRANGER;
 		stranger = npc;
 		follower.setStayFaceTile(at);
-		follower.setPoseOverride(PEER);
+		follower.playWhenStill(PEER, PEER_WAIT_TICKS);
 		log.debug("A stranger, {}, for the player", npc.getName());
 	}
 
@@ -878,12 +881,6 @@ public class Moments implements Noticing.Looker
 			{
 				flourish.abort();
 			}
-		}
-		if (was == Doing.STRANGER)
-		{
-			// Only its own peer: the film can put a pose on in the very tick
-			// it interrupts the moment.
-			follower.clearPoseOverride(PEER);
 		}
 		if (was != Doing.NOTHING)
 		{
