@@ -9502,6 +9502,10 @@
             "ticks": 30
           },
           {
+            "type": "idleBelow",
+            "ticks": 480
+          },
+          {
             "type": "chance",
             "percent": 25
           }
@@ -9566,7 +9570,7 @@
       "group": "reactions",
       "priority": 20,
       "cooldownMs": 12000,
-      "animation": 13993,
+      "animation": 6840,
       "when": {
         "type": "all",
         "conditions": [
@@ -11126,6 +11130,8 @@
       "priority": 22,
       "cooldownMs": 1800000,
       "output": "overhead",
+      "animation": 827,
+      "holdStill": true,
       "pickUp": {
         "what": "a nice flat rock",
         "minutes": 50
@@ -11135,11 +11141,11 @@
         "conditions": [
           {
             "type": "idle",
-            "ticks": 500
+            "ticks": 380
           },
           {
             "type": "idleBelow",
-            "ticks": 620
+            "ticks": 480
           },
           {
             "type": "none",
@@ -11169,6 +11175,8 @@
       "priority": 22,
       "cooldownMs": 1800000,
       "output": "overhead",
+      "animation": 827,
+      "holdStill": true,
       "pickUp": {
         "what": "an interesting stick",
         "minutes": 50
@@ -11178,11 +11186,11 @@
         "conditions": [
           {
             "type": "idle",
-            "ticks": 500
+            "ticks": 380
           },
           {
             "type": "idleBelow",
-            "ticks": 620
+            "ticks": 480
           },
           {
             "type": "none",
@@ -11212,6 +11220,8 @@
       "priority": 22,
       "cooldownMs": 1800000,
       "output": "overhead",
+      "animation": 827,
+      "holdStill": true,
       "pickUp": {
         "what": "a lucky-looking pebble",
         "minutes": 50
@@ -11221,11 +11231,11 @@
         "conditions": [
           {
             "type": "idle",
-            "ticks": 500
+            "ticks": 380
           },
           {
             "type": "idleBelow",
-            "ticks": 620
+            "ticks": 480
           },
           {
             "type": "none",
@@ -11255,6 +11265,8 @@
       "priority": 22,
       "cooldownMs": 1800000,
       "output": "overhead",
+      "animation": 827,
+      "holdStill": true,
       "pickUp": {
         "what": "a feather",
         "minutes": 50
@@ -11264,11 +11276,11 @@
         "conditions": [
           {
             "type": "idle",
-            "ticks": 500
+            "ticks": 380
           },
           {
             "type": "idleBelow",
-            "ticks": 620
+            "ticks": 480
           },
           {
             "type": "none",
@@ -11298,6 +11310,8 @@
       "priority": 22,
       "cooldownMs": 1800000,
       "output": "overhead",
+      "animation": 827,
+      "holdStill": true,
       "pickUp": {
         "what": "a bent nail",
         "minutes": 50
@@ -11307,11 +11321,11 @@
         "conditions": [
           {
             "type": "idle",
-            "ticks": 500
+            "ticks": 380
           },
           {
             "type": "idleBelow",
-            "ticks": 620
+            "ticks": 480
           },
           {
             "type": "none",
@@ -13043,6 +13057,10 @@
           {
             "type": "idle",
             "ticks": 20
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 480
           }
         ]
       },
