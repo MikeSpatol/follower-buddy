@@ -183,9 +183,21 @@ public class FilmDialog extends JDialog
 			javax.swing.JComponent.WHEN_IN_FOCUSED_WINDOW);
 
 		setContentPane(root);
-		setPreferredSize(new Dimension(680, 760));
+		// Both tabs need about 700 with the title bar. QA2, 15 Oct: at 760
+		// a 1366x768 laptop, about 728 above the taskbar, hid the status line
+		// under the taskbar; a still smaller screen gets what it has.
+		setPreferredSize(new Dimension(680, 700));
 		pack();
+		java.awt.GraphicsConfiguration screen = getGraphicsConfiguration();
+		setSize(getWidth(), heightOnScreen(getHeight(), screen.getBounds(),
+			java.awt.Toolkit.getDefaultToolkit().getScreenInsets(screen)));
 		setLocationRelativeTo(null);
+	}
+
+	/** A window height cut down, if need be, to the screen less its taskbar. */
+	static int heightOnScreen(int wanted, java.awt.Rectangle screen, java.awt.Insets taskbars)
+	{
+		return Math.min(wanted, screen.height - taskbars.top - taskbars.bottom);
 	}
 
 	/** Shows the window and starts the scene, or carries on with the one under way. */

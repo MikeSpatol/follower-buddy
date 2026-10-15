@@ -151,4 +151,54 @@ public class FilmDialogTest
 			source.contains("public void windowClosing(java.awt.event.WindowEvent e)\n\t\t\t{\n\t\t\t\tact(c ->\n"
 				+ "\t\t\t\t{\n\t\t\t\t\tc.cut();"));
 	}
+
+	@Test
+	public void theWindowFitsAboveALaptopsTaskbar()
+	{
+		// 1366x768 with a 40px taskbar leaves 728.
+		assertEquals(700, FilmDialog.heightOnScreen(700, new java.awt.Rectangle(0, 0, 1366, 768),
+			new java.awt.Insets(0, 0, 40, 0)));
+		assertEquals(560, FilmDialog.heightOnScreen(700, new java.awt.Rectangle(0, 0, 1024, 600),
+			new java.awt.Insets(0, 0, 40, 0)));
+	}
+
+	@Test
+	public void bothTabsFitInTheWindowAsItOpens() throws Exception
+	{
+		// QA2, 15 Oct: it opened 760 tall, and the status line went under a
+		// laptop's taskbar. Built, never shown.
+		org.junit.Assume.assumeFalse(java.awt.GraphicsEnvironment.isHeadless());
+		java.nio.file.Path dir = Files.createTempDirectory("film");
+		com.follower.speech.ConversationStore store = new com.follower.speech.ConversationStore(new com.google.gson.Gson());
+		store.load(dir);
+		FilmDialog.Crew none = (FilmDialog.Crew) java.lang.reflect.Proxy.newProxyInstance(
+			getClass().getClassLoader(), new Class<?>[]{FilmDialog.Crew.class},
+			(p, m, a) -> m.getReturnType() == int.class ? -1 : null);
+		// Measured in the client's own look, put back afterwards.
+		javax.swing.LookAndFeel before = javax.swing.UIManager.getLookAndFeel();
+		FilmDialog[] made = new FilmDialog[1];
+		javax.swing.SwingUtilities.invokeAndWait(() ->
+		{
+			net.runelite.client.ui.laf.RuneLiteLAF.setup();
+			made[0] = new FilmDialog(none, Runnable::run, store, () -> "Bob");
+		});
+		FilmDialog film = made[0];
+		javax.swing.SwingUtilities.invokeAndWait(() ->
+		{
+			film.validate();
+			assertTrue("opens " + film.getHeight() + " tall", film.getHeight() <= 700);
+			java.awt.Dimension wants = film.getContentPane().getPreferredSize();
+			assertTrue("its content wants " + wants.height + " and gets " + film.getContentPane().getHeight(),
+				wants.height <= film.getContentPane().getHeight());
+			film.dispose();
+			try
+			{
+				javax.swing.UIManager.setLookAndFeel(before);
+			}
+			catch (javax.swing.UnsupportedLookAndFeelException e)
+			{
+				throw new IllegalStateException(e);
+			}
+		});
+	}
 }
