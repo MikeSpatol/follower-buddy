@@ -130,6 +130,24 @@ public final class GameFont
 		}
 	}
 
+	/**
+	 * Text as the client draws it, character for character: a no-break
+	 * space as a space, a character with a glyph as itself, and one without
+	 * as a '?', all by {@link #glyphIndex}. For text typed anywhere, shown
+	 * where the game's fonts draw it.
+	 */
+	public static String drawable(String text)
+	{
+		StringBuilder out = new StringBuilder(text.length());
+		for (int i = 0; i < text.length(); i++)
+		{
+			char c = text.charAt(i);
+			int glyph = glyphIndex(c);
+			out.append(glyph == '?' || glyph == ' ' ? (char) glyph : c);
+		}
+		return out.toString();
+	}
+
 	/** The exact pixel width the client would measure for this string. */
 	public int stringWidth(String text)
 	{

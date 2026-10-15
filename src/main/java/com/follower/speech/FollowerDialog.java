@@ -55,6 +55,12 @@ public class FollowerDialog extends Overlay
 		/** Latched when the node is reached, run when the conversation ENDS. */
 		private Runnable onFinish;
 
+		/**
+		 * The face it speaks with: the chathead animations for a box of one,
+		 * two, three and four lines. Null for the dialog's own talk loop.
+		 */
+		private int[] expression;
+
 		private Node(boolean playerSpeaking, String[] pages)
 		{
 			this.playerSpeaking = playerSpeaking;
@@ -79,6 +85,16 @@ public class FollowerDialog extends Overlay
 		public static Node you(String... pages)
 		{
 			return new Node(true, pages);
+		}
+
+		/**
+		 * Speaks with this face: the chathead animations for a box of one
+		 * to four lines, as the game picks among them by the lines on show.
+		 */
+		public Node face(int[] animations)
+		{
+			this.expression = animations;
+			return this;
 		}
 
 		/** Continue to another node once the pages are done. */
@@ -500,6 +516,16 @@ public class FollowerDialog extends Overlay
 	private boolean open;
 
 	/**
+	 * Whether the box on show is a line of a conversation written in the
+	 * film window: the follower keeps the facing the film gave it, and how
+	 * the box closed is kept for the playback to read.
+	 */
+	private boolean scripted;
+
+	/** Whether the last box closed by being continued past its last page. */
+	private boolean continued;
+
+	/**
 	 * The tick gate: dialog input resolves ON the game tick, never instantly.
 	 * A real dialog's click travels to the server and takes effect when the
 	 * next tick processes it - opening, advancing, choosing and dismissing all
@@ -762,6 +788,7 @@ public class FollowerDialog extends Overlay
 	public void close()
 	{
 		open = false;
+		scripted = false;
 		head = null;
 		chatheadBase = null;
 		talkAnimation = null;
@@ -786,9 +813,60 @@ public class FollowerDialog extends Overlay
 	/** Starts a conversation at {@code startId}. */
 	public void start(String speakerName, Map<String, Node> conversation, String startId)
 	{
+		begin(speakerName, conversation, startId, false);
+	}
+
+	/**
+	 * Shows one line of a conversation written in the film window, at once
+	 * and over anything queued: a Talk-to clicked a moment before is dropped
+	 * rather than opened over it a tick later.
+	 */
+	public void showScripted(String speakerName, Node line)
+	{
+		pendingAction = null;
+		awaitingContinue = false;
+		pendingOptionIndex = -1;
+		Map<String, Node> single = new LinkedHashMap<>();
+		single.put("line", line);
+		begin(speakerName, single, "line", true);
+	}
+
+	/** The page of the box on show, or -1 when none is. */
+	public int pageShown()
+	{
+		return open && !sweepMode && node != null ? page : -1;
+	}
+
+	/** The text of the page on show, or "" when none is. */
+	public String pageText()
+	{
+		return pageShown() >= 0 && page < pages.length ? pages[page] : "";
+	}
+
+	/** Whether the last box closed by being continued past its last page, rather than closed. */
+	public boolean wasContinued()
+	{
+		return continued;
+	}
+
+	/** Continues a page now, as a click does a tick later. */
+	public void continueNow()
+	{
+		if (pageShown() >= 0 && !optionsVisible())
+		{
+			pendingAction = null;
+			awaitingContinue = false;
+			advance();
+		}
+	}
+
+	private void begin(String speakerName, Map<String, Node> conversation, String startId, boolean scripted)
+	{
 		followerName = speakerName;
 		script = conversation;
 		open = true;
+		this.scripted = scripted;
+		continued = false;
 		// A fresh conversation inherits nothing from the last one; a leftover
 		// would fire on the wrong ending entirely.
 		pendingFinish = null;
@@ -819,7 +897,11 @@ public class FollowerDialog extends Overlay
 
 		pages = node.dynamicPages != null ? node.dynamicPages.get() : node.pages;
 		page = 0;
-		follower.facePlayer();
+		// A written line keeps the facing the film gave it: the shot is set up.
+		if (!scripted)
+		{
+			follower.facePlayer();
+		}
 		refreshHead();
 	}
 
@@ -836,6 +918,7 @@ public class FollowerDialog extends Overlay
 		}
 		else
 		{
+			continued = true;
 			close();
 		}
 	}
@@ -927,6 +1010,10 @@ public class FollowerDialog extends Overlay
 
 	/** The talking animation state, advanced on the wall clock while drawing. */
 	private net.runelite.api.Animation talkAnimation;
+	/** The id {@link #talkAnimation} was loaded for. */
+	private int talkLoadedId = -1;
+	/** The page an expression was started on: each page starts its face again, as each box does in game. */
+	private int talkPage = -1;
 	private int talkFrame;
 	private long talkCarryMs;
 	private long lastTalkMs;
@@ -997,16 +1084,30 @@ public class FollowerDialog extends Overlay
 	 * so posing here is legal. The posed model comes back on the client's shared
 	 * scratch buffer and is rendered to pixels immediately, never held.
 	 */
-	private BufferedImage animatedHead()
+	private BufferedImage animatedHead(int lines)
 	{
 		if (chatheadBase == null)
 		{
 			return head;
 		}
 
+		// A face chosen for the line plays the game's own length for the
+		// lines on show, from its first frame on each page.
+		int wanted = node.expression == null ? talkAnimationId
+			: node.expression[Math.max(1, Math.min(node.expression.length, lines)) - 1];
+		if (talkAnimation != null && (wanted != talkLoadedId
+			|| (node.expression != null && page != talkPage)))
+		{
+			talkAnimation = null;
+			talkFrame = 0;
+			talkCarryMs = 0;
+			lastTalkMs = System.currentTimeMillis();
+		}
 		if (talkAnimation == null)
 		{
-			talkAnimation = client.loadAnimation(talkAnimationId);
+			talkLoadedId = wanted;
+			talkPage = page;
+			talkAnimation = client.loadAnimation(wanted);
 			if (talkAnimation == null || talkAnimation.getFrameLengths() == null)
 			{
 				talkAnimation = null;
@@ -1116,7 +1217,9 @@ public class FollowerDialog extends Overlay
 
 	private void drawSpeech(Graphics2D graphics)
 	{
-		BufferedImage face = animatedHead();
+		com.follower.ui.GameFont font = gameFonts.get(DIALOG_FONT_ID);
+		String[] wrapped = wrap(graphics, font, pages[page], TEXT_WIDTH);
+		BufferedImage face = animatedHead(wrapped.length);
 
 		// The canvas is anchored so the model's origin lands at the measured
 		// widget centre, its top row IS the dialog's top row, and the blit clips
@@ -1143,13 +1246,11 @@ public class FollowerDialog extends Overlay
 
 		// The measured text column: 380 wide at x=115 beside an NPC head on the
 		// left, x=24 with the player's head on the right.
-		com.follower.ui.GameFont font = gameFonts.get(DIALOG_FONT_ID);
 		int cellX = bounds.x + (headIsPlayer ? PLAYER_TEXT_X : NPC_TEXT_X);
 
 		drawCell(graphics, font, speakerName(), cellX, TEXT_WIDTH,
 			bounds.y + NAME_TOP, NAME.getRGB() & 0xFFFFFF);
 
-		String[] wrapped = wrap(graphics, font, pages[page], TEXT_WIDTH);
 		int lineHeight = measuredLineHeight(wrapped.length);
 		int top = bounds.y + BODY_TOP + (BODY_HEIGHT - wrapped.length * lineHeight) / 2;
 		for (String line : wrapped)
@@ -1274,26 +1375,78 @@ public class FollowerDialog extends Overlay
 	private String[] wrap(Graphics2D graphics, com.follower.ui.GameFont font,
 		String text, int maxWidth)
 	{
-		java.util.List<String> out = new java.util.ArrayList<>();
-		StringBuilder line = new StringBuilder();
+		return wrap(text, candidate -> textWidth(graphics, font, candidate), maxWidth);
+	}
 
-		for (String word : text.split(" "))
+	/**
+	 * The wrap itself, against any measure. A line break typed into the text
+	 * starts a new line, as the game's own break tag does, and a blank one
+	 * is kept.
+	 */
+	static String[] wrap(String text, java.util.function.ToIntFunction<String> width, int maxWidth)
+	{
+		java.util.List<String> out = new java.util.ArrayList<>();
+		for (String paragraph : text.split("\n", -1))
 		{
-			String candidate = line.length() == 0 ? word : line + " " + word;
-			if (textWidth(graphics, font, candidate) > maxWidth && line.length() > 0)
+			StringBuilder line = new StringBuilder();
+			for (String word : paragraph.split(" "))
+			{
+				String candidate = line.length() == 0 ? word : line + " " + word;
+				if (width.applyAsInt(candidate) > maxWidth && line.length() > 0)
+				{
+					out.add(line.toString());
+					line = new StringBuilder(word);
+				}
+				else
+				{
+					line = new StringBuilder(candidate);
+				}
+			}
+			if (line.length() > 0 || (paragraph.isEmpty() && text.contains("\n")))
 			{
 				out.add(line.toString());
-				line = new StringBuilder(word);
 			}
-			else
-			{
-				line = new StringBuilder(candidate);
-			}
-		}
-		if (line.length() > 0)
-		{
-			out.add(line.toString());
 		}
 		return out.toArray(new String[0]);
 	}
+
+	/**
+	 * The most lines a box holds. Four, at the spacing the game gives four,
+	 * fill the body's 67 rows; the chathead animations come in lengths for
+	 * one to four lines, and no more.
+	 */
+	static final int LINES_PER_PAGE = 4;
+
+	/**
+	 * A text cut into the pages a box shows it on: wrapped to the box's
+	 * column as it is drawn, and four lines to a page, each page its lines
+	 * joined by line breaks so it wraps the same again when drawn.
+	 */
+	public String[] pagesFor(String text)
+	{
+		com.follower.ui.GameFont font = gameFonts.get(DIALOG_FONT_ID);
+		java.awt.FontMetrics metrics = font != null ? null : FALLBACK_METRICS;
+		return pages(text, candidate -> font != null ? font.stringWidth(candidate)
+			: metrics.stringWidth(candidate), TEXT_WIDTH);
+	}
+
+	static String[] pages(String text, java.util.function.ToIntFunction<String> width, int maxWidth)
+	{
+		String[] lines = wrap(text, width, maxWidth);
+		java.util.List<String> out = new java.util.ArrayList<>();
+		for (int at = 0; at < lines.length; at += LINES_PER_PAGE)
+		{
+			out.add(String.join("\n",
+				java.util.Arrays.copyOfRange(lines, at, Math.min(lines.length, at + LINES_PER_PAGE))));
+		}
+		if (out.isEmpty())
+		{
+			out.add("");
+		}
+		return out.toArray(new String[0]);
+	}
+
+	/** The fallback font's measure, for paging before anything is drawn. */
+	private static final java.awt.FontMetrics FALLBACK_METRICS =
+		new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB).createGraphics().getFontMetrics(PLAIN_12);
 }
