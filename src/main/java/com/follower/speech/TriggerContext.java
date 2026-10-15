@@ -1330,11 +1330,43 @@ public final class TriggerContext
 		return name.substring(0, cut).trim();
 	}
 
-	/** " in Edgeville", ready to follow the memory in a line; empty when unknown. */
+	/**
+	 * " in Edgeville", ready to follow the memory in a line; empty when
+	 * unknown. The place as said in passing: "in the God Wars Dungeon",
+	 * "in Lumbridge", never "in Lumbridge town and castle".
+	 */
 	public String getMemoryWhere()
 	{
 		String place = getIncidentPlace();
-		return place.isEmpty() ? "" : " in " + place;
+		return place.isEmpty() ? "" : " in " + shortPlace(place);
+	}
+
+	/**
+	 * A place as the middle of a sentence names it. The Locations rules name
+	 * places descriptively: "Lumbridge town and castle" is Lumbridge, "The
+	 * Barrows mounds" is the Barrows.
+	 */
+	public static String shortPlace(String place)
+	{
+		String name = place.trim();
+		int and = name.indexOf(" and ");
+		if (and > 0)
+		{
+			name = name.substring(0, and);
+		}
+		if (name.startsWith("The "))
+		{
+			name = "the " + name.substring(4);
+		}
+		for (String tail : new String[]{" town", " plaza", " mounds", " lobby area", " camp"})
+		{
+			if (name.endsWith(tail) && name.length() > tail.length() + 4)
+			{
+				name = name.substring(0, name.length() - tail.length());
+				break;
+			}
+		}
+		return name;
 	}
 
 	/** "just now", "three days ago", or "a while ago" for a memory with no date. */
