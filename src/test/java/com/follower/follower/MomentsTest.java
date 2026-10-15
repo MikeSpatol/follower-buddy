@@ -192,6 +192,9 @@ public class MomentsTest
 	private int tick;
 	private PropFlourish flourish;
 	private int held;
+
+	/** The left hand's thing of a pair, the quill, or 0. */
+	private int heldLeft;
 	private boolean grateful;
 
 	@Before
@@ -232,12 +235,21 @@ public class MomentsTest
 			public void hold(int itemId)
 			{
 				held = itemId;
+				heldLeft = 0;
+			}
+
+			@Override
+			public void hold(int leftItemId, int rightItemId)
+			{
+				held = rightItemId;
+				heldLeft = leftItemId;
 			}
 
 			@Override
 			public void release()
 			{
 				held = 0;
+				heldLeft = 0;
 			}
 
 			@Override
@@ -682,7 +694,8 @@ public class MomentsTest
 
 		tick(follower.stayingAt.distanceTo(new WorldPoint(49, 49, 0)) + 2);
 		assertEquals("the scroll out on arrival", ErrandController.SCROLL_PROP, held);
-		assertEquals(ErrandController.READ_SCROLL_POSE, follower.poseOverride);
+		assertEquals("and the quill", ErrandController.QUILL_PROP, heldLeft);
+		assertEquals(ErrandController.WRITE_SCROLL_POSE, follower.poseOverride);
 
 		tick(Moments.NOTES_ON_THE_SPOT_TICKS - 1);
 		assertTrue("the look up at the player", follower.glances.contains(PLAYER));
@@ -691,6 +704,7 @@ public class MomentsTest
 		tick(2);
 		assertFalse("the feet handed back", moments.holdsTheFeet());
 		assertEquals("the scroll put away", 0, held);
+		assertEquals("and the quill", 0, heldLeft);
 		assertEquals(0, follower.poseOverride);
 	}
 
@@ -717,6 +731,7 @@ public class MomentsTest
 		moments.noteworthy(Moments.Tier.MEDIUM, DROP);
 		assertFalse("no walk for a medium one", moments.isLooking());
 		assertEquals("the scroll out at once", ErrandController.SCROLL_PROP, held);
+		assertEquals("and the quill", ErrandController.QUILL_PROP, heldLeft);
 		assertTrue("facing the drop", follower.glances.contains(DROP));
 
 		tick(Moments.NOTES_TICKS - 1);

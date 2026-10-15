@@ -486,8 +486,8 @@ public class Moments implements Noticing.Looker
 		boolean canWrite = flourish != null && doing == Doing.NOTHING && !skilling.isSitting()
 			&& !feetTakenOrParked() && !inCombat.getAsBoolean()
 			&& follower.isSettled();
-		if (canWrite && flourish.start(ErrandController.SCROLL_PROP,
-			ErrandController.READ_SCROLL_POSE, NOTES_TICKS))
+		if (canWrite && flourish.start(ErrandController.QUILL_PROP, ErrandController.SCROLL_PROP,
+			ErrandController.WRITE_SCROLL_POSE, NOTES_TICKS))
 		{
 			follower.glanceAt(facing, NOTES_TICKS * 600);
 			lookUpAt = now + NOTES_TICKS - 1;
@@ -670,8 +670,8 @@ public class Moments implements Noticing.Looker
 				{
 					arriveAt = 0;
 					if (lookWrites && flourish != null && flourish.start(
-						ErrandController.SCROLL_PROP, ErrandController.READ_SCROLL_POSE,
-						lookHoldTicks))
+						ErrandController.QUILL_PROP, ErrandController.SCROLL_PROP,
+						ErrandController.WRITE_SCROLL_POSE, lookHoldTicks))
 					{
 						// The flourish planted it where it stands, which is the
 						// spot; the look up comes a beat before the notes go away.

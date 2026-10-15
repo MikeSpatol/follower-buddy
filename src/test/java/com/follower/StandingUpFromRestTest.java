@@ -87,9 +87,9 @@ public class StandingUpFromRestTest
 	{
 		follower.setPoseOverride(SIT);
 		// The errand's first tick, before the rest has noticed it.
-		follower.setPoseOverride(ErrandController.READ_SCROLL_POSE);
+		follower.setPoseOverride(ErrandController.WRITE_SCROLL_POSE);
 		FollowerPlugin.letGoOfTheSit(follower, SIT);
-		assertEquals("still reading", ErrandController.READ_SCROLL_POSE, follower.getPoseOverride());
+		assertEquals("still reading", ErrandController.WRITE_SCROLL_POSE, follower.getPoseOverride());
 		assertTrue("and no stand-up over it", played.isEmpty());
 	}
 

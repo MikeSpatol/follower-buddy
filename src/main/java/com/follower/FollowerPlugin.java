@@ -629,8 +629,31 @@ public class FollowerPlugin extends Plugin
 						log.warn("Prop {} has no wearable slot", itemId);
 						return;
 					}
+					propHands = null;
 					propSlot = slot;
 					propItemId = itemId;
+					takeOut();
+				}
+
+				@Override
+				public void hold(int leftItemId, int rightItemId)
+				{
+					// Dressed as the film dresses a pose: the left hand's thing
+					// in the shield slot, the right's in the weapon slot,
+					// whatever each is worn as.
+					if (handSlot(rightItemId, false) == null)
+					{
+						log.warn("Prop {} has no worn model", rightItemId);
+						return;
+					}
+					propSlot = null;
+					propItemId = 0;
+					propHands = new int[]{leftItemId, rightItemId};
+					takeOut();
+				}
+
+				private void takeOut()
+				{
 					rebuildFollower();
 					// The reach that puts it there, so the thing does not simply
 					// appear in the hand. Every prop the follower takes out comes
@@ -650,12 +673,13 @@ public class FollowerPlugin extends Plugin
 				{
 					// Idempotent: the reset and abort paths call this with
 					// nothing held, including once at construction time.
-					if (propSlot == null)
+					if (propSlot == null && propHands == null)
 					{
 						return;
 					}
 					propSlot = null;
 					propItemId = 0;
+					propHands = null;
 					// Let go by a stop, the model data is already unloaded and a
 					// rebuild could only fail, out loud; the stop despawns anyway.
 					if (started)
@@ -667,7 +691,7 @@ public class FollowerPlugin extends Plugin
 				@Override
 				public boolean isHolding()
 				{
-					return propSlot != null;
+					return propSlot != null || propHands != null;
 				}
 
 				@Override
@@ -1523,9 +1547,10 @@ public class FollowerPlugin extends Plugin
 				}
 				else if (follower.isStaying() && follower.isSettled())
 				{
-					hands.hold(com.follower.follower.ErrandController.SCROLL_PROP);
+					hands.hold(com.follower.follower.ErrandController.QUILL_PROP,
+						com.follower.follower.ErrandController.SCROLL_PROP);
 					follower.setPoseOverride(
-						com.follower.follower.ErrandController.READ_SCROLL_POSE);
+						com.follower.follower.ErrandController.WRITE_SCROLL_POSE);
 					minutesState = 2;
 				}
 				break;
@@ -4936,6 +4961,7 @@ public class FollowerPlugin extends Plugin
 		Outfit outfit = dressForRender(resolveOutfit(), spectateDisarmed || emoteDisarmed && filmHands == null,
 			outfitOverride == null ? propSlot : null, propItemId,
 			outfitOverride == null ? wornSlot : null, wornItemId);
+		dressForPose(outfit, outfitOverride == null ? propHands : null);
 		dressForPose(outfit, filmHands);
 
 		appearanceService.request(outfit, com.follower.appearance.ModelSource.DUMP_ONLY, appearance ->
@@ -5452,6 +5478,13 @@ public class FollowerPlugin extends Plugin
 	 */
 	private KitType propSlot;
 	private int propItemId;
+
+	/**
+	 * A thing in each hand instead, left then right, as an animation names
+	 * them - the quill and the scroll of the writing pose - or null. Dressed
+	 * as the film dresses a pose's hands.
+	 */
+	private int[] propHands;
 
 	/** The second transient prop, worn rather than held: a borrowed hat. */
 	private KitType wornSlot;
@@ -11346,6 +11379,7 @@ public class FollowerPlugin extends Plugin
 			&& !follower.isNpcSlaved() && !errands.isBusy() && !dialog.isOpen())
 		{
 			clientThread.invoke(() -> flourish.start(
+				rule.prop.left == null ? 0 : rule.prop.left,
 				rule.prop.item == null ? 0 : rule.prop.item,
 				rule.prop.pose == null ? 0 : rule.prop.pose,
 				rule.prop.ticks == null ? 8 : rule.prop.ticks));

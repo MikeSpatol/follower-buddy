@@ -1258,8 +1258,8 @@ public class SkillingController
 			ledgerAt = 0;
 			if (!holdsTheFeet() && !feetTaken.getAsBoolean())
 			{
-				ledger.start(ErrandController.SCROLL_PROP, ErrandController.READ_SCROLL_POSE,
-					LEDGER_TICKS);
+				ledger.start(ErrandController.QUILL_PROP, ErrandController.SCROLL_PROP,
+					ErrandController.WRITE_SCROLL_POSE, LEDGER_TICKS);
 			}
 		}
 		previousHere = here;
@@ -1914,10 +1914,10 @@ public class SkillingController
 		{
 			return;
 		}
-		hands.hold(ErrandController.SCROLL_PROP);
+		hands.hold(ErrandController.QUILL_PROP, ErrandController.SCROLL_PROP);
 		if (hands.isHolding())
 		{
-			follower.setPoseOverride(ErrandController.READ_SCROLL_POSE);
+			follower.setPoseOverride(ErrandController.WRITE_SCROLL_POSE);
 			trapReading = true;
 			trapReadUntil = now + jitter(KeepingCompany.WORK_BREAK_TICKS,
 				KeepingCompany.WORK_BREAK_SPREAD);
@@ -1931,7 +1931,7 @@ public class SkillingController
 			return;
 		}
 		trapReading = false;
-		follower.clearPoseOverride(ErrandController.READ_SCROLL_POSE);
+		follower.clearPoseOverride(ErrandController.WRITE_SCROLL_POSE);
 		hands.release();
 	}
 

@@ -439,7 +439,7 @@ public class SketchController
 		{
 			return asking ? NOT_NOW : "Still drawing the last sketch of " + here + ".";
 		}
-		hands.hold(ErrandController.SCROLL_PROP);
+		hands.hold(ErrandController.QUILL_PROP, ErrandController.SCROLL_PROP);
 		if (!hands.isHolding())
 		{
 			return asking ? NOT_NOW : "The scroll would not come out.";
@@ -456,7 +456,7 @@ public class SketchController
 			log.warn("Could not back up the sketch of {}", here, e);
 			return asking ? NO_BACKUP : "Could not back up the old sketch of " + here + ", so it is left alone.";
 		}
-		follower.setPoseOverride(ErrandController.READ_SCROLL_POSE);
+		follower.setPoseOverride(ErrandController.WRITE_SCROLL_POSE);
 		key = here;
 		ticks = 0;
 		asked = asking;
@@ -490,7 +490,7 @@ public class SketchController
 		// release rebuilds the model, the part that can fail. Only the scroll's
 		// own, so a pose something else has put on since stays. The facing
 		// is only a field too.
-		follower.clearPoseOverride(ErrandController.READ_SCROLL_POSE);
+		follower.clearPoseOverride(ErrandController.WRITE_SCROLL_POSE);
 		follower.setFacingThePlayer(false);
 		hands.release();
 		stage = Stage.WAITING;

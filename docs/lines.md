@@ -207,7 +207,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Ten minutes into the first day. Scheduled rather than left to a gate that may not fire for hours, because an early characterful moment is the thing the first session is missing. Also the first hint that the notebook is not really about the scenery - and it never explains itself.
 
 - **when:** session minute 10-44 AND known 0-1 days
-- **does:** occasion (never held back); once ever; prop item 10485, pose 5354; holds the floor 6s
+- **does:** occasion (never held back); once ever; prop item 31830, pose 13302; holds the floor 6s
 - **pacing:** priority 72, cooldown 1m, overhead
 
 - Page one, done. Mostly the buildings. Mostly.
@@ -2005,7 +2005,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > The bigger milestone, at every hundredth of one npc. Higher priority than kill-tally so the round number wins when both come up together.
 
 - **when:** a kill
-- **does:** mood +5; prop item 10485, pose 5354
+- **does:** mood +5; prop item 31830, pose 13302
 - **pacing:** priority 62, cooldown 20s, delay 2-5 ticks, overhead
 
 - {count}. I do hope this is all for something.
@@ -2224,7 +2224,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > The obvious one. Filed on every death, so the count is what makes the recall land: once is bad luck, four times is a habit. The particulars (who, how many hitpoints, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.
 
 - **when:** on your death
-- **does:** files incident `the-death` as 'the way that went with the {foe}'; prop item 10485, pose 5354
+- **does:** files incident `the-death` as 'the way that went with the {foe}'; prop item 31830, pose 13302
 - **pacing:** priority 30, cooldown 5s, delay 6-12 ticks, overhead
 
 - That's going in the book.
@@ -2242,7 +2242,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Filed on a drop big enough to still be talking about an hour later. Above the loot-celebrate threshold so the celebration wins the event and this one only files - two lines about one drop is one too many, and the recall is the part that matters here. The particulars (who, how many hitpoints, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.
 
 - **when:** loot worth 1000000+
-- **does:** files incident `big-drop` as 'the {item} that dropped'; prop item 10485, pose 5354
+- **does:** files incident `big-drop` as 'the {item} that dropped'; prop item 31830, pose 13302
 - **pacing:** priority 20, cooldown 10m, overhead
 
 - I'm still not over that.
@@ -2255,7 +2255,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Filed when something with a combat level in three figures stops moving. Low priority so the celebration rules win the kill. The particulars (who, how many hitpoints, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.
 
 - **when:** a kill
-- **does:** files incident `the-boss` as 'the {npc} going down'; prop item 10485, pose 5354
+- **does:** files incident `the-boss` as 'the {npc} going down'; prop item 31830, pose 13302
 - **pacing:** priority 20, cooldown 10m, overhead
 
 - I want that written down somewhere.
@@ -3486,7 +3486,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `errand-document-start`
 
-> The documenting errand: stops where it stands, takes out the scroll (item 10485, transient prop) and reads/writes in it (pose 5354, both verified in game 2026-08-12). The scribe caught doing the job title.
+> The documenting errand: stops where it stands, takes out the quill and the scroll (items 31829 and 31830, transient props) and writes in it (pose 13302, the Write with a quill of the Advanced posing window). The scribe caught doing the job title.
 
 - **when:** errand start: document
 - **pacing:** priority 85, cooldown 1s, overhead

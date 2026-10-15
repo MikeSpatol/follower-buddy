@@ -70,21 +70,24 @@ public class ErrandController
 	}
 
 	/**
-	 * Reading a scroll: harvested live with {@code sniffanims} and verified as
-	 * a pose on the follower, 2026-08-12. Loops, so it is held as a pose
-	 * override rather than played as a one-shot.
+	 * Writing in a scroll with a quill, the pose the Advanced posing window
+	 * shows as Write with a quill. The animation is authored to play once,
+	 * with no restart frame; held as a pose override it starts again from its
+	 * first frame each time it ends (FollowerEntity's loopSafely), so the
+	 * follower writes on for as long as the pose is held.
 	 */
-	// Public: the minutes-taking borrows the same stance and prop, so the
+	// Public: the minutes-taking borrows the same stance and props, so the
 	// documenting look has exactly one definition.
-	public static final int READ_SCROLL_POSE = 5354;
+	public static final int WRITE_SCROLL_POSE = 13302;
 
 	/**
-	 * The plain Scroll, weapon slot. The animation mimes the scroll and draws
-	 * nothing - the item in hand comes from equipment - and of the sixty-five
-	 * hand-slot candidates this is the one that sits between the hands with no
-	 * vertex nudge at all. Verified with the pose above, same session.
+	 * The two things the writing pose names for its hands, as the game draws
+	 * them: the charting quill in the left hand (the shield slot) and the
+	 * scroll it writes in in the right (the weapon slot). Held together
+	 * through {@link Hands#hold(int, int)}.
 	 */
-	public static final int SCROLL_PROP = 10485;
+	public static final int QUILL_PROP = 31829;
+	public static final int SCROLL_PROP = 31830;
 
 	/**
 	 * What the scribe considers worth walking over to.
@@ -166,6 +169,18 @@ public class ErrandController
 	public interface Hands
 	{
 		void hold(int itemId);
+
+		/**
+		 * Puts a thing in each hand, as an animation names them: the left in
+		 * the shield slot, the right in the weapon slot - the quill and the
+		 * scroll of the writing pose. One {@link #release} lets go of both,
+		 * and {@link #isHolding} is true while they are out. Hands that only
+		 * know one hand hold the right-hand thing.
+		 */
+		default void hold(int leftItemId, int rightItemId)
+		{
+			hold(rightItemId);
+		}
 
 		void release();
 
@@ -962,8 +977,8 @@ public class ErrandController
 	 */
 	private void takeOutTheScroll()
 	{
-		hands.hold(SCROLL_PROP);
-		follower.setPoseOverride(READ_SCROLL_POSE);
+		hands.hold(QUILL_PROP, SCROLL_PROP);
+		follower.setPoseOverride(WRITE_SCROLL_POSE);
 	}
 
 	/**

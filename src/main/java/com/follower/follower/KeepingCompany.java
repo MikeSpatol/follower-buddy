@@ -940,12 +940,12 @@ class KeepingCompany
 		{
 			return 0;
 		}
-		hands.hold(ErrandController.SCROLL_PROP);
+		hands.hold(ErrandController.QUILL_PROP, ErrandController.SCROLL_PROP);
 		if (!hands.isHolding())
 		{
 			return 0;
 		}
-		follower.setPoseOverride(ErrandController.READ_SCROLL_POSE);
+		follower.setPoseOverride(ErrandController.WRITE_SCROLL_POSE);
 		scrollOut = true;
 		scrollTicks = 0;
 		return NOTE_TICKS;
@@ -1224,12 +1224,12 @@ class KeepingCompany
 		{
 			return;
 		}
-		hands.hold(ErrandController.SCROLL_PROP);
+		hands.hold(ErrandController.QUILL_PROP, ErrandController.SCROLL_PROP);
 		if (!hands.isHolding())
 		{
 			return;
 		}
-		follower.setPoseOverride(ErrandController.READ_SCROLL_POSE);
+		follower.setPoseOverride(ErrandController.WRITE_SCROLL_POSE);
 		scrollOut = true;
 		scrollTicks = ticks;
 	}
@@ -1252,7 +1252,7 @@ class KeepingCompany
 			// back to reading it, rather than holding it at the side.
 			if (follower.getPoseOverride() == 0)
 			{
-				follower.setPoseOverride(ErrandController.READ_SCROLL_POSE);
+				follower.setPoseOverride(ErrandController.WRITE_SCROLL_POSE);
 			}
 			return;
 		}
@@ -1265,12 +1265,12 @@ class KeepingCompany
 			// Something else is in the hand; not the scroll's to take.
 			return;
 		}
-		hands.hold(ErrandController.SCROLL_PROP);
+		hands.hold(ErrandController.QUILL_PROP, ErrandController.SCROLL_PROP);
 		if (!hands.isHolding())
 		{
 			return;
 		}
-		follower.setPoseOverride(ErrandController.READ_SCROLL_POSE);
+		follower.setPoseOverride(ErrandController.WRITE_SCROLL_POSE);
 		scrollOut = true;
 		scrollTicks = ticks;
 	}

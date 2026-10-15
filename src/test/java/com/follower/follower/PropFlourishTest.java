@@ -57,9 +57,14 @@ public class PropFlourishTest
 		}
 	}
 
+	private static final int QUILL = ErrandController.QUILL_PROP;
+	private static final int SCROLL = ErrandController.SCROLL_PROP;
+	private static final int WRITE = ErrandController.WRITE_SCROLL_POSE;
+
 	private RecordingFollower follower;
 	private PropFlourish flourish;
 	private int held;
+	private int heldLeft;
 
 	@Before
 	public void setUp()
@@ -74,9 +79,17 @@ public class PropFlourishTest
 			}
 
 			@Override
+			public void hold(int leftItemId, int rightItemId)
+			{
+				heldLeft = leftItemId;
+				held = rightItemId;
+			}
+
+			@Override
 			public void release()
 			{
 				held = 0;
+				heldLeft = 0;
 			}
 		});
 	}
@@ -89,17 +102,27 @@ public class PropFlourishTest
 		// delay the dump path does not have - and those ticks were exactly the
 		// window in which the follower stood in its idle pose holding a
 		// scroll, which the eye reads as wrong immediately.
-		assertTrue(flourish.start(10485, 5354, 5));
+		assertTrue(flourish.start(QUILL, SCROLL, WRITE, 5));
 		assertTrue(flourish.isActive());
 		assertTrue("it should stop to write", follower.staying);
-		assertEquals("the scroll is out", 10485, held);
-		assertEquals("and the pose is already playing", 5354, follower.poseOverride);
+		assertEquals("the scroll is out", SCROLL, held);
+		assertEquals("and the quill with it", QUILL, heldLeft);
+		assertEquals("and the pose is already playing", WRITE, follower.poseOverride);
+	}
+
+	@Test
+	public void aFlourishWithNothingForTheOtherHandHoldsTheOneProp()
+	{
+		heldLeft = -1;
+		assertTrue(flourish.start(0, 10485, 5354, 5));
+		assertEquals("the one prop, through the one-handed hold", 10485, held);
+		assertEquals("and the other hand never asked", -1, heldLeft);
 	}
 
 	@Test
 	public void everythingGoesBackWhenTheMomentPasses()
 	{
-		flourish.start(10485, 5354, 3);
+		flourish.start(QUILL, SCROLL, WRITE, 3);
 		for (int i = 0; i < 10; i++)
 		{
 			flourish.tick();
@@ -108,38 +131,40 @@ public class PropFlourishTest
 		assertFalse(flourish.isActive());
 		assertEquals("the pose released", 0, follower.poseOverride);
 		assertEquals("the scroll went away", 0, held);
+		assertEquals("and the quill", 0, heldLeft);
 		assertTrue("and the follower walks again", follower.following);
 	}
 
 	@Test
 	public void anAbortPutsEverythingBackToo()
 	{
-		flourish.start(10485, 5354, 20);
+		flourish.start(QUILL, SCROLL, WRITE, 20);
 		flourish.tick();
 		flourish.tick();
-		assertEquals(5354, follower.poseOverride);
+		assertEquals(WRITE, follower.poseOverride);
 
 		flourish.abort();
 
 		assertFalse(flourish.isActive());
 		assertEquals(0, follower.poseOverride);
 		assertEquals(0, held);
+		assertEquals(0, heldLeft);
 		assertTrue(follower.following);
 	}
 
 	@Test
 	public void aSecondGestureMidGestureIsDroppedNotQueued()
 	{
-		assertTrue(flourish.start(10485, 5354, 10));
+		assertTrue(flourish.start(QUILL, SCROLL, WRITE, 10));
 		assertFalse("a backlog of gestures stops reading as spontaneous",
-			flourish.start(10485, 5354, 10));
+			flourish.start(QUILL, SCROLL, WRITE, 10));
 	}
 
 	@Test
 	public void nonsenseNeverStarts()
 	{
-		assertFalse(flourish.start(0, 5354, 10));
-		assertFalse(flourish.start(10485, 0, 10));
+		assertFalse(flourish.start(QUILL, 0, WRITE, 10));
+		assertFalse(flourish.start(QUILL, SCROLL, 0, 10));
 		assertFalse("and nothing was touched", follower.staying);
 		assertEquals(0, held);
 	}

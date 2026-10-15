@@ -85,10 +85,21 @@ public class BorrowTest
 			held = itemId;
 		}
 
+		/** The left hand's thing of a pair, the quill; 0 when none. */
+		int heldLeft;
+
+		@Override
+		public void hold(int leftItemId, int rightItemId)
+		{
+			heldLeft = leftItemId;
+			held = rightItemId;
+		}
+
 		@Override
 		public void release()
 		{
 			held = 0;
+			heldLeft = 0;
 		}
 
 		@Override
@@ -171,9 +182,10 @@ public class BorrowTest
 		// Set down under the scroll, the hand is not the swap's to change; the
 		// loan is, so the right tool is the one that comes back.
 		assertTrue(borrow.setAside());
-		hands.hold(ErrandController.SCROLL_PROP);
+		hands.hold(ErrandController.QUILL_PROP, ErrandController.SCROLL_PROP);
 		borrow.swap(5343);
 		assertEquals("the scroll untouched", ErrandController.SCROLL_PROP, hands.held);
+		assertEquals("and the quill", ErrandController.QUILL_PROP, hands.heldLeft);
 		hands.release();
 		borrow.takeBack();
 		assertEquals("the dibber back, not the rake", 5343, hands.held);
@@ -199,17 +211,19 @@ public class BorrowTest
 	public void theScrollAndTheToolShareTheSlot()
 	{
 		// The scroll is out for something else: no borrow over it.
-		hands.hold(ErrandController.SCROLL_PROP);
+		hands.hold(ErrandController.QUILL_PROP, ErrandController.SCROLL_PROP);
 		assertFalse(borrow.start(1351));
 		assertFalse(borrow.isHolding());
 		assertEquals("the scroll is untouched", ErrandController.SCROLL_PROP, hands.held);
+		assertEquals("and the quill", ErrandController.QUILL_PROP, hands.heldLeft);
 
 		// And the other way: a tool in hand means the scroll flourish skips
 		// its gesture rather than swapping the axe for a scroll.
 		hands.release();
 		assertTrue(borrow.start(1351));
 		PropFlourish flourish = new PropFlourish(follower, hands);
-		assertFalse(flourish.start(ErrandController.SCROLL_PROP, ErrandController.READ_SCROLL_POSE, 5));
+		assertFalse(flourish.start(ErrandController.QUILL_PROP, ErrandController.SCROLL_PROP,
+			ErrandController.WRITE_SCROLL_POSE, 5));
 		assertFalse(flourish.isActive());
 		assertEquals("the axe stays", 1351, hands.held);
 		assertEquals("no writing pose over an axe", 0, follower.poseOverride);

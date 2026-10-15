@@ -123,6 +123,8 @@ public class SketchControllerTest
 	private int idle;
 	private int region = 12850;
 	private boolean holding;
+	/** The left hand's thing of a pair, the quill, while it is out; 0 otherwise. */
+	private int heldLeft;
 	/** Whether the scroll will not come out when asked for. */
 	private boolean handsRefuse;
 	/** Whether putting it away fails, as a model rebuild off the client thread does. */
@@ -208,6 +210,13 @@ public class SketchControllerTest
 			}
 
 			@Override
+			public void hold(int leftItemId, int rightItemId)
+			{
+				hold(rightItemId);
+				heldLeft = holding ? leftItemId : 0;
+			}
+
+			@Override
 			public void release()
 			{
 				if (releaseFails)
@@ -215,6 +224,7 @@ public class SketchControllerTest
 					throw new IllegalStateException("must be called on client thread");
 				}
 				holding = false;
+				heldLeft = 0;
 			}
 
 			@Override
@@ -366,7 +376,8 @@ public class SketchControllerTest
 		assertTrue(scribe.isSketching());
 		assertTrue("other lines wait", scribe.isPosing());
 		assertTrue("the scroll is out", holding);
-		assertEquals(ErrandController.READ_SCROLL_POSE, follower.getPoseOverride());
+		assertEquals("and the quill to write in it with", ErrandController.QUILL_PROP, heldLeft);
+		assertEquals(ErrandController.WRITE_SCROLL_POSE, follower.getPoseOverride());
 		assertEquals("turned to you", 1, faced);
 		assertTrue("and held on you, whatever you do", facingYou);
 		assertEquals(Collections.singletonList(SketchController.START), overhead);
@@ -631,7 +642,7 @@ public class SketchControllerTest
 		// a field, so it goes first.
 		SketchController scribe = scribe();
 		scribe.askForSketch();
-		assertEquals(ErrandController.READ_SCROLL_POSE, follower.getPoseOverride());
+		assertEquals(ErrandController.WRITE_SCROLL_POSE, follower.getPoseOverride());
 
 		releaseFails = true;
 		try

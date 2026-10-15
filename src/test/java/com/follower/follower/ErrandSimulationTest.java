@@ -169,12 +169,21 @@ public class ErrandSimulationTest
 				public void hold(int itemId)
 				{
 					heldProp = itemId;
+					heldLeft = 0;
+				}
+
+				@Override
+				public void hold(int leftItemId, int rightItemId)
+				{
+					heldProp = rightItemId;
+					heldLeft = leftItemId;
 				}
 
 				@Override
 				public void release()
 				{
 					heldProp = 0;
+					heldLeft = 0;
 				}
 
 				@Override
@@ -187,6 +196,9 @@ public class ErrandSimulationTest
 
 	/** What the hands are holding; 0 for nothing. */
 	private int heldProp;
+
+	/** The left hand's thing of a pair, the quill; 0 for nothing. */
+	private int heldLeft;
 
 	/** For the secondary controllers a few tests build: hands nobody watches. */
 	private static ErrandController.Hands idleHands()
@@ -339,16 +351,18 @@ public class ErrandSimulationTest
 
 		assertTrue("the errand never started", errands.isBusy());
 		assertTrue("it should have stopped where it stood", follower.staying);
-		assertEquals("the scroll is out", 10485, heldProp);
+		assertEquals("the scroll is out", ErrandController.SCROLL_PROP, heldProp);
+		assertEquals("and the quill with it", ErrandController.QUILL_PROP, heldLeft);
 		assertEquals("and the pose plays from the same tick - the dump path is"
 			+ " synchronous, so waiting only shows a scroll in idle hands",
-			5354, follower.poseOverride);
+			ErrandController.WRITE_SCROLL_POSE, follower.poseOverride);
 		assertTrue("and it announced itself", started("document"));
 
 		tick(30);
 		assertFalse("the errand should have finished", errands.isBusy());
 		assertEquals("the pose released", 0, follower.poseOverride);
 		assertEquals("and the scroll went away", 0, heldProp);
+		assertEquals("and the quill", 0, heldLeft);
 		assertTrue("and the follower came back", follower.following);
 	}
 
@@ -360,7 +374,7 @@ public class ErrandSimulationTest
 		// walking pose would wear this bug forever.
 		errands.force("document");
 		tick(3);
-		assertEquals(5354, follower.poseOverride);
+		assertEquals(ErrandController.WRITE_SCROLL_POSE, follower.poseOverride);
 
 		busy = true;      // the dialog opened mid-read
 		tick(1);
@@ -368,6 +382,7 @@ public class ErrandSimulationTest
 		assertFalse("the errand should have aborted", errands.isBusy());
 		assertEquals("the pose must not outlive it", 0, follower.poseOverride);
 		assertEquals("nor the scroll", 0, heldProp);
+		assertEquals("nor the quill", 0, heldLeft);
 	}
 
 	@Test
@@ -384,8 +399,10 @@ public class ErrandSimulationTest
 		assertEquals("and no pose either", 0, follower.poseOverride);
 
 		tick(5);      // the look ends
-		assertEquals("the scroll comes out", 10485, heldProp);
-		assertEquals("with the pose on the same tick", 5354, follower.poseOverride);
+		assertEquals("the scroll comes out", ErrandController.SCROLL_PROP, heldProp);
+		assertEquals("and the quill", ErrandController.QUILL_PROP, heldLeft);
+		assertEquals("with the pose on the same tick", ErrandController.WRITE_SCROLL_POSE,
+			follower.poseOverride);
 
 		tick(30);
 		assertFalse("the study should have finished", errands.isBusy());
@@ -415,8 +432,10 @@ public class ErrandSimulationTest
 		assertEquals("and no pose either", 0, follower.poseOverride);
 
 		tick(5);      // the look ends
-		assertEquals("the entry gets written", 10485, heldProp);
-		assertEquals("with the pose on the same tick", 5354, follower.poseOverride);
+		assertEquals("the entry gets written", ErrandController.SCROLL_PROP, heldProp);
+		assertEquals("with the quill", ErrandController.QUILL_PROP, heldLeft);
+		assertEquals("with the pose on the same tick", ErrandController.WRITE_SCROLL_POSE,
+			follower.poseOverride);
 
 		tick(25);
 		assertFalse("the look should have finished", errands.isBusy());
@@ -438,7 +457,7 @@ public class ErrandSimulationTest
 	{
 		errands.beginExploreAt(new WorldPoint(3225, 3218, 0), "Chest");
 		tick(9);      // deep enough that the scroll is out and the pose holds
-		assertEquals(5354, follower.poseOverride);
+		assertEquals(ErrandController.WRITE_SCROLL_POSE, follower.poseOverride);
 
 		busy = true;
 		tick(1);

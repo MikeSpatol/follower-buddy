@@ -996,7 +996,8 @@ public class StayHoldsTest
 		film();
 		PropFlourish flourish = new PropFlourish(feet, (ErrandController.Hands) get("hands"));
 		set("flourish", flourish);
-		assertTrue(flourish.start(ErrandController.SCROLL_PROP, ErrandController.READ_SCROLL_POSE, 8));
+		assertTrue(flourish.start(ErrandController.QUILL_PROP, ErrandController.SCROLL_PROP,
+			ErrandController.WRITE_SCROLL_POSE, 8));
 		FilmDialog.Crew crew = (FilmDialog.Crew) call("filmCrew");
 		assertNull(crew.start());
 		assertFalse("put away as the scene starts", flourish.isActive());
@@ -1025,7 +1026,7 @@ public class StayHoldsTest
 			h.gameTick();
 			skilling.tick();
 		}
-		assertEquals("the entry under way", ErrandController.READ_SCROLL_POSE, feet.pose);
+		assertEquals("the entry under way", ErrandController.WRITE_SCROLL_POSE, feet.pose);
 
 		FilmDialog.Crew crew = (FilmDialog.Crew) call("filmCrew");
 		assertNull(crew.start());

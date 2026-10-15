@@ -24,7 +24,7 @@ list, and RuneLite's `AnimationID` names none of them.
 | 3140 | reading a book | pairs with 3141; god-book props sit visibly OFF under it |
 | 3141 | turning the page | the two chain: read, turn, read |
 | 4549 | reading a note, shaking head | disapproval included |
-| 5354 | reading a scroll | **SHIPPED**: pairs with item 10485, no offset needed |
+| 5354 | reading a scroll | shipped until 2026-10-14: pairs with item 10485, no offset needed |
 
 **The winning pair, verified 2026-08-12:** pose 5354 with the plain Scroll
 (10485, weapon slot) sits between the hands with no vertex nudge at all. It
@@ -33,6 +33,13 @@ scroll out, writes something up, and puts it away. The book animations remain
 unshipped: every book prop tried sat where a *wielded* book sits, not where
 3140's hands meet, so a book pairing needs `propoffset` tuning or the
 synthetic-model fallback before it is usable.
+
+**Replaced 2026-10-14:** every scroll moment (the errands, the minutes, the
+study at the seat, the notes, the sketch, the rule flourishes) now writes with
+Write with a quill (13302) instead, dressed as the Advanced posing window
+dresses it: the quill (31829) in the shield slot and the scroll (31830) in the
+weapon slot, through `Hands.hold(left, right)`. 13302 is authored to play once;
+held as a pose override it starts again from its first frame each time it ends.
 
 All four mime holding something that is not there. In the real game the item
 in your hands comes from your equipment — so the prop is an item, overlaid on

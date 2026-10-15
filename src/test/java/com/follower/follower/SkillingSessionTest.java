@@ -268,6 +268,9 @@ public class SkillingSessionTest
 	private boolean borrowsTools = true;
 	private int held;
 
+	/** The left hand's thing of a pair, the quill, or 0. */
+	private int heldLeft;
+
 	/** What the fake hands have put on, or 0. */
 	private int worn;
 	private int tick;
@@ -286,6 +289,7 @@ public class SkillingSessionTest
 		keepsCompany = true;
 		borrowsTools = true;
 		held = 0;
+		heldLeft = 0;
 		worn = 0;
 		tick = 0;
 		skilling = new SkillingController(game.client, follower, new FollowerConfig()
@@ -307,12 +311,21 @@ public class SkillingSessionTest
 			public void hold(int itemId)
 			{
 				held = itemId;
+				heldLeft = 0;
+			}
+
+			@Override
+			public void hold(int leftItemId, int rightItemId)
+			{
+				held = rightItemId;
+				heldLeft = leftItemId;
 			}
 
 			@Override
 			public void release()
 			{
 				held = 0;
+				heldLeft = 0;
 			}
 
 			@Override
@@ -1800,7 +1813,8 @@ public class SkillingSessionTest
 		workTheRange();
 		int out = dropsUntilTheScroll(4, 12);
 		assertTrue("came out on drop " + out, out >= 7 && out <= 9);
-		assertEquals(ErrandController.READ_SCROLL_POSE, follower.poseOverride);
+		assertEquals(ErrandController.WRITE_SCROLL_POSE, follower.poseOverride);
+		assertEquals("the quill with it", ErrandController.QUILL_PROP, heldLeft);
 		tick(1);
 		assertEquals("facing the player for it", PLAYER, follower.facing);
 
@@ -1847,14 +1861,16 @@ public class SkillingSessionTest
 		workTheTree();
 		assertEquals("the scroll in the hand", ErrandController.SCROLL_PROP, held);
 		assertEquals("the axe on loan, set down for it", 1351, onLoan());
-		assertEquals(ErrandController.READ_SCROLL_POSE, follower.poseOverride);
+		assertEquals(ErrandController.WRITE_SCROLL_POSE, follower.poseOverride);
+		assertEquals("the quill with it", ErrandController.QUILL_PROP, heldLeft);
 		for (int i = 0; i < 20; i++)
 		{
 			tick(4);
 			skilling.noteXpDrop(Skill.WOODCUTTING);
 			assertEquals("and left out, drop after drop", ErrandController.SCROLL_PROP, held);
 		}
-		assertEquals(ErrandController.READ_SCROLL_POSE, follower.poseOverride);
+		assertEquals(ErrandController.WRITE_SCROLL_POSE, follower.poseOverride);
+		assertEquals("the quill with it", ErrandController.QUILL_PROP, heldLeft);
 		assertEquals("never a step", 1, follower.stays.size());
 	}
 
@@ -1869,7 +1885,8 @@ public class SkillingSessionTest
 		assertEquals(seat, follower.stayingAt);
 		assertFalse("and never sat down", skilling.isSitting());
 		assertEquals("still reading", ErrandController.SCROLL_PROP, held);
-		assertEquals(ErrandController.READ_SCROLL_POSE, follower.poseOverride);
+		assertEquals(ErrandController.WRITE_SCROLL_POSE, follower.poseOverride);
+		assertEquals("the quill with it", ErrandController.QUILL_PROP, heldLeft);
 	}
 
 	@Test
@@ -1885,7 +1902,8 @@ public class SkillingSessionTest
 		tick(1);
 		assertEquals("and back on the seat the scroll comes out again",
 			ErrandController.SCROLL_PROP, held);
-		assertEquals(ErrandController.READ_SCROLL_POSE, follower.poseOverride);
+		assertEquals(ErrandController.WRITE_SCROLL_POSE, follower.poseOverride);
+		assertEquals("the quill with it", ErrandController.QUILL_PROP, heldLeft);
 	}
 
 	@Test
@@ -2113,7 +2131,8 @@ public class SkillingSessionTest
 		game.inventoryUsing(14);
 		tick(1);
 		assertEquals(ErrandController.SCROLL_PROP, held);
-		assertEquals(ErrandController.READ_SCROLL_POSE, follower.poseOverride);
+		assertEquals(ErrandController.WRITE_SCROLL_POSE, follower.poseOverride);
+		assertEquals("the quill with it", ErrandController.QUILL_PROP, heldLeft);
 		tick(KeepingCompany.NOTE_TICKS);
 		assertEquals(0, held);
 		assertEquals(0, follower.poseOverride);
@@ -2426,7 +2445,8 @@ public class SkillingSessionTest
 	public void aReadingPoseSomethingElseLetGoOfIsPutBack()
 	{
 		workTheTree();
-		assertEquals(ErrandController.READ_SCROLL_POSE, follower.poseOverride);
+		assertEquals(ErrandController.WRITE_SCROLL_POSE, follower.poseOverride);
+		assertEquals("the quill with it", ErrandController.QUILL_PROP, heldLeft);
 
 		// A stranger's peer, a held emote copied: somebody else's pose on top.
 		follower.setPoseOverride(KeepingCompany.PEER);
@@ -2436,7 +2456,7 @@ public class SkillingSessionTest
 		// And let go of, leaving the scroll in the hand.
 		follower.setPoseOverride(0);
 		tick(1);
-		assertEquals("reading it again", ErrandController.READ_SCROLL_POSE, follower.poseOverride);
+		assertEquals("reading it again", ErrandController.WRITE_SCROLL_POSE, follower.poseOverride);
 	}
 
 	@Test
@@ -2903,10 +2923,11 @@ public class SkillingSessionTest
 				chopping++;
 				assertEquals("the axe in the hand while it chops", 1351, held);
 			}
-			boolean nowReading = follower.poseOverride == ErrandController.READ_SCROLL_POSE;
+			boolean nowReading = follower.poseOverride == ErrandController.WRITE_SCROLL_POSE;
 			if (nowReading)
 			{
 				assertEquals("the scroll in the hand while it reads", ErrandController.SCROLL_PROP, held);
+				assertEquals("and the quill", ErrandController.QUILL_PROP, heldLeft);
 			}
 			if (nowReading && !reading)
 			{
@@ -2987,7 +3008,8 @@ public class SkillingSessionTest
 
 		assertNotEquals("nothing of its own to chop", CHOP, follower.poseOverride);
 		assertEquals("so it reads, parked", ErrandController.SCROLL_PROP, held);
-		assertEquals(ErrandController.READ_SCROLL_POSE, follower.poseOverride);
+		assertEquals(ErrandController.WRITE_SCROLL_POSE, follower.poseOverride);
+		assertEquals("the quill with it", ErrandController.QUILL_PROP, heldLeft);
 	}
 
 	/**
@@ -3271,7 +3293,8 @@ public class SkillingSessionTest
 		chopAlongside();
 		tick(3);
 		assertEquals(ErrandController.SCROLL_PROP, held);
-		assertEquals(ErrandController.READ_SCROLL_POSE, follower.poseOverride);
+		assertEquals(ErrandController.WRITE_SCROLL_POSE, follower.poseOverride);
+		assertEquals("the quill with it", ErrandController.QUILL_PROP, heldLeft);
 	}
 
 	@Test
@@ -3501,7 +3524,8 @@ public class SkillingSessionTest
 		tick(1 + SkillingController.SEAT_AFTER_TICKS);
 		assertEquals("the anvil's far side", new WorldPoint(53, 50, 0), follower.stayingAt);
 		assertEquals("the notes out from the first", ErrandController.SCROLL_PROP, held);
-		assertEquals(ErrandController.READ_SCROLL_POSE, follower.poseOverride);
+		assertEquals(ErrandController.WRITE_SCROLL_POSE, follower.poseOverride);
+		assertEquals("the quill with it", ErrandController.QUILL_PROP, heldLeft);
 		assertEquals("about the anvil, not the player", anvil, follower.facing);
 		assertTrue("and the anvil errand cannot roll on top of it", skilling.blocksErrands());
 
@@ -3520,7 +3544,8 @@ public class SkillingSessionTest
 			follower.animations);
 		tick(4);
 		assertEquals("and out again", ErrandController.SCROLL_PROP, held);
-		assertEquals(ErrandController.READ_SCROLL_POSE, follower.poseOverride);
+		assertEquals(ErrandController.WRITE_SCROLL_POSE, follower.poseOverride);
+		assertEquals("the quill with it", ErrandController.QUILL_PROP, heldLeft);
 
 		for (int i = 0; i < 12; i++)
 		{
@@ -4053,7 +4078,8 @@ public class SkillingSessionTest
 		tick(1);
 		assertFalse(skilling.isWorking());
 		assertEquals("the notes, now the session is over", ErrandController.SCROLL_PROP, held);
-		assertEquals(ErrandController.READ_SCROLL_POSE, follower.poseOverride);
+		assertEquals(ErrandController.WRITE_SCROLL_POSE, follower.poseOverride);
+		assertEquals("the quill with it", ErrandController.QUILL_PROP, heldLeft);
 		assertTrue("the feet kept for them", skilling.holdsTheFeet());
 		tick(KeepingCompany.NOTE_TICKS + 4);
 		assertEquals("and away", 0, held);
@@ -4215,7 +4241,7 @@ public class SkillingSessionTest
 				}
 				tick(1);
 				read |= held == ErrandController.SCROLL_PROP
-					&& follower.poseOverride == ErrandController.READ_SCROLL_POSE;
+					&& follower.poseOverride == ErrandController.WRITE_SCROLL_POSE;
 			}
 			skilling.noteXpDrop(Skill.HUNTER);
 		}
@@ -4387,7 +4413,8 @@ public class SkillingSessionTest
 		assertNotNull(seat);
 		assertEquals("three tiles off the hotspot", 3, seat.distanceTo(hotspot));
 		assertEquals("the notes out", ErrandController.SCROLL_PROP, held);
-		assertEquals(ErrandController.READ_SCROLL_POSE, follower.poseOverride);
+		assertEquals(ErrandController.WRITE_SCROLL_POSE, follower.poseOverride);
+		assertEquals("the quill with it", ErrandController.QUILL_PROP, heldLeft);
 		assertEquals("about the work", hotspot, follower.facing);
 
 		game.animating(-1);
@@ -4599,7 +4626,8 @@ public class SkillingSessionTest
 		assertEquals("the scroll waits for the clap", 0, held);
 		tick(3);
 		assertEquals(ErrandController.SCROLL_PROP, held);
-		assertEquals(ErrandController.READ_SCROLL_POSE, follower.poseOverride);
+		assertEquals(ErrandController.WRITE_SCROLL_POSE, follower.poseOverride);
+		assertEquals("the quill with it", ErrandController.QUILL_PROP, heldLeft);
 		assertTrue("the entry holds the feet", skilling.holdsTheFeet());
 		tick(SkillingController.LEDGER_TICKS);
 		assertEquals(0, held);

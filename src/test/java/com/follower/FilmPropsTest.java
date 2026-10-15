@@ -6,6 +6,7 @@ import com.follower.appearance.ComposedAppearance;
 import com.follower.appearance.ModelRepository;
 import com.follower.appearance.ModelSource;
 import com.follower.appearance.Outfit;
+import com.follower.follower.ErrandController;
 import com.follower.follower.FilmSet;
 import com.follower.follower.FollowerEntity;
 import com.google.gson.Gson;
@@ -294,6 +295,25 @@ public class FilmPropsTest
 		film.frame();
 		assertEquals("the chair again once it stands", CHAIR, lastBuilt().itemId(KitType.WEAPON));
 		assertFalse(lastBuilt().isItem(KitType.SHIELD));
+	}
+
+	@Test
+	public void theWritingPropsAreDressedAsTheFilmDressesThem() throws ReflectiveOperationException
+	{
+		// The quill and the scroll the errands, the minutes and the sketch
+		// take out through the plugin's hands, laid on as the film lays a
+		// pose's: the quill in the shield slot over the follower's own shield.
+		filmOnThePlugin();
+		set("propHands", new int[]{ErrandController.QUILL_PROP, ErrandController.SCROLL_PROP});
+		call("rebuildFollower");
+		assertEquals("the quill in the left hand", QUILL, lastBuilt().itemId(KitType.SHIELD));
+		assertEquals("the scroll in the right", CHART, lastBuilt().itemId(KitType.WEAPON));
+		assertFalse("drawn whatever the gear hides", hidden(lastBuilt()).contains(KitType.SHIELD));
+
+		set("propHands", null);
+		call("rebuildFollower");
+		assertEquals("put away, its own whip", WHIP, lastBuilt().itemId(KitType.WEAPON));
+		assertEquals("and shield", DRAGON_SQUARE, lastBuilt().itemId(KitType.SHIELD));
 	}
 
 	/**

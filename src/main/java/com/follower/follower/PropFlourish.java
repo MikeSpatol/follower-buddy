@@ -41,10 +41,12 @@ public class PropFlourish
 	/**
 	 * Starts the flourish, unless one is already playing.
 	 *
+	 * @param leftItemId a thing for the other hand too - the quill of the
+	 *                   writing pose - or 0 for the one prop alone
 	 * @return whether it started - a false means the line still says its
 	 * words, just without the gesture, which is the right degradation
 	 */
-	public boolean start(int itemId, int poseId, int ticks)
+	public boolean start(int leftItemId, int itemId, int poseId, int ticks)
 	{
 		// Hands already full - a borrowed tool, most likely - and the scroll
 		// would take the same slot: the gesture is skipped, the line still lands.
@@ -59,9 +61,16 @@ public class PropFlourish
 		// appearance service's dump path is synchronous, so the model with the
 		// prop in it is applied before hold() returns. A settle delay here
 		// only ever produced the wrong order - idle hands holding a scroll.
-		hands.hold(itemId);
+		if (leftItemId > 0)
+		{
+			hands.hold(leftItemId, itemId);
+		}
+		else
+		{
+			hands.hold(itemId);
+		}
 		follower.setPoseOverride(poseId);
-		log.debug("Flourish started: item {} pose {} for {} ticks", itemId, poseId, ticks);
+		log.debug("Flourish started: items {} and {} pose {} for {} ticks", leftItemId, itemId, poseId, ticks);
 		return true;
 	}
 
