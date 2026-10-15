@@ -633,7 +633,7 @@ public class FollowerPlugin extends Plugin
 					propHands = null;
 					propSlot = slot;
 					propItemId = itemId;
-					takeOut();
+					takeOut(true);
 				}
 
 				@Override
@@ -650,23 +650,38 @@ public class FollowerPlugin extends Plugin
 					propSlot = null;
 					propItemId = 0;
 					propHands = new int[]{leftItemId, rightItemId};
-					takeOut();
+					// No reach for the pair: the writing pose lifts them from
+					// the waist itself (its frames 0-3), and a bend to the floor
+					// first was a second take-out that ate most of a short note.
+					takeOut(false);
 				}
 
-				private void takeOut()
+				/**
+				 * Into the hand, behind the reach that puts it there so the
+				 * thing does not simply appear: the reach first, and the prop
+				 * at the bottom of it. An emote already playing owns the body
+				 * and is left alone. A rebuild mid-emote leaves the emote be
+				 * (the pose waits on it), so the prop can come in partway.
+				 */
+				private void takeOut(boolean reach)
 				{
-					rebuildFollower();
-					// The reach that puts it there, so the thing does not simply
-					// appear in the hand. Every prop the follower takes out comes
-					// through here, so one clip covers the scroll, the borrowed
-					// tools and the flourishes. An emote already playing owns the
-					// body and is left alone, and the rebuild goes first because a
-					// rebuild restarts a clip from its first frame.
-					int[] reach = parseAnimationIds(config.reachAnimation());
-					if (reach.length > 0 && !follower.isEmotePlaying())
+					int[] clip = reach ? parseAnimationIds(config.reachAnimation()) : new int[0];
+					if (clip.length == 0 || follower.isEmotePlaying())
 					{
-						follower.playAnimations(reach);
+						propBehindReach = false;
+						rebuildFollower();
+						return;
 					}
+					propBehindReach = true;
+					follower.playAnimations(clip);
+					follower.atEmoteFraction(REACH_BOTTOM, () ->
+					{
+						if (propBehindReach)
+						{
+							propBehindReach = false;
+							rebuildFollower();
+						}
+					});
 				}
 
 				@Override
@@ -678,12 +693,27 @@ public class FollowerPlugin extends Plugin
 					{
 						return;
 					}
+					boolean writing = propHands != null;
 					propSlot = null;
 					propItemId = 0;
 					propHands = null;
+					propBehindReach = false;
 					// Let go by a stop, the model data is already unloaded and a
 					// rebuild could only fail, out loud; the stop despawns anyway.
-					if (started)
+					// The scroll on its way down keeps its props to the end of
+					// the lowering, or they would vanish at the top of it; and
+					// to the end of the nod up from the notes, the same way.
+					if (started && (follower.isPuttingAway() || writing && follower.isEmotePlaying()))
+					{
+						follower.atEmoteFraction(1, () ->
+						{
+							if (started)
+							{
+								rebuildFollower();
+							}
+						});
+					}
+					else if (started)
 					{
 						rebuildFollower();
 					}
@@ -4960,10 +4990,12 @@ public class FollowerPlugin extends Plugin
 		// and whose conscript has no time to read. So are the film's pose's
 		// hands, which stand in for the emote disarm while they are on.
 		int[] filmHands = outfitOverride == null && filmSet != null ? filmSet.hands() : null;
+		// Nor a prop still behind its reach: it comes in at the bottom of it.
+		boolean propShown = outfitOverride == null && !propBehindReach;
 		Outfit outfit = dressForRender(resolveOutfit(), spectateDisarmed || emoteDisarmed && filmHands == null,
-			outfitOverride == null ? propSlot : null, propItemId,
+			propShown ? propSlot : null, propItemId,
 			outfitOverride == null ? wornSlot : null, wornItemId);
-		dressForPose(outfit, outfitOverride == null ? propHands : null);
+		dressForPose(outfit, propShown ? propHands : null);
 		dressForPose(outfit, filmHands);
 
 		appearanceService.request(outfit, com.follower.appearance.ModelSource.DUMP_ONLY, appearance ->
@@ -5487,6 +5519,12 @@ public class FollowerPlugin extends Plugin
 	 * as the film dresses a pose's hands.
 	 */
 	private int[] propHands;
+
+	/** A prop taken out but not yet shown: the reach for it is still going down. */
+	private boolean propBehindReach;
+
+	/** How far into the reach the prop comes into the hand: the bottom of the bend. */
+	static final double REACH_BOTTOM = 0.5;
 
 	/** The second transient prop, worn rather than held: a borrowed hat. */
 	private KitType wornSlot;
@@ -10469,6 +10507,7 @@ public class FollowerPlugin extends Plugin
 						}
 						propSlot = slot;
 						propItemId = itemId;
+						propBehindReach = false;
 						appearanceComposer.setItemAdjustment(-1, 0, 0, 0);
 						rebuildFollower();
 						String name = modelRepository.itemName(itemId);
