@@ -236,7 +236,7 @@ public class MemoryDialog extends JDialog
 		}
 		if (!c.getAskedTree().isEmpty())
 		{
-			rows.add(row("Waiting on an answer", c.getAskedTree()));
+			rows.add(row("Waiting on an answer", askedAbout(c.getAskedTree())));
 			anything = true;
 		}
 		if (c.isChallenging())
@@ -255,6 +255,26 @@ public class MemoryDialog extends JDialog
 		rows.add(row("Lines counted, to vary them", Integer.toString(c.getLineWear().size())));
 
 		return rows;
+	}
+
+	/**
+	 * What the follower asked, in words, for the three trees it ships with;
+	 * a tree of the player's own shows its id. Text sweep, 14 Oct: the raw
+	 * id was shown for all of them.
+	 */
+	static String askedAbout(String tree)
+	{
+		switch (tree)
+		{
+			case "want-outing":
+				return "Whether you'll take it somewhere";
+			case "game-hands":
+				return "Which hand it's hiding something in";
+			case "nickname-offer":
+				return "The name it suggested for you";
+			default:
+				return tree;
+		}
 	}
 
 	/** "today", "1 day ago" or "N days ago". */

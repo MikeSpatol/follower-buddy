@@ -5759,7 +5759,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Skotizo. Douse the altars or it shrugs your hits off.
 - The altars feed it. Starve them first.
 - Demonbane weapons sing down here. Arclight especially.
-- It sleeps under the Catacombs, held down by the dark altar itself.
+- It set up under the Catacombs long ago, and nobody's managed to evict it.
 - Kourend built a church district on top of THIS. Bold.
 - The reanimated rise to help it. Terribly loyal, the dead.
 - A demon so large the ceiling is a formality.

@@ -93,6 +93,20 @@ public class MemorySurfaceTest
 	}
 
 	@Test
+	public void aQuestionWaitingIsSaidInWordsNotByItsId()
+	{
+		// Text sweep, 14 Oct: the window showed "want-outing". A tree of the
+		// player's own still shows its id, having nothing better to show.
+		TriggerContext context = new TriggerContext(new FakeGame().client);
+		context.noteQuestion("want-outing");
+		String shown = flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap()));
+		assertTrue(shown, shown.contains("Waiting on an answer: Whether you'll take it somewhere\n"));
+		context.noteQuestion("my-own-tree");
+		shown = flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap()));
+		assertTrue(shown, shown.contains("Waiting on an answer: my-own-tree\n"));
+	}
+
+	@Test
 	public void aStrangerHasNothingToShow()
 	{
 		TriggerContext context = new TriggerContext(new FakeGame().client);
