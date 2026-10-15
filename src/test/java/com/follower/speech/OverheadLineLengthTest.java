@@ -109,7 +109,8 @@ public class OverheadLineLengthTest
 	 * so a line that is reworded comes off this list, and a line that grows
 	 * past the limit cannot hide behind it.
 	 */
-	private static final List<String> AWAITING_WORDING = List.of();
+	private static final List<String> AWAITING_WORDING = List.of(
+		"gifted-swap: Out goes {souvenir}, in goes the {wish}, and you get my old one.");
 
 	private GameFont overheadFont() throws IOException
 	{

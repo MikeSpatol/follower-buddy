@@ -8350,7 +8350,7 @@
         "A {item}! I need to sit down.",
         "That's a {item}. That's a real one!",
         "I'm never letting you bank that.",
-        "I wrote down the {item}, and I keep going back to look at it.",
+        "Did you SEE that?",
         "{value}. In one drop. Write it down.",
         "Stop. Look at what you're holding.",
         "That's a page all to itself, that is.",
@@ -8966,8 +8966,7 @@
         "I'm telling everyone about this.",
         "That was magnificent. {npc} never stood a chance.",
         "You were unbelievable just then.",
-        "{npc} down and you still standing. My favourite sort of entry.",
-        "{npc}, down. I watched most of it through my fingers."
+        "That'll be the best thing I see all week."
       ]
     },
     {
@@ -8986,7 +8985,7 @@
       },
       "say": [
         "Your first {boss}. In the book, dated.",
-        "One {boss}. Whatever comes after, this is the page I'll reread.",
+        "One {boss}. The first of many, I suspect.",
         "{boss}, once. I'd saved a good page for this."
       ]
     },
@@ -12020,7 +12019,7 @@
         "The {wish}! I'll set down {souvenir} to make room.",
         "A trade, then: {souvenir} out, the {wish} in.",
         "The {wish} outranks {souvenir}. Out it goes.",
-        "In goes the {wish}, and you get my old one.",
+        "Out goes {souvenir}, in goes the {wish}, and you get my old one.",
         "The {wish} bumps {souvenir}. Have my old one."
       ]
     },
@@ -14721,7 +14720,6 @@
         ]
       },
       "say": [
-        "Somebody in the Wizards' Tower knows your name. I keep mine quiet here.",
         "Sedridor's basement is under us. I'm still working out how he knew you."
       ]
     },
@@ -15021,43 +15019,6 @@
       ]
     },
     {
-      "id": "fun-regath-after-client-of-kourend",
-      "note": "Callback: same trigger as quest-regath plus Client of Kourend done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Client of Kourend, so it cannot rise on the quest finishing.",
-      "group": "quest",
-      "priority": 36,
-      "cooldownMs": 10800000,
-      "delayTicks": 2,
-      "output": "overhead",
-      "when": {
-        "type": "all",
-        "conditions": [
-          {
-            "type": "npcNearby",
-            "visible": true,
-            "within": 5,
-            "names": [
-              "Regath"
-            ]
-          },
-          {
-            "type": "questDone",
-            "quest": "CLIENT_OF_KOUREND"
-          },
-          {
-            "type": "none",
-            "conditions": [
-              {
-                "type": "dialogueOpen"
-              }
-            ]
-          }
-        ]
-      },
-      "say": [
-        "Regath still thinks you're a journalist. He's yet to read a word you've written."
-      ]
-    },
-    {
       "id": "fun-leenz-after-client-of-kourend",
       "note": "Callback: same trigger as quest-leenz plus Client of Kourend done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Client of Kourend, so it cannot rise on the quest finishing.",
       "group": "quest",
@@ -15341,7 +15302,6 @@
         ]
       },
       "say": [
-        "Chapter two of the fence book. Mostly posts, but the posts are improving.",
         "The fence book's found its feet. Lots of posts, and a promising stile."
       ],
       "delayTicks": 2,
@@ -15376,8 +15336,7 @@
         ]
       },
       "say": [
-        "The fence book's reached gates at last. I read that bit twice.",
-        "Halfway through the fence book. The author has strong views on hedges."
+        "The fence book's reached gates at last. I read that bit twice."
       ],
       "delayTicks": 2,
       "output": "overhead"
@@ -15412,40 +15371,6 @@
       },
       "say": [
         "Finished the fence book. I miss it, which I didn't expect."
-      ],
-      "delayTicks": 2,
-      "output": "overhead"
-    },
-    {
-      "id": "fun-fence-book-reread",
-      "note": "Running bit, the fence book: days 70-99 known. Idle window like wonders-about-you, rarer, two-hour cooldown.",
-      "group": "idle",
-      "priority": 17,
-      "cooldownMs": 7200000,
-      "when": {
-        "type": "all",
-        "conditions": [
-          {
-            "type": "idle",
-            "ticks": 240
-          },
-          {
-            "type": "idleBelow",
-            "ticks": 600
-          },
-          {
-            "type": "daysKnown",
-            "minimum": 70,
-            "maximum": 99
-          },
-          {
-            "type": "chance",
-            "percent": 6
-          }
-        ]
-      },
-      "say": [
-        "I'm rereading the fence book. It's better the second time, which worries me."
       ],
       "delayTicks": 2,
       "output": "overhead"
@@ -15858,7 +15783,6 @@
         ]
       },
       "say": [
-        "One cow with a bell on, and every adventurer in Lumbridge brings her a bucket.",
         "The dairy cow. She has the look of someone asked for milk a great deal.",
         "A milkmaid, a cow and a bucket. The cake's coming together, slowly."
       ]
@@ -16182,7 +16106,6 @@
         ]
       },
       "say": [
-        "More than half delivered. Somewhere out there, a sheep feels the draught.",
         "Past halfway. The flock's noticeably slimmer than when we arrived."
       ]
     },
@@ -16214,7 +16137,6 @@
         ]
       },
       "say": [
-        "The Wizards' Tower. Every window, I'd bet, has someone reading behind it.",
         "A tower full of wizards, and we're bringing them a trinket from a cellar."
       ]
     },
@@ -16348,8 +16270,7 @@
         ]
       },
       "say": [
-        "Notes going the other way now. I'd love to know what's in them.",
-        "He read it twice and handed us something new. Scholars never just say thanks."
+        "Notes going the other way now. I'd love to know what's in them."
       ]
     },
     {
@@ -16392,8 +16313,7 @@
         ]
       },
       "say": [
-        "Back down the ladder. Same basement, rather more to tell him.",
-        "Down to Sedridor again. Somewhere in these notes is whatever he's after."
+        "Back down the ladder. Same basement, rather more to tell him."
       ]
     },
     {
@@ -16428,7 +16348,6 @@
       },
       "say": [
         "Shy, for a priest. He wouldn't even open the door.",
-        "A dog in the mausoleum, says the voice behind the door. I'll take its word.",
         "Pest control for a temple. Not the job I pictured from the palace."
       ]
     },
@@ -16456,15 +16375,6 @@
             "type": "none",
             "conditions": [
               {
-                "type": "questDone",
-                "quest": "CHILDREN_OF_THE_SUN"
-              }
-            ]
-          },
-          {
-            "type": "none",
-            "conditions": [
-              {
                 "type": "dialogueOpen"
               }
             ]
@@ -16474,44 +16384,6 @@
       "say": [
         "In fairness, I only wrote down what the door told us.",
         "A king's dog. I'd have liked to know that sooner."
-      ]
-    },
-    {
-      "id": "qm-priest-in-peril-the-kings-verdict-after-children-of-the-sun",
-      "note": "Callback: said instead of qm-priest-in-peril-the-kings-verdict when Children Of The Sun is done. Priest In Peril, varp 302 = 4: King Roald, furious about his dog, sent the player back to put it right. Source: Quest Helper (Zoinkwiz/quest-helper on GitHub, master as of 2025-10-23), PriestInPeril.java loadSteps: 4 = back to the temple, kill a monk, talk to Drezel. Game cache: the caged Drezel multinpc (9804, on varp 302) first shows at 4",
-      "group": "quest",
-      "priority": 61,
-      "cooldownMs": 600000,
-      "once": true,
-      "occasion": true,
-      "delayTicks": 2,
-      "output": "overhead",
-      "animation": 2113,
-      "when": {
-        "type": "all",
-        "conditions": [
-          {
-            "type": "questVar",
-            "varp": 302,
-            "minimum": 4,
-            "maximum": 4
-          },
-          {
-            "type": "questDone",
-            "quest": "CHILDREN_OF_THE_SUN"
-          },
-          {
-            "type": "none",
-            "conditions": [
-              {
-                "type": "dialogueOpen"
-              }
-            ]
-          }
-        ]
-      },
-      "say": [
-        "His own dog, after we caught his bandits. My drawing will need a kinder caption."
       ]
     },
     {
@@ -17196,8 +17068,7 @@
         ]
       },
       "say": [
-        "Questioning. I'll stand at the back and take the minutes.",
-        "Four arrested and nobody so much as shouted. Varrock's guards, at their best."
+        "Questioning. I'll stand at the back and take the minutes."
       ]
     },
     {
@@ -17565,8 +17436,7 @@
         ]
       },
       "say": [
-        "I've stood by a vampyre's coffin for you. This is worse.",
-        "A vampyre's coffin was one thing. My quill stays pocketed here, while it behaves."
+        "I've stood by a vampyre's coffin for you. This is worse."
       ]
     },
     {

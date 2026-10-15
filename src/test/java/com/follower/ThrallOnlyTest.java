@@ -280,6 +280,13 @@ public class ThrallOnlyTest
 			{
 				return muteThrall;
 			}
+
+			// No chat here for the one-time Replace thralls hint.
+			@Override
+			public boolean thrallHintShown()
+			{
+				return true;
+			}
 		});
 		return plugin;
 	}

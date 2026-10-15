@@ -1,25 +1,25 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 605 rules, 2581 spoken lines, 3 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 602 rules, 2566 spoken lines, 3 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
 ## Contents
 
 - [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (52 rules, 223 lines)
-- [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (46 rules, 237 lines)
+- [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (45 rules, 234 lines)
 - [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (48 rules, 292 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 115 lines)
 - [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 74 lines)
 - [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (28 rules, 121 lines)
-- [area](#area) - Places: named lines, tastes, earned verdicts, the defences (76 rules, 242 lines)
+- [area](#area) - Places: named lines, tastes, earned verdicts, the defences (76 rules, 241 lines)
 - [errand](#errand) - Its little trips: bank, altar, fire, cat, studies, explores (44 rules, 155 lines)
 - [souvenir](#souvenir) - Wishes, gifts, the pocket, and what it carries (17 rules, 84 lines)
 - [bet](#bet) - Its predictions about drops (3 rules, 20 lines)
 - [clock](#clock) - The hour and how long we have been at it (9 rules, 39 lines)
 - [gear](#gear) - What you put on (63 rules, 147 lines)
-- [boss](#boss) - Bosses sighted and fought (55 rules, 521 lines)
-- [quest](#quest) - Famous quest figures nearby (111 rules, 277 lines)
+- [boss](#boss) - Bosses sighted and fought (55 rules, 520 lines)
+- [quest](#quest) - Famous quest figures nearby (109 rules, 267 lines)
 - [thrall](#thrall) - When it stands in for a thrall (3 rules, 18 lines)
 - [mimic](#mimic) - Copying your emotes (30 rules, 16 lines)
 - [dialogs](#dialogs) - the conversations it starts (3 trees)
@@ -1252,7 +1252,6 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** standing still 240+ ticks AND standing still under 600 ticks AND known 3-14 days AND a 6% roll
 - **pacing:** priority 17, cooldown 2h, delay 2 ticks, overhead
 
-- Chapter two of the fence book. Mostly posts, but the posts are improving.
 - The fence book's found its feet. Lots of posts, and a promising stile.
 
 ### `fun-fence-book-middle`
@@ -1263,7 +1262,6 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 17, cooldown 2h, delay 2 ticks, overhead
 
 - The fence book's reached gates at last. I read that bit twice.
-- Halfway through the fence book. The author has strong views on hedges.
 
 ### `fun-fence-book-finished`
 
@@ -1273,15 +1271,6 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 17, cooldown 2h, delay 2 ticks, overhead
 
 - Finished the fence book. I miss it, which I didn't expect.
-
-### `fun-fence-book-reread`
-
-> Running bit, the fence book: days 70-99 known. Idle window like wonders-about-you, rarer, two-hour cooldown.
-
-- **when:** standing still 240+ ticks AND standing still under 600 ticks AND known 70-99 days AND a 6% roll
-- **pacing:** priority 17, cooldown 2h, delay 2 ticks, overhead
-
-- I'm rereading the fence book. It's better the second time, which worries me.
 
 ### `fun-fence-book-sequel`
 
@@ -1405,7 +1394,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - A {item}! I need to sit down.
 - That's a {item}. That's a real one!
 - I'm never letting you bank that.
-- I wrote down the {item}, and I keep going back to look at it.
+- Did you SEE that?
 - {value}. In one drop. Write it down.
 - Stop. Look at what you're holding.
 - That's a page all to itself, that is.
@@ -3627,7 +3616,6 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** entering region 12337 AND a 50% roll AND questdone
 - **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
-- Somebody in the Wizards' Tower knows your name. I keep mine quiet here.
 - Sedridor's basement is under us. I'm still working out how he knew you.
 
 ### `fun-piscarilius-after-client-of-kourend`
@@ -4256,7 +4244,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - The {wish}! I'll set down {souvenir} to make room.
 - A trade, then: {souvenir} out, the {wish} in.
 - The {wish} outranks {souvenir}. Out it goes.
-- In goes the {wish}, and you get my old one.
+- Out goes {souvenir}, in goes the {wish}, and you get my old one.
 - The {wish} bumps {souvenir}. Have my old one.
 
 ### `gifted-bluff`
@@ -6120,8 +6108,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - I'm telling everyone about this.
 - That was magnificent. {npc} never stood a chance.
 - You were unbelievable just then.
-- {npc} down and you still standing. My favourite sort of entry.
-- {npc}, down. I watched most of it through my fingers.
+- That'll be the best thing I see all week.
 
 ### `kill-count-first`
 
@@ -6132,7 +6119,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 75, cooldown 30s, delay 3-5 ticks
 
 - Your first {boss}. In the book, dated.
-- One {boss}. Whatever comes after, this is the page I'll reread.
+- One {boss}. The first of many, I suspect.
 - {boss}, once. I'd saved a good page for this.
 
 ### `kill-count-round`
@@ -6813,15 +6800,6 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Ned did get us to Crandor. I've stopped arguing about the word captain.
 - The boat's still in bits on Crandor. Ned's never once brought it up.
 
-### `fun-regath-after-client-of-kourend`
-
-> Callback: same trigger as quest-regath plus Client of Kourend done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Client of Kourend, so it cannot rise on the quest finishing.
-
-- **when:** Regath within 5 tiles, in sight AND questdone AND NOT (dialogueopen)
-- **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
-
-- Regath still thinks you're a journalist. He's yet to read a word you've written.
-
 ### `fun-leenz-after-client-of-kourend`
 
 > Callback: same trigger as quest-leenz plus Client of Kourend done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Client of Kourend, so it cannot rise on the quest finishing.
@@ -6879,7 +6857,6 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **does:** occasion (never held back); once ever
 - **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
 
-- One cow with a bell on, and every adventurer in Lumbridge brings her a bucket.
 - The dairy cow. She has the look of someone asked for milk a great deal.
 - A milkmaid, a cow and a bucket. The cake's coming together, slowly.
 
@@ -6968,7 +6945,6 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **does:** occasion (never held back); once ever; animation 865
 - **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
 
-- More than half delivered. Somewhere out there, a sheep feels the draught.
 - Past halfway. The flock's noticeably slimmer than when we arrived.
 
 ### `qm-rune-mysteries-tower-arrival`
@@ -6979,7 +6955,6 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **does:** occasion (never held back); once ever
 - **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
 
-- The Wizards' Tower. Every window, I'd bet, has someone reading behind it.
 - A tower full of wizards, and we're bringing them a trinket from a cellar.
 
 ### `qm-rune-mysteries-package-in-hand`
@@ -7012,7 +6987,6 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
 
 - Notes going the other way now. I'd love to know what's in them.
-- He read it twice and handed us something new. Scholars never just say thanks.
 
 ### `qm-rune-mysteries-basement-return`
 
@@ -7023,7 +6997,6 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
 
 - Back down the ladder. Same basement, rather more to tell him.
-- Down to Sedridor again. Somewhere in these notes is whatever he's after.
 
 ### `qm-priest-in-peril-the-voice-at-the-door`
 
@@ -7034,29 +7007,18 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
 
 - Shy, for a priest. He wouldn't even open the door.
-- A dog in the mausoleum, says the voice behind the door. I'll take its word.
 - Pest control for a temple. Not the job I pictured from the palace.
 
 ### `qm-priest-in-peril-the-kings-verdict`
 
 > Priest In Peril, varp 302 = 4: King Roald, furious about his dog, sent the player back to put it right. Source: Quest Helper (Zoinkwiz/quest-helper on GitHub, master as of 2025-10-23), PriestInPeril.java loadSteps: 4 = back to the temple, kill a monk, talk to Drezel. Game cache: the caged Drezel multinpc (9804, on varp 302) first shows at 4
 
-- **when:** questvar AND NOT (questdone) AND NOT (dialogueopen)
+- **when:** questvar AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 4275
 - **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
 
 - In fairness, I only wrote down what the door told us.
 - A king's dog. I'd have liked to know that sooner.
-
-### `qm-priest-in-peril-the-kings-verdict-after-children-of-the-sun`
-
-> Callback: said instead of qm-priest-in-peril-the-kings-verdict when Children Of The Sun is done. Priest In Peril, varp 302 = 4: King Roald, furious about his dog, sent the player back to put it right. Source: Quest Helper (Zoinkwiz/quest-helper on GitHub, master as of 2025-10-23), PriestInPeril.java loadSteps: 4 = back to the temple, kill a monk, talk to Drezel. Game cache: the caged Drezel multinpc (9804, on varp 302) first shows at 4
-
-- **when:** questvar AND questdone AND NOT (dialogueopen)
-- **does:** occasion (never held back); once ever; animation 2113
-- **pacing:** priority 61, cooldown 10m, delay 2 ticks, overhead
-
-- His own dog, after we caught his bandits. My drawing will need a kinder caption.
 
 ### `qm-priest-in-peril-the-monk-falls`
 
@@ -7259,7 +7221,6 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
 
 - Questioning. I'll stand at the back and take the minutes.
-- Four arrested and nobody so much as shouted. Varrock's guards, at their best.
 
 ### `qm-x-marks-the-spot-the-orb`
 
@@ -7364,7 +7325,6 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 61, cooldown 10m, delay 2 ticks, overhead
 
 - I've stood by a vampyre's coffin for you. This is worse.
-- A vampyre's coffin was one thing. My quill stays pocketed here, while it behaves.
 
 ### `qm-client-of-kourend-orb-shatters`
 
