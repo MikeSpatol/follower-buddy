@@ -1,6 +1,6 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 517 rules, 2390 spoken lines, 3 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 517 rules, 2394 spoken lines, 3 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
@@ -18,7 +18,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - [bet](#bet) - Its predictions about drops (3 rules, 20 lines)
 - [clock](#clock) - The hour and how long we have been at it (9 rules, 39 lines)
 - [gear](#gear) - What you put on (63 rules, 145 lines)
-- [boss](#boss) - Bosses sighted and fought (55 rules, 515 lines)
+- [boss](#boss) - Bosses sighted and fought (55 rules, 519 lines)
 - [quest](#quest) - Famous quest figures nearby (53 rules, 155 lines)
 - [thrall](#thrall) - When it stands in for a thrall (3 rules, 18 lines)
 - [mimic](#mimic) - Copying your emotes (30 rules, 16 lines)
@@ -2207,7 +2207,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `memory-close-call`
 
-> Filed when you come out the far side of nearly dying. The follower does not need to say anything at the time - critical-hp already does - it just needs to remember, so it can bring it up later. The particulars (who, how many hitpoints, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.
+> Filed when you come out the far side of nearly dying. The follower does not need to say anything at the time - critical-hp already does - it just needs to remember, so it can bring it up later. The particulars (who, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.
 
 - **when:** HP under 8% AND in a fight
 - **does:** files incident `close-call` as 'how close that was with the {foe}'
@@ -2221,7 +2221,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `memory-death`
 
-> The obvious one. Filed on every death, so the count is what makes the recall land: once is bad luck, four times is a habit. The particulars (who, how many hitpoints, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.
+> The obvious one. Filed on every death, so the count is what makes the recall land: once is bad luck, four times is a habit. The particulars (who, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.
 
 - **when:** on your death
 - **does:** files incident `the-death` as 'the way that went with the {foe}'; prop item 31830, pose 13302
@@ -2239,7 +2239,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `memory-big-drop`
 
-> Filed on a drop big enough to still be talking about an hour later. Above the loot-celebrate threshold so the celebration wins the event and this one only files - two lines about one drop is one too many, and the recall is the part that matters here. The particulars (who, how many hitpoints, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.
+> Filed on a drop big enough to still be talking about an hour later. Above the loot-celebrate threshold so the celebration wins the event and this one only files - two lines about one drop is one too many, and the recall is the part that matters here. The particulars (who, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.
 
 - **when:** loot worth 1000000+
 - **does:** files incident `big-drop` as 'the {item} that dropped'; prop item 31830, pose 13302
@@ -2252,7 +2252,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `memory-boss`
 
-> Filed when something with a combat level in three figures stops moving. Low priority so the celebration rules win the kill. The particulars (who, how many hitpoints, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.
+> Filed when something with a combat level in three figures stops moving. Low priority so the celebration rules win the kill. The particulars (who, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.
 
 - **when:** a kill
 - **does:** files incident `the-boss` as 'the {npc} going down'; prop item 31830, pose 13302
@@ -2273,7 +2273,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - I keep thinking about {memory}.
 - I was rereading the entry on {memory}.
 - Do you ever think about {memory}? I do.
-- It's quiet, so naturally my mind goes back to {memory}.
+- It's quiet. My mind goes back to {memory}.
 
 ### `recall-death-third`
 
@@ -2320,10 +2320,10 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** memoryhere AND a 60% roll
 - **pacing:** priority 40, cooldown 30m, delay 3-6 ticks, overhead
 
-- Stand still a moment. The notes on {memory} start here.
+- The notes on {memory} start here.
 - Here again, and I've not forgotten {memory}.
-- I know this spot. This is where I wrote down {memory}.
-- It was right about here, {memoryWhen}. The page on {memory} is still creased.
+- This is where I wrote down {memory}.
+- The page on {memory} is still creased.
 
 ### `recall-foe`
 
@@ -5779,6 +5779,10 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - You are NOT winning this on {hp} HP.
 - Heal up or leave, {player}.
+- Eat something, {player}. That thing is winning.
+- Half your health gone and it is still standing. Food, now.
+- I would rather not write this one up as a lesson. Eat.
+- {hp} HP is not a plan, {player}. Heal or go.
 
 ### `kill-boss-celebrate`
 

@@ -36,11 +36,7 @@ public class MemoryLineLengthTest
 	 * exact, so a line that is reworded comes off this list, and a line that
 	 * grows past the limit cannot hide behind it.
 	 */
-	private static final List<String> AWAITING_WORDING = java.util.Arrays.asList(
-		"recall-here: It was right about here, {memoryWhen}. The page on {memory} is still creased.",
-		"recall-here: Stand still a moment. The notes on {memory} start here.",
-		"recall-here: I know this spot. This is where I wrote down {memory}.",
-		"recall-idle: It's quiet, so naturally my mind goes back to {memory}.");
+	private static final List<String> AWAITING_WORDING = java.util.Collections.emptyList();
 
 	@Test
 	public void everyRecallLineFitsOverheadWithAnEverydayMemory() throws IOException

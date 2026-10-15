@@ -2727,7 +2727,11 @@
       },
       "say": [
         "You are NOT winning this on {hp} HP.",
-        "Heal up or leave, {player}."
+        "Heal up or leave, {player}.",
+        "Eat something, {player}. That thing is winning.",
+        "Half your health gone and it is still standing. Food, now.",
+        "I would rather not write this one up as a lesson. Eat.",
+        "{hp} HP is not a plan, {player}. Heal or go."
       ]
     },
     {
@@ -10856,7 +10860,7 @@
     },
     {
       "id": "memory-close-call",
-      "note": "Filed when you come out the far side of nearly dying. The follower does not need to say anything at the time - critical-hp already does - it just needs to remember, so it can bring it up later. The particulars (who, how many hitpoints, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.",
+      "note": "Filed when you come out the far side of nearly dying. The follower does not need to say anything at the time - critical-hp already does - it just needs to remember, so it can bring it up later. The particulars (who, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.",
       "group": "memory",
       "priority": 30,
       "cooldownMs": 300000,
@@ -10894,7 +10898,7 @@
         "pose": 13302,
         "ticks": 8
       },
-      "note": "The obvious one. Filed on every death, so the count is what makes the recall land: once is bad luck, four times is a habit. The particulars (who, how many hitpoints, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.",
+      "note": "The obvious one. Filed on every death, so the count is what makes the recall land: once is bad luck, four times is a habit. The particulars (who, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.",
       "group": "memory",
       "priority": 30,
       "cooldownMs": 5000,
@@ -10929,7 +10933,7 @@
         "pose": 13302,
         "ticks": 8
       },
-      "note": "Filed on a drop big enough to still be talking about an hour later. Above the loot-celebrate threshold so the celebration wins the event and this one only files - two lines about one drop is one too many, and the recall is the part that matters here. The particulars (who, how many hitpoints, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.",
+      "note": "Filed on a drop big enough to still be talking about an hour later. Above the loot-celebrate threshold so the celebration wins the event and this one only files - two lines about one drop is one too many, and the recall is the part that matters here. The particulars (who, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.",
       "group": "memory",
       "priority": 20,
       "cooldownMs": 600000,
@@ -10958,7 +10962,7 @@
         "pose": 13302,
         "ticks": 8
       },
-      "note": "Filed when something with a combat level in three figures stops moving. Low priority so the celebration rules win the kill. The particulars (who, how many hitpoints, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.",
+      "note": "Filed when something with a combat level in three figures stops moving. Low priority so the celebration rules win the kill. The particulars (who, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.",
       "group": "memory",
       "priority": 20,
       "cooldownMs": 600000,
@@ -11010,7 +11014,7 @@
         "I keep thinking about {memory}.",
         "I was rereading the entry on {memory}.",
         "Do you ever think about {memory}? I do.",
-        "It's quiet, so naturally my mind goes back to {memory}."
+        "It's quiet. My mind goes back to {memory}."
       ]
     },
     {
@@ -11126,10 +11130,10 @@
         ]
       },
       "say": [
-        "Stand still a moment. The notes on {memory} start here.",
+        "The notes on {memory} start here.",
         "Here again, and I've not forgotten {memory}.",
-        "I know this spot. This is where I wrote down {memory}.",
-        "It was right about here, {memoryWhen}. The page on {memory} is still creased."
+        "This is where I wrote down {memory}.",
+        "The page on {memory} is still creased."
       ]
     },
     {
