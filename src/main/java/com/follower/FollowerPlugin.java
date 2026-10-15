@@ -8495,6 +8495,14 @@ public class FollowerPlugin extends Plugin
 		{
 			return;
 		}
+		// Nor its status lines, which are CONSOLE lines, as are the echoes
+		// below: with chatwatch on, each echo was itself echoed, endlessly.
+		// The game says nothing a rule listens for as CONSOLE; that is
+		// RuneLite's and the plugins' own channel.
+		if (event.getType() == ChatMessageType.CONSOLE)
+		{
+			return;
+		}
 		// ::follower chatwatch - the same idea as watching animations. A
 		// chatMessage rule has to match the game's exact wording, and wording
 		// taken from memory or a wiki is how a rule ends up never firing.

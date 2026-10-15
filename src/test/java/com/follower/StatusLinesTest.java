@@ -69,4 +69,24 @@ public class StatusLinesTest
 		assertTrue("a forced errand that cannot start here is told",
 			source().contains("errands.setOnForcedMiss("));
 	}
+
+	/**
+	 * With ::follower chatwatch on, each echo was a CONSOLE line, posted as a
+	 * chat message, and echoed again, endlessly; every status line also went
+	 * to the rules as a chat event. Both stop at the top of the handler.
+	 */
+	@Test
+	public void thePluginsOwnLinesAreNeitherEchoedNorHeardByTheRules() throws IOException
+	{
+		assertTrue("status lines are CONSOLE lines - the lint has lost its place",
+			method("private void sendStatus(String message)").contains(".type(ChatMessageType.CONSOLE)"));
+		String chat = method("public void onChatMessage(ChatMessage event)");
+		int skip = chat.indexOf("if (event.getType() == ChatMessageType.CONSOLE)");
+		int echo = chat.indexOf("if (watchChat)");
+		int rules = chat.indexOf("speechEngine.dispatch(TriggerEvent.chat(");
+		assertTrue("the lint has lost its place", echo >= 0 && rules >= 0);
+		assertTrue("CONSOLE lines return before the echo and the rules",
+			skip >= 0 && skip < echo && skip < rules
+				&& chat.substring(skip, echo).contains("return;"));
+	}
 }
