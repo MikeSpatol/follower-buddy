@@ -1496,6 +1496,9 @@ public class FollowerEntity
 		}
 		applyPose(pose, false);
 		wrapBeforeFinalFrame();
+		holdTheWriting();
+		passEmoteMilestones(false);
+		playWhatWaitedForStill();
 		render();
 
 		// The summoning circle rides the follower's rendered feet.
@@ -2462,6 +2465,9 @@ public class FollowerEntity
 		applyPose(pose, false);
 
 		wrapBeforeFinalFrame();
+		holdTheWriting();
+		passEmoteMilestones(false);
+		playWhatWaitedForStill();
 
 		if (!render())
 		{
@@ -3643,8 +3649,16 @@ public class FollowerEntity
 	 */
 	public void setPoseOverride(int animationId)
 	{
+		// The writing let go of with the scroll up: it is lowered first, the
+		// pose's own way down, before whatever comes next.
+		boolean putAway = poseOverride == ErrandController.WRITE_SCROLL_POSE
+			&& animationId != poseOverride && writingShown();
 		poseOverride = animationId;
 		activePose = -1;
+		if (putAway)
+		{
+			playAnimation(WRITE_PUT_AWAY);
+		}
 	}
 
 	/** The forced pose held now, or 0. */
@@ -3697,9 +3711,17 @@ public class FollowerEntity
 			return;
 		}
 		emotePlaying = playing;
+		if (!playing)
+		{
+			puttingAway = false;
+		}
 		if (onEmoteStateChanged != null)
 		{
 			onEmoteStateChanged.accept(playing);
+		}
+		if (!playing)
+		{
+			passEmoteMilestones(true);
 		}
 	}
 
@@ -4278,6 +4300,46 @@ public class FollowerEntity
 		playAnimations(new int[]{animationId});
 	}
 
+	/** A one-shot waiting for the follower to stand, and the tick it gives up; or -1. */
+	private int waitingEmote = -1;
+	private int waitingEmoteUntil;
+
+	/**
+	 * Plays a one-shot now if the follower is standing, or as soon as it
+	 * stands within so many ticks, and not at all after that. Moving drops an
+	 * emote on its first frame, so one asked for on the move was simply lost.
+	 */
+	public void playWhenStill(int animationId, int ticks)
+	{
+		if (!onTheMove)
+		{
+			waitingEmote = -1;
+			playAnimation(animationId);
+			return;
+		}
+		waitingEmote = animationId;
+		waitingEmoteUntil = client.getTickCount() + ticks;
+	}
+
+	/** Plays what {@link #playWhenStill} kept, once it stands. Every frame. */
+	private void playWhatWaitedForStill()
+	{
+		if (waitingEmote < 0 || onTheMove || emotePlaying)
+		{
+			if (waitingEmote >= 0 && client.getTickCount() > waitingEmoteUntil)
+			{
+				waitingEmote = -1;
+			}
+			return;
+		}
+		int animationId = waitingEmote;
+		waitingEmote = -1;
+		if (client.getTickCount() <= waitingEmoteUntil)
+		{
+			playAnimation(animationId);
+		}
+	}
+
 	/**
 	 * Plays animations back to back, then resumes the pose. Some sequences are
 	 * authored as separate clips - a landing and the get-up that follows it, say -
@@ -4309,6 +4371,9 @@ public class FollowerEntity
 		{
 			return;
 		}
+		// The one-shot this takes over from is as good as over for whatever
+		// was waiting on it.
+		passEmoteMilestones(true);
 		playChain(animationIds, graphics, graphicHeight, 0, emoteGeneration);
 	}
 
@@ -4340,7 +4405,9 @@ public class FollowerEntity
 			return;
 		}
 
-		AnimationController controller = new AnimationController(client, animation);
+		AnimationController controller = EASED_STANCES.contains(clip)
+			? new EaseInOutController(client, animation, stance().idle)
+			: new AnimationController(client, animation);
 		int firstFrame = firstFrameOf(ids[index]);
 		if (firstFrame > 0)
 		{
@@ -4349,6 +4416,7 @@ public class FollowerEntity
 		controller.setOnFinished(finished -> playChain(ids, graphics, graphicHeight, index + 1, generation));
 		object.setAnimationController(controller);
 		animationIds.add(clip);
+		puttingAway = ids[index] == WRITE_PUT_AWAY;
 		setEmotePlaying(true);
 		// Which clip is on screen right now: activePose is not updated while an
 		// emote owns the slot, so anything that needs to know what is being
@@ -4378,16 +4446,151 @@ public class FollowerEntity
 	 */
 	public static final int STAND_UP = 0x10000 + SIT_EMOTE;
 
-	/** The clip an id plays: the stand-up is the Sit emote, anything else itself. */
+	/**
+	 * The writing pose's own lowering, as an id of its own: 13302 from frame
+	 * 17, the scroll and quill coming down to the waist (frames 18-21, 32
+	 * client cycles). Played when the writing is let go of, so the scroll is
+	 * put away rather than switched off mid-air (QA, 15 Oct).
+	 */
+	public static final int WRITE_PUT_AWAY = 0x10000 + ErrandController.WRITE_SCROLL_POSE;
+
+	/** Where 13302's lowering begins. */
+	static final int WRITE_PUT_AWAY_FRAME = 17;
+
+	/** The clip an id plays: the two halves are their emotes, anything else itself. */
 	static int clipOf(int id)
 	{
-		return id == STAND_UP ? SIT_EMOTE : id;
+		return id == STAND_UP ? SIT_EMOTE
+			: id == WRITE_PUT_AWAY ? ErrandController.WRITE_SCROLL_POSE : id;
 	}
 
 	/** The frame an id's clip starts on. */
 	static int firstFrameOf(int id)
 	{
-		return id == STAND_UP ? SIT_EMOTE_STAND_UP_FRAME : 0;
+		return id == STAND_UP ? SIT_EMOTE_STAND_UP_FRAME
+			: id == WRITE_PUT_AWAY ? WRITE_PUT_AWAY_FRAME : 0;
+	}
+
+	/**
+	 * Writing with a quill held as a pose. 13302 is authored to play once,
+	 * with its own lift (frames 0-3) and lowering (18-21) built in; looped
+	 * whole, the follower lowered the scroll to its waist and lifted it again
+	 * every 2.9 seconds of a long hold (QA, 15 Oct). Frame 16 is frame 9
+	 * exactly, so on reaching 16 it goes back to 9 and writes on with no seam:
+	 * the lift once on the way in, then frames 9-15 for as long as it is held.
+	 */
+	static final int WRITE_LOOP_END = 16;
+	static final int WRITE_LOOP_START = 9;
+
+	/** The first frame with the scroll up and writing, past the lift. */
+	static final int WRITE_RAISED_FRAME = 4;
+
+	/** Keeps a held writing pose on its writing frames. Every frame, after the pose. */
+	private void holdTheWriting()
+	{
+		if (object == null || emotePlaying || activePose != ErrandController.WRITE_SCROLL_POSE)
+		{
+			return;
+		}
+		AnimationController controller = object.getAnimationController();
+		if (controller != null && controller.getFrame() >= WRITE_LOOP_END)
+		{
+			controller.setFrame(WRITE_LOOP_START);
+		}
+	}
+
+	/** Whether the writing pose is on screen now, with the scroll up. */
+	private boolean writingShown()
+	{
+		if (object == null || emotePlaying || onTheMove
+			|| activePose != ErrandController.WRITE_SCROLL_POSE)
+		{
+			return false;
+		}
+		AnimationController controller = object.getAnimationController();
+		return controller != null && controller.getFrame() >= WRITE_RAISED_FRAME
+			&& controller.getFrame() < WRITE_PUT_AWAY_FRAME;
+	}
+
+	/** Set while the writing's lowering plays. */
+	private boolean puttingAway;
+
+	/**
+	 * Whether the scroll is on its way down: whoever lets go of the props
+	 * waits for the end of it, or they vanish at the top of the lowering.
+	 */
+	public boolean isPuttingAway()
+	{
+		return emotePlaying && puttingAway;
+	}
+
+	/**
+	 * The HUMAN_*_IDLE mood clips. They are standing stances, not emotes: the
+	 * first and last frames sit 63-104 units from the normal standing pose,
+	 * so played as a one-shot the body jumped into the mood and jumped back
+	 * out about five seconds later (QA, 15 Oct). Eased in from the idle and
+	 * back out to it instead.
+	 */
+	static final java.util.Set<Integer> EASED_STANCES = new java.util.HashSet<>(java.util.Arrays.asList(
+		13993, 13994, 13995, 13996, 13997, 13998, 13999, 14000, 14001));
+
+	/** What waits on the one-shot playing now: how far through it, and what then. */
+	private static final class Milestone
+	{
+		final double fraction;
+		final Runnable then;
+
+		Milestone(double fraction, Runnable then)
+		{
+			this.fraction = fraction;
+			this.then = then;
+		}
+	}
+
+	private final java.util.List<Milestone> emoteMilestones = new java.util.ArrayList<>();
+
+	/**
+	 * Runs {@code then} once the one-shot playing now is {@code fraction} of
+	 * the way through its frames, or once it ends or gives way to another,
+	 * whichever is first; at once when nothing is playing.
+	 */
+	public void atEmoteFraction(double fraction, Runnable then)
+	{
+		if (!emotePlaying)
+		{
+			then.run();
+			return;
+		}
+		emoteMilestones.add(new Milestone(fraction, then));
+	}
+
+	/** Runs whatever the one-shot has got far enough for; all of it when it is over. */
+	private void passEmoteMilestones(boolean over)
+	{
+		if (emoteMilestones.isEmpty())
+		{
+			return;
+		}
+		double through = 1;
+		if (!over)
+		{
+			AnimationController controller = object == null ? null : object.getAnimationController();
+			Animation animation = controller == null ? null : controller.getAnimation();
+			int[] lengths = animation == null ? null : animation.getFrameLengths();
+			through = lengths == null || lengths.length == 0 ? 1
+				: controller.getFrame() / (double) lengths.length;
+		}
+		java.util.List<Runnable> due = new java.util.ArrayList<>();
+		for (java.util.Iterator<Milestone> it = emoteMilestones.iterator(); it.hasNext(); )
+		{
+			Milestone milestone = it.next();
+			if (through >= milestone.fraction)
+			{
+				due.add(milestone.then);
+				it.remove();
+			}
+		}
+		due.forEach(Runnable::run);
 	}
 
 	/** Bumped to orphan an in-flight emote chain. */
