@@ -992,9 +992,13 @@ public class ChronicleWindow extends Overlay
 			int plateTop = bodyTop + 2 - pageScroll * ChronicleLayout.LINE_HEIGHT;
 			if (plateTop + ChronicleLayout.PLATE_H > bodyTop)
 			{
-				// Only the part scrolled into view takes a press.
-				shown.setBounds(new Rectangle(left, plateTop, ChronicleLayout.PLATE_W, ChronicleLayout.PLATE_H)
-					.intersection(new Rectangle(ChronicleLayout.PAGE.x, bodyTop, ChronicleLayout.PAGE.width, bodyHeight)));
+				// Only the part scrolled into view takes a press, and only a
+				// picture: paper not yet sketched on is nothing to open.
+				if (plate.sketch == null || sketches != null && sketches.has(plate.sketch))
+				{
+					shown.setBounds(new Rectangle(left, plateTop, ChronicleLayout.PLATE_W, ChronicleLayout.PLATE_H)
+						.intersection(new Rectangle(ChronicleLayout.PAGE.x, bodyTop, ChronicleLayout.PAGE.width, bodyHeight)));
+				}
 				drawPlate(g, plate, left, plateTop, ChronicleLayout.PLATE_W, ChronicleLayout.PLATE_H,
 					readable, small, false, hovered(shown));
 			}

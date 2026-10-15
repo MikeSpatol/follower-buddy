@@ -507,6 +507,25 @@ public class ChronicleWindowTest
 		assertEquals("drawn again standing still, the pose goes with the old drawing", 0, inkAtThePlatesFoot());
 	}
 
+	/**
+	 * QA: a plate not sketched yet opened across the window as a sheet of
+	 * bare paper, and lit up under the mouse as if it were worth pressing.
+	 */
+	@Test
+	public void paperNotYetSketchedOnDoesNotOpen() throws Exception
+	{
+		SketchBook book = new SketchBook(folder.newFolder().toPath());
+		book.openFor("acct");
+		openOn(LUMBRIDGE_PAGE, "location-lumbridge", null, book);
+		pressThePlate();
+		assertFalse(enlarged());
+
+		book.put("lumbridge", paper(), paper(), null);
+		draw();
+		pressThePlate();
+		assertTrue("once it is drawn, it does", enlarged());
+	}
+
 	@Test
 	public void aSketchFromBeforeThereWerePosesHasNoPoseLine() throws Exception
 	{
