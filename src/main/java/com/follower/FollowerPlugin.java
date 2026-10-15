@@ -3507,6 +3507,16 @@ public class FollowerPlugin extends Plugin
 	// so the existing config-changed path does the rebuild and panel sync.
 	private void loadOutfitProfile(String name)
 	{
+		loadOutfitProfile(name, false);
+	}
+
+	/**
+	 * {@code quiet} is for the profile a session starts in: restoring it on
+	 * every start and profile switch is not news, and on a fresh install it was
+	 * the first thing the plugin ever said. A profile the player picks says so.
+	 */
+	private void loadOutfitProfile(String name, boolean quiet)
+	{
 		String outfit = profileStore.get(name);
 		if (outfit == null)
 		{
@@ -3517,7 +3527,10 @@ public class FollowerPlugin extends Plugin
 		// A profile with an identical outfit writes no config change, so the
 		// panel is refreshed here rather than relying on the config event.
 		syncPanel();
-		sendStatus("Wearing outfit profile '" + activeProfile + "'");
+		if (!quiet)
+		{
+			sendStatus("Wearing outfit profile '" + activeProfile + "'");
+		}
 	}
 
 	private void setActiveProfile(String name)
@@ -3559,7 +3572,7 @@ public class FollowerPlugin extends Plugin
 			&& profileStore.get(stored.trim()) != null
 			? stored.trim()
 			: profileStore.firstUserProfile();
-		loadOutfitProfile(wanted);
+		loadOutfitProfile(wanted, true);
 		panel.setProfileNames(profileStore.names(), activeProfile);
 	}
 
