@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.util.List;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -56,10 +57,11 @@ public class MemorySurfaceTest
 
 		assertTrue(surface.contains("(31 days ago)"));
 		assertTrue(surface.contains("Sessions together: 36"));
-		assertTrue(surface.contains("kill:goblin: 2"));
-		assertTrue(surface.contains("hit: 42"));
-		assertTrue("the incident quoted as its words, filed under its key: " + surface,
-			surface.contains("\"that chicken, just now\" (chicken-death, x1)"));
+		assertTrue(surface.contains("Goblin killed: 2"));
+		assertTrue(surface.contains("Biggest hit: 42"));
+		assertTrue("the incident quoted as its words: " + surface,
+			surface.contains("\"that chicken, just now\" (x1)"));
+		assertFalse("and not by its file key: " + surface, surface.contains("chicken-death"));
 		assertTrue("the place, its feeling and its memory: " + surface,
 			surface.contains("+45 - the drop"));
 		// A region the Locations rules name is shown with its name; one they
@@ -71,6 +73,65 @@ public class MemorySurfaceTest
 			surface.contains("Hoping for: feather (right-click the follower and Talk-to to hand it over)"));
 		assertTrue(surface.contains("One-time lines already said: 1"));
 		assertTrue(surface.contains("Lines counted, to vary them: 1"));
+	}
+
+	@Test
+	public void countsAndBestsAreNamedInWords()
+	{
+		// QA, 15 Oct: the window showed the keys the plugin files them under.
+		assertEquals("Goblin killed", MemoryDialog.keyLabel("kill:goblin"));
+		assertEquals("Hill giant killed", MemoryDialog.keyLabel("kill:hill giant"));
+		assertEquals("Kills", MemoryDialog.keyLabel("kills"));
+		assertEquals("Kills today", MemoryDialog.keyLabel("kills" + TriggerContext.TODAY));
+		assertEquals("Levels gained today", MemoryDialog.keyLabel("levels:today"));
+		assertEquals("Deaths today", MemoryDialog.keyLabel("deaths:today"));
+		assertEquals("Wishes granted", MemoryDialog.keyLabel("want:kept"));
+		assertEquals("Wishes missed", MemoryDialog.keyLabel("want:missed"));
+		assertEquals("Advice taken", MemoryDialog.keyLabel("advice:taken"));
+		assertEquals("Advice ignored", MemoryDialog.keyLabel("advice:ignored"));
+		assertEquals("Zulrah kill count", MemoryDialog.keyLabel("kc:zulrah"));
+		assertEquals("Biggest hit", MemoryDialog.keyLabel("hit"));
+		assertEquals("Longest session (minutes)", MemoryDialog.keyLabel("session"));
+		assertEquals("Quests completed", MemoryDialog.keyLabel("quests"));
+		assertEquals("Music tracks unlocked", MemoryDialog.keyLabel("music"));
+		assertEquals("Collection log items", MemoryDialog.keyLabel("collections"));
+		assertEquals("a key with no words is shown as it is",
+			"someone:else", MemoryDialog.keyLabel("someone:else"));
+		assertEquals("kill:", MemoryDialog.keyLabel("kill:"));
+	}
+
+	@Test
+	public void everyKeyThePluginFilesHasWords() throws java.io.IOException
+	{
+		// A new tally or record written without words here would show raw
+		// again. The keys are read out of the source that writes them.
+		StringBuilder source = new StringBuilder();
+		for (String file : new String[]{"src/main/java/com/follower/FollowerPlugin.java",
+			"src/main/java/com/follower/speech/SpeechEngine.java"})
+		{
+			source.append(new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(file)),
+				java.nio.charset.StandardCharsets.UTF_8));
+		}
+		java.util.regex.Matcher m = java.util.regex.Pattern.compile(
+			"(?:\\.tally|tallyBoth|noteRecord)\\(\\s*\"([^\"]+)\"|\\? \"(\\w+:\\w+)\" : \"(\\w+:\\w+)\"")
+			.matcher(source);
+		int found = 0;
+		while (m.find())
+		{
+			for (int g = 1; g <= 3; g++)
+			{
+				String key = m.group(g);
+				if (key != null)
+				{
+					// A prefix ("kill:" + the name) is checked with a name on.
+					key = key.endsWith(":") ? key + "goblin" : key;
+					found++;
+					assertFalse(key + " has no words in the Memory window",
+						key.equals(MemoryDialog.keyLabel(key)));
+				}
+			}
+		}
+		assertTrue("the lint found nothing to check - the pattern has lost its place", found >= 10);
 	}
 
 	@Test
