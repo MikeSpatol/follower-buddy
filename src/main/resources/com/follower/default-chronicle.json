@@ -924,10 +924,6 @@
         ],
         "quest": "PRIEST_IN_PERIL"
       },
-      "tally": {
-        "label": "Guardians felled while I watched",
-        "of": "kill:temple guardian"
-      },
       "summary": "A big dog in the mausoleum under Paterdomus, on the River Salve. Worth a page, I thought.",
       "sections": [
         {

@@ -330,7 +330,9 @@ public class ChroniclePageFitTest
 			}
 		}
 		assertTrue(String.join("\n", problems), problems.isEmpty());
-		assertEquals("the creature and boss pages count", 9, tallies);
+		// Eight: the Temple Guardian is fought once in Priest in Peril, so its
+		// count could only ever read 1 (drafts QA, 15 Oct).
+		assertEquals("the creature and boss pages count", 8, tallies);
 	}
 
 	@Test
