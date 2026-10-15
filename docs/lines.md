@@ -2006,7 +2006,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** a kill
 - **does:** mood +5; prop item 31830, pose 13302
-- **pacing:** priority 62, cooldown 20s, delay 2-5 ticks, overhead
+- **pacing:** priority 71, cooldown 20s, delay 2-5 ticks, overhead
 
 - {count}. I do hope this is all for something.
 - {count} of them. You realise that's a village?
@@ -4017,7 +4017,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** a fight starting AND NOT (a bet open) AND a 12% roll
 - **does:** bets on a rich drop
-- **pacing:** priority 28, cooldown 4m, overhead
+- **pacing:** priority 51, cooldown 4m, overhead
 
 - I've got a feeling about this one. A good feeling.
 - This is the one. Don't ask me how I know.
@@ -6417,7 +6417,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > The tenth quest completed since the follower arrived. Exact bracket, once.
 
 - **when:** questcomplete AND quests count at 10+
-- **pacing:** priority 60, cooldown 1m, delay 5 ticks
+- **does:** occasion (never held back)
+- **pacing:** priority 86, cooldown 1m, delay 5 ticks
 
 - Ten quests since we met. The index has its own page now.
 

@@ -9057,7 +9057,7 @@
       },
       "note": "The bigger milestone, at every hundredth of one npc. Higher priority than kill-tally so the round number wins when both come up together.",
       "group": "combat",
-      "priority": 62,
+      "priority": 71,
       "cooldownMs": 20000,
       "delayTicks": 2,
       "delayTicksMax": 5,
@@ -11908,7 +11908,7 @@
       "id": "bet-rich",
       "note": "The optimist. Same machinery, other direction, so being wrong is on the table for both of them.",
       "group": "bet",
-      "priority": 28,
+      "priority": 51,
       "cooldownMs": 240000,
       "output": "overhead",
       "bet": {
@@ -13751,9 +13751,10 @@
     },
     {
       "id": "quest-milestone-10",
+      "occasion": true,
       "note": "The tenth quest completed since the follower arrived. Exact bracket, once.",
       "group": "quest",
-      "priority": 60,
+      "priority": 86,
       "cooldownMs": 60000,
       "delayTicks": 5,
       "when": {

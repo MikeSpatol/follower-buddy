@@ -10,6 +10,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -70,6 +71,43 @@ public class ShadowedRulesTest
 		}
 		assertTrue("levels-many is heard on some levels: " + many, many > 0);
 		assertTrue("and the plain level line keeps the rest: " + plain, plain > many);
+	}
+
+	@Test
+	public void theTenthQuestIsTheMilestoneNotTheUsualScroll() throws IOException
+	{
+		Harness h = harness();
+		count(h.engine.getContext(), "quests", 10);
+		h.dispatch(TriggerEvent.questComplete("Cook's Assistant"));
+		ticks(h, 8);
+		assertEquals(1, h.firedBy("quest-milestone-10").size());
+		assertTrue(h.firedBy("quest-complete").isEmpty());
+		assertTrue("an occasion", h.rule("quest-milestone-10").isOccasion());
+	}
+
+	@Test
+	public void aBetIsOpenedOnSomeFights() throws IOException
+	{
+		int bets = 0;
+		for (int trial = 0; trial < 80 && bets == 0; trial++)
+		{
+			Harness h = harness();
+			h.dispatch(TriggerEvent.combat(TriggerEvent.Type.COMBAT_START, "Goblin"));
+			ticks(h, 2);
+			bets += h.firedBy("bet-rich").size();
+		}
+		assertTrue("bet-rich wins the fight's start when it rolls", bets > 0);
+	}
+
+	@Test
+	public void theHundredthBossKillIsCountedNotOnlyCelebrated() throws IOException
+	{
+		Harness h = harness();
+		h.engine.getContext().setBossNames(h.loader.getBossNames());
+		h.dispatch(TriggerEvent.kill(8061, "Vorkath", 732, 100));
+		ticks(h, 10);
+		assertEquals(1, h.firedBy("kill-tally-hundred").size());
+		assertTrue(h.firedBy("kill-boss-celebrate").isEmpty());
 	}
 
 	@Test
