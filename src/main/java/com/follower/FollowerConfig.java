@@ -1076,7 +1076,7 @@ public interface FollowerConfig extends Config
 			+ " twenty seconds or so instead of standing to attention. Stops once it is"
 			+ " due to sit down.",
 		section = movementSection,
-		position = 0
+		position = 1
 	)
 	default boolean wanderWhenIdle()
 	{
@@ -1105,7 +1105,7 @@ public interface FollowerConfig extends Config
 			+ " game's own pet distance; two or three keep it out from under"
 			+ " your feet when you stop.",
 		section = movementSection,
-		position = 3
+		position = 0
 	)
 	@Range(min = 1, max = 3)
 	default int followDistance()
@@ -1119,7 +1119,7 @@ public interface FollowerConfig extends Config
 		description = "After about five minutes of standing still, the follower sits down."
 			+ " It gets up the moment anything happens.",
 		section = movementSection,
-		position = 1
+		position = 3
 	)
 	default boolean restWhenIdle()
 	{
@@ -1359,8 +1359,8 @@ public interface FollowerConfig extends Config
 			+ " beyond the toggles in the Messages section. Each of those toggles"
 			+ " shows its group name in brackets; rule ids are shown in the"
 			+ " Messages window.",
-		section = shieldSection,
-		position = 14
+		section = groupsSection,
+		position = 12
 	)
 	default String disabledGroups()
 	{
