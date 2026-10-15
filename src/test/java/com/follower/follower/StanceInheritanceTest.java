@@ -189,6 +189,35 @@ public class StanceInheritanceTest
 	// ----------------------------------------------------------- the refusals
 
 	@Test
+	public void aDeadmanCorruptedWeaponInheritsFromThePlainOne()
+	{
+		// "Corrupted" is a prefix, so no bracket stripping ever reached it.
+		observe(BASE + 30, "Dragon claws", SCIMITAR, 7514);
+		names.name(BASE + 31, "Corrupted dragon claws");
+		assertEquals("the Deadman cosmetic should walk like the plain claws",
+			SCIMITAR[0], library.forWeapon(BASE + 31).idle);
+	}
+
+	@Test
+	public void aCorruptedWeaponWithNoPlainFormFallsBack()
+	{
+		// The Gauntlet's sceptre: nothing called plain "Sceptre" to borrow from.
+		observe(BASE + 32, "Dragon claws", SCIMITAR, 7514);
+		names.name(BASE + 33, "Corrupted sceptre");
+		assertEquals(library.forWeapon(0).idle, library.forWeapon(BASE + 33).idle);
+	}
+
+	@Test
+	public void aCorruptedWeaponThatIsKnownByItsOwnNameKeepsIt()
+	{
+		observe(BASE + 34, "Staff", SCIMITAR, 393);
+		observe(BASE + 35, "Corrupted staff (perfected)", STAFF, 393);
+		names.name(BASE + 36, "Corrupted staff (attuned)");
+		assertEquals("the Gauntlet's own staff, not the plain one",
+			STAFF[0], library.forWeapon(BASE + 36).idle);
+	}
+
+	@Test
 	public void aDifferentWeaponSharingAWordDoesNotInherit()
 	{
 		observe(BASE + 12, "Dragon axe", SCIMITAR, 401);

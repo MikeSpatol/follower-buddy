@@ -1123,6 +1123,18 @@ public class StanceLibrary
 				donor = match;
 			}
 		}
+		// The Deadman cosmetics: "Corrupted" is a prefix, not a bracket, so
+		// the marker stripping never reaches it. Only when the rest names a
+		// weapon the library knows: the Gauntlet's own "Corrupted sceptre"
+		// has no plain form and keeps its name.
+		if (donor == 0 && base != null && base.startsWith(CORRUPTED))
+		{
+			Integer match = byBaseName.get(base.substring(CORRUPTED.length()));
+			if (match != null && match != weaponItemId)
+			{
+				donor = match;
+			}
+		}
 		// Second chance: the same weapon in a different metal.
 		if (donor == 0)
 		{
@@ -1197,6 +1209,9 @@ public class StanceLibrary
 		String stripped = base.substring(matcher.end()).trim();
 		return stripped.isEmpty() ? null : stripped;
 	}
+
+	/** The Deadman cosmetic prefix: "Corrupted dragon claws" are dragon claws. */
+	private static final String CORRUPTED = "corrupted ";
 
 	/** Plain metal tiers only - see {@link #tierBaseName(String)}. */
 	private static final java.util.regex.Pattern TIER_PREFIX = java.util.regex.Pattern.compile(

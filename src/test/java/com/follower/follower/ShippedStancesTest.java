@@ -72,6 +72,15 @@ public class ShippedStancesTest
 	}
 
 	@Test
+	public void theThirdAgeFellingAxeCarriesAsEveryFellingAxeDoes()
+	{
+		// QA, 15 Oct: Borrow hands it over, and it alone of the felling axes
+		// had no stance, so it was carried with the plain one-handed walk.
+		carries(28223, 10075, 10076, 10077);
+		carries(28226, 10075, 10076, 10077);
+	}
+
+	@Test
 	public void dharoksGreataxeRunsTheRunJagexGaveItLater()
 	{
 		// Weapon Animation Replacer's author saw 824 before the update; this
