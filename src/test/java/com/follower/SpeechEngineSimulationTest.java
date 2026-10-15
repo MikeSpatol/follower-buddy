@@ -543,8 +543,74 @@ public class SpeechEngineSimulationTest
 		// Names in their own right keep their capitals.
 		assertEquals("Careful with the Hill Giant.", says(kill, "Careful with the {npc}.",
 			TriggerEvent.kill(2098, "Hill Giant", 28)));
-		assertEquals("Careful with the Obor.", says(kill, "Careful with the {npc}.",
+		assertEquals("Careful with the Kraken.", says(kill, "Careful with the {npc}.",
+			TriggerEvent.kill(494, "Kraken", 291)));
+
+		// QA, 15 Oct: the same goes for {thing} when it is a monster, and for
+		// the creature a memory is about. "Next to the Goblin?"
+		assertEquals("Next to the moss giant?", says("{\"type\": \"hesitated\", \"is\": \"monster\"}",
+			"Next to the {thing}?", TriggerEvent.hesitated("monster", "Moss giant")));
+		assertEquals("Not the Wilderness.", says("{\"type\": \"hesitated\", \"is\": \"wilderness\"}",
+			"Not {thing}.", TriggerEvent.hesitated("wilderness", "the Wilderness")));
+		Harness h = new Harness(scratch(), rules(
+			"{\"id\": \"t\", \"group\": \"t\", \"cooldownMs\": 0, \"when\": " + kill + ","
+				+ " \"say\": [\"That's a {memoryWho}.\"]}"));
+		h.engine.getContext().restoreIncident("the-boss", "the goblin going down", 1, 0, 0L, "Goblin");
+		h.gameTicks(1);
+		h.dispatch(TriggerEvent.kill(3029, "Goblin", 2));
+		assertEquals("That's a goblin.", h.spoken.get(0).text);
+	}
+
+	@Test
+	public void aBossWithAPersonalNameTakesNoArticle() throws IOException
+	{
+		// QA, 15 Oct: "Careful with the Vorkath.", "The Zulrah is all yours."
+		// Vorkath is somebody; the Corporeal Beast is a kind of thing.
+		String kill = "{\"type\": \"npcKill\", \"minimum\": 1}";
+		TriggerEvent vorkath = TriggerEvent.kill(8061, "Vorkath", 732);
+		assertEquals("Careful with Vorkath.", says(kill, "Careful with the {npc}.", vorkath));
+		assertEquals("Zulrah is all yours. I insist.", says(kill, "The {npc} is all yours. I insist.",
+			TriggerEvent.kill(2042, "Zulrah", 725)));
+		assertEquals("That's Vorkath.", says(kill, "That's a {npc}.", vorkath));
+		assertEquals("Vorkath. I remember it.", says(kill, "A {npc}. I remember it.", vorkath));
+		assertEquals("I'll keep my distance from General Graardor.", says(kill,
+			"I'll keep my distance from the {npc}.", TriggerEvent.kill(2215, "General Graardor", 624)));
+		assertEquals("The way that went with Phosani's Nightmare.", says(kill,
+			"The way that went with the {npc}.", TriggerEvent.kill(9416, "Phosani's Nightmare", 800)));
+		// "That" points, and a name can take it.
+		assertEquals("That Vorkath never stood a chance.", says(kill,
+			"That {npc} never stood a chance.", vorkath));
+		// An article for a noun after the name stays: the population is the thing.
+		assertEquals("The Vorkath population is down by one.", says(kill,
+			"The {npc} population is down by one.", vorkath));
+		// A kind of thing keeps its article.
+		assertEquals("Careful with the Corporeal Beast.", says(kill, "Careful with the {npc}.",
+			TriggerEvent.kill(319, "Corporeal Beast", 785)));
+		assertEquals("Careful with Obor.", says(kill, "Careful with the {npc}.",
 			TriggerEvent.kill(7416, "Obor", 106)));
+	}
+
+	@Test
+	public void aCountOfOneTakesItsUnitSingular() throws IOException
+	{
+		// QA, 15 Oct: "Prayer's nearly out. 1 points left." A dry prayer or
+		// a close call is often exactly one.
+		String low = "{\"type\": \"prayerBelow\", \"percent\": 20}";
+		Harness h = new Harness(scratch(), rules(
+			"{\"id\": \"t\", \"group\": \"t\", \"cooldownMs\": 0, \"when\": " + low + ","
+				+ " \"say\": [\"{prayer} points left. Down to {prayer} prayer points. {hp} hitpoints.\"]}"));
+		h.game.hitpoints(1, 99);
+		h.game.prayer(1, 99);
+		h.gameTicks(2);
+		assertEquals("1 point left. Down to 1 prayer point. 1 hitpoint.", h.spoken.get(0).text);
+
+		Harness more = new Harness(scratch(), rules(
+			"{\"id\": \"t\", \"group\": \"t\", \"cooldownMs\": 0, \"when\": " + low + ","
+				+ " \"say\": [\"{prayer} points left, {hp} pointsy.\"]}"));
+		more.game.hitpoints(1, 99);
+		more.game.prayer(11, 99);
+		more.gameTicks(2);
+		assertEquals("11 points left, 1 pointsy.", more.spoken.get(0).text);
 	}
 
 	// -------------------------------------------------------------- mirroring

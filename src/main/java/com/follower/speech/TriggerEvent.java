@@ -572,6 +572,10 @@ public final class TriggerEvent
 		event.message = thing == null ? "" : thing;
 		event.placeholders.put("misgiving", event.name);
 		event.placeholders.put("thing", event.message);
+		if ("monster".equals(event.name))
+		{
+			event.creatures.add("thing");
+		}
 		return event;
 	}
 

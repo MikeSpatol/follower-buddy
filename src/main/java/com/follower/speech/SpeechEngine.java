@@ -128,6 +128,22 @@ public class SpeechEngine
 	/** Words that already point at the thing, so a name's own "The" goes: that Leviathan, the first Leviathan. */
 	private static final Set<String> POINTING = Set.of("the", "that", "this", "another", "one", "first", "more");
 
+	/**
+	 * A unit the template wrote in the plural, after a number: "{prayer}
+	 * points left". A count of one takes it singular - 1 point, 1 prayer
+	 * point - since a close call or a nearly dry prayer is often exactly one.
+	 */
+	private static final java.util.regex.Pattern PLURAL_UNIT = java.util.regex.Pattern.compile(
+		" ((?:prayer )?(?:hit)?point|day|minute|hour|time|kill|level)s\\b");
+
+	/**
+	 * Nouns a boss's name can stand in front of, the article belonging to
+	 * the noun: the Vorkath population, the Zulrah column.
+	 */
+	private static final Set<String> NAME_MODIFIES = Set.of(
+		"population", "column", "kill", "kills", "count", "fight", "pet", "drop", "drops",
+		"lair", "page", "entry");
+
 	private boolean isIdleRemark(SpeechRule rule)
 	{
 		return rule.when != null && rule.when.usesType("idle") && !rule.isOccasion();
@@ -1519,10 +1535,17 @@ public class SpeechEngine
 					|| !Character.isLetter(template.charAt(close + 2));
 				// A name that brings its own "The" is a proper one.
 				boolean named = replacement.regionMatches(true, 0, "the ", 0, 4);
+				// Vorkath is somebody, not a kind of thing: never the Vorkath,
+				// unless the article is for a noun after it.
+				if (Words.isPersonalName(replacement) && !modifiesNoun(template, close))
+				{
+					dropArticle(out);
+				}
 				replacement = agreeArticle(out, replacement, endsPhrase);
 				// After a pointing word a creature is a common noun: the guard,
 				// a goblin, that monk of Zamorak. Bosses keep their capitals.
-				if ((event.getCreatureKeys().contains(key) || "foe".equals(key)) && !named
+				if ((event.getCreatureKeys().contains(key) || "foe".equals(key) || "memoryWho".equals(key))
+					&& !named
 					&& afterAnArticle(out) && !ctx.isBoss(replacement,
 						event.getType() == TriggerEvent.Type.NPC_KILL ? event.getValue() : 0))
 				{
@@ -1540,9 +1563,54 @@ public class SpeechEngine
 			}
 			out.append(replacement == null ? template.substring(i, close + 1) : replacement);
 			i = close + 1;
+			if ("1".equals(replacement))
+			{
+				java.util.regex.Matcher unit = PLURAL_UNIT.matcher(template).region(i, template.length());
+				if (unit.lookingAt())
+				{
+					out.append(' ').append(unit.group(1));
+					i = unit.end();
+				}
+			}
 		}
 
 		return out.toString();
+	}
+
+	/** Whether the template follows the placeholder ending at {@code close} with a noun it describes. */
+	private static boolean modifiesNoun(String template, int close)
+	{
+		int start = close + 2;
+		if (start >= template.length() || template.charAt(close + 1) != ' ')
+		{
+			return false;
+		}
+		int end = start;
+		while (end < template.length() && Character.isLetter(template.charAt(end)))
+		{
+			end++;
+		}
+		return NAME_MODIFIES.contains(template.substring(start, end).toLowerCase(Locale.ROOT));
+	}
+
+	/** Takes a "the", "a" or "an" off the end of the text so far, keeping the space before it. */
+	private static void dropArticle(StringBuilder out)
+	{
+		int space = out.length() - 1;
+		if (space < 1 || out.charAt(space) != ' ')
+		{
+			return;
+		}
+		int start = space;
+		while (start > 0 && Character.isLetter(out.charAt(start - 1)))
+		{
+			start--;
+		}
+		String word = out.substring(start, space).toLowerCase(Locale.ROOT);
+		if (word.equals("the") || word.equals("a") || word.equals("an"))
+		{
+			out.setLength(start);
+		}
 	}
 
 	/**
