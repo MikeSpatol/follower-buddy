@@ -11131,9 +11131,13 @@ public class FollowerPlugin extends Plugin
 				sendStatus("Models: " + modelRepository.getStatus()
 					+ " | Rules: " + ruleLoader.getStatus()
 					+ " | Follower " + (follower.isSpawned() ? "spawned" : "not spawned"));
-				sendStatus("Skilling: " + skilling.describe());
+				// The skilling state is a developer's: raw item ids and names.
+				if (config.developerMode())
+				{
+					sendStatus("Skilling: " + skilling.describe());
+				}
 				sendStatus("Region " + speechEngine.getContext().getRegionId()
-					+ " at " + speechEngine.getContext().getLocation());
+					+ atTile(speechEngine.getContext().getLocation()));
 				break;
 
 			case "boat":
@@ -11173,7 +11177,7 @@ public class FollowerPlugin extends Plugin
 				// promises the region id, which used to arrive buried after a
 				// model report nobody asked for.
 				sendStatus("Region " + speechEngine.getContext().getRegionId()
-					+ " at " + speechEngine.getContext().getLocation()
+					+ atTile(speechEngine.getContext().getLocation())
 					+ " - use this id under Locations in the Messages window.");
 				break;
 
@@ -11982,6 +11986,17 @@ public class FollowerPlugin extends Plugin
 				}
 			})
 			.build();
+	}
+
+	/**
+	 * " at (x, y, plane)" for where and status, or nothing before a place is
+	 * known. The tile went in raw, as "WorldPoint(x=3222, y=3218, plane=0)",
+	 * or "at null" (QA, 15 Oct).
+	 */
+	static String atTile(WorldPoint tile)
+	{
+		return tile == null ? ""
+			: " at (" + tile.getX() + ", " + tile.getY() + ", " + tile.getPlane() + ")";
 	}
 
 	/**

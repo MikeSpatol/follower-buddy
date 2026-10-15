@@ -7,6 +7,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -88,5 +90,29 @@ public class StatusLinesTest
 		assertTrue("CONSOLE lines return before the echo and the rules",
 			skip >= 0 && skip < echo && skip < rules
 				&& chat.substring(skip, echo).contains("return;"));
+	}
+
+	/** where and status printed "at WorldPoint(x=3222, y=3218, plane=0)", or "at null". */
+	@Test
+	public void aTileIsPrintedAsNumbersAndNotAtAllBeforeItIsKnown()
+	{
+		assertEquals(" at (3222, 3218, 0)",
+			FollowerPlugin.atTile(new net.runelite.api.coords.WorldPoint(3222, 3218, 0)));
+		assertEquals("", FollowerPlugin.atTile(null));
+	}
+
+	/** status dumped the skilling state, raw item ids and all, to everyone. */
+	@Test
+	public void theSkillingDumpIsADevelopersOnly() throws IOException
+	{
+		String source = source();
+		int status = source.indexOf("case \"status\":");
+		assertTrue("the lint has lost its place", status >= 0);
+		String body = source.substring(status, source.indexOf("break;", status));
+		int dump = body.indexOf("sendStatus(\"Skilling: \"");
+		assertTrue("the lint has lost its place", dump >= 0);
+		assertTrue("the skilling line is said only in developer mode",
+			body.substring(0, dump).contains("if (config.developerMode())"));
+		assertFalse("no raw tile", body.contains("+ \" at \" + speechEngine"));
 	}
 }
