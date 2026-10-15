@@ -54,4 +54,34 @@ public class NamePromptTest
 		assertEquals("", FollowerPlugin.cleanFollowerName("   "));
 		assertEquals("", FollowerPlugin.cleanFollowerName("<<<>>>"));
 	}
+
+	/**
+	 * QA, 15 Oct: a name typed in the settings box never went through this
+	 * gate. A blank one gave "[] " in chat, options with no target, and a
+	 * menu strip that took every other plugin's entries with it.
+	 */
+	@Test
+	public void theSettingsBoxNameIsCleanedAndNeverBlank()
+	{
+		assertEquals("Pip", FollowerPlugin.displayName(" Pip "));
+		assertEquals("Bobcolff0000", FollowerPlugin.displayName("Bob<col=ff0000>"));
+		assertEquals("Follower", FollowerPlugin.displayName(""));
+		assertEquals("Follower", FollowerPlugin.displayName("   "));
+		assertEquals("Follower", FollowerPlugin.displayName("<>"));
+		assertEquals("Follower", FollowerPlugin.displayName(null));
+	}
+
+	@Test
+	public void everyUseOfTheNameGoesThroughTheCleanOne() throws java.io.IOException
+	{
+		java.nio.file.Path plugin = java.nio.file.Paths.get("src/main/java/com/follower/FollowerPlugin.java");
+		String source = new String(java.nio.file.Files.readAllBytes(plugin),
+			java.nio.charset.StandardCharsets.UTF_8);
+		int uses = source.split("config\\.followerName\\(\\)", -1).length - 1;
+		org.junit.Assert.assertEquals("the raw setting is read in one place only", 1, uses);
+		org.junit.Assert.assertTrue("the plugin's own menu entries are found by their exact target",
+			source.contains("!followerTarget().equals(entry.getTarget())"));
+		org.junit.Assert.assertFalse("never by a name contained in a target",
+			source.contains("getTarget().contains("));
+	}
 }
