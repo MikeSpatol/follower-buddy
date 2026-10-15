@@ -1100,7 +1100,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 3653	Study idle	Standing and walking	hold	empty	empty	0	B	-1	8
 796	Stumble and hang idle	Standing and walking	hold	keep	keep	0	B	-1	4
 14285	Stymphike idle	Standing and walking	hold	keep	keep	0	B	15	6
-14286	Stymphike idle start	Standing and walking	hold	keep	keep	0	B	-1	5
+14286	Stymphike idle start	Standing and walking	once	keep	keep	0	B	-1	5
 13996	Suspicious idle	Standing and walking	hold	keep	keep	0	B	-1	21
 2316	Toad cannon idle	Standing and walking	hold	keep	keep	0	B	-1	21
 2322	Toad cannon run	Standing and walking	once	keep	keep	0	B	-1	4
@@ -1209,7 +1209,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 2338	Crawl (for forget)	Climbing and agility	hold	keep	keep	0	B	-1	26
 1440	Crawl a long way	Climbing and agility	hold	empty	empty	0	B	8	4
 2796	Crawl a long way	Climbing and agility	once	empty	empty	0	B	-1	4
-3417	Idle into swimming	Climbing and agility	hold	empty	empty	0	B	-1	6
+3417	Idle into swimming	Climbing and agility	once	empty	empty	0	B	-1	6
 1603	Jump a hurdle	Climbing and agility	once	keep	keep	0	B	-1	4
 769	Jump across stepping stones	Climbing and agility	once	keep	keep	0	B	-1	4
 1604	Jump across stones	Climbing and agility	once	keep	keep	0	B	-1	4
@@ -1256,7 +1256,7 @@ id	name	group	play	left	right	graphic	tier	restart	last
 3421	Swimming climb anchor	Climbing and agility	once	empty	empty	0	B	-1	10
 3418	Swimming idle	Climbing and agility	hold	empty	empty	0	B	-1	5
 3423	Swimming into bombdive	Climbing and agility	once	empty	empty	0	B	-1	2
-3416	Swimming into idle	Climbing and agility	hold	empty	empty	0	B	-1	6
+3416	Swimming into idle	Climbing and agility	once	empty	empty	0	B	-1	6
 3420	Swimming pickup floor	Climbing and agility	once	empty	empty	0	B	-1	6
 750	Swing on a rope	Climbing and agility	once	empty	empty	0	B	-1	4
 1105	Swing on a rope (long miss)	Climbing and agility	hold	empty	empty	0	B	8	1
@@ -2386,8 +2386,8 @@ id	name	group	play	left	right	graphic	tier	restart	last
 9418	House smash magic tablet	Magic and prayer	once	empty	empty	0	C	-1	10
 9854	House smash magic tablet (2)	Magic and prayer	once	empty	empty	0	C	-1	10
 14	Ibansboltcasting	Magic and prayer	once	keep	keep	0	C	-1	4
-14099	Idle then start spell (Myreque)	Magic and prayer	hold	empty	empty	0	C	-1	5
-14100	Idle then start spell longer (Myreque)	Magic and prayer	hold	empty	empty	0	C	-1	5
+14099	Idle then start spell (Myreque)	Magic and prayer	once	empty	empty	0	C	-1	5
+14100	Idle then start spell longer (Myreque)	Magic and prayer	once	empty	empty	0	C	-1	5
 9209	League home teleport 1	Magic and prayer	hold	empty	empty	0	C	1	4
 9210	League home teleport 2	Magic and prayer	hold	empty	empty	0	C	1	6
 9211	League home teleport 3	Magic and prayer	hold	empty	empty	0	C	1	2

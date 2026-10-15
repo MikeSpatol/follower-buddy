@@ -56,7 +56,9 @@ import net.runelite.cache.fs.Store;
  * <p>A pose is held when the game loops it, or when Jagex names it a stance (a
  * READY or an IDLE, which the game loops as the standing pose), unless its
  * last frame is held for longer than {@link #LONG_LAST_FRAME}: the deaths and
- * knockdowns, which lie still for minutes and are played once.
+ * knockdowns, which lie still for minutes and are played once. A name that
+ * moves between two stances (a START, an INTO, a TO) is no stance itself: the
+ * swim-to-idle pair looped with a jump of 136 units at every wrap.
  *
  * <p>A graphic is paired with a pose only where Jagex's names pair them, or
  * the cache does by numbering the graphic's own animation just after the
@@ -400,6 +402,10 @@ public class PoseCatalog
 		}
 		for (String name : names)
 		{
+			if (isTransition(name))
+			{
+				continue;
+			}
 			for (String word : name.split("_"))
 			{
 				if (word.equals("READY") || word.equals("IDLE"))
@@ -409,6 +415,38 @@ public class PoseCatalog
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * A clip from one stance into another, named for the move rather than the
+	 * stance: a START or an INTO, or a TO that leaves a stance or arrives at
+	 * one. A TO that does both is a round trip (READY_TO_CRAWL ... CRAWL_TO_READY)
+	 * and ends where it began, and a TO between two other words is no move at
+	 * all (BENT_TO_LISTEN_AT_DOOR_IDLE).
+	 */
+	static boolean isTransition(String name)
+	{
+		String[] words = name.split("_");
+		boolean leaves = false;
+		boolean arrives = false;
+		for (int i = 0; i < words.length; i++)
+		{
+			if (words[i].equals("START") || words[i].equals("INTO"))
+			{
+				return true;
+			}
+			if (words[i].equals("TO"))
+			{
+				leaves |= i > 0 && isStanceWord(words[i - 1]);
+				arrives |= i + 1 < words.length && isStanceWord(words[i + 1]);
+			}
+		}
+		return leaves != arrives;
+	}
+
+	private static boolean isStanceWord(String word)
+	{
+		return word.equals("READY") || word.equals("IDLE");
 	}
 
 	/**

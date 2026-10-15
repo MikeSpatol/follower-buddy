@@ -181,7 +181,11 @@ public class PoseCatalogTest
 		assertEquals(id + " right", right, byId.get(id)[5]);
 	}
 
-	/** A READY or an IDLE: the game loops a stance as the standing pose. */
+	/**
+	 * A READY or an IDLE: the game loops a stance as the standing pose. Not a
+	 * move from one stance to another, which is named for the move: the swim
+	 * into idle and back, looped, jumped 136 units at every wrap (QA, 15 Oct).
+	 */
 	private static boolean isStance(List<String> names)
 	{
 		if (names == null)
@@ -190,6 +194,10 @@ public class PoseCatalogTest
 		}
 		for (String name : names)
 		{
+			if (isTransition(name))
+			{
+				continue;
+			}
 			for (String word : name.split("_"))
 			{
 				if (word.equals("READY") || word.equals("IDLE"))
@@ -199,6 +207,38 @@ public class PoseCatalogTest
 			}
 		}
 		return false;
+	}
+
+	/** As PoseCatalog.isTransition: a START, an INTO, or a TO that leaves a stance or arrives at one. */
+	private static boolean isTransition(String name)
+	{
+		String[] words = name.split("_");
+		boolean leaves = false;
+		boolean arrives = false;
+		for (int i = 0; i < words.length; i++)
+		{
+			if (words[i].equals("START") || words[i].equals("INTO"))
+			{
+				return true;
+			}
+			if (words[i].equals("TO"))
+			{
+				leaves |= i > 0 && (words[i - 1].equals("READY") || words[i - 1].equals("IDLE"));
+				arrives |= i + 1 < words.length && (words[i + 1].equals("READY") || words[i + 1].equals("IDLE"));
+			}
+		}
+		return leaves != arrives;
+	}
+
+	@Test
+	public void aMoveBetweenStancesIsPlayedOnce()
+	{
+		for (int id : new int[]{3416, 3417, 14286})
+		{
+			assertFalse(id + " " + FilmSet.pose(id).name + " moves between stances and must not be held",
+				FilmSet.pose(id).hold);
+		}
+		assertTrue("the swimming idle itself is still held", FilmSet.pose(3418).hold);
 	}
 
 	private static List<String[]> rows() throws IOException

@@ -13,6 +13,7 @@ import org.junit.Assume;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -58,6 +59,21 @@ public class PoseCatalogTest
 		List<String> problems = catalog().check(Collections.singletonList(
 			"0\tSwarm\tOther\tonce\tkeep\tkeep\t0\tC\t-1\t4"));
 		assertTrue(problems.toString(), problems.contains("0 Swarm: not on the player skeleton"));
+	}
+
+	@Test
+	public void aMoveBetweenStancesIsNoStance()
+	{
+		List<String> none = Collections.emptyList();
+		assertFalse(PoseCatalog.holds(-1, 6, Collections.singletonList("HUMAN_READY_INTO_REAL_SWIMMING")));
+		assertFalse(PoseCatalog.holds(-1, 5, Collections.singletonList("HUMAN_STYMPHIKE_IDLE_START")));
+		assertTrue("a TO that is no move", PoseCatalog.holds(-1, 20,
+			Collections.singletonList("DTTD_BENT_TO_LISTEN_AT_DOOR_IDLE")));
+		assertTrue("a round trip from a stance and back", PoseCatalog.holds(-1, 5,
+			Collections.singletonList("MYQ3_READY_TO_CRAWL_CRAWL_CRAWL_TO_READY")));
+		assertTrue("a loop the game makes is held whatever its name", PoseCatalog.holds(2, 5,
+			Collections.singletonList("HUMAN_READY_INTO_REAL_SWIMMING")));
+		assertFalse(PoseCatalog.holds(-1, 5, none));
 	}
 
 	@Test
