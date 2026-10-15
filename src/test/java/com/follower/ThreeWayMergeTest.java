@@ -344,7 +344,7 @@ public class ThreeWayMergeTest
 	/** A rule's lines as a sorted set, or null for a rule that says nothing of its own. */
 	private static java.util.TreeSet<String> lines(JsonObject rule)
 	{
-		if (!rule.has("say"))
+		if (!rule.has("say") || rule.getAsJsonArray("say").size() == 0)
 		{
 			return null;
 		}

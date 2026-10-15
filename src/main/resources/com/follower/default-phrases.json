@@ -10906,7 +10906,18 @@
       "delayTicksMax": 12,
       "when": {
         "type": "playerDeath"
-      }
+      },
+      "say": [
+        "That's going in the book.",
+        "I saw all of it, for what it's worth.",
+        "The record will be kind about it.",
+        "I've written it down. Not happily.",
+        "Some entries I would rather not have.",
+        "Filed under things we don't mention.",
+        "The ink went on heavier than usual for that one.",
+        "I wrote it smaller, so it looks further away.",
+        "One more for the chapter I keep meaning to close."
+      ]
     },
     {
       "id": "memory-big-drop",
@@ -10929,7 +10940,13 @@
       "when": {
         "type": "lootWorth",
         "minimum": 1000000
-      }
+      },
+      "say": [
+        "I'm still not over that.",
+        "That drop gets its own footnote.",
+        "I re-read that entry sometimes. For morale.",
+        "Best line in the ledger so far."
+      ]
     },
     {
       "id": "memory-boss",
@@ -10952,7 +10969,13 @@
       "when": {
         "type": "npcKill",
         "minimum": 150
-      }
+      },
+      "say": [
+        "I want that written down somewhere.",
+        "That one goes in with a steadier hand.",
+        "Chapters end on moments like that.",
+        "Tell people. If you don't, I will."
+      ]
     },
     {
       "id": "recall-idle",

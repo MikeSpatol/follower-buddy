@@ -1,6 +1,6 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 517 rules, 2372 spoken lines, 3 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 517 rules, 2389 spoken lines, 3 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
@@ -11,7 +11,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (42 rules, 280 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 114 lines)
 - [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 72 lines)
-- [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (28 rules, 102 lines)
+- [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (28 rules, 119 lines)
 - [area](#area) - Places: named lines, tastes, earned verdicts, the defences (66 rules, 222 lines)
 - [errand](#errand) - Its little trips: bank, altar, fire, cat, studies, explores (44 rules, 155 lines)
 - [souvenir](#souvenir) - Wishes, gifts, the pocket, and what it carries (17 rules, 84 lines)
@@ -2223,7 +2223,15 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **does:** files incident `the-death` as 'the way that went with the {foe}'; prop item 31830, pose 13302
 - **pacing:** priority 30, cooldown 5s, delay 6-12 ticks, overhead
 
-- *(no lines - animation or effect only)*
+- That's going in the book.
+- I saw all of it, for what it's worth.
+- The record will be kind about it.
+- I've written it down. Not happily.
+- Some entries I would rather not have.
+- Filed under things we don't mention.
+- The ink went on heavier than usual for that one.
+- I wrote it smaller, so it looks further away.
+- One more for the chapter I keep meaning to close.
 
 ### `memory-big-drop`
 
@@ -2233,7 +2241,10 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **does:** files incident `big-drop` as 'the {item} that dropped'; prop item 31830, pose 13302
 - **pacing:** priority 20, cooldown 10m, overhead
 
-- *(no lines - animation or effect only)*
+- I'm still not over that.
+- That drop gets its own footnote.
+- I re-read that entry sometimes. For morale.
+- Best line in the ledger so far.
 
 ### `memory-boss`
 
@@ -2243,7 +2254,10 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **does:** files incident `the-boss` as 'the {npc} going down'; prop item 31830, pose 13302
 - **pacing:** priority 20, cooldown 10m, overhead
 
-- *(no lines - animation or effect only)*
+- I want that written down somewhere.
+- That one goes in with a steadier hand.
+- Chapters end on moments like that.
+- Tell people. If you don't, I will.
 
 ### `recall-idle`
 
