@@ -128,7 +128,7 @@ public class PhrasesDialog extends JDialog
 	/** Hides rows that do not mention the text, within the current category. */
 	private final JTextField find = new JTextField(14);
 	private final JButton addLocation = new JButton("Add location");
-	private final JPanel list = new JPanel();
+	private final JPanel list = new WidthTrackingPanel();
 	private JScrollPane scroll;
 	private final JLabel status = new JLabel(" ");
 	/** The loaded count, put back once Find matches something again. */
@@ -483,9 +483,18 @@ public class PhrasesDialog extends JDialog
 		JLabel idLabel = new JLabel(id);
 		idLabel.setFont(FontManager.getRunescapeSmallFont());
 		idLabel.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
-		JPanel titles = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+		// A long title or id is cut short with "..." rather than widening the
+		// row: the list is as wide as the window, and the controls on the
+		// right have to stay on it. QA2, 15 Oct: Quest NPCs and Locations
+		// pushed On and Sounds past the edge.
+		title.setMinimumSize(new Dimension(0, title.getPreferredSize().height));
+		idLabel.setMinimumSize(new Dimension(0, idLabel.getPreferredSize().height));
+		JPanel titles = new JPanel();
+		titles.setLayout(new BoxLayout(titles, BoxLayout.X_AXIS));
+		titles.setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 0));
 		titles.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		titles.add(title);
+		titles.add(javax.swing.Box.createHorizontalStrut(6));
 		titles.add(idLabel);
 		header.add(titles, BorderLayout.CENTER);
 
@@ -891,6 +900,44 @@ public class PhrasesDialog extends JDialog
 	}
 
 	// ------------------------------------------------------------------ helpers
+
+	/**
+	 * The rule list: always exactly as wide as the window, so a wide row is
+	 * squeezed to fit instead of widening every row past the right edge, where
+	 * a list that never scrolls sideways would leave its controls unreachable.
+	 */
+	private static final class WidthTrackingPanel extends JPanel implements javax.swing.Scrollable
+	{
+		@Override
+		public Dimension getPreferredScrollableViewportSize()
+		{
+			return getPreferredSize();
+		}
+
+		@Override
+		public int getScrollableUnitIncrement(java.awt.Rectangle visible, int orientation, int direction)
+		{
+			return 16;
+		}
+
+		@Override
+		public int getScrollableBlockIncrement(java.awt.Rectangle visible, int orientation, int direction)
+		{
+			return orientation == javax.swing.SwingConstants.VERTICAL ? visible.height : visible.width;
+		}
+
+		@Override
+		public boolean getScrollableTracksViewportWidth()
+		{
+			return true;
+		}
+
+		@Override
+		public boolean getScrollableTracksViewportHeight()
+		{
+			return false;
+		}
+	}
 
 	private JPanel rowShell()
 	{
