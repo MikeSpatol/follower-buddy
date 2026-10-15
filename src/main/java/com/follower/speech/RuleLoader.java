@@ -537,7 +537,7 @@ public class RuleLoader
 				}
 				if (!seenIds.add(rule.id))
 				{
-					problems.add("Duplicate rule id '" + rule.id + "' — later one wins for cooldowns");
+					problems.add("Duplicate rule id '" + rule.id + "' - the later one wins for cooldowns");
 				}
 				if (!rule.isValid())
 				{

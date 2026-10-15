@@ -228,7 +228,7 @@
         {
           "id": "what-a",
           "says": [
-            "The one I said just now. Saying it again feels like deciding for you."
+            "The one I said just now. Tell me to ask later and I'll say it again."
           ],
           "next": "ask"
         },

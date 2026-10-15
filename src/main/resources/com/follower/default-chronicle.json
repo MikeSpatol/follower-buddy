@@ -73,7 +73,7 @@
         },
         {
           "heading": "Who was there",
-          "body": "King Roald: Roald Remanis III, ruler of Misthalin, at home in Varrock Palace. His wife, Queen Ellamaria, calls the dog Spots. The histories call him a steady, straightforward king, and Varrock has done well under him.\n\nDrezel: described, and briefly, as \"A holy man.\" A priest of Saradomin, descended from one of the Seven Priestly Warriors. Use a spare iron key on his old cell door and he asks what you are trying to lock him back in for, which is a fair question.\n\n{done:IN_AID_OF_THE_MYREQUE,DARKNESS_OF_HALLOWVALE,SINS_OF_THE_FATHER} Drezel later works with the Myreque in In Aid of the Myreque, Darkness of Hallowvale and Sins of the Father."
+          "body": "King Roald: Roald Remanis III, ruler of Misthalin, at home in Varrock Palace. The dog was his, and he called it Spots. The histories call him a steady, straightforward king, and Varrock has done well under him.\n\nDrezel: described, and briefly, as \"A holy man.\" A priest of Saradomin, descended from one of the Seven Priestly Warriors. Use a spare iron key on his old cell door and he asks what you are trying to lock him back in for, which is a fair question.\n\n{done:IN_AID_OF_THE_MYREQUE,DARKNESS_OF_HALLOWVALE,SINS_OF_THE_FATHER} Drezel later works with the Myreque in In Aid of the Myreque, Darkness of Hallowvale and Sins of the Father."
         },
         {
           "heading": "Where it took us",
@@ -96,7 +96,7 @@
         "Bucket - 2 coins at the general store",
         "Essence - 50 rune or pure, in one trip with pouches or several without",
         "Monuments - golden pot, feather, candle, tinderbox, needle and hammer",
-        "Souvenirs - one swap, before Drezel moves",
+        "Souvenirs - swap a plain item for a monument's golden one, before Drezel moves",
         "Wolfbane - strikes like a mithril dagger, with a 5 Prayer bonus on top",
         "Wolfbane - a silver weapon, so it works on tier 1 vampyres",
         "Wolfbane - a Canifis citizen killed with it counts for the Easy Morytania Diary",
@@ -1094,7 +1094,7 @@
         },
         {
           "heading": "Worth knowing",
-          "body": "Avarrocka began when a nomadic tribe found a boy of exceptional strength, took him for a good omen and settled in the forest there. The boy was Arrav, and as he grew, so did Avarrocka.\n\n{done:DEFENDER_OF_VARROCK} Ten years after the founding, goblins attacked. The boy beat them off, and that's how he came by the name Arrav.\n\n{done:SHIELD_OF_ARRAV,DEFENDER_OF_VARROCK} Then Zemouregal came, a Mahjarrat necromancer of Zamorak's, with an army of zombies. His forces were beaten, but Arrav fell and was taken as an undead servant. A poor ending for the boy. The city rebuilt and kept growing, and in time it had a king and a kingdom, Misthalin.\n\nAvarrocka has shortened to Varrock, but the boy hasn't been forgotten, and people still talk about the Shield of Arrav. Seven quests start here, which keeps the quill busy."
+          "body": "Avarrocka began when a nomadic tribe found a boy of exceptional strength, took him for a good omen and settled in the forest there. The boy was Arrav, and as he grew, so did Avarrocka.\n\n{done:DEFENDER_OF_VARROCK} Ten years after the founding, goblins attacked. The boy beat them off, and that's how he came by the name Arrav.\n\n{done:SHIELD_OF_ARRAV,DEFENDER_OF_VARROCK} Then Zemouregal came, a Mahjarrat necromancer of Zamorak's, with an army of zombies. His forces were beaten, but Arrav fell and was taken as an undead servant. A poor ending for the boy. The city rebuilt and kept growing, and in time it had a king and a kingdom, Misthalin.\n\nAvarrocka has shortened to Varrock, but the boy hasn't been forgotten, and people still talk about the Shield of Arrav. A good many quests start here, which keeps the quill busy."
         }
       ],
       "people": [

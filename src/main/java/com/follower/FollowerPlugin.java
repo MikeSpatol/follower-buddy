@@ -71,8 +71,8 @@ import net.runelite.client.ui.overlay.OverlayManager;
 @Slf4j
 @PluginDescriptor(
 	name = "Follower Buddy",
-	description = "A player-model follower that wears any gear and speaks configurable"
-		+ " phrases. Dress it in the Follower Buddy side panel",
+	description = "A companion that follows you in any gear you like and talks about"
+		+ " what you're doing. Dress it in the Follower Buddy side panel.",
 	tags = {"follower", "companion", "pet", "player", "model", "chat", "cosmetic", "outfit"}
 )
 public class FollowerPlugin extends Plugin
@@ -3298,7 +3298,7 @@ public class FollowerPlugin extends Plugin
 				{
 					return refused;
 				}
-				return filmSet.again() ? null : "Nothing has been played once yet.";
+				return filmSet.again() ? null : "Again repeats the last [once] pose. Play one first.";
 			}
 
 			@Override
@@ -6720,7 +6720,7 @@ public class FollowerPlugin extends Plugin
 
 			script.put("who-name-q", you("Do you have a name?").then("who-name-a"));
 			script.put("who-name-a", says(
-				"You gave me one. I'd have chosen differently, but I wasn't asked.",
+				"Whatever you've been calling me. I'd have picked my own, but nobody asked.",
 				"It's grown on me.")
 				.then("who-menu"));
 
@@ -6790,7 +6790,7 @@ public class FollowerPlugin extends Plugin
 			"If it's pockets, I give you room and keep an eye on the street. I say nothing until you're done.")
 			.then("do-work-b"));
 		script.put("do-work-b", says(
-			"Otherwise I'll find something to look at. I don't need watching every minute.",
+			"Trees, rocks, fishing spots. I set up beside you and do a bit myself.",
 			"Now and then I wander off on an errand of my own. I always come back.")
 			.then("do-menu"));
 
@@ -9333,7 +9333,7 @@ public class FollowerPlugin extends Plugin
 			command("posing", "the Advanced posing window: pose it, turn it and give it lines"),
 			command("sketch", "pose for the chronicle's sketch of this place, as right-click Sketch"),
 			command("height <n>", "lift or lower it"),
-			command("errand [" + String.join("|", ERRAND_KEYS) + "]", "an errand now"),
+			command("errand [" + ERRAND_KEYS.stream().filter(k -> !k.equals("firedeath")).collect(java.util.stream.Collectors.joining("|")) + "]", "send it on an errand now"),
 			command("reload", "re-read the phrase and sound files"),
 			command("status", "models, rules and spawn state"),
 			command("where", "your region id, for Locations in the Messages window")));

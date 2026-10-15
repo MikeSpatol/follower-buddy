@@ -368,7 +368,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Back, then. I did wonder.
 - Afternoon. Or evening. I've rather lost track.
 - You were gone a while. Everything's where you left it.
-- A few hours, by my count. I don't get those wrong.
+- Hours, by my count. I don't get those wrong.
 - Back at last. I'd sharpened every quill I own.
 - Nothing happened. I wrote that down, too.
 
@@ -986,7 +986,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - I'd like a word, when you're not busy.
 - A word, when your hands are free.
 - No hurry, but come and find me for a minute.
-- Something to ask. It'll keep until you're ready.
+- Something to ask. Talk to me when you're ready.
 - Next time there's a lull, come and find me. I've got a small proposal.
 
 ### `want-lumbridge`
@@ -2199,7 +2199,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 60, cooldown 12s
 
 - Ouch. {damage}.
-- That was a {damage}. Maybe pray next time.
+- That was a {damage}. I felt that one from here.
 
 ## memory
 
@@ -2412,9 +2412,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** known 7-29 days AND standing still 100+ ticks AND a 6% roll
 - **pacing:** priority 27, cooldown 1h, overhead
 
-- A week now, you and me. Settling in nicely.
+- A week and counting, you and me. Settling in nicely.
 - {days} days I've been following you about. Nothing to report.
-- One week in. The notes are getting personal.
+- Past the first week. The notes are getting personal.
 - {days} days. Long enough to learn your walk.
 
 ### `known-a-month`
@@ -2422,7 +2422,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** known 30-99 days AND standing still 100+ ticks AND a 6% roll
 - **pacing:** priority 27, cooldown 1h, overhead
 
-- A month of this. I'd not have guessed it would stick.
+- A month and more of this. I'd not have guessed it would stick.
 - {days} days. Not that I keep a calendar. I keep a calendar.
 - A month, give or take. Mostly give.
 - {days} days in. The early pages already read like history.
@@ -2435,7 +2435,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - {days} days I've known you. That's a proper stretch, that is.
 - Over a hundred days. I've seen you at your best and the other thing.
 - {days} days. The notebook needed a second volume.
-- A hundred days and change. You've not got rid of me yet.
+- A hundred days and more. You've not got rid of me yet.
 
 ### `known-a-year`
 
@@ -2452,9 +2452,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `anniversary`
 
-> The same day of the year as the first one. Priority high enough to beat the everyday chatter, because it happens once.
+> The same day of the year as the first one, the first year only: every line says a year. Priority high enough to beat the everyday chatter, because it happens once.
 
-- **when:** the anniversary AND standing still 20+ ticks
+- **when:** the anniversary AND known 1-400 days AND standing still 20+ ticks
 - **does:** occasion (never held back); animation 863; holds the floor 8s; holds still
 - **pacing:** priority 68, cooldown 2h, overhead
 
@@ -2548,7 +2548,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - I remember what you turned up in. This is better.
 - You've come up in the world. I was there for the bottom of it.
 - The kit's improved beyond recognition. The walk's the same.
-- Page one has you in bronze. I look at it whenever you get too grand.
+- Page one has you in your old kit. I look at it whenever you get too grand.
 
 ### `notes-edited`
 
@@ -5472,7 +5472,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 90, cooldown 1h, both
 
 - Graardor. Pray Melee and watch his goons, they cover what he doesn't.
-- His rangers sting through prayer. That's the bodyguards, not him.
+- His ranged smash hits the whole room. Melee prayer won't stop it.
 - The bodyguards attack in their own rhythm. Learn it, save the food.
 - Last of the Ourg, this one. Bandos worked the rest to death.
 - He's guarded that door since the Third Age. Dedication.
@@ -5549,9 +5549,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - Nex. Smoke first, keep an antipoison handy.
 - When she calls the shadows, step out of them. Quickly.
-- Fill my soul, that's the blood phase. She heals off what you give her.
+- When she starts her blood siphon, stop hitting her. Your hits heal her.
 - When the ice comes, keep moving or she'll entomb you.
-- The Zarosians locked her behind a frozen door for a reason.
+- Saradomin's people froze her down here. The door was meant to stay shut.
 - Zaros's finest general. The other gods teamed up just to contain her.
 - Four elements, then pure darkness. She saves the worst for last.
 - The Ancient Prison held for millennia. We let her out for sport.
@@ -5832,7 +5832,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 76, cooldown 1m, delay 3-5 ticks
 
 - {count} {boss}. I've bound a new volume for it.
-- A thousand. If {boss} keeps a book on you, it's a long one.
+- {count}. If {boss} keeps a book on you, it's a long one.
 - Your {ordinal} {boss}. I ran out of room in the margin around the six hundredth.
 
 ## quest
@@ -6854,7 +6854,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **what-q**
   - You: Which name?
 - **what-a**
-  - Follower: The one I said just now. Saying it again feels like deciding for you.
+  - Follower: The one I said just now. Tell me to ask later and I'll say it again.
 - **no-q**
   - You: I'd rather you didn't.
 - **no-a (answers 'no')**
