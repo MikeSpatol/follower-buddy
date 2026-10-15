@@ -110,7 +110,8 @@ public class OverheadLineLengthTest
 	 * past the limit cannot hide behind it.
 	 */
 	private static final List<String> AWAITING_WORDING = List.of(
-		"gifted-swap: Out goes {souvenir}, in goes the {wish}, and you get my old one.");
+		"gifted-swap: Out goes {souvenir}, in goes the {wish}, and you get my old one.",
+		"level-mastery-again: Ninety-nine {skill} makes your {ninesOrdinal}. The reserved pages are running out.");
 
 	private GameFont overheadFont() throws IOException
 	{

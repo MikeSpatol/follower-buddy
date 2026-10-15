@@ -140,7 +140,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 89, cooldown 1m
 
 - That's {nines} at ninety-nine, and yes, I'm counting.
-- Ninety-nine {skill}. The reserved pages are running out.
+- Ninety-nine {skill} makes your {ninesOrdinal}. The reserved pages are running out.
 - {skill} to ninety-nine, your {ninesOrdinal}. It never gets smaller.
 - The {ninesOrdinal} ninety-nine. I've had to start a second index.
 
