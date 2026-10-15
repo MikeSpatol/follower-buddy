@@ -47,7 +47,7 @@ public class RuleSetIntegrityTest
 	static final Set<String> KNOWN_TYPES = new HashSet<>(Arrays.asList(
 		"all", "any", "none", "always", "chance", "npcspawn", "npcdespawn",
 		"npcnearby", "petnearby", "healthbelow", "healthabove", "prayerbelow",
-		"prayerabove", "inregion", "regionenter", "inarea", "chatmessage",
+		"prayerabove", "inventoryhas", "inregion", "regionenter", "inarea", "chatmessage",
 		"varbitequals", "varbitchanged", "questvar", "dialogueopen", "questdone",
 		"animationself", "levelup",
 		"damagetaken", "itemequipped", "poisoned", "venomed", "skulled",

@@ -272,6 +272,25 @@ public class EveryConditionTypeTest
 	}
 
 	@Test
+	public void inventoryHas() throws IOException
+	{
+		note("inventoryHas");
+
+		Harness h = harnessFor("{\"type\": \"inventoryHas\", \"ids\": [2944]}");
+		h.game.inventoryContaining(1511);
+		h.gameTicks(2);
+		assertQuiet(h, "not in the bag yet");
+		h.game.inventoryContaining(1511, 2944);
+		h.gameTicks(1);
+		assertFired(h, "the golden key arrives");
+
+		Harness none = harnessFor("{\"type\": \"inventoryHas\", \"ids\": [2944]}");
+		none.game.noInventory();
+		none.gameTicks(2);
+		assertQuiet(none, "no inventory loaded");
+	}
+
+	@Test
 	public void questVarAndDialogueOpen() throws IOException
 	{
 		note("questVar", "dialogueOpen");
@@ -1827,6 +1846,7 @@ public class EveryConditionTypeTest
 		energyAndIdleBounds();
 		itemEquipped();
 		varbitEquals();
+		inventoryHas();
 		questVarAndDialogueOpen();
 		questDone();
 		inRegionAndInArea();

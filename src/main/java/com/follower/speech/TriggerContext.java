@@ -1776,6 +1776,28 @@ public final class TriggerContext
 	 * Whether the wished-for thing is actually in the player's bag right now.
 	 * A wish with no item list is grantable on word alone.
 	 */
+	/**
+	 * Whether any of these items is in the inventory now. False before the
+	 * inventory has loaded, so a rule never rises on an empty read.
+	 */
+	public boolean isInInventory(java.util.Collection<Integer> ids)
+	{
+		net.runelite.api.ItemContainer inventory =
+			client.getItemContainer(net.runelite.api.gameval.InventoryID.INV);
+		if (inventory == null || ids == null)
+		{
+			return false;
+		}
+		for (net.runelite.api.Item item : inventory.getItems())
+		{
+			if (item != null && ids.contains(item.getId()))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public boolean isWishedItemInBag()
 	{
 		if (!isWishing())

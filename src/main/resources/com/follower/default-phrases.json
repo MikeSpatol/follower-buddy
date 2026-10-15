@@ -3386,6 +3386,18 @@
               {
                 "type": "awayFor",
                 "minimum": 180
+              },
+              {
+                "type": "all",
+                "conditions": [
+                  {
+                    "type": "lastTime"
+                  },
+                  {
+                    "type": "awayFor",
+                    "minimum": 60
+                  }
+                ]
               }
             ]
           }
@@ -9186,8 +9198,18 @@
             "minimum": 60
           },
           {
-            "type": "chance",
-            "percent": 60
+            "type": "any",
+            "conditions": [
+              {
+                "type": "awayFor",
+                "minimum": 60,
+                "maximum": 179
+              },
+              {
+                "type": "chance",
+                "percent": 60
+              }
+            ]
           }
         ]
       },

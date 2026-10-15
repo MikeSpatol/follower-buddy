@@ -54,6 +54,7 @@ import net.runelite.api.NPC;
  *   <tr><td>hovered</td><td>{@code ticks} — the mouse resting on the follower</td></tr>
  *   <tr><td>examined</td><td>no fields</td></tr>
  *   <tr><td>inventoryFree</td><td>{@code maximum} free slots — a warning, not a report</td></tr>
+ *   <tr><td>inventoryHas</td><td>{@code ids} - true while any of those items is in the inventory</td></tr>
  *   <tr><td>playersNearby</td><td>{@code minimum} count, {@code within} tiles</td></tr>
  *   <tr><td>wanting</td><td>no fields — a want is open; usually used negated</td></tr>
  *   <tr><td>wantFulfilled / wantExpired</td><td>no fields; {@code {want}} placeholder</td></tr>
@@ -971,6 +972,12 @@ public class Condition
 			// gift's thank-you requires this; the bluff rule requires its
 			// absence - claiming to have found a feather is checkable, and a
 			// follower that cannot tell is a follower that cannot see.
+			// One of these items is in the bag now: state, so a rule rises when
+			// it arrives - the golden key in Priest in Peril, picked up off the
+			// right monk.
+			case "inventoryhas":
+				return ctx.isInInventory(ids);
+
 			case "wishitemheld":
 				return ctx.isWishedItemInBag();
 

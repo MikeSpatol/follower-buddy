@@ -343,7 +343,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > A hello a couple of seconds after the follower teleports in on login. Spawn happens ~4 ticks after login; delayTicks 8 lands the line ~2.5s after the puff. The cooldown stops quick world hops re-greeting. It steps aside after three hours away, for the away lines: one login has one line, and at a higher priority it won every one of them, so they never said a word.
 
-- **when:** on login AND known 7+ days AND NOT (away 180+ minutes)
+- **when:** on login AND known 7+ days AND NOT (away 180+ minutes OR lasttime AND away 60+ minutes)
 - **pacing:** priority 90, cooldown 1m, delay 8 ticks, overhead
 
 - Perfect timing. I'd only just sat down.
@@ -376,7 +376,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > The greeting that remembers what you were doing rather than how long it has been. lastTime is the last nameable thing the two of you did - the work, a boss, a level, a quest - carried across the logout. An hour away or more, and a chance roll so the plain away lines keep a share.
 
-- **when:** lasttime AND away 60+ minutes AND a 60% roll
+- **when:** lasttime AND away 60+ minutes AND (away 60+ minutes OR a 60% roll)
 - **does:** mood +4
 - **pacing:** priority 79, cooldown 5s, delay 6-10 ticks, both
 

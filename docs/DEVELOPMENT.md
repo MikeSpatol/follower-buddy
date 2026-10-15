@@ -388,6 +388,7 @@ mood stretches or shortens on top.
 | `personalBest` | optional `names`; fires the moment a record is beaten. `{record}`, `{value}`, `{previous}` |
 | `sessionCount` | `minimum`/`maximum`/`every` - how many times the follower has been out with you; login only |
 | `inventoryFree` | `maximum` free slots - meant as a warning while there is still room |
+| `inventoryHas` | `ids` - true while any of those items is in the inventory, so a rule rises when one arrives |
 | `hovered` | `ticks` - the mouse resting on the follower |
 | `examined` | - somebody looked it up |
 | `wanting` | - a want is open; normally used inside a `none` |

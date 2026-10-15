@@ -89,6 +89,7 @@ public class EngineSoakTest
 		"{\"type\": \"questVar\", \"varp\": 179, \"minimum\": 1, \"maximum\": 20}",
 		"{\"type\": \"dialogueOpen\"}",
 		"{\"type\": \"questDone\", \"quest\": \"SHEEP_SHEARER\"}",
+		"{\"type\": \"inventoryHas\", \"ids\": [2944]}",
 		"{\"type\": \"poisoned\"}",
 		"{\"type\": \"venomed\"}",
 		"{\"type\": \"skulled\"}",
@@ -393,6 +394,15 @@ public class EngineSoakTest
 				h.game.varp(179, random.nextInt(22));
 				h.game.quest(net.runelite.api.Quest.SHEEP_SHEARER, random.nextBoolean()
 					? net.runelite.api.QuestState.FINISHED : net.runelite.api.QuestState.IN_PROGRESS);
+				// And an item in the bag, or not.
+				if (random.nextBoolean())
+				{
+					h.game.inventoryContaining(2944);
+				}
+				else
+				{
+					h.game.inventoryContaining(1511);
+				}
 				break;
 			}
 			case 13:

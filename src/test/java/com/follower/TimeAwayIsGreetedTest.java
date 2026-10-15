@@ -97,6 +97,24 @@ public class TimeAwayIsGreetedTest
 		}
 	}
 
+	/**
+	 * QA, 15 Oct (MikeS: yes): an hour to three away belonged to the everyday
+	 * hello, which outranks last-time, so last-time never had them. With
+	 * something to remember, last-time has every one of them now.
+	 */
+	@Test
+	public void anHourOrTwoAwayIsRememberedEveryTime() throws IOException
+	{
+		for (int i = 0; i < 10; i++)
+		{
+			Harness h = login(10, 90, "the woodcutting");
+			assertEquals("last time, every time", 1, h.firedBy("last-time").size());
+			assertTrue("instead of the hello", h.firedBy("login-greeting").isEmpty());
+		}
+		assertEquals("with nothing to remember, the hello",
+			1, login(10, 90, "").firedBy("login-greeting").size());
+	}
+
 	@Test
 	public void aShortBreakOrNoRecordStillGetsTheHello() throws IOException
 	{
