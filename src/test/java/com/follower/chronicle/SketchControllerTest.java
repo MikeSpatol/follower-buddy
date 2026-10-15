@@ -134,6 +134,8 @@ public class SketchControllerTest
 	private int animation = -1;
 	/** Whether a right-click menu is open over the view. */
 	private boolean menuOpen;
+	/** Whether the follower has finished its last steps. */
+	private boolean settled = true;
 	/** Said through the engine, which the mute holds back. */
 	private final List<String> said = new ArrayList<>();
 	/** Of those, the ones said ahead of whatever is waiting. */
@@ -180,7 +182,7 @@ public class SketchControllerTest
 			@Override
 			public boolean isSettled()
 			{
-				return true;
+				return settled;
 			}
 
 			@Override
@@ -353,6 +355,25 @@ public class SketchControllerTest
 		holding = false;
 		scribe.tick();
 		assertEquals("once the hand is empty", Collections.singletonList(SketchController.INVITE), said);
+	}
+
+	/**
+	 * QA, 15 Oct: "Right-click me and pick Sketch" is only true when Sketch
+	 * is on the menu, so the line waits on the gates the option does.
+	 */
+	@Test
+	public void pointedOutOnlyWhenSketchIsOnTheMenu() throws IOException
+	{
+		SketchController scribe = scribe();
+		idle = SketchController.IDLE_TICKS;
+		settled = false;
+		tick(scribe, 20);
+		assertTrue("not while it is still walking", said.isEmpty());
+		assertFalse(scribe.canSketchNow());
+		settled = true;
+		scribe.tick();
+		assertEquals(Collections.singletonList(SketchController.INVITE), said);
+		assertTrue("and Sketch is there when it is said", scribe.canSketchNow());
 	}
 
 	@Test

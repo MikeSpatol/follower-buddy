@@ -346,9 +346,9 @@ public class SketchController
 		// Nothing is drawn unasked. A place with a plate still empty is
 		// pointed out, once a session, and drawn when you pose for it. Not
 		// with a tool kept between trees still in the hand: Sketch would be
-		// refused, and the one time it is pointed out spent on nothing.
-		if (busy.getAsBoolean() || hands.isHolding() || idleTicks.getAsInt() < IDLE_TICKS
-			|| !follower.isSpawned() || !follower.isSettled())
+		// refused, and the one time it is pointed out spent on nothing. The
+		// gates are Sketch's own, so the option is there when the line is.
+		if (idleTicks.getAsInt() < IDLE_TICKS || !canSketchNow())
 		{
 			return;
 		}
