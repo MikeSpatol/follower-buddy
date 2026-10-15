@@ -517,6 +517,9 @@ follower has a stamp to measure from). On `killCount`: `{boss}`, `{count}`,
   freezes for a second or two between stages; slaving to the player removes the
   freeze, paces correctly under overrides on different schedules, and ends the
   moment the player's sequence ends (with a 25-tick watchdog against desync).
+  Each stage's graphic also takes the last one's place, as in the player's one
+  spotanim slot, rather than running out its own clip: 803's book outlasts its
+  stage and stayed opaque in the hands while 4857 faded the body.
 - `holdStill` - plant the follower where it stands for the length of the
   animation, releasing it when the animation ends. Movement always wins over an
   emote, so anything triggered by a fight is otherwise cut off the instant the
