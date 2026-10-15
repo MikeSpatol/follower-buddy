@@ -125,6 +125,8 @@ public class ChronicleWindow extends Overlay
 	private volatile int tab;
 	private volatile int listScroll;
 	private volatile int pageScroll;
+	/** Part of a wheel notch turned and not yet scrolled, in notches. */
+	private double wheelOwed;
 	private volatile String selectedId;
 
 	/** The buttons' wait for the tick. */
@@ -464,15 +466,35 @@ public class ChronicleWindow extends Overlay
 			{
 				return event;
 			}
-			int x = event.getX() - bounds.x;
-			int step = event.getWheelRotation() > 0 ? 1 : -1;
-			if (x < ChronicleLayout.SPLIT_X)
+			// A row of the list or three lines of the page per notch. A touchpad
+			// or a fine wheel turns part of a notch at a time, with a whole
+			// rotation of 0; the parts add up, and a turn back starts afresh.
+			double turn = event.getPreciseWheelRotation();
+			if (turn == 0)
 			{
-				scroll(DRAG_LIST, step, listed.size(), ChronicleLayout.visibleRows());
+				return event;
+			}
+			if (wheelOwed != 0 && Math.signum(wheelOwed) != Math.signum(turn))
+			{
+				wheelOwed = 0;
+			}
+			wheelOwed += turn;
+			boolean list = event.getX() - bounds.x < ChronicleLayout.SPLIT_X;
+			int perNotch = list ? 1 : 3;
+			// Rounded a hair outward, so three thirds of a notch make a whole one.
+			int by = (int) (wheelOwed * perNotch + Math.copySign(1e-9, wheelOwed));
+			if (by == 0)
+			{
+				return event;
+			}
+			wheelOwed -= (double) by / perNotch;
+			if (list)
+			{
+				scroll(DRAG_LIST, by, listed.size(), ChronicleLayout.visibleRows());
 			}
 			else
 			{
-				scroll(DRAG_PAGE, step * 3, pageLines.size(), Math.max(1, pageVisibleLines));
+				scroll(DRAG_PAGE, by, pageLines.size(), Math.max(1, pageVisibleLines));
 			}
 			return event;
 		}

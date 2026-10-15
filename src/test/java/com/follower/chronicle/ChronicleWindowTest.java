@@ -551,4 +551,70 @@ public class ChronicleWindowTest
 		openOn(LUMBRIDGE_PAGE, "location-lumbridge", null, book);
 		assertEquals(0, inkAtThePlatesFoot());
 	}
+
+	private void wheel(int x, int rotation, double precise)
+	{
+		window.wheelAdapter.mouseWheelMoved(new java.awt.event.MouseWheelEvent(canvas,
+			java.awt.event.MouseWheelEvent.MOUSE_WHEEL, 0, 0, x, 200, 0, 0, 0, false,
+			java.awt.event.MouseWheelEvent.WHEEL_UNIT_SCROLL, 3, rotation, precise));
+		draw();
+	}
+
+	/**
+	 * QA2: a touchpad's part-notch comes with a whole rotation of 0, which
+	 * counted as a notch up, so scrolling down jerked the page back up. The
+	 * parts add up now, in the way they turn; a notch is still three lines,
+	 * and a flick of three notches is nine.
+	 */
+	@Test
+	public void aTouchpadScrollsThePageTheWayItTurns() throws Exception
+	{
+		openOn(longGoblinPage(), "enemy-goblin", new TriggerContext(null), null);
+		int x = ChronicleLayout.PAGE_TEXT_X + 50;
+		wheel(x, 1, 1);
+		assertEquals("a notch is three lines", 3, field("pageScroll"));
+		wheel(x, 3, 3);
+		assertEquals("a flick of three is nine", 12, field("pageScroll"));
+
+		wheel(x, 0, 0.25);
+		assertEquals("a quarter notch down never goes up", 12, field("pageScroll"));
+		wheel(x, 0, 0.25);
+		assertEquals("half a notch is a line", 13, field("pageScroll"));
+		wheel(x, 0, 0.25);
+		wheel(x, 0, 0.25);
+		assertEquals("four quarters are a notch", 15, field("pageScroll"));
+		for (int i = 0; i < 3; i++)
+		{
+			wheel(x, 0, 1 / 3.0);
+		}
+		assertEquals("three thirds are a notch", 18, field("pageScroll"));
+
+		wheel(x, 0, 0.25);
+		wheel(x, 0, -0.25);
+		assertEquals("a turn back starts afresh", 18, field("pageScroll"));
+		wheel(x, 0, -0.25);
+		assertEquals(17, field("pageScroll"));
+		wheel(x, 0, 0);
+		assertEquals("no turn, no scroll", 17, field("pageScroll"));
+	}
+
+	@Test
+	public void aTouchpadScrollsTheListARowANotch() throws Exception
+	{
+		StringBuilder pages = new StringBuilder();
+		for (int i = 1; i <= 40; i++)
+		{
+			pages.append(i > 1 ? "," : "").append("{\"id\": \"quest-").append(i)
+				.append("\", \"kind\": \"quest\", \"name\": \"Q").append(i)
+				.append("\", \"unlock\": {\"always\": true}, \"summary\": \"S.\"}");
+		}
+		openOn(pages.toString(), "quest-1", new TriggerContext(null), null);
+		int x = ChronicleLayout.SPLIT_X / 2;
+		wheel(x, 0, 0.5);
+		assertEquals(0, field("listScroll"));
+		wheel(x, 0, 0.5);
+		assertEquals(1, field("listScroll"));
+		wheel(x, 0, -0.25);
+		assertEquals("a part-notch up never goes down", 1, field("listScroll"));
+	}
 }
