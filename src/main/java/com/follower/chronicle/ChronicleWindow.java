@@ -808,6 +808,28 @@ public class ChronicleWindow extends Overlay
 	static final String WRITTEN_AT = "Written at: ";
 
 	/**
+	 * The header's third line, as its label and value: where a dated page
+	 * was written, or else what writes it. A place or a land written where
+	 * the book has no name for the spot is written at itself, so a dated
+	 * page there never reads as still waiting.
+	 */
+	static String[] whereLine(ChronicleEntry entry, boolean readable, Long on, String at)
+	{
+		if (on != null && at.isEmpty()
+			&& ("location".equals(entry.kindOrEmpty()) || "world".equals(entry.kindOrEmpty())))
+		{
+			at = entry.name;
+		}
+		if (!at.isEmpty())
+		{
+			return new String[]{WRITTEN_AT, shortPlace(at)};
+		}
+		// Written before the book kept dates, or a quest found finished at
+		// the first look: not still waiting, as unlockLabel would read.
+		return new String[]{"Written when: ", readable && on == null ? "before I kept dates" : unlockLabel(entry)};
+	}
+
+	/**
 	 * A place as a page header names it: the Locations rules describe their
 	 * places ("Lumbridge town and castle", "The Grand Exchange plaza"), and a
 	 * header has room only for the name ("Lumbridge", "the Grand Exchange").
@@ -926,20 +948,9 @@ public class ChronicleWindow extends Overlay
 			on != null ? writtenOn(on)
 				: readable ? "Written" : "Not yet written",
 			readable ? ChronicleLayout.READABLE_GREEN : ChronicleLayout.LOCKED_RED);
-		String at = on == null ? "" : progress.writtenAt(entry);
-		if (!at.isEmpty())
-		{
-			labelled(g, small, left, ChronicleLayout.HEADER_LINE3_BASELINE, WRITTEN_AT,
-				shortPlace(at), ChronicleLayout.BODY_WHITE);
-		}
-		else
-		{
-			// Written before the book kept dates, or a quest found finished at
-			// the first look: not still waiting, as unlockLabel would read.
-			labelled(g, small, left, ChronicleLayout.HEADER_LINE3_BASELINE, "Written when: ",
-				readable && on == null ? "before I kept dates" : unlockLabel(entry),
-				ChronicleLayout.BODY_WHITE);
-		}
+		String[] where = whereLine(entry, readable, on, on == null ? "" : progress.writtenAt(entry));
+		labelled(g, small, left, ChronicleLayout.HEADER_LINE3_BASELINE, where[0], where[1],
+			ChronicleLayout.BODY_WHITE);
 
 		// The body, laid out once per page and cached until the page or its
 		// state changes: the page itself, or the reason it cannot be read

@@ -552,6 +552,38 @@ public class ChronicleWindowTest
 		assertEquals(0, inkAtThePlatesFoot());
 	}
 
+	/**
+	 * QA2: a place written where the book had no name for the spot showed
+	 * its date and, under it, "Written when: you visit", written and still
+	 * waiting at once. A dated place or land is written at itself.
+	 */
+	@Test
+	public void aDatedPlaceWithNoPlaceKeptIsWrittenAtItself() throws Exception
+	{
+		ChronicleLoader loader = new ChronicleLoader(new Gson());
+		loader.load(folder.newFolder().toPath());
+		int places = 0;
+		for (ChronicleEntry entry : loader.getEntries())
+		{
+			String kind = entry.kindOrEmpty();
+			if (!kind.equals("location") && !kind.equals("world"))
+			{
+				continue;
+			}
+			places++;
+			String[] where = ChronicleWindow.whereLine(entry, true, 20000L, "");
+			assertEquals(entry.id, ChronicleWindow.WRITTEN_AT, where[0]);
+			assertEquals(entry.id, entry.name, where[1]);
+		}
+		assertTrue("the book has places and lands", places >= 8);
+
+		ChronicleEntry tower = loader.get("location-wizards-tower");
+		assertEquals("a place kept still wins", "Lumbridge",
+			ChronicleWindow.whereLine(tower, true, 20000L, "Lumbridge town and castle")[1]);
+		assertEquals("undated, as before", "before I kept dates", ChronicleWindow.whereLine(tower, true, null, "")[1]);
+		assertEquals("locked, as before", "you visit", ChronicleWindow.whereLine(tower, false, null, "")[1]);
+	}
+
 	private void wheel(int x, int rotation, double precise)
 	{
 		window.wheelAdapter.mouseWheelMoved(new java.awt.event.MouseWheelEvent(canvas,
