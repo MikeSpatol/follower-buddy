@@ -885,6 +885,84 @@ public class RuleSetIntegrityTest
 			h.rule("mimic-emote-loops").when.ids.contains(10052));
 	}
 
+	/**
+	 * Every animation the follower can be made to play from a rule moves the
+	 * player's skeleton. poses.tsv lists every animation that does, so an id
+	 * missing from it is a creature's clip, which bends the follower's human
+	 * model out of shape for its length. A mirror rule plays the id that
+	 * triggered it, so its trigger list counts too: mimic-emotes once carried
+	 * the penguin, Easter egg, party graphic and cow pet emotes (QA, 15 Oct).
+	 */
+	@Test
+	public void everyAnimationARuleCanPlayIsOnThePlayerSkeleton() throws IOException
+	{
+		Set<Integer> playerSkeleton = new HashSet<>();
+		try (InputStream in = RuleSetIntegrityTest.class.getResourceAsStream("/com/follower/poses.tsv");
+			java.io.BufferedReader reader = new java.io.BufferedReader(
+				new InputStreamReader(in, StandardCharsets.UTF_8)))
+		{
+			for (String line = reader.readLine(); line != null; line = reader.readLine())
+			{
+				if (!line.isEmpty() && !line.startsWith("#") && !line.startsWith("id\t"))
+				{
+					playerSkeleton.add(Integer.parseInt(line.split("\t")[0]));
+				}
+			}
+		}
+		assertTrue("poses.tsv looks too short to be every player animation",
+			playerSkeleton.size() > 3000);
+
+		Harness h = new Harness(folder.newFolder().toPath());
+		Set<String> problems = new TreeSet<>();
+		for (SpeechRule rule : h.loader.getRules())
+		{
+			List<Integer> played = new ArrayList<>();
+			if (rule.animation != null)
+			{
+				played.add(rule.animation);
+			}
+			if (rule.animations != null)
+			{
+				played.addAll(rule.animations);
+			}
+			if (rule.prop != null && rule.prop.pose != null)
+			{
+				played.add(rule.prop.pose);
+			}
+			if ((Boolean.TRUE.equals(rule.mirrorAnimation) || Boolean.TRUE.equals(rule.mirrorPose))
+				&& rule.when != null)
+			{
+				collectAnimationSelfIds(rule.when, played);
+			}
+			for (Integer id : played)
+			{
+				if (id != null && id > 0 && !playerSkeleton.contains(id))
+				{
+					problems.add(rule.id + " " + id);
+				}
+			}
+		}
+		assertTrue("animations off the player skeleton: " + problems, problems.isEmpty());
+	}
+
+	private static void collectAnimationSelfIds(Condition condition, List<Integer> out)
+	{
+		if ("animationSelf".equalsIgnoreCase(condition.type) && condition.ids != null)
+		{
+			out.addAll(condition.ids);
+		}
+		if (condition.conditions != null)
+		{
+			for (Condition child : condition.conditions)
+			{
+				if (child != null)
+				{
+					collectAnimationSelfIds(child, out);
+				}
+			}
+		}
+	}
+
 	@Test
 	public void noRuleAsksToHoldStillWithoutAnimatingAnything() throws IOException
 	{

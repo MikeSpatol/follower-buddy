@@ -6475,7 +6475,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Copies your emote. Every animation in RuneLite's constants with EMOTE in its name that is a ONE-SHOT, measured from the cache. Matching on the EMOTE_ prefix alone missed HUMAN_EMOTE_CRABDANCE and others, which is why the crab dance never mirrored. The authored loops are in mimic-emote-loops instead: a chain ends when the animation controller finishes, which a looping clip never does.
 
-- **when:** your animation 855, 856, 857, 858, 859, 860, 861, 862, 863, 864, 865, 866, 868, 870, 872, 874, 1128, 1129, 1130, 1131, 1374, 1481, 1482, 1483, 1484, 1485, 1708, 2105, 2106, 2107, 2108, 2109, 2110, 2111, 2112, 2113, 2709, 2836, 3544, 3859, 4275, 4276, 4278, 4280, 4751, 5059, 5312, 5313, 5315, 5316, 5693, 5694, 5695, 5696, 5697, 5698, 5699, 5700, 6111, 7131, 7278, 7751, 8331, 8332, 8536, 8537, 8541, 8792, 8855, 8917, 9208, 9831, 9832, 9833, 9834, 9835, 10031, 10038, 10051, 10053, 10503, 10678, 10781, 10796, 11526, 12514, 13801, 13803
+- **when:** your animation 855, 856, 857, 858, 859, 860, 861, 862, 863, 864, 865, 866, 868, 870, 872, 874, 1128, 1129, 1130, 1131, 1374, 1481, 1482, 1483, 1484, 1485, 1708, 2105, 2106, 2107, 2108, 2109, 2110, 2111, 2112, 2113, 2709, 2836, 3544, 3859, 4275, 4276, 4278, 4280, 4751, 5059, 5312, 5313, 5315, 5316, 6111, 7131, 7278, 7751, 8332, 8536, 8537, 8541, 8792, 8855, 8917, 9208, 9831, 9832, 9833, 9834, 9835, 10031, 10051, 10053, 10503, 10678, 10781, 10796, 11526, 12514
 - **does:** mirrors you
 - **pacing:** priority 40, cooldown 2s, delay 1-4 ticks
 
