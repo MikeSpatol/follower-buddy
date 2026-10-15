@@ -953,6 +953,22 @@ public class FollowerEntity
 		facePlayer();
 	}
 
+	/**
+	 * Where a held follower looks. A cutscene: the same way the player is
+	 * turned, animating or not. Play test, 15 Oct (Children of the Sun): the
+	 * hold faced the player on its own, ahead of the frame's turn, so the
+	 * scene's look never got as far as the yaw.
+	 */
+	private void faceTheHold(Player local)
+	{
+		if (watchingWithThePlayer)
+		{
+			dstYaw = local.getOrientation() & 0x7ff;
+			return;
+		}
+		faceStayAnchor();
+	}
+
 	/** Until when the follower stays invisible (the comedy death's empty stage). */
 	private long hideUntilMs;
 
@@ -2326,7 +2342,7 @@ public class FollowerEntity
 		{
 			if (tile.equals(stayTile) && route.isEmpty() && serverPath.isEmpty())
 			{
-				faceStayAnchor();
+				faceTheHold(local);
 			}
 			else if (serverPath.isEmpty() && route.isEmpty())
 			{
@@ -2406,14 +2422,9 @@ public class FollowerEntity
 		// with the turn pose as the player circles around. A stay pose with a
 		// face tile (an errand at its business) faces that instead. A
 		// cutscene comes first: its hold is a stay, and would face the player.
-		if (!moving && watchingWithThePlayer)
+		if (!moving && (watchingWithThePlayer || faceLocked()))
 		{
-			// A cutscene: the same way the player is turned, animating or not.
-			dstYaw = local.getOrientation() & 0x7ff;
-		}
-		else if (!moving && faceLocked())
-		{
-			faceStayAnchor();
+			faceTheHold(local);
 		}
 		else if (!moving && !glance())
 		{
