@@ -150,7 +150,61 @@ public class SceneExtraTest
 		assertNotEquals("the next one is", MARK, follower.getStayTile());
 	}
 
+	/**
+	 * Play test, 15 Oct (Children of the Sun): the player turned and the
+	 * follower went on facing them. The hold's own facing ran ahead of the
+	 * frame's turn and pointed it back at the player every frame.
+	 */
+	@Test
+	public void theHoldLooksWhereThePlayerLooks()
+	{
+		keep();
+		set("watchingWithThePlayer", true);
+		for (int jau : new int[]{1536, 512, 0})
+		{
+			game.turned(jau);
+			faceTheHold();
+			assertEquals("turned the way the player is", jau, get("dstYaw"));
+		}
+		set("watchingWithThePlayer", false);
+		set("lastRenderedLocation", net.runelite.api.coords.LocalPoint.fromWorld(game.client, MARK));
+		faceTheHold();
+		assertNotEquals("out of a scene, a stay faces the player again", 0, get("dstYaw"));
+	}
+
+	/**
+	 * Both of the frame's facings of a held follower go through the scene's
+	 * look (the order inside it: WallPathingTest). A third caller of the
+	 * stay's own facing is how the scene's look was lost.
+	 */
+	@Test
+	public void theFrameFacesTheHoldOnlyThroughTheScenesLook() throws java.io.IOException
+	{
+		String source = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(
+			"src/main/java/com/follower/follower/FollowerEntity.java")), java.nio.charset.StandardCharsets.UTF_8);
+		int calls = 0;
+		for (int at = source.indexOf("faceStayAnchor();"); at >= 0; at = source.indexOf("faceStayAnchor();", at + 1))
+		{
+			calls++;
+		}
+		assertEquals("faceTheHold, and faceAnchor while the feet move", 2, calls);
+	}
+
 	// ---------------------------------------------------------------- helpers
+
+	private void faceTheHold()
+	{
+		try
+		{
+			Method face = FollowerEntity.class.getDeclaredMethod("faceTheHold", net.runelite.api.Player.class);
+			face.setAccessible(true);
+			face.invoke(follower, game.client.getLocalPlayer());
+		}
+		catch (ReflectiveOperationException e)
+		{
+			throw new AssertionError("FollowerEntity.faceTheHold has moved", e);
+		}
+	}
 
 	/** The next tick's keeping of the scene, with the player where they are. */
 	private void keep()

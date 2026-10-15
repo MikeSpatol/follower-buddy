@@ -391,7 +391,9 @@ public class WallPathingTest
 	/**
 	 * A cutscene's hold is a stay, and a stay faces the player: asked second,
 	 * the follower stared at the player all scene instead of looking where
-	 * they look. The facing needs a live client, so the order is read.
+	 * they look. The facing needs a live client, so the order is read. Both
+	 * of the frame's facings of a hold now ask through faceTheHold
+	 * (SceneExtraTest).
 	 */
 	@Test
 	public void aSceneIsLookedAtBeforeAStayIsFaced() throws java.io.IOException
@@ -399,9 +401,10 @@ public class WallPathingTest
 		String source = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(
 			"src/main/java/com/follower/follower/FollowerEntity.java")),
 			java.nio.charset.StandardCharsets.UTF_8).replace("\r\n", "\n");
-		int scene = source.indexOf("if (!moving && watchingWithThePlayer)");
-		int stay = source.indexOf("else if (!moving && faceLocked())");
-		assertTrue("the lint has lost its place", scene >= 0 && stay >= 0);
+		int start = source.indexOf("private void faceTheHold(");
+		int scene = source.indexOf("if (watchingWithThePlayer)", start);
+		int stay = source.indexOf("faceStayAnchor();", start);
+		assertTrue("the lint has lost its place", start >= 0 && scene >= 0 && stay >= 0);
 		assertTrue("the scene is asked first", scene < stay);
 	}
 
