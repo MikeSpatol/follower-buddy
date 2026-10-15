@@ -72,9 +72,10 @@ public class ErrandController
 	/**
 	 * Writing in a scroll with a quill, the pose the Advanced posing window
 	 * shows as Write with a quill. The animation is authored to play once,
-	 * with no restart frame; held as a pose override it starts again from its
-	 * first frame each time it ends (FollowerEntity's loopSafely), so the
-	 * follower writes on for as long as the pose is held.
+	 * with no restart frame; held as a pose override it lifts the scroll once
+	 * and writes on over its writing frames for as long as the pose is held,
+	 * and lowers it when let go of (FollowerEntity's holdTheWriting and
+	 * WRITE_PUT_AWAY).
 	 */
 	// Public: the minutes-taking borrows the same stance and props, so the
 	// documenting look has exactly one definition.
@@ -215,8 +216,14 @@ public class ErrandController
 		}
 	}
 
-	/** Praying at an altar - the classic kneel. */
-	private static final int PRAY_ANIMATION = 645;
+	/**
+	 * Praying at an altar: HUMAN_PRAY_LOOP held as a pose, which kneels and
+	 * stays kneeling (frame step 5), then HUMAN_GETUP to stand. The one-shot
+	 * kneel, 645, is 3.9 ticks and ends almost upright, so the follower knelt
+	 * once and stood idle at the altar for the rest of the visit (QA, 15 Oct).
+	 */
+	private static final int PRAY_LOOP = 179;
+	private static final int GET_UP = 534;
 
 	/** Bending down: petting the cat, seeing to the bootlace. */
 	private static final int BEND_ANIMATION = 827;
@@ -227,6 +234,14 @@ public class ErrandController
 	 * (FORESTRY_CAMPFIRE 10082 turned out to be the campfire's own animation.)
 	 */
 	private static final int WARM_ANIMATION = 897;
+
+	/**
+	 * The warming replayed this often, as the fireside seat does: the clip is
+	 * 3.1 ticks, and played once the follower knelt and then stood about at
+	 * the fire for four seconds (QA, 15 Oct). Three times over the visit.
+	 */
+	private static final int WARM_EVERY_TICKS = 4;
+	private static final int WARM_TICKS = 12;
 
 	/** At or under this distance the follower comes back on foot - the
 	 * catch-up pathing walks a short gap and runs a longer one on its own. */
@@ -468,6 +483,17 @@ public class ErrandController
 			if (--waitTicks <= 0)
 			{
 				finish();
+			}
+			else if (current == Errand.FIRE && waitTicks % WARM_EVERY_TICKS == 0)
+			{
+				follower.playAnimation(WARM_ANIMATION);
+			}
+			else if (current == Errand.ALTAR && waitTicks == 1)
+			{
+				// Up off the knees a tick before the walk home, which would
+				// cancel the get-up on its first frame.
+				follower.clearPoseOverride(PRAY_LOOP);
+				follower.playAnimation(GET_UP);
 			}
 		}
 		else if (state == State.RETURNING)
@@ -866,12 +892,12 @@ public class ErrandController
 				waitTicks = 14 + random.nextInt(5);
 				break;
 			case ALTAR:
-				follower.playAnimation(PRAY_ANIMATION);
+				follower.setPoseOverride(PRAY_LOOP);
 				waitTicks = 8;
 				break;
 			case FIRE:
 				follower.playAnimation(WARM_ANIMATION);
-				waitTicks = 10;
+				waitTicks = WARM_TICKS;
 				break;
 			case FIREDEATH:
 				// Standing IN the fire now. The pain is immediate and vocal.
@@ -992,6 +1018,10 @@ public class ErrandController
 	private void putTheScrollAway()
 	{
 		studyLookTicks = 0;
+		if (current == Errand.ALTAR)
+		{
+			follower.clearPoseOverride(PRAY_LOOP);
+		}
 		if (current == Errand.DOCUMENT || current == Errand.STUDY
 			|| current == Errand.EXPLORE)
 		{
