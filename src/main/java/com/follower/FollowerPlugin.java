@@ -1143,7 +1143,7 @@ public class FollowerPlugin extends Plugin
 		});
 		panel.setOnComeHere(this::placeHere);
 		panel.setOnFilm(this::openFilmDialog);
-		panel.setFollowerName(config.followerName());
+		panel.setFollowerName(followerName());
 		// The too-close fire variant is the scheduler's own roll, not a
 		// choice to offer.
 		java.util.Map<String, String> errandNames =
@@ -4479,7 +4479,7 @@ public class FollowerPlugin extends Plugin
 			}
 			if ("followerName".equals(key))
 			{
-				panel.setFollowerName(config.followerName());
+				panel.setFollowerName(followerName());
 			}
 			if ("developerMode".equals(key))
 			{
@@ -6517,12 +6517,12 @@ public class FollowerPlugin extends Plugin
 		com.follower.speech.DialogTree tree = dialogLoader.get(asked);
 		if (tree != null)
 		{
-			dialog.startNextTick(config.followerName(),
+			dialog.startNextTick(followerName(),
 				com.follower.speech.FollowerDialog.build(tree, this::answerQuestion),
 				tree.startId());
 			return;
 		}
-		dialog.startNextTick(config.followerName(),
+		dialog.startNextTick(followerName(),
 			talkScript(this::daySummary, this::answerQuestion,
 				speechEngine.getContext().getWishLabel(),
 				speechEngine.getContext().isWishedItemInBag(),
@@ -6993,7 +6993,7 @@ public class FollowerPlugin extends Plugin
 		for (net.runelite.api.MenuEntry entry : existing)
 		{
 			if (entry.getType() != net.runelite.api.MenuAction.RUNELITE
-				|| !entry.getTarget().contains(config.followerName()))
+				|| !entry.getTarget().contains(followerName()))
 			{
 				kept.add(entry);
 			}
@@ -7004,7 +7004,7 @@ public class FollowerPlugin extends Plugin
 		// index 1 in the bottom-up entry array (Cancel is index 0).
 		client.getMenu().createMenuEntry(1)
 			.setOption("Examine")
-			.setTarget("<col=ffff00>" + config.followerName() + "</col>")
+			.setTarget("<col=ffff00>" + followerName() + "</col>")
 			.setType(net.runelite.api.MenuAction.RUNELITE)
 			.onClick(e ->
 			{
@@ -7115,7 +7115,7 @@ public class FollowerPlugin extends Plugin
 		WorldPoint target = sceneTile.getWorldLocation();
 		client.getMenu().createMenuEntry(0)
 			.setOption("Send")
-			.setTarget("<col=ffff00>" + config.followerName() + "</col>")
+			.setTarget("<col=ffff00>" + followerName() + "</col>")
 			.setType(net.runelite.api.MenuAction.RUNELITE)
 			.onClick(e ->
 			{
@@ -7305,7 +7305,7 @@ public class FollowerPlugin extends Plugin
 			&& offersWalkHere(client.getMenu().getMenuEntries()))
 		{
 			tooltipManager.add(new net.runelite.client.ui.overlay.tooltip.Tooltip(
-				talkOption() + " <col=ffff00>" + config.followerName() + "</col>"));
+				talkOption() + " <col=ffff00>" + followerName() + "</col>"));
 		}
 	}
 
@@ -7350,7 +7350,7 @@ public class FollowerPlugin extends Plugin
 	{
 		client.getMenu().createMenuEntry(-1)
 			.setOption(option)
-			.setTarget("<col=ffff00>" + config.followerName() + "</col>")
+			.setTarget("<col=ffff00>" + followerName() + "</col>")
 			.setType(net.runelite.api.MenuAction.RUNELITE)
 			.onClick(e ->
 			{
@@ -7678,7 +7678,7 @@ public class FollowerPlugin extends Plugin
 		{
 			configManager.setConfiguration(FollowerConfig.GROUP, "wishHintShown", true);
 			sendStatus("When you have the " + speechEngine.getContext().getWishLabel()
-				+ ", right-click " + config.followerName()
+				+ ", right-click " + followerName()
 				+ " and Talk-to to hand it over.");
 		}
 		wasWishing = wishingNow;
@@ -8444,7 +8444,7 @@ public class FollowerPlugin extends Plugin
 	{
 		// The follower's own lines land in public chat under its name; feeding
 		// them back into the rules would let it react to itself.
-		if (config.followerName().equals(event.getName()))
+		if (followerName().equals(event.getName()))
 		{
 			return;
 		}
@@ -11396,7 +11396,7 @@ public class FollowerPlugin extends Plugin
 			// follower's name - "Name: message" in the game's own chat colours
 			// - exactly as a real player's overhead words mirror into chat.
 			clientThread.invoke(() -> client.addChatMessage(
-				ChatMessageType.PUBLICCHAT, config.followerName(), text, null));
+				ChatMessageType.PUBLICCHAT, followerName(), text, null));
 		}
 
 		// The writing flourish: the scroll comes out as the line is said, so
@@ -11862,8 +11862,7 @@ public class FollowerPlugin extends Plugin
 		final boolean[] done = {false};
 		chatboxPanelManager.openTextInput("Your new follower is waiting. What will you call them?")
 			.value("")
-			.charValidator(c -> Character.isLetterOrDigit(c)
-				|| c == ' ' || c == '\'' || c == '-')
+			.charValidator(c -> nameChar((char) c))
 			.onDone((String answer) ->
 			{
 				done[0] = true;
@@ -11915,6 +11914,27 @@ public class FollowerPlugin extends Plugin
 	}
 
 	/**
+	 * A letter or digit the game's fonts can draw - they stop at Latin-1, so
+	 * a Cyrillic or Greek name would come out blank over the follower's head
+	 * - or a space, apostrophe or hyphen.
+	 */
+	static boolean nameChar(char c)
+	{
+		return (Character.isLetterOrDigit(c) && c <= 0xFF) || c == ' ' || c == '\'' || c == '-';
+	}
+
+	/**
+	 * The name from the settings, kept to what a typed name may hold: the
+	 * settings text field takes anything at all. The setting's own default
+	 * when nothing usable is left.
+	 */
+	private String followerName()
+	{
+		String name = cleanFollowerName(config.followerName());
+		return name.isEmpty() ? "Follower" : name;
+	}
+
+	/**
 	 * What survives of a typed name: the allowed characters, single spaces,
 	 * at most twenty of them. The chatbox validator already refuses most of
 	 * this, but pasted text does not go through it, and the menu target and
@@ -11930,7 +11950,7 @@ public class FollowerPlugin extends Plugin
 		for (int i = 0; i < raw.length(); i++)
 		{
 			char c = raw.charAt(i);
-			if (Character.isLetterOrDigit(c) || c == ' ' || c == '\'' || c == '-')
+			if (nameChar(c))
 			{
 				kept.append(c);
 			}
@@ -11955,7 +11975,7 @@ public class FollowerPlugin extends Plugin
 			return;
 		}
 		configManager.setConfiguration(FollowerConfig.GROUP, "firstSpawnNoticeShown", true);
-		sendStatus("Only you can see " + config.followerName()
+		sendStatus("Only you can see " + followerName()
 			+ ". Everything it does is client-side - nothing is sent to the game.");
 		sendStatus("Type ::follower in chat for commands.");
 	}
@@ -11973,7 +11993,7 @@ public class FollowerPlugin extends Plugin
 		}
 		configManager.setConfiguration(FollowerConfig.GROUP, "sendHintShown", true);
 		sendStatus("You can also hold Shift and right-click any tile to Send "
-			+ config.followerName() + " there.");
+			+ followerName() + " there.");
 	}
 
 	// ---------------------------------------------------------------- sharing
@@ -12029,7 +12049,7 @@ public class FollowerPlugin extends Plugin
 			}
 
 			com.follower.share.PackFile.Summary made = com.follower.share.PackFile.export(
-				target.toPath(), mine, shipped, voices, gson, config.followerName());
+				target.toPath(), mine, shipped, voices, gson, followerName());
 
 			if (made.isEmpty())
 			{
@@ -12344,7 +12364,7 @@ public class FollowerPlugin extends Plugin
 			.type(ChatMessageType.CONSOLE)
 			.runeLiteFormattedMessage(new ChatMessageBuilder()
 				.append(ChatColorType.HIGHLIGHT)
-				.append("[" + config.followerName() + "] ")
+				.append("[" + followerName() + "] ")
 				.append(ChatColorType.NORMAL)
 				.append(message)
 				.build())
