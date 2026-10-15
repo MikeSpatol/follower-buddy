@@ -301,6 +301,12 @@ public class FollowerPlugin extends Plugin
 	private com.follower.follower.WrapTrimStore wrapTrimStore;
 
 	@Inject
+	private com.follower.speech.ConversationStore conversationStore;
+
+	@Inject
+	private net.runelite.client.input.KeyManager keyManager;
+
+	@Inject
 	private SpeechEngine speechEngine;
 
 	@Inject
@@ -612,6 +618,7 @@ public class FollowerPlugin extends Plugin
 		}
 		paletteHarvest.load(dataDir);
 		wrapTrimStore.load(dataDir, follower);
+		conversationStore.load(dataDir);
 		loadOutfitProfiles();
 
 		speechEngine.setSink(this::speak);
@@ -836,6 +843,7 @@ public class FollowerPlugin extends Plugin
 				&& minutesState == 0 && !emoteHold && !filming && !sceneHolds());
 		filmSet = new com.follower.follower.FilmSet(follower, this::rebuildFollower,
 			(graphicId, height) -> follower.playSpotAnim(spotAnimRepository.get(graphicId), height));
+		conversation = new com.follower.speech.ConversationPlayer(conversationStage());
 
 		// On a fresh client boot the LOGIN_SCREEN transition can happen before
 		// this plugin subscribes, so the first login would not read as fresh.
@@ -849,6 +857,7 @@ public class FollowerPlugin extends Plugin
 		overlayManager.add(chronicleWindow);
 		overlayManager.add(crossOverlay);
 		dialog.register();
+		keyManager.registerKeyListener(escapeStopsTheConversation);
 		// The chronicle reads quests from the game and the rest from the
 		// follower's memory, so it is built on the same context the memory
 		// lives in and is saved with it.
@@ -957,6 +966,7 @@ public class FollowerPlugin extends Plugin
 		overlayManager.remove(chronicleWindow);
 		overlayManager.remove(crossOverlay);
 		dialog.unregister();
+		keyManager.unregisterKeyListener(escapeStopsTheConversation);
 		chronicleWindow.unregister();
 		chronicleWindow.close();
 		mouseManager.unregisterMouseListener(shiftClickAdapter);
@@ -3242,7 +3252,8 @@ public class FollowerPlugin extends Plugin
 		{
 			if (filmDialog == null)
 			{
-				filmDialog = new com.follower.ui.FilmDialog(filmCrew(), clientThread::invoke);
+				filmDialog = new com.follower.ui.FilmDialog(filmCrew(), clientThread::invoke,
+					conversationStore, this::followerName);
 			}
 			filmDialog.open();
 		});
@@ -3295,6 +3306,12 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void endFilming()
 	{
+		// A conversation can play without the follower out, so before the
+		// check: whatever ends the scene ends it too.
+		if (conversation != null)
+		{
+			conversation.stop(null);
+		}
 		if (!filming)
 		{
 			return;
@@ -3520,10 +3537,167 @@ public class FollowerPlugin extends Plugin
 			}
 
 			@Override
+			public String play(com.follower.speech.Conversation script)
+			{
+				if (client.getLocalPlayer() == null)
+				{
+					return "You are not in the game.";
+				}
+				// The follower holds still and quiet for it, as for any line.
+				// A conversation of the player's lines alone plays without it.
+				String refused = ensureFilming();
+				if (refused != null && script.followerSpeaks())
+				{
+					return refused;
+				}
+				return conversation.play(script, System.currentTimeMillis());
+			}
+
+			@Override
+			public String stopConversation()
+			{
+				conversation.stop("Stopped.");
+				return null;
+			}
+
+			@Override
 			public void cut()
 			{
 				// The pose's props go with it, and its own gear comes back.
 				endFilming();
+			}
+		};
+	}
+
+	/** The film window's conversation, played; built in startUp. */
+	private com.follower.speech.ConversationPlayer conversation;
+
+	/** Esc in the game stops a conversation playing, and is the conversation's while one is. */
+	private final net.runelite.client.input.KeyListener escapeStopsTheConversation =
+		new net.runelite.client.input.KeyListener()
+	{
+		@Override
+		public void keyTyped(java.awt.event.KeyEvent e)
+		{
+		}
+
+		@Override
+		public void keyReleased(java.awt.event.KeyEvent e)
+		{
+		}
+
+		@Override
+		public void keyPressed(java.awt.event.KeyEvent e)
+		{
+			com.follower.speech.ConversationPlayer playing = conversation;
+			if (e.getKeyCode() == java.awt.event.KeyEvent.VK_ESCAPE && playing != null && playing.isPlaying())
+			{
+				clientThread.invoke(() -> playing.stop("Stopped."));
+				e.consume();
+			}
+		}
+	};
+
+	/** Where the conversation plays: the dialogue box, the chatbox and the overheads. */
+	private com.follower.speech.ConversationPlayer.Stage conversationStage()
+	{
+		return new com.follower.speech.ConversationPlayer.Stage()
+		{
+			@Override
+			public boolean gameDialogueOpen()
+			{
+				return npcDialogOpen();
+			}
+
+			@Override
+			public boolean talkToOpen()
+			{
+				return dialog.isOpen();
+			}
+
+			@Override
+			public void showBox(com.follower.speech.Conversation.Line line)
+			{
+				String[] pages = dialog.pagesFor(com.follower.speech.Conversation.shown(line));
+				com.follower.speech.FollowerDialog.Node node =
+					line.speaker == com.follower.speech.Conversation.Speaker.YOU
+						? com.follower.speech.FollowerDialog.Node.you(pages)
+						: com.follower.speech.FollowerDialog.Node.says(pages);
+				// A bubble still up is two mouths at once, as at a Talk-to.
+				overlay.clear();
+				dialog.showScripted(followerName(), node.face(line.expression.animations()));
+			}
+
+			@Override
+			public int boxPage()
+			{
+				return dialog.pageShown();
+			}
+
+			@Override
+			public String boxPageText()
+			{
+				return dialog.pageText();
+			}
+
+			@Override
+			public boolean boxContinued()
+			{
+				return dialog.wasContinued();
+			}
+
+			@Override
+			public void continueBox()
+			{
+				dialog.continueNow();
+			}
+
+			@Override
+			public void closeBox()
+			{
+				dialog.close();
+			}
+
+			@Override
+			public void say(com.follower.speech.Conversation.Line line, long ms)
+			{
+				if (line.speaker == com.follower.speech.Conversation.Speaker.FOLLOWER)
+				{
+					// Straight away, over whatever is up, and the floor held
+					// for as long as it is.
+					speechQueue.clear();
+					cutByTheScene = null;
+					speakingUntilMs = System.currentTimeMillis() + ms + SPEECH_GAP_MS;
+				}
+				com.follower.speech.ConversationPlayer.sayInChat(client, filmSet, followerName(),
+					overlay::show, line, ms);
+			}
+
+			@Override
+			public void unsay(com.follower.speech.Conversation.Line line)
+			{
+				if (line.speaker == com.follower.speech.Conversation.Speaker.FOLLOWER)
+				{
+					overlay.clear();
+					return;
+				}
+				Player me = client.getLocalPlayer();
+				if (me != null)
+				{
+					me.setOverheadCycle(0);
+				}
+			}
+
+			@Override
+			public long readingTimeMs(String text)
+			{
+				return FollowerPlugin.this.readingTimeMs(text);
+			}
+
+			@Override
+			public void tell(String text)
+			{
+				tellTheFilm(text);
 			}
 		};
 	}
@@ -6643,6 +6817,12 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void startTalking()
 	{
+		// A conversation playing has the box; Talk-to waits for its end.
+		if (conversation != null && conversation.isPlaying())
+		{
+			tellTheFilm("Talk-to waits until the conversation is over.");
+			return;
+		}
 		// Opening the box is presence too, even before anything is chosen.
 		speechEngine.getContext().noteAttention();
 		// A bubble still up when the box opens is two mouths at once; the
@@ -7404,6 +7584,10 @@ public class FollowerPlugin extends Plugin
 	@Subscribe
 	public void onClientTick(net.runelite.api.events.ClientTick event)
 	{
+		if (conversation != null)
+		{
+			conversation.update(System.currentTimeMillis());
+		}
 		if (gaze != null)
 		{
 			gaze.noteHover(com.follower.follower.Gaze.read(client, follower));

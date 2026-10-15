@@ -77,6 +77,12 @@ public class FilmDialog extends JDialog
 
 		String playerSays(String text);
 
+		/** Plays a written conversation from its first line, over any playing. */
+		String play(com.follower.speech.Conversation script);
+
+		/** Ends the conversation playing, if one is. */
+		String stopConversation();
+
 		/** The window closed: the scene is over. */
 		void cut();
 	}
@@ -102,10 +108,15 @@ public class FilmDialog extends JDialog
 	/** The poses the list shows now, row for row. */
 	private List<FilmSet.Pose> shown = new ArrayList<>();
 
+	private final ConversationPanel conversation;
+
 	/**
 	 * @param clientThread runs a task on the client thread
+	 * @param store        the saved conversations
+	 * @param followerName the follower's name, as the Conversation tab shows it
 	 */
-	public FilmDialog(Crew crew, Consumer<Runnable> clientThread)
+	public FilmDialog(Crew crew, Consumer<Runnable> clientThread,
+		com.follower.speech.ConversationStore store, java.util.function.Supplier<String> followerName)
 	{
 		super((java.awt.Frame) null, "Follower Buddy - Advanced posing", false);
 		this.crew = crew;
@@ -142,22 +153,36 @@ public class FilmDialog extends JDialog
 		columns.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		columns.add(poses());
 		columns.add(placing());
-		root.add(columns, BorderLayout.CENTER);
+		JPanel posing = new JPanel(new BorderLayout(0, 8));
+		posing.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		posing.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
+		posing.add(columns, BorderLayout.CENTER);
 
 		JPanel lines = column();
 		lines.add(heading("FOLLOWER SAYS"));
 		lines.add(sayRow(Crew::followerSays, "Said."));
 		lines.add(heading("YOU SAY (your screen only)"));
 		lines.add(sayRow(Crew::playerSays, "Over your head, on your screen only."));
+		posing.add(lines, BorderLayout.SOUTH);
+
+		conversation = new ConversationPanel(this::act, store, followerName, status::setText);
+		javax.swing.JTabbedPane tabs = new javax.swing.JTabbedPane();
+		tabs.addTab("Posing", posing);
+		tabs.addTab("Conversation", conversation);
+		root.add(tabs, BorderLayout.CENTER);
+
 		status.setFont(FontManager.getRunescapeSmallFont());
 		status.setForeground(Color.WHITE);
-		status.setBorder(BorderFactory.createEmptyBorder(8, 0, 0, 0));
 		status.setAlignmentX(LEFT_ALIGNMENT);
-		lines.add(status);
-		root.add(lines, BorderLayout.SOUTH);
+		root.add(status, BorderLayout.SOUTH);
+
+		// Esc stops a conversation playing, here as in the game.
+		getRootPane().registerKeyboardAction(e -> act(c -> c.stopConversation(), null),
+			javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_ESCAPE, 0),
+			javax.swing.JComponent.WHEN_IN_FOCUSED_WINDOW);
 
 		setContentPane(root);
-		setPreferredSize(new Dimension(680, 720));
+		setPreferredSize(new Dimension(680, 760));
 		pack();
 		setLocationRelativeTo(null);
 	}
@@ -165,6 +190,7 @@ public class FilmDialog extends JDialog
 	/** Shows the window and starts the scene, or carries on with the one under way. */
 	public void open()
 	{
+		conversation.refreshNames();
 		setVisible(true);
 		toFront();
 		act(Crew::start, "Posing. It holds still and keeps quiet until you close this window.");
