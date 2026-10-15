@@ -3368,7 +3368,7 @@
     },
     {
       "id": "login-greeting",
-      "note": "A hello a couple of seconds after the follower teleports in on login. Spawn happens ~4 ticks after login; delayTicks 8 lands the line ~2.5s after the puff. The cooldown stops quick world hops re-greeting. It steps aside after three hours away, for the away lines: one login has one line, and at a higher priority it won every one of them, so they never said a word.",
+      "note": "A hello a couple of seconds after the follower teleports in on login. Spawn happens ~4 ticks after login; the login is raised once the baseline is taken, a couple of ticks in, so delayTicks 8 lands the line a few seconds after the puff. The cooldown stops quick world hops re-greeting. It steps aside after three hours away, for the away lines: one login has one line, and at a higher priority it won every one of them, so they never said a word.",
       "group": "misc",
       "priority": 90,
       "output": "overhead",
@@ -8370,7 +8370,7 @@
     },
     {
       "id": "combat-cheer-boss",
-      "note": "Encouragement during a boss fight. Outranks the ordinary cheer.",
+      "note": "Encouragement during a boss fight, where the ordinary cheer stands aside.",
       "group": "combat",
       "priority": 40,
       "cooldownMs": 45000,
@@ -8402,7 +8402,7 @@
     },
     {
       "id": "combat-cheer",
-      "note": "Encouragement during any fight, kept rare so it does not natter.",
+      "note": "Encouragement during an ordinary fight, kept rare so it does not natter. A boss fight has its own cheer.",
       "group": "combat",
       "priority": 30,
       "cooldownMs": 20000,
@@ -10865,6 +10865,7 @@
       "priority": 30,
       "cooldownMs": 300000,
       "output": "overhead",
+      "animation": 13302,
       "remember": {
         "key": "close-call",
         "as": "how close that was with the {foe}",
@@ -10881,14 +10882,7 @@
             "type": "combat"
           }
         ]
-      },
-      "say": [
-        "I'm not going to forget that one.",
-        "That'll stay with me, that will.",
-        "Too close. The handwriting shows it.",
-        "That gets an underline.",
-        "My heart was in my mouth for that one."
-      ]
+      }
     },
     {
       "id": "memory-death",
@@ -10912,18 +10906,7 @@
       "delayTicksMax": 12,
       "when": {
         "type": "playerDeath"
-      },
-      "say": [
-        "That's going in the book.",
-        "I saw all of it, for what it's worth.",
-        "The record will be kind about it.",
-        "I've written it down. Not happily.",
-        "Some entries I would rather not have.",
-        "Filed under things we don't mention.",
-        "The ink went on heavier than usual for that one.",
-        "I wrote it smaller, so it looks further away.",
-        "One more for the chapter I keep meaning to close."
-      ]
+      }
     },
     {
       "id": "memory-big-drop",
@@ -10946,13 +10929,7 @@
       "when": {
         "type": "lootWorth",
         "minimum": 1000000
-      },
-      "say": [
-        "I'm still not over that.",
-        "That drop gets its own footnote.",
-        "I re-read that entry sometimes. For morale.",
-        "Best line in the ledger so far."
-      ]
+      }
     },
     {
       "id": "memory-boss",
@@ -10975,13 +10952,7 @@
       "when": {
         "type": "npcKill",
         "minimum": 150
-      },
-      "say": [
-        "I want that written down somewhere.",
-        "That one goes in with a steadier hand.",
-        "Chapters end on moments like that.",
-        "Tell people. If you don't, I will."
-      ]
+      }
     },
     {
       "id": "recall-idle",
@@ -13838,8 +13809,8 @@
       },
       "say": [
         "Bought the {item}. The ledger balances.",
-        "Word's come through. The {item} is yours.",
-        "The {item}'s arrived. I signed for it in spirit."
+        "Word's come through. You've got the {item}.",
+        "Your {item} arrived. I signed for it in spirit."
       ]
     },
     {

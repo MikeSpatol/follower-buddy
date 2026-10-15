@@ -1,6 +1,6 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 517 rules, 2394 spoken lines, 3 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 517 rules, 2372 spoken lines, 3 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
@@ -11,7 +11,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (42 rules, 280 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 114 lines)
 - [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 72 lines)
-- [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (28 rules, 124 lines)
+- [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (28 rules, 102 lines)
 - [area](#area) - Places: named lines, tastes, earned verdicts, the defences (66 rules, 222 lines)
 - [errand](#errand) - Its little trips: bank, altar, fire, cat, studies, explores (44 rules, 155 lines)
 - [souvenir](#souvenir) - Wishes, gifts, the pocket, and what it carries (17 rules, 84 lines)
@@ -341,7 +341,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `login-greeting`
 
-> A hello a couple of seconds after the follower teleports in on login. Spawn happens ~4 ticks after login; delayTicks 8 lands the line ~2.5s after the puff. The cooldown stops quick world hops re-greeting. It steps aside after three hours away, for the away lines: one login has one line, and at a higher priority it won every one of them, so they never said a word.
+> A hello a couple of seconds after the follower teleports in on login. Spawn happens ~4 ticks after login; the login is raised once the baseline is taken, a couple of ticks in, so delayTicks 8 lands the line a few seconds after the puff. The cooldown stops quick world hops re-greeting. It steps aside after three hours away, for the away lines: one login has one line, and at a higher priority it won every one of them, so they never said a word.
 
 - **when:** on login AND known 7+ days AND NOT (away 180+ minutes OR lasttime AND away 60+ minutes)
 - **pacing:** priority 90, cooldown 1m, delay 8 ticks, overhead
@@ -616,8 +616,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 24, cooldown 5m, delay 2 ticks
 
 - Bought the {item}. The ledger balances.
-- Word's come through. The {item} is yours.
-- The {item}'s arrived. I signed for it in spirit.
+- Word's come through. You've got the {item}.
+- Your {item} arrived. I signed for it in spirit.
 
 ### `ge-sold`
 
@@ -1877,7 +1877,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `combat-cheer-boss`
 
-> Encouragement during a boss fight. Outranks the ordinary cheer.
+> Encouragement during a boss fight, where the ordinary cheer stands aside.
 
 - **when:** a boss fight AND a 12% roll
 - **pacing:** priority 40, cooldown 45s
@@ -1896,7 +1896,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `combat-cheer`
 
-> Encouragement during any fight, kept rare so it does not natter.
+> Encouragement during an ordinary fight, kept rare so it does not natter. A boss fight has its own cheer.
 
 - **when:** in a fight AND NOT (a boss fight) AND a 8% roll
 - **pacing:** priority 30, cooldown 20s
@@ -2210,14 +2210,10 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Filed when you come out the far side of nearly dying. The follower does not need to say anything at the time - critical-hp already does - it just needs to remember, so it can bring it up later. The particulars (who, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.
 
 - **when:** HP under 8% AND in a fight
-- **does:** files incident `close-call` as 'how close that was with the {foe}'
+- **does:** files incident `close-call` as 'how close that was with the {foe}'; animation 13302
 - **pacing:** priority 30, cooldown 5m, overhead
 
-- I'm not going to forget that one.
-- That'll stay with me, that will.
-- Too close. The handwriting shows it.
-- That gets an underline.
-- My heart was in my mouth for that one.
+- *(no lines - animation or effect only)*
 
 ### `memory-death`
 
@@ -2227,15 +2223,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **does:** files incident `the-death` as 'the way that went with the {foe}'; prop item 31830, pose 13302
 - **pacing:** priority 30, cooldown 5s, delay 6-12 ticks, overhead
 
-- That's going in the book.
-- I saw all of it, for what it's worth.
-- The record will be kind about it.
-- I've written it down. Not happily.
-- Some entries I would rather not have.
-- Filed under things we don't mention.
-- The ink went on heavier than usual for that one.
-- I wrote it smaller, so it looks further away.
-- One more for the chapter I keep meaning to close.
+- *(no lines - animation or effect only)*
 
 ### `memory-big-drop`
 
@@ -2245,10 +2233,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **does:** files incident `big-drop` as 'the {item} that dropped'; prop item 31830, pose 13302
 - **pacing:** priority 20, cooldown 10m, overhead
 
-- I'm still not over that.
-- That drop gets its own footnote.
-- I re-read that entry sometimes. For morale.
-- Best line in the ledger so far.
+- *(no lines - animation or effect only)*
 
 ### `memory-boss`
 
@@ -2258,10 +2243,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **does:** files incident `the-boss` as 'the {npc} going down'; prop item 31830, pose 13302
 - **pacing:** priority 20, cooldown 10m, overhead
 
-- I want that written down somewhere.
-- That one goes in with a steadier hand.
-- Chapters end on moments like that.
-- Tell people. If you don't, I will.
+- *(no lines - animation or effect only)*
 
 ### `recall-idle`
 
@@ -6800,7 +6782,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **start**
   - Follower: Oh good, you came over.
-  - Follower: I wanted to ask you something, and I'd rather ask it properly.
+  - Follower: There's something I wanted to ask you. Properly.
 - **ask**
   - Follower: Have you got time to go somewhere with me? Nowhere far. Just somewhere I like.
 - **why-q**
@@ -6865,7 +6847,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **no-q**
   - You: I'd rather you didn't.
 - **no-a (answers 'no')**
-  - Follower: Understood. That one's gone, and I won't bring it up again.
+  - Follower: Understood. That one's gone, and I won't bring it up.
 - **later-q**
   - You: Ask me later.
 - **later-a (answers 'later')**
