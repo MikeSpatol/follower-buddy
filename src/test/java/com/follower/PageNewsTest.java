@@ -1,12 +1,17 @@
 package com.follower;
 
+import com.follower.sim.Harness;
 import com.follower.speech.TriggerEvent;
+import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  * When a page written gets its mention.
@@ -56,5 +61,50 @@ public class PageNewsTest
 		assertNull("something else is being said", FollowerPlugin.nextPageNews(news, 120, false, false));
 		assertNull("and a minute (100 ticks) later it is news no longer",
 			FollowerPlugin.nextPageNews(news, 100 + 101, true, false));
+	}
+
+	@Rule
+	public final TemporaryFolder folder = new TemporaryFolder();
+
+	/**
+	 * QA, 15 Oct: after a burst of three lines the gap ran out while the
+	 * director was still resting, so the news went out, was held back by the
+	 * rest, and the page was never mentioned.
+	 */
+	@Test
+	public void theNewsWaitsOutTheRestAfterABurst() throws IOException
+	{
+		java.util.concurrent.atomic.AtomicLong clock = new java.util.concurrent.atomic.AtomicLong(1_800_000_000_000L);
+		Harness h = new Harness(folder.newFolder().toPath());
+		h.engine.setClock(clock::get);
+		h.engine.setGlobalCooldownMs(6_000L);
+		h.engine.getContext().setSessionCount(20);
+		h.engine.getContext().setMetOnDay(java.time.LocalDate.now().toEpochDay() - 30);
+		for (String line : new String[]{"combat-start", "kill-cheer", "combat-end"})
+		{
+			h.engine.force(line);
+			for (int i = 0; i < 11; i++)
+			{
+				clock.addAndGet(600L);
+				h.gameTick();
+			}
+		}
+		int waited = 0;
+		while (!h.engine.isQuiet() && waited < 200)
+		{
+			clock.addAndGet(600L);
+			h.gameTick();
+			waited++;
+		}
+		assertTrue("quiet means the rest is over too",
+			!h.engine.getDirector().isRelaxing(clock.get()));
+		h.clear();
+		h.dispatch(TriggerEvent.pageWritten("location", "Lumbridge"));
+		for (int i = 0; i < 3; i++)
+		{
+			clock.addAndGet(600L);
+			h.gameTick();
+		}
+		assertTrue("the page is mentioned", !h.firedBy("chronicle-page-place").isEmpty());
 	}
 }
