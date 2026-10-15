@@ -110,6 +110,58 @@ public class ShadowedRulesTest
 		assertTrue(h.firedBy("kill-boss-celebrate").isEmpty());
 	}
 
+	/** Spoken times of a rule's lines, from the harness clock. */
+	private void fight(Harness h, String name, int level, int forTicks, java.util.List<Long> bossCheers)
+	{
+		net.runelite.api.NPC foe = h.game.spawnNpc(1, name, level);
+		h.game.fighting(foe);
+		for (int i = 0; i < forTicks; i++)
+		{
+			int before = h.firedBy("combat-cheer-boss").size();
+			ticks(h, 1);
+			if (h.firedBy("combat-cheer-boss").size() > before)
+			{
+				bossCheers.add(clock.get());
+			}
+		}
+	}
+
+	@Test
+	public void aBossFightHasOneCheerNotTwo() throws IOException
+	{
+		Harness h = harness();
+		java.util.List<Long> cheers = new java.util.ArrayList<>();
+		fight(h, "Vorkath", 732, 2000, cheers);
+		assertTrue("the ordinary cheer stays out of a boss fight", h.firedBy("combat-cheer").isEmpty());
+		assertTrue("the boss cheer has it", cheers.size() > 1);
+		for (int i = 1; i < cheers.size(); i++)
+		{
+			assertTrue("45 s between boss cheers", cheers.get(i) - cheers.get(i - 1) >= 45_000L);
+		}
+
+		Harness goblin = harness();
+		fight(goblin, "Goblin", 2, 2000, new java.util.ArrayList<>());
+		assertTrue("an ordinary fight still has its cheer", !goblin.firedBy("combat-cheer").isEmpty());
+	}
+
+	@Test
+	public void theBossKillIsCelebratedWhileTheFollowerIsResting() throws IOException
+	{
+		Harness h = harness();
+		h.engine.setGlobalCooldownMs(6_000L);
+		h.engine.getContext().setBossNames(h.loader.getBossNames());
+		for (String line : new String[]{"combat-start", "kill-cheer", "combat-end"})
+		{
+			h.engine.force(line);
+			ticks(h, 11);
+		}
+		assertTrue("the burst has the director resting",
+			h.engine.getDirector().isRelaxing(clock.get()));
+		h.dispatch(TriggerEvent.kill(8061, "Vorkath", 732, 7));
+		ticks(h, 30);
+		assertEquals(1, h.firedBy("kill-boss-celebrate").size());
+	}
+
 	@Test
 	public void aGrudgeIsNotedWhenNoWishWasKept() throws IOException
 	{

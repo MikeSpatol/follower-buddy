@@ -8369,7 +8369,7 @@
       "note": "Encouragement during a boss fight. Outranks the ordinary cheer.",
       "group": "combat",
       "priority": 40,
-      "cooldownMs": 15000,
+      "cooldownMs": 45000,
       "when": {
         "type": "all",
         "conditions": [
@@ -8407,6 +8407,14 @@
         "conditions": [
           {
             "type": "combat"
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "bossFight"
+              }
+            ]
           },
           {
             "type": "chance",
@@ -8750,6 +8758,7 @@
     },
     {
       "id": "kill-boss-celebrate",
+      "occasion": true,
       "markHere": "you put that thing down",
       "note": "A proper celebration for a boss kill: cheer, dance, then a jump for joy (862/866/2109, 7.4s in total). The 6-8 tick delay lets the fight formally end and the spectating ward wind down first, so the celebration follows the fight instead of colliding with it - the ward's own release is 4 ticks, which this clears. It was 13-16, which cleared the ward three times over and left an eight second hole between the kill and the cheer. namedBoss: true keeps it for the bosses named in the boss rules: play test, 14 Oct, it had worn out on every level-100 Slayer demon of a task.",
       "group": "boss",
