@@ -155,6 +155,20 @@ public class LifecycleGlueTest
 	}
 
 	@Test
+	public void theHiddenErrandIsNeverListed() throws IOException
+	{
+		// Text sweep, 14 Oct: the fire errand that walks into the fire is a
+		// joke the panel's dropdown keeps hidden; the help and the typo reply
+		// listed it.
+		for (java.util.Map.Entry<String, String> command : FollowerPlugin.EVERYDAY_COMMANDS)
+		{
+			assertFalse(command.getKey(), command.getKey().contains("firedeath"));
+		}
+		assertTrue("the typo reply lists the same keys", source()
+			.contains("+ LISTED_ERRAND_KEYS.replace(\"|\", \", \"));"));
+	}
+
+	@Test
 	public void theQuietAfterASceneStartsNothing() throws IOException
 	{
 		// Play test, 13 Oct: hold the activities through the quiet too. No

@@ -9315,6 +9315,15 @@ public class FollowerPlugin extends Plugin
 		com.follower.follower.ErrandController.keys();
 
 	/**
+	 * The errand keys a player is shown: all but firedeath, which stays
+	 * accepted but unlisted, as in the panel's dropdown, so the joke is not
+	 * spoiled by a list.
+	 */
+	private static final String LISTED_ERRAND_KEYS = ERRAND_KEYS.stream()
+		.filter(k -> !"firedeath".equals(k))
+		.collect(java.util.stream.Collectors.joining("|"));
+
+	/**
 	 * The everyday commands as (command, description) pairs. The help printer
 	 * and the side panel's Commands section both read this list, so the two
 	 * cannot drift apart.
@@ -9333,7 +9342,7 @@ public class FollowerPlugin extends Plugin
 			command("posing", "the Advanced posing window: pose it, turn it and give it lines"),
 			command("sketch", "pose for the chronicle's sketch of this place, as right-click Sketch"),
 			command("height <n>", "lift or lower it"),
-			command("errand [" + ERRAND_KEYS.stream().filter(k -> !k.equals("firedeath")).collect(java.util.stream.Collectors.joining("|")) + "]", "send it on an errand now"),
+			command("errand [" + LISTED_ERRAND_KEYS + "]", "send it on an errand now"),
 			command("reload", "re-read the phrase and sound files"),
 			command("status", "models, rules and spawn state"),
 			command("where", "your region id, for Locations in the Messages window")));
@@ -9487,7 +9496,7 @@ public class FollowerPlugin extends Plugin
 		if (key != null && !ERRAND_KEYS.contains(key))
 		{
 			sendStatus("No errand called '" + key + "'. Try: "
-				+ String.join(", ", ERRAND_KEYS));
+				+ LISTED_ERRAND_KEYS.replace("|", ", "));
 			return;
 		}
 		errands.force(key);
