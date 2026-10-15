@@ -7,6 +7,7 @@ import com.follower.speech.TriggerEvent;
 import com.google.gson.Gson;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import net.runelite.api.coords.WorldPoint;
@@ -221,8 +222,16 @@ public class ErrandSimulationTest
 	{
 		return new FollowerConfig()
 		{
+			@Override
+			public boolean errandsEnabled()
+			{
+				return errandsOn;
+			}
 		};
 	}
+
+	/** The Go on errands setting, as the controller reads it each tick. */
+	private boolean errandsOn = true;
 
 	private void tick(int count)
 	{
@@ -312,6 +321,40 @@ public class ErrandSimulationTest
 
 	/** Whether a work session is on, for the session gate. */
 	private boolean working;
+
+	/**
+	 * QA, 15 Oct: ::follower errand answers "Will run the bank errand at the
+	 * next quiet moment", and a bank errand with no bank near was dropped with
+	 * only a debug log. The miss is told, so the player hears why.
+	 */
+	@Test
+	public void aForcedErrandThatCannotStartHereSaysSo()
+	{
+		List<String> missed = new ArrayList<>();
+		errands.setOnForcedMiss(missed::add);
+		game.at(50, 50, 0);
+		errands.force("bank");
+		tick(1);
+		assertFalse("no bank, no errand", errands.isBusy());
+		assertEquals("and the miss is told", Collections.singletonList("bank"), missed);
+
+		// Asked for silently, a miss is nobody's business.
+		errands.force("bank", true);
+		tick(1);
+		assertEquals("a silent force tells nobody", 1, missed.size());
+	}
+
+	@Test
+	public void anErrandAskedForBeforeErrandsWereSwitchedOffIsNotOwedLater()
+	{
+		errands.force("bootlace");
+		errandsOn = false;
+		tick(5);
+		assertFalse(errands.isBusy());
+		errandsOn = true;
+		tick(1);
+		assertFalse("the old ask does not fire when errands come back on", started("bootlace"));
+	}
 
 	@Test
 	public void theBankErrandFindsABoothTheGameCapitalises()

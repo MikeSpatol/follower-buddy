@@ -760,6 +760,7 @@ public class FollowerPlugin extends Plugin
 		// And in return no errand of the follower's own starts mid-session,
 		// or in a scene or the quiet after one.
 		errands.setSession(() -> skilling.isWorking() || sceneQuiet());
+		errands.setOnForcedMiss(key -> sendStatus(ERRAND_MISSED));
 		moments = new com.follower.follower.Moments(client, follower, config, skilling,
 			this::momentFeetTaken,
 			() -> speechEngine.getContext().isInCombat(),
@@ -9404,6 +9405,14 @@ public class FollowerPlugin extends Plugin
 		.collect(java.util.stream.Collectors.joining("|"));
 
 	/**
+	 * The two answers that keep "Will run the errand at the next quiet
+	 * moment" honest: errands are off, or the one asked for could not start
+	 * where the follower is. Wording awaits approval (fx/chat-text.json).
+	 */
+	static final String ERRANDS_OFF = "Errands are off. Tick Go on errands under Errands to send it on one.";
+	static final String ERRAND_MISSED = "That errand can't start here.";
+
+	/**
 	 * The everyday commands as (command, description) pairs. The help printer
 	 * and the side panel's Commands section both read this list, so the two
 	 * cannot drift apart.
@@ -9577,6 +9586,13 @@ public class FollowerPlugin extends Plugin
 		{
 			sendStatus("No errand called '" + key + "'. Try: "
 				+ LISTED_ERRAND_KEYS.replace("|", ", "));
+			return;
+		}
+		// The controller does nothing while errands are off, so a queued
+		// key would be a promise nobody keeps.
+		if (!config.errandsEnabled())
+		{
+			sendStatus(ERRANDS_OFF);
 			return;
 		}
 		errands.force(key);

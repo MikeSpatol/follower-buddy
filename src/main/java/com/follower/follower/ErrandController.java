@@ -343,6 +343,18 @@ public class ErrandController
 	private boolean forceSilently;
 
 	/**
+	 * Told the key of a forced errand that could not start where the follower
+	 * is. The command that asked for it promised a run, so the player hears
+	 * why there was none; a silent force tells nobody.
+	 */
+	private Consumer<String> onForcedMiss = key -> { };
+
+	public void setOnForcedMiss(Consumer<String> onForcedMiss)
+	{
+		this.onForcedMiss = onForcedMiss;
+	}
+
+	/**
 	 * Whether a work session is on. Errands do not start during one; the
 	 * exception is the errand the session itself asks for through
 	 * {@link #force(String, boolean)}, which is company rather than a
@@ -423,6 +435,10 @@ public class ErrandController
 			{
 				abort();
 			}
+			// One asked for before errands were switched off is not owed
+			// whenever they next come back on.
+			forceKey = null;
+			forceSilently = false;
 			return;
 		}
 
@@ -500,8 +516,13 @@ public class ErrandController
 					}
 				}
 			}
+			boolean quiet = silent;
 			silent = false;
 			log.debug("Forced errand '{}' could not start here", key);
+			if (!quiet)
+			{
+				onForcedMiss.accept(key);
+			}
 			return;
 		}
 

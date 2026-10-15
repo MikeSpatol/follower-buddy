@@ -50,4 +50,23 @@ public class StatusLinesTest
 		assertTrue("a profile picked in the panel still says so",
 			method("private void loadOutfitProfile(String name)\n").contains("loadOutfitProfile(name, false)"));
 	}
+
+	/**
+	 * With errands off, ::follower errand and the panel's Go now promised a
+	 * run the controller would never make. The ask is refused before the
+	 * promise, and a forced errand that cannot start is reported back.
+	 */
+	@Test
+	public void anErrandIsPromisedOnlyWhenErrandsAreOn() throws IOException
+	{
+		String force = method("public void forceErrand(String key)");
+		int off = force.indexOf("if (!config.errandsEnabled())");
+		int queued = force.indexOf("errands.force(key)");
+		int promised = force.indexOf("sendStatus(\"Will run the ");
+		assertTrue("the lint has lost its place", queued >= 0 && promised > queued);
+		assertTrue("errands off is answered before anything is queued", off >= 0 && off < queued);
+		assertTrue("and that answer returns", force.substring(off, queued).contains("return;"));
+		assertTrue("a forced errand that cannot start here is told",
+			source().contains("errands.setOnForcedMiss("));
+	}
 }
