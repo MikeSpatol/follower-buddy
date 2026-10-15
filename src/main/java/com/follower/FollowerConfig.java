@@ -1339,11 +1339,13 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "reachAnimation",
 		name = "Reaching for something",
-		description = "Animation played as the follower takes something out -"
-			+ " its scroll, or a tool it is borrowing - so the thing does not"
-			+ " simply appear in its hand. Default 827 is the bend the errands"
-			+ " already use. Others worth a look: 832, 5207, 895, 1649, 6217."
-			+ " Preview with ::follower anim <id>. Blank or 0 for none.",
+		description = "Animation played as the follower takes a single thing out,"
+			+ " such as a tool it is borrowing, so it does not simply appear in"
+			+ " its hand. The thing comes into the hand halfway through. The"
+			+ " quill and scroll need none: the writing pose lifts them itself."
+			+ " Default 827 is the bend the errands already use. Others worth a"
+			+ " look: 832, 5207, 895, 1649, 6217. Preview with"
+			+ " ::follower anim <id>. Blank or 0 for none.",
 		section = shieldSection,
 		position = 13
 	)

@@ -1480,7 +1480,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `thieving-lookout`
 
-> Keeping watch while the player works. Animation 13993 is HUMAN_DISTANT_IDLE, measured from the cache at 5.04s: it reads as glancing about rather than as glaring at somebody, which suits a lookout better than SUSPECTING did. Silent by design - the whole session is muted, and an animation-only rule is movement rather than chatter so it plays anyway.
+> Keeping watch while the player works. Animation 6840 is GENERIC_LOOK_AND_SEARCH, a look about that starts and ends standing, 3.4 ticks. The distant idle it replaced moved too little to read as anything. Silent by design - the whole session is muted, and an animation-only rule is movement rather than chatter so it plays anyway.
 
 - **when:** thieving AND a 45% roll
 - **does:** animation 6840
