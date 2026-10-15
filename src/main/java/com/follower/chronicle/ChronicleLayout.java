@@ -230,8 +230,7 @@ public final class ChronicleLayout
 	{
 		// The number sits straight under the plate, if the page has one.
 		int at = 0;
-		while (at < after.size() && (after.get(at).style == Style.PLATE || after.get(at).style == Style.CAPTION
-			|| after.get(at).style == Style.POSE))
+		while (at < after.size() && (after.get(at).style == Style.PLATE || after.get(at).style == Style.CAPTION))
 		{
 			at++;
 		}
@@ -302,19 +301,12 @@ public final class ChronicleLayout
 	public static List<Line> lockedPage(ChronicleEntry entry, String reason, int width,
 		ToIntFunction<String> bodyWidth, ToIntFunction<String> headingWidth)
 	{
-		return lockedPage(entry, reason, false, width, bodyWidth, headingWidth);
-	}
-
-	/** The same, with the pose line under the caption when a sketch on it has one. */
-	public static List<Line> lockedPage(ChronicleEntry entry, String reason, boolean posed, int width,
-		ToIntFunction<String> bodyWidth, ToIntFunction<String> headingWidth)
-	{
 		List<Line> lines = new ArrayList<>();
 		if (entry == null)
 		{
 			return lines;
 		}
-		plate(lines, entry, posed);
+		plate(lines, entry);
 		paragraphs(lines, reason, width, bodyWidth, Style.BODY, 0);
 		String kind = entry.kindOrEmpty();
 		if (!kind.equals("boss") && !kind.equals("enemy"))
@@ -414,20 +406,15 @@ public final class ChronicleLayout
 		/** Room held for the plate, drawn as one picture over all its rows. */
 		PLATE,
 		/** The line under the plate; the window fills in which plate it is. */
-		CAPTION,
-		/**
-		 * The line under the caption, on a page with a sketch that caught you
-		 * mid-emote; the window fills in the pose of the plate showing.
-		 */
-		POSE
+		CAPTION
 	}
 
 	/**
-	 * The plate's rows and its caption line, when the page has pictures, and
-	 * the pose line under it when any of its sketches has one. Any, not the
-	 * plate showing: turning the plates must not move the text below them.
+	 * The plate's rows and its caption line, when the page has pictures. A
+	 * sketch's pose is pencilled on the drawing rather than given a line: a
+	 * line kept for it showed blank under every other plate on the page.
 	 */
-	private static void plate(List<Line> lines, ChronicleEntry entry, boolean posed)
+	private static void plate(List<Line> lines, ChronicleEntry entry)
 	{
 		if (entry.platesOrEmpty().isEmpty())
 		{
@@ -438,10 +425,6 @@ public final class ChronicleLayout
 			lines.add(new Line("", Style.PLATE, 0));
 		}
 		lines.add(new Line("", Style.CAPTION, 0));
-		if (posed)
-		{
-			lines.add(new Line("", Style.POSE, 0));
-		}
 	}
 
 	/** Plate numbers as a book has them. */
@@ -461,15 +444,15 @@ public final class ChronicleLayout
 	public static List<Line> page(ChronicleEntry entry, int width,
 		ToIntFunction<String> bodyWidth, ToIntFunction<String> headingWidth)
 	{
-		return page(entry, null, false, width, bodyWidth, headingWidth);
+		return page(entry, null, width, bodyWidth, headingWidth);
 	}
 
 	/**
 	 * The same, with the page's own number under the plate, a note in the
 	 * margin before the summary, when there is one ({@code tally} null when
-	 * not), and the pose line when a sketch on it has one.
+	 * not).
 	 */
-	public static List<Line> page(ChronicleEntry entry, String tally, boolean posed, int width,
+	public static List<Line> page(ChronicleEntry entry, String tally, int width,
 		ToIntFunction<String> bodyWidth, ToIntFunction<String> headingWidth)
 	{
 		List<Line> lines = new ArrayList<>();
@@ -477,7 +460,7 @@ public final class ChronicleLayout
 		{
 			return lines;
 		}
-		plate(lines, entry, posed);
+		plate(lines, entry);
 		paragraphs(lines, tally, width, bodyWidth, Style.TALLY, 0);
 		paragraphs(lines, entry.summary, width, bodyWidth, Style.BODY, 0);
 		for (ChronicleEntry.Section section : entry.sectionsOrEmpty())

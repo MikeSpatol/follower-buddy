@@ -472,28 +472,39 @@ public class ChronicleWindowTest
 		+ "\"plates\": [{\"sketch\": \"lumbridge\", \"regions\": [12850], \"caption\": \"Lumbridge, done in a hurry.\","
 		+ "\"hint\": \"Lumbridge, when we're there.\"}]}";
 
+	/** Pencil marks along the foot of the page's plate, where the pose is written. */
+	private int inkAtThePlatesFoot()
+	{
+		int foot = ChronicleLayout.BODY_TOP + 2 + ChronicleLayout.PLATE_H - 2 - ChronicleWindow.POSE_RISE;
+		return count(picture(), new java.awt.Rectangle(ChronicleLayout.PAGE_TEXT_X, foot - 10,
+			ChronicleLayout.PLATE_W, 13), SketchStyle.INK);
+	}
+
 	/**
-	 * A sketch that caught you mid-emote says so on the line under the
-	 * caption, on the page and opened across the window; one drawn with you
-	 * standing still, or before the book kept poses, has no such line.
+	 * A sketch that caught you mid-emote says so, pencilled on the drawing
+	 * on the page and under the caption opened across the window; one drawn
+	 * with you standing still, or before the book kept poses, says nothing.
+	 *
+	 * <p>QA: the pose used to have a line of its own under the caption, held
+	 * on the page whenever any of its sketches had one, so it showed blank
+	 * under every other plate and pushed the summary down the first screen.
 	 */
 	@Test
-	public void aSketchOfYouMidDanceSaysSoUnderItsCaption() throws Exception
+	public void aSketchOfYouMidDanceSaysSoOnTheDrawing() throws Exception
 	{
 		SketchBook book = new SketchBook(folder.newFolder().toPath());
 		book.openFor("acct");
 		book.put("lumbridge", paper(), paper(), "dance");
 		openOn(LUMBRIDGE_PAGE, "location-lumbridge", null, book);
-		int caption = pageStyles().indexOf(ChronicleLayout.Style.CAPTION);
-		assertEquals("the pose under the caption", ChronicleLayout.Style.POSE, pageStyles().get(caption + 1));
-		assertEquals("then the summary", "Home.", pageTexts().get(caption + 2));
+		assertTrue("pencilled on the drawing", inkAtThePlatesFoot() > 0);
+		assertEquals("and the summary straight under the caption", "Home.",
+			pageTexts().get(pageStyles().indexOf(ChronicleLayout.Style.CAPTION) + 1));
 		pressThePlate();
 		assertTrue("and opened across the window, drawn without trouble", enlarged());
 
 		book.put("lumbridge", paper(), paper(), null);
 		escape();
-		assertFalse("drawn again standing still, the pose goes with the old drawing: " + pageStyles(),
-			pageStyles().contains(ChronicleLayout.Style.POSE));
+		assertEquals("drawn again standing still, the pose goes with the old drawing", 0, inkAtThePlatesFoot());
 	}
 
 	@Test
@@ -507,18 +518,18 @@ public class ChronicleWindowTest
 		SketchBook book = new SketchBook(data);
 		book.openFor("acct");
 		openOn(LUMBRIDGE_PAGE, "location-lumbridge", null, book);
-		assertFalse(pageStyles().toString(), pageStyles().contains(ChronicleLayout.Style.POSE));
+		assertEquals(0, inkAtThePlatesFoot());
 		assertEquals("the summary straight under the caption", "Home.",
 			pageTexts().get(pageStyles().indexOf(ChronicleLayout.Style.CAPTION) + 1));
 	}
 
 	@Test
-	public void aPoseItHasNoWordsForAddsNoLine() throws Exception
+	public void aPoseItHasNoWordsForWritesNothing() throws Exception
 	{
 		SketchBook book = new SketchBook(folder.newFolder().toPath());
 		book.openFor("acct");
 		book.put("lumbridge", paper(), paper(), "somersault");
 		openOn(LUMBRIDGE_PAGE, "location-lumbridge", null, book);
-		assertFalse(pageStyles().contains(ChronicleLayout.Style.POSE));
+		assertEquals(0, inkAtThePlatesFoot());
 	}
 }

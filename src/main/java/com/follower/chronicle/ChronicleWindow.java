@@ -83,6 +83,12 @@ public class ChronicleWindow extends Overlay
 	private static final int PORTRAIT_FOOT = 0xbfa97f;
 	private static final int BARE_PAPER = 0xcbb994;
 
+	/** How far above the drawing's foot the pose is pencilled on a page's plate. */
+	static final int POSE_RISE = 4;
+
+	/** How much of the drawing the strip under the pencilled pose hides, out of 255. */
+	private static final int POSE_PAPER_ALPHA = 190;
+
 	/** How much a plate under the mouse lightens, out of 255. */
 	private static final int HOVER_ALPHA = 28;
 
@@ -944,19 +950,18 @@ public class ChronicleWindow extends Overlay
 			}
 		}
 		// Your own number under the plate, once the page is written and the
-		// follower has one; and room for the pose when a sketch caught one.
+		// follower has one.
 		String tally = readable ? tallyLine(entry, progress.count(entry)) : null;
-		boolean posed = posed(entry);
 		String page = entry.id + (readable ? "" : ":locked");
-		String key = page + done + tally + posed;
+		String key = page + done + tally;
 		if (!key.equals(pageLinesFor))
 		{
 			ChronicleEntry asRead = entry.readAs(done::contains);
 			List<ChronicleLayout.Line> before = pageLines;
 			pageLines = readable
-				? ChronicleLayout.page(asRead, tally, posed, width,
+				? ChronicleLayout.page(asRead, tally, width,
 					s -> measure(g, body, false, s), s -> measure(g, bold, true, s))
-				: ChronicleLayout.lockedPage(asRead, unwrittenHint(entry), posed, width,
+				: ChronicleLayout.lockedPage(asRead, unwrittenHint(entry), width,
 					s -> measure(g, body, false, s), s -> measure(g, bold, true, s));
 			// Another page, or this one just written, opens at the top. The
 			// same page changing under the reader - one more kill, a passage
@@ -1013,9 +1018,6 @@ public class ChronicleWindow extends Overlay
 				case CAPTION:
 					drawCaption(g, small, plate, plates.size(), readable, left, width, ly, prev, next);
 					break;
-				case POSE:
-					drawPose(g, small, plate, left + width / 2, ly);
-					break;
 				case HEADING:
 					text(g, bold, true, line.text, left, ly, ChronicleLayout.TITLE_ORANGE, false);
 					break;
@@ -1041,7 +1043,8 @@ public class ChronicleWindow extends Overlay
 	 * person is drawn from its own model, turning, in its idle; one not yet
 	 * met is its outline in ink. A place is the scribe's sketch, or bare
 	 * paper until you have posed for it there. Enlarged, a sketch is the
-	 * copy drawn at that size. Under the
+	 * copy drawn at that size; on the page, the pose it caught you in is
+	 * pencilled along its foot. Under the
 	 * mouse it lightens a touch, as the game's own pictures that take a
 	 * press do.
 	 */
@@ -1084,6 +1087,26 @@ public class ChronicleWindow extends Overlay
 			else
 			{
 				text(g, null, false, blank, ix + iw / 2, iy + ih / 2 + 4, SketchStyle.INK, true);
+			}
+		}
+		else if (!big && poseLine(plate) != null)
+		{
+			// On the page there is no room under the caption for the pose
+			// without a line held blank under every other plate, so it is
+			// written on the drawing, as a note in pencil at its foot.
+			String said = poseLine(plate);
+			int baseline = iy + ih - POSE_RISE;
+			// On a strip of paper left clear, or the pencil is lost in a busy drawing.
+			int across = measure(g, small, false, said) + 8;
+			g.setColor(new Color(SketchStyle.PAPER | POSE_PAPER_ALPHA << 24, true));
+			g.fillRect(ix + (iw - across) / 2, baseline - 10, across, 13);
+			if (small != null)
+			{
+				small.drawCenteredBaseline(g, said, ix + iw / 2, baseline, SketchStyle.INK, false);
+			}
+			else
+			{
+				text(g, null, false, said, ix + iw / 2, baseline, SketchStyle.INK, true);
 			}
 		}
 		if (hover)
@@ -1156,19 +1179,6 @@ public class ChronicleWindow extends Overlay
 		{
 			text(g, small, false, said, centre, baseline, ChronicleLayout.NOTE_PALE, true);
 		}
-	}
-
-	/** Whether any sketch on the page caught you in a pose, so the page keeps a line for it. */
-	private boolean posed(ChronicleEntry entry)
-	{
-		for (ChronicleEntry.Plate plate : entry.platesOrEmpty())
-		{
-			if (poseLine(plate) != null)
-			{
-				return true;
-			}
-		}
-		return false;
 	}
 
 	/** The plate's pose in the scribe's words, or null: not a sketch, not drawn, or no pose. */
