@@ -119,4 +119,52 @@ public class TimeAwayIsGreetedTest
 			assertEquals("away " + away, 1, hellos(login(10, away, "the woodcutting")));
 		}
 	}
+	/**
+	 * The login as the plugin raises it: the prime armed first, and LOGIN
+	 * held until it has taken its baseline. QA, 15 Oct: raised before the
+	 * prime, logging in poisoned or in the Wilderness had that standing state
+	 * rise on the login pass and take it from the greeting.
+	 */
+	private Harness loginAsThePluginDoes(java.util.function.Consumer<Harness> standing) throws IOException
+	{
+		Harness h = new Harness(folder.newFolder().toPath());
+		h.engine.getContext().setSessionCount(20);
+		h.engine.getContext().setMetOnDay(LocalDate.now().toEpochDay() - 40);
+		h.engine.getContext().setMinutesAway(30);
+		standing.accept(h);
+		h.engine.primeEdgesOnNextTick();
+		h.engine.dispatchAfterPriming(TriggerEvent.simple(TriggerEvent.Type.LOGIN));
+		h.gameTicks(20);
+		return h;
+	}
+
+	@Test
+	public void standingStateDoesNotTakeTheHello() throws IOException
+	{
+		Harness wildy = loginAsThePluginDoes(h -> h.game.varbit(5963, 1));
+		assertEquals(1, wildy.firedBy("login-greeting").size());
+		assertTrue(wildy.firedBy("enter-wilderness").isEmpty());
+
+		Harness poisoned = loginAsThePluginDoes(
+			h -> h.game.varp(net.runelite.api.gameval.VarPlayerID.POISON, 5));
+		assertEquals(1, poisoned.firedBy("login-greeting").size());
+		assertTrue(poisoned.firedBy("status-poisoned").isEmpty());
+	}
+
+	/** The plugin arms the prime before it raises LOGIN, and raises it through the wait. */
+	@Test
+	public void thePluginRaisesLoginAfterThePrime() throws IOException
+	{
+		String source = new String(java.nio.file.Files.readAllBytes(
+			java.nio.file.Paths.get("src/main/java/com/follower/FollowerPlugin.java")),
+			java.nio.charset.StandardCharsets.UTF_8);
+		String login = "TriggerEvent.simple(TriggerEvent.Type.LOGIN)";
+		int at = source.indexOf(login);
+		assertTrue("the plugin raises LOGIN", at >= 0);
+		assertEquals("once", at, source.lastIndexOf(login));
+		String before = source.substring(Math.max(0, at - 1500), at);
+		assertTrue("through dispatchAfterPriming",
+			before.trim().endsWith("speechEngine.dispatchAfterPriming("));
+		assertTrue("after the prime is armed", before.contains("speechEngine.primeEdgesOnNextTick();"));
+	}
 }

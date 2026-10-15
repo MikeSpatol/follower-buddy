@@ -4216,10 +4216,19 @@ public class FollowerPlugin extends Plugin
 					sessionRecordSaid = false;
 					writeCounters();
 
+					// The gear you logged in wearing and the place you logged in
+					// standing are baseline, not news - the first ticks' evaluation
+					// records edges without firing.
+					speechEngine.primeEdgesOnNextTick();
+
 					// The LOGIN trigger, so rules can greet: a delayTicks on the rule
 					// puts the hello a couple of seconds AFTER the follower's own
-					// spawn (which waits out spawnDelayTicks itself).
-					speechEngine.dispatch(TriggerEvent.simple(TriggerEvent.Type.LOGIN));
+					// spawn (which waits out spawnDelayTicks itself). Raised once
+					// the prime has taken its baseline, as the world hop is: QA,
+					// 15 Oct, dispatched before it, logging in poisoned or in the
+					// Wilderness had that standing state rise on the login pass,
+					// outrank the greeting, and take the hello.
+					speechEngine.dispatchAfterPriming(TriggerEvent.simple(TriggerEvent.Type.LOGIN));
 
 					// The world literally changes under everyone's feet once a
 					// week; a scribe keeping maps would notice. Seeded silently
@@ -4228,7 +4237,7 @@ public class FollowerPlugin extends Plugin
 					int revision = client.getRevision();
 					if (config.lastRevision() > 0 && revision != config.lastRevision())
 					{
-						speechEngine.dispatch(
+						speechEngine.dispatchAfterPriming(
 							TriggerEvent.simple(TriggerEvent.Type.GAME_UPDATE));
 					}
 					if (revision != config.lastRevision())
@@ -4236,11 +4245,6 @@ public class FollowerPlugin extends Plugin
 						configManager.setConfiguration(FollowerConfig.GROUP,
 							"lastRevision", revision);
 					}
-
-					// The gear you logged in wearing and the place you logged in
-					// standing are baseline, not news - the first ticks' evaluation
-					// records edges without firing.
-					speechEngine.primeEdgesOnNextTick();
 				}
 
 				// Sync the colour table to the brightness setting as it stands now;
