@@ -560,6 +560,9 @@ follower has a stamp to measure from). On `killCount`: `{boss}`, `{count}`,
   that conversation: see below.
 - `want` - `{"region": 12850, "label": "Lumbridge", "minutes": 20}`. See below.
 - `hushMs` - takes the floor: nothing else speaks for this long. See below.
+- `waits` - `true` waits out a cutscene, the quiet after it and the gap after
+  another line, as an occasion does, instead of being dropped. Nothing else of
+  an occasion's: the pacing still rests it. The quest people's lines use it.
 - `markHere` - files this moment against the PLACE, said later via `{here}`.
   The incident in `remember` is one thing anywhere; this is one per place, and
   it waits for you to come back.

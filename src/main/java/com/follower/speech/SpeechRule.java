@@ -203,6 +203,17 @@ public class SpeechRule
 	public Boolean occasion;
 
 	/**
+	 * Waits its turn as an occasion does - out a cutscene and the quiet after
+	 * it, and out the gap after another line - rather than being dropped, and
+	 * nothing more: the director's rests and the empty-chair damper still
+	 * hold it. For a line with one chance, the meeting of a quest's people.
+	 * Play test, 15 Oct (Children of the Sun): Prince Itzla's line came up as
+	 * the cutscene opened and Sergeant Tobyn's six seconds after a cat, and
+	 * neither was heard.
+	 */
+	public Boolean waits;
+
+	/**
 	 * Said once, ever, and then never again.
 	 *
 	 * <p>For firsts. A line that only has to hold up on a single hearing can be
@@ -463,6 +474,12 @@ public class SpeechRule
 	public boolean isOccasion()
 	{
 		return Boolean.TRUE.equals(occasion);
+	}
+
+	/** Whether it waits out a scene and the gap rather than being dropped: an occasion, or {@link #waits}. */
+	public boolean waitsItsTurn()
+	{
+		return isOccasion() || Boolean.TRUE.equals(waits);
 	}
 
 	public boolean isOnce()

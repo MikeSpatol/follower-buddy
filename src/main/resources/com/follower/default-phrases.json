@@ -3572,6 +3572,7 @@
     },
     {
       "id": "quest-wise-old-man",
+      "waits": true,
       "title": "Wise Old Man",
       "note": "The Wise Old Man of Draynor.",
       "group": "quest",
@@ -4427,6 +4428,7 @@
     },
     {
       "id": "quest-hans",
+      "waits": true,
       "note": "Hans, circling Lumbridge Castle.",
       "group": "quest",
       "priority": 35,
@@ -4449,6 +4451,7 @@
     },
     {
       "id": "quest-duke-horacio",
+      "waits": true,
       "title": "Duke Horacio",
       "note": "Duke Horacio of Lumbridge.",
       "group": "quest",
@@ -4472,6 +4475,7 @@
     },
     {
       "id": "quest-cook",
+      "waits": true,
       "note": "The Lumbridge cook. NOTE: other NPCs named Cook exist and will match too.",
       "about": "The Lumbridge cook. Anyone else called Cook counts too.",
       "group": "quest",
@@ -4495,6 +4499,7 @@
     },
     {
       "id": "quest-father-aereck",
+      "waits": true,
       "title": "Father Aereck",
       "note": "Father Aereck of the Lumbridge church.",
       "group": "quest",
@@ -4518,6 +4523,7 @@
     },
     {
       "id": "quest-fred-the-farmer",
+      "waits": true,
       "title": "Fred the Farmer",
       "note": "Fred the Farmer of Lumbridge.",
       "group": "quest",
@@ -4541,6 +4547,7 @@
     },
     {
       "id": "quest-doric",
+      "waits": true,
       "note": "Doric the dwarf smith near Falador.",
       "group": "quest",
       "priority": 35,
@@ -4563,6 +4570,7 @@
     },
     {
       "id": "quest-thurgo",
+      "waits": true,
       "note": "Thurgo, last of the Imcando dwarves.",
       "group": "quest",
       "priority": 35,
@@ -4585,6 +4593,7 @@
     },
     {
       "id": "quest-oziach",
+      "waits": true,
       "note": "Oziach of Edgeville.",
       "group": "quest",
       "priority": 35,
@@ -4607,6 +4616,7 @@
     },
     {
       "id": "quest-guildmaster",
+      "waits": true,
       "note": "The Champions' Guild Guildmaster.",
       "group": "quest",
       "priority": 35,
@@ -4629,6 +4639,7 @@
     },
     {
       "id": "quest-gypsy-aris",
+      "waits": true,
       "title": "Gypsy Aris",
       "note": "Gypsy Aris of Varrock Square.",
       "group": "quest",
@@ -4652,6 +4663,7 @@
     },
     {
       "id": "quest-sir-amik",
+      "waits": true,
       "title": "Sir Amik Varze",
       "note": "Sir Amik Varze of the White Knights.",
       "group": "quest",
@@ -4675,6 +4687,7 @@
     },
     {
       "id": "quest-sir-tiffy",
+      "waits": true,
       "title": "Sir Tiffy Cashien",
       "note": "Sir Tiffy Cashien in Falador Park.",
       "group": "quest",
@@ -4698,6 +4711,7 @@
     },
     {
       "id": "quest-king-roald",
+      "waits": true,
       "title": "King Roald",
       "note": "King Roald of Misthalin.",
       "group": "quest",
@@ -4721,6 +4735,7 @@
     },
     {
       "id": "quest-reldo",
+      "waits": true,
       "note": "Reldo, the Varrock palace librarian.",
       "group": "quest",
       "priority": 35,
@@ -4743,6 +4758,7 @@
     },
     {
       "id": "quest-aubury",
+      "waits": true,
       "note": "Aubury of the Varrock rune shop.",
       "group": "quest",
       "priority": 35,
@@ -4765,6 +4781,7 @@
     },
     {
       "id": "quest-sedridor",
+      "waits": true,
       "note": "Sedridor, head of the Wizards Tower.",
       "group": "quest",
       "priority": 35,
@@ -4787,6 +4804,7 @@
     },
     {
       "id": "quest-traiborn",
+      "waits": true,
       "note": "Wizard Traiborn of the Wizards Tower.",
       "group": "quest",
       "priority": 35,
@@ -4809,6 +4827,7 @@
     },
     {
       "id": "quest-gertrude",
+      "waits": true,
       "note": "Gertrude of Varrock.",
       "group": "quest",
       "priority": 35,
@@ -4831,6 +4850,7 @@
     },
     {
       "id": "quest-romeo-juliet",
+      "waits": true,
       "title": "Romeo and Juliet",
       "note": "Romeo and Juliet of Varrock.",
       "group": "quest",
@@ -4855,6 +4875,7 @@
     },
     {
       "id": "quest-oddenstein",
+      "waits": true,
       "note": "Professor Oddenstein in Draynor Manor.",
       "group": "quest",
       "priority": 35,
@@ -4877,6 +4898,7 @@
     },
     {
       "id": "quest-veronica",
+      "waits": true,
       "note": "Veronica outside Draynor Manor.",
       "group": "quest",
       "priority": 35,
@@ -4899,6 +4921,7 @@
     },
     {
       "id": "quest-ned",
+      "waits": true,
       "note": "Ned of Draynor Village.",
       "group": "quest",
       "priority": 35,
@@ -4921,6 +4944,7 @@
     },
     {
       "id": "quest-aggie",
+      "waits": true,
       "note": "Aggie the Draynor witch.",
       "group": "quest",
       "priority": 35,
@@ -4943,6 +4967,7 @@
     },
     {
       "id": "quest-hetty",
+      "waits": true,
       "note": "Hetty the Rimmington witch.",
       "group": "quest",
       "priority": 35,
@@ -4965,6 +4990,7 @@
     },
     {
       "id": "quest-morgan",
+      "waits": true,
       "note": "Morgan of Draynor Village.",
       "group": "quest",
       "priority": 35,
@@ -4987,6 +5013,7 @@
     },
     {
       "id": "quest-redbeard-frank",
+      "waits": true,
       "title": "Redbeard Frank",
       "note": "Redbeard Frank of Port Sarim.",
       "group": "quest",
@@ -5010,6 +5037,7 @@
     },
     {
       "id": "quest-luthas",
+      "waits": true,
       "note": "Luthas of the Musa Point plantation.",
       "group": "quest",
       "priority": 35,
@@ -5032,6 +5060,7 @@
     },
     {
       "id": "quest-zanik",
+      "waits": true,
       "note": "Zanik of the Dorgeshuun.",
       "group": "quest",
       "priority": 35,
@@ -5054,6 +5083,7 @@
     },
     {
       "id": "quest-juna",
+      "waits": true,
       "note": "Juna, guardian of the Tears of Guthix.",
       "group": "quest",
       "priority": 35,
@@ -5076,6 +5106,7 @@
     },
     {
       "id": "quest-hazelmere",
+      "waits": true,
       "note": "Hazelmere, the ancient gnome mystic.",
       "group": "quest",
       "priority": 35,
@@ -5098,6 +5129,7 @@
     },
     {
       "id": "quest-narnode",
+      "waits": true,
       "note": "King Narnode Shareen of the Grand Tree.",
       "group": "quest",
       "priority": 35,
@@ -5120,6 +5152,7 @@
     },
     {
       "id": "quest-glough",
+      "waits": true,
       "note": "Glough of the Tree Gnome Stronghold.",
       "group": "quest",
       "priority": 35,
@@ -5142,6 +5175,7 @@
     },
     {
       "id": "quest-sanfew",
+      "waits": true,
       "note": "Sanfew of Taverley.",
       "group": "quest",
       "priority": 35,
@@ -5164,6 +5198,7 @@
     },
     {
       "id": "quest-kaqemeex",
+      "waits": true,
       "note": "Kaqemeex of the Taverley stone circle.",
       "group": "quest",
       "priority": 35,
@@ -5186,6 +5221,7 @@
     },
     {
       "id": "quest-elena",
+      "waits": true,
       "note": "Elena of East Ardougne.",
       "group": "quest",
       "priority": 35,
@@ -5208,6 +5244,7 @@
     },
     {
       "id": "quest-king-lathas",
+      "waits": true,
       "title": "King Lathas",
       "note": "King Lathas of East Ardougne.",
       "group": "quest",
@@ -5231,6 +5268,7 @@
     },
     {
       "id": "quest-sir-prysin",
+      "waits": true,
       "title": "Sir Prysin",
       "note": "Sir Prysin of Varrock Palace.",
       "group": "quest",
@@ -5254,6 +5292,7 @@
     },
     {
       "id": "quest-evil-dave",
+      "waits": true,
       "title": "Evil Dave",
       "note": "Evil Dave of Edgeville. Well, of his mum's basement.",
       "group": "quest",
@@ -5277,6 +5316,7 @@
     },
     {
       "id": "quest-ali-morrisane",
+      "waits": true,
       "title": "Ali Morrisane",
       "note": "Ali Morrisane of Al Kharid.",
       "group": "quest",
@@ -5300,6 +5340,7 @@
     },
     {
       "id": "quest-oracle",
+      "waits": true,
       "note": "The Oracle atop Ice Mountain.",
       "group": "quest",
       "priority": 35,
@@ -5322,6 +5363,7 @@
     },
     {
       "id": "quest-ernest",
+      "waits": true,
       "note": "Ernest, formerly a chicken, of Draynor Manor.",
       "group": "quest",
       "priority": 35,
@@ -5344,6 +5386,7 @@
     },
     {
       "id": "quest-alina-noah",
+      "waits": true,
       "title": "Alina and Noah",
       "note": "Alina and Noah, waiting for the delegation in Varrock Square.",
       "group": "quest",
@@ -5368,6 +5411,7 @@
     },
     {
       "id": "quest-sergeant-tobyn",
+      "waits": true,
       "title": "Sergeant Tobyn",
       "note": "Sergeant Tobyn, keeping order in Varrock Square, and later on the palace roof.",
       "group": "quest",
@@ -5391,6 +5435,7 @@
     },
     {
       "id": "quest-itzla",
+      "waits": true,
       "title": "Prince Itzla Arkan",
       "note": "Prince Itzla Arkan, heir to the throne of Varlamore. NOTE: his versions in later quests share the name and will match too.",
       "about": "Prince Itzla Arkan, heir to the throne of Varlamore. His appearances in later quests count too.",
@@ -5415,6 +5460,7 @@
     },
     {
       "id": "quest-regulus-cento",
+      "waits": true,
       "title": "Regulus Cento",
       "note": "Regulus Cento and his quetzal, outside Varrock's east gate and in Civitas illa Fortis.",
       "group": "quest",
@@ -5438,6 +5484,7 @@
     },
     {
       "id": "quest-boy",
+      "waits": true,
       "note": "The boy by the witch's hedge in north Taverley, who starts Witch's House. He is the only NPC named Boy.",
       "about": "The boy by the hedge in north Taverley who starts Witch's House.",
       "group": "quest",
@@ -5461,6 +5508,7 @@
     },
     {
       "id": "quest-nora-t-hagg",
+      "waits": true,
       "title": "Nora T. Hagg",
       "note": "Nora T. Hagg, the witch, walking her hedged garden in north Taverley.",
       "group": "quest",
@@ -5484,6 +5532,7 @@
     },
     {
       "id": "quest-veos",
+      "waits": true,
       "note": "Veos, the Kourend treasure hunter, at the Port Sarim and Port Piscarilius docks. NOTE: his copies in quests and cutscenes share the name and will match too.",
       "about": "Veos, the Kourend treasure hunter, at the Port Sarim and Port Piscarilius docks. His appearances in quests and cutscenes count too.",
       "group": "quest",
@@ -5506,6 +5555,7 @@
     },
     {
       "id": "quest-leenz",
+      "waits": true,
       "note": "Leenz, who keeps the general store in Port Piscarilius.",
       "group": "quest",
       "priority": 35,
@@ -5527,6 +5577,7 @@
     },
     {
       "id": "quest-regath",
+      "waits": true,
       "note": "Regath, who keeps Regath's Wares in Arceuus.",
       "group": "quest",
       "priority": 35,
@@ -14756,6 +14807,7 @@
     },
     {
       "id": "fun-duke-horacio-after-cooks-assistant",
+      "waits": true,
       "note": "Callback: same trigger as quest-duke-horacio plus Cook's Assistant done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Cook's Assistant, so it cannot rise on the quest finishing.",
       "group": "quest",
       "priority": 36,
@@ -14793,6 +14845,7 @@
     },
     {
       "id": "fun-duke-horacio-after-rune-mysteries",
+      "waits": true,
       "note": "Callback: same trigger as quest-duke-horacio plus Rune Mysteries done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Rune Mysteries, so it cannot rise on the quest finishing.",
       "group": "quest",
       "priority": 37,
@@ -14830,6 +14883,7 @@
     },
     {
       "id": "fun-king-roald-after-priest-in-peril",
+      "waits": true,
       "note": "Callback: same trigger as quest-king-roald plus Priest in Peril done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Priest in Peril, so it cannot rise on the quest finishing.",
       "group": "quest",
       "priority": 36,
@@ -14868,6 +14922,7 @@
     },
     {
       "id": "fun-alina-noah-after-children-of-the-sun",
+      "waits": true,
       "note": "Callback: same trigger as quest-alina-noah plus Children of the Sun done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Children of the Sun, so it cannot rise on the quest finishing.",
       "group": "quest",
       "priority": 36,
@@ -14907,6 +14962,7 @@
     },
     {
       "id": "fun-aubury-after-rune-mysteries",
+      "waits": true,
       "note": "Callback: same trigger as quest-aubury plus Rune Mysteries done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Rune Mysteries, so it cannot rise on the quest finishing.",
       "group": "quest",
       "priority": 36,
@@ -14944,6 +15000,7 @@
     },
     {
       "id": "fun-father-aereck-after-the-restless-ghost",
+      "waits": true,
       "note": "Callback: same trigger as quest-father-aereck plus The Restless Ghost done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for The Restless Ghost, so it cannot rise on the quest finishing.",
       "group": "quest",
       "priority": 36,
@@ -14982,6 +15039,7 @@
     },
     {
       "id": "fun-ned-after-dragon-slayer",
+      "waits": true,
       "note": "Callback: same trigger as quest-ned plus Dragon Slayer I done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Dragon Slayer I, so it cannot rise on the quest finishing.",
       "group": "quest",
       "priority": 36,
@@ -15020,6 +15078,7 @@
     },
     {
       "id": "fun-leenz-after-client-of-kourend",
+      "waits": true,
       "note": "Callback: same trigger as quest-leenz plus Client of Kourend done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Client of Kourend, so it cannot rise on the quest finishing.",
       "group": "quest",
       "priority": 36,
@@ -15526,6 +15585,7 @@
     },
     {
       "id": "fun-hans-race-first",
+      "waits": true,
       "once": true,
       "note": "Running bit, Hans: the opener. Same trigger as quest-hans, above it and the stages.",
       "group": "quest",
@@ -15547,6 +15607,7 @@
     },
     {
       "id": "fun-hans-race-early",
+      "waits": true,
       "note": "Running bit, Hans: days 0-29 known. Same trigger as quest-hans, one point higher, three-hour cooldown; while it cools down the base's lines play.",
       "group": "quest",
       "priority": 36,
@@ -15578,6 +15639,7 @@
     },
     {
       "id": "fun-hans-race-middle",
+      "waits": true,
       "note": "Running bit, Hans: days 30-99 known. Same trigger as quest-hans, one point higher, three-hour cooldown; while it cools down the base's lines play.",
       "group": "quest",
       "priority": 36,
@@ -15609,6 +15671,7 @@
     },
     {
       "id": "fun-hans-race-late",
+      "waits": true,
       "note": "Running bit, Hans: day 100 on known. Same trigger as quest-hans, one point higher, three-hour cooldown; while it cools down the base's lines play.",
       "group": "quest",
       "priority": 36,

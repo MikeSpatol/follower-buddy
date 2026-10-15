@@ -487,7 +487,7 @@ public class SpeechEngine
 	/** Whether a firing held up for this reason waits a tick and tries again rather than being dropped. */
 	static boolean waitsOutTheGap(SpeechRule rule, String held, int waited, int limit)
 	{
-		return "gap".equals(held) && rule.isOccasion() && waited < limit;
+		return "gap".equals(held) && rule.waitsItsTurn() && waited < limit;
 	}
 
 	/**
@@ -508,7 +508,7 @@ public class SpeechEngine
 	 */
 	static boolean waitsOutTheScene(SpeechRule rule, String held, int waited)
 	{
-		return rule.isOccasion() && waited < SCENE_WAIT_TICKS
+		return rule.waitsItsTurn() && waited < SCENE_WAIT_TICKS
 			&& ("scene".equals(held) || (waited > 0 && ("gap".equals(held) || "hush".equals(held))));
 	}
 

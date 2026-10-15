@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -208,6 +209,60 @@ public class SceneQuietTest
 		h.engine.setSceneQuiet(false);
 		h.engine.remark("There.");
 		assertEquals(1, h.spoken.size());
+	}
+
+	private static final String WAITS = "{\"id\": \"waits\", \"group\": \"t\", \"cooldownMs\": 0,"
+		+ " \"waits\": true, \"when\": {\"type\": \"levelUp\", \"names\": [\"*\"]}, \"say\": [\"Prince Itzla.\"]}";
+
+	/**
+	 * Play test, 15 Oct (Children of the Sun): Prince Itzla's line came up as
+	 * the cutscene opened and was lost to it. A line that waits is said after.
+	 */
+	@Test
+	public void aLineThatWaitsIsSaidAfterTheScene() throws IOException
+	{
+		Harness h = harness(WAITS);
+		assertFalse("waiting is not an occasion's other exemptions", h.rule("waits").isOccasion());
+		h.engine.setSceneQuiet(true);
+		h.dispatch(TriggerEvent.levelUp("Attack", 30));
+		ticks(h, 30);
+		assertTrue("not over the scene", h.firedBy("waits").isEmpty());
+
+		h.engine.setSceneQuiet(false);
+		ticks(h, 1);
+		assertEquals("said once it is over", 1, h.firedBy("waits").size());
+	}
+
+	/** And Sergeant Tobyn's, six seconds after a cat: it waits out the gap. */
+	@Test
+	public void aLineThatWaitsWaitsOutTheGap() throws IOException
+	{
+		Harness h = harness(CHATTY, WAITS);
+		h.game.hitpoints(10, 99);
+		ticks(h, 1);
+		assertEquals(1, h.firedBy("chatty").size());
+		h.dispatch(TriggerEvent.levelUp("Attack", 30));
+		ticks(h, 1);
+		assertTrue("not in the gap", h.firedBy("waits").isEmpty());
+		ticks(h, 10);
+		assertEquals("said once the gap is over", 1, h.firedBy("waits").size());
+		assertTrue("nothing dropped", held.stream().noneMatch(x -> x.startsWith("waits:")));
+	}
+
+	/** Every line about meeting a quest's people has its one chance kept. */
+	@Test
+	public void everyShippedQuestLineWaitsItsTurn() throws IOException
+	{
+		Harness h = new Harness(folder.newFolder().toPath());
+		List<String> dropped = new ArrayList<>();
+		for (SpeechRule rule : h.loader.getRules())
+		{
+			if ("quest".equals(rule.group) && !rule.waitsItsTurn())
+			{
+				dropped.add(rule.id);
+			}
+		}
+		assertTrue("quest lines a scene or a gap would drop: " + dropped, dropped.isEmpty());
 	}
 
 	@Test
