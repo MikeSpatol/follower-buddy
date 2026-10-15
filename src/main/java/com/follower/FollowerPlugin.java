@@ -5707,6 +5707,9 @@ public class FollowerPlugin extends Plugin
 		refreshEmoteDisarm(follower.isEmotePlaying());
 	}
 
+	/** How long a rule's gesture said on the move waits for the follower to stand. */
+	static final int EMOTE_WAIT_TICKS = 3;
+
 	private void updateEmoteDisarm(boolean emoting)
 	{
 		if (!emoting && emoteHold)
@@ -11442,8 +11445,15 @@ public class FollowerPlugin extends Plugin
 		// the claim and the act happen together. Best effort - mid-errand or
 		// otherwise spoken for, the words stand alone, which still reads fine;
 		// the gesture without the words never happens the other way round.
+		// Sat on the rest, a rule's gesture had the follower pop up off the
+		// seat with no stand-up, and sit down again after it (QA, 15 Oct).
+		// The words come and the body stays seated. Not a copy of the
+		// player's own animation: that ends the rest a tick later anyway.
+		boolean seated = resting && rule != null && !Boolean.TRUE.equals(rule.mirrorAnimation)
+			&& !Boolean.TRUE.equals(rule.mirrorPose);
+
 		if (rule != null && rule.prop != null && flourish != null
-			&& !text.isEmpty()
+			&& !text.isEmpty() && !seated
 			&& follower.isSpawned() && !follower.isStaying()
 			&& !follower.isNpcSlaved() && !errands.isBusy() && !dialog.isOpen())
 		{
@@ -11452,6 +11462,11 @@ public class FollowerPlugin extends Plugin
 				rule.prop.item == null ? 0 : rule.prop.item,
 				rule.prop.pose == null ? 0 : rule.prop.pose,
 				rule.prop.ticks == null ? 8 : rule.prop.ticks));
+		}
+
+		if (seated)
+		{
+			return;
 		}
 
 		// A copy of the work is made from beside the WORK, not from the
@@ -11529,7 +11544,24 @@ public class FollowerPlugin extends Plugin
 		}
 		else if (animationId >= 0)
 		{
-			clientThread.invoke(() -> follower.playAnimation(animationId));
+			// Said on the move, the gesture was cancelled on its first frame:
+			// moving drops an emote. Entering a place, a crowd, a pet in range
+			// and a greeting typed mid-walk all usually come on the move, so
+			// the line was said and the body did nothing (QA, 15 Oct). It
+			// waits for the follower to stand, a few ticks at most.
+			boolean waits = rule != null && !Boolean.TRUE.equals(rule.holdStill) && !atTheWork
+				&& !Boolean.TRUE.equals(rule.vanishAfter);
+			clientThread.invoke(() ->
+			{
+				if (waits)
+				{
+					follower.playWhenStill(animationId, EMOTE_WAIT_TICKS);
+				}
+				else
+				{
+					follower.playAnimation(animationId);
+				}
+			});
 		}
 
 		// A teleporting follower leaves with its cast: once the mirrored

@@ -268,6 +268,21 @@ public class Moments implements Noticing.Looker
 			log.debug("Level {}: walking over", level);
 			return;
 		}
+		// In place, but a level gained on the move (an Agility course) had its
+		// clap cancelled on the first frame: moving drops an emote (QA, 15
+		// Oct). So on the move it stops where it is, finishes the step, and
+		// claps on the next tick, planted for it as the walk over is.
+		if (follower.isMoving() && free())
+		{
+			skilling.setExcused(true);
+			follower.stayHere();
+			doing = Doing.LEVEL;
+			beat = play;
+			arriveAt = now + 1;
+			leaveAt = 0;
+			log.debug("Level {}: stopping to clap", level);
+			return;
+		}
 		skilling.gesture(play, here);
 	}
 

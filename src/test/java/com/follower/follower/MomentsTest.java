@@ -36,6 +36,7 @@ public class MomentsTest
 		boolean following = true;
 		int poseOverride;
 		int movedToFront;
+		boolean moving;
 		final List<Integer> animations = new ArrayList<>();
 		final List<WorldPoint> stays = new ArrayList<>();
 		final List<WorldPoint> glances = new ArrayList<>();
@@ -55,6 +56,12 @@ public class MomentsTest
 		public boolean isSettled()
 		{
 			return true;
+		}
+
+		@Override
+		public boolean isMoving()
+		{
+			return moving;
 		}
 
 		@Override
@@ -308,6 +315,27 @@ public class MomentsTest
 			follower.animations);
 		tick(4);
 		assertFalse("and the feet are handed back after it", moments.holdsTheFeet());
+	}
+
+	@Test
+	public void aLevelGainedOnTheMoveStopsToClap()
+	{
+		// QA, 15 Oct: a level gained mid-course had its clap cancelled on the
+		// first frame, since moving drops an emote. It stops, then claps.
+		tick(1);
+		follower.moving = true;
+		moments.levelUp(41);
+		assertTrue("planted", moments.holdsTheFeet());
+		assertFalse(follower.following);
+		assertTrue("not on the move: the clap would be dropped", follower.animations.isEmpty());
+
+		follower.moving = false;
+		tick(1);
+		assertEquals("clapped once stopped", Collections.singletonList(Moments.CLAP), follower.animations);
+		assertEquals("in place, no walk", 0, follower.movedToFront);
+		tick(3);
+		assertFalse("and the feet handed back after it", moments.holdsTheFeet());
+		assertTrue(follower.following);
 	}
 
 	@Test

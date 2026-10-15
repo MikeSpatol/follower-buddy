@@ -520,7 +520,10 @@ follower has a stamp to measure from). On `killCount`: `{boss}`, `{count}`,
   animation, releasing it when the animation ends. Movement always wins over an
   emote, so anything triggered by a fight is otherwise cut off the instant the
   follower starts walking back to you - which is immediately. `kill-cheer` and
-  `kill-boss-celebrate` both use it.
+  `kill-boss-celebrate` both use it. Without it, a single animation said while
+  the follower is on the move waits up to three ticks for it to stand, and is
+  dropped after that; and none is played while it rests on its sit, though the
+  line is still said.
 - `delayTicks` / `delayTicksMax` - ticks to wait between the trigger and the
   whole firing, line and animation together. Set both and each firing draws a
   fresh wait between them, inclusive; set only `delayTicks` for a fixed one.
