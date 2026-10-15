@@ -280,7 +280,10 @@ public class FilmDialog extends JDialog
 				}
 			}
 		});
-		JScrollPane scroll = new JScrollPane(list);
+		// No sideways scrollbar: it covered the last row it could show. A row
+		// too long for the column is cut at the edge instead.
+		JScrollPane scroll = new JScrollPane(list,
+			JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		scroll.setBorder(BorderFactory.createEmptyBorder());
 		scroll.getVerticalScrollBar().setUnitIncrement(16);
 		scroll.setAlignmentX(LEFT_ALIGNMENT);
