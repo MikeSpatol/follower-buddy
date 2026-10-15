@@ -3087,7 +3087,7 @@ public class FollowerPlugin extends Plugin
 							false),
 						new com.follower.ui.PhrasesDialog.Category("Errands", "errand",
 							"Each errand has a line for setting off and one for coming"
-								+ " back.",
+								+ " back. Go on errands in settings turns them off.",
 							false),
 						new com.follower.ui.PhrasesDialog.Category("Mimicry", "mimic",
 							"Said now and then while it copies your emotes or eats when you"
@@ -3114,10 +3114,11 @@ public class FollowerPlugin extends Plugin
 							false),
 						new com.follower.ui.PhrasesDialog.Category("Thrall", "thrall",
 							"Said as it takes a thrall's place and when the thrall's time"
-								+ " runs out.",
+								+ " runs out. Mute the thrall in settings silences them.",
 							false),
 						new com.follower.ui.PhrasesDialog.Category("Everything else", "misc",
-							"Hellos, goodbyes, milestones and the rest.",
+							"Hellos, goodbyes, milestones and the rest. To silence them all,"
+								+ " add misc to Silence groups or rule ids by name in settings.",
 							false)),
 					// The tick loop keeps lastRegionId current; reading a
 					// slightly stale int from the EDT is harmless.
@@ -5212,6 +5213,10 @@ public class FollowerPlugin extends Plugin
 		{
 			disabled.add("clock");
 		}
+		if (!config.groupReactions())
+		{
+			disabled.add("reactions");
+		}
 		for (String token : config.disabledGroups().split(","))
 		{
 			String trimmed = token.trim().toLowerCase(Locale.ROOT);
@@ -6251,6 +6256,21 @@ public class FollowerPlugin extends Plugin
 			rebuildFollower();
 		});
 		announceSummon(style);
+		maybeSendThrallHint();
+	}
+
+	/**
+	 * Replace thralls is on by default, so a player who wanted their own
+	 * thrall is told once, at the first summon taken, how to have it back.
+	 */
+	private void maybeSendThrallHint()
+	{
+		if (!config.thrallMode() || config.thrallHintShown())
+		{
+			return;
+		}
+		configManager.setConfiguration(FollowerConfig.GROUP, "thrallHintShown", true);
+		sendStatus("Untick Replace thralls in settings to keep your own.");
 	}
 
 	/**
@@ -10035,7 +10055,7 @@ public class FollowerPlugin extends Plugin
 		}
 		if (!config.keepsCompany())
 		{
-			return "Keeps you company while you skill is off in the settings.";
+			return "Works beside you when skilling is off in the settings.";
 		}
 		String item = args.length > 3
 			? String.join(" ", java.util.Arrays.copyOfRange(args, 3, args.length))

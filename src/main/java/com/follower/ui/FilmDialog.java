@@ -160,9 +160,10 @@ public class FilmDialog extends JDialog
 
 		JPanel lines = column();
 		lines.add(heading("FOLLOWER SAYS"));
-		lines.add(sayRow(Crew::followerSays, "Said."));
-		lines.add(heading("YOU SAY (your screen only)"));
-		lines.add(sayRow(Crew::playerSays, "Over your head, on your screen only."));
+		lines.add(sayRow(Crew::followerSays, "Said.", null));
+		lines.add(heading("YOU SAY"));
+		lines.add(sayRow(Crew::playerSays, "Over your head, on your screen only.",
+			"Shows over your head, on your screen only."));
 		posing.add(lines, BorderLayout.SOUTH);
 
 		conversation = new ConversationPanel(this::act, store, followerName, status::setText);
@@ -437,9 +438,10 @@ public class FilmDialog extends JDialog
 	}
 
 	/** A line to type, Say, and this session's earlier lines for a retake. */
-	private JPanel sayRow(BiFunction<Crew, String, String> say, String done)
+	private JPanel sayRow(BiFunction<Crew, String, String> say, String done, String tip)
 	{
 		JTextField line = new JTextField();
+		line.setToolTipText(tip);
 		JComboBox<String> earlier = new JComboBox<>();
 		earlier.addItem("Earlier lines");
 		Runnable send = () ->

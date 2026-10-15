@@ -369,7 +369,7 @@ public class FollowerPanel extends PluginPanel
 	// ---------------------------------------------------------------- profiles
 
 	private final javax.swing.JComboBox<String> profileCombo = new javax.swing.JComboBox<>();
-	private final JButton profileDelete = new JButton("Delete profile");
+	private final JButton profileDelete = new JButton("Delete");
 
 	private Consumer<String> onProfileLoad = s -> { };
 	private Consumer<String> onProfileSave = s -> { };
@@ -830,8 +830,7 @@ public class FollowerPanel extends PluginPanel
 		// to make cold. The categories live in a dropdown inside Messages.
 		JPanel buttons = buttonColumn(4);
 		buttons.add(button("Messages...",
-			"Everything the follower says - items, places, bosses,"
-				+ " combat, statuses, quest NPCs and errands - viewable and editable",
+			"Everything the follower says, by subject, to read and edit",
 			() -> onEditMessages.run()));
 		buttons.add(button("Conversations...",
 			"View and edit the conversations the follower starts itself -"
@@ -875,7 +874,7 @@ public class FollowerPanel extends PluginPanel
 		body.add(profilesLabel);
 
 		// Pick a profile and you are wearing it; every change from then on is
-		// saved straight back to it. Save as new makes one, Delete removes it.
+		// saved straight back to it. New profile makes one, Delete removes it.
 		profileCombo.setAlignmentX(LEFT_ALIGNMENT);
 		profileCombo.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
 		// The item stays the bare name; only its rendering says which thrall
@@ -907,7 +906,7 @@ public class FollowerPanel extends PluginPanel
 		body.add(caption("Changes save to the selected profile automatically"));
 
 		JPanel profileButtons = buttonPair();
-		profileButtons.add(button("Save as new...",
+		profileButtons.add(button("New profile...",
 			"Save the follower's current outfit as a new profile", () ->
 		{
 			String name = javax.swing.JOptionPane.showInputDialog(this,
@@ -1402,7 +1401,7 @@ public class FollowerPanel extends PluginPanel
 		{
 			cell.setToolTipText("Empty " + slotName + " slot - click to choose an item");
 
-			JLabel empty = new JLabel(slotName);
+			JLabel empty = new JLabel(sentenceCase(slotName));
 			empty.setFont(FontManager.getRunescapeSmallFont());
 			empty.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
 			empty.setHorizontalAlignment(SwingConstants.CENTER);
@@ -1450,7 +1449,7 @@ public class FollowerPanel extends PluginPanel
 	{
 		JPanel row = bodyRowShell();
 
-		JLabel name = new JLabel("body");
+		JLabel name = new JLabel("Body");
 		name.setFont(FontManager.getRunescapeSmallFont());
 		name.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
 		name.setPreferredSize(new Dimension(NAME_WIDTH, ROW_CONTENT_HEIGHT));
@@ -1458,8 +1457,8 @@ public class FollowerPanel extends PluginPanel
 
 		JPanel toggle = new JPanel(new GridLayout(1, 2, 2, 0));
 		toggle.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		toggle.add(genderButton("male", 0));
-		toggle.add(genderButton("female", 1));
+		toggle.add(genderButton("Male", 0));
+		toggle.add(genderButton("Female", 1));
 		row.add(toggle, BorderLayout.CENTER);
 
 		return row;
@@ -1496,13 +1495,13 @@ public class FollowerPanel extends PluginPanel
 	{
 		JPanel row = bodyRowShell();
 
-		JLabel name = new JLabel("skin");
+		JLabel name = new JLabel("Skin");
 		name.setFont(FontManager.getRunescapeSmallFont());
 		name.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
 		name.setPreferredSize(new Dimension(NAME_WIDTH, ROW_CONTENT_HEIGHT));
 		row.add(name, BorderLayout.WEST);
 
-		row.add(swatch(4, "skin", GamePalette.SKIN), BorderLayout.EAST);
+		row.add(swatch(4, "Skin", GamePalette.SKIN), BorderLayout.EAST);
 		return row;
 	}
 
@@ -1533,7 +1532,7 @@ public class FollowerPanel extends PluginPanel
 	{
 		JPanel row = bodyRowShell();
 
-		JLabel name = new JLabel(part.name().toLowerCase());
+		JLabel name = new JLabel(sentenceCase(part.name().toLowerCase()));
 		name.setFont(FontManager.getRunescapeSmallFont());
 		name.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
 		name.setPreferredSize(new Dimension(NAME_WIDTH, ROW_CONTENT_HEIGHT));
@@ -1584,7 +1583,7 @@ public class FollowerPanel extends PluginPanel
 			|| part == KitType.LEGS || part == KitType.BOOTS)
 		{
 			int colorSlot = colorSlotFor(part);
-			row.add(swatch(colorSlot, part.name().toLowerCase(),
+			row.add(swatch(colorSlot, sentenceCase(part.name().toLowerCase()),
 				GamePalette.table(colorSlot)), BorderLayout.EAST);
 		}
 		else
@@ -1596,6 +1595,12 @@ public class FollowerPanel extends PluginPanel
 		return row;
 	}
 
+	/** "head" as a label shows it: "Head". */
+	private static String sentenceCase(String word)
+	{
+		return word.isEmpty() ? word : Character.toUpperCase(word.charAt(0)) + word.substring(1);
+	}
+
 	/** A clickable colour square showing the current palette choice. */
 	private JPanel swatch(int colorSlot, String title, short[] table)
 	{
@@ -1604,7 +1609,7 @@ public class FollowerPanel extends PluginPanel
 		square.setBackground(new Color(HslColor.toRgb(table[paletteIndex(colorSlot)])));
 		square.setBorder(BorderFactory.createLineBorder(ColorScheme.DARK_GRAY_COLOR, 1));
 		square.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-		square.setToolTipText(title + " colour - the game's " + table.length + " exact choices");
+		square.setToolTipText(title + " colour: the game's " + table.length + " exact choices");
 		square.addMouseListener(new MouseAdapter()
 		{
 			@Override

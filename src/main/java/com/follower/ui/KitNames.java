@@ -34,7 +34,7 @@ public final class KitNames
 	{
 		if (index < 0)
 		{
-			return "-";
+			return "Default";
 		}
 		return "Style " + (index + 1) + " of " + total;
 	}

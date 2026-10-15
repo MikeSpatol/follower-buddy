@@ -142,7 +142,7 @@ flow.
 knows about you, and **Forget everything** to erase all of it.
 
 **Outfit.** **Copy my gear** and **Clear all**, then OUTFIT PROFILES: a
-dropdown of saved outfits with **Save as new...** and **Delete profile**;
+dropdown of saved outfits with **New profile...** and **Delete**;
 changes save to the selected profile automatically. A folded **Used for
 thralls** row picks the Melee, Ranged and Magic profile for Thrall mode, and a
 profile a thrall wears is marked in the dropdown and cannot be deleted. Under
@@ -173,7 +173,7 @@ speed), Sounds (play attached sounds, volume), Messages (a toggle per subject,
 named as in the Messages window), Thrall mode, Errands (a toggle per errand and a
 frequency), Skilling (keeps you company while you skill, borrows your tools),
 Company (looks where you look, notices things, walks beside you on open
-ground), Combat, Advanced: animations and graphics (closed by default: the
+ground), Combat, Advanced (closed by default: the
 animation and graphic ids, and a box that silences groups or rule ids by
 name) and Developer (closed by default).
 

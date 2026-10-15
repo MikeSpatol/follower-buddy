@@ -41,7 +41,7 @@ automated, and the follower cannot be interacted with.
   guess. The reveal lands overhead a beat after the box closes, and it is a real
   coin flip.
 - **Outfit profiles** - named outfits in the OUTFIT PROFILES dropdown under
-  Outfit in the side panel (Save as new..., Delete profile; edits save back to
+  Outfit in the side panel (New profile..., Delete; edits save back to
   the selected profile) and a `::follower outfit <name>` command.
   Melee/Ranged/Magic style profiles are seeded.
 - **Thrall mode** - summoning an Arceuus thrall replaces it with the follower:
@@ -1598,7 +1598,7 @@ player works. It is about the body and position, not words: nothing in it
 speaks, and the plugin's rules hear of it only through a few events and the
 trigger context (`working`, `xpDrop`, `workEnded`, `targetDepleted`, `bagFull`,
 `bagHalf` in the condition table). Two settings, under **Skilling**:
-`keepsCompany` ("Keeps you company while you skill", the master switch for the
+`keepsCompany` ("Works beside you when skilling", the master switch for the
 seat and everything below) and `borrowsTools` ("Borrows your tools"). The pure
 mirror rules that came with it (`bury-along`, `casting-along`) sit in the
 `mimic` group, so the Mimicry toggle governs them.

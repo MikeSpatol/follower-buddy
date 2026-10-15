@@ -185,7 +185,6 @@ public class ConfigDefaultsTest
 		switchable.add("misc");
 		switchable.add("errand");
 		switchable.add("thrall");
-		switchable.add("reactions");
 
 		Harness h = new Harness(folder.newFolder().toPath());
 		Set<String> orphans = new TreeSet<>();
@@ -311,7 +310,7 @@ public class ConfigDefaultsTest
 		ConfigItem item = item("disabledGroups");
 		assertEquals("disabledGroups", item.keyName());
 		assertEquals(FollowerConfig.groupsSection, item.section());
-		assertEquals("after the last toggle", position("groupClock") + 1, item.position());
+		assertEquals("after the last toggle", position("groupReactions") + 1, item.position());
 	}
 
 	@Test

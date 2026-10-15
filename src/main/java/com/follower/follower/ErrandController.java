@@ -36,13 +36,13 @@ public class ErrandController
 	/** The errand types; names match the rule {@code names} lists. */
 	private enum Errand
 	{
-		BANK("bank", "Bank visit"),
-		ALTAR("altar", "Altar visit"),
+		BANK("bank", "Bank visits"),
+		ALTAR("altar", "Altar visits"),
 		FIRE("fire", "Warming up"),
 		/** The 10% fire variant: walks INTO it. Announces itself as FIRE. */
 		FIREDEATH("firedeath", "Warming up, too close"),
-		CAT("cat", "Cat"),
-		BOOTLACE("bootlace", "Bootlace"),
+		CAT("cat", "Cats"),
+		BOOTLACE("bootlace", "Bootlaces"),
 		GLANCE("glance", "Did you see that?"),
 		/** Stops where it stands and writes something up in its scroll. */
 		DOCUMENT("document", "Field notes"),

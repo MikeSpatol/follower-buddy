@@ -420,7 +420,7 @@ public class NoticingTest
 		assertEquals("one look at a time, forced or not", "The follower is busy.", noticing.forceNotice());
 		looker.looking = false;
 		notices = false;
-		assertEquals("Notices things, or Keeps you company while you skill, is off in the settings.", noticing.forceNotice());
+		assertEquals("Notices things, or Works beside you when skilling, is off in the settings.", noticing.forceNotice());
 		assertTrue(looker.looks.isEmpty());
 	}
 

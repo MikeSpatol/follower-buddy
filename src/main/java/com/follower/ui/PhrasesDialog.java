@@ -131,6 +131,9 @@ public class PhrasesDialog extends JDialog
 	private final JPanel list = new JPanel();
 	private JScrollPane scroll;
 	private final JLabel status = new JLabel(" ");
+	/** The loaded count, put back once Find matches something again. */
+	private String loadedStatus = " ";
+	private boolean findMatchedNothing;
 	private final List<Row> rows = new ArrayList<>();
 	private final List<Row> added = new ArrayList<>();
 	private final Set<String> deleted = new HashSet<>();
@@ -412,7 +415,9 @@ public class PhrasesDialog extends JDialog
 
 		hint.setText("<html><body style='width:440px'>" + HOW_TO + "<br>" + category.hint + "</body></html>");
 		addLocation.setVisible(category.structural);
-		setStatus(count + " rules loaded", false);
+		loadedStatus = count + " rules loaded";
+		findMatchedNothing = false;
+		setStatus(loadedStatus, false);
 		applyFind();
 		list.revalidate();
 		list.repaint();
@@ -432,6 +437,7 @@ public class PhrasesDialog extends JDialog
 	private void applyFind()
 	{
 		String wanted = find.getText().trim().toLowerCase(Locale.ROOT);
+		boolean any = false;
 		for (Row row : rows)
 		{
 			boolean shown = wanted.isEmpty()
@@ -440,6 +446,19 @@ public class PhrasesDialog extends JDialog
 				|| row.note.toLowerCase(Locale.ROOT).contains(wanted)
 				|| row.say.getText().toLowerCase(Locale.ROOT).contains(wanted);
 			row.panel.setVisible(shown);
+			any |= shown;
+		}
+		// With nothing shown the window said nothing, and the status still
+		// counted what was loaded.
+		if (!wanted.isEmpty() && !any)
+		{
+			setStatus("No rules here mention \"" + find.getText().trim() + "\".", false);
+			findMatchedNothing = true;
+		}
+		else if (findMatchedNothing)
+		{
+			setStatus(loadedStatus, false);
+			findMatchedNothing = false;
 		}
 		list.revalidate();
 		list.repaint();

@@ -90,7 +90,7 @@ public interface FollowerConfig extends Config
 	String combatSection = "combat";
 
 	@ConfigSection(
-		name = "Advanced: animations and graphics",
+		name = "Advanced",
 		description = "Animation and graphic ids. Preview one with ::follower anim <id>,"
 			+ " ::follower gfx <id> or ::follower pose <id>; with Developer commands"
 			+ " on, ::follower watch prints ids as they play. The defaults look"
@@ -179,7 +179,7 @@ public interface FollowerConfig extends Config
 	@Range(min = 0)
 	@ConfigItem(
 		keyName = "spectateShieldChannelStart",
-		name = "Shield channel start animation",
+		name = "Channel start animation",
 		description = "Played once as the follower settles into the channel, before the"
 			+ " looping pose takes over. 0 for none.",
 		section = shieldSection,
@@ -200,7 +200,7 @@ public interface FollowerConfig extends Config
 	@Range(min = 0)
 	@ConfigItem(
 		keyName = "spectateShieldChannelEnd",
-		name = "Shield channel end animation",
+		name = "Channel end animation",
 		description = "Played as the channel ends, before the finishing cast. 0 for none.",
 		section = shieldSection,
 		position = 10
@@ -501,9 +501,9 @@ public interface FollowerConfig extends Config
 	@Range(min = 500, max = 12000)
 	@ConfigItem(
 		keyName = "speechDurationMs",
-		name = "Shortest time a line stays up",
-		description = "In milliseconds; 4000 is four seconds. Longer lines are"
-			+ " given longer, at the reading speed below.",
+		name = "Shortest time on screen",
+		description = "In milliseconds: 4000 is four seconds, 6000 is six. Longer"
+			+ " lines are given longer, at the reading speed below.",
 		section = speechSection,
 		position = 3
 	)
@@ -542,7 +542,7 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "chattiness",
 		name = "Chattiness",
-		description = "How much it talks. Minimal is about one remark a minute at"
+		description = "How much it talks. Minimal is a remark every minute or so at"
 			+ " most; Chatty is a running commentary. Occasional is the default.",
 		section = appearanceSection,
 		position = 3
@@ -833,7 +833,7 @@ public interface FollowerConfig extends Config
 
 	@ConfigItem(
 		keyName = "keepsCompany",
-		name = "Keeps you company while you skill",
+		name = "Works beside you when skilling",
 		description = "While you chop, mine or fish it works alongside you: the same"
 			+ " tree, rock or spot when there is room, the next one along when"
 			+ " there is not. At a farming patch it works the patch with you. Now"
@@ -893,7 +893,7 @@ public interface FollowerConfig extends Config
 
 	@ConfigItem(
 		keyName = "walksBeside",
-		name = "Walks beside you on open ground",
+		name = "Walks at your side",
 		description = "On a long run it draws level and walks at your shoulder instead of"
 			+ " trailing behind, and drops back the moment the ground narrows."
 			+ " Untick to keep it at your heel.",
@@ -988,7 +988,7 @@ public interface FollowerConfig extends Config
 
 	@ConfigItem(
 		keyName = "groupCombat",
-		name = "Combat",
+		name = "Combat remarks",
 		description = "Encouragement while it watches you fight (group \"combat\")."
 			+ " Editable under Combat in Messages.",
 		section = groupsSection,
@@ -1065,6 +1065,19 @@ public interface FollowerConfig extends Config
 		position = 11
 	)
 	default boolean groupClock()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "groupReactions",
+		name = "Reactions",
+		description = "Deaths, drops, thieving, level-ups and the chat (group \"reactions\")."
+			+ " Editable under Reactions in Messages.",
+		section = groupsSection,
+		position = 12
+	)
+	default boolean groupReactions()
 	{
 		return true;
 	}
@@ -1277,6 +1290,18 @@ public interface FollowerConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "thrallHintShown",
+		name = "Thrall hint shown",
+		description = "Whether the one-time Replace thralls hint has been printed;"
+			+ " managed by the plugin",
+		hidden = true
+	)
+	default boolean thrallHintShown()
+	{
+		return false;
+	}
+
+	@ConfigItem(
 		keyName = "attacksRelearnedSkilling",
 		name = "Attacks relearned again",
 		description = "Whether the second clear of learned attack animations has run,"
@@ -1362,7 +1387,7 @@ public interface FollowerConfig extends Config
 			+ " shows its group name in brackets; rule ids are shown in the"
 			+ " Messages window.",
 		section = groupsSection,
-		position = 12
+		position = 13
 	)
 	default String disabledGroups()
 	{
