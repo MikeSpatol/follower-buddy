@@ -1599,7 +1599,9 @@
       },
       "say": [
         "Ouch. {damage}.",
-        "That was a {damage}. I felt that one from here."
+        "That was a {damage}. I felt that one from here.",
+        "{damage}. I said ow on your behalf.",
+        "That {damage} made me flinch, and I'm nowhere near it."
       ]
     },
     {
@@ -2619,7 +2621,8 @@
       },
       "say": [
         "The Void Knights' outpost. The portals never stay shut for long.",
-        "The lander leaves soon. Try to come back with all your limbs."
+        "The lander leaves soon. Try to come back with all your limbs.",
+        "Nobody lives at the outpost. Everyone's just waiting for the next boat."
       ]
     },
     {
@@ -2797,7 +2800,8 @@
         "Eat something, {player}. That thing is winning.",
         "Half your health gone and it is still standing. Food, now.",
         "I would rather not write this one up as a lesson. Eat.",
-        "{hp} HP is not a plan, {player}. Heal or go."
+        "{hp} HP is not a plan, {player}. Heal or go.",
+        "Eat. That thing has more left than you do."
       ]
     },
     {
@@ -2832,7 +2836,8 @@
         "I'll go get the gravestone.",
         "We do not speak of the last five minutes.",
         "I'll mark the spot. It's what I'm for.",
-        "Deep breath. You can get it all back. Mostly."
+        "Deep breath. You can get it all back. Mostly.",
+        "Back to the start, then. I know the road."
       ]
     },
     {
@@ -2848,10 +2853,11 @@
       },
       "say": [
         "PET! Actual pet!",
-        "You lucky thing.",
+        "A pet. So there'll be two of us walking behind you now.",
         "A pet! Look at its little face!",
         "We have a pet. Today is a good page.",
-        "THE LUCK. Write it down, nobody will believe us."
+        "THE LUCK. Write it down, nobody will believe us.",
+        "It looked straight at you and chose. I'm writing that down."
       ]
     },
     {
@@ -2920,7 +2926,9 @@
         "{skill} {level}. I'll pretend I saw that coming.",
         "There it is, {skill} {level}. Suits you.",
         "{level} in {skill}. At this rate I'll need a thicker book.",
-        "Another {skill} level. I acted surprised in the notes."
+        "Another {skill} level. I acted surprised in the notes.",
+        "{skill} {level}. The page was ready before you were.",
+        "{skill} {level}. Worth the ink."
       ]
     },
     {
@@ -3497,7 +3505,8 @@
         "There you are, {player}. The page was getting lonely.",
         "Right on time. Ish.",
         "Good. You're here. The world kept happening without you.",
-        "Evening. Or morning. You pick, I'll log it."
+        "Evening. Or morning. You pick, I'll log it.",
+        "{days} days of notes now. Let's make today a readable one."
       ]
     },
     {
@@ -5556,7 +5565,8 @@
         ]
       },
       "say": [
-        "Runes at the ready, then. Try not to singe my outfit."
+        "Runes at the ready, then. Try not to singe my outfit.",
+        "A staff. I'll keep the notebook out of the line of fire."
       ]
     },
     {
@@ -7427,7 +7437,8 @@
         ]
       },
       "say": [
-        "The whip. Someone means business today."
+        "The whip. Someone means business today.",
+        "A whip. I'll walk a pace or two further back."
       ]
     },
     {
@@ -8337,11 +8348,12 @@
         "A {item}! I need to sit down.",
         "That's a {item}. That's a real one!",
         "I'm never letting you bank that.",
-        "Did you SEE that?",
+        "I wrote down the {item}, and I keep going back to look at it.",
         "{value}. In one drop. Write it down.",
         "Stop. Look at what you're holding.",
         "That's a page all to itself, that is.",
-        "{value}! I'd better count the noughts again."
+        "{value}! I'd better count the noughts again.",
+        "Stand still. I'm marking this exact square for later."
       ]
     },
     {
@@ -8550,7 +8562,8 @@
         "This is the tricky part.",
         "Patience wins this one.",
         "Eyes up. It's got more to give.",
-        "Halfway. Roughly. Don't check."
+        "Halfway. Roughly. Don't check.",
+        "Steady hands. Mine are shaking enough for both of us."
       ]
     },
     {
@@ -8944,14 +8957,15 @@
       "say": [
         "YES! You did it!",
         "{npc} is down! I knew you had it!",
-        "That was incredible. Absolutely incredible.",
+        "Incredible. I'm allowed one of those a page.",
         "You beat {npc}! Take a bow. I'll wait.",
         "I was never worried. Well. Barely worried.",
         "Look at you. Champion.",
         "I'm telling everyone about this.",
         "That was magnificent. {npc} never stood a chance.",
         "You were unbelievable just then.",
-        "That'll be the best thing I see all week."
+        "{npc} down and you still standing. My favourite sort of entry.",
+        "{npc}, down. I watched most of it through my fingers."
       ]
     },
     {
@@ -8970,7 +8984,7 @@
       },
       "say": [
         "Your first {boss}. In the book, dated.",
-        "One {boss}. The first of many, I suspect.",
+        "One {boss}. Whatever comes after, this is the page I'll reread.",
         "{boss}, once. I'd saved a good page for this."
       ]
     },
@@ -11302,7 +11316,8 @@
         "Careful. I've not forgotten {memory}.",
         "Before you start. Remember {memory}?",
         "Go on then. But I'm watching, after {memory}.",
-        "Mind how you go. The ink's barely dry on {memory}."
+        "Mind how you go. The ink's barely dry on {memory}.",
+        "Off you go. My mind's still half on {memory}."
       ]
     },
     {
@@ -11361,7 +11376,8 @@
         "That's a {memoryWho}. You'll remember {memory}.",
         "A {memoryWho}. I remember {memory}.",
         "Mind the {memoryWho}. My page on it isn't a kind one.",
-        "There's the {memoryWho}. I was there for {memory}."
+        "There's the {memoryWho}. I was there for {memory}.",
+        "A {memoryWho}. That shape's on a page I keep going back to."
       ]
     },
     {
@@ -13519,7 +13535,8 @@
         "Hello, {nickname}. I've saved you a fresh page.",
         "{nickname}. Back again. Good.",
         "Ah, {nickname}. I was hoping it'd be you.",
-        "The file says {nickname}. The file is pleased."
+        "The file says {nickname}. The file is pleased.",
+        "There's {nickname}. I'd only got as far as the date."
       ]
     },
     {
@@ -13775,7 +13792,8 @@
         "Same field, different census.",
         "World {world}. The scenery didn't even blink.",
         "Everyone's been replaced. I'll pretend not to notice.",
-        "A new world. The roads, I note, came with us."
+        "A new world. The roads, I note, came with us.",
+        "World {world}. I'll start the head count again."
       ]
     },
     {
@@ -14111,7 +14129,8 @@
       "say": [
         "{name}'s turned up. I'll mark them present.",
         "There's {name}. I'll take the register.",
-        "{name}'s in. I'll give them a line in the book."
+        "{name}'s in. I'll give them a line in the book.",
+        "{name} has arrived. Noted, with the time."
       ]
     },
     {
@@ -14134,7 +14153,8 @@
       },
       "say": [
         "There goes {name}. The minutes will show it.",
-        "{name}'s gone. Fewer witnesses."
+        "{name}'s gone. Fewer witnesses.",
+        "{name} has left. I've put the time down, in case it matters."
       ]
     },
     {

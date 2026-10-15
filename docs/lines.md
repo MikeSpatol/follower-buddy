@@ -1,24 +1,24 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 517 rules, 2389 spoken lines, 3 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 517 rules, 2409 spoken lines, 3 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
 ## Contents
 
-- [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (48 rules, 209 lines)
+- [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (48 rules, 216 lines)
 - [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (36 rules, 222 lines)
-- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (42 rules, 280 lines)
-- [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 114 lines)
-- [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 72 lines)
-- [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (28 rules, 119 lines)
-- [area](#area) - Places: named lines, tastes, earned verdicts, the defences (66 rules, 222 lines)
+- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (42 rules, 283 lines)
+- [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 115 lines)
+- [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 74 lines)
+- [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (28 rules, 121 lines)
+- [area](#area) - Places: named lines, tastes, earned verdicts, the defences (66 rules, 223 lines)
 - [errand](#errand) - Its little trips: bank, altar, fire, cat, studies, explores (44 rules, 155 lines)
 - [souvenir](#souvenir) - Wishes, gifts, the pocket, and what it carries (17 rules, 84 lines)
 - [bet](#bet) - Its predictions about drops (3 rules, 20 lines)
 - [clock](#clock) - The hour and how long we have been at it (9 rules, 39 lines)
-- [gear](#gear) - What you put on (63 rules, 145 lines)
-- [boss](#boss) - Bosses sighted and fought (55 rules, 519 lines)
+- [gear](#gear) - What you put on (63 rules, 147 lines)
+- [boss](#boss) - Bosses sighted and fought (55 rules, 521 lines)
 - [quest](#quest) - Famous quest figures nearby (53 rules, 155 lines)
 - [thrall](#thrall) - When it stands in for a thrall (3 rules, 18 lines)
 - [mimic](#mimic) - Copying your emotes (30 rules, 16 lines)
@@ -40,6 +40,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - We do not speak of the last five minutes.
 - I'll mark the spot. It's what I'm for.
 - Deep breath. You can get it all back. Mostly.
+- Back to the start, then. I know the road.
 
 ### `pet-drop`
 
@@ -48,10 +49,11 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 150, cooldown 1s, both
 
 - PET! Actual pet!
-- You lucky thing.
+- A pet. So there'll be two of us walking behind you now.
 - A pet! Look at its little face!
 - We have a pet. Today is a good page.
 - THE LUCK. Write it down, nobody will believe us.
+- It looked straight at you and chose. I'm writing that down.
 
 ### `level-up-new`
 
@@ -86,6 +88,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - There it is, {skill} {level}. Suits you.
 - {level} in {skill}. At this rate I'll need a thicker book.
 - Another {skill} level. I acted surprised in the notes.
+- {skill} {level}. The page was ready before you were.
+- {skill} {level}. Worth the ink.
 
 ### `level-halfway`
 
@@ -355,6 +359,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Right on time. Ish.
 - Good. You're here. The world kept happening without you.
 - Evening. Or morning. You pick, I'll log it.
+- {days} days of notes now. Let's make today a readable one.
 
 ### `away-a-while`
 
@@ -498,6 +503,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - {nickname}. Back again. Good.
 - Ah, {nickname}. I was hoping it'd be you.
 - The file says {nickname}. The file is pleased.
+- There's {nickname}. I'd only got as far as the date.
 
 ### `world-hop`
 
@@ -510,6 +516,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - World {world}. The scenery didn't even blink.
 - Everyone's been replaced. I'll pretend not to notice.
 - A new world. The roads, I note, came with us.
+- World {world}. I'll start the head count again.
 
 ### `game-updated`
 
@@ -1257,11 +1264,12 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - A {item}! I need to sit down.
 - That's a {item}. That's a real one!
 - I'm never letting you bank that.
-- Did you SEE that?
+- I wrote down the {item}, and I keep going back to look at it.
 - {value}. In one drop. Write it down.
 - Stop. Look at what you're holding.
 - That's a page all to itself, that is.
 - {value}! I'd better count the noughts again.
+- Stand still. I'm marking this exact square for later.
 
 ### `loot-nice`
 
@@ -1769,6 +1777,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - {name}'s turned up. I'll mark them present.
 - There's {name}. I'll take the register.
 - {name}'s in. I'll give them a line in the book.
+- {name} has arrived. Noted, with the time.
 
 ### `channel-left`
 
@@ -1779,6 +1788,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - There goes {name}. The minutes will show it.
 - {name}'s gone. Fewer witnesses.
+- {name} has left. I've put the time down, in case it matters.
 
 ### `npc-dictation`
 
@@ -1893,6 +1903,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Patience wins this one.
 - Eyes up. It's got more to give.
 - Halfway. Roughly. Don't check.
+- Steady hands. Mine are shaking enough for both of us.
 
 ### `combat-cheer`
 
@@ -2200,6 +2211,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - Ouch. {damage}.
 - That was a {damage}. I felt that one from here.
+- {damage}. I said ow on your behalf.
+- That {damage} made me flinch, and I'm nowhere near it.
 
 ## memory
 
@@ -2308,6 +2321,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Before you start. Remember {memory}?
 - Go on then. But I'm watching, after {memory}.
 - Mind how you go. The ink's barely dry on {memory}.
+- Off you go. My mind's still half on {memory}.
 
 ### `recall-here`
 
@@ -2332,6 +2346,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - A {memoryWho}. I remember {memory}.
 - Mind the {memoryWho}. My page on it isn't a kind one.
 - There's the {memoryWho}. I was there for {memory}.
+- A {memoryWho}. That shape's on a page I keep going back to.
 
 ### `favour-remembered`
 
@@ -3108,6 +3123,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - The Void Knights' outpost. The portals never stay shut for long.
 - The lander leaves soon. Try to come back with all your limbs.
+- Nobody lives at the outpost. Everyone's just waiting for the next boat.
 
 ### `area-barbarian-assault`
 
@@ -4184,6 +4200,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 30, cooldown 5s, delay 2 ticks, overhead
 
 - Runes at the ready, then. Try not to singe my outfit.
+- A staff. I'll keep the notebook out of the line of fire.
 
 ### `gear-dfs`
 
@@ -4768,6 +4785,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 30, cooldown 5s, delay 2 ticks, overhead
 
 - The whip. Someone means business today.
+- A whip. I'll walk a pace or two further back.
 
 ### `gear-rune-scimitar`
 
@@ -5779,6 +5797,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Half your health gone and it is still standing. Food, now.
 - I would rather not write this one up as a lesson. Eat.
 - {hp} HP is not a plan, {player}. Heal or go.
+- Eat. That thing has more left than you do.
 
 ### `kill-boss-celebrate`
 
@@ -5790,14 +5809,15 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - YES! You did it!
 - {npc} is down! I knew you had it!
-- That was incredible. Absolutely incredible.
+- Incredible. I'm allowed one of those a page.
 - You beat {npc}! Take a bow. I'll wait.
 - I was never worried. Well. Barely worried.
 - Look at you. Champion.
 - I'm telling everyone about this.
 - That was magnificent. {npc} never stood a chance.
 - You were unbelievable just then.
-- That'll be the best thing I see all week.
+- {npc} down and you still standing. My favourite sort of entry.
+- {npc}, down. I watched most of it through my fingers.
 
 ### `kill-count-first`
 
@@ -5808,7 +5828,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 75, cooldown 30s, delay 3-5 ticks
 
 - Your first {boss}. In the book, dated.
-- One {boss}. The first of many, I suspect.
+- One {boss}. Whatever comes after, this is the page I'll reread.
 - {boss}, once. I'd saved a good page for this.
 
 ### `kill-count-round`
@@ -6828,7 +6848,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **what-q**
   - You: What have you got in there?
 - **what-a**
-  - Follower: That'd be telling.
+  - Follower: Something small. Smaller than you're hoping.
 - **left-q**
   - You: Left.
 - **left-a (answers 'left')**
