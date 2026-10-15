@@ -7297,12 +7297,45 @@ public class FollowerPlugin extends Plugin
 		// follower costs nothing beyond this line.
 		hoveredThisTick |= over;
 
-		if (!over)
+		// Over a booth, a tree or an NPC the left-click is theirs: the entry
+		// goes on top of the menu, and the follower walks at the heel, so it
+		// would take that click all day.
+		if (!over || !onlyGroundUnder(client.getMenu().getMenuEntries()))
 		{
 			return;
 		}
 
 		addFollowerMenuEntry(talkOption(), this::startTalking);
+	}
+
+	/**
+	 * Whether nothing but bare ground is under the mouse: Walk here, Cancel
+	 * and plugins' own entries, and no NPC, object, player or item op. QA,
+	 * 15 Oct: the hover Talk-to took the left-click from a bank booth, a tree
+	 * and an NPC to attack, the annoyance the game's own "Move follower
+	 * options lower down" setting exists for with real pets.
+	 */
+	static boolean onlyGroundUnder(net.runelite.api.MenuEntry[] entries)
+	{
+		if (entries == null)
+		{
+			return false;
+		}
+		for (net.runelite.api.MenuEntry entry : entries)
+		{
+			if (entry == null)
+			{
+				continue;
+			}
+			net.runelite.api.MenuAction type = entry.getType();
+			if (type != net.runelite.api.MenuAction.WALK
+				&& type != net.runelite.api.MenuAction.CANCEL
+				&& type != net.runelite.api.MenuAction.RUNELITE)
+			{
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/**

@@ -60,6 +60,37 @@ public class MenuOverTheSceneTest
 		assertFalse(FollowerPlugin.offersWalkHere(null));
 	}
 
+	/**
+	 * QA, 15 Oct: the hover Talk-to goes on top of the menu, so it took the
+	 * left-click from a bank booth, a tree, an NPC to attack. It is offered
+	 * over bare ground only.
+	 */
+	@Test
+	public void theHoverTalkToIsOfferedOverBareGroundOnly() throws IOException
+	{
+		assertTrue("bare ground", FollowerPlugin.onlyGroundUnder(new MenuEntry[]{
+			entry(MenuAction.CANCEL), entry(MenuAction.WALK)}));
+		assertTrue("a plugin's own entry is not the world's", FollowerPlugin.onlyGroundUnder(new MenuEntry[]{
+			entry(MenuAction.CANCEL), entry(MenuAction.WALK), entry(MenuAction.RUNELITE)}));
+		assertFalse("a bank booth", FollowerPlugin.onlyGroundUnder(new MenuEntry[]{
+			entry(MenuAction.CANCEL), entry(MenuAction.WALK), entry(MenuAction.EXAMINE_OBJECT),
+			entry(MenuAction.GAME_OBJECT_FIRST_OPTION)}));
+		assertFalse("an NPC", FollowerPlugin.onlyGroundUnder(new MenuEntry[]{
+			entry(MenuAction.CANCEL), entry(MenuAction.WALK), entry(MenuAction.NPC_SECOND_OPTION)}));
+		assertFalse("a player", FollowerPlugin.onlyGroundUnder(new MenuEntry[]{
+			entry(MenuAction.CANCEL), entry(MenuAction.WALK), entry(MenuAction.PLAYER_FIRST_OPTION)}));
+		assertFalse("an item on the ground", FollowerPlugin.onlyGroundUnder(new MenuEntry[]{
+			entry(MenuAction.CANCEL), entry(MenuAction.WALK), entry(MenuAction.GROUND_ITEM_THIRD_OPTION)}));
+		assertFalse(FollowerPlugin.onlyGroundUnder(null));
+
+		String tick = source().substring(source().indexOf("public void onClientTick("));
+		tick = tick.substring(0, tick.indexOf("\n\t}\n"));
+		int added = tick.indexOf("addFollowerMenuEntry(talkOption()");
+		assertTrue("the hover entry has moved - the lint has lost its place", added >= 0);
+		assertTrue("the hover entry asks what else is under the mouse first",
+			tick.substring(0, added).contains("onlyGroundUnder("));
+	}
+
 	@Test
 	public void everyLookUnderTheMouseAsksWhetherItIsOverTheScene() throws IOException
 	{

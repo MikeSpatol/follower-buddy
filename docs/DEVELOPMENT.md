@@ -1132,8 +1132,11 @@ plumbing, and the right-click menu fronts all of it.
    possible (the game doesn't know the object exists), but `MenuOpened` + a
    clickbox test via `Perspective.getClickbox` (we hold the model, orientation and
    location) injects "Talk-to" / "Pose" / etc. entries with `onClick` handlers -
-   the standard technique. Left-click stays Walk here, and entries coexist with an
-   NPC's if one overlaps the follower. Note `Perspective.getClickbox` is marked
+   the standard technique. Talk-to is also added each `ClientTick` while the
+   follower is hovered, so it is the left-click over bare ground; over anything
+   with its own op (an NPC, an object, a player, an item) nothing is added and
+   the left-click stays that thing's. Entries coexist with an NPC's if one
+   overlaps the follower. Note `Perspective.getClickbox` is marked
    internal in the API (it backs `TileObject#getClickbox()`, which a
    RuneLiteObject can never provide), so it is a watch item across client updates.
 2. **Posing - go there / play animation / say.** DONE (movement): `stayTile` is
