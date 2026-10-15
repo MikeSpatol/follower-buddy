@@ -578,6 +578,8 @@ public class FollowerPlugin extends Plugin
 		// are only written when missing - a tester's file from 1.0.0 had no
 		// emote mirroring at all, and it looked broken rather than absent).
 		ruleLoader.initialise(dataDir, true);
+		// Chat is not up yet; what the files got wrong is told at the login.
+		loadErrorsReported = false;
 		voices.load(dataDir);
 		journal.initialise(dataDir);
 		journal.setRegionSource(() -> speechEngine.getContext().getRegionId());
@@ -4192,6 +4194,7 @@ public class FollowerPlugin extends Plugin
 				{
 					freshLogin = false;
 					hopped = false;
+					reportLoadErrors();
 
 					// How long it has been, worked out before the greeting so a
 					// rule can choose a different one for a long absence.
@@ -11589,6 +11592,28 @@ public class FollowerPlugin extends Plugin
 					mirrorGraphic(active.getId(), active.getHeight());
 				}
 			});
+		}
+	}
+
+	/**
+	 * Whether the problems the rule and dialog files had when the plugin
+	 * started have been told. Read at startup, before there is a chat to
+	 * tell them in, so a phrases.json with a syntax error left the follower
+	 * silent and nothing said why (QA, 15 Oct). Once per start, at the login.
+	 */
+	private boolean loadErrorsReported;
+
+	private void reportLoadErrors()
+	{
+		if (loadErrorsReported)
+		{
+			return;
+		}
+		loadErrorsReported = true;
+		reportRuleErrors();
+		for (String problem : dialogLoader.getErrors())
+		{
+			sendStatus("Dialog: " + problem);
 		}
 	}
 

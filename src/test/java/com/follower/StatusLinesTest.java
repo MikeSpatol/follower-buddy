@@ -115,4 +115,28 @@ public class StatusLinesTest
 			body.substring(0, dump).contains("if (config.developerMode())"));
 		assertFalse("no raw tile", body.contains("+ \" at \" + speechEngine"));
 	}
+
+	/**
+	 * A phrases.json with a syntax error at startup left the follower silent
+	 * and nothing said why: the files are read before there is a chat, and
+	 * their problems were told only on a reload. They are told at the login.
+	 */
+	@Test
+	public void whatTheFilesGotWrongAtStartupIsToldAtTheLogin() throws IOException
+	{
+		String source = source();
+		int read = source.indexOf("ruleLoader.initialise(dataDir, true);");
+		assertTrue("the lint has lost its place", read >= 0);
+		assertTrue("each start owes the telling afresh",
+			source.substring(read, source.indexOf("dialogLoader.initialise(dataDir, true);", read))
+				.contains("loadErrorsReported = false;"));
+		int login = source.indexOf("if (freshLogin)\n\t\t\t\t{");
+		assertTrue("the lint has lost its place", login >= 0);
+		assertTrue("the login tells them",
+			source.substring(login, source.indexOf("TriggerEvent.Type.LOGIN", login)).contains("reportLoadErrors();"));
+		String report = method("private void reportLoadErrors()");
+		assertTrue("rules and dialogs both", report.contains("reportRuleErrors();")
+			&& report.contains("dialogLoader.getErrors()"));
+		assertTrue("once per start", report.contains("if (loadErrorsReported)"));
+	}
 }
