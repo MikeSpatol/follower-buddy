@@ -65,9 +65,12 @@ class KeepingCompany
 	/** Eight minutes in, the follower sits. */
 	static final int SIT_AFTER_TICKS = 800;
 
-	/** The sit emote's own stand-up, the plugin's rest already pairs the two. */
-	static final int STAND_UP = 10053;
-	static final int STAND_UP_TICKS = 5;
+	/**
+	 * The sit emote's own stand-up, the plugin's rest already pairs the two:
+	 * its second half only, a second long, so two ticks covers it.
+	 */
+	static final int STAND_UP = FollowerEntity.STAND_UP;
+	static final int STAND_UP_TICKS = 2;
 
 	/** An hour: a slow half circle behind the player. Two: the same, then sit. */
 	static final int STRETCH_AFTER_TICKS = 6000;

@@ -253,6 +253,41 @@ public class SpeechEngineSimulationTest
 	}
 
 	@Test
+	public void anOccasionOutlastsAGapStretchedByMoodAndChattiness() throws IOException
+	{
+		// QA, 15 Oct: the wait above was a fixed six seconds, and the gap it
+		// waits on is not. At a low mood it is two and a half times the
+		// setting: 30 seconds on Quiet, nearly two minutes on Minimal, and
+		// the quest's line was dropped again in both. The shipped rules, so
+		// the level line and the quest line are the real ones.
+		for (com.follower.speech.Chattiness setting : new com.follower.speech.Chattiness[]{
+			com.follower.speech.Chattiness.QUIET, com.follower.speech.Chattiness.MINIMAL})
+		{
+			Harness h = new Harness(scratch());
+			long[] ms = {1_000_000L};
+			h.engine.setClock(() -> ms[0]);
+			h.engine.setGlobalCooldownMs(setting.getGapMs());
+			h.engine.getContext().adjustMood(-100);
+			assertEquals("low", h.engine.getContext().getMoodBand());
+			h.gameTicks(1);
+			h.dispatch(TriggerEvent.levelUp("Attack", 41));
+			int afterLevel = h.spoken.size();
+			assertTrue(setting + ": the level line goes first", afterLevel > 0);
+			for (int tick = 0; tick < 300; tick++)
+			{
+				ms[0] += 600;
+				h.gameTick();
+				if (tick == 2)
+				{
+					h.dispatch(TriggerEvent.questComplete("Waterfall Quest"));
+				}
+			}
+			assertEquals(setting + " at a low mood: the quest line is still said",
+				1, h.firedBy("quest-complete").size());
+		}
+	}
+
+	@Test
 	public void muteSilencesSpeechButNotAnimation() throws IOException
 	{
 		Harness h = new Harness(scratch(), rules(

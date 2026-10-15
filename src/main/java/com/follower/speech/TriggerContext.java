@@ -435,6 +435,12 @@ public final class TriggerContext
 		return ticksSinceCombat <= COMBAT_GRACE_TICKS;
 	}
 
+	/** Whether the player has fought in the last {@code ticks} ticks, or is fighting now. */
+	public boolean foughtWithin(int ticks)
+	{
+		return ticksSinceCombat <= ticks;
+	}
+
 	/** Whether that fight is with something big enough to call a boss. */
 	/**
 	 * The names the boss rules list, so that "boss" means one thing.

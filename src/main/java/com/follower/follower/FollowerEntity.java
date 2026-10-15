@@ -4331,28 +4331,63 @@ public class FollowerEntity
 			return;
 		}
 
-		Animation animation = client.loadAnimation(ids[index]);
+		int clip = clipOf(ids[index]);
+		Animation animation = client.loadAnimation(clip);
 		if (animation == null)
 		{
-			log.debug("Animation {} not in cache, skipping", ids[index]);
+			log.debug("Animation {} not in cache, skipping", clip);
 			playChain(ids, graphics, graphicHeight, index + 1, generation);
 			return;
 		}
 
 		AnimationController controller = new AnimationController(client, animation);
+		int firstFrame = firstFrameOf(ids[index]);
+		if (firstFrame > 0)
+		{
+			controller.setFrame(firstFrame);
+		}
 		controller.setOnFinished(finished -> playChain(ids, graphics, graphicHeight, index + 1, generation));
 		object.setAnimationController(controller);
-		animationIds.add(ids[index]);
+		animationIds.add(clip);
 		setEmotePlaying(true);
 		// Which clip is on screen right now: activePose is not updated while an
 		// emote owns the slot, so anything that needs to know what is being
 		// drawn - the tile recentring - has to read it from here.
-		emoteAnimation = ids[index];
+		emoteAnimation = clip;
 
 		if (graphics != null && index < graphics.length && graphics[index] != null)
 		{
 			playSpotAnim(graphics[index], graphicHeight);
 		}
+	}
+
+	/** The Sit emote, which the stand-up is the second half of. */
+	static final int SIT_EMOTE = 10053;
+
+	/** Where the Sit emote's stand-up half begins: the seated pose, about to rise. */
+	static final int SIT_EMOTE_STAND_UP_FRAME = 17;
+
+	/**
+	 * The stand-up from a sit, as an id of its own: the Sit emote from frame
+	 * 17. The emote starts standing, sits down, holds and stands; played
+	 * whole from a sit, the follower popped up to full height, sat back down
+	 * and stood again, 2.8 seconds of up-down-up (QA, 15 Oct). Frames 17-25
+	 * rise from exactly the seated pose in 50 client cycles, a second. Kept
+	 * apart from 10053 itself, which stays whole where it is the emote: the
+	 * follower copying a player's Sit. Above any id the cache has.
+	 */
+	public static final int STAND_UP = 0x10000 + SIT_EMOTE;
+
+	/** The clip an id plays: the stand-up is the Sit emote, anything else itself. */
+	static int clipOf(int id)
+	{
+		return id == STAND_UP ? SIT_EMOTE : id;
+	}
+
+	/** The frame an id's clip starts on. */
+	static int firstFrameOf(int id)
+	{
+		return id == STAND_UP ? SIT_EMOTE_STAND_UP_FRAME : 0;
 	}
 
 	/** Bumped to orphan an in-flight emote chain. */

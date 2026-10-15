@@ -17,12 +17,10 @@ import static org.junit.Assert.assertTrue;
 /**
  * The glyph renderer every line the follower says goes through.
  *
- * <p>Its one sharp edge is how a character becomes a glyph: {@code charAt(i) &
- * 0xFF}. Nothing is rejected and nothing is mapped, so a character above
- * U+00FF is silently drawn as a DIFFERENT character, and the text on screen is
- * wrong in a way no log will ever mention. That is pinned here so the rule
- * cannot quietly change, and so the phrase-file check has something to agree
- * with.
+ * <p>Its one sharp edge is how a character becomes a glyph. It follows the
+ * client: a no-break space is a space, and the rest goes through cp1252,
+ * with a '?' for what has no byte there. That is pinned here so the rule
+ * cannot quietly change.
  */
 public class GameFontTest
 {
@@ -148,20 +146,79 @@ public class GameFontTest
 	}
 
 	/**
-	 * The behaviour that makes the phrase-file check necessary. An em-dash is
-	 * U+2014; the low byte is 0x14, so it is drawn as whatever sits there - not
-	 * as the em-dash glyph the font really holds at 0x97, and not as nothing.
+	 * Past Latin-1 a character goes through cp1252, as the client's font
+	 * renderer sends it: an em-dash, U+2014, is the glyph the font holds at
+	 * 0x97, a curly apostrophe the one at 0x92, and a character with no
+	 * cp1252 byte is drawn as a '?'. It used to be cut to its low byte, so an
+	 * em-dash was drawn as glyph 0x14. The phrase-file check still keeps them
+	 * out of the shipped lines: not every font has a glyph there.
 	 */
 	@Test
-	public void aCharacterPastLatin1IsTruncatedNotRejected()
+	public void aCharacterPastLatin1IsMappedAsTheClientMapsIt()
 	{
-		assertEquals("an em-dash is measured as the character at its low byte",
-			overhead.stringWidth(String.valueOf((char) 0x14)),
-			overhead.stringWidth("—"));
+		assertEquals("an em-dash is the cp1252 em-dash", 0x97, GameFont.glyphIndex('\u2014'));
+		assertEquals("a curly apostrophe is the cp1252 one", 0x92, GameFont.glyphIndex('\u2019'));
+		assertEquals("the euro sign", 0x80, GameFont.glyphIndex('\u20AC'));
+		assertEquals("Latin-1 is itself", 0xE9, GameFont.glyphIndex('\u00E9'));
+		assertEquals("a C1 control has no glyph of its own", '?', GameFont.glyphIndex((char) 0x97));
+		assertEquals("and what cp1252 has no byte for is a question mark",
+			overhead.stringWidth("?"),
+			overhead.stringWidth("\u4E2D"));
+	}
 
-		assertEquals("and as a different width from the glyph cp1252 would pick",
-			overhead.stringWidth(String.valueOf((char) 0x97)),
-			overhead.stringWidth(""));
+	/**
+	 * QA, 15 Oct: display names arrive with no-break spaces, and no game font
+	 * has a width at 0xA0, so "Sir Zeebos" was measured and drawn as
+	 * "SirZeebos" over the follower and in the Talk-to name header. The client
+	 * turns one into a plain space first; so does GameFont.
+	 */
+	@Test
+	public void aNoBreakSpaceIsAPlainSpace()
+	{
+		for (GameFont font : new GameFont[]{overhead, dialog})
+		{
+			assertEquals(font.stringWidth("Sir Zeebos"), font.stringWidth("Sir\u00A0Zeebos"));
+			assertTrue(font.stringWidth("Sir\u00A0Zeebos") > font.stringWidth("SirZeebos"));
+		}
+	}
+
+	@Test
+	public void everyDrawPutsTheSamePixelsForANoBreakSpaceAsForASpace()
+	{
+		for (int style = 0; style < 4; style++)
+		{
+			BufferedImage plain = new BufferedImage(200, 40, BufferedImage.TYPE_INT_ARGB);
+			BufferedImage nbsp = new BufferedImage(200, 40, BufferedImage.TYPE_INT_ARGB);
+			draw(style, plain.createGraphics(), "Sir Zeebos");
+			draw(style, nbsp.createGraphics(), "Sir\u00A0Zeebos");
+			for (int x = 0; x < plain.getWidth(); x++)
+			{
+				for (int y = 0; y < plain.getHeight(); y++)
+				{
+					assertEquals("draw style " + style + " differs at " + x + "," + y,
+						plain.getRGB(x, y), nbsp.getRGB(x, y));
+				}
+			}
+		}
+	}
+
+	private void draw(int style, Graphics2D g, String text)
+	{
+		switch (style)
+		{
+			case 0:
+				overhead.drawTop(g, text, 5, 5, 0xFFFFFF, false);
+				break;
+			case 1:
+				overhead.drawTop(g, text, 5, 5, 0xFFFFFF, true);
+				break;
+			case 2:
+				overhead.drawCenteredBaseline(g, text, 100, 25, 0xFFFFFF, true);
+				break;
+			default:
+				overhead.drawCenteredOverhead(g, text, 100, 25, 0xFFFF00);
+				break;
+		}
 	}
 
 	@Test

@@ -228,7 +228,8 @@ public class FollowerPlugin extends Plugin
 				|| client.isMenuOpen()
 				|| dialog.isOpen()
 				|| !follower.isSpawned()
-				|| !follower.isUnderMouse(new net.runelite.api.Point(event.getX(), event.getY())))
+				|| !follower.isUnderMouse(new net.runelite.api.Point(event.getX(), event.getY()))
+				|| !offersWalkHere(client.getMenu().getMenuEntries()))
 			{
 				return event;
 			}
@@ -1261,11 +1262,12 @@ public class FollowerPlugin extends Plugin
 	private Map<Integer, KitType> slotIndex = java.util.Collections.emptyMap();
 
 	/**
-	 * The sit emote's own stand-up, 2.84s, captured alongside the sit itself.
-	 * Its partner rather than a generic getting-up animation, so the two read
-	 * as one gesture the way they do when a player performs it.
+	 * The sit emote's own stand-up, captured alongside the sit itself: its
+	 * second half, about a second, the whole emote being 2.84s that starts
+	 * standing. Its partner rather than a generic getting-up animation, so
+	 * the two read as one gesture the way they do when a player performs it.
 	 */
-	static final int REST_STAND_UP = 10053;
+	static final int REST_STAND_UP = com.follower.follower.FollowerEntity.STAND_UP;
 
 	/** Matches idle-long's five minutes, so the sitting and the "we live here
 	 * now" lines arrive as one mood rather than two systems coinciding. */
@@ -6975,6 +6977,13 @@ public class FollowerPlugin extends Plugin
 			return;
 		}
 
+		// Over an interface drawn on top of the follower - the bank, the
+		// inventory, the chatbox - the menu is the interface's.
+		if (!offersWalkHere(event.getMenuEntries()))
+		{
+			return;
+		}
+
 		// The hover hint injects a Talk-to every client tick so the game draws
 		// the top-left text natively; when the menu OPENS that entry is still
 		// in it, and adding a fresh set would duplicate it. Strip our own
@@ -7098,16 +7107,7 @@ public class FollowerPlugin extends Plugin
 			return;
 		}
 
-		boolean groundMenu = false;
-		for (net.runelite.api.MenuEntry entry : event.getMenuEntries())
-		{
-			if (entry.getType() == net.runelite.api.MenuAction.WALK)
-			{
-				groundMenu = true;
-				break;
-			}
-		}
-		if (!groundMenu)
+		if (!offersWalkHere(event.getMenuEntries()))
 		{
 			return;
 		}
@@ -7122,6 +7122,31 @@ public class FollowerPlugin extends Plugin
 				showRedCross();
 				clientThread.invoke(() -> sendTo(target));
 			});
+	}
+
+	/**
+	 * Whether a menu is the game scene's: the game offers Walk here only over
+	 * the 3D view. The follower's clickbox is a projection, and it goes on
+	 * under the bank, the inventory or the chatbox drawn over it. QA, 15 Oct:
+	 * read through them, Talk-to took the left-click from a bank item, the
+	 * follower's options sat above the item's own, and shift-click drop was
+	 * swallowed. Send has always asked this; the hover entry, the right-click
+	 * options and shift-click ask it too.
+	 */
+	static boolean offersWalkHere(net.runelite.api.MenuEntry[] entries)
+	{
+		if (entries == null)
+		{
+			return false;
+		}
+		for (net.runelite.api.MenuEntry entry : entries)
+		{
+			if (entry != null && entry.getType() == net.runelite.api.MenuAction.WALK)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/** The Send op's move, on the client thread. */
@@ -7250,7 +7275,8 @@ public class FollowerPlugin extends Plugin
 		}
 
 		boolean over = !client.isMenuOpen() && follower.isSpawned()
-			&& follower.isUnderMouse(client.getMouseCanvasPosition());
+			&& follower.isUnderMouse(client.getMouseCanvasPosition())
+			&& offersWalkHere(client.getMenu().getMenuEntries());
 
 		// Latched for the game tick to read. The clickbox is already projected
 		// here to draw the hover hint, so knowing the mouse is resting on the
@@ -7275,7 +7301,8 @@ public class FollowerPlugin extends Plugin
 	private void shiftHoverTooltip()
 	{
 		if (client.isKeyPressed(net.runelite.api.KeyCode.KC_SHIFT) && !client.isMenuOpen()
-			&& follower.isSpawned() && follower.isUnderMouse(client.getMouseCanvasPosition()))
+			&& follower.isSpawned() && follower.isUnderMouse(client.getMouseCanvasPosition())
+			&& offersWalkHere(client.getMenu().getMenuEntries()))
 		{
 			tooltipManager.add(new net.runelite.client.ui.overlay.tooltip.Tooltip(
 				talkOption() + " <col=ffff00>" + config.followerName() + "</col>"));
@@ -7402,7 +7429,10 @@ public class FollowerPlugin extends Plugin
 		lastHarvestColors = colors == null ? null : colors.clone();
 		int before = paletteHarvest.size();
 		int total = paletteHarvest.record(colors, pairs);
-		if (total > before)
+		// Said only to a developer: the palette command it points at is one of
+		// theirs, and to anybody else it is advice that does not work, about
+		// a harvest they never asked for (QA, 15 Oct).
+		if (total > before && config.developerMode())
 		{
 			sendStatus("Banked colour set #" + total
 				+ " - run '::follower palette' to put this one on the follower.");

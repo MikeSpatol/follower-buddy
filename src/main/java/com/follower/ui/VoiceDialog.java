@@ -53,7 +53,7 @@ public class VoiceDialog extends JDialog
 	{
 		JPanel root = shell();
 
-		JLabel how = new JLabel("<html><body style='width:480px'>Pick a rule in Messages"
+		JLabel how = new JLabel("<html><body style='width:380px'>Pick a rule in Messages"
 			+ " and press Sounds to choose a file for each line.</body></html>");
 		how.setFont(FontManager.getRunescapeSmallFont());
 		how.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
@@ -127,7 +127,7 @@ public class VoiceDialog extends JDialog
 		root.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		root.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-		JLabel hint = new JLabel("<html><body style='width:480px'>"
+		JLabel hint = new JLabel("<html><body style='width:380px'>"
 			+ "A sound plays when the follower says that line, and the line still"
 			+ " appears as usual. Put your own files in the folder below and they"
 			+ " turn up in the list beside each line. Only <b>WAV, AIFF and AU</b> files will play -"
@@ -177,7 +177,7 @@ public class VoiceDialog extends JDialog
 			BorderFactory.createEmptyBorder(6, 0, 6, 4)));
 		row.setAlignmentX(LEFT_ALIGNMENT);
 
-		JLabel words = new JLabel("<html><body style='width:470px'>"
+		JLabel words = new JLabel("<html><body style='width:370px'>"
 			+ escape(line) + "</body></html>");
 		words.setFont(FontManager.getRunescapeSmallFont());
 		words.setForeground(Color.WHITE);

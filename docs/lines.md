@@ -31,7 +31,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `death`
 
-- **when:** a chat message (Oh dear, you are dead)
+- **when:** a chat message (Oh dear, you are dead) AND NOT (an incident remembered)
 - **does:** mood -10; occasion (never held back)
 - **pacing:** priority 140, cooldown 5s, both
 
@@ -2210,7 +2210,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Filed when you come out the far side of nearly dying. The follower does not need to say anything at the time - critical-hp already does - it just needs to remember, so it can bring it up later. The particulars (who, how many hitpoints, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.
 
 - **when:** HP under 8% AND in a fight
-- **does:** files incident `close-call` as 'how close that was with the {foe}, {hp} hitpoints left'
+- **does:** files incident `close-call` as 'how close that was with the {foe}'
 - **pacing:** priority 30, cooldown 5m, overhead
 
 - I'm not going to forget that one.
@@ -2270,9 +2270,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** standing still 120+ ticks AND standing still under 600 ticks AND an incident remembered AND a 4% roll
 - **pacing:** priority 24, cooldown 15m, overhead
 
-- I keep thinking about {memory}{memoryWhere}.
-- I was rereading the entry on {memory}. That was {memoryWhen}.
-- Do you ever think about {memory}? I do. It was only {memoryWhen}.
+- I keep thinking about {memory}.
+- I was rereading the entry on {memory}.
+- Do you ever think about {memory}? I do.
 - It's quiet, so naturally my mind goes back to {memory}.
 
 ### `recall-death-third`
@@ -2280,7 +2280,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > The third death exactly, so the count is true when it is said. The death being spoken of is filed after the line is chosen, so the count read here is the deaths before it: two. Outranks recall-death-again, which takes over from the fourth.
 
 - **when:** on your death AND an incident remembered
-- **pacing:** priority 93, cooldown 2m, delay 10-16 ticks, overhead
+- **does:** occasion (never held back)
+- **pacing:** priority 93, cooldown 2m, delay 1-2 ticks, overhead
 
 - That's three. I've started keeping count, and I wish I hadn't.
 
@@ -2289,7 +2290,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Named rather than generic, because the count is the joke and only this incident has a count worth making one of. The count read is the deaths before this one, so a minimum of 2 is the third death on.
 
 - **when:** on your death AND an incident remembered
-- **pacing:** priority 92, cooldown 2m, delay 10-16 ticks, overhead
+- **does:** occasion (never held back)
+- **pacing:** priority 93, cooldown 2m, delay 1-2 ticks, overhead
 
 - I'm starting to see a pattern, and I don't like it.
 - We've done this before. Several times. Recently.
@@ -2307,8 +2309,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 52, cooldown 10m, overhead
 
 - Careful. I've not forgotten {memory}.
-- Before you start. Remember {memory}? That was {memoryWhen}.
-- Go on then. But I'm watching, after {memory}{memoryWhere}.
+- Before you start. Remember {memory}?
+- Go on then. But I'm watching, after {memory}.
 - Mind how you go. The ink's barely dry on {memory}.
 
 ### `recall-here`
@@ -2319,7 +2321,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 40, cooldown 30m, delay 3-6 ticks, overhead
 
 - Stand still a moment. The notes on {memory} start here.
-- Here again, and I've not forgotten {memory}. That was {memoryWhen}.
+- Here again, and I've not forgotten {memory}.
 - I know this spot. This is where I wrote down {memory}.
 - It was right about here, {memoryWhen}. The page on {memory} is still creased.
 
@@ -2331,7 +2333,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 45, cooldown 20m, delay 2-4 ticks, overhead
 
 - That's a {memoryWho}. You'll remember {memory}.
-- A {memoryWho}. I remember {memory}, {memoryWhen}.
+- A {memoryWho}. I remember {memory}.
 - Mind the {memoryWho}. I've got a page on those, and it's not a kind one.
 - There's the {memoryWho}. I was there for {memory}.
 
@@ -5773,7 +5775,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** HP under 50% AND Great Olm, Verzik Vitur, TzKal-Zuk, Nex, Vorkath, Zulrah within 12 tiles, in sight
 - **does:** occasion (never held back)
-- **pacing:** priority 130, cooldown 15s, both
+- **pacing:** priority 130, cooldown 3m, both
 
 - You are NOT winning this on {hp} HP.
 - Heal up or leave, {player}.

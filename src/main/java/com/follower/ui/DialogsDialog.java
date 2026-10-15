@@ -116,7 +116,7 @@ public class DialogsDialog extends JDialog
 		root.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		root.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-		JLabel hint = new JLabel("<html>These are the conversations the follower"
+		JLabel hint = new JLabel("<html><body style='width:500px'>These are the conversations the follower"
 			+ " <b>starts</b>. While it is waiting for an answer, its Talk-to option becomes"
 			+ " Answer and opens the conversation it asked about instead of the everyday one.<br>"
 			+ "<b>Says</b> is one page per line, spoken by whoever is picked beside the node. <b>Choices</b> are one"

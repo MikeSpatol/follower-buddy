@@ -54,11 +54,71 @@ public class IncidentTest
 		TriggerContext context = h.engine.getContext();
 		assertTrue("the close call was filed", context.hasIncident());
 		assertEquals("close-call", context.getIncidentKey());
-		assertEquals("how close that was with the Hill Giant, 6 hitpoints left",
+		assertEquals("how close that was with the Hill Giant",
 			context.getIncidentPhrase());
 		assertEquals("Hill Giant", context.getIncidentWho());
 		assertEquals(12342, context.getIncidentWhere());
 		assertEquals(" in Edgeville", context.getMemoryWhere());
+	}
+
+	private static final String QUEST_MEMORY = "{\"version\": 1, \"rules\": [{\"id\": \"quest-memory\","
+		+ " \"group\": \"memory\", \"cooldownMs\": 0,"
+		+ " \"remember\": {\"key\": \"the-quest\", \"as\": \"the sheep that wouldn't be sheared\"},"
+		+ " \"when\": {\"type\": \"questComplete\"}, \"say\": [\"Filed.\"]}]}";
+
+	/** A memory filed some ticks after a ram fight ended. */
+	private String whoAfter(int ticksSinceTheFight) throws IOException
+	{
+		Harness h = new Harness(folder.newFolder().toPath(), QUEST_MEMORY);
+		h.game.regions(12342).at(3090, 3490, 0);
+		NPC ram = h.game.spawnNpc(2800, "Ram", 2);
+		h.game.fighting(ram);
+		h.gameTicks(3);
+		h.game.fighting(null);
+		h.gameTicks(ticksSinceTheFight);
+		h.dispatch(TriggerEvent.questComplete("Sheep Shearer"));
+		assertEquals("the-quest", h.engine.getContext().getIncidentKey());
+		return h.engine.getContext().getIncidentWho();
+	}
+
+	@Test
+	public void aMemoryIsAboutTheFightOnlyWhileItIsGoingOn() throws IOException
+	{
+		// QA, 15 Oct: the combat target is never cleared, so a quest finished
+		// long after a ram fight was filed with the Ram as its "who", and the
+		// next Ram in sight brought up a quest it had nothing to do with.
+		assertEquals("a fight just over is the memory's", "Ram", whoAfter(2));
+		assertEquals("one long over is not", "", whoAfter(60));
+	}
+
+	@Test
+	public void aDeathLongAfterAFightIsNotPutDownToIt() throws IOException
+	{
+		// The same stale target in the shipped death memory's own words:
+		// "the way that went with the {foe}".
+		for (int since : new int[]{2, 60})
+		{
+			Harness h = new Harness(folder.newFolder().toPath());
+			h.game.regions(12342).at(3090, 3490, 0);
+			NPC ram = h.game.spawnNpc(2800, "Ram", 2);
+			h.game.fighting(ram);
+			h.gameTicks(3);
+			h.game.fighting(null);
+			h.gameTicks(since);
+			h.dispatch(TriggerEvent.death());
+			TriggerContext context = h.engine.getContext();
+			assertEquals("the-death", context.getIncidentKey());
+			if (since == 2)
+			{
+				assertEquals("the way that went with the ram", context.getIncidentPhrase().toLowerCase());
+				assertEquals("Ram", context.getIncidentWho());
+			}
+			else
+			{
+				assertEquals("the way that went", context.getIncidentPhrase());
+				assertEquals("", context.getIncidentWho());
+			}
+		}
 	}
 
 	@Test
@@ -97,12 +157,31 @@ public class IncidentTest
 		// Dialogue check, 14 Oct: "That's three" was said from the fourth
 		// death on - the death is filed after its line is chosen, so the
 		// count read was one behind. It has the third to itself now.
+		//
+		// QA, 15 Oct: and it was never heard. It waited 10-16 ticks, and the
+		// game's "Oh dear, you are dead!" a few ticks after the death let the
+		// chat death line speak first, so the count was lost in the gap. Run
+		// the way the game runs it: the default gap on a game clock, and the
+		// message five ticks behind the death.
 		Harness h = new Harness(folder.newFolder().toPath());
+		long[] ms = {1_000_000L};
+		h.engine.setClock(() -> ms[0]);
+		h.engine.setGlobalCooldownMs(com.follower.speech.Chattiness.OCCASIONAL.getGapMs());
 		h.gameTicks(1);
 		for (int death = 1; death <= 4; death++)
 		{
+			int deathLinesBefore = h.firedBy("death").size();
 			h.dispatch(TriggerEvent.death());
-			h.gameTicks(400);
+			for (int tick = 0; tick < 400; tick++)
+			{
+				ms[0] += 600;
+				h.gameTick();
+				if (tick == 4)
+				{
+					h.dispatch(TriggerEvent.chat("Oh dear, you are dead!",
+						net.runelite.api.ChatMessageType.GAMEMESSAGE.getType(), ""));
+				}
+			}
 			if (death == 2)
 			{
 				assertTrue("nothing to count yet", h.firedBy("recall-death-third").isEmpty());
@@ -111,9 +190,39 @@ public class IncidentTest
 			{
 				assertEquals("said on the third", 1, h.firedBy("recall-death-third").size());
 			}
+			if (death >= 3)
+			{
+				assertEquals("and the chat death line does not talk over the count on death " + death,
+					deathLinesBefore, h.firedBy("death").size());
+			}
 		}
 		assertEquals("and not again on the fourth", 1, h.firedBy("recall-death-third").size());
 		assertEquals("which has the other lines", 1, h.firedBy("recall-death-again").size());
+	}
+
+	@Test
+	public void theCountBeatsTheLifetimeTally() throws IOException
+	{
+		// QA, 15 Oct: past ten lifetime deaths, deaths-many (same priority,
+		// earlier in the file) took every pass from recall-death-again.
+		// A game clock, so the cooldowns run out between deaths as they would.
+		Harness h = new Harness(folder.newFolder().toPath());
+		long[] ms = {1_000_000L};
+		h.engine.setClock(() -> ms[0]);
+		h.engine.getContext().restoreCounters(Collections.singletonMap("deaths", 12), null);
+		h.gameTicks(1);
+		for (int death = 1; death <= 4; death++)
+		{
+			h.engine.getContext().tallyBoth("deaths");
+			h.dispatch(TriggerEvent.death());
+			for (int tick = 0; tick < 400; tick++)
+			{
+				ms[0] += 600;
+				h.gameTick();
+			}
+		}
+		assertEquals(1, h.firedBy("recall-death-third").size());
+		assertEquals(1, h.firedBy("recall-death-again").size());
 	}
 
 	@Test
@@ -172,7 +281,7 @@ public class IncidentTest
 		h.game.regions(12342).at(3090, 3490, 0);
 		h.gameTicks(1);
 		h.engine.getContext().noteIncident("close-call",
-			"how close that was with the Hill Giant, 6 hitpoints left", "Hill Giant",
+			"how close that was with the Hill Giant", "Hill Giant",
 			System.currentTimeMillis() - 3L * 24 * 60 * 60_000L);
 		// Away and back: the return is the rising edge the place recall fires on.
 		h.game.regions(12850).at(3222, 3218, 0);
@@ -191,7 +300,7 @@ public class IncidentTest
 		foe.engine.getContext().setRegionNames(names());
 		foe.gameTicks(1);
 		foe.engine.getContext().noteIncident("close-call",
-			"how close that was with the Hill Giant, 6 hitpoints left", "Hill Giant",
+			"how close that was with the Hill Giant", "Hill Giant",
 			System.currentTimeMillis() - 3L * 24 * 60 * 60_000L);
 		NPC giant = foe.game.spawnNpc(2098, "Hill Giant", 28);
 		foe.game.moveNpc(giant, foe.game.player.getWorldLocation().getX() + 4,

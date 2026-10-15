@@ -268,9 +268,9 @@ public class TalkScriptTest
 	public void everyLineHasAGlyphInBothGameFonts() throws IOException
 	{
 		// Same check the rule file gets, and for the same reason: GameFont
-		// indexes with charAt(i) & 0xFF, so anything above U+00FF is truncated
-		// and drawn as whatever lives at that index. The line does not come out
-		// blank, it comes out wrong, and nothing reports it.
+		// maps anything above U+00FF through cp1252, to a '?' or a glyph not
+		// every font has. The line does not come out blank, it comes out
+		// wrong, and nothing reports it.
 		JsonObject fonts = bundled("/com/follower/fonts.json");
 		JsonObject overhead = fontById(fonts, 496);
 		JsonObject dialog = fontById(fonts, 497);

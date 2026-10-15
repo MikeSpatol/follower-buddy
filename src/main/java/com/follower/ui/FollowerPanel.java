@@ -263,7 +263,7 @@ public class FollowerPanel extends PluginPanel
 	public void setFollowerName(String name)
 	{
 		SwingUtilities.invokeLater(() -> behaviourCaption.setText(
-			"<html><body style='width:180px'>Right-click " + escapeHtml(name)
+			"<html><body style='width:160px'>Right-click " + escapeHtml(name)
 				+ " in game for Talk-to, Stay, Dance, Wave, Step-in-front and Chronicle."
 				+ " Hold Shift and right-click any tile to send it there.</body></html>"));
 	}
@@ -313,7 +313,7 @@ public class FollowerPanel extends PluginPanel
 	public void setRegionId(int region)
 	{
 		SwingUtilities.invokeLater(() -> regionCaption.setText(
-			"<html><body style='width:180px'>Your region id: "
+			"<html><body style='width:160px'>Your region id: "
 				+ (region > 0 ? Integer.toString(region) : "not known until you log in")
 				+ ", for Locations rules.</body></html>"));
 	}
@@ -621,7 +621,7 @@ public class FollowerPanel extends PluginPanel
 		// unwrapped line, and a single wide child forces the WHOLE panel past
 		// the sidebar, clipping every section against the no-horizontal-scroll
 		// viewport.
-		JLabel identity = new JLabel("<html><body style='width:180px'>Only you"
+		JLabel identity = new JLabel("<html><body style='width:160px'>Only you"
 			+ " can see this follower. Dress it under Outfit; edit what it says"
 			+ " under Talking; see what it remembers under Memory.</body></html>");
 		identity.setFont(FontManager.getRunescapeSmallFont());
@@ -718,7 +718,7 @@ public class FollowerPanel extends PluginPanel
 	/** A width-bounded grey line of explanation, so it wraps instead of widening the panel. */
 	private JLabel caption(String text)
 	{
-		JLabel label = new JLabel("<html><body style='width:180px'>" + text + "</body></html>");
+		JLabel label = new JLabel("<html><body style='width:160px'>" + text + "</body></html>");
 		label.setFont(FontManager.getRunescapeSmallFont());
 		label.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
 		label.setAlignmentX(LEFT_ALIGNMENT);

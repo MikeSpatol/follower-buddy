@@ -408,7 +408,7 @@ public class PhrasesDialog extends JDialog
 			count++;
 		}
 
-		hint.setText("<html>" + HOW_TO + "<br>" + category.hint + "</html>");
+		hint.setText("<html><body style='width:440px'>" + HOW_TO + "<br>" + category.hint + "</body></html>");
 		addLocation.setVisible(category.structural);
 		setStatus(count + " rules loaded", false);
 		applyFind();

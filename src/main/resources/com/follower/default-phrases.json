@@ -2701,7 +2701,7 @@
       "note": "Combinator example: only complains if a boss is near AND you're hurt.",
       "group": "boss",
       "priority": 130,
-      "cooldownMs": 15000,
+      "cooldownMs": 180000,
       "output": "both",
       "when": {
         "type": "all",
@@ -2739,8 +2739,23 @@
       "output": "both",
       "mood": -10,
       "when": {
-        "type": "chatMessage",
-        "contains": "Oh dear, you are dead"
+        "type": "all",
+        "conditions": [
+          {
+            "type": "chatMessage",
+            "contains": "Oh dear, you are dead"
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "remembers",
+                "is": "the-death",
+                "minimum": 3
+              }
+            ]
+          }
+        ]
       },
       "say": [
         "Well. That happened.",
@@ -10818,8 +10833,8 @@
       "output": "overhead",
       "remember": {
         "key": "close-call",
-        "as": "how close that was with the {foe}, {hp} hitpoints left",
-        "plain": "how close that was, {hp} hitpoints left"
+        "as": "how close that was with the {foe}",
+        "plain": "how close that was"
       },
       "when": {
         "type": "all",
@@ -10962,21 +10977,22 @@
         ]
       },
       "say": [
-        "I keep thinking about {memory}{memoryWhere}.",
-        "I was rereading the entry on {memory}. That was {memoryWhen}.",
-        "Do you ever think about {memory}? I do. It was only {memoryWhen}.",
+        "I keep thinking about {memory}.",
+        "I was rereading the entry on {memory}.",
+        "Do you ever think about {memory}? I do.",
         "It's quiet, so naturally my mind goes back to {memory}."
       ]
     },
     {
       "id": "recall-death-third",
+      "occasion": true,
       "note": "The third death exactly, so the count is true when it is said. The death being spoken of is filed after the line is chosen, so the count read here is the deaths before it: two. Outranks recall-death-again, which takes over from the fourth.",
       "group": "memory",
       "priority": 93,
       "cooldownMs": 120000,
       "output": "overhead",
-      "delayTicks": 10,
-      "delayTicksMax": 16,
+      "delayTicks": 1,
+      "delayTicksMax": 2,
       "when": {
         "type": "all",
         "conditions": [
@@ -10997,13 +11013,14 @@
     },
     {
       "id": "recall-death-again",
+      "occasion": true,
       "note": "Named rather than generic, because the count is the joke and only this incident has a count worth making one of. The count read is the deaths before this one, so a minimum of 2 is the third death on.",
       "group": "memory",
-      "priority": 92,
+      "priority": 93,
       "cooldownMs": 120000,
       "output": "overhead",
-      "delayTicks": 10,
-      "delayTicksMax": 16,
+      "delayTicks": 1,
+      "delayTicksMax": 2,
       "when": {
         "type": "all",
         "conditions": [
@@ -11052,8 +11069,8 @@
       },
       "say": [
         "Careful. I've not forgotten {memory}.",
-        "Before you start. Remember {memory}? That was {memoryWhen}.",
-        "Go on then. But I'm watching, after {memory}{memoryWhere}.",
+        "Before you start. Remember {memory}?",
+        "Go on then. But I'm watching, after {memory}.",
         "Mind how you go. The ink's barely dry on {memory}."
       ]
     },
@@ -11080,7 +11097,7 @@
       },
       "say": [
         "Stand still a moment. The notes on {memory} start here.",
-        "Here again, and I've not forgotten {memory}. That was {memoryWhen}.",
+        "Here again, and I've not forgotten {memory}.",
         "I know this spot. This is where I wrote down {memory}.",
         "It was right about here, {memoryWhen}. The page on {memory} is still creased."
       ]
@@ -11109,7 +11126,7 @@
       },
       "say": [
         "That's a {memoryWho}. You'll remember {memory}.",
-        "A {memoryWho}. I remember {memory}, {memoryWhen}.",
+        "A {memoryWho}. I remember {memory}.",
         "Mind the {memoryWho}. I've got a page on those, and it's not a kind one.",
         "There's the {memoryWho}. I was there for {memory}."
       ]

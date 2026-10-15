@@ -452,14 +452,26 @@ public class SpeechEngine
 	 * six seconds. Play test, 7 Oct: Waterfall Quest's reward levelled
 	 * Attack, the level line went first, and the quest-complete line two
 	 * seconds behind it met the gap and was dropped. The gap is there to keep
-	 * chatter apart, not to cost a quest its one line.
+	 * chatter apart, not to cost a quest its one line. The least it waits:
+	 * see {@link #occasionWaitTicks}.
 	 */
 	static final int OCCASION_WAIT_TICKS = 10;
 
-	/** Whether a firing held up for this reason waits a tick and tries again rather than being dropped. */
-	static boolean waitsOutTheGap(SpeechRule rule, String held, int waited)
+	/**
+	 * How long an occasion waits for the gap now, in ticks: the gap itself
+	 * and two more. The gap stretches with mood and chattiness - 15 seconds
+	 * at a low mood on Occasional, nearly two minutes on Minimal - and a fixed
+	 * six seconds dropped the quest's line again in every one of those.
+	 */
+	int occasionWaitTicks()
 	{
-		return "gap".equals(held) && rule.isOccasion() && waited < OCCASION_WAIT_TICKS;
+		return Math.max(OCCASION_WAIT_TICKS, (int) (moodScaledGap() / 600L) + 2);
+	}
+
+	/** Whether a firing held up for this reason waits a tick and tries again rather than being dropped. */
+	static boolean waitsOutTheGap(SpeechRule rule, String held, int waited, int limit)
+	{
+		return "gap".equals(held) && rule.isOccasion() && waited < limit;
 	}
 
 	/**
@@ -824,7 +836,7 @@ public class SpeechEngine
 						delayed.ticksLeft = 1;
 						continue;
 					}
-					if (waitsOutTheGap(delayed.rule, held, delayed.waited))
+					if (waitsOutTheGap(delayed.rule, held, delayed.waited, occasionWaitTicks()))
 					{
 						delayed.waited++;
 						delayed.ticksLeft = 1;
@@ -975,7 +987,7 @@ public class SpeechEngine
 		}
 
 		String blocked = blockedBy(winner, now);
-		if (waitsOutTheGap(winner, blocked, 0) || waitsOutTheScene(winner, blocked, 0))
+		if (waitsOutTheGap(winner, blocked, 0, occasionWaitTicks()) || waitsOutTheScene(winner, blocked, 0))
 		{
 			winner.markFired(now);
 			pending.add(new PendingSpeech(winner, event, 1));
@@ -1066,7 +1078,7 @@ public class SpeechEngine
 	{
 		String template = rule.pickPhrase(recentLineSet,
 			line -> getContext().lineWear(line));
-		String text = substitute(template, event, null, true);
+		String text = spokenText(template, event);
 		Integer animation = rule.resolveAnimation(event);
 
 		// A mirroring rule triggered by something OTHER than an animation event
@@ -1243,6 +1255,9 @@ public class SpeechEngine
 			text.isEmpty() ? "(animation " + animation + ")" : text);
 	}
 
+	/** How recent a fight has to be for a memory filed now to be about it, in ticks: six seconds. */
+	static final int RECENT_FIGHT_TICKS = 10;
+
 	/** What a rule writes down when it rises: the incident, and the place. */
 	private void file(SpeechRule rule, TriggerEvent event)
 	{
@@ -1253,14 +1268,20 @@ public class SpeechEngine
 			// The particulars are filled in NOW, while the event and the
 			// moment still know them; a placeholder with nothing to say drops
 			// the phrase back to its plain form rather than filing a hole.
+			// The last thing fought is never forgotten by the context, so only
+			// a fight going on, or just over, is this memory's. QA, 15 Oct: a
+			// quest finished an hour after a ram fight was filed "with the
+			// Ram", and the next Ram brought the quest up.
+			boolean fighting = getContext().foughtWithin(RECENT_FIGHT_TICKS);
 			boolean[] incomplete = {false};
 			String phrase = substitute(rule.remember.as, event, incomplete, false);
-			if (incomplete[0] && rule.remember.plain != null)
+			if ((incomplete[0] || (!fighting && rule.remember.as != null && rule.remember.as.contains("{foe}")))
+				&& rule.remember.plain != null)
 			{
 				phrase = substitute(rule.remember.plain, event, null, false);
 			}
 			String who = event.getPlaceholders().getOrDefault("npc", "");
-			if (who.isEmpty())
+			if (who.isEmpty() && fighting)
 			{
 				who = getContext().getCombatTarget();
 			}
@@ -1367,6 +1388,59 @@ public class SpeechEngine
 			states.add("advising");
 		}
 		return states;
+	}
+
+	/**
+	 * The longest line said over a head: the game's own limit for anything
+	 * a player or NPC says there. QA, 15 Oct: a memory with its where and
+	 * when ran to 92-151 characters, and fixed mode clips both ends of it.
+	 */
+	static final int OVERHEAD_MAX_CHARS = 80;
+
+	/** "That was {memoryWhen}." and the like: a sentence that only says when. */
+	private static final java.util.regex.Pattern WHEN_SENTENCE =
+		java.util.regex.Pattern.compile("\\s*[^.?!]*\\{memoryWhen\\}[^.?!]*[.?!]");
+
+	/**
+	 * A template filled for saying. Over the limit, a line that tells a
+	 * memory's where and when is filled again without them: the memory is
+	 * the point, and the particulars are what there is no room for.
+	 */
+	String spokenText(String template, TriggerEvent event)
+	{
+		String text = substitute(template, event, null, true);
+		if (text.length() > OVERHEAD_MAX_CHARS)
+		{
+			String shorter = withoutMemoryParticulars(template);
+			if (shorter != null)
+			{
+				text = substitute(shorter, event, null, true);
+			}
+		}
+		return text;
+	}
+
+	/**
+	 * The template with {memoryWhere} and {memoryWhen} taken out, or null
+	 * when it has neither or would lose the memory with them. The where
+	 * brings its own " in", so it goes alone; the when goes with its comma,
+	 * or with the sentence it has to itself.
+	 */
+	static String withoutMemoryParticulars(String template)
+	{
+		if (template == null
+			|| (!template.contains("{memoryWhere}") && !template.contains("{memoryWhen}")))
+		{
+			return null;
+		}
+		String shorter = template.replace("{memoryWhere}", "").replace(", {memoryWhen}", "");
+		shorter = WHEN_SENTENCE.matcher(shorter).replaceAll("").trim();
+		if (shorter.contains("{memoryWhen}")
+			|| (template.contains("{memory}") && !shorter.contains("{memory}")))
+		{
+			return null;
+		}
+		return shorter;
 	}
 
 	/** Replaces {@code {placeholder}} tokens from the event and the state snapshot. */

@@ -182,15 +182,13 @@ public class RuleSetIntegrityTest
 
 	/**
 	 * The game draws with bitmap fonts of exactly 256 glyphs, and
-	 * {@code GameFont} picks one with {@code text.charAt(i) & 0xFF}.
+	 * {@code GameFont} picks one as the client does: cp1252, with a '?' for a
+	 * character that has no byte there.
 	 *
-	 * <p>That mask is the whole rule, and it is stricter than it looks. There is
-	 * no charset mapping: a character above U+00FF is not rejected, it is
-	 * TRUNCATED to its low byte and drawn as whatever glyph happens to live
-	 * there. An em-dash, U+2014, reaches glyph 0x14 - not the em-dash the font
-	 * really does hold at 0x97, which is where cp1252 would have put it. So the
-	 * line does not come out blank, it comes out as a different character
-	 * entirely, and nothing anywhere reports it.
+	 * <p>So a character above U+00FF either becomes a question mark or lands
+	 * on a glyph not every font has: an em-dash, U+2014, is glyph 0x97, which
+	 * 496 holds and 497 does not. The line does not come out blank, it comes
+	 * out as a different character, and nothing anywhere reports it.
 	 *
 	 * <p>Hence both halves of the check: the character has to be inside Latin-1
 	 * at all, and the glyph at that index has to have pixels. Measured for both
@@ -253,7 +251,7 @@ public class RuleSetIntegrityTest
 
 	private static boolean hasGlyph(JsonObject font, char c)
 	{
-		// Anything past Latin-1 would be truncated to a different character.
+		// Anything past Latin-1 is a '?' or a glyph not every font has.
 		if (c > 0xFF)
 		{
 			return false;
