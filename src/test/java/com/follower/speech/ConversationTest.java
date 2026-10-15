@@ -169,8 +169,45 @@ public class ConversationTest
 		}
 		// The talk loop the follower's head was animated with all along.
 		assertEquals(588, Conversation.Expression.NEUTRAL.animations()[0]);
-		assertEquals(new FollowerDialog(null, null, null, null, null, null, null, null).getTalkAnimationId(),
-			Conversation.Expression.NEUTRAL.animations()[0]);
+		// Talk-to's own box plays it too, at the length for the lines on show.
+		for (int lines = 1; lines <= 4; lines++)
+		{
+			assertEquals(Conversation.Expression.NEUTRAL.animations()[lines - 1],
+				FollowerDialog.talkClip(null, 0, lines));
+		}
+	}
+
+	@Test
+	public void anNpcsChatheadNeverPosesOrFramesTheFollowersHead()
+	{
+		FollowerDialog dialog = new FollowerDialog(null, null, null, null, null, null, null, null);
+		int turn = dialog.getNpcTurn(), pitch = dialog.getHeadPitch(), zoom = dialog.getHeadZoom();
+
+		// A troll's talk and an angry human's scowl: neither is kept, and
+		// neither one's framing is taken.
+		dialog.adoptNpcHead(AnimationID.MY2ARM_TROLL_CHATHEAD_TALK_BASIC, 100, 200, 900);
+		dialog.adoptNpcHead(AnimationID.CHATANG1, 100, 200, 900);
+		assertEquals(0, dialog.getTalkAnimationId());
+		assertEquals(turn, dialog.getNpcTurn());
+		assertEquals(pitch, dialog.getHeadPitch());
+		assertEquals(zoom, dialog.getHeadZoom());
+		for (int lines = 1; lines <= 4; lines++)
+		{
+			assertEquals(Conversation.Expression.NEUTRAL.animations()[lines - 1],
+				FollowerDialog.talkClip(null, dialog.getTalkAnimationId(), lines));
+		}
+
+		// A human head's neutral talk lends its framing, still not its clip.
+		dialog.adoptNpcHead(AnimationID.CHATNEU2, 1882 + 2048, 64, 796);
+		assertEquals(1882, dialog.getNpcTurn());
+		assertEquals(64, dialog.getHeadPitch());
+		assertEquals(796, dialog.getHeadZoom());
+		assertEquals(0, dialog.getTalkAnimationId());
+
+		// A scripted face and ::follower head talk still win.
+		int[] happy = Conversation.Expression.HAPPY.animations();
+		assertEquals(happy[2], FollowerDialog.talkClip(happy, 0, 3));
+		assertEquals(AnimationID.CHATANG1, FollowerDialog.talkClip(null, AnimationID.CHATANG1, 2));
 	}
 
 	@Test

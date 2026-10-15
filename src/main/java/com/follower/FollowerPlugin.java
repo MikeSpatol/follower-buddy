@@ -8530,18 +8530,12 @@ public class FollowerPlugin extends Plugin
 						dialog.setDialogInsetY(Math.max(0, dialogRoot.getBounds().y - rootRect.y));
 					}
 				}
-				// Our dialog lays the head out like the NPC side (left), so adopt the
-				// NPC dialog's animation the moment one is seen.
+				// Our dialog lays the head out like the NPC side (left), so adopt a
+				// human NPC head's framing; rotationZ is the head's actual angle.
 				if (group == net.runelite.api.gameval.InterfaceID.CHAT_LEFT)
 				{
-					if (widget.getAnimationId() > 0)
-					{
-						dialog.setTalkAnimationId(widget.getAnimationId());
-					}
-					// rotationZ is the head's actual angle - copy it verbatim.
-					dialog.setNpcTurn(widget.getRotationZ() & 0x7ff);
-					dialog.setHeadPitch(widget.getRotationX() & 0x7ff);
-					dialog.setHeadZoom(Math.max(1, widget.getModelZoom()));
+					dialog.adoptNpcHead(widget.getAnimationId(), widget.getRotationZ(),
+						widget.getRotationX(), widget.getModelZoom());
 				}
 				return;
 			}
