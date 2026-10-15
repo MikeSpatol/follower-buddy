@@ -138,6 +138,34 @@ public class ChronicleIntegrityTest
 	}
 
 	@Test
+	public void aPlaceIsWrittenWhereverItsSketchesAreDrawn() throws IOException
+	{
+		// QA: Varrock's Grand Exchange plate could be sketched in a region
+		// that did not write Varrock's page, leaving a finished drawing over
+		// "not been there yet". A place written by going there is written in
+		// every region it sketches.
+		List<String> problems = new ArrayList<>();
+		for (ChronicleEntry entry : loadAsAFreshInstall().getEntries())
+		{
+			String kind = entry.kindOrEmpty();
+			if (!"location".equals(kind) && !"world".equals(kind)
+				|| entry.unlock == null || entry.unlock.regions == null || entry.unlock.regions.isEmpty())
+			{
+				continue;
+			}
+			for (ChronicleEntry.Plate plate : entry.platesOrEmpty())
+			{
+				if (plate.sketch != null && plate.regions != null && !entry.unlock.regions.containsAll(plate.regions))
+				{
+					problems.add(entry.id + ": " + plate.sketch + " is drawn in " + plate.regions
+						+ ", written in " + entry.unlock.regions);
+				}
+			}
+		}
+		assertTrue(String.join("\n", problems), problems.isEmpty());
+	}
+
+	@Test
 	public void everyUnlockIsOneTheCodeCanCheck() throws IOException
 	{
 		ChronicleLoader loader = loadAsAFreshInstall();
