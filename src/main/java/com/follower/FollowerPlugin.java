@@ -932,6 +932,7 @@ public class FollowerPlugin extends Plugin
 		mouseManager.unregisterMouseListener(shiftClickAdapter);
 		overlay.clear();
 		speechQueue.clear();
+		cutByTheScene = null;
 		speakingUntilMs = 0;
 		voices.close();
 
@@ -1404,6 +1405,32 @@ public class FollowerPlugin extends Plugin
 	private int quietUntilTick;
 
 	/**
+	 * A line a starting scene cut off just after it went up, said again once
+	 * the scene and its quiet are over. QA, 15 Oct: the line was gone a tick
+	 * or two after it appeared, and a once line - every quest-moment draft -
+	 * was spent all the same. Only a once line or an occasion, the lines that
+	 * do not come round again; anything else is let go, as before.
+	 */
+	static final long SCENE_CUT_GRACE_MS = 2_000L;
+
+	/** As long as the engine holds an occasion for a scene: five minutes. */
+	static final int SCENE_CUT_KEPT_TICKS = 500;
+
+	/** The line on the overhead now, and when it went up. */
+	private Utterance onScreen;
+	private long onScreenSinceMs;
+
+	/** The line held over the scene, and for how many ticks it has been. */
+	private Utterance cutByTheScene;
+	private int cutHeldTicks;
+
+	/** Whether a line up this long, from this rule, is said again after the scene. */
+	static boolean saysAgainAfterTheScene(SpeechRule rule, long upForMs)
+	{
+		return rule != null && (rule.isOnce() || rule.isOccasion()) && upForMs < SCENE_CUT_GRACE_MS;
+	}
+
+	/**
 	 * Whether a cutscene has the camera, or had it under three ticks ago: a beat
 	 * between two shots is not the end of the scene. While it does, the follower
 	 * is an extra: it keeps to where it stands, gives way to the cast, looks
@@ -1452,6 +1479,10 @@ public class FollowerPlugin extends Plugin
 			journal.scene(on, !on ? "-" : cutsceneForced ? "forced" : "542");
 			if (on)
 			{
+				long now = System.currentTimeMillis();
+				cutByTheScene = onScreen != null && now < speakingUntilMs
+					&& saysAgainAfterTheScene(onScreen.rule, now - onScreenSinceMs) ? onScreen : null;
+				cutHeldTicks = 0;
 				// What was about to be said belongs to the moment before.
 				speechQueue.clear();
 				overlay.clear();
@@ -1470,6 +1501,21 @@ public class FollowerPlugin extends Plugin
 		}
 		follower.setWatchingWithThePlayer(sceneHolds());
 		speechEngine.setSceneQuiet(sceneQuiet());
+
+		// Through the engine's remark, so the mute still holds. The words
+		// only: the rule's own business ran when the line first went up.
+		if (cutByTheScene != null && (sceneQuiet() || filming))
+		{
+			if (++cutHeldTicks > SCENE_CUT_KEPT_TICKS)
+			{
+				cutByTheScene = null;
+			}
+		}
+		else if (cutByTheScene != null)
+		{
+			speechEngine.remark(cutByTheScene.text);
+			cutByTheScene = null;
+		}
 	}
 
 	/** Whether any NPC-dialog interface is up (heads or the options menu). */
@@ -2480,6 +2526,7 @@ public class FollowerPlugin extends Plugin
 			// Lines the old profile's follower queued go with it: delivered,
 			// a wish or a want they ask would open in the new one's memory.
 			speechQueue.clear();
+			cutByTheScene = null;
 			speakingUntilMs = 0;
 			speechEngine.reset();
 			// The reset clears every rule's edge, so the gear worn and the
@@ -3092,6 +3139,7 @@ public class FollowerPlugin extends Plugin
 			// wish ask, say - would run against the blank context and hand
 			// the brand-new stranger an open wish nobody heard asked.
 			speechQueue.clear();
+			cutByTheScene = null;
 			speakingUntilMs = 0;
 			speechEngine.reset();
 			// The reset clears every rule's edge, so the gear worn and the
@@ -3179,6 +3227,7 @@ public class FollowerPlugin extends Plugin
 	{
 		filming = true;
 		speechQueue.clear();
+		cutByTheScene = null;
 		overlay.clear();
 		// A scroll still out is put away before the film puts anything on.
 		// Left to run out, its end takes off the pose the film has put on
@@ -3420,6 +3469,7 @@ public class FollowerPlugin extends Plugin
 				// own gate lets it through, with its voice and the chatbox
 				// mirror as any line has them.
 				speechQueue.clear();
+				cutByTheScene = null;
 				speakingUntilMs = 0;
 				speak(text, com.follower.speech.SpeechOutput.OVERHEAD, null, -1, null);
 				return null;
@@ -4239,10 +4289,19 @@ public class FollowerPlugin extends Plugin
 					sessionRecordSaid = false;
 					writeCounters();
 
+					// The gear you logged in wearing and the place you logged in
+					// standing are baseline, not news - the first ticks' evaluation
+					// records edges without firing.
+					speechEngine.primeEdgesOnNextTick();
+
 					// The LOGIN trigger, so rules can greet: a delayTicks on the rule
 					// puts the hello a couple of seconds AFTER the follower's own
-					// spawn (which waits out spawnDelayTicks itself).
-					speechEngine.dispatch(TriggerEvent.simple(TriggerEvent.Type.LOGIN));
+					// spawn (which waits out spawnDelayTicks itself). Raised once
+					// the prime has taken its baseline, as the world hop is: QA,
+					// 15 Oct, dispatched before it, logging in poisoned or in the
+					// Wilderness had that standing state rise on the login pass,
+					// outrank the greeting, and take the hello.
+					speechEngine.dispatchAfterPriming(TriggerEvent.simple(TriggerEvent.Type.LOGIN));
 
 					// The world literally changes under everyone's feet once a
 					// week; a scribe keeping maps would notice. Seeded silently
@@ -4251,7 +4310,7 @@ public class FollowerPlugin extends Plugin
 					int revision = client.getRevision();
 					if (config.lastRevision() > 0 && revision != config.lastRevision())
 					{
-						speechEngine.dispatch(
+						speechEngine.dispatchAfterPriming(
 							TriggerEvent.simple(TriggerEvent.Type.GAME_UPDATE));
 					}
 					if (revision != config.lastRevision())
@@ -4259,11 +4318,6 @@ public class FollowerPlugin extends Plugin
 						configManager.setConfiguration(FollowerConfig.GROUP,
 							"lastRevision", revision);
 					}
-
-					// The gear you logged in wearing and the place you logged in
-					// standing are baseline, not news - the first ticks' evaluation
-					// records edges without firing.
-					speechEngine.primeEdgesOnNextTick();
 				}
 
 				// Sync the colour table to the brightness setting as it stands now;
@@ -4440,6 +4494,7 @@ public class FollowerPlugin extends Plugin
 		// Anything still waiting its turn belongs to the scene that just went;
 		// it must not surface in the next one.
 		speechQueue.clear();
+		cutByTheScene = null;
 		speakingUntilMs = 0;
 		knownLevels.clear();
 		knownXp.clear();
@@ -7932,6 +7987,7 @@ public class FollowerPlugin extends Plugin
 				// silence; letting it trickle out during it is exactly the
 				// chatter this is meant to stop.
 				speechQueue.clear();
+				cutByTheScene = null;
 			}
 			speechEngine.dispatch(TriggerEvent.simple(thievingNow
 				? TriggerEvent.Type.THIEVING_START
@@ -7944,6 +8000,7 @@ public class FollowerPlugin extends Plugin
 		if (absentNow && !wasAbsent)
 		{
 			speechQueue.clear();
+			cutByTheScene = null;
 		}
 		wasAbsent = absentNow;
 		// A take is a silence too. Muted, a rule's line is held back in the
@@ -11496,6 +11553,8 @@ public class FollowerPlugin extends Plugin
 		{
 			long showFor = readingTimeMs(text);
 			overlay.show(text, showFor);
+			onScreen = utterance;
+			onScreenSinceMs = System.currentTimeMillis();
 			speakingUntilMs = System.currentTimeMillis() + showFor + SPEECH_GAP_MS;
 		}
 

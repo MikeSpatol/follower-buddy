@@ -610,12 +610,17 @@ public class SpeechEngine
 	 * at the moment it happens, it met the reaction to the same moment and
 	 * lost: a region's arrival line outranks it on the same event, and a
 	 * boss's own line speaks first and leaves it inside the gap.
+	 *
+	 * <p>Nor while the director rests after a burst. QA, 15 Oct: the gap ran
+	 * out well before the rest did, so the page news went out into the rest,
+	 * was held back, and was gone from the queue.
 	 */
 	public boolean isQuiet()
 	{
 		long now = now();
 		return pending.isEmpty() && primeTicksLeft == 0 && !muted
-			&& now - lastSpokeMs >= moodScaledGap() && now >= hushUntilMs;
+			&& now - lastSpokeMs >= moodScaledGap() && now >= hushUntilMs
+			&& !director.isRelaxing(now);
 	}
 
 	/**

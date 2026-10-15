@@ -378,7 +378,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** lasttime AND away 60+ minutes AND a 60% roll
 - **does:** mood +4
-- **pacing:** priority 71, cooldown 5s, delay 6-10 ticks, both
+- **pacing:** priority 79, cooldown 5s, delay 6-10 ticks, both
 
 - Back, then. Last time it was {lastTime}, as I recall.
 - We finished on {lastTime}, if the notes are right. Shall we carry on?
@@ -1509,7 +1509,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > A level up when there have been a great many. Same lifetime tally.
 
-- **when:** on a level-up (any) AND levels count at 25+
+- **when:** on a level-up (*) AND levels count at 25+ AND a 30% roll
 - **does:** mood +6
 - **pacing:** priority 42, cooldown 5m, overhead
 
@@ -1880,7 +1880,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Encouragement during a boss fight. Outranks the ordinary cheer.
 
 - **when:** a boss fight AND a 12% roll
-- **pacing:** priority 40, cooldown 15s
+- **pacing:** priority 40, cooldown 45s
 
 - Stay sharp.
 - Mind the big one.
@@ -1898,7 +1898,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Encouragement during any fight, kept rare so it does not natter.
 
-- **when:** in a fight AND a 8% roll
+- **when:** in a fight AND NOT (a boss fight) AND a 8% roll
 - **pacing:** priority 30, cooldown 20s
 
 - Keep at it.
@@ -2006,7 +2006,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** a kill
 - **does:** mood +5; prop item 31830, pose 13302
-- **pacing:** priority 62, cooldown 20s, delay 2-5 ticks, overhead
+- **pacing:** priority 71, cooldown 20s, delay 2-5 ticks, overhead
 
 - {count}. I do hope this is all for something.
 - {count} of them. You realise that's a village?
@@ -2356,7 +2356,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > And the other ledger. Not sulking - noting. A follower that forgot the times you said no would not be much of a companion either.
 
-- **when:** want:missed count at 3+ AND want:kept count at 1+ AND standing still 100+ ticks AND a 8% roll
+- **when:** want:missed count at 3+ AND want:kept count at 0+ AND standing still 100+ ticks AND a 8% roll
 - **does:** mood -4
 - **pacing:** priority 26, cooldown 1h, overhead
 
@@ -2594,7 +2594,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Lumbridge town and castle.
 
 - **when:** in region 12850
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Lumbridge. Goblins in one field, cows in the next. Very rural.
 - Named after the bridge over the River Lum, you know. The locals are very proud of it.
@@ -2608,7 +2608,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > The Grand Exchange plaza.
 
 - **when:** in region 12598
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - The Grand Exchange. Somebody's getting rich in there right now.
 - Listen to them shout numbers at each other. Magnificent.
@@ -2622,7 +2622,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Varrock: west bank, centre and palace.
 
 - **when:** in region 12597, 12853, 12854
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Varrock. The old-timers still call it Avarrocka.
 - Biggest city in Misthalin, and it has the pickpockets to prove it.
@@ -2635,7 +2635,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Falador, both halves of the white city.
 
 - **when:** in region 11828, 12084
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Falador, the white city. Do wipe your boots.
 - The White Knights run things here. Very shiny. Very serious.
@@ -2648,7 +2648,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Edgeville.
 
 - **when:** in region 12342
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Edgeville. Last stop before the Wilderness.
 - Cosy little place, considering what's just north of it.
@@ -2661,7 +2661,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Ferox Enclave, the Wilderness safe haven. Higher priority than the wilderness line.
 
 - **when:** in region 12344
-- **pacing:** priority 45, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 45, cooldown 30m, delay 2 ticks, overhead
 
 - Ferox Enclave. Safe ground, strange as that sounds out here.
 - The pool here fixes everything. Wish I could bottle it.
@@ -2673,7 +2673,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Draynor Village.
 
 - **when:** in region 12338
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Draynor Village. Keep a hand on your coin pouch.
 - The Wise Old Man robbed the bank here in broad daylight. I almost admire it.
@@ -2684,7 +2684,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Al Kharid.
 
 - **when:** in region 13105
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Al Kharid. Mind the heat, mind the scimitar prices.
 - Ten coins at the gate, or a whole quest. I've never forgiven that toll.
@@ -2695,7 +2695,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Port Sarim.
 
 - **when:** in region 12082
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Port Sarim. Smells of fish, tar and bad decisions.
 - Boats to everywhere, if you've got the stomach for it.
@@ -2706,7 +2706,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Rimmington.
 
 - **when:** in region 11826
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Rimmington. Quiet. Suspiciously quiet.
 - Folk build lovely houses around here, I'm told.
@@ -2716,7 +2716,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Taverley.
 
 - **when:** in region 11573
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Taverley. Druids, herbs and very good air.
 - All stone circles and potions here. Peaceful, mostly.
@@ -2727,7 +2727,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Burthorpe.
 
 - **when:** in region 11575
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Burthorpe. The Imperial Guard holds the troll line here.
 - Trolls in the mountains, heroes in the pub. Balance.
@@ -2738,7 +2738,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Catherby.
 
 - **when:** in region 11061
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Catherby. Best fishing beach in Kandarin.
 - Nets, harpoons, lobster pots, this town runs on fish.
@@ -2749,7 +2749,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Seers' Village and Camelot castle.
 
 - **when:** in region 10806
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Seers' Village. They probably knew we were coming.
 - Camelot. King Arthur and his knights, actual legends, right there.
@@ -2761,7 +2761,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > East Ardougne and its market.
 
 - **when:** in region 10291, 10547
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Ardougne. Biggest market in Kandarin, fastest fingers too.
 - Watch the stalls. Watch the guards watching the stalls.
@@ -2772,7 +2772,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > West Ardougne, behind the wall.
 
 - **when:** in region 9779, 10035
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - West Ardougne. The wall tells you everything, really.
 - Grim over here. The people deserve better.
@@ -2783,7 +2783,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Yanille.
 
 - **when:** in region 10288
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Yanille. Built to keep the ogres out. Sturdy work.
 - Watchtower to the west, wizards in the guild. Magic town, this.
@@ -2794,7 +2794,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Castle Wars lobby area.
 
 - **when:** in region 9776
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Castle Wars. Old grudges, fresh barricades.
 - Saradomin and Zamorak settle it here, over and over.
@@ -2805,7 +2805,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Tree Gnome Stronghold.
 
 - **when:** in region 9525, 9781
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - The Tree Gnome Stronghold. Mind where you step. Gnomes everywhere.
 - That's the Grand Tree. It's a tree AND a government.
@@ -2816,7 +2816,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Barbarian Village.
 
 - **when:** in region 12341
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Gunnarsgrunn. Though everyone just says Barbarian Village.
 - They fish with their bare hands here. Show-offs.
@@ -2827,7 +2827,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Rellekka.
 
 - **when:** in region 10553
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Rellekka. Fremennik country, so best not mention magic.
 - Everything here is earned. Names included.
@@ -2838,7 +2838,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Canifis.
 
 - **when:** in region 13878
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Canifis. Lovely people. Don't stare at their teeth.
 - Everyone here is a werewolf. Everyone. Walk casual.
@@ -2849,7 +2849,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > The Barrows mounds.
 
 - **when:** in region 14131
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - The Barrows. Six brothers, six mounds, no rest.
 - The brothers were heroes once. Their reward was... this.
@@ -2860,7 +2860,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Port Phasmatys.
 
 - **when:** in region 14646
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Port Phasmatys. A town of ghosts, and it still charges tolls.
 - The ghosts here can't leave. Necrovarus saw to that.
@@ -2871,7 +2871,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Lunar Isle.
 
 - **when:** in region 8253
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Lunar Isle. The Moon Clan dream deeper than most folk live.
 - Half of what goes on here happens in somebody's sleep.
@@ -2882,7 +2882,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Miscellania.
 
 - **when:** in region 10044
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Miscellania. Somebody important runs this place, I hear.
 - The subjects will work, if someone keeps the coffers full.
@@ -2892,7 +2892,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Sophanem.
 
 - **when:** in region 13099
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Sophanem, city of the dead. They mean that literally.
 - Plagues, locusts, tombs. Charming place for a stroll.
@@ -2902,7 +2902,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Mor Ul Rek, the TzHaar city.
 
 - **when:** in region 9808
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Mor Ul Rek. The TzHaar are made of living rock. Mind the handshakes.
 - Everything here is obsidian. Even the shopkeepers.
@@ -2913,7 +2913,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Brimhaven.
 
 - **when:** in region 11057
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Brimhaven. A pirate town, and folk still pay good money to live here.
 - The agility arena's here, if you fancy dodging darts and spikes for tickets.
@@ -2923,7 +2923,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Musa Point, Karamja.
 
 - **when:** in region 11569
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Musa Point. Bananas as far as the eye can see.
 - Luthas pays coin for banana crates. He never checks what else goes in them.
@@ -2934,7 +2934,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Shilo Village.
 
 - **when:** in region 11310
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Shilo Village. They fought the dead for this town.
 - The gem mine here made a lot of folk rich. The cart ride's extra.
@@ -2944,7 +2944,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Crandor.
 
 - **when:** in region 11314
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Crandor. Elvarg burned this whole island to cinders.
 - A city stood here once. One dragon later...
@@ -2954,7 +2954,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Entrana.
 
 - **when:** in region 11316
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Entrana. Holy ground. The monks made us leave ALL the weapons behind.
 - The law altar's here. Fitting, with all these rules.
@@ -2965,7 +2965,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Ape Atoll.
 
 - **when:** in region 11051
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Ape Atoll. The monkeys are armed and extremely accurate.
 - Walk like you belong or we're both getting arrested by gorillas.
@@ -2975,7 +2975,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Zanaris.
 
 - **when:** in region 9797
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Zanaris, the lost city itself. It took some finding.
 - This place is the moon, you know. The actual moon.
@@ -2986,7 +2986,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Keldagrim.
 
 - **when:** in region 11679
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Keldagrim. The dwarves built a whole city and kept it quiet.
 - The Consortium runs everything here. Eight companies, one grudge each.
@@ -2996,7 +2996,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Fossil Island, museum camp side.
 
 - **when:** in region 14907
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Fossil Island. The museum folk barely scratched the surface.
 - Ancient wyverns sleep in the caves here. SLEEP. Let's keep it that way.
@@ -3006,7 +3006,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > The God Wars Dungeon.
 
 - **when:** in region 11602
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - The God Wars Dungeon. The war never ended down here.
 - Four armies, frozen mid-battle for thousands of years. And us, visiting.
@@ -3017,7 +3017,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Taverley Dungeon.
 
 - **when:** in region 11673
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Taverley Dungeon. It gets worse the deeper you go. Much worse.
 - Black dragons at the bottom, and something meaner below.
@@ -3027,7 +3027,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Catacombs of Kourend.
 
 - **when:** in region 6557
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - The Catacombs of Kourend. The dark altar hums through these walls.
 - The dead down here don't rest. Blame the altar.
@@ -3037,7 +3037,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Warriors' Guild.
 
 - **when:** in region 11319
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - The Warriors' Guild. Even the armour fights here.
 - Harrallak collects the finest warriors. And us, apparently.
@@ -3047,7 +3047,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Fishing Guild.
 
 - **when:** in region 10293
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - The Fishing Guild. Sixty-eight and not a level lower, the door says.
 - The sharks here practically volunteer.
@@ -3057,7 +3057,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Wintertodt camp.
 
 - **when:** in region 6462
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - The Wintertodt. The cold out here is ALIVE. Layer up.
 - The pyromancers hold it back with bonfires and stubbornness.
@@ -3068,7 +3068,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Motherlode Mine.
 
 - **when:** in region 14936
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - The Motherlode Mine. Percy's pay-dirt racket, and we're all in on it.
 - Listen to that water wheel. Honest work, this.
@@ -3078,7 +3078,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Mining Guild, under Falador.
 
 - **when:** in region 12184
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - The Mining Guild. The dwarves keep the good rocks behind a door.
 - Coal and mithril as far as the pick swings.
@@ -3088,7 +3088,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Woodcutting Guild, Hosidius.
 
 - **when:** in region 6454
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - The Woodcutting Guild. The axes here never seem to stop.
 - Hosidius grows the trees; we take the logs. Fair trade.
@@ -3098,7 +3098,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Farming Guild.
 
 - **when:** in region 4922
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - The Farming Guild. Everything here grows bigger than it should.
 - Mind where you step. Someone loves every plant in here.
@@ -3108,7 +3108,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Void Knights' Outpost.
 
 - **when:** in region 10537
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - The Void Knights' outpost. The portals never stay shut for long.
 - The lander leaves soon. Try to come back with all your limbs.
@@ -3118,7 +3118,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Barbarian Assault.
 
 - **when:** in region 10039
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Barbarian Assault. The Penance don't negotiate.
 - Teams win here. Lone heroes get carried out.
@@ -3128,7 +3128,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Arceuus, Great Kourend.
 
 - **when:** in region 6714
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Arceuus. The magic here is old, dark and rather rude.
 - The library rearranges itself. The scholars pretend that's fine.
@@ -3138,7 +3138,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Hosidius, Great Kourend.
 
 - **when:** in region 6968
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Hosidius. Half of Kourend eats because of these fields.
 - Good soil, better kitchens. I could get used to this.
@@ -3148,7 +3148,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Shayzien, Great Kourend.
 
 - **when:** in region 5944
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Shayzien. Soldiers everywhere and every one of them busy.
 - They keep the lizardmen at bay. Someone has to.
@@ -3158,7 +3158,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Lovakengj, Great Kourend.
 
 - **when:** in region 5947
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Lovakengj. Sulphur in the air, minecarts in every direction.
 - Breathe lightly. The forges never cool here.
@@ -3168,7 +3168,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Port Piscarilius, Great Kourend.
 
 - **when:** in region 7226
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Port Piscarilius. Fresh fish and sticky fingers.
 - Half this port needs repairing at any given moment. Job security.
@@ -3178,7 +3178,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Prifddinas.
 
 - **when:** in region 12894, 12895, 13150, 13151
-- **pacing:** priority 40, cooldown 3m, delay 2 ticks, overhead
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Prifddinas. A city grown from crystal. Listen, it sings.
 - The elves waited a very long time for this place to stand again.
@@ -3189,7 +3189,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Entering somewhere the session has already seen five times. Region ping-pong along a boundary is damped in the counter itself.
 
 - **when:** returning somewhere AND a 40% roll
-- **pacing:** priority 20, cooldown 15m
+- **pacing:** priority 41, cooldown 15m
 
 - Back again, are we?
 - We're practically regulars here.
@@ -4017,7 +4017,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** a fight starting AND NOT (a bet open) AND a 12% roll
 - **does:** bets on a rich drop
-- **pacing:** priority 28, cooldown 4m, overhead
+- **pacing:** priority 51, cooldown 4m, overhead
 
 - I've got a feeling about this one. A good feeling.
 - This is the one. Don't ask me how I know.
@@ -5785,7 +5785,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > A proper celebration for a boss kill: cheer, dance, then a jump for joy (862/866/2109, 7.4s in total). The 6-8 tick delay lets the fight formally end and the spectating ward wind down first, so the celebration follows the fight instead of colliding with it - the ward's own release is 4 ticks, which this clears. It was 13-16, which cleared the ward three times over and left an eight second hole between the kill and the cheer. namedBoss: true keeps it for the bosses named in the boss rules: play test, 14 Oct, it had worn out on every level-100 Slayer demon of a task.
 
 - **when:** a kill
-- **does:** mood +18; marks this place: 'you put that thing down'; animation chain; holds still
+- **does:** mood +18; occasion (never held back); marks this place: 'you put that thing down'; animation chain; holds still
 - **pacing:** priority 70, cooldown 30s, delay 6-8 ticks, overhead
 
 - YES! You did it!
@@ -6417,7 +6417,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > The tenth quest completed since the follower arrived. Exact bracket, once.
 
 - **when:** questcomplete AND quests count at 10+
-- **pacing:** priority 60, cooldown 1m, delay 5 ticks
+- **does:** occasion (never held back)
+- **pacing:** priority 86, cooldown 1m, delay 5 ticks
 
 - Ten quests since we met. The index has its own page now.
 
