@@ -264,4 +264,30 @@ public class MemorySurvivesRestartTest
 		assertFalse("nothing read yet", FollowerPlugin.belongsToProfile(-1L, -1L));
 		assertFalse(FollowerPlugin.belongsToProfile(-1L, 3L));
 	}
+
+	/**
+	 * The Chronicle's numbers are the follower's own counters, so they come
+	 * back with the rest of its memory: the goblins it saw you kill and the
+	 * mole's kill count are on their pages after a restart, not nought again.
+	 */
+	@Test
+	public void theChroniclesNumbersComeBack()
+	{
+		TriggerContext before = fresh();
+		before.tally("kill:goblin");
+		before.tally("kill:goblin");
+		before.tally("kill:goblin");
+		before.noteRecord("kc:giant mole", 41);
+
+		TriggerContext after = fresh();
+		FollowerPlugin.restoreMemory(after, FollowerPlugin.snapshotMemory(before, 0, gson), gson, 0);
+
+		// No data directory: the bundled book, as a fresh install reads it.
+		com.follower.chronicle.ChronicleLoader loader = new com.follower.chronicle.ChronicleLoader(gson);
+		loader.load(null);
+		com.follower.chronicle.ChronicleProgress progress =
+			new com.follower.chronicle.ChronicleProgress(new FakeGame().client, loader, () -> after);
+		assertEquals(3, progress.count(loader.get("enemy-goblin")));
+		assertEquals(41, progress.count(loader.get("boss-giant-mole")));
+	}
 }

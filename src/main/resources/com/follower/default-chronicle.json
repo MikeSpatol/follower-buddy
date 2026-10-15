@@ -621,6 +621,10 @@
           "Giant Mole"
         ]
       },
+      "tally": {
+        "label": "Moles seen off, all told",
+        "of": "kc:giant mole"
+      },
       "summary": "A mole the size of a hay cart, living in the tunnels under Falador Park. Wyson the gardener grew it by accident with a bottle of growth potion, which is the kind of accident I keep notes on.",
       "sections": [
         {
@@ -674,6 +678,10 @@
           "King Black Dragon"
         ]
       },
+      "tally": {
+        "label": "Dragon kings put down, all told",
+        "of": "kc:king black dragon"
+      },
       "summary": "It's the size of a house, and in the old days nothing anyone knew of was stronger. Its lair sits behind a lever in the deep Wilderness, and the walk there is the first test.",
       "sections": [
         {
@@ -716,6 +724,10 @@
         "npcs": [
           "Goblin"
         ]
+      },
+      "tally": {
+        "label": "Goblins you've killed while I watched",
+        "of": "kill:goblin"
       },
       "summary": "The war god Bandos brought goblins to the world, and now there's hardly a road without one. Their main village in Asgarnia is run by two generals who cannot agree on anything, and somehow it still stands.",
       "sections": [
@@ -771,6 +783,10 @@
           "Hill Giant"
         ]
       },
+      "tally": {
+        "label": "Hill giants felled while I watched",
+        "of": "kill:hill giant"
+      },
       "summary": "Dungeons and hills are full of them, each \"A very large foe\". Of the three giant kinds most adventurers meet first it's the weakest, which isn't the same as weak. Their giant keys open the door to Obor, the Hill Titan.",
       "sections": [
         {
@@ -816,6 +832,10 @@
           "Fire giant"
         ]
       },
+      "tally": {
+        "label": "Fire giants put out while I watched",
+        "of": "kill:fire giant"
+      },
       "summary": "The strongest of the ordinary giants, an elemental brute living in the Brimhaven Dungeon and a good many other caves. Slayers and archers favour it, and it's the classic source of a rune scimitar. Everyone goes back eventually.",
       "sections": [
         {
@@ -855,6 +875,10 @@
         "npcs": [
           "Monk of Zamorak"
         ]
+      },
+      "tally": {
+        "label": "Monks seen off while I watched",
+        "of": "kill:monk of zamorak"
       },
       "summary": "They're evil human clerics of Zamorak, and weak on paper. The paper is wrong.\n\n{done:PRIEST_IN_PERIL} A band of them seized Paterdomus in Priest in Peril and poisoned the River Salve. That's the sort they are.",
       "sections": [
@@ -900,6 +924,10 @@
         ],
         "quest": "PRIEST_IN_PERIL"
       },
+      "tally": {
+        "label": "Guardians felled while I watched",
+        "of": "kill:temple guardian"
+      },
       "summary": "A big dog in the mausoleum under Paterdomus, on the River Salve. Worth a page, I thought.",
       "sections": [
         {
@@ -941,6 +969,10 @@
           "Moss Guardian"
         ],
         "quest": "WATERFALL_QUEST"
+      },
+      "tally": {
+        "label": "Guardians weeded while I watched",
+        "of": "kill:moss guardian"
       },
       "summary": "The guardian spirits of Glarial's Tomb, and a good deal stronger than the ordinary moss giant.\n\n{done:ROVING_ELVES} In Roving Elves, Islwyn and Eluned send you to kill one for a consecration seed, and they mean bare-handed.",
       "sections": [
@@ -985,6 +1017,10 @@
           "Witch's experiment (fourth form)"
         ],
         "quest": "WITCHS_HOUSE"
+      },
+      "tally": {
+        "label": "Experiments ended while I watched",
+        "of": "kill:witch's experiment (fourth form)"
       },
       "summary": "The name says whose it is. Nora T. Hagg keeps it in her locked garden shed in Taverley, and it doesn't care for visitors.",
       "sections": [

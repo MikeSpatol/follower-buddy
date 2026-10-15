@@ -941,14 +941,18 @@ public class ChronicleWindow extends Overlay
 				done.add(quest);
 			}
 		}
-		String key = entry.id + (readable ? "" : ":locked") + done;
+		// Your own number under the plate, once the page is written and the
+		// follower has one; and room for the pose when a sketch caught one.
+		String tally = readable ? tallyLine(entry, progress.count(entry)) : null;
+		boolean posed = posed(entry);
+		String key = entry.id + (readable ? "" : ":locked") + done + tally + posed;
 		if (!key.equals(pageLinesFor))
 		{
 			ChronicleEntry asRead = entry.readAs(done::contains);
 			pageLines = readable
-				? ChronicleLayout.page(asRead, width,
+				? ChronicleLayout.page(asRead, tally, posed, width,
 					s -> measure(g, body, false, s), s -> measure(g, bold, true, s))
-				: ChronicleLayout.lockedPage(asRead, unwrittenHint(entry), width,
+				: ChronicleLayout.lockedPage(asRead, unwrittenHint(entry), posed, width,
 					s -> measure(g, body, false, s), s -> measure(g, bold, true, s));
 			pageLinesFor = key;
 			pageScroll = 0;
@@ -999,6 +1003,9 @@ public class ChronicleWindow extends Overlay
 					break;
 				case CAPTION:
 					drawCaption(g, small, plate, plates.size(), readable, left, width, ly, prev, next);
+					break;
+				case POSE:
+					drawPose(g, small, plate, left + width / 2, ly);
 					break;
 				case HEADING:
 					text(g, bold, true, line.text, left, ly, ChronicleLayout.TITLE_ORANGE, false);
@@ -1125,6 +1132,87 @@ public class ChronicleWindow extends Overlay
 		drawPlate(g, plate, frame.x, frame.y, frame.width, frame.height, readable, small, true, hovered(frame));
 		drawCaption(g, small, plate, plates.size(), readable, frame.x, frame.width,
 			ChronicleLayout.BIG_CAPTION_BASELINE, prev, next);
+		drawPose(g, small, plate, ChronicleLayout.WIDTH / 2,
+			ChronicleLayout.BIG_CAPTION_BASELINE + ChronicleLayout.LINE_HEIGHT);
+	}
+
+	/** Under the caption, the emote the sketch caught you in, if it caught one. */
+	private void drawPose(Graphics2D g, GameFont small, ChronicleEntry.Plate plate, int centre, int baseline)
+	{
+		String said = plate == null ? null : poseLine(plate);
+		if (said != null)
+		{
+			text(g, small, false, said, centre, baseline, ChronicleLayout.NOTE_PALE, true);
+		}
+	}
+
+	/** Whether any sketch on the page caught you in a pose, so the page keeps a line for it. */
+	private boolean posed(ChronicleEntry entry)
+	{
+		for (ChronicleEntry.Plate plate : entry.platesOrEmpty())
+		{
+			if (poseLine(plate) != null)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/** The plate's pose in the scribe's words, or null: not a sketch, not drawn, or no pose. */
+	private String poseLine(ChronicleEntry.Plate plate)
+	{
+		return sketches == null || plate.sketch == null || !sketches.has(plate.sketch) ? null
+			: posePhrase(sketches.poseOf(plate.sketch));
+	}
+
+	/**
+	 * What the scribe says under a sketch of you mid-emote, by the word filed
+	 * with it ({@link SketchController#POSE_NAMES}). A word it does not know,
+	 * from a later version or a hand-edited file, says nothing.
+	 */
+	static final java.util.Map<String, String> POSE_PHRASES;
+
+	static
+	{
+		java.util.Map<String, String> phrases = new java.util.HashMap<>();
+		phrases.put("wave", "You were waving. I waved back, after.");
+		phrases.put("dance", "You were mid-dance. I couldn't keep up.");
+		phrases.put("cheer", "You were cheering. I never learned why.");
+		phrases.put("bow", "You were bowing. Nobody bowed back.");
+		phrases.put("clap", "You were clapping. Me, I hope.");
+		phrases.put("laugh", "You were laughing. I missed the joke.");
+		phrases.put("cry", "You were crying. I drew it kindly.");
+		phrases.put("think", "You were thinking. Or posing as it.");
+		phrases.put("salute", "You were saluting. I stood a little taller.");
+		phrases.put("jig", "You were doing a jig. I kept the beat.");
+		phrases.put("headbang", "You were headbanging. The ink smudged.");
+		phrases.put("jump-for-joy", "You were jumping for joy. Mid-air, in ink.");
+		phrases.put("spin", "You were spinning. I drew you twice.");
+		phrases.put("blow-kiss", "You were blowing a kiss. I'll pass it on.");
+		phrases.put("yawn", "You were yawning. Rude, but noted.");
+		phrases.put("shrug", "You were shrugging. So was I.");
+		phrases.put("flex", "You were flexing. I drew you bigger.");
+		POSE_PHRASES = java.util.Collections.unmodifiableMap(phrases);
+	}
+
+	static String posePhrase(String pose)
+	{
+		return pose == null ? null : POSE_PHRASES.get(pose);
+	}
+
+	/**
+	 * "Goblins you've killed while I watched: 214" - the page's own number,
+	 * or null when it names none or nothing is counted yet, so the line is
+	 * simply not there.
+	 */
+	static String tallyLine(ChronicleEntry entry, int count)
+	{
+		if (entry == null || entry.tally == null || entry.tally.label == null || count <= 0)
+		{
+			return null;
+		}
+		return entry.tally.label + ": " + count;
 	}
 
 	/**

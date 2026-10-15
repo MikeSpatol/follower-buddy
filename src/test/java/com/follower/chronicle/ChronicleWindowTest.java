@@ -1,5 +1,6 @@
 package com.follower.chronicle;
 
+import com.follower.speech.TriggerContext;
 import com.follower.ui.GameFontRepository;
 import com.google.gson.Gson;
 import java.awt.Canvas;
@@ -262,5 +263,152 @@ public class ChronicleWindowTest
 		{
 			assertFalse("a gate drawn on the page: " + text, text.contains("{done"));
 		}
+	}
+
+	private List<ChronicleLayout.Style> pageStyles() throws Exception
+	{
+		List<ChronicleLayout.Style> styles = new ArrayList<>();
+		@SuppressWarnings("unchecked")
+		List<ChronicleLayout.Line> lines = (List<ChronicleLayout.Line>) field("pageLines");
+		for (ChronicleLayout.Line line : lines)
+		{
+			styles.add(line.style);
+		}
+		return styles;
+	}
+
+	/** A window on a book of the one page given, as JSON, with the memory and sketches given. */
+	private void openOn(String page, String id, TriggerContext memory, SketchBook sketches) throws IOException
+	{
+		Path data = folder.newFolder().toPath();
+		Files.write(data.resolve(ChronicleLoader.FILE_NAME), ("{\"version\": 1, \"entries\": [" + page + "]}")
+			.getBytes(StandardCharsets.UTF_8));
+		ChronicleLoader loader = new ChronicleLoader(new Gson());
+		loader.load(data);
+		window = new ChronicleWindow(client, null, null, null, fonts, loader);
+		window.attach(new ChronicleProgress(client, loader, () -> memory));
+		if (sketches != null)
+		{
+			window.attach(sketches);
+		}
+		window.openAt(id);
+		draw();
+	}
+
+	private static final String GOBLIN_PAGE = "{\"id\": \"enemy-goblin\", \"kind\": \"enemy\", \"name\": \"Goblin\","
+		+ "\"unlock\": {\"always\": true}, \"summary\": \"Green.\","
+		+ "\"tally\": {\"label\": \"Goblins you've killed while I watched\", \"of\": \"kill:goblin\"}}";
+
+	/**
+	 * The page's own number, under the plate: not there until the follower
+	 * has counted one, then there, and moving as the count does, without
+	 * the page being turned.
+	 */
+	@Test
+	public void aCreaturePageShowsYourKillsOnlyOnceThereAreAny() throws Exception
+	{
+		TriggerContext memory = new TriggerContext(null);
+		openOn(GOBLIN_PAGE, "enemy-goblin", memory, null);
+		for (String text : pageTexts())
+		{
+			assertFalse("no number before there is one: " + text, text.contains("while I watched"));
+		}
+		assertEquals("Green.", pageTexts().get(0));
+
+		memory.tally("kill:goblin");
+		memory.tally("kill:goblin");
+		draw();
+		assertEquals("first, before the summary", "Goblins you've killed while I watched: 2", pageTexts().get(0));
+		assertEquals(ChronicleLayout.Style.NOTE, pageStyles().get(0));
+
+		memory.tally("kill:goblin");
+		draw();
+		assertEquals("Goblins you've killed while I watched: 3", pageTexts().get(0));
+	}
+
+	@Test
+	public void aBossPageShowsTheGamesKillCount() throws Exception
+	{
+		TriggerContext memory = new TriggerContext(null);
+		openOn("{\"id\": \"boss-giant-mole\", \"kind\": \"boss\", \"name\": \"Giant Mole\","
+			+ "\"unlock\": {\"always\": true}, \"summary\": \"Big.\","
+			+ "\"tally\": {\"label\": \"Moles seen off, all told\", \"of\": \"kc:giant mole\"}}",
+			"boss-giant-mole", memory, null);
+		assertEquals("Big.", pageTexts().get(0));
+		memory.noteRecord("kc:giant mole", 41);
+		draw();
+		assertEquals("Moles seen off, all told: 41", pageTexts().get(0));
+	}
+
+	@Test
+	public void aPageNotYetWrittenKeepsItsNumberToItself() throws Exception
+	{
+		TriggerContext memory = new TriggerContext(null);
+		memory.tally("kill:goblin");
+		openOn(GOBLIN_PAGE.replace("{\"always\": true}", "{\"npcs\": [\"Goblin\"]}"), "enemy-goblin", memory, null);
+		for (String text : pageTexts())
+		{
+			assertFalse(text, text.contains("while I watched"));
+		}
+	}
+
+	private static BufferedImage paper()
+	{
+		return new BufferedImage(8, 4, BufferedImage.TYPE_INT_RGB);
+	}
+
+	private static final String LUMBRIDGE_PAGE = "{\"id\": \"location-lumbridge\", \"kind\": \"location\","
+		+ "\"name\": \"Lumbridge\", \"unlock\": {\"always\": true}, \"summary\": \"Home.\","
+		+ "\"plates\": [{\"sketch\": \"lumbridge\", \"regions\": [12850], \"caption\": \"Lumbridge, done in a hurry.\","
+		+ "\"hint\": \"Lumbridge, when we're there.\"}]}";
+
+	/**
+	 * A sketch that caught you mid-emote says so on the line under the
+	 * caption, on the page and opened across the window; one drawn with you
+	 * standing still, or before the book kept poses, has no such line.
+	 */
+	@Test
+	public void aSketchOfYouMidDanceSaysSoUnderItsCaption() throws Exception
+	{
+		SketchBook book = new SketchBook(folder.newFolder().toPath());
+		book.openFor("acct");
+		book.put("lumbridge", paper(), paper(), "dance");
+		openOn(LUMBRIDGE_PAGE, "location-lumbridge", null, book);
+		int caption = pageStyles().indexOf(ChronicleLayout.Style.CAPTION);
+		assertEquals("the pose under the caption", ChronicleLayout.Style.POSE, pageStyles().get(caption + 1));
+		assertEquals("then the summary", "Home.", pageTexts().get(caption + 2));
+		pressThePlate();
+		assertTrue("and opened across the window, drawn without trouble", enlarged());
+
+		book.put("lumbridge", paper(), paper(), null);
+		escape();
+		assertFalse("drawn again standing still, the pose goes with the old drawing: " + pageStyles(),
+			pageStyles().contains(ChronicleLayout.Style.POSE));
+	}
+
+	@Test
+	public void aSketchFromBeforeThereWerePosesHasNoPoseLine() throws Exception
+	{
+		Path data = folder.newFolder().toPath();
+		Path acct = data.resolve(SketchBook.DIR_NAME).resolve("acct");
+		Files.createDirectories(acct);
+		javax.imageio.ImageIO.write(paper(), "png", acct.resolve("lumbridge.png").toFile());
+		javax.imageio.ImageIO.write(paper(), "png", acct.resolve("lumbridge.large.png").toFile());
+		SketchBook book = new SketchBook(data);
+		book.openFor("acct");
+		openOn(LUMBRIDGE_PAGE, "location-lumbridge", null, book);
+		assertFalse(pageStyles().toString(), pageStyles().contains(ChronicleLayout.Style.POSE));
+		assertEquals("the summary straight under the caption", "Home.",
+			pageTexts().get(pageStyles().indexOf(ChronicleLayout.Style.CAPTION) + 1));
+	}
+
+	@Test
+	public void aPoseItHasNoWordsForAddsNoLine() throws Exception
+	{
+		SketchBook book = new SketchBook(folder.newFolder().toPath());
+		book.openFor("acct");
+		book.put("lumbridge", paper(), paper(), "somersault");
+		openOn(LUMBRIDGE_PAGE, "location-lumbridge", null, book);
+		assertFalse(pageStyles().contains(ChronicleLayout.Style.POSE));
 	}
 }

@@ -1558,6 +1558,13 @@ things, named in the page's `plates`:
   to draw and so where to pose: "Pose for me in Lumbridge." A place can have
   several views, each its own sketch with its own regions (Varrock's square,
   its palace end and the Exchange), so posing in each one fills its page.
+  The emote you struck for it, when it is a common one
+  (`SketchController.POSE_NAMES`, each with its looping copy), is filed beside
+  the pictures as a word in `<name>.pose` and backed up with them; drawn again
+  standing still, it goes. A page with a posed sketch keeps a line under the
+  caption, and the enlarged plate one under its own, for the scribe's words
+  about it (`ChronicleWindow.POSE_PHRASES`): "You were waving. I waved back,
+  after." A sketch with no pose, or from before there were poses, has none.
 
 The sketch regions were checked against the game's own world map with the
 cache dumper's region audit, like every other region id in the plugin.
@@ -1567,6 +1574,15 @@ to having a portrait and every place to having a sketch, and every caption to
 fitting its line in the font it is drawn in. `everyCaptionIsItsOwn` refuses a
 bare label and a caption another plate already uses; what a caption should say
 is rule 15 of chronicle-voice.md.
+
+**Your numbers.** A creature or boss page can name one of the follower's own
+counters, `"tally": {"label": "...", "of": "kill:goblin"}`: the kills it saw
+you make (`kill:<name>`, counted in `onActorDeath`) or the game's kill count
+(`kc:<boss>`, from the chat message). Both are kept in the follower's memory
+and saved with it. Once the page is written and the count is above nought,
+"label: N" sits under the plate as a note in the margin, before the summary;
+until then the line is not there. `everyPagesNumberIsACounterTheFollowerKeeps`
+holds each key to one the plugin really files.
 
 ## Skilling company
 

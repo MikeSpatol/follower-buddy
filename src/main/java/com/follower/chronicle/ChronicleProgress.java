@@ -235,6 +235,22 @@ public class ChronicleProgress
 		return context.chronicledOn(key) != null ? context.chronicledAt(key) : context.chronicledAt(entry.id);
 	}
 
+	/**
+	 * A page's own number: the follower's counter the page names, or 0 when
+	 * it has none or nothing is counted yet. The kills it saw are tallies
+	 * and the game's kill counts are records, under keys that never meet,
+	 * so whichever holds the key has the number.
+	 */
+	public int count(ChronicleEntry entry)
+	{
+		TriggerContext context = memory.get();
+		if (context == null || entry == null || entry.tally == null || entry.tally.of == null)
+		{
+			return 0;
+		}
+		return Math.max(context.getTally(entry.tally.of), context.getRecord(entry.tally.of));
+	}
+
 	private String here()
 	{
 		TriggerContext context = memory.get();

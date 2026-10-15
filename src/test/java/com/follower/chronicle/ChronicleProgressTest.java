@@ -361,4 +361,32 @@ public class ChronicleProgressTest
 		assertTrue(told.toString(), told.isEmpty());
 		assertNull(progress.writtenOn(loader.get("boss-giant-mole")));
 	}
+
+	@Test
+	public void aPagesNumberIsTheFollowersCountOrNothing()
+	{
+		ChronicleEntry goblin = loader.get("enemy-goblin");
+		ChronicleEntry mole = loader.get("boss-giant-mole");
+		assertEquals("nothing counted yet", 0, progress.count(goblin));
+		assertEquals(0, progress.count(mole));
+
+		memory.tally("kill:goblin");
+		memory.tally("kill:goblin");
+		memory.noteRecord("kc:giant mole", 41);
+		assertEquals("the kills it saw", 2, progress.count(goblin));
+		assertEquals("the game's own kill count", 41, progress.count(mole));
+		assertEquals("a page that names no counter", 0, progress.count(loader.get("quest-cooks-assistant")));
+		assertEquals(0, progress.count(null));
+
+		assertEquals(0, new ChronicleProgress(game.client, loader, () -> null).count(goblin));
+	}
+
+	@Test
+	public void aPagesNumberIsOnlyALineOnceItIsAboveNought()
+	{
+		ChronicleEntry goblin = loader.get("enemy-goblin");
+		assertNull(ChronicleWindow.tallyLine(goblin, 0));
+		assertEquals("Goblins you've killed while I watched: 214", ChronicleWindow.tallyLine(goblin, 214));
+		assertNull("a page that counts nothing", ChronicleWindow.tallyLine(loader.get("quest-cooks-assistant"), 5));
+	}
 }

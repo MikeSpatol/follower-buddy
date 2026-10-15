@@ -162,4 +162,67 @@ public class SketchBookTest
 		assertEquals("rsprofile_abc_123", SketchBook.safe("rsprofile.abc:123"));
 		assertEquals("___", SketchBook.safe("../"));
 	}
+
+	@Test
+	public void thePoseIsKeptWithItsSketchThroughARestart() throws IOException
+	{
+		Path data = folder.newFolder().toPath();
+		SketchBook before = new SketchBook(data);
+		before.openFor("acct");
+		before.put("lumbridge", picture(0x8a6a40), picture(0x9a7a50), "dance");
+		before.put("varrock-square", picture(0x505050), picture(0x606060));
+		assertEquals("dance", before.poseOf("lumbridge"));
+
+		SketchBook after = new SketchBook(data);
+		after.openFor("acct");
+		assertEquals("dance", after.poseOf("lumbridge"));
+		assertNull("one drawn standing still has none", after.poseOf("varrock-square"));
+		assertNull(after.poseOf(null));
+
+		after.openFor("another");
+		assertNull("another account's sketches are not theirs", after.poseOf("lumbridge"));
+	}
+
+	@Test
+	public void aSketchFromBeforeThereWerePosesHasNone() throws IOException
+	{
+		Path data = folder.newFolder().toPath();
+		Path acct = data.resolve(SketchBook.DIR_NAME).resolve("acct");
+		Files.createDirectories(acct);
+		javax.imageio.ImageIO.write(picture(0x707070), "png", acct.resolve("lumbridge.png").toFile());
+		javax.imageio.ImageIO.write(picture(0x808080), "png", acct.resolve("lumbridge.large.png").toFile());
+
+		SketchBook book = new SketchBook(data);
+		book.openFor("acct");
+		assertTrue(book.hasBoth("lumbridge"));
+		assertNull(book.poseOf("lumbridge"));
+	}
+
+	@Test
+	public void thePoseFollowsTheDrawingAndTheOldOneIsBackedUpWithIt() throws IOException
+	{
+		// Drawn again on purpose: the old drawing, pose and all, kept beside
+		// it to be put back by hand, and the new drawing's pose, or none, shown.
+		Path data = folder.newFolder().toPath();
+		Path acct = data.resolve(SketchBook.DIR_NAME).resolve("acct");
+		SketchBook book = new SketchBook(data);
+		book.openFor("acct");
+		book.put("lumbridge", picture(0x8a6a40), picture(0x9a7a50), "wave");
+
+		assertEquals(java.util.Arrays.asList("lumbridge.large.png.bak", "lumbridge.png.bak", "lumbridge.pose.bak"),
+			book.backUp("lumbridge"));
+		assertEquals("wave", new String(Files.readAllBytes(acct.resolve("lumbridge.pose.bak")), StandardCharsets.UTF_8));
+
+		book.put("lumbridge", picture(0x101010), picture(0x202020), "bow");
+		assertEquals("bow", book.poseOf("lumbridge"));
+
+		book.backUp("lumbridge");
+		book.put("lumbridge", picture(0x303030), picture(0x404040), null);
+		assertNull("drawn again standing still, the old pose goes", book.poseOf("lumbridge"));
+		assertFalse(Files.exists(acct.resolve("lumbridge.pose")));
+
+		SketchBook again = new SketchBook(data);
+		again.openFor("acct");
+		assertNull("and stays gone; a backup is not read back", again.poseOf("lumbridge"));
+	}
 }

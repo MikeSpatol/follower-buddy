@@ -796,4 +796,23 @@ public class SketchControllerTest
 		}
 		assertEquals("a word for each pose it knows", 6, SketchController.POSED.size());
 	}
+
+	@Test
+	public void theCommonEmotesAreFiledByNameAndNothingElseIs()
+	{
+		assertEquals("dance", SketchController.POSE_NAMES.get(AnimationID.EMOTE_DANCE));
+		assertEquals("the repeating copy is the same pose", "dance",
+			SketchController.POSE_NAMES.get(AnimationID.EMOTE_DANCE_LOOP));
+		assertEquals("wave", SketchController.POSE_NAMES.get(AnimationID.EMOTE_WAVE));
+		assertEquals("jig", SketchController.POSE_NAMES.get(AnimationID.EMOTE_DANCE_SCOTTISH));
+		assertEquals("jump-for-joy", SketchController.POSE_NAMES.get(AnimationID.EMOTE_JUMP_WITH_JOY));
+		assertNull("standing still", SketchController.POSE_NAMES.get(-1));
+		assertNull("an emote it has no words for", SketchController.POSE_NAMES.get(AnimationID.EMOTE_GLASS_BOX));
+		for (String name : SketchController.POSE_NAMES.values())
+		{
+			assertTrue("the scribe has words for " + name, ChronicleWindow.POSE_PHRASES.containsKey(name));
+		}
+		assertEquals("and no words for a pose it never files",
+			new HashSet<>(SketchController.POSE_NAMES.values()), ChronicleWindow.POSE_PHRASES.keySet());
+	}
 }

@@ -271,12 +271,19 @@ public final class ChronicleLayout
 	public static List<Line> lockedPage(ChronicleEntry entry, String reason, int width,
 		ToIntFunction<String> bodyWidth, ToIntFunction<String> headingWidth)
 	{
+		return lockedPage(entry, reason, false, width, bodyWidth, headingWidth);
+	}
+
+	/** The same, with the pose line under the caption when a sketch on it has one. */
+	public static List<Line> lockedPage(ChronicleEntry entry, String reason, boolean posed, int width,
+		ToIntFunction<String> bodyWidth, ToIntFunction<String> headingWidth)
+	{
 		List<Line> lines = new ArrayList<>();
 		if (entry == null)
 		{
 			return lines;
 		}
-		plate(lines, entry);
+		plate(lines, entry, posed);
 		paragraphs(lines, reason, width, bodyWidth, Style.BODY, 0);
 		String kind = entry.kindOrEmpty();
 		if (!kind.equals("boss") && !kind.equals("enemy"))
@@ -374,11 +381,20 @@ public final class ChronicleLayout
 		/** Room held for the plate, drawn as one picture over all its rows. */
 		PLATE,
 		/** The line under the plate; the window fills in which plate it is. */
-		CAPTION
+		CAPTION,
+		/**
+		 * The line under the caption, on a page with a sketch that caught you
+		 * mid-emote; the window fills in the pose of the plate showing.
+		 */
+		POSE
 	}
 
-	/** The plate's rows and its caption line, when the page has pictures. */
-	private static void plate(List<Line> lines, ChronicleEntry entry)
+	/**
+	 * The plate's rows and its caption line, when the page has pictures, and
+	 * the pose line under it when any of its sketches has one. Any, not the
+	 * plate showing: turning the plates must not move the text below them.
+	 */
+	private static void plate(List<Line> lines, ChronicleEntry entry, boolean posed)
 	{
 		if (entry.platesOrEmpty().isEmpty())
 		{
@@ -389,6 +405,10 @@ public final class ChronicleLayout
 			lines.add(new Line("", Style.PLATE, 0));
 		}
 		lines.add(new Line("", Style.CAPTION, 0));
+		if (posed)
+		{
+			lines.add(new Line("", Style.POSE, 0));
+		}
 	}
 
 	/** Plate numbers as a book has them. */
@@ -408,12 +428,24 @@ public final class ChronicleLayout
 	public static List<Line> page(ChronicleEntry entry, int width,
 		ToIntFunction<String> bodyWidth, ToIntFunction<String> headingWidth)
 	{
+		return page(entry, null, false, width, bodyWidth, headingWidth);
+	}
+
+	/**
+	 * The same, with the page's own number under the plate, a note in the
+	 * margin before the summary, when there is one ({@code tally} null when
+	 * not), and the pose line when a sketch on it has one.
+	 */
+	public static List<Line> page(ChronicleEntry entry, String tally, boolean posed, int width,
+		ToIntFunction<String> bodyWidth, ToIntFunction<String> headingWidth)
+	{
 		List<Line> lines = new ArrayList<>();
 		if (entry == null)
 		{
 			return lines;
 		}
-		plate(lines, entry);
+		plate(lines, entry, posed);
+		paragraphs(lines, tally, width, bodyWidth, Style.NOTE, 0);
 		paragraphs(lines, entry.summary, width, bodyWidth, Style.BODY, 0);
 		for (ChronicleEntry.Section section : entry.sectionsOrEmpty())
 		{

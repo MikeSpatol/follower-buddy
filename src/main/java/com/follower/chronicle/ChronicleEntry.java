@@ -54,6 +54,26 @@ public class ChronicleEntry
 	/** The pictures at the head of the page, in the order they are turned. */
 	public List<Plate> plates;
 
+	/** A number of your own under the plate, when the follower has one; see {@link Tally}. */
+	public Tally tally;
+
+	/**
+	 * A line under the plate with a count the follower keeps: "Goblins
+	 * you've killed while I watched: 214". Shown only once the count is
+	 * above nought, so a page without one simply has no line.
+	 */
+	public static class Tally
+	{
+		/** What is counted, in the scribe's words; the number follows a colon. */
+		public String label;
+
+		/**
+		 * The follower's counter: {@code kill:<npc name>} for the kills it
+		 * saw you make, {@code kc:<boss>} for the game's own kill count.
+		 */
+		public String of;
+	}
+
 	/**
 	 * A picture on a page. Exactly one of {@link #npc} and {@link #sketch} is
 	 * set: a creature or a person is drawn from its own model, turning; a
@@ -232,6 +252,7 @@ public class ChronicleEntry
 		shown.name = name;
 		shown.unlock = unlock;
 		shown.plates = plates;
+		shown.tally = tally;
 		shown.summary = shownParagraphs(summary, done);
 		if (sections != null)
 		{

@@ -284,4 +284,71 @@ public class ChroniclePageFitTest
 		}
 		assertTrue(String.join("\n", problems), problems.isEmpty());
 	}
+
+	@Test
+	public void everyPagesOwnNumberFitsOnOneLine()
+	{
+		// A five-figure count, more goblins than anyone kills, still one line
+		// in the margin and not two.
+		List<String> problems = new ArrayList<>();
+		int tallies = 0;
+		for (ChronicleEntry entry : loader.getEntries())
+		{
+			String line = ChronicleWindow.tallyLine(entry, 99999);
+			if (line == null)
+			{
+				continue;
+			}
+			tallies++;
+			if (body.stringWidth(line) > WIDTH)
+			{
+				problems.add(entry.id + ": " + body.stringWidth(line) + "px: " + line);
+			}
+			List<ChronicleLayout.Line> lines = ChronicleLayout.page(entry.readAs(quest -> true), line, false, WIDTH,
+				body::stringWidth, bold::stringWidth);
+			int margin = entry.platesOrEmpty().isEmpty() ? 0 : ChronicleLayout.PLATE_ROWS + 1;
+			if (!lines.get(margin).text.equals(line))
+			{
+				problems.add(entry.id + ": not straight under the plate: " + lines.get(margin));
+			}
+		}
+		assertTrue(String.join("\n", problems), problems.isEmpty());
+		assertEquals("the creature and boss pages count", 9, tallies);
+	}
+
+	@Test
+	public void everyPoseLineFitsUnderThePlate()
+	{
+		// The caption's own room, though the pose line has no arrows beside it.
+		List<String> problems = new ArrayList<>();
+		for (String phrase : ChronicleWindow.POSE_PHRASES.values())
+		{
+			if (small.stringWidth(phrase) > ChronicleLayout.PLATE_W - 32)
+			{
+				problems.add(small.stringWidth(phrase) + "px: " + phrase);
+			}
+			if (!phrase.chars().allMatch(c -> c >= 0x20 && c < 0x7f))
+			{
+				problems.add("not plain ASCII: " + phrase);
+			}
+		}
+		assertTrue(String.join("\n", problems), problems.isEmpty());
+	}
+
+	@Test
+	public void theLastLineCanStillBeReachedWithTheNumberAndThePose()
+	{
+		List<String> problems = new ArrayList<>();
+		for (ChronicleEntry entry : loader.getEntries())
+		{
+			List<ChronicleLayout.Line> lines = ChronicleLayout.page(entry.readAs(quest -> true),
+				ChronicleWindow.tallyLine(entry, 99999), true, WIDTH, body::stringWidth, bold::stringWidth);
+			int most = ChronicleLayout.lastScroll(lines, BODY_HEIGHT);
+			if (lastBaseline(lines, most) + ChronicleLayout.DESCENT >= BODY_HEIGHT)
+			{
+				problems.add(entry.id);
+			}
+		}
+		assertTrue(String.join("\n", problems), problems.isEmpty());
+	}
 }

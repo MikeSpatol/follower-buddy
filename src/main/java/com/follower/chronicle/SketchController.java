@@ -91,6 +91,56 @@ public class SketchController
 		POSED = Collections.unmodifiableMap(posed);
 	}
 
+	/**
+	 * The emotes a sketch's caption remembers, by the word filed with it.
+	 * Each has a looping copy, played when the game is set to repeat
+	 * emotes, which is the same pose. Anything else, standing still
+	 * included, is filed with no pose.
+	 */
+	static final Map<Integer, String> POSE_NAMES;
+
+	static
+	{
+		Map<Integer, String> names = new HashMap<>();
+		names.put(AnimationID.EMOTE_WAVE, "wave");
+		names.put(AnimationID.EMOTE_WAVE_LOOP, "wave");
+		names.put(AnimationID.EMOTE_DANCE, "dance");
+		names.put(AnimationID.EMOTE_DANCE_LOOP, "dance");
+		names.put(AnimationID.EMOTE_CHEER, "cheer");
+		names.put(AnimationID.EMOTE_CHEER_LOOP, "cheer");
+		names.put(AnimationID.EMOTE_BOW, "bow");
+		names.put(AnimationID.EMOTE_BOW_LOOP, "bow");
+		names.put(AnimationID.EMOTE_CLAP, "clap");
+		names.put(AnimationID.EMOTE_CLAP_LOOP, "clap");
+		names.put(AnimationID.EMOTE_LAUGH, "laugh");
+		names.put(AnimationID.EMOTE_LAUGH_LOOP, "laugh");
+		names.put(AnimationID.EMOTE_CRY, "cry");
+		names.put(AnimationID.EMOTE_CRY_LOOP, "cry");
+		names.put(AnimationID.EMOTE_THINK, "think");
+		names.put(AnimationID.EMOTE_THINK_LOOP, "think");
+		names.put(AnimationID.EMOTE_FREMMENIK_SALUTE, "salute");
+		names.put(AnimationID.EMOTE_FREMMENIK_SALUTE_LOOP, "salute");
+		names.put(AnimationID.EMOTE_VARLAMORE_SALUTE, "salute");
+		names.put(AnimationID.EMOTE_VARLAMORE_SALUTE_LOOP, "salute");
+		names.put(AnimationID.EMOTE_DANCE_SCOTTISH, "jig");
+		names.put(AnimationID.EMOTE_DANCE_SCOTTISH_LOOP, "jig");
+		names.put(AnimationID.EMOTE_DANCE_HEADBANG, "headbang");
+		names.put(AnimationID.EMOTE_DANCE_HEADBANG_LOOP, "headbang");
+		names.put(AnimationID.EMOTE_JUMP_WITH_JOY, "jump-for-joy");
+		names.put(AnimationID.EMOTE_JUMP_WITH_JOY_LOOP, "jump-for-joy");
+		names.put(AnimationID.EMOTE_DANCE_SPIN, "spin");
+		names.put(AnimationID.EMOTE_DANCE_SPIN_LOOP, "spin");
+		names.put(AnimationID.EMOTE_BLOW_KISS, "blow-kiss");
+		names.put(AnimationID.EMOTE_BLOW_KISS_LOOP, "blow-kiss");
+		names.put(AnimationID.EMOTE_YAWN, "yawn");
+		names.put(AnimationID.EMOTE_YAWN_LOOP, "yawn");
+		names.put(AnimationID.EMOTE_SHRUG, "shrug");
+		names.put(AnimationID.EMOTE_SHRUG_LOOP, "shrug");
+		names.put(AnimationID.EMOTE_FLEX, "flex");
+		names.put(AnimationID.EMOTE_FLEX_LOOP, "flex");
+		POSE_NAMES = Collections.unmodifiableMap(names);
+	}
+
 	/** Once a session where a plate is empty; the mute holds it back, as any line of its own. */
 	static final String INVITE = "This place wants a sketch in the book. Right-click me and pick Sketch when ready.";
 
@@ -516,16 +566,17 @@ public class SketchController
 		// next drawn, and the count's last line could still be up.
 		overhead.accept(null);
 		String filing = key;
+		String posed = POSE_NAMES.get(pose);
 		Rectangle crop = cropAroundYou();
 		if (filing == null || crop == null)
 		{
 			return;
 		}
 		long seed = filing.hashCode();
-		drawManager.requestNextFrameListener(frame -> copyAndDraw(frame, crop, filing, seed));
+		drawManager.requestNextFrameListener(frame -> copyAndDraw(frame, crop, filing, seed, posed));
 	}
 
-	private void copyAndDraw(Image frame, Rectangle crop, String filing, long seed)
+	private void copyAndDraw(Image frame, Rectangle crop, String filing, long seed, String posed)
 	{
 		// The frame is the client's own buffer, reused on the next draw: copy
 		// the part wanted now, and do the slow drawing somewhere else.
@@ -549,7 +600,8 @@ public class SketchController
 				// ink stays a pen's width in both.
 				book.put(filing,
 					SketchStyle.draw(copy, ChronicleLayout.PLATE_W - 4, ChronicleLayout.PLATE_H - 4, seed),
-					SketchStyle.draw(copy, ChronicleLayout.BIG_PLATE_W - 4, ChronicleLayout.BIG_PLATE_H - 4, seed));
+					SketchStyle.draw(copy, ChronicleLayout.BIG_PLATE_W - 4, ChronicleLayout.BIG_PLATE_H - 4, seed),
+					posed);
 			}
 			catch (RuntimeException e)
 			{

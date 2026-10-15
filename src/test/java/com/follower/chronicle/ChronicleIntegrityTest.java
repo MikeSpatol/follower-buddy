@@ -582,4 +582,47 @@ public class ChronicleIntegrityTest
 			assertNotNull(loader.getStatus());
 		}
 	}
+
+	/**
+	 * A page's number is one of the follower's own counters, named exactly
+	 * as the plugin files it: the kills it saw you make under
+	 * {@code kill:} and the creature's name as the game spells it, one the
+	 * page unlocks on; a boss's count under {@code kc:} and the boss's name
+	 * as the game's kill count message gives it. A misspelt key is never
+	 * counted, so its line would never show and nothing would say why.
+	 */
+	@Test
+	public void everyPagesNumberIsACounterTheFollowerKeeps() throws IOException
+	{
+		ChronicleLoader loader = loadAsAFreshInstall();
+		List<String> problems = new ArrayList<>();
+		for (ChronicleEntry entry : loader.getEntries())
+		{
+			if (entry.tally == null)
+			{
+				continue;
+			}
+			if (entry.tally.label == null || entry.tally.label.trim().isEmpty())
+			{
+				problems.add(entry.id + ": a number with no label");
+			}
+			Set<String> counters = new HashSet<>();
+			if (entry.unlock != null && entry.unlock.npcs != null)
+			{
+				for (String npc : entry.unlock.npcs)
+				{
+					counters.add("kill:" + npc.toLowerCase(java.util.Locale.ROOT));
+				}
+			}
+			if (entry.kindOrEmpty().equals("boss"))
+			{
+				counters.add("kc:" + entry.name.toLowerCase(java.util.Locale.ROOT));
+			}
+			if (!counters.contains(entry.tally.of))
+			{
+				problems.add(entry.id + ": counts " + entry.tally.of + ", not one of " + counters);
+			}
+		}
+		assertTrue("numbers nothing counts:\n  " + String.join("\n  ", problems), problems.isEmpty());
+	}
 }

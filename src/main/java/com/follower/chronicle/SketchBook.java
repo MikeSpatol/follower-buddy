@@ -2,6 +2,7 @@ package com.follower.chronicle;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,7 +18,9 @@ import lombok.extern.slf4j.Slf4j;
  * follower's files and one folder per account, because a second character
  * has not been where the first one has. Each place is drawn twice from the
  * same view: at the page plate's size, and larger for the plate opened
- * across the window, filed beside it as {@code <name>.large.png}.
+ * across the window, filed beside it as {@code <name>.large.png}. The emote
+ * you struck for it, if you struck one, is filed beside them as a word in
+ * {@code <name>.pose}; a sketch from before there were poses has none.
  *
  * <p>Nothing here throws: a missing folder is an empty book and a picture
  * that will not read is skipped, as every loader in the plugin does.
@@ -30,9 +33,13 @@ public class SketchBook
 	/** The large copy's file ending; a name is letters, digits and hyphens, so it cannot be mistaken for one. */
 	static final String LARGE = ".large";
 
+	/** The pose's file ending, beside the pictures. */
+	static final String POSE = ".pose";
+
 	private final Path root;
 	private final Map<String, BufferedImage> sketches = new ConcurrentHashMap<>();
 	private final Map<String, BufferedImage> large = new ConcurrentHashMap<>();
+	private final Map<String, String> poses = new ConcurrentHashMap<>();
 	private volatile Path folder;
 
 	public SketchBook(Path dataDir)
@@ -45,6 +52,7 @@ public class SketchBook
 	{
 		sketches.clear();
 		large.clear();
+		poses.clear();
 		folder = null;
 		if (root == null || account == null || account.isEmpty())
 		{
@@ -84,6 +92,22 @@ public class SketchBook
 		{
 			log.warn("Could not read the sketch book at {}", folder, e);
 		}
+		try (DirectoryStream<Path> files = Files.newDirectoryStream(folder, "*" + POSE))
+		{
+			for (Path file : files)
+			{
+				String name = file.getFileName().toString();
+				String pose = new String(Files.readAllBytes(file), StandardCharsets.UTF_8).trim();
+				if (!pose.isEmpty())
+				{
+					poses.put(name.substring(0, name.length() - POSE.length()), pose);
+				}
+			}
+		}
+		catch (IOException | RuntimeException e)
+		{
+			log.debug("Could not read the poses at {}", folder, e);
+		}
 	}
 
 	public BufferedImage get(String key)
@@ -95,6 +119,12 @@ public class SketchBook
 	public BufferedImage getLarge(String key)
 	{
 		return key == null ? null : large.get(key);
+	}
+
+	/** The emote the sketch caught you in, as a word ("dance"), or null for none. */
+	public String poseOf(String key)
+	{
+		return key == null ? null : poses.get(key);
 	}
 
 	public boolean has(String key)
@@ -111,11 +141,29 @@ public class SketchBook
 	/** Files the sketch at both sizes, in memory at once and on disk as well as it can. */
 	public void put(String key, BufferedImage sketch, BufferedImage big)
 	{
+		put(key, sketch, big, null);
+	}
+
+	/**
+	 * The same, with the emote you struck for it, or null for none. The pose
+	 * belongs to this drawing: drawn again standing still, the old one's goes.
+	 */
+	public void put(String key, BufferedImage sketch, BufferedImage big, String pose)
+	{
 		if (key == null || sketch == null || big == null)
 		{
 			return;
 		}
-		// The large one first, so a page never finds the small without it.
+		// The large one first, so a page never finds the small without it,
+		// and the pose before either, so it never shows the last one's.
+		if (pose == null)
+		{
+			poses.remove(key);
+		}
+		else
+		{
+			poses.put(key, pose);
+		}
 		large.put(key, big);
 		sketches.put(key, sketch);
 		Path into = folder;
@@ -126,6 +174,15 @@ public class SketchBook
 		try
 		{
 			Files.createDirectories(into);
+			Path poseFile = into.resolve(safe(key) + POSE);
+			if (pose == null)
+			{
+				Files.deleteIfExists(poseFile);
+			}
+			else
+			{
+				Files.write(poseFile, pose.getBytes(StandardCharsets.UTF_8));
+			}
 			ImageIO.write(big, "png", into.resolve(safe(key) + LARGE + ".png").toFile());
 			ImageIO.write(sketch, "png", into.resolve(safe(key) + ".png").toFile());
 		}
@@ -139,7 +196,7 @@ public class SketchBook
 	 * Copies what is on disk for a sketch to a backup beside it, before the
 	 * place is drawn again on purpose: {@code name.png.bak}, or
 	 * {@code name.png.1.bak} and on when that is taken, so no file, sketch
-	 * or backup, is ever written over. The book does not read them back;
+	 * or backup, is ever written over. Its pose goes with it, if it had one. The book does not read them back;
 	 * they are there to be put back by hand.
 	 *
 	 * @return the backups' file names, empty when nothing was on disk
@@ -153,7 +210,7 @@ public class SketchBook
 		{
 			return kept;
 		}
-		for (String name : new String[]{safe(key) + LARGE + ".png", safe(key) + ".png"})
+		for (String name : new String[]{safe(key) + LARGE + ".png", safe(key) + ".png", safe(key) + POSE})
 		{
 			Path file = in.resolve(name);
 			if (!Files.isRegularFile(file))
