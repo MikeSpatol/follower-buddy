@@ -139,11 +139,13 @@ public class Will
 		else
 		{
 			NPC monster = monsterBeside(target, local, forced);
-			if (monster != null)
+			// A monster with no name gives the line nothing to say: "Next to
+			// the that?" So it simply goes.
+			if (monster != null && monster.getName() != null)
 			{
 				about = Misgiving.MONSTER;
 				edge = edgeShortOf(target, from, MONSTER_EDGE);
-				thing = monster.getName() == null ? "that" : monster.getName();
+				thing = monster.getName();
 				key = "monster:" + monster.getIndex();
 			}
 		}

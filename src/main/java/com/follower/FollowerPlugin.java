@@ -12052,8 +12052,7 @@ public class FollowerPlugin extends Plugin
 		final boolean[] done = {false};
 		chatboxPanelManager.openTextInput("Your new follower is waiting. What will you call them?")
 			.value("")
-			.charValidator(c -> Character.isLetterOrDigit(c)
-				|| c == ' ' || c == '\'' || c == '-')
+			.charValidator(c -> nameChar((char) c))
 			.onDone((String answer) ->
 			{
 				done[0] = true;
@@ -12116,6 +12115,16 @@ public class FollowerPlugin extends Plugin
 	}
 
 	/**
+	 * A letter or digit the game's fonts can draw - they stop at Latin-1, so
+	 * a Cyrillic or Greek name would come out blank over the follower's head
+	 * - or a space, apostrophe or hyphen.
+	 */
+	static boolean nameChar(char c)
+	{
+		return (Character.isLetterOrDigit(c) && c <= 0xFF) || c == ' ' || c == '\'' || c == '-';
+	}
+
+	/**
 	 * The follower's name as everything shows it. The settings box takes any
 	 * text, and only the chatbox prompt used to clean it: a blank name gave a
 	 * "[] " chat prefix and menu options with no target, and tags went
@@ -12160,7 +12169,7 @@ public class FollowerPlugin extends Plugin
 		for (int i = 0; i < raw.length(); i++)
 		{
 			char c = raw.charAt(i);
-			if (Character.isLetterOrDigit(c) || c == ' ' || c == '\'' || c == '-')
+			if (nameChar(c))
 			{
 				kept.append(c);
 			}

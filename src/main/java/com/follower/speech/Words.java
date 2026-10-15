@@ -50,8 +50,26 @@ public final class Words
 	/** Endings of words that end in s and still mean one: Cerberus, a Nylocas Hagios, a Cyclops. */
 	private static final String[] ONE_DESPITE_THE_S = {"ss", "us", "is", "as", "os", "cyclops", "lens"};
 
+	/**
+	 * Bosses whose name is who they are, not what: Vorkath, never the
+	 * Vorkath. The Corporeal Beast and the Leviathan are kinds of thing,
+	 * and keep their article.
+	 */
+	private static final Set<String> PERSONAL_NAMES = Set.of(
+		"vorkath", "zulrah", "vet'ion", "callisto", "venenatis", "artio", "calvar'ion", "spindel",
+		"scorpia", "cerberus", "sarachnis", "zalcano", "tempoross", "hespori", "skotizo", "obor",
+		"bryophyta", "nex", "kree'arra", "k'ril tsutsaroth", "general graardor", "commander zilyana",
+		"vardorvis", "duke sucellus", "sol heredit", "araxxor", "tztok-jad", "tzkal-zuk",
+		"verzik vitur", "phosani's nightmare");
+
 	private Words()
 	{
+	}
+
+	/** Whether the name is a boss's own name, which takes no article: Vorkath, General Graardor. */
+	public static boolean isPersonalName(String name)
+	{
+		return name != null && PERSONAL_NAMES.contains(name.trim().toLowerCase(Locale.ROOT));
 	}
 
 	/** One to ninety-nine in words; anything else as digits. */

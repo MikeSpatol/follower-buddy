@@ -62,14 +62,20 @@ public class SpeechDetailsTest
 		assertEquals("10K", gp(10_000));
 		assertEquals("214K", gp(214_500));
 		assertEquals("999K", gp(999_999));
-		assertEquals("1.0M", gp(1_000_000));
+		assertEquals("1M", gp(1_000_000));
 		assertEquals("1.2M", gp(1_234_567));
+		assertEquals("2.4M", gp(2_350_000));
+		assertEquals("10M", gp(10_000_000));
+		assertEquals("999.9M", gp(999_900_000));
 	}
 
 	@Test
 	public void aHugeDropDoesNotOverflowIntoNonsense()
 	{
-		assertEquals("2147.5M", gp(Integer.MAX_VALUE));
+		// QA, 15 Oct: "1500.0M! I'd better count the noughts again."
+		assertEquals("1B", gp(999_960_000));
+		assertEquals("1.5B", gp(1_500_000_000));
+		assertEquals("2.1B", gp(Integer.MAX_VALUE));
 	}
 
 	@Test

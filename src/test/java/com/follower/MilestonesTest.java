@@ -75,7 +75,10 @@ public class MilestonesTest
 		assertTrue("the first is once ever", h.firedBy("level-mastery-first").isEmpty());
 		String line = said(h, "level-mastery-again");
 		assertTrue("the ordinal is said in words: " + line,
-			line.contains("third") || line.contains("3 at ninety-nine"));
+			line.contains("third") || line.contains("three at ninety-nine"));
+		// QA, 15 Oct: "That's 22 at ninety-nine. Your twenty-second" - the
+		// count is in words, like the ninety-nine beside it.
+		assertFalse(line, line.matches(".*\\d.*"));
 	}
 
 	@Test

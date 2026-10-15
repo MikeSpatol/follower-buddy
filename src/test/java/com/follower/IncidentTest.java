@@ -274,6 +274,35 @@ public class IncidentTest
 	}
 
 	@Test
+	public void aPlaceIsSaidAsItsNameNotItsDescription() throws IOException
+	{
+		// QA, 15 Oct: "in The God Wars Dungeon", "in Lumbridge town and
+		// castle". The Locations notes describe; a line wants the name.
+		com.follower.speech.RuleLoader rules = new com.follower.speech.RuleLoader(new com.google.gson.Gson());
+		rules.initialise(folder.newFolder().toPath());
+		TriggerContext context = new TriggerContext(new com.follower.sim.FakeGame().client);
+		context.setRegionNames(rules.getRegionNames());
+		Map<String, String> said = new java.util.TreeMap<>();
+		for (Map.Entry<Integer, String> place : rules.getRegionNames().entrySet())
+		{
+			context.restoreIncident("the-boss", "the size of that thing", 1, place.getKey(), 0L, "");
+			said.put(place.getValue(), context.getMemoryWhere());
+		}
+		assertEquals(" in the God Wars Dungeon", said.get("The God Wars Dungeon"));
+		assertEquals(" in Lumbridge", said.get("Lumbridge town and castle"));
+		assertEquals(" in Seers' Village", said.get("Seers' Village and Camelot castle"));
+		assertEquals(" in East Ardougne", said.get("East Ardougne and its market"));
+		assertEquals(" in Castle Wars", said.get("Castle Wars lobby area"));
+		assertEquals(" in the Grand Exchange", said.get("The Grand Exchange plaza"));
+		assertEquals(" in the Barrows", said.get("The Barrows mounds"));
+		for (String where : said.values())
+		{
+			assertFalse("no capital The mid-sentence: " + where, where.contains(" The "));
+			assertFalse("no description: " + where, where.contains(" and "));
+		}
+	}
+
+	@Test
 	public void theRecallLinesSayTheParticulars() throws IOException
 	{
 		Harness h = new Harness(folder.newFolder().toPath());

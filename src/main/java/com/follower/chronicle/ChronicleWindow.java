@@ -1,5 +1,6 @@
 package com.follower.chronicle;
 
+import com.follower.speech.TriggerContext;
 import com.follower.ui.GameFont;
 import com.follower.ui.GameFontRepository;
 import java.awt.Color;
@@ -811,25 +812,7 @@ public class ChronicleWindow extends Overlay
 	 */
 	static String shortPlace(String place)
 	{
-		String name = place.trim();
-		int and = name.indexOf(" and ");
-		if (and > 0)
-		{
-			name = name.substring(0, and);
-		}
-		if (name.startsWith("The "))
-		{
-			name = "the " + name.substring(4);
-		}
-		for (String tail : new String[]{" town", " plaza", " mounds", " lobby area", " camp"})
-		{
-			if (name.endsWith(tail) && name.length() > tail.length() + 4)
-			{
-				name = name.substring(0, name.length() - tail.length());
-				break;
-			}
-		}
-		return name;
+		return TriggerContext.shortPlace(place);
 	}
 
 	private void drawCloseButton(Graphics2D g)
