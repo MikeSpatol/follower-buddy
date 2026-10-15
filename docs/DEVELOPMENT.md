@@ -364,6 +364,9 @@ mood stretches or shortens on top.
 | `answered` | `is` - the token on the branch the player picked, in a rule marked `asks`. Any plain word: `yes`/`no` for a question, `left`/`right` for a game. Optional `of` names the tree, so a yes to the nickname is not a yes to the outing |
 | `asking` | - a question is already waiting for an answer; optional `is` names the tree. **Every `asks` rule needs this inside a `none`**, or opening a second question silently withdraws the first |
 | `varbitEquals` / `varbitChanged` | `varbit`, `value` |
+| `questVar` | `varbit` or `varp`, optional `minimum`/`maximum` (both inclusive) - true while a quest's progress is in that range, so the rule rises on entering it, even by a jump (1 to 13 enters 11-20). Newer quests keep progress in a varbit, older ones in a varp. A value already in range at login is baseline, not news. Put an event (`chatMessage`, `npcKill`, `regionEnter`...) beside it in an `all` to fire on that event during the step |
+| `questDone` | `quest` - a RuneLite `Quest` constant name (`COOKS_ASSISTANT`). True while that quest is finished, read with the game's own quest-state script, at most once a tick. False with no player, before the scripts are ready, and for a name that is no quest. For a line that calls back to another quest: the callback takes it, the base line takes it inside a `none`, so only one can be said |
+| `dialogueOpen` | - an NPC dialogue box is up, or was in the last two ticks (a page flip drops it for a beat). Used inside a `none` in an `all`, so a rule whose state changes mid-conversation rises as the box closes |
 | `animationSelf` | `ids`; optional `every` - the nth time one of them plays, counted for life |
 | `levelUp` | `names` (skill names, `*` ok) |
 | `damageTaken` | `minimum` |
@@ -377,7 +380,7 @@ mood stretches or shortens on top.
 | `combat` | - true throughout a fight, including the gaps between targets |
 | `bossFight` | `minimum` - target's combat level, default 100 |
 | `combatStart` / `combatEnd` | `names`, `{npc}` placeholder |
-| `npcKill` | `minimum` / `maximum` combat level, `names`, `ids`; `{npc}` and `{level}` placeholders |
+| `npcKill` | `minimum` / `maximum` combat level, `names`, `ids`, `boss: true` (big enough or named), `namedBoss: true` (named in the boss rules only); `{npc}` and `{level}` placeholders |
 | `mood` | `is` - a band (`low`, `down`, `even`, `good`, `high`) - or `minimum`/`maximum` over 0–100 |
 | `repeating` | `ticks` - how long the same animation has been running; optional `ids` |
 | `awayFor` | `minimum`/`maximum` minutes since the follower last saw you; login only |

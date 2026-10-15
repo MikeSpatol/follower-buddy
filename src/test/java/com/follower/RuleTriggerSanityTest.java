@@ -392,6 +392,10 @@ public class RuleTriggerSanityTest
 				{
 					dead.add(rule.id + ": varbitChanged with no varbit");
 				}
+				if (type.equals("questvar") && condition.varbit == null && condition.varp == null)
+				{
+					dead.add(rule.id + ": questVar with neither varbit nor varp");
+				}
 				if (type.equals("inarea")
 					&& (condition.x1 == null || condition.y1 == null
 					|| condition.x2 == null || condition.y2 == null))

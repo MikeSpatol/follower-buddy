@@ -247,6 +247,59 @@ public class EveryConditionTypeTest
 		assertFired(h, "varbitEquals");
 	}
 
+	@Test
+	public void questVarAndDialogueOpen() throws IOException
+	{
+		note("questVar", "dialogueOpen");
+
+		Harness varbit = harnessFor("{\"type\": \"questVar\", \"varbit\": 9632, \"minimum\": 6, \"maximum\": 8}");
+		varbit.game.varbit(9632, 4);
+		varbit.gameTicks(2);
+		assertQuiet(varbit, "below the range");
+		varbit.game.varbit(9632, 8);
+		varbit.gameTicks(2);
+		assertFired(varbit, "questVar on a varbit");
+
+		Harness varp = harnessFor("{\"type\": \"questVar\", \"varp\": 179, \"minimum\": 11}");
+		varp.game.varp(179, 10);
+		varp.gameTicks(2);
+		assertQuiet(varp, "below an open-ended range");
+		varp.game.varp(179, 21);
+		varp.gameTicks(2);
+		assertFired(varp, "questVar on a varp, no maximum");
+
+		Harness past = harnessFor("{\"type\": \"questVar\", \"varp\": 29, \"minimum\": 1, \"maximum\": 1}");
+		past.game.varp(29, 2);
+		past.gameTicks(2);
+		assertQuiet(past, "above the range");
+
+		Harness open = harnessFor("{\"type\": \"dialogueOpen\"}");
+		open.gameTicks(2);
+		assertQuiet(open, "no box up");
+		open.engine.getContext().setDialogueOpen(true);
+		open.gameTicks(1);
+		assertFired(open, "dialogueOpen");
+	}
+
+	@Test
+	public void questDone() throws IOException
+	{
+		note("questDone");
+
+		Harness h = harnessFor("{\"type\": \"questDone\", \"quest\": \"COOKS_ASSISTANT\"}");
+		h.game.quest(net.runelite.api.Quest.COOKS_ASSISTANT, net.runelite.api.QuestState.IN_PROGRESS);
+		h.gameTicks(2);
+		assertQuiet(h, "under way is not done");
+		h.game.quest(net.runelite.api.Quest.COOKS_ASSISTANT, net.runelite.api.QuestState.FINISHED);
+		h.gameTicks(2);
+		assertFired(h, "questDone");
+
+		Harness other = harnessFor("{\"type\": \"questDone\", \"quest\": \"SHEEP_SHEARER\"}");
+		other.game.quest(net.runelite.api.Quest.COOKS_ASSISTANT, net.runelite.api.QuestState.FINISHED);
+		other.gameTicks(2);
+		assertQuiet(other, "a different quest finished");
+	}
+
 	// -------------------------------------------------------------- location
 
 	@Test
@@ -1750,6 +1803,8 @@ public class EveryConditionTypeTest
 		energyAndIdleBounds();
 		itemEquipped();
 		varbitEquals();
+		questVarAndDialogueOpen();
+		questDone();
 		inRegionAndInArea();
 		regionEnterAndReturnVisit();
 		npcSpawnDespawnAndNearby();

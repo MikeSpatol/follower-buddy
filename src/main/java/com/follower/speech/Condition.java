@@ -23,6 +23,9 @@ import net.runelite.api.NPC;
  *   <tr><td>inArea</td><td>{@code x1,y1,x2,y2,plane}</td></tr>
  *   <tr><td>chatMessage</td><td>{@code contains} or {@code regex}; optional {@code every} - the nth matching message</td></tr>
  *   <tr><td>varbitEquals / varbitChanged</td><td>{@code varbit}, {@code value}</td></tr>
+ *   <tr><td>questVar</td><td>{@code varbit} or {@code varp}, optional {@code minimum} / {@code maximum} (inclusive) - true while the value is in range</td></tr>
+ *   <tr><td>dialogueOpen</td><td>no fields - an NPC dialogue box is up; used negated, so a line waits for the box to close</td></tr>
+ *   <tr><td>questDone</td><td>{@code quest} (a {@link net.runelite.api.Quest} constant name) - that quest is finished</td></tr>
  *   <tr><td>animationSelf</td><td>{@code ids}; optional {@code every} - the nth time one plays</td></tr>
  *   <tr><td>levelUp</td><td>{@code names} (skill names)</td></tr>
  *   <tr><td>damageTaken</td><td>{@code minimum}</td></tr>
@@ -39,7 +42,7 @@ import net.runelite.api.NPC;
  *   <tr><td>combat</td><td>no fields — true throughout a fight, including the gaps between targets</td></tr>
  *   <tr><td>bossFight</td><td>{@code minimum} — target combat level, default 100</td></tr>
  *   <tr><td>combatStart / combatEnd</td><td>optional {@code names}; {@code {npc}} placeholder</td></tr>
- *   <tr><td>npcKill</td><td>{@code minimum} / {@code maximum} combat level, optional {@code names} / {@code ids}, or {@code boss: true} for either big enough or named in the boss rules</td></tr>
+ *   <tr><td>npcKill</td><td>{@code minimum} / {@code maximum} combat level, optional {@code names} / {@code ids}, or {@code boss: true} for either big enough or named in the boss rules, or {@code namedBoss: true} for named only</td></tr>
  *   <tr><td>energyBelow</td><td>{@code percent}</td></tr>
  *   <tr><td>idle</td><td>{@code ticks}</td></tr>
  *   <tr><td>login / always</td><td>no fields</td></tr>
@@ -122,10 +125,20 @@ public class Condition
 	 * answer, and this consults both.
 	 */
 	public Boolean boss;
+	/**
+	 * npcKill only: named in the boss rules, whatever its level. A level-100
+	 * Slayer demon is big enough for {@code boss} but no occasion; play test,
+	 * 14 Oct, the boss celebration had worn out on every demon of a task.
+	 */
+	public Boolean namedBoss;
 	public Integer maximum;
 	public Integer within;
 	public Integer ticks;
 	public Integer varbit;
+	/** questVar: a varplayer, for the older quests that keep their progress in one. */
+	public Integer varp;
+	/** questDone: the quest, by its {@link net.runelite.api.Quest} constant name. */
+	public String quest;
 	public Integer value;
 
 	/** Fire on every Nth occurrence rather than on each one. */
@@ -363,6 +376,35 @@ public class Condition
 				return event.getType() == TriggerEvent.Type.VARBIT
 					&& varbit != null && event.getId() == varbit
 					&& (value == null || event.getValue() == value);
+
+			// A quest's progress inside a band of steps. State, so the rule
+			// rises on entering the band: a jump from 1 to 13 still enters
+			// 11-20. Newer quests keep progress in a varbit, older ones in a
+			// varp. Same guard as varbitEquals, for the same reason.
+			case "questvar":
+			{
+				if ((varbit == null && varp == null) || ctx.getClient().getLocalPlayer() == null)
+				{
+					return false;
+				}
+				int current = varbit != null
+					? ctx.getClient().getVarbitValue(varbit)
+					: ctx.getClient().getVarpValue(varp);
+				return (minimum == null || current >= minimum)
+					&& (maximum == null || current <= maximum);
+			}
+
+			// An NPC dialogue box is up, or was a moment ago: page flips drop
+			// it for a beat. Used negated, inside an "all", so a rule whose
+			// state changes mid-conversation rises as the box closes.
+			case "dialogueopen":
+				return ctx.isDialogueOpen();
+
+			// Another quest already finished, for a line that calls back to
+			// it. State; read the way the chronicle reads it, and false with
+			// no player or a name the game does not know.
+			case "questdone":
+				return ctx.isQuestDone(quest);
 
 			case "animationself":
 				return event.getType() == TriggerEvent.Type.ANIMATION && idsContain(event.getId())
@@ -618,6 +660,7 @@ public class Condition
 				return event.getType() == TriggerEvent.Type.NPC_KILL
 					&& (boss == null
 						|| boss == ctx.isBoss(event.getName(), event.getValue()))
+					&& (namedBoss == null || namedBoss == ctx.isNamedBoss(event.getName()))
 					&& event.getValue() >= orDefault(minimum, 0)
 					&& (maximum == null || event.getValue() <= maximum)
 					&& (names == null && ids == null || matchesNpc(event))

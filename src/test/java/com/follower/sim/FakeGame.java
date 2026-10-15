@@ -663,6 +663,33 @@ public final class FakeGame
 		return this;
 	}
 
+	/** Quest states by quest id, as the state script reports them: 2 finished, 1 not started, 0 under way. */
+	private final Map<Integer, Integer> questStatus = new HashMap<>();
+	private int questAsked = -1;
+
+	/**
+	 * A quest's state, as {@link net.runelite.api.Quest#getState} reads it: by
+	 * running the state script and taking the top of the int stack. Until the
+	 * first call the client runs no scripts and the read fails, as it does in
+	 * the real client before the scripts are ready; after it, any quest not
+	 * set reads as not started.
+	 */
+	public FakeGame quest(net.runelite.api.Quest quest, net.runelite.api.QuestState state)
+	{
+		questStatus.put(quest.getId(),
+			state == net.runelite.api.QuestState.FINISHED ? 2
+				: state == net.runelite.api.QuestState.NOT_STARTED ? 1 : 0);
+		clientAnswers.put("runScript", (Answer) args ->
+		{
+			Object[] script = (Object[]) args[0];
+			questAsked = script.length > 1 ? (Integer) script[1] : -1;
+			return null;
+		});
+		clientAnswers.put("getIntStack",
+			(Answer) args -> new int[]{questStatus.getOrDefault(questAsked, 1)});
+		return this;
+	}
+
 	public FakeGame skulled(boolean skulled)
 	{
 		playerAnswers.put("getSkullIcon", skulled ? 0 : -1);

@@ -575,6 +575,18 @@ public class SpeechEngineSimulationTest
 		assertEquals("cheer, dance, jump", 3, rule.animations.size());
 	}
 
+	@Test
+	public void aBigSlayerMonsterIsNoBossToCelebrate() throws IOException
+	{
+		// Play test, 14 Oct: the celebration had worn out on every level-100
+		// demon of a Slayer task. It is for the bosses the boss rules name.
+		Harness h = new Harness(scratch());
+		h.gameTicks(1);
+		h.dispatch(TriggerEvent.kill(1432, "Black demon", 172));
+		h.gameTicks(20);
+		assertTrue(h.firedBy("kill-boss-celebrate").isEmpty());
+	}
+
 	// ------------------------------------------------------------ reset paths
 
 	@Test

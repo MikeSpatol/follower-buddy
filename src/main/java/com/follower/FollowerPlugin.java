@@ -7844,6 +7844,10 @@ public class FollowerPlugin extends Plugin
 			lastMusicTrack = track;
 		}
 
+		// An NPC dialogue up, or gone for under three ticks: the same reading
+		// the minutes take, so a page flip does not count as the box closing.
+		speechEngine.getContext().setDialogueOpen(npcDialogOpen() || dialogGoneTicks <= 2);
+
 		// A player-commanded Stay (R25): the follower's own machinery also
 		// parks it - errands, spectating, thrall work, and the WANDER, which
 		// drifts via the same stayAt - and only this side can tell the

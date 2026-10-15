@@ -716,6 +716,83 @@ public final class TriggerContext
 		return followerStaying;
 	}
 
+	// ------------------------------------------------------------ npc dialogue
+
+	/**
+	 * True while an NPC dialogue box is up, and for the couple of ticks a page
+	 * flip drops it. Fed by the plugin each tick, which reads the widgets and
+	 * rides out the flips; a quest step that changes mid-conversation waits
+	 * on this to fall, so its line arrives just after the box closes.
+	 */
+	private boolean dialogueOpen;
+
+	public void setDialogueOpen(boolean open)
+	{
+		dialogueOpen = open;
+	}
+
+	public boolean isDialogueOpen()
+	{
+		return dialogueOpen;
+	}
+
+	// ------------------------------------------------------------ quest states
+
+	/** Quest states read this tick, by enum name; cleared when the tick moves on. */
+	private final java.util.Map<String, Boolean> questsDone = new java.util.HashMap<>();
+	private int questsDoneGeneration = -1;
+
+	/**
+	 * Whether the named quest is finished, read the way ChronicleProgress
+	 * reads it: the {@link net.runelite.api.Quest} constant's own state
+	 * script. Asked for only when a rule gets that far, and remembered for
+	 * the rest of the tick, so the script runs at most once a tick a quest.
+	 *
+	 * <p>False with no player, for a name that is no quest, and when the read
+	 * throws (before the scripts are ready): a condition that threw would
+	 * disable its rule for the session.
+	 */
+	public boolean isQuestDone(String name)
+	{
+		if (name == null || client.getLocalPlayer() == null)
+		{
+			return false;
+		}
+		if (questsDoneGeneration != refreshGeneration)
+		{
+			questsDoneGeneration = refreshGeneration;
+			questsDone.clear();
+		}
+		Boolean done = questsDone.get(name);
+		if (done == null)
+		{
+			done = readQuestDone(name);
+			questsDone.put(name, done);
+		}
+		return done;
+	}
+
+	private boolean readQuestDone(String name)
+	{
+		net.runelite.api.Quest quest;
+		try
+		{
+			quest = net.runelite.api.Quest.valueOf(name);
+		}
+		catch (IllegalArgumentException e)
+		{
+			return false;
+		}
+		try
+		{
+			return quest.getState(client) == net.runelite.api.QuestState.FINISHED;
+		}
+		catch (RuntimeException e)
+		{
+			return false;
+		}
+	}
+
 	// ---------------------------------------------------------- work sessions
 
 	/**

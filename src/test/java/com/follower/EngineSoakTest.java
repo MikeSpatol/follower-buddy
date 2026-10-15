@@ -86,6 +86,9 @@ public class EngineSoakTest
 		"{\"type\": \"returnVisit\", \"minimum\": 1}",
 		"{\"type\": \"varbitEquals\", \"varbit\": 5963, \"value\": 1}",
 		"{\"type\": \"varbitChanged\", \"varbit\": 5963, \"value\": 1}",
+		"{\"type\": \"questVar\", \"varp\": 179, \"minimum\": 1, \"maximum\": 20}",
+		"{\"type\": \"dialogueOpen\"}",
+		"{\"type\": \"questDone\", \"quest\": \"SHEEP_SHEARER\"}",
 		"{\"type\": \"poisoned\"}",
 		"{\"type\": \"venomed\"}",
 		"{\"type\": \"skulled\"}",
@@ -378,6 +381,7 @@ public class EngineSoakTest
 				break;
 			case 11:
 				h.engine.getContext().setFollowerStaying(random.nextBoolean());
+				h.engine.getContext().setDialogueOpen(random.nextBoolean());
 				break;
 			case 12:
 			{
@@ -385,6 +389,10 @@ public class EngineSoakTest
 				int wilderness = random.nextInt(2);
 				h.game.varbit(5963, wilderness);
 				h.dispatch(TriggerEvent.varbit(5963, wilderness, 1 - wilderness));
+				// A quest's progress, before, during and after.
+				h.game.varp(179, random.nextInt(22));
+				h.game.quest(net.runelite.api.Quest.SHEEP_SHEARER, random.nextBoolean()
+					? net.runelite.api.QuestState.FINISHED : net.runelite.api.QuestState.IN_PROGRESS);
 				break;
 			}
 			case 13:
