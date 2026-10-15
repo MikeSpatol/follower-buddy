@@ -14411,6 +14411,1391 @@
         "There you are. I came round to check, and you hadn't moved an inch.",
         "Welcome back. You passed your welfare check, barely."
       ]
+    },
+    {
+      "id": "fun-lumbridge-after-cooks-assistant",
+      "note": "Callback: stands in for area-lumbridge on about 35% of arrivals once Cook's Assistant is done, at most every 30 minutes; the base's lines play the rest of the time.",
+      "group": "area",
+      "priority": 41,
+      "cooldownMs": 1800000,
+      "delayTicks": 2,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "regionEnter",
+            "regions": [
+              12850
+            ]
+          },
+          {
+            "type": "chance",
+            "percent": 35
+          },
+          {
+            "type": "questDone",
+            "quest": "COOKS_ASSISTANT"
+          }
+        ]
+      },
+      "say": [
+        "The cook's still telling people about that cake.",
+        "The Duke got his cake. I'm still waiting on my party invitation."
+      ]
+    },
+    {
+      "id": "fun-lumbridge-after-sheep-shearer",
+      "note": "Callback: stands in for area-lumbridge on about 30% of arrivals once Sheep Shearer is done, at most every 30 minutes; the base's lines play the rest of the time.",
+      "group": "area",
+      "priority": 42,
+      "cooldownMs": 1800000,
+      "delayTicks": 2,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "regionEnter",
+            "regions": [
+              12850
+            ]
+          },
+          {
+            "type": "chance",
+            "percent": 30
+          },
+          {
+            "type": "questDone",
+            "quest": "SHEEP_SHEARER"
+          }
+        ]
+      },
+      "say": [
+        "I still can't pass a spinning wheel without counting to twenty.",
+        "The sheep round here give us a look now. Word's got about."
+      ]
+    },
+    {
+      "id": "fun-paterdomus-after-priest-in-peril",
+      "note": "New place line with no base rule: only exists once Priest in Peril is done. About 50% of arrivals, at most every 30 minutes.",
+      "group": "area",
+      "priority": 40,
+      "cooldownMs": 1800000,
+      "delayTicks": 2,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "regionEnter",
+            "regions": [
+              13622
+            ]
+          },
+          {
+            "type": "chance",
+            "percent": 50
+          },
+          {
+            "type": "questDone",
+            "quest": "PRIEST_IN_PERIL"
+          }
+        ]
+      },
+      "say": [
+        "Paterdomus. I say a quiet word for the dog every time we cross.",
+        "The temple again. I give the coffins outside a very wide berth."
+      ]
+    },
+    {
+      "id": "fun-baxtorian-falls-after-waterfall-quest",
+      "note": "New place line with no base rule: only exists once Waterfall Quest is done. About 50% of arrivals, at most every 30 minutes.",
+      "group": "area",
+      "priority": 40,
+      "cooldownMs": 1800000,
+      "delayTicks": 2,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "regionEnter",
+            "regions": [
+              10038
+            ]
+          },
+          {
+            "type": "chance",
+            "percent": 50
+          },
+          {
+            "type": "questDone",
+            "quest": "WATERFALL_QUEST"
+          }
+        ]
+      },
+      "say": [
+        "The falls sound different now I know what's behind them.",
+        "Hudon's still out on that rock, I expect. His mother has my sympathy."
+      ]
+    },
+    {
+      "id": "fun-varrock-after-children-of-the-sun",
+      "note": "Callback: stands in for area-varrock on about 25% of arrivals once Children of the Sun is done, at most every 40 minutes; the base's lines play the rest of the time.",
+      "group": "area",
+      "priority": 41,
+      "cooldownMs": 2400000,
+      "delayTicks": 2,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "regionEnter",
+            "regions": [
+              12597,
+              12853,
+              12854
+            ]
+          },
+          {
+            "type": "chance",
+            "percent": 25
+          },
+          {
+            "type": "questDone",
+            "quest": "CHILDREN_OF_THE_SUN"
+          }
+        ]
+      },
+      "say": [
+        "Varrock. I still give every guard's uniform a second look.",
+        "Any guard here carrying a large bag gets watched. I learned that much."
+      ]
+    },
+    {
+      "id": "fun-taverley-after-witchs-house",
+      "note": "Callback: stands in for area-taverley on about 35% of arrivals once Witch's House is done, at most every 30 minutes; the base's lines play the rest of the time.",
+      "group": "area",
+      "priority": 41,
+      "cooldownMs": 1800000,
+      "delayTicks": 2,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "regionEnter",
+            "regions": [
+              11573
+            ]
+          },
+          {
+            "type": "chance",
+            "percent": 35
+          },
+          {
+            "type": "questDone",
+            "quest": "WITCHS_HOUSE"
+          }
+        ]
+      },
+      "say": [
+        "Taverley. I keep to the far side of the witch's hedge.",
+        "If that boy's ball goes over again, he can knock on her door himself."
+      ]
+    },
+    {
+      "id": "fun-draynor-after-x-marks-the-spot",
+      "note": "Callback: stands in for area-draynor on about 35% of arrivals once X Marks the Spot is done, at most every 30 minutes; the base's lines play the rest of the time.",
+      "group": "area",
+      "priority": 41,
+      "cooldownMs": 1800000,
+      "delayTicks": 2,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "regionEnter",
+            "regions": [
+              12338
+            ]
+          },
+          {
+            "type": "chance",
+            "percent": 35
+          },
+          {
+            "type": "questDone",
+            "quest": "X_MARKS_THE_SPOT"
+          }
+        ]
+      },
+      "say": [
+        "Every pig pen I pass, I listen. Draynor's has kept quiet since.",
+        "Two of Veos' holes were round here, and I still don't know what he got."
+      ]
+    },
+    {
+      "id": "fun-crandor-after-dragon-slayer",
+      "note": "Callback: stands in for area-crandor on about 60% of arrivals once Dragon Slayer I is done, at most every 30 minutes; the base's lines play the rest of the time.",
+      "group": "area",
+      "priority": 41,
+      "cooldownMs": 1800000,
+      "delayTicks": 2,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "regionEnter",
+            "regions": [
+              11314
+            ]
+          },
+          {
+            "type": "chance",
+            "percent": 60
+          },
+          {
+            "type": "questDone",
+            "quest": "DRAGON_SLAYER_I"
+          }
+        ]
+      },
+      "say": [
+        "Crandor, with no dragon on it. The island looks almost relieved.",
+        "Elvarg's island. I still check the sky, out of respect."
+      ]
+    },
+    {
+      "id": "fun-wizards-tower-after-rune-mysteries",
+      "note": "New place line with no base rule: only exists once Rune Mysteries is done. About 50% of arrivals, at most every 30 minutes.",
+      "group": "area",
+      "priority": 40,
+      "cooldownMs": 1800000,
+      "delayTicks": 2,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "regionEnter",
+            "regions": [
+              12337
+            ]
+          },
+          {
+            "type": "chance",
+            "percent": 50
+          },
+          {
+            "type": "questDone",
+            "quest": "RUNE_MYSTERIES"
+          }
+        ]
+      },
+      "say": [
+        "Somebody in the Wizards' Tower knows your name. I keep mine quiet here.",
+        "Sedridor's basement is under us. I'm still working out how he knew you."
+      ]
+    },
+    {
+      "id": "fun-piscarilius-after-client-of-kourend",
+      "note": "Callback: stands in for area-piscarilius on about 35% of arrivals once Client of Kourend is done, at most every 30 minutes; the base's lines play the rest of the time.",
+      "group": "area",
+      "priority": 41,
+      "cooldownMs": 1800000,
+      "delayTicks": 2,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "regionEnter",
+            "regions": [
+              7226
+            ]
+          },
+          {
+            "type": "chance",
+            "percent": 35
+          },
+          {
+            "type": "questDone",
+            "quest": "CLIENT_OF_KOUREND"
+          }
+        ]
+      },
+      "say": [
+        "Don't ask Veos about the client. He doesn't remember any of it, and I do."
+      ]
+    },
+    {
+      "id": "fun-duke-horacio-after-cooks-assistant",
+      "note": "Callback: same trigger as quest-duke-horacio plus Cook's Assistant done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Cook's Assistant, so it cannot rise on the quest finishing.",
+      "group": "quest",
+      "priority": 36,
+      "cooldownMs": 10800000,
+      "delayTicks": 2,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "npcNearby",
+            "visible": true,
+            "within": 5,
+            "names": [
+              "Duke Horacio"
+            ]
+          },
+          {
+            "type": "questDone",
+            "quest": "COOKS_ASSISTANT"
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "dialogueOpen"
+              }
+            ]
+          }
+        ]
+      },
+      "say": [
+        "He had his cake, and never once asked who fetched the flour."
+      ]
+    },
+    {
+      "id": "fun-duke-horacio-after-rune-mysteries",
+      "note": "Callback: same trigger as quest-duke-horacio plus Rune Mysteries done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Rune Mysteries, so it cannot rise on the quest finishing.",
+      "group": "quest",
+      "priority": 37,
+      "cooldownMs": 10800000,
+      "delayTicks": 2,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "npcNearby",
+            "visible": true,
+            "within": 5,
+            "names": [
+              "Duke Horacio"
+            ]
+          },
+          {
+            "type": "questDone",
+            "quest": "RUNE_MYSTERIES"
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "dialogueOpen"
+              }
+            ]
+          }
+        ]
+      },
+      "say": [
+        "If the Duke's found anything else in that cellar, I'm not carrying it."
+      ]
+    },
+    {
+      "id": "fun-king-roald-after-priest-in-peril",
+      "note": "Callback: same trigger as quest-king-roald plus Priest in Peril done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Priest in Peril, so it cannot rise on the quest finishing.",
+      "group": "quest",
+      "priority": 36,
+      "cooldownMs": 10800000,
+      "delayTicks": 2,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "npcNearby",
+            "visible": true,
+            "within": 5,
+            "names": [
+              "King Roald"
+            ]
+          },
+          {
+            "type": "questDone",
+            "quest": "PRIEST_IN_PERIL"
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "dialogueOpen"
+              }
+            ]
+          }
+        ]
+      },
+      "say": [
+        "He's not mentioned the dog since. I've chosen to call that forgiveness.",
+        "The King. I'd keep the conversation well away from dogs."
+      ]
+    },
+    {
+      "id": "fun-alina-noah-after-children-of-the-sun",
+      "note": "Callback: same trigger as quest-alina-noah plus Children of the Sun done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Children of the Sun, so it cannot rise on the quest finishing.",
+      "group": "quest",
+      "priority": 36,
+      "cooldownMs": 10800000,
+      "delayTicks": 2,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "npcNearby",
+            "visible": true,
+            "within": 5,
+            "names": [
+              "Alina",
+              "Noah"
+            ]
+          },
+          {
+            "type": "questDone",
+            "quest": "CHILDREN_OF_THE_SUN"
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "dialogueOpen"
+              }
+            ]
+          }
+        ]
+      },
+      "say": [
+        "Alina's still on about Varlamore. Noah's still not.",
+        "Noah saw that bag before any of us. I nod to him now."
+      ]
+    },
+    {
+      "id": "fun-aubury-after-rune-mysteries",
+      "note": "Callback: same trigger as quest-aubury plus Rune Mysteries done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Rune Mysteries, so it cannot rise on the quest finishing.",
+      "group": "quest",
+      "priority": 36,
+      "cooldownMs": 10800000,
+      "delayTicks": 2,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "npcNearby",
+            "visible": true,
+            "within": 5,
+            "names": [
+              "Aubury"
+            ]
+          },
+          {
+            "type": "questDone",
+            "quest": "RUNE_MYSTERIES"
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "dialogueOpen"
+              }
+            ]
+          }
+        ]
+      },
+      "say": [
+        "Aubury. He still checks our hands for packages when we walk in."
+      ]
+    },
+    {
+      "id": "fun-father-aereck-after-the-restless-ghost",
+      "note": "Callback: same trigger as quest-father-aereck plus The Restless Ghost done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for The Restless Ghost, so it cannot rise on the quest finishing.",
+      "group": "quest",
+      "priority": 36,
+      "cooldownMs": 10800000,
+      "delayTicks": 2,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "npcNearby",
+            "visible": true,
+            "within": 5,
+            "names": [
+              "Father Aereck"
+            ]
+          },
+          {
+            "type": "questDone",
+            "quest": "THE_RESTLESS_GHOST"
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "dialogueOpen"
+              }
+            ]
+          }
+        ]
+      },
+      "say": [
+        "Father Aereck. One fewer ghost in his graveyard, thanks to you.",
+        "The ghost's at rest. Father Aereck could do with some of that himself."
+      ]
+    },
+    {
+      "id": "fun-ned-after-dragon-slayer",
+      "note": "Callback: same trigger as quest-ned plus Dragon Slayer I done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Dragon Slayer I, so it cannot rise on the quest finishing.",
+      "group": "quest",
+      "priority": 36,
+      "cooldownMs": 10800000,
+      "delayTicks": 2,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "npcNearby",
+            "visible": true,
+            "within": 5,
+            "names": [
+              "Ned"
+            ]
+          },
+          {
+            "type": "questDone",
+            "quest": "DRAGON_SLAYER_I"
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "dialogueOpen"
+              }
+            ]
+          }
+        ]
+      },
+      "say": [
+        "Ned did get us to Crandor. I've stopped arguing about the word captain.",
+        "The boat's still in bits on Crandor. Ned's never once brought it up."
+      ]
+    },
+    {
+      "id": "fun-regath-after-client-of-kourend",
+      "note": "Callback: same trigger as quest-regath plus Client of Kourend done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Client of Kourend, so it cannot rise on the quest finishing.",
+      "group": "quest",
+      "priority": 36,
+      "cooldownMs": 10800000,
+      "delayTicks": 2,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "npcNearby",
+            "visible": true,
+            "within": 5,
+            "names": [
+              "Regath"
+            ]
+          },
+          {
+            "type": "questDone",
+            "quest": "CLIENT_OF_KOUREND"
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "dialogueOpen"
+              }
+            ]
+          }
+        ]
+      },
+      "say": [
+        "Regath still thinks you're a journalist. He's yet to read a word you've written."
+      ]
+    },
+    {
+      "id": "fun-leenz-after-client-of-kourend",
+      "note": "Callback: same trigger as quest-leenz plus Client of Kourend done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Client of Kourend, so it cannot rise on the quest finishing.",
+      "group": "quest",
+      "priority": 36,
+      "cooldownMs": 10800000,
+      "delayTicks": 2,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "npcNearby",
+            "visible": true,
+            "within": 5,
+            "names": [
+              "Leenz"
+            ]
+          },
+          {
+            "type": "questDone",
+            "quest": "CLIENT_OF_KOUREND"
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "dialogueOpen"
+              }
+            ]
+          }
+        ]
+      },
+      "say": [
+        "I worked up a verse for Leenz once. It didn't scan, so I kept it."
+      ]
+    },
+    {
+      "id": "fun-gull-rival-first",
+      "once": true,
+      "note": "Running bit, the gull: the opener. Any gull in sight (Seagull and Gull, both checked in the cache). Outranks the stages so it comes first.",
+      "group": "reactions",
+      "priority": 32,
+      "cooldownMs": 600000,
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 6,
+        "names": [
+          "Seagull",
+          "Gull"
+        ]
+      },
+      "say": [
+        "That gull's eyeing my notebook. We're rivals now, and it started it."
+      ],
+      "delayTicks": 2,
+      "output": "overhead"
+    },
+    {
+      "id": "fun-gull-rival-early",
+      "note": "Running bit, the gull: stage for days 1-20 known. No chance roll (npcNearby is state; a roll would re-arm every tick), so the three-hour cooldown is the pacing.",
+      "group": "reactions",
+      "priority": 30,
+      "cooldownMs": 10800000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "daysKnown",
+            "minimum": 1,
+            "maximum": 20
+          },
+          {
+            "type": "npcNearby",
+            "visible": true,
+            "within": 6,
+            "names": [
+              "Seagull",
+              "Gull"
+            ]
+          }
+        ]
+      },
+      "say": [
+        "Watch that gull. It's been reading over my shoulder.",
+        "The gull's back. I'm keeping the notebook shut."
+      ],
+      "delayTicks": 2,
+      "output": "overhead"
+    },
+    {
+      "id": "fun-gull-rival-middle",
+      "note": "Running bit, the gull: stage for days 21-89 known. No chance roll (npcNearby is state; a roll would re-arm every tick), so the three-hour cooldown is the pacing.",
+      "group": "reactions",
+      "priority": 30,
+      "cooldownMs": 10800000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "daysKnown",
+            "minimum": 21,
+            "maximum": 89
+          },
+          {
+            "type": "npcNearby",
+            "visible": true,
+            "within": 6,
+            "names": [
+              "Seagull",
+              "Gull"
+            ]
+          }
+        ]
+      },
+      "say": [
+        "That gull took a page off me once. I've rewritten it, out of spite.",
+        "Same gull as last time, I'd swear to it. It's following us."
+      ],
+      "delayTicks": 2,
+      "output": "overhead"
+    },
+    {
+      "id": "fun-gull-rival-late",
+      "note": "Running bit, the gull: stage for day 90 on known. No chance roll (npcNearby is state; a roll would re-arm every tick), so the three-hour cooldown is the pacing.",
+      "group": "reactions",
+      "priority": 30,
+      "cooldownMs": 10800000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "daysKnown",
+            "minimum": 90
+          },
+          {
+            "type": "npcNearby",
+            "visible": true,
+            "within": 6,
+            "names": [
+              "Seagull",
+              "Gull"
+            ]
+          }
+        ]
+      },
+      "say": [
+        "The gull and I have come to terms. It stays there, I stay here.",
+        "I nodded at that gull, and it nodded back. Don't tell anyone."
+      ],
+      "delayTicks": 2,
+      "output": "overhead"
+    },
+    {
+      "id": "fun-gull-feather",
+      "once": true,
+      "note": "Running bit, the gull: the truce, said once. Day 90 on, pocket empty: it picks up a gull's feather (souvenir, 60 min), which the souvenir-mention lines then carry. One point over the late stage, so the peace offering opens it.",
+      "group": "reactions",
+      "priority": 31,
+      "cooldownMs": 600000,
+      "mood": 3,
+      "pickUp": {
+        "what": "a gull's feather",
+        "minutes": 60
+      },
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "daysKnown",
+            "minimum": 90
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "carrying"
+              }
+            ]
+          },
+          {
+            "type": "npcNearby",
+            "visible": true,
+            "within": 6,
+            "names": [
+              "Seagull",
+              "Gull"
+            ]
+          }
+        ]
+      },
+      "say": [
+        "It dropped a feather. I'm calling that a peace offering."
+      ],
+      "delayTicks": 2,
+      "output": "overhead"
+    },
+    {
+      "id": "fun-gull-killed",
+      "once": true,
+      "note": "Running bit, the gull: the first gull the player kills. Squeamish, and it was never that one anyway. holdStill so the facepalm is seen after the fight.",
+      "group": "reactions",
+      "priority": 60,
+      "cooldownMs": 600000,
+      "animation": 4275,
+      "holdStill": true,
+      "mood": -2,
+      "when": {
+        "type": "npcKill",
+        "names": [
+          "Seagull",
+          "Gull"
+        ]
+      },
+      "say": [
+        "Not that one. That wasn't even the right gull."
+      ],
+      "delayTicks": 2,
+      "output": "overhead"
+    },
+    {
+      "id": "fun-fence-book-start",
+      "once": true,
+      "note": "Running bit, the fence book: the opener, from day 2, while standing still. Outranks the stages.",
+      "group": "idle",
+      "priority": 18,
+      "cooldownMs": 600000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "idle",
+            "ticks": 240
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 600
+          },
+          {
+            "type": "daysKnown",
+            "minimum": 2
+          },
+          {
+            "type": "chance",
+            "percent": 6
+          }
+        ]
+      },
+      "say": [
+        "I've started reading a history of fences. It's better than it sounds."
+      ],
+      "delayTicks": 2,
+      "output": "overhead"
+    },
+    {
+      "id": "fun-fence-book-early",
+      "note": "Running bit, the fence book: days 3-14 known. Idle window like wonders-about-you, rarer, two-hour cooldown.",
+      "group": "idle",
+      "priority": 17,
+      "cooldownMs": 7200000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "idle",
+            "ticks": 240
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 600
+          },
+          {
+            "type": "daysKnown",
+            "minimum": 3,
+            "maximum": 14
+          },
+          {
+            "type": "chance",
+            "percent": 6
+          }
+        ]
+      },
+      "say": [
+        "Chapter two of the fence book. Mostly posts, but the posts are improving.",
+        "The fence book's found its feet. Lots of posts, and a promising stile."
+      ],
+      "delayTicks": 2,
+      "output": "overhead"
+    },
+    {
+      "id": "fun-fence-book-middle",
+      "note": "Running bit, the fence book: days 15-44 known. Idle window like wonders-about-you, rarer, two-hour cooldown.",
+      "group": "idle",
+      "priority": 17,
+      "cooldownMs": 7200000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "idle",
+            "ticks": 240
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 600
+          },
+          {
+            "type": "daysKnown",
+            "minimum": 15,
+            "maximum": 44
+          },
+          {
+            "type": "chance",
+            "percent": 6
+          }
+        ]
+      },
+      "say": [
+        "The fence book's reached gates at last. I read that bit twice.",
+        "Halfway through the fence book. The author has strong views on hedges."
+      ],
+      "delayTicks": 2,
+      "output": "overhead"
+    },
+    {
+      "id": "fun-fence-book-finished",
+      "note": "Running bit, the fence book: days 45-69 known. Idle window like wonders-about-you, rarer, two-hour cooldown.",
+      "group": "idle",
+      "priority": 17,
+      "cooldownMs": 7200000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "idle",
+            "ticks": 240
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 600
+          },
+          {
+            "type": "daysKnown",
+            "minimum": 45,
+            "maximum": 69
+          },
+          {
+            "type": "chance",
+            "percent": 6
+          }
+        ]
+      },
+      "say": [
+        "Finished the fence book. I miss it, which I didn't expect."
+      ],
+      "delayTicks": 2,
+      "output": "overhead"
+    },
+    {
+      "id": "fun-fence-book-reread",
+      "note": "Running bit, the fence book: days 70-99 known. Idle window like wonders-about-you, rarer, two-hour cooldown.",
+      "group": "idle",
+      "priority": 17,
+      "cooldownMs": 7200000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "idle",
+            "ticks": 240
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 600
+          },
+          {
+            "type": "daysKnown",
+            "minimum": 70,
+            "maximum": 99
+          },
+          {
+            "type": "chance",
+            "percent": 6
+          }
+        ]
+      },
+      "say": [
+        "I'm rereading the fence book. It's better the second time, which worries me."
+      ],
+      "delayTicks": 2,
+      "output": "overhead"
+    },
+    {
+      "id": "fun-fence-book-sequel",
+      "note": "Running bit, the fence book: day 100 on known. Idle window like wonders-about-you, rarer, two-hour cooldown.",
+      "group": "idle",
+      "priority": 17,
+      "cooldownMs": 7200000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "idle",
+            "ticks": 240
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 600
+          },
+          {
+            "type": "daysKnown",
+            "minimum": 100
+          },
+          {
+            "type": "chance",
+            "percent": 6
+          }
+        ]
+      },
+      "say": [
+        "There's a second volume of the fence book, all walls. I'm pacing myself.",
+        "Volume two's still all walls. The author's warming to dry stone."
+      ],
+      "delayTicks": 2,
+      "output": "overhead"
+    },
+    {
+      "id": "fun-gerald-first",
+      "once": true,
+      "note": "Running bit, Gerald: the opener, while mining. Builds on idle-long's 'That one's Gerald' without repeating it.",
+      "group": "idle",
+      "priority": 20,
+      "cooldownMs": 600000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "working",
+            "is": "mining"
+          },
+          {
+            "type": "chance",
+            "percent": 3
+          }
+        ]
+      },
+      "say": [
+        "Every mine has a Gerald. In this one, it's that rock."
+      ],
+      "delayTicks": 2,
+      "output": "overhead"
+    },
+    {
+      "id": "fun-gerald-early",
+      "note": "Running bit, Gerald: days 0-29 known, while mining. Two-hour cooldown.",
+      "group": "idle",
+      "priority": 19,
+      "cooldownMs": 7200000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "working",
+            "is": "mining"
+          },
+          {
+            "type": "daysKnown",
+            "minimum": 0,
+            "maximum": 29
+          },
+          {
+            "type": "chance",
+            "percent": 2
+          }
+        ]
+      },
+      "say": [
+        "Go easy on Gerald. He's sensitive about his ore.",
+        "Not Gerald. Any rock but Gerald."
+      ],
+      "delayTicks": 2,
+      "output": "overhead"
+    },
+    {
+      "id": "fun-gerald-later",
+      "note": "Running bit, Gerald: day 30 on known, while mining. Two-hour cooldown.",
+      "group": "idle",
+      "priority": 19,
+      "cooldownMs": 7200000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "working",
+            "is": "mining"
+          },
+          {
+            "type": "daysKnown",
+            "minimum": 30
+          },
+          {
+            "type": "chance",
+            "percent": 2
+          }
+        ]
+      },
+      "say": [
+        "Gerald's looking well. I think the attention suits him.",
+        "I've met a Gerald in every mine now. Big family, rocks."
+      ],
+      "delayTicks": 2,
+      "output": "overhead"
+    },
+    {
+      "id": "fun-gerald-gone",
+      "note": "Running bit, Gerald: the rock the player was mining runs out. One in twenty, two-hour cooldown.",
+      "group": "idle",
+      "priority": 21,
+      "cooldownMs": 7200000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "targetDepleted"
+          },
+          {
+            "type": "working",
+            "is": "mining"
+          },
+          {
+            "type": "chance",
+            "percent": 5
+          }
+        ]
+      },
+      "say": [
+        "That was Gerald. He'll grow back, they always do."
+      ],
+      "delayTicks": 2,
+      "output": "overhead"
+    },
+    {
+      "id": "fun-hans-race-first",
+      "once": true,
+      "note": "Running bit, Hans: the opener. Same trigger as quest-hans, above it and the stages.",
+      "group": "quest",
+      "priority": 38,
+      "cooldownMs": 600000,
+      "when": {
+        "type": "npcNearby",
+        "visible": true,
+        "within": 5,
+        "names": [
+          "Hans"
+        ]
+      },
+      "say": [
+        "I'm racing Hans round the castle. He doesn't know, and I'm losing."
+      ],
+      "delayTicks": 2,
+      "output": "overhead"
+    },
+    {
+      "id": "fun-hans-race-early",
+      "note": "Running bit, Hans: days 0-29 known. Same trigger as quest-hans, one point higher, three-hour cooldown; while it cools down the base's lines play.",
+      "group": "quest",
+      "priority": 36,
+      "cooldownMs": 10800000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "daysKnown",
+            "minimum": 0,
+            "maximum": 29
+          },
+          {
+            "type": "npcNearby",
+            "visible": true,
+            "within": 5,
+            "names": [
+              "Hans"
+            ]
+          }
+        ]
+      },
+      "say": [
+        "Hans is well ahead today. I've been standing still, in fairness.",
+        "Another lap to Hans. I'm saving myself for the last stretch."
+      ],
+      "delayTicks": 2,
+      "output": "overhead"
+    },
+    {
+      "id": "fun-hans-race-middle",
+      "note": "Running bit, Hans: days 30-99 known. Same trigger as quest-hans, one point higher, three-hour cooldown; while it cools down the base's lines play.",
+      "group": "quest",
+      "priority": 36,
+      "cooldownMs": 10800000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "daysKnown",
+            "minimum": 30,
+            "maximum": 99
+          },
+          {
+            "type": "npcNearby",
+            "visible": true,
+            "within": 5,
+            "names": [
+              "Hans"
+            ]
+          }
+        ]
+      },
+      "say": [
+        "Hans gave me a nod. I think he knows about the race now.",
+        "Still behind Hans. The gap's down to a few hundred laps."
+      ],
+      "delayTicks": 2,
+      "output": "overhead"
+    },
+    {
+      "id": "fun-hans-race-late",
+      "note": "Running bit, Hans: day 100 on known. Same trigger as quest-hans, one point higher, three-hour cooldown; while it cools down the base's lines play.",
+      "group": "quest",
+      "priority": 36,
+      "cooldownMs": 10800000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "daysKnown",
+            "minimum": 100
+          },
+          {
+            "type": "npcNearby",
+            "visible": true,
+            "within": 5,
+            "names": [
+              "Hans"
+            ]
+          }
+        ]
+      },
+      "say": [
+        "Hans and I have agreed it's a draw. Neither of us has said so.",
+        "Hans and I passed each other today. We both called it a lap."
+      ],
+      "delayTicks": 2,
+      "output": "overhead"
+    },
+    {
+      "id": "fun-collection-rival-first",
+      "once": true,
+      "note": "Running bit, the collection: the opener, on the first collection log entry it sees.",
+      "group": "misc",
+      "priority": 28,
+      "cooldownMs": 600000,
+      "when": {
+        "type": "collectionAdd"
+      },
+      "say": [
+        "You keep a collection log and I keep a pocket. We'll see who does better."
+      ],
+      "delayTicks": 2,
+      "output": "overhead"
+    },
+    {
+      "id": "fun-collection-rival-early",
+      "note": "Running bit, the collection: the follower's own 'collections' tally at 1-24. Event chance, so rolled once per entry; above collection-add.",
+      "group": "misc",
+      "priority": 27,
+      "cooldownMs": 7200000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "collectionAdd"
+          },
+          {
+            "type": "tally",
+            "of": "collections",
+            "minimum": 1,
+            "maximum": 24
+          },
+          {
+            "type": "chance",
+            "percent": 40
+          }
+        ]
+      },
+      "say": [
+        "One more for your log. My pocket's mostly pebbles, but good ones.",
+        "Another for the log. I found a very round pebble, so we're level."
+      ],
+      "delayTicks": 2,
+      "output": "overhead"
+    },
+    {
+      "id": "fun-collection-rival-middle",
+      "note": "Running bit, the collection: the follower's own 'collections' tally at 25-99. Event chance, so rolled once per entry; above collection-add.",
+      "group": "misc",
+      "priority": 27,
+      "cooldownMs": 7200000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "collectionAdd"
+          },
+          {
+            "type": "tally",
+            "of": "collections",
+            "minimum": 25,
+            "maximum": 99
+          },
+          {
+            "type": "chance",
+            "percent": 40
+          }
+        ]
+      },
+      "say": [
+        "Your collection's pulling ahead. I've taken up buttons to catch up.",
+        "Your log's grown again. My buttons are holding their own, just."
+      ],
+      "delayTicks": 2,
+      "output": "overhead"
+    },
+    {
+      "id": "fun-collection-rival-late",
+      "note": "Running bit, the collection: the follower's own 'collections' tally at 100 on. Event chance, so rolled once per entry; above collection-add.",
+      "group": "misc",
+      "priority": 27,
+      "cooldownMs": 7200000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "collectionAdd"
+          },
+          {
+            "type": "tally",
+            "of": "collections",
+            "minimum": 100
+          },
+          {
+            "type": "chance",
+            "percent": 40
+          }
+        ]
+      },
+      "say": [
+        "Your log's well ahead, so I've retired. The pebbles took it badly.",
+        "Another entry. I've stopped competing and started admiring."
+      ],
+      "delayTicks": 2,
+      "output": "overhead"
     }
   ]
 }

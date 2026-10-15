@@ -1,25 +1,25 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 517 rules, 2409 spoken lines, 3 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 560 rules, 2479 spoken lines, 3 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
 ## Contents
 
-- [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (48 rules, 216 lines)
-- [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (36 rules, 222 lines)
-- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (42 rules, 283 lines)
+- [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (52 rules, 223 lines)
+- [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (46 rules, 237 lines)
+- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (48 rules, 292 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 115 lines)
 - [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 74 lines)
 - [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (28 rules, 121 lines)
-- [area](#area) - Places: named lines, tastes, earned verdicts, the defences (66 rules, 223 lines)
+- [area](#area) - Places: named lines, tastes, earned verdicts, the defences (76 rules, 242 lines)
 - [errand](#errand) - Its little trips: bank, altar, fire, cat, studies, explores (44 rules, 155 lines)
 - [souvenir](#souvenir) - Wishes, gifts, the pocket, and what it carries (17 rules, 84 lines)
 - [bet](#bet) - Its predictions about drops (3 rules, 20 lines)
 - [clock](#clock) - The hour and how long we have been at it (9 rules, 39 lines)
 - [gear](#gear) - What you put on (63 rules, 147 lines)
 - [boss](#boss) - Bosses sighted and fought (55 rules, 521 lines)
-- [quest](#quest) - Famous quest figures nearby (53 rules, 155 lines)
+- [quest](#quest) - Famous quest figures nearby (66 rules, 175 lines)
 - [thrall](#thrall) - When it stands in for a thrall (3 rules, 18 lines)
 - [mimic](#mimic) - Copying your emotes (30 rules, 16 lines)
 - [dialogs](#dialogs) - the conversations it starts (3 trees)
@@ -647,6 +647,46 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Sea Shanty 2. The sailors request it nightly. The sailors are the problem.
 - This tune again. I've transcribed it. It doesn't help.
 
+### `fun-collection-rival-first`
+
+> Running bit, the collection: the opener, on the first collection log entry it sees.
+
+- **when:** collectionadd
+- **does:** once ever
+- **pacing:** priority 28, cooldown 10m, delay 2 ticks, overhead
+
+- You keep a collection log and I keep a pocket. We'll see who does better.
+
+### `fun-collection-rival-early`
+
+> Running bit, the collection: the follower's own 'collections' tally at 1-24. Event chance, so rolled once per entry; above collection-add.
+
+- **when:** collectionadd AND collections count at 1+ AND a 40% roll
+- **pacing:** priority 27, cooldown 2h, delay 2 ticks, overhead
+
+- One more for your log. My pocket's mostly pebbles, but good ones.
+- Another for the log. I found a very round pebble, so we're level.
+
+### `fun-collection-rival-middle`
+
+> Running bit, the collection: the follower's own 'collections' tally at 25-99. Event chance, so rolled once per entry; above collection-add.
+
+- **when:** collectionadd AND collections count at 25+ AND a 40% roll
+- **pacing:** priority 27, cooldown 2h, delay 2 ticks, overhead
+
+- Your collection's pulling ahead. I've taken up buttons to catch up.
+- Your log's grown again. My buttons are holding their own, just.
+
+### `fun-collection-rival-late`
+
+> Running bit, the collection: the follower's own 'collections' tally at 100 on. Event chance, so rolled once per entry; above collection-add.
+
+- **when:** collectionadd AND collections count at 100+ AND a 40% roll
+- **pacing:** priority 27, cooldown 2h, delay 2 ticks, overhead
+
+- Your log's well ahead, so I've retired. The pebbles took it badly.
+- Another entry. I've stopped competing and started admiring.
+
 ## idle
 
 *Standing still: chatter, wondering, offers, the trail-off's subjects.*
@@ -1190,6 +1230,103 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Back with us. You had the look of somebody listening at a door.
 - There you are. I came round to check, and you hadn't moved an inch.
 - Welcome back. You passed your welfare check, barely.
+
+### `fun-fence-book-start`
+
+> Running bit, the fence book: the opener, from day 2, while standing still. Outranks the stages.
+
+- **when:** standing still 240+ ticks AND standing still under 600 ticks AND known 2+ days AND a 6% roll
+- **does:** once ever
+- **pacing:** priority 18, cooldown 10m, delay 2 ticks, overhead
+
+- I've started reading a history of fences. It's better than it sounds.
+
+### `fun-fence-book-early`
+
+> Running bit, the fence book: days 3-14 known. Idle window like wonders-about-you, rarer, two-hour cooldown.
+
+- **when:** standing still 240+ ticks AND standing still under 600 ticks AND known 3-14 days AND a 6% roll
+- **pacing:** priority 17, cooldown 2h, delay 2 ticks, overhead
+
+- Chapter two of the fence book. Mostly posts, but the posts are improving.
+- The fence book's found its feet. Lots of posts, and a promising stile.
+
+### `fun-fence-book-middle`
+
+> Running bit, the fence book: days 15-44 known. Idle window like wonders-about-you, rarer, two-hour cooldown.
+
+- **when:** standing still 240+ ticks AND standing still under 600 ticks AND known 15-44 days AND a 6% roll
+- **pacing:** priority 17, cooldown 2h, delay 2 ticks, overhead
+
+- The fence book's reached gates at last. I read that bit twice.
+- Halfway through the fence book. The author has strong views on hedges.
+
+### `fun-fence-book-finished`
+
+> Running bit, the fence book: days 45-69 known. Idle window like wonders-about-you, rarer, two-hour cooldown.
+
+- **when:** standing still 240+ ticks AND standing still under 600 ticks AND known 45-69 days AND a 6% roll
+- **pacing:** priority 17, cooldown 2h, delay 2 ticks, overhead
+
+- Finished the fence book. I miss it, which I didn't expect.
+
+### `fun-fence-book-reread`
+
+> Running bit, the fence book: days 70-99 known. Idle window like wonders-about-you, rarer, two-hour cooldown.
+
+- **when:** standing still 240+ ticks AND standing still under 600 ticks AND known 70-99 days AND a 6% roll
+- **pacing:** priority 17, cooldown 2h, delay 2 ticks, overhead
+
+- I'm rereading the fence book. It's better the second time, which worries me.
+
+### `fun-fence-book-sequel`
+
+> Running bit, the fence book: day 100 on known. Idle window like wonders-about-you, rarer, two-hour cooldown.
+
+- **when:** standing still 240+ ticks AND standing still under 600 ticks AND known 100+ days AND a 6% roll
+- **pacing:** priority 17, cooldown 2h, delay 2 ticks, overhead
+
+- There's a second volume of the fence book, all walls. I'm pacing myself.
+- Volume two's still all walls. The author's warming to dry stone.
+
+### `fun-gerald-first`
+
+> Running bit, Gerald: the opener, while mining. Builds on idle-long's 'That one's Gerald' without repeating it.
+
+- **when:** working AND a 3% roll
+- **does:** once ever
+- **pacing:** priority 20, cooldown 10m, delay 2 ticks, overhead
+
+- Every mine has a Gerald. In this one, it's that rock.
+
+### `fun-gerald-early`
+
+> Running bit, Gerald: days 0-29 known, while mining. Two-hour cooldown.
+
+- **when:** working AND known 0-29 days AND a 2% roll
+- **pacing:** priority 19, cooldown 2h, delay 2 ticks, overhead
+
+- Go easy on Gerald. He's sensitive about his ore.
+- Not Gerald. Any rock but Gerald.
+
+### `fun-gerald-later`
+
+> Running bit, Gerald: day 30 on known, while mining. Two-hour cooldown.
+
+- **when:** working AND known 30+ days AND a 2% roll
+- **pacing:** priority 19, cooldown 2h, delay 2 ticks, overhead
+
+- Gerald's looking well. I think the attention suits him.
+- I've met a Gerald in every mine now. Big family, rocks.
+
+### `fun-gerald-gone`
+
+> Running bit, Gerald: the rock the player was mining runs out. One in twenty, two-hour cooldown.
+
+- **when:** targetdepleted AND working AND a 5% roll
+- **pacing:** priority 21, cooldown 2h, delay 2 ticks, overhead
+
+- That was Gerald. He'll grow back, they always do.
 
 ## reactions
 
@@ -1843,6 +1980,66 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - I have the minutes, if it ever comes to a dispute.
 - I've minuted every word of that. Some of the pauses, too.
 - That's in the record now. They seemed nice.
+
+### `fun-gull-rival-first`
+
+> Running bit, the gull: the opener. Any gull in sight (Seagull and Gull, both checked in the cache). Outranks the stages so it comes first.
+
+- **when:** Seagull, Gull within 6 tiles, in sight
+- **does:** once ever
+- **pacing:** priority 32, cooldown 10m, delay 2 ticks, overhead
+
+- That gull's eyeing my notebook. We're rivals now, and it started it.
+
+### `fun-gull-rival-early`
+
+> Running bit, the gull: stage for days 1-20 known. No chance roll (npcNearby is state; a roll would re-arm every tick), so the three-hour cooldown is the pacing.
+
+- **when:** known 1-20 days AND Seagull, Gull within 6 tiles, in sight
+- **pacing:** priority 30, cooldown 3h, delay 2 ticks, overhead
+
+- Watch that gull. It's been reading over my shoulder.
+- The gull's back. I'm keeping the notebook shut.
+
+### `fun-gull-rival-middle`
+
+> Running bit, the gull: stage for days 21-89 known. No chance roll (npcNearby is state; a roll would re-arm every tick), so the three-hour cooldown is the pacing.
+
+- **when:** known 21-89 days AND Seagull, Gull within 6 tiles, in sight
+- **pacing:** priority 30, cooldown 3h, delay 2 ticks, overhead
+
+- That gull took a page off me once. I've rewritten it, out of spite.
+- Same gull as last time, I'd swear to it. It's following us.
+
+### `fun-gull-rival-late`
+
+> Running bit, the gull: stage for day 90 on known. No chance roll (npcNearby is state; a roll would re-arm every tick), so the three-hour cooldown is the pacing.
+
+- **when:** known 90+ days AND Seagull, Gull within 6 tiles, in sight
+- **pacing:** priority 30, cooldown 3h, delay 2 ticks, overhead
+
+- The gull and I have come to terms. It stays there, I stay here.
+- I nodded at that gull, and it nodded back. Don't tell anyone.
+
+### `fun-gull-feather`
+
+> Running bit, the gull: the truce, said once. Day 90 on, pocket empty: it picks up a gull's feather (souvenir, 60 min), which the souvenir-mention lines then carry. One point over the late stage, so the peace offering opens it.
+
+- **when:** known 90+ days AND NOT (carrying a souvenir) AND Seagull, Gull within 6 tiles, in sight
+- **does:** mood +3; once ever; picks up 'a gull's feather' (60 min)
+- **pacing:** priority 31, cooldown 10m, delay 2 ticks, overhead
+
+- It dropped a feather. I'm calling that a peace offering.
+
+### `fun-gull-killed`
+
+> Running bit, the gull: the first gull the player kills. Squeamish, and it was never that one anyway. holdStill so the facepalm is seen after the fight.
+
+- **when:** a kill
+- **does:** mood -2; once ever; animation 4275; holds still
+- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+
+- Not that one. That wasn't even the right gull.
 
 ## combat
 
@@ -3335,6 +3532,105 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - You may not remember. This is where {here}.
 - I've got this spot marked. It's where {here}.
 - Here. Right here. This is where {here}.
+
+### `fun-lumbridge-after-cooks-assistant`
+
+> Callback: stands in for area-lumbridge on about 35% of arrivals once Cook's Assistant is done, at most every 30 minutes; the base's lines play the rest of the time.
+
+- **when:** entering region 12850 AND a 35% roll AND questdone
+- **pacing:** priority 41, cooldown 30m, delay 2 ticks, overhead
+
+- The cook's still telling people about that cake.
+- The Duke got his cake. I'm still waiting on my party invitation.
+
+### `fun-lumbridge-after-sheep-shearer`
+
+> Callback: stands in for area-lumbridge on about 30% of arrivals once Sheep Shearer is done, at most every 30 minutes; the base's lines play the rest of the time.
+
+- **when:** entering region 12850 AND a 30% roll AND questdone
+- **pacing:** priority 42, cooldown 30m, delay 2 ticks, overhead
+
+- I still can't pass a spinning wheel without counting to twenty.
+- The sheep round here give us a look now. Word's got about.
+
+### `fun-paterdomus-after-priest-in-peril`
+
+> New place line with no base rule: only exists once Priest in Peril is done. About 50% of arrivals, at most every 30 minutes.
+
+- **when:** entering region 13622 AND a 50% roll AND questdone
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
+
+- Paterdomus. I say a quiet word for the dog every time we cross.
+- The temple again. I give the coffins outside a very wide berth.
+
+### `fun-baxtorian-falls-after-waterfall-quest`
+
+> New place line with no base rule: only exists once Waterfall Quest is done. About 50% of arrivals, at most every 30 minutes.
+
+- **when:** entering region 10038 AND a 50% roll AND questdone
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
+
+- The falls sound different now I know what's behind them.
+- Hudon's still out on that rock, I expect. His mother has my sympathy.
+
+### `fun-varrock-after-children-of-the-sun`
+
+> Callback: stands in for area-varrock on about 25% of arrivals once Children of the Sun is done, at most every 40 minutes; the base's lines play the rest of the time.
+
+- **when:** entering region 12597, 12853, 12854 AND a 25% roll AND questdone
+- **pacing:** priority 41, cooldown 40m, delay 2 ticks, overhead
+
+- Varrock. I still give every guard's uniform a second look.
+- Any guard here carrying a large bag gets watched. I learned that much.
+
+### `fun-taverley-after-witchs-house`
+
+> Callback: stands in for area-taverley on about 35% of arrivals once Witch's House is done, at most every 30 minutes; the base's lines play the rest of the time.
+
+- **when:** entering region 11573 AND a 35% roll AND questdone
+- **pacing:** priority 41, cooldown 30m, delay 2 ticks, overhead
+
+- Taverley. I keep to the far side of the witch's hedge.
+- If that boy's ball goes over again, he can knock on her door himself.
+
+### `fun-draynor-after-x-marks-the-spot`
+
+> Callback: stands in for area-draynor on about 35% of arrivals once X Marks the Spot is done, at most every 30 minutes; the base's lines play the rest of the time.
+
+- **when:** entering region 12338 AND a 35% roll AND questdone
+- **pacing:** priority 41, cooldown 30m, delay 2 ticks, overhead
+
+- Every pig pen I pass, I listen. Draynor's has kept quiet since.
+- Two of Veos' holes were round here, and I still don't know what he got.
+
+### `fun-crandor-after-dragon-slayer`
+
+> Callback: stands in for area-crandor on about 60% of arrivals once Dragon Slayer I is done, at most every 30 minutes; the base's lines play the rest of the time.
+
+- **when:** entering region 11314 AND a 60% roll AND questdone
+- **pacing:** priority 41, cooldown 30m, delay 2 ticks, overhead
+
+- Crandor, with no dragon on it. The island looks almost relieved.
+- Elvarg's island. I still check the sky, out of respect.
+
+### `fun-wizards-tower-after-rune-mysteries`
+
+> New place line with no base rule: only exists once Rune Mysteries is done. About 50% of arrivals, at most every 30 minutes.
+
+- **when:** entering region 12337 AND a 50% roll AND questdone
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
+
+- Somebody in the Wizards' Tower knows your name. I keep mine quiet here.
+- Sedridor's basement is under us. I'm still working out how he knew you.
+
+### `fun-piscarilius-after-client-of-kourend`
+
+> Callback: stands in for area-piscarilius on about 35% of arrivals once Client of Kourend is done, at most every 30 minutes; the base's lines play the rest of the time.
+
+- **when:** entering region 7226 AND a 35% roll AND questdone
+- **pacing:** priority 41, cooldown 30m, delay 2 ticks, overhead
+
+- Don't ask Veos about the client. He doesn't remember any of it, and I do.
 
 ## errand
 
@@ -6441,6 +6737,131 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 86, cooldown 1m, delay 5 ticks
 
 - Ten quests since we met. The index has its own page now.
+
+### `fun-duke-horacio-after-cooks-assistant`
+
+> Callback: same trigger as quest-duke-horacio plus Cook's Assistant done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Cook's Assistant, so it cannot rise on the quest finishing.
+
+- **when:** Duke Horacio within 5 tiles, in sight AND questdone AND NOT (dialogueopen)
+- **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
+
+- He had his cake, and never once asked who fetched the flour.
+
+### `fun-duke-horacio-after-rune-mysteries`
+
+> Callback: same trigger as quest-duke-horacio plus Rune Mysteries done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Rune Mysteries, so it cannot rise on the quest finishing.
+
+- **when:** Duke Horacio within 5 tiles, in sight AND questdone AND NOT (dialogueopen)
+- **pacing:** priority 37, cooldown 3h, delay 2 ticks, overhead
+
+- If the Duke's found anything else in that cellar, I'm not carrying it.
+
+### `fun-king-roald-after-priest-in-peril`
+
+> Callback: same trigger as quest-king-roald plus Priest in Peril done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Priest in Peril, so it cannot rise on the quest finishing.
+
+- **when:** King Roald within 5 tiles, in sight AND questdone AND NOT (dialogueopen)
+- **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
+
+- He's not mentioned the dog since. I've chosen to call that forgiveness.
+- The King. I'd keep the conversation well away from dogs.
+
+### `fun-alina-noah-after-children-of-the-sun`
+
+> Callback: same trigger as quest-alina-noah plus Children of the Sun done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Children of the Sun, so it cannot rise on the quest finishing.
+
+- **when:** Alina, Noah within 5 tiles, in sight AND questdone AND NOT (dialogueopen)
+- **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
+
+- Alina's still on about Varlamore. Noah's still not.
+- Noah saw that bag before any of us. I nod to him now.
+
+### `fun-aubury-after-rune-mysteries`
+
+> Callback: same trigger as quest-aubury plus Rune Mysteries done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Rune Mysteries, so it cannot rise on the quest finishing.
+
+- **when:** Aubury within 5 tiles, in sight AND questdone AND NOT (dialogueopen)
+- **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
+
+- Aubury. He still checks our hands for packages when we walk in.
+
+### `fun-father-aereck-after-the-restless-ghost`
+
+> Callback: same trigger as quest-father-aereck plus The Restless Ghost done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for The Restless Ghost, so it cannot rise on the quest finishing.
+
+- **when:** Father Aereck within 5 tiles, in sight AND questdone AND NOT (dialogueopen)
+- **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
+
+- Father Aereck. One fewer ghost in his graveyard, thanks to you.
+- The ghost's at rest. Father Aereck could do with some of that himself.
+
+### `fun-ned-after-dragon-slayer`
+
+> Callback: same trigger as quest-ned plus Dragon Slayer I done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Dragon Slayer I, so it cannot rise on the quest finishing.
+
+- **when:** Ned within 5 tiles, in sight AND questdone AND NOT (dialogueopen)
+- **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
+
+- Ned did get us to Crandor. I've stopped arguing about the word captain.
+- The boat's still in bits on Crandor. Ned's never once brought it up.
+
+### `fun-regath-after-client-of-kourend`
+
+> Callback: same trigger as quest-regath plus Client of Kourend done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Client of Kourend, so it cannot rise on the quest finishing.
+
+- **when:** Regath within 5 tiles, in sight AND questdone AND NOT (dialogueopen)
+- **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
+
+- Regath still thinks you're a journalist. He's yet to read a word you've written.
+
+### `fun-leenz-after-client-of-kourend`
+
+> Callback: same trigger as quest-leenz plus Client of Kourend done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Client of Kourend, so it cannot rise on the quest finishing.
+
+- **when:** Leenz within 5 tiles, in sight AND questdone AND NOT (dialogueopen)
+- **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
+
+- I worked up a verse for Leenz once. It didn't scan, so I kept it.
+
+### `fun-hans-race-first`
+
+> Running bit, Hans: the opener. Same trigger as quest-hans, above it and the stages.
+
+- **when:** Hans within 5 tiles, in sight
+- **does:** once ever
+- **pacing:** priority 38, cooldown 10m, delay 2 ticks, overhead
+
+- I'm racing Hans round the castle. He doesn't know, and I'm losing.
+
+### `fun-hans-race-early`
+
+> Running bit, Hans: days 0-29 known. Same trigger as quest-hans, one point higher, three-hour cooldown; while it cools down the base's lines play.
+
+- **when:** known 0-29 days AND Hans within 5 tiles, in sight
+- **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
+
+- Hans is well ahead today. I've been standing still, in fairness.
+- Another lap to Hans. I'm saving myself for the last stretch.
+
+### `fun-hans-race-middle`
+
+> Running bit, Hans: days 30-99 known. Same trigger as quest-hans, one point higher, three-hour cooldown; while it cools down the base's lines play.
+
+- **when:** known 30-99 days AND Hans within 5 tiles, in sight
+- **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
+
+- Hans gave me a nod. I think he knows about the race now.
+- Still behind Hans. The gap's down to a few hundred laps.
+
+### `fun-hans-race-late`
+
+> Running bit, Hans: day 100 on known. Same trigger as quest-hans, one point higher, three-hour cooldown; while it cools down the base's lines play.
+
+- **when:** known 100+ days AND Hans within 5 tiles, in sight
+- **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
+
+- Hans and I have agreed it's a draw. Neither of us has said so.
+- Hans and I passed each other today. We both called it a lap.
 
 ## thrall
 
