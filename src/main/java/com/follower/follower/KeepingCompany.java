@@ -1254,8 +1254,8 @@ class KeepingCompany
 		}
 		if (scrollOut)
 		{
-			// Something else let go of the pose over it - a stranger's peer,
-			// a held emote copied and done - and left the scroll in the hand:
+			// Something else let go of the pose over it - a held emote
+			// copied and done - and left the scroll in the hand:
 			// back to reading it, rather than holding it at the side.
 			if (follower.getPoseOverride() == 0)
 			{

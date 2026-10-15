@@ -324,5 +324,8 @@ public class WritingPoseTest
 		assertEquals(WRITE, FollowerEntity.clipOf(WRITE));
 		assertEquals(0, FollowerEntity.firstFrameOf(WRITE));
 		assertEquals(FollowerEntity.SIT_EMOTE, FollowerEntity.clipOf(FollowerEntity.STAND_UP));
+		// The held prayer kneel is 645's frame 8 exactly; 9-11 rise from it.
+		assertEquals(645, FollowerEntity.clipOf(FollowerEntity.PRAY_STAND_UP));
+		assertEquals(8, FollowerEntity.firstFrameOf(FollowerEntity.PRAY_STAND_UP));
 	}
 }

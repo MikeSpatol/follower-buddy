@@ -312,7 +312,8 @@ public class ErrandSimulationTest
 		assertEquals("still at prayer", 179, follower.poseOverride);
 		tick(1);
 		assertEquals("up off the knees before the walk home", 0, follower.poseOverride);
-		assertEquals("HUMAN_GETUP", java.util.Collections.singletonList(534), follower.animations);
+		assertEquals("the rise from the kneel", java.util.Collections.singletonList(FollowerEntity.PRAY_STAND_UP),
+			follower.animations);
 		tick(1);
 		assertFalse(errands.isBusy());
 		assertTrue(follower.following);

@@ -4457,18 +4457,32 @@ public class FollowerEntity
 	/** Where 13302's lowering begins. */
 	static final int WRITE_PUT_AWAY_FRAME = 17;
 
-	/** The clip an id plays: the two halves are their emotes, anything else itself. */
+	/** The one-shot prayer kneel, whose last frames are the rise from it. */
+	static final int PRAY = 645;
+
+	/**
+	 * Up off the knees from the held prayer, HUMAN_PRAY_LOOP: the one-shot
+	 * kneel, 645, from frame 8, which is the loop's kneel exactly, through
+	 * its rise. HUMAN_GETUP starts 97-103 units from that kneel, a getting
+	 * up from the floor rather than from the knees (cache, 15 Oct).
+	 */
+	public static final int PRAY_STAND_UP = 0x10000 + PRAY;
+	static final int PRAY_STAND_UP_FRAME = 8;
+
+	/** The clip an id plays: the halves are their emotes, anything else itself. */
 	static int clipOf(int id)
 	{
 		return id == STAND_UP ? SIT_EMOTE
-			: id == WRITE_PUT_AWAY ? ErrandController.WRITE_SCROLL_POSE : id;
+			: id == WRITE_PUT_AWAY ? ErrandController.WRITE_SCROLL_POSE
+			: id == PRAY_STAND_UP ? PRAY : id;
 	}
 
 	/** The frame an id's clip starts on. */
 	static int firstFrameOf(int id)
 	{
 		return id == STAND_UP ? SIT_EMOTE_STAND_UP_FRAME
-			: id == WRITE_PUT_AWAY ? WRITE_PUT_AWAY_FRAME : 0;
+			: id == WRITE_PUT_AWAY ? WRITE_PUT_AWAY_FRAME
+			: id == PRAY_STAND_UP ? PRAY_STAND_UP_FRAME : 0;
 	}
 
 	/**

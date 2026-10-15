@@ -218,12 +218,13 @@ public class ErrandController
 
 	/**
 	 * Praying at an altar: HUMAN_PRAY_LOOP held as a pose, which kneels and
-	 * stays kneeling (frame step 5), then HUMAN_GETUP to stand. The one-shot
-	 * kneel, 645, is 3.9 ticks and ends almost upright, so the follower knelt
-	 * once and stood idle at the altar for the rest of the visit (QA, 15 Oct).
+	 * stays kneeling (frame step 5), then the rise from the one-shot kneel to
+	 * stand. That one-shot, 645, played alone is 3.9 ticks and ends almost
+	 * upright, so the follower knelt once and stood idle at the altar for the
+	 * rest of the visit (QA, 15 Oct).
 	 */
 	private static final int PRAY_LOOP = 179;
-	private static final int GET_UP = 534;
+	private static final int GET_UP = FollowerEntity.PRAY_STAND_UP;
 
 	/** Bending down: petting the cat, seeing to the bootlace. */
 	private static final int BEND_ANIMATION = 827;
