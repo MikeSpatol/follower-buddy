@@ -7124,7 +7124,7 @@ public class FollowerPlugin extends Plugin
 		script.put("do-thrall-q", you("What about my thralls?").then("do-thrall-a"));
 		script.put("do-thrall-a", says(
 			"Raise one of those Arceuus things and I'll take its place.",
-			"Same walking, same swinging, considerably better dressed.")
+			"Same walking, same swinging, far better dressed.")
 			.then("do-thrall-b"));
 		script.put("do-thrall-b", says(
 			"Three sorts, mind. Zombie, skeleton, ghost - melee, ranged and magic.")
@@ -7225,8 +7225,8 @@ public class FollowerPlugin extends Plugin
 
 		script.put("chat-outfit-q", you("What do you think of my outfit?").then("chat-outfit-a"));
 		script.put("chat-outfit-a", says(
-			"Anyone who dresses their follower this well clearly has taste.",
-			"The rest of your wardrobe I couldn't possibly comment on.")
+			"Anyone who dresses their follower this well has taste.",
+			"The rest of your wardrobe I couldn't comment on.")
 			.then("chat-menu"));
 
 		// Every visit re-rolls from the pool (never the same joke twice in a
@@ -7260,7 +7260,7 @@ public class FollowerPlugin extends Plugin
 			"Don't take the detour for the cabbage. It is never worth it.")
 			.then("advice-b"));
 		script.put("advice-b", says(
-			"If a stranger offers to trim your armour, he is not a barber.")
+			"A stranger offering to trim your armour is no barber.")
 			.then("advice-c"));
 		script.put("advice-c", says(
 			"And bank before you think you need to. A gravestone is not storage.")

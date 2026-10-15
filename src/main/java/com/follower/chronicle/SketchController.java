@@ -142,7 +142,7 @@ public class SketchController
 	}
 
 	/** Once a session where a plate is empty; the mute holds it back, as any line of its own. */
-	static final String INVITE = "This place wants a sketch in the book. Right-click me and pick Sketch when ready.";
+	static final String INVITE = "This place wants a sketch. Right-click me and pick Sketch.";
 
 	/** The count, over its head whatever the mute: it was asked for. */
 	static final String START = "Pose for me. Any emote will do.";

@@ -10,7 +10,7 @@
           "id": "start",
           "says": [
             "Oh good, you came over.",
-            "I wanted to ask you something, and I'd rather ask it properly."
+            "There's something I wanted to ask you. Properly."
           ],
           "next": "ask"
         },
@@ -242,7 +242,7 @@
         {
           "id": "no-a",
           "says": [
-            "Understood. That one's gone, and I won't bring it up again."
+            "Understood. That one's gone, and I won't bring it up."
           ],
           "answer": "no"
         },
