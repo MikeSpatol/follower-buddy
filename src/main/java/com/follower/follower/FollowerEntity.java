@@ -1856,6 +1856,8 @@ public class FollowerEntity implements CrossingWatch.Listener
 	private boolean hurrying;
 	private AnimationController crossingController;
 	private int crossingAnimation = -1;
+	/** The recorded frame of the clip last shown, to tell it begun again. */
+	private int crossingActionFrame = -1;
 
 	/** The walk to where the next crossing begins: aimed at, planned to, and how long stuck. */
 	private WorldPoint approachTarget;
@@ -2443,8 +2445,12 @@ public class FollowerEntity implements CrossingWatch.Listener
 		int normalIndex = action ? -1 : crossing.normalIndex(frame.pose);
 		int wanted = action ? frame.action : normalIndex >= 0 ? ownPose(normalIndex) : frame.pose;
 		int startFrame = action ? frame.actionFrame : normalIndex >= 0 ? 0 : frame.poseFrame;
+		// The same clip begun again (its frame gone back, with nothing
+		// between): a second jump, not the first one held.
+		boolean again = action && frame.actionFrame < crossingActionFrame;
+		crossingActionFrame = action ? frame.actionFrame : -1;
 		if (wanted == crossingAnimation && crossingController != null
-			&& object.getAnimationController() == crossingController)
+			&& object.getAnimationController() == crossingController && !again)
 		{
 			return;
 		}

@@ -407,6 +407,42 @@ public class CrossingReplayTest
 		assertEquals("a rebuild for each", 2, rebuilds[0]);
 	}
 
+	/**
+	 * Two jumps of the same clip back to back, its frame going back to the
+	 * start for the second with nothing between: both are played, not the
+	 * first held on its last frame through the second hop (QA4 #26).
+	 */
+	@Test
+	public void theSameClipTwiceInARowIsPlayedTwice() throws ReflectiveOperationException
+	{
+		List<Crossing.Frame> frames = new ArrayList<>();
+		long t = 0;
+		for (int jump = 0; jump < 2; jump++)
+		{
+			for (int i = 0; i < 40; i++)
+			{
+				long x = (51 + jump) * 128L + 64 + i * 128 / 40;
+				frames.add(new Crossing.Frame(t, x, 50 * 128 + 64, 0, 1536, 808, 0, JUMP, Math.min(7, i / 5)));
+				t += 20;
+			}
+		}
+		follower.queueCrossing(new Crossing(frames, NORMAL, false));
+		untilPlaying();
+		int clips = 0;
+		Object last = null;
+		while (follower.isPlayingCrossing())
+		{
+			frame();
+			Object clip = get("crossingController");
+			if (clip != null && clip != last)
+			{
+				clips++;
+				last = clip;
+			}
+		}
+		assertEquals("one for each jump", 2, clips);
+	}
+
 	// ------------------------------------------------------- rebuilt from XP
 
 	/**
