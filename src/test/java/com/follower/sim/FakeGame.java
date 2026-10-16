@@ -553,7 +553,18 @@ public final class FakeGame
 			new WorldPoint(here.getX() + dx, here.getY() + dy, here.getPlane()));
 		Player other = proxy(Player.class, answers);
 		others.add(other);
+		otherAnswers.put(other, answers);
 		return other;
+	}
+
+	private final Map<Player, Map<String, Object>> otherAnswers = new HashMap<>();
+
+	/** Another player on the move: a walk pose showing over their idle one. */
+	public FakeGame otherWalking(Player other)
+	{
+		otherAnswers.get(other).put("getIdlePoseAnimation", 808);
+		otherAnswers.get(other).put("getPoseAnimation", 819);
+		return this;
 	}
 
 	public FakeGame clearPlayers()

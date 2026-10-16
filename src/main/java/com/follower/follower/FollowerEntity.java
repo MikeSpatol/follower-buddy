@@ -3782,7 +3782,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		return goalTile != null || stayTile != null;
 	}
 
-	/** True while the follower is hidden because an NPC shares its tile. */
+	/** True while the follower is hidden because an NPC or another player shares its tile. */
 	private boolean hiddenForNpcOverlap;
 
 	/**
@@ -3896,6 +3896,34 @@ public class FollowerEntity implements CrossingWatch.Listener
 				npcHeights.put(npc.getId(), height);
 			}
 			if (own <= 0 || height >= own * OVERLAP_HEIGHT_FRACTION)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Another player standing still on the follower's tile. Play test, 16 Oct:
+	 * two player-sized models on one tile overlap as badly as an NPC's does,
+	 * so the follower gives way the same way. Not the local player, whom the
+	 * follower keeps off by itself, and only once they have stopped there.
+	 */
+	private boolean playerOnTile(WorldPoint where)
+	{
+		net.runelite.api.WorldView view = client.getTopLevelWorldView();
+		if (where == null || view == null)
+		{
+			return false;
+		}
+		Player local = client.getLocalPlayer();
+		for (Player other : view.players())
+		{
+			if (other == null || other == local || !where.equals(other.getWorldLocation()))
+			{
+				continue;
+			}
+			if (other.getPoseAnimation() == other.getIdlePoseAnimation())
 			{
 				return true;
 			}
@@ -4328,7 +4356,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		// Only once STOPPED on the shared tile: walking through an NPC is a
 		// moment, and blinking out mid-stride draws more attention than the
 		// overlap it hides.
-		hiddenForNpcOverlap = isSettled() && npcOnTile(tile);
+		hiddenForNpcOverlap = isSettled() && (npcOnTile(tile) || playerOnTile(tile));
 		if (hiddenForNpcOverlap)
 		{
 			if (object.isActive())
