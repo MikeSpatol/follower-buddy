@@ -870,6 +870,9 @@ public class EngineSoakTest
 				assertTrue("seed " + seed + ": spoke on tick " + tick + " of a 10 tick wait",
 					h.firedBy("slow").isEmpty());
 			}
+			// A line due inside a conversation is held back, not handed over
+			// to be hushed (QA3 #10); the box the random events opened goes.
+			h.engine.getContext().setDialogueOpen(false);
 			h.gameTick();
 			assertEquals("seed " + seed + ": did not speak when the wait was up",
 				1, h.firedBy("slow").size());

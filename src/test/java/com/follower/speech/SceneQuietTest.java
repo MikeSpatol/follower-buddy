@@ -304,13 +304,19 @@ public class SceneQuietTest
 	@Test
 	public void chatterInAConversationIsNotHeldForIt() throws IOException
 	{
-		// Handed over as ever; the plugin drops it. A remark about the tree
-		// two minutes after the tree is worse than none.
+		// Held back there, as under the mute, and not kept for after: a
+		// remark about the tree two minutes after the tree is worse than
+		// none. Not handed over to be hushed either, where it charged the
+		// gap (QA3 #10).
 		Harness h = harness(CHATTY);
 		h.engine.getContext().setDialogueOpen(true);
 		h.game.hitpoints(10, 99);
 		ticks(h, 2);
-		assertEquals(1, h.firedBy("chatty").size());
+		assertTrue(h.firedBy("chatty").isEmpty());
+		assertEquals("chatty:dialogue", held.get(0));
+		h.engine.getContext().setDialogueOpen(false);
+		ticks(h, 20);
+		assertTrue("dropped, not kept for after", h.firedBy("chatty").isEmpty());
 	}
 
 	/**

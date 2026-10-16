@@ -316,7 +316,10 @@ public class EveryConditionTypeTest
 		past.gameTicks(2);
 		assertQuiet(past, "above the range");
 
-		Harness open = harnessFor("{\"type\": \"dialogueOpen\"}");
+		// Speech is held back while a box is up (QA3 #10), so this probe moves rather than speaks.
+		Harness open = new Harness(folder.newFolder().toPath(),
+			"{\"version\": 1, \"rules\": [{\"id\": \"probe\", \"group\": \"t\","
+				+ " \"cooldownMs\": 0, \"when\": {\"type\": \"dialogueOpen\"}, \"animation\": 863}]}");
 		open.gameTicks(2);
 		assertQuiet(open, "no box up");
 		open.engine.getContext().setDialogueOpen(true);

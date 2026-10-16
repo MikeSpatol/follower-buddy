@@ -68,6 +68,23 @@ public class OccasionGapTest
 	}
 
 	@Test
+	public void chatterInAConversationIsHeldBackAndCostsNoGap() throws IOException
+	{
+		// QA3 #10: an idle line hushed in a quest's long conversation still
+		// charged the gap, and the scroll's line waited behind it.
+		Harness h = harness();
+		h.engine.getContext().setDialogueOpen(true);
+		ticks(h, 5);
+		h.dispatch(TriggerEvent.levelUp("Attack", 30));
+		assertTrue("not handed over to be hushed", h.spoken.isEmpty());
+		assertEquals("chatty:dialogue", held.get(0));
+		ticks(h, 5);
+		h.engine.getContext().setDialogueOpen(false);
+		h.dispatch(TriggerEvent.questComplete("Children of the Sun"));
+		assertEquals("no gap to wait out", 1, h.firedBy("quest").size());
+	}
+
+	@Test
 	public void ordinaryLinesStillKeepTheWholeGap() throws IOException
 	{
 		Harness h = harness();

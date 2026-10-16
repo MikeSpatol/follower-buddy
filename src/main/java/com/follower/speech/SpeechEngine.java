@@ -712,10 +712,15 @@ public class SpeechEngine
 	 * up as the box opened, and the moments held over a scene were released
 	 * into the conversation the scene ran on into. Held, they are said once
 	 * it is over.
+	 *
+	 * <p>Every other line is held back there too, as under the mute, rather
+	 * than handed over to be hushed. Quests QA, 16 Oct: an idle line hushed
+	 * in a long quest conversation still charged the gap, so at Minimal the
+	 * quest's end waited 45 s behind a line nobody saw.
 	 */
-	private boolean heldForTheBox(SpeechRule rule)
+	private boolean heldForTheBox()
 	{
-		return rule.waitsItsTurn() && getContext().isDialogueOpen();
+		return getContext().isDialogueOpen();
 	}
 
 	/**
@@ -734,7 +739,7 @@ public class SpeechEngine
 		}
 		if (rule == hushOwner && now < hushUntilMs)
 		{
-			return muted ? "muted" : sceneQuiet ? "scene" : heldForTheBox(rule) ? "dialogue" : null;
+			return muted ? "muted" : sceneQuiet ? "scene" : heldForTheBox() ? "dialogue" : null;
 		}
 		if (muted)
 		{
@@ -744,7 +749,7 @@ public class SpeechEngine
 		{
 			return "scene";
 		}
-		if (heldForTheBox(rule))
+		if (heldForTheBox())
 		{
 			return "dialogue";
 		}
@@ -1397,8 +1402,10 @@ public class SpeechEngine
 			}
 		};
 
-		// The pacing is charged at the win, heard or not: it only spaces the
-		// lines out, and a hushed line costing its gap does no harm.
+		// The pacing is charged at the hand-over, heard or not: it only spaces
+		// the lines out. A line the plugin then drops still costs its gap, so
+		// what a conversation would hush is held back above instead (QA3 #10:
+		// at Minimal that gap cost the quest's end 45 s).
 		if (!text.isEmpty())
 		{
 			// Only actual speech resets the global window; an animation-only
