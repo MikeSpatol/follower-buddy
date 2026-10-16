@@ -357,9 +357,9 @@ public class QuestMomentDraftTest
 				wrong.add(rule.id + ": no base moment");
 				continue;
 			}
-			if (rule.priority != 61 || base.priority != 60)
+			if (rule.priority != 64 || base.priority != 63)
 			{
-				wrong.add(rule.id + ": a callback is priority 61 over a base at 60");
+				wrong.add(rule.id + ": a callback is priority 64 over a base at 63");
 			}
 			boolean standsAside = false;
 			for (Condition c : base.when.conditions)

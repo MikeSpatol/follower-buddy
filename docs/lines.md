@@ -6888,7 +6888,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND Gillie Groats within 6 tiles, in sight AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - The dairy cow. She has the look of someone asked for milk a great deal.
 - A milkmaid, a cow and a bucket. The cake's coming together, slowly.
@@ -6900,7 +6900,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND Chicken within 4 tiles, in sight AND in region 12595 AND NOT (the follower saw SHEEP_SHEARER done) AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - The Duke's cake, at present, is sitting under a chicken.
 - Eggs, straight from the source. The source looks unimpressed.
@@ -6911,7 +6911,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND Chicken within 4 tiles, in sight AND in region 12595 AND the follower saw SHEEP_SHEARER done AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever
-- **pacing:** priority 61, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 64, cooldown 10m, delay 2 ticks, overhead
 
 - Fred's chickens. If he asks, we only came for the one egg.
 - Near Fred's again. If a gate's left open, it wasn't us.
@@ -6922,7 +6922,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND in the area AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - So this is where bread starts. It's noisier than I'd have guessed.
 - Three floors for one pot of flour. Millers don't believe in shortcuts.
@@ -6934,7 +6934,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND questvar AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; files incident `quest-mill-flour` as 'the Duke's flour coming down at the mill'; animation 865
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - Lever pulled. Somewhere below us, there's flour now.
 - Wheat to flour in one pull of a lever. That wants a page of its own.
@@ -6946,7 +6946,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND a chat message (manages to get away from you) AND in region 12851 AND NOT (questdone)
 - **does:** occasion (never held back); once ever; animation 861
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - Every other sheep stood still for it. That one had somewhere to be.
 - It got away. Sheep don't usually look that pleased with themselves.
@@ -6957,7 +6957,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND a chat message (manages to get away from you) AND in region 12851 AND questdone
 - **does:** occasion (never held back); once ever; animation 861
-- **pacing:** priority 61, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 64, cooldown 10m, delay 2 ticks, overhead
 
 - It ran off like it had a report to file.
 
@@ -6967,7 +6967,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND a fight starting AND in region 12851
 - **does:** occasion (never held back); once ever; animation 856
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - Of all the animals in that pen, you picked one with horns.
 - That's a ram. The wool isn't worth this, and neither is the argument.
@@ -6978,7 +6978,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND xpdrop AND in the area
 - **does:** occasion (never held back); once ever; animation 855
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - Wool in, ball out. The wheel does the clever part.
 - There's a rhythm to that wheel. I'm trying not to tap along.
@@ -6989,7 +6989,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 2113
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - Handed over, counted twice, and he still wants more. Farmers.
 - He counted those like he expected to be short-changed.
@@ -7000,7 +7000,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 865
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - Past halfway. The flock's noticeably slimmer than when we arrived.
 - Over half delivered. Somewhere, a sheep feels the draught.
@@ -7011,7 +7011,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND entering region 12337 AND NOT (the follower saw COOKS_ASSISTANT done)
 - **does:** occasion (never held back); once ever
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - A tower full of wizards, and we're bringing them a trinket from a cellar.
 - The Wizards' Tower. Someone's reading behind every window.
@@ -7022,7 +7022,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND entering region 12337 AND the follower saw COOKS_ASSISTANT done
 - **does:** occasion (never held back); once ever
-- **pacing:** priority 61, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 64, cooldown 10m, delay 2 ticks, overhead
 
 - First the Duke's cake, now the Duke's post. We're practically staff.
 - The Duke's business again. Last time it was his birthday cake.
@@ -7033,7 +7033,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND questvar AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; files incident `quest-aubury-package` as 'the sealed package for Aubury'; animation 2113
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - Courier work, then. I'll note the package was sealed when we got it.
 - He kept the talisman and gave us a package. Wizards trade in errands.
@@ -7044,7 +7044,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND Mugger within 6 tiles, in sight AND in region 12853 AND NOT (the follower saw CHILDREN_OF_THE_SUN done) AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - A mugger, and us carrying a wizard's post. I'll walk on the inside.
 - That mugger's had a long look at your pockets. Keep walking.
@@ -7055,7 +7055,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND Mugger within 6 tiles, in sight AND in region 12853 AND the follower saw CHILDREN_OF_THE_SUN done AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever
-- **pacing:** priority 61, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 64, cooldown 10m, delay 2 ticks, overhead
 
 - This street again. Bandits next door last time, and a mugger now.
 
@@ -7065,7 +7065,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND questvar AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 857
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - Notes going the other way now. I'd love to know what's in them.
 - He read it twice and gave us more. Scholars never just say thanks.
@@ -7076,7 +7076,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND entering region 12437 AND questvar AND questvar
 - **does:** occasion (never held back); once ever
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - Back down the ladder. Same basement, rather more to tell him.
 - Down to Sedridor again. He's after something in these notes.
@@ -7087,7 +7087,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 2113
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - Shy, for a priest. He wouldn't even open the door.
 - Pest control for a temple. Not the job I pictured from the palace.
@@ -7099,7 +7099,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND NOT (dialogueopen)
 - **does:** mood -4; occasion (never held back); once ever; files incident `quest-temple-dog` as 'the dog in the mausoleum'; animation 13993
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - Done. I'll draw it later, when I can look at it.
 
@@ -7109,7 +7109,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND NOT (the follower saw CHILDREN_OF_THE_SUN done) AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 4275
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - Beheading came up. I underlined it, then rubbed it out.
 - In fairness, I only wrote down what the door told us.
@@ -7122,7 +7122,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND the follower saw CHILDREN_OF_THE_SUN done AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 2113
-- **pacing:** priority 61, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 64, cooldown 10m, delay 2 ticks, overhead
 
 - We caught four bandits in his own square, and still beheading comes up.
 - His own dog, after we caught his bandits. That caption needs work.
@@ -7133,7 +7133,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND inventoryhas AND in region 13622 AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 856
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - Spells from a monk, all the way down the aisle. Very unchurchlike.
 - A monk of Zamorak in Saradomin's temple. Someone's lost the rota.
@@ -7144,7 +7144,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 14001
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - So that's the real Drezel. Then who were we talking to at the door?
 - A vampyre in a coffin, in a temple, upstairs. I'd like that noted twice.
@@ -7156,7 +7156,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND NOT (the follower saw VAMPYRE_SLAYER done) AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 855
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - Sealed in. I'd still rather not stand next to it.
 - Holy water on a coffin. It's gone quiet, which I'm taking as a yes.
@@ -7168,7 +7168,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND the follower saw VAMPYRE_SLAYER done AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 855
-- **pacing:** priority 61, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 64, cooldown 10m, delay 2 ticks, overhead
 
 - A vampyre in a coffin again. This one, at least, is staying in.
 
@@ -7178,7 +7178,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 2113
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - His mother will want a report. I'm drafting something gentle.
 
@@ -7188,7 +7188,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 857
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - An elf king, a lost queen and a pebble. I'll need more ink.
 - A pebble for a key, kept by gnomes for a century. Of course.
@@ -7200,7 +7200,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND questvar AND NOT (the follower saw TREE_GNOME_VILLAGE done) AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 2113
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - Old elven junk, he says. I'd have checked with an elf first.
 - He handed it over like a button off a coat.
@@ -7212,7 +7212,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND questvar AND the follower saw TREE_GNOME_VILLAGE done AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 2113
-- **pacing:** priority 61, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 64, cooldown 10m, delay 2 ticks, overhead
 
 - We've been through that maze before. I didn't know it had a cellar.
 
@@ -7222,7 +7222,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND entering region 10137
 - **does:** occasion (never held back); once ever
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - Peaceful intent only, the stone said. I've never had any other kind.
 - Empty-handed in a tomb. I'm used to it, and you aren't.
@@ -7234,7 +7234,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND entering region 10394
 - **does:** occasion (never held back); once ever
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - Behind the waterfall. Every story says there's something behind it.
 - It's dry in here. Somebody built this to stay dry.
@@ -7247,7 +7247,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND in the area AND NOT (dialogueopen)
 - **does:** mood +5; occasion (never held back); once ever
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - A cup, floating, and nobody's mentioned it. I'm mentioning it.
 - Two statues and a cup in mid-air. I don't know where to start the page.
@@ -7259,7 +7259,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 865
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - Well done, mouse. You'll get a portrait.
 
@@ -7269,7 +7269,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND in the area AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - Hedges, a fountain and a witch on patrol. Quietly, then.
 - I'll write very softly from here.
@@ -7281,7 +7281,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND Witch's experiment* within 6 tiles, in sight AND NOT (questdone) AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 2105
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - So that's the experiment. I'd hoped it was a vegetable.
 - The ball's on the crate. The thing beside it is not a crate.
@@ -7293,7 +7293,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND Witch's experiment* within 6 tiles, in sight AND questdone AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 2105
-- **pacing:** priority 61, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 64, cooldown 10m, delay 2 ticks, overhead
 
 - Another experiment. Ernest only got turned into a chicken.
 - Ernest only got as far as a chicken. Whoever made this aimed higher.
@@ -7304,7 +7304,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND NOT (dialogueopen)
 - **does:** mood -5; occasion (never held back); once ever; files incident `quest-witchs-shed` as 'the thing in the witch's shed'; animation 13994
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - That's the lot, I think. It kept coming back in new clothes.
 - Four of it, and the ball sat there through every one.
@@ -7317,7 +7317,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND npcshout
 - **does:** occasion (never held back); once ever
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - Caught. The notes will say we were admiring the hedges.
 - Out on our ear. I'll call that reconnaissance.
@@ -7329,7 +7329,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; files incident `quest-guards-bag` as 'the guard with the very large bag'; animation 857
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - The whole square watched the delegation. Noah watched the bag.
 - Supplies, he said. Supplies don't usually need a bag that size.
@@ -7341,7 +7341,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND NOT (questdone) AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 2113
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - Not the gates, then.
 - He looked round every few steps. With that bag, so would I.
@@ -7353,7 +7353,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND questdone AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 2113
-- **pacing:** priority 61, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 64, cooldown 10m, delay 2 ticks, overhead
 
 - Next door to Aubury's. I hope nobody in there offers us tea.
 
@@ -7363,7 +7363,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 13994
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - Stolen uniforms. I'm crossing out 'supplies'.
 - They all know the target. Nobody said it aloud, more's the pity.
@@ -7375,7 +7375,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 14001
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - Four of these guards aren't. I'll be polite to all of them, to be safe.
 - No warning for the delegation, then. I'll panic quietly on their behalf.
@@ -7387,7 +7387,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND in region 12854 AND NOT (the follower saw PRIEST_IN_PERIL done) AND NOT (dialogueopen)
 - **does:** mood +4; occasion (never held back); once ever; animation 13995
-- **pacing:** priority 60, cooldown 10m, overhead
+- **pacing:** priority 63, cooldown 10m, overhead
 
 - A cell on the palace roof. Out of the way, he said, and it certainly is.
 - Questioning. I'll stand at the back and take the minutes.
@@ -7399,7 +7399,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND in region 12854 AND the follower saw PRIEST_IN_PERIL done AND NOT (dialogueopen)
 - **does:** mood +4; occasion (never held back); once ever; animation 13995
-- **pacing:** priority 61, cooldown 10m, overhead
+- **pacing:** priority 64, cooldown 10m, overhead
 
 - The palace again. Last time we were here, the King wanted your head.
 
@@ -7409,7 +7409,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 14000
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - That's hole one. I've started numbering them, just in case.
 
@@ -7419,7 +7419,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND NOT (questdone) AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 2113
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - An orb, buried behind a kitchen. I'd have looked for a ladle.
 - Scroll, map, now an orb. Whoever planned this liked variety.
@@ -7431,7 +7431,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND questdone AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 2113
-- **pacing:** priority 61, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 64, cooldown 10m, delay 2 ticks, overhead
 
 - The cook's back door. If he sees us, he'll want something fetched.
 
@@ -7441,7 +7441,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND NOT (the follower saw PRINCE_ALI_RESCUE done) AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 857
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - Digging next to a jail. Bold, even for you.
 - Letters that don't spell anything. Yet.
@@ -7453,7 +7453,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND the follower saw PRINCE_ALI_RESCUE done AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 856
-- **pacing:** priority 61, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 64, cooldown 10m, delay 2 ticks, overhead
 
 - That's the jail we got Prince Ali out of. I'd rather not go back in.
 
@@ -7463,7 +7463,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND NOT (dialogueopen)
 - **does:** mood +5; occasion (never held back); once ever; files incident `quest-pig-pen-casket` as 'the whispering casket in the pig pen'; animation 13995
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - A whispering casket. I'm holding the notebook a little further away.
 - Whatever that was, the pigs are keeping it to themselves.
@@ -7476,7 +7476,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND questvar AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 13994
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - My quill has never once done that. I checked it anyway.
 
@@ -7486,7 +7486,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 2113
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - A voice in your ear, you say. I heard nothing, and I was right here.
 - Five cities written up, and the scroll's still blank. I'd want a receipt.
@@ -7498,7 +7498,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 857
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - An orb, for an altar, for a client. I'd like one name in all that.
 - Best you don't ask, he says. I've written the question down anyway.
@@ -7510,7 +7510,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND in region 6716 AND NOT (the follower saw PRIEST_IN_PERIL done) AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - This is near enough for me. You go on.
 - So this is what upset the scroll.
@@ -7523,7 +7523,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND in region 6716 AND the follower saw PRIEST_IN_PERIL done AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever
-- **pacing:** priority 61, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 64, cooldown 10m, delay 2 ticks, overhead
 
 - I've stood by a vampyre's coffin for you. This is worse.
 - A vampyre's coffin was one thing. Here my quill stays pocketed.
@@ -7534,7 +7534,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND NOT (dialogueopen)
 - **does:** mood -5; occasion (never held back); once ever; files incident `quest-dark-altar-orb` as 'the orb breaking at the Dark Altar'; animation 13997
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - It thanked you. I'd rather it hadn't.
 - Glass everywhere, and a thank-you from nobody in particular.
