@@ -325,6 +325,25 @@ public class ChronicleProgress
 	 */
 	public void sawQuestFinish(String questName)
 	{
+		noteQuestFinish(questName, LocalDate.now(clock).toEpochDay());
+	}
+
+	/** Recorded for a quest finished while the follower was parked elsewhere. */
+	static final long NOT_THERE = -1L;
+
+	/**
+	 * The reward scroll came up with the follower parked elsewhere - a Stay,
+	 * a Send, Follow me off - so it did not see the quest finish, and the
+	 * page dated that day does not say it did. Chronicle QA4, 16 Oct: the
+	 * callbacks said "we" about a quest watched from a bank in another town.
+	 */
+	public void missedQuestFinish(String questName)
+	{
+		noteQuestFinish(questName, NOT_THERE);
+	}
+
+	private void noteQuestFinish(String questName, long epochDay)
+	{
 		TriggerContext context = memory.get();
 		if (context == null || questName == null)
 		{
@@ -334,7 +353,7 @@ public class ChronicleProgress
 		{
 			if (quest.getName().equalsIgnoreCase(questName))
 			{
-				context.noteQuestSeenFinished(accountKey(quest.name()), LocalDate.now(clock).toEpochDay());
+				context.noteQuestSeenFinished(accountKey(quest.name()), epochDay);
 				return;
 			}
 		}
@@ -343,7 +362,8 @@ public class ChronicleProgress
 	/**
 	 * The day the follower was there for a quest (by constant name): it saw
 	 * the quest finish, or wrote its quest page as it did. Null for a quest
-	 * done before it came along, which it knows of only from the book.
+	 * done before it came along, which it knows of only from the book, or
+	 * one finished while it was parked elsewhere.
 	 */
 	public Long witnessedOn(String quest)
 	{
@@ -355,7 +375,7 @@ public class ChronicleProgress
 		Long seen = context.questSeenFinishedOn(accountKey(quest));
 		if (seen != null)
 		{
-			return seen;
+			return seen == NOT_THERE ? null : seen;
 		}
 		for (ChronicleEntry entry : loader.ofKind("quest"))
 		{

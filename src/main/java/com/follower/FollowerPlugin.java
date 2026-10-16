@@ -9441,7 +9441,12 @@ public class FollowerPlugin extends Plugin
 			}
 			speechEngine.getContext().tally("quests");
 			speechEngine.getContext().noteDoing("finishing " + quest);
-			if (chronicleProgress != null)
+			if (chronicleProgress != null && isStaying())
+			{
+				// Parked elsewhere by the player, it did not see this one.
+				chronicleProgress.missedQuestFinish(quest);
+			}
+			else if (chronicleProgress != null)
 			{
 				chronicleProgress.sawQuestFinish(quest);
 			}
