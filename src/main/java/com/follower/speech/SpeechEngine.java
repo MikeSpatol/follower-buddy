@@ -538,10 +538,16 @@ public class SpeechEngine
 	 */
 	static final long OCCASION_GAP_MS = 8_000L;
 
-	/** The gap this rule keeps after the last line. */
+	/**
+	 * The gap this rule keeps after the last line. A quest person's line - it
+	 * waits its turn, and is about someone near - keeps an occasion's: quests
+	 * QA4, 16 Oct, at Minimal the 45 s gap outlasted the first talk, and the
+	 * boy's intro came as he got his ball back. The user's call.
+	 */
 	private long gapFor(SpeechRule rule)
 	{
-		return rule.isOccasion() ? Math.min(moodScaledGap(), OCCASION_GAP_MS) : moodScaledGap();
+		boolean person = Boolean.TRUE.equals(rule.waits) && rule.when != null && rule.when.usesType("npcNearby");
+		return rule.isOccasion() || person ? Math.min(moodScaledGap(), OCCASION_GAP_MS) : moodScaledGap();
 	}
 
 	/** Whether a firing held up for this reason waits a tick and tries again rather than being dropped. */
