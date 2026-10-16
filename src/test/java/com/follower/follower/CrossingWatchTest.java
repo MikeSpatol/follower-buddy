@@ -71,6 +71,10 @@ public class CrossingWatchTest
 	private int[] base = NORMAL;
 	private int weapon = -1;
 	private boolean interacting;
+	/** The server's tile when it is ahead of the drawn one, or null for the tile they are drawn on. */
+	private WorldPoint server;
+	/** How many frames show each game cycle's position: more than one above 50 frames a second. */
+	private int framesPerCycle = 1;
 
 	// ---------------------------------------------------------- not agility
 
@@ -255,6 +259,63 @@ public class CrossingWatchTest
 		assertTrue(actions(jump).contains(741));
 	}
 
+	/**
+	 * Above fifty frames a second a game cycle is drawn more than once, and
+	 * the repeat shows no movement. That frame is neither a glide nor a break
+	 * in one (QA4 #4): the jump and the log are seen as they happen, not when
+	 * their XP lands.
+	 */
+	@Test
+	public void aboveFiftyFramesASecondAJumpAndALogAreStillSeenLive()
+	{
+		for (int repeats : new int[]{2, 3})
+		{
+			events.clear();
+			queued.clear();
+			framesPerCycle = repeats;
+			stand(200);
+			action = 741;
+			stand(300);
+			glide(2, 0, 808, 9);
+			action = -1;
+			stand(2000);
+			base = ON_A_LOG;
+			walk(5, 0, 762, 4);
+			base = NORMAL;
+			pose = 808;
+			stand(2000);
+			assertEquals(repeats + " frames a cycle: both, with no XP at all",
+				List.of("queue 50,50,0 live", "queue 52,50,0 live"), events);
+			x = 50 * 128 + 64;
+		}
+	}
+
+	/**
+	 * On the Draynor ropes the game puts the player's own set back as the
+	 * server steps them off, while they are still drawn a tile or two along
+	 * the rope (QA4 #2, trace 16 Oct). The crossing runs on to where they
+	 * are put down, so the follower is not left on the rope.
+	 */
+	@Test
+	public void aRopeWhoseSetSwapsBackEarlyRunsToWhereTheyStepOff()
+	{
+		stand(200);
+		base = ON_A_LOG;
+		walk(6, 0, 762, 4);
+		// The server is two tiles on, off the rope; the drawn player walks
+		// the rest of it on their own walk, and on.
+		base = NORMAL;
+		server = new WorldPoint(58, 50, 0);
+		walk(2, 0, 819, 4);
+		server = null;
+		walk(3, 0, 819, 4);
+		stand(2000);
+
+		assertEquals(List.of("queue 50,50,0 live"), events);
+		assertEquals("ended where the server put them, not two tiles back on the rope",
+			new WorldPoint(58, 50, 0), queued.get(0).getEnd());
+	}
+
 	@Test
 	public void aClimbWithItsXpIsACrossing()
 	{
@@ -421,6 +482,79 @@ public class CrossingWatchTest
 		walk(3, 0, 6994, 4);
 		stand(2000);
 		assertEquals("the swim is the normal walk now", List.of(), events);
+	}
+
+	/**
+	 * The swim was taken as normal; once their own set is back, so is their
+	 * own walk, not a glide recorded as a half-minute crossing (QA4 #19).
+	 */
+	@Test
+	public void afterALongSwapTheirOwnWalkIsNormalAgain()
+	{
+		stand(200);
+		int[] swimming = {6993, 6994, 6994, 6994, 6994, 6994, 6993, 6993};
+		base = swimming;
+		for (int i = 0; i < 30; i++)
+		{
+			walk(1, 0, 6994, 4);
+			walk(-1, 0, 6994, 4);
+		}
+		events.clear();
+		base = NORMAL;
+		stand(2000);
+		walk(10, 0, 819, 4);
+		stand(2000);
+		assertEquals("out of the water, an ordinary walk", List.of(), events);
+	}
+
+	/** At 250 frames a second a 14 s log is still under the frame cap: copied, not dropped (QA4 #19). */
+	@Test
+	public void aLongLogAtAHighFrameRateIsNotDropped()
+	{
+		framesPerCycle = 5;
+		stand(200);
+		base = ON_A_LOG;
+		for (int i = 0; i < 14; i++)
+		{
+			walk(1, 0, 762, 2);
+			stand(400);
+		}
+		base = NORMAL;
+		pose = 808;
+		stand(2000);
+		assertEquals(List.of("queue 50,50,0 live"), events);
+		assertFalse("copied, not let go as no obstacle", queued.get(0).isDropped());
+	}
+
+	/**
+	 * A climb's clip begun on the last step towards it: those frames lead
+	 * into the climb, and its XP rebuilds no 0.2 s fragment of them ahead
+	 * of it (QA4 #18, trace 16 Oct 14:51:13).
+	 */
+	@Test
+	public void aClipBegunOnTheLastStepIsNotRebuiltAsACrossingOfItsOwn()
+	{
+		stand(200);
+		walk(0, 1, 819, 4);
+		pose = 819;
+		for (int i = 0; i < 32; i++)
+		{
+			if (i == 10)
+			{
+				action = 828;
+			}
+			y += 4;
+			frame(20);
+		}
+		pose = 808;
+		stand(1200);
+		watch.noteAgilityXp(t);
+		plane = 3;
+		x -= 128;
+		frame(20);
+		action = -1;
+		stand(2000);
+		assertEquals(List.of("queue 50,52,0 live"), events);
 	}
 
 	@Test
@@ -644,9 +778,13 @@ public class CrossingWatchTest
 
 	private void frame(long ms)
 	{
-		t += ms;
-		watch.sample(new CrossingWatch.Sample(t, x, y, plane, 0, pose, 0, action, 0,
-			base, weapon, interacting));
+		for (int i = 0; i < framesPerCycle; i++)
+		{
+			t += ms / framesPerCycle;
+			watch.sample(new CrossingWatch.Sample(t, x, y, plane, 0, pose, 0, action, 0,
+				base, weapon, interacting,
+				server != null ? server : new WorldPoint((int) (x >> 7), (int) (y >> 7), plane)));
+		}
 	}
 
 	private void stand(long ms)

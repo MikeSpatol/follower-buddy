@@ -448,6 +448,54 @@ public class StanceSourcesTest
 		assertEquals("the swing in the style it was seen in", 390, library.attackFor(WHIP, 1));
 	}
 
+	// ------------------------------------------------- a player on an obstacle
+
+	/** HUMAN_WALK_LOGBALANCE_READY and HUMAN_WALK_LOGBALANCE: the set the game swaps in for a log. */
+	private static final int[] ON_A_LOG = {763, 762, 762, 762, 762, 762, 763, 763};
+
+	/**
+	 * The game does a log or a ledge by swapping the player's base set, so
+	 * a player seen on one shows the balance where their weapon's stand and
+	 * walk would be (QA4 #5). Unarmed is shipped and never learned, and a set
+	 * whose stand, walk or run empties a hand is no weapon's: every real
+	 * stance keeps both, every obstacle set empties both.
+	 */
+	@Test
+	public void aPlayerOnALogTeachesNoStance()
+	{
+		Client client = client(player(-1, ON_A_LOG, false));
+		library.observe(client);
+		assertEquals("empty-handed: still the follower's own walk", 819, library.forWeapon(-1).walk);
+		assertEquals(808, library.forWeapon(-1).idle);
+
+		int before = library.forWeapon(STAFF_OF_AIR).walk;
+		library.observe(client(player(STAFF_OF_AIR, ON_A_LOG, false)));
+		assertEquals("nor a weapon's", before, library.forWeapon(STAFF_OF_AIR).walk);
+
+		library.observe(client(player(WHIP, new int[]{808, 762, 824, 820, 821, 822, 823, 823}, false)));
+		assertEquals("nor a walk alone swapped", 1660, library.forWeapon(WHIP).walk);
+	}
+
+	/** One an older build learned is taken out of the file on the first tick, its swing kept. */
+	@Test
+	public void anObstacleSetLearnedBeforeIsForgotten() throws IOException
+	{
+		writeLearned("{\"0\":{\"idle\":763,\"walk\":762,\"run\":762,\"attack\":423},"
+			+ "\"" + STAFF_OF_AIR + "\":{\"idle\":763,\"walk\":762,\"run\":762},"
+			+ "\"" + (BASE + 7) + "\":{\"idle\":900001,\"walk\":900002,\"run\":900003}}");
+		library = load();
+		library.observe(client());
+		library.save();
+
+		JsonObject saved = savedFile();
+		assertEquals("the unarmed swing stays", 423, saved.getAsJsonObject("0").get("attack").getAsInt());
+		assertEquals("its balance goes", 0, saved.getAsJsonObject("0").get("walk").getAsInt());
+		assertFalse(saved.has(Integer.toString(STAFF_OF_AIR)));
+		assertEquals("a real one stays", 900002,
+			saved.getAsJsonObject(Integer.toString(BASE + 7)).get("walk").getAsInt());
+		assertEquals(819, library.forWeapon(-1).walk);
+	}
+
 	// ------------------------------------------------------------- doubles
 
 	private static Player player(int weapon, int[] poses, boolean fighting)
@@ -471,15 +519,15 @@ public class StanceSourcesTest
 		return proxy(Player.class, answers);
 	}
 
-	private static Client client(Player player)
+	private static Client client(Player... seen)
 	{
-		List<Player> players = Collections.singletonList(player);
+		List<Player> players = java.util.Arrays.asList(seen);
 		IndexedObjectSet<Player> set = new IndexedObjectSet<Player>()
 		{
 			@Override
 			public Player byIndex(int index)
 			{
-				return index == 0 ? player : null;
+				return index < players.size() ? players.get(index) : null;
 			}
 
 			@Override
@@ -492,7 +540,16 @@ public class StanceSourcesTest
 		view.put("players", set);
 		Map<String, Object> client = new HashMap<>();
 		client.put("getTopLevelWorldView", proxy(WorldView.class, view));
-		return proxy(Client.class, client);
+		// The log balance empties both hands, as every obstacle set does.
+		net.runelite.api.Animation keeps = proxy(net.runelite.api.Animation.class,
+			Map.of("getLeftHandItem", -1, "getRightHandItem", -1));
+		net.runelite.api.Animation empties = proxy(net.runelite.api.Animation.class,
+			Map.of("getLeftHandItem", -512, "getRightHandItem", -512));
+		Client plain = proxy(Client.class, client);
+		return (Client) Proxy.newProxyInstance(Client.class.getClassLoader(), new Class<?>[]{Client.class},
+			(self, method, args) -> method.getName().equals("loadAnimation")
+				? ((Integer) args[0] == 762 || (Integer) args[0] == 763 ? empties : keeps)
+				: method.invoke(plain, args));
 	}
 
 	@SuppressWarnings("unchecked")

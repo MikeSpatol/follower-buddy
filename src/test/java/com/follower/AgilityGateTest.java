@@ -46,6 +46,7 @@ public class AgilityGateTest
 	{
 		boolean doing;
 		boolean holding;
+		int held;
 		int cleared;
 		int strandedCleared;
 
@@ -88,6 +89,12 @@ public class AgilityGateTest
 		public void clearCrossings()
 		{
 			cleared++;
+		}
+
+		@Override
+		public void holdForAgility()
+		{
+			held++;
 		}
 
 		@Override
@@ -252,13 +259,55 @@ public class AgilityGateTest
 		assertEquals("a Stay ends the wait as it ends the queue", 1, follower.cleared);
 	}
 
+	/**
+	 * Ape Atoll is run as a greegree monkey, which the watch cannot read, so
+	 * nothing there is copied. Its XP then holds nothing either: the follower
+	 * joins the player up each tree at once, as before (QA4 #7).
+	 */
+	@Test
+	public void xpTheWatchCannotReadHoldsNothing() throws ReflectiveOperationException, IOException
+	{
+		set("speechEngine", new com.follower.sim.Harness(folder.newFolder().toPath()).engine);
+		game.transformedInto(1480);
+		agilityXp(1000);
+		agilityXp(1010);
+		assertEquals("a monkey's XP", 0, follower.held);
+
+		game.transformedInto(-1);
+		agilityXp(1020);
+		assertEquals("their own", 1, follower.held);
+	}
+
+	/**
+	 * On a course the run back to the first obstacle is not agility, and an
+	 * errand begun there turned the watch off and missed the first climb.
+	 * Agility XP in the last minute keeps errands off (QA4 #24).
+	 */
+	@Test
+	public void noErrandWithinAMinuteOfAgilityXp() throws ReflectiveOperationException, IOException
+	{
+		set("dialog", new com.follower.speech.FollowerDialog(null, null, null, null, null, null, null, null));
+		set("speechEngine", new com.follower.sim.Harness(folder.newFolder().toPath()).engine);
+		assertFalse("nothing going on", (Boolean) call("errandBusy"));
+		agilityXp(1000);
+		agilityXp(1010);
+		assertTrue("between laps", (Boolean) call("errandBusy"));
+		set("lastAgilityXpMs", System.currentTimeMillis() - 61_000);
+		assertFalse("a minute on", (Boolean) call("errandBusy"));
+	}
+
+	private void agilityXp(int xp)
+	{
+		plugin.onStatChanged(new net.runelite.api.events.StatChanged(net.runelite.api.Skill.AGILITY, xp, 50, 50));
+	}
+
 	// ---------------------------------------------------------------- trace
 
 	@Test
 	public void theTraceIsWrittenOnlyWithDeveloperCommandsOn() throws ReflectiveOperationException, IOException
 	{
 		AgilityTrace trace = trace();
-		somethingOdd();
+		somethingThatMoves();
 		call("traceAgilityTick");
 		trace.flush();
 		assertFalse("nothing at all with it off", Files.exists(trace.getFile()));
@@ -269,7 +318,7 @@ public class AgilityGateTest
 		List<String> lines = Files.readAllLines(trace.getFile());
 		assertTrue("opened with its columns: " + lines, lines.get(0).contains("agility trace on"));
 		assertTrue("and a tick line: " + lines, lines.stream().anyMatch(line ->
-			line.contains("| 50,50,0 pose 808 anim 866 gfx -1 still xp+0 hit - | watch ")
+			line.contains("fps | 50,50,0 pose 808 anim 741 gfx -1 still xp+0 hit - | watch ")
 				&& line.contains("| - q0 follow")));
 
 		developer = false;
@@ -292,6 +341,24 @@ public class AgilityGateTest
 			call("traceAgilityTick");
 		}
 		trace.flush();
+		assertEquals("just the heading: " + Files.readAllLines(trace.getFile()),
+			1, Files.readAllLines(trace.getFile()).size());
+	}
+
+	/** A clip that moves nobody - a skilling loop, an emote - is not agility about (QA4 #20). */
+	@Test
+	public void theTraceKeepsQuietThroughASkillingLoop() throws ReflectiveOperationException, IOException
+	{
+		AgilityTrace trace = trace();
+		developer = true;
+		somethingOdd();
+		for (int i = 0; i < 5; i++)
+		{
+			frame();
+			call("traceAgilityTick");
+		}
+		trace.flush();
+		assertTrue("watched, but nothing moved", watch.isWatching());
 		assertEquals("just the heading: " + Files.readAllLines(trace.getFile()),
 			1, Files.readAllLines(trace.getFile()).size());
 	}
@@ -332,6 +399,18 @@ public class AgilityGateTest
 		frame();
 		assertFalse("nothing watched", watch.isWatching());
 		assertEquals("and the queue let go", 1, follower.cleared);
+	}
+
+	/** A jump: the clip, and the player put over a few units at a time on the stand. */
+	private void somethingThatMoves() throws ReflectiveOperationException
+	{
+		game.animating(741);
+		frame();
+		for (int i = 1; i <= 3; i++)
+		{
+			game.fineAt(50 * 128 + 64 + 8 * i, 50 * 128 + 64, 0);
+			frame();
+		}
 	}
 
 	/** An animation begins: something the watch looks at. */

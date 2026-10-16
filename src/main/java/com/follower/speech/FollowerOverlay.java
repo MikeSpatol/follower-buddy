@@ -112,18 +112,21 @@ public class FollowerOverlay extends Overlay
 		int zOffset = config.speechHeight();
 		int rgb = config.speechColor().getRGB() & 0xFFFFFF;
 
+		// Over the follower's own floor, which agility can leave a floor or
+		// more from the player's: on the ground below a roof they are on.
+		Point anchor = Perspective.localToCanvas(client, location,
+			follower.getWorldLocation().getPlane(), zOffset);
+		if (anchor == null)
+		{
+			return null;
+		}
+
 		// The client's own overhead draw: BOLD 12 glyphs, centred on the
 		// entity's projected height point, black copy one pixel straight down,
 		// coloured text over it. No fade - real overhead text just disappears.
 		com.follower.ui.GameFont b12 = gameFonts.getByName("b12_full");
 		if (b12 != null)
 		{
-			Point anchor = Perspective.localToCanvas(client, location,
-				client.getWorldView(location.getWorldView()).getPlane(), zOffset);
-			if (anchor == null)
-			{
-				return null;
-			}
 			b12.drawCenteredOverhead(graphics, message, anchor.getX(), anchor.getY(), rgb);
 			return null;
 		}
@@ -131,16 +134,11 @@ public class FollowerOverlay extends Overlay
 		// Fallback while fonts.json is missing: RuneLite's recreation.
 		graphics.setFont(FontManager.getRunescapeBoldFont());
 		FontMetrics metrics = graphics.getFontMetrics();
-		Point anchor = Perspective.getCanvasTextLocation(
-			client, graphics, location, message, zOffset);
-		if (anchor == null)
-		{
-			return null;
-		}
+		int x = anchor.getX() - metrics.stringWidth(message) / 2;
 		graphics.setColor(Color.BLACK);
-		graphics.drawString(message, anchor.getX(), anchor.getY() + 1);
+		graphics.drawString(message, x, anchor.getY() + 1);
 		graphics.setColor(new Color(rgb));
-		graphics.drawString(message, anchor.getX(), anchor.getY());
+		graphics.drawString(message, x, anchor.getY());
 
 		return null;
 	}

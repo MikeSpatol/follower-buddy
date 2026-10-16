@@ -870,6 +870,14 @@ public class FollowerPlugin extends Plugin
 		crossingWatch.setTrace(agilityTrace::event);
 		follower.setAgilityTrace(agilityTrace::event);
 		follower.setOnAgilitySnap(crossingWatch::forgetMissed);
+		// Later in the frame, and only if still out: a despawn lets a crossing go too.
+		follower.setOnCrossingHands(() -> clientThread.invokeLater(() ->
+		{
+			if (follower.isSpawned())
+			{
+				rebuildFollower();
+			}
+		}));
 		filmSet = new com.follower.follower.FilmSet(follower, this::rebuildFollower,
 			(graphicId, height) -> follower.playSpotAnim(spotAnimRepository.get(graphicId), height));
 		conversation = new com.follower.speech.ConversationPlayer(conversationStage());
@@ -5228,8 +5236,17 @@ public class FollowerPlugin extends Plugin
 			|| (moments != null && moments.holdsTheFeet())
 			|| parkedByPlayer || filming
 			|| (sketching != null && sketching.isSketching())
-			|| inCutscene() || follower.isDoingAgility();
+			|| inCutscene() || follower.isDoingAgility()
+			|| System.currentTimeMillis() - lastAgilityXpMs < ERRANDS_AFTER_AGILITY_MS;
 	}
+
+	/**
+	 * Agility XP this recently keeps errands off: on a course the run back
+	 * to the first obstacle is not agility, and an errand begun there turns
+	 * the watch off and misses the first climb.
+	 */
+	private static final long ERRANDS_AFTER_AGILITY_MS = 60_000;
+	private long lastAgilityXpMs;
 
 	/**
 	 * What beats the seat. Thrall work and the spectator, over their whole
@@ -5467,6 +5484,7 @@ public class FollowerPlugin extends Plugin
 		dressForPose(outfit, propShown ? propHands : null);
 		dressForPose(outfit, outfitOverride == null ? emoteHands : null);
 		dressForPose(outfit, outfitOverride == null && emoteHands == null ? loopHands : null);
+		dressForPose(outfit, outfitOverride == null ? follower.getCrossingHands() : null);
 		dressForPose(outfit, filmHands);
 
 		appearanceService.request(outfit, com.follower.appearance.ModelSource.DUMP_ONLY, appearance ->
@@ -6796,6 +6814,7 @@ public class FollowerPlugin extends Plugin
 		{
 			return;
 		}
+		agilityFramesThisTick++;
 		GameState state = client.getGameState();
 		if (state == GameState.LOADING)
 		{
@@ -6835,12 +6854,17 @@ public class FollowerPlugin extends Plugin
 	/** Where the player was drawn at the last tick line, for its moving column. */
 	private net.runelite.api.coords.LocalPoint agilityTraceLast;
 
+	/** Frames drawn since the last game tick, and when that was: the trace's fps, which the glide depends on. */
+	private int agilityFramesThisTick;
+	private long agilityTickMs;
+
 	/** An odd pose or movement this recently still counts as agility about, for the trace. */
 	private static final long AGILITY_TRACE_NEAR_MS = 3000;
 
 	/**
 	 * Once a game tick: a line of the agility trace, when Developer commands
-	 * is on and there is agility about - a crossing watched or queued, the
+	 * is on and there is agility about - something watched that has moved
+	 * the player (not a skilling loop or an emote), a crossing queued, the
 	 * follower holding for one, agility XP this tick, or an odd pose or move
 	 * in the last few seconds. Nothing at all otherwise, so a day's file is
 	 * the laps and little else.
@@ -6852,16 +6876,20 @@ public class FollowerPlugin extends Plugin
 		int hit = agilityHitsplatThisTick;
 		agilityXpThisTick = 0;
 		agilityHitsplatThisTick = -1;
+		long now = System.currentTimeMillis();
+		int fps = agilityTickMs > 0 && now > agilityTickMs
+			? (int) Math.round(agilityFramesThisTick * 1000.0 / (now - agilityTickMs)) : 0;
+		agilityFramesThisTick = 0;
+		agilityTickMs = now;
 		Player local = client.getLocalPlayer();
 		if (!agilityTrace.isEnabled() || local == null || crossingWatch == null)
 		{
 			return;
 		}
-		long now = System.currentTimeMillis();
 		net.runelite.api.coords.LocalPoint at = local.getLocalLocation();
 		boolean moving = at != null && agilityTraceLast != null && !at.equals(agilityTraceLast);
 		agilityTraceLast = at;
-		if (crossingWatch.isWatching() || follower.isDoingAgility() || follower.isHoldingForAgility()
+		if (crossingWatch.isWatchingMovement() || follower.isDoingAgility() || follower.isHoldingForAgility()
 			|| xp > 0 || crossingWatch.wasOddWithin(now, AGILITY_TRACE_NEAR_MS))
 		{
 			int graphic = -1;
@@ -6873,8 +6901,8 @@ public class FollowerPlugin extends Plugin
 					break;
 				}
 			}
-			agilityTrace.tick(String.format("t%d | %s pose %d anim %d gfx %d %s xp+%d hit %s | %s | %s q%d %s",
-				client.getTickCount(),
+			agilityTrace.tick(String.format("t%d %dfps | %s pose %d anim %d gfx %d %s xp+%d hit %s | %s | %s q%d %s",
+				client.getTickCount(), fps,
 				com.follower.follower.CrossingWatch.describe(local.getWorldLocation()),
 				local.getPoseAnimation(), local.getAnimation(), graphic, moving ? "moving" : "still",
 				xp, hit < 0 ? "-" : String.valueOf(hit),
@@ -10191,9 +10219,13 @@ public class FollowerPlugin extends Plugin
 			{
 				// What tells a climb from a ladder, and rebuilds an obstacle missed.
 				crossingWatch.noteAgilityXp(System.currentTimeMillis());
+				lastAgilityXpMs = System.currentTimeMillis();
 				agilityXpThisTick += xp - previousXp;
 				agilityTrace.event("xp +" + (xp - previousXp));
-				if (config.copiesAgility() && !parkedByPlayer)
+				// Not while the watch cannot read them: as a greegree monkey on
+				// Ape Atoll nothing is copied, and the follower joins them as before.
+				if (config.copiesAgility() && !parkedByPlayer && com.follower.follower.CrossingWatch.Sample
+					.read(client.getLocalPlayer(), System.currentTimeMillis()) != null)
 				{
 					// Whatever the player is on is about to be queued: no snap meanwhile.
 					follower.holdForAgility();

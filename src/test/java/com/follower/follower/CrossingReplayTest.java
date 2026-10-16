@@ -307,26 +307,191 @@ public class CrossingReplayTest
 		assertTrue(done.isEmpty());
 	}
 
+	/**
+	 * A rope's first tile is one nobody can walk onto: the game puts the
+	 * player there. The follower sets off from beside it, eased on over the
+	 * first moments, rather than standing stuck for 4.8 s and then being
+	 * placed on it (QA4 #1, trace 16 Oct).
+	 */
+	@Test
+	public void aStartNobodyCanWalkOntoIsBegunFromBesideIt() throws ReflectiveOperationException
+	{
+		for (int x = 52; x <= 58; x++)
+		{
+			game.blockTile(x, 50);
+		}
+		Mover player = new Mover(51, 50, 0);
+		player.stand(1500);
+		// Onto the rope's first tile on their own walk, then the balance.
+		player.walk(1, 0).onto(ON_A_ROPE).move(6, 0, LOG_WALK, 4).onto(NORMAL).walk(1, 0).xp();
+
+		long biggestStep = 0;
+		long lastX = (Long) get("fineWX");
+		long lastY = (Long) get("fineWY");
+		for (int i = 0; i < 1000 && follower.isDoingAgility(); i++)
+		{
+			player.stand(20);
+			long x = (Long) get("fineWX");
+			long y = (Long) get("fineWY");
+			biggestStep = Math.max(biggestStep, Math.max(Math.abs(x - lastX), Math.abs(y - lastY)));
+			lastX = x;
+			lastY = y;
+		}
+		assertEquals(1, done.size());
+		assertTrue("never placed: " + trace, trace.stream().noneMatch(l -> l.contains("placed")));
+		assertEquals(0, snaps);
+		assertTrue("on at about two ticks behind: " + (player.setOffAt * 20L), player.setOffWhilePlayerOn);
+		assertTrue("eased on, no pop: " + biggestStep + " units in a frame", biggestStep <= 16);
+	}
+
+	/**
+	 * Waiting by the start, it turns the way the player set off before it
+	 * goes, rather than sliding along the log sideways for a third of a
+	 * second (QA4 #27).
+	 */
+	@Test
+	public void itFacesTheWayThePlayerWentBeforeItSetsOff() throws ReflectiveOperationException
+	{
+		// From the north, onto a crossing taken eastward.
+		standOn(new WorldPoint(52, 53, 0));
+		game.at(60, 52, 0);
+		follower.queueCrossing(new Recording(52, 50, 0).stand(100, 808).glide(4, 0, LOG_WALK, -1)
+			.stand(200, 808).build(false));
+		untilPlaying();
+		int yaw = (Integer) get("yaw");
+		assertTrue("facing east (1536) as it sets off: " + yaw, Math.abs(yaw - 1536) <= 256);
+	}
+
+	/**
+	 * The game empties the hands for a climb, a squeeze or a swing, as the
+	 * clip's own hand items say; the follower's crossing does too, and hands
+	 * them back after (QA4 #12). A swapped pose, the balance, keeps them.
+	 */
+	@Test
+	public void aClipThatEmptiesThePlayersHandsEmptiesTheFollowers() throws ReflectiveOperationException
+	{
+		game.animation(CLIMB, -1, -512, -512);
+		int[] rebuilds = {0};
+		follower.setOnCrossingHands(() -> rebuilds[0]++);
+		game.at(70, 52, 1);
+		follower.queueCrossing(new Recording(52, 50, 0).stand(200, LOG_READY).glide(2, 0, LOG_WALK, -1)
+			.stand(600, 808, CLIMB).hop(1, 0, 1, CLIMB).stand(200, 808).build(false));
+		List<int[]> seen = new ArrayList<>();
+		for (int i = 0; i < 2000 && follower.isDoingAgility(); i++)
+		{
+			frame();
+			int[] hands = follower.getCrossingHands();
+			if (seen.isEmpty() ? hands != null : !java.util.Arrays.equals(seen.get(seen.size() - 1), hands))
+			{
+				seen.add(hands);
+				if (hands != null)
+				{
+					// The rebuild for it swaps the model under the clip.
+					Object clip = get("crossingController");
+					follower.setAppearance(new com.follower.appearance.ComposedAppearance(
+						(net.runelite.api.Model) java.lang.reflect.Proxy.newProxyInstance(
+							net.runelite.api.Model.class.getClassLoader(), new Class<?>[]{net.runelite.api.Model.class},
+							(proxy, method, args) -> method.getReturnType() == boolean.class ? false
+								: method.getReturnType() == int.class ? 0 : null),
+						com.follower.appearance.ComposedAppearance.Source.DUMP,
+						new com.follower.appearance.Outfit()));
+					assertTrue("the climb keeps playing on the new model, no stand put up for a frame",
+						((RuneLiteObject) get("object")).getAnimationController() == clip);
+				}
+			}
+		}
+		assertEquals("emptied for the climb, and back after", 2, seen.size());
+		assertEquals(-512, seen.get(0)[0]);
+		assertEquals(-512, seen.get(0)[1]);
+		assertEquals(null, seen.get(1));
+		assertEquals("a rebuild for each", 2, rebuilds[0]);
+	}
+
+	/**
+	 * Two jumps of the same clip back to back, its frame going back to the
+	 * start for the second with nothing between: both are played, not the
+	 * first held on its last frame through the second hop (QA4 #26).
+	 */
+	@Test
+	public void theSameClipTwiceInARowIsPlayedTwice() throws ReflectiveOperationException
+	{
+		List<Crossing.Frame> frames = new ArrayList<>();
+		long t = 0;
+		for (int jump = 0; jump < 2; jump++)
+		{
+			for (int i = 0; i < 40; i++)
+			{
+				long x = (51 + jump) * 128L + 64 + i * 128 / 40;
+				frames.add(new Crossing.Frame(t, x, 50 * 128 + 64, 0, 1536, 808, 0, JUMP, Math.min(7, i / 5)));
+				t += 20;
+			}
+		}
+		follower.queueCrossing(new Crossing(frames, NORMAL, false));
+		untilPlaying();
+		int clips = 0;
+		Object last = null;
+		while (follower.isPlayingCrossing())
+		{
+			frame();
+			Object clip = get("crossingController");
+			if (clip != null && clip != last)
+			{
+				clips++;
+				last = clip;
+			}
+		}
+		assertEquals("one for each jump", 2, clips);
+	}
+
 	// ------------------------------------------------------- rebuilt from XP
 
+	/**
+	 * Off a course, a climb with no XP inside the two ticks it waits is a
+	 * ladder: let go, and the follower joins the player upstairs then, as it
+	 * did before any agility, not eight seconds later (QA4 #3). XP that comes
+	 * after it rebuilds nothing, the follower being there already. (This was
+	 * a rebuild with no snap, before the wait was let go with the hop.)
+	 */
 	@Test
-	public void aClimbWhoseXpComesLateIsRebuiltAndCopiedWithoutASnap()
+	public void offACourseAClimbWithNoXpIsALadderAndJoinedAtOnce()
 	{
 		Mover player = new Mover(51, 50, 0);
-		player.stand(200).doing(CLIMB).stand(1200).hop(1, 0, 1).doing(-1);
-		// Off a course: the two ticks a hop waits for its XP run out.
-		player.stand(1500);
-		assertFalse("let go as a ladder", follower.isDoingAgility());
-		assertTrue("but waiting, not snapped", follower.isHoldingForAgility());
-		assertEquals(0, snaps);
+		follower.setOnAgilitySnap(player.watch::forgetMissed);
+		player.stand(600).doing(CLIMB).stand(1200).hop(1, 0, 1).doing(-1);
+		int hopped = player.frames;
+		while (snaps == 0 && player.frames - hopped < 500)
+		{
+			player.stand(20);
+		}
+		long joinedMs = (player.frames - hopped) * 20L;
+		assertEquals("joined upstairs", 1, snaps);
+		assertTrue("once the hop's two ticks were up, not eight seconds on: " + joinedMs + " ms",
+			joinedMs <= CrossingWatch.CONFIRM_WAIT_MS + 300);
+		assertEquals(1, follower.getWorldLocation().getPlane());
+		assertFalse(follower.isHoldingForAgility());
 
-		player.xp().stand(100);
-		runUntilDone();
-		assertEquals("rebuilt, and copied", 1, done.size());
-		assertEquals(new WorldPoint(51, 50, 0), done.get(0).getStart());
-		assertEquals(new WorldPoint(52, 50, 1), follower.getWorldLocation());
-		assertTrue(shown.contains(CLIMB));
-		assertEquals(0, snaps);
+		player.xp().stand(2000);
+		assertFalse("the late XP rebuilds nothing", follower.isDoingAgility());
+		assertTrue(done.isEmpty());
+	}
+
+	/** On a course a hop waits five ticks for its XP; none, and it is a ladder after all. */
+	@Test
+	public void onACourseALadderIsJoinedOnceItsLongerWaitIsUp()
+	{
+		Mover player = new Mover(51, 50, 0);
+		player.stand(600).xp();
+		follower.holdForAgility();
+		player.stand(600).doing(CLIMB).stand(1200).hop(1, 0, 1).doing(-1);
+		int hopped = player.frames;
+		while (snaps == 0 && player.frames - hopped < 500)
+		{
+			player.stand(20);
+		}
+		long joinedMs = (player.frames - hopped) * 20L;
+		assertEquals(1, snaps);
+		assertTrue(joinedMs + " ms", joinedMs >= CrossingWatch.CONFIRM_WAIT_MS
+			&& joinedMs <= CrossingWatch.CONFIRM_WAIT_ON_COURSE_MS + 300);
 	}
 
 	// ----------------------------------------------------- a Draynor-like lap
@@ -646,6 +811,7 @@ public class CrossingReplayTest
 			y = tileY * 128L + 64;
 			this.plane = plane;
 			watch.setTrace(trace::add);
+			follower.setAgilityClock(() -> clock);
 			frame();
 		}
 
