@@ -180,6 +180,65 @@ public class PhrasesDialogTest
 		SwingUtilities.invokeAndWait(dialog::dispose);
 	}
 
+	@Test
+	public void aPlaceLineWithAQuestOrAChanceStillHasItsRegions() throws Exception
+	{
+		// QA2, 15 Oct: the fun- place lines keep their place inside an "all"
+		// beside a chance and a quest, and read as "triggered by something
+		// other than a place". Their regions show, and an edit goes back there.
+		Assume.assumeFalse(GraphicsEnvironment.isHeadless());
+		PhrasesDialog dialog = dialog(true);
+		JComboBox<?> picker = (JComboBox<?>) field(dialog, "categoryPicker");
+		SwingUtilities.invokeAndWait(() -> picker.setSelectedIndex(1));
+		settle(dialog);
+		JTextField regions = null;
+		for (Object row : (List<?>) field(dialog, "rows"))
+		{
+			Field id = row.getClass().getDeclaredField("id");
+			id.setAccessible(true);
+			if ("fun-lumbridge-after-cooks-assistant".equals(id.get(row)))
+			{
+				Field f = row.getClass().getDeclaredField("regions");
+				f.setAccessible(true);
+				regions = (JTextField) f.get(row);
+			}
+		}
+		assertTrue("the row has its regions", regions != null);
+		assertEquals("12850", regions.getText());
+
+		JTextField edited = regions;
+		SwingUtilities.invokeAndWait(() -> edited.setText("12850, 12851"));
+		java.lang.reflect.Method save = PhrasesDialog.class.getDeclaredMethod("save");
+		save.setAccessible(true);
+		SwingUtilities.invokeAndWait(() ->
+		{
+			try
+			{
+				assertEquals(true, save.invoke(dialog));
+			}
+			catch (ReflectiveOperationException e)
+			{
+				throw new IllegalStateException(e);
+			}
+		});
+		Path file = (Path) field(dialog, "file");
+		JsonObject saved = new Gson().fromJson(new String(Files.readAllBytes(file),
+			java.nio.charset.StandardCharsets.UTF_8), JsonObject.class);
+		for (com.google.gson.JsonElement r : saved.getAsJsonArray("rules"))
+		{
+			JsonObject rule = r.getAsJsonObject();
+			if ("fun-lumbridge-after-cooks-assistant".equals(rule.get("id").getAsString()))
+			{
+				JsonObject when = rule.getAsJsonObject("when");
+				assertEquals("all", when.get("type").getAsString());
+				assertEquals("[12850,12851]", when.getAsJsonArray("conditions").get(0).getAsJsonObject()
+					.getAsJsonArray("regions").toString());
+				assertTrue("and nowhere else", !when.has("regions"));
+			}
+		}
+		SwingUtilities.invokeAndWait(dialog::dispose);
+	}
+
 	private static void collectButtons(java.awt.Container root, List<javax.swing.AbstractButton> out)
 	{
 		for (Component c : root.getComponents())

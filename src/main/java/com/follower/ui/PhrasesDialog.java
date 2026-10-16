@@ -847,9 +847,10 @@ public class PhrasesDialog extends JDialog
 		if (row.regions != null)
 		{
 			JsonArray regions = parseRegions(row.regions.getText(), warnings);
-			if (regions.size() > 0)
+			JsonObject place = placeOf(rule);
+			if (regions.size() > 0 && place != null)
 			{
-				rule.getAsJsonObject("when").add("regions", regions);
+				place.add("regions", regions);
 			}
 			else
 			{
@@ -1033,15 +1034,52 @@ public class PhrasesDialog extends JDialog
 
 	private static JsonArray regionsOf(JsonObject rule)
 	{
+		JsonObject place = placeOf(rule);
+		return place == null ? null : place.getAsJsonArray("regions");
+	}
+
+	/**
+	 * The condition that holds a rule's regions: its when, or the one place
+	 * in an "all" that also asks for a chance or a quest, as the fun- place
+	 * lines do. QA2, 15 Oct: those read as "triggered by something other
+	 * than a place". Null for a rule that is not about a place.
+	 */
+	private static JsonObject placeOf(JsonObject rule)
+	{
 		JsonObject when = rule.has("when") && rule.get("when").isJsonObject()
 			? rule.getAsJsonObject("when") : null;
 		if (when == null)
 		{
 			return null;
 		}
-		String type = optString(when, "type");
-		boolean regionBased = "inRegion".equalsIgnoreCase(type) || "regionEnter".equalsIgnoreCase(type);
-		return regionBased && when.has("regions") ? when.getAsJsonArray("regions") : null;
+		if (isPlace(when))
+		{
+			return when;
+		}
+		JsonObject found = null;
+		if ("all".equalsIgnoreCase(optString(when, "type")) && when.has("conditions")
+			&& when.get("conditions").isJsonArray())
+		{
+			for (JsonElement each : when.getAsJsonArray("conditions"))
+			{
+				if (each.isJsonObject() && isPlace(each.getAsJsonObject()))
+				{
+					if (found != null)
+					{
+						return null;
+					}
+					found = each.getAsJsonObject();
+				}
+			}
+		}
+		return found;
+	}
+
+	private static boolean isPlace(JsonObject condition)
+	{
+		String type = optString(condition, "type");
+		return ("inRegion".equalsIgnoreCase(type) || "regionEnter".equalsIgnoreCase(type))
+			&& condition.has("regions") && condition.get("regions").isJsonArray();
 	}
 
 	private JsonObject readFile() throws IOException
