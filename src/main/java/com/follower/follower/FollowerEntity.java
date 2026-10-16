@@ -563,6 +563,7 @@ public class FollowerEntity
 		}
 		activeGraphics.clear();
 		stayTile = null;
+		releaseAfterCast = false;
 		stayFaceTile = null;
 		stayFaceMax = null;
 		goalTile = null;
@@ -808,9 +809,23 @@ public class FollowerEntity
 		return object == null ? null : object.getModel();
 	}
 
+	/**
+	 * A release asked for mid-cast, carried out when the cast ends: a teleport's
+	 * hold is only a stay, and anything let go of mid-cast (a flourish running
+	 * out, a work session or an errand ending) would walk the follower off its
+	 * cast and leave it behind at the departure point.
+	 */
+	private boolean releaseAfterCast;
+
 	/** Releases a stay pose; following resumes on its own. */
 	public void resumeFollowing()
 	{
+		if (slavedChain != null || vanishAfterEmoteArmed)
+		{
+			releaseAfterCast = true;
+			return;
+		}
+		releaseAfterCast = false;
 		stayTile = null;
 		stayFaceTile = null;
 		stayFaceMax = null;
@@ -1569,6 +1584,7 @@ public class FollowerEntity
 			return;
 		}
 		stayTile = tile;
+		releaseAfterCast = false;
 		goalTile = null;
 		serverPath.clear();
 	}
@@ -1762,6 +1778,11 @@ public class FollowerEntity
 			if (debugEnabled)
 			{
 				log.info("FTRACE obs JUMP from {} to {}", lastSeenPlayerTile, current);
+			}
+			// The player landed while the copy of their cast still plays.
+			if (lastSeenPlayerTile != null && vanishAfterEmoteArmed)
+			{
+				castLanded = true;
 			}
 			lastSeenPlayerTile = current;
 			playerFollowTile = current;
@@ -2260,13 +2281,24 @@ public class FollowerEntity
 		// A stay pose widens the distance to its leash - roaming away from a
 		// posed follower is the point - but a snap of any kind releases it.
 		int leash = stayTile != null ? STAY_LEASH : SNAP_DISTANCE;
-		if (playerTile.getPlane() != tile.getPlane()
+		if (castLanded || playerTile.getPlane() != tile.getPlane()
 			|| tile.distanceTo(playerTile) > leash)
 		{
 			if (client.getGameState() != GameState.LOGGED_IN)
 			{
 				// Snapped from real data once the area has loaded.
 				return;
+			}
+			if (castLanded)
+			{
+				// A teleport clip whose hold outlasts the cast (the Lunar
+				// one's, HUMAN_TELEPORT_OTHER_IMPACT, runs 41 seconds) never
+				// ends in time to vanish: the follower lands with the player.
+				castLanded = false;
+				if (vanishAfterEmoteArmed)
+				{
+					cancelEmote();
+				}
 			}
 			stayTile = null;
 			if (!snapBeside(playerTile))
@@ -3710,6 +3742,18 @@ public class FollowerEntity
 	@lombok.Setter
 	private java.util.function.Consumer<Boolean> onEmoteStateChanged;
 
+	/** Notified as each clip of an emote goes on, with the clip's id, so its hands can be dressed. */
+	@lombok.Setter
+	private java.util.function.IntConsumer onEmoteClip;
+
+	private void emoteClipOn(int clip)
+	{
+		if (onEmoteClip != null)
+		{
+			onEmoteClip.accept(clip);
+		}
+	}
+
 	/**
 	 * The one place emotePlaying changes, so anything that needs to react does
 	 * so AS it happens rather than on the next tick. Half a second of a wave
@@ -4305,6 +4349,17 @@ public class FollowerEntity
 			: new int[]{animation.getLeftHandItem(), animation.getRightHandItem()};
 	}
 
+	/**
+	 * What an emote's clip puts in the hands, as {@link #handItems}, when it
+	 * names a thing for either hand; null when it names nothing, and the
+	 * hands stay as the emote disarm leaves them.
+	 */
+	public int[] emoteHandItems(int animationId)
+	{
+		int[] hands = handItems(animationId);
+		return hands != null && (hands[0] > 0 || hands[1] > 0) ? hands : null;
+	}
+
 	/** Plays a one-shot animation, then resumes the walk/idle pose. */
 	public void playAnimation(int animationId)
 	{
@@ -4433,6 +4488,7 @@ public class FollowerEntity
 		// emote owns the slot, so anything that needs to know what is being
 		// drawn - the tile recentring - has to read it from here.
 		emoteAnimation = clip;
+		emoteClipOn(clip);
 
 		if (graphics != null && index < graphics.length && graphics[index] != null)
 		{
@@ -4631,6 +4687,9 @@ public class FollowerEntity
 	private long vanishedAtMs;
 	private WorldPoint vanishPlayerTile;
 
+	/** Set when the player is seen to land with the vanish still armed. */
+	private boolean castLanded;
+
 	/**
 	 * Arms the teleport exit: when the current emote or slaved chain finishes,
 	 * the follower vanishes - as the player does at the end of their cast - and
@@ -4640,7 +4699,13 @@ public class FollowerEntity
 	 */
 	public void vanishAfterEmote()
 	{
-		vanishAfterEmoteArmed = true;
+		// Only over a cast that is playing: one that never started (no model
+		// to play it on) would hold the vanish, and every release waiting on
+		// the cast, until some later emote.
+		if (emotePlaying)
+		{
+			vanishAfterEmoteArmed = true;
+		}
 	}
 
 	/** Called as a mirrored cast ends: go invisible and wait for the landing. */
@@ -4670,6 +4735,16 @@ public class FollowerEntity
 		if (object != null)
 		{
 			object.setActive(false);
+		}
+		releaseHeldOverTheCast();
+	}
+
+	/** Carries out a release that waited on the cast. */
+	private void releaseHeldOverTheCast()
+	{
+		if (releaseAfterCast && slavedChain == null && !vanishAfterEmoteArmed)
+		{
+			resumeFollowing();
 		}
 	}
 
@@ -4743,6 +4818,7 @@ public class FollowerEntity
 		object.setAnimationController(controller);
 		animationIds.add(slavedChain[slavedIndex]);
 		setEmotePlaying(true);
+		emoteClipOn(slavedChain[slavedIndex]);
 
 		if (slavedGraphics != null && slavedIndex < slavedGraphics.length
 			&& slavedGraphics[slavedIndex] != null)
@@ -4764,6 +4840,23 @@ public class FollowerEntity
 
 	/** The graphic the slaved chain's last stage put on, which the next one's replaces. */
 	private RuneLiteObject stageGraphic;
+
+	/**
+	 * The player's sequence stopped. Only a cast that reached its last stage
+	 * leaves with it; one cut short (a click away, a hit) keeps the follower,
+	 * as a mirrored one-shot cast cut by movement does.
+	 */
+	public void slavedPlayerStopped()
+	{
+		if (slavedChain != null && slavedIndex >= slavedChain.length - 1)
+		{
+			endSlavedChain();
+		}
+		else
+		{
+			cancelEmote();
+		}
+	}
 
 	/** Ends the chain and hands the animation slot back to locomotion. */
 	public void endSlavedChain()
@@ -4909,6 +5002,7 @@ public class FollowerEntity
 		slavedChain = null;
 		slavedGraphics = null;
 		vanishAfterEmoteArmed = false;
+		releaseHeldOverTheCast();
 		// An interrupted death keeps the follower visible - same rule as the
 		// interrupted teleport above.
 		hideAfterEmoteMs = 0;

@@ -652,6 +652,11 @@ public class SpectateSimulationTest
 		assertEquals("and the weapon handed back",
 			Boolean.FALSE, disarms.get(disarms.size() - 1));
 		assertTrue("it must end up following again", follower.following);
+
+		// Up off the knees with the kneel's own rise, not HUMAN_GETUP's rise
+		// from the floor, which starts about 100 units away from the kneel.
+		int[] closing = follower.chains.get(follower.chains.size() - 1);
+		assertEquals(FollowerEntity.PRAY_STAND_UP, closing[0]);
 	}
 
 	@Test

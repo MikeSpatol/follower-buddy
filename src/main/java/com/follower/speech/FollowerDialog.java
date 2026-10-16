@@ -1018,10 +1018,44 @@ public class FollowerDialog extends Overlay
 	private long talkCarryMs;
 	private long lastTalkMs;
 
-	/** The chathead talking sequence; tunable, since ids are folklore. */
+	/**
+	 * A chathead talking sequence forced by {@code ::follower head talk}, for
+	 * testing. 0, the default, plays the neutral face for the lines on show.
+	 */
 	@lombok.Setter
 	@lombok.Getter
-	private int talkAnimationId = 588;
+	private int talkAnimationId;
+
+	/**
+	 * The clip a box plays: the line's own face, else a forced one, else the
+	 * neutral face, each at the game's length for the lines on show.
+	 */
+	static int talkClip(int[] face, int forced, int lines)
+	{
+		int[] clips = face != null ? face
+			: forced > 0 ? new int[]{forced} : Conversation.Expression.NEUTRAL.animations();
+		return clips[Math.max(1, Math.min(clips.length, lines)) - 1];
+	}
+
+	/**
+	 * Takes a live NPC dialog's head turn, pitch and zoom, but only off the
+	 * human head's neutral talk (CHATNEU1-4): any other clip may belong to
+	 * another skeleton or a boss's or pet's framing, which would bend or
+	 * resize the follower's head. The NPC's clip itself is never adopted.
+	 */
+	public void adoptNpcHead(int animationId, int turn, int pitch, int zoom)
+	{
+		for (int neutral : Conversation.Expression.NEUTRAL.animations())
+		{
+			if (animationId == neutral)
+			{
+				npcTurn = turn & 0x7ff;
+				headPitch = pitch & 0x7ff;
+				headZoom = Math.max(1, zoom);
+				return;
+			}
+		}
+	}
 
 	/**
 	 * Rebuilds the head for whoever is speaking, on the client thread - model
@@ -1093,10 +1127,8 @@ public class FollowerDialog extends Overlay
 
 		// A face chosen for the line plays the game's own length for the
 		// lines on show, from its first frame on each page.
-		int wanted = node.expression == null ? talkAnimationId
-			: node.expression[Math.max(1, Math.min(node.expression.length, lines)) - 1];
-		if (talkAnimation != null && (wanted != talkLoadedId
-			|| (node.expression != null && page != talkPage)))
+		int wanted = talkClip(node.expression, talkAnimationId, lines);
+		if (talkAnimation != null && (wanted != talkLoadedId || page != talkPage))
 		{
 			talkAnimation = null;
 			talkFrame = 0;

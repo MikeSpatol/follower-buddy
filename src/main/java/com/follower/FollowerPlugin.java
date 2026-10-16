@@ -1239,6 +1239,7 @@ public class FollowerPlugin extends Plugin
 		clientToolbar.addNavigation(navButton);
 		syncPanel();
 		follower.setOnEmoteStateChanged(this::updateEmoteDisarm);
+		follower.setOnEmoteClip(this::dressEmoteHands);
 		stanceLibrary.setStyleSource(this::weaponUsage);
 		buildSlotIndexAsync();
 	}
@@ -5266,6 +5267,7 @@ public class FollowerPlugin extends Plugin
 			propShown ? propSlot : null, propItemId,
 			outfitOverride == null ? wornSlot : null, wornItemId);
 		dressForPose(outfit, propShown ? propHands : null);
+		dressForPose(outfit, outfitOverride == null ? emoteHands : null);
 		dressForPose(outfit, filmHands);
 
 		appearanceService.request(outfit, com.follower.appearance.ModelSource.DUMP_ONLY, appearance ->
@@ -6008,7 +6010,36 @@ public class FollowerPlugin extends Plugin
 			// A one-shot of the film's is over: its props come off.
 			filmSet.onceOver();
 		}
+		// The emote's own things go with it, in the same rebuild as the
+		// weapon coming back when there is one.
+		boolean handsBack = !emoting && emoteHands != null;
+		emoteHands = emoting ? emoteHands : null;
+		boolean disarmed = emoteDisarmed;
 		refreshEmoteDisarm(emoting);
+		if (handsBack && disarmed == emoteDisarmed)
+		{
+			rebuildFollower();
+		}
+	}
+
+	/**
+	 * What the emote playing names for each hand, left then right, or null.
+	 * The game draws an animation's own hand items whatever is worn: the
+	 * charting quill and scroll, the home teleport's chalk stick, a teleport
+	 * scroll, a smith's hammer. Dressed as the film dresses a pose.
+	 */
+	private int[] emoteHands;
+
+	/** Each clip of an emote, as it goes on: dresses the hands it names. */
+	private void dressEmoteHands(int clip)
+	{
+		int[] hands = thrallNpc == null ? follower.emoteHandItems(clip) : null;
+		if (java.util.Arrays.equals(hands, emoteHands))
+		{
+			return;
+		}
+		emoteHands = hands;
+		rebuildFollower();
 	}
 
 	/**
@@ -7894,11 +7925,12 @@ public class FollowerPlugin extends Plugin
 
 		// Watchdog: a slaved chain waits on the player's next stage; if that
 		// never arrives (desync, logout race), release the follower rather than
-		// hold the last frame forever. Stages arrive at most ~4s apart.
+		// hold the last frame forever. Stages arrive at most ~4s apart. A cast
+		// never seen to finish keeps the follower rather than vanishing it.
 		if (follower.isSlavedChainActive()
 			&& client.getTickCount() - follower.getSlavedAdvanceTick() > 25)
 		{
-			follower.endSlavedChain();
+			follower.cancelEmote();
 		}
 
 		logPoseComparison(local);
@@ -8542,18 +8574,12 @@ public class FollowerPlugin extends Plugin
 						dialog.setDialogInsetY(Math.max(0, dialogRoot.getBounds().y - rootRect.y));
 					}
 				}
-				// Our dialog lays the head out like the NPC side (left), so adopt the
-				// NPC dialog's animation the moment one is seen.
+				// Our dialog lays the head out like the NPC side (left), so adopt a
+				// human NPC head's framing; rotationZ is the head's actual angle.
 				if (group == net.runelite.api.gameval.InterfaceID.CHAT_LEFT)
 				{
-					if (widget.getAnimationId() > 0)
-					{
-						dialog.setTalkAnimationId(widget.getAnimationId());
-					}
-					// rotationZ is the head's actual angle - copy it verbatim.
-					dialog.setNpcTurn(widget.getRotationZ() & 0x7ff);
-					dialog.setHeadPitch(widget.getRotationX() & 0x7ff);
-					dialog.setHeadZoom(Math.max(1, widget.getModelZoom()));
+					dialog.adoptNpcHead(widget.getAnimationId(), widget.getRotationZ(),
+						widget.getRotationX(), widget.getModelZoom());
 				}
 				return;
 			}
@@ -9307,7 +9333,7 @@ public class FollowerPlugin extends Plugin
 		{
 			if (animationId == -1)
 			{
-				clientThread.invoke(follower::endSlavedChain);
+				clientThread.invoke(follower::slavedPlayerStopped);
 			}
 			else
 			{
@@ -9404,10 +9430,25 @@ public class FollowerPlugin extends Plugin
 			log.info("WATCH self graphic {} height {}", graphicId, graphicHeight);
 		}
 
-		if (client.getTickCount() <= mirrorGraphicsUntilTick)
+		if (takesMirroredGraphic(client.getTickCount()))
 		{
 			mirrorGraphic(graphicId, graphicHeight);
 		}
+	}
+
+	/**
+	 * Whether a graphic on the player now is the cast's to copy: within the
+	 * window a copying rule opened, and only the first, so one cast copies
+	 * one graphic.
+	 */
+	boolean takesMirroredGraphic(int tick)
+	{
+		if (tick > mirrorGraphicsUntilTick)
+		{
+			return false;
+		}
+		mirrorGraphicsUntilTick = -1;
+		return true;
 	}
 
 	private void mirrorGraphic(int graphicId, int height)
@@ -11960,17 +12001,17 @@ public class FollowerPlugin extends Plugin
 			clientThread.invoke(follower::vanishAfterEmote);
 		}
 
-		// A mirror rule firing opens the graphic-copy window, and any spotanim
-		// already showing on the player (it can precede the animation event) is
-		// copied immediately.
-		if (rule != null && Boolean.TRUE.equals(rule.mirrorAnimation))
+		// A rule that copies graphics opens the graphic-copy window, and any
+		// spotanim already showing on the player (it can precede the animation
+		// event) is copied immediately.
+		if (rule != null && Boolean.TRUE.equals(rule.copiesGraphics))
 		{
 			mirrorGraphicsUntilTick = client.getTickCount() + MIRROR_GRAPHIC_WINDOW_TICKS;
 			clientThread.invoke(() ->
 			{
 				Player local = client.getLocalPlayer();
 				net.runelite.api.ActorSpotAnim active = local == null ? null : latestSpotAnim(local);
-				if (active != null)
+				if (active != null && takesMirroredGraphic(client.getTickCount()))
 				{
 					mirrorGraphic(active.getId(), active.getHeight());
 				}

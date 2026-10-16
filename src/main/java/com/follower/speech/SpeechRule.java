@@ -63,6 +63,15 @@ public class SpeechRule
 	public Boolean mirrorAnimation;
 
 	/**
+	 * Copy the graphic the player's cast puts on them as well - a teleport's
+	 * swirl, an alchemy's flash: the first one within a few ticks of the rule
+	 * firing, and only the one. Off, a rule leaves the player's graphics alone,
+	 * so a bite of food mid-fight does not have the follower wear the next
+	 * spell that lands on the player.
+	 */
+	public Boolean copiesGraphics;
+
+	/**
 	 * Mirror the player's animation as a held POSE rather than a one-shot, for
 	 * the emotes you can keep doing until you stop.
 	 *
