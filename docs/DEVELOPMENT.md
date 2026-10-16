@@ -477,9 +477,9 @@ follower has a stamp to measure from). On `killCount`: `{boss}`, `{count}`,
   to the config default.
 - `group` - used by the **Messages** config section to silence whole categories.
   The built-in toggles cover `boss`, `health`, `area`, `idle`, `gear`, `quest`,
-  `combat`, `mimic`, `memory`, `souvenir`, `bet` and `clock`; anything else goes
-  in the *Silence groups or rule ids by name* box under **Advanced:
-  animations and graphics** (rule ids work there too, and the Messages window
+  `combat`, `mimic`, `memory`, `souvenir`, `bet`, `clock` and `reactions`;
+  anything else goes in the *Silence groups or rule ids by name* box at the end
+  of the **Messages** section (rule ids work there too, and the Messages window
   shows each rule's id beside its title).
 - `animation` - optional emote animation id played alongside the line.
 - `mirrorAnimation` - `true` to replay the PLAYER'S animation on the follower
@@ -1996,8 +1996,8 @@ OSRS gets to petting the dog.
 follower asked (`isGrateful`), the gestures' cooldowns are halved and the
 seat is taken in half the time (`SkillingController.seatAfter`).
 
-**Walking beside** (`FollowerEntity.followTileFor`, *Walks beside you on
-open ground*). Pets trail; friends walk alongside. After ten continuous
+**Walking beside** (`FollowerEntity.followTileFor`, *Walks at your
+side*). Pets trail; friends walk alongside. After ten continuous
 steps the follow tile becomes the tile at the player's shoulder - one to the
 side of the line of travel, on whichever side the follower already is -
 for as long as that tile is ground the player could step to. Two blocked
@@ -2345,7 +2345,7 @@ These are inherent to the approach, not bugs to be filed:
 - **Equipment-based conditions miss rings and ammo.** `itemEquipped` reads the player
   composition, which only covers slots with a visible model.
 - The region ids in the starter rules are **examples**. Verify with `::follower where`.
-- The follower hides in the Wilderness by default so it can't obscure a real player.
+- The follower hides in the Wilderness and other PvP areas by default so it can't obscure a real player.
   Turn that off under **Follower** (Hide in PvP areas) if you want.
 
 ---
