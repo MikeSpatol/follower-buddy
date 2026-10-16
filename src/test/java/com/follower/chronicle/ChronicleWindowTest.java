@@ -450,6 +450,21 @@ public class ChronicleWindowTest
 		assertEquals("Moles seen off, all told: 41", pageTexts().get(0));
 	}
 
+	/** QA2: the page's number was the one number in the book not grouped in thousands. */
+	@Test
+	public void aLargeNumberIsGroupedAsTheBooksOthersAre() throws Exception
+	{
+		TriggerContext memory = new TriggerContext(null);
+		memory.noteRecord("kc:giant mole", 1234);
+		openOn("{\"id\": \"boss-giant-mole\", \"kind\": \"boss\", \"name\": \"Giant Mole\","
+			+ "\"unlock\": {\"always\": true}, \"summary\": \"Big.\","
+			+ "\"tally\": {\"label\": \"Moles seen off, all told\", \"of\": \"kc:giant mole\"}}",
+			"boss-giant-mole", memory, null);
+		assertEquals("Moles seen off, all told: 1,234", pageTexts().get(0));
+		assertEquals(Arrays.asList("Moles seen off, all told: ", "1,234"),
+			Arrays.asList(ChronicleWindow.tallyParts(pageTexts().get(0))));
+	}
+
 	@Test
 	public void aPageNotYetWrittenKeepsItsNumberToItself() throws Exception
 	{

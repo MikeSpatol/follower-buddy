@@ -1250,9 +1250,9 @@ public class ChronicleWindow extends Overlay
 	}
 
 	/**
-	 * "Goblins you've killed while I watched: 214" - the page's own number,
-	 * or null when it names none or nothing is counted yet, so the line is
-	 * simply not there.
+	 * "Goblins you've killed while I watched: 1,214" - the page's own number,
+	 * grouped as every other number in the book is, or null when it names
+	 * none or nothing is counted yet, so the line is simply not there.
 	 */
 	static String tallyLine(ChronicleEntry entry, int count)
 	{
@@ -1260,7 +1260,7 @@ public class ChronicleWindow extends Overlay
 		{
 			return null;
 		}
-		return entry.tally.label + ": " + count;
+		return entry.tally.label + ": " + String.format(java.util.Locale.ROOT, "%,d", count);
 	}
 
 	/**
