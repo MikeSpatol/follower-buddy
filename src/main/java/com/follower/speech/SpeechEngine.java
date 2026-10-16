@@ -449,6 +449,13 @@ public class SpeechEngine
 		}
 	}
 
+	/** Whether what a waiting line advises was done while it waited: the teleport before "Get out!". */
+	private boolean answered(PendingSpeech delayed)
+	{
+		SpeechRule.Advice advice = delayed.rule.advise;
+		return advice != null && advice.ids != null && getContext().actedSince(advice.ids, delayed.wonTick);
+	}
+
 	/** A won rule waiting out its delayTicks before speaking. */
 	private static final class PendingSpeech
 	{
@@ -469,16 +476,19 @@ public class SpeechEngine
 		boolean heardTheBox;
 		/** The rule's last firing before this win, given back if the line is let go unsaid. */
 		final long firedBefore;
+		/** The game tick it won on. */
+		final int wonTick;
 		/** A callback about the same person was said meanwhile: the plain line stands aside. */
 		boolean stoodAside;
 
-		PendingSpeech(SpeechRule rule, TriggerEvent event, int ticksLeft, long firedBefore)
+		PendingSpeech(SpeechRule rule, TriggerEvent event, int ticksLeft, long firedBefore, int wonTick)
 		{
 			this.rule = rule;
 			this.event = event;
 			this.delay = ticksLeft;
 			this.ticksLeft = ticksLeft;
 			this.firedBefore = firedBefore;
+			this.wonTick = wonTick;
 		}
 	}
 
@@ -1002,10 +1012,11 @@ public class SpeechEngine
 					}
 					it.remove();
 					// Kept waiting, the moment it was about can pass: the
-					// player ate, or the person walked off. Let go unsaid, with
-					// its cooldown given back, so it rises again the next time
-					// it is true.
-					if (held == null && !delayed.rule.when.standingHolds(getContext(), delayed.event))
+					// player ate, or the person walked off, or did what a
+					// warning was about to advise. Let go unsaid, with its
+					// cooldown given back, so it rises the next time it is true.
+					if (held == null && (!delayed.rule.when.standingHolds(getContext(), delayed.event)
+						|| answered(delayed)))
 					{
 						delayed.rule.markFired(delayed.firedBefore);
 						noteSuppressed(delayed.rule, "passed");
@@ -1162,7 +1173,7 @@ public class SpeechEngine
 		if (delay > 0)
 		{
 			winner.markFired(now);
-			pending.add(new PendingSpeech(winner, event, delay, firedBefore));
+			pending.add(new PendingSpeech(winner, event, delay, firedBefore, client.getTickCount()));
 			return;
 		}
 
@@ -1171,7 +1182,7 @@ public class SpeechEngine
 			|| waitsOutTheRest(winner, blocked, 0))
 		{
 			winner.markFired(now);
-			PendingSpeech held = new PendingSpeech(winner, event, 1, firedBefore);
+			PendingSpeech held = new PendingSpeech(winner, event, 1, firedBefore, client.getTickCount());
 			held.gapAfterMs = lastSpokeMs;
 			held.heardTheBox = "dialogue".equals(blocked);
 			pending.add(held);

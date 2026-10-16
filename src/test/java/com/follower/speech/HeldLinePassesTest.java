@@ -160,4 +160,24 @@ public class HeldLinePassesTest
 		assertTrue("no 'Get out!' at 70 percent: " + h.spoken, h.firedBy("critical-hp").isEmpty());
 		assertTrue(held.toString(), held.contains("critical-hp:passed"));
 	}
+
+	@Test
+	public void aWarningAnsweredWhileItWaitedIsLetGo() throws IOException
+	{
+		// Probe P12: 60 damage to 14 percent just after another line, and
+		// the player teleports 2 ticks later, still at 14. "Get out!" was
+		// said after the teleport, and the advice was called ignored a
+		// minute on. The advised act, played while it waited, answers it.
+		Harness h = wire(new Harness(folder.newFolder().toPath()));
+		ticks(h, 20);
+		h.spoken.clear();
+		h.engine.remark("That was a 60.");
+		h.game.hitpoints(10, 70);
+		ticks(h, 2);
+		h.dispatch(TriggerEvent.animation(714));
+		ticks(h, 20);
+		assertTrue("not said after the teleport: " + h.spoken, h.firedBy("critical-hp").isEmpty());
+		assertTrue(held.toString(), held.contains("critical-hp:passed"));
+		assertTrue("no advice left open", !h.engine.getContext().isAdvising());
+	}
 }

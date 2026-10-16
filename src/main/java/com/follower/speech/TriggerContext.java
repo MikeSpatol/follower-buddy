@@ -2823,9 +2823,32 @@ public final class TriggerContext
 		return adviceAbout;
 	}
 
-	/** Offered every animation the player plays, while advice is outstanding. */
+	/** The tick each animation the player played was last played. */
+	private final java.util.Map<Integer, Integer> actTicks = new java.util.HashMap<>();
+
+	/**
+	 * Whether the player has played any of these since that tick: for a
+	 * warning kept waiting, already answered. Behaviour QA, 16 Oct: "Get
+	 * out!" was said after the teleport, and a minute later the advice was
+	 * called ignored.
+	 */
+	public boolean actedSince(java.util.Collection<Integer> ids, int tick)
+	{
+		for (Integer id : ids)
+		{
+			Integer at = actTicks.get(id);
+			if (at != null && at >= tick)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/** Offered every animation the player plays, and settles advice outstanding. */
 	public void offerAct(int animationId)
 	{
+		actTicks.put(animationId, client.getTickCount());
 		if (isAdvising() && adviceIds.contains(animationId))
 		{
 			settleAdvice(AdviceOutcome.HEEDED);
