@@ -12059,8 +12059,11 @@ public class FollowerPlugin extends Plugin
 		}
 		// Nor a silent rule's gesture while a sketch is under way: an idle
 		// fidget played over the scroll, and could be in the picture. It is
-		// body language, not worth playing late, so it goes.
-		if (rule != null && text.isEmpty() && sketching != null && sketching.isSketching())
+		// body language, not worth playing late, so it goes. So in its own
+		// Talk-to box: behaviour QA4, 16 Oct, it yawned, shrugged and struck
+		// its distant pose while its chathead was talking to you.
+		if (rule != null && text.isEmpty()
+			&& ((sketching != null && sketching.isSketching()) || dialog.isOpen()))
 		{
 			return;
 		}

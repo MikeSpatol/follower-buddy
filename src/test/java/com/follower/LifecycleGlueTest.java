@@ -205,6 +205,19 @@ public class LifecycleGlueTest
 	}
 
 	@Test
+	public void noGestureIsPlayedInTheFollowersOwnBox() throws IOException
+	{
+		// Behaviour QA4, 16 Oct: once the player had read for 48 s the
+		// follower yawned, shrugged and struck its distant pose while its
+		// chathead was talking: 4.4 gestures a 90 s box.
+		String speak = method("private void speak(String text,");
+		int gate = speak.indexOf("|| dialog.isOpen()))");
+		assertTrue("a silent rule stands down for the box", gate >= 0
+			&& speak.lastIndexOf("text.isEmpty()", gate) >= 0);
+		assertTrue("before it is played", gate < speak.indexOf("if (text.isEmpty())"));
+	}
+
+	@Test
 	public void theHiddenErrandIsNeverListed() throws IOException
 	{
 		// Text sweep, 14 Oct: the fire errand that walks into the fire is a
