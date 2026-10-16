@@ -8384,9 +8384,11 @@ public class FollowerPlugin extends Plugin
 		speechEngine.dispatch(TriggerEvent.tick());
 
 		// A page written gets its mention after this tick's own events have
-		// been heard, and only when nothing else is being said.
+		// been heard, and only when nothing else is being said. The dialogue
+		// as the rules read it, page flips ridden out: on the raw box the news
+		// went out on a flip and sat over the conversation (QA, 15 Oct).
 		TriggerEvent news = nextPageNews(pageNews, client.getTickCount(), speechEngine.isQuiet(),
-			npcDialogOpen() || sceneQuiet());
+			inConversation() || sceneQuiet());
 		if (news != null)
 		{
 			speechEngine.dispatch(news);

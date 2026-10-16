@@ -148,10 +148,14 @@ public class LifecycleGlueTest
 		// one waits for both to be over.
 		assertTrue("the engine is told of the scene and the quiet after it",
 			method("private void noticeTheScene()").contains("speechEngine.setSceneQuiet(sceneQuiet());"));
+		// And for a conversation as the rules read it, page flips ridden out:
+		// on the raw box the news went out on a flip (QA, 15 Oct).
 		assertTrue("the page news waits for the quiet",
 			method("public void onGameTick(GameTick event)").contains(
 				"nextPageNews(pageNews, client.getTickCount(), speechEngine.isQuiet(),\n"
-					+ "\t\t\tnpcDialogOpen() || sceneQuiet());"));
+					+ "\t\t\tinConversation() || sceneQuiet());"));
+		assertTrue(method("private boolean inConversation()")
+			.contains("return npcDialogOpen() || dialogGoneTicks <= 2;"));
 	}
 
 	@Test
