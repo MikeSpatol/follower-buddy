@@ -201,6 +201,55 @@ public class MilestonesTest
 	}
 
 	@Test
+	public void theCountKeptBeforeAccountsRetiresOnceItsAccountReachesIt()
+		throws IOException, ReflectiveOperationException
+	{
+		// QA pass 4, #41: the profile-wide count from before counts were per
+		// account stood in, for good, for any account without its own.
+		Harness h = new Harness(folder.newFolder().toPath());
+		com.follower.chronicle.ChronicleLoader pages =
+			new com.follower.chronicle.ChronicleLoader(new com.google.gson.Gson());
+		pages.load(folder.newFolder().toPath());
+		com.follower.chronicle.ChronicleProgress book =
+			new com.follower.chronicle.ChronicleProgress(h.game.client, pages, h.engine::getContext);
+		String[] who = {"alt"};
+		book.setAccount(() -> who[0]);
+		FollowerPlugin plugin = new FollowerPlugin();
+		for (Object[] field : new Object[][]{{"config", new FollowerConfig()
+		{
+		}}, {"speechEngine", h.engine}, {"chronicleProgress", book}})
+		{
+			java.lang.reflect.Field f = FollowerPlugin.class.getDeclaredField((String) field[0]);
+			f.setAccessible(true);
+			f.set(plugin, field[1]);
+		}
+		h.engine.getContext().noteRecord("kc:king black dragon", 1200);
+		com.follower.chronicle.ChronicleEntry kbd = pages.get("boss-king-black-dragon");
+		net.runelite.api.events.ChatMessage message = new net.runelite.api.events.ChatMessage();
+		message.setType(net.runelite.api.ChatMessageType.GAMEMESSAGE);
+		message.setName("");
+
+		// An alt's lower count says the old one was someone else's: it stays.
+		message.setMessage("Your King Black Dragon kill count is: <col=ff0000>4</col>.");
+		plugin.onChatMessage(message);
+		assertEquals(1200, h.engine.getContext().getRecord("kc:king black dragon"));
+		who[0] = "main";
+		assertEquals("the main has none of its own yet", 1200, book.count(kbd));
+
+		// The main reaching it says it was the main's: it has done its job.
+		message.setMessage("Your King Black Dragon kill count is: <col=ff0000>1,201</col>.");
+		plugin.onChatMessage(message);
+		assertEquals(0, h.engine.getContext().getRecord("kc:king black dragon"));
+		assertEquals(1201, book.count(kbd));
+		who[0] = "alt";
+		assertEquals(4, book.count(kbd));
+		who[0] = "another";
+		assertEquals("an account that never killed it has no tally", 0, book.count(kbd));
+		assertEquals("the game's own spelling, for the Memory window", "King Black Dragon",
+			h.engine.getContext().getKillCountNames().get("king black dragon"));
+	}
+
+	@Test
 	public void aTracksNameComesWithoutTheGamesColourTag()
 	{
 		// Every music unlock in the transcripts was said tag and all:

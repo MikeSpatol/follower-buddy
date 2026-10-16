@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.UnaryOperator;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -149,6 +150,16 @@ public class MemoryDialog extends JDialog
 	 */
 	public static List<String[]> summarise(TriggerContext c, Map<Integer, String> regionNames)
 	{
+		return summarise(c, regionNames, key -> key);
+	}
+
+	/**
+	 * @param accountKey the key a kill count is kept under for this account
+	 * (ChronicleProgress.accountKey); only this account's counts are shown
+	 */
+	public static List<String[]> summarise(TriggerContext c, Map<Integer, String> regionNames,
+		UnaryOperator<String> accountKey)
+	{
 		List<String[]> rows = new ArrayList<>();
 
 		rows.add(header("THE BASICS"));
@@ -177,12 +188,19 @@ public class MemoryDialog extends JDialog
 		}
 
 		rows.add(header("BESTS"));
-		if (c.getRecords().isEmpty())
+		List<String[]> bests = new ArrayList<>();
+		c.getRecords().forEach((what, value) ->
+		{
+			if (isShown(what, c.getRecords(), accountKey))
+			{
+				bests.add(row(keyLabel(what, c.getKillCountNames()), Integer.toString(value)));
+			}
+		});
+		if (bests.isEmpty())
 		{
 			rows.add(remark("No records held yet."));
 		}
-		c.getRecords().forEach((what, value) ->
-			rows.add(row(keyLabel(what), Integer.toString(value))));
+		rows.addAll(bests);
 
 		// The phrase is written for the middle of a sentence - "I keep
 		// thinking about {memory}" - so bare in a window it reads as a
@@ -292,6 +310,12 @@ public class MemoryDialog extends JDialog
 	 */
 	public static String keyLabel(String key)
 	{
+		return keyLabel(key, java.util.Collections.emptyMap());
+	}
+
+	/** @param killCountNames each boss's name as the game writes it, by its lower-case name */
+	static String keyLabel(String key, Map<String, String> killCountNames)
+	{
 		boolean today = key.endsWith(TriggerContext.TODAY);
 		String base = today ? key.substring(0, key.length() - TriggerContext.TODAY.length()) : key;
 		String label;
@@ -303,7 +327,8 @@ public class MemoryDialog extends JDialog
 		{
 			// Per account: the account's key is not for showing.
 			String boss = base.substring("kc:".length());
-			label = capitalised(boss.contains("@") ? boss.substring(0, boss.indexOf('@')) : boss) + " kill count";
+			boss = boss.contains("@") ? boss.substring(0, boss.indexOf('@')) : boss;
+			label = killCountNames.getOrDefault(boss, capitalised(boss)) + " kill count";
 		}
 		else
 		{
@@ -350,6 +375,24 @@ public class MemoryDialog extends JDialog
 			}
 		}
 		return today ? label + " today" : label;
+	}
+
+	/**
+	 * Whether a best belongs in this account's window. Kill counts are kept
+	 * per account, so another account's on the same profile is left out, and
+	 * the one kept before counts were per account is shown only while this
+	 * account has none of its own, as the book's page reads it.
+	 */
+	private static boolean isShown(String key, Map<String, Integer> records,
+		UnaryOperator<String> accountKey)
+	{
+		if (!key.startsWith("kc:"))
+		{
+			return true;
+		}
+		String bare = key.contains("@") ? key.substring(0, key.indexOf('@')) : key;
+		String mine = accountKey.apply(bare);
+		return key.equals(mine) || (key.equals(bare) && !records.containsKey(mine));
 	}
 
 	private static String capitalised(String s)

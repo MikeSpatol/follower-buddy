@@ -42,6 +42,7 @@ public class MemorySurvivesRestartTest
 		context.tally("advice:taken");
 		context.noteRecord("hit", 42);
 		context.noteRecord("session", 238);
+		context.noteKillCountName("TzTok-Jad");
 		context.setSessionCount(36);
 		context.noteIncident("chicken-death", "that chicken", "Chicken", 1_700_000_000_000L);
 		context.notePlaceFeeling(10);
@@ -92,6 +93,8 @@ public class MemorySurvivesRestartTest
 		assertEquals("tallies", 1, after.getTally("advice:taken"));
 		assertEquals("records", 42, after.getRecord("hit"));
 		assertEquals("records", 238, after.getRecord("session"));
+		assertEquals("a boss's name as the game writes it", "TzTok-Jad",
+			after.getKillCountNames().get("tztok-jad"));
 		assertEquals("sessions", 36, after.getSessionCount());
 		assertEquals("the incident", "that chicken", after.getIncidentPhrase());
 		assertEquals("who it was with", "Chicken", after.getIncidentWho());

@@ -2496,6 +2496,8 @@ public class FollowerPlugin extends Plugin
 	{
 		java.util.Map<String, Integer> tallies;
 		java.util.Map<String, Integer> records;
+		/** Each boss's name as the game writes it, by its lower-case kill count key. */
+		java.util.Map<String, String> killCountNames;
 		int sessions;
 
 		/** The incident the follower is still thinking about, and how to say it. */
@@ -2698,7 +2700,7 @@ public class FollowerPlugin extends Plugin
 			// one its Forget everything would wipe (QA3).
 			java.util.List<String[]> rows =
 				com.follower.ui.MemoryDialog.summarise(speechEngine.getContext(),
-					ruleLoader.getRegionNames());
+					ruleLoader.getRegionNames(), chronicleProgress::accountKey);
 			javax.swing.SwingUtilities.invokeLater(() ->
 			{
 				if (memoryDialog != null && memoryDialog.isVisible())
@@ -2759,6 +2761,7 @@ public class FollowerPlugin extends Plugin
 				return fallbackMetWearing;
 			}
 			context.restoreCounters(saved.tallies, saved.records);
+			context.restoreKillCountNames(saved.killCountNames);
 			context.setSessionCount(saved.sessions);
 			context.restoreIncident(saved.incidentKey, saved.incidentPhrase,
 				saved.incidentCount, saved.incidentWhere, saved.incidentWhenMs, saved.incidentWho);
@@ -2831,6 +2834,8 @@ public class FollowerPlugin extends Plugin
 		SavedCounters saved = new SavedCounters();
 		saved.tallies = trimCounters(context.getTallies());
 		saved.records = trimCounters(context.getRecords());
+		saved.killCountNames = context.getKillCountNames().isEmpty() ? null
+			: new java.util.HashMap<>(context.getKillCountNames());
 		saved.sessions = context.getSessionCount();
 		saved.incidentKey = context.getIncidentKey();
 		saved.incidentPhrase = context.getIncidentPhrase();
@@ -3267,7 +3272,7 @@ public class FollowerPlugin extends Plugin
 		{
 			java.util.List<String[]> rows =
 				com.follower.ui.MemoryDialog.summarise(speechEngine.getContext(),
-					ruleLoader.getRegionNames());
+					ruleLoader.getRegionNames(), chronicleProgress::accountKey);
 			javax.swing.SwingUtilities.invokeLater(() ->
 			{
 				if (memoryDialog == null)
@@ -3324,7 +3329,7 @@ public class FollowerPlugin extends Plugin
 
 			java.util.List<String[]> rows =
 				com.follower.ui.MemoryDialog.summarise(speechEngine.getContext(),
-					ruleLoader.getRegionNames());
+					ruleLoader.getRegionNames(), chronicleProgress::accountKey);
 			javax.swing.SwingUtilities.invokeLater(() ->
 			{
 				if (memoryDialog != null)
@@ -9302,13 +9307,18 @@ public class FollowerPlugin extends Plugin
 		// A record rather than a tally: the game's count only ever goes up,
 		// and what the follower keeps is the highest it has heard. The game
 		// keeps it per account, so the follower does too.
-		String key = "kc:" + boss.toLowerCase(Locale.ROOT);
-		if (chronicleProgress != null)
-		{
-			key = chronicleProgress.accountKey(key);
-		}
+		String bare = "kc:" + boss.toLowerCase(Locale.ROOT);
+		String key = chronicleProgress == null ? bare : chronicleProgress.accountKey(bare);
 		int last = context.getRecord(key);
 		context.noteRecord(key, count);
+		context.noteKillCountName(boss);
+		// The count kept before counts were per account was this account's
+		// once this one has reached it, and it has done its job: kept, it
+		// would stand in for an alt that never killed the boss, for good.
+		if (!key.equals(bare) && count >= context.getRecord(bare))
+		{
+			context.forgetRecord(bare);
+		}
 		speechEngine.dispatch(TriggerEvent.killCount(boss, count, last));
 	}
 

@@ -641,6 +641,44 @@ public final class TriggerContext
 		return records.getOrDefault(what, 0);
 	}
 
+	/** Drops a record that has done its job, such as a count now kept under another key. */
+	public void forgetRecord(String what)
+	{
+		if (records.remove(what) != null)
+		{
+			countersDirty = true;
+		}
+	}
+
+	/**
+	 * Each boss's name as the game writes it ("TzTok-Jad"), by the lower-case
+	 * name its kill count is kept under, so the Memory window can show it
+	 * the game's way rather than as "Tztok-jad".
+	 */
+	private final java.util.Map<String, String> killCountNames = new java.util.HashMap<>();
+
+	public void noteKillCountName(String asWritten)
+	{
+		if (!asWritten.equals(killCountNames.put(asWritten.toLowerCase(java.util.Locale.ROOT), asWritten)))
+		{
+			countersDirty = true;
+		}
+	}
+
+	/** The live map, for the plugin to write out and the window to read. Not a copy. */
+	public java.util.Map<String, String> getKillCountNames()
+	{
+		return killCountNames;
+	}
+
+	public void restoreKillCountNames(java.util.Map<String, String> saved)
+	{
+		if (saved != null)
+		{
+			saved.forEach(killCountNames::putIfAbsent);
+		}
+	}
+
 	/**
 	 * How many times the follower has been started up with this player,
 	 * this one included. Counted at login, so the first session is 1.

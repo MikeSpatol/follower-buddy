@@ -89,6 +89,50 @@ public class MemorySurfaceTest
 	}
 
 	@Test
+	public void killCountsShowThisAccountsOneRowPerBoss()
+	{
+		// QA pass 4, #15 and #42: the old profile-wide count, this account's
+		// and an alt's all showed, under one label with three numbers.
+		TriggerContext context = new TriggerContext(new FakeGame().client);
+		context.noteRecord("kc:zulrah", 150);
+		context.noteRecord("hit", 42);
+		context.noteRecord("kc:zulrah@1234567890", 151);
+		context.noteRecord("kc:zulrah@9876543210", 12);
+		context.noteRecord("kc:vorkath@9876543210", 3);
+
+		String mine = flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap(),
+			key -> key + "@1234567890"));
+		assertTrue(mine, mine.contains("Zulrah kill count: 151\n"));
+		assertEquals(mine, 1, mine.split("kill count", -1).length - 1);
+		assertTrue(mine, mine.contains("Biggest hit: 42\n"));
+
+		// An account with none of its own reads the old count, as the book does.
+		String another = flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap(),
+			key -> key + "@5555"));
+		assertTrue(another, another.contains("Zulrah kill count: 150\n"));
+		assertEquals(another, 1, another.split("kill count", -1).length - 1);
+
+		// Only another account's counts: nothing of this one's to show.
+		context.getRecords().remove("hit");
+		context.getRecords().remove("kc:zulrah");
+		String none = flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap(),
+			key -> key + "@5555"));
+		assertTrue(none, none.contains("No records held yet."));
+	}
+
+	@Test
+	public void aBossIsNamedAsTheGameWritesIt()
+	{
+		// QA pass 4, #54: "Tztok-jad kill count", from the lower-case key.
+		TriggerContext context = new TriggerContext(new FakeGame().client);
+		context.noteRecord("kc:tztok-jad@main", 5);
+		context.noteKillCountName("TzTok-Jad");
+		String shown = flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap(),
+			key -> key + "@main"));
+		assertTrue(shown, shown.contains("TzTok-Jad kill count: 5\n"));
+	}
+
+	@Test
 	public void countsAndBestsAreNamedInWords()
 	{
 		// QA, 15 Oct: the window showed the keys the plugin files them under.
