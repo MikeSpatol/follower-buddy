@@ -119,15 +119,25 @@ public class RunningBitOrderTest
 		int[][] stages = {{5, 1}, {20, 2}, {50, 3}, {120, 4}};
 		for (int[] stage : stages)
 		{
-			Harness h = harnessWith(FENCE);
-			// Met long ago; the opener said some days back.
-			h.engine.getContext().setMetOnDay(daysAgo(400));
-			h.engine.getContext().restoreSpokenOnce(
-				Collections.singletonList("fun-fence-book-start"),
-				Collections.singletonMap("fun-fence-book-start", daysAgo(stage[0])));
-			h.gameTicks(700);
-			assertEquals(stage[0] + " days after the opener",
-				Collections.singleton(FENCE.get(stage[1])), heard(h, FENCE));
+			// Each stage rolls a small chance in its idle window, so one
+			// session can pass without it: a few sessions, and never the
+			// wrong stage in any of them.
+			boolean heardIt = false;
+			for (int session = 0; session < 5 && !heardIt; session++)
+			{
+				Harness h = harnessWith(FENCE);
+				// Met long ago; the opener said some days back.
+				h.engine.getContext().setMetOnDay(daysAgo(400));
+				h.engine.getContext().restoreSpokenOnce(
+					Collections.singletonList("fun-fence-book-start"),
+					Collections.singletonMap("fun-fence-book-start", daysAgo(stage[0])));
+				h.gameTicks(700);
+				Set<String> said = heard(h, FENCE);
+				assertTrue(stage[0] + " days after the opener, only its stage: " + said,
+					minus(said, FENCE.get(stage[1])).isEmpty());
+				heardIt = said.contains(FENCE.get(stage[1]));
+			}
+			assertTrue(stage[0] + " days after the opener, its stage is heard", heardIt);
 		}
 
 		Harness unopened = harnessWith(Arrays.asList(FENCE.get(1), FENCE.get(2), FENCE.get(3), FENCE.get(4)));
