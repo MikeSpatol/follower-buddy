@@ -2233,7 +2233,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** HP under 40%
 - **does:** occasion (never held back); advises: food
-- **pacing:** priority 100, cooldown 1m, both
+- **pacing:** priority 100, cooldown 3m, both
 
 - Eat something! {hp} out of {maxHp} is not a plan.
 - You're on {hp}. I'd feel better if you weren't.
@@ -6187,7 +6187,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > The Lumbridge cook. NOTE: other NPCs named Cook exist and will match too.
 
-- **when:** Cook within 5 tiles, in sight
+- **when:** Cook within 5 tiles, in sight AND NOT (the follower saw COOKS_ASSISTANT done)
 - **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
 
 - A cook in distress, I'd wager. There's usually an egg involved.
@@ -6198,7 +6198,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Father Aereck of the Lumbridge church.
 
-- **when:** Father Aereck within 5 tiles, in sight
+- **when:** Father Aereck within 5 tiles, in sight AND NOT (the follower saw THE_RESTLESS_GHOST done)
 - **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
 
 - Father Aereck. Church and graveyard both, he's never short of work.

@@ -1453,7 +1453,7 @@
       "group": "health",
       "priority": 100,
       "output": "both",
-      "cooldownMs": 60000,
+      "cooldownMs": 180000,
       "when": {
         "type": "healthBelow",
         "percent": 40
@@ -4624,11 +4624,25 @@
       "delayTicks": 2,
       "cooldownMs": 3600000,
       "when": {
-        "type": "npcNearby",
-        "visible": true,
-        "within": 5,
-        "names": [
-          "Cook"
+        "type": "all",
+        "conditions": [
+          {
+            "type": "npcNearby",
+            "visible": true,
+            "within": 5,
+            "names": [
+              "Cook"
+            ]
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "questWitnessed",
+                "quest": "COOKS_ASSISTANT"
+              }
+            ]
+          }
         ]
       },
       "say": [
@@ -4649,11 +4663,25 @@
       "delayTicks": 2,
       "cooldownMs": 3600000,
       "when": {
-        "type": "npcNearby",
-        "visible": true,
-        "within": 5,
-        "names": [
-          "Father Aereck"
+        "type": "all",
+        "conditions": [
+          {
+            "type": "npcNearby",
+            "visible": true,
+            "within": 5,
+            "names": [
+              "Father Aereck"
+            ]
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "questWitnessed",
+                "quest": "THE_RESTLESS_GHOST"
+              }
+            ]
+          }
         ]
       },
       "say": [
@@ -14906,7 +14934,8 @@
           },
           {
             "type": "questWitnessed",
-            "quest": "COOKS_ASSISTANT"
+            "quest": "COOKS_ASSISTANT",
+            "minimum": 1
           }
         ]
       },
@@ -14940,7 +14969,8 @@
           },
           {
             "type": "questWitnessed",
-            "quest": "SHEEP_SHEARER"
+            "quest": "SHEEP_SHEARER",
+            "minimum": 1
           }
         ]
       },
@@ -15115,7 +15145,8 @@
           },
           {
             "type": "questWitnessed",
-            "quest": "X_MARKS_THE_SPOT"
+            "quest": "X_MARKS_THE_SPOT",
+            "minimum": 1
           }
         ]
       },
@@ -15416,7 +15447,8 @@
           },
           {
             "type": "questWitnessed",
-            "quest": "RUNE_MYSTERIES"
+            "quest": "RUNE_MYSTERIES",
+            "minimum": 1
           },
           {
             "type": "none",
