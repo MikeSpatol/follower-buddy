@@ -16,6 +16,7 @@ import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.api.gameval.InterfaceID;
+import net.runelite.api.gameval.VarClientID;
 import net.runelite.api.widgets.Widget;
 import org.junit.Before;
 import org.junit.Rule;
@@ -41,6 +42,9 @@ public class ConversationStageTest
 	/** The interfaces open now, by group id. */
 	private final Set<Integer> open = new HashSet<>();
 
+	/** The chatbox prompt's mode (MESLAYERMODE), 0 for none. */
+	private int chatboxInput;
+
 	@Before
 	public void setUp() throws Exception
 	{
@@ -55,6 +59,10 @@ public class ConversationStageTest
 				if (method.getName().equals("getWidget") && args != null && args.length == 2)
 				{
 					return open.contains((Integer) args[0]) ? box : null;
+				}
+				if (method.getName().equals("getVarcIntValue"))
+				{
+					return (Integer) args[0] == VarClientID.MESLAYERMODE ? chatboxInput : 0;
 				}
 				if (method.getName().equals("addChatMessage"))
 				{
@@ -91,12 +99,18 @@ public class ConversationStageTest
 		ConversationPlayer.Stage stage = stage();
 		assertFalse("nothing open", stage.gameDialogueOpen());
 		for (int group : new int[]{InterfaceID.CHAT_LEFT, InterfaceID.CHAT_RIGHT, InterfaceID.CHATMENU,
-			InterfaceID.MESSAGEBOX, InterfaceID.OBJECTBOX, InterfaceID.OBJECTBOX_DOUBLE, InterfaceID.LEVELUP_DISPLAY})
+			InterfaceID.MESSAGEBOX, InterfaceID.OBJECTBOX, InterfaceID.OBJECTBOX_DOUBLE, InterfaceID.LEVELUP_DISPLAY,
+			// QA3: Make-X, the destroy question and the graphic box.
+			InterfaceID.SKILLMULTI, InterfaceID.CONFIRMDESTROY, InterfaceID.GRAPHICBOX})
 		{
 			open.clear();
 			open.add(group);
 			assertTrue("interface " + group, stage.gameDialogueOpen());
 		}
+		open.clear();
+		// And a chatbox prompt, Enter amount and the like.
+		chatboxInput = 7;
+		assertTrue("a chatbox prompt", stage.gameDialogueOpen());
 	}
 
 	@Test

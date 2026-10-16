@@ -3676,11 +3676,17 @@ public class FollowerPlugin extends Plugin
 				// The game's other boxes over the chatbox too: a message, an
 				// item, two items, a level-up. QA2, 15 Oct: a written line
 				// was drawn over one and took its "Click here to continue".
+				// QA3: and Make-X, the destroy question, the graphic box and
+				// a chatbox prompt such as Enter amount.
 				return npcDialogOpen()
 					|| client.getWidget(net.runelite.api.gameval.InterfaceID.MESSAGEBOX, 0) != null
 					|| client.getWidget(net.runelite.api.gameval.InterfaceID.OBJECTBOX, 0) != null
 					|| client.getWidget(net.runelite.api.gameval.InterfaceID.OBJECTBOX_DOUBLE, 0) != null
-					|| client.getWidget(net.runelite.api.gameval.InterfaceID.LEVELUP_DISPLAY, 0) != null;
+					|| client.getWidget(net.runelite.api.gameval.InterfaceID.LEVELUP_DISPLAY, 0) != null
+					|| client.getWidget(net.runelite.api.gameval.InterfaceID.SKILLMULTI, 0) != null
+					|| client.getWidget(net.runelite.api.gameval.InterfaceID.CONFIRMDESTROY, 0) != null
+					|| client.getWidget(net.runelite.api.gameval.InterfaceID.GRAPHICBOX, 0) != null
+					|| client.getVarcIntValue(net.runelite.api.gameval.VarClientID.MESLAYERMODE) != 0;
 			}
 
 			@Override
