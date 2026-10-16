@@ -1685,6 +1685,13 @@ public class SpeechEngine
 				boolean endsPhrase = close + 2 >= template.length()
 					|| template.charAt(close + 1) != ' '
 					|| !Character.isLetter(template.charAt(close + 2));
+				// The agreed nickname is written for the middle of a sentence,
+				// "the swot". Said to the player it is a name: "Hello, swot.",
+				// never "Hello, the swot." A {candidate} is only talked about.
+				if ("nickname".equals(key) && addressed(out, template, close))
+				{
+					replacement = replacement.replaceFirst("(?i)^the ", "");
+				}
 				// A name that brings its own "The" is a proper one.
 				boolean named = replacement.regionMatches(true, 0, "the ", 0, 4);
 				// Vorkath is somebody, not a kind of thing: never the Vorkath,
@@ -1837,6 +1844,14 @@ public class SpeechEngine
 		}
 		String word = out.substring(start, space).toLowerCase(Locale.ROOT);
 		return word.equals("a") || word.equals("an") || POINTING.contains(word);
+	}
+
+	/** Whether a value set off by a comma before it and the sentence's end after it is said to someone. */
+	private static boolean addressed(StringBuilder out, String template, int close)
+	{
+		int n = out.length();
+		return n >= 2 && out.charAt(n - 2) == ',' && out.charAt(n - 1) == ' '
+			&& (close + 1 >= template.length() || ".!?".indexOf(template.charAt(close + 1)) >= 0);
 	}
 
 	/**
