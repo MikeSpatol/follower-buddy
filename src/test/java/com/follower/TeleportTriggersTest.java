@@ -50,4 +50,22 @@ public class TeleportTriggersTest
 		// enchantments too: only the teleport's own absorb is copied.
 		assertTrue(copying(AnimationID.POH_SMASH_MAGIC_TABLET).firedBy("mirror-teleport").isEmpty());
 	}
+
+	/**
+	 * QA, 16 Oct: two cosmetic home teleports' first stages, beside the
+	 * Trailblazer and League 3 ones in gameval and the cache, were missing,
+	 * and with them the copy. COW_HOME_TELEPORT_1 in RuneLite's own legacy
+	 * constants is 1696, so that one stays though gameval names it a dodge.
+	 */
+	@Test
+	public void everyHomeTeleportsFirstStageStartsTheCopy() throws IOException
+	{
+		for (int start : new int[]{AnimationID.AIDE_DRAWING_CHALK_CIRCLE,
+			AnimationID.LEAGUES_6_HOME_TELEPORT_PLAYER_01, AnimationID.LEAGUE_TRAILBLAZER_HOME_TELEPORT_HUMAN_1,
+			AnimationID.LEAGUE03_HOME_TELEPORT_HUMAN_1, AnimationID.HUMAN_DODGE_RF_A,
+			AnimationID.HOME_TELEPORT_HUMAN_FIRE_1, AnimationID.HOME_TELEPORT_HUMAN_ECHOES_1})
+		{
+			assertEquals("home teleport " + start, 1, copying(start).firedBy("mirror-home-teleport").size());
+		}
+	}
 }
