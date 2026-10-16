@@ -371,6 +371,12 @@ public final class CrossingWatch
 		return run != null;
 	}
 
+	/** Whether what is being watched has moved the player: a skilling loop or an emote has not. */
+	public boolean isWatchingMovement()
+	{
+		return run != null && (run.displaced() || run.glided > 0 || run.hopMs >= 0);
+	}
+
 	/** Whether anything odd moved or posed the player within this long before {@code nowMs}. */
 	public boolean wasOddWithin(long nowMs, long windowMs)
 	{

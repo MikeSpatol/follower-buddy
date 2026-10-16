@@ -24,8 +24,10 @@ import lombok.extern.slf4j.Slf4j;
  * and the follower decided: a crossing recognised, ended, cut or rebuilt, a
  * cap tripped, every snap and placement with its reason.
  *
- * <p>Buffered and written on a timer, as the speech transcript is, so the
- * frame never waits on the disk; flushed at once when switched on or off.
+ * <p>Buffered, and written every 5 s in one small append, as the speech
+ * transcript is; flushed at once when switched on or off. The client thread
+ * writes it and the plugin's shutdown flushes it from another, so the
+ * buffer is only touched under its lock.
  */
 @Slf4j
 public class AgilityTrace
@@ -36,7 +38,7 @@ public class AgilityTrace
 	private static final long FLUSH_EVERY_MS = 5_000L;
 
 	/** What a tick line's columns are, written when the trace starts. */
-	static final String COLUMNS = "tick | player x,y,plane pose anim gfx moving|still xp+N hit type"
+	static final String COLUMNS = "tick fps | player x,y,plane pose anim gfx moving|still xp+N hit type"
 		+ " | watch state | follower x,y,plane queue N state";
 
 	private Path dataDir;
@@ -47,6 +49,8 @@ public class AgilityTrace
 	public void initialise(Path dataDir)
 	{
 		this.dataDir = dataDir;
+		// TODO(merge): keep only recent days' files, with fix5/ui's
+		// LogRetention.prune(dataDir, "agility-trace-", LocalDate.now()).
 	}
 
 	/** Today's file: a session past midnight carries on in the new day's. */
@@ -60,7 +64,7 @@ public class AgilityTrace
 		return enabled;
 	}
 
-	public void setEnabled(boolean on)
+	public synchronized void setEnabled(boolean on)
 	{
 		if (on == enabled)
 		{
@@ -97,13 +101,13 @@ public class AgilityTrace
 		}
 	}
 
-	private void append(String line)
+	private synchronized void append(String line)
 	{
 		pending.add(LocalTime.now().format(CLOCK) + " " + line);
 	}
 
 	/** Called from the tick. Writes only when there is something and it is due. */
-	public void flushIfDue()
+	public synchronized void flushIfDue()
 	{
 		if (!pending.isEmpty() && System.currentTimeMillis() - lastFlushMs >= FLUSH_EVERY_MS)
 		{
@@ -111,7 +115,7 @@ public class AgilityTrace
 		}
 	}
 
-	public void flush()
+	public synchronized void flush()
 	{
 		lastFlushMs = System.currentTimeMillis();
 		Path file = getFile();
