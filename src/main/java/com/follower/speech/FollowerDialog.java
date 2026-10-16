@@ -1030,6 +1030,16 @@ public class FollowerDialog extends Overlay
 	private long lastTalkMs;
 
 	/**
+	 * The last head drawn, and what it was drawn from. A talk frame is held
+	 * for several frames of the overlay, and posing and rasterising the head
+	 * again for each was a new 150 px image every frame the box was open.
+	 */
+	private BufferedImage lastFace;
+	private net.runelite.api.Model lastFaceBase;
+	private net.runelite.api.Animation lastFaceAnimation;
+	private int[] lastFacePose;
+
+	/**
 	 * A chathead talking sequence forced by {@code ::follower head talk}, for
 	 * testing. 0, the default, plays the neutral face for the lines on show.
 	 */
@@ -1189,10 +1199,20 @@ public class FollowerDialog extends Overlay
 			talkFrame = nextTalkFrame(talkFrame, lengths.length, talkAnimation.getFrameStep());
 		}
 
+		int[] pose = {talkFrame, headTurn(), headPitch, headZoom, headWidth(), headHeight(), originY()};
+		if (lastFace != null && lastFaceBase == chatheadBase && lastFaceAnimation == talkAnimation
+			&& java.util.Arrays.equals(pose, lastFacePose))
+		{
+			return lastFace;
+		}
 		net.runelite.api.Model posed = client.applyTransformations(
 			chatheadBase, talkAnimation, talkFrame, null, 0);
-		return ChatheadRenderer.render(posed == null ? chatheadBase : posed,
+		lastFace = ChatheadRenderer.render(posed == null ? chatheadBase : posed,
 			chatheadBase, headWidth(), headHeight(), headTurn(), headPitch, headZoom, 1.0, headWidth() / 2, originY());
+		lastFaceBase = chatheadBase;
+		lastFaceAnimation = talkAnimation;
+		lastFacePose = pose;
+		return lastFace;
 	}
 
 	private String speakerName()
