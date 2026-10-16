@@ -3500,16 +3500,19 @@ public final class TriggerContext
 		}
 		for (NPC npc : view.npcs())
 		{
-			if (npc == null || !predicate.test(npc))
+			if (npc == null)
 			{
 				continue;
 			}
+			// Distance first: it is cheap, and the predicate is a name match
+			// per pattern, which over a whole loaded scene once a tick per
+			// rule cost milliseconds in a crowd (perf audit, Oct 2026).
 			WorldPoint npcLocation = npc.getWorldLocation();
 			if (location == null || npcLocation == null)
 			{
 				continue;
 			}
-			if (npcLocation.distanceTo(location) > within)
+			if (npcLocation.distanceTo(location) > within || !predicate.test(npc))
 			{
 				continue;
 			}
