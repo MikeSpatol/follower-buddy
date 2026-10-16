@@ -89,6 +89,7 @@ public class SpeechJournal
 	public void initialise(Path dataDir)
 	{
 		file = dataDir.resolve("transcript-" + LocalDate.now() + ".log");
+		com.follower.LogRetention.prune(dataDir, "transcript-", LocalDate.now());
 	}
 
 	public Path getFile()
