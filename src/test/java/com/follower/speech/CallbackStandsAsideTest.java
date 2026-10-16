@@ -82,14 +82,17 @@ public class CallbackStandsAsideTest
 		// Behaviour QA, 16 Oct (probe P8): the Duke walks up with a box open.
 		// The plain line rises alone, the callback being gated off by the
 		// box, and is held for it; the callback rises as it closes and wins.
-		// Both were said, 6 s apart.
+		// Both were said, 6 s apart. Both wait 2 ticks, as shipped: the plain
+		// line gets its beat after the box before the callback's delay is
+		// out, so it stands aside at the callback's win, not its saying.
 		Harness h = new Harness(folder.newFolder().toPath(), "{\"version\": 1, \"rules\": ["
-			+ "{\"id\": \"fun-duke-after-cooks-assistant\", \"group\": \"t\", \"priority\": 36,"
+			+ "{\"id\": \"fun-duke-after-cooks-assistant\", \"group\": \"t\", \"priority\": 36, \"delayTicks\": 2,"
 			+ " \"cooldownMs\": 10800000, \"waits\": true, \"when\": {\"type\": \"all\", \"conditions\": ["
 			+ "{\"type\": \"npcNearby\", \"within\": 5, \"names\": [\"Duke Horacio\"]},"
 			+ " {\"type\": \"none\", \"conditions\": [{\"type\": \"dialogueOpen\"}]}]},"
 			+ " \"say\": [\"The Duke looks well.\"]},"
-			+ duke("quest-duke", 35, 3_600_000L) + "]}");
+			+ duke("quest-duke", 35, 3_600_000L).replace("\"waits\": true,", "\"waits\": true, \"delayTicks\": 2,")
+			+ "]}");
 		h.engine.setClock(() -> ms[0]);
 		h.engine.setGlobalCooldownMs(6000L);
 		ticks(h, 1);

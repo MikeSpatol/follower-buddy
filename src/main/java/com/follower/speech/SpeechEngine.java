@@ -478,7 +478,7 @@ public class SpeechEngine
 		final long firedBefore;
 		/** The game tick it won on. */
 		final int wonTick;
-		/** A callback about the same person was said meanwhile: the plain line stands aside. */
+		/** A callback about the same person won meanwhile: the plain line stands aside. */
 		boolean stoodAside;
 
 		PendingSpeech(SpeechRule rule, TriggerEvent event, int ticksLeft, long firedBefore, int wonTick)
@@ -1153,6 +1153,20 @@ public class SpeechEngine
 			return;
 		}
 
+		// A callback about a quest's person: a plain line about them already
+		// waiting is let go now, at the win, since the two are one line.
+		// Behaviour QA, 16 Oct: the person came by with a box up, the plain
+		// line was held for it, the callback rose as it closed, and both
+		// were said 6 s apart.
+		String plain = winner.plainLineId();
+		if (plain != null)
+		{
+			for (PendingSpeech waiting : pending)
+			{
+				waiting.stoodAside |= plain.equals(waiting.rule.id);
+			}
+		}
+
 		// Taking the floor happens at the WIN, not when the line finally comes
 		// out. A rule with a delay would otherwise leave its own gap open: the
 		// want-fulfilled line waits a few ticks, and the region-change line
@@ -1314,13 +1328,6 @@ public class SpeechEngine
 				{
 					other.markFired(now);
 				}
-			}
-			// And a plain line already waiting is let go: behaviour QA, 16
-			// Oct, the person came by with a box up, the plain line was held
-			// for it, the callback rose as it closed, and both were said.
-			for (PendingSpeech waiting : pending)
-			{
-				waiting.stoodAside |= plain.equals(waiting.rule.id);
 			}
 		}
 
