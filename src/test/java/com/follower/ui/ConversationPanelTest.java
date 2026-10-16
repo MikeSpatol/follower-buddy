@@ -30,6 +30,35 @@ public class ConversationPanelTest
 				Conversation.Display.CHAT, Conversation.Expression.SAD, "Two lines\n  here"), "Bob"));
 		assertEquals("3. You (box, Neutral): ...",
 			ConversationPanel.row(2, new Conversation.Line(), "Bob"));
+		// QA2, 15 Oct: the row kept what was typed while the game showed '?'.
+		assertEquals("4. Bob (box, Neutral): and ??? - \"so\"",
+			ConversationPanel.row(3, new Conversation.Line(Conversation.Speaker.FOLLOWER, Conversation.Display.BOX,
+				Conversation.Expression.NEUTRAL, "and 日本語 — “so”"), "Bob"));
+	}
+
+	@Test
+	public void playSaysWhichLineTheGameWillShowOtherwise()
+	{
+		// QA2, 15 Oct: a 117-character chat line and a line of CJK played
+		// with no word, though the Say boxes warn of the one and refuse the
+		// other. The same check now speaks for both tabs.
+		java.util.List<Conversation.Line> lines = new java.util.ArrayList<>();
+		lines.add(new Conversation.Line(Conversation.Speaker.YOU, Conversation.Display.CHAT,
+			Conversation.Expression.NEUTRAL, "Hello — “there”."));
+		lines.add(new Conversation.Line(Conversation.Speaker.FOLLOWER, Conversation.Display.BOX,
+			Conversation.Expression.NEUTRAL, "x".repeat(200)));
+		assertEquals("pasted punctuation is written plain, and a long box pages", null,
+			ConversationPanel.lineNote(lines));
+
+		lines.add(new Conversation.Line(Conversation.Speaker.FOLLOWER, Conversation.Display.CHAT,
+			Conversation.Expression.NEUTRAL, "y".repeat(117)));
+		assertEquals("Line 3: At 117 characters it may run off the screen: overhead text never wraps.",
+			ConversationPanel.lineNote(lines));
+
+		lines.add(1, new Conversation.Line(Conversation.Speaker.YOU, Conversation.Display.BOX,
+			Conversation.Expression.NEUTRAL, "and 日本"));
+		assertEquals("the first line it finds", "Line 2: The game can't show '日'.",
+			ConversationPanel.lineNote(lines));
 	}
 
 	@Test
@@ -135,7 +164,8 @@ public class ConversationPanelTest
 			Paths.get("src/main/java/com/follower/ui/ConversationPanel.java")), StandardCharsets.UTF_8)
 			.replace("\r\n", "\n");
 		String code = source.replaceAll("(?s)/\\*.*?\\*/", "").replaceAll("//[^\n]*", "");
-		assertTrue("Play hands the conversation over", code.contains("act.accept(c -> c.play(script), null);"));
+		assertTrue("Play hands the conversation over, with any note on how a line will show",
+			code.contains("act.accept(c -> c.play(script), lineNote(script.lines));"));
 		assertTrue("Stop does too", code.contains("act.accept(c -> c.stopConversation(), null)"));
 		assertFalse("the tab never reaches the game itself", code.contains("net.runelite.api"));
 		assertFalse(code.contains("clientThread"));

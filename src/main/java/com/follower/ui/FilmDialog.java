@@ -1,6 +1,7 @@
 package com.follower.ui;
 
 import com.follower.follower.FilmSet;
+import com.follower.speech.Conversation;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -464,13 +465,16 @@ public class FilmDialog extends JDialog
 		earlier.addItem("Earlier lines");
 		Runnable send = () ->
 		{
-			String text = line.getText().trim();
-			String refused = refusal(text);
+			String typed = line.getText().trim();
+			String refused = refusal(typed);
 			if (refused != null)
 			{
 				status.setText(refused);
 				return;
 			}
+			// Said as the Conversation tab says a chat line, a pasted dash or
+			// curly quote written plain.
+			String text = asSaid(typed);
 			remember(earlier, text);
 			act(c -> say.apply(c, text), done(done, text));
 		};
@@ -543,10 +547,9 @@ public class FilmDialog extends JDialog
 	}
 
 	/**
-	 * Why a typed line cannot be said, or null. The game's overhead font
-	 * draws plain ASCII, and a dash or a curly quote pasted in from
-	 * elsewhere comes out as a box; an angle bracket is read as the start
-	 * of a colour tag.
+	 * Why a typed line cannot be said, or null: a character the game has no
+	 * glyph for ({@link #undrawable}), or an angle bracket, which is read as
+	 * the start of a colour tag. A pasted dash or curly quote is said plain.
 	 */
 	static String refusal(String text)
 	{
@@ -554,23 +557,59 @@ public class FilmDialog extends JDialog
 		{
 			return "Type a line first.";
 		}
-		for (int i = 0; i < text.length(); i++)
+		for (int i = 0; i < text.length(); )
 		{
-			char c = text.charAt(i);
-			if (c < 0x20 || c > 0x7E || c == '<' || c == '>')
+			String one = new String(Character.toChars(text.codePointAt(i)));
+			i += one.length();
+			if (one.equals("<") || one.equals(">") || undrawable(one) != null)
 			{
-				return "The game can't show '" + c + "' overhead. Use plain letters and punctuation.";
+				return "The game can't show '" + one + "' overhead. Use plain letters and punctuation.";
 			}
 		}
 		return null;
 	}
 
+	/** A typed line as the game shows it said: Conversation.shown for a chat line. */
+	static String asSaid(String typed)
+	{
+		return Conversation.shown(new Conversation.Line(Conversation.Speaker.YOU, Conversation.Display.CHAT,
+			Conversation.Expression.NEUTRAL, typed));
+	}
+
+	/**
+	 * The first character of a typed line the game has no glyph for, or
+	 * null. One check for both tabs: the Say boxes refuse it, and the
+	 * Conversation tab, which plays it as a '?', says so. QA2, 15 Oct: the
+	 * Say boxes refused a pasted dash the Conversation tab wrote plain.
+	 */
+	static String undrawable(String typed)
+	{
+		for (int i = 0; i < typed.length(); )
+		{
+			int c = typed.codePointAt(i);
+			String one = new String(Character.toChars(c));
+			i += one.length();
+			if (c != '?' && asSaid(one).contains("?"))
+			{
+				return one;
+			}
+		}
+		return null;
+	}
+
+	/** A warning for a line long enough to run off the screen overhead, or null. */
+	static String longLine(String text)
+	{
+		return text.length() > LONG_LINE
+			? "At " + text.length() + " characters it may run off the screen: overhead text never wraps."
+			: null;
+	}
+
 	/** What was done, with a warning when the line is long enough to run off the screen. */
 	static String done(String done, String text)
 	{
-		return text.length() > LONG_LINE
-			? done + " At " + text.length() + " characters it may run off the screen: overhead text never wraps."
-			: done;
+		String warning = longLine(text);
+		return warning == null ? done : done + " " + warning;
 	}
 
 	private JPanel column()

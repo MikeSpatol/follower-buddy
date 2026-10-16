@@ -458,7 +458,8 @@ class ConversationPanel extends JPanel
 	{
 		String who = line.speaker == Conversation.Speaker.YOU ? "You" : followerName;
 		String how = line.display == Conversation.Display.BOX ? "box, " + line.expression.label : "chat";
-		String words = line.text.replaceAll("\\s+", " ").trim();
+		// As it will play, so a character the game can't draw reads as its '?' here too.
+		String words = Conversation.shown(line).replaceAll("\\s+", " ").trim();
 		return (index + 1) + ". " + who + " (" + how + "): " + (words.isEmpty() ? "..." : words);
 	}
 
@@ -539,7 +540,32 @@ class ConversationPanel extends JPanel
 			status.accept(refused);
 			return;
 		}
-		act.accept(c -> c.play(script), null);
+		// It plays all the same; the note shows once it has started.
+		act.accept(c -> c.play(script), lineNote(script.lines));
+	}
+
+	/**
+	 * The first line the game will show otherwise than it is written, as a
+	 * word for the status line, or null: a character it has no glyph for,
+	 * or a chat line too long for one line overhead. The same check as the
+	 * Posing tab's Say boxes, {@link FilmDialog#undrawable} and
+	 * {@link FilmDialog#longLine}. QA2, 15 Oct: a 117-character chat line
+	 * and a line of CJK played with no word at all.
+	 */
+	static String lineNote(List<Conversation.Line> lines)
+	{
+		for (int i = 0; i < lines.size(); i++)
+		{
+			Conversation.Line line = lines.get(i);
+			String missing = FilmDialog.undrawable(line.text);
+			String note = missing != null ? "The game can't show '" + missing + "'."
+				: line.display == Conversation.Display.CHAT ? FilmDialog.longLine(Conversation.shown(line)) : null;
+			if (note != null)
+			{
+				return "Line " + (i + 1) + ": " + note;
+			}
+		}
+		return null;
 	}
 
 	/** @return whether it was saved */

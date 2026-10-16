@@ -40,12 +40,29 @@ public class FilmDialogTest
 	@Test
 	public void whatTheFontCannotDrawIsRefused()
 	{
-		for (String pasted : new String[]{"Wait \u2014 what?", "\u201cHello\u201d", "Don\u2019t", "caf\u00e9",
-			"A <col=ff0000>red</col> line"})
+		for (String pasted : new String[]{"\u65e5\u672c", "An emoji \ud83d\ude00", "A <col=ff0000>red</col> line"})
 		{
 			assertNotNull(pasted, FilmDialog.refusal(pasted));
 		}
 		assertEquals("Type a line first.", FilmDialog.refusal(""));
+		assertEquals("a character is named whole, not half an emoji",
+			"The game can't show '\ud83d\ude00' overhead. Use plain letters and punctuation.",
+			FilmDialog.refusal("An emoji \ud83d\ude00"));
+	}
+
+	@Test
+	public void aPastedDashOrCurlyQuoteIsSaidPlainAsInTheConversationTab()
+	{
+		// QA2, 15 Oct: the Say boxes refused what the Conversation tab
+		// quietly wrote plain. One check now serves both.
+		for (String pasted : new String[]{"Wait \u2014 what?", "\u201cHello\u201d", "Don\u2019t", "caf\u00e9"})
+		{
+			assertNull(pasted, FilmDialog.refusal(pasted));
+			assertNull(pasted, FilmDialog.undrawable(pasted));
+		}
+		assertEquals("Wait - \"what\"? Don't...", FilmDialog.asSaid("Wait \u2014 \u201cwhat\u201d? Don\u2019t\u2026"));
+		assertEquals("\u65e5", FilmDialog.undrawable("ok \u65e5\u672c"));
+		assertNull("a typed question mark is the player's own", FilmDialog.undrawable("Why?"));
 	}
 
 	@Test
