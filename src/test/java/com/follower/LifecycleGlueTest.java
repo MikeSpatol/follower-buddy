@@ -231,6 +231,27 @@ public class LifecycleGlueTest
 	}
 
 	@Test
+	public void theMomentsAnswerToNoticesThings() throws IOException
+	{
+		// UI QA4 #37, the owner's call: the level clap, the pet's greeting,
+		// the walk over to a good drop and the stranger watch stand down
+		// with Notices things, which already sends the follower to drops.
+		String source = source();
+		int calls = 0;
+		for (String call : new String[]{"moments.levelUp(", "moments.noteworthy(",
+			"moments.npcSpawned(", "moments.noteChatMessage("})
+		{
+			for (int at = source.indexOf(call); at >= 0; at = source.indexOf(call, at + 1))
+			{
+				calls++;
+				String guard = source.substring(source.lastIndexOf("if (", at), at);
+				assertTrue(call + " in " + methodAt(source, at), guard.contains("config.noticesThings()"));
+			}
+		}
+		assertEquals(5, calls);
+	}
+
+	@Test
 	public void theHiddenErrandIsNeverListed() throws IOException
 	{
 		// Text sweep, 14 Oct: the fire errand that walks into the fire is a

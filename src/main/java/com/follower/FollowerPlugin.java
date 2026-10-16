@@ -8995,7 +8995,7 @@ public class FollowerPlugin extends Plugin
 		{
 			skilling.npcSpawned(npc);
 		}
-		if (moments != null)
+		if (moments != null && config.noticesThings())
 		{
 			moments.npcSpawned(npc);
 		}
@@ -9223,7 +9223,7 @@ public class FollowerPlugin extends Plugin
 			// and none in a take, where they would turn and gesture over the pose.
 			skilling.noteChatMessage(event.getMessage(), event.getType());
 		}
-		if (moments != null)
+		if (moments != null && config.noticesThings())
 		{
 			// The pet drop: the walk over to see it.
 			moments.noteChatMessage(event.getMessage(), event.getType());
@@ -9248,7 +9248,7 @@ public class FollowerPlugin extends Plugin
 			{
 				speechEngine.getContext().tally("collections");
 				speechEngine.dispatch(TriggerEvent.collectionAdd(parsed));
-				if (moments != null && !filming)
+				if (moments != null && config.noticesThings() && !filming)
 				{
 					// A first-ever thing is news whatever it sells for; it is
 					// in the bag, so the write-up faces the player.
@@ -10072,7 +10072,7 @@ public class FollowerPlugin extends Plugin
 			// remembering it had money on it.
 			speechEngine.getContext().settleBet(worth);
 			speechEngine.dispatch(TriggerEvent.loot(worth, best));
-			if (moments != null && !filming)
+			if (moments != null && config.noticesThings() && !filming)
 			{
 				// The body's share: a glance, the notes, or the walk over.
 				moments.noteworthy(com.follower.follower.Moments.tierFor(total), at);
@@ -10114,7 +10114,7 @@ public class FollowerPlugin extends Plugin
 			speechEngine.dispatch(TriggerEvent.levelUp(skill.getName(), level,
 				total, total - (level - previous), base, previousBase, masteries,
 				sinceLast, sinceAny));
-			if (moments != null && !filming)
+			if (moments != null && config.noticesThings() && !filming)
 			{
 				// The clap, or the walk over for it; the line is the rules'.
 				moments.levelUp(level);
