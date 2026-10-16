@@ -2039,7 +2039,9 @@ each measured against how the player moves the rest of the time:
   one. Ordinary steps always show a walk or run; forced movement (a jump, a
   squeeze, a vault) shows the stand. Counted from the second consecutive
   glide frame, 48 fine units to count, so the one frame where a walk ends on
-  the stand never adds up to one.
+  the stand never adds up to one. A frame that only repeats the last (above
+  50 fps a game cycle is drawn more than once) neither counts nor breaks it,
+  so short forced moves are seen live at 100 or 150 fps too.
 - *An action and a hop*: an animation, then the player put down up to 14
   tiles away or on another floor. One tile in a single frame counts as a hop
   when a clip or an odd pose is on (a gap jump can set the player down a tile
@@ -2056,8 +2058,10 @@ each measured against how the player moves the rest of the time:
   an obstacle the signals missed: rebuilt from the last frame of the player's
   own stand or walk before it to the first after it (or now), and queued. A
   lamp, a book or a quest pays nothing that moved recently, so rebuilds
-  nothing; nor does movement that went nowhere. A teleport, or a snap of the
-  follower, forgets what came before.
+  nothing; nor does movement that went nowhere, nor odd frames that run
+  straight into what is being watched (a climb's clip begun on the last step
+  towards it). A teleport, or a snap of the follower, forgets what came
+  before.
 
 No animation id or gameval name is relied on: the ids in the tests are only
 there to read like the real thing. An animation alone never counts (an emote,
@@ -2066,31 +2070,46 @@ a run that has not counted, and none of it is watched while the player
 interacts with an actor (a fight's knock-back, a conversation), is
 transformed into an NPC, or is aboard a boat. A hop past 14 tiles is a
 teleport: dropped, and the queue let go. A crossing ends after 1.2 s back to
-normal standing or 0.3 s walking on, cut at the first normal frame, so two
-obstacles taken back to back are two crossings. Anything past 30 s is not an
-obstacle (a carpet ride, swimming): dropped, and its pose taken as normal.
+normal standing or 0.3 s walking on, so two obstacles taken back to back are
+two crossings. The calm counts from where the drawn player reaches the tile
+the server stepped them off to as their own set came back: on the Draynor
+ropes the set swaps back while the drawn player still has a tile or two of
+rope to go, and cutting there left the follower on a rope tile. The watch
+reads the server tile (`getWorldLocation`) beside the drawn position for
+this. Anything past 30 s is not an obstacle (a carpet ride, swimming):
+dropped, and its pose taken as normal until the player's own set is back on
+them (the frame cap behind it allows 300 fps).
 
 **Recording.** Per frame: the rendered position in fine world units (scene
 base plus local, so a rebuild does not move it), the floor, the orientation,
 the pose and action with their frames, and whether the player was hurt.
 Frames during a scene load are skipped, not taken for a logout. A crossing is
 handed to the follower the moment it is recognised and grows a frame at a
-time; it is then ended (trimmed to its first normal frame), cut (a logout, a
+time; it is then ended (trimmed where the player stepped off), cut (a logout, a
 cutscene, a teleport: played as far as it got) or dropped (past 30 s, or a
 fight: not an obstacle, and skipped if the follower has not begun it). The
 watch and the follower both run on the client thread (`BeforeRender`,
-`StatChanged`, `HitsplatApplied`, `GameTick`), so there is no lock.
+`StatChanged`, `HitsplatApplied`, `GameTick`), so there is no lock; only the
+trace's buffer, which the shutdown flushes from the Swing thread, has one.
 
 **Replay.** Crossings queue in the order the player began them (a rebuilt one
 goes ahead of any recognised since; one older than the crossing being played
 is too late and let go). For each, the follower walks to the start tile on the
-BFS (beside it while the player is still on it, and staying put if already
-beside it), and begins it once the player is 1.2 s (two ticks) into it,
-measured from the player's start, not the follower's arrival; it plays the
-recording as it grows, holding on the newest frame should it ever catch up. It
-plays it back: fine position interpolated between frames on one floor and
-held across a floor change or a hop, the facing turned at the client's rate,
-and the action or the pose put on at the frame the player's was on. A pose
+BFS, running (beside it while the player is still on it, and staying put if
+already beside it), turns the way the player set off, and begins it once the
+player is 1.2 s (two ticks) into it, measured from the player's start, not
+the follower's arrival. Beside the start counts as there once the player is
+off it: the first 300 ms ease the follower from where it stands onto the
+recording, which a start nobody can walk onto (a rope's first tile, where the
+game puts the player) needs. It plays the recording as it grows, holding on
+the newest frame should it ever catch up; while more than two ticks behind
+the player it plays at 1.25x through anything that is not a clip of the
+player's, until it is back to two ticks. It plays it back: fine position
+interpolated between frames on one floor and held across a floor change or a
+hop, the facing turned at the client's rate, and the action or the pose put
+on at the frame the player's was on (begun again if the same clip restarts).
+A clip's own hand items are dressed on the follower as an emote's are, so a
+climb empties its hands and the pole vault holds the pole. A pose
 from the player's own set is shown as the follower's own (so it stands and
 walks like itself between the odd parts); anything else is the player's,
 id for id. Then the next, then following again from wherever the player is.
@@ -2108,8 +2127,9 @@ go: the crossing under way is finished and the ordinary catch-up takes over.
 64, not the old 40 (the stay leash): the scene is 104 tiles and rebuilt round
 the player within 16 of its edge, leaving about 48 behind them, so past 64 the
 follower is about to drop off the map anyway, while 40 was inside a long
-course's lap. Unable to reach a crossing's start for 4.8 s (eight ticks,
-longer than a hop waits for late XP), it is put there.
+course's lap. Unable to get within a tile of a crossing's start for 4.8 s
+(eight ticks, longer than a hop waits for late XP: a start on another floor),
+it is put there.
 
 **Waiting, not snapping.** For 8 s after the last crossing queued, begun or
 finished, or agility XP, the follower waits for a player on another floor
@@ -2117,23 +2137,28 @@ rather than snapping to them (on the same floor it walks after them as
 usual), the blocked-tile hop is off, and the plugin's stranded teleport does
 not count. That is the window in which a missed obstacle is rebuilt from its
 XP. A real teleport (a jump past 14 tiles, seen by the watch), a Stay, the
-setting off or any gate that lets the queue go ends the wait at once; off a
-course the wait never starts, so a ladder snaps as before. The snaps that
+setting off or any gate that lets the queue go ends the wait at once. A hop
+held for its XP holds the follower only that long (plus a tick), and letting
+the hop go ends the wait unless XP or a crossing renewed it meanwhile, so a
+ladder snaps about 1.2 s after the climb off a course and 3 s on one. XP the
+watch cannot read (a greegree monkey on Ape Atoll, which is not copied)
+holds nothing, and agility XP keeps errands off for a minute, lap to lap. The snaps that
 remain: the teleport rule once the wait is over, the 64-tile cap, a cast that
 landed, the watchdog and the off-scene recovery (genuine faults), and the
 errand, thrall and stranded-teleport homecomings outside agility.
 
 **The trace.** With Developer commands on, `agility-trace-YYYY-MM-DD.log` in
 the plugin folder (`AgilityTrace`, buffered and written every 5 s). A tick
-line, once a game tick while there is agility about (a crossing watched or
-queued, the wait on, XP this tick, or an odd pose or move in the last 3 s):
-the player's tile, pose, animation, graphic, moving or still, XP gained and
+line, once a game tick while there is agility about (something watched that
+has moved the player, a crossing queued, the wait on, XP this tick, or an odd
+pose or move in the last 3 s): the frame rate since the last tick, the
+player's tile, pose, animation, graphic, moving or still, XP gained and
 hitsplat type this tick; the watch's state (`idle`, `watch`, `await-xp`,
 `rec(<signal>)`, with its age and frames); the follower's tile, queue and
 state (`follow`, `await`, `to <start> lag|ready|stuck`, `play <at>/<length>
 live`, `hold <left>`). Event lines, marked `*`: crossings recognised, ended,
-cut, dropped or rebuilt (and XP that rebuilt nothing), queued, begun,
-finished, skipped or too late, caps tripped, and every snap, pin and
+cut, dropped or rebuilt (and XP that rebuilt nothing), queued, begun (with
+the real lag behind the player), finished, skipped or too late, caps tripped, and every snap, pin and
 placement with its reason.
 
 **Interruptions.** A Stay, Send or Follow me off: no agility, the queue let
