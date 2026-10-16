@@ -59,7 +59,7 @@ public class FollowerEntity
 	private static final int TURN_SPEED = 32;
 
 	/** Beyond this distance the player must have teleported; snap rather than walk. */
-	private static final int SNAP_DISTANCE = 14;
+	static final int SNAP_DISTANCE = 14;
 
 	private final Client client;
 	private final StanceLibrary stanceLibrary;
