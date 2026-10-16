@@ -204,12 +204,12 @@ public class SpeechRule
 
 	/**
 	 * Waits its turn as an occasion does - out a cutscene and the quiet after
-	 * it, and out the gap after another line - rather than being dropped, and
-	 * nothing more: the director's rests and the empty-chair damper still
-	 * hold it. For a line with one chance, the meeting of a quest's people.
-	 * Play test, 15 Oct (Children of the Sun): Prince Itzla's line came up as
-	 * the cutscene opened and Sergeant Tobyn's six seconds after a cat, and
-	 * neither was heard.
+	 * it, an NPC conversation, and the gap after another line - rather than
+	 * being dropped, and nothing more: the director's rests and the
+	 * empty-chair damper still hold it. For a line with one chance, the
+	 * meeting of a quest's people. Play test, 15 Oct (Children of the Sun):
+	 * Prince Itzla's line came up as the cutscene opened and Sergeant Tobyn's
+	 * six seconds after a cat, and neither was heard.
 	 */
 	public Boolean waits;
 

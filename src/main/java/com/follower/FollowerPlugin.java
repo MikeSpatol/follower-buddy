@@ -1566,6 +1566,24 @@ public class FollowerPlugin extends Plugin
 			|| client.getWidget(net.runelite.api.gameval.InterfaceID.CHATMENU, 0) != null;
 	}
 
+	/** An NPC dialogue up, or gone under three ticks: the reading the rules get, page flips ridden out. */
+	private boolean inConversation()
+	{
+		return npcDialogOpen() || dialogGoneTicks <= 2;
+	}
+
+	/**
+	 * Whether a line is kept in the queue through a conversation rather than
+	 * said into it and dropped: a line that waits its turn, as the engine
+	 * keeps it. The engine hands one over only with no box up, but the queue
+	 * can hold it a few seconds behind a long line, and the player can start
+	 * talking to someone in that time.
+	 */
+	static boolean keptForTheBox(SpeechRule rule, boolean conversation)
+	{
+		return conversation && rule != null && rule.waitsItsTurn();
+	}
+
 	/**
 	 * Attends the player's meetings. When an NPC dialog opens the follower
 	 * takes a spot over the player's shoulder and looks at whoever they are
@@ -11565,7 +11583,7 @@ public class FollowerPlugin extends Plugin
 		private final SpeechRule rule;
 		private final int animationId;
 		private final Runnable onSaid;
-		private final long queuedAtMs;
+		private long queuedAtMs;
 
 		Utterance(String text, SpeechOutput output, SpeechRule rule, int animationId,
 			Runnable onSaid)
@@ -11670,7 +11688,7 @@ public class FollowerPlugin extends Plugin
 		}
 
 		long now = System.currentTimeMillis();
-		if (now < speakingUntilMs)
+		if (now < speakingUntilMs || keptForTheBox(rule, inConversation()))
 		{
 			if (speechQueue.size() < SPEECH_QUEUE_LIMIT)
 			{
@@ -11701,6 +11719,15 @@ public class FollowerPlugin extends Plugin
 			return;
 		}
 		long now = System.currentTimeMillis();
+		// A line that waits its turn, through an NPC conversation, and what
+		// is behind it with it: said into the box it would be dropped. Its
+		// staleness counts from the box closing.
+		Utterance next = speechQueue.peekFirst();
+		if (next != null && keptForTheBox(next.rule, inConversation()))
+		{
+			next.queuedAtMs = now;
+			return;
+		}
 		while (!speechQueue.isEmpty()
 			&& now - speechQueue.peekFirst().queuedAtMs > SPEECH_STALE_MS)
 		{

@@ -7346,7 +7346,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND in region 12854 AND NOT (questdone) AND NOT (dialogueopen)
 - **does:** mood +4; occasion (never held back); once ever; animation 13995
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 60, cooldown 10m, overhead
 
 - A cell on the palace roof. Out of the way, he said, and it certainly is.
 - Questioning. I'll stand at the back and take the minutes.
@@ -7357,7 +7357,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** questvar AND in region 12854 AND questdone AND NOT (dialogueopen)
 - **does:** mood +4; occasion (never held back); once ever; animation 13995
-- **pacing:** priority 61, cooldown 10m, delay 2 ticks, overhead
+- **pacing:** priority 61, cooldown 10m, overhead
 
 - The palace again. Last time we were here, the King wanted your head.
 

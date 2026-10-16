@@ -155,6 +155,31 @@ public class LifecycleGlueTest
 	}
 
 	@Test
+	public void aLineThatWaitsIsKeptInTheQueueThroughAConversation() throws IOException
+	{
+		// QA, 15 Oct: a line the engine held for a conversation can still sit
+		// in the queue behind a long one, and the player start talking to
+		// someone meanwhile. Kept, not said into the box and dropped.
+		com.follower.speech.SpeechRule waits = new com.follower.speech.SpeechRule();
+		waits.waits = Boolean.TRUE;
+		com.follower.speech.SpeechRule occasion = new com.follower.speech.SpeechRule();
+		occasion.occasion = Boolean.TRUE;
+		assertTrue(FollowerPlugin.keptForTheBox(waits, true));
+		assertTrue(FollowerPlugin.keptForTheBox(occasion, true));
+		assertFalse("chatter is dropped there as ever",
+			FollowerPlugin.keptForTheBox(new com.follower.speech.SpeechRule(), true));
+		assertFalse(FollowerPlugin.keptForTheBox(waits, false));
+		assertFalse(FollowerPlugin.keptForTheBox(null, true));
+
+		assertTrue("not said into the box when the floor is free", method("private void speak(String text,")
+			.contains("if (now < speakingUntilMs || keptForTheBox(rule, inConversation()))"));
+		String drain = method("private void drainSpeechQueue()");
+		int kept = drain.indexOf("keptForTheBox(next.rule, inConversation())");
+		assertTrue("nor drained into it", kept >= 0);
+		assertTrue("its staleness counted from the box closing", kept < drain.indexOf("SPEECH_STALE_MS"));
+	}
+
+	@Test
 	public void theHiddenErrandIsNeverListed() throws IOException
 	{
 		// Text sweep, 14 Oct: the fire errand that walks into the fire is a

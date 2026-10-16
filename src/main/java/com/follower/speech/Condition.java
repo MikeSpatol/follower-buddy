@@ -1407,6 +1407,30 @@ public class Condition
 		return false;
 	}
 
+	/**
+	 * Whether the quest steps this condition requires - its questVar, alone
+	 * or inside an "all" - still hold. True when it reads none. For a line
+	 * kept waiting, which can outlive the step it was about.
+	 */
+	public boolean questStepHolds(TriggerContext ctx, TriggerEvent event)
+	{
+		if ("questVar".equalsIgnoreCase(type))
+		{
+			return matches(ctx, event);
+		}
+		if ("all".equalsIgnoreCase(type) && conditions != null)
+		{
+			for (Condition child : conditions)
+			{
+				if (child != null && !child.questStepHolds(ctx, event))
+				{
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
 	/** The counts a person says out loud, rather than every one. */
 	static boolean isRoundCount(int n)
 	{

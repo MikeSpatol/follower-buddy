@@ -278,4 +278,148 @@ public class SceneQuietTest
 		ticks(h, 20);
 		assertTrue("and not said after", h.firedBy("quest").isEmpty());
 	}
+
+	// ------------------------------------------------------- a conversation
+
+	/**
+	 * QA, 15 Oct: the quest's people are met by talking to them, so their
+	 * lines came up as the box opened and the plugin dropped the words. A
+	 * line that waits is held through the conversation and said after it.
+	 */
+	@Test
+	public void aLineThatWaitsIsHeldThroughAConversation() throws IOException
+	{
+		Harness h = harness(WAITS);
+		h.engine.getContext().setDialogueOpen(true);
+		h.dispatch(TriggerEvent.levelUp("Attack", 30));
+		ticks(h, 60);
+		assertTrue("not into the box", h.firedBy("waits").isEmpty());
+		assertTrue("held, not dropped", held.isEmpty());
+
+		h.engine.getContext().setDialogueOpen(false);
+		ticks(h, 2);
+		assertEquals("said once it is over", 1, h.firedBy("waits").size());
+	}
+
+	@Test
+	public void chatterInAConversationIsNotHeldForIt() throws IOException
+	{
+		// Handed over as ever; the plugin drops it. A remark about the tree
+		// two minutes after the tree is worse than none.
+		Harness h = harness(CHATTY);
+		h.engine.getContext().setDialogueOpen(true);
+		h.game.hitpoints(10, 99);
+		ticks(h, 2);
+		assertEquals(1, h.firedBy("chatty").size());
+	}
+
+	/**
+	 * QA, 15 Oct: Children of the Sun's roof moment was held over a scene and
+	 * released when the quiet ran out, inside the conversation the scene had
+	 * run on into - 26 of 26 runs, none heard.
+	 */
+	@Test
+	public void anOccasionOutOfASceneAndIntoAConversationWaitsForItToEnd() throws IOException
+	{
+		Harness h = harness(QUEST);
+		h.engine.setSceneQuiet(true);
+		h.dispatch(TriggerEvent.questComplete("Children of the Sun"));
+		ticks(h, 20);
+		h.engine.getContext().setDialogueOpen(true);
+		h.engine.setSceneQuiet(false);
+		ticks(h, 40);
+		assertTrue("not into the conversation", h.firedBy("quest").isEmpty());
+
+		h.engine.getContext().setDialogueOpen(false);
+		ticks(h, 2);
+		assertEquals("said after it", 1, h.firedBy("quest").size());
+		assertTrue(held.isEmpty());
+	}
+
+	private static final String NOT_IN_DIALOGUE =
+		"{\"type\": \"none\", \"conditions\": [{\"type\": \"dialogueOpen\"}]}";
+
+	/** A quest moment on a step of varbit 9632. */
+	private static String moment(String id, int minimum, int maximum, int delay, String... more)
+	{
+		return "{\"id\": \"" + id + "\", \"group\": \"quest\", \"priority\": 60, \"cooldownMs\": 600000,"
+			+ " \"once\": true, \"occasion\": true, \"delayTicks\": " + delay + ", \"when\": {\"type\": \"all\","
+			+ " \"conditions\": [{\"type\": \"questVar\", \"varbit\": 9632, \"minimum\": " + minimum
+			+ ", \"maximum\": " + maximum + "}" + (more.length == 0 ? "" : ", " + String.join(", ", more))
+			+ "]}, \"say\": [\"" + id + "\"]}";
+	}
+
+	@Test
+	public void whatAConversationsEndRaisesGoesBeforeALineHeldThroughIt() throws IOException
+	{
+		// The roof: Prince Itzla's line comes up during the escort box, and
+		// the moment as it closes. The moment is about now, and the player
+		// is about to talk to the Prince; his line keeps.
+		Harness h = harness(WAITS, moment("roof", 16, 16, 0, NOT_IN_DIALOGUE));
+		h.engine.getContext().setDialogueOpen(true);
+		h.game.varbit(9632, 16);
+		h.dispatch(TriggerEvent.levelUp("Attack", 30));
+		ticks(h, 10);
+		h.engine.getContext().setDialogueOpen(false);
+		ticks(h, 1);
+		assertEquals("the moment first", 1, h.spoken.size());
+		assertEquals("roof", h.spoken.get(0).rule.id);
+		ticks(h, 10);
+		assertEquals("then the held line, after the gap", 1, h.firedBy("waits").size());
+	}
+
+	@Test
+	public void aMomentWhoseStepMovesOnInTheConversationIsStillSaid() throws IOException
+	{
+		// Children of the Sun's overheard, for a runner: held into Tobyn's
+		// briefing, which moves the step on. It is still about the window.
+		Harness h = harness(moment("overheard", 10, 10, 2));
+		h.game.varbit(9632, 10);
+		ticks(h, 1);
+		h.engine.getContext().setDialogueOpen(true);
+		ticks(h, 20);
+		h.game.varbit(9632, 12);
+		ticks(h, 2);
+		h.engine.getContext().setDialogueOpen(false);
+		ticks(h, 3);
+		assertEquals(1, h.firedBy("overheard").size());
+	}
+
+	@Test
+	public void aMomentKeptOverASceneThatMovedItsStepOnIsLetGoUnspent() throws IOException
+	{
+		// Up on the roof, straight into the Prince's questioning and its
+		// scene: "Questioning" after the questioning is old news.
+		Harness h = harness(moment("roof", 16, 16, 2));
+		h.game.varbit(9632, 16);
+		ticks(h, 1);
+		h.engine.getContext().setDialogueOpen(true);
+		ticks(h, 10);
+		h.engine.setSceneQuiet(true);
+		h.game.varbit(9632, 18);
+		ticks(h, 60);
+		h.engine.getContext().setDialogueOpen(false);
+		h.engine.setSceneQuiet(false);
+		ticks(h, 20);
+		assertTrue(h.firedBy("roof").isEmpty());
+		assertEquals("roof:moved-on", held.get(0));
+		assertFalse("not spent", h.engine.getContext().hasSaidOnce("roof"));
+	}
+
+	@Test
+	public void aLineKeptOverASceneWithNoStepIsStillSaid() throws IOException
+	{
+		// A quest's person has no step to move on from: Itzla's line is
+		// still true after the interrogation.
+		Harness h = harness(WAITS);
+		h.engine.getContext().setDialogueOpen(true);
+		h.dispatch(TriggerEvent.levelUp("Attack", 30));
+		ticks(h, 10);
+		h.engine.setSceneQuiet(true);
+		ticks(h, 60);
+		h.engine.getContext().setDialogueOpen(false);
+		h.engine.setSceneQuiet(false);
+		ticks(h, 3);
+		assertEquals(1, h.firedBy("waits").size());
+	}
 }
