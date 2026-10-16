@@ -11806,8 +11806,10 @@ public class FollowerPlugin extends Plugin
 		}
 		// Posing for a sketch, the overhead is the count's, and a line said
 		// now would be in the picture. Held, as in a conversation, and said
-		// once the scroll is away.
-		if (sketching != null && sketching.isPosing())
+		// once the scroll is away. So in the follower's own Talk-to box:
+		// behaviour QA, 16 Oct, a line went overhead with the box open,
+		// two mouths at once.
+		if ((sketching != null && sketching.isPosing()) || dialog.isOpen())
 		{
 			if (speechQueue.size() < SPEECH_QUEUE_LIMIT)
 			{
@@ -11834,6 +11836,20 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void drainSpeechQueue()
 	{
+		long now = System.currentTimeMillis();
+		// A line that waits its turn is kept through a conversation - an
+		// NPC's, or the follower's own box - and its staleness counts from the
+		// box closing. Every such line in the queue, not only the first:
+		// behaviour QA, 16 Oct, the second was dropped as stale as the box
+		// closed, and one kept through the follower's own box aged out in it.
+		boolean box = dialog.isOpen() || inConversation();
+		for (Utterance queued : speechQueue)
+		{
+			if (keptForTheBox(queued.rule, box))
+			{
+				queued.queuedAtMs = now;
+			}
+		}
 		// Nothing overhead while the follower is talking to you in the box:
 		// a bubble above its head mid-conversation is two mouths at once.
 		// Held, not dropped - the stale sweep below decides what survives
@@ -11847,14 +11863,11 @@ public class FollowerPlugin extends Plugin
 		{
 			return;
 		}
-		long now = System.currentTimeMillis();
-		// A line that waits its turn, through an NPC conversation, and what
-		// is behind it with it: said into the box it would be dropped. Its
-		// staleness counts from the box closing.
+		// Nor into an NPC conversation, a line that waits and what is behind
+		// it: said into the box it would be dropped.
 		Utterance next = speechQueue.peekFirst();
 		if (next != null && keptForTheBox(next.rule, inConversation()))
 		{
-			next.queuedAtMs = now;
 			return;
 		}
 		while (!speechQueue.isEmpty()

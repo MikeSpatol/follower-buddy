@@ -184,6 +184,25 @@ public class LifecycleGlueTest
 	}
 
 	@Test
+	public void theFollowersOwnBoxHoldsTheQueueAndEveryKeptLineKeepsItsTime() throws IOException
+	{
+		// Behaviour QA, 16 Oct: with the follower's own Talk-to box open a
+		// rule's line went overhead once the floor was free, and lines
+		// queued meanwhile aged out in the box. Through an NPC conversation
+		// only the first kept line had its clock restarted, so the second
+		// was dropped as stale as the box closed (probe P6).
+		assertTrue("queued while its own box is open", method("private void speak(String text,")
+			.contains("if ((sketching != null && sketching.isPosing()) || dialog.isOpen())"));
+		String drain = method("private void drainSpeechQueue()");
+		int every = drain.indexOf("for (Utterance queued : speechQueue)");
+		assertTrue("every kept line", every >= 0
+			&& drain.indexOf("keptForTheBox(queued.rule, box)") > every);
+		assertTrue("in either box", drain.contains("boolean box = dialog.isOpen() || inConversation();"));
+		assertTrue("before the own box returns", every < drain.indexOf("if (dialog.isOpen())"));
+		assertTrue("and before the stale sweep", every < drain.indexOf("SPEECH_STALE_MS"));
+	}
+
+	@Test
 	public void theHiddenErrandIsNeverListed() throws IOException
 	{
 		// Text sweep, 14 Oct: the fire errand that walks into the fire is a
