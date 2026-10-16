@@ -2233,7 +2233,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - **when:** HP under 40%
 - **does:** occasion (never held back); advises: food
-- **pacing:** priority 100, cooldown 15s, both
+- **pacing:** priority 100, cooldown 1m, both
 
 - Eat something! {hp} out of {maxHp} is not a plan.
 - You're on {hp}. I'd feel better if you weren't.
@@ -6638,7 +6638,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Prince Itzla Arkan, heir to the throne of Varlamore. NOTE: his versions in later quests share the name and will match too.
 
-- **when:** Prince Itzla Arkan within 5 tiles, in sight
+- **when:** Prince Itzla Arkan within 5 tiles, in sight AND NOT (questvar)
 - **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
 
 - Prince Itzla Arkan, who'll give you the full title if you've got a minute.

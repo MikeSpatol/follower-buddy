@@ -149,7 +149,7 @@ public class ChildrenOfTheSunWalkTest
 	}
 
 	private static final List<String> PEOPLE_AND_MOMENTS = Arrays.asList(
-		"quest-itzla", "quest-sergeant-tobyn", "qm-children-of-the-sun-overheard");
+		"quest-sergeant-tobyn", "qm-children-of-the-sun-overheard");
 
 	private static void hearsEveryone(QuestSim s, String roof)
 	{
@@ -176,6 +176,36 @@ public class ChildrenOfTheSunWalkTest
 		hearsEveryone(walk(true, 3, 6000, false), "qm-children-of-the-sun-the-roof");
 	}
 
+	private static final List<String> MOMENTS = Arrays.asList(
+		"qm-children-of-the-sun-the-bag", "qm-children-of-the-sun-the-hideout",
+		"qm-children-of-the-sun-overheard", "qm-children-of-the-sun-spot-the-four",
+		"qm-children-of-the-sun-the-roof");
+
+	/**
+	 * At Minimal (45 s), the user's own setting. Quests QA, 16 Oct: the
+	 * hideout was never heard, moments drifted a stage late, and the page
+	 * news lapsed in every run. Each moment is said, in order and before
+	 * the scroll; then the quest's end and its page.
+	 */
+	@Test
+	public void atMinimalAWalkerHearsTheMomentsTheEndAndThePage() throws Exception
+	{
+		QuestSim s = walk(false, 12, 45_000L, false);
+		// The page waits a gap behind the quest's own line.
+		s.ticks(100);
+		int last = -1;
+		for (String id : MOMENTS)
+		{
+			int at = s.heardIds.indexOf(id);
+			assertTrue(id + " heard\n" + s.transcript(), at > last);
+			last = at;
+		}
+		assertTrue("Tobyn\n" + s.transcript(), s.heardIds.contains("quest-sergeant-tobyn"));
+		assertTrue("all before the scroll\n" + s.transcript(), last < s.heardIds.indexOf("quest-complete"));
+		assertEquals(s.transcript(), Arrays.asList("Children of the Sun"), s.pagesSaid);
+		assertTrue("nothing dropped\n" + s.transcript(), s.lost.isEmpty());
+	}
+
 	@Test
 	public void andWithTheCallbacks() throws Exception
 	{
@@ -184,29 +214,36 @@ public class ChildrenOfTheSunWalkTest
 	}
 
 	@Test
-	public void theRoofIsSaidBeforeTheQuestioningAndItzlaWaitsForIt() throws Exception
+	public void theRoofIsSaidBeforeTheQuestioningAndItzlaIsNotAnnouncedAfterHeHasGone() throws Exception
 	{
 		// Both come up as the escort box closes. The moment is about now,
-		// so it goes first; the Prince's line keeps, and is said after.
+		// so it goes first. The Prince's line was kept through the
+		// questioning and said after it, with the Prince gone (QA3 #5,
+		// #12): now it is let go unsaid, with its cooldown back, for the
+		// next time he is near.
 		QuestSim s = walk(true, 3, 6000, false);
-		List<String> heard = s.heardIds;
-		assertTrue(s.transcript(),
-			heard.indexOf("qm-children-of-the-sun-the-roof") < heard.indexOf("quest-itzla"));
-		assertTrue(s.transcript(), heard.indexOf("quest-itzla") > heard.indexOf("quest-complete"));
+		assertTrue(s.transcript(), s.heardIds.contains("qm-children-of-the-sun-the-roof"));
+		assertFalse(s.transcript(), s.heardIds.contains("quest-itzla"));
+		assertTrue(s.transcript(), s.transcript().contains("held back: quest-itzla (passed)"));
+		assertTrue("its hour's cooldown given back", s.h.rule("quest-itzla").offCooldown(s.ms[0]));
 	}
 
 	@Test
-	public void aHideoutLineTheWindowsSceneCutsBeforeItIsReadIsSaidAgain() throws Exception
+	public void aHideoutLineTheWindowsSceneCutsIsNotSaidAgainOnceTheSceneMovesTheStep() throws Exception
 	{
 		// QA pass 2, #43: a runner clicks the door a few ticks after the
 		// hideout line goes up, and the window's scene clears it about 2.4 s
-		// in. The callback's one line wants about 3.5 s to read, so it is
-		// said again after the scene rather than spent half read.
+		// in. It used to be said again after the scene, but that scene moves
+		// the step on (8 to 10), and the overheard moment then came 6 s
+		// behind it: two lines about two steps (QA3 #29, probe P10). Now it
+		// is let go, as a line still waiting would be.
 		QuestSim s = walk(true, 3, 6000, true);
 		String line = "Next door to Aubury's. I hope nobody in there offers us tea.";
 		assertTrue(s.transcript(), s.transcript().contains(
 			"overhead cleared mid-line (qm-children-of-the-sun-the-hideout-after-rune-mysteries)"));
-		assertEquals(s.transcript(), 2, s.heard.stream().filter(line::equals).count());
+		assertTrue(s.transcript(), s.transcript().contains("about a step since moved on: not said again"));
+		assertEquals(s.transcript(), 1, s.heard.stream().filter(line::equals).count());
+		assertTrue(s.transcript(), s.heardIds.contains("qm-children-of-the-sun-overheard"));
 	}
 
 	@Test

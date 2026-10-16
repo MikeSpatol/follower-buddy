@@ -121,7 +121,7 @@ public class LifecycleGlueTest
 		{
 			String leaving = method(signature);
 			for (String let : new String[]{"sceneOn = false;", "quietUntilTick = 0;",
-				"speechEngine.setSceneQuiet(false);"})
+				"speechEngine.setSceneQuiet(false);", "speechEngine.setInCutscene(false);"})
 			{
 				assertTrue(signature + " must let go of the scene: " + let, leaving.contains(let));
 			}
@@ -148,12 +148,14 @@ public class LifecycleGlueTest
 		// one waits for both to be over.
 		assertTrue("the engine is told of the scene and the quiet after it",
 			method("private void noticeTheScene()").contains("speechEngine.setSceneQuiet(sceneQuiet());"));
+		assertTrue("and of the scene itself, which can move a quest on",
+			method("private void noticeTheScene()").contains("speechEngine.setInCutscene(inCutscene());"));
 		// And for a conversation as the rules read it, page flips ridden out:
 		// on the raw box the news went out on a flip (QA, 15 Oct).
 		assertTrue("the page news waits for the quiet",
 			method("public void onGameTick(GameTick event)").contains(
 				"nextPageNews(pageNews, client.getTickCount(), speechEngine.isQuiet(),\n"
-					+ "\t\t\tinConversation() || sceneQuiet());"));
+					+ "\t\t\tinConversation() || sceneQuiet(), pageNewsTicks(speechEngine.moodScaledGap()));"));
 		assertTrue(method("private boolean inConversation()")
 			.contains("return npcDialogOpen() || dialogGoneTicks <= 2;"));
 	}
@@ -181,6 +183,25 @@ public class LifecycleGlueTest
 		int kept = drain.indexOf("keptForTheBox(next.rule, inConversation())");
 		assertTrue("nor drained into it", kept >= 0);
 		assertTrue("its staleness counted from the box closing", kept < drain.indexOf("SPEECH_STALE_MS"));
+	}
+
+	@Test
+	public void theFollowersOwnBoxHoldsTheQueueAndEveryKeptLineKeepsItsTime() throws IOException
+	{
+		// Behaviour QA, 16 Oct: with the follower's own Talk-to box open a
+		// rule's line went overhead once the floor was free, and lines
+		// queued meanwhile aged out in the box. Through an NPC conversation
+		// only the first kept line had its clock restarted, so the second
+		// was dropped as stale as the box closed (probe P6).
+		assertTrue("queued while its own box is open", method("private void speak(String text,")
+			.contains("if ((sketching != null && sketching.isPosing()) || dialog.isOpen())"));
+		String drain = method("private void drainSpeechQueue()");
+		int every = drain.indexOf("for (Utterance queued : speechQueue)");
+		assertTrue("every kept line", every >= 0
+			&& drain.indexOf("keptForTheBox(queued.rule, box)") > every);
+		assertTrue("in either box", drain.contains("boolean box = dialog.isOpen() || inConversation();"));
+		assertTrue("before the own box returns", every < drain.indexOf("if (dialog.isOpen())"));
+		assertTrue("and before the stale sweep", every < drain.indexOf("SPEECH_STALE_MS"));
 	}
 
 	@Test

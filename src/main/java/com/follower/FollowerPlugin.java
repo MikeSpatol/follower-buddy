@@ -91,7 +91,18 @@ public class FollowerPlugin extends Plugin
 	private static final int CHRONICLE_LOOK_TICKS = 10;
 
 	/** How long a page written waits for the follower to have the floor before it goes unsaid: a minute. */
-	private static final int PAGE_NEWS_TICKS = 100;
+	static final int PAGE_NEWS_TICKS = 100;
+
+	/**
+	 * The page news's wait for a gap this long, in ticks: a minute, or two
+	 * gaps and a little over when they are longer. Quests QA, 16 Oct: at
+	 * Minimal the news needs 45 s of quiet after the quest's own line, so
+	 * any other line in that minute, or a low mood, lost every quest's page.
+	 */
+	public static int pageNewsTicks(long gapMs)
+	{
+		return Math.max(PAGE_NEWS_TICKS, (int) (2 * gapMs / 600L) + 20);
+	}
 
 	/** A page written, waiting to be mentioned. */
 	static final class PageNews
@@ -1146,6 +1157,7 @@ public class FollowerPlugin extends Plugin
 		sceneGoneTicks = 0;
 		quietUntilTick = 0;
 		speechEngine.setSceneQuiet(false);
+		speechEngine.setInCutscene(false);
 	}
 
 	/*
@@ -1466,8 +1478,10 @@ public class FollowerPlugin extends Plugin
 	 * A line a starting scene cut off just after it went up, said again once
 	 * the scene and its quiet are over. QA, 15 Oct: the line was gone a tick
 	 * or two after it appeared, and a once line - every quest-moment draft -
-	 * was spent all the same. Only a once line or an occasion, the lines that
-	 * do not come round again; anything else is let go, as before.
+	 * was spent all the same. Only a once line or one that waits its turn,
+	 * the lines that do not come round again; anything else is let go, as
+	 * before. Behaviour QA, 16 Oct: a bet's payoff, a waits line, was cut 1.2 s
+	 * in and lost.
 	 *
 	 * <p>Cut before it could be read: the time the line takes to read, and
 	 * never less than this. QA pass 2: a runner's door click let the window's
@@ -1489,7 +1503,7 @@ public class FollowerPlugin extends Plugin
 	/** Whether a line up this long, from this rule, taking this long to read, is said again after the scene. */
 	static boolean saysAgainAfterTheScene(SpeechRule rule, long upForMs, long toReadMs)
 	{
-		return rule != null && (rule.isOnce() || rule.isOccasion())
+		return rule != null && (rule.isOnce() || rule.waitsItsTurn())
 			&& upForMs < Math.max(SCENE_CUT_GRACE_MS, toReadMs);
 	}
 
@@ -1565,6 +1579,7 @@ public class FollowerPlugin extends Plugin
 		}
 		follower.setWatchingWithThePlayer(sceneHolds());
 		speechEngine.setSceneQuiet(sceneQuiet());
+		speechEngine.setInCutscene(inCutscene());
 
 		// Through the engine's remark, so the mute still holds. The words
 		// only: the rule's own business ran when the line first went up.
@@ -1579,7 +1594,15 @@ public class FollowerPlugin extends Plugin
 		}
 		else if (cutByTheScene != null)
 		{
-			speechEngine.remark(cutByTheScene.text);
+			// Not when its quest's step has moved on since, as the engine lets
+			// a line still waiting go. Behaviour QA, 16 Oct: the hideout line
+			// was said again after the scene that moved the step, and the next
+			// step's moment came 6 s behind it. The step is read from the
+			// game; no event plays a part in it.
+			if (cutByTheScene.rule.when.questStepHolds(speechEngine.getContext(), TriggerEvent.tick()))
+			{
+				speechEngine.remark(cutByTheScene.text);
+			}
 			cutByTheScene = null;
 		}
 	}
@@ -4855,6 +4878,7 @@ public class FollowerPlugin extends Plugin
 		sceneGoneTicks = 0;
 		quietUntilTick = 0;
 		speechEngine.setSceneQuiet(false);
+		speechEngine.setInCutscene(false);
 	}
 
 	@Subscribe
@@ -8632,7 +8656,7 @@ public class FollowerPlugin extends Plugin
 		// as the rules read it, page flips ridden out: on the raw box the news
 		// went out on a flip and sat over the conversation (QA, 15 Oct).
 		TriggerEvent news = nextPageNews(pageNews, client.getTickCount(), speechEngine.isQuiet(),
-			inConversation() || sceneQuiet());
+			inConversation() || sceneQuiet(), pageNewsTicks(speechEngine.moodScaledGap()));
 		if (news != null)
 		{
 			speechEngine.dispatch(news);
@@ -8647,9 +8671,10 @@ public class FollowerPlugin extends Plugin
 	 * was never mentioned. While a dialogue is up the news waits, and its
 	 * minute starts again when the box closes. A cutscene and the quiet after
 	 * it hold it the same way: a page a scene writes is mentioned after.
+	 * Its minute is {@code window} ticks, as {@link #pageNewsTicks} has it.
 	 */
 	static TriggerEvent nextPageNews(java.util.Deque<PageNews> news, int now, boolean quiet,
-		boolean waits)
+		boolean waits, int window)
 	{
 		if (waits)
 		{
@@ -8659,7 +8684,7 @@ public class FollowerPlugin extends Plugin
 			}
 			return null;
 		}
-		while (!news.isEmpty() && now - news.peek().tick > PAGE_NEWS_TICKS)
+		while (!news.isEmpty() && now - news.peek().tick > window)
 		{
 			news.poll();
 		}
@@ -11955,8 +11980,10 @@ public class FollowerPlugin extends Plugin
 		}
 		// Posing for a sketch, the overhead is the count's, and a line said
 		// now would be in the picture. Held, as in a conversation, and said
-		// once the scroll is away.
-		if (sketching != null && sketching.isPosing())
+		// once the scroll is away. So in the follower's own Talk-to box:
+		// behaviour QA, 16 Oct, a line went overhead with the box open,
+		// two mouths at once.
+		if ((sketching != null && sketching.isPosing()) || dialog.isOpen())
 		{
 			if (speechQueue.size() < SPEECH_QUEUE_LIMIT)
 			{
@@ -11983,6 +12010,20 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void drainSpeechQueue()
 	{
+		long now = System.currentTimeMillis();
+		// A line that waits its turn is kept through a conversation - an
+		// NPC's, or the follower's own box - and its staleness counts from the
+		// box closing. Every such line in the queue, not only the first:
+		// behaviour QA, 16 Oct, the second was dropped as stale as the box
+		// closed, and one kept through the follower's own box aged out in it.
+		boolean box = dialog.isOpen() || inConversation();
+		for (Utterance queued : speechQueue)
+		{
+			if (keptForTheBox(queued.rule, box))
+			{
+				queued.queuedAtMs = now;
+			}
+		}
 		// Nothing overhead while the follower is talking to you in the box:
 		// a bubble above its head mid-conversation is two mouths at once.
 		// Held, not dropped - the stale sweep below decides what survives
@@ -11996,14 +12037,11 @@ public class FollowerPlugin extends Plugin
 		{
 			return;
 		}
-		long now = System.currentTimeMillis();
-		// A line that waits its turn, through an NPC conversation, and what
-		// is behind it with it: said into the box it would be dropped. Its
-		// staleness counts from the box closing.
+		// Nor into an NPC conversation, a line that waits and what is behind
+		// it: said into the box it would be dropped.
 		Utterance next = speechQueue.peekFirst();
 		if (next != null && keptForTheBox(next.rule, inConversation()))
 		{
-			next.queuedAtMs = now;
 			return;
 		}
 		while (!speechQueue.isEmpty()

@@ -35,6 +35,29 @@ public class SceneCutTest
 		assertTrue(FollowerPlugin.saysAgainAfterTheScene(rule(null, true), 1_900, 1_000));
 	}
 
+	/** Behaviour QA, 16 Oct: a bet's payoff, a line that waits, cut 1.2 s in and lost. */
+	@Test
+	public void aLineThatWaitsIsSaidAgainToo()
+	{
+		SpeechRule waits = rule(null, null);
+		waits.waits = true;
+		assertTrue(FollowerPlugin.saysAgainAfterTheScene(waits, 1_200, 3_000));
+	}
+
+	/**
+	 * Behaviour QA, 16 Oct (probe P10): the hideout line was said again after
+	 * the scene that moved its step on, with the next step's moment 6 s
+	 * behind it. The re-say checks the step, as the engine does.
+	 */
+	@Test
+	public void aCutLineWhoseStepMovedOnIsNotSaidAgain() throws IOException
+	{
+		String src = new String(Files.readAllBytes(
+			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8);
+		assertTrue(src.contains(
+			"if (cutByTheScene.rule.when.questStepHolds(speechEngine.getContext(), TriggerEvent.tick()))"));
+	}
+
 	/**
 	 * QA pass 2: the window's scene cut the hideout line 2.4 s into the
 	 * 3.5 s it takes to read, and it was spent half read. A line cut before

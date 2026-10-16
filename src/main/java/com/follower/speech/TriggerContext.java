@@ -2106,6 +2106,8 @@ public final class TriggerContext
 	 */
 	private String souvenir = "";
 	private int souvenirDroppedTick;
+	/** The tick it came into the pocket, so a line about having it a while can wait for a while. */
+	private int souvenirSinceTick;
 
 	public void pickUp(String what, int minutes)
 	{
@@ -2115,6 +2117,7 @@ public final class TriggerContext
 		}
 		souvenir = what;
 		souvenirDroppedTick = client.getTickCount() + Math.max(1, minutes) * 100;
+		souvenirSinceTick = client.getTickCount();
 		log.debug("Picked up {} for {} minutes", what, minutes);
 	}
 
@@ -2136,11 +2139,18 @@ public final class TriggerContext
 		log.debug("Traded {} for {}", souvenir, what);
 		souvenir = what;
 		souvenirDroppedTick = client.getTickCount() + Math.max(1, minutes) * 100;
+		souvenirSinceTick = client.getTickCount();
 	}
 
 	public boolean isCarrying()
 	{
 		return !souvenir.isEmpty();
+	}
+
+	/** Whole minutes the thing it is carrying has been in the pocket. */
+	public int minutesCarried()
+	{
+		return (client.getTickCount() - souvenirSinceTick) / 100;
 	}
 
 	/** What it is carrying, or what it just lost, for the {souvenir} placeholder. */
@@ -2813,9 +2823,32 @@ public final class TriggerContext
 		return adviceAbout;
 	}
 
-	/** Offered every animation the player plays, while advice is outstanding. */
+	/** The tick each animation the player played was last played. */
+	private final java.util.Map<Integer, Integer> actTicks = new java.util.HashMap<>();
+
+	/**
+	 * Whether the player has played any of these since that tick: for a
+	 * warning kept waiting, already answered. Behaviour QA, 16 Oct: "Get
+	 * out!" was said after the teleport, and a minute later the advice was
+	 * called ignored.
+	 */
+	public boolean actedSince(java.util.Collection<Integer> ids, int tick)
+	{
+		for (Integer id : ids)
+		{
+			Integer at = actTicks.get(id);
+			if (at != null && at >= tick)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/** Offered every animation the player plays, and settles advice outstanding. */
 	public void offerAct(int animationId)
 	{
+		actTicks.put(animationId, client.getTickCount());
 		if (isAdvising() && adviceIds.contains(animationId))
 		{
 			settleAdvice(AdviceOutcome.HEEDED);

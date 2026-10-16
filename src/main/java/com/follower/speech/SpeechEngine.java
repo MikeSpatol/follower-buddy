@@ -205,6 +205,13 @@ public class SpeechEngine
 	private boolean sceneQuiet;
 
 	/**
+	 * The cutscene itself, without the quiet after it: what can move a
+	 * quest's step on under a line kept waiting (see the moved-on check).
+	 */
+	@Setter
+	private boolean inCutscene;
+
+	/**
 	 * Where "now" comes from.
 	 *
 	 * <p>Every window in this class is wall-clock - the speech gap, the held
@@ -455,6 +462,13 @@ public class SpeechEngine
 		}
 	}
 
+	/** Whether what a waiting line advises was done while it waited: the teleport before "Get out!". */
+	private boolean answered(PendingSpeech delayed)
+	{
+		SpeechRule.Advice advice = delayed.rule.advise;
+		return advice != null && advice.ids != null && getContext().actedSince(advice.ids, delayed.wonTick);
+	}
+
 	/** A won rule waiting out its delayTicks before speaking. */
 	private static final class PendingSpeech
 	{
@@ -473,17 +487,21 @@ public class SpeechEngine
 		int rested;
 		/** Held by a conversation, and not yet given its beat after it. */
 		boolean heardTheBox;
-		/** The scene quiet when last looked at, and whether a scene has begun since the win. */
-		boolean quiet;
-		boolean sceneSinceWin;
+		/** The rule's last firing before this win, given back if the line is let go unsaid. */
+		final long firedBefore;
+		/** The game tick it won on. */
+		final int wonTick;
+		/** A callback about the same person won meanwhile: the plain line stands aside. */
+		boolean stoodAside;
 
-		PendingSpeech(SpeechRule rule, TriggerEvent event, int ticksLeft, boolean quiet)
+		PendingSpeech(SpeechRule rule, TriggerEvent event, int ticksLeft, long firedBefore, int wonTick)
 		{
 			this.rule = rule;
 			this.event = event;
 			this.delay = ticksLeft;
 			this.ticksLeft = ticksLeft;
-			this.quiet = quiet;
+			this.firedBefore = firedBefore;
+			this.wonTick = wonTick;
 		}
 	}
 
@@ -500,14 +518,30 @@ public class SpeechEngine
 	static final int OCCASION_WAIT_TICKS = 10;
 
 	/**
-	 * How long an occasion waits for the gap now, in ticks: the gap itself
-	 * and two more. The gap stretches with mood and chattiness - 15 seconds
-	 * at a low mood on Occasional, nearly two minutes on Minimal - and a fixed
-	 * six seconds dropped the quest's line again in every one of those.
+	 * How long a line that waits its turn waits for the gap now, in ticks:
+	 * its gap and two more. The gap stretches with mood and chattiness - 15
+	 * seconds at a low mood on Occasional, nearly two minutes on Minimal - and
+	 * a fixed six seconds dropped the quest's line again in every one of those.
 	 */
-	int occasionWaitTicks()
+	int occasionWaitTicks(SpeechRule rule)
 	{
-		return Math.max(OCCASION_WAIT_TICKS, (int) (moodScaledGap() / 600L) + 2);
+		return Math.max(OCCASION_WAIT_TICKS, (int) (gapFor(rule) / 600L) + 2);
+	}
+
+	/**
+	 * The longest gap an occasion keeps after another line: eight seconds.
+	 * Quests QA, 16 Oct, at Minimal (45 s, the user's own setting): every
+	 * quest moment waited the full gap behind any line, the sketch prompt
+	 * included, and they landed a stage late, out of order or after the
+	 * scroll. The user's call: the moments break through. The gap still
+	 * thins out everything else.
+	 */
+	static final long OCCASION_GAP_MS = 8_000L;
+
+	/** The gap this rule keeps after the last line. */
+	private long gapFor(SpeechRule rule)
+	{
+		return rule.isOccasion() ? Math.min(moodScaledGap(), OCCASION_GAP_MS) : moodScaledGap();
 	}
 
 	/** Whether a firing held up for this reason waits a tick and tries again rather than being dropped. */
@@ -706,10 +740,15 @@ public class SpeechEngine
 	 * up as the box opened, and the moments held over a scene were released
 	 * into the conversation the scene ran on into. Held, they are said once
 	 * it is over.
+	 *
+	 * <p>Every other line is held back there too, as under the mute, rather
+	 * than handed over to be hushed. Quests QA, 16 Oct: an idle line hushed
+	 * in a long quest conversation still charged the gap, so at Minimal the
+	 * quest's end waited 45 s behind a line nobody saw.
 	 */
-	private boolean heldForTheBox(SpeechRule rule)
+	private boolean heldForTheBox()
 	{
-		return rule.waitsItsTurn() && getContext().isDialogueOpen();
+		return getContext().isDialogueOpen();
 	}
 
 	/**
@@ -728,7 +767,7 @@ public class SpeechEngine
 		}
 		if (rule == hushOwner && now < hushUntilMs)
 		{
-			return muted ? "muted" : sceneQuiet ? "scene" : heldForTheBox(rule) ? "dialogue" : null;
+			return muted ? "muted" : sceneQuiet ? "scene" : heldForTheBox() ? "dialogue" : null;
 		}
 		if (muted)
 		{
@@ -738,7 +777,7 @@ public class SpeechEngine
 		{
 			return "scene";
 		}
-		if (heldForTheBox(rule))
+		if (heldForTheBox())
 		{
 			return "dialogue";
 		}
@@ -781,7 +820,7 @@ public class SpeechEngine
 		{
 			return "trailing";
 		}
-		if (now - lastSpokeMs < moodScaledGap())
+		if (now - lastSpokeMs < gapFor(rule))
 		{
 			return "gap";
 		}
@@ -851,7 +890,7 @@ public class SpeechEngine
 	 * everything evenly instead of silencing particular things: the follower
 	 * still says what matters, just with more room around it.
 	 */
-	private long moodScaledGap()
+	public long moodScaledGap()
 	{
 		return gapForMood(globalCooldownMs, getContext().getMoodBand());
 	}
@@ -907,18 +946,46 @@ public class SpeechEngine
 		// the same guarded path as everything else when their beat arrives.
 		if (event.getType() == TriggerEvent.Type.TICK && !pending.isEmpty())
 		{
+			// Most important first, when several come free on one tick; level
+			// ones keep the order they won in. Quests QA, 16 Oct: Prince
+			// Itzla's line went ahead of the bag moment it was held with.
+			pending.sort(java.util.Comparator.comparingInt(p -> -p.rule.priority));
 			java.util.Iterator<PendingSpeech> it = pending.iterator();
 			while (it.hasNext())
 			{
 				PendingSpeech delayed = it.next();
+				if (delayed.stoodAside)
+				{
+					it.remove();
+					noteSuppressed(delayed.rule, "callback");
+					continue;
+				}
 				if (--delayed.ticksLeft <= 0)
 				{
-					if (sceneQuiet && !delayed.quiet)
+					// A cutscene that moves its quest's step on makes a line
+					// about the step before old news: two scenes stale, and
+					// "Questioning" said after the questioning. Let go
+					// unspent. A pan that leaves the step alone does not do
+					// it, nor a conversation alone: that is usually the very
+					// step it moves on, and the line is still about what came
+					// just before. Behaviour QA, 16 Oct: "a scene began since
+					// the win" lost a line to an unrelated pan, and missed a
+					// second scene that started inside the first one's quiet.
+					if (inCutscene && !delayed.rule.when.questStepHolds(getContext(), delayed.event))
 					{
-						delayed.sceneSinceWin = true;
+						it.remove();
+						noteSuppressed(delayed.rule, "moved-on");
+						continue;
 					}
-					delayed.quiet = sceneQuiet;
 					String held = blockedBy(delayed.rule, now);
+					// The beat after a conversation is for the tick the box
+					// goes. Held by anything else first, it waits its gap
+					// like any other line, rather than jumping a moment
+					// that came up since.
+					if (held != null && !"dialogue".equals(held))
+					{
+						delayed.heardTheBox = false;
+					}
 					if (waitsOutTheScene(delayed.rule, held, delayed.sceneWaited))
 					{
 						delayed.sceneWaited++;
@@ -944,7 +1011,7 @@ public class SpeechEngine
 						delayed.gapAfterMs = lastSpokeMs;
 						delayed.waited = 0;
 					}
-					if (waitsOutTheGap(delayed.rule, held, delayed.waited, occasionWaitTicks()))
+					if (waitsOutTheGap(delayed.rule, held, delayed.waited, occasionWaitTicks(delayed.rule)))
 					{
 						delayed.waited++;
 						delayed.ticksLeft = 1;
@@ -957,16 +1024,15 @@ public class SpeechEngine
 						continue;
 					}
 					it.remove();
-					// Kept over a cutscene that began after it won, a line
-					// about a quest's step that has since moved on is old
-					// news: two scenes stale, and "Questioning" said after the
-					// questioning. Let go unspent. A conversation alone does
-					// not do it: that is usually the very step it moves on,
-					// and the line is still about what came just before.
-					if (held == null && delayed.sceneSinceWin
-						&& !delayed.rule.when.questStepHolds(getContext(), delayed.event))
+					// Kept waiting, the moment it was about can pass: the
+					// player ate, or the person walked off, or did what a
+					// warning was about to advise. Let go unsaid, with its
+					// cooldown given back, so it rises the next time it is true.
+					if (held == null && (!delayed.rule.when.standingHolds(getContext(), delayed.event)
+						|| answered(delayed)))
 					{
-						noteSuppressed(delayed.rule, "moved-on");
+						delayed.rule.markFired(delayed.firedBefore);
+						noteSuppressed(delayed.rule, "passed");
 						continue;
 					}
 					if (held == null)
@@ -1100,6 +1166,20 @@ public class SpeechEngine
 			return;
 		}
 
+		// A callback about a quest's person: a plain line about them already
+		// waiting is let go now, at the win, since the two are one line.
+		// Behaviour QA, 16 Oct: the person came by with a box up, the plain
+		// line was held for it, the callback rose as it closed, and both
+		// were said 6 s apart.
+		String plain = winner.plainLineId();
+		if (plain != null)
+		{
+			for (PendingSpeech waiting : pending)
+			{
+				waiting.stoodAside |= plain.equals(waiting.rule.id);
+			}
+		}
+
 		// Taking the floor happens at the WIN, not when the line finally comes
 		// out. A rule with a delay would otherwise leave its own gap open: the
 		// want-fulfilled line waits a few ticks, and the region-change line
@@ -1116,19 +1196,20 @@ public class SpeechEngine
 		// charged at the win so re-triggers don't stack up more firings. The
 		// wait is drawn HERE, once, so a ranged delay stays put while pending.
 		int delay = winner.rollDelayTicks();
+		long firedBefore = winner.lastFiredMs();
 		if (delay > 0)
 		{
 			winner.markFired(now);
-			pending.add(new PendingSpeech(winner, event, delay, sceneQuiet));
+			pending.add(new PendingSpeech(winner, event, delay, firedBefore, client.getTickCount()));
 			return;
 		}
 
 		String blocked = blockedBy(winner, now);
-		if (waitsOutTheGap(winner, blocked, 0, occasionWaitTicks()) || waitsOutTheScene(winner, blocked, 0)
+		if (waitsOutTheGap(winner, blocked, 0, occasionWaitTicks(winner)) || waitsOutTheScene(winner, blocked, 0)
 			|| waitsOutTheRest(winner, blocked, 0))
 		{
 			winner.markFired(now);
-			PendingSpeech held = new PendingSpeech(winner, event, 1, sceneQuiet);
+			PendingSpeech held = new PendingSpeech(winner, event, 1, firedBefore, client.getTickCount());
 			held.gapAfterMs = lastSpokeMs;
 			held.heardTheBox = "dialogue".equals(blocked);
 			pending.add(held);
@@ -1383,8 +1464,10 @@ public class SpeechEngine
 			}
 		};
 
-		// The pacing is charged at the win, heard or not: it only spaces the
-		// lines out, and a hushed line costing its gap does no harm.
+		// The pacing is charged at the hand-over, heard or not: it only spaces
+		// the lines out. A line the plugin then drops still costs its gap, so
+		// what a conversation would hush is held back above instead (QA3 #10:
+		// at Minimal that gap cost the quest's end 45 s).
 		if (!text.isEmpty())
 		{
 			// Only actual speech resets the global window; an animation-only

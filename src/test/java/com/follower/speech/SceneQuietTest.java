@@ -304,13 +304,19 @@ public class SceneQuietTest
 	@Test
 	public void chatterInAConversationIsNotHeldForIt() throws IOException
 	{
-		// Handed over as ever; the plugin drops it. A remark about the tree
-		// two minutes after the tree is worse than none.
+		// Held back there, as under the mute, and not kept for after: a
+		// remark about the tree two minutes after the tree is worse than
+		// none. Not handed over to be hushed either, where it charged the
+		// gap (QA3 #10).
 		Harness h = harness(CHATTY);
 		h.engine.getContext().setDialogueOpen(true);
 		h.game.hitpoints(10, 99);
 		ticks(h, 2);
-		assertEquals(1, h.firedBy("chatty").size());
+		assertTrue(h.firedBy("chatty").isEmpty());
+		assertEquals("chatty:dialogue", held.get(0));
+		h.engine.getContext().setDialogueOpen(false);
+		ticks(h, 20);
+		assertTrue("dropped, not kept for after", h.firedBy("chatty").isEmpty());
 	}
 
 	/**
@@ -396,14 +402,63 @@ public class SceneQuietTest
 		h.engine.getContext().setDialogueOpen(true);
 		ticks(h, 10);
 		h.engine.setSceneQuiet(true);
+		h.engine.setInCutscene(true);
 		h.game.varbit(9632, 18);
 		ticks(h, 60);
 		h.engine.getContext().setDialogueOpen(false);
 		h.engine.setSceneQuiet(false);
+		h.engine.setInCutscene(false);
 		ticks(h, 20);
 		assertTrue(h.firedBy("roof").isEmpty());
 		assertEquals("roof:moved-on", held.get(0));
 		assertFalse("not spent", h.engine.getContext().hasSaidOnce("roof"));
+	}
+
+	@Test
+	public void aPanThatLeavesTheStepAloneDoesNotLoseTheMoment() throws IOException
+	{
+		// Behaviour QA, 16 Oct (probe P7): spot-the-four held, a five-tick
+		// pan that does not touch the step, then the talk that moves it on.
+		// Without the pan the line is said after the box; with it, it was
+		// lost as moved-on.
+		Harness h = harness(moment("spot", 12, 12, 2));
+		h.game.varbit(9632, 12);
+		ticks(h, 1);
+		h.engine.getContext().setDialogueOpen(true);
+		h.engine.setSceneQuiet(true);
+		h.engine.setInCutscene(true);
+		ticks(h, 5);
+		h.engine.setInCutscene(false);
+		ticks(h, 25);
+		h.engine.setSceneQuiet(false);
+		ticks(h, 10);
+		h.game.varbit(9632, 14);
+		ticks(h, 2);
+		h.engine.getContext().setDialogueOpen(false);
+		ticks(h, 3);
+		assertEquals(held.toString(), 1, h.firedBy("spot").size());
+	}
+
+	@Test
+	public void aSecondSceneInsideTheFirstOnesQuietThatMovesTheStepIsSeen() throws IOException
+	{
+		// Probe P11: the bag (step 6) won in scene A's quiet; scene B,
+		// starting inside that quiet, moves the step on. The bag line was
+		// said after scene B.
+		Harness h = harness(moment("bag", 6, 6, 2));
+		h.engine.setSceneQuiet(true);
+		h.game.varbit(9632, 6);
+		ticks(h, 5);
+		h.engine.setInCutscene(true);
+		ticks(h, 10);
+		h.game.varbit(9632, 8);
+		ticks(h, 10);
+		h.engine.setInCutscene(false);
+		ticks(h, 25);
+		h.engine.setSceneQuiet(false);
+		ticks(h, 20);
+		assertTrue(h.firedBy("bag").isEmpty());
+		assertTrue(held.toString(), held.contains("bag:moved-on"));
 	}
 
 	@Test
