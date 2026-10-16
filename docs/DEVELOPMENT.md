@@ -2041,10 +2041,23 @@ each measured against how the player moves the rest of the time:
   glide frame, 48 fine units to count, so the one frame where a walk ends on
   the stand never adds up to one.
 - *An action and a hop*: an animation, then the player put down up to 14
-  tiles away or on another floor. A ladder looks identical, so this needs
-  agility XP (`StatChanged`) or a damage hitsplat (a fall: `DAMAGE_ME`,
-  `DAMAGE_OTHER`, `DAMAGE_MAX_ME`, never poison or venom) within two ticks.
-  The follower is held, not snapped, while it waits.
+  tiles away or on another floor. One tile in a single frame counts as a hop
+  when a clip or an odd pose is on (a gap jump can set the player down a tile
+  over with nothing between); the frame a walk ends on never does. A ladder
+  looks identical, so this needs agility XP (`StatChanged`) or a damage
+  hitsplat (a fall: `DAMAGE_ME`, `DAMAGE_OTHER`, `DAMAGE_MAX_ME`, never poison
+  or venom) within two ticks, or five on a course (agility XP in the last
+  minute). The follower is held, not snapped, while it waits. XP while an
+  unconfirmed run has moved the player confirms it too.
+- *Rebuilt from XP*: every course obstacle pays XP as it completes. The watch
+  keeps the last 10 s of the player (at most 3000 frames). When agility XP
+  arrives, any odd movement (a glide, a hop, an odd pose or a clip on the
+  move) since the last crossing handed over, ending within 3 s of the XP, is
+  an obstacle the signals missed: rebuilt from the last frame of the player's
+  own stand or walk before it to the first after it (or now), and queued. A
+  lamp, a book or a quest pays nothing that moved recently, so rebuilds
+  nothing; nor does movement that went nowhere. A teleport, or a snap of the
+  follower, forgets what came before.
 
 No animation id or gameval name is relied on: the ids in the tests are only
 there to read like the real thing. An animation alone never counts (an emote,
@@ -2060,10 +2073,21 @@ obstacle (a carpet ride, swimming): dropped, and its pose taken as normal.
 **Recording.** Per frame: the rendered position in fine world units (scene
 base plus local, so a rebuild does not move it), the floor, the orientation,
 the pose and action with their frames, and whether the player was hurt.
-Frames during a scene load are skipped, not taken for a logout.
+Frames during a scene load are skipped, not taken for a logout. A crossing is
+handed to the follower the moment it is recognised and grows a frame at a
+time; it is then ended (trimmed to its first normal frame), cut (a logout, a
+cutscene, a teleport: played as far as it got) or dropped (past 30 s, or a
+fight: not an obstacle, and skipped if the follower has not begun it). The
+watch and the follower both run on the client thread (`BeforeRender`,
+`StatChanged`, `HitsplatApplied`, `GameTick`), so there is no lock.
 
-**Replay.** Crossings queue in order. For each, the follower walks to the
-start tile on the BFS (beside it while the player is still on it), then
+**Replay.** Crossings queue in the order the player began them (a rebuilt one
+goes ahead of any recognised since; one older than the crossing being played
+is too late and let go). For each, the follower walks to the start tile on the
+BFS (beside it while the player is still on it, and staying put if already
+beside it), and begins it once the player is 1.2 s (two ticks) into it,
+measured from the player's start, not the follower's arrival; it plays the
+recording as it grows, holding on the newest frame should it ever catch up. It
 plays it back: fine position interpolated between frames on one floor and
 held across a floor change or a hop, the facing turned at the client's rate,
 and the action or the pose put on at the frame the player's was on. A pose
@@ -2078,11 +2102,39 @@ The follower is drawn, routed and kept out of walls on its own floor now:
 the client's `LocalPoint.fromWorld` answers null for a tile off the player's
 floor, which never mattered while the snap kept the two together.
 
-**Limits on falling behind.** More than 40 tiles behind (the stay leash,
-inside the loaded scene) or more than 16 crossings waiting (more than any
-course has obstacles), and the queue is let go: the crossing under way is
-finished and the ordinary catch-up takes over. Unable to reach a crossing's
-start for 3 s, it is put there.
+**Limits on falling behind.** More than 64 tiles behind or more than 16
+crossings waiting (more than any course has obstacles), and the queue is let
+go: the crossing under way is finished and the ordinary catch-up takes over.
+64, not the old 40 (the stay leash): the scene is 104 tiles and rebuilt round
+the player within 16 of its edge, leaving about 48 behind them, so past 64 the
+follower is about to drop off the map anyway, while 40 was inside a long
+course's lap. Unable to reach a crossing's start for 4.8 s (eight ticks,
+longer than a hop waits for late XP), it is put there.
+
+**Waiting, not snapping.** For 8 s after the last crossing queued, begun or
+finished, or agility XP, the follower waits for a player on another floor
+rather than snapping to them (on the same floor it walks after them as
+usual), the blocked-tile hop is off, and the plugin's stranded teleport does
+not count. That is the window in which a missed obstacle is rebuilt from its
+XP. A real teleport (a jump past 14 tiles, seen by the watch), a Stay, the
+setting off or any gate that lets the queue go ends the wait at once; off a
+course the wait never starts, so a ladder snaps as before. The snaps that
+remain: the teleport rule once the wait is over, the 64-tile cap, a cast that
+landed, the watchdog and the off-scene recovery (genuine faults), and the
+errand, thrall and stranded-teleport homecomings outside agility.
+
+**The trace.** With Developer commands on, `agility-trace-YYYY-MM-DD.log` in
+the plugin folder (`AgilityTrace`, buffered and written every 5 s). A tick
+line, once a game tick while there is agility about (a crossing watched or
+queued, the wait on, XP this tick, or an odd pose or move in the last 3 s):
+the player's tile, pose, animation, graphic, moving or still, XP gained and
+hitsplat type this tick; the watch's state (`idle`, `watch`, `await-xp`,
+`rec(<signal>)`, with its age and frames); the follower's tile, queue and
+state (`follow`, `await`, `to <start> lag|ready|stuck`, `play <at>/<length>
+live`, `hold <left>`). Event lines, marked `*`: crossings recognised, ended,
+cut, dropped or rebuilt (and XP that rebuilt nothing), queued, begun,
+finished, skipped or too late, caps tripped, and every snap, pin and
+placement with its reason.
 
 **Interruptions.** A Stay, Send or Follow me off: no agility, the queue let
 go; a Stay given mid-crossing holds where that crossing ends. Thrall work, a
