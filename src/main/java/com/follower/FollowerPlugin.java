@@ -6387,7 +6387,8 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void maybeSendThrallHint()
 	{
-		if (!config.thrallMode() || config.thrallHintShown())
+		// Thrall only replaces them too, so the hint would not work (QA3).
+		if (!config.thrallMode() || config.thrallOnly() || config.thrallHintShown())
 		{
 			return;
 		}
@@ -10711,7 +10712,8 @@ public class FollowerPlugin extends Plugin
 				{
 					try
 					{
-						int offset = Integer.parseInt(args[1]);
+						// The setting's own range; its box clamps only what it shows (QA3).
+						int offset = Math.max(-64, Math.min(64, Integer.parseInt(args[1])));
 						configManager.setConfiguration(FollowerConfig.GROUP, "verticalOffset", offset);
 						clientThread.invoke(() -> follower.setVerticalOffset(offset));
 						sendStatus("Height offset " + offset + " (positive lifts).");
