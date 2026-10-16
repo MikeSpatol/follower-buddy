@@ -612,22 +612,24 @@ public class SpeechRule
 	}
 
 	/**
-	 * Forgets the edge and the cooldown, so the rule may fire again as soon as
-	 * its condition next rises. Deliberately leaves the shuffle bag alone: what
-	 * the follower has already said is not scene state, and a player who hops
+	 * Forgets the edge, so a condition still true rises again. Deliberately
+	 * leaves the cooldown and the shuffle bag alone: what the follower has
+	 * already said is not scene state. Behaviour QA, 16 Oct: a hop that
+	 * cleared the cooldown too had Callisto's intro said again a minute
+	 * later, and crowded-here again after every GE hop. And a player who hops
 	 * worlds often would otherwise be handed the front of a fresh bag every
 	 * time and hear the same few lines for it.
 	 */
 	public void resetEdges()
 	{
 		lastState = false;
-		lastFiredMs = 0L;
 	}
 
-	/** The full clear, bag included. For starting the follower over. */
+	/** The full clear, cooldown and bag included. For starting the follower over. */
 	public void reset()
 	{
 		resetEdges();
+		lastFiredMs = 0L;
 		lastPhraseIndex = -1;
 		bag = null;
 		bagPos = 0;
