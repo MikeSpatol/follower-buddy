@@ -2998,7 +2998,8 @@
       "say": [
         "Your first ninety-nine. I reserved a page and never thought I'd use it.",
         "Ninety-nine {skill}. The first. I'm going to need a better pen.",
-        "That's a ninety-nine. Your first. I've written the date next to it."
+        "That's a ninety-nine. Your first. I've written the date next to it.",
+        "Your first ninety-nine. I'm dancing, off the record."
       ]
     },
     {
@@ -3017,7 +3018,7 @@
       },
       "say": [
         "That's {nines} at ninety-nine, and yes, I'm counting.",
-        "Ninety-nine {skill} makes your {ninesOrdinal}. The reserved pages are running out.",
+        "Your {ninesOrdinal} ninety-nine. The reserved pages are running out.",
         "{skill} to ninety-nine, your {ninesOrdinal}. It never gets smaller.",
         "The {ninesOrdinal} ninety-nine. I've had to start a second index."
       ]
@@ -8407,7 +8408,7 @@
         "A {item}! I need to sit down.",
         "That's a {item}. That's a real one!",
         "I'm never letting you bank that.",
-        "Did you SEE that?",
+        "I wrote the {item} down, and I keep rereading it.",
         "{value}. In one drop. Write it down.",
         "Stop. Look at what you're holding.",
         "That's a page all to itself, that is.",
@@ -9023,7 +9024,8 @@
         "I'm telling everyone about this.",
         "That was magnificent. {npc} never stood a chance.",
         "You were unbelievable just then.",
-        "That'll be the best thing I see all week."
+        "{npc} down and you standing. My favourite page.",
+        "{npc}, down. I watched through my fingers."
       ]
     },
     {
@@ -9042,7 +9044,7 @@
       },
       "say": [
         "Your first {boss}. In the book, dated.",
-        "One {boss}. The first of many, I suspect.",
+        "One {boss}. This is the page I'll reread.",
         "{boss}, once. I'd saved a good page for this."
       ]
     },
@@ -11235,7 +11237,7 @@
         "ticks": 8
       },
       "note": "Filed when something with a combat level in three figures stops moving. Low priority so the celebration rules win the kill. The particulars (who, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.",
-      "about": "Remembers a kill of something level 100 or higher, to bring up later.",
+      "about": "Remembers a kill of something level 150 or higher, to bring up later.",
       "group": "memory",
       "priority": 20,
       "cooldownMs": 600000,
@@ -12076,7 +12078,7 @@
         "The {wish}! I'll set down {souvenir} to make room.",
         "A trade, then: {souvenir} out, the {wish} in.",
         "The {wish} outranks {souvenir}. Out it goes.",
-        "Out goes {souvenir}, in goes the {wish}, and you get my old one.",
+        "Trading {souvenir} for the {wish}. Back to you.",
         "The {wish} bumps {souvenir}. Have my old one."
       ]
     },
@@ -14784,7 +14786,8 @@
         ]
       },
       "say": [
-        "Sedridor's basement is under us. I'm still working out how he knew you."
+        "Sedridor's basement is under us. I'm still working out how he knew you.",
+        "Someone in the Wizards' Tower knows your name. I keep mine quiet."
       ]
     },
     {
@@ -15090,6 +15093,44 @@
       ]
     },
     {
+      "id": "fun-regath-after-client-of-kourend",
+      "waits": true,
+      "note": "Callback: same trigger as quest-regath plus Client of Kourend done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Client of Kourend, so it cannot rise on the quest finishing.",
+      "group": "quest",
+      "priority": 36,
+      "cooldownMs": 10800000,
+      "delayTicks": 2,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "npcNearby",
+            "visible": true,
+            "within": 5,
+            "names": [
+              "Regath"
+            ]
+          },
+          {
+            "type": "questWitnessed",
+            "quest": "CLIENT_OF_KOUREND"
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "dialogueOpen"
+              }
+            ]
+          }
+        ]
+      },
+      "say": [
+        "Regath still thinks you're a journalist. He's never seen your writing."
+      ]
+    },
+    {
       "id": "fun-leenz-after-client-of-kourend",
       "waits": true,
       "note": "Callback: same trigger as quest-leenz plus Client of Kourend done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Client of Kourend, so it cannot rise on the quest finishing.",
@@ -15375,7 +15416,8 @@
         ]
       },
       "say": [
-        "The fence book's found its feet. Lots of posts, and a promising stile."
+        "The fence book's found its feet. Lots of posts, and a promising stile.",
+        "Chapter two of the fence book. The posts are improving."
       ],
       "delayTicks": 2,
       "output": "overhead"
@@ -15410,7 +15452,8 @@
         ]
       },
       "say": [
-        "The fence book's reached gates at last. I read that bit twice."
+        "The fence book's reached gates at last. I read that bit twice.",
+        "Halfway through the fence book, and the author has views on hedges."
       ],
       "delayTicks": 2,
       "output": "overhead"
@@ -15446,6 +15489,41 @@
       },
       "say": [
         "Finished the fence book. I miss it, which I didn't expect."
+      ],
+      "delayTicks": 2,
+      "output": "overhead"
+    },
+    {
+      "id": "fun-fence-book-reread",
+      "note": "Running bit, the fence book: days 68-97 after the opener. Idle window like wonders-about-you, rarer, two-hour cooldown.",
+      "group": "idle",
+      "priority": 17,
+      "cooldownMs": 7200000,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "idle",
+            "ticks": 240
+          },
+          {
+            "type": "idleBelow",
+            "ticks": 600
+          },
+          {
+            "type": "daysSinceSaid",
+            "rule": "fun-fence-book-start",
+            "minimum": 68,
+            "maximum": 97
+          },
+          {
+            "type": "chance",
+            "percent": 6
+          }
+        ]
+      },
+      "say": [
+        "I'm rereading the fence book, and it's better. That worries me."
       ],
       "delayTicks": 2,
       "output": "overhead"
@@ -15863,7 +15941,8 @@
       },
       "say": [
         "The dairy cow. She has the look of someone asked for milk a great deal.",
-        "A milkmaid, a cow and a bucket. The cake's coming together, slowly."
+        "A milkmaid, a cow and a bucket. The cake's coming together, slowly.",
+        "One cow with a bell, and every adventurer brings her a bucket."
       ]
     },
     {
@@ -16297,7 +16376,8 @@
         ]
       },
       "say": [
-        "Past halfway. The flock's noticeably slimmer than when we arrived."
+        "Past halfway. The flock's noticeably slimmer than when we arrived.",
+        "Over half delivered. Somewhere, a sheep feels the draught."
       ]
     },
     {
@@ -16337,7 +16417,8 @@
         ]
       },
       "say": [
-        "A tower full of wizards, and we're bringing them a trinket from a cellar."
+        "A tower full of wizards, and we're bringing them a trinket from a cellar.",
+        "The Wizards' Tower. Someone's reading behind every window."
       ]
     },
     {
@@ -16418,7 +16499,8 @@
         ]
       },
       "say": [
-        "Courier work, then. I'll note the package was sealed when we got it."
+        "Courier work, then. I'll note the package was sealed when we got it.",
+        "He kept the talisman and gave us a package. Wizards trade in errands."
       ]
     },
     {
@@ -16566,7 +16648,8 @@
         ]
       },
       "say": [
-        "Notes going the other way now. I'd love to know what's in them."
+        "Notes going the other way now. I'd love to know what's in them.",
+        "He read it twice and gave us more. Scholars never just say thanks."
       ]
     },
     {
@@ -16609,7 +16692,8 @@
         ]
       },
       "say": [
-        "Back down the ladder. Same basement, rather more to tell him."
+        "Back down the ladder. Same basement, rather more to tell him.",
+        "Down to Sedridor again. He's after something in these notes."
       ]
     },
     {
@@ -16644,7 +16728,8 @@
       },
       "say": [
         "Shy, for a priest. He wouldn't even open the door.",
-        "Pest control for a temple. Not the job I pictured from the palace."
+        "Pest control for a temple. Not the job I pictured from the palace.",
+        "A dog in the mausoleum, says the voice. I'll take its word."
       ]
     },
     {
@@ -16768,7 +16853,8 @@
         ]
       },
       "say": [
-        "We caught four bandits in his own square, and still beheading comes up."
+        "We caught four bandits in his own square, and still beheading comes up.",
+        "His own dog, after we caught his bandits. That caption needs work."
       ]
     },
     {
@@ -16814,7 +16900,8 @@
         ]
       },
       "say": [
-        "Spells from a monk, all the way down the aisle. Very unchurchlike."
+        "Spells from a monk, all the way down the aisle. Very unchurchlike.",
+        "A monk of Zamorak in Saradomin's temple. Someone's lost the rota."
       ]
     },
     {
@@ -17710,7 +17797,8 @@
       },
       "say": [
         "A cell on the palace roof. Out of the way, he said, and it certainly is.",
-        "Questioning. I'll stand at the back and take the minutes."
+        "Questioning. I'll stand at the back and take the minutes.",
+        "Four arrested, and nobody shouted. Varrock's guards at their best."
       ]
     },
     {
@@ -18204,7 +18292,8 @@
         ]
       },
       "say": [
-        "I've stood by a vampyre's coffin for you. This is worse."
+        "I've stood by a vampyre's coffin for you. This is worse.",
+        "A vampyre's coffin was one thing. Here my quill stays pocketed."
       ]
     },
     {

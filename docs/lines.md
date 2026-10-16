@@ -1,25 +1,25 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 616 rules, 2599 spoken lines, 3 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 618 rules, 2617 spoken lines, 3 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
 ## Contents
 
 - [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (40 rules, 159 lines)
-- [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (45 rules, 234 lines)
-- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (60 rules, 356 lines)
+- [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (46 rules, 237 lines)
+- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (60 rules, 357 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 115 lines)
 - [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 74 lines)
 - [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (28 rules, 121 lines)
-- [area](#area) - Places: named lines, tastes, earned verdicts, the defences (76 rules, 241 lines)
+- [area](#area) - Places: named lines, tastes, earned verdicts, the defences (76 rules, 242 lines)
 - [errand](#errand) - Its little trips: bank, altar, fire, cat, studies, explores (44 rules, 155 lines)
 - [souvenir](#souvenir) - Wishes, gifts, the pocket, and what it carries (17 rules, 84 lines)
 - [bet](#bet) - Its predictions about drops (3 rules, 20 lines)
 - [clock](#clock) - The hour and how long we have been at it (9 rules, 39 lines)
 - [gear](#gear) - What you put on (63 rules, 147 lines)
-- [boss](#boss) - Bosses sighted and fought (55 rules, 521 lines)
-- [quest](#quest) - Famous quest figures nearby (123 rules, 299 lines)
+- [boss](#boss) - Bosses sighted and fought (55 rules, 522 lines)
+- [quest](#quest) - Famous quest figures nearby (124 rules, 311 lines)
 - [thrall](#thrall) - When it stands in for a thrall (3 rules, 18 lines)
 - [mimic](#mimic) - Copying your emotes (30 rules, 16 lines)
 - [dialogs](#dialogs) - the conversations it starts (3 trees)
@@ -1088,6 +1088,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 17, cooldown 2h, delay 2 ticks, overhead
 
 - The fence book's found its feet. Lots of posts, and a promising stile.
+- Chapter two of the fence book. The posts are improving.
 
 ### `fun-fence-book-middle`
 
@@ -1097,6 +1098,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 17, cooldown 2h, delay 2 ticks, overhead
 
 - The fence book's reached gates at last. I read that bit twice.
+- Halfway through the fence book, and the author has views on hedges.
 
 ### `fun-fence-book-finished`
 
@@ -1106,6 +1108,15 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 17, cooldown 2h, delay 2 ticks, overhead
 
 - Finished the fence book. I miss it, which I didn't expect.
+
+### `fun-fence-book-reread`
+
+> Running bit, the fence book: days 68-97 after the opener. Idle window like wonders-about-you, rarer, two-hour cooldown.
+
+- **when:** standing still 240+ ticks AND standing still under 600 ticks AND 68-97 days after `fun-fence-book-start` was said AND a 6% roll
+- **pacing:** priority 17, cooldown 2h, delay 2 ticks, overhead
+
+- I'm rereading the fence book, and it's better. That worries me.
 
 ### `fun-fence-book-sequel`
 
@@ -1261,6 +1272,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Your first ninety-nine. I reserved a page and never thought I'd use it.
 - Ninety-nine {skill}. The first. I'm going to need a better pen.
 - That's a ninety-nine. Your first. I've written the date next to it.
+- Your first ninety-nine. I'm dancing, off the record.
 
 ### `level-mastery-again`
 
@@ -1271,7 +1283,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 89, cooldown 1m
 
 - That's {nines} at ninety-nine, and yes, I'm counting.
-- Ninety-nine {skill} makes your {ninesOrdinal}. The reserved pages are running out.
+- Your {ninesOrdinal} ninety-nine. The reserved pages are running out.
 - {skill} to ninety-nine, your {ninesOrdinal}. It never gets smaller.
 - The {ninesOrdinal} ninety-nine. I've had to start a second index.
 
@@ -1394,7 +1406,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - A {item}! I need to sit down.
 - That's a {item}. That's a real one!
 - I'm never letting you bank that.
-- Did you SEE that?
+- I wrote the {item} down, and I keep rereading it.
 - {value}. In one drop. Write it down.
 - Stop. Look at what you're holding.
 - That's a page all to itself, that is.
@@ -3617,6 +3629,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Sedridor's basement is under us. I'm still working out how he knew you.
+- Someone in the Wizards' Tower knows your name. I keep mine quiet.
 
 ### `fun-piscarilius-after-client-of-kourend`
 
@@ -4244,7 +4257,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - The {wish}! I'll set down {souvenir} to make room.
 - A trade, then: {souvenir} out, the {wish} in.
 - The {wish} outranks {souvenir}. Out it goes.
-- Out goes {souvenir}, in goes the {wish}, and you get my old one.
+- Trading {souvenir} for the {wish}. Back to you.
 - The {wish} bumps {souvenir}. Have my old one.
 
 ### `gifted-bluff`
@@ -6109,7 +6122,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - I'm telling everyone about this.
 - That was magnificent. {npc} never stood a chance.
 - You were unbelievable just then.
-- That'll be the best thing I see all week.
+- {npc} down and you standing. My favourite page.
+- {npc}, down. I watched through my fingers.
 
 ### `kill-count-first`
 
@@ -6120,7 +6134,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 75, cooldown 30s, delay 3-5 ticks
 
 - Your first {boss}. In the book, dated.
-- One {boss}. The first of many, I suspect.
+- One {boss}. This is the page I'll reread.
 - {boss}, once. I'd saved a good page for this.
 
 ### `kill-count-round`
@@ -6801,6 +6815,15 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Ned did get us to Crandor. I've stopped arguing about the word captain.
 - The boat's still in bits on Crandor. Ned's never once brought it up.
 
+### `fun-regath-after-client-of-kourend`
+
+> Callback: same trigger as quest-regath plus Client of Kourend done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Client of Kourend, so it cannot rise on the quest finishing.
+
+- **when:** Regath within 5 tiles, in sight AND the follower saw CLIENT_OF_KOUREND done AND NOT (dialogueopen)
+- **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
+
+- Regath still thinks you're a journalist. He's never seen your writing.
+
 ### `fun-leenz-after-client-of-kourend`
 
 > Callback: same trigger as quest-leenz plus Client of Kourend done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Client of Kourend, so it cannot rise on the quest finishing.
@@ -6860,6 +6883,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - The dairy cow. She has the look of someone asked for milk a great deal.
 - A milkmaid, a cow and a bucket. The cake's coming together, slowly.
+- One cow with a bell, and every adventurer brings her a bucket.
 
 ### `qm-cooks-assistant-egg-coop`
 
@@ -6970,6 +6994,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
 
 - Past halfway. The flock's noticeably slimmer than when we arrived.
+- Over half delivered. Somewhere, a sheep feels the draught.
 
 ### `qm-rune-mysteries-tower-arrival`
 
@@ -6980,6 +7005,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
 
 - A tower full of wizards, and we're bringing them a trinket from a cellar.
+- The Wizards' Tower. Someone's reading behind every window.
 
 ### `qm-rune-mysteries-tower-arrival-after-cooks-assistant`
 
@@ -7001,6 +7027,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
 
 - Courier work, then. I'll note the package was sealed when we got it.
+- He kept the talisman and gave us a package. Wizards trade in errands.
 
 ### `qm-rune-mysteries-mugger-street`
 
@@ -7032,6 +7059,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
 
 - Notes going the other way now. I'd love to know what's in them.
+- He read it twice and gave us more. Scholars never just say thanks.
 
 ### `qm-rune-mysteries-basement-return`
 
@@ -7042,6 +7070,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
 
 - Back down the ladder. Same basement, rather more to tell him.
+- Down to Sedridor again. He's after something in these notes.
 
 ### `qm-priest-in-peril-the-voice-at-the-door`
 
@@ -7053,6 +7082,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - Shy, for a priest. He wouldn't even open the door.
 - Pest control for a temple. Not the job I pictured from the palace.
+- A dog in the mausoleum, says the voice. I'll take its word.
 
 ### `qm-priest-in-peril-the-dog-is-dead`
 
@@ -7086,6 +7116,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 61, cooldown 10m, delay 2 ticks, overhead
 
 - We caught four bandits in his own square, and still beheading comes up.
+- His own dog, after we caught his bandits. That caption needs work.
 
 ### `qm-priest-in-peril-the-monk-falls`
 
@@ -7096,6 +7127,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
 
 - Spells from a monk, all the way down the aisle. Very unchurchlike.
+- A monk of Zamorak in Saradomin's temple. Someone's lost the rota.
 
 ### `qm-priest-in-peril-the-real-drezel`
 
@@ -7350,6 +7382,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - A cell on the palace roof. Out of the way, he said, and it certainly is.
 - Questioning. I'll stand at the back and take the minutes.
+- Four arrested, and nobody shouted. Varrock's guards at their best.
 
 ### `qm-children-of-the-sun-the-roof-after-priest-in-peril`
 
@@ -7484,6 +7517,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 61, cooldown 10m, delay 2 ticks, overhead
 
 - I've stood by a vampyre's coffin for you. This is worse.
+- A vampyre's coffin was one thing. Here my quill stays pocketed.
 
 ### `qm-client-of-kourend-orb-shatters`
 
