@@ -490,14 +490,30 @@ public class SpeechEngine
 	static final int OCCASION_WAIT_TICKS = 10;
 
 	/**
-	 * How long an occasion waits for the gap now, in ticks: the gap itself
-	 * and two more. The gap stretches with mood and chattiness - 15 seconds
-	 * at a low mood on Occasional, nearly two minutes on Minimal - and a fixed
-	 * six seconds dropped the quest's line again in every one of those.
+	 * How long a line that waits its turn waits for the gap now, in ticks:
+	 * its gap and two more. The gap stretches with mood and chattiness - 15
+	 * seconds at a low mood on Occasional, nearly two minutes on Minimal - and
+	 * a fixed six seconds dropped the quest's line again in every one of those.
 	 */
-	int occasionWaitTicks()
+	int occasionWaitTicks(SpeechRule rule)
 	{
-		return Math.max(OCCASION_WAIT_TICKS, (int) (moodScaledGap() / 600L) + 2);
+		return Math.max(OCCASION_WAIT_TICKS, (int) (gapFor(rule) / 600L) + 2);
+	}
+
+	/**
+	 * The longest gap an occasion keeps after another line: eight seconds.
+	 * Quests QA, 16 Oct, at Minimal (45 s, the user's own setting): every
+	 * quest moment waited the full gap behind any line, the sketch prompt
+	 * included, and they landed a stage late, out of order or after the
+	 * scroll. The user's call: the moments break through. The gap still
+	 * thins out everything else.
+	 */
+	static final long OCCASION_GAP_MS = 8_000L;
+
+	/** The gap this rule keeps after the last line. */
+	private long gapFor(SpeechRule rule)
+	{
+		return rule.isOccasion() ? Math.min(moodScaledGap(), OCCASION_GAP_MS) : moodScaledGap();
 	}
 
 	/** Whether a firing held up for this reason waits a tick and tries again rather than being dropped. */
@@ -771,7 +787,7 @@ public class SpeechEngine
 		{
 			return "trailing";
 		}
-		if (now - lastSpokeMs < moodScaledGap())
+		if (now - lastSpokeMs < gapFor(rule))
 		{
 			return "gap";
 		}
@@ -934,7 +950,7 @@ public class SpeechEngine
 						delayed.gapAfterMs = lastSpokeMs;
 						delayed.waited = 0;
 					}
-					if (waitsOutTheGap(delayed.rule, held, delayed.waited, occasionWaitTicks()))
+					if (waitsOutTheGap(delayed.rule, held, delayed.waited, occasionWaitTicks(delayed.rule)))
 					{
 						delayed.waited++;
 						delayed.ticksLeft = 1;
@@ -1125,7 +1141,7 @@ public class SpeechEngine
 		}
 
 		String blocked = blockedBy(winner, now);
-		if (waitsOutTheGap(winner, blocked, 0, occasionWaitTicks()) || waitsOutTheScene(winner, blocked, 0)
+		if (waitsOutTheGap(winner, blocked, 0, occasionWaitTicks(winner)) || waitsOutTheScene(winner, blocked, 0)
 			|| waitsOutTheRest(winner, blocked, 0))
 		{
 			winner.markFired(now);
