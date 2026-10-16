@@ -1454,6 +1454,10 @@ public class FollowerPlugin extends Plugin
 	 * or two after it appeared, and a once line - every quest-moment draft -
 	 * was spent all the same. Only a once line or an occasion, the lines that
 	 * do not come round again; anything else is let go, as before.
+	 *
+	 * <p>Cut before it could be read: the time the line takes to read, and
+	 * never less than this. QA pass 2: a runner's door click let the window's
+	 * scene cut the hideout line 2.4 s into the 3.5 s it takes to read.
 	 */
 	static final long SCENE_CUT_GRACE_MS = 2_000L;
 
@@ -1468,10 +1472,11 @@ public class FollowerPlugin extends Plugin
 	private Utterance cutByTheScene;
 	private int cutHeldTicks;
 
-	/** Whether a line up this long, from this rule, is said again after the scene. */
-	static boolean saysAgainAfterTheScene(SpeechRule rule, long upForMs)
+	/** Whether a line up this long, from this rule, taking this long to read, is said again after the scene. */
+	static boolean saysAgainAfterTheScene(SpeechRule rule, long upForMs, long toReadMs)
 	{
-		return rule != null && (rule.isOnce() || rule.isOccasion()) && upForMs < SCENE_CUT_GRACE_MS;
+		return rule != null && (rule.isOnce() || rule.isOccasion())
+			&& upForMs < Math.max(SCENE_CUT_GRACE_MS, toReadMs);
 	}
 
 	/**
@@ -1525,7 +1530,8 @@ public class FollowerPlugin extends Plugin
 			{
 				long now = System.currentTimeMillis();
 				cutByTheScene = onScreen != null && now < speakingUntilMs
-					&& saysAgainAfterTheScene(onScreen.rule, now - onScreenSinceMs) ? onScreen : null;
+					&& saysAgainAfterTheScene(onScreen.rule, now - onScreenSinceMs,
+						timeToReadMs(onScreen.text)) ? onScreen : null;
 				cutHeldTicks = 0;
 				// What was about to be said belongs to the moment before.
 				speechQueue.clear();
@@ -1548,7 +1554,9 @@ public class FollowerPlugin extends Plugin
 
 		// Through the engine's remark, so the mute still holds. The words
 		// only: the rule's own business ran when the line first went up.
-		if (cutByTheScene != null && (sceneQuiet() || filming))
+		// Kept through a conversation too, as the engine keeps a line that
+		// waits, rather than said into it and dropped.
+		if (cutByTheScene != null && (sceneQuiet() || filming || inConversation()))
 		{
 			if (++cutHeldTicks > SCENE_CUT_KEPT_TICKS)
 			{
@@ -11819,9 +11827,13 @@ public class FollowerPlugin extends Plugin
 	 */
 	private long readingTimeMs(String text)
 	{
-		int cps = Math.max(1, config.readingSpeed());
-		long needed = (long) text.length() * 1000L / cps;
-		return Math.min(MAX_SPEECH_MS, Math.max(config.speechDurationMs(), needed));
+		return Math.min(MAX_SPEECH_MS, Math.max(config.speechDurationMs(), timeToReadMs(text)));
+	}
+
+	/** How long the line itself takes to read at the player's speed, with no minimum. */
+	private long timeToReadMs(String text)
+	{
+		return (long) text.length() * 1000L / Math.max(1, config.readingSpeed());
 	}
 
 	/**

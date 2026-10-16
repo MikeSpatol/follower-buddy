@@ -196,6 +196,20 @@ public class ChildrenOfTheSunWalkTest
 	}
 
 	@Test
+	public void aHideoutLineTheWindowsSceneCutsBeforeItIsReadIsSaidAgain() throws Exception
+	{
+		// QA pass 2, #43: a runner clicks the door a few ticks after the
+		// hideout line goes up, and the window's scene clears it about 2.4 s
+		// in. The callback's one line wants about 3.5 s to read, so it is
+		// said again after the scene rather than spent half read.
+		QuestSim s = walk(true, 3, 6000, true);
+		String line = "Next door to Aubury's. I hope nobody in there offers us tea.";
+		assertTrue(s.transcript(), s.transcript().contains(
+			"overhead cleared mid-line (qm-children-of-the-sun-the-hideout-after-rune-mysteries)"));
+		assertEquals(s.transcript(), 2, s.heard.stream().filter(line::equals).count());
+	}
+
+	@Test
 	public void aChainClickerLosesTheRoofCleanly() throws Exception
 	{
 		// The Prince clicked a tick after the escort box: the box never
