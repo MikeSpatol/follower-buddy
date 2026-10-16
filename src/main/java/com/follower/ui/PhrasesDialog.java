@@ -128,7 +128,7 @@ public class PhrasesDialog extends JDialog
 	/** Hides rows that do not mention the text, within the current category. */
 	private final JTextField find = new JTextField(14);
 	private final JButton addLocation = new JButton("Add location");
-	private final JPanel list = new JPanel();
+	private final JPanel list = new WidthTrackingPanel();
 	private JScrollPane scroll;
 	private final JLabel status = new JLabel(" ");
 	/** The loaded count, put back once Find matches something again. */
@@ -483,9 +483,18 @@ public class PhrasesDialog extends JDialog
 		JLabel idLabel = new JLabel(id);
 		idLabel.setFont(FontManager.getRunescapeSmallFont());
 		idLabel.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
-		JPanel titles = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+		// A long title or id is cut short with "..." rather than widening the
+		// row: the list is as wide as the window, and the controls on the
+		// right have to stay on it. QA2, 15 Oct: Quest NPCs and Locations
+		// pushed On and Sounds past the edge.
+		title.setMinimumSize(new Dimension(0, title.getPreferredSize().height));
+		idLabel.setMinimumSize(new Dimension(0, idLabel.getPreferredSize().height));
+		JPanel titles = new JPanel();
+		titles.setLayout(new BoxLayout(titles, BoxLayout.X_AXIS));
+		titles.setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 0));
 		titles.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		titles.add(title);
+		titles.add(javax.swing.Box.createHorizontalStrut(6));
 		titles.add(idLabel);
 		header.add(titles, BorderLayout.CENTER);
 
@@ -524,7 +533,6 @@ public class PhrasesDialog extends JDialog
 		header.add(controls, BorderLayout.EAST);
 		row.add(header);
 
-		String note = optString(rule, "note");
 		String shownNote = aboutOf(rule);
 		if (shownNote != null && !shownNote.isEmpty())
 		{
@@ -590,7 +598,8 @@ public class PhrasesDialog extends JDialog
 		Row r = new Row(id, null, enabled, regionsField, area);
 		r.panel = row;
 		r.title = ruleTitle;
-		r.note = (note == null ? "" : note) + "\n" + (shownNote == null ? "" : shownNote);
+		// Find looks through what is shown, not the hidden note.
+		r.note = shownNote == null ? "" : shownNote;
 		rows.add(r);
 		return row;
 	}
@@ -892,6 +901,44 @@ public class PhrasesDialog extends JDialog
 
 	// ------------------------------------------------------------------ helpers
 
+	/**
+	 * The rule list: always exactly as wide as the window, so a wide row is
+	 * squeezed to fit instead of widening every row past the right edge, where
+	 * a list that never scrolls sideways would leave its controls unreachable.
+	 */
+	private static final class WidthTrackingPanel extends JPanel implements javax.swing.Scrollable
+	{
+		@Override
+		public Dimension getPreferredScrollableViewportSize()
+		{
+			return getPreferredSize();
+		}
+
+		@Override
+		public int getScrollableUnitIncrement(java.awt.Rectangle visible, int orientation, int direction)
+		{
+			return 16;
+		}
+
+		@Override
+		public int getScrollableBlockIncrement(java.awt.Rectangle visible, int orientation, int direction)
+		{
+			return orientation == javax.swing.SwingConstants.VERTICAL ? visible.height : visible.width;
+		}
+
+		@Override
+		public boolean getScrollableTracksViewportWidth()
+		{
+			return true;
+		}
+
+		@Override
+		public boolean getScrollableTracksViewportHeight()
+		{
+			return false;
+		}
+	}
+
 	private JPanel rowShell()
 	{
 		// Never taller than it needs: the list is a vertical box, which shares
@@ -1028,12 +1075,14 @@ public class PhrasesDialog extends JDialog
 
 	/**
 	 * What the window says about a rule: its "about", written for players,
-	 * when it has one, otherwise its note. The note stays the authors' own.
+	 * or nothing. The note is the authors' own and never shown: QA2, 15 Oct,
+	 * the quest moments' notes put varp numbers and quest steps in front of
+	 * players.
 	 */
 	static String aboutOf(JsonObject rule)
 	{
 		String about = optString(rule, "about");
-		return about == null || about.trim().isEmpty() ? optString(rule, "note") : about.trim();
+		return about == null || about.trim().isEmpty() ? null : about.trim();
 	}
 
 	static String prettyName(String id)

@@ -63,11 +63,15 @@ public class PhrasesDialogTest
 	}
 
 	@Test
-	public void theWindowShowsAboutOverTheNote()
+	public void theWindowShowsTheAboutAndNeverTheNote()
 	{
 		assertEquals("Wearing a whip.",
 			PhrasesDialog.aboutOf(rule("{'id':'gear-whip','note':'R12: ids 4151.','about':'Wearing a whip.'}")));
-		assertEquals("R12: ids 4151.", PhrasesDialog.aboutOf(rule("{'id':'gear-whip','note':'R12: ids 4151.'}")));
+		// QA2, 15 Oct: with no about, the authors' note was shown instead.
+		assertEquals("no about, no line", null,
+			PhrasesDialog.aboutOf(rule("{'id':'gear-whip','note':'R12: ids 4151.'}")));
+		assertEquals("a blank about is no about", null,
+			PhrasesDialog.aboutOf(rule("{'id':'gear-whip','note':'R12: ids 4151.','about':' '}")));
 		assertEquals(null, PhrasesDialog.aboutOf(rule("{'id':'gear-whip'}")));
 	}
 
@@ -125,6 +129,72 @@ public class PhrasesDialogTest
 		SwingUtilities.invokeAndWait(dialog::dispose);
 	}
 
+	@Test
+	public void everyRowsControlsStayInsideTheWindow() throws Exception
+	{
+		// QA2, 15 Oct: the list was as wide as its widest row, and a scroll
+		// pane that never scrolls sideways left On, Sounds and Delete past
+		// the right edge on every row of Quest NPCs and Locations. Every
+		// group in the shipped file gets a category of its own here, the
+		// place category with its Delete and Regions too.
+		Assume.assumeFalse(GraphicsEnvironment.isHeadless());
+		JsonObject shipped = new Gson().fromJson(new String(Files.readAllBytes(
+			Paths.get("src/main/resources/com/follower/default-phrases.json")),
+			java.nio.charset.StandardCharsets.UTF_8), JsonObject.class);
+		java.util.Set<String> groups = new java.util.TreeSet<>();
+		for (com.google.gson.JsonElement r : shipped.getAsJsonArray("rules"))
+		{
+			if (r.getAsJsonObject().has("group"))
+			{
+				groups.add(r.getAsJsonObject().get("group").getAsString());
+			}
+		}
+		List<PhrasesDialog.Category> all = new java.util.ArrayList<>();
+		for (String g : groups)
+		{
+			all.add(new PhrasesDialog.Category(g, g, "Said.", "area".equals(g)));
+		}
+		PhrasesDialog dialog = dialog(false, all);
+		dialog.setOnEditSounds((t, l) -> { });
+		SwingUtilities.invokeAndWait(dialog::open);
+		JScrollPane scroll = (JScrollPane) field(dialog, "scroll");
+		JComboBox<?> picker = (JComboBox<?>) field(dialog, "categoryPicker");
+		for (int i = 0; i < all.size(); i++)
+		{
+			int at = i;
+			SwingUtilities.invokeAndWait(() -> picker.setSelectedIndex(at));
+			settle(dialog);
+			int width = scroll.getViewport().getWidth();
+			Component view = scroll.getViewport().getView();
+			assertEquals(all.get(i).name + ": the list is as wide as the window", width, view.getWidth());
+			List<javax.swing.AbstractButton> buttons = new java.util.ArrayList<>();
+			collectButtons((java.awt.Container) view, buttons);
+			assertTrue(all.get(i).name + " has rows", !buttons.isEmpty());
+			for (javax.swing.AbstractButton b : buttons)
+			{
+				java.awt.Point p = SwingUtilities.convertPoint(b.getParent(), b.getLocation(), view);
+				assertTrue(all.get(i).name + ": '" + b.getText() + "' ends at " + (p.x + b.getWidth())
+					+ ", past the window's " + width, p.x + b.getWidth() <= width);
+			}
+		}
+		SwingUtilities.invokeAndWait(dialog::dispose);
+	}
+
+	private static void collectButtons(java.awt.Container root, List<javax.swing.AbstractButton> out)
+	{
+		for (Component c : root.getComponents())
+		{
+			if (c instanceof javax.swing.AbstractButton)
+			{
+				out.add((javax.swing.AbstractButton) c);
+			}
+			else if (c instanceof java.awt.Container)
+			{
+				collectButtons((java.awt.Container) c, out);
+			}
+		}
+	}
+
 	/** The look the window was built under, put back afterwards. */
 	private LookAndFeel before;
 
@@ -150,6 +220,11 @@ public class PhrasesDialogTest
 
 	private PhrasesDialog dialog(boolean open) throws Exception
 	{
+		return dialog(open, CATEGORIES);
+	}
+
+	private PhrasesDialog dialog(boolean open, List<PhrasesDialog.Category> categories) throws Exception
+	{
 		// The client's own look: its text areas' carets are what scrolled.
 		before = UIManager.getLookAndFeel();
 		SwingUtilities.invokeAndWait(RuneLiteLAF::setup);
@@ -159,7 +234,7 @@ public class PhrasesDialogTest
 		PhrasesDialog[] made = new PhrasesDialog[1];
 		SwingUtilities.invokeAndWait(() ->
 		{
-			made[0] = new PhrasesDialog(new Gson(), file, CATEGORIES, () -> 12850)
+			made[0] = new PhrasesDialog(new Gson(), file, categories, () -> 12850)
 			{
 				@Override
 				public void setVisible(boolean b)
