@@ -799,6 +799,58 @@ public final class TriggerContext
 		}
 	}
 
+	/**
+	 * Quests the follower saw finish, and the day (an epoch day), under the
+	 * key the chronicle gives them: a quest belongs to the account, where the
+	 * memory belongs to the profile.
+	 */
+	private final java.util.Map<String, Long> questsSeenFinished = new java.util.HashMap<>();
+
+	public void noteQuestSeenFinished(String key, long epochDay)
+	{
+		if (key != null && questsSeenFinished.putIfAbsent(key, epochDay) == null)
+		{
+			countersDirty = true;
+		}
+	}
+
+	public Long questSeenFinishedOn(String key)
+	{
+		return key == null ? null : questsSeenFinished.get(key);
+	}
+
+	/** Live map, for the plugin to write out. Read-only by convention. */
+	public java.util.Map<String, Long> getQuestsSeenFinished()
+	{
+		return questsSeenFinished;
+	}
+
+	public void restoreQuestsSeenFinished(java.util.Map<String, Long> saved)
+	{
+		if (saved != null)
+		{
+			questsSeenFinished.putAll(saved);
+		}
+	}
+
+	/**
+	 * Whether the follower was there for a quest, as the chronicle answers
+	 * it: the day it saw the quest through, or null for one done before it
+	 * came along. A finished quest is not enough for a line that remembers
+	 * doing it together; most players did the early quests years ago.
+	 */
+	private java.util.function.Function<String, Long> questWitness = quest -> null;
+
+	public void setQuestWitness(java.util.function.Function<String, Long> lookup)
+	{
+		questWitness = lookup == null ? quest -> null : lookup;
+	}
+
+	public Long questWitnessedOn(String quest)
+	{
+		return quest == null ? null : questWitness.apply(quest);
+	}
+
 	// ---------------------------------------------------------- work sessions
 
 	/**

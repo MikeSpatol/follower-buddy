@@ -316,6 +316,58 @@ public class ChronicleProgress
 		}
 	}
 
+	/**
+	 * The reward scroll came up with the follower there: it saw this quest
+	 * finish. By the name the scroll shows, so a quest with no page counts.
+	 */
+	public void sawQuestFinish(String questName)
+	{
+		TriggerContext context = memory.get();
+		if (context == null || questName == null)
+		{
+			return;
+		}
+		for (Quest quest : Quest.values())
+		{
+			if (quest.getName().equalsIgnoreCase(questName))
+			{
+				context.noteQuestSeenFinished(accountKey(quest.name()), LocalDate.now(clock).toEpochDay());
+				return;
+			}
+		}
+	}
+
+	/**
+	 * The day the follower was there for a quest (by constant name): it saw
+	 * the quest finish, or wrote its quest page as it did. Null for a quest
+	 * done before it came along, which it knows of only from the book.
+	 */
+	public Long witnessedOn(String quest)
+	{
+		TriggerContext context = memory.get();
+		if (context == null || quest == null)
+		{
+			return null;
+		}
+		Long seen = context.questSeenFinishedOn(accountKey(quest));
+		if (seen != null)
+		{
+			return seen;
+		}
+		for (ChronicleEntry entry : loader.ofKind("quest"))
+		{
+			if (entry.unlock != null && quest.equals(entry.unlock.quest))
+			{
+				Long written = writtenOn(entry);
+				if (written != null)
+				{
+					return written;
+				}
+			}
+		}
+		return null;
+	}
+
 	/** Whether a quest was finished at the last read; what a gated passage waits on. */
 	public boolean isDone(String quest)
 	{

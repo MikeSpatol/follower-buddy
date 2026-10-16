@@ -90,6 +90,7 @@ public class EngineSoakTest
 		"{\"type\": \"questVar\", \"varp\": 179, \"minimum\": 1, \"maximum\": 20}",
 		"{\"type\": \"dialogueOpen\"}",
 		"{\"type\": \"questDone\", \"quest\": \"SHEEP_SHEARER\"}",
+		"{\"type\": \"questWitnessed\", \"quest\": \"SHEEP_SHEARER\"}",
 		"{\"type\": \"inventoryHas\", \"ids\": [2944]}",
 		"{\"type\": \"poisoned\"}",
 		"{\"type\": \"venomed\"}",
@@ -718,6 +719,9 @@ public class EngineSoakTest
 		{
 			Random random = new Random(seed);
 			Harness h = new Harness(folder.newFolder().toPath(), rules(random, 25));
+			// The book, as the plugin wires it: here a quest done is a quest seen.
+			h.engine.getContext().setQuestWitness(quest -> h.engine.getContext().isQuestDone(quest)
+				? LocalDate.now().toEpochDay() : null);
 
 			Set<String> disabled = new HashSet<>();
 			disabled.add("probe");

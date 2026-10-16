@@ -14508,7 +14508,7 @@
             "percent": 35
           },
           {
-            "type": "questDone",
+            "type": "questWitnessed",
             "quest": "COOKS_ASSISTANT"
           }
         ]
@@ -14540,7 +14540,7 @@
             "percent": 30
           },
           {
-            "type": "questDone",
+            "type": "questWitnessed",
             "quest": "SHEEP_SHEARER"
           }
         ]
@@ -14572,7 +14572,7 @@
             "percent": 50
           },
           {
-            "type": "questDone",
+            "type": "questWitnessed",
             "quest": "PRIEST_IN_PERIL"
           }
         ]
@@ -14604,7 +14604,7 @@
             "percent": 50
           },
           {
-            "type": "questDone",
+            "type": "questWitnessed",
             "quest": "WATERFALL_QUEST"
           }
         ]
@@ -14638,7 +14638,7 @@
             "percent": 25
           },
           {
-            "type": "questDone",
+            "type": "questWitnessed",
             "quest": "CHILDREN_OF_THE_SUN"
           }
         ]
@@ -14670,7 +14670,7 @@
             "percent": 35
           },
           {
-            "type": "questDone",
+            "type": "questWitnessed",
             "quest": "WITCHS_HOUSE"
           }
         ]
@@ -14702,7 +14702,7 @@
             "percent": 35
           },
           {
-            "type": "questDone",
+            "type": "questWitnessed",
             "quest": "X_MARKS_THE_SPOT"
           }
         ]
@@ -14734,7 +14734,7 @@
             "percent": 60
           },
           {
-            "type": "questDone",
+            "type": "questWitnessed",
             "quest": "DRAGON_SLAYER_I"
           }
         ]
@@ -14766,7 +14766,7 @@
             "percent": 50
           },
           {
-            "type": "questDone",
+            "type": "questWitnessed",
             "quest": "RUNE_MYSTERIES"
           }
         ]
@@ -14797,7 +14797,7 @@
             "percent": 35
           },
           {
-            "type": "questDone",
+            "type": "questWitnessed",
             "quest": "CLIENT_OF_KOUREND"
           }
         ]
@@ -14827,7 +14827,7 @@
             ]
           },
           {
-            "type": "questDone",
+            "type": "questWitnessed",
             "quest": "COOKS_ASSISTANT"
           },
           {
@@ -14865,7 +14865,7 @@
             ]
           },
           {
-            "type": "questDone",
+            "type": "questWitnessed",
             "quest": "RUNE_MYSTERIES"
           },
           {
@@ -14903,7 +14903,7 @@
             ]
           },
           {
-            "type": "questDone",
+            "type": "questWitnessed",
             "quest": "PRIEST_IN_PERIL"
           },
           {
@@ -14943,7 +14943,7 @@
             ]
           },
           {
-            "type": "questDone",
+            "type": "questWitnessed",
             "quest": "CHILDREN_OF_THE_SUN"
           },
           {
@@ -14982,7 +14982,7 @@
             ]
           },
           {
-            "type": "questDone",
+            "type": "questWitnessed",
             "quest": "RUNE_MYSTERIES"
           },
           {
@@ -15020,7 +15020,7 @@
             ]
           },
           {
-            "type": "questDone",
+            "type": "questWitnessed",
             "quest": "THE_RESTLESS_GHOST"
           },
           {
@@ -15059,7 +15059,7 @@
             ]
           },
           {
-            "type": "questDone",
+            "type": "questWitnessed",
             "quest": "DRAGON_SLAYER_I"
           },
           {
@@ -15098,7 +15098,7 @@
             ]
           },
           {
-            "type": "questDone",
+            "type": "questWitnessed",
             "quest": "CLIENT_OF_KOUREND"
           },
           {
@@ -15899,7 +15899,7 @@
             "type": "none",
             "conditions": [
               {
-                "type": "questDone",
+                "type": "questWitnessed",
                 "quest": "SHEEP_SHEARER"
               }
             ]
@@ -15953,7 +15953,7 @@
             ]
           },
           {
-            "type": "questDone",
+            "type": "questWitnessed",
             "quest": "SHEEP_SHEARER"
           },
           {
@@ -16325,7 +16325,7 @@
             "type": "none",
             "conditions": [
               {
-                "type": "questDone",
+                "type": "questWitnessed",
                 "quest": "COOKS_ASSISTANT"
               }
             ]
@@ -16362,7 +16362,7 @@
             ]
           },
           {
-            "type": "questDone",
+            "type": "questWitnessed",
             "quest": "COOKS_ASSISTANT"
           }
         ]
@@ -16454,7 +16454,7 @@
             "type": "none",
             "conditions": [
               {
-                "type": "questDone",
+                "type": "questWitnessed",
                 "quest": "CHILDREN_OF_THE_SUN"
               }
             ]
@@ -16508,7 +16508,7 @@
             ]
           },
           {
-            "type": "questDone",
+            "type": "questWitnessed",
             "quest": "CHILDREN_OF_THE_SUN"
           },
           {
@@ -16707,7 +16707,7 @@
             "type": "none",
             "conditions": [
               {
-                "type": "questDone",
+                "type": "questWitnessed",
                 "quest": "CHILDREN_OF_THE_SUN"
               }
             ]
@@ -16750,7 +16750,7 @@
             "maximum": 4
           },
           {
-            "type": "questDone",
+            "type": "questWitnessed",
             "quest": "CHILDREN_OF_THE_SUN"
           },
           {
@@ -16873,7 +16873,7 @@
             "type": "none",
             "conditions": [
               {
-                "type": "questDone",
+                "type": "questWitnessed",
                 "quest": "VAMPYRE_SLAYER"
               }
             ]
@@ -16915,7 +16915,7 @@
             "maximum": 7
           },
           {
-            "type": "questDone",
+            "type": "questWitnessed",
             "quest": "VAMPYRE_SLAYER"
           },
           {
@@ -17032,7 +17032,7 @@
             "type": "none",
             "conditions": [
               {
-                "type": "questDone",
+                "type": "questWitnessed",
                 "quest": "TREE_GNOME_VILLAGE"
               }
             ]
@@ -17080,7 +17080,7 @@
             "maximum": 9
           },
           {
-            "type": "questDone",
+            "type": "questWitnessed",
             "quest": "TREE_GNOME_VILLAGE"
           },
           {
@@ -17689,7 +17689,7 @@
             "type": "none",
             "conditions": [
               {
-                "type": "questDone",
+                "type": "questWitnessed",
                 "quest": "PRIEST_IN_PERIL"
               }
             ]
@@ -17737,7 +17737,7 @@
             ]
           },
           {
-            "type": "questDone",
+            "type": "questWitnessed",
             "quest": "PRIEST_IN_PERIL"
           },
           {
@@ -17895,7 +17895,7 @@
             "type": "none",
             "conditions": [
               {
-                "type": "questDone",
+                "type": "questWitnessed",
                 "quest": "PRINCE_ALI_RESCUE"
               }
             ]
@@ -17937,7 +17937,7 @@
             "maximum": 5
           },
           {
-            "type": "questDone",
+            "type": "questWitnessed",
             "quest": "PRINCE_ALI_RESCUE"
           },
           {
@@ -18138,7 +18138,7 @@
             "type": "none",
             "conditions": [
               {
-                "type": "questDone",
+                "type": "questWitnessed",
                 "quest": "PRIEST_IN_PERIL"
               }
             ]
@@ -18186,7 +18186,7 @@
             ]
           },
           {
-            "type": "questDone",
+            "type": "questWitnessed",
             "quest": "PRIEST_IN_PERIL"
           },
           {

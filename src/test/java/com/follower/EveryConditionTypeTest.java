@@ -343,6 +343,30 @@ public class EveryConditionTypeTest
 		assertQuiet(other, "a different quest finished");
 	}
 
+	@Test
+	public void questWitnessed() throws IOException
+	{
+		note("questWitnessed");
+
+		long today = java.time.LocalDate.now().toEpochDay();
+		Harness h = harnessFor("{\"type\": \"questWitnessed\", \"quest\": \"COOKS_ASSISTANT\"}");
+		h.game.quest(net.runelite.api.Quest.COOKS_ASSISTANT, net.runelite.api.QuestState.FINISHED);
+		h.gameTicks(2);
+		assertQuiet(h, "done before the follower came along");
+		h.engine.getContext().setQuestWitness(quest -> "COOKS_ASSISTANT".equals(quest) ? today : null);
+		h.gameTicks(1);
+		assertFired(h, "questWitnessed");
+
+		Harness waiting = harnessFor(
+			"{\"type\": \"questWitnessed\", \"quest\": \"COOKS_ASSISTANT\", \"minimum\": 1}");
+		waiting.engine.getContext().setQuestWitness(quest -> today);
+		waiting.gameTicks(2);
+		assertQuiet(waiting, "seen today is not a day ago");
+		waiting.engine.getContext().setQuestWitness(quest -> today - 3);
+		waiting.gameTicks(1);
+		assertFired(waiting, "questWitnessed with a minimum");
+	}
+
 	// -------------------------------------------------------------- location
 
 	@Test
@@ -1873,6 +1897,7 @@ public class EveryConditionTypeTest
 		inventoryHas();
 		questVarAndDialogueOpen();
 		questDone();
+		questWitnessed();
 		inRegionAndInArea();
 		regionEnterAndReturnVisit();
 		npcSpawnDespawnAndNearby();

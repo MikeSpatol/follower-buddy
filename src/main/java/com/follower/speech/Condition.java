@@ -85,6 +85,7 @@ import net.runelite.api.NPC;
  *   <tr><td>workEnded</td><td>optional {@code names} (activities) - the tick a session ends; {@code {activity}} {@code {target}}</td></tr>
  *   <tr><td>targetDepleted</td><td>no fields - the session's target changed id or went; {@code {target}}</td></tr>
  *   <tr><td>bagFull / bagHalf</td><td>no fields - the last slot went, or fourteen were left (once per fill)</td></tr>
+ *   <tr><td>questWitnessed</td><td>{@code quest}, optional {@code minimum} days since - the follower saw that quest finish, or its quest page has a date</td></tr>
  *   <tr><td>daysSinceSaid</td><td>{@code rule} (a once rule's id), {@code minimum} / {@code maximum} days - false until that rule has been said</td></tr>
  * </table>
  *
@@ -139,7 +140,7 @@ public class Condition
 	public Integer varbit;
 	/** questVar: a varplayer, for the older quests that keep their progress in one. */
 	public Integer varp;
-	/** questDone: the quest, by its {@link net.runelite.api.Quest} constant name. */
+	/** questDone / questWitnessed: the quest, by its {@link net.runelite.api.Quest} constant name. */
 	public String quest;
 	/** daysSinceSaid: the id of the one-time rule counted from. */
 	public String rule;
@@ -422,6 +423,16 @@ public class Condition
 			// no player or a name the game does not know.
 			case "questdone":
 				return ctx.isQuestDone(quest);
+
+			// The follower was there for that quest: saw it finish, or wrote
+			// its page at the time. For a callback that claims a shared
+			// memory; minimum is days since, so a "still" waits a day.
+			case "questwitnessed":
+			{
+				Long on = ctx.questWitnessedOn(quest);
+				return on != null
+					&& java.time.LocalDate.now().toEpochDay() - on >= orDefault(minimum, 0);
+			}
 
 			case "animationself":
 				return event.getType() == TriggerEvent.Type.ANIMATION && idsContain(event.getId())
