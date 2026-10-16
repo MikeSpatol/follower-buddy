@@ -69,4 +69,29 @@ public class HopKeepsCooldownsTest
 		ticks(h, 1);
 		assertEquals(2, h.firedBy("boss").size());
 	}
+
+	@Test
+	public void aLineWaitingAtTheHopIsNotLostForItsCooldown() throws IOException
+	{
+		// Behaviour QA4, 16 Oct (probe Q3): Tobyn's line was waiting its gap
+		// when the player hopped, and was gone for the hour with him still
+		// beside the player. Its cooldown is given back, so it rises again.
+		Harness h = new Harness(folder.newFolder().toPath(),
+			"{\"version\": 1, \"rules\": [{\"id\": \"tobyn\", \"group\": \"quest\", \"waits\": true,"
+				+ " \"cooldownMs\": 3600000, \"when\": {\"type\": \"npcNearby\", \"within\": 5,"
+				+ " \"names\": [\"Sergeant Tobyn\"]}, \"say\": [\"Sergeant Tobyn.\"]}]}");
+		h.engine.setClock(() -> ms[0]);
+		h.engine.setGlobalCooldownMs(45_000L);
+		h.game.at(3222, 3218, 0);
+		h.gameTicks(1);
+		h.engine.remark("Hold still a moment.");
+		ticks(h, 1);
+		h.game.moveNpc(h.game.spawnNpc(12703, "Sergeant Tobyn", 0), 3224, 3218, 0);
+		ticks(h, 5);
+		assertEquals("waiting its gap", 0, h.firedBy("tobyn").size());
+
+		h.engine.resetForNewScene();
+		ticks(h, 5);
+		assertEquals("said after the hop, him still there", 1, h.firedBy("tobyn").size());
+	}
 }

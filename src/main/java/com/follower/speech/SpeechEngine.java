@@ -424,6 +424,14 @@ public class SpeechEngine
 	public void resetForNewScene()
 	{
 		lastSpokeMs = 0L;
+		// A line still waiting is let go unsaid, its cooldown given back, as a
+		// line whose moment passed is: behaviour QA4, 16 Oct, Sergeant Tobyn's
+		// line waited its gap across a hop and was gone for the hour, with him
+		// still beside the player.
+		for (PendingSpeech delayed : pending)
+		{
+			delayed.rule.markFired(delayed.firedBefore);
+		}
 		pending.clear();
 		// The plugin clears its queue with the scene, so those lines never land.
 		unlanded.clear();
