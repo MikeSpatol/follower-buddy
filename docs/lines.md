@@ -1239,7 +1239,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Running bit, the fence book: the opener, from day 2, while standing still. Outranks the stages.
 
-- **when:** standing still 240+ ticks AND standing still under 600 ticks AND known 2+ days AND a 6% roll
+- **when:** standing still 240+ ticks AND standing still under 600 ticks AND known 2+ days
 - **does:** once ever
 - **pacing:** priority 18, cooldown 10m, delay 2 ticks, overhead
 
@@ -1286,7 +1286,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Running bit, Gerald: the opener, while mining. Builds on idle-long's 'That one's Gerald' without repeating it.
 
-- **when:** working AND a 3% roll
+- **when:** working
 - **does:** once ever
 - **pacing:** priority 20, cooldown 10m, delay 2 ticks, overhead
 

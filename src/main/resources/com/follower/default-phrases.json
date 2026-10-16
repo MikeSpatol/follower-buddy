@@ -15326,10 +15326,6 @@
           {
             "type": "daysKnown",
             "minimum": 2
-          },
-          {
-            "type": "chance",
-            "percent": 6
           }
         ]
       },
@@ -15488,10 +15484,6 @@
           {
             "type": "working",
             "is": "mining"
-          },
-          {
-            "type": "chance",
-            "percent": 3
           }
         ]
       },
