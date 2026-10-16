@@ -517,6 +517,17 @@ public class FollowerEntity
 		render();
 		spawned = true;
 
+		// A new body starts clear of whatever the last one was in the middle
+		// of. An emote cut off by a logout, a hop or a hide stayed "playing",
+		// which refused this body its idle until its first step, and a
+		// teleport's vanish or the comedy death's hide would take it straight
+		// back out of sight. Here and not in despawn, so whatever waited on
+		// that emote is let go with a follower out to rebuild.
+		cancelEmote();
+		vanished = false;
+		hideUntilMs = 0;
+		waitingEmote = -1;
+
 		if (spawnAnimationIds != null && spawnAnimationIds.length > 0)
 		{
 			// Paired through the chain rather than played after it, so the
