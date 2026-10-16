@@ -484,6 +484,79 @@ public class CrossingWatchTest
 		assertEquals("the swim is the normal walk now", List.of(), events);
 	}
 
+	/**
+	 * The swim was taken as normal; once their own set is back, so is their
+	 * own walk, not a glide recorded as a half-minute crossing (QA4 #19).
+	 */
+	@Test
+	public void afterALongSwapTheirOwnWalkIsNormalAgain()
+	{
+		stand(200);
+		int[] swimming = {6993, 6994, 6994, 6994, 6994, 6994, 6993, 6993};
+		base = swimming;
+		for (int i = 0; i < 30; i++)
+		{
+			walk(1, 0, 6994, 4);
+			walk(-1, 0, 6994, 4);
+		}
+		events.clear();
+		base = NORMAL;
+		stand(2000);
+		walk(10, 0, 819, 4);
+		stand(2000);
+		assertEquals("out of the water, an ordinary walk", List.of(), events);
+	}
+
+	/** At 250 frames a second a 14 s log is still under the frame cap: copied, not dropped (QA4 #19). */
+	@Test
+	public void aLongLogAtAHighFrameRateIsNotDropped()
+	{
+		framesPerCycle = 5;
+		stand(200);
+		base = ON_A_LOG;
+		for (int i = 0; i < 14; i++)
+		{
+			walk(1, 0, 762, 2);
+			stand(400);
+		}
+		base = NORMAL;
+		pose = 808;
+		stand(2000);
+		assertEquals(List.of("queue 50,50,0 live"), events);
+		assertFalse("copied, not let go as no obstacle", queued.get(0).isDropped());
+	}
+
+	/**
+	 * A climb's clip begun on the last step towards it: those frames lead
+	 * into the climb, and its XP rebuilds no 0.2 s fragment of them ahead
+	 * of it (QA4 #18, trace 16 Oct 14:51:13).
+	 */
+	@Test
+	public void aClipBegunOnTheLastStepIsNotRebuiltAsACrossingOfItsOwn()
+	{
+		stand(200);
+		walk(0, 1, 819, 4);
+		pose = 819;
+		for (int i = 0; i < 32; i++)
+		{
+			if (i == 10)
+			{
+				action = 828;
+			}
+			y += 4;
+			frame(20);
+		}
+		pose = 808;
+		stand(1200);
+		watch.noteAgilityXp(t);
+		plane = 3;
+		x -= 128;
+		frame(20);
+		action = -1;
+		stand(2000);
+		assertEquals(List.of("queue 50,52,0 live"), events);
+	}
+
 	@Test
 	public void aWeaponChangeIsANewNormalNotAnOddPose()
 	{

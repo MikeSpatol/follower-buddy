@@ -109,12 +109,13 @@ public final class CrossingWatch
 	 * The longest a crossing may run. Every obstacle and shortcut takes
 	 * seconds; a recording past half a minute is something else wearing an
 	 * odd pose - a carpet ride, swimming, carrying something in a minigame -
-	 * and is dropped, with that pose taken as normal from then on.
+	 * and is dropped, with that pose taken as normal until the player's own
+	 * set is back on them.
 	 */
 	static final long MAX_CROSSING_MS = 30_000;
 
-	/** Frames kept for one crossing: half a minute at a hundred frames a second. */
-	static final int MAX_FRAMES = 3000;
+	/** Frames kept for one crossing, a safety cap past MAX_CROSSING_MS: half a minute at three hundred a second. */
+	static final int MAX_FRAMES = 9000;
 
 	/** A hop further than this is a teleport: the follower's own snap distance. */
 	static final int MAX_HOP_TILES = FollowerEntity.SNAP_DISTANCE;
@@ -312,6 +313,12 @@ public final class CrossingWatch
 	private int[] normal;
 	private int normalWeapon;
 
+	/**
+	 * The player's own set while a long swapped one (swimming, a carpet)
+	 * stands in for it, to go back to the moment it is on them again.
+	 */
+	private int[] ownSet;
+
 	private Sample previous;
 	private Run run;
 	private long lastXpMs = Long.MIN_VALUE;
@@ -426,6 +433,13 @@ public final class CrossingWatch
 		{
 			normal = s.base.clone();
 			normalWeapon = s.weapon;
+			ownSet = null;
+		}
+		else if (ownSet != null && java.util.Arrays.equals(s.base, ownSet))
+		{
+			// Out of the water: their own walk is not a glide.
+			normal = ownSet;
+			ownSet = null;
 		}
 
 		Sample prev = previous;
@@ -599,7 +613,12 @@ public final class CrossingWatch
 			cooling = true;
 			if (s.weapon == normalWeapon)
 			{
-				// Whatever this is, it is how they move now.
+				// Whatever this is, it is how they move now, until their own
+				// set is back.
+				if (ownSet == null)
+				{
+					ownSet = normal;
+				}
 				normal = s.base.clone();
 			}
 			return;
@@ -698,11 +717,28 @@ public final class CrossingWatch
 	 */
 	private void rebuildMissed(long nowMs)
 	{
+		// Odd frames that run straight into what is being watched lead into
+		// it, a clip begun on the last step towards a climb: not a crossing
+		// of their own.
+		long until = run == null ? Long.MAX_VALUE : run.startMs;
+		for (java.util.Iterator<Seen> back = recent.descendingIterator(); run != null && back.hasNext(); )
+		{
+			Seen seen = back.next();
+			if (seen.frame.atMs >= run.startMs)
+			{
+				continue;
+			}
+			if (!seen.unusual)
+			{
+				break;
+			}
+			until = seen.frame.atMs;
+		}
 		List<Seen> window = new ArrayList<>();
 		for (Seen seen : recent)
 		{
 			long at = seen.frame.atMs;
-			if (at > coveredToMs && (run == null || at < run.startMs))
+			if (at > coveredToMs && at < until)
 			{
 				window.add(seen);
 			}
