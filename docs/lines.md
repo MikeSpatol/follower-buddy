@@ -7098,7 +7098,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Priest In Peril, varp 302 = 3: Killed the Temple Guardian in the mausoleum. Source: Quest Helper (Zoinkwiz/quest-helper on GitHub, master as of 2025-10-23), PriestInPeril.java loadSteps: 3 = report to Roald. Game cache: the Temple Guardian multinpc (3487, on varp 302) shows at 0-2 and is gone from 3
 
 - **when:** questvar AND NOT (dialogueopen)
-- **does:** mood -4; occasion (never held back); once ever; files incident `quest-temple-dog` as 'the dog in the mausoleum'; animation 13993
+- **does:** mood -4; occasion (never held back); once ever; files incident `quest-temple-dog` as 'the dog in the mausoleum'; animation 13994
 - **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
 
 - Done. I'll draw it later, when I can look at it.
