@@ -1240,6 +1240,7 @@ public class FollowerPlugin extends Plugin
 		syncPanel();
 		follower.setOnEmoteStateChanged(this::updateEmoteDisarm);
 		follower.setOnEmoteClip(this::dressEmoteHands);
+		follower.setOnSnapped(this::followerSnapped);
 		stanceLibrary.setStyleSource(this::weaponUsage);
 		buildSlotIndexAsync();
 	}
@@ -1780,6 +1781,25 @@ public class FollowerPlugin extends Plugin
 		if (wrote)
 		{
 			speechEngine.dispatch(TriggerEvent.simple(TriggerEvent.Type.MINUTES_TAKEN));
+		}
+	}
+
+	/**
+	 * The follower put back beside the player by a teleport or a jump past
+	 * its leash, in the frame it happens: an errand and the minutes end there
+	 * rather than on the next tick, so the scroll is away before it is shown
+	 * beside the landed player, and the snap no longer defeats the minutes'
+	 * own leash.
+	 */
+	private void followerSnapped()
+	{
+		if (errands != null && errands.isBusy())
+		{
+			errands.reset();
+		}
+		if (minutesState != 0)
+		{
+			endMinutes(false);
 		}
 	}
 

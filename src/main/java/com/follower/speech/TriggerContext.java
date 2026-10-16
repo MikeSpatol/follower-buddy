@@ -102,6 +102,7 @@ public final class TriggerContext
 				// Leaving is what turns a fresh memory into one worth
 				// bringing up when you next come back.
 				placesJustFiled.remove(regionId);
+				incidentJustFiled = false;
 				previousRegionId = regionId;
 				regionId = newRegion;
 				noteRegionEntered(newRegion);
@@ -1382,6 +1383,7 @@ public final class TriggerContext
 		}
 		incidentPhrase = phrase == null ? "" : phrase;
 		incidentWhere = regionId;
+		incidentJustFiled = true;
 		incidentWhenMs = nowMs;
 		incidentWho = who == null ? "" : who;
 		countersDirty = true;
@@ -1487,10 +1489,17 @@ public final class TriggerContext
 		return ago < 120_000L ? "just now" : Words.duration(ago) + " ago";
 	}
 
-	/** Standing in the region the incident happened in. */
+	/**
+	 * Filed in this region and not left since: still the visit it happened
+	 * on. QA, 15 Oct: "Here again, and I've not forgotten the orb breaking"
+	 * was said twelve seconds after the orb broke, to somebody still there.
+	 */
+	private boolean incidentJustFiled;
+
+	/** Back in the region the incident happened in. */
 	public boolean isAtTheIncident()
 	{
-		return hasIncident() && incidentWhere != 0 && incidentWhere == regionId;
+		return hasIncident() && incidentWhere != 0 && incidentWhere == regionId && !incidentJustFiled;
 	}
 
 	/** Whether the NPC the incident was with has one of its kind within so many tiles. */
@@ -1542,6 +1551,7 @@ public final class TriggerContext
 		incidentPhrase = phrase == null ? "" : phrase;
 		incidentCount = Math.max(1, count);
 		incidentWhere = where;
+		incidentJustFiled = false;
 		incidentWhenMs = whenMs;
 		incidentWho = who == null ? "" : who;
 	}

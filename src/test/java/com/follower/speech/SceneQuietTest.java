@@ -451,6 +451,128 @@ public class SceneQuietTest
 		assertFalse(held.contains("waits:relax"));
 	}
 
+	// ------------------------------------------------------- the empty chair
+
+	private static final String PERSON = "{\"id\": \"person\", \"group\": \"t\", \"cooldownMs\": 0,"
+		+ " \"waits\": true, \"when\": {\"type\": \"npcSpawn\", \"names\": [\"Prince Itzla Arkan\"]},"
+		+ " \"say\": [\"Prince Itzla.\"]}";
+
+	/** Three minutes and more with nobody at the keys, and somebody walks up. */
+	private Harness unattended() throws IOException
+	{
+		Harness h = harness(PERSON);
+		ticks(h, 320);
+		assertTrue(h.engine.getContext().getUnattendedTicks() >= 300);
+		h.dispatch(TriggerEvent.npc(TriggerEvent.Type.NPC_SPAWN, 12345, "Prince Itzla Arkan"));
+		return h;
+	}
+
+	/**
+	 * QA, 15 Oct: a line with one chance that came while the player was away
+	 * from the keys was dropped by the damper and its cooldown charged: a
+	 * quest's person, the two-hour mark, a souvenir lost. A line that waits
+	 * is kept for them coming back.
+	 */
+	@Test
+	public void aLineThatWaitsIsKeptForThePlayersReturn() throws IOException
+	{
+		Harness h = unattended();
+		ticks(h, 100);
+		assertTrue("not to the empty chair", h.firedBy("person").isEmpty());
+
+		h.game.cameraMoved();
+		ticks(h, 1);
+		assertEquals("said once they are back", 1, h.firedBy("person").size());
+		assertTrue("nothing dropped", held.isEmpty());
+	}
+
+	@Test
+	public void aLineKeptForTheReturnIsOldNewsInTheEnd() throws IOException
+	{
+		Harness h = unattended();
+		ticks(h, SpeechEngine.SCENE_WAIT_TICKS + 5);
+		assertTrue("given up on", held.contains("person:unattended"));
+
+		h.game.cameraMoved();
+		ticks(h, 20);
+		assertTrue("and not said after", h.firedBy("person").isEmpty());
+	}
+
+	// ------------------------------------------------------- two on one pass
+
+	private static String meeting(String id, int priority, String who)
+	{
+		return "{\"id\": \"" + id + "\", \"group\": \"t\", \"priority\": " + priority + ", \"cooldownMs\": 0,"
+			+ " \"waits\": true, \"when\": {\"type\": \"npcNearby\", \"within\": 5, \"names\": [\"" + who + "\"]},"
+			+ " \"say\": [\"" + id + ".\"]}";
+	}
+
+	/**
+	 * Behaviour QA, 15 Oct: Prince Itzla and Sergeant Tobyn came into view on
+	 * one tick. Level in priority, Tobyn won on file order and Itzla's edge
+	 * was spent with him still in view: 26 of 26 runs, never said.
+	 */
+	@Test
+	public void twoLinesThatWaitRisingLevelOnOnePassAreBothSaid() throws IOException
+	{
+		Harness h = harness(meeting("tobyn", 35, "Sergeant Tobyn"), meeting("itzla", 35, "Prince Itzla Arkan"));
+		h.game.spawnNpc(12645, "Sergeant Tobyn", 0);
+		h.game.spawnNpc(12646, "Prince Itzla Arkan", 0);
+		ticks(h, 30);
+		assertEquals(1, h.firedBy("tobyn").size());
+		assertEquals("said behind him", 1, h.firedBy("itzla").size());
+		assertTrue("nothing dropped", held.isEmpty());
+	}
+
+	/** A point below is outranked on purpose: a callback over its base, one line a meeting. */
+	@Test
+	public void aLineOutrankedOnPurposeStillStandsAside() throws IOException
+	{
+		Harness h = harness(meeting("tobyn-after", 36, "Sergeant Tobyn"), meeting("tobyn", 35, "Sergeant Tobyn"));
+		h.game.spawnNpc(12645, "Sergeant Tobyn", 0);
+		ticks(h, 30);
+		assertEquals(1, h.firedBy("tobyn-after").size());
+		assertTrue("the base is not said behind its callback", h.firedBy("tobyn").isEmpty());
+	}
+
+	/**
+	 * A hold can outlast a short cooldown: a health warning, five seconds
+	 * apart, kept through a long conversation while the health dips again.
+	 * Found by the scene soak: the second copy, queued behind the first, was
+	 * said straight after it once the box closed.
+	 */
+	@Test
+	public void aLineWaitingItsTurnIsNotQueuedASecondTime() throws IOException
+	{
+		Harness h = harness("{\"id\": \"warn\", \"group\": \"t\", \"cooldownMs\": 5000, \"occasion\": true,"
+			+ " \"when\": {\"type\": \"healthBelow\", \"percent\": 50}, \"say\": [\"Careful.\"]}");
+		h.engine.getContext().setDialogueOpen(true);
+		for (int dip = 0; dip < 3; dip++)
+		{
+			h.game.hitpoints(10, 99);
+			ticks(h, 12);
+			h.game.hitpoints(99, 99);
+			ticks(h, 2);
+		}
+		h.game.hitpoints(10, 99);
+		ticks(h, 1);
+		h.engine.getContext().setDialogueOpen(false);
+		ticks(h, 40);
+		assertEquals("said once for the conversation", 1, h.firedBy("warn").size());
+	}
+
+	/** Behaviour QA, 15 Oct: the two shipped lines the damper took in an AFK, 5 of 5 and 4 of 4. */
+	@Test
+	public void theLinesAnAbsenceCostWaitTheirTurn() throws IOException
+	{
+		Harness h = new Harness(folder.newFolder().toPath());
+		for (String id : new String[]{"been-at-it-two-hours", "souvenir-lost"})
+		{
+			assertTrue(id, h.rule(id).waitsItsTurn());
+			assertFalse("waiting, not an occasion's exemptions: " + id, h.rule(id).isOccasion());
+		}
+	}
+
 	/**
 	 * QA, 15 Oct (probe P7): two occasions behind one ordinary line. The
 	 * first waits out the gap and is said; the second's wait was counted from

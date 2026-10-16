@@ -244,6 +244,15 @@ public class EngineSoakTest
 			{
 				out.append(", \"animation\": 862");
 			}
+			int waiting = random.nextInt(6);
+			if (waiting == 0)
+			{
+				out.append(", \"occasion\": true");
+			}
+			else if (waiting == 1)
+			{
+				out.append(", \"waits\": true");
+			}
 			out.append(", \"when\": ").append(condition(random, 2))
 				.append(", \"say\": [\"line ").append(i).append("\"]}");
 		}
@@ -385,6 +394,7 @@ public class EngineSoakTest
 			case 11:
 				h.engine.getContext().setFollowerStaying(random.nextBoolean());
 				h.engine.getContext().setDialogueOpen(random.nextBoolean());
+				h.engine.setSceneQuiet(random.nextInt(4) == 0);
 				break;
 			case 12:
 			{
@@ -780,9 +790,9 @@ public class EngineSoakTest
 					// held back, so the next line waits a full cooldown after the
 					// last. The harness has the global gap off; it could only
 					// spread them further. The clock moves only between steps, so
-					// this reads the "now" each line was charged at, and the
-					// longest delay here, six ticks, is under the shortest
-					// cooldown, so a rule never has two firings in flight.
+					// this reads the "now" each line was charged at. A line held
+					// through a scene or a conversation can outlast its cooldown,
+					// and a rule with one waiting is not queued a second time.
 					Long previous = lastSpokeAt.get(rule.id);
 					long now = clock.get();
 					if (previous != null && rule.cooldownMs > 0)

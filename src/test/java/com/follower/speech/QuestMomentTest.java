@@ -201,6 +201,37 @@ public class QuestMomentTest
 		assertTrue(callbacks >= 12);
 	}
 
+	/**
+	 * QA, 15 Oct: the quest moments sat at 60 with thirteen other rules, every
+	 * one of them earlier in the file. A tie goes to file order and the loser's
+	 * edge is spent, so a moment rising on the same pass as a hit taken or a
+	 * boss engaged was lost, and a stage moment may never rise again. Nothing
+	 * else stands level with a quest's moment.
+	 */
+	@Test
+	public void noOtherLineStandsLevelWithAQuestMoment() throws IOException
+	{
+		Harness h = new Harness(folder.newFolder().toPath());
+		java.util.Set<Integer> tier = new java.util.HashSet<>();
+		for (SpeechRule rule : h.loader.getRules())
+		{
+			if (rule.id.startsWith("qm-") && rule.onceKey().equals(rule.id))
+			{
+				tier.add(rule.priority);
+			}
+		}
+		assertEquals("the moments are one tier: " + tier, 1, tier.size());
+		java.util.List<String> level = new java.util.ArrayList<>();
+		for (SpeechRule rule : h.loader.getRules())
+		{
+			if (!rule.id.startsWith("qm-") && tier.contains(rule.priority))
+			{
+				level.add(rule.id);
+			}
+		}
+		assertTrue("level with the quest moments, and earlier in the file: " + level, level.isEmpty());
+	}
+
 	@Test
 	public void questDoneIsQuietAndHarmlessWhenItCannotRead() throws IOException
 	{

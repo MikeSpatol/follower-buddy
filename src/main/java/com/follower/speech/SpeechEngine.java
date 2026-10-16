@@ -518,12 +518,14 @@ public class SpeechEngine
 	 * the scene is over: two occasions held by one scene are said one after
 	 * the other at any chattiness, where the ten-tick wait lost the second to
 	 * a gap of 45 seconds. An NPC conversation holds it the same way, inside
-	 * the same five minutes.
+	 * the same five minutes, and so does the empty chair: QA, 15 Oct, a line
+	 * with one chance that came while the player was away from the keys was
+	 * dropped by the damper, where it can wait for them to be back.
 	 */
 	static boolean waitsOutTheScene(SpeechRule rule, String held, int waited)
 	{
 		return rule.waitsItsTurn() && waited < SCENE_WAIT_TICKS
-			&& ("scene".equals(held) || "dialogue".equals(held)
+			&& ("scene".equals(held) || "dialogue".equals(held) || "unattended".equals(held)
 				|| (waited > 0 && ("gap".equals(held) || "hush".equals(held))));
 	}
 
@@ -1003,7 +1005,7 @@ public class SpeechEngine
 			// gift held back is a gift lost; and it trades whatever the pocket
 			// holds when it is thanked for, so a rock still on its way only
 			// changes the words.
-			if (!rising || !isActive(rule) || !rule.offCooldown(now)
+			if (!rising || !isActive(rule) || !rule.offCooldown(now) || isWaiting(rule)
 				|| (!Boolean.TRUE.equals(rule.grantsWish) && awaitsALanding(rule, now)))
 			{
 				continue;
@@ -1019,6 +1021,17 @@ public class SpeechEngine
 			if (winner == null || rule.priority > winner.priority)
 			{
 				winner = rule;
+			}
+			// Level with the winner, a line that waits lost on file order
+			// alone. It rises again on the next pass and is said behind it.
+			// Behaviour QA, 15 Oct: Prince Itzla and Sergeant Tobyn came into
+			// view on one tick, and Itzla's line was never said. Not one a
+			// point below, which is outranked on purpose (a callback over its
+			// base), nor an occasion: two of those level on one event are
+			// each other's alternatives (the third death and "again").
+			else if (rule.priority == winner.priority && Boolean.TRUE.equals(rule.waits))
+			{
+				rule.riseAgain();
 			}
 		}
 
@@ -1222,6 +1235,21 @@ public class SpeechEngine
 
 		rule.markFired(now);
 
+		// A callback about a quest's person stands aside the plain line about
+		// them for that line's own while. QA, 15 Oct: two Duke callbacks, then
+		// "Duke Horacio himself" as if they had never met, in six minutes.
+		String plain = rule.plainLineId();
+		if (plain != null)
+		{
+			for (SpeechRule other : loader.getRules())
+			{
+				if (plain.equals(other.id))
+				{
+					other.markFired(now);
+				}
+			}
+		}
+
 		// Mood moves with what the follower ACTUALLY did. Applying it here
 		// rather than at the win means a rule held back by a cooldown, a
 		// disabled group or the mute does not quietly move the mood while
@@ -1420,6 +1448,24 @@ public class SpeechEngine
 		String group = rule.group == null ? "misc" : rule.group.toLowerCase(Locale.ROOT);
 		return !disabledGroups.contains(group)
 			&& !(rule.id != null && disabledGroups.contains(rule.id.toLowerCase(Locale.ROOT)));
+	}
+
+	/**
+	 * Whether a firing of this rule is already waiting its turn. A hold can
+	 * outlast a short cooldown - a low-health warning kept through a long
+	 * conversation - and a second copy queued behind the first was said
+	 * straight after it once both were let go.
+	 */
+	private boolean isWaiting(SpeechRule rule)
+	{
+		for (PendingSpeech waiting : pending)
+		{
+			if (waiting.rule == rule)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

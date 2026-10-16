@@ -43,7 +43,10 @@ public class LongSoakTest
 	/** One game tick, in milliseconds. */
 	private static final long TICK_MS = 600L;
 
-	private static final long GAP = 3_000L;
+	/** The shipped chattiness, Occasional: what a player who never opens the settings hears. */
+	private static final long GAP = new FollowerConfig()
+	{
+	}.chattiness().getGapMs();
 
 	/** A session long enough for every window in the engine to cycle many times. */
 	private static final int TICKS = 20_000;      // 20,000 * 0.6s = about 3h20m
@@ -590,5 +593,204 @@ public class LongSoakTest
 		assertTrue("the director held back lines it must never hold: " + heldOccasions,
 			heldOccasions.isEmpty());
 		assertLevelsSpoke(rulesOf(h.spoken));
+	}
+
+	// ------------------------------------------------- scenes, boxes, chairs
+
+	/** Who the driver brings into view: quest people, whose lines wait, and a passer-by. */
+	private static final String[] PEOPLE = {"Hans", "Alina", "Sergeant Tobyn", "Prince Itzla Arkan",
+		"Duke Horacio", "Cook", "Man"};
+
+	/** Ticks a session of the scene soak plays: two hours. */
+	private static final int SCENE_SOAK_TICKS = 12_000;
+
+	@Test
+	public void scenesConversationsAndAbsencesKeepTheirPromises() throws Exception
+	{
+		// QA, 15 Oct: the soaks above never drove what came in with the
+		// cutscenes and the quest people - the quiet after a scene, lines
+		// that wait their turn through it, through a conversation and an
+		// empty chair, and two quest people met on one tick. Six seeds of two
+		// hours each, the scenes, boxes and absences at random among the rest.
+		java.lang.reflect.Field pendingField =
+			com.follower.speech.SpeechEngine.class.getDeclaredField("pending");
+		pendingField.setAccessible(true);
+		List<String> problems = new ArrayList<>();
+		int waitsHeard = 0;
+		int occasionsHeard = 0;
+
+		for (long seed = 1; seed <= 6; seed++)
+		{
+			final long run = seed;
+			Harness h = soakHarness();
+			TriggerContext ctx = h.engine.getContext();
+			boolean[] quiet = {false};
+			List<SpeechRule> said = new ArrayList<>();
+			h.engine.setSink((text, output, rule, animationId, onSaid) ->
+			{
+				onSaid.run();
+				if (text.isEmpty() || rule == null)
+				{
+					return;
+				}
+				said.add(rule);
+				if (quiet[0])
+				{
+					problems.add(run + ": " + rule.id + " said in a scene or the quiet after it");
+				}
+				if (rule.waitsItsTurn() && ctx.isDialogueOpen())
+				{
+					problems.add(run + ": " + rule.id + " said into a conversation");
+				}
+				if (Boolean.TRUE.equals(rule.waits) && ctx.getUnattendedTicks() >= 300
+					&& !rule.when.usesType("unattended"))
+				{
+					problems.add(run + ": " + rule.id + " said to the empty chair");
+				}
+			});
+			h.gameTicks(3);
+
+			Random r = new Random(run);
+			int sceneLeft = 0;
+			int quietLeft = 0;
+			int boxLeft = 0;
+			int boxTail = 0;
+			int awayLeft = 0;
+			int quest = 0;
+			int maxPending = 0;
+			for (int i = 0; i < SCENE_SOAK_TICKS; i++)
+			{
+				clock.addAndGet(TICK_MS);
+
+				// A cutscene, then the quiet the plugin keeps after one.
+				if (sceneLeft == 0 && quietLeft == 0 && r.nextInt(400) == 0)
+				{
+					sceneLeft = 20 + r.nextInt(80);
+				}
+				if (sceneLeft > 0 && --sceneLeft == 0)
+				{
+					quietLeft = 25;
+				}
+				else if (quietLeft > 0)
+				{
+					quietLeft--;
+				}
+				quiet[0] = sceneLeft > 0 || quietLeft > 0;
+				h.engine.setSceneQuiet(quiet[0]);
+
+				// A conversation, read as the plugin reads it: up, and for two
+				// ticks after the box goes. A scene may run straight into one.
+				if (boxLeft == 0 && boxTail == 0 && r.nextInt(80) == 0)
+				{
+					boxLeft = 5 + r.nextInt(35);
+				}
+				if (boxLeft > 0 && --boxLeft == 0)
+				{
+					boxTail = 2;
+				}
+				else if (boxTail > 0)
+				{
+					boxTail--;
+				}
+				ctx.setDialogueOpen(boxLeft > 0 || boxTail > 0);
+
+				// Away from the keys now and then, long enough for the damper.
+				if (awayLeft == 0 && r.nextInt(3000) == 0)
+				{
+					awayLeft = 350 + r.nextInt(400);
+				}
+				boolean away = awayLeft > 0;
+				if (away)
+				{
+					awayLeft--;
+				}
+				else if (r.nextInt(5) == 0)
+				{
+					h.game.cameraMoved();
+				}
+
+				// A quest moving on, as Children of the Sun and Priest in Peril do.
+				if (r.nextInt(150) == 0)
+				{
+					quest = Math.min(22, quest + 2);
+					h.game.varbit(9632, quest);
+					h.game.varp(302, Math.min(60, quest / 2));
+				}
+
+				h.gameTick();
+
+				// Somebody comes into view, now and then two at once.
+				if (r.nextInt(40) == 0)
+				{
+					h.game.clearNpcs();
+					for (int n = r.nextInt(4) == 0 ? 2 : 1; n > 0; n--)
+					{
+						String who = PEOPLE[r.nextInt(PEOPLE.length)];
+						h.game.spawnNpc(4000 + who.length(), who, 0);
+						h.dispatch(TriggerEvent.npc(TriggerEvent.Type.NPC_SPAWN, 4000 + who.length(), who));
+					}
+				}
+
+				int roll = r.nextInt(100);
+				if (away)
+				{
+					// Nothing of the player's own while they are away.
+				}
+				else if (roll < 3)
+				{
+					h.dispatch(TriggerEvent.simple(TriggerEvent.Type.COMBAT_START));
+				}
+				else if (roll < 6)
+				{
+					h.dispatch(TriggerEvent.simple(TriggerEvent.Type.COMBAT_END));
+				}
+				else if (roll < 8)
+				{
+					h.dispatch(TriggerEvent.levelUp(SKILLS[r.nextInt(SKILLS.length)], 2 + r.nextInt(97)));
+				}
+				else if (roll < 9)
+				{
+					h.dispatch(TriggerEvent.questComplete("Cook's Assistant"));
+				}
+				maxPending = Math.max(maxPending, ((List<?>) pendingField.get(h.engine)).size());
+			}
+
+			Map<String, Integer> once = new HashMap<>();
+			for (SpeechRule rule : said)
+			{
+				waitsHeard += Boolean.TRUE.equals(rule.waits) ? 1 : 0;
+				occasionsHeard += rule.isOccasion() ? 1 : 0;
+				if (rule.isOnce())
+				{
+					once.merge(rule.onceKey(), 1, Integer::sum);
+				}
+			}
+			for (Map.Entry<String, Integer> e : once.entrySet())
+			{
+				if (e.getValue() > 1)
+				{
+					problems.add(run + ": the first " + e.getKey() + " said " + e.getValue() + " times");
+				}
+			}
+			if (maxPending > 8)
+			{
+				problems.add(run + ": " + maxPending + " lines waiting at once");
+			}
+
+			// And still capable of speech once it is all over.
+			h.engine.setSceneQuiet(false);
+			quiet[0] = false;
+			ctx.setDialogueOpen(false);
+			int before = said.size();
+			play(h, 600, 7L);
+			if (said.size() == before)
+			{
+				problems.add(run + ": the follower went permanently quiet");
+			}
+		}
+
+		assertTrue(String.join("\n", problems), problems.isEmpty());
+		assertTrue("no line that waits was ever heard: the path was not driven", waitsHeard > 0);
+		assertTrue("no occasion was ever heard: the path was not driven", occasionsHeard > 0);
 	}
 }
