@@ -516,17 +516,79 @@ public class StanceLibrary
 			// Between worlds: nobody to watch this tick.
 			return;
 		}
+		if (!learnedChecked)
+		{
+			learnedChecked = true;
+			forgetObstacleSets(client);
+		}
 		for (Player player : view.players())
 		{
 			if (player == null)
 			{
 				continue;
 			}
-			learn(player);
+			learn(client, player);
 		}
 	}
 
-	private void learn(Player player)
+	/** Whether the learned file has been checked for obstacle sets, which needs the client. */
+	private boolean learnedChecked;
+
+	/**
+	 * Takes out of the learned file any pose set an older build learned off
+	 * a player on an obstacle (see {@link #emptiesAHand}), keeping any swing
+	 * learned with it. Unarmed ships with the plugin, so a learned unarmed
+	 * set is always one of these.
+	 */
+	private void forgetObstacleSets(Client client)
+	{
+		int forgotten = 0;
+		for (java.util.Iterator<Map.Entry<Integer, Stance>> it = learned.entrySet().iterator(); it.hasNext(); )
+		{
+			Map.Entry<Integer, Stance> entry = it.next();
+			Stance mine = entry.getValue();
+			if (!mine.isComplete() || (entry.getKey() != UNARMED && !emptiesAHand(client, mine)))
+			{
+				continue;
+			}
+			if (mine.attack != 0 || mine.attackByStyle != null)
+			{
+				entry.setValue(mine.swingsOnly());
+			}
+			else
+			{
+				it.remove();
+			}
+			forgotten++;
+		}
+		if (forgotten > 0)
+		{
+			dirty = true;
+			log.info("Forgot {} learned stance(s) taken from a player on an obstacle", forgotten);
+		}
+	}
+
+	/**
+	 * Whether the stand, walk or run of a set empties a hand. No weapon's
+	 * does; the sets the game swaps in for an agility obstacle (the log
+	 * balance, the ledge shimmy, the monkey bars) empty both, so a player
+	 * seen on one teaches nothing.
+	 */
+	private static boolean emptiesAHand(Client client, Stance stance)
+	{
+		for (int pose : new int[]{stance.idle, stance.walk, stance.run})
+		{
+			net.runelite.api.Animation animation = client.loadAnimation(pose);
+			if (animation != null && (animation.getLeftHandItem() == FilmSet.EMPTY
+				|| animation.getRightHandItem() == FilmSet.EMPTY))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private void learn(Client client, Player player)
 	{
 		PlayerComposition composition = player.getPlayerComposition();
 		if (composition == null)
@@ -537,6 +599,12 @@ public class StanceLibrary
 		int raw = composition.getEquipmentId(KitType.WEAPON);
 		// getEquipmentId returns the item id directly, or -1 when nothing is wielded.
 		int weaponId = raw <= 0 ? UNARMED : raw;
+		if (weaponId == UNARMED)
+		{
+			// Shipped, and never learned: an empty-handed player on a log
+			// would teach the follower to balance on flat ground.
+			return;
+		}
 
 		Stance observed = new Stance(
 			player.getIdlePoseAnimation(),
@@ -548,7 +616,7 @@ public class StanceLibrary
 			player.getIdleRotateLeft(),
 			player.getIdleRotateRight());
 
-		if (!observed.isComplete())
+		if (!observed.isComplete() || emptiesAHand(client, observed))
 		{
 			return;
 		}
