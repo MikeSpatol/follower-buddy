@@ -515,12 +515,14 @@ public class SpeechEngine
 	 * the scene is over: two occasions held by one scene are said one after
 	 * the other at any chattiness, where the ten-tick wait lost the second to
 	 * a gap of 45 seconds. An NPC conversation holds it the same way, inside
-	 * the same five minutes.
+	 * the same five minutes, and so does the empty chair: QA, 15 Oct, a line
+	 * with one chance that came while the player was away from the keys was
+	 * dropped by the damper, where it can wait for them to be back.
 	 */
 	static boolean waitsOutTheScene(SpeechRule rule, String held, int waited)
 	{
 		return rule.waitsItsTurn() && waited < SCENE_WAIT_TICKS
-			&& ("scene".equals(held) || "dialogue".equals(held)
+			&& ("scene".equals(held) || "dialogue".equals(held) || "unattended".equals(held)
 				|| (waited > 0 && ("gap".equals(held) || "hush".equals(held))));
 	}
 

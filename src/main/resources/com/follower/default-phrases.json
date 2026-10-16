@@ -12503,6 +12503,7 @@
     },
     {
       "id": "souvenir-lost",
+      "waits": true,
       "note": "And one day it is not the same rock. The name survives the loss so the line can mourn it properly.",
       "about": "When it loses the thing it was carrying. {souvenir} is the thing.",
       "group": "souvenir",
@@ -12726,6 +12727,7 @@
     },
     {
       "id": "been-at-it-two-hours",
+      "waits": true,
       "note": "Pinned with a maximum so the two-hour line does not keep being true at four hours and shout over the four-hour one.",
       "about": "Now and then two hours into a session.",
       "group": "clock",
