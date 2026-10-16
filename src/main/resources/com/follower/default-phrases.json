@@ -15156,8 +15156,7 @@
       },
       "say": [
         "Sedridor's basement is under us. I'm still working out how he knew you.",
-        "Someone in the Wizards' Tower knows your name. I keep mine quiet.",
-        "Somebody in that tower knows your name. I keep mine quiet here."
+        "Someone in the Wizards' Tower knows your name. I keep mine quiet."
       ]
     },
     {
@@ -15866,8 +15865,7 @@
       },
       "say": [
         "The fence book's reached gates at last. I read that bit twice.",
-        "Halfway through the fence book, and the author has views on hedges.",
-        "The fence book's author has strong views on hedges."
+        "Halfway through the fence book, and the author has views on hedges."
       ],
       "delayTicks": 2,
       "output": "overhead"
