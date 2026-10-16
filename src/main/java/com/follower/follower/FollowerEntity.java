@@ -47,7 +47,7 @@ import net.runelite.api.coords.WorldPoint;
  */
 @Slf4j
 @Singleton
-public class FollowerEntity
+public class FollowerEntity implements CrossingWatch.Listener
 {
 	/** Local (fine) units per tile. */
 	private static final int TILE = Perspective.LOCAL_TILE_SIZE;
@@ -593,6 +593,7 @@ public class FollowerEntity
 		serverPath.clear();
 		lastSeenPlayerTile = null;
 		playerFollowTile = null;
+		dropCrossings();
 		spawned = false;
 		activePose = -1;
 	}
@@ -1056,6 +1057,7 @@ public class FollowerEntity
 		strandedTicks = 0;
 		thrallNpc = npc;
 		lastThrallTile = null;
+		dropCrossings();
 		stayTile = null;
 		stayFaceTile = null;
 		stayFaceMax = null;
@@ -1612,6 +1614,8 @@ public class FollowerEntity
 		releaseAfterCast = false;
 		goalTile = null;
 		serverPath.clear();
+		// Halfway along a log is not a place to stay: see finishCrossing.
+		stayGivenMidCrossing = playing != null ? tile : null;
 	}
 
 	/**
@@ -1762,6 +1766,480 @@ public class FollowerEntity
 	public WorldPoint getWorldLocation()
 	{
 		return tile;
+	}
+
+	// -------------------------------------------------------------------- agility
+
+	/*
+	 * The player's agility, done after them: every obstacle and shortcut they
+	 * take, in order, however far behind that puts it, falls included.
+	 * CrossingWatch records each one off the player; this walks to the tile it
+	 * began on and plays it back - the same fine positions, floors, facing and
+	 * animations at the same moments - then the next, then follows again.
+	 *
+	 * While any of it is going on, following, the teleport snap and the
+	 * blocked-tile hop are all off: a follower a log behind is not lost, and
+	 * one a floor below on a rooftop course is not stranded. Two limits stand
+	 * in for the snap. More than STAY_LEASH tiles behind - far enough that the
+	 * next scene rebuild could leave it off the loaded map - or more than
+	 * MAX_QUEUED_CROSSINGS waiting, and the queue is let go: the crossing under
+	 * way is finished, and the ordinary catch-up takes it from there.
+	 */
+
+	/**
+	 * Crossings waiting before the queue is let go: more than the longest
+	 * course has obstacles, so a follower this far behind has lost a whole lap.
+	 */
+	static final int MAX_QUEUED_CROSSINGS = 16;
+
+	/** Unable to reach where a crossing begins for this long, and it is put there. */
+	static final long STUCK_APPROACH_MS = 3000;
+
+	private final Deque<Crossing> crossings = new ArrayDeque<>();
+
+	/** Where the crossing the player is on now began, until it is queued. */
+	private WorldPoint awaitedCrossing;
+
+	/** The crossing being played back, and how far into it. */
+	private Crossing playing;
+	private long playedMs;
+	private AnimationController crossingController;
+	private int crossingAnimation = -1;
+
+	/** The walk to where the next crossing begins: aimed at, planned to, and how long stuck. */
+	private WorldPoint approachTarget;
+	private boolean approachWaiting;
+	private WorldPoint approachPlanned;
+	private long approachStillMs;
+
+	/** Where a stay was given while a crossing played, to be moved to where it ends. */
+	private WorldPoint stayGivenMidCrossing;
+
+	/** Whether the last frame was agility's, so the hand-back to following happens once. */
+	private boolean inAgility;
+
+	/** Told as each crossing is done, for the words. */
+	@lombok.Setter
+	private java.util.function.Consumer<Crossing> onCrossed;
+
+	/** Whether agility has the follower: one being played, queued, or under way on the player. */
+	public boolean isDoingAgility()
+	{
+		return playing != null || awaitedCrossing != null || !crossings.isEmpty();
+	}
+
+	public boolean isPlayingCrossing()
+	{
+		return playing != null;
+	}
+
+	public int getCrossingsQueued()
+	{
+		return crossings.size();
+	}
+
+	@Override
+	public void expectCrossing(WorldPoint start)
+	{
+		if (!spawned || tile == null || thrallNpc != null || start == null)
+		{
+			return;
+		}
+		takeFeetForAgility();
+		awaitedCrossing = start;
+	}
+
+	@Override
+	public void queueCrossing(Crossing crossing)
+	{
+		if (!spawned || tile == null || thrallNpc != null || crossing == null)
+		{
+			return;
+		}
+		if (crossings.size() >= MAX_QUEUED_CROSSINGS)
+		{
+			log.debug("{} crossings behind; letting the queue go", crossings.size());
+			clearCrossings();
+			return;
+		}
+		takeFeetForAgility();
+		crossings.addLast(crossing);
+		awaitedCrossing = null;
+	}
+
+	@Override
+	public void cancelExpectedCrossing()
+	{
+		awaitedCrossing = null;
+	}
+
+	/** Lets go of what is waiting. One under way is finished: nobody stops halfway along a log. */
+	@Override
+	public void clearCrossings()
+	{
+		crossings.clear();
+		awaitedCrossing = null;
+	}
+
+	/** All of it, now: a snap, a despawn, thrall work. */
+	private void dropCrossings()
+	{
+		clearCrossings();
+		playing = null;
+		crossingController = null;
+		crossingAnimation = -1;
+	}
+
+	/**
+	 * Agility taking the feet from whatever of the follower's own had them -
+	 * a moment's walk, a drift. Never the player's park: the plugin does not
+	 * watch for crossings while there is one.
+	 */
+	private void takeFeetForAgility()
+	{
+		if (isDoingAgility())
+		{
+			return;
+		}
+		stayTile = null;
+		stayFaceTile = null;
+		stayFaceMax = null;
+		goalTile = null;
+		insistedTile = null;
+		releaseAfterCast = false;
+		serverPath.clear();
+		approachTarget = null;
+		approachPlanned = null;
+		approachStillMs = 0;
+	}
+
+	/**
+	 * The frame while agility has the follower. False once it is over, after
+	 * handing back to following, so the rest of the frame follows as usual.
+	 */
+	private boolean agilityFrame(Player local, long deltaMs)
+	{
+		if (!isDoingAgility())
+		{
+			if (inAgility)
+			{
+				// Picked up from wherever the player is now, as after any jump:
+				// beside them if they are near, the snap if they are not.
+				inAgility = false;
+				lastSeenPlayerTile = null;
+				playerFollowTile = null;
+				clearTrailOfPlayer();
+				serverPath.clear();
+				approachTarget = null;
+				approachPlanned = null;
+			}
+			return false;
+		}
+		inAgility = true;
+
+		WorldPoint playerTile = local.getWorldLocation();
+		if (playerTile != null && tile.distanceTo2D(playerTile) > STAY_LEASH
+			&& (awaitedCrossing != null || !crossings.isEmpty()))
+		{
+			log.debug("{} tiles behind on agility; letting the queue go", tile.distanceTo2D(playerTile));
+			clearCrossings();
+			if (!isDoingAgility())
+			{
+				return agilityFrame(local, deltaMs);
+			}
+		}
+
+		if (playing != null)
+		{
+			playCrossing(deltaMs);
+		}
+		else
+		{
+			approachCrossing(local, deltaMs);
+		}
+
+		if (!render() && client.getGameState() == GameState.LOGGED_IN)
+		{
+			// Off the loaded scene: nothing here can be shown. The old catch-up.
+			recoverPosition(local, playerTile);
+		}
+		return true;
+	}
+
+	/** Walking to where the next crossing begins, or waiting there for the one the player is on. */
+	private void approachCrossing(Player local, long deltaMs)
+	{
+		Crossing next = crossings.peekFirst();
+		WorldPoint target = next != null ? next.getStart() : awaitedCrossing;
+		// A cutscene: the queue waits where it stands until the scene is over.
+		boolean held = watchingWithThePlayer;
+		// While the player is still on it, up beside where it began rather
+		// than onto them: a climb starts on the very tile they stand on.
+		boolean waiting = next == null;
+
+		if (!target.equals(approachTarget) || waiting != approachWaiting)
+		{
+			approachTarget = target;
+			approachWaiting = waiting;
+			approachPlanned = null;
+			approachStillMs = 0;
+		}
+		if (held)
+		{
+			serverPath.clear();
+			approachPlanned = null;
+		}
+		else if (approachPlanned == null
+			|| (serverPath.isEmpty() && route.isEmpty() && !tile.equals(approachPlanned))
+			|| (!serverPath.isEmpty() && !serverPath.peekLast().equals(approachPlanned)))
+		{
+			// Planned once, and again only if something else took the walk.
+			planApproach(target, waiting ? playerTileToAvoid() : null);
+		}
+
+		if (!serverPath.isEmpty())
+		{
+			tickCarryMs += deltaMs;
+			while (tickCarryMs >= 600)
+			{
+				tickCarryMs -= 600;
+				releaseSteps();
+			}
+		}
+		else
+		{
+			tickCarryMs = 0;
+		}
+		moveContinuous(deltaMs / (double) CYCLE_MS);
+
+		boolean moving = !route.isEmpty()
+			|| fineWX != tile.getX() * 128L + 64 || fineWY != tile.getY() * 128L + 64;
+		onTheMove = moving;
+		if (moving)
+		{
+			cancelEmote();
+		}
+
+		boolean there = !moving && serverPath.isEmpty() && tile.equals(target);
+		if (!moving && serverPath.isEmpty() && !there && !held && !waiting)
+		{
+			approachStillMs += deltaMs;
+			if (approachStillMs >= STUCK_APPROACH_MS)
+			{
+				// Walled off from it, or it is on a floor the follower cannot
+				// walk to: put on the spot, as a snap would put it beside you.
+				log.debug("Cannot reach the crossing at {} from {}; placing it there", target, tile);
+				placeAt(target);
+				there = true;
+			}
+		}
+		else
+		{
+			approachStillMs = 0;
+		}
+
+		if (there && next != null && !held)
+		{
+			startCrossing(next);
+			return;
+		}
+
+		if (!moving)
+		{
+			if (held)
+			{
+				faceTheHold(local);
+			}
+			else
+			{
+				// Watching them do it.
+				facePlayer();
+			}
+		}
+		StanceLibrary.Stance stance = stance();
+		applyPose(!moving ? stance.idle : lastMoveSpeed >= 8 ? stance.run : stance.walk, false);
+		wrapBeforeFinalFrame();
+		passEmoteMilestones(false);
+	}
+
+	private void planApproach(WorldPoint target, WorldPoint avoid)
+	{
+		WorldPoint from = simTile != null ? simTile : tile;
+		java.util.List<WorldPoint> path = target.getPlane() == from.getPlane()
+			? findPath(from, target, true, avoid) : null;
+		serverPath.clear();
+		if (path != null)
+		{
+			serverPath.addAll(path);
+		}
+		approachPlanned = path == null || path.isEmpty() ? from : path.get(path.size() - 1);
+	}
+
+	private void placeAt(WorldPoint at)
+	{
+		route.clear();
+		routeRun.clear();
+		serverPath.clear();
+		tile = at;
+		simTile = at;
+		fineWX = at.getX() * 128L + 64;
+		fineWY = at.getY() * 128L + 64;
+		approachPlanned = at;
+	}
+
+	private void startCrossing(Crossing crossing)
+	{
+		crossings.pollFirst();
+		playing = crossing;
+		playedMs = 0;
+		route.clear();
+		routeRun.clear();
+		serverPath.clear();
+		crossingController = null;
+		crossingAnimation = -1;
+		playCrossing(0);
+	}
+
+	/** One frame of the crossing: where the player was at this moment of it, and what they were doing. */
+	private void playCrossing(long deltaMs)
+	{
+		// The crossing has the body, as walking does: no emote over it.
+		if (emotePlaying)
+		{
+			cancelEmote();
+		}
+		waitingEmote = -1;
+
+		Crossing crossing = playing;
+		playedMs += deltaMs;
+		long at = Math.min(playedMs, crossing.getDurationMs());
+		Crossing.Frame frame = crossing.frameAt(at);
+		long[] fine = crossing.fineAt(at);
+		fineWX = fine[0];
+		fineWY = fine[1];
+		tile = new WorldPoint((int) (fineWX >> 7), (int) (fineWY >> 7), frame.plane);
+		simTile = tile;
+		lastMoveSpeed = 0;
+		onTheMove = true;
+		dstYaw = frame.orientation & 0x7ff;
+		turnContinuous(deltaMs / (double) CYCLE_MS);
+		showCrossingFrame(crossing, frame);
+
+		if (playedMs >= crossing.getDurationMs())
+		{
+			finishCrossing();
+		}
+	}
+
+	private void finishCrossing()
+	{
+		Crossing done = playing;
+		playing = null;
+		crossingController = null;
+		crossingAnimation = -1;
+		// The locomotion pose goes back on with the next frame's.
+		activePose = -1;
+		route.clear();
+		routeRun.clear();
+		serverPath.clear();
+		if (fineWX != tile.getX() * 128L + 64 || fineWY != tile.getY() * 128L + 64)
+		{
+			// Ended mid-step, as the player walked off: the rest of the step.
+			route.addLast(tile);
+			routeRun.addLast(false);
+		}
+		simTile = tile;
+		approachPlanned = null;
+		approachTarget = null;
+		if (stayTile != null && stayTile.equals(stayGivenMidCrossing))
+		{
+			// A Stay given mid-crossing holds where the crossing put it down.
+			stayTile = tile;
+		}
+		stayGivenMidCrossing = null;
+		if (onCrossed != null)
+		{
+			onCrossed.accept(done);
+		}
+	}
+
+	/**
+	 * The animation the player showed at this frame, on the follower: the
+	 * action when one played, the pose otherwise. A pose from the player's
+	 * own stand-walk-run set is shown as the follower's own, so it walks
+	 * between the odd parts like itself; anything else - the balance, the
+	 * shimmy, the hang - is the player's, frame for frame. Each starts on
+	 * the frame the player's was on, so a clip begun before the first
+	 * sample still lines up.
+	 */
+	private void showCrossingFrame(Crossing crossing, Crossing.Frame frame)
+	{
+		if (object == null || !animatable)
+		{
+			return;
+		}
+		boolean action = frame.action != -1;
+		int normalIndex = action ? -1 : crossing.normalIndex(frame.pose);
+		int wanted = action ? frame.action : normalIndex >= 0 ? ownPose(normalIndex) : frame.pose;
+		int startFrame = action ? frame.actionFrame : normalIndex >= 0 ? 0 : frame.poseFrame;
+		if (wanted == crossingAnimation && crossingController != null
+			&& object.getAnimationController() == crossingController)
+		{
+			return;
+		}
+
+		Animation animation = wanted > 0 ? client.loadAnimation(wanted) : null;
+		if (animation == null)
+		{
+			// Not in the cache: the follower's own stand rather than nothing.
+			wanted = stance().idle;
+			startFrame = 0;
+			action = false;
+			animation = client.loadAnimation(wanted);
+			if (animation == null)
+			{
+				return;
+			}
+		}
+		AnimationController controller = new AnimationController(client, animation);
+		int frames = animation.getFrameLengths() == null ? 0 : animation.getFrameLengths().length;
+		if (startFrame > 0 && startFrame < frames)
+		{
+			controller.setFrame(startFrame);
+		}
+		// A one-shot holds its last frame until the recording moves on, the
+		// way the player's did until the next thing replaced it; a loop loops.
+		controller.setOnFinished(action && animation.getFrameStep() < 0
+			? FollowerEntity::holdLastFrame : FollowerEntity::loopSafely);
+		object.setAnimationController(controller);
+		crossingController = controller;
+		crossingAnimation = wanted;
+		animationIds.add(wanted);
+		controllerGeneration++;
+		activePose = action ? -1 : wanted;
+	}
+
+	/** The follower's own version of the player's normal pose at this index, in stance order. */
+	private int ownPose(int index)
+	{
+		StanceLibrary.Stance stance = stance();
+		int[] own = {stance.idle, stance.walk, stance.run, stance.walkBack,
+			stance.walkLeft, stance.walkRight, stance.turnLeft, stance.turnRight};
+		int pose = index < own.length ? own[index] : 0;
+		if (pose > 0)
+		{
+			return pose;
+		}
+		// Missing from a stance saved before the directional fields existed.
+		return index >= 1 && index <= 5 ? stance.walk : stance.idle;
+	}
+
+	private static void holdLastFrame(AnimationController controller)
+	{
+		Animation animation = controller.getAnimation();
+		int frames = animation == null || animation.getFrameLengths() == null
+			? 0 : animation.getFrameLengths().length;
+		controller.setFrame(Math.max(0, frames - 1));
 	}
 
 	// ------------------------------------------------------------------- movement
@@ -1951,8 +2429,8 @@ public class FollowerEntity
 	private java.util.List<WorldPoint> findPath(WorldPoint src, WorldPoint dest,
 		boolean tryNearest, WorldPoint avoid)
 	{
-		LocalPoint srcLocal = LocalPoint.fromWorld(client, src);
-		LocalPoint destLocal = LocalPoint.fromWorld(client, dest);
+		LocalPoint srcLocal = sceneOf(src);
+		LocalPoint destLocal = sceneOf(dest);
 		if (srcLocal == null || destLocal == null)
 		{
 			return null;
@@ -2223,6 +2701,11 @@ public class FollowerEntity
 		out.add("sim " + describe(simTile) + "  render " + describe(tile));
 		out.add("path=" + serverPath.size() + "  route=" + route.size()
 			+ "  speed=" + lastMoveSpeed + (playerRunning ? "  RUN" : "  walk"));
+		if (isDoingAgility())
+		{
+			out.add("agility queued=" + crossings.size() + (playing != null ? "  playing" : "")
+				+ (awaitedCrossing != null ? "  awaiting " + describe(awaitedCrossing) : ""));
+		}
 		return out;
 	}
 
@@ -2293,6 +2776,14 @@ public class FollowerEntity
 		if (thrallNpc != null)
 		{
 			updateThrallFrame(deltaMs);
+			return;
+		}
+
+		// Agility: the follower is doing the player's obstacles after them.
+		// Ahead of the follow pathing, the teleport rule and the blocked-tile
+		// hop, none of which apply to somebody halfway along a log.
+		if (agilityFrame(local, deltaMs))
+		{
 			return;
 		}
 
@@ -3262,7 +3753,8 @@ public class FollowerEntity
 		{
 			return null;
 		}
-		LocalPoint localPoint = LocalPoint.fromWorld(view, tile);
+		// By x and y: the tile's own floor is read below, whichever the player is on.
+		LocalPoint localPoint = LocalPoint.fromWorld(view, tile.getX(), tile.getY());
 		if (localPoint == null)
 		{
 			return null;
@@ -3499,7 +3991,8 @@ public class FollowerEntity
 			playerTile.getX() - 1, playerTile.getY(), playerTile.getPlane()), playerTile);
 
 		// A forced relocation ends any pose - the tile it was holding is gone,
-		// and the way the pose faced with it.
+		// and the way the pose faced with it. And any agility it was copying.
+		dropCrossings();
 		stayTile = null;
 		stayFaceTile = null;
 		stayFaceMax = null;
@@ -3568,6 +4061,19 @@ public class FollowerEntity
 	}
 
 	/**
+	 * Where a world tile is in the scene, on whichever floor it is. The
+	 * client's own conversion answers null for a tile off the player's
+	 * floor, which was right while the follower only ever stood where they
+	 * did; a floor behind them on a rooftop course it still has to be drawn
+	 * and routed on its own floor.
+	 */
+	private LocalPoint sceneOf(WorldPoint at)
+	{
+		net.runelite.api.WorldView view = client.findWorldViewFromWorldPoint(at);
+		return view == null ? null : LocalPoint.fromWorld(view, at.getX(), at.getY());
+	}
+
+	/**
 	 * Draws the follower at its fine world position, converted to scene
 	 * coordinates here and nowhere else.
 	 *
@@ -3583,7 +4089,7 @@ public class FollowerEntity
 
 		WorldPoint baseTile = new WorldPoint(
 			(int) (fineWX >> 7), (int) (fineWY >> 7), tile.getPlane());
-		LocalPoint base = LocalPoint.fromWorld(client, baseTile);
+		LocalPoint base = sceneOf(baseTile);
 		if (base == null)
 		{
 			lastRenderedLocation = null;
