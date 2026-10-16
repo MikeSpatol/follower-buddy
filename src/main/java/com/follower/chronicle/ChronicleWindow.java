@@ -1021,7 +1021,7 @@ public class ChronicleWindow extends Overlay
 					shown.setBounds(new Rectangle(left, plateTop, ChronicleLayout.PLATE_W, ChronicleLayout.PLATE_H)
 						.intersection(new Rectangle(ChronicleLayout.PAGE.x, bodyTop, ChronicleLayout.PAGE.width, bodyHeight)));
 				}
-				drawPlate(g, plate, left, plateTop, ChronicleLayout.PLATE_W, ChronicleLayout.PLATE_H,
+				drawPlate(g, entry.kindOrEmpty(), plate, left, plateTop, ChronicleLayout.PLATE_W, ChronicleLayout.PLATE_H,
 					readable, small, false, hovered(shown));
 			}
 		}
@@ -1074,7 +1074,7 @@ public class ChronicleWindow extends Overlay
 	 * mouse it lightens a touch, as the game's own pictures that take a
 	 * press do.
 	 */
-	private void drawPlate(Graphics2D g, ChronicleEntry.Plate plate, int x, int y, int w, int h,
+	private void drawPlate(Graphics2D g, String kind, ChronicleEntry.Plate plate, int x, int y, int w, int h,
 		boolean seen, GameFont small, boolean big, boolean hover)
 	{
 		g.setColor(new Color(PLATE_EDGE));
@@ -1115,12 +1115,12 @@ public class ChronicleWindow extends Overlay
 				text(g, null, false, blank, ix + iw / 2, iy + ih / 2 + 4, SketchStyle.INK, true);
 			}
 		}
-		else if (!big && poseLine(plate) != null)
+		else if (!big && poseLine(kind, plate) != null)
 		{
 			// On the page there is no room under the caption for the pose
 			// without a line held blank under every other plate, so it is
 			// written on the drawing, as a note in pencil at its foot.
-			String said = poseLine(plate);
+			String said = poseLine(kind, plate);
 			int baseline = iy + ih - POSE_RISE;
 			// On a strip of paper left clear, or the pencil is lost in a busy drawing.
 			int across = measure(g, small, false, said) + 8;
@@ -1190,27 +1190,33 @@ public class ChronicleWindow extends Overlay
 		text(g, bold, true, entry.name, ChronicleLayout.WIDTH / 2, ChronicleLayout.BIG_NAME_BASELINE,
 			ChronicleLayout.TITLE_ORANGE, true);
 		Rectangle frame = ChronicleLayout.BIG_PLATE;
-		drawPlate(g, plate, frame.x, frame.y, frame.width, frame.height, readable, small, true, hovered(frame));
+		drawPlate(g, entry.kindOrEmpty(), plate, frame.x, frame.y, frame.width, frame.height, readable, small, true,
+			hovered(frame));
 		drawCaption(g, small, entry, plate, plates.size(), readable, frame.x, frame.width,
 			ChronicleLayout.BIG_CAPTION_BASELINE, prev, next);
-		drawPose(g, small, plate, ChronicleLayout.WIDTH / 2,
+		drawPose(g, small, entry.kindOrEmpty(), plate, ChronicleLayout.WIDTH / 2,
 			ChronicleLayout.BIG_CAPTION_BASELINE + ChronicleLayout.LINE_HEIGHT);
 	}
 
 	/** Under the caption, the emote the sketch caught you in, if it caught one. */
-	private void drawPose(Graphics2D g, GameFont small, ChronicleEntry.Plate plate, int centre, int baseline)
+	private void drawPose(Graphics2D g, GameFont small, String kind, ChronicleEntry.Plate plate, int centre, int baseline)
 	{
-		String said = plate == null ? null : poseLine(plate);
+		String said = plate == null ? null : poseLine(kind, plate);
 		if (said != null)
 		{
 			text(g, small, false, said, centre, baseline, ChronicleLayout.NOTE_PALE, true);
 		}
 	}
 
-	/** The plate's pose in the scribe's words, or null: not a sketch, not drawn, or no pose. */
-	private String poseLine(ChronicleEntry.Plate plate)
+	/**
+	 * The plate's pose in the scribe's words, or null: not a sketch, not
+	 * drawn, or no pose, or on a faction's page. That is the Seven's, a grave
+	 * page, whose sketch of the temple is over their graves; the same sketch
+	 * keeps its pose on the other pages that share it.
+	 */
+	private String poseLine(String kind, ChronicleEntry.Plate plate)
 	{
-		return sketches == null || plate.sketch == null || !sketches.has(plate.sketch) ? null
+		return "faction".equals(kind) || sketches == null || plate.sketch == null || !sketches.has(plate.sketch) ? null
 			: posePhrase(sketches.poseOf(plate.sketch));
 	}
 

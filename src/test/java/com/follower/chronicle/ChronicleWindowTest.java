@@ -567,6 +567,45 @@ public class ChronicleWindowTest
 		assertEquals(0, inkAtThePlatesFoot());
 	}
 
+	/** The pose under the caption opened across the window, in the caption's pale face. */
+	private int poseUnderTheBigCaption()
+	{
+		int baseline = ChronicleLayout.BIG_CAPTION_BASELINE + ChronicleLayout.LINE_HEIGHT;
+		return count(picture(), new java.awt.Rectangle(0, baseline - 10, ChronicleLayout.WIDTH, 13),
+			ChronicleLayout.NOTE_PALE);
+	}
+
+	/**
+	 * QA2: the temple sketch the Seven's page shares with Paterdomus carried
+	 * its pose there too, so a jig was pencilled over their graves. A faction
+	 * page has no pose, on the page or opened across the window; the same
+	 * sketch on a place's page keeps it.
+	 */
+	@Test
+	public void noPoseIsPencilledOverTheSevensGraves() throws Exception
+	{
+		String temple = "\"plates\": [{\"sketch\": \"paterdomus\", \"regions\": [13622],"
+			+ " \"caption\": \"The temple over their graves.\", \"hint\": \"Pose for me at the temple.\"}]}";
+		SketchBook book = new SketchBook(folder.newFolder().toPath());
+		book.openFor("acct");
+		book.put("paterdomus", paper(), paper(), "jig");
+
+		openOn("{\"id\": \"location-paterdomus\", \"kind\": \"location\", \"name\": \"Paterdomus\","
+			+ "\"unlock\": {\"always\": true}, \"summary\": \"A temple.\", " + temple,
+			"location-paterdomus", null, book);
+		assertTrue("a place's page keeps the pose", inkAtThePlatesFoot() > 0);
+		pressThePlate();
+		assertTrue("and opened across the window", poseUnderTheBigCaption() > 0);
+
+		openOn("{\"id\": \"faction-seven-priestly-warriors\", \"kind\": \"faction\","
+			+ "\"name\": \"Seven Priestly Warriors\", \"unlock\": {\"always\": true}, \"summary\": \"The Seven.\", "
+			+ temple, "faction-seven-priestly-warriors", null, book);
+		assertEquals("none on the Seven's page", 0, inkAtThePlatesFoot());
+		pressThePlate();
+		assertTrue(enlarged());
+		assertEquals("nor opened across the window", 0, poseUnderTheBigCaption());
+	}
+
 	/**
 	 * QA2: a place written where the book had no name for the spot showed
 	 * its date and, under it, "Written when: you visit", written and still
