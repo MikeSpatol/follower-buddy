@@ -545,6 +545,12 @@ public class Condition
 			case "steppedaside":
 				return event.getType() == TriggerEvent.Type.STEPPED_ASIDE;
 
+			// The follower did an agility obstacle after the player. "is" is
+			// "fell" for a fall copied, "crossed" for a clean one.
+			case "crossed":
+				return event.getType() == TriggerEvent.Type.CROSSED
+					&& (is == null || is.equalsIgnoreCase(event.getName()));
+
 			// An earned name the player has not been asked about yet. {candidate}
 			// says it; the asking rule is what turns it into a nickname.
 			case "nicknameearned":

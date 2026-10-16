@@ -70,7 +70,7 @@ public class RuleSetIntegrityTest
 		"challenging", "challengemet", "challengefailed",
 		"unattended", "underfoot",
 		"milestone", "levelgap", "killcount", "grateful", "lasttime", "farewell",
-		"noticed", "hesitated", "steppedaside", "addressed", "nicknameearned",
+		"noticed", "hesitated", "steppedaside", "crossed", "addressed", "nicknameearned",
 		"dateis", "worldhop", "gameupdated", "notesedited",
 		"musicunlock", "collectionadd", "questcomplete", "geoffer",
 		"channeljoined", "channelleft", "npcshout", "musictrack",
