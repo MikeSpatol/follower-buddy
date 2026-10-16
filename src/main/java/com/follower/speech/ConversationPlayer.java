@@ -248,7 +248,7 @@ public class ConversationPlayer
 		BiConsumer<String, Long> followerOverhead, Conversation.Line line, long ms)
 	{
 		String text = Conversation.shown(line);
-		String marked = Text.escapeJagex(text);
+		String marked = inChat(line);
 		if (line.speaker == Conversation.Speaker.FOLLOWER)
 		{
 			followerOverhead.accept(text, ms);
@@ -262,5 +262,11 @@ public class ConversationPlayer
 		}
 		film.playerSays(me, marked, ms);
 		client.addChatMessage(ChatMessageType.PUBLICCHAT, me.getName(), marked, null);
+	}
+
+	/** A chat line's words as {@link #sayInChat} puts them in the chatbox. */
+	public static String inChat(Conversation.Line line)
+	{
+		return Text.escapeJagex(Conversation.shown(line));
 	}
 }

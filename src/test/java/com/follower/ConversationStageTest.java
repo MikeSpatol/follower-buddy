@@ -3,6 +3,7 @@ package com.follower;
 import com.follower.follower.FilmSet;
 import com.follower.follower.FollowerEntity;
 import com.follower.sim.Harness;
+import com.follower.speech.Conversation;
 import com.follower.speech.ConversationPlayer;
 import com.follower.speech.FollowerOverlay;
 import java.lang.reflect.Field;
@@ -26,7 +27,8 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * Where the film window's conversation plays, on the plugin's own stage:
- * which of the game's boxes it keeps clear of.
+ * which of the game's boxes it keeps clear of, and that the player's written
+ * chat lines, which the chatbox hands back as if typed, are heard by no rule.
  */
 public class ConversationStageTest
 {
@@ -95,6 +97,27 @@ public class ConversationStageTest
 			open.add(group);
 			assertTrue("interface " + group, stage.gameDialogueOpen());
 		}
+	}
+
+	@Test
+	public void thePlayersWrittenChatLineIsHeardByNoRule() throws Exception
+	{
+		// QA2, 15 Oct: a written "hello" went in as typed public chat and set
+		// off greet-back, charging its cooldown in the middle of a take.
+		h.gameTicks(1);
+		stage().say(new Conversation.Line(Conversation.Speaker.YOU, Conversation.Display.CHAT,
+			Conversation.Expression.NEUTRAL, "hello there"), 3000);
+		h.gameTicks(8);
+		assertTrue("played back, not said", h.firedBy("greet-back").isEmpty());
+
+		// The same words typed for real are heard as ever.
+		ChatMessage typed = new ChatMessage();
+		typed.setType(ChatMessageType.PUBLICCHAT);
+		typed.setName("Tester");
+		typed.setMessage("hello there");
+		plugin.onChatMessage(typed);
+		h.gameTicks(8);
+		assertFalse("typed, so heard", h.firedBy("greet-back").isEmpty());
 	}
 
 	private ConversationPlayer.Stage stage() throws ReflectiveOperationException
