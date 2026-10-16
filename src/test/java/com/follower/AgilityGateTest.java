@@ -46,6 +46,7 @@ public class AgilityGateTest
 	{
 		boolean doing;
 		boolean holding;
+		int held;
 		int cleared;
 		int strandedCleared;
 
@@ -88,6 +89,12 @@ public class AgilityGateTest
 		public void clearCrossings()
 		{
 			cleared++;
+		}
+
+		@Override
+		public void holdForAgility()
+		{
+			held++;
 		}
 
 		@Override
@@ -250,6 +257,30 @@ public class AgilityGateTest
 		set("parkedByPlayer", true);
 		frame();
 		assertEquals("a Stay ends the wait as it ends the queue", 1, follower.cleared);
+	}
+
+	/**
+	 * Ape Atoll is run as a greegree monkey, which the watch cannot read, so
+	 * nothing there is copied. Its XP then holds nothing either: the follower
+	 * joins the player up each tree at once, as before (QA4 #7).
+	 */
+	@Test
+	public void xpTheWatchCannotReadHoldsNothing() throws ReflectiveOperationException, IOException
+	{
+		set("speechEngine", new com.follower.sim.Harness(folder.newFolder().toPath()).engine);
+		game.transformedInto(1480);
+		agilityXp(1000);
+		agilityXp(1010);
+		assertEquals("a monkey's XP", 0, follower.held);
+
+		game.transformedInto(-1);
+		agilityXp(1020);
+		assertEquals("their own", 1, follower.held);
+	}
+
+	private void agilityXp(int xp)
+	{
+		plugin.onStatChanged(new net.runelite.api.events.StatChanged(net.runelite.api.Skill.AGILITY, xp, 50, 50));
 	}
 
 	// ---------------------------------------------------------------- trace

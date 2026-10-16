@@ -10124,7 +10124,10 @@ public class FollowerPlugin extends Plugin
 				crossingWatch.noteAgilityXp(System.currentTimeMillis());
 				agilityXpThisTick += xp - previousXp;
 				agilityTrace.event("xp +" + (xp - previousXp));
-				if (config.copiesAgility() && !parkedByPlayer)
+				// Not while the watch cannot read them: as a greegree monkey on
+				// Ape Atoll nothing is copied, and the follower joins them as before.
+				if (config.copiesAgility() && !parkedByPlayer && com.follower.follower.CrossingWatch.Sample
+					.read(client.getLocalPlayer(), System.currentTimeMillis()) != null)
 				{
 					// Whatever the player is on is about to be queued: no snap meanwhile.
 					follower.holdForAgility();
