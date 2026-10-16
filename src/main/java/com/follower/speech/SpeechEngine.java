@@ -963,7 +963,12 @@ public class SpeechEngine
 			// Most important first, when several come free on one tick; level
 			// ones keep the order they won in. Quests QA, 16 Oct: Prince
 			// Itzla's line went ahead of the bag moment it was held with.
-			pending.sort(java.util.Comparator.comparingInt(p -> -p.rule.priority));
+			// Occasions go before the rest, in the order they won: quests
+			// QA4, 16 Oct, the scroll's line went ahead of a moment held
+			// through the hand-in, and "It's stopped. I'm giving it a moment
+			// to be sure." came after "Witch's House. Nice scroll."
+			pending.sort(java.util.Comparator.comparing((PendingSpeech p) -> !p.rule.isOccasion())
+				.thenComparingInt(p -> p.rule.isOccasion() ? p.wonTick : -p.rule.priority));
 			java.util.Iterator<PendingSpeech> it = pending.iterator();
 			while (it.hasNext())
 			{
