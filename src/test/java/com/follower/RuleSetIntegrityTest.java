@@ -127,8 +127,7 @@ public class RuleSetIntegrityTest
 	 * Restored with an approved line but no approved title or about yet.
 	 * Kept exact, so a rule that gets its words comes off this list.
 	 */
-	private static final List<String> AWAITING_TITLE_AND_ABOUT = Arrays.asList(
-		"fun-fence-book-reread", "fun-regath-after-client-of-kourend");
+	private static final List<String> AWAITING_TITLE_AND_ABOUT = java.util.Collections.emptyList();
 
 	/**
 	 * QA 2, 15 Oct: the quest moments and fun lines came in with titles made

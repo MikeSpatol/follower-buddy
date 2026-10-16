@@ -15479,7 +15479,9 @@
     {
       "id": "fun-regath-after-client-of-kourend",
       "waits": true,
+      "title": "Regath, after Client of Kourend",
       "note": "Callback: same trigger as quest-regath plus Client of Kourend done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Client of Kourend, so it cannot rise on the quest finishing.",
+      "about": "Now and then when Regath is near, once Client of Kourend is done.",
       "group": "quest",
       "priority": 36,
       "cooldownMs": 10800000,
@@ -15904,7 +15906,9 @@
     },
     {
       "id": "fun-fence-book-reread",
+      "title": "The fence book, a running joke (rereading)",
       "note": "Running bit, the fence book: days 68-97 after the opener. Idle window like wonders-about-you, rarer, two-hour cooldown.",
+      "about": "Now and then while you stand still for a few minutes, around your eleventh to fourteenth week together.",
       "group": "idle",
       "priority": 17,
       "cooldownMs": 7200000,
