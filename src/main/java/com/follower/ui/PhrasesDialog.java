@@ -533,7 +533,6 @@ public class PhrasesDialog extends JDialog
 		header.add(controls, BorderLayout.EAST);
 		row.add(header);
 
-		String note = optString(rule, "note");
 		String shownNote = aboutOf(rule);
 		if (shownNote != null && !shownNote.isEmpty())
 		{
@@ -599,7 +598,8 @@ public class PhrasesDialog extends JDialog
 		Row r = new Row(id, null, enabled, regionsField, area);
 		r.panel = row;
 		r.title = ruleTitle;
-		r.note = (note == null ? "" : note) + "\n" + (shownNote == null ? "" : shownNote);
+		// Find looks through what is shown, not the hidden note.
+		r.note = shownNote == null ? "" : shownNote;
 		rows.add(r);
 		return row;
 	}
@@ -1075,12 +1075,14 @@ public class PhrasesDialog extends JDialog
 
 	/**
 	 * What the window says about a rule: its "about", written for players,
-	 * when it has one, otherwise its note. The note stays the authors' own.
+	 * or nothing. The note is the authors' own and never shown: QA2, 15 Oct,
+	 * the quest moments' notes put varp numbers and quest steps in front of
+	 * players.
 	 */
 	static String aboutOf(JsonObject rule)
 	{
 		String about = optString(rule, "about");
-		return about == null || about.trim().isEmpty() ? optString(rule, "note") : about.trim();
+		return about == null || about.trim().isEmpty() ? null : about.trim();
 	}
 
 	static String prettyName(String id)

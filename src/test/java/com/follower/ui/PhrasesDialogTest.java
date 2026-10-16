@@ -63,11 +63,15 @@ public class PhrasesDialogTest
 	}
 
 	@Test
-	public void theWindowShowsAboutOverTheNote()
+	public void theWindowShowsTheAboutAndNeverTheNote()
 	{
 		assertEquals("Wearing a whip.",
 			PhrasesDialog.aboutOf(rule("{'id':'gear-whip','note':'R12: ids 4151.','about':'Wearing a whip.'}")));
-		assertEquals("R12: ids 4151.", PhrasesDialog.aboutOf(rule("{'id':'gear-whip','note':'R12: ids 4151.'}")));
+		// QA2, 15 Oct: with no about, the authors' note was shown instead.
+		assertEquals("no about, no line", null,
+			PhrasesDialog.aboutOf(rule("{'id':'gear-whip','note':'R12: ids 4151.'}")));
+		assertEquals("a blank about is no about", null,
+			PhrasesDialog.aboutOf(rule("{'id':'gear-whip','note':'R12: ids 4151.','about':' '}")));
 		assertEquals(null, PhrasesDialog.aboutOf(rule("{'id':'gear-whip'}")));
 	}
 
