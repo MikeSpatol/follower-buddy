@@ -8169,14 +8169,19 @@ public class FollowerPlugin extends Plugin
 		// actually displayed (inside the drain above), so the rising edge
 		// lands here the same tick.
 		boolean wishingNow = !speechEngine.getContext().getWishLabel().isEmpty();
-		if (wishingNow && !wasWishing && !config.wishHintShown())
+		// While a question waits, Answer opens the question and not Talk-to,
+		// where the handover is; the edge is held until it is answered (QA3).
+		if (speechEngine.getContext().getAskedTree().isEmpty())
 		{
-			configManager.setConfiguration(FollowerConfig.GROUP, "wishHintShown", true);
-			sendStatus("When you have the " + speechEngine.getContext().getWishLabel()
-				+ ", right-click " + followerName()
-				+ " and choose " + talkOption() + " to hand it over.");
+			if (wishingNow && !wasWishing && !config.wishHintShown())
+			{
+				configManager.setConfiguration(FollowerConfig.GROUP, "wishHintShown", true);
+				sendStatus("When you have the " + speechEngine.getContext().getWishLabel()
+					+ ", right-click " + followerName()
+					+ " and choose " + talkOption() + " to hand it over.");
+			}
+			wasWishing = wishingNow;
 		}
-		wasWishing = wishingNow;
 		tickScan();
 		commitAttackSighting();
 		expireKillClaims();

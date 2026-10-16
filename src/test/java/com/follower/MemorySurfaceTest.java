@@ -76,14 +76,16 @@ public class MemorySurfaceTest
 	}
 
 	@Test
-	public void theWishNamesTheOptionAsTheMenuHasIt()
+	public void theWishNamesNoHandoverWhileAQuestionWaits()
 	{
-		// QA2, 15 Oct: it said Talk-to while the menu read Answer.
+		// QA2, 15 Oct: it said Talk-to while the menu read Answer. QA3: and
+		// Answer opens the question, which has no handover in it.
 		TriggerContext context = new TriggerContext(new FakeGame().client);
 		context.setWish("feather", 5, java.util.Collections.singletonList(314));
 		context.noteQuestion("want-outing");
 		String surface = flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap()));
-		assertTrue(surface, surface.contains("Hoping for: feather (right-click the follower and Answer to hand it over)"));
+		assertTrue(surface, surface.contains("Hoping for: feather"));
+		assertFalse(surface, surface.contains("hand it over"));
 	}
 
 	@Test
