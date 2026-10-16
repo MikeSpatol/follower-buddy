@@ -115,6 +115,8 @@ public class VoiceDialog extends JDialog
 		setContentPane(root);
 		setPreferredSize(size);
 		pack();
+		// Narrower cuts the fixed-width hint mid-word (QA3).
+		setMinimumSize(new Dimension(540, 200));
 		setLocationRelativeTo(null);
 		setVisible(true);
 		toFront();
