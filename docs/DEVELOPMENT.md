@@ -365,7 +365,7 @@ mood stretches or shortens on top.
 | `asking` | - a question is already waiting for an answer; optional `is` names the tree. **Every `asks` rule needs this inside a `none`**, or opening a second question silently withdraws the first |
 | `varbitEquals` / `varbitChanged` | `varbit`, `value` |
 | `questVar` | `varbit` or `varp`, optional `minimum`/`maximum` (both inclusive) - true while a quest's progress is in that range, so the rule rises on entering it, even by a jump (1 to 13 enters 11-20). Newer quests keep progress in a varbit, older ones in a varp. A value already in range at login is baseline, not news. Put an event (`chatMessage`, `npcKill`, `regionEnter`...) beside it in an `all` to fire on that event during the step |
-| `questDone` | `quest` - a RuneLite `Quest` constant name (`COOKS_ASSISTANT`). True while that quest is finished, read with the game's own quest-state script, at most once a tick. False with no player, before the scripts are ready, and for a name that is no quest. For a line that calls back to another quest: the callback takes it, the base line takes it inside a `none`, so only one can be said |
+| `questDone` | `quest` - a RuneLite `Quest` constant name (`COOKS_ASSISTANT`). True while that quest is finished, read with the game's own quest-state script, at most once a tick. False with no player, before the scripts are ready, and for a name that is no quest. For a line that calls back to another quest: the callback takes it, the base line takes it inside a `none`, so only one can be said. A once callback named `<base id>-after-<quest>` is spent with its base, so a base said before the other quest was finished keeps its callback quiet at the same step |
 | `dialogueOpen` | - an NPC dialogue box is up, or was in the last two ticks (a page flip drops it for a beat). Used inside a `none` in an `all`, so a rule whose state changes mid-conversation rises as the box closes |
 | `animationSelf` | `ids`; optional `every` - the nth time one of them plays, counted for life |
 | `levelUp` | `names` (skill names, `*` ok) |
@@ -563,9 +563,11 @@ follower has a stamp to measure from). On `killCount`: `{boss}`, `{count}`,
   that conversation: see below.
 - `want` - `{"region": 12850, "label": "Lumbridge", "minutes": 20}`. See below.
 - `hushMs` - takes the floor: nothing else speaks for this long. See below.
-- `waits` - `true` waits out a cutscene, the quiet after it and the gap after
-  another line, as an occasion does, instead of being dropped. Nothing else of
-  an occasion's: the pacing still rests it. The quest people's lines use it.
+- `waits` - `true` waits out a cutscene, the quiet after it, an NPC conversation
+  and the gap after another line, as an occasion does, instead of being dropped,
+  and waits out one of the director's rests. Nothing else of an occasion's: it
+  still counts towards the next rest. The quest people's lines use it, and so do
+  the payoffs of the follower's own bets, advice and dares.
 - `markHere` - files this moment against the PLACE, said later via `{here}`.
   The incident in `remember` is one thing anywhere; this is one per place, and
   it waits for you to come back.
