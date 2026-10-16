@@ -51,6 +51,15 @@ public class PropFlourishTest
 		}
 
 		@Override
+		public void clearPoseOverride(int id)
+		{
+			if (poseOverride == id)
+			{
+				poseOverride = 0;
+			}
+		}
+
+		@Override
 		public WorldPoint getWorldLocation()
 		{
 			return new WorldPoint(3222, 3218, 0);
@@ -150,6 +159,27 @@ public class PropFlourishTest
 		assertEquals(0, held);
 		assertEquals(0, heldLeft);
 		assertTrue(follower.following);
+	}
+
+	/**
+	 * QA, 16 Oct: the end of the gesture took off whatever pose was on, so
+	 * a rest that sat it down meanwhile was stood up under it, and the
+	 * rest's own stand-up never came.
+	 */
+	@Test
+	public void aPoseSomethingElsePutOnMeanwhileStays()
+	{
+		// The rest's sit, the default Rest pose.
+		final int sit = 10061;
+		flourish.start(QUILL, SCROLL, WRITE, 3);
+		follower.setPoseOverride(sit);
+		for (int i = 0; i < 10; i++)
+		{
+			flourish.tick();
+		}
+		assertFalse(flourish.isActive());
+		assertEquals("the sit is the rest's to take off", sit, follower.poseOverride);
+		assertEquals("the scroll still went away", 0, held);
 	}
 
 	@Test
