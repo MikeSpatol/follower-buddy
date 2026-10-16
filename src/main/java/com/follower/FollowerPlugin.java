@@ -110,11 +110,19 @@ public class FollowerPlugin extends Plugin
 		final TriggerEvent event;
 		/** When its minute began: the writing, or the close of a dialogue it waited out. */
 		int tick;
+		/** For a place's page, the regions it is about; null for news that holds anywhere. */
+		final java.util.List<Integer> where;
 
 		PageNews(TriggerEvent event, int tick)
 		{
+			this(event, tick, null);
+		}
+
+		PageNews(TriggerEvent event, int tick, java.util.List<Integer> where)
+		{
 			this.event = event;
 			this.tick = tick;
+			this.where = where;
 		}
 	}
 
@@ -890,7 +898,9 @@ public class FollowerPlugin extends Plugin
 		// "quest" for a page a quest opened, which the follower has not seen.
 		chronicleProgress.setOnWritten((entry, byQuest) -> pageNews.add(new PageNews(
 			TriggerEvent.pageWritten(byQuest ? "quest" : entry.kindOrEmpty(), entry.name),
-			client.getTickCount())));
+			client.getTickCount(),
+			!byQuest && "location".equals(entry.kindOrEmpty()) && entry.unlock != null
+				? entry.unlock.regions : null)));
 		// Quest pages are per account, where the memory is per profile.
 		chronicleProgress.setAccount(() -> configManager.getRSProfileKey());
 		// A callback that remembers a quest together asks the book whether
@@ -8677,6 +8687,16 @@ public class FollowerPlugin extends Plugin
 		// An NPC dialogue up, or gone for under three ticks: the same reading
 		// the minutes take, so a page flip does not count as the box closing.
 		speechEngine.getContext().setDialogueOpen(npcDialogOpen() || dialogGoneTicks <= 2);
+		// And who is in it, so a line about them held through the talk is
+		// still said once the player walks on from them. Not a cutscene's
+		// speakers: nobody the player walked up to.
+		net.runelite.api.widgets.Widget speaker = client.getWidget(
+			net.runelite.api.gameval.InterfaceID.ChatLeft.NAME);
+		if (speaker != null && speaker.getText() != null && !inCutscene())
+		{
+			speechEngine.getContext().noteSpeaker(
+				net.runelite.client.util.Text.removeTags(speaker.getText()));
+		}
 
 		// A player-commanded Stay (R25): the follower's own machinery also
 		// parks it - errands, spectating, thrall work, and the WANDER, which
@@ -8760,8 +8780,10 @@ public class FollowerPlugin extends Plugin
 		// been heard, and only when nothing else is being said. The dialogue
 		// as the rules read it, page flips ridden out: on the raw box the news
 		// went out on a flip and sat over the conversation (QA, 15 Oct).
+		PageNews first = pageNews.peek();
 		TriggerEvent news = nextPageNews(pageNews, client.getTickCount(), speechEngine.isQuiet(),
-			inConversation() || sceneQuiet(), pageNewsTicks(speechEngine.moodScaledGap()));
+			inConversation() || sceneQuiet() || (first != null && speechEngine.isPageLineCooling(first.event)),
+			pageNewsTicks(speechEngine.moodScaledGap()), lastRegionId);
 		if (news != null)
 		{
 			speechEngine.dispatch(news);
@@ -8777,10 +8799,15 @@ public class FollowerPlugin extends Plugin
 	 * minute starts again when the box closes. A cutscene and the quiet after
 	 * it hold it the same way: a page a scene writes is mentioned after.
 	 * Its minute is {@code window} ticks, as {@link #pageNewsTicks} has it.
+	 *
+	 * <p>A place's page is news only while the player is there. Text QA4,
+	 * 16 Oct: at Minimal it was mostly said after they had left, asking them
+	 * to pose for a sketch they could no longer take.
 	 */
 	static TriggerEvent nextPageNews(java.util.Deque<PageNews> news, int now, boolean quiet,
-		boolean waits, int window)
+		boolean waits, int window, int region)
 	{
+		news.removeIf(page -> page.where != null && !page.where.contains(region));
 		if (waits)
 		{
 			for (PageNews waiting : news)
@@ -9017,7 +9044,7 @@ public class FollowerPlugin extends Plugin
 		{
 			skilling.npcSpawned(npc);
 		}
-		if (moments != null)
+		if (moments != null && config.noticesThings())
 		{
 			moments.npcSpawned(npc);
 		}
@@ -9245,7 +9272,7 @@ public class FollowerPlugin extends Plugin
 			// and none in a take, where they would turn and gesture over the pose.
 			skilling.noteChatMessage(event.getMessage(), event.getType());
 		}
-		if (moments != null)
+		if (moments != null && config.noticesThings())
 		{
 			// The pet drop: the walk over to see it.
 			moments.noteChatMessage(event.getMessage(), event.getType());
@@ -9270,7 +9297,7 @@ public class FollowerPlugin extends Plugin
 			{
 				speechEngine.getContext().tally("collections");
 				speechEngine.dispatch(TriggerEvent.collectionAdd(parsed));
-				if (moments != null && !filming)
+				if (moments != null && config.noticesThings() && !filming)
 				{
 					// A first-ever thing is news whatever it sells for; it is
 					// in the bag, so the write-up faces the player.
@@ -9451,7 +9478,12 @@ public class FollowerPlugin extends Plugin
 			}
 			speechEngine.getContext().tally("quests");
 			speechEngine.getContext().noteDoing("finishing " + quest);
-			if (chronicleProgress != null)
+			if (chronicleProgress != null && isStaying())
+			{
+				// Parked elsewhere by the player, it did not see this one.
+				chronicleProgress.missedQuestFinish(quest);
+			}
+			else if (chronicleProgress != null)
 			{
 				chronicleProgress.sawQuestFinish(quest);
 			}
@@ -10099,7 +10131,7 @@ public class FollowerPlugin extends Plugin
 			// remembering it had money on it.
 			speechEngine.getContext().settleBet(worth);
 			speechEngine.dispatch(TriggerEvent.loot(worth, best));
-			if (moments != null && !filming)
+			if (moments != null && config.noticesThings() && !filming)
 			{
 				// The body's share: a glance, the notes, or the walk over.
 				moments.noteworthy(com.follower.follower.Moments.tierFor(total), at);
@@ -10141,7 +10173,7 @@ public class FollowerPlugin extends Plugin
 			speechEngine.dispatch(TriggerEvent.levelUp(skill.getName(), level,
 				total, total - (level - previous), base, previousBase, masteries,
 				sinceLast, sinceAny));
-			if (moments != null && !filming)
+			if (moments != null && config.noticesThings() && !filming)
 			{
 				// The clap, or the walk over for it; the line is the rules'.
 				moments.levelUp(level);
@@ -12086,8 +12118,11 @@ public class FollowerPlugin extends Plugin
 		}
 		// Nor a silent rule's gesture while a sketch is under way: an idle
 		// fidget played over the scroll, and could be in the picture. It is
-		// body language, not worth playing late, so it goes.
-		if (rule != null && text.isEmpty() && sketching != null && sketching.isSketching())
+		// body language, not worth playing late, so it goes. So in its own
+		// Talk-to box: behaviour QA4, 16 Oct, it yawned, shrugged and struck
+		// its distant pose while its chathead was talking to you.
+		if (rule != null && text.isEmpty()
+			&& ((sketching != null && sketching.isSketching()) || dialog.isOpen()))
 		{
 			return;
 		}
@@ -12177,7 +12212,16 @@ public class FollowerPlugin extends Plugin
 		{
 			return;
 		}
-		speakNow(speechQueue.removeFirst());
+		Utterance line = speechQueue.removeFirst();
+		// Kept waiting here, as in the engine, the moment it was about can
+		// pass: behaviour QA4, 16 Oct, Hans was announced as the follower's
+		// own box closed, 24 s after he had gone. Let go unsaid.
+		if (line.rule != null && line.rule.when != null
+			&& !line.rule.when.standingHolds(speechEngine.getContext(), TriggerEvent.tick()))
+		{
+			return;
+		}
+		speakNow(line);
 	}
 
 	/**

@@ -46,10 +46,12 @@ public class QaThreeRuleDataTest
 
 	/**
 	 * Behaviour QA, 16 Oct: for a player who eats late, low-hp was about 68
-	 * an hour in combat, a third of all combat lines. Once a minute at most.
+	 * an hour in combat, a third of all combat lines. Behaviour QA4, 16 Oct:
+	 * at Minimal the warning loop was still 62% of combat lines. Once every
+	 * three minutes at most; critical-hp still cuts in for real danger.
 	 */
 	@Test
-	public void lowHealthIsSaidAtMostOnceAMinute() throws IOException
+	public void lowHealthIsSaidAtMostOnceEveryThreeMinutes() throws IOException
 	{
 		Harness h = shipped();
 		for (int dip = 0; dip < 6; dip++)
@@ -59,7 +61,11 @@ public class QaThreeRuleDataTest
 			h.game.hitpoints(60, 70);
 			ticks(h, 30);
 		}
-		assertEquals("six dips in a minute and a half", 2, h.firedBy("low-hp").size());
+		assertEquals("six dips in a minute and a half", 1, h.firedBy("low-hp").size());
+		ticks(h, 110);
+		h.game.hitpoints(25, 70);
+		ticks(h, 3);
+		assertEquals("and the next dip three minutes on", 2, h.firedBy("low-hp").size());
 	}
 
 	/**
@@ -121,7 +127,12 @@ public class QaThreeRuleDataTest
 			{"fun-wizards-tower-after-rune-mysteries", "RUNE_MYSTERIES"},
 			{"fun-paterdomus-after-priest-in-peril", "PRIEST_IN_PERIL"},
 			{"fun-baxtorian-falls-after-waterfall-quest", "WATERFALL_QUEST"},
-			{"fun-varrock-after-children-of-the-sun", "CHILDREN_OF_THE_SUN"}};
+			{"fun-varrock-after-children-of-the-sun", "CHILDREN_OF_THE_SUN"},
+			// Quests QA4 #28 and chronicle QA4 #43: the four missed.
+			{"fun-lumbridge-after-cooks-assistant", "COOKS_ASSISTANT"},
+			{"fun-lumbridge-after-sheep-shearer", "SHEEP_SHEARER"},
+			{"fun-draynor-after-x-marks-the-spot", "X_MARKS_THE_SPOT"},
+			{"fun-aubury-after-rune-mysteries", "RUNE_MYSTERIES"}};
 		Harness h = shipped();
 		long today = java.time.LocalDate.now().toEpochDay();
 		for (String[] callback : callbacks)

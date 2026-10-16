@@ -96,4 +96,36 @@ public class PendingOrderTest
 		assertEquals("arrival", h.spoken.get(1).rule.id);
 		assertEquals("moment", h.spoken.get(2).rule.id);
 	}
+
+	private static final String SCROLL = "{\"id\": \"scroll\", \"group\": \"t\", \"priority\": 85,"
+		+ " \"occasion\": true, \"cooldownMs\": 0, \"when\": {\"type\": \"questComplete\"},"
+		+ " \"say\": [\"Done and witnessed.\"]}";
+
+	@Test
+	public void aMomentHeldThroughTheHandInGoesBeforeTheScrollsLine() throws IOException
+	{
+		// Quests QA4, 16 Oct: the moment won before the hand-in and was held
+		// through it; the scroll's line, higher in priority, won in the
+		// talk and went first, so the moment came after it as an
+		// afterthought, or in another place. Occasions go in the order they
+		// won, and the person's line after them both.
+		Harness h = new Harness(folder.newFolder().toPath(),
+			"{\"version\": 1, \"rules\": [" + PERSON + "," + MOMENT + "," + SCROLL + "]}");
+		h.engine.setClock(() -> ms[0]);
+		h.engine.setGlobalCooldownMs(6000L);
+		h.gameTicks(1);
+		h.engine.getContext().setDialogueOpen(true);
+		h.dispatch(TriggerEvent.levelUp("Attack", 30));
+		ticks(h, 2);
+		h.dispatch(TriggerEvent.levelUp("Strength", 30));
+		ticks(h, 5);
+		h.dispatch(TriggerEvent.questComplete("Witch's House"));
+		ticks(h, 2);
+		h.engine.getContext().setDialogueOpen(false);
+		ticks(h, 40);
+		assertEquals(3, h.spoken.size());
+		assertEquals("the moment, as it won first", "moment", h.spoken.get(0).rule.id);
+		assertEquals("scroll", h.spoken.get(1).rule.id);
+		assertEquals("person", h.spoken.get(2).rule.id);
+	}
 }

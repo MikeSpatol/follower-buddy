@@ -155,7 +155,8 @@ public class LifecycleGlueTest
 		assertTrue("the page news waits for the quiet",
 			method("public void onGameTick(GameTick event)").contains(
 				"nextPageNews(pageNews, client.getTickCount(), speechEngine.isQuiet(),\n"
-					+ "\t\t\tinConversation() || sceneQuiet(), pageNewsTicks(speechEngine.moodScaledGap()));"));
+					+ "\t\t\tinConversation() || sceneQuiet() || (first != null && speechEngine.isPageLineCooling(first.event)),\n"
+					+ "\t\t\tpageNewsTicks(speechEngine.moodScaledGap()), lastRegionId);"));
 		assertTrue(method("private boolean inConversation()")
 			.contains("return npcDialogOpen() || dialogGoneTicks <= 2;"));
 	}
@@ -202,6 +203,53 @@ public class LifecycleGlueTest
 		assertTrue("in either box", drain.contains("boolean box = dialog.isOpen() || inConversation();"));
 		assertTrue("before the own box returns", every < drain.indexOf("if (dialog.isOpen())"));
 		assertTrue("and before the stale sweep", every < drain.indexOf("SPEECH_STALE_MS"));
+	}
+
+	@Test
+	public void noGestureIsPlayedInTheFollowersOwnBox() throws IOException
+	{
+		// Behaviour QA4, 16 Oct: once the player had read for 48 s the
+		// follower yawned, shrugged and struck its distant pose while its
+		// chathead was talking: 4.4 gestures a 90 s box.
+		String speak = method("private void speak(String text,");
+		int gate = speak.indexOf("|| dialog.isOpen()))");
+		assertTrue("a silent rule stands down for the box", gate >= 0
+			&& speak.lastIndexOf("text.isEmpty()", gate) >= 0);
+		assertTrue("before it is played", gate < speak.indexOf("if (text.isEmpty())"));
+	}
+
+	@Test
+	public void aLineKeptInTheQueueIsLetGoOnceItsMomentHasPassed() throws IOException
+	{
+		// Behaviour QA4, 16 Oct (probe Q2a): Hans walked past during a 44 s
+		// Talk-to box and was 12 tiles gone 24 s before it closed; his
+		// opener was said on the tick the box closed. Re-checked as the
+		// engine re-checks a line it kept.
+		String drain = method("private void drainSpeechQueue()");
+		int check = drain.indexOf("!line.rule.when.standingHolds(speechEngine.getContext(), TriggerEvent.tick())");
+		assertTrue("re-checked", check >= 0);
+		assertTrue("before it is said", check < drain.indexOf("speakNow(line);"));
+	}
+
+	@Test
+	public void theMomentsAnswerToNoticesThings() throws IOException
+	{
+		// UI QA4 #37, the owner's call: the level clap, the pet's greeting,
+		// the walk over to a good drop and the stranger watch stand down
+		// with Notices things, which already sends the follower to drops.
+		String source = source();
+		int calls = 0;
+		for (String call : new String[]{"moments.levelUp(", "moments.noteworthy(",
+			"moments.npcSpawned(", "moments.noteChatMessage("})
+		{
+			for (int at = source.indexOf(call); at >= 0; at = source.indexOf(call, at + 1))
+			{
+				calls++;
+				String guard = source.substring(source.lastIndexOf("if (", at), at);
+				assertTrue(call + " in " + methodAt(source, at), guard.contains("config.noticesThings()"));
+			}
+		}
+		assertEquals(5, calls);
 	}
 
 	@Test

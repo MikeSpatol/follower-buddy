@@ -41,9 +41,12 @@ public final class QuestSim
 	public final List<String> heard = new ArrayList<>();
 	public final List<String> heardIds = new ArrayList<>();
 	public final List<String> lost = new ArrayList<>();
-	/** Pages mentioned, and pages whose news lapsed unsaid. */
+	/** Pages mentioned, pages whose news lapsed unsaid, and pages whose news no line spoke. */
 	public final List<String> pagesSaid = new ArrayList<>();
 	public final List<String> pagesLost = new ArrayList<>();
+	public final List<String> pagesDropped = new ArrayList<>();
+	/** Rules handed to the plugin's side, for whether the page news spoke. */
+	private final List<String> handed = new ArrayList<>();
 
 	/** A page written and waiting for its mention: the event, its name, and when its wait began. */
 	private static final class Page
@@ -64,6 +67,8 @@ public final class QuestSim
 
 	// world
 	public boolean npcDialog;
+	/** Who is talking in the box, as the plugin reads it off CHAT_LEFT's name; null for nobody named. */
+	public String speaker;
 	public boolean cutscene;
 	private int goneTicks = 99;
 	private boolean sceneOn;
@@ -124,6 +129,7 @@ public final class QuestSim
 
 	private void pluginSpeak(String text, SpeechRule rule, int anim, Runnable onSaid)
 	{
+		handed.add(id(rule));
 		if (text.isEmpty())
 		{
 			speakNow(new U(text, rule, anim, onSaid, ms[0]));
@@ -134,12 +140,12 @@ public final class QuestSim
 			if (queue.size() < 3)
 			{
 				queue.addLast(new U(text, rule, anim, onSaid, ms[0]));
-				note("   queued: " + rule.id);
+				note("   queued: " + id(rule));
 			}
 			else
 			{
-				note("   QUEUE FULL, dropped: " + rule.id);
-				lost.add(rule.id + " (queue full)");
+				note("   QUEUE FULL, dropped: " + id(rule));
+				lost.add(id(rule) + " (queue full)");
 			}
 			return;
 		}
@@ -263,7 +269,13 @@ public final class QuestSim
 		{
 			return;
 		}
-		speakNow(queue.removeFirst());
+		U line = queue.removeFirst();
+		if (line.rule != null && !line.rule.when.standingHolds(h.engine.getContext(), TriggerEvent.tick()))
+		{
+			note("   kept in the queue, its moment passed: " + line.rule.id);
+			return;
+		}
+		speakNow(line);
 	}
 
 	// ------------------------------------------------------------ the world
@@ -288,6 +300,10 @@ public final class QuestSim
 		drain();
 		goneTicks = npcDialog ? 0 : Math.min(goneTicks + 1, 1000);
 		h.engine.getContext().setDialogueOpen(npcDialog || goneTicks <= 2);
+		if (npcDialog && speaker != null && !sceneOn)
+		{
+			h.engine.getContext().noteSpeaker(speaker);
+		}
 		h.gameTick();
 		pageNews();
 		int now = regionOf(h.engine.getContext().getRegionId());
@@ -355,7 +371,18 @@ public final class QuestSim
 	public void dialogue(boolean open)
 	{
 		npcDialog = open;
+		if (!open)
+		{
+			speaker = null;
+		}
 		note(open ? "-- NPC dialogue opens" : "-- NPC dialogue closes");
+	}
+
+	/** A dialogue opening with this person talking in it. */
+	public void dialogue(String with)
+	{
+		dialogue(true);
+		speaker = with;
 	}
 
 	public void scene(boolean on)
@@ -367,7 +394,14 @@ public final class QuestSim
 	/** A conversation of the given length, with any var changes run at its end, still inside it. */
 	public void talk(int lengthTicks, Runnable atEnd)
 	{
+		talk(null, lengthTicks, atEnd);
+	}
+
+	/** The same, with this person talking in the box. */
+	public void talk(String with, int lengthTicks, Runnable atEnd)
+	{
 		dialogue(true);
+		speaker = with;
 		ticks(lengthTicks);
 		if (atEnd != null)
 		{
@@ -401,7 +435,7 @@ public final class QuestSim
 	{
 		done(q);
 		seenFinished.put(q.name(), java.time.LocalDate.now().toEpochDay() - 30);
-		h.engine.getContext().setQuestWitness(seenFinished::get);
+		h.engine.setQuestWitness(seenFinished::get);
 	}
 
 	public void started(Quest q)
@@ -415,14 +449,22 @@ public final class QuestSim
 		h.dispatch(TriggerEvent.chat(message, net.runelite.api.ChatMessageType.GAMEMESSAGE.getType(), ""));
 	}
 
-	/** The scroll: the follower saw it finish, and the quest's page is written. */
-	public void questComplete(Quest q, String name)
+	/**
+	 * The scroll: the follower saw it finish, and the quest's page is
+	 * written, with any other pages the quest opens: their news is "quest"
+	 * news too, as the plugin raises it for a page a quest wrote.
+	 */
+	public void questComplete(Quest q, String name, String... morePages)
 	{
 		done(q);
 		note("   quest scroll: " + name);
 		seenFinished.put(q.name(), java.time.LocalDate.now().toEpochDay());
-		h.engine.getContext().setQuestWitness(seenFinished::get);
+		h.engine.setQuestWitness(seenFinished::get);
 		pageWritten("quest", name);
+		for (String page : morePages)
+		{
+			pageWritten("quest", page);
+		}
 		h.engine.getContext().tally("quests");
 		h.dispatch(TriggerEvent.questComplete(name));
 	}
@@ -437,7 +479,8 @@ public final class QuestSim
 	/** FollowerPlugin.nextPageNews, once a tick after the tick's own events. */
 	private void pageNews()
 	{
-		if (npcDialog || goneTicks <= 2 || sceneOn || tick < quietUntil)
+		if (npcDialog || goneTicks <= 2 || sceneOn || tick < quietUntil
+			|| (!pages.isEmpty() && h.engine.isPageLineCooling(pages.peek().event)))
 		{
 			for (Page waiting : pages)
 			{
@@ -456,8 +499,17 @@ public final class QuestSim
 		{
 			Page page = pages.poll();
 			note("   page news: " + page.name);
-			pagesSaid.add(page.name);
+			handed.clear();
 			h.dispatch(page.event);
+			if (handed.stream().anyMatch(id -> id.startsWith("chronicle-page-")))
+			{
+				pagesSaid.add(page.name);
+			}
+			else
+			{
+				note("   PAGE NEWS DROPPED, no line spoke: " + page.name);
+				pagesDropped.add(page.name);
+			}
 		}
 	}
 
@@ -483,7 +535,7 @@ public final class QuestSim
 	{
 		note("HEARD, in order: " + heardIds);
 		note("LOST: " + lost);
-		note("PAGES said: " + pagesSaid + "  lapsed: " + pagesLost);
+		note("PAGES said: " + pagesSaid + "  lapsed: " + pagesLost + "  dropped: " + pagesDropped);
 	}
 
 	public String transcript()

@@ -57,7 +57,7 @@ public class ChildrenOfTheSunWalkTest
 		s.npc("Noah", 3226, 3427, 0);
 		s.npc("Sergeant Tobyn", 3211, 3437, 0);
 		s.walkTo(3224, 3425, 0, speed);
-		s.dialogue(true);
+		s.dialogue("Alina");
 		s.ticks(20);
 		s.varbit(VB, 2);
 		// The delegation's scene.
@@ -101,7 +101,7 @@ public class ChildrenOfTheSunWalkTest
 			s.ticks(20);
 		}
 		s.walkTo(3212, 3436, 0, speed);
-		s.talk(25, () -> s.varbit(VB, 12));
+		s.talk("Sergeant Tobyn", 25, () -> s.varbit(VB, 12));
 
 		// Mark the four.
 		int[][] guards = {{3208, 3422}, {3221, 3430}, {3246, 3429}, {3237, 3427}};
@@ -113,7 +113,7 @@ public class ChildrenOfTheSunWalkTest
 		}
 		s.varbit(VB, 14);
 		s.walkTo(3212, 3436, 0, speed);
-		s.dialogue(true);
+		s.dialogue("Sergeant Tobyn");
 		s.ticks(15);
 		s.chat("Sergeant Tobyn signals to his guards and the bandits are quickly arrested.");
 		s.ticks(10);
@@ -127,7 +127,7 @@ public class ChildrenOfTheSunWalkTest
 		s.dialogue(false);
 		s.ticks(roofLag);
 		// The Prince, and the interrogation's scene.
-		s.dialogue(true);
+		s.dialogue("Prince Itzla Arkan");
 		s.ticks(10);
 		s.scene(true);
 		s.varbit(VB, 18);
@@ -244,6 +244,76 @@ public class ChildrenOfTheSunWalkTest
 		assertTrue(s.transcript(), s.transcript().contains("about a step since moved on: not said again"));
 		assertEquals(s.transcript(), 1, s.heard.stream().filter(line::equals).count());
 		assertTrue(s.transcript(), s.heardIds.contains("qm-children-of-the-sun-overheard"));
+	}
+
+	/**
+	 * Behaviour QA4 #8: the player clicks Talk-to on Sergeant Tobyn and runs
+	 * up. His line rises at five tiles and is held through the talk with him,
+	 * then said once the box has gone, by when the player is walking or
+	 * running on to mark the four. It was let go as "passed" because he was
+	 * no longer within five tiles, so Tobyn was never introduced. With a line
+	 * said just before he rises, and without.
+	 */
+	private QuestSim talkToTobynThenLeave(long gap, boolean lineBefore, int speed) throws Exception
+	{
+		QuestSim s = new QuestSim(folder.newFolder().toPath(), gap);
+		s.started(Quest.CHILDREN_OF_THE_SUN);
+		s.varbit(VB, 10);
+		s.at(3216, 3437, 0);
+		s.ticks(150);
+		if (lineBefore)
+		{
+			s.h.engine.force("idle-chatter");
+			s.ticks(5);
+		}
+		// He comes into view five tiles off, and the box opens as the
+		// player reaches him, before his line's beat is out.
+		s.npc("Sergeant Tobyn", 3211, 3437, 0);
+		s.tick();
+		s.at(3213, 3437, 0);
+		s.tick();
+		s.talk("Sergeant Tobyn", 30, () -> s.varbit(VB, 12));
+		s.walkTo(3242, 3437, 0, speed);
+		s.ticks(120);
+		s.summary();
+		return s;
+	}
+
+	@Test
+	public void sergeantTobynIsIntroducedAfterTheTalkWithHim() throws Exception
+	{
+		// Occasional and Minimal, with and without a line just before, a
+		// walker and a runner: five runs of each.
+		for (int run = 0; run < 40; run++)
+		{
+			long gap = run % 2 == 0 ? 6000L : 45_000L;
+			boolean lineBefore = run / 2 % 2 == 1;
+			int speed = 1 + run / 4 % 2;
+			QuestSim s = talkToTobynThenLeave(gap, lineBefore, speed);
+			assertTrue("gap " + gap + ", line before " + lineBefore + ", speed " + speed + "\n"
+				+ s.transcript(), s.heardIds.contains("quest-sergeant-tobyn"));
+		}
+	}
+
+	@Test
+	public void aPasserByIsStillLetGoOnceHeHasGone() throws Exception
+	{
+		// The other half: Tobyn rises while the player is talking to someone
+		// else, and is far off by the time that box closes. Let go, as before.
+		QuestSim s = new QuestSim(folder.newFolder().toPath(), 6000L);
+		s.started(Quest.CHILDREN_OF_THE_SUN);
+		s.at(3222, 3437, 0);
+		s.ticks(150);
+		s.npc("Alina", 3223, 3437, 0);
+		s.dialogue("Alina");
+		s.npc("Sergeant Tobyn", 3218, 3437, 0);
+		s.ticks(10);
+		s.npc("Sergeant Tobyn", 3200, 3437, 0);
+		s.ticks(20);
+		s.dialogue(false);
+		s.ticks(60);
+		assertFalse(s.transcript(), s.heardIds.contains("quest-sergeant-tobyn"));
+		assertTrue(s.transcript(), s.transcript().contains("held back: quest-sergeant-tobyn (passed)"));
 	}
 
 	@Test

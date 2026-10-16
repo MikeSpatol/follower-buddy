@@ -152,6 +152,25 @@ public class SpeechEngine
 		return rule.when != null && rule.when.usesType("idle") && !rule.isOccasion();
 	}
 
+	/** How long after one rule brings up a memory the others wait: ten minutes. */
+	static final long MEMORY_APART_MS = 600_000L;
+
+	/** Whether a rule's lines bring up something remembered, by its {memory}. */
+	private static boolean bringsUpAMemory(SpeechRule rule)
+	{
+		if (rule.say != null)
+		{
+			for (String line : rule.say)
+			{
+				if (line.contains("{memory}"))
+				{
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	/**
 	 * The events that end an idle stretch.
 	 *
@@ -424,6 +443,14 @@ public class SpeechEngine
 	public void resetForNewScene()
 	{
 		lastSpokeMs = 0L;
+		// A line still waiting is let go unsaid, its cooldown given back, as a
+		// line whose moment passed is: behaviour QA4, 16 Oct, Sergeant Tobyn's
+		// line waited its gap across a hop and was gone for the hour, with him
+		// still beside the player.
+		for (PendingSpeech delayed : pending)
+		{
+			delayed.rule.markFired(delayed.firedBefore);
+		}
 		pending.clear();
 		// The plugin clears its queue with the scene, so those lines never land.
 		unlanded.clear();
@@ -538,10 +565,16 @@ public class SpeechEngine
 	 */
 	static final long OCCASION_GAP_MS = 8_000L;
 
-	/** The gap this rule keeps after the last line. */
+	/**
+	 * The gap this rule keeps after the last line. A quest person's line - it
+	 * waits its turn, and is about someone near - keeps an occasion's: quests
+	 * QA4, 16 Oct, at Minimal the 45 s gap outlasted the first talk, and the
+	 * boy's intro came as he got his ball back. The user's call.
+	 */
 	private long gapFor(SpeechRule rule)
 	{
-		return rule.isOccasion() ? Math.min(moodScaledGap(), OCCASION_GAP_MS) : moodScaledGap();
+		boolean person = Boolean.TRUE.equals(rule.waits) && rule.when != null && rule.when.usesType("npcNearby");
+		return rule.isOccasion() || person ? Math.min(moodScaledGap(), OCCASION_GAP_MS) : moodScaledGap();
 	}
 
 	/** Whether a firing held up for this reason waits a tick and tries again rather than being dropped. */
@@ -715,6 +748,26 @@ public class SpeechEngine
 		return pending.isEmpty() && primeTicksLeft == 0 && !muted
 			&& now - lastSpokeMs >= moodScaledGap() && now >= hushUntilMs
 			&& !director.isRelaxing(now);
+	}
+
+	/**
+	 * Whether the line that would mention this page is still cooling from
+	 * the last one. Quests QA4, 16 Oct: Priest in Peril writes three pages at
+	 * its scroll, and the second and third were spent on the quest page's
+	 * line while it cooled, two pages never mentioned. The news waits for it.
+	 */
+	public boolean isPageLineCooling(TriggerEvent news)
+	{
+		long now = now();
+		for (SpeechRule rule : loader.getRules())
+		{
+			if (!rule.offCooldown(now) && rule.when != null && rule.when.usesType("pageWritten")
+				&& rule.when.matches(getContext(), news))
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -949,7 +1002,12 @@ public class SpeechEngine
 			// Most important first, when several come free on one tick; level
 			// ones keep the order they won in. Quests QA, 16 Oct: Prince
 			// Itzla's line went ahead of the bag moment it was held with.
-			pending.sort(java.util.Comparator.comparingInt(p -> -p.rule.priority));
+			// Occasions go before the rest, in the order they won: quests
+			// QA4, 16 Oct, the scroll's line went ahead of a moment held
+			// through the hand-in, and "It's stopped. I'm giving it a moment
+			// to be sure." came after "Witch's House. Nice scroll."
+			pending.sort(java.util.Comparator.comparing((PendingSpeech p) -> !p.rule.isOccasion())
+				.thenComparingInt(p -> p.rule.isOccasion() ? p.wonTick : -p.rule.priority));
 			java.util.Iterator<PendingSpeech> it = pending.iterator();
 			while (it.hasNext())
 			{
@@ -1343,6 +1401,21 @@ public class SpeechEngine
 				if (plain.equals(other.id) || (other.id != null && other.id.startsWith(fellows)))
 				{
 					other.markFired(now);
+				}
+			}
+		}
+
+		// One thing remembered at a time: text QA4, 16 Oct, "My mind goes back
+		// to the guard with the very large bag" and, 16 s later, "The notes on
+		// the guard with the very large bag start here." The other rules that
+		// bring up a memory wait ten minutes, or their own while if it is left.
+		if (bringsUpAMemory(rule))
+		{
+			for (SpeechRule other : loader.getRules())
+			{
+				if (other != rule && bringsUpAMemory(other))
+				{
+					other.markFired(Math.max(other.lastFiredMs(), now - other.cooldownMs + MEMORY_APART_MS));
 				}
 			}
 		}

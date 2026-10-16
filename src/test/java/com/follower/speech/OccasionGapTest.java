@@ -33,10 +33,17 @@ public class OccasionGapTest
 	private static final String QUEST = "{\"id\": \"quest\", \"group\": \"t\", \"cooldownMs\": 0,"
 		+ " \"occasion\": true, \"when\": {\"type\": \"questComplete\"}, \"say\": [\"Done and witnessed.\"]}";
 
+	private static final String PERSON = "{\"id\": \"fred\", \"group\": \"quest\", \"cooldownMs\": 0,"
+		+ " \"waits\": true, \"when\": {\"type\": \"npcNearby\", \"within\": 5, \"names\": [\"Fred the Farmer\"]},"
+		+ " \"say\": [\"Fred the Farmer.\"]}";
+
+	private static final String WAITS = "{\"id\": \"heeded\", \"group\": \"t\", \"cooldownMs\": 0,"
+		+ " \"waits\": true, \"when\": {\"type\": \"heeded\"}, \"say\": [\"Good.\"]}";
+
 	private Harness harness() throws IOException
 	{
 		Harness h = new Harness(folder.newFolder().toPath(),
-			"{\"version\": 1, \"rules\": [" + CHATTY + "," + QUEST + "]}");
+			"{\"version\": 1, \"rules\": [" + CHATTY + "," + QUEST + "," + PERSON + "]}");
 		h.engine.setClock(() -> ms[0]);
 		h.engine.setGlobalCooldownMs(45_000L);
 		h.engine.setOnSuppressed((rule, why) -> held.add(rule.describe() + ":" + why));
@@ -97,5 +104,40 @@ public class OccasionGapTest
 		ticks(h, 60);
 		h.dispatch(TriggerEvent.levelUp("Attack", 31));
 		assertEquals("48 s after it", 1, h.firedBy("chatty").size());
+	}
+
+	@Test
+	public void atMinimalAQuestPersonIsNamedWhileStillNear() throws IOException
+	{
+		// Quests QA4 #31 and text QA4 #55: the 45 s gap outlasted the first
+		// talk, and the line came at the hand-in or not at all. A quest
+		// person's line now keeps an occasion's eight seconds.
+		Harness h = harness();
+		h.engine.remark("Hold still a moment.");
+		ticks(h, 1);
+		h.game.moveNpc(h.game.spawnNpc(9001, "Fred the Farmer", 0), 3224, 3218, 0);
+		ticks(h, 11);
+		assertTrue("not inside eight seconds", h.firedBy("fred").isEmpty());
+		ticks(h, 3);
+		assertEquals("said once eight seconds are out", 1, h.firedBy("fred").size());
+	}
+
+	@Test
+	public void otherLinesThatWaitKeepTheWholeGap() throws IOException
+	{
+		// Only a person's line: the advice-taken reply waits its turn too,
+		// and keeps the gap the combat lines keep.
+		Harness h = new Harness(folder.newFolder().toPath(),
+			"{\"version\": 1, \"rules\": [" + WAITS + "]}");
+		h.engine.setClock(() -> ms[0]);
+		h.engine.setGlobalCooldownMs(45_000L);
+		h.gameTicks(1);
+		h.engine.remark("Eat something.");
+		ticks(h, 1);
+		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.ADVICE_HEEDED));
+		ticks(h, 30);
+		assertTrue("not inside the gap", h.firedBy("heeded").isEmpty());
+		ticks(h, 50);
+		assertEquals("said once the gap is out", 1, h.firedBy("heeded").size());
 	}
 }

@@ -187,6 +187,34 @@ public class QuestWitnessedTest
 	}
 
 	@Test
+	public void aQuestFinishedWithTheFollowerParkedElsewhereWasNotWitnessed() throws IOException
+	{
+		// Chronicle QA4, 16 Oct: a quest finished with the follower on a
+		// Stay, a Send or Follow me off still counted, scroll and page
+		// alike, and the callbacks said "we" about it. The owner's call:
+		// witnessed only with the follower there.
+		World w = new World("quest-duke-horacio", "fun-duke-horacio-after-cooks-assistant");
+		w.h.game.quest(Quest.COOKS_ASSISTANT, QuestState.IN_PROGRESS);
+		w.ticks(2);
+		w.h.game.quest(Quest.COOKS_ASSISTANT, QuestState.FINISHED);
+		w.ticks(2);
+		w.book.missedQuestFinish("Cook's Assistant");
+		assertNull("the page dated that day does not stand in for it",
+			w.book.witnessedOn("COOKS_ASSISTANT"));
+		w.h.game.spawnNpc(815, "Duke Horacio", 0);
+		w.ticks(4);
+		assertEquals(Arrays.asList("quest-duke-horacio"), said(w.h));
+
+		String scroll = new String(java.nio.file.Files.readAllBytes(
+			java.nio.file.Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8)
+			.replace("\r\n", "\n");
+		assertTrue("the scroll asks whether the player parked it", scroll.contains(
+			"if (chronicleProgress != null && isStaying())\n\t\t\t{\n"
+				+ "\t\t\t\t// Parked elsewhere by the player, it did not see this one.\n"
+				+ "\t\t\t\tchronicleProgress.missedQuestFinish(quest);"));
+	}
+
+	@Test
 	public void tobynOnTheRoofIsRememberedTheDayAfterAndNotAsTheQuestEnds() throws IOException
 	{
 		// Alina and Noah are gone from the square once Children of the Sun is
