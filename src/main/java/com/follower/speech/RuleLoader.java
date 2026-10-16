@@ -38,6 +38,14 @@ public class RuleLoader
 	/** The bundled defaults as of the last merge, for the three-way. */
 	public static final String BASE_FILE = "defaults-seen.json";
 
+	/**
+	 * Beside the base: the bundled rules' checksum and the player's file as
+	 * the last merge left them. When neither has changed the merge would do
+	 * nothing, and it re-read three large files and rewrote the base, 70-100
+	 * ms of every start on the Swing thread (perf audit, Oct 2026).
+	 */
+	static final String MERGE_STAMP = "defaults-seen.stamp";
+
 	public static final String FILE_NAME = "phrases.json";
 	private static final String BUNDLED_DEFAULT = "/com/follower/default-phrases.json";
 
@@ -147,9 +155,16 @@ public class RuleLoader
 			{
 				return;
 			}
+			byte[] shipped = in.readAllBytes();
+			Path stampFile = file.resolveSibling(MERGE_STAMP);
+			if (Files.exists(stampFile) && mergeStamp(shipped).equals(
+				new String(Files.readAllBytes(stampFile), StandardCharsets.UTF_8)))
+			{
+				return;
+			}
 			Gson pretty = gson.newBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 			com.google.gson.JsonObject bundled = pretty.fromJson(
-				new java.io.InputStreamReader(in, StandardCharsets.UTF_8),
+				new String(shipped, StandardCharsets.UTF_8),
 				com.google.gson.JsonObject.class);
 			com.google.gson.JsonObject ours = pretty.fromJson(
 				new String(Files.readAllBytes(file), StandardCharsets.UTF_8),
@@ -248,7 +263,10 @@ public class RuleLoader
 			// Written whether or not anything moved, and last, so a merge that
 			// half-happened is retried rather than recorded as done. From here
 			// on there is a base and the guessing above never runs again.
-			writeBase(bundled, pretty);
+			if (writeBase(bundled, pretty))
+			{
+				Files.write(stampFile, mergeStamp(shipped).getBytes(StandardCharsets.UTF_8));
+			}
 		}
 		catch (Exception e)
 		{
@@ -399,6 +417,15 @@ public class RuleLoader
 		return x.equals(y);
 	}
 
+	/** What a merge depends on: the bundled rules, the player's file, and that there is a base. */
+	private String mergeStamp(byte[] shipped) throws IOException
+	{
+		java.util.zip.CRC32 crc = new java.util.zip.CRC32();
+		crc.update(shipped);
+		return crc.getValue() + " " + Files.size(file) + " " + Files.getLastModifiedTime(file)
+			+ " " + Files.exists(baseFile);
+	}
+
 	/** The defaults as they stood at the last merge, or null if never written. */
 	private com.google.gson.JsonObject readBase(Gson pretty)
 	{
@@ -421,22 +448,24 @@ public class RuleLoader
 		}
 	}
 
-	private void writeBase(com.google.gson.JsonObject bundled, Gson pretty)
+	private boolean writeBase(com.google.gson.JsonObject bundled, Gson pretty)
 	{
 		if (baseFile == null)
 		{
-			return;
+			return false;
 		}
 		try
 		{
 			Files.write(baseFile,
 				(pretty.toJson(bundled) + "\n").getBytes(StandardCharsets.UTF_8));
+			return true;
 		}
 		catch (Exception e)
 		{
 			// Only costs a repeat of the bootstrap next start, which is
 			// idempotent, so it is not worth failing the merge over.
 			log.warn("Could not record the merged defaults in {}", baseFile, e);
+			return false;
 		}
 	}
 
