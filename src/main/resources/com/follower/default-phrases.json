@@ -9459,8 +9459,8 @@
       },
       "say": [
         "Back, then. Last time: {lastTime}.",
-        "Shall we carry on {lastTime}?",
-        "Hello again. Still on {lastTime}?",
+        "Where were we? Ah, {lastTime}.",
+        "Last line in the book: {lastTime}.",
         "You're back. Last entry: {lastTime}."
       ]
     },
@@ -14787,7 +14787,8 @@
       },
       "say": [
         "Sedridor's basement is under us. I'm still working out how he knew you.",
-        "Someone in the Wizards' Tower knows your name. I keep mine quiet."
+        "Someone in the Wizards' Tower knows your name. I keep mine quiet.",
+        "Somebody in that tower knows your name. I keep mine quiet here."
       ]
     },
     {
@@ -14818,7 +14819,8 @@
         ]
       },
       "say": [
-        "Don't ask Veos about the client. He doesn't remember any of it, and I do."
+        "Don't ask Veos about the client. He doesn't remember any of it, and I do.",
+        "Port Piscarilius. If Veos asks, we never met the client."
       ]
     },
     {
@@ -14856,7 +14858,8 @@
         ]
       },
       "say": [
-        "He had his cake, and never once asked who fetched the flour."
+        "He had his cake, and never once asked who fetched the flour.",
+        "The Duke looks well. Cake will do that."
       ]
     },
     {
@@ -14894,7 +14897,8 @@
         ]
       },
       "say": [
-        "If the Duke's found anything else in that cellar, I'm not carrying it."
+        "If the Duke's found anything else in that cellar, I'm not carrying it.",
+        "The Duke. If he finds another talisman, he can deliver it himself."
       ]
     },
     {
@@ -14972,8 +14976,8 @@
         ]
       },
       "say": [
-        "Alina's still on about Varlamore. Noah's still not.",
-        "Noah saw that bag before any of us. I nod to him now."
+        "Tobyn's still minding his bandit. That report must be a long one by now.",
+        "Noah saw that bag before any of us. I hope somebody thanked him."
       ]
     },
     {
@@ -15011,7 +15015,8 @@
         ]
       },
       "say": [
-        "Aubury. He still checks our hands for packages when we walk in."
+        "Aubury. He still checks our hands for packages when we walk in.",
+        "Aubury. I'd still like to know what was in those notes."
       ]
     },
     {
@@ -15165,7 +15170,8 @@
         ]
       },
       "say": [
-        "I worked up a verse for Leenz once. It didn't scan, so I kept it."
+        "I worked up a verse for Leenz once. It didn't scan, so I kept it.",
+        "Leenz. I've got a rhyme ready this time, and I won't use it."
       ]
     },
     {
@@ -15453,7 +15459,8 @@
       },
       "say": [
         "The fence book's reached gates at last. I read that bit twice.",
-        "Halfway through the fence book, and the author has views on hedges."
+        "Halfway through the fence book, and the author has views on hedges.",
+        "The fence book's author has strong views on hedges."
       ],
       "delayTicks": 2,
       "output": "overhead"
@@ -15488,7 +15495,8 @@
         ]
       },
       "say": [
-        "Finished the fence book. I miss it, which I didn't expect."
+        "Finished the fence book. I miss it, which I didn't expect.",
+        "I keep checking the fence book for a last chapter. There isn't one."
       ],
       "delayTicks": 2,
       "output": "overhead"
@@ -15669,7 +15677,8 @@
         ]
       },
       "say": [
-        "That was Gerald. He'll grow back, they always do."
+        "That was Gerald. He'll grow back, they always do.",
+        "Gerald's gone. The next rock along looks nervous."
       ],
       "delayTicks": 2,
       "output": "overhead"

@@ -1,25 +1,25 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 618 rules, 2617 spoken lines, 3 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 618 rules, 2626 spoken lines, 3 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
 ## Contents
 
 - [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (40 rules, 159 lines)
-- [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (46 rules, 237 lines)
+- [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (46 rules, 240 lines)
 - [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (60 rules, 357 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 115 lines)
 - [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 74 lines)
 - [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (28 rules, 121 lines)
-- [area](#area) - Places: named lines, tastes, earned verdicts, the defences (76 rules, 242 lines)
+- [area](#area) - Places: named lines, tastes, earned verdicts, the defences (76 rules, 244 lines)
 - [errand](#errand) - Its little trips: bank, altar, fire, cat, studies, explores (44 rules, 155 lines)
 - [souvenir](#souvenir) - Wishes, gifts, the pocket, and what it carries (17 rules, 84 lines)
 - [bet](#bet) - Its predictions about drops (3 rules, 20 lines)
 - [clock](#clock) - The hour and how long we have been at it (9 rules, 39 lines)
 - [gear](#gear) - What you put on (63 rules, 147 lines)
 - [boss](#boss) - Bosses sighted and fought (55 rules, 522 lines)
-- [quest](#quest) - Famous quest figures nearby (124 rules, 311 lines)
+- [quest](#quest) - Famous quest figures nearby (124 rules, 315 lines)
 - [thrall](#thrall) - When it stands in for a thrall (3 rules, 18 lines)
 - [mimic](#mimic) - Copying your emotes (30 rules, 16 lines)
 - [dialogs](#dialogs) - the conversations it starts (3 trees)
@@ -222,8 +222,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 79, cooldown 5s, delay 6-10 ticks, both
 
 - Back, then. Last time: {lastTime}.
-- Shall we carry on {lastTime}?
-- Hello again. Still on {lastTime}?
+- Where were we? Ah, {lastTime}.
+- Last line in the book: {lastTime}.
 - You're back. Last entry: {lastTime}.
 
 ### `farewell`
@@ -1099,6 +1099,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - The fence book's reached gates at last. I read that bit twice.
 - Halfway through the fence book, and the author has views on hedges.
+- The fence book's author has strong views on hedges.
 
 ### `fun-fence-book-finished`
 
@@ -1108,6 +1109,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 17, cooldown 2h, delay 2 ticks, overhead
 
 - Finished the fence book. I miss it, which I didn't expect.
+- I keep checking the fence book for a last chapter. There isn't one.
 
 ### `fun-fence-book-reread`
 
@@ -1166,6 +1168,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 21, cooldown 2h, delay 2 ticks, overhead
 
 - That was Gerald. He'll grow back, they always do.
+- Gerald's gone. The next rock along looks nervous.
 
 ## reactions
 
@@ -3630,6 +3633,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - Sedridor's basement is under us. I'm still working out how he knew you.
 - Someone in the Wizards' Tower knows your name. I keep mine quiet.
+- Somebody in that tower knows your name. I keep mine quiet here.
 
 ### `fun-piscarilius-after-client-of-kourend`
 
@@ -3639,6 +3643,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 41, cooldown 30m, delay 2 ticks, overhead
 
 - Don't ask Veos about the client. He doesn't remember any of it, and I do.
+- Port Piscarilius. If Veos asks, we never met the client.
 
 ## errand
 
@@ -6756,6 +6761,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
 
 - He had his cake, and never once asked who fetched the flour.
+- The Duke looks well. Cake will do that.
 
 ### `fun-duke-horacio-after-rune-mysteries`
 
@@ -6765,6 +6771,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 37, cooldown 3h, delay 2 ticks, overhead
 
 - If the Duke's found anything else in that cellar, I'm not carrying it.
+- The Duke. If he finds another talisman, he can deliver it himself.
 
 ### `fun-king-roald-after-priest-in-peril`
 
@@ -6783,8 +6790,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** Sergeant Tobyn within 5 tiles, in sight AND the follower saw CHILDREN_OF_THE_SUN done AND NOT (dialogueopen)
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
 
-- Alina's still on about Varlamore. Noah's still not.
-- Noah saw that bag before any of us. I nod to him now.
+- Tobyn's still minding his bandit. That report must be a long one by now.
+- Noah saw that bag before any of us. I hope somebody thanked him.
 
 ### `fun-aubury-after-rune-mysteries`
 
@@ -6794,6 +6801,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
 
 - Aubury. He still checks our hands for packages when we walk in.
+- Aubury. I'd still like to know what was in those notes.
 
 ### `fun-father-aereck-after-the-restless-ghost`
 
@@ -6832,6 +6840,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
 
 - I worked up a verse for Leenz once. It didn't scan, so I kept it.
+- Leenz. I've got a rhyme ready this time, and I won't use it.
 
 ### `fun-hans-race-first`
 
