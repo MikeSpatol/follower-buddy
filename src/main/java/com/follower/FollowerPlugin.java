@@ -9053,8 +9053,13 @@ public class FollowerPlugin extends Plugin
 		int count = parsed.getValue();
 		TriggerContext context = speechEngine.getContext();
 		// A record rather than a tally: the game's count only ever goes up,
-		// and what the follower keeps is the highest it has heard.
+		// and what the follower keeps is the highest it has heard. The game
+		// keeps it per account, so the follower does too.
 		String key = "kc:" + boss.toLowerCase(Locale.ROOT);
+		if (chronicleProgress != null)
+		{
+			key = chronicleProgress.accountKey(key);
+		}
 		int last = context.getRecord(key);
 		context.noteRecord(key, count);
 		speechEngine.dispatch(TriggerEvent.killCount(boss, count, last));

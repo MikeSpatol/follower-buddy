@@ -382,6 +382,23 @@ public class ChronicleProgressTest
 	}
 
 	@Test
+	public void aBossCountIsThisAccountsOwn()
+	{
+		// The game keeps kill counts per account, and a profile can be shared
+		// by a main and an alt (QA pass 3, #40).
+		ChronicleEntry mole = loader.get("boss-giant-mole");
+		String[] who = {"main"};
+		progress.setAccount(() -> who[0]);
+		memory.noteRecord("kc:giant mole", 41);
+		assertEquals("a count kept before counts were per account", 41, progress.count(mole));
+		memory.noteRecord(progress.accountKey("kc:giant mole"), 1200);
+		assertEquals(1200, progress.count(mole));
+		who[0] = "alt";
+		memory.noteRecord(progress.accountKey("kc:giant mole"), 4);
+		assertEquals("not the main's", 4, progress.count(mole));
+	}
+
+	@Test
 	public void aPagesNumberIsOnlyALineOnceItIsAboveNought()
 	{
 		ChronicleEntry goblin = loader.get("enemy-goblin");

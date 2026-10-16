@@ -302,7 +302,9 @@ public class MemoryDialog extends JDialog
 		}
 		else if (base.startsWith("kc:") && base.length() > "kc:".length())
 		{
-			label = capitalised(base.substring("kc:".length())) + " kill count";
+			// Per account: the account's key is not for showing.
+			String boss = base.substring("kc:".length());
+			label = capitalised(boss.contains("@") ? boss.substring(0, boss.indexOf('@')) : boss) + " kill count";
 		}
 		else
 		{

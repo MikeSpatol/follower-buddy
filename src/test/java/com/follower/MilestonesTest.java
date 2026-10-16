@@ -164,6 +164,43 @@ public class MilestonesTest
 	}
 
 	@Test
+	public void theGamesCountIsKeptPerAccount() throws IOException, ReflectiveOperationException
+	{
+		// One RuneLite profile, two accounts: the alt's King Black Dragon page
+		// showed the main's count (QA pass 3, #40).
+		Harness h = new Harness(folder.newFolder().toPath());
+		com.follower.chronicle.ChronicleLoader pages =
+			new com.follower.chronicle.ChronicleLoader(new com.google.gson.Gson());
+		pages.load(folder.newFolder().toPath());
+		com.follower.chronicle.ChronicleProgress book =
+			new com.follower.chronicle.ChronicleProgress(h.game.client, pages, h.engine::getContext);
+		String[] who = {"main"};
+		book.setAccount(() -> who[0]);
+		FollowerPlugin plugin = new FollowerPlugin();
+		for (Object[] field : new Object[][]{{"config", new FollowerConfig()
+		{
+		}}, {"speechEngine", h.engine}, {"chronicleProgress", book}})
+		{
+			java.lang.reflect.Field f = FollowerPlugin.class.getDeclaredField((String) field[0]);
+			f.setAccessible(true);
+			f.set(plugin, field[1]);
+		}
+		net.runelite.api.events.ChatMessage message = new net.runelite.api.events.ChatMessage();
+		message.setType(net.runelite.api.ChatMessageType.GAMEMESSAGE);
+		message.setName("");
+		message.setMessage("Your King Black Dragon kill count is: <col=ff0000>1,200</col>.");
+		plugin.onChatMessage(message);
+		who[0] = "alt";
+		message.setMessage("Your King Black Dragon kill count is: <col=ff0000>4</col>.");
+		plugin.onChatMessage(message);
+
+		com.follower.chronicle.ChronicleEntry kbd = pages.get("boss-king-black-dragon");
+		assertEquals("the alt's own count", 4, book.count(kbd));
+		who[0] = "main";
+		assertEquals(1200, book.count(kbd));
+	}
+
+	@Test
 	public void aTracksNameComesWithoutTheGamesColourTag()
 	{
 		// Every music unlock in the transcripts was said tag and all:

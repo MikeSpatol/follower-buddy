@@ -101,6 +101,7 @@ public class MemorySurfaceTest
 		assertEquals("Advice taken", MemoryDialog.keyLabel("advice:taken"));
 		assertEquals("Advice ignored", MemoryDialog.keyLabel("advice:ignored"));
 		assertEquals("Zulrah kill count", MemoryDialog.keyLabel("kc:zulrah"));
+		assertEquals("Zulrah kill count", MemoryDialog.keyLabel("kc:zulrah@main"));
 		assertEquals("Biggest hit", MemoryDialog.keyLabel("hit"));
 		assertEquals("Longest session (minutes)", MemoryDialog.keyLabel("session"));
 		assertEquals("Quests completed", MemoryDialog.keyLabel("quests"));

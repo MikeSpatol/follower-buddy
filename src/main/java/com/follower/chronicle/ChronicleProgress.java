@@ -200,8 +200,8 @@ public class ChronicleProgress
 		return begun == QuestState.IN_PROGRESS || begun == QuestState.FINISHED;
 	}
 
-	/** The key a quest page's date is kept under for this account. */
-	private String accountKey(String entryId)
+	/** The key a quest page's date, or a boss's kill count, is kept under for this account. */
+	public String accountKey(String entryId)
 	{
 		String who = account.get();
 		return who == null || who.isEmpty() ? entryId : entryId + "@" + who;
@@ -239,7 +239,9 @@ public class ChronicleProgress
 	 * A page's own number: the follower's counter the page names, or 0 when
 	 * it has none or nothing is counted yet. The kills it saw are tallies
 	 * and the game's kill counts are records, under keys that never meet,
-	 * so whichever holds the key has the number.
+	 * so whichever holds the key has the number. A kill count is the game's,
+	 * so this account's; one kept before counts were per account is the
+	 * fallback.
 	 */
 	public int count(ChronicleEntry entry)
 	{
@@ -248,7 +250,8 @@ public class ChronicleProgress
 		{
 			return 0;
 		}
-		return Math.max(context.getTally(entry.tally.of), context.getRecord(entry.tally.of));
+		int mine = context.getRecord(accountKey(entry.tally.of));
+		return Math.max(context.getTally(entry.tally.of), mine > 0 ? mine : context.getRecord(entry.tally.of));
 	}
 
 	private String here()
