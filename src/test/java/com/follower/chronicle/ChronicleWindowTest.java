@@ -657,4 +657,19 @@ public class ChronicleWindowTest
 		wheel(x, 0, -0.25);
 		assertEquals("a part-notch up never goes down", 1, field("listScroll"));
 	}
+
+	/**
+	 * QA2: a book with no pages at all drew the list's scrollbar and not the
+	 * page's, so the window looked half drawn. Both are there, as in the game.
+	 */
+	@Test
+	public void anEmptyBookStillHasBothScrollbars() throws Exception
+	{
+		openOn("", "nothing", new TriggerContext(null), null);
+		BufferedImage image = picture();
+		// The scrollbar's stand-in, drawn while its sprites have not arrived.
+		int bar = 0x6a5c43;
+		assertTrue("the list's", count(image, ChronicleLayout.LIST_SCROLL, bar) > 0);
+		assertTrue("and the page's", count(image, ChronicleLayout.PAGE_SCROLL, bar) > 0);
+	}
 }

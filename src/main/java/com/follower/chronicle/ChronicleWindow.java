@@ -937,6 +937,7 @@ public class ChronicleWindow extends Overlay
 			pageLines = new ArrayList<>();
 			pageLinesFor = null;
 			pageLinesOf = null;
+			drawScrollbar(g, ChronicleLayout.PAGE_SCROLL, pageThumb, 0, 0, 1);
 			return;
 		}
 
