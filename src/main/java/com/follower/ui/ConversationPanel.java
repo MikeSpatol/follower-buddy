@@ -69,6 +69,12 @@ class ConversationPanel extends JPanel
 	private boolean loading;
 
 	/**
+	 * Whether the tab holds edits not saved under its name. Load asks first,
+	 * as Messages and Conversations do. QA2, 15 Oct: Load threw them away.
+	 */
+	private boolean dirty;
+
+	/**
 	 * @param act    the window's door to the client thread: the work, and what
 	 *               to show once it is done
 	 * @param status the window's status line
@@ -95,6 +101,30 @@ class ConversationPanel extends JPanel
 		refreshNames();
 		refreshSaved(null);
 		edit(-1);
+
+		DocumentListener marks = new DocumentListener()
+		{
+			@Override
+			public void insertUpdate(DocumentEvent e)
+			{
+				dirty = true;
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e)
+			{
+				dirty = true;
+			}
+
+			@Override
+			public void changedUpdate(DocumentEvent e)
+			{
+				dirty = true;
+			}
+		};
+		name.getDocument().addDocumentListener(marks);
+		seconds.getDocument().addDocumentListener(marks);
+		auto.addItemListener(e -> dirty = true);
 	}
 
 	/** The follower's name again, as the speaker choice and the rows show it. */
@@ -315,6 +345,7 @@ class ConversationPanel extends JPanel
 		line.text = text.getText();
 		face.setEnabled(line.display == Conversation.Display.BOX);
 		rows.set(index, row(index, line, followerName.get()));
+		dirty = true;
 	}
 
 	/**
@@ -333,6 +364,7 @@ class ConversationPanel extends JPanel
 			line.display = before.display;
 		}
 		lines.add(at, line);
+		dirty = true;
 		refreshRows();
 		select(at);
 		text.requestFocusInWindow();
@@ -347,6 +379,7 @@ class ConversationPanel extends JPanel
 			return;
 		}
 		lines.remove(index);
+		dirty = true;
 		refreshRows();
 		select(Math.min(index, lines.size() - 1));
 	}
@@ -360,6 +393,7 @@ class ConversationPanel extends JPanel
 			return;
 		}
 		lines.add(to, lines.remove(index));
+		dirty = true;
 		refreshRows();
 		select(to);
 	}
@@ -451,6 +485,7 @@ class ConversationPanel extends JPanel
 		list.clearSelection();
 		refreshRows();
 		select(lines.isEmpty() ? -1 : 0);
+		dirty = false;
 	}
 
 	/** 3 rather than 3.0. */
@@ -476,26 +511,29 @@ class ConversationPanel extends JPanel
 		act.accept(c -> c.play(script), null);
 	}
 
-	private void save()
+	/** @return whether it was saved */
+	private boolean save()
 	{
 		Conversation script = script();
 		if (script.name.isEmpty())
 		{
 			status.accept("Type a name first.");
-			return;
+			return false;
 		}
 		if (script.seconds < 0)
 		{
 			status.accept("Type the seconds as a number, such as 3.5, or leave it blank.");
-			return;
+			return false;
 		}
 		if (!store.save(script))
 		{
 			status.accept("Could not save it. The client's log says why.");
-			return;
+			return false;
 		}
 		refreshSaved(script.name);
 		status.accept("Saved as " + script.name + ".");
+		dirty = false;
+		return true;
 	}
 
 	private void load()
@@ -507,8 +545,38 @@ class ConversationPanel extends JPanel
 			status.accept("Pick a saved conversation first.");
 			return;
 		}
+		if (!confirmDirty())
+		{
+			return;
+		}
+		// Read again: Save may just have written over this very one.
+		found = store.get(picked);
 		show(found);
 		status.accept("Loaded " + found.name + ".");
+	}
+
+	/** Save, Discard or Cancel over unsaved edits, as Messages asks; false for Cancel. */
+	private boolean confirmDirty()
+	{
+		if (!dirty)
+		{
+			return true;
+		}
+		int choice = askToSave();
+		if (choice == 0)
+		{
+			return save();
+		}
+		return choice == 1;
+	}
+
+	/** 0 for Save, 1 for Discard, anything else for Cancel. */
+	int askToSave()
+	{
+		return JOptionPane.showOptionDialog(this,
+			"There are unsaved changes.", "Save changes?",
+			JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null,
+			new Object[]{"Save", "Discard", "Cancel"}, "Save");
 	}
 
 	private void delete()
