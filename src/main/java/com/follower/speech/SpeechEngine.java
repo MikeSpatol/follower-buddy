@@ -1238,12 +1238,15 @@ public class SpeechEngine
 		// A callback about a quest's person stands aside the plain line about
 		// them for that line's own while. QA, 15 Oct: two Duke callbacks, then
 		// "Duke Horacio himself" as if they had never met, in six minutes.
+		// Its fellow callbacks about the same person stand aside too: Text
+		// QA 3, the Duke's two callbacks came two minutes apart.
 		String plain = rule.plainLineId();
 		if (plain != null)
 		{
+			String fellows = rule.id.substring(0, rule.id.indexOf("-after-") + 7);
 			for (SpeechRule other : loader.getRules())
 			{
-				if (plain.equals(other.id))
+				if (plain.equals(other.id) || (other.id != null && other.id.startsWith(fellows)))
 				{
 					other.markFired(now);
 				}
