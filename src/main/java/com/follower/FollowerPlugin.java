@@ -3349,6 +3349,9 @@ public class FollowerPlugin extends Plugin
 			sessionMinutes = 0;
 			sessionRecordSaid = false;
 			knownLevels.clear();
+			// The Chronicle goes too (the user, 16 Oct): its dates live in the
+			// memory just erased, and its drawings are torn out here.
+			sketchBook.forgetAll();
 			sendStatus("Forgotten. All of it. Clean page.");
 
 			java.util.List<String[]> rows =

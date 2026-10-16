@@ -55,6 +55,31 @@ public class SketchBookTest
 		assertTrue(after.hasBoth("lumbridge"));
 	}
 
+	/** Forget everything forgets the Chronicle's drawings too (the user, 16 Oct). */
+	@Test
+	public void forgettingTearsOutThisAccountsDrawingsAndNoOneElses() throws IOException
+	{
+		Path data = folder.newFolder().toPath();
+		SketchBook book = new SketchBook(data);
+		book.openFor("account-two");
+		book.put("varrock", picture(0x405060), picture(0x506070));
+		book.openFor("account-one");
+		book.put("lumbridge", picture(0x8a6a40), picture(0x9a7a50), "dance");
+		book.backUp("lumbridge");
+
+		book.forgetAll();
+		assertFalse("gone from the open book", book.has("lumbridge"));
+		SketchBook again = new SketchBook(data);
+		again.openFor("account-one");
+		assertFalse("and from disk, with its pose and backups", again.has("lumbridge"));
+		try (java.util.stream.Stream<Path> left = java.nio.file.Files.list(data.resolve(SketchBook.DIR_NAME).resolve("account-one")))
+		{
+			assertEquals(0, left.count());
+		}
+		again.openFor("account-two");
+		assertTrue("another account's book is its own", again.has("varrock"));
+	}
+
 	@Test
 	public void aPlaceDrawnBeforeThereWereTwoSizesIsWantedAgain() throws IOException
 	{

@@ -268,6 +268,39 @@ public class SketchBook
 		return kept;
 	}
 
+	/**
+	 * Tears out every drawing in the open account's book, with its pose and
+	 * backups, on disk and in memory. Forget everything: the user's decision,
+	 * 16 Oct, that forgetting forgets the Chronicle too.
+	 */
+	public void forgetAll()
+	{
+		sketches.clear();
+		large.clear();
+		unread.clear();
+		unreadLarge.clear();
+		poses.clear();
+		Path in = folder;
+		if (in == null || !Files.isDirectory(in))
+		{
+			return;
+		}
+		try (DirectoryStream<Path> files = Files.newDirectoryStream(in))
+		{
+			for (Path file : files)
+			{
+				if (Files.isRegularFile(file))
+				{
+					Files.deleteIfExists(file);
+				}
+			}
+		}
+		catch (IOException | RuntimeException e)
+		{
+			log.warn("Could not tear every sketch out of {}", in, e);
+		}
+	}
+
 	/** {@code name.bak} is the first, numbered 0; then {@code name.1.bak} and on. */
 	private static Path backup(Path in, String name, int n)
 	{
