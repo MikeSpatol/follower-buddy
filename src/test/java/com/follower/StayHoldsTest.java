@@ -1716,7 +1716,7 @@ public class StayHoldsTest
 		};
 		SkillingController skilling = new SkillingController(h.game.client, feet, config, hands,
 			event -> { }, () -> false, () -> false, () -> false);
-		Moments moments = new Moments(h.game.client, feet, config, skilling,
+		Moments moments = new Moments(h.game.client, feet, skilling,
 			() -> gate("momentFeetTaken"), () -> false, () -> 30, null, () -> false,
 			() -> field("parkedByPlayer"));
 		set("moments", moments);

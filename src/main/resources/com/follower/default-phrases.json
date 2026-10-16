@@ -7779,7 +7779,7 @@
       "id": "mirror-teleport",
       "note": "Mirrors the player's teleport cast, then vanishes and reappears beside them. holdStill plants the follower for the duration: without it, a teleport that happens while the follower is off on an idle distraction interrupts its own cast. The player animating resets the idle counter, the wander is released the same tick, and the follower abandons the animation to run back to somebody who is no longer there. The hold also keeps updateWander out - it treats a held emote as busy.",
       "about": "Copies your teleport, then vanishes and reappears beside you.",
-      "group": "reactions",
+      "group": "mimic",
       "priority": 60,
       "cooldownMs": 3000,
       "holdStill": true,
@@ -7802,7 +7802,7 @@
       "id": "mirror-home-teleport",
       "note": "ANY home teleport, default or a cosmetic override the follower doesn't own, plays the DEFAULT home teleport on the follower, rune-circle graphics and all (stage pairing measured in game: animations 4847/4850/4853/4855/4857 with graphics 800/-/802/803/804). Trigger ids are each variant's FIRST stage; the chain carries the rest, and the long cooldown stops later stages retriggering it. For a new variant, add its first stage id here (::follower watch announces it).",
       "about": "Copies any home teleport with the standard one, rune circle and all.",
-      "group": "reactions",
+      "group": "mimic",
       "priority": 70,
       "cooldownMs": 15000,
       "holdStill": true,
@@ -10544,9 +10544,18 @@
       "animation": 862,
       "mood": 12,
       "when": {
-        "type": "personalBest",
-        "names": [
-          "hit"
+        "type": "all",
+        "conditions": [
+          {
+            "type": "personalBest",
+            "names": [
+              "hit"
+            ]
+          },
+          {
+            "type": "daysKnown",
+            "minimum": 1
+          }
         ]
       },
       "say": [
@@ -14015,7 +14024,7 @@
       "id": "offer-challenge",
       "note": "A wager on YOU rather than on the world. Guarded against a second one and against talking over a piece of advice still outstanding.",
       "about": "Sometimes during a fight, it bets you cannot get ten kills in five minutes.",
-      "group": "idle",
+      "group": "bet",
       "priority": 24,
       "cooldownMs": 1800000,
       "output": "overhead",
@@ -14079,7 +14088,7 @@
       "waits": true,
       "note": "Paid out. Above the kill rules so the wager beats the cheer.",
       "about": "When you win its wager. {challenge} is what it bet you could not do.",
-      "group": "idle",
+      "group": "bet",
       "priority": 74,
       "cooldownMs": 5000,
       "output": "overhead",
@@ -14101,7 +14110,7 @@
     {
       "id": "challenge-failed",
       "waits": true,
-      "group": "idle",
+      "group": "bet",
       "priority": 72,
       "cooldownMs": 5000,
       "output": "overhead",
@@ -14234,7 +14243,7 @@
       "id": "notes-edited",
       "note": "phrases.json changed on disk and hot-reloaded. In-world, somebody wrote in the scribe's own book. Long cooldown so an editing session earns one remark.",
       "about": "When you save changes to its lines in this window.",
-      "group": "memory",
+      "group": "misc",
       "priority": 40,
       "cooldownMs": 1800000,
       "delayTicks": 3,

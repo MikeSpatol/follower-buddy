@@ -76,6 +76,16 @@ public class ThrallOnlyTest
 	}
 
 	@Test
+	public void theReplaceThrallsHintWaitsWhileThrallOnlyReplacesThemAnyway() throws Exception
+	{
+		// QA3: "Untick Replace thralls" does nothing with Thrall only on. No
+		// config manager here, so sending the hint would throw.
+		Method hint = FollowerPlugin.class.getDeclaredMethod("maybeSendThrallHint");
+		hint.setAccessible(true);
+		hint.invoke(plugin(true));
+	}
+
+	@Test
 	public void absentUntilAThrallHasIt() throws ReflectiveOperationException
 	{
 		assertTrue("no thrall, no follower", hidden(plugin(true)));

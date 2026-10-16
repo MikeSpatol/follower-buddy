@@ -332,8 +332,8 @@ class ConversationPanel extends JPanel
 		display.setEnabled(any);
 		text.setEnabled(any);
 		remove.setEnabled(any);
-		up.setEnabled(any);
-		down.setEnabled(any);
+		up.setEnabled(any && index > 0);
+		down.setEnabled(any && index < lines.size() - 1);
 		if (any)
 		{
 			Conversation.Line line = lines.get(index);
@@ -636,6 +636,13 @@ class ConversationPanel extends JPanel
 			new Object[]{"Save", "Discard", "Cancel"}, "Save");
 	}
 
+	/** Whether the player says yes to deleting the saved one of that name. */
+	boolean confirmDelete(String picked)
+	{
+		return JOptionPane.showConfirmDialog(this, "Delete the saved conversation \"" + picked + "\"?",
+			"Delete", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
+	}
+
 	private void delete()
 	{
 		String picked = pickedSaved();
@@ -644,9 +651,7 @@ class ConversationPanel extends JPanel
 			status.accept("Pick a saved conversation first.");
 			return;
 		}
-		int sure = JOptionPane.showConfirmDialog(this, "Delete the saved conversation \"" + picked + "\"?",
-			"Delete", JOptionPane.YES_NO_OPTION);
-		if (sure != JOptionPane.YES_OPTION)
+		if (!confirmDelete(picked))
 		{
 			return;
 		}
@@ -654,6 +659,11 @@ class ConversationPanel extends JPanel
 		{
 			status.accept("Could not delete it. The client's log says why.");
 			return;
+		}
+		// The lines in the tab are now the only copy: Load asks first (QA3).
+		if (picked.equalsIgnoreCase(name.getText().trim()))
+		{
+			dirty = true;
 		}
 		refreshSaved(null);
 		status.accept("Deleted " + picked + ".");

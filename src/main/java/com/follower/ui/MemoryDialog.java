@@ -235,11 +235,10 @@ public class MemoryDialog extends JDialog
 		}
 		if (c.isWishing())
 		{
-			// The option as the menu names it now (FollowerPlugin.talkOption):
-			// Answer while a question waits.
+			// The handover is in Talk-to, which a waiting question takes over
+			// as Answer, so the hint waits with it (QA3).
 			rows.add(row("Hoping for", c.getWishLabel()
-				+ " (right-click the follower and " + (c.getAskedTree().isEmpty() ? "Talk-to" : "Answer")
-				+ " to hand it over)"));
+				+ (c.getAskedTree().isEmpty() ? " (right-click the follower and Talk-to to hand it over)" : "")));
 			anything = true;
 		}
 		if (!c.getAskedTree().isEmpty())

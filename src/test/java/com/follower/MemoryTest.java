@@ -106,6 +106,13 @@ public class MemoryTest
 		Harness h = new Harness(folder.newFolder().toPath());
 		h.gameTicks(1);
 		h.dispatch(TriggerEvent.record("hit", 71, 54));
+		h.gameTicks(2);
+		// QA3: its about says never on the first day, and the hits of a
+		// first fight beat each other every few seconds.
+		assertTrue("not on the day you met", h.firedBy("record-hit").isEmpty());
+
+		h.engine.getContext().setMetOnDay(java.time.LocalDate.now().toEpochDay() - 1);
+		h.dispatch(TriggerEvent.record("hit", 71, 54));
 
 		List<Harness.Spoken> said = h.firedBy("record-hit");
 		assertFalse("a new biggest hit is worth saying", said.isEmpty());

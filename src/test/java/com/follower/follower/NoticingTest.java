@@ -85,6 +85,7 @@ public class NoticingTest
 	private boolean busy;
 	private int idle;
 	private boolean notices = true;
+	private boolean keepsCompany = true;
 	private List<Map.Entry<String, WorldPoint>> landmarks = Collections.emptyList();
 	private int tick;
 
@@ -99,6 +100,12 @@ public class NoticingTest
 			public boolean noticesThings()
 			{
 				return notices;
+			}
+
+			@Override
+			public boolean keepsCompany()
+			{
+				return keepsCompany;
 			}
 		};
 		noticing = new Noticing(game.client, new StandingFollower(), config, looker,
@@ -168,6 +175,20 @@ public class NoticingTest
 		looker.looking = false;
 		tick(Noticing.Kind.VALUABLE.cooldownTicks + 5);
 		assertEquals("each thing once", 1, looker.looks.size());
+	}
+
+	@Test
+	public void itNoticesWithWorksBesideYouOff()
+	{
+		// QA3: Notices things also needed Works beside you when skilling,
+		// a setting in another section that says nothing of it.
+		keepsCompany = false;
+		tick(1);
+		noticing.itemSpawned(item(4151, TileItem.OWNERSHIP_SELF), DROP, "Abyssal whip", 1_500_000);
+		tick(Noticing.LEFT_AFTER_TICKS + 1);
+		walkAway();
+		tick(1);
+		assertEquals(Collections.singletonList(DROP), looker.looks);
 	}
 
 	@Test

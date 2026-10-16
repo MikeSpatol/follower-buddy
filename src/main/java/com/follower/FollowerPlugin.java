@@ -803,7 +803,7 @@ public class FollowerPlugin extends Plugin
 		// or in a scene or the quiet after one.
 		errands.setSession(() -> skilling.isWorking() || sceneQuiet());
 		errands.setOnForcedMiss(key -> sendStatus(ERRAND_MISSED));
-		moments = new com.follower.follower.Moments(client, follower, config, skilling,
+		moments = new com.follower.follower.Moments(client, follower, skilling,
 			this::momentFeetTaken,
 			() -> speechEngine.getContext().isInCombat(),
 			() -> speechEngine.getContext().getDaysKnown(),
@@ -999,6 +999,12 @@ public class FollowerPlugin extends Plugin
 		{
 			voiceDialog.dispose();
 			voiceDialog = null;
+		}
+		// Left open, its Forget everything still ran for a stopped plugin (QA3).
+		if (memoryDialog != null)
+		{
+			memoryDialog.dispose();
+			memoryDialog = null;
 		}
 		// Disposing is not closing, so no cut is sent: the block below takes
 		// the film's pose off with every other, and the scene's flags go with
@@ -2654,6 +2660,18 @@ public class FollowerPlugin extends Plugin
 			appearanceService.invalidate();
 			rebuildFollower();
 			syncPanel();
+			// An open Memory window shows this profile's memory, which is the
+			// one its Forget everything would wipe (QA3).
+			java.util.List<String[]> rows =
+				com.follower.ui.MemoryDialog.summarise(speechEngine.getContext(),
+					ruleLoader.getRegionNames());
+			javax.swing.SwingUtilities.invokeLater(() ->
+			{
+				if (memoryDialog != null && memoryDialog.isVisible())
+				{
+					memoryDialog.show(rows);
+				}
+			});
 		});
 	}
 
@@ -3232,6 +3250,10 @@ public class FollowerPlugin extends Plugin
 	{
 		clientThread.invoke(() ->
 		{
+			if (!started)
+			{
+				return;
+			}
 			configManager.unsetConfiguration(FollowerConfig.GROUP, "counters");
 			configManager.unsetConfiguration(FollowerConfig.GROUP, "traits");
 			configManager.unsetConfiguration(FollowerConfig.GROUP, "lastSeenMs");
@@ -3677,11 +3699,17 @@ public class FollowerPlugin extends Plugin
 				// The game's other boxes over the chatbox too: a message, an
 				// item, two items, a level-up. QA2, 15 Oct: a written line
 				// was drawn over one and took its "Click here to continue".
+				// QA3: and Make-X, the destroy question, the graphic box and
+				// a chatbox prompt such as Enter amount.
 				return npcDialogOpen()
 					|| client.getWidget(net.runelite.api.gameval.InterfaceID.MESSAGEBOX, 0) != null
 					|| client.getWidget(net.runelite.api.gameval.InterfaceID.OBJECTBOX, 0) != null
 					|| client.getWidget(net.runelite.api.gameval.InterfaceID.OBJECTBOX_DOUBLE, 0) != null
-					|| client.getWidget(net.runelite.api.gameval.InterfaceID.LEVELUP_DISPLAY, 0) != null;
+					|| client.getWidget(net.runelite.api.gameval.InterfaceID.LEVELUP_DISPLAY, 0) != null
+					|| client.getWidget(net.runelite.api.gameval.InterfaceID.SKILLMULTI, 0) != null
+					|| client.getWidget(net.runelite.api.gameval.InterfaceID.CONFIRMDESTROY, 0) != null
+					|| client.getWidget(net.runelite.api.gameval.InterfaceID.GRAPHICBOX, 0) != null
+					|| client.getVarcIntValue(net.runelite.api.gameval.VarClientID.MESLAYERMODE) != 0;
 			}
 
 			@Override
@@ -3920,6 +3948,14 @@ public class FollowerPlugin extends Plugin
 	{
 		if (name == null || name.trim().isEmpty())
 		{
+			return;
+		}
+		// The thrall looks are worn by name and nothing restores a changed
+		// one; New profile... over one would lose it (QA3).
+		if (profileStore.isProtected(name))
+		{
+			sendStatus("'" + name.trim() + "' is a combat-style profile used by thrall mode"
+				+ " and cannot be replaced. Pick it and edit it instead.");
 			return;
 		}
 		profileStore.put(name, config.customOutfit());
@@ -6426,7 +6462,8 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void maybeSendThrallHint()
 	{
-		if (!config.thrallMode() || config.thrallHintShown())
+		// Thrall only replaces them too, so the hint would not work (QA3).
+		if (!config.thrallMode() || config.thrallOnly() || config.thrallHintShown())
 		{
 			return;
 		}
@@ -8214,14 +8251,19 @@ public class FollowerPlugin extends Plugin
 		// actually displayed (inside the drain above), so the rising edge
 		// lands here the same tick.
 		boolean wishingNow = !speechEngine.getContext().getWishLabel().isEmpty();
-		if (wishingNow && !wasWishing && !config.wishHintShown())
+		// While a question waits, Answer opens the question and not Talk-to,
+		// where the handover is; the edge is held until it is answered (QA3).
+		if (speechEngine.getContext().getAskedTree().isEmpty())
 		{
-			configManager.setConfiguration(FollowerConfig.GROUP, "wishHintShown", true);
-			sendStatus("When you have the " + speechEngine.getContext().getWishLabel()
-				+ ", right-click " + followerName()
-				+ " and choose " + talkOption() + " to hand it over.");
+			if (wishingNow && !wasWishing && !config.wishHintShown())
+			{
+				configManager.setConfiguration(FollowerConfig.GROUP, "wishHintShown", true);
+				sendStatus("When you have the " + speechEngine.getContext().getWishLabel()
+					+ ", right-click " + followerName()
+					+ " and choose " + talkOption() + " to hand it over.");
+			}
+			wasWishing = wishingNow;
 		}
-		wasWishing = wishingNow;
 		tickScan();
 		commitAttackSighting();
 		expireKillClaims();
@@ -10246,10 +10288,6 @@ public class FollowerPlugin extends Plugin
 		{
 			return "::follower force drop <gp> [item name] - e.g. ::follower force drop 2500000 Dragon warhammer";
 		}
-		if (!config.keepsCompany())
-		{
-			return "Works beside you when skilling is off in the settings.";
-		}
 		String item = args.length > 3
 			? String.join(" ", java.util.Arrays.copyOfRange(args, 3, args.length))
 			: "Coins";
@@ -10754,7 +10792,8 @@ public class FollowerPlugin extends Plugin
 				{
 					try
 					{
-						int offset = Integer.parseInt(args[1]);
+						// The setting's own range; its box clamps only what it shows (QA3).
+						int offset = Math.max(-64, Math.min(64, Integer.parseInt(args[1])));
 						configManager.setConfiguration(FollowerConfig.GROUP, "verticalOffset", offset);
 						clientThread.invoke(() -> follower.setVerticalOffset(offset));
 						sendStatus("Height offset " + offset + " (positive lifts).");

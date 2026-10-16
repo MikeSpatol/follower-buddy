@@ -224,7 +224,7 @@ public class Noticing
 	/** Call once per game tick, on the client thread, after the moments. */
 	public void tick()
 	{
-		if (!config.noticesThings() || !config.keepsCompany())
+		if (!config.noticesThings())
 		{
 			drops.clear();
 			stars.clear();
@@ -261,7 +261,7 @@ public class Noticing
 	 */
 	public String forceNotice()
 	{
-		if (!config.noticesThings() || !config.keepsCompany())
+		if (!config.noticesThings())
 		{
 			return "Notices things, or Works beside you when skilling, is off in the settings.";
 		}

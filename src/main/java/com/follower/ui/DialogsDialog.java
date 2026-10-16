@@ -195,6 +195,12 @@ public class DialogsDialog extends JDialog
 		setContentPane(root);
 		setPreferredSize(new Dimension(700, 700));
 		pack();
+		// Narrower cuts the hint; taller than the screen puts Save under the
+		// taskbar, as Advanced posing found (QA3).
+		setMinimumSize(new Dimension(700, 400));
+		java.awt.GraphicsConfiguration screen = getGraphicsConfiguration();
+		setSize(getWidth(), FilmDialog.heightOnScreen(getHeight(), screen.getBounds(),
+			java.awt.Toolkit.getDefaultToolkit().getScreenInsets(screen)));
 		setLocationRelativeTo(null);
 	}
 

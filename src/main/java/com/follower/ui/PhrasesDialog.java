@@ -333,6 +333,8 @@ public class PhrasesDialog extends JDialog
 		setContentPane(root);
 		setPreferredSize(new Dimension(620, 640));
 		pack();
+		// Narrower, the fixed-width hint and abouts are cut mid-word (QA3).
+		setMinimumSize(new Dimension(620, 400));
 		setLocationRelativeTo(null);
 	}
 
@@ -486,9 +488,12 @@ public class PhrasesDialog extends JDialog
 		// A long title or id is cut short with "..." rather than widening the
 		// row: the list is as wide as the window, and the controls on the
 		// right have to stay on it. QA2, 15 Oct: Quest NPCs and Locations
-		// pushed On and Sounds past the edge.
-		title.setMinimumSize(new Dimension(0, title.getPreferredSize().height));
+		// pushed On and Sounds past the edge. The id gives way first: the
+		// title's end is what tells a callback from its plain rule (QA3).
+		title.setMinimumSize(title.getPreferredSize());
 		idLabel.setMinimumSize(new Dimension(0, idLabel.getPreferredSize().height));
+		title.setToolTipText(ruleTitle + "  " + id);
+		idLabel.setToolTipText(id);
 		JPanel titles = new JPanel();
 		titles.setLayout(new BoxLayout(titles, BoxLayout.X_AXIS));
 		titles.setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 0));

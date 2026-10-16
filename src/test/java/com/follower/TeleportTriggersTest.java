@@ -22,9 +22,10 @@ public class TeleportTriggersTest
 	@Rule
 	public final TemporaryFolder folder = new TemporaryFolder();
 
-	private Harness copying(int animation) throws IOException
+	private Harness copying(int animation, String... silenced) throws IOException
 	{
 		Harness h = new Harness(folder.newFolder().toPath());
+		h.engine.setDisabledGroups(new java.util.HashSet<>(java.util.Arrays.asList(silenced)));
 		h.gameTicks(2);
 		h.dispatch(TriggerEvent.animation(animation));
 		h.gameTicks(2);
@@ -41,6 +42,22 @@ public class TeleportTriggersTest
 			assertEquals("teleport " + cast, 1, copied.size());
 			assertEquals(cast, copied.get(0).animationId);
 		}
+	}
+
+	/**
+	 * QA3: the copies were in Reactions, so unticking Reactions to quiet the
+	 * death and level remarks stopped them, and Mimicry, which governs the
+	 * other copies, did not.
+	 */
+	@Test
+	public void mimicryGovernsTheTeleportCopiesAndReactionsDoesNot() throws IOException
+	{
+		int cast = AnimationID.HUMAN_SPELLCAST_ARCEUUS_TELEPORT;
+		int home = AnimationID.LEAGUE03_HOME_TELEPORT_HUMAN_1;
+		assertEquals(1, copying(cast, "reactions").firedBy("mirror-teleport").size());
+		assertEquals(1, copying(home, "reactions").firedBy("mirror-home-teleport").size());
+		assertTrue(copying(cast, "mimic").firedBy("mirror-teleport").isEmpty());
+		assertTrue(copying(home, "mimic").firedBy("mirror-home-teleport").isEmpty());
 	}
 
 	@Test
