@@ -621,6 +621,27 @@ public class RuleLoader
 		return !EVENT_CONDITIONS.containsKey(type) || listened.contains(type);
 	}
 
+	/** The rules with an npcSpawn condition somewhere in them. */
+	private List<SpeechRule> spawnRules = Collections.emptyList();
+
+	/**
+	 * Whether any rule's npcSpawn names this NPC. A wave of spawns is a pass
+	 * over every rule for each NPC, 5-12 ms in one frame for a busy area
+	 * (perf audit, Oct 2026); a spawn no rule names can make true nothing the
+	 * next tick would not, for the reason {@link #listensFor} gives.
+	 */
+	public boolean answersSpawn(TriggerEvent spawn)
+	{
+		for (SpeechRule rule : spawnRules)
+		{
+			if (rule.when.answersSpawn(spawn))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/**
 	 * The NPC names the boss rules name, which is what the rest of the plugin
 	 * means by "boss" - see {@link com.follower.speech.TriggerContext#isBoss}.
@@ -739,6 +760,15 @@ public class RuleLoader
 			}
 		}
 		varbitEventRules = listened.contains(TriggerEvent.Type.VARBIT);
+		List<SpeechRule> spawning = new ArrayList<>();
+		for (SpeechRule rule : newRules)
+		{
+			if (rule.when != null && rule.when.usesType("npcSpawn"))
+			{
+				spawning.add(rule);
+			}
+		}
+		spawnRules = spawning;
 
 		status = summary + (problems.isEmpty() ? "" : ", " + problems.size() + " warning(s)");
 		log.info("Loaded rules: {}", status);

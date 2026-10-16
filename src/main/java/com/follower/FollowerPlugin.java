@@ -9019,11 +9019,11 @@ public class FollowerPlugin extends Plugin
 		}
 
 		// A chunk load raises one of these for every NPC in the new scene, and
-		// each costs a pass over every rule. Only pay it when something listens.
-		if (ruleLoader.listensFor(TriggerEvent.Type.NPC_SPAWN))
+		// each costs a pass over every rule. Only pay it when a rule names it.
+		TriggerEvent spawn = TriggerEvent.npc(TriggerEvent.Type.NPC_SPAWN, npc.getId(), npc.getName());
+		if (ruleLoader.answersSpawn(spawn))
 		{
-			speechEngine.dispatch(
-				TriggerEvent.npc(TriggerEvent.Type.NPC_SPAWN, npc.getId(), npc.getName()));
+			speechEngine.dispatch(spawn);
 		}
 	}
 

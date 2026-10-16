@@ -1418,6 +1418,26 @@ public class Condition
 	}
 
 	/** Whether this condition tree contains the given type (case-insensitive). */
+	/** Whether this is, or holds, an npcSpawn condition this spawn would make true. */
+	public boolean answersSpawn(TriggerEvent spawn)
+	{
+		if ("npcSpawn".equalsIgnoreCase(type) && matchesNpc(spawn))
+		{
+			return true;
+		}
+		if (conditions != null)
+		{
+			for (Condition child : conditions)
+			{
+				if (child != null && child.answersSpawn(spawn))
+				{
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	public boolean usesType(String wanted)
 	{
 		if (wanted.equalsIgnoreCase(type))
