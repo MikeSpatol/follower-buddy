@@ -847,6 +847,9 @@ public class FollowerPlugin extends Plugin
 		crossingWatch = new com.follower.follower.CrossingWatch(follower);
 		follower.setOnCrossed(crossing -> speechEngine.dispatch(
 			TriggerEvent.crossed(crossing.isFell())));
+		agilityTrace.initialise(dataDir);
+		crossingWatch.setTrace(agilityTrace::event);
+		follower.setAgilityTrace(agilityTrace::event);
 		follower.setOnAgilitySnap(crossingWatch::forgetMissed);
 		filmSet = new com.follower.follower.FilmSet(follower, this::rebuildFollower,
 			(graphicId, height) -> follower.playSpotAnim(spotAnimRepository.get(graphicId), height));
@@ -959,6 +962,7 @@ public class FollowerPlugin extends Plugin
 		// First, so work already queued for the client thread finds it gone.
 		started = false;
 		journal.flush();
+		agilityTrace.flush();
 		renderCallbacks.unregister(thrallHider);
 		// Before the engine is reset: an orderly shutdown is the one chance to
 		// save what the last few ticks counted.
@@ -6755,6 +6759,66 @@ public class FollowerPlugin extends Plugin
 			System.currentTimeMillis()));
 	}
 
+	/** The agility trace, written while Developer commands is on. */
+	private final com.follower.follower.AgilityTrace agilityTrace = new com.follower.follower.AgilityTrace();
+
+	/** Agility XP, and the local player's last hitsplat type, since the last tick line. */
+	private int agilityXpThisTick;
+	private int agilityHitsplatThisTick = -1;
+
+	/** Where the player was drawn at the last tick line, for its moving column. */
+	private net.runelite.api.coords.LocalPoint agilityTraceLast;
+
+	/** An odd pose or movement this recently still counts as agility about, for the trace. */
+	private static final long AGILITY_TRACE_NEAR_MS = 3000;
+
+	/**
+	 * Once a game tick: a line of the agility trace, when Developer commands
+	 * is on and there is agility about - a crossing watched or queued, the
+	 * follower holding for one, agility XP this tick, or an odd pose or move
+	 * in the last few seconds. Nothing at all otherwise, so a day's file is
+	 * the laps and little else.
+	 */
+	private void traceAgilityTick()
+	{
+		agilityTrace.setEnabled(config.developerMode());
+		int xp = agilityXpThisTick;
+		int hit = agilityHitsplatThisTick;
+		agilityXpThisTick = 0;
+		agilityHitsplatThisTick = -1;
+		Player local = client.getLocalPlayer();
+		if (!agilityTrace.isEnabled() || local == null || crossingWatch == null)
+		{
+			return;
+		}
+		long now = System.currentTimeMillis();
+		net.runelite.api.coords.LocalPoint at = local.getLocalLocation();
+		boolean moving = at != null && agilityTraceLast != null && !at.equals(agilityTraceLast);
+		agilityTraceLast = at;
+		if (crossingWatch.isWatching() || follower.isDoingAgility() || follower.isHoldingForAgility()
+			|| xp > 0 || crossingWatch.wasOddWithin(now, AGILITY_TRACE_NEAR_MS))
+		{
+			int graphic = -1;
+			if (local.getSpotAnims() != null)
+			{
+				for (net.runelite.api.ActorSpotAnim spotAnim : local.getSpotAnims())
+				{
+					graphic = spotAnim.getId();
+					break;
+				}
+			}
+			agilityTrace.tick(String.format("t%d | %s pose %d anim %d gfx %d %s xp+%d hit %s | %s | %s q%d %s",
+				client.getTickCount(),
+				com.follower.follower.CrossingWatch.describe(local.getWorldLocation()),
+				local.getPoseAnimation(), local.getAnimation(), graphic, moving ? "moving" : "still",
+				xp, hit < 0 ? "-" : String.valueOf(hit),
+				crossingWatch.describe(now),
+				com.follower.follower.CrossingWatch.describe(follower.getWorldLocation()),
+				follower.getCrossingsQueued(), follower.describeAgility()));
+		}
+		agilityTrace.flushIfDue();
+	}
+
 	@Subscribe
 	public void onBeforeRender(BeforeRender event)
 	{
@@ -8087,6 +8151,7 @@ public class FollowerPlugin extends Plugin
 		{
 			return;
 		}
+		traceAgilityTick();
 		noteCreaturesInSight(local);
 		if (pendingMime != 0)
 		{
@@ -9730,6 +9795,11 @@ public class FollowerPlugin extends Plugin
 		{
 			playersHit.put(event.getActor(), client.getTickCount());
 		}
+		if (event.getActor() == client.getLocalPlayer())
+		{
+			// For the agility trace, zeros included: which types a fall is.
+			agilityHitsplatThisTick = event.getHitsplat().getHitsplatType();
+		}
 
 		if (event.getHitsplat().getAmount() <= 0)
 		{
@@ -10027,6 +10097,8 @@ public class FollowerPlugin extends Plugin
 			{
 				// What tells a climb from a ladder, and rebuilds an obstacle missed.
 				crossingWatch.noteAgilityXp(System.currentTimeMillis());
+				agilityXpThisTick += xp - previousXp;
+				agilityTrace.event("xp +" + (xp - previousXp));
 				if (config.copiesAgility() && !parkedByPlayer)
 				{
 					// Whatever the player is on is about to be queued: no snap meanwhile.
