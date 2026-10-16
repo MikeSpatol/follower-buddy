@@ -30,7 +30,10 @@ public class ConversationPlayer
 	/** What it plays on. Every call on the client thread. */
 	public interface Stage
 	{
-		/** Whether the game's own dialogue - an NPC's, the player's, or a choice - is open. */
+		/**
+		 * Whether the game's own dialogue - an NPC's, the player's, a choice,
+		 * or a message, item or level-up box - is open.
+		 */
 		boolean gameDialogueOpen();
 
 		/** Whether the follower's own Talk-to box is open. */
@@ -245,7 +248,7 @@ public class ConversationPlayer
 		BiConsumer<String, Long> followerOverhead, Conversation.Line line, long ms)
 	{
 		String text = Conversation.shown(line);
-		String marked = Text.escapeJagex(text);
+		String marked = inChat(line);
 		if (line.speaker == Conversation.Speaker.FOLLOWER)
 		{
 			followerOverhead.accept(text, ms);
@@ -259,5 +262,11 @@ public class ConversationPlayer
 		}
 		film.playerSays(me, marked, ms);
 		client.addChatMessage(ChatMessageType.PUBLICCHAT, me.getName(), marked, null);
+	}
+
+	/** A chat line's words as {@link #sayInChat} puts them in the chatbox. */
+	public static String inChat(Conversation.Line line)
+	{
+		return Text.escapeJagex(Conversation.shown(line));
 	}
 }

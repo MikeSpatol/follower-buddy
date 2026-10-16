@@ -1412,8 +1412,7 @@ public class FollowerDialog extends Overlay
 
 	/**
 	 * Greedy word wrap measured with the GAME's own advances when available -
-	 * wrap decisions have to agree with the renderer or lines land wrong. A
-	 * single word longer than the column is left to overflow.
+	 * wrap decisions have to agree with the renderer or lines land wrong.
 	 */
 	private String[] wrap(Graphics2D graphics, com.follower.ui.GameFont font,
 		String text, int maxWidth)
@@ -1424,7 +1423,9 @@ public class FollowerDialog extends Overlay
 	/**
 	 * The wrap itself, against any measure. A line break typed into the text
 	 * starts a new line, as the game's own break tag does, and a blank one
-	 * is kept.
+	 * is kept. A word wider than the column alone, such as a pasted link,
+	 * is cut where it stops fitting and carried on to the next line; QA2,
+	 * 15 Oct: left whole, it ran over the chathead and out of the box.
 	 */
 	static String[] wrap(String text, java.util.function.ToIntFunction<String> width, int maxWidth)
 	{
@@ -1443,6 +1444,16 @@ public class FollowerDialog extends Overlay
 				else
 				{
 					line = new StringBuilder(candidate);
+				}
+				while (line.length() > 1 && width.applyAsInt(line.toString()) > maxWidth)
+				{
+					int cut = line.length() - 1;
+					while (cut > 1 && width.applyAsInt(line.substring(0, cut)) > maxWidth)
+					{
+						cut--;
+					}
+					out.add(line.substring(0, cut));
+					line = new StringBuilder(line.substring(cut));
 				}
 			}
 			if (line.length() > 0 || (paragraph.isEmpty() && text.contains("\n")))

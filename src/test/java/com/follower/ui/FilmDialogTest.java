@@ -40,12 +40,29 @@ public class FilmDialogTest
 	@Test
 	public void whatTheFontCannotDrawIsRefused()
 	{
-		for (String pasted : new String[]{"Wait \u2014 what?", "\u201cHello\u201d", "Don\u2019t", "caf\u00e9",
-			"A <col=ff0000>red</col> line"})
+		for (String pasted : new String[]{"\u65e5\u672c", "An emoji \ud83d\ude00", "A <col=ff0000>red</col> line"})
 		{
 			assertNotNull(pasted, FilmDialog.refusal(pasted));
 		}
 		assertEquals("Type a line first.", FilmDialog.refusal(""));
+		assertEquals("a character is named whole, not half an emoji",
+			"The game can't show '\ud83d\ude00' overhead. Use plain letters and punctuation.",
+			FilmDialog.refusal("An emoji \ud83d\ude00"));
+	}
+
+	@Test
+	public void aPastedDashOrCurlyQuoteIsSaidPlainAsInTheConversationTab()
+	{
+		// QA2, 15 Oct: the Say boxes refused what the Conversation tab
+		// quietly wrote plain. One check now serves both.
+		for (String pasted : new String[]{"Wait \u2014 what?", "\u201cHello\u201d", "Don\u2019t", "caf\u00e9"})
+		{
+			assertNull(pasted, FilmDialog.refusal(pasted));
+			assertNull(pasted, FilmDialog.undrawable(pasted));
+		}
+		assertEquals("Wait - \"what\"? Don't...", FilmDialog.asSaid("Wait \u2014 \u201cwhat\u201d? Don\u2019t\u2026"));
+		assertEquals("\u65e5", FilmDialog.undrawable("ok \u65e5\u672c"));
+		assertNull("a typed question mark is the player's own", FilmDialog.undrawable("Why?"));
 	}
 
 	@Test
@@ -200,5 +217,86 @@ public class FilmDialogTest
 				throw new IllegalStateException(e);
 			}
 		});
+	}
+
+	@Test
+	public void itCannotBeDraggedSmallerThanItsHintAndThePoseListStopsShortOfItsButtons() throws Exception
+	{
+		// QA2, 15 Oct: dragged to 560 wide the hint was cut ("right-click
+		// the g"), and the pose list ran into Again with no gap, so its last
+		// row looked cut by the buttons.
+		org.junit.Assume.assumeFalse(java.awt.GraphicsEnvironment.isHeadless());
+		com.follower.speech.ConversationStore store = new com.follower.speech.ConversationStore(new com.google.gson.Gson());
+		store.load(Files.createTempDirectory("film"));
+		FilmDialog.Crew none = (FilmDialog.Crew) java.lang.reflect.Proxy.newProxyInstance(
+			getClass().getClassLoader(), new Class<?>[]{FilmDialog.Crew.class},
+			(p, m, a) -> m.getReturnType() == int.class ? -1 : null);
+		javax.swing.LookAndFeel before = javax.swing.UIManager.getLookAndFeel();
+		javax.swing.SwingUtilities.invokeAndWait(() ->
+		{
+			net.runelite.client.ui.laf.RuneLiteLAF.setup();
+			FilmDialog film = new FilmDialog(none, Runnable::run, store, () -> "Bob");
+			try
+			{
+				film.setSize(560, 600);
+				film.validate();
+				assertTrue("held at " + film.getWidth() + " wide", film.getWidth() >= 620);
+				for (java.awt.Component c : all(film.getContentPane()))
+				{
+					if (c instanceof javax.swing.JLabel && ((javax.swing.JLabel) c).getText().startsWith("<html>"))
+					{
+						assertTrue("the hint wants " + c.getPreferredSize().width + " and has " + c.getWidth(),
+							c.getPreferredSize().width <= c.getWidth());
+					}
+				}
+
+				javax.swing.JButton again = null;
+				javax.swing.JScrollPane poses = null;
+				for (java.awt.Component c : all(film.getContentPane()))
+				{
+					if (c instanceof javax.swing.JButton && "Again".equals(((javax.swing.JButton) c).getText()))
+					{
+						again = (javax.swing.JButton) c;
+					}
+					if (c instanceof javax.swing.JScrollPane && poses == null
+						&& ((javax.swing.JScrollPane) c).getViewport().getView() instanceof javax.swing.JList)
+					{
+						poses = (javax.swing.JScrollPane) c;
+					}
+				}
+				int listBottom = javax.swing.SwingUtilities.convertPoint(poses.getParent(), 0,
+					poses.getY() + poses.getHeight(), film.getContentPane()).y;
+				int buttonsTop = javax.swing.SwingUtilities.convertPoint(again.getParent(), 0, again.getY(),
+					film.getContentPane()).y;
+				assertTrue("the list ends at " + listBottom + " and Again starts at " + buttonsTop,
+					buttonsTop - listBottom >= 4);
+			}
+			finally
+			{
+				film.dispose();
+				try
+				{
+					javax.swing.UIManager.setLookAndFeel(before);
+				}
+				catch (javax.swing.UnsupportedLookAndFeelException e)
+				{
+					throw new IllegalStateException(e);
+				}
+			}
+		});
+	}
+
+	private static List<java.awt.Component> all(java.awt.Container root)
+	{
+		List<java.awt.Component> out = new ArrayList<>();
+		for (java.awt.Component c : root.getComponents())
+		{
+			out.add(c);
+			if (c instanceof java.awt.Container)
+			{
+				out.addAll(all((java.awt.Container) c));
+			}
+		}
+		return out;
 	}
 }

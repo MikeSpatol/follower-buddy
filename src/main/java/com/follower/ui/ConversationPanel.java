@@ -65,6 +65,15 @@ class ConversationPanel extends JPanel
 	private final JRadioButton auto = new JRadioButton("Auto");
 	private final JTextField seconds = new JTextField(4);
 
+	/** Remove, Up and Down work on the line picked, so are off with none. */
+	private final JButton remove = button("Remove", this::removeLine);
+	private final JButton up = button("Up", () -> move(-1));
+	private final JButton down = button("Down", () -> move(1));
+
+	/** Load and Delete work on a saved one, so are off at the list's first choice. */
+	private final JButton load = button("Load", this::load);
+	private final JButton delete = button("Delete", this::delete);
+
 	/** Set while a line is put into the editor, so its own listeners leave it be. */
 	private boolean loading;
 
@@ -152,6 +161,7 @@ class ConversationPanel extends JPanel
 		naming.setMaximumSize(new Dimension(Integer.MAX_VALUE, 26));
 		naming.add(label("Name"), BorderLayout.WEST);
 		name.setToolTipText("Saving under a name already used writes over that one");
+		name.addActionListener(e -> save());
 		naming.add(name, BorderLayout.CENTER);
 		naming.add(button("Save", this::save), BorderLayout.EAST);
 		panel.add(naming);
@@ -162,9 +172,14 @@ class ConversationPanel extends JPanel
 		loadRow.setAlignmentX(LEFT_ALIGNMENT);
 		loadRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 26));
 		loadRow.add(saved, BorderLayout.CENTER);
+		saved.addActionListener(e ->
+		{
+			load.setEnabled(pickedSaved() != null);
+			delete.setEnabled(pickedSaved() != null);
+		});
 		JPanel pair = grid(1, 2);
-		pair.add(button("Load", this::load));
-		pair.add(button("Delete", this::delete));
+		pair.add(load);
+		pair.add(delete);
 		loadRow.add(pair, BorderLayout.EAST);
 		panel.add(loadRow);
 		return panel;
@@ -195,9 +210,9 @@ class ConversationPanel extends JPanel
 		panel.add(Box.createVerticalStrut(4));
 		JPanel buttons = grid(2, 2);
 		buttons.add(button("Add", this::addLine));
-		buttons.add(button("Remove", this::removeLine));
-		buttons.add(button("Up", () -> move(-1)));
-		buttons.add(button("Down", () -> move(1)));
+		buttons.add(remove);
+		buttons.add(up);
+		buttons.add(down);
 		panel.add(buttons);
 		return panel;
 	}
@@ -229,6 +244,9 @@ class ConversationPanel extends JPanel
 		text.setWrapStyleWord(true);
 		text.setToolTipText("A long line goes onto more pages, as in the game."
 			+ " Enter starts a new line in a dialogue box.");
+		// Enter is the line break here, so Tab moves on, as everywhere else.
+		text.setFocusTraversalKeys(java.awt.KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS, null);
+		text.setFocusTraversalKeys(java.awt.KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS, null);
 		JScrollPane scroll = new JScrollPane(text,
 			JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		scroll.setAlignmentX(LEFT_ALIGNMENT);
@@ -288,6 +306,9 @@ class ConversationPanel extends JPanel
 			advance.add(radio);
 		}
 		advance.add(label("Seconds"));
+		// Only Auto reads them.
+		seconds.setEnabled(auto.isSelected());
+		auto.addItemListener(e -> seconds.setEnabled(auto.isSelected()));
 		advance.add(seconds);
 		advance.add(label("(blank: reading speed)"));
 		panel.add(advance);
@@ -310,6 +331,9 @@ class ConversationPanel extends JPanel
 		speaker.setEnabled(any);
 		display.setEnabled(any);
 		text.setEnabled(any);
+		remove.setEnabled(any);
+		up.setEnabled(any);
+		down.setEnabled(any);
 		if (any)
 		{
 			Conversation.Line line = lines.get(index);
@@ -434,7 +458,8 @@ class ConversationPanel extends JPanel
 	{
 		String who = line.speaker == Conversation.Speaker.YOU ? "You" : followerName;
 		String how = line.display == Conversation.Display.BOX ? "box, " + line.expression.label : "chat";
-		String words = line.text.replaceAll("\\s+", " ").trim();
+		// As it will play, so a character the game can't draw reads as its '?' here too.
+		String words = Conversation.shown(line).replaceAll("\\s+", " ").trim();
 		return (index + 1) + ". " + who + " (" + how + "): " + (words.isEmpty() ? "..." : words);
 	}
 
@@ -444,7 +469,8 @@ class ConversationPanel extends JPanel
 		Conversation out = new Conversation();
 		out.name = name.getText().trim();
 		out.advance = auto.isSelected() ? Conversation.Advance.AUTO : Conversation.Advance.CLICK;
-		out.seconds = secondsTyped();
+		// Click to continue never reads them, so whatever is typed there is no time.
+		out.seconds = Math.max(0, secondsTyped());
 		for (Conversation.Line line : lines)
 		{
 			out.lines.add(line.copy());
@@ -494,21 +520,52 @@ class ConversationPanel extends JPanel
 		return value == Math.rint(value) ? String.valueOf((long) value) : String.valueOf(value);
 	}
 
+	/** Whether Auto is picked with seconds that are not a time. Only Auto reads them. */
+	private boolean badSeconds()
+	{
+		return auto.isSelected() && secondsTyped() < 0;
+	}
+
 	private void play()
 	{
-		Conversation script = script();
-		if (script.seconds < 0)
+		if (badSeconds())
 		{
 			status.accept("Type the seconds as a number, such as 3.5, or leave it blank.");
 			return;
 		}
+		Conversation script = script();
 		String refused = script.refusal();
 		if (refused != null)
 		{
 			status.accept(refused);
 			return;
 		}
-		act.accept(c -> c.play(script), null);
+		// It plays all the same; the note shows once it has started.
+		act.accept(c -> c.play(script), lineNote(script.lines));
+	}
+
+	/**
+	 * The first line the game will show otherwise than it is written, as a
+	 * word for the status line, or null: a character it has no glyph for,
+	 * or a chat line too long for one line overhead. The same check as the
+	 * Posing tab's Say boxes, {@link FilmDialog#undrawable} and
+	 * {@link FilmDialog#longLine}. QA2, 15 Oct: a 117-character chat line
+	 * and a line of CJK played with no word at all.
+	 */
+	static String lineNote(List<Conversation.Line> lines)
+	{
+		for (int i = 0; i < lines.size(); i++)
+		{
+			Conversation.Line line = lines.get(i);
+			String missing = FilmDialog.undrawable(line.text);
+			String note = missing != null ? "The game can't show '" + missing + "'."
+				: line.display == Conversation.Display.CHAT ? FilmDialog.longLine(Conversation.shown(line)) : null;
+			if (note != null)
+			{
+				return "Line " + (i + 1) + ": " + note;
+			}
+		}
+		return null;
 	}
 
 	/** @return whether it was saved */
@@ -520,7 +577,7 @@ class ConversationPanel extends JPanel
 			status.accept("Type a name first.");
 			return false;
 		}
-		if (script.seconds < 0)
+		if (badSeconds())
 		{
 			status.accept("Type the seconds as a number, such as 3.5, or leave it blank.");
 			return false;

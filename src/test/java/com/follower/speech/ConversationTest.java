@@ -105,6 +105,15 @@ public class ConversationTest
 	}
 
 	@Test
+	public void aRunOfBlankLinesInABoxIsOneSoNoPageIsEmpty()
+	{
+		// QA2, 15 Oct: eight breaks in a row made a box page with nothing on it.
+		assertEquals("Line one.\n\nLine nine.", Conversation.shown(box("Line one.\n\n\n\n\n\n\n\nLine nine.")));
+		assertEquals("A\n\nB", Conversation.shown(box("A\n \n\t\n\nB")));
+		assertEquals("A\nB\n\nC", Conversation.shown(box("A\nB\n\nC")));
+	}
+
+	@Test
 	public void aHandEditedFileIsTidiedIntoSomethingPlayable()
 	{
 		Conversation script = new Conversation();

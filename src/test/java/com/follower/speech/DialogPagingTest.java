@@ -30,9 +30,20 @@ public class DialogPagingTest
 	public void textWithNoBreakWrapsAsItAlwaysDid()
 	{
 		assertArrayEquals(new String[]{"one two", "three four", "five"}, wrap("one two three four five"));
-		assertArrayEquals("a word too long for the column is left to overflow",
-			new String[]{"a", "unbreakablething", "b"}, wrap("a unbreakablething b"));
 		assertArrayEquals(new String[0], wrap(""));
+	}
+
+	@Test
+	public void aWordTooWideForTheColumnIsCutWhereItStopsFitting()
+	{
+		// QA2, 15 Oct: left whole, a pasted link ran over the chathead and
+		// past both edges of the box.
+		assertArrayEquals(new String[]{"a", "unbreakabl", "ething b"}, wrap("a unbreakablething b"));
+		assertArrayEquals(new String[]{"aaaaaaaaaa", "aaaaaaaaaa", "aaaaa"}, wrap("a".repeat(25)));
+		for (String line : wrap("see https://example.com/a/very/long/link/with/no/spaces ok"))
+		{
+			assertEquals(line, true, line.length() * 6 <= 60);
+		}
 	}
 
 	@Test

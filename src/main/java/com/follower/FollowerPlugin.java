@@ -3612,6 +3612,13 @@ public class FollowerPlugin extends Plugin
 	/** The film window's conversation, played; built in startUp. */
 	private com.follower.speech.ConversationPlayer conversation;
 
+	/**
+	 * The player's written chat line last put in the chatbox, until the
+	 * chatbox hands it back to onChatMessage: written, not said, so no rule
+	 * hears it. QA2, 15 Oct: "hello" in a take set off greet-back.
+	 */
+	private String scriptedChat;
+
 	/** Esc in the game stops a conversation playing, and is the conversation's while one is. */
 	private final net.runelite.client.input.KeyListener escapeStopsTheConversation =
 		new net.runelite.client.input.KeyListener()
@@ -3646,7 +3653,14 @@ public class FollowerPlugin extends Plugin
 			@Override
 			public boolean gameDialogueOpen()
 			{
-				return npcDialogOpen();
+				// The game's other boxes over the chatbox too: a message, an
+				// item, two items, a level-up. QA2, 15 Oct: a written line
+				// was drawn over one and took its "Click here to continue".
+				return npcDialogOpen()
+					|| client.getWidget(net.runelite.api.gameval.InterfaceID.MESSAGEBOX, 0) != null
+					|| client.getWidget(net.runelite.api.gameval.InterfaceID.OBJECTBOX, 0) != null
+					|| client.getWidget(net.runelite.api.gameval.InterfaceID.OBJECTBOX_DOUBLE, 0) != null
+					|| client.getWidget(net.runelite.api.gameval.InterfaceID.LEVELUP_DISPLAY, 0) != null;
 			}
 
 			@Override
@@ -3708,6 +3722,11 @@ public class FollowerPlugin extends Plugin
 					speechQueue.clear();
 					cutByTheScene = null;
 					speakingUntilMs = System.currentTimeMillis() + ms + SPEECH_GAP_MS;
+				}
+				else
+				{
+					// Before it lands: the chatbox hands it straight to onChatMessage.
+					scriptedChat = com.follower.speech.ConversationPlayer.inChat(line);
 				}
 				com.follower.speech.ConversationPlayer.sayInChat(client, filmSet, followerName(),
 					overlay::show, line, ms);
@@ -6514,7 +6533,11 @@ public class FollowerPlugin extends Plugin
 	 */
 	private boolean shouldHide()
 	{
-		return (config.hideInPvp() && client.getVarbitValue(VarbitID.INSIDE_WILDERNESS) == 1)
+		// The setting says the Wilderness and other PvP areas: PVP_AREA_CLIENT
+		// is the game's own flag for the rest, a PvP world outside its safe
+		// zones among them. QA2, 15 Oct: only the Wilderness was read.
+		return (config.hideInPvp() && (client.getVarbitValue(VarbitID.INSIDE_WILDERNESS) == 1
+			|| client.getVarbitValue(VarbitID.PVP_AREA_CLIENT) == 1))
 			|| absentUntilSummoned(config.thrallOnly(), thrallBusiness());
 	}
 
@@ -8888,6 +8911,13 @@ public class FollowerPlugin extends Plugin
 		// them back into the rules would let it react to itself.
 		if (followerName().equals(event.getName()))
 		{
+			return;
+		}
+		// Nor the player's lines written in the film window and played back.
+		if (event.getType() == ChatMessageType.PUBLICCHAT && scriptedChat != null
+			&& scriptedChat.equals(event.getMessage()))
+		{
+			scriptedChat = null;
 			return;
 		}
 		// Nor its status lines, which are CONSOLE lines, as are the echoes
