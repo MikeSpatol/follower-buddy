@@ -2852,10 +2852,58 @@ public class FollowerEntity implements CrossingWatch.Listener
 			return false;
 		}
 
-		java.awt.Shape clickbox = Perspective.getClickbox(client,
-			client.getWorldView(lastRenderedLocation.getWorldView()), baseModel, yaw,
+		net.runelite.api.WorldView view = client.getWorldView(lastRenderedLocation.getWorldView());
+		if (!isInsideBoundingBox(view, canvasPoint))
+		{
+			return false;
+		}
+		java.awt.Shape clickbox = Perspective.getClickbox(client, view, baseModel, yaw,
 			lastRenderedLocation.getX(), lastRenderedLocation.getY(), lastRenderedZ);
 		return clickbox != null && clickbox.contains(canvasPoint.getX(), canvasPoint.getY());
+	}
+
+	/**
+	 * Whether the point is inside the screen rectangle round the model's
+	 * bounding box, projected the way {@code getClickbox} projects it first:
+	 * the clickbox is clipped to that box's outline, so a point outside it
+	 * cannot be on the follower. The full clickbox, every face projected,
+	 * merged and sorted, was built fifty times a second wherever the mouse
+	 * was, and was most of the plugin's CPU (perf audit, Oct 2026).
+	 */
+	private boolean isInsideBoundingBox(net.runelite.api.WorldView view, net.runelite.api.Point point)
+	{
+		net.runelite.api.AABB box = baseModel.getAABB(yaw);
+		float[] xs = new float[8];
+		float[] ys = new float[8];
+		float[] zs = new float[8];
+		for (int i = 0; i < 8; i++)
+		{
+			// The same corners, in the same order, as Perspective's own.
+			xs[i] = box.getCenterX() + ((i & 1) == 0 ? -box.getExtremeX() : box.getExtremeX());
+			ys[i] = box.getCenterZ() + ((i & 2) == 0 ? -box.getExtremeZ() : box.getExtremeZ());
+			zs[i] = box.getCenterY() + ((i & 4) == 0 ? -box.getExtremeY() : box.getExtremeY());
+		}
+		int[] canvasX = new int[8];
+		int[] canvasY = new int[8];
+		Perspective.modelToCanvas(client, view, 8, lastRenderedLocation.getX(),
+			lastRenderedLocation.getY(), lastRenderedZ, 0, xs, ys, zs, canvasX, canvasY);
+		int minX = Integer.MAX_VALUE;
+		int minY = Integer.MAX_VALUE;
+		int maxX = Integer.MIN_VALUE;
+		int maxY = Integer.MIN_VALUE;
+		for (int i = 0; i < 8; i++)
+		{
+			// A corner behind the camera is left out, as the outline leaves it out.
+			if (canvasX[i] != Integer.MIN_VALUE)
+			{
+				minX = Math.min(minX, canvasX[i]);
+				maxX = Math.max(maxX, canvasX[i]);
+				minY = Math.min(minY, canvasY[i]);
+				maxY = Math.max(maxY, canvasY[i]);
+			}
+		}
+		return point.getX() >= minX && point.getX() <= maxX
+			&& point.getY() >= minY && point.getY() <= maxY;
 	}
 
 	// ------------------------------------------------------------------ debugging
