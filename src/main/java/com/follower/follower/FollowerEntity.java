@@ -1779,6 +1779,11 @@ public class FollowerEntity
 			{
 				log.info("FTRACE obs JUMP from {} to {}", lastSeenPlayerTile, current);
 			}
+			// The player landed while the copy of their cast still plays.
+			if (lastSeenPlayerTile != null && vanishAfterEmoteArmed)
+			{
+				castLanded = true;
+			}
 			lastSeenPlayerTile = current;
 			playerFollowTile = current;
 			clearTrailOfPlayer();
@@ -2276,13 +2281,24 @@ public class FollowerEntity
 		// A stay pose widens the distance to its leash - roaming away from a
 		// posed follower is the point - but a snap of any kind releases it.
 		int leash = stayTile != null ? STAY_LEASH : SNAP_DISTANCE;
-		if (playerTile.getPlane() != tile.getPlane()
+		if (castLanded || playerTile.getPlane() != tile.getPlane()
 			|| tile.distanceTo(playerTile) > leash)
 		{
 			if (client.getGameState() != GameState.LOGGED_IN)
 			{
 				// Snapped from real data once the area has loaded.
 				return;
+			}
+			if (castLanded)
+			{
+				// A teleport clip whose hold outlasts the cast (the Lunar
+				// one's, HUMAN_TELEPORT_OTHER_IMPACT, runs 41 seconds) never
+				// ends in time to vanish: the follower lands with the player.
+				castLanded = false;
+				if (vanishAfterEmoteArmed)
+				{
+					cancelEmote();
+				}
 			}
 			stayTile = null;
 			if (!snapBeside(playerTile))
@@ -4668,6 +4684,9 @@ public class FollowerEntity
 
 	/** While true the follower is gone mid-teleport, awaiting the player's landing. */
 	private boolean vanished;
+
+	/** Set when the player is seen to land with the vanish still armed. */
+	private boolean castLanded;
 	private long vanishedAtMs;
 	private WorldPoint vanishPlayerTile;
 

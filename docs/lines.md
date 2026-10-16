@@ -1329,7 +1329,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Mirrors the player's teleport cast, then vanishes and reappears beside them. holdStill plants the follower for the duration: without it, a teleport that happens while the follower is off on an idle distraction interrupts its own cast. The player animating resets the idle counter, the wander is released the same tick, and the follower abandons the animation to run back to somebody who is no longer there. The hold also keeps updateWander out - it treats a held emote as busy.
 
-- **when:** your animation 714, 3864, 1979
+- **when:** your animation 714, 3864, 1979, 1816, 6575, 4071
 - **does:** mirrors you; holds still
 - **pacing:** priority 60, cooldown 3s
 
