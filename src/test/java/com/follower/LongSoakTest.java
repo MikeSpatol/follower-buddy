@@ -677,6 +677,7 @@ public class LongSoakTest
 				}
 				quiet[0] = sceneLeft > 0 || quietLeft > 0;
 				h.engine.setSceneQuiet(quiet[0]);
+				h.engine.setInCutscene(sceneLeft > 0);
 
 				// A conversation, read as the plugin reads it: up, and for two
 				// ticks after the box goes. A scene may run straight into one.

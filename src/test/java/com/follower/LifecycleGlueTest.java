@@ -121,7 +121,7 @@ public class LifecycleGlueTest
 		{
 			String leaving = method(signature);
 			for (String let : new String[]{"sceneOn = false;", "quietUntilTick = 0;",
-				"speechEngine.setSceneQuiet(false);"})
+				"speechEngine.setSceneQuiet(false);", "speechEngine.setInCutscene(false);"})
 			{
 				assertTrue(signature + " must let go of the scene: " + let, leaving.contains(let));
 			}
@@ -148,6 +148,8 @@ public class LifecycleGlueTest
 		// one waits for both to be over.
 		assertTrue("the engine is told of the scene and the quiet after it",
 			method("private void noticeTheScene()").contains("speechEngine.setSceneQuiet(sceneQuiet());"));
+		assertTrue("and of the scene itself, which can move a quest on",
+			method("private void noticeTheScene()").contains("speechEngine.setInCutscene(inCutscene());"));
 		// And for a conversation as the rules read it, page flips ridden out:
 		// on the raw box the news went out on a flip (QA, 15 Oct).
 		assertTrue("the page news waits for the quiet",

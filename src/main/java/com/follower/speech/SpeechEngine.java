@@ -205,6 +205,13 @@ public class SpeechEngine
 	private boolean sceneQuiet;
 
 	/**
+	 * The cutscene itself, without the quiet after it: what can move a
+	 * quest's step on under a line kept waiting (see the moved-on check).
+	 */
+	@Setter
+	private boolean inCutscene;
+
+	/**
 	 * Where "now" comes from.
 	 *
 	 * <p>Every window in this class is wall-clock - the speech gap, the held
@@ -460,19 +467,15 @@ public class SpeechEngine
 		int rested;
 		/** Held by a conversation, and not yet given its beat after it. */
 		boolean heardTheBox;
-		/** The scene quiet when last looked at, and whether a scene has begun since the win. */
-		boolean quiet;
-		boolean sceneSinceWin;
 		/** The rule's last firing before this win, given back if the line is let go unsaid. */
 		final long firedBefore;
 
-		PendingSpeech(SpeechRule rule, TriggerEvent event, int ticksLeft, boolean quiet, long firedBefore)
+		PendingSpeech(SpeechRule rule, TriggerEvent event, int ticksLeft, long firedBefore)
 		{
 			this.rule = rule;
 			this.event = event;
 			this.delay = ticksLeft;
 			this.ticksLeft = ticksLeft;
-			this.quiet = quiet;
 			this.firedBefore = firedBefore;
 		}
 	}
@@ -928,11 +931,21 @@ public class SpeechEngine
 				PendingSpeech delayed = it.next();
 				if (--delayed.ticksLeft <= 0)
 				{
-					if (sceneQuiet && !delayed.quiet)
+					// A cutscene that moves its quest's step on makes a line
+					// about the step before old news: two scenes stale, and
+					// "Questioning" said after the questioning. Let go
+					// unspent. A pan that leaves the step alone does not do
+					// it, nor a conversation alone: that is usually the very
+					// step it moves on, and the line is still about what came
+					// just before. Behaviour QA, 16 Oct: "a scene began since
+					// the win" lost a line to an unrelated pan, and missed a
+					// second scene that started inside the first one's quiet.
+					if (inCutscene && !delayed.rule.when.questStepHolds(getContext(), delayed.event))
 					{
-						delayed.sceneSinceWin = true;
+						it.remove();
+						noteSuppressed(delayed.rule, "moved-on");
+						continue;
 					}
-					delayed.quiet = sceneQuiet;
 					String held = blockedBy(delayed.rule, now);
 					// The beat after a conversation is for the tick the box
 					// goes. Held by anything else first, it waits its gap
@@ -980,18 +993,6 @@ public class SpeechEngine
 						continue;
 					}
 					it.remove();
-					// Kept over a cutscene that began after it won, a line
-					// about a quest's step that has since moved on is old
-					// news: two scenes stale, and "Questioning" said after the
-					// questioning. Let go unspent. A conversation alone does
-					// not do it: that is usually the very step it moves on,
-					// and the line is still about what came just before.
-					if (held == null && delayed.sceneSinceWin
-						&& !delayed.rule.when.questStepHolds(getContext(), delayed.event))
-					{
-						noteSuppressed(delayed.rule, "moved-on");
-						continue;
-					}
 					// Kept waiting, the moment it was about can pass: the
 					// player ate, or the person walked off. Let go unsaid, with
 					// its cooldown given back, so it rises again the next time
@@ -1153,7 +1154,7 @@ public class SpeechEngine
 		if (delay > 0)
 		{
 			winner.markFired(now);
-			pending.add(new PendingSpeech(winner, event, delay, sceneQuiet, firedBefore));
+			pending.add(new PendingSpeech(winner, event, delay, firedBefore));
 			return;
 		}
 
@@ -1162,7 +1163,7 @@ public class SpeechEngine
 			|| waitsOutTheRest(winner, blocked, 0))
 		{
 			winner.markFired(now);
-			PendingSpeech held = new PendingSpeech(winner, event, 1, sceneQuiet, firedBefore);
+			PendingSpeech held = new PendingSpeech(winner, event, 1, firedBefore);
 			held.gapAfterMs = lastSpokeMs;
 			held.heardTheBox = "dialogue".equals(blocked);
 			pending.add(held);

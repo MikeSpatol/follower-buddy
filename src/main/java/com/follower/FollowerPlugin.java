@@ -1144,6 +1144,7 @@ public class FollowerPlugin extends Plugin
 		sceneGoneTicks = 0;
 		quietUntilTick = 0;
 		speechEngine.setSceneQuiet(false);
+		speechEngine.setInCutscene(false);
 	}
 
 	/*
@@ -1464,8 +1465,10 @@ public class FollowerPlugin extends Plugin
 	 * A line a starting scene cut off just after it went up, said again once
 	 * the scene and its quiet are over. QA, 15 Oct: the line was gone a tick
 	 * or two after it appeared, and a once line - every quest-moment draft -
-	 * was spent all the same. Only a once line or an occasion, the lines that
-	 * do not come round again; anything else is let go, as before.
+	 * was spent all the same. Only a once line or one that waits its turn,
+	 * the lines that do not come round again; anything else is let go, as
+	 * before. Behaviour QA, 16 Oct: a bet's payoff, a waits line, was cut 1.2 s
+	 * in and lost.
 	 *
 	 * <p>Cut before it could be read: the time the line takes to read, and
 	 * never less than this. QA pass 2: a runner's door click let the window's
@@ -1487,7 +1490,7 @@ public class FollowerPlugin extends Plugin
 	/** Whether a line up this long, from this rule, taking this long to read, is said again after the scene. */
 	static boolean saysAgainAfterTheScene(SpeechRule rule, long upForMs, long toReadMs)
 	{
-		return rule != null && (rule.isOnce() || rule.isOccasion())
+		return rule != null && (rule.isOnce() || rule.waitsItsTurn())
 			&& upForMs < Math.max(SCENE_CUT_GRACE_MS, toReadMs);
 	}
 
@@ -1563,6 +1566,7 @@ public class FollowerPlugin extends Plugin
 		}
 		follower.setWatchingWithThePlayer(sceneHolds());
 		speechEngine.setSceneQuiet(sceneQuiet());
+		speechEngine.setInCutscene(inCutscene());
 
 		// Through the engine's remark, so the mute still holds. The words
 		// only: the rule's own business ran when the line first went up.
@@ -1577,7 +1581,15 @@ public class FollowerPlugin extends Plugin
 		}
 		else if (cutByTheScene != null)
 		{
-			speechEngine.remark(cutByTheScene.text);
+			// Not when its quest's step has moved on since, as the engine lets
+			// a line still waiting go. Behaviour QA, 16 Oct: the hideout line
+			// was said again after the scene that moved the step, and the next
+			// step's moment came 6 s behind it. The step is read from the
+			// game; no event plays a part in it.
+			if (cutByTheScene.rule.when.questStepHolds(speechEngine.getContext(), TriggerEvent.tick()))
+			{
+				speechEngine.remark(cutByTheScene.text);
+			}
 			cutByTheScene = null;
 		}
 	}
@@ -4812,6 +4824,7 @@ public class FollowerPlugin extends Plugin
 		sceneGoneTicks = 0;
 		quietUntilTick = 0;
 		speechEngine.setSceneQuiet(false);
+		speechEngine.setInCutscene(false);
 	}
 
 	@Subscribe

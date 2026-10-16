@@ -20,7 +20,8 @@ import net.runelite.api.coords.WorldPoint;
  * overhead queue (3 deep, 15.4 s stale), reading time (17 cps, 4 s floor, 12 s
  * cap), the NPC-dialogue hush in speakNow, a line that waits its turn kept in
  * the queue through a conversation (keptForTheBox), the cutscene clearing the queue and
- * re-saying a once/occasion line cut before it could be read (2 s at least), the 25-tick quiet
+ * re-saying a once or waiting line cut before it could be read (2 s at least) unless its quest
+ * step has moved on, the 25-tick quiet
  * after a scene, and the dialogue reading that stays "open" 2 ticks after
  * the box goes. Pacing is ON (Occasional, 6 s) unless set otherwise.
  */
@@ -156,7 +157,7 @@ public final class QuestSim
 			if (on)
 			{
 				cut = onScreen != null && ms[0] < speakingUntil && onScreen.rule != null
-					&& (onScreen.rule.isOnce() || onScreen.rule.isOccasion())
+					&& (onScreen.rule.isOnce() || onScreen.rule.waitsItsTurn())
 					&& ms[0] - onScreenSince < Math.max(2000, onScreen.text.length() * 1000L / 17) ? onScreen : null;
 				if (onScreen != null && ms[0] < speakingUntil)
 				{
@@ -183,6 +184,7 @@ public final class QuestSim
 		}
 		boolean quiet = sceneOn || tick < quietUntil;
 		h.engine.setSceneQuiet(quiet);
+		h.engine.setInCutscene(sceneOn);
 		if (cut != null && (quiet || npcDialog || goneTicks <= 2))
 		{
 			if (++cutHeld > 500)
@@ -192,8 +194,15 @@ public final class QuestSim
 		}
 		else if (cut != null)
 		{
-			note("   re-says the line the scene cut:");
-			h.engine.remark(cut.text);
+			if (cut.rule.when.questStepHolds(h.engine.getContext(), TriggerEvent.tick()))
+			{
+				note("   re-says the line the scene cut:");
+				h.engine.remark(cut.text);
+			}
+			else
+			{
+				note("   the line the scene cut is about a step since moved on: not said again");
+			}
 			cut = null;
 		}
 	}
