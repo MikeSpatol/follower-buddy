@@ -8630,7 +8630,7 @@
       "note": "Encouragement during an ordinary fight, kept rare so it does not natter. A boss fight has its own cheer.",
       "group": "combat",
       "priority": 30,
-      "cooldownMs": 20000,
+      "cooldownMs": 90000,
       "when": {
         "type": "all",
         "conditions": [
@@ -8647,7 +8647,7 @@
           },
           {
             "type": "chance",
-            "percent": 8
+            "percent": 4
           }
         ]
       },
@@ -12268,6 +12268,7 @@
     },
     {
       "id": "bet-won",
+      "waits": true,
       "note": "Above the loot rules so the verdict on the prediction beats the remark about the prize. The follower called it; that is the story.",
       "group": "bet",
       "priority": 72,
@@ -12290,6 +12291,7 @@
     },
     {
       "id": "bet-lost",
+      "waits": true,
       "note": "The half that makes the other half worth anything.",
       "group": "bet",
       "priority": 72,
@@ -13122,6 +13124,7 @@
     },
     {
       "id": "advice-taken",
+      "waits": true,
       "note": "The other half of a warning. Until now the follower shouted and then never mentioned it again, whichever way it went, which is the difference between commentary and a conversation.",
       "group": "reactions",
       "priority": 44,
@@ -13159,6 +13162,7 @@
     },
     {
       "id": "advice-ignored",
+      "waits": true,
       "note": "And the funnier half.",
       "group": "reactions",
       "priority": 42,
@@ -13740,6 +13744,7 @@
     },
     {
       "id": "challenge-met",
+      "waits": true,
       "note": "Paid out. Above the kill rules so the wager beats the cheer.",
       "group": "idle",
       "priority": 74,
@@ -13762,6 +13767,7 @@
     },
     {
       "id": "challenge-failed",
+      "waits": true,
       "group": "idle",
       "priority": 72,
       "cooldownMs": 5000,
@@ -15330,10 +15336,6 @@
           {
             "type": "daysKnown",
             "minimum": 2
-          },
-          {
-            "type": "chance",
-            "percent": 6
           }
         ]
       },
@@ -15496,10 +15498,6 @@
           {
             "type": "working",
             "is": "mining"
-          },
-          {
-            "type": "chance",
-            "percent": 3
           }
         ]
       },
@@ -16440,7 +16438,7 @@
             "type": "questVar",
             "varp": 63,
             "minimum": 3,
-            "maximum": 5
+            "maximum": 4
           },
           {
             "type": "npcNearby",
@@ -16497,7 +16495,7 @@
             "type": "questVar",
             "varp": 63,
             "minimum": 3,
-            "maximum": 5
+            "maximum": 4
           },
           {
             "type": "npcNearby",
@@ -16791,7 +16789,7 @@
             "type": "questVar",
             "varp": 302,
             "minimum": 4,
-            "maximum": 4
+            "maximum": 5
           },
           {
             "type": "inventoryHas",
@@ -17672,7 +17670,7 @@
       "cooldownMs": 600000,
       "once": true,
       "occasion": true,
-      "delayTicks": 2,
+      "delayTicks": 0,
       "output": "overhead",
       "animation": 13995,
       "mood": 4,
@@ -17723,7 +17721,7 @@
       "cooldownMs": 600000,
       "once": true,
       "occasion": true,
-      "delayTicks": 2,
+      "delayTicks": 0,
       "output": "overhead",
       "animation": 13995,
       "mood": 4,

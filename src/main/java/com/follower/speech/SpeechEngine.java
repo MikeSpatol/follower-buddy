@@ -449,15 +449,25 @@ public class SpeechEngine
 		int ticksLeft;
 		/** Ticks an occasion has spent waiting out the gap after another line. */
 		int waited;
+		/** The line that gap is after: a new line said starts the count again. */
+		long gapAfterMs;
 		/** Ticks an occasion has spent waiting out a scene, its quiet and the gap after, apart from the gap's ten. */
 		int sceneWaited;
+		/** Ticks a waits line has spent waiting out the director's rest. */
+		int rested;
+		/** Held by a conversation, and not yet given its beat after it. */
+		boolean heardTheBox;
+		/** The scene quiet when last looked at, and whether a scene has begun since the win. */
+		boolean quiet;
+		boolean sceneSinceWin;
 
-		PendingSpeech(SpeechRule rule, TriggerEvent event, int ticksLeft)
+		PendingSpeech(SpeechRule rule, TriggerEvent event, int ticksLeft, boolean quiet)
 		{
 			this.rule = rule;
 			this.event = event;
 			this.delay = ticksLeft;
 			this.ticksLeft = ticksLeft;
+			this.quiet = quiet;
 		}
 	}
 
@@ -504,12 +514,28 @@ public class SpeechEngine
 	 * than being dropped, and the gap or the floor after another line once
 	 * the scene is over: two occasions held by one scene are said one after
 	 * the other at any chattiness, where the ten-tick wait lost the second to
-	 * a gap of 45 seconds.
+	 * a gap of 45 seconds. An NPC conversation holds it the same way, inside
+	 * the same five minutes.
 	 */
 	static boolean waitsOutTheScene(SpeechRule rule, String held, int waited)
 	{
 		return rule.waitsItsTurn() && waited < SCENE_WAIT_TICKS
-			&& ("scene".equals(held) || (waited > 0 && ("gap".equals(held) || "hush".equals(held))));
+			&& ("scene".equals(held) || "dialogue".equals(held)
+				|| (waited > 0 && ("gap".equals(held) || "hush".equals(held))));
+	}
+
+	/**
+	 * How long a line that waits will wait out the director's rest, in
+	 * ticks: the longest rest. One rest, not a queue through every one: the
+	 * rest still happens, and the line comes after it. Behaviour QA, 15 Oct:
+	 * Alina and Noah's line met a rest in a busy square and was gone for good.
+	 */
+	static final int REST_WAIT_TICKS = 75;
+
+	/** Whether a line held by the director's rest waits it out rather than being dropped. Not an occasion: no rest holds one. */
+	static boolean waitsOutTheRest(SpeechRule rule, String held, int rested)
+	{
+		return "relax".equals(held) && Boolean.TRUE.equals(rule.waits) && rested < REST_WAIT_TICKS;
 	}
 
 	/**
@@ -654,6 +680,21 @@ public class SpeechEngine
 	}
 
 	/**
+	 * Whether a line that waits its turn is held for an NPC conversation:
+	 * the box is up, or went under three ticks ago (the context rides out a
+	 * page flip). Anything else said there is dropped by the plugin, and a
+	 * line with one chance was lost with it. QA, 15 Oct (Children of the
+	 * Sun): a quest's people were met by talking to them, so their lines came
+	 * up as the box opened, and the moments held over a scene were released
+	 * into the conversation the scene ran on into. Held, they are said once
+	 * it is over.
+	 */
+	private boolean heldForTheBox(SpeechRule rule)
+	{
+		return rule.waitsItsTurn() && getContext().isDialogueOpen();
+	}
+
+	/**
 	 * WHY this rule cannot speak, or null if it can.
 	 *
 	 * <p>Same decision as {@link #cannotSpeak}, phrased so the transcript can
@@ -669,7 +710,7 @@ public class SpeechEngine
 		}
 		if (rule == hushOwner && now < hushUntilMs)
 		{
-			return muted ? "muted" : sceneQuiet ? "scene" : null;
+			return muted ? "muted" : sceneQuiet ? "scene" : heldForTheBox(rule) ? "dialogue" : null;
 		}
 		if (muted)
 		{
@@ -678,6 +719,10 @@ public class SpeechEngine
 		if (sceneQuiet)
 		{
 			return "scene";
+		}
+		if (heldForTheBox(rule))
+		{
+			return "dialogue";
 		}
 		// Before the gap, because when both apply the director is the honest
 		// answer: the gap is three seconds and would be gone by the next tick,
@@ -850,12 +895,36 @@ public class SpeechEngine
 				PendingSpeech delayed = it.next();
 				if (--delayed.ticksLeft <= 0)
 				{
+					if (sceneQuiet && !delayed.quiet)
+					{
+						delayed.sceneSinceWin = true;
+					}
+					delayed.quiet = sceneQuiet;
 					String held = blockedBy(delayed.rule, now);
 					if (waitsOutTheScene(delayed.rule, held, delayed.sceneWaited))
 					{
 						delayed.sceneWaited++;
+						delayed.heardTheBox |= "dialogue".equals(held);
 						delayed.ticksLeft = 1;
 						continue;
+					}
+					// A beat after the conversation: what its end raises - the
+					// quest's step, moved on in it - goes first, and a line
+					// held from before waits its gap behind it.
+					if (held == null && delayed.heardTheBox)
+					{
+						delayed.heardTheBox = false;
+						delayed.ticksLeft = 1;
+						continue;
+					}
+					// The gap counted from the line it is behind: one said
+					// while it waits starts the count again (QA, 15 Oct: the
+					// second of two moments behind an area line was dropped a
+					// tick before its gap ran out).
+					if (delayed.gapAfterMs != lastSpokeMs)
+					{
+						delayed.gapAfterMs = lastSpokeMs;
+						delayed.waited = 0;
 					}
 					if (waitsOutTheGap(delayed.rule, held, delayed.waited, occasionWaitTicks()))
 					{
@@ -863,7 +932,25 @@ public class SpeechEngine
 						delayed.ticksLeft = 1;
 						continue;
 					}
+					if (waitsOutTheRest(delayed.rule, held, delayed.rested))
+					{
+						delayed.rested++;
+						delayed.ticksLeft = 1;
+						continue;
+					}
 					it.remove();
+					// Kept over a cutscene that began after it won, a line
+					// about a quest's step that has since moved on is old
+					// news: two scenes stale, and "Questioning" said after the
+					// questioning. Let go unspent. A conversation alone does
+					// not do it: that is usually the very step it moves on,
+					// and the line is still about what came just before.
+					if (held == null && delayed.sceneSinceWin
+						&& !delayed.rule.when.questStepHolds(getContext(), delayed.event))
+					{
+						noteSuppressed(delayed.rule, "moved-on");
+						continue;
+					}
 					if (held == null)
 					{
 						log.debug("rule '{}' fired after its {}-tick delay",
@@ -1003,15 +1090,19 @@ public class SpeechEngine
 		if (delay > 0)
 		{
 			winner.markFired(now);
-			pending.add(new PendingSpeech(winner, event, delay));
+			pending.add(new PendingSpeech(winner, event, delay, sceneQuiet));
 			return;
 		}
 
 		String blocked = blockedBy(winner, now);
-		if (waitsOutTheGap(winner, blocked, 0, occasionWaitTicks()) || waitsOutTheScene(winner, blocked, 0))
+		if (waitsOutTheGap(winner, blocked, 0, occasionWaitTicks()) || waitsOutTheScene(winner, blocked, 0)
+			|| waitsOutTheRest(winner, blocked, 0))
 		{
 			winner.markFired(now);
-			pending.add(new PendingSpeech(winner, event, 1));
+			PendingSpeech held = new PendingSpeech(winner, event, 1, sceneQuiet);
+			held.gapAfterMs = lastSpokeMs;
+			held.heardTheBox = "dialogue".equals(blocked);
+			pending.add(held);
 			return;
 		}
 		if (blocked != null)
@@ -1241,7 +1332,7 @@ public class SpeechEngine
 			// holds every first's cooldown longer than the queue's wait.
 			if (rule.isOnce() && !text.isEmpty())
 			{
-				getContext().noteSaidOnce(rule.id);
+				getContext().noteSaidOnce(rule.onceKey());
 			}
 		};
 
@@ -1318,7 +1409,8 @@ public class SpeechEngine
 
 	private boolean isActive(SpeechRule rule)
 	{
-		if (!rule.isEnabled() || (rule.isOnce() && getContext().hasSaidOnce(rule.id)))
+		if (!rule.isEnabled() || (rule.isOnce()
+			&& (getContext().hasSaidOnce(rule.id) || getContext().hasSaidOnce(rule.onceKey()))))
 		{
 			return false;
 		}

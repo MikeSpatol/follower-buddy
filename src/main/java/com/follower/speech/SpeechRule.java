@@ -213,11 +213,13 @@ public class SpeechRule
 
 	/**
 	 * Waits its turn as an occasion does - out a cutscene and the quiet after
-	 * it, and out the gap after another line - rather than being dropped, and
-	 * nothing more: the director's rests and the empty-chair damper still
-	 * hold it. For a line with one chance, the meeting of a quest's people.
-	 * Play test, 15 Oct (Children of the Sun): Prince Itzla's line came up as
-	 * the cutscene opened and Sergeant Tobyn's six seconds after a cat, and
+	 * it, an NPC conversation, and the gap after another line - rather than
+	 * being dropped. It also waits out one of the director's rests, where an
+	 * occasion goes through, and it counts towards the next rest when said;
+	 * the empty-chair damper still drops it. For a line with one chance: the
+	 * meeting of a quest's people, the payoff of something the follower set
+	 * up. Play test, 15 Oct (Children of the Sun): Prince Itzla's line came up
+	 * as the cutscene opened and Sergeant Tobyn's six seconds after a cat, and
 	 * neither was heard.
 	 */
 	public Boolean waits;
@@ -494,6 +496,20 @@ public class SpeechRule
 	public boolean isOnce()
 	{
 		return Boolean.TRUE.equals(once);
+	}
+
+	/**
+	 * What a once rule is spent under. A callback - a moment's other version
+	 * for a player who has done the quest it names, "-after-" in its id - is
+	 * spent with its base: they are one moment, and only one of them is ever
+	 * said. QA, 15 Oct: the mugger on Rune Mysteries' street was said, the
+	 * player finished Children of the Sun next door, and the callback said
+	 * the mugger again at the same step.
+	 */
+	public String onceKey()
+	{
+		int cut = id == null ? -1 : id.indexOf("-after-");
+		return cut > 0 ? id.substring(0, cut) : id;
 	}
 
 	public boolean isValid()

@@ -148,10 +148,39 @@ public class LifecycleGlueTest
 		// one waits for both to be over.
 		assertTrue("the engine is told of the scene and the quiet after it",
 			method("private void noticeTheScene()").contains("speechEngine.setSceneQuiet(sceneQuiet());"));
+		// And for a conversation as the rules read it, page flips ridden out:
+		// on the raw box the news went out on a flip (QA, 15 Oct).
 		assertTrue("the page news waits for the quiet",
 			method("public void onGameTick(GameTick event)").contains(
 				"nextPageNews(pageNews, client.getTickCount(), speechEngine.isQuiet(),\n"
-					+ "\t\t\tnpcDialogOpen() || sceneQuiet());"));
+					+ "\t\t\tinConversation() || sceneQuiet());"));
+		assertTrue(method("private boolean inConversation()")
+			.contains("return npcDialogOpen() || dialogGoneTicks <= 2;"));
+	}
+
+	@Test
+	public void aLineThatWaitsIsKeptInTheQueueThroughAConversation() throws IOException
+	{
+		// QA, 15 Oct: a line the engine held for a conversation can still sit
+		// in the queue behind a long one, and the player start talking to
+		// someone meanwhile. Kept, not said into the box and dropped.
+		com.follower.speech.SpeechRule waits = new com.follower.speech.SpeechRule();
+		waits.waits = Boolean.TRUE;
+		com.follower.speech.SpeechRule occasion = new com.follower.speech.SpeechRule();
+		occasion.occasion = Boolean.TRUE;
+		assertTrue(FollowerPlugin.keptForTheBox(waits, true));
+		assertTrue(FollowerPlugin.keptForTheBox(occasion, true));
+		assertFalse("chatter is dropped there as ever",
+			FollowerPlugin.keptForTheBox(new com.follower.speech.SpeechRule(), true));
+		assertFalse(FollowerPlugin.keptForTheBox(waits, false));
+		assertFalse(FollowerPlugin.keptForTheBox(null, true));
+
+		assertTrue("not said into the box when the floor is free", method("private void speak(String text,")
+			.contains("if (now < speakingUntilMs || keptForTheBox(rule, inConversation()))"));
+		String drain = method("private void drainSpeechQueue()");
+		int kept = drain.indexOf("keptForTheBox(next.rule, inConversation())");
+		assertTrue("nor drained into it", kept >= 0);
+		assertTrue("its staleness counted from the box closing", kept < drain.indexOf("SPEECH_STALE_MS"));
 	}
 
 	@Test
