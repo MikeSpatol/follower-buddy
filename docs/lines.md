@@ -1,6 +1,6 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 618 rules, 2626 spoken lines, 3 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 616 rules, 2622 spoken lines, 3 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
@@ -19,7 +19,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - [clock](#clock) - The hour and how long we have been at it (9 rules, 39 lines)
 - [gear](#gear) - What you put on (63 rules, 147 lines)
 - [boss](#boss) - Bosses sighted and fought (55 rules, 522 lines)
-- [quest](#quest) - Famous quest figures nearby (124 rules, 315 lines)
+- [quest](#quest) - Famous quest figures nearby (122 rules, 311 lines)
 - [thrall](#thrall) - When it stands in for a thrall (3 rules, 18 lines)
 - [mimic](#mimic) - Copying your emotes (30 rules, 16 lines)
 - [dialogs](#dialogs) - the conversations it starts (3 trees)
@@ -7413,28 +7413,6 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - That's hole one. I've started numbering them, just in case.
 
-### `qm-x-marks-the-spot-the-orb`
-
-> X Marks The Spot, varbit 8063 = 4: Dug at the X behind Lumbridge Castle, by the kitchen door, and found a mysterious orb. Source: Quest Helper (4 = dig in Draynor) (unverified)
-
-- **when:** questvar AND NOT (questdone) AND NOT (dialogueopen)
-- **does:** occasion (never held back); once ever; animation 2113
-- **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
-
-- An orb, buried behind a kitchen. I'd have looked for a ladle.
-- Scroll, map, now an orb. Whoever planned this liked variety.
-- A glass ball out of the ground. I'm keeping my hands in my pockets.
-
-### `qm-x-marks-the-spot-the-orb-after-cooks-assistant`
-
-> Callback: said instead of qm-x-marks-the-spot-the-orb when Cooks Assistant is done. X Marks The Spot, varbit 8063 = 4: Dug at the X behind Lumbridge Castle, by the kitchen door, and found a mysterious orb. Source: Quest Helper (4 = dig in Draynor) (unverified)
-
-- **when:** questvar AND questdone AND NOT (dialogueopen)
-- **does:** occasion (never held back); once ever; animation 2113
-- **pacing:** priority 61, cooldown 10m, delay 2 ticks, overhead
-
-- The cook's back door. If he sees us, he'll want something fetched.
-
 ### `qm-x-marks-the-spot-the-cipher`
 
 > X Marks The Spot, varbit 8063 = 5: Followed the orb to the spot east of Draynor, near the jail, and dug up a scroll written in cipher. Source: Quest Helper (5 = dig in the pig pen by Martin) (unverified)
@@ -7462,7 +7440,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > X Marks The Spot, varbit 8063 = 6: Dug up the ancient casket in the Draynor pig pen, heard a faint whisper, and put it down to the wind. Source: Quest Helper (6 = bring Veos the casket) (unverified)
 
 - **when:** questvar AND NOT (dialogueopen)
-- **does:** mood +5; occasion (never held back); once ever; files incident `quest-pig-pen-casket` as 'the whispering casket in the pig pen'; animation 13995
+- **does:** occasion (never held back); once ever; files incident `quest-pig-pen-casket` as 'the whispering casket in the pig pen'; animation 13994
 - **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
 
 - A whispering casket. I'm holding the notebook a little further away.

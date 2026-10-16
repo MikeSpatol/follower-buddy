@@ -198,7 +198,7 @@ public class QuestMomentTest
 				assertTrue(rule.id + "'s base is a first too", base.isOnce());
 			}
 		}
-		assertTrue(callbacks >= 13);
+		assertTrue(callbacks >= 12);
 	}
 
 	@Test

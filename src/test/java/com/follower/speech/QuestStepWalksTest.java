@@ -198,4 +198,30 @@ public class QuestStepWalksTest
 			}
 		}
 	}
+
+	/**
+	 * X Marks the Spot dug through stages 3-6 as Quest Helper's
+	 * XMarksTheSpot.java (BSD) has them. Four moments in about two minutes
+	 * was the densest stretch of any quest (QA pass 2): the orb, a short
+	 * walk after hole one, is left out. The casket is uneasy, not pleased.
+	 */
+	@Test
+	public void xMarksTheSpotKeepsItsHolesAndUneasyCasket() throws Exception
+	{
+		QuestSim s = sim();
+		s.started(Quest.X_MARKS_THE_SPOT);
+		s.at(3230, 3210, 0);
+		for (int stage = 3; stage <= 6; stage++)
+		{
+			s.varbit(8063, stage);
+			s.ticks(30);
+		}
+		s.summary();
+		assertTrue(s.transcript(), s.heardIds.contains("qm-x-marks-the-spot-first-hole"));
+		assertFalse(s.transcript(), s.heardIds.contains("qm-x-marks-the-spot-the-orb"));
+		assertTrue(s.transcript(), s.heardIds.contains("qm-x-marks-the-spot-the-cipher"));
+		String casket = saidLine(s, "qm-x-marks-the-spot-the-casket");
+		assertTrue(s.transcript(), casket.contains("anim=13994"));
+		assertFalse(casket, casket.contains("mood="));
+	}
 }
