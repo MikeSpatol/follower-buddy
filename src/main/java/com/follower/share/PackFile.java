@@ -8,7 +8,6 @@ import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -779,12 +778,31 @@ public final class PackFile
 		}
 	}
 
-	/** Writes a JSON file back out, used after an import. */
+	/**
+	 * Writes a JSON file back out, used after an import. Written beside it and
+	 * moved over it, as the Messages window saves: the client thread polls
+	 * phrases.json, and an in-place write let it read the file half written
+	 * (QA3).
+	 */
 	public static void save(Path file, JsonObject data, Gson gson) throws IOException
 	{
-		try (OutputStream out = Files.newOutputStream(file))
+		byte[] bytes = (gson.toJson(data) + "\n").getBytes(StandardCharsets.UTF_8);
+		Path temp = file.resolveSibling(file.getFileName() + ".tmp");
+		Files.write(temp, bytes);
+		try
 		{
-			out.write((gson.toJson(data) + "\n").getBytes(StandardCharsets.UTF_8));
+			Files.move(temp, file, java.nio.file.StandardCopyOption.REPLACE_EXISTING,
+				java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+		}
+		catch (java.nio.file.AtomicMoveNotSupportedException e)
+		{
+			Files.move(temp, file, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+		}
+		catch (java.nio.file.FileSystemException e)
+		{
+			// Held open elsewhere on Windows: written in place, as before.
+			Files.write(file, bytes);
+			Files.deleteIfExists(temp);
 		}
 	}
 }

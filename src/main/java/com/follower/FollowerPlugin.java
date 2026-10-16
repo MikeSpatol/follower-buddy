@@ -1000,6 +1000,12 @@ public class FollowerPlugin extends Plugin
 			voiceDialog.dispose();
 			voiceDialog = null;
 		}
+		// Left open, its Forget everything still ran for a stopped plugin (QA3).
+		if (memoryDialog != null)
+		{
+			memoryDialog.dispose();
+			memoryDialog = null;
+		}
 		// Disposing is not closing, so no cut is sent: the block below takes
 		// the film's pose off with every other, and the scene's flags go with
 		// the transient state at the end.
@@ -2653,6 +2659,18 @@ public class FollowerPlugin extends Plugin
 			appearanceService.invalidate();
 			rebuildFollower();
 			syncPanel();
+			// An open Memory window shows this profile's memory, which is the
+			// one its Forget everything would wipe (QA3).
+			java.util.List<String[]> rows =
+				com.follower.ui.MemoryDialog.summarise(speechEngine.getContext(),
+					ruleLoader.getRegionNames());
+			javax.swing.SwingUtilities.invokeLater(() ->
+			{
+				if (memoryDialog != null && memoryDialog.isVisible())
+				{
+					memoryDialog.show(rows);
+				}
+			});
 		});
 	}
 
@@ -3231,6 +3249,10 @@ public class FollowerPlugin extends Plugin
 	{
 		clientThread.invoke(() ->
 		{
+			if (!started)
+			{
+				return;
+			}
 			configManager.unsetConfiguration(FollowerConfig.GROUP, "counters");
 			configManager.unsetConfiguration(FollowerConfig.GROUP, "traits");
 			configManager.unsetConfiguration(FollowerConfig.GROUP, "lastSeenMs");

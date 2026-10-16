@@ -66,12 +66,16 @@ public class VoiceLibrary
 	private Path file;
 	private Path sounds;
 
-	/** Line text to file name. Insertion-ordered so the file reads sensibly. */
-	private Map<String, String> attached = new LinkedHashMap<>();
+	/**
+	 * Line text to file name. Insertion-ordered so the file reads sensibly.
+	 * Never changed in place, only replaced: the Sounds window writes it on
+	 * the event thread while the client thread plays (QA3).
+	 */
+	private volatile Map<String, String> attached = new LinkedHashMap<>();
 
 
 	/** Files that failed to open; remembered so a broken one is logged once. */
-	private final Set<String> refused = new HashSet<>();
+	private final Set<String> refused = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
 
 	@Inject
@@ -197,14 +201,16 @@ public class VoiceLibrary
 		{
 			return;
 		}
+		Map<String, String> next = new LinkedHashMap<>(attached);
 		if (fileName == null || fileName.isEmpty())
 		{
-			attached.remove(line);
+			next.remove(line);
 		}
 		else
 		{
-			attached.put(line, fileName);
+			next.put(line, fileName);
 		}
+		attached = next;
 		write();
 	}
 
