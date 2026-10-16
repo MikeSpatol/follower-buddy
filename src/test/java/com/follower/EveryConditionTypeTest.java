@@ -343,6 +343,30 @@ public class EveryConditionTypeTest
 		assertQuiet(other, "a different quest finished");
 	}
 
+	@Test
+	public void questWitnessed() throws IOException
+	{
+		note("questWitnessed");
+
+		long today = java.time.LocalDate.now().toEpochDay();
+		Harness h = harnessFor("{\"type\": \"questWitnessed\", \"quest\": \"COOKS_ASSISTANT\"}");
+		h.game.quest(net.runelite.api.Quest.COOKS_ASSISTANT, net.runelite.api.QuestState.FINISHED);
+		h.gameTicks(2);
+		assertQuiet(h, "done before the follower came along");
+		h.engine.getContext().setQuestWitness(quest -> "COOKS_ASSISTANT".equals(quest) ? today : null);
+		h.gameTicks(1);
+		assertFired(h, "questWitnessed");
+
+		Harness waiting = harnessFor(
+			"{\"type\": \"questWitnessed\", \"quest\": \"COOKS_ASSISTANT\", \"minimum\": 1}");
+		waiting.engine.getContext().setQuestWitness(quest -> today);
+		waiting.gameTicks(2);
+		assertQuiet(waiting, "seen today is not a day ago");
+		waiting.engine.getContext().setQuestWitness(quest -> today - 3);
+		waiting.gameTicks(1);
+		assertFired(waiting, "questWitnessed with a minimum");
+	}
+
 	// -------------------------------------------------------------- location
 
 	@Test
@@ -1833,6 +1857,30 @@ public class EveryConditionTypeTest
 		assertFired(last, "lastTime");
 	}
 
+	@Test
+	public void howLongSinceAOneTimeLineWasSaid() throws IOException
+	{
+		note("daysSinceSaid");
+
+		String when = "{\"type\": \"daysSinceSaid\", \"rule\": \"opener\", \"minimum\": 10}";
+		Harness never = harnessFor(when);
+		never.engine.getContext().setMetOnDay(java.time.LocalDate.now().toEpochDay() - 400);
+		never.gameTicks(2);
+		assertQuiet(never, "the opener has not been said, however long we have known each other");
+
+		Harness h = harnessFor(when);
+		h.engine.getContext().restoreSpokenOnce(java.util.Collections.singletonList("opener"),
+			java.util.Collections.singletonMap("opener", java.time.LocalDate.now().toEpochDay() - 5));
+		h.gameTicks(2);
+		assertQuiet(h, "five days is not ten");
+
+		Harness later = harnessFor(when);
+		later.engine.getContext().restoreSpokenOnce(java.util.Collections.singletonList("opener"),
+			java.util.Collections.singletonMap("opener", java.time.LocalDate.now().toEpochDay() - 12));
+		later.gameTicks(2);
+		assertFired(later, "daysSinceSaid");
+	}
+
 	// ------------------------------------------------------------- coverage
 
 	@Test
@@ -1849,6 +1897,7 @@ public class EveryConditionTypeTest
 		inventoryHas();
 		questVarAndDialogueOpen();
 		questDone();
+		questWitnessed();
 		inRegionAndInArea();
 		regionEnterAndReturnVisit();
 		npcSpawnDespawnAndNearby();
@@ -1876,6 +1925,7 @@ public class EveryConditionTypeTest
 		tasteIsEarnedAndOutranksTheRoll();
 		adviceIsTakenOrIsNot();
 		howLongWeHaveKnownEachOther();
+		howLongSinceAOneTimeLineWasSaid();
 		theNameYouEarnAndTheGearYouOutgrew();
 		theChallengeIsMetOrIsNot();
 		underfootAndGoneFromTheKeyboard();

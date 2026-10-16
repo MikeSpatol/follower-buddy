@@ -872,6 +872,9 @@ public class FollowerPlugin extends Plugin
 			client.getTickCount())));
 		// Quest pages are per account, where the memory is per profile.
 		chronicleProgress.setAccount(() -> configManager.getRSProfileKey());
+		// A callback that remembers a quest together asks the book whether
+		// the follower was there for it.
+		speechEngine.getContext().setQuestWitness(chronicleProgress::witnessedOn);
 		// The book is the follower's, and signed with its name.
 		chronicleWindow.setOwner(config::followerName);
 		sketchBook = new com.follower.chronicle.SketchBook(dataDir);
@@ -2440,6 +2443,10 @@ public class FollowerPlugin extends Plugin
 		 * are only ever as many entries as there are firsts worth marking.
 		 */
 		java.util.List<String> spokenOnce;
+		/** And the day (an epoch day) each was said; missing from older saves. */
+		java.util.Map<String, Long> spokenOnceOn;
+		/** Quests the follower saw finish, by quest and account, and the day. */
+		java.util.Map<String, Long> questsSeenFinished;
 		/** Chronicle pages written so far, by entry id. */
 		java.util.List<String> chronicled;
 		/** And when (an epoch day) and where each was written, where known. */
@@ -2656,7 +2663,8 @@ public class FollowerPlugin extends Plugin
 			context.restoreIncident(saved.incidentKey, saved.incidentPhrase,
 				saved.incidentCount, saved.incidentWhere, saved.incidentWhenMs, saved.incidentWho);
 			context.restorePlaces(saved.placeScores, saved.placeMemories);
-			context.restoreSpokenOnce(saved.spokenOnce);
+			context.restoreSpokenOnce(saved.spokenOnce, saved.spokenOnceOn);
+			context.restoreQuestsSeenFinished(saved.questsSeenFinished);
 			context.restoreChronicled(saved.chronicled);
 			context.restoreChronicledStamps(saved.chronicledOn, saved.chronicledAt);
 			context.restoreLineWear(saved.lineWear);
@@ -2733,6 +2741,10 @@ public class FollowerPlugin extends Plugin
 		saved.placeScores = context.getPlaceScores();
 		saved.placeMemories = context.getPlaceMemories();
 		saved.spokenOnce = new java.util.ArrayList<>(context.getSpokenOnce());
+		saved.spokenOnceOn = context.getSpokenOnceOn().isEmpty() ? null
+			: new java.util.HashMap<>(context.getSpokenOnceOn());
+		saved.questsSeenFinished = context.getQuestsSeenFinished().isEmpty() ? null
+			: new java.util.HashMap<>(context.getQuestsSeenFinished());
 		saved.chronicled = new java.util.ArrayList<>(context.getChronicled());
 		saved.chronicledOn = context.getChronicledOn().isEmpty() ? null
 			: new java.util.HashMap<>(context.getChronicledOn());
@@ -9046,6 +9058,10 @@ public class FollowerPlugin extends Plugin
 			}
 			speechEngine.getContext().tally("quests");
 			speechEngine.getContext().noteDoing("finishing " + quest);
+			if (chronicleProgress != null)
+			{
+				chronicleProgress.sawQuestFinish(quest);
+			}
 			speechEngine.dispatch(TriggerEvent.questComplete(quest));
 		});
 	}

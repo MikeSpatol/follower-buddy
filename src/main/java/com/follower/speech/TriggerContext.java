@@ -799,6 +799,58 @@ public final class TriggerContext
 		}
 	}
 
+	/**
+	 * Quests the follower saw finish, and the day (an epoch day), under the
+	 * key the chronicle gives them: a quest belongs to the account, where the
+	 * memory belongs to the profile.
+	 */
+	private final java.util.Map<String, Long> questsSeenFinished = new java.util.HashMap<>();
+
+	public void noteQuestSeenFinished(String key, long epochDay)
+	{
+		if (key != null && questsSeenFinished.putIfAbsent(key, epochDay) == null)
+		{
+			countersDirty = true;
+		}
+	}
+
+	public Long questSeenFinishedOn(String key)
+	{
+		return key == null ? null : questsSeenFinished.get(key);
+	}
+
+	/** Live map, for the plugin to write out. Read-only by convention. */
+	public java.util.Map<String, Long> getQuestsSeenFinished()
+	{
+		return questsSeenFinished;
+	}
+
+	public void restoreQuestsSeenFinished(java.util.Map<String, Long> saved)
+	{
+		if (saved != null)
+		{
+			questsSeenFinished.putAll(saved);
+		}
+	}
+
+	/**
+	 * Whether the follower was there for a quest, as the chronicle answers
+	 * it: the day it saw the quest through, or null for one done before it
+	 * came along. A finished quest is not enough for a line that remembers
+	 * doing it together; most players did the early quests years ago.
+	 */
+	private java.util.function.Function<String, Long> questWitness = quest -> null;
+
+	public void setQuestWitness(java.util.function.Function<String, Long> lookup)
+	{
+		questWitness = lookup == null ? quest -> null : lookup;
+	}
+
+	public Long questWitnessedOn(String quest)
+	{
+		return quest == null ? null : questWitness.apply(quest);
+	}
+
 	// ---------------------------------------------------------- work sessions
 
 	/**
@@ -1012,8 +1064,36 @@ public final class TriggerContext
 	{
 		if (ruleId != null && spokenOnce.add(ruleId))
 		{
+			spokenOnceOn.put(ruleId, java.time.LocalDate.now().toEpochDay());
 			countersDirty = true;
 		}
+	}
+
+	/**
+	 * The day (an epoch day) each one-time line was said. A running bit's
+	 * later stages count from the day its opener was heard, not from the
+	 * first meeting: counted from the meeting, a follower already past the
+	 * last stage's day when the bit arrived would open it and close it in
+	 * the same session.
+	 */
+	private final java.util.Map<String, Long> spokenOnceOn = new java.util.HashMap<>();
+
+	/** Days since the one-time line was said, or -1 if it has not been. */
+	public int daysSinceSaid(String ruleId)
+	{
+		Long on = ruleId == null ? null : spokenOnceOn.get(ruleId);
+		if (on == null)
+		{
+			return -1;
+		}
+		long days = java.time.LocalDate.now().toEpochDay() - on;
+		return days < 0 ? 0 : (int) Math.min(days, Integer.MAX_VALUE);
+	}
+
+	/** Live map, for the plugin to write out. Read-only by convention. */
+	public java.util.Map<String, Long> getSpokenOnceOn()
+	{
+		return spokenOnceOn;
 	}
 
 	/** Live set, for the plugin to write out. Read-only by convention. */
@@ -1024,9 +1104,32 @@ public final class TriggerContext
 
 	public void restoreSpokenOnce(java.util.Collection<String> saved)
 	{
+		restoreSpokenOnce(saved, null);
+	}
+
+	/**
+	 * The lines and, where saved, their days. A line saved before the days
+	 * were kept is dated today: its bit then starts again from its first
+	 * stage, which is a repeat, where dating it from the meeting could jump
+	 * straight to the end.
+	 */
+	public void restoreSpokenOnce(java.util.Collection<String> saved, java.util.Map<String, Long> on)
+	{
 		if (saved != null)
 		{
 			spokenOnce.addAll(saved);
+		}
+		if (on != null)
+		{
+			spokenOnceOn.putAll(on);
+		}
+		long today = java.time.LocalDate.now().toEpochDay();
+		for (String id : spokenOnce)
+		{
+			if (spokenOnceOn.putIfAbsent(id, today) == null)
+			{
+				countersDirty = true;
+			}
 		}
 	}
 

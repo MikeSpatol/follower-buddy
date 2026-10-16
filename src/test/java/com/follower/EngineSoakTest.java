@@ -74,6 +74,7 @@ public class EngineSoakTest
 		"{\"type\": \"inWilderness\"}",
 		"{\"type\": \"rolledFeeling\", \"is\": \"disliked\"}",
 		"{\"type\": \"daysKnown\", \"minimum\": 0, \"maximum\": 3}",
+		"{\"type\": \"daysSinceSaid\", \"rule\": \"probe\", \"maximum\": 3}",
 		"{\"type\": \"none\", \"conditions\": [{\"type\": \"repeating\"}]}",
 		// The rest of the vocabulary, older than the pool's last look. The
 		// scene, the body and the bag first: state the driver moves.
@@ -89,6 +90,7 @@ public class EngineSoakTest
 		"{\"type\": \"questVar\", \"varp\": 179, \"minimum\": 1, \"maximum\": 20}",
 		"{\"type\": \"dialogueOpen\"}",
 		"{\"type\": \"questDone\", \"quest\": \"SHEEP_SHEARER\"}",
+		"{\"type\": \"questWitnessed\", \"quest\": \"SHEEP_SHEARER\"}",
 		"{\"type\": \"inventoryHas\", \"ids\": [2944]}",
 		"{\"type\": \"poisoned\"}",
 		"{\"type\": \"venomed\"}",
@@ -555,6 +557,8 @@ public class EngineSoakTest
 				long today = LocalDate.now().toEpochDay();
 				ctx.setMetOnDay(new long[]{0L, today - 1, today - 400,
 					LocalDate.now().minusYears(2).toEpochDay()}[random.nextInt(4)]);
+				// And a one-time line said, for daysSinceSaid to count from.
+				ctx.noteSaidOnce("probe");
 				break;
 			}
 			case 46:
@@ -715,6 +719,9 @@ public class EngineSoakTest
 		{
 			Random random = new Random(seed);
 			Harness h = new Harness(folder.newFolder().toPath(), rules(random, 25));
+			// The book, as the plugin wires it: here a quest done is a quest seen.
+			h.engine.getContext().setQuestWitness(quest -> h.engine.getContext().isQuestDone(quest)
+				? LocalDate.now().toEpochDay() : null);
 
 			Set<String> disabled = new HashSet<>();
 			disabled.add("probe");

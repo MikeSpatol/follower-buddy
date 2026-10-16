@@ -1247,36 +1247,36 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-fence-book-early`
 
-> Running bit, the fence book: days 3-14 known. Idle window like wonders-about-you, rarer, two-hour cooldown.
+> Running bit, the fence book: days 1-12 after the opener. Idle window like wonders-about-you, rarer, two-hour cooldown.
 
-- **when:** standing still 240+ ticks AND standing still under 600 ticks AND known 3-14 days AND a 6% roll
+- **when:** standing still 240+ ticks AND standing still under 600 ticks AND 1-12 days after `fun-fence-book-start` was said AND a 6% roll
 - **pacing:** priority 17, cooldown 2h, delay 2 ticks, overhead
 
 - The fence book's found its feet. Lots of posts, and a promising stile.
 
 ### `fun-fence-book-middle`
 
-> Running bit, the fence book: days 15-44 known. Idle window like wonders-about-you, rarer, two-hour cooldown.
+> Running bit, the fence book: days 13-42 after the opener. Idle window like wonders-about-you, rarer, two-hour cooldown.
 
-- **when:** standing still 240+ ticks AND standing still under 600 ticks AND known 15-44 days AND a 6% roll
+- **when:** standing still 240+ ticks AND standing still under 600 ticks AND 13-42 days after `fun-fence-book-start` was said AND a 6% roll
 - **pacing:** priority 17, cooldown 2h, delay 2 ticks, overhead
 
 - The fence book's reached gates at last. I read that bit twice.
 
 ### `fun-fence-book-finished`
 
-> Running bit, the fence book: days 45-69 known. Idle window like wonders-about-you, rarer, two-hour cooldown.
+> Running bit, the fence book: days 43-67 after the opener. Idle window like wonders-about-you, rarer, two-hour cooldown.
 
-- **when:** standing still 240+ ticks AND standing still under 600 ticks AND known 45-69 days AND a 6% roll
+- **when:** standing still 240+ ticks AND standing still under 600 ticks AND 43-67 days after `fun-fence-book-start` was said AND a 6% roll
 - **pacing:** priority 17, cooldown 2h, delay 2 ticks, overhead
 
 - Finished the fence book. I miss it, which I didn't expect.
 
 ### `fun-fence-book-sequel`
 
-> Running bit, the fence book: day 100 on known. Idle window like wonders-about-you, rarer, two-hour cooldown.
+> Running bit, the fence book: day 98 on after the opener. Idle window like wonders-about-you, rarer, two-hour cooldown.
 
-- **when:** standing still 240+ ticks AND standing still under 600 ticks AND known 100+ days AND a 6% roll
+- **when:** standing still 240+ ticks AND standing still under 600 ticks AND 98+ days after `fun-fence-book-start` was said AND a 6% roll
 - **pacing:** priority 17, cooldown 2h, delay 2 ticks, overhead
 
 - There's a second volume of the fence book, all walls. I'm pacing myself.
@@ -1987,9 +1987,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-gull-rival-early`
 
-> Running bit, the gull: stage for days 1-20 known. No chance roll (npcNearby is state; a roll would re-arm every tick), so the three-hour cooldown is the pacing.
+> Running bit, the gull: stage for days 1-20 after the opener. No chance roll (npcNearby is state; a roll would re-arm every tick), so the three-hour cooldown is the pacing.
 
-- **when:** known 1-20 days AND Seagull, Gull within 6 tiles, in sight
+- **when:** 1-20 days after `fun-gull-rival-first` was said AND Seagull, Gull within 6 tiles, in sight
 - **pacing:** priority 30, cooldown 3h, delay 2 ticks, overhead
 
 - Watch that gull. It's been reading over my shoulder.
@@ -1997,9 +1997,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-gull-rival-middle`
 
-> Running bit, the gull: stage for days 21-89 known. No chance roll (npcNearby is state; a roll would re-arm every tick), so the three-hour cooldown is the pacing.
+> Running bit, the gull: stage for days 21-89 after the opener. No chance roll (npcNearby is state; a roll would re-arm every tick), so the three-hour cooldown is the pacing.
 
-- **when:** known 21-89 days AND Seagull, Gull within 6 tiles, in sight
+- **when:** 21-89 days after `fun-gull-rival-first` was said AND Seagull, Gull within 6 tiles, in sight
 - **pacing:** priority 30, cooldown 3h, delay 2 ticks, overhead
 
 - That gull took a page off me once. I've rewritten it, out of spite.
@@ -2007,9 +2007,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-gull-rival-late`
 
-> Running bit, the gull: stage for day 90 on known. No chance roll (npcNearby is state; a roll would re-arm every tick), so the three-hour cooldown is the pacing.
+> Running bit, the gull: stage for day 90 on after the opener. No chance roll (npcNearby is state; a roll would re-arm every tick), so the three-hour cooldown is the pacing.
 
-- **when:** known 90+ days AND Seagull, Gull within 6 tiles, in sight
+- **when:** 90+ days after `fun-gull-rival-first` was said AND Seagull, Gull within 6 tiles, in sight
 - **pacing:** priority 30, cooldown 3h, delay 2 ticks, overhead
 
 - The gull and I have come to terms. It stays there, I stay here.
@@ -2017,9 +2017,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-gull-feather`
 
-> Running bit, the gull: the truce, said once. Day 90 on, pocket empty: it picks up a gull's feather (souvenir, 60 min), which the souvenir-mention lines then carry. One point over the late stage, so the peace offering opens it.
+> Running bit, the gull: the truce, said once. Day 90 on after the opener, pocket empty: it picks up a gull's feather (souvenir, 60 min), which the souvenir-mention lines then carry. One point over the late stage, so the peace offering opens it.
 
-- **when:** known 90+ days AND NOT (carrying a souvenir) AND Seagull, Gull within 6 tiles, in sight
+- **when:** 90+ days after `fun-gull-rival-first` was said AND NOT (carrying a souvenir) AND Seagull, Gull within 6 tiles, in sight
 - **does:** mood +3; once ever; picks up 'a gull's feather' (60 min)
 - **pacing:** priority 31, cooldown 10m, delay 2 ticks, overhead
 
@@ -3533,7 +3533,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Callback: stands in for area-lumbridge on about 35% of arrivals once Cook's Assistant is done, at most every 30 minutes; the base's lines play the rest of the time.
 
-- **when:** entering region 12850 AND a 35% roll AND questdone
+- **when:** entering region 12850 AND a 35% roll AND the follower saw COOKS_ASSISTANT done
 - **pacing:** priority 41, cooldown 30m, delay 2 ticks, overhead
 
 - The cook's still telling people about that cake.
@@ -3543,7 +3543,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Callback: stands in for area-lumbridge on about 30% of arrivals once Sheep Shearer is done, at most every 30 minutes; the base's lines play the rest of the time.
 
-- **when:** entering region 12850 AND a 30% roll AND questdone
+- **when:** entering region 12850 AND a 30% roll AND the follower saw SHEEP_SHEARER done
 - **pacing:** priority 42, cooldown 30m, delay 2 ticks, overhead
 
 - I still can't pass a spinning wheel without counting to twenty.
@@ -3553,7 +3553,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > New place line with no base rule: only exists once Priest in Peril is done. About 50% of arrivals, at most every 30 minutes.
 
-- **when:** entering region 13622 AND a 50% roll AND questdone
+- **when:** entering region 13622 AND a 50% roll AND the follower saw PRIEST_IN_PERIL done
 - **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Paterdomus. I say a quiet word for the dog every time we cross.
@@ -3563,7 +3563,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > New place line with no base rule: only exists once Waterfall Quest is done. About 50% of arrivals, at most every 30 minutes.
 
-- **when:** entering region 10038 AND a 50% roll AND questdone
+- **when:** entering region 10038 AND a 50% roll AND the follower saw WATERFALL_QUEST done
 - **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - The falls sound different now I know what's behind them.
@@ -3573,7 +3573,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Callback: stands in for area-varrock on about 25% of arrivals once Children of the Sun is done, at most every 40 minutes; the base's lines play the rest of the time.
 
-- **when:** entering region 12597, 12853, 12854 AND a 25% roll AND questdone
+- **when:** entering region 12597, 12853, 12854 AND a 25% roll AND the follower saw CHILDREN_OF_THE_SUN done
 - **pacing:** priority 41, cooldown 40m, delay 2 ticks, overhead
 
 - Varrock. I still give every guard's uniform a second look.
@@ -3583,7 +3583,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Callback: stands in for area-taverley on about 35% of arrivals once Witch's House is done, at most every 30 minutes; the base's lines play the rest of the time.
 
-- **when:** entering region 11573 AND a 35% roll AND questdone
+- **when:** entering region 11573 AND a 35% roll AND the follower saw WITCHS_HOUSE done
 - **pacing:** priority 41, cooldown 30m, delay 2 ticks, overhead
 
 - Taverley. I keep to the far side of the witch's hedge.
@@ -3593,7 +3593,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Callback: stands in for area-draynor on about 35% of arrivals once X Marks the Spot is done, at most every 30 minutes; the base's lines play the rest of the time.
 
-- **when:** entering region 12338 AND a 35% roll AND questdone
+- **when:** entering region 12338 AND a 35% roll AND the follower saw X_MARKS_THE_SPOT done
 - **pacing:** priority 41, cooldown 30m, delay 2 ticks, overhead
 
 - Every pig pen I pass, I listen. Draynor's has kept quiet since.
@@ -3603,7 +3603,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Callback: stands in for area-crandor on about 60% of arrivals once Dragon Slayer I is done, at most every 30 minutes; the base's lines play the rest of the time.
 
-- **when:** entering region 11314 AND a 60% roll AND questdone
+- **when:** entering region 11314 AND a 60% roll AND the follower saw DRAGON_SLAYER_I done
 - **pacing:** priority 41, cooldown 30m, delay 2 ticks, overhead
 
 - Crandor, with no dragon on it. The island looks almost relieved.
@@ -3613,7 +3613,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > New place line with no base rule: only exists once Rune Mysteries is done. About 50% of arrivals, at most every 30 minutes.
 
-- **when:** entering region 12337 AND a 50% roll AND questdone
+- **when:** entering region 12337 AND a 50% roll AND the follower saw RUNE_MYSTERIES done
 - **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
 
 - Sedridor's basement is under us. I'm still working out how he knew you.
@@ -3622,7 +3622,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Callback: stands in for area-piscarilius on about 35% of arrivals once Client of Kourend is done, at most every 30 minutes; the base's lines play the rest of the time.
 
-- **when:** entering region 7226 AND a 35% roll AND questdone
+- **when:** entering region 7226 AND a 35% roll AND the follower saw CLIENT_OF_KOUREND done
 - **pacing:** priority 41, cooldown 30m, delay 2 ticks, overhead
 
 - Don't ask Veos about the client. He doesn't remember any of it, and I do.
@@ -6738,7 +6738,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Callback: same trigger as quest-duke-horacio plus Cook's Assistant done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Cook's Assistant, so it cannot rise on the quest finishing.
 
-- **when:** Duke Horacio within 5 tiles, in sight AND questdone AND NOT (dialogueopen)
+- **when:** Duke Horacio within 5 tiles, in sight AND the follower saw COOKS_ASSISTANT done AND NOT (dialogueopen)
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
 
 - He had his cake, and never once asked who fetched the flour.
@@ -6747,7 +6747,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Callback: same trigger as quest-duke-horacio plus Rune Mysteries done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Rune Mysteries, so it cannot rise on the quest finishing.
 
-- **when:** Duke Horacio within 5 tiles, in sight AND questdone AND NOT (dialogueopen)
+- **when:** Duke Horacio within 5 tiles, in sight AND the follower saw RUNE_MYSTERIES done AND NOT (dialogueopen)
 - **pacing:** priority 37, cooldown 3h, delay 2 ticks, overhead
 
 - If the Duke's found anything else in that cellar, I'm not carrying it.
@@ -6756,17 +6756,17 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Callback: same trigger as quest-king-roald plus Priest in Peril done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Priest in Peril, so it cannot rise on the quest finishing.
 
-- **when:** King Roald within 5 tiles, in sight AND questdone AND NOT (dialogueopen)
+- **when:** King Roald within 5 tiles, in sight AND the follower saw PRIEST_IN_PERIL done AND NOT (dialogueopen)
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
 
 - He's not mentioned the dog since. I've chosen to call that forgiveness.
 - The King. I'd keep the conversation well away from dogs.
 
-### `fun-alina-noah-after-children-of-the-sun`
+### `fun-sergeant-tobyn-after-children-of-the-sun`
 
-> Callback: same trigger as quest-alina-noah plus Children of the Sun done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Children of the Sun, so it cannot rise on the quest finishing.
+> Callback: same trigger as quest-sergeant-tobyn plus Children of the Sun seen done a day or more before, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Roof Tobyn (6781, shown as 12648 at varbit 9632 = 16-24) stays after the quest, whose end state is 24 (cache; Quest Helper ChildrenOfTheSun); Alina and Noah, its first target, are gone from 7 on. He stands by as the quest ends, so the day's wait keeps it from rising then.
 
-- **when:** Alina, Noah within 5 tiles, in sight AND questdone AND NOT (dialogueopen)
+- **when:** Sergeant Tobyn within 5 tiles, in sight AND the follower saw CHILDREN_OF_THE_SUN done AND NOT (dialogueopen)
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
 
 - Alina's still on about Varlamore. Noah's still not.
@@ -6776,7 +6776,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Callback: same trigger as quest-aubury plus Rune Mysteries done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Rune Mysteries, so it cannot rise on the quest finishing.
 
-- **when:** Aubury within 5 tiles, in sight AND questdone AND NOT (dialogueopen)
+- **when:** Aubury within 5 tiles, in sight AND the follower saw RUNE_MYSTERIES done AND NOT (dialogueopen)
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
 
 - Aubury. He still checks our hands for packages when we walk in.
@@ -6785,7 +6785,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Callback: same trigger as quest-father-aereck plus The Restless Ghost done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for The Restless Ghost, so it cannot rise on the quest finishing.
 
-- **when:** Father Aereck within 5 tiles, in sight AND questdone AND NOT (dialogueopen)
+- **when:** Father Aereck within 5 tiles, in sight AND the follower saw THE_RESTLESS_GHOST done AND NOT (dialogueopen)
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
 
 - Father Aereck. One fewer ghost in his graveyard, thanks to you.
@@ -6795,7 +6795,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Callback: same trigger as quest-ned plus Dragon Slayer I done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Dragon Slayer I, so it cannot rise on the quest finishing.
 
-- **when:** Ned within 5 tiles, in sight AND questdone AND NOT (dialogueopen)
+- **when:** Ned within 5 tiles, in sight AND the follower saw DRAGON_SLAYER_I done AND NOT (dialogueopen)
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
 
 - Ned did get us to Crandor. I've stopped arguing about the word captain.
@@ -6805,7 +6805,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Callback: same trigger as quest-leenz plus Client of Kourend done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Client of Kourend, so it cannot rise on the quest finishing.
 
-- **when:** Leenz within 5 tiles, in sight AND questdone AND NOT (dialogueopen)
+- **when:** Leenz within 5 tiles, in sight AND the follower saw CLIENT_OF_KOUREND done AND NOT (dialogueopen)
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
 
 - I worked up a verse for Leenz once. It didn't scan, so I kept it.
@@ -6822,9 +6822,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-hans-race-early`
 
-> Running bit, Hans: days 0-29 known. Same trigger as quest-hans, one point higher, three-hour cooldown; while it cools down the base's lines play.
+> Running bit, Hans: days 0-29 after the opener. Same trigger as quest-hans, one point higher, three-hour cooldown; while it cools down the base's lines play.
 
-- **when:** known 0-29 days AND Hans within 5 tiles, in sight
+- **when:** 0-29 days after `fun-hans-race-first` was said AND Hans within 5 tiles, in sight
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
 
 - Hans is well ahead today. I've been standing still, in fairness.
@@ -6832,9 +6832,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-hans-race-middle`
 
-> Running bit, Hans: days 30-99 known. Same trigger as quest-hans, one point higher, three-hour cooldown; while it cools down the base's lines play.
+> Running bit, Hans: days 30-99 after the opener. Same trigger as quest-hans, one point higher, three-hour cooldown; while it cools down the base's lines play.
 
-- **when:** known 30-99 days AND Hans within 5 tiles, in sight
+- **when:** 30-99 days after `fun-hans-race-first` was said AND Hans within 5 tiles, in sight
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
 
 - Hans gave me a nod. I think he knows about the race now.
@@ -6842,9 +6842,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-hans-race-late`
 
-> Running bit, Hans: day 100 on known. Same trigger as quest-hans, one point higher, three-hour cooldown; while it cools down the base's lines play.
+> Running bit, Hans: day 100 on after the opener. Same trigger as quest-hans, one point higher, three-hour cooldown; while it cools down the base's lines play.
 
-- **when:** known 100+ days AND Hans within 5 tiles, in sight
+- **when:** 100+ days after `fun-hans-race-first` was said AND Hans within 5 tiles, in sight
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
 
 - Hans and I have agreed it's a draw. Neither of us has said so.
@@ -6865,7 +6865,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Cooks Assistant, varp 29 = 1: Reached the chickens at the Groats' coop with the quest under way. Source: cache: quest_progress_get (script 4024) reads %cookquest (varp 29); quest dbrow 17 endstate 2, unstarted 0; so 1 is the only in-progress value. Region 12595 computed from the egg spawn at (3177, 3296) in Quest Helper (github.com/Zoinkwiz/quest-helper, master 5f79193, 2026-10-14).
 
-- **when:** questvar AND Chicken within 4 tiles, in sight AND in region 12595 AND NOT (questdone) AND NOT (dialogueopen)
+- **when:** questvar AND Chicken within 4 tiles, in sight AND in region 12595 AND NOT (the follower saw SHEEP_SHEARER done) AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever
 - **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
 
@@ -6876,7 +6876,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Callback: said instead of qm-cooks-assistant-egg-coop when Sheep Shearer is done. Cooks Assistant, varp 29 = 1: Reached the chickens at the Groats' coop with the quest under way. Source: cache: quest_progress_get (script 4024) reads %cookquest (varp 29); quest dbrow 17 endstate 2, unstarted 0; so 1 is the only in-progress value. Region 12595 computed from the egg spawn at (3177, 3296) in Quest Helper (github.com/Zoinkwiz/quest-helper, master 5f79193, 2026-10-14).
 
-- **when:** questvar AND Chicken within 4 tiles, in sight AND in region 12595 AND questdone AND NOT (dialogueopen)
+- **when:** questvar AND Chicken within 4 tiles, in sight AND in region 12595 AND the follower saw SHEEP_SHEARER done AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever
 - **pacing:** priority 61, cooldown 10m, delay 2 ticks, overhead
 
@@ -6975,7 +6975,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Rune Mysteries, varp 63 = 1: Reached the Wizards' Tower with the Duke's talisman, not yet handed over. Source: cache: quest_progress_get (script 4024) reads %runemysteries (varp 63); quest dbrow 125 endstate 6, unstarted 0; 1-5 in progress. 1 = carrying the talisman to Sedridor, from Quest Helper (github.com/Zoinkwiz/quest-helper, master 5f79193, 2026-10-14). Region 12337 is the chronicle's Wizards' Tower plate region. (unverified)
 
-- **when:** questvar AND entering region 12337 AND NOT (questdone)
+- **when:** questvar AND entering region 12337 AND NOT (the follower saw COOKS_ASSISTANT done)
 - **does:** occasion (never held back); once ever
 - **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
 
@@ -6985,7 +6985,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Callback: said instead of qm-rune-mysteries-tower-arrival when Cooks Assistant is done. Rune Mysteries, varp 63 = 1: Reached the Wizards' Tower with the Duke's talisman, not yet handed over. Source: cache: quest_progress_get (script 4024) reads %runemysteries (varp 63); quest dbrow 125 endstate 6, unstarted 0; 1-5 in progress. 1 = carrying the talisman to Sedridor, from Quest Helper (github.com/Zoinkwiz/quest-helper, master 5f79193, 2026-10-14). Region 12337 is the chronicle's Wizards' Tower plate region. (unverified)
 
-- **when:** questvar AND entering region 12337 AND questdone
+- **when:** questvar AND entering region 12337 AND the follower saw COOKS_ASSISTANT done
 - **does:** occasion (never held back); once ever
 - **pacing:** priority 61, cooldown 10m, delay 2 ticks, overhead
 
@@ -7006,7 +7006,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Rune Mysteries, varp 63 = 3-5: Walking past the mugger outside Aubury's shop while carrying the package or the notes. Source: cache: quest_progress_get (script 4024) reads %runemysteries (varp 63); quest dbrow 125 endstate 6, unstarted 0; 1-5 in progress. 3-5 = package or notes in transit, from Quest Helper (github.com/Zoinkwiz/quest-helper, master 5f79193, 2026-10-14). Mugger is NPC 513 and others, level 6. Region 12853 from Aubury at (3253, 3401) in Quest Helper (github.com/Zoinkwiz/quest-helper, master 5f79193, 2026-10-14). The mugger outside is in the chronicle page. (unverified)
 
-- **when:** questvar AND Mugger within 6 tiles, in sight AND in region 12853 AND NOT (questdone) AND NOT (dialogueopen)
+- **when:** questvar AND Mugger within 6 tiles, in sight AND in region 12853 AND NOT (the follower saw CHILDREN_OF_THE_SUN done) AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever
 - **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
 
@@ -7017,7 +7017,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Callback: said instead of qm-rune-mysteries-mugger-street when Children Of The Sun is done. Rune Mysteries, varp 63 = 3-5: Walking past the mugger outside Aubury's shop while carrying the package or the notes. Source: cache: quest_progress_get (script 4024) reads %runemysteries (varp 63); quest dbrow 125 endstate 6, unstarted 0; 1-5 in progress. 3-5 = package or notes in transit, from Quest Helper (github.com/Zoinkwiz/quest-helper, master 5f79193, 2026-10-14). Mugger is NPC 513 and others, level 6. Region 12853 from Aubury at (3253, 3401) in Quest Helper (github.com/Zoinkwiz/quest-helper, master 5f79193, 2026-10-14). The mugger outside is in the chronicle page. (unverified)
 
-- **when:** questvar AND Mugger within 6 tiles, in sight AND in region 12853 AND questdone AND NOT (dialogueopen)
+- **when:** questvar AND Mugger within 6 tiles, in sight AND in region 12853 AND the follower saw CHILDREN_OF_THE_SUN done AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever
 - **pacing:** priority 61, cooldown 10m, delay 2 ticks, overhead
 
@@ -7068,7 +7068,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Priest In Peril, varp 302 = 4: King Roald, furious about his dog, sent the player back to put it right. Source: Quest Helper (Zoinkwiz/quest-helper on GitHub, master as of 2025-10-23), PriestInPeril.java loadSteps: 4 = back to the temple, kill a monk, talk to Drezel. Game cache: the caged Drezel multinpc (9804, on varp 302) first shows at 4
 
-- **when:** questvar AND NOT (questdone) AND NOT (dialogueopen)
+- **when:** questvar AND NOT (the follower saw CHILDREN_OF_THE_SUN done) AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 4275
 - **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
 
@@ -7081,7 +7081,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Callback: said instead of qm-priest-in-peril-the-kings-verdict when Children Of The Sun is done. Priest In Peril, varp 302 = 4: King Roald, furious about his dog, sent the player back to put it right. Source: Quest Helper (Zoinkwiz/quest-helper on GitHub, master as of 2025-10-23), PriestInPeril.java loadSteps: 4 = back to the temple, kill a monk, talk to Drezel. Game cache: the caged Drezel multinpc (9804, on varp 302) first shows at 4
 
-- **when:** questvar AND questdone AND NOT (dialogueopen)
+- **when:** questvar AND the follower saw CHILDREN_OF_THE_SUN done AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 2113
 - **pacing:** priority 61, cooldown 10m, delay 2 ticks, overhead
 
@@ -7113,7 +7113,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Priest In Peril, varp 302 = 7: Poured the blessed water over the vampyre's coffin. Source: Quest Helper (Zoinkwiz/quest-helper on GitHub, master as of 2025-10-23), PriestInPeril.java loadSteps: 6 = bless the water and use it on the coffin, 7 = talk to Drezel again. The cache only shows the caged Drezel leaving at 9 (unverified)
 
-- **when:** questvar AND NOT (questdone) AND NOT (dialogueopen)
+- **when:** questvar AND NOT (the follower saw VAMPYRE_SLAYER done) AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 855
 - **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
 
@@ -7125,7 +7125,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Callback: said instead of qm-priest-in-peril-the-coffin-sealed when Vampyre Slayer is done. Priest In Peril, varp 302 = 7: Poured the blessed water over the vampyre's coffin. Source: Quest Helper (Zoinkwiz/quest-helper on GitHub, master as of 2025-10-23), PriestInPeril.java loadSteps: 6 = bless the water and use it on the coffin, 7 = talk to Drezel again. The cache only shows the caged Drezel leaving at 9 (unverified)
 
-- **when:** questvar AND questdone AND NOT (dialogueopen)
+- **when:** questvar AND the follower saw VAMPYRE_SLAYER done AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 855
 - **pacing:** priority 61, cooldown 10m, delay 2 ticks, overhead
 
@@ -7157,7 +7157,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Waterfall Quest, varbit 9110 = 1: Golrie, let out of his cage, handed over Glarial's pebble. Source: Varbit 9110 is WATERFALL_GOLRIE_CHAT (RuneLite gameval; cache: varp 667 bit 14). Quest Helper commit fc4e126d43 (2025-04-10) read == 1 as 'got the pebble'; its 2025-08 polish switched to checking for the pebble item instead (unverified)
 
-- **when:** questvar AND questvar AND NOT (questdone) AND NOT (dialogueopen)
+- **when:** questvar AND questvar AND NOT (the follower saw TREE_GNOME_VILLAGE done) AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 2113
 - **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
 
@@ -7169,7 +7169,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Callback: said instead of qm-waterfall-quest-golries-pebble when Tree Gnome Village is done. Waterfall Quest, varbit 9110 = 1: Golrie, let out of his cage, handed over Glarial's pebble. Source: Varbit 9110 is WATERFALL_GOLRIE_CHAT (RuneLite gameval; cache: varp 667 bit 14). Quest Helper commit fc4e126d43 (2025-04-10) read == 1 as 'got the pebble'; its 2025-08 polish switched to checking for the pebble item instead (unverified)
 
-- **when:** questvar AND questvar AND questdone AND NOT (dialogueopen)
+- **when:** questvar AND questvar AND the follower saw TREE_GNOME_VILLAGE done AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 2113
 - **pacing:** priority 61, cooldown 10m, delay 2 ticks, overhead
 
@@ -7344,7 +7344,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Children Of The Sun, varbit 9632 = 16: The four were arrested and Sergeant Tobyn has escorted the player up to the cell on the palace roof for the questioning. Source: Quest Helper (16 = go to the roof); cache: roof Tobyn and the caged bandit appear from 16; roof cell 3205,3471,2 is region 12854
 
-- **when:** questvar AND in region 12854 AND NOT (questdone) AND NOT (dialogueopen)
+- **when:** questvar AND in region 12854 AND NOT (the follower saw PRIEST_IN_PERIL done) AND NOT (dialogueopen)
 - **does:** mood +4; occasion (never held back); once ever; animation 13995
 - **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
 
@@ -7355,7 +7355,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Callback: said instead of qm-children-of-the-sun-the-roof when Priest In Peril is done. Children Of The Sun, varbit 9632 = 16: The four were arrested and Sergeant Tobyn has escorted the player up to the cell on the palace roof for the questioning. Source: Quest Helper (16 = go to the roof); cache: roof Tobyn and the caged bandit appear from 16; roof cell 3205,3471,2 is region 12854
 
-- **when:** questvar AND in region 12854 AND questdone AND NOT (dialogueopen)
+- **when:** questvar AND in region 12854 AND the follower saw PRIEST_IN_PERIL done AND NOT (dialogueopen)
 - **does:** mood +4; occasion (never held back); once ever; animation 13995
 - **pacing:** priority 61, cooldown 10m, delay 2 ticks, overhead
 
@@ -7397,7 +7397,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > X Marks The Spot, varbit 8063 = 5: Followed the orb to the spot east of Draynor, near the jail, and dug up a scroll written in cipher. Source: Quest Helper (5 = dig in the pig pen by Martin) (unverified)
 
-- **when:** questvar AND NOT (questdone) AND NOT (dialogueopen)
+- **when:** questvar AND NOT (the follower saw PRINCE_ALI_RESCUE done) AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 857
 - **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
 
@@ -7409,7 +7409,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Callback: said instead of qm-x-marks-the-spot-the-cipher when Prince Ali Rescue is done. X Marks The Spot, varbit 8063 = 5: Followed the orb to the spot east of Draynor, near the jail, and dug up a scroll written in cipher. Source: Quest Helper (5 = dig in the pig pen by Martin) (unverified)
 
-- **when:** questvar AND questdone AND NOT (dialogueopen)
+- **when:** questvar AND the follower saw PRINCE_ALI_RESCUE done AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 856
 - **pacing:** priority 61, cooldown 10m, delay 2 ticks, overhead
 
@@ -7466,7 +7466,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Client Of Kourend, varbit 5619 = 4: Arrived at the Dark Altar, north of Arceuus, carrying the orb. Source: Quest Helper (4); region 6716 from the cache map label 'Dark Altar' at 1696,3880 and the chronicle's audited dark-altar sketch (unverified)
 
-- **when:** questvar AND in region 6716 AND NOT (questdone) AND NOT (dialogueopen)
+- **when:** questvar AND in region 6716 AND NOT (the follower saw PRIEST_IN_PERIL done) AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever
 - **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
 
@@ -7479,7 +7479,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Callback: said instead of qm-client-of-kourend-dark-altar when Priest In Peril is done. Client Of Kourend, varbit 5619 = 4: Arrived at the Dark Altar, north of Arceuus, carrying the orb. Source: Quest Helper (4); region 6716 from the cache map label 'Dark Altar' at 1696,3880 and the chronicle's audited dark-altar sketch (unverified)
 
-- **when:** questvar AND in region 6716 AND questdone AND NOT (dialogueopen)
+- **when:** questvar AND in region 6716 AND the follower saw PRIEST_IN_PERIL done AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever
 - **pacing:** priority 61, cooldown 10m, delay 2 ticks, overhead
 
