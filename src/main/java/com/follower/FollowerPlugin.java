@@ -862,6 +862,14 @@ public class FollowerPlugin extends Plugin
 		crossingWatch.setTrace(agilityTrace::event);
 		follower.setAgilityTrace(agilityTrace::event);
 		follower.setOnAgilitySnap(crossingWatch::forgetMissed);
+		// Later in the frame, and only if still out: a despawn lets a crossing go too.
+		follower.setOnCrossingHands(() -> clientThread.invokeLater(() ->
+		{
+			if (follower.isSpawned())
+			{
+				rebuildFollower();
+			}
+		}));
 		filmSet = new com.follower.follower.FilmSet(follower, this::rebuildFollower,
 			(graphicId, height) -> follower.playSpotAnim(spotAnimRepository.get(graphicId), height));
 		conversation = new com.follower.speech.ConversationPlayer(conversationStage());
@@ -5425,6 +5433,7 @@ public class FollowerPlugin extends Plugin
 		dressForPose(outfit, propShown ? propHands : null);
 		dressForPose(outfit, outfitOverride == null ? emoteHands : null);
 		dressForPose(outfit, outfitOverride == null && emoteHands == null ? loopHands : null);
+		dressForPose(outfit, outfitOverride == null ? follower.getCrossingHands() : null);
 		dressForPose(outfit, filmHands);
 
 		appearanceService.request(outfit, com.follower.appearance.ModelSource.DUMP_ONLY, appearance ->

@@ -362,6 +362,51 @@ public class CrossingReplayTest
 		assertTrue("facing east (1536) as it sets off: " + yaw, Math.abs(yaw - 1536) <= 256);
 	}
 
+	/**
+	 * The game empties the hands for a climb, a squeeze or a swing, as the
+	 * clip's own hand items say; the follower's crossing does too, and hands
+	 * them back after (QA4 #12). A swapped pose, the balance, keeps them.
+	 */
+	@Test
+	public void aClipThatEmptiesThePlayersHandsEmptiesTheFollowers() throws ReflectiveOperationException
+	{
+		game.animation(CLIMB, -1, -512, -512);
+		int[] rebuilds = {0};
+		follower.setOnCrossingHands(() -> rebuilds[0]++);
+		game.at(70, 52, 1);
+		follower.queueCrossing(new Recording(52, 50, 0).stand(200, LOG_READY).glide(2, 0, LOG_WALK, -1)
+			.stand(600, 808, CLIMB).hop(1, 0, 1, CLIMB).stand(200, 808).build(false));
+		List<int[]> seen = new ArrayList<>();
+		for (int i = 0; i < 2000 && follower.isDoingAgility(); i++)
+		{
+			frame();
+			int[] hands = follower.getCrossingHands();
+			if (seen.isEmpty() ? hands != null : !java.util.Arrays.equals(seen.get(seen.size() - 1), hands))
+			{
+				seen.add(hands);
+				if (hands != null)
+				{
+					// The rebuild for it swaps the model under the clip.
+					Object clip = get("crossingController");
+					follower.setAppearance(new com.follower.appearance.ComposedAppearance(
+						(net.runelite.api.Model) java.lang.reflect.Proxy.newProxyInstance(
+							net.runelite.api.Model.class.getClassLoader(), new Class<?>[]{net.runelite.api.Model.class},
+							(proxy, method, args) -> method.getReturnType() == boolean.class ? false
+								: method.getReturnType() == int.class ? 0 : null),
+						com.follower.appearance.ComposedAppearance.Source.DUMP,
+						new com.follower.appearance.Outfit()));
+					assertTrue("the climb keeps playing on the new model, no stand put up for a frame",
+						((RuneLiteObject) get("object")).getAnimationController() == clip);
+				}
+			}
+		}
+		assertEquals("emptied for the climb, and back after", 2, seen.size());
+		assertEquals(-512, seen.get(0)[0]);
+		assertEquals(-512, seen.get(0)[1]);
+		assertEquals(null, seen.get(1));
+		assertEquals("a rebuild for each", 2, rebuilds[0]);
+	}
+
 	// ------------------------------------------------------- rebuilt from XP
 
 	/**

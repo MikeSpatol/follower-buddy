@@ -619,8 +619,10 @@ public class FollowerEntity implements CrossingWatch.Listener
 			object.setAnimationController(null);
 			activePose = -1;
 		}
-		else
+		else if (playing == null || activePose >= 0)
 		{
+			// Not under a crossing's clip, which keeps running on the new
+			// model: a stand put up here would show for a frame.
 			applyPose(activePose < 0 ? PlayerPose.IDLE : activePose, true);
 		}
 	}
@@ -1871,6 +1873,17 @@ public class FollowerEntity implements CrossingWatch.Listener
 	@lombok.Setter
 	private java.util.function.Consumer<Crossing> onCrossed;
 
+	/**
+	 * What the clip a crossing shows now puts in each hand, as handItems
+	 * gives it, or null: a climb, a squeeze or a swing empties the hands,
+	 * the pole vault holds the pole. The plugin dresses it as it dresses an
+	 * emote's, and is told to rebuild when it changes.
+	 */
+	@Getter
+	private int[] crossingHands;
+	@lombok.Setter
+	private Runnable onCrossingHands;
+
 	/** Left of the wait after agility before a snap may fetch the follower (AGILITY_PATIENCE_MS). */
 	private long patienceMs;
 	/** XP, a crossing queued or one finished since the last hop was expected. */
@@ -2038,6 +2051,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		playing = null;
 		crossingController = null;
 		crossingAnimation = -1;
+		setCrossingHands(null);
 	}
 
 	/**
@@ -2383,6 +2397,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 			+ (done.isFell() ? ", fell" : "") + ", " + crossings.size() + " waiting");
 		crossingController = null;
 		crossingAnimation = -1;
+		setCrossingHands(null);
 		// The locomotion pose goes back on with the next frame's.
 		activePose = -1;
 		route.clear();
@@ -2447,6 +2462,8 @@ public class FollowerEntity implements CrossingWatch.Listener
 				return;
 			}
 		}
+		int[] hands = action ? handItems(wanted) : null;
+		setCrossingHands(hands != null && (hands[0] != FilmSet.KEEP || hands[1] != FilmSet.KEEP) ? hands : null);
 		AnimationController controller = new AnimationController(client, animation);
 		int frames = animation.getFrameLengths() == null ? 0 : animation.getFrameLengths().length;
 		if (startFrame > 0 && startFrame < frames)
@@ -2463,6 +2480,19 @@ public class FollowerEntity implements CrossingWatch.Listener
 		animationIds.add(wanted);
 		controllerGeneration++;
 		activePose = action ? -1 : wanted;
+	}
+
+	private void setCrossingHands(int[] hands)
+	{
+		if (java.util.Arrays.equals(hands, crossingHands))
+		{
+			return;
+		}
+		crossingHands = hands;
+		if (onCrossingHands != null)
+		{
+			onCrossingHands.run();
+		}
 	}
 
 	/** The follower's own version of the player's normal pose at this index, in stance order. */
