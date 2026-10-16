@@ -188,6 +188,9 @@ public class FilmDialog extends JDialog
 		// under the taskbar; a still smaller screen gets what it has.
 		setPreferredSize(new Dimension(680, 700));
 		pack();
+		// A dialog can be dragged smaller than its layout; below about 620
+		// wide the hint and the saved names were cut (QA2, 15 Oct).
+		setMinimumSize(new Dimension(620, 560));
 		java.awt.GraphicsConfiguration screen = getGraphicsConfiguration();
 		setSize(getWidth(), heightOnScreen(getHeight(), screen.getBounds(),
 			java.awt.Toolkit.getDefaultToolkit().getScreenInsets(screen)));
@@ -326,9 +329,12 @@ public class FilmDialog extends JDialog
 		scroll.setBorder(BorderFactory.createEmptyBorder());
 		scroll.getVerticalScrollBar().setUnitIncrement(16);
 		scroll.setAlignmentX(LEFT_ALIGNMENT);
-		scroll.setPreferredSize(new Dimension(260, 230));
+		// 4 shorter for the gap below it, so the window still fits in 700.
+		scroll.setPreferredSize(new Dimension(260, 226));
 		panel.add(scroll);
 		refilter();
+		// QA2, 15 Oct: without a gap the last row showing looked cut by the buttons.
+		panel.add(javax.swing.Box.createVerticalStrut(4));
 
 		JPanel pair = grid(1, 2);
 		pair.add(button("Again", () -> act(Crew::again, "Again.")));
