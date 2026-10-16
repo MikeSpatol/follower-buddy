@@ -152,6 +152,25 @@ public class SpeechEngine
 		return rule.when != null && rule.when.usesType("idle") && !rule.isOccasion();
 	}
 
+	/** How long after one rule brings up a memory the others wait: ten minutes. */
+	static final long MEMORY_APART_MS = 600_000L;
+
+	/** Whether a rule's lines bring up something remembered, by its {memory}. */
+	private static boolean bringsUpAMemory(SpeechRule rule)
+	{
+		if (rule.say != null)
+		{
+			for (String line : rule.say)
+			{
+				if (line.contains("{memory}"))
+				{
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	/**
 	 * The events that end an idle stretch.
 	 *
@@ -1382,6 +1401,21 @@ public class SpeechEngine
 				if (plain.equals(other.id) || (other.id != null && other.id.startsWith(fellows)))
 				{
 					other.markFired(now);
+				}
+			}
+		}
+
+		// One thing remembered at a time: text QA4, 16 Oct, "My mind goes back
+		// to the guard with the very large bag" and, 16 s later, "The notes on
+		// the guard with the very large bag start here." The other rules that
+		// bring up a memory wait ten minutes, or their own while if it is left.
+		if (bringsUpAMemory(rule))
+		{
+			for (SpeechRule other : loader.getRules())
+			{
+				if (other != rule && bringsUpAMemory(other))
+				{
+					other.markFired(Math.max(other.lastFiredMs(), now - other.cooldownMs + MEMORY_APART_MS));
 				}
 			}
 		}
