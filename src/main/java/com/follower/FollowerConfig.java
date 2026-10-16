@@ -2,7 +2,6 @@ package com.follower;
 
 import com.follower.speech.SpeechOutput;
 import java.awt.Color;
-import net.runelite.client.config.Alpha;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
@@ -482,7 +481,6 @@ public interface FollowerConfig extends Config
 		return false;
 	}
 
-	@Alpha
 	@ConfigItem(
 		keyName = "speechColor",
 		name = "Overhead text colour",

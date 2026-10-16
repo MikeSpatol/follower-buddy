@@ -410,6 +410,16 @@ public class FollowerEntity
 	@Getter
 	private LocalPoint lastRenderedLocation;
 
+	/**
+	 * Whether the body is in the scene now. Spawned is not enough: it goes
+	 * out of sight while an NPC stands on its tile, through a teleport and
+	 * the comedy death, and its overhead line must go with it.
+	 */
+	public boolean isShown()
+	{
+		return spawned && object != null && object.isActive();
+	}
+
 	/** The render z used at the last draw, needed to project the clickbox. */
 	@Getter
 	private int lastRenderedZ;
