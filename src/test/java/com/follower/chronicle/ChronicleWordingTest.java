@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -115,6 +116,34 @@ public class ChronicleWordingTest
 		ChronicleEntry.Plate duke = loader.get("location-lumbridge").plates.get(1);
 		assertEquals("the second plate is II", "Plate II. " + duke.caption,
 			ChronicleWindow.caption("location", duke, 1, true, false));
+	}
+
+	/**
+	 * QA2: "The histories take this to mean he asks every newcomer" points
+	 * back at the cook offering Zanik the errand, a passage that waits on
+	 * Death to the Dorgeshuun. It waits with it, so it never follows the
+	 * failed cakes instead.
+	 */
+	@Test
+	public void theCooksNewcomersWaitForZanik()
+	{
+		ChronicleEntry cooks = loader.get("quest-cooks-assistant");
+		String worth = worthKnowing(cooks.readAs(quest -> false));
+		assertFalse(worth, worth.contains("The histories take this"));
+		worth = worthKnowing(cooks.readAs("DEATH_TO_THE_DORGESHUUN"::equals));
+		assertTrue(worth, worth.contains("worth a try.\n\nThe histories take this"));
+	}
+
+	private static String worthKnowing(ChronicleEntry entry)
+	{
+		for (ChronicleEntry.Section section : entry.sectionsOrEmpty())
+		{
+			if ("Worth knowing".equals(section.heading))
+			{
+				return section.body;
+			}
+		}
+		return "";
 	}
 
 	@Test
