@@ -9414,10 +9414,25 @@ public class FollowerPlugin extends Plugin
 			log.info("WATCH self graphic {} height {}", graphicId, graphicHeight);
 		}
 
-		if (client.getTickCount() <= mirrorGraphicsUntilTick)
+		if (takesMirroredGraphic(client.getTickCount()))
 		{
 			mirrorGraphic(graphicId, graphicHeight);
 		}
+	}
+
+	/**
+	 * Whether a graphic on the player now is the cast's to copy: within the
+	 * window a copying rule opened, and only the first, so one cast copies
+	 * one graphic.
+	 */
+	boolean takesMirroredGraphic(int tick)
+	{
+		if (tick > mirrorGraphicsUntilTick)
+		{
+			return false;
+		}
+		mirrorGraphicsUntilTick = -1;
+		return true;
 	}
 
 	private void mirrorGraphic(int graphicId, int height)
@@ -11970,17 +11985,17 @@ public class FollowerPlugin extends Plugin
 			clientThread.invoke(follower::vanishAfterEmote);
 		}
 
-		// A mirror rule firing opens the graphic-copy window, and any spotanim
-		// already showing on the player (it can precede the animation event) is
-		// copied immediately.
-		if (rule != null && Boolean.TRUE.equals(rule.mirrorAnimation))
+		// A rule that copies graphics opens the graphic-copy window, and any
+		// spotanim already showing on the player (it can precede the animation
+		// event) is copied immediately.
+		if (rule != null && Boolean.TRUE.equals(rule.copiesGraphics))
 		{
 			mirrorGraphicsUntilTick = client.getTickCount() + MIRROR_GRAPHIC_WINDOW_TICKS;
 			clientThread.invoke(() ->
 			{
 				Player local = client.getLocalPlayer();
 				net.runelite.api.ActorSpotAnim active = local == null ? null : latestSpotAnim(local);
-				if (active != null)
+				if (active != null && takesMirroredGraphic(client.getTickCount()))
 				{
 					mirrorGraphic(active.getId(), active.getHeight());
 				}

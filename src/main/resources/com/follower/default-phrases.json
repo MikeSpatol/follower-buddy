@@ -7555,6 +7555,7 @@
         ]
       },
       "mirrorAnimation": true,
+      "copiesGraphics": true,
       "vanishAfter": true
     },
     {
@@ -7682,7 +7683,8 @@
           12514
         ]
       },
-      "mirrorAnimation": true
+      "mirrorAnimation": true,
+      "copiesGraphics": true
     },
     {
       "id": "answer-yes",
@@ -12711,6 +12713,7 @@
       "priority": 18,
       "cooldownMs": 60000,
       "mirrorAnimation": true,
+      "copiesGraphics": true,
       "when": {
         "type": "all",
         "conditions": [
