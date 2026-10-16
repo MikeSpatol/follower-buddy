@@ -6,9 +6,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ## Contents
 
-- [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (52 rules, 223 lines)
+- [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (40 rules, 159 lines)
 - [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (45 rules, 234 lines)
-- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (48 rules, 292 lines)
+- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (60 rules, 356 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 115 lines)
 - [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 74 lines)
 - [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (28 rules, 121 lines)
@@ -28,171 +28,6 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 ## misc
 
 *Greetings, arrivals, level-ups, firsts, the everyday spine.*
-
-### `death`
-
-- **when:** a chat message (Oh dear, you are dead) AND NOT (an incident remembered)
-- **does:** mood -10; occasion (never held back)
-- **pacing:** priority 140, cooldown 5s, both
-
-- Well. That happened.
-- I'll go get the gravestone.
-- We do not speak of the last five minutes.
-- I'll mark the spot. It's what I'm for.
-- Deep breath. You can get it all back. Mostly.
-- Back to the start, then. I know the road.
-
-### `pet-drop`
-
-- **when:** a chat message (funny feeling like)
-- **does:** occasion (never held back)
-- **pacing:** priority 150, cooldown 1s, both
-
-- PET! Actual pet!
-- A pet. So there'll be two of us walking behind you now.
-- A pet! Look at its little face!
-- We have a pet. Today is a good page.
-- THE LUCK. Write it down, nobody will believe us.
-- It looked straight at you and chose. I'm writing that down.
-
-### `level-up-new`
-
-> R16, days 0-2: congratulations from someone still being polite about it. The familiar sibling takes over from day 3.
-
-- **when:** on a level-up (*) AND known 0-2 days
-- **does:** mood +8
-- **pacing:** priority 40, cooldown 3s
-
-- Level {level} in {skill}. Congratulations.
-- {skill} has reached {level}. I have written it down.
-- That is {skill} level {level}. Well done.
-- Your {skill} is now level {level}. My compliments.
-- Another level in {skill}. You are making steady progress.
-- {skill} at {level} now. It is entered in my neatest hand.
-- {skill}, level {level}. You are improving faster than I can write.
-- A new {skill} level. I will record it exactly as it happened.
-
-### `level-up`
-
-- **when:** on a level-up (*) AND known 3+ days
-- **does:** mood +8
-- **pacing:** priority 40, cooldown 3s
-
-- {skill} {level}. Nice.
-- Level {level} {skill}!
-- {skill} {level}. Underlined.
-- That's {level} in {skill}. The column grows.
-- Level {level}. Your {skill} is coming along nicely.
-- {skill} up. I'll want a demonstration later.
-- {skill} {level}. I'll pretend I saw that coming.
-- There it is, {skill} {level}. Suits you.
-- {level} in {skill}. At this rate I'll need a thicker book.
-- Another {skill} level. I acted surprised in the notes.
-- {skill} {level}. The page was ready before you were.
-- {skill} {level}. Worth the ink.
-
-### `level-halfway`
-
-> Ninety-two is half the experience to ninety-nine, which most people do not know and a scribe would. Outranks the plain level line on the one level where there is more to say.
-
-- **when:** milestone
-- **does:** mood +8
-- **pacing:** priority 48, cooldown 1m
-
-- Ninety-two. Half the experience to ninety-nine, whatever it says.
-- {skill} 92. That's the true halfway. I've ruled a line under it.
-- Halfway to ninety-nine in {skill}, by experience. Few know that.
-- Ninety-two in {skill}. The second half's as big as the first. Sorry.
-- The halfway mark in {skill}. I've turned the page over.
-
-### `level-round`
-
-> A multiple of ten from fifty up: the levels people tell each other about. A chance roll so the plain level line still gets some of them.
-
-- **when:** milestone AND a 70% roll
-- **does:** mood +6
-- **pacing:** priority 44, cooldown 1m
-
-- {skill} {level}. A round number. Those get a box round them.
-- Level {level} in {skill}. I do like a round one. It sits tidily on the page.
-- {level} in {skill}. That's a milestone, and I've stopped for it.
-- A round {level} in {skill}. I've underlined it twice.
-- {skill}, {level}. The kind of number you tell people.
-
-### `level-mastery-first`
-
-> The first ninety-nine the follower has seen on this account - maximum 1 means the count of maxed skills, this one included, is one. Once ever. The body does the send-off chain; this is the words.
-
-- **when:** milestone
-- **does:** mood +20; once ever; holds the floor 8s
-- **pacing:** priority 90, cooldown 1m
-
-- Your first ninety-nine. I reserved a page and never thought I'd use it.
-- Ninety-nine {skill}. The first. I'm going to need a better pen.
-- That's a ninety-nine. Your first. I've written the date next to it.
-
-### `level-mastery-again`
-
-> The second ninety-nine and every one after. {nines} is how many now; {ninesOrdinal} says it.
-
-- **when:** milestone
-- **does:** mood +18; holds the floor 8s
-- **pacing:** priority 89, cooldown 1m
-
-- That's {nines} at ninety-nine, and yes, I'm counting.
-- Ninety-nine {skill} makes your {ninesOrdinal}. The reserved pages are running out.
-- {skill} to ninety-nine, your {ninesOrdinal}. It never gets smaller.
-- The {ninesOrdinal} ninety-nine. I've had to start a second index.
-
-### `level-total`
-
-> The total level crossing a hundred, from five hundred up. The line carries the skill too, since it outranks the plain level line.
-
-- **when:** milestone
-- **does:** mood +6
-- **pacing:** priority 46, cooldown 1m
-
-- {skill} {level}, which makes {total} in total. I checked the sum twice.
-- Total level {total} with that one. I've ruled off the column.
-- That's {total} across the lot. A round total gets its own line in the book.
-- {total} total. I keep the running sum on the inside cover.
-
-### `level-base`
-
-> The lowest skill catching up: the tick every skill became fifty, sixty, seventy, eighty or ninety or better. One rule over the five thresholds, since {base} says which.
-
-- **when:** (milestone OR milestone OR milestone OR milestone OR milestone)
-- **does:** mood +8
-- **pacing:** priority 49, cooldown 1m
-
-- Every skill at {base} or better now. The lowest column has caught up.
-- Nothing under {base} any more. I've retired the page I kept for it.
-- That was the laggard. Base {base}, all round.
-- {skill} was holding the base down. Not now: {base} across the board.
-
-### `level-after-a-gap`
-
-> A level in a skill the player had left alone for a week or more. {sinceLast} is the gap in words; levelGap is the guard that makes it a number worth printing.
-
-- **when:** levelgap
-- **does:** mood +6
-- **pacing:** priority 47, cooldown 1m
-
-- {skill}, after {sinceLast}. I'd stopped leaving the page open.
-- {sinceLast} since the last {skill} level. I'd wondered.
-- Back to {skill} after {sinceLast}. The ink had long dried.
-- A {skill} level, the first in {sinceLast}. That surprised me.
-
-### `level-quick`
-
-> The other end: a second level in the same skill inside ten minutes. Low priority and a chance roll, so it is an occasional aside rather than a commentary on fast experience.
-
-- **when:** levelgap AND a 40% roll
-- **pacing:** priority 43, cooldown 5m
-
-- Another {skill} level already. I can barely keep up.
-- {sinceLast} since the last. The {skill} page is getting crowded.
-- Two {skill} levels in {sinceLast}. I've had to write smaller.
 
 ### `first-meeting`
 
@@ -1324,6 +1159,171 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 ## reactions
 
 *Answering the world: pets, drops, examines, bags, crowds.*
+
+### `death`
+
+- **when:** a chat message (Oh dear, you are dead) AND NOT (an incident remembered)
+- **does:** mood -10; occasion (never held back)
+- **pacing:** priority 140, cooldown 5s, both
+
+- Well. That happened.
+- I'll go get the gravestone.
+- We do not speak of the last five minutes.
+- I'll mark the spot. It's what I'm for.
+- Deep breath. You can get it all back. Mostly.
+- Back to the start, then. I know the road.
+
+### `pet-drop`
+
+- **when:** a chat message (funny feeling like)
+- **does:** occasion (never held back)
+- **pacing:** priority 150, cooldown 1s, both
+
+- PET! Actual pet!
+- A pet. So there'll be two of us walking behind you now.
+- A pet! Look at its little face!
+- We have a pet. Today is a good page.
+- THE LUCK. Write it down, nobody will believe us.
+- It looked straight at you and chose. I'm writing that down.
+
+### `level-up-new`
+
+> R16, days 0-2: congratulations from someone still being polite about it. The familiar sibling takes over from day 3.
+
+- **when:** on a level-up (*) AND known 0-2 days
+- **does:** mood +8
+- **pacing:** priority 40, cooldown 3s
+
+- Level {level} in {skill}. Congratulations.
+- {skill} has reached {level}. I have written it down.
+- That is {skill} level {level}. Well done.
+- Your {skill} is now level {level}. My compliments.
+- Another level in {skill}. You are making steady progress.
+- {skill} at {level} now. It is entered in my neatest hand.
+- {skill}, level {level}. You are improving faster than I can write.
+- A new {skill} level. I will record it exactly as it happened.
+
+### `level-up`
+
+- **when:** on a level-up (*) AND known 3+ days
+- **does:** mood +8
+- **pacing:** priority 40, cooldown 3s
+
+- {skill} {level}. Nice.
+- Level {level} {skill}!
+- {skill} {level}. Underlined.
+- That's {level} in {skill}. The column grows.
+- Level {level}. Your {skill} is coming along nicely.
+- {skill} up. I'll want a demonstration later.
+- {skill} {level}. I'll pretend I saw that coming.
+- There it is, {skill} {level}. Suits you.
+- {level} in {skill}. At this rate I'll need a thicker book.
+- Another {skill} level. I acted surprised in the notes.
+- {skill} {level}. The page was ready before you were.
+- {skill} {level}. Worth the ink.
+
+### `level-halfway`
+
+> Ninety-two is half the experience to ninety-nine, which most people do not know and a scribe would. Outranks the plain level line on the one level where there is more to say.
+
+- **when:** milestone
+- **does:** mood +8
+- **pacing:** priority 48, cooldown 1m
+
+- Ninety-two. Half the experience to ninety-nine, whatever it says.
+- {skill} 92. That's the true halfway. I've ruled a line under it.
+- Halfway to ninety-nine in {skill}, by experience. Few know that.
+- Ninety-two in {skill}. The second half's as big as the first. Sorry.
+- The halfway mark in {skill}. I've turned the page over.
+
+### `level-round`
+
+> A multiple of ten from fifty up: the levels people tell each other about. A chance roll so the plain level line still gets some of them.
+
+- **when:** milestone AND a 70% roll
+- **does:** mood +6
+- **pacing:** priority 44, cooldown 1m
+
+- {skill} {level}. A round number. Those get a box round them.
+- Level {level} in {skill}. I do like a round one. It sits tidily on the page.
+- {level} in {skill}. That's a milestone, and I've stopped for it.
+- A round {level} in {skill}. I've underlined it twice.
+- {skill}, {level}. The kind of number you tell people.
+
+### `level-mastery-first`
+
+> The first ninety-nine the follower has seen on this account - maximum 1 means the count of maxed skills, this one included, is one. Once ever. The body does the send-off chain; this is the words.
+
+- **when:** milestone
+- **does:** mood +20; once ever; holds the floor 8s
+- **pacing:** priority 90, cooldown 1m
+
+- Your first ninety-nine. I reserved a page and never thought I'd use it.
+- Ninety-nine {skill}. The first. I'm going to need a better pen.
+- That's a ninety-nine. Your first. I've written the date next to it.
+
+### `level-mastery-again`
+
+> The second ninety-nine and every one after. {nines} is how many now; {ninesOrdinal} says it.
+
+- **when:** milestone
+- **does:** mood +18; holds the floor 8s
+- **pacing:** priority 89, cooldown 1m
+
+- That's {nines} at ninety-nine, and yes, I'm counting.
+- Ninety-nine {skill} makes your {ninesOrdinal}. The reserved pages are running out.
+- {skill} to ninety-nine, your {ninesOrdinal}. It never gets smaller.
+- The {ninesOrdinal} ninety-nine. I've had to start a second index.
+
+### `level-total`
+
+> The total level crossing a hundred, from five hundred up. The line carries the skill too, since it outranks the plain level line.
+
+- **when:** milestone
+- **does:** mood +6
+- **pacing:** priority 46, cooldown 1m
+
+- {skill} {level}, which makes {total} in total. I checked the sum twice.
+- Total level {total} with that one. I've ruled off the column.
+- That's {total} across the lot. A round total gets its own line in the book.
+- {total} total. I keep the running sum on the inside cover.
+
+### `level-base`
+
+> The lowest skill catching up: the tick every skill became fifty, sixty, seventy, eighty or ninety or better. One rule over the five thresholds, since {base} says which.
+
+- **when:** (milestone OR milestone OR milestone OR milestone OR milestone)
+- **does:** mood +8
+- **pacing:** priority 49, cooldown 1m
+
+- Every skill at {base} or better now. The lowest column has caught up.
+- Nothing under {base} any more. I've retired the page I kept for it.
+- That was the laggard. Base {base}, all round.
+- {skill} was holding the base down. Not now: {base} across the board.
+
+### `level-after-a-gap`
+
+> A level in a skill the player had left alone for a week or more. {sinceLast} is the gap in words; levelGap is the guard that makes it a number worth printing.
+
+- **when:** levelgap
+- **does:** mood +6
+- **pacing:** priority 47, cooldown 1m
+
+- {skill}, after {sinceLast}. I'd stopped leaving the page open.
+- {sinceLast} since the last {skill} level. I'd wondered.
+- Back to {skill} after {sinceLast}. The ink had long dried.
+- A {skill} level, the first in {sinceLast}. That surprised me.
+
+### `level-quick`
+
+> The other end: a second level in the same skill inside ten minutes. Low priority and a chance roll, so it is an occasional aside rather than a commentary on fast experience.
+
+- **when:** levelgap AND a 40% roll
+- **pacing:** priority 43, cooldown 5m
+
+- Another {skill} level already. I can barely keep up.
+- {sinceLast} since the last. The {skill} page is getting crowded.
+- Two {skill} levels in {sinceLast}. I've had to write smaller.
 
 ### `mirror-teleport`
 

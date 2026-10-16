@@ -178,6 +178,55 @@ public class RuleSetIntegrityTest
 			orphans.isEmpty());
 	}
 
+	@Test
+	public void theReactionsSwitchCoversTheDeathsDropsAndLevelUpsItNames() throws IOException
+	{
+		// The setting reads "Deaths, drops, thieving, level-ups and the chat".
+		// QA2, 15 Oct: the level-ups, the death line and the pet drop were in
+		// misc, so switching Reactions off left them talking. Reminiscing
+		// files its own memories of deaths and drops under its own switch.
+		Set<String> named = new HashSet<>(Arrays.asList("death", "pet-drop", "level-up-new", "level-up",
+			"level-halfway", "level-round", "level-mastery-first", "level-mastery-again", "level-total",
+			"level-base", "level-after-a-gap", "level-quick", "levels-many"));
+		Set<String> triggers = new HashSet<>(Arrays.asList(
+			"levelUp", "levelGap", "playerDeath", "nearDeathSpot", "lootWorth"));
+		Set<String> elsewhere = new TreeSet<>();
+		for (JsonElement e : bundled("/com/follower/default-phrases.json").getAsJsonArray("rules"))
+		{
+			JsonObject rule = e.getAsJsonObject();
+			String id = rule.get("id").getAsString();
+			String group = rule.has("group") ? rule.get("group").getAsString() : "misc";
+			boolean covered = named.contains(id)
+				|| (!"memory".equals(group) && triggerTypes(rule.getAsJsonObject("when")).stream().anyMatch(triggers::contains));
+			if (covered && !"reactions".equals(group))
+			{
+				elsewhere.add(id + " (" + group + ")");
+			}
+		}
+		assertTrue("said on a death, drop or level-up but not under Reactions: " + elsewhere, elsewhere.isEmpty());
+	}
+
+	private static Set<String> triggerTypes(JsonObject when)
+	{
+		Set<String> out = new HashSet<>();
+		if (when == null)
+		{
+			return out;
+		}
+		if (when.has("type"))
+		{
+			out.add(when.get("type").getAsString());
+		}
+		if (when.has("conditions"))
+		{
+			for (JsonElement c : when.getAsJsonArray("conditions"))
+			{
+				out.addAll(triggerTypes(c.getAsJsonObject()));
+			}
+		}
+		return out;
+	}
+
 	// ----------------------------------------------------------------- glyphs
 
 	/**
