@@ -535,6 +535,32 @@ public class SceneQuietTest
 		assertTrue("the base is not said behind its callback", h.firedBy("tobyn").isEmpty());
 	}
 
+	/**
+	 * A hold can outlast a short cooldown: a health warning, five seconds
+	 * apart, kept through a long conversation while the health dips again.
+	 * Found by the scene soak: the second copy, queued behind the first, was
+	 * said straight after it once the box closed.
+	 */
+	@Test
+	public void aLineWaitingItsTurnIsNotQueuedASecondTime() throws IOException
+	{
+		Harness h = harness("{\"id\": \"warn\", \"group\": \"t\", \"cooldownMs\": 5000, \"occasion\": true,"
+			+ " \"when\": {\"type\": \"healthBelow\", \"percent\": 50}, \"say\": [\"Careful.\"]}");
+		h.engine.getContext().setDialogueOpen(true);
+		for (int dip = 0; dip < 3; dip++)
+		{
+			h.game.hitpoints(10, 99);
+			ticks(h, 12);
+			h.game.hitpoints(99, 99);
+			ticks(h, 2);
+		}
+		h.game.hitpoints(10, 99);
+		ticks(h, 1);
+		h.engine.getContext().setDialogueOpen(false);
+		ticks(h, 40);
+		assertEquals("said once for the conversation", 1, h.firedBy("warn").size());
+	}
+
 	/** Behaviour QA, 15 Oct: the two shipped lines the damper took in an AFK, 5 of 5 and 4 of 4. */
 	@Test
 	public void theLinesAnAbsenceCostWaitTheirTurn() throws IOException

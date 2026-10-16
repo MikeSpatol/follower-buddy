@@ -1002,7 +1002,7 @@ public class SpeechEngine
 			// gift held back is a gift lost; and it trades whatever the pocket
 			// holds when it is thanked for, so a rock still on its way only
 			// changes the words.
-			if (!rising || !isActive(rule) || !rule.offCooldown(now)
+			if (!rising || !isActive(rule) || !rule.offCooldown(now) || isWaiting(rule)
 				|| (!Boolean.TRUE.equals(rule.grantsWish) && awaitsALanding(rule, now)))
 			{
 				continue;
@@ -1445,6 +1445,24 @@ public class SpeechEngine
 		String group = rule.group == null ? "misc" : rule.group.toLowerCase(Locale.ROOT);
 		return !disabledGroups.contains(group)
 			&& !(rule.id != null && disabledGroups.contains(rule.id.toLowerCase(Locale.ROOT)));
+	}
+
+	/**
+	 * Whether a firing of this rule is already waiting its turn. A hold can
+	 * outlast a short cooldown - a low-health warning kept through a long
+	 * conversation - and a second copy queued behind the first was said
+	 * straight after it once both were let go.
+	 */
+	private boolean isWaiting(SpeechRule rule)
+	{
+		for (PendingSpeech waiting : pending)
+		{
+			if (waiting.rule == rule)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
