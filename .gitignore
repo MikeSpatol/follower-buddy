@@ -13,3 +13,6 @@ jx.env
 .idea/
 *.iml
 .vscode/
+
+# A local permission for the Blender export tools (dev/model-export only). Never commit.
+.dev-tools-allowed
