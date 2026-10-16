@@ -12153,7 +12153,16 @@ public class FollowerPlugin extends Plugin
 		{
 			return;
 		}
-		speakNow(speechQueue.removeFirst());
+		Utterance line = speechQueue.removeFirst();
+		// Kept waiting here, as in the engine, the moment it was about can
+		// pass: behaviour QA4, 16 Oct, Hans was announced as the follower's
+		// own box closed, 24 s after he had gone. Let go unsaid.
+		if (line.rule != null && line.rule.when != null
+			&& !line.rule.when.standingHolds(speechEngine.getContext(), TriggerEvent.tick()))
+		{
+			return;
+		}
+		speakNow(line);
 	}
 
 	/**

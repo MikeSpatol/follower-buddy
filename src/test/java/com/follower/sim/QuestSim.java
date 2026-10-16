@@ -265,7 +265,13 @@ public final class QuestSim
 		{
 			return;
 		}
-		speakNow(queue.removeFirst());
+		U line = queue.removeFirst();
+		if (line.rule != null && !line.rule.when.standingHolds(h.engine.getContext(), TriggerEvent.tick()))
+		{
+			note("   kept in the queue, its moment passed: " + line.rule.id);
+			return;
+		}
+		speakNow(line);
 	}
 
 	// ------------------------------------------------------------ the world

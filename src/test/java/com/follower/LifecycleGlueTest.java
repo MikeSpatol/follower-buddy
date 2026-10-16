@@ -218,6 +218,19 @@ public class LifecycleGlueTest
 	}
 
 	@Test
+	public void aLineKeptInTheQueueIsLetGoOnceItsMomentHasPassed() throws IOException
+	{
+		// Behaviour QA4, 16 Oct (probe Q2a): Hans walked past during a 44 s
+		// Talk-to box and was 12 tiles gone 24 s before it closed; his
+		// opener was said on the tick the box closed. Re-checked as the
+		// engine re-checks a line it kept.
+		String drain = method("private void drainSpeechQueue()");
+		int check = drain.indexOf("!line.rule.when.standingHolds(speechEngine.getContext(), TriggerEvent.tick())");
+		assertTrue("re-checked", check >= 0);
+		assertTrue("before it is said", check < drain.indexOf("speakNow(line);"));
+	}
+
+	@Test
 	public void theHiddenErrandIsNeverListed() throws IOException
 	{
 		// Text sweep, 14 Oct: the fire errand that walks into the fire is a
