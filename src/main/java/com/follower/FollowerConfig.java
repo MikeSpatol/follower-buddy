@@ -1137,6 +1137,19 @@ public interface FollowerConfig extends Config
 		return true;
 	}
 
+	@ConfigItem(
+		keyName = "copiesAgility",
+		name = "Does agility with you",
+		description = "Takes every obstacle and shortcut after you, in the same order and"
+			+ " the same way, falls and all. Untick to have it catch up the old way.",
+		section = movementSection,
+		position = 4
+	)
+	default boolean copiesAgility()
+	{
+		return true;
+	}
+
 	@Range(min = 0)
 	@ConfigItem(
 		keyName = "restAnimation",
