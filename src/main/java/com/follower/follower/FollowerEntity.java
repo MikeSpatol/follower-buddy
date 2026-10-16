@@ -1011,6 +1011,10 @@ public class FollowerEntity
 	/** Armed by the comedy death: at the emote's final frame, go dark this long. */
 	private int hideAfterEmoteMs;
 
+	/** Out of the frames drawn while set: the sketch's frame, which the scribe draws and is not in. */
+	@lombok.Setter
+	private boolean outOfPicture;
+
 	/**
 	 * Arms a frame-accurate disappearance: the instant the current emote
 	 * finishes, the follower goes invisible for the given time - no standing
@@ -2272,8 +2276,9 @@ public class FollowerEntity
 			return;
 		}
 
-		// Briefly gone (the comedy death): nothing renders, nothing moves.
-		if (System.currentTimeMillis() < hideUntilMs)
+		// Briefly gone (the comedy death, or a sketch's frame): nothing
+		// renders, nothing moves.
+		if (outOfPicture || System.currentTimeMillis() < hideUntilMs)
 		{
 			if (object.isActive())
 			{

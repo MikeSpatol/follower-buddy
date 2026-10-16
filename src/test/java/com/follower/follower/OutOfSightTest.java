@@ -32,7 +32,8 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * When the follower's body is in the scene and when it is not (QA, 16 Oct):
- * what a despawn cut off does not follow it into the next body.
+ * what a despawn cut off does not follow it into the next body, and a
+ * sketch's frame is drawn without it.
  */
 public class OutOfSightTest
 {
@@ -188,5 +189,21 @@ public class OutOfSightTest
 		spawn();
 		follower.updateFrame();
 		assertTrue("the new body is not waiting on the old one's landing", follower.isShown());
+	}
+
+	@Test
+	public void aSketchsFrameIsDrawnWithoutTheScribe()
+	{
+		spawn();
+		follower.updateFrame();
+		assertTrue(follower.isShown());
+
+		follower.setOutOfPicture(true);
+		follower.updateFrame();
+		assertFalse("out of the frame the sketch is taken from", follower.isShown());
+
+		follower.setOutOfPicture(false);
+		follower.updateFrame();
+		assertTrue("back for the next", follower.isShown());
 	}
 }
