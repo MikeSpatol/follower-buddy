@@ -20,7 +20,7 @@ import net.runelite.api.coords.WorldPoint;
  * overhead queue (3 deep, 15.4 s stale), reading time (17 cps, 4 s floor, 12 s
  * cap), the NPC-dialogue hush in speakNow, a line that waits its turn kept in
  * the queue through a conversation (keptForTheBox), the cutscene clearing the queue and
- * re-saying a once/occasion line cut in its first 2 s, the 25-tick quiet
+ * re-saying a once/occasion line cut before it could be read (2 s at least), the 25-tick quiet
  * after a scene, and the dialogue reading that stays "open" 2 ticks after
  * the box goes. Pacing is ON (Occasional, 6 s) unless set otherwise.
  */
@@ -157,7 +157,7 @@ public final class QuestSim
 			{
 				cut = onScreen != null && ms[0] < speakingUntil && onScreen.rule != null
 					&& (onScreen.rule.isOnce() || onScreen.rule.isOccasion())
-					&& ms[0] - onScreenSince < 2000 ? onScreen : null;
+					&& ms[0] - onScreenSince < Math.max(2000, onScreen.text.length() * 1000L / 17) ? onScreen : null;
 				if (onScreen != null && ms[0] < speakingUntil)
 				{
 					note("   scene starts: overhead cleared mid-line (" + id(onScreen.rule) + ")"
@@ -183,7 +183,7 @@ public final class QuestSim
 		}
 		boolean quiet = sceneOn || tick < quietUntil;
 		h.engine.setSceneQuiet(quiet);
-		if (cut != null && quiet)
+		if (cut != null && (quiet || npcDialog || goneTicks <= 2))
 		{
 			if (++cutHeld > 500)
 			{

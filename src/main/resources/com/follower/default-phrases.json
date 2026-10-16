@@ -16579,6 +16579,13 @@
             "maximum": 1
           },
           {
+            "type": "inArea",
+            "x1": 3162,
+            "y1": 3302,
+            "x2": 3171,
+            "y2": 3311
+          },
+          {
             "type": "none",
             "conditions": [
               {
@@ -18301,10 +18308,12 @@
             "maximum": 16
           },
           {
-            "type": "inRegion",
-            "regions": [
-              12854
-            ]
+            "type": "inArea",
+            "x1": 3199,
+            "y1": 3465,
+            "x2": 3227,
+            "y2": 3500,
+            "plane": 2
           },
           {
             "type": "none",
@@ -18343,8 +18352,7 @@
       "occasion": true,
       "delayTicks": 0,
       "output": "overhead",
-      "animation": 13995,
-      "mood": 4,
+      "animation": 13994,
       "when": {
         "type": "all",
         "conditions": [
@@ -18355,10 +18363,12 @@
             "maximum": 16
           },
           {
-            "type": "inRegion",
-            "regions": [
-              12854
-            ]
+            "type": "inArea",
+            "x1": 3199,
+            "y1": 3465,
+            "x2": 3227,
+            "y2": 3500,
+            "plane": 2
           },
           {
             "type": "questWitnessed",
@@ -18412,93 +18422,6 @@
       },
       "say": [
         "That's hole one. I've started numbering them, just in case."
-      ]
-    },
-    {
-      "id": "qm-x-marks-the-spot-the-orb",
-      "title": "X Marks the Spot: the orb",
-      "note": "X Marks The Spot, varbit 8063 = 4: Dug at the X behind Lumbridge Castle, by the kitchen door, and found a mysterious orb. Source: Quest Helper (4 = dig in Draynor) (unverified)",
-      "about": "Said once, partway through X Marks the Spot.",
-      "group": "quest",
-      "priority": 60,
-      "cooldownMs": 600000,
-      "once": true,
-      "occasion": true,
-      "delayTicks": 2,
-      "output": "overhead",
-      "animation": 2113,
-      "when": {
-        "type": "all",
-        "conditions": [
-          {
-            "type": "questVar",
-            "varbit": 8063,
-            "minimum": 4,
-            "maximum": 4
-          },
-          {
-            "type": "none",
-            "conditions": [
-              {
-                "type": "questDone",
-                "quest": "COOKS_ASSISTANT"
-              }
-            ]
-          },
-          {
-            "type": "none",
-            "conditions": [
-              {
-                "type": "dialogueOpen"
-              }
-            ]
-          }
-        ]
-      },
-      "say": [
-        "An orb, buried behind a kitchen. I'd have looked for a ladle.",
-        "Scroll, map, now an orb. Whoever planned this liked variety.",
-        "A glass ball out of the ground. I'm keeping my hands in my pockets."
-      ]
-    },
-    {
-      "id": "qm-x-marks-the-spot-the-orb-after-cooks-assistant",
-      "title": "X Marks the Spot: the orb (after Cook's Assistant)",
-      "note": "Callback: said instead of qm-x-marks-the-spot-the-orb when Cooks Assistant is done. X Marks The Spot, varbit 8063 = 4: Dug at the X behind Lumbridge Castle, by the kitchen door, and found a mysterious orb. Source: Quest Helper (4 = dig in Draynor) (unverified)",
-      "about": "Said once, partway through X Marks the Spot, if you have already done Cook's Assistant.",
-      "group": "quest",
-      "priority": 61,
-      "cooldownMs": 600000,
-      "once": true,
-      "occasion": true,
-      "delayTicks": 2,
-      "output": "overhead",
-      "animation": 2113,
-      "when": {
-        "type": "all",
-        "conditions": [
-          {
-            "type": "questVar",
-            "varbit": 8063,
-            "minimum": 4,
-            "maximum": 4
-          },
-          {
-            "type": "questDone",
-            "quest": "COOKS_ASSISTANT"
-          },
-          {
-            "type": "none",
-            "conditions": [
-              {
-                "type": "dialogueOpen"
-              }
-            ]
-          }
-        ]
-      },
-      "say": [
-        "The cook's back door. If he sees us, he'll want something fetched."
       ]
     },
     {
@@ -18600,8 +18523,7 @@
       "occasion": true,
       "delayTicks": 2,
       "output": "overhead",
-      "animation": 13995,
-      "mood": 5,
+      "animation": 13994,
       "remember": {
         "key": "quest-pig-pen-casket",
         "as": "the whispering casket in the pig pen",
