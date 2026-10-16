@@ -2245,6 +2245,7 @@ public class FollowerEntity
 				lastSeenPlayerTile = null;
 				if (where != null)
 				{
+					snapped();
 					snapBeside(where);
 				}
 			}
@@ -2301,6 +2302,7 @@ public class FollowerEntity
 				}
 			}
 			stayTile = null;
+			snapped();
 			if (!snapBeside(playerTile))
 			{
 				recoverPosition(local, playerTile);
@@ -3444,6 +3446,24 @@ public class FollowerEntity
 	private String hotness(WorldPoint at)
 	{
 		return at != null && hot(at) ? " [FIRE]" : "";
+	}
+
+	/**
+	 * Told when a teleport, a plane change or a jump past the leash puts the
+	 * follower back beside the player, before it is shown there: whatever had
+	 * it elsewhere is over. Behaviour QA, 15 Oct: an errand's scroll and the
+	 * minutes' writing pose could be drawn beside the landed player until
+	 * the next game tick noticed they had gone.
+	 */
+	@lombok.Setter
+	private Runnable onSnapped;
+
+	private void snapped()
+	{
+		if (onSnapped != null)
+		{
+			onSnapped.run();
+		}
 	}
 
 	/** Re-places the follower beside the player after a teleport or plane change. */
