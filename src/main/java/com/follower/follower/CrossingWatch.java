@@ -31,7 +31,8 @@ import net.runelite.api.kit.KitType;
  * walking pose. Ordinary steps always show a walk or a run; the game's
  * forced movement (a jump, a squeeze, a vault) shows the stand, or an odd
  * pose. Counted only over consecutive frames, so the one frame where a walk
- * ends on the stand can never add up to one.</li>
+ * ends on the stand can never add up to one; a frame that only repeats the
+ * last (more frames drawn than game cycles) neither counts nor breaks it.</li>
  * <li><b>An action with a hop.</b> An animation, then the player put down a
  * tile or more away or on another floor: a climb, a jump across a gap. A
  * ladder looks exactly the same, so this one needs agility XP, or damage (a
@@ -57,7 +58,9 @@ import net.runelite.api.kit.KitType;
  * recording, so the follower can begin it a couple of ticks behind the
  * player. It ends once the player has been back to normal for a while:
  * {@link #SETTLE_MS} standing, or {@link #WALK_OFF_MS} walking on. It is cut
- * at the first normal frame, so the follower does not copy the walk away.
+ * where the drawn player reaches the tile the server stepped them off to
+ * as their own set came back, so the follower does not copy the walk away,
+ * nor stop short of the end of a rope.
  */
 public final class CrossingWatch
 {
@@ -155,11 +158,22 @@ public final class CrossingWatch
 		final int[] base;
 		final int weapon;
 		final boolean interacting;
+		/** The tile the server has them on, which leads the drawn one on a walk. */
+		final WorldPoint server;
 
 		public Sample(long atMs, long fineX, long fineY, int plane, int orientation,
 			int pose, int poseFrame, int action, int actionFrame, int[] base, int weapon,
 			boolean interacting)
 		{
+			this(atMs, fineX, fineY, plane, orientation, pose, poseFrame, action, actionFrame, base, weapon,
+				interacting, new WorldPoint((int) (fineX >> 7), (int) (fineY >> 7), plane));
+		}
+
+		Sample(long atMs, long fineX, long fineY, int plane, int orientation,
+			int pose, int poseFrame, int action, int actionFrame, int[] base, int weapon,
+			boolean interacting, WorldPoint server)
+		{
+			this.server = server;
 			this.atMs = atMs;
 			this.fineX = fineX;
 			this.fineY = fineY;
@@ -213,7 +227,7 @@ public final class CrossingWatch
 				local.getPoseAnimation(), local.getPoseAnimationFrame(),
 				local.getAnimation(), local.getAnimationFrame(),
 				base, composition.getEquipmentId(KitType.WEAPON),
-				local.getInteracting() != null);
+				local.getInteracting() != null, tile);
 		}
 
 		Crossing.Frame frame()
@@ -250,6 +264,8 @@ public final class CrossingWatch
 		long calmSinceMs = -1;
 		int calmIndex = -1;
 		boolean calmWalked;
+		/** The server's tile on the first normal frame: the calm counts from the drawn player's reaching it. */
+		WorldPoint steppedOffTo;
 
 		Run(Sample first)
 		{
@@ -278,9 +294,11 @@ public final class CrossingWatch
 		final boolean walking;
 		/** Moved by something other than their own walk: a glide, a hop, an odd pose or an animation on the move. */
 		final boolean unusual;
+		final WorldPoint server;
 
-		Seen(Crossing.Frame frame, boolean calm, boolean walking, boolean unusual)
+		Seen(Crossing.Frame frame, boolean calm, boolean walking, boolean unusual, WorldPoint server)
 		{
+			this.server = server;
 			this.frame = frame;
 			this.calm = calm;
 			this.walking = walking;
@@ -414,7 +432,7 @@ public final class CrossingWatch
 		previous = s;
 		if (prev == null)
 		{
-			remember(new Seen(s.frame(), true, false, false));
+			remember(new Seen(s.frame(), true, false, false, s.server));
 			return;
 		}
 
@@ -447,7 +465,7 @@ public final class CrossingWatch
 		boolean odd = oddPose || s.action != -1 || glide;
 		boolean unusual = (moved > 0 || planeChanged)
 			&& (planeChanged || !walkingPose || oddPose || s.action != -1);
-		remember(new Seen(s.frame(), !odd && !hop, walking, unusual));
+		remember(new Seen(s.frame(), !odd && !hop, walking, unusual, s.server));
 		if (unusual || oddPose)
 		{
 			lastOddMs = s.atMs;
@@ -493,8 +511,13 @@ public final class CrossingWatch
 			return;
 		}
 
-		run.glided += glide && run.lastGlided ? moved : 0;
-		run.lastGlided = glide;
+		// A frame that repeats the last (more frames than game cycles) is
+		// neither a glide nor a break in one, unless it shows a walk.
+		if (moved > 0 || planeChanged || walkingPose)
+		{
+			run.glided += glide && run.lastGlided ? moved : 0;
+			run.lastGlided = glide;
+		}
 		if (hop)
 		{
 			run.hopMs = s.atMs;
@@ -547,12 +570,23 @@ public final class CrossingWatch
 		{
 			run.calmSinceMs = -1;
 			run.calmWalked = false;
+			run.steppedOffTo = null;
 		}
 		else if (run.calmSinceMs < 0)
 		{
-			run.calmSinceMs = s.atMs;
-			run.calmIndex = run.frames.size() - 1;
-			run.calmWalked = walking;
+			// Back to normal as the server steps them off, with the drawn
+			// player still a tile or two along the rope: calm from where it
+			// put them down, once they are drawn there.
+			if (run.steppedOffTo == null)
+			{
+				run.steppedOffTo = s.server;
+			}
+			if (frame.tile().equals(run.steppedOffTo))
+			{
+				run.calmSinceMs = s.atMs;
+				run.calmIndex = run.frames.size() - 1;
+				run.calmWalked = walking;
+			}
 		}
 		else
 		{
@@ -709,10 +743,23 @@ public final class CrossingWatch
 			}
 		}
 		int start = Math.max(0, first - 1);
+		// As a crossing seen live ends: where the drawn player reaches the
+		// tile the server stepped them off to.
 		int end = window.size() - 1;
+		WorldPoint steppedOffTo = null;
 		for (int i = last + 1; i < window.size(); i++)
 		{
-			if (window.get(i).calm)
+			Seen seen = window.get(i);
+			if (!seen.calm)
+			{
+				steppedOffTo = null;
+				continue;
+			}
+			if (steppedOffTo == null)
+			{
+				steppedOffTo = seen.server;
+			}
+			if (seen.frame.tile().equals(steppedOffTo))
 			{
 				end = i;
 				break;
