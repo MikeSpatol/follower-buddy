@@ -123,6 +123,48 @@ public class RuleSetIntegrityTest
 		assertTrue("duplicate rule ids: " + duplicates, duplicates.isEmpty());
 	}
 
+	/**
+	 * Restored with an approved line but no approved title or about yet.
+	 * Kept exact, so a rule that gets its words comes off this list.
+	 */
+	private static final List<String> AWAITING_TITLE_AND_ABOUT = Arrays.asList(
+		"fun-fence-book-reread", "fun-regath-after-client-of-kourend");
+
+	/**
+	 * QA 2, 15 Oct: the quest moments and fun lines came in with titles made
+	 * from their ids ('Qm priest in peril the kings verdict ...') and, under
+	 * them, the authors' notes: varp numbers, sources, quest steps. The
+	 * window shows only an about, so each of them carries a title and one.
+	 */
+	@Test
+	public void everyQuestMomentAndFunLineHasATitleAndAnAbout() throws IOException
+	{
+		JsonArray raw = bundled("/com/follower/default-phrases.json")
+			.getAsJsonArray("rules");
+		Set<String> missing = new TreeSet<>();
+		int checked = 0;
+		for (JsonElement element : raw)
+		{
+			JsonObject rule = element.getAsJsonObject();
+			String id = rule.get("id").getAsString();
+			if (!id.startsWith("qm-") && !id.startsWith("fun-"))
+			{
+				continue;
+			}
+			checked++;
+			for (String field : new String[]{"title", "about"})
+			{
+				if (!rule.has(field) || rule.get(field).getAsString().trim().isEmpty())
+				{
+					missing.add(id);
+				}
+			}
+		}
+		assertTrue("the qm- and fun- rules were found", checked > 90);
+		assertEquals("qm- and fun- rules with no title or no about",
+			new TreeSet<>(AWAITING_TITLE_AND_ABOUT), missing);
+	}
+
 	@Test
 	public void everyConditionTypeIsOneTheEngineHandles() throws IOException
 	{

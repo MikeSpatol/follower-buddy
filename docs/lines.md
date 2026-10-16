@@ -7040,7 +7040,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `qm-rune-mysteries-mugger-street`
 
-> Rune Mysteries, varp 63 = 3-5: Walking past the mugger outside Aubury's shop while carrying the package or the notes. Source: cache: quest_progress_get (script 4024) reads %runemysteries (varp 63); quest dbrow 125 endstate 6, unstarted 0; 1-5 in progress. 3-5 = package or notes in transit, from Quest Helper (github.com/Zoinkwiz/quest-helper, master 5f79193, 2026-10-14). Mugger is NPC 513 and others, level 6. Region 12853 from Aubury at (3253, 3401) in Quest Helper (github.com/Zoinkwiz/quest-helper, master 5f79193, 2026-10-14). The mugger outside is in the chronicle page. (unverified)
+> Rune Mysteries, varp 63 = 3-4: Walking past the mugger outside Aubury's shop with the package, on the way in or just after handing it over. Source: cache: quest_progress_get (script 4024) reads %runemysteries (varp 63); quest dbrow 125 endstate 6, unstarted 0; 1-5 in progress. 3-4 = the package leg (3 deliver it, 4 talk to Aubury again; 5, the notes, has its own moment), from Quest Helper (github.com/Zoinkwiz/quest-helper, master 5f79193, 2026-10-14). Mugger is NPC 513 and others, level 6. Region 12853 from Aubury at (3253, 3401) in Quest Helper (github.com/Zoinkwiz/quest-helper, master 5f79193, 2026-10-14). The mugger outside is in the chronicle page. (unverified)
 
 - **when:** questvar AND Mugger within 6 tiles, in sight AND in region 12853 AND NOT (the follower saw CHILDREN_OF_THE_SUN done) AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever
@@ -7051,7 +7051,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `qm-rune-mysteries-mugger-street-after-children-of-the-sun`
 
-> Callback: said instead of qm-rune-mysteries-mugger-street when Children Of The Sun is done. Rune Mysteries, varp 63 = 3-5: Walking past the mugger outside Aubury's shop while carrying the package or the notes. Source: cache: quest_progress_get (script 4024) reads %runemysteries (varp 63); quest dbrow 125 endstate 6, unstarted 0; 1-5 in progress. 3-5 = package or notes in transit, from Quest Helper (github.com/Zoinkwiz/quest-helper, master 5f79193, 2026-10-14). Mugger is NPC 513 and others, level 6. Region 12853 from Aubury at (3253, 3401) in Quest Helper (github.com/Zoinkwiz/quest-helper, master 5f79193, 2026-10-14). The mugger outside is in the chronicle page. (unverified)
+> Callback: said instead of qm-rune-mysteries-mugger-street when Children Of The Sun is done. Rune Mysteries, varp 63 = 3-4: Walking past the mugger outside Aubury's shop with the package, on the way in or just after handing it over. Source: cache: quest_progress_get (script 4024) reads %runemysteries (varp 63); quest dbrow 125 endstate 6, unstarted 0; 1-5 in progress. 3-4 = the package leg (3 deliver it, 4 talk to Aubury again; 5, the notes, has its own moment), from Quest Helper (github.com/Zoinkwiz/quest-helper, master 5f79193, 2026-10-14). Mugger is NPC 513 and others, level 6. Region 12853 from Aubury at (3253, 3401) in Quest Helper (github.com/Zoinkwiz/quest-helper, master 5f79193, 2026-10-14). The mugger outside is in the chronicle page. (unverified)
 
 - **when:** questvar AND Mugger within 6 tiles, in sight AND in region 12853 AND the follower saw CHILDREN_OF_THE_SUN done AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever
@@ -7129,7 +7129,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `qm-priest-in-peril-the-monk-falls`
 
-> Priest In Peril, varp 302 = 4: Picked up the golden key from the right Monk of Zamorak inside Paterdomus. Source: Quest Helper (Zoinkwiz/quest-helper on GitHub, master as of 2025-10-23), PriestInPeril.java loadSteps: killMonk is the value-4 step. Region 13622 is the chronicle's Paterdomus plate region and holds Quest Helper's temple zones (x 3408-3419, y 3483-3494). 'Monk of Zamorak' checked in the cache Trigger moved to the golden key (2944, PIPKEY_GOLD) reaching the bag, via inventoryHas, so only the key-carrying monk counts (drafts QA, 15 Oct).
+> Priest In Peril, varp 302 = 4-5: Picked up the golden key from the right Monk of Zamorak inside Paterdomus. Source: Quest Helper (Zoinkwiz/quest-helper on GitHub, master as of 2025-10-23), PriestInPeril.java loadSteps: killMonk is a step at 4 and at 5. The current quest meets Drezel first (4 to 5) and kills the monk after (OSRS Wiki quick guide), so the key can come at either. Region 13622 is the chronicle's Paterdomus plate region and holds Quest Helper's temple zones (x 3408-3419, y 3483-3494). 'Monk of Zamorak' checked in the cache Trigger moved to the golden key (2944, PIPKEY_GOLD) reaching the bag, via inventoryHas, so only the key-carrying monk counts (drafts QA, 15 Oct).
 
 - **when:** questvar AND inventoryhas AND in region 13622 AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; animation 856
