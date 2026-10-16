@@ -91,7 +91,18 @@ public class FollowerPlugin extends Plugin
 	private static final int CHRONICLE_LOOK_TICKS = 10;
 
 	/** How long a page written waits for the follower to have the floor before it goes unsaid: a minute. */
-	private static final int PAGE_NEWS_TICKS = 100;
+	static final int PAGE_NEWS_TICKS = 100;
+
+	/**
+	 * The page news's wait for a gap this long, in ticks: a minute, or two
+	 * gaps and a little over when they are longer. Quests QA, 16 Oct: at
+	 * Minimal the news needs 45 s of quiet after the quest's own line, so
+	 * any other line in that minute, or a low mood, lost every quest's page.
+	 */
+	static int pageNewsTicks(long gapMs)
+	{
+		return Math.max(PAGE_NEWS_TICKS, (int) (2 * gapMs / 600L) + 20);
+	}
 
 	/** A page written, waiting to be mentioned. */
 	static final class PageNews
@@ -8483,7 +8494,7 @@ public class FollowerPlugin extends Plugin
 		// as the rules read it, page flips ridden out: on the raw box the news
 		// went out on a flip and sat over the conversation (QA, 15 Oct).
 		TriggerEvent news = nextPageNews(pageNews, client.getTickCount(), speechEngine.isQuiet(),
-			inConversation() || sceneQuiet());
+			inConversation() || sceneQuiet(), pageNewsTicks(speechEngine.moodScaledGap()));
 		if (news != null)
 		{
 			speechEngine.dispatch(news);
@@ -8498,9 +8509,10 @@ public class FollowerPlugin extends Plugin
 	 * was never mentioned. While a dialogue is up the news waits, and its
 	 * minute starts again when the box closes. A cutscene and the quiet after
 	 * it hold it the same way: a page a scene writes is mentioned after.
+	 * Its minute is {@code window} ticks, as {@link #pageNewsTicks} has it.
 	 */
 	static TriggerEvent nextPageNews(java.util.Deque<PageNews> news, int now, boolean quiet,
-		boolean waits)
+		boolean waits, int window)
 	{
 		if (waits)
 		{
@@ -8510,7 +8522,7 @@ public class FollowerPlugin extends Plugin
 			}
 			return null;
 		}
-		while (!news.isEmpty() && now - news.peek().tick > PAGE_NEWS_TICKS)
+		while (!news.isEmpty() && now - news.peek().tick > window)
 		{
 			news.poll();
 		}

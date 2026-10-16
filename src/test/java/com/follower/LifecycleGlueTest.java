@@ -153,7 +153,7 @@ public class LifecycleGlueTest
 		assertTrue("the page news waits for the quiet",
 			method("public void onGameTick(GameTick event)").contains(
 				"nextPageNews(pageNews, client.getTickCount(), speechEngine.isQuiet(),\n"
-					+ "\t\t\tinConversation() || sceneQuiet());"));
+					+ "\t\t\tinConversation() || sceneQuiet(), pageNewsTicks(speechEngine.moodScaledGap()));"));
 		assertTrue(method("private boolean inConversation()")
 			.contains("return npcDialogOpen() || dialogGoneTicks <= 2;"));
 	}

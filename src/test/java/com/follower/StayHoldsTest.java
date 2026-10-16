@@ -832,14 +832,14 @@ public class StayHoldsTest
 			call("noticeTheScene");
 			assertTrue(engineQuiet());
 			assertNull("the page waits", FollowerPlugin.nextPageNews(news, h.game.client.getTickCount(), true,
-				(Boolean) call("sceneQuiet")));
+				(Boolean) call("sceneQuiet"), FollowerPlugin.PAGE_NEWS_TICKS));
 			h.gameTick();
 		}
 		assertFalse((Boolean) call("sceneQuiet"));
 		call("noticeTheScene");
 		assertFalse("the engine may speak again", engineQuiet());
 		assertEquals("and the page is mentioned", page, FollowerPlugin.nextPageNews(news,
-			h.game.client.getTickCount(), true, (Boolean) call("sceneQuiet")));
+			h.game.client.getTickCount(), true, (Boolean) call("sceneQuiet"), FollowerPlugin.PAGE_NEWS_TICKS));
 	}
 
 	/**

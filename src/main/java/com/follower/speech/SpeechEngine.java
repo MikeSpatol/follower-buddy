@@ -862,7 +862,7 @@ public class SpeechEngine
 	 * everything evenly instead of silencing particular things: the follower
 	 * still says what matters, just with more room around it.
 	 */
-	private long moodScaledGap()
+	public long moodScaledGap()
 	{
 		return gapForMood(globalCooldownMs, getContext().getMoodBand());
 	}

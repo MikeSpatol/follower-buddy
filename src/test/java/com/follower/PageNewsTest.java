@@ -9,6 +9,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
@@ -37,8 +38,8 @@ public class PageNewsTest
 	{
 		TriggerEvent page = written(100);
 		assertNull("not over the dialogue, where it would be dropped",
-			FollowerPlugin.nextPageNews(news, 101, true, true));
-		assertSame("but once the box closes", page, FollowerPlugin.nextPageNews(news, 102, true, false));
+			FollowerPlugin.nextPageNews(news, 101, true, true, FollowerPlugin.PAGE_NEWS_TICKS));
+		assertSame("but once the box closes", page, FollowerPlugin.nextPageNews(news, 102, true, false, FollowerPlugin.PAGE_NEWS_TICKS));
 	}
 
 	@Test
@@ -48,19 +49,37 @@ public class PageNewsTest
 		// King Roald talks for well over a minute.
 		for (int tick = 101; tick <= 300; tick++)
 		{
-			assertNull(FollowerPlugin.nextPageNews(news, tick, true, true));
+			assertNull(FollowerPlugin.nextPageNews(news, tick, true, true, FollowerPlugin.PAGE_NEWS_TICKS));
 		}
 		assertSame("the minute starts when the box closes", page,
-			FollowerPlugin.nextPageNews(news, 350, true, false));
+			FollowerPlugin.nextPageNews(news, 350, true, false, FollowerPlugin.PAGE_NEWS_TICKS));
 	}
 
 	@Test
 	public void withNoDialogueItStillWaitsForQuietAndLapsesAfterAMinute()
 	{
 		written(100);
-		assertNull("something else is being said", FollowerPlugin.nextPageNews(news, 120, false, false));
+		assertNull("something else is being said", FollowerPlugin.nextPageNews(news, 120, false, false, FollowerPlugin.PAGE_NEWS_TICKS));
 		assertNull("and a minute (100 ticks) later it is news no longer",
-			FollowerPlugin.nextPageNews(news, 100 + 101, true, false));
+			FollowerPlugin.nextPageNews(news, 100 + 101, true, false, FollowerPlugin.PAGE_NEWS_TICKS));
+	}
+
+	/**
+	 * Quests QA, 16 Oct: at Minimal the news needs 45 s of quiet after the
+	 * quest's own line, said a couple of seconds after the scroll, and lapsed
+	 * a minute after the writing whenever anything else was said in it.
+	 */
+	@Test
+	public void atALongGapTheNewsWaitsForTwoGaps()
+	{
+		assertEquals("a minute at the shipped gaps", FollowerPlugin.PAGE_NEWS_TICKS,
+			FollowerPlugin.pageNewsTicks(6_000L));
+		int window = FollowerPlugin.pageNewsTicks(45_000L);
+		assertEquals(170, window);
+		TriggerEvent page = written(100);
+		assertNull("another line, then the gap after it", FollowerPlugin.nextPageNews(news, 180, false, false, window));
+		assertSame("still news once the gap after that is out", page,
+			FollowerPlugin.nextPageNews(news, 260, true, false, window));
 	}
 
 	@Rule
