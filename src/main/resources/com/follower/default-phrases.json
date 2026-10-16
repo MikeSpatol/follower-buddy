@@ -1453,7 +1453,7 @@
       "group": "health",
       "priority": 100,
       "output": "both",
-      "cooldownMs": 15000,
+      "cooldownMs": 60000,
       "when": {
         "type": "healthBelow",
         "percent": 40
@@ -1486,7 +1486,11 @@
           9209,
           1696,
           8811,
-          11875
+          11875,
+          1816,
+          6575,
+          4069,
+          4071
         ],
         "minutes": 1
       },
@@ -5621,11 +5625,27 @@
       "delayTicks": 2,
       "cooldownMs": 3600000,
       "when": {
-        "type": "npcNearby",
-        "visible": true,
-        "within": 5,
-        "names": [
-          "Prince Itzla Arkan"
+        "type": "all",
+        "conditions": [
+          {
+            "type": "npcNearby",
+            "visible": true,
+            "within": 5,
+            "names": [
+              "Prince Itzla Arkan"
+            ]
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "questVar",
+                "varbit": 9632,
+                "minimum": 1,
+                "maximum": 15
+              }
+            ]
+          }
         ]
       },
       "say": [
@@ -14944,7 +14964,8 @@
           },
           {
             "type": "questWitnessed",
-            "quest": "PRIEST_IN_PERIL"
+            "quest": "PRIEST_IN_PERIL",
+            "minimum": 1
           }
         ]
       },
@@ -14978,7 +14999,8 @@
           },
           {
             "type": "questWitnessed",
-            "quest": "WATERFALL_QUEST"
+            "quest": "WATERFALL_QUEST",
+            "minimum": 1
           }
         ]
       },
@@ -15014,7 +15036,8 @@
           },
           {
             "type": "questWitnessed",
-            "quest": "CHILDREN_OF_THE_SUN"
+            "quest": "CHILDREN_OF_THE_SUN",
+            "minimum": 1
           }
         ]
       },
@@ -15150,7 +15173,8 @@
           },
           {
             "type": "questWitnessed",
-            "quest": "RUNE_MYSTERIES"
+            "quest": "RUNE_MYSTERIES",
+            "minimum": 1
           }
         ]
       },
