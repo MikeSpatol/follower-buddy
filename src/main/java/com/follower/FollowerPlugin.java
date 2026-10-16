@@ -5194,8 +5194,17 @@ public class FollowerPlugin extends Plugin
 			|| (moments != null && moments.holdsTheFeet())
 			|| parkedByPlayer || filming
 			|| (sketching != null && sketching.isSketching())
-			|| inCutscene() || follower.isDoingAgility();
+			|| inCutscene() || follower.isDoingAgility()
+			|| System.currentTimeMillis() - lastAgilityXpMs < ERRANDS_AFTER_AGILITY_MS;
 	}
+
+	/**
+	 * Agility XP this recently keeps errands off: on a course the run back
+	 * to the first obstacle is not agility, and an errand begun there turns
+	 * the watch off and misses the first climb.
+	 */
+	private static final long ERRANDS_AFTER_AGILITY_MS = 60_000;
+	private long lastAgilityXpMs;
 
 	/**
 	 * What beats the seat. Thrall work and the spectator, over their whole
@@ -10141,6 +10150,7 @@ public class FollowerPlugin extends Plugin
 			{
 				// What tells a climb from a ladder, and rebuilds an obstacle missed.
 				crossingWatch.noteAgilityXp(System.currentTimeMillis());
+				lastAgilityXpMs = System.currentTimeMillis();
 				agilityXpThisTick += xp - previousXp;
 				agilityTrace.event("xp +" + (xp - previousXp));
 				// Not while the watch cannot read them: as a greegree monkey on

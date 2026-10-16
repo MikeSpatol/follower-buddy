@@ -278,6 +278,24 @@ public class AgilityGateTest
 		assertEquals("their own", 1, follower.held);
 	}
 
+	/**
+	 * On a course the run back to the first obstacle is not agility, and an
+	 * errand begun there turned the watch off and missed the first climb.
+	 * Agility XP in the last minute keeps errands off (QA4 #24).
+	 */
+	@Test
+	public void noErrandWithinAMinuteOfAgilityXp() throws ReflectiveOperationException, IOException
+	{
+		set("dialog", new com.follower.speech.FollowerDialog(null, null, null, null, null, null, null, null));
+		set("speechEngine", new com.follower.sim.Harness(folder.newFolder().toPath()).engine);
+		assertFalse("nothing going on", (Boolean) call("errandBusy"));
+		agilityXp(1000);
+		agilityXp(1010);
+		assertTrue("between laps", (Boolean) call("errandBusy"));
+		set("lastAgilityXpMs", System.currentTimeMillis() - 61_000);
+		assertFalse("a minute on", (Boolean) call("errandBusy"));
+	}
+
 	private void agilityXp(int xp)
 	{
 		plugin.onStatChanged(new net.runelite.api.events.StatChanged(net.runelite.api.Skill.AGILITY, xp, 50, 50));
