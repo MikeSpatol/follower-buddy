@@ -803,7 +803,7 @@ public class FollowerPlugin extends Plugin
 		// or in a scene or the quiet after one.
 		errands.setSession(() -> skilling.isWorking() || sceneQuiet());
 		errands.setOnForcedMiss(key -> sendStatus(ERRAND_MISSED));
-		moments = new com.follower.follower.Moments(client, follower, config, skilling,
+		moments = new com.follower.follower.Moments(client, follower, skilling,
 			this::momentFeetTaken,
 			() -> speechEngine.getContext().isInCombat(),
 			() -> speechEngine.getContext().getDaysKnown(),
@@ -10195,10 +10195,6 @@ public class FollowerPlugin extends Plugin
 		catch (NumberFormatException e)
 		{
 			return "::follower force drop <gp> [item name] - e.g. ::follower force drop 2500000 Dragon warhammer";
-		}
-		if (!config.keepsCompany())
-		{
-			return "Works beside you when skilling is off in the settings.";
 		}
 		String item = args.length > 3
 			? String.join(" ", java.util.Arrays.copyOfRange(args, 3, args.length))

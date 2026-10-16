@@ -1,6 +1,5 @@
 package com.follower.follower;
 
-import com.follower.FollowerConfig;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -142,7 +141,6 @@ public class Moments implements Noticing.Looker
 
 	private final Client client;
 	private final FollowerEntity follower;
-	private final FollowerConfig config;
 	private final SkillingController skilling;
 
 	/** Thrall work, the spectator or an errand: they all beat a moment. */
@@ -186,11 +184,11 @@ public class Moments implements Noticing.Looker
 	private final Map<NPC, Integer> newcomers = new LinkedHashMap<>();
 	private NPC stranger;
 
-	public Moments(Client client, FollowerEntity follower, FollowerConfig config,
+	public Moments(Client client, FollowerEntity follower,
 		SkillingController skilling, BooleanSupplier feetTaken, BooleanSupplier inCombat,
 		IntSupplier daysKnown)
 	{
-		this(client, follower, config, skilling, feetTaken, inCombat, daysKnown, null, () -> false,
+		this(client, follower, skilling, feetTaken, inCombat, daysKnown, null, () -> false,
 			() -> false);
 	}
 
@@ -200,14 +198,13 @@ public class Moments implements Noticing.Looker
 	 * which halves every gesture's cooldown
 	 * @param parked whether the player has parked the follower
 	 */
-	public Moments(Client client, FollowerEntity follower, FollowerConfig config,
+	public Moments(Client client, FollowerEntity follower,
 		SkillingController skilling, BooleanSupplier feetTaken, BooleanSupplier inCombat,
 		IntSupplier daysKnown, PropFlourish flourish, BooleanSupplier grateful,
 		BooleanSupplier parked)
 	{
 		this.client = client;
 		this.follower = follower;
-		this.config = config;
 		this.skilling = skilling;
 		this.feetTaken = feetTaken;
 		this.parked = parked;
@@ -247,10 +244,6 @@ public class Moments implements Noticing.Looker
 	 */
 	public void levelUp(int level)
 	{
-		if (!config.keepsCompany())
-		{
-			return;
-		}
 		Player local = client.getLocalPlayer();
 		WorldPoint here = local == null ? null : local.getWorldLocation();
 		if (here == null)
@@ -298,7 +291,7 @@ public class Moments implements Noticing.Looker
 	 */
 	public void noteChatMessage(String message, ChatMessageType type)
 	{
-		if (!config.keepsCompany() || message == null
+		if (message == null
 			|| (type != ChatMessageType.GAMEMESSAGE && type != ChatMessageType.SPAM))
 		{
 			return;
@@ -326,7 +319,7 @@ public class Moments implements Noticing.Looker
 	 */
 	public void npcSpawned(NPC npc)
 	{
-		if (!config.keepsCompany() || npc == null)
+		if (npc == null)
 		{
 			return;
 		}
@@ -447,7 +440,7 @@ public class Moments implements Noticing.Looker
 	/** @param forced whether the ledger's waits are waived for this one reaction */
 	private String noteworthy(Tier tier, WorldPoint at, boolean forced)
 	{
-		if (!config.keepsCompany() || tier == null)
+		if (tier == null)
 		{
 			return null;
 		}
@@ -614,7 +607,7 @@ public class Moments implements Noticing.Looker
 		int now = client.getTickCount();
 		Player local = client.getLocalPlayer();
 		WorldPoint here = local == null ? null : local.getWorldLocation();
-		if (!config.keepsCompany() || here == null)
+		if (here == null)
 		{
 			letGo(true);
 			newcomers.clear();

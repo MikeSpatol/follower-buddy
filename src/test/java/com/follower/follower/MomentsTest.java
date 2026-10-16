@@ -266,7 +266,7 @@ public class MomentsTest
 			}
 		};
 		flourish = new PropFlourish(follower, hands);
-		moments = new Moments(game.client, follower, config, skilling,
+		moments = new Moments(game.client, follower, skilling,
 			() -> feetTaken, () -> inCombat, () -> daysKnown, flourish, () -> grateful, () -> parked);
 	}
 
@@ -650,28 +650,16 @@ public class MomentsTest
 	// ------------------------------------------------------------------- off
 
 	@Test
-	public void nothingHappensWithTheCompanyOff()
+	public void theSkillingSwitchLeavesTheMomentsAlone()
 	{
+		// QA3: Works beside you when skilling also stopped the claps, the pet,
+		// the stranger and the drops, which its name never said.
 		keepsCompany = false;
-		running(true);
 		tick(1);
-		moments.levelUp(50);
-		moments.levelUp(51);
-		moments.levelUp(52);
-		petDropped();
-		petAt(52, 50);
-		NPC genie = strangerAt(52, 50, 0, false);
-		game.npcFacingPlayer(genie);
-		game.energy(500);
-		running(false);
-		tick(3);
-
-		assertTrue(follower.animations.isEmpty());
-		assertEquals(0, follower.movedToFront);
-		assertNull(follower.stayingAt);
-		assertEquals(0, follower.poseOverride);
-		assertFalse(moments.holdsTheFeet());
-		assertFalse(moments.keepsClose());
+		moments.levelUp(41);
+		assertEquals(Collections.singletonList(Moments.CLAP), follower.animations);
+		moments.noteworthy(Moments.Tier.BIG, DROP);
+		assertTrue("and a big drop is walked over to", moments.isLooking());
 	}
 
 	@Test
@@ -924,9 +912,9 @@ public class MomentsTest
 		WorldPoint post = follower.stayingAt;
 		parked = true;
 
-		// Ended by the company switched off, which lets go before anything
-		// asks whether the moment was interrupted.
-		keepsCompany = false;
+		// Ended by the player's position going (a logout), which lets go
+		// before anything asks whether the moment was interrupted.
+		game.loggedOut();
 		tick(1);
 		assertFalse(moments.isLooking());
 		assertEquals("the player's park, not handed back to following", post, follower.stayingAt);
@@ -1032,17 +1020,5 @@ public class MomentsTest
 		assertEquals(Moments.Tier.SMALL, Moments.tierFor(10_000));
 		assertEquals(Moments.Tier.MEDIUM, Moments.tierFor(100_000));
 		assertEquals(Moments.Tier.BIG, Moments.tierFor(1_000_000));
-	}
-
-	@Test
-	public void nothingIsWrittenUpWithTheCompanySwitchedOff()
-	{
-		keepsCompany = false;
-		tick(1);
-		moments.noteworthy(Moments.Tier.BIG, DROP);
-		moments.noteworthy(Moments.Tier.SMALL, DROP);
-		assertEquals(0, held);
-		assertTrue(follower.glances.isEmpty());
-		assertNull(follower.stayingAt);
 	}
 }
