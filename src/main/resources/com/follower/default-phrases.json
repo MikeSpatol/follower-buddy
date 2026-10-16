@@ -16579,6 +16579,13 @@
             "maximum": 1
           },
           {
+            "type": "inArea",
+            "x1": 3162,
+            "y1": 3302,
+            "x2": 3171,
+            "y2": 3311
+          },
+          {
             "type": "none",
             "conditions": [
               {
@@ -18301,10 +18308,12 @@
             "maximum": 16
           },
           {
-            "type": "inRegion",
-            "regions": [
-              12854
-            ]
+            "type": "inArea",
+            "x1": 3199,
+            "y1": 3465,
+            "x2": 3227,
+            "y2": 3500,
+            "plane": 2
           },
           {
             "type": "none",
@@ -18343,8 +18352,7 @@
       "occasion": true,
       "delayTicks": 0,
       "output": "overhead",
-      "animation": 13995,
-      "mood": 4,
+      "animation": 13994,
       "when": {
         "type": "all",
         "conditions": [
@@ -18355,10 +18363,12 @@
             "maximum": 16
           },
           {
-            "type": "inRegion",
-            "regions": [
-              12854
-            ]
+            "type": "inArea",
+            "x1": 3199,
+            "y1": 3465,
+            "x2": 3227,
+            "y2": 3500,
+            "plane": 2
           },
           {
             "type": "questWitnessed",

@@ -115,4 +115,87 @@ public class QuestStepWalksTest
 		s.summary();
 		assertTrue(s.transcript(), s.heardIds.contains("qm-rune-mysteries-mugger-street"));
 	}
+
+	/** The line a rule was said with, from the transcript. */
+	private static String saidLine(QuestSim s, String id)
+	{
+		for (String line : s.transcript().split("\n"))
+		{
+			if (line.contains("SAYS [" + id + "]"))
+			{
+				return line;
+			}
+		}
+		return "";
+	}
+
+	/**
+	 * Flour left in the mill's bin from before the quest: the moment waits
+	 * for the mill, rather than going off in the castle kitchen as the cook
+	 * starts the quest (QA pass 2). Quest Helper's CooksAssistant.java (BSD)
+	 * millSecond and millThird zones, 3162-3171 by 3302-3311.
+	 */
+	@Test
+	public void flourLeftInTheBinIsMarkedAtTheMillNotInTheKitchen() throws Exception
+	{
+		QuestSim s = sim();
+		s.varbit(4920, 3);
+		s.at(3208, 3214, 0);
+		s.ticks(4);
+		s.started(Quest.COOKS_ASSISTANT);
+		s.talk(10, () -> s.varp(29, 1));
+		s.ticks(20);
+		assertFalse("not in the kitchen\n" + s.transcript(),
+			s.heardIds.contains("qm-cooks-assistant-flour-in-bin"));
+		s.at(3166, 3306, 0);
+		s.ticks(10);
+		s.summary();
+		assertTrue(s.transcript(), s.heardIds.contains("qm-cooks-assistant-flour-in-bin"));
+
+		// And the usual way: the lever pulled on the top floor.
+		QuestSim lever = sim();
+		lever.started(Quest.COOKS_ASSISTANT);
+		lever.varp(29, 1);
+		lever.at(3166, 3306, 2);
+		lever.ticks(20);
+		lever.varbit(4920, 1);
+		lever.ticks(10);
+		lever.summary();
+		assertTrue(lever.transcript(), lever.heardIds.contains("qm-cooks-assistant-flour-in-bin"));
+	}
+
+	/**
+	 * Children of the Sun at 16 but on the ground, at the palace gate: the
+	 * roof moment waits for the roof, Quest Helper's castleF2 zone
+	 * (ChildrenOfTheSun.java, BSD). It had all of region 12854 at any
+	 * plane (QA pass 2). The callback winces rather than looks pleased.
+	 */
+	@Test
+	public void theRoofMomentWaitsForTheRoof() throws Exception
+	{
+		for (boolean priestInPeril : new boolean[]{false, true})
+		{
+			QuestSim s = sim();
+			if (priestInPeril)
+			{
+				s.witnessed(Quest.PRIEST_IN_PERIL);
+			}
+			String id = priestInPeril
+				? "qm-children-of-the-sun-the-roof-after-priest-in-peril" : "qm-children-of-the-sun-the-roof";
+			s.started(Quest.CHILDREN_OF_THE_SUN);
+			s.varbit(9632, 16);
+			s.at(3212, 3466, 0);
+			s.ticks(15);
+			assertFalse("not at the gate\n" + s.transcript(), s.heardIds.contains(id));
+			s.at(3205, 3471, 2);
+			s.ticks(10);
+			s.summary();
+			assertTrue(s.transcript(), s.heardIds.contains(id));
+			if (priestInPeril)
+			{
+				assertTrue(saidLine(s, id), saidLine(s, id).contains("anim=13994"));
+				assertFalse(saidLine(s, id), saidLine(s, id).contains("mood="));
+			}
+		}
+	}
 }

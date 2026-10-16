@@ -6932,7 +6932,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Cooks Assistant, varbit 4920 = 1-30: Pulled the hopper lever; flour has come down into the bin on the ground floor. Source: varbit 4920 MILL_FLOUR (gameval; cache: varp 203 bits 0-4) = flour waiting in the bin; Quest Helper (github.com/Zoinkwiz/quest-helper, master 5f79193, 2026-10-14) treats MILL_FLOUR == 1 as 'controls used'. Upper bound 30 is the bin's capacity, not verified. (unverified)
 
-- **when:** questvar AND questvar AND NOT (dialogueopen)
+- **when:** questvar AND questvar AND in the area AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever; files incident `quest-mill-flour` as 'the Duke's flour coming down at the mill'; animation 865
 - **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
 
@@ -7385,7 +7385,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Children Of The Sun, varbit 9632 = 16: The four were arrested and Sergeant Tobyn has escorted the player up to the cell on the palace roof for the questioning. Source: Quest Helper (16 = go to the roof); cache: roof Tobyn and the caged bandit appear from 16; roof cell 3205,3471,2 is region 12854
 
-- **when:** questvar AND in region 12854 AND NOT (the follower saw PRIEST_IN_PERIL done) AND NOT (dialogueopen)
+- **when:** questvar AND in the area AND NOT (the follower saw PRIEST_IN_PERIL done) AND NOT (dialogueopen)
 - **does:** mood +4; occasion (never held back); once ever; animation 13995
 - **pacing:** priority 60, cooldown 10m, overhead
 
@@ -7397,8 +7397,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Callback: said instead of qm-children-of-the-sun-the-roof when Priest In Peril is done. Children Of The Sun, varbit 9632 = 16: The four were arrested and Sergeant Tobyn has escorted the player up to the cell on the palace roof for the questioning. Source: Quest Helper (16 = go to the roof); cache: roof Tobyn and the caged bandit appear from 16; roof cell 3205,3471,2 is region 12854
 
-- **when:** questvar AND in region 12854 AND the follower saw PRIEST_IN_PERIL done AND NOT (dialogueopen)
-- **does:** mood +4; occasion (never held back); once ever; animation 13995
+- **when:** questvar AND in the area AND the follower saw PRIEST_IN_PERIL done AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 13994
 - **pacing:** priority 61, cooldown 10m, overhead
 
 - The palace again. Last time we were here, the King wanted your head.
