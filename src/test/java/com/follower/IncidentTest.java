@@ -302,6 +302,30 @@ public class IncidentTest
 		}
 	}
 
+	/**
+	 * QA, 15 Oct (probe P3): a memory is filed where it happens, so the place
+	 * recall could say "Here again, and I've not forgotten the orb breaking"
+	 * twelve seconds after the orb broke, to somebody who never left.
+	 */
+	@Test
+	public void aMemoryIsNotHereUntilYouComeBackToIt() throws IOException
+	{
+		Harness h = new Harness(folder.newFolder().toPath());
+		h.game.regions(12342).at(3090, 3490, 0);
+		h.gameTicks(1);
+		h.engine.getContext().noteIncident("close-call",
+			"how close that was with the Hill Giant", "Hill Giant", System.currentTimeMillis());
+		h.gameTicks(200);
+		assertTrue("not on the visit it happened", h.firedBy("recall-here").isEmpty());
+		assertFalse(h.engine.getContext().isAtTheIncident());
+
+		h.game.regions(12850).at(3222, 3218, 0);
+		h.gameTicks(2);
+		h.game.regions(12342).at(3090, 3490, 0);
+		h.gameTicks(1);
+		assertTrue("back again", h.engine.getContext().isAtTheIncident());
+	}
+
 	@Test
 	public void theRecallLinesSayTheParticulars() throws IOException
 	{
