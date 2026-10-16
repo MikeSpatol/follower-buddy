@@ -59,7 +59,7 @@ public class QuestWitnessedTest
 			ChronicleLoader pages = new ChronicleLoader(new Gson());
 			pages.load(folder.newFolder().toPath());
 			book = new ChronicleProgress(h.game.client, pages, h.engine::getContext);
-			h.engine.getContext().setQuestWitness(book::witnessedOn);
+			h.engine.setQuestWitness(book::witnessedOn);
 		}
 
 		World ticks(int count)
@@ -132,6 +132,37 @@ public class QuestWitnessedTest
 		w.h.game.spawnNpc(3308, "Ned", 0);
 		w.ticks(4);
 		assertEquals(Arrays.asList("fun-ned-after-dragon-slayer"), said(w.h));
+	}
+
+	@Test
+	public void theBookIsStillAskedAfterTheEngineIsReset() throws IOException
+	{
+		// A logout, a profile switch and a Forget each reset the engine, which
+		// builds a new context. The lookup went with the old one, so every
+		// callback fell silent after the first logout (QA pass 3, #4).
+		World w = new World("quest-ned", "fun-ned-after-dragon-slayer");
+		w.h.game.quest(Quest.DRAGON_SLAYER_I, QuestState.FINISHED);
+		w.book.sawQuestFinish("Dragon Slayer I");
+		Gson gson = new Gson();
+		String stored = FollowerPlugin.snapshotMemory(w.h.engine.getContext(), 0, gson);
+		w.h.engine.reset();
+		// The login that follows reads the memory back into the new context.
+		FollowerPlugin.restoreMemory(w.h.engine.getContext(), stored, gson, 0);
+		w.ticks(2);
+		w.h.game.spawnNpc(3308, "Ned", 0);
+		w.ticks(4);
+		assertEquals(Arrays.asList("fun-ned-after-dragon-slayer"), said(w.h));
+	}
+
+	@Test
+	public void thePluginHandsTheBookToTheEngineNotToOneContext() throws IOException
+	{
+		String plugin = new String(java.nio.file.Files.readAllBytes(
+			java.nio.file.Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8);
+		assertTrue("the plugin wires the book to the engine",
+			plugin.contains("speechEngine.setQuestWitness(chronicleProgress::witnessedOn);"));
+		assertTrue("a context's lookup is gone at the next reset",
+			!plugin.contains("getContext().setQuestWitness("));
 	}
 
 	@Test

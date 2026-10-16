@@ -874,7 +874,7 @@ public class FollowerPlugin extends Plugin
 		chronicleProgress.setAccount(() -> configManager.getRSProfileKey());
 		// A callback that remembers a quest together asks the book whether
 		// the follower was there for it.
-		speechEngine.getContext().setQuestWitness(chronicleProgress::witnessedOn);
+		speechEngine.setQuestWitness(chronicleProgress::witnessedOn);
 		// The book is the follower's, and signed with its name.
 		chronicleWindow.setOwner(config::followerName);
 		sketchBook = new com.follower.chronicle.SketchBook(dataDir);

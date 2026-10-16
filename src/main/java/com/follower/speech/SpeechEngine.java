@@ -278,6 +278,8 @@ public class SpeechEngine
 		}
 	}
 
+	private java.util.function.Function<String, Long> questWitness;
+
 	@Inject
 	public SpeechEngine(Client client, RuleLoader loader)
 	{
@@ -285,11 +287,22 @@ public class SpeechEngine
 		this.loader = loader;
 	}
 
+	/**
+	 * Asks the book whether the follower was there for a quest. Kept here and
+	 * not only on the context, which every reset throws away.
+	 */
+	public void setQuestWitness(java.util.function.Function<String, Long> lookup)
+	{
+		questWitness = lookup;
+		getContext().setQuestWitness(lookup);
+	}
+
 	public TriggerContext getContext()
 	{
 		if (context == null)
 		{
 			context = new TriggerContext(client);
+			context.setQuestWitness(questWitness);
 		}
 		return context;
 	}
