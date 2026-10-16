@@ -251,7 +251,8 @@ public final class Conversation
 				out.append(plain(c));
 			}
 		}
-		String drawable = com.follower.ui.GameFont.drawable(out.toString().trim());
+		// A run of blank lines is one: more made a box page with nothing on it.
+		String drawable = com.follower.ui.GameFont.drawable(out.toString().replaceAll("\n\\s*\n", "\n\n").trim());
 		StringBuilder shown = new StringBuilder(drawable.length());
 		for (int i = 0; i < drawable.length(); i++)
 		{
