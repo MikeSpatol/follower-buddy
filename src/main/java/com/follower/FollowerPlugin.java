@@ -6525,7 +6525,11 @@ public class FollowerPlugin extends Plugin
 	 */
 	private boolean shouldHide()
 	{
-		return (config.hideInPvp() && client.getVarbitValue(VarbitID.INSIDE_WILDERNESS) == 1)
+		// The setting says the Wilderness and other PvP areas: PVP_AREA_CLIENT
+		// is the game's own flag for the rest, a PvP world outside its safe
+		// zones among them. QA2, 15 Oct: only the Wilderness was read.
+		return (config.hideInPvp() && (client.getVarbitValue(VarbitID.INSIDE_WILDERNESS) == 1
+			|| client.getVarbitValue(VarbitID.PVP_AREA_CLIENT) == 1))
 			|| absentUntilSummoned(config.thrallOnly(), thrallBusiness());
 	}
 
