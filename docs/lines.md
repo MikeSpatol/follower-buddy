@@ -6762,11 +6762,11 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - He's not mentioned the dog since. I've chosen to call that forgiveness.
 - The King. I'd keep the conversation well away from dogs.
 
-### `fun-alina-noah-after-children-of-the-sun`
+### `fun-sergeant-tobyn-after-children-of-the-sun`
 
-> Callback: same trigger as quest-alina-noah plus Children of the Sun done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Children of the Sun, so it cannot rise on the quest finishing.
+> Callback: same trigger as quest-sergeant-tobyn plus Children of the Sun seen done a day or more before, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Roof Tobyn (6781, shown as 12648 at varbit 9632 = 16-24) stays after the quest, whose end state is 24 (cache; Quest Helper ChildrenOfTheSun); Alina and Noah, its first target, are gone from 7 on. He stands by as the quest ends, so the day's wait keeps it from rising then.
 
-- **when:** Alina, Noah within 5 tiles, in sight AND the follower saw CHILDREN_OF_THE_SUN done AND NOT (dialogueopen)
+- **when:** Sergeant Tobyn within 5 tiles, in sight AND the follower saw CHILDREN_OF_THE_SUN done AND NOT (dialogueopen)
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
 
 - Alina's still on about Varlamore. Noah's still not.

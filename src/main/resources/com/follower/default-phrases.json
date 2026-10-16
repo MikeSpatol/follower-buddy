@@ -14922,9 +14922,9 @@
       ]
     },
     {
-      "id": "fun-alina-noah-after-children-of-the-sun",
+      "id": "fun-sergeant-tobyn-after-children-of-the-sun",
       "waits": true,
-      "note": "Callback: same trigger as quest-alina-noah plus Children of the Sun done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Children of the Sun, so it cannot rise on the quest finishing.",
+      "note": "Callback: same trigger as quest-sergeant-tobyn plus Children of the Sun seen done a day or more before, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Roof Tobyn (6781, shown as 12648 at varbit 9632 = 16-24) stays after the quest, whose end state is 24 (cache; Quest Helper ChildrenOfTheSun); Alina and Noah, its first target, are gone from 7 on. He stands by as the quest ends, so the day's wait keeps it from rising then.",
       "group": "quest",
       "priority": 36,
       "cooldownMs": 10800000,
@@ -14938,13 +14938,13 @@
             "visible": true,
             "within": 5,
             "names": [
-              "Alina",
-              "Noah"
+              "Sergeant Tobyn"
             ]
           },
           {
             "type": "questWitnessed",
-            "quest": "CHILDREN_OF_THE_SUN"
+            "quest": "CHILDREN_OF_THE_SUN",
+            "minimum": 1
           },
           {
             "type": "none",

@@ -155,6 +155,70 @@ public class QuestWitnessedTest
 			Arrays.asList("quest-duke-horacio"), said(veteran.h));
 	}
 
+	@Test
+	public void tobynOnTheRoofIsRememberedTheDayAfterAndNotAsTheQuestEnds() throws IOException
+	{
+		// Alina and Noah are gone from the square once Children of the Sun is
+		// under way, so a callback on them could never be heard (QA pass 2,
+		// #13). Tobyn stays on the roof, and is beside you as the quest ends.
+		World today = new World("quest-sergeant-tobyn", "fun-sergeant-tobyn-after-children-of-the-sun");
+		today.h.game.spawnNpc(12648, "Sergeant Tobyn", 0);
+		today.h.game.quest(Quest.CHILDREN_OF_THE_SUN, QuestState.FINISHED);
+		today.book.sawQuestFinish("Children of the Sun");
+		today.ticks(4);
+		assertEquals("not a 'still' on the day itself", Arrays.asList("quest-sergeant-tobyn"), said(today.h));
+
+		World later = new World("quest-sergeant-tobyn", "fun-sergeant-tobyn-after-children-of-the-sun");
+		later.h.game.quest(Quest.CHILDREN_OF_THE_SUN, QuestState.FINISHED);
+		later.h.engine.getContext().noteQuestSeenFinished("CHILDREN_OF_THE_SUN",
+			java.time.LocalDate.now().toEpochDay() - 3);
+		later.ticks(2);
+		later.h.game.spawnNpc(12648, "Sergeant Tobyn", 0);
+		later.ticks(4);
+		assertEquals(Arrays.asList("fun-sergeant-tobyn-after-children-of-the-sun"), said(later.h));
+
+		World veteran = new World("quest-sergeant-tobyn", "fun-sergeant-tobyn-after-children-of-the-sun");
+		veteran.h.game.quest(Quest.CHILDREN_OF_THE_SUN, QuestState.FINISHED);
+		veteran.ticks(2);
+		veteran.h.game.spawnNpc(12648, "Sergeant Tobyn", 0);
+		veteran.ticks(4);
+		assertEquals(Arrays.asList("quest-sergeant-tobyn"), said(veteran.h));
+	}
+
+	@Test
+	public void noCallbackWaitsOnAlinaOrNoahAfterChildrenOfTheSun() throws IOException
+	{
+		Harness h = new Harness(folder.newFolder().toPath());
+		for (SpeechRule rule : h.loader.getRules())
+		{
+			if (uses(rule.when, "questWitnessed") || uses(rule.when, "questDone"))
+			{
+				assertTrue(rule.id + " waits for Alina or Noah, who are gone once the quest is done",
+					!names(rule.when).contains("Alina") && !names(rule.when).contains("Noah"));
+			}
+		}
+	}
+
+	private static Set<String> names(Condition c)
+	{
+		Set<String> out = new HashSet<>();
+		if (c != null)
+		{
+			if (c.names != null)
+			{
+				out.addAll(c.names);
+			}
+			if (c.conditions != null)
+			{
+				for (Condition child : c.conditions)
+				{
+					out.addAll(names(child));
+				}
+			}
+		}
+		return out;
+	}
+
 	// ----------------------------------------------------------- the moments
 
 	@Test
