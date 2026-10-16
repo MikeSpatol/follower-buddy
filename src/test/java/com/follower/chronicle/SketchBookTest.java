@@ -148,6 +148,57 @@ public class SketchBookTest
 	}
 
 	@Test
+	public void aSketchIsReadWhenItIsFirstWanted() throws IOException
+	{
+		// Every sketch was decoded at login and held for the session: about
+		// 9 MB and a quarter of a second for a whole book (perf audit, #60).
+		Path data = folder.newFolder().toPath();
+		Path acct = data.resolve(SketchBook.DIR_NAME).resolve("acct");
+		Files.createDirectories(acct);
+		javax.imageio.ImageIO.write(picture(0x111111), "png", acct.resolve("lumbridge.png").toFile());
+		javax.imageio.ImageIO.write(picture(0x222222), "png", acct.resolve("lumbridge.large.png").toFile());
+
+		SketchBook book = new SketchBook(data);
+		book.openFor("acct");
+		javax.imageio.ImageIO.write(picture(0x333333), "png", acct.resolve("lumbridge.png").toFile());
+		javax.imageio.ImageIO.write(picture(0x444444), "png", acct.resolve("lumbridge.large.png").toFile());
+		assertTrue(book.hasBoth("lumbridge"));
+		assertEquals("read when asked for, not at opening", 0x333333, book.get("lumbridge").getRGB(3, 3) & 0xffffff);
+		assertEquals(0x444444, book.getLarge("lumbridge").getRGB(3, 3) & 0xffffff);
+
+		// And once read, kept: the page does not read the file every frame.
+		javax.imageio.ImageIO.write(picture(0x555555), "png", acct.resolve("lumbridge.png").toFile());
+		assertEquals(0x333333, book.get("lumbridge").getRGB(3, 3) & 0xffffff);
+	}
+
+	@Test
+	public void aRedrawKeepsOnlyTheLastFewBackups() throws IOException
+	{
+		// Each redraw kept the old drawing for good: 18 backups, 1.65 MB of a
+		// 4 MB folder, on the developer's machine (perf audit, #61).
+		Path data = folder.newFolder().toPath();
+		Path acct = data.resolve(SketchBook.DIR_NAME).resolve("acct");
+		SketchBook book = new SketchBook(data);
+		book.openFor("acct");
+		for (int i = 0; i < 5; i++)
+		{
+			book.put("lumbridge", picture(0x101010 * (i + 1)), picture(0x9a7a50));
+			book.backUp("lumbridge");
+		}
+		java.util.List<String> left = new java.util.ArrayList<>();
+		try (java.util.stream.Stream<Path> files = Files.list(acct))
+		{
+			files.map(p -> p.getFileName().toString()).filter(n -> n.startsWith("lumbridge.png") && n.endsWith(".bak"))
+				.sorted().forEach(left::add);
+		}
+		assertEquals(java.util.Arrays.asList("lumbridge.png.2.bak", "lumbridge.png.3.bak", "lumbridge.png.4.bak"), left);
+		assertEquals("the newest is the last drawing", 0x505050,
+			javax.imageio.ImageIO.read(acct.resolve("lumbridge.png.4.bak").toFile()).getRGB(3, 3) & 0xffffff);
+		assertFalse(Files.exists(acct.resolve("lumbridge.large.png.1.bak")));
+		assertTrue(Files.exists(acct.resolve("lumbridge.large.png.4.bak")));
+	}
+
+	@Test
 	public void nothingOnDiskIsNothingToBackUp() throws IOException
 	{
 		SketchBook book = new SketchBook(folder.newFolder().toPath());

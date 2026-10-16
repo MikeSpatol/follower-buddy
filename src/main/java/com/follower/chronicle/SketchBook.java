@@ -36,9 +36,19 @@ public class SketchBook
 	/** The pose's file ending, beside the pictures. */
 	static final String POSE = ".pose";
 
+	/** How many backups of each file a redraw keeps; the oldest beyond go. */
+	static final int BACKUPS_KEPT = 3;
+
 	private final Path root;
 	private final Map<String, BufferedImage> sketches = new ConcurrentHashMap<>();
 	private final Map<String, BufferedImage> large = new ConcurrentHashMap<>();
+	/**
+	 * The pictures on disk not read yet. A whole book decoded at login was
+	 * about 9 MB held and a quarter of a second on the client thread (perf
+	 * audit, Oct 2026); each is read the first time it is asked for.
+	 */
+	private final Map<String, Path> unread = new ConcurrentHashMap<>();
+	private final Map<String, Path> unreadLarge = new ConcurrentHashMap<>();
 	private final Map<String, String> poses = new ConcurrentHashMap<>();
 	private volatile Path folder;
 
@@ -52,6 +62,8 @@ public class SketchBook
 	{
 		sketches.clear();
 		large.clear();
+		unread.clear();
+		unreadLarge.clear();
 		poses.clear();
 		folder = null;
 		if (root == null || account == null || account.isEmpty())
@@ -69,22 +81,13 @@ public class SketchBook
 			{
 				String name = file.getFileName().toString();
 				String key = name.substring(0, name.length() - ".png".length());
-				boolean big = key.endsWith(LARGE);
-				try
+				if (key.endsWith(LARGE))
 				{
-					BufferedImage image = ImageIO.read(file.toFile());
-					if (image != null && big)
-					{
-						large.put(key.substring(0, key.length() - LARGE.length()), image);
-					}
-					else if (image != null)
-					{
-						sketches.put(key, image);
-					}
+					unreadLarge.put(key.substring(0, key.length() - LARGE.length()), file);
 				}
-				catch (IOException | RuntimeException e)
+				else
 				{
-					log.debug("Skipping unreadable sketch {}", file, e);
+					unread.put(key, file);
 				}
 			}
 		}
@@ -112,13 +115,40 @@ public class SketchBook
 
 	public BufferedImage get(String key)
 	{
-		return key == null ? null : sketches.get(key);
+		return key == null ? null : read(key, sketches, unread);
 	}
 
 	/** The larger copy, or null for a place not drawn since there were two sizes. */
 	public BufferedImage getLarge(String key)
 	{
-		return key == null ? null : large.get(key);
+		return key == null ? null : read(key, large, unreadLarge);
+	}
+
+	/** A picture already read, or read now from the file found for it; null if it will not read. */
+	private static BufferedImage read(String key, Map<String, BufferedImage> pictures, Map<String, Path> files)
+	{
+		BufferedImage picture = pictures.get(key);
+		Path file = picture == null ? files.remove(key) : null;
+		if (file == null)
+		{
+			return picture;
+		}
+		try
+		{
+			picture = ImageIO.read(file.toFile());
+		}
+		catch (IOException | RuntimeException e)
+		{
+			picture = null;
+		}
+		if (picture == null)
+		{
+			log.debug("Skipping unreadable sketch {}", file);
+			return pictures.get(key);
+		}
+		// A sketch filed while this one was read is the newer.
+		BufferedImage filed = pictures.putIfAbsent(key, picture);
+		return filed != null ? filed : picture;
 	}
 
 	/** The emote the sketch caught you in, as a word ("dance"), or null for none. */
@@ -129,13 +159,13 @@ public class SketchBook
 
 	public boolean has(String key)
 	{
-		return key != null && sketches.containsKey(key);
+		return get(key) != null;
 	}
 
 	/** Drawn at both sizes; a place drawn before there were two is drawn again. */
 	public boolean hasBoth(String key)
 	{
-		return has(key) && large.containsKey(key);
+		return has(key) && (large.containsKey(key) || unreadLarge.containsKey(key));
 	}
 
 	/** Files the sketch at both sizes, in memory at once and on disk as well as it can. */
@@ -164,6 +194,8 @@ public class SketchBook
 		{
 			poses.put(key, pose);
 		}
+		unreadLarge.remove(key);
+		unread.remove(key);
 		large.put(key, big);
 		sketches.put(key, sketch);
 		Path into = folder;
@@ -194,10 +226,12 @@ public class SketchBook
 
 	/**
 	 * Copies what is on disk for a sketch to a backup beside it, before the
-	 * place is drawn again on purpose: {@code name.png.bak}, or
-	 * {@code name.png.1.bak} and on when that is taken, so no file, sketch
-	 * or backup, is ever written over. Its pose goes with it, if it had one. The book does not read them back;
-	 * they are there to be put back by hand.
+	 * place is drawn again on purpose: {@code name.png.bak}, then
+	 * {@code name.png.1.bak} and on, so no file, sketch or backup, is ever
+	 * written over. Its pose goes with it, if it had one. The book does not read them back;
+	 * they are there to be put back by hand. The last {@value #BACKUPS_KEPT}
+	 * of each are kept and older ones removed: every redraw added another
+	 * for good (perf audit, Oct 2026).
 	 *
 	 * @return the backups' file names, empty when nothing was on disk
 	 * @throws IOException when one could not be made, so nothing is drawn over it
@@ -217,17 +251,50 @@ public class SketchBook
 			{
 				continue;
 			}
-			Path backup = in.resolve(name + ".bak");
-			for (int n = 1; Files.exists(backup); n++)
-			{
-				backup = in.resolve(name + "." + n + ".bak");
-			}
+			// Numbered after the newest there is, so the numbers only go up
+			// and the oldest is always the lowest.
+			List<Integer> taken = backups(in, name);
+			int next = taken.isEmpty() ? 0 : taken.get(taken.size() - 1) + 1;
+			Path backup = backup(in, name, next);
 			// No REPLACE_EXISTING: a backup that somehow appeared first fails
 			// the copy rather than being lost to it.
 			Files.copy(file, backup);
 			kept.add(backup.getFileName().toString());
+			for (int old : taken.subList(0, Math.max(0, taken.size() + 1 - BACKUPS_KEPT)))
+			{
+				Files.deleteIfExists(backup(in, name, old));
+			}
 		}
 		return kept;
+	}
+
+	/** {@code name.bak} is the first, numbered 0; then {@code name.1.bak} and on. */
+	private static Path backup(Path in, String name, int n)
+	{
+		return in.resolve(n == 0 ? name + ".bak" : name + "." + n + ".bak");
+	}
+
+	/** The numbers of a file's backups on disk, lowest first. */
+	private static List<Integer> backups(Path in, String name) throws IOException
+	{
+		List<Integer> numbers = new ArrayList<>();
+		try (DirectoryStream<Path> files = Files.newDirectoryStream(in, name + "*.bak"))
+		{
+			for (Path file : files)
+			{
+				String rest = file.getFileName().toString().substring(name.length());
+				if (rest.equals(".bak"))
+				{
+					numbers.add(0);
+				}
+				else if (rest.matches("[.][0-9]{1,9}[.]bak"))
+				{
+					numbers.add(Integer.parseInt(rest.substring(1, rest.length() - ".bak".length())));
+				}
+			}
+		}
+		numbers.sort(null);
+		return numbers;
 	}
 
 	/** A name that is a file name on every system: letters, digits, hyphens. */
