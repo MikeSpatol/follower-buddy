@@ -810,14 +810,18 @@ public class ChronicleWindow extends Overlay
 	/**
 	 * The header's third line, as its label and value: where a dated page
 	 * was written, or else what writes it. A place or a land written where
-	 * the book has no name for the spot is written at itself, so a dated
-	 * page there never reads as still waiting.
+	 * the book has no name for the spot is written at itself, and any other
+	 * page at a place it couldn't name, so a dated page never reads as still
+	 * waiting.
 	 */
 	static String[] whereLine(ChronicleEntry entry, boolean readable, Long on, String at)
 	{
-		if (on != null && at.isEmpty()
-			&& ("location".equals(entry.kindOrEmpty()) || "world".equals(entry.kindOrEmpty())))
+		if (on != null && at.isEmpty())
 		{
+			if (!"location".equals(entry.kindOrEmpty()) && !"world".equals(entry.kindOrEmpty()))
+			{
+				return new String[]{WRITTEN_AT, "a place I couldn't name"};
+			}
 			at = entry.name;
 		}
 		if (!at.isEmpty())

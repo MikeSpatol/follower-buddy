@@ -406,7 +406,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - Got a good look at that one. It goes in under {page}.
 - {page}. I'll be writing that one up, and I won't be kind.
-- I saw {page} myself. That's how a page should start.
+- I saw one myself. That's how a page should start.
 
 ### `chronicle-page-place`
 
@@ -437,8 +437,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 30, cooldown 1m
 
 - That's {page} in the book. I'll write it up properly tonight.
-- {page} has its own page now. The rest of it's up to you.
-- I've opened a page on {page}. I'll fill in the rest as we go.
+- {page} has its own page now. I'll do it justice.
+- I've opened a page on {page}. The ink's still wet.
 
 ### `collection-add`
 

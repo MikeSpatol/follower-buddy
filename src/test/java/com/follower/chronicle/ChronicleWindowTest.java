@@ -555,7 +555,9 @@ public class ChronicleWindowTest
 	/**
 	 * QA2: a place written where the book had no name for the spot showed
 	 * its date and, under it, "Written when: you visit", written and still
-	 * waiting at once. A dated place or land is written at itself.
+	 * waiting at once. A dated place or land is written at itself, and any
+	 * other page at a place it couldn't name: a readable page with a date
+	 * and no place never shows Written when:.
 	 */
 	@Test
 	public void aDatedPlaceWithNoPlaceKeptIsWrittenAtItself() throws Exception
@@ -563,19 +565,25 @@ public class ChronicleWindowTest
 		ChronicleLoader loader = new ChronicleLoader(new Gson());
 		loader.load(folder.newFolder().toPath());
 		int places = 0;
+		int others = 0;
 		for (ChronicleEntry entry : loader.getEntries())
 		{
 			String kind = entry.kindOrEmpty();
-			if (!kind.equals("location") && !kind.equals("world"))
-			{
-				continue;
-			}
-			places++;
 			String[] where = ChronicleWindow.whereLine(entry, true, 20000L, "");
 			assertEquals(entry.id, ChronicleWindow.WRITTEN_AT, where[0]);
-			assertEquals(entry.id, entry.name, where[1]);
+			if (kind.equals("location") || kind.equals("world"))
+			{
+				places++;
+				assertEquals(entry.id, entry.name, where[1]);
+			}
+			else
+			{
+				others++;
+				assertEquals(entry.id, "a place I couldn't name", where[1]);
+			}
 		}
 		assertTrue("the book has places and lands", places >= 8);
+		assertTrue("and quests, creatures and the faction", others >= 8);
 
 		ChronicleEntry tower = loader.get("location-wizards-tower");
 		assertEquals("a place kept still wins", "Lumbridge",
