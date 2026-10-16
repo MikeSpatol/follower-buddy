@@ -518,10 +518,26 @@ public final class ChronicleLayout
 		}
 		// Headed apart from every section above them: "Worth knowing" twice on
 		// one page read as a recap, and got written as one.
-		list(lines, "People", entry.peopleOrEmpty(), width, bodyWidth, headingWidth);
-		list(lines, "Places", entry.placesOrEmpty(), width, bodyWidth, headingWidth);
-		list(lines, "Particulars", entry.detailsOrEmpty(), width, bodyWidth, headingWidth);
+		List<String> particulars = new ArrayList<>();
+		list(lines, "People", headedOrNot(entry.peopleOrEmpty(), particulars), width, bodyWidth, headingWidth);
+		list(lines, "Places", headedOrNot(entry.placesOrEmpty(), particulars), width, bodyWidth, headingWidth);
+		particulars.addAll(entry.detailsOrEmpty());
+		list(lines, "Particulars", particulars, width, bodyWidth, headingWidth);
 		return lines;
+	}
+
+	/**
+	 * A list as it is headed, or none: a heading over one item reads as a
+	 * list left unfinished, so a list of one goes in with the particulars.
+	 */
+	private static List<String> headedOrNot(List<String> items, List<String> particulars)
+	{
+		if (items.size() != 1)
+		{
+			return items;
+		}
+		particulars.addAll(items);
+		return new ArrayList<>();
 	}
 
 	private static void heading(List<Line> lines, String text, int width, ToIntFunction<String> measure)

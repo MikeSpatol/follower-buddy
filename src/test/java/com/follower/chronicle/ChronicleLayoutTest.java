@@ -209,7 +209,7 @@ public class ChronicleLayoutTest
 		section.heading = "What happened";
 		section.body = "First paragraph.\n\nSecond paragraph.";
 		entry.sections = Arrays.asList(section);
-		entry.people = Arrays.asList("Someone - did a thing");
+		entry.people = Arrays.asList("Someone - did a thing", "Another - watched");
 		entry.places = Arrays.asList();
 		entry.details = Arrays.asList("A detail");
 
@@ -222,9 +222,49 @@ public class ChronicleLayoutTest
 		assertTrue("a paragraph break is a gap, not a blank line", lines.get(3).gapAbove > 0);
 		assertEquals("HEADING:People", lines.get(4).toString());
 		assertEquals("NOTE:- Someone - did a thing", lines.get(5).toString());
-		assertEquals("an empty list gets no heading", "HEADING:Particulars", lines.get(6).toString());
-		assertEquals("NOTE:- A detail", lines.get(7).toString());
-		assertEquals(8, lines.size());
+		assertEquals("NOTE:- Another - watched", lines.get(6).toString());
+		assertEquals("an empty list gets no heading", "HEADING:Particulars", lines.get(7).toString());
+		assertEquals("NOTE:- A detail", lines.get(8).toString());
+		assertEquals(9, lines.size());
+	}
+
+	/**
+	 * QA2: a People or Places heading over a single item reads as a list
+	 * left unfinished. A list of one goes in at the head of the particulars
+	 * instead, people before places, and a longer list keeps its heading.
+	 */
+	@Test
+	public void aListOfOneGoesInWithTheParticulars()
+	{
+		ChronicleEntry entry = new ChronicleEntry();
+		entry.id = "enemy-test";
+		entry.kind = "enemy";
+		entry.name = "Test";
+		entry.summary = "One two.";
+		entry.people = Arrays.asList("Someone - made it");
+		entry.places = Arrays.asList("Somewhere - its home");
+		entry.details = Arrays.asList("A detail", "Another detail");
+
+		List<ChronicleLayout.Line> lines = ChronicleLayout.page(entry, 600,
+			ChronicleLayoutTest::width, ChronicleLayoutTest::width);
+		assertEquals(Arrays.asList("BODY:One two.", "HEADING:Particulars", "NOTE:- Someone - made it",
+			"NOTE:- Somewhere - its home", "NOTE:- A detail", "NOTE:- Another detail"), texts(lines));
+
+		entry.places = Arrays.asList("Somewhere - its home", "Elsewhere - its haunt");
+		assertEquals(Arrays.asList("BODY:One two.", "HEADING:Places", "NOTE:- Somewhere - its home",
+			"NOTE:- Elsewhere - its haunt", "HEADING:Particulars", "NOTE:- Someone - made it",
+			"NOTE:- A detail", "NOTE:- Another detail"),
+			texts(ChronicleLayout.page(entry, 600, ChronicleLayoutTest::width, ChronicleLayoutTest::width)));
+	}
+
+	private static List<String> texts(List<ChronicleLayout.Line> lines)
+	{
+		List<String> out = new java.util.ArrayList<>();
+		for (ChronicleLayout.Line line : lines)
+		{
+			out.add(line.toString());
+		}
+		return out;
 	}
 
 	@Test
