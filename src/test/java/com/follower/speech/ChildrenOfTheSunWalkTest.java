@@ -43,8 +43,9 @@ public class ChildrenOfTheSunWalkTest
 		QuestSim s = new QuestSim(folder.newFolder().toPath(), gap);
 		if (priorQuests)
 		{
-			s.done(Quest.RUNE_MYSTERIES);
-			s.done(Quest.PRIEST_IN_PERIL);
+			// Witnessed: the callbacks remember them (QA pass 2, #31).
+			s.witnessed(Quest.RUNE_MYSTERIES);
+			s.witnessed(Quest.PRIEST_IN_PERIL);
 		}
 		s.started(Quest.CHILDREN_OF_THE_SUN);
 		int speed = runner ? 2 : 1;

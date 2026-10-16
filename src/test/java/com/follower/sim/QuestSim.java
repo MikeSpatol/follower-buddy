@@ -351,6 +351,16 @@ public final class QuestSim
 		h.game.quest(q, QuestState.FINISHED);
 	}
 
+	private final java.util.Map<String, Long> seenFinished = new java.util.HashMap<>();
+
+	/** Finished with the follower there to see it, some days ago: what the callbacks need. */
+	public void witnessed(Quest q)
+	{
+		done(q);
+		seenFinished.put(q.name(), java.time.LocalDate.now().toEpochDay() - 30);
+		h.engine.getContext().setQuestWitness(seenFinished::get);
+	}
+
 	public void started(Quest q)
 	{
 		h.game.quest(q, QuestState.IN_PROGRESS);
