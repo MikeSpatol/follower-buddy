@@ -1084,11 +1084,15 @@ public class FollowerPlugin extends Plugin
 			colorHarvester.abort();
 			follower.despawn();
 			appearanceService.invalidate();
+			chronicleWindow.forgetPortraits();
 		});
 
 		stanceLibrary.save();
 		wrapTrimStore.save(follower);
 		modelRepository.unload();
+		// RuneLite keeps a plugin switched off, and with it all it holds:
+		// these come back at the next startUp and login (perf audit, Oct 2026).
+		spotAnimRepository.unload();
 		knownLevels.clear();
 		knownXp.clear();
 		lastPlayerTile = null;

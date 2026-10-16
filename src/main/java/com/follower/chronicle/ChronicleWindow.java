@@ -220,6 +220,12 @@ public class ChronicleWindow extends Overlay
 		gate.clear();
 	}
 
+	/** The portraits' models, let go while the plugin is off. On the client thread, which draws them. */
+	public void forgetPortraits()
+	{
+		portraits.clear();
+	}
+
 	/** Opens on the next game tick, as a right-click op on a real thing would. */
 	public void openNextTick()
 	{

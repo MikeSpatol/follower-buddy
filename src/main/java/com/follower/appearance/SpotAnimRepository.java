@@ -158,4 +158,11 @@ public class SpotAnimRepository
 	{
 		return !spotanims.isEmpty();
 	}
+
+	/** Lets the catalogue go while the plugin is off; startUp and the next login load it again. */
+	public void unload()
+	{
+		spotanims = Collections.emptyMap();
+		status = "not loaded";
+	}
 }

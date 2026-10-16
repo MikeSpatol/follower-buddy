@@ -59,6 +59,16 @@ public class ChroniclePortraits
 		this.client = client;
 	}
 
+	/** Lets every model and animation built go, for a plugin switched off; drawn again as wanted. */
+	public void clear()
+	{
+		models.clear();
+		failed.clear();
+		animations.clear();
+		noAnimation.clear();
+		framing.clear();
+	}
+
 	/** The yaw for this moment of the turn. */
 	public static int yawAt(long nowMs)
 	{
