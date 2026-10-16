@@ -732,6 +732,26 @@ public class SpeechEngine
 	}
 
 	/**
+	 * Whether the line that would mention this page is still cooling from
+	 * the last one. Quests QA4, 16 Oct: Priest in Peril writes three pages at
+	 * its scroll, and the second and third were spent on the quest page's
+	 * line while it cooled, two pages never mentioned. The news waits for it.
+	 */
+	public boolean isPageLineCooling(TriggerEvent news)
+	{
+		long now = now();
+		for (SpeechRule rule : loader.getRules())
+		{
+			if (!rule.offCooldown(now) && rule.when != null && rule.when.usesType("pageWritten")
+				&& rule.when.matches(getContext(), news))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * Whether this rule is allowed to say its line right now.
 	 *
 	 * <p>The mute and the global window throttle SPEECH; a rule that only plays

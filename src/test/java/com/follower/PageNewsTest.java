@@ -1,10 +1,12 @@
 package com.follower;
 
 import com.follower.sim.Harness;
+import com.follower.sim.QuestSim;
 import com.follower.speech.TriggerEvent;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import net.runelite.api.Quest;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -38,8 +40,8 @@ public class PageNewsTest
 	{
 		TriggerEvent page = written(100);
 		assertNull("not over the dialogue, where it would be dropped",
-			FollowerPlugin.nextPageNews(news, 101, true, true, FollowerPlugin.PAGE_NEWS_TICKS));
-		assertSame("but once the box closes", page, FollowerPlugin.nextPageNews(news, 102, true, false, FollowerPlugin.PAGE_NEWS_TICKS));
+			FollowerPlugin.nextPageNews(news, 101, true, true, FollowerPlugin.PAGE_NEWS_TICKS, 0));
+		assertSame("but once the box closes", page, FollowerPlugin.nextPageNews(news, 102, true, false, FollowerPlugin.PAGE_NEWS_TICKS, 0));
 	}
 
 	@Test
@@ -49,19 +51,19 @@ public class PageNewsTest
 		// King Roald talks for well over a minute.
 		for (int tick = 101; tick <= 300; tick++)
 		{
-			assertNull(FollowerPlugin.nextPageNews(news, tick, true, true, FollowerPlugin.PAGE_NEWS_TICKS));
+			assertNull(FollowerPlugin.nextPageNews(news, tick, true, true, FollowerPlugin.PAGE_NEWS_TICKS, 0));
 		}
 		assertSame("the minute starts when the box closes", page,
-			FollowerPlugin.nextPageNews(news, 350, true, false, FollowerPlugin.PAGE_NEWS_TICKS));
+			FollowerPlugin.nextPageNews(news, 350, true, false, FollowerPlugin.PAGE_NEWS_TICKS, 0));
 	}
 
 	@Test
 	public void withNoDialogueItStillWaitsForQuietAndLapsesAfterAMinute()
 	{
 		written(100);
-		assertNull("something else is being said", FollowerPlugin.nextPageNews(news, 120, false, false, FollowerPlugin.PAGE_NEWS_TICKS));
+		assertNull("something else is being said", FollowerPlugin.nextPageNews(news, 120, false, false, FollowerPlugin.PAGE_NEWS_TICKS, 0));
 		assertNull("and a minute (100 ticks) later it is news no longer",
-			FollowerPlugin.nextPageNews(news, 100 + 101, true, false, FollowerPlugin.PAGE_NEWS_TICKS));
+			FollowerPlugin.nextPageNews(news, 100 + 101, true, false, FollowerPlugin.PAGE_NEWS_TICKS, 0));
 	}
 
 	/**
@@ -77,9 +79,9 @@ public class PageNewsTest
 		int window = FollowerPlugin.pageNewsTicks(45_000L);
 		assertEquals(170, window);
 		TriggerEvent page = written(100);
-		assertNull("another line, then the gap after it", FollowerPlugin.nextPageNews(news, 180, false, false, window));
+		assertNull("another line, then the gap after it", FollowerPlugin.nextPageNews(news, 180, false, false, window, 0));
 		assertSame("still news once the gap after that is out", page,
-			FollowerPlugin.nextPageNews(news, 260, true, false, window));
+			FollowerPlugin.nextPageNews(news, 260, true, false, window, 0));
 	}
 
 	@Rule
@@ -125,5 +127,66 @@ public class PageNewsTest
 			h.gameTick();
 		}
 		assertTrue("the page is mentioned", !h.firedBy("chronicle-page-place").isEmpty());
+	}
+
+	/**
+	 * Text QA4, 16 Oct: at Minimal a place's page news waits up to 102 s for
+	 * quiet, and was mostly said after the player had left: "Find me a good
+	 * spot and pose for me." for a sketch only that place can take. It is
+	 * let go once they have left the place's regions.
+	 */
+	@Test
+	public void aPlacesNewsIsLetGoOnceThePlayerHasLeftIt()
+	{
+		TriggerEvent lumbridge = TriggerEvent.pageWritten("location", "Lumbridge");
+		news.add(new FollowerPlugin.PageNews(lumbridge, 100, java.util.Arrays.asList(12850, 12849)));
+		assertNull("something else is being said", FollowerPlugin.nextPageNews(news, 120, false, false,
+			FollowerPlugin.PAGE_NEWS_TICKS, 12849));
+		assertSame("still there", lumbridge, FollowerPlugin.nextPageNews(news, 130, true, false,
+			FollowerPlugin.PAGE_NEWS_TICKS, 12849));
+
+		news.add(new FollowerPlugin.PageNews(lumbridge, 200, java.util.Arrays.asList(12850, 12849)));
+		assertNull(FollowerPlugin.nextPageNews(news, 220, true, true, FollowerPlugin.PAGE_NEWS_TICKS, 12851));
+		assertTrue("gone from the queue once they have left", news.isEmpty());
+		assertTrue("the plugin gives a place's page its regions", java.nio.file.Files.exists(PLUGIN)
+			&& source().contains("!byQuest && \"location\".equals(entry.kindOrEmpty()) && entry.unlock != null\n"
+				+ "\t\t\t\t? entry.unlock.regions : null)));"));
+	}
+
+	/**
+	 * Quests QA4, 16 Oct: Priest in Peril's scroll writes three pages, its
+	 * own, Seven Priestly Warriors and Morytania, all quest news. The second
+	 * and third were spent on the quest page's line while it cooled, and two
+	 * pages were never mentioned. Each now waits for the line.
+	 */
+	@Test
+	public void aScrollThatWritesThreePagesMentionsAllThree() throws IOException
+	{
+		for (long gap : new long[]{6000L, 45_000L})
+		{
+			QuestSim s = new QuestSim(folder.newFolder().toPath(), gap);
+			s.started(Quest.PRIEST_IN_PERIL);
+			s.ticks(20);
+			s.questComplete(Quest.PRIEST_IN_PERIL, "Priest in Peril", "Seven Priestly Warriors", "Morytania");
+			s.ticks(600);
+			s.summary();
+			assertEquals("gap " + gap + "\n" + s.transcript(),
+				java.util.Arrays.asList("Priest in Peril", "Seven Priestly Warriors", "Morytania"), s.pagesSaid);
+		}
+	}
+
+	private static final java.nio.file.Path PLUGIN = java.nio.file.Paths.get("src/main/java/com/follower/FollowerPlugin.java");
+
+	private static String source()
+	{
+		try
+		{
+			return new String(java.nio.file.Files.readAllBytes(PLUGIN), java.nio.charset.StandardCharsets.UTF_8)
+				.replace("\r\n", "\n");
+		}
+		catch (IOException e)
+		{
+			throw new AssertionError(e);
+		}
 	}
 }

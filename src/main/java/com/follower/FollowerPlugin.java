@@ -110,11 +110,19 @@ public class FollowerPlugin extends Plugin
 		final TriggerEvent event;
 		/** When its minute began: the writing, or the close of a dialogue it waited out. */
 		int tick;
+		/** For a place's page, the regions it is about; null for news that holds anywhere. */
+		final java.util.List<Integer> where;
 
 		PageNews(TriggerEvent event, int tick)
 		{
+			this(event, tick, null);
+		}
+
+		PageNews(TriggerEvent event, int tick, java.util.List<Integer> where)
+		{
 			this.event = event;
 			this.tick = tick;
+			this.where = where;
 		}
 	}
 
@@ -890,7 +898,9 @@ public class FollowerPlugin extends Plugin
 		// "quest" for a page a quest opened, which the follower has not seen.
 		chronicleProgress.setOnWritten((entry, byQuest) -> pageNews.add(new PageNews(
 			TriggerEvent.pageWritten(byQuest ? "quest" : entry.kindOrEmpty(), entry.name),
-			client.getTickCount())));
+			client.getTickCount(),
+			!byQuest && "location".equals(entry.kindOrEmpty()) && entry.unlock != null
+				? entry.unlock.regions : null)));
 		// Quest pages are per account, where the memory is per profile.
 		chronicleProgress.setAccount(() -> configManager.getRSProfileKey());
 		// A callback that remembers a quest together asks the book whether
@@ -8738,8 +8748,10 @@ public class FollowerPlugin extends Plugin
 		// been heard, and only when nothing else is being said. The dialogue
 		// as the rules read it, page flips ridden out: on the raw box the news
 		// went out on a flip and sat over the conversation (QA, 15 Oct).
+		PageNews first = pageNews.peek();
 		TriggerEvent news = nextPageNews(pageNews, client.getTickCount(), speechEngine.isQuiet(),
-			inConversation() || sceneQuiet(), pageNewsTicks(speechEngine.moodScaledGap()));
+			inConversation() || sceneQuiet() || (first != null && speechEngine.isPageLineCooling(first.event)),
+			pageNewsTicks(speechEngine.moodScaledGap()), lastRegionId);
 		if (news != null)
 		{
 			speechEngine.dispatch(news);
@@ -8755,10 +8767,15 @@ public class FollowerPlugin extends Plugin
 	 * minute starts again when the box closes. A cutscene and the quiet after
 	 * it hold it the same way: a page a scene writes is mentioned after.
 	 * Its minute is {@code window} ticks, as {@link #pageNewsTicks} has it.
+	 *
+	 * <p>A place's page is news only while the player is there. Text QA4,
+	 * 16 Oct: at Minimal it was mostly said after they had left, asking them
+	 * to pose for a sketch they could no longer take.
 	 */
 	static TriggerEvent nextPageNews(java.util.Deque<PageNews> news, int now, boolean quiet,
-		boolean waits, int window)
+		boolean waits, int window, int region)
 	{
+		news.removeIf(page -> page.where != null && !page.where.contains(region));
 		if (waits)
 		{
 			for (PageNews waiting : news)

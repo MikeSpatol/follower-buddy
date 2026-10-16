@@ -479,7 +479,8 @@ public final class QuestSim
 	/** FollowerPlugin.nextPageNews, once a tick after the tick's own events. */
 	private void pageNews()
 	{
-		if (npcDialog || goneTicks <= 2 || sceneOn || tick < quietUntil)
+		if (npcDialog || goneTicks <= 2 || sceneOn || tick < quietUntil
+			|| (!pages.isEmpty() && h.engine.isPageLineCooling(pages.peek().event)))
 		{
 			for (Page waiting : pages)
 			{
