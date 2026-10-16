@@ -469,6 +469,8 @@ public class SpeechEngine
 		boolean heardTheBox;
 		/** The rule's last firing before this win, given back if the line is let go unsaid. */
 		final long firedBefore;
+		/** A callback about the same person was said meanwhile: the plain line stands aside. */
+		boolean stoodAside;
 
 		PendingSpeech(SpeechRule rule, TriggerEvent event, int ticksLeft, long firedBefore)
 		{
@@ -929,6 +931,12 @@ public class SpeechEngine
 			while (it.hasNext())
 			{
 				PendingSpeech delayed = it.next();
+				if (delayed.stoodAside)
+				{
+					it.remove();
+					noteSuppressed(delayed.rule, "callback");
+					continue;
+				}
 				if (--delayed.ticksLeft <= 0)
 				{
 					// A cutscene that moves its quest's step on makes a line
@@ -1295,6 +1303,13 @@ public class SpeechEngine
 				{
 					other.markFired(now);
 				}
+			}
+			// And a plain line already waiting is let go: behaviour QA, 16
+			// Oct, the person came by with a box up, the plain line was held
+			// for it, the callback rose as it closed, and both were said.
+			for (PendingSpeech waiting : pending)
+			{
+				waiting.stoodAside |= plain.equals(waiting.rule.id);
 			}
 		}
 
