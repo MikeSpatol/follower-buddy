@@ -109,10 +109,16 @@ public class ConversationPanelTest
 				assertFalse(off + " with nothing to work on", button(panel, off).isEnabled());
 			}
 			press(panel, "Add");
-			for (String on : new String[]{"Remove", "Up", "Down"})
-			{
-				assertTrue(on + " with a line picked", button(panel, on).isEnabled());
-			}
+			assertTrue("Remove with a line picked", button(panel, "Remove").isEnabled());
+			// QA3: Up on the first line and Down on the last did nothing.
+			assertFalse("Up with the only line picked", button(panel, "Up").isEnabled());
+			assertFalse("Down with the only line picked", button(panel, "Down").isEnabled());
+			press(panel, "Add");
+			assertTrue("Up on the second of two", button(panel, "Up").isEnabled());
+			assertFalse("Down on the last", button(panel, "Down").isEnabled());
+			press(panel, "Up");
+			assertFalse("Up on the first", button(panel, "Up").isEnabled());
+			assertTrue("Down on the first of two", button(panel, "Down").isEnabled());
 			pickSaved(panel, "Take one");
 			assertTrue(button(panel, "Load").isEnabled());
 			assertTrue(button(panel, "Delete").isEnabled());
@@ -244,6 +250,61 @@ public class ConversationPanelTest
 
 			press(panel, "Load");
 			assertEquals("and once saved there is nothing to ask", 3, asked[0]);
+		});
+	}
+
+	@Test
+	public void deletingTheLoadedOneLeavesTheTabsLinesAsUnsaved() throws Exception
+	{
+		// QA3: the tab's lines were the only copy once the saved one was
+		// deleted, and the next Load dropped them without asking.
+		org.junit.Assume.assumeFalse(java.awt.GraphicsEnvironment.isHeadless());
+		com.follower.speech.ConversationStore store = new com.follower.speech.ConversationStore(new com.google.gson.Gson());
+		store.load(Files.createTempDirectory("conv"));
+		for (String name : new String[]{"Doomed", "Next"})
+		{
+			Conversation take = new Conversation();
+			take.name = name;
+			take.lines.add(new Conversation.Line(Conversation.Speaker.YOU, Conversation.Display.BOX,
+				Conversation.Expression.NEUTRAL, name + " line."));
+			assertTrue(store.save(take));
+		}
+		int[] asked = {0};
+		java.util.List<String> deleteAsked = new java.util.ArrayList<>();
+		ConversationPanel[] made = new ConversationPanel[1];
+		javax.swing.SwingUtilities.invokeAndWait(() ->
+		{
+			made[0] = new ConversationPanel((w, d) -> { }, store, () -> "Bob", s -> { })
+			{
+				@Override
+				int askToSave()
+				{
+					asked[0]++;
+					return 2;
+				}
+
+				@Override
+				boolean confirmDelete(String picked)
+				{
+					deleteAsked.add(picked);
+					return true;
+				}
+			};
+		});
+		ConversationPanel panel = made[0];
+		javax.swing.SwingUtilities.invokeAndWait(() ->
+		{
+			pickSaved(panel, "Doomed");
+			press(panel, "Load");
+			pickSaved(panel, "Doomed");
+			press(panel, "Delete");
+			assertEquals(java.util.Collections.singletonList("Doomed"), deleteAsked);
+			assertEquals(null, store.get("Doomed"));
+
+			pickSaved(panel, "Next");
+			press(panel, "Load");
+			assertEquals("asked before the only copy went", 1, asked[0]);
+			assertEquals("and Cancel kept it", "Doomed line.", panel.script().lines.get(0).text);
 		});
 	}
 
