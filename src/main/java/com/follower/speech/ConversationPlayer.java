@@ -30,7 +30,10 @@ public class ConversationPlayer
 	/** What it plays on. Every call on the client thread. */
 	public interface Stage
 	{
-		/** Whether the game's own dialogue - an NPC's, the player's, or a choice - is open. */
+		/**
+		 * Whether the game's own dialogue - an NPC's, the player's, a choice,
+		 * or a message, item or level-up box - is open.
+		 */
 		boolean gameDialogueOpen();
 
 		/** Whether the follower's own Talk-to box is open. */

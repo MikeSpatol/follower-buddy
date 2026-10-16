@@ -3638,7 +3638,14 @@ public class FollowerPlugin extends Plugin
 			@Override
 			public boolean gameDialogueOpen()
 			{
-				return npcDialogOpen();
+				// The game's other boxes over the chatbox too: a message, an
+				// item, two items, a level-up. QA2, 15 Oct: a written line
+				// was drawn over one and took its "Click here to continue".
+				return npcDialogOpen()
+					|| client.getWidget(net.runelite.api.gameval.InterfaceID.MESSAGEBOX, 0) != null
+					|| client.getWidget(net.runelite.api.gameval.InterfaceID.OBJECTBOX, 0) != null
+					|| client.getWidget(net.runelite.api.gameval.InterfaceID.OBJECTBOX_DOUBLE, 0) != null
+					|| client.getWidget(net.runelite.api.gameval.InterfaceID.LEVELUP_DISPLAY, 0) != null;
 			}
 
 			@Override
