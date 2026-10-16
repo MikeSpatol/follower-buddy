@@ -309,24 +309,53 @@ public class CrossingReplayTest
 
 	// ------------------------------------------------------- rebuilt from XP
 
+	/**
+	 * Off a course, a climb with no XP inside the two ticks it waits is a
+	 * ladder: let go, and the follower joins the player upstairs then, as it
+	 * did before any agility, not eight seconds later (QA4 #3). XP that comes
+	 * after it rebuilds nothing, the follower being there already. (This was
+	 * a rebuild with no snap, before the wait was let go with the hop.)
+	 */
 	@Test
-	public void aClimbWhoseXpComesLateIsRebuiltAndCopiedWithoutASnap()
+	public void offACourseAClimbWithNoXpIsALadderAndJoinedAtOnce()
 	{
 		Mover player = new Mover(51, 50, 0);
-		player.stand(200).doing(CLIMB).stand(1200).hop(1, 0, 1).doing(-1);
-		// Off a course: the two ticks a hop waits for its XP run out.
-		player.stand(1500);
-		assertFalse("let go as a ladder", follower.isDoingAgility());
-		assertTrue("but waiting, not snapped", follower.isHoldingForAgility());
-		assertEquals(0, snaps);
+		follower.setOnAgilitySnap(player.watch::forgetMissed);
+		player.stand(600).doing(CLIMB).stand(1200).hop(1, 0, 1).doing(-1);
+		int hopped = player.frames;
+		while (snaps == 0 && player.frames - hopped < 500)
+		{
+			player.stand(20);
+		}
+		long joinedMs = (player.frames - hopped) * 20L;
+		assertEquals("joined upstairs", 1, snaps);
+		assertTrue("once the hop's two ticks were up, not eight seconds on: " + joinedMs + " ms",
+			joinedMs <= CrossingWatch.CONFIRM_WAIT_MS + 300);
+		assertEquals(1, follower.getWorldLocation().getPlane());
+		assertFalse(follower.isHoldingForAgility());
 
-		player.xp().stand(100);
-		runUntilDone();
-		assertEquals("rebuilt, and copied", 1, done.size());
-		assertEquals(new WorldPoint(51, 50, 0), done.get(0).getStart());
-		assertEquals(new WorldPoint(52, 50, 1), follower.getWorldLocation());
-		assertTrue(shown.contains(CLIMB));
-		assertEquals(0, snaps);
+		player.xp().stand(2000);
+		assertFalse("the late XP rebuilds nothing", follower.isDoingAgility());
+		assertTrue(done.isEmpty());
+	}
+
+	/** On a course a hop waits five ticks for its XP; none, and it is a ladder after all. */
+	@Test
+	public void onACourseALadderIsJoinedOnceItsLongerWaitIsUp()
+	{
+		Mover player = new Mover(51, 50, 0);
+		player.stand(600).xp();
+		follower.holdForAgility();
+		player.stand(600).doing(CLIMB).stand(1200).hop(1, 0, 1).doing(-1);
+		int hopped = player.frames;
+		while (snaps == 0 && player.frames - hopped < 500)
+		{
+			player.stand(20);
+		}
+		long joinedMs = (player.frames - hopped) * 20L;
+		assertEquals(1, snaps);
+		assertTrue(joinedMs + " ms", joinedMs >= CrossingWatch.CONFIRM_WAIT_MS
+			&& joinedMs <= CrossingWatch.CONFIRM_WAIT_ON_COURSE_MS + 300);
 	}
 
 	// ----------------------------------------------------- a Draynor-like lap

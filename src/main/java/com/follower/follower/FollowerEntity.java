@@ -1862,6 +1862,8 @@ public class FollowerEntity implements CrossingWatch.Listener
 
 	/** Left of the wait after agility before a snap may fetch the follower (AGILITY_PATIENCE_MS). */
 	private long patienceMs;
+	/** XP, a crossing queued or one finished since the last hop was expected. */
+	private boolean patienceRenewed;
 
 	/** The agility trace's event lines; nowhere unless the plugin says. */
 	private java.util.function.Consumer<String> agilityTrace = line -> { };
@@ -1893,6 +1895,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		if (spawned && tile != null && thrallNpc == null && stayTile == null)
 		{
 			patienceMs = AGILITY_PATIENCE_MS;
+			patienceRenewed = true;
 		}
 	}
 
@@ -1939,7 +1942,10 @@ public class FollowerEntity implements CrossingWatch.Listener
 		}
 		takeFeetForAgility();
 		awaitedCrossing = start;
-		patienceMs = AGILITY_PATIENCE_MS;
+		// Long enough for its XP on a course, and no longer: a ladder is let
+		// go and snapped after much as before.
+		patienceMs = Math.max(patienceMs, CrossingWatch.CONFIRM_WAIT_ON_COURSE_MS + 600);
+		patienceRenewed = false;
 	}
 
 	/**
@@ -1980,6 +1986,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		crossings.addAll(ordered);
 		awaitedCrossing = null;
 		patienceMs = AGILITY_PATIENCE_MS;
+		patienceRenewed = true;
 		agilityTrace.accept("follower: queued crossing from " + CrossingWatch.describe(crossing.getStart())
 			+ (crossing.isComplete() ? "" : " (live)") + ", " + crossings.size() + " waiting");
 	}
@@ -1988,6 +1995,11 @@ public class FollowerEntity implements CrossingWatch.Listener
 	public void cancelExpectedCrossing()
 	{
 		awaitedCrossing = null;
+		if (!patienceRenewed)
+		{
+			// Only the hop held it: no agility after all.
+			patienceMs = 0;
+		}
 	}
 
 	/** Lets go of what is waiting, and of the wait. One under way is finished: nobody stops halfway along a log. */
@@ -2319,6 +2331,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		Crossing done = playing;
 		playing = null;
 		patienceMs = AGILITY_PATIENCE_MS;
+		patienceRenewed = true;
 		agilityTrace.accept("follower: finished crossing at " + CrossingWatch.describe(tile)
 			+ (done.isFell() ? ", fell" : "") + ", " + crossings.size() + " waiting");
 		crossingController = null;
