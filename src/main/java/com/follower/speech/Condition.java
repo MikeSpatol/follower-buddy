@@ -1436,7 +1436,34 @@ public class Condition
 	 */
 	public boolean questStepHolds(TriggerContext ctx, TriggerEvent event)
 	{
-		if ("questVar".equalsIgnoreCase(type))
+		return holds(ctx, event, QUEST_STEP);
+	}
+
+	private static final java.util.Set<String> QUEST_STEP = java.util.Set.of("questvar");
+
+	/**
+	 * The conditions that say how things stand rather than what just
+	 * happened, and read nothing else: no roll, no count, no event.
+	 */
+	private static final java.util.Set<String> STANDING = java.util.Set.of(
+		"healthbelow", "prayerbelow", "poisoned", "venomed", "npcnearby");
+
+	/**
+	 * Whether how things stood when the line won - its health, prayer,
+	 * poison or the person near, alone or inside an "all" - still holds.
+	 * True when it reads none. For a line kept waiting: behaviour QA, 16 Oct,
+	 * "49 HP! Get out!" said at 70 percent after the player had eaten, and a
+	 * passer-by announced after he had gone.
+	 */
+	public boolean standingHolds(TriggerContext ctx, TriggerEvent event)
+	{
+		return holds(ctx, event, STANDING);
+	}
+
+	/** Whether this condition's parts of these types, alone or inside an "all", still match. */
+	private boolean holds(TriggerContext ctx, TriggerEvent event, java.util.Set<String> types)
+	{
+		if (type != null && types.contains(type.toLowerCase(Locale.ROOT)))
 		{
 			return matches(ctx, event);
 		}
@@ -1444,7 +1471,7 @@ public class Condition
 		{
 			for (Condition child : conditions)
 			{
-				if (child != null && !child.questStepHolds(ctx, event))
+				if (child != null && !child.holds(ctx, event, types))
 				{
 					return false;
 				}

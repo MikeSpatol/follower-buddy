@@ -463,14 +463,17 @@ public class SpeechEngine
 		/** The scene quiet when last looked at, and whether a scene has begun since the win. */
 		boolean quiet;
 		boolean sceneSinceWin;
+		/** The rule's last firing before this win, given back if the line is let go unsaid. */
+		final long firedBefore;
 
-		PendingSpeech(SpeechRule rule, TriggerEvent event, int ticksLeft, boolean quiet)
+		PendingSpeech(SpeechRule rule, TriggerEvent event, int ticksLeft, boolean quiet, long firedBefore)
 		{
 			this.rule = rule;
 			this.event = event;
 			this.delay = ticksLeft;
 			this.ticksLeft = ticksLeft;
 			this.quiet = quiet;
+			this.firedBefore = firedBefore;
 		}
 	}
 
@@ -956,6 +959,16 @@ public class SpeechEngine
 						noteSuppressed(delayed.rule, "moved-on");
 						continue;
 					}
+					// Kept waiting, the moment it was about can pass: the
+					// player ate, or the person walked off. Let go unsaid, with
+					// its cooldown given back, so it rises again the next time
+					// it is true.
+					if (held == null && !delayed.rule.when.standingHolds(getContext(), delayed.event))
+					{
+						delayed.rule.markFired(delayed.firedBefore);
+						noteSuppressed(delayed.rule, "passed");
+						continue;
+					}
 					if (held == null)
 					{
 						log.debug("rule '{}' fired after its {}-tick delay",
@@ -1103,10 +1116,11 @@ public class SpeechEngine
 		// charged at the win so re-triggers don't stack up more firings. The
 		// wait is drawn HERE, once, so a ranged delay stays put while pending.
 		int delay = winner.rollDelayTicks();
+		long firedBefore = winner.lastFiredMs();
 		if (delay > 0)
 		{
 			winner.markFired(now);
-			pending.add(new PendingSpeech(winner, event, delay, sceneQuiet));
+			pending.add(new PendingSpeech(winner, event, delay, sceneQuiet, firedBefore));
 			return;
 		}
 
@@ -1115,7 +1129,7 @@ public class SpeechEngine
 			|| waitsOutTheRest(winner, blocked, 0))
 		{
 			winner.markFired(now);
-			PendingSpeech held = new PendingSpeech(winner, event, 1, sceneQuiet);
+			PendingSpeech held = new PendingSpeech(winner, event, 1, sceneQuiet, firedBefore);
 			held.gapAfterMs = lastSpokeMs;
 			held.heardTheBox = "dialogue".equals(blocked);
 			pending.add(held);

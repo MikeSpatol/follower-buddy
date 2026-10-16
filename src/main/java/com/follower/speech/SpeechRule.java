@@ -605,6 +605,12 @@ public class SpeechRule
 		lastFiredMs = nowMs;
 	}
 
+	/** When it last fired, so a line let go unsaid can give its cooldown back. */
+	public long lastFiredMs()
+	{
+		return lastFiredMs;
+	}
+
 	/**
 	 * Forgets the edge and the cooldown, so the rule may fire again as soon as
 	 * its condition next rises. Deliberately leaves the shuffle bag alone: what

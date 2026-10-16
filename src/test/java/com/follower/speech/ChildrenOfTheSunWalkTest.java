@@ -149,7 +149,7 @@ public class ChildrenOfTheSunWalkTest
 	}
 
 	private static final List<String> PEOPLE_AND_MOMENTS = Arrays.asList(
-		"quest-itzla", "quest-sergeant-tobyn", "qm-children-of-the-sun-overheard");
+		"quest-sergeant-tobyn", "qm-children-of-the-sun-overheard");
 
 	private static void hearsEveryone(QuestSim s, String roof)
 	{
@@ -184,15 +184,18 @@ public class ChildrenOfTheSunWalkTest
 	}
 
 	@Test
-	public void theRoofIsSaidBeforeTheQuestioningAndItzlaWaitsForIt() throws Exception
+	public void theRoofIsSaidBeforeTheQuestioningAndItzlaIsNotAnnouncedAfterHeHasGone() throws Exception
 	{
 		// Both come up as the escort box closes. The moment is about now,
-		// so it goes first; the Prince's line keeps, and is said after.
+		// so it goes first. The Prince's line was kept through the
+		// questioning and said after it, with the Prince gone (QA3 #5,
+		// #12): now it is let go unsaid, with its cooldown back, for the
+		// next time he is near.
 		QuestSim s = walk(true, 3, 6000, false);
-		List<String> heard = s.heardIds;
-		assertTrue(s.transcript(),
-			heard.indexOf("qm-children-of-the-sun-the-roof") < heard.indexOf("quest-itzla"));
-		assertTrue(s.transcript(), heard.indexOf("quest-itzla") > heard.indexOf("quest-complete"));
+		assertTrue(s.transcript(), s.heardIds.contains("qm-children-of-the-sun-the-roof"));
+		assertFalse(s.transcript(), s.heardIds.contains("quest-itzla"));
+		assertTrue(s.transcript(), s.transcript().contains("held back: quest-itzla (passed)"));
+		assertTrue("its hour's cooldown given back", s.h.rule("quest-itzla").offCooldown(s.ms[0]));
 	}
 
 	@Test
