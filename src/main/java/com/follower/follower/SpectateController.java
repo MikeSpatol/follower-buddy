@@ -10,6 +10,7 @@ import net.runelite.api.Actor;
 import net.runelite.api.Client;
 import net.runelite.api.Player;
 import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.gameval.AnimationID;
 
 /**
  * Gets the follower out of the way when a fight starts, and gives it something
@@ -401,7 +402,8 @@ public class SpectateController
 		// Stand, then cast: it gets to its feet before releasing the spell, so
 		// the sequence closes the way it opened.
 		if (wasCasting && castChain(
-			new int[]{config.spectateShieldChannelEnd(), config.spectateShieldEndAnimation()},
+			new int[]{channelEnd(config.spectateShieldChannelAnimation(), config.spectateShieldChannelEnd()),
+				config.spectateShieldEndAnimation()},
 			new int[]{config.spectateShieldEndGraphic(), config.spectateShieldEndGraphic()}))
 		{
 			// The weapon stays away until the closing cast has played: taking
@@ -734,6 +736,18 @@ public class SpectateController
 		// ward does not go dark between the summon and the first top-up.
 		ticksSinceShield = SHIELD_MAINTAIN_TICKS;
 		log.debug("Shield: channelling, pose {}", channel);
+	}
+
+	/**
+	 * The rise that ends a channel. Off the held prayer, HUMAN_PRAY_LOOP, the
+	 * kneel's own rise: HUMAN_GETUP starts from the floor, 97-103 units from
+	 * that kneel, and the body jumped into it (cache, 15 Oct), as it did at
+	 * the altar.
+	 */
+	static int channelEnd(int channel, int end)
+	{
+		return channel == AnimationID.HUMAN_PRAY_LOOP && end == AnimationID.HUMAN_GETUP
+			? FollowerEntity.PRAY_STAND_UP : end;
 	}
 
 	/** Ends the channel and hands the follower's pose back to normal. */
