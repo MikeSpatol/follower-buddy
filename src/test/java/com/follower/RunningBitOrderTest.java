@@ -212,15 +212,24 @@ public class RunningBitOrderTest
 	{
 		for (int[] stage : new int[][]{{5, 1}, {40, 2}})
 		{
-			Harness h = harnessWith(GERALD);
-			h.engine.getContext().setMetOnDay(daysAgo(400));
-			h.engine.getContext().restoreSpokenOnce(
-				Collections.singletonList("fun-gerald-first"),
-				Collections.singletonMap("fun-gerald-first", daysAgo(stage[0])));
-			h.engine.getContext().setWork(true, "mining", "Iron rocks", null, 0, 0, 0);
-			h.gameTicks(1500);
-			assertEquals(stage[0] + " days after the opener",
-				Collections.singleton(GERALD.get(stage[1])), heard(h, GERALD));
+			// A chance roll in its window, as the fence stages: a few
+			// sessions, and never the wrong stage in any of them.
+			boolean heardIt = false;
+			for (int session = 0; session < 5 && !heardIt; session++)
+			{
+				Harness h = harnessWith(GERALD);
+				h.engine.getContext().setMetOnDay(daysAgo(400));
+				h.engine.getContext().restoreSpokenOnce(
+					Collections.singletonList("fun-gerald-first"),
+					Collections.singletonMap("fun-gerald-first", daysAgo(stage[0])));
+				h.engine.getContext().setWork(true, "mining", "Iron rocks", null, 0, 0, 0);
+				h.gameTicks(1500);
+				Set<String> said = heard(h, GERALD);
+				assertTrue(stage[0] + " days after the opener, only its stage: " + said,
+					minus(said, GERALD.get(stage[1])).isEmpty());
+				heardIt = said.contains(GERALD.get(stage[1]));
+			}
+			assertTrue(stage[0] + " days after the opener, its stage is heard", heardIt);
 		}
 	}
 

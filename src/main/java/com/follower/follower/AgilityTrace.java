@@ -49,8 +49,7 @@ public class AgilityTrace
 	public void initialise(Path dataDir)
 	{
 		this.dataDir = dataDir;
-		// TODO(merge): keep only recent days' files, with fix5/ui's
-		// LogRetention.prune(dataDir, "agility-trace-", LocalDate.now()).
+		com.follower.LogRetention.prune(dataDir, "agility-trace-", LocalDate.now());
 	}
 
 	/** Today's file: a session past midnight carries on in the new day's. */
