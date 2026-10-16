@@ -2106,6 +2106,8 @@ public final class TriggerContext
 	 */
 	private String souvenir = "";
 	private int souvenirDroppedTick;
+	/** The tick it came into the pocket, so a line about having it a while can wait for a while. */
+	private int souvenirSinceTick;
 
 	public void pickUp(String what, int minutes)
 	{
@@ -2115,6 +2117,7 @@ public final class TriggerContext
 		}
 		souvenir = what;
 		souvenirDroppedTick = client.getTickCount() + Math.max(1, minutes) * 100;
+		souvenirSinceTick = client.getTickCount();
 		log.debug("Picked up {} for {} minutes", what, minutes);
 	}
 
@@ -2136,11 +2139,18 @@ public final class TriggerContext
 		log.debug("Traded {} for {}", souvenir, what);
 		souvenir = what;
 		souvenirDroppedTick = client.getTickCount() + Math.max(1, minutes) * 100;
+		souvenirSinceTick = client.getTickCount();
 	}
 
 	public boolean isCarrying()
 	{
 		return !souvenir.isEmpty();
+	}
+
+	/** Whole minutes the thing it is carrying has been in the pocket. */
+	public int minutesCarried()
+	{
+		return (client.getTickCount() - souvenirSinceTick) / 100;
 	}
 
 	/** What it is carrying, or what it just lost, for the {souvenir} placeholder. */

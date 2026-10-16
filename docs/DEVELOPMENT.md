@@ -397,7 +397,7 @@ mood stretches or shortens on top.
 | `remembers` | the incident on its mind; optional `is` names it, `minimum` how many times it has happened. `{memory}` says it out loud |
 | `memoryHere` | - standing in the region the incident happened in. `{memory}`, `{memoryWhere}`, `{memoryWhen}` |
 | `memoryFoeNearby` | `within` - one of the things the incident was with is this close (12 by default). `{memoryWho}` names it |
-| `carrying` | - it is holding a souvenir. `{souvenir}` names it |
+| `carrying` | optional `minimum` - it is holding a souvenir, and has for that many minutes. `{souvenir}` names it |
 | `souvenirLost` | - the thing it was carrying is gone |
 | `betting` | - a prediction is outstanding; normally used inside a `none` |
 | `betWon` / `betLost` | - the prediction came good, or did not |

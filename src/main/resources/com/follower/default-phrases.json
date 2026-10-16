@@ -12498,7 +12498,8 @@
         "type": "all",
         "conditions": [
           {
-            "type": "carrying"
+            "type": "carrying",
+            "minimum": 10
           },
           {
             "type": "idle",

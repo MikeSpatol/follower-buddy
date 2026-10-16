@@ -60,7 +60,7 @@ import net.runelite.api.NPC;
  *   <tr><td>wantFulfilled / wantExpired</td><td>no fields; {@code {want}} placeholder</td></tr>
  *   <tr><td>feelsAbout</td><td>{@code is} liked|disliked — about the CURRENT region</td></tr>
  *   <tr><td>remembers</td><td>optional {@code is} incident key, {@code minimum} times; {@code {memory}}</td></tr>
- *   <tr><td>carrying</td><td>no fields — holding a souvenir; {@code {souvenir}}</td></tr>
+ *   <tr><td>carrying</td><td>optional {@code minimum} minutes held — holding a souvenir; {@code {souvenir}}</td></tr>
  *   <tr><td>souvenirLost</td><td>no fields; {@code {souvenir}} names it one last time</td></tr>
  *   <tr><td>betting / betWon / betLost</td><td>no fields</td></tr>
  *   <tr><td>timeOfDay</td><td>{@code minimum} / {@code maximum} hour, 0-23, wrapping past midnight</td></tr>
@@ -846,9 +846,11 @@ public class Condition
 					&& (is == null || is.equalsIgnoreCase(ctx.getAskedTree()));
 
 			// Carrying something it picked up. Mostly used negated, to stop it
-			// picking up a second thing while its hands are full.
+			// picking up a second thing while its hands are full. A minimum
+			// is minutes held: behaviour QA, 16 Oct, "I've carried it through
+			// some things today" came 8 s after the picking up.
 			case "carrying":
-				return ctx.isCarrying();
+				return ctx.isCarrying() && ctx.minutesCarried() >= orDefault(minimum, 0);
 
 			case "souvenirlost":
 				return event.getType() == TriggerEvent.Type.SOUVENIR_LOST;
