@@ -57,4 +57,32 @@ public class ThreadingGlueTest
 			assertTrue(line, line.contains("clientThread.invoke("));
 		}
 	}
+
+	@Test
+	public void aPackIsReadAndWrittenOffTheEventThread() throws IOException
+	{
+		// Up to 64 MB of sounds unzipped, and every sound zipped, with the
+		// event thread, and the game's input, waiting.
+		String share = method("private void shareLines(java.awt.Component parent)");
+		assertTrue(share, share.contains("executor.execute(() -> exportPack("));
+		assertTrue(share, share.contains("executor.execute(() -> importPack("));
+		for (String off : new String[]{"private void exportPack(", "private void importPack("})
+		{
+			String work = method(off);
+			assertTrue("a dialog shown off the event thread in " + off,
+				!work.contains("JOptionPane.show"));
+		}
+	}
+
+	@Test
+	public void aVoicedLineIsPlayedOffTheClientThread() throws IOException
+	{
+		// Opening the file and the audio line, on the client thread, for
+		// every line with a sound.
+		String speak = method("private void speakNow(");
+		int at = speak.indexOf("voices.play(");
+		assertTrue("no voices.play in speakNow - the lint has lost its place", at >= 0);
+		assertTrue(speak.substring(Math.max(0, at - 60), at),
+			speak.substring(Math.max(0, at - 60), at).contains("executor.execute("));
+	}
 }

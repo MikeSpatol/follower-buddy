@@ -3873,16 +3873,31 @@ public class FollowerPlugin extends Plugin
 				+ "\n\nImporting adds somebody else's to yours. Nothing is replaced.",
 			"Share", javax.swing.JOptionPane.DEFAULT_OPTION,
 			javax.swing.JOptionPane.QUESTION_MESSAGE, null, choices, choices[0]);
+		// The packs are read and written on the executor: up to 64 MB of
+		// sounds held the event thread, and with it the game's input (QA pass 4).
 		if (picked == 0)
 		{
-			exportPack(parent);
+			java.io.File target = choosePack(true, parent);
+			if (target != null)
+			{
+				executor.execute(() -> exportPack(target, parent));
+			}
 		}
-		else if (picked == 1 && importPack(parent)
-			&& messagesDialog != null && messagesDialog.isVisible())
+		else if (picked == 1)
 		{
-			// The file has grown underneath the window; show what it says now.
-			messagesDialog.open();
+			java.io.File source = choosePack(false, parent);
+			if (source != null)
+			{
+				executor.execute(() -> importPack(source, parent));
+			}
 		}
+	}
+
+	/** A message box, shown on the event thread from wherever it is said. */
+	private static void tell(java.awt.Component parent, String message, String title, int kind)
+	{
+		javax.swing.SwingUtilities.invokeLater(() ->
+			javax.swing.JOptionPane.showMessageDialog(parent, message, title, kind));
 	}
 
 	/** Share lines from the panel, unless the Messages window holds edits the file does not. */
@@ -12241,9 +12256,12 @@ public class FollowerPlugin extends Plugin
 		// The line's own voice, if the player has given it one. After the
 		// journal so a sounded line is recorded like any other, and before
 		// the text so the mouth and the words start together.
-		if (!text.isEmpty() && config.voiceEnabled())
+		// Played off the client thread: opening the file and the audio line
+		// is disk and driver work, enough to drop a frame (QA pass 4).
+		if (!text.isEmpty() && config.voiceEnabled() && voices.has(text))
 		{
-			voices.play(text, config.voiceVolume());
+			int volume = config.voiceVolume();
+			executor.execute(() -> voices.play(text, volume));
 		}
 
 		if (!text.isEmpty() && output.showsOverhead())
@@ -12977,13 +12995,8 @@ public class FollowerPlugin extends Plugin
 	}
 
 	/** Writes everything the player has added to a pack they can hand over. */
-	private void exportPack(java.awt.Component parent)
+	private void exportPack(java.io.File target, java.awt.Component parent)
 	{
-		java.io.File target = choosePack(true, parent);
-		if (target == null)
-		{
-			return;
-		}
 		try
 		{
 			com.google.gson.JsonObject mine = gson.fromJson(
@@ -12997,7 +13010,7 @@ public class FollowerPlugin extends Plugin
 				// No defaults to diff against means everything would look like
 				// the player's own work, and the pack would carry all two
 				// thousand shipped lines. Better to write nothing.
-				javax.swing.JOptionPane.showMessageDialog(parent,
+				tell(parent,
 					"The plugin's own lines could not be read, so there is nothing"
 						+ " to compare yours against. No pack was written.",
 					"Pack not saved", javax.swing.JOptionPane.ERROR_MESSAGE);
@@ -13009,13 +13022,13 @@ public class FollowerPlugin extends Plugin
 
 			if (made.isEmpty())
 			{
-				javax.swing.JOptionPane.showMessageDialog(parent,
+				tell(parent,
 					"There is nothing of your own to share yet. Add a line or a rule"
 						+ " in the Messages window first, and it will go in the pack.",
 					"Nothing to share", javax.swing.JOptionPane.INFORMATION_MESSAGE);
 				return;
 			}
-			javax.swing.JOptionPane.showMessageDialog(parent,
+			tell(parent,
 				"Saved " + target.getName() + " with " +
 					+ made.rules + " rule(s), " + made.lines + " line(s), "
 					+ made.sounds + " sound(s)."
@@ -13026,7 +13039,7 @@ public class FollowerPlugin extends Plugin
 		catch (Exception e)
 		{
 			log.warn("Could not write the pack", e);
-			javax.swing.JOptionPane.showMessageDialog(parent,
+			tell(parent,
 				"That pack could not be written: " + e.getMessage(),
 				"Pack not saved", javax.swing.JOptionPane.ERROR_MESSAGE);
 		}
@@ -13035,21 +13048,38 @@ public class FollowerPlugin extends Plugin
 	/**
 	 * Takes on somebody else's pack, after showing exactly what it holds. The
 	 * file is read and checked in full before a single line of it is kept.
-	 *
-	 * @return whether the pack's lines were added to the file
 	 */
-	private boolean importPack(java.awt.Component parent)
+	private void importPack(java.io.File source, java.awt.Component parent)
 	{
-		java.io.File source = choosePack(false, parent);
-		if (source == null)
-		{
-			return false;
-		}
 		try
 		{
 			com.follower.share.PackFile.Loaded loaded =
 				com.follower.share.PackFile.read(source.toPath(), gson);
+			javax.swing.SwingUtilities.invokeLater(() -> takePack(loaded, parent));
+		}
+		catch (Exception e)
+		{
+			log.warn("Could not read the pack", e);
+			tell(parent, "That pack could not be read: " + e.getMessage(),
+				"Pack not imported", javax.swing.JOptionPane.ERROR_MESSAGE);
+		}
+	}
 
+	/**
+	 * The read pack, asked about and added, on the event thread: the Messages
+	 * window saves the same file there, so nothing can save between this
+	 * reading the file and writing it back.
+	 */
+	private void takePack(com.follower.share.PackFile.Loaded loaded, java.awt.Component parent)
+	{
+		// Edits begun while the pack was read would save over what it adds.
+		if (messagesDialog != null && messagesDialog.isDirty())
+		{
+			sendStatus("Save or discard the edits in the Messages window first.");
+			return;
+		}
+		try
+		{
 			if (loaded.summary.isEmpty())
 			{
 				javax.swing.JOptionPane.showMessageDialog(parent,
@@ -13057,7 +13087,7 @@ public class FollowerPlugin extends Plugin
 						+ (loaded.summary.problems.isEmpty() ? ""
 						: System.lineSeparator() + System.lineSeparator() + String.join(System.lineSeparator(), loaded.summary.problems)),
 					"Nothing to import", javax.swing.JOptionPane.WARNING_MESSAGE);
-				return false;
+				return;
 			}
 
 			String from = loaded.summary.author == null || loaded.summary.author.isEmpty()
@@ -13076,7 +13106,7 @@ public class FollowerPlugin extends Plugin
 				"Import this pack?", javax.swing.JOptionPane.OK_CANCEL_OPTION);
 			if (confirm != javax.swing.JOptionPane.OK_OPTION)
 			{
-				return false;
+				return;
 			}
 
 			com.google.gson.JsonObject mine = gson.fromJson(
@@ -13098,7 +13128,11 @@ public class FollowerPlugin extends Plugin
 						+ System.lineSeparator()
 						+ String.join(System.lineSeparator(), took.problems)),
 				"Pack imported", javax.swing.JOptionPane.INFORMATION_MESSAGE);
-			return true;
+			if (messagesDialog != null && messagesDialog.isVisible())
+			{
+				// The file has grown underneath the window; show what it says now.
+				messagesDialog.open();
+			}
 		}
 		catch (Exception e)
 		{
@@ -13106,7 +13140,6 @@ public class FollowerPlugin extends Plugin
 			javax.swing.JOptionPane.showMessageDialog(parent,
 				"That pack could not be read: " + e.getMessage(),
 				"Pack not imported", javax.swing.JOptionPane.ERROR_MESSAGE);
-			return false;
 		}
 	}
 
