@@ -4766,6 +4766,16 @@ public class FollowerPlugin extends Plugin
 			tellTheFilm("Posing ended when you left the world. Press anything here to start again.");
 		}
 		endFilming();
+		// A held copy (a sit, a dance loop) too. Its pose override outlives
+		// the body, and the next one held it at every stop, weapon away.
+		if (mirroredPose != 0)
+		{
+			follower.clearPoseOverride(mirroredPose);
+			mirroredPose = 0;
+			emoteDisarmed = false;
+		}
+		pendingMime = 0;
+		copyAtWork = false;
 		welfareChecked = false;
 		captureFallback.abort();
 		follower.despawn();
