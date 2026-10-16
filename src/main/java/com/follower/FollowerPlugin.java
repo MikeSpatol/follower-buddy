@@ -3921,6 +3921,14 @@ public class FollowerPlugin extends Plugin
 		{
 			return;
 		}
+		// The thrall looks are worn by name and nothing restores a changed
+		// one; New profile... over one would lose it (QA3).
+		if (profileStore.isProtected(name))
+		{
+			sendStatus("'" + name.trim() + "' is a combat-style profile used by thrall mode"
+				+ " and cannot be replaced. Pick it and edit it instead.");
+			return;
+		}
 		profileStore.put(name, config.customOutfit());
 		setActiveProfile(name.trim());
 		panel.setProfileNames(profileStore.names(), activeProfile);

@@ -106,15 +106,20 @@ public class FollowerPanel extends PluginPanel
 	/** Reflects a config-side change without writing it back again. */
 	public void setMuted(boolean muted)
 	{
-		suppressMuteEvents = true;
-		try
+		// On the event thread like its neighbours: a profile switch sends
+		// this from RuneLite's executor (QA3).
+		SwingUtilities.invokeLater(() ->
 		{
-			muteBox.setSelected(muted);
-		}
-		finally
-		{
-			suppressMuteEvents = false;
-		}
+			suppressMuteEvents = true;
+			try
+			{
+				muteBox.setSelected(muted);
+			}
+			finally
+			{
+				suppressMuteEvents = false;
+			}
+		});
 	}
 
 	/** Opens the memory window (R20); set by the plugin after construction. */
@@ -408,32 +413,67 @@ public class FollowerPanel extends PluginPanel
 	 * suppressed throughout: repopulating must not read as the user picking a
 	 * profile, which would re-load the outfit mid-edit. The thrall dropdowns
 	 * are filled from the same names.
+	 *
+	 * <p>On the event thread, like the other setters: a profile switch calls
+	 * this from the client thread while the thrall settings refill the same
+	 * dropdowns on the event thread (QA3).
 	 */
 	public void setProfileNames(java.util.List<String> names, String active)
 	{
-		profileNames = new java.util.ArrayList<>(names);
-		suppressProfileEvents = true;
-		try
+		List<String> copy = new java.util.ArrayList<>(names);
+		SwingUtilities.invokeLater(() ->
 		{
-			profileCombo.removeAllItems();
-			for (String name : names)
+			profileNames = copy;
+			suppressProfileEvents = true;
+			try
 			{
-				profileCombo.addItem(name);
+				profileCombo.removeAllItems();
+				for (String name : copy)
+				{
+					profileCombo.addItem(name);
+				}
+				profileCombo.setSelectedItem(active == null ? null : active);
 			}
-			profileCombo.setSelectedItem(active == null ? null : active);
-		}
-		finally
-		{
-			suppressProfileEvents = false;
-		}
-		fillThrallBoxes();
-		refreshDeleteButton();
+			finally
+			{
+				suppressProfileEvents = false;
+			}
+			fillThrallBoxes();
+			refreshDeleteButton();
+		});
 	}
 
 	private String profileName()
 	{
 		Object item = profileCombo.getSelectedItem();
 		return item == null ? "" : item.toString().trim();
+	}
+
+	/**
+	 * New profile... with the name typed. A name already in the list is
+	 * written over only when the player says so (QA3: it was replaced without
+	 * a word). The thrall looks are not asked about: the plugin refuses them.
+	 */
+	void newProfile(String typed)
+	{
+		if (typed == null || typed.trim().isEmpty())
+		{
+			return;
+		}
+		String name = typed.trim();
+		if (!profileProtected.test(name) && profileNames.contains(name) && !confirmReplace(name))
+		{
+			return;
+		}
+		onProfileSave.accept(name);
+	}
+
+	/** Whether to write the outfit worn now over the profile of that name. */
+	boolean confirmReplace(String name)
+	{
+		return javax.swing.JOptionPane.showConfirmDialog(this,
+			"Replace the outfit profile \"" + name + "\" with what the follower is wearing now?",
+			"New profile", javax.swing.JOptionPane.YES_NO_OPTION) == javax.swing.JOptionPane.YES_OPTION;
 	}
 
 	// ----------------------------------------------------------------- thralls
@@ -909,13 +949,9 @@ public class FollowerPanel extends PluginPanel
 		profileButtons.add(button("New profile...",
 			"Save the follower's current outfit as a new profile", () ->
 		{
-			String name = javax.swing.JOptionPane.showInputDialog(this,
+			newProfile(javax.swing.JOptionPane.showInputDialog(this,
 				"Name for the new outfit profile:", "New profile",
-				javax.swing.JOptionPane.PLAIN_MESSAGE);
-			if (name != null && !name.trim().isEmpty())
-			{
-				onProfileSave.accept(name.trim());
-			}
+				javax.swing.JOptionPane.PLAIN_MESSAGE));
 		}));
 
 		profileDelete.setToolTipText("Remove the selected profile. A profile a thrall"

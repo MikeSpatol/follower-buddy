@@ -20,6 +20,9 @@ import lombok.extern.slf4j.Slf4j;
  * mutation, insertion order preserved so the dropdown lists profiles in the
  * order they were created. The outfit-profiles.json earlier versions shared
  * between profiles is only read, as where a profile's list starts.
+ *
+ * <p>Synchronized: the panel's New profile and Delete run on the event
+ * thread, the autosave after an outfit edit on the client thread (QA3).
  */
 @Slf4j
 @Singleton
@@ -84,7 +87,7 @@ public class OutfitProfileStore
 	 * it is wearing: another profile may already have written over the shared
 	 * one. Any other profile with no list starts from the defaults.
 	 */
-	public void load(Path dataDir, String stored, String active, String worn,
+	public synchronized void load(Path dataDir, String stored, String active, String worn,
 		java.util.function.Consumer<String> writer)
 	{
 		this.writer = writer == null ? json -> { } : writer;
@@ -157,7 +160,7 @@ public class OutfitProfileStore
 		}
 	}
 
-	public List<String> names()
+	public synchronized List<String> names()
 	{
 		return new ArrayList<>(profiles.keySet());
 	}
@@ -176,7 +179,7 @@ public class OutfitProfileStore
 	 * The first profile the user made themselves, or {@link #DEFAULT_PROFILE}
 	 * when they have not made any - what a fresh session should be wearing.
 	 */
-	public String firstUserProfile()
+	public synchronized String firstUserProfile()
 	{
 		for (String name : profiles.keySet())
 		{
@@ -189,19 +192,19 @@ public class OutfitProfileStore
 	}
 
 	/** The stored outfit string, or null when no profile has that name. */
-	public String get(String name)
+	public synchronized String get(String name)
 	{
 		return name == null ? null : profiles.get(name.trim());
 	}
 
-	public void put(String name, String outfit)
+	public synchronized void put(String name, String outfit)
 	{
 		profiles.put(name.trim(), outfit == null ? "" : outfit);
 		save();
 	}
 
 	/** Returns true when a profile existed and was removed. */
-	public boolean remove(String name)
+	public synchronized boolean remove(String name)
 	{
 		boolean removed = name != null && profiles.remove(name.trim()) != null;
 		if (removed)
