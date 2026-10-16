@@ -918,6 +918,10 @@ public class SpeechEngine
 		// the same guarded path as everything else when their beat arrives.
 		if (event.getType() == TriggerEvent.Type.TICK && !pending.isEmpty())
 		{
+			// Most important first, when several come free on one tick; level
+			// ones keep the order they won in. Quests QA, 16 Oct: Prince
+			// Itzla's line went ahead of the bag moment it was held with.
+			pending.sort(java.util.Comparator.comparingInt(p -> -p.rule.priority));
 			java.util.Iterator<PendingSpeech> it = pending.iterator();
 			while (it.hasNext())
 			{
@@ -930,6 +934,14 @@ public class SpeechEngine
 					}
 					delayed.quiet = sceneQuiet;
 					String held = blockedBy(delayed.rule, now);
+					// The beat after a conversation is for the tick the box
+					// goes. Held by anything else first, it waits its gap
+					// like any other line, rather than jumping a moment
+					// that came up since.
+					if (held != null && !"dialogue".equals(held))
+					{
+						delayed.heardTheBox = false;
+					}
 					if (waitsOutTheScene(delayed.rule, held, delayed.sceneWaited))
 					{
 						delayed.sceneWaited++;
