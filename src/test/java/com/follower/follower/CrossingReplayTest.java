@@ -44,6 +44,23 @@ public class CrossingReplayTest
 	private static final int CLIMB = 737;
 	private static final int FALL = 3068;
 
+	/** The Draynor rooftop's clips, by their gameval names. */
+	private static final int REACHFORLADDER = 828;
+	private static final int INTO_SIDESTEPL = 753;
+	private static final int WALK_SIDESTEPL = 756;
+	private static final int READY_SIDESTEPL = 757;
+	private static final int OUTOF_SIDESTEPL = 759;
+	private static final int WALL_JUMP = 2583;
+	private static final int WALL_JUMP2 = 2585;
+	private static final int WALL_JUMPDOWN = 2586;
+	private static final int WALL_JUMPDOWN2 = 2588;
+
+	/** The base sets the game swaps in: the tightrope's balance, and the narrow wall's side-step. */
+	private static final int[] ON_A_ROPE = {LOG_READY, LOG_WALK, LOG_WALK, LOG_WALK, LOG_WALK, LOG_WALK,
+		LOG_READY, LOG_READY};
+	private static final int[] SIDESTEPPING = {READY_SIDESTEPL, WALK_SIDESTEPL, WALK_SIDESTEPL,
+		WALK_SIDESTEPL, WALK_SIDESTEPL, WALK_SIDESTEPL, READY_SIDESTEPL, READY_SIDESTEPL};
+
 	private FakeGame game;
 	private FollowerEntity follower;
 	private int snaps;
@@ -53,13 +70,19 @@ public class CrossingReplayTest
 	private final List<WorldPoint> visited = new ArrayList<>();
 	/** Every animation the crossings put on it. */
 	private final List<Integer> shown = new ArrayList<>();
+	/** The agility trace's event lines, from the follower and the watch. */
+	private final List<String> trace = new ArrayList<>();
 
 	@Before
 	public void setUp() throws IOException, ReflectiveOperationException
 	{
 		game = new FakeGame().withCollision().keepsRuneLiteObjects()
 			.animation(LOG_WALK, 0).animation(LOG_READY, 0)
-			.animation(JUMP, -1).animation(CLIMB, -1).animation(FALL, -1);
+			.animation(JUMP, -1).animation(CLIMB, -1).animation(FALL, -1)
+			.animation(REACHFORLADDER, -1).animation(INTO_SIDESTEPL, -1).animation(OUTOF_SIDESTEPL, -1)
+			.animation(WALK_SIDESTEPL, 0).animation(READY_SIDESTEPL, 0)
+			.animation(WALL_JUMP, -1).animation(WALL_JUMP2, -1)
+			.animation(WALL_JUMPDOWN, -1).animation(WALL_JUMPDOWN2, -1);
 		for (int pose : NORMAL)
 		{
 			game.animation(pose, 0);
@@ -68,6 +91,7 @@ public class CrossingReplayTest
 		stances.load(folder.newFolder().toPath());
 		follower = new FollowerEntity(game.client, stances);
 		follower.setOnSnapped(() -> snaps++);
+		follower.setAgilityTrace(trace::add);
 		follower.setOnCrossed(done::add);
 		set("object", new RuneLiteObject(game.client));
 		set("animatable", true);
@@ -79,6 +103,7 @@ public class CrossingReplayTest
 		standOn(new WorldPoint(50, 50, 0));
 		visited.clear();
 		snaps = 0;
+		trace.clear();
 	}
 
 	// --------------------------------------------------------------- replay
@@ -231,18 +256,200 @@ public class CrossingReplayTest
 		assertTrue(shown.contains(LOG_WALK));
 	}
 
+	// ------------------------------------------------------------ streaming
+
+	@Test
+	public void itSetsOffTwoTicksAfterThePlayerNotAfterTheyFinish()
+	{
+		Mover player = new Mover(51, 50, 0);
+		// Long enough for the follower to settle beside them.
+		player.stand(1500);
+		int began = player.frames;
+		player.onto(ON_A_ROPE).stand(300).move(8, 0, LOG_WALK, 4).onto(NORMAL).stand(2000);
+
+		long lagMs = (player.setOffAt - began) * 20L;
+		assertTrue("set off while the player was still on it", player.setOffWhilePlayerOn);
+		assertTrue("about two ticks after they began, not before: " + lagMs + " ms",
+			lagMs >= FollowerEntity.START_LAG_MS && lagMs <= FollowerEntity.START_LAG_MS + 300);
+		runUntilDone();
+		assertEquals(1, done.size());
+		assertEquals("then all of it, to the far end", new WorldPoint(59, 50, 0), follower.getWorldLocation());
+		assertTrue(visited.contains(new WorldPoint(55, 50, 0)));
+		assertTrue(shown.contains(LOG_WALK));
+		assertEquals(0, snaps);
+	}
+
+	@Test
+	public void aRecordingCutShortEndsTheReplayWhereItGotTo()
+	{
+		Mover player = new Mover(51, 50, 0);
+		player.stand(200).onto(ON_A_ROPE).move(6, 0, LOG_WALK, 4);
+		assertTrue(follower.isPlayingCrossing());
+		// Logged out on the rope: the plugin resets the watch.
+		player.watch.reset();
+		runUntilDone();
+		assertEquals(1, done.size());
+		assertEquals("as far as the player got", new WorldPoint(57, 50, 0), follower.getWorldLocation());
+	}
+
+	@Test
+	public void aCrossingDroppedBeforeItWasBegunIsSkipped()
+	{
+		Mover player = new Mover(51, 50, 0);
+		player.stand(200).onto(ON_A_ROPE).move(1, 0, LOG_WALK, 4);
+		assertEquals(1, follower.getCrossingsQueued());
+		// A fight's knock-back: the watch lets it go as not an obstacle.
+		game.fighting(game.spawnNpc(3029, "Rat", 0));
+		player.move(1, 0, LOG_WALK, 4);
+		assertFalse(player.watch.isWatching());
+		frames(5);
+		assertFalse(follower.isDoingAgility());
+		assertTrue(done.isEmpty());
+	}
+
+	// ------------------------------------------------------- rebuilt from XP
+
+	@Test
+	public void aClimbWhoseXpComesLateIsRebuiltAndCopiedWithoutASnap()
+	{
+		Mover player = new Mover(51, 50, 0);
+		player.stand(200).doing(CLIMB).stand(1200).hop(1, 0, 1).doing(-1);
+		// Off a course: the two ticks a hop waits for its XP run out.
+		player.stand(1500);
+		assertFalse("let go as a ladder", follower.isDoingAgility());
+		assertTrue("but waiting, not snapped", follower.isHoldingForAgility());
+		assertEquals(0, snaps);
+
+		player.xp().stand(100);
+		runUntilDone();
+		assertEquals("rebuilt, and copied", 1, done.size());
+		assertEquals(new WorldPoint(51, 50, 0), done.get(0).getStart());
+		assertEquals(new WorldPoint(52, 50, 1), follower.getWorldLocation());
+		assertTrue(shown.contains(CLIMB));
+		assertEquals(0, snaps);
+	}
+
+	// ----------------------------------------------------- a Draynor-like lap
+
+	/**
+	 * The seven obstacles of the Draynor rooftop course, in order, each as the
+	 * game is thought to show it: the rough wall a clip and a hop up to the
+	 * roof, plane 3, with its XP a tick late; two tightropes and the narrow
+	 * wall on swapped base sets; the wall a clip and a one-tile glide; the gap
+	 * a clip and a one-tile hop; the crate a glide and a hop back down to the
+	 * ground. Copied in order, all seven, and the follower never snapped,
+	 * placed or teleported.
+	 */
+	@Test
+	public void aDraynorLikeLapIsCopiedObstacleByObstacleWithNoSnap()
+	{
+		// The harness's object is put in the scene by the watchdog on the
+		// first frame a test runs: that one is not agility's.
+		frames(1);
+		trace.clear();
+		standOn(new WorldPoint(64, 59, 0));
+		Mover player = new Mover(63, 58, 0);
+		player.stand(600);
+		// Rough wall: up onto the roof.
+		player.doing(REACHFORLADDER).stand(1200).hop(-1, 0, 3).doing(-1).stand(600).xp().stand(300);
+		// Tightrope, west.
+		player.walk(-3, 0).onto(ON_A_ROPE).stand(600).move(-9, 0, LOG_WALK, 4).onto(NORMAL).xp();
+		// Tightrope, south.
+		player.walk(0, -1).onto(ON_A_ROPE).stand(300).move(0, -9, LOG_WALK, 4).onto(NORMAL).xp();
+		// Narrow wall: on, along, off.
+		player.walk(-2, -2).doing(INTO_SIDESTEPL).onto(SIDESTEPPING).stand(600).doing(-1)
+			.move(0, -3, WALK_SIDESTEPL, 4).doing(OUTOF_SIDESTEPL).stand(600).doing(-1).onto(NORMAL).xp();
+		// Wall: the jump up, and a tile over.
+		player.walk(0, -3).doing(WALL_JUMP).stand(600).doing(WALL_JUMP2).move(0, -1, 808, 8)
+			.stand(300).doing(-1).xp();
+		// Gap: set down a tile over, diagonally.
+		player.walk(7, 0).doing(WALL_JUMPDOWN).stand(600).doing(WALL_JUMPDOWN2).hop(1, 1, 0)
+			.stand(600).doing(-1).xp();
+		// Crate: a tile on, then down to the ground.
+		player.walk(4, 4).doing(WALL_JUMPDOWN).stand(600).move(1, 0, 808, 8).doing(WALL_JUMPDOWN2)
+			.hop(2, 0, -3).stand(600).doing(-1).xp();
+		player.walk(0, 2).stand(3000);
+		runUntilDone();
+
+		List<WorldPoint> starts = new ArrayList<>();
+		done.forEach(c -> starts.add(c.getStart()));
+		assertEquals("all seven, in order", List.of(
+			new WorldPoint(63, 58, 0), new WorldPoint(59, 58, 3), new WorldPoint(50, 57, 3),
+			new WorldPoint(48, 46, 3), new WorldPoint(48, 40, 3), new WorldPoint(55, 39, 3),
+			new WorldPoint(60, 44, 3)), starts);
+		assertEquals("down on the ground where the crate put them",
+			new WorldPoint(63, 44, 0), done.get(6).getEnd());
+		assertEquals("never snapped: " + trace, 0, snaps);
+		assertTrue("never placed or snapped: " + trace,
+			trace.stream().noneMatch(line -> line.contains("snap") || line.contains("placed")));
+		assertTrue(shown.contains(REACHFORLADDER));
+		assertTrue(shown.contains(WALK_SIDESTEPL));
+		assertTrue(shown.contains(WALL_JUMPDOWN2));
+	}
+
+	// ---------------------------------------------------------------- snaps
+
+	@Test
+	public void justAfterAgilityItWaitsForAPlayerOnAnotherFloorThenSnaps()
+	{
+		follower.holdForAgility();
+		game.at(51, 50, 3);
+		// Six seconds: an obstacle the watch has not queued yet.
+		frames(300);
+		assertEquals("waited", 0, snaps);
+		assertEquals(0, follower.getWorldLocation().getPlane());
+		// Past the wait: whatever that was, it was not agility.
+		frames(150);
+		assertEquals(1, snaps);
+		assertEquals(3, follower.getWorldLocation().getPlane());
+	}
+
+	@Test
+	public void withNoAgilityAboutAFloorChangeSnapsAsBefore()
+	{
+		game.at(51, 50, 3);
+		frames(2);
+		assertEquals(1, snaps);
+	}
+
+	@Test
+	public void aRealTeleportStillSnapsAtOnce()
+	{
+		Mover player = new Mover(51, 50, 0);
+		player.stand(100);
+		follower.holdForAgility();
+		follower.queueCrossing(new Recording(60, 50, 0).stand(200, 808).glide(2, 0, 808, JUMP).build(false));
+		player.hop(30, 0, 0);
+		frames(2);
+		assertFalse(follower.isDoingAgility());
+		assertTrue("snapped", snaps >= 1);
+		assertTrue(follower.getWorldLocation().distanceTo(new WorldPoint(81, 50, 0)) <= 2);
+	}
+
 	// -------------------------------------------------------- interruptions
 
 	@Test
-	public void pastTheLeashTheQueueIsLetGoAndTheOldCatchUpTakesOver()
+	public void pastTheCapTheQueueIsLetGoAndTheOldCatchUpTakesOver()
 	{
-		game.at(95, 52, 0);
-		follower.queueCrossing(new Recording(52, 50, 0).stand(200, 808).glide(2, 0, 808, JUMP).build(false));
-		follower.queueCrossing(new Recording(56, 50, 0).stand(200, 808).glide(2, 0, 808, JUMP).build(false));
+		standOn(new WorldPoint(20, 50, 0));
+		game.at(20 + FollowerEntity.MAX_BEHIND_TILES + 2, 52, 0);
+		follower.queueCrossing(new Recording(22, 50, 0).stand(200, 808).glide(2, 0, 808, JUMP).build(false));
+		follower.queueCrossing(new Recording(26, 50, 0).stand(200, 808).glide(2, 0, 808, JUMP).build(false));
 		frames(2);
 		assertFalse("let go", follower.isDoingAgility());
 		assertTrue("and snapped to the player the usual way", snaps >= 1);
-		assertTrue(follower.getWorldLocation().distanceTo(new WorldPoint(95, 52, 0)) <= 2);
+		assertTrue(follower.getWorldLocation().distanceTo(new WorldPoint(86, 52, 0)) <= 2);
+	}
+
+	@Test
+	public void aLongCoursesWorthBehindIsNotLetGo()
+	{
+		// Forty-five tiles: past the old cap (the stay leash), well inside a lap.
+		game.at(95, 52, 3);
+		follower.queueCrossing(new Recording(52, 50, 0).stand(200, 808).glide(2, 0, 808, JUMP).build(false));
+		runUntilDone();
+		assertEquals(1, done.size());
+		assertEquals("nor snapped after, with the player up on the roof and the wait still on", 0, snaps);
 	}
 
 	@Test
@@ -411,6 +618,109 @@ public class CrossingReplayTest
 		Crossing build(boolean fell)
 		{
 			return new Crossing(frames, NORMAL, fell);
+		}
+	}
+
+	/**
+	 * The player, frame by frame, read by a real watch feeding this follower,
+	 * with the follower's own frame run after each: the plugin's order.
+	 */
+	private final class Mover
+	{
+		final CrossingWatch watch = new CrossingWatch(follower);
+		long clock = 1_000_000;
+		long x;
+		long y;
+		int plane;
+		int pose = 808;
+		int action = -1;
+		int[] base = NORMAL;
+		int frames;
+		/** The first frame the follower was playing a crossing, and whether the player was still on one then. */
+		int setOffAt = -1;
+		boolean setOffWhilePlayerOn;
+
+		Mover(int tileX, int tileY, int plane)
+		{
+			x = tileX * 128L + 64;
+			y = tileY * 128L + 64;
+			this.plane = plane;
+			watch.setTrace(trace::add);
+			frame();
+		}
+
+		void frame()
+		{
+			clock += 20;
+			frames++;
+			game.fineAt((int) x, (int) y, plane).posing(pose).animating(action).basePoses(base);
+			watch.sample(CrossingWatch.Sample.read(game.player, clock));
+			CrossingReplayTest.this.frame();
+			if (setOffAt < 0 && follower.isPlayingCrossing())
+			{
+				setOffAt = frames;
+				setOffWhilePlayerOn = watch.isWatching();
+			}
+		}
+
+		Mover stand(long ms)
+		{
+			for (long i = 0; i < ms; i += 20)
+			{
+				frame();
+			}
+			return this;
+		}
+
+		Mover doing(int clip)
+		{
+			action = clip;
+			return this;
+		}
+
+		/** The base set the game has on them now: their own, or an obstacle's. */
+		Mover onto(int[] set)
+		{
+			base = set;
+			pose = set[0];
+			return this;
+		}
+
+		/** Their own walk, a tile every 32 frames. */
+		Mover walk(int tilesX, int tilesY)
+		{
+			return move(tilesX, tilesY, base[1], 4);
+		}
+
+		Mover move(int tilesX, int tilesY, int movePose, int unitsPerFrame)
+		{
+			long toX = x + tilesX * 128L;
+			long toY = y + tilesY * 128L;
+			pose = movePose;
+			while (x != toX || y != toY)
+			{
+				x += Math.max(-unitsPerFrame, Math.min(unitsPerFrame, toX - x));
+				y += Math.max(-unitsPerFrame, Math.min(unitsPerFrame, toY - y));
+				frame();
+			}
+			pose = base[0];
+			return this;
+		}
+
+		/** Put down so many tiles over and floors up or down in one frame. */
+		Mover hop(int tilesX, int tilesY, int floors)
+		{
+			x += tilesX * 128L;
+			y += tilesY * 128L;
+			plane += floors;
+			frame();
+			return this;
+		}
+
+		Mover xp()
+		{
+			watch.noteAgilityXp(clock);
+			return this;
 		}
 	}
 

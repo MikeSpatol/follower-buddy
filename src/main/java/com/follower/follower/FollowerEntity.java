@@ -1038,7 +1038,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		Player local = client.getLocalPlayer();
 		if (spawned && local != null && local.getWorldLocation() != null)
 		{
-			snapBeside(local.getWorldLocation());
+			snapBeside(local.getWorldLocation(), "sent home");
 		}
 	}
 
@@ -1080,7 +1080,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		Player local = client.getLocalPlayer();
 		if (local != null && local.getWorldLocation() != null)
 		{
-			snapBeside(local.getWorldLocation());
+			snapBeside(local.getWorldLocation(), "thrall released");
 		}
 	}
 
@@ -1115,7 +1115,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 			Player local = client.getLocalPlayer();
 			if (local != null && local.getWorldLocation() != null)
 			{
-				snapBeside(local.getWorldLocation());
+				snapBeside(local.getWorldLocation(), "thrall left it somewhere unstandable");
 				return;
 			}
 		}
@@ -1776,17 +1776,23 @@ public class FollowerEntity implements CrossingWatch.Listener
 	/*
 	 * The player's agility, done after them: every obstacle and shortcut they
 	 * take, in order, however far behind that puts it, falls included.
-	 * CrossingWatch records each one off the player; this walks to the tile it
-	 * began on and plays it back - the same fine positions, floors, facing and
-	 * animations at the same moments - then the next, then follows again.
+	 * CrossingWatch records each one off the player and hands it over while
+	 * it is still recording; this walks to the tile it began on and plays it
+	 * back START_LAG_MS behind the player - the same fine positions, floors,
+	 * facing and animations at the same moments - then the next, then follows
+	 * again.
 	 *
 	 * While any of it is going on, following, the teleport snap and the
 	 * blocked-tile hop are all off: a follower a log behind is not lost, and
-	 * one a floor below on a rooftop course is not stranded. Two limits stand
-	 * in for the snap. More than STAY_LEASH tiles behind - far enough that the
-	 * next scene rebuild could leave it off the loaded map - or more than
-	 * MAX_QUEUED_CROSSINGS waiting, and the queue is let go: the crossing under
-	 * way is finished, and the ordinary catch-up takes it from there.
+	 * one a floor below on a rooftop course is not stranded. For a while after
+	 * (AGILITY_PATIENCE_MS from the last crossing or XP drop) they stay off
+	 * too, the follower waiting where it is rather than snapping: on a course,
+	 * an obstacle the watch missed is about to be rebuilt from its XP. Two
+	 * limits stand in for the snap. More than MAX_BEHIND_TILES behind - far
+	 * enough that the next scene rebuild could leave it off the loaded map -
+	 * or more than MAX_QUEUED_CROSSINGS waiting, and the queue is let go: the
+	 * crossing under way is finished, and the ordinary catch-up takes it from
+	 * there. A real teleport (the watch's) ends the patience at once.
 	 */
 
 	/**
@@ -1795,8 +1801,37 @@ public class FollowerEntity implements CrossingWatch.Listener
 	 */
 	static final int MAX_QUEUED_CROSSINGS = 16;
 
-	/** Unable to reach where a crossing begins for this long, and it is put there. */
-	static final long STUCK_APPROACH_MS = 3000;
+	/**
+	 * Unable to reach where a crossing begins for this long, and it is put
+	 * there: eight ticks, longer than the watch waits for a late XP drop
+	 * (five), so a missed climb between here and there is rebuilt and
+	 * queued first, and walked rather than jumped.
+	 */
+	static final long STUCK_APPROACH_MS = 4800;
+
+	/**
+	 * How far behind the player a crossing starts: two ticks, measured from
+	 * when the player began it (the recording's own length), not from when
+	 * the follower got to the start.
+	 */
+	static final long START_LAG_MS = 1200;
+
+	/**
+	 * After the last crossing, or agility XP, this long the follower waits
+	 * for the player rather than snapping to them. A rooftop obstacle takes
+	 * a few seconds and pays as it ends; a ladder off the course is snapped
+	 * after, as before, once this has run out.
+	 */
+	static final long AGILITY_PATIENCE_MS = 8000;
+
+	/**
+	 * Behind by more than this and the queue is let go. The loaded scene is
+	 * 104 tiles and is rebuilt round the player when they come within 16 of
+	 * its edge, leaving about 48 behind them: past 64 the follower is about
+	 * to fall off the map whatever it does. The old 40 (the stay leash) was
+	 * within a long course's lap; Draynor's whole course fits in 24.
+	 */
+	static final int MAX_BEHIND_TILES = 64;
 
 	private final Deque<Crossing> crossings = new ArrayDeque<>();
 
@@ -1825,10 +1860,64 @@ public class FollowerEntity implements CrossingWatch.Listener
 	@lombok.Setter
 	private java.util.function.Consumer<Crossing> onCrossed;
 
+	/** Left of the wait after agility before a snap may fetch the follower (AGILITY_PATIENCE_MS). */
+	private long patienceMs;
+
+	/** The agility trace's event lines; nowhere unless the plugin says. */
+	private java.util.function.Consumer<String> agilityTrace = line -> { };
+
+	/** Told when a snap lets the agility go, so XP for what was left behind rebuilds nothing. */
+	@lombok.Setter
+	private Runnable onAgilitySnap;
+
+	public void setAgilityTrace(java.util.function.Consumer<String> trace)
+	{
+		agilityTrace = trace == null ? line -> { } : trace;
+	}
+
 	/** Whether agility has the follower: one being played, queued, or under way on the player. */
 	public boolean isDoingAgility()
 	{
 		return playing != null || awaitedCrossing != null || !crossings.isEmpty();
+	}
+
+	/** Whether the follower is waiting on the player's agility rather than snapping to them. */
+	public boolean isHoldingForAgility()
+	{
+		return patienceMs > 0;
+	}
+
+	/** Agility XP: whatever the player is on is about to be queued, so no snap for a while. */
+	public void holdForAgility()
+	{
+		if (spawned && tile != null && thrallNpc == null && stayTile == null)
+		{
+			patienceMs = AGILITY_PATIENCE_MS;
+		}
+	}
+
+	/** What agility has the follower doing, in a few words, for the trace. */
+	public String describeAgility()
+	{
+		String hold = patienceMs > 0 ? " hold " + CrossingWatch.seconds(patienceMs) : "";
+		if (playing != null)
+		{
+			return "play " + CrossingWatch.seconds(Math.min(playedMs, playing.getDurationMs())) + "/"
+				+ CrossingWatch.seconds(playing.getDurationMs()) + (playing.isComplete() ? "" : " live") + hold;
+		}
+		Crossing next = crossings.peekFirst();
+		if (next != null)
+		{
+			return "to " + CrossingWatch.describe(next.getStart())
+				+ (next.isComplete() || next.getDurationMs() >= START_LAG_MS ? " ready"
+				: " lag " + CrossingWatch.seconds(START_LAG_MS - next.getDurationMs()))
+				+ (approachStillMs > 0 ? " stuck " + CrossingWatch.seconds(approachStillMs) : "") + hold;
+		}
+		if (awaitedCrossing != null)
+		{
+			return "await " + CrossingWatch.describe(awaitedCrossing) + hold;
+		}
+		return "follow" + hold;
 	}
 
 	public boolean isPlayingCrossing()
@@ -1850,8 +1939,15 @@ public class FollowerEntity implements CrossingWatch.Listener
 		}
 		takeFeetForAgility();
 		awaitedCrossing = start;
+		patienceMs = AGILITY_PATIENCE_MS;
 	}
 
+	/**
+	 * Queued in the order the player began them: a crossing rebuilt from
+	 * late XP goes ahead of one recognised since. One that began before the
+	 * crossing already being played is too late to copy in order, and is let
+	 * go rather than walked back for.
+	 */
 	@Override
 	public void queueCrossing(Crossing crossing)
 	{
@@ -1862,12 +1958,30 @@ public class FollowerEntity implements CrossingWatch.Listener
 		if (crossings.size() >= MAX_QUEUED_CROSSINGS)
 		{
 			log.debug("{} crossings behind; letting the queue go", crossings.size());
+			agilityTrace.accept("follower: cap, " + crossings.size() + " crossings queued; queue let go");
 			clearCrossings();
 			return;
 		}
+		if (playing != null && crossing.getStartedAtMs() < playing.getStartedAtMs())
+		{
+			agilityTrace.accept("follower: crossing from " + CrossingWatch.describe(crossing.getStart())
+				+ " began before the one playing; too late to copy");
+			return;
+		}
 		takeFeetForAgility();
-		crossings.addLast(crossing);
+		java.util.List<Crossing> ordered = new java.util.ArrayList<>(crossings);
+		int at = ordered.size();
+		while (at > 0 && ordered.get(at - 1).getStartedAtMs() > crossing.getStartedAtMs())
+		{
+			at--;
+		}
+		ordered.add(at, crossing);
+		crossings.clear();
+		crossings.addAll(ordered);
 		awaitedCrossing = null;
+		patienceMs = AGILITY_PATIENCE_MS;
+		agilityTrace.accept("follower: queued crossing from " + CrossingWatch.describe(crossing.getStart())
+			+ (crossing.isComplete() ? "" : " (live)") + ", " + crossings.size() + " waiting");
 	}
 
 	@Override
@@ -1876,12 +1990,13 @@ public class FollowerEntity implements CrossingWatch.Listener
 		awaitedCrossing = null;
 	}
 
-	/** Lets go of what is waiting. One under way is finished: nobody stops halfway along a log. */
+	/** Lets go of what is waiting, and of the wait. One under way is finished: nobody stops halfway along a log. */
 	@Override
 	public void clearCrossings()
 	{
 		crossings.clear();
 		awaitedCrossing = null;
+		patienceMs = 0;
 	}
 
 	/** All of it, now: a snap, a despawn, thrall work. */
@@ -1941,15 +2056,24 @@ public class FollowerEntity implements CrossingWatch.Listener
 		inAgility = true;
 
 		WorldPoint playerTile = local.getWorldLocation();
-		if (playerTile != null && tile.distanceTo2D(playerTile) > STAY_LEASH
+		if (playerTile != null && tile.distanceTo2D(playerTile) > MAX_BEHIND_TILES
 			&& (awaitedCrossing != null || !crossings.isEmpty()))
 		{
 			log.debug("{} tiles behind on agility; letting the queue go", tile.distanceTo2D(playerTile));
+			agilityTrace.accept("follower: cap, " + tile.distanceTo2D(playerTile) + " tiles behind; queue let go");
 			clearCrossings();
 			if (!isDoingAgility())
 			{
 				return agilityFrame(local, deltaMs);
 			}
+		}
+		if (playing == null && !crossings.isEmpty() && crossings.peekFirst().isDropped())
+		{
+			// Let go by the watch as not an obstacle before it was begun.
+			Crossing skipped = crossings.pollFirst();
+			agilityTrace.accept("follower: skipped crossing from " + CrossingWatch.describe(skipped.getStart())
+				+ ", dropped before it began");
+			return agilityFrame(local, deltaMs);
 		}
 
 		if (playing != null)
@@ -1964,7 +2088,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		if (!render() && client.getGameState() == GameState.LOGGED_IN)
 		{
 			// Off the loaded scene: nothing here can be shown. The old catch-up.
-			recoverPosition(local, playerTile);
+			recoverPosition(local, playerTile, "off the loaded scene during agility");
 		}
 		return true;
 	}
@@ -1977,8 +2101,11 @@ public class FollowerEntity implements CrossingWatch.Listener
 		// A cutscene: the queue waits where it stands until the scene is over.
 		boolean held = watchingWithThePlayer;
 		// While the player is still on it, up beside where it began rather
-		// than onto them: a climb starts on the very tile they stand on.
-		boolean waiting = next == null;
+		// than onto them: a climb starts on the very tile they stand on, and
+		// a crossing handed over as it begins may still have them on it.
+		boolean waiting = next == null || target.equals(local.getWorldLocation());
+		// Not before the player is START_LAG_MS into it.
+		boolean ready = next != null && (next.isComplete() || next.getDurationMs() >= START_LAG_MS);
 
 		if (!target.equals(approachTarget) || waiting != approachWaiting)
 		{
@@ -1992,12 +2119,22 @@ public class FollowerEntity implements CrossingWatch.Listener
 			serverPath.clear();
 			approachPlanned = null;
 		}
+		else if (waiting && approachPlanned == null && route.isEmpty() && tile.distanceTo(target) == 1)
+		{
+			// Already beside it: stay, one step from it for when they move off.
+			serverPath.clear();
+			approachPlanned = tile;
+		}
 		else if (approachPlanned == null
 			|| (serverPath.isEmpty() && route.isEmpty() && !tile.equals(approachPlanned))
 			|| (!serverPath.isEmpty() && !serverPath.peekLast().equals(approachPlanned)))
 		{
 			// Planned once, and again only if something else took the walk.
 			planApproach(target, waiting ? playerTileToAvoid() : null);
+			// The first step at once rather than on the next tick's release:
+			// the start is usually the tile the player has just stepped off,
+			// and the crossing begins START_LAG_MS after they did.
+			tickCarryMs = 600;
 		}
 
 		if (!serverPath.isEmpty())
@@ -2032,6 +2169,9 @@ public class FollowerEntity implements CrossingWatch.Listener
 				// Walled off from it, or it is on a floor the follower cannot
 				// walk to: put on the spot, as a snap would put it beside you.
 				log.debug("Cannot reach the crossing at {} from {}; placing it there", target, tile);
+				agilityTrace.accept("follower: placed on the crossing start " + CrossingWatch.describe(target)
+					+ " from " + CrossingWatch.describe(tile) + ", unreachable for "
+					+ CrossingWatch.seconds(approachStillMs));
 				placeAt(target);
 				there = true;
 			}
@@ -2041,7 +2181,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 			approachStillMs = 0;
 		}
 
-		if (there && next != null && !held)
+		if (there && next != null && !held && ready)
 		{
 			startCrossing(next);
 			return;
@@ -2063,6 +2203,37 @@ public class FollowerEntity implements CrossingWatch.Listener
 		applyPose(!moving ? stance.idle : lastMoveSpeed >= 8 ? stance.run : stance.walk, false);
 		wrapBeforeFinalFrame();
 		passEmoteMilestones(false);
+	}
+
+	/**
+	 * The frame while the player is up on another floor just after agility:
+	 * the step under way finished, then standing watching them, as beside a
+	 * crossing's start, until the crossing is queued or the patience runs out.
+	 */
+	private void waitForAgility(Player local, long deltaMs)
+	{
+		serverPath.clear();
+		tickCarryMs = 0;
+		moveContinuous(deltaMs / (double) CYCLE_MS);
+		boolean moving = !route.isEmpty()
+			|| fineWX != tile.getX() * 128L + 64 || fineWY != tile.getY() * 128L + 64;
+		onTheMove = moving;
+		if (moving)
+		{
+			cancelEmote();
+		}
+		else
+		{
+			facePlayer();
+		}
+		StanceLibrary.Stance stance = stance();
+		applyPose(!moving ? stance.idle : lastMoveSpeed >= 8 ? stance.run : stance.walk, false);
+		wrapBeforeFinalFrame();
+		passEmoteMilestones(false);
+		if (!render() && client.getGameState() == GameState.LOGGED_IN)
+		{
+			recoverPosition(local, local.getWorldLocation(), "off the loaded scene while waiting on agility");
+		}
 	}
 
 	private void planApproach(WorldPoint target, WorldPoint avoid)
@@ -2100,6 +2271,9 @@ public class FollowerEntity implements CrossingWatch.Listener
 		serverPath.clear();
 		crossingController = null;
 		crossingAnimation = -1;
+		agilityTrace.accept("follower: began crossing from " + CrossingWatch.describe(crossing.getStart())
+			+ ", " + CrossingWatch.seconds(crossing.getDurationMs()) + " behind the player"
+			+ (crossing.isComplete() ? " (recording done)" : ""));
 		playCrossing(0);
 	}
 
@@ -2115,6 +2289,12 @@ public class FollowerEntity implements CrossingWatch.Listener
 
 		Crossing crossing = playing;
 		playedMs += deltaMs;
+		if (!crossing.isComplete() && playedMs > crossing.getDurationMs())
+		{
+			// Caught up with the recording (a stalled frame on the player's
+			// side): hold on its newest frame rather than run on past it.
+			playedMs = crossing.getDurationMs();
+		}
 		long at = Math.min(playedMs, crossing.getDurationMs());
 		Crossing.Frame frame = crossing.frameAt(at);
 		long[] fine = crossing.fineAt(at);
@@ -2128,7 +2308,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		turnContinuous(deltaMs / (double) CYCLE_MS);
 		showCrossingFrame(crossing, frame);
 
-		if (playedMs >= crossing.getDurationMs())
+		if (crossing.isComplete() && playedMs >= crossing.getDurationMs())
 		{
 			finishCrossing();
 		}
@@ -2138,6 +2318,9 @@ public class FollowerEntity implements CrossingWatch.Listener
 	{
 		Crossing done = playing;
 		playing = null;
+		patienceMs = AGILITY_PATIENCE_MS;
+		agilityTrace.accept("follower: finished crossing at " + CrossingWatch.describe(tile)
+			+ (done.isFell() ? ", fell" : "") + ", " + crossings.size() + " waiting");
 		crossingController = null;
 		crossingAnimation = -1;
 		// The locomotion pose goes back on with the next frame's.
@@ -2734,6 +2917,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		long now = System.currentTimeMillis();
 		long deltaMs = Math.min(now - lastFrameMs, 600);
 		lastFrameMs = now;
+		patienceMs = Math.max(0, patienceMs - deltaMs);
 
 		// Mid-teleport: the follower is gone until the player lands (their tile
 		// moves from where it was at the cast's end), then reappears at their
@@ -2757,7 +2941,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 				if (where != null)
 				{
 					snapped();
-					snapBeside(where);
+					snapBeside(where, "teleport landing");
 				}
 			}
 			return;
@@ -2810,8 +2994,21 @@ public class FollowerEntity implements CrossingWatch.Listener
 		// A stay pose widens the distance to its leash - roaming away from a
 		// posed follower is the point - but a snap of any kind releases it.
 		int leash = stayTile != null ? STAY_LEASH : SNAP_DISTANCE;
-		if (castLanded || playerTile.getPlane() != tile.getPlane()
-			|| tile.distanceTo(playerTile) > leash)
+		boolean otherFloor = playerTile.getPlane() != tile.getPlane();
+		boolean away = otherFloor || tile.distanceTo(playerTile) > leash;
+		if (away && !castLanded && patienceMs > 0 && stayTile == null
+			&& tile.distanceTo2D(playerTile) <= MAX_BEHIND_TILES)
+		{
+			// Just after agility: the player is on an obstacle the watch has
+			// not queued yet, or one its XP is about to rebuild. Wait for it
+			// rather than snap; on the same floor, walk after them as usual.
+			if (otherFloor)
+			{
+				waitForAgility(local, deltaMs);
+				return;
+			}
+		}
+		else if (castLanded || away)
 		{
 			if (client.getGameState() != GameState.LOGGED_IN)
 			{
@@ -2831,19 +3028,22 @@ public class FollowerEntity implements CrossingWatch.Listener
 			}
 			stayTile = null;
 			snapped();
-			if (!snapBeside(playerTile))
+			String why = castLanded ? "cast landed" : otherFloor ? "player on another floor"
+				: "player " + tile.distanceTo(playerTile) + " tiles away";
+			if (!snapBeside(playerTile, why))
 			{
-				recoverPosition(local, playerTile);
+				recoverPosition(local, playerTile, why);
 			}
 			return;
 		}
 
 		// A settled follower whose own tile reads blocked hops to the spot
 		// beside the player: a booth it was placed in while the area loaded,
-		// or a deck facility that arrived after the boarding snap.
-		if (isSettled() && blockedUnderfoot(tile, local))
+		// or a deck facility that arrived after the boarding snap. Not just
+		// after agility: a crossing can end where the map says nobody stands.
+		if (isSettled() && patienceMs <= 0 && blockedUnderfoot(tile, local))
 		{
-			snapBeside(playerTile);
+			snapBeside(playerTile, "blocked underfoot");
 			return;
 		}
 
@@ -2887,7 +3087,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		// tile) is not a fault and must not trigger a recovery snap.
 		if (!object.isActive() && !hiddenForNpcOverlap && client.getGameState() == GameState.LOGGED_IN)
 		{
-			recoverPosition(local, playerTile);
+			recoverPosition(local, playerTile, "watchdog: hidden");
 		}
 
 		// A cutscene keeps the follower as an extra (keepToTheScene).
@@ -3049,7 +3249,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 			// outright while genuinely logged in and unresolvable.
 			if (client.getGameState() == GameState.LOGGED_IN)
 			{
-				recoverPosition(local, playerTile);
+				recoverPosition(local, playerTile, "off the loaded scene");
 			}
 		}
 
@@ -3996,14 +4196,22 @@ public class FollowerEntity implements CrossingWatch.Listener
 	}
 
 	/** Re-places the follower beside the player after a teleport or plane change. */
-	private boolean snapBeside(WorldPoint playerTile)
+	private boolean snapBeside(WorldPoint playerTile, String why)
 	{
 		WorldPoint beside = landingTile(new WorldPoint(
 			playerTile.getX() - 1, playerTile.getY(), playerTile.getPlane()), playerTile);
 
+		agilityTrace.accept("follower: snap (" + why + ") from " + CrossingWatch.describe(tile)
+			+ " to " + CrossingWatch.describe(beside)
+			+ (isDoingAgility() ? ", letting go of " + (crossings.size() + (playing != null ? 1 : 0))
+			+ " crossings" : ""));
 		// A forced relocation ends any pose - the tile it was holding is gone,
 		// and the way the pose faced with it. And any agility it was copying.
 		dropCrossings();
+		if (onAgilitySnap != null)
+		{
+			onAgilitySnap.run();
+		}
 		stayTile = null;
 		stayFaceTile = null;
 		stayFaceMax = null;
@@ -4026,11 +4234,11 @@ public class FollowerEntity implements CrossingWatch.Listener
 	 * space, then pin directly to the player's local coordinates - the last step
 	 * always works while the player is being rendered.
 	 */
-	private void recoverPosition(Player local, WorldPoint playerTile)
+	private void recoverPosition(Player local, WorldPoint playerTile, String why)
 	{
 		if (playerTile != null)
 		{
-			if (snapBeside(playerTile))
+			if (snapBeside(playerTile, why))
 			{
 				return;
 			}
@@ -4046,6 +4254,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 
 		route.clear();
 		routeRun.clear();
+		agilityTrace.accept("follower: pinned to the player's scene position (" + why + ")");
 
 		// Last ditch, and still not licence to stand in a wall: pick the
 		// landing tile in world space and come back to local, falling back to

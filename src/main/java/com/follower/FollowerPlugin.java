@@ -847,6 +847,7 @@ public class FollowerPlugin extends Plugin
 		crossingWatch = new com.follower.follower.CrossingWatch(follower);
 		follower.setOnCrossed(crossing -> speechEngine.dispatch(
 			TriggerEvent.crossed(crossing.isFell())));
+		follower.setOnAgilitySnap(crossingWatch::forgetMissed);
 		filmSet = new com.follower.follower.FilmSet(follower, this::rebuildFollower,
 			(graphicId, height) -> follower.playSpotAnim(spotAnimRepository.get(graphicId), height));
 		conversation = new com.follower.speech.ConversationPlayer(conversationStage());
@@ -3083,6 +3084,13 @@ public class FollowerPlugin extends Plugin
 		if (!follower.isSpawned() || follower.isStaying() || follower.isPosed()
 			|| follower.isNpcSlaved() || (errands != null && errands.isBusy()))
 		{
+			return;
+		}
+		// Agility too: a follower a floor below on a rooftop course, or
+		// waiting on an obstacle about to be queued, is behind, not stuck.
+		if (follower.isDoingAgility() || follower.isHoldingForAgility())
+		{
+			follower.clearStranded();
 			return;
 		}
 
@@ -6732,7 +6740,7 @@ public class FollowerPlugin extends Plugin
 		if (!watching)
 		{
 			crossingWatch.reset();
-			if (follower.isDoingAgility())
+			if (follower.isDoingAgility() || follower.isHoldingForAgility())
 			{
 				follower.clearCrossings();
 			}
@@ -10017,8 +10025,13 @@ public class FollowerPlugin extends Plugin
 		{
 			if (skill == Skill.AGILITY && crossingWatch != null)
 			{
-				// What tells a climb from a ladder.
+				// What tells a climb from a ladder, and rebuilds an obstacle missed.
 				crossingWatch.noteAgilityXp(System.currentTimeMillis());
+				if (config.copiesAgility() && !parkedByPlayer)
+				{
+					// Whatever the player is on is about to be queued: no snap meanwhile.
+					follower.holdForAgility();
+				}
 			}
 			int count = skilling == null ? 0 : skilling.noteXpDrop(skill);
 			speechEngine.dispatch(TriggerEvent.xpDrop(skill.getName(), count));

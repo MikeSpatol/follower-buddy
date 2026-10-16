@@ -1,7 +1,10 @@
 package com.follower.follower;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
+import java.util.function.Consumer;
 import net.runelite.api.HitsplatID;
 import net.runelite.api.Player;
 import net.runelite.api.PlayerComposition;
@@ -30,20 +33,29 @@ import net.runelite.api.kit.KitType;
  * pose. Counted only over consecutive frames, so the one frame where a walk
  * ends on the stand can never add up to one.</li>
  * <li><b>An action with a hop.</b> An animation, then the player put down a
- * few tiles away or on another floor: a climb. A ladder looks exactly the
- * same, so this one needs agility XP, or damage (a fall), to count.</li>
+ * tile or more away or on another floor: a climb, a jump across a gap. A
+ * ladder looks exactly the same, so this one needs agility XP, or damage (a
+ * fall), to count.</li>
+ * <li><b>Agility XP after something moved them.</b> Every course obstacle
+ * pays XP as it completes. XP while an unconfirmed run has moved the player
+ * confirms it; XP with nothing open, or for movement before what is open,
+ * rebuilds the crossing from the last few seconds of the player (see
+ * {@link #BUFFER_MS}), so an obstacle none of the above caught is late but
+ * never skipped.</li>
  * </ul>
  *
  * <p>An animation alone - an emote, a swing, a skilling loop, eating on the
- * run - never counts: nothing moved. Walking on normally ends a run that has
- * not counted yet. A fight or a conversation (the player interacting with
- * an actor) is never a crossing, and nor is anything while the player is
- * transformed into an NPC or aboard a boat; the plugin also stops watching
- * in a cutscene. A jump further than the follower's own snap distance is a
- * teleport: whatever was being watched is dropped and the follower's queue
- * with it.
+ * run - never counts: nothing moved, or it moved them on an ordinary walk
+ * with no XP. Walking on normally ends a run that has not counted yet. A
+ * fight or a conversation (the player interacting with an actor) is never a
+ * crossing, and nor is anything while the player is transformed into an NPC
+ * or aboard a boat; the plugin also stops watching in a cutscene. A jump
+ * further than the follower's own snap distance is a teleport: whatever was
+ * being watched is dropped and the follower's queue with it.
  *
- * <p>A crossing ends once the player has been back to normal for a while:
+ * <p>A crossing is handed to the follower the moment it is recognised, still
+ * recording, so the follower can begin it a couple of ticks behind the
+ * player. It ends once the player has been back to normal for a while:
  * {@link #SETTLE_MS} standing, or {@link #WALK_OFF_MS} walking on. It is cut
  * at the first normal frame, so the follower does not copy the walk away.
  */
@@ -52,13 +64,13 @@ public final class CrossingWatch
 	/** Where the crossings go; {@link FollowerEntity} is the one that copies them. */
 	public interface Listener
 	{
-		/** A crossing has begun at this tile: stop following and go there. */
+		/** Something has begun at this tile that may be a crossing (a climb awaiting its XP): hold, do not snap. */
 		void expectCrossing(WorldPoint start);
 
-		/** The crossing expected last is over and recorded. */
+		/** A crossing, recognised: still recording unless {@link Crossing#isComplete}. */
 		void queueCrossing(Crossing crossing);
 
-		/** It was not a crossing after all. */
+		/** What was expected was not a crossing after all. */
 		void cancelExpectedCrossing();
 
 		/** The player is gone (a teleport): whatever is queued is let go. */
@@ -81,6 +93,16 @@ public final class CrossingWatch
 	static final long CONFIRM_WAIT_MS = 1200;
 
 	/**
+	 * The same wait on a course - agility XP in the last {@link #ON_COURSE_MS}
+	 * - where a hop is far more likely an obstacle than a ladder: five ticks,
+	 * so XP that comes a tick or two late still confirms it in place.
+	 */
+	static final long CONFIRM_WAIT_ON_COURSE_MS = 3000;
+
+	/** Agility XP this recently means the player is on a course. A lap of the longest takes about a minute. */
+	static final long ON_COURSE_MS = 60_000;
+
+	/**
 	 * The longest a crossing may run. Every obstacle and shortcut takes
 	 * seconds; a recording past half a minute is something else wearing an
 	 * odd pose - a carpet ride, swimming, carrying something in a minigame -
@@ -93,6 +115,29 @@ public final class CrossingWatch
 
 	/** A hop further than this is a teleport: the follower's own snap distance. */
 	static final int MAX_HOP_TILES = FollowerEntity.SNAP_DISTANCE;
+
+	/**
+	 * A whole tile in one frame, off a walking pose, with an animation on:
+	 * a hop. A jump across a gap can put the player down one tile over with
+	 * nothing between; ordinary steps never cover a tile in a frame.
+	 */
+	static final long HOP_UNITS = 128;
+
+	/**
+	 * How much of the player is remembered for rebuilding a crossing the
+	 * signals missed when its XP arrives: ten seconds, longer than any one
+	 * obstacle of a rooftop course, at most {@link #BUFFER_FRAMES} frames.
+	 */
+	static final long BUFFER_MS = 10_000;
+
+	static final int BUFFER_FRAMES = 3000;
+
+	/**
+	 * XP rebuilds a crossing only from movement that ended this recently.
+	 * An obstacle pays as it completes; XP from a lamp, a book or a quest
+	 * comes long after any walk, and so rebuilds nothing.
+	 */
+	static final long REBUILD_RECENT_MS = 3000;
 
 	/** One reading of the player, taken each frame. */
 	public static final class Sample
@@ -193,6 +238,10 @@ public final class CrossingWatch
 		long glided;
 		boolean lastGlided;
 		boolean confirmed;
+		/** Handed to the follower once confirmed, and grown frame by frame after. */
+		Crossing crossing;
+		/** What confirmed it, for the trace. */
+		String why;
 		/** The listener was told to expect it. */
 		boolean announced;
 		/** When the player was put down somewhere new, or -1. */
@@ -212,6 +261,31 @@ public final class CrossingWatch
 		{
 			return frames.get(0).tile();
 		}
+
+		/** Whether the player is on another tile or floor than it began on. */
+		boolean displaced()
+		{
+			return !frames.get(frames.size() - 1).tile().equals(start());
+		}
+	}
+
+	/** One remembered frame, with what the watch made of it. */
+	private static final class Seen
+	{
+		final Crossing.Frame frame;
+		/** Their own stand or walk, with nothing playing. */
+		final boolean calm;
+		final boolean walking;
+		/** Moved by something other than their own walk: a glide, a hop, an odd pose or an animation on the move. */
+		final boolean unusual;
+
+		Seen(Crossing.Frame frame, boolean calm, boolean walking, boolean unusual)
+		{
+			this.frame = frame;
+			this.calm = calm;
+			this.walking = walking;
+			this.unusual = unusual;
+		}
 	}
 
 	private final Listener listener;
@@ -228,15 +302,36 @@ public final class CrossingWatch
 	/** After a run too long to be an obstacle: nothing new starts until the player looks normal. */
 	private boolean cooling;
 
+	/** The last few seconds of the player, oldest first. */
+	private final Deque<Seen> recent = new ArrayDeque<>();
+
+	/** Frames up to this time are in a crossing already handed over, or are past caring about. */
+	private long coveredToMs = Long.MIN_VALUE;
+
+	/** Agility XP has landed and the next frame looks for what it paid for. */
+	private boolean xpToCheck;
+
+	/** The last frame anything odd moved or posed the player, for the trace's "near agility". */
+	private long lastOddMs = Long.MIN_VALUE;
+
+	/** Where the trace's event lines go; nowhere unless the plugin says. */
+	private Consumer<String> trace = line -> { };
+
 	public CrossingWatch(Listener listener)
 	{
 		this.listener = listener;
 	}
 
-	/** Agility XP landed: the hop being watched, if any, was an obstacle. */
+	public void setTrace(Consumer<String> trace)
+	{
+		this.trace = trace == null ? line -> { } : trace;
+	}
+
+	/** Agility XP landed: the hop being watched, if any, was an obstacle, and anything missed is rebuilt. */
 	public void noteAgilityXp(long atMs)
 	{
 		lastXpMs = atMs;
+		xpToCheck = true;
 	}
 
 	/** The player was hurt: on a crossing, that is a fall. */
@@ -251,6 +346,42 @@ public final class CrossingWatch
 		return run != null;
 	}
 
+	/** Whether anything odd moved or posed the player within this long before {@code nowMs}. */
+	public boolean wasOddWithin(long nowMs, long windowMs)
+	{
+		return lastOddMs != Long.MIN_VALUE && nowMs - lastOddMs <= windowMs;
+	}
+
+	/**
+	 * The follower was put beside the player: whatever the player did before
+	 * now is behind it, and XP arriving for it must not send it back there.
+	 */
+	public void forgetMissed()
+	{
+		recent.clear();
+		if (previous != null)
+		{
+			coveredToMs = previous.atMs;
+		}
+	}
+
+	/** The watch's state in a few words, for the trace. */
+	public String describe(long nowMs)
+	{
+		if (cooling)
+		{
+			return "cooling";
+		}
+		if (run == null)
+		{
+			return "idle";
+		}
+		String state = run.confirmed ? "rec(" + run.why + ")"
+			: run.hopMs >= 0 ? "await-xp" : "watch";
+		return state + " " + seconds(nowMs - run.startMs) + " " + run.frames.size() + "f"
+			+ (run.calmSinceMs >= 0 ? " calm" : "");
+	}
+
 	/**
 	 * Stops watching: a logout, a hop, the setting turned off, a cutscene.
 	 * Whatever was half-recorded is dropped. The player's normal set is
@@ -258,9 +389,11 @@ public final class CrossingWatch
 	 */
 	public void reset()
 	{
-		discard();
+		discard("watching stopped");
 		previous = null;
 		cooling = false;
+		recent.clear();
+		xpToCheck = false;
 	}
 
 	/** One frame of the player, or null when there is nothing to read. */
@@ -281,6 +414,7 @@ public final class CrossingWatch
 		previous = s;
 		if (prev == null)
 		{
+			remember(new Seen(s.frame(), true, false, false));
 			return;
 		}
 
@@ -291,7 +425,11 @@ public final class CrossingWatch
 		{
 			// A teleport. Nothing of this is copied, and nothing queued
 			// either: the follower catches up the way it always has.
-			discard();
+			discard("teleport");
+			recent.clear();
+			coveredToMs = s.atMs;
+			xpToCheck = false;
+			trace.accept("watch: teleport of " + (moved / 128) + " tiles; queue let go");
 			listener.clearCrossings();
 			return;
 		}
@@ -299,11 +437,29 @@ public final class CrossingWatch
 		boolean planeChanged = s.plane != prev.plane;
 		boolean walkingPose = isWalkingPose(s.pose);
 		boolean oddPose = s.pose != -1 && !contains(normal, s.pose);
-		// A walking pose with a big step is a slow frame of ordinary steps.
-		boolean hop = planeChanged || (moved > 256 && !walkingPose);
+		boolean animating = s.action != -1 || prev.action != -1;
+		// A walking pose with a big step is a slow frame of ordinary steps;
+		// a tile in one frame off a walking pose, with a clip on, is a hop.
+		boolean hop = planeChanged || (moved > 256 && !walkingPose)
+			|| (moved >= HOP_UNITS && !walkingPose && (animating || oddPose));
 		boolean walking = !planeChanged && moved > 0 && walkingPose;
 		boolean glide = !planeChanged && moved > 0 && moved <= 256 && !walkingPose;
 		boolean odd = oddPose || s.action != -1 || glide;
+		boolean unusual = (moved > 0 || planeChanged)
+			&& (planeChanged || !walkingPose || oddPose || s.action != -1);
+		remember(new Seen(s.frame(), !odd && !hop, walking, unusual));
+		if (unusual || oddPose)
+		{
+			lastOddMs = s.atMs;
+		}
+
+		if (xpToCheck)
+		{
+			// Before this frame's run is handled, so anything rebuilt is
+			// queued ahead of a crossing this frame confirms.
+			xpToCheck = false;
+			rebuildMissed(s.atMs);
+		}
 
 		if (cooling)
 		{
@@ -323,12 +479,17 @@ public final class CrossingWatch
 			// Begun from where they stood a frame ago: a glide has already left it.
 			run = new Run(prev);
 		}
-		run.frames.add(s.frame());
+		Crossing.Frame frame = s.frame();
+		run.frames.add(frame);
+		if (run.crossing != null)
+		{
+			run.crossing.append(frame);
+		}
 
 		if (s.interacting)
 		{
 			// A knock-back in a fight, a scripted step in a conversation.
-			discard();
+			discard("interacting");
 			return;
 		}
 
@@ -341,10 +502,19 @@ public final class CrossingWatch
 
 		if (!run.confirmed)
 		{
-			if (run.glided >= GLIDE_UNITS
-				|| (run.hopMs >= 0 && (lastXpMs >= run.startMs || lastDamageMs >= run.startMs)))
+			boolean xp = lastXpMs >= run.startMs;
+			boolean hurt = lastDamageMs >= run.startMs;
+			if (run.glided >= GLIDE_UNITS)
 			{
-				confirm();
+				confirm("glide");
+			}
+			else if (run.hopMs >= 0 && (xp || hurt))
+			{
+				confirm(xp ? "hop+xp" : "hop+fall");
+			}
+			else if (xp && run.displaced())
+			{
+				confirm("moved+xp");
 			}
 			else if (run.hopMs >= 0)
 			{
@@ -353,19 +523,22 @@ public final class CrossingWatch
 				if (!run.announced)
 				{
 					run.announced = true;
+					trace.accept("watch: hop from " + describe(run.start()) + " to " + describe(frame.tile())
+						+ "; holding for xp");
 					listener.expectCrossing(run.start());
 				}
-				if (s.atMs - run.hopMs > CONFIRM_WAIT_MS)
+				long wait = onCourse(s.atMs) ? CONFIRM_WAIT_ON_COURSE_MS : CONFIRM_WAIT_MS;
+				if (s.atMs - run.hopMs > wait)
 				{
 					// No XP and no fall: a ladder, a trapdoor, stairs.
-					discard();
+					discard("no xp " + seconds(wait) + " after the hop");
 					return;
 				}
 			}
 			else if (walking)
 			{
 				// Walked on: whatever played, it was not an obstacle.
-				discard();
+				discard("walked on");
 				return;
 			}
 		}
@@ -388,7 +561,7 @@ public final class CrossingWatch
 
 		if (s.atMs - run.startMs > MAX_CROSSING_MS || run.frames.size() > MAX_FRAMES)
 		{
-			discard();
+			discard("ran past " + seconds(MAX_CROSSING_MS) + ": not an obstacle");
 			cooling = true;
 			if (s.weapon == normalWeapon)
 			{
@@ -408,38 +581,161 @@ public final class CrossingWatch
 			else if (run.hopMs < 0)
 			{
 				// Stood still again with nothing moved: an emote, a swing.
-				discard();
+				discard("nothing moved");
 			}
 		}
 	}
 
-	private void confirm()
+	private boolean onCourse(long nowMs)
+	{
+		return lastXpMs != Long.MIN_VALUE && nowMs - lastXpMs <= ON_COURSE_MS;
+	}
+
+	private void confirm(String why)
 	{
 		run.confirmed = true;
-		if (!run.announced)
-		{
-			run.announced = true;
-			listener.expectCrossing(run.start());
-		}
+		run.why = why;
+		run.announced = true;
+		run.crossing = Crossing.live(run.frames, normal);
+		trace.accept("watch: crossing recognised (" + why + ") from " + describe(run.start()));
+		listener.queueCrossing(run.crossing);
 	}
 
 	private void finish()
 	{
-		List<Crossing.Frame> kept = run.frames.subList(0, run.calmIndex + 1);
-		Crossing crossing = new Crossing(new ArrayList<>(kept), normal,
-			lastDamageMs >= run.startMs);
+		Run done = run;
 		run = null;
-		listener.queueCrossing(crossing);
+		done.crossing.end(done.calmIndex + 1, lastDamageMs >= done.startMs);
+		coveredToMs = done.frames.get(done.calmIndex).atMs;
+		trace.accept("watch: crossing ended at " + describe(done.crossing.getEnd()) + ", "
+			+ seconds(done.crossing.getDurationMs()) + (done.crossing.isFell() ? ", fell" : ""));
 	}
 
-	private void discard()
+	private void discard(String why)
 	{
 		Run dropped = run;
 		run = null;
-		if (dropped != null && dropped.announced)
+		if (dropped == null)
 		{
+			return;
+		}
+		if (dropped.crossing != null)
+		{
+			// Already handed over. Ended where it got to; and if it was not an
+			// obstacle at all, one the follower has not begun is skipped.
+			if (why.startsWith("ran past") || why.equals("interacting"))
+			{
+				dropped.crossing.drop();
+			}
+			else
+			{
+				dropped.crossing.cut();
+			}
+			coveredToMs = dropped.frames.get(dropped.frames.size() - 1).atMs;
+			trace.accept("watch: crossing " + (dropped.crossing.isDropped() ? "dropped" : "cut")
+				+ " (" + why + ") at " + describe(dropped.crossing.getEnd()));
+		}
+		else if (dropped.announced)
+		{
+			trace.accept("watch: let go of the hop (" + why + ")");
 			listener.cancelExpectedCrossing();
 		}
+	}
+
+	private void remember(Seen seen)
+	{
+		recent.addLast(seen);
+		long oldest = seen.frame.atMs - BUFFER_MS;
+		while (recent.size() > BUFFER_FRAMES || recent.peekFirst().frame.atMs < oldest)
+		{
+			recent.removeFirst();
+		}
+	}
+
+	/**
+	 * Agility XP arrived: if the player was moved oddly since the last
+	 * crossing handed over, and before whatever is being watched now, that
+	 * movement was an obstacle the signals missed. It is rebuilt from the
+	 * remembered frames and queued like any other, late but not skipped.
+	 *
+	 * <p>It starts on the last frame of the player's own stand or walk before
+	 * the odd movement, and ends on the first after it - or now, if they
+	 * are still at it - as a crossing seen live would.
+	 */
+	private void rebuildMissed(long nowMs)
+	{
+		List<Seen> window = new ArrayList<>();
+		for (Seen seen : recent)
+		{
+			long at = seen.frame.atMs;
+			if (at > coveredToMs && (run == null || at < run.startMs))
+			{
+				window.add(seen);
+			}
+		}
+		int last = -1;
+		for (int i = window.size() - 1; i >= 0; i--)
+		{
+			if (window.get(i).unusual)
+			{
+				last = i;
+				break;
+			}
+		}
+		if (last < 0 || nowMs - window.get(last).frame.atMs > REBUILD_RECENT_MS)
+		{
+			trace.accept("watch: xp, nothing missed");
+			return;
+		}
+
+		// Back to the last stretch of their own stand or walk long enough to
+		// have ended a crossing: the odd movement began after it.
+		int first = last;
+		boolean walked = false;
+		for (int i = last - 1; i >= 0; i--)
+		{
+			Seen seen = window.get(i);
+			if (!seen.calm)
+			{
+				first = i;
+				walked = false;
+				continue;
+			}
+			walked |= seen.walking;
+			long stretch = window.get(first).frame.atMs - seen.frame.atMs;
+			if (stretch >= (walked ? WALK_OFF_MS : SETTLE_MS))
+			{
+				break;
+			}
+		}
+		int start = Math.max(0, first - 1);
+		int end = window.size() - 1;
+		for (int i = last + 1; i < window.size(); i++)
+		{
+			if (window.get(i).calm)
+			{
+				end = i;
+				break;
+			}
+		}
+
+		List<Crossing.Frame> frames = new ArrayList<>();
+		for (int i = start; i <= end; i++)
+		{
+			frames.add(window.get(i).frame);
+		}
+		Crossing rebuilt = new Crossing(frames, normal,
+			lastDamageMs >= frames.get(0).atMs);
+		if (rebuilt.getStart().equals(rebuilt.getEnd()))
+		{
+			trace.accept("watch: xp, odd movement at " + describe(rebuilt.getStart()) + " went nowhere");
+			return;
+		}
+		coveredToMs = window.get(end).frame.atMs;
+		trace.accept("watch: crossing rebuilt from xp, " + describe(rebuilt.getStart()) + " to "
+			+ describe(rebuilt.getEnd()) + ", " + seconds(rebuilt.getDurationMs())
+			+ ", " + frames.size() + " frames");
+		listener.queueCrossing(rebuilt);
 	}
 
 	/** Walk, run, back-pedal and the side-steps of the player's own set. */
@@ -465,5 +761,15 @@ public final class CrossingWatch
 			}
 		}
 		return false;
+	}
+
+	public static String describe(WorldPoint p)
+	{
+		return p == null ? "-" : p.getX() + "," + p.getY() + "," + p.getPlane();
+	}
+
+	static String seconds(long ms)
+	{
+		return String.format("%.1fs", ms / 1000.0);
 	}
 }

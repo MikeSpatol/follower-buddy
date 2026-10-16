@@ -34,7 +34,9 @@ public class AgilityGateTest
 	private static final class Agile extends FollowerEntity
 	{
 		boolean doing;
+		boolean holding;
 		int cleared;
+		int strandedCleared;
 
 		Agile()
 		{
@@ -51,6 +53,24 @@ public class AgilityGateTest
 		public boolean isDoingAgility()
 		{
 			return doing;
+		}
+
+		@Override
+		public boolean isHoldingForAgility()
+		{
+			return holding;
+		}
+
+		@Override
+		public int getStrandedTicks()
+		{
+			return 10;
+		}
+
+		@Override
+		public void clearStranded()
+		{
+			strandedCleared++;
 		}
 
 		@Override
@@ -190,7 +210,38 @@ public class AgilityGateTest
 		}
 	}
 
+	@Test
+	public void agilityIsBehindNotStrandedSoNoTeleport() throws ReflectiveOperationException
+	{
+		follower.doing = true;
+		call("updateStrandedTeleport");
+		assertEquals("no teleport set off", 0, get("strandedLandingTicks"));
+		assertEquals("and the count let go", 1, follower.strandedCleared);
+
+		follower.doing = false;
+		follower.holding = true;
+		call("updateStrandedTeleport");
+		assertEquals("nor while it waits on the player's agility", 0, get("strandedLandingTicks"));
+		assertEquals(2, follower.strandedCleared);
+	}
+
+	@Test
+	public void theWaitIsLetGoWithTheQueue() throws ReflectiveOperationException
+	{
+		follower.holding = true;
+		set("parkedByPlayer", true);
+		frame();
+		assertEquals("a Stay ends the wait as it ends the queue", 1, follower.cleared);
+	}
+
 	// ---------------------------------------------------------------- helpers
+
+	private Object get(String name) throws ReflectiveOperationException
+	{
+		Field field = FollowerPlugin.class.getDeclaredField(name);
+		field.setAccessible(true);
+		return field.get(plugin);
+	}
 
 	private void lettingGo() throws ReflectiveOperationException
 	{
