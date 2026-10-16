@@ -1236,6 +1236,7 @@ public class FollowerPlugin extends Plugin
 		clientToolbar.addNavigation(navButton);
 		syncPanel();
 		follower.setOnEmoteStateChanged(this::updateEmoteDisarm);
+		follower.setOnEmoteClip(this::dressEmoteHands);
 		stanceLibrary.setStyleSource(this::weaponUsage);
 		buildSlotIndexAsync();
 	}
@@ -5254,6 +5255,7 @@ public class FollowerPlugin extends Plugin
 			propShown ? propSlot : null, propItemId,
 			outfitOverride == null ? wornSlot : null, wornItemId);
 		dressForPose(outfit, propShown ? propHands : null);
+		dressForPose(outfit, outfitOverride == null ? emoteHands : null);
 		dressForPose(outfit, filmHands);
 
 		appearanceService.request(outfit, com.follower.appearance.ModelSource.DUMP_ONLY, appearance ->
@@ -5996,7 +5998,36 @@ public class FollowerPlugin extends Plugin
 			// A one-shot of the film's is over: its props come off.
 			filmSet.onceOver();
 		}
+		// The emote's own things go with it, in the same rebuild as the
+		// weapon coming back when there is one.
+		boolean handsBack = !emoting && emoteHands != null;
+		emoteHands = emoting ? emoteHands : null;
+		boolean disarmed = emoteDisarmed;
 		refreshEmoteDisarm(emoting);
+		if (handsBack && disarmed == emoteDisarmed)
+		{
+			rebuildFollower();
+		}
+	}
+
+	/**
+	 * What the emote playing names for each hand, left then right, or null.
+	 * The game draws an animation's own hand items whatever is worn: the
+	 * charting quill and scroll, the home teleport's chalk stick, a teleport
+	 * scroll, a smith's hammer. Dressed as the film dresses a pose.
+	 */
+	private int[] emoteHands;
+
+	/** Each clip of an emote, as it goes on: dresses the hands it names. */
+	private void dressEmoteHands(int clip)
+	{
+		int[] hands = thrallNpc == null ? follower.emoteHandItems(clip) : null;
+		if (java.util.Arrays.equals(hands, emoteHands))
+		{
+			return;
+		}
+		emoteHands = hands;
+		rebuildFollower();
 	}
 
 	/**

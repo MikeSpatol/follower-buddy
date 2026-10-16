@@ -3726,6 +3726,18 @@ public class FollowerEntity
 	@lombok.Setter
 	private java.util.function.Consumer<Boolean> onEmoteStateChanged;
 
+	/** Notified as each clip of an emote goes on, with the clip's id, so its hands can be dressed. */
+	@lombok.Setter
+	private java.util.function.IntConsumer onEmoteClip;
+
+	private void emoteClipOn(int clip)
+	{
+		if (onEmoteClip != null)
+		{
+			onEmoteClip.accept(clip);
+		}
+	}
+
 	/**
 	 * The one place emotePlaying changes, so anything that needs to react does
 	 * so AS it happens rather than on the next tick. Half a second of a wave
@@ -4321,6 +4333,17 @@ public class FollowerEntity
 			: new int[]{animation.getLeftHandItem(), animation.getRightHandItem()};
 	}
 
+	/**
+	 * What an emote's clip puts in the hands, as {@link #handItems}, when it
+	 * names a thing for either hand; null when it names nothing, and the
+	 * hands stay as the emote disarm leaves them.
+	 */
+	public int[] emoteHandItems(int animationId)
+	{
+		int[] hands = handItems(animationId);
+		return hands != null && (hands[0] > 0 || hands[1] > 0) ? hands : null;
+	}
+
 	/** Plays a one-shot animation, then resumes the walk/idle pose. */
 	public void playAnimation(int animationId)
 	{
@@ -4449,6 +4472,7 @@ public class FollowerEntity
 		// emote owns the slot, so anything that needs to know what is being
 		// drawn - the tile recentring - has to read it from here.
 		emoteAnimation = clip;
+		emoteClipOn(clip);
 
 		if (graphics != null && index < graphics.length && graphics[index] != null)
 		{
@@ -4769,6 +4793,7 @@ public class FollowerEntity
 		object.setAnimationController(controller);
 		animationIds.add(slavedChain[slavedIndex]);
 		setEmotePlaying(true);
+		emoteClipOn(slavedChain[slavedIndex]);
 
 		if (slavedGraphics != null && slavedIndex < slavedGraphics.length
 			&& slavedGraphics[slavedIndex] != null)

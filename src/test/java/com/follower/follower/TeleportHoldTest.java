@@ -224,6 +224,19 @@ public class TeleportHoldTest
 	}
 
 	@Test
+	public void eachClipThatGoesOnIsReportedForItsHands()
+	{
+		java.util.List<Integer> clips = new java.util.ArrayList<>();
+		follower.setOnEmoteClip(clips::add);
+		homeTeleport();
+		toStage(1);
+		assertEquals("the chalk stick's stage, then the next", Arrays.asList(4847, 4850), clips);
+		follower.cancelEmote();
+		follower.playAnimation(3864);
+		assertEquals(Integer.valueOf(3864), clips.get(clips.size() - 1));
+	}
+
+	@Test
 	public void aReleaseOutsideACastIsImmediate() throws Exception
 	{
 		follower.stayHere();
