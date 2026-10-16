@@ -40,6 +40,13 @@ public class FollowerOverlay extends Overlay
 	private long shownAtMs;
 	private long durationMs;
 
+	/** How long the line has been out of sight with its follower, which does not count against it. */
+	private long unseenMs;
+	private long lastRenderMs;
+
+	/** The most a line waits for its follower to be seen again. */
+	private static final long MAX_UNSEEN_MS = 8000;
+
 	@Inject
 	public FollowerOverlay(Client client, FollowerEntity follower, FollowerConfig config,
 		com.follower.ui.GameFontRepository gameFonts)
@@ -58,6 +65,8 @@ public class FollowerOverlay extends Overlay
 		this.message = text;
 		this.shownAtMs = System.currentTimeMillis();
 		this.durationMs = durationMs;
+		unseenMs = 0;
+		lastRenderMs = shownAtMs;
 	}
 
 	public void clear()
@@ -73,15 +82,21 @@ public class FollowerOverlay extends Overlay
 			return null;
 		}
 
-		long elapsed = System.currentTimeMillis() - shownAtMs;
+		long now = System.currentTimeMillis();
+		if (!follower.isShown())
+		{
+			unseenMs += now - lastRenderMs;
+		}
+		lastRenderMs = now;
+		long elapsed = now - shownAtMs - Math.min(unseenMs, MAX_UNSEEN_MS);
 		if (elapsed > durationMs)
 		{
 			message = null;
 			return null;
 		}
 
-		// Kept while it is out of sight, so the line comes back with it if
-		// its time is not up. Drawn over an empty tile, or an NPC standing
+		// Kept while it is out of sight, its clock stopped, so the line comes
+		// back with it to be read. Drawn over an empty tile, or an NPC standing
 		// on it, the line reads as someone else's.
 		if (!follower.isShown())
 		{

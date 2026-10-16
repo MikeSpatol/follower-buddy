@@ -59,6 +59,23 @@ public class OverheadDrawTest
 	}
 
 	@Test
+	public void itsTimeDoesNotRunOutWhileItsFollowerIsUnseen() throws InterruptedException
+	{
+		FollowerOverlay overlay = new FollowerOverlay(null, follower, null, null);
+		overlay.show("Hm.", 200);
+
+		// Hidden for longer than the line lasts.
+		shown = false;
+		overlay.render(null);
+		Thread.sleep(500);
+		overlay.render(null);
+
+		shown = true;
+		overlay.render(null);
+		assertEquals("still there to be read once the follower is back", 1, placed);
+	}
+
+	@Test
 	public void theColourHasNoOpacityToSet() throws NoSuchMethodException
 	{
 		// The game draws overhead text opaque, and so does the bitmap font
