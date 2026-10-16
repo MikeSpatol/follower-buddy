@@ -1239,9 +1239,11 @@ public class FollowerPlugin extends Plugin
 		panel.setOnReload(() -> clientThread.invoke(this::reloadFiles));
 		panel.setCommands(commandLines());
 		panel.setRegionId(lastRegionId);
-		panel.setOnProfileLoad(this::loadOutfitProfile);
-		panel.setOnProfileSave(this::saveOutfitProfile);
-		panel.setOnProfileDelete(this::deleteOutfitProfile);
+		// On the client thread, as the outfit's own callbacks are: the active
+		// profile and the autosave that reads it live there (QA pass 4).
+		panel.setOnProfileLoad(name -> clientThread.invoke(() -> loadOutfitProfile(name)));
+		panel.setOnProfileSave(name -> clientThread.invoke(() -> saveOutfitProfile(name)));
+		panel.setOnProfileDelete(name -> clientThread.invoke(() -> deleteOutfitProfile(name)));
 		restoreActiveProfile();
 
 		// ImageUtil.loadImageResource THROWS on a missing resource rather than
@@ -3941,6 +3943,12 @@ public class FollowerPlugin extends Plugin
 		// A profile with an identical outfit writes no config change, so the
 		// panel is refreshed here rather than relying on the config event.
 		syncPanel();
+		// And the dropdown, which a profile worn by chat command left on the
+		// old one, while the edits after it saved into this one (QA pass 4).
+		if (panel != null)
+		{
+			panel.setProfileNames(profileStore.names(), activeProfile);
+		}
 		if (!quiet)
 		{
 			sendStatus("Wearing outfit profile '" + activeProfile + "'.");
