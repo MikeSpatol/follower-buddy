@@ -361,6 +361,9 @@ public class FollowerPlugin extends Plugin
 	/** The beat before yes: a Send with a misgiving, the late step aside. */
 	private com.follower.follower.Will will;
 
+	/** The player's agility obstacles, recorded for the follower to take after them. */
+	private com.follower.follower.CrossingWatch crossingWatch;
+
 	/** Walkable ground nobody walks on: the lit fires in the scene. */
 	private com.follower.follower.HotGround hotGround;
 
@@ -841,6 +844,9 @@ public class FollowerPlugin extends Plugin
 			() -> thrallNpc == null && !errands.isBusy() && !spectate.holdsTheFeet()
 				&& !skilling.holdsTheFeet() && !moments.holdsTheFeet() && !flourish.isActive()
 				&& minutesState == 0 && !emoteHold && !filming && !sceneHolds());
+		crossingWatch = new com.follower.follower.CrossingWatch(follower);
+		follower.setOnCrossed(crossing -> speechEngine.dispatch(
+			TriggerEvent.crossed(crossing.isFell())));
 		filmSet = new com.follower.follower.FilmSet(follower, this::rebuildFollower,
 			(graphicId, height) -> follower.playSpotAnim(spotAnimRepository.get(graphicId), height));
 		conversation = new com.follower.speech.ConversationPlayer(conversationStage());
@@ -5144,7 +5150,7 @@ public class FollowerPlugin extends Plugin
 			|| (moments != null && moments.holdsTheFeet())
 			|| parkedByPlayer || filming
 			|| (sketching != null && sketching.isSketching())
-			|| inCutscene();
+			|| inCutscene() || follower.isDoingAgility();
 	}
 
 	/**
@@ -5156,7 +5162,7 @@ public class FollowerPlugin extends Plugin
 	private boolean seatFeetTaken()
 	{
 		return thrallBusiness() || (spectate != null && spectate.holdsTheFeet())
-			|| parkedByPlayer || inCutscene();
+			|| parkedByPlayer || inCutscene() || follower.isDoingAgility();
 	}
 
 	/**
@@ -5177,7 +5183,7 @@ public class FollowerPlugin extends Plugin
 		return thrallBusiness() || (spectate != null && spectate.holdsTheFeet())
 			|| (errands != null && errands.isBusy()) || filming
 			|| (sketching != null && sketching.isSketching())
-			|| sceneQuiet();
+			|| sceneQuiet() || follower.isDoingAgility();
 	}
 
 	/**
@@ -5188,7 +5194,8 @@ public class FollowerPlugin extends Plugin
 	 */
 	private boolean spectateBusy()
 	{
-		return thrallBusiness() || (errands != null && errands.isBusy()) || filming || inCutscene();
+		return thrallBusiness() || (errands != null && errands.isBusy()) || filming || inCutscene()
+			|| follower.isDoingAgility();
 	}
 
 	/**
@@ -6696,11 +6703,58 @@ public class FollowerPlugin extends Plugin
 		return thrallKeepsQuiet(config.muteThrall(), thrallBusiness());
 	}
 
+	/**
+	 * Once a frame: the player read for agility, and what the follower does
+	 * with it. Only while the follower is out with them and nobody else has
+	 * it: not parked by the player (a Stay means no agility), not thrall
+	 * work, not a film, an errand or a sketch. Losing any of those lets the
+	 * queue go, finishing the crossing under way. A cutscene only pauses
+	 * the watching: the scene moves the player as it likes, and what is
+	 * queued waits for it to end.
+	 */
+	private void watchForAgility()
+	{
+		if (crossingWatch == null)
+		{
+			return;
+		}
+		GameState state = client.getGameState();
+		if (state == GameState.LOADING)
+		{
+			// A rebuild: the recording carries on after it, in world units.
+			return;
+		}
+		Player local = client.getLocalPlayer();
+		boolean watching = config.copiesAgility() && local != null && state == GameState.LOGGED_IN
+			&& follower.isSpawned() && !parkedByPlayer && !thrallBusiness() && !filming
+			&& (errands == null || !errands.isBusy())
+			&& (sketching == null || !sketching.isSketching());
+		if (!watching)
+		{
+			crossingWatch.reset();
+			if (follower.isDoingAgility())
+			{
+				follower.clearCrossings();
+			}
+			return;
+		}
+		if (inCutscene())
+		{
+			crossingWatch.reset();
+			return;
+		}
+		crossingWatch.sample(com.follower.follower.CrossingWatch.Sample.read(local,
+			System.currentTimeMillis()));
+	}
+
 	@Subscribe
 	public void onBeforeRender(BeforeRender event)
 	{
 		appearanceService.tick();
 		colorHarvester.tick();
+		// Before the follower's frame: a crossing seen this frame holds it
+		// before the teleport rule can snap it after a player on the roof.
+		watchForAgility();
 		follower.updateFrame();
 		shiftHoverTooltip();
 		if (filmSet != null)
@@ -9679,6 +9733,11 @@ public class FollowerPlugin extends Plugin
 			// interaction check alone would miss.
 			speechEngine.getContext().noteDamageTaken();
 			speechEngine.dispatch(TriggerEvent.damageTaken(event.getHitsplat().getAmount()));
+			if (crossingWatch != null
+				&& com.follower.follower.CrossingWatch.isFallDamage(event.getHitsplat().getHitsplatType()))
+			{
+				crossingWatch.noteDamage(System.currentTimeMillis());
+			}
 			dialog.close();
 		}
 		else if (event.getActor() instanceof NPC && event.getHitsplat().isMine())
@@ -9956,6 +10015,11 @@ public class FollowerPlugin extends Plugin
 		Integer previousXp = knownXp.put(skill, xp);
 		if (previousXp != null && xp > previousXp)
 		{
+			if (skill == Skill.AGILITY && crossingWatch != null)
+			{
+				// What tells a climb from a ladder.
+				crossingWatch.noteAgilityXp(System.currentTimeMillis());
+			}
 			int count = skilling == null ? 0 : skilling.noteXpDrop(skill);
 			speechEngine.dispatch(TriggerEvent.xpDrop(skill.getName(), count));
 		}

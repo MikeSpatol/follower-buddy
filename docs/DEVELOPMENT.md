@@ -446,6 +446,7 @@ mood stretches or shortens on top.
 | `noticed` | `is` - `valuable`, `nest`, `impling`, `star` or `landmark`; optional `contains` on the thing's name. The follower noticed it and set off to look. `{kind}`, `{thing}` |
 | `hesitated` | `is` - `wilderness` or `monster`: a Send the follower had misgivings about; it has stopped at the edge and turned to the player. `{misgiving}`, `{thing}` |
 | `steppedAside` | - the player walked straight at the parked follower and it stepped aside at the last tick |
+| `crossed` | optional `is` - `fell` or `crossed`: the follower has just done an agility obstacle or shortcut after the player; `fell` where the player fell and it copied the fall. No shipped lines yet |
 | `addressed` | - the player is within a tile of the follower and turned toward it; what makes an emote a reply rather than an echo |
 | `login`, `always` | - |
 | `chance` | `percent`, rolled each evaluation |
@@ -2013,6 +2014,85 @@ the reason this is a tile choice and not a second follow model.
 
 **Not in scope.** The agility course spectator (it needs a course table) and
 the sailing deckhand (no verified deck stays). Both left out on purpose.
+
+## Agility (2026-10-16)
+
+The follower does the player's agility after them: every obstacle and
+shortcut, in the order taken, however far behind that leaves it, falls
+included. Record and replay, with no obstacle data at all: nothing knows
+which obstacle it was, only what the player looked like doing it.
+`CrossingWatch` recognises and records; `Crossing` holds one recording;
+`FollowerEntity` walks to where each began and plays it back. One setting,
+Movement > `copiesAgility`, on by default.
+
+**Recognising a crossing.** Read once a frame (`BeforeRender`, before the
+follower's own frame, so a crossing seen this frame holds the follower before
+the teleport rule could snap it after a player on a roof). Three signals,
+each measured against how the player moves the rest of the time:
+
+- *An odd pose*: the pose is not one of the player's own stand, walk, run,
+  back, side-steps or turns. The game does a log or a ledge by swapping the
+  player's base animations, so the getters say the swapped set too; the set
+  measured against is the one from before the swap, re-taken only when the
+  weapon changes.
+- *A glide*: the rendered position moving while the pose is not a walking
+  one. Ordinary steps always show a walk or run; forced movement (a jump, a
+  squeeze, a vault) shows the stand. Counted from the second consecutive
+  glide frame, 48 fine units to count, so the one frame where a walk ends on
+  the stand never adds up to one.
+- *An action and a hop*: an animation, then the player put down up to 14
+  tiles away or on another floor. A ladder looks identical, so this needs
+  agility XP (`StatChanged`) or a damage hitsplat (a fall: `DAMAGE_ME`,
+  `DAMAGE_OTHER`, `DAMAGE_MAX_ME`, never poison or venom) within two ticks.
+  The follower is held, not snapped, while it waits.
+
+No animation id or gameval name is relied on: the ids in the tests are only
+there to read like the real thing. An animation alone never counts (an emote,
+a swing, a skilling loop, eating on the run: nothing moved), walking on ends
+a run that has not counted, and none of it is watched while the player
+interacts with an actor (a fight's knock-back, a conversation), is
+transformed into an NPC, or is aboard a boat. A hop past 14 tiles is a
+teleport: dropped, and the queue let go. A crossing ends after 1.2 s back to
+normal standing or 0.3 s walking on, cut at the first normal frame, so two
+obstacles taken back to back are two crossings. Anything past 30 s is not an
+obstacle (a carpet ride, swimming): dropped, and its pose taken as normal.
+
+**Recording.** Per frame: the rendered position in fine world units (scene
+base plus local, so a rebuild does not move it), the floor, the orientation,
+the pose and action with their frames, and whether the player was hurt.
+Frames during a scene load are skipped, not taken for a logout.
+
+**Replay.** Crossings queue in order. For each, the follower walks to the
+start tile on the BFS (beside it while the player is still on it), then
+plays it back: fine position interpolated between frames on one floor and
+held across a floor change or a hop, the facing turned at the client's rate,
+and the action or the pose put on at the frame the player's was on. A pose
+from the player's own set is shown as the follower's own (so it stands and
+walks like itself between the odd parts); anything else is the player's,
+id for id. Then the next, then following again from wherever the player is.
+While it does any of this, following, the teleport snap and the
+blocked-tile hop are off, and the seat, the moments, the spectator and the
+errands stand aside.
+
+The follower is drawn, routed and kept out of walls on its own floor now:
+the client's `LocalPoint.fromWorld` answers null for a tile off the player's
+floor, which never mattered while the snap kept the two together.
+
+**Limits on falling behind.** More than 40 tiles behind (the stay leash,
+inside the loaded scene) or more than 16 crossings waiting (more than any
+course has obstacles), and the queue is let go: the crossing under way is
+finished and the ordinary catch-up takes over. Unable to reach a crossing's
+start for 3 s, it is put there.
+
+**Interruptions.** A Stay, Send or Follow me off: no agility, the queue let
+go; a Stay given mid-crossing holds where that crossing ends. Thrall work, a
+film, an errand, a sketch, the setting off, a logout or a hop: the queue let
+go. A cutscene: nothing watched, and the queue waits where it stands. Hidden
+(a sketch's frame, the comedy death): it waits and carries on. A snap, a
+despawn or thrall possession drops everything at once.
+
+**The words.** One trigger, `crossed` (`is: fell` for a copied fall), with
+no shipped lines.
 
 ## Weapon stance coverage - PARKED, not a release blocker (2026-08-06)
 

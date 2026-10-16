@@ -362,6 +362,66 @@ public final class FakeGame
 		return this;
 	}
 
+	/**
+	 * Remembers which RuneLiteObjects are in the scene, as the client does,
+	 * so isActive answers what setActive last said. Left off by default:
+	 * without it every object reads as out of the scene.
+	 */
+	public FakeGame keepsRuneLiteObjects()
+	{
+		java.util.Set<Object> inScene = new java.util.HashSet<>();
+		clientAnswers.put("registerRuneLiteObject", (Answer) args -> inScene.add(args[0]) ? null : null);
+		clientAnswers.put("removeRuneLiteObject", (Answer) args -> inScene.remove(args[0]) ? null : null);
+		clientAnswers.put("isRuneLiteObjectRegistered", (Answer) args -> inScene.contains(args[0]));
+		return this;
+	}
+
+	/** The pose the player shows now: a stand, a walk, a log balance. */
+	public FakeGame posing(int pose)
+	{
+		playerAnswers.put("getPoseAnimation", pose);
+		return this;
+	}
+
+	/**
+	 * The player's base animations, in stance order: idle, walk, run, back,
+	 * left, right, turn left, turn right. The game swaps these for some
+	 * obstacles, which is what the agility watch measures against.
+	 */
+	public FakeGame basePoses(int... poses)
+	{
+		String[] getters = {"getIdlePoseAnimation", "getWalkAnimation", "getRunAnimation",
+			"getWalkRotate180", "getWalkRotateLeft", "getWalkRotateRight",
+			"getIdleRotateLeft", "getIdleRotateRight"};
+		for (int i = 0; i < getters.length && i < poses.length; i++)
+		{
+			playerAnswers.put(getters[i], poses[i]);
+		}
+		return this;
+	}
+
+	/**
+	 * The player drawn part way across a tile: the rendered position in
+	 * local units (128 to a tile, a tile's centre at 64), with the server
+	 * tile the one it is over.
+	 */
+	public FakeGame fineAt(int localX, int localY, int plane)
+	{
+		playerAnswers.put("getWorldLocation", new WorldPoint(localX >> 7, localY >> 7, plane));
+		playerAnswers.put("getLocalLocation", new net.runelite.api.coords.LocalPoint(localX, localY, 0));
+		return this;
+	}
+
+	/** The player transformed into an NPC (a ring of stone, a greegree), or -1 for themselves. */
+	public FakeGame transformedInto(int npcId)
+	{
+		Map<String, Object> answers = new HashMap<>();
+		answers.put("getEquipmentIds", (Answer) args -> equipment);
+		answers.put("getTransformedNpcId", npcId);
+		playerAnswers.put("getPlayerComposition", proxy(PlayerComposition.class, answers));
+		return this;
+	}
+
 	/** Hitpoints as a level pair; the context turns them into a percentage. */
 	public FakeGame hitpoints(int current, int max)
 	{
@@ -775,6 +835,8 @@ public final class FakeGame
 	{
 		Map<String, Object> answers = new HashMap<>();
 		answers.put("getEquipmentIds", (Answer) args -> equipment);
+		// The client's own "not transformed into an NPC".
+		answers.put("getTransformedNpcId", -1);
 		return proxy(PlayerComposition.class, answers);
 	}
 
@@ -788,6 +850,10 @@ public final class FakeGame
 		answers.put("getBaseY", (Answer) args -> 0);
 		answers.put("getSizeX", (Answer) args -> net.runelite.api.Perspective.SCENE_SIZE);
 		answers.put("getSizeY", (Answer) args -> net.runelite.api.Perspective.SCENE_SIZE);
+		// Flat ground everywhere, so a follower drawn in the scene has a height.
+		int size = net.runelite.api.Perspective.SCENE_SIZE;
+		answers.put("getTileSettings", new byte[4][size][size]);
+		answers.put("getTileHeights", new int[4][size + 1][size + 1]);
 		answers.put("isInstance", (Answer) args -> instanced);
 		answers.put("getCollisionMaps", (Answer) args -> collisionFlags == null
 			? null

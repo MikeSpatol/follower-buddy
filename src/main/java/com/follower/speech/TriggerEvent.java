@@ -80,6 +80,8 @@ public final class TriggerEvent
 		HESITATED,
 		/** The player walked straight at the parked follower and it stepped aside. */
 		STEPPED_ASIDE,
+		/** The follower did an agility obstacle after the player. */
+		CROSSED,
 	}
 
 	/**
@@ -617,6 +619,18 @@ public final class TriggerEvent
 		event.value = newRegion;
 		event.previousValue = oldRegion;
 		event.placeholders.put("region", Integer.toString(newRegion));
+		return event;
+	}
+
+	/**
+	 * The follower has done an agility obstacle or shortcut after the player.
+	 * The name is "fell" where the player fell, and so the follower with
+	 * them, and "crossed" otherwise.
+	 */
+	public static TriggerEvent crossed(boolean fell)
+	{
+		TriggerEvent event = new TriggerEvent(Type.CROSSED);
+		event.name = fell ? "fell" : "crossed";
 		return event;
 	}
 

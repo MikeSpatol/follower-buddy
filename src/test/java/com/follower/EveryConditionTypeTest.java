@@ -1790,6 +1790,10 @@ public class EveryConditionTypeTest
 		quiet("{\"type\": \"hesitated\", \"is\": \"wilderness\"}",
 			TriggerEvent.hesitated("monster", "Hill Giant"));
 		fires("{\"type\": \"steppedAside\"}", TriggerEvent.simple(TriggerEvent.Type.STEPPED_ASIDE));
+		note("crossed");
+		fires("{\"type\": \"crossed\"}", TriggerEvent.crossed(false));
+		fires("{\"type\": \"crossed\", \"is\": \"fell\"}", TriggerEvent.crossed(true));
+		quiet("{\"type\": \"crossed\", \"is\": \"fell\"}", TriggerEvent.crossed(false));
 
 		note("addressed");
 		Harness at = harnessFor("{\"type\": \"addressed\"}");
