@@ -16011,7 +16011,7 @@
     {
       "id": "fun-gerald-early",
       "title": "Gerald, a running joke (early days)",
-      "note": "Running bit, Gerald: days 0-29 known, while mining. Two-hour cooldown.",
+      "note": "Running bit, Gerald: days 1-29 after the opener, while mining. Two-hour cooldown.",
       "about": "Now and then while you are mining, in your first month together.",
       "group": "idle",
       "priority": 19,
@@ -16024,8 +16024,9 @@
             "is": "mining"
           },
           {
-            "type": "daysKnown",
-            "minimum": 0,
+            "type": "daysSinceSaid",
+            "rule": "fun-gerald-first",
+            "minimum": 1,
             "maximum": 29
           },
           {
@@ -16044,7 +16045,7 @@
     {
       "id": "fun-gerald-later",
       "title": "Gerald, a running joke (later on)",
-      "note": "Running bit, Gerald: day 30 on known, while mining. Two-hour cooldown.",
+      "note": "Running bit, Gerald: day 30 on after the opener, while mining. Two-hour cooldown.",
       "about": "Now and then while you are mining, after your first month together.",
       "group": "idle",
       "priority": 19,
@@ -16057,7 +16058,8 @@
             "is": "mining"
           },
           {
-            "type": "daysKnown",
+            "type": "daysSinceSaid",
+            "rule": "fun-gerald-first",
             "minimum": 30
           },
           {
@@ -16132,7 +16134,7 @@
       "id": "fun-hans-race-early",
       "waits": true,
       "title": "Hans, a running joke (early days)",
-      "note": "Running bit, Hans: days 0-29 after the opener. Same trigger as quest-hans, one point higher, three-hour cooldown; while it cools down the base's lines play.",
+      "note": "Running bit, Hans: days 1-29 after the opener. Same trigger as quest-hans, one point higher, three-hour cooldown; while it cools down the base's lines play.",
       "about": "Now and then when Hans is near, in your first month together.",
       "group": "quest",
       "priority": 36,
@@ -16143,7 +16145,7 @@
           {
             "type": "daysSinceSaid",
             "rule": "fun-hans-race-first",
-            "minimum": 0,
+            "minimum": 1,
             "maximum": 29
           },
           {

@@ -22,7 +22,6 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -49,6 +48,8 @@ public class RunningBitOrderTest
 	private static final List<String> HANS = Arrays.asList(
 		"fun-hans-race-first", "fun-hans-race-early", "fun-hans-race-middle",
 		"fun-hans-race-late");
+	private static final List<String> GERALD = Arrays.asList(
+		"fun-gerald-first", "fun-gerald-early", "fun-gerald-later");
 
 	/** Just these shipped rules, as the bundled file has them. */
 	private Harness harnessWith(List<String> ids) throws IOException
@@ -184,10 +185,43 @@ public class RunningBitOrderTest
 			h.game.clearNpcs();
 			h.gameTicks(5);
 		}
-		Set<String> said = heard(h, HANS);
-		assertTrue(said.toString(), said.contains("fun-hans-race-first"));
-		assertFalse("not the draw on the day the race starts: " + said,
-			said.contains("fun-hans-race-late") || said.contains("fun-hans-race-middle"));
+		// QA pass 3, #22: the first stage, from day 0, rose the moment the
+		// opener was heard and followed it six seconds later.
+		assertEquals("the race starts, and no stage follows it the same day",
+			Collections.singleton("fun-hans-race-first"), heard(h, HANS));
+	}
+
+	@Test
+	public void aFollowerSixtyDaysInNamesGeraldAndLeavesItThere() throws IOException
+	{
+		// QA pass 3, #23: keyed on the days since meeting, a follower known a
+		// month heard "Every mine has a Gerald" and then "Gerald's looking
+		// well" in the same mining session.
+		for (int trial = 0; trial < 10; trial++)
+		{
+			Harness h = harnessWith(GERALD);
+			h.engine.getContext().setMetOnDay(daysAgo(60));
+			h.engine.getContext().setWork(true, "mining", "Iron rocks", null, 0, 0, 0);
+			h.gameTicks(600);
+			assertEquals("trial " + trial, Collections.singleton("fun-gerald-first"), heard(h, GERALD));
+		}
+	}
+
+	@Test
+	public void theGeraldStagesCountFromTheOpenersDay() throws IOException
+	{
+		for (int[] stage : new int[][]{{5, 1}, {40, 2}})
+		{
+			Harness h = harnessWith(GERALD);
+			h.engine.getContext().setMetOnDay(daysAgo(400));
+			h.engine.getContext().restoreSpokenOnce(
+				Collections.singletonList("fun-gerald-first"),
+				Collections.singletonMap("fun-gerald-first", daysAgo(stage[0])));
+			h.engine.getContext().setWork(true, "mining", "Iron rocks", null, 0, 0, 0);
+			h.gameTicks(1500);
+			assertEquals(stage[0] + " days after the opener",
+				Collections.singleton(GERALD.get(stage[1])), heard(h, GERALD));
+		}
 	}
 
 	@Test
@@ -238,6 +272,7 @@ public class RunningBitOrderTest
 			}
 		}
 		List<String> bad = new java.util.ArrayList<>();
+		List<String> sameDay = new java.util.ArrayList<>();
 		int found = 0;
 		for (com.follower.speech.SpeechRule rule : h.loader.getRules())
 		{
@@ -250,11 +285,17 @@ public class RunningBitOrderTest
 					{
 						bad.add(rule.id + " -> " + c.rule);
 					}
+					// From day 0 a stage rises the moment its opener is said.
+					if (c.minimum == null || c.minimum < 1)
+					{
+						sameDay.add(rule.id);
+					}
 				}
 			}
 		}
 		assertTrue("the running bits use it", found >= 11);
 		assertTrue("counting from no once rule: " + bad, bad.isEmpty());
+		assertTrue("a stage that can share its opener's day: " + sameDay, sameDay.isEmpty());
 	}
 
 	private static List<com.follower.speech.Condition> flatten(com.follower.speech.Condition c)

@@ -1142,9 +1142,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-gerald-early`
 
-> Running bit, Gerald: days 0-29 known, while mining. Two-hour cooldown.
+> Running bit, Gerald: days 1-29 after the opener, while mining. Two-hour cooldown.
 
-- **when:** working AND known 0-29 days AND a 2% roll
+- **when:** working AND 1-29 days after `fun-gerald-first` was said AND a 2% roll
 - **pacing:** priority 19, cooldown 2h, delay 2 ticks, overhead
 
 - Go easy on Gerald. He's sensitive about his ore.
@@ -1152,9 +1152,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-gerald-later`
 
-> Running bit, Gerald: day 30 on known, while mining. Two-hour cooldown.
+> Running bit, Gerald: day 30 on after the opener, while mining. Two-hour cooldown.
 
-- **when:** working AND known 30+ days AND a 2% roll
+- **when:** working AND 30+ days after `fun-gerald-first` was said AND a 2% roll
 - **pacing:** priority 19, cooldown 2h, delay 2 ticks, overhead
 
 - Gerald's looking well. I think the attention suits him.
@@ -6854,9 +6854,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-hans-race-early`
 
-> Running bit, Hans: days 0-29 after the opener. Same trigger as quest-hans, one point higher, three-hour cooldown; while it cools down the base's lines play.
+> Running bit, Hans: days 1-29 after the opener. Same trigger as quest-hans, one point higher, three-hour cooldown; while it cools down the base's lines play.
 
-- **when:** 0-29 days after `fun-hans-race-first` was said AND Hans within 5 tiles, in sight
+- **when:** 1-29 days after `fun-hans-race-first` was said AND Hans within 5 tiles, in sight
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
 
 - Hans is well ahead today. I've been standing still, in fairness.
