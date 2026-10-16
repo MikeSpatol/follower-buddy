@@ -498,6 +498,43 @@ public class SceneQuietTest
 		assertTrue("and not said after", h.firedBy("person").isEmpty());
 	}
 
+	// ------------------------------------------------------- two on one pass
+
+	private static String meeting(String id, int priority, String who)
+	{
+		return "{\"id\": \"" + id + "\", \"group\": \"t\", \"priority\": " + priority + ", \"cooldownMs\": 0,"
+			+ " \"waits\": true, \"when\": {\"type\": \"npcNearby\", \"within\": 5, \"names\": [\"" + who + "\"]},"
+			+ " \"say\": [\"" + id + ".\"]}";
+	}
+
+	/**
+	 * Behaviour QA, 15 Oct: Prince Itzla and Sergeant Tobyn came into view on
+	 * one tick. Level in priority, Tobyn won on file order and Itzla's edge
+	 * was spent with him still in view: 26 of 26 runs, never said.
+	 */
+	@Test
+	public void twoLinesThatWaitRisingLevelOnOnePassAreBothSaid() throws IOException
+	{
+		Harness h = harness(meeting("tobyn", 35, "Sergeant Tobyn"), meeting("itzla", 35, "Prince Itzla Arkan"));
+		h.game.spawnNpc(12645, "Sergeant Tobyn", 0);
+		h.game.spawnNpc(12646, "Prince Itzla Arkan", 0);
+		ticks(h, 30);
+		assertEquals(1, h.firedBy("tobyn").size());
+		assertEquals("said behind him", 1, h.firedBy("itzla").size());
+		assertTrue("nothing dropped", held.isEmpty());
+	}
+
+	/** A point below is outranked on purpose: a callback over its base, one line a meeting. */
+	@Test
+	public void aLineOutrankedOnPurposeStillStandsAside() throws IOException
+	{
+		Harness h = harness(meeting("tobyn-after", 36, "Sergeant Tobyn"), meeting("tobyn", 35, "Sergeant Tobyn"));
+		h.game.spawnNpc(12645, "Sergeant Tobyn", 0);
+		ticks(h, 30);
+		assertEquals(1, h.firedBy("tobyn-after").size());
+		assertTrue("the base is not said behind its callback", h.firedBy("tobyn").isEmpty());
+	}
+
 	/** Behaviour QA, 15 Oct: the two shipped lines the damper took in an AFK, 5 of 5 and 4 of 4. */
 	@Test
 	public void theLinesAnAbsenceCostWaitTheirTurn() throws IOException

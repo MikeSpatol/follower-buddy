@@ -1019,6 +1019,17 @@ public class SpeechEngine
 			{
 				winner = rule;
 			}
+			// Level with the winner, a line that waits lost on file order
+			// alone. It rises again on the next pass and is said behind it.
+			// Behaviour QA, 15 Oct: Prince Itzla and Sergeant Tobyn came into
+			// view on one tick, and Itzla's line was never said. Not one a
+			// point below, which is outranked on purpose (a callback over its
+			// base), nor an occasion: two of those level on one event are
+			// each other's alternatives (the third death and "again").
+			else if (rule.priority == winner.priority && Boolean.TRUE.equals(rule.waits))
+			{
+				rule.riseAgain();
+			}
 		}
 
 		// Something just ENDED: open the breather window (R6). Noted AFTER the

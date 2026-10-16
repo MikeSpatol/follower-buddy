@@ -579,6 +579,12 @@ public class SpeechRule
 		return rising;
 	}
 
+	/** Leaves this pass's edge unspent, so a condition still true rises again on the next pass. */
+	public void riseAgain()
+	{
+		lastState = false;
+	}
+
 	public boolean offCooldown(long nowMs)
 	{
 		return nowMs - lastFiredMs >= cooldownMs;
