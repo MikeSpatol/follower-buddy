@@ -563,6 +563,7 @@ public class FollowerEntity
 		}
 		activeGraphics.clear();
 		stayTile = null;
+		releaseAfterCast = false;
 		stayFaceTile = null;
 		stayFaceMax = null;
 		goalTile = null;
@@ -808,9 +809,23 @@ public class FollowerEntity
 		return object == null ? null : object.getModel();
 	}
 
+	/**
+	 * A release asked for mid-cast, carried out when the cast ends: a teleport's
+	 * hold is only a stay, and anything let go of mid-cast (a flourish running
+	 * out, a work session or an errand ending) would walk the follower off its
+	 * cast and leave it behind at the departure point.
+	 */
+	private boolean releaseAfterCast;
+
 	/** Releases a stay pose; following resumes on its own. */
 	public void resumeFollowing()
 	{
+		if (slavedChain != null || vanishAfterEmoteArmed)
+		{
+			releaseAfterCast = true;
+			return;
+		}
+		releaseAfterCast = false;
 		stayTile = null;
 		stayFaceTile = null;
 		stayFaceMax = null;
@@ -1569,6 +1584,7 @@ public class FollowerEntity
 			return;
 		}
 		stayTile = tile;
+		releaseAfterCast = false;
 		goalTile = null;
 		serverPath.clear();
 	}
@@ -4671,6 +4687,16 @@ public class FollowerEntity
 		{
 			object.setActive(false);
 		}
+		releaseHeldOverTheCast();
+	}
+
+	/** Carries out a release that waited on the cast. */
+	private void releaseHeldOverTheCast()
+	{
+		if (releaseAfterCast && slavedChain == null && !vanishAfterEmoteArmed)
+		{
+			resumeFollowing();
+		}
 	}
 
 	// ---- slaved chain: stages advanced by the PLAYER's animation changes ----
@@ -4764,6 +4790,23 @@ public class FollowerEntity
 
 	/** The graphic the slaved chain's last stage put on, which the next one's replaces. */
 	private RuneLiteObject stageGraphic;
+
+	/**
+	 * The player's sequence stopped. Only a cast that reached its last stage
+	 * leaves with it; one cut short (a click away, a hit) keeps the follower,
+	 * as a mirrored one-shot cast cut by movement does.
+	 */
+	public void slavedPlayerStopped()
+	{
+		if (slavedChain != null && slavedIndex >= slavedChain.length - 1)
+		{
+			endSlavedChain();
+		}
+		else
+		{
+			cancelEmote();
+		}
+	}
 
 	/** Ends the chain and hands the animation slot back to locomotion. */
 	public void endSlavedChain()
@@ -4909,6 +4952,7 @@ public class FollowerEntity
 		slavedChain = null;
 		slavedGraphics = null;
 		vanishAfterEmoteArmed = false;
+		releaseHeldOverTheCast();
 		// An interrupted death keeps the follower visible - same rule as the
 		// interrupted teleport above.
 		hideAfterEmoteMs = 0;

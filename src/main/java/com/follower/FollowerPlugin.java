@@ -7882,11 +7882,12 @@ public class FollowerPlugin extends Plugin
 
 		// Watchdog: a slaved chain waits on the player's next stage; if that
 		// never arrives (desync, logout race), release the follower rather than
-		// hold the last frame forever. Stages arrive at most ~4s apart.
+		// hold the last frame forever. Stages arrive at most ~4s apart. A cast
+		// never seen to finish keeps the follower rather than vanishing it.
 		if (follower.isSlavedChainActive()
 			&& client.getTickCount() - follower.getSlavedAdvanceTick() > 25)
 		{
-			follower.endSlavedChain();
+			follower.cancelEmote();
 		}
 
 		logPoseComparison(local);
@@ -9285,7 +9286,7 @@ public class FollowerPlugin extends Plugin
 		{
 			if (animationId == -1)
 			{
-				clientThread.invoke(follower::endSlavedChain);
+				clientThread.invoke(follower::slavedPlayerStopped);
 			}
 			else
 			{
