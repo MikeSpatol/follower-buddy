@@ -541,7 +541,8 @@ The window is 500 by 314. The page column shows 14 body lines, and the plate
 and caption take 9 of them, so about 5 summary lines show when a page opens.
 `ChronicleLayout.page` fixes the order: plate and caption, summary, headed
 sections, then the people, places and details lists, headed People,
-Places and Particulars in the window.
+Places and Particulars in the window. A people or places list of one item
+gets no heading of its own and goes in at the head of Particulars.
 
 - **Summary.** At most about 220 characters, in two or three sentences.
   Sentence one is the opener (rule 12). Sentence two says what the subject is.
@@ -592,8 +593,9 @@ Every page opens with a plate, and a test holds it to that. A creature or
 person is its own game model, turning, framed to fill the plate. A place is a
 watercolour the scribe makes when you pose for it in one of its regions, with
 you in the middle; it draws nothing unasked. Before then, a portrait shows as
-an ink outline captioned "Not yet seen." and a sketch as bare paper captioned
-with its hint, what the scribe means to draw: "Pose for me in Lumbridge."
+an ink outline captioned "Not yet seen." on a creature page and "Not drawn
+yet." elsewhere, and a sketch as bare paper captioned with its hint, what the
+scribe means to draw: "Pose for me in Lumbridge."
 That already matches the research: Audubon's
 plates marked as drawn from nature, the medieval bestiary artist working from
 a description, and the museum case marked as having no information yet.
@@ -632,7 +634,9 @@ a description, and the museum case marked as having no information yet.
   follower already says aloud (the sketch line "You're in it, for scale."
   rules out a "You, for scale." caption). Captions follow rule 2, so a caption
   on a `questBegun` page gives away nothing the quest hasn't reached. On grave
-  pages captions stay plain: "The well. I stood back."
+  pages captions stay plain: "The well. I stood back." The emote a sketch
+  caught you in, pencilled at its foot on the other pages that share it, is
+  left off the Seven's page.
 - **The drawing as the scribe's work.** At most once a page, the prose may
   mention the drawing and how it was made ("The spray got into the ink.", "My
   sketch flatters it."). That counts as the page's workings for rule 8.
@@ -692,9 +696,6 @@ like this:
 - Do pure route facts (the palace bucket, 2 coins at the general store, the
   southernmost bookcase) count as facts that must stay, or as walkthrough the
   book may drop?
-- The locked-page hint speaks of "The scribe" in the third person ("The
-  scribe has not met one of these yet.") in a book otherwise written in the
-  first person.
 - Locked creature pages show "Where it is found" but not the places list. If
   the full map is wanted there, that is a small code change.
 
