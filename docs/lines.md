@@ -6,22 +6,22 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ## Contents
 
-- [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (40 rules, 159 lines)
-- [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (46 rules, 240 lines)
-- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (60 rules, 357 lines)
+- [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (41 rules, 163 lines)
+- [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (43 rules, 222 lines)
+- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (58 rules, 357 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 115 lines)
 - [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 74 lines)
-- [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (28 rules, 121 lines)
+- [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (27 rules, 117 lines)
 - [area](#area) - Places: named lines, tastes, earned verdicts, the defences (76 rules, 244 lines)
 - [errand](#errand) - Its little trips: bank, altar, fire, cat, studies, explores (44 rules, 155 lines)
 - [souvenir](#souvenir) - Wishes, gifts, the pocket, and what it carries (17 rules, 84 lines)
-- [bet](#bet) - Its predictions about drops (3 rules, 20 lines)
+- [bet](#bet) - Its predictions about drops (6 rules, 38 lines)
 - [clock](#clock) - The hour and how long we have been at it (9 rules, 39 lines)
 - [gear](#gear) - What you put on (63 rules, 147 lines)
 - [boss](#boss) - Bosses sighted and fought (55 rules, 522 lines)
 - [quest](#quest) - Famous quest figures nearby (122 rules, 311 lines)
 - [thrall](#thrall) - When it stands in for a thrall (3 rules, 18 lines)
-- [mimic](#mimic) - Copying your emotes (30 rules, 16 lines)
+- [mimic](#mimic) - Copying your emotes (32 rules, 16 lines)
 - [dialogs](#dialogs) - the conversations it starts (3 trees)
 - [talk-to](#talk-to) - the everyday Talk-to script (in code)
 
@@ -364,6 +364,19 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - The world moved in the night. I'll have to redraw the maps.
 - They've changed the world again. Nobody consulted the scribe.
 - Something's shifted since we were last out. I'll re-survey as we go.
+
+### `notes-edited`
+
+> phrases.json changed on disk and hot-reloaded. In-world, somebody wrote in the scribe's own book. Long cooldown so an editing session earns one remark.
+
+- **when:** notesedited AND a 75% roll
+- **does:** animation 14001
+- **pacing:** priority 40, cooldown 30m, delay 3 ticks
+
+- This isn't my handwriting.
+- Someone's been in my notes. The margins are different.
+- The annotations are an improvement. Worrying.
+- My notebook smells of fresh ink I didn't buy.
 
 ### `music-unlock`
 
@@ -987,48 +1000,6 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Fair. It wasn't much of a prize.
 - No? I'll play against myself, then. I usually win.
 
-### `offer-challenge`
-
-> A wager on YOU rather than on the world. Guarded against a second one and against talking over a piece of advice still outstanding.
-
-- **when:** NOT (repeating one action 100+ ticks) AND NOT (mood is low) AND in a fight AND NOT (a challenge running OR advice outstanding) AND a 4% roll
-- **does:** challenge: ten kills
-- **pacing:** priority 24, cooldown 30m, overhead
-
-- Ten of them. Five minutes. I say you can't.
-- Right, a wager. Ten kills before I lose interest. Go on.
-- Bet you can't manage ten in five minutes. Prove me wrong.
-- Let's have a little bet. Ten before five minutes are up.
-- I've set a mark. Ten of them, five minutes. Impress me.
-- Care to make this interesting? Ten kills. Clock's running.
-
-### `challenge-met`
-
-> Paid out. Above the kill rules so the wager beats the cheer.
-
-- **when:** the challenge met
-- **does:** mood +12; animation 862; holds still
-- **pacing:** priority 74, cooldown 5s, overhead
-
-- You did it, {challenge} with time to spare.
-- All right, that was impressive. I'll say it once.
-- Done, and I'm out of pocket. Worth it.
-- That's ten. I'll have to expect more of you now.
-- Well. That's me told.
-- Paid in full. That's a win for you in the book.
-
-### `challenge-failed`
-
-- **when:** the challenge failed
-- **pacing:** priority 72, cooldown 5s, overhead
-
-- Time. You didn't get there.
-- That's five minutes. I win, and I'm insufferable about it.
-- Time, I'm afraid. Closer than I expected, mind.
-- Short of the mark. I'll try not to bring it up.
-- Time's up. You've lost the bet, but not your dignity.
-- Not this time. We'll call it a near thing.
-
 ### `gone-away`
 
 > Not the same as idle, which a player working a furnace also satisfies. The camera is the tell: it moves when somebody is there.
@@ -1339,26 +1310,6 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Another {skill} level already. I can barely keep up.
 - {sinceLast} since the last. The {skill} page is getting crowded.
 - Two {skill} levels in {sinceLast}. I've had to write smaller.
-
-### `mirror-teleport`
-
-> Mirrors the player's teleport cast, then vanishes and reappears beside them. holdStill plants the follower for the duration: without it, a teleport that happens while the follower is off on an idle distraction interrupts its own cast. The player animating resets the idle counter, the wander is released the same tick, and the follower abandons the animation to run back to somebody who is no longer there. The hold also keeps updateWander out - it treats a held emote as busy.
-
-- **when:** your animation 714, 3864, 1979, 1816, 6575, 4071
-- **does:** mirrors you; holds still
-- **pacing:** priority 60, cooldown 3s
-
-- *(no lines - animation or effect only)*
-
-### `mirror-home-teleport`
-
-> ANY home teleport, default or a cosmetic override the follower doesn't own, plays the DEFAULT home teleport on the follower, rune-circle graphics and all (stage pairing measured in game: animations 4847/4850/4853/4855/4857 with graphics 800/-/802/803/804). Trigger ids are each variant's FIRST stage; the chain carries the rest, and the long cooldown stops later stages retriggering it. For a new variant, add its first stage id here (::follower watch announces it).
-
-- **when:** your animation 4847, 13764, 8798, 9209, 1696, 8811, 11875
-- **does:** animation chain; holds still
-- **pacing:** priority 70, cooldown 15s
-
-- *(no lines - animation or effect only)*
 
 ### `death-moment`
 
@@ -2237,7 +2188,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > A new biggest hit. {value} is the new mark and {previous} the one it beat, which is what makes it land - a record without the old number is just a number. The first hit after an install seeds the record silently and says nothing, so this cannot fire on day one.
 
-- **when:** a personal best (hit)
+- **when:** a personal best (hit) AND known 1+ days
 - **does:** mood +12; marks this place: 'you hit harder than you ever had'; animation 862
 - **pacing:** priority 68, cooldown 20s, overhead
 
@@ -2769,19 +2720,6 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - You've come up in the world. I was there for the bottom of it.
 - The kit's improved beyond recognition. The walk's the same.
 - Page one has you in your old kit. I look at it whenever you get too grand.
-
-### `notes-edited`
-
-> phrases.json changed on disk and hot-reloaded. In-world, somebody wrote in the scribe's own book. Long cooldown so an editing session earns one remark.
-
-- **when:** notesedited AND a 75% roll
-- **does:** animation 14001
-- **pacing:** priority 40, cooldown 30m, delay 3 ticks
-
-- This isn't my handwriting.
-- Someone's been in my notes. The margins are different.
-- The annotations are an improvement. Worrying.
-- My notebook smells of fresh ink I didn't buy.
 
 ## area
 
@@ -4378,6 +4316,48 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - We'll not speak of this again.
 - The prediction business is harder than it looks.
 - Strike that entry. Carefully, so nobody can read it.
+
+### `offer-challenge`
+
+> A wager on YOU rather than on the world. Guarded against a second one and against talking over a piece of advice still outstanding.
+
+- **when:** NOT (repeating one action 100+ ticks) AND NOT (mood is low) AND in a fight AND NOT (a challenge running OR advice outstanding) AND a 4% roll
+- **does:** challenge: ten kills
+- **pacing:** priority 24, cooldown 30m, overhead
+
+- Ten of them. Five minutes. I say you can't.
+- Right, a wager. Ten kills before I lose interest. Go on.
+- Bet you can't manage ten in five minutes. Prove me wrong.
+- Let's have a little bet. Ten before five minutes are up.
+- I've set a mark. Ten of them, five minutes. Impress me.
+- Care to make this interesting? Ten kills. Clock's running.
+
+### `challenge-met`
+
+> Paid out. Above the kill rules so the wager beats the cheer.
+
+- **when:** the challenge met
+- **does:** mood +12; animation 862; holds still
+- **pacing:** priority 74, cooldown 5s, overhead
+
+- You did it, {challenge} with time to spare.
+- All right, that was impressive. I'll say it once.
+- Done, and I'm out of pocket. Worth it.
+- That's ten. I'll have to expect more of you now.
+- Well. That's me told.
+- Paid in full. That's a win for you in the book.
+
+### `challenge-failed`
+
+- **when:** the challenge failed
+- **pacing:** priority 72, cooldown 5s, overhead
+
+- Time. You didn't get there.
+- That's five minutes. I win, and I'm insufferable about it.
+- Time, I'm afraid. Closer than I expected, mind.
+- Short of the mark. I'll try not to bring it up.
+- Time's up. You've lost the bet, but not your dignity.
+- Not this time. We'll call it a near thing.
 
 ## clock
 
@@ -7567,6 +7547,26 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 ## mimic
 
 *Copying your emotes.*
+
+### `mirror-teleport`
+
+> Mirrors the player's teleport cast, then vanishes and reappears beside them. holdStill plants the follower for the duration: without it, a teleport that happens while the follower is off on an idle distraction interrupts its own cast. The player animating resets the idle counter, the wander is released the same tick, and the follower abandons the animation to run back to somebody who is no longer there. The hold also keeps updateWander out - it treats a held emote as busy.
+
+- **when:** your animation 714, 3864, 1979, 1816, 6575, 4071
+- **does:** mirrors you; holds still
+- **pacing:** priority 60, cooldown 3s
+
+- *(no lines - animation or effect only)*
+
+### `mirror-home-teleport`
+
+> ANY home teleport, default or a cosmetic override the follower doesn't own, plays the DEFAULT home teleport on the follower, rune-circle graphics and all (stage pairing measured in game: animations 4847/4850/4853/4855/4857 with graphics 800/-/802/803/804). Trigger ids are each variant's FIRST stage; the chain carries the rest, and the long cooldown stops later stages retriggering it. For a new variant, add its first stage id here (::follower watch announces it).
+
+- **when:** your animation 4847, 13764, 8798, 9209, 1696, 8811, 11875
+- **does:** animation chain; holds still
+- **pacing:** priority 70, cooldown 15s
+
+- *(no lines - animation or effect only)*
 
 ### `mimic-emotes`
 
