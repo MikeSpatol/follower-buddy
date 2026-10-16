@@ -33,6 +33,102 @@ public class ConversationPanelTest
 	}
 
 	@Test
+	public void theControlsAreOnOnlyWhereTheyDoSomething() throws Exception
+	{
+		// QA2, 15 Oct: Seconds stayed on under Click to continue, which never
+		// reads it, and refused 601 there; Remove, Up, Down, Load and Delete
+		// were on with nothing to work on; Tab typed a tab into Text; Enter
+		// in Name did nothing.
+		org.junit.Assume.assumeFalse(java.awt.GraphicsEnvironment.isHeadless());
+		com.follower.speech.ConversationStore store = new com.follower.speech.ConversationStore(new com.google.gson.Gson());
+		store.load(Files.createTempDirectory("conv"));
+		Conversation take = new Conversation();
+		take.name = "Take one";
+		take.lines.add(new Conversation.Line());
+		assertTrue(store.save(take));
+		java.util.List<String> said = new java.util.ArrayList<>();
+		javax.swing.SwingUtilities.invokeAndWait(() ->
+		{
+			ConversationPanel panel = new ConversationPanel((w, d) -> { }, store, () -> "Bob", said::add);
+			javax.swing.JTextField seconds = null;
+			javax.swing.JTextField name = null;
+			javax.swing.JTextArea text = null;
+			for (java.awt.Component c : all(panel))
+			{
+				if (c instanceof javax.swing.JTextField && ((javax.swing.JTextField) c).getColumns() == 4)
+				{
+					seconds = (javax.swing.JTextField) c;
+				}
+				else if (c instanceof javax.swing.JTextField && name == null)
+				{
+					name = (javax.swing.JTextField) c;
+				}
+				else if (c instanceof javax.swing.JTextArea)
+				{
+					text = (javax.swing.JTextArea) c;
+				}
+			}
+
+			assertFalse("Click to continue reads no seconds", seconds.isEnabled());
+			radio(panel, "Auto").setSelected(true);
+			assertTrue(seconds.isEnabled());
+			radio(panel, "Click to continue").setSelected(true);
+			assertFalse(seconds.isEnabled());
+
+			for (String off : new String[]{"Remove", "Up", "Down", "Load", "Delete"})
+			{
+				assertFalse(off + " with nothing to work on", button(panel, off).isEnabled());
+			}
+			press(panel, "Add");
+			for (String on : new String[]{"Remove", "Up", "Down"})
+			{
+				assertTrue(on + " with a line picked", button(panel, on).isEnabled());
+			}
+			pickSaved(panel, "Take one");
+			assertTrue(button(panel, "Load").isEnabled());
+			assertTrue(button(panel, "Delete").isEnabled());
+
+			assertTrue("Tab leaves the Text box", text.getFocusTraversalKeys(
+				java.awt.KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS)
+				.contains(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_TAB, 0)));
+
+			seconds.setText("601");
+			name.setText("Take two");
+			name.postActionEvent();
+			assertTrue("Enter in Name saves, and seconds Click never reads are no bar: " + said,
+				store.get("Take two") != null);
+			radio(panel, "Auto").setSelected(true);
+			name.setText("Take three");
+			name.postActionEvent();
+			assertEquals("Auto does read them", null, store.get("Take three"));
+		});
+	}
+
+	private static javax.swing.JRadioButton radio(ConversationPanel panel, String text)
+	{
+		for (java.awt.Component c : all(panel))
+		{
+			if (c instanceof javax.swing.JRadioButton && text.equals(((javax.swing.JRadioButton) c).getText()))
+			{
+				return (javax.swing.JRadioButton) c;
+			}
+		}
+		throw new AssertionError("no " + text + " choice");
+	}
+
+	private static javax.swing.JButton button(ConversationPanel panel, String text)
+	{
+		for (java.awt.Component c : all(panel))
+		{
+			if (c instanceof javax.swing.JButton && text.equals(((javax.swing.JButton) c).getText()))
+			{
+				return (javax.swing.JButton) c;
+			}
+		}
+		throw new AssertionError("no " + text + " button");
+	}
+
+	@Test
 	public void playAndStopGoThroughTheWindowsDoor() throws IOException
 	{
 		String source = new String(Files.readAllBytes(
