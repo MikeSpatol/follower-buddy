@@ -307,6 +307,61 @@ public class CrossingReplayTest
 		assertTrue(done.isEmpty());
 	}
 
+	/**
+	 * A rope's first tile is one nobody can walk onto: the game puts the
+	 * player there. The follower sets off from beside it, eased on over the
+	 * first moments, rather than standing stuck for 4.8 s and then being
+	 * placed on it (QA4 #1, trace 16 Oct).
+	 */
+	@Test
+	public void aStartNobodyCanWalkOntoIsBegunFromBesideIt() throws ReflectiveOperationException
+	{
+		for (int x = 52; x <= 58; x++)
+		{
+			game.blockTile(x, 50);
+		}
+		Mover player = new Mover(51, 50, 0);
+		player.stand(1500);
+		// Onto the rope's first tile on their own walk, then the balance.
+		player.walk(1, 0).onto(ON_A_ROPE).move(6, 0, LOG_WALK, 4).onto(NORMAL).walk(1, 0).xp();
+
+		long biggestStep = 0;
+		long lastX = (Long) get("fineWX");
+		long lastY = (Long) get("fineWY");
+		for (int i = 0; i < 1000 && follower.isDoingAgility(); i++)
+		{
+			player.stand(20);
+			long x = (Long) get("fineWX");
+			long y = (Long) get("fineWY");
+			biggestStep = Math.max(biggestStep, Math.max(Math.abs(x - lastX), Math.abs(y - lastY)));
+			lastX = x;
+			lastY = y;
+		}
+		assertEquals(1, done.size());
+		assertTrue("never placed: " + trace, trace.stream().noneMatch(l -> l.contains("placed")));
+		assertEquals(0, snaps);
+		assertTrue("on at about two ticks behind: " + (player.setOffAt * 20L), player.setOffWhilePlayerOn);
+		assertTrue("eased on, no pop: " + biggestStep + " units in a frame", biggestStep <= 16);
+	}
+
+	/**
+	 * Waiting by the start, it turns the way the player set off before it
+	 * goes, rather than sliding along the log sideways for a third of a
+	 * second (QA4 #27).
+	 */
+	@Test
+	public void itFacesTheWayThePlayerWentBeforeItSetsOff() throws ReflectiveOperationException
+	{
+		// From the north, onto a crossing taken eastward.
+		standOn(new WorldPoint(52, 53, 0));
+		game.at(60, 52, 0);
+		follower.queueCrossing(new Recording(52, 50, 0).stand(100, 808).glide(4, 0, LOG_WALK, -1)
+			.stand(200, 808).build(false));
+		untilPlaying();
+		int yaw = (Integer) get("yaw");
+		assertTrue("facing east (1536) as it sets off: " + yaw, Math.abs(yaw - 1536) <= 256);
+	}
+
 	// ------------------------------------------------------- rebuilt from XP
 
 	/**
@@ -675,6 +730,7 @@ public class CrossingReplayTest
 			y = tileY * 128L + 64;
 			this.plane = plane;
 			watch.setTrace(trace::add);
+			follower.setAgilityClock(() -> clock);
 			frame();
 		}
 

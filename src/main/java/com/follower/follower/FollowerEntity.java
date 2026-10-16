@@ -1816,6 +1816,12 @@ public class FollowerEntity implements CrossingWatch.Listener
 	 */
 	static final long START_LAG_MS = 1200;
 
+	/** The first part of a crossing eases from where the follower stood onto the recording. */
+	static final long EASE_MS = 300;
+
+	/** Playback speed while further behind the player than START_LAG_MS, outside the player's own clips. */
+	static final double CATCH_UP = 1.25;
+
 	/**
 	 * After the last crossing, or agility XP, this long the follower waits
 	 * for the player rather than snapping to them. A rooftop obstacle takes
@@ -1841,6 +1847,11 @@ public class FollowerEntity implements CrossingWatch.Listener
 	/** The crossing being played back, and how far into it. */
 	private Crossing playing;
 	private long playedMs;
+	/** Where the follower stood as it began: the first EASE_MS go from here onto the recording. */
+	private long easeFromX;
+	private long easeFromY;
+	/** A crossing the player has begun is waiting: the walk to its start is a run. */
+	private boolean hurrying;
 	private AnimationController crossingController;
 	private int crossingAnimation = -1;
 
@@ -1875,6 +1886,15 @@ public class FollowerEntity implements CrossingWatch.Listener
 	public void setAgilityTrace(java.util.function.Consumer<String> trace)
 	{
 		agilityTrace = trace == null ? line -> { } : trace;
+	}
+
+	/** The clock the watch stamps its recordings with: how far behind the player the follower is. */
+	private java.util.function.LongSupplier agilityClock = System::currentTimeMillis;
+
+	/** For a harness driving the watch on a clock of its own. */
+	void setAgilityClock(java.util.function.LongSupplier clock)
+	{
+		agilityClock = clock;
 	}
 
 	/** Whether agility has the follower: one being played, queued, or under way on the player. */
@@ -2062,6 +2082,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 				serverPath.clear();
 				approachTarget = null;
 				approachPlanned = null;
+				hurrying = false;
 			}
 			return false;
 		}
@@ -2118,6 +2139,8 @@ public class FollowerEntity implements CrossingWatch.Listener
 		boolean waiting = next == null || target.equals(local.getWorldLocation());
 		// Not before the player is START_LAG_MS into it.
 		boolean ready = next != null && (next.isComplete() || next.getDurationMs() >= START_LAG_MS);
+		// The player has begun it: run there, as they would after someone.
+		hurrying = next != null;
 
 		if (!target.equals(approachTarget) || waiting != approachWaiting)
 		{
@@ -2172,7 +2195,11 @@ public class FollowerEntity implements CrossingWatch.Listener
 			cancelEmote();
 		}
 
-		boolean there = !moving && serverPath.isEmpty() && tile.equals(target);
+		// On the start, or beside it once the player is off it: the first
+		// moments of the crossing ease it on, which a rope's first tile,
+		// where the game puts the player and nobody can walk, needs.
+		boolean there = !moving && ((serverPath.isEmpty() && tile.equals(target))
+			|| (!waiting && tile.distanceTo(target) == 1));
 		if (!moving && serverPath.isEmpty() && !there && !held && !waiting)
 		{
 			approachStillMs += deltaMs;
@@ -2193,7 +2220,9 @@ public class FollowerEntity implements CrossingWatch.Listener
 			approachStillMs = 0;
 		}
 
-		if (there && next != null && !held && ready)
+		// Facing the way the player set off, so it does not start sideways.
+		int setOff = next == null ? -1 : next.getFrames().get(0).getOrientation() & 0x7ff;
+		if (there && next != null && !held && ready && Math.abs(((setOff - yaw + 1024) & 0x7ff) - 1024) <= 256)
 		{
 			startCrossing(next);
 			return;
@@ -2204,6 +2233,10 @@ public class FollowerEntity implements CrossingWatch.Listener
 			if (held)
 			{
 				faceTheHold(local);
+			}
+			else if (there && next != null)
+			{
+				dstYaw = setOff;
 			}
 			else
 			{
@@ -2283,9 +2316,12 @@ public class FollowerEntity implements CrossingWatch.Listener
 		serverPath.clear();
 		crossingController = null;
 		crossingAnimation = -1;
+		easeFromX = fineWX;
+		easeFromY = fineWY;
+		hurrying = false;
 		agilityTrace.accept("follower: began crossing from " + CrossingWatch.describe(crossing.getStart())
-			+ ", " + CrossingWatch.seconds(crossing.getDurationMs()) + " behind the player"
-			+ (crossing.isComplete() ? " (recording done)" : ""));
+			+ ", " + CrossingWatch.seconds(agilityClock.getAsLong() - crossing.getStartedAtMs())
+			+ " behind the player" + (crossing.isComplete() ? " (recording done)" : ""));
 		playCrossing(0);
 	}
 
@@ -2300,7 +2336,10 @@ public class FollowerEntity implements CrossingWatch.Listener
 		waitingEmote = -1;
 
 		Crossing crossing = playing;
-		playedMs += deltaMs;
+		// Behind the player by more than the two ticks: a little quicker
+		// through whatever is not a clip of its own, until it is back to them.
+		boolean behind = agilityClock.getAsLong() - crossing.getStartedAtMs() - playedMs > START_LAG_MS;
+		playedMs += behind && crossing.frameAt(playedMs).action == -1 ? Math.round(deltaMs * CATCH_UP) : deltaMs;
 		if (!crossing.isComplete() && playedMs > crossing.getDurationMs())
 		{
 			// Caught up with the recording (a stalled frame on the player's
@@ -2310,6 +2349,14 @@ public class FollowerEntity implements CrossingWatch.Listener
 		long at = Math.min(playedMs, crossing.getDurationMs());
 		Crossing.Frame frame = crossing.frameAt(at);
 		long[] fine = crossing.fineAt(at);
+		if (at < EASE_MS)
+		{
+			// From where it stood, beside the start or a little off it, onto
+			// the player's path: no pop.
+			double k = at / (double) EASE_MS;
+			fine[0] = easeFromX + Math.round((fine[0] - easeFromX) * k);
+			fine[1] = easeFromY + Math.round((fine[1] - easeFromY) * k);
+		}
 		fineWX = fine[0];
 		fineWY = fine[1];
 		tile = new WorldPoint((int) (fineWX >> 7), (int) (fineWY >> 7), frame.plane);
@@ -2819,7 +2866,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		// Posed movement - Face-me's walk-around, a Send - is a deliberate WALK:
 		// one step a tick, never the run pair, whatever the run orb says.
 		boolean posed = goalTile != null || stayTile != null;
-		boolean two = !posed && serverPath.size() >= 2 && (playerRunning || serverPath.size() > 2);
+		boolean two = !posed && (hurrying || serverPath.size() >= 2 && (playerRunning || serverPath.size() > 2));
 		int steps = two ? 2 : 1;
 		for (int i = 0; i < steps && !serverPath.isEmpty(); i++)
 		{

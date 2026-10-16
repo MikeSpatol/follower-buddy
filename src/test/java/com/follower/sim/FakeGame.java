@@ -412,6 +412,18 @@ public final class FakeGame
 		return this;
 	}
 
+	/**
+	 * The player drawn part way across a tile, as {@link #fineAt}, with the
+	 * server already on another: a tile or two ahead on a walk, or off the
+	 * end of a rope the drawn player is still on.
+	 */
+	public FakeGame fineAt(int localX, int localY, int plane, int serverX, int serverY)
+	{
+		fineAt(localX, localY, plane);
+		playerAnswers.put("getWorldLocation", new WorldPoint(serverX, serverY, plane));
+		return this;
+	}
+
 	/** The player transformed into an NPC (a ring of stone, a greegree), or -1 for themselves. */
 	public FakeGame transformedInto(int npcId)
 	{
