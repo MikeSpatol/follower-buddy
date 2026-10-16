@@ -449,6 +449,8 @@ public class SpeechEngine
 		int ticksLeft;
 		/** Ticks an occasion has spent waiting out the gap after another line. */
 		int waited;
+		/** The line that gap is after: a new line said starts the count again. */
+		long gapAfterMs;
 		/** Ticks an occasion has spent waiting out a scene, its quiet and the gap after, apart from the gap's ten. */
 		int sceneWaited;
 		/** Held by a conversation, and not yet given its beat after it. */
@@ -899,6 +901,15 @@ public class SpeechEngine
 						delayed.ticksLeft = 1;
 						continue;
 					}
+					// The gap counted from the line it is behind: one said
+					// while it waits starts the count again (QA, 15 Oct: the
+					// second of two moments behind an area line was dropped a
+					// tick before its gap ran out).
+					if (delayed.gapAfterMs != lastSpokeMs)
+					{
+						delayed.gapAfterMs = lastSpokeMs;
+						delayed.waited = 0;
+					}
 					if (waitsOutTheGap(delayed.rule, held, delayed.waited, occasionWaitTicks()))
 					{
 						delayed.waited++;
@@ -1066,6 +1077,7 @@ public class SpeechEngine
 		{
 			winner.markFired(now);
 			PendingSpeech held = new PendingSpeech(winner, event, 1, sceneQuiet);
+			held.gapAfterMs = lastSpokeMs;
 			held.heardTheBox = "dialogue".equals(blocked);
 			pending.add(held);
 			return;

@@ -422,4 +422,28 @@ public class SceneQuietTest
 		ticks(h, 3);
 		assertEquals(1, h.firedBy("waits").size());
 	}
+
+	// --------------------------------------------------------- a rest, a gap
+
+	/**
+	 * QA, 15 Oct (probe P7): two occasions behind one ordinary line. The
+	 * first waits out the gap and is said; the second's wait was counted from
+	 * when it first blocked, ran out a tick before the first's gap did, and
+	 * it was dropped.
+	 */
+	@Test
+	public void theGapAnOccasionWaitsOutIsTheOneInFrontOfIt() throws IOException
+	{
+		Harness h = harness(CHATTY, QUEST, LEVEL);
+		h.engine.setGlobalCooldownMs(6000L);
+		h.game.hitpoints(10, 99);
+		ticks(h, 1);
+		assertEquals(1, h.firedBy("chatty").size());
+		h.dispatch(TriggerEvent.questComplete("Sheep Shearer"));
+		h.dispatch(TriggerEvent.levelUp("Attack", 30));
+		ticks(h, 40);
+		assertEquals("both said", 1, h.firedBy("quest").size());
+		assertEquals(1, h.firedBy("level").size());
+		assertTrue("nothing dropped", held.isEmpty());
+	}
 }
