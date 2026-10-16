@@ -410,6 +410,16 @@ public class FollowerEntity
 	@Getter
 	private LocalPoint lastRenderedLocation;
 
+	/**
+	 * Whether the body is in the scene now. Spawned is not enough: it goes
+	 * out of sight while an NPC stands on its tile, through a teleport and
+	 * the comedy death, and its overhead line must go with it.
+	 */
+	public boolean isShown()
+	{
+		return spawned && object != null && object.isActive();
+	}
+
 	/** The render z used at the last draw, needed to project the clickbox. */
 	@Getter
 	private int lastRenderedZ;
@@ -506,6 +516,17 @@ public class FollowerEntity
 		applyPose(stance().idle, true);
 		render();
 		spawned = true;
+
+		// A new body starts clear of whatever the last one was in the middle
+		// of. An emote cut off by a logout, a hop or a hide stayed "playing",
+		// which refused this body its idle until its first step, and a
+		// teleport's vanish or the comedy death's hide would take it straight
+		// back out of sight. Here and not in despawn, so whatever waited on
+		// that emote is let go with a follower out to rebuild.
+		cancelEmote();
+		vanished = false;
+		hideUntilMs = 0;
+		waitingEmote = -1;
 
 		if (spawnAnimationIds != null && spawnAnimationIds.length > 0)
 		{
@@ -989,6 +1010,10 @@ public class FollowerEntity
 
 	/** Armed by the comedy death: at the emote's final frame, go dark this long. */
 	private int hideAfterEmoteMs;
+
+	/** Out of the frames drawn while set: the sketch's frame, which the scribe draws and is not in. */
+	@lombok.Setter
+	private boolean outOfPicture;
 
 	/**
 	 * Arms a frame-accurate disappearance: the instant the current emote
@@ -2251,8 +2276,9 @@ public class FollowerEntity
 			return;
 		}
 
-		// Briefly gone (the comedy death): nothing renders, nothing moves.
-		if (System.currentTimeMillis() < hideUntilMs)
+		// Briefly gone (the comedy death, or a sketch's frame): nothing
+		// renders, nothing moves.
+		if (outOfPicture || System.currentTimeMillis() < hideUntilMs)
 		{
 			if (object.isActive())
 			{

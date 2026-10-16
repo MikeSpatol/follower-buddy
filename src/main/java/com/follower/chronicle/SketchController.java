@@ -573,7 +573,14 @@ public class SketchController
 			return;
 		}
 		long seed = filing.hashCode();
-		drawManager.requestNextFrameListener(frame -> copyAndDraw(frame, crop, filing, seed, posed));
+		// Nor the scribe: it draws the view, it is not in it. Out for that
+		// one frame, back the moment it is taken.
+		follower.setOutOfPicture(true);
+		drawManager.requestNextFrameListener(frame ->
+		{
+			follower.setOutOfPicture(false);
+			copyAndDraw(frame, crop, filing, seed, posed);
+		});
 	}
 
 	private void copyAndDraw(Image frame, Rectangle crop, String filing, long seed, String posed)

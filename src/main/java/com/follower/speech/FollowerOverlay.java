@@ -80,6 +80,14 @@ public class FollowerOverlay extends Overlay
 			return null;
 		}
 
+		// Kept while it is out of sight, so the line comes back with it if
+		// its time is not up. Drawn over an empty tile, or an NPC standing
+		// on it, the line reads as someone else's.
+		if (!follower.isShown())
+		{
+			return null;
+		}
+
 		LocalPoint location = follower.getLastRenderedLocation();
 		if (location == null)
 		{
@@ -116,7 +124,7 @@ public class FollowerOverlay extends Overlay
 		}
 		graphics.setColor(Color.BLACK);
 		graphics.drawString(message, anchor.getX(), anchor.getY() + 1);
-		graphics.setColor(config.speechColor());
+		graphics.setColor(new Color(rgb));
 		graphics.drawString(message, anchor.getX(), anchor.getY());
 
 		return null;

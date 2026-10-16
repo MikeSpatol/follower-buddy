@@ -1354,7 +1354,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > ANY home teleport, default or a cosmetic override the follower doesn't own, plays the DEFAULT home teleport on the follower, rune-circle graphics and all (stage pairing measured in game: animations 4847/4850/4853/4855/4857 with graphics 800/-/802/803/804). Trigger ids are each variant's FIRST stage; the chain carries the rest, and the long cooldown stops later stages retriggering it. For a new variant, add its first stage id here (::follower watch announces it).
 
-- **when:** your animation 4847, 13764, 8798, 9209, 1696
+- **when:** your animation 4847, 13764, 8798, 9209, 1696, 8811, 11875
 - **does:** animation chain; holds still
 - **pacing:** priority 70, cooldown 15s
 
@@ -7098,7 +7098,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Priest In Peril, varp 302 = 3: Killed the Temple Guardian in the mausoleum. Source: Quest Helper (Zoinkwiz/quest-helper on GitHub, master as of 2025-10-23), PriestInPeril.java loadSteps: 3 = report to Roald. Game cache: the Temple Guardian multinpc (3487, on varp 302) shows at 0-2 and is gone from 3
 
 - **when:** questvar AND NOT (dialogueopen)
-- **does:** mood -4; occasion (never held back); once ever; files incident `quest-temple-dog` as 'the dog in the mausoleum'; animation 13993
+- **does:** mood -4; occasion (never held back); once ever; files incident `quest-temple-dog` as 'the dog in the mausoleum'; animation 13994
 - **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
 
 - Done. I'll draw it later, when I can look at it.

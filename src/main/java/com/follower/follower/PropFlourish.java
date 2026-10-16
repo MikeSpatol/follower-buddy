@@ -26,6 +26,8 @@ public class PropFlourish
 
 	private int holdTicks;
 	private boolean active;
+	/** The pose it put on, the only one it takes off. */
+	private int poseId;
 
 	public PropFlourish(FollowerEntity follower, ErrandController.Hands hands)
 	{
@@ -56,6 +58,7 @@ public class PropFlourish
 		}
 		active = true;
 		holdTicks = Math.max(1, ticks);
+		this.poseId = poseId;
 		follower.stayHere();
 		// Prop and pose on the same tick, and so the same rendered frame: the
 		// appearance service's dump path is synchronous, so the model with the
@@ -111,7 +114,9 @@ public class PropFlourish
 	{
 		active = false;
 		holdTicks = 0;
-		follower.setPoseOverride(0);
+		// Only its own: a rest's sit or a held emote's copy put on since
+		// stays, or the follower stands while it is still meant to be at it.
+		follower.clearPoseOverride(poseId);
 		hands.release();
 		follower.resumeFollowing();
 	}
