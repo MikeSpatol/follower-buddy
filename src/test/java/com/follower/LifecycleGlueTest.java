@@ -261,6 +261,21 @@ public class LifecycleGlueTest
 	}
 
 	@Test
+	public void aHeldCopyGoesWithTheScene() throws IOException
+	{
+		// A copied sit or dance loop is a pose override the body keeps, and
+		// despawn and spawn leave it on. Carried over a hop, the next body sat
+		// at every stop beside a standing player, its weapon put away.
+		String leaving = method("private void tearDownScene()");
+		for (String let : new String[]{"follower.clearPoseOverride(mirroredPose);", "mirroredPose = 0;",
+			"pendingMime = 0;", "copyAtWork = false;", "emoteDisarmed = false;"})
+		{
+			assertTrue("leaving a scene must let go of the copy: " + let, leaving.contains(let));
+		}
+		assertTrue("before the body goes", leaving.indexOf("mirroredPose = 0;") < leaving.indexOf("follower.despawn();"));
+	}
+
+	@Test
 	public void theBookClosesWithTheScene() throws IOException
 	{
 		// Left open at a logout with no tick to close it, the chronicle was

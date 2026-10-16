@@ -118,6 +118,11 @@ public class OutOfSightTest
 	/** Spawned beside the player as the plugin does it, with no spawn animation. */
 	private void spawn()
 	{
+		spawnAt(new WorldPoint(49, 50, 0));
+	}
+
+	private void spawnAt(WorldPoint at)
+	{
 		Model model = (Model) Proxy.newProxyInstance(Model.class.getClassLoader(),
 			new Class<?>[]{Model.class}, (proxy, method, args) ->
 			{
@@ -126,7 +131,7 @@ public class OutOfSightTest
 			});
 		follower.setSpawnAnimation(new int[0]);
 		follower.spawn(new ComposedAppearance(model, ComposedAppearance.Source.DUMP, new Outfit()),
-			new WorldPoint(49, 50, 0), null, 0);
+			at, null, 0);
 	}
 
 	private RuneLiteObject body() throws ReflectiveOperationException
@@ -194,9 +199,15 @@ public class OutOfSightTest
 	@Test
 	public void aSketchsFrameIsDrawnWithoutTheScribe()
 	{
-		spawn();
+		// Not on the west tile: that is where a recovery snap would put it,
+		// and a snap there would pass for standing still.
+		spawnAt(new WorldPoint(51, 50, 0));
+		follower.updateFrame();
+		follower.stayHere();
 		follower.updateFrame();
 		assertTrue(follower.isShown());
+		WorldPoint post = follower.getWorldLocation();
+		WorldPoint stay = follower.getStayTile();
 
 		follower.setOutOfPicture(true);
 		follower.updateFrame();
@@ -205,5 +216,7 @@ public class OutOfSightTest
 		follower.setOutOfPicture(false);
 		follower.updateFrame();
 		assertTrue("back for the next", follower.isShown());
+		assertEquals("where it stood", post, follower.getWorldLocation());
+		assertEquals("still told to stay", stay, follower.getStayTile());
 	}
 }

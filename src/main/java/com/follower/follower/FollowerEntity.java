@@ -1015,6 +1015,9 @@ public class FollowerEntity
 	@lombok.Setter
 	private boolean outOfPicture;
 
+	/** The body is out for the sketch's frame, not lost: it comes back where it stood. */
+	private boolean pictureHidden;
+
 	/**
 	 * Arms a frame-accurate disappearance: the instant the current emote
 	 * finishes, the follower goes invisible for the given time - no standing
@@ -2285,7 +2288,15 @@ public class FollowerEntity
 			{
 				object.setActive(false);
 			}
+			pictureHidden = outOfPicture;
 			return;
+		}
+		if (pictureHidden)
+		{
+			// Put back here, before the watchdog below can take the hide
+			// for a fault and snap it beside the player, ending any Stay.
+			pictureHidden = false;
+			object.setActive(true);
 		}
 
 		// Thrall mode: the follower IS the thrall. Everything below - follow
@@ -4844,7 +4855,10 @@ public class FollowerEntity
 		slavedAdvanceTick = client.getTickCount();
 		if (slavedIndex >= slavedChain.length)
 		{
-			endSlavedChain();
+			// A cosmetic with more stages than ours (Leagues 6 has eight):
+			// stay on the last one until the player's sequence ends, which
+			// is when slavedPlayerStopped takes the follower with them.
+			slavedIndex = slavedChain.length - 1;
 			return;
 		}
 
@@ -4859,8 +4873,11 @@ public class FollowerEntity
 		// No onFinished chaining: if the clip outlasts the player's stage, the
 		// player's next change cuts it; if it runs out first, the model holds
 		// its final frame until the next stage - the same look the server's
-		// schedule produces on a real player.
+		// schedule produces on a real player. Held here: left to the default,
+		// a finished clip starts again from its first frame.
 		AnimationController controller = new AnimationController(client, animation);
+		controller.setOnFinished(finished -> finished.setFrame(animation.isMayaAnim()
+			? animation.getDuration() - 1 : animation.getFrameLengths().length - 1));
 		object.setAnimationController(controller);
 		animationIds.add(slavedChain[slavedIndex]);
 		setEmotePlaying(true);

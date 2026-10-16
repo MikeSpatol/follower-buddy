@@ -245,7 +245,7 @@ public class TeleportStageGraphicTest
 		}
 		assertEquals(Arrays.asList(3), showing());
 
-		follower.advanceSlavedChain();
+		follower.slavedPlayerStopped();
 
 		assertFalse(follower.isSlavedChainActive());
 		assertEquals("nothing left behind at the departure", Arrays.asList(), showing());

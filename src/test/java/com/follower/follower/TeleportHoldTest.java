@@ -7,6 +7,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import net.runelite.api.Animation;
+import net.runelite.api.AnimationController;
 import net.runelite.api.Client;
 import net.runelite.api.RuneLiteObject;
 import net.runelite.api.coords.WorldPoint;
@@ -174,6 +175,30 @@ public class TeleportHoldTest
 		follower.slavedPlayerStopped();
 		assertTrue("the last stage done, it leaves with the player", vanished());
 		assertFalse(follower.isSlavedChainActive());
+	}
+
+	@Test
+	public void aCosmeticWithMoreStagesHoldsTheLastOneUntilThePlayerLeaves() throws Exception
+	{
+		// Leagues 6: eight player stages to the follower's five.
+		homeTeleport();
+		toStage(7);
+		assertFalse("still with the player on their last stage", vanished());
+		assertTrue(follower.isSlavedChainActive());
+		follower.slavedPlayerStopped();
+		assertTrue("and gone with them", vanished());
+	}
+
+	@Test
+	public void aStageThatRunsOutHoldsItsFinalFrame() throws Exception
+	{
+		homeTeleport();
+		toStage(HOME.length - 1);
+		AnimationController clip = ((RuneLiteObject) get("object")).getAnimationController();
+		// Ten frames of five ticks, run well past their end.
+		clip.tick(70);
+		assertEquals("held on its last frame, not started again", 9, clip.getFrame());
+		assertTrue("and still playing it", clip.getAnimation() != null);
 	}
 
 	@Test

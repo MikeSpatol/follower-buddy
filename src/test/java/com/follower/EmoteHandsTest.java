@@ -60,11 +60,14 @@ public class EmoteHandsTest
 	private static final int QUILL = ErrandController.QUILL_PROP;
 	private static final int SCROLL = ErrandController.SCROLL_PROP;
 	private static final int STICK = 9702;
+	private static final int SEXTANT = 24487;
 
 	private static final int WRITE = ErrandController.WRITE_SCROLL_POSE;
 	private static final int DRAW_THE_CIRCLE = 4847;
 	private static final int SIT_CROSSLEGGED = 4850;
 	private static final int WAVE = 863;
+	private static final int EXPLORE_LOOP = net.runelite.api.gameval.AnimationID.EMOTE_EXPLORE_LOOP;
+	private static final int FLINCH = net.runelite.api.gameval.AnimationID.HUMAN_UNARMEDBLOCK;
 
 	/** The follower: what each animation names for the hands. */
 	private static final class Feet extends FollowerEntity
@@ -96,7 +99,8 @@ public class EmoteHandsTest
 			+ "\"" + DRAGON_SQUARE + "\":{\"n\":\"Dragon sq shield\",\"wp1\":5,\"m\":[2522,-1,-1],\"f\":[2522,-1,-1]},"
 			+ "\"" + QUILL + "\":{\"n\":\"null\",\"m\":[60001,-1,-1],\"f\":[60001,-1,-1]},"
 			+ "\"" + SCROLL + "\":{\"n\":\"null\",\"m\":[60002,-1,-1],\"f\":[60002,-1,-1]},"
-			+ "\"" + STICK + "\":{\"n\":\"null\",\"m\":[60003,-1,-1],\"f\":[60003,-1,-1]}"
+			+ "\"" + STICK + "\":{\"n\":\"null\",\"m\":[60003,-1,-1],\"f\":[60003,-1,-1]},"
+			+ "\"" + SEXTANT + "\":{\"n\":\"null\",\"m\":[60004,-1,-1],\"f\":[60004,-1,-1]}"
 			+ "},\"kits\":{}}").getBytes(StandardCharsets.UTF_8));
 		ModelRepository models = new ModelRepository(new Gson());
 		models.load(dir);
@@ -126,11 +130,21 @@ public class EmoteHandsTest
 		});
 		feet = new Feet();
 		set("follower", feet);
+		set("clientThread", new net.runelite.client.callback.ClientThread()
+		{
+			@Override
+			public void invoke(Runnable r)
+			{
+				r.run();
+			}
+		});
 
 		feet.hands.put(WRITE, new int[]{QUILL, SCROLL});
 		feet.hands.put(DRAW_THE_CIRCLE, new int[]{-1, STICK});
 		feet.hands.put(SIT_CROSSLEGGED, new int[]{-1, -1});
 		feet.hands.put(WAVE, new int[]{-1, -1});
+		feet.hands.put(EXPLORE_LOOP, new int[]{SEXTANT, -1});
+		feet.hands.put(FLINCH, new int[]{-1, -1});
 	}
 
 	private static Object nothing(Class<?> type)
@@ -185,6 +199,39 @@ public class EmoteHandsTest
 		call("dressEmoteHands", WAVE);
 		assertEquals(rebuilds, built.size());
 		assertFalse("hands empty, as the emote disarm has them", lastBuilt().isItem(KitType.WEAPON));
+	}
+
+	@Test
+	public void aHeldLoopHoldsWhatItNames() throws ReflectiveOperationException
+	{
+		// Explore's loop, mirrored as a pose after its entry clip.
+		call("startPoseMirror", EXPLORE_LOOP);
+		assertEquals("the sextant still to its eye", SEXTANT, lastBuilt().itemId(KitType.SHIELD));
+		assertFalse("the weapon away, as for any emote", lastBuilt().isItem(KitType.WEAPON));
+
+		call("stopPoseMirror");
+		assertEquals("and the gear back once the player stops", WHIP, lastBuilt().itemId(KitType.WEAPON));
+		assertEquals(DRAGON_SQUARE, lastBuilt().itemId(KitType.SHIELD));
+	}
+
+	@Test
+	public void aCopyOfTheWorkKeepsToTheBorrowedTools() throws ReflectiveOperationException
+	{
+		set("copyAtWork", true);
+		call("startPoseMirror", EXPLORE_LOOP);
+		assertFalse(lastBuilt().isItem(KitType.SHIELD));
+	}
+
+	@Test
+	public void aBlockKeepsTheWeaponAndShieldUp() throws ReflectiveOperationException
+	{
+		emote(FLINCH);
+		assertEquals("blocked with what it holds", WHIP, lastBuilt().itemId(KitType.WEAPON));
+		assertEquals(DRAGON_SQUARE, lastBuilt().itemId(KitType.SHIELD));
+		call("updateEmoteDisarm", false);
+
+		emote(WAVE);
+		assertFalse("any other emote still puts it away", lastBuilt().isItem(KitType.WEAPON));
 	}
 
 	@Test

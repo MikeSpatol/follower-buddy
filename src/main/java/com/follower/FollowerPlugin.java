@@ -1089,6 +1089,7 @@ public class FollowerPlugin extends Plugin
 		emoteDisarmed = false;
 		emoteHold = false;
 		mirroredPose = 0;
+		loopHands = null;
 		pendingMime = 0;
 		pendingOneShot = false;
 		copyAtWork = false;
@@ -4766,6 +4767,17 @@ public class FollowerPlugin extends Plugin
 			tellTheFilm("Posing ended when you left the world. Press anything here to start again.");
 		}
 		endFilming();
+		// A held copy (a sit, a dance loop) too. Its pose override outlives
+		// the body, and the next one held it at every stop, weapon away.
+		if (mirroredPose != 0)
+		{
+			follower.clearPoseOverride(mirroredPose);
+			mirroredPose = 0;
+			loopHands = null;
+			emoteDisarmed = false;
+		}
+		pendingMime = 0;
+		copyAtWork = false;
 		welfareChecked = false;
 		captureFallback.abort();
 		follower.despawn();
@@ -5333,6 +5345,7 @@ public class FollowerPlugin extends Plugin
 			outfitOverride == null ? wornSlot : null, wornItemId);
 		dressForPose(outfit, propShown ? propHands : null);
 		dressForPose(outfit, outfitOverride == null ? emoteHands : null);
+		dressForPose(outfit, outfitOverride == null && emoteHands == null ? loopHands : null);
 		dressForPose(outfit, filmHands);
 
 		appearanceService.request(outfit, com.follower.appearance.ModelSource.DUMP_ONLY, appearance ->
@@ -6033,11 +6046,24 @@ public class FollowerPlugin extends Plugin
 	/** Whether the copy under way is of the work, and so lasts only while beside it. */
 	private boolean copyAtWork;
 
+	/**
+	 * What a held emote loop names for the hands (Explore's sextant), kept
+	 * apart from emoteHands, which its entry clip's end takes off.
+	 */
+	private int[] loopHands;
+
 	private void startPoseMirror(int animationId)
 	{
 		mirroredPose = animationId;
 		clientThread.invoke(() -> follower.setPoseOverride(animationId));
+		// Not a copy of the work, which keeps to the tools it borrowed.
+		loopHands = copyAtWork ? null : follower.emoteHandItems(animationId);
+		boolean disarmed = emoteDisarmed;
 		refreshEmoteDisarm(follower.isEmotePlaying());
+		if (loopHands != null && disarmed == emoteDisarmed)
+		{
+			rebuildFollower();
+		}
 	}
 
 	private void stopPoseMirror()
@@ -6057,7 +6083,14 @@ public class FollowerPlugin extends Plugin
 		mirroredPose = 0;
 		// Only its own: a moment that stepped in may have put a pose of its own on.
 		clientThread.invoke(() -> follower.clearPoseOverride(held));
+		boolean handsBack = loopHands != null;
+		loopHands = null;
+		boolean disarmed = emoteDisarmed;
 		refreshEmoteDisarm(follower.isEmotePlaying());
+		if (handsBack && disarmed == emoteDisarmed)
+		{
+			rebuildFollower();
+		}
 	}
 
 	/** How long a rule's gesture said on the move waits for the follower to stand. */
@@ -6079,6 +6112,7 @@ public class FollowerPlugin extends Plugin
 		// weapon coming back when there is one.
 		boolean handsBack = !emoting && emoteHands != null;
 		emoteHands = emoting ? emoteHands : null;
+		clipKeepsHands = emoting && clipKeepsHands;
 		boolean disarmed = emoteDisarmed;
 		refreshEmoteDisarm(emoting);
 		if (handsBack && disarmed == emoteDisarmed)
@@ -6095,9 +6129,28 @@ public class FollowerPlugin extends Plugin
 	 */
 	private int[] emoteHands;
 
+	/**
+	 * Clips that keep both hands as they are, as the game plays them: the
+	 * block keeps weapon and shield up, the Ancient and Arceuus teleports the
+	 * staff. Not the mood idles, keep-handed too, where a kiteshield would
+	 * cross the face.
+	 */
+	private static final Set<Integer> KEEPS_HANDS = Set.of(
+		net.runelite.api.gameval.AnimationID.HUMAN_UNARMEDBLOCK,
+		net.runelite.api.gameval.AnimationID.ZAROS_VERTICAL_CASTING,
+		net.runelite.api.gameval.AnimationID.HUMAN_SPELLCAST_ARCEUUS_TELEPORT);
+
+	/** Whether the emote clip on now is one of those. */
+	private boolean clipKeepsHands;
+
 	/** Each clip of an emote, as it goes on: dresses the hands it names. */
 	private void dressEmoteHands(int clip)
 	{
+		if (clipKeepsHands != KEEPS_HANDS.contains(clip))
+		{
+			clipKeepsHands = !clipKeepsHands;
+			refreshEmoteDisarm(follower.isEmotePlaying());
+		}
 		int[] hands = thrallNpc == null ? follower.emoteHandItems(clip) : null;
 		if (java.util.Arrays.equals(hands, emoteHands))
 		{
@@ -6115,7 +6168,7 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void refreshEmoteDisarm(boolean emoting)
 	{
-		boolean wanted = (emoting || mirroredPose != 0
+		boolean wanted = (emoting && !clipKeepsHands || mirroredPose != 0
 			|| skilling != null && skilling.worksBareHanded()) && thrallNpc == null
 			&& (filmSet == null || !filmSet.isPosing());
 		if (wanted == emoteDisarmed)
