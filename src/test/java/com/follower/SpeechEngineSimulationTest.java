@@ -488,7 +488,7 @@ public class SpeechEngineSimulationTest
 	{
 		// "Careful with the The Leviathan." The name's own "The" goes to the
 		// word already pointing at it, an "a" becoming that "the"; with nothing
-		// pointing at it, the name stays as the game spells it.
+		// pointing at it, the name keeps its own "The".
 		String kill = "{\"type\": \"npcKill\", \"minimum\": 1}";
 		TriggerEvent leviathan = TriggerEvent.kill(12214, "The Leviathan", 723);
 		assertEquals("Careful with the Leviathan.", says(kill, "Careful with the {npc}.", leviathan));
@@ -502,7 +502,15 @@ public class SpeechEngineSimulationTest
 			"That {npc} never stood a chance.", leviathan));
 		assertEquals("I remember the first Leviathan.", says(kill,
 			"I remember the first {npc}.", leviathan));
-		assertEquals("You beat The Leviathan!", says(kill, "You beat {npc}!", leviathan));
+		// QA 2: with nothing pointing at it, the name's "The" is lower case in
+		// the middle of a sentence and keeps its capital at the start of one.
+		assertEquals("You beat the Leviathan!", says(kill, "You beat {npc}!", leviathan));
+		assertEquals("Well. The Leviathan, down.", says(kill, "Well. {npc}, down.", leviathan));
+		assertEquals("I heard you, the Leviathan. So did everybody.", says("{\"type\": \"npcShout\"}",
+			"I heard you, {npc}. So did everybody.", TriggerEvent.npcShout("The Leviathan", "Rrraagh")));
+		// A quest is a title, and keeps its capital wherever it falls.
+		assertEquals("You finished The Restless Ghost.", says("{\"type\": \"questComplete\"}",
+			"You finished {quest}.", TriggerEvent.questComplete("The Restless Ghost")));
 
 		// Only a whole "The" is given up.
 		assertEquals("Careful with the Thermonuclear smoke devil.", says(kill,

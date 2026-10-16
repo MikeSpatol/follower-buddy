@@ -125,6 +125,9 @@ public class SpeechEngine
 	/** Someone's own name or words: the article step leaves them as written, "The" and all. */
 	private static final Set<String> AS_WRITTEN = Set.of("player", "name", "speaker", "message");
 
+	/** Placeholders that always name a creature or a boss, whatever the event. */
+	private static final Set<String> CREATURE_NAMES = Set.of("npc", "foe", "boss", "memoryWho");
+
 	/** Words that already point at the thing, so a name's own "The" goes: that Leviathan, the first Leviathan. */
 	private static final Set<String> POINTING = Set.of("the", "that", "this", "another", "one", "first", "more");
 
@@ -1647,6 +1650,13 @@ public class SpeechEngine
 						event.getType() == TriggerEvent.Type.NPC_KILL ? event.getValue() : 0))
 				{
 					replacement = Words.asCommonNoun(replacement);
+				}
+				// A creature's own "The", with nothing pointing at it, is lower
+				// case mid-sentence: you beat the Leviathan.
+				if ((event.getCreatureKeys().contains(key) || CREATURE_NAMES.contains(key))
+					&& replacement.startsWith("The ") && !opensSentence(template, i))
+				{
+					replacement = "t" + replacement.substring(1);
 				}
 			}
 			// The values are written for the middle of a sentence - "a feather",
