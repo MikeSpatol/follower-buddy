@@ -2100,8 +2100,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > Encouragement during an ordinary fight, kept rare so it does not natter. A boss fight has its own cheer.
 
-- **when:** in a fight AND NOT (a boss fight) AND a 8% roll
-- **pacing:** priority 30, cooldown 20s
+- **when:** in a fight AND NOT (a boss fight) AND a 4% roll
+- **pacing:** priority 30, cooldown 1m
 
 - Keep at it.
 - That's it.

@@ -8625,7 +8625,7 @@
       "note": "Encouragement during an ordinary fight, kept rare so it does not natter. A boss fight has its own cheer.",
       "group": "combat",
       "priority": 30,
-      "cooldownMs": 20000,
+      "cooldownMs": 90000,
       "when": {
         "type": "all",
         "conditions": [
@@ -8642,7 +8642,7 @@
           },
           {
             "type": "chance",
-            "percent": 8
+            "percent": 4
           }
         ]
       },
