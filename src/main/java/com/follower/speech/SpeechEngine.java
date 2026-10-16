@@ -1332,7 +1332,7 @@ public class SpeechEngine
 			// holds every first's cooldown longer than the queue's wait.
 			if (rule.isOnce() && !text.isEmpty())
 			{
-				getContext().noteSaidOnce(rule.id);
+				getContext().noteSaidOnce(rule.onceKey());
 			}
 		};
 
@@ -1409,7 +1409,8 @@ public class SpeechEngine
 
 	private boolean isActive(SpeechRule rule)
 	{
-		if (!rule.isEnabled() || (rule.isOnce() && getContext().hasSaidOnce(rule.id)))
+		if (!rule.isEnabled() || (rule.isOnce()
+			&& (getContext().hasSaidOnce(rule.id) || getContext().hasSaidOnce(rule.onceKey()))))
 		{
 			return false;
 		}

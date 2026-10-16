@@ -489,6 +489,20 @@ public class SpeechRule
 		return Boolean.TRUE.equals(once);
 	}
 
+	/**
+	 * What a once rule is spent under. A callback - a moment's other version
+	 * for a player who has done the quest it names, "-after-" in its id - is
+	 * spent with its base: they are one moment, and only one of them is ever
+	 * said. QA, 15 Oct: the mugger on Rune Mysteries' street was said, the
+	 * player finished Children of the Sun next door, and the callback said
+	 * the mugger again at the same step.
+	 */
+	public String onceKey()
+	{
+		int cut = id == null ? -1 : id.indexOf("-after-");
+		return cut > 0 ? id.substring(0, cut) : id;
+	}
+
 	public boolean isValid()
 	{
 		return when != null && (hasSpeech() || hasAnimationAction());

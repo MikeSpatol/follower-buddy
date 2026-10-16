@@ -152,6 +152,55 @@ public class QuestMomentTest
 		}
 	}
 
+	/**
+	 * QA, 15 Oct (probe P1): the mugger on Rune Mysteries' street was said,
+	 * Children of the Sun was finished next door, and at the same step the
+	 * callback said the mugger again. A base and its callback are one moment.
+	 */
+	@Test
+	public void aCallbackIsNotSaidAfterItsBaseNorTheBaseAfterIt() throws IOException
+	{
+		for (boolean baseFirst : new boolean[]{true, false})
+		{
+			Harness h = harness(
+				moment("mugger", varp(63, 3, 4), notDone("CHILDREN_OF_THE_SUN"), NOT_IN_DIALOGUE),
+				callback("mugger-after-cots", varp(63, 3, 4), done("CHILDREN_OF_THE_SUN"), NOT_IN_DIALOGUE));
+			h.game.quest(Quest.CHILDREN_OF_THE_SUN, baseFirst ? QuestState.IN_PROGRESS : QuestState.FINISHED);
+			ticks(h, 2);
+			h.game.varp(63, 3);
+			ticks(h, 5);
+			assertEquals(1, h.spoken.size());
+
+			// Twelve minutes on, at the same step, the other quest's state is
+			// the other way round. Never in fact for the callback first, but the
+			// key is one either way.
+			h.game.quest(Quest.CHILDREN_OF_THE_SUN, baseFirst ? QuestState.FINISHED : QuestState.IN_PROGRESS);
+			ms[0] += 12 * 60_000L;
+			h.game.varp(63, 4);
+			ticks(h, 5);
+			assertEquals("one moment, said once", 1, h.spoken.size());
+		}
+	}
+
+	/** Every shipped callback is spent with its base: the base is there, and a first too. */
+	@Test
+	public void everyShippedCallbackSharesItsBasesOnce() throws IOException
+	{
+		Harness h = new Harness(folder.newFolder().toPath());
+		int callbacks = 0;
+		for (SpeechRule rule : h.loader.getRules())
+		{
+			if (rule.isOnce() && !rule.onceKey().equals(rule.id))
+			{
+				callbacks++;
+				SpeechRule base = h.rule(rule.onceKey());
+				assertTrue(rule.id + " has a base", base != null);
+				assertTrue(rule.id + "'s base is a first too", base.isOnce());
+			}
+		}
+		assertTrue(callbacks >= 13);
+	}
+
 	@Test
 	public void questDoneIsQuietAndHarmlessWhenItCannotRead() throws IOException
 	{
