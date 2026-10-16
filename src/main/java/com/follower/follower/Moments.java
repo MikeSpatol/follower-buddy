@@ -254,6 +254,15 @@ public class Moments implements Noticing.Looker
 		int[] play = level >= MASTERY ? CELEBRATION.clone()
 			: new int[]{daysKnown.getAsInt() <= NEW_DAYS ? BOW : CLAP};
 		int now = client.getTickCount();
+		if (follower.isDoingAgility())
+		{
+			// An Agility level lands as the player finishes an obstacle, with
+			// the follower still on it, and the crossing would cancel the clap
+			// on its first frame: owed, and clapped once the feet are free.
+			owed = play;
+			owedUntil = now + OWED_TICKS;
+			return;
+		}
 		if (levels % WALK_EVERY == 0 && free() && follower.moveToFront(local))
 		{
 			skilling.setExcused(true);
@@ -280,6 +289,30 @@ public class Moments implements Noticing.Looker
 			return;
 		}
 		skilling.gesture(play, here);
+	}
+
+	/** A clap owed from a level gained on an obstacle, and the tick it is let go. */
+	private int[] owed;
+	private int owedUntil;
+
+	/** About ten seconds: past that, the moment has gone. */
+	static final int OWED_TICKS = 17;
+
+	/** The owed clap, as a level gained on the move is clapped: stopped, then clapped. */
+	private void clapOwed(int now)
+	{
+		int[] play = owed;
+		owed = null;
+		if (now > owedUntil)
+		{
+			return;
+		}
+		skilling.setExcused(true);
+		follower.stayHere();
+		doing = Doing.LEVEL;
+		beat = play;
+		arriveAt = now + 1;
+		leaveAt = 0;
 	}
 
 	// -------------------------------------------------------------------- pet
@@ -616,6 +649,10 @@ public class Moments implements Noticing.Looker
 		}
 		watchTheWind(now, here, local);
 		watchForStrangers(now, local);
+		if (owed != null && (now > owedUntil || free()))
+		{
+			clapOwed(now);
+		}
 		// The look up from an in-place write-up: the notes are still out,
 		// and the nod goes to the player. Not once something has taken the
 		// feet since: a scene being filmed puts the notes away as it starts,

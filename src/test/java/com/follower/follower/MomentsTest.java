@@ -37,6 +37,7 @@ public class MomentsTest
 		int poseOverride;
 		int movedToFront;
 		boolean moving;
+		boolean agility;
 		final List<Integer> animations = new ArrayList<>();
 		final List<WorldPoint> stays = new ArrayList<>();
 		final List<WorldPoint> glances = new ArrayList<>();
@@ -62,6 +63,12 @@ public class MomentsTest
 		public boolean isMoving()
 		{
 			return moving;
+		}
+
+		@Override
+		public boolean isDoingAgility()
+		{
+			return agility;
 		}
 
 		@Override
@@ -336,6 +343,46 @@ public class MomentsTest
 		tick(3);
 		assertFalse("and the feet handed back after it", moments.holdsTheFeet());
 		assertTrue(follower.following);
+	}
+
+	/**
+	 * An Agility level lands as the player finishes an obstacle, with the
+	 * follower still on it a couple of ticks behind. The crossing would
+	 * cancel the clap on its first frame, so it is owed, and clapped once
+	 * the crossing is done (QA4 #10).
+	 */
+	@Test
+	public void aLevelGainedOnAnObstacleIsClappedOnceTheFollowerIsOffIt()
+	{
+		tick(1);
+		follower.agility = true;
+		feetTaken = true;
+		moments.levelUp(41);
+		tick(3);
+		assertTrue("nothing played into the crossing", follower.animations.isEmpty());
+
+		follower.agility = false;
+		feetTaken = false;
+		tick(2);
+		assertEquals("clapped once off it", Collections.singletonList(Moments.CLAP), follower.animations);
+		tick(3);
+		assertFalse("and the feet handed back after it", moments.holdsTheFeet());
+		assertTrue(follower.following);
+	}
+
+	@Test
+	public void anOwedClapIsLetGoAfterTenSeconds()
+	{
+		tick(1);
+		follower.agility = true;
+		feetTaken = true;
+		moments.levelUp(41);
+		tick(Moments.OWED_TICKS + 1);
+		follower.agility = false;
+		feetTaken = false;
+		tick(5);
+		assertTrue("the moment has gone", follower.animations.isEmpty());
+		assertFalse(moments.holdsTheFeet());
 	}
 
 	@Test
