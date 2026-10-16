@@ -237,6 +237,17 @@ public class TeleportHoldTest
 	}
 
 	@Test
+	public void aCastThatNeverStartedHoldsNothingBack() throws Exception
+	{
+		set("animatable", false);
+		follower.stayHere();
+		follower.playAnimation(714);
+		follower.vanishAfterEmote();
+		follower.resumeFollowing();
+		assertNull(get("stayTile"));
+	}
+
+	@Test
 	public void aReleaseOutsideACastIsImmediate() throws Exception
 	{
 		follower.stayHere();

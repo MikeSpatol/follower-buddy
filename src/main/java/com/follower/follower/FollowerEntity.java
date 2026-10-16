@@ -4684,11 +4684,11 @@ public class FollowerEntity
 
 	/** While true the follower is gone mid-teleport, awaiting the player's landing. */
 	private boolean vanished;
+	private long vanishedAtMs;
+	private WorldPoint vanishPlayerTile;
 
 	/** Set when the player is seen to land with the vanish still armed. */
 	private boolean castLanded;
-	private long vanishedAtMs;
-	private WorldPoint vanishPlayerTile;
 
 	/**
 	 * Arms the teleport exit: when the current emote or slaved chain finishes,
@@ -4699,7 +4699,13 @@ public class FollowerEntity
 	 */
 	public void vanishAfterEmote()
 	{
-		vanishAfterEmoteArmed = true;
+		// Only over a cast that is playing: one that never started (no model
+		// to play it on) would hold the vanish, and every release waiting on
+		// the cast, until some later emote.
+		if (emotePlaying)
+		{
+			vanishAfterEmoteArmed = true;
+		}
 	}
 
 	/** Called as a mirrored cast ends: go invisible and wait for the landing. */
