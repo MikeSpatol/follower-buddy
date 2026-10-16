@@ -453,6 +453,8 @@ public class SpeechEngine
 		long gapAfterMs;
 		/** Ticks an occasion has spent waiting out a scene, its quiet and the gap after, apart from the gap's ten. */
 		int sceneWaited;
+		/** Ticks a waits line has spent waiting out the director's rest. */
+		int rested;
 		/** Held by a conversation, and not yet given its beat after it. */
 		boolean heardTheBox;
 		/** The scene quiet when last looked at, and whether a scene has begun since the win. */
@@ -520,6 +522,20 @@ public class SpeechEngine
 		return rule.waitsItsTurn() && waited < SCENE_WAIT_TICKS
 			&& ("scene".equals(held) || "dialogue".equals(held)
 				|| (waited > 0 && ("gap".equals(held) || "hush".equals(held))));
+	}
+
+	/**
+	 * How long a line that waits will wait out the director's rest, in
+	 * ticks: the longest rest. One rest, not a queue through every one: the
+	 * rest still happens, and the line comes after it. Behaviour QA, 15 Oct:
+	 * Alina and Noah's line met a rest in a busy square and was gone for good.
+	 */
+	static final int REST_WAIT_TICKS = 75;
+
+	/** Whether a line held by the director's rest waits it out rather than being dropped. Not an occasion: no rest holds one. */
+	static boolean waitsOutTheRest(SpeechRule rule, String held, int rested)
+	{
+		return "relax".equals(held) && Boolean.TRUE.equals(rule.waits) && rested < REST_WAIT_TICKS;
 	}
 
 	/**
@@ -916,6 +932,12 @@ public class SpeechEngine
 						delayed.ticksLeft = 1;
 						continue;
 					}
+					if (waitsOutTheRest(delayed.rule, held, delayed.rested))
+					{
+						delayed.rested++;
+						delayed.ticksLeft = 1;
+						continue;
+					}
 					it.remove();
 					// Kept over a cutscene that began after it won, a line
 					// about a quest's step that has since moved on is old
@@ -1073,7 +1095,8 @@ public class SpeechEngine
 		}
 
 		String blocked = blockedBy(winner, now);
-		if (waitsOutTheGap(winner, blocked, 0, occasionWaitTicks()) || waitsOutTheScene(winner, blocked, 0))
+		if (waitsOutTheGap(winner, blocked, 0, occasionWaitTicks()) || waitsOutTheScene(winner, blocked, 0)
+			|| waitsOutTheRest(winner, blocked, 0))
 		{
 			winner.markFired(now);
 			PendingSpeech held = new PendingSpeech(winner, event, 1, sceneQuiet);

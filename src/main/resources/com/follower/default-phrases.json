@@ -12263,6 +12263,7 @@
     },
     {
       "id": "bet-won",
+      "waits": true,
       "note": "Above the loot rules so the verdict on the prediction beats the remark about the prize. The follower called it; that is the story.",
       "group": "bet",
       "priority": 72,
@@ -12285,6 +12286,7 @@
     },
     {
       "id": "bet-lost",
+      "waits": true,
       "note": "The half that makes the other half worth anything.",
       "group": "bet",
       "priority": 72,
@@ -13116,6 +13118,7 @@
     },
     {
       "id": "advice-taken",
+      "waits": true,
       "note": "The other half of a warning. Until now the follower shouted and then never mentioned it again, whichever way it went, which is the difference between commentary and a conversation.",
       "group": "reactions",
       "priority": 44,
@@ -13153,6 +13156,7 @@
     },
     {
       "id": "advice-ignored",
+      "waits": true,
       "note": "And the funnier half.",
       "group": "reactions",
       "priority": 42,
@@ -13734,6 +13738,7 @@
     },
     {
       "id": "challenge-met",
+      "waits": true,
       "note": "Paid out. Above the kill rules so the wager beats the cheer.",
       "group": "idle",
       "priority": 74,
@@ -13756,6 +13761,7 @@
     },
     {
       "id": "challenge-failed",
+      "waits": true,
       "group": "idle",
       "priority": 72,
       "cooldownMs": 5000,

@@ -426,6 +426,32 @@ public class SceneQuietTest
 	// --------------------------------------------------------- a rest, a gap
 
 	/**
+	 * Behaviour QA, 15 Oct: Alina and Noah's line met the director's rest in
+	 * a busy square and was gone for good, its hour's cooldown charged.
+	 */
+	@Test
+	public void aLineThatWaitsWaitsOutOneRest() throws IOException
+	{
+		Harness h = harness(CHATTY, WAITS);
+		SpeechRule chatty = h.rule("chatty");
+		for (int i = 0; i < 3; i++)
+		{
+			h.engine.getDirector().noteSpoke(chatty, ms[0]);
+		}
+		assertTrue(h.engine.getDirector().isRelaxing(ms[0]));
+
+		h.dispatch(TriggerEvent.levelUp("Attack", 30));
+		h.game.hitpoints(10, 99);
+		ticks(h, 40);
+		assertTrue("not through the rest", h.firedBy("waits").isEmpty());
+		assertTrue("chatter is dropped by it", held.contains("chatty:relax"));
+
+		ticks(h, SpeechEngine.REST_WAIT_TICKS);
+		assertEquals("said after it", 1, h.firedBy("waits").size());
+		assertFalse(held.contains("waits:relax"));
+	}
+
+	/**
 	 * QA, 15 Oct (probe P7): two occasions behind one ordinary line. The
 	 * first waits out the gap and is said; the second's wait was counted from
 	 * when it first blocked, ran out a tick before the first's gap did, and
@@ -445,5 +471,18 @@ public class SceneQuietTest
 		assertEquals("both said", 1, h.firedBy("quest").size());
 		assertEquals(1, h.firedBy("level").size());
 		assertTrue("nothing dropped", held.isEmpty());
+	}
+
+	/** The payoffs of something the follower set up itself: the setup was heard, so is its end. */
+	@Test
+	public void everyShippedPayoffWaitsItsTurn() throws IOException
+	{
+		Harness h = new Harness(folder.newFolder().toPath());
+		for (String id : new String[]{"advice-taken", "advice-ignored", "bet-won", "bet-lost",
+			"challenge-met", "challenge-failed"})
+		{
+			assertTrue(id, h.rule(id).waitsItsTurn());
+			assertFalse("waiting, not an occasion's exemptions: " + id, h.rule(id).isOccasion());
+		}
 	}
 }
