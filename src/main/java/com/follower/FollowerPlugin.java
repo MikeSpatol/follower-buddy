@@ -6915,7 +6915,7 @@ public class FollowerPlugin extends Plugin
 		if (tree != null)
 		{
 			dialog.startNextTick(followerName(),
-				com.follower.speech.FollowerDialog.build(tree, this::answerQuestion),
+				com.follower.speech.FollowerDialog.build(tree, this::answerQuestion, speechEngine::fill),
 				tree.startId());
 			return;
 		}

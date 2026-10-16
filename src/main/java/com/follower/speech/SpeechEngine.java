@@ -1536,6 +1536,12 @@ public class SpeechEngine
 		return text;
 	}
 
+	/** A page of a conversation tree, filled from the state like a spoken line: {candidate} and the rest. */
+	public String fill(String template)
+	{
+		return substitute(template, TriggerEvent.simple(TriggerEvent.Type.MANUAL), null, true);
+	}
+
 	/**
 	 * The template with {memoryWhere} and {memoryWhen} taken out, or null
 	 * when it has neither or would lose the memory with them. The where

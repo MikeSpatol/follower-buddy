@@ -219,6 +219,17 @@ public class FollowerDialog extends Overlay
 	public static Map<String, Node> build(DialogTree tree,
 		java.util.function.Consumer<String> onAnswer)
 	{
+		return build(tree, onAnswer, java.util.function.UnaryOperator.identity());
+	}
+
+	/**
+	 * As {@link #build(DialogTree, java.util.function.Consumer)}, with every
+	 * page and option passed through {@code fill}, so a tree can say the
+	 * {candidate} its question is about.
+	 */
+	public static Map<String, Node> build(DialogTree tree,
+		java.util.function.Consumer<String> onAnswer, java.util.function.UnaryOperator<String> fill)
+	{
 		Map<String, Node> script = new LinkedHashMap<>();
 		if (tree == null || tree.nodes == null)
 		{
@@ -232,7 +243,7 @@ public class FollowerDialog extends Overlay
 				continue;
 			}
 
-			String[] pages = source.pages().toArray(new String[0]);
+			String[] pages = source.pages().stream().map(fill).toArray(String[]::new);
 			Node node = source.isPlayerSpeaking() ? Node.you(pages) : Node.says(pages);
 
 			if (source.choices != null && !source.choices.isEmpty())
@@ -241,7 +252,7 @@ public class FollowerDialog extends Overlay
 				for (int i = 0; i < source.choices.size(); i++)
 				{
 					DialogTree.DialogChoice choice = source.choices.get(i);
-					pairs[i * 2] = choice.label;
+					pairs[i * 2] = fill.apply(choice.label);
 					pairs[i * 2 + 1] = choice.next;
 				}
 				node.choices(pairs);

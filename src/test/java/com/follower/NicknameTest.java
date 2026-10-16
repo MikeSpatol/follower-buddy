@@ -1,6 +1,8 @@
 package com.follower;
 
 import com.follower.sim.Harness;
+import com.follower.speech.DialogTree;
+import com.follower.speech.FollowerDialog;
 import com.follower.speech.TriggerContext;
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -167,8 +169,24 @@ public class NicknameTest
 		assertEquals(FollowerPlugin.NICKNAME_TREE, h.rule("ask-nickname").asks);
 		for (String line : h.rule("ask-nickname").say)
 		{
-			assertTrue("the line has to say the name, since the tree cannot: " + line,
+			assertTrue("the line has to say the name: " + line,
 				line.contains("{candidate}"));
 		}
+	}
+
+	@Test
+	public void theTreeCanSayTheCandidate() throws IOException
+	{
+		// QA 2: "Which name?" got "The one I said just now", because a tree
+		// was fixed text. Built for Talk-to, its pages and options are filled.
+		Harness h = earned("deaths", 30);
+		DialogTree tree = new com.google.gson.Gson().fromJson("{\"id\": \"t\", \"nodes\": ["
+			+ "{\"id\": \"ask\", \"says\": [\"{candidate}, then?\"],"
+			+ " \"choices\": [{\"label\": \"Fine, {candidate}.\", \"next\": \"yes\"}]},"
+			+ "{\"id\": \"yes\", \"you\": [\"Fine, {candidate}.\"], \"answer\": \"yes\"}]}", DialogTree.class);
+		Map<String, FollowerDialog.Node> script = FollowerDialog.build(tree, answer -> { }, h.engine::fill);
+		assertEquals("The gravedigger, then?", script.get("ask").getPages().get(0));
+		assertEquals("Fine, the gravedigger.", script.get("ask").getOptionLabels().get(0));
+		assertEquals("Fine, the gravedigger.", script.get("yes").getPages().get(0));
 	}
 }
