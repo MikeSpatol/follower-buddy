@@ -8645,6 +8645,16 @@ public class FollowerPlugin extends Plugin
 		// An NPC dialogue up, or gone for under three ticks: the same reading
 		// the minutes take, so a page flip does not count as the box closing.
 		speechEngine.getContext().setDialogueOpen(npcDialogOpen() || dialogGoneTicks <= 2);
+		// And who is in it, so a line about them held through the talk is
+		// still said once the player walks on from them. Not a cutscene's
+		// speakers: nobody the player walked up to.
+		net.runelite.api.widgets.Widget speaker = client.getWidget(
+			net.runelite.api.gameval.InterfaceID.ChatLeft.NAME);
+		if (speaker != null && speaker.getText() != null && !inCutscene())
+		{
+			speechEngine.getContext().noteSpeaker(
+				net.runelite.client.util.Text.removeTags(speaker.getText()));
+		}
 
 		// A player-commanded Stay (R25): the follower's own machinery also
 		// parks it - errands, spectating, thrall work, and the WANDER, which

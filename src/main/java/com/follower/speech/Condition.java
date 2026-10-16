@@ -1462,6 +1462,11 @@ public class Condition
 	 * True when it reads none. For a line kept waiting: behaviour QA, 16 Oct,
 	 * "49 HP! Get out!" said at 70 percent after the player had eaten, and a
 	 * passer-by announced after he had gone.
+	 *
+	 * <p>The person the player has just been talking to still counts as near:
+	 * a line about them is held through that talk, and the player has often
+	 * walked a few tiles on by the time the box closes. Behaviour QA4, 16
+	 * Oct: Sergeant Tobyn was never introduced.
 	 */
 	public boolean standingHolds(TriggerContext ctx, TriggerEvent event)
 	{
@@ -1473,7 +1478,8 @@ public class Condition
 	{
 		if (type != null && types.contains(type.toLowerCase(Locale.ROOT)))
 		{
-			return matches(ctx, event);
+			return matches(ctx, event)
+				|| ("npcnearby".equalsIgnoreCase(type) && matchesAnyName(ctx.getRecentSpeaker()));
 		}
 		if ("all".equalsIgnoreCase(type) && conditions != null)
 		{

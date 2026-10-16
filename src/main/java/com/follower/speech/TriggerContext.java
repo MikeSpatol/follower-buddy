@@ -743,6 +743,36 @@ public final class TriggerContext
 		return dialogueOpen;
 	}
 
+	/**
+	 * A minute: how long after the box the person in it still counts as just
+	 * talked to. Long enough for a line about them to wait out the gap and a
+	 * rest behind whatever the box's close raised, a quest's moment most often.
+	 */
+	static final int SPEAKER_TICKS = 100;
+
+	private String speaker;
+	private int speakerTick;
+
+	/**
+	 * The NPC the player is talking to this tick, by the name the box shows.
+	 * Not one speaking in a cutscene: the player did not walk up to them.
+	 */
+	public void noteSpeaker(String name)
+	{
+		speaker = name;
+		speakerTick = client.getTickCount();
+	}
+
+	/**
+	 * Who the player was talking to in the last minute, or null. A line
+	 * about them held through that talk is still about someone just met,
+	 * though they are a few tiles off by the time it is said.
+	 */
+	public String getRecentSpeaker()
+	{
+		return speaker != null && client.getTickCount() - speakerTick <= SPEAKER_TICKS ? speaker : null;
+	}
+
 	// ------------------------------------------------------------ quest states
 
 	/** Quest states read this tick, by enum name; cleared when the tick moves on. */

@@ -64,6 +64,8 @@ public final class QuestSim
 
 	// world
 	public boolean npcDialog;
+	/** Who is talking in the box, as the plugin reads it off CHAT_LEFT's name; null for nobody named. */
+	public String speaker;
 	public boolean cutscene;
 	private int goneTicks = 99;
 	private boolean sceneOn;
@@ -288,6 +290,10 @@ public final class QuestSim
 		drain();
 		goneTicks = npcDialog ? 0 : Math.min(goneTicks + 1, 1000);
 		h.engine.getContext().setDialogueOpen(npcDialog || goneTicks <= 2);
+		if (npcDialog && speaker != null && !sceneOn)
+		{
+			h.engine.getContext().noteSpeaker(speaker);
+		}
 		h.gameTick();
 		pageNews();
 		int now = regionOf(h.engine.getContext().getRegionId());
@@ -355,7 +361,18 @@ public final class QuestSim
 	public void dialogue(boolean open)
 	{
 		npcDialog = open;
+		if (!open)
+		{
+			speaker = null;
+		}
 		note(open ? "-- NPC dialogue opens" : "-- NPC dialogue closes");
+	}
+
+	/** A dialogue opening with this person talking in it. */
+	public void dialogue(String with)
+	{
+		dialogue(true);
+		speaker = with;
 	}
 
 	public void scene(boolean on)
@@ -367,7 +384,14 @@ public final class QuestSim
 	/** A conversation of the given length, with any var changes run at its end, still inside it. */
 	public void talk(int lengthTicks, Runnable atEnd)
 	{
+		talk(null, lengthTicks, atEnd);
+	}
+
+	/** The same, with this person talking in the box. */
+	public void talk(String with, int lengthTicks, Runnable atEnd)
+	{
 		dialogue(true);
+		speaker = with;
 		ticks(lengthTicks);
 		if (atEnd != null)
 		{
