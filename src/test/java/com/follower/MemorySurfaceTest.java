@@ -76,6 +76,17 @@ public class MemorySurfaceTest
 	}
 
 	@Test
+	public void theWishNamesTheOptionAsTheMenuHasIt()
+	{
+		// QA2, 15 Oct: it said Talk-to while the menu read Answer.
+		TriggerContext context = new TriggerContext(new FakeGame().client);
+		context.setWish("feather", 5, java.util.Collections.singletonList(314));
+		context.noteQuestion("want-outing");
+		String surface = flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap()));
+		assertTrue(surface, surface.contains("Hoping for: feather (right-click the follower and Answer to hand it over)"));
+	}
+
+	@Test
 	public void countsAndBestsAreNamedInWords()
 	{
 		// QA, 15 Oct: the window showed the keys the plugin files them under.
