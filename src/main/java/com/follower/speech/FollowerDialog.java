@@ -1038,6 +1038,25 @@ public class FollowerDialog extends Overlay
 	}
 
 	/**
+	 * The frame after this one, wrapping as the game wraps a clip: back by
+	 * its frame step, so a box left open loops the talk's tail and does not
+	 * start the mouth again from the top. A clip with no step goes back to 0.
+	 */
+	static int nextTalkFrame(int frame, int frames, int frameStep)
+	{
+		int next = frame + 1;
+		if (next >= frames)
+		{
+			next -= frameStep;
+			if (next < 0 || next >= frames)
+			{
+				next = 0;
+			}
+		}
+		return next;
+	}
+
+	/**
 	 * Takes a live NPC dialog's head turn, pitch and zoom, but only off the
 	 * human head's neutral talk (CHATNEU1-4): any other clip may belong to
 	 * another skeleton or a boss's or pet's framing, which would bend or
@@ -1156,7 +1175,7 @@ public class FollowerDialog extends Overlay
 		while (talkCarryMs >= lengths[talkFrame] * 20L)
 		{
 			talkCarryMs -= lengths[talkFrame] * 20L;
-			talkFrame = (talkFrame + 1) % lengths.length;
+			talkFrame = nextTalkFrame(talkFrame, lengths.length, talkAnimation.getFrameStep());
 		}
 
 		net.runelite.api.Model posed = client.applyTransformations(
