@@ -16,7 +16,8 @@ import static org.junit.Assert.assertTrue;
  * QA, 15 Oct (probe P2): passing the Duke a few times in ten minutes gave
  * both callbacks and then "Duke Horacio himself. Lovely man.", as if the two
  * had never met. The callbacks keep three hours apart and the plain line one,
- * and nothing tied them together.
+ * and nothing tied them together. Text QA pass 3, #70: and the two callbacks
+ * themselves came about two minutes apart.
  */
 public class CallbackStandsAsideTest
 {
@@ -67,7 +68,7 @@ public class CallbackStandsAsideTest
 		passTheDuke(h);
 		passTheDuke(h);
 		assertEquals("first meeting", 1, h.firedBy("fun-duke-after-rune-mysteries").size());
-		assertEquals("second", 1, h.firedBy("fun-duke-after-cooks-assistant").size());
+		assertTrue("not a second callback on the next pass", h.firedBy("fun-duke-after-cooks-assistant").isEmpty());
 		assertTrue("not as if they had never met", h.firedBy("quest-duke").isEmpty());
 
 		// An hour on, the callbacks are still cooling and the plain line has its turn.

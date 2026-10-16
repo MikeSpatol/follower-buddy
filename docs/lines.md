@@ -1,18 +1,18 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 616 rules, 2622 spoken lines, 3 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 616 rules, 2620 spoken lines, 3 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
 ## Contents
 
 - [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (40 rules, 159 lines)
-- [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (46 rules, 240 lines)
+- [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (46 rules, 239 lines)
 - [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (60 rules, 357 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 115 lines)
 - [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 74 lines)
 - [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (28 rules, 121 lines)
-- [area](#area) - Places: named lines, tastes, earned verdicts, the defences (76 rules, 244 lines)
+- [area](#area) - Places: named lines, tastes, earned verdicts, the defences (76 rules, 243 lines)
 - [errand](#errand) - Its little trips: bank, altar, fire, cat, studies, explores (44 rules, 155 lines)
 - [souvenir](#souvenir) - Wishes, gifts, the pocket, and what it carries (17 rules, 84 lines)
 - [bet](#bet) - Its predictions about drops (3 rules, 20 lines)
@@ -1099,7 +1099,6 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - The fence book's reached gates at last. I read that bit twice.
 - Halfway through the fence book, and the author has views on hedges.
-- The fence book's author has strong views on hedges.
 
 ### `fun-fence-book-finished`
 
@@ -1142,9 +1141,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-gerald-early`
 
-> Running bit, Gerald: days 0-29 known, while mining. Two-hour cooldown.
+> Running bit, Gerald: days 1-29 after the opener, while mining. Two-hour cooldown.
 
-- **when:** working AND known 0-29 days AND a 2% roll
+- **when:** working AND 1-29 days after `fun-gerald-first` was said AND a 2% roll
 - **pacing:** priority 19, cooldown 2h, delay 2 ticks, overhead
 
 - Go easy on Gerald. He's sensitive about his ore.
@@ -1152,9 +1151,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-gerald-later`
 
-> Running bit, Gerald: day 30 on known, while mining. Two-hour cooldown.
+> Running bit, Gerald: day 30 on after the opener, while mining. Two-hour cooldown.
 
-- **when:** working AND known 30+ days AND a 2% roll
+- **when:** working AND 30+ days after `fun-gerald-first` was said AND a 2% roll
 - **pacing:** priority 19, cooldown 2h, delay 2 ticks, overhead
 
 - Gerald's looking well. I think the attention suits him.
@@ -3633,7 +3632,6 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - Sedridor's basement is under us. I'm still working out how he knew you.
 - Someone in the Wizards' Tower knows your name. I keep mine quiet.
-- Somebody in that tower knows your name. I keep mine quiet here.
 
 ### `fun-piscarilius-after-client-of-kourend`
 
@@ -6854,9 +6852,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-hans-race-early`
 
-> Running bit, Hans: days 0-29 after the opener. Same trigger as quest-hans, one point higher, three-hour cooldown; while it cools down the base's lines play.
+> Running bit, Hans: days 1-29 after the opener. Same trigger as quest-hans, one point higher, three-hour cooldown; while it cools down the base's lines play.
 
-- **when:** 0-29 days after `fun-hans-race-first` was said AND Hans within 5 tiles, in sight
+- **when:** 1-29 days after `fun-hans-race-first` was said AND Hans within 5 tiles, in sight
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
 
 - Hans is well ahead today. I've been standing still, in fairness.

@@ -15156,8 +15156,7 @@
       },
       "say": [
         "Sedridor's basement is under us. I'm still working out how he knew you.",
-        "Someone in the Wizards' Tower knows your name. I keep mine quiet.",
-        "Somebody in that tower knows your name. I keep mine quiet here."
+        "Someone in the Wizards' Tower knows your name. I keep mine quiet."
       ]
     },
     {
@@ -15866,8 +15865,7 @@
       },
       "say": [
         "The fence book's reached gates at last. I read that bit twice.",
-        "Halfway through the fence book, and the author has views on hedges.",
-        "The fence book's author has strong views on hedges."
+        "Halfway through the fence book, and the author has views on hedges."
       ],
       "delayTicks": 2,
       "output": "overhead"
@@ -16011,7 +16009,7 @@
     {
       "id": "fun-gerald-early",
       "title": "Gerald, a running joke (early days)",
-      "note": "Running bit, Gerald: days 0-29 known, while mining. Two-hour cooldown.",
+      "note": "Running bit, Gerald: days 1-29 after the opener, while mining. Two-hour cooldown.",
       "about": "Now and then while you are mining, in your first month together.",
       "group": "idle",
       "priority": 19,
@@ -16024,8 +16022,9 @@
             "is": "mining"
           },
           {
-            "type": "daysKnown",
-            "minimum": 0,
+            "type": "daysSinceSaid",
+            "rule": "fun-gerald-first",
+            "minimum": 1,
             "maximum": 29
           },
           {
@@ -16044,7 +16043,7 @@
     {
       "id": "fun-gerald-later",
       "title": "Gerald, a running joke (later on)",
-      "note": "Running bit, Gerald: day 30 on known, while mining. Two-hour cooldown.",
+      "note": "Running bit, Gerald: day 30 on after the opener, while mining. Two-hour cooldown.",
       "about": "Now and then while you are mining, after your first month together.",
       "group": "idle",
       "priority": 19,
@@ -16057,7 +16056,8 @@
             "is": "mining"
           },
           {
-            "type": "daysKnown",
+            "type": "daysSinceSaid",
+            "rule": "fun-gerald-first",
             "minimum": 30
           },
           {
@@ -16132,7 +16132,7 @@
       "id": "fun-hans-race-early",
       "waits": true,
       "title": "Hans, a running joke (early days)",
-      "note": "Running bit, Hans: days 0-29 after the opener. Same trigger as quest-hans, one point higher, three-hour cooldown; while it cools down the base's lines play.",
+      "note": "Running bit, Hans: days 1-29 after the opener. Same trigger as quest-hans, one point higher, three-hour cooldown; while it cools down the base's lines play.",
       "about": "Now and then when Hans is near, in your first month together.",
       "group": "quest",
       "priority": 36,
@@ -16143,7 +16143,7 @@
           {
             "type": "daysSinceSaid",
             "rule": "fun-hans-race-first",
-            "minimum": 0,
+            "minimum": 1,
             "maximum": 29
           },
           {
