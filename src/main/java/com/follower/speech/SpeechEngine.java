@@ -1232,6 +1232,21 @@ public class SpeechEngine
 
 		rule.markFired(now);
 
+		// A callback about a quest's person stands aside the plain line about
+		// them for that line's own while. QA, 15 Oct: two Duke callbacks, then
+		// "Duke Horacio himself" as if they had never met, in six minutes.
+		String plain = rule.plainLineId();
+		if (plain != null)
+		{
+			for (SpeechRule other : loader.getRules())
+			{
+				if (plain.equals(other.id))
+				{
+					other.markFired(now);
+				}
+			}
+		}
+
 		// Mood moves with what the follower ACTUALLY did. Applying it here
 		// rather than at the win means a rule held back by a cooldown, a
 		// disabled group or the mute does not quietly move the mood while

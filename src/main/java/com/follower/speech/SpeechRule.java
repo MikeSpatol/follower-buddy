@@ -512,6 +512,16 @@ public class SpeechRule
 		return cut > 0 ? id.substring(0, cut) : id;
 	}
 
+	/**
+	 * The plain line a quest person's callback stands in for: quest-duke-horacio
+	 * for fun-duke-horacio-after-cooks-assistant. Null for any other rule.
+	 */
+	public String plainLineId()
+	{
+		int cut = id == null ? -1 : id.indexOf("-after-");
+		return cut > 4 && id.startsWith("fun-") ? "quest-" + id.substring(4, cut) : null;
+	}
+
 	public boolean isValid()
 	{
 		return when != null && (hasSpeech() || hasAnimationAction());
