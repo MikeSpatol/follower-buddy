@@ -1,6 +1,6 @@
 package com.follower.sim;
 
-import com.follower.speech.SpeechOutput;
+import com.follower.FollowerPlugin;
 import com.follower.speech.SpeechRule;
 import com.follower.speech.TriggerEvent;
 import java.nio.file.Path;
@@ -24,6 +24,13 @@ import net.runelite.api.coords.WorldPoint;
  * step has moved on, the 25-tick quiet
  * after a scene, and the dialogue reading that stays "open" 2 ticks after
  * the box goes. Pacing is ON (Occasional, 6 s) unless set otherwise.
+ *
+ * <p>And what the plugin does at the scroll (QA3 #35): the follower is
+ * witness to the quest from that moment, and the quest's page is written
+ * then, its news waiting for the floor as FollowerPlugin.nextPageNews has it
+ * - held through a conversation or a scene's quiet, lapsing after
+ * {@link FollowerPlugin#pageNewsTicks} of the gap. MINUTES_TAKEN can be
+ * raised as the plugin does when a minuted conversation closes.
  */
 public final class QuestSim
 {
@@ -34,6 +41,26 @@ public final class QuestSim
 	public final List<String> heard = new ArrayList<>();
 	public final List<String> heardIds = new ArrayList<>();
 	public final List<String> lost = new ArrayList<>();
+	/** Pages mentioned, and pages whose news lapsed unsaid. */
+	public final List<String> pagesSaid = new ArrayList<>();
+	public final List<String> pagesLost = new ArrayList<>();
+
+	/** A page written and waiting for its mention: the event, its name, and when its wait began. */
+	private static final class Page
+	{
+		final TriggerEvent event;
+		final String name;
+		int since;
+
+		Page(TriggerEvent event, String name, int since)
+		{
+			this.event = event;
+			this.name = name;
+			this.since = since;
+		}
+	}
+
+	private final ArrayDeque<Page> pages = new ArrayDeque<>();
 
 	// world
 	public boolean npcDialog;
@@ -215,9 +242,15 @@ public final class QuestSim
 
 	private void drain()
 	{
+		for (U kept : queue)
+		{
+			if (keptForTheBox(kept.rule))
+			{
+				kept.queuedAt = ms[0];
+			}
+		}
 		if (!queue.isEmpty() && keptForTheBox(queue.peekFirst().rule))
 		{
-			queue.peekFirst().queuedAt = ms[0];
 			return;
 		}
 		while (!queue.isEmpty() && ms[0] - queue.peekFirst().queuedAt > 15_400L)
@@ -256,6 +289,7 @@ public final class QuestSim
 		goneTicks = npcDialog ? 0 : Math.min(goneTicks + 1, 1000);
 		h.engine.getContext().setDialogueOpen(npcDialog || goneTicks <= 2);
 		h.gameTick();
+		pageNews();
 		int now = regionOf(h.engine.getContext().getRegionId());
 		if (now != region)
 		{
@@ -381,28 +415,57 @@ public final class QuestSim
 		h.dispatch(TriggerEvent.chat(message, net.runelite.api.ChatMessageType.GAMEMESSAGE.getType(), ""));
 	}
 
+	/** The scroll: the follower saw it finish, and the quest's page is written. */
 	public void questComplete(Quest q, String name)
 	{
 		done(q);
 		note("   quest scroll: " + name);
+		seenFinished.put(q.name(), java.time.LocalDate.now().toEpochDay());
+		h.engine.getContext().setQuestWitness(seenFinished::get);
+		pageWritten("quest", name);
 		h.engine.getContext().tally("quests");
 		h.dispatch(TriggerEvent.questComplete(name));
 	}
 
-	/** The plugin writes the page when the follower has the floor. */
-	public void pageWhenQuiet(String name, int maxTicks)
+	/** A chronicle page written now; its news waits for the floor. */
+	public void pageWritten(String kind, String name)
 	{
-		for (int i = 0; i < maxTicks; i++)
+		note("   chronicle page written: " + name);
+		pages.add(new Page(TriggerEvent.pageWritten(kind, name), name, tick));
+	}
+
+	/** FollowerPlugin.nextPageNews, once a tick after the tick's own events. */
+	private void pageNews()
+	{
+		if (npcDialog || goneTicks <= 2 || sceneOn || tick < quietUntil)
 		{
-			if (h.engine.isQuiet())
+			for (Page waiting : pages)
 			{
-				note("   chronicle page written: " + name);
-				h.dispatch(TriggerEvent.pageWritten("quest", name));
-				return;
+				waiting.since = tick;
 			}
-			tick();
+			return;
 		}
-		note("   (page news never found the floor in " + maxTicks + " ticks)");
+		int window = FollowerPlugin.pageNewsTicks(h.engine.moodScaledGap());
+		while (!pages.isEmpty() && tick - pages.peek().since > window)
+		{
+			Page gone = pages.poll();
+			note("   PAGE NEWS LAPSED unsaid: " + gone.name);
+			pagesLost.add(gone.name);
+		}
+		if (!pages.isEmpty() && h.engine.isQuiet())
+		{
+			Page page = pages.poll();
+			note("   page news: " + page.name);
+			pagesSaid.add(page.name);
+			h.dispatch(page.event);
+		}
+	}
+
+	/** MINUTES_TAKEN, as the plugin raises it when a conversation the follower minuted closes. */
+	public void minutes()
+	{
+		note("   event: minutes taken");
+		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.MINUTES_TAKEN));
 	}
 
 	public void event(TriggerEvent e, String desc)
@@ -420,6 +483,7 @@ public final class QuestSim
 	{
 		note("HEARD, in order: " + heardIds);
 		note("LOST: " + lost);
+		note("PAGES said: " + pagesSaid + "  lapsed: " + pagesLost);
 	}
 
 	public String transcript()

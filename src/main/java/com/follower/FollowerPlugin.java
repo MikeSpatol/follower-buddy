@@ -99,7 +99,7 @@ public class FollowerPlugin extends Plugin
 	 * Minimal the news needs 45 s of quiet after the quest's own line, so
 	 * any other line in that minute, or a low mood, lost every quest's page.
 	 */
-	static int pageNewsTicks(long gapMs)
+	public static int pageNewsTicks(long gapMs)
 	{
 		return Math.max(PAGE_NEWS_TICKS, (int) (2 * gapMs / 600L) + 20);
 	}

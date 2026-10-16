@@ -176,6 +176,36 @@ public class ChildrenOfTheSunWalkTest
 		hearsEveryone(walk(true, 3, 6000, false), "qm-children-of-the-sun-the-roof");
 	}
 
+	private static final List<String> MOMENTS = Arrays.asList(
+		"qm-children-of-the-sun-the-bag", "qm-children-of-the-sun-the-hideout",
+		"qm-children-of-the-sun-overheard", "qm-children-of-the-sun-spot-the-four",
+		"qm-children-of-the-sun-the-roof");
+
+	/**
+	 * At Minimal (45 s), the user's own setting. Quests QA, 16 Oct: the
+	 * hideout was never heard, moments drifted a stage late, and the page
+	 * news lapsed in every run. Each moment is said, in order and before
+	 * the scroll; then the quest's end and its page.
+	 */
+	@Test
+	public void atMinimalAWalkerHearsTheMomentsTheEndAndThePage() throws Exception
+	{
+		QuestSim s = walk(false, 12, 45_000L, false);
+		// The page waits a gap behind the quest's own line.
+		s.ticks(100);
+		int last = -1;
+		for (String id : MOMENTS)
+		{
+			int at = s.heardIds.indexOf(id);
+			assertTrue(id + " heard\n" + s.transcript(), at > last);
+			last = at;
+		}
+		assertTrue("Tobyn\n" + s.transcript(), s.heardIds.contains("quest-sergeant-tobyn"));
+		assertTrue("all before the scroll\n" + s.transcript(), last < s.heardIds.indexOf("quest-complete"));
+		assertEquals(s.transcript(), Arrays.asList("Children of the Sun"), s.pagesSaid);
+		assertTrue("nothing dropped\n" + s.transcript(), s.lost.isEmpty());
+	}
+
 	@Test
 	public void andWithTheCallbacks() throws Exception
 	{
