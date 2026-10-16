@@ -17,6 +17,15 @@ import net.runelite.api.coords.WorldPoint;
  *
  * <p>Nothing here knows which obstacle it was. That is the point: the
  * follower plays back what it saw, not what a table says the obstacle does.
+ *
+ * <p>A recording is handed over while it is still being made, so the
+ * follower can set off a couple of ticks after the player rather than
+ * waiting for them to finish: {@link CrossingWatch} appends a frame at a
+ * time, then {@link #end ends} it, or {@link #cut cuts} it short. The watch
+ * writes and the follower reads on the client thread alone (BeforeRender,
+ * StatChanged, HitsplatApplied and GameTick are all posted there), so there
+ * is no lock: frames are only ever appended, and the one trim, at the end,
+ * removes frames the reader clamps itself away from.
  */
 public final class Crossing
 {
@@ -79,7 +88,14 @@ public final class Crossing
 	}
 
 	private final List<Frame> frames;
-	private final boolean fell;
+	private final List<Frame> readOnly;
+	/** The recording clock's time at the first frame, which every frame is rebased against. */
+	private final long zero;
+	private boolean fell;
+	/** No more frames are coming: ended, cut or dropped. */
+	private boolean complete;
+	/** Let go as not an obstacle at all: skipped if the follower has not begun it. */
+	private boolean dropped;
 
 	/**
 	 * The player's own stand, walk, run and turns while they were not
@@ -90,28 +106,87 @@ public final class Crossing
 	 */
 	private final int[] normal;
 
+	/** A finished recording. */
 	public Crossing(List<Frame> frames, int[] normal, boolean fell)
+	{
+		this(frames, normal);
+		this.fell = fell;
+		complete = true;
+	}
+
+	private Crossing(List<Frame> frames, int[] normal)
 	{
 		if (frames == null || frames.isEmpty())
 		{
 			throw new IllegalArgumentException("a crossing has at least one frame");
 		}
 		// Rebased so the first frame is time zero whatever clock recorded it.
-		long zero = frames.get(0).atMs;
-		List<Frame> rebased = new ArrayList<>(frames.size());
+		zero = frames.get(0).atMs;
+		this.frames = new ArrayList<>(frames.size());
 		for (Frame f : frames)
 		{
-			rebased.add(new Frame(f.atMs - zero, f.fineX, f.fineY, f.plane, f.orientation,
-				f.pose, f.poseFrame, f.action, f.actionFrame));
+			append(f);
 		}
-		this.frames = Collections.unmodifiableList(rebased);
+		readOnly = Collections.unmodifiableList(this.frames);
 		this.normal = normal == null ? new int[0] : normal.clone();
+	}
+
+	/** A recording still being made: the watch appends to it and then ends it. */
+	static Crossing live(List<Frame> frames, int[] normal)
+	{
+		return new Crossing(frames, normal);
+	}
+
+	/** The next frame, on the recording clock. */
+	void append(Frame f)
+	{
+		frames.add(new Frame(f.atMs - zero, f.fineX, f.fineY, f.plane, f.orientation,
+			f.pose, f.poseFrame, f.action, f.actionFrame));
+	}
+
+	/** Over: only the first {@code keep} frames were the crossing, the rest the walk away. */
+	void end(int keep, boolean fell)
+	{
+		while (frames.size() > Math.max(1, keep))
+		{
+			frames.remove(frames.size() - 1);
+		}
 		this.fell = fell;
+		complete = true;
+	}
+
+	/** Ended early, where it got to: played that far and no further. */
+	void cut()
+	{
+		complete = true;
+	}
+
+	/** Not an obstacle after all: what has been played ends, and an unbegun one is skipped. */
+	void drop()
+	{
+		complete = true;
+		dropped = true;
+	}
+
+	public boolean isComplete()
+	{
+		return complete;
+	}
+
+	public boolean isDropped()
+	{
+		return dropped;
+	}
+
+	/** When it began on the recording clock, which orders crossings made at different times. */
+	public long getStartedAtMs()
+	{
+		return zero;
 	}
 
 	public List<Frame> getFrames()
 	{
-		return frames;
+		return readOnly;
 	}
 
 	/** Where the player stood as it began: the tile the follower walks to first. */
@@ -126,6 +201,7 @@ public final class Crossing
 		return frames.get(frames.size() - 1).tile();
 	}
 
+	/** As long as it is so far: the whole of it once {@link #isComplete complete}. */
 	public long getDurationMs()
 	{
 		return frames.get(frames.size() - 1).atMs;

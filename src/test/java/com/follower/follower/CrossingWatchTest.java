@@ -42,7 +42,9 @@ public class CrossingWatchTest
 		@Override
 		public void queueCrossing(Crossing crossing)
 		{
-			events.add("queue");
+			WorldPoint start = crossing.getStart();
+			events.add("queue " + start.getX() + "," + start.getY() + "," + start.getPlane()
+				+ (crossing.isComplete() ? "" : " live"));
 			queued.add(crossing);
 		}
 
@@ -225,8 +227,10 @@ public class CrossingWatchTest
 		pose = 808;
 		stand(2000);
 
-		assertEquals(List.of("expect 52,50,0", "queue"), events);
+		assertEquals("handed over as soon as it is seen, still recording",
+			List.of("queue 52,50,0 live"), events);
 		Crossing log = queued.get(0);
+		assertTrue("and ended since", log.isComplete());
 		assertEquals(new WorldPoint(52, 50, 0), log.getStart());
 		assertEquals(new WorldPoint(59, 50, 0), log.getEnd());
 		assertTrue("the balance is in it", poses(log).contains(762));
@@ -245,7 +249,7 @@ public class CrossingWatchTest
 		glide(2, 0, 808, 10);
 		action = -1;
 		stand(2000);
-		assertEquals(List.of("expect 50,50,0", "queue"), events);
+		assertEquals(List.of("queue 50,50,0 live"), events);
 		Crossing jump = queued.get(0);
 		assertEquals(new WorldPoint(52, 50, 0), jump.getEnd());
 		assertTrue(actions(jump).contains(741));
@@ -263,7 +267,7 @@ public class CrossingWatchTest
 		action = -1;
 		frame(20);
 		stand(2000);
-		assertEquals(List.of("expect 50,50,0", "queue"), events);
+		assertEquals("the XP was in before the hop: no wait", List.of("queue 50,50,0 live"), events);
 		Crossing climb = queued.get(0);
 		assertEquals(new WorldPoint(50, 50, 0), climb.getStart());
 		assertEquals(new WorldPoint(51, 50, 1), climb.getEnd());
@@ -282,7 +286,7 @@ public class CrossingWatchTest
 		stand(500);
 		watch.noteAgilityXp(t);
 		stand(2000);
-		assertEquals(List.of("expect 50,50,0", "queue"), events);
+		assertEquals(List.of("expect 50,50,0", "queue 50,50,0 live"), events);
 	}
 
 	@Test
@@ -302,7 +306,7 @@ public class CrossingWatchTest
 		stand(1500);
 		action = -1;
 		stand(2000);
-		assertEquals(List.of("expect 50,50,3", "queue"), events);
+		assertEquals(List.of("queue 50,50,3 live"), events);
 		Crossing fall = queued.get(0);
 		assertTrue(fall.isFell());
 		assertEquals(new WorldPoint(54, 50, 0), fall.getEnd());
@@ -321,7 +325,7 @@ public class CrossingWatchTest
 		watch.noteDamage(t);
 		action = -1;
 		stand(2000);
-		assertEquals(List.of("expect 50,50,3", "queue"), events);
+		assertEquals(List.of("expect 50,50,3", "queue 50,50,3 live"), events);
 		assertTrue(queued.get(0).isFell());
 	}
 
@@ -348,7 +352,7 @@ public class CrossingWatchTest
 		base = NORMAL;
 		pose = 808;
 		stand(2000);
-		assertEquals(List.of("expect 50,50,0", "queue", "expect 54,50,0", "queue"), events);
+		assertEquals(List.of("queue 50,50,0 live", "queue 54,50,0 live"), events);
 		assertEquals(new WorldPoint(52, 50, 0), queued.get(0).getEnd());
 		assertEquals(new WorldPoint(54, 50, 0), queued.get(1).getStart());
 		assertEquals(new WorldPoint(58, 50, 0), queued.get(1).getEnd());
@@ -368,7 +372,7 @@ public class CrossingWatchTest
 		glide(1, 0, 808, 10);
 		action = -1;
 		stand(2000);
-		assertEquals(List.of("expect 50,50,0", "queue"), events);
+		assertEquals(List.of("queue 50,50,0 live"), events);
 		assertEquals(new WorldPoint(52, 50, 0), queued.get(0).getEnd());
 	}
 
@@ -380,8 +384,10 @@ public class CrossingWatchTest
 		walk(3, 0, 762, 4);
 		x += 300 * 128;
 		frame(20);
-		assertEquals(List.of("expect 50,50,0", "cancel", "clear"), events);
+		assertEquals(List.of("queue 50,50,0 live", "clear"), events);
 		assertFalse(watch.isWatching());
+		assertTrue("cut where it got to", queued.get(0).isComplete());
+		assertEquals(new WorldPoint(53, 50, 0), queued.get(0).getEnd());
 	}
 
 	@Test
@@ -391,8 +397,10 @@ public class CrossingWatchTest
 		base = ON_A_LOG;
 		walk(3, 0, 762, 4);
 		watch.sample(null);
-		assertEquals(List.of("expect 50,50,0", "cancel"), events);
+		assertEquals(List.of("queue 50,50,0 live"), events);
 		assertFalse(watch.isWatching());
+		assertTrue("cut where it got to", queued.get(0).isComplete());
+		assertFalse("but still a crossing", queued.get(0).isDropped());
 	}
 
 	@Test
@@ -407,7 +415,8 @@ public class CrossingWatchTest
 			walk(1, 0, 6994, 4);
 			walk(-1, 0, 6994, 4);
 		}
-		assertEquals("held, then let go", List.of("expect 50,50,0", "cancel"), events);
+		assertEquals("handed over, then let go", List.of("queue 50,50,0 live"), events);
+		assertTrue("as not an obstacle at all", queued.get(0).isDropped());
 		events.clear();
 		walk(3, 0, 6994, 4);
 		stand(2000);
@@ -423,6 +432,176 @@ public class CrossingWatchTest
 		walk(4, 0, 1660, 4);
 		stand(2000);
 		assertEquals(List.of(), events);
+	}
+
+	@Test
+	public void aJumpThatPutsThemDownATileOverIsAHop()
+	{
+		// A gap: the clip, then set down on the next tile with nothing between.
+		stand(200);
+		action = 2586;
+		stand(600);
+		watch.noteAgilityXp(t + 10);
+		x += 128;
+		y += 128;
+		action = 2588;
+		frame(20);
+		stand(600);
+		action = -1;
+		stand(2000);
+		assertEquals(List.of("queue 50,50,0 live"), events);
+		assertEquals(new WorldPoint(51, 51, 0), queued.get(0).getEnd());
+	}
+
+	@Test
+	public void aTileOverWithNoClipOnIsNotAHop()
+	{
+		// The frame a walk ends on, late: a whole tile, on the stand, nothing playing.
+		stand(200);
+		x += 128;
+		frame(20);
+		stand(2000);
+		assertEquals(List.of(), events);
+	}
+
+	@Test
+	public void onACourseAHopWaitsLongerForItsXp()
+	{
+		watch.noteAgilityXp(t);
+		stand(200);
+		action = 828;
+		stand(1200);
+		plane = 3;
+		action = -1;
+		frame(20);
+		// Past the two ticks a ladder gets, inside the course's five.
+		stand(2000);
+		watch.noteAgilityXp(t);
+		stand(2000);
+		assertEquals("held, and confirmed in place",
+			List.of("expect 50,50,0", "queue 50,50,0 live"), events);
+	}
+
+	// ------------------------------------------------------- rebuilt from XP
+
+	@Test
+	public void anObstacleTheSignalsMissIsRebuiltWhenItsXpArrives()
+	{
+		// Shown as a clip over the ordinary walk: it looks like eating on the
+		// run, and the watch lets it go as it would that.
+		stand(200);
+		walk(2, 0, 819, 4);
+		action = 7134;
+		walk(6, 0, 819, 4);
+		action = -1;
+		stand(300);
+		assertEquals("missed", List.of(), events);
+
+		watch.noteAgilityXp(t);
+		frame(20);
+		assertEquals("late, but not skipped", List.of("queue 52,50,0"), events);
+		Crossing rebuilt = queued.get(0);
+		assertEquals("from the last of their own walk", new WorldPoint(52, 50, 0), rebuilt.getStart());
+		assertEquals("to where it stopped", new WorldPoint(58, 50, 0), rebuilt.getEnd());
+		assertTrue(actions(rebuilt).contains(7134));
+		assertFalse("not the walk up to it, past the frame it set off from",
+			actions(rebuilt).get(0) == 7134);
+	}
+
+	@Test
+	public void xpLaterThanTheWaitStillRebuildsTheClimb()
+	{
+		stand(200);
+		action = 828;
+		stand(1200);
+		x += 128;
+		plane = 1;
+		action = -1;
+		frame(20);
+		stand(1500);
+		assertEquals("let go as a ladder", List.of("expect 50,50,0", "cancel"), events);
+
+		watch.noteAgilityXp(t);
+		frame(20);
+		assertEquals(List.of("expect 50,50,0", "cancel", "queue 50,50,0"), events);
+		assertEquals(new WorldPoint(50, 50, 0), queued.get(0).getStart());
+		assertEquals(new WorldPoint(51, 50, 1), queued.get(0).getEnd());
+		assertTrue(actions(queued.get(0)).contains(828));
+	}
+
+	@Test
+	public void xpForACrossingAlreadyHandedOverRebuildsNothing()
+	{
+		stand(200);
+		base = ON_A_LOG;
+		walk(5, 0, 762, 4);
+		base = NORMAL;
+		walk(2, 0, 819, 4);
+		watch.noteAgilityXp(t);
+		stand(2000);
+		assertEquals(List.of("queue 50,50,0 live"), events);
+	}
+
+	@Test
+	public void xpWithNothingMovedRebuildsNothing()
+	{
+		// A lamp rubbed after an emote and a walk: XP, but no obstacle.
+		stand(200);
+		action = 866;
+		stand(1500);
+		action = -1;
+		walk(3, 0, 819, 4);
+		stand(500);
+		watch.noteAgilityXp(t);
+		stand(2000);
+		assertEquals(List.of(), events);
+	}
+
+	@Test
+	public void xpLongAfterTheMovementRebuildsNothing()
+	{
+		stand(200);
+		action = 7134;
+		walk(4, 0, 819, 4);
+		action = -1;
+		stand(4000);
+		watch.noteAgilityXp(t);
+		stand(200);
+		assertEquals("a lamp, minutes on, is not the obstacle's", List.of(), events);
+	}
+
+	@Test
+	public void aMissedObstacleGoesAheadOfOneSeenSince()
+	{
+		stand(200);
+		action = 7134;
+		walk(4, 0, 819, 4);
+		action = -1;
+		walk(1, 0, 819, 4);
+		// Straight onto a log, recognised, before the first one's XP lands.
+		base = ON_A_LOG;
+		walk(3, 0, 762, 4);
+		watch.noteAgilityXp(t);
+		walk(2, 0, 762, 4);
+		base = NORMAL;
+		stand(2000);
+		assertEquals(List.of("queue 55,50,0 live", "queue 50,50,0"), events);
+		assertTrue("the rebuilt one began first: the follower orders them by that",
+			queued.get(1).getStartedAtMs() < queued.get(0).getStartedAtMs());
+	}
+
+	@Test
+	public void aTeleportForgetsWhatCameBefore()
+	{
+		stand(200);
+		action = 7134;
+		walk(4, 0, 819, 4);
+		action = -1;
+		x += 300 * 128;
+		frame(20);
+		watch.noteAgilityXp(t);
+		stand(200);
+		assertEquals(List.of("clear"), events);
 	}
 
 	// ------------------------------------------------------------ recording
