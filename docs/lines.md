@@ -6734,7 +6734,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-duke-horacio-after-cooks-assistant`
 
-> Callback: same trigger as quest-duke-horacio plus Cook's Assistant done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Cook's Assistant, so it cannot rise on the quest finishing.
+> Callback: same trigger as quest-duke-horacio plus Cook's Assistant done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins, once its own cooldown, charged when the callback was said, has run out. Not a hand-in NPC for Cook's Assistant, so it cannot rise on the quest finishing.
 
 - **when:** Duke Horacio within 5 tiles, in sight AND the follower saw COOKS_ASSISTANT done AND NOT (dialogueopen)
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
@@ -6744,7 +6744,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-duke-horacio-after-rune-mysteries`
 
-> Callback: same trigger as quest-duke-horacio plus Rune Mysteries done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Rune Mysteries, so it cannot rise on the quest finishing.
+> Callback: same trigger as quest-duke-horacio plus Rune Mysteries done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins, once its own cooldown, charged when the callback was said, has run out. Not a hand-in NPC for Rune Mysteries, so it cannot rise on the quest finishing.
 
 - **when:** Duke Horacio within 5 tiles, in sight AND the follower saw RUNE_MYSTERIES done AND NOT (dialogueopen)
 - **pacing:** priority 37, cooldown 3h, delay 2 ticks, overhead
@@ -6754,7 +6754,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-king-roald-after-priest-in-peril`
 
-> Callback: same trigger as quest-king-roald plus Priest in Peril done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Priest in Peril, so it cannot rise on the quest finishing.
+> Callback: same trigger as quest-king-roald plus Priest in Peril done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins, once its own cooldown, charged when the callback was said, has run out. Not a hand-in NPC for Priest in Peril, so it cannot rise on the quest finishing.
 
 - **when:** King Roald within 5 tiles, in sight AND the follower saw PRIEST_IN_PERIL done AND NOT (dialogueopen)
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
@@ -6764,7 +6764,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-sergeant-tobyn-after-children-of-the-sun`
 
-> Callback: same trigger as quest-sergeant-tobyn plus Children of the Sun seen done a day or more before, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Roof Tobyn (6781, shown as 12648 at varbit 9632 = 16-24) stays after the quest, whose end state is 24 (cache; Quest Helper ChildrenOfTheSun); Alina and Noah, its first target, are gone from 7 on. He stands by as the quest ends, so the day's wait keeps it from rising then.
+> Callback: same trigger as quest-sergeant-tobyn plus Children of the Sun seen done a day or more before, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins, once its own cooldown, charged when the callback was said, has run out. Roof Tobyn (6781, shown as 12648 at varbit 9632 = 16-24) stays after the quest, whose end state is 24 (cache; Quest Helper ChildrenOfTheSun); Alina and Noah, its first target, are gone from 7 on. He stands by as the quest ends, so the day's wait keeps it from rising then.
 
 - **when:** Sergeant Tobyn within 5 tiles, in sight AND the follower saw CHILDREN_OF_THE_SUN done AND NOT (dialogueopen)
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
@@ -6774,7 +6774,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-aubury-after-rune-mysteries`
 
-> Callback: same trigger as quest-aubury plus Rune Mysteries done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Rune Mysteries, so it cannot rise on the quest finishing.
+> Callback: same trigger as quest-aubury plus Rune Mysteries done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins, once its own cooldown, charged when the callback was said, has run out. Not a hand-in NPC for Rune Mysteries, so it cannot rise on the quest finishing.
 
 - **when:** Aubury within 5 tiles, in sight AND the follower saw RUNE_MYSTERIES done AND NOT (dialogueopen)
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
@@ -6784,7 +6784,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-father-aereck-after-the-restless-ghost`
 
-> Callback: same trigger as quest-father-aereck plus The Restless Ghost done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for The Restless Ghost, so it cannot rise on the quest finishing.
+> Callback: same trigger as quest-father-aereck plus The Restless Ghost done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins, once its own cooldown, charged when the callback was said, has run out. Not a hand-in NPC for The Restless Ghost, so it cannot rise on the quest finishing.
 
 - **when:** Father Aereck within 5 tiles, in sight AND the follower saw THE_RESTLESS_GHOST done AND NOT (dialogueopen)
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
@@ -6794,7 +6794,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-ned-after-dragon-slayer`
 
-> Callback: same trigger as quest-ned plus Dragon Slayer I done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Dragon Slayer I, so it cannot rise on the quest finishing.
+> Callback: same trigger as quest-ned plus Dragon Slayer I done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins, once its own cooldown, charged when the callback was said, has run out. Not a hand-in NPC for Dragon Slayer I, so it cannot rise on the quest finishing.
 
 - **when:** Ned within 5 tiles, in sight AND the follower saw DRAGON_SLAYER_I done AND NOT (dialogueopen)
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
@@ -6804,7 +6804,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-regath-after-client-of-kourend`
 
-> Callback: same trigger as quest-regath plus Client of Kourend done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Client of Kourend, so it cannot rise on the quest finishing.
+> Callback: same trigger as quest-regath plus Client of Kourend done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins, once its own cooldown, charged when the callback was said, has run out. Not a hand-in NPC for Client of Kourend, so it cannot rise on the quest finishing.
 
 - **when:** Regath within 5 tiles, in sight AND the follower saw CLIENT_OF_KOUREND done AND NOT (dialogueopen)
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
@@ -6814,7 +6814,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-leenz-after-client-of-kourend`
 
-> Callback: same trigger as quest-leenz plus Client of Kourend done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins. Not a hand-in NPC for Client of Kourend, so it cannot rise on the quest finishing.
+> Callback: same trigger as quest-leenz plus Client of Kourend done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins, once its own cooldown, charged when the callback was said, has run out. Not a hand-in NPC for Client of Kourend, so it cannot rise on the quest finishing.
 
 - **when:** Leenz within 5 tiles, in sight AND the follower saw CLIENT_OF_KOUREND done AND NOT (dialogueopen)
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
