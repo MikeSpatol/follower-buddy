@@ -869,7 +869,11 @@ public class FollowerPlugin extends Plugin
 		crossingWatch = new com.follower.follower.CrossingWatch(follower);
 		// The count is the context's, read at the time: Forget everything
 		// makes a new one, and the count goes with it.
-		marksOfGrace = new com.follower.follower.MarksOfGrace(speechEngine::dispatch,
+		marksOfGrace = new com.follower.follower.MarksOfGrace(event ->
+		{
+			agilityTrace.event("grace: " + event.getName() + " raised");
+			speechEngine.dispatch(event);
+		},
 			() -> speechEngine.getContext().tally("graces"));
 		follower.setOnCrossed(crossing -> speechEngine.dispatch(
 			TriggerEvent.crossed(crossing.isFell())));
@@ -9204,6 +9208,11 @@ public class FollowerPlugin extends Plugin
 		// Every mark, chunk load or not: one already on a roof is spotted on arrival.
 		if (marksOfGrace != null)
 		{
+			if (event.getItem().getId() == com.follower.follower.MarksOfGrace.MARK)
+			{
+				agilityTrace.event("grace: mark appeared at " + event.getTile().getWorldLocation()
+					+ (ticksSinceLoading > 2 ? "" : " (with a load)"));
+			}
 			marksOfGrace.spawned(event.getItem().getId(), event.getTile().getWorldLocation());
 		}
 		// A chunk load raises one of these per item already lying about;
@@ -9235,6 +9244,10 @@ public class FollowerPlugin extends Plugin
 		if (marksOfGrace != null && event.getItem() != null && event.getTile() != null
 			&& client.getGameState() == GameState.LOGGED_IN && ticksSinceLoading > 2)
 		{
+			if (event.getItem().getId() == com.follower.follower.MarksOfGrace.MARK)
+			{
+				agilityTrace.event("grace: mark gone from " + event.getTile().getWorldLocation());
+			}
 			marksOfGrace.despawned(event.getItem().getId(), event.getTile().getWorldLocation());
 		}
 	}
