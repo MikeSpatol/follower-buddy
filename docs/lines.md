@@ -1,6 +1,6 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 616 rules, 2621 spoken lines, 3 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 619 rules, 2629 spoken lines, 3 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
@@ -8,7 +8,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (41 rules, 163 lines)
 - [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (43 rules, 222 lines)
-- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (58 rules, 357 lines)
+- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (60 rules, 363 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 115 lines)
 - [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 74 lines)
 - [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (27 rules, 117 lines)
@@ -19,7 +19,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - [clock](#clock) - The hour and how long we have been at it (9 rules, 39 lines)
 - [gear](#gear) - What you put on (63 rules, 147 lines)
 - [boss](#boss) - Bosses sighted and fought (55 rules, 522 lines)
-- [quest](#quest) - Famous quest figures nearby (122 rules, 311 lines)
+- [quest](#quest) - Famous quest figures nearby (123 rules, 313 lines)
 - [thrall](#thrall) - When it stands in for a thrall (3 rules, 18 lines)
 - [mimic](#mimic) - Copying your emotes (32 rules, 16 lines)
 - [dialogs](#dialogs) - the conversations it starts (3 trees)
@@ -1542,6 +1542,28 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - The ground moved. We'll say the ground moved.
 - Graceful. In a manner of speaking.
 - I'll leave that out of the notes. Kidding. It's in.
+
+### `agility-fell`
+
+> After the follower copies the player's fall on an agility obstacle. While Does agility with you is on, fail-slip stands aside (the plugin silences it by id), so one fall gets one line, said after the follower has fallen too.
+
+- **when:** crossed
+- **pacing:** priority 55, cooldown 45s, delay 1-3 ticks, overhead
+
+- I fell exactly where you fell. Solidarity, mostly.
+- Same spot, same landing. Filed under research.
+- For the record, I fell on purpose. To keep you company.
+
+### `agility-crossed`
+
+> After the follower takes an agility obstacle or shortcut cleanly behind the player (Does agility with you). CROSSED is raised after every obstacle of a lap, so a small roll and a ten-minute cooldown keep it to an odd remark.
+
+- **when:** crossed AND a 10% roll
+- **pacing:** priority 20, cooldown 10m, delay 1-3 ticks, overhead
+
+- Done. I'd like it noted that I didn't look down.
+- Over. It and I have reached an understanding.
+- Made it. Writing that one up before it gets any taller.
 
 ### `thieving-start`
 
@@ -6781,6 +6803,16 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - Aubury. He still checks our hands for packages when we walk in.
 - Aubury. I'd still like to know what was in those notes.
+
+### `fun-cook-after-cooks-assistant`
+
+> Callback: same trigger as quest-cook plus Cook's Assistant seen done a day or more before, one point higher, cooldown three times the base's. quest-cook itself stands aside once the quest is seen done, so this carries the cook after it. The quest ends at the cook, so the day's wait keeps it from rising then.
+
+- **when:** Cook within 5 tiles, in sight AND the follower saw COOKS_ASSISTANT done AND NOT (dialogueopen)
+- **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
+
+- The cook. He's never once offered us a slice of that cake.
+- That's the cook. If he asks for eggs again, I'm busy.
 
 ### `fun-father-aereck-after-the-restless-ghost`
 

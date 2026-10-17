@@ -5448,6 +5448,13 @@ public class FollowerPlugin extends Plugin
 		{
 			disabled.add("reactions");
 		}
+		// Copying agility, the follower falls after the player does, and
+		// agility-fell says so once it has. fail-slip, on the player's own
+		// 'You slip', would make that two remarks about one fall.
+		if (config.copiesAgility())
+		{
+			disabled.add("fail-slip");
+		}
 		for (String token : config.disabledGroups().split(","))
 		{
 			String trimmed = token.trim().toLowerCase(Locale.ROOT);

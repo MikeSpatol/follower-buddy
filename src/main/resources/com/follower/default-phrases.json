@@ -10182,6 +10182,53 @@
       ]
     },
     {
+      "id": "agility-fell",
+      "note": "After the follower copies the player's fall on an agility obstacle. While Does agility with you is on, fail-slip stands aside (the plugin silences it by id), so one fall gets one line, said after the follower has fallen too.",
+      "group": "reactions",
+      "priority": 55,
+      "cooldownMs": 45000,
+      "delayTicks": 1,
+      "delayTicksMax": 3,
+      "output": "overhead",
+      "when": {
+        "type": "crossed",
+        "is": "fell"
+      },
+      "say": [
+        "I fell exactly where you fell. Solidarity, mostly.",
+        "Same spot, same landing. Filed under research.",
+        "For the record, I fell on purpose. To keep you company."
+      ]
+    },
+    {
+      "id": "agility-crossed",
+      "note": "After the follower takes an agility obstacle or shortcut cleanly behind the player (Does agility with you). CROSSED is raised after every obstacle of a lap, so a small roll and a ten-minute cooldown keep it to an odd remark.",
+      "group": "reactions",
+      "priority": 20,
+      "cooldownMs": 600000,
+      "delayTicks": 1,
+      "delayTicksMax": 3,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "crossed",
+            "is": "crossed"
+          },
+          {
+            "type": "chance",
+            "percent": 10
+          }
+        ]
+      },
+      "say": [
+        "Done. I'd like it noted that I didn't look down.",
+        "Over. It and I have reached an understanding.",
+        "Made it. Writing that one up before it gets any taller."
+      ]
+    },
+    {
       "id": "cold-stamp-feet",
       "note": "Stamps its feet in the snow. Silent on purpose - a physical tell says more than a line about being cold. Animation 4278 is EMOTE_STAMPFEET, measured from the cache; the regions are ones RegionAudit has confirmed.",
       "about": "Stamps its feet in the snow. No words.",
@@ -15585,6 +15632,48 @@
       "say": [
         "Aubury. He still checks our hands for packages when we walk in.",
         "Aubury. I'd still like to know what was in those notes."
+      ]
+    },
+    {
+      "id": "fun-cook-after-cooks-assistant",
+      "waits": true,
+      "title": "The cook, after Cook's Assistant",
+      "note": "Callback: same trigger as quest-cook plus Cook's Assistant seen done a day or more before, one point higher, cooldown three times the base's. quest-cook itself stands aside once the quest is seen done, so this carries the cook after it. The quest ends at the cook, so the day's wait keeps it from rising then.",
+      "about": "Now and then when the Cook is near, from the day after it saw you finish Cook's Assistant.",
+      "group": "quest",
+      "priority": 36,
+      "cooldownMs": 10800000,
+      "delayTicks": 2,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "npcNearby",
+            "visible": true,
+            "within": 5,
+            "names": [
+              "Cook"
+            ]
+          },
+          {
+            "type": "questWitnessed",
+            "quest": "COOKS_ASSISTANT",
+            "minimum": 1
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "dialogueOpen"
+              }
+            ]
+          }
+        ]
+      },
+      "say": [
+        "The cook. He's never once offered us a slice of that cake.",
+        "That's the cook. If he asks for eggs again, I'm busy."
       ]
     },
     {
