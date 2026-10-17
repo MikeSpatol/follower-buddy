@@ -699,26 +699,22 @@ like this:
 - Locked creature pages show "Where it is found" but not the places list. If
   the full map is wanted there, that is a small code change.
 
-## Where the first pages stand
+## Where the pages stand
 
-Measured on 2026-09-24, after the redundancy pass that cut the repeats out
-of the 17 pages. That pass fixed what was redundant and nothing else: the
-retellings became pointers, the lists became a ledger, the Seven's date now
-agrees, "by my tallies", "suicide run" and the unkept footnote promise are
-gone, the spoilers went from the pages that open when a quest starts, and
-no paragraph passes 360 characters. What is left to bring in line:
+Measured on 2026-10-16, after the fourth QA pass, across all 27 pages. Most
+of what the first measurement (2026-09-24) listed is now in line: the pages
+contract where the scribe speaks and the grave pages do not, summaries keep
+to about 220 characters, "Described" is down to four pages, no summary
+opens on "One of the", and Priest in Peril no longer gives its safespot as
+advice. What is left:
 
-- **Rule 10.** Cook's Assistant runs about 4,500 characters of prose, Priest
-  in Peril about 5,200 and Waterfall Quest about 9,200, against a 5,000
-  ceiling. What remains is the story and its history, not repetition.
-  Priest in Peril still gives a safespot as advice ("a spot between the pews
-  he cannot reach you in").
-- **Rule 12.** "Described" is used 12 times on 7 pages, and "One of the" is
-  still in the King Black Dragon's prose.
-- **Rules 1 and 16.** The goblin, fire giant, monk and moss guardian pages
-  have no first-person "I". The fire giant page is still the weakest in the
-  book; the Giant Mole page is the best.
-- **Voice.** The pages carry no contractions at all.
-- **Rule 14.** Summaries run 110 to 226 characters; three pass 220 by a few.
-- **Rule 3.** Some history paragraphs, on the Waterfall and goblin pages
-  among them, have no source in the world.
+- **Rule 10.** Waterfall Quest runs 7,235 characters of prose with every
+  passage open and 5,609 with none, against the 5,000 ceiling. The approved
+  cuts are in; what remains is the story and its history.
+- **Rule 1.** Six of the 17 creature and place pages have no witnessed
+  first-person verb outside quotes: the Giant Mole, the Monk of Zamorak, the
+  moss guardian, Lumbridge, Paterdomus and Morytania. The mole page also
+  carries this rule's own "Don't" sentence until its rewording lands.
+- **Rule 6.** Only 6 of the 17 creature and place pages carry a gap marker.
+- **Rule 14.** Morytania runs 2,096 characters of prose with every passage
+  open, against about 2,000 for a land.
