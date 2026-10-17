@@ -3212,17 +3212,19 @@ public class FollowerPlugin extends Plugin
 				messagesDialog = new com.follower.ui.PhrasesDialog(gson, ruleLoader.getFile(),
 					java.util.Arrays.asList(
 						new com.follower.ui.PhrasesDialog.Category("Items", "gear",
-							"Said when you equip something it has an opinion on.",
+							"Said when you equip something it has an opinion on, and when your"
+								+ " bag is nearly full.",
 							false),
 						new com.follower.ui.PhrasesDialog.Category("Locations", "area",
-							"Said on entering a place. Region ids are editable and Add"
-								+ " location makes a new one.",
+							"Said on entering a place, and about places it likes, dislikes or"
+								+ " remembers. Region ids are editable and Add location makes a new one.",
 							true),
 						new com.follower.ui.PhrasesDialog.Category("Bosses", "boss",
-							"Said when that boss appears nearby.",
+							"Said when that boss appears nearby, and at boss kills and kill counts.",
 							false),
 						new com.follower.ui.PhrasesDialog.Category("Combat", "combat",
-							"Said while it stands clear and watches you fight.",
+							"Said while it stands clear and watches you fight, and when something"
+								+ " big comes near.",
 							false),
 						new com.follower.ui.PhrasesDialog.Category("Statuses", "health",
 							"Your HP, prayer, poison, venom, skull and run energy.",
@@ -3231,15 +3233,16 @@ public class FollowerPlugin extends Plugin
 							"Small talk while nothing much is happening.",
 							false),
 						new com.follower.ui.PhrasesDialog.Category("Quest NPCs", "quest",
-							"Said when that quest figure comes within a few tiles of you.",
+							"Said near famous quest figures, at moments partway through some"
+								+ " quests, and when you finish one.",
 							false),
 						new com.follower.ui.PhrasesDialog.Category("Errands", "errand",
 							"Each errand has a line for setting off and one for coming"
 								+ " back. Go on errands in settings turns them off.",
 							false),
 						new com.follower.ui.PhrasesDialog.Category("Mimicry", "mimic",
-							"Said now and then while it copies your emotes or eats when you"
-								+ " eat.",
+							"Said now and then while it copies your emotes, spells or teleports,"
+								+ " or eats when you eat.",
 							false),
 						new com.follower.ui.PhrasesDialog.Category("Reminiscing", "memory",
 							"Things that happened before, the outings it was and was not"
@@ -3249,7 +3252,7 @@ public class FollowerPlugin extends Plugin
 							"Things it picks up, carries about and loses.",
 							false),
 						new com.follower.ui.PhrasesDialog.Category("Predictions", "bet",
-							"Its call on what the next drop is worth, and how it takes"
+							"Its calls on the next drop and its bets on you, and how it takes"
 								+ " being wrong.",
 							false),
 						new com.follower.ui.PhrasesDialog.Category("The hour and the session", "clock",
@@ -3712,6 +3715,10 @@ public class FollowerPlugin extends Plugin
 			@Override
 			public String stopConversation()
 			{
+				if (!conversation.isPlaying())
+				{
+					return "Nothing is playing.";
+				}
 				conversation.stop("Stopped.");
 				return null;
 			}
@@ -4048,14 +4055,15 @@ public class FollowerPlugin extends Plugin
 		// one; New profile... over one would lose it (QA3).
 		if (profileStore.isProtected(name))
 		{
-			sendStatus("'" + name.trim() + "' is a combat-style profile used by thrall mode"
+			sendStatus("'" + name.trim() + "' is one of the built-in looks"
 				+ " and cannot be replaced. Pick it and edit it instead.");
 			return;
 		}
+		boolean replacing = profileStore.get(name.trim()) != null;
 		profileStore.put(name, config.customOutfit());
 		setActiveProfile(name.trim());
 		panel.setProfileNames(profileStore.names(), activeProfile);
-		sendStatus("Outfit profile '" + activeProfile + "' created.");
+		sendStatus("Outfit profile '" + activeProfile + (replacing ? "' replaced." : "' created."));
 	}
 
 	private void deleteOutfitProfile(String name)
@@ -4066,7 +4074,7 @@ public class FollowerPlugin extends Plugin
 		}
 		if (profileStore.isProtected(name))
 		{
-			sendStatus("'" + name.trim() + "' is a combat-style profile used by thrall mode"
+			sendStatus("'" + name.trim() + "' is one of the built-in looks"
 				+ " and cannot be deleted. Edit it instead.");
 			return;
 		}
@@ -6575,13 +6583,15 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void maybeSendThrallHint()
 	{
-		// Thrall only replaces them too, so the hint would not work (QA3).
-		if (!config.thrallMode() || config.thrallOnly() || config.thrallHintShown())
+		// Thrall only replaces them too, so with it ticked the hint names both.
+		if (!replacesThralls(config.thrallMode(), config.thrallOnly()) || config.thrallHintShown())
 		{
 			return;
 		}
 		configManager.setConfiguration(FollowerConfig.GROUP, "thrallHintShown", true);
-		sendStatus("Untick Replace thralls in settings to keep your own.");
+		sendStatus(config.thrallOnly()
+			? "Untick Thrall only and Replace thralls in settings to keep your own."
+			: "Untick Replace thralls in settings to keep your own.");
 	}
 
 	/**
@@ -7273,7 +7283,7 @@ public class FollowerPlugin extends Plugin
 		// A conversation playing has the box; Talk-to waits for its end.
 		if (conversation != null && conversation.isPlaying())
 		{
-			tellTheFilm("Talk-to waits until the conversation is over.");
+			tellTheFilm("Talk-to is off until the scene is over.");
 			return;
 		}
 		// Opening the box is presence too, even before anything is chosen.
@@ -8616,7 +8626,7 @@ public class FollowerPlugin extends Plugin
 				sendStatus("Reloaded " + dialogLoader.getStatus() + ".");
 				for (String problem : dialogLoader.getErrors())
 				{
-					sendStatus("Dialog: " + problem);
+					sendStatus("Problem in dialogs.json: " + problem);
 				}
 			}
 			if (ruleLoader.reloadIfChanged())
@@ -8626,7 +8636,7 @@ public class FollowerPlugin extends Plugin
 				speechEngine.clearFloor();
 				speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
 				speechEngine.getContext().setRegionNames(ruleLoader.getRegionNames());
-				sendStatus("Reloaded " + ruleLoader.getStatus());
+				sendStatus("Reloaded " + ruleLoader.getStatus() + ".");
 				reportRuleErrors();
 
 				// In-world, phrases.json IS the scribe's notebook, so an edit
@@ -10318,7 +10328,7 @@ public class FollowerPlugin extends Plugin
 			command("anim <id...>", "preview an animation on it"),
 			command("gfx <id> [height]", "preview a graphic on it, that far up its body"),
 			command("pose <id>", "hold a looping pose, 0 to release"),
-			command("posing", "the Advanced posing window: pose it, turn it and give it lines"),
+			command("posing", "the Advanced posing window: pose it, give it lines, or play out a scene"),
 			command("sketch", "pose for the chronicle's sketch of this place, as right-click Sketch"),
 			command("height <n>", "lift or lower it"),
 			// Spaced, so the list wraps between keys rather than mid-word.
@@ -10339,7 +10349,7 @@ public class FollowerPlugin extends Plugin
 	 */
 	private static final java.util.List<java.util.Map.Entry<String, String>> DEVELOPER_COMMAND_HELP =
 		java.util.Collections.unmodifiableList(java.util.Arrays.asList(
-			command("watch", "print the id of every animation you play"),
+			command("watch [all]", "print the ids of your animations and graphics; watch all adds everyone's"),
 			command("stance <weaponId> [idle walk run attack]", "show or hand-set a weapon's animations"),
 			command("hidden", "which slots each equipped item covers"),
 			command("palette", "copy your exact body colours onto it; palette clear drops them"),
@@ -11078,10 +11088,13 @@ public class FollowerPlugin extends Plugin
 					try
 					{
 						// The setting's own range; its box clamps only what it shows (QA3).
-						int offset = Math.max(-64, Math.min(64, Integer.parseInt(args[1])));
+						int asked = Integer.parseInt(args[1]);
+						int offset = Math.max(-64, Math.min(64, asked));
 						configManager.setConfiguration(FollowerConfig.GROUP, "verticalOffset", offset);
 						clientThread.invoke(() -> follower.setVerticalOffset(offset));
-						sendStatus("Height offset " + offset + " (positive lifts).");
+						sendStatus("Height offset " + offset
+							+ (asked > offset ? ", the most it goes" : asked < offset ? ", the least it goes" : "")
+							+ " (positive lifts).");
 					}
 					catch (NumberFormatException e)
 					{

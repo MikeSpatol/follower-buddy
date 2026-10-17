@@ -124,8 +124,9 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "spectateShield",
 		name = "Cast a shield on bosses",
-		description = "While watching a boss fight, the follower occasionally plays a casting"
-			+ " animation with a graphic over it, as though warding itself.",
+		description = "In every boss fight it watches, the follower raises a ward: a cast with"
+			+ " a graphic over it, then a kneel that holds it until the fight ends."
+			+ " Needs Stand clear in combat.",
 		section = combatSection,
 		position = 1
 	)
@@ -200,7 +201,9 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "spectateShieldChannelEnd",
 		name = "Channel end animation",
-		description = "Played as the channel ends, before the finishing cast. 0 for none.",
+		description = "Played as the channel ends, before the finishing cast. 0 for none."
+			+ " With the default kneel (179), the default 534 is played as the kneel's"
+			+ " own rise.",
 		section = shieldSection,
 		position = 10
 	)
@@ -234,8 +237,8 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "spectateShieldChannelGraphic",
 		name = "Shield channel graphic",
-		description = "Renewed every ~30s while channelling, since a looping pose shows no"
-			+ " particles of its own. 0 for none.",
+		description = "Renewed every second or so while channelling, since a looping pose"
+			+ " shows no particles of its own. 0 for none.",
 		section = shieldSection,
 		position = 9
 	)
@@ -288,8 +291,10 @@ public interface FollowerConfig extends Config
 		keyName = "developerMode",
 		name = "Developer commands",
 		description = "Enable the diagnostic ::follower commands (animation traces,"
-			+ " colour sweeps, cachecheck, stanceaudit). Off unless you're working"
-			+ " on the plugin itself.",
+			+ " colour sweeps, cachecheck, stanceaudit). While it's on, agility is"
+			+ " also logged to agility-trace-<date>.log in the plugin's folder, a"
+			+ " file a day, kept for 30 days. Off unless you're working on the"
+			+ " plugin itself.",
 		section = developerSection,
 		position = 0
 	)
@@ -367,7 +372,7 @@ public interface FollowerConfig extends Config
 		keyName = "followEnabled",
 		name = "Follow me",
 		description = "Off parks the follower where it stands. Same as right-click"
-			+ " Stay and Follow on the follower. Hold Shift and right-click a tile"
+			+ " Stay and Follow-me on the follower. Hold Shift and right-click a tile"
 			+ " to send it somewhere in particular.",
 		section = appearanceSection,
 		position = 1
@@ -599,7 +604,9 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "thrallMode",
 		name = "Replace thralls",
-		description = "When you summon an Arceuus thrall, the follower takes its place - moving and attacking as the thrall does",
+		description = "When you summon an Arceuus thrall, the follower takes its place, moving"
+			+ " and attacking as the thrall does. Thrall only does this too, even with"
+			+ " this unticked.",
 		section = thrallSection,
 		position = 0
 	)
@@ -880,7 +887,9 @@ public interface FollowerConfig extends Config
 		name = "Notices things",
 		description = "Goes to look at a drop of yours you walked away from, a bird's"
 			+ " nest, an impling, a crashed star, or a signpost or statue you stop"
-			+ " beside, and says so once.",
+			+ " beside, and says so once. It also claps your levels, greets a new"
+			+ " pet, comes over to see a good drop and keeps an eye on a stranger"
+			+ " who walks up to you.",
 		section = companySection,
 		position = 1
 	)
@@ -974,7 +983,8 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "groupQuest",
 		name = "Quest NPCs",
-		description = "Comments when famous quest figures are nearby (group \"quest\")."
+		description = "Comments near famous quest figures, at moments partway through some"
+			+ " quests, and when you finish one (group \"quest\")."
 			+ " Editable under Quest NPCs in Messages.",
 		section = groupsSection,
 		position = 6
@@ -1000,7 +1010,8 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "groupMimic",
 		name = "Mimicry",
-		description = "It copies your emotes and joins you when you eat (group \"mimic\")."
+		description = "It copies your emotes, spells and teleports, joins in when you eat"
+			+ " or work, and answers an emote made at it (group \"mimic\")."
 			+ " Editable under Mimicry in Messages.",
 		section = groupsSection,
 		position = 7
@@ -1042,8 +1053,8 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "groupBet",
 		name = "Predictions",
-		description = "It calls what the next drop is worth before it lands, and has to"
-			+ " live with being wrong (group \"bet\")."
+		description = "It calls what the next drop is worth before it lands, bets you cannot"
+			+ " manage a run of kills, and has to live with being wrong (group \"bet\")."
 			+ " Editable under Predictions in Messages.",
 		section = groupsSection,
 		position = 10
@@ -1070,7 +1081,8 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "groupReactions",
 		name = "Reactions",
-		description = "Deaths, drops, thieving, level-ups and the chat (group \"reactions\")."
+		description = "Deaths, drops, thieving, level-ups and the chat, and its other answers"
+			+ " to what you do and what it sees (group \"reactions\")."
 			+ " Editable under Reactions in Messages.",
 		section = groupsSection,
 		position = 12
@@ -1084,8 +1096,8 @@ public interface FollowerConfig extends Config
 		keyName = "wanderWhenIdle",
 		name = "Wander when idle",
 		description = "While you stand still, the follower drifts to a nearby tile every"
-			+ " twenty seconds or so instead of standing to attention. Stops once it is"
-			+ " due to sit down.",
+			+ " half a minute or so instead of standing to attention. It stops after"
+			+ " five minutes, when it would sit down.",
 		section = movementSection,
 		position = 1
 	)
@@ -1140,8 +1152,9 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "copiesAgility",
 		name = "Does agility with you",
-		description = "Takes every obstacle and shortcut after you, in the same order and"
-			+ " the same way, falls and all. Untick to have it catch up the old way.",
+		description = "Takes the obstacles and most shortcuts you take, after you and the"
+			+ " same way, falls and all. Untick and it walks round to you, or appears"
+			+ " beside you, instead.",
 		section = movementSection,
 		position = 4
 	)
@@ -1154,8 +1167,9 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "restAnimation",
 		name = "Rest pose",
-		description = "Animation held while it sits. 0 for none. Default 10061 is the"
-			+ " game's own sit emote; audition others with ::follower pose <id>.",
+		description = "Animation held while it sits. Set 0 and it never sits down. Default"
+			+ " 10061 is the game's own sit emote; audition others with"
+			+ " ::follower pose <id>.",
 		section = shieldSection,
 		position = 0
 	)

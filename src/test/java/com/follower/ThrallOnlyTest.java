@@ -76,13 +76,19 @@ public class ThrallOnlyTest
 	}
 
 	@Test
-	public void theReplaceThrallsHintWaitsWhileThrallOnlyReplacesThemAnyway() throws Exception
+	public void theReplaceThrallsHintNamesThrallOnlyWhileItIsTicked() throws Exception
 	{
-		// QA3: "Untick Replace thralls" does nothing with Thrall only on. No
-		// config manager here, so sending the hint would throw.
-		Method hint = FollowerPlugin.class.getDeclaredMethod("maybeSendThrallHint");
-		hint.setAccessible(true);
-		hint.invoke(plugin(true));
+		// QA3: "Untick Replace thralls" does nothing with Thrall only on, so
+		// with it ticked the hint names both switches (QA4, approved wording).
+		String source = new String(Files.readAllBytes(
+			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8)
+			.replace("\r\n", "\n");
+		int at = source.indexOf("private void maybeSendThrallHint()");
+		assertTrue("the lint has lost its place", at >= 0);
+		String body = source.substring(at, source.indexOf("\n\t}", at));
+		assertTrue(body, body.contains("config.thrallOnly()\n\t\t\t? \"Untick Thrall only and Replace thralls"
+			+ " in settings to keep your own.\""));
+		assertTrue(body, body.contains(": \"Untick Replace thralls in settings to keep your own.\""));
 	}
 
 	@Test

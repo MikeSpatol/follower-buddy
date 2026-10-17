@@ -263,7 +263,7 @@ public class Noticing
 	{
 		if (!config.noticesThings())
 		{
-			return "Notices things, or Works beside you when skilling, is off in the settings.";
+			return "Notices things is off in the settings.";
 		}
 		int now = client.getTickCount();
 		Player local = client.getLocalPlayer();

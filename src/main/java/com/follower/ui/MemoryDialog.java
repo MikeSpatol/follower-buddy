@@ -28,7 +28,8 @@ import net.runelite.client.ui.FontManager;
  * cannot see is machinery they cannot trust. This makes it legible, and the
  * "Forget everything" button is the named mitigation for the invasiveness of
  * remembering anything at all: the memory is a gift the player can decline.
- * It doubles as a debugging window, which is why region ids stay visible.
+ * It doubles as a debugging window, which is why a region no rule names
+ * still shows its id.
  *
  * <p>The window renders a snapshot handed to it (taken on the client thread)
  * rather than reading live state from the event thread.
@@ -221,8 +222,9 @@ public class MemoryDialog extends JDialog
 		for (Map.Entry<Integer, Integer> place : places.subList(0, Math.min(3, places.size())))
 		{
 			String memory = c.getPlaceMemories().get(place.getKey());
-			rows.add(row("Region " + named(place.getKey(), regionNames),
-				(place.getValue() > 0 ? "+" : "") + place.getValue()
+			String where = place(place.getKey(), regionNames);
+			rows.add(row(Character.toUpperCase(where.charAt(0)) + where.substring(1),
+				(place.getValue() > 0 ? "likes it (+" : "dislikes it (") + place.getValue() + ")"
 					+ (memory == null ? "" : " - " + memory)));
 		}
 		rows.add(row("Likes on a whim", c.getLikedRegions().isEmpty()
@@ -234,12 +236,12 @@ public class MemoryDialog extends JDialog
 			StringBuilder core = new StringBuilder();
 			if (c.getCoreLikedRegion() != 0)
 			{
-				core.append("likes region ").append(named(c.getCoreLikedRegion(), regionNames));
+				core.append("likes ").append(place(c.getCoreLikedRegion(), regionNames));
 			}
 			if (c.getCoreDislikedRegion() != 0)
 			{
 				core.append(core.length() == 0 ? "" : ", ")
-					.append("avoids region ").append(named(c.getCoreDislikedRegion(), regionNames));
+					.append("avoids ").append(place(c.getCoreDislikedRegion(), regionNames));
 			}
 			rows.add(row("Won't be argued out of", core.toString()));
 		}
@@ -254,9 +256,12 @@ public class MemoryDialog extends JDialog
 		if (c.isWishing())
 		{
 			// The handover is in Talk-to, which a waiting question takes over
-			// as Answer, so the hint waits with it (QA3).
+			// as Answer, so with one open the hint says to answer it first (QA3).
 			rows.add(row("Hoping for", c.getWishLabel()
-				+ (c.getAskedTree().isEmpty() ? " (right-click the follower and Talk-to to hand it over)" : "")));
+				+ (c.getAskedTree().isEmpty()
+					? " (right-click the follower and choose Talk-to to hand it over)"
+					: " (answer its question first, then right-click the follower and choose"
+						+ " Talk-to to hand it over)")));
 			anything = true;
 		}
 		if (!c.getAskedTree().isEmpty())
@@ -321,7 +326,7 @@ public class MemoryDialog extends JDialog
 		String label;
 		if (base.startsWith("kill:") && base.length() > "kill:".length())
 		{
-			label = capitalised(base.substring("kill:".length())) + " killed";
+			label = capitalised(base.substring("kill:".length())) + " kills";
 		}
 		else if (base.startsWith("kc:") && base.length() > "kc:".length())
 		{
@@ -438,15 +443,15 @@ public class MemoryDialog extends JDialog
 		StringBuilder out = new StringBuilder();
 		for (Integer region : regions)
 		{
-			out.append(out.length() == 0 ? "region " : ", ").append(named(region, names));
+			out.append(out.length() == 0 ? "" : ", ").append(place(region, names));
 		}
 		return out.toString();
 	}
 
-	/** "12850 (Lumbridge town and castle)", or the bare id when no rule names it. */
-	private static String named(int region, Map<Integer, String> names)
+	/** "Lumbridge town and castle", or "region 12850" when no rule names it. */
+	private static String place(int region, Map<Integer, String> names)
 	{
 		String name = names == null ? null : names.get(region);
-		return name == null ? Integer.toString(region) : region + " (" + name + ")";
+		return name == null ? "region " + region : name;
 	}
 }

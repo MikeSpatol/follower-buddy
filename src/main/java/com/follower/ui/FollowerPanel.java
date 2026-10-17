@@ -269,7 +269,7 @@ public class FollowerPanel extends PluginPanel
 	{
 		SwingUtilities.invokeLater(() -> behaviourCaption.setText(
 			"<html><body style='width:160px'>Right-click " + escapeHtml(name)
-				+ " in game for Talk-to, Stay, Dance, Wave, Step-in-front and Chronicle."
+				+ " in game for Talk-to, Stay, Dance, Wave, Step-in-front and Read-chronicle."
 				+ " Hold Shift and right-click any tile to send it there.</body></html>"));
 	}
 
@@ -954,8 +954,8 @@ public class FollowerPanel extends PluginPanel
 				javax.swing.JOptionPane.PLAIN_MESSAGE));
 		}));
 
-		profileDelete.setToolTipText("Remove the selected profile. A profile a thrall"
-			+ " wears cannot be removed.");
+		profileDelete.setToolTipText("Remove the selected profile. The built-in looks, and a"
+			+ " profile a thrall wears, cannot be removed.");
 		profileDelete.setFocusPainted(false);
 		profileDelete.addActionListener(e ->
 		{
@@ -1059,7 +1059,7 @@ public class FollowerPanel extends PluginPanel
 	private void buildBehaviour(JPanel body)
 	{
 		JPanel buttons = buttonPair();
-		stayButton.setToolTipText("Same as right-click Stay and Follow on the follower,"
+		stayButton.setToolTipText("Same as right-click Stay and Follow-me on the follower,"
 			+ " and Follow me in settings");
 		stayButton.setFocusPainted(false);
 		stayButton.addActionListener(e -> onFollowEnabled.accept(staying));
@@ -1103,7 +1103,7 @@ public class FollowerPanel extends PluginPanel
 
 		JPanel film = buttonColumn(1);
 		film.add(button("Advanced posing...",
-			"A window to pose it, turn it and give it lines",
+			"A window to pose it, turn it, give it lines, and play out a scene you write",
 			() -> onFilm.run()));
 		body.add(film);
 	}

@@ -57,35 +57,36 @@ public class MemorySurfaceTest
 
 		assertTrue(surface.contains("(31 days ago)"));
 		assertTrue(surface.contains("Sessions together: 36"));
-		assertTrue(surface.contains("Goblin killed: 2"));
+		assertTrue(surface.contains("Goblin kills: 2"));
 		assertTrue(surface.contains("Biggest hit: 42"));
 		assertTrue("the incident quoted as its words: " + surface,
 			surface.contains("\"that chicken, just now\" (x1)"));
 		assertFalse("and not by its file key: " + surface, surface.contains("chicken-death"));
 		assertTrue("the place, its feeling and its memory: " + surface,
-			surface.contains("+45 - the drop"));
-		// A region the Locations rules name is shown with its name; one they
-		// do not stays a bare id.
+			surface.contains("likes it (+45) - the drop"));
+		// A region the Locations rules name is shown by its name alone; one
+		// they do not stays a region id.
 		assertTrue("the named region: " + surface,
-			surface.contains("region 12850 (Lumbridge town and castle)"));
+			surface.contains("Likes on a whim: Lumbridge town and castle\n"));
 		assertTrue(surface.contains("region 10553\n"));
 		assertTrue("the open wish says how to hand it over: " + surface,
-			surface.contains("Hoping for: feather (right-click the follower and Talk-to to hand it over)"));
+			surface.contains("Hoping for: feather (right-click the follower and choose Talk-to to hand it over)"));
 		assertTrue(surface.contains("One-time lines already said: 1"));
 		assertTrue(surface.contains("Lines counted, to vary them: 1"));
 	}
 
 	@Test
-	public void theWishNamesNoHandoverWhileAQuestionWaits()
+	public void theWishSaysToAnswerFirstWhileAQuestionWaits()
 	{
 		// QA2, 15 Oct: it said Talk-to while the menu read Answer. QA3: and
-		// Answer opens the question, which has no handover in it.
+		// Answer opens the question, which has no handover in it, so the
+		// hint says to answer it first.
 		TriggerContext context = new TriggerContext(new FakeGame().client);
 		context.setWish("feather", 5, java.util.Collections.singletonList(314));
 		context.noteQuestion("want-outing");
 		String surface = flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap()));
-		assertTrue(surface, surface.contains("Hoping for: feather"));
-		assertFalse(surface, surface.contains("hand it over"));
+		assertTrue(surface, surface.contains("Hoping for: feather (answer its question first, then"
+			+ " right-click the follower and choose Talk-to to hand it over)"));
 	}
 
 	@Test
@@ -136,8 +137,8 @@ public class MemorySurfaceTest
 	public void countsAndBestsAreNamedInWords()
 	{
 		// QA, 15 Oct: the window showed the keys the plugin files them under.
-		assertEquals("Goblin killed", MemoryDialog.keyLabel("kill:goblin"));
-		assertEquals("Hill giant killed", MemoryDialog.keyLabel("kill:hill giant"));
+		assertEquals("Goblin kills", MemoryDialog.keyLabel("kill:goblin"));
+		assertEquals("Hill giant kills", MemoryDialog.keyLabel("kill:hill giant"));
 		assertEquals("Kills", MemoryDialog.keyLabel("kills"));
 		assertEquals("Kills today", MemoryDialog.keyLabel("kills" + TriggerContext.TODAY));
 		assertEquals("Levels gained today", MemoryDialog.keyLabel("levels:today"));
