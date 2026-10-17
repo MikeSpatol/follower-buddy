@@ -182,7 +182,7 @@
     ,
     {
       "id": "nickname-offer",
-      "note": "Opened by the ask-nickname rule, whose overhead line said the name. A tree is fixed text, so the name itself lives in that line and in the answer lines outside; in here the follower asks whether the player minds. yes makes it the nickname, no strikes it through for good, later leaves it in pencil.",
+      "note": "Opened by the ask-nickname rule, whose overhead line said the name. In here the follower asks whether the player minds, and {candidate} says the name again. yes makes it the nickname, no strikes it through for good, later leaves it in pencil.",
       "start": "start",
       "nodes": [
         {
@@ -228,7 +228,7 @@
         {
           "id": "what-a",
           "says": [
-            "The one I said just now. Tell me to ask later and I'll say it again."
+            "{candidate}. It's yours if you want it."
           ],
           "next": "ask"
         },

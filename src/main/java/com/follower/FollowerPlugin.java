@@ -7542,7 +7542,7 @@ public class FollowerPlugin extends Plugin
 
 		script.put("do-follow-q", you("Tell me about the walking.").then("do-follow-a"));
 		script.put("do-follow-a", says(
-			"One tile behind. Corners, doorways, stairs, running - I keep up.",
+			"One tile behind. Corners, doorways, stairs, running: I keep up.",
 			"Where you go I go, teleports included. Same swirl, half a step later.")
 			.then("do-follow-b"));
 		script.put("do-follow-b", says(
@@ -7553,7 +7553,7 @@ public class FollowerPlugin extends Plugin
 		script.put("do-fight-q", you("What do you do when I'm fighting?").then("do-fight-a"));
 		script.put("do-fight-a", says(
 			"Get out of the way, mainly. Then watch.",
-			"If something enormous is standing near us I'll mention it first. For all the good that does.")
+			"If something enormous is near, I mention it first. For all the good that does.")
 			.then("do-fight-b"));
 		script.put("do-fight-b", says(
 			"And when it goes down I make a fuss. You've usually earned it by then.")
@@ -7573,7 +7573,7 @@ public class FollowerPlugin extends Plugin
 			"Same walking, same swinging, far better dressed.")
 			.then("do-thrall-b"));
 		script.put("do-thrall-b", says(
-			"Three sorts, mind. Zombie, skeleton, ghost - melee, ranged and magic.")
+			"Three sorts, mind. Zombie, skeleton and ghost, for melee, ranged and magic.")
 			.then("do-thrall-c"));
 		script.put("do-thrall-c", says(
 			"Set me an outfit for each in the settings.",
@@ -7583,7 +7583,7 @@ public class FollowerPlugin extends Plugin
 		script.put("do-work-q", you("And when I'm working?").then("do-work-a"));
 		script.put("do-work-a", says(
 			"Depends what you're at.",
-			"If it's pockets, I give you room and keep an eye on the street. I say nothing until you're done.")
+			"If it's pockets, I give you room and watch the street until you're done.")
 			.then("do-work-b"));
 		script.put("do-work-b", says(
 			"Trees, rocks, fishing spots. I set up beside you and do a bit myself.",
@@ -7592,7 +7592,7 @@ public class FollowerPlugin extends Plugin
 
 		script.put("do-emote-q", you("Can you dance?").then("do-emote-a"));
 		script.put("do-emote-a", says(
-			"Ask and find out. Right-click me - wave, dance, whatever the moment wants.",
+			"Ask and find out. Right-click me for a wave or a dance, whatever the moment wants.",
 			"Or do one yourself and I'll join in a beat behind. I'm not a mirror. I have timing.")
 			.then("do-menu"));
 

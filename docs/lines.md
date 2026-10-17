@@ -1,13 +1,13 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 616 rules, 2620 spoken lines, 3 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 616 rules, 2621 spoken lines, 3 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
 ## Contents
 
 - [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (41 rules, 163 lines)
-- [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (43 rules, 221 lines)
+- [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (43 rules, 222 lines)
 - [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (58 rules, 357 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 115 lines)
 - [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 74 lines)
@@ -99,7 +99,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 25, cooldown 8m, overhead
 
 - Still here. Holding the fort.
-- All quiet at my post. Suspiciously quiet.
+- All quiet at my post. I find that suspicious.
 - The view hasn't changed. I've checked twice.
 - Nothing to report. Not one incident all shift.
 - Haven't moved. Neither has the grass. I've been watching it.
@@ -484,7 +484,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - Sold the {item}. That's {value} to the estate.
 - The {item} went. Try to look like you'll miss it.
-- Your {item} sold. The economy thanks you.
+- Your {item} sold. Someone out there is thrilled.
 
 ### `song-sea-shanty`
 
@@ -1089,6 +1089,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 17, cooldown 2h, delay 2 ticks, overhead
 
 - I'm rereading the fence book, and it's better. That worries me.
+- Second time through the fence book. It holds up, mostly.
 
 ### `fun-fence-book-sequel`
 
@@ -1326,7 +1327,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Go, then. I'm right behind you.
 - Wherever you land, I'm coming with you.
 - Not like this. Not here.
-- I'll mark the place. Go.
+- Go. I'll find you.
 - It's all right. I've seen where you land.
 - Up. Please. The page can wait.
 - I looked away and I still saw it.
@@ -1720,7 +1721,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - {want}! You actually brought me. Thank you.
 - You remembered. We're in {want}. I'm delighted.
-- Look at that - {want}. You didn't have to do that.
+- Look at that, {want}. You didn't have to do that.
 - {want}, like I asked. You're all right, you are.
 - {want}, as requested. You take requests.
 - We made it to {want}. The notes thank you.
@@ -1893,9 +1894,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** npcshout AND a 8% roll
 - **pacing:** priority 12, cooldown 15m, delay 2 ticks
 
-- I wrote down what {npc} said. Most of it.
+- Taking that down word for word. Well, most of the words.
 - I heard you, {npc}. So did everybody.
-- {npc} wants that on the record. It very nearly is.
+- Noted, every word. I've left out the shouting.
 
 ### `examine-echo`
 
@@ -1921,7 +1922,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - A {target}. I'd hoped for more, honestly.
 - Someone worked hard describing the {target}.
 - {target}. There. Now we both know.
-- The {target}. Yes. Very much so.
+- The {target}. Yes, very much so.
 - Careful! Oh, it's only a {target}. Carry on.
 - One more {target} and it's going in the notebook.
 - You really do read everything, don't you?
@@ -4007,7 +4008,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 85, cooldown 1s, overhead
 
 - Wooden, nailed shut, deeply mysterious. Best crate all week.
-- Wrote down what I could. Its secrets survive another day.
+- Wrote down what I could. The crate kept the rest.
 
 ### `errand-glance-start`
 
@@ -5395,7 +5396,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **does:** occasion (never held back)
 - **pacing:** priority 90, cooldown 1h, both
 
-- Zalcano. Weapons mean nothing here. It's pickaxes and imbued stone.
+- Zalcano. Weapons are no use here, only pickaxes and imbued stone.
 - Mine, refine, throw. The forge fights for you.
 - Dodge the falling rock, she shakes the ceiling when she's cross.
 - A demon the elves bound into living stone.
@@ -6344,7 +6345,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** Wizard Traiborn within 5 tiles, in sight
 - **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
 
-- Traiborn. Brilliant, hasn't a clue where anything is. Lovely company.
+- Traiborn hasn't a clue where anything is, and he's lovely company.
 - He'll ask for bones and forget why. Bring bones anyway.
 - Thingummywut! ...I don't know either. Nobody knows.
 
@@ -6532,7 +6533,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
 
 - Kaqemeex. He'll teach herblore to anyone willing to put the work in.
-- He keeps the stone circle. Zamorakians ruined the last. Sore subject.
+- He keeps the stone circle. Zamorakians ruined the last, a sore subject.
 - A druid of the old ways, and generous with them.
 
 ### `quest-elena`
@@ -6586,7 +6587,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** Ali Morrisane within 5 tiles, in sight
 - **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
 
-- Ali Morrisane, greatest salesman alive. His words. Always his words.
+- Ali Morrisane, greatest salesman alive. His words, every time.
 - He could sell sand in the Kharidian desert. He HAS.
 - Fine man. Check your pockets after. Fine man.
 
@@ -6716,7 +6717,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **does:** mood +8; occasion (never held back); animation 858
 - **pacing:** priority 85, cooldown 1m, delay 3 ticks
 
-- {quest}, done and witnessed. A full page.
+- {quest}, done and witnessed.
 - {quest}. Nice scroll. Mine has footnotes.
 - {quest}. Signed, sealed, filed.
 - Finished. Let me see the scroll before you put it away.
@@ -6809,6 +6810,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
 
 - Regath still thinks you're a journalist. He's never seen your writing.
+- Regath. He never did ask which paper you write for.
 
 ### `fun-leenz-after-client-of-kourend`
 
@@ -6915,7 +6917,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - Lever pulled. Somewhere below us, there's flour now.
-- Wheat to flour in one pull of a lever. That wants a page of its own.
+- Wheat to flour in one pull of a lever. I'm writing that down twice.
 - That's flour. Two floors of falling, and none of it spilled that I saw.
 
 ### `qm-sheep-shearer-thing-escaped`
@@ -7273,7 +7275,6 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **does:** occasion (never held back); once ever; animation 2105
 - **pacing:** priority 64, cooldown 10m, delay 2 ticks, overhead
 
-- Another experiment. Ernest only got turned into a chicken.
 - Ernest only got as far as a chicken. Whoever made this aimed higher.
 
 ### `qm-witchs-house-the-experiment-beaten`
@@ -7321,7 +7322,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **does:** occasion (never held back); once ever; animation 2113
 - **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
-- Not the gates, then.
+- Not out the gates, then. He's gone to ground right here.
 - He looked round every few steps. With that bag, so would I.
 - You kept out of sight. So did I, which is harder than it looks.
 
@@ -7938,7 +7939,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `nickname-offer`
 
-> Opened by the ask-nickname rule, whose overhead line said the name. A tree is fixed text, so the name itself lives in that line and in the answer lines outside; in here the follower asks whether the player minds. yes makes it the nickname, no strikes it through for good, later leaves it in pencil.
+> Opened by the ask-nickname rule, whose overhead line said the name. In here the follower asks whether the player minds, and {candidate} says the name again. yes makes it the nickname, no strikes it through for good, later leaves it in pencil.
 
 - **start**
   - Follower: Ah, good. I wanted a word about the name.
@@ -7951,7 +7952,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **what-q**
   - You: Which name?
 - **what-a**
-  - Follower: The one I said just now. Tell me to ask later and I'll say it again.
+  - Follower: {candidate}. It's yours if you want it.
 - **no-q**
   - You: I'd rather you didn't.
 - **no-a (answers 'no')**

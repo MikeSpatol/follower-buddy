@@ -417,7 +417,7 @@
         ]
       },
       "say": [
-        "Zalcano. Weapons mean nothing here. It's pickaxes and imbued stone.",
+        "Zalcano. Weapons are no use here, only pickaxes and imbued stone.",
         "Mine, refine, throw. The forge fights for you.",
         "Dodge the falling rock, she shakes the ceiling when she's cross.",
         "A demon the elves bound into living stone.",
@@ -3417,7 +3417,7 @@
       },
       "say": [
         "Still here. Holding the fort.",
-        "All quiet at my post. Suspiciously quiet.",
+        "All quiet at my post. I find that suspicious.",
         "The view hasn't changed. I've checked twice.",
         "Nothing to report. Not one incident all shift.",
         "Haven't moved. Neither has the grass. I've been watching it.",
@@ -4517,7 +4517,7 @@
       },
       "say": [
         "Wooden, nailed shut, deeply mysterious. Best crate all week.",
-        "Wrote down what I could. Its secrets survive another day."
+        "Wrote down what I could. The crate kept the rest."
       ]
     },
     {
@@ -5002,7 +5002,7 @@
         ]
       },
       "say": [
-        "Traiborn. Brilliant, hasn't a clue where anything is. Lovely company.",
+        "Traiborn hasn't a clue where anything is, and he's lovely company.",
         "He'll ask for bones and forget why. Bring bones anyway.",
         "Thingummywut! ...I don't know either. Nobody knows."
       ]
@@ -5414,7 +5414,7 @@
       },
       "say": [
         "Kaqemeex. He'll teach herblore to anyone willing to put the work in.",
-        "He keeps the stone circle. Zamorakians ruined the last. Sore subject.",
+        "He keeps the stone circle. Zamorakians ruined the last, a sore subject.",
         "A druid of the old ways, and generous with them."
       ]
     },
@@ -5537,7 +5537,7 @@
         ]
       },
       "say": [
-        "Ali Morrisane, greatest salesman alive. His words. Always his words.",
+        "Ali Morrisane, greatest salesman alive. His words, every time.",
         "He could sell sand in the Kharidian desert. He HAS.",
         "Fine man. Check your pockets after. Fine man."
       ]
@@ -8640,7 +8640,7 @@
         "Go, then. I'm right behind you.",
         "Wherever you land, I'm coming with you.",
         "Not like this. Not here.",
-        "I'll mark the place. Go.",
+        "Go. I'll find you.",
         "It's all right. I've seen where you land.",
         "Up. Please. The page can wait.",
         "I looked away and I still saw it."
@@ -11123,7 +11123,7 @@
       "say": [
         "{want}! You actually brought me. Thank you.",
         "You remembered. We're in {want}. I'm delighted.",
-        "Look at that - {want}. You didn't have to do that.",
+        "Look at that, {want}. You didn't have to do that.",
         "{want}, like I asked. You're all right, you are.",
         "{want}, as requested. You take requests.",
         "We made it to {want}. The notes thank you.",
@@ -14508,7 +14508,7 @@
         "type": "questComplete"
       },
       "say": [
-        "{quest}, done and witnessed. A full page.",
+        "{quest}, done and witnessed.",
         "{quest}. Nice scroll. Mine has footnotes.",
         "{quest}. Signed, sealed, filed.",
         "Finished. Let me see the scroll before you put it away."
@@ -14592,7 +14592,7 @@
       "say": [
         "Sold the {item}. That's {value} to the estate.",
         "The {item} went. Try to look like you'll miss it.",
-        "Your {item} sold. The economy thanks you."
+        "Your {item} sold. Someone out there is thrilled."
       ]
     },
     {
@@ -14668,9 +14668,9 @@
         ]
       },
       "say": [
-        "I wrote down what {npc} said. Most of it.",
+        "Taking that down word for word. Well, most of the words.",
         "I heard you, {npc}. So did everybody.",
-        "{npc} wants that on the record. It very nearly is."
+        "Noted, every word. I've left out the shouting."
       ]
     },
     {
@@ -14856,7 +14856,7 @@
         "A {target}. I'd hoped for more, honestly.",
         "Someone worked hard describing the {target}.",
         "{target}. There. Now we both know.",
-        "The {target}. Yes. Very much so.",
+        "The {target}. Yes, very much so.",
         "Careful! Oh, it's only a {target}. Carry on.",
         "One more {target} and it's going in the notebook.",
         "You really do read everything, don't you?",
@@ -15584,7 +15584,8 @@
         ]
       },
       "say": [
-        "Regath still thinks you're a journalist. He's never seen your writing."
+        "Regath still thinks you're a journalist. He's never seen your writing.",
+        "Regath. He never did ask which paper you write for."
       ]
     },
     {
@@ -16006,7 +16007,8 @@
         ]
       },
       "say": [
-        "I'm rereading the fence book, and it's better. That worries me."
+        "I'm rereading the fence book, and it's better. That worries me.",
+        "Second time through the fence book. It holds up, mostly."
       ],
       "delayTicks": 2,
       "output": "overhead"
@@ -16669,7 +16671,7 @@
       },
       "say": [
         "Lever pulled. Somewhere below us, there's flour now.",
-        "Wheat to flour in one pull of a lever. That wants a page of its own.",
+        "Wheat to flour in one pull of a lever. I'm writing that down twice.",
         "That's flour. Two floors of falling, and none of it spilled that I saw."
       ]
     },
@@ -18065,7 +18067,6 @@
         ]
       },
       "say": [
-        "Another experiment. Ernest only got turned into a chicken.",
         "Ernest only got as far as a chicken. Whoever made this aimed higher."
       ]
     },
@@ -18235,7 +18236,7 @@
         ]
       },
       "say": [
-        "Not the gates, then.",
+        "Not out the gates, then. He's gone to ground right here.",
         "He looked round every few steps. With that bag, so would I.",
         "You kept out of sight. So did I, which is harder than it looks."
       ]
