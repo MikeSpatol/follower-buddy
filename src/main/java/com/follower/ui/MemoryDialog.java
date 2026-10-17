@@ -77,15 +77,15 @@ public class MemoryDialog extends JDialog
 		root.add(scroll, BorderLayout.CENTER);
 
 		JButton forget = new JButton("Forget everything");
-		forget.setToolTipText("Erase every count, best, place, and the day it met"
-			+ " you - it meets you again as a stranger");
+		forget.setToolTipText("Erase every count, best, place, the Chronicle's drawings,"
+			+ " and the day it met you. It meets you again as a stranger.");
 		forget.setFocusPainted(false);
 		forget.addActionListener(e ->
 		{
 			int sure = JOptionPane.showConfirmDialog(this,
-				"Everything it knows - counts, bests, places, the incident,\n"
-					+ "the day you met - is erased for good, and the follower\n"
-					+ "meets you again as a stranger. There is no undo.",
+				"Everything it knows is erased for good: counts, bests, places,\n"
+					+ "the incident, the day you met, and the drawings in the Chronicle.\n"
+					+ "The follower meets you again as a stranger. There is no undo.",
 				"Forget everything?",
 				JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 			if (sure == JOptionPane.YES_OPTION)
