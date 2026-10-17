@@ -2439,10 +2439,10 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `memory-close-call`
 
-> Filed when you come out the far side of nearly dying. The follower does not need to say anything at the time - critical-hp already does - it just needs to remember, so it can bring it up later. The particulars (who, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.
+> Filed when you come out the far side of nearly dying. The follower does not need to say anything at the time - critical-hp already does - it just needs to remember, so it can bring it up later. The particulars (who, how many hitpoints, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.
 
 - **when:** HP under 8% AND in a fight
-- **does:** files incident `close-call` as 'how close that was with the {foe}'; animation 13302
+- **does:** files incident `close-call` as 'the {foe} leaving you on {hp} hitpoints'; animation 13302
 - **pacing:** priority 30, cooldown 5m, overhead
 
 - *(no lines - animation or effect only)*
@@ -2452,7 +2452,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > The obvious one. Filed on every death, so the count is what makes the recall land: once is bad luck, four times is a habit. The particulars (who, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.
 
 - **when:** on your death
-- **does:** files incident `the-death` as 'the way that went with the {foe}'; prop item 31830, pose 13302
+- **does:** files incident `the-death` as 'your death to the {foe}'; prop item 31830, pose 13302
 - **pacing:** priority 30, cooldown 5s, delay 6-12 ticks, overhead
 
 - That's going in the book.
@@ -2470,7 +2470,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > Filed on a drop big enough to still be talking about an hour later. Above the loot-celebrate threshold so the celebration wins the event and this one only files - two lines about one drop is one too many, and the recall is the part that matters here. The particulars (who, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.
 
 - **when:** loot worth 1000000+
-- **does:** files incident `big-drop` as 'the {item} that dropped'; prop item 31830, pose 13302
+- **does:** files incident `big-drop` as 'the {item} from the {foe}'; prop item 31830, pose 13302
 - **pacing:** priority 20, cooldown 10m, overhead
 
 - I'm still not over that.
@@ -2498,10 +2498,10 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** standing still 120+ ticks AND standing still under 600 ticks AND an incident remembered AND a 4% roll
 - **pacing:** priority 24, cooldown 15m, overhead
 
-- I keep thinking about {memory}.
-- I was rereading the entry on {memory}.
-- Do you ever think about {memory}? I do.
-- It's quiet. My mind goes back to {memory}.
+- I keep thinking about {memory}{memoryWhere}, {memoryAgo}.
+- I was rereading the entry on {memory}{memoryWhere}.
+- Do you ever think about {memory}{memoryWhere}? I do.
+- It's quiet. My mind goes back to {memory}, {memoryAgo}.
 
 ### `recall-death-third`
 
@@ -2536,8 +2536,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** a fight starting AND an incident remembered AND a 25% roll
 - **pacing:** priority 52, cooldown 10m, overhead
 
-- Careful. I've not forgotten {memory}.
-- Before you start. Remember {memory}?
+- Careful. I've not forgotten {memory}{memoryWhere}.
+- Before you start. Remember {memory}? That was {memoryAgo}.
 - Go on then. But I'm watching, after {memory}.
 - Mind how you go. The ink's barely dry on {memory}.
 - Off you go. My mind's still half on {memory}.
@@ -2550,8 +2550,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 40, cooldown 30m, delay 3-6 ticks, overhead
 
 - The notes on {memory} start here.
-- Here again, and I've not forgotten {memory}.
-- This is where I wrote down {memory}.
+- Here again. I've not forgotten {memory}.
+- This is where I wrote down {memory}, {memoryAgo}.
 - The page on {memory} is still creased.
 
 ### `recall-foe`
@@ -2561,11 +2561,11 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** memoryfoenearby AND a 50% roll
 - **pacing:** priority 45, cooldown 20m, delay 2-4 ticks, overhead
 
-- That's a {memoryWho}. You'll remember {memory}.
-- A {memoryWho}. I remember {memory}.
+- That's a {memoryWho}. Remember {memory}?
+- A {memoryWho}. I remember {memory}{memoryWhere}.
 - Mind the {memoryWho}. My page on it isn't a kind one.
-- There's the {memoryWho}. I was there for {memory}.
-- A {memoryWho}. That shape's on a page I keep going back to.
+- There's a {memoryWho}. I saw {memory}.
+- A {memoryWho}. That shape's on a page I keep rereading.
 
 ### `favour-remembered`
 

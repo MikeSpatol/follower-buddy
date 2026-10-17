@@ -41,35 +41,14 @@ public class MemoryLineLengthTest
 	 * exact, so a line that is reworded comes off this list, and a line that
 	 * grows past the limit cannot hide behind it.
 	 */
-	private static final List<String> AWAITING_WORDING = java.util.Arrays.asList(
-		// Under 80 characters but over 480 px, which only the font shows.
-		"recall-close-call-warning: Go on then. But I'm watching, after {memory}.",
-		"recall-close-call-warning: Mind how you go. The ink's barely dry on {memory}.",
-		"recall-foe: There's the {memoryWho}. I was there for {memory}.");
+	private static final List<String> AWAITING_WORDING = java.util.Collections.emptyList();
 
 	/**
 	 * Over the limit with the longest particulars, and waiting for the new
 	 * memory wording (memories/text.json), whose shorter forms are what a
 	 * line falls back to. Kept exact, as above.
 	 */
-	private static final List<String> AWAITING_LONGEST = java.util.Arrays.asList(
-		"recall-close-call-warning: Before you start. Remember {memory}?",
-		"recall-close-call-warning: Careful. I've not forgotten {memory}.",
-		"recall-close-call-warning: Go on then. But I'm watching, after {memory}.",
-		"recall-close-call-warning: Mind how you go. The ink's barely dry on {memory}.",
-		"recall-close-call-warning: Off you go. My mind's still half on {memory}.",
-		"recall-foe: A {memoryWho}. I remember {memory}.",
-		"recall-foe: A {memoryWho}. That shape's on a page I keep going back to.",
-		"recall-foe: That's a {memoryWho}. You'll remember {memory}.",
-		"recall-foe: There's the {memoryWho}. I was there for {memory}.",
-		"recall-here: Here again, and I've not forgotten {memory}.",
-		"recall-here: The notes on {memory} start here.",
-		"recall-here: The page on {memory} is still creased.",
-		"recall-here: This is where I wrote down {memory}.",
-		"recall-idle: Do you ever think about {memory}? I do.",
-		"recall-idle: I keep thinking about {memory}.",
-		"recall-idle: I was rereading the entry on {memory}.",
-		"recall-idle: It's quiet. My mind goes back to {memory}.");
+	private static final List<String> AWAITING_LONGEST = java.util.Collections.emptyList();
 
 	private GameFont overheadFont() throws IOException
 	{
@@ -104,9 +83,9 @@ public class MemoryLineLengthTest
 		// Each kind of memory, as its rule files it in an ordinary session.
 		String[][] memories = {
 			{"close-call", closeCall},
-			{"the-death", "the way that went with the Hill Giant"},
-			{"big-drop", "the Abyssal whip that dropped"},
-			{"the-boss", "the General Graardor going down"},
+			{"the-death", "your death to the Hill Giant"},
+			{"big-drop", "the Abyssal whip from the abyssal demon"},
+			{"the-boss", "General Graardor going down"},
 		};
 
 		TreeSet<String> over = new TreeSet<>();
@@ -258,7 +237,7 @@ public class MemoryLineLengthTest
 		h.gameTicks(1);
 		h.engine.getContext().restoreIncident("big-drop", "that drop", 1, 12342,
 			System.currentTimeMillis() - THREE_DAYS_MS, "");
-		assertEquals("a line that fits keeps them", "I keep thinking about that drop in Edgeville.",
+		assertEquals("a line that fits keeps them", "I keep thinking about your big drop in Edgeville.",
 			h.engine.spokenText("I keep thinking about {memory}{memoryWhere}.", TriggerEvent.tick()));
 
 		h.engine.getContext().restoreIncident("the-death",
@@ -306,6 +285,44 @@ public class MemoryLineLengthTest
 		h.engine.setOverheadWidth(text -> text.length() * 9);
 		assertEquals("only the kind of moment, when nothing more fits",
 			"I keep thinking about the time you died.", h.engine.spokenText(line, TriggerEvent.tick()));
+	}
+
+	/**
+	 * A line that names the creature itself says the memory without it.
+	 * Play report, 17 Oct: "A Hill Giant. I remember your death to the Hill
+	 * Giant" named it twice.
+	 */
+	@Test
+	public void aLineThatNamesTheFoeSaysTheMemoryWithoutIt() throws IOException
+	{
+		Harness h = new Harness(folder.newFolder().toPath());
+		Map<Integer, String> names = new HashMap<>();
+		names.put(12342, "Edgeville");
+		h.engine.getContext().setRegionNames(names);
+		h.gameTicks(1);
+		TriggerContext c = h.engine.getContext();
+		long twoDays = System.currentTimeMillis() - 2 * DAY_MS;
+		String line = "A {memoryWho}. I remember {memory}{memoryWhere}.";
+
+		c.restoreIncident("the-death", "your death to the Hill Giant", 1, 12342, twoDays, "Hill Giant");
+		assertEquals("A Hill Giant. I remember your death in Edgeville.",
+			h.engine.spokenText(line, TriggerEvent.tick()));
+		assertEquals("a line that does not name it keeps the foe",
+			"I was rereading the entry on your death to the Hill Giant in Edgeville.",
+			h.engine.spokenText("I was rereading the entry on {memory}{memoryWhere}.", TriggerEvent.tick()));
+
+		c.restoreIncident("the-death", "your death to the Hill Giant", 1, 0, twoDays, "Hill Giant");
+		assertEquals("with no place, the plain form", "A Hill Giant. I remember the time you died.",
+			h.engine.spokenText(line, TriggerEvent.tick()));
+
+		c.restoreIncident("big-drop", "the Abyssal whip from the abyssal demon", 1, 12342, twoDays,
+			"Abyssal demon", null, false, "Abyssal whip", 40);
+		assertEquals("An abyssal demon. I remember the Abyssal whip that dropped in Edgeville.",
+			h.engine.spokenText(line, TriggerEvent.tick()));
+
+		c.restoreIncident("the-boss", "General Graardor going down", 1, 12342, twoDays, "General Graardor");
+		assertEquals("General Graardor. I remember your big kill in Edgeville.",
+			h.engine.spokenText(line, TriggerEvent.tick()));
 	}
 
 	@Test

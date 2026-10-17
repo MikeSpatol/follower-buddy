@@ -1785,8 +1785,11 @@ public class SpeechEngine
 	 */
 	String spokenText(String template, TriggerEvent event)
 	{
+		// A line that names the creature itself says the memory without it:
+		// "A Hill Giant. I remember your death in Edgeville", never "... your
+		// death to the Hill Giant".
 		java.util.List<String> phrases = template != null && template.contains("{memory}")
-			? memoryPhrases() : new java.util.ArrayList<>();
+			? memoryPhrases(template.contains("{memoryWho}")) : new java.util.ArrayList<>();
 		if (phrases.isEmpty())
 		{
 			phrases.add(null);
@@ -1842,17 +1845,30 @@ public class SpeechEngine
 	 */
 	public java.util.List<String> memoryPhrases()
 	{
+		return memoryPhrases(false);
+	}
+
+	/**
+	 * @param withoutCreature only the ways that leave out who it was with:
+	 * no form with a {foe} or an {npc} in it, and not the filed phrase if it
+	 * names them
+	 */
+	java.util.List<String> memoryPhrases(boolean withoutCreature)
+	{
 		java.util.List<String> phrases = new java.util.ArrayList<>();
 		TriggerContext ctx = getContext();
 		if (!ctx.hasIncident())
 		{
 			return phrases;
 		}
-		if (!TriggerContext.isVague(ctx.getIncidentPhrase()))
+		String filed = ctx.getIncidentPhrase();
+		String who = ctx.getIncidentWho().toLowerCase(Locale.ROOT);
+		if (!TriggerContext.isVague(filed)
+			&& !(withoutCreature && !who.isEmpty() && filed.toLowerCase(Locale.ROOT).contains(who)))
 		{
-			phrases.add(ctx.getIncidentPhrase());
+			phrases.add(filed);
 		}
-		for (String phrase : retold())
+		for (String phrase : retold(withoutCreature))
 		{
 			if (!phrases.contains(phrase))
 			{
@@ -1867,6 +1883,11 @@ public class SpeechEngine
 	 * with it: each form that has everything it needs, and is not vague.
 	 */
 	private java.util.List<String> retold()
+	{
+		return retold(false);
+	}
+
+	private java.util.List<String> retold(boolean withoutCreature)
 	{
 		java.util.List<String> phrases = new java.util.ArrayList<>();
 		TriggerContext ctx = getContext();
@@ -1884,6 +1905,10 @@ public class SpeechEngine
 		values.put("where", ctx.getIncidentWhereSaid());
 		for (String form : remember.forms())
 		{
+			if (withoutCreature && (form.contains("{foe}") || form.contains("{npc}")))
+			{
+				continue;
+			}
 			boolean[] incomplete = {false};
 			String phrase = substitute(form, particulars, incomplete, false);
 			if (!incomplete[0] && !TriggerContext.isVague(phrase) && !phrases.contains(phrase))

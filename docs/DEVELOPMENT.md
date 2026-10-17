@@ -821,7 +821,10 @@ while back" for two weeks or more, or no date.
 480 px in the game's bold font. Too wide, it drops its `{memoryWhen}` or
 `{memoryAgo}`, then its `{memoryWhere}`, then says the memory a shorter way
 from the rule's other forms, filled from the kept particulars. `{memoryWhere}`
-is empty when the phrase names the place already. MemoryLineLengthTest
+is empty when the phrase names the place already. A line that names the
+creature itself with `{memoryWho}` says the memory without it, skipping any
+form with a `{foe}` or `{npc}` in it: "A Hill Giant. I remember your death in
+Edgeville", never "... your death to the Hill Giant". MemoryLineLengthTest
 measures every recall line this way with the longest foe, item, place and
 "when" there are.
 

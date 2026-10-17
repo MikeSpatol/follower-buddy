@@ -11647,7 +11647,7 @@
     },
     {
       "id": "memory-close-call",
-      "note": "Filed when you come out the far side of nearly dying. The follower does not need to say anything at the time - critical-hp already does - it just needs to remember, so it can bring it up later. The particulars (who, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.",
+      "note": "Filed when you come out the far side of nearly dying. The follower does not need to say anything at the time - critical-hp already does - it just needs to remember, so it can bring it up later. The particulars (who, how many hitpoints, which item, where, when) are filled in when it is filed, so a recall can jog the memory rather than allude to it.",
       "about": "Remembers when you nearly die, to bring up later.",
       "group": "memory",
       "priority": 30,
@@ -11656,8 +11656,12 @@
       "animation": 13302,
       "remember": {
         "key": "close-call",
-        "as": "how close that was with the {foe}",
-        "plain": "how close that was"
+        "as": "the {foe} leaving you on {hp} hitpoints",
+        "or": [
+          "your close call with the {foe}",
+          "your close call {where}"
+        ],
+        "plain": "the time you nearly died"
       },
       "when": {
         "type": "all",
@@ -11688,8 +11692,11 @@
       "output": "overhead",
       "remember": {
         "key": "the-death",
-        "as": "the way that went with the {foe}",
-        "plain": "the way that went"
+        "as": "your death to the {foe}",
+        "or": [
+          "your death {where}"
+        ],
+        "plain": "the time you died"
       },
       "delayTicks": 6,
       "delayTicksMax": 12,
@@ -11724,8 +11731,12 @@
       "output": "overhead",
       "remember": {
         "key": "big-drop",
-        "as": "the {item} that dropped",
-        "plain": "that drop"
+        "as": "the {item} from the {foe}",
+        "or": [
+          "the {item} that dropped",
+          "your big drop {where}"
+        ],
+        "plain": "your big drop"
       },
       "when": {
         "type": "lootWorth",
@@ -11755,7 +11766,10 @@
       "remember": {
         "key": "the-boss",
         "as": "the {npc} going down",
-        "plain": "the size of that thing"
+        "or": [
+          "your big kill {where}"
+        ],
+        "plain": "your big kill"
       },
       "when": {
         "type": "npcKill",
@@ -11797,10 +11811,10 @@
         ]
       },
       "say": [
-        "I keep thinking about {memory}.",
-        "I was rereading the entry on {memory}.",
-        "Do you ever think about {memory}? I do.",
-        "It's quiet. My mind goes back to {memory}."
+        "I keep thinking about {memory}{memoryWhere}, {memoryAgo}.",
+        "I was rereading the entry on {memory}{memoryWhere}.",
+        "Do you ever think about {memory}{memoryWhere}? I do.",
+        "It's quiet. My mind goes back to {memory}, {memoryAgo}."
       ]
     },
     {
@@ -11891,8 +11905,8 @@
         ]
       },
       "say": [
-        "Careful. I've not forgotten {memory}.",
-        "Before you start. Remember {memory}?",
+        "Careful. I've not forgotten {memory}{memoryWhere}.",
+        "Before you start. Remember {memory}? That was {memoryAgo}.",
         "Go on then. But I'm watching, after {memory}.",
         "Mind how you go. The ink's barely dry on {memory}.",
         "Off you go. My mind's still half on {memory}."
@@ -11922,8 +11936,8 @@
       },
       "say": [
         "The notes on {memory} start here.",
-        "Here again, and I've not forgotten {memory}.",
-        "This is where I wrote down {memory}.",
+        "Here again. I've not forgotten {memory}.",
+        "This is where I wrote down {memory}, {memoryAgo}.",
         "The page on {memory} is still creased."
       ]
     },
@@ -11951,11 +11965,11 @@
         ]
       },
       "say": [
-        "That's a {memoryWho}. You'll remember {memory}.",
-        "A {memoryWho}. I remember {memory}.",
+        "That's a {memoryWho}. Remember {memory}?",
+        "A {memoryWho}. I remember {memory}{memoryWhere}.",
         "Mind the {memoryWho}. My page on it isn't a kind one.",
-        "There's the {memoryWho}. I was there for {memory}.",
-        "A {memoryWho}. That shape's on a page I keep going back to."
+        "There's a {memoryWho}. I saw {memory}.",
+        "A {memoryWho}. That shape's on a page I keep rereading."
       ]
     },
     {

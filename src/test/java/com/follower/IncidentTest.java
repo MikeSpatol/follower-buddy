@@ -54,8 +54,9 @@ public class IncidentTest
 		TriggerContext context = h.engine.getContext();
 		assertTrue("the close call was filed", context.hasIncident());
 		assertEquals("close-call", context.getIncidentKey());
-		assertEquals("how close that was with the Hill Giant",
+		assertEquals("the Hill Giant leaving you on 6 hitpoints",
 			context.getIncidentPhrase());
+		assertEquals(6, context.getIncidentHp());
 		assertEquals("Hill Giant", context.getIncidentWho());
 		assertEquals(12342, context.getIncidentWhere());
 		assertEquals(" in Edgeville", context.getMemoryWhere());
@@ -95,7 +96,7 @@ public class IncidentTest
 	public void aDeathLongAfterAFightIsNotPutDownToIt() throws IOException
 	{
 		// The same stale target in the shipped death memory's own words:
-		// "the way that went with the {foe}".
+		// "your death to the {foe}".
 		for (int since : new int[]{2, 60})
 		{
 			Harness h = new Harness(folder.newFolder().toPath());
@@ -110,12 +111,12 @@ public class IncidentTest
 			assertEquals("the-death", context.getIncidentKey());
 			if (since == 2)
 			{
-				assertEquals("the way that went with the ram", context.getIncidentPhrase().toLowerCase());
+				assertEquals("your death to the ram", context.getIncidentPhrase().toLowerCase());
 				assertEquals("Ram", context.getIncidentWho());
 			}
 			else
 			{
-				assertEquals("the way that went", context.getIncidentPhrase());
+				assertEquals("the time you died", context.getIncidentPhrase());
 				assertEquals("", context.getIncidentWho());
 			}
 		}
@@ -140,14 +141,15 @@ public class IncidentTest
 	@Test
 	public void aPlaceholderWithNothingToSayFilesThePlainForm() throws IOException
 	{
-		// A death with no combat target on record: "the way that went with
-		// the " would be a hole, so the plain form is filed instead.
+		// A death with no combat target and no named place on record: "your
+		// death to the " would be a hole, and so would "your death ", so the
+		// plain form is filed instead.
 		Harness h = new Harness(folder.newFolder().toPath());
 		h.gameTicks(1);
 		h.dispatch(TriggerEvent.death());
 		TriggerContext context = h.engine.getContext();
 		assertEquals("the-death", context.getIncidentKey());
-		assertEquals("the way that went", context.getIncidentPhrase());
+		assertEquals("the time you died", context.getIncidentPhrase());
 		assertEquals("", context.getIncidentWho());
 	}
 
@@ -250,7 +252,7 @@ public class IncidentTest
 		byId.engine.setDisabledGroups(Collections.singleton("memory-death"));
 		byId.gameTicks(1);
 		byId.dispatch(TriggerEvent.death());
-		assertEquals("the way that went", byId.engine.getContext().getIncidentPhrase());
+		assertEquals("the time you died", byId.engine.getContext().getIncidentPhrase());
 		assertTrue("and silenced means silent", byId.firedBy("memory-death").isEmpty());
 	}
 
