@@ -365,7 +365,7 @@ mood stretches or shortens on top.
 | `asking` | - a question is already waiting for an answer; optional `is` names the tree. **Every `asks` rule needs this inside a `none`**, or opening a second question silently withdraws the first |
 | `varbitEquals` / `varbitChanged` | `varbit`, `value` |
 | `questVar` | `varbit` or `varp`, optional `minimum`/`maximum` (both inclusive) - true while a quest's progress is in that range, so the rule rises on entering it, even by a jump (1 to 13 enters 11-20). Newer quests keep progress in a varbit, older ones in a varp. A value already in range at login is baseline, not news. Put an event (`chatMessage`, `npcKill`, `regionEnter`...) beside it in an `all` to fire on that event during the step |
-| `questDone` | `quest` - a RuneLite `Quest` constant name (`COOKS_ASSISTANT`). True while that quest is finished, read with the game's own quest-state script, at most once a tick. False with no player, before the scripts are ready, and for a name that is no quest. For a line that calls back to another quest: the callback takes it, the base line takes it inside a `none`, so only one can be said. A once callback named `<base id>-after-<quest>` is spent with its base, so a base said before the other quest was finished keeps its callback quiet at the same step |
+| `questDone` | `quest` - a RuneLite `Quest` constant name (`COOKS_ASSISTANT`). True while that quest is finished, read with the game's own quest-state script, at most once a tick. False with no player, before the scripts are ready, and for a name that is no quest. For a line that calls back to another quest: the callback takes it, the base line takes it inside a `none`, so only one can be said. A once callback named `<base id>-after-<quest>` is spent with its base, so a base said before the other quest was finished keeps its callback quiet at the same step. A callback about a quest's person, `fun-<who>-after-<quest>`, also charges `quest-<who>`'s cooldown when it is said, so the plain line stands aside for its own while |
 | `questWitnessed` | `quest` - a RuneLite `Quest` constant name, optional `minimum` (days, default 0). True when the follower was there for that quest on this account: it saw the reward scroll, or the Chronicle dated the quest's page as it finished. A quest done before the follower came along, or by another account on the same profile, is never witnessed. `minimum` counts days from that day, so a line that says "still" can wait a day. For a callback that remembers the quest together: the callback takes it, its base line takes it inside a `none` |
 | `daysSinceSaid` | `rule` - a `once` rule's id; optional `minimum` / `maximum` days (both inclusive). False until that rule has been said, then the days since, so the later stages of a running bit count from its opener |
 | `dialogueOpen` | - an NPC dialogue box is up, or was in the last two ticks (a page flip drops it for a beat). Used inside a `none` in an `all`, so a rule whose state changes mid-conversation rises as the box closes |
@@ -397,7 +397,7 @@ mood stretches or shortens on top.
 | `wantFulfilled` / `wantExpired` | - `{want}` names the place it asked for |
 | `feelsAbout` | `is` - `liked` or `disliked`, about the region you are standing in |
 | `remembers` | the incident on its mind; optional `is` names it, `minimum` how many times it has happened. `{memory}` says it out loud |
-| `memoryHere` | - standing in the region the incident happened in. `{memory}`, `{memoryWhere}`, `{memoryWhen}` |
+| `memoryHere` | - back in the region the incident happened in: true once the player has left it and come back, not on the visit it was filed. `{memory}`, `{memoryWhere}`, `{memoryWhen}` |
 | `memoryFoeNearby` | `within` - one of the things the incident was with is this close (12 by default). `{memoryWho}` names it |
 | `carrying` | optional `minimum` - it is holding a souvenir, and has for that many minutes. `{souvenir}` names it |
 | `souvenirLost` | - the thing it was carrying is gone |
@@ -566,11 +566,14 @@ follower has a stamp to measure from). On `killCount`: `{boss}`, `{count}`,
   that conversation: see below.
 - `want` - `{"region": 12850, "label": "Lumbridge", "minutes": 20}`. See below.
 - `hushMs` - takes the floor: nothing else speaks for this long. See below.
-- `waits` - `true` waits out a cutscene, the quiet after it, an NPC conversation
-  and the gap after another line, as an occasion does, instead of being dropped,
-  and waits out one of the director's rests. Nothing else of an occasion's: it
-  still counts towards the next rest. The quest people's lines use it, and so do
-  the payoffs of the follower's own bets, advice and dares.
+- `waits` - `true` waits out a cutscene, the quiet after it, an NPC conversation,
+  a spell with nobody at the keys and the gap after another line, as an occasion
+  does, instead of being dropped, and waits out one of the director's rests.
+  Nothing else of an occasion's: it still counts towards the next rest, and is
+  not said to an empty chair. One that rises level with the winning rule on the
+  same pass is said after it, where one a point below is outranked on purpose.
+  The quest people's lines use it, and so do the payoffs of the follower's own
+  bets, advice and dares, the two-hour mark and a lost souvenir.
 - `markHere` - files this moment against the PLACE, said later via `{here}`.
   The incident in `remember` is one thing anywhere; this is one per place, and
   it waits for you to come back.
@@ -989,7 +992,7 @@ gated ones once Developer commands is on; both read `EVERYDAY_COMMANDS` and
 | `::follower anim <id...>` | Play an animation, or a chain of them, on the follower |
 | `::follower outfit <name>` | Wear a saved outfit profile |
 | `::follower errand` | Send the follower on an errand now |
-| `::follower watch` **[dev]** | Print the id of every animation your character plays |
+| `::follower watch [all]` **[dev]** | Print the ids of your animations and graphics; with `all`, everyone's graphics too |
 | `::follower stance <weaponId> [idle walk run attack]` **[dev]** | Show or hand-set a weapon's animations |
 
 **Diagnostics** - all developer-gated

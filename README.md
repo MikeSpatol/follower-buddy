@@ -49,7 +49,8 @@ before it uses it.
 
 **It has a life.** Between events it copies your emotes, has a go at whatever
 you're skilling, wanders when you stand still and sits down when you stand
-still for long enough. Now and then it goes on an errand - a nearby bank, an
+still for long enough. Take an agility obstacle or a shortcut and it takes it
+after you, the same way and in the same order, falls included. Now and then it goes on an errand - a nearby bank, an
 altar, a fire, a cat, or something curious it wants to write up in its scroll -
 and comes back on foot or by teleport. Tell it to Stay and it holds the post,
 notices when you come back, and updates its notes while it waits.
@@ -70,7 +71,9 @@ sketched by the scribe itself, with you in the middle of the drawing. Stand
 somewhere a page wants a drawing of, right-click the follower and pick
 Sketch, then strike any emote while it counts you in, or just stand still.
 Sketch is only on the menu when the follower is settled and its hands are
-free. Ask again for a
+free. The drawing is made from the game view itself, so anything RuneLite
+draws over the view, such as tile markers or ground item names, is drawn in
+too. Ask again for a
 retake; the old drawing is kept. Click any picture to see it larger. It
 starts small: nine quests and a handful of pages around them.
 
@@ -170,12 +173,11 @@ Follower, with the rest of the settings in these sections: Follower (name,
 Follow me, Mute, Chattiness, Hide in PvP areas), Movement, Speech (the chatbox
 tick, overhead text colour and height, how long a line stays up, reading
 speed), Sounds (play attached sounds, volume), Messages (a toggle per subject,
-named as in the Messages window), Thrall mode, Errands (a toggle per errand and a
-frequency), Skilling (keeps you company while you skill, borrows your tools),
-Company (looks where you look, notices things, walks beside you on open
-ground), Combat, Advanced (closed by default: the
-animation and graphic ids, and a box that silences groups or rule ids by
-name) and Developer (closed by default).
+named as in the Messages window, and a box that silences groups or rule ids
+by name), Thrall mode, Errands (a toggle per errand and a frequency), Skilling
+(works beside you when skilling, borrows your tools), Company (looks where you
+look, notices things, walks at your side), Combat, Advanced (closed by
+default: the animation and graphic ids) and Developer (closed by default).
 
 Everything it says lives in `.runelite/follower/phrases.json`, hot-reloaded
 within a second of saving.
