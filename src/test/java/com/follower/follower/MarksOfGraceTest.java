@@ -94,6 +94,29 @@ public class MarksOfGraceTest
 		assertEquals(List.of("spotted"), stages());
 	}
 
+	/**
+	 * Play test, 17 Oct, Varrock's roofs: the game took the same mark away
+	 * and put it straight back on its tile every half minute or so, and each
+	 * return was spotted as a new mark - five times for one.
+	 */
+	@Test
+	public void aMarkTakenAwayAndPutStraightBackIsTheSameMark()
+	{
+		onTheCourse();
+		at(3092, 3267);
+		marks.spawned(MarksOfGrace.MARK, MARK);
+		at(3092, 3267);
+		for (int i = 0; i < 4; i++)
+		{
+			marks.despawned(MarksOfGrace.MARK, MARK);
+			marks.spawned(MarksOfGrace.MARK, MARK);
+			onTheCourse();
+			at(3092, 3267);
+		}
+		assertEquals("spotted once, not again at each return", List.of("spotted"), stages());
+		assertEquals("and nothing counted as picked up", 0, counted);
+	}
+
 	@Test
 	public void aMarkAlreadyOnTheRoofIsSpottedOnArrival()
 	{

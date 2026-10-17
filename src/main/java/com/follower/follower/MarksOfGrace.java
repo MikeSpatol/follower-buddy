@@ -92,6 +92,16 @@ public final class MarksOfGrace
 	{
 		if (itemId == MARK && at != null)
 		{
+			// The game takes a mark away and puts it straight back on its
+			// tile now and then (seen every half minute or so on Varrock's
+			// roofs, 17 Oct). It is the same mark, with what the follower
+			// already made of it, not a new one to spot again.
+			if (gone != null && gone.at.equals(at) && !marks.containsKey(at))
+			{
+				marks.put(at, gone);
+				gone = null;
+				return;
+			}
 			marks.computeIfAbsent(at, Mark::new);
 		}
 	}
