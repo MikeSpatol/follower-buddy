@@ -1408,6 +1408,17 @@ public final class TriggerContext
 	private long incidentWhenMs;
 	private String incidentWho = "";
 
+	/**
+	 * And the rest of what was there to see: the place as said ("Edgeville",
+	 * "the Wilderness"), whether that is only the nearest named place, the
+	 * item (a drop) and the hitpoints left. Kept apart from the phrase so the
+	 * memory can be said again, longer or shorter, in words written later.
+	 */
+	private String incidentPlace = "";
+	private boolean incidentNear;
+	private String incidentItem = "";
+	private int incidentHp = -1;
+
 	/** Place names by region id, from the Locations rules; for {memoryWhere}. */
 	private java.util.Map<Integer, String> regionNames = java.util.Collections.emptyMap();
 
@@ -1436,6 +1447,15 @@ public final class TriggerContext
 	 */
 	public void noteIncident(String key, String phrase, String who, long nowMs)
 	{
+		noteIncident(key, phrase, who, "", -1, nowMs);
+	}
+
+	/**
+	 * @param item the item involved (a drop), or empty
+	 * @param hp   the hitpoints left, or -1
+	 */
+	public void noteIncident(String key, String phrase, String who, String item, int hp, long nowMs)
+	{
 		if (key == null || key.isEmpty())
 		{
 			return;
@@ -1454,6 +1474,11 @@ public final class TriggerContext
 		incidentJustFiled = true;
 		incidentWhenMs = nowMs;
 		incidentWho = who == null ? "" : who;
+		incidentItem = item == null ? "" : item;
+		incidentHp = hp;
+		incidentPlace = getPlaceHere();
+		incidentNear = isPlaceHereNear();
+		incidentToRetell = false;
 		countersDirty = true;
 		log.debug("Incident: {} ({}) in {} with '{}', now {}", key, incidentPhrase,
 			incidentWhere, incidentWho, incidentCount);
@@ -1474,14 +1499,131 @@ public final class TriggerContext
 		return incidentWho;
 	}
 
+	public String getIncidentItem()
+	{
+		return incidentItem;
+	}
+
+	/** The hitpoints left when it was filed, or -1 when not known. */
+	public int getIncidentHp()
+	{
+		return incidentHp;
+	}
+
+	/** Whether {@link #getIncidentPlace} is only the nearest named place, not the place itself. */
+	public boolean isIncidentNear()
+	{
+		return incidentNear && !incidentPlace.isEmpty();
+	}
+
 	/**
-	 * The place the incident happened, as the Locations rules name it, cut
-	 * to its first clause ("Varrock: west bank, centre and palace" is
-	 * Varrock). Empty when the region has no name or no incident is held.
+	 * The place the incident happened as a sentence says it: "Edgeville",
+	 * "the God Wars Dungeon". Filed with the incident; a memory saved before
+	 * places were filed reads its region's name from the Locations rules.
+	 * Empty when there is none or no incident is held.
 	 */
 	public String getIncidentPlace()
 	{
-		return placeName(incidentWhere);
+		if (!incidentPlace.isEmpty())
+		{
+			return incidentPlace;
+		}
+		String place = placeName(incidentWhere);
+		return place.isEmpty() ? "" : shortPlace(place);
+	}
+
+	/** "in Edgeville", or "near Lumbridge" for the nearest named place; empty when unknown. */
+	public String getIncidentWhereSaid()
+	{
+		return where(getIncidentPlace(), isIncidentNear());
+	}
+
+	private static String where(String place, boolean near)
+	{
+		return place.isEmpty() ? "" : (near ? "near " : "in ") + place;
+	}
+
+	/** The name the Wilderness goes by, where no Locations rule names the spot. */
+	static final String WILDERNESS = "the Wilderness";
+
+	/**
+	 * The place here, as a memory filed now would say it: this region's name
+	 * from the Locations rules; failing that the Wilderness; failing that the
+	 * nearest named region next door, which {@link #isPlaceHereNear} owns up
+	 * to. Empty when there is nothing better than a region id.
+	 */
+	public String getPlaceHere()
+	{
+		String place = placeName(regionId);
+		if (!place.isEmpty())
+		{
+			return shortPlace(place);
+		}
+		if (inWilderness)
+		{
+			return WILDERNESS;
+		}
+		int next = namedNeighbour();
+		return next == 0 ? "" : shortPlace(placeName(next));
+	}
+
+	/** Whether {@link #getPlaceHere} is a neighbouring region's name rather than this one's. */
+	public boolean isPlaceHereNear()
+	{
+		return placeName(regionId).isEmpty() && !inWilderness && namedNeighbour() != 0;
+	}
+
+	/** "in Edgeville", "near Lumbridge" or "" for here: the {where} a memory files. */
+	public String getWhereHere()
+	{
+		return where(getPlaceHere(), isPlaceHereNear());
+	}
+
+	/**
+	 * The named region among the eight around this one whose middle is
+	 * closest to where the player stands, or 0. A region is 64 tiles a side,
+	 * so this is never more than a short walk from the name it borrows.
+	 */
+	private int namedNeighbour()
+	{
+		if (regionId <= 0)
+		{
+			return 0;
+		}
+		int rx = regionId >> 8;
+		int ry = regionId & 0xFF;
+		int best = 0;
+		long bestDistance = Long.MAX_VALUE;
+		for (int dx = -1; dx <= 1; dx++)
+		{
+			for (int dy = -1; dy <= 1; dy++)
+			{
+				int x = rx + dx;
+				int y = ry + dy;
+				if ((dx == 0 && dy == 0) || x < 0 || y < 0 || y > 0xFF)
+				{
+					continue;
+				}
+				int region = (x << 8) | y;
+				if (placeName(region).isEmpty())
+				{
+					continue;
+				}
+				long distance = location == null ? Math.abs(dx) + Math.abs(dy)
+					: square((x << 6) + 32 - location.getX()) + square((y << 6) + 32 - location.getY());
+				if (distance < bestDistance)
+				{
+					bestDistance = distance;
+					best = region;
+				}
+			}
+		}
+		return best;
+	}
+
+	private static long square(long n)
+	{
+		return n * n;
 	}
 
 	public String placeName(int region)
@@ -1510,8 +1652,21 @@ public final class TriggerContext
 	 */
 	public String getMemoryWhere()
 	{
+		return memoryWhereFor(incidentPhrase);
+	}
+
+	/**
+	 * The same, for the memory said as {@code phrase}: empty when the
+	 * phrase names the place already ("your death in Edgeville").
+	 */
+	public String memoryWhereFor(String phrase)
+	{
 		String place = getIncidentPlace();
-		return place.isEmpty() ? "" : " in " + shortPlace(place);
+		if (place.isEmpty() || (phrase != null && phrase.contains(place)))
+		{
+			return "";
+		}
+		return " " + getIncidentWhereSaid();
 	}
 
 	/**
@@ -1556,6 +1711,53 @@ public final class TriggerContext
 		long ago = nowMs - incidentWhenMs;
 		return ago < 120_000L ? "just now" : Words.duration(ago) + " ago";
 	}
+
+	/**
+	 * When it happened, the way somebody would say it in passing: "earlier
+	 * today", "yesterday", "three days ago", "last week", "a while back".
+	 * By the calendar on your clock, so last night is yesterday. An old
+	 * record with no date is a while back. Empty with no incident.
+	 */
+	public String getMemoryAgo(long nowMs)
+	{
+		return getMemoryAgo(nowMs, java.time.ZoneId.systemDefault());
+	}
+
+	public String getMemoryAgo(long nowMs, java.time.ZoneId zone)
+	{
+		if (!hasIncident())
+		{
+			return "";
+		}
+		if (incidentWhenMs <= 0 || incidentWhenMs > nowMs)
+		{
+			return AGO_LONG;
+		}
+		long days = java.time.temporal.ChronoUnit.DAYS.between(
+			java.time.Instant.ofEpochMilli(incidentWhenMs).atZone(zone).toLocalDate(),
+			java.time.Instant.ofEpochMilli(nowMs).atZone(zone).toLocalDate());
+		if (days <= 0)
+		{
+			return AGO_TODAY;
+		}
+		if (days == 1)
+		{
+			return AGO_YESTERDAY;
+		}
+		if (days < 7)
+		{
+			return Words.number((int) days) + AGO_DAYS;
+		}
+		return days < 14 ? AGO_LAST_WEEK : AGO_LONG;
+	}
+
+	// The words {memoryAgo} says. Awaiting the player's approval, and said
+	// by no shipped line until then: see the memories text review.
+	static final String AGO_TODAY = "earlier today";
+	static final String AGO_YESTERDAY = "yesterday";
+	static final String AGO_DAYS = " days ago";
+	static final String AGO_LAST_WEEK = "last week";
+	static final String AGO_LONG = "a while back";
 
 	/**
 	 * Filed in this region and not left since: still the visit it happened
@@ -1611,6 +1813,16 @@ public final class TriggerContext
 	public void restoreIncident(String key, String phrase, int count, int where, long whenMs,
 		String who)
 	{
+		restoreIncident(key, phrase, count, where, whenMs, who, null, false, null, -1);
+	}
+
+	/**
+	 * With every particular. A save from before places, items and hitpoints
+	 * were filed brings nulls and -1: the place is then read off the region.
+	 */
+	public void restoreIncident(String key, String phrase, int count, int where, long whenMs,
+		String who, String place, boolean near, String item, int hp)
+	{
 		if (key == null || key.isEmpty())
 		{
 			return;
@@ -1622,6 +1834,68 @@ public final class TriggerContext
 		incidentJustFiled = false;
 		incidentWhenMs = whenMs;
 		incidentWho = who == null ? "" : who;
+		incidentPlace = place == null ? "" : place;
+		incidentNear = near;
+		incidentItem = item == null ? "" : item;
+		incidentHp = hp;
+		incidentToRetell = isLegacy(incidentPhrase);
+	}
+
+	/**
+	 * Puts a better way of saying the incident in place of the old words it
+	 * was saved with, once the engine has worked one out from the particulars.
+	 */
+	public void retellIncident(String phrase)
+	{
+		incidentToRetell = false;
+		if (phrase != null && !phrase.isEmpty() && !phrase.equals(incidentPhrase))
+		{
+			incidentPhrase = phrase;
+			countersDirty = true;
+		}
+	}
+
+	/** Whether the incident came back from a save in words from before memories named the moment. */
+	public boolean isIncidentToRetell()
+	{
+		return incidentToRetell && hasIncident();
+	}
+
+	private boolean incidentToRetell;
+
+	/**
+	 * The fallbacks the memory rules filed before they named the moment.
+	 * "I was rereading the entry on the way that went" told the player
+	 * nothing. A memory in these words is never said: a restore says it
+	 * again from its particulars if it can, and otherwise it waits, unsaid,
+	 * to be replaced by the next incident.
+	 */
+	private static final Set<String> VAGUE = new HashSet<>(Arrays.asList(
+		"how close that was", "the way that went", "that drop", "the size of that thing"));
+
+	/** The old forms that named only the foe, which a restore says again in the current words. */
+	private static final String[] LEGACY_PREFIXES = {"how close that was with ", "the way that went with "};
+
+	/** Whether a memory said this way would tell the player nothing about which moment it was. */
+	public static boolean isVague(String phrase)
+	{
+		return phrase == null || phrase.isEmpty() || VAGUE.contains(phrase);
+	}
+
+	static boolean isLegacy(String phrase)
+	{
+		if (isVague(phrase))
+		{
+			return true;
+		}
+		for (String prefix : LEGACY_PREFIXES)
+		{
+			if (phrase.startsWith(prefix))
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	// ---------------------------------------------------------------- traits

@@ -397,7 +397,7 @@ mood stretches or shortens on top.
 | `wantFulfilled` / `wantExpired` | - `{want}` names the place it asked for |
 | `feelsAbout` | `is` - `liked` or `disliked`, about the region you are standing in |
 | `remembers` | the incident on its mind; optional `is` names it, `minimum` how many times it has happened. `{memory}` says it out loud |
-| `memoryHere` | - back in the region the incident happened in: true once the player has left it and come back, not on the visit it was filed. `{memory}`, `{memoryWhere}`, `{memoryWhen}` |
+| `memoryHere` | - back in the region the incident happened in: true once the player has left it and come back, not on the visit it was filed. `{memory}`, `{memoryWhere}`, `{memoryWhen}`, `{memoryAgo}` |
 | `memoryFoeNearby` | `within` - one of the things the incident was with is this close (12 by default). `{memoryWho}` names it |
 | `carrying` | optional `minimum` - it is holding a souvenir, and has for that many minutes. `{souvenir}` names it |
 | `souvenirLost` | - the thing it was carrying is gone |
@@ -463,7 +463,10 @@ standing on, which is what you want for instanced dungeons and raids.
 total, written the way a player says it - `1.2M`, `214K`), `{speaker}` (who said it, on
 chat events), `{record}` / `{previous}` (on `personalBest`), `{want}` (on `wantFulfilled`
 and `wantExpired`), `{memory}` (the incident on its mind - guard the rule with
-`remembers` or it prints nothing), `{souvenir}` (what it is carrying, or has
+`remembers` or it prints nothing; `{memoryWhere}`, `{memoryWhen}` and
+`{memoryAgo}` go with it), `{place}` and `{where}` (where a memory filed now
+happened: "Edgeville", and "in Edgeville" or "near Lumbridge"; meant for
+`remember` forms), `{souvenir}` (what it is carrying, or has
 just lost - guard with `carrying` or `souvenirLost`), `{here}` (guard with
 `happenedHere`), `{nickname}` (guard with `nicknamed`), `{days}` (guard with
 `daysKnown`), `{advice}` and `{challenge}`. On a level-up: `{total}`, `{base}`,
@@ -552,10 +555,11 @@ follower has a stamp to measure from). On `killCount`: `{boss}`, `{count}`,
   only then copies. Moved off that tile for any reason, the copy stops. With no
   work session on there is nothing to stand against, so there is no copy.
   `mime-loops` and `mime-oneshots` use it; emote copies do not.
-- `remember` - `{"key": "close-call", "as": "how close that was with the {foe}", "plain": "how close that was"}`. Files what
+- `remember` - `{"key": "close-call", "as": "how close that was with the {foe}", "or": [...], "plain": "how close that was"}`. Files what
   just happened as the incident the follower keeps coming back to; `remembers`
   conditions match on the key and `{memory}` says the phrase. Filed whether or
-  not the line was heard: the thing happened either way.
+  not the line was heard: the thing happened either way. `or` is optional:
+  fallbacks tried in turn between `as` and `plain`. See "Remembering one thing".
 - `pickUp` - `{"what": "a nice flat rock", "minutes": 25}`. Something it carries
   about and is put out about losing. Refused while its hands are full.
 - `bet` - `{"rich": false, "threshold": 50000, "minutes": 5}`: the follower
@@ -799,6 +803,39 @@ conditions jog the memory at the right moment: `memoryHere`, standing in the
 region it happened in, and `memoryFoeNearby`, one of the things it was with
 within `within` tiles. "How close that was" is a hint; the particulars are
 what make it a memory two people share.
+
+**Every incident is filed with all of its particulars**, whatever its phrase
+uses: the foe, the item (a drop), the hitpoints left, and the place as a
+sentence says it. The place is the region's name from the Locations rules;
+failing that "the Wilderness"; failing that the nearest named region of the
+eight around it, said "near" ("near Lumbridge"). `{place}` and `{where}`
+("in Edgeville", "near Lumbridge") put it in a form. A form is used only when
+nothing in it is empty (and a `{foe}` only when the fight is this one), so
+`as`, then each of `or`, then `plain` is a ladder from most to least
+particular: "your death to the {foe}", "your death {where}", "the time you
+died". `{memoryAgo}` says when by the calendar on your clock: "earlier
+today", "yesterday", "two days ago" to "six days ago", "last week", and "a
+while back" for two weeks or more, or no date.
+
+**A memory line is fitted to the overhead as it is said**: 80 characters and
+480 px in the game's bold font. Too wide, it drops its `{memoryWhen}` or
+`{memoryAgo}`, then its `{memoryWhere}`, then says the memory a shorter way
+from the rule's other forms, filled from the kept particulars. `{memoryWhere}`
+is empty when the phrase names the place already. MemoryLineLengthTest
+measures every recall line this way with the longest foe, item, place and
+"when" there are.
+
+**A vague memory is never said.** "I was rereading the entry on the way that
+went" told the player nothing (play report, 17 Oct). The old fallbacks ("how
+close that was", "the way that went", "that drop", "the size of that thing")
+count as vague, and a rule whose lines say `{memory}` stays quiet while there
+is nothing more specific to say. A memory restored in the old words - those,
+or the old "... with the {foe}" forms - is told again on the first event from
+its rule's current forms and what was kept with it: "the way that went", kept
+with the Hill Giant, becomes the death rule's words for a death to the Hill
+Giant. One with nothing kept is left as it was, unsaid, until the next
+incident replaces it; its count still counts. Saves from before the
+particulars load as they are, the place read off the region id.
 
 An incident is filed by every rule that rises, winner or not: the remember
 rules sit under the reaction lines on purpose, and filing only from the

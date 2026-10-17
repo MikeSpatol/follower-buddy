@@ -647,6 +647,9 @@ public class FollowerPlugin extends Plugin
 		loadOutfitProfiles();
 
 		speechEngine.setSink(this::speak);
+		// Lines are fitted to the overhead in the font it is drawn in.
+		com.follower.ui.GameFont overheadFont = gameFontRepository.getByName("b12_full");
+		speechEngine.setOverheadWidth(overheadFont == null ? null : overheadFont::stringWidth);
 		applyConfig();
 		loadExactPalette();
 		renderCallbacks.register(thrallHider);
@@ -2547,6 +2550,15 @@ public class FollowerPlugin extends Plugin
 		int incidentWhere;
 		long incidentWhenMs;
 		String incidentWho;
+		/**
+		 * The place as said, whether that is only the nearest named place,
+		 * the item and the hitpoints left. Absent from older saves, which
+		 * read the place off the region and know no item or hitpoints.
+		 */
+		String incidentPlace;
+		Boolean incidentNear;
+		String incidentItem;
+		Integer incidentHp;
 
 		/**
 		 * Where the last death happened. Session-scoped memory made
@@ -2803,7 +2815,9 @@ public class FollowerPlugin extends Plugin
 			context.restoreKillCountNames(saved.killCountNames);
 			context.setSessionCount(saved.sessions);
 			context.restoreIncident(saved.incidentKey, saved.incidentPhrase,
-				saved.incidentCount, saved.incidentWhere, saved.incidentWhenMs, saved.incidentWho);
+				saved.incidentCount, saved.incidentWhere, saved.incidentWhenMs, saved.incidentWho,
+				saved.incidentPlace, Boolean.TRUE.equals(saved.incidentNear), saved.incidentItem,
+				saved.incidentHp == null ? -1 : saved.incidentHp);
 			context.restorePlaces(saved.placeScores, saved.placeMemories);
 			context.restoreSpokenOnce(saved.spokenOnce, saved.spokenOnceOn);
 			context.restoreQuestsSeenFinished(saved.questsSeenFinished);
@@ -2882,6 +2896,10 @@ public class FollowerPlugin extends Plugin
 		saved.incidentWhere = context.getIncidentWhere();
 		saved.incidentWhenMs = context.getIncidentWhenMs();
 		saved.incidentWho = context.getIncidentWho().isEmpty() ? null : context.getIncidentWho();
+		saved.incidentPlace = context.getIncidentPlace().isEmpty() ? null : context.getIncidentPlace();
+		saved.incidentNear = context.isIncidentNear() ? Boolean.TRUE : null;
+		saved.incidentItem = context.getIncidentItem().isEmpty() ? null : context.getIncidentItem();
+		saved.incidentHp = context.getIncidentHp() < 0 ? null : context.getIncidentHp();
 		saved.placeScores = context.getPlaceScores();
 		saved.placeMemories = context.getPlaceMemories();
 		saved.spokenOnce = new java.util.ArrayList<>(context.getSpokenOnce());
@@ -7173,7 +7191,8 @@ public class FollowerPlugin extends Plugin
 			context.getTally("levels:today"),
 			context.getTally("deaths:today"),
 			context.getMoodBand(),
-			context.hasIncident() ? context.getIncidentPhrase() + context.getMemoryWhere()
+			context.hasIncident() && !com.follower.speech.TriggerContext.isVague(context.getIncidentPhrase())
+				? context.getIncidentPhrase() + context.getMemoryWhere()
 				+ ", " + context.getMemoryWhen(System.currentTimeMillis()) : null);
 	}
 

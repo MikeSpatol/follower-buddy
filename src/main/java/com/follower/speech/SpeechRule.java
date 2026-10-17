@@ -341,8 +341,38 @@ public class SpeechRule
 		 * filled in when it is filed: "how close that was with the {foe}".
 		 */
 		public String as;
+		/**
+		 * Fallbacks tried in turn when {@link #as} cannot be filled, before
+		 * {@link #plain}: "your death {where}" when there was no foe.
+		 */
+		public java.util.List<String> or;
 		/** What to file instead when a placeholder in {@link #as} has nothing to say. */
 		public String plain;
+
+		/** Every way of saying it, most particular first: as, each or, then plain. */
+		public java.util.List<String> forms()
+		{
+			java.util.List<String> forms = new java.util.ArrayList<>();
+			if (as != null)
+			{
+				forms.add(as);
+			}
+			if (or != null)
+			{
+				for (String form : or)
+				{
+					if (form != null)
+					{
+						forms.add(form);
+					}
+				}
+			}
+			if (plain != null)
+			{
+				forms.add(plain);
+			}
+			return forms;
+		}
 	}
 
 	/**

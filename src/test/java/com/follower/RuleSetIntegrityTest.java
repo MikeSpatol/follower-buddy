@@ -822,7 +822,7 @@ public class RuleSetIntegrityTest
 		// something to read, and an empty one leaves a hole in the sentence
 		// ("I keep thinking about ."). Listing them as conditional rather than
 		// ambient is what makes the guard compulsory.
-		Set<String> memoryExtras = new HashSet<>(Arrays.asList("memory", "memoryWhere", "memoryWhen"));
+		Set<String> memoryExtras = new HashSet<>(Arrays.asList("memory", "memoryWhere", "memoryWhen", "memoryAgo"));
 		byType.put("remembers", memoryExtras);
 		byType.put("memoryhere", memoryExtras);
 		Set<String> foeExtras = new HashSet<>(memoryExtras);

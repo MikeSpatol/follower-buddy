@@ -64,6 +64,14 @@ public class SpeechEngine
 	/** Nothing speaks within this window of the previous line, whatever the rule. */
 	private long globalCooldownMs = 3_000L;
 
+	/**
+	 * How wide a line is drawn over the head, in pixels: the game's bold
+	 * font, set by the plugin once the fonts are read. Null measures in
+	 * characters only.
+	 */
+	@Setter
+	private java.util.function.ToIntFunction<String> overheadWidth;
+
 	public void setGlobalCooldownMs(long globalCooldownMs)
 	{
 		this.globalCooldownMs = globalCooldownMs;
@@ -977,6 +985,15 @@ public class SpeechEngine
 	{
 		long now = now();
 
+		// A memory restored in the old vague words is said again from its
+		// particulars before anything can bring it up. Here rather than at
+		// the restore, which runs before the rules and place names are in.
+		if (getContext().isIncidentToRetell())
+		{
+			java.util.List<String> retold = retold();
+			getContext().retellIncident(retold.isEmpty() ? null : retold.get(0));
+		}
+
 		// An animation the player played may be them doing the thing they were
 		// just told to. Offered before the rules run, so the settling and the
 		// reaction land on the same tick rather than a tick apart.
@@ -1589,19 +1606,29 @@ public class SpeechEngine
 			// quest finished an hour after a ram fight was filed "with the
 			// Ram", and the next Ram brought the quest up.
 			boolean fighting = getContext().foughtWithin(RECENT_FIGHT_TICKS);
-			boolean[] incomplete = {false};
-			String phrase = substitute(rule.remember.as, event, incomplete, false);
-			if ((incomplete[0] || (!fighting && rule.remember.as != null && rule.remember.as.contains("{foe}")))
-				&& rule.remember.plain != null)
+			String phrase = "";
+			java.util.List<String> forms = rule.remember.forms();
+			for (int i = 0; i < forms.size(); i++)
 			{
-				phrase = substitute(rule.remember.plain, event, null, false);
+				// Each form in turn, the first with nothing missing; the last
+				// whatever it has.
+				String form = forms.get(i);
+				boolean[] incomplete = {false};
+				phrase = substitute(form, event, incomplete, false);
+				if (i == forms.size() - 1
+					|| (!incomplete[0] && (fighting || !form.contains("{foe}"))))
+				{
+					break;
+				}
 			}
 			String who = event.getPlaceholders().getOrDefault("npc", "");
 			if (who.isEmpty() && fighting)
 			{
 				who = getContext().getCombatTarget();
 			}
-			getContext().noteIncident(rule.remember.key, phrase, who, System.currentTimeMillis());
+			getContext().noteIncident(rule.remember.key, phrase, who,
+				event.getPlaceholders().getOrDefault("item", ""), getContext().getHitpoints(),
+				System.currentTimeMillis());
 		}
 
 		// And the same moment against the place, when the rule says so.
@@ -1615,6 +1642,13 @@ public class SpeechEngine
 	{
 		if (!rule.isEnabled() || (rule.isOnce()
 			&& (getContext().hasSaidOnce(rule.id) || getContext().hasSaidOnce(rule.onceKey()))))
+		{
+			return false;
+		}
+		// A memory that would only come out vague is not brought up at all:
+		// "I was rereading the entry on the way that went" tells the player
+		// nothing about which moment it was.
+		if (bringsUpAMemory(rule) && memoryPhrases().isEmpty())
 		{
 			return false;
 		}
@@ -1732,27 +1766,145 @@ public class SpeechEngine
 	 */
 	static final int OVERHEAD_MAX_CHARS = 80;
 
+	/** The widest line said over a head, in pixels: wider is clipped in fixed mode. */
+	static final int OVERHEAD_MAX_PX = 480;
+
 	/** "That was {memoryWhen}." and the like: a sentence that only says when. */
 	private static final java.util.regex.Pattern WHEN_SENTENCE =
-		java.util.regex.Pattern.compile("\\s*[^.?!]*\\{memoryWhen\\}[^.?!]*[.?!]");
+		java.util.regex.Pattern.compile("\\s*[^.?!]*\\{memory(?:When|Ago)\\}[^.?!]*[.?!]");
+
+	/** The memory being tried while a line is fitted, in place of the one filed. */
+	private String memoryOverride;
 
 	/**
 	 * A template filled for saying. Over the limit, a line that tells a
-	 * memory's where and when is filled again without them: the memory is
-	 * the point, and the particulars are what there is no room for.
+	 * memory is filled again with less: first without its when, then
+	 * without its where, then with the memory said a shorter way, from its
+	 * rule's other forms. The fullest that fits is said; the moment itself
+	 * is the point, and the particulars are what there may be no room for.
 	 */
 	String spokenText(String template, TriggerEvent event)
 	{
-		String text = substitute(template, event, null, true);
-		if (text.length() > OVERHEAD_MAX_CHARS)
+		java.util.List<String> phrases = template != null && template.contains("{memory}")
+			? memoryPhrases() : new java.util.ArrayList<>();
+		if (phrases.isEmpty())
 		{
-			String shorter = withoutMemoryParticulars(template);
-			if (shorter != null)
+			phrases.add(null);
+		}
+		String text = "";
+		try
+		{
+			for (String phrase : phrases)
 			{
-				text = substitute(shorter, event, null, true);
+				memoryOverride = phrase;
+				for (String variant : shortenings(template))
+				{
+					text = substitute(variant, event, null, true);
+					if (fitsOverhead(text))
+					{
+						return text;
+					}
+				}
+			}
+			return text;
+		}
+		finally
+		{
+			memoryOverride = null;
+		}
+	}
+
+	private boolean fitsOverhead(String text)
+	{
+		return text.length() <= OVERHEAD_MAX_CHARS
+			&& (overheadWidth == null || overheadWidth.applyAsInt(text) <= OVERHEAD_MAX_PX);
+	}
+
+	/** The template, then without its memory's when, then without its where too. */
+	private static java.util.List<String> shortenings(String template)
+	{
+		java.util.List<String> out = new java.util.ArrayList<>();
+		out.add(template);
+		for (String shorter : new String[]{withoutMemoryWhen(template), withoutMemoryParticulars(template)})
+		{
+			if (shorter != null && !out.contains(shorter))
+			{
+				out.add(shorter);
 			}
 		}
-		return text;
+		return out;
+	}
+
+	/**
+	 * Every way the incident can be said, most particular first: as it was
+	 * filed, then as its rule's forms say it from the particulars kept with
+	 * it. Never a vague one, so empty when there is nothing specific to say.
+	 */
+	public java.util.List<String> memoryPhrases()
+	{
+		java.util.List<String> phrases = new java.util.ArrayList<>();
+		TriggerContext ctx = getContext();
+		if (!ctx.hasIncident())
+		{
+			return phrases;
+		}
+		if (!TriggerContext.isVague(ctx.getIncidentPhrase()))
+		{
+			phrases.add(ctx.getIncidentPhrase());
+		}
+		for (String phrase : retold())
+		{
+			if (!phrases.contains(phrase))
+			{
+				phrases.add(phrase);
+			}
+		}
+		return phrases;
+	}
+
+	/**
+	 * The incident in its rule's words, filled from the particulars kept
+	 * with it: each form that has everything it needs, and is not vague.
+	 */
+	private java.util.List<String> retold()
+	{
+		java.util.List<String> phrases = new java.util.ArrayList<>();
+		TriggerContext ctx = getContext();
+		SpeechRule.Incident remember = rememberFor(ctx.getIncidentKey());
+		if (remember == null)
+		{
+			return phrases;
+		}
+		TriggerEvent particulars = TriggerEvent.combat(TriggerEvent.Type.MANUAL, ctx.getIncidentWho());
+		Map<String, String> values = particulars.getPlaceholders();
+		values.put("foe", ctx.getIncidentWho());
+		values.put("item", ctx.getIncidentItem());
+		values.put("hp", ctx.getIncidentHp() < 0 ? "" : Integer.toString(ctx.getIncidentHp()));
+		values.put("place", ctx.getIncidentPlace());
+		values.put("where", ctx.getIncidentWhereSaid());
+		for (String form : remember.forms())
+		{
+			boolean[] incomplete = {false};
+			String phrase = substitute(form, particulars, incomplete, false);
+			if (!incomplete[0] && !TriggerContext.isVague(phrase) && !phrases.contains(phrase))
+			{
+				phrases.add(phrase);
+			}
+		}
+		return phrases;
+	}
+
+	/** The remember block that files incidents under this key, or null. */
+	private SpeechRule.Incident rememberFor(String key)
+	{
+		for (SpeechRule rule : loader.getRules())
+		{
+			if (rule.remember != null && key.equals(rule.remember.key))
+			{
+				return rule.remember;
+			}
+		}
+		return null;
 	}
 
 	/** A page of a conversation tree, filled from the state like a spoken line: {candidate} and the rest. */
@@ -1762,26 +1914,44 @@ public class SpeechEngine
 	}
 
 	/**
-	 * The template with {memoryWhere} and {memoryWhen} taken out, or null
-	 * when it has neither or would lose the memory with them. The where
-	 * brings its own " in", so it goes alone; the when goes with its comma,
-	 * or with the sentence it has to itself.
+	 * The template with {memoryWhere}, {memoryWhen} and {memoryAgo} taken
+	 * out, or null when it has none or would lose the memory with them. The
+	 * where brings its own " in", so it goes alone; the when goes with its
+	 * comma, or with the sentence it has to itself.
 	 */
 	static String withoutMemoryParticulars(String template)
 	{
-		if (template == null
-			|| (!template.contains("{memoryWhere}") && !template.contains("{memoryWhen}")))
+		if (template == null || !template.contains("{memoryWhere}"))
+		{
+			return withoutMemoryWhen(template);
+		}
+		String shorter = template.replace("{memoryWhere}", "");
+		if (saysWhen(shorter))
+		{
+			shorter = withoutMemoryWhen(shorter);
+		}
+		return shorter;
+	}
+
+	/** The template with only its when taken out, or null as above. */
+	static String withoutMemoryWhen(String template)
+	{
+		if (template == null || !saysWhen(template))
 		{
 			return null;
 		}
-		String shorter = template.replace("{memoryWhere}", "").replace(", {memoryWhen}", "");
+		String shorter = template.replace(", {memoryWhen}", "").replace(", {memoryAgo}", "");
 		shorter = WHEN_SENTENCE.matcher(shorter).replaceAll("").trim();
-		if (shorter.contains("{memoryWhen}")
-			|| (template.contains("{memory}") && !shorter.contains("{memory}")))
+		if (saysWhen(shorter) || (template.contains("{memory}") && !shorter.contains("{memory}")))
 		{
 			return null;
 		}
 		return shorter;
+	}
+
+	private static boolean saysWhen(String template)
+	{
+		return template.contains("{memoryWhen}") || template.contains("{memoryAgo}");
 	}
 
 	/** Replaces {@code {placeholder}} tokens from the event and the state snapshot. */
@@ -1805,10 +1975,16 @@ public class SpeechEngine
 		TriggerContext ctx = getContext();
 		// Available wherever the state is: a callback line wants {memory}
 		// whatever event happened to trigger it.
-		values.putIfAbsent("memory", ctx.getIncidentPhrase());
-		values.putIfAbsent("memoryWhere", ctx.getMemoryWhere());
+		String memory = memoryOverride != null ? memoryOverride : ctx.getIncidentPhrase();
+		values.putIfAbsent("memory", memory);
+		values.putIfAbsent("memoryWhere", ctx.memoryWhereFor(memory));
 		values.putIfAbsent("memoryWhen", ctx.getMemoryWhen(System.currentTimeMillis()));
+		values.putIfAbsent("memoryAgo", ctx.getMemoryAgo(System.currentTimeMillis()));
 		values.putIfAbsent("memoryWho", ctx.getIncidentWho());
+		// Where a memory filed now happened: "Edgeville", and "in Edgeville"
+		// or "near Lumbridge" ready to follow it.
+		values.putIfAbsent("place", ctx.getPlaceHere());
+		values.putIfAbsent("where", ctx.getWhereHere());
 		values.putIfAbsent("foe", ctx.getCombatTarget());
 		values.putIfAbsent("souvenir", ctx.getSouvenir());
 		values.putIfAbsent("wish", ctx.getWishLabel());
