@@ -867,7 +867,10 @@ public class FollowerPlugin extends Plugin
 				&& !skilling.holdsTheFeet() && !moments.holdsTheFeet() && !flourish.isActive()
 				&& minutesState == 0 && !emoteHold && !filming && !sceneHolds());
 		crossingWatch = new com.follower.follower.CrossingWatch(follower);
-		marksOfGrace = new com.follower.follower.MarksOfGrace(speechEngine::dispatch);
+		// The count is the context's, read at the time: Forget everything
+		// makes a new one, and the count goes with it.
+		marksOfGrace = new com.follower.follower.MarksOfGrace(speechEngine::dispatch,
+			() -> speechEngine.getContext().tally("graces"));
 		follower.setOnCrossed(crossing -> speechEngine.dispatch(
 			TriggerEvent.crossed(crossing.isFell())));
 		agilityTrace.initialise(dataDir);

@@ -24,7 +24,9 @@ public class MarksOfGraceTest
 	private static final WorldPoint MARK = new WorldPoint(3090, 3266, ROOF);
 
 	private final List<TriggerEvent> events = new ArrayList<>();
-	private final MarksOfGrace marks = new MarksOfGrace(events::add);
+	/** Marks counted into the tally. */
+	private int counted;
+	private final MarksOfGrace marks = new MarksOfGrace(events::add, () -> counted++);
 
 	private long now = 1_700_000_000_000L;
 	private long lastXp;
@@ -207,6 +209,7 @@ public class MarksOfGraceTest
 		cross(3089, 3265, 3088, 3261, ROOF);
 		at(3088, 3260);
 		assertEquals(List.of("spotted", "collected"), stages());
+		assertEquals("counted", 1, counted);
 	}
 
 	@Test
@@ -235,6 +238,7 @@ public class MarksOfGraceTest
 		}
 		cross(3089, 3265, 3088, 3261, ROOF);
 		assertEquals(List.of("spotted"), stages());
+		assertEquals("gone, not collected", 0, counted);
 	}
 
 	@Test
@@ -328,10 +332,26 @@ public class MarksOfGraceTest
 		held = 1;
 		at(3090, 3266);
 		assertEquals("no second line", List.of("spotted", "left"), stages());
+		assertEquals("counted all the same", 1, counted);
 	}
 
 	@Test
-	public void aPickUpOffTheCourseIsNotRaised()
+	public void aMarkSpokenOfIsStillCountedWhenPickedUp()
+	{
+		onTheCourse();
+		marks.spawned(MarksOfGrace.MARK, MARK);
+		at(3092, 3267);
+		events.get(0).noteSaid();
+		at(3090, 3266);
+		marks.despawned(MarksOfGrace.MARK, MARK);
+		held = 1;
+		at(3090, 3266);
+		assertEquals("its one line was the sighting", List.of("spotted"), stages());
+		assertEquals("but it went into the tally", 1, counted);
+	}
+
+	@Test
+	public void aPickUpOffTheCourseIsNotRaisedOrCounted()
 	{
 		marks.spawned(MarksOfGrace.MARK, MARK);
 		at(3090, 3266);
@@ -339,6 +359,7 @@ public class MarksOfGraceTest
 		held = 1;
 		at(3090, 3266);
 		assertTrue(events.isEmpty());
+		assertEquals(0, counted);
 	}
 
 	@Test

@@ -64,6 +64,7 @@ public final class MarksOfGrace
 	}
 
 	private final Consumer<TriggerEvent> events;
+	private final Runnable collected;
 	private final Map<WorldPoint, Mark> marks = new HashMap<>();
 
 	/** The mark that last went from the ground, and ticks left to match it to the bag. */
@@ -76,10 +77,14 @@ public final class MarksOfGrace
 	/** The player has moved on since the last landing: a crossing, a floor, an obstacle's XP. */
 	private boolean movedOn;
 
-	/** @param events where the rules hear of it */
-	public MarksOfGrace(Consumer<TriggerEvent> events)
+	/**
+	 * @param events where the rules hear of it
+	 * @param collected told of every mark picked up on a course, said or not, for the tally
+	 */
+	public MarksOfGrace(Consumer<TriggerEvent> events, Runnable collected)
 	{
 		this.events = events;
+		this.collected = collected;
 	}
 
 	/** A ground item appeared, fresh or with a chunk load. Only a mark is kept. */
@@ -131,9 +136,13 @@ public final class MarksOfGrace
 		// Into the bag: the mark that just went, and one more held.
 		if (gone != null && held > lastHeld && lastHeld >= 0)
 		{
-			if (onCourse && !gone.voiced)
+			if (onCourse)
 			{
-				raise("collected", gone);
+				collected.run();
+				if (!gone.voiced)
+				{
+					raise("collected", gone);
+				}
 			}
 			gone = null;
 		}

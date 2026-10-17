@@ -2180,7 +2180,9 @@ no shipped lines.
 `mark-spotted` (a 35% roll, 5 min cooldown), `mark-left-behind` (every
 time, `waits`, 30 s cooldown) and `mark-collected` (a 20% roll, 10 min
 cooldown). One line a mark at most: a line heard about it tells the mark,
-through the event, and it raises nothing after.
+through the event, and it raises nothing after. Every mark picked up on a course,
+said or not, goes into the tally `graces`, which the Memory window shows
+and Forget everything clears.
 
 ## Weapon stance coverage - PARKED, not a release blocker (2026-08-06)
 

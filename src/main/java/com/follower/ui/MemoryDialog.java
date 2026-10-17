@@ -357,6 +357,9 @@ public class MemoryDialog extends JDialog
 				case "collections":
 					label = "Collection log items";
 					break;
+				case "graces":
+					label = "Marks of grace you've collected while I watched";
+					break;
 				case "want:kept":
 					label = "Wishes granted";
 					break;

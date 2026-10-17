@@ -115,7 +115,7 @@ public class MarksOfGracePacingTest
 					leftAt.add(ms[0]);
 				}
 				h.dispatch(event);
-			});
+			}, () -> { });
 			h.game.at(here.getX(), here.getY(), here.getPlane());
 			// The login baseline, taken standing at the foot of the wall.
 			h.gameTicks(10);

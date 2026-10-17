@@ -154,6 +154,7 @@ public class MemorySurfaceTest
 		assertEquals("Quests completed", MemoryDialog.keyLabel("quests"));
 		assertEquals("Music tracks unlocked", MemoryDialog.keyLabel("music"));
 		assertEquals("Collection log items", MemoryDialog.keyLabel("collections"));
+		assertEquals("Marks of grace you've collected while I watched", MemoryDialog.keyLabel("graces"));
 		assertEquals("a key with no words is shown as it is",
 			"someone:else", MemoryDialog.keyLabel("someone:else"));
 		assertEquals("kill:", MemoryDialog.keyLabel("kill:"));
@@ -224,6 +225,23 @@ public class MemorySurfaceTest
 		context.noteQuestion("my-own-tree");
 		shown = flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap()));
 		assertTrue(shown, shown.contains("Waiting on an answer: my-own-tree\n"));
+	}
+
+	@Test
+	public void forgetEverythingTakesTheMarksOfGraceWithIt() throws java.io.IOException
+	{
+		// The plugin's Forget everything resets the engine, which drops the
+		// context the count lives in; the window then shows a clean page.
+		java.nio.file.Path dir = java.nio.file.Files.createTempDirectory("graces");
+		com.follower.sim.Harness h = new com.follower.sim.Harness(dir);
+		h.engine.getContext().tally("graces");
+		h.engine.getContext().tally("graces");
+		assertTrue(flat(MemoryDialog.summarise(h.engine.getContext(), java.util.Collections.emptyMap()))
+			.contains("Marks of grace you've collected while I watched: 2"));
+		h.engine.reset();
+		assertEquals(0, h.engine.getContext().getTally("graces"));
+		assertFalse(flat(MemoryDialog.summarise(h.engine.getContext(), java.util.Collections.emptyMap()))
+			.contains("Marks of grace"));
 	}
 
 	@Test
