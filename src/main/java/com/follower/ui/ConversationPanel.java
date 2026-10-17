@@ -43,7 +43,7 @@ import net.runelite.client.ui.FontManager;
 class ConversationPanel extends JPanel
 {
 	/** The saved list's first choice, which is none. */
-	static final String NO_SAVED = "Saved conversations";
+	static final String NO_SAVED = "Saved scenes";
 
 	private final BiConsumer<Function<FilmDialog.Crew, String>, String> act;
 	private final ConversationStore store;
@@ -153,7 +153,7 @@ class ConversationPanel extends JPanel
 	private JPanel savedRows()
 	{
 		JPanel panel = column();
-		panel.add(heading("CONVERSATION"));
+		panel.add(heading("SCENE"));
 
 		JPanel naming = new JPanel(new BorderLayout(6, 0));
 		naming.setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -242,8 +242,9 @@ class ConversationPanel extends JPanel
 		panel.add(Box.createVerticalStrut(2));
 		text.setLineWrap(true);
 		text.setWrapStyleWord(true);
-		text.setToolTipText("A long line goes onto more pages, as in the game."
-			+ " Enter starts a new line in a dialogue box.");
+		text.setToolTipText("In a dialogue box a long line goes onto more pages, as in the"
+			+ " game, and Enter starts a new line. A chat line never wraps overhead, so keep"
+			+ " it to 80 characters.");
 		// Enter is the line break here, so Tab moves on, as everywhere else.
 		text.setFocusTraversalKeys(java.awt.KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS, null);
 		text.setFocusTraversalKeys(java.awt.KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS, null);
@@ -316,7 +317,8 @@ class ConversationPanel extends JPanel
 
 		JPanel buttons = grid(1, 2);
 		JButton play = button("Play", this::play);
-		play.setToolTipText("Plays it in the game from the first line. Esc or Stop ends it.");
+		play.setToolTipText("Plays it in the game from the first line. Esc or Stop ends it."
+			+ " Chat lines stay in your chatbox afterwards, as typed ones do.");
 		buttons.add(play);
 		buttons.add(button("Stop", () -> act.accept(c -> c.stopConversation(), null)));
 		panel.add(buttons);
@@ -530,7 +532,7 @@ class ConversationPanel extends JPanel
 	{
 		if (badSeconds())
 		{
-			status.accept("Type the seconds as a number, such as 3.5, or leave it blank.");
+			status.accept("Seconds go above 0 and up to 600. Type a number such as 3.5, or leave it blank.");
 			return;
 		}
 		Conversation script = script();
@@ -557,12 +559,15 @@ class ConversationPanel extends JPanel
 		for (int i = 0; i < lines.size(); i++)
 		{
 			Conversation.Line line = lines.get(i);
-			String missing = FilmDialog.undrawable(line.text);
-			String note = missing != null ? "The game can't show '" + missing + "'."
-				: line.display == Conversation.Display.CHAT ? FilmDialog.longLine(Conversation.shown(line)) : null;
-			if (note != null)
+			if (FilmDialog.undrawable(line.text) != null)
 			{
-				return "Line " + (i + 1) + ": " + note;
+				return "Line " + (i + 1) + " has characters the game can't show. They will appear as ?.";
+			}
+			String shown = Conversation.shown(line);
+			if (line.display == Conversation.Display.CHAT && FilmDialog.longLine(shown) != null)
+			{
+				return "Line " + (i + 1) + " is " + shown.length() + " characters. A chat line in the game"
+					+ " stops at 80, and overhead text never wraps.";
 			}
 		}
 		return null;
@@ -579,7 +584,7 @@ class ConversationPanel extends JPanel
 		}
 		if (badSeconds())
 		{
-			status.accept("Type the seconds as a number, such as 3.5, or leave it blank.");
+			status.accept("Seconds go above 0 and up to 600. Type a number such as 3.5, or leave it blank.");
 			return false;
 		}
 		if (!store.save(script))
@@ -599,7 +604,7 @@ class ConversationPanel extends JPanel
 		Conversation found = picked == null ? null : store.get(picked);
 		if (found == null)
 		{
-			status.accept("Pick a saved conversation first.");
+			status.accept("Pick a saved scene first.");
 			return;
 		}
 		if (!confirmDirty())
@@ -639,7 +644,7 @@ class ConversationPanel extends JPanel
 	/** Whether the player says yes to deleting the saved one of that name. */
 	boolean confirmDelete(String picked)
 	{
-		return JOptionPane.showConfirmDialog(this, "Delete the saved conversation \"" + picked + "\"?",
+		return JOptionPane.showConfirmDialog(this, "Delete the saved scene \"" + picked + "\"?",
 			"Delete", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
 	}
 
@@ -648,7 +653,7 @@ class ConversationPanel extends JPanel
 		String picked = pickedSaved();
 		if (picked == null)
 		{
-			status.accept("Pick a saved conversation first.");
+			status.accept("Pick a saved scene first.");
 			return;
 		}
 		if (!confirmDelete(picked))

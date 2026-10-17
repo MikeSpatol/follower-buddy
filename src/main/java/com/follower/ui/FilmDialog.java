@@ -170,7 +170,7 @@ public class FilmDialog extends JDialog
 		conversation = new ConversationPanel(this::act, store, followerName, status::setText);
 		javax.swing.JTabbedPane tabs = new javax.swing.JTabbedPane();
 		tabs.addTab("Posing", posing);
-		tabs.addTab("Conversation", conversation);
+		tabs.addTab("Scene", conversation);
 		root.add(tabs, BorderLayout.CENTER);
 
 		status.setFont(FontManager.getRunescapeSmallFont());

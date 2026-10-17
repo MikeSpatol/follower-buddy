@@ -184,7 +184,7 @@ public class ConversationPlayerTest
 		stage.click();
 		player.update(10 * 60_000 + 40);
 		assertFalse(player.isPlaying());
-		assertEquals("The conversation is over.", stage.lastTold());
+		assertEquals("The scene is over.", stage.lastTold());
 	}
 
 	@Test
@@ -232,7 +232,7 @@ public class ConversationPlayerTest
 		assertTrue(player.isPlaying());
 		player.update(1240);
 		assertFalse(player.isPlaying());
-		assertEquals("The conversation is over.", stage.lastTold());
+		assertEquals("The scene is over.", stage.lastTold());
 	}
 
 	@Test

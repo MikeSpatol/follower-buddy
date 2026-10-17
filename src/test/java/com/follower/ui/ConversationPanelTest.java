@@ -52,12 +52,13 @@ public class ConversationPanelTest
 
 		lines.add(new Conversation.Line(Conversation.Speaker.FOLLOWER, Conversation.Display.CHAT,
 			Conversation.Expression.NEUTRAL, "y".repeat(117)));
-		assertEquals("Line 3: At 117 characters it may run off the screen: overhead text never wraps.",
+		assertEquals("Line 3 is 117 characters. A chat line in the game stops at 80, and overhead text"
+			+ " never wraps.",
 			ConversationPanel.lineNote(lines));
 
 		lines.add(1, new Conversation.Line(Conversation.Speaker.YOU, Conversation.Display.BOX,
 			Conversation.Expression.NEUTRAL, "and 日本"));
-		assertEquals("the first line it finds", "Line 2: The game can't show '日'.",
+		assertEquals("the first line it finds", "Line 2 has characters the game can't show. They will appear as ?.",
 			ConversationPanel.lineNote(lines));
 	}
 

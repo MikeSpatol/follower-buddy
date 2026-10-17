@@ -214,7 +214,7 @@ public class ConversationPlayer
 		if (index >= playing.lines.size())
 		{
 			playing = null;
-			stage.tell("The conversation is over.");
+			stage.tell("The scene is over.");
 			return;
 		}
 		Conversation.Line line = playing.lines.get(index);
