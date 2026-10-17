@@ -1,13 +1,13 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 622 rules, 2645 spoken lines, 3 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 622 rules, 2646 spoken lines, 3 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
 ## Contents
 
 - [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (41 rules, 163 lines)
-- [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (43 rules, 222 lines)
+- [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (43 rules, 223 lines)
 - [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (63 rules, 379 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 115 lines)
 - [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 74 lines)
@@ -576,7 +576,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - What are we saving for? Don't tell me. I'll guess wrong on purpose.
 - Why here, of all places? No, don't explain. I like a mystery.
 - Do you ever miss anywhere? You look like you might.
-- What's the plan this week? Rough shape only. I'll fill in the margins.
+- Any plans this week? I like to know what to sharpen the quill for.
+- What's next for us this week? I've left the page blank on purpose.
 - Were you always like this, or did the adventuring do it?
 - What do you do when I'm not here? Sleep? I've never seen you do it.
 - Are we staying long? Not a complaint. The notes want to know.
