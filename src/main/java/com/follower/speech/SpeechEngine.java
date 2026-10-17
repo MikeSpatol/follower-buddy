@@ -1477,6 +1477,7 @@ public class SpeechEngine
 			if (!text.isEmpty())
 			{
 				getContext().noteLineSaid(template);
+				event.noteSaid();
 			}
 			if (rule.asks != null && !rule.asks.isEmpty() && !text.isEmpty())
 			{

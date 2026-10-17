@@ -182,6 +182,7 @@ public class EngineSoakTest
 		"{\"type\": \"hesitated\", \"is\": \"monster\"}",
 		"{\"type\": \"steppedAside\"}",
 		"{\"type\": \"crossed\", \"is\": \"fell\"}",
+		"{\"type\": \"grace\", \"is\": \"left\"}",
 		"{\"type\": \"addressed\"}",
 		"{\"type\": \"nicknameEarned\"}",
 		"{\"type\": \"memoryHere\"}",
@@ -629,6 +630,7 @@ public class EngineSoakTest
 			case 59:
 				h.dispatch(TriggerEvent.simple(TriggerEvent.Type.STEPPED_ASIDE));
 				h.dispatch(TriggerEvent.crossed(true));
+				h.dispatch(TriggerEvent.grace("left", null));
 				break;
 			case 60:
 				h.dispatch(TriggerEvent.pageWritten(

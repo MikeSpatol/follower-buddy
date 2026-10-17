@@ -76,7 +76,7 @@ public class RuleSetIntegrityTest
 		"channeljoined", "channelleft", "npcshout", "musictrack",
 		"examinedthing", "attendedagain", "minutestaken", "pagewritten",
 		"working", "xpdrop", "workended", "targetdepleted", "bagfull", "baghalf",
-		"dayssincesaid", "questwitnessed"));
+		"dayssincesaid", "questwitnessed", "grace"));
 
 	private static JsonObject bundled(String resource) throws IOException
 	{

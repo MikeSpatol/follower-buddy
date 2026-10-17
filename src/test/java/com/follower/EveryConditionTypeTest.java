@@ -1797,6 +1797,10 @@ public class EveryConditionTypeTest
 		fires("{\"type\": \"crossed\"}", TriggerEvent.crossed(false));
 		fires("{\"type\": \"crossed\", \"is\": \"fell\"}", TriggerEvent.crossed(true));
 		quiet("{\"type\": \"crossed\", \"is\": \"fell\"}", TriggerEvent.crossed(false));
+		note("grace");
+		fires("{\"type\": \"grace\"}", TriggerEvent.grace("spotted", null));
+		fires("{\"type\": \"grace\", \"is\": \"left\"}", TriggerEvent.grace("left", null));
+		quiet("{\"type\": \"grace\", \"is\": \"left\"}", TriggerEvent.grace("collected", null));
 
 		note("addressed");
 		Harness at = harnessFor("{\"type\": \"addressed\"}");

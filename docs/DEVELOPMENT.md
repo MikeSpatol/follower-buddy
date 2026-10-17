@@ -447,6 +447,7 @@ mood stretches or shortens on top.
 | `hesitated` | `is` - `wilderness` or `monster`: a Send the follower had misgivings about; it has stopped at the edge and turned to the player. `{misgiving}`, `{thing}` |
 | `steppedAside` | - the player walked straight at the parked follower and it stepped aside at the last tick |
 | `crossed` | optional `is` - `fell` or `crossed`: the follower has just done an agility obstacle or shortcut after the player; `fell` where the player fell and it copied the fall. No shipped lines yet |
+| `grace` | optional `is` - `spotted`, `left` or `collected`: a mark of grace on a rooftop course (agility XP in the last minute, or a crossing under way). `spotted`: one on the player's floor within ten tiles, fresh or already lying there on arrival. `left`: the player came within three tiles of it, moved on (a crossing, a change of floor, or an obstacle's XP) and, off the obstacle, it is still there and they are not beside it. `collected`: it went into the bag. Each once per mark, and none once a line about that mark was heard |
 | `addressed` | - the player is within a tile of the follower and turned toward it; what makes an emote a reply rather than an echo |
 | `login`, `always` | - |
 | `chance` | `percent`, rolled each evaluation |
@@ -2170,6 +2171,13 @@ despawn or thrall possession drops everything at once.
 
 **The words.** One trigger, `crossed` (`is: fell` for a copied fall), with
 no shipped lines.
+
+**Marks of grace.** `MarksOfGrace` watches the ground items for the mark
+(gameval `ItemID.GRACE`, 11849) and raises `grace` for three rules:
+`mark-spotted` (a 35% roll, 5 min cooldown), `mark-left-behind` (every
+time, `waits`, 30 s cooldown) and `mark-collected` (a 20% roll, 10 min
+cooldown). One line a mark at most: a line heard about it tells the mark,
+through the event, and it raises nothing after.
 
 ## Weapon stance coverage - PARKED, not a release blocker (2026-08-06)
 

@@ -134,6 +134,7 @@ TYPE_WORDS = {
     "inwilderness": "in the Wilderness",
     "thrallstart": "thrall duty starting",
     "thrallend": "thrall duty ending",
+    "grace": "a mark of grace{is_kind} on a rooftop course",
 }
 
 

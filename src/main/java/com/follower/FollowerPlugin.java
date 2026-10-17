@@ -377,6 +377,9 @@ public class FollowerPlugin extends Plugin
 	/** What it notices that the player has not, and goes to look at. */
 	private com.follower.follower.Noticing noticing;
 
+	/** Marks of grace on a rooftop course: spotted, left behind, picked up. */
+	private com.follower.follower.MarksOfGrace marksOfGrace;
+
 	/** The beat before yes: a Send with a misgiving, the late step aside. */
 	private com.follower.follower.Will will;
 
@@ -864,6 +867,7 @@ public class FollowerPlugin extends Plugin
 				&& !skilling.holdsTheFeet() && !moments.holdsTheFeet() && !flourish.isActive()
 				&& minutesState == 0 && !emoteHold && !filming && !sceneHolds());
 		crossingWatch = new com.follower.follower.CrossingWatch(follower);
+		marksOfGrace = new com.follower.follower.MarksOfGrace(speechEngine::dispatch);
 		follower.setOnCrossed(crossing -> speechEngine.dispatch(
 			TriggerEvent.crossed(crossing.isFell())));
 		agilityTrace.initialise(dataDir);
@@ -1162,6 +1166,10 @@ public class FollowerPlugin extends Plugin
 		if (noticing != null)
 		{
 			noticing.reset();
+		}
+		if (marksOfGrace != null)
+		{
+			marksOfGrace.reset();
 		}
 		if (will != null)
 		{
@@ -4872,6 +4880,10 @@ public class FollowerPlugin extends Plugin
 		{
 			noticing.reset();
 		}
+		if (marksOfGrace != null)
+		{
+			marksOfGrace.reset();
+		}
 		if (gaze != null)
 		{
 			gaze.reset();
@@ -8543,6 +8555,14 @@ public class FollowerPlugin extends Plugin
 			// After the moments, whose feet it borrows for the walk.
 			noticing.tick();
 		}
+		if (marksOfGrace != null && crossingWatch != null)
+		{
+			net.runelite.api.ItemContainer inventory =
+				client.getItemContainer(net.runelite.api.gameval.InventoryID.INV);
+			marksOfGrace.tick(System.currentTimeMillis(), local.getWorldLocation(),
+				crossingWatch.isWatchingMovement(), lastAgilityXpMs,
+				inventory == null ? -1 : inventory.count(com.follower.follower.MarksOfGrace.MARK));
+		}
 		if (will != null)
 		{
 			will.tick();
@@ -9161,6 +9181,11 @@ public class FollowerPlugin extends Plugin
 		{
 			return;
 		}
+		// Every mark, chunk load or not: one already on a roof is spotted on arrival.
+		if (marksOfGrace != null)
+		{
+			marksOfGrace.spawned(event.getItem().getId(), event.getTile().getWorldLocation());
+		}
 		// A chunk load raises one of these per item already lying about;
 		// none of those is a drop the player just walked away from.
 		if (noticing != null && ticksSinceLoading > 2)
@@ -9184,6 +9209,13 @@ public class FollowerPlugin extends Plugin
 		if (noticing != null && event.getItem() != null && event.getTile() != null)
 		{
 			noticing.itemDespawned(event.getItem(), event.getTile().getWorldLocation());
+		}
+		// Not one a load shuffles: its spawn comes back to the same tile, and
+		// the mark keeps what the follower already made of it.
+		if (marksOfGrace != null && event.getItem() != null && event.getTile() != null
+			&& client.getGameState() == GameState.LOGGED_IN && ticksSinceLoading > 2)
+		{
+			marksOfGrace.despawned(event.getItem().getId(), event.getTile().getWorldLocation());
 		}
 	}
 
