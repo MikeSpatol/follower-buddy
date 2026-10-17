@@ -1,6 +1,6 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 619 rules, 2629 spoken lines, 3 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 622 rules, 2645 spoken lines, 3 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
@@ -8,7 +8,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (41 rules, 163 lines)
 - [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (43 rules, 222 lines)
-- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (60 rules, 363 lines)
+- [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (63 rules, 379 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 115 lines)
 - [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 74 lines)
 - [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (27 rules, 117 lines)
@@ -2022,6 +2022,46 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 60, cooldown 10m, delay 2 ticks, overhead
 
 - Not that one. That wasn't even the right gull.
+
+### `mark-spotted`
+
+> A mark of grace on the floor the player is on, during a rooftop course (agility XP in the last minute, or a crossing under way), fresh or found on arrival. Plain, with a roll and a long cooldown: most marks pass without a word, and the gap may drop it. A line here is that mark's one line.
+
+- **when:** a mark of grace (spotted) on a rooftop course AND a 35% roll
+- **pacing:** priority 45, cooldown 5m, delay 1-3 ticks, overhead
+
+- A mark of grace, up here. I'll note the roof.
+- Mark on the roof. I saw it first, for the record.
+- There's a mark up here. Who leaves these on roofs?
+- A mark on the tiles. There's a column for those now.
+- A mark of grace. The roofs are generous today.
+
+### `mark-left-behind`
+
+> The player came within three tiles of a mark, then moved on (the next obstacle, or off the roof's floor) and it is still there. Every time, once per mark, unless the mark already had its line. waits, not occasion: at Minimal it waits out the 45 s gap rather than breaking it, so the lines look back ('back there') and still read true late. 30 s cooldown: two marks left on one roof, or one obstacle apart, are one reminder; a mark a lap later gets its own.
+
+- **when:** a mark of grace (left) on a rooftop course
+- **pacing:** priority 62, cooldown 30s, delay 1-3 ticks, overhead
+
+- You went straight past a mark back there.
+- We passed a mark of grace. I'm only mentioning it.
+- A mark went begging back there. I've written that down.
+- Left the mark, then. I assume there's a plan.
+- That mark's still back there. The roof keeps it, apparently.
+- There was a mark on that last roof. Was, and still is.
+
+### `mark-collected`
+
+> A mark went from the ground into the bag on a rooftop course. Plain, a low roll and a ten-minute cooldown: a small nod now and then, never a commentary on every mark.
+
+- **when:** a mark of grace (collected) on a rooftop course AND a 20% roll
+- **pacing:** priority 40, cooldown 10m, delay 1-2 ticks, overhead
+
+- Into the bag. Good.
+- That's one for the column.
+- Pocketed. I saw where it went.
+- Got it. The roof's lighter for it.
+- Mark of grace, collected. Noted, with approval.
 
 ## combat
 

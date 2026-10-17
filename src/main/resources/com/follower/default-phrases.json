@@ -10183,6 +10183,8 @@
     },
     {
       "id": "agility-fell",
+      "title": "An agility obstacle, failed",
+      "about": "When it copies a fall of yours on an agility course.",
       "note": "After the follower copies the player's fall on an agility obstacle. While Does agility with you is on, fail-slip stands aside (the plugin silences it by id), so one fall gets one line, said after the follower has fallen too.",
       "group": "reactions",
       "priority": 55,
@@ -10202,6 +10204,8 @@
     },
     {
       "id": "agility-crossed",
+      "title": "An agility obstacle, crossed",
+      "about": "Now and then, after it copies an obstacle on an agility course.",
       "note": "After the follower takes an agility obstacle or shortcut cleanly behind the player (Does agility with you). CROSSED is raised after every obstacle of a lap, so a small roll and a ten-minute cooldown keep it to an odd remark.",
       "group": "reactions",
       "priority": 20,
@@ -16039,6 +16043,95 @@
       ],
       "delayTicks": 2,
       "output": "overhead"
+    },
+    {
+      "id": "mark-spotted",
+      "title": "A mark of grace, spotted",
+      "note": "A mark of grace on the floor the player is on, during a rooftop course (agility XP in the last minute, or a crossing under way), fresh or found on arrival. Plain, with a roll and a long cooldown: most marks pass without a word, and the gap may drop it. A line here is that mark's one line.",
+      "about": "Now and then, when a mark of grace turns up on your roof during a rooftop course.",
+      "group": "reactions",
+      "priority": 45,
+      "cooldownMs": 300000,
+      "delayTicks": 1,
+      "delayTicksMax": 3,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "grace",
+            "is": "spotted"
+          },
+          {
+            "type": "chance",
+            "percent": 35
+          }
+        ]
+      },
+      "say": [
+        "A mark of grace, up here. I'll note the roof.",
+        "Mark on the roof. I saw it first, for the record.",
+        "There's a mark up here. Who leaves these on roofs?",
+        "A mark on the tiles. There's a column for those now.",
+        "A mark of grace. The roofs are generous today."
+      ]
+    },
+    {
+      "id": "mark-left-behind",
+      "title": "A mark of grace, left behind",
+      "note": "The player came within three tiles of a mark, then moved on (the next obstacle, or off the roof's floor) and it is still there. Every time, once per mark, unless the mark already had its line. waits, not occasion: at Minimal it waits out the 45 s gap rather than breaking it, so the lines look back ('back there') and still read true late. 30 s cooldown: two marks left on one roof, or one obstacle apart, are one reminder; a mark a lap later gets its own.",
+      "about": "When you walk past a mark of grace on a rooftop course and go on without it.",
+      "group": "reactions",
+      "priority": 62,
+      "cooldownMs": 30000,
+      "waits": true,
+      "delayTicks": 1,
+      "delayTicksMax": 3,
+      "output": "overhead",
+      "when": {
+        "type": "grace",
+        "is": "left"
+      },
+      "say": [
+        "You went straight past a mark back there.",
+        "We passed a mark of grace. I'm only mentioning it.",
+        "A mark went begging back there. I've written that down.",
+        "Left the mark, then. I assume there's a plan.",
+        "That mark's still back there. The roof keeps it, apparently.",
+        "There was a mark on that last roof. Was, and still is."
+      ]
+    },
+    {
+      "id": "mark-collected",
+      "title": "A mark of grace, picked up",
+      "note": "A mark went from the ground into the bag on a rooftop course. Plain, a low roll and a ten-minute cooldown: a small nod now and then, never a commentary on every mark.",
+      "about": "Now and then, when you pick up a mark of grace on a rooftop course.",
+      "group": "reactions",
+      "priority": 40,
+      "cooldownMs": 600000,
+      "delayTicks": 1,
+      "delayTicksMax": 2,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "grace",
+            "is": "collected"
+          },
+          {
+            "type": "chance",
+            "percent": 20
+          }
+        ]
+      },
+      "say": [
+        "Into the bag. Good.",
+        "That's one for the column.",
+        "Pocketed. I saw where it went.",
+        "Got it. The roof's lighter for it.",
+        "Mark of grace, collected. Noted, with approval."
+      ]
     },
     {
       "id": "fun-fence-book-start",

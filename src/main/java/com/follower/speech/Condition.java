@@ -551,6 +551,12 @@ public class Condition
 				return event.getType() == TriggerEvent.Type.CROSSED
 					&& (is == null || is.equalsIgnoreCase(event.getName()));
 
+			// A mark of grace on a rooftop course. "is" is "spotted", "left"
+			// (walked past and on to the next obstacle) or "collected".
+			case "grace":
+				return event.getType() == TriggerEvent.Type.GRACE
+					&& (is == null || is.equalsIgnoreCase(event.getName()));
+
 			// An earned name the player has not been asked about yet. {candidate}
 			// says it; the asking rule is what turns it into a nickname.
 			case "nicknameearned":

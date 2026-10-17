@@ -82,6 +82,8 @@ public final class TriggerEvent
 		STEPPED_ASIDE,
 		/** The follower did an agility obstacle after the player. */
 		CROSSED,
+		/** A mark of grace on a rooftop course: spotted, left behind or collected. */
+		GRACE,
 	}
 
 	/**
@@ -461,6 +463,8 @@ public final class TriggerEvent
 	private long sinceMs = -1;
 	private String message = "";
 	private int chatTypeId = -1;
+	/** Told when a line this event raised is heard: the plugin's own bookkeeping, never the rules'. */
+	private Runnable onSaid;
 
 	private TriggerEvent(Type type)
 	{
@@ -632,6 +636,29 @@ public final class TriggerEvent
 		TriggerEvent event = new TriggerEvent(Type.CROSSED);
 		event.name = fell ? "fell" : "crossed";
 		return event;
+	}
+
+	/**
+	 * A mark of grace on a rooftop course. The name is "spotted" (it turned
+	 * up on the player's roof), "left" (the player went past it and on to
+	 * the next obstacle) or "collected" (it went into the bag). {@code onSaid}
+	 * is told if a line about it is heard, so the mark gets no other.
+	 */
+	public static TriggerEvent grace(String stage, Runnable onSaid)
+	{
+		TriggerEvent event = new TriggerEvent(Type.GRACE);
+		event.name = stage == null ? "" : stage;
+		event.onSaid = onSaid;
+		return event;
+	}
+
+	/** A line this event raised was heard. */
+	public void noteSaid()
+	{
+		if (onSaid != null)
+		{
+			onSaid.run();
+		}
 	}
 
 	public static TriggerEvent damageTaken(int amount)
