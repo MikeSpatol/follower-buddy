@@ -241,7 +241,7 @@ public class RuleLoader
 						? ours.getAsJsonObject("nicknames") : new com.google.gson.JsonObject();
 				for (Map.Entry<String, com.google.gson.JsonElement> entry : theirs.entrySet())
 				{
-					if (!held.has(entry.getKey()))
+					if (!held.has(entry.getKey()) || widens(held.get(entry.getKey()), entry.getValue()))
 					{
 						held.add(entry.getKey(), entry.getValue());
 						nicknamesAdded++;
@@ -602,6 +602,34 @@ public class RuleLoader
 			status = "syntax error, keeping " + rules.size() + " previous rules";
 			log.warn("phrases.json failed to parse", e);
 		}
+	}
+
+	/**
+	 * Whether the bundled names for a tally only add to the player's: theirs
+	 * is still one of ours, untouched, and ours now offers a choice. "the
+	 * swot" becomes "the swot|the grinder" (18 Oct); a name the player wrote
+	 * themselves is kept.
+	 */
+	static boolean widens(com.google.gson.JsonElement held, com.google.gson.JsonElement bundled)
+	{
+		if (held == null || !held.isJsonPrimitive() || bundled == null || !bundled.isJsonPrimitive())
+		{
+			return false;
+		}
+		String theirs = held.getAsString().trim();
+		String ours = bundled.getAsString();
+		if (theirs.equals(ours.trim()))
+		{
+			return false;
+		}
+		for (String name : ours.split("\\|"))
+		{
+			if (name.trim().equals(theirs))
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

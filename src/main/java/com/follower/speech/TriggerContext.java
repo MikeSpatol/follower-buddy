@@ -2667,10 +2667,42 @@ public final class TriggerContext
 			if (count > most)
 			{
 				most = count;
-				best = entry.getValue();
+				best = pickName(entry.getValue());
 			}
 		}
 		return best;
+	}
+
+	/**
+	 * One of a tally's names, when the rule file gives it a choice as
+	 * "the swot|the grinder" (the user, 18 Oct). Each follower settles on
+	 * one by the day it met you, so the name asked about is the name
+	 * answered, session after session; one refused gives way to the next.
+	 */
+	String pickName(String names)
+	{
+		java.util.List<String> options = new java.util.ArrayList<>();
+		for (String name : names.split("\\|"))
+		{
+			if (!name.trim().isEmpty())
+			{
+				options.add(name.trim());
+			}
+		}
+		if (options.isEmpty())
+		{
+			return "";
+		}
+		int first = (int) Math.floorMod(metOnDay, (long) options.size());
+		for (int i = 0; i < options.size(); i++)
+		{
+			String name = options.get((first + i) % options.size());
+			if (!refusedNicknames.contains(name))
+			{
+				return name;
+			}
+		}
+		return options.get(first);
 	}
 
 	private String acceptedNickname = "";
