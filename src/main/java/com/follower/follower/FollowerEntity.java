@@ -103,6 +103,11 @@ public class FollowerEntity implements CrossingWatch.Listener
 	/** Speed the last movement cycle used; >= 8 means the run animation. */
 	private int lastMoveSpeed;
 
+	/** Catching up on a backlog: on past BURST_FROM tiles waiting, off at BURST_UNTIL. */
+	private boolean burst;
+	static final int BURST_FROM = 6;
+	static final int BURST_UNTIL = 2;
+
 	/** The player's followX/followZ - the tile they last stepped FROM. */
 	private WorldPoint playerFollowTile;
 	private WorldPoint lastSeenPlayerTile;
@@ -2378,6 +2383,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		tile = new WorldPoint((int) (fineWX >> 7), (int) (fineWY >> 7), frame.plane);
 		simTile = tile;
 		lastMoveSpeed = 0;
+		burst = false;
 		onTheMove = true;
 		dstYaw = frame.orientation & 0x7ff;
 		turnContinuous(deltaMs / (double) CYCLE_MS);
@@ -3572,6 +3578,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 			if (route.isEmpty())
 			{
 				lastMoveSpeed = 0;
+				burst = false;
 				moveCarryX = 0;
 				moveCarryY = 0;
 				return;
@@ -3624,7 +3631,20 @@ public class FollowerEntity implements CrossingWatch.Listener
 			// slow drift to 3 on very long runs - but the speed surging read
 			// wrong in game and the user preferred this feel; the drift only
 			// shows on runs longer than ~15 seconds straight.)
-			if (route.size() > 6)
+			//
+			// Once begun, the burst runs until the follower has properly caught
+			// up, then settles back to a walk. Play test, 18 Oct: on and off at
+			// the one threshold, a long walk flicked into the run pose for a
+			// split second and straight back, over and over.
+			if (route.size() > BURST_FROM)
+			{
+				burst = true;
+			}
+			else if (route.size() <= BURST_UNTIL)
+			{
+				burst = false;
+			}
+			if (burst)
 			{
 				speed = 8;
 			}
@@ -4396,6 +4416,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		fineWX = beside.getX() * 128L + 64;
 		fineWY = beside.getY() * 128L + 64;
 		lastMoveSpeed = 0;
+		burst = false;
 		applyPose(stance().idle, false);
 		return render();
 	}
