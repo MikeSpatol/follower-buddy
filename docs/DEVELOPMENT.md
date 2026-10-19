@@ -1464,9 +1464,19 @@ glyph with no error.
 `ChronicleIntegrityTest` enforces that, the unique ids, the kinds, and that every
 unlock names something the code can check. A `chronicle.json` in the data
 directory replaces the bundled file outright, the same override as the fonts.
-The starting set is nine quests (Cook's Assistant, Priest in Peril, Waterfall
+The starting set is ten quests (Cook's Assistant, Priest in Peril, Waterfall
 Quest, Children of the Sun, Rune Mysteries, Sheep Shearer, Witch's House,
-X Marks the Spot, Client of Kourend) and the pages around them.
+X Marks the Spot, Client of Kourend, Temple of the Eye), one miniquest (Enter
+the Abyss) and the pages around them.
+
+**Miniquests.** A miniquest is in the game's quest list and RuneLite's
+`Quest` enum, so its page unlocks like any quest's, but it ends with no reward
+scroll: `quest-complete` never fires for one. Its page, dated as the quest is
+seen finished, is the follower's only record that it was there, so
+`ChronicleProgress.setAway` (the plugin's `isStaying`) marks a quest page
+written while the follower is parked elsewhere as missed, the same way the
+scroll does. Enter the Abyss says its own word at the end from its progress
+varp (`qm-enter-the-abyss-done`, varp 492 = 4).
 
 **Unlocks** (`ChronicleProgress`). Two kinds of knowing. A quest page asks the
 client (`Quest.getState`), so it is right from the first login, quests done long

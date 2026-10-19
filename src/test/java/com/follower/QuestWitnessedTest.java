@@ -214,6 +214,46 @@ public class QuestWitnessedTest
 				+ "\t\t\t\tchronicleProgress.missedQuestFinish(quest);"));
 	}
 
+	/**
+	 * Enter the Abyss is a miniquest, and a miniquest ends with no reward
+	 * scroll (the wiki's Miniquests page: nothing marks one's start or end
+	 * but the quest journal). Its page, written as the follower sees it
+	 * finish, is the only witness the Temple of the Eye callbacks can ask
+	 * for, and parked elsewhere it is none.
+	 */
+	@Test
+	public void aMiniquestIsWitnessedByItsPageAndNotFromAStay() throws IOException
+	{
+		World there = new World("quest-mage-of-zamorak", "fun-mage-of-zamorak-after-enter-the-abyss");
+		there.h.game.quest(Quest.ENTER_THE_ABYSS, QuestState.IN_PROGRESS);
+		there.ticks(2);
+		there.h.game.quest(Quest.ENTER_THE_ABYSS, QuestState.FINISHED);
+		there.ticks(2);
+		assertTrue("the page, written as it finished, is the witness",
+			there.book.witnessedOn("ENTER_THE_ABYSS") != null);
+		there.h.game.spawnNpc(2582, "Mage of Zamorak", 0);
+		there.ticks(4);
+		assertEquals("the plain line stands aside, and the callback waits the day",
+			Arrays.asList(), said(there.h));
+
+		World away = new World("quest-mage-of-zamorak", "fun-mage-of-zamorak-after-enter-the-abyss");
+		away.book.setAway(() -> true);
+		away.h.game.quest(Quest.ENTER_THE_ABYSS, QuestState.IN_PROGRESS);
+		away.ticks(2);
+		away.h.game.quest(Quest.ENTER_THE_ABYSS, QuestState.FINISHED);
+		away.ticks(2);
+		assertNull("parked elsewhere, the page dated that day does not stand in for it",
+			away.book.witnessedOn("ENTER_THE_ABYSS"));
+		away.h.game.spawnNpc(2582, "Mage of Zamorak", 0);
+		away.ticks(4);
+		assertEquals(Arrays.asList("quest-mage-of-zamorak"), said(away.h));
+
+		String plugin = new String(java.nio.file.Files.readAllBytes(
+			java.nio.file.Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8);
+		assertTrue("the plugin tells the book when the follower is parked",
+			plugin.contains("chronicleProgress.setAway(this::isStaying);"));
+	}
+
 	@Test
 	public void tobynOnTheRoofIsRememberedTheDayAfterAndNotAsTheQuestEnds() throws IOException
 	{

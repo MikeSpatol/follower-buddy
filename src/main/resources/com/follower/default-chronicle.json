@@ -291,7 +291,7 @@
         },
         {
           "heading": "Worth knowing",
-          "body": "Sedridor dates the Order to the rediscovery of runecrafting, just under two hundred years ago, which he says began the Fifth Age. How the first tower burned is on the Wizards' Tower page.\n\nBefore the talisman turned up, the Order bought its essence from people who would sell it but wouldn't say where they found it. Sedridor didn't name them, and I'd like to know who they are.\n\n{done:ENTER_THE_ABYSS} The Zamorakians wanted the mine as well. In Enter the Abyss you carried their scrying orb there from three different teleporters so they could work the spell out, and they let you into the Abyss in exchange.\n\n{done:THE_LOST_TRIBE} The Duke's cellar had more to give. In The Lost Tribe a wall down there gave way, the Duke put it down to an earthquake, and it was nothing of the kind.\n\nEvery one of the teleporters shouts the same three words as you go: \"Senventior disthine molenko!\" I've spelled them as best I could, and I won't be trying them."
+          "body": "Sedridor dates the Order to the rediscovery of runecrafting, just under two hundred years ago, which he says began the Fifth Age. How the first tower burned is on the Wizards' Tower page.\n\nBefore the talisman turned up, the Order bought its essence from people who would sell it but wouldn't say where they found it. Sedridor didn't name them, and I'd like to know who they are.\n\n{done:ENTER_THE_ABYSS} The Zamorakians wanted the mine as well, and paid you for the way in with a way into the Abyss. Enter the Abyss has its own page.\n\n{done:THE_LOST_TRIBE} The Duke's cellar had more to give. In The Lost Tribe a wall down there gave way, the Duke put it down to an earthquake, and it was nothing of the kind.\n\nEvery one of the teleporters shouts the same three words as you go: \"Senventior disthine molenko!\" I've spelled them as best I could, and I won't be trying them."
         }
       ],
       "people": [
@@ -335,6 +335,134 @@
           "npc": 11435,
           "idle": 808,
           "caption": "Aubury, with the kettle on."
+        }
+      ]
+    },
+    {
+      "id": "quest-enter-the-abyss",
+      "kind": "quest",
+      "name": "Enter the Abyss",
+      "unlock": {
+        "quest": "ENTER_THE_ABYSS"
+      },
+      "summary": "The mage wouldn't talk in the Wilderness, though he sells runes there. In Varrock he asked for the way into Sedridor's essence mine, and paid for it with a way into the Abyss.",
+      "sections": [
+        {
+          "heading": "What happened",
+          "body": "The Wilderness first. The Mage of Zamorak stands just north of Edgeville selling runes, and when you tried to talk to him he sent you to a chaos temple in Varrock instead. He'd sell us runes there, but not a word more.\n\nIn the temple you asked where his runes came from. His people make their own, he said, faster than the Order ever could, until the Order found its lost mine again. You told him you were the one who had helped them find it. He took that better than I did.\n\nNobody had taught you the words to the mine, only sent you through, so he gave you a scrying orb instead. Taken to the mine by three different teleporters, it would soak up enough of the spell for his people to work out the rest. None of the three asked why you kept coming back.\n\nHe looked into the orb, said the Order had been beaten again, and kept his side of it. His people reach the altars through the Abyss, a place between places, and he'll send you there from the Wilderness whenever you ask. Then he gave you a small pouch and a book of their notes."
+        },
+        {
+          "heading": "Who was there",
+          "body": "The Mage of Zamorak: one of the Zamorak Magical Institute, which he says few know exists. He won't speak to anyone wearing Saradomin's colours, or Guthix's.\n\n{done:TEMPLE_OF_THE_EYE} He has a name, Herbert, which we learned over a cup of tea. Temple of the Eye has the rest of that.\n\nThe teleporters: Aubury in Varrock, Sedridor under the Wizards' Tower, Wizard Cromperty in East Ardougne, Brimstail and Wizard Distentor. Any three of them will fill the orb. Rune Mysteries has the first two."
+        },
+        {
+          "heading": "Where it took us",
+          "body": "The Wilderness: over the ditch north of Edgeville, where the mage stands among the rocks of a small mine with his runes. I didn't stop to sketch it.\n\nThe chaos temple in Varrock: a small chapel just south-east of Aubury's shop. It's where the mage will talk.\n\nThe rune essence mine: three times, by three different doors. Rune Mysteries has more on the mine."
+        },
+        {
+          "heading": "Worth knowing",
+          "body": "The Abyss has its own page, with the mage's account of it.\n\nThe orb took a reading each time it came through, and filled at the third. It knew where it had come from better than I did, and I was carrying the notebook.\n\nYou told a Zamorakian you'd helped the Order, and then helped him too. I haven't decided which column to put you in."
+        }
+      ],
+      "people": [
+        "Aubury - Varrock's rune shop; knows the words",
+        "Archmage Sedridor - the Wizards' Tower basement; knows the words",
+        "Wizard Cromperty - East Ardougne; knows the words",
+        "Brimstail and Wizard Distentor - the Gnome Stronghold and Yanille; the same"
+      ],
+      "places": [],
+      "details": [
+        "Start - the Mage of Zamorak, in the Wilderness just north of Edgeville",
+        "Requirements - Rune Mysteries; nothing to fight",
+        "Bring - nothing you'd mind losing; the start is in the Wilderness",
+        "Lost the orb - the mage has another, and the readings already taken stay taken",
+        "Rewards - 1,000 Runecraft experience, a small pouch and an abyssal book",
+        "And - the mage's teleport into the Abyss, from the Wilderness",
+        "A miniquest - no quest point for it",
+        "Needed for - Temple of the Eye, Devious Minds, and the Wilderness diary's easy tasks"
+      ],
+      "plates": [
+        {
+          "npc": 2582,
+          "idle": 808,
+          "caption": "The mage, who won't talk outside."
+        },
+        {
+          "sketch": "rune-essence-mine",
+          "regions": [
+            11595
+          ],
+          "caption": "The mine, by its third door.",
+          "hint": "Pose for me in the essence mine."
+        }
+      ]
+    },
+    {
+      "id": "quest-temple-of-the-eye",
+      "kind": "quest",
+      "name": "Temple of the Eye",
+      "unlock": {
+        "quest": "TEMPLE_OF_THE_EYE"
+      },
+      "summary": "Wizard Persten paid a hundred coins in Al Kharid for an amulet with the Order's eye on it, thousands of years older than the Order, she says. Following it took us through the Abyss to a temple under the sea.",
+      "sections": [
+        {
+          "heading": "What happened",
+          "body": "The amulet first. An archaeologist found it washed up near the Ruins of Uzer and took it for junk. Persten found two kinds of magic in it, essence and the Abyss, and as she couldn't go into the Abyss herself, you went for her, asked not to say who sent you.\n\nHerbert next. The Mage of Zamorak turned out to have a name, and wanted a bucket of water and a strong cup of tea before he'd help. The tea seller let us into a secret about Herbert's strong tea, and I'll keep it. The water was for the dark mage in the middle of the Abyss, who needed a bath, and got one.\n\nThe dark mage, once he'd stopped dripping, traced the amulet and wrote the way there on a scroll. Sedridor knew it at a glance for Zamorakian work: it is written on flesh, not parchment. I haven't touched it, and I wrote this paragraph at arm's length.\n\nTraiborn lent us his three apprentices once they'd worked out what a thingummywut is, which they did together, with your help. He celebrated with fireworks. Nobody was hurt, which I put down to luck. Then Persten and the apprentices spoke the incantation in the basement, and a portal opened.\n\nThe temple is deep under the sea, south of Morytania, Tamara says. There are statues of a justiciar, rune guardians with eyes carved on them, and a hole in the floor Cordelia didn't like. You looked at some markings, went somewhere else for a moment, and came back saying a word none of us knew.\n\nPersten cast one spell more, to see what else was hidden. A rift opened in the floor and took her. Cordelia dealt with what came out of it, and I looked at the far wall until it was over. Then the Great Guardian woke, and asked us to help it close the rift.\n\nThe apprentices stayed, to keep the rift shut with the guardians. Sedridor took the news hard, and blamed himself for wanting the matrix more than he distrusted it. He gave you Persten's pouch. He doesn't think she survived, though if anyone could, he said, it would be her."
+        },
+        {
+          "heading": "Who was there",
+          "body": "Wizard Persten: by her own account the Order's leading researcher in teleportation, and the inventor of the Home Teleport. Everything was brilliant to her, the Abyss included.\n\nHerbert, the Mage of Zamorak: of the Zamorak Magical Institute. Enter the Abyss has the first errand we ran for him.\n\nThe dark mage: keeps the rift in the middle of the Abyss from collapsing, and doesn't like to be interrupted. The Abyss has its own page.\n\nTraiborn's apprentices: Felix, who thinks the world of Traiborn; Tamara, whose subject is teleportation; and Cordelia, who would rather solve things alone. All three stayed in the temple.\n\nThe Great Guardian: made by the justiciar Aliya after a battle in the temple, it says, to keep the rift shut. It speaks slowly, and I kept up."
+        },
+        {
+          "heading": "Where it took us",
+          "body": "Al Kharid: Persten waited just north of the town, by the gate from Lumbridge. She'd been shopping.\n\nVarrock: Herbert's chaos temple beside Aubury's shop, and the tea seller by the east gate. It's a short walk between them.\n\nThe Abyss: by Herbert's one teleport from Varrock, and after that only from the Wilderness. It has its own page.\n\nThe Wizards' Tower: Sedridor in the basement, Traiborn and his apprentices on the first floor. The tower has its own page.\n\nThe Temple of the Eye: through the portal in the tower's basement, to the bottom of the sea south of Morytania. The portal is still open."
+        },
+        {
+          "heading": "Worth knowing",
+          "body": "The Great Guardian told it like this. The temple was built to hold a powerful artefact, the Eye. Servants of the Fallen Empire tried to take it with magic they didn't understand, and opened the rift. The justiciar of the Lion sealed it with the Eye, made the guardians, and the Eye was taken away.\n\nWithout the Eye, the guardian says, the rift can't be sealed for good, so it keeps opening and someone has to keep closing it. The apprentices do, and so can you.\n\nYou told Sedridor you'd help wherever you were needed. I've made a note, so I can hold you to it.\n\nThe Order's eye is the temple's, borrowed by the first tower. Where the rest of that knowledge went is on the Wizards' Tower page.\n\nTo ask: why Persten, in the temple, wanted to hear twice who made the Eye."
+        }
+      ],
+      "people": [
+        "Archmage Sedridor - the Wizards' Tower basement",
+        "Wizard Traiborn - the tower's first floor, and his puzzle",
+        "The tea seller - by Varrock's east gate; a strong cup on request",
+        "Asgarnia Smith - the archaeologist who sold Persten the amulet"
+      ],
+      "places": [],
+      "details": [
+        "Start - Wizard Persten, just north of Al Kharid by the gate from Lumbridge",
+        "Requirements - Enter the Abyss, and 10 Runecraft",
+        "Bring - a bucket of water; a chisel and pickaxe, or take them in the temple",
+        "Teleports - Herbert's to the Abyss and Persten's to the tower, once each",
+        "Traiborn's puzzle - a part from each apprentice; the answer needs all three",
+        "Rewards - 1 quest point, 9,210 Runecraft experience in all, and a medium pouch",
+        "Opens - helping the Guardians of the Rift, in the temple",
+        "Needed for - Desert Treasure II - The Fallen Empire, While Guthix Sleeps"
+      ],
+      "plates": [
+        {
+          "npc": 11436,
+          "idle": 808,
+          "caption": "Persten, with the amulet."
+        },
+        {
+          "sketch": "temple-of-the-eye",
+          "regions": [
+            14484
+          ],
+          "caption": "The temple, under all that sea.",
+          "hint": "Pose for me in the temple."
+        },
+        {
+          "npc": 11442,
+          "idle": 808,
+          "caption": "Tamara, who found us on the map."
+        },
+        {
+          "npc": 11403,
+          "idle": 9370,
+          "caption": "The Guardian, who asked for help."
         }
       ]
     },
@@ -1288,7 +1416,7 @@
         },
         {
           "heading": "Worth knowing",
-          "body": "The library on the ground floor is what I'd come back for. I've read the spines. Only the spines.\n\n{done:RUNE_MYSTERIES} Sedridor says the first tower went up when runecrafting was found again, at the start of the Fifth Age, and that the Order's own Zamorakian wizards burnt it down. The basement is all that's left of it, and he still works there. Rune Mysteries has its own page.\n\n{done:ENTER_THE_ABYSS} The Zamorakians tell it another way. One of theirs made a breakthrough in teleport magic, they say, the Order stole it, and a ritual built on it went wrong and burnt the place down. Sedridor calls that hearsay. I've written down both and taken no side.\n\n{done:TEMPLE_OF_THE_EYE} A portal in the basement now leads to the Temple of the Eye, where the Order and the Guardians of the Rift hold back the Abyss. The first tower knew the Eye well enough to borrow its symbol for the Order, Sedridor says, and nobody does now. I take that to be the eye by the bridge."
+          "body": "The library on the ground floor is what I'd come back for. I've read the spines. Only the spines.\n\n{done:RUNE_MYSTERIES} Sedridor says the first tower went up when runecrafting was found again, at the start of the Fifth Age, and that the Order's own Zamorakian wizards burnt it down. The basement is all that's left of it, and he still works there. Rune Mysteries has its own page.\n\n{done:ENTER_THE_ABYSS} The Zamorakians tell it another way. One of theirs made a breakthrough in teleport magic, they say, the Order stole it, and a ritual built on it went wrong and burnt the place down. Sedridor calls that hearsay. I've written down both and taken no side.\n\n{done:TEMPLE_OF_THE_EYE} A portal in the basement now leads to the Temple of the Eye, where the Order and the Guardians of the Rift hold back the Abyss; that quest has its own page. The first tower knew the Eye well enough to borrow its symbol for the Order, Sedridor says, and nobody does now. I take that to be the eye by the bridge."
         }
       ],
       "people": [
@@ -1321,6 +1449,61 @@
           "npc": 11432,
           "idle": 813,
           "caption": "Sedridor, under it all."
+        }
+      ]
+    },
+    {
+      "id": "location-abyss",
+      "kind": "location",
+      "name": "The Abyss",
+      "unlock": {
+        "regions": [
+          12107
+        ]
+      },
+      "summary": "Every prayer you had was gone the moment we arrived, and the walls looked back at us. The Abyss is the Zamorakians' road to the runic altars, and only their mage sends you in.",
+      "sections": [
+        {
+          "heading": "What it is",
+          "body": "We came in at the outer edge, among creatures that wanted us gone. The walls aren't stone. There are eyes in them, and boils, and growths I'd call tendrils if I had to call them anything, and I kept close behind you on the way through.\n\nThe middle is quieter. Rifts stand round it, one to each altar, and I counted them while you chose: thirteen. A dark mage floats at the centre holding the place open, and asked us not to break his concentration. I stopped writing."
+        },
+        {
+          "heading": "Where it is found",
+          "body": "On no road. The Mage of Zamorak stands in the Wilderness just north of Edgeville, and sends you in when you ask, once you've done his errand. The Wilderness on the way is the dangerous part, he says, and I'd call it close."
+        },
+        {
+          "heading": "Worth knowing",
+          "body": "The mage calls it a plane that sits between all the others. A few steps in it can bring you out somewhere else, he says, and days in it pass as moments outside. Every teleport goes through it, he says, without our noticing. I've watched you teleport a great deal, and noticed nothing.\n\nOne of the Institute's initiates found the way in by accident, when a teleport went wrong. Enter the Abyss has how we earned ours.\n\n{done:TEMPLE_OF_THE_EYE} The dark mage has had one bath that I know of, and Temple of the Eye has the bucket. The Great Guardian calls one part of the Abyss the Scar, and says no part is more dangerous.\n\nWhy the walls have eyes, nobody has told me."
+        }
+      ],
+      "people": [
+        "The dark mage - in the middle, holding the rift; he mends pouches",
+        "The Mage of Zamorak - outside, in the Wilderness, who sends you in"
+      ],
+      "places": [
+        "Outer ring - the creatures, and the ways through to the middle",
+        "Inner ring - the rifts, and the dark mage"
+      ],
+      "details": [
+        "Way in - the Mage of Zamorak, in the Wilderness north of Edgeville",
+        "On arrival - your prayer drained to nothing, and a skull over your head",
+        "Outer ring - abyssal walkers, guardians and leeches, and a great many of them",
+        "Ways through - a gap, a passage, a rock, tendrils, eyes or a boil",
+        "Rifts - one to each altar but the Astral and the Wrath"
+      ],
+      "plates": [
+        {
+          "sketch": "abyss",
+          "regions": [
+            12107
+          ],
+          "caption": "The Abyss, drawn in a hurry.",
+          "hint": "Pose for me in the Abyss."
+        },
+        {
+          "npc": 2583,
+          "idle": 2149,
+          "caption": "The dark mage, asking for quiet."
         }
       ]
     },

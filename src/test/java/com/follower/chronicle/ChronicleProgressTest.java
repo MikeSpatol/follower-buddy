@@ -159,7 +159,7 @@ public class ChronicleProgressTest
 		progress.noteNpc("Goblin");
 		assertEquals(2, progress.tally()[0]);
 		assertEquals(1, progress.tally("quest")[0]);
-		assertEquals(9, progress.tally("quest")[1]);
+		assertEquals(11, progress.tally("quest")[1]);
 		assertEquals(1, progress.tally("enemy")[0]);
 	}
 

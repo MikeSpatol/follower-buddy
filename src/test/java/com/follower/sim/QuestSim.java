@@ -469,6 +469,20 @@ public final class QuestSim
 		h.dispatch(TriggerEvent.questComplete(name));
 	}
 
+	/**
+	 * A miniquest finished: no scroll, so no quest-complete. The plugin sees
+	 * it only as its page is written, which dates the page (the witness) and
+	 * raises the page's news.
+	 */
+	public void miniquestComplete(Quest q, String name)
+	{
+		done(q);
+		note("   finished, no scroll: " + name);
+		seenFinished.put(q.name(), java.time.LocalDate.now().toEpochDay());
+		h.engine.setQuestWitness(seenFinished::get);
+		pageWritten("quest", name);
+	}
+
 	/** A chronicle page written now; its news waits for the floor. */
 	public void pageWritten(String kind, String name)
 	{
