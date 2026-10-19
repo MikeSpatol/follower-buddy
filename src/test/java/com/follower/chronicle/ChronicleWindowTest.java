@@ -628,7 +628,8 @@ public class ChronicleWindowTest
 			if (kind.equals("location") || kind.equals("world"))
 			{
 				places++;
-				assertEquals(entry.id, entry.name, where[1]);
+				// As a header names a place: "The Abyss" is written at the Abyss.
+				assertEquals(entry.id, ChronicleWindow.shortPlace(entry.name), where[1]);
 			}
 			else
 			{

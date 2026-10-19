@@ -11,6 +11,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import net.runelite.api.Client;
 import net.runelite.api.Quest;
@@ -65,6 +66,9 @@ public class ChronicleProgress
 
 	/** Whose quests these are; quest pages are dated per account. */
 	private Supplier<String> account = () -> null;
+
+	/** Whether the player has parked the follower elsewhere, so a quest finished now was not seen. */
+	private BooleanSupplier away = () -> false;
 
 	public ChronicleProgress(Client client, ChronicleLoader loader, Supplier<TriggerContext> memory)
 	{
@@ -128,6 +132,17 @@ public class ChronicleProgress
 		this.account = account == null ? () -> null : account;
 	}
 
+	/**
+	 * Whether the follower is parked elsewhere: a Stay, a Send, Follow me
+	 * off. A miniquest ends with no reward scroll, so its page, written as
+	 * it is seen finished, is its only witness, and must not stand in for
+	 * one when the follower was not there.
+	 */
+	public void setAway(BooleanSupplier away)
+	{
+		this.away = away == null ? () -> false : away;
+	}
+
 	/** The day as the tests set it. */
 	void setClock(Clock clock)
 	{
@@ -163,6 +178,10 @@ public class ChronicleProgress
 				// Readable now and not then, and not met or walked into: a
 				// quest begun or finished since the last look wrote it.
 				written(entry, here(), true);
+				if ("quest".equals(entry.kindOrEmpty()) && entry.unlock.quest != null && away.getAsBoolean())
+				{
+					missedQuestFinish(entry.name);
+				}
 			}
 		}
 		if (!looked)

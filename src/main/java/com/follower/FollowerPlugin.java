@@ -928,6 +928,9 @@ public class FollowerPlugin extends Plugin
 		// A callback that remembers a quest together asks the book whether
 		// the follower was there for it.
 		speechEngine.setQuestWitness(chronicleProgress::witnessedOn);
+		// A miniquest has no scroll: its page, dated as it finishes, is all
+		// the witness it has, and parked elsewhere the follower saw nothing.
+		chronicleProgress.setAway(this::isStaying);
 		// The book is the follower's, and signed with its name.
 		chronicleWindow.setOwner(config::followerName);
 		sketchBook = new com.follower.chronicle.SketchBook(dataDir);

@@ -1,6 +1,6 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 622 rules, 2646 spoken lines, 3 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 647 rules, 2699 spoken lines, 3 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
@@ -12,14 +12,14 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 115 lines)
 - [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 74 lines)
 - [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (27 rules, 117 lines)
-- [area](#area) - Places: named lines, tastes, earned verdicts, the defences (76 rules, 243 lines)
+- [area](#area) - Places: named lines, tastes, earned verdicts, the defences (78 rules, 247 lines)
 - [errand](#errand) - Its little trips: bank, altar, fire, cat, studies, explores (44 rules, 155 lines)
 - [souvenir](#souvenir) - Wishes, gifts, the pocket, and what it carries (17 rules, 84 lines)
 - [bet](#bet) - Its predictions about drops (6 rules, 38 lines)
 - [clock](#clock) - The hour and how long we have been at it (9 rules, 39 lines)
 - [gear](#gear) - What you put on (63 rules, 147 lines)
 - [boss](#boss) - Bosses sighted and fought (55 rules, 522 lines)
-- [quest](#quest) - Famous quest figures nearby (123 rules, 313 lines)
+- [quest](#quest) - Famous quest figures nearby (146 rules, 362 lines)
 - [thrall](#thrall) - When it stands in for a thrall (3 rules, 18 lines)
 - [mimic](#mimic) - Copying your emotes (32 rules, 16 lines)
 - [dialogs](#dialogs) - the conversations it starts (3 trees)
@@ -3645,6 +3645,26 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Don't ask Veos about the client. He doesn't remember any of it, and I do.
 - Port Piscarilius. If Veos asks, we never met the client.
 
+### `fun-abyss-after-enter-the-abyss`
+
+> New place line with no base rule: the Abyss can only be entered once Enter the Abyss is done. About 50% of arrivals, at most every 30 minutes. Region 12107: the abyss zone (3010,4803 to 3070,4862) in Quest Helper (github.com/Zoinkwiz/quest-helper, master 06da90f, 2026-10-18), TempleOfTheEye.java, and the OSRS Wiki's map of the Abyss (3011-3071 by 4803-4862); the world map carries no label there.
+
+- **when:** entering region 12107 AND a 50% roll AND the follower saw ENTER_THE_ABYSS done
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
+
+- The Abyss. We paid for the way in with a scrying orb. I'd like a refund.
+- A day in here is a moment outside, he says. My ink dries just the same.
+
+### `fun-temple-of-the-eye-after-temple-of-the-eye`
+
+> New place line with no base rule: the Guardians of the Rift temple, open once Temple of the Eye is done. About 50% of arrivals, at most every 30 minutes. Region 14484: RuneLite 1.13.1's Discord plugin (MG_GUARDIANS_OF_THE_RIFT) and the OSRS Wiki's map of the temple (3613, 9501).
+
+- **when:** entering region 14484 AND a 50% roll AND the follower saw TEMPLE_OF_THE_EYE done
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
+
+- All three apprentices still here. I count them every time we come in.
+- This is where the rift opened. I keep to the edges, and I keep quiet.
+
 ## errand
 
 *Its little trips: bank, altar, fire, cat, studies, explores.*
@@ -6772,6 +6792,72 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Regath deals in many things, he says. Mostly runes, I've seen.
 - Regath talks as if every sentence is going in a book. Some of them will.
 
+### `quest-mage-of-zamorak`
+
+> The Mage of Zamorak: in the Wilderness north of Edgeville (2580, 2581) and in the Varrock chaos temple (2582, from varp 492 = 1). Stands aside once the follower has seen Enter the Abyss finished; its callbacks carry him after. The Wanted! cutscene copies (4936-4938) share the name.
+
+- **when:** Mage of Zamorak within 5 tiles, in sight AND NOT (the follower saw ENTER_THE_ABYSS done)
+- **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
+
+- He sells runes where the guards don't go. That's most of his sales pitch.
+- He won't talk to anyone in Saradomin's colours. I've checked my sleeves.
+- A Zamorakian with a shop. He'd like you to think that's all he is.
+
+### `quest-wizard-persten`
+
+> Wizard Persten: Al Kharid at Temple of the Eye 0-60 (11436), the Wizards' Tower at 85-90 (11437), the temple during the quest (11439), and the Desert Treasure II copies (12380-12382). Lines hold anywhere she appears.
+
+- **when:** Wizard Persten within 5 tiles, in sight
+- **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
+
+- Persten invented the Home Teleport, she says. I have notes on the arms.
+- She talks faster than I write. I've given up on whole sentences.
+- Everything's brilliant to Persten. I'd like a week of that, just to see.
+
+### `quest-wizard-cromperty`
+
+> Wizard Cromperty of East Ardougne (8480 before the Ardougne diary, 8481 after); one of the five who teleport to the essence mine.
+
+- **when:** Wizard Cromperty within 5 tiles, in sight
+- **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
+
+- Cromperty. One of the few who know the words to the essence mine.
+- He's had trouble with his post, I'm told. Magic, and the post still wins.
+- His teleports are free, which in Ardougne makes him a curiosity.
+
+### `quest-dark-mage`
+
+> The Dark Mage holding the rift in the middle of the Abyss (2583, RCU_ZAMMY_MAGE2). The Underground Pass has a Dark Mage too (7752, 7753, UPASSMAGE), so the rule keeps to the Abyss, region 12107 (see fun-abyss-after-enter-the-abyss for the region's sources).
+
+- **when:** Dark Mage within 5 tiles, in sight AND in region 12107
+- **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
+
+- He holds a rift together with his mind. A pen is tiring enough.
+- Don't break his concentration, he says. I'm breathing quietly, to be safe.
+- Keeps the rift, mends pouches, never leaves. Not a man for holidays.
+
+### `quest-apprentice-felix`
+
+> Apprentice Felix: the Wizards' Tower first floor at Temple of the Eye 70-90 (11446), the temple from 100 (11448), and the Guardians of the Rift temple after (11404).
+
+- **when:** Apprentice Felix within 5 tiles, in sight
+- **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
+
+- Felix thinks Traiborn is the greatest wizard alive. Somebody should.
+- Apprentice Felix. He's read about everything, and wants to see it all.
+- Felix would follow a good teacher anywhere. He's chosen Traiborn.
+
+### `quest-great-guardian`
+
+> The Great Guardian (11403, 11455, 11456): appears in the temple at Temple of the Eye 115, and stays for Guardians of the Rift. Lines claim nothing of its history, which it tells at 120.
+
+- **when:** The Great Guardian within 5 tiles, in sight
+- **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
+
+- The Great Guardian. I keep my voice down near it, and I'm not sure why.
+- A guardian that size asking for help. That's the top of the page.
+- Its beard is stone. I'd very much like to know who trims it.
+
 ### `quest-complete`
 
 > The quest reward scroll - the one moment the game hands the player literal paperwork, witnessed by a professional. Tally 'quests' counts them.
@@ -6894,6 +6980,46 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - I worked up a verse for Leenz once. It didn't scan, so I kept it.
 - Leenz. I've got a rhyme ready this time, and I won't use it.
+
+### `fun-mage-of-zamorak-after-enter-the-abyss`
+
+> Callback: carries the Mage of Zamorak once quest-mage-of-zamorak stands aside, from the day after the follower saw Enter the Abyss finished. Cooldown three times the base's. Enter the Abyss ends at him, so the day's wait keeps it from rising then.
+
+- **when:** Mage of Zamorak within 5 tiles, in sight AND the follower saw ENTER_THE_ABYSS done AND NOT (dialogueopen)
+- **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
+
+- He has Sedridor's spell now, thanks to us. I don't mention it in the tower.
+- We showed his lot the way to the mine, and he's never once smiled.
+
+### `fun-mage-of-zamorak-after-temple-of-the-eye`
+
+> Callback: the Mage of Zamorak once the follower has seen Temple of the Eye finished, one point over the Enter the Abyss callback; his name, Herbert, comes out at Temple of the Eye 15. Not at the quest's end (Sedridor), so no day's wait.
+
+- **when:** Mage of Zamorak within 5 tiles, in sight AND the follower saw TEMPLE_OF_THE_EYE done AND NOT (dialogueopen)
+- **pacing:** priority 37, cooldown 3h, delay 2 ticks, overhead
+
+- Herbert. He knows we know his name, and it's made things awkward.
+- Herbert thinks his tea is strong. I've never had the heart to tell him.
+
+### `fun-sedridor-after-temple-of-the-eye`
+
+> Callback: same trigger as quest-sedridor plus Temple of the Eye seen done a day or more before, one point higher, cooldown three times the base's. The quest ends with Sedridor, so the day's wait keeps it from rising then.
+
+- **when:** *Sedridor within 5 tiles, in sight AND the follower saw TEMPLE_OF_THE_EYE done AND NOT (dialogueopen)
+- **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
+
+- Sedridor hasn't said Persten's name in front of us since the temple.
+- The Archmage blames himself for the temple. I haven't argued with him.
+
+### `fun-traiborn-after-temple-of-the-eye`
+
+> Callback: same trigger as quest-traiborn plus Temple of the Eye seen done a day or more before, one point higher, cooldown three times the base's. Its lines say 'still', so it waits the day.
+
+- **when:** Wizard Traiborn within 5 tiles, in sight AND the follower saw TEMPLE_OF_THE_EYE done AND NOT (dialogueopen)
+- **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
+
+- Traiborn. A thingummywut is eleven, and I still don't know what it is.
+- He set off fireworks indoors for us once. I still flinch at his door.
 
 ### `fun-hans-race-first`
 
@@ -7133,6 +7259,146 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - Back down the ladder. Same basement, rather more to tell him.
 - Down to Sedridor again. He's after something in these notes.
+
+### `qm-enter-the-abyss-not-here`
+
+> Enter the Abyss, varp 492 = 1: the Mage of Zamorak in the Wilderness would not talk there and sent the player to the chaos temple in Varrock. Source: cache: quest_progress_get (script 4024) reads %abyssal_miniquest (varp 492, used whole); quest dbrow 43 endstate 4, unstarted 0. The Varrock mage multinpc (3229, on varp 492) shows 2582 at 1-4 and nobody at 0; the Wilderness one (3228) is 2580 at 0-3 and 2581, the teleporting mage, at 4. Steps from Quest Helper (github.com/Zoinkwiz/quest-helper, master 06da90f, 2026-10-18), EnterTheAbyss.java loadSteps: 0 talk to the mage in the Wilderness, 1 talk to him in Varrock, 2 the orb and the three teleports, 3 hand it over, 4 done.
+
+- **when:** questvar AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 2113
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
+
+- Too dangerous to talk here, he says, standing in the Wilderness.
+- He works out here and won't talk out here. I've noted the contradiction.
+
+### `qm-enter-the-abyss-the-orb`
+
+> Enter the Abyss, varp 492 = 2: the deal is struck in the Varrock chaos temple and the scrying orb (5519, SCRYING_ORB_EMPTY) is in the bag. Source: cache: quest_progress_get (script 4024) reads %abyssal_miniquest (varp 492, used whole); quest dbrow 43 endstate 4, unstarted 0. The Varrock mage multinpc (3229, on varp 492) shows 2582 at 1-4 and nobody at 0; the Wilderness one (3228) is 2580 at 0-3 and 2581, the teleporting mage, at 4. Steps from Quest Helper (github.com/Zoinkwiz/quest-helper, master 06da90f, 2026-10-18), EnterTheAbyss.java loadSteps: 0 talk to the mage in the Wilderness, 1 talk to him in Varrock, 2 the orb and the three teleports, 3 hand it over, 4 done.
+
+- **when:** questvar AND NOT (the follower saw RUNE_MYSTERIES done) AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; files incident `quest-scrying-orb` as 'the mage's scrying orb'; animation 857
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
+
+- So we steal the spell by standing in it. I'll keep that off the record.
+- A Zamorakian orb in your bag. I'd keep it well away from Sedridor.
+
+### `qm-enter-the-abyss-the-orb-after-rune-mysteries`
+
+> Callback: said instead of qm-enter-the-abyss-the-orb when the follower saw Rune Mysteries finished. Enter the Abyss, varp 492 = 2: the deal is struck in the Varrock chaos temple and the scrying orb (5519, SCRYING_ORB_EMPTY) is in the bag. Source: cache: quest_progress_get (script 4024) reads %abyssal_miniquest (varp 492, used whole); quest dbrow 43 endstate 4, unstarted 0. The Varrock mage multinpc (3229, on varp 492) shows 2582 at 1-4 and nobody at 0; the Wilderness one (3228) is 2580 at 0-3 and 2581, the teleporting mage, at 4. Steps from Quest Helper (github.com/Zoinkwiz/quest-helper, master 06da90f, 2026-10-18), EnterTheAbyss.java loadSteps: 0 talk to the mage in the Wilderness, 1 talk to him in Varrock, 2 the orb and the three teleports, 3 hand it over, 4 done.
+
+- **when:** questvar AND the follower saw RUNE_MYSTERIES done AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; files incident `quest-scrying-orb` as 'the mage's scrying orb'; animation 857
+- **pacing:** priority 64, cooldown 10m, delay 2 ticks, overhead
+
+- We found Sedridor his mine. Now we're showing the other side the door.
+
+### `qm-enter-the-abyss-the-orb-full`
+
+> Enter the Abyss, varp 492 = 2: back in the essence mine on the third teleport, and the orb is now the full one (5518, SCRYING_ORB_FULL; 5519 before). Not the first reading: that comes a short walk after the orb moment and Aubury's own line, three lines in under 25 seconds in the walks. Region 11595 is the rune essence mine in RuneLite 1.13.1's Discord plugin (REGION_RUNE_ESSENCE_MINE); the readings are varbits 2314-2318 (RCU_ESSENCESPOT_*, varp 491). Source: cache: quest_progress_get (script 4024) reads %abyssal_miniquest (varp 492, used whole); quest dbrow 43 endstate 4, unstarted 0. The Varrock mage multinpc (3229, on varp 492) shows 2582 at 1-4 and nobody at 0; the Wilderness one (3228) is 2580 at 0-3 and 2581, the teleporting mage, at 4. Steps from Quest Helper (github.com/Zoinkwiz/quest-helper, master 06da90f, 2026-10-18), EnterTheAbyss.java loadSteps: 0 talk to the mage in the Wilderness, 1 talk to him in Varrock, 2 the orb and the three teleports, 3 hand it over, 4 done.
+
+- **when:** questvar AND in region 11595 AND inventoryhas AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
+
+- Your orb's full of notes now. For the record, mine are neater.
+- The orb's full. I made the same three trips and filled two pages.
+
+### `qm-enter-the-abyss-done`
+
+> Enter the Abyss, varp 492 = 4: the end state. A miniquest ends with no reward scroll (OSRS Wiki, Miniquests: no indication of starting or completing one but the quest journal), so quest-complete never fires for it; this is the follower's word on it, and the quest page, dated as the quest is seen finished, is its witness. Source: cache: quest_progress_get (script 4024) reads %abyssal_miniquest (varp 492, used whole); quest dbrow 43 endstate 4, unstarted 0. The Varrock mage multinpc (3229, on varp 492) shows 2582 at 1-4 and nobody at 0; the Wilderness one (3228) is 2580 at 0-3 and 2581, the teleporting mage, at 4. Steps from Quest Helper (github.com/Zoinkwiz/quest-helper, master 06da90f, 2026-10-18), EnterTheAbyss.java loadSteps: 0 talk to the mage in the Wilderness, 1 talk to him in Varrock, 2 the orb and the three teleports, 3 hand it over, 4 done.
+
+- **when:** questvar AND NOT (dialogueopen)
+- **does:** mood +6; occasion (never held back); once ever; animation 858
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
+
+- Done, and no scroll for it. Some errands only the notebook remembers.
+- A book and a pouch for our trouble, and a door into the Abyss.
+
+### `qm-temple-of-the-eye-herbert`
+
+> Temple of the Eye, varbit 13738 = 15: the Mage of Zamorak has looked at the amulet, asked for a bucket of water and a strong cup of tea, and given his name, Herbert. Source: cache: quest_progress_get (script 4024) reads %tote (varbit 13738, varp 3405 bits 0-8); quest dbrow 167 endstate 130, unstarted 0. Persten in Al Kharid (multinpc 11457) shows at 0-60, at the tower (11458) at 85-90; Traiborn's apprentices at the tower (11459-11461) at 70-90. Steps from Quest Helper (github.com/Zoinkwiz/quest-helper, master 06da90f, 2026-10-18), TempleOfTheEye.java loadSteps.
+
+- **when:** questvar AND NOT (the follower saw ENTER_THE_ABYSS done) AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 2113
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
+
+- Herbert. I've been writing 'the Mage of Zamorak' out in full, for nothing.
+- His name's Herbert. I'd had him down as something with more menace.
+
+### `qm-temple-of-the-eye-herbert-after-enter-the-abyss`
+
+> Callback: said instead of qm-temple-of-the-eye-herbert when the follower saw Enter the Abyss finished. Temple of the Eye, varbit 13738 = 15: the Mage of Zamorak has looked at the amulet, asked for a bucket of water and a strong cup of tea, and given his name, Herbert. Source: cache: quest_progress_get (script 4024) reads %tote (varbit 13738, varp 3405 bits 0-8); quest dbrow 167 endstate 130, unstarted 0. Persten in Al Kharid (multinpc 11457) shows at 0-60, at the tower (11458) at 85-90; Traiborn's apprentices at the tower (11459-11461) at 70-90. Steps from Quest Helper (github.com/Zoinkwiz/quest-helper, master 06da90f, 2026-10-18), TempleOfTheEye.java loadSteps.
+
+- **when:** questvar AND the follower saw ENTER_THE_ABYSS done AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 2113
+- **pacing:** priority 64, cooldown 10m, delay 2 ticks, overhead
+
+- We ran his errand with the orb and never got a name. Herbert, then.
+
+### `qm-temple-of-the-eye-strong-tea`
+
+> Temple of the Eye, varbit 13738 = 15: the tea seller by Varrock's east gate has handed over the strong cup of tea (26904, TOTE_CUP_OF_TEA_STRONG) and said it is his ordinary tea. Source: cache: quest_progress_get (script 4024) reads %tote (varbit 13738, varp 3405 bits 0-8); quest dbrow 167 endstate 130, unstarted 0. Persten in Al Kharid (multinpc 11457) shows at 0-60, at the tower (11458) at 85-90; Traiborn's apprentices at the tower (11459-11461) at 70-90. Steps from Quest Helper (github.com/Zoinkwiz/quest-helper, master 06da90f, 2026-10-18), TempleOfTheEye.java loadSteps.
+
+- **when:** questvar AND inventoryhas AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 861
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
+
+- A strong cup of tea is the ordinary sort, with Herbert's name on it.
+- The tea's no stronger than anyone's. Nobody has told Herbert.
+
+### `qm-temple-of-the-eye-the-bath`
+
+> Temple of the Eye, varbit 13738 = 30-35: the bucket thrown over the Dark Mage in the Abyss (30), and his tracing spell cast, the energies out of the rift (35); the conversation usually runs straight from one to the other. Source: cache: quest_progress_get (script 4024) reads %tote (varbit 13738, varp 3405 bits 0-8); quest dbrow 167 endstate 130, unstarted 0. Persten in Al Kharid (multinpc 11457) shows at 0-60, at the tower (11458) at 85-90; Traiborn's apprentices at the tower (11459-11461) at 70-90. Steps from Quest Helper (github.com/Zoinkwiz/quest-helper, master 06da90f, 2026-10-18), TempleOfTheEye.java loadSteps.
+
+- **when:** questvar AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; files incident `quest-dark-mage-bath` as 'the Dark Mage's bath'; animation 2105
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
+
+- You soaked the man holding the rift together. I stopped breathing.
+- He's soaked, the rift's still up, and I'm told that's a good outcome.
+
+### `qm-temple-of-the-eye-written-on-flesh`
+
+> Temple of the Eye, varbit 13738 = 70: Sedridor has the incantation, says it is written on flesh, not parchment, and sends the player up to Traiborn (65 is the middle of that conversation). Source: cache: quest_progress_get (script 4024) reads %tote (varbit 13738, varp 3405 bits 0-8); quest dbrow 167 endstate 130, unstarted 0. Persten in Al Kharid (multinpc 11457) shows at 0-60, at the tower (11458) at 85-90; Traiborn's apprentices at the tower (11459-11461) at 70-90. Steps from Quest Helper (github.com/Zoinkwiz/quest-helper, master 06da90f, 2026-10-18), TempleOfTheEye.java loadSteps.
+
+- **when:** questvar AND NOT (the follower saw RUNE_MYSTERIES done) AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 13994
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
+
+- Written on flesh, he says. Suddenly I'm very fond of paper.
+- Not parchment. I've decided not to ask what it is, and to wash my hands.
+
+### `qm-temple-of-the-eye-written-on-flesh-after-rune-mysteries`
+
+> Callback: said instead of qm-temple-of-the-eye-written-on-flesh when the follower saw Rune Mysteries finished. Temple of the Eye, varbit 13738 = 70: Sedridor has the incantation, says it is written on flesh, not parchment, and sends the player up to Traiborn (65 is the middle of that conversation). Source: cache: quest_progress_get (script 4024) reads %tote (varbit 13738, varp 3405 bits 0-8); quest dbrow 167 endstate 130, unstarted 0. Persten in Al Kharid (multinpc 11457) shows at 0-60, at the tower (11458) at 85-90; Traiborn's apprentices at the tower (11459-11461) at 70-90. Steps from Quest Helper (github.com/Zoinkwiz/quest-helper, master 06da90f, 2026-10-18), TempleOfTheEye.java loadSteps.
+
+- **when:** questvar AND the follower saw RUNE_MYSTERIES done AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 13994
+- **pacing:** priority 64, cooldown 10m, delay 2 ticks, overhead
+
+- We brought Sedridor a talisman once. This time it's writing on skin.
+
+### `qm-temple-of-the-eye-thingummywut`
+
+> Temple of the Eye, varbit 13738 = 85: Traiborn has his answer, says his apprentices all pass, and sets off fireworks; the player is sent back to Sedridor. Source: cache: quest_progress_get (script 4024) reads %tote (varbit 13738, varp 3405 bits 0-8); quest dbrow 167 endstate 130, unstarted 0. Persten in Al Kharid (multinpc 11457) shows at 0-60, at the tower (11458) at 85-90; Traiborn's apprentices at the tower (11459-11461) at 70-90. Steps from Quest Helper (github.com/Zoinkwiz/quest-helper, master 06da90f, 2026-10-18), TempleOfTheEye.java loadSteps.
+
+- **when:** questvar AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 857
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
+
+- So a thingummywut is a number. That's a lot of old notes to correct.
+- Fireworks indoors, in a tower that's burned down once already.
+
+### `qm-temple-of-the-eye-persten`
+
+> Temple of the Eye, varbit 13738 = 115: after the abyssal rift cutscene, in which Persten is pulled into the rift and the Great Guardian wakes; the tutorial begins. Grave: no contractions. Source: cache: quest_progress_get (script 4024) reads %tote (varbit 13738, varp 3405 bits 0-8); quest dbrow 167 endstate 130, unstarted 0. Persten in Al Kharid (multinpc 11457) shows at 0-60, at the tower (11458) at 85-90; Traiborn's apprentices at the tower (11459-11461) at 70-90. Steps from Quest Helper (github.com/Zoinkwiz/quest-helper, master 06da90f, 2026-10-18), TempleOfTheEye.java loadSteps.
+
+- **when:** questvar AND NOT (dialogueopen)
+- **does:** mood -5; occasion (never held back); once ever; files incident `quest-persten-rift` as 'Persten going into the rift'; animation 13994
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
+
+- She was there, and then she was not. I will write it down when I can.
+- Persten went into the rift. I am not writing anything for a moment.
 
 ### `qm-priest-in-peril-the-voice-at-the-door`
 
