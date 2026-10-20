@@ -1007,8 +1007,16 @@ public class FollowerPlugin extends Plugin
 	{
 		// First, so work already queued for the client thread finds it gone.
 		started = false;
-		journal.flush();
-		agilityTrace.flush();
+		// Diagnostics: one that throws must not cost the teardown after it.
+		try
+		{
+			journal.flush();
+			agilityTrace.flush();
+		}
+		catch (RuntimeException e)
+		{
+			log.warn("Could not write the transcript or trace at shutdown", e);
+		}
 		renderCallbacks.unregister(thrallHider);
 		// Before the engine is reset: an orderly shutdown is the one chance to
 		// save what the last few ticks counted.
