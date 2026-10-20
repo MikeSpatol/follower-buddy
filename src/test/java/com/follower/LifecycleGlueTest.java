@@ -28,6 +28,9 @@ public class LifecycleGlueTest
 
 	private static final String RESET = "speechEngine.reset();";
 
+	/** The reset that forgets what was said as well: another follower's memory. */
+	private static final String FORGET = "speechEngine.forget();";
+
 	private static String source() throws IOException
 	{
 		assertTrue("cannot read " + PLUGIN, Files.isRegularFile(PLUGIN));
@@ -71,7 +74,7 @@ public class LifecycleGlueTest
 		int offset = 0;
 		for (String member : members)
 		{
-			for (int at = member.indexOf(RESET); at >= 0; at = member.indexOf(RESET, at + 1))
+			for (int at = firstReset(member, 0); at >= 0; at = firstReset(member, at + 1))
 			{
 				resets++;
 				String after = member.substring(at);
@@ -84,6 +87,13 @@ public class LifecycleGlueTest
 			offset += member.length() + "\n\t}\n".length();
 		}
 		assertTrue("no engine resets found at all - the scan broke, not the plugin", resets > 0);
+	}
+
+	private static int firstReset(String member, int from)
+	{
+		int reset = member.indexOf(RESET, from);
+		int forget = member.indexOf(FORGET, from);
+		return reset < 0 ? forget : forget < 0 ? reset : Math.min(reset, forget);
 	}
 
 	@Test
@@ -363,7 +373,7 @@ public class LifecycleGlueTest
 		// profile's follower queued would have opened its wish or want in the
 		// new one's memory at delivery.
 		String switched = method("public void onProfileChanged(ProfileChanged event)");
-		int reset = switched.indexOf(RESET);
+		int reset = switched.indexOf(FORGET);
 		assertTrue("the switch resets the engine", reset >= 0);
 		assertTrue("so the edges are primed after the reset clears them",
 			switched.indexOf("speechEngine.primeEdgesOnNextTick();", reset) > reset);
@@ -385,7 +395,7 @@ public class LifecycleGlueTest
 		// cure, and the same exception at the login screen, where the login
 		// takes its own after the hello.
 		String forget = method("private void forgetEverything()");
-		int reset = forget.indexOf(RESET);
+		int reset = forget.indexOf(FORGET);
 		assertTrue("Forget resets the engine", reset >= 0);
 		assertTrue("so the edges are primed after the reset clears them",
 			forget.indexOf("speechEngine.primeEdgesOnNextTick();", reset) > reset);

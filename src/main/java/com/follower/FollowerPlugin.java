@@ -2719,7 +2719,7 @@ public class FollowerPlugin extends Plugin
 			speechQueue.clear();
 			cutByTheScene = null;
 			speakingUntilMs = 0;
-			speechEngine.reset();
+			speechEngine.forget();
 			// The reset clears every rule's edge, so the gear worn and the
 			// place stood in would rise as news on the next tick. Same cure
 			// as login: they are baseline.
@@ -3373,7 +3373,7 @@ public class FollowerPlugin extends Plugin
 			speechQueue.clear();
 			cutByTheScene = null;
 			speakingUntilMs = 0;
-			speechEngine.reset();
+			speechEngine.forget();
 			// The reset clears every rule's edge, so the gear worn and the
 			// place stood in would rise as news on the next tick. Same cure
 			// as a switch: baseline, unless a login is coming to take its own.
@@ -4724,6 +4724,8 @@ public class FollowerPlugin extends Plugin
 					{
 						readCounters();
 					}
+					// Cooldowns kept through the logout are this account's.
+					speechEngine.loggedInAs(client.getAccountHash());
 					readTimeAway();
 					if (sketchBook != null)
 					{

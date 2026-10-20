@@ -491,9 +491,45 @@ public class SpeechEngine
 		// plugin mid-hush would otherwise leave the follower mute for it.
 		hushUntilMs = 0L;
 		hushOwner = null;
+		// Edges only, as at a hop: what was said is kept through a logout,
+		// cooldowns and bags. Text QA5, 17-18 Oct: every relog wiped the
+		// cooldowns, so the two-hour fence book came back twelve minutes on,
+		// and the nickname was asked again either side of a relog.
+		for (SpeechRule rule : loader.getRules())
+		{
+			rule.resetEdges();
+		}
+	}
+
+	/**
+	 * {@link #reset}, and every rule's cooldown and bag too: for a follower
+	 * whose memory is not the one these were spent in - a profile switch,
+	 * Forget everything, another account logging in.
+	 */
+	public void forget()
+	{
+		reset();
+		forgetWhatWasSaid();
+	}
+
+	private void forgetWhatWasSaid()
+	{
 		for (SpeechRule rule : loader.getRules())
 		{
 			rule.reset();
+		}
+	}
+
+	/** The account whose cooldowns the rules hold. */
+	private long account = -1L;
+
+	/** A login: another account than the last starts its cooldowns over. */
+	public void loggedInAs(long accountHash)
+	{
+		if (accountHash != account)
+		{
+			account = accountHash;
+			forgetWhatWasSaid();
 		}
 	}
 
