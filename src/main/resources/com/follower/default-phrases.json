@@ -4693,8 +4693,8 @@
       "id": "quest-cook",
       "waits": true,
       "title": "Cook",
-      "note": "The Lumbridge cook. NOTE: other NPCs named Cook exist and will match too.",
-      "about": "The Lumbridge cook, until it has seen you finish Cook's Assistant. Anyone else called Cook counts too.",
+      "note": "The Lumbridge cook. Other NPCs are named Cook too (the Blue Moon Inn's, where Below Ice Mountain sends you), so it is held to Lumbridge (region 12850).",
+      "about": "The Lumbridge cook, until it has seen you finish Cook's Assistant.",
       "group": "quest",
       "priority": 35,
       "output": "overhead",
@@ -4703,6 +4703,12 @@
       "when": {
         "type": "all",
         "conditions": [
+          {
+            "type": "inRegion",
+            "regions": [
+              12850
+            ]
+          },
           {
             "type": "npcNearby",
             "visible": true,
@@ -16054,8 +16060,8 @@
       "id": "fun-cook-after-cooks-assistant",
       "waits": true,
       "title": "The cook, after Cook's Assistant",
-      "note": "Callback: same trigger as quest-cook plus Cook's Assistant seen done a day or more before, one point higher, cooldown three times the base's. quest-cook itself stands aside once the quest is seen done, so this carries the cook after it. The quest ends at the cook, so the day's wait keeps it from rising then.",
-      "about": "Now and then when the Cook is near, from the day after it saw you finish Cook's Assistant.",
+      "note": "Callback: same trigger as quest-cook plus Cook's Assistant seen done a day or more before, one point higher, cooldown three times the base's. quest-cook itself stands aside once the quest is seen done, so this carries the cook after it. Held to Lumbridge (region 12850) as quest-cook is. The quest ends at the cook, so the day's wait keeps it from rising then.",
+      "about": "Now and then when the Lumbridge cook is near, from the day after it saw you finish Cook's Assistant.",
       "group": "quest",
       "priority": 36,
       "cooldownMs": 10800000,
@@ -16064,6 +16070,12 @@
       "when": {
         "type": "all",
         "conditions": [
+          {
+            "type": "inRegion",
+            "regions": [
+              12850
+            ]
+          },
           {
             "type": "npcNearby",
             "visible": true,
@@ -16575,6 +16587,90 @@
       "say": [
         "Burntof knew the markings in the ruins. Dwarves remember stone.",
         "Burntof, sober. The desert has no pub, and he's taken it personally."
+      ]
+    },
+    {
+      "id": "fun-checkal-after-below-ice-mountain",
+      "waits": true,
+      "title": "Checkal, after Below Ice Mountain",
+      "note": "Callback: same trigger as quest-checkal plus Below Ice Mountain seen done a day or more before, one point higher, cooldown three times the base's. After the quest Checkal is only in Nardah (10647 at 120); he says sorry for the ruins and still wants you training.",
+      "about": "Now and then when Checkal is near, from the day after it saw you finish Below Ice Mountain.",
+      "group": "quest",
+      "priority": 36,
+      "cooldownMs": 10800000,
+      "delayTicks": 2,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "npcNearby",
+            "visible": true,
+            "within": 5,
+            "names": [
+              "Checkal"
+            ]
+          },
+          {
+            "type": "questWitnessed",
+            "quest": "BELOW_ICE_MOUNTAIN",
+            "minimum": 1
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "dialogueOpen"
+              }
+            ]
+          }
+        ]
+      },
+      "say": [
+        "Checkal's sorry about the ruins. He'd still like you to train harder.",
+        "He cleared the rocks at the ruins door, then ran. Strong legs, at least."
+      ]
+    },
+    {
+      "id": "fun-marley-after-below-ice-mountain",
+      "waits": true,
+      "title": "Marley, after Below Ice Mountain",
+      "note": "Callback: same trigger as quest-marley plus Below Ice Mountain seen done a day or more before, one point higher, cooldown three times the base's. After the quest Marley is only in Nardah (10644 at 120), and the desert heat does not agree with him.",
+      "about": "Now and then when Marley is near, from the day after it saw you finish Below Ice Mountain.",
+      "group": "quest",
+      "priority": 36,
+      "cooldownMs": 10800000,
+      "delayTicks": 2,
+      "output": "overhead",
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "npcNearby",
+            "visible": true,
+            "within": 5,
+            "names": [
+              "Marley"
+            ]
+          },
+          {
+            "type": "questWitnessed",
+            "quest": "BELOW_ICE_MOUNTAIN",
+            "minimum": 1
+          },
+          {
+            "type": "none",
+            "conditions": [
+              {
+                "type": "dialogueOpen"
+              }
+            ]
+          }
+        ]
+      },
+      "say": [
+        "Marley got past every trap in the ruins. Not past the desert heat.",
+        "Marley worked for a steak sandwich. Now he's sweating it off in Nardah."
       ]
     },
     {

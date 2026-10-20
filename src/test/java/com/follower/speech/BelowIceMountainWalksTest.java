@@ -389,6 +389,48 @@ public class BelowIceMountainWalksTest
 		assertFalse(after.transcript(), after.heardIds.contains("quest-thurgo"));
 	}
 
+	/**
+	 * The quest sends you to the Blue Moon Inn's cook, who is named Cook too:
+	 * the Lumbridge cook's lines stay in Lumbridge (the user, 20 Oct).
+	 */
+	@Test
+	public void theBlueMoonCookIsNotTheLumbridgeCook() throws Exception
+	{
+		QuestSim varrock = new QuestSim(folder.newFolder().toPath(), 6000);
+		varrock.at(3230, 3400, 0);
+		varrock.npc("Cook", 3231, 3400, 0);
+		varrock.ticks(20);
+		assertFalse(varrock.transcript(), varrock.heardIds.contains("quest-cook"));
+
+		QuestSim lumbridge = new QuestSim(folder.newFolder().toPath(), 6000);
+		lumbridge.at(3208, 3214, 0);
+		lumbridge.npc("Cook", 3209, 3214, 0);
+		lumbridge.ticks(20);
+		assertTrue(lumbridge.transcript(), lumbridge.heardIds.contains("quest-cook"));
+
+		QuestSim after = new QuestSim(folder.newFolder().toPath(), 6000);
+		after.witnessed(Quest.COOKS_ASSISTANT);
+		after.at(3230, 3400, 0);
+		after.npc("Cook", 3231, 3400, 0);
+		after.ticks(20);
+		assertFalse(after.transcript(), after.heardIds.contains("fun-cook-after-cooks-assistant"));
+	}
+
+	/** Checkal and Marley went to Nardah with Willow; each has a line there once the quest is seen done. */
+	@Test
+	public void theGangInNardah() throws Exception
+	{
+		for (String who : new String[]{"Checkal", "Marley"})
+		{
+			QuestSim s = new QuestSim(folder.newFolder().toPath(), 6000);
+			s.witnessed(Quest.BELOW_ICE_MOUNTAIN);
+			s.at(3446, 2903, 0);
+			s.npc(who, 3447, 2903, 0);
+			s.ticks(20);
+			assertTrue(s.transcript(), s.heardIds.contains("fun-" + who.toLowerCase() + "-after-below-ice-mountain"));
+		}
+	}
+
 	/** Barronite in the ruins, once the quest is seen done: a line now and then, and none for any other rock. */
 	@Test
 	public void barroniteIsMinedForTheForge() throws Exception
