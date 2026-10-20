@@ -293,4 +293,19 @@ public class MemorySurvivesRestartTest
 		assertEquals(3, progress.count(loader.get("enemy-goblin")));
 		assertEquals(41, progress.count(loader.get("boss-giant-mole")));
 	}
+
+	@Test
+	public void theRestsFromAskingAndRecallingSurvive()
+	{
+		// Text QA5: the nickname asked again at every login, and one memory
+		// brought up at every one; both rests are kept with the memory.
+		TriggerContext before = lived();
+		before.restoreNicknameAsks(1_700_000_000_000L, 3);
+		before.noteIncidentRecalled(1_700_000_100_000L);
+		TriggerContext after = fresh();
+		FollowerPlugin.restoreMemory(after, FollowerPlugin.snapshotMemory(before, 0, gson), gson, 0);
+		assertEquals(1_700_000_000_000L, after.getNicknameAskedMs());
+		assertEquals(3, after.getNicknameAsksIgnored());
+		assertEquals(1_700_000_100_000L, after.getIncidentRecalledMs());
+	}
 }

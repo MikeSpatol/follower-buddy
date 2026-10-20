@@ -158,6 +158,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > R16, days 0-2: the same hello, before it has earned any warmth. The formality is carried by the grammar - full sentences, no contractions - rather than announced.
 
 - **when:** on login AND known 0-2 days
+- **does:** holds the floor 8s
 - **pacing:** priority 90, cooldown 1m, delay 8 ticks, overhead
 
 - Good day, {player}. Ready when you are.
@@ -171,6 +172,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > R16, days 3-6: the thaw. Contractions start creeping in, which is the point.
 
 - **when:** on login AND known 3-6 days
+- **does:** holds the floor 8s
 - **pacing:** priority 90, cooldown 1m, delay 8 ticks, overhead
 
 - Back again, {player}. Good. I am getting used to this.
@@ -184,6 +186,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > A hello a couple of seconds after the follower teleports in on login. Spawn happens ~4 ticks after login; the login is raised once the baseline is taken, a couple of ticks in, so delayTicks 8 lands the line a few seconds after the puff. The cooldown stops quick world hops re-greeting. It steps aside after three hours away, for the away lines: one login has one line, and at a higher priority it won every one of them, so they never said a word.
 
 - **when:** on login AND known 7+ days AND NOT (away 180+ minutes OR lasttime AND away 60+ minutes)
+- **does:** holds the floor 8s
 - **pacing:** priority 90, cooldown 1m, delay 8 ticks, overhead
 
 - Perfect timing. I'd only just sat down.
@@ -202,7 +205,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > A few hours away. awayFor is the one thing the follower remembers between sessions, and it is what makes it feel like it existed while you were gone.
 
 - **when:** away 180+ minutes
-- **does:** mood +4
+- **does:** mood +4; holds the floor 8s
 - **pacing:** priority 70, cooldown 5s, delay 6-10 ticks, both
 
 - The notebook kept me company. It's not much of a talker.
@@ -218,7 +221,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > The greeting that remembers what you were doing rather than how long it has been. lastTime is the last nameable thing the two of you did - the work, a boss, a level, a quest - carried across the logout. An hour away or more, and a chance roll so the plain away lines keep a share.
 
 - **when:** lasttime AND away 60+ minutes AND (away 60+ minutes OR a 60% roll)
-- **does:** mood +4
+- **does:** mood +4; holds the floor 8s
 - **pacing:** priority 79, cooldown 5s, delay 6-10 ticks, both
 
 - Back, then. Last time: {lastTime}.
@@ -244,7 +247,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > A day or more. Higher priority so it wins over away-a-while.
 
 - **when:** away 1440+ minutes
-- **does:** mood +8
+- **does:** mood +8; holds the floor 8s
 - **pacing:** priority 74, cooldown 5s, delay 6-10 ticks, both
 
 - Days, this time. I counted.
@@ -260,7 +263,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > A week or more. The warmest of the three, and the highest priority.
 
 - **when:** away 10080+ minutes
-- **does:** mood +12; animation 13995
+- **does:** mood +12; animation 13995; holds the floor 8s
 - **pacing:** priority 78, cooldown 5s, delay 6-10 ticks, both
 
 - You came back. I wasn't sure you would.
@@ -333,6 +336,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > The greeting with the agreed name in it, some of the time. Outranks the plain greeting by one; the chance roll keeps that one in play.
 
 - **when:** on login AND nickname earned AND known 3+ days AND a 45% roll
+- **does:** holds the floor 8s
 - **pacing:** priority 91, cooldown 1m, delay 8 ticks, overhead
 
 - Hello, {nickname}. I've saved you a fresh page.

@@ -2873,12 +2873,51 @@ public final class TriggerContext
 		return !acceptedNickname.isEmpty();
 	}
 
-	/** Whether there is an earned name the player has not been asked about. */
+	/** Whether there is an earned name the player has not been asked about, and it is time to ask. */
 	public boolean hasNicknameToOffer()
 	{
 		String earned = getEarnedNickname();
 		return !earned.isEmpty() && !earned.equals(acceptedNickname)
-			&& !refusedNicknames.contains(earned);
+			&& !refusedNicknames.contains(earned) && !isNicknameAskResting(System.currentTimeMillis());
+	}
+
+	/** The tree that asks about the name. */
+	static final String NICKNAME_TREE = "nickname-offer";
+
+	/**
+	 * The name is asked about once a day, and after three asks in a row
+	 * went unanswered, not for a week. Kept with the memory, so a relog or
+	 * a restart does not start the asking over. Text QA5: asked about "the
+	 * swot" 63 times since 20 Sep, 14 in four days, and never answered.
+	 */
+	static final long NICKNAME_ASK_REST_MS = 24L * 60 * 60 * 1000;
+	static final long NICKNAME_IGNORED_REST_MS = 7 * NICKNAME_ASK_REST_MS;
+	static final int NICKNAME_IGNORED_LIMIT = 3;
+
+	private long nicknameAskedMs;
+	private int nicknameAsksIgnored;
+
+	public boolean isNicknameAskResting(long nowMs)
+	{
+		long rest = nicknameAsksIgnored >= NICKNAME_IGNORED_LIMIT ? NICKNAME_IGNORED_REST_MS : NICKNAME_ASK_REST_MS;
+		return nicknameAskedMs > 0 && nowMs - nicknameAskedMs < rest;
+	}
+
+	public long getNicknameAskedMs()
+	{
+		return nicknameAskedMs;
+	}
+
+	public int getNicknameAsksIgnored()
+	{
+		return nicknameAsksIgnored;
+	}
+
+	/** From the stored memory: when the name was last asked about, and the asks since that went unanswered. */
+	public void restoreNicknameAsks(long askedMs, int ignored)
+	{
+		nicknameAskedMs = Math.max(0L, askedMs);
+		nicknameAsksIgnored = Math.max(0, ignored);
 	}
 
 	public void acceptNickname(String name)
@@ -2889,6 +2928,8 @@ public final class TriggerContext
 		}
 		acceptedNickname = name;
 		refusedNicknames.remove(name);
+		// Settled, so the next name earned is asked about afresh.
+		nicknameAskedMs = 0L;
 		countersDirty = true;
 	}
 
@@ -2903,6 +2944,7 @@ public final class TriggerContext
 		{
 			acceptedNickname = "";
 		}
+		nicknameAskedMs = 0L;
 		countersDirty = true;
 	}
 
@@ -3547,6 +3589,11 @@ public final class TriggerContext
 	{
 		ticksSinceQuestion = 0;
 		askedTree = treeId == null ? "" : treeId;
+		if (NICKNAME_TREE.equals(askedTree))
+		{
+			nicknameAskedMs = System.currentTimeMillis();
+			countersDirty = true;
+		}
 	}
 
 	/** Called once the player has answered, or declined to. */
@@ -3558,6 +3605,11 @@ public final class TriggerContext
 		// exists for a player who is not answering, not one who just did.
 		ignoredAsks = 0;
 		askBackoffUntilTick = 0;
+		if (nicknameAsksIgnored > 0)
+		{
+			nicknameAsksIgnored = 0;
+			countersDirty = true;
+		}
 	}
 
 	public boolean isAwaitingAnswer()
@@ -3584,6 +3636,11 @@ public final class TriggerContext
 		// ignored earns a long pause; two of them end the asking for the day.
 		if (ticksSinceQuestion == ANSWER_WINDOW_TICKS + 1 && !askedTree.isEmpty())
 		{
+			if (NICKNAME_TREE.equals(askedTree))
+			{
+				nicknameAsksIgnored++;
+				countersDirty = true;
+			}
 			askedTree = "";
 			ignoredAsks++;
 			askBackoffUntilTick = client.getTickCount() + ASK_BACKOFF_TICKS;

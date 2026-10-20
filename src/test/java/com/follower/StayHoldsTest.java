@@ -397,7 +397,11 @@ public class StayHoldsTest
 		assertTrue("nothing while another tab is up", feet.played.isEmpty());
 		logoutUp = true;
 		call("noticeTheLogoutTab");
-		assertFalse("the tab opened: a wave", feet.played.isEmpty());
+		// Behaviour QA5: not as it opens, which is also the way to the World
+		// Switcher; a tick on with it still up.
+		assertTrue("not as it opens", feet.played.isEmpty());
+		call("noticeTheLogoutTab");
+		assertFalse("the tab stayed open: a wave", feet.played.isEmpty());
 		int waved = feet.played.size();
 		call("noticeTheLogoutTab");
 		assertEquals("still open is not opened again", waved, feet.played.size());

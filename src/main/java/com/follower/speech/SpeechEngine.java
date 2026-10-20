@@ -155,9 +155,15 @@ public class SpeechEngine
 		"population", "column", "kill", "kills", "count", "fight", "pet", "drop", "drops",
 		"lair", "page", "entry");
 
+	/**
+	 * Away from the keys is standing still too. Behaviour QA5, 20 Oct:
+	 * gone-away, on "unattended" rather than "idle", never trailed off, and
+	 * was said every twenty minutes for as long as the player was away.
+	 */
 	private boolean isIdleRemark(SpeechRule rule)
 	{
-		return rule.when != null && rule.when.usesType("idle") && !rule.isOccasion();
+		return rule.when != null && (rule.when.usesType("idle") || rule.when.usesType("unattended"))
+			&& !rule.isOccasion();
 	}
 
 	/** How long after one rule brings up a memory the others wait: ten minutes. */
@@ -1378,11 +1384,13 @@ public class SpeechEngine
 	 * mute, or in a scene and the quiet after it. {@link #say} is the
 	 * player's own command and speaks through the mute on purpose; a line
 	 * nobody asked for has no such excuse, and went straight to the
-	 * overhead, muted or not.
+	 * overhead, muted or not. Nor while a line holds the floor: behaviour
+	 * QA5, 17 Oct, the sketch invite went out three ticks into a login, and
+	 * the hello was lost to the gap behind it.
 	 */
 	public void remark(String text)
 	{
-		if (!muted && !sceneQuiet)
+		if (!muted && !sceneQuiet && now() >= hushUntilMs)
 		{
 			say(text, null);
 		}

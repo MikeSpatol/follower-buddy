@@ -80,6 +80,9 @@ public class MemoryTest
 	public void theSessionMilestoneLandsOnTheExactNumber() throws IOException
 	{
 		Harness h = new Harness(folder.newFolder().toPath());
+		// A login's hello holds the floor a few seconds: logins a day apart.
+		long[] ms = {1_700_000_000_000L};
+		h.engine.setClock(() -> ms[0]);
 		h.gameTicks(1);
 
 		// These carry a delayTicks, so the line lands some ticks after the win.
@@ -87,11 +90,13 @@ public class MemoryTest
 		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.LOGIN));
 		h.gameTicks(20);
 		assertTrue("ninety-nine is not a hundred", h.firedBy("session-100").isEmpty());
+		ms[0] += 86_400_000L;
 
 		h.engine.getContext().setSessionCount(100);
 		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.LOGIN));
 		h.gameTicks(20);
 		assertFalse("the hundredth session", h.firedBy("session-100").isEmpty());
+		ms[0] += 86_400_000L;
 
 		h.clear();
 		h.engine.getContext().setSessionCount(101);

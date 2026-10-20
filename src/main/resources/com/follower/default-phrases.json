@@ -3528,6 +3528,7 @@
       "priority": 90,
       "output": "overhead",
       "delayTicks": 8,
+      "hushMs": 8000,
       "cooldownMs": 60000,
       "when": {
         "type": "all",
@@ -3558,6 +3559,7 @@
       "priority": 90,
       "output": "overhead",
       "delayTicks": 8,
+      "hushMs": 8000,
       "cooldownMs": 60000,
       "when": {
         "type": "all",
@@ -3588,6 +3590,7 @@
       "priority": 90,
       "output": "overhead",
       "delayTicks": 8,
+      "hushMs": 8000,
       "cooldownMs": 60000,
       "when": {
         "type": "all",
@@ -10216,6 +10219,7 @@
       "priority": 70,
       "cooldownMs": 5000,
       "delayTicks": 6,
+      "hushMs": 8000,
       "delayTicksMax": 10,
       "output": "both",
       "mood": 4,
@@ -10242,6 +10246,7 @@
       "priority": 79,
       "cooldownMs": 5000,
       "delayTicks": 6,
+      "hushMs": 8000,
       "delayTicksMax": 10,
       "output": "both",
       "mood": 4,
@@ -10489,6 +10494,7 @@
       "priority": 74,
       "cooldownMs": 5000,
       "delayTicks": 6,
+      "hushMs": 8000,
       "delayTicksMax": 10,
       "output": "both",
       "mood": 8,
@@ -10515,6 +10521,7 @@
       "priority": 78,
       "cooldownMs": 5000,
       "delayTicks": 6,
+      "hushMs": 8000,
       "delayTicksMax": 10,
       "output": "both",
       "mood": 12,
@@ -14560,6 +14567,7 @@
       "priority": 91,
       "output": "overhead",
       "delayTicks": 8,
+      "hushMs": 8000,
       "cooldownMs": 60000,
       "when": {
         "type": "all",

@@ -2628,6 +2628,9 @@ public class FollowerPlugin extends Plugin
 		/** The name the player agreed to be called, and the ones they turned down. */
 		String nickname;
 		java.util.List<String> refusedNicknames;
+		/** When the name was last asked about, and the asks since that went unanswered. */
+		long nicknameAskedMs;
+		int nicknameAsksIgnored;
 	}
 
 	/**
@@ -2836,6 +2839,7 @@ public class FollowerPlugin extends Plugin
 			context.restoreLevelStamps(saved.levelStamps);
 			context.restoreLastThing(saved.lastThing);
 			context.restoreNickname(saved.nickname, saved.refusedNicknames);
+			context.restoreNicknameAsks(saved.nicknameAskedMs, saved.nicknameAsksIgnored);
 			if (saved.deathPlane >= 0)
 			{
 				context.restoreDeathSpot(new WorldPoint(
@@ -2929,6 +2933,8 @@ public class FollowerPlugin extends Plugin
 		saved.nickname = context.getNickname().isEmpty() ? null : context.getNickname();
 		saved.refusedNicknames = context.getRefusedNicknames().isEmpty() ? null
 			: new java.util.ArrayList<>(new java.util.TreeSet<>(context.getRefusedNicknames()));
+		saved.nicknameAskedMs = context.getNicknameAskedMs();
+		saved.nicknameAsksIgnored = context.getNicknameAsksIgnored();
 		WorldPoint died = context.getDeathLocation();
 		if (died != null)
 		{
@@ -8967,15 +8973,19 @@ public class FollowerPlugin extends Plugin
 		boolean open = panel != null && !panel.isHidden();
 		boolean opened = open && !logoutTabOpen;
 		logoutTabOpen = open;
+		logoutTabTicks = ticksOnShow(logoutTabTicks, open, opened);
+		if (logoutTabTicks == FAREWELL_AFTER_TICKS)
+		{
+			if (moments != null)
+			{
+				moments.farewell();
+			}
+			speechEngine.dispatch(TriggerEvent.simple(TriggerEvent.Type.FAREWELL));
+		}
 		if (!opened)
 		{
 			return;
 		}
-		if (moments != null)
-		{
-			moments.farewell();
-		}
-		speechEngine.dispatch(TriggerEvent.simple(TriggerEvent.Type.FAREWELL));
 		if (chronicleProgress != null)
 		{
 			chronicleProgress.refresh(client.getTickCount());
@@ -8987,6 +8997,22 @@ public class FollowerPlugin extends Plugin
 	 * sessions, so a tab still up as one starts is not taken for a goodbye.
 	 */
 	private boolean logoutTabOpen = true;
+
+	/** Ticks the logout panel has been on show since it was opened, or 0. */
+	private int logoutTabTicks;
+
+	/**
+	 * The goodbye waits a tick with the panel still up. Behaviour QA5, 16-20
+	 * Oct: all four farewells came as the panel opened on the way to the
+	 * World Switcher, 20 s before a hop, and none before a logout. Going on
+	 * to the switcher takes the panel down, and the goodbye with it.
+	 */
+	static final int FAREWELL_AFTER_TICKS = 2;
+
+	static int ticksOnShow(int was, boolean open, boolean opened)
+	{
+		return !open ? 0 : opened ? 1 : was > 0 ? was + 1 : 0;
+	}
 
 	@Subscribe
 	public void onWidgetLoaded(net.runelite.api.events.WidgetLoaded event)
