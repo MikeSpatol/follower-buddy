@@ -467,6 +467,79 @@
       ]
     },
     {
+      "id": "quest-below-ice-mountain",
+      "kind": "quest",
+      "name": "Below Ice Mountain",
+      "unlock": {
+        "quest": "BELOW_ICE_MOUNTAIN"
+      },
+      "summary": "Willow said she was the greatest archaeologist of the age, and that she'd found a door under Ice Mountain. Getting it open took her old crew: a strongman, a thief and a dwarf with dynamite.",
+      "sections": [
+        {
+          "heading": "What happened",
+          "body": "Willow first. She stood on the path south of Ice Mountain, and the door she'd found was buried on its west side. She couldn't leave it, she said, in case another archaeologist took the credit, so you went to fetch her old crew. She corrected that to her excavation team.\n\nCheckal, in Barbarian Village, wouldn't lift a shrimp for Willow, but would help you once you'd proved yourself. His old trainer Atlas gave you a lesson that ended at a run up the palace steps in Varrock. Somebody threw a tomato on the way. Then you flexed for Checkal, and he was satisfied.\n\nBurntof was drinking in the Rising Sun Inn in Falador, and wouldn't say who he was until you'd bought him one. He'd come if you beat him at rock, paper, scissors upstairs. He couldn't keep track of his own hand, and you changed yours after the count. I've recorded it as a win.\n\nMarley was in the ruins at Edgeville, and couldn't remember Willow on an empty stomach. It had to be a steak sandwich from the Blue Moon Inn, where he's barred for picking a customer's pocket. The cook wouldn't make him one, but told you how. It's meat in bread.\n\nAt the door, Burntof lit the fuse before he told anyone to run. Checkal moved the rubble, Marley went in first for the traps, and we followed. You said the ruins mattered more than any money. Willow said it had always been about money, called her crew grave robbers, and told you the ruins would be your tomb.\n\nThen Burntof stepped somewhere he shouldn't, the rocks by the far doors stood up, and the four of them ran. The guardian was yours. I watched the pillars in the corners, which looked to be all that held the ceiling up.\n\nWhen it was over, Willow's bag was still on the floor with her coins in it, and the far doors opened. A dwarf stood in them, Ramarno, and the ruins turned out to be Camdozaal, a city. It has its own page."
+        },
+        {
+          "heading": "Who was there",
+          "body": "Willow: an archaeologist by her own account, until she wasn't. She ran from the ruins with the rest of them, and left her bag behind.\n\nCheckal: a strongman who takes remarks about his muscles to heart. Atlas, in the Long Hall, trained him first, and trained you for nothing, which he says he doesn't usually do.\n\nBurntof: a dwarf who knows explosives, and is short a couple of fingers to prove it. Inside, he said the markings on the walls looked familiar.\n\nMarley: a thief, though he'd tell you otherwise, and hungry, which he'd tell you at once. Charlie the Tramp in Varrock is his cousin, and knows where he hides.\n\nRamarno: the dwarf behind the doors. The Ruins of Camdozaal have his page."
+        },
+        {
+          "heading": "Where it took us",
+          "body": "The path south of Ice Mountain: Willow, north-east of Falador and below the dwarves' mine.\n\nBarbarian Village: Checkal in the middle of it, and Atlas in the Long Hall to the north.\n\nFalador: the Rising Sun Inn, and the quiet room upstairs.\n\nEdgeville: Marley, in the ruins by the yews south of the bank.\n\nVarrock: the Blue Moon Inn's kitchen, and the palace steps for the workout.\n\nIce Mountain's west side: the door. There's no way up from Willow's side, so you go round past the dwarves' mine."
+        },
+        {
+          "heading": "Worth knowing",
+          "body": "Burntof said he'd seen those markings before, and didn't say where. Then the floor shook, and the question went out of everyone's head but mine.\n\nTo ask: where Burntof saw them.\n\nYou can make a steak sandwich now, and Marley would tell you it's worth the trouble. I wasn't offered one, so I'll reserve judgement.\n\nCamdozaal has its own page, with what Ramarno told us at the door."
+        }
+      ],
+      "people": [
+        "Atlas - the Long Hall, Barbarian Village; a lesson, usually for a price",
+        "Tina - the Rising Sun Inn; brings Burntof another",
+        "The cook - the Blue Moon Inn's kitchen; won't cook for Marley",
+        "Charlie the Tramp - near the Blue Moon Inn; Marley's cousin"
+      ],
+      "places": [],
+      "details": [
+        "Start - Willow, on the path south of Ice Mountain, north-east of Falador",
+        "Requirements - 16 quest points",
+        "Bring - cooked meat, bread and a knife, and 3 coins for Burntof's drink",
+        "On the table - a beer and cooked meat in the Long Hall, free",
+        "The recruits - any order; each goes to the door once he agrees",
+        "The guardian - level 25; or mine the four pillars, with a pickaxe and 10 Mining",
+        "Atlas's lesson - free the first time, 25,000 coins after",
+        "Rewards - 1 quest point, 2,000 coins from Willow's bag, and Atlas's flex",
+        "And - the way into Camdozaal, and the knack of a steak sandwich",
+        "Needed for - Desert Treasure II - The Fallen Empire, and Defender of Varrock"
+      ],
+      "plates": [
+        {
+          "npc": 10661,
+          "idle": 808,
+          "caption": "Willow, who said archaeologist."
+        },
+        {
+          "sketch": "camdozaal",
+          "regions": [
+            11610,
+            11866,
+            12122
+          ],
+          "caption": "The ruins, after Burntof's door.",
+          "hint": "Pose for me in the ruins."
+        },
+        {
+          "npc": 10659,
+          "idle": 900,
+          "caption": "Burntof, between drinks."
+        },
+        {
+          "npc": 10654,
+          "idle": 8941,
+          "caption": "The guardian, from the doorway."
+        }
+      ]
+    },
+    {
       "id": "quest-sheep-shearer",
       "kind": "quest",
       "name": "Sheep Shearer",
@@ -1265,6 +1338,7 @@
         "Varrock Museum - natural history displays and a quiz",
         "Champions' Guild - sells rune weapons and green dragonhide",
         "Blue Moon Inn - the most popular pub in Varrock",
+        "{done:BELOW_ICE_MOUNTAIN} Palace steps - where Atlas's workout finished, with a cheer",
         "Varrock Sewers - home of Scurrius and Bryophyta"
       ],
       "details": [
@@ -1504,6 +1578,64 @@
           "npc": 2583,
           "idle": 2149,
           "caption": "The dark mage, asking for quiet."
+        }
+      ]
+    },
+    {
+      "id": "location-camdozaal",
+      "kind": "location",
+      "name": "Ruins of Camdozaal",
+      "unlock": {
+        "quest": "BELOW_ICE_MOUNTAIN"
+      },
+      "summary": "Ramarno calls it Camdozaal, once the home of the Imcando dwarves, and says he's the only one left. It lies under Ice Mountain, through the door Burntof opened.",
+      "sections": [
+        {
+          "heading": "What it is",
+          "body": "We came in through the hall behind Burntof's door. It has a pillar in each corner holding up the ceiling, and I looked at those before anything else. I paced between them afterwards: eleven strides one way, seven the other.\n\nPast the hall are the doors the guardian kept, and Ramarno was behind them. He says these halls were busy once, and that the guardian was one of the city's own. There are plenty more, he says, which he meant kindly."
+        },
+        {
+          "heading": "Where it is found",
+          "body": "Under Ice Mountain, through the door on its west side. From Falador, go north and round the mountain past the dwarves' mine, as there's no way up from the south. From the monastery by Edgeville it's a walk west, round the mountain or over it."
+        },
+        {
+          "heading": "Worth knowing",
+          "body": "Where the rest of the Imcando went, Ramarno didn't say at the door, and I didn't ask. He talked instead of a way we could make up for the guardian, which says something for him.\n\n{done:THE_KNIGHTS_SWORD} Thurgo, south of Port Sarim, is Imcando too, which Ramarno didn't know. I'd like to be there when they meet.\n\nHow the door came open is on the Below Ice Mountain page. Next time I'd like to come in by it slowly, and see the hall with nothing waking up in it."
+        }
+      ],
+      "people": [
+        "Ramarno - by the forge in the middle, once he's met you at the door"
+      ],
+      "places": [
+        "Entrance hall - the four pillars, and the doors the guardian kept",
+        "Sacred Forge - the middle of the city; Ramarno feeds it barronite",
+        "Mines - north-west; barronite, with copper, tin and clay",
+        "Offering altar - south-west, with the fishing and the preparation tables",
+        "Golem workshop - east; its golems are mostly barronite now",
+        "Great Vault - north of the forge; 750 shards buys a minute inside"
+      ],
+      "details": [
+        "Way in - the door on Ice Mountain's west side, after Below Ice Mountain",
+        "Barronite - from the mines, the water and the golems; Ramarno trades for it",
+        "Fish - guppy, cavefish, tetra and catfish; cut at the tables, offered at the altar",
+        "Crusher - beside the forge; a hammer on it cracks barronite deposits open",
+        "Bank - a chest just east of the forge"
+      ],
+      "plates": [
+        {
+          "sketch": "camdozaal",
+          "regions": [
+            11610,
+            11866,
+            12122
+          ],
+          "caption": "The city, what's left of it.",
+          "hint": "Pose for me in the ruins."
+        },
+        {
+          "npc": 10684,
+          "idle": 101,
+          "caption": "Ramarno, at his own doors."
         }
       ]
     },

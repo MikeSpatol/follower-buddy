@@ -75,7 +75,7 @@ free. The drawing is made from the game view itself, so anything RuneLite
 draws over the view, such as tile markers or ground item names, is drawn in
 too. Ask again for a
 retake; the old drawing is kept. Click any picture to see it larger. It
-starts small: ten quests, a miniquest and a handful of pages around them.
+starts small: eleven quests, a miniquest and a handful of pages around them.
 
 **It keeps you company.** Start on a tree, a rock or a fishing spot and it works
 alongside you: the same one when there is room, the next one along when there is
