@@ -8607,7 +8607,8 @@ public class FollowerPlugin extends Plugin
 				client.getItemContainer(net.runelite.api.gameval.InventoryID.INV);
 			marksOfGrace.tick(System.currentTimeMillis(), local.getWorldLocation(),
 				crossingWatch.isWatchingMovement(), lastAgilityXpMs,
-				inventory == null ? -1 : inventory.count(com.follower.follower.MarksOfGrace.MARK));
+				inventory == null ? -1 : inventory.count(com.follower.follower.MarksOfGrace.MARK),
+				follower.isSpawned() && !isStaying());
 		}
 		if (will != null)
 		{

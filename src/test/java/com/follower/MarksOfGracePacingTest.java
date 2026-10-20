@@ -128,7 +128,7 @@ public class MarksOfGracePacingTest
 			h.game.animating(crossing ? 762 : -1);
 			int before = h.spoken.size();
 			h.gameTick();
-			marks.tick(ms[0], here, crossing || calm > 0, lastXp, held);
+			marks.tick(ms[0], here, crossing || calm > 0, lastXp, held, true);
 			if (calm > 0)
 			{
 				calm--;
