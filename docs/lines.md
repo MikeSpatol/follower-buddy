@@ -1,6 +1,6 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 667 rules, 2745 spoken lines, 3 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 669 rules, 2749 spoken lines, 3 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
@@ -19,7 +19,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - [clock](#clock) - The hour and how long we have been at it (9 rules, 39 lines)
 - [gear](#gear) - What you put on (63 rules, 147 lines)
 - [boss](#boss) - Bosses sighted and fought (55 rules, 522 lines)
-- [quest](#quest) - Famous quest figures nearby (163 rules, 402 lines)
+- [quest](#quest) - Famous quest figures nearby (165 rules, 406 lines)
 - [thrall](#thrall) - When it stands in for a thrall (3 rules, 18 lines)
 - [mimic](#mimic) - Copying your emotes (32 rules, 16 lines)
 - [dialogs](#dialogs) - the conversations it starts (3 trees)
@@ -6299,9 +6299,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `quest-cook`
 
-> The Lumbridge cook. NOTE: other NPCs named Cook exist and will match too.
+> The Lumbridge cook. Other NPCs are named Cook too (the Blue Moon Inn's, where Below Ice Mountain sends you), so it is held to Lumbridge (region 12850).
 
-- **when:** Cook within 5 tiles, in sight AND NOT (the follower saw COOKS_ASSISTANT done)
+- **when:** in region 12850 AND Cook within 5 tiles, in sight AND NOT (the follower saw COOKS_ASSISTANT done)
 - **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
 
 - A cook in distress, I'd wager. There's usually an egg involved.
@@ -7040,9 +7040,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-cook-after-cooks-assistant`
 
-> Callback: same trigger as quest-cook plus Cook's Assistant seen done a day or more before, one point higher, cooldown three times the base's. quest-cook itself stands aside once the quest is seen done, so this carries the cook after it. The quest ends at the cook, so the day's wait keeps it from rising then.
+> Callback: same trigger as quest-cook plus Cook's Assistant seen done a day or more before, one point higher, cooldown three times the base's. quest-cook itself stands aside once the quest is seen done, so this carries the cook after it. Held to Lumbridge (region 12850) as quest-cook is. The quest ends at the cook, so the day's wait keeps it from rising then.
 
-- **when:** Cook within 5 tiles, in sight AND the follower saw COOKS_ASSISTANT done AND NOT (dialogueopen)
+- **when:** in region 12850 AND Cook within 5 tiles, in sight AND the follower saw COOKS_ASSISTANT done AND NOT (dialogueopen)
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
 
 - The cook. He's never once offered us a slice of that cake.
@@ -7147,6 +7147,26 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - Burntof knew the markings in the ruins. Dwarves remember stone.
 - Burntof, sober. The desert has no pub, and he's taken it personally.
+
+### `fun-checkal-after-below-ice-mountain`
+
+> Callback: same trigger as quest-checkal plus Below Ice Mountain seen done a day or more before, one point higher, cooldown three times the base's. After the quest Checkal is only in Nardah (10647 at 120); he says sorry for the ruins and still wants you training.
+
+- **when:** Checkal within 5 tiles, in sight AND the follower saw BELOW_ICE_MOUNTAIN done AND NOT (dialogueopen)
+- **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
+
+- Checkal's sorry about the ruins. He'd still like you to train harder.
+- He cleared the rocks at the ruins door, then ran. Strong legs, at least.
+
+### `fun-marley-after-below-ice-mountain`
+
+> Callback: same trigger as quest-marley plus Below Ice Mountain seen done a day or more before, one point higher, cooldown three times the base's. After the quest Marley is only in Nardah (10644 at 120), and the desert heat does not agree with him.
+
+- **when:** Marley within 5 tiles, in sight AND the follower saw BELOW_ICE_MOUNTAIN done AND NOT (dialogueopen)
+- **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
+
+- Marley got past every trap in the ruins. Not past the desert heat.
+- Marley worked for a steak sandwich. Now he's sweating it off in Nardah.
 
 ### `fun-ramarno-after-below-ice-mountain`
 
