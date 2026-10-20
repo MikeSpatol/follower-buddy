@@ -6039,10 +6039,11 @@ public class FollowerPlugin extends Plugin
 			// that beat the item stats to it.
 			buildSlotIndexAsync();
 		}
-		if (!modelRepository.isLoaded())
+		// Read under a dump too, so what the game added since the dump is there.
+		if (!modelRepository.hasReadTheLiveCache())
 		{
 			modelRepository.loadFromClient(client);
-			if (modelRepository.isLoaded())
+			if (modelRepository.hasReadTheLiveCache())
 			{
 				// The outfit picker's slot filter and status line were built
 				// against an empty catalogue; rebuild them on the real one.
@@ -6050,7 +6051,7 @@ public class FollowerPlugin extends Plugin
 				syncPanel();
 			}
 		}
-		if (!spotAnimRepository.isLoaded())
+		if (!spotAnimRepository.hasReadTheLiveCache())
 		{
 			spotAnimRepository.loadFromClient(client);
 		}

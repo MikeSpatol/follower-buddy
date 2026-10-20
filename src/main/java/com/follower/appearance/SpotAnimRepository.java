@@ -90,6 +90,7 @@ public class SpotAnimRepository
 	private final Gson gson;
 
 	private Map<String, Entry> spotanims = Collections.emptyMap();
+	private boolean liveRead;
 
 	@Getter
 	private String status = "not loaded";
@@ -133,19 +134,45 @@ public class SpotAnimRepository
 
 	/**
 	 * Builds the catalogue from the client's own loaded cache - the no-dump
-	 * path every Hub install uses. A dump file, when present, wins. No-op
-	 * while the cache indexes are not available yet; callers retry.
+	 * path every Hub install uses. A dump file, when present, wins for the
+	 * ids it has. No-op while the cache indexes are not available yet;
+	 * callers retry.
 	 */
 	public void loadFromClient(net.runelite.api.Client client)
 	{
-		Map<String, Entry> live = LiveCacheParser.parseSpotAnims(client);
+		addLive(LiveCacheParser.parseSpotAnims(client));
+	}
+
+	/**
+	 * The live cache's graphics, under a dump's: the game's graphics newer
+	 * than the dump are there too. A dump from August hid 426 of them on
+	 * the development client (qa5 #75).
+	 */
+	void addLive(Map<String, Entry> live)
+	{
 		if (live.isEmpty())
 		{
 			return;
 		}
+		int dumped = spotanims.size();
+		live.putAll(spotanims);
 		spotanims = live;
-		status = spotanims.size() + " spotanims (live cache)";
-		log.info("Loaded {} spotanims from live cache", spotanims.size());
+		liveRead = true;
+		if (dumped == 0)
+		{
+			status = spotanims.size() + " spotanims (live cache)";
+			log.info("Loaded {} spotanims from live cache", spotanims.size());
+		}
+		else
+		{
+			log.info("Added {} spotanims from the live cache to the dump's {}", spotanims.size() - dumped, dumped);
+		}
+	}
+
+	/** Whether the client's own cache has been read in yet, under a dump or not. */
+	public boolean hasReadTheLiveCache()
+	{
+		return liveRead;
 	}
 
 	/** The definition for a graphic id, or null if unknown or not loaded. */
@@ -163,6 +190,7 @@ public class SpotAnimRepository
 	public void unload()
 	{
 		spotanims = Collections.emptyMap();
+		liveRead = false;
 		status = "not loaded";
 	}
 }
