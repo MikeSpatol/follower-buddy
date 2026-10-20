@@ -1,25 +1,25 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 647 rules, 2699 spoken lines, 3 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 667 rules, 2745 spoken lines, 3 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
 ## Contents
 
 - [misc](#misc) - Greetings, arrivals, level-ups, firsts, the everyday spine (41 rules, 163 lines)
-- [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (43 rules, 223 lines)
+- [idle](#idle) - Standing still: chatter, wondering, offers, the trail-off's subjects (45 rules, 227 lines)
 - [reactions](#reactions) - Answering the world: pets, drops, examines, bags, crowds (63 rules, 379 lines)
 - [combat](#combat) - The fight from the sidelines, and its ends (12 rules, 115 lines)
 - [health](#health) - Hitpoints, prayer, poison, the warnings that must land (8 rules, 74 lines)
 - [memory](#memory) - Deaths, incidents, comforts, the things it keeps bringing up (27 rules, 117 lines)
-- [area](#area) - Places: named lines, tastes, earned verdicts, the defences (78 rules, 247 lines)
+- [area](#area) - Places: named lines, tastes, earned verdicts, the defences (79 rules, 249 lines)
 - [errand](#errand) - Its little trips: bank, altar, fire, cat, studies, explores (44 rules, 155 lines)
 - [souvenir](#souvenir) - Wishes, gifts, the pocket, and what it carries (17 rules, 84 lines)
 - [bet](#bet) - Its predictions about drops (6 rules, 38 lines)
 - [clock](#clock) - The hour and how long we have been at it (9 rules, 39 lines)
 - [gear](#gear) - What you put on (63 rules, 147 lines)
 - [boss](#boss) - Bosses sighted and fought (55 rules, 522 lines)
-- [quest](#quest) - Famous quest figures nearby (146 rules, 362 lines)
+- [quest](#quest) - Famous quest figures nearby (163 rules, 402 lines)
 - [thrall](#thrall) - When it stands in for a thrall (3 rules, 18 lines)
 - [mimic](#mimic) - Copying your emotes (32 rules, 16 lines)
 - [dialogs](#dialogs) - the conversations it starts (3 trees)
@@ -1041,6 +1041,26 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - Back with us. You had the look of somebody listening at a door.
 - There you are. I came round to check, and you hadn't moved an inch.
 - Welcome back. You passed your welfare check, barely.
+
+### `fun-camdozaal-mining-after-below-ice-mountain`
+
+> Running while you mine barronite in the ruins (Barronite rocks, 41547 and 41548 in the cache), once it has seen Below Ice Mountain finished. Ramarno says the forge powers the city and runs on barronite. A 2% roll on the working state, as the Gerald lines do, three-hour cooldown.
+
+- **when:** working AND the follower saw BELOW_ICE_MOUNTAIN done AND a 2% roll
+- **pacing:** priority 21, cooldown 3h, delay 2 ticks, overhead
+
+- Barronite for Ramarno's forge. The whole city runs on what you dig.
+- Every shard you dig keeps the forge lit. No pressure on the pickaxe.
+
+### `fun-camdozaal-fishing-after-below-ice-mountain`
+
+> Running while you fish in the ruins' reservoir by the offering altar (region 11610), once it has seen Below Ice Mountain finished. Ramarno says his kin offered the fish to Saradomin, and that worshipping gods never did them any good. A 2% roll on the working state, three-hour cooldown. Region: RuneLite 1.13.1's Discord plugin (DUNGEON_RUINS_OF_CAMDOZAAL: 11609-11611, 11865-11867, 12121-12123); the world map labels Ramarno and the Camdozaal Vault in 11866, the Offering Altar and the Camdozaal Mines in 11610, and the Golem Workshop in 12122; the entrance hall (the four structural pillars, 2947-2958 by 5771-5778, and Willow's bag, 2950,5769, on the OSRS Wiki) is in 11866.
+
+- **when:** working AND in region 11610 AND the follower saw BELOW_ICE_MOUNTAIN done AND a 2% roll
+- **pacing:** priority 21, cooldown 3h, delay 2 ticks, overhead
+
+- Fish for an altar, not for eating. Ramarno's people were particular.
+- Ramarno warned us off gods. We're netting fish for his altar anyway.
 
 ### `fun-fence-book-start`
 
@@ -3664,6 +3684,16 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - All three apprentices still here. I count them every time we come in.
 - This is where the rift opened. I keep to the edges, and I keep quiet.
+
+### `fun-camdozaal-after-below-ice-mountain`
+
+> New place line with no base rule: the ruins can only be entered once Below Ice Mountain is done, but the quest ends inside them, so it waits the day. About 50% of arrivals in the entrance hall's region, at most every 30 minutes. Region 11866: RuneLite 1.13.1's Discord plugin (DUNGEON_RUINS_OF_CAMDOZAAL: 11609-11611, 11865-11867, 12121-12123); the world map labels Ramarno and the Camdozaal Vault in 11866, the Offering Altar and the Camdozaal Mines in 11610, and the Golem Workshop in 12122; the entrance hall (the four structural pillars, 2947-2958 by 5771-5778, and Willow's bag, 2950,5769, on the OSRS Wiki) is in 11866.
+
+- **when:** entering region 11866 AND a 50% roll AND the follower saw BELOW_ICE_MOUNTAIN done
+- **pacing:** priority 40, cooldown 30m, delay 2 ticks, overhead
+
+- Camdozaal. Burntof's door is still open, and nobody's come to mend it.
+- A city under a mountain, and one dwarf keeping its forge lit.
 
 ## errand
 
@@ -6313,9 +6343,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `quest-thurgo`
 
-> Thurgo, last of the Imcando dwarves.
+> Thurgo, last of the Imcando dwarves, he believes. Stands aside once the follower has seen Below Ice Mountain finished: the first line calls him the last of the Imcando smiths, and it has met Ramarno. fun-thurgo-after-below-ice-mountain carries him after.
 
-- **when:** Thurgo within 5 tiles, in sight
+- **when:** Thurgo within 5 tiles, in sight AND NOT (the follower saw BELOW_ICE_MOUNTAIN done)
 - **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
 
 - Thurgo. The last of the Imcando smiths, and powered by redberry pie.
@@ -6858,6 +6888,83 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - A guardian that size asking for help. That's the top of the page.
 - Its beard is stone. I'd very much like to know who trims it.
 
+### `quest-willow`
+
+> Willow (10655 in every multinpc: 10638-10641 on varbit 12063): on the path south of Ice Mountain, at the door, inside, and after the quest in Nardah. Lines are true at every stage and give nothing away; stands aside once the follower has seen Below Ice Mountain finished, and its callback carries her after.
+
+- **when:** Willow within 5 tiles, in sight AND NOT (the follower saw BELOW_ICE_MOUNTAIN done)
+- **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
+
+- Willow keeps looking over her shoulder, like someone expecting a bill.
+- Greatest archaeologist alive, she says. I can't find her in any book.
+- Willow talks about her digs the way other people talk about payday.
+
+### `quest-checkal`
+
+> Checkal (10657; multinpcs 10645 in Barbarian Village, 10646 at the door, 10647 in Nardah). Lines hold at every stage.
+
+- **when:** Checkal within 5 tiles, in sight
+- **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
+
+- Checkal. Built like a door, and about as easy to talk round.
+- He talks about his muscles the way I talk about my notebook.
+- A strongman with feelings. Say nothing about his arms.
+
+### `quest-marley`
+
+> Marley (10656; multinpcs 10642 in the Edgeville ruins, 10643 at the door, 10644 in Nardah). Lines hold at every stage.
+
+- **when:** Marley within 5 tiles, in sight
+- **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
+
+- Marley says he's hungry. His eyes are on everyone's pockets.
+- Marley remembers things better on a full stomach. Or so he claims.
+- Barred from the Blue Moon Inn. That takes real effort, in Varrock.
+
+### `quest-burntof`
+
+> Burntof (10659, 10660; multinpcs 10648 in the Rising Sun Inn, 10649 at the door, 10701 in Nardah). Lines hold at every stage, sober or not.
+
+- **when:** Burntof within 5 tiles, in sight
+- **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
+
+- Burntof. A dwarf, a drink, and fewer fingers than he started with.
+- He blows things up for a living. I'm standing a little further back.
+- Burntof says he knows explosives. His eyebrows say otherwise.
+
+### `quest-atlas`
+
+> Atlas (10658), in the Long Hall in Barbarian Village, before, during and after the quest.
+
+- **when:** Atlas within 5 tiles, in sight
+- **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
+
+- Atlas. He could carry the Long Hall on his back, and probably has.
+- He charges a fortune for a workout. I get mine following you about.
+- Atlas shouts encouragement. It works better from further off.
+
+### `quest-ancient-guardian`
+
+> The Ancient Guardian (10654) wakes in the entrance hall under Ice Mountain at Below Ice Mountain 35; asleep it is 'Rubble' (10666). Desert Treasure II's Ancient Guardian (12336, 12337) is in the Ancient Vault in the desert, so the rule keeps to the ruins' regions. RuneLite 1.13.1's Discord plugin (DUNGEON_RUINS_OF_CAMDOZAAL: 11609-11611, 11865-11867, 12121-12123); the world map labels Ramarno and the Camdozaal Vault in 11866, the Offering Altar and the Camdozaal Mines in 11610, and the Golem Workshop in 12122; the entrance hall (the four structural pillars, 2947-2958 by 5771-5778, and Willow's bag, 2950,5769, on the OSRS Wiki) is in 11866.
+
+- **when:** Ancient Guardian within 5 tiles, in sight AND in region 11609, 11610, 11611, 11865, 11866, 11867, 12121, 12122, 12123
+- **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
+
+- It's made of the same stone as the walls. I'd been leaning on them.
+- Stone, walking about. I'm taking notes from behind you.
+- It woke up cross, and I can't say I blame it.
+
+### `quest-ramarno`
+
+> Ramarno (10684 by the forge, 10685 at the doors, 10670 in the last cutscene), only after the quest. Lines claim only what anyone who finishes it sees, and what he says at the doors.
+
+- **when:** Ramarno within 5 tiles, in sight
+- **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
+
+- Ramarno. The last of the Imcando, he says, and he says it quietly.
+- A forge, a city and one dwarf to keep both. Ramarno doesn't complain.
+- Ramarno, alone under a mountain, and very polite about visitors.
+
 ### `quest-complete`
 
 > The quest reward scroll - the one moment the game hands the player literal paperwork, witnessed by a professional. Tally 'quests' counts them.
@@ -7020,6 +7127,46 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - Traiborn. A thingummywut is eleven, and I still don't know what it is.
 - He set off fireworks indoors for us once. I still flinch at his door.
+
+### `fun-willow-after-below-ice-mountain`
+
+> Callback: carries Willow once quest-willow stands aside, from the day after the follower saw Below Ice Mountain finished. After the quest she is only in Nardah (10641 at 120), scouting the desert's tombs. Cooldown three times the base's.
+
+- **when:** Willow within 5 tiles, in sight AND the follower saw BELOW_ICE_MOUNTAIN done AND NOT (dialogueopen)
+- **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
+
+- She called the ruins your tomb. Now she's eyeing the desert's.
+- An archaeologist, she told us. I've filed her under something else.
+
+### `fun-burntof-after-below-ice-mountain`
+
+> Callback: same trigger as quest-burntof plus Below Ice Mountain seen done a day or more before, one point higher, cooldown three times the base's. After the quest Burntof is only in Nardah (10701 at 120), where there is no pub; he knew the markings in the ruins.
+
+- **when:** Burntof within 5 tiles, in sight AND the follower saw BELOW_ICE_MOUNTAIN done AND NOT (dialogueopen)
+- **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
+
+- Burntof knew the markings in the ruins. Dwarves remember stone.
+- Burntof, sober. The desert has no pub, and he's taken it personally.
+
+### `fun-ramarno-after-below-ice-mountain`
+
+> Callback: same trigger as quest-ramarno plus Below Ice Mountain seen done a day or more before, one point higher, cooldown three times the base's. The quest ends at Ramarno, so the day's wait keeps it from rising then.
+
+- **when:** Ramarno within 5 tiles, in sight AND the follower saw BELOW_ICE_MOUNTAIN done AND NOT (dialogueopen)
+- **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
+
+- We broke into his home and flattened his guardian. He offered us work.
+- Burntof's dynamite was our knock. Ramarno answered the door anyway.
+
+### `fun-thurgo-after-below-ice-mountain`
+
+> Callback: carries Thurgo once quest-thurgo stands aside, once the follower has seen Below Ice Mountain finished: quest-thurgo calls him the last of the Imcando smiths, and the follower has met Ramarno. Thurgo is not at the quest's end, so no day's wait. Cooldown three times the base's.
+
+- **when:** Thurgo within 5 tiles, in sight AND the follower saw BELOW_ICE_MOUNTAIN done AND NOT (dialogueopen)
+- **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
+
+- Thurgo has kin under Ice Mountain now. Neither has made the walk.
+- Thurgo by the sea, Ramarno under a mountain. Two forges, one scribe.
 
 ### `fun-hans-race-first`
 
@@ -7399,6 +7546,71 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - She was there, and then she was not. I will write it down when I can.
 - Persten went into the rift. I am not writing anything for a moment.
+
+### `qm-below-ice-mountain-the-crew`
+
+> Below Ice Mountain, varbit 12063 = 10-29: Willow has told the player about the door, and asked for her old crew, which she corrected to her excavation team; she says there could be untold riches inside. The range runs to the door (30), not to the first recruit, so a moment held by the next conversation is still said. Source: cache: varbit 12063 (gameval BIM, varp 2951 bits 0-6) is the quest's progress; quest dbrow 6 endstate 120, unstarted 0. Willow's multinpcs on it show her on the path south of Ice Mountain at 0-14 (10638), at the door at 15-29 (10639), inside at 30-34 (10640) and in Nardah at 120 (10641). Each recruit has a varbit of his own, 40 when recruited (his door multinpc shows at 40-44): Marley 12064 (bits 7-12), Checkal 12065 (bits 13-18), Burntof 12066 (bits 19-24). Steps from Quest Helper (github.com/Zoinkwiz/quest-helper, master 06da90f, 2026-10-18), BelowIceMountain.java loadSteps: 0-7 Willow, 10-15 the recruits (Checkal 5-10 to Atlas, 15-20 flex, 40 done; Marley 5 to the cook, 10 the recipe, 35 fed, 40 done; Burntof 5 a drink, 10-15 the game, 40 done), 20-25 Willow at the door, 30 back in, 35 the Ancient Guardian, 40 the last cutscene.
+
+- **when:** questvar AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 857
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
+
+- Her old crew, she said, then 'excavation team'. I wrote down both.
+- Untold riches, she says. Archaeologists usually say untold history.
+
+### `qm-below-ice-mountain-the-workout`
+
+> Below Ice Mountain, Checkal's varbit 12065 = 15-20: Atlas's training is done (the workout cutscene ends on the Varrock palace steps, a tomato thrown on the way, per the OSRS Wiki) and the player can flex; Checkal still has to see it. The follower flexes too: 8917, the Flex emote, in poses.tsv. Source: cache: varbit 12063 (gameval BIM, varp 2951 bits 0-6) is the quest's progress; quest dbrow 6 endstate 120, unstarted 0. Willow's multinpcs on it show her on the path south of Ice Mountain at 0-14 (10638), at the door at 15-29 (10639), inside at 30-34 (10640) and in Nardah at 120 (10641). Each recruit has a varbit of his own, 40 when recruited (his door multinpc shows at 40-44): Marley 12064 (bits 7-12), Checkal 12065 (bits 13-18), Burntof 12066 (bits 19-24). Steps from Quest Helper (github.com/Zoinkwiz/quest-helper, master 06da90f, 2026-10-18), BelowIceMountain.java loadSteps: 0-7 Willow, 10-15 the recruits (Checkal 5-10 to Atlas, 15-20 flex, 40 done; Marley 5 to the cook, 10 the recipe, 35 fed, 40 done; Burntof 5 a drink, 10-15 the game, 40 done), 20-25 Willow at the door, 30 back in, 35 the Ancient Guardian, 40 the last cutscene.
+
+- **when:** questvar AND NOT (dialogueopen)
+- **does:** mood +4; occasion (never held back); once ever; files incident `quest-atlas-workout` as 'the run up the palace steps for Atlas'; animation 8917
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
+
+- Up the palace steps for Atlas, with a tomato thrown in. It's all noted.
+- Atlas charges a fortune for that. You got it free, and I got it in ink.
+
+### `qm-below-ice-mountain-steak-sandwich`
+
+> Below Ice Mountain, Marley's varbit 12064 = 10-34 (the cook has given the recipe; 35 is Marley fed) with the steak sandwich (25631, BIM_STEAK_SANDWICH) in the bag: cooked meat in sliced bread, which the Blue Moon Inn's cook calls a delicate art. Source: cache: varbit 12063 (gameval BIM, varp 2951 bits 0-6) is the quest's progress; quest dbrow 6 endstate 120, unstarted 0. Willow's multinpcs on it show her on the path south of Ice Mountain at 0-14 (10638), at the door at 15-29 (10639), inside at 30-34 (10640) and in Nardah at 120 (10641). Each recruit has a varbit of his own, 40 when recruited (his door multinpc shows at 40-44): Marley 12064 (bits 7-12), Checkal 12065 (bits 13-18), Burntof 12066 (bits 19-24). Steps from Quest Helper (github.com/Zoinkwiz/quest-helper, master 06da90f, 2026-10-18), BelowIceMountain.java loadSteps: 0-7 Willow, 10-15 the recruits (Checkal 5-10 to Atlas, 15-20 flex, 40 done; Marley 5 to the cook, 10 the recipe, 35 fed, 40 done; Burntof 5 a drink, 10-15 the game, 40 done), 20-25 Willow at the door, 30 back in, 35 the Ancient Guardian, 40 the last cutscene.
+
+- **when:** questvar AND inventoryhas AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 2113
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
+
+- A steak sandwich is meat in bread. I'd been led to expect an art.
+- That's Marley's sandwich. I'd keep it well away from your own mouth.
+
+### `qm-below-ice-mountain-rock-paper-scissors`
+
+> Below Ice Mountain, Burntof's varbit 12066 = 40: the best of three upstairs in the Rising Sun Inn is over; Burntof was too drunk to follow it, and the player changed hands after the count in the last round (the cutscene's own words, on the OSRS Wiki transcript). Source: cache: varbit 12063 (gameval BIM, varp 2951 bits 0-6) is the quest's progress; quest dbrow 6 endstate 120, unstarted 0. Willow's multinpcs on it show her on the path south of Ice Mountain at 0-14 (10638), at the door at 15-29 (10639), inside at 30-34 (10640) and in Nardah at 120 (10641). Each recruit has a varbit of his own, 40 when recruited (his door multinpc shows at 40-44): Marley 12064 (bits 7-12), Checkal 12065 (bits 13-18), Burntof 12066 (bits 19-24). Steps from Quest Helper (github.com/Zoinkwiz/quest-helper, master 06da90f, 2026-10-18), BelowIceMountain.java loadSteps: 0-7 Willow, 10-15 the recruits (Checkal 5-10 to Atlas, 15-20 flex, 40 done; Marley 5 to the cook, 10 the recipe, 35 fed, 40 done; Burntof 5 a drink, 10-15 the game, 40 done), 20-25 Willow at the door, 30 back in, 35 the Ancient Guardian, 40 the last cutscene.
+
+- **when:** questvar AND NOT (dialogueopen)
+- **does:** occasion (never held back); once ever; animation 861
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
+
+- You changed your hand after the count. I saw, and Burntof didn't.
+- Best of three, against a dwarf who'd lost count by two. A famous win.
+
+### `qm-below-ice-mountain-grave-robbers`
+
+> Below Ice Mountain, varbit 12063 = 35: the long cutscene is over. Inside the ruins Willow said they were grave robbers and that the ruins would be the player's tomb; Burntof set off a trap, the Ancient Guardian woke, and the four of them ran. Source: cache: varbit 12063 (gameval BIM, varp 2951 bits 0-6) is the quest's progress; quest dbrow 6 endstate 120, unstarted 0. Willow's multinpcs on it show her on the path south of Ice Mountain at 0-14 (10638), at the door at 15-29 (10639), inside at 30-34 (10640) and in Nardah at 120 (10641). Each recruit has a varbit of his own, 40 when recruited (his door multinpc shows at 40-44): Marley 12064 (bits 7-12), Checkal 12065 (bits 13-18), Burntof 12066 (bits 19-24). Steps from Quest Helper (github.com/Zoinkwiz/quest-helper, master 06da90f, 2026-10-18), BelowIceMountain.java loadSteps: 0-7 Willow, 10-15 the recruits (Checkal 5-10 to Atlas, 15-20 flex, 40 done; Marley 5 to the cook, 10 the recipe, 35 fed, 40 done; Burntof 5 a drink, 10-15 the game, 40 done), 20-25 Willow at the door, 30 back in, 35 the Ancient Guardian, 40 the last cutscene.
+
+- **when:** questvar AND NOT (the follower saw PRIEST_IN_PERIL done) AND NOT (dialogueopen)
+- **does:** mood -4; occasion (never held back); once ever; files incident `quest-willows-gang` as 'the gang leaving you to the guardian'; animation 856
+- **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
+
+- Grave robbers. I'd underlined her excavation team, for what it's worth.
+- She promised you a tomb. Then the rocks woke, and her crew ran first.
+
+### `qm-below-ice-mountain-grave-robbers-after-priest-in-peril`
+
+> Callback: said instead of qm-below-ice-mountain-grave-robbers when the follower saw Priest in Peril finished. Below Ice Mountain, varbit 12063 = 35: the long cutscene is over. Inside the ruins Willow said they were grave robbers and that the ruins would be the player's tomb; Burntof set off a trap, the Ancient Guardian woke, and the four of them ran. Source: cache: varbit 12063 (gameval BIM, varp 2951 bits 0-6) is the quest's progress; quest dbrow 6 endstate 120, unstarted 0. Willow's multinpcs on it show her on the path south of Ice Mountain at 0-14 (10638), at the door at 15-29 (10639), inside at 30-34 (10640) and in Nardah at 120 (10641). Each recruit has a varbit of his own, 40 when recruited (his door multinpc shows at 40-44): Marley 12064 (bits 7-12), Checkal 12065 (bits 13-18), Burntof 12066 (bits 19-24). Steps from Quest Helper (github.com/Zoinkwiz/quest-helper, master 06da90f, 2026-10-18), BelowIceMountain.java loadSteps: 0-7 Willow, 10-15 the recruits (Checkal 5-10 to Atlas, 15-20 flex, 40 done; Marley 5 to the cook, 10 the recipe, 35 fed, 40 done; Burntof 5 a drink, 10-15 the game, 40 done), 20-25 Willow at the door, 30 back in, 35 the Ancient Guardian, 40 the last cutscene.
+
+- **when:** questvar AND the follower saw PRIEST_IN_PERIL done AND NOT (dialogueopen)
+- **does:** mood -4; occasion (never held back); once ever; files incident `quest-willows-gang` as 'the gang leaving you to the guardian'; animation 856
+- **pacing:** priority 64, cooldown 10m, delay 2 ticks, overhead
+
+- Lied to again. Last time it was a voice behind the Paterdomus door.
 
 ### `qm-priest-in-peril-the-voice-at-the-door`
 
