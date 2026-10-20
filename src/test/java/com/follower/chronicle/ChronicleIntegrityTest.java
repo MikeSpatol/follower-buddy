@@ -490,6 +490,12 @@ public class ChronicleIntegrityTest
 					{
 						problems.add(at + ": hint too wide (" + width + "px): " + plate.hint);
 					}
+					// Drawn before its page is written, it says so instead (qa5 #12).
+					String ahead = ChronicleWindow.caption("location", plate, 7, false, true);
+					if (small.stringWidth(ahead) > ChronicleLayout.PLATE_W - 32)
+					{
+						problems.add(at + ": too wide (" + small.stringWidth(ahead) + "px): " + ahead);
+					}
 					String before = sketchHints.putIfAbsent(plate.sketch, plate.hint);
 					if (before != null && !before.equals(plate.hint))
 					{
@@ -653,4 +659,5 @@ public class ChronicleIntegrityTest
 		}
 		assertTrue("numbers nothing counts:\n  " + String.join("\n  ", problems), problems.isEmpty());
 	}
+
 }

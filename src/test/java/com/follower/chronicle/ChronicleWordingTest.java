@@ -112,7 +112,9 @@ public class ChronicleWordingTest
 		lumbridge.hint = null;
 		assertEquals("a book without hints still says something", "Plate I. Pose for me when we're there.",
 			ChronicleWindow.caption("location", lumbridge, 0, true, false));
-		assertEquals("Plate I. " + lumbridge.caption, ChronicleWindow.caption("location", lumbridge, 0, false, true));
+		assertEquals("Plate I. " + lumbridge.caption, ChronicleWindow.caption("location", lumbridge, 0, true, true));
+		assertEquals("drawn on a locked page, its caption waits for the page (qa5 #12)",
+			"Plate I. Drawn ahead of the page.", ChronicleWindow.caption("location", lumbridge, 0, false, true));
 		ChronicleEntry.Plate duke = loader.get("location-lumbridge").plates.get(1);
 		assertEquals("the second plate is II", "Plate II. " + duke.caption,
 			ChronicleWindow.caption("location", duke, 1, true, false));
