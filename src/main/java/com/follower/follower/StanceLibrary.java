@@ -536,9 +536,9 @@ public class StanceLibrary
 
 	/**
 	 * Takes out of the learned file any pose set an older build learned off
-	 * a player on an obstacle (see {@link #emptiesAHand}), keeping any swing
-	 * learned with it. Unarmed ships with the plugin, so a learned unarmed
-	 * set is always one of these.
+	 * a player on an obstacle (see {@link #emptiesAHand}) or mid-swap (see
+	 * {@link #isAPassingSwap}), keeping any swing learned with it. Unarmed
+	 * ships with the plugin, so a learned unarmed set is always one of these.
 	 */
 	private void forgetObstacleSets(Client client)
 	{
@@ -547,7 +547,8 @@ public class StanceLibrary
 		{
 			Map.Entry<Integer, Stance> entry = it.next();
 			Stance mine = entry.getValue();
-			if (!mine.isComplete() || (entry.getKey() != UNARMED && !emptiesAHand(client, mine)))
+			if (!mine.isComplete() || (entry.getKey() != UNARMED && !emptiesAHand(client, mine)
+				&& !isAPassingSwap(entry.getKey(), mine)))
 			{
 				continue;
 			}
@@ -564,8 +565,23 @@ public class StanceLibrary
 		if (forgotten > 0)
 		{
 			dirty = true;
-			log.info("Forgot {} learned stance(s) taken from a player on an obstacle", forgotten);
+			log.info("Forgot {} learned stance(s) taken from a player on an obstacle or mid-swap", forgotten);
 		}
+	}
+
+	/**
+	 * Whether a set keeps a shipped weapon's own stand but walks or runs
+	 * otherwise. Seen once, it overrode the shipped carry for good: the
+	 * learned file held seven, two-handers and godswords on their own
+	 * stand and the plain walk and run (qa5 #31). A weapon's stand comes
+	 * with its walk and run, so a set like that is the game, or another
+	 * plugin, swapping the moves for a moment, never a new way to carry it.
+	 */
+	private boolean isAPassingSwap(int weaponId, Stance stance)
+	{
+		Stance shipped = bundled.get(weaponId);
+		return shipped != null && shipped.isComplete() && shipped.idle == stance.idle
+			&& (shipped.walk != stance.walk || shipped.run != stance.run);
 	}
 
 	/**
@@ -616,7 +632,7 @@ public class StanceLibrary
 			player.getIdleRotateLeft(),
 			player.getIdleRotateRight());
 
-		if (!observed.isComplete() || emptiesAHand(client, observed))
+		if (!observed.isComplete() || emptiesAHand(client, observed) || isAPassingSwap(weaponId, observed))
 		{
 			return;
 		}
