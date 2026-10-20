@@ -1341,7 +1341,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > The moment you die. Highest priority there is - nothing talks over this.
 
 - **when:** on your death
-- **does:** mood -25; occasion (never held back); marks this place: 'it went wrong for you'
+- **does:** mood -25; occasion (never held back); marks this place: 'it went wrong for you'; holds the floor 2s
 - **pacing:** priority 90, cooldown 1m
 
 - No! Get up!

@@ -60,7 +60,7 @@ public final class Words
 		"scorpia", "cerberus", "sarachnis", "zalcano", "tempoross", "hespori", "skotizo", "obor",
 		"bryophyta", "nex", "kree'arra", "k'ril tsutsaroth", "general graardor", "commander zilyana",
 		"vardorvis", "duke sucellus", "sol heredit", "araxxor", "tztok-jad", "tzkal-zuk",
-		"verzik vitur", "phosani's nightmare");
+		"verzik vitur", "phosani's nightmare", "dagannoth rex", "dagannoth prime", "dagannoth supreme");
 
 	private Words()
 	{

@@ -609,6 +609,11 @@ public class RuleLoader
 	 * is still one of ours, untouched, and ours now offers a choice. "the
 	 * swot" becomes "the swot|the grinder" (18 Oct); a name the player wrote
 	 * themselves is kept.
+	 *
+	 * <p>A build from before the choice reads the widened value whole, and
+	 * says it so: "you're down as the swot|the grinder" (behaviour QA5, 20
+	 * Oct, the Hub's build on the same phrases.json). Editing the value back
+	 * to one name is the cure for a player who goes back to such a build.
 	 */
 	static boolean widens(com.google.gson.JsonElement held, com.google.gson.JsonElement bundled)
 	{

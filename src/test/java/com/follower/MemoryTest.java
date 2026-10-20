@@ -131,6 +131,9 @@ public class MemoryTest
 	public void dyingOftenReadsDifferentlyFromDyingOnce() throws IOException
 	{
 		Harness h = new Harness(folder.newFolder().toPath());
+		// The moment of a death holds the floor a couple of seconds.
+		long[] ms = {1_700_000_000_000L};
+		h.engine.setClock(() -> ms[0]);
 		h.gameTicks(1);
 
 		h.dispatch(TriggerEvent.death());
@@ -142,6 +145,7 @@ public class MemoryTest
 			h.engine.getContext().tally("deaths");
 		}
 		h.gameTicks(200);
+		ms[0] += 120_000L;
 		h.clear();
 		h.dispatch(TriggerEvent.death());
 		h.gameTicks(10);

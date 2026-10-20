@@ -484,6 +484,7 @@ public class SpeechEngine
 		for (PendingSpeech delayed : pending)
 		{
 			delayed.rule.markFired(delayed.firedBefore);
+			givenBack.add(delayed.rule);
 		}
 		pending.clear();
 		// The plugin clears its queue with the scene, so those lines never land.
@@ -506,6 +507,7 @@ public class SpeechEngine
 		context = null;
 		lastSpokeMs = 0L;
 		afterPriming.clear();
+		givenBack.clear();
 		director.reset();
 		recentLines.clear();
 		recentLineSet.clear();
@@ -742,6 +744,9 @@ public class SpeechEngine
 
 	/** Announcements waiting for the prime window to drain. */
 	private final java.util.List<TriggerEvent> afterPriming = new java.util.ArrayList<>();
+
+	/** Lines let go at a hop, to rise again once its baseline is taken. */
+	private final java.util.List<SpeechRule> givenBack = new java.util.ArrayList<>();
 
 	/**
 	 * Raises an event the plugin MEANT to raise - a world hop, an edited
@@ -1132,8 +1137,11 @@ public class SpeechEngine
 					}
 					// A beat after the conversation: what its end raises - the
 					// quest's step, moved on in it - goes first, and a line
-					// held from before waits its gap behind it.
-					if (held == null && delayed.heardTheBox)
+					// held from before waits its gap behind it. Not a moment:
+					// it came before the box, and the scroll its close raises
+					// comes after it (quests QA5, Witch's House: "It's
+					// stopped." 8 s after the scroll's line).
+					if (held == null && delayed.heardTheBox && !delayed.rule.isOccasion())
 					{
 						delayed.heardTheBox = false;
 						delayed.ticksLeft = 1;
@@ -1283,7 +1291,7 @@ public class SpeechEngine
 		if (primeTicksLeft > 0)
 		{
 			if (event.getType() == TriggerEvent.Type.TICK && getContext().isPlayerReady()
-				&& --primeTicksLeft == 0 && !afterPriming.isEmpty())
+				&& --primeTicksLeft == 0)
 			{
 				// The baseline is taken; anything held back now lands on a rule
 				// set where only it is rising. Drained into a copy first, so a
@@ -1294,6 +1302,15 @@ public class SpeechEngine
 				{
 					dispatch(announcement);
 				}
+				// Then a line let go at a hop rises on the next pass, if what it
+				// was about is still so: behaviour QA5, the hop's baseline took
+				// Tobyn beside the player as given, and his line waited for him
+				// to leave and come back.
+				for (SpeechRule rule : givenBack)
+				{
+					rule.riseAgain();
+				}
+				givenBack.clear();
 			}
 			return;
 		}
@@ -2190,6 +2207,12 @@ public class SpeechEngine
 				{
 					dropArticle(out);
 				}
+				// The memory's own boss is the one there is: "That's the
+				// Kraken", never "That's a Kraken" (text QA5).
+				if ("memoryWho".equals(key) && ctx.isNamedBoss(replacement))
+				{
+					definiteArticle(out);
+				}
 				replacement = agreeArticle(out, replacement, endsPhrase);
 				// After a pointing word a creature is a common noun: the guard,
 				// a goblin, that monk of Zamorak. Bosses keep their capitals.
@@ -2247,6 +2270,26 @@ public class SpeechEngine
 			end++;
 		}
 		return NAME_MODIFIES.contains(template.substring(start, end).toLowerCase(Locale.ROOT));
+	}
+
+	/** Makes an "a" or "an" at the end of the text so far a "the", keeping its capital. */
+	private static void definiteArticle(StringBuilder out)
+	{
+		int space = out.length() - 1;
+		if (space < 1 || out.charAt(space) != ' ')
+		{
+			return;
+		}
+		int start = space;
+		while (start > 0 && Character.isLetter(out.charAt(start - 1)))
+		{
+			start--;
+		}
+		String word = out.substring(start, space);
+		if (word.equalsIgnoreCase("a") || word.equalsIgnoreCase("an"))
+		{
+			out.replace(start, space, Character.isUpperCase(word.charAt(0)) ? "The" : "the");
+		}
 	}
 
 	/** Takes a "the", "a" or "an" off the end of the text so far, keeping the space before it. */

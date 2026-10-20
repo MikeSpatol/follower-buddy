@@ -10808,6 +10808,8 @@ public class FollowerPlugin extends Plugin
 				// the line for a large share of everything examinable.
 				target = com.follower.follower.ErrandController.objectName(
 					client, event.getId());
+				// Named as a creature is, a common noun after "the": this statue.
+				creature = true;
 				if (view != null)
 				{
 					at = WorldPoint.fromScene(view,

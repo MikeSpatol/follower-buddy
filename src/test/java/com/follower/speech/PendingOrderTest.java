@@ -128,4 +128,34 @@ public class PendingOrderTest
 		assertEquals("scroll", h.spoken.get(1).rule.id);
 		assertEquals("person", h.spoken.get(2).rule.id);
 	}
+
+	private static final String KILLED = "{\"id\": \"killed\", \"group\": \"t\", \"priority\": 63,"
+		+ " \"occasion\": true, \"delayTicks\": 2, \"cooldownMs\": 0,"
+		+ " \"when\": {\"type\": \"levelUp\", \"names\": [\"Strength\"]},"
+		+ " \"say\": [\"It's stopped. I'm giving it a moment to be sure.\"]}";
+
+	@Test
+	public void aMomentHeldThroughTheHandInIsNotOvertakenByWhatItsCloseRaises() throws IOException
+	{
+		// Quests QA5 (Witch's House, 1 walk in 57): the experiment's end won,
+		// waited its two ticks into the hand-in box and was held through it;
+		// the scroll's line, raised as the box closed, took the beat after
+		// the box, and "It's stopped" came 8 s after the scroll.
+		Harness h = new Harness(folder.newFolder().toPath(),
+			"{\"version\": 1, \"rules\": [" + KILLED + "," + SCROLL + "]}");
+		h.engine.setClock(() -> ms[0]);
+		h.engine.setGlobalCooldownMs(6000L);
+		h.gameTicks(1);
+		h.dispatch(TriggerEvent.levelUp("Strength", 30));
+		ticks(h, 1);
+		h.engine.getContext().setDialogueOpen(true);
+		ticks(h, 10);
+		h.engine.getContext().setDialogueOpen(false);
+		ticks(h, 1);
+		h.dispatch(TriggerEvent.questComplete("Witch's House"));
+		ticks(h, 40);
+		assertEquals(2, h.spoken.size());
+		assertEquals("killed", h.spoken.get(0).rule.id);
+		assertEquals("scroll", h.spoken.get(1).rule.id);
+	}
 }

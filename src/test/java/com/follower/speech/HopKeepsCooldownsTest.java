@@ -90,7 +90,11 @@ public class HopKeepsCooldownsTest
 		ticks(h, 5);
 		assertEquals("waiting its gap", 0, h.firedBy("tobyn").size());
 
+		// The hop as the plugin has it: the scene goes, and the new one's
+		// baseline is taken (behaviour QA5: without the prime this passed
+		// while the plugin never said the line).
 		h.engine.resetForNewScene();
+		h.engine.primeEdgesOnNextTick();
 		ticks(h, 5);
 		assertEquals("said after the hop, him still there", 1, h.firedBy("tobyn").size());
 	}

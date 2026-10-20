@@ -137,7 +137,11 @@ public final class TriggerEvent
 		return event;
 	}
 
-	/** As {@link #examinedThing}, for a creature: {target} is a creature's name. */
+	/**
+	 * As {@link #examinedThing}, for a creature, or anything else standing in
+	 * the scene: {target} is a common noun after "the" or "this" - the guard,
+	 * this statue (text QA5: "this Statue", "One more Crate").
+	 */
 	public static TriggerEvent examinedCreature(String target)
 	{
 		TriggerEvent event = examinedThing(target);
@@ -574,6 +578,12 @@ public final class TriggerEvent
 		event.message = thing == null ? "" : thing;
 		event.placeholders.put("kind", event.name);
 		event.placeholders.put("thing", event.message);
+		// A landmark's name is a common noun after "this": text QA5, 17 Oct,
+		// "the wording of this Statue". An item keeps the game's spelling.
+		if ("landmark".equals(event.name))
+		{
+			event.creatures.add("thing");
+		}
 		return event;
 	}
 
