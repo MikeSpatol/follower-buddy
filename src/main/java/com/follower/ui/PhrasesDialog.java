@@ -242,7 +242,7 @@ public class PhrasesDialog extends JDialog
 				return;
 			}
 			category = categories.get(categoryPicker.getSelectedIndex());
-			refresh();
+			showCategory();
 		});
 
 		hint.setFont(FontManager.getRunescapeSmallFont());
@@ -301,7 +301,7 @@ public class PhrasesDialog extends JDialog
 		buttons.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		addLocation.setToolTipText("A new place for the follower to comment on");
 		addLocation.addActionListener(e -> addBlankRow());
-		// Only the structural category can add rules; refresh() keeps the
+		// Only the structural category can add rules; showCategory() keeps the
 		// button's visibility in step with the picked category.
 		addLocation.setVisible(category.structural);
 		buttons.add(addLocation);
@@ -381,21 +381,37 @@ public class PhrasesDialog extends JDialog
 		return false;
 	}
 
+	/**
+	 * The file as last read, by open(), Reload or a save, or null when it
+	 * would not read. A switch of category lists from it: reading the whole
+	 * file again each time held the event thread for most of half a second
+	 * (qa5 #71).
+	 */
+	private JsonObject loaded;
+
 	private void refresh()
+	{
+		try
+		{
+			loaded = readFile();
+		}
+		catch (Exception e)
+		{
+			log.warn("Could not read {}", file, e);
+			loaded = null;
+		}
+		showCategory();
+	}
+
+	private void showCategory()
 	{
 		rows.clear();
 		added.clear();
 		deleted.clear();
 		list.removeAll();
 
-		JsonObject parsed;
-		try
+		if (loaded == null)
 		{
-			parsed = readFile();
-		}
-		catch (Exception e)
-		{
-			log.warn("Could not read {}", file, e);
 			setStatus("The messages file couldn't be read - it may have been"
 				+ " hand-edited. Fix it or restore a backup, then Reload.", true);
 			list.revalidate();
@@ -404,7 +420,7 @@ public class PhrasesDialog extends JDialog
 		}
 
 		int count = 0;
-		for (JsonElement element : parsed.getAsJsonArray("rules"))
+		for (JsonElement element : loaded.getAsJsonArray("rules"))
 		{
 			JsonObject rule = element.getAsJsonObject();
 			if (!category.groups.contains(optString(rule, "group")) || optString(rule, "id") == null)
