@@ -414,6 +414,56 @@ public final class TriggerContext
 		{
 			ticksSinceCombat = 0;
 		}
+		else if (local != null)
+		{
+			noteAttacker(local);
+		}
+	}
+
+	/**
+	 * Who hit the player last while they were not fighting back, and when:
+	 * the thing chasing them. A memory filed then is about it. Behaviour
+	 * QA5, 19 Oct: run down in the Abyss with nothing targeted, the death
+	 * was filed as "the time you died", and said so for two days.
+	 */
+	private String attacker = "";
+	private int attackerTick = Integer.MIN_VALUE / 2;
+
+	private void noteAttacker(Player local)
+	{
+		net.runelite.api.WorldView view = client.getTopLevelWorldView();
+		WorldPoint here = local.getWorldLocation();
+		if (view == null || here == null)
+		{
+			return;
+		}
+		NPC nearest = null;
+		int best = Integer.MAX_VALUE;
+		for (NPC npc : view.npcs())
+		{
+			if (npc == null || npc.getInteracting() != local || npc.getCombatLevel() <= 0
+				|| npc.getName() == null || npc.getWorldLocation() == null)
+			{
+				continue;
+			}
+			int distance = npc.getWorldLocation().distanceTo(here);
+			if (distance < best)
+			{
+				best = distance;
+				nearest = npc;
+			}
+		}
+		if (nearest != null)
+		{
+			attacker = nearest.getName();
+			attackerTick = client.getTickCount();
+		}
+	}
+
+	/** What hit the player within the last {@code ticks} while they were not fighting it, or empty. */
+	public String getRecentAttacker(int ticks)
+	{
+		return client != null && client.getTickCount() - attackerTick <= ticks ? attacker : "";
 	}
 
 	/**
@@ -1472,6 +1522,7 @@ public final class TriggerContext
 		incidentPhrase = phrase == null ? "" : phrase;
 		incidentWhere = regionId;
 		incidentJustFiled = true;
+		incidentRecalledMs = 0L;
 		incidentWhenMs = nowMs;
 		incidentWho = who == null ? "" : who;
 		incidentItem = item == null ? "" : item;
@@ -1766,10 +1817,88 @@ public final class TriggerContext
 	 */
 	private boolean incidentJustFiled;
 
+	/**
+	 * How old a memory has to be before it is brought up: twenty minutes.
+	 * Quests QA5, 20 Oct: "Persten went into the rift. I am not writing
+	 * anything for a moment." and, 15 s later, "My mind goes back to Persten
+	 * going into the rift, earlier today." Leaving the region was no wait at
+	 * all where quest steps and boats cross borders every minute.
+	 */
+	public static final long MEMORY_MIN_AGE_MS = 20L * 60 * 1000;
+
+	/** The same in game ticks, for what a place holds, which is kept without a date. */
+	public static final int MEMORY_MIN_AGE_TICKS = (int) (MEMORY_MIN_AGE_MS / 600);
+
+	/** Filed less than {@link #MEMORY_MIN_AGE_MS} before {@code nowMs}: too fresh to be a memory yet. */
+	public boolean isIncidentFresh(long nowMs)
+	{
+		return hasIncident() && incidentWhenMs > 0 && incidentWhenMs <= nowMs
+			&& nowMs - incidentWhenMs < MEMORY_MIN_AGE_MS;
+	}
+
+	private boolean isFresh(int filedTick)
+	{
+		return filedTick >= 0 && tickNow() - filedTick < MEMORY_MIN_AGE_TICKS;
+	}
+
+	private int tickNow()
+	{
+		return client == null ? 0 : client.getTickCount();
+	}
+
+	/**
+	 * When the incident was last brought up unprompted, as epoch millis, or
+	 * 0. Kept with the memory. Text QA5, 18 Oct: the Castle Wars death was
+	 * brought up eighteen times in one day, the only memory there was.
+	 */
+	private long incidentRecalledMs;
+
+	public void noteIncidentRecalled(long nowMs)
+	{
+		incidentRecalledMs = nowMs;
+		countersDirty = true;
+	}
+
+	public long getIncidentRecalledMs()
+	{
+		return incidentRecalledMs;
+	}
+
+	/** From the stored memory, after {@link #restoreIncident}. */
+	public void restoreIncidentRecalled(long epochMs)
+	{
+		incidentRecalledMs = Math.max(0L, epochMs);
+	}
+
+	/** Whether the incident was brought up unprompted already today, by the calendar on your clock. */
+	public boolean wasIncidentRecalledToday(long nowMs)
+	{
+		java.time.ZoneId zone = java.time.ZoneId.systemDefault();
+		return incidentRecalledMs > 0
+			&& java.time.Instant.ofEpochMilli(incidentRecalledMs).atZone(zone).toLocalDate()
+				.equals(java.time.Instant.ofEpochMilli(nowMs).atZone(zone).toLocalDate());
+	}
+
 	/** Back in the region the incident happened in. */
 	public boolean isAtTheIncident()
 	{
 		return hasIncident() && incidentWhere != 0 && incidentWhere == regionId && !incidentJustFiled;
+	}
+
+	/**
+	 * Where a death costs nothing and is given back: Castle Wars, its arena
+	 * and the tunnels under it, and Last Man Standing's maps, as RuneLite's
+	 * loot tracker lists them (LAST_MAN_STANDING_REGIONS, 1.13.1). The user,
+	 * 20 Oct: no grief, no memory, no mark. Text QA5: a Castle Wars death was
+	 * mourned, filed, and brought up 24 times.
+	 */
+	static final Set<Integer> SAFE_DEATH_REGIONS = Set.of(9520, 9620,
+		13658, 13659, 13660, 13914, 13915, 13916, 13918, 13919, 13920, 14174, 14175, 14176,
+		14430, 14431, 14432);
+
+	public boolean isSafeDeathHere()
+	{
+		return SAFE_DEATH_REGIONS.contains(regionId);
 	}
 
 	/** Whether the NPC the incident was with has one of its kind within so many tiles. */
@@ -1871,7 +2000,11 @@ public final class TriggerContext
 	 * to be replaced by the next incident.
 	 */
 	private static final Set<String> VAGUE = new HashSet<>(Arrays.asList(
-		"how close that was", "the way that went", "that drop", "the size of that thing"));
+		"how close that was", "the way that went", "that drop", "the size of that thing",
+		// And what the places were marked with before they named the moment.
+		// Text QA5, 17 Oct: "Same spot. This is where it went wrong for you."
+		"it went wrong for you", "you got that drop", "you put that thing down",
+		"you hit harder than you ever had"));
 
 	/** The old forms that named only the foe, which a restore says again in the current words. */
 	private static final String[] LEGACY_PREFIXES = {"how close that was with ", "the way that went with "};
@@ -1882,9 +2015,25 @@ public final class TriggerContext
 		return phrase == null || phrase.isEmpty() || VAGUE.contains(phrase);
 	}
 
+	/**
+	 * The memory rules' plain forms: what is filed when nothing particular
+	 * was known. A memory filed so is not brought up, though a particular
+	 * one can still be said this way when nothing longer fits. Behaviour
+	 * QA5, 19-20 Oct: "I was rereading the entry on the time you died." six
+	 * times, about a death in the Abyss.
+	 */
+	private static final Set<String> PLAIN = new HashSet<>(Arrays.asList(
+		"the time you died", "the time you nearly died", "your big drop", "your big kill"));
+
+	/** Whether a memory filed this way was filed knowing nothing particular about the moment. */
+	public static boolean isPlain(String phrase)
+	{
+		return PLAIN.contains(phrase);
+	}
+
 	static boolean isLegacy(String phrase)
 	{
-		if (isVague(phrase))
+		if (isVague(phrase) || isPlain(phrase))
 		{
 			return true;
 		}
@@ -1985,6 +2134,9 @@ public final class TriggerContext
 	 */
 	private final java.util.Set<Integer> placesJustFiled = new java.util.HashSet<>();
 
+	/** The tick each place's memory was filed on in this session, for {@link #MEMORY_MIN_AGE_TICKS}. */
+	private final java.util.Map<Integer, Integer> placeFiledTick = new java.util.HashMap<>();
+
 	/** Past this, an accumulation of small moments counts as an opinion. */
 	public static final int OPINION_AT = 40;
 
@@ -2025,6 +2177,7 @@ public final class TriggerContext
 		}
 		placeMemories.put(regionId, phrase);
 		placesJustFiled.add(regionId);
+		placeFiledTick.put(regionId, tickNow());
 		countersDirty = true;
 		trimPlaces();
 	}
@@ -2095,17 +2248,18 @@ public final class TriggerContext
 	/**
 	 * Something the follower remembers about this place, or empty.
 	 *
-	 * <p>Empty while the memory is still fresh from this visit: a thing that
-	 * happened a moment ago is not a thing the place reminds you of.
+	 * <p>Empty while the memory is still fresh from this visit, or less than
+	 * twenty minutes old: a thing that happened a moment ago is not a thing
+	 * the place reminds you of.
 	 */
 	public String getPlaceMemory()
 	{
-		if (placesJustFiled.contains(regionId))
+		if (placesJustFiled.contains(regionId) || isFresh(placeFiledTick.getOrDefault(regionId, -1)))
 		{
 			return "";
 		}
 		String here = placeMemories.get(regionId);
-		return here == null ? "" : here;
+		return here == null || isVague(here) ? "" : here;
 	}
 
 	public boolean hasPlaceMemory()

@@ -36,7 +36,8 @@ public class OneMemoryAtATimeTest
 			+ rule("chatty", "Defence", 0L, "Nice.") + "]}");
 		h.engine.setClock(() -> ms[0]);
 		h.gameTicks(1);
-		h.engine.getContext().noteIncident("bag", "the guard with the very large bag", "", ms[0]);
+		// From an earlier session: a memory filed just now is too fresh to bring up.
+		h.engine.getContext().restoreIncident("bag", "the guard with the very large bag", 1);
 
 		h.dispatch(TriggerEvent.levelUp("Attack", 30));
 		assertEquals(1, h.firedBy("recall-idle").size());
@@ -49,5 +50,41 @@ public class OneMemoryAtATimeTest
 		ms[0] += 600_000L;
 		h.dispatch(TriggerEvent.levelUp("Strength", 31));
 		assertEquals("ten minutes on", 1, h.firedBy("recall-here").size());
+	}
+
+	@Test
+	public void whatAPlaceHoldsIsAMemoryToo() throws IOException
+	{
+		// Text QA5, 17 Oct: arriving where the player died, "This is where I
+		// wrote down the time you died, yesterday." and, 6 s later, "Same
+		// spot. This is where it went wrong for you." The spot of the last
+		// death counts as well.
+		Harness h = new Harness(folder.newFolder().toPath(), "{\"version\": 1, \"rules\": ["
+			+ rule("recall-here", "Attack", 1_800_000L, "The notes on {memory} start here.") + ","
+			+ rule("place-remembers", "Strength", 1_200_000L, "Same spot. This is where {here}.") + ","
+			+ "{\"id\": \"death-spot\", \"group\": \"t\", \"cooldownMs\": 600000, \"when\": {\"type\": \"all\","
+			+ " \"conditions\": [{\"type\": \"levelUp\", \"names\": [\"Defence\"]}, {\"type\": \"nearDeathSpot\"}]},"
+			+ " \"say\": [\"This is where it happened.\"]}]}");
+		h.engine.setClock(() -> ms[0]);
+		h.game.at(3222, 3218, 0);
+		h.gameTicks(1);
+		h.engine.getContext().restoreIncident("the-death", "your death to the Hill Giant", 1);
+		h.engine.getContext().restorePlaces(java.util.Collections.emptyMap(),
+			java.util.Collections.singletonMap(h.engine.getContext().getRegionId(), "you died to the Hill Giant"));
+		h.engine.getContext().restoreDeathSpot(new net.runelite.api.coords.WorldPoint(3222, 3218, 0));
+
+		h.dispatch(TriggerEvent.levelUp("Attack", 30));
+		assertEquals(1, h.firedBy("recall-here").size());
+		ms[0] += 6_000L;
+		h.gameTicks(1);
+		h.dispatch(TriggerEvent.levelUp("Strength", 30));
+		h.dispatch(TriggerEvent.levelUp("Defence", 30));
+		assertEquals("not the place's memory 6 s on", 0, h.firedBy("place-remembers").size());
+		assertEquals("nor the death spot", 0, h.firedBy("death-spot").size());
+
+		ms[0] += 600_000L;
+		h.gameTicks(1);
+		h.dispatch(TriggerEvent.levelUp("Strength", 31));
+		assertEquals("ten minutes on", 1, h.firedBy("place-remembers").size());
 	}
 }

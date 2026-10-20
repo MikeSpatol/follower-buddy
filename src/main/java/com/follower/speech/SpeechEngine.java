@@ -163,16 +163,36 @@ public class SpeechEngine
 	/** How long after one rule brings up a memory the others wait: ten minutes. */
 	static final long MEMORY_APART_MS = 600_000L;
 
-	/** Whether a rule's lines bring up something remembered, by its {memory}. */
+	/** Whether a rule's lines tell the incident, by its {memory}. */
+	private static boolean tellsTheIncident(SpeechRule rule)
+	{
+		return saysAnyOf(rule, "{memory}");
+	}
+
+	/**
+	 * Whether a rule brings up something remembered: the incident, what a
+	 * place holds ({here}), or the spot of the last death. Text QA5, 17 Oct:
+	 * "This is where I wrote down the time you died, yesterday." and, 6 s
+	 * later, "Same spot. This is where it went wrong for you."
+	 */
 	private static boolean bringsUpAMemory(SpeechRule rule)
+	{
+		return saysAnyOf(rule, "{memory}", "{here}")
+			|| (rule.when != null && rule.when.usesType("nearDeathSpot"));
+	}
+
+	private static boolean saysAnyOf(SpeechRule rule, String... placeholders)
 	{
 		if (rule.say != null)
 		{
 			for (String line : rule.say)
 			{
-				if (line.contains("{memory}"))
+				for (String placeholder : placeholders)
 				{
-					return true;
+					if (line.contains(placeholder))
+					{
+						return true;
+					}
 				}
 			}
 		}
@@ -1409,9 +1429,29 @@ public class SpeechEngine
 
 	private void speak(SpeechRule rule, TriggerEvent event, long now)
 	{
-		String template = rule.pickPhrase(recentLineSet,
+		String drawn = rule.pickPhrase(recentLineSet,
 			line -> getContext().lineWear(line));
-		String text = spokenText(template, event);
+		String filled = spokenText(drawn, event);
+		// Filled too long to fit over the head, a line gives way to the
+		// rule's first that fits: a place's memory has one way of being
+		// said, and one that will not fit "You may not remember. This is
+		// where ..." still fits "Same spot. This is where ..." (behaviour
+		// QA5, measured).
+		if (!fitsOverhead(filled) && rule.say != null)
+		{
+			for (String other : rule.say)
+			{
+				String fits = spokenText(other, event);
+				if (fitsOverhead(fits))
+				{
+					drawn = other;
+					filled = fits;
+					break;
+				}
+			}
+		}
+		String template = drawn;
+		String text = filled;
 		Integer animation = rule.resolveAnimation(event);
 
 		// A mirroring rule triggered by something OTHER than an animation event
@@ -1589,6 +1629,10 @@ public class SpeechEngine
 			{
 				getContext().noteSaidOnce(rule.onceKey());
 			}
+			if (isIdleRemark(rule) && tellsTheIncident(rule) && !text.isEmpty())
+			{
+				getContext().noteIncidentRecalled(now());
+			}
 		};
 
 		// The pacing is charged at the hand-over, heard or not: it only spaces
@@ -1630,48 +1674,74 @@ public class SpeechEngine
 	/** What a rule writes down when it rises: the incident, and the place. */
 	private void file(SpeechRule rule, TriggerEvent event)
 	{
+		boolean marks = rule.markHere != null && !rule.markHere.isEmpty();
+		if ((rule.remember == null || rule.remember.key == null) && !marks)
+		{
+			return;
+		}
+		// The particulars are filled in NOW, while the event and the moment
+		// still know them; a placeholder with nothing to say drops the phrase
+		// back to a plainer form rather than filing a hole. The last thing
+		// fought is never forgotten by the context, so only a fight going on,
+		// or just over, is this memory's. QA, 15 Oct: a quest finished an
+		// hour after a ram fight was filed "with the Ram", and the next Ram
+		// brought the quest up.
+		boolean fighting = getContext().foughtWithin(RECENT_FIGHT_TICKS);
+		// Chased rather than fighting, what was hitting the player is the
+		// foe: behaviour QA5, run down in the Abyss with nothing targeted.
+		String attacker = fighting ? "" : getContext().getRecentAttacker(RECENT_FIGHT_TICKS);
+		if (!attacker.isEmpty())
+		{
+			event.getPlaceholders().putIfAbsent("foe", attacker);
+		}
+		boolean foeKnown = fighting || !attacker.isEmpty();
+
 		// An incident is filed whether or not the line was heard: the chicken
 		// killed you regardless of whether the follower got a word in.
 		if (rule.remember != null && rule.remember.key != null)
 		{
-			// The particulars are filled in NOW, while the event and the
-			// moment still know them; a placeholder with nothing to say drops
-			// the phrase back to its plain form rather than filing a hole.
-			// The last thing fought is never forgotten by the context, so only
-			// a fight going on, or just over, is this memory's. QA, 15 Oct: a
-			// quest finished an hour after a ram fight was filed "with the
-			// Ram", and the next Ram brought the quest up.
-			boolean fighting = getContext().foughtWithin(RECENT_FIGHT_TICKS);
-			String phrase = "";
-			java.util.List<String> forms = rule.remember.forms();
-			for (int i = 0; i < forms.size(); i++)
-			{
-				// Each form in turn, the first with nothing missing; the last
-				// whatever it has.
-				String form = forms.get(i);
-				boolean[] incomplete = {false};
-				phrase = substitute(form, event, incomplete, false);
-				if (i == forms.size() - 1
-					|| (!incomplete[0] && (fighting || !form.contains("{foe}"))))
-				{
-					break;
-				}
-			}
+			String phrase = firstFilled(rule.remember.forms(), event, foeKnown);
 			String who = event.getPlaceholders().getOrDefault("npc", "");
-			if (who.isEmpty() && fighting)
+			if (who.isEmpty() && foeKnown)
 			{
-				who = getContext().getCombatTarget();
+				who = fighting ? getContext().getCombatTarget() : attacker;
 			}
 			getContext().noteIncident(rule.remember.key, phrase, who,
 				event.getPlaceholders().getOrDefault("item", ""), getContext().getHitpoints(),
 				System.currentTimeMillis());
 		}
 
-		// And the same moment against the place, when the rule says so.
-		if (rule.markHere != null && !rule.markHere.isEmpty())
+		// And the same moment against the place, when the rule says so, in
+		// the same way: text QA5, 17 Oct, "This is where it went wrong for
+		// you." said what happened nowhere in it.
+		if (marks)
 		{
-			getContext().notePlaceMemory(rule.markHere);
+			java.util.List<String> forms = new java.util.ArrayList<>();
+			forms.add(rule.markHere);
+			if (rule.markHereOr != null)
+			{
+				forms.addAll(rule.markHereOr);
+			}
+			getContext().notePlaceMemory(firstFilled(forms, event, foeKnown));
 		}
+	}
+
+	/** Each form in turn, filled: the first with nothing missing, or the last whatever it has. */
+	private String firstFilled(java.util.List<String> forms, TriggerEvent event, boolean foeKnown)
+	{
+		String phrase = "";
+		for (int i = 0; i < forms.size(); i++)
+		{
+			String form = forms.get(i);
+			boolean[] incomplete = {false};
+			phrase = substitute(form, event, incomplete, false);
+			if (i == forms.size() - 1
+				|| (!incomplete[0] && (foeKnown || !form.contains("{foe}"))))
+			{
+				break;
+			}
+		}
+		return phrase;
 	}
 
 	private boolean isActive(SpeechRule rule)
@@ -1683,8 +1753,10 @@ public class SpeechEngine
 		}
 		// A memory that would only come out vague is not brought up at all:
 		// "I was rereading the entry on the way that went" tells the player
-		// nothing about which moment it was.
-		if (bringsUpAMemory(rule) && memoryPhrases().isEmpty())
+		// nothing about which moment it was. Nor one too fresh to be a memory
+		// yet, nor brought up unprompted twice in a day.
+		if (tellsTheIncident(rule) && (memoryPhrases().isEmpty() || getContext().isIncidentFresh(now())
+			|| (isIdleRemark(rule) && getContext().wasIncidentRecalledToday(now()))))
 		{
 			return false;
 		}
@@ -1893,7 +1965,7 @@ public class SpeechEngine
 	{
 		java.util.List<String> phrases = new java.util.ArrayList<>();
 		TriggerContext ctx = getContext();
-		if (!ctx.hasIncident())
+		if (!ctx.hasIncident() || TriggerContext.isPlain(ctx.getIncidentPhrase()))
 		{
 			return phrases;
 		}

@@ -2514,10 +2514,10 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `recall-idle`
 
-> The whole point of the incident. Brought up unprompted, in a quiet moment, about the specific thing that happened rather than about the number of times something like it has. Deliberately rare.
+> The whole point of the incident. Brought up unprompted, in a quiet moment, about the specific thing that happened rather than about the number of times something like it has. Deliberately rare: two hours apart, and any one memory once a day (text QA5, 18 Oct: the same death eighteen times in a day).
 
 - **when:** standing still 120+ ticks AND standing still under 600 ticks AND an incident remembered AND a 4% roll
-- **pacing:** priority 24, cooldown 15m, overhead
+- **pacing:** priority 24, cooldown 2h, overhead
 
 - I keep thinking about {memory}{memoryWhere}, {memoryAgo}.
 - I was rereading the entry on {memory}{memoryWhere}.

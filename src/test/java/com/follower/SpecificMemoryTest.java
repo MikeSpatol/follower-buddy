@@ -254,11 +254,13 @@ public class SpecificMemoryTest
 		assertEquals("the way that went", today.engine.getContext().getIncidentPhrase());
 		assertTrue(today.firedBy("recall").isEmpty());
 
-		// The next incident replaces it, and is said.
+		// The next incident replaces it, and is said, once it is old enough
+		// to be a memory.
 		h.game.at(3090, 3490, 0);
 		h.gameTicks(1);
 		h.dispatch(TriggerEvent.death());
 		h.gameTicks(2);
+		h.engine.setClock(() -> System.currentTimeMillis() + TriggerContext.MEMORY_MIN_AGE_MS);
 		h.playerSays("recall");
 		assertEquals("your death in Edgeville", c.getIncidentPhrase());
 		assertFalse(h.firedBy("recall").isEmpty());
@@ -301,5 +303,92 @@ public class SpecificMemoryTest
 		assertEquals("", loaded.getIncidentItem());
 		assertEquals(-1, loaded.getIncidentHp());
 		assertTrue("waiting to be told again", loaded.isIncidentToRetell());
+	}
+
+	@Test
+	public void aPlainFormIsKeptForItsCountButNeverSaid() throws IOException
+	{
+		// Behaviour QA5, 19-20 Oct: "I was rereading the entry on the time
+		// you died." said six times about a death in the Abyss.
+		Harness h = harness();
+		h.game.at(1000, 1000, 0);
+		h.gameTicks(1);
+		h.dispatch(TriggerEvent.death());
+		assertEquals("the time you died", h.engine.getContext().getIncidentPhrase());
+		h.gameTicks(2);
+		h.engine.setClock(() -> System.currentTimeMillis() + TriggerContext.MEMORY_MIN_AGE_MS);
+		h.playerSays("recall");
+		assertTrue(h.firedBy("recall").isEmpty());
+	}
+
+	@Test
+	public void everyShippedPlainFormIsOneThatIsNeverSaid() throws IOException
+	{
+		Harness h = new Harness(folder.newFolder().toPath());
+		int checked = 0;
+		for (com.follower.speech.SpeechRule rule : h.loader.getRules())
+		{
+			if (rule.remember != null && rule.remember.plain != null
+				&& !rule.remember.plain.equals(rule.remember.as))
+			{
+				assertTrue(rule.id + ": '" + rule.remember.plain + "' says nothing particular",
+					TriggerContext.isPlain(rule.remember.plain));
+				checked++;
+			}
+		}
+		assertTrue(checked >= 4);
+	}
+
+	@Test
+	public void aDeathWhileChasedIsFiledWithWhatWasChasing() throws IOException
+	{
+		// Behaviour QA5, 19 Oct 13:51: run down in the Abyss with nothing
+		// targeted, "hit 16" as the player ran.
+		Harness h = harness();
+		h.game.at(3090, 3490, 0);
+		NPC leech = h.game.spawnNpc(1, "Abyssal leech", 41);
+		h.game.npcFacingPlayer(leech);
+		h.gameTicks(3);
+		h.engine.getContext().noteDamageTaken();
+		h.dispatch(TriggerEvent.death());
+		TriggerContext c = h.engine.getContext();
+		assertEquals("your death to the abyssal leech", c.getIncidentPhrase());
+		assertEquals("Abyssal leech", c.getIncidentWho());
+		assertFalse("being chased is not a fight", c.isInCombat());
+	}
+
+	@Test
+	public void somethingThatHitLongAgoIsNotTheFoe() throws IOException
+	{
+		Harness h = harness();
+		h.game.at(3090, 3490, 0);
+		NPC leech = h.game.spawnNpc(1, "Abyssal leech", 41);
+		h.game.npcFacingPlayer(leech);
+		h.gameTicks(1);
+		h.engine.getContext().noteDamageTaken();
+		h.gameTicks(30);
+		h.dispatch(TriggerEvent.death());
+		assertEquals("your death in Edgeville", h.engine.getContext().getIncidentPhrase());
+	}
+
+	@Test
+	public void theNewQuestPlacesHaveNames() throws IOException
+	{
+		// Text QA5: the Abyss, Camdozaal, the Temple of the Eye and the
+		// Wizards' Tower had no name for {where}; each has an area rule
+		// whose title names it.
+		Harness h = new Harness(folder.newFolder().toPath());
+		Map<Integer, String> names = h.loader.getRegionNames();
+		assertEquals("The Abyss", names.get(12107));
+		assertEquals("Camdozaal", names.get(11866));
+		assertEquals("The Temple of the Eye", names.get(14484));
+		assertEquals("The Wizards' Tower", names.get(12337));
+		assertEquals("a name from a note is kept", "Lumbridge town and castle", names.get(12850));
+
+		h.engine.getContext().setRegionNames(names);
+		h.game.at(3040, 4830, 0);
+		h.gameTicks(1);
+		h.dispatch(TriggerEvent.death());
+		assertEquals("your death in the Abyss", h.engine.getContext().getIncidentPhrase());
 	}
 }

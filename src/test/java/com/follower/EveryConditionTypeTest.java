@@ -1425,7 +1425,7 @@ public class EveryConditionTypeTest
 		Harness held = harnessFor("{\"type\": \"happenedHere\"}");
 		held.gameTicks(2);
 		assertQuiet(held, "this place holds nothing yet");
-		held.engine.getContext().notePlaceMemory("you got that drop");
+		held.engine.getContext().notePlaceMemory("the Armadyl chestplate dropped");
 		held.gameTicks(2);
 		assertQuiet(held, "a thing that just happened is not something a place reminds you of");
 
@@ -1433,8 +1433,9 @@ public class EveryConditionTypeTest
 		held.game.at(3300, 3300, 0);
 		held.gameTicks(2);
 		assertQuiet(held, "a different region holds a different nothing");
+		held.gameTicks(com.follower.speech.TriggerContext.MEMORY_MIN_AGE_TICKS);
 
-		// And coming back is what makes it worth saying.
+		// And coming back, twenty minutes on, is what makes it worth saying.
 		held.game.at(3222, 3218, 0);
 		held.gameTicks(2);
 		assertFired(held, "happenedHere, once you have been away and returned");

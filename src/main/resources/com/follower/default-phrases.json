@@ -12188,11 +12188,11 @@
     },
     {
       "id": "recall-idle",
-      "note": "The whole point of the incident. Brought up unprompted, in a quiet moment, about the specific thing that happened rather than about the number of times something like it has. Deliberately rare.",
+      "note": "The whole point of the incident. Brought up unprompted, in a quiet moment, about the specific thing that happened rather than about the number of times something like it has. Deliberately rare: two hours apart, and any one memory once a day (text QA5, 18 Oct: the same death eighteen times in a day).",
       "about": "In a quiet moment, it brings up something it remembers. {memory} is that thing.",
       "group": "memory",
       "priority": 24,
-      "cooldownMs": 900000,
+      "cooldownMs": 7200000,
       "output": "overhead",
       "when": {
         "type": "all",

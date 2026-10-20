@@ -18,6 +18,9 @@ public class SpeechRule
 	/** Free text for your own benefit. Ignored by the plugin. */
 	public String note;
 
+	/** The rule's name in the panel; an area rule's names its place, before the comma. */
+	public String title;
+
 	/** Group name, so the config panel can switch whole categories off. */
 	public String group = "misc";
 
@@ -465,6 +468,13 @@ public class SpeechRule
 	 * anywhere; this is one thing per place, and waits for you to come back.
 	 */
 	public String markHere;
+
+	/**
+	 * Fallbacks for {@link #markHere}, tried in turn when a placeholder in it
+	 * has nothing to say, as a remember block's {@code or}: "you died to the
+	 * {foe}", then "you died".
+	 */
+	public List<String> markHereOr;
 
 	public Condition when;
 

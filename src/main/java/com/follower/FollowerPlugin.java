@@ -2562,6 +2562,8 @@ public class FollowerPlugin extends Plugin
 		Boolean incidentNear;
 		String incidentItem;
 		Integer incidentHp;
+		/** When it was last brought up unprompted, so that is once a day. */
+		long incidentRecalledMs;
 
 		/**
 		 * Where the last death happened. Session-scoped memory made
@@ -2821,6 +2823,7 @@ public class FollowerPlugin extends Plugin
 				saved.incidentCount, saved.incidentWhere, saved.incidentWhenMs, saved.incidentWho,
 				saved.incidentPlace, Boolean.TRUE.equals(saved.incidentNear), saved.incidentItem,
 				saved.incidentHp == null ? -1 : saved.incidentHp);
+			context.restoreIncidentRecalled(saved.incidentRecalledMs);
 			context.restorePlaces(saved.placeScores, saved.placeMemories);
 			context.restoreSpokenOnce(saved.spokenOnce, saved.spokenOnceOn);
 			context.restoreQuestsSeenFinished(saved.questsSeenFinished);
@@ -2903,6 +2906,7 @@ public class FollowerPlugin extends Plugin
 		saved.incidentNear = context.isIncidentNear() ? Boolean.TRUE : null;
 		saved.incidentItem = context.getIncidentItem().isEmpty() ? null : context.getIncidentItem();
 		saved.incidentHp = context.getIncidentHp() < 0 ? null : context.getIncidentHp();
+		saved.incidentRecalledMs = context.getIncidentRecalledMs();
 		saved.placeScores = context.getPlaceScores();
 		saved.placeMemories = context.getPlaceMemories();
 		saved.spokenOnce = new java.util.ArrayList<>(context.getSpokenOnce());
@@ -9383,8 +9387,12 @@ public class FollowerPlugin extends Plugin
 			log.info("WATCH chat [{}] {}", event.getType(), event.getMessage());
 		}
 
-		speechEngine.dispatch(TriggerEvent.chat(
-			event.getMessage(), event.getType().getType(), event.getName()));
+		// Nor the game's word for a death there: the death rule listens for it.
+		if (!(speechEngine.getContext().isSafeDeathHere() && event.getMessage().startsWith(DEATH_MESSAGE)))
+		{
+			speechEngine.dispatch(TriggerEvent.chat(
+				event.getMessage(), event.getType().getType(), event.getName()));
+		}
 
 		if (skilling != null && !filming)
 		{
@@ -10163,6 +10171,9 @@ public class FollowerPlugin extends Plugin
 		damagedByPlayer.values().removeIf(tick -> tick < cutoff);
 	}
 
+	/** What the game says at a death, which the death rule answers. */
+	static final String DEATH_MESSAGE = "Oh dear, you are dead";
+
 	@Subscribe
 	public void onActorDeath(net.runelite.api.events.ActorDeath event)
 	{
@@ -10201,11 +10212,16 @@ public class FollowerPlugin extends Plugin
 			return;
 		}
 
-		// Where, as well as that: the death spot is remembered for the session,
-		// and walking back over it later has its own lines.
-		speechEngine.getContext().noteDeath(local.getWorldLocation());
-		speechEngine.getContext().tallyBoth("deaths");
-		speechEngine.dispatch(TriggerEvent.death());
+		// A death a minigame gives back is no death: no grief, no memory and
+		// no mark (the user, 20 Oct, after Castle Wars was mourned for days).
+		if (!speechEngine.getContext().isSafeDeathHere())
+		{
+			// Where, as well as that: the death spot is remembered for the session,
+			// and walking back over it later has its own lines.
+			speechEngine.getContext().noteDeath(local.getWorldLocation());
+			speechEngine.getContext().tallyBoth("deaths");
+			speechEngine.dispatch(TriggerEvent.death());
+		}
 		dialog.close();
 	}
 

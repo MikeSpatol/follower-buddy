@@ -755,6 +755,32 @@ public class RuleLoader
 		}
 	}
 
+	/** Each region an area rule's "all" stands in, by the rule's title up to its comma, where nothing names it yet. */
+	private static void collectTitledRegionNames(SpeechRule rule, Map<Integer, String> into)
+	{
+		if (rule.when == null || rule.when.conditions == null || rule.title == null
+			|| !"all".equalsIgnoreCase(rule.when.type))
+		{
+			return;
+		}
+		int comma = rule.title.indexOf(',');
+		String name = (comma > 0 ? rule.title.substring(0, comma) : rule.title).trim();
+		for (Condition part : rule.when.conditions)
+		{
+			if (part != null && part.regions != null && !name.isEmpty()
+				&& ("inregion".equalsIgnoreCase(part.type) || "regionenter".equalsIgnoreCase(part.type)))
+			{
+				for (Integer region : part.regions)
+				{
+					if (region != null)
+					{
+						into.putIfAbsent(region, name);
+					}
+				}
+			}
+		}
+	}
+
 	private void collectBossNames(Condition condition, java.util.Set<String> into)
 	{
 		if (condition == null)
@@ -792,6 +818,16 @@ public class RuleLoader
 			else if ("area".equalsIgnoreCase(rule.group))
 			{
 				collectRegionNames(rule, places);
+			}
+		}
+		// Then the places only a rule with more to it names, by its title:
+		// "The Abyss, after Enter the Abyss". Behaviour QA5, 19 Oct: a death
+		// in the Abyss had no place to be filed in.
+		for (SpeechRule rule : newRules)
+		{
+			if ("area".equalsIgnoreCase(rule.group))
+			{
+				collectTitledRegionNames(rule, places);
 			}
 		}
 		bossNames = bosses;

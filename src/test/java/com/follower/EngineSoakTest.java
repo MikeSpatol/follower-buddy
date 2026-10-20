@@ -561,7 +561,9 @@ public class EngineSoakTest
 				ctx.notePlaceFeeling(random.nextBoolean() ? 25 : -25);
 				if (random.nextBoolean())
 				{
-					ctx.notePlaceMemory("you got that drop");
+					// From an earlier session: one filed now is too fresh to come up.
+					ctx.restorePlaces(new java.util.HashMap<>(ctx.getPlaceScores()),
+						Collections.singletonMap(ctx.getRegionId(), "the Armadyl chestplate dropped"));
 				}
 				break;
 			case 45:

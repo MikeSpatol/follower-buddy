@@ -121,14 +121,14 @@ public class MoodAndPlaceTest
 				+ " \"say\": [\"this is where {here}\"]}]}");
 
 		h.gameTicks(1);
-		h.engine.getContext().notePlaceMemory("you hit harder than you ever had");
+		h.engine.getContext().notePlaceMemory("you hit a 73");
 		h.gameTicks(5);
 		assertTrue("standing where it happened is not being reminded of it",
 			h.firedBy("recall").isEmpty());
 
-		// Leave, come back.
+		// Leave, come back, twenty minutes on: a minute on is still too fresh.
 		h.game.at(2624, 3648, 0);
-		h.gameTicks(2);
+		h.gameTicks(TriggerContext.MEMORY_MIN_AGE_TICKS);
 		h.game.at(3222, 3218, 0);
 		h.gameTicks(2);
 		assertFalse("coming back is what makes it worth saying",

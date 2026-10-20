@@ -676,4 +676,21 @@ public class LifecycleGlueTest
 		assertTrue("but not for a logout's empty one",
 			arrived.contains("event.getNewProfile() != null"));
 	}
+
+	@Test
+	public void aDeathAMinigameGivesBackIsNoDeath() throws IOException
+	{
+		// The user, 20 Oct: a Castle Wars death is ignored - no grief, no
+		// memory, no mark. Text QA5: it was mourned, filed, and brought up
+		// 24 times. The death event and the game's death message both stay
+		// out of the rules there.
+		String died = method("public void onActorDeath(net.runelite.api.events.ActorDeath event)");
+		int safe = died.indexOf("isSafeDeathHere()");
+		assertTrue("the death waits on the place", safe >= 0 && safe < died.indexOf("TriggerEvent.death()")
+			&& safe < died.indexOf("noteDeath("));
+		String chat = method("public void onChatMessage(ChatMessage event)");
+		assertTrue("and so does the game's word for it",
+			chat.indexOf("isSafeDeathHere()") >= 0
+				&& chat.indexOf("isSafeDeathHere()") < chat.indexOf("TriggerEvent.chat("));
+	}
 }
