@@ -2304,6 +2304,23 @@ public class FollowerEntity implements CrossingWatch.Listener
 
 	private void planApproach(WorldPoint target, WorldPoint avoid)
 	{
+		// Steps already released that run on past where it begins (the
+		// player's trail, after the game carried them on from it) stop
+		// there: nobody walks past an obstacle's start to turn back to it.
+		if (!route.isEmpty() && (tile.equals(target) || route.contains(target)))
+		{
+			while (!route.isEmpty() && !route.peekLast().equals(target))
+			{
+				route.pollLast();
+				routeRun.pollLast();
+			}
+			if (route.isEmpty())
+			{
+				route.addLast(target);
+				routeRun.addLast(false);
+			}
+			simTile = target;
+		}
 		WorldPoint from = simTile != null ? simTile : tile;
 		java.util.List<WorldPoint> path = target.getPlane() == from.getPlane()
 			? findPath(from, target, true, avoid) : null;

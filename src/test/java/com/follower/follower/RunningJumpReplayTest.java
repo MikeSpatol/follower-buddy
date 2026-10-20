@@ -50,6 +50,8 @@ public class RunningJumpReplayTest
 	private final List<String> trace = new ArrayList<>();
 	/** The real lag at each crossing the follower begins: the player's clock then, less when they began it. */
 	private final List<Long> lags = new ArrayList<>();
+	/** The follower's x, in the real world, each frame a crossing waits for it. */
+	private final java.util.Set<Integer> approachX = new java.util.TreeSet<>();
 
 	private WorldPoint tile(int x, int y, int plane)
 	{
@@ -211,6 +213,53 @@ public class RunningJumpReplayTest
 			trace.stream().anyMatch(line -> line.contains("rebuilt")));
 	}
 
+	/**
+	 * Al Kharid's cable swing (17 Oct 12:36:04-10): run up to 3266,3166, and
+	 * on the very next tick the game carries them three tiles east (1995,
+	 * standing), then fifteen more on the cable (751) with the XP. The
+	 * follower is on the player's trail as it is queued, with steps
+	 * released on past the start towards where they were carried, as the
+	 * trace shows (3265,3168, then 3266,3166, then 3268,3166): it should
+	 * stop at the start, not walk on past it and back.
+	 */
+	private void cableSwing(int fps)
+	{
+		offsetX = 3240;
+		offsetY = 3113;
+		for (int y = 3163; y <= 3169; y++)
+		{
+			for (int x = 3270; x <= 3283; x++)
+			{
+				block(x, y);
+			}
+		}
+		player = new Player(fps, tile(3268, 3172, 3));
+		player.idle(2).xp();
+		player.runTo(3266, 3168).runTo(3266, 3166);
+		standOn(tile(3265, 3168, 3));
+		released(tile(3265, 3167, 3), tile(3266, 3166, 3), tile(3267, 3166, 3), tile(3268, 3166, 3));
+		player.doing(1995).forced(3269, 3166)
+			.doing(751).xp().forcedFast(3284, 3166).idle(1).doing(-1).idle(12);
+		String said = "cable at " + fps + " fps: lags " + lags + ", approached over x " + approachX
+			+ "\n" + String.join("\n", trace);
+		assertEquals(said, 1, done.size());
+		assertEquals(said, tile(3266, 3166, 3), done.get(0).getStart());
+		assertTrue(said, approachX.stream().allMatch(x -> x <= 3266));
+		assertTrue(said, lags.get(0) <= 1500);
+	}
+
+	@Test
+	public void alKharidCableSwingAt58Fps()
+	{
+		cableSwing(58);
+	}
+
+	@Test
+	public void alKharidCableSwingAt100Fps()
+	{
+		cableSwing(100);
+	}
+
 	private void assertBegunFromTheNearSide(int fps, String what,
 		java.util.function.Predicate<WorldPoint> nearSide)
 	{
@@ -326,6 +375,15 @@ public class RunningJumpReplayTest
 			serverX = x - offsetX;
 			serverY = y - offsetY;
 			steps.addLast(new double[]{serverX, serverY, 16, 1});
+			return tick();
+		}
+
+		/** Put a long way over by the game, quickly, standing: a swing. */
+		Player forcedFast(int x, int y)
+		{
+			serverX = x - offsetX;
+			serverY = y - offsetY;
+			steps.addLast(new double[]{serverX, serverY, 64, 1});
 			return tick();
 		}
 
@@ -452,6 +510,10 @@ public class RunningJumpReplayTest
 				set("lastFrameMs", System.currentTimeMillis() - delta);
 				boolean wasPlaying = follower.isPlayingCrossing();
 				follower.updateFrame();
+				if (lags.isEmpty() && !follower.isPlayingCrossing() && follower.getCrossingsQueued() > 0)
+				{
+					approachX.add(follower.getWorldLocation().getX() + offsetX);
+				}
 				if (follower.isPlayingCrossing() && (!wasPlaying || get("playing") != current))
 				{
 					current = (Crossing) get("playing");
@@ -476,6 +538,25 @@ public class RunningJumpReplayTest
 			((Deque<?>) get("serverPath")).clear();
 			((Deque<?>) get("route")).clear();
 			((Deque<?>) get("routeRun")).clear();
+		}
+		catch (ReflectiveOperationException e)
+		{
+			throw new AssertionError(e);
+		}
+	}
+
+	/** Steps already released to the follower's feet, the last its server tile. */
+	@SuppressWarnings("unchecked")
+	private void released(WorldPoint... steps)
+	{
+		try
+		{
+			for (WorldPoint step : steps)
+			{
+				((Deque<WorldPoint>) get("route")).addLast(step);
+				((Deque<Boolean>) get("routeRun")).addLast(true);
+			}
+			set("simTile", steps[steps.length - 1]);
 		}
 		catch (ReflectiveOperationException e)
 		{
