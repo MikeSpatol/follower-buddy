@@ -39,6 +39,12 @@ public class MemoryDialog extends JDialog
 	private final Runnable onForget;
 	private final JPanel list = new JPanel();
 
+	/** The counts with names of their own, in the order the window lists them. */
+	private static final List<String> NAMED_COUNTS = java.util.Arrays.asList(
+		"kills", "kills" + TriggerContext.TODAY, "deaths", "deaths" + TriggerContext.TODAY,
+		"levels", "levels" + TriggerContext.TODAY, "quests", "music", "collections", "graces",
+		"want:kept", "want:missed", "advice:taken", "advice:ignored");
+
 	public MemoryDialog(Runnable onForget)
 	{
 		super((java.awt.Frame) null, "Follower Buddy - Memory", false);
@@ -172,11 +178,28 @@ public class MemoryDialog extends JDialog
 		rows.add(row("Mood right now", c.getMoodBand()));
 
 		rows.add(header("COUNTS"));
-		List<Map.Entry<String, Integer>> tallies =
-			new ArrayList<>(c.getTallies().entrySet());
-		if (tallies.isEmpty())
+		if (c.getTallies().isEmpty())
 		{
 			rows.add(remark("Nothing counted yet."));
+		}
+		// The named counts always show, in one order, each day's under its
+		// lifetime row: only the kills by creature are ever many, and they
+		// alone are capped, so they never push the rest out (qa5 #28).
+		List<Map.Entry<String, Integer>> tallies = new ArrayList<>();
+		for (Map.Entry<String, Integer> tally : c.getTallies().entrySet())
+		{
+			if (!NAMED_COUNTS.contains(tally.getKey()))
+			{
+				tallies.add(tally);
+			}
+		}
+		for (String key : NAMED_COUNTS)
+		{
+			Integer value = c.getTallies().get(key);
+			if (value != null)
+			{
+				rows.add(row(keyLabel(key), Integer.toString(value)));
+			}
 		}
 		tallies.sort(Map.Entry.<String, Integer>comparingByValue().reversed());
 		for (Map.Entry<String, Integer> tally : tallies.subList(0, Math.min(10, tallies.size())))

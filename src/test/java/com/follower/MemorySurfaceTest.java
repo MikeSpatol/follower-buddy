@@ -245,6 +245,37 @@ public class MemorySurfaceTest
 	}
 
 	@Test
+	public void theNamedCountsShowHoweverManyCreaturesWereKilled()
+	{
+		// QA pass 5, #28: every kind of creature competed with the named
+		// counts for ten rows, and the marks of grace fell off the end.
+		TriggerContext context = new TriggerContext(new FakeGame().client);
+		for (int kind = 0; kind < 12; kind++)
+		{
+			for (int n = 0; n < 50 + kind; n++)
+			{
+				context.tally("kill:creature" + (char) ('a' + kind));
+			}
+		}
+		for (int n = 0; n < 600; n++)
+		{
+			context.tallyBoth("kills");
+		}
+		context.tallyBoth("levels");
+		context.tally("graces");
+		context.tally("advice:taken");
+
+		String surface = flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap()));
+		assertTrue(surface, surface.contains("Kills: 600\nKills today: 600\nLevels gained: 1\nLevels gained today: 1\n"));
+		assertTrue(surface, surface.contains("Marks of grace"));
+		assertTrue(surface, surface.contains("Advice taken: 1"));
+		assertTrue("the kills by creature, ten of them, most first: " + surface,
+			surface.contains("Creaturel kills: 61\n"));
+		assertFalse(surface, surface.contains("Creaturea kills"));
+		assertTrue(surface, surface.contains("...and 2 more."));
+	}
+
+	@Test
 	public void aStrangerHasNothingToShow()
 	{
 		TriggerContext context = new TriggerContext(new FakeGame().client);
