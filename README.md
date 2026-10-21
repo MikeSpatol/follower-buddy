@@ -267,4 +267,4 @@ Many of the weapon stances and attack animations come from Weapon Animation
 Replacer by geheur, used under its BSD 2-Clause License. See
 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
 
-The quest stages the follower watches for were checked against Quest Helper's data.
+The quest stages and areas the follower watches for were checked against Quest Helper's data.
