@@ -75,6 +75,43 @@ public class CatchUpPaceTest
 		}
 	}
 
+	/**
+	 * Catching up on a long run. QA5: at twice a run, the surge closed seven
+	 * tiles to two in under a second every fourteen seconds, and read as a
+	 * lunge. Half as fast again, and still back to its own run after.
+	 */
+	@Test
+	public void aRunsCatchUpIsHalfAsFastAgainNotTwice() throws Exception
+	{
+		WorldPoint start = new WorldPoint(50, 50, 0);
+		set("tile", start);
+		set("fineWX", start.getX() * 128L + 64);
+		set("fineWY", start.getY() * 128L + 64);
+		Deque<WorldPoint> route = deque("route");
+		@SuppressWarnings("unchecked")
+		Deque<Boolean> run = (Deque<Boolean>) get("routeRun");
+		for (int x = 51; x <= 60; x++)
+		{
+			route.add(new WorldPoint(x, 50, 0));
+			run.add(true);
+		}
+		set("yaw", 1536);
+		set("dstYaw", 1536);
+
+		List<Integer> speeds = new ArrayList<>();
+		Method move = FollowerEntity.class.getDeclaredMethod("moveContinuous", double.class);
+		move.setAccessible(true);
+		while (!route.isEmpty())
+		{
+			move.invoke(follower, 1.0);
+			speeds.add((Integer) get("lastMoveSpeed"));
+		}
+		assertTrue("caught up a little faster than a run: " + speeds, speeds.contains(12));
+		assertTrue("never twice a run: " + speeds, speeds.stream().allMatch(speed -> speed <= 12));
+		assertTrue("and its own run once caught up: " + speeds,
+			speeds.subList(speeds.lastIndexOf(12), speeds.size()).contains(8));
+	}
+
 	@SuppressWarnings("unchecked")
 	private Deque<WorldPoint> deque(String name) throws Exception
 	{

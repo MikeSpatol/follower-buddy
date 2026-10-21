@@ -3685,7 +3685,9 @@ public class FollowerEntity implements CrossingWatch.Listener
 			Boolean run = routeRun.peekFirst();
 			if (run != null && run)
 			{
-				speed <<= 1;
+				// A run's catch-up at half as fast again: at twice a run, a
+				// long straight run read as a lunge every fourteen seconds.
+				speed = burst ? 12 : speed << 1;
 			}
 			lastMoveSpeed = speed;
 
