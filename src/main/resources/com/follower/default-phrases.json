@@ -6,6 +6,10 @@
     "kills": "the local menace",
     "levels": "the swot|the grinder"
   },
+  "places": {
+    "11595": "the essence mine",
+    "12437": "the Wizards' Tower"
+  },
   "rules": [
     {
       "id": "boss-spawn-inferno-wave",
@@ -9172,7 +9176,10 @@
     {
       "id": "death-moment",
       "occasion": true,
-      "markHere": "it went wrong for you",
+      "markHere": "you died to the {foe}",
+      "markHereOr": [
+        "you died"
+      ],
       "hushMs": 2000,
       "note": "The moment you die. Highest priority there is - nothing talks over this.",
       "about": "The moment you die.",
@@ -9232,7 +9239,7 @@
     {
       "id": "loot-big",
       "occasion": true,
-      "markHere": "you got that drop",
+      "markHere": "the {item} dropped",
       "note": "A drop worth a million or more. The body's reaction is the moments': walked over to and written up on the spot, then a look up and a nod. In character a great thing is written down, not cheered, so the cheer this used to carry has gone.",
       "about": "A drop worth a million or more.",
       "group": "reactions",
@@ -9844,7 +9851,7 @@
     {
       "id": "kill-boss-celebrate",
       "occasion": true,
-      "markHere": "you put that thing down",
+      "markHere": "you put the {npc} down",
       "note": "A proper celebration for a boss kill: cheer, dance, then a jump for joy (862/866/2109, 7.4s in total). The 6-8 tick delay lets the fight formally end and the spectating ward wind down first, so the celebration follows the fight instead of colliding with it - the ward's own release is 4 ticks, which this clears. It was 13-16, which cleared the ward three times over and left an eight second hole between the kill and the cheer. namedBoss: true keeps it for the bosses named in the boss rules: play test, 14 Oct, it had worn out on every level-100 Slayer demon of a task.",
       "about": "A proper celebration when you kill a named boss: a cheer, a dance and a jump for joy.",
       "group": "boss",
@@ -11226,7 +11233,7 @@
     },
     {
       "id": "record-hit",
-      "markHere": "you hit harder than you ever had",
+      "markHere": "you hit a {value}, your highest yet",
       "note": "A new biggest hit. {value} is the new mark and {previous} the one it beat, which is what makes it land - a record without the old number is just a number. The first hit after an install seeds the record silently and says nothing, so this cannot fire on day one.",
       "about": "Your biggest hit yet. {value} is the new best and {previous} the one it beat. Never on the first day.",
       "group": "combat",
@@ -12450,7 +12457,7 @@
         ]
       },
       "say": [
-        "That's a {memoryWho}. Remember {memory}?",
+        "A {memoryWho}. Remember {memory}?",
         "A {memoryWho}. I remember {memory}{memoryWhere}.",
         "Mind the {memoryWho}. My page on it isn't a kind one.",
         "There's a {memoryWho}. I saw {memory}.",

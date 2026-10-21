@@ -48,10 +48,7 @@ public class MemoryLineLengthTest
 	 * memory wording (memories/text.json), whose shorter forms are what a
 	 * line falls back to. Kept exact, as above.
 	 */
-	private static final List<String> AWAITING_LONGEST = List.of(
-		// Text QA5 #66: a boss is "the" one, two characters longer than "a".
-		// Said, a line over the limit gives way to the rule's next that fits.
-		"recall-foe: That's a {memoryWho}. Remember {memory}?");
+	private static final List<String> AWAITING_LONGEST = java.util.Collections.emptyList();
 
 	private GameFont overheadFont() throws IOException
 	{

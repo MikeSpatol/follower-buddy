@@ -391,4 +391,21 @@ public class SpecificMemoryTest
 		h.dispatch(TriggerEvent.death());
 		assertEquals("your death in the Abyss", h.engine.getContext().getIncidentPhrase());
 	}
+
+	@Test
+	public void thePlacesNoRuleStandsInAreNamedInTheFile() throws IOException
+	{
+		// Speech QA5 #23: the essence mine and the Wizards' Tower basement,
+		// where no area rule stands, filed their moments with no place.
+		Harness h = new Harness(folder.newFolder().toPath());
+		Map<Integer, String> names = h.loader.getRegionNames();
+		assertEquals("the essence mine", names.get(11595));
+		assertEquals("the Wizards' Tower", names.get(12437));
+
+		h.engine.getContext().setRegionNames(names);
+		h.game.at(3104, 9571, 0);
+		h.gameTicks(1);
+		h.dispatch(TriggerEvent.death());
+		assertEquals("your death in the Wizards' Tower", h.engine.getContext().getIncidentPhrase());
+	}
 }

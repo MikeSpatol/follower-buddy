@@ -17,8 +17,8 @@ import static org.junit.Assert.assertTrue;
  * "Same spot. This is where it went wrong for you." and "You may not
  * remember. This is where it went wrong for you." told the player nothing.
  *
- * <p>The forms here are written to try the machinery; the shipped rules keep
- * their words until new ones are approved, and until then say nothing.
+ * <p>The forms here are written to try the machinery; the last test holds
+ * the shipped rules to the same.
  */
 public class PlaceMemoryNamesTheMomentTest
 {
@@ -96,5 +96,45 @@ public class PlaceMemoryNamesTheMomentTest
 		{
 			assertTrue(said.text, said.text.length() <= SpeechEngine.OVERHEAD_MAX_CHARS);
 		}
+	}
+
+	/**
+	 * The shipped marks name the moment, so place-remembers, quiet while the
+	 * old words were all it had, has something to say again.
+	 */
+	@Test
+	public void theShippedMarksAreOnesThePlaceSays() throws IOException
+	{
+		Harness h = new Harness(folder.newFolder().toPath());
+		h.game.at(3090, 3490, 0);
+		h.gameTicks(1);
+		int marks = 0;
+		for (SpeechRule rule : h.loader.getRules())
+		{
+			if (rule.markHere == null)
+			{
+				continue;
+			}
+			marks++;
+			assertFalse(rule.id, TriggerContext.isVague(rule.markHere));
+			for (String form : rule.markHereOr == null ? Collections.<String>emptyList() : rule.markHereOr)
+			{
+				assertFalse(rule.id, TriggerContext.isVague(form));
+			}
+		}
+		assertTrue("the marking rules were found", marks >= 4);
+
+		NPC giant = h.game.spawnNpc(2098, "Hill Giant", 28);
+		h.game.fighting(giant);
+		h.gameTicks(3);
+		h.dispatch(TriggerEvent.death());
+		assertEquals("you died to the Hill Giant", held(h));
+
+		TriggerContext c = h.engine.getContext();
+		h.game.at(3222, 3218, 0);
+		h.gameTicks(TriggerContext.MEMORY_MIN_AGE_TICKS);
+		h.game.at(3090, 3490, 0);
+		h.gameTicks(2);
+		assertTrue("back after twenty minutes, the place holds it", c.hasPlaceMemory());
 	}
 }

@@ -144,8 +144,8 @@ public class RuleLoader
 	 *
 	 * <p>Rules the editor deleted are recorded in the file's "removed" list and
 	 * stay deleted. The file as it stood is kept beside the merged one as
-	 * phrases.json.bak, and new nickname hooks arrive as before - existing keys
-	 * are the user's to keep.
+	 * phrases.json.bak, and new nickname hooks arrive as before, as do new
+	 * place names - existing keys are the user's to keep.
 	 */
 	private void mergeNewDefaults()
 	{
@@ -250,14 +250,32 @@ public class RuleLoader
 				ours.add("nicknames", held);
 			}
 
-			if (added > 0 || updated > 0 || nicknamesAdded > 0)
+			int placesAdded = 0;
+			if (bundled.has("places") && bundled.get("places").isJsonObject())
+			{
+				com.google.gson.JsonObject held =
+					ours.has("places") && ours.get("places").isJsonObject()
+						? ours.getAsJsonObject("places") : new com.google.gson.JsonObject();
+				for (Map.Entry<String, com.google.gson.JsonElement> entry
+					: bundled.getAsJsonObject("places").entrySet())
+				{
+					if (!held.has(entry.getKey()))
+					{
+						held.add(entry.getKey(), entry.getValue());
+						placesAdded++;
+					}
+				}
+				ours.add("places", held);
+			}
+
+			if (added > 0 || updated > 0 || nicknamesAdded > 0 || placesAdded > 0)
 			{
 				Files.copy(file, file.resolveSibling(file.getFileName() + ".bak"),
 					java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 				Files.write(file,
 					(pretty.toJson(ours) + "\n").getBytes(StandardCharsets.UTF_8));
-				log.info("Merged {} new rule(s), {} changed rule(s) and {} nickname(s) into {}",
-					added, updated, nicknamesAdded, file);
+				log.info("Merged {} new rule(s), {} changed rule(s), {} nickname(s) and {} place name(s) into {}",
+					added, updated, nicknamesAdded, placesAdded, file);
 			}
 
 			// Written whether or not anything moved, and last, so a merge that
@@ -586,6 +604,8 @@ public class RuleLoader
 			valid.sort((a, b) -> Integer.compare(b.priority, a.priority));
 			nicknames = parsed.nicknames == null
 				? Collections.<String, String>emptyMap() : parsed.nicknames;
+			filePlaces = parsed.places == null
+				? Collections.<Integer, String>emptyMap() : parsed.places;
 			apply(valid, problems, valid.size() + " rules");
 		}
 		catch (IOException e)
@@ -729,6 +749,9 @@ public class RuleLoader
 
 	private Map<Integer, String> regionNames = Collections.emptyMap();
 
+	/** The file's own place names, for regions no area rule names: its "places". */
+	private Map<Integer, String> filePlaces = Collections.emptyMap();
+
 	private static void collectRegionNames(SpeechRule rule, Map<Integer, String> into)
 	{
 		if (rule.when == null || rule.when.regions == null
@@ -833,6 +856,15 @@ public class RuleLoader
 			if ("area".equalsIgnoreCase(rule.group))
 			{
 				collectTitledRegionNames(rule, places);
+			}
+		}
+		// And the places no rule stands in, named in the file itself: the
+		// essence mine, the Wizards' Tower basement (speech QA5 #23).
+		for (Map.Entry<Integer, String> place : filePlaces.entrySet())
+		{
+			if (place.getKey() != null && place.getValue() != null)
+			{
+				places.putIfAbsent(place.getKey(), place.getValue());
 			}
 		}
 		bossNames = bosses;

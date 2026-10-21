@@ -1341,7 +1341,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > The moment you die. Highest priority there is - nothing talks over this.
 
 - **when:** on your death
-- **does:** mood -25; occasion (never held back); marks this place: 'it went wrong for you'; holds the floor 2s
+- **does:** mood -25; occasion (never held back); marks this place: 'you died to the {foe}'; holds the floor 2s
 - **pacing:** priority 90, cooldown 1m
 
 - No! Get up!
@@ -1378,7 +1378,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > A drop worth a million or more. The body's reaction is the moments': walked over to and written up on the spot, then a look up and a nod. In character a great thing is written down, not cheered, so the cheer this used to carry has gone.
 
 - **when:** loot worth 1000000+
-- **does:** mood +20; occasion (never held back); marks this place: 'you got that drop'
+- **does:** mood +20; occasion (never held back); marks this place: 'the {item} dropped'
 - **pacing:** priority 80, cooldown 1m, delay 2 ticks
 
 - The {item}! LOOK at it!
@@ -2276,7 +2276,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > A new biggest hit. {value} is the new mark and {previous} the one it beat, which is what makes it land - a record without the old number is just a number. The first hit after an install seeds the record silently and says nothing, so this cannot fire on day one.
 
 - **when:** a personal best (hit) AND known 1+ days
-- **does:** mood +12; marks this place: 'you hit harder than you ever had'; animation 862
+- **does:** mood +12; marks this place: 'you hit a {value}, your highest yet'; animation 862
 - **pacing:** priority 68, cooldown 20s, overhead
 
 - {value}! Hardest I've ever seen you hit, and I was there for the {previous}.
@@ -2586,7 +2586,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** memoryfoenearby AND a 50% roll
 - **pacing:** priority 45, cooldown 20m, delay 2-4 ticks, overhead
 
-- That's a {memoryWho}. Remember {memory}?
+- A {memoryWho}. Remember {memory}?
 - A {memoryWho}. I remember {memory}{memoryWhere}.
 - Mind the {memoryWho}. My page on it isn't a kind one.
 - There's a {memoryWho}. I saw {memory}.
@@ -6211,7 +6211,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > A proper celebration for a boss kill: cheer, dance, then a jump for joy (862/866/2109, 7.4s in total). The 6-8 tick delay lets the fight formally end and the spectating ward wind down first, so the celebration follows the fight instead of colliding with it - the ward's own release is 4 ticks, which this clears. It was 13-16, which cleared the ward three times over and left an eight second hole between the kill and the cheer. namedBoss: true keeps it for the bosses named in the boss rules: play test, 14 Oct, it had worn out on every level-100 Slayer demon of a task.
 
 - **when:** a kill
-- **does:** mood +18; occasion (never held back); marks this place: 'you put that thing down'; animation chain; holds still
+- **does:** mood +18; occasion (never held back); marks this place: 'you put the {npc} down'; animation chain; holds still
 - **pacing:** priority 70, cooldown 30s, delay 6-8 ticks, overhead
 
 - YES! You did it!

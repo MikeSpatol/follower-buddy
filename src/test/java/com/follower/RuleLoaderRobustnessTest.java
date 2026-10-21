@@ -72,6 +72,23 @@ public class RuleLoaderRobustnessTest
 	}
 
 	@Test
+	public void anOldFileGainsThePlaceNamesItLacksAndKeepsItsOwn() throws IOException
+	{
+		Path dir = dir();
+		String old = "{\"version\": 1, \"places\": {\"12437\": \"Sedridor's cellar\"}, \"rules\": ["
+			+ "{\"id\": \"my-rule\", \"group\": \"t\","
+			+ " \"when\": {\"type\": \"always\"}, \"say\": [\"mine\"]}"
+			+ "]}";
+		Files.write(dir.resolve(RuleLoader.FILE_NAME), old.getBytes(StandardCharsets.UTF_8));
+
+		RuleLoader loader = new RuleLoader(new Gson());
+		loader.initialise(dir, true);
+
+		assertEquals("a bundled place name arrived", "the essence mine", loader.getRegionNames().get(11595));
+		assertEquals("the player's own name stayed", "Sedridor's cellar", loader.getRegionNames().get(12437));
+	}
+
+	@Test
 	public void anOldFileGainsNewlyBundledRulesWithoutLosingItsEdits() throws IOException
 	{
 		// The upgrade gap: the starter file is written only when missing, so

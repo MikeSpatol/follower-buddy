@@ -24,5 +24,12 @@ public class RuleFile
 	 */
 	public java.util.Map<String, String> nicknames;
 
+	/**
+	 * Place names by region id, for the regions no area rule names:
+	 * {@code {"11595": "the essence mine"}}. Said by {where} and {memoryWhere}
+	 * as the Locations rules' names are.
+	 */
+	public java.util.Map<Integer, String> places;
+
 	public List<SpeechRule> rules = new ArrayList<>();
 }
