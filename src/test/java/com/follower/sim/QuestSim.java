@@ -170,7 +170,7 @@ public final class QuestSim
 			heard.add(u.text);
 			heardIds.add(id(u.rule));
 			// FollowerPlugin.speakNow: the scroll's line, naming its quest, is that quest's page news.
-			if ("quest-complete".equals(id(u.rule)))
+			if ("quest-complete".equals(id(u.rule)) || "quest-complete-parked".equals(id(u.rule)))
 			{
 				pages.removeIf(page -> "quest".equals(page.event.getName()) && u.text.contains(page.name));
 			}

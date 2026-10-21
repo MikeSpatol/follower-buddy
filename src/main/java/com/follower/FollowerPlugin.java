@@ -12526,7 +12526,8 @@ public class FollowerPlugin extends Plugin
 		// The scroll's line, naming its quest, is that quest's page news
 		// already. Text QA5 #63: "Priest in Peril, done and witnessed." then
 		// "That's Priest in Peril in the book." The quest's other pages keep theirs.
-		if (!text.isEmpty() && rule != null && "quest-complete".equals(rule.id))
+		if (!text.isEmpty() && rule != null
+			&& ("quest-complete".equals(rule.id) || "quest-complete-parked".equals(rule.id)))
 		{
 			pageNews.removeIf(page -> "quest".equals(page.event.getName())
 				&& text.contains(page.event.getPlaceholders().get("page")));

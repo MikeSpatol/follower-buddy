@@ -187,7 +187,8 @@ public class PageNewsTest
 		}
 		assertTrue("the scroll line named the quest in some runs", named.contains(true));
 		assertTrue("the plugin lets the quest's own page news go as QuestSim does", source().contains(
-			"if (!text.isEmpty() && rule != null && \"quest-complete\".equals(rule.id))\n"
+			"if (!text.isEmpty() && rule != null\n"
+				+ "\t\t\t&& (\"quest-complete\".equals(rule.id) || \"quest-complete-parked\".equals(rule.id)))\n"
 				+ "\t\t{\n"
 				+ "\t\t\tpageNews.removeIf(page -> \"quest\".equals(page.event.getName())\n"
 				+ "\t\t\t\t&& text.contains(page.event.getPlaceholders().get(\"page\")));"));
