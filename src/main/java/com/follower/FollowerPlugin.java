@@ -884,6 +884,11 @@ public class FollowerPlugin extends Plugin
 		crossingWatch.setTrace(agilityTrace::event);
 		follower.setAgilityTrace(agilityTrace::event);
 		follower.setOnAgilitySnap(crossingWatch::forgetMissed);
+		// The trace's line on a stall names whose stay held the follower.
+		follower.setStayOwner(() -> isStaying() ? "the player's Stay" : skilling.holdsTheFeet() ? "skilling"
+			: moments.holdsTheFeet() ? "a moment" : errands.isBusy() ? "an errand"
+			: spectate.holdsTheFeet() ? "spectating" : flourish.isActive() ? "a flourish"
+			: sceneHolds() ? "a scene" : "unknown");
 		// Later in the frame, and only if still out: a despawn lets a crossing go too.
 		follower.setOnCrossingHands(() -> clientThread.invokeLater(() ->
 		{

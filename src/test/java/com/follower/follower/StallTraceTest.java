@@ -52,7 +52,7 @@ public class StallTraceTest
 	{
 		follower.stayHere();
 		frames(30);
-		assertEquals(List.of("follower: still 10 tiles from the player at 60,50,0 for 2.0s: a stay at 50,50,0"),
+		assertEquals(List.of("follower: still 10 tiles from the player at 60,50,0 for 2.0s: a stay at 50,50,0 (unknown)"),
 			trace);
 	}
 

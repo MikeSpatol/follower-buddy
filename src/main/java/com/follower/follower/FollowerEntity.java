@@ -4161,6 +4161,14 @@ public class FollowerEntity implements CrossingWatch.Listener
 	private long stalledMs;
 	static final long STALL_NOTE_MS = 2000;
 
+	/** Whose stay holds the follower, in a word or two, for that line. */
+	private java.util.function.Supplier<String> stayOwner = () -> "unknown";
+
+	public void setStayOwner(java.util.function.Supplier<String> owner)
+	{
+		stayOwner = owner == null ? () -> "unknown" : owner;
+	}
+
 	/**
 	 * QA5: the follower sometimes stood still 5 to 24 tiles from the player
 	 * until the leash snapped it over, and nothing on record said why. Two
@@ -4177,7 +4185,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		String why;
 		if (stayTile != null)
 		{
-			why = "a stay at " + CrossingWatch.describe(stayTile);
+			why = "a stay at " + CrossingWatch.describe(stayTile) + " (" + stayOwner.get() + ")";
 		}
 		else if (goalTile != null)
 		{
