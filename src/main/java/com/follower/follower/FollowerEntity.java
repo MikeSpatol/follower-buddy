@@ -3355,6 +3355,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		boolean moving = !route.isEmpty()
 			|| fineWX != tile.getX() * 128L + 64 || fineWY != tile.getY() * 128L + 64;
 		onTheMove = moving;
+		noteAStall(moving, playerTile, deltaMs);
 
 		// Movement always wins over an emote - a dancing follower gliding along
 		// behind you looks broken, and the real game drops emotes on movement too.
@@ -4153,6 +4154,47 @@ public class FollowerEntity implements CrossingWatch.Listener
 	public void setDrawn(java.util.function.Predicate<net.runelite.api.Actor> drawn)
 	{
 		this.drawn = drawn == null ? actor -> true : drawn;
+	}
+
+	/** How long the follower has stood still well out of a follow's reach of the player. */
+	private long stalledMs;
+	static final long STALL_NOTE_MS = 2000;
+
+	/**
+	 * QA5: the follower sometimes stood still 5 to 24 tiles from the player
+	 * until the leash snapped it over, and nothing on record said why. Two
+	 * seconds of that, once, and the trace says what held it.
+	 */
+	private void noteAStall(boolean moving, WorldPoint playerTile, long deltaMs)
+	{
+		int gap = tile.getPlane() == playerTile.getPlane() ? tile.distanceTo(playerTile) : 0;
+		stalledMs = !moving && gap > followDistance + 3 ? stalledMs + deltaMs : 0;
+		if (stalledMs < STALL_NOTE_MS || stalledMs - deltaMs >= STALL_NOTE_MS)
+		{
+			return;
+		}
+		String why;
+		if (stayTile != null)
+		{
+			why = "a stay at " + CrossingWatch.describe(stayTile);
+		}
+		else if (goalTile != null)
+		{
+			why = "a goal at " + CrossingWatch.describe(goalTile);
+		}
+		else if (playerFollowTile == null || simTile == null)
+		{
+			why = "no follow tile";
+		}
+		else
+		{
+			java.util.List<WorldPoint> path = playerFollowTile.getPlane() != simTile.getPlane() ? null
+				: findPath(simTile, playerFollowTile, true, playerFollowTile.equals(playerTile) ? playerTile : null);
+			why = (path == null ? "no route to " : path.isEmpty() ? "as near as it gets to "
+				: "a route of " + path.size() + " not walked to ") + CrossingWatch.describe(playerFollowTile);
+		}
+		agilityTrace.accept("follower: still " + gap + " tiles from the player at "
+			+ CrossingWatch.describe(playerTile) + " for " + CrossingWatch.seconds(stalledMs) + ": " + why);
 	}
 
 	/**
