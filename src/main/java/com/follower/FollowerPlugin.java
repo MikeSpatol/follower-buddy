@@ -946,7 +946,11 @@ public class FollowerPlugin extends Plugin
 				|| speechEngine.getContext().isInCombat() || inCutscene() || windowOverTheView(client)
 				|| filming,
 			() -> speechEngine.getContext().getIdleTicks(),
-			() -> speechEngine.getContext().getRegionId(),
+			// In an instance, the region it is a copy of, which is what a
+			// plate names. Quests QA5 #14: the essence mine is an instance,
+			// and its own region id matched no plate.
+			() -> client.getLocalPlayer() == null || client.getLocalPlayer().getLocalLocation() == null ? -1
+				: WorldPoint.fromLocalInstance(client, client.getLocalPlayer().getLocalLocation()).getRegionID(),
 			() -> client.getLocalPlayer() == null ? null : client.getLocalPlayer().getWorldLocation(),
 			() -> client.getLocalPlayer() == null ? -1 : client.getLocalPlayer().getAnimation(),
 			// Through the engine, so the mute and the output setting hold.

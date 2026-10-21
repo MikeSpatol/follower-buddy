@@ -3607,10 +3607,10 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-varrock-after-children-of-the-sun`
 
-> Callback: stands in for area-varrock on about 25% of arrivals once Children of the Sun is done, at most every 40 minutes; the base's lines play the rest of the time.
+> Callback: stands in for area-varrock on about 25% of arrivals once Children of the Sun is done, at most every three hours, as the quest-person callbacks (QA5 #17: six times on 18 Oct at 40 minutes, the bag line four); the base's lines play the rest of the time.
 
 - **when:** entering region 12597, 12853, 12854 AND a 25% roll AND the follower saw CHILDREN_OF_THE_SUN done
-- **pacing:** priority 41, cooldown 40m, delay 2 ticks, overhead
+- **pacing:** priority 41, cooldown 3h, delay 2 ticks, overhead
 
 - Varrock. I still give every guard's uniform a second look.
 - Any guard here carrying a large bag gets watched. I learned that much.
@@ -6453,9 +6453,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `quest-traiborn`
 
-> Wizard Traiborn of the Wizards Tower.
+> Wizard Traiborn of the Wizards Tower. Stands aside once the follower has seen Temple of the Eye finished, which answers the thingummywut; fun-traiborn-after-temple-of-the-eye carries him after (QA5 #60).
 
-- **when:** Wizard Traiborn within 5 tiles, in sight
+- **when:** Wizard Traiborn within 5 tiles, in sight AND NOT (the follower saw TEMPLE_OF_THE_EYE done)
 - **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
 
 - Traiborn hasn't a clue where anything is, and he's lovely company.
@@ -6824,9 +6824,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `quest-mage-of-zamorak`
 
-> The Mage of Zamorak: in the Wilderness north of Edgeville (2580, 2581) and in the Varrock chaos temple (2582, from varp 492 = 1). Stands aside once the follower has seen Enter the Abyss finished; its callbacks carry him after. The Wanted! cutscene copies (4936-4938) share the name.
+> The Mage of Zamorak: in the Wilderness north of Edgeville (2580, 2581) and in the Varrock chaos temple (2582, from varp 492 = 1). Stands aside once the follower has seen Enter the Abyss finished; its callbacks carry him after. The Wanted! cutscene copies (4936-4938) share the name, and so does the Ourania Cave's mage (7425, RC_ZMI_CHAOSMONK, region 12119), so the rule keeps to the two places he stands: 12343 (the Wilderness mine, 3102,3557) and 12852 (the Varrock chaos temple, 3259,3383), both as said on 19 Oct (QA5 #15). Not on the quest's errand (varp 492 1-3), where its moments speak for him: at 1 the Wilderness start crowded, the introduction after the moment about him (QA5 #57), and held to 2 it crowded the orb moment and Aubury in Varrock instead. Met before he is spoken to, he is introduced then.
 
-- **when:** Mage of Zamorak within 5 tiles, in sight AND NOT (the follower saw ENTER_THE_ABYSS done)
+- **when:** Mage of Zamorak within 5 tiles, in sight AND in region 12343, 12852 AND NOT (questvar) AND NOT (the follower saw ENTER_THE_ABYSS done)
 - **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
 
 - He sells runes where the guards don't go. That's most of his sales pitch.
@@ -6923,9 +6923,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `quest-burntof`
 
-> Burntof (10659, 10660; multinpcs 10648 in the Rising Sun Inn, 10649 at the door, 10701 in Nardah). Lines hold at every stage, sober or not.
+> Burntof (10659, 10660; multinpcs 10648 in the Rising Sun Inn, 10649 at the door, 10701 in Nardah). Lines hold at every stage, sober or not. Stands aside once the follower has seen Below Ice Mountain finished, as fun-burntof-after-below-ice-mountain has him sober in Nardah (QA5 #60).
 
-- **when:** Burntof within 5 tiles, in sight
+- **when:** Burntof within 5 tiles, in sight AND NOT (the follower saw BELOW_ICE_MOUNTAIN done)
 - **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
 
 - Burntof. A dwarf, a drink, and fewer fingers than he started with.
@@ -6945,9 +6945,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `quest-ancient-guardian`
 
-> The Ancient Guardian (10654) wakes in the entrance hall under Ice Mountain at Below Ice Mountain 35; asleep it is 'Rubble' (10666). Desert Treasure II's Ancient Guardian (12336, 12337) is in the Ancient Vault in the desert, so the rule keeps to the ruins' regions. RuneLite 1.13.1's Discord plugin (DUNGEON_RUINS_OF_CAMDOZAAL: 11609-11611, 11865-11867, 12121-12123); the world map labels Ramarno and the Camdozaal Vault in 11866, the Offering Altar and the Camdozaal Mines in 11610, and the Golem Workshop in 12122; the entrance hall (the four structural pillars, 2947-2958 by 5771-5778, and Willow's bag, 2950,5769, on the OSRS Wiki) is in 11866.
+> The Ancient Guardian (10654) wakes in the entrance hall under Ice Mountain at Below Ice Mountain 35; asleep it is 'Rubble' (10666). Desert Treasure II's Ancient Guardian (12336, 12337) is in the Ancient Vault in the desert, so the rule keeps to Below Ice Mountain 30-40 (varbit 12063; Quest Helper: 30 re-enter the dungeon, 35 the fight, 40 the cutscene), which comes long before Desert Treasure II. Not the ruins' regions: the fight may be instanced, and an instance reports its own region (QA5 #55). RuneLite 1.13.1's Discord plugin (DUNGEON_RUINS_OF_CAMDOZAAL: 11609-11611, 11865-11867, 12121-12123); the world map labels Ramarno and the Camdozaal Vault in 11866, the Offering Altar and the Camdozaal Mines in 11610, and the Golem Workshop in 12122; the entrance hall (the four structural pillars, 2947-2958 by 5771-5778, and Willow's bag, 2950,5769, on the OSRS Wiki) is in 11866.
 
-- **when:** Ancient Guardian within 5 tiles, in sight AND in region 11609, 11610, 11611, 11865, 11866, 11867, 12121, 12122, 12123
+- **when:** Ancient Guardian within 5 tiles, in sight AND questvar
 - **pacing:** priority 35, cooldown 1h, delay 2 ticks, overhead
 
 - It's made of the same stone as the walls. I'd been leaning on them.
@@ -6967,9 +6967,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `quest-complete`
 
-> The quest reward scroll - the one moment the game hands the player literal paperwork, witnessed by a professional. Tally 'quests' counts them.
+> The quest reward scroll - the one moment the game hands the player literal paperwork, witnessed by a professional. Tally 'quests' counts them. Not from a follower parked on Stay: it did not see the quest finish, and the book files it as not seen (QA5 #41).
 
-- **when:** questcomplete
+- **when:** questcomplete AND NOT (on a player-commanded Stay)
 - **does:** mood +8; occasion (never held back); animation 858
 - **pacing:** priority 85, cooldown 1m, delay 3 ticks
 
@@ -6980,9 +6980,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `quest-milestone-10`
 
-> The tenth quest completed since the follower arrived. Exact bracket, once.
+> The tenth quest completed since the follower arrived. Exact bracket, once. Not from a follower parked on Stay, as quest-complete (QA5 #41).
 
-- **when:** questcomplete AND quests count at 10+
+- **when:** questcomplete AND quests count at 10+ AND NOT (on a player-commanded Stay)
 - **does:** occasion (never held back)
 - **pacing:** priority 86, cooldown 1m, delay 5 ticks
 
@@ -7030,9 +7030,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-aubury-after-rune-mysteries`
 
-> Callback: same trigger as quest-aubury plus Rune Mysteries done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins, once its own cooldown, charged when the callback was said, has run out. Not a hand-in NPC for Rune Mysteries, so it cannot rise on the quest finishing.
+> Callback: same trigger as quest-aubury plus Rune Mysteries done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins, once its own cooldown, charged when the callback was said, has run out. Not a hand-in NPC for Rune Mysteries, so it cannot rise on the quest finishing. Not on Enter the Abyss's errand (varp 492 1-3), which passes his shop: the orb moment calls back to Rune Mysteries itself, and the plain quest-aubury covers him (QA5 #52, 19 Oct). From 1, not 2: met on the way to the mage, the line was held through his box and said after the orb moment all the same.
 
-- **when:** Aubury within 5 tiles, in sight AND the follower saw RUNE_MYSTERIES done AND NOT (dialogueopen)
+- **when:** Aubury within 5 tiles, in sight AND the follower saw RUNE_MYSTERIES done AND NOT (questvar) AND NOT (dialogueopen)
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
 
 - Aubury. He still checks our hands for packages when we walk in.
@@ -7090,9 +7090,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-mage-of-zamorak-after-enter-the-abyss`
 
-> Callback: carries the Mage of Zamorak once quest-mage-of-zamorak stands aside, from the day after the follower saw Enter the Abyss finished. Cooldown three times the base's. Enter the Abyss ends at him, so the day's wait keeps it from rising then.
+> Callback: carries the Mage of Zamorak once quest-mage-of-zamorak stands aside, from the day after the follower saw Enter the Abyss finished. Cooldown three times the base's. Enter the Abyss ends at him, so the day's wait keeps it from rising then. Kept to his two places, 12343 and 12852, as the base is: the Ourania Cave's mage (7425) shares the name (QA5 #15). Not at Temple of the Eye 1-15, on the way to the Herbert moment, which calls back to Enter the Abyss itself (QA5 #52).
 
-- **when:** Mage of Zamorak within 5 tiles, in sight AND the follower saw ENTER_THE_ABYSS done AND NOT (dialogueopen)
+- **when:** Mage of Zamorak within 5 tiles, in sight AND in region 12343, 12852 AND the follower saw ENTER_THE_ABYSS done AND NOT (questvar) AND NOT (dialogueopen)
 - **pacing:** priority 36, cooldown 3h, delay 2 ticks, overhead
 
 - He has Sedridor's spell now, thanks to us. I don't mention it in the tower.
@@ -7100,9 +7100,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `fun-mage-of-zamorak-after-temple-of-the-eye`
 
-> Callback: the Mage of Zamorak once the follower has seen Temple of the Eye finished, one point over the Enter the Abyss callback; his name, Herbert, comes out at Temple of the Eye 15. Not at the quest's end (Sedridor), so no day's wait.
+> Callback: the Mage of Zamorak once the follower has seen Temple of the Eye finished, one point over the Enter the Abyss callback; his name, Herbert, comes out at Temple of the Eye 15. Not at the quest's end (Sedridor), so no day's wait. Kept to his two places, 12343 and 12852, as the base is: the Ourania Cave's mage (7425) shares the name (QA5 #15).
 
-- **when:** Mage of Zamorak within 5 tiles, in sight AND the follower saw TEMPLE_OF_THE_EYE done AND NOT (dialogueopen)
+- **when:** Mage of Zamorak within 5 tiles, in sight AND in region 12343, 12852 AND the follower saw TEMPLE_OF_THE_EYE done AND NOT (dialogueopen)
 - **pacing:** priority 37, cooldown 3h, delay 2 ticks, overhead
 
 - Herbert. He knows we know his name, and it's made things awkward.
@@ -7461,9 +7461,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `qm-enter-the-abyss-the-orb-full`
 
-> Enter the Abyss, varp 492 = 2: back in the essence mine on the third teleport, and the orb is now the full one (5518, SCRYING_ORB_FULL; 5519 before). Not the first reading: that comes a short walk after the orb moment and Aubury's own line, three lines in under 25 seconds in the walks. Region 11595 is the rune essence mine in RuneLite 1.13.1's Discord plugin (REGION_RUNE_ESSENCE_MINE); the readings are varbits 2314-2318 (RCU_ESSENCESPOT_*, varp 491). Source: cache: quest_progress_get (script 4024) reads %abyssal_miniquest (varp 492, used whole); quest dbrow 43 endstate 4, unstarted 0. The Varrock mage multinpc (3229, on varp 492) shows 2582 at 1-4 and nobody at 0; the Wilderness one (3228) is 2580 at 0-3 and 2581, the teleporting mage, at 4. Steps from Quest Helper (github.com/Zoinkwiz/quest-helper, master 06da90f, 2026-10-18), EnterTheAbyss.java loadSteps: 0 talk to the mage in the Wilderness, 1 talk to him in Varrock, 2 the orb and the three teleports, 3 hand it over, 4 done.
+> Enter the Abyss, varp 492 = 2: back in the essence mine on the third teleport, and the orb is now the full one (5518, SCRYING_ORB_FULL; 5519 before). Not the first reading: that comes a short walk after the orb moment and Aubury's own line, three lines in under 25 seconds in the walks. No region: the mine is an instance and reports the instance's own region (QA5 #14: never said on 19 Oct), and the full orb at 2 is only ever true from the third teleport into it. The readings are varbits 2314-2318 (RCU_ESSENCESPOT_*, varp 491). Source: cache: quest_progress_get (script 4024) reads %abyssal_miniquest (varp 492, used whole); quest dbrow 43 endstate 4, unstarted 0. The Varrock mage multinpc (3229, on varp 492) shows 2582 at 1-4 and nobody at 0; the Wilderness one (3228) is 2580 at 0-3 and 2581, the teleporting mage, at 4. Steps from Quest Helper (github.com/Zoinkwiz/quest-helper, master 06da90f, 2026-10-18), EnterTheAbyss.java loadSteps: 0 talk to the mage in the Wilderness, 1 talk to him in Varrock, 2 the orb and the three teleports, 3 hand it over, 4 done.
 
-- **when:** questvar AND in region 11595 AND inventoryhas AND NOT (dialogueopen)
+- **when:** questvar AND inventoryhas AND NOT (dialogueopen)
 - **does:** occasion (never held back); once ever
 - **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
@@ -7558,10 +7558,10 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `qm-temple-of-the-eye-persten`
 
-> Temple of the Eye, varbit 13738 = 115: after the abyssal rift cutscene, in which Persten is pulled into the rift and the Great Guardian wakes; the tutorial begins. Grave: no contractions. Source: cache: quest_progress_get (script 4024) reads %tote (varbit 13738, varp 3405 bits 0-8); quest dbrow 167 endstate 130, unstarted 0. Persten in Al Kharid (multinpc 11457) shows at 0-60, at the tower (11458) at 85-90; Traiborn's apprentices at the tower (11459-11461) at 70-90. Steps from Quest Helper (github.com/Zoinkwiz/quest-helper, master 06da90f, 2026-10-18), TempleOfTheEye.java loadSteps.
+> Temple of the Eye, varbit 13738 = 115: after the abyssal rift cutscene, in which Persten is pulled into the rift and the Great Guardian wakes; the tutorial begins. Grave: no contractions. Hushes the next 45 s, or a light line followed within seconds, Felix's intro most often (QA5 #53). Source: cache: quest_progress_get (script 4024) reads %tote (varbit 13738, varp 3405 bits 0-8); quest dbrow 167 endstate 130, unstarted 0. Persten in Al Kharid (multinpc 11457) shows at 0-60, at the tower (11458) at 85-90; Traiborn's apprentices at the tower (11459-11461) at 70-90. Steps from Quest Helper (github.com/Zoinkwiz/quest-helper, master 06da90f, 2026-10-18), TempleOfTheEye.java loadSteps.
 
 - **when:** questvar AND NOT (dialogueopen)
-- **does:** mood -5; occasion (never held back); once ever; files incident `quest-persten-rift` as 'Persten going into the rift'; animation 13994
+- **does:** mood -5; occasion (never held back); once ever; files incident `quest-persten-rift` as 'Persten going into the rift'; animation 13994; holds the floor 45s
 - **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - She was there, and then she was not. I will write it down when I can.
