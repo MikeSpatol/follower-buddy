@@ -959,6 +959,8 @@ public class FollowerPlugin extends Plugin
 			this::sketchSaysNext,
 			// The count was asked for, so it is shown whatever the mute.
 			this::sketchCount);
+		// The invitations are remembered, so a place is not pointed out at every login.
+		sketching.setMemory(() -> speechEngine.getContext());
 		if (client.getGameState() == GameState.LOGGED_IN)
 		{
 			sketchBook.openFor(configManager.getRSProfileKey());
