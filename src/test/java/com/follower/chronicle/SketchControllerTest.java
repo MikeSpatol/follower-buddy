@@ -3,6 +3,7 @@ package com.follower.chronicle;
 import com.follower.follower.ErrandController;
 import com.follower.follower.FollowerEntity;
 import com.follower.sim.FakeGame;
+import com.follower.speech.TriggerContext;
 import com.google.gson.Gson;
 import java.awt.Rectangle;
 import java.io.IOException;
@@ -305,6 +306,36 @@ public class SketchControllerTest
 		scribe.reset();
 		scribe.tick();
 		assertEquals("the next session points it out again", 3, said.size());
+	}
+
+	/**
+	 * Text QA5 #64: the same invitation at nearly every login, 17 times in
+	 * 15 sessions. Remembered, a place is pointed out once a day, and after
+	 * three times unanswered it is left to you.
+	 */
+	@Test
+	public void anEmptyPlateIsPointedOutOnceADayAndThreeTimesAtMost() throws IOException
+	{
+		SketchController scribe = scribe();
+		TriggerContext memory = new TriggerContext(null);
+		scribe.setMemory(() -> memory);
+		idle = SketchController.IDLE_TICKS;
+		scribe.tick();
+		assertEquals(1, said.size());
+		scribe.reset();
+		tick(scribe, 20);
+		assertEquals("not again the same day, whatever the logins", 1, said.size());
+		for (int day = 2; day <= 4; day++)
+		{
+			// A day passes.
+			memory.getSpokenOnceOn().replaceAll((line, on) -> on - 1);
+			scribe.reset();
+			tick(scribe, 20);
+			assertEquals("day " + day, Math.min(day, SketchController.INVITES), said.size());
+		}
+		region = 12853;
+		scribe.tick();
+		assertEquals("another place's plate is its own", 4, said.size());
 	}
 
 	@Test

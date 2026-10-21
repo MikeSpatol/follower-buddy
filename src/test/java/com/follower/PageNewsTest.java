@@ -6,6 +6,8 @@ import com.follower.speech.TriggerEvent;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.HashSet;
+import java.util.Set;
 import net.runelite.api.Quest;
 import org.junit.Rule;
 import org.junit.Test;
@@ -158,21 +160,37 @@ public class PageNewsTest
 	 * own, Seven Priestly Warriors and Morytania, all quest news. The second
 	 * and third were spent on the quest page's line while it cooled, and two
 	 * pages were never mentioned. Each now waits for the line.
+	 *
+	 * <p>Text QA5 #63: the scroll's line names the quest, and its own page's
+	 * news straight after named it again: "Priest in Peril, done and
+	 * witnessed." then "That's Priest in Peril in the book." A scroll line
+	 * that names the quest is its page's news; the other pages keep theirs.
 	 */
 	@Test
 	public void aScrollThatWritesThreePagesMentionsAllThree() throws IOException
 	{
-		for (long gap : new long[]{6000L, 45_000L})
+		Set<Boolean> named = new HashSet<>();
+		for (int run = 0; run < 12; run++)
 		{
+			long gap = run % 2 == 0 ? 6000L : 45_000L;
 			QuestSim s = new QuestSim(folder.newFolder().toPath(), gap);
 			s.started(Quest.PRIEST_IN_PERIL);
 			s.ticks(20);
 			s.questComplete(Quest.PRIEST_IN_PERIL, "Priest in Peril", "Seven Priestly Warriors", "Morytania");
 			s.ticks(600);
 			s.summary();
-			assertEquals("gap " + gap + "\n" + s.transcript(),
-				java.util.Arrays.asList("Priest in Peril", "Seven Priestly Warriors", "Morytania"), s.pagesSaid);
+			String scroll = s.heard.get(s.heardIds.indexOf("quest-complete"));
+			named.add(scroll.contains("Priest in Peril"));
+			assertEquals("gap " + gap + "\n" + s.transcript(), scroll.contains("Priest in Peril")
+				? java.util.Arrays.asList("Seven Priestly Warriors", "Morytania")
+				: java.util.Arrays.asList("Priest in Peril", "Seven Priestly Warriors", "Morytania"), s.pagesSaid);
 		}
+		assertTrue("the scroll line named the quest in some runs", named.contains(true));
+		assertTrue("the plugin lets the quest's own page news go as QuestSim does", source().contains(
+			"if (!text.isEmpty() && rule != null && \"quest-complete\".equals(rule.id))\n"
+				+ "\t\t{\n"
+				+ "\t\t\tpageNews.removeIf(page -> \"quest\".equals(page.event.getName())\n"
+				+ "\t\t\t\t&& text.contains(page.event.getPlaceholders().get(\"page\")));"));
 	}
 
 	private static final java.nio.file.Path PLUGIN = java.nio.file.Paths.get("src/main/java/com/follower/FollowerPlugin.java");

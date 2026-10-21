@@ -299,7 +299,9 @@ public class BelowIceMountainWalksTest
 					assertEquals(s.transcript(), expected(seen), moments(s));
 					assertTrue(s.transcript(), s.lost.isEmpty());
 					assertTrue(s.transcript(), s.heardIds.contains("quest-complete"));
-					assertTrue(s.transcript(), s.pagesSaid.contains("Below Ice Mountain"));
+					// Named once: by the page news, or by the scroll's line, which lets the news go.
+					assertTrue(s.transcript(), s.pagesSaid.contains("Below Ice Mountain")
+						!= s.scrollLine().contains("Below Ice Mountain"));
 				}
 			}
 		}
@@ -431,24 +433,50 @@ public class BelowIceMountainWalksTest
 		}
 	}
 
-	/** Barronite in the ruins, once the quest is seen done: a line now and then, and none for any other rock. */
+	/**
+	 * Barronite in the ruins, once the quest is seen done: a line now and
+	 * then, and none for any other rock. Only that line, and its chance a
+	 * certainty, past the gap after the arrival line: the test is of what it
+	 * is said for. Left to its 2%, its first rise could land in another
+	 * line's gap, be held, and spend its three-hour cooldown (agility QA5's
+	 * baseline run, 20 Oct).
+	 */
 	@Test
 	public void barroniteIsMinedForTheForge() throws Exception
 	{
-		QuestSim seen = new QuestSim(folder.newFolder().toPath(), 6000);
-		seen.witnessed(Quest.BELOW_ICE_MOUNTAIN);
-		seen.at(2924, 5814, 0);
-		seen.ticks(5);
+		QuestSim seen = onlyTheBarroniteLine();
 		seen.h.engine.getContext().setWork(true, "mining", "Barronite rocks", null, 20, 3, 1);
-		seen.ticks(600);
+		seen.ticks(5);
 		assertTrue(seen.transcript(), seen.heardIds.contains("fun-camdozaal-mining-after-below-ice-mountain"));
 
-		QuestSim copper = new QuestSim(folder.newFolder().toPath(), 6000);
-		copper.witnessed(Quest.BELOW_ICE_MOUNTAIN);
-		copper.at(2924, 5814, 0);
-		copper.ticks(5);
+		QuestSim copper = onlyTheBarroniteLine();
 		copper.h.engine.getContext().setWork(true, "mining", "Copper rocks", null, 20, 3, 1);
 		copper.ticks(600);
 		assertFalse(copper.transcript(), copper.heardIds.contains("fun-camdozaal-mining-after-below-ice-mountain"));
+	}
+
+	private QuestSim onlyTheBarroniteLine() throws Exception
+	{
+		QuestSim s = new QuestSim(folder.newFolder().toPath(), 6000);
+		for (SpeechRule rule : s.h.loader.getRules())
+		{
+			if (!rule.id.equals("fun-camdozaal-mining-after-below-ice-mountain"))
+			{
+				rule.enabled = Boolean.FALSE;
+				continue;
+			}
+			for (Condition condition : rule.when.conditions)
+			{
+				if ("chance".equals(condition.type))
+				{
+					assertEquals("the shipped chance", Integer.valueOf(2), condition.percent);
+					condition.percent = 100;
+				}
+			}
+		}
+		s.witnessed(Quest.BELOW_ICE_MOUNTAIN);
+		s.at(2924, 5814, 0);
+		s.ticks(20);
+		return s;
 	}
 }

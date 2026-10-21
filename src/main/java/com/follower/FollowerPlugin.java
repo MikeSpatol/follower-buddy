@@ -919,7 +919,7 @@ public class FollowerPlugin extends Plugin
 		// floor: its own rules say what, from the page's kind and name, or
 		// "quest" for a page a quest opened, which the follower has not seen.
 		chronicleProgress.setOnWritten((entry, byQuest) -> pageNews.add(new PageNews(
-			TriggerEvent.pageWritten(byQuest ? "quest" : entry.kindOrEmpty(), entry.name),
+			TriggerEvent.pageWritten(byQuest ? "quest" : entry.kindOrEmpty(), entry.spokenName()),
 			client.getTickCount(),
 			!byQuest && "location".equals(entry.kindOrEmpty()) && entry.unlock != null
 				? entry.unlock.regions : null)));
@@ -946,7 +946,11 @@ public class FollowerPlugin extends Plugin
 				|| speechEngine.getContext().isInCombat() || inCutscene() || windowOverTheView(client)
 				|| filming,
 			() -> speechEngine.getContext().getIdleTicks(),
-			() -> speechEngine.getContext().getRegionId(),
+			// In an instance, the region it is a copy of, which is what a
+			// plate names. Quests QA5 #14: the essence mine is an instance,
+			// and its own region id matched no plate.
+			() -> client.getLocalPlayer() == null || client.getLocalPlayer().getLocalLocation() == null ? -1
+				: WorldPoint.fromLocalInstance(client, client.getLocalPlayer().getLocalLocation()).getRegionID(),
 			() -> client.getLocalPlayer() == null ? null : client.getLocalPlayer().getWorldLocation(),
 			() -> client.getLocalPlayer() == null ? -1 : client.getLocalPlayer().getAnimation(),
 			// Through the engine, so the mute and the output setting hold.
@@ -955,6 +959,8 @@ public class FollowerPlugin extends Plugin
 			this::sketchSaysNext,
 			// The count was asked for, so it is shown whatever the mute.
 			this::sketchCount);
+		// The invitations are remembered, so a place is not pointed out at every login.
+		sketching.setMemory(() -> speechEngine.getContext());
 		if (client.getGameState() == GameState.LOGGED_IN)
 		{
 			sketchBook.openFor(configManager.getRSProfileKey());
@@ -12470,6 +12476,15 @@ public class FollowerPlugin extends Plugin
 		if (!hushed)
 		{
 			journal.spoke(rule, text);
+		}
+
+		// The scroll's line, naming its quest, is that quest's page news
+		// already. Text QA5 #63: "Priest in Peril, done and witnessed." then
+		// "That's Priest in Peril in the book." The quest's other pages keep theirs.
+		if (!text.isEmpty() && rule != null && "quest-complete".equals(rule.id))
+		{
+			pageNews.removeIf(page -> "quest".equals(page.event.getName())
+				&& text.contains(page.event.getPlaceholders().get("page")));
 		}
 
 		// The line's own voice, if the player has given it one. After the

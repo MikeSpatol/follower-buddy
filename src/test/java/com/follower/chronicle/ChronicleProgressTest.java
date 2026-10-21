@@ -233,6 +233,32 @@ public class ChronicleProgressTest
 		assertEquals("and only the once", 1, told.size());
 	}
 
+	/**
+	 * Chronicle QA5 #47: Temple of the Eye ends in the Wizards' Tower
+	 * basement and Below Ice Mountain in Camdozaal, which no location rule
+	 * names; the book has a page for each, and the quest page says so.
+	 */
+	@Test
+	public void aQuestFinishedSomewhereUnnamedIsWrittenAtThePlacePageThatCoversIt()
+	{
+		told();
+		String[][] cases = {
+			{"TEMPLE_OF_THE_EYE", "quest-temple-of-the-eye", "3104", "9571", "Wizards' Tower"},
+			{"BELOW_ICE_MOUNTAIN", "quest-below-ice-mountain", "2950", "5769", "Ruins of Camdozaal"},
+		};
+		for (String[] c : cases)
+		{
+			game.at(Integer.parseInt(c[2]), Integer.parseInt(c[3]), 0);
+			memory.refresh();
+			assertEquals("no location rule names it", "", memory.placeName(memory.getRegionId()));
+			progress.setQuestState(c[0], QuestState.IN_PROGRESS);
+			progress.look();
+			progress.setQuestState(c[0], QuestState.FINISHED);
+			progress.look();
+			assertEquals(c[4], progress.writtenAt(loader.get(c[1])));
+		}
+	}
+
 	@Test
 	public void aPageAlreadyWrittenAtTheFirstLookIsLeftUndated()
 	{

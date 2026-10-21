@@ -231,6 +231,8 @@ public class QuestWitnessedTest
 		there.ticks(2);
 		assertTrue("the page, written as it finished, is the witness",
 			there.book.witnessedOn("ENTER_THE_ABYSS") != null);
+		// The Varrock chaos temple: the lines keep to his two places (quests QA5 #15).
+		there.h.game.at(3258, 3384, 0);
 		there.h.game.spawnNpc(2582, "Mage of Zamorak", 0);
 		there.ticks(4);
 		assertEquals("the plain line stands aside, and the callback waits the day",
@@ -244,6 +246,7 @@ public class QuestWitnessedTest
 		away.ticks(2);
 		assertNull("parked elsewhere, the page dated that day does not stand in for it",
 			away.book.witnessedOn("ENTER_THE_ABYSS"));
+		away.h.game.at(3258, 3384, 0);
 		away.h.game.spawnNpc(2582, "Mage of Zamorak", 0);
 		away.ticks(4);
 		assertEquals(Arrays.asList("quest-mage-of-zamorak"), said(away.h));

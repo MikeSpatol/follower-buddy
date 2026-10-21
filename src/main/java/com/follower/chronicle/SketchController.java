@@ -2,6 +2,7 @@ package com.follower.chronicle;
 
 import com.follower.follower.ErrandController;
 import com.follower.follower.FollowerEntity;
+import com.follower.speech.TriggerContext;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Rectangle;
@@ -141,7 +142,10 @@ public class SketchController
 		POSE_NAMES = Collections.unmodifiableMap(names);
 	}
 
-	/** Once a session where a plate is empty; the mute holds it back, as any line of its own. */
+	/**
+	 * Where a plate is empty, once a session and once a day, and only
+	 * {@link #INVITES} times; the mute holds it back, as any line of its own.
+	 */
 	static final String INVITE = "This place wants a sketch. Right-click me and pick Sketch.";
 
 	/** The count, over its head whatever the mute: it was asked for. */
@@ -206,8 +210,18 @@ public class SketchController
 	private final Consumer<String> overhead;
 	private final Random random = new Random();
 
+	/**
+	 * How many times a place's empty plate is pointed out, a day apart,
+	 * before it is left to you. Text QA5 #64: the same words at nearly every
+	 * login, 17 times in 15 sessions, at the same few places.
+	 */
+	static final int INVITES = 3;
+
 	/** The plates pointed out this session, each once. */
 	private final Set<String> invited = new HashSet<>();
+
+	/** The follower's memory, which keeps the invitations from session to session; none in some tests. */
+	private Supplier<TriggerContext> memory = () -> null;
 
 	private Stage stage = Stage.WAITING;
 	private String key;
@@ -353,12 +367,60 @@ public class SketchController
 			return;
 		}
 		String here = wanted(loader.getEntries(), region.getAsInt(),
-			name -> book.hasBoth(name) || drawing.contains(name) || invited.contains(name));
+			name -> book.hasBoth(name) || drawing.contains(name) || invited.contains(name) || !mayInvite(name));
 		if (here != null)
 		{
 			invited.add(here);
+			noteInvited(here);
 			say.accept(INVITE);
 		}
+	}
+
+	public void setMemory(Supplier<TriggerContext> memory)
+	{
+		this.memory = memory == null ? () -> null : memory;
+	}
+
+	/**
+	 * Whether the plate may be pointed out: not yet today, and not
+	 * {@link #INVITES} times already. Each invitation is kept as a dated
+	 * one-time line of its own, the first, second and third, so they last
+	 * through a logout as the follower's other once-said lines do.
+	 */
+	private boolean mayInvite(String plate)
+	{
+		TriggerContext context = memory.get();
+		for (int n = 1; context != null && n <= INVITES; n++)
+		{
+			int days = context.daysSinceSaid(inviteKey(plate, n));
+			if (days < 0)
+			{
+				return true;
+			}
+			if (days == 0)
+			{
+				return false;
+			}
+		}
+		return context == null;
+	}
+
+	private void noteInvited(String plate)
+	{
+		TriggerContext context = memory.get();
+		for (int n = 1; context != null && n <= INVITES; n++)
+		{
+			if (!context.hasSaidOnce(inviteKey(plate, n)))
+			{
+				context.noteSaidOnce(inviteKey(plate, n));
+				return;
+			}
+		}
+	}
+
+	private static String inviteKey(String plate, int n)
+	{
+		return "sketch-invite:" + plate + ":" + n;
 	}
 
 	/**

@@ -169,6 +169,11 @@ public final class QuestSim
 			speakingUntil = ms[0] + readingTime(u.text) + 400;
 			heard.add(u.text);
 			heardIds.add(id(u.rule));
+			// FollowerPlugin.speakNow: the scroll's line, naming its quest, is that quest's page news.
+			if ("quest-complete".equals(id(u.rule)))
+			{
+				pages.removeIf(page -> "quest".equals(page.event.getName()) && u.text.contains(page.name));
+			}
 			note("SAYS [" + id(u.rule) + "] \"" + u.text + "\"" + (u.anim > 0 ? " anim=" + u.anim : "")
 				+ (u.rule != null && u.rule.mood != null ? " mood=" + u.rule.mood : "")
 				+ (u.rule != null && u.rule.remember != null ? " remembers='" + u.rule.remember.as + "'" : ""));
@@ -550,6 +555,13 @@ public final class QuestSim
 		note("HEARD, in order: " + heardIds);
 		note("LOST: " + lost);
 		note("PAGES said: " + pagesSaid + "  lapsed: " + pagesLost + "  dropped: " + pagesDropped);
+	}
+
+	/** The scroll's line as heard, or empty: when it names the quest, the quest's page news goes. */
+	public String scrollLine()
+	{
+		int at = heardIds.indexOf("quest-complete");
+		return at < 0 ? "" : heard.get(at);
 	}
 
 	public String transcript()

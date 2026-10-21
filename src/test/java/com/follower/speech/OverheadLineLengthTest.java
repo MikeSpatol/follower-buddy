@@ -1,5 +1,7 @@
 package com.follower.speech;
 
+import com.follower.chronicle.ChronicleEntry;
+import com.follower.chronicle.ChronicleLoader;
 import com.follower.sim.Harness;
 import com.follower.ui.GameFont;
 import com.follower.ui.GameFontRepository;
@@ -93,6 +95,7 @@ public class OverheadLineLengthTest
 		OVERRIDES.put("level-quick", Map.of("sinceLast", "ten minutes"));
 		OVERRIDES.put("kill-count-first", Map.of("count", "1", "ordinal", "first"));
 		OVERRIDES.put("kill-count-round", Map.of("count", "2500", "ordinal", "seventy-fifth"));
+		OVERRIDES.put("kill-count-round-long", Map.of("count", "2500", "ordinal", "seventy-fifth"));
 		OVERRIDES.put("kill-count-thousand", Map.of("ordinal", "3000th"));
 		OVERRIDES.put("gifted-swap", Map.of("souvenir", "the soft clay you found me"));
 		OVERRIDES.put("noticed-impling", Map.of("thing", "Eclectic impling"));
@@ -100,7 +103,6 @@ public class OverheadLineLengthTest
 		OVERRIDES.put("chronicle-page-boss", Map.of("page", "King Black Dragon"));
 		OVERRIDES.put("chronicle-page-enemy", Map.of("page", "Witch's Experiment"));
 		OVERRIDES.put("chronicle-page-place", Map.of("page", "Baxtorian Falls"));
-		OVERRIDES.put("chronicle-page-quest", Map.of("page", "Children of the Sun"));
 	}
 
 	/**
@@ -109,13 +111,36 @@ public class OverheadLineLengthTest
 	 * so a line that is reworded comes off this list, and a line that grows
 	 * past the limit cannot hide behind it.
 	 */
-	private static final List<String> AWAITING_WORDING = List.of();
+	private static final List<String> AWAITING_WORDING = List.of(
+		"chronicle-page-quest: That's {page} in the book. I'll write it up properly tonight.");
 
 	private GameFont overheadFont() throws IOException
 	{
 		GameFontRepository fonts = new GameFontRepository(new Gson());
 		fonts.load(folder.newFolder().toPath());
 		return fonts.getByName("b12_full");
+	}
+
+	/**
+	 * The longest {page} is the widest name in the book. Text QA5 #25: the
+	 * quest kind's news was measured with a shorter one, and a quest can
+	 * open a page of any kind, so "Seven Priestly Warriors" went unmeasured.
+	 */
+	@Test
+	public void theLongestPageIsTheWidestInTheBook() throws IOException
+	{
+		GameFont font = overheadFont();
+		ChronicleLoader loader = new ChronicleLoader(new Gson());
+		loader.load(folder.newFolder().toPath());
+		String widest = "";
+		for (ChronicleEntry entry : loader.getEntries())
+		{
+			if (font.stringWidth(entry.name) > font.stringWidth(widest))
+			{
+				widest = entry.name;
+			}
+		}
+		assertEquals(widest, LONGEST.get("page"));
 	}
 
 	@Test

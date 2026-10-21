@@ -71,6 +71,42 @@ public class PendingOrderTest
 		+ " \"occasion\": true, \"cooldownMs\": 0, \"when\": {\"type\": \"levelUp\", \"names\": [\"Magic\"]},"
 		+ " \"say\": [\"The tower.\"]}";
 
+	private static final String MOMENT_IN_A_BEAT = "{\"id\": \"moment\", \"group\": \"t\", \"priority\": 63,"
+		+ " \"occasion\": true, \"delayTicks\": 2, \"cooldownMs\": 0,"
+		+ " \"when\": {\"type\": \"levelUp\", \"names\": [\"Strength\"]}, \"say\": [\"The thingummywut.\"]}";
+
+	/**
+	 * Quests QA5 #54: a moment that has won has the floor through its beat.
+	 * A line that comes up in it, a wish or a person kept through the box,
+	 * went first, the moment waited its gap into the next box, and a scene
+	 * there let it go. Now the person waits behind it and the chatter goes.
+	 */
+	@Test
+	public void anOccasionInItsBeatHasTheFloor() throws IOException
+	{
+		Harness h = new Harness(folder.newFolder().toPath(),
+			"{\"version\": 1, \"rules\": [" + PERSON + "," + MOMENT_IN_A_BEAT + "," + CHATTY + "]}");
+		h.engine.setClock(() -> ms[0]);
+		h.engine.setGlobalCooldownMs(6000L);
+		h.gameTicks(1);
+		h.dispatch(TriggerEvent.levelUp("Strength", 30));
+		ticks(h, 1);
+		h.dispatch(TriggerEvent.levelUp("Defence", 30));
+		h.dispatch(TriggerEvent.levelUp("Attack", 30));
+		ticks(h, 30);
+		assertEquals(2, h.spoken.size());
+		assertEquals("the moment first", "moment", h.spoken.get(0).rule.id);
+		assertEquals("person", h.spoken.get(1).rule.id);
+	}
+
+	/**
+	 * An occasion of its own: anything less now waits behind one that has
+	 * won and is still in its beat (quests QA5 #54), so it is an occasion
+	 * that is said as the box goes and holds the arrival for the gap.
+	 */
+	private static final String SAID_AS_THE_BOX_GOES = "{\"id\": \"chatty\", \"group\": \"t\", \"cooldownMs\": 0,"
+		+ " \"occasion\": true, \"when\": {\"type\": \"levelUp\", \"names\": [\"Defence\"]}, \"say\": [\"Nice.\"]}";
+
 	@Test
 	public void theBeatAfterTheBoxIsOnlyForTheTickItGoes() throws IOException
 	{
@@ -79,7 +115,7 @@ public class PendingOrderTest
 		// as the box went, was said after the package moment that rose in
 		// that gap. Level in priority, the earlier moment goes first.
 		Harness h = new Harness(folder.newFolder().toPath(),
-			"{\"version\": 1, \"rules\": [" + ARRIVAL + "," + MOMENT + "," + CHATTY + "]}");
+			"{\"version\": 1, \"rules\": [" + ARRIVAL + "," + MOMENT + "," + SAID_AS_THE_BOX_GOES + "]}");
 		h.engine.setClock(() -> ms[0]);
 		h.engine.setGlobalCooldownMs(6000L);
 		h.gameTicks(1);

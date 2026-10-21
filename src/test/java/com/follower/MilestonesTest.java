@@ -298,14 +298,17 @@ public class MilestonesTest
 			quiet.dispatch(TriggerEvent.killCount("Vorkath", n, n - 1));
 			quiet.gameTicks(8);
 			assertTrue(n + " is not a count anybody says out loud",
-				quiet.firedBy("kill-count-round").isEmpty());
+				quiet.firedBy("kill-count-round").isEmpty() && quiet.firedBy("kill-count-round-long").isEmpty());
 		}
 		for (int n : new int[]{5, 10, 25, 50, 75, 100, 300, 900, 1500})
 		{
 			Harness round = bundled();
 			round.dispatch(TriggerEvent.killCount("Vorkath", n, n - 1));
 			round.gameTicks(8);
-			assertFalse(n + " is a round count", round.firedBy("kill-count-round").isEmpty());
+			// From the hundreds the long-history lines have a rule of their own (text QA5 #65).
+			assertFalse(n + " is a round count", round.firedBy("kill-count-round").isEmpty()
+				&& round.firedBy("kill-count-round-long").isEmpty());
+			assertTrue(n + " is too soon for a long history", n >= 100 || round.firedBy("kill-count-round-long").isEmpty());
 		}
 
 		Harness thousand = bundled();
@@ -313,7 +316,7 @@ public class MilestonesTest
 		thousand.gameTicks(8);
 		assertFalse("the thousandth outranks the round line",
 			thousand.firedBy("kill-count-thousand").isEmpty());
-		assertTrue(thousand.firedBy("kill-count-round").isEmpty());
+		assertTrue(thousand.firedBy("kill-count-round").isEmpty() && thousand.firedBy("kill-count-round-long").isEmpty());
 	}
 
 	@Test

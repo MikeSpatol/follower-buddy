@@ -202,7 +202,9 @@ public class ChildrenOfTheSunWalkTest
 		}
 		assertTrue("Tobyn\n" + s.transcript(), s.heardIds.contains("quest-sergeant-tobyn"));
 		assertTrue("all before the scroll\n" + s.transcript(), last < s.heardIds.indexOf("quest-complete"));
-		assertEquals(s.transcript(), Arrays.asList("Children of the Sun"), s.pagesSaid);
+		// Named once: by the page news, or by the scroll's line, which lets the news go (text QA5 #63).
+		assertEquals(s.transcript(), s.scrollLine().contains("Children of the Sun")
+			? Arrays.asList() : Arrays.asList("Children of the Sun"), s.pagesSaid);
 		assertTrue("nothing dropped\n" + s.transcript(), s.lost.isEmpty());
 	}
 

@@ -273,10 +273,40 @@ public class ChronicleProgress
 		return Math.max(context.getTally(entry.tally.of), mine > 0 ? mine : context.getRecord(entry.tally.of));
 	}
 
+	/**
+	 * Where a page is being written: the place's name, or failing that the
+	 * place page that covers it. Chronicle QA5 #47: Temple of the Eye ends
+	 * in the Wizards' Tower basement and Below Ice Mountain in Camdozaal,
+	 * regions no location rule names, and both pages said "a place I
+	 * couldn't name" with a page for the place in the same book.
+	 */
 	private String here()
 	{
 		TriggerContext context = memory.get();
-		return context == null ? "" : context.placeName(context.getRegionId());
+		if (context == null)
+		{
+			return "";
+		}
+		int region = context.getRegionId();
+		String named = context.placeName(region);
+		if (!named.isEmpty())
+		{
+			return named;
+		}
+		for (ChronicleEntry entry : loader.ofKind("location"))
+		{
+			boolean covers = entry.unlock != null && entry.unlock.regions != null
+				&& entry.unlock.regions.contains(region);
+			for (ChronicleEntry.Plate plate : entry.platesOrEmpty())
+			{
+				covers |= plate.regions != null && plate.regions.contains(region);
+			}
+			if (covers)
+			{
+				return entry.name;
+			}
+		}
+		return "";
 	}
 
 	private void written(ChronicleEntry entry, String place, boolean byQuest)
