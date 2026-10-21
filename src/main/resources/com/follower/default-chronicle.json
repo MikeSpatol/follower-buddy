@@ -818,6 +818,7 @@
       "id": "boss-giant-mole",
       "kind": "boss",
       "name": "Giant Mole",
+      "spoken": "the Giant Mole",
       "unlock": {
         "npcs": [
           "Giant Mole"
@@ -875,6 +876,7 @@
       "id": "boss-king-black-dragon",
       "kind": "boss",
       "name": "King Black Dragon",
+      "spoken": "the King Black Dragon",
       "unlock": {
         "npcs": [
           "King Black Dragon"
@@ -1472,6 +1474,7 @@
       "id": "location-wizards-tower",
       "kind": "location",
       "name": "Wizards' Tower",
+      "spoken": "the Wizards' Tower",
       "unlock": {
         "regions": [
           12337,
@@ -1585,6 +1588,7 @@
       "id": "location-camdozaal",
       "kind": "location",
       "name": "Ruins of Camdozaal",
+      "spoken": "the Ruins of Camdozaal",
       "unlock": {
         "quest": "BELOW_ICE_MOUNTAIN"
       },
@@ -1600,7 +1604,7 @@
         },
         {
           "heading": "Worth knowing",
-          "body": "Where the rest of the Imcando went, Ramarno didn't say at the door, and I didn't ask. He talked instead of a way we could make up for the guardian, which says something for him.\n\n{done:THE_KNIGHTS_SWORD} Thurgo, south of Port Sarim, is Imcando too, which Ramarno didn't know. I'd like to be there when they meet.\n\nHow the door came open is on the Below Ice Mountain page. Next time I'd like to come in by it slowly, and see the hall with nothing waking up in it."
+          "body": "Where the rest of the Imcando went, Ramarno didn't say at the door, and I didn't ask. He talked instead of a way we could make up for the guardian, which says something for him.\n\n{done:THE_KNIGHTS_SWORD} Thurgo, south of Port Sarim, is Imcando too, which Ramarno didn't know. I'd like to be there when they meet.\n\nHow the door came open is on the Below Ice Mountain page. I'd like to see that hall once with nothing waking up in it."
         }
       ],
       "people": [
@@ -1643,6 +1647,7 @@
       "id": "faction-seven-priestly-warriors",
       "kind": "faction",
       "name": "Seven Priestly Warriors",
+      "spoken": "the Seven Priestly Warriors",
       "unlock": {
         "quest": "PRIEST_IN_PERIL"
       },

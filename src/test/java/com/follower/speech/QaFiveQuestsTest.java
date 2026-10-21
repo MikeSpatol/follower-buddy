@@ -542,10 +542,10 @@ public class QaFiveQuestsTest
 	/**
 	 * QA5 #41: parked on Stay, the follower did not see the quest finish, and
 	 * the book files it as not seen; it said "{quest}, done and witnessed."
-	 * from its post all the same.
+	 * from its post all the same. QA5 #46: it asks how it went instead.
 	 */
 	@Test
-	public void aParkedFollowerSaysNothingAtTheScroll() throws Exception
+	public void aParkedFollowerClaimsNoSightingAtTheScroll() throws Exception
 	{
 		for (int tally : new int[]{0, 9})
 		{
@@ -561,6 +561,7 @@ public class QaFiveQuestsTest
 			s.ticks(60);
 			assertFalse(s.transcript(), s.heardIds.contains("quest-complete"));
 			assertFalse(s.transcript(), s.heardIds.contains("quest-milestone-10"));
+			assertTrue(s.transcript(), s.heard.contains("Cook's Assistant, done. Tell me how it went."));
 		}
 		QuestSim there = sim(6000);
 		there.started(Quest.COOKS_ASSISTANT);
@@ -568,6 +569,7 @@ public class QaFiveQuestsTest
 		there.questComplete(Quest.COOKS_ASSISTANT, "Cook's Assistant");
 		there.ticks(60);
 		assertTrue(there.transcript(), there.heardIds.contains("quest-complete"));
+		assertFalse(there.transcript(), there.heardIds.contains("quest-complete-parked"));
 	}
 
 	/**

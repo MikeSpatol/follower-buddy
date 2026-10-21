@@ -86,7 +86,7 @@ public class OverheadLineLengthTest
 		LONGEST.put("lastTime", "finishing Desert Treasure II - The Fallen Empire");
 		LONGEST.put("track", "Ballad of the Basilisk");
 		LONGEST.put("quest", "Desert Treasure II - The Fallen Empire");
-		LONGEST.put("page", "Seven Priestly Warriors");
+		LONGEST.put("page", "the Seven Priestly Warriors");
 		LONGEST.put("challenge", "ten kills");
 
 		// Where the trigger narrows what can arrive.
@@ -100,9 +100,9 @@ public class OverheadLineLengthTest
 		OVERRIDES.put("gifted-swap", Map.of("souvenir", "the soft clay you found me"));
 		OVERRIDES.put("noticed-impling", Map.of("thing", "Eclectic impling"));
 		OVERRIDES.put("noticed-landmark", Map.of("thing", "Notice board"));
-		OVERRIDES.put("chronicle-page-boss", Map.of("page", "King Black Dragon"));
+		OVERRIDES.put("chronicle-page-boss", Map.of("page", "the King Black Dragon"));
 		OVERRIDES.put("chronicle-page-enemy", Map.of("page", "Witch's Experiment"));
-		OVERRIDES.put("chronicle-page-place", Map.of("page", "Baxtorian Falls"));
+		OVERRIDES.put("chronicle-page-place", Map.of("page", "the Wizards' Tower"));
 	}
 
 	/**
@@ -111,8 +111,7 @@ public class OverheadLineLengthTest
 	 * so a line that is reworded comes off this list, and a line that grows
 	 * past the limit cannot hide behind it.
 	 */
-	private static final List<String> AWAITING_WORDING = List.of(
-		"chronicle-page-quest: That's {page} in the book. I'll write it up properly tonight.");
+	private static final List<String> AWAITING_WORDING = java.util.Collections.emptyList();
 
 	private GameFont overheadFont() throws IOException
 	{
@@ -122,9 +121,10 @@ public class OverheadLineLengthTest
 	}
 
 	/**
-	 * The longest {page} is the widest name in the book. Text QA5 #25: the
-	 * quest kind's news was measured with a shorter one, and a quest can
-	 * open a page of any kind, so "Seven Priestly Warriors" went unmeasured.
+	 * The longest {page} is the widest name in the book, as a line says it.
+	 * Text QA5 #25: the quest kind's news was measured with a shorter one,
+	 * and a quest can open a page of any kind, so "Seven Priestly Warriors"
+	 * went unmeasured.
 	 */
 	@Test
 	public void theLongestPageIsTheWidestInTheBook() throws IOException
@@ -135,9 +135,9 @@ public class OverheadLineLengthTest
 		String widest = "";
 		for (ChronicleEntry entry : loader.getEntries())
 		{
-			if (font.stringWidth(entry.name) > font.stringWidth(widest))
+			if (font.stringWidth(entry.spokenName()) > font.stringWidth(widest))
 			{
-				widest = entry.name;
+				widest = entry.spokenName();
 			}
 		}
 		assertEquals(widest, LONGEST.get("page"));

@@ -1,6 +1,6 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 670 rules, 2749 spoken lines, 3 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 671 rules, 2750 spoken lines, 3 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
@@ -19,7 +19,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - [clock](#clock) - The hour and how long we have been at it (9 rules, 39 lines)
 - [gear](#gear) - What you put on (63 rules, 147 lines)
 - [boss](#boss) - Bosses sighted and fought (56 rules, 522 lines)
-- [quest](#quest) - Famous quest figures nearby (165 rules, 406 lines)
+- [quest](#quest) - Famous quest figures nearby (166 rules, 407 lines)
 - [thrall](#thrall) - When it stands in for a thrall (3 rules, 18 lines)
 - [mimic](#mimic) - Copying your emotes (32 rules, 16 lines)
 - [dialogs](#dialogs) - the conversations it starts (3 trees)
@@ -432,9 +432,9 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** pagewritten
 - **pacing:** priority 30, cooldown 1m
 
-- {page} has a page now. Find me a good spot and pose for me.
+- {page} has a page now. Find me a spot and pose for me.
 - Starting a page on {page}. I've got the name down, at least.
-- New page for {page}. I'll write it up once I've had a look round.
+- New page for {page}. I'll write it up once I've looked round.
 
 ### `chronicle-page-lore`
 
@@ -453,7 +453,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **when:** pagewritten
 - **pacing:** priority 30, cooldown 1m
 
-- That's {page} in the book. I'll write it up properly tonight.
+- That's {page} in the book. I'll write it up tonight.
 - {page} has its own page now. I'll do it justice.
 - I've opened a page on {page}. The ink's still wet.
 
@@ -1570,7 +1570,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `agility-fell`
 
-> After the follower copies the player's fall on an agility obstacle. While Does agility with you is on, fail-slip stands aside (the plugin silences it by id), so one fall gets one line, said after the follower has fallen too.
+> After the follower copies the player's fall on an agility obstacle. While Does agility with you is on, fail-slip stands aside (the plugin silences it by id), so a fall never gets two lines. A roll and a five-minute cooldown keep it to some falls, not every one.
 
 - **when:** crossed AND a 35% roll
 - **pacing:** priority 55, cooldown 5m, delay 1-3 ticks, overhead
@@ -1581,7 +1581,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 ### `agility-crossed`
 
-> After the follower takes an agility obstacle or shortcut cleanly behind the player (Does agility with you). CROSSED is raised after every obstacle of a lap, so a small roll and a ten-minute cooldown keep it to an odd remark.
+> After the follower takes an agility obstacle or shortcut cleanly behind the player (Does agility with you). CROSSED is raised after every obstacle of a lap, so a small roll and a half-hour cooldown keep it to an odd remark.
 
 - **when:** crossed AND a 10% roll
 - **pacing:** priority 20, cooldown 30m, delay 1-3 ticks, overhead
@@ -6991,6 +6991,14 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - {quest}. Signed, sealed, filed.
 - Finished. Let me see the scroll before you put it away.
 
+### `quest-complete-parked`
+
+- **when:** questcomplete AND on a player-commanded Stay
+- **does:** occasion (never held back)
+- **pacing:** priority 85, cooldown 1m, delay 3 ticks
+
+- {quest}, done. Tell me how it went.
+
 ### `quest-milestone-10`
 
 > The tenth quest completed since the follower arrived. Exact bracket, once. Not from a follower parked on Stay, as quest-complete (QA5 #41).
@@ -7600,7 +7608,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 63, cooldown 10m, delay 2 ticks, overhead
 
 - Up the palace steps for Atlas, with a tomato thrown in. It's all noted.
-- Atlas charges a fortune for that. You got it free, and I got it in ink.
+- Atlas's workout, and not a coin to him. I got it all in ink.
 
 ### `qm-below-ice-mountain-steak-sandwich`
 

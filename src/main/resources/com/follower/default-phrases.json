@@ -5099,7 +5099,7 @@
       "waits": true,
       "title": "Wizard Traiborn",
       "note": "Wizard Traiborn of the Wizards Tower. Stands aside once the follower has seen Temple of the Eye finished, which answers the thingummywut; fun-traiborn-after-temple-of-the-eye carries him after (QA5 #60).",
-      "about": "Wizard Traiborn of the Wizards' Tower.",
+      "about": "Wizard Traiborn of the Wizards' Tower, until it has seen you finish Temple of the Eye.",
       "group": "quest",
       "priority": 35,
       "output": "overhead",
@@ -5978,7 +5978,7 @@
       "waits": true,
       "title": "Mage of Zamorak",
       "note": "The Mage of Zamorak: in the Wilderness north of Edgeville (2580, 2581) and in the Varrock chaos temple (2582, from varp 492 = 1). Stands aside once the follower has seen Enter the Abyss finished; its callbacks carry him after. The Wanted! cutscene copies (4936-4938) share the name, and so does the Ourania Cave's mage (7425, RC_ZMI_CHAOSMONK, region 12119), so the rule keeps to the two places he stands: 12343 (the Wilderness mine, 3102,3557) and 12852 (the Varrock chaos temple, 3259,3383), both as said on 19 Oct (QA5 #15). Not on the quest's errand (varp 492 1-3), where its moments speak for him: at 1 the Wilderness start crowded, the introduction after the moment about him (QA5 #57), and held to 2 it crowded the orb moment and Aubury in Varrock instead. Met before he is spoken to, he is introduced then.",
-      "about": "The Mage of Zamorak, in the Wilderness and in Varrock, until it has seen you finish Enter the Abyss.",
+      "about": "The Mage of Zamorak, in the Wilderness and in Varrock, except partway through Enter the Abyss, and until it has seen you finish it.",
       "group": "quest",
       "priority": 35,
       "output": "overhead",
@@ -6260,7 +6260,7 @@
       "waits": true,
       "title": "Burntof",
       "note": "Burntof (10659, 10660; multinpcs 10648 in the Rising Sun Inn, 10649 at the door, 10701 in Nardah). Lines hold at every stage, sober or not. Stands aside once the follower has seen Below Ice Mountain finished, as fun-burntof-after-below-ice-mountain has him sober in Nardah (QA5 #60).",
-      "about": "Burntof the dwarf, who handles the explosives.",
+      "about": "Burntof the dwarf, who handles the explosives, until it has seen you finish Below Ice Mountain.",
       "group": "quest",
       "priority": 35,
       "output": "overhead",
@@ -9931,6 +9931,7 @@
     {
       "id": "kill-count-round-long",
       "note": "kill-count-round's two lines that speak of a long history, from the hundredth: said at the fifth they were wrong (QA5 #65, 20 Oct). A point over the round line on two rises in five, so from a hundred each of the five lines comes up as often as before.",
+      "about": "Your boss kill count at the hundreds, then every 500, now and then in place of the round line. {boss} is the boss and {count} the count.",
       "group": "boss",
       "priority": 73,
       "cooldownMs": 60000,
@@ -10667,8 +10668,8 @@
     {
       "id": "agility-fell",
       "title": "An agility obstacle, failed",
-      "about": "When it copies a fall of yours on an agility course.",
-      "note": "After the follower copies the player's fall on an agility obstacle. While Does agility with you is on, fail-slip stands aside (the plugin silences it by id), so one fall gets one line, said after the follower has fallen too.",
+      "about": "Now and then, when it copies a fall of yours on an agility course.",
+      "note": "After the follower copies the player's fall on an agility obstacle. While Does agility with you is on, fail-slip stands aside (the plugin silences it by id), so a fall never gets two lines. A roll and a five-minute cooldown keep it to some falls, not every one.",
       "group": "reactions",
       "priority": 55,
       "cooldownMs": 300000,
@@ -10698,7 +10699,7 @@
       "id": "agility-crossed",
       "title": "An agility obstacle, crossed",
       "about": "Now and then, after it copies an obstacle on an agility course.",
-      "note": "After the follower takes an agility obstacle or shortcut cleanly behind the player (Does agility with you). CROSSED is raised after every obstacle of a lap, so a small roll and a ten-minute cooldown keep it to an odd remark.",
+      "note": "After the follower takes an agility obstacle or shortcut cleanly behind the player (Does agility with you). CROSSED is raised after every obstacle of a lap, so a small roll and a half-hour cooldown keep it to an odd remark.",
       "group": "reactions",
       "priority": 20,
       "cooldownMs": 1800000,
@@ -15090,9 +15091,9 @@
         "is": "location"
       },
       "say": [
-        "{page} has a page now. Find me a good spot and pose for me.",
+        "{page} has a page now. Find me a spot and pose for me.",
         "Starting a page on {page}. I've got the name down, at least.",
-        "New page for {page}. I'll write it up once I've had a look round."
+        "New page for {page}. I'll write it up once I've looked round."
       ]
     },
     {
@@ -15134,7 +15135,7 @@
         "is": "quest"
       },
       "say": [
-        "That's {page} in the book. I'll write it up properly tonight.",
+        "That's {page} in the book. I'll write it up tonight.",
         "{page} has its own page now. I'll do it justice.",
         "I've opened a page on {page}. The ink's still wet."
       ]
@@ -15170,7 +15171,7 @@
       "title": "A quest finished",
       "occasion": true,
       "note": "The quest reward scroll - the one moment the game hands the player literal paperwork, witnessed by a professional. Tally 'quests' counts them. Not from a follower parked on Stay: it did not see the quest finish, and the book files it as not seen (QA5 #41).",
-      "about": "When you complete a quest. {quest} is the quest.",
+      "about": "When you complete a quest, unless it is staying put elsewhere. {quest} is the quest.",
       "group": "quest",
       "priority": 85,
       "cooldownMs": 60000,
@@ -15201,11 +15202,35 @@
       ]
     },
     {
+      "id": "quest-complete-parked",
+      "title": "A quest finished, while parked",
+      "occasion": true,
+      "about": "When you complete a quest while it is staying put elsewhere. {quest} is the quest.",
+      "group": "quest",
+      "priority": 85,
+      "cooldownMs": 60000,
+      "delayTicks": 3,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "questComplete"
+          },
+          {
+            "type": "staying"
+          }
+        ]
+      },
+      "say": [
+        "{quest}, done. Tell me how it went."
+      ]
+    },
+    {
       "id": "quest-milestone-10",
       "title": "Ten quests done",
       "occasion": true,
       "note": "The tenth quest completed since the follower arrived. Exact bracket, once. Not from a follower parked on Stay, as quest-complete (QA5 #41).",
-      "about": "The tenth quest you complete since you met.",
+      "about": "The tenth quest you complete since you met, unless it is staying put elsewhere.",
       "group": "quest",
       "priority": 86,
       "cooldownMs": 60000,
@@ -16129,7 +16154,7 @@
       "waits": true,
       "title": "Aubury, after Rune Mysteries",
       "note": "Callback: same trigger as quest-aubury plus Rune Mysteries done, one point higher, cooldown three times the base's. First meeting after the quest gets this; while it cools down the base wins, once its own cooldown, charged when the callback was said, has run out. Not a hand-in NPC for Rune Mysteries, so it cannot rise on the quest finishing. Not on Enter the Abyss's errand (varp 492 1-3), which passes his shop: the orb moment calls back to Rune Mysteries itself, and the plain quest-aubury covers him (QA5 #52, 19 Oct). From 1, not 2: met on the way to the mage, the line was held through his box and said after the orb moment all the same.",
-      "about": "Now and then when Aubury is near, from the day after it saw you finish Rune Mysteries.",
+      "about": "Now and then when Aubury is near, from the day after it saw you finish Rune Mysteries, except partway through Enter the Abyss.",
       "group": "quest",
       "priority": 36,
       "cooldownMs": 10800000,
@@ -19349,7 +19374,7 @@
       },
       "say": [
         "Up the palace steps for Atlas, with a tomato thrown in. It's all noted.",
-        "Atlas charges a fortune for that. You got it free, and I got it in ink."
+        "Atlas's workout, and not a coin to him. I got it all in ink."
       ]
     },
     {
