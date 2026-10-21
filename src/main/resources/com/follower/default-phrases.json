@@ -9914,8 +9914,34 @@
       "say": [
         "{count} times now. I know how this one goes.",
         "Your {ordinal}. That page is filling up.",
+        "That makes {count}. The ledger has a column just for it."
+      ]
+    },
+    {
+      "id": "kill-count-round-long",
+      "note": "kill-count-round's two lines that speak of a long history, from the hundredth: said at the fifth they were wrong (QA5 #65, 20 Oct). A point over the round line on two rises in five, so from a hundred each of the five lines comes up as often as before.",
+      "group": "boss",
+      "priority": 73,
+      "cooldownMs": 60000,
+      "delayTicks": 3,
+      "delayTicksMax": 5,
+      "mood": 8,
+      "when": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "killCount",
+            "is": "round",
+            "minimum": 100
+          },
+          {
+            "type": "chance",
+            "percent": 40
+          }
+        ]
+      },
+      "say": [
         "{ordinal} time. I could draw it from memory now.",
-        "That makes {count}. The ledger has a column just for it.",
         "{count}. Hard to believe there was ever a first one."
       ]
     },

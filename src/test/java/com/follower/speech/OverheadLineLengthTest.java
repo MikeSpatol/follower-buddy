@@ -95,6 +95,7 @@ public class OverheadLineLengthTest
 		OVERRIDES.put("level-quick", Map.of("sinceLast", "ten minutes"));
 		OVERRIDES.put("kill-count-first", Map.of("count", "1", "ordinal", "first"));
 		OVERRIDES.put("kill-count-round", Map.of("count", "2500", "ordinal", "seventy-fifth"));
+		OVERRIDES.put("kill-count-round-long", Map.of("count", "2500", "ordinal", "seventy-fifth"));
 		OVERRIDES.put("kill-count-thousand", Map.of("ordinal", "3000th"));
 		OVERRIDES.put("gifted-swap", Map.of("souvenir", "the soft clay you found me"));
 		OVERRIDES.put("noticed-impling", Map.of("thing", "Eclectic impling"));

@@ -1,6 +1,6 @@
 # The line book
 
-Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 669 rules, 2749 spoken lines, 3 dialog trees.
+Every line the follower can say, organised for review against [voice.md](voice.md). **Generated** by `tools/lines.py` from the shipped rule file - do not edit here; edit the rules and re-run. 670 rules, 2749 spoken lines, 3 dialog trees.
 
 Each entry: **when** it fires (plain English of the condition tree), **does** (anything beyond speaking), **pacing** (priority, cooldown, delay, output), then the lines. `{x}` in a line is filled at say-time.
 
@@ -18,7 +18,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - [bet](#bet) - Its predictions about drops (6 rules, 38 lines)
 - [clock](#clock) - The hour and how long we have been at it (9 rules, 39 lines)
 - [gear](#gear) - What you put on (63 rules, 147 lines)
-- [boss](#boss) - Bosses sighted and fought (55 rules, 522 lines)
+- [boss](#boss) - Bosses sighted and fought (56 rules, 522 lines)
 - [quest](#quest) - Famous quest figures nearby (165 rules, 406 lines)
 - [thrall](#thrall) - When it stands in for a thrall (3 rules, 18 lines)
 - [mimic](#mimic) - Copying your emotes (32 rules, 16 lines)
@@ -6244,8 +6244,17 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - {count} times now. I know how this one goes.
 - Your {ordinal}. That page is filling up.
-- {ordinal} time. I could draw it from memory now.
 - That makes {count}. The ledger has a column just for it.
+
+### `kill-count-round-long`
+
+> kill-count-round's two lines that speak of a long history, from the hundredth: said at the fifth they were wrong (QA5 #65, 20 Oct). A point over the round line on two rises in five, so from a hundred each of the five lines comes up as often as before.
+
+- **when:** killcount AND a 40% roll
+- **does:** mood +8
+- **pacing:** priority 73, cooldown 1m, delay 3-5 ticks
+
+- {ordinal} time. I could draw it from memory now.
 - {count}. Hard to believe there was ever a first one.
 
 ### `kill-count-thousand`

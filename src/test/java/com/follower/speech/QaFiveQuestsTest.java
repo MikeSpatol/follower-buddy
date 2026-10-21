@@ -1,5 +1,6 @@
 package com.follower.speech;
 
+import com.follower.sim.Harness;
 import com.follower.sim.QuestSim;
 import java.util.ArrayList;
 import java.util.List;
@@ -588,5 +589,44 @@ public class QaFiveQuestsTest
 		}
 		int said = java.util.Collections.frequency(s.heardIds, "fun-varrock-after-children-of-the-sun");
 		assertTrue(said + "\n" + s.transcript(), said >= 1 && said <= 2);
+	}
+
+	/**
+	 * Text QA5 #65: "5. Hard to believe there was ever a first one." at the
+	 * fifth kill. The lines about a long history wait for the hundreds.
+	 */
+	@Test
+	public void theLongHistoryLinesWaitForTheHundreds() throws Exception
+	{
+		Harness h = new Harness(folder.newFolder().toPath());
+		java.util.Set<String> early = new java.util.HashSet<>();
+		java.util.Set<String> late = new java.util.HashSet<>();
+		long[] clock = {1_800_000_000_000L};
+		h.engine.setClock(() -> clock[0]);
+		for (int round = 0; round < 60; round++)
+		{
+			for (int count : new int[]{5, 10, 25, 50, 75, 100, 200, 500})
+			{
+				h.clear();
+				clock[0] += 3_600_000L;
+				h.dispatch(TriggerEvent.killCount("Vorkath", count, count - 1));
+				h.gameTicks(8);
+				for (Harness.Spoken spoken : h.spoken)
+				{
+					if (spoken.rule != null && spoken.rule.id.startsWith("kill-count-round"))
+					{
+						(count < 100 ? early : late).add(spoken.rule.id + ": " + spoken.text);
+					}
+				}
+			}
+		}
+		assertFalse("the round line was heard early", early.isEmpty());
+		for (String line : early)
+		{
+			assertFalse(line, line.contains("first one") || line.contains("from memory"));
+		}
+		assertTrue("from the hundreds, " + late, late.stream().anyMatch(line -> line.contains("first one")));
+		assertTrue("and the round line's own, " + late,
+			late.stream().anyMatch(line -> line.startsWith("kill-count-round: ")));
 	}
 }
