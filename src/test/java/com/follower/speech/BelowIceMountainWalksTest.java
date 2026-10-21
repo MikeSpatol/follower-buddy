@@ -299,7 +299,9 @@ public class BelowIceMountainWalksTest
 					assertEquals(s.transcript(), expected(seen), moments(s));
 					assertTrue(s.transcript(), s.lost.isEmpty());
 					assertTrue(s.transcript(), s.heardIds.contains("quest-complete"));
-					assertTrue(s.transcript(), s.pagesSaid.contains("Below Ice Mountain"));
+					// Named once: by the page news, or by the scroll's line, which lets the news go.
+					assertTrue(s.transcript(), s.pagesSaid.contains("Below Ice Mountain")
+						!= s.scrollLine().contains("Below Ice Mountain"));
 				}
 			}
 		}

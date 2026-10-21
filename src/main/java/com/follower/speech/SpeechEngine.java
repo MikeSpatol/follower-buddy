@@ -2102,9 +2102,10 @@ public class SpeechEngine
 				{
 					replacement = Words.asCommonNoun(replacement);
 				}
-				// A creature's own "The", with nothing pointing at it, is lower
-				// case mid-sentence: you beat the Leviathan.
-				if ((event.getCreatureKeys().contains(key) || CREATURE_NAMES.contains(key))
+				// A creature's own "The", or a page's, with nothing pointing at
+				// it, is lower case mid-sentence: you beat the Leviathan, a page
+				// on the Abyss (quests QA5 #56).
+				if ((event.getCreatureKeys().contains(key) || CREATURE_NAMES.contains(key) || "page".equals(key))
 					&& replacement.startsWith("The ") && !opensSentence(template, i))
 				{
 					replacement = "t" + replacement.substring(1);

@@ -33,6 +33,13 @@ public class ChronicleEntry
 	/** The name exactly as the game spells it. */
 	public String name;
 
+	/**
+	 * The name as a line says it, where it wants an article the title does
+	 * not have: "Starting a page on the Wizards' Tower." Left out, a line
+	 * says the name as it is. Quests QA5 #56.
+	 */
+	public String spoken;
+
 	/** What has to have happened for the page to be readable. */
 	public ChronicleUnlock unlock;
 
@@ -148,6 +155,11 @@ public class ChronicleEntry
 	public String kindOrEmpty()
 	{
 		return kind == null ? "" : kind.toLowerCase(Locale.ROOT);
+	}
+
+	public String spokenName()
+	{
+		return spoken == null || spoken.isEmpty() ? name : spoken;
 	}
 
 	public List<Section> sectionsOrEmpty()

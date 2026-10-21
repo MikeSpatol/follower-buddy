@@ -919,7 +919,7 @@ public class FollowerPlugin extends Plugin
 		// floor: its own rules say what, from the page's kind and name, or
 		// "quest" for a page a quest opened, which the follower has not seen.
 		chronicleProgress.setOnWritten((entry, byQuest) -> pageNews.add(new PageNews(
-			TriggerEvent.pageWritten(byQuest ? "quest" : entry.kindOrEmpty(), entry.name),
+			TriggerEvent.pageWritten(byQuest ? "quest" : entry.kindOrEmpty(), entry.spokenName()),
 			client.getTickCount(),
 			!byQuest && "location".equals(entry.kindOrEmpty()) && entry.unlock != null
 				? entry.unlock.regions : null)));
@@ -12428,6 +12428,15 @@ public class FollowerPlugin extends Plugin
 		if (!hushed)
 		{
 			journal.spoke(rule, text);
+		}
+
+		// The scroll's line, naming its quest, is that quest's page news
+		// already. Text QA5 #63: "Priest in Peril, done and witnessed." then
+		// "That's Priest in Peril in the book." The quest's other pages keep theirs.
+		if (!text.isEmpty() && rule != null && "quest-complete".equals(rule.id))
+		{
+			pageNews.removeIf(page -> "quest".equals(page.event.getName())
+				&& text.contains(page.event.getPlaceholders().get("page")));
 		}
 
 		// The line's own voice, if the player has given it one. After the
