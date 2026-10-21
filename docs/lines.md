@@ -1588,7 +1588,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 - Done. I'd like it noted that I didn't look down.
 - Over. That obstacle and I have reached an understanding.
-- Made it. Writing that one up before it gets any taller.
+- Made it across. My notes will say I was very brave about it.
 
 ### `thieving-start`
 
