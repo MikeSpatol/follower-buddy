@@ -1316,6 +1316,7 @@ public class FollowerPlugin extends Plugin
 		follower.setOnEmoteStateChanged(this::updateEmoteDisarm);
 		follower.setOnEmoteClip(this::dressEmoteHands);
 		follower.setOnSnapped(this::followerSnapped);
+		follower.setDrawn(actor -> renderCallbacks.addEntity(actor, false));
 		stanceLibrary.setStyleSource(this::weaponUsage);
 		buildSlotIndexAsync();
 	}

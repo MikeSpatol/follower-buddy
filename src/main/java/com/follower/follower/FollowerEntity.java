@@ -2965,7 +2965,8 @@ public class FollowerEntity implements CrossingWatch.Listener
 	 */
 	public boolean isUnderMouse(net.runelite.api.Point canvasPoint)
 	{
-		if (!spawned || object == null || baseModel == null
+		// Out of sight (an NPC or a player on its tile, a vanish): nothing to click.
+		if (!isShown() || baseModel == null
 			|| lastRenderedLocation == null || canvasPoint == null)
 		{
 			return false;
@@ -3247,6 +3248,15 @@ public class FollowerEntity implements CrossingWatch.Listener
 		else
 		{
 			inAFire = false;
+		}
+
+		// Out of sight a long while under somebody standing on its tile (a
+		// player gone idle at a bank booth): a step aside, as off a fire.
+		hiddenForOverlapMs = hiddenForNpcOverlap ? hiddenForOverlapMs + deltaMs : 0;
+		if (hiddenForOverlapMs >= LONG_HIDE_MS && isSettled())
+		{
+			hiddenForOverlapMs = 0;
+			stepOffTheFire();
 		}
 
 		// Watchdog: if anything at all has left the object hidden while the player
@@ -3966,6 +3976,10 @@ public class FollowerEntity implements CrossingWatch.Listener
 	/** True while the follower is hidden because an NPC or another player shares its tile. */
 	private boolean hiddenForNpcOverlap;
 
+	/** How long it has been hidden so, and how long before it steps aside instead. */
+	private long hiddenForOverlapMs;
+	static final long LONG_HIDE_MS = 20_000;
+
 	/**
 	 * How tall an NPC has to be, against the follower's own height, before
 	 * sharing a tile with it is worth hiding for.
@@ -4056,7 +4070,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 			// than the overlap would have. An NPC on the move is playing a
 			// walk pose; a standing one is on its idle pose, including while
 			// it attacks, since that lives in the animation slot instead.
-			if (npc.getPoseAnimation() != npc.getIdlePoseAnimation())
+			if (!standing(npc) || !drawn.test(npc))
 			{
 				continue;
 			}
@@ -4104,12 +4118,32 @@ public class FollowerEntity implements CrossingWatch.Listener
 			{
 				continue;
 			}
-			if (other.getPoseAnimation() == other.getIdlePoseAnimation())
+			if (standing(other) && drawn.test(other))
 			{
 				return true;
 			}
 		}
 		return false;
+	}
+
+	/** Stopped: on its idle pose, or turning on the spot, which plays the idle's turn. */
+	private static boolean standing(net.runelite.api.Actor actor)
+	{
+		int pose = actor.getPoseAnimation();
+		return pose == actor.getIdlePoseAnimation()
+			|| pose == actor.getIdleRotateLeft() || pose == actor.getIdleRotateRight();
+	}
+
+	/**
+	 * Whether the client will draw this actor: another plugin (Entity Hider)
+	 * can hide players and NPCs, and the follower does not give way to
+	 * someone nobody can see. Everyone, until the plugin says.
+	 */
+	private java.util.function.Predicate<net.runelite.api.Actor> drawn = actor -> true;
+
+	public void setDrawn(java.util.function.Predicate<net.runelite.api.Actor> drawn)
+	{
+		this.drawn = drawn == null ? actor -> true : drawn;
 	}
 
 	/**
@@ -4544,6 +4578,11 @@ public class FollowerEntity implements CrossingWatch.Listener
 			if (object.isActive())
 			{
 				object.setActive(false);
+				// Whatever it is wearing goes with it, and comes back with it.
+				for (RuneLiteObject graphic : activeGraphics)
+				{
+					graphic.setActive(false);
+				}
 			}
 			return true;
 		}
@@ -4558,6 +4597,10 @@ public class FollowerEntity implements CrossingWatch.Listener
 		if (!object.isActive())
 		{
 			object.setActive(true);
+			for (RuneLiteObject graphic : activeGraphics)
+			{
+				graphic.setActive(true);
+			}
 		}
 
 		int lx = base.getX() + (int) (fineWX & 127) - 64;
