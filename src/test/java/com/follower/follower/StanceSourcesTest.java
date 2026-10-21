@@ -401,7 +401,8 @@ public class StanceSourcesTest
 	@Test
 	public void seeingAWeaponCarriedDifferentlyLearnsIt()
 	{
-		Player player = player(WHIP, new int[]{808, 1660, 11466, 1660, 1660, 1660, 823, 823}, false);
+		// A stand of its own too: on the shipped stand it would be a passing swap.
+		Player player = player(WHIP, new int[]{INVENTED[0], 1660, 11466, 1660, 1660, 1660, 823, 823}, false);
 		library.observe(client(player));
 
 		assertEquals(11466, library.forWeapon(WHIP).run);
@@ -442,7 +443,7 @@ public class StanceSourcesTest
 	public void aWeaponSwungAndThenSeenCarriedDifferentlyKeepsItsSwings()
 	{
 		library.learnAttack(player(WHIP, new int[]{808, 1660, 1661, 1660, 1660, 1660, 823, 823}, true), 390, 1);
-		library.observe(client(player(WHIP, new int[]{808, 1660, 11466, 1660, 1660, 1660, 823, 823}, false)));
+		library.observe(client(player(WHIP, new int[]{INVENTED[0], 1660, 11466, 1660, 1660, 1660, 823, 823}, false)));
 
 		assertEquals(11466, library.forWeapon(WHIP).run);
 		assertEquals("the swing in the style it was seen in", 390, library.attackFor(WHIP, 1));
@@ -494,6 +495,42 @@ public class StanceSourcesTest
 		assertEquals("a real one stays", 900002,
 			saved.getAsJsonObject(Integer.toString(BASE + 7)).get("walk").getAsInt());
 		assertEquals(819, library.forWeapon(-1).walk);
+	}
+
+	private static final int RUNE_2H = 1319;
+
+	/**
+	 * A two-hander seen on its own stand but the plain walk and run is
+	 * mid-swap, and teaches nothing: one sighting used to carry it like a
+	 * one-handed sword for good (qa5 #31).
+	 */
+	@Test
+	public void aShippedStandWithAnotherWalkTeachesNothing() throws IOException
+	{
+		library.observe(client(player(RUNE_2H, new int[]{2561, 819, 824, 820, 821, 822, 823, 823}, false)));
+		library.save();
+
+		StanceLibrary reloaded = load();
+		assertEquals(2562, reloaded.forWeapon(RUNE_2H).walk);
+		assertEquals(2563, reloaded.forWeapon(RUNE_2H).run);
+	}
+
+	/** Such a set learned before is taken out on the first tick, its swing kept. */
+	@Test
+	public void aPassingSwapLearnedBeforeIsForgotten() throws IOException
+	{
+		writeLearned("{\"" + RUNE_2H + "\":{\"idle\":2561,\"walk\":819,\"run\":824,\"attack\":7045},"
+			+ "\"20368\":{\"idle\":7053,\"walk\":819,\"run\":824}}");
+		library = load();
+		library.observe(client());
+		library.save();
+
+		JsonObject saved = savedFile();
+		assertEquals("its swing stays", 7045, saved.getAsJsonObject(Integer.toString(RUNE_2H)).get("attack").getAsInt());
+		assertEquals("its walk goes", 0, saved.getAsJsonObject(Integer.toString(RUNE_2H)).get("walk").getAsInt());
+		assertFalse(saved.has("20368"));
+		assertEquals(2562, library.forWeapon(RUNE_2H).walk);
+		assertEquals(7052, library.forWeapon(20368).walk);
 	}
 
 	// ------------------------------------------------------------- doubles

@@ -635,17 +635,18 @@ public class SketchController
 			return;
 		}
 		long seed = filing.hashCode();
+		int edition = book.edition();
 		// Nor the scribe: it draws the view, it is not in it. Out for that
 		// one frame, back the moment it is taken.
 		follower.setOutOfPicture(true);
 		drawManager.requestNextFrameListener(frame ->
 		{
 			follower.setOutOfPicture(false);
-			copyAndDraw(frame, crop, filing, seed, posed);
+			copyAndDraw(frame, crop, filing, seed, posed, edition);
 		});
 	}
 
-	private void copyAndDraw(Image frame, Rectangle crop, String filing, long seed, String posed)
+	private void copyAndDraw(Image frame, Rectangle crop, String filing, long seed, String posed, int edition)
 	{
 		// The frame is the client's own buffer, reused on the next draw: copy
 		// the part wanted now, and do the slow drawing somewhere else.
@@ -670,7 +671,7 @@ public class SketchController
 				book.put(filing,
 					SketchStyle.draw(copy, ChronicleLayout.PLATE_W - 4, ChronicleLayout.PLATE_H - 4, seed),
 					SketchStyle.draw(copy, ChronicleLayout.BIG_PLATE_W - 4, ChronicleLayout.BIG_PLATE_H - 4, seed),
-					posed);
+					posed, edition);
 			}
 			catch (RuntimeException e)
 			{

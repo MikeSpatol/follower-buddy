@@ -67,6 +67,29 @@ public class SpotAnimRepositoryTest
 	}
 
 	@Test
+	public void theLiveCacheFillsInWhatADumpPredates() throws IOException
+	{
+		// QA pass 5, #75: an August dump won outright, so 426 graphics the
+		// game added since were not there on the development client.
+		SpotAnimRepository repository = loadedWith(
+			"{\"version\": 1, \"spotanims\": {\"246\": {\"m\": 1, \"a\": 2}}}");
+		assertFalse(repository.hasReadTheLiveCache());
+
+		java.util.Map<String, SpotAnimRepository.Entry> live = new java.util.LinkedHashMap<>();
+		SpotAnimRepository.Entry changed = new SpotAnimRepository.Entry();
+		changed.m = 7;
+		live.put("246", changed);
+		SpotAnimRepository.Entry newer = new SpotAnimRepository.Entry();
+		newer.m = 9;
+		live.put("4400", newer);
+		repository.addLive(live);
+
+		assertTrue(repository.hasReadTheLiveCache());
+		assertEquals("the dump still wins for the ids it has", 1, repository.get(246).modelId());
+		assertEquals("and the newer one is there", 9, repository.get(4400).modelId());
+	}
+
+	@Test
 	public void anEmptyDumpIsNotLoaded() throws IOException
 	{
 		SpotAnimRepository repository = loadedWith("{\"version\": 1}");

@@ -55,9 +55,13 @@ public class SketchBookTest
 		assertTrue(after.hasBoth("lumbridge"));
 	}
 
-	/** Forget everything forgets the Chronicle's drawings too (the user, 16 Oct). */
+	/**
+	 * Forget everything forgets the Chronicle's drawings too (the user,
+	 * 16 Oct), every account's, as the memory it goes with is the whole
+	 * profile's (the user, 20 Oct; qa5 #13/#27).
+	 */
 	@Test
-	public void forgettingTearsOutThisAccountsDrawingsAndNoOneElses() throws IOException
+	public void forgettingTearsOutEveryAccountsDrawings() throws IOException
 	{
 		Path data = folder.newFolder().toPath();
 		SketchBook book = new SketchBook(data);
@@ -72,12 +76,49 @@ public class SketchBookTest
 		SketchBook again = new SketchBook(data);
 		again.openFor("account-one");
 		assertFalse("and from disk, with its pose and backups", again.has("lumbridge"));
-		try (java.util.stream.Stream<Path> left = java.nio.file.Files.list(data.resolve(SketchBook.DIR_NAME).resolve("account-one")))
+		for (String account : new String[]{"account-one", "account-two"})
 		{
-			assertEquals(0, left.count());
+			try (java.util.stream.Stream<Path> left = Files.list(data.resolve(SketchBook.DIR_NAME).resolve(account)))
+			{
+				assertEquals(account + " is emptied", 0, left.count());
+			}
 		}
 		again.openFor("account-two");
-		assertTrue("another account's book is its own", again.has("varrock"));
+		assertFalse("another account's drawings go with the memory", again.has("varrock"));
+	}
+
+	/** At the login screen no book is open yet, and the drawings still go (qa5 #27). */
+	@Test
+	public void forgettingBeforeAnyLoginStillTearsThemOut() throws IOException
+	{
+		Path data = folder.newFolder().toPath();
+		SketchBook before = new SketchBook(data);
+		before.openFor("account-one");
+		before.put("lumbridge", picture(0x8a6a40), picture(0x9a7a50));
+
+		SketchBook unopened = new SketchBook(data);
+		unopened.forgetAll();
+		unopened.openFor("account-one");
+		assertFalse(unopened.has("lumbridge"));
+	}
+
+	/** A drawing still being made when Forget is pressed is not filed after it (qa5 #13). */
+	@Test
+	public void aDrawingBegunBeforeForgettingIsDropped() throws IOException
+	{
+		Path data = folder.newFolder().toPath();
+		SketchBook book = new SketchBook(data);
+		book.openFor("account-one");
+		int begun = book.edition();
+		book.forgetAll();
+		book.put("wizards-tower", picture(0x101010), picture(0x202020), "dance", begun);
+		assertFalse("not in the book", book.has("wizards-tower"));
+		Path into = data.resolve(SketchBook.DIR_NAME).resolve("account-one");
+		assertFalse("and nothing written to disk", Files.exists(into.resolve("wizards-tower.png")));
+		assertFalse(Files.exists(into.resolve("wizards-tower" + SketchBook.POSE)));
+
+		book.put("wizards-tower", picture(0x101010), picture(0x202020), null, book.edition());
+		assertTrue("one begun after is filed as ever", book.has("wizards-tower"));
 	}
 
 	@Test

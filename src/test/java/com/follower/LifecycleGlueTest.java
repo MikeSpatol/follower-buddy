@@ -693,4 +693,22 @@ public class LifecycleGlueTest
 			chat.indexOf("isSafeDeathHere()") >= 0
 				&& chat.indexOf("isSafeDeathHere()") < chat.indexOf("TriggerEvent.chat("));
 	}
+
+	@Test
+	public void theSlowWorkIsOnThePluginsOwnWorker() throws IOException
+	{
+		// QA pass 5, #68: RuneLite's executor is one thread every plugin
+		// shares. A 64 MB pack or a second-long sketch on it held up all else
+		// queued there, a line's voice among them. Only the voice, a moment's
+		// work, is left on it; the rest goes to the plugin's own worker, made
+		// at the start and stopped at the stop.
+		String source = source();
+		assertEquals("only the voice on the shared executor", 1, source.split("executor[.]execute[(]", -1).length - 1);
+		assertTrue(source.contains("executor.execute(() -> voices.play(text, volume));"));
+		assertTrue(source.contains("worker.execute(() -> exportPack(target, parent));"));
+		assertTrue(source.contains("worker.execute(() -> importPack(source, parent));"));
+		assertTrue(source.contains("sketchBook, drawManager, worker,"));
+		assertTrue(method("protected void startUp() throws Exception").contains("worker = new "));
+		assertTrue(method("protected void shutDown() throws Exception").contains("worker.shutdown();"));
+	}
 }

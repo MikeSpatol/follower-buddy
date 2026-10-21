@@ -138,6 +138,7 @@ public class ModelRepository
 
 	@Getter
 	private volatile boolean loaded;
+	private volatile boolean liveRead;
 
 	@Getter
 	private volatile String status = "not loaded";
@@ -217,9 +218,10 @@ public class ModelRepository
 
 	/**
 	 * Builds the catalogue from the client's own loaded cache - the no-dump
-	 * path every Hub install uses. A dump file, when present, wins: it is the
-	 * development override and the validation baseline for the live parser.
-	 * No-op while the cache indexes are not available yet; callers retry.
+	 * path every Hub install uses. A dump file, when present, wins for the
+	 * ids it has: it is the development override and the validation baseline
+	 * for the live parser. No-op while the cache indexes are not available
+	 * yet; callers retry.
 	 */
 	public void loadFromClient(net.runelite.api.Client client)
 	{
@@ -228,11 +230,34 @@ public class ModelRepository
 		{
 			return;
 		}
+		addLive(liveItems, LiveCacheParser.parseKits(client));
+	}
+
+	/**
+	 * The live cache's items and kits, under a dump's: the items newer than
+	 * the dump are in the catalogue too, where a dump from August left them
+	 * out on the development client (qa5 #75).
+	 */
+	void addLive(Map<String, Entry> liveItems, Map<String, Entry> liveKits)
+	{
+		boolean dumped = loaded;
+		liveItems.putAll(items);
+		liveKits.putAll(kits);
 		items = liveItems;
-		kits = LiveCacheParser.parseKits(client);
+		kits = liveKits;
 		loaded = true;
-		status = items.size() + " items, " + kits.size() + " kits (live cache)";
-		log.info("Loaded model catalogue from live cache: {}", status);
+		liveRead = true;
+		if (!dumped)
+		{
+			status = items.size() + " items, " + kits.size() + " kits (live cache)";
+		}
+		log.info("Loaded model catalogue from live cache: {} items, {} kits", items.size(), kits.size());
+	}
+
+	/** Whether the client's own cache has been read in yet, under a dump or not. */
+	public boolean hasReadTheLiveCache()
+	{
+		return liveRead;
 	}
 
 	public void unload()
@@ -240,6 +265,7 @@ public class ModelRepository
 		items = Collections.emptyMap();
 		kits = Collections.emptyMap();
 		loaded = false;
+		liveRead = false;
 		status = "not loaded";
 	}
 

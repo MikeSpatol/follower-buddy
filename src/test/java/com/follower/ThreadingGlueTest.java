@@ -64,8 +64,8 @@ public class ThreadingGlueTest
 		// Up to 64 MB of sounds unzipped, and every sound zipped, with the
 		// event thread, and the game's input, waiting.
 		String share = method("private void shareLines(java.awt.Component parent)");
-		assertTrue(share, share.contains("executor.execute(() -> exportPack("));
-		assertTrue(share, share.contains("executor.execute(() -> importPack("));
+		assertTrue(share, share.contains("worker.execute(() -> exportPack("));
+		assertTrue(share, share.contains("worker.execute(() -> importPack("));
 		for (String off : new String[]{"private void exportPack(", "private void importPack("})
 		{
 			String work = method(off);

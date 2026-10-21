@@ -109,7 +109,9 @@ wait, start the paragraph or list item with `{done:RECIPE_FOR_DISASTER}`
 needed). It stays off the page until the quest is done, a section left with
 nothing loses its heading, and the gate is never drawn. Naming a quest in a
 list of what it leads to or where it starts gives nothing away. Plate captions
-cannot wait, so a caption is safe from the page's earliest unlock. The summary,
+cannot wait, but none shows before its page can be read: a place drawn early
+is captioned "Drawn ahead of the page." until then (the user, 20 Oct). So a
+caption is safe from the page's earliest unlock. The summary,
 and a creature's "Where it is found", which shows even on its locked page, each
 keep at least one passage with no gate.
 
@@ -701,7 +703,8 @@ like this:
 
 ## Where the pages stand
 
-Measured on 2026-10-16, after the fourth QA pass, across all 27 pages. Most
+Measured on 2026-10-16, after the fourth QA pass, and re-counted on
+2026-10-20, after the fifth, across all 32 pages. Most
 of what the first measurement (2026-09-24) listed is now in line: the pages
 contract where the scribe speaks and the grave pages do not, summaries keep
 to about 220 characters, "Described" is down to four pages, no summary
@@ -711,10 +714,9 @@ advice. What is left:
 - **Rule 10.** Waterfall Quest runs 7,235 characters of prose with every
   passage open and 5,609 with none, against the 5,000 ceiling. The approved
   cuts are in; what remains is the story and its history.
-- **Rule 1.** Six of the 17 creature and place pages have no witnessed
-  first-person verb outside quotes: the Giant Mole, the Monk of Zamorak, the
-  moss guardian, Lumbridge, Paterdomus and Morytania. The mole page also
-  carries this rule's own "Don't" sentence until its rewording lands.
-- **Rule 6.** Only 6 of the 17 creature and place pages carry a gap marker.
+- **Rule 1.** Five of the 19 creature and place pages have no witnessed
+  first-person verb outside quotes: the Monk of Zamorak, the moss guardian,
+  Lumbridge, Paterdomus and Morytania.
+- **Rule 6.** Only 8 of the 19 creature and place pages carry a gap marker.
 - **Rule 14.** Morytania runs 2,096 characters of prose with every passage
   open, against about 2,000 for a land.

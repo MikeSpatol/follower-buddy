@@ -66,6 +66,29 @@ public class ModelRepositoryTest
 	}
 
 	@Test
+	public void theLiveCacheFillsInWhatADumpPredates() throws IOException
+	{
+		// QA pass 5, #75: an August dump won outright, so the items the game
+		// added since were missing from the outfit catalogue.
+		ModelRepository repository = loadedWith(dumpWith(
+			"\"4151\": {\"n\": \"Abyssal whip\", \"m\": [100], \"f\": [101], \"wp1\": 3}", ""));
+		assertFalse(repository.hasReadTheLiveCache());
+
+		java.util.Map<String, ModelRepository.Entry> live = new java.util.LinkedHashMap<>();
+		ModelRepository.Entry renamed = new ModelRepository.Entry();
+		renamed.n = "Whip from the cache";
+		live.put("4151", renamed);
+		ModelRepository.Entry newer = new ModelRepository.Entry();
+		newer.n = "Newer item";
+		live.put("31000", newer);
+		repository.addLive(live, new java.util.LinkedHashMap<>());
+
+		assertTrue(repository.hasReadTheLiveCache());
+		assertEquals("the dump still wins for the ids it has", "Abyssal whip", repository.itemName(4151));
+		assertEquals("and the newer one is there", "Newer item", repository.itemName(31000));
+	}
+
+	@Test
 	public void anUnknownItemIsNullRatherThanAnEmptyEntry() throws IOException
 	{
 		ModelRepository repository = loadedWith(dumpWith(

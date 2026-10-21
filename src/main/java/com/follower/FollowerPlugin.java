@@ -313,6 +313,15 @@ public class FollowerPlugin extends Plugin
 	@Inject
 	private java.util.concurrent.ScheduledExecutorService executor;
 
+	/**
+	 * The plugin's own worker for its slow work off the client and event
+	 * threads: reading and writing packs, and drawing sketches. RuneLite's
+	 * executor is one thread every plugin shares, so a 64 MB pack or a
+	 * second-long sketch on it held up all else queued there, a line's voice
+	 * among them (qa5 #68). Made in startUp, stopped in shutDown.
+	 */
+	private java.util.concurrent.ExecutorService worker;
+
 	@Inject
 	private com.follower.follower.StanceLibrary stanceLibrary;
 
@@ -590,6 +599,15 @@ public class FollowerPlugin extends Plugin
 	@Override
 	protected void startUp() throws Exception
 	{
+		// One thread; work handed it once stopped (a sketch's frame arriving
+		// after shutDown) is dropped, not thrown into the caller.
+		worker = new java.util.concurrent.ThreadPoolExecutor(1, 1, 0, java.util.concurrent.TimeUnit.MILLISECONDS,
+			new java.util.concurrent.LinkedBlockingQueue<>(), work ->
+			{
+				Thread thread = new Thread(work, "Follower Buddy worker");
+				thread.setDaemon(true);
+				return thread;
+			}, new java.util.concurrent.ThreadPoolExecutor.DiscardPolicy());
 		dataDir = RuneLite.RUNELITE_DIR.toPath().resolve(DATA_DIR_NAME);
 		try
 		{
@@ -939,7 +957,7 @@ public class FollowerPlugin extends Plugin
 		// it: never mid-fight, mid-errand, mid-conversation, or with any
 		// window open over the view, since the view is the picture.
 		sketching = new com.follower.chronicle.SketchController(client, follower, hands, chronicle,
-			sketchBook, drawManager, executor,
+			sketchBook, drawManager, worker,
 			() -> thrallNpc != null || errands.isBusy() || spectate.holdsTheFeet()
 				|| dialog.isOpen() || chronicleWindow.isOpen() || emoteHold || minutesState != 0
 				|| skilling.holdsTheFeet() || moments.holdsTheFeet() || flourish.isActive()
@@ -1013,8 +1031,16 @@ public class FollowerPlugin extends Plugin
 	{
 		// First, so work already queued for the client thread finds it gone.
 		started = false;
-		journal.flush();
-		agilityTrace.flush();
+		// Diagnostics: one that throws must not cost the teardown after it.
+		try
+		{
+			journal.flush();
+			agilityTrace.flush();
+		}
+		catch (RuntimeException e)
+		{
+			log.warn("Could not write the transcript or trace at shutdown", e);
+		}
 		renderCallbacks.unregister(thrallHider);
 		// Before the engine is reset: an orderly shutdown is the one chance to
 		// save what the last few ticks counted.
@@ -1041,6 +1067,8 @@ public class FollowerPlugin extends Plugin
 		cutByTheScene = null;
 		speakingUntilMs = 0;
 		voices.close();
+		// A pack being written is let finish, not cut off half-way.
+		worker.shutdown();
 
 		if (navButton != null)
 		{
@@ -3405,7 +3433,9 @@ public class FollowerPlugin extends Plugin
 			sessionRecordSaid = false;
 			knownLevels.clear();
 			// The Chronicle goes too (the user, 16 Oct): its dates live in the
-			// memory just erased, and its drawings are torn out here.
+			// memory just erased, and its drawings are torn out here, with
+			// one being posed for or drawn (the user, 20 Oct).
+			sketching.reset();
 			sketchBook.forgetAll();
 			sendStatus("Forgotten. All of it. Clean page.");
 
@@ -3957,14 +3987,14 @@ public class FollowerPlugin extends Plugin
 				+ "\n\nImporting adds somebody else's to yours. Nothing is replaced.",
 			"Share", javax.swing.JOptionPane.DEFAULT_OPTION,
 			javax.swing.JOptionPane.QUESTION_MESSAGE, null, choices, choices[0]);
-		// The packs are read and written on the executor: up to 64 MB of
+		// The packs are read and written on the worker: up to 64 MB of
 		// sounds held the event thread, and with it the game's input (QA pass 4).
 		if (picked == 0)
 		{
 			java.io.File target = choosePack(true, parent);
 			if (target != null)
 			{
-				executor.execute(() -> exportPack(target, parent));
+				worker.execute(() -> exportPack(target, parent));
 			}
 		}
 		else if (picked == 1)
@@ -3972,7 +4002,7 @@ public class FollowerPlugin extends Plugin
 			java.io.File source = choosePack(false, parent);
 			if (source != null)
 			{
-				executor.execute(() -> importPack(source, parent));
+				worker.execute(() -> importPack(source, parent));
 			}
 		}
 	}
@@ -6027,10 +6057,11 @@ public class FollowerPlugin extends Plugin
 			// that beat the item stats to it.
 			buildSlotIndexAsync();
 		}
-		if (!modelRepository.isLoaded())
+		// Read under a dump too, so what the game added since the dump is there.
+		if (!modelRepository.hasReadTheLiveCache())
 		{
 			modelRepository.loadFromClient(client);
-			if (modelRepository.isLoaded())
+			if (modelRepository.hasReadTheLiveCache())
 			{
 				// The outfit picker's slot filter and status line were built
 				// against an empty catalogue; rebuild them on the real one.
@@ -6038,7 +6069,7 @@ public class FollowerPlugin extends Plugin
 				syncPanel();
 			}
 		}
-		if (!spotAnimRepository.isLoaded())
+		if (!spotAnimRepository.hasReadTheLiveCache())
 		{
 			spotAnimRepository.loadFromClient(client);
 		}

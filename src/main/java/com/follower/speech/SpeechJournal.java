@@ -222,13 +222,13 @@ public class SpeechJournal
 		return "r" + region.getAsInt();
 	}
 
-	private void append(String line)
+	private synchronized void append(String line)
 	{
 		pending.add(line);
 	}
 
 	/** Called from the tick. Writes only when there is something and it is due. */
-	public void flushIfDue()
+	public synchronized void flushIfDue()
 	{
 		long now = System.currentTimeMillis();
 		if (!pending.isEmpty() && now - lastFlushMs >= FLUSH_EVERY_MS)
@@ -237,7 +237,7 @@ public class SpeechJournal
 		}
 	}
 
-	public void flush()
+	public synchronized void flush()
 	{
 		lastFlushMs = System.currentTimeMillis();
 		if (pending.isEmpty() || file == null)

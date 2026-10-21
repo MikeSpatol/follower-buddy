@@ -490,6 +490,12 @@ public class ChronicleIntegrityTest
 					{
 						problems.add(at + ": hint too wide (" + width + "px): " + plate.hint);
 					}
+					// Drawn before its page is written, it says so instead (qa5 #12).
+					String ahead = ChronicleWindow.caption("location", plate, 7, false, true);
+					if (small.stringWidth(ahead) > ChronicleLayout.PLATE_W - 32)
+					{
+						problems.add(at + ": too wide (" + small.stringWidth(ahead) + "px): " + ahead);
+					}
 					String before = sketchHints.putIfAbsent(plate.sketch, plate.hint);
 					if (before != null && !before.equals(plate.hint))
 					{
@@ -652,5 +658,38 @@ public class ChronicleIntegrityTest
 			}
 		}
 		assertTrue("numbers nothing counts:\n  " + String.join("\n  ", problems), problems.isEmpty());
+	}
+
+	/**
+	 * A portrait is the person you meet, not a cutscene's copy of them: the
+	 * copy can be made without parts, as Willow's was without her boots
+	 * (qa5 #30). The names are RuneLite's gameval ones. King Roald's
+	 * cutscene copy, 1399, has the same models, colours and stand as the
+	 * KING_ROALD met in the palace (5215; cache dump, 20 Oct).
+	 */
+	@Test
+	public void noPortraitIsACutscenesCopy() throws IOException, IllegalAccessException
+	{
+		java.util.Map<Integer, String> names = new java.util.HashMap<>();
+		for (java.lang.reflect.Field field : net.runelite.api.gameval.NpcID.class.getFields())
+		{
+			if (field.getType() == int.class)
+			{
+				names.put(field.getInt(null), field.getName());
+			}
+		}
+		List<String> problems = new ArrayList<>();
+		for (ChronicleEntry entry : loadAsAFreshInstall().getEntries())
+		{
+			for (ChronicleEntry.Plate plate : entry.platesOrEmpty())
+			{
+				String name = plate.npc == null ? null : names.get(plate.npc);
+				if (plate.npc != null && plate.npc != 1399 && (name == null || name.contains("CUTSCENE")))
+				{
+					problems.add(entry.id + ": " + plate.npc + " " + name);
+				}
+			}
+		}
+		assertTrue(String.join("\n", problems), problems.isEmpty());
 	}
 }

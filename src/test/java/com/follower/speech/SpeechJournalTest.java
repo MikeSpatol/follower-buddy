@@ -322,4 +322,36 @@ public class SpeechJournalTest
 		assertTrue("the transcript never mentions the settling damper:\n" + written,
 			written.contains("\tsettling"));
 	}
+
+	/**
+	 * The client thread writes lines while shutDown flushes on the event
+	 * thread: unguarded, the flush threw part-way through the teardown or
+	 * lost lines (qa5 #69). Every line is written exactly once.
+	 */
+	@Test
+	public void linesWrittenWhileItFlushesAreAllKept() throws Exception
+	{
+		Path dir = folder.newFolder().toPath();
+		SpeechJournal journal = journalIn(dir);
+		journal.setEnabled(true);
+		int lines = 50_000;
+		Thread client = new Thread(() ->
+		{
+			for (int n = 0; n < lines; n++)
+			{
+				journal.scene(true, "line " + n);
+			}
+		});
+		client.start();
+		while (client.isAlive())
+		{
+			journal.flush();
+		}
+		client.join();
+		journal.flush();
+
+		long scenes = Files.readAllLines(journal.getFile(), StandardCharsets.UTF_8).stream()
+			.filter(line -> line.contains("\tscene\t")).count();
+		assertEquals(lines, scenes);
+	}
 }

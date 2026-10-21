@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -177,6 +178,35 @@ public class PhrasesDialogTest
 					+ ", past the window's " + width, p.x + b.getWidth() <= width);
 			}
 		}
+		SwingUtilities.invokeAndWait(dialog::dispose);
+	}
+
+	@Test
+	public void aSwitchOfCategoryListsFromTheFileAsOpenedAndReloadReadsItAgain() throws Exception
+	{
+		// QA pass 5, #71: every switch read and parsed the whole file again,
+		// most of half a second on the event thread for Quest NPCs.
+		Assume.assumeFalse(GraphicsEnvironment.isHeadless());
+		PhrasesDialog dialog = dialog(true);
+		Files.write((Path) field(dialog, "file"), "{".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+		JComboBox<?> picker = (JComboBox<?>) field(dialog, "categoryPicker");
+		SwingUtilities.invokeAndWait(() -> picker.setSelectedIndex(2));
+		assertFalse("listed without reading the file again", ((List<?>) field(dialog, "rows")).isEmpty());
+
+		java.lang.reflect.Method refresh = PhrasesDialog.class.getDeclaredMethod("refresh");
+		refresh.setAccessible(true);
+		SwingUtilities.invokeAndWait(() ->
+		{
+			try
+			{
+				refresh.invoke(dialog);
+			}
+			catch (ReflectiveOperationException e)
+			{
+				throw new IllegalStateException(e);
+			}
+		});
+		assertTrue("Reload does read it", ((List<?>) field(dialog, "rows")).isEmpty());
 		SwingUtilities.invokeAndWait(dialog::dispose);
 	}
 

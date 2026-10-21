@@ -51,6 +51,8 @@ public class SketchBook
 	private final Map<String, Path> unreadLarge = new ConcurrentHashMap<>();
 	private final Map<String, String> poses = new ConcurrentHashMap<>();
 	private volatile Path folder;
+	/** Turned by every forgetAll, so a drawing begun before one is not filed after it. */
+	private volatile int edition;
 
 	public SketchBook(Path dataDir)
 	{
@@ -180,7 +182,22 @@ public class SketchBook
 	 */
 	public void put(String key, BufferedImage sketch, BufferedImage big, String pose)
 	{
-		if (key == null || sketch == null || big == null)
+		put(key, sketch, big, pose, edition);
+	}
+
+	/** The book's edition now: a drawing takes it when it begins and files with it. */
+	public int edition()
+	{
+		return edition;
+	}
+
+	/**
+	 * The same, for a drawing begun in the given edition: one begun before
+	 * a Forget everything is dropped, not filed into the emptied book.
+	 */
+	public synchronized void put(String key, BufferedImage sketch, BufferedImage big, String pose, int begun)
+	{
+		if (key == null || sketch == null || big == null || begun != edition)
 		{
 			return;
 		}
@@ -269,22 +286,42 @@ public class SketchBook
 	}
 
 	/**
-	 * Tears out every drawing in the open account's book, with its pose and
-	 * backups, on disk and in memory. Forget everything: the user's decision,
-	 * 16 Oct, that forgetting forgets the Chronicle too.
+	 * Tears out every drawing in every account's book, with its pose and
+	 * backups, on disk and in memory, and drops a drawing still being made.
+	 * Forget everything: the user's decisions, 16 Oct, that forgetting
+	 * forgets the Chronicle too, and 20 Oct, that it is every account's,
+	 * as the memory it goes with belongs to the whole profile.
 	 */
-	public void forgetAll()
+	public synchronized void forgetAll()
 	{
+		edition++;
 		sketches.clear();
 		large.clear();
 		unread.clear();
 		unreadLarge.clear();
 		poses.clear();
-		Path in = folder;
-		if (in == null || !Files.isDirectory(in))
+		if (root == null || !Files.isDirectory(root))
 		{
 			return;
 		}
+		try (DirectoryStream<Path> accounts = Files.newDirectoryStream(root))
+		{
+			for (Path account : accounts)
+			{
+				if (Files.isDirectory(account))
+				{
+					tearOut(account);
+				}
+			}
+		}
+		catch (IOException | RuntimeException e)
+		{
+			log.warn("Could not tear every sketch out of {}", root, e);
+		}
+	}
+
+	private static void tearOut(Path in)
+	{
 		try (DirectoryStream<Path> files = Files.newDirectoryStream(in))
 		{
 			for (Path file : files)

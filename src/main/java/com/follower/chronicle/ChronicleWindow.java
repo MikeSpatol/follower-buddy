@@ -1323,7 +1323,9 @@ public class ChronicleWindow extends Overlay
 	 * "Plate II. The cook, in his kitchen." - or what stands in for it before
 	 * it is earned. A creature's page opens on sight, so its plate is not yet
 	 * seen; any other page waits on a quest or a visit, and its people may
-	 * well have been met already.
+	 * well have been met already. A place can be drawn before its page is
+	 * written, on a page that shares the place or on the way through, and
+	 * its caption waits for the page all the same (the user, 20 Oct).
 	 */
 	static String caption(String kind, ChronicleEntry.Plate plate, int index, boolean seen, boolean sketched)
 	{
@@ -1336,6 +1338,10 @@ public class ChronicleWindow extends Overlay
 		{
 			return number + (plate.hint == null || plate.hint.trim().isEmpty()
 				? "Pose for me when we're there." : plate.hint);
+		}
+		if (plate.sketch != null && !seen)
+		{
+			return number + "Drawn ahead of the page.";
 		}
 		return number + (plate.caption == null ? "" : plate.caption);
 	}
