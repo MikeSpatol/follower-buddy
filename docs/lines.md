@@ -1587,7 +1587,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 - **pacing:** priority 20, cooldown 30m, delay 1-3 ticks, overhead
 
 - Done. I'd like it noted that I didn't look down.
-- Over. It and I have reached an understanding.
+- Over. That obstacle and I have reached an understanding.
 - Made it. Writing that one up before it gets any taller.
 
 ### `thieving-start`
