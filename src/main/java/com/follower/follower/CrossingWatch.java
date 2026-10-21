@@ -32,7 +32,9 @@ import net.runelite.api.kit.KitType;
  * forced movement (a jump, a squeeze, a vault) shows the stand, or an odd
  * pose. Counted only over consecutive frames, so the one frame where a walk
  * ends on the stand can never add up to one; a frame that only repeats the
- * last (more frames drawn than game cycles) neither counts nor breaks it.</li>
+ * last (more frames drawn than game cycles) neither counts nor breaks it.
+ * A running jump counts at once: the server puts them further than their
+ * walk goes, with a clip on, while the client still draws the walk.</li>
  * <li><b>An action with a hop.</b> An animation, then the player put down a
  * tile or more away or on another floor: a climb, a jump across a gap. A
  * ladder looks exactly the same, so this one needs agility XP, or damage (a
@@ -476,11 +478,17 @@ public final class CrossingWatch
 		boolean walkingPose = isWalkingPose(s.pose);
 		boolean oddPose = s.pose != -1 && !contains(normal, s.pose);
 		boolean animating = s.action != -1 || prev.action != -1;
+		// A running jump: the server puts them further than their walk or run
+		// goes, with a clip on, while the client still draws the walk. Moved
+		// by the game, as a glide is, though it looks like walking.
+		boolean leapt = !planeChanged && s.action != -1
+			&& Math.max(Math.abs(s.server.getX() - prev.server.getX()), Math.abs(s.server.getY() - prev.server.getY()))
+			> (s.pose == normal[1] ? 1 : 2);
 		// A walking pose with a big step is a slow frame of ordinary steps;
 		// a tile in one frame off a walking pose, with a clip on, is a hop.
 		boolean hop = planeChanged || (moved > 256 && !walkingPose)
 			|| (moved >= HOP_UNITS && !walkingPose && (animating || oddPose));
-		boolean walking = !planeChanged && moved > 0 && walkingPose;
+		boolean walking = !planeChanged && !leapt && moved > 0 && walkingPose;
 		boolean glide = !planeChanged && moved > 0 && moved <= 256 && !walkingPose;
 		boolean odd = oddPose || s.action != -1 || glide;
 		boolean unusual = (moved > 0 || planeChanged)
@@ -547,9 +555,9 @@ public final class CrossingWatch
 		{
 			boolean xp = lastXpMs >= run.startMs;
 			boolean hurt = lastDamageMs >= run.startMs;
-			if (run.glided >= GLIDE_UNITS)
+			if (run.glided >= GLIDE_UNITS || leapt)
 			{
-				confirm("glide");
+				confirm(leapt ? "leap" : "glide");
 			}
 			else if (run.hopMs >= 0 && (xp || hurt))
 			{

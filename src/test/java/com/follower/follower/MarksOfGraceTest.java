@@ -31,6 +31,8 @@ public class MarksOfGraceTest
 	private long now = 1_700_000_000_000L;
 	private long lastXp;
 	private int held;
+	/** The follower is out with the player, not parked. */
+	private boolean watching = true;
 
 	/** One tick standing at x, y on the roof, not crossing. */
 	private void at(int x, int y)
@@ -41,7 +43,7 @@ public class MarksOfGraceTest
 	private void at(int x, int y, int plane, boolean crossing)
 	{
 		now += 600;
-		marks.tick(now, new WorldPoint(x, y, plane), crossing, lastXp, held);
+		marks.tick(now, new WorldPoint(x, y, plane), crossing, lastXp, held, watching);
 	}
 
 	/** An obstacle: a few ticks on it, the XP as it completes, and the calm after. */
@@ -381,6 +383,124 @@ public class MarksOfGraceTest
 		marks.despawned(MarksOfGrace.MARK, MARK);
 		held = 1;
 		at(3090, 3266);
+		assertTrue(events.isEmpty());
+		assertEquals(0, counted);
+	}
+
+	@Test
+	public void aMarkOnAWideCourseIsSpottedOnce()
+	{
+		// Varrock, 18 Oct 14:52-15:32: a mark at 3186,3395,3 passed at 9
+		// tiles every lap, the lap's far end 50 tiles off, and the game
+		// sending the item again while the player is away.
+		WorldPoint mark = new WorldPoint(3186, 3395, 3);
+		onTheCourse();
+		marks.spawned(MarksOfGrace.MARK, mark);
+		for (int lap = 0; lap < 3; lap++)
+		{
+			onTheCourse();
+			at(3193, 3400);
+			at(3195, 3396);
+			for (int i = 0; i < 5; i++)
+			{
+				at(3236, 3415);
+			}
+			marks.spawned(MarksOfGrace.MARK, mark);
+		}
+		assertEquals(List.of("spotted"), stages());
+	}
+
+	@Test
+	public void aMarkPickedUpAfterAMinutesPauseOnTheRoofIsCounted()
+	{
+		// Varrock, 18 Oct 15:38:31-15:39:44: landed beside it, stood more
+		// than a minute, then picked it up.
+		WorldPoint mark = new WorldPoint(3195, 3416, 1);
+		onTheCourse();
+		marks.spawned(MarksOfGrace.MARK, mark);
+		for (int i = 0; i < 120; i++)
+		{
+			at(3197, 3416, 1, false);
+		}
+		marks.despawned(MarksOfGrace.MARK, mark);
+		held = 1;
+		at(3195, 3416, 1, false);
+		assertEquals(List.of("spotted", "collected"), stages());
+		assertEquals(1, counted);
+	}
+
+	@Test
+	public void nothingIsRaisedOrCountedWhileTheFollowerIsParked()
+	{
+		onTheCourse();
+		watching = false;
+		marks.spawned(MarksOfGrace.MARK, MARK);
+		at(3090, 3266);
+		cross(3089, 3265, 3088, 3261, ROOF);
+		at(3088, 3260);
+		cross(3088, 3261, 3089, 3265, ROOF);
+		marks.despawned(MarksOfGrace.MARK, MARK);
+		held = 1;
+		at(3090, 3266);
+		assertTrue(events.isEmpty());
+		assertEquals(0, counted);
+	}
+
+	@Test
+	public void aMarkLyingThereWhenTheFollowerComesBackIsSpotted()
+	{
+		onTheCourse();
+		watching = false;
+		marks.spawned(MarksOfGrace.MARK, MARK);
+		at(3092, 3267);
+		watching = true;
+		at(3092, 3267);
+		assertEquals(List.of("spotted"), stages());
+	}
+
+	@Test
+	public void aRelogMidCourseDoesNotSpotTheSameMarkAgain()
+	{
+		onTheCourse();
+		marks.spawned(MarksOfGrace.MARK, MARK);
+		at(3092, 3266);
+		events.get(0).noteSaid();
+		marks.reset();
+		now += 20_000;
+		marks.spawned(MarksOfGrace.MARK, MARK);
+		at(3092, 3266);
+		assertEquals(List.of("spotted"), stages());
+	}
+
+	@Test
+	public void theSameTileLaterOnIsANewMark()
+	{
+		onTheCourse();
+		marks.spawned(MarksOfGrace.MARK, MARK);
+		at(3092, 3266);
+		events.get(0).noteSaid();
+		marks.despawned(MarksOfGrace.MARK, MARK);
+		// Off the course for a while, then back on it.
+		now += CrossingWatch.ON_COURSE_MS;
+		at(3092, 3266);
+		at(3092, 3266);
+		onTheCourse();
+		marks.spawned(MarksOfGrace.MARK, MARK);
+		at(3092, 3266);
+		assertEquals(List.of("spotted", "spotted"), stages());
+	}
+
+	@Test
+	public void aMarkDroppedOnTheGroundIsNotOneOfTheCourses()
+	{
+		onTheCourse();
+		WorldPoint dropped = new WorldPoint(3092, 3245, 0);
+		at(3092, 3245, 0, false);
+		marks.spawned(MarksOfGrace.MARK, dropped);
+		at(3092, 3245, 0, false);
+		marks.despawned(MarksOfGrace.MARK, dropped);
+		held = 1;
+		at(3092, 3245, 0, false);
 		assertTrue(events.isEmpty());
 		assertEquals(0, counted);
 	}

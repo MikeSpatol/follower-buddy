@@ -2,9 +2,12 @@ package com.follower.follower;
 
 import com.follower.speech.TriggerEvent;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
+import net.runelite.api.Perspective;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.gameval.ItemID;
 
@@ -42,8 +45,12 @@ public final class MarksOfGrace
 	/** This close and the player has walked past it. */
 	static final int PASSED_WITHIN = 3;
 
-	/** Further than this and the mark is out of the scene: forgotten. */
-	static final int FORGET_TILES = 40;
+	/**
+	 * Further than this and the mark is out of the scene: forgotten. A whole
+	 * scene, since no despawn comes for a scene thrown away, and a lap runs
+	 * further from its own marks than half of one.
+	 */
+	static final int FORGET_TILES = Perspective.SCENE_SIZE;
 
 	/** Ticks a mark that went stays the one picked up, for an inventory that updates a tick late. */
 	static final int PICKUP_TICKS = 2;
@@ -66,6 +73,8 @@ public final class MarksOfGrace
 	private final Consumer<TriggerEvent> events;
 	private final Runnable collected;
 	private final Map<WorldPoint, Mark> marks = new HashMap<>();
+	/** Where marks were spoken of on this course: a relog brings the same mark back, already said. */
+	private final Set<WorldPoint> said = new HashSet<>();
 
 	/** The mark that last went from the ground, and ticks left to match it to the bag. */
 	private Mark gone;
@@ -87,10 +96,10 @@ public final class MarksOfGrace
 		this.collected = collected;
 	}
 
-	/** A ground item appeared, fresh or with a chunk load. Only a mark is kept. */
+	/** A ground item appeared, fresh or with a chunk load. Only a mark on a roof is kept: one on the ground was dropped. */
 	public void spawned(int itemId, WorldPoint at)
 	{
-		if (itemId == MARK && at != null)
+		if (itemId == MARK && at != null && at.getPlane() > 0)
 		{
 			// The game takes a mark away and puts it straight back on its
 			// tile now and then (seen every half minute or so on Varrock's
@@ -102,7 +111,12 @@ public final class MarksOfGrace
 				gone = null;
 				return;
 			}
-			marks.computeIfAbsent(at, Mark::new);
+			Mark mark = marks.computeIfAbsent(at, Mark::new);
+			if (said.contains(at))
+			{
+				mark.spotted = true;
+				mark.voiced = true;
+			}
 		}
 	}
 
@@ -129,15 +143,22 @@ public final class MarksOfGrace
 	 * @param crossing the agility watch has a crossing under way
 	 * @param lastAgilityXpMs when agility XP last landed, 0 for never
 	 * @param held marks in the inventory, or -1 before it has loaded
+	 * @param watching the follower is out and with the player, not parked or put away
 	 */
-	public void tick(long nowMs, WorldPoint player, boolean crossing, long lastAgilityXpMs, int held)
+	public void tick(long nowMs, WorldPoint player, boolean crossing, long lastAgilityXpMs, int held,
+		boolean watching)
 	{
 		if (player == null)
 		{
 			return;
 		}
-		boolean onCourse = crossing
+		boolean course = crossing
 			|| (lastAgilityXpMs > 0 && nowMs - lastAgilityXpMs <= CrossingWatch.ON_COURSE_MS);
+		if (!course)
+		{
+			said.clear();
+		}
+		boolean onCourse = watching && course;
 		boolean xp = lastAgilityXpMs != seenXpMs;
 		seenXpMs = lastAgilityXpMs;
 		boolean newFloor = lastPlane >= 0 && player.getPlane() != lastPlane;
@@ -146,7 +167,9 @@ public final class MarksOfGrace
 		// Into the bag: the mark that just went, and one more held.
 		if (gone != null && held > lastHeld && lastHeld >= 0)
 		{
-			if (onCourse)
+			// Spotted on a course, it is that course's mark however long they
+			// stood on the roof before taking it.
+			if (onCourse || (watching && gone.spotted))
 			{
 				collected.run();
 				if (!gone.voiced)
@@ -196,7 +219,7 @@ public final class MarksOfGrace
 				mark.spotted = true;
 				raise("spotted", mark);
 			}
-			if (!crossing && samePlane && distance <= PASSED_WITHIN)
+			if (watching && !crossing && samePlane && distance <= PASSED_WITHIN)
 			{
 				mark.near = true;
 			}
@@ -205,10 +228,14 @@ public final class MarksOfGrace
 
 	private void raise(String stage, Mark mark)
 	{
-		events.accept(TriggerEvent.grace(stage, () -> mark.voiced = true));
+		events.accept(TriggerEvent.grace(stage, () ->
+		{
+			mark.voiced = true;
+			said.add(mark.at);
+		}));
 	}
 
-	/** Logout, hop: the scene is gone, and every mark in it. */
+	/** Logout, hop: the scene is gone, and every mark in it. What was said stays while the course does. */
 	public void reset()
 	{
 		marks.clear();

@@ -902,6 +902,11 @@ public class FollowerPlugin extends Plugin
 		crossingWatch.setTrace(agilityTrace::event);
 		follower.setAgilityTrace(agilityTrace::event);
 		follower.setOnAgilitySnap(crossingWatch::forgetMissed);
+		// The trace's line on a stall names whose stay held the follower.
+		follower.setStayOwner(() -> isStaying() ? "the player's Stay" : skilling.holdsTheFeet() ? "skilling"
+			: moments.holdsTheFeet() ? "a moment" : errands.isBusy() ? "an errand"
+			: spectate.holdsTheFeet() ? "spectating" : flourish.isActive() ? "a flourish"
+			: sceneHolds() ? "a scene" : "unknown");
 		// Later in the frame, and only if still out: a despawn lets a crossing go too.
 		follower.setOnCrossingHands(() -> clientThread.invokeLater(() ->
 		{
@@ -1350,6 +1355,7 @@ public class FollowerPlugin extends Plugin
 		follower.setOnEmoteStateChanged(this::updateEmoteDisarm);
 		follower.setOnEmoteClip(this::dressEmoteHands);
 		follower.setOnSnapped(this::followerSnapped);
+		follower.setDrawn(actor -> renderCallbacks.addEntity(actor, false));
 		stanceLibrary.setStyleSource(this::weaponUsage);
 		buildSlotIndexAsync();
 	}
@@ -6969,6 +6975,9 @@ public class FollowerPlugin extends Plugin
 
 	/** An odd pose or movement this recently still counts as agility about, for the trace. */
 	private static final long AGILITY_TRACE_NEAR_MS = 3000;
+	/** Tick lines go on this long after, to see the follower off the course. */
+	private static final long AGILITY_TRACE_AFTER_MS = 10_000;
+	private long agilityTraceUntilMs;
 
 	/**
 	 * Once a game tick: a line of the agility trace, when Developer commands
@@ -7000,6 +7009,10 @@ public class FollowerPlugin extends Plugin
 		agilityTraceLast = at;
 		if (crossingWatch.isWatchingMovement() || follower.isDoingAgility() || follower.isHoldingForAgility()
 			|| xp > 0 || crossingWatch.wasOddWithin(now, AGILITY_TRACE_NEAR_MS))
+		{
+			agilityTraceUntilMs = now + AGILITY_TRACE_AFTER_MS;
+		}
+		if (now < agilityTraceUntilMs)
 		{
 			int graphic = -1;
 			if (local.getSpotAnims() != null)
@@ -8656,7 +8669,8 @@ public class FollowerPlugin extends Plugin
 				client.getItemContainer(net.runelite.api.gameval.InventoryID.INV);
 			marksOfGrace.tick(System.currentTimeMillis(), local.getWorldLocation(),
 				crossingWatch.isWatchingMovement(), lastAgilityXpMs,
-				inventory == null ? -1 : inventory.count(com.follower.follower.MarksOfGrace.MARK));
+				inventory == null ? -1 : inventory.count(com.follower.follower.MarksOfGrace.MARK),
+				follower.isSpawned() && !isStaying());
 		}
 		if (will != null)
 		{

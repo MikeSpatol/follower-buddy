@@ -2304,6 +2304,24 @@ public class FollowerEntity implements CrossingWatch.Listener
 
 	private void planApproach(WorldPoint target, WorldPoint avoid)
 	{
+		// Steps already released that run on past where it begins (the
+		// player's trail, after the game carried them on from it) stop
+		// there: nobody walks past an obstacle's start to turn back to it.
+		// Not while the player still stands on it: that is walked up beside.
+		if (avoid == null && !route.isEmpty() && (tile.equals(target) || route.contains(target)))
+		{
+			while (!route.isEmpty() && !route.peekLast().equals(target))
+			{
+				route.pollLast();
+				routeRun.pollLast();
+			}
+			if (route.isEmpty())
+			{
+				route.addLast(target);
+				routeRun.addLast(false);
+			}
+			simTile = target;
+		}
 		WorldPoint from = simTile != null ? simTile : tile;
 		java.util.List<WorldPoint> path = target.getPlane() == from.getPlane()
 			? findPath(from, target, true, avoid) : null;
@@ -2948,7 +2966,8 @@ public class FollowerEntity implements CrossingWatch.Listener
 	 */
 	public boolean isUnderMouse(net.runelite.api.Point canvasPoint)
 	{
-		if (!spawned || object == null || baseModel == null
+		// Out of sight (an NPC or a player on its tile, a vanish): nothing to click.
+		if (!isShown() || baseModel == null
 			|| lastRenderedLocation == null || canvasPoint == null)
 		{
 			return false;
@@ -3191,10 +3210,17 @@ public class FollowerEntity implements CrossingWatch.Listener
 		// beside the player: a booth it was placed in while the area loaded,
 		// or a deck facility that arrived after the boarding snap. Not just
 		// after agility: a crossing can end where the map says nobody stands.
-		if (isSettled() && patienceMs <= 0 && blockedUnderfoot(tile, local))
+		if (isSettled() && blockedUnderfoot(tile, local))
 		{
-			snapBeside(playerTile, "blocked underfoot");
-			return;
+			if (patienceMs <= 0)
+			{
+				snapBeside(playerTile, "blocked underfoot");
+				return;
+			}
+			// Off a crossing that ends where nobody stands, a rope's last
+			// tile: a step off it now, rather than the agility patience
+			// waited out on the rope and then a hop.
+			stepOffTheFire();
 		}
 
 		// The follow tile is worked out when the player steps, and the tile
@@ -3230,6 +3256,15 @@ public class FollowerEntity implements CrossingWatch.Listener
 		else
 		{
 			inAFire = false;
+		}
+
+		// Out of sight a long while under somebody standing on its tile (a
+		// player gone idle at a bank booth): a step aside, as off a fire.
+		hiddenForOverlapMs = hiddenForNpcOverlap ? hiddenForOverlapMs + deltaMs : 0;
+		if (hiddenForOverlapMs >= LONG_HIDE_MS && isSettled())
+		{
+			hiddenForOverlapMs = 0;
+			stepOffTheFire();
 		}
 
 		// Watchdog: if anything at all has left the object hidden while the player
@@ -3321,6 +3356,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		boolean moving = !route.isEmpty()
 			|| fineWX != tile.getX() * 128L + 64 || fineWY != tile.getY() * 128L + 64;
 		onTheMove = moving;
+		noteAStall(moving, playerTile, deltaMs);
 
 		// Movement always wins over an emote - a dancing follower gliding along
 		// behind you looks broken, and the real game drops emotes on movement too.
@@ -3651,7 +3687,9 @@ public class FollowerEntity implements CrossingWatch.Listener
 			Boolean run = routeRun.peekFirst();
 			if (run != null && run)
 			{
-				speed <<= 1;
+				// A run's catch-up at half as fast again: at twice a run, a
+				// long straight run read as a lunge every fourteen seconds.
+				speed = burst ? 12 : speed << 1;
 			}
 			lastMoveSpeed = speed;
 
@@ -3949,6 +3987,10 @@ public class FollowerEntity implements CrossingWatch.Listener
 	/** True while the follower is hidden because an NPC or another player shares its tile. */
 	private boolean hiddenForNpcOverlap;
 
+	/** How long it has been hidden so, and how long before it steps aside instead. */
+	private long hiddenForOverlapMs;
+	static final long LONG_HIDE_MS = 20_000;
+
 	/**
 	 * How tall an NPC has to be, against the follower's own height, before
 	 * sharing a tile with it is worth hiding for.
@@ -4039,7 +4081,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 			// than the overlap would have. An NPC on the move is playing a
 			// walk pose; a standing one is on its idle pose, including while
 			// it attacks, since that lives in the animation slot instead.
-			if (npc.getPoseAnimation() != npc.getIdlePoseAnimation())
+			if (!standing(npc) || !drawn.test(npc))
 			{
 				continue;
 			}
@@ -4087,12 +4129,81 @@ public class FollowerEntity implements CrossingWatch.Listener
 			{
 				continue;
 			}
-			if (other.getPoseAnimation() == other.getIdlePoseAnimation())
+			if (standing(other) && drawn.test(other))
 			{
 				return true;
 			}
 		}
 		return false;
+	}
+
+	/** Stopped: on its idle pose, or turning on the spot, which plays the idle's turn. */
+	private static boolean standing(net.runelite.api.Actor actor)
+	{
+		int pose = actor.getPoseAnimation();
+		return pose == actor.getIdlePoseAnimation()
+			|| pose == actor.getIdleRotateLeft() || pose == actor.getIdleRotateRight();
+	}
+
+	/**
+	 * Whether the client will draw this actor: another plugin (Entity Hider)
+	 * can hide players and NPCs, and the follower does not give way to
+	 * someone nobody can see. Everyone, until the plugin says.
+	 */
+	private java.util.function.Predicate<net.runelite.api.Actor> drawn = actor -> true;
+
+	public void setDrawn(java.util.function.Predicate<net.runelite.api.Actor> drawn)
+	{
+		this.drawn = drawn == null ? actor -> true : drawn;
+	}
+
+	/** How long the follower has stood still well out of a follow's reach of the player. */
+	private long stalledMs;
+	static final long STALL_NOTE_MS = 2000;
+
+	/** Whose stay holds the follower, in a word or two, for that line. */
+	private java.util.function.Supplier<String> stayOwner = () -> "unknown";
+
+	public void setStayOwner(java.util.function.Supplier<String> owner)
+	{
+		stayOwner = owner == null ? () -> "unknown" : owner;
+	}
+
+	/**
+	 * QA5: the follower sometimes stood still 5 to 24 tiles from the player
+	 * until the leash snapped it over, and nothing on record said why. Two
+	 * seconds of that, once, and the trace says what held it.
+	 */
+	private void noteAStall(boolean moving, WorldPoint playerTile, long deltaMs)
+	{
+		int gap = tile.getPlane() == playerTile.getPlane() ? tile.distanceTo(playerTile) : 0;
+		stalledMs = !moving && gap > followDistance + 3 ? stalledMs + deltaMs : 0;
+		if (stalledMs < STALL_NOTE_MS || stalledMs - deltaMs >= STALL_NOTE_MS)
+		{
+			return;
+		}
+		String why;
+		if (stayTile != null)
+		{
+			why = "a stay at " + CrossingWatch.describe(stayTile) + " (" + stayOwner.get() + ")";
+		}
+		else if (goalTile != null)
+		{
+			why = "a goal at " + CrossingWatch.describe(goalTile);
+		}
+		else if (playerFollowTile == null || simTile == null)
+		{
+			why = "no follow tile";
+		}
+		else
+		{
+			java.util.List<WorldPoint> path = playerFollowTile.getPlane() != simTile.getPlane() ? null
+				: findPath(simTile, playerFollowTile, true, playerFollowTile.equals(playerTile) ? playerTile : null);
+			why = (path == null ? "no route to " : path.isEmpty() ? "as near as it gets to "
+				: "a route of " + path.size() + " not walked to ") + CrossingWatch.describe(playerFollowTile);
+		}
+		agilityTrace.accept("follower: still " + gap + " tiles from the player at "
+			+ CrossingWatch.describe(playerTile) + " for " + CrossingWatch.seconds(stalledMs) + ": " + why);
 	}
 
 	/**
@@ -4527,6 +4638,11 @@ public class FollowerEntity implements CrossingWatch.Listener
 			if (object.isActive())
 			{
 				object.setActive(false);
+				// Whatever it is wearing goes with it, and comes back with it.
+				for (RuneLiteObject graphic : activeGraphics)
+				{
+					graphic.setActive(false);
+				}
 			}
 			return true;
 		}
@@ -4541,6 +4657,10 @@ public class FollowerEntity implements CrossingWatch.Listener
 		if (!object.isActive())
 		{
 			object.setActive(true);
+			for (RuneLiteObject graphic : activeGraphics)
+			{
+				graphic.setActive(true);
+			}
 		}
 
 		int lx = base.getX() + (int) (fineWX & 127) - 64;

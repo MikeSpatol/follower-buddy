@@ -1572,8 +1572,8 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 
 > After the follower copies the player's fall on an agility obstacle. While Does agility with you is on, fail-slip stands aside (the plugin silences it by id), so one fall gets one line, said after the follower has fallen too.
 
-- **when:** crossed
-- **pacing:** priority 55, cooldown 45s, delay 1-3 ticks, overhead
+- **when:** crossed AND a 35% roll
+- **pacing:** priority 55, cooldown 5m, delay 1-3 ticks, overhead
 
 - I fell exactly where you fell. Solidarity, mostly.
 - Same spot, same landing. Filed under research.
@@ -1584,7 +1584,7 @@ Each entry: **when** it fires (plain English of the condition tree), **does** (a
 > After the follower takes an agility obstacle or shortcut cleanly behind the player (Does agility with you). CROSSED is raised after every obstacle of a lap, so a small roll and a ten-minute cooldown keep it to an odd remark.
 
 - **when:** crossed AND a 10% roll
-- **pacing:** priority 20, cooldown 10m, delay 1-3 ticks, overhead
+- **pacing:** priority 20, cooldown 30m, delay 1-3 ticks, overhead
 
 - Done. I'd like it noted that I didn't look down.
 - Over. It and I have reached an understanding.
