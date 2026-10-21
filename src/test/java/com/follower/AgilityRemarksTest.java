@@ -60,9 +60,17 @@ public class AgilityRemarksTest
 		assertTrue("a cooldown of minutes, not one line a lap", crossed.cooldownMs >= 300_000);
 		assertTrue("and a roll", crossed.when.usesType("chance"));
 
+		SpeechRule fell = h.rule("agility-fell");
+		assertTrue("a fall too: minutes between, not one a fall", fell.cooldownMs >= 300_000);
+		assertTrue("and a roll", fell.when.usesType("chance"));
+
+		// Falls until one passes its roll: about one in three.
 		h.gameTicks(2);
-		h.dispatch(TriggerEvent.crossed(true));
-		h.gameTicks(5);
+		for (int i = 0; i < 40 && h.firedBy("agility-fell").isEmpty(); i++)
+		{
+			h.dispatch(TriggerEvent.crossed(true));
+			h.gameTicks(5);
+		}
 		assertEquals("a copied fall is said", 1, h.firedBy("agility-fell").size());
 		assertEquals("and only that", 0, h.firedBy("agility-crossed").size());
 	}

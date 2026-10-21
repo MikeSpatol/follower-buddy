@@ -10592,13 +10592,22 @@
       "note": "After the follower copies the player's fall on an agility obstacle. While Does agility with you is on, fail-slip stands aside (the plugin silences it by id), so one fall gets one line, said after the follower has fallen too.",
       "group": "reactions",
       "priority": 55,
-      "cooldownMs": 45000,
+      "cooldownMs": 300000,
       "delayTicks": 1,
       "delayTicksMax": 3,
       "output": "overhead",
       "when": {
-        "type": "crossed",
-        "is": "fell"
+        "type": "all",
+        "conditions": [
+          {
+            "type": "crossed",
+            "is": "fell"
+          },
+          {
+            "type": "chance",
+            "percent": 35
+          }
+        ]
       },
       "say": [
         "I fell exactly where you fell. Solidarity, mostly.",
@@ -10613,7 +10622,7 @@
       "note": "After the follower takes an agility obstacle or shortcut cleanly behind the player (Does agility with you). CROSSED is raised after every obstacle of a lap, so a small roll and a ten-minute cooldown keep it to an odd remark.",
       "group": "reactions",
       "priority": 20,
-      "cooldownMs": 600000,
+      "cooldownMs": 1800000,
       "delayTicks": 1,
       "delayTicksMax": 3,
       "output": "overhead",
