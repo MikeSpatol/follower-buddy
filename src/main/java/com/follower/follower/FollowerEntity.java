@@ -2307,7 +2307,8 @@ public class FollowerEntity implements CrossingWatch.Listener
 		// Steps already released that run on past where it begins (the
 		// player's trail, after the game carried them on from it) stop
 		// there: nobody walks past an obstacle's start to turn back to it.
-		if (!route.isEmpty() && (tile.equals(target) || route.contains(target)))
+		// Not while the player still stands on it: that is walked up beside.
+		if (avoid == null && !route.isEmpty() && (tile.equals(target) || route.contains(target)))
 		{
 			while (!route.isEmpty() && !route.peekLast().equals(target))
 			{
