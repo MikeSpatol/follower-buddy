@@ -3209,10 +3209,17 @@ public class FollowerEntity implements CrossingWatch.Listener
 		// beside the player: a booth it was placed in while the area loaded,
 		// or a deck facility that arrived after the boarding snap. Not just
 		// after agility: a crossing can end where the map says nobody stands.
-		if (isSettled() && patienceMs <= 0 && blockedUnderfoot(tile, local))
+		if (isSettled() && blockedUnderfoot(tile, local))
 		{
-			snapBeside(playerTile, "blocked underfoot");
-			return;
+			if (patienceMs <= 0)
+			{
+				snapBeside(playerTile, "blocked underfoot");
+				return;
+			}
+			// Off a crossing that ends where nobody stands, a rope's last
+			// tile: a step off it now, rather than the agility patience
+			// waited out on the rope and then a hop.
+			stepOffTheFire();
 		}
 
 		// The follow tile is worked out when the player steps, and the tile

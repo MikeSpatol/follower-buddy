@@ -30,7 +30,8 @@ import static org.junit.Assert.assertTrue;
  *
  * <p>Each is run at 58 frames a second, as in the traces, and at 100. What
  * the user asked for: begun from the near side about two ticks behind the
- * player, never placed.
+ * player, never placed. And the same course's other pops: the cable
+ * swing's walk past its start, and the rope that ends on a closed tile.
  */
 public class RunningJumpReplayTest
 {
@@ -258,6 +259,33 @@ public class RunningJumpReplayTest
 	public void alKharidCableSwingAt100Fps()
 	{
 		cableSwing(100);
+	}
+
+	/**
+	 * Al Kharid's second tightrope ends on its last rope tile, 3302,3186,3,
+	 * which is closed, and the player stops beside it for the mark (17 Oct
+	 * 11:49:48-56). The follower stood on the rope for the whole agility
+	 * patience, then hopped a tile. It steps off at once instead.
+	 */
+	@Test
+	public void aRopeThatEndsOnAClosedTileIsSteppedOffAtOnce()
+	{
+		offsetX = 3265;
+		offsetY = 3113;
+		for (int x = 3292; x <= 3302; x++)
+		{
+			block(x, 3186);
+		}
+		player = new Player(58, tile(3302, 3187, 3));
+		player.idle(1);
+		standOn(tile(3302, 3186, 3));
+		trace.clear();
+		player.xp().idle(3);
+		WorldPoint at = follower.getWorldLocation();
+		String said = "at " + at + "\n" + String.join("\n", trace);
+		assertFalse(said, at.equals(tile(3302, 3186, 3)));
+		assertTrue(said, at.distanceTo(tile(3302, 3187, 3)) == 1);
+		assertFalse("walked, not hopped: " + said, trace.stream().anyMatch(line -> line.contains("snap")));
 	}
 
 	private void assertBegunFromTheNearSide(int fps, String what,
