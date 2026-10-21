@@ -142,13 +142,15 @@ somebody else's pack; the Messages window's **Share...** button runs the same
 flow.
 
 **Memory.** One button, **Memory...**: everything the follower currently
-knows about you, and **Forget everything** to erase all of it.
+knows about you, and **Forget everything** to erase all of it, the Chronicle's
+drawings included.
 
 **Outfit.** **Copy my gear** and **Clear all**, then OUTFIT PROFILES: a
 dropdown of saved outfits with **New profile...** and **Delete**;
 changes save to the selected profile automatically. A folded **Used for
 thralls** row picks the Melee, Ranged and Magic profile for Thrall mode, and a
-profile a thrall wears is marked in the dropdown and cannot be deleted. Under
+profile a thrall wears is marked in the dropdown. The built-in looks and a
+profile a thrall wears cannot be deleted. Under
 that, EQUIPMENT (click a slot to change it, right-click to clear it) and BODY
 (style cyclers per body part, and the game's own colours).
 
@@ -162,7 +164,9 @@ group; **Show all** adds the quest, cutscene and creature animations that also
 fit the follower. A pose marked [prop] puts its book, quill or chair in the
 follower's hands while it lasts. Lines you type for yourself show over your own
 head on your screen only: nothing is sent, and nobody else sees them. Close
-the window when you are done.
+the window when you are done. The **Scene** tab writes a scene of dialogue
+boxes and chat lines for you and the follower, saves it under a name, and plays
+it in the game with **Play**.
 
 **Commands.** **Come here**, **Fix if it vanished** and **Reload message
 and sound files**, the list of everyday chat commands, and your current region

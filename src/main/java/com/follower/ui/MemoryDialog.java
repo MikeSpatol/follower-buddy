@@ -57,8 +57,8 @@ public class MemoryDialog extends JDialog
 		root.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
 		JLabel hint = new JLabel(wrapped("Everything the follower currently remembers"
-			+ " about you. It lives on this machine, goes nowhere, and the button"
-			+ " below erases all of it for good."));
+			+ " about you. It is kept with this RuneLite profile's settings, and the"
+			+ " button below erases all of it for good."));
 		hint.setFont(FontManager.getRunescapeSmallFont());
 		hint.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
 
@@ -381,7 +381,7 @@ public class MemoryDialog extends JDialog
 					label = "Collection log items";
 					break;
 				case "graces":
-					label = "Marks of grace you've collected while I watched";
+					label = "Marks of grace picked up on a course";
 					break;
 				case "want:kept":
 					label = "Wishes granted";

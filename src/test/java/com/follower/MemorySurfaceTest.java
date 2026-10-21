@@ -154,7 +154,7 @@ public class MemorySurfaceTest
 		assertEquals("Quests completed", MemoryDialog.keyLabel("quests"));
 		assertEquals("Music tracks unlocked", MemoryDialog.keyLabel("music"));
 		assertEquals("Collection log items", MemoryDialog.keyLabel("collections"));
-		assertEquals("Marks of grace you've collected while I watched", MemoryDialog.keyLabel("graces"));
+		assertEquals("Marks of grace picked up on a course", MemoryDialog.keyLabel("graces"));
 		assertEquals("a key with no words is shown as it is",
 			"someone:else", MemoryDialog.keyLabel("someone:else"));
 		assertEquals("kill:", MemoryDialog.keyLabel("kill:"));
@@ -237,7 +237,7 @@ public class MemorySurfaceTest
 		h.engine.getContext().tally("graces");
 		h.engine.getContext().tally("graces");
 		assertTrue(flat(MemoryDialog.summarise(h.engine.getContext(), java.util.Collections.emptyMap()))
-			.contains("Marks of grace you've collected while I watched: 2"));
+			.contains("Marks of grace picked up on a course: 2"));
 		h.engine.reset();
 		assertEquals(0, h.engine.getContext().getTally("graces"));
 		assertFalse(flat(MemoryDialog.summarise(h.engine.getContext(), java.util.Collections.emptyMap()))
