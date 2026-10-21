@@ -232,6 +232,21 @@ public class RuleLoader
 				}
 			}
 
+			// A rule the update dropped goes too, as a dropped line does,
+			// unless the player has changed it: then it is theirs now.
+			Set<String> stillShipped = byId(bundled).keySet();
+			int dropped = 0;
+			for (java.util.Iterator<com.google.gson.JsonElement> it = rules.iterator(); it.hasNext(); )
+			{
+				com.google.gson.JsonElement element = it.next();
+				String id = idOf(element);
+				if (id != null && !stillShipped.contains(id) && element.equals(was.get(id)))
+				{
+					it.remove();
+					dropped++;
+				}
+			}
+
 			int nicknamesAdded = 0;
 			if (bundled.has("nicknames") && bundled.get("nicknames").isJsonObject())
 			{
@@ -268,14 +283,14 @@ public class RuleLoader
 				ours.add("places", held);
 			}
 
-			if (added > 0 || updated > 0 || nicknamesAdded > 0 || placesAdded > 0)
+			if (added > 0 || updated > 0 || dropped > 0 || nicknamesAdded > 0 || placesAdded > 0)
 			{
 				Files.copy(file, file.resolveSibling(file.getFileName() + ".bak"),
 					java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 				Files.write(file,
 					(pretty.toJson(ours) + "\n").getBytes(StandardCharsets.UTF_8));
-				log.info("Merged {} new rule(s), {} changed rule(s), {} nickname(s) and {} place name(s) into {}",
-					added, updated, nicknamesAdded, placesAdded, file);
+				log.info("Merged {} new rule(s), {} changed rule(s), {} dropped rule(s), {} nickname(s) and {} place name(s) into {}",
+					added, updated, dropped, nicknamesAdded, placesAdded, file);
 			}
 
 			// Written whether or not anything moved, and last, so a merge that

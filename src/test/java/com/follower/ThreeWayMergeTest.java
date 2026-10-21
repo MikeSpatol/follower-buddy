@@ -528,4 +528,40 @@ public class ThreeWayMergeTest
 		assertTrue("a new rule is still appended",
 			rule(merged, "boss-brutus") != null);
 	}
+
+	/**
+	 * Upgrade test, 21 Oct: a 1.4.1 file kept wilderness-crossing, a rule 1.5.0
+	 * dropped (its lines went to enter-wilderness). It could never be heard, but
+	 * it sat in the Messages window. A rule an update drops goes, as a dropped
+	 * line does, whether the base was recorded or has to be told from 1.4.0.
+	 */
+	@Test
+	public void aRuleDroppedUpstreamGoes() throws Exception
+	{
+		assertTrue("1.4.0 had it", rule(freshFrom140(), "wilderness-crossing") != null);
+		assertTrue("1.5.0 does not", rule(shipped(), "wilderness-crossing") == null);
+
+		assertTrue("gone with no record of the base",
+			rule(merge(freshFrom140(), null), "wilderness-crossing") == null);
+		assertTrue("and gone with one",
+			rule(merge(freshFrom140(), freshFrom140()), "wilderness-crossing") == null);
+	}
+
+	/** One the player changed is theirs now, and so is one they wrote. */
+	@Test
+	public void aDroppedRuleThePlayerChangedOrWroteStays() throws Exception
+	{
+		JsonObject theirs = freshFrom140();
+		List<String> plus = new ArrayList<>(say(theirs, "wilderness-crossing"));
+		plus.add("A line of my own.");
+		setSay(theirs, "wilderness-crossing", plus);
+		JsonObject mine = rule(theirs, "wilderness-crossing").deepCopy();
+		mine.addProperty("id", "my-own-rule");
+		theirs.getAsJsonArray("rules").add(mine);
+
+		JsonObject merged = merge(theirs, freshFrom140());
+
+		assertTrue("the changed one stays", rule(merged, "wilderness-crossing") != null);
+		assertTrue("and their own rule", rule(merged, "my-own-rule") != null);
+	}
 }
