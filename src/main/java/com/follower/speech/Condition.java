@@ -1517,6 +1517,20 @@ public class Condition
 				}
 			}
 		}
+		// A quest step the line stands aside at is how things stand too: met
+		// before it and kept waiting, the line is let go once the quest is
+		// there. Quests QA5 #57: the mage's introduction, kept through his
+		// box, came straight after the moment that speaks for him at that step.
+		if ("none".equalsIgnoreCase(type) && conditions != null)
+		{
+			for (Condition child : conditions)
+			{
+				if (child != null && "questvar".equalsIgnoreCase(child.type) && child.matches(ctx, event))
+				{
+					return false;
+				}
+			}
+		}
 		return true;
 	}
 

@@ -889,6 +889,15 @@ public class SpeechEngine
 		{
 			return "hush";
 		}
+		// An occasion still in its beat has the floor already: anything else
+		// waits behind it, as behind a line just said, or goes. Quests QA5
+		// #54: Traiborn's intro, kept through the puzzle's boxes, and another
+		// time a wish, went in the beat before the thingummywut the last box
+		// raised, which then waited its gap into Persten's box and was lost.
+		if (!rule.isOccasion() && pending.stream().anyMatch(waiting -> waiting.rule.isOccasion()))
+		{
+			return "gap";
+		}
 		return null;
 	}
 
@@ -1114,6 +1123,15 @@ public class SpeechEngine
 					{
 						log.debug("rule '{}' fired after its {}-tick delay",
 							delayed.rule.describe(), delayed.delay);
+						// Won in a scene's quiet, it took no floor then (see
+						// the win), so it takes it now, as it is said. Quests
+						// QA5 #53: the grave Persten moment comes out of a scene.
+						if (delayed.rule.hushMs != null && delayed.rule.hushMs > 0 && delayed.rule.hasSpeech()
+							&& !(hushOwner == delayed.rule && now < hushUntilMs))
+						{
+							hushUntilMs = now + delayed.rule.hushMs;
+							hushOwner = delayed.rule;
+						}
 						speak(delayed.rule, delayed.event, now);
 					}
 					else
