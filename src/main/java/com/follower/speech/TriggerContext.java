@@ -1356,6 +1356,37 @@ public final class TriggerContext
 		}
 	}
 
+	/**
+	 * The accounts, by RS-profile key, whose sketch book has been opened
+	 * under this memory. Forget everything tears out their drawings and no
+	 * others: the sketch folders are shared by every RuneLite profile, and
+	 * this memory is one profile's (the user, 21 Oct). Memory, so it goes
+	 * when the memory does.
+	 */
+	private final java.util.Set<String> sketchAccounts = new java.util.TreeSet<>();
+
+	public void noteSketchAccount(String account)
+	{
+		if (account != null && !account.isEmpty() && sketchAccounts.add(account))
+		{
+			countersDirty = true;
+		}
+	}
+
+	/** Live set, for the plugin to write out. Read-only by convention. */
+	public java.util.Set<String> getSketchAccounts()
+	{
+		return sketchAccounts;
+	}
+
+	public void restoreSketchAccounts(java.util.Collection<String> saved)
+	{
+		if (saved != null)
+		{
+			sketchAccounts.addAll(saved);
+		}
+	}
+
 	// -------------------------------------------------------------- repeating
 
 	/**

@@ -678,6 +678,32 @@ public class LifecycleGlueTest
 	}
 
 	@Test
+	public void forgettingTakesOnlyTheDrawingsMadeUnderThisMemory() throws IOException
+	{
+		// The sketch folders are shared by every RuneLite profile and the
+		// memory is one profile's (the user, 21 Oct): every book opened is
+		// noted in the memory, and Forget takes the books noted there, read
+		// before the memory is erased.
+		String source = source();
+		int opened = 0;
+		for (int at = source.indexOf("sketchBook.openFor("); at >= 0; at = source.indexOf("sketchBook.openFor(", at + 1))
+		{
+			opened++;
+			String account = source.substring(at + "sketchBook.openFor(".length(), source.indexOf(");", at));
+			int noted = source.indexOf("noteSketchAccount(" + account + ");", at);
+			assertTrue("the book opened for " + account + " is noted in the memory",
+				noted > at && noted - at < 200);
+		}
+		assertTrue(opened >= 3);
+		String forget = method("private void forgetEverything()");
+		int listed = forget.indexOf("getSketchAccounts()");
+		assertTrue("the list is read before the memory is erased",
+			listed >= 0 && listed < forget.indexOf("unsetConfiguration(FollowerConfig.GROUP, \"counters\")")
+				&& listed < forget.indexOf(FORGET));
+		assertTrue("and Forget takes those", forget.contains("sketchBook.forgetAll(sketched);"));
+	}
+
+	@Test
 	public void aDeathAMinigameGivesBackIsNoDeath() throws IOException
 	{
 		// The user, 20 Oct: a Castle Wars death is ignored - no grief, no

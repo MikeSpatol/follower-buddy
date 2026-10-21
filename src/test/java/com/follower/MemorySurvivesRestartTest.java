@@ -60,6 +60,7 @@ public class MemorySurvivesRestartTest
 		context.noteDoing("fighting Vorkath");
 		context.acceptNickname("the swot");
 		context.refuseNickname("the gravedigger");
+		context.noteSketchAccount("rsprofile_Rn0JAOtr");
 		return context;
 	}
 
@@ -122,6 +123,8 @@ public class MemorySurvivesRestartTest
 		assertFalse(after.isChronicled("boss-king-black-dragon"));
 		assertEquals("and the day it was written", Long.valueOf(20_720L), after.chronicledOn("boss-giant-mole"));
 		assertEquals("and where", "Falador", after.chronicledAt("boss-giant-mole"));
+		assertTrue("the accounts whose drawings Forget everything takes",
+			after.getSketchAccounts().contains("rsprofile_Rn0JAOtr"));
 
 		// Line wear resetting every restart would make retirement (R17) a
 		// per-session mechanism, which is to say no mechanism at all.

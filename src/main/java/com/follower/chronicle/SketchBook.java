@@ -7,8 +7,11 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.imageio.ImageIO;
 import lombok.extern.slf4j.Slf4j;
@@ -286,13 +289,17 @@ public class SketchBook
 	}
 
 	/**
-	 * Tears out every drawing in every account's book, with its pose and
-	 * backups, on disk and in memory, and drops a drawing still being made.
-	 * Forget everything: the user's decisions, 16 Oct, that forgetting
-	 * forgets the Chronicle too, and 20 Oct, that it is every account's,
-	 * as the memory it goes with belongs to the whole profile.
+	 * Tears out the drawings of the given accounts and of the one open, with
+	 * their poses and backups, on disk and in memory, and drops a drawing
+	 * still being made. Forget everything: the user's decisions, 16 Oct, that
+	 * forgetting forgets the Chronicle too, and 21 Oct, that it takes only the
+	 * accounts used under the memory it erases. The folders are shared by
+	 * every RuneLite profile and the memory is one profile's, so an account
+	 * not named is kept: a deletion cannot be undone.
+	 *
+	 * @param accounts the account keys whose books were opened under the memory
 	 */
-	public synchronized void forgetAll()
+	public synchronized void forgetAll(Collection<String> accounts)
 	{
 		edition++;
 		sketches.clear();
@@ -300,23 +307,27 @@ public class SketchBook
 		unread.clear();
 		unreadLarge.clear();
 		poses.clear();
-		if (root == null || !Files.isDirectory(root))
+		Set<Path> books = new LinkedHashSet<>();
+		if (folder != null)
 		{
-			return;
+			books.add(folder);
 		}
-		try (DirectoryStream<Path> accounts = Files.newDirectoryStream(root))
+		if (root != null && accounts != null)
 		{
-			for (Path account : accounts)
+			for (String account : accounts)
 			{
-				if (Files.isDirectory(account))
+				if (account != null && !account.isEmpty())
 				{
-					tearOut(account);
+					books.add(root.resolve(safe(account)));
 				}
 			}
 		}
-		catch (IOException | RuntimeException e)
+		for (Path book : books)
 		{
-			log.warn("Could not tear every sketch out of {}", root, e);
+			if (Files.isDirectory(book))
+			{
+				tearOut(book);
+			}
 		}
 	}
 

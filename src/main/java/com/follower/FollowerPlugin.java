@@ -987,6 +987,7 @@ public class FollowerPlugin extends Plugin
 		if (client.getGameState() == GameState.LOGGED_IN)
 		{
 			sketchBook.openFor(configManager.getRSProfileKey());
+			speechEngine.getContext().noteSketchAccount(configManager.getRSProfileKey());
 		}
 		chronicleWindow.register();
 		mouseManager.registerMouseListener(shiftClickAdapter);
@@ -2638,6 +2639,8 @@ public class FollowerPlugin extends Plugin
 		/** And when (an epoch day) and where each was written, where known. */
 		java.util.Map<String, Long> chronicledOn;
 		java.util.Map<String, String> chronicledAt;
+		/** The accounts whose sketch book was opened under this memory; absent from older saves. */
+		java.util.List<String> sketchAccounts;
 
 		/**
 		 * How worn each line is - times actually said, keyed by the template's
@@ -2872,6 +2875,7 @@ public class FollowerPlugin extends Plugin
 			context.restoreQuestsSeenFinished(saved.questsSeenFinished);
 			context.restoreChronicled(saved.chronicled);
 			context.restoreChronicledStamps(saved.chronicledOn, saved.chronicledAt);
+			context.restoreSketchAccounts(saved.sketchAccounts);
 			context.restoreLineWear(saved.lineWear);
 			context.setMetOnDay(saved.metOnDay);
 			context.setLastWishMs(saved.lastWishMs);
@@ -2963,6 +2967,8 @@ public class FollowerPlugin extends Plugin
 			: new java.util.HashMap<>(context.getChronicledOn());
 		saved.chronicledAt = context.getChronicledAt().isEmpty() ? null
 			: new java.util.HashMap<>(context.getChronicledAt());
+		saved.sketchAccounts = context.getSketchAccounts().isEmpty() ? null
+			: new java.util.ArrayList<>(context.getSketchAccounts());
 		saved.lineWear = context.getLineWear();
 		saved.metOnDay = context.getMetOnDay();
 		saved.lastWishMs = context.getLastWishMs();
@@ -3413,6 +3419,10 @@ public class FollowerPlugin extends Plugin
 			{
 				return;
 			}
+			// The accounts whose drawings go with this memory, read before
+			// the memory is erased.
+			java.util.List<String> sketched =
+				new java.util.ArrayList<>(speechEngine.getContext().getSketchAccounts());
 			configManager.unsetConfiguration(FollowerConfig.GROUP, "counters");
 			configManager.unsetConfiguration(FollowerConfig.GROUP, "traits");
 			configManager.unsetConfiguration(FollowerConfig.GROUP, "lastSeenMs");
@@ -3440,9 +3450,12 @@ public class FollowerPlugin extends Plugin
 			knownLevels.clear();
 			// The Chronicle goes too (the user, 16 Oct): its dates live in the
 			// memory just erased, and its drawings are torn out here, with
-			// one being posed for or drawn (the user, 20 Oct).
+			// one being posed for or drawn (the user, 20 Oct), for the
+			// accounts used under this memory only (the user, 21 Oct). The
+			// open book stays open under the new memory, so it is noted there.
 			sketching.reset();
-			sketchBook.forgetAll();
+			sketchBook.forgetAll(sketched);
+			speechEngine.getContext().noteSketchAccount(configManager.getRSProfileKey());
 			sendStatus("Forgotten. All of it. Clean page.");
 
 			java.util.List<String[]> rows =
@@ -4782,6 +4795,7 @@ public class FollowerPlugin extends Plugin
 					if (sketchBook != null)
 					{
 						sketchBook.openFor(configManager.getRSProfileKey());
+						speechEngine.getContext().noteSketchAccount(configManager.getRSProfileKey());
 					}
 					if (chronicleProgress != null)
 					{
@@ -8301,6 +8315,9 @@ public class FollowerPlugin extends Plugin
 		if (sketchBook != null && event.getNewProfile() != null)
 		{
 			sketchBook.openFor(event.getNewProfile());
+			// Noted in the memory, so Forget everything knows its drawings
+			// were made under it (the user, 21 Oct).
+			speechEngine.getContext().noteSketchAccount(event.getNewProfile());
 		}
 	}
 

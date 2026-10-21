@@ -57,21 +57,24 @@ public class SketchBookTest
 
 	/**
 	 * Forget everything forgets the Chronicle's drawings too (the user,
-	 * 16 Oct), every account's, as the memory it goes with is the whole
-	 * profile's (the user, 20 Oct; qa5 #13/#27).
+	 * 16 Oct), of the accounts used under the memory it erases and no others:
+	 * the folders are shared by every RuneLite profile, and the memory is one
+	 * profile's (the user, 21 Oct; qa5 #13/#27).
 	 */
 	@Test
-	public void forgettingTearsOutEveryAccountsDrawings() throws IOException
+	public void forgettingTearsOutTheDrawingsOfThisProfilesAccountsOnly() throws IOException
 	{
 		Path data = folder.newFolder().toPath();
 		SketchBook book = new SketchBook(data);
+		book.openFor("another-profiles");
+		book.put("falador", picture(0x203040), picture(0x304050));
 		book.openFor("account-two");
 		book.put("varrock", picture(0x405060), picture(0x506070));
 		book.openFor("account-one");
 		book.put("lumbridge", picture(0x8a6a40), picture(0x9a7a50), "dance");
 		book.backUp("lumbridge");
 
-		book.forgetAll();
+		book.forgetAll(java.util.Arrays.asList("account-one", "account-two"));
 		assertFalse("gone from the open book", book.has("lumbridge"));
 		SketchBook again = new SketchBook(data);
 		again.openFor("account-one");
@@ -84,22 +87,61 @@ public class SketchBookTest
 			}
 		}
 		again.openFor("account-two");
-		assertFalse("another account's drawings go with the memory", again.has("varrock"));
+		assertFalse("another account used under this profile goes with the memory", again.has("varrock"));
+		again.openFor("another-profiles");
+		assertTrue("an account never seen under this profile is kept", again.hasBoth("falador"));
 	}
 
-	/** At the login screen no book is open yet, and the drawings still go (qa5 #27). */
+	/** The open account goes even before it is on the list. */
 	@Test
-	public void forgettingBeforeAnyLoginStillTearsThemOut() throws IOException
+	public void forgettingTakesTheOpenAccountsDrawings() throws IOException
+	{
+		Path data = folder.newFolder().toPath();
+		SketchBook book = new SketchBook(data);
+		book.openFor("account-one");
+		book.put("lumbridge", picture(0x8a6a40), picture(0x9a7a50));
+		book.forgetAll(java.util.Collections.emptyList());
+		SketchBook again = new SketchBook(data);
+		again.openFor("account-one");
+		assertFalse(again.has("lumbridge"));
+	}
+
+	/**
+	 * An install from before the list has none, and a deletion cannot be
+	 * undone: nothing but the open book goes until the accounts log in.
+	 */
+	@Test
+	public void withNoListNoOtherAccountsDrawingsGo() throws IOException
 	{
 		Path data = folder.newFolder().toPath();
 		SketchBook before = new SketchBook(data);
+		before.openFor("account-two");
+		before.put("varrock", picture(0x405060), picture(0x506070));
+
+		SketchBook unopened = new SketchBook(data);
+		unopened.forgetAll(java.util.Collections.emptyList());
+		unopened.forgetAll(null);
+		unopened.openFor("account-two");
+		assertTrue(unopened.hasBoth("varrock"));
+	}
+
+	/** At the login screen no book is open yet, and the listed accounts' drawings still go (qa5 #27). */
+	@Test
+	public void forgettingBeforeAnyLoginTakesTheListedAccounts() throws IOException
+	{
+		Path data = folder.newFolder().toPath();
+		SketchBook before = new SketchBook(data);
+		before.openFor("account-two");
+		before.put("varrock", picture(0x405060), picture(0x506070));
 		before.openFor("account-one");
 		before.put("lumbridge", picture(0x8a6a40), picture(0x9a7a50));
 
 		SketchBook unopened = new SketchBook(data);
-		unopened.forgetAll();
+		unopened.forgetAll(java.util.Collections.singletonList("account-one"));
 		unopened.openFor("account-one");
-		assertFalse(unopened.has("lumbridge"));
+		assertFalse("a listed account's drawings go", unopened.has("lumbridge"));
+		unopened.openFor("account-two");
+		assertTrue("an unlisted one's stay", unopened.has("varrock"));
 	}
 
 	/** A drawing still being made when Forget is pressed is not filed after it (qa5 #13). */
@@ -110,7 +152,7 @@ public class SketchBookTest
 		SketchBook book = new SketchBook(data);
 		book.openFor("account-one");
 		int begun = book.edition();
-		book.forgetAll();
+		book.forgetAll(java.util.Collections.emptyList());
 		book.put("wizards-tower", picture(0x101010), picture(0x202020), "dance", begun);
 		assertFalse("not in the book", book.has("wizards-tower"));
 		Path into = data.resolve(SketchBook.DIR_NAME).resolve("account-one");
