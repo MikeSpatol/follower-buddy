@@ -2,11 +2,9 @@
 package com.follower.follower;
 
 import com.follower.FollowerConfig;
+import com.follower.Resources;
 import com.follower.speech.TriggerContext;
 import com.follower.speech.TriggerEvent;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -61,21 +59,13 @@ public class SkillingController
 	 * outfits and the like - read once from skilling.properties: each a key
 	 * and its values, comma separated.
 	 */
-	private static final Properties DATA = new Properties();
+	private static final Properties DATA = Resources.properties("skilling.properties");
 
 	/** The option words that start work, lowercased, and the skill each points at. */
 	private static final Map<String, String> WORK = new HashMap<>();
 
 	static
 	{
-		try (InputStream in = SkillingController.class.getResourceAsStream("/com/follower/skilling.properties"))
-		{
-			DATA.load(in);
-		}
-		catch (IOException e)
-		{
-			throw new UncheckedIOException(e);
-		}
 		for (String key : DATA.stringPropertyNames())
 		{
 			if (key.startsWith("option."))

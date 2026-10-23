@@ -1,8 +1,6 @@
 package com.follower.speech;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
+import com.follower.Resources;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -936,18 +934,10 @@ public class Condition
 	 * names the event it is true on, then the fields that narrow it. See
 	 * event-conditions.properties.
 	 */
-	private static final Properties EVENT_CONDITIONS = new Properties();
+	private static final Properties EVENT_CONDITIONS = Resources.properties("event-conditions.properties");
 
 	static
 	{
-		try (InputStream in = Condition.class.getResourceAsStream("/com/follower/event-conditions.properties"))
-		{
-			EVENT_CONDITIONS.load(in);
-		}
-		catch (IOException e)
-		{
-			throw new UncheckedIOException(e);
-		}
 		// A line whose event type is gone stops the class loading here, rather
 		// than leaving the rules that use it silently never true.
 		EVENT_CONDITIONS.values().forEach(spec -> TriggerEvent.Type.valueOf(spec.toString().split(" ")[0]));

@@ -1,12 +1,11 @@
 package com.follower.appearance;
 
+import com.follower.Resources;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -55,8 +54,7 @@ public final class LiveCacheParser
 
 	static
 	{
-		try (BufferedReader reader = new BufferedReader(new InputStreamReader(
-			LiveCacheParser.class.getResourceAsStream("/com/follower/cache-opcodes.txt"), StandardCharsets.UTF_8)))
+		try (BufferedReader reader = Resources.reader("cache-opcodes.txt"))
 		{
 			for (String line = reader.readLine(); line != null; line = reader.readLine())
 			{

@@ -7615,8 +7615,7 @@ public class FollowerPlugin extends Plugin
 	{
 		if (talk == null)
 		{
-			try (java.io.Reader in = new java.io.InputStreamReader(FollowerPlugin.class
-				.getResourceAsStream("/com/follower/talk.json"), java.nio.charset.StandardCharsets.UTF_8))
+			try (java.io.Reader in = Resources.reader("talk.json"))
 			{
 				talk = gson.fromJson(in, Talk.class);
 			}
