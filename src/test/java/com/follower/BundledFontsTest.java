@@ -50,10 +50,12 @@ public class BundledFontsTest
 		assertNotNull("font 497 is FollowerDialog's DIALOG_FONT_ID", fonts.get(497));
 		assertNotNull("b12_full is what FollowerOverlay draws the overhead line with",
 			fonts.getByName("b12_full"));
+		// public:cut chronicle
 		assertNotNull("p12_full is what the chronicle's lists and pages are set in",
 			fonts.getByName("p12_full"));
 		assertNotNull("p11_full is the chronicle's small header lines",
 			fonts.getByName("p11_full"));
+		// public:end chronicle
 	}
 
 	@Test

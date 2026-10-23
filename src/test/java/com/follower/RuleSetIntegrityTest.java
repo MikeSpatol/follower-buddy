@@ -77,7 +77,8 @@ public class RuleSetIntegrityTest
 		"dateis", "worldhop", "gameupdated", "notesedited",
 		"musicunlock", "collectionadd", "questcomplete", "geoffer",
 		"channeljoined", "channelleft", "npcshout", "musictrack",
-		"examinedthing", "attendedagain", "minutestaken", "pagewritten",
+		"examinedthing", "attendedagain", "minutestaken",
+		"pagewritten", // public:cut chronicle
 		"working", "xpdrop", "workended", "targetdepleted", "bagfull", "baghalf", // public:cut skilling
 		// public:else "xpdrop",
 		"dayssincesaid", "questwitnessed", "grace")); // public:cut agility-all,marks

@@ -123,6 +123,7 @@ public class SceneCutTest
 		}
 		// The two that keep it: the scene's own start, and the sketch's
 		// reshuffle, which puts the queue straight back.
-		assertEquals(clears - 2, dropped);
+		assertEquals(clears - 2, dropped); // public:cut chronicle
+		// public:else assertEquals(clears - 1, dropped);
 	}
 }

@@ -276,6 +276,14 @@ public class Condition
 	private transient int nearbyGeneration = -1;
 	private transient boolean nearbyCached;
 
+	// The public build leaves features out, and a player's own phrases.json
+	// can still hold rules of theirs. Their condition types are unknown there:
+	// such a condition is false, and its type is warned about once a session,
+	// not on every evaluation.
+	// public:cut agility,agility-all,chronicle,company-extras,errands,marks,noticing,side-games,skilling,souvenirs-wishes,spectate,will
+	// public:end agility,agility-all,chronicle,company-extras,errands,marks,noticing,side-games,skilling,souvenirs-wishes,spectate,will
+	// public:else private static final java.util.Set<String> UNKNOWN_TYPES = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
 	public boolean matches(TriggerContext ctx, TriggerEvent event)
 	{
 		if (type == null)
@@ -1174,7 +1182,11 @@ public class Condition
 			// public:end skilling
 
 			default:
-				log.warn("Unknown condition type '{}'", type);
+				log.warn("Unknown condition type '{}'", type); // public:cut agility,agility-all,chronicle,company-extras,errands,marks,noticing,side-games,skilling,souvenirs-wishes,spectate,will
+				// public:else if (UNKNOWN_TYPES.add(type))
+				// public:else {
+				// public:else 	log.warn("Unknown condition type '{}'", type);
+				// public:else }
 				return false;
 		}
 	}
