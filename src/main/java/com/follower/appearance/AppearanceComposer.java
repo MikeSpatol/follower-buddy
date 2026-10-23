@@ -146,7 +146,7 @@ public class AppearanceComposer
 
 		Outfit resolved = outfit.withDefaultBody();
 		List<ModelData> parts = new ArrayList<>();
-		List<String> missing = new ArrayList<>();
+		List<String> missing = new ArrayList<>(); // public:cut logs
 
 		// Body kits hidden by the gear on top of them.
 		java.util.Set<KitType> hidden = hiddenSlots(resolved);
@@ -173,7 +173,7 @@ public class AppearanceComposer
 
 			if (entry == null)
 			{
-				missing.add(slot.name() + " " + (item ? "item " : "kit ") + id);
+				missing.add(slot.name() + " " + (item ? "item " : "kit ") + id); // public:cut logs
 				continue;
 			}
 
@@ -209,22 +209,30 @@ public class AppearanceComposer
 			// public:end dev
 		}
 
+		// public:cut logs
 		if (!missing.isEmpty())
 		{
-			log.debug("Model dump has no data for: {}", String.join(", ", missing)); // public:cut logs
+			log.debug("Model dump has no data for: {}", String.join(", ", missing));
 		}
 
-		if (parts.isEmpty())
-		{
-			return null;
-		}
+		// public:end logs
+		// The ground clearance offset is applied when positioning, not baked into the
+		// vertices - it belongs in world space alongside the terrain height, and this
+		// keeps the composed model reusable across positions.
+		return mergeAndLight(parts, resolved, CONTRAST, LIGHT_X, LIGHT_Y, LIGHT_Z);
+	}
 
-		ModelData merged = client.mergeModels(parts.toArray(new ModelData[0]));
+	/**
+	 * Merges the parts, colours the body through the palette tables and lights
+	 * the result; null when there is nothing to merge.
+	 */
+	private Model mergeAndLight(List<ModelData> parts, Outfit resolved, int contrast, int x, int y, int z)
+	{
+		ModelData merged = parts.isEmpty() ? null : client.mergeModels(parts.toArray(new ModelData[0]));
 		if (merged == null)
 		{
 			return null;
 		}
-
 		// public:cut dev
 		if (!exactPairs.isEmpty())
 		{
@@ -234,18 +242,10 @@ public class AppearanceComposer
 			{
 				merged.recolor(pair.getKey(), pair.getValue());
 			}
+			return merged.light(AMBIENT, contrast, x, y, z);
 		}
-		else
-		{
 		// public:end dev
-			merged = applyBodyColors(merged, resolved.getColors()); // public:cut dev
-		// public:else merged = applyBodyColors(merged, resolved.getColors());
-		} // public:cut dev
-
-		// The ground clearance offset is applied when positioning, not baked into the
-		// vertices - it belongs in world space alongside the terrain height, and this
-		// keeps the composed model reusable across positions.
-		return merged.light(AMBIENT, CONTRAST, LIGHT_X, LIGHT_Y, LIGHT_Z);
+		return applyBodyColors(merged, resolved.getColors()).light(AMBIENT, contrast, x, y, z);
 	}
 
 	// public:cut chathead
@@ -275,44 +275,15 @@ public class AppearanceComposer
 		{
 			addHeadPart(parts, repository.item(resolved.itemId(KitType.HEAD)), resolved.getGender());
 		}
-		if (!hidden.contains(KitType.HAIR) && resolved.isKit(KitType.HAIR))
+		for (KitType slot : new KitType[]{KitType.HAIR, KitType.JAW})
 		{
-			addHeadPart(parts, repository.kit(resolved.kitId(KitType.HAIR)), resolved.getGender());
-		}
-		if (!hidden.contains(KitType.JAW) && resolved.isKit(KitType.JAW))
-		{
-			addHeadPart(parts, repository.kit(resolved.kitId(KitType.JAW)), resolved.getGender());
-		}
-
-		if (parts.isEmpty())
-		{
-			return null;
-		}
-
-		ModelData merged = client.mergeModels(parts.toArray(new ModelData[0]));
-		if (merged == null)
-		{
-			return null;
-		}
-
-		// public:cut dev
-		if (!exactPairs.isEmpty())
-		{
-			merged = merged.cloneColors();
-			for (java.util.Map.Entry<Short, Short> pair : exactPairs.entrySet())
+			if (!hidden.contains(slot) && resolved.isKit(slot))
 			{
-				merged.recolor(pair.getKey(), pair.getValue());
+				addHeadPart(parts, repository.kit(resolved.kitId(slot)), resolved.getGender());
 			}
 		}
-		else
-		{
-		// public:end dev
-			merged = applyBodyColors(merged, resolved.getColors()); // public:cut dev
-		// public:else merged = applyBodyColors(merged, resolved.getColors());
-		} // public:cut dev
 
-		return merged.light(AMBIENT, WIDGET_CONTRAST,
-			WIDGET_LIGHT_X, WIDGET_LIGHT_Y, WIDGET_LIGHT_Z);
+		return mergeAndLight(parts, resolved, WIDGET_CONTRAST, WIDGET_LIGHT_X, WIDGET_LIGHT_Y, WIDGET_LIGHT_Z);
 	}
 
 	/** Loads an entry's dialogue-head models with its authored recolours applied. */
@@ -326,35 +297,11 @@ public class AppearanceComposer
 
 		for (int modelId : modelIds)
 		{
-			if (modelId < 0)
+			ModelData data = modelId < 0 ? null : client.loadModelData(modelId);
+			if (data != null)
 			{
-				continue;
+				parts.add(entry.recolour(data));
 			}
-
-			ModelData data = client.loadModelData(modelId);
-			if (data == null)
-			{
-				continue;
-			}
-
-			if (hasPairs(entry.cf, entry.cr))
-			{
-				data = data.cloneColors();
-				for (int i = 0; i < entry.cf.length && i < entry.cr.length; i++)
-				{
-					data.recolor(entry.cf[i], entry.cr[i]);
-				}
-			}
-			if (hasPairs(entry.tf, entry.tr))
-			{
-				data = data.cloneTextures();
-				for (int i = 0; i < entry.tf.length && i < entry.tr.length; i++)
-				{
-					data.retexture(entry.tf[i], entry.tr[i]);
-				}
-			}
-
-			parts.add(data);
 		}
 	}
 
@@ -706,24 +653,7 @@ public class AppearanceComposer
 				continue;
 			}
 
-			// loadModelData shares arrays between callers; clone before mutating.
-			if (hasPairs(entry.cf, entry.cr))
-			{
-				data = data.cloneColors();
-				for (int i = 0; i < entry.cf.length && i < entry.cr.length; i++)
-				{
-					data.recolor(entry.cf[i], entry.cr[i]);
-				}
-			}
-
-			if (hasPairs(entry.tf, entry.tr))
-			{
-				data = data.cloneTextures();
-				for (int i = 0; i < entry.tf.length && i < entry.tr.length; i++)
-				{
-					data.retexture(entry.tf[i], entry.tr[i]);
-				}
-			}
+			data = entry.recolour(data);
 
 			// Each worn model carries a vertical offset that positions it against the
 			// body. Merging without it leaves every piece at its raw origin, so
@@ -757,7 +687,8 @@ public class AppearanceComposer
 				continue;
 			}
 
-			merged.recolor(GamePalette.find(slot), table[index]);
+			// Each table replaces its own first entry, the default colour.
+			merged.recolor(table[0], table[index]);
 			if (slot == 0 && index < GamePalette.HAIR_HIGHLIGHT.length)
 			{
 				// The highlight is its own authored colour with its own table entry,
@@ -768,10 +699,5 @@ public class AppearanceComposer
 		}
 
 		return merged;
-	}
-
-	private static boolean hasPairs(short[] find, short[] replace)
-	{
-		return find != null && replace != null && find.length > 0 && replace.length > 0;
 	}
 }

@@ -17,13 +17,12 @@ package com.follower.appearance;
  */
 public final class GamePalette
 {
-	/** Source colours the tables replace, one per body-colour slot. */
-	public static final short HAIR_FIND = 6798;
+	/**
+	 * The source colour each table replaces is its own first entry, the
+	 * default: 6798 hair, 8741 torso, 25238 legs, 4626 boots, 4550 skin. The
+	 * hair highlight is the exception, authored on its own colour.
+	 */
 	public static final short HAIR_HIGHLIGHT_FIND = (short) -10304;
-	public static final short TORSO_FIND = 8741;
-	public static final short LEGS_FIND = 25238;
-	public static final short BOOTS_FIND = 4626;
-	public static final short SKIN_FIND = 4550;
 
 	public static final short[] HAIR = {
 		6798, 107, 10283, 16, 4797, 7744, 5799, 4634, -31839, 22433,
@@ -79,26 +78,6 @@ public final class GamePalette
 				return SKIN;
 			default:
 				return null;
-		}
-	}
-
-	/** Source colour for one body-colour slot; hair's highlight is handled separately. */
-	public static short find(int colorSlot)
-	{
-		switch (colorSlot)
-		{
-			case 0:
-				return HAIR_FIND;
-			case 1:
-				return TORSO_FIND;
-			case 2:
-				return LEGS_FIND;
-			case 3:
-				return BOOTS_FIND;
-			case 4:
-				return SKIN_FIND;
-			default:
-				return 0;
 		}
 	}
 }

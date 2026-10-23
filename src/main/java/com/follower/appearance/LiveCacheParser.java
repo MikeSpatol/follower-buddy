@@ -1,7 +1,19 @@
 package com.follower.appearance;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.IndexDataBase;
@@ -12,10 +24,12 @@ import net.runelite.api.IndexDataBase;
  * offline dumps: Hub users get the full outfit catalogue and graphic
  * repository the moment the client is running.
  *
- * <p>The opcode logic is a faithful port of runelite-cache's ItemLoader,
- * KitLoader and SpotAnimLoader, transcribed from the library's bytecode and
- * validated in game by diffing every entry against the offline dumper's
- * output ({@code ::follower cachecheck}). Output shapes mirror the dump files
+ * <p>The opcode layouts are data, in {@code cache-opcodes.txt}: a faithful
+ * port of runelite-cache's ItemLoader, KitLoader and SpotAnimLoader,
+ * transcribed from the library's bytecode and validated in game by diffing
+ * every entry against the offline dumper's output
+ * ({@code ::follower cachecheck}). This class walks a definition by that
+ * table and keeps the named fields. Output shapes mirror the dump files
  * exactly, defaults included, so the repositories cannot tell the difference.
  *
  * <p>Every definition parses independently: a malformed or future-format
@@ -29,6 +43,44 @@ public final class LiveCacheParser
 	private static final int CONFIG_ITEM = 10;
 	private static final int CONFIG_SEQUENCE = 12; // public:cut dev
 	private static final int CONFIG_SPOTANIM = 13;
+
+	/**
+	 * The cache's text encoding. Windows-1252 leaves five bytes unassigned,
+	 * which the cache library reads as '?'.
+	 */
+	private static final Charset CP1252 = Charset.forName("windows-1252");
+
+	/** Per definition type, each opcode's payload fields (null: an unknown opcode). */
+	private static final Map<String, String[][]> LAYOUTS = new HashMap<>();
+
+	static
+	{
+		try (BufferedReader reader = new BufferedReader(new InputStreamReader(
+			LiveCacheParser.class.getResourceAsStream("/com/follower/cache-opcodes.txt"), StandardCharsets.UTF_8)))
+		{
+			for (String line = reader.readLine(); line != null; line = reader.readLine())
+			{
+				String[] words = line.split("#", 2)[0].trim().split("\\s+");
+				if (words.length < 2)
+				{
+					continue;
+				}
+				String[] fields = Arrays.copyOfRange(words, 2, words.length);
+				for (String run : words[1].split(","))
+				{
+					String[] ends = run.split("-");
+					for (int op = Integer.parseInt(ends[0]); op <= Integer.parseInt(ends[ends.length - 1]); op++)
+					{
+						LAYOUTS.computeIfAbsent(words[0], type -> new String[256][])[op] = fields;
+					}
+				}
+			}
+		}
+		catch (IOException e)
+		{
+			throw new UncheckedIOException(e);
+		}
+	}
 
 	private LiveCacheParser()
 	{
@@ -62,500 +114,121 @@ public final class LiveCacheParser
 	/** Wearable items keyed by id, matching equipment-models.json's items map. */
 	public static Map<String, ModelRepository.Entry> parseItems(Client client)
 	{
-		IndexDataBase configs = client.getIndexConfig();
-		Map<String, ModelRepository.Entry> items = new LinkedHashMap<>();
-		if (configs == null)
-		{
-			return items;
-		}
-		int failures = 0;
-		for (int id : configs.getFileIds(CONFIG_ITEM))
-		{
-			byte[] data = configs.loadData(CONFIG_ITEM, id);
-			if (data == null)
-			{
-				continue;
-			}
-			try
-			{
-				ModelRepository.Entry entry = decodeItem(data);
-				if (entry != null)
-				{
-					items.put(Integer.toString(id), entry);
-				}
-			}
-			catch (RuntimeException e)
-			{
-				if (failures++ == 0)
-				{
-					log.warn("Item {} failed to parse (further failures counted silently)", id, e);
-				}
-			}
-		}
-		if (failures > 0)
-		{
-			log.warn("{} item definitions failed to parse", failures);
-		}
-		return items;
-	}
-
-	/** Body kits keyed by id, matching equipment-models.json's kits map. */
-	public static Map<String, ModelRepository.Entry> parseKits(Client client)
-	{
-		return parseKits(client, null);
+		return parse(client, CONFIG_ITEM, (id, data) -> decodeItem(data), "item",
+			(id, e) -> log.warn("Item {} failed to parse (further failures counted silently)", id, e));
 	}
 
 	/**
+	 * Body kits keyed by id, matching equipment-models.json's kits map.
+	 *
 	 * @param nonSelectableOut when non-null, receives the ids of kits flagged
 	 * non-selectable - the styles character creation does not offer, which is
 	 * how the NPC-only and unreleased extras are told apart from real player
 	 * styles. Collected on the side so {@link ModelRepository.Entry} keeps the
 	 * dump file's exact shape and {@code ::follower cachecheck} stays honest.
 	 */
-	public static Map<String, ModelRepository.Entry> parseKits(Client client,
-		java.util.Set<Integer> nonSelectableOut)
+	public static Map<String, ModelRepository.Entry> parseKits(Client client, Set<Integer> nonSelectableOut)
 	{
-		IndexDataBase configs = client.getIndexConfig();
-		Map<String, ModelRepository.Entry> kits = new LinkedHashMap<>();
-		if (configs == null)
+		return parse(client, CONFIG_IDENTKIT, (id, data) ->
 		{
-			return kits;
-		}
-		for (int id : configs.getFileIds(CONFIG_IDENTKIT))
-		{
-			byte[] data = configs.loadData(CONFIG_IDENTKIT, id);
-			if (data == null)
+			boolean[] nonSelectable = new boolean[1];
+			ModelRepository.Entry entry = decodeKit(data, nonSelectable);
+			if (entry != null && nonSelectable[0] && nonSelectableOut != null)
 			{
-				continue;
+				nonSelectableOut.add(id);
 			}
-			try
-			{
-				boolean[] nonSelectable = new boolean[1];
-				ModelRepository.Entry entry = decodeKit(data, nonSelectable);
-				if (entry != null)
-				{
-					kits.put(Integer.toString(id), entry);
-					if (nonSelectable[0] && nonSelectableOut != null)
-					{
-						nonSelectableOut.add(id);
-					}
-				}
-			}
-			catch (RuntimeException e)
-			{
-				log.debug("Kit {} failed to parse", id, e); // public:cut logs
-			}
-		}
-		return kits;
+			return entry;
+		}, null,
+			(id, e) -> log.debug("Kit {} failed to parse", id, e)); // public:cut logs
+			// public:else (id, e) -> { });
 	}
 
 	/** Spotanims keyed by id, matching spotanims.json. */
 	public static Map<String, SpotAnimRepository.Entry> parseSpotAnims(Client client)
 	{
+		return parse(client, CONFIG_SPOTANIM, (id, data) -> decodeSpotAnim(data), "spotanim",
+			(id, e) -> log.warn("Spotanim {} failed to parse: {}", id, e.getMessage()));
+	}
+
+	/**
+	 * Every definition in one config archive, keyed by id. One that fails to
+	 * parse is skipped and handed to {@code failed}: every one when
+	 * {@code counted} is null, otherwise the first, with a count of them all
+	 * at the end under that name.
+	 */
+	private static <E> Map<String, E> parse(Client client, int archive, BiFunction<Integer, byte[], E> decoder,
+		String counted, BiConsumer<Integer, RuntimeException> failed)
+	{
 		IndexDataBase configs = client.getIndexConfig();
-		Map<String, SpotAnimRepository.Entry> spotAnims = new LinkedHashMap<>();
+		Map<String, E> entries = new LinkedHashMap<>();
 		if (configs == null)
 		{
-			return spotAnims;
+			return entries;
 		}
 		int failures = 0;
-		for (int id : configs.getFileIds(CONFIG_SPOTANIM))
+		for (int id : configs.getFileIds(archive))
 		{
-			byte[] data = configs.loadData(CONFIG_SPOTANIM, id);
+			byte[] data = configs.loadData(archive, id);
 			if (data == null)
 			{
 				continue;
 			}
 			try
 			{
-				SpotAnimRepository.Entry entry = decodeSpotAnim(data);
+				E entry = decoder.apply(id, data);
 				if (entry != null)
 				{
-					spotAnims.put(Integer.toString(id), entry);
+					entries.put(Integer.toString(id), entry);
 				}
 			}
 			catch (RuntimeException e)
 			{
-				if (failures++ == 0)
+				if (failures++ == 0 || counted == null)
 				{
-					log.warn("Spotanim {} failed to parse: {}", id, e.getMessage());
+					failed.accept(id, e);
 				}
 			}
 		}
-		if (failures > 0)
+		if (failures > 0 && counted != null)
 		{
-			log.warn("{} spotanim definitions failed to parse", failures);
+			log.warn("{} {} definitions failed to parse", failures, counted);
 		}
-		return spotAnims;
+		return entries;
 	}
 
-	// ------------------------------------------------------------------ items
-
-	/**
-	 * ItemLoader's opcode walk. Only the fields the follower needs are kept,
-	 * but EVERY opcode must be consumed at its exact width or the stream
-	 * desynchronises and the rest of the definition parses as garbage.
-	 */
 	static ModelRepository.Entry decodeItem(byte[] data)
 	{
-		Buffer in = new Buffer(data);
-		// The cache's convention for an unnamed item is the literal string
-		// "null" (the definition's constructor default), and the dumper
-		// preserved it - so the live parse must too.
-		String name = "null";
-		int maleModel0 = -1;
-		int maleModel1 = -1;
-		int maleModel2 = -1;
-		int femaleModel0 = -1;
-		int femaleModel1 = -1;
-		int femaleModel2 = -1;
-		int maleOffset = 0;
-		int femaleOffset = 0;
-		int maleHead = -1;
-		int maleHead2 = -1;
-		int femaleHead = -1;
-		int femaleHead2 = -1;
-		int wearPos1 = -1;
-		int wearPos2 = -1;
-		int wearPos3 = -1;
-		short[] colorFind = null;
-		short[] colorReplace = null;
-		short[] textureFind = null;
-		short[] textureReplace = null;
-
-		for (int opcode = in.readUnsignedByte(); opcode != 0; opcode = in.readUnsignedByte())
-		{
-			switch (opcode)
-			{
-				case 1:
-					in.readUnsignedShort(); // inventory model
-					break;
-				case 2:
-					name = in.readString();
-					break;
-				case 3:
-				case 9:
-					in.readString(); // examine / unknown1
-					break;
-				case 4:
-				case 5:
-				case 6:
-				case 7:
-				case 8:
-					in.readUnsignedShort(); // 2d zoom/rotation/offsets
-					break;
-				case 11:
-				case 15:
-				case 16:
-				case 65:
-				case 160:
-					break; // flag opcodes carry no payload
-				case 12:
-					in.readInt(); // cost
-					break;
-				case 13:
-					wearPos1 = in.readByte();
-					break;
-				case 14:
-					wearPos2 = in.readByte();
-					break;
-				case 23:
-					maleModel0 = in.readUnsignedShort();
-					maleOffset = in.readUnsignedByte();
-					break;
-				case 24:
-					maleModel1 = in.readUnsignedShort();
-					break;
-				case 25:
-					femaleModel0 = in.readUnsignedShort();
-					femaleOffset = in.readUnsignedByte();
-					break;
-				case 26:
-					femaleModel1 = in.readUnsignedShort();
-					break;
-				case 27:
-					wearPos3 = in.readByte();
-					break;
-				case 30:
-				case 31:
-				case 32:
-				case 33:
-				case 34:
-				case 35:
-				case 36:
-				case 37:
-				case 38:
-				case 39:
-					in.readString(); // ground / interface actions
-					break;
-				case 40:
-				{
-					int count = in.readUnsignedByte();
-					colorFind = new short[count];
-					colorReplace = new short[count];
-					for (int i = 0; i < count; i++)
-					{
-						colorFind[i] = (short) in.readUnsignedShort();
-						colorReplace[i] = (short) in.readUnsignedShort();
-					}
-					break;
-				}
-				case 41:
-				{
-					int count = in.readUnsignedByte();
-					textureFind = new short[count];
-					textureReplace = new short[count];
-					for (int i = 0; i < count; i++)
-					{
-						textureFind[i] = (short) in.readUnsignedShort();
-						textureReplace[i] = (short) in.readUnsignedShort();
-					}
-					break;
-				}
-				case 42:
-					in.readByte(); // shift-click drop index
-					break;
-				case 43:
-					// Menu subops: group byte, then (index byte, string) pairs
-					// terminated by a zero index byte.
-					in.readUnsignedByte();
-					while (in.readUnsignedByte() != 0)
-					{
-						in.readString();
-					}
-					break;
-				case 44:
-					in.readInt(); // large inventory model
-					break;
-				case 45:
-					maleModel0 = in.readInt();
-					maleOffset = in.readUnsignedByte();
-					break;
-				case 46:
-					maleModel1 = in.readInt();
-					break;
-				case 47:
-					maleModel2 = in.readInt();
-					break;
-				case 48:
-					femaleModel0 = in.readInt();
-					femaleOffset = in.readUnsignedByte();
-					break;
-				case 49:
-					femaleModel1 = in.readInt();
-					break;
-				case 50:
-					femaleModel2 = in.readInt();
-					break;
-				case 51:
-					maleHead = in.readInt();
-					break;
-				case 52:
-					maleHead2 = in.readInt();
-					break;
-				case 53:
-					femaleHead = in.readInt();
-					break;
-				case 54:
-					femaleHead2 = in.readInt();
-					break;
-				case 75:
-					in.readShort(); // weight
-					break;
-				case 78:
-					maleModel2 = in.readUnsignedShort();
-					break;
-				case 79:
-					femaleModel2 = in.readUnsignedShort();
-					break;
-				case 90:
-					maleHead = in.readUnsignedShort();
-					break;
-				case 91:
-					femaleHead = in.readUnsignedShort();
-					break;
-				case 92:
-					maleHead2 = in.readUnsignedShort();
-					break;
-				case 93:
-					femaleHead2 = in.readUnsignedShort();
-					break;
-				case 94:
-				case 95:
-				case 97:
-				case 98:
-				case 110:
-				case 111:
-				case 112:
-				case 139:
-				case 140:
-				case 148:
-				case 149:
-					in.readUnsignedShort(); // category/noted/resize/links
-					break;
-				case 100:
-				case 101:
-				case 102:
-				case 103:
-				case 104:
-				case 105:
-				case 106:
-				case 107:
-				case 108:
-				case 109:
-					in.readUnsignedShort(); // stack count variant
-					in.readUnsignedShort();
-					break;
-				case 113:
-				case 114:
-					in.readByte(); // ambient / contrast
-					break;
-				case 115:
-					in.readUnsignedByte(); // team
-					break;
-				case 200:
-					// EntityOpsLoader.decodeSubOp: byte, byte, string.
-					in.readUnsignedByte();
-					in.readUnsignedByte();
-					in.readString();
-					break;
-				case 201:
-					// decodeConditionalOp: byte, short, short, int, int, string.
-					in.readUnsignedByte();
-					in.readUnsignedShort();
-					in.readUnsignedShort();
-					in.readInt();
-					in.readInt();
-					in.readString();
-					break;
-				case 202:
-					// decodeConditionalSubOp: byte, 3x short, int, int, string.
-					in.readUnsignedByte();
-					in.readUnsignedShort();
-					in.readUnsignedShort();
-					in.readUnsignedShort();
-					in.readInt();
-					in.readInt();
-					in.readString();
-					break;
-				case 249:
-					in.skipParams();
-					break;
-				default:
-					throw new IllegalStateException("unknown item opcode " + opcode);
-			}
-		}
-
+		Map<String, Object> v = decode("item", data);
+		int[] male = ids(v, "male0", "male1", "male2");
+		int[] female = ids(v, "female0", "female1", "female2");
 		// Mirror the dumper's wearable filter: only items with a worn model.
-		if (maleModel0 == -1 && femaleModel0 == -1)
+		if (male[0] == -1 && female[0] == -1)
 		{
 			return null;
 		}
 
 		ModelRepository.Entry entry = new ModelRepository.Entry();
-		entry.n = name;
-		entry.mo = maleOffset;
-		entry.fo = femaleOffset;
-		entry.wp1 = wearPos1;
-		entry.wp2 = wearPos2;
-		entry.wp3 = wearPos3;
-		entry.m = new int[]{maleModel0, maleModel1, maleModel2};
-		entry.f = new int[]{femaleModel0, femaleModel1, femaleModel2};
-		if (maleHead != -1 || maleHead2 != -1)
-		{
-			entry.hm = new int[]{maleHead, maleHead2};
-		}
-		if (femaleHead != -1 || femaleHead2 != -1)
-		{
-			entry.hf = new int[]{femaleHead, femaleHead2};
-		}
-		entry.cf = colorFind;
-		entry.cr = colorReplace;
-		entry.tf = textureFind;
-		entry.tr = textureReplace;
-		return entry;
+		// The cache's convention for an unnamed item is the literal string
+		// "null" (the definition's constructor default), and the dumper
+		// preserved it - so the live parse must too.
+		entry.n = (String) v.getOrDefault("name", "null");
+		entry.mo = (Integer) v.getOrDefault("maleOffset", 0);
+		entry.fo = (Integer) v.getOrDefault("femaleOffset", 0);
+		entry.wp1 = (Integer) v.getOrDefault("wearPos1", -1);
+		entry.wp2 = (Integer) v.getOrDefault("wearPos2", -1);
+		entry.wp3 = (Integer) v.getOrDefault("wearPos3", -1);
+		entry.m = male;
+		entry.f = female;
+		entry.hm = anySet(ids(v, "maleHead0", "maleHead1"));
+		entry.hf = anySet(ids(v, "femaleHead0", "femaleHead1"));
+		return recoloured(entry, v);
 	}
-
-	// ------------------------------------------------------------------- kits
 
 	static ModelRepository.Entry decodeKit(byte[] data, boolean[] nonSelectableOut)
 	{
-		Buffer in = new Buffer(data);
-		Integer bodyPartId = null;
-		int[] models = null;
-		int[] chatheads = {-1, -1, -1, -1, -1};
-		short[] recolorFind = null;
-		short[] recolorReplace = null;
-		short[] retextureFind = null;
-		short[] retextureReplace = null;
-
-		for (int opcode = in.readUnsignedByte(); opcode != 0; opcode = in.readUnsignedByte())
-		{
-			if (opcode == 1)
-			{
-				bodyPartId = in.readUnsignedByte();
-			}
-			else if (opcode == 2)
-			{
-				int count = in.readUnsignedByte();
-				models = new int[count];
-				for (int i = 0; i < count; i++)
-				{
-					models[i] = in.readUnsignedShort();
-				}
-			}
-			else if (opcode == 3)
-			{
-				// Flagged non-selectable: character creation never offers this
-				// style. No payload.
-				nonSelectableOut[0] = true;
-			}
-			else if (opcode == 5)
-			{
-				int count = in.readUnsignedByte();
-				models = new int[count];
-				for (int i = 0; i < count; i++)
-				{
-					models[i] = in.readInt();
-				}
-			}
-			else if (opcode == 40)
-			{
-				int count = in.readUnsignedByte();
-				recolorFind = new short[count];
-				recolorReplace = new short[count];
-				for (int i = 0; i < count; i++)
-				{
-					// NOTE: signed shorts here, unlike items and spotanims.
-					recolorFind[i] = (short) in.readShort();
-					recolorReplace[i] = (short) in.readShort();
-				}
-			}
-			else if (opcode == 41)
-			{
-				int count = in.readUnsignedByte();
-				retextureFind = new short[count];
-				retextureReplace = new short[count];
-				for (int i = 0; i < count; i++)
-				{
-					retextureFind[i] = (short) in.readShort();
-					retextureReplace[i] = (short) in.readShort();
-				}
-			}
-			else if (opcode >= 60 && opcode < 70)
-			{
-				chatheads[opcode - 60] = in.readUnsignedShort();
-			}
-			else if (opcode >= 70 && opcode < 80)
-			{
-				chatheads[opcode - 70] = in.readInt();
-			}
-			else
-			{
-				throw new IllegalStateException("unknown kit opcode " + opcode);
-			}
-		}
-
+		Map<String, Object> v = decode("kit", data);
+		nonSelectableOut[0] |= v.containsKey("nonSelectable");
+		int[] models = (int[]) v.get("models");
 		// Mirror the dumper's filter: kits without models are unusable.
 		if (models == null || models.length == 0)
 		{
@@ -563,222 +236,151 @@ public final class LiveCacheParser
 		}
 
 		ModelRepository.Entry entry = new ModelRepository.Entry();
-		entry.bp = bodyPartId;
+		entry.bp = (Integer) v.get("bodyPart");
 		entry.m = models;
 		entry.f = models;
-		boolean anyHead = false;
-		for (int head : chatheads)
-		{
-			anyHead |= head != -1;
-		}
-		if (anyHead)
-		{
-			entry.ch = chatheads;
-		}
-		entry.cf = recolorFind;
-		entry.cr = recolorReplace;
-		entry.tf = retextureFind;
-		entry.tr = retextureReplace;
-		return entry;
+		entry.ch = anySet(ids(v, "head0", "head1", "head2", "head3", "head4"));
+		return recoloured(entry, v);
 	}
-
-	// -------------------------------------------------------------- spotanims
 
 	private static SpotAnimRepository.Entry decodeSpotAnim(byte[] data)
 	{
-		Buffer in = new Buffer(data);
-		int modelId = 0;
-		int animationId = -1;
-		int resizeX = 128;
-		int resizeY = 128;
-		int rotation = 0;
-		int ambient = 0;
-		int contrast = 0;
-		short[] recolorFind = null;
-		short[] recolorReplace = null;
-		short[] retextureFind = null;
-		short[] retextureReplace = null;
-
-		for (int opcode = in.readUnsignedByte(); opcode != 0; opcode = in.readUnsignedByte())
-		{
-			switch (opcode)
-			{
-				case 1:
-					modelId = in.readUnsignedShort();
-					break;
-				case 2:
-					animationId = in.readUnsignedShort();
-					break;
-				case 3:
-					modelId = in.readInt();
-					break;
-				case 4:
-					resizeX = in.readUnsignedShort();
-					break;
-				case 5:
-					resizeY = in.readUnsignedShort();
-					break;
-				case 6:
-					rotation = in.readUnsignedShort();
-					break;
-				case 7:
-					ambient = in.readUnsignedByte();
-					break;
-				case 8:
-					contrast = in.readUnsignedByte();
-					break;
-				case 9:
-					in.readString(); // debug name
-					break;
-				case 10:
-					// A newer flag opcode with NO payload - proven empirically:
-					// the offline dumper's library ignores unknown opcodes
-					// without consuming bytes, and every affected definition
-					// (39 of them, ids 3882+) still dumped perfectly clean.
-					break;
-				case 40:
-				{
-					int count = in.readUnsignedByte();
-					recolorFind = new short[count];
-					recolorReplace = new short[count];
-					for (int i = 0; i < count; i++)
-					{
-						recolorFind[i] = (short) in.readUnsignedShort();
-						recolorReplace[i] = (short) in.readUnsignedShort();
-					}
-					break;
-				}
-				case 41:
-				{
-					int count = in.readUnsignedByte();
-					retextureFind = new short[count];
-					retextureReplace = new short[count];
-					for (int i = 0; i < count; i++)
-					{
-						retextureFind[i] = (short) in.readUnsignedShort();
-						retextureReplace[i] = (short) in.readUnsignedShort();
-					}
-					break;
-				}
-				default:
-					throw new IllegalStateException("unknown spotanim opcode " + opcode);
-			}
-		}
-
+		Map<String, Object> v = decode("spotanim", data);
+		SpotAnimRepository.Entry entry = new SpotAnimRepository.Entry();
+		entry.m = (Integer) v.getOrDefault("model", 0);
 		// Mirror the dumper's filter: a spotanim without a model shows nothing.
-		if (modelId <= 0)
+		if (entry.m <= 0)
 		{
 			return null;
 		}
+		entry.a = (Integer) v.getOrDefault("animation", -1);
+		entry.rx = unlessDefault(v, "resizeX", 128);
+		entry.ry = unlessDefault(v, "resizeY", 128);
+		entry.rot = unlessDefault(v, "rotation", 0);
+		entry.am = unlessDefault(v, "ambient", 0);
+		entry.co = unlessDefault(v, "contrast", 0);
+		return recoloured(entry, v);
+	}
 
-		SpotAnimRepository.Entry entry = new SpotAnimRepository.Entry();
-		entry.m = modelId;
-		entry.a = animationId;
-		entry.rx = resizeX == 128 ? null : resizeX;
-		entry.ry = resizeY == 128 ? null : resizeY;
-		entry.rot = rotation == 0 ? null : rotation;
-		entry.am = ambient == 0 ? null : ambient;
-		entry.co = contrast == 0 ? null : contrast;
-		entry.cf = recolorFind;
-		entry.cr = recolorReplace;
-		entry.tf = retextureFind;
-		entry.tr = retextureReplace;
+	/**
+	 * Walks one definition by its type's layouts; the named fields come back
+	 * by name. EVERY opcode is consumed at its exact width, or the stream
+	 * would desynchronise and the rest parse as garbage.
+	 */
+	private static Map<String, Object> decode(String type, byte[] data)
+	{
+		String[][] layouts = LAYOUTS.get(type);
+		ByteBuffer in = ByteBuffer.wrap(data);
+		Map<String, Object> values = new HashMap<>();
+		for (int opcode = in.get() & 0xFF; opcode != 0; opcode = in.get() & 0xFF)
+		{
+			if (layouts[opcode] == null)
+			{
+				throw new IllegalStateException("unknown " + type + " opcode " + opcode);
+			}
+			for (String field : layouts[opcode])
+			{
+				Object value = read(in, field.charAt(0));
+				if (field.length() > 2)
+				{
+					values.put(field.substring(2), value);
+				}
+			}
+		}
+		return values;
+	}
+
+	/** One payload field; cache-opcodes.txt lists the kinds. */
+	private static Object read(ByteBuffer in, char kind)
+	{
+		switch (kind)
+		{
+			case 'b':
+				return (int) in.get();
+			case 'B':
+				return in.get() & 0xFF;
+			case 'h':
+				return in.getShort() & 0xFFFF;
+			case 'i':
+				return in.getInt();
+			case 's':
+				int start = in.position();
+				while (in.get() != 0)
+				{
+					// to the terminator
+				}
+				return new String(in.array(), start, in.position() - start - 1, CP1252).replace('\uFFFD', '?');
+			case 'f':
+				return true;
+			case 'c':
+				short[][] pairs = new short[2][in.get() & 0xFF];
+				for (int i = 0; i < pairs[0].length; i++)
+				{
+					pairs[0][i] = in.getShort();
+					pairs[1][i] = in.getShort();
+				}
+				return pairs;
+			case 'H':
+			case 'I':
+				int[] list = new int[in.get() & 0xFF];
+				for (int i = 0; i < list.length; i++)
+				{
+					list[i] = kind == 'H' ? in.getShort() & 0xFFFF : in.getInt();
+				}
+				return list;
+			case 'o':
+				in.get();
+				while (in.get() != 0)
+				{
+					read(in, 's');
+				}
+				return null;
+			case 'p':
+				for (int count = in.get() & 0xFF; count > 0; count--)
+				{
+					boolean isString = in.get() == 1;
+					in.position(in.position() + 3);
+					read(in, isString ? 's' : 'i');
+				}
+				return null;
+			default:
+				throw new IllegalStateException("unknown field kind " + kind);
+		}
+	}
+
+	/** The named ids, -1 for any the definition did not set. */
+	private static int[] ids(Map<String, Object> values, String... names)
+	{
+		int[] ids = new int[names.length];
+		for (int i = 0; i < names.length; i++)
+		{
+			ids[i] = (Integer) values.getOrDefault(names[i], -1);
+		}
+		return ids;
+	}
+
+	/** The dump leaves out an id array that is all -1 rather than writing it. */
+	private static int[] anySet(int[] ids)
+	{
+		return Arrays.stream(ids).allMatch(id -> id == -1) ? null : ids;
+	}
+
+	/** The definition's find/replace pairs onto its entry; null where it has none. */
+	private static <E extends Recolours> E recoloured(E entry, Map<String, Object> values)
+	{
+		short[][] colours = (short[][]) values.getOrDefault("colours", new short[2][]);
+		short[][] textures = (short[][]) values.getOrDefault("textures", new short[2][]);
+		entry.cf = colours[0];
+		entry.cr = colours[1];
+		entry.tf = textures[0];
+		entry.tr = textures[1];
 		return entry;
 	}
 
-	// ----------------------------------------------------------------- buffer
-
-	/** Minimal big-endian reader matching runelite-cache's InputStream widths. */
-	private static final class Buffer
+	/** The dump leaves out a value at its default. */
+	private static Integer unlessDefault(Map<String, Object> values, String name, int defaultValue)
 	{
-		private final byte[] data;
-		private int offset;
-
-		Buffer(byte[] data)
-		{
-			this.data = data;
-		}
-
-		int readUnsignedByte()
-		{
-			return data[offset++] & 0xFF;
-		}
-
-		int readByte()
-		{
-			return data[offset++];
-		}
-
-		int readUnsignedShort()
-		{
-			return (readUnsignedByte() << 8) | readUnsignedByte();
-		}
-
-		int readShort()
-		{
-			return (short) readUnsignedShort();
-		}
-
-		int read24BitInt()
-		{
-			return (readUnsignedByte() << 16) | (readUnsignedByte() << 8) | readUnsignedByte();
-		}
-
-		int readInt()
-		{
-			return (readUnsignedByte() << 24) | (readUnsignedByte() << 16)
-				| (readUnsignedByte() << 8) | readUnsignedByte();
-		}
-
-		/**
-		 * A 0-terminated string. Only item NAMES are kept, and those are
-		 * plain CP1252; the special-character remapping the cache library
-		 * applies affects codepoints 128-159, which item names do not use -
-		 * anything in that range maps through the same table here for parity.
-		 */
-		String readString()
-		{
-			StringBuilder sb = new StringBuilder();
-			for (int b = readUnsignedByte(); b != 0; b = readUnsignedByte())
-			{
-				if (b >= 128 && b < 160)
-				{
-					char mapped = CP1252_SPECIALS[b - 128];
-					sb.append(mapped == 0 ? '?' : mapped);
-				}
-				else
-				{
-					sb.append((char) b);
-				}
-			}
-			return sb.toString();
-		}
-
-		/** Skips a params map: count, then (isString byte, 24-bit key, value). */
-		void skipParams()
-		{
-			int count = readUnsignedByte();
-			for (int i = 0; i < count; i++)
-			{
-				boolean isString = readUnsignedByte() == 1;
-				read24BitInt();
-				if (isString)
-				{
-					readString();
-				}
-				else
-				{
-					readInt();
-				}
-			}
-		}
+		Integer value = (Integer) values.get(name);
+		return value == null || value == defaultValue ? null : value;
 	}
-
-	/** Windows-1252's 0x80-0x9F block, as the cache text format defines it. */
-	private static final char[] CP1252_SPECIALS = {
-		'€', 0, '‚', 'ƒ', '„', '…', '†', '‡',
-		'ˆ', '‰', 'Š', '‹', 'Œ', 0, 'Ž', 0,
-		0, '‘', '’', '“', '”', '•', '–', '—',
-		'˜', '™', 'š', '›', 'œ', 0, 'ž', 'Ÿ',
-	};
 }

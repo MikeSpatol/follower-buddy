@@ -34,7 +34,7 @@ public class SpotAnimRepository
 
 	// public:end devdump
 	/** One spotanim definition. Field names mirror the dumper's. */
-	public static class Entry
+	public static class Entry extends Recolours
 	{
 		public int m;
 		public int a;
@@ -43,10 +43,6 @@ public class SpotAnimRepository
 		public Integer rot;
 		public Integer am;
 		public Integer co;
-		public short[] cf;
-		public short[] cr;
-		public short[] tf;
-		public short[] tr;
 
 		public int modelId()
 		{

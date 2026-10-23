@@ -57,7 +57,7 @@ public class ModelRepository
 		}
 	}
 
-	public static class Entry
+	public static class Entry extends Recolours
 	{
 		/** Item name; present in dumps produced by the current dumper. */
 		public String n;
@@ -85,12 +85,6 @@ public class ModelRepository
 		public int[] m;
 		/** Female worn model ids, -1 for unused. */
 		public int[] f;
-		/** Colours to find / replace with. */
-		public short[] cf;
-		public short[] cr;
-		/** Textures to find / replace with. */
-		public short[] tf;
-		public short[] tr;
 
 		public int[] models(int gender)
 		{
@@ -223,7 +217,7 @@ public class ModelRepository
 		{
 			return;
 		}
-		addLive(liveItems, LiveCacheParser.parseKits(client));
+		addLive(liveItems, LiveCacheParser.parseKits(client, null));
 	}
 
 	/**

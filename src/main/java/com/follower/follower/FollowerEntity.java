@@ -6117,22 +6117,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 
 		// The client's own pipeline order: base model (rotation, colours), then
 		// the height translate, then resize, then lighting.
-		data = data.cloneColors();
-		if (fx.cf != null && fx.cr != null)
-		{
-			for (int i = 0; i < Math.min(fx.cf.length, fx.cr.length); i++)
-			{
-				data.recolor(fx.cf[i], fx.cr[i]);
-			}
-		}
-		if (fx.tf != null && fx.tr != null)
-		{
-			data = data.cloneTextures();
-			for (int i = 0; i < Math.min(fx.tf.length, fx.tr.length); i++)
-			{
-				data.retexture(fx.tf[i], fx.tr[i]);
-			}
-		}
+		data = fx.recolour(data.cloneColors());
 		for (int i = 0; i < fx.rotation(); i++)
 		{
 			data = data.cloneVertices().rotateY90Ccw();

@@ -4534,9 +4534,9 @@ public class FollowerPlugin extends Plugin
 			{
 				for (int s = 0; s < colors.length; s++)
 				{
-					Short replacement = pairs.get(com.follower.appearance.GamePalette.find(s));
 					short[] table = com.follower.appearance.GamePalette.table(s);
-					if (replacement == null || table == null)
+					Short replacement = table == null ? null : pairs.get(table[0]);
+					if (replacement == null)
 					{
 						continue;
 					}
@@ -6003,7 +6003,7 @@ public class FollowerPlugin extends Plugin
 			problems += diffCatalogue("items", dump.items,
 				com.follower.appearance.LiveCacheParser.parseItems(client));
 			problems += diffCatalogue("kits", dump.kits,
-				com.follower.appearance.LiveCacheParser.parseKits(client));
+				com.follower.appearance.LiveCacheParser.parseKits(client, null));
 			problems += diffCatalogue("spotanims", dumpSpots,
 				com.follower.appearance.LiveCacheParser.parseSpotAnims(client));
 
