@@ -1,5 +1,6 @@
 package com.follower.speech;
 
+import com.follower.Resources;
 import java.util.Locale;
 import java.util.Set;
 
@@ -14,53 +15,32 @@ import java.util.Set;
  */
 public final class Words
 {
-	private static final String[] ONES = {
-		"zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
-		"ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen",
-		"seventeen", "eighteen", "nineteen",
-	};
+	private static final String[] ONES = Resources.list("ones");
 
-	private static final String[] TENS = {
-		"", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety",
-	};
+	private static final String[] TENS = Resources.list("tens");
 
-	private static final String[] ORDINAL_ONES = {
-		"zeroth", "first", "second", "third", "fourth", "fifth", "sixth", "seventh",
-		"eighth", "ninth", "tenth", "eleventh", "twelfth", "thirteenth", "fourteenth",
-		"fifteenth", "sixteenth", "seventeenth", "eighteenth", "nineteenth",
-	};
+	private static final String[] ORDINAL_ONES = Resources.list("ordinalOnes");
 
-	private static final String[] ORDINAL_TENS = {
-		"", "", "twentieth", "thirtieth", "fortieth", "fiftieth", "sixtieth",
-		"seventieth", "eightieth", "ninetieth",
-	};
+	private static final String[] ORDINAL_TENS = Resources.list("ordinalTens");
 
 	/** Vowel letters said with a consonant: a unicorn, a one-eyed rat, a useful thing. */
-	private static final String[] SAID_WITH_A = {
-		"one", "once", "unic", "unif", "unit", "univ", "use", "usu", "eu",
-	};
+	private static final String[] SAID_WITH_A = Resources.list("saidWithA");
 
 	/** And the h that is not said: an hour, an honest mistake. */
-	private static final String[] SAID_WITH_AN = {"hour", "honest", "honour", "heir"};
+	private static final String[] SAID_WITH_AN = Resources.list("saidWithAn");
 
 	/** Things had by the heap, not the piece: soft clay, never a soft clay. */
-	private static final Set<String> HEAPS = Set.of(
-		"clay", "charcoal", "coal", "essence", "flour", "meat", "papyrus", "sand", "wool");
+	private static final Set<String> HEAPS = Resources.words("heaps");
 
 	/** Endings of words that end in s and still mean one: Cerberus, a Nylocas Hagios, a Cyclops. */
-	private static final String[] ONE_DESPITE_THE_S = {"ss", "us", "is", "as", "os", "cyclops", "lens"};
+	private static final String[] ONE_DESPITE_THE_S = Resources.list("oneDespiteTheS");
 
 	/**
 	 * Bosses whose name is who they are, not what: Vorkath, never the
 	 * Vorkath. The Corporeal Beast and the Leviathan are kinds of thing,
 	 * and keep their article.
 	 */
-	private static final Set<String> PERSONAL_NAMES = Set.of(
-		"vorkath", "zulrah", "vet'ion", "callisto", "venenatis", "artio", "calvar'ion", "spindel",
-		"scorpia", "cerberus", "sarachnis", "zalcano", "tempoross", "hespori", "skotizo", "obor",
-		"bryophyta", "nex", "kree'arra", "k'ril tsutsaroth", "general graardor", "commander zilyana",
-		"vardorvis", "duke sucellus", "sol heredit", "araxxor", "tztok-jad", "tzkal-zuk",
-		"verzik vitur", "phosani's nightmare", "dagannoth rex", "dagannoth prime", "dagannoth supreme");
+	private static final Set<String> PERSONAL_NAMES = Resources.words("personalNames");
 
 	private Words()
 	{

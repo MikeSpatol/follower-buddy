@@ -6,7 +6,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * The data files bundled in the jar beside the code, under /com/follower/:
@@ -15,6 +18,9 @@ import java.util.Properties;
  */
 public final class Resources
 {
+	/** lists.properties: the small word and id lists, each comma separated. */
+	private static final Properties LISTS = properties("lists.properties");
+
 	private Resources()
 	{
 	}
@@ -39,5 +45,28 @@ public final class Resources
 			throw new UncheckedIOException(e);
 		}
 		return properties;
+	}
+
+	/** One of lists.properties' lists, in its order. */
+	public static String[] list(String key)
+	{
+		return LISTS.getProperty(key).split(",");
+	}
+
+	/** One of lists.properties' lists, as a set of its words. */
+	public static Set<String> words(String key)
+	{
+		return new HashSet<>(Arrays.asList(list(key)));
+	}
+
+	/** One of lists.properties' lists, as a set of its ids. */
+	public static Set<Integer> ids(String key)
+	{
+		Set<Integer> ids = new HashSet<>();
+		for (String id : list(key))
+		{
+			ids.add(Integer.valueOf(id));
+		}
+		return ids;
 	}
 }

@@ -1,5 +1,6 @@
 package com.follower.speech;
 
+import com.follower.Resources;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -190,8 +191,7 @@ public final class TriggerContext
 	 * running from the last successful attempt instead. That is the "sometimes"
 	 * in "sometimes it comes back too early".
 	 */
-	private static final Set<Integer> THIEVING_STUNS = new HashSet<>(
-		Arrays.asList(1054, 1874, 848, 14422, 14423, 14424, 10087, 10088));
+	private static final Set<Integer> THIEVING_STUNS = Resources.ids("thievingStuns");
 
 	/**
 	 * How long a thieving ANIMATION counts as an attempt in progress.
@@ -1876,9 +1876,7 @@ public final class TriggerContext
 	 * 20 Oct: no grief, no memory, no mark. Text QA5: a Castle Wars death was
 	 * mourned, filed, and brought up 24 times.
 	 */
-	static final Set<Integer> SAFE_DEATH_REGIONS = Set.of(9520, 9620,
-		13658, 13659, 13660, 13914, 13915, 13916, 13918, 13919, 13920, 14174, 14175, 14176,
-		14430, 14431, 14432);
+	static final Set<Integer> SAFE_DEATH_REGIONS = Resources.ids("safeDeathRegions");
 
 	public boolean isSafeDeathHere()
 	{
@@ -1983,12 +1981,7 @@ public final class TriggerContext
 	 * again from its particulars if it can, and otherwise it waits, unsaid,
 	 * to be replaced by the next incident.
 	 */
-	private static final Set<String> VAGUE = new HashSet<>(Arrays.asList(
-		"how close that was", "the way that went", "that drop", "the size of that thing",
-		// And what the places were marked with before they named the moment.
-		// Text QA5, 17 Oct: "Same spot. This is where it went wrong for you."
-		"it went wrong for you", "you got that drop", "you put that thing down",
-		"you hit harder than you ever had"));
+	private static final Set<String> VAGUE = Resources.words("vague");
 
 	/** The old forms that named only the foe, which a restore says again in the current words. */
 	private static final String[] LEGACY_PREFIXES = {"how close that was with ", "the way that went with "};
@@ -2006,8 +1999,7 @@ public final class TriggerContext
 	 * QA5, 19-20 Oct: "I was rereading the entry on the time you died." six
 	 * times, about a death in the Abyss.
 	 */
-	private static final Set<String> PLAIN = new HashSet<>(Arrays.asList(
-		"the time you died", "the time you nearly died", "your big drop", "your big kill"));
+	private static final Set<String> PLAIN = Resources.words("plain");
 
 	/** Whether a memory filed this way was filed knowing nothing particular about the moment. */
 	public static boolean isPlain(String phrase)

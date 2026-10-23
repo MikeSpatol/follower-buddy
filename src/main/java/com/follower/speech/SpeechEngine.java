@@ -1,5 +1,6 @@
 package com.follower.speech;
 
+import com.follower.Resources;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
@@ -128,16 +129,16 @@ public class SpeechEngine
 	private static final long TRAIL_CAP_GAPS = 200;
 
 	/** The placeholders that hold a player's name: the player's own, whoever came or went, whoever spoke. */
-	private static final Set<String> PLAYER_NAMES = Set.of("player", "name", "speaker");
+	private static final Set<String> PLAYER_NAMES = Resources.words("playerNames");
 
 	/** Someone's own name or words: the article step leaves them as written, "The" and all. */
-	private static final Set<String> AS_WRITTEN = Set.of("player", "name", "speaker", "message");
+	private static final Set<String> AS_WRITTEN = Resources.words("asWritten");
 
 	/** Placeholders that always name a creature or a boss, whatever the event. */
-	private static final Set<String> CREATURE_NAMES = Set.of("npc", "foe", "boss", "memoryWho");
+	private static final Set<String> CREATURE_NAMES = Resources.words("creatureNames");
 
 	/** Words that already point at the thing, so a name's own "The" goes: that Leviathan, the first Leviathan. */
-	private static final Set<String> POINTING = Set.of("the", "that", "this", "another", "one", "first", "more");
+	private static final Set<String> POINTING = Resources.words("pointing");
 
 	/**
 	 * A unit the template wrote in the plural, after a number: "{prayer}
@@ -151,9 +152,7 @@ public class SpeechEngine
 	 * Nouns a boss's name can stand in front of, the article belonging to
 	 * the noun: the Vorkath population, the Zulrah column.
 	 */
-	private static final Set<String> NAME_MODIFIES = Set.of(
-		"population", "column", "kill", "kills", "count", "fight", "pet", "drop", "drops",
-		"lair", "page", "entry");
+	private static final Set<String> NAME_MODIFIES = Resources.words("nameModifies");
 
 	/**
 	 * Away from the keys is standing still too. Behaviour QA5, 20 Oct:

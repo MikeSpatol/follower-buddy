@@ -1,5 +1,6 @@
 package com.follower.follower;
 
+import com.follower.Resources;
 import com.follower.appearance.ComposedAppearance;
 import com.follower.appearance.SpotAnimRepository;
 import java.util.ArrayDeque;
@@ -5202,8 +5203,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 	 * tile is not. Both were measured with {@code ::follower centre}: standing
 	 * (pose 808) reads z=-11, the prayer kneel reads z=-39.
 	 */
-	private static final java.util.Set<Integer> RECENTRED_POSES =
-		new java.util.HashSet<>(java.util.Arrays.asList(179, 645, 534, 10061, 10053));
+	private static final java.util.Set<Integer> RECENTRED_POSES = Resources.ids("recentredPoses");
 
 	/**
 	 * How much of the model's own offset to leave alone.
@@ -5662,8 +5662,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 	 * out about five seconds later (QA, 15 Oct). Eased in from the idle and
 	 * back out to it instead.
 	 */
-	static final java.util.Set<Integer> EASED_STANCES = new java.util.HashSet<>(java.util.Arrays.asList(
-		13993, 13994, 13995, 13996, 13997, 13998, 13999, 14000, 14001));
+	static final java.util.Set<Integer> EASED_STANCES = Resources.ids("easedStances");
 
 	/** What waits on the one-shot playing now: how far through it, and what then. */
 	private static final class Milestone
