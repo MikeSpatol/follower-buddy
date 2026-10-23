@@ -159,7 +159,6 @@ public interface FollowerConfig extends Config
 	 * ::follower gfx <id> set keeps one straight away.
 	 */
 
-	@Range(min = 0)
 	@ConfigItem(
 		keyName = "spectateShieldAnimation",
 		name = "Shield summon animation",
@@ -173,7 +172,6 @@ public interface FollowerConfig extends Config
 		return 1162;
 	}
 
-	@Range(min = 0)
 	@ConfigItem(
 		keyName = "spectateShieldGraphic",
 		name = "Shield summon graphic",
@@ -188,7 +186,6 @@ public interface FollowerConfig extends Config
 		return 246;
 	}
 
-	@Range(min = 0)
 	@ConfigItem(
 		keyName = "spectateShieldChannelStart",
 		name = "Channel start animation",
@@ -209,7 +206,6 @@ public interface FollowerConfig extends Config
 		return 0;
 	}
 
-	@Range(min = 0)
 	@ConfigItem(
 		keyName = "spectateShieldChannelEnd",
 		name = "Channel end animation",
@@ -225,7 +221,6 @@ public interface FollowerConfig extends Config
 		return 534;
 	}
 
-	@Range(min = 0)
 	@ConfigItem(
 		keyName = "spectateShieldChannelAnimation",
 		name = "Shield channel animation",
@@ -245,7 +240,6 @@ public interface FollowerConfig extends Config
 		return 179;
 	}
 
-	@Range(min = 0)
 	@ConfigItem(
 		keyName = "spectateShieldChannelGraphic",
 		name = "Shield channel graphic",
@@ -259,7 +253,6 @@ public interface FollowerConfig extends Config
 		return 246;
 	}
 
-	@Range(min = 0)
 	@ConfigItem(
 		keyName = "spectateShieldEndAnimation",
 		name = "Shield finish animation",
@@ -275,7 +268,6 @@ public interface FollowerConfig extends Config
 		return 1162;
 	}
 
-	@Range(min = 0)
 	@ConfigItem(
 		keyName = "spectateShieldEndGraphic",
 		name = "Shield finish graphic",
@@ -547,7 +539,7 @@ public interface FollowerConfig extends Config
 		return 17;
 	}
 
-	@Range(min = 0, max = 400)
+	@Range(max = 400)
 	@ConfigItem(
 		keyName = "speechHeight",
 		name = "Overhead text height",
@@ -592,7 +584,7 @@ public interface FollowerConfig extends Config
 		return true;
 	}
 
-	@Range(min = 0, max = 100)
+	@Range(max = 100)
 	@ConfigItem(
 		keyName = "voiceVolume",
 		name = "Sound volume",
@@ -1197,7 +1189,6 @@ public interface FollowerConfig extends Config
 	}
 
 	// public:end agility,agility-all
-	@Range(min = 0)
 	@ConfigItem(
 		keyName = "restAnimation",
 		name = "Rest pose",
