@@ -135,17 +135,13 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 	/** The player stepped onto this tile; the trail remembers the last few. */
 	void recordTrail(WorldPoint stepped)
 	{
-		if (stepped == null)
+		WorldPoint last = playerTrail.peekLast();
+		if (stepped == null || stepped.equals(last))
 		{
 			return;
 		}
-		if (!playerTrail.isEmpty() && (playerTrail.peekLast().equals(stepped)
-			|| playerTrail.peekLast().getPlane() != stepped.getPlane()))
+		if (last != null && last.getPlane() != stepped.getPlane())
 		{
-			if (playerTrail.peekLast().equals(stepped))
-			{
-				return;
-			}
 			playerTrail.clear();
 		}
 		playerTrail.addLast(stepped);
@@ -171,16 +167,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		{
 			return behind;
 		}
-		int index = playerTrail.size() - 1 - steps;
-		int i = 0;
-		for (WorldPoint tile : playerTrail)
-		{
-			if (i++ == index)
-			{
-				return tile;
-			}
-		}
-		return behind;
+		return new java.util.ArrayList<>(playerTrail).get(playerTrail.size() - 1 - steps);
 	}
 
 	// ----------------------------------------------------- walking beside
@@ -318,30 +305,23 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		WorldPoint from = simTile != null ? simTile : tile;
 		WorldPoint best = null;
 		int nearest = Integer.MAX_VALUE;
-		for (int dx = -1; dx <= 1; dx++)
+		for (int[] step : AROUND)
 		{
-			for (int dy = -1; dy <= 1; dy++)
+			WorldPoint beside = new WorldPoint(wanted.getX() + step[0],
+				wanted.getY() + step[1], wanted.getPlane());
+			if (beside.equals(player) || !goodGround(beside)
+				|| (chosen && furnished(beside)))
 			{
-				if (dx == 0 && dy == 0)
-				{
-					continue;
-				}
-				WorldPoint beside = new WorldPoint(wanted.getX() + dx,
-					wanted.getY() + dy, wanted.getPlane());
-				if (beside.equals(player) || !goodGround(beside)
-					|| (chosen && furnished(beside)))
-				{
-					continue;
-				}
-				int away = from == null ? 0 : beside.distanceTo(from);
-				// Coordinates break ties so the choice cannot jitter between
-				// frames on the iteration order.
-				if (best == null || away < nearest
-					|| (away == nearest && comesFirst(beside, best)))
-				{
-					nearest = away;
-					best = beside;
-				}
+				continue;
+			}
+			int away = from == null ? 0 : beside.distanceTo(from);
+			// Coordinates break ties so the choice cannot jitter between
+			// frames on the iteration order.
+			if (best == null || away < nearest
+				|| (away == nearest && comesFirst(beside, best)))
+			{
+				nearest = away;
+				best = beside;
 			}
 		}
 		return best == null ? wanted : best;
@@ -386,7 +366,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 	private boolean needsReattach;
 	private int controllerGeneration; // public:cut dev
 	private int poseOverride;
-	private int wrapTrim = 1;
+	private int wrapTrim = 1; // public:cut dev
 
 	/** Whether the last frame had it on the move, which a forced pose gives way to. */
 	private boolean onTheMove;
@@ -496,19 +476,13 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 
 		// Arriving is a snap like any other: whatever the caller worked out,
 		// it does not get to put the follower inside a wall.
-		Player spawnAnchor = client.getLocalPlayer();
-		if (spawnAnchor != null && spawnAnchor.getWorldLocation() != null)
+		WorldPoint anchor = playerTile(client);
+		if (anchor != null)
 		{
-			at = arrivalTile(at, spawnAnchor.getWorldLocation(), post);
+			at = arrivalTile(at, anchor, post);
 		}
 
-		tile = at;
-		simTile = at;
-		fineWX = at.getX() * 128L + 64;
-		fineWY = at.getY() * 128L + 64;
-		route.clear();
-		routeRun.clear();
-		serverPath.clear();
+		putAt(at);
 		playerFollowTile = null;
 		lastSeenPlayerTile = null;
 		moveCarryX = 0;
@@ -582,19 +556,11 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 			object.setActive(false);
 			object = null;
 		}
-		for (RuneLiteObject graphic : activeGraphics)
-		{
-			graphic.setActive(false);
-		}
+		showGraphics(false);
 		activeGraphics.clear();
-		stayTile = null;
+		dropPose();
 		releaseAfterCast = false;
-		stayFaceTile = null;
-		stayFaceMax = null; // public:cut skilling
-		goalTile = null;
-		route.clear();
-		routeRun.clear();
-		serverPath.clear();
+		clearTrail();
 		lastSeenPlayerTile = null;
 		playerFollowTile = null;
 		dropCrossings(); // public:cut agility,agility-all
@@ -652,8 +618,6 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		// simply the reverse of where they face.
 		int jau = local.getCurrentOrientation();
 		double radians = (jau / 2048.0) * 2.0 * Math.PI;
-		double facingX = -Math.sin(radians);
-		double facingY = -Math.cos(radians);
 
 		// Walkable is not enough: a tile on the far side of a wall is "walkable"
 		// but unreachable, and a follower spawned there walks THROUGH the wall to
@@ -672,9 +636,8 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 
 			for (int d = distance; d >= 1; d--)
 			{
-				int x = playerTile.getX() - (int) Math.round(bx * d);
-				int y = playerTile.getY() - (int) Math.round(by * d);
-				WorldPoint candidate = new WorldPoint(x, y, playerTile.getPlane());
+				WorldPoint candidate = new WorldPoint(playerTile.getX() - (int) Math.round(bx * d),
+					playerTile.getY() - (int) Math.round(by * d), playerTile.getPlane());
 
 				if (!candidate.equals(playerTile) && reachable.contains(candidate))
 				{
@@ -714,21 +677,14 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 			for (int i = 0; i < size; i++)
 			{
 				WorldPoint at = frontier.poll();
-				for (int dx = -1; dx <= 1; dx++)
+				for (int[] step : AROUND)
 				{
-					for (int dy = -1; dy <= 1; dy++)
+					WorldPoint next = new WorldPoint(
+						at.getX() + step[0], at.getY() + step[1], at.getPlane());
+					if (!seen.contains(next) && canStep(at, step[0], step[1]))
 					{
-						if (dx == 0 && dy == 0)
-						{
-							continue;
-						}
-						WorldPoint next = new WorldPoint(
-							at.getX() + dx, at.getY() + dy, at.getPlane());
-						if (!seen.contains(next) && canStep(at, dx, dy))
-						{
-							seen.add(next);
-							frontier.add(next);
-						}
+						seen.add(next);
+						frontier.add(next);
 					}
 				}
 			}
@@ -779,9 +735,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		// Face-me replaces a stay pose: the follower is being called over.
 		// The pose's face goes with it, or it would arrive facing whatever
 		// the stay was looking at.
-		stayTile = null;
-		stayFaceTile = null;
-		stayFaceMax = null; // public:cut skilling
+		dropPose();
 		goalTile = front;
 		serverPath.clear();
 		return true;
@@ -831,9 +785,29 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 	 */
 	public boolean isSettled()
 	{
-		return route.isEmpty() && serverPath.isEmpty() && tile != null
-			&& fineWX == tile.getX() * 128L + 64
-			&& fineWY == tile.getY() * 128L + 64;
+		return route.isEmpty() && serverPath.isEmpty() && tile != null && !offCentre();
+	}
+
+	/** Whether the fine position is off its tile's centre: mid-step. */
+	private boolean offCentre()
+	{
+		return fineWX != tile.getX() * 128L + 64 || fineWY != tile.getY() * 128L + 64;
+	}
+
+	/** The fine position onto this tile's centre. */
+	private void centreOn(WorldPoint at)
+	{
+		fineWX = at.getX() * 128L + 64;
+		fineWY = at.getY() * 128L + 64;
+	}
+
+	/** Put down on a tile outright, with nothing queued. */
+	private void putAt(WorldPoint at)
+	{
+		clearTrail();
+		tile = at;
+		simTile = at;
+		centreOn(at);
 	}
 
 	// public:cut dev
@@ -965,6 +939,15 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 	private WorldPoint stayFaceMax;
 
 	// public:end skilling
+	/** Lets go of a stay, the way it faced, and a goal. */
+	private void dropPose()
+	{
+		stayTile = null;
+		stayFaceTile = null;
+		stayFaceMax = null; // public:cut skilling
+		goalTile = null;
+	}
+
 	public void setStayFaceTile(WorldPoint tile)
 	{
 		stayFaceTile = tile;
@@ -1002,7 +985,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 			int dy = 2 * tile.getY() - stayFaceTile.getY() - far.getY();
 			if (dx != 0 || dy != 0)
 			{
-				dstYaw = (int) Math.round(Math.atan2(dx, dy) * 325.949) & 0x7ff;
+				dstYaw = yawOf(dx, dy);
 			}
 			return;
 		}
@@ -1056,11 +1039,24 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		// Arriving home ends any staged disappearance, however long it had left.
 		hideUntilMs = 0;
 		strandedTicks = 0;
-		Player local = client.getLocalPlayer();
-		if (spawned && local != null && local.getWorldLocation() != null)
+		if (spawned)
 		{
-			snapBeside(local.getWorldLocation(), "sent home");
+			snapHome("sent home"); // public:cut dev
+			// public:else snapHome();
 		}
+	}
+
+	/** Snaps beside the player, when there is a player to snap to; false when not. */
+	private boolean snapHome(String why) // public:cut dev
+	// public:else private boolean snapHome()
+	{
+		WorldPoint player = playerTile(client);
+		if (player != null)
+		{
+			snapBeside(player, why); // public:cut dev
+			// public:else snapBeside(player);
+		}
+		return player != null;
 	}
 
 	// -------------------------------------------------------------- thrall mode
@@ -1082,13 +1078,8 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		thrallNpc = npc;
 		lastThrallTile = null;
 		dropCrossings(); // public:cut agility,agility-all
-		stayTile = null;
-		stayFaceTile = null;
-		stayFaceMax = null; // public:cut skilling
-		goalTile = null;
-		route.clear();
-		routeRun.clear();
-		serverPath.clear();
+		dropPose();
+		clearTrail();
 		cancelEmote();
 	}
 
@@ -1098,11 +1089,8 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		thrallNpc = null;
 		lastThrallTile = null;
 		clearThrallCircle();
-		Player local = client.getLocalPlayer();
-		if (local != null && local.getWorldLocation() != null)
-		{
-			snapBeside(local.getWorldLocation(), "thrall released");
-		}
+		snapHome("thrall released"); // public:cut dev
+		// public:else snapHome();
 	}
 
 	/**
@@ -1131,14 +1119,10 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		// counters, over water, inside scenery. Holding the spot is right
 		// when the spot is a real one. When it is not, the possession ended
 		// somewhere the follower has no business standing, so it goes home.
-		if (!standable(tile))
+		if (!standable(tile) && snapHome("thrall left it somewhere unstandable")) // public:cut dev
+		// public:else if (!standable(tile) && snapHome())
 		{
-			Player local = client.getLocalPlayer();
-			if (local != null && local.getWorldLocation() != null)
-			{
-				snapBeside(local.getWorldLocation(), "thrall left it somewhere unstandable");
-				return;
-			}
+			return;
 		}
 
 		// Possession moved `tile` every tick and never touched simTile, which
@@ -1163,7 +1147,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 	boolean blockedUnderfoot(WorldPoint standing, Player local)
 	{
 		return standing != null && local != null
-			&& client.getGameState() == GameState.LOGGED_IN
+			&& loggedIn()
 			&& !standing.equals(local.getWorldLocation())
 			&& !standable(standing);
 	}
@@ -1190,9 +1174,11 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 	private WorldPoint insistedTile;
 
 	// public:end errands
+	// public:cut dev,logs
 	/** Whether the last frame found the follower standing in a fire. */
 	private boolean inAFire;
 
+	// public:end dev,logs
 	// public:cut errands
 	/**
 	 * Walk onto it even so. Goes through {@link #stayAt} rather than round
@@ -1236,15 +1222,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 	boolean walledToward(WorldPoint at, int dx, int dy)
 	{
 		Integer flags = flagAt(at);
-		if (flags == null)
-		{
-			return false;
-		}
-		int wall = dx > 0 ? CollisionDataFlag.BLOCK_MOVEMENT_EAST
-			: dx < 0 ? CollisionDataFlag.BLOCK_MOVEMENT_WEST
-			: dy > 0 ? CollisionDataFlag.BLOCK_MOVEMENT_NORTH
-			: CollisionDataFlag.BLOCK_MOVEMENT_SOUTH;
-		return (flags & wall) != 0;
+		return flags != null && (flags & cardinalWallBit(dx, dy)) != 0;
 	}
 
 	// public:end skilling
@@ -1281,17 +1259,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 			composition = composition.getImpostor();
 		}
 		String[] actions = composition == null ? null : composition.getActions();
-		if (actions != null)
-		{
-			for (String action : actions)
-			{
-				if ("Pick".equalsIgnoreCase(action))
-				{
-					return true;
-				}
-			}
-		}
-		return false;
+		return actions != null && java.util.Arrays.stream(actions).anyMatch("Pick"::equalsIgnoreCase);
 	}
 
 	/**
@@ -1539,8 +1507,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 			route.clear();
 			routeRun.clear();
 			tile = wp;
-			fineWX = wp.getX() * 128L + 64;
-			fineWY = wp.getY() * 128L + 64;
+			centreOn(wp);
 		}
 		else if (!wp.equals(lastThrallTile))
 		{
@@ -1559,8 +1526,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 
 		moveContinuous(deltaMs / (double) CYCLE_MS);
 
-		boolean moving = !route.isEmpty()
-			|| fineWX != tile.getX() * 128L + 64 || fineWY != tile.getY() * 128L + 64;
+		boolean moving = !route.isEmpty() || offCentre();
 
 		// A fighting entity keeps FACING its target even while its feet move -
 		// the client's entityFace. Applied after moveContinuous so it overrides
@@ -1581,14 +1547,9 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		}
 		else
 		{
-			pose = lastMoveSpeed >= 8 ? stance.run : stance.walk;
+			pose = gait(stance);
 		}
-		applyPose(pose, false);
-		wrapBeforeFinalFrame();
-		holdTheWriting();
-		passEmoteMilestones(false);
-		playWhatWaitedForStill();
-		render();
+		showPose(pose);
 
 		// The summoning circle rides the follower's rendered feet.
 		if (thrallCircle != null && lastRenderedLocation != null)
@@ -1613,20 +1574,10 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		}
 		net.runelite.api.Actor target = thrallTarget();
 		WorldPoint targetTile = target == null ? null : target.getWorldLocation();
-		if (targetTile == null)
+		if (targetTile == null || !faceToward(targetTile))
 		{
 			return false;
 		}
-		// SELF minus TARGET, matching facePlayer: the reversed delta bakes in
-		// the game's 0-is-south yaw convention. Target-minus-self faces the
-		// exact opposite way.
-		int dx = tile.getX() - targetTile.getX();
-		int dy = tile.getY() - targetTile.getY();
-		if (dx == 0 && dy == 0)
-		{
-			return false;
-		}
-		dstYaw = (int) Math.round(Math.atan2(dx, dy) * 325.949) & 0x7ff;
 		if (snap)
 		{
 			yaw = dstYaw;
@@ -1770,15 +1721,14 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 
 		// A destination near the leash edge would snap-and-release the moment
 		// the follower set off; refuse it as out of range instead.
-		Player local = client.getLocalPlayer();
-		if (local == null || local.getWorldLocation() == null
-			|| target.distanceTo(local.getWorldLocation()) > STAY_LEASH - 2)
+		WorldPoint player = playerTile(client);
+		if (player == null || target.distanceTo(player) > STAY_LEASH - 2)
 		{
 			return null;
 		}
 
 		WorldPoint from = simTile != null ? simTile : tile;
-		return findPath(from, target, true, playerTile(client));
+		return findPath(from, target, true, player);
 	}
 
 	/** Drops queued route steps. */
@@ -2115,10 +2065,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		{
 			return;
 		}
-		stayTile = null;
-		stayFaceTile = null;
-		stayFaceMax = null; // public:cut skilling
-		goalTile = null;
+		dropPose();
 		insistedTile = null; // public:cut errands
 		releaseAfterCast = false;
 		serverPath.clear();
@@ -2185,10 +2132,11 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 			approachCrossing(local, deltaMs);
 		}
 
-		if (!render() && client.getGameState() == GameState.LOGGED_IN)
+		if (!render())
 		{
 			// Off the loaded scene: nothing here can be shown. The old catch-up.
-			recoverPosition(local, playerTile, "off the loaded scene during agility");
+			recoverPosition(local, playerTile, "off the loaded scene during agility"); // public:cut dev
+			// public:else recoverPosition(local, playerTile);
 		}
 		return true;
 	}
@@ -2238,29 +2186,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 			// and the crossing begins START_LAG_MS after they did.
 			tickCarryMs = 600;
 		}
-
-		if (!serverPath.isEmpty())
-		{
-			tickCarryMs += deltaMs;
-			while (tickCarryMs >= 600)
-			{
-				tickCarryMs -= 600;
-				releaseSteps();
-			}
-		}
-		else
-		{
-			tickCarryMs = 0;
-		}
-		moveContinuous(deltaMs / (double) CYCLE_MS);
-
-		boolean moving = !route.isEmpty()
-			|| fineWX != tile.getX() * 128L + 64 || fineWY != tile.getY() * 128L + 64;
-		onTheMove = moving;
-		if (moving)
-		{
-			cancelEmote();
-		}
+		boolean moving = walkFrame(deltaMs);
 
 		// On the start, or beside it once the player is off it: the first
 		// moments of the crossing ease it on, which a rope's first tile,
@@ -2313,10 +2239,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 				facePlayer();
 			}
 		}
-		StanceLibrary.Stance stance = stance();
-		applyPose(!moving ? stance.idle : lastMoveSpeed >= 8 ? stance.run : stance.walk, false);
-		wrapBeforeFinalFrame();
-		passEmoteMilestones(false);
+		walkPose(moving);
 	}
 
 	/**
@@ -2327,27 +2250,26 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 	private void waitForAgility(Player local, long deltaMs)
 	{
 		serverPath.clear();
-		tickCarryMs = 0;
-		moveContinuous(deltaMs / (double) CYCLE_MS);
-		boolean moving = !route.isEmpty()
-			|| fineWX != tile.getX() * 128L + 64 || fineWY != tile.getY() * 128L + 64;
-		onTheMove = moving;
-		if (moving)
-		{
-			cancelEmote();
-		}
-		else
+		boolean moving = walkFrame(deltaMs);
+		if (!moving)
 		{
 			facePlayer();
 		}
+		walkPose(moving);
+		if (!render())
+		{
+			recoverPosition(local, local.getWorldLocation(), "off the loaded scene while waiting on agility"); // public:cut dev
+			// public:else recoverPosition(local, local.getWorldLocation());
+		}
+	}
+
+	/** Agility's plain locomotion: stand, walk or run. */
+	private void walkPose(boolean moving)
+	{
 		StanceLibrary.Stance stance = stance();
-		applyPose(!moving ? stance.idle : lastMoveSpeed >= 8 ? stance.run : stance.walk, false);
+		applyPose(!moving ? stance.idle : gait(stance), false);
 		wrapBeforeFinalFrame();
 		passEmoteMilestones(false);
-		if (!render() && client.getGameState() == GameState.LOGGED_IN)
-		{
-			recoverPosition(local, local.getWorldLocation(), "off the loaded scene while waiting on agility");
-		}
 	}
 
 	private void planApproach(WorldPoint target, WorldPoint avoid)
@@ -2383,13 +2305,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 
 	private void placeAt(WorldPoint at)
 	{
-		route.clear();
-		routeRun.clear();
-		serverPath.clear();
-		tile = at;
-		simTile = at;
-		fineWX = at.getX() * 128L + 64;
-		fineWY = at.getY() * 128L + 64;
+		putAt(at);
 		approachPlanned = at;
 	}
 
@@ -2398,9 +2314,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		crossings.pollFirst();
 		playing = crossing;
 		playedMs = 0;
-		route.clear();
-		routeRun.clear();
-		serverPath.clear();
+		clearTrail();
 		crossingController = null;
 		crossingAnimation = -1;
 		easeFromX = fineWX;
@@ -2478,10 +2392,8 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		setCrossingHands(null);
 		// The locomotion pose goes back on with the next frame's.
 		activePose = -1;
-		route.clear();
-		routeRun.clear();
-		serverPath.clear();
-		if (fineWX != tile.getX() * 128L + 64 || fineWY != tile.getY() * 128L + 64)
+		clearTrail();
+		if (offCentre())
 		{
 			// Ended mid-step, as the player walked off: the rest of the step.
 			route.addLast(tile);
@@ -2548,7 +2460,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		setCrossingHands(hands != null && (hands[0] != FilmSet.KEEP || hands[1] != FilmSet.KEEP) ? hands : null); // public:cut posing
 		// public:else setCrossingHands(hands != null && (hands[0] != -1 || hands[1] != -1) ? hands : null);
 		AnimationController controller = new AnimationController(client, animation);
-		int frames = animation.getFrameLengths() == null ? 0 : animation.getFrameLengths().length;
+		int frames = frameCount(animation);
 		if (startFrame > 0 && startFrame < frames)
 		{
 			controller.setFrame(startFrame);
@@ -2594,10 +2506,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 
 	private static void holdLastFrame(AnimationController controller)
 	{
-		Animation animation = controller.getAnimation();
-		int frames = animation == null || animation.getFrameLengths() == null
-			? 0 : animation.getFrameLengths().length;
-		controller.setFrame(Math.max(0, frames - 1));
+		controller.setFrame(Math.max(0, frameCount(controller.getAnimation()) - 1));
 	}
 
 	// public:end agility,agility-all
@@ -2774,15 +2683,6 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 	 * the lowest flood cost under 100 - which is why clicking inside a fenced
 	 * yard walks you up against the fence.
 	 *
-	 * @return every tile of the route after {@code src} in walking order; empty
-	 * if already there; null if nothing reachable
-	 */
-	private java.util.List<WorldPoint> findPath(WorldPoint src, WorldPoint dest, boolean tryNearest)
-	{
-		return findPath(src, dest, tryNearest, null);
-	}
-
-	/**
 	 * @param avoid a tile to route around, or null. Posed movement passes the
 	 *              PLAYER'S tile: the pathfinder itself walks through players
 	 *              (they don't collide), but a follower cutting straight
@@ -2790,6 +2690,8 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 	 *              the lateral movement that shows the side-step poses while
 	 *              face-locked. An avoided destination resolves by the
 	 *              closest-approach fallback, landing beside it.
+	 * @return every tile of the route after {@code src} in walking order; empty
+	 * if already there; null if nothing reachable
 	 */
 	private java.util.List<WorldPoint> findPath(WorldPoint src, WorldPoint dest,
 		boolean tryNearest, WorldPoint avoid)
@@ -2826,12 +2728,12 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		queueX[steps] = srcX;
 		queueZ[steps++] = srcZ;
 
-		// The client's neighbour order, and the direction code each records:
-		// W=2 E=8 S=1 N=4 SW=3 SE=9 NW=6 NE=12 (bits point BACK toward the
-		// source: NORTH=1, EAST=2, SOUTH=4, WEST=8).
+		// The client's neighbour order: W E S N SW SE NW NE. A reached tile
+		// records which of these steps reached it (index + 1, 0 = unvisited),
+		// where the client records the direction bits back toward the source
+		// (W=2 E=8 S=1 N=4 SW=3 SE=9 NW=6 NE=12); both backtrack the same route.
 		final int[] stepX = {-1, 1, 0, 0, -1, 1, -1, 1};
 		final int[] stepZ = {0, 0, -1, 1, -1, -1, 1, 1};
-		final int[] dirCode = {2, 8, 1, 4, 3, 9, 6, 12};
 
 		boolean arrived = false;
 		int x = srcX;
@@ -2863,7 +2765,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 				}
 				queueX[steps] = nx;
 				queueZ[steps++] = nz;
-				dirMap[nx * size + nz] = dirCode[d];
+				dirMap[nx * size + nz] = d + 1;
 				distMap[nx * size + nz] = nextCost;
 			}
 		}
@@ -2901,23 +2803,10 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		while (x != srcX || z != srcZ)
 		{
 			reversed.add(new WorldPoint(baseX + x, baseY + z, plane));
-			int dir = dirMap[x * size + z];
-			if ((dir & 2) != 0)
-			{
-				x++;
-			}
-			else if ((dir & 8) != 0)
-			{
-				x--;
-			}
-			if ((dir & 1) != 0)
-			{
-				z++;
-			}
-			else if ((dir & 4) != 0)
-			{
-				z--;
-			}
+			// Back along the step that first reached this tile.
+			int d = dirMap[x * size + z] - 1;
+			x -= stepX[d];
+			z -= stepZ[d];
 		}
 		Collections.reverse(reversed);
 		return reversed;
@@ -3174,14 +3063,15 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 				&& !where.equals(vanishPlayerTile);
 			// Not while the area it landed in is still loading: the map then
 			// is not the new one's, and a booth beside the player reads open.
-			if (client.getGameState() == GameState.LOGGED_IN && (landed || now - vanishedAtMs > 8000))
+			if (loggedIn() && (landed || now - vanishedAtMs > 8000))
 			{
 				vanished = false;
 				lastSeenPlayerTile = null;
 				if (where != null)
 				{
 					snapped();
-					snapBeside(where, "teleport landing");
+					snapBeside(where, "teleport landing"); // public:cut dev
+					// public:else snapBeside(where);
 				}
 			}
 			return;
@@ -3258,7 +3148,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		else if (castLanded || away) // public:cut agility,agility-all
 		// public:else if (castLanded || away)
 		{
-			if (client.getGameState() != GameState.LOGGED_IN)
+			if (!loggedIn())
 			{
 				// Snapped from real data once the area has loaded.
 				return;
@@ -3276,11 +3166,15 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 			}
 			stayTile = null;
 			snapped();
+			// public:cut dev
 			String why = castLanded ? "cast landed" : otherFloor ? "player on another floor"
 				: "player " + tile.distanceTo(playerTile) + " tiles away";
-			if (!snapBeside(playerTile, why))
+			// public:end dev
+			if (!snapBeside(playerTile, why)) // public:cut dev
+			// public:else if (!snapBeside(playerTile))
 			{
-				recoverPosition(local, playerTile, why);
+				recoverPosition(local, playerTile, why); // public:cut dev
+				// public:else recoverPosition(local, playerTile);
 			}
 			return;
 		}
@@ -3297,8 +3191,11 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 			if (patienceMs <= 0)
 			{
 			// public:end agility,agility-all
+				// public:cut dev
 				snapBeside(playerTile, "blocked underfoot"); // public:cut agility,agility-all
 			// public:else snapBeside(playerTile, "blocked underfoot");
+				// public:end dev
+				// public:else snapBeside(playerTile);
 				return; // public:cut agility,agility-all
 			// public:else return;
 			// public:cut agility,agility-all
@@ -3321,6 +3218,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		// step off, not a snap: somebody whose ground catches moves aside,
 		// they do not appear elsewhere. Whatever owns the feet then chooses
 		// properly at its own pace - the seat is re-taken a tick later.
+		// public:cut dev,logs
 		if (hot(tile))
 		{
 			if (!inAFire)
@@ -3344,6 +3242,11 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		{
 			inAFire = false;
 		}
+		// public:end dev,logs
+		// public:else if (hot(tile) && isSettled())
+		// public:else {
+			// public:else stepOffTheFire();
+		// public:else }
 
 		// Out of sight a long while under somebody standing on its tile (a
 		// player gone idle at a bank booth): a step aside, as off a fire.
@@ -3357,13 +3260,14 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		// Watchdog: if anything at all has left the object hidden while the player
 		// is on screen, put it back. A deliberate hide (an NPC sharing the
 		// tile) is not a fault and must not trigger a recovery snap.
-		if (!object.isActive() && !hiddenForNpcOverlap && client.getGameState() == GameState.LOGGED_IN)
+		if (!object.isActive() && !hiddenForNpcOverlap)
 		{
-			recoverPosition(local, playerTile, "watchdog: hidden");
+			recoverPosition(local, playerTile, "watchdog: hidden"); // public:cut dev
+			// public:else recoverPosition(local, playerTile);
 		}
 
 		// A cutscene keeps the follower as an extra (keepToTheScene).
-		if (watchingWithThePlayer && client.getGameState() == GameState.LOGGED_IN)
+		if (watchingWithThePlayer && loggedIn())
 		{
 			keepToTheScene(playerTile);
 		}
@@ -3372,32 +3276,29 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		// facing the player attentively - until explicitly released. The player
 		// walking away does NOT end it; watchPlayer skips the follow pathing
 		// while it is set.
-		if (stayTile != null)
-		{
-			if (tile.equals(stayTile) && route.isEmpty() && serverPath.isEmpty())
-			{
-				faceTheHold(local);
-			}
-			else if (serverPath.isEmpty() && route.isEmpty())
-			{
-				extendPathBfs(stayTile, playerTile(client));
-			}
-		}
 		// A posed goal suspends following: the goal's path is the only target
 		// until the follower arrives (then it faces the player) or the player
 		// moves (watchPlayer clears the goal).
-		else if (goalTile != null)
+		WorldPoint posed = stayTile != null ? stayTile : goalTile;
+		if (posed != null)
 		{
-			if (tile.equals(goalTile) && route.isEmpty() && serverPath.isEmpty())
+			if (route.isEmpty() && serverPath.isEmpty())
 			{
-				// Arrived: HOLD here, facing the player, until they move. Clearing
-				// the goal on arrival let the follow rule immediately walk it back
-				// behind them, so the pose lasted a fraction of a second.
-				facePlayer();
-			}
-			else if (serverPath.isEmpty() && route.isEmpty())
-			{
-				extendPathBfs(goalTile, playerTile(client));
+				if (!tile.equals(posed))
+				{
+					extendPathBfs(posed, playerTile(client));
+				}
+				else if (stayTile != null)
+				{
+					faceTheHold(local);
+				}
+				else
+				{
+					// Arrived: HOLD here, facing the player, until they move. Clearing
+					// the goal on arrival let the follow rule immediately walk it back
+					// behind them, so the pose lasted a fraction of a second.
+					facePlayer();
+				}
 			}
 		}
 		// Fallback for the cases the eager extension can't see - after a spawn,
@@ -3405,10 +3306,9 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		// the follower away from their follow tile. BFS-routed: the follower
 		// may be an arbitrary distance away with walls in between, and the
 		// greedy stepper's raw-step fallback would walk it through them.
+		// (extendPathBfs itself declines a follow tile on another floor.)
 		else if (serverPath.isEmpty() && route.isEmpty() && playerFollowTile != null
-			&& simTile != null
-			&& playerFollowTile.getPlane() == simTile.getPlane()
-			&& !simTile.equals(playerFollowTile))
+			&& !playerFollowTile.equals(simTile))
 		{
 			// After a jump the follow tile IS the player's tile; avoid it so
 			// closest-approach parks the follower beside them, not on them.
@@ -3416,41 +3316,8 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 				playerFollowTile.equals(playerTile) ? playerFollowTile : null);
 		}
 
-		// Idle drain: releases are normally phase-locked to observed player steps,
-		// which stop when the player stops - this timer finishes the follower's
-		// remaining approach afterwards, one tick's worth at a time.
-		if (!serverPath.isEmpty())
-		{
-			tickCarryMs += deltaMs;
-			while (tickCarryMs >= 600)
-			{
-				tickCarryMs -= 600;
-				releaseSteps();
-			}
-		}
-		else
-		{
-			tickCarryMs = 0;
-		}
-
-		// The client's movement budget for this frame, in 20ms cycles. Consumed
-		// CONTINUOUSLY rather than in whole cycles: the real client renders at a
-		// locked 20ms per frame so whole cycles are smooth there, but against a
-		// variable frame rate they beat (move, move, skip...) - a micro-stutter.
-		// The speeds and rules are unchanged; only the granularity is finer.
-		moveContinuous(deltaMs / (double) CYCLE_MS);
-
-		boolean moving = !route.isEmpty()
-			|| fineWX != tile.getX() * 128L + 64 || fineWY != tile.getY() * 128L + 64;
-		onTheMove = moving;
+		boolean moving = walkFrame(deltaMs);
 		noteAStall(moving, playerTile, deltaMs); // public:cut dev
-
-		// Movement always wins over an emote - a dancing follower gliding along
-		// behind you looks broken, and the real game drops emotes on movement too.
-		if (moving)
-		{
-			cancelEmote();
-		}
 
 		// Idle facing: the follow op interacts with its target, and an
 		// interacting entity keeps facing it while standing - turning in place
@@ -3487,8 +3354,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 			// Directional poses belong to the FACE-LOCKED states only (Face-me's
 			// walk-around); plain following walks and runs facing its travel,
 			// with no side-step flicker on sharp turns while the yaw catches up.
-			pose = faceLocked() ? movePose(stance)
-				: (lastMoveSpeed >= 8 ? stance.run : stance.walk);
+			pose = faceLocked() ? movePose(stance) : gait(stance);
 		}
 		else if (yaw != dstYaw && faceLocked())
 		{
@@ -3508,22 +3374,13 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		{
 			pose = stance.idle;
 		}
-		applyPose(pose, false);
-
-		wrapBeforeFinalFrame();
-		holdTheWriting();
-		passEmoteMilestones(false);
-		playWhatWaitedForStill();
-
-		if (!render())
+		if (!showPose(pose))
 		{
 			// A chunk load is a seamless, sub-second rebuild that the player keeps
 			// running through. Hold position and let the scene settle; only recover
 			// outright while genuinely logged in and unresolvable.
-			if (client.getGameState() == GameState.LOGGED_IN)
-			{
-				recoverPosition(local, playerTile, "off the loaded scene");
-			}
+			recoverPosition(local, playerTile, "off the loaded scene"); // public:cut dev
+			// public:else recoverPosition(local, playerTile);
 		}
 		// public:cut dev
 
@@ -3533,6 +3390,71 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 			log.info("FTRACE gap {}", debugLines().get(0).trim()); // public:cut logs
 		}
 		// public:end dev
+	}
+
+	/**
+	 * The frame's walking. Idle drain first: releases are normally
+	 * phase-locked to observed player steps, which stop when the player
+	 * stops - this timer finishes the follower's remaining approach
+	 * afterwards, one tick's worth at a time.
+	 *
+	 * <p>Then the client's movement budget for this frame, in 20ms cycles.
+	 * Consumed CONTINUOUSLY rather than in whole cycles: the real client
+	 * renders at a locked 20ms per frame so whole cycles are smooth there,
+	 * but against a variable frame rate they beat (move, move, skip...) - a
+	 * micro-stutter. The speeds and rules are unchanged; only the
+	 * granularity is finer.
+	 *
+	 * <p>Movement always wins over an emote - a dancing follower gliding
+	 * along behind you looks broken, and the real game drops emotes on
+	 * movement too.
+	 *
+	 * @return whether it is on the move
+	 */
+	private boolean walkFrame(long deltaMs)
+	{
+		if (!serverPath.isEmpty())
+		{
+			tickCarryMs += deltaMs;
+			while (tickCarryMs >= 600)
+			{
+				tickCarryMs -= 600;
+				releaseSteps();
+			}
+		}
+		else
+		{
+			tickCarryMs = 0;
+		}
+		moveContinuous(deltaMs / (double) CYCLE_MS);
+		onTheMove = !route.isEmpty() || offCentre();
+		if (onTheMove)
+		{
+			cancelEmote();
+		}
+		return onTheMove;
+	}
+
+	/** Walk or run by the last movement cycle's speed. */
+	private int gait(StanceLibrary.Stance stance)
+	{
+		return lastMoveSpeed >= 8 ? stance.run : stance.walk;
+	}
+
+	/**
+	 * The frame's pose on, kept on its loop, the emote's waiters told how far
+	 * it has got, what waited for it to stand played, and the frame drawn.
+	 *
+	 * @return false when the draw could not place it, as {@link #render}
+	 */
+	private boolean showPose(int pose)
+	{
+		applyPose(pose, false);
+		wrapBeforeFinalFrame();
+		holdTheWriting();
+		passEmoteMilestones(false);
+		playWhatWaitedForStill();
+		return render();
 	}
 
 	// public:cut dev
@@ -3943,13 +3865,12 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 			return null;
 		}
 
+		if (canStep(origin, dx, dy))
+		{
+			return new WorldPoint(origin.getX() + dx, origin.getY() + dy, origin.getPlane());
+		}
 		if (dx != 0 && dy != 0)
 		{
-			if (canStep(origin, dx, dy))
-			{
-				return new WorldPoint(origin.getX() + dx, origin.getY() + dy, origin.getPlane());
-			}
-
 			// The corner is closed; go around it, longer axis first.
 			int firstDx = Math.abs(remX) >= Math.abs(remY) ? dx : 0;
 			int firstDy = firstDx == 0 ? dy : 0;
@@ -3961,10 +3882,6 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 			{
 				return new WorldPoint(origin.getX() + dx - firstDx, origin.getY() + dy - firstDy, origin.getPlane());
 			}
-		}
-		else if (canStep(origin, dx, dy))
-		{
-			return new WorldPoint(origin.getX() + dx, origin.getY() + dy, origin.getPlane());
 		}
 
 		// Boxed in. Only the player's own retraced path may step anyway.
@@ -4148,35 +4065,21 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 	 */
 	private boolean npcOnTile(WorldPoint where)
 	{
-		if (where == null)
-		{
-			return false;
-		}
-
 		net.runelite.api.WorldView view = client.getTopLevelWorldView();
-		if (view == null)
+		if (where == null || view == null)
 		{
 			return false;
 		}
 		int own = modelHeight(object == null ? null : object.getModel());
 		for (net.runelite.api.NPC npc : view.npcs())
 		{
-			if (npc == null || npc == thrallNpc)
-			{
-				continue;
-			}
-			WorldPoint at = npc.getWorldLocation();
-			if (at == null || !at.equals(where))
-			{
-				continue;
-			}
-
 			// Only once the NPC has STOPPED there. One walking through is a
 			// moment, and blinking out as it crosses draws far more attention
 			// than the overlap would have. An NPC on the move is playing a
 			// walk pose; a standing one is on its idle pose, including while
 			// it attacks, since that lives in the animation slot instead.
-			if (!standing(npc) || !drawn.test(npc))
+			if (npc == null || npc == thrallNpc || !where.equals(npc.getWorldLocation())
+				|| !standing(npc) || !drawn.test(npc))
 			{
 				continue;
 			}
@@ -4405,6 +4308,9 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		return flags[sx][sy];
 	}
 
+	/** The eight steps round a tile, cardinals first: the order a step aside tries them. */
+	private static final int[][] AROUND = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {-1, 1}, {1, -1}, {-1, -1}};
+
 	/** How far around the player a snap may look for somewhere legal to land. */
 	private static final int LANDING_SEARCH_RADIUS = 2;
 
@@ -4424,7 +4330,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		if (post && wanted != null && anchor != null && wanted.getPlane() == anchor.getPlane()
 			&& wanted.distanceTo(anchor) <= STAY_LEASH - 2 && goodGround(wanted) && !furnished(wanted))
 		{
-			java.util.List<WorldPoint> path = findPath(anchor, wanted, false);
+			java.util.List<WorldPoint> path = findPath(anchor, wanted, false, null);
 			if (path != null && (path.isEmpty() ? anchor.equals(wanted)
 				: path.get(path.size() - 1).equals(wanted)))
 			{
@@ -4524,8 +4430,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 	{
 		WorldPoint player = playerTile(client);
 		boolean staying = stayTile != null;
-		int[][] steps = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {-1, 1}, {1, -1}, {-1, -1}};
-		for (int[] step : steps)
+		for (int[] step : AROUND)
 		{
 			WorldPoint off = new WorldPoint(
 				tile.getX() + step[0], tile.getY() + step[1], tile.getPlane());
@@ -4551,6 +4456,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		}
 	}
 
+	// public:cut dev
 	/**
 	 * Where the feet are and what owns them, for {@code ::follower fires}.
 	 * Every one of these is a route onto a tile, so a fire showing up in any
@@ -4582,6 +4488,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		return at != null && hot(at) ? " [FIRE]" : "";
 	}
 
+	// public:end dev
 	/**
 	 * Told when a teleport, a plane change or a jump past the leash puts the
 	 * follower back beside the player, before it is shown there: whatever had
@@ -4601,7 +4508,8 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 	}
 
 	/** Re-places the follower beside the player after a teleport or plane change. */
-	private boolean snapBeside(WorldPoint playerTile, String why)
+	private boolean snapBeside(WorldPoint playerTile, String why) // public:cut dev
+	// public:else private boolean snapBeside(WorldPoint playerTile)
 	{
 		WorldPoint beside = landingTile(new WorldPoint(
 			playerTile.getX() - 1, playerTile.getY(), playerTile.getPlane()), playerTile);
@@ -4625,17 +4533,8 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 			onAgilitySnap.run();
 		}
 		// public:end agility,agility-all
-		stayTile = null;
-		stayFaceTile = null;
-		stayFaceMax = null; // public:cut skilling
-		goalTile = null;
-		route.clear();
-		routeRun.clear();
-		serverPath.clear();
-		tile = beside;
-		simTile = beside;
-		fineWX = beside.getX() * 128L + 64;
-		fineWY = beside.getY() * 128L + 64;
+		dropPose();
+		putAt(beside);
 		lastMoveSpeed = 0;
 		burst = false;
 		applyPose(stance().idle, false);
@@ -4648,14 +4547,15 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 	 * space, then pin directly to the player's local coordinates - the last step
 	 * always works while the player is being rendered.
 	 */
-	private void recoverPosition(Player local, WorldPoint playerTile, String why)
+	private void recoverPosition(Player local, WorldPoint playerTile, String why) // public:cut dev
+	// public:else private void recoverPosition(Player local, WorldPoint playerTile)
 	{
-		if (playerTile != null)
+		// Only while genuinely logged in: a chunk load is a seamless rebuild
+		// the scene settles from by itself.
+		if (!loggedIn() || playerTile != null && snapBeside(playerTile, why)) // public:cut dev
+		// public:else if (!loggedIn() || playerTile != null && snapBeside(playerTile))
 		{
-			if (snapBeside(playerTile, why))
-			{
-				return;
-			}
+			return;
 		}
 
 		LocalPoint playerLocal = local.getLocalLocation();
@@ -4692,6 +4592,11 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		{
 			object.setActive(true);
 		}
+	}
+
+	private boolean loggedIn()
+	{
+		return client.getGameState() == GameState.LOGGED_IN;
 	}
 
 	/**
@@ -4749,10 +4654,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 			{
 				object.setActive(false);
 				// Whatever it is wearing goes with it, and comes back with it.
-				for (RuneLiteObject graphic : activeGraphics)
-				{
-					graphic.setActive(false);
-				}
+				showGraphics(false);
 			}
 			return true;
 		}
@@ -4767,10 +4669,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		if (!object.isActive())
 		{
 			object.setActive(true);
-			for (RuneLiteObject graphic : activeGraphics)
-			{
-				graphic.setActive(true);
-			}
+			showGraphics(true);
 		}
 
 		int lx = base.getX() + (int) (fineWX & 127) - 64;
@@ -5017,9 +4916,12 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		//
 		// WrapLerpController interpolates across the loop boundary, which the client
 		// itself never does; the trim workaround below stays available as a fallback.
+		// public:cut dev
 		AnimationController controller = wrapLerp
 			? new WrapLerpController(client, animation)
 			: new AnimationController(client, animation);
+		// public:end dev
+		// public:else AnimationController controller = new WrapLerpController(client, animation);
 		controller.setOnFinished(FollowerEntity::loopSafely);
 		object.setAnimationController(controller);
 
@@ -5055,42 +4957,25 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 	 */
 	private void wrapBeforeFinalFrame()
 	{
-		// The lerp controller renders the final frame correctly - trimming it too
-		// would cut the very segment being interpolated. But if its safety guard has
-		// switched it off, the trim must take back over or the raw hold shows.
-		if (wrapLerp && object != null)
-		{
-			AnimationController active = object.getAnimationController();
-			if (active instanceof WrapLerpController && !((WrapLerpController) active).isDisabled())
-			{
-				return;
-			}
-		}
-
 		// Never touch a one-shot. Skipping the final frame of an emote means it never
 		// finishes, onFinished never fires, and the follower is stuck replaying it
 		// forever with the pose logic locked out behind emotePlaying.
-		if (wrapTrim <= 0 || object == null || emotePlaying)
+		if (wrapTrim <= 0 || object == null || emotePlaying) // public:cut dev
+		// public:else if (object == null || emotePlaying)
 		{
 			return;
 		}
-
 		AnimationController controller = object.getAnimationController();
-		if (controller == null)
-		{
-			return;
-		}
-
-		Animation animation = controller.getAnimation();
-		if (animation == null || animation.getFrameLengths() == null)
-		{
-			return;
-		}
-
-		// Only worth doing when smoothing is actually on. Without interpolation there
-		// is no dead-end frame to avoid, so trimming one would cost a frame of the
-		// cycle for nothing.
-		if (!isSmoothingActive(animation))
+		Animation animation = controller == null ? null : controller.getAnimation();
+		// The lerp controller renders the final frame correctly - trimming it too
+		// would cut the very segment being interpolated. But if its safety guard has
+		// switched it off, the trim must take back over or the raw hold shows. And
+		// only worth doing when smoothing is actually on: without interpolation
+		// there is no dead-end frame to avoid, so trimming one would cost a frame
+		// of the cycle for nothing.
+		if (wrapLerp && controller instanceof WrapLerpController && !((WrapLerpController) controller).isDisabled() // public:cut dev
+		// public:else if (controller instanceof WrapLerpController && !((WrapLerpController) controller).isDisabled()
+			|| animation == null || animation.getFrameLengths() == null || !isSmoothingActive(animation))
 		{
 			return;
 		}
@@ -5128,7 +5013,8 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 			return measured;
 		}
 
-		return Math.min(wrapTrim, Math.max(1, frames / 6));
+		return Math.min(wrapTrim, Math.max(1, frames / 6)); // public:cut dev
+		// public:else return 1;
 	}
 
 	/**
@@ -5196,31 +5082,13 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 	 */
 	private float[] poseVertices(Animation animation, int frame)
 	{
-		net.runelite.api.Model posed = client.applyTransformations(baseModel, animation, frame, null, 0);
-		if (posed == null || posed.getVerticesX() == null)
-		{
-			return null;
-		}
-
-		int count = posed.getVerticesCount();
-		float[] out = new float[count * 3];
-		float[] x = posed.getVerticesX();
-		float[] y = posed.getVerticesY();
-		float[] z = posed.getVerticesZ();
-
-		for (int i = 0; i < count; i++)
-		{
-			out[i * 3] = x[i];
-			out[i * 3 + 1] = y[i];
-			out[i * 3 + 2] = z[i];
-		}
-		return out;
+		return WrapLerpController.snapshot(client.applyTransformations(baseModel, animation, frame, null, 0));
 	}
 
+	// public:cut dev
 	/** Interpolate across the loop boundary instead of trimming frames off it. */
 	private boolean wrapLerp = true;
 
-	// public:cut dev
 	/** Switches wrap handling and re-applies the current pose so it takes effect now. */
 	public void setWrapLerp(boolean enabled)
 	{
@@ -5318,11 +5186,18 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 			return;
 		}
 
-		int frames = animation.getFrameLengths() == null ? 0 : animation.getFrameLengths().length;
+		int frames = frameCount(animation);
 		if (controller.getFrame() < 0 || controller.getFrame() >= frames)
 		{
 			controller.setFrame(0);
 		}
+	}
+
+	/** An animation's frame count; 0 for none. */
+	private static int frameCount(Animation animation)
+	{
+		int[] lengths = animation == null ? null : animation.getFrameLengths();
+		return lengths == null ? 0 : lengths.length;
 	}
 
 	/**
@@ -5840,9 +5715,8 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		{
 			AnimationController controller = object == null ? null : object.getAnimationController();
 			Animation animation = controller == null ? null : controller.getAnimation();
-			int[] lengths = animation == null ? null : animation.getFrameLengths();
-			through = lengths == null || lengths.length == 0 ? 1
-				: controller.getFrame() / (double) lengths.length;
+			int frames = frameCount(animation);
+			through = frames == 0 ? 1 : controller.getFrame() / (double) frames;
 		}
 		java.util.List<Runnable> due = new java.util.ArrayList<>();
 		for (java.util.Iterator<Milestone> it = emoteMilestones.iterator(); it.hasNext(); )
@@ -6189,11 +6063,17 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 
 		// A cancelled teleport should not leave its rune circle spinning at the
 		// follower's feet as it walks off.
+		showGraphics(false);
+		activeGraphics.clear();
+	}
+
+	/** Shows or hides every graphic the follower is wearing. */
+	private void showGraphics(boolean shown)
+	{
 		for (RuneLiteObject graphic : activeGraphics)
 		{
-			graphic.setActive(false);
+			graphic.setActive(shown);
 		}
-		activeGraphics.clear();
 	}
 
 	/**
@@ -6268,7 +6148,30 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		{
 			return;
 		}
-		dstYaw = (int) Math.round(Math.atan2(dx, dy) * 325.949) & 0x7ff;
+		dstYaw = yawOf(dx, dy);
+	}
+
+	/**
+	 * The yaw that faces along a delta taken SELF minus TARGET: the reversed
+	 * delta bakes in the game's 0-is-south yaw convention. Target-minus-self
+	 * faces the exact opposite way.
+	 */
+	private static int yawOf(double dx, double dy)
+	{
+		return (int) Math.round(Math.atan2(dx, dy) * 325.949) & 0x7ff;
+	}
+
+	/** Turns toward a tile; false when standing on it, with no way to face. */
+	private boolean faceToward(WorldPoint at)
+	{
+		int dx = tile.getX() - at.getX();
+		int dy = tile.getY() - at.getY();
+		if (dx == 0 && dy == 0)
+		{
+			return false;
+		}
+		dstYaw = yawOf(dx, dy);
+		return true;
 	}
 
 	/** Where and until when the follower's gaze is borrowed by a glance. */
@@ -6299,18 +6202,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 			glanceTile = null;
 			return false;
 		}
-		if (tile == null)
-		{
-			return false;
-		}
-		int dx = tile.getX() - glanceTile.getX();
-		int dy = tile.getY() - glanceTile.getY();
-		if (dx == 0 && dy == 0)
-		{
-			return false;
-		}
-		dstYaw = (int) Math.round(Math.atan2(dx, dy) * 325.949) & 0x7ff;
-		return true;
+		return tile != null && faceToward(glanceTile);
 	}
 } // public:cut skilling
 // public:else

@@ -378,14 +378,16 @@ public class WallPathingTest
 		String source = com.follower.PublicMarkers.strip(new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(
 			"src/main/java/com/follower/follower/FollowerEntity.java")),
 			java.nio.charset.StandardCharsets.UTF_8).replace("\r\n", "\n"));
-		String loaded = "client.getGameState() == GameState.LOGGED_IN";
+		assertTrue("logged in means the game state says so",
+			source.contains("return client.getGameState() == GameState.LOGGED_IN;"));
 		assertTrue("the teleport landing waits for the area to load",
-			source.contains("if (" + loaded + " && (landed || now - vanishedAtMs > 8000))"));
+			source.contains("if (loggedIn() && (landed || now - vanishedAtMs > 8000))"));
 		assertTrue("so does the leash and plane snap",
-			source.contains("if (client.getGameState() != GameState.LOGGED_IN)\n\t\t\t{\n"
+			source.contains("if (!loggedIn())\n\t\t\t{\n"
 				+ "\t\t\t\t// Snapped from real data once the area has loaded.\n\t\t\t\treturn;"));
-		assertTrue("and the hidden-object watchdog",
-			source.contains("if (!object.isActive() && !hiddenForNpcOverlap && " + loaded + ")"));
+		assertTrue("and the hidden-object watchdog, through the recovery's own guard",
+			source.contains("if (!object.isActive() && !hiddenForNpcOverlap)\n\t\t{\n\t\t\trecoverPosition(")
+				&& source.contains("if (!loggedIn() || playerTile != null && snapBeside(playerTile"));
 	}
 
 	/**

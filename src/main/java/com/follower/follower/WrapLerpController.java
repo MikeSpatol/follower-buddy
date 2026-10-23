@@ -179,7 +179,7 @@ public class WrapLerpController extends AnimationController
 	}
 
 	/** Flattens a posed model's vertices into an owned array, or null. */
-	private static float[] snapshot(Model posed)
+	static float[] snapshot(Model posed)
 	{
 		if (posed == null || posed.getVerticesX() == null)
 		{
