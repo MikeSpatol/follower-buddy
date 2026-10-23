@@ -603,7 +603,7 @@ public class RuleSetIntegrityTest
 		List<String> missing = new ArrayList<>();
 		for (String target : com.follower.follower.ErrandController.STUDY_TARGETS)
 		{
-			String key = com.follower.follower.ErrandController.studyKey(target);
+			String key = com.follower.follower.ErrandController.siteKey("study", target);
 			boolean start = false;
 			boolean end = false;
 			for (SpeechRule rule : h.loader.getRules())
@@ -732,7 +732,7 @@ public class RuleSetIntegrityTest
 		List<String> missing = new ArrayList<>();
 		for (String target : com.follower.follower.ErrandController.EXPLORE_TARGETS)
 		{
-			String key = com.follower.follower.ErrandController.exploreKey(target);
+			String key = com.follower.follower.ErrandController.siteKey("explore", target);
 			boolean start = false;
 			boolean end = false;
 			for (SpeechRule rule : h.loader.getRules())

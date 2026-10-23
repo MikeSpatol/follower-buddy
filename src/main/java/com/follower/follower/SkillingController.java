@@ -1721,7 +1721,7 @@ public class SkillingController
 		}
 		else
 		{
-			next = nearestObject(client, session.targetTile, NEXT_TARGET_TILES,
+			next = nearestObject(client, session.targetTile, session.targetTile, NEXT_TARGET_TILES,
 				session.targetName::equals, session.targetTile, session.targetMax);
 		}
 		WorldPoint here = playerTile();
@@ -2928,7 +2928,9 @@ public class SkillingController
 		}
 		alongside = null;
 		List<WorldPoint> candidates;
-		NPC guard = mode == KeepingCompany.Mode.STALL ? nearestGuard(player) : null;
+		// The nearest guard by name within the watch's reach.
+		NPC guard = mode == KeepingCompany.Mode.STALL
+			? nearestNpc(client, player, GUARD_TILES, Arrays.asList(GUARD_NAMES)::contains) : null;
 		WorldPoint post = guard == null ? null : guard.getWorldLocation();
 		WorldPoint face = faceTile();
 		if (post != null)
@@ -3105,34 +3107,6 @@ public class SkillingController
 			default:
 				return activity;
 		}
-	}
-
-	/** The nearest guard by name within the watch's reach, or null. */
-	private NPC nearestGuard(WorldPoint player)
-	{
-		WorldView view = client.getTopLevelWorldView();
-		if (view == null)
-		{
-			return null;
-		}
-		NPC best = null;
-		int bestDistance = Integer.MAX_VALUE;
-		for (NPC npc : view.npcs())
-		{
-			WorldPoint at = npc == null ? null : npc.getWorldLocation();
-			if (at == null || at.getPlane() != player.getPlane()
-				|| !Arrays.asList(GUARD_NAMES).contains(npc.getName()))
-			{
-				continue;
-			}
-			int distance = at.distanceTo(player);
-			if (distance <= GUARD_TILES && distance < bestDistance)
-			{
-				bestDistance = distance;
-				best = npc;
-			}
-		}
-		return best;
 	}
 
 	/**
@@ -3539,14 +3513,17 @@ public class SkillingController
 	static WorldPoint nearestObject(Client client, WorldPoint centre, int radius,
 		Predicate<String> nameMatch)
 	{
-		return nearestObject(client, centre, radius, nameMatch, null, null);
+		return nearestObject(client, centre, centre, radius, nameMatch, null, null);
 	}
 
 	/**
 	 * The same, skipping anything standing on a footprint - the depleted
-	 * target itself, which an empty rock shares its name with.
+	 * target itself, which an empty rock shares its name with - and with the
+	 * square searched round {@code centre} but the nearest measured from
+	 * {@code from}, which the errands need: they search round where the
+	 * player is drawn and measure from where the server has them.
 	 */
-	static WorldPoint nearestObject(Client client, WorldPoint centre, int radius,
+	static WorldPoint nearestObject(Client client, WorldPoint centre, WorldPoint from, int radius,
 		Predicate<String> nameMatch, WorldPoint skipMin, WorldPoint skipMax)
 	{
 		WorldView view = client.getTopLevelWorldView();
@@ -3574,13 +3551,42 @@ public class SkillingController
 					{
 						continue;
 					}
-					int distance = object.getWorldLocation().distanceTo(centre);
+					int distance = object.getWorldLocation().distanceTo(from);
 					if (distance < bestDistance)
 					{
 						bestDistance = distance;
 						best = object.getWorldLocation();
 					}
 				}
+			}
+		}
+		return best;
+	}
+
+	/**
+	 * The nearest NPC by name within a radius of a tile, or null: a stall's
+	 * guard, and the errands' banker and cat. The name is tested before
+	 * anything else, so the errands' scan sees every name in the scene.
+	 */
+	static NPC nearestNpc(Client client, WorldPoint centre, int radius, Predicate<String> nameMatch)
+	{
+		WorldView view = client.getTopLevelWorldView();
+		if (centre == null || view == null)
+		{
+			return null;
+		}
+		NPC best = null;
+		int bestDistance = Integer.MAX_VALUE;
+		for (NPC npc : view.npcs())
+		{
+			WorldPoint at = npc == null || npc.getName() == null || !nameMatch.test(npc.getName())
+				? null : npc.getWorldLocation();
+			// Another floor is infinitely far, as distanceTo has it.
+			int distance = at == null ? Integer.MAX_VALUE : at.distanceTo(centre);
+			if (distance <= radius && distance < bestDistance)
+			{
+				bestDistance = distance;
+				best = npc;
 			}
 		}
 		return best;

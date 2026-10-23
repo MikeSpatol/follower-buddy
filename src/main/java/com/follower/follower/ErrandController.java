@@ -13,14 +13,11 @@ import lombok.extern.slf4j.Slf4j;
 // public:end errands
 import net.runelite.api.Client;
 // public:cut errands
-import net.runelite.api.GameObject;
 import net.runelite.api.NPC;
 // public:end errands
 import net.runelite.api.ObjectComposition;
 // public:cut errands
 import net.runelite.api.Player;
-import net.runelite.api.Scene;
-import net.runelite.api.Tile;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 // public:end errands
@@ -43,34 +40,41 @@ import net.runelite.api.coords.WorldPoint;
 public class ErrandController
 {
 	// public:cut errands
-	/** The errand types; names match the rule {@code names} lists. */
+	/**
+	 * The errand types; the lower-case names are the keys the rule
+	 * {@code names} lists match. Each comes with its setting, and a roll
+	 * offers them in this order.
+	 */
 	private enum Errand
 	{
-		BANK("bank", "Bank visits"),
-		ALTAR("altar", "Altar visits"),
-		FIRE("fire", "Warming up"),
-		/** The 10% fire variant: walks INTO it. Announces itself as FIRE. */
-		FIREDEATH("firedeath", "Warming up, too close"),
-		CAT("cat", "Cats"),
-		BOOTLACE("bootlace", "Bootlaces"),
-		GLANCE("glance", "Did you see that?"),
+		BANK("Bank visits", FollowerConfig::errandBank),
+		ALTAR("Altar visits", FollowerConfig::errandAltar),
+		FIRE("Warming up", FollowerConfig::errandFire),
+		/** The 10% fire variant: walks INTO it. Announces itself as FIRE, and
+		 * a roll never offers it on its own. */
+		FIREDEATH("Warming up, too close", config -> false),
+		CAT("Cats", FollowerConfig::errandCat),
+		BOOTLACE("Bootlaces", FollowerConfig::errandBootlace),
+		GLANCE("Did you see that?", FollowerConfig::errandGlance),
 		/** Stops where it stands and writes something up in its scroll. */
-		DOCUMENT("document", "Field notes"),
+		DOCUMENT("Field notes", FollowerConfig::errandDocument),
 		/** Walks to something notable, looks at it, and writes THAT up. */
-		STUDY("study", "Field study"),
+		STUDY("Field study", FollowerConfig::errandStudy),
 		/** Plain nosiness: walks to something curious, looks, then notes it
 		 * down in the scroll - everything explored is for posterity. Also
 		 * the one errand with an arrival trigger - see noticeArrival. */
-		EXPLORE("explore", "Exploring");
+		EXPLORE("Exploring", FollowerConfig::errandExplore);
 
-		final String key;
+		final String key = name().toLowerCase(java.util.Locale.ROOT);
 		/** What the side panel calls it; the settings use the same words. */
 		final String label;
+		/** Whether its setting is on. */
+		final java.util.function.Predicate<FollowerConfig> enabled;
 
-		Errand(String key, String label)
+		Errand(String label, java.util.function.Predicate<FollowerConfig> enabled)
 		{
-			this.key = key;
 			this.label = label;
+			this.enabled = enabled;
 		}
 	}
 
@@ -120,10 +124,15 @@ public class ErrandController
 		"Anvil", "Furnace", "Well", "Fountain", "Statue", "Bookcase", "Crate",
 	};
 
-	/** The errand-event key a studied thing announces itself under. */
-	public static String studyKey(String objectName)
+	/**
+	 * The errand-event key a studied or explored thing announces itself
+	 * under, e.g. "study-anvil".
+	 *
+	 * @param kind the errand's own key, "study" or "explore"
+	 */
+	public static String siteKey(String kind, String objectName)
 	{
-		return "study-" + objectName.toLowerCase(java.util.Locale.ROOT).replace(' ', '-');
+		return kind + "-" + objectName.toLowerCase(java.util.Locale.ROOT).replace(' ', '-');
 	}
 
 	/**
@@ -142,24 +151,13 @@ public class ErrandController
 		"Scarecrow", "Web",
 	};
 
-	/** The errand-event key an explored thing announces itself under. */
-	public static String exploreKey(String objectName)
-	{
-		return "explore-" + objectName.toLowerCase(java.util.Locale.ROOT).replace(' ', '-');
-	}
-
 	/**
 	 * Every errand key the force command accepts, straight from the enum so
 	 * the chat command's validation can never drift from what exists.
 	 */
 	public static java.util.List<String> keys()
 	{
-		java.util.List<String> keys = new java.util.ArrayList<>();
-		for (Errand errand : Errand.values())
-		{
-			keys.add(errand.key);
-		}
-		return keys;
+		return new java.util.ArrayList<>(displayNames().keySet());
 	}
 
 	/** Every errand key with its display name, in the order keys() gives them. */
@@ -631,48 +629,18 @@ public class ErrandController
 			return;
 		}
 
-		List<Errand> candidates = new ArrayList<>();
-		if (config.errandBank())
-		{
-			candidates.add(Errand.BANK);
-		}
-		if (config.errandAltar())
-		{
-			candidates.add(Errand.ALTAR);
-		}
-		if (config.errandFire())
-		{
-			candidates.add(Errand.FIRE);
-		}
-		if (config.errandCat())
-		{
-			candidates.add(Errand.CAT);
-		}
-		if (config.errandBootlace())
-		{
-			candidates.add(Errand.BOOTLACE);
-		}
-		if (config.errandGlance())
-		{
-			candidates.add(Errand.GLANCE);
-		}
-		if (config.errandDocument())
-		{
-			candidates.add(Errand.DOCUMENT);
-		}
-		if (config.errandStudy())
-		{
-			candidates.add(Errand.STUDY);
-		}
-		if (config.errandExplore())
-		{
-			candidates.add(Errand.EXPLORE);
-		}
 		// An errand that has just run stands aside entirely; the rest are
 		// offered stalest first. Between them, the errands that need
 		// something in the world get their turn when that something is
 		// there, instead of losing every roll to the three that never fail.
-		candidates.removeIf(errand -> !offAgainCooldown(errand));
+		List<Errand> candidates = new ArrayList<>();
+		for (Errand errand : Errand.values())
+		{
+			if (errand.enabled.test(config) && offAgainCooldown(errand))
+			{
+				candidates.add(errand);
+			}
+		}
 		orderByStaleness(candidates);
 
 		for (Errand errand : candidates)
@@ -735,64 +703,47 @@ public class ErrandController
 				return startAdjacentErrand(errand, findNpc(
 					name -> name.equals("Cat") || name.equals("Kitten") || name.equals("Stray dog")));
 			case BOOTLACE:
+			case DOCUMENT:
 			{
-				// No trip at all: stop where it stands, see to the boot.
+				// No trip at all: stop where it stands and see to the boot, or
+				// - something here is worth the record, apparently - scroll and
+				// pose together, the read running long enough to look deliberate.
 				current = errand;
 				errandSite = follower.getWorldLocation();
 				follower.stayHere();
-				follower.playAnimation(BEND_ANIMATION);
+				if (errand == Errand.BOOTLACE)
+				{
+					follower.playAnimation(BEND_ANIMATION);
+				}
+				else
+				{
+					takeOutTheScroll();
+				}
 				announce(TriggerEvent.errand(TriggerEvent.Type.ERRAND_START, errand.key));
 				state = State.DOING;
-				waitTicks = 6;
+				waitTicks = errand == Errand.BOOTLACE ? 6 : 12 + random.nextInt(8);
 				log.debug("Errand started: {}", errand.key); // public:cut logs
 				return true;
 			}
 			case STUDY:
-			{
-				// Whatever notable fixture the scene has closest; a scene with
-				// none of them simply produces no study today.
-				List<String> names = new ArrayList<>(java.util.Arrays.asList(STUDY_TARGETS));
-				Collections.shuffle(names, random);
-				for (String name : names)
-				{
-					WorldPoint found = findObject(name::equals);
-					if (found != null && beginStudyAt(found, name))
-					{
-						return true;
-					}
-				}
-				return false;
-			}
 			case EXPLORE:
 			{
-				// Same hunt, different register: whatever curiosity the scene
-				// offers, or no exploring here today.
-				List<String> names = new ArrayList<>(java.util.Arrays.asList(EXPLORE_TARGETS));
+				// Whatever notable fixture the scene has closest, or for the
+				// explore the same hunt in the other register: whatever
+				// curiosity it offers. A scene with none of them simply
+				// produces no study, or no exploring, today.
+				List<String> names = new ArrayList<>(java.util.Arrays.asList(
+					errand == Errand.STUDY ? STUDY_TARGETS : EXPLORE_TARGETS));
 				Collections.shuffle(names, random);
 				for (String name : names)
 				{
 					WorldPoint found = findObject(name::equals);
-					if (found != null && beginExploreAt(found, name))
+					if (found != null && beginSiteVisit(errand, found, siteKey(errand.key, name)))
 					{
 						return true;
 					}
 				}
 				return false;
-			}
-			case DOCUMENT:
-			{
-				// No trip: something here is worth the record, apparently.
-				// Scroll and pose together, and the read runs long enough to
-				// look deliberate.
-				current = errand;
-				errandSite = follower.getWorldLocation();
-				follower.stayHere();
-				takeOutTheScroll();
-				announce(TriggerEvent.errand(TriggerEvent.Type.ERRAND_START, errand.key));
-				state = State.DOING;
-				waitTicks = 12 + random.nextInt(8);
-				log.debug("Errand started: {}", errand.key); // public:cut logs
-				return true;
 			}
 			case GLANCE:
 			{
@@ -821,23 +772,27 @@ public class ErrandController
 	 */
 	boolean beginStudyAt(WorldPoint target, String objectName)
 	{
-		return beginSiteVisit(Errand.STUDY, target, studyKey(objectName));
+		return beginSiteVisit(Errand.STUDY, target, siteKey("study", objectName));
 	}
 
 	/** The explore twin of {@link #beginStudyAt}, and a test seam for the same reason. */
 	boolean beginExploreAt(WorldPoint target, String objectName)
 	{
-		return beginSiteVisit(Errand.EXPLORE, target, exploreKey(objectName));
+		return beginSiteVisit(Errand.EXPLORE, target, siteKey("explore", objectName));
 	}
 
-	/** The shared trip to a named thing: beside it, facing it, announced by name. */
+	/**
+	 * The shared trip to a named thing: beside it, facing it, announced by
+	 * name. The walkable targets (fires, cats) come this way too, under
+	 * their errand's own key.
+	 */
 	private boolean beginSiteVisit(Errand errand, WorldPoint target, String siteKey)
 	{
-		List<WorldPoint> besides = new ArrayList<>();
-		besides.add(new WorldPoint(target.getX() + 1, target.getY(), target.getPlane()));
-		besides.add(new WorldPoint(target.getX() - 1, target.getY(), target.getPlane()));
-		besides.add(new WorldPoint(target.getX(), target.getY() + 1, target.getPlane()));
-		besides.add(new WorldPoint(target.getX(), target.getY() - 1, target.getPlane()));
+		List<WorldPoint> besides = new ArrayList<>(List.of(
+			new WorldPoint(target.getX() + 1, target.getY(), target.getPlane()),
+			new WorldPoint(target.getX() - 1, target.getY(), target.getPlane()),
+			new WorldPoint(target.getX(), target.getY() + 1, target.getPlane()),
+			new WorldPoint(target.getX(), target.getY() - 1, target.getPlane())));
 		WorldPoint from = follower.getWorldLocation();
 		if (from != null)
 		{
@@ -856,7 +811,10 @@ public class ErrandController
 					TriggerEvent.Type.ERRAND_START, currentSiteKey));
 				state = State.TRAVELING;
 				waitTicks = TRAVEL_TIMEOUT_TICKS;
-				log.debug("Errand started: {} at {}", currentSiteKey, target); // public:cut logs
+				// public:cut logs
+				log.debug(siteKey.equals(errand.key) ? "Errand started: {} beside {}"
+					: "Errand started: {} at {}", currentSiteKey, target);
+				// public:end logs
 				return true;
 			}
 		}
@@ -866,36 +824,7 @@ public class ErrandController
 	/** For walkable targets (fires, cats): aim at a free tile BESIDE them. */
 	private boolean startAdjacentErrand(Errand errand, WorldPoint target)
 	{
-		if (target == null)
-		{
-			return false;
-		}
-		List<WorldPoint> besides = new ArrayList<>();
-		besides.add(new WorldPoint(target.getX() + 1, target.getY(), target.getPlane()));
-		besides.add(new WorldPoint(target.getX() - 1, target.getY(), target.getPlane()));
-		besides.add(new WorldPoint(target.getX(), target.getY() + 1, target.getPlane()));
-		besides.add(new WorldPoint(target.getX(), target.getY() - 1, target.getPlane()));
-		WorldPoint from = follower.getWorldLocation();
-		if (from != null)
-		{
-			besides.sort(java.util.Comparator.comparingInt(p -> p.distanceTo(from)));
-		}
-		for (WorldPoint beside : besides)
-		{
-			if (follower.stayAt(beside))
-			{
-				follower.setStayFaceTile(target);
-				current = errand;
-				targetTile = beside;
-				errandSite = target;
-				announce(TriggerEvent.errand(TriggerEvent.Type.ERRAND_START, errand.key));
-				state = State.TRAVELING;
-				waitTicks = TRAVEL_TIMEOUT_TICKS;
-				log.debug("Errand started: {} beside {}", errand.key, target); // public:cut logs
-				return true;
-			}
-		}
-		return false;
+		return target != null && beginSiteVisit(errand, target, errand.key);
 	}
 
 	private boolean startTravelErrand(Errand errand, WorldPoint target)
@@ -1011,33 +940,41 @@ public class ErrandController
 		// Close enough to come back on foot: releasing the pose lets the
 		// catch-up pathing bring it home - walking a short gap, running a
 		// longer one - which is what a person would do.
-		Errand done = current;
 		follower.resumeFollowing();
-		announce(TriggerEvent.errand(TriggerEvent.Type.ERRAND_END, endKey(done)));
-		log.debug("Errand finished: {}", endKey(done)); // public:cut logs
-		clearErrand();
+		home();
 	}
 
 	private int distanceToPlayer()
 	{
 		WorldPoint at = follower.getWorldLocation();
 		WorldPoint pt = FollowerEntity.playerTile(client);
-		return at != null && pt != null && at.getPlane() == pt.getPlane()
-			? at.distanceTo(pt) : Integer.MAX_VALUE;
+		// Another floor is infinitely far, as distanceTo has it.
+		return at != null && pt != null ? at.distanceTo(pt) : Integer.MAX_VALUE;
 	}
 
 	/** Stage two of the teleport home: land beside the player, swirl in, report. */
 	private void completeReturn()
 	{
-		Errand done = current;
 		follower.resumeFollowing();
 		follower.teleportToPlayer();
 		follower.playAnimation(TELEPORT_ARRIVE_ANIMATION);
 		// Raised to mid-body: at ground height the swirl sat in the ankles.
 		follower.playSpotAnim(spotAnims.get(TELEPORT_REVERSE_SPOTANIM),
 			FollowerEntity.TELEPORT_GRAPHIC_HEIGHT);
-		announce(TriggerEvent.errand(TriggerEvent.Type.ERRAND_END, endKey(done)));
-		log.debug("Errand finished: {}", endKey(done)); // public:cut logs
+		home();
+	}
+
+	/**
+	 * Back with the player, on foot or by teleport: the end is reported as
+	 * what the errand announced itself as - a study or explore names the
+	 * thing itself - and the slate is cleared for the next one.
+	 */
+	private void home()
+	{
+		String key = (current == Errand.STUDY || current == Errand.EXPLORE) && currentSiteKey != null
+			? currentSiteKey : current.key;
+		announce(TriggerEvent.errand(TriggerEvent.Type.ERRAND_END, key));
+		log.debug("Errand finished: {}", key); // public:cut logs
 		clearErrand();
 	}
 
@@ -1083,13 +1020,6 @@ public class ErrandController
 		hands.release();
 	}
 
-	/** What this errand reports as; a study or explore names the thing itself. */
-	private String endKey(Errand done)
-	{
-		return (done == Errand.STUDY || done == Errand.EXPLORE) && currentSiteKey != null
-			? currentSiteKey : done.key;
-	}
-
 	private void abort()
 	{
 		putTheScrollAway();
@@ -1128,14 +1058,21 @@ public class ErrandController
 		return clearToStart() && !session.getAsBoolean();
 	}
 
-	/** What any errand needs before it sets off, forced or not. */
+	/** What any errand needs before it sets off, forced or not: free feet as well. */
 	private boolean clearToStart()
 	{
-		Player local = client.getLocalPlayer();
+		return quiet(client.getLocalPlayer()) && !follower.isStaying();
+	}
+
+	/**
+	 * What an errand needs throughout: the player about, not fighting or
+	 * talking, and out of the Wilderness; the follower out and not wanted.
+	 */
+	private boolean quiet(Player local)
+	{
 		return local != null
 			&& local.getWorldLocation() != null
 			&& follower.isSpawned()
-			&& !follower.isStaying()
 			&& !busy.getAsBoolean()
 			&& local.getInteracting() == null
 			&& client.getVarbitValue(WILDERNESS_VARBIT) != 1;
@@ -1144,17 +1081,10 @@ public class ErrandController
 	private boolean safeToContinue()
 	{
 		Player local = client.getLocalPlayer();
-		if (local == null || local.getWorldLocation() == null || !follower.isSpawned()
-			|| busy.getAsBoolean() || local.getInteracting() != null
-			|| client.getVarbitValue(WILDERNESS_VARBIT) == 1)
-		{
-			return false;
-		}
-		// The player leaving - walked off, teleported, changed plane - ends it.
-		WorldPoint p = local.getWorldLocation();
-		return errandSite != null
-			&& p.getPlane() == errandSite.getPlane()
-			&& p.distanceTo(errandSite) <= 16;
+		// The player leaving - walked off, teleported, changed plane (which
+		// distanceTo counts as infinitely far) - ends it.
+		return quiet(local) && errandSite != null
+			&& local.getWorldLocation().distanceTo(errandSite) <= 16;
 	}
 
 	private static final int WILDERNESS_VARBIT = 5963;
@@ -1187,62 +1117,73 @@ public class ErrandController
 	{
 		Player local = client.getLocalPlayer();
 		LocalPoint lp = local == null ? null : local.getLocalLocation();
-		WorldPoint centre = local == null ? null : local.getWorldLocation();
-		if (lp == null || centre == null)
-		{
-			return null;
-		}
+		// public:cut skilling
 		net.runelite.api.WorldView view = client.getTopLevelWorldView();
-		if (view == null)
-		{
-			// Between worlds, or mid-login: there is no scene to search.
-			return null;
-		}
-		Scene scene = view.getScene();
-		Tile[][][] tiles = scene.getTiles();
-		int plane = view.getPlane();
-		int sx = lp.getSceneX();
-		int sy = lp.getSceneY();
-
-		WorldPoint best = null;
-		int bestDistance = Integer.MAX_VALUE;
-		for (int dx = -SEARCH_RADIUS; dx <= SEARCH_RADIUS; dx++)
-		{
-			for (int dy = -SEARCH_RADIUS; dy <= SEARCH_RADIUS; dy++)
-			{
-				int x = sx + dx;
-				int y = sy + dy;
-				if (x < 0 || y < 0 || x >= tiles[plane].length || y >= tiles[plane][x].length)
-				{
-					continue;
-				}
-				Tile tile = tiles[plane][x][y];
-				if (tile == null)
-				{
-					continue;
-				}
-				for (GameObject object : tile.getGameObjects())
-				{
-					if (object == null)
-					{
-						continue;
-					}
-					String name = objectName(client, object.getId());
-					if (name == null || !nameMatch.test(name))
-					{
-						continue;
-					}
-					WorldPoint where = object.getWorldLocation();
-					int distance = where.distanceTo(centre);
-					if (distance < bestDistance)
-					{
-						bestDistance = distance;
-						best = where;
-					}
-				}
-			}
-		}
-		return best;
+		// Between worlds, or mid-login, there is no scene to search. The
+		// skilling company's scan does the rest: the square round where the
+		// player is drawn, the nearest measured from where the server has them.
+		return lp == null || local.getWorldLocation() == null || view == null ? null
+			: SkillingController.nearestObject(client,
+				WorldPoint.fromScene(view, lp.getSceneX(), lp.getSceneY(), view.getPlane()),
+				local.getWorldLocation(), SEARCH_RADIUS, name -> name != null && nameMatch.test(name),
+				null, null);
+		// public:end skilling
+		// public:else WorldPoint centre = local == null ? null : local.getWorldLocation();
+		// public:else if (lp == null || centre == null)
+		// public:else {
+			// public:else return null;
+		// public:else }
+		// public:else net.runelite.api.WorldView view = client.getTopLevelWorldView();
+		// public:else if (view == null)
+		// public:else {
+			// public:else // Between worlds, or mid-login: there is no scene to search.
+			// public:else return null;
+		// public:else }
+		// public:else net.runelite.api.Scene scene = view.getScene();
+		// public:else net.runelite.api.Tile[][][] tiles = scene.getTiles();
+		// public:else int plane = view.getPlane();
+		// public:else int sx = lp.getSceneX();
+		// public:else int sy = lp.getSceneY();
+		// public:else
+		// public:else WorldPoint best = null;
+		// public:else int bestDistance = Integer.MAX_VALUE;
+		// public:else for (int dx = -SEARCH_RADIUS; dx <= SEARCH_RADIUS; dx++)
+		// public:else {
+			// public:else for (int dy = -SEARCH_RADIUS; dy <= SEARCH_RADIUS; dy++)
+			// public:else {
+				// public:else int x = sx + dx;
+				// public:else int y = sy + dy;
+				// public:else if (x < 0 || y < 0 || x >= tiles[plane].length || y >= tiles[plane][x].length)
+				// public:else {
+					// public:else continue;
+				// public:else }
+				// public:else net.runelite.api.Tile tile = tiles[plane][x][y];
+				// public:else if (tile == null)
+				// public:else {
+					// public:else continue;
+				// public:else }
+				// public:else for (net.runelite.api.GameObject object : tile.getGameObjects())
+				// public:else {
+					// public:else if (object == null)
+					// public:else {
+						// public:else continue;
+					// public:else }
+					// public:else String name = objectName(client, object.getId());
+					// public:else if (name == null || !nameMatch.test(name))
+					// public:else {
+						// public:else continue;
+					// public:else }
+					// public:else WorldPoint where = object.getWorldLocation();
+					// public:else int distance = where.distanceTo(centre);
+					// public:else if (distance < bestDistance)
+					// public:else {
+						// public:else bestDistance = distance;
+						// public:else best = where;
+					// public:else }
+				// public:else }
+			// public:else }
+		// public:else }
+		// public:else return best;
 	}
 
 	// public:end errands
@@ -1281,37 +1222,42 @@ public class ErrandController
 	/** The nearest matching NPC's tile within the search radius, or null. */
 	private WorldPoint findNpc(java.util.function.Predicate<String> nameMatch)
 	{
-		WorldPoint centre = FollowerEntity.playerTile(client);
-		if (centre == null)
-		{
-			return null;
-		}
-		net.runelite.api.WorldView view = client.getTopLevelWorldView();
-		if (view == null)
-		{
-			return null;
-		}
-		WorldPoint best = null;
-		int bestDistance = Integer.MAX_VALUE;
-		for (NPC npc : view.npcs())
-		{
-			if (npc == null || npc.getName() == null || !nameMatch.test(npc.getName()))
-			{
-				continue;
-			}
-			WorldPoint where = npc.getWorldLocation();
-			if (where == null || where.getPlane() != centre.getPlane())
-			{
-				continue;
-			}
-			int distance = where.distanceTo(centre);
-			if (distance <= SEARCH_RADIUS && distance < bestDistance)
-			{
-				bestDistance = distance;
-				best = where;
-			}
-		}
-		return best;
+		// public:cut skilling
+		NPC npc = SkillingController.nearestNpc(client, FollowerEntity.playerTile(client),
+			SEARCH_RADIUS, nameMatch);
+		return npc == null ? null : npc.getWorldLocation();
+		// public:end skilling
+		// public:else WorldPoint centre = FollowerEntity.playerTile(client);
+		// public:else if (centre == null)
+		// public:else {
+			// public:else return null;
+		// public:else }
+		// public:else net.runelite.api.WorldView view = client.getTopLevelWorldView();
+		// public:else if (view == null)
+		// public:else {
+			// public:else return null;
+		// public:else }
+		// public:else WorldPoint best = null;
+		// public:else int bestDistance = Integer.MAX_VALUE;
+		// public:else for (NPC npc : view.npcs())
+		// public:else {
+			// public:else if (npc == null || npc.getName() == null || !nameMatch.test(npc.getName()))
+			// public:else {
+				// public:else continue;
+			// public:else }
+			// public:else WorldPoint where = npc.getWorldLocation();
+			// public:else if (where == null || where.getPlane() != centre.getPlane())
+			// public:else {
+				// public:else continue;
+			// public:else }
+			// public:else int distance = where.distanceTo(centre);
+			// public:else if (distance <= SEARCH_RADIUS && distance < bestDistance)
+			// public:else {
+				// public:else bestDistance = distance;
+				// public:else best = where;
+			// public:else }
+		// public:else }
+		// public:else return best;
 	}
 
 	// ------------------------------------------------------------- schedule
