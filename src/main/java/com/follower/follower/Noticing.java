@@ -44,26 +44,25 @@ import net.runelite.api.coords.WorldPoint;
 @Slf4j
 public class Noticing
 {
-	/** What was noticed; {@code key} is what the rules match on. */
+	/** What was noticed; {@code key}, the name in lower case, is what the rules match on. */
 	public enum Kind
 	{
 		/** A drop of the player's, worth having, that they walked away from. */
-		VALUABLE("valuable", 150),
+		VALUABLE(150),
 		/** A bird's nest on the ground. */
-		NEST("nest", 100),
+		NEST(100),
 		/** An impling within reach. */
-		IMPLING("impling", 300),
+		IMPLING(300),
 		/** A crashed star. */
-		STAR("star", 1500),
+		STAR(1500),
 		/** A signpost, a statue, a plaque the player stopped beside. */
-		LANDMARK("landmark", 400);
+		LANDMARK(400);
 
-		public final String key;
+		public final String key = name().toLowerCase(Locale.ROOT);
 		final int cooldownTicks;
 
-		Kind(String key, int cooldownTicks)
+		Kind(int cooldownTicks)
 		{
-			this.key = key;
 			this.cooldownTicks = cooldownTicks;
 		}
 	}
@@ -310,9 +309,9 @@ public class Noticing
 		int steps, boolean writes, int holdTicks)
 	{
 		String key = kind.key + ":" + at.getX() + "," + at.getY() + ":" + what;
-		if ((seen.contains(key) && !forcing) || at.getPlane() != from.getPlane() // public:cut dev
-		// public:else if (seen.contains(key) || at.getPlane() != from.getPlane()
-			|| at.distanceTo(from) > VISIBLE_TILES)
+		// Another floor is infinitely far, as distanceTo has it.
+		if ((seen.contains(key) && !forcing) || at.distanceTo(from) > VISIBLE_TILES) // public:cut dev
+		// public:else if (seen.contains(key) || at.distanceTo(from) > VISIBLE_TILES)
 		{
 			return false;
 		}
@@ -347,7 +346,8 @@ public class Noticing
 		{
 			Map.Entry<WorldPoint, List<Drop>> entry = it.next();
 			WorldPoint tile = entry.getKey();
-			if (tile.getPlane() != here.getPlane() || tile.distanceTo(here) > 40)
+			// Another floor is infinitely far, as distanceTo has it.
+			if (tile.distanceTo(here) > 40)
 			{
 				// Out of the picture; forgotten with the rest of the scene.
 				it.remove();
@@ -464,18 +464,7 @@ public class Noticing
 	/** Whether the name is one of the landmarks the scribe reads. */
 	public static boolean isLandmark(String name)
 	{
-		if (name == null)
-		{
-			return false;
-		}
-		for (String landmark : LANDMARKS)
-		{
-			if (landmark.equalsIgnoreCase(name))
-			{
-				return true;
-			}
-		}
-		return false;
+		return name != null && java.util.Arrays.stream(LANDMARKS).anyMatch(name::equalsIgnoreCase);
 	}
 
 	/** Logout, hop: the scene is gone, and so is everything noticed in it. */

@@ -222,10 +222,11 @@ public class Will
 		for (NPC npc : view.npcs())
 		{
 			WorldPoint at = npc == null ? null : npc.getWorldLocation();
+			// Another floor is infinitely far, as distanceTo has it.
 			if (at == null || npc == local.getInteracting()
 				|| (npc.getCombatLevel() < level + MONSTER_MARGIN && !anyLevel) // public:cut dev
 				// public:else || npc.getCombatLevel() < level + MONSTER_MARGIN
-				|| at.getPlane() != target.getPlane() || at.distanceTo(target) > MONSTER_WITHIN)
+				|| at.distanceTo(target) > MONSTER_WITHIN)
 			{
 				continue;
 			}

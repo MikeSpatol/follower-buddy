@@ -314,21 +314,13 @@ public class SpectateController
 		}
 
 		// public:end spectate-shield
-		if (!config.spectateCombat() || busy || !follower.isSpawned())
-		{
-			if (spectating)
-			{
-				stop();
-			}
-			return;
-		}
-
 		// Thieving is not a fight and is not spectated. Standing clear was tried
 		// and is the wrong shape: it holds one spot facing the action, which
 		// reads as an audience. A player picking pockets wants the follower
 		// gone, not watching - so the thieving session suppresses this outright
 		// and the wandering takes over instead.
-		if (!context().isInCombat() || context().isInThievingSession())
+		if (!config.spectateCombat() || busy || !follower.isSpawned()
+			|| !context().isInCombat() || context().isInThievingSession())
 		{
 			if (spectating)
 			{
@@ -424,8 +416,7 @@ public class SpectateController
 		// Finishing the spell is its own moment: drop the channelled pose, play
 		// the closing animation where it stands, and only walk back once it has
 		// had time to play - movement would cut it off otherwise.
-		boolean wasCasting = shield != Shield.NONE;
-		dropChannel("fight over");
+		boolean wasCasting = dropChannel("fight over", false);
 		// Stand, then cast: it gets to its feet before releasing the spell, so
 		// the sequence closes the way it opened.
 		if (wasCasting && castChain(
@@ -469,13 +460,7 @@ public class SpectateController
 	 */
 	private void letTheSeatGo()
 	{
-		// public:cut spectate-shield
-		if (shield != Shield.NONE)
-		{
-			dropChannel("parked");
-			disarm.accept(false);
-		}
-		// public:end spectate-shield
+		dropChannel("parked", true); // public:cut spectate-shield
 		watchTile = null;
 		panicDue = false;
 	}
@@ -510,9 +495,9 @@ public class SpectateController
 		// "out of thrall mode they don't step away, but still do the magic
 		// barrier animations." If the follower no longer holds ANY stay, it
 		// was un-seated, whoever did it: take the seat again.
+		// Another floor is infinitely far, as distanceTo has it.
 		if (!follower.isStaying()
 			|| watchTile.distanceTo(local.getWorldLocation()) > RESEAT_DISTANCE
-			|| watchTile.getPlane() != local.getWorldLocation().getPlane()
 			|| isSuperior(local.getInteracting()) != seatedForSuperior)
 		{
 			moveClear();
@@ -590,17 +575,11 @@ public class SpectateController
 		{
 			for (int distance = watch; distance >= 2; distance--)
 			{
-				WorldPoint candidate = new WorldPoint(
+				if (seat(new WorldPoint(
 					player.getX() + direction[0] * distance,
 					player.getY() + direction[1] * distance,
-					player.getPlane());
-				if (threat != null && candidate.distanceTo(threat) < 3)
+					player.getPlane()), threat))
 				{
-					continue;
-				}
-				if (follower.stayAt(candidate))
-				{
-					watchTile = candidate;
 					return true;
 				}
 			}
@@ -616,23 +595,24 @@ public class SpectateController
 			{
 				for (int oy = -distance; oy <= distance; oy++)
 				{
-					if (Math.max(Math.abs(ox), Math.abs(oy)) != distance)
+					if (Math.max(Math.abs(ox), Math.abs(oy)) == distance && seat(new WorldPoint(
+						player.getX() + ox, player.getY() + oy, player.getPlane()), threat))
 					{
-						continue;
-					}
-					WorldPoint candidate = new WorldPoint(
-						player.getX() + ox, player.getY() + oy, player.getPlane());
-					if (threat != null && candidate.distanceTo(threat) < 3)
-					{
-						continue;
-					}
-					if (follower.stayAt(candidate))
-					{
-						watchTile = candidate;
 						return true;
 					}
 				}
 			}
+		}
+		return false;
+	}
+
+	/** Takes a seat on this tile, unless it is next to the threat or cannot be held. */
+	private boolean seat(WorldPoint candidate, WorldPoint threat)
+	{
+		if ((threat == null || candidate.distanceTo(threat) >= 3) && follower.stayAt(candidate))
+		{
+			watchTile = candidate;
+			return true;
 		}
 		return false;
 	}
@@ -681,12 +661,7 @@ public class SpectateController
 			{
 				// Broken by movement, so there is no closing animation to
 				// protect: the weapon can come straight back.
-				boolean wasCasting = shield != Shield.NONE;
-				dropChannel("moved");
-				if (wasCasting)
-				{
-					disarm.accept(false);
-				}
+				dropChannel("moved", true);
 			}
 			return;
 		}
@@ -781,10 +756,17 @@ public class SpectateController
 			? FollowerEntity.PRAY_STAND_UP : end;
 	}
 
-	/** Ends the channel and hands the follower's pose back to normal. */
-	private void dropChannel(String reason)
+	/**
+	 * Ends the channel and hands the follower's pose back to normal.
+	 *
+	 * @param rearm whether a ward that was up gives the weapon straight back,
+	 * there being no closing cast for a rebuild to cut short
+	 * @return whether a ward was up
+	 */
+	private boolean dropChannel(String reason, boolean rearm)
 	{
-		if (shield != Shield.NONE)
+		boolean wasCasting = shield != Shield.NONE;
+		if (wasCasting)
 		{
 			log.debug("Shield: dropping from {} ({})", shield, reason); // public:cut logs
 		}
@@ -793,6 +775,11 @@ public class SpectateController
 			follower.setPoseOverride(0);
 		}
 		shield = Shield.NONE;
+		if (wasCasting && rearm)
+		{
+			disarm.accept(false);
+		}
+		return wasCasting;
 	}
 
 	/**
@@ -832,11 +819,7 @@ public class SpectateController
 
 		if (!ids.isEmpty())
 		{
-			int[] chain = new int[ids.size()];
-			for (int i = 0; i < chain.length; i++)
-			{
-				chain[i] = ids.get(i);
-			}
+			int[] chain = ids.stream().mapToInt(Integer::intValue).toArray();
 			// Kept, at debug: this is what showed the sit and stand were
 			// running all along and the ids were the problem. ::follower
 			// spectate reports the same state on demand without it.
