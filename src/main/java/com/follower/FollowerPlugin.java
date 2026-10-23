@@ -1456,8 +1456,11 @@ public class FollowerPlugin extends Plugin
 			() -> clientThread.invoke(this::copyGearToCustomOutfit),
 			this::clearOutfit, this::setGender, this::cycleKit, this::setBodyColor,
 			config.panelFolds());
-		panel.setOnFoldsChanged(open -> configManager.setConfiguration(
-			FollowerConfig.GROUP, "panelFolds", open));
+		// The panel's Mute and the settings' Mute are the same config key,
+		// synced both ways, so they can never disagree. Chattiness, the
+		// chatbox mirror, errands, the thrall profiles and the open sections
+		// work the same way.
+		panel.setOnSetting((key, value) -> configManager.setConfiguration(FollowerConfig.GROUP, key, value));
 		panel.setOnEditMessages(this::openMessagesDialog); // public:cut messages-window
 		panel.setOnEditDialogs(this::openDialogsDialog); // public:cut dialogs-editor
 		panel.setOnShowMemory(this::openMemoryDialog); // public:cut memory-window
@@ -1466,27 +1469,11 @@ public class FollowerPlugin extends Plugin
 		panel.setOnShareLines(this::shareLinesFromPanel); // public:cut messages-readonly,messages-window
 		// public:else panel.setOnShareLines(() -> shareLines(panel));
 		// public:end sharevoice
-		// The panel's Mute and the settings' Mute are the same config key,
-		// synced both ways, so they can never disagree. Chattiness, the
-		// chatbox mirror, errands and the thrall profiles work the same way.
-		panel.setOnMute(muted -> configManager.setConfiguration(
-			FollowerConfig.GROUP, "muted", muted));
-		panel.setMuted(config.muted());
-		panel.setOnChattiness(chattiness -> configManager.setConfiguration(
-			FollowerConfig.GROUP, "chattiness", chattiness));
-		panel.setChattiness(config.chattiness());
-		panel.setOnMirrorToChat(on -> configManager.setConfiguration(
-			FollowerConfig.GROUP, "mirrorToChat", on));
-		panel.setMirrorToChat(config.mirrorToChat());
-		// public:cut errands
-		panel.setOnErrandsEnabled(on -> configManager.setConfiguration(
-			FollowerConfig.GROUP, "errandsEnabled", on));
-		panel.setErrandsEnabled(config.errandsEnabled());
-		// public:end errands
+		panel.setSetting("muted", config.muted());
+		panel.setSetting("chattiness", config.chattiness());
+		panel.setSetting("mirrorToChat", config.mirrorToChat());
+		panel.setSetting("errandsEnabled", config.errandsEnabled()); // public:cut errands
 		// public:cut outfit-profiles,thrall-outfits
-		panel.setOnThrallProfile((style, name) -> configManager.setConfiguration(
-			FollowerConfig.GROUP, "thrall" + Character.toUpperCase(style.charAt(0))
-				+ style.substring(1) + "Profile", name));
 		panel.setThrallProfiles(config.thrallMeleeProfile(),
 			config.thrallRangedProfile(), config.thrallMagicProfile());
 		panel.setProfileProtected(profileStore::isProtected);
@@ -5187,24 +5174,24 @@ public class FollowerPlugin extends Plugin
 			cutsceneForced = false;
 		}
 		// public:end dev
-		if ("muted".equals(key) && panel != null)
-		{
-			panel.setMuted(config.muted());
-		}
 		if (panel != null)
 		{
+			if ("muted".equals(key))
+			{
+				panel.setSetting(key, config.muted());
+			}
 			if ("chattiness".equals(key))
 			{
-				panel.setChattiness(config.chattiness());
+				panel.setSetting(key, config.chattiness());
 			}
 			if ("mirrorToChat".equals(key))
 			{
-				panel.setMirrorToChat(config.mirrorToChat());
+				panel.setSetting(key, config.mirrorToChat());
 			}
 			// public:cut errands
 			if ("errandsEnabled".equals(key))
 			{
-				panel.setErrandsEnabled(config.errandsEnabled());
+				panel.setSetting(key, config.errandsEnabled());
 			}
 			// public:end errands
 			if ("followerName".equals(key))

@@ -11,13 +11,8 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-// public:cut messages-readonly
-import java.nio.file.AtomicMoveNotSupportedException;
-import java.nio.file.FileSystemException;
-// public:end messages-readonly
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption; // public:cut messages-readonly
 import java.util.ArrayList;
 import java.util.HashSet; // public:cut messages-readonly
 import java.util.List;
@@ -28,15 +23,13 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
-import javax.swing.JDialog;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane; // public:cut messages-readonly
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
+import javax.swing.text.JTextComponent;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
@@ -61,7 +54,7 @@ import net.runelite.client.ui.FontManager;
  */
 @Slf4j
 // public:end messages-window
-public class PhrasesDialog extends JDialog // public:cut messages-window
+public class PhrasesDialog extends EditorDialog // public:cut messages-window
 // public:else public class PhrasesDialog
 {
 	// public:cut messages-window
@@ -92,9 +85,6 @@ public class PhrasesDialog extends JDialog // public:cut messages-window
 			this.structural = structural; // public:cut messages-readonly
 		}
 	}
-
-	private final Gson gson;
-	private final Path file;
 
 	// public:cut messages-readonly
 	/** Where "Use my current location" gets its region id; may be null. */
@@ -135,14 +125,11 @@ public class PhrasesDialog extends JDialog // public:cut messages-window
 		+ " untick a rule to silence it, then Save - changes reach the follower within a second.";
 
 	private final JComboBox<String> categoryPicker = new JComboBox<>();
-	private final JLabel hint = new JLabel();
+	private final JLabel hint = Ui.label("", ColorScheme.LIGHT_GRAY_COLOR);
 
 	/** Hides rows that do not mention the text, within the current category. */
 	private final JTextField find = new JTextField(14);
 	private final JButton addLocation = new JButton("Add location"); // public:cut messages-readonly
-	private final JPanel list = new WidthTrackingPanel();
-	private JScrollPane scroll;
-	private final JLabel status = new JLabel(" ");
 	/** The loaded count, put back once Find matches something again. */
 	private String loadedStatus = " ";
 	private boolean findMatchedNothing;
@@ -155,34 +142,6 @@ public class PhrasesDialog extends JDialog // public:cut messages-window
 	// public:cut messages-readonly
 	/** True while the category picker is being set programmatically. */
 	private boolean switching;
-
-	/**
-	 * Whether anything on screen differs from the file. Guards every road out
-	 * of the window - closing, reopening, switching category - because the
-	 * first design lost ten typed lines to a stray click on the X.
-	 */
-	private boolean dirty;
-
-	private final DocumentListener dirtyMarker = new DocumentListener()
-	{
-		@Override
-		public void insertUpdate(DocumentEvent e)
-		{
-			dirty = true;
-		}
-
-		@Override
-		public void removeUpdate(DocumentEvent e)
-		{
-			dirty = true;
-		}
-
-		@Override
-		public void changedUpdate(DocumentEvent e)
-		{
-			dirty = true;
-		}
-	};
 
 	// public:end messages-readonly
 	// public:cut sharevoice
@@ -222,32 +181,9 @@ public class PhrasesDialog extends JDialog // public:cut messages-window
 	// public:else public PhrasesDialog(Gson gson, Path file, List<Category> categories)
 		java.util.function.IntSupplier currentRegion) // public:cut messages-readonly
 	{
-		super((java.awt.Frame) null, "Follower Buddy - Messages", false);
-		this.gson = gson.newBuilder().setPrettyPrinting().disableHtmlEscaping().create(); // public:cut messages-readonly
-		// public:else this.gson = gson;
-		this.file = file;
+		super("Follower Buddy - Messages", gson, file, new Ui.WidthTrackingPanel(), 170);
 		this.currentRegion = currentRegion; // public:cut messages-readonly
 		this.category = categories.get(0);
-
-		// public:cut messages-readonly
-		// Closing is handled below so unsaved edits get a say first.
-		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-		addWindowListener(new java.awt.event.WindowAdapter()
-		{
-			@Override
-			public void windowClosing(java.awt.event.WindowEvent e)
-			{
-				if (confirmDirty())
-				{
-					setVisible(false);
-				}
-			}
-		});
-		// public:end messages-readonly
-
-		JPanel root = new JPanel(new BorderLayout(0, 6));
-		root.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		root.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
 		for (Category c : categories)
 		{
@@ -274,60 +210,17 @@ public class PhrasesDialog extends JDialog // public:cut messages-window
 			showCategory();
 		});
 
-		hint.setFont(FontManager.getRunescapeSmallFont());
-		hint.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-
 		find.setToolTipText("Show only the rules in this category whose title, note or lines"
 			+ " contain this");
-		find.getDocument().addDocumentListener(new DocumentListener()
-		{
-			@Override
-			public void insertUpdate(DocumentEvent e)
-			{
-				applyFind();
-			}
-
-			@Override
-			public void removeUpdate(DocumentEvent e)
-			{
-				applyFind();
-			}
-
-			@Override
-			public void changedUpdate(DocumentEvent e)
-			{
-				applyFind();
-			}
-		});
-		JPanel pickerRow = new JPanel(new BorderLayout(6, 0));
-		pickerRow.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		find.getDocument().addDocumentListener(Ui.onChange(this::applyFind));
+		JPanel pickerRow = Ui.panel(new BorderLayout(6, 0));
 		pickerRow.add(categoryPicker, BorderLayout.CENTER);
 		pickerRow.add(labelledField("Find:", find), BorderLayout.EAST);
 
-		JPanel top = new JPanel(new BorderLayout(6, 6));
-		top.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		JPanel top = Ui.panel(new BorderLayout(6, 6));
 		top.add(pickerRow, BorderLayout.NORTH);
 		top.add(hint, BorderLayout.CENTER);
-		root.add(top, BorderLayout.NORTH);
 
-		list.setLayout(new BoxLayout(list, BoxLayout.Y_AXIS));
-		list.setBackground(ColorScheme.DARK_GRAY_COLOR);
-
-		scroll = new JScrollPane(list,
-			JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		scroll.setBorder(BorderFactory.createEmptyBorder());
-		scroll.getVerticalScrollBar().setUnitIncrement(16);
-		root.add(scroll, BorderLayout.CENTER);
-
-		JPanel bottom = new JPanel(new BorderLayout());
-		bottom.setBackground(ColorScheme.DARK_GRAY_COLOR);
-
-		status.setFont(FontManager.getRunescapeSmallFont());
-		status.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
-		bottom.add(status, BorderLayout.CENTER);
-
-		JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
-		buttons.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		// public:cut messages-readonly
 		addLocation.setToolTipText("A new place for the follower to comment on");
 		addLocation.addActionListener(e -> addBlankRow());
@@ -352,74 +245,11 @@ public class PhrasesDialog extends JDialog // public:cut messages-window
 		});
 		buttons.add(share);
 		// public:end sharevoice
+		addReloadAndSave(); // public:cut messages-readonly
 
-		// public:cut messages-readonly
-		JButton reload = new JButton("Reload");
-		reload.setToolTipText("Discard unsaved edits and reload from disk");
-		reload.addActionListener(e -> refresh());
-		buttons.add(reload);
-		JButton save = new JButton("Save");
-		save.addActionListener(e -> save());
-		buttons.add(save);
-		// public:end messages-readonly
-		bottom.add(buttons, BorderLayout.EAST);
-
-		root.add(bottom, BorderLayout.SOUTH);
-
-		setContentPane(root);
-		setPreferredSize(new Dimension(620, 640));
-		pack();
-		// Narrower, the fixed-width hint and abouts are cut mid-word (QA3).
-		setMinimumSize(new Dimension(620, 400));
+		layOut(top, 620, 640);
 		setLocationRelativeTo(null);
 	}
-
-	/**
-	 * Shows the window, fronting it if already open. Fresh file contents
-	 * unless there are edits in progress - alt-tabbing away and clicking the
-	 * panel button again must not wipe half-typed lines.
-	 */
-	public void open()
-	{
-		// public:cut messages-readonly
-		if (!dirty)
-		{
-		// public:end messages-readonly
-			refresh();
-		} // public:cut messages-readonly
-		setVisible(true);
-		toFront();
-	}
-
-	// public:cut messages-readonly
-	/**
-	 * Gives unsaved edits a say before they would be lost.
-	 *
-	 * @return true when the action may proceed - nothing was pending, the
-	 * edits were saved, or the user chose to discard them
-	 */
-	private boolean confirmDirty()
-	{
-		if (!dirty)
-		{
-			return true;
-		}
-		int choice = JOptionPane.showOptionDialog(this,
-			"There are unsaved changes.", "Save changes?",
-			JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null,
-			new Object[]{"Save", "Discard", "Cancel"}, "Save");
-		if (choice == 0)
-		{
-			return save();
-		}
-		if (choice == 1)
-		{
-			dirty = false;
-			return true;
-		}
-		return false;
-	}
-	// public:end messages-readonly
 
 	/**
 	 * The file as last read, by open(), Reload or a save, or null when it
@@ -429,7 +259,8 @@ public class PhrasesDialog extends JDialog // public:cut messages-window
 	 */
 	private JsonObject loaded;
 
-	private void refresh()
+	@Override
+	void refresh()
 	{
 		try
 		{
@@ -456,8 +287,7 @@ public class PhrasesDialog extends JDialog // public:cut messages-window
 		{
 			setStatus("The messages file couldn't be read - it may have been"
 				+ " hand-edited. Fix it or restore a backup, then Reload.", true);
-			list.revalidate();
-			list.repaint();
+			Ui.relayout(list);
 			return;
 		}
 
@@ -479,8 +309,7 @@ public class PhrasesDialog extends JDialog // public:cut messages-window
 		findMatchedNothing = false;
 		setStatus(loadedStatus, false);
 		applyFind();
-		list.revalidate();
-		list.repaint();
+		Ui.relayout(list);
 		dirty = false; // public:cut messages-readonly
 		// Every say area moves its caret as its text goes in, and each queues
 		// a scroll to bring that caret into view, so the last of them decided
@@ -520,8 +349,7 @@ public class PhrasesDialog extends JDialog // public:cut messages-window
 			setStatus(loadedStatus, false);
 			findMatchedNothing = false;
 		}
-		list.revalidate();
-		list.repaint();
+		Ui.relayout(list);
 	}
 
 	private JPanel buildRow(JsonObject rule)
@@ -531,18 +359,10 @@ public class PhrasesDialog extends JDialog // public:cut messages-window
 
 		JPanel row = rowShell();
 
-		JPanel header = new JPanel(new BorderLayout());
-		header.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		header.setAlignmentX(LEFT_ALIGNMENT);
-
-		JLabel title = new JLabel(ruleTitle);
-		title.setFont(FontManager.getRunescapeBoldFont());
-		title.setForeground(Color.WHITE);
+		JLabel title = title(ruleTitle);
 		// The id beside the title is what the settings' silence-by-name box
 		// wants typed into it.
-		JLabel idLabel = new JLabel(id);
-		idLabel.setFont(FontManager.getRunescapeSmallFont());
-		idLabel.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
+		JLabel idLabel = Ui.label(id, ColorScheme.MEDIUM_GRAY_COLOR);
 		// A long title or id is cut short with "..." rather than widening the
 		// row: the list is as wide as the window, and the controls on the
 		// right have to stay on it. QA2, 15 Oct: Quest NPCs and Locations
@@ -559,15 +379,10 @@ public class PhrasesDialog extends JDialog // public:cut messages-window
 		titles.add(title);
 		titles.add(javax.swing.Box.createHorizontalStrut(6));
 		titles.add(idLabel);
-		header.add(titles, BorderLayout.CENTER);
+		JPanel controls = header(row, titles);
 
-		JPanel controls = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
-		controls.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		JCheckBox enabled = new JCheckBox("On");
-		enabled.setSelected(!rule.has("enabled") || rule.get("enabled").getAsBoolean());
-		enabled.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		JCheckBox enabled = onTick(!rule.has("enabled") || rule.get("enabled").getAsBoolean());
 		enabled.setToolTipText("Untick to silence just this rule"); // public:cut messages-readonly
-		enabled.addItemListener(e -> dirty = true); // public:cut messages-readonly
 		// public:else enabled.setEnabled(false);
 		controls.add(enabled);
 		// public:cut sharevoice
@@ -590,23 +405,18 @@ public class PhrasesDialog extends JDialog // public:cut messages-window
 				deleted.add(id);
 				rows.removeIf(r -> id.equals(r.id));
 				list.remove(row);
-				list.revalidate();
-				list.repaint();
+				Ui.relayout(list);
 				setStatus("'" + ruleTitle + "' will be removed on Save", false);
 				dirty = true;
 			});
 			controls.add(delete);
 		}
 		// public:end messages-readonly
-		header.add(controls, BorderLayout.EAST);
-		row.add(header);
 
 		String shownNote = aboutOf(rule);
 		if (shownNote != null && !shownNote.isEmpty())
 		{
-			JLabel items = new JLabel("<html><body style='width:430px'>" + escapeHtml(shownNote) + "</body></html>");
-			items.setFont(FontManager.getRunescapeSmallFont());
-			items.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
+			JLabel items = Ui.label(Ui.html(430, shownNote), ColorScheme.MEDIUM_GRAY_COLOR);
 			items.setAlignmentX(LEFT_ALIGNMENT);
 			items.setBorder(BorderFactory.createEmptyBorder(2, 0, 4, 0));
 			row.add(items);
@@ -630,10 +440,8 @@ public class PhrasesDialog extends JDialog // public:cut messages-window
 			}
 			else
 			{
-				JLabel special = new JLabel("(triggered by something other than a place"
-					+ " - the messages can still be edited)");
-				special.setFont(FontManager.getRunescapeSmallFont());
-				special.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
+				JLabel special = Ui.label("(triggered by something other than a place"
+					+ " - the messages can still be edited)", ColorScheme.MEDIUM_GRAY_COLOR);
 				special.setAlignmentX(LEFT_ALIGNMENT);
 				row.add(special);
 			}
@@ -682,20 +490,8 @@ public class PhrasesDialog extends JDialog // public:cut messages-window
 	private void addBlankRow()
 	{
 		JPanel row = rowShell();
-
-		JPanel header = new JPanel(new BorderLayout());
-		header.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		header.setAlignmentX(LEFT_ALIGNMENT);
-		JLabel title = new JLabel("New location");
-		title.setFont(FontManager.getRunescapeBoldFont());
-		title.setForeground(Color.WHITE);
-		header.add(title, BorderLayout.CENTER);
-
-		JPanel controls = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
-		controls.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		JPanel controls = header(row, title("New location"));
 		JButton delete = new JButton("Delete");
-		header.add(controls, BorderLayout.EAST);
-		row.add(header);
 
 		JTextField name = new JTextField();
 		name.getDocument().addDocumentListener(dirtyMarker);
@@ -730,9 +526,7 @@ public class PhrasesDialog extends JDialog // public:cut messages-window
 		area.getDocument().addDocumentListener(dirtyMarker);
 		row.add(area);
 
-		JCheckBox enabled = new JCheckBox("On", true);
-		enabled.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		enabled.addItemListener(e -> dirty = true);
+		JCheckBox enabled = onTick(true);
 		controls.add(enabled);
 		controls.add(delete);
 
@@ -744,13 +538,11 @@ public class PhrasesDialog extends JDialog // public:cut messages-window
 		{
 			added.remove(r);
 			list.remove(row);
-			list.revalidate();
-			list.repaint();
+			Ui.relayout(list);
 		});
 
 		list.add(row);
-		list.revalidate();
-		list.repaint();
+		Ui.relayout(list);
 		name.requestFocusInWindow();
 	}
 
@@ -760,7 +552,8 @@ public class PhrasesDialog extends JDialog // public:cut messages-window
 	 *
 	 * @return whether the file was written
 	 */
-	private boolean save()
+	@Override
+	boolean save()
 	{
 		try
 		{
@@ -858,47 +651,6 @@ public class PhrasesDialog extends JDialog // public:cut messages-window
 		}
 	}
 
-	/**
-	 * Replaces the rules file in one step, via a sibling temp file.
-	 *
-	 * <p>The plugin polls this same file every game tick and reloads it when it
-	 * changes, which is what makes editing feel live. Writing in place truncates
-	 * it first, so a poll landing mid-write reads half a file; a rename is a
-	 * single step - the poller sees the old file or the new one, never a torn
-	 * one.
-	 *
-	 * <p>Windows will not rename over a file another handle has open, and the
-	 * plugin's poller opens this one every couple of ticks, so the rename can
-	 * lose that race. When it does, write in place rather than lose the edit:
-	 * the loader keeps its previous rules if a poll catches the file
-	 * half-written, and picks the finished file up on the following poll. (A
-	 * sleep-and-retry between move attempts would spare that one-in-a-thousand
-	 * poll, but the Hub forbids Thread.sleep; this is the surviving tradeoff.)
-	 */
-	private void writeAtomically(String contents) throws IOException
-	{
-		Path temp = file.resolveSibling(file.getFileName() + ".tmp");
-		byte[] bytes = contents.getBytes(StandardCharsets.UTF_8);
-		Files.write(temp, bytes);
-
-		try
-		{
-			Files.move(temp, file,
-				StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-		}
-		catch (AtomicMoveNotSupportedException e)
-		{
-			// Some filesystems cannot promise it; a plain replace is still
-			// one call rather than a truncate followed by a write.
-			Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING);
-		}
-		catch (FileSystemException e)
-		{
-			Files.write(file, bytes);
-			Files.deleteIfExists(temp);
-		}
-	}
-
 	private void applyRow(JsonObject rule, Row row, List<String> warnings)
 	{
 		JsonArray say = parseSay(row.say.getText());
@@ -976,44 +728,40 @@ public class PhrasesDialog extends JDialog // public:cut messages-window
 	}
 
 	// public:end messages-readonly
+	// public:else @Override
+	// public:else boolean save()
+	// public:else {
+	// public:else 	return false;
+	// public:else }
 	// ------------------------------------------------------------------ helpers
 
-	/**
-	 * The rule list: always exactly as wide as the window, so a wide row is
-	 * squeezed to fit instead of widening every row past the right edge, where
-	 * a list that never scrolls sideways would leave its controls unreachable.
-	 */
-	private static final class WidthTrackingPanel extends JPanel implements javax.swing.Scrollable
+	/** A row's top line: {@code left} and, returned for filling, the controls on the right. */
+	private static JPanel header(JPanel row, JComponent left)
 	{
-		@Override
-		public Dimension getPreferredScrollableViewportSize()
-		{
-			return getPreferredSize();
-		}
+		JPanel header = Ui.panel(new BorderLayout());
+		header.setAlignmentX(LEFT_ALIGNMENT);
+		header.add(left, BorderLayout.CENTER);
+		JPanel controls = Ui.panel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
+		header.add(controls, BorderLayout.EAST);
+		row.add(header);
+		return controls;
+	}
 
-		@Override
-		public int getScrollableUnitIncrement(java.awt.Rectangle visible, int orientation, int direction)
-		{
-			return 16;
-		}
+	private static JLabel title(String text)
+	{
+		JLabel title = new JLabel(text);
+		title.setFont(FontManager.getRunescapeBoldFont());
+		title.setForeground(Color.WHITE);
+		return title;
+	}
 
-		@Override
-		public int getScrollableBlockIncrement(java.awt.Rectangle visible, int orientation, int direction)
-		{
-			return orientation == javax.swing.SwingConstants.VERTICAL ? visible.height : visible.width;
-		}
-
-		@Override
-		public boolean getScrollableTracksViewportWidth()
-		{
-			return true;
-		}
-
-		@Override
-		public boolean getScrollableTracksViewportHeight()
-		{
-			return false;
-		}
+	/** A rule's On tick; changing it marks the window dirty. */
+	private JCheckBox onTick(boolean on)
+	{
+		JCheckBox enabled = new JCheckBox("On", on);
+		enabled.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		enabled.addItemListener(e -> dirty = true); // public:cut messages-readonly
+		return enabled;
 	}
 
 	private JPanel rowShell()
@@ -1021,51 +769,46 @@ public class PhrasesDialog extends JDialog // public:cut messages-window
 		// Never taller than it needs: the list is a vertical box, which shares
 		// any spare height out between rows that allow it, so a Find leaving
 		// two rows pulled each one's title, controls and lines far apart.
-		JPanel row = new JPanel()
+		JPanel row = Ui.column(new JPanel()
 		{
 			@Override
 			public Dimension getMaximumSize()
 			{
 				return new Dimension(Integer.MAX_VALUE, getPreferredSize().height);
 			}
-		};
-		row.setLayout(new BoxLayout(row, BoxLayout.Y_AXIS));
-		row.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		});
 		row.setBorder(BorderFactory.createCompoundBorder(
 			BorderFactory.createMatteBorder(0, 0, 1, 0, ColorScheme.DARKER_GRAY_COLOR),
 			BorderFactory.createEmptyBorder(8, 0, 8, 8)));
-		row.setAlignmentX(LEFT_ALIGNMENT);
 		return row;
 	}
 
 	private JPanel labelledField(String label, JTextField field)
 	{
-		JPanel line = new JPanel(new BorderLayout(6, 0));
-		line.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		JPanel line = Ui.panel(new BorderLayout(6, 0));
 		line.setAlignmentX(LEFT_ALIGNMENT);
 		line.setBorder(BorderFactory.createEmptyBorder(0, 0, 4, 0));
 		line.setMaximumSize(new Dimension(Integer.MAX_VALUE, 26));
-		JLabel l = new JLabel(label);
-		l.setFont(FontManager.getRunescapeSmallFont());
-		l.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-		line.add(l, BorderLayout.WEST);
+		line.add(Ui.label(label, ColorScheme.LIGHT_GRAY_COLOR), BorderLayout.WEST);
+		line.add(editable(field), BorderLayout.CENTER);
+		return line;
+	}
+
+	/** White game-font text on the darker grey, for the boxes a player types in. */
+	private static <T extends JTextComponent> T editable(T field)
+	{
 		field.setFont(FontManager.getRunescapeFont());
 		field.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 		field.setForeground(Color.WHITE);
 		field.setCaretColor(Color.WHITE);
-		line.add(field, BorderLayout.CENTER);
-		return line;
+		return field;
 	}
 
 	private JTextArea sayArea(String text, int rows)
 	{
-		JTextArea area = new JTextArea(text, rows, 40);
+		JTextArea area = editable(new JTextArea(text, rows, 40));
 		area.setLineWrap(true);
 		area.setWrapStyleWord(true);
-		area.setFont(FontManager.getRunescapeFont());
-		area.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		area.setForeground(Color.WHITE);
-		area.setCaretColor(Color.WHITE);
 		area.setBorder(BorderFactory.createEmptyBorder(4, 6, 4, 6));
 		area.setAlignmentX(LEFT_ALIGNMENT);
 		return area;
@@ -1165,18 +908,6 @@ public class PhrasesDialog extends JDialog // public:cut messages-window
 		return gson.fromJson(new String(Files.readAllBytes(file), StandardCharsets.UTF_8), JsonObject.class);
 	}
 
-	private void setStatus(String text, boolean error)
-	{
-		// An error can run long, and a plain label clips it mid-sentence;
-		// wrapped, it is read whole.
-		status.setText(error ? "<html><body style='width:" + STATUS_WRAP + "px'>"
-			+ escapeHtml(text) + "</body></html>" : text);
-		status.setForeground(error ? ColorScheme.PROGRESS_ERROR_COLOR : ColorScheme.MEDIUM_GRAY_COLOR);
-	}
-
-	/** An error status's wrap width, in the HTML renderer's px (x1.3 on screen). */
-	private static final int STATUS_WRAP = 170;
-
 	private static String optString(JsonObject object, String key)
 	{
 		return object.has(key) && object.get(key).isJsonPrimitive() ? object.get(key).getAsString() : null;
@@ -1209,38 +940,18 @@ public class PhrasesDialog extends JDialog // public:cut messages-window
 			return "(new)";
 		}
 		String s = id;
-		boolean set = false;
-		if (s.startsWith("gear-set-"))
+		boolean set = id.startsWith("gear-set-");
+		// The category says it already: Items, Locations, Bosses.
+		for (String prefix : new String[]{"gear-set-", "gear-", "area-", "enter-", "boss-"})
 		{
-			set = true;
-			s = s.substring("gear-set-".length());
-		}
-		else if (s.startsWith("gear-"))
-		{
-			s = s.substring("gear-".length());
-		}
-		else if (s.startsWith("area-"))
-		{
-			s = s.substring("area-".length());
-		}
-		else if (s.startsWith("enter-"))
-		{
-			s = s.substring("enter-".length());
-		}
-		else if (s.startsWith("boss-"))
-		{
-			// The Bosses category says it already, as gear- and area- do.
-			s = s.substring("boss-".length());
+			if (s.startsWith(prefix))
+			{
+				s = s.substring(prefix.length());
+				break;
+			}
 		}
 		s = s.replace('-', ' ');
 		s = Character.toUpperCase(s.charAt(0)) + s.substring(1);
 		return set ? "Full " + s + " (set)" : s;
 	}
-	// public:cut messages-window
-
-	private static String escapeHtml(String s)
-	{
-		return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
-	}
-	// public:end messages-window
 }

@@ -4,26 +4,19 @@ package com.follower.ui;
 import com.follower.speech.DialogTree;
 import com.google.gson.Gson;
 import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.io.IOException;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.AtomicMoveNotSupportedException;
-import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JDialog;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -31,7 +24,6 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.ui.ColorScheme;
-import net.runelite.client.ui.FontManager;
 
 /**
  * The conversation editor: every node of a dialog tree as a row, with who
@@ -48,14 +40,9 @@ import net.runelite.client.ui.FontManager;
  * worse than one that never opens, because the player is already inside it.
  */
 @Slf4j
-public class DialogsDialog extends JDialog
+public class DialogsDialog extends EditorDialog
 {
-	private final Gson gson;
-	private final Path file;
-
 	private final JComboBox<String> treePicker = new JComboBox<>();
-	private final JPanel list = new JPanel();
-	private final JLabel status = new JLabel(" ");
 	private final List<Row> rows = new ArrayList<>();
 
 	private DialogFile parsed;
@@ -64,70 +51,18 @@ public class DialogsDialog extends JDialog
 	/** The tree the rows on screen belong to, for reverting a cancelled switch. */
 	private int shownTreeIndex;
 
-	/**
-	 * Whether anything on screen differs from the file. Guards every road out
-	 * of the window - closing, reopening, switching tree - because unsaved
-	 * node edits used to vanish silently on any of them.
-	 */
-	private boolean dirty;
-
-	private final javax.swing.event.DocumentListener dirtyMarker =
-		new javax.swing.event.DocumentListener()
-	{
-		@Override
-		public void insertUpdate(javax.swing.event.DocumentEvent e)
-		{
-			dirty = true;
-		}
-
-		@Override
-		public void removeUpdate(javax.swing.event.DocumentEvent e)
-		{
-			dirty = true;
-		}
-
-		@Override
-		public void changedUpdate(javax.swing.event.DocumentEvent e)
-		{
-			dirty = true;
-		}
-	};
-
 	public DialogsDialog(Gson gson, Path file)
 	{
-		super((java.awt.Frame) null, "Follower Buddy - Conversations", false);
-		this.gson = gson.newBuilder().setPrettyPrinting().disableHtmlEscaping().create();
-		this.file = file;
+		super("Follower Buddy - Conversations", gson, file, new JPanel(), 300);
 
-		// Closing is handled below so unsaved edits get a say first.
-		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-		addWindowListener(new java.awt.event.WindowAdapter()
-		{
-			@Override
-			public void windowClosing(java.awt.event.WindowEvent e)
-			{
-				if (confirmDirty())
-				{
-					setVisible(false);
-				}
-			}
-		});
-
-		JPanel root = new JPanel(new BorderLayout(0, 6));
-		root.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		root.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-		JLabel hint = new JLabel("<html><body style='width:500px'>These are the conversations the follower"
+		JLabel hint = Ui.label("<html><body style='width:500px'>These are the conversations the follower"
 			+ " <b>starts</b>. While it is waiting for an answer, its Talk-to option becomes"
 			+ " Answer and opens the conversation it asked about instead of the everyday one.<br>"
 			+ "<b>Says</b> is one page per line, spoken by whoever is picked beside the node. <b>Choices</b> are one"
 			+ " per line, written <code>label -&gt; node-id</code>. <b>Answer</b> is what"
-			+ " reaching that node records as your reply.</html>");
-		hint.setFont(FontManager.getRunescapeSmallFont());
-		hint.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+			+ " reaching that node records as your reply.</html>", ColorScheme.LIGHT_GRAY_COLOR);
 
-		JPanel top = new JPanel(new BorderLayout(6, 6));
-		top.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		JPanel top = Ui.panel(new BorderLayout(6, 6));
 		top.add(hint, BorderLayout.CENTER);
 		treePicker.addActionListener(e ->
 		{
@@ -155,51 +90,18 @@ public class DialogsDialog extends JDialog
 			showSelectedTree();
 		});
 		top.add(treePicker, BorderLayout.SOUTH);
-		root.add(top, BorderLayout.NORTH);
-
-		list.setLayout(new BoxLayout(list, BoxLayout.Y_AXIS));
-		list.setBackground(ColorScheme.DARK_GRAY_COLOR);
-
-		JScrollPane scroll = new JScrollPane(list,
-			JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		scroll.setBorder(BorderFactory.createEmptyBorder());
-		scroll.getVerticalScrollBar().setUnitIncrement(16);
-		root.add(scroll, BorderLayout.CENTER);
-
-		JPanel bottom = new JPanel(new BorderLayout());
-		bottom.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		status.setFont(FontManager.getRunescapeSmallFont());
-		status.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
-		bottom.add(status, BorderLayout.CENTER);
-
-		JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
-		buttons.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
 		JButton add = new JButton("Add node");
 		add.setToolTipText("A new step in this conversation. Point something at it"
 			+ " with Next or a Choice, or nothing will ever reach it.");
 		add.addActionListener(e -> addBlankRow());
 		buttons.add(add);
+		addReloadAndSave();
 
-		JButton reload = new JButton("Reload");
-		reload.setToolTipText("Discard unsaved edits and reload from disk");
-		reload.addActionListener(e -> refresh());
-		buttons.add(reload);
-
-		JButton save = new JButton("Save");
-		save.addActionListener(e -> save());
-		buttons.add(save);
-		bottom.add(buttons, BorderLayout.EAST);
-
-		root.add(bottom, BorderLayout.SOUTH);
-
-		setContentPane(root);
-		setPreferredSize(new Dimension(700, 700));
-		pack();
-		// Narrower cuts the hint; taller than the screen puts Save under the
+		layOut(top, 700, 700);
+		// Taller than the screen puts Save under the
 		// taskbar, as Advanced posing found (QA3). // public:cut posing
 		// public:else // taskbar (QA3).
-		setMinimumSize(new Dimension(700, 400));
 		java.awt.GraphicsConfiguration screen = getGraphicsConfiguration();
 		setSize(getWidth(), FilmDialog.heightOnScreen(getHeight(), screen.getBounds(), // public:cut posing
 		// public:else java.awt.Insets taskbars = java.awt.Toolkit.getDefaultToolkit().getScreenInsets(screen);
@@ -208,51 +110,8 @@ public class DialogsDialog extends JDialog
 		setLocationRelativeTo(null);
 	}
 
-	/**
-	 * Shows the window, fronting it if already open. Fresh file contents
-	 * unless there are edits in progress - alt-tabbing away and clicking the
-	 * panel button again must not wipe half-typed nodes.
-	 */
-	public void open()
-	{
-		if (!dirty)
-		{
-			refresh();
-		}
-		setVisible(true);
-		toFront();
-	}
-
-	/**
-	 * Gives unsaved edits a say before they would be lost.
-	 *
-	 * @return true when the action may proceed - nothing was pending, the
-	 * edits were saved, or the user chose to discard them
-	 */
-	private boolean confirmDirty()
-	{
-		if (!dirty)
-		{
-			return true;
-		}
-		int choice = javax.swing.JOptionPane.showOptionDialog(this,
-			"There are unsaved changes.", "Save changes?",
-			javax.swing.JOptionPane.YES_NO_CANCEL_OPTION,
-			javax.swing.JOptionPane.QUESTION_MESSAGE, null,
-			new Object[]{"Save", "Discard", "Cancel"}, "Save");
-		if (choice == 0)
-		{
-			return save();
-		}
-		if (choice == 1)
-		{
-			dirty = false;
-			return true;
-		}
-		return false;
-	}
-
-	private void refresh()
+	@Override
+	void refresh()
 	{
 		try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8))
 		{
@@ -300,8 +159,7 @@ public class DialogsDialog extends JDialog
 		DialogTree tree = selectedTree();
 		if (tree == null)
 		{
-			list.revalidate();
-			list.repaint();
+			Ui.relayout(list);
 			return;
 		}
 		if (tree.nodes != null)
@@ -313,8 +171,7 @@ public class DialogsDialog extends JDialog
 		}
 		setStatus((tree.nodes == null ? 0 : tree.nodes.size()) + " nodes, starting at '"
 			+ tree.startId() + "'", false);
-		list.revalidate();
-		list.repaint();
+		Ui.relayout(list);
 		shownTreeIndex = treePicker.getSelectedIndex();
 		dirty = false;
 	}
@@ -325,8 +182,7 @@ public class DialogsDialog extends JDialog
 		node.id = "node-" + (rows.size() + 1);
 		node.says = new ArrayList<>();
 		list.add(buildRow(node));
-		list.revalidate();
-		list.repaint();
+		Ui.relayout(list);
 		dirty = true;
 	}
 
@@ -412,26 +268,7 @@ public class DialogsDialog extends JDialog
 		}
 		row.choices.setText(choiceText.toString().trim());
 		row.choices.next = row.next;
-		row.next.getDocument().addDocumentListener(new javax.swing.event.DocumentListener()
-		{
-			@Override
-			public void insertUpdate(javax.swing.event.DocumentEvent e)
-			{
-				row.choices.repaint();
-			}
-
-			@Override
-			public void removeUpdate(javax.swing.event.DocumentEvent e)
-			{
-				row.choices.repaint();
-			}
-
-			@Override
-			public void changedUpdate(javax.swing.event.DocumentEvent e)
-			{
-				row.choices.repaint();
-			}
-		});
+		row.next.getDocument().addDocumentListener(Ui.onChange(row.choices::repaint));
 
 		JPanel panel = new JPanel(new GridBagLayout());
 		panel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
@@ -439,21 +276,6 @@ public class DialogsDialog extends JDialog
 			BorderFactory.createMatteBorder(0, 0, 1, 0, ColorScheme.DARK_GRAY_COLOR),
 			BorderFactory.createEmptyBorder(6, 6, 6, 6)));
 
-		GridBagConstraints c = new GridBagConstraints();
-		c.insets = new Insets(2, 2, 2, 2);
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridy = 0;
-
-		c.gridx = 0;
-		c.weightx = 0;
-		panel.add(label("Node"), c);
-		c.gridx = 1;
-		c.weightx = 1;
-		panel.add(row.id, c);
-		c.gridx = 2;
-		c.weightx = 0;
-		panel.add(row.speaker, c);
-		c.gridx = 3;
 		JButton remove = new JButton("Delete");
 		remove.setToolTipText("Remove this node. Anything pointing at it will need"
 			+ " repointing, and Save will say so.");
@@ -463,40 +285,29 @@ public class DialogsDialog extends JDialog
 			panel.setVisible(false);
 			dirty = true;
 		});
-		panel.add(remove, c);
 
-		c.gridy = 1;
-		c.gridx = 0;
-		c.weightx = 0;
-		panel.add(label("Says"), c);
-		c.gridx = 1;
-		c.gridwidth = 3;
-		c.weightx = 1;
-		panel.add(scrollable(row.pages), c);
-
-		c.gridwidth = 1;
-		c.gridy = 2;
-		c.gridx = 0;
-		c.weightx = 0;
-		panel.add(label("Choices"), c);
-		c.gridx = 1;
-		c.gridwidth = 3;
-		c.weightx = 1;
-		panel.add(scrollable(row.choices), c);
-
-		c.gridwidth = 1;
-		c.gridy = 3;
-		c.gridx = 0;
-		c.weightx = 0;
-		panel.add(label("Next"), c);
-		c.gridx = 1;
-		c.weightx = 1;
-		panel.add(row.next, c);
-		c.gridx = 2;
-		c.weightx = 0;
-		panel.add(label("Answer"), c);
-		c.gridx = 3;
-		panel.add(row.answer, c);
+		// One line per row of the grid. The field after each name takes the
+		// spare width, and a name with a single field beside it spans the row.
+		JComponent[][] grid = {
+			{label("Node"), row.id, row.speaker, remove},
+			{label("Says"), scrollable(row.pages)},
+			{label("Choices"), scrollable(row.choices)},
+			{label("Next"), row.next, label("Answer"), row.answer},
+		};
+		GridBagConstraints c = new GridBagConstraints();
+		c.insets = new Insets(2, 2, 2, 2);
+		c.fill = GridBagConstraints.HORIZONTAL;
+		for (int y = 0; y < grid.length; y++)
+		{
+			for (int x = 0; x < grid[y].length; x++)
+			{
+				c.gridx = x;
+				c.gridy = y;
+				c.weightx = x == 1 ? 1 : 0;
+				c.gridwidth = x == 1 && grid[y].length == 2 ? 3 : 1;
+				panel.add(grid[y][x], c);
+			}
+		}
 
 		// Attached after the values above are set, so populating a row does
 		// not read as the user editing one.
@@ -513,10 +324,7 @@ public class DialogsDialog extends JDialog
 
 	private static JLabel label(String text)
 	{
-		JLabel jLabel = new JLabel(text);
-		jLabel.setFont(FontManager.getRunescapeSmallFont());
-		jLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-		return jLabel;
+		return Ui.label(text, ColorScheme.LIGHT_GRAY_COLOR);
 	}
 
 	private static JScrollPane scrollable(JTextArea area)
@@ -532,8 +340,8 @@ public class DialogsDialog extends JDialog
 		return scroll;
 	}
 
-	/** @return whether the file was written */
-	private boolean save()
+	@Override
+	boolean save()
 	{
 		DialogTree tree = selectedTree();
 		if (tree == null)
@@ -649,48 +457,6 @@ public class DialogsDialog extends JDialog
 			return false;
 		}
 	}
-
-	/**
-	 * Replaces the file in one step, via a sibling temp file, with the same
-	 * fall-back-to-in-place dance phrases.json uses: the plugin polls this
-	 * file every couple of ticks, Windows will not rename over an open
-	 * handle, and losing somebody's edits is worse than a torn read the loader
-	 * already knows how to survive.
-	 */
-	private void writeAtomically(String contents) throws IOException
-	{
-		Path temp = file.resolveSibling(file.getFileName() + ".tmp");
-		byte[] bytes = contents.getBytes(StandardCharsets.UTF_8);
-		Files.write(temp, bytes);
-
-		try
-		{
-			Files.move(temp, file,
-				StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-		}
-		catch (AtomicMoveNotSupportedException e)
-		{
-			Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING);
-		}
-		catch (FileSystemException e)
-		{
-			Files.write(file, bytes);
-			Files.deleteIfExists(temp);
-		}
-	}
-
-	private void setStatus(String text, boolean bad)
-	{
-		// An error can run long, and a plain label clips it mid-sentence;
-		// wrapped, it is read whole.
-		status.setText(bad ? "<html><body style='width:" + STATUS_WRAP + "px'>"
-			+ text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-			+ "</body></html>" : text);
-		status.setForeground(bad ? ColorScheme.PROGRESS_ERROR_COLOR : ColorScheme.MEDIUM_GRAY_COLOR);
-	}
-
-	/** An error status's wrap width, in the HTML renderer's px (x1.3 on screen). */
-	private static final int STATUS_WRAP = 300;
 
 	/** Mirrors the on-disk shape so the whole file round-trips, not just one tree. */
 	private static final class DialogFile

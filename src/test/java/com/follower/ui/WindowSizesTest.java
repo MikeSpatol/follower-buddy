@@ -163,7 +163,16 @@ public class WindowSizesTest
 
 	private static Object field(Object owner, String name) throws Exception
 	{
-		java.lang.reflect.Field f = PhrasesDialog.class.getDeclaredField(name);
+		// Fields the two file editors share live on their base class.
+		java.lang.reflect.Field f;
+		try
+		{
+			f = PhrasesDialog.class.getDeclaredField(name);
+		}
+		catch (NoSuchFieldException e)
+		{
+			f = EditorDialog.class.getDeclaredField(name);
+		}
 		f.setAccessible(true);
 		return f.get(owner);
 	}

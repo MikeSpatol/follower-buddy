@@ -18,7 +18,6 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -27,12 +26,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import net.runelite.api.kit.KitType;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.ColorScheme;
-import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.PluginPanel;
 import net.runelite.client.util.AsyncBufferedImage;
 
@@ -95,35 +91,6 @@ public class FollowerPanel extends PluginPanel
 	 */
 	private final javax.swing.JCheckBox muteBox = new javax.swing.JCheckBox("Mute the follower");
 
-	private Consumer<Boolean> onMute = m -> { };
-
-	/** Set while the box is being synced FROM config, so it does not echo. */
-	private boolean suppressMuteEvents;
-
-	public void setOnMute(Consumer<Boolean> onMute)
-	{
-		this.onMute = onMute;
-	}
-
-	/** Reflects a config-side change without writing it back again. */
-	public void setMuted(boolean muted)
-	{
-		// On the event thread like its neighbours: a profile switch sends
-		// this from RuneLite's executor (QA3).
-		SwingUtilities.invokeLater(() ->
-		{
-			suppressMuteEvents = true;
-			try
-			{
-				muteBox.setSelected(muted);
-			}
-			finally
-			{
-				suppressMuteEvents = false;
-			}
-		});
-	}
-
 	// public:cut memory-window
 	/** Opens the memory window (R20); set by the plugin after construction. */
 	private Runnable onShowMemory = () -> { };
@@ -177,7 +144,8 @@ public class FollowerPanel extends PluginPanel
 	/**
 	 * Chattiness, the chatbox mirror and errands follow the Mute pattern: the
 	 * same key as settings, written through the plugin, and reflected back
-	 * without an echo when the setting changes from the other side.
+	 * without an echo when the setting changes from the other side. The
+	 * thrall profiles and the open sections are written the same way.
 	 */
 	private final javax.swing.JComboBox<com.follower.speech.Chattiness> chattinessBox =
 		new javax.swing.JComboBox<>(com.follower.speech.Chattiness.values());
@@ -185,47 +153,59 @@ public class FollowerPanel extends PluginPanel
 		new javax.swing.JCheckBox("Also show lines in the chatbox");
 	private final javax.swing.JCheckBox errandsBox = new javax.swing.JCheckBox("Go on errands"); // public:cut errands
 
-	private Consumer<com.follower.speech.Chattiness> onChattiness = c -> { };
-	private Consumer<Boolean> onMirrorToChat = m -> { };
-	private Consumer<Boolean> onErrandsEnabled = e -> { }; // public:cut errands
+	/** (config key, value) as the player changes a synced control; set by the plugin. */
+	private BiConsumer<String, Object> onSetting = (key, value) -> { };
+
+	/** The synced ticks and dropdown, by their config key. */
+	private final Map<String, javax.swing.JComponent> synced = new java.util.HashMap<>();
 
 	/** Set while a synced control is being set FROM config, so it does not echo. */
 	private boolean suppressSyncEvents;
 
-	public void setOnChattiness(Consumer<com.follower.speech.Chattiness> onChattiness)
+	public void setOnSetting(BiConsumer<String, Object> onSetting)
 	{
-		this.onChattiness = onChattiness;
+		this.onSetting = onSetting;
 	}
 
-	public void setOnMirrorToChat(Consumer<Boolean> onMirrorToChat)
+	/**
+	 * Reflects a config-side change without writing it back again: a tick
+	 * takes a Boolean, the dropdown its item. On the event thread like its
+	 * neighbours: a profile switch sends this from RuneLite's executor (QA3).
+	 */
+	public void setSetting(String key, Object value)
 	{
-		this.onMirrorToChat = onMirrorToChat;
+		synced(() ->
+		{
+			javax.swing.JComponent control = synced.get(key);
+			if (control instanceof javax.swing.JCheckBox)
+			{
+				((javax.swing.JCheckBox) control).setSelected((Boolean) value);
+			}
+			else
+			{
+				((javax.swing.JComboBox<?>) control).setSelectedItem(value);
+			}
+		});
 	}
 
-	// public:cut errands
-	public void setOnErrandsEnabled(Consumer<Boolean> onErrandsEnabled)
+	/** Writes a synced control's new value, unless config is the one setting it. */
+	private void write(String key, Object value)
 	{
-		this.onErrandsEnabled = onErrandsEnabled;
+		if (!suppressSyncEvents && value != null)
+		{
+			onSetting.accept(key, value);
+		}
 	}
 
-	// public:end errands
-	public void setChattiness(com.follower.speech.Chattiness chattiness)
+	/** A synced tick, styled like the others, writing its config key when clicked. */
+	private javax.swing.JCheckBox tick(String key, javax.swing.JCheckBox box, String tooltip)
 	{
-		synced(() -> chattinessBox.setSelectedItem(chattiness));
+		styleTick(box, tooltip);
+		synced.put(key, box);
+		box.addActionListener(e -> write(key, box.isSelected()));
+		return box;
 	}
 
-	public void setMirrorToChat(boolean on)
-	{
-		synced(() -> chatboxBox.setSelected(on));
-	}
-
-	// public:cut errands
-	public void setErrandsEnabled(boolean on)
-	{
-		synced(() -> errandsBox.setSelected(on));
-	}
-
-	// public:end errands
 	/** Applies a config-side value on the event thread with the echo guard up. */
 	private void synced(Runnable update)
 	{
@@ -285,10 +265,9 @@ public class FollowerPanel extends PluginPanel
 
 	public void setFollowerName(String name)
 	{
-		SwingUtilities.invokeLater(() -> behaviourCaption.setText(
-			"<html><body style='width:160px'>Right-click " + escapeHtml(name)
-				+ " in game for Talk-to, Stay, Dance, Wave, Step-in-front and Read-chronicle."
-				+ " Hold Shift and right-click any tile to send it there.</body></html>"));
+		SwingUtilities.invokeLater(() -> behaviourCaption.setText(Ui.html(160, "Right-click " + name
+			+ " in game for Talk-to, Stay, Dance, Wave, Step-in-front and Read-chronicle."
+			+ " Hold Shift and right-click any tile to send it there.")));
 	}
 
 	// public:cut errands
@@ -298,11 +277,7 @@ public class FollowerPanel extends PluginPanel
 		SwingUtilities.invokeLater(() ->
 		{
 			errandKeys = new java.util.ArrayList<>(keyToLabel.keySet());
-			errandBox.removeAllItems();
-			for (String label : keyToLabel.values())
-			{
-				errandBox.addItem(label);
-			}
+			refill(errandBox, keyToLabel.values());
 		});
 	}
 
@@ -337,10 +312,9 @@ public class FollowerPanel extends PluginPanel
 	/** The region the player stands in, or below zero before the first tick. */
 	public void setRegionId(int region)
 	{
-		SwingUtilities.invokeLater(() -> regionCaption.setText(
-			"<html><body style='width:160px'>Your region id: "
-				+ (region > 0 ? Integer.toString(region) : "not known until you log in")
-				+ ", for Locations rules.</body></html>"));
+		SwingUtilities.invokeLater(() -> regionCaption.setText(Ui.html(160, "Your region id: "
+			+ (region > 0 ? Integer.toString(region) : "not known until you log in")
+			+ ", for Locations rules.")));
 	}
 
 	// ------------------------------------------------------------------- folds
@@ -362,15 +336,9 @@ public class FollowerPanel extends PluginPanel
 
 	private final Map<String, Section> sections = new java.util.LinkedHashMap<>();
 	private final java.util.Set<String> openSections;
-	private Consumer<String> onFoldsChanged = s -> { };
 
 	/** The whole scrolling column, revalidated as sections open and close. */
-	private final JPanel column = new ScrollableColumn();
-
-	public void setOnFoldsChanged(Consumer<String> onFoldsChanged)
-	{
-		this.onFoldsChanged = onFoldsChanged;
-	}
+	private final JPanel column = Ui.column(new Ui.WidthTrackingPanel());
 
 	/** The stored fold list, "talking,outfit", as the set of open section keys. */
 	static java.util.Set<String> parseFolds(String stored)
@@ -452,11 +420,7 @@ public class FollowerPanel extends PluginPanel
 			suppressProfileEvents = true;
 			try
 			{
-				profileCombo.removeAllItems();
-				for (String name : copy)
-				{
-					profileCombo.addItem(name);
-				}
+				refill(profileCombo, copy);
 				profileCombo.setSelectedItem(active == null ? null : active);
 			}
 			finally
@@ -512,14 +476,6 @@ public class FollowerPanel extends PluginPanel
 	/** Style key to the profile name the setting holds. */
 	private final Map<String, String> thrallProfiles = new java.util.LinkedHashMap<>();
 
-	private BiConsumer<String, String> onThrallProfile = (style, name) -> { };
-
-	/** (style key, profile name) as a thrall dropdown is changed. */
-	public void setOnThrallProfile(BiConsumer<String, String> onThrallProfile)
-	{
-		this.onThrallProfile = onThrallProfile;
-	}
-
 	/** Reflects the three thrall settings without writing them back. */
 	public void setThrallProfiles(String melee, String ranged, String magic)
 	{
@@ -542,11 +498,7 @@ public class FollowerPanel extends PluginPanel
 			for (Map.Entry<String, javax.swing.JComboBox<String>> entry : thrallBoxes.entrySet())
 			{
 				javax.swing.JComboBox<String> box = entry.getValue();
-				box.removeAllItems();
-				for (String name : profileNames)
-				{
-					box.addItem(name);
-				}
+				refill(box, profileNames);
 				String wanted = thrallProfiles.get(entry.getKey());
 				if (wanted != null && !wanted.isEmpty())
 				{
@@ -651,13 +603,11 @@ public class FollowerPanel extends PluginPanel
 		// search, so nothing may impose a floor on the viewport height.
 		setMinimumSize(new Dimension(0, 0));
 
-		// A ScrollableColumn, not a plain panel: a plain view is laid out at
+		// A WidthTrackingPanel, not a plain panel: a plain view is laid out at
 		// its own preferred width, so any child preferring more than the
 		// sidebar (or the width left once the scrollbar appears) pushed the
 		// whole column past the right edge - padding gone, buttons clipped -
 		// with the horizontal scrollbar deliberately never there to save it.
-		column.setLayout(new BoxLayout(column, BoxLayout.Y_AXIS));
-		column.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		column.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
 		column.add(buildHeader());
 		buildTalking(section("talking", "TALKING"));
@@ -669,12 +619,9 @@ public class FollowerPanel extends PluginPanel
 		// Everything scrolls together: the sidebar is never tall enough for
 		// the dialogue editors, profiles, equipment grid and item picker at
 		// once, and a clipped panel hides controls with no way to reach them.
-		JScrollPane scroll = new JScrollPane(column,
-			JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		scroll.setBorder(BorderFactory.createEmptyBorder());
+		JScrollPane scroll = Ui.scroller(column);
 		scroll.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		scroll.getViewport().setBackground(ColorScheme.DARK_GRAY_COLOR);
-		scroll.getVerticalScrollBar().setUnitIncrement(16);
 		scroll.setMinimumSize(new Dimension(0, 0));
 		add(scroll, BorderLayout.CENTER);
 
@@ -685,21 +632,16 @@ public class FollowerPanel extends PluginPanel
 
 	private JPanel buildHeader()
 	{
-		JPanel header = new JPanel();
-		header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
-		header.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		JPanel header = Ui.column();
 
 		// The one line that says what this thing IS, before any controls do.
 		// The body style width matters: an HTML label's preferred width is one
 		// unwrapped line, and a single wide child forces the WHOLE panel past
 		// the sidebar, clipping every section against the no-horizontal-scroll
 		// viewport.
-		JLabel identity = new JLabel("<html><body style='width:160px'>Only you"
+		JLabel identity = caption("Only you"
 			+ " can see this follower. Dress it under Outfit; edit what it says"
-			+ " under Talking; see what it remembers under Memory.</body></html>");
-		identity.setFont(FontManager.getRunescapeSmallFont());
-		identity.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
-		identity.setAlignmentX(LEFT_ALIGNMENT);
+			+ " under Talking; see what it remembers under Memory.");
 		identity.setBorder(BorderFactory.createEmptyBorder(0, 0, 4, 0));
 		header.add(identity);
 
@@ -713,17 +655,12 @@ public class FollowerPanel extends PluginPanel
 	 */
 	private JPanel section(String key, String title)
 	{
-		JLabel label = new JLabel();
-		label.setFont(FontManager.getRunescapeSmallFont());
-		label.setForeground(ColorScheme.BRAND_ORANGE);
+		JLabel label = Ui.label("", ColorScheme.BRAND_ORANGE);
 		JPanel header = headerRow(label);
 		header.setToolTipText("Click to open or close this section");
 		clickable(header, () -> toggleSection(key));
 
-		JPanel body = new JPanel();
-		body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
-		body.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		body.setAlignmentX(LEFT_ALIGNMENT);
+		JPanel body = Ui.column();
 		body.setVisible(openSections.contains(key));
 
 		sections.put(key, new Section(title, label, body));
@@ -747,8 +684,7 @@ public class FollowerPanel extends PluginPanel
 		Section section = sections.get(key);
 		section.body.setVisible(openSections.contains(key));
 		section.label.setText(foldTitle(key));
-		column.revalidate();
-		column.repaint();
+		Ui.relayout(column);
 		// Stored in section order, whatever order they were clicked in.
 		List<String> open = new java.util.ArrayList<>();
 		for (String k : sections.keySet())
@@ -758,7 +694,7 @@ public class FollowerPanel extends PluginPanel
 				open.add(k);
 			}
 		}
-		onFoldsChanged.accept(String.join(",", open));
+		onSetting.accept("panelFolds", String.join(",", open));
 	}
 
 	/**
@@ -791,9 +727,7 @@ public class FollowerPanel extends PluginPanel
 	/** A width-bounded grey line of explanation, so it wraps instead of widening the panel. */
 	private JLabel caption(String text)
 	{
-		JLabel label = new JLabel("<html><body style='width:160px'>" + text + "</body></html>");
-		label.setFont(FontManager.getRunescapeSmallFont());
-		label.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
+		JLabel label = Ui.label(Ui.html(160, text), ColorScheme.MEDIUM_GRAY_COLOR);
 		label.setAlignmentX(LEFT_ALIGNMENT);
 		label.setBorder(BorderFactory.createEmptyBorder(2, 0, 4, 0));
 		return label;
@@ -802,8 +736,7 @@ public class FollowerPanel extends PluginPanel
 	/** A full-width column of buttons. */
 	private JPanel buttonColumn(int count)
 	{
-		JPanel buttons = new JPanel(new GridLayout(0, 1, 6, 4));
-		buttons.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		JPanel buttons = Ui.panel(new GridLayout(0, 1, 6, 4));
 		buttons.setAlignmentX(LEFT_ALIGNMENT);
 		buttons.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30 * count));
 		return buttons;
@@ -812,8 +745,7 @@ public class FollowerPanel extends PluginPanel
 	/** Two buttons side by side. */
 	private JPanel buttonPair()
 	{
-		JPanel buttons = new JPanel(new GridLayout(1, 2, 6, 0));
-		buttons.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		JPanel buttons = Ui.panel(new GridLayout(1, 2, 6, 0));
 		buttons.setAlignmentX(LEFT_ALIGNMENT);
 		buttons.setMaximumSize(new Dimension(Integer.MAX_VALUE, 26));
 		return buttons;
@@ -821,18 +753,30 @@ public class FollowerPanel extends PluginPanel
 
 	private JButton button(String text, String tooltip, Runnable action)
 	{
-		JButton button = new JButton(text);
+		return button(new JButton(text), tooltip, action);
+	}
+
+	private static JButton button(JButton button, String tooltip, Runnable action)
+	{
 		button.setToolTipText(tooltip);
 		button.setFocusPainted(false);
 		button.addActionListener(e -> action.run());
 		return button;
 	}
 
+	/** Empties a dropdown and lists the items in it, in order. */
+	private static void refill(javax.swing.JComboBox<String> box, Iterable<String> items)
+	{
+		box.removeAllItems();
+		for (String item : items)
+		{
+			box.addItem(item);
+		}
+	}
+
 	private void styleTick(javax.swing.JCheckBox box, String tooltip)
 	{
-		box.setToolTipText(tooltip);
-		box.setFont(FontManager.getRunescapeSmallFont());
-		box.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+		Ui.small(box, ColorScheme.LIGHT_GRAY_COLOR).setToolTipText(tooltip);
 		box.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		box.setAlignmentX(LEFT_ALIGNMENT);
 	}
@@ -840,13 +784,10 @@ public class FollowerPanel extends PluginPanel
 	/** A small label on the left and a control taking the rest of the row. */
 	private JPanel labelledRow(String text, javax.swing.JComponent control)
 	{
-		JPanel row = new JPanel(new BorderLayout(6, 0));
-		row.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		JPanel row = Ui.panel(new BorderLayout(6, 0));
 		row.setAlignmentX(LEFT_ALIGNMENT);
 		row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
-		JLabel label = new JLabel(text);
-		label.setFont(FontManager.getRunescapeSmallFont());
-		label.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+		JLabel label = Ui.label(text, ColorScheme.LIGHT_GRAY_COLOR);
 		// At least the body rows' column, and wider when the name needs it:
 		// QA, 15 Oct, "Chattiness" was cut to "Chattine...".
 		label.setPreferredSize(new Dimension(Math.max(NAME_WIDTH, label.getPreferredSize().width),
@@ -861,38 +802,16 @@ public class FollowerPanel extends PluginPanel
 		body.add(caption("What it says and when. Messages holds every line;"
 			+ " Conversations the talks it starts itself."));
 
-		styleTick(muteBox, "The follower stops talking. All your other"
-			+ " speech settings are kept. Same switch as Mute in settings.");
-		muteBox.addActionListener(e ->
-		{
-			if (!suppressMuteEvents)
-			{
-				onMute.accept(muteBox.isSelected());
-			}
-		});
-		body.add(muteBox);
+		body.add(tick("muted", muteBox, "The follower stops talking. All your other"
+			+ " speech settings are kept. Same switch as Mute in settings."));
 
 		chattinessBox.setToolTipText("How much it talks. Same setting as Chattiness in settings.");
-		chattinessBox.addActionListener(e ->
-		{
-			Object picked = chattinessBox.getSelectedItem();
-			if (!suppressSyncEvents && picked != null)
-			{
-				onChattiness.accept((com.follower.speech.Chattiness) picked);
-			}
-		});
+		synced.put("chattiness", chattinessBox);
+		chattinessBox.addActionListener(e -> write("chattiness", chattinessBox.getSelectedItem()));
 		body.add(labelledRow("Chattiness", chattinessBox));
 
-		styleTick(chatboxBox, "Every line also appears in the chatbox under the"
-			+ " follower's name. Same switch as in settings.");
-		chatboxBox.addActionListener(e ->
-		{
-			if (!suppressSyncEvents)
-			{
-				onMirrorToChat.accept(chatboxBox.isSelected());
-			}
-		});
-		body.add(chatboxBox);
+		body.add(tick("mirrorToChat", chatboxBox, "Every line also appears in the chatbox under the"
+			+ " follower's name. Same switch as in settings."));
 		body.add(javax.swing.Box.createVerticalStrut(4));
 
 		// Four doors, not nine: the old grid surfaced every internal rule
@@ -950,9 +869,7 @@ public class FollowerPanel extends PluginPanel
 		body.add(javax.swing.Box.createVerticalStrut(6));
 		// public:cut outfit-profiles
 
-		JLabel profilesLabel = new JLabel("OUTFIT PROFILES");
-		profilesLabel.setFont(FontManager.getRunescapeSmallFont());
-		profilesLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+		JLabel profilesLabel = Ui.label("OUTFIT PROFILES", ColorScheme.LIGHT_GRAY_COLOR);
 		profilesLabel.setAlignmentX(LEFT_ALIGNMENT);
 		body.add(profilesLabel);
 
@@ -999,10 +916,8 @@ public class FollowerPanel extends PluginPanel
 				javax.swing.JOptionPane.PLAIN_MESSAGE));
 		}));
 
-		profileDelete.setToolTipText("Remove the selected profile. The built-in looks, and a"
-			+ " profile a thrall wears, cannot be removed.");
-		profileDelete.setFocusPainted(false);
-		profileDelete.addActionListener(e ->
+		profileButtons.add(button(profileDelete, "Remove the selected profile. The built-in looks, and a"
+			+ " profile a thrall wears, cannot be removed.", () ->
 		{
 			String name = profileName();
 			if (name.isEmpty())
@@ -1018,8 +933,7 @@ public class FollowerPanel extends PluginPanel
 			{
 				onProfileDelete.accept(name);
 			}
-		});
-		profileButtons.add(profileDelete);
+		}));
 		// Half the column each is a few px short of both names at the usual
 		// margins; QA, 15 Oct: "Save as ne..." and "Delete profi...".
 		for (java.awt.Component button : profileButtons.getComponents())
@@ -1030,9 +944,7 @@ public class FollowerPanel extends PluginPanel
 		body.add(buildThrallRow()); // public:cut thrall-outfits
 		// public:end outfit-profiles
 
-		status.setFont(FontManager.getRunescapeSmallFont());
-		status.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
-		status.setAlignmentX(LEFT_ALIGNMENT);
+		Ui.small(status, ColorScheme.MEDIUM_GRAY_COLOR).setAlignmentX(LEFT_ALIGNMENT);
 		status.setBorder(BorderFactory.createEmptyBorder(4, 0, 0, 0));
 		body.add(status);
 
@@ -1043,10 +955,7 @@ public class FollowerPanel extends PluginPanel
 		// BoxLayout, NOT GridLayout: a grid splits its height evenly between
 		// rows and ignores their maximum size, so every row grew as the
 		// window did. A vertical box honours the fixed row height.
-		bodyList.setLayout(new BoxLayout(bodyList, BoxLayout.Y_AXIS));
-		bodyList.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		bodyList.setAlignmentX(LEFT_ALIGNMENT);
-		body.add(bodyList);
+		body.add(Ui.column(bodyList));
 	}
 
 	// public:cut outfit-profiles,thrall-outfits
@@ -1056,20 +965,11 @@ public class FollowerPanel extends PluginPanel
 	 */
 	private JPanel buildThrallRow()
 	{
-		JPanel wrap = new JPanel();
-		wrap.setLayout(new BoxLayout(wrap, BoxLayout.Y_AXIS));
-		wrap.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		wrap.setAlignmentX(LEFT_ALIGNMENT);
-
-		JPanel rows = new JPanel();
-		rows.setLayout(new BoxLayout(rows, BoxLayout.Y_AXIS));
-		rows.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		rows.setAlignmentX(LEFT_ALIGNMENT);
+		JPanel wrap = Ui.column();
+		JPanel rows = Ui.column();
 		rows.setVisible(false);
 
-		JLabel toggle = new JLabel("+ Used for thralls");
-		toggle.setFont(FontManager.getRunescapeSmallFont());
-		toggle.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+		JLabel toggle = Ui.label("+ Used for thralls", ColorScheme.LIGHT_GRAY_COLOR);
 		toggle.setToolTipText("Which profile stands in for each thrall. Same"
 			+ " three settings as in Thrall mode.");
 		toggle.setAlignmentX(LEFT_ALIGNMENT);
@@ -1078,8 +978,7 @@ public class FollowerPanel extends PluginPanel
 		{
 			rows.setVisible(!rows.isVisible());
 			toggle.setText((rows.isVisible() ? "- " : "+ ") + "Used for thralls");
-			column.revalidate();
-			column.repaint();
+			Ui.relayout(column);
 		});
 		wrap.add(toggle);
 
@@ -1087,14 +986,8 @@ public class FollowerPanel extends PluginPanel
 		for (String[] style : styles)
 		{
 			javax.swing.JComboBox<String> box = new javax.swing.JComboBox<>();
-			box.addActionListener(e ->
-			{
-				Object picked = box.getSelectedItem();
-				if (!suppressSyncEvents && picked != null)
-				{
-					onThrallProfile.accept(style[0], picked.toString());
-				}
-			});
+			// thrallMeleeProfile, thrallRangedProfile, thrallMagicProfile
+			box.addActionListener(e -> write("thrall" + style[1] + "Profile", box.getSelectedItem()));
 			thrallBoxes.put(style[0], box);
 			rows.add(labelledRow(style[1], box));
 			rows.add(javax.swing.Box.createVerticalStrut(2));
@@ -1107,35 +1000,21 @@ public class FollowerPanel extends PluginPanel
 	private void buildBehaviour(JPanel body)
 	{
 		JPanel buttons = buttonPair();
-		stayButton.setToolTipText("Same as right-click Stay and Follow-me on the follower,"
-			+ " and Follow me in settings");
-		stayButton.setFocusPainted(false);
-		stayButton.addActionListener(e -> onFollowEnabled.accept(staying));
-		buttons.add(stayButton);
+		buttons.add(button(stayButton, "Same as right-click Stay and Follow-me on the follower,"
+			+ " and Follow me in settings", () -> onFollowEnabled.accept(staying)));
 		buttons.add(button("Come here", "Places the follower at your feet",
 			() -> onComeHere.run()));
 		body.add(buttons);
 
-		behaviourCaption.setFont(FontManager.getRunescapeSmallFont());
-		behaviourCaption.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
-		behaviourCaption.setAlignmentX(LEFT_ALIGNMENT);
+		Ui.small(behaviourCaption, ColorScheme.MEDIUM_GRAY_COLOR).setAlignmentX(LEFT_ALIGNMENT);
 		behaviourCaption.setBorder(BorderFactory.createEmptyBorder(4, 0, 4, 0));
 		body.add(behaviourCaption);
 
 		// public:cut errands
-		styleTick(errandsBox, "Now and then it wanders off on a small errand and"
-			+ " comes back. Same switch as Go on errands in settings.");
-		errandsBox.addActionListener(e ->
-		{
-			if (!suppressSyncEvents)
-			{
-				onErrandsEnabled.accept(errandsBox.isSelected());
-			}
-		});
-		body.add(errandsBox);
+		body.add(tick("errandsEnabled", errandsBox, "Now and then it wanders off on a small errand and"
+			+ " comes back. Same switch as Go on errands in settings."));
 
-		JPanel row = new JPanel(new BorderLayout(6, 0));
-		row.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		JPanel row = Ui.panel(new BorderLayout(6, 0));
 		row.setAlignmentX(LEFT_ALIGNMENT);
 		row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
 		row.add(errandBox, BorderLayout.CENTER);
@@ -1177,17 +1056,13 @@ public class FollowerPanel extends PluginPanel
 		commandList.setEditable(false);
 		commandList.setLineWrap(true);
 		commandList.setWrapStyleWord(true);
-		commandList.setFont(FontManager.getRunescapeSmallFont());
-		commandList.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		commandList.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+		Ui.small(commandList, ColorScheme.LIGHT_GRAY_COLOR).setBackground(ColorScheme.DARKER_GRAY_COLOR);
 		commandList.setBorder(BorderFactory.createEmptyBorder(4, 6, 4, 6));
 		commandList.setAlignmentX(LEFT_ALIGNMENT);
 		commandList.setToolTipText("Type any of these in the chat as ::follower <command>");
 		body.add(commandList);
 
-		regionCaption.setFont(FontManager.getRunescapeSmallFont());
-		regionCaption.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
-		regionCaption.setAlignmentX(LEFT_ALIGNMENT);
+		Ui.small(regionCaption, ColorScheme.MEDIUM_GRAY_COLOR).setAlignmentX(LEFT_ALIGNMENT);
 		regionCaption.setBorder(BorderFactory.createEmptyBorder(4, 0, 0, 0));
 		body.add(regionCaption);
 		setRegionId(-1);
@@ -1196,61 +1071,32 @@ public class FollowerPanel extends PluginPanel
 	/** The equipment grid and the item picker under it. */
 	private JPanel buildGear()
 	{
-		JPanel content = new JPanel();
-		content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
-		content.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		content.setAlignmentX(LEFT_ALIGNMENT);
+		JPanel content = Ui.column();
 
 		gearGrid.setLayout(new GridLayout(GEAR_GRID.length, 3, 4, 4));
 		gearGrid.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		gearGrid.setMaximumSize(new Dimension((CELL + 4) * 3, (CELL + 4) * GEAR_GRID.length));
 
-		JPanel gridWrap = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
-		gridWrap.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		JPanel gridWrap = Ui.panel(new FlowLayout(FlowLayout.CENTER, 0, 0));
 		gridWrap.setAlignmentX(LEFT_ALIGNMENT);
 		gridWrap.add(gearGrid);
 		content.add(gridWrap);
 
-		picker.setLayout(new BoxLayout(picker, BoxLayout.Y_AXIS));
-		picker.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		picker.setBorder(BorderFactory.createEmptyBorder(8, 0, 0, 0));
-		picker.setAlignmentX(LEFT_ALIGNMENT);
+		Ui.column(picker).setBorder(BorderFactory.createEmptyBorder(8, 0, 0, 0));
 
-		pickerTitle.setFont(FontManager.getRunescapeSmallFont());
-		pickerTitle.setForeground(Color.WHITE);
-		pickerTitle.setAlignmentX(LEFT_ALIGNMENT);
+		Ui.small(pickerTitle, Color.WHITE).setAlignmentX(LEFT_ALIGNMENT);
 		pickerTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 4, 0));
 		picker.add(pickerTitle);
 
 		search.setToolTipText("Type to filter items for this slot");
 		search.setAlignmentX(LEFT_ALIGNMENT);
 		search.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
-		search.getDocument().addDocumentListener(new DocumentListener()
-		{
-			public void insertUpdate(DocumentEvent e)
-			{
-				refreshResults();
-			}
-
-			public void removeUpdate(DocumentEvent e)
-			{
-				refreshResults();
-			}
-
-			public void changedUpdate(DocumentEvent e)
-			{
-				refreshResults();
-			}
-		});
+		search.getDocument().addDocumentListener(Ui.onChange(this::refreshResults));
 		picker.add(search);
 
 		showAll.setText("Show items from every slot");
-		showAll.setToolTipText("Some wearable items (mostly quest and holiday ones)"
+		styleTick(showAll, "Some wearable items (mostly quest and holiday ones)"
 			+ " don't say which slot they belong to. Tick to include them in every search.");
-		showAll.setFont(FontManager.getRunescapeSmallFont());
-		showAll.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-		showAll.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		showAll.setAlignmentX(LEFT_ALIGNMENT);
 		showAll.addActionListener(e -> refreshResults());
 		picker.add(showAll);
 
@@ -1259,16 +1105,13 @@ public class FollowerPanel extends PluginPanel
 		resultList.setLayout(new GridLayout(0, 1, 0, 2));
 		resultList.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
-		resultScroll = new JScrollPane(resultList,
-			JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		resultScroll.setBorder(BorderFactory.createEmptyBorder());
+		resultScroll = Ui.scroller(resultList);
 		// Zero preferred WIDTH: a fixed one (this used to say PANEL_WIDTH)
 		// out-demanded the sidebar and shoved the whole column off its right
 		// edge. The height is the fixed part; the width is the container's.
 		resultScroll.setPreferredSize(new Dimension(0, 240));
 		resultScroll.setMaximumSize(new Dimension(Integer.MAX_VALUE, 240));
 		resultScroll.setAlignmentX(LEFT_ALIGNMENT);
-		resultScroll.getVerticalScrollBar().setUnitIncrement(16);
 		// The rest of the catalogue arrives as the list is scrolled toward
 		// its end - every match is reachable, none is paid for up front.
 		resultScroll.getVerticalScrollBar().addAdjustmentListener(e ->
@@ -1287,51 +1130,10 @@ public class FollowerPanel extends PluginPanel
 		return content;
 	}
 
-	/**
-	 * A panel whose scroll view always matches the viewport's width, whatever
-	 * the viewport happens to be once the vertical scrollbar takes its share.
-	 * Content adapts or wraps; it never slides out past the right edge.
-	 */
-	private static final class ScrollableColumn extends JPanel
-		implements javax.swing.Scrollable
-	{
-		@Override
-		public Dimension getPreferredScrollableViewportSize()
-		{
-			return getPreferredSize();
-		}
-
-		@Override
-		public int getScrollableUnitIncrement(java.awt.Rectangle visible, int orientation, int direction)
-		{
-			return 16;
-		}
-
-		@Override
-		public int getScrollableBlockIncrement(java.awt.Rectangle visible, int orientation, int direction)
-		{
-			return visible.height;
-		}
-
-		@Override
-		public boolean getScrollableTracksViewportWidth()
-		{
-			return true;
-		}
-
-		@Override
-		public boolean getScrollableTracksViewportHeight()
-		{
-			return false;
-		}
-	}
-
 	/** A sub-header inside a section; the same look as a section header, but nothing folds. */
 	private JPanel sectionHeader(String text, String tooltip)
 	{
-		JLabel label = new JLabel(text);
-		label.setFont(FontManager.getRunescapeSmallFont());
-		label.setForeground(ColorScheme.BRAND_ORANGE);
+		JLabel label = Ui.label(text, ColorScheme.BRAND_ORANGE);
 		label.setToolTipText(tooltip);
 		return headerRow(label);
 	}
@@ -1339,8 +1141,7 @@ public class FollowerPanel extends PluginPanel
 	/** The label on the left with a thin rule filling the rest of the line. */
 	private JPanel headerRow(JLabel label)
 	{
-		JPanel wrap = new JPanel(new BorderLayout());
-		wrap.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		JPanel wrap = Ui.panel(new BorderLayout());
 		wrap.setAlignmentX(LEFT_ALIGNMENT);
 		wrap.setBorder(BorderFactory.createEmptyBorder(10, 0, 4, 0));
 		wrap.setMaximumSize(new Dimension(Integer.MAX_VALUE, 26));
@@ -1349,8 +1150,7 @@ public class FollowerPanel extends PluginPanel
 		JPanel rule = new JPanel();
 		rule.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 		rule.setPreferredSize(new Dimension(10, 1));
-		JPanel ruleWrap = new JPanel(new BorderLayout());
-		ruleWrap.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		JPanel ruleWrap = Ui.panel(new BorderLayout());
 		ruleWrap.setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 0));
 		ruleWrap.add(rule, BorderLayout.CENTER);
 		wrap.add(ruleWrap, BorderLayout.CENTER);
@@ -1372,9 +1172,7 @@ public class FollowerPanel extends PluginPanel
 		previewIcon.setPreferredSize(new Dimension(36 * PREVIEW_SCALE, 32 * PREVIEW_SCALE));
 		wrapper.add(previewIcon, BorderLayout.WEST);
 
-		previewName.setFont(FontManager.getRunescapeSmallFont());
-		previewName.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-		previewName.setVerticalAlignment(SwingConstants.TOP);
+		Ui.small(previewName, ColorScheme.LIGHT_GRAY_COLOR).setVerticalAlignment(SwingConstants.TOP);
 		// Fixed size: an HTML label sizes itself to its longest line, so a
 		// long item name would widen this label, then the wrapper, then the
 		// whole sidebar column - the layout visibly jumping on hover.
@@ -1429,30 +1227,26 @@ public class FollowerPanel extends PluginPanel
 		{
 			for (KitType slot : row)
 			{
-				gearGrid.add(slot == null ? spacer() : buildSlotCell(slot));
+				gearGrid.add(slot == null ? Ui.panel(new FlowLayout()) : buildSlotCell(slot));
 			}
 		}
-		gearGrid.revalidate();
-		gearGrid.repaint();
+		Ui.relayout(gearGrid);
 
 		bodyList.removeAll();
 		bodyList.add(buildGenderRow());
 		bodyList.add(javax.swing.Box.createVerticalStrut(2));
-		bodyList.add(buildSkinRow());
+		// Skin is its own control rather than part of any one slot: the same
+		// skin colours appear across the head, arms and hands, so recolouring
+		// them together is the only way to keep a body consistent.
+		JPanel skin = bodyRow("Skin");
+		skin.add(swatch(4, "Skin", GamePalette.SKIN), BorderLayout.EAST);
+		bodyList.add(skin);
 		for (KitType part : BODY_PARTS)
 		{
 			bodyList.add(javax.swing.Box.createVerticalStrut(2));
 			bodyList.add(buildBodyRow(part));
 		}
-		bodyList.revalidate();
-		bodyList.repaint();
-	}
-
-	private JPanel spacer()
-	{
-		JPanel s = new JPanel();
-		s.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		return s;
+		Ui.relayout(bodyList);
 	}
 
 	private JPanel buildSlotCell(KitType slot)
@@ -1489,9 +1283,7 @@ public class FollowerPanel extends PluginPanel
 		{
 			cell.setToolTipText("Empty " + slotName + " slot - click to choose an item");
 
-			JLabel empty = new JLabel(sentenceCase(slotName));
-			empty.setFont(FontManager.getRunescapeSmallFont());
-			empty.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
+			JLabel empty = Ui.label(sentenceCase(slotName), ColorScheme.MEDIUM_GRAY_COLOR);
 			empty.setHorizontalAlignment(SwingConstants.CENTER);
 			cell.add(empty, BorderLayout.CENTER);
 		}
@@ -1535,14 +1327,7 @@ public class FollowerPanel extends PluginPanel
 
 	private JPanel buildGenderRow()
 	{
-		JPanel row = bodyRowShell();
-
-		JLabel name = new JLabel("Body");
-		name.setFont(FontManager.getRunescapeSmallFont());
-		name.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-		name.setPreferredSize(new Dimension(NAME_WIDTH, ROW_CONTENT_HEIGHT));
-		row.add(name, BorderLayout.WEST);
-
+		JPanel row = bodyRow("Body");
 		JPanel toggle = new JPanel(new GridLayout(1, 2, 2, 0));
 		toggle.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 		toggle.add(genderButton("Male", 0));
@@ -1555,10 +1340,8 @@ public class FollowerPanel extends PluginPanel
 	private JButton genderButton(String label, int gender)
 	{
 		boolean selected = current.getGender() == gender;
-		JButton button = new JButton(label);
-		button.setFont(FontManager.getRunescapeSmallFont());
+		JButton button = Ui.small(new JButton(label), selected ? Color.WHITE : ColorScheme.MEDIUM_GRAY_COLOR);
 		button.setFocusPainted(false);
-		button.setForeground(selected ? Color.WHITE : ColorScheme.MEDIUM_GRAY_COLOR);
 		if (selected)
 		{
 			button.setBackground(ColorScheme.MEDIUM_GRAY_COLOR.darker());
@@ -1574,25 +1357,6 @@ public class FollowerPanel extends PluginPanel
 		return button;
 	}
 
-	/**
-	 * Skin is its own control rather than part of any one slot: the same skin
-	 * colours appear across the head, arms and hands, so recolouring them together
-	 * is the only way to keep a body consistent.
-	 */
-	private JPanel buildSkinRow()
-	{
-		JPanel row = bodyRowShell();
-
-		JLabel name = new JLabel("Skin");
-		name.setFont(FontManager.getRunescapeSmallFont());
-		name.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-		name.setPreferredSize(new Dimension(NAME_WIDTH, ROW_CONTENT_HEIGHT));
-		row.add(name, BorderLayout.WEST);
-
-		row.add(swatch(4, "Skin", GamePalette.SKIN), BorderLayout.EAST);
-		return row;
-	}
-
 	/** Label column width; the style label takes whatever is left over. */
 	private static final int NAME_WIDTH = 52;
 	private static final int ROW_CONTENT_HEIGHT = 20;
@@ -1602,8 +1366,9 @@ public class FollowerPanel extends PluginPanel
 	 * A body-part row: fixed height so the vertical BoxLayout cannot stretch
 	 * it (rows doubled in height on a maximised window), and never wider than
 	 * the panel so the scrollbar cannot clip the colour swatch off the right.
+	 * The name sits in a fixed column on the left.
 	 */
-	private JPanel bodyRowShell()
+	private JPanel bodyRow(String name)
 	{
 		JPanel row = new JPanel(new BorderLayout(4, 0));
 		row.setBackground(ColorScheme.DARKER_GRAY_COLOR);
@@ -1612,19 +1377,17 @@ public class FollowerPanel extends PluginPanel
 		row.setPreferredSize(new Dimension(0, ROW_HEIGHT));
 		row.setMaximumSize(new Dimension(Integer.MAX_VALUE, ROW_HEIGHT));
 		row.setAlignmentX(LEFT_ALIGNMENT);
+		JLabel label = Ui.label(name, ColorScheme.LIGHT_GRAY_COLOR);
+		label.setPreferredSize(new Dimension(NAME_WIDTH, ROW_CONTENT_HEIGHT));
+		row.add(label, BorderLayout.WEST);
 		return row;
 	}
 
 	/** One body part: cycle its kit, and set its colour. */
 	private JPanel buildBodyRow(KitType part)
 	{
-		JPanel row = bodyRowShell();
-
-		JLabel name = new JLabel(sentenceCase(part.name().toLowerCase()));
-		name.setFont(FontManager.getRunescapeSmallFont());
-		name.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-		name.setPreferredSize(new Dimension(NAME_WIDTH, ROW_CONTENT_HEIGHT));
-		row.add(name, BorderLayout.WEST);
+		String name = sentenceCase(part.name().toLowerCase());
+		JPanel row = bodyRow(name);
 
 		// Kits have no names in the cache, so they're cycled and judged by eye - the
 		// follower updates live, which makes it its own preview.
@@ -1635,32 +1398,18 @@ public class FollowerPanel extends PluginPanel
 		JPanel cycle = new JPanel(new BorderLayout(2, 0));
 		cycle.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 
-		JButton prev = new JButton("‹");
-		prev.setToolTipText("Previous style");
-		prev.setFocusPainted(false);
-		prev.setMargin(new java.awt.Insets(0, 2, 0, 2));
-		prev.setPreferredSize(new Dimension(18, ROW_CONTENT_HEIGHT));
-		prev.addActionListener(e -> onCycleKit.accept(part, -1));
-		cycle.add(prev, BorderLayout.WEST);
+		cycle.add(arrow("‹", "Previous style", part, -1), BorderLayout.WEST);
 
 		java.util.List<Integer> choices = repository.kitsFor(part, current.getGender());
 		int index = current.isKit(part) ? choices.indexOf(current.kitId(part)) : -1;
 		String label = KitNames.label(part, index, choices.size());
 
-		JLabel style = new JLabel(label);
-		style.setFont(FontManager.getRunescapeSmallFont());
-		style.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
+		JLabel style = Ui.label(label, ColorScheme.MEDIUM_GRAY_COLOR);
 		style.setPreferredSize(new Dimension(0, ROW_CONTENT_HEIGHT));
 		style.setHorizontalAlignment(SwingConstants.CENTER);
 		cycle.add(style, BorderLayout.CENTER);
 
-		JButton next = new JButton("›");
-		next.setToolTipText("Next style");
-		next.setFocusPainted(false);
-		next.setMargin(new java.awt.Insets(0, 2, 0, 2));
-		next.setPreferredSize(new Dimension(18, ROW_CONTENT_HEIGHT));
-		next.addActionListener(e -> onCycleKit.accept(part, 1));
-		cycle.add(next, BorderLayout.EAST);
+		cycle.add(arrow("›", "Next style", part, 1), BorderLayout.EAST);
 
 		row.add(cycle, BorderLayout.CENTER);
 
@@ -1671,8 +1420,7 @@ public class FollowerPanel extends PluginPanel
 			|| part == KitType.LEGS || part == KitType.BOOTS)
 		{
 			int colorSlot = colorSlotFor(part);
-			row.add(swatch(colorSlot, sentenceCase(part.name().toLowerCase()),
-				GamePalette.table(colorSlot)), BorderLayout.EAST);
+			row.add(swatch(colorSlot, name, GamePalette.table(colorSlot)), BorderLayout.EAST);
 		}
 		else
 		{
@@ -1681,6 +1429,15 @@ public class FollowerPanel extends PluginPanel
 		}
 
 		return row;
+	}
+
+	/** One of a body row's style arrows: a step back or forward through the part's kits. */
+	private JButton arrow(String text, String tooltip, KitType part, int step)
+	{
+		JButton arrow = button(text, tooltip, () -> onCycleKit.accept(part, step));
+		arrow.setMargin(new java.awt.Insets(0, 2, 0, 2));
+		arrow.setPreferredSize(new Dimension(18, ROW_CONTENT_HEIGHT));
+		return arrow;
 	}
 
 	/** "head" as a label shows it: "Head". */
@@ -1778,8 +1535,7 @@ public class FollowerPanel extends PluginPanel
 	 */
 	private Integer pickPaletteIndex(String title, short[] table)
 	{
-		JPanel grid = new JPanel(new GridLayout(0, 8, 3, 3));
-		grid.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		JPanel grid = Ui.panel(new GridLayout(0, 8, 3, 3));
 
 		final Integer[] picked = {null};
 		final javax.swing.JDialog[] dialog = {null};
@@ -1823,8 +1579,7 @@ public class FollowerPanel extends PluginPanel
 
 		if (activeSlot == null)
 		{
-			resultList.revalidate();
-			resultList.repaint();
+			Ui.relayout(resultList);
 			return;
 		}
 
@@ -1878,8 +1633,7 @@ public class FollowerPanel extends PluginPanel
 			}
 		}
 
-		resultList.revalidate();
-		resultList.repaint();
+		Ui.relayout(resultList);
 	}
 
 	/** Builds the next slice of pending matches into rows. */
@@ -1889,8 +1643,7 @@ public class FollowerPanel extends PluginPanel
 		{
 			resultList.add(buildResultRow(pendingResults.pollFirst()));
 		}
-		resultList.revalidate();
-		resultList.repaint();
+		Ui.relayout(resultList);
 	}
 
 	private JPanel buildResultRow(ModelRepository.WearableItem item)
@@ -1914,9 +1667,7 @@ public class FollowerPanel extends PluginPanel
 		}
 		row.add(icon, BorderLayout.WEST);
 
-		JLabel name = new JLabel(item.name);
-		name.setFont(FontManager.getRunescapeSmallFont());
-		name.setForeground(Color.WHITE);
+		JLabel name = Ui.label(item.name, Color.WHITE);
 		// Zero preferred width: BorderLayout's centre takes whatever is left
 		// over at layout time, and the label ellipsises rather than demanding
 		// room for the full name. The tooltip carries the untruncated text.
@@ -1926,10 +1677,7 @@ public class FollowerPanel extends PluginPanel
 		// Two rows with the same name looked identical; the id tells them apart.
 		if (repeatedNames.contains(item.name))
 		{
-			JLabel id = new JLabel("#" + item.id);
-			id.setFont(FontManager.getRunescapeSmallFont());
-			id.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
-			row.add(id, BorderLayout.EAST);
+			row.add(Ui.label("#" + item.id, ColorScheme.MEDIUM_GRAY_COLOR), BorderLayout.EAST);
 		}
 
 		row.addMouseListener(new MouseAdapter()
@@ -1980,7 +1728,7 @@ public class FollowerPanel extends PluginPanel
 		// The body width is what makes long names WRAP; without it the label
 		// grows sideways and drags the sidebar's layout with it.
 		previewName.setText("<html><body style='width:" + (PREVIEW_TEXT_WIDTH - 4) + "px'><b>"
-			+ escapeHtml(item.name) + "</b><br>id " + item.id + "</body></html>");
+			+ Ui.escape(item.name) + "</b><br>id " + item.id + "</body></html>");
 		preview.setVisible(true);
 
 		AsyncBufferedImage image = itemManager.getImage(item.id);
@@ -2011,18 +1759,6 @@ public class FollowerPanel extends PluginPanel
 	/** A grey line in the results, wrapped to the picker's width. */
 	private JLabel hint(String text)
 	{
-		JLabel label = new JLabel("<html><body style='width:150px'>" + text + "</body></html>");
-		label.setFont(FontManager.getRunescapeSmallFont());
-		label.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
-		return label;
-	}
-
-	/** Item names are cache text; they must not be able to inject markup. */
-	private static String escapeHtml(String text)
-	{
-		return text == null ? "" : text
-			.replace("&", "&amp;")
-			.replace("<", "&lt;")
-			.replace(">", "&gt;");
+		return Ui.label(Ui.html(150, text), ColorScheme.MEDIUM_GRAY_COLOR);
 	}
 }

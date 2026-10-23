@@ -10,13 +10,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.UnaryOperator;
 import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
 
@@ -37,7 +35,7 @@ import net.runelite.client.ui.FontManager;
  */
 public class MemoryDialog extends JDialog
 {
-	private final JPanel list = new JPanel();
+	private final JPanel list = Ui.column();
 
 	/** The counts with names of their own, in the order the window lists them. */
 	private static final List<String> NAMED_COUNTS = java.util.Arrays.asList(
@@ -53,36 +51,23 @@ public class MemoryDialog extends JDialog
 
 		setDefaultCloseOperation(HIDE_ON_CLOSE);
 
-		JPanel root = new JPanel(new BorderLayout(0, 6));
-		root.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		JPanel root = Ui.panel(new BorderLayout(0, 6));
 		root.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-		JLabel hint = new JLabel(wrapped("Everything the follower currently remembers"
+		JLabel hint = Ui.label(wrapped("Everything the follower currently remembers"
 			+ " about you. It is kept with this RuneLite profile's settings, and the"
-			+ " button below erases all of it for good."));
-		hint.setFont(FontManager.getRunescapeSmallFont());
-		hint.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
+			+ " button below erases all of it for good."), ColorScheme.MEDIUM_GRAY_COLOR);
 
-		JLabel where = new JLabel(wrapped("The Reminiscing toggle in settings silences the"
-			+ " lines that use this; Forget everything erases it."));
-		where.setFont(FontManager.getRunescapeSmallFont());
-		where.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
+		JLabel where = Ui.label(wrapped("The Reminiscing toggle in settings silences the"
+			+ " lines that use this; Forget everything erases it."), ColorScheme.MEDIUM_GRAY_COLOR);
 		where.setBorder(BorderFactory.createEmptyBorder(4, 0, 0, 0));
 
-		JPanel top = new JPanel(new BorderLayout());
-		top.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		JPanel top = Ui.panel(new BorderLayout());
 		top.add(hint, BorderLayout.NORTH);
 		top.add(where, BorderLayout.SOUTH);
 		root.add(top, BorderLayout.NORTH);
 
-		list.setLayout(new BoxLayout(list, BoxLayout.Y_AXIS));
-		list.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		JScrollPane scroll = new JScrollPane(list,
-			JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-			JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		scroll.setBorder(BorderFactory.createEmptyBorder());
-		scroll.getVerticalScrollBar().setUnitIncrement(16);
-		root.add(scroll, BorderLayout.CENTER);
+		root.add(Ui.scroller(list), BorderLayout.CENTER);
 
 		JButton forget = new JButton("Forget everything");
 		forget.setToolTipText("Erase every count, best, place, the Chronicle's drawings,"
@@ -131,17 +116,14 @@ public class MemoryDialog extends JDialog
 			{
 				// Wrapped, since a label never wraps by itself and the window
 				// scrolls only downwards: long rows were cut off.
-				JLabel line = new JLabel(wrapped(row[1].isEmpty()
-					? row[0] : row[0] + ":  " + row[1]));
-				line.setFont(FontManager.getRunescapeSmallFont());
-				line.setForeground(row[1].isEmpty()
-					? ColorScheme.MEDIUM_GRAY_COLOR : ColorScheme.LIGHT_GRAY_COLOR);
+				JLabel line = Ui.label(wrapped(row[1].isEmpty()
+					? row[0] : row[0] + ":  " + row[1]),
+					row[1].isEmpty() ? ColorScheme.MEDIUM_GRAY_COLOR : ColorScheme.LIGHT_GRAY_COLOR);
 				line.setAlignmentX(LEFT_ALIGNMENT);
 				list.add(line);
 			}
 		}
-		list.revalidate();
-		list.repaint();
+		Ui.relayout(list);
 		setVisible(true);
 		toFront();
 	}
@@ -175,7 +157,7 @@ public class MemoryDialog extends JDialog
 			? java.time.LocalDate.ofEpochDay(c.getMetOnDay())
 				+ " (" + daysAgo(c.getDaysKnown()) + ")"
 			: "not recorded yet"));
-		rows.add(row("Sessions together", Integer.toString(c.getSessionCount())));
+		rows.add(row("Sessions together", c.getSessionCount()));
 		rows.add(row("Mood right now", c.getMoodBand()));
 
 		rows.add(header("COUNTS"));
@@ -199,13 +181,13 @@ public class MemoryDialog extends JDialog
 			Integer value = c.getTallies().get(key);
 			if (value != null)
 			{
-				rows.add(row(keyLabel(key), Integer.toString(value)));
+				rows.add(row(keyLabel(key), value));
 			}
 		}
 		tallies.sort(Map.Entry.<String, Integer>comparingByValue().reversed());
 		for (Map.Entry<String, Integer> tally : tallies.subList(0, Math.min(10, tallies.size())))
 		{
-			rows.add(row(keyLabel(tally.getKey()), Integer.toString(tally.getValue())));
+			rows.add(row(keyLabel(tally.getKey()), tally.getValue()));
 		}
 		if (tallies.size() > 10)
 		{
@@ -218,7 +200,7 @@ public class MemoryDialog extends JDialog
 		{
 			if (isShown(what, c.getRecords(), accountKey))
 			{
-				bests.add(row(keyLabel(what, c.getKillCountNames()), Integer.toString(value)));
+				bests.add(row(keyLabel(what, c.getKillCountNames()), value));
 			}
 		});
 		if (bests.isEmpty())
@@ -239,7 +221,7 @@ public class MemoryDialog extends JDialog
 			: remark("Nothing has stuck yet."));
 
 		rows.add(header("PLACES"));
-		rows.add(row("Opinions held", Integer.toString(c.getPlaceScores().size())));
+		rows.add(row("Opinions held", c.getPlaceScores().size()));
 		List<Map.Entry<Integer, Integer>> places =
 			new ArrayList<>(c.getPlaceScores().entrySet());
 		places.sort(Comparator.comparingInt(e -> -Math.abs(e.getValue())));
@@ -251,10 +233,8 @@ public class MemoryDialog extends JDialog
 				(place.getValue() > 0 ? "likes it (+" : "dislikes it (") + place.getValue() + ")"
 					+ (memory == null ? "" : " - " + memory)));
 		}
-		rows.add(row("Likes on a whim", c.getLikedRegions().isEmpty()
-			? "nowhere in particular" : joined(c.getLikedRegions(), regionNames)));
-		rows.add(row("Avoids on a whim", c.getDislikedRegions().isEmpty()
-			? "nowhere in particular" : joined(c.getDislikedRegions(), regionNames)));
+		rows.add(row("Likes on a whim", joined(c.getLikedRegions(), regionNames)));
+		rows.add(row("Avoids on a whim", joined(c.getDislikedRegions(), regionNames)));
 		if (c.getCoreLikedRegion() != 0 || c.getCoreDislikedRegion() != 0)
 		{
 			StringBuilder core = new StringBuilder();
@@ -271,12 +251,11 @@ public class MemoryDialog extends JDialog
 		}
 
 		rows.add(header("RIGHT NOW"));
-		boolean anything = false;
+		int before = rows.size();
 		// public:cut souvenirs-wishes
 		if (c.isCarrying())
 		{
 			rows.add(row("Carrying", c.getSouvenir()));
-			anything = true;
 		}
 		if (c.isWishing())
 		{
@@ -287,30 +266,27 @@ public class MemoryDialog extends JDialog
 					? " (right-click the follower and choose Talk-to to hand it over)"
 					: " (answer its question first, then right-click the follower and choose"
 						+ " Talk-to to hand it over)")));
-			anything = true;
 		}
 		// public:end souvenirs-wishes
 		if (!c.getAskedTree().isEmpty())
 		{
 			rows.add(row("Waiting on an answer", askedAbout(c.getAskedTree())));
-			anything = true;
 		}
 		// public:cut side-games
 		if (c.isChallenging())
 		{
 			rows.add(row("The challenge", c.getChallengeAbout()
 				+ " (" + c.getChallengeLeft() + " to go)"));
-			anything = true;
 		}
 		// public:end side-games
-		if (!anything)
+		if (rows.size() == before)
 		{
 			rows.add(remark("Nothing in hand."));
 		}
 
 		rows.add(header("BOOKKEEPING"));
-		rows.add(row("One-time lines already said", Integer.toString(c.getSpokenOnce().size())));
-		rows.add(row("Lines counted, to vary them", Integer.toString(c.getLineWear().size())));
+		rows.add(row("One-time lines already said", c.getSpokenOnce().size()));
+		rows.add(row("Lines counted, to vary them", c.getLineWear().size()));
 
 		return rows;
 	}
@@ -443,9 +419,7 @@ public class MemoryDialog extends JDialog
 	/** Text that wraps at the window's narrowest, in the HTML renderer's px (x1.3 on screen). */
 	private static String wrapped(String text)
 	{
-		return "<html><body style='width:260px'>"
-			+ text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-			+ "</body></html>";
+		return Ui.html(260, text);
 	}
 
 	/** "today", "1 day ago" or "N days ago". */
@@ -468,13 +442,23 @@ public class MemoryDialog extends JDialog
 		return new String[]{label, value};
 	}
 
+	private static String[] row(String label, int count)
+	{
+		return row(label, Integer.toString(count));
+	}
+
 	private static String[] remark(String text)
 	{
 		return new String[]{text, ""};
 	}
 
+	/** The places, by name where a rule gives one, or "nowhere in particular". */
 	private static String joined(java.util.Set<Integer> regions, Map<Integer, String> names)
 	{
+		if (regions.isEmpty())
+		{
+			return "nowhere in particular";
+		}
 		StringBuilder out = new StringBuilder();
 		for (Integer region : regions)
 		{

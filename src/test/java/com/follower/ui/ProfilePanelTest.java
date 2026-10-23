@@ -106,7 +106,7 @@ public class ProfilePanelTest
 
 		// As a profile switch does: from a thread that is not Swing's.
 		panel.setProfileNames(Arrays.asList("Default follower", "Melee", "Woodcutting"), "Woodcutting"); // public:cut outfit-profiles
-		panel.setMuted(true);
+		panel.setSetting("muted", true);
 		SwingUtilities.invokeAndWait(() -> { });
 
 		assertTrue("Swing touched off its thread: " + offThread, offThread.isEmpty());

@@ -183,6 +183,11 @@ public final class GameFont
 		{
 			return;
 		}
+		draw(g, text, x, y, rgb, shadowed);
+	}
+
+	private void draw(Graphics2D g, String text, int x, int y, int rgb, boolean shadowed)
+	{
 		int pen = x;
 		for (int i = 0; i < text.length(); i++)
 		{
@@ -217,23 +222,8 @@ public final class GameFont
 	public void drawCenteredOverhead(Graphics2D g, String text, int x, int y, int rgb)
 	{
 		int left = x - stringWidth(text) / 2;
-		drawTopNoShadow(g, text, left, y + 1 - ascent, 0x000000);
-		drawTopNoShadow(g, text, left, y - ascent, rgb);
-	}
-
-	private void drawTopNoShadow(Graphics2D g, String text, int x, int y, int rgb)
-	{
-		int pen = x;
-		for (int i = 0; i < text.length(); i++)
-		{
-			int c = glyphIndex(text.charAt(i));
-			Glyph glyph = glyphs[c];
-			if (glyph != null && glyph.width > 0 && glyph.height > 0)
-			{
-				g.drawImage(tint(c, rgb), pen + glyph.offsetX, y + glyph.offsetY, null);
-			}
-			pen += advances[c];
-		}
+		draw(g, text, left, y + 1 - ascent, 0x000000, false);
+		draw(g, text, left, y - ascent, rgb, false);
 	}
 
 	private BufferedImage tint(int character, int rgb)

@@ -363,7 +363,16 @@ public class PhrasesDialogTest
 
 	private static Object field(Object owner, String name) throws Exception
 	{
-		Field f = PhrasesDialog.class.getDeclaredField(name);
+		// Fields the two file editors share live on their base class.
+		Field f;
+		try
+		{
+			f = PhrasesDialog.class.getDeclaredField(name);
+		}
+		catch (NoSuchFieldException e)
+		{
+			f = EditorDialog.class.getDeclaredField(name);
+		}
 		f.setAccessible(true);
 		return f.get(owner);
 	}
