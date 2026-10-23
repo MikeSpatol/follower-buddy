@@ -1,5 +1,22 @@
 {
   "about": "The public (Plugin Hub) build is generated from this source. Code that belongs to a feature the public build leaves out is marked with comments: '// public:cut f' ... '// public:end f' around a block, a trailing '// public:cut f' on one line, '// public:else text' for the line that replaces a cut one, and '// public:file f' on line 1 of a file that goes whole (<!-- --> in Markdown). A marker naming several features applies when any of them is left out. Markers are comments, so the full build is unchanged. requires: leaving out the key means leaving out those features too. resources: files that go with a feature.",
+  "build": "tools/make_public.py builds the public tree from this one: cut lists the features it leaves out, exclude the paths it never copies, export_rewrites the scripts it runs on the copy (each given the output directory), resources a cut feature's files to drop, to move (to the tests) and its fonts to take out of fonts.json, rules the rule fields, groups, ids and tallies of a cut feature to prune beyond the condition types its code no longer has, expect the settings (by section), commands and follower menu entries the public build must have exactly, and budget the most the Hub replica (hub_count.py) may count.",
+  "cut": [
+    "chronicle",
+    "posing",
+    "sharevoice",
+    "dev",
+    "logs",
+    "legacy",
+    "devdump",
+    "devfonts"
+  ],
+  "budget": 190000,
+  "exclude": [
+    "tools/make_public.py",
+    "public/"
+  ],
+  "export_rewrites": [],
   "features": {
     "chronicle": "the Chronicle book, sketches, portraits and page news",
     "posing": "Advanced posing and its Scene tab",
@@ -35,10 +52,180 @@
     "will": "the Wilderness-ditch and strong-monster stops, stepping aside"
   },
   "requires": {
-    "devdump": ["dev"],
-    "devfonts": ["dev", "posing"]
+    "devdump": [
+      "dev"
+    ],
+    "devfonts": [
+      "dev",
+      "posing"
+    ]
   },
   "resources": {
-    "chronicle": ["src/main/resources/com/follower/default-chronicle.json"]
+    "chronicle": {
+      "drop": [
+        "src/main/resources/com/follower/default-chronicle.json"
+      ],
+      "fonts": [
+        "p11_full",
+        "p12_full"
+      ]
+    },
+    "posing": {
+      "move": {
+        "src/main/resources/com/follower/poses.tsv": "src/test/resources/com/follower/poses.tsv"
+      }
+    }
+  },
+  "rules": {},
+  "expect": {
+    "settings": {
+      "": [
+        "activeProfile",
+        "counters",
+        "customOutfit",
+        "defaultOutput",
+        "firstSpawnNoticeShown",
+        "lastRevision",
+        "lastSeenMs",
+        "namePrompted",
+        "outfitProfiles",
+        "panelFolds",
+        "parkedAt",
+        "sendHintShown",
+        "thrallHintShown",
+        "traits",
+        "wishHintShown"
+      ],
+      "Advanced": [
+        "reachAnimation",
+        "restAnimation",
+        "spawnAnimation",
+        "spawnGraphic",
+        "spawnGraphicHeight",
+        "spectateShieldAnimation",
+        "spectateShieldChannelAnimation",
+        "spectateShieldChannelEnd",
+        "spectateShieldChannelGraphic",
+        "spectateShieldChannelStart",
+        "spectateShieldEndAnimation",
+        "spectateShieldEndGraphic",
+        "spectateShieldGraphic",
+        "verticalOffset"
+      ],
+      "Combat": [
+        "spectateCombat",
+        "spectateShield"
+      ],
+      "Company": [
+        "noticesThings",
+        "paysAttention",
+        "walksBeside"
+      ],
+      "Errands": [
+        "errandAltar",
+        "errandBank",
+        "errandBootlace",
+        "errandCat",
+        "errandDocument",
+        "errandExplore",
+        "errandFire",
+        "errandFrequency",
+        "errandGlance",
+        "errandStudy",
+        "errandsEnabled"
+      ],
+      "Follower": [
+        "chattiness",
+        "followEnabled",
+        "followerName",
+        "hideInPvp",
+        "muted"
+      ],
+      "Messages": [
+        "disabledGroups",
+        "groupArea",
+        "groupBet",
+        "groupBoss",
+        "groupClock",
+        "groupCombat",
+        "groupGear",
+        "groupHealth",
+        "groupIdle",
+        "groupMemory",
+        "groupMimic",
+        "groupQuest",
+        "groupReactions",
+        "groupSouvenir"
+      ],
+      "Movement": [
+        "copiesAgility",
+        "followDistance",
+        "restWhenIdle",
+        "wanderAfterSeconds",
+        "wanderWhenIdle"
+      ],
+      "Skilling": [
+        "borrowsTools",
+        "keepsCompany"
+      ],
+      "Speech": [
+        "mirrorToChat",
+        "readingSpeed",
+        "speechColor",
+        "speechDurationMs",
+        "speechHeight"
+      ],
+      "Thrall mode": [
+        "muteThrall",
+        "thrallMagicProfile",
+        "thrallMeleeProfile",
+        "thrallMode",
+        "thrallOnly",
+        "thrallRangedProfile"
+      ]
+    },
+    "commands": {
+      "everyday": [
+        "anim",
+        "copy",
+        "errand",
+        "fix",
+        "gfx",
+        "height",
+        "here",
+        "outfit",
+        "pose",
+        "rebuild",
+        "reload",
+        "say",
+        "status",
+        "where"
+      ],
+      "handled": [
+        "anim",
+        "copy",
+        "errand",
+        "fix",
+        "gfx",
+        "height",
+        "here",
+        "outfit",
+        "pose",
+        "rebuild",
+        "reload",
+        "say",
+        "status",
+        "where"
+      ]
+    },
+    "menu": [
+      "Dance",
+      "Examine",
+      "Follow-me",
+      "Send",
+      "Stay",
+      "Step-in-front",
+      "Wave"
+    ]
   }
 }
