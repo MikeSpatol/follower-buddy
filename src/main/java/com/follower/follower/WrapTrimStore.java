@@ -1,7 +1,6 @@
 package com.follower.follower;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
@@ -52,9 +51,7 @@ public class WrapTrimStore
 
 		try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8))
 		{
-			Saved saved = gson.fromJson(reader, new TypeToken<Saved>()
-			{
-			}.getType());
+			Saved saved = gson.fromJson(reader, Saved.class);
 
 			if (saved != null)
 			{

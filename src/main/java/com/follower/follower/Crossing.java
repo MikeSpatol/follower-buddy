@@ -31,7 +31,7 @@ import net.runelite.api.coords.WorldPoint;
 public final class Crossing
 {
 	/** One sample of the player. */
-	public static final class Frame
+	public static class Frame
 	{
 		final long atMs;
 		final long fineX;

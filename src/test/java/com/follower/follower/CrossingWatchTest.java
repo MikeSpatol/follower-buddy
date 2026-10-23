@@ -747,7 +747,7 @@ public class CrossingWatchTest
 		FakeGame game = new FakeGame().fineAt(53 * 128 + 20, 60 * 128 + 100, 2);
 		CrossingWatch.Sample sample = CrossingWatch.Sample.read(game.player, 0);
 		assertNotNull(sample);
-		Crossing one = new Crossing(List.of(sample.frame()), NORMAL, false);
+		Crossing one = new Crossing(List.of(sample), NORMAL, false);
 		assertEquals(new WorldPoint(53, 60, 2), one.getStart());
 		assertEquals(53 * 128 + 20, one.fineAt(0)[0]);
 		assertEquals(60 * 128 + 100, one.fineAt(0)[1]);

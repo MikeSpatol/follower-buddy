@@ -118,17 +118,23 @@ public class StanceLibrary
 		{
 		}
 
-		Stance(int idle, int walk, int run,
-			int walkBack, int walkLeft, int walkRight, int turnLeft, int turnRight)
+		/** The eight poses in {@link #poses} order. */
+		Stance(int... poses)
 		{
-			this.idle = idle;
-			this.walk = walk;
-			this.run = run;
-			this.walkBack = walkBack;
-			this.walkLeft = walkLeft;
-			this.walkRight = walkRight;
-			this.turnLeft = turnLeft;
-			this.turnRight = turnRight;
+			idle = poses[0];
+			walk = poses[1];
+			run = poses[2];
+			walkBack = poses[3];
+			walkLeft = poses[4];
+			walkRight = poses[5];
+			turnLeft = poses[6];
+			turnRight = poses[7];
+		}
+
+		/** Stand, walk, run, back, left, right, turn left, turn right. */
+		int[] poses()
+		{
+			return new int[]{idle, walk, run, walkBack, walkLeft, walkRight, turnLeft, turnRight};
 		}
 
 		boolean isComplete()
@@ -139,7 +145,7 @@ public class StanceLibrary
 		/** How the weapon is carried, without anything about how it is swung. */
 		Stance posesOnly()
 		{
-			return new Stance(idle, walk, run, walkBack, walkLeft, walkRight, turnLeft, turnRight);
+			return new Stance(poses());
 		}
 
 		/** How the weapon is swung, without anything about how it is carried. */
@@ -159,9 +165,8 @@ public class StanceLibrary
 		 */
 		boolean carriedAs(Stance shipped)
 		{
-			int[] mine = {idle, walk, run, walkBack, walkLeft, walkRight, turnLeft, turnRight};
-			int[] theirs = {shipped.idle, shipped.walk, shipped.run, shipped.walkBack,
-				shipped.walkLeft, shipped.walkRight, shipped.turnLeft, shipped.turnRight};
+			int[] mine = poses();
+			int[] theirs = shipped.poses();
 			for (int i = 0; i < mine.length; i++)
 			{
 				if (mine[i] != 0 && mine[i] != theirs[i])
@@ -194,10 +199,7 @@ public class StanceLibrary
 
 		boolean sameAs(Stance other)
 		{
-			return idle == other.idle && walk == other.walk && run == other.run
-				&& walkBack == other.walkBack
-				&& walkLeft == other.walkLeft && walkRight == other.walkRight
-				&& turnLeft == other.turnLeft && turnRight == other.turnRight;
+			return java.util.Arrays.equals(poses(), other.poses());
 		}
 
 		/**
@@ -287,13 +289,11 @@ public class StanceLibrary
 	{
 		file = dataDir.resolve(FILE_NAME);
 
-		try (java.io.InputStream in = StanceLibrary.class
-			.getResourceAsStream("/com/follower/" + FILE_NAME))
+		try (Reader in = shipped(FILE_NAME))
 		{
 			if (in != null)
 			{
-				int added = read(new java.io.BufferedReader(
-					new java.io.InputStreamReader(in, StandardCharsets.UTF_8)), bundled);
+				int added = read(in, bundled);
 				log.info("Loaded {} bundled weapon stances", added); // public:cut logs
 			}
 		}
@@ -377,15 +377,13 @@ public class StanceLibrary
 
 	private void loadKinds()
 	{
-		try (java.io.InputStream in = StanceLibrary.class
-			.getResourceAsStream("/com/follower/" + KINDS_FILE))
+		try (Reader in = shipped(KINDS_FILE))
 		{
 			if (in == null)
 			{
 				return;
 			}
-			AttackKinds kinds = gson.fromJson(new java.io.InputStreamReader(in, StandardCharsets.UTF_8),
-				AttackKinds.class);
+			AttackKinds kinds = gson.fromJson(in, AttackKinds.class);
 			if (kinds == null)
 			{
 				return;
@@ -401,6 +399,14 @@ public class StanceLibrary
 		{
 			log.warn("Could not read {}", KINDS_FILE, e);
 		}
+	}
+
+	/** A file shipped with the plugin, or null when it is missing. */
+	private static Reader shipped(String name)
+	{
+		java.io.InputStream in = StanceLibrary.class.getResourceAsStream("/com/follower/" + name);
+		return in == null ? null
+			: new java.io.BufferedReader(new java.io.InputStreamReader(in, StandardCharsets.UTF_8));
 	}
 
 	private static Set<Integer> toSet(int[] ids)
@@ -609,6 +615,14 @@ public class StanceLibrary
 		return false;
 	}
 
+	/** An actor's base animations now, in {@link Stance#poses} order. */
+	static int[] posesOf(net.runelite.api.Actor actor)
+	{
+		return new int[]{actor.getIdlePoseAnimation(), actor.getWalkAnimation(), actor.getRunAnimation(),
+			actor.getWalkRotate180(), actor.getWalkRotateLeft(), actor.getWalkRotateRight(),
+			actor.getIdleRotateLeft(), actor.getIdleRotateRight()};
+	}
+
 	private void learn(Client client, Player player)
 	{
 		PlayerComposition composition = player.getPlayerComposition();
@@ -617,9 +631,8 @@ public class StanceLibrary
 			return;
 		}
 
-		int raw = composition.getEquipmentId(KitType.WEAPON);
 		// getEquipmentId returns the item id directly, or -1 when nothing is wielded.
-		int weaponId = raw <= 0 ? UNARMED : raw;
+		int weaponId = key(composition.getEquipmentId(KitType.WEAPON));
 		if (weaponId == UNARMED)
 		{
 			// Shipped, and never learned: an empty-handed player on a log
@@ -627,15 +640,7 @@ public class StanceLibrary
 			return;
 		}
 
-		Stance observed = new Stance(
-			player.getIdlePoseAnimation(),
-			player.getWalkAnimation(),
-			player.getRunAnimation(),
-			player.getWalkRotate180(),
-			player.getWalkRotateLeft(),
-			player.getWalkRotateRight(),
-			player.getIdleRotateLeft(),
-			player.getIdleRotateRight());
+		Stance observed = new Stance(posesOf(player));
 
 		if (!observed.isComplete() || emptiesAHand(client, observed) || isAPassingSwap(weaponId, observed))
 		{
@@ -696,8 +701,7 @@ public class StanceLibrary
 		{
 			return;
 		}
-		int raw = composition.getEquipmentId(KitType.WEAPON);
-		int weaponId = raw <= 0 ? UNARMED : raw;
+		int weaponId = key(composition.getEquipmentId(KitType.WEAPON));
 
 		Stance stance = learned.get(weaponId);
 		if (stance == null)
@@ -849,7 +853,7 @@ public class StanceLibrary
 	 */
 	public int attackFor(int weaponItemId, int style, int kind)
 	{
-		int id = weaponItemId <= 0 ? UNARMED : weaponItemId;
+		int id = key(weaponItemId);
 		boolean realWeapon = id != UNARMED;
 		int own = ownAttack(id, style, kind, realWeapon);
 		if (own > 0)
@@ -1019,7 +1023,7 @@ public class StanceLibrary
 	 */
 	public int castFor(int weaponItemId)
 	{
-		int id = weaponItemId <= 0 ? UNARMED : weaponItemId;
+		int id = key(weaponItemId);
 		int cast = ownCast(id);
 		if (cast > 0 || id == UNARMED)
 		{
@@ -1082,7 +1086,7 @@ public class StanceLibrary
 	 */
 	public void setManual(int weaponItemId, int idle, int walk, int run, int attack)
 	{
-		int id = weaponItemId <= 0 ? UNARMED : weaponItemId;
+		int id = key(weaponItemId);
 		Stance stance = learned.get(id);
 		if (stance == null || !stance.isComplete())
 		{
@@ -1114,10 +1118,16 @@ public class StanceLibrary
 		// public:end logs
 	}
 
+	/** The library's key for a wielded item id: nothing wielded (0 or -1) is {@link #UNARMED}. */
+	private static int key(int weaponItemId)
+	{
+		return weaponItemId <= 0 ? UNARMED : weaponItemId;
+	}
+
 	/** A weapon's own stance, learned poses over shipped, or null when never seen or set. */
 	public Stance describe(int weaponItemId)
 	{
-		return stanceOf(weaponItemId <= 0 ? UNARMED : weaponItemId);
+		return stanceOf(key(weaponItemId));
 	}
 	// public:cut dev
 
@@ -1185,7 +1195,7 @@ public class StanceLibrary
 	 */
 	public Stance forWeapon(int weaponItemId)
 	{
-		int id = weaponItemId <= 0 ? UNARMED : weaponItemId;
+		int id = key(weaponItemId);
 		Stance stance = stanceOf(id);
 		if (stance != null)
 		{
@@ -1209,44 +1219,34 @@ public class StanceLibrary
 			buildNameIndex();
 		}
 
-		int donor = 0;
 		String name = models.itemName(weaponItemId);
 		String base = baseName(name);
-		if (base != null)
-		{
-			Integer match = byBaseName.get(base);
-			if (match != null && match != weaponItemId)
-			{
-				donor = match;
-			}
-		}
+		int donor = match(byBaseName, base, weaponItemId);
 		// The Deadman cosmetics: "Corrupted" is a prefix, not a bracket, so
 		// the marker stripping never reaches it. Only when the rest names a
 		// weapon the library knows: the Gauntlet's own "Corrupted sceptre"
 		// has no plain form and keeps its name.
 		if (donor == 0 && base != null && base.startsWith(CORRUPTED))
 		{
-			Integer match = byBaseName.get(base.substring(CORRUPTED.length()));
-			if (match != null && match != weaponItemId)
-			{
-				donor = match;
-			}
+			donor = match(byBaseName, base.substring(CORRUPTED.length()), weaponItemId);
 		}
 		// Second chance: the same weapon in a different metal.
 		if (donor == 0)
 		{
-			String tierBase = tierBaseName(name);
-			if (tierBase != null)
-			{
-				Integer match = byTierName.get(tierBase);
-				if (match != null && match != weaponItemId)
-				{
-					donor = match;
-				}
-			}
+			donor = match(byTierName, tierBaseName(name), weaponItemId);
 		}
 		donors.put(weaponItemId, donor);
 		return donor;
+	}
+
+	/**
+	 * The weapon a name index holds for a name, unless it is this one; else
+	 * 0. No name (null) is never in an index.
+	 */
+	private static int match(Map<String, Integer> index, String name, int weaponItemId)
+	{
+		Integer match = index.get(name);
+		return match != null && match != weaponItemId ? match : 0;
 	}
 
 	private void buildNameIndex()
@@ -1365,7 +1365,7 @@ public class StanceLibrary
 
 	public boolean knows(int weaponItemId)
 	{
-		int id = weaponItemId <= 0 ? UNARMED : weaponItemId;
+		int id = key(weaponItemId);
 		return known(id) || donorFor(id) > 0;
 	}
 

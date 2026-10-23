@@ -146,18 +146,13 @@ public final class CrossingWatch
 	 */
 	static final long REBUILD_RECENT_MS = 3000;
 
-	/** One reading of the player, taken each frame. */
-	public static final class Sample
+	/**
+	 * One reading of the player, taken each frame: the frame a crossing is
+	 * recorded from, with what the watch judges it by. A crossing copies
+	 * every frame it is given, so a reading is never shared beyond the watch.
+	 */
+	public static final class Sample extends Crossing.Frame
 	{
-		final long atMs;
-		final long fineX;
-		final long fineY;
-		final int plane;
-		final int orientation;
-		final int pose;
-		final int poseFrame;
-		final int action;
-		final int actionFrame;
 		/** Idle, walk, run, back, left, right, turn left, turn right: the base animations now. */
 		final int[] base;
 		final int weapon;
@@ -177,16 +172,8 @@ public final class CrossingWatch
 			int pose, int poseFrame, int action, int actionFrame, int[] base, int weapon,
 			boolean interacting, WorldPoint server)
 		{
+			super(atMs, fineX, fineY, plane, orientation, pose, poseFrame, action, actionFrame);
 			this.server = server;
-			this.atMs = atMs;
-			this.fineX = fineX;
-			this.fineY = fineY;
-			this.plane = plane;
-			this.orientation = orientation;
-			this.pose = pose;
-			this.poseFrame = poseFrame;
-			this.action = action;
-			this.actionFrame = actionFrame;
 			this.base = base;
 			this.weapon = weapon;
 			this.interacting = interacting;
@@ -216,28 +203,13 @@ public final class CrossingWatch
 			{
 				return null;
 			}
-			int[] base = {
-				local.getIdlePoseAnimation(),
-				local.getWalkAnimation(),
-				local.getRunAnimation(),
-				local.getWalkRotate180(),
-				local.getWalkRotateLeft(),
-				local.getWalkRotateRight(),
-				local.getIdleRotateLeft(),
-				local.getIdleRotateRight()};
 			return new Sample(nowMs,
 				view.getBaseX() * 128L + at.getX(), view.getBaseY() * 128L + at.getY(),
 				tile.getPlane(), local.getOrientation(),
 				local.getPoseAnimation(), local.getPoseAnimationFrame(),
 				local.getAnimation(), local.getAnimationFrame(),
-				base, composition.getEquipmentId(KitType.WEAPON),
+				StanceLibrary.posesOf(local), composition.getEquipmentId(KitType.WEAPON),
 				local.getInteracting() != null, tile);
-		}
-
-		Crossing.Frame frame()
-		{
-			return new Crossing.Frame(atMs, fineX, fineY, plane, orientation,
-				pose, poseFrame, action, actionFrame);
 		}
 	}
 
@@ -276,7 +248,7 @@ public final class CrossingWatch
 		Run(Sample first)
 		{
 			startMs = first.atMs;
-			frames.add(first.frame());
+			frames.add(first);
 		}
 
 		WorldPoint start()
@@ -465,7 +437,7 @@ public final class CrossingWatch
 		previous = s;
 		if (prev == null)
 		{
-			remember(new Seen(s.frame(), true, false, false, s.server));
+			remember(new Seen(s, true, false, false, s.server));
 			return;
 		}
 
@@ -504,7 +476,7 @@ public final class CrossingWatch
 		boolean odd = oddPose || s.action != -1 || glide;
 		boolean unusual = (moved > 0 || planeChanged)
 			&& (planeChanged || !walkingPose || oddPose || s.action != -1);
-		remember(new Seen(s.frame(), !odd && !hop, walking, unusual, s.server));
+		remember(new Seen(s, !odd && !hop, walking, unusual, s.server));
 		// public:cut dev
 		if (unusual || oddPose)
 		{
@@ -538,11 +510,10 @@ public final class CrossingWatch
 			// Begun from where they stood a frame ago: a glide has already left it.
 			run = new Run(prev);
 		}
-		Crossing.Frame frame = s.frame();
-		run.frames.add(frame);
+		run.frames.add(s);
 		if (run.crossing != null)
 		{
-			run.crossing.append(frame);
+			run.crossing.append(s);
 		}
 
 		if (s.interacting)
@@ -591,7 +562,7 @@ public final class CrossingWatch
 				{
 					run.announced = true;
 					// public:cut dev
-					trace.accept("watch: hop from " + describe(run.start()) + " to " + describe(frame.tile())
+					trace.accept("watch: hop from " + describe(run.start()) + " to " + describe(s.tile())
 						+ "; holding for xp");
 					// public:end dev
 					listener.expectCrossing(run.start());
@@ -628,7 +599,7 @@ public final class CrossingWatch
 			{
 				run.steppedOffTo = s.server;
 			}
-			if (frame.tile().equals(run.steppedOffTo))
+			if (s.tile().equals(run.steppedOffTo))
 			{
 				run.calmSinceMs = s.atMs;
 				run.calmIndex = run.frames.size() - 1;
