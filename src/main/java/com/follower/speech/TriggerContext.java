@@ -721,14 +721,6 @@ public final class TriggerContext
 		return killCountNames;
 	}
 
-	public void restoreKillCountNames(java.util.Map<String, String> saved)
-	{
-		if (saved != null)
-		{
-			saved.forEach(killCountNames::putIfAbsent);
-		}
-	}
-
 	/**
 	 * How many times the follower has been started up with this player,
 	 * this one included. Counted at login, so the first session is 1.
@@ -938,20 +930,6 @@ public final class TriggerContext
 		return key == null ? null : questsSeenFinished.get(key);
 	}
 
-	/** Live map, for the plugin to write out. Read-only by convention. */
-	public java.util.Map<String, Long> getQuestsSeenFinished()
-	{
-		return questsSeenFinished;
-	}
-
-	public void restoreQuestsSeenFinished(java.util.Map<String, Long> saved)
-	{
-		if (saved != null)
-		{
-			questsSeenFinished.putAll(saved);
-		}
-	}
-
 	/**
 	 * Whether the follower was there for a quest, as the chronicle answers
 	 * it: the day it saw the quest through, or null for one done before it
@@ -1129,15 +1107,6 @@ public final class TriggerContext
 	public java.util.Map<String, Integer> getLineWear()
 	{
 		return lineWear;
-	}
-
-	public void restoreLineWear(java.util.Map<String, Integer> saved)
-	{
-		if (saved != null)
-		{
-			saved.forEach((key, value) -> lineWear.merge(key, value, Integer::sum));
-			countersDirty = true;
-		}
 	}
 
 	// ------------------------------------------------------------ one-time lines
@@ -2930,18 +2899,6 @@ public final class TriggerContext
 		return refusedNicknames;
 	}
 
-	public void restoreNickname(String accepted, java.util.Collection<String> refused)
-	{
-		if (accepted != null)
-		{
-			acceptedNickname = accepted;
-		}
-		if (refused != null)
-		{
-			refusedNicknames.addAll(refused);
-		}
-	}
-
 	// ---------------------------------------------------------- the levels
 
 	/**
@@ -2982,14 +2939,6 @@ public final class TriggerContext
 	public java.util.Map<String, Long> getLevelStamps()
 	{
 		return levelStamps;
-	}
-
-	public void restoreLevelStamps(java.util.Map<String, Long> saved)
-	{
-		if (saved != null)
-		{
-			saved.forEach((skill, stamp) -> levelStamps.merge(skill, stamp, Math::max));
-		}
 	}
 
 	// ------------------------------------------------------------- goodwill
@@ -3652,11 +3601,6 @@ public final class TriggerContext
 			|| (lastWishMs > 0 && System.currentTimeMillis() - lastWishMs < WISH_REST_MS);
 	}
 
-	public long getLastWishMs()
-	{
-		return lastWishMs;
-	}
-
 	/** From the stored memory: when the follower last asked for something. */
 	public void setLastWishMs(long epochMs)
 	{
@@ -4183,5 +4127,288 @@ public final class TriggerContext
 	{
 		Player local = client.getLocalPlayer();
 		return local == null || local.getName() == null ? "you" : local.getName();
+	}
+
+	// ----------------------------------------------------------- saved memory
+
+	/**
+	 * What the follower has counted, kept between sessions.
+	 *
+	 * <p>The counts themselves are the point of the feature: "your fiftieth"
+	 * means nothing if the fifty were all this afternoon, and everything if
+	 * they were the fifty since you met. A session-scoped tally is a scoreboard;
+	 * this is a memory.
+	 *
+	 * <p>One config value holding one JSON object, for the same reason the
+	 * last-seen stamp is a config value: RuneLite already persists config per
+	 * profile, and a file of our own would be more machinery than this deserves.
+	 */
+	private static final class SavedCounters
+	{
+		java.util.Map<String, Integer> tallies;
+		java.util.Map<String, Integer> records;
+		/** Each boss's name as the game writes it, by its lower-case kill count key. */
+		java.util.Map<String, String> killCountNames;
+		int sessions;
+
+		/** The incident the follower is still thinking about, and how to say it. */
+		String incidentKey;
+		String incidentPhrase;
+		int incidentCount;
+		/** Where (a region id), when (epoch ms) and who it was with. */
+		int incidentWhere;
+		long incidentWhenMs;
+		String incidentWho;
+		/**
+		 * The place as said, whether that is only the nearest named place,
+		 * the item and the hitpoints left. Absent from older saves, which
+		 * read the place off the region and know no item or hitpoints.
+		 */
+		String incidentPlace;
+		Boolean incidentNear;
+		String incidentItem;
+		Integer incidentHp;
+		/** When it was last brought up unprompted, so that is once a day. */
+		long incidentRecalledMs;
+
+		/**
+		 * Where the last death happened. Session-scoped memory made
+		 * nearDeathSpot a thing that could only fire on the walk back; kept
+		 * between sessions it becomes an anniversary, which is a much better
+		 * line - "this is the spot" six weeks later.
+		 */
+		int deathX;
+		int deathY;
+		int deathPlane = -1;
+
+		/**
+		 * What each place has come to mean, and the one thing worth bringing up
+		 * about it. Keyed by region id. Earned rather than rolled, so unlike the
+		 * traits blob this one is never regenerated - losing it would have the
+		 * follower forget which places it has reason to feel anything about.
+		 */
+		java.util.Map<Integer, Integer> placeScores;
+		java.util.Map<Integer, String> placeMemories;
+
+		/**
+		 * Ids of the one-time lines already said. Small and slow-growing: there
+		 * are only ever as many entries as there are firsts worth marking.
+		 */
+		java.util.List<String> spokenOnce;
+		/** And the day (an epoch day) each was said; missing from older saves. */
+		java.util.Map<String, Long> spokenOnceOn;
+		/** Quests the follower saw finish, by quest and account, and the day. */
+		java.util.Map<String, Long> questsSeenFinished;
+		// public:cut chronicle
+		/** Chronicle pages written so far, by entry id. */
+		java.util.List<String> chronicled;
+		/** And when (an epoch day) and where each was written, where known. */
+		java.util.Map<String, Long> chronicledOn;
+		java.util.Map<String, String> chronicledAt;
+		/** The accounts whose sketch book was opened under this memory; absent from older saves. */
+		java.util.List<String> sketchAccounts;
+		// public:end chronicle
+
+		/**
+		 * How worn each line is - times actually said, keyed by the template's
+		 * hash so the blob stays small. Capped at 500 entries by the context,
+		 * least-worn dropped first.
+		 */
+		java.util.Map<String, Integer> lineWear;
+
+		/**
+		 * The day the follower first met this player, as an epoch day. Written
+		 * once and never again: it is the only thing here that would be a lie
+		 * if it were ever recalculated.
+		 */
+		long metOnDay;
+
+		/** What the player was wearing then, so an upgrade has something to beat. */
+		int metWearingValue = -1;
+
+		// public:cut souvenirs-wishes
+		/** When the follower last asked for something, so the next ask waits a day. */
+		long lastWishMs;
+
+		// public:end souvenirs-wishes
+		/** When each skill last went up, so the next level knows how long it took. */
+		java.util.Map<String, Long> levelStamps;
+
+		/** What the two of them were doing when the session ended, for the greeting. */
+		String lastThing;
+
+		/** The name the player agreed to be called, and the ones they turned down. */
+		String nickname;
+		java.util.List<String> refusedNicknames;
+		/** When the name was last asked about, and the asks since that went unanswered. */
+		long nicknameAskedMs;
+		int nicknameAsksIgnored;
+	}
+
+	/**
+	 * How many counters are kept. Every distinct NPC name the player has ever
+	 * killed earns an entry, so this grows for as long as the plugin is used;
+	 * without a bound it would grow into the config file forever. The rarest
+	 * counts go first, since a count of one is the least likely to be the
+	 * subject of a milestone rule.
+	 */
+	private static final int MAX_COUNTERS = 300;
+
+	/**
+	 * Puts a saved blob back, and returns the gear value the follower first
+	 * met the player wearing. FollowerPlugin.restoreMemory is the seam, and
+	 * reads a blob that is not JSON as no memory at all.
+	 */
+	public int restoreMemory(String stored, com.google.gson.Gson gson, int fallbackMetWearing)
+	{
+		if (stored == null || stored.isEmpty())
+		{
+			return fallbackMetWearing;
+		}
+		SavedCounters saved = gson.fromJson(stored, SavedCounters.class);
+		if (saved == null)
+		{
+			return fallbackMetWearing;
+		}
+		restoreCounters(saved.tallies, saved.records);
+		if (saved.killCountNames != null)
+		{
+			saved.killCountNames.forEach(killCountNames::putIfAbsent);
+		}
+		setSessionCount(saved.sessions);
+		restoreIncident(saved.incidentKey, saved.incidentPhrase,
+			saved.incidentCount, saved.incidentWhere, saved.incidentWhenMs, saved.incidentWho,
+			saved.incidentPlace, Boolean.TRUE.equals(saved.incidentNear), saved.incidentItem,
+			saved.incidentHp == null ? -1 : saved.incidentHp);
+		restoreIncidentRecalled(saved.incidentRecalledMs);
+		restorePlaces(saved.placeScores, saved.placeMemories);
+		restoreSpokenOnce(saved.spokenOnce, saved.spokenOnceOn);
+		if (saved.questsSeenFinished != null)
+		{
+			questsSeenFinished.putAll(saved.questsSeenFinished);
+		}
+		// public:cut chronicle
+		restoreChronicled(saved.chronicled);
+		restoreChronicledStamps(saved.chronicledOn, saved.chronicledAt);
+		restoreSketchAccounts(saved.sketchAccounts);
+		// public:end chronicle
+		if (saved.lineWear != null)
+		{
+			saved.lineWear.forEach((key, value) -> lineWear.merge(key, value, Integer::sum));
+			countersDirty = true;
+		}
+		setMetOnDay(saved.metOnDay);
+		setLastWishMs(saved.lastWishMs); // public:cut souvenirs-wishes
+		setMetWearingValue(saved.metWearingValue);
+		if (saved.levelStamps != null)
+		{
+			saved.levelStamps.forEach((skill, stamp) -> levelStamps.merge(skill, stamp, Math::max));
+		}
+		restoreLastThing(saved.lastThing);
+		if (saved.nickname != null)
+		{
+			acceptedNickname = saved.nickname;
+		}
+		if (saved.refusedNicknames != null)
+		{
+			refusedNicknames.addAll(saved.refusedNicknames);
+		}
+		restoreNicknameAsks(saved.nicknameAskedMs, saved.nicknameAsksIgnored);
+		if (saved.deathPlane >= 0)
+		{
+			restoreDeathSpot(new WorldPoint(
+				saved.deathX, saved.deathY, saved.deathPlane));
+		}
+		// public:cut logs
+		log.debug("Restored {} tallies, {} records, session {}",
+			saved.tallies == null ? 0 : saved.tallies.size(),
+			saved.records == null ? 0 : saved.records.size(),
+			saved.sessions);
+		// public:end logs
+		return saved.metWearingValue;
+	}
+
+	/** Everything the follower remembers, as it goes to disk. */
+	public String snapshotMemory(com.google.gson.Gson gson, int metWearing)
+	{
+		SavedCounters saved = new SavedCounters();
+		saved.tallies = trimCounters(tallies);
+		saved.records = trimCounters(records);
+		saved.killCountNames = killCountNames.isEmpty() ? null
+			: new java.util.HashMap<>(killCountNames);
+		saved.sessions = sessionCount;
+		saved.incidentKey = incidentKey;
+		saved.incidentPhrase = incidentPhrase;
+		saved.incidentCount = incidentCount;
+		saved.incidentWhere = incidentWhere;
+		saved.incidentWhenMs = incidentWhenMs;
+		saved.incidentWho = incidentWho.isEmpty() ? null : incidentWho;
+		saved.incidentPlace = getIncidentPlace().isEmpty() ? null : getIncidentPlace();
+		saved.incidentNear = isIncidentNear() ? Boolean.TRUE : null;
+		saved.incidentItem = incidentItem.isEmpty() ? null : incidentItem;
+		saved.incidentHp = incidentHp < 0 ? null : incidentHp;
+		saved.incidentRecalledMs = incidentRecalledMs;
+		saved.placeScores = placeScores;
+		saved.placeMemories = placeMemories;
+		saved.spokenOnce = new java.util.ArrayList<>(spokenOnce);
+		saved.spokenOnceOn = spokenOnceOn.isEmpty() ? null
+			: new java.util.HashMap<>(spokenOnceOn);
+		saved.questsSeenFinished = questsSeenFinished.isEmpty() ? null
+			: new java.util.HashMap<>(questsSeenFinished);
+		// public:cut chronicle
+		saved.chronicled = new java.util.ArrayList<>(getChronicled());
+		saved.chronicledOn = getChronicledOn().isEmpty() ? null
+			: new java.util.HashMap<>(getChronicledOn());
+		saved.chronicledAt = getChronicledAt().isEmpty() ? null
+			: new java.util.HashMap<>(getChronicledAt());
+		saved.sketchAccounts = getSketchAccounts().isEmpty() ? null
+			: new java.util.ArrayList<>(getSketchAccounts());
+		// public:end chronicle
+		saved.lineWear = lineWear;
+		saved.metOnDay = metOnDay;
+		saved.lastWishMs = lastWishMs; // public:cut souvenirs-wishes
+		saved.metWearingValue = metWearing;
+		saved.levelStamps = levelStamps.isEmpty() ? null
+			: new java.util.HashMap<>(levelStamps);
+		saved.lastThing = lastThing.isEmpty() ? null : lastThing;
+		saved.nickname = acceptedNickname.isEmpty() ? null : acceptedNickname;
+		saved.refusedNicknames = refusedNicknames.isEmpty() ? null
+			: new java.util.ArrayList<>(new java.util.TreeSet<>(refusedNicknames));
+		saved.nicknameAskedMs = nicknameAskedMs;
+		saved.nicknameAsksIgnored = nicknameAsksIgnored;
+		WorldPoint died = deathLocation;
+		if (died != null)
+		{
+			saved.deathX = died.getX();
+			saved.deathY = died.getY();
+			saved.deathPlane = died.getPlane();
+		}
+		return gson.toJson(saved);
+	}
+
+	private static java.util.Map<String, Integer> trimCounters(java.util.Map<String, Integer> counters)
+	{
+		// Today's counters are for today. Writing them out would have the
+		// follower's summary open with yesterday's afternoon still in it.
+		java.util.Map<String, Integer> lasting = new java.util.LinkedHashMap<>();
+		counters.forEach((key, value) ->
+		{
+			if (!key.endsWith(TODAY))
+			{
+				lasting.put(key, value);
+			}
+		});
+		counters = lasting;
+
+		if (counters.size() <= MAX_COUNTERS)
+		{
+			return counters;
+		}
+		return counters.entrySet().stream()
+			.sorted(java.util.Map.Entry.<String, Integer>comparingByValue().reversed())
+			.limit(MAX_COUNTERS)
+			.collect(java.util.stream.Collectors.toMap(
+				java.util.Map.Entry::getKey, java.util.Map.Entry::getValue,
+				(a, b) -> a, java.util.LinkedHashMap::new));
 	}
 }

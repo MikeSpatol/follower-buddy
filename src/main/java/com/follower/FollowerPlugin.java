@@ -2793,129 +2793,6 @@ public class FollowerPlugin extends Plugin
 			Long.toString(System.currentTimeMillis()));
 	}
 
-	/**
-	 * What the follower has counted, kept between sessions.
-	 *
-	 * <p>The counts themselves are the point of the feature: "your fiftieth"
-	 * means nothing if the fifty were all this afternoon, and everything if
-	 * they were the fifty since you met. A session-scoped tally is a scoreboard;
-	 * this is a memory.
-	 *
-	 * <p>One config value holding one JSON object, for the same reason the
-	 * last-seen stamp is a config value: RuneLite already persists config per
-	 * profile, and a file of our own would be more machinery than this deserves.
-	 */
-	private static final class SavedCounters
-	{
-		java.util.Map<String, Integer> tallies;
-		java.util.Map<String, Integer> records;
-		/** Each boss's name as the game writes it, by its lower-case kill count key. */
-		java.util.Map<String, String> killCountNames;
-		int sessions;
-
-		/** The incident the follower is still thinking about, and how to say it. */
-		String incidentKey;
-		String incidentPhrase;
-		int incidentCount;
-		/** Where (a region id), when (epoch ms) and who it was with. */
-		int incidentWhere;
-		long incidentWhenMs;
-		String incidentWho;
-		/**
-		 * The place as said, whether that is only the nearest named place,
-		 * the item and the hitpoints left. Absent from older saves, which
-		 * read the place off the region and know no item or hitpoints.
-		 */
-		String incidentPlace;
-		Boolean incidentNear;
-		String incidentItem;
-		Integer incidentHp;
-		/** When it was last brought up unprompted, so that is once a day. */
-		long incidentRecalledMs;
-
-		/**
-		 * Where the last death happened. Session-scoped memory made
-		 * nearDeathSpot a thing that could only fire on the walk back; kept
-		 * between sessions it becomes an anniversary, which is a much better
-		 * line - "this is the spot" six weeks later.
-		 */
-		int deathX;
-		int deathY;
-		int deathPlane = -1;
-
-		/**
-		 * What each place has come to mean, and the one thing worth bringing up
-		 * about it. Keyed by region id. Earned rather than rolled, so unlike the
-		 * traits blob this one is never regenerated - losing it would have the
-		 * follower forget which places it has reason to feel anything about.
-		 */
-		java.util.Map<Integer, Integer> placeScores;
-		java.util.Map<Integer, String> placeMemories;
-
-		/**
-		 * Ids of the one-time lines already said. Small and slow-growing: there
-		 * are only ever as many entries as there are firsts worth marking.
-		 */
-		java.util.List<String> spokenOnce;
-		/** And the day (an epoch day) each was said; missing from older saves. */
-		java.util.Map<String, Long> spokenOnceOn;
-		/** Quests the follower saw finish, by quest and account, and the day. */
-		java.util.Map<String, Long> questsSeenFinished;
-		// public:cut chronicle
-		/** Chronicle pages written so far, by entry id. */
-		java.util.List<String> chronicled;
-		/** And when (an epoch day) and where each was written, where known. */
-		java.util.Map<String, Long> chronicledOn;
-		java.util.Map<String, String> chronicledAt;
-		/** The accounts whose sketch book was opened under this memory; absent from older saves. */
-		java.util.List<String> sketchAccounts;
-		// public:end chronicle
-
-		/**
-		 * How worn each line is - times actually said, keyed by the template's
-		 * hash so the blob stays small. Capped at 500 entries by the context,
-		 * least-worn dropped first.
-		 */
-		java.util.Map<String, Integer> lineWear;
-
-		/**
-		 * The day the follower first met this player, as an epoch day. Written
-		 * once and never again: it is the only thing here that would be a lie
-		 * if it were ever recalculated.
-		 */
-		long metOnDay;
-
-		/** What the player was wearing then, so an upgrade has something to beat. */
-		int metWearingValue = -1;
-
-		// public:cut souvenirs-wishes
-		/** When the follower last asked for something, so the next ask waits a day. */
-		long lastWishMs;
-
-		// public:end souvenirs-wishes
-		/** When each skill last went up, so the next level knows how long it took. */
-		java.util.Map<String, Long> levelStamps;
-
-		/** What the two of them were doing when the session ended, for the greeting. */
-		String lastThing;
-
-		/** The name the player agreed to be called, and the ones they turned down. */
-		String nickname;
-		java.util.List<String> refusedNicknames;
-		/** When the name was last asked about, and the asks since that went unanswered. */
-		long nicknameAskedMs;
-		int nicknameAsksIgnored;
-	}
-
-	/**
-	 * How many counters are kept. Every distinct NPC name the player has ever
-	 * killed earns an entry, so this grows for as long as the plugin is used;
-	 * without a bound it would grow into the config file forever. The rarest
-	 * counts go first, since a count of one is the least likely to be the
-	 * subject of a milestone rule.
-	 */
-	private static final int MAX_COUNTERS = 300;
-
 	private void readCounters()
 	{
 		metWearingValue = restoreMemory(speechEngine.getContext(), config.counters(),
@@ -3091,53 +2968,9 @@ public class FollowerPlugin extends Plugin
 	static int restoreMemory(TriggerContext context, String stored,
 		com.google.gson.Gson gson, int fallbackMetWearing)
 	{
-		if (stored == null || stored.isEmpty())
-		{
-			return fallbackMetWearing;
-		}
 		try
 		{
-			SavedCounters saved = gson.fromJson(stored, SavedCounters.class);
-			if (saved == null)
-			{
-				return fallbackMetWearing;
-			}
-			context.restoreCounters(saved.tallies, saved.records);
-			context.restoreKillCountNames(saved.killCountNames);
-			context.setSessionCount(saved.sessions);
-			context.restoreIncident(saved.incidentKey, saved.incidentPhrase,
-				saved.incidentCount, saved.incidentWhere, saved.incidentWhenMs, saved.incidentWho,
-				saved.incidentPlace, Boolean.TRUE.equals(saved.incidentNear), saved.incidentItem,
-				saved.incidentHp == null ? -1 : saved.incidentHp);
-			context.restoreIncidentRecalled(saved.incidentRecalledMs);
-			context.restorePlaces(saved.placeScores, saved.placeMemories);
-			context.restoreSpokenOnce(saved.spokenOnce, saved.spokenOnceOn);
-			context.restoreQuestsSeenFinished(saved.questsSeenFinished);
-			// public:cut chronicle
-			context.restoreChronicled(saved.chronicled);
-			context.restoreChronicledStamps(saved.chronicledOn, saved.chronicledAt);
-			context.restoreSketchAccounts(saved.sketchAccounts);
-			// public:end chronicle
-			context.restoreLineWear(saved.lineWear);
-			context.setMetOnDay(saved.metOnDay);
-			context.setLastWishMs(saved.lastWishMs); // public:cut souvenirs-wishes
-			context.setMetWearingValue(saved.metWearingValue);
-			context.restoreLevelStamps(saved.levelStamps);
-			context.restoreLastThing(saved.lastThing);
-			context.restoreNickname(saved.nickname, saved.refusedNicknames);
-			context.restoreNicknameAsks(saved.nicknameAskedMs, saved.nicknameAsksIgnored);
-			if (saved.deathPlane >= 0)
-			{
-				context.restoreDeathSpot(new WorldPoint(
-					saved.deathX, saved.deathY, saved.deathPlane));
-			}
-			// public:cut logs
-			log.debug("Restored {} tallies, {} records, session {}",
-				saved.tallies == null ? 0 : saved.tallies.size(),
-				saved.records == null ? 0 : saved.records.size(),
-				saved.sessions);
-			// public:end logs
-			return saved.metWearingValue;
+			return context.restoreMemory(stored, gson, fallbackMetWearing);
 		}
 		catch (com.google.gson.JsonSyntaxException e)
 		{
@@ -3182,59 +3015,7 @@ public class FollowerPlugin extends Plugin
 	static String snapshotMemory(TriggerContext context, int metWearing,
 		com.google.gson.Gson gson)
 	{
-		SavedCounters saved = new SavedCounters();
-		saved.tallies = trimCounters(context.getTallies());
-		saved.records = trimCounters(context.getRecords());
-		saved.killCountNames = context.getKillCountNames().isEmpty() ? null
-			: new java.util.HashMap<>(context.getKillCountNames());
-		saved.sessions = context.getSessionCount();
-		saved.incidentKey = context.getIncidentKey();
-		saved.incidentPhrase = context.getIncidentPhrase();
-		saved.incidentCount = context.getIncidentCount();
-		saved.incidentWhere = context.getIncidentWhere();
-		saved.incidentWhenMs = context.getIncidentWhenMs();
-		saved.incidentWho = context.getIncidentWho().isEmpty() ? null : context.getIncidentWho();
-		saved.incidentPlace = context.getIncidentPlace().isEmpty() ? null : context.getIncidentPlace();
-		saved.incidentNear = context.isIncidentNear() ? Boolean.TRUE : null;
-		saved.incidentItem = context.getIncidentItem().isEmpty() ? null : context.getIncidentItem();
-		saved.incidentHp = context.getIncidentHp() < 0 ? null : context.getIncidentHp();
-		saved.incidentRecalledMs = context.getIncidentRecalledMs();
-		saved.placeScores = context.getPlaceScores();
-		saved.placeMemories = context.getPlaceMemories();
-		saved.spokenOnce = new java.util.ArrayList<>(context.getSpokenOnce());
-		saved.spokenOnceOn = context.getSpokenOnceOn().isEmpty() ? null
-			: new java.util.HashMap<>(context.getSpokenOnceOn());
-		saved.questsSeenFinished = context.getQuestsSeenFinished().isEmpty() ? null
-			: new java.util.HashMap<>(context.getQuestsSeenFinished());
-		// public:cut chronicle
-		saved.chronicled = new java.util.ArrayList<>(context.getChronicled());
-		saved.chronicledOn = context.getChronicledOn().isEmpty() ? null
-			: new java.util.HashMap<>(context.getChronicledOn());
-		saved.chronicledAt = context.getChronicledAt().isEmpty() ? null
-			: new java.util.HashMap<>(context.getChronicledAt());
-		saved.sketchAccounts = context.getSketchAccounts().isEmpty() ? null
-			: new java.util.ArrayList<>(context.getSketchAccounts());
-		// public:end chronicle
-		saved.lineWear = context.getLineWear();
-		saved.metOnDay = context.getMetOnDay();
-		saved.lastWishMs = context.getLastWishMs(); // public:cut souvenirs-wishes
-		saved.metWearingValue = metWearing;
-		saved.levelStamps = context.getLevelStamps().isEmpty() ? null
-			: new java.util.HashMap<>(context.getLevelStamps());
-		saved.lastThing = context.getLastThing().isEmpty() ? null : context.getLastThing();
-		saved.nickname = context.getNickname().isEmpty() ? null : context.getNickname();
-		saved.refusedNicknames = context.getRefusedNicknames().isEmpty() ? null
-			: new java.util.ArrayList<>(new java.util.TreeSet<>(context.getRefusedNicknames()));
-		saved.nicknameAskedMs = context.getNicknameAskedMs();
-		saved.nicknameAsksIgnored = context.getNicknameAsksIgnored();
-		WorldPoint died = context.getDeathLocation();
-		if (died != null)
-		{
-			saved.deathX = died.getX();
-			saved.deathY = died.getY();
-			saved.deathPlane = died.getPlane();
-		}
-		return gson.toJson(saved);
+		return context.snapshotMemory(gson, metWearing);
 	}
 
 	/**
@@ -3392,32 +3173,6 @@ public class FollowerPlugin extends Plugin
 			context.setMetOnDay(java.time.LocalDate.now().toEpochDay());
 			log.debug("First meeting recorded as {}", java.time.LocalDate.now()); // public:cut logs
 		}
-	}
-
-	private static java.util.Map<String, Integer> trimCounters(java.util.Map<String, Integer> counters)
-	{
-		// Today's counters are for today. Writing them out would have the
-		// follower's summary open with yesterday's afternoon still in it.
-		java.util.Map<String, Integer> lasting = new java.util.LinkedHashMap<>();
-		counters.forEach((key, value) ->
-		{
-			if (!key.endsWith(TriggerContext.TODAY))
-			{
-				lasting.put(key, value);
-			}
-		});
-		counters = lasting;
-
-		if (counters.size() <= MAX_COUNTERS)
-		{
-			return counters;
-		}
-		return counters.entrySet().stream()
-			.sorted(java.util.Map.Entry.<String, Integer>comparingByValue().reversed())
-			.limit(MAX_COUNTERS)
-			.collect(java.util.stream.Collectors.toMap(
-				java.util.Map.Entry::getKey, java.util.Map.Entry::getValue,
-				(a, b) -> a, java.util.LinkedHashMap::new));
 	}
 
 	/**
