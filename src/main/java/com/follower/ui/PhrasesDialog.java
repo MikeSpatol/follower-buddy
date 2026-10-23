@@ -130,12 +130,10 @@ public class PhrasesDialog extends JDialog // public:cut messages-window
 	// public:end sharevoice
 	private Category category;
 
-	// public:cut messages-readonly
 	/** What every category has in common; each category adds one line of its own. */
 	private static final String HOW_TO = "One message per line. Edit, remove or add lines,"
 		+ " untick a rule to silence it, then Save - changes reach the follower within a second.";
 
-	// public:end messages-readonly
 	private final JComboBox<String> categoryPicker = new JComboBox<>();
 	private final JLabel hint = new JLabel();
 
