@@ -2,6 +2,7 @@ package com.follower.ui;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -78,6 +79,9 @@ public final class GameFont
 		return lineHeight;
 	}
 
+	/** The client's text encoding, the JDK's own table of it. */
+	private static final Charset CP1252 = Charset.forName("windows-1252");
+
 	/**
 	 * The glyph a character is drawn with, as the client picks it (its font
 	 * renderer's char width and draws, injected-client 1.13.1): a no-break
@@ -97,37 +101,10 @@ public final class GameFont
 		{
 			return c;
 		}
-		switch (c)
-		{
-			case '\u20AC': return 0x80;
-			case '\u201A': return 0x82;
-			case '\u0192': return 0x83;
-			case '\u201E': return 0x84;
-			case '\u2026': return 0x85;
-			case '\u2020': return 0x86;
-			case '\u2021': return 0x87;
-			case '\u02C6': return 0x88;
-			case '\u2030': return 0x89;
-			case '\u0160': return 0x8A;
-			case '\u2039': return 0x8B;
-			case '\u0152': return 0x8C;
-			case '\u017D': return 0x8E;
-			case '\u2018': return 0x91;
-			case '\u2019': return 0x92;
-			case '\u201C': return 0x93;
-			case '\u201D': return 0x94;
-			case '\u2022': return 0x95;
-			case '\u2013': return 0x96;
-			case '\u2014': return 0x97;
-			case '\u02DC': return 0x98;
-			case '\u2122': return 0x99;
-			case '\u0161': return 0x9A;
-			case '\u203A': return 0x9B;
-			case '\u0153': return 0x9C;
-			case '\u017E': return 0x9E;
-			case '\u0178': return 0x9F;
-			default: return '?';
-		}
+		// What the encoding cannot map, a C1 control or a lone surrogate, it
+		// writes as '?', as the client does; and NUL, which it would pass
+		// through as 0, is one too.
+		return c == 0 ? '?' : String.valueOf(c).getBytes(CP1252)[0] & 0xFF;
 	}
 
 	// public:cut posing
