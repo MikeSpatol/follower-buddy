@@ -40,7 +40,7 @@ public class TalkScriptTest
 		// exists and every structural check walks it too; the other variants
 		// are checked in their own tests below.
 		return FollowerPlugin.talkScript(talk(),
-			() -> FollowerPlugin.daySummary(95, 12, 2, 1, "good", "that chicken"),
+			() -> FollowerPlugin.daySummary(talk(), 95, 12, 2, 1, "good", "that chicken"),
 			answer -> { }, "feather", true, "even"); // public:cut souvenirs-wishes
 			// public:else answer -> { }, "even");
 	}
@@ -114,7 +114,7 @@ public class TalkScriptTest
 			wishing.get("start").getOptionLabels().contains("Found you that feather."));
 
 		Map<String, FollowerDialog.Node> wishless = FollowerPlugin.talkScript(talk(),
-			() -> FollowerPlugin.daySummary(95, 12, 2, 1, "good", "that chicken"),
+			() -> FollowerPlugin.daySummary(talk(), 95, 12, 2, 1, "good", "that chicken"),
 			answer -> { }, "", false, "even");
 		assertTrue("with no wish there is no gift branch at all",
 			!wishless.containsKey("gift-q"));
@@ -225,15 +225,15 @@ public class TalkScriptTest
 		for (String band : new String[]{"low", "even"})
 		{
 			variants.put(band + "/no-wish", FollowerPlugin.talkScript(talk(),
-				() -> FollowerPlugin.daySummary(95, 12, 2, 1, "good", "that chicken"),
+				() -> FollowerPlugin.daySummary(talk(), 95, 12, 2, 1, "good", "that chicken"),
 				answer -> { }, "", false, band)); // public:cut souvenirs-wishes
 				// public:else answer -> { }, band));
 			// public:cut souvenirs-wishes
 			variants.put(band + "/wish-held", FollowerPlugin.talkScript(talk(),
-				() -> FollowerPlugin.daySummary(95, 12, 2, 1, "good", "that chicken"),
+				() -> FollowerPlugin.daySummary(talk(), 95, 12, 2, 1, "good", "that chicken"),
 				answer -> { }, "feather", true, band));
 			variants.put(band + "/wish-empty", FollowerPlugin.talkScript(talk(),
-				() -> FollowerPlugin.daySummary(95, 12, 2, 1, "good", "that chicken"),
+				() -> FollowerPlugin.daySummary(talk(), 95, 12, 2, 1, "good", "that chicken"),
 				answer -> { }, "feather", false, band));
 			// public:end souvenirs-wishes
 		}
@@ -332,7 +332,7 @@ public class TalkScriptTest
 			{
 				for (String incident : new String[]{null, "that chicken"})
 				{
-					String[] pages = FollowerPlugin.daySummary(
+					String[] pages = FollowerPlugin.daySummary(talk(),
 						f[0], f[1], f[2], f[3], mood, incident);
 					String where = mood + " " + java.util.Arrays.toString(f);
 
@@ -377,7 +377,7 @@ public class TalkScriptTest
 	{
 		// 95 minutes used to read "1 hour" - the diary of somebody who was
 		// not really keeping one.
-		String[] pages = FollowerPlugin.daySummary(95, 0, 0, 0, "neutral", null);
+		String[] pages = FollowerPlugin.daySummary(talk(), 95, 0, 0, 0, "neutral", null);
 		assertTrue("the extra minutes went missing: " + pages[0],
 			pages[0].contains("1 hour and 35 minutes"));
 	}
@@ -388,7 +388,7 @@ public class TalkScriptTest
 		// The reason the branch exists at all. A follower that answers "0
 		// kills, 0 levels, 0 deaths" has read the tallies out; one that says
 		// nothing happened has understood them.
-		String[] pages = FollowerPlugin.daySummary(0, 0, 0, 0, "neutral", null);
+		String[] pages = FollowerPlugin.daySummary(talk(), 0, 0, 0, 0, "neutral", null);
 		String first = pages[0];
 		assertFalse("reported a zero: " + first, first.contains("0 "));
 		assertFalse("reported a zero: " + first, first.startsWith("So far:"));

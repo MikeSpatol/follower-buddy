@@ -1,8 +1,8 @@
 package com.follower;
 
 /**
- * The everyday Talk-to script as FollowerPlugin built it in Java before
- * talk.json, copied verbatim (its public markers included), so
+ * The everyday Talk-to script and the day summary as FollowerPlugin built
+ * them in Java before talk.json, copied verbatim (its public markers included), so
  * TalkScriptEquivalenceTest can prove the file builds the same conversation.
  * Three things differ, none in what is built: the joke method reference names
  * this class, the pool is package-private for the test, and the three
@@ -23,6 +23,86 @@ final class OldTalk
 	private static com.follower.speech.FollowerDialog.Node you(String... pages)
 	{
 		return com.follower.speech.FollowerDialog.Node.you(pages);
+	}
+
+	static String[] daySummary(int minutes, int kills, int levels, int deaths,
+		String moodBand, String incident)
+	{
+		java.util.List<String> parts = new java.util.ArrayList<>();
+
+		if (minutes >= 1)
+		{
+			// A scribe does not round 95 minutes down to "1 hour" - the
+			// half hour happened and it was there for it.
+			int hours = minutes / 60;
+			int rest = minutes % 60;
+			parts.add(hours == 0
+				? minutes + (minutes == 1 ? " minute" : " minutes")
+				: hours + (hours == 1 ? " hour" : " hours")
+					+ (rest == 0 ? "" : " and " + rest
+						+ (rest == 1 ? " minute" : " minutes")));
+		}
+
+		if (kills > 0)
+		{
+			parts.add(kills + (kills == 1 ? " thing killed" : " things killed"));
+		}
+		if (levels > 0)
+		{
+			parts.add(levels + (levels == 1 ? " level" : " levels"));
+		}
+		if (deaths > 0)
+		{
+			parts.add(deaths + (deaths == 1 ? " death" : " deaths"));
+		}
+
+		java.util.List<String> pages = new java.util.ArrayList<>();
+		if (parts.isEmpty())
+		{
+			pages.add("Today's page is blank. Restful, I call that.");
+		}
+		else
+		{
+			pages.add("Today's page: " + join(parts) + ".");
+		}
+
+		// The mood is the follower's own verdict on all that, which is a
+		// different thing from the figures and worth saying separately.
+		switch (moodBand == null ? "" : moodBand)
+		{
+			case "low":
+				pages.add("I've had better days, if I'm honest.");
+				break;
+			case "down":
+				pages.add("Not our finest, but we're still walking.");
+				break;
+			case "good":
+				pages.add("A good day, that. I'd take another like it.");
+				break;
+			case "high":
+				pages.add("One of the good ones. I mean that.");
+				break;
+			default:
+				pages.add("An ordinary day. There's nothing wrong with those.");
+				break;
+		}
+
+		// And the one thing it has not let go of.
+		if (incident != null && !incident.isEmpty())
+		{
+			pages.add("I'm still thinking about " + incident + ".");
+		}
+		return pages.toArray(new String[0]);
+	}
+
+	private static String join(java.util.List<String> parts)
+	{
+		if (parts.size() == 1)
+		{
+			return parts.get(0);
+		}
+		return String.join(", ", parts.subList(0, parts.size() - 1))
+			+ " and " + parts.get(parts.size() - 1);
 	}
 
 	static final String[][] JOKES = {

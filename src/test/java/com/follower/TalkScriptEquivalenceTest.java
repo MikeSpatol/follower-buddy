@@ -14,7 +14,8 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * talk.json builds exactly the conversation the Java in {@link OldTalk} did,
- * for every input that shapes it: the mood band, the wish and the bag.
+ * for every input that shapes it - the mood band, the wish and the bag - and
+ * the day summary says what it said, for every band.
  */
 public class TalkScriptEquivalenceTest
 {
@@ -85,6 +86,35 @@ public class TalkScriptEquivalenceTest
 		}
 		assertEquals(BANDS.length * 8, variants); // public:cut souvenirs-wishes
 		// public:else assertEquals(BANDS.length, variants);
+	}
+
+	@Test
+	public void theDaySummaryReadsTheSameFromTheFile()
+	{
+		FollowerPlugin.Talk talk = TalkScriptTest.talk();
+		int[] counts = {0, 1, 2, 12};
+		int checked = 0;
+		for (String band : new String[]{null, "", "low", "down", "even", "good", "high", "neutral", "ordinary"})
+		{
+			for (int minutes : new int[]{0, 1, 2, 59, 60, 61, 95, 120, 121, 480, 999})
+			{
+				for (int kills : counts)
+				{
+					for (int other : counts)
+					{
+						for (String incident : new String[]{null, "", "that chicken"})
+						{
+							String[] was = OldTalk.daySummary(minutes, kills, other, kills ^ other, band, incident);
+							String[] now = FollowerPlugin.daySummary(talk, minutes, kills, other, kills ^ other, band, incident);
+							assertEquals(band + "/" + minutes + "/" + kills + "/" + other + "/" + incident,
+								Arrays.asList(was), Arrays.asList(now));
+							checked++;
+						}
+					}
+				}
+			}
+		}
+		assertEquals(9 * 11 * 4 * 4 * 3, checked);
 	}
 
 	private static boolean isJoke(FollowerPlugin.Talk talk, List<String> pages)

@@ -7405,7 +7405,7 @@ public class FollowerPlugin extends Plugin
 	private String[] daySummary()
 	{
 		com.follower.speech.TriggerContext context = speechEngine.getContext();
-		return daySummary(
+		return daySummary(talk(),
 			sessionMinutes,
 			context.getTally("kills:today"),
 			context.getTally("levels:today"),
@@ -7422,7 +7422,7 @@ public class FollowerPlugin extends Plugin
 	 * what did and did not happen today, and they are all sentences the player
 	 * reads.
 	 */
-	static String[] daySummary(int minutes, int kills, int levels, int deaths,
+	static String[] daySummary(Talk talk, int minutes, int kills, int levels, int deaths,
 		String moodBand, String incident)
 	{
 		java.util.List<String> parts = new java.util.ArrayList<>();
@@ -7464,25 +7464,9 @@ public class FollowerPlugin extends Plugin
 		}
 
 		// The mood is the follower's own verdict on all that, which is a
-		// different thing from the figures and worth saying separately.
-		switch (moodBand == null ? "" : moodBand)
-		{
-			case "low":
-				pages.add("I've had better days, if I'm honest.");
-				break;
-			case "down":
-				pages.add("Not our finest, but we're still walking.");
-				break;
-			case "good":
-				pages.add("A good day, that. I'd take another like it.");
-				break;
-			case "high":
-				pages.add("One of the good ones. I mean that.");
-				break;
-			default:
-				pages.add("An ordinary day. There's nothing wrong with those.");
-				break;
-		}
+		// different thing from the figures and worth saying separately: the
+		// band's line from talk.json, or the ordinary one for any other band.
+		pages.add(talk.moods.getOrDefault(moodBand, talk.moods.get("ordinary")));
 
 		// And the one thing it has not let go of.
 		if (incident != null && !incident.isEmpty())
@@ -7645,11 +7629,14 @@ public class FollowerPlugin extends Plugin
 		return script;
 	}
 
-	/** talk.json: the Talk-to script's nodes, and its joke pool. */
+	/** talk.json: the Talk-to script's nodes, its joke pool and the day summary's moods. */
 	static class Talk
 	{
 		/** Each a setup page and a punchline page. */
 		List<String[]> jokes;
+
+		/** What the day summary says of each mood band, and of any other ("ordinary"). */
+		Map<String, String> moods;
 
 		List<Line> nodes;
 
