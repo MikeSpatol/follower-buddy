@@ -145,6 +145,7 @@ public class EmoteHandsTest
 		feet.hands.put(WAVE, new int[]{-1, -1});
 		feet.hands.put(EXPLORE_LOOP, new int[]{SEXTANT, -1});
 		feet.hands.put(FLINCH, new int[]{-1, -1});
+		IdleControllers.fill(plugin);
 	}
 
 	private static Object nothing(Class<?> type)

@@ -143,6 +143,7 @@ public class AgilityGateTest
 			}
 			// public:end dev
 		});
+		IdleControllers.fill(plugin);
 		game.at(50, 50, 0).basePoses(NORMAL).posing(808);
 		frame();
 	}

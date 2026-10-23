@@ -186,6 +186,7 @@ public class MilestonesTest
 			f.setAccessible(true);
 			f.set(plugin, field[1]);
 		}
+		IdleControllers.fill(plugin);
 		net.runelite.api.events.ChatMessage message = new net.runelite.api.events.ChatMessage();
 		message.setType(net.runelite.api.ChatMessageType.GAMEMESSAGE);
 		message.setName("");
@@ -224,6 +225,7 @@ public class MilestonesTest
 			f.setAccessible(true);
 			f.set(plugin, field[1]);
 		}
+		IdleControllers.fill(plugin);
 		h.engine.getContext().noteRecord("kc:king black dragon", 1200);
 		com.follower.chronicle.ChronicleEntry kbd = pages.get("boss-king-black-dragon");
 		net.runelite.api.events.ChatMessage message = new net.runelite.api.events.ChatMessage();

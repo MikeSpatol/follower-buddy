@@ -284,6 +284,7 @@ public class StayHoldsTest
 			{
 			}
 		});
+		IdleControllers.fill(plugin);
 	}
 
 	private static Object nothing(Class<?> type)
@@ -1297,7 +1298,7 @@ public class StayHoldsTest
 			{
 				found++;
 				String guard = source.substring(source.lastIndexOf("if (", at), at);
-				assertTrue(reaction + " ... must not be asked for while filming", guard.contains("&& !filming)"));
+				assertTrue(reaction + " ... must not be asked for while filming", guard.contains("!filming)"));
 			}
 			assertTrue("no " + reaction + " - the lint has lost its place", found > 0);
 		}

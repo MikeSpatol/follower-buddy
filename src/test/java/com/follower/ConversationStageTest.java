@@ -90,6 +90,7 @@ public class ConversationStageTest
 		set("speechEngine", h.engine);
 		set("filmSet", new FilmSet(new FollowerEntity(null, null)));
 		set("overlay", new FollowerOverlay(null, null, null, null));
+		IdleControllers.fill(plugin);
 	}
 
 	@Test

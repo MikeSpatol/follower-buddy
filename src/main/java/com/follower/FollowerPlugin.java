@@ -641,6 +641,12 @@ public class FollowerPlugin extends Plugin
 	@Override
 	protected void startUp() throws Exception
 	{
+		// The controllers (errands, skilling, moments, gaze, ...) are built
+		// below and never set back to null. RuneLite registers the event
+		// handlers only after this returns, so the handlers and the ticks use
+		// them without a null check. What this method or shutDown can reach
+		// keeps its checks: shutDown also runs when startUp throws part-way.
+
 		// One thread; work handed it once stopped (a sketch's frame arriving
 		// after shutDown) is dropped, not thrown into the caller.
 		worker = new java.util.concurrent.ThreadPoolExecutor(1, 1, 0, java.util.concurrent.TimeUnit.MILLISECONDS,
@@ -1647,8 +1653,8 @@ public class FollowerPlugin extends Plugin
 	private void updateRest()
 	{
 		boolean busy = thrallNpc != null
-			|| (errands != null && errands.isBusy()) // public:cut errands
-			|| (spectate != null && spectate.isSpectating()) // public:cut spectate,spectate-keep-fight-lines
+			|| errands.isBusy() // public:cut errands
+			|| spectate.isSpectating() // public:cut spectate,spectate-keep-fight-lines
 			|| dialog.isOpen()
 			// A long dialog must not sit the minute-taker down mid-sentence.
 			|| minutesState != 0 // public:cut posing
@@ -1955,10 +1961,10 @@ public class FollowerPlugin extends Plugin
 		boolean over = !open && dialogGoneTicks > 2;
 
 		boolean busy = thrallNpc != null
-			|| (errands != null && errands.isBusy()) // public:cut errands
-			|| (spectate != null && spectate.isSpectating()) // public:cut spectate,spectate-keep-fight-lines
+			|| errands.isBusy() // public:cut errands
+			|| spectate.isSpectating() // public:cut spectate,spectate-keep-fight-lines
 			|| dialog.isOpen()
-			|| (skilling != null && skilling.isWorking()) // public:cut skilling
+			|| skilling.isWorking() // public:cut skilling
 			|| speechEngine.getContext().isInCombat()
 			// A scene's lines are its own: no trip to the shoulder for each.
 			|| inCutscene();
@@ -2230,12 +2236,12 @@ public class FollowerPlugin extends Plugin
 			return;
 		}
 		boolean busy = thrallNpc != null
-			|| (errands != null && errands.isBusy()) // public:cut errands
-			|| (spectate != null && spectate.isSpectating()) // public:cut spectate,spectate-keep-fight-lines
+			|| errands.isBusy() // public:cut errands
+			|| spectate.isSpectating() // public:cut spectate,spectate-keep-fight-lines
 			|| dialog.isOpen()
 			|| minutesState != 0
 			|| follower.isStaying()
-			|| (skilling != null && skilling.isWorking()) // public:cut skilling
+			|| skilling.isWorking() // public:cut skilling
 			|| speechEngine.getContext().isInCombat();
 		Player local = client.getLocalPlayer();
 		if (busy || local == null || !follower.isSpawned())
@@ -2279,7 +2285,7 @@ public class FollowerPlugin extends Plugin
 	private int wanderRadius()
 	{
 		// public:cut moments
-		if (moments != null && moments.keepsClose())
+		if (moments.keepsClose())
 		{
 			// The ten minutes after a pet: it stays by the new arrival.
 			return Math.max(2, WANDER_RADIUS - 2);
@@ -2343,12 +2349,12 @@ public class FollowerPlugin extends Plugin
 		// public:end chronicle
 		int idle = speechEngine.getContext().getIdleTicks();
 		boolean busy = thrallNpc != null
-			|| (errands != null && errands.isBusy()) // public:cut errands
-			|| (spectate != null && spectate.isSpectating()) // public:cut spectate,spectate-keep-fight-lines
+			|| errands.isBusy() // public:cut errands
+			|| spectate.isSpectating() // public:cut spectate,spectate-keep-fight-lines
 			|| dialog.isOpen()
 			|| emoteHold
-			|| (skilling != null && skilling.holdsTheFeet()) // public:cut skilling
-			|| (moments != null && moments.holdsTheFeet()) // public:cut moments
+			|| skilling.holdsTheFeet() // public:cut skilling
+			|| moments.holdsTheFeet() // public:cut moments
 			|| inCutscene()
 			|| resting
 			// A long dialog must not walk the minute-taker off the shoulder.
@@ -3214,7 +3220,7 @@ public class FollowerPlugin extends Plugin
 		// it: a Stay, a Send, an errand, a possessed thrall. Being away from
 		// the player is the point of all four, and none of them is stuck.
 		if (!follower.isSpawned() || follower.isStaying() || follower.isPosed()
-			|| follower.isNpcSlaved() || (errands != null && errands.isBusy())) // public:cut errands
+			|| follower.isNpcSlaved() || errands.isBusy()) // public:cut errands
 			// public:else || follower.isNpcSlaved())
 		{
 			return;
@@ -4937,19 +4943,13 @@ public class FollowerPlugin extends Plugin
 				// a lost tick of movement - which is what made it stop and then snap.
 				// A real teleport is caught by the distance check in updateTrail.
 				follower.markNeedsReattach();
-				if (hotGround != null)
-				{
-					// The scene is rebuilt from here; its fires are announced
-					// again as it loads, so the old set is only ever stale.
-					hotGround.clear();
-				}
+				// The scene is rebuilt from here; its fires are announced
+				// again as it loads, so the old set is only ever stale.
+				hotGround.clear();
 				// public:cut skilling
-				if (skilling != null)
-				{
-					// Objects and NPCs dropped around a load are shuffling,
-					// not a tree falling; the company ignores them for a beat.
-					skilling.sceneLoading();
-				}
+				// Objects and NPCs dropped around a load are shuffling,
+				// not a tree falling; the company ignores them for a beat.
+				skilling.sceneLoading();
 				// public:end skilling
 				break;
 
@@ -5020,65 +5020,38 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void tearDownScene()
 	{
-		if (hotGround != null)
-		{
-			hotGround.clear();
-		}
+		hotGround.clear();
 		ensureCatalogues();
 		resetThrallQuietly();
 		// Actor references from a scene that is going away.
 		damagedByPlayer.clear();
 		// public:cut errands
-		if (errands != null)
-		{
-			errands.reset();
-		}
+		errands.reset();
 		// public:end errands
-		if (flourish != null)
-		{
-			// Mid-gesture when the scene went: the scroll must not survive it.
-			flourish.abort();
-		}
+		// Mid-gesture when the scene went: the scroll must not survive it.
+		flourish.abort();
 		// public:cut skilling
-		if (skilling != null)
-		{
-			// The session, the seat and the borrowed tool all belonged to it.
-			skilling.reset();
-		}
+		// The session, the seat and the borrowed tool all belonged to it.
+		skilling.reset();
 		// public:end skilling
 		// public:cut moments
-		if (moments != null)
-		{
-			moments.reset();
-		}
+		moments.reset();
 		// public:end moments
 		// public:cut company-extras,noticing
 		// What was noticed, looked at and hesitated over was all in this
 		// scene. No despawn comes for a scene thrown away, so a drop or a star
 		// left behind was walked to and named in the next world.
-		if (noticing != null)
-		{
-			noticing.reset();
-		}
+		noticing.reset();
 		// public:end company-extras,noticing
 		// public:cut agility-all,marks
-		if (marksOfGrace != null)
-		{
-			marksOfGrace.reset();
-		}
+		marksOfGrace.reset();
 		// public:end agility-all,marks
 		// public:cut company-extras
 		// public:cut gaze
-		if (gaze != null)
-		{
-			gaze.reset();
-		}
+		gaze.reset();
 		// public:end gaze
 		// public:cut will
-		if (will != null)
-		{
-			will.reset();
-		}
+		will.reset();
 		// public:end will
 		// public:end company-extras
 		// The conversation too. Left open at a logout it took the presses in
@@ -5525,7 +5498,7 @@ public class FollowerPlugin extends Plugin
 	private boolean spectateBusy()
 	{
 		return thrallBusiness()
-			|| (errands != null && errands.isBusy()) // public:cut errands
+			|| errands.isBusy() // public:cut errands
 			|| filming // public:cut posing
 			|| inCutscene()
 			|| follower.isDoingAgility(); // public:cut agility,agility-all
@@ -6506,11 +6479,8 @@ public class FollowerPlugin extends Plugin
 		// public:cut skilling
 		pendingMime = 0;
 		copyAtWork = false;
-		if (skilling != null)
-		{
-			// Whatever it walked over for is finished; back to the seat.
-			skilling.dropTheJoin();
-		}
+		// Whatever it walked over for is finished; back to the seat.
+		skilling.dropTheJoin();
 		// public:end skilling
 		if (mirroredPose == 0)
 		{
@@ -7128,10 +7098,6 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void watchForAgility()
 	{
-		if (crossingWatch == null)
-		{
-			return;
-		}
 		agilityFramesThisTick++; // public:cut dev
 		GameState state = client.getGameState();
 		if (state == GameState.LOADING)
@@ -7144,8 +7110,8 @@ public class FollowerPlugin extends Plugin
 			&& follower.isSpawned() && !parkedByPlayer && !thrallBusiness() && !filming // public:cut posing
 			// public:else && follower.isSpawned() && !parkedByPlayer && !thrallBusiness()
 			// public:cut errands
-			&& (errands == null || !errands.isBusy()) // public:cut chronicle
-			// public:else && (errands == null || !errands.isBusy());
+			&& !errands.isBusy() // public:cut chronicle
+			// public:else && !errands.isBusy();
 			// public:end errands
 			&& (sketching == null || !sketching.isSketching()); // public:cut chronicle
 		if (!watching)
@@ -7212,7 +7178,7 @@ public class FollowerPlugin extends Plugin
 		agilityFramesThisTick = 0;
 		agilityTickMs = now;
 		Player local = client.getLocalPlayer();
-		if (!agilityTrace.isEnabled() || local == null || crossingWatch == null)
+		if (!agilityTrace.isEnabled() || local == null)
 		{
 			return;
 		}
@@ -8300,7 +8266,7 @@ public class FollowerPlugin extends Plugin
 		// Through the will, which stops at an edge it has misgivings
 		// about before going on.
 		// public:end company-extras,will
-		boolean sent = will != null ? will.send(target) : follower.stayAt(target); // public:cut company-extras,will
+		boolean sent = will.send(target); // public:cut company-extras,will
 		// public:else boolean sent = follower.stayAt(besideIt(target));
 		if (!sent)
 		{
@@ -8314,7 +8280,7 @@ public class FollowerPlugin extends Plugin
 			// that had the feet, the pause is over, and the follower parked on
 			// the edge stayed three tiles short of a monster for good.
 			// public:end company-extras,will
-			parkedByThePlayer(will != null ? will.endsAt() : follower.getStayTile()); // public:cut company-extras,will
+			parkedByThePlayer(will.endsAt()); // public:cut company-extras,will
 			// public:else parkedByThePlayer(follower.getStayTile());
 		}
 	}
@@ -8455,10 +8421,7 @@ public class FollowerPlugin extends Plugin
 		}
 		// public:end posing
 		// public:cut company-extras,gaze
-		if (gaze != null)
-		{
-			gaze.noteHover(com.follower.follower.Gaze.read(client, follower));
-		}
+		gaze.noteHover(com.follower.follower.Gaze.read(client, follower));
 		// public:end company-extras,gaze
 
 		boolean over = !client.isMenuOpen() && follower.isSpawned()
@@ -8686,7 +8649,7 @@ public class FollowerPlugin extends Plugin
 		if (pendingMime != 0)
 		{
 			// Arrived beside the work: now the copying reads as joining in.
-			if (skilling == null || !skilling.joiningIn())
+			if (!skilling.joiningIn())
 			{
 				pendingMime = 0;
 			}
@@ -8935,10 +8898,7 @@ public class FollowerPlugin extends Plugin
 		expireKillClaims();
 		updateWander();
 		// public:cut company-extras,gaze
-		if (gaze != null)
-		{
-			gaze.tick();
-		}
+		gaze.tick();
 		// public:end company-extras,gaze
 		follower.setFollowDistance(config.followDistance());
 		// The shoulder is for open ground and nothing else going on: not a
@@ -8947,75 +8907,53 @@ public class FollowerPlugin extends Plugin
 			&& !speechEngine.getContext().isInCombat()
 			&& !speechEngine.getContext().isInThievingSession() // public:cut skilling
 			// public:else && !speechEngine.getContext().isInThievingSession());
-			&& (skilling == null || !skilling.isWorking())); // public:cut skilling
+			&& !skilling.isWorking()); // public:cut skilling
 		updateMinutes();
 		updateWelfare();
 		updateRest();
 
 		// public:cut errands
-		if (errands != null)
-		{
-			errands.tick();
-		}
+		errands.tick();
 		// public:end errands
-		if (flourish != null)
-		{
-			flourish.tick();
-		}
+		flourish.tick();
 		// public:cut skilling
 		// public:cut spectate,spectate-keep-fight-lines
 		// Before the spectator, which beats it: on the tick a fight is seen
 		// the seat is let go first and the stand-clear takes the feet after.
 		// public:end spectate,spectate-keep-fight-lines
-		if (skilling != null)
+		skilling.tick();
+		skilling.describeTo(speechEngine.getContext());
+		// Picking by hand at a patch: the hands emptied of its own gear.
+		refreshEmoteDisarm(follower.isEmotePlaying());
+		// A copy of the work lasts while the follower is beside it: moved
+		// off it, or the work over, and the copy stops there and then,
+		// rather than carrying on wherever it was taken. A one-shot is
+		// over when its swing is, and back to the seat it goes.
+		if (copyAtWork && (!skilling.stillJoined()
+			|| (mirroredPose == 0 && !follower.isEmotePlaying())))
 		{
-			skilling.tick();
-			skilling.describeTo(speechEngine.getContext());
-			// Picking by hand at a patch: the hands emptied of its own gear.
-			refreshEmoteDisarm(follower.isEmotePlaying());
-			// A copy of the work lasts while the follower is beside it: moved
-			// off it, or the work over, and the copy stops there and then,
-			// rather than carrying on wherever it was taken. A one-shot is
-			// over when its swing is, and back to the seat it goes.
-			if (copyAtWork && (!skilling.stillJoined()
-				|| (mirroredPose == 0 && !follower.isEmotePlaying())))
-			{
-				stopPoseMirror();
-			}
+			stopPoseMirror();
 		}
 		// public:end skilling
 		// public:cut moments
-		if (moments != null)
-		{
-			// After the seat, which it excuses itself from.
-			moments.tick();
-		}
+		// After the seat, which it excuses itself from.
+		moments.tick();
 		// public:end moments
 		// public:cut company-extras,noticing
-		if (noticing != null)
-		{
-			// After the moments, whose feet it borrows for the walk.
-			noticing.tick();
-		}
+		// After the moments, whose feet it borrows for the walk.
+		noticing.tick();
 		// public:end company-extras,noticing
 		// public:cut agility-all,marks
-		if (marksOfGrace != null && crossingWatch != null) // public:cut agility
-		// public:else if (marksOfGrace != null)
-		{
-			net.runelite.api.ItemContainer inventory =
-				client.getItemContainer(net.runelite.api.gameval.InventoryID.INV);
-			marksOfGrace.tick(System.currentTimeMillis(), local.getWorldLocation(),
-				crossingWatch.isWatchingMovement(), lastAgilityXpMs, // public:cut agility
-				// public:else false, lastAgilityXpMs,
-				inventory == null ? -1 : inventory.count(com.follower.follower.MarksOfGrace.MARK),
-				follower.isSpawned() && !isStaying());
-		}
+		net.runelite.api.ItemContainer inventory =
+			client.getItemContainer(net.runelite.api.gameval.InventoryID.INV);
+		marksOfGrace.tick(System.currentTimeMillis(), local.getWorldLocation(),
+			crossingWatch.isWatchingMovement(), lastAgilityXpMs, // public:cut agility
+			// public:else false, lastAgilityXpMs,
+			inventory == null ? -1 : inventory.count(com.follower.follower.MarksOfGrace.MARK),
+			follower.isSpawned() && !isStaying());
 		// public:end agility-all,marks
 		// public:cut company-extras,will
-		if (will != null)
-		{
-			will.tick();
-		}
+		will.tick();
 		// public:end company-extras,will
 
 		// public:cut spectate
@@ -9037,10 +8975,7 @@ public class FollowerPlugin extends Plugin
 		// finished with the feet, and a spectate started in that window had
 		// its seat wiped by the exit machinery. Play report: fresh out of
 		// thrall mode, wards at the player's side, no stepping away.
-		if (spectate != null)
-		{
-			spectate.tick(spectateBusy(), parkedByPlayer);
-		}
+		spectate.tick(spectateBusy(), parkedByPlayer);
 		// public:end spectate-keep-fight-lines
 		// public:end spectate
 		// After everything that borrows the feet, so a park the player gave
@@ -9223,14 +9158,14 @@ public class FollowerPlugin extends Plugin
 		// the post thirty times in an afternoon of its own pottering.
 		boolean stayCommanded = stayIsPlayerCommanded(follower.isStaying(),
 			wandered, thrallNpc != null,
-			errands != null && errands.isBusy(), // public:cut errands
-			spectate != null && spectate.holdsTheFeet(), // public:cut spectate,spectate-keep-fight-lines
+			errands.isBusy(), // public:cut errands
+			spectate.holdsTheFeet(), // public:cut spectate,spectate-keep-fight-lines
 			emoteHold, minutesState != 0,
-			(skilling != null && skilling.holdsTheFeet()) // public:cut skilling
-			// public:else (moments != null && moments.holdsTheFeet())
-				|| (moments != null && moments.holdsTheFeet()) // public:cut moments,skilling
+			skilling.holdsTheFeet() // public:cut skilling
+			// public:else moments.holdsTheFeet()
+				|| moments.holdsTheFeet() // public:cut moments,skilling
 				// A write-up plants the follower for the length of the notes.
-				|| (flourish != null && flourish.isActive())
+				|| flourish.isActive()
 				// A scene holds it where it stands.
 				|| sceneHolds());
 		speechEngine.getContext().setFollowerStaying(stayCommanded);
@@ -9288,10 +9223,7 @@ public class FollowerPlugin extends Plugin
 				// public:cut errands
 				// Somewhere new: once the player settles, the follower may go
 				// and nose at something (the explore errand's arrival trigger).
-				if (errands != null)
-				{
-					errands.noticeArrival();
-				}
+				errands.noticeArrival();
 				// public:end errands
 			}
 		}
@@ -9396,10 +9328,7 @@ public class FollowerPlugin extends Plugin
 		if (logoutTabTicks == FAREWELL_AFTER_TICKS)
 		{
 			// public:cut moments
-			if (moments != null)
-			{
-				moments.farewell();
-			}
+			moments.farewell();
 			// public:end moments
 			speechEngine.dispatch(TriggerEvent.simple(TriggerEvent.Type.FAREWELL));
 		}
@@ -9599,13 +9528,10 @@ public class FollowerPlugin extends Plugin
 		// tiles, through walls and floors. See noteCreaturesInSight.
 		maybeAdoptThrall(npc);
 		// public:cut skilling
-		if (skilling != null)
-		{
-			skilling.npcSpawned(npc);
-		}
+		skilling.npcSpawned(npc);
 		// public:end skilling
 		// public:cut moments
-		if (moments != null && config.noticesThings())
+		if (config.noticesThings())
 		{
 			moments.npcSpawned(npc);
 		}
@@ -9652,16 +9578,10 @@ public class FollowerPlugin extends Plugin
 			}
 		}
 		// public:cut skilling
-		if (skilling != null)
-		{
-			skilling.npcDespawned(npc);
-		}
+		skilling.npcDespawned(npc);
 		// public:end skilling
 		// public:cut moments
-		if (moments != null)
-		{
-			moments.npcDespawned(npc);
-		}
+		moments.npcDespawned(npc);
 		// public:end moments
 		// As with spawns: the whole scene despawns on a chunk load, and no
 		// bundled rule listens for it at all.
@@ -9698,22 +9618,19 @@ public class FollowerPlugin extends Plugin
 		}
 		// public:cut agility-all,marks
 		// Every mark, chunk load or not: one already on a roof is spotted on arrival.
-		if (marksOfGrace != null)
+		// public:cut dev
+		if (event.getItem().getId() == com.follower.follower.MarksOfGrace.MARK)
 		{
-			// public:cut dev
-			if (event.getItem().getId() == com.follower.follower.MarksOfGrace.MARK)
-			{
-				agilityTrace.event("grace: mark appeared at " + event.getTile().getWorldLocation()
-					+ (ticksSinceLoading > 2 ? "" : " (with a load)"));
-			}
-			// public:end dev
-			marksOfGrace.spawned(event.getItem().getId(), event.getTile().getWorldLocation());
+			agilityTrace.event("grace: mark appeared at " + event.getTile().getWorldLocation()
+				+ (ticksSinceLoading > 2 ? "" : " (with a load)"));
 		}
+		// public:end dev
+		marksOfGrace.spawned(event.getItem().getId(), event.getTile().getWorldLocation());
 		// public:end agility-all,marks
 		// public:cut company-extras,noticing
 		// A chunk load raises one of these per item already lying about;
 		// none of those is a drop the player just walked away from.
-		if (noticing != null && ticksSinceLoading > 2)
+		if (ticksSinceLoading > 2)
 		{
 			int id = event.getItem().getId();
 			noticing.itemSpawned(event.getItem(), event.getTile().getWorldLocation(),
@@ -9722,7 +9639,7 @@ public class FollowerPlugin extends Plugin
 		}
 		// public:end company-extras,noticing
 		// public:cut skilling
-		if (skilling == null || !skilling.isWorking())
+		if (!skilling.isWorking())
 		{
 			return;
 		}
@@ -9735,7 +9652,7 @@ public class FollowerPlugin extends Plugin
 	public void onItemDespawned(net.runelite.api.events.ItemDespawned event)
 	{
 		// public:cut company-extras,noticing
-		if (noticing != null && event.getItem() != null && event.getTile() != null)
+		if (event.getItem() != null && event.getTile() != null)
 		{
 			noticing.itemDespawned(event.getItem(), event.getTile().getWorldLocation());
 		}
@@ -9743,7 +9660,7 @@ public class FollowerPlugin extends Plugin
 		// public:cut agility-all,marks
 		// Not one a load shuffles: its spawn comes back to the same tile, and
 		// the mark keeps what the follower already made of it.
-		if (marksOfGrace != null && event.getItem() != null && event.getTile() != null
+		if (event.getItem() != null && event.getTile() != null
 			&& client.getGameState() == GameState.LOGGED_IN && ticksSinceLoading > 2)
 		{
 			// public:cut dev
@@ -9771,7 +9688,7 @@ public class FollowerPlugin extends Plugin
 		// object in the scene, and that IS how the set is built - the tiles
 		// the follower walks round have to be known before it takes a step,
 		// whatever the company settings say.
-		if (hotGround != null && object != null)
+		if (object != null)
 		{
 			net.runelite.api.WorldView fires = client.getTopLevelWorldView();
 			net.runelite.api.Point from = object.getSceneMinLocation();
@@ -9796,7 +9713,7 @@ public class FollowerPlugin extends Plugin
 		// public:cut company-extras,noticing
 		// A star landing. Names are only looked up outside a chunk load,
 		// which raises one of these per object in the scene.
-		if (noticing != null && object != null && ticksSinceLoading > 2)
+		if (object != null && ticksSinceLoading > 2)
 		{
 			String name = com.follower.follower.ErrandController.objectName(client, object.getId());
 			if (spawned)
@@ -9810,7 +9727,7 @@ public class FollowerPlugin extends Plugin
 		}
 		// public:end company-extras,noticing
 		// public:cut skilling
-		if (skilling == null || object == null
+		if (object == null
 			|| (spawned ? !config.keepsCompany() : !skilling.isWorking()))
 		{
 			return;
@@ -9880,7 +9797,7 @@ public class FollowerPlugin extends Plugin
 		}
 
 		// public:cut skilling
-		if (skilling != null && !filming) // public:cut posing
+		if (!filming) // public:cut posing
 		// public:else if (skilling != null)
 		{
 			// The stun, the empty rune pouch, the slayer task: silent reactions,
@@ -9889,7 +9806,7 @@ public class FollowerPlugin extends Plugin
 		}
 		// public:end skilling
 		// public:cut moments
-		if (moments != null && config.noticesThings())
+		if (config.noticesThings())
 		{
 			// The pet drop: the walk over to see it.
 			moments.noteChatMessage(event.getMessage(), event.getType());
@@ -9916,8 +9833,8 @@ public class FollowerPlugin extends Plugin
 				speechEngine.getContext().tally("collections");
 				speechEngine.dispatch(TriggerEvent.collectionAdd(parsed));
 				// public:cut moments
-				if (moments != null && config.noticesThings() && !filming) // public:cut posing
-				// public:else if (moments != null && config.noticesThings())
+				if (config.noticesThings() && !filming) // public:cut posing
+				// public:else if (config.noticesThings())
 				{
 					// A first-ever thing is news whatever it sells for; it is
 					// in the bag, so the write-up faces the player.
@@ -10365,7 +10282,7 @@ public class FollowerPlugin extends Plugin
 		}
 
 		// public:cut skilling
-		if (skilling != null && event.getActor() instanceof Player)
+		if (event.getActor() instanceof Player)
 		{
 			// Any player's: the proof that an animation is safe on a player
 			// skeleton is a player playing it.
@@ -10385,11 +10302,8 @@ public class FollowerPlugin extends Plugin
 		// public:end posing
 
 		// public:cut skilling
-		if (skilling != null)
-		{
-			// Proof that a work click turned into work, or that it goes on.
-			skilling.noteAnimation(animationId);
-		}
+		// Proof that a work click turned into work, or that it goes on.
+		skilling.noteAnimation(animationId);
 		// public:end skilling
 
 		// A slaved chain (the home teleport) steps stage-for-stage with the
@@ -10497,7 +10411,7 @@ public class FollowerPlugin extends Plugin
 		int graphicId = spotAnim.getId();
 		int graphicHeight = spotAnim.getHeight();
 		// public:cut skilling
-		if (skilling != null && !filming) // public:cut posing
+		if (!filming) // public:cut posing
 		// public:else if (skilling != null)
 		{
 			// The thieving stun's stars, which land before its message.
@@ -10597,8 +10511,7 @@ public class FollowerPlugin extends Plugin
 			speechEngine.getContext().noteDamageTaken();
 			speechEngine.dispatch(TriggerEvent.damageTaken(event.getHitsplat().getAmount()));
 			// public:cut agility,agility-all
-			if (crossingWatch != null
-				&& com.follower.follower.CrossingWatch.isFallDamage(event.getHitsplat().getHitsplatType()))
+			if (com.follower.follower.CrossingWatch.isFallDamage(event.getHitsplat().getHitsplatType()))
 			{
 				crossingWatch.noteDamage(System.currentTimeMillis());
 			}
@@ -10837,8 +10750,8 @@ public class FollowerPlugin extends Plugin
 			// public:end side-games
 			speechEngine.dispatch(TriggerEvent.loot(worth, best));
 			// public:cut moments
-			if (moments != null && config.noticesThings() && !filming) // public:cut posing
-			// public:else if (moments != null && config.noticesThings())
+			if (config.noticesThings() && !filming) // public:cut posing
+			// public:else if (config.noticesThings())
 			{
 				// The body's share: a glance, the notes, or the walk over.
 				moments.noteworthy(com.follower.follower.Moments.tierFor(total), at);
@@ -10882,8 +10795,8 @@ public class FollowerPlugin extends Plugin
 				total, total - (level - previous), base, previousBase, masteries,
 				sinceLast, sinceAny));
 			// public:cut moments
-			if (moments != null && config.noticesThings() && !filming) // public:cut posing
-			// public:else if (moments != null && config.noticesThings())
+			if (config.noticesThings() && !filming) // public:cut posing
+			// public:else if (config.noticesThings())
 			{
 				// The clap, or the walk over for it; the line is the rules'.
 				moments.levelUp(level);
@@ -10898,8 +10811,7 @@ public class FollowerPlugin extends Plugin
 		Integer previousXp = knownXp.put(skill, xp);
 		if (previousXp != null && xp > previousXp)
 		{
-			if (skill == Skill.AGILITY && crossingWatch != null) // public:cut agility,agility-all
-			// public:else if (skill == Skill.AGILITY)
+			if (skill == Skill.AGILITY)
 			{
 				// public:cut agility-all
 				// public:cut agility
@@ -10921,7 +10833,7 @@ public class FollowerPlugin extends Plugin
 				}
 				// public:end agility,agility-all
 			}
-			int count = skilling == null ? 0 : skilling.noteXpDrop(skill); // public:cut skilling
+			int count = skilling.noteXpDrop(skill); // public:cut skilling
 			// public:else speechEngine.dispatch(TriggerEvent.xpDrop(skill.getName(), 0));
 			speechEngine.dispatch(TriggerEvent.xpDrop(skill.getName(), count)); // public:cut skilling
 		}
@@ -11343,12 +11255,9 @@ public class FollowerPlugin extends Plugin
 		noteIntentFrom(event.getMenuOption());
 		noteExamine(event);
 		// public:cut skilling
-		if (skilling != null)
-		{
-			skilling.noteMenuOption(
-				com.follower.follower.SkillingController.plainOption(event.getMenuOption()),
-				com.follower.follower.SkillingController.plainOption(event.getMenuTarget()));
-		}
+		skilling.noteMenuOption(
+			com.follower.follower.SkillingController.plainOption(event.getMenuOption()),
+			com.follower.follower.SkillingController.plainOption(event.getMenuTarget()));
 		noteWorkClick(event);
 		// public:end skilling
 
@@ -11547,8 +11456,7 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void noteWorkClick(MenuOptionClicked event)
 	{
-		if (skilling == null
-			|| !com.follower.follower.SkillingController.isWorkOption(event.getMenuOption()))
+		if (!com.follower.follower.SkillingController.isWorkOption(event.getMenuOption()))
 		{
 			return;
 		}
@@ -12270,11 +12178,8 @@ public class FollowerPlugin extends Plugin
 			// public:cut dev
 			case "errandscan":
 			{
-				if (errands != null)
-				{
-					errands.debugScan();
-					sendStatus("Errand scan logged.");
-				}
+				errands.debugScan();
+				sendStatus("Errand scan logged.");
 				break;
 			}
 
@@ -12438,13 +12343,8 @@ public class FollowerPlugin extends Plugin
 			// public:cut spectate,spectate-keep-fight-lines
 			case "spectate":
 			{
-				if (spectate == null)
-				{
-					sendStatus("Spectating is not running.");
-					break;
-				}
 				String state = spectate.describe(
-					thrallNpc != null || (errands != null && errands.isBusy())); // public:cut errands
+					thrallNpc != null || errands.isBusy()); // public:cut errands
 					// public:else thrallNpc != null);
 				sendStatus(state);
 				log.info("{}", state); // public:cut logs
@@ -12802,11 +12702,8 @@ public class FollowerPlugin extends Plugin
 						log.info("FIRES {}", line); // public:cut logs
 					}
 					// public:cut skilling
-					if (skilling != null)
-					{
-						sendStatus("Skilling: " + skilling.describe());
-						log.info("FIRES skilling {}", skilling.describe()); // public:cut logs
-					}
+					sendStatus("Skilling: " + skilling.describe());
+					log.info("FIRES skilling {}", skilling.describe()); // public:cut logs
 					// public:end skilling
 				});
 				break;
