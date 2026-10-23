@@ -571,10 +571,16 @@ public class FollowerDialog extends Overlay
 			return;
 		}
 		Runnable action = pendingAction;
+		clearInput();
+		action.run();
+	}
+
+	/** Drops any input still in flight. */
+	private void clearInput()
+	{
 		pendingAction = null;
 		awaitingContinue = false;
 		pendingOptionIndex = -1;
-		action.run();
 	}
 
 	/** Opens the conversation on the NEXT game tick, like a real Talk-to. */
@@ -836,9 +842,7 @@ public class FollowerDialog extends Overlay
 		// public:end chathead
 		// An interrupt-close cancels any input still in flight, or a stale
 		// queued action would fire a tick after the box is gone.
-		pendingAction = null;
-		awaitingContinue = false;
-		pendingOptionIndex = -1;
+		clearInput();
 
 		// Cleared before it runs: whatever it does, it must not be able to
 		// arrive here a second time.
@@ -864,9 +868,7 @@ public class FollowerDialog extends Overlay
 	 */
 	public void showScripted(String speakerName, Node line)
 	{
-		pendingAction = null;
-		awaitingContinue = false;
-		pendingOptionIndex = -1;
+		clearInput();
 		Map<String, Node> single = new LinkedHashMap<>();
 		single.put("line", line);
 		begin(speakerName, single, "line", true);
@@ -1167,10 +1169,7 @@ public class FollowerDialog extends Overlay
 		{
 			chatheadBase = null;
 			head = null;
-			talkAnimation = null;
-			talkFrame = 0;
-			talkCarryMs = 0;
-			lastTalkMs = System.currentTimeMillis();
+			restartTalk();
 
 			com.follower.appearance.Outfit outfit = null;
 			net.runelite.api.Model cropModel = null;
@@ -1198,10 +1197,25 @@ public class FollowerDialog extends Overlay
 			}
 			if (chatheadBase == null)
 			{
-				head = ChatheadRenderer.render(cropModel, null, headWidth(), headHeight(),
-					headTurn(), headPitch, headZoom, headFraction, headWidth() / 2, originY());
+				head = renderHead(cropModel, null, headFraction);
 			}
 		});
+	}
+
+	/** Starts the talking face again from its first frame. */
+	private void restartTalk()
+	{
+		talkAnimation = null;
+		talkFrame = 0;
+		talkCarryMs = 0;
+		lastTalkMs = System.currentTimeMillis();
+	}
+
+	/** The head at the box's size and angles, framed by {@code base} when it is given. */
+	private BufferedImage renderHead(net.runelite.api.Model model, net.runelite.api.Model base, double fraction)
+	{
+		return ChatheadRenderer.render(model, base, headWidth(), headHeight(),
+			headTurn(), headPitch, headZoom, fraction, headWidth() / 2, originY());
 	}
 
 	/**
@@ -1225,10 +1239,7 @@ public class FollowerDialog extends Overlay
 		// public:else int wanted = talkClip(talkAnimationId, lines);
 		if (talkAnimation != null && (wanted != talkLoadedId || page != talkPage))
 		{
-			talkAnimation = null;
-			talkFrame = 0;
-			talkCarryMs = 0;
-			lastTalkMs = System.currentTimeMillis();
+			restartTalk();
 		}
 		if (talkAnimation == null)
 		{
@@ -1238,8 +1249,7 @@ public class FollowerDialog extends Overlay
 			if (talkAnimation == null || talkAnimation.getFrameLengths() == null)
 			{
 				talkAnimation = null;
-				return ChatheadRenderer.render(chatheadBase, null, headWidth(), headHeight(),
-					headTurn(), headPitch, headZoom, 1.0, headWidth() / 2, originY());
+				return renderHead(chatheadBase, null, 1.0);
 			}
 		}
 
@@ -1262,8 +1272,7 @@ public class FollowerDialog extends Overlay
 		}
 		net.runelite.api.Model posed = client.applyTransformations(
 			chatheadBase, talkAnimation, talkFrame, null, 0);
-		lastFace = ChatheadRenderer.render(posed == null ? chatheadBase : posed,
-			chatheadBase, headWidth(), headHeight(), headTurn(), headPitch, headZoom, 1.0, headWidth() / 2, originY());
+		lastFace = renderHead(posed == null ? chatheadBase : posed, chatheadBase, 1.0);
 		lastFaceBase = chatheadBase;
 		lastFaceAnimation = talkAnimation;
 		lastFacePose = pose;

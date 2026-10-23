@@ -1,4 +1,14 @@
-package com.follower.speech;
+package com.follower.speech.before;
+
+/*
+ * The loader as it stood before MergingLoader (commit 310760e), kept verbatim as
+ * LoaderDiffTest's reference: the same upgrade scenarios must leave the same
+ * files, status, errors, rules, trees and log lines with either. Only the
+ * package, the imports of the speech classes it shared, Lombok's @Slf4j and
+ * @Getter written out (the tests are built without Lombok) and, in
+ * DialogLoader, the dialogs-editor marker round getFile differ. Not used by
+ * the plugin.
+ */
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
