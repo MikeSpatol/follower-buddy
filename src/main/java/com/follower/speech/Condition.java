@@ -1,7 +1,12 @@
 package com.follower.speech;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Properties;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
@@ -249,15 +254,16 @@ public class Condition
 
 	private boolean idsContain(int wanted)
 	{
-		if (ids == null)
-		{
-			return false;
-		}
+		return ids != null && contains(unboxedIds(), wanted);
+	}
+
+	private int[] unboxedIds()
+	{
 		if (idsUnboxed == null)
 		{
 			idsUnboxed = unbox(ids);
 		}
-		return contains(idsUnboxed, wanted);
+		return idsUnboxed;
 	}
 
 	/**
@@ -392,7 +398,7 @@ public class Condition
 			// nickname is not a yes to the outing.
 			case "answered":
 				return event.getType() == TriggerEvent.Type.ANSWERED
-					&& (is == null || is.equalsIgnoreCase(event.getName()))
+					&& isAny(event.getName())
 					&& (of == null || of.equalsIgnoreCase(event.getMessage()));
 
 			// No player, no answer: at client start a chat message can arrive
@@ -412,17 +418,10 @@ public class Condition
 			// 11-20. Newer quests keep progress in a varbit, older ones in a
 			// varp. Same guard as varbitEquals, for the same reason.
 			case "questvar":
-			{
-				if ((varbit == null && varp == null) || ctx.getClient().getLocalPlayer() == null)
-				{
-					return false;
-				}
-				int current = varbit != null
-					? ctx.getClient().getVarbitValue(varbit)
-					: ctx.getClient().getVarpValue(varp);
-				return (minimum == null || current >= minimum)
-					&& (maximum == null || current <= maximum);
-			}
+				return (varbit != null || varp != null) && ctx.getClient().getLocalPlayer() != null
+					&& inRange(varbit != null
+						? ctx.getClient().getVarbitValue(varbit)
+						: ctx.getClient().getVarpValue(varp), Integer.MIN_VALUE);
 
 			// An NPC dialogue box is up, or was a moment ago: page flips drop
 			// it for a beat. Used negated, inside an "all", so a rule whose
@@ -452,8 +451,7 @@ public class Condition
 
 			case "levelup":
 				return event.getType() == TriggerEvent.Type.LEVEL_UP && matchesText(event.getName())
-					&& event.getValue() >= orDefault(minimum, 1)
-					&& (maximum == null || event.getValue() <= maximum);
+					&& inRange(event.getValue(), 1);
 
 			// A level that means something beyond being the next one. "is"
 			// picks which: halfway (92, half the experience to 99), round (a
@@ -474,11 +472,9 @@ public class Condition
 					case "halfway":
 						return level == 92;
 					case "round":
-						return level % 10 == 0 && level >= orDefault(minimum, 50)
-							&& (maximum == null || level <= maximum);
+						return level % 10 == 0 && inRange(level, 50);
 					case "mastery":
-						return level == 99 && event.getCount() >= orDefault(minimum, 1)
-							&& (maximum == null || event.getCount() <= maximum);
+						return level == 99 && inRange(event.getCount(), 1);
 					case "total":
 					{
 						int step = Math.max(1, orDefault(every, 100));
@@ -498,14 +494,8 @@ public class Condition
 			// follower has a stamp to measure from: a first level in a skill
 			// since it started keeping them is not a gap of any size.
 			case "levelgap":
-			{
-				if (event.getType() != TriggerEvent.Type.LEVEL_UP || event.getSinceMs() < 0)
-				{
-					return false;
-				}
-				long gap = event.getSinceMs() / 60_000L;
-				return gap >= orDefault(minimum, 0) && (maximum == null || gap <= maximum);
-			}
+				return event.getType() == TriggerEvent.Type.LEVEL_UP && event.getSinceMs() >= 0
+					&& inRange(event.getSinceMs() / 60_000L, 0);
 
 			// The game announcing a kill count - the account's own number, not
 			// the follower's tally, which is why it can say "your forty-first"
@@ -515,14 +505,10 @@ public class Condition
 			// every five hundred).
 			case "killcount":
 			{
-				if (event.getType() != TriggerEvent.Type.KILL_COUNT)
-				{
-					return false;
-				}
 				int n = event.getCount();
-				return (names == null || matchesAnyName(event.getName()))
-					&& n >= orDefault(minimum, 1)
-					&& (maximum == null || n <= maximum)
+				return event.getType() == TriggerEvent.Type.KILL_COUNT
+					&& namesAny(event.getName())
+					&& inRange(n, 1)
 					&& (every == null || every <= 0 || n % every == 0)
 					&& (is == null || !"round".equalsIgnoreCase(is) || isRoundCount(n));
 			}
@@ -533,54 +519,6 @@ public class Condition
 			case "grateful":
 				return ctx.isGrateful();
 
-			// What the two of them were doing when the last session ended, for
-			// the greeting. Login only, and only when there is something to
-			// say; {lastTime} says it.
-			// public:cut company-extras
-			// public:cut noticing
-			// The follower noticed something and went to look at it. "is" is
-			// the kind (valuable, nest, impling, star, landmark); "contains"
-			// narrows on the thing's name. {kind}, {thing}.
-			case "noticed":
-				return event.getType() == TriggerEvent.Type.NOTICED
-					&& (is == null || is.equalsIgnoreCase(event.getName()))
-					&& (contains == null || event.getMessage().toLowerCase(Locale.ROOT)
-						.contains(contains.toLowerCase(Locale.ROOT)));
-
-			// public:end noticing
-			// public:cut will
-			// A Send the follower had misgivings about: it has stopped at the
-			// edge and turned to the player. "is" is the kind (wilderness,
-			// monster); {misgiving}, {thing}.
-			case "hesitated":
-				return event.getType() == TriggerEvent.Type.HESITATED
-					&& (is == null || is.equalsIgnoreCase(event.getName()));
-
-			// The player walked straight at the parked follower and it stepped
-			// aside at the last tick.
-			case "steppedaside":
-				return event.getType() == TriggerEvent.Type.STEPPED_ASIDE;
-
-			// public:end will
-			// public:end company-extras
-			// public:cut agility-all
-			// public:cut agility
-			// The follower did an agility obstacle after the player. "is" is
-			// "fell" for a fall copied, "crossed" for a clean one.
-			case "crossed":
-				return event.getType() == TriggerEvent.Type.CROSSED
-					&& (is == null || is.equalsIgnoreCase(event.getName()));
-
-			// public:end agility
-			// public:cut marks
-			// A mark of grace on a rooftop course. "is" is "spotted", "left"
-			// (walked past and on to the next obstacle) or "collected".
-			case "grace":
-				return event.getType() == TriggerEvent.Type.GRACE
-					&& (is == null || is.equalsIgnoreCase(event.getName()));
-
-			// public:end marks
-			// public:end agility-all
 			// An earned name the player has not been asked about yet. {candidate}
 			// says it; the asking rule is what turns it into a nickname.
 			case "nicknameearned":
@@ -591,10 +529,9 @@ public class Condition
 			case "addressed":
 				return ctx.isAddressingFollower();
 
-			// The logout tab opening. The body waves; this is the rare word.
-			case "farewell":
-				return event.getType() == TriggerEvent.Type.FAREWELL;
-
+			// What the two of them were doing when the last session ended, for
+			// the greeting. Login only, and only when there is something to
+			// say; {lastTime} says it.
 			case "lasttime":
 				return event.getType() == TriggerEvent.Type.LOGIN && !ctx.getLastTime().isEmpty();
 
@@ -603,16 +540,7 @@ public class Condition
 					&& event.getValue() >= orDefault(minimum, 1);
 
 			case "itemequipped":
-			{
-				if (ids == null)
-				{
-					return false;
-				}
-				if (idsUnboxed == null)
-				{
-					idsUnboxed = unbox(ids);
-				}
-				for (int id : idsUnboxed)
+				for (int id : ids == null ? new int[0] : unboxedIds())
 				{
 					if (ctx.isEquipped(id))
 					{
@@ -620,7 +548,6 @@ public class Condition
 					}
 				}
 				return false;
-			}
 
 			case "poisoned":
 			{
@@ -643,9 +570,6 @@ public class Condition
 			// "been still a while" AND "not settled in for the night".
 			case "idlebelow":
 				return ctx.getIdleTicks() < orDefault(ticks, 500);
-
-			case "playerdeath":
-				return event.getType() == TriggerEvent.Type.PLAYER_DEATH;
 
 			// Standing where the last death happened, well after the fact.
 			case "neardeathspot":
@@ -672,31 +596,9 @@ public class Condition
 				return ctx.isInCombat()
 					&& ctx.getCombatTargetLevel() >= orDefault(minimum, 100);
 
-			case "login":
-				return event.getType() == TriggerEvent.Type.LOGIN;
-
-			case "thrallstart":
-				return event.getType() == TriggerEvent.Type.THRALL_START;
-			case "thrallswitch":
-				return event.getType() == TriggerEvent.Type.THRALL_SWITCH;
-			case "thrallend":
-				return event.getType() == TriggerEvent.Type.THRALL_END;
-
-			// public:cut errands
-			case "errandstart":
-				return event.getType() == TriggerEvent.Type.ERRAND_START
-					&& (names == null || matchesAnyName(event.getName()));
-			case "errandend":
-				return event.getType() == TriggerEvent.Type.ERRAND_END
-					&& (names == null || matchesAnyName(event.getName()));
-
-			// public:end errands
 			// public:cut spectate
-			// The moment a fight starts or ends, as opposed to "combat", which
-			// stays true throughout one. Optional names match what is fought.
-			case "combatstart":
-				return event.getType() == TriggerEvent.Type.COMBAT_START
-					&& (names == null || matchesAnyName(event.getName()));
+			// The moment a fight ends, as opposed to "combat", which stays
+			// true throughout one. Optional names match what was fought.
 			case "combatend":
 				return event.getType() == TriggerEvent.Type.COMBAT_END
 					// The level comes from the context rather than the event,
@@ -704,50 +606,34 @@ public class Condition
 					// the one the fight was fought at when this fires.
 					&& (boss == null
 						|| boss == ctx.isBoss(event.getName(), ctx.getCombatTargetLevel()))
-					&& (names == null || matchesAnyName(event.getName()));
+					&& namesAny(event.getName());
 
 			// public:end spectate
-			// Something the player killed. "minimum"/"maximum" bracket the
-			// victim's COMBAT LEVEL, which is how one rule celebrates a boss
-			// and another shrugs at a chicken; "names"/"ids" narrow it further.
 			// How the follower is feeling. "is" names a band (low, down, even,
 			// good, high); minimum and maximum bracket the raw 0..100 for
 			// anything that wants a finer edge than the bands give.
 			case "mood":
-			{
-				if (is != null)
-				{
-					return is.equalsIgnoreCase(ctx.getMoodBand());
-				}
-				int value = ctx.getMood();
-				return value >= orDefault(minimum, 0)
-					&& value <= orDefault(maximum, 100);
-			}
+				// The mood is held to 0..100, so with no maximum it is at most 100.
+				return is != null ? is.equalsIgnoreCase(ctx.getMoodBand()) : inRange(ctx.getMood(), 0);
 
+			// Something the player killed. "minimum"/"maximum" bracket the
+			// victim's COMBAT LEVEL, which is how one rule celebrates a boss
+			// and another shrugs at a chicken; "names"/"ids" narrow it further.
 			case "npckill":
 				return event.getType() == TriggerEvent.Type.NPC_KILL
 					&& (boss == null
 						|| boss == ctx.isBoss(event.getName(), event.getValue()))
 					&& (namedBoss == null || namedBoss == ctx.isNamedBoss(event.getName()))
-					&& event.getValue() >= orDefault(minimum, 0)
-					&& (maximum == null || event.getValue() <= maximum)
+					&& inRange(event.getValue(), 0)
 					&& (names == null && ids == null || matchesNpc(event))
 					// "every": 50 fires on the fiftieth of THIS npc and every
 					// fiftieth after, which is what makes a tally a remark.
 					&& (every == null || every <= 0
 						|| (event.getCount() > 0 && event.getCount() % every == 0));
 
-			// The two ends of a thieving session. Everything between them is
-			// silent, and these are what make that silence read as the
-			// follower giving the player room rather than having broken.
-			case "thievingstart":
-				return event.getType() == TriggerEvent.Type.THIEVING_START;
-			case "thievingend":
-				return event.getType() == TriggerEvent.Type.THIEVING_END;
-
-			// True for the whole session, unlike the two edges. Speech is muted
-			// throughout, so this is really for animation-only rules - which
-			// skip the mute, being movement rather than chatter.
+			// True for the whole thieving session, unlike the two edges. Speech
+			// is muted throughout, so this is really for animation-only rules -
+			// which skip the mute, being movement rather than chatter.
 			case "thieving":
 				return ctx.isInThievingSession();
 
@@ -757,21 +643,16 @@ public class Condition
 			case "awayfor":
 				return event.getType() == TriggerEvent.Type.LOGIN
 					&& ctx.getMinutesAway() >= 0
-					&& ctx.getMinutesAway() >= orDefault(minimum, 60)
-					&& (maximum == null || ctx.getMinutesAway() <= maximum);
+					&& inRange(ctx.getMinutesAway(), 60);
 
-			// A lifetime count, as against npcKill's "every" which fires on the
-			// moment. This is state: it stays true once passed, so it belongs
-			// alongside something that picks the moment to say it.
 			// The incident the follower is still thinking about. "is" names a
 			// particular one; without it, any incident will do - which is what
 			// a generic "I still think about {memory}" line wants. A maximum
 			// holds a line to the counts it is true for: "That's three".
 			case "remembers":
 				return ctx.hasIncident()
-					&& (is == null || is.equalsIgnoreCase(ctx.getIncidentKey()))
-					&& ctx.getIncidentCount() >= orDefault(minimum, 1)
-					&& (maximum == null || ctx.getIncidentCount() <= maximum);
+					&& isAny(ctx.getIncidentKey())
+					&& inRange(ctx.getIncidentCount(), 1);
 
 			// Standing where the incident happened, and the thing it was with
 			// being nearby again: the two moments a memory is worth jogging.
@@ -780,20 +661,11 @@ public class Condition
 			case "memoryfoenearby":
 				return ctx.isIncidentFoeNearby(orDefault(within, 12));
 
-			// You clicked the tile the follower was standing on.
-			case "underfoot":
-				return event.getType() == TriggerEvent.Type.UNDERFOOT;
-
 			// public:cut side-games
-			// A challenge is outstanding, was met, or ran out. {challenge}
-			// names it. "challenging" is mostly used negated, so the follower
+			// A challenge is outstanding. Mostly used negated, so the follower
 			// does not set a second one over the top of the first.
 			case "challenging":
 				return ctx.isChallenging();
-			case "challengemet":
-				return event.getType() == TriggerEvent.Type.CHALLENGE_MET;
-			case "challengefailed":
-				return event.getType() == TriggerEvent.Type.CHALLENGE_FAILED;
 
 			// public:end side-games
 			// Nobody has touched the camera for this long. Distinct from idle,
@@ -801,8 +673,6 @@ public class Condition
 			case "unattended":
 				return ctx.getUnattendedTicks() >= orDefault(ticks, 200);
 
-			// How long the follower has known you, in days, and the day of
-			// the year it met you coming round again.
 			// A player-commanded Stay: watched, parked, and free to have a
 			// little life of its own.
 			case "staying":
@@ -816,19 +686,18 @@ public class Condition
 			// an arrival, thieving, the bank. "is" names which ending; left
 			// out, any ending counts.
 			case "boundary":
-				return ctx.isAtBoundary()
-					&& (is == null || is.equalsIgnoreCase(ctx.getBoundaryKind()));
+				return ctx.isAtBoundary() && isAny(ctx.getBoundaryKind());
 
+			// How long the follower has known you, in days, and the day of
+			// the year it met you coming round again.
 			case "daysknown":
-				return ctx.getDaysKnown() >= orDefault(minimum, 1)
-					&& (maximum == null || ctx.getDaysKnown() <= maximum);
+				return inRange(ctx.getDaysKnown(), 1);
 			// Days since a one-time rule was heard: a running bit's stages
 			// count from its opener, and stay quiet until it has been said.
 			case "dayssincesaid":
 			{
 				int days = ctx.daysSinceSaid(rule);
-				return days >= 0 && days >= orDefault(minimum, 0)
-					&& (maximum == null || days <= maximum);
+				return days >= 0 && inRange(days, 0);
 			}
 			case "anniversary":
 				return ctx.isAnniversary();
@@ -842,8 +711,7 @@ public class Condition
 			// The follower has taken to calling you something. {nickname} says
 			// it; without this guard the placeholder prints nothing.
 			case "nicknamed":
-				return ctx.hasNickname()
-					&& (is == null || is.equalsIgnoreCase(ctx.getNickname()));
+				return ctx.hasNickname() && isAny(ctx.getNickname());
 
 			// public:cut side-games
 			// The player did what the follower suggested, or the window shut
@@ -851,11 +719,9 @@ public class Condition
 			// one piece of advice, so the food line and the bag line can react
 			// differently.
 			case "heeded":
-				return event.getType() == TriggerEvent.Type.ADVICE_HEEDED
-					&& (is == null || is.equalsIgnoreCase(ctx.getAdviceAbout()));
+				return event.getType() == TriggerEvent.Type.ADVICE_HEEDED && isAny(ctx.getAdviceAbout());
 			case "ignored":
-				return event.getType() == TriggerEvent.Type.ADVICE_IGNORED
-					&& (is == null || is.equalsIgnoreCase(ctx.getAdviceAbout()));
+				return event.getType() == TriggerEvent.Type.ADVICE_IGNORED && isAny(ctx.getAdviceAbout());
 
 			// Advice is outstanding. Used NEGATED, so the follower does not
 			// give the same advice twice while still waiting on the first.
@@ -874,11 +740,7 @@ public class Condition
 			// rather than a verdict, so a rule can want a STRONG opinion.
 			// Negative is the bad direction.
 			case "placescore":
-			{
-				int score = ctx.getPlaceScore();
-				return (minimum == null || score >= minimum)
-					&& (maximum == null || score <= maximum);
-			}
+				return inRange(ctx.getPlaceScore(), Integer.MIN_VALUE);
 
 			// A question is already on the table. Used NEGATED, and every rule
 			// with an "asks" needs it: opening a second question replaces the
@@ -886,8 +748,7 @@ public class Condition
 			// and then offers a game has silently withdrawn the outing, and the
 			// player answers a question nobody is listening for.
 			case "asking":
-				return ctx.isAwaitingAnswer()
-					&& (is == null || is.equalsIgnoreCase(ctx.getAskedTree()));
+				return ctx.isAwaitingAnswer() && isAny(ctx.getAskedTree());
 
 			// public:cut souvenirs-wishes
 			// Carrying something it picked up. Mostly used negated, to stop it
@@ -897,9 +758,6 @@ public class Condition
 			case "carrying":
 				return ctx.isCarrying() && ctx.minutesCarried() >= orDefault(minimum, 0);
 
-			case "souvenirlost":
-				return event.getType() == TriggerEvent.Type.SOUVENIR_LOST;
-
 			// public:end souvenirs-wishes
 			// public:cut side-games
 			// A prediction is outstanding. Negated, this stops it betting twice
@@ -907,29 +765,16 @@ public class Condition
 			case "betting":
 				return ctx.isBetting();
 
-			case "betwon":
-				return event.getType() == TriggerEvent.Type.BET_WON;
-			case "betlost":
-				return event.getType() == TriggerEvent.Type.BET_LOST;
-
 			// public:end side-games
 			// The hour on the player's own wall, not the game's. "minimum" and
 			// "maximum" bound it, wrapping past midnight so a late-night window
 			// can be written the way a person would say it: 23 to 5.
 			case "timeofday":
-			{
-				int hour = ctx.getHourOfDay();
-				int from = orDefault(minimum, 0);
-				int to = orDefault(maximum, 23);
-				return from <= to
-					? hour >= from && hour <= to
-					: hour >= from || hour <= to;
-			}
+				return between(ctx.getHourOfDay(), orDefault(minimum, 0), orDefault(maximum, 23));
 
 			// How long today has run, in minutes.
 			case "sessionminutes":
-				return ctx.getSessionMinutes() >= orDefault(minimum, 60)
-					&& (maximum == null || ctx.getSessionMinutes() <= maximum);
+				return inRange(ctx.getSessionMinutes(), 60);
 
 			// The date on the player's own calendar, like timeOfDay is the
 			// player's own clock. A single day, or a range that may wrap past
@@ -951,71 +796,9 @@ public class Condition
 					return today % 100 == day;
 				}
 				int from = month * 100 + day;
-				int to = untilMonth == null || untilDay == null
-					? from : untilMonth * 100 + untilDay;
-				return from <= to
-					? today >= from && today <= to
-					: today >= from || today <= to;
+				return between(today, from, untilMonth == null || untilDay == null
+					? from : untilMonth * 100 + untilDay);
 			}
-
-			// A world hop landed. Rare by nature, so no flood guard needed.
-			case "worldhop":
-				return event.getType() == TriggerEvent.Type.WORLD_HOP;
-
-			// First login since the game itself changed under everyone's feet.
-			case "gameupdated":
-				return event.getType() == TriggerEvent.Type.GAME_UPDATE;
-
-			// The notebook was edited from outside and hot-reloaded. In-world
-			// this is somebody writing in the scribe's own book.
-			case "notesedited":
-				return event.getType() == TriggerEvent.Type.NOTES_EDITED;
-
-			case "musicunlock":
-				return event.getType() == TriggerEvent.Type.MUSIC_UNLOCK;
-
-			// The music changed to another track - the town's own song, where
-			// musicUnlock is hearing one for the FIRST time. Names narrow it
-			// to particular tracks, which is how a rule gets an opinion about
-			// Sea Shanty 2 without one about everything.
-			case "musictrack":
-				return event.getType() == TriggerEvent.Type.TRACK_CHANGE
-					&& (names == null || matchesAnyName(event.getName()));
-
-			case "collectionadd":
-				return event.getType() == TriggerEvent.Type.COLLECTION_ADD;
-
-			case "questcomplete":
-				return event.getType() == TriggerEvent.Type.QUEST_COMPLETE;
-
-			// public:cut chronicle
-			// A chronicle page was written for the first time. "is" narrows it
-			// to one kind of page met or walked into (boss, enemy, location,
-			// faction, world), or "quest" for any page a quest opened.
-			case "pagewritten":
-				return event.getType() == TriggerEvent.Type.PAGE_WRITTEN
-					&& (is == null || is.equalsIgnoreCase(event.getName()));
-
-			// public:end chronicle
-			// A Grand Exchange offer finished; "is" narrows to bought or sold.
-			case "geoffer":
-				return event.getType() == TriggerEvent.Type.GE_OFFER
-					&& (is == null || is.equalsIgnoreCase(event.getName()));
-
-			case "channeljoined":
-				return event.getType() == TriggerEvent.Type.CHANNEL_JOIN;
-			case "channelleft":
-				return event.getType() == TriggerEvent.Type.CHANNEL_LEAVE;
-
-			// A named NPC's overhead line. Names match like npcSpawn's and the
-			// message like chatMessage's contains - spelled out here rather
-			// than through matchesText, which would also try the message
-			// against the NAMES and quietly widen what a rule matches.
-			case "npcshout":
-				return event.getType() == TriggerEvent.Type.NPC_SHOUT
-					&& (names == null || matchesAnyName(event.getName()))
-					&& (contains == null || event.getMessage().toLowerCase(Locale.ROOT)
-						.contains(contains.toLowerCase(Locale.ROOT)));
 
 			// How this particular follower feels about where it is standing.
 			// The set is rolled once per character, so the answer is a fact
@@ -1040,13 +823,8 @@ public class Condition
 			// the wish rules (one hope at a time) and required by the gift's
 			// thank-you, which names the thing via {wish}.
 			case "wishing":
-				return ctx.isWishing()
-					&& (is == null || is.equalsIgnoreCase(ctx.getWishLabel()));
+				return ctx.isWishing() && isAny(ctx.getWishLabel());
 
-			// And the wished-for thing is actually in the player's bag. The
-			// gift's thank-you requires this; the bluff rule requires its
-			// absence - claiming to have found a feather is checkable, and a
-			// follower that cannot tell is a follower that cannot see.
 			// public:end souvenirs-wishes
 			// One of these items is in the bag now: state, so a rule rises when
 			// it arrives - the golden key in Priest in Peril, picked up off the
@@ -1055,15 +833,14 @@ public class Condition
 				return ctx.isInInventory(ids);
 
 			// public:cut souvenirs-wishes
+			// And the wished-for thing is actually in the player's bag. The
+			// gift's thank-you requires this; the bluff rule requires its
+			// absence - claiming to have found a feather is checkable, and a
+			// follower that cannot tell is a follower that cannot see.
 			case "wishitemheld":
 				return ctx.isWishedItemInBag();
 
 			// public:end souvenirs-wishes
-			case "wantfulfilled":
-				return event.getType() == TriggerEvent.Type.WANT_FULFILLED;
-			case "wantexpired":
-				return event.getType() == TriggerEvent.Type.WANT_EXPIRED;
-
 			// Room left in the bag. The point of this one is the WARNING - set
 			// maximum to 2 and the follower speaks up while there is still
 			// somewhere to put the next log, which is a companion paying
@@ -1085,58 +862,20 @@ public class Condition
 			case "hovered":
 				return ctx.getHoverTicks() >= orDefault(ticks, 5);
 
-			case "examined":
-				return event.getType() == TriggerEvent.Type.EXAMINED;
-
-			// The player examined something - the other direction. Names
-			// narrow it to particular things, so the scarecrow can have its
-			// own line without everything having one.
-			case "examinedthing":
-				return event.getType() == TriggerEvent.Type.EXAMINED_THING
-					&& (names == null || matchesAnyName(event.getName()));
-
-			// The player came back from a long absence during which the
-			// follower walked round to peer at them. The check itself is
-			// silent - the damper holds while nobody is there to read a line -
-			// so this is the payoff, landing on a present player.
-			case "attendedagain":
-				return event.getType() == TriggerEvent.Type.ATTENDED_AGAIN;
-
-			// The follower finished minuting one of the player's NPC dialogs:
-			// it stepped aside, wrote through the meeting, and put the scroll
-			// away as the box closed.
-			case "minutestaken":
-				return event.getType() == TriggerEvent.Type.MINUTES_TAKEN;
-
+			// A lifetime count, as against npcKill's "every" which fires on the
+			// moment. This is state: it stays true once passed, so it belongs
+			// alongside something that picks the moment to say it.
 			case "tally":
-			{
-				if (of == null)
-				{
-					return false;
-				}
-				int counted = ctx.getTally(of);
-				return counted >= orDefault(minimum, 1)
-					&& (maximum == null || counted <= maximum);
-			}
-
-			// The moment a record was beaten. {record}, {value} and {previous}
-			// are on the event; "names" narrows to particular records.
-			case "personalbest":
-				return event.getType() == TriggerEvent.Type.RECORD
-					&& (names == null || matchesAnyName(event.getName()));
+				return of != null && inRange(ctx.getTally(of), 1);
 
 			// How many times the follower has been started up with this player.
 			// Login only, which is the one moment it changes and the one moment
 			// remarking on it is not out of nowhere.
 			case "sessioncount":
 			{
-				if (event.getType() != TriggerEvent.Type.LOGIN)
-				{
-					return false;
-				}
 				int sessions = ctx.getSessionCount();
-				return sessions >= orDefault(minimum, 1)
-					&& (maximum == null || sessions <= maximum)
+				return event.getType() == TriggerEvent.Type.LOGIN
+					&& inRange(sessions, 1)
 					&& (every == null || every <= 0 || sessions % every == 0);
 			}
 
@@ -1153,9 +892,8 @@ public class Condition
 			// a piece of the target's name, so a yew can have its own line.
 			case "working":
 				return ctx.isWorking()
-					&& (is == null || is.equalsIgnoreCase(ctx.getWorkActivity()))
-					&& (contains == null || ctx.getWorkTargetName().toLowerCase(Locale.ROOT)
-						.contains(contains.toLowerCase(Locale.ROOT)));
+					&& isAny(ctx.getWorkActivity())
+					&& containsAny(ctx.getWorkTargetName());
 
 			// public:end skilling
 			// The tick of an XP drop. "every" counts within the work session,
@@ -1163,32 +901,90 @@ public class Condition
 			// eighth drop and every eighth after.
 			case "xpdrop":
 				return event.getType() == TriggerEvent.Type.XP_DROP
-					&& (names == null || matchesAnyName(event.getName()))
+					&& namesAny(event.getName())
 					&& (every == null || every <= 0
 						|| (event.getCount() > 0 && event.getCount() % every == 0));
-			// public:cut skilling
 
-			case "workended":
-				return event.getType() == TriggerEvent.Type.WORK_END
-					&& (names == null || matchesAnyName(event.getName()));
-
-			case "targetdepleted":
-				return event.getType() == TriggerEvent.Type.TARGET_DEPLETED;
-
-			case "bagfull":
-				return event.getType() == TriggerEvent.Type.BAG_FULL;
-			case "baghalf":
-				return event.getType() == TriggerEvent.Type.BAG_HALF;
-			// public:end skilling
-
+			// Every other type is an event and nothing more, listed with what
+			// narrows it in event-conditions.properties.
 			default:
-				log.warn("Unknown condition type '{}'", type); // public:cut agility,agility-all,chronicle,company-extras,errands,marks,noticing,side-games,skilling,souvenirs-wishes,spectate,will
-				// public:else if (UNKNOWN_TYPES.add(type))
-				// public:else {
-				// public:else 	log.warn("Unknown condition type '{}'", type);
-				// public:else }
-				return false;
+			{
+				if (eventSpec == null)
+				{
+					eventSpec = Arrays.asList(EVENT_CONDITIONS.getProperty(normalizedType, "").split(" "));
+					eventType = eventSpec.get(0).isEmpty() ? null : TriggerEvent.Type.valueOf(eventSpec.get(0));
+				}
+				if (eventType == null)
+				{
+					log.warn("Unknown condition type '{}'", type); // public:cut agility,agility-all,chronicle,company-extras,errands,marks,noticing,side-games,skilling,souvenirs-wishes,spectate,will
+					// public:else if (UNKNOWN_TYPES.add(type))
+					// public:else {
+					// public:else 	log.warn("Unknown condition type '{}'", type);
+					// public:else }
+					return false;
+				}
+				return event.getType() == eventType
+					&& (!eventSpec.contains("is") || isAny(event.getName()))
+					&& (!eventSpec.contains("names") || namesAny(event.getName()))
+					&& (!eventSpec.contains("contains") || containsAny(event.getMessage()));
+			}
 		}
+	}
+
+	/**
+	 * The condition types that are an event and nothing more, by type: each
+	 * names the event it is true on, then the fields that narrow it. See
+	 * event-conditions.properties.
+	 */
+	private static final Properties EVENT_CONDITIONS = new Properties();
+
+	static
+	{
+		try (InputStream in = Condition.class.getResourceAsStream("/com/follower/event-conditions.properties"))
+		{
+			EVENT_CONDITIONS.load(in);
+		}
+		catch (IOException e)
+		{
+			throw new UncheckedIOException(e);
+		}
+		// A line whose event type is gone stops the class loading here, rather
+		// than leaving the rules that use it silently never true.
+		EVENT_CONDITIONS.values().forEach(spec -> TriggerEvent.Type.valueOf(spec.toString().split(" ")[0]));
+	}
+
+	/** This condition's line of event-conditions.properties, split, and its event, once looked up. */
+	private transient List<String> eventSpec;
+	private transient TriggerEvent.Type eventType;
+
+	/** Absent, any; present, the value named, whatever its case. */
+	private boolean isAny(String value)
+	{
+		return is == null || is.equalsIgnoreCase(value);
+	}
+
+	/** Absent, any; present, one of the names (wildcards ok). */
+	private boolean namesAny(String value)
+	{
+		return names == null || matchesAnyName(value);
+	}
+
+	/** Absent, any; present, a piece of the text, whatever its case. */
+	private boolean containsAny(String text)
+	{
+		return contains == null || text.toLowerCase(Locale.ROOT).contains(contains.toLowerCase(Locale.ROOT));
+	}
+
+	/** At least {@link #minimum} (or the fallback) and at most {@link #maximum}, if given. */
+	private boolean inRange(long value, int fallbackMinimum)
+	{
+		return value >= orDefault(minimum, fallbackMinimum) && (maximum == null || value <= maximum);
+	}
+
+	/** Between the two, inclusive, wrapping round when from is past to: 23 to 5. */
+	private static boolean between(int value, int from, int to)
+	{
+		return from <= to ? value >= from && value <= to : value >= from || value <= to;
 	}
 
 	private boolean allOf(TriggerContext ctx, TriggerEvent event)
@@ -1225,11 +1021,7 @@ public class Condition
 
 	private boolean matchesNpc(TriggerEvent event)
 	{
-		if (idsContain(event.getId()))
-		{
-			return true;
-		}
-		return names != null && matchesAnyName(event.getName());
+		return idsContain(event.getId()) || matchesAnyName(event.getName());
 	}
 
 	/**
@@ -1259,11 +1051,7 @@ public class Condition
 
 	private boolean matchesNpcObject(NPC npc)
 	{
-		if (idsContain(npc.getId()))
-		{
-			return true;
-		}
-		return names != null && npc.getName() != null && matchesAnyName(npc.getName());
+		return idsContain(npc.getId()) || matchesAnyName(npc.getName());
 	}
 
 	private boolean matchesRegion(TriggerContext ctx, int currentRegion)
@@ -1390,7 +1178,7 @@ public class Condition
 				return true;
 			}
 		}
-		return names != null && matchesAnyName(text);
+		return matchesAnyName(text);
 	}
 
 	/** Name matching is case-insensitive and supports {@code *} wildcards. */
