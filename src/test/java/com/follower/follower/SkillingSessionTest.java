@@ -3159,7 +3159,7 @@ public class SkillingSessionTest
 		game.animating(621);
 		tick(3 + SkillingController.SEAT_AFTER_TICKS);
 		assertEquals("netting", 621, follower.poseOverride);
-		assertEquals("with the net", Borrow.SMALL_NET, held);
+		assertEquals("with the net", 303, held);
 		assertEquals("at the net spot", netAt, follower.facing);
 	}
 
@@ -3352,7 +3352,7 @@ public class SkillingSessionTest
 		assertNotEquals(BANK_SIDE, at);
 		assertEquals("facing it", SPOT, follower.facing);
 		assertEquals("netting", 621, follower.poseOverride);
-		assertEquals("with the small net", Borrow.SMALL_NET, held);
+		assertEquals("with the small net", 303, held);
 	}
 
 	@Test
@@ -4463,7 +4463,7 @@ public class SkillingSessionTest
 		game.animating(HAMMER);
 		tick(1 + SkillingController.SEAT_AFTER_TICKS);
 		assertEquals("the flank", 2, follower.stayingAt.distanceTo(PLAYER));
-		assertEquals("the saw, not the notes", Borrow.SAW, held);
+		assertEquals("the saw, not the notes", 8794, held);
 	}
 
 	@Test
@@ -4483,7 +4483,7 @@ public class SkillingSessionTest
 
 		held = 0;
 		skilling.noteXpDrop(Skill.CONSTRUCTION);
-		assertEquals("the hand free again, and the saw in it", Borrow.SAW, held);
+		assertEquals("the hand free again, and the saw in it", 8794, held);
 	}
 
 	// ------------------------------------------------------------- firemaking

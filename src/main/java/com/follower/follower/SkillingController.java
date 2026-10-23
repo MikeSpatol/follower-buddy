@@ -4,19 +4,26 @@ package com.follower.follower;
 import com.follower.FollowerConfig;
 import com.follower.speech.TriggerContext;
 import com.follower.speech.TriggerEvent;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
 import java.util.function.BiConsumer; // public:cut errands
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Animation;
 import net.runelite.api.ChatMessageType;
@@ -49,34 +56,46 @@ import net.runelite.api.coords.WorldPoint;
 @Slf4j
 public class SkillingController
 {
-	/** The option words that start work, matched whole after tag stripping. */
-	private static final String[] WORK_OPTIONS = {
-		"Chop down", "Mine", "Fish", "Net", "Harpoon", "Cage", "Bait", "Lure",
-		// Read off the cache: the same work under other words.
-		"Chop", "Chop-down", "Cut", "Cut down", "Cut-Down",
-		"Small Net", "Big Net", "Use-rod",
-		"Cook", "Smith", "Smelt", "Craft", "Spin", "Weave", "Pray-at", "Craft-rune",
-		"Rake", "Plant", "Harvest", "Check-health", "Pick", "Steal-from", "Pickpocket",
-		"Build", "Light", "Burn", "Bury", "Lay", "Set-trap", "Catch", "Use",
-		// The Wintertodt brazier is fed, not lit, once it is burning.
-		"Feed",
-	};
+	/**
+	 * The skilling company's tables - the work options, the tools, the
+	 * outfits and the like - read once from skilling.properties: each a key
+	 * and its values, comma separated.
+	 */
+	private static final Properties DATA = new Properties();
+
+	/** The option words that start work, lowercased, and the skill each points at. */
+	private static final Map<String, String> WORK = new HashMap<>();
+
+	static
+	{
+		try (InputStream in = SkillingController.class.getResourceAsStream("/com/follower/skilling.properties"))
+		{
+			DATA.load(in);
+		}
+		catch (IOException e)
+		{
+			throw new UncheckedIOException(e);
+		}
+		for (String key : DATA.stringPropertyNames())
+		{
+			if (key.startsWith("option."))
+			{
+				for (String word : values(key))
+				{
+					WORK.put(word.toLowerCase(Locale.ROOT), key.substring("option.".length()));
+				}
+			}
+		}
+	}
 
 	/**
 	 * The work the game lets a player do from one side only: every object
 	 * with a work option whose cache definition carries an access mask. The
 	 * client drops that mask when it loads the definition, so it cannot be
-	 * read at run time; this is it, read off the cache. Everything else is
-	 * worked from any side a fence does not close.
+	 * read at run time; skilling.properties has it, read off the cache.
+	 * Everything else is worked from any side a fence does not close.
 	 */
-	private static final Set<Integer> ONE_SIDED = new HashSet<>(Arrays.asList(
-		// Ranges, ovens, a stove and a gnome cooker.
-		114, 8750, 16641, 7183, 7184, 9682, 12102, 12611, 25730, 26181, 50563, 54049,
-		21792, 27516, 47925, 48169, 27517, 27724, 31631, 59682, 39391, 39458, 39490,
-		7421, 52647, 54449, 57332, 57333, 10377, 12269, 17131,
-		// Doric's anvil, rocks and a tree or two.
-		2031, 25422, 48921, 51485, 51486, 51487, 51488, 51489, 51490, 51491, 51492,
-		10048, 25425));
+	private static final Set<Integer> ONE_SIDED = idSet("oneSided");
 
 	/** Ticks the player has to be at it before the seat is taken. */
 	static final int SEAT_AFTER_TICKS = 6;
@@ -193,7 +212,7 @@ public class SkillingController
 	private static final int FIRE_GAG_ONE_IN = 50; // public:cut errands
 
 	/** The cold-stamp-feet rule's regions: the Wintertodt camp and the snows. */
-	static final Set<Integer> COLD_REGIONS = new HashSet<>(Arrays.asList(10553, 8253, 6462));
+	static final Set<Integer> COLD_REGIONS = idSet("coldRegions");
 
 	/**
 	 * How long a borrowed tool stays in the hand once a session ends. One
@@ -629,15 +648,7 @@ public class SkillingController
 	/** Whether a menu option is one of the words that start work. */
 	public static boolean isWorkOption(String option)
 	{
-		String plain = plainOption(option);
-		for (String word : WORK_OPTIONS)
-		{
-			if (word.equalsIgnoreCase(plain))
-			{
-				return true;
-			}
-		}
-		return false;
+		return WORK.keySet().stream().anyMatch(plainOption(option)::equalsIgnoreCase);
 	}
 
 	/** The option with the game's colour tags off it. */
@@ -653,63 +664,7 @@ public class SkillingController
 	 */
 	public static String activityFor(String option)
 	{
-		switch (plainOption(option).toLowerCase(Locale.ROOT))
-		{
-			case "chop down":
-			case "chop":
-			case "chop-down":
-			case "cut":
-			case "cut down":
-			case "cut-down":
-				return "woodcutting";
-			case "mine":
-				return "mining";
-			case "fish":
-			case "net":
-			case "harpoon":
-			case "cage":
-			case "bait":
-			case "lure":
-			case "small net":
-			case "big net":
-			case "use-rod":
-				return "fishing";
-			case "cook":
-				return "cooking";
-			case "smith":
-			case "smelt":
-				return "smithing";
-			case "craft":
-			case "spin":
-			case "weave":
-				return "crafting";
-			case "pray-at":
-			case "bury":
-				return "prayer";
-			case "craft-rune":
-				return "runecraft";
-			case "rake":
-			case "plant":
-			case "harvest":
-			case "check-health":
-			case "pick":
-				return "farming";
-			case "steal-from":
-			case "pickpocket":
-				return "thieving";
-			case "build":
-				return "construction";
-			case "light":
-			case "burn":
-			case "feed":
-				return "firemaking";
-			case "lay":
-			case "set-trap":
-			case "catch":
-				return "hunter";
-			default:
-				return "";
-		}
+		return WORK.getOrDefault(plainOption(option).toLowerCase(Locale.ROOT), "");
 	}
 
 	/**
@@ -3683,5 +3638,25 @@ public class SkillingController
 		context.setWork(true, session.activity, session.targetName, session.targetTile,
 			now - session.startTick, session.xpDrops,
 			session.lastDropTick < 0 ? Integer.MAX_VALUE : now - session.lastDropTick);
+	}
+
+	/** A row of skilling.properties, or null when there is none. */
+	static String[] values(String key)
+	{
+		String row = DATA.getProperty(key);
+		return row == null ? null : row.split(",");
+	}
+
+	/** A row of skilling.properties as ids - items, objects, regions, animations - or null. */
+	static int[] ids(String key)
+	{
+		String[] cells = values(key);
+		return cells == null ? null : Arrays.stream(cells).mapToInt(Integer::parseInt).toArray();
+	}
+
+	/** A row of skilling.properties as a set of ids. */
+	static Set<Integer> idSet(String key)
+	{
+		return Arrays.stream(ids(key)).boxed().collect(Collectors.toSet());
 	}
 }

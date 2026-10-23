@@ -161,7 +161,7 @@ public class BorrowTest
 		assertEquals("a rake to rake", 5341, Borrow.toolFor("farming", 2273, none));
 		assertEquals("a dibber to plant", 5343, Borrow.toolFor("farming", 2291, none));
 		assertEquals("bare hands to pick", 0, Borrow.toolFor("farming", 2282, none));
-		assertEquals("secateurs when the work is not one we know", Borrow.SECATEURS,
+		assertEquals("secateurs when the work is not one we know", 5329,
 			Borrow.toolFor("farming", -1, none));
 		assertTrue(Borrow.farmingWork(2273));
 		assertFalse("a bite to eat is not farming", Borrow.farmingWork(829));
@@ -296,8 +296,8 @@ public class BorrowTest
 	{
 		// The torch is only borrowed if the cache says it is wearable; the
 		// hands say so by holding it or not, and the borrow believes them.
-		hands.unwearable.add(Borrow.TORCH);
-		assertFalse(borrow.start(Borrow.TORCH));
+		hands.unwearable.add(Borrow.toolFor("firemaking", -1, null));
+		assertFalse(borrow.start(Borrow.toolFor("firemaking", -1, null)));
 		assertFalse("nothing must be thought held that is not", borrow.isHolding());
 		assertEquals(0, hands.held);
 	}
@@ -366,7 +366,7 @@ public class BorrowTest
 			301, Borrow.toolFor("fishing", 619, dragon, 21028, "Dragon harpoon"));
 		assertEquals("nor a net", 303, Borrow.toolFor("fishing", 621, dragon, 21028, "Dragon harpoon"));
 		assertEquals("nor a big net", 305, Borrow.toolFor("fishing", 620, dragon, 21028, "Dragon harpoon"));
-		assertEquals("nor a vessel", Borrow.KARAMBWAN_VESSEL,
+		assertEquals("nor a vessel", 3157,
 			Borrow.toolFor("fishing", 1193, dragon, 21028, "Dragon harpoon"));
 		assertEquals("nor a fly rod", 307, Borrow.toolFor("fishing", 623, dragon, 21028, "Dragon harpoon"));
 		assertEquals("a rod that is a weapon is no net",
@@ -429,9 +429,11 @@ public class BorrowTest
 		assertEquals(20708, Borrow.hatFor("firemaking", worn(20708, 20704, 20706, 20710)));
 		assertEquals(5554, Borrow.hatFor("thieving", worn(5554, 5553, 5555, 5557)));
 		assertEquals(24872, Borrow.hatFor("construction", worn(24872, 24874, 24876, 24878)));
-		for (int[] outfit : Borrow.OUTFITS)
+		for (String work : new String[]{"woodcutting", "mining", "fishing", "farming", "firemaking",
+			"thieving", "construction", "agility"})
 		{
-			assertTrue("the hat is what earns the salute", Borrow.HATS.contains(outfit[0]));
+			int[] outfit = SkillingController.ids("outfit." + work);
+			assertEquals("the hat comes first", outfit[0], Borrow.hatFor(work, worn(outfit)));
 		}
 
 		// Graceful is worn everywhere and is for none of this work.
