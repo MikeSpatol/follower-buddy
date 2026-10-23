@@ -240,7 +240,7 @@ def export(out, worktree, exclude):
             src = os.path.join(REPO, rel)
             if rel and not excluded(rel, exclude) and os.path.isfile(src):
                 os.makedirs(os.path.dirname(os.path.join(out, rel)), exist_ok=True)
-                shutil.copyfile(src, os.path.join(out, rel))
+                shutil.copy(src, os.path.join(out, rel))
     else:
         data = subprocess.run(['git', '-C', REPO, 'archive', '--format=tar', 'HEAD'],
                               capture_output=True, check=True).stdout
@@ -268,6 +268,11 @@ def marker_stage(out, cut, known):
         if res is None:
             os.remove(path)
             dropped.append(rel)
+            # A folder left empty goes too, as it would in a git checkout.
+            folder = os.path.dirname(os.path.normpath(path))
+            while folder != out and not os.listdir(folder):
+                os.rmdir(folder)
+                folder = os.path.dirname(folder)
         else:
             write(path, res)
     return dropped
