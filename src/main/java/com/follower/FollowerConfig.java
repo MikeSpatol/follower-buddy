@@ -362,11 +362,13 @@ public interface FollowerConfig extends Config
 	 * The outfit itself, edited through the side panel rather than here - hidden
 	 * so the raw encoding can't be half-edited into an inconsistent state, while
 	 * the stored value keeps its key and survives.
+	 *
+	 * <p>The follower's outfit; use the side panel to edit it
 	 */
 	@ConfigItem(
 		keyName = "customOutfit",
 		name = "Custom outfit",
-		description = "The follower's outfit; use the side panel to edit it",
+		description = "Edited in the side panel",
 		hidden = true
 	)
 	default String customOutfit()
@@ -479,12 +481,14 @@ public interface FollowerConfig extends Config
 	 * Hidden since the overhaul: the engine only ever consulted the overhead
 	 * half of this plus mirrorToChat, so choosing Chatbox alone was silence.
 	 * It stays as the per-rule fallback the engine reads.
+	 *
+	 * <p>Overhead, chatbox, or both. The fallback for rules that do not choose their own
+	 * place; managed by the plugin
 	 */
 	@ConfigItem(
 		keyName = "defaultOutput",
 		name = "Where speech appears",
-		description = "Overhead, chatbox, or both. The fallback for rules that do"
-			+ " not choose their own place; managed by the plugin",
+		description = "Fallback speech place",
 		hidden = true
 	)
 	default SpeechOutput defaultOutput()
@@ -1221,10 +1225,11 @@ public interface FollowerConfig extends Config
 	}
 
 	// public:cut outfit-profiles
+	// Which outfit profile the follower is wearing; managed by the panel
 	@ConfigItem(
 		keyName = "activeProfile",
 		name = "Active outfit profile",
-		description = "Which outfit profile the follower is wearing; managed by the panel",
+		description = "Worn outfit profile",
 		hidden = true
 	)
 	default String activeProfile()
@@ -1234,10 +1239,11 @@ public interface FollowerConfig extends Config
 
 	// public:end outfit-profiles
 	// public:cut dev
+	// Body colour pairs captured by ::follower palette; managed by the plugin
 	@ConfigItem(
 		keyName = "exactPalette",
 		name = "Exact palette",
-		description = "Body colour pairs captured by ::follower palette; managed by the plugin",
+		description = "Captured body colours",
 		hidden = true
 	)
 	default String exactPalette()
@@ -1246,10 +1252,11 @@ public interface FollowerConfig extends Config
 	}
 	// public:end dev
 
+	// Which side panel sections are open; managed by the panel
 	@ConfigItem(
 		keyName = "panelFolds",
 		name = "Panel folds",
-		description = "Which side panel sections are open; managed by the panel",
+		description = "Open panel sections",
 		hidden = true
 	)
 	default String panelFolds()
@@ -1257,11 +1264,12 @@ public interface FollowerConfig extends Config
 		return "talking,outfit";
 	}
 
+	// When the follower last saw you, so it can tell a quick relog from an absence; managed
+	// by the plugin
 	@ConfigItem(
 		keyName = "lastSeenMs",
 		name = "Last seen",
-		description = "When the follower last saw you, so it can tell a quick"
-			+ " relog from an absence; managed by the plugin",
+		description = "Last time seen",
 		hidden = true
 	)
 	default String lastSeenMs()
@@ -1270,11 +1278,12 @@ public interface FollowerConfig extends Config
 	}
 	// public:cut dev
 
+	// Whether the session transcript is running; toggled with ::follower transcript, kept
+	// here so it survives a restart
 	@ConfigItem(
 		keyName = "transcriptOn",
 		name = "Transcript",
-		description = "Whether the session transcript is running; toggled with"
-			+ " ::follower transcript, kept here so it survives a restart",
+		description = "Transcript running",
 		hidden = true
 	)
 	default boolean transcriptOn()
@@ -1283,11 +1292,11 @@ public interface FollowerConfig extends Config
 	}
 	// public:end dev
 
+	// Whether the one-time naming prompt has been offered; managed by the plugin
 	@ConfigItem(
 		keyName = "namePrompted",
 		name = "Name prompted",
-		description = "Whether the one-time naming prompt has been offered;"
-			+ " managed by the plugin",
+		description = "Naming prompt offered",
 		hidden = true
 	)
 	default boolean namePrompted()
@@ -1296,10 +1305,11 @@ public interface FollowerConfig extends Config
 	}
 
 	// public:cut outfit-profiles
+	// This profile's own named outfits; managed by the plugin
 	@ConfigItem(
 		keyName = "outfitProfiles",
 		name = "Outfit profiles",
-		description = "This profile's own named outfits; managed by the plugin",
+		description = "Named outfits",
 		hidden = true
 	)
 	default String outfitProfiles()
@@ -1308,11 +1318,12 @@ public interface FollowerConfig extends Config
 	}
 
 	// public:end outfit-profiles
+	// The tile the follower was told to wait on, so it is there again after a relog; managed
+	// by the plugin
 	@ConfigItem(
 		keyName = "parkedAt",
 		name = "Parked at",
-		description = "The tile the follower was told to wait on, so it is there again"
-			+ " after a relog; managed by the plugin",
+		description = "Wait tile",
 		hidden = true
 	)
 	default String parkedAt()
@@ -1320,11 +1331,12 @@ public interface FollowerConfig extends Config
 		return "";
 	}
 
+	// Whether the one-time client-side notice and ::follower hint have been printed; managed
+	// by the plugin
 	@ConfigItem(
 		keyName = "firstSpawnNoticeShown",
 		name = "First spawn notice shown",
-		description = "Whether the one-time client-side notice and ::follower hint"
-			+ " have been printed; managed by the plugin",
+		description = "First notice printed",
 		hidden = true
 	)
 	default boolean firstSpawnNoticeShown()
@@ -1332,11 +1344,12 @@ public interface FollowerConfig extends Config
 		return false;
 	}
 
+	// Whether the one-time shift-right-click Send hint has been printed; managed by the
+	// plugin
 	@ConfigItem(
 		keyName = "sendHintShown",
 		name = "Send hint shown",
-		description = "Whether the one-time shift-right-click Send hint has been"
-			+ " printed; managed by the plugin",
+		description = "Send hint printed",
 		hidden = true
 	)
 	default boolean sendHintShown()
@@ -1345,11 +1358,11 @@ public interface FollowerConfig extends Config
 	}
 
 	// public:cut souvenirs-wishes
+	// Whether the one-time gift handover hint has been printed; managed by the plugin
 	@ConfigItem(
 		keyName = "wishHintShown",
 		name = "Wish hint shown",
-		description = "Whether the one-time gift handover hint has been printed;"
-			+ " managed by the plugin",
+		description = "Gift hint printed",
 		hidden = true
 	)
 	default boolean wishHintShown()
@@ -1358,11 +1371,11 @@ public interface FollowerConfig extends Config
 	}
 
 	// public:end souvenirs-wishes
+	// Whether the one-time Replace thralls hint has been printed; managed by the plugin
 	@ConfigItem(
 		keyName = "thrallHintShown",
 		name = "Thrall hint shown",
-		description = "Whether the one-time Replace thralls hint has been printed;"
-			+ " managed by the plugin",
+		description = "Thrall hint printed",
 		hidden = true
 	)
 	default boolean thrallHintShown()
@@ -1371,11 +1384,12 @@ public interface FollowerConfig extends Config
 	}
 	// public:cut legacy
 
+	// Whether the second clear of learned attack animations has run, after skilling
+	// animations were found among them; managed by the plugin
 	@ConfigItem(
 		keyName = "attacksRelearnedSkilling",
 		name = "Attacks relearned again",
-		description = "Whether the second clear of learned attack animations has run,"
-			+ " after skilling animations were found among them; managed by the plugin",
+		description = "Second attack clear run",
 		hidden = true
 	)
 	default boolean attacksRelearnedSkilling()
@@ -1383,11 +1397,11 @@ public interface FollowerConfig extends Config
 		return false;
 	}
 
+	// Whether the one-time clear of learned attack animations has run; managed by the plugin
 	@ConfigItem(
 		keyName = "attacksRelearned",
 		name = "Attacks relearned",
-		description = "Whether the one-time clear of learned attack animations has"
-			+ " run; managed by the plugin",
+		description = "Attack clear run",
 		hidden = true
 	)
 	default boolean attacksRelearned()
@@ -1396,11 +1410,12 @@ public interface FollowerConfig extends Config
 	}
 	// public:end legacy
 
+	// The game build the last session ran on, so the follower can notice a weekly update;
+	// managed by the plugin
 	@ConfigItem(
 		keyName = "lastRevision",
 		name = "Last game revision",
-		description = "The game build the last session ran on, so the follower"
-			+ " can notice a weekly update; managed by the plugin",
+		description = "Last game build",
 		hidden = true
 	)
 	default int lastRevision()
@@ -1408,11 +1423,12 @@ public interface FollowerConfig extends Config
 		return 0;
 	}
 
+	// What the follower has counted and the records it holds, so its memory survives a
+	// logout; managed by the plugin
 	@ConfigItem(
 		keyName = "counters",
 		name = "Counters",
-		description = "What the follower has counted and the records it holds,"
-			+ " so its memory survives a logout; managed by the plugin",
+		description = "Saved memory",
 		hidden = true
 	)
 	default String counters()
@@ -1420,11 +1436,12 @@ public interface FollowerConfig extends Config
 		return "";
 	}
 
+	// The places this follower likes and dislikes, rolled once when it first met you;
+	// managed by the plugin
 	@ConfigItem(
 		keyName = "traits",
 		name = "Traits",
-		description = "The places this follower likes and dislikes, rolled once"
-			+ " when it first met you; managed by the plugin",
+		description = "Liked and disliked places",
 		hidden = true
 	)
 	default String traits()
