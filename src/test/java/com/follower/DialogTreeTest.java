@@ -267,7 +267,7 @@ public class DialogTreeTest
 		{
 			for (String band : new String[]{"even", "low"})
 			{
-				for (FollowerDialog.Node node : FollowerPlugin.talkScript(
+				for (FollowerDialog.Node node : FollowerPlugin.talkScript(TalkScriptTest.talk(),
 					() -> new String[]{""},
 					answer -> offered.add(answer.toLowerCase(java.util.Locale.ROOT)),
 					"feather", held, band).values()) // public:cut souvenirs-wishes

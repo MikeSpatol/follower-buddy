@@ -39,7 +39,7 @@ public class TalkScriptTest
 		// Built WITH a wish open and the thing in the bag, so the gift branch
 		// exists and every structural check walks it too; the other variants
 		// are checked in their own tests below.
-		return FollowerPlugin.talkScript(
+		return FollowerPlugin.talkScript(talk(),
 			() -> FollowerPlugin.daySummary(95, 12, 2, 1, "good", "that chicken"),
 			answer -> { }, "feather", true, "even"); // public:cut souvenirs-wishes
 			// public:else answer -> { }, "even");
@@ -113,7 +113,7 @@ public class TalkScriptTest
 		assertTrue("and the option names the thing",
 			wishing.get("start").getOptionLabels().contains("Found you that feather."));
 
-		Map<String, FollowerDialog.Node> wishless = FollowerPlugin.talkScript(
+		Map<String, FollowerDialog.Node> wishless = FollowerPlugin.talkScript(talk(),
 			() -> FollowerPlugin.daySummary(95, 12, 2, 1, "good", "that chicken"),
 			answer -> { }, "", false, "even");
 		assertTrue("with no wish there is no gift branch at all",
@@ -137,13 +137,13 @@ public class TalkScriptTest
 		// reception, decided by the bag.
 		java.util.List<String> reactions = new java.util.ArrayList<>();
 
-		Map<String, FollowerDialog.Node> holding = FollowerPlugin.talkScript(
+		Map<String, FollowerDialog.Node> holding = FollowerPlugin.talkScript(talk(),
 			() -> new String[]{""}, reactions::add, "feather", true, "even");
 		holding.get("gift-a").runFinish();
 		assertTrue("with the feather in the bag, the box accepts",
 			holding.get("gift-a").getPages().get(0).contains("That's the one"));
 
-		Map<String, FollowerDialog.Node> bluffing = FollowerPlugin.talkScript(
+		Map<String, FollowerDialog.Node> bluffing = FollowerPlugin.talkScript(talk(),
 			() -> new String[]{""}, reactions::add, "feather", false, "even");
 		bluffing.get("gift-a").runFinish();
 		assertTrue("with an empty bag, the box catches the bluff",
@@ -162,7 +162,7 @@ public class TalkScriptTest
 		// itself the kindness: the answer node latches "comforted" on arrival.
 		java.util.List<String> answers = new java.util.ArrayList<>();
 
-		Map<String, FollowerDialog.Node> low = FollowerPlugin.talkScript(
+		Map<String, FollowerDialog.Node> low = FollowerPlugin.talkScript(talk(),
 			() -> new String[]{""}, answers::add, "", false, "low"); // public:cut souvenirs-wishes
 			// public:else () -> new String[]{""}, answers::add, "low");
 		assertTrue("the sharpened option leads somewhere real",
@@ -177,13 +177,13 @@ public class TalkScriptTest
 		// "down" is lowish too - the sharpened question covers the whole
 		// bottom of the mood range, not just its floor. (Only "low" was
 		// tested at first; the strategy's mutation analysis caught it.)
-		Map<String, FollowerDialog.Node> down = FollowerPlugin.talkScript(
+		Map<String, FollowerDialog.Node> down = FollowerPlugin.talkScript(talk(),
 			() -> new String[]{""}, answers::add, "", false, "down"); // public:cut souvenirs-wishes
 			// public:else () -> new String[]{""}, answers::add, "down");
 		assertTrue("a down day sharpens the question too",
 			down.get("start").getOptionLabels().contains("You all right?"));
 
-		Map<String, FollowerDialog.Node> fine = FollowerPlugin.talkScript(
+		Map<String, FollowerDialog.Node> fine = FollowerPlugin.talkScript(talk(),
 			() -> new String[]{""}, answers::add, "", false, "good"); // public:cut souvenirs-wishes
 			// public:else () -> new String[]{""}, answers::add, "good");
 		assertTrue("on a fine day the everyday question is back",
@@ -224,15 +224,15 @@ public class TalkScriptTest
 			new java.util.LinkedHashMap<>();
 		for (String band : new String[]{"low", "even"})
 		{
-			variants.put(band + "/no-wish", FollowerPlugin.talkScript(
+			variants.put(band + "/no-wish", FollowerPlugin.talkScript(talk(),
 				() -> FollowerPlugin.daySummary(95, 12, 2, 1, "good", "that chicken"),
 				answer -> { }, "", false, band)); // public:cut souvenirs-wishes
 				// public:else answer -> { }, band));
 			// public:cut souvenirs-wishes
-			variants.put(band + "/wish-held", FollowerPlugin.talkScript(
+			variants.put(band + "/wish-held", FollowerPlugin.talkScript(talk(),
 				() -> FollowerPlugin.daySummary(95, 12, 2, 1, "good", "that chicken"),
 				answer -> { }, "feather", true, band));
-			variants.put(band + "/wish-empty", FollowerPlugin.talkScript(
+			variants.put(band + "/wish-empty", FollowerPlugin.talkScript(talk(),
 				() -> FollowerPlugin.daySummary(95, 12, 2, 1, "good", "that chicken"),
 				answer -> { }, "feather", false, band));
 			// public:end souvenirs-wishes
@@ -497,6 +497,20 @@ public class TalkScriptTest
 	}
 
 	// ------------------------------------------------------------- plumbing
+
+	/** talk.json, read as the plugin reads it. */
+	static FollowerPlugin.Talk talk()
+	{
+		try (java.io.Reader in = new InputStreamReader(
+			TalkScriptTest.class.getResourceAsStream("/com/follower/talk.json"), StandardCharsets.UTF_8))
+		{
+			return new com.google.gson.Gson().fromJson(in, FollowerPlugin.Talk.class);
+		}
+		catch (IOException e)
+		{
+			throw new java.io.UncheckedIOException(e);
+		}
+	}
 
 	/** Every line the script can put on screen, lowercased. */
 	private static String allText()

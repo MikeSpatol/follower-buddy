@@ -75,12 +75,11 @@ public class FollowerDialog extends Overlay
 			return new Node(false, pages);
 		}
 
-		/** The follower speaks pages resolved fresh each visit. */
-		public static Node saysDynamic(java.util.function.Supplier<String[]> pages)
+		/** Pages resolved fresh on each visit instead of the fixed ones. */
+		public Node dynamic(java.util.function.Supplier<String[]> pages)
 		{
-			Node node = new Node(false, new String[0]);
-			node.dynamicPages = pages;
-			return node;
+			dynamicPages = pages;
+			return this;
 		}
 
 		/** The player speaks these pages, with their own head and name. */
@@ -206,11 +205,11 @@ public class FollowerDialog extends Overlay
 	/**
 	 * Turns a loaded {@link DialogTree} into a runnable conversation.
 	 *
-	 * <p>The everyday talk script is built in Java and stays that way - it does
-	 * not change, so a file would buy nothing. These are the ones the follower
-	 * OPENS, and they are content: whoever writes them should not need a
-	 * compiler, and the one thing they must be able to do from the file is say
-	 * which branch counts as the answer.
+	 * <p>The everyday talk script (talk.json, bundled) is built through here
+	 * too. These are the ones the follower OPENS, and they are content:
+	 * whoever writes them should not need a compiler, and the one thing they
+	 * must be able to do from the file is say which branch counts as the
+	 * answer.
 	 *
 	 * @param onAnswer handed "yes" or "no" the moment a branch carrying one is
 	 * reached

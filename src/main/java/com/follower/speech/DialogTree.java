@@ -8,8 +8,8 @@ import java.util.Map;
 /**
  * A conversation, as data.
  *
- * <p>The follower's everyday talk script is written in Java, which is fine for
- * something that never changes. These are different: they are the conversations
+ * <p>The follower's everyday talk script is bundled (talk.json) and never
+ * changes, so it is no one's to edit. These are different: they are the conversations
  * the follower STARTS, they replace the everyday one while they are open, and
  * they are where the player's answer to a question actually comes from. That
  * makes them content rather than plumbing, and content belongs in a file
