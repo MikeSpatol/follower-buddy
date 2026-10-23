@@ -118,10 +118,7 @@ public class WrapLerpController extends AnimationController
 			return null;
 		}
 
-		boolean separate = temp != model
-			&& temp.getVerticesX() != model.getVerticesX()
-			&& temp.getVerticesY() != model.getVerticesY()
-			&& temp.getVerticesZ() != model.getVerticesZ();
+		boolean separate = separate(temp, model);
 		boolean sized = temp.getVerticesCount() * 3 == lastXyz.length
 			&& lastXyz.length == targetXyz.length;
 		if (!separate || !sized)
@@ -178,43 +175,45 @@ public class WrapLerpController extends AnimationController
 			loopTargetFrame(animation, frames), null, 0));
 	}
 
-	/** Flattens a posed model's vertices into an owned array, or null. */
+	/**
+	 * Whether the client's per-frame temp is its own model, safe to write:
+	 * never the base, nor sharing its vertex arrays.
+	 */
+	static boolean separate(Model temp, Model model)
+	{
+		return temp != model
+			&& temp.getVerticesX() != model.getVerticesX()
+			&& temp.getVerticesY() != model.getVerticesY()
+			&& temp.getVerticesZ() != model.getVerticesZ();
+	}
+
+	/** Flattens a posed model's vertices into an owned xyz array, or null. */
 	static float[] snapshot(Model posed)
 	{
 		if (posed == null || posed.getVerticesX() == null)
 		{
 			return null;
 		}
-
-		int count = posed.getVerticesCount();
-		float[] outXyz = new float[count * 3];
-		float[] x = posed.getVerticesX();
-		float[] y = posed.getVerticesY();
-		float[] z = posed.getVerticesZ();
-		for (int i = 0; i < count; i++)
+		float[] outXyz = new float[posed.getVerticesCount() * 3];
+		float[][] xyz = {posed.getVerticesX(), posed.getVerticesY(), posed.getVerticesZ()};
+		for (int i = 0; i < outXyz.length; i++)
 		{
-			outXyz[i * 3] = x[i];
-			outXyz[i * 3 + 1] = y[i];
-			outXyz[i * 3 + 2] = z[i];
+			outXyz[i] = xyz[i % 3][i / 3];
 		}
 		return outXyz;
 	}
 
-	private static void lerpInto(Model dest, float[] from, float[] to, float t)
+	/**
+	 * Blends each vertex from one xyz snapshot toward another, or toward
+	 * where the model already has it when {@code to} is null.
+	 */
+	static void lerpInto(Model dest, float[] from, float[] to, float t)
 	{
-		int count = dest.getVerticesCount();
-		float[] dx = dest.getVerticesX();
-		float[] dy = dest.getVerticesY();
-		float[] dz = dest.getVerticesZ();
-
-		for (int i = 0; i < count; i++)
+		float[][] xyz = {dest.getVerticesX(), dest.getVerticesY(), dest.getVerticesZ()};
+		for (int i = 0; i < dest.getVerticesCount() * 3; i++)
 		{
-			float ax = from[i * 3];
-			float ay = from[i * 3 + 1];
-			float az = from[i * 3 + 2];
-			dx[i] = ax + (to[i * 3] - ax) * t;
-			dy[i] = ay + (to[i * 3 + 1] - ay) * t;
-			dz[i] = az + (to[i * 3 + 2] - az) * t;
+			float a = from[i];
+			xyz[i % 3][i / 3] = a + ((to == null ? xyz[i % 3][i / 3] : to[i]) - a) * t;
 		}
 	}
 }

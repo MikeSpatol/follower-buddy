@@ -81,7 +81,7 @@ class EaseInOutController extends AnimationController
 		{
 			Animation standing = client.loadAnimation(standingPose);
 			standingXyz = standing == null ? null
-				: snapshot(client.applyTransformations(model, standing, 0, null, 0));
+				: WrapLerpController.snapshot(client.applyTransformations(model, standing, 0, null, 0));
 			if (standingXyz == null)
 			{
 				unsafe = true;
@@ -94,26 +94,14 @@ class EaseInOutController extends AnimationController
 		{
 			return null;
 		}
-		boolean separate = temp != model
-			&& temp.getVerticesX() != model.getVerticesX()
-			&& temp.getVerticesY() != model.getVerticesY()
-			&& temp.getVerticesZ() != model.getVerticesZ();
-		if (!separate || temp.getVerticesCount() * 3 != standingXyz.length)
+		if (!WrapLerpController.separate(temp, model) || temp.getVerticesCount() * 3 != standingXyz.length)
 		{
 			log.debug("Render temp is not safe to write; easing off for this clip"); // public:cut logs
 			unsafe = true;
 			return temp;
 		}
 
-		float[] x = temp.getVerticesX();
-		float[] y = temp.getVerticesY();
-		float[] z = temp.getVerticesZ();
-		for (int i = 0; i < temp.getVerticesCount(); i++)
-		{
-			x[i] = standingXyz[i * 3] + (x[i] - standingXyz[i * 3]) * weight;
-			y[i] = standingXyz[i * 3 + 1] + (y[i] - standingXyz[i * 3 + 1]) * weight;
-			z[i] = standingXyz[i * 3 + 2] + (z[i] - standingXyz[i * 3 + 2]) * weight;
-		}
+		WrapLerpController.lerpInto(temp, standingXyz, null, weight);
 		return temp;
 	}
 
@@ -125,25 +113,5 @@ class EaseInOutController extends AnimationController
 			total += length;
 		}
 		return total;
-	}
-
-	private static float[] snapshot(Model posed)
-	{
-		if (posed == null || posed.getVerticesX() == null)
-		{
-			return null;
-		}
-		int count = posed.getVerticesCount();
-		float[] out = new float[count * 3];
-		float[] x = posed.getVerticesX();
-		float[] y = posed.getVerticesY();
-		float[] z = posed.getVerticesZ();
-		for (int i = 0; i < count; i++)
-		{
-			out[i * 3] = x[i];
-			out[i * 3 + 1] = y[i];
-			out[i * 3 + 2] = z[i];
-		}
-		return out;
 	}
 }
