@@ -430,8 +430,9 @@ def menu(out):
     """The options of the follower's own menu entries."""
     code, mask = java_code(read(os.path.join(out, JAVA, 'FollowerPlugin.java')))
     found = set()
-    for m in re.finditer(r'(?:addFollowerMenuEntry|\.setOption)\(\s*"', mask):
-        found.add(literal(code[m.start():], mask[m.start():], r'\(\s*"'))
+    # addFollowerMenuEntry may take the entry's index first: (1, "Examine", ...).
+    for m in re.finditer(r'(?:addFollowerMenuEntry|\.setOption)\(\s*(?:-?\d+\s*,\s*)?"', mask):
+        found.add(literal(code[m.start():], mask[m.start():], r'\(\s*(?:-?\d+\s*,\s*)?"'))
     return sorted(found)
 
 
