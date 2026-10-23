@@ -330,23 +330,24 @@ public class ModelRepository
 	}
 
 	/**
-	 * Body parts in bodyPartId order. The id is this index for a male kit, and this
-	 * index + 7 for a female one - verified against the whole dump, which is
-	 * symmetric across the two halves.
+	 * The body kits, the parts whose kit ids are gender-specific, in bodyPartId
+	 * order. The id is this index for a male kit, and this index + 7 for a
+	 * female one - verified against the whole dump, which is symmetric across
+	 * the two halves. The side panel edits them in this order too.
 	 */
-	private static final KitType[] BODY_PART_ORDER = {
+	public static final KitType[] BODY_PARTS = {
 		KitType.HAIR, KitType.JAW, KitType.TORSO, KitType.ARMS,
 		KitType.HANDS, KitType.LEGS, KitType.BOOTS,
 	};
 
-	private static final int PARTS_PER_GENDER = BODY_PART_ORDER.length;
+	private static final int PARTS_PER_GENDER = BODY_PARTS.length;
 
 	/** @return the bodyPartId a kit must have to belong to this slot and gender. */
 	public static int bodyPartId(KitType part, int gender)
 	{
-		for (int i = 0; i < BODY_PART_ORDER.length; i++)
+		for (int i = 0; i < BODY_PARTS.length; i++)
 		{
-			if (BODY_PART_ORDER[i] == part)
+			if (BODY_PARTS[i] == part)
 			{
 				return i + (gender == 1 ? PARTS_PER_GENDER : 0);
 			}

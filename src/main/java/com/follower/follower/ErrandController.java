@@ -1311,23 +1311,9 @@ public class ErrandController
 			* (0.6 + random.nextDouble() * 0.8));
 	}
 
-	// FollowerConfig.errandFrequency()'s description quotes these as minutes
-	// (30, 24, 12 at 0.6s a tick). Change one, change the other.
 	private int baseScheduleTicks()
 	{
-		switch (config.errandFrequency())
-		{
-			case RARE:
-				return 3000;
-			case LIVELY:
-				return 1200;
-			case OCCASIONAL:
-			default:
-				// Was 1800. At that pace the follower ran an errand every
-				// eighteen minutes all day, which is not something it does
-				// now and then - it is something it is always doing.
-				return 2400;
-		}
+		return config.errandFrequency().ticks;
 	}
 	// public:end errands
 }

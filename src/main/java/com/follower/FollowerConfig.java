@@ -314,15 +314,24 @@ public interface FollowerConfig extends Config
 	// public:cut errands
 	enum ErrandFrequency
 	{
-		RARE("Rare"),
-		OCCASIONAL("Occasional"),
-		LIVELY("Lively");
+		// errandFrequency()'s description quotes these as minutes (30, 24, 12
+		// at 0.6s a tick). Change one, change the other.
+		RARE("Rare", 3000),
+		// Was 1800. At that pace the follower ran an errand every eighteen
+		// minutes all day, which is not something it does now and then - it
+		// is something it is always doing.
+		OCCASIONAL("Occasional", 2400),
+		LIVELY("Lively", 1200);
 
 		private final String label;
 
-		ErrandFrequency(String label)
+		/** Ticks between errands at this pace, before the schedule's 60%..140%. */
+		public final int ticks;
+
+		ErrandFrequency(String label, int ticks)
 		{
 			this.label = label;
+			this.ticks = ticks;
 		}
 
 		@Override

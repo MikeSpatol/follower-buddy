@@ -1006,7 +1006,7 @@ public class SkillingController
 	}
 
 	/** The far corner of an NPC's footprint, from its south-west tile. */
-	private static WorldPoint farCorner(NPC npc, WorldPoint at)
+	public static WorldPoint farCorner(NPC npc, WorldPoint at)
 	{
 		int size = npc.getComposition() == null ? 1 : Math.max(1, npc.getComposition().getSize());
 		return at.dx(size - 1).dy(size - 1);

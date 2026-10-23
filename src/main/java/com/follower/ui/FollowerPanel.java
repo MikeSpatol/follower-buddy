@@ -54,12 +54,6 @@ public class FollowerPanel extends PluginPanel
 		{KitType.HANDS, null, KitType.BOOTS},
 	};
 
-	/** Body kits that make up the character itself, in a sensible editing order. */
-	private static final KitType[] BODY_PARTS = {
-		KitType.HAIR, KitType.JAW, KitType.TORSO, KitType.ARMS,
-		KitType.HANDS, KitType.LEGS, KitType.BOOTS,
-	};
-
 	private final ItemManager itemManager;
 	private final ModelRepository repository;
 
@@ -1241,7 +1235,7 @@ public class FollowerPanel extends PluginPanel
 		JPanel skin = bodyRow("Skin");
 		skin.add(swatch(4, "Skin", GamePalette.SKIN), BorderLayout.EAST);
 		bodyList.add(skin);
-		for (KitType part : BODY_PARTS)
+		for (KitType part : ModelRepository.BODY_PARTS)
 		{
 			bodyList.add(javax.swing.Box.createVerticalStrut(2));
 			bodyList.add(buildBodyRow(part));

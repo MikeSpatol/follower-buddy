@@ -4280,12 +4280,6 @@ public class FollowerPlugin extends Plugin
 		});
 	}
 
-	/** The body parts whose kits are gender-specific and so need per-gender memory. */
-	private static final KitType[] BODY_KIT_PARTS = {
-		KitType.HAIR, KitType.JAW, KitType.TORSO, KitType.ARMS,
-		KitType.HANDS, KitType.LEGS, KitType.BOOTS,
-	};
-
 	private void setGender(int gender)
 	{
 		clientThread.invoke(() ->
@@ -4305,7 +4299,7 @@ public class FollowerPlugin extends Plugin
 			// Kit ids are gender-specific, so the old ones would render as the wrong
 			// body. Drop them, then restore what this gender wore last time; anything
 			// not remembered falls back to withDefaultBody() as before.
-			for (KitType part : BODY_KIT_PARTS)
+			for (KitType part : ModelRepository.BODY_PARTS)
 			{
 				if (outfit.isKit(part))
 				{
@@ -4327,7 +4321,7 @@ public class FollowerPlugin extends Plugin
 	private static String serializeKits(Outfit resolved)
 	{
 		StringBuilder sb = new StringBuilder();
-		for (KitType part : BODY_KIT_PARTS)
+		for (KitType part : ModelRepository.BODY_PARTS)
 		{
 			if (resolved.isKit(part))
 			{
@@ -6130,8 +6124,7 @@ public class FollowerPlugin extends Plugin
 	/** One-line-per-part census of what the picker will offer, for verification. */
 	private void logKitCatalogue()
 	{
-		for (KitType part : new KitType[]{KitType.HAIR, KitType.JAW, KitType.TORSO,
-			KitType.ARMS, KitType.HANDS, KitType.LEGS, KitType.BOOTS})
+		for (KitType part : ModelRepository.BODY_PARTS)
 		{
 			log.debug("kits offered for {}: male {}, female {}", part,
 				modelRepository.kitsFor(part, 0).size(),
@@ -10945,10 +10938,8 @@ public class FollowerPlugin extends Plugin
 				{
 					return;
 				}
-				int size = npc.getComposition() == null ? 1
-					: Math.max(1, npc.getComposition().getSize());
 				skilling.noteClick(event.getMenuOption(), npc.getName(), npc.getId(), at,
-					at.dx(size - 1).dy(size - 1), npc);
+					com.follower.follower.SkillingController.farCorner(npc, at), npc);
 				break;
 			}
 			default:
