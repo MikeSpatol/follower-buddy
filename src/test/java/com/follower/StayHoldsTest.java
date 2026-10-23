@@ -1536,7 +1536,7 @@ public class StayHoldsTest
 		animation = animation.substring(0, animation.indexOf("\n\t}\n"));
 		int skip = animation.indexOf("if (sketching != null && sketching.isSketching())\n\t\t{\n\t\t\treturn;");
 		assertTrue("an emote while sketching is not answered or copied",
-			skip >= 0 && skip < animation.indexOf("speechEngine.dispatch(TriggerEvent.animation(animationId));"));
+			skip >= 0 && skip < animation.indexOf("dispatch(TriggerEvent.animation(animationId));"));
 		// public:cut posing
 		assertTrue("but the film still keeps it for Copy my emote",
 			animation.indexOf("filmSet.notePlayerAnimation(animationId);") < skip);

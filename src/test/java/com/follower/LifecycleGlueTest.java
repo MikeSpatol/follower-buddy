@@ -248,7 +248,7 @@ public class LifecycleGlueTest
 		// opener was said on the tick the box closed. Re-checked as the
 		// engine re-checks a line it kept.
 		String drain = method("private void drainSpeechQueue()");
-		int check = drain.indexOf("!line.rule.when.standingHolds(speechEngine.getContext(), TriggerEvent.tick())");
+		int check = drain.indexOf("!line.rule.when.standingHolds(context(), TriggerEvent.tick())");
 		assertTrue("re-checked", check >= 0);
 		assertTrue("before it is said", check < drain.indexOf("speakNow(line);"));
 	}

@@ -174,7 +174,7 @@ public class QuestWitnessedTest
 			plugin.contains("speechEngine.setQuestWitness(chronicleProgress::witnessedOn);")); // public:cut chronicle
 			// public:else plugin.contains("speechEngine.setQuestWitness(quest ->"));
 		assertTrue("a context's lookup is gone at the next reset",
-			!plugin.contains("getContext().setQuestWitness("));
+			!plugin.contains("getContext().setQuestWitness(") && !plugin.contains("context().setQuestWitness("));
 	}
 
 	// public:cut chronicle

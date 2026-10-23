@@ -89,7 +89,7 @@ public class StatusLinesTest
 		String chat = method("public void onChatMessage(ChatMessage event)");
 		int skip = chat.indexOf("if (event.getType() == ChatMessageType.CONSOLE)");
 		int echo = chat.indexOf("if (watchChat)"); // public:cut dev
-		int rules = chat.indexOf("speechEngine.dispatch(TriggerEvent.chat(");
+		int rules = chat.indexOf("dispatch(TriggerEvent.chat(");
 		assertTrue("the lint has lost its place", echo >= 0 && rules >= 0); // public:cut dev
 		// public:else assertTrue("the lint has lost its place", rules >= 0);
 		assertTrue("CONSOLE lines return before the echo and the rules", // public:cut dev

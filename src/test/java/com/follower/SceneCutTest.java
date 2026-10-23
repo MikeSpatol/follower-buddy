@@ -55,7 +55,7 @@ public class SceneCutTest
 		String src = PublicMarkers.strip(new String(Files.readAllBytes(
 			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8));
 		assertTrue(src.contains(
-			"if (cutByTheScene.rule.when.questStepHolds(speechEngine.getContext(), TriggerEvent.tick()))"));
+			"if (cutByTheScene.rule.when.questStepHolds(context(), TriggerEvent.tick()))"));
 	}
 
 	/**

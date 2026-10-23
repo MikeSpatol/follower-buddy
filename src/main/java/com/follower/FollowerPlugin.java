@@ -632,6 +632,27 @@ public class FollowerPlugin extends Plugin
 	/** Last XP seen per skill; a rise is a drop, whatever the level did. */
 	private final Map<Skill, Integer> knownXp = new EnumMap<>(Skill.class);
 
+	/**
+	 * The engine's context now. Forget everything and a profile switch give
+	 * the engine a new one, so it is read each time and never kept.
+	 */
+	private TriggerContext context()
+	{
+		return speechEngine.getContext();
+	}
+
+	/** Hands an event to the speech engine. */
+	private void dispatch(TriggerEvent event)
+	{
+		speechEngine.dispatch(event);
+	}
+
+	/** Stores one of the plugin's settings. */
+	private void setConfig(String key, Object value)
+	{
+		configManager.setConfiguration(FollowerConfig.GROUP, key, value);
+	}
+
 	@Provides
 	FollowerConfig provideConfig(ConfigManager configManager)
 	{
@@ -686,7 +707,7 @@ public class FollowerPlugin extends Plugin
 		voices.load(dataDir); // public:cut sharevoice
 		// public:cut dev
 		journal.initialise(dataDir);
-		journal.setRegionSource(() -> speechEngine.getContext().getRegionId());
+		journal.setRegionSource(() -> context().getRegionId());
 		journal.setEnabled(config.transcriptOn());
 		// public:end dev
 		dialogLoader.initialise(dataDir, true);
@@ -709,9 +730,9 @@ public class FollowerPlugin extends Plugin
 			// saves would leave that promise sitting over an unrepaired file
 			// with nothing left to run the repair again.
 			stanceLibrary.save();
-			configManager.setConfiguration(FollowerConfig.GROUP, "attacksRelearned", true);
-			configManager.setConfiguration(
-				FollowerConfig.GROUP, "attacksRelearnedSkilling", true);
+			setConfig("attacksRelearned", true);
+			setConfig(
+				"attacksRelearnedSkilling", true);
 		}
 		// public:end legacy
 		paletteHarvest.load(dataDir); // public:cut dev
@@ -902,7 +923,7 @@ public class FollowerPlugin extends Plugin
 		// public:cut skilling
 		skilling = new com.follower.follower.SkillingController(client, follower, config,
 			hands, speechEngine::dispatch,
-			() -> speechEngine.getContext().isInCombat(),
+			() -> context().isInCombat(),
 			this::seatFeetTaken,
 			() -> client.getWidget(net.runelite.api.gameval.InterfaceID.BANKMAIN, 0) != null);
 		// public:cut errands
@@ -910,7 +931,7 @@ public class FollowerPlugin extends Plugin
 		skilling.setErrands(errands::force);
 		// public:end errands
 		// The seat is taken sooner for the half hour after a favour.
-		skilling.setGrateful(() -> speechEngine.getContext().isGrateful());
+		skilling.setGrateful(() -> context().isGrateful());
 		// public:cut errands
 		// And in return no errand of the follower's own starts mid-session,
 		// or in a scene or the quiet after one.
@@ -925,10 +946,10 @@ public class FollowerPlugin extends Plugin
 		moments = new com.follower.follower.Moments(client, follower, skilling, // public:cut skilling
 		// public:else moments = new com.follower.follower.Moments(client, follower,
 			this::momentFeetTaken,
-			() -> speechEngine.getContext().isInCombat(),
-			() -> speechEngine.getContext().getDaysKnown(),
+			() -> context().isInCombat(),
+			() -> context().getDaysKnown(),
 			flourish,
-			() -> speechEngine.getContext().isGrateful(), // public:cut company-extras,gestures
+			() -> context().isGrateful(), // public:cut company-extras,gestures
 			() -> parkedByPlayer);
 		// public:end moments
 		// public:cut company-extras
@@ -937,7 +958,7 @@ public class FollowerPlugin extends Plugin
 		// that owns the head or the feet; the seat's own looks are its own.
 		gaze = new com.follower.follower.Gaze(client, follower, config,
 			client::getCameraYaw,
-			() -> speechEngine.getContext().getIdleTicks(),
+			() -> context().getIdleTicks(),
 			() -> thrallNpc != null
 				|| errands.isBusy() // public:cut errands
 				|| spectate.holdsTheFeet() // public:cut spectate,spectate-keep-fight-lines
@@ -945,12 +966,12 @@ public class FollowerPlugin extends Plugin
 				|| skilling.holdsTheFeet() // public:cut skilling
 				|| moments.holdsTheFeet() // public:cut moments
 				|| flourish.isActive()
-				|| speechEngine.getContext().isInCombat() || sceneQuiet() || filming // public:cut posing
-				// public:else || speechEngine.getContext().isInCombat() || sceneQuiet()
+				|| context().isInCombat() || sceneQuiet() || filming // public:cut posing
+				// public:else || context().isInCombat() || sceneQuiet()
 				|| (sketching != null && sketching.isSketching()), // public:cut chronicle
 				// public:else ,
-			() -> speechEngine.getContext().feelsAbout("disliked") ? "disliked"
-				: speechEngine.getContext().feelsAbout("liked") ? "liked" : "",
+			() -> context().feelsAbout("disliked") ? "disliked"
+				: context().feelsAbout("liked") ? "liked" : "",
 			() -> thingsNearby(com.follower.follower.Gaze.AROUND_FAR + 2),
 			new java.util.Random());
 		// public:end gaze
@@ -978,11 +999,11 @@ public class FollowerPlugin extends Plugin
 				|| skilling.holdsTheFeet() // public:cut skilling
 				|| moments.holdsTheFeet() // public:cut moments
 				|| flourish.isActive()
-				|| speechEngine.getContext().isInCombat() || sceneQuiet() || filming // public:cut posing
-				// public:else || speechEngine.getContext().isInCombat() || sceneQuiet()
+				|| context().isInCombat() || sceneQuiet() || filming // public:cut posing
+				// public:else || context().isInCombat() || sceneQuiet()
 				|| (sketching != null && sketching.isSketching()), // public:cut chronicle
 				// public:else ,
-			() -> speechEngine.getContext().getIdleTicks(),
+			() -> context().getIdleTicks(),
 			this::landmarksNearby);
 		// public:end noticing
 		// public:cut will
@@ -1013,13 +1034,13 @@ public class FollowerPlugin extends Plugin
 		// public:cut dev
 		{
 			agilityTrace.event("grace: " + event.getName() + " raised");
-			speechEngine.dispatch(event);
+			dispatch(event);
 		},
 		// public:end dev
-			() -> speechEngine.getContext().tally("graces"));
+			() -> context().tally("graces"));
 		// public:end marks
 		// public:cut agility
-		follower.setOnCrossed(crossing -> speechEngine.dispatch(
+		follower.setOnCrossed(crossing -> dispatch(
 			TriggerEvent.crossed(crossing.isFell())));
 		// public:end agility
 		// public:end agility-all
@@ -1074,14 +1095,14 @@ public class FollowerPlugin extends Plugin
 		// public:else // before it came along or while it was parked elsewhere.
 		// public:else speechEngine.setQuestWitness(quest ->
 		// public:else {
-			// public:else Long seen = speechEngine.getContext().questSeenFinishedOn(accountKey(quest));
+			// public:else Long seen = context().questSeenFinishedOn(accountKey(quest));
 			// public:else return seen == null || seen == QUEST_NOT_SEEN ? null : seen;
 		// public:else });
 		// public:cut chronicle
 		// follower's memory, so it is built on the same context the memory
 		// lives in and is saved with it.
 		chronicleProgress = new com.follower.chronicle.ChronicleProgress(client, chronicle,
-			() -> speechEngine.getContext());
+			() -> context());
 		chronicleWindow.attach(chronicleProgress);
 		// A page written is a page the follower mentions, once it has the
 		// floor: its own rules say what, from the page's kind and name, or
@@ -1115,10 +1136,10 @@ public class FollowerPlugin extends Plugin
 				|| skilling.holdsTheFeet() // public:cut skilling
 				|| moments.holdsTheFeet() // public:cut moments
 				|| flourish.isActive()
-				|| speechEngine.getContext().isInCombat() || inCutscene() || windowOverTheView(client) // public:cut posing
-				// public:else || speechEngine.getContext().isInCombat() || inCutscene() || windowOverTheView(client),
+				|| context().isInCombat() || inCutscene() || windowOverTheView(client) // public:cut posing
+				// public:else || context().isInCombat() || inCutscene() || windowOverTheView(client),
 				|| filming, // public:cut posing
-			() -> speechEngine.getContext().getIdleTicks(),
+			() -> context().getIdleTicks(),
 			// In an instance, the region it is a copy of, which is what a
 			// plate names. Quests QA5 #14: the essence mine is an instance,
 			// and its own region id matched no plate.
@@ -1133,11 +1154,11 @@ public class FollowerPlugin extends Plugin
 			// The count was asked for, so it is shown whatever the mute.
 			this::sketchCount);
 		// The invitations are remembered, so a place is not pointed out at every login.
-		sketching.setMemory(() -> speechEngine.getContext());
+		sketching.setMemory(() -> context());
 		if (client.getGameState() == GameState.LOGGED_IN)
 		{
 			sketchBook.openFor(configManager.getRSProfileKey());
-			speechEngine.getContext().noteSketchAccount(configManager.getRSProfileKey());
+			context().noteSketchAccount(configManager.getRSProfileKey());
 		}
 		chronicleWindow.register();
 		// public:end chronicle
@@ -1176,8 +1197,8 @@ public class FollowerPlugin extends Plugin
 				pageNews.clear();
 				// public:end chronicle
 				noteFirstMeeting();
-				speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
-				speechEngine.getContext().setRegionNames(ruleLoader.getRegionNames());
+				context().setNicknames(ruleLoader.getNicknames());
+				context().setRegionNames(ruleLoader.getRegionNames());
 				readTraits();
 				rebuildFollower();
 			});
@@ -1466,7 +1487,7 @@ public class FollowerPlugin extends Plugin
 		// synced both ways, so they can never disagree. Chattiness, the
 		// chatbox mirror, errands, the thrall profiles and the open sections
 		// work the same way.
-		panel.setOnSetting((key, value) -> configManager.setConfiguration(FollowerConfig.GROUP, key, value));
+		panel.setOnSetting(this::setConfig);
 		panel.setOnEditMessages(this::openMessagesDialog); // public:cut messages-window
 		panel.setOnEditDialogs(this::openDialogsDialog); // public:cut dialogs-editor
 		panel.setOnShowMemory(this::openMemoryDialog); // public:cut memory-window
@@ -1668,7 +1689,7 @@ public class FollowerPlugin extends Plugin
 			&& !busy
 			&& follower.isSpawned()
 			&& follower.isSettled()
-			&& speechEngine.getContext().getIdleTicks() >= REST_AFTER_TICKS;
+			&& context().getIdleTicks() >= REST_AFTER_TICKS;
 		if (wantRest == resting)
 		{
 			return;
@@ -1896,7 +1917,7 @@ public class FollowerPlugin extends Plugin
 			// was said again after the scene that moved the step, and the next
 			// step's moment came 6 s behind it. The step is read from the
 			// game; no event plays a part in it.
-			if (cutByTheScene.rule.when.questStepHolds(speechEngine.getContext(), TriggerEvent.tick()))
+			if (cutByTheScene.rule.when.questStepHolds(context(), TriggerEvent.tick()))
 			{
 				speechEngine.remark(cutByTheScene.text);
 			}
@@ -1965,7 +1986,7 @@ public class FollowerPlugin extends Plugin
 			|| spectate.isSpectating() // public:cut spectate,spectate-keep-fight-lines
 			|| dialog.isOpen()
 			|| skilling.isWorking() // public:cut skilling
-			|| speechEngine.getContext().isInCombat()
+			|| context().isInCombat()
 			// A scene's lines are its own: no trip to the shoulder for each.
 			|| inCutscene();
 
@@ -2114,7 +2135,7 @@ public class FollowerPlugin extends Plugin
 		shoulderForcedTicks = 0; // public:cut dev
 		if (wrote)
 		{
-			speechEngine.dispatch(TriggerEvent.simple(TriggerEvent.Type.MINUTES_TAKEN));
+			dispatch(TriggerEvent.simple(TriggerEvent.Type.MINUTES_TAKEN));
 		}
 	}
 
@@ -2220,13 +2241,13 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void updateWelfare()
 	{
-		int unattended = speechEngine.getContext().getUnattendedTicks();
+		int unattended = context().getUnattendedTicks();
 		if (welfareChecked)
 		{
 			if (unattended == 0)
 			{
 				welfareChecked = false;
-				speechEngine.dispatch(
+				dispatch(
 					TriggerEvent.simple(TriggerEvent.Type.ATTENDED_AGAIN));
 			}
 			return;
@@ -2242,7 +2263,7 @@ public class FollowerPlugin extends Plugin
 			|| minutesState != 0
 			|| follower.isStaying()
 			|| skilling.isWorking() // public:cut skilling
-			|| speechEngine.getContext().isInCombat();
+			|| context().isInCombat();
 		Player local = client.getLocalPlayer();
 		if (busy || local == null || !follower.isSpawned())
 		{
@@ -2293,15 +2314,15 @@ public class FollowerPlugin extends Plugin
 		// public:end moments
 		// Taste before mood: somewhere it dislikes it keeps close whatever
 		// it is feeling, and somewhere it likes it strays a tile further.
-		if (speechEngine.getContext().feelsAbout("disliked"))
+		if (context().feelsAbout("disliked"))
 		{
 			return Math.max(2, WANDER_RADIUS - 2);
 		}
-		if (speechEngine.getContext().feelsAbout("liked"))
+		if (context().feelsAbout("liked"))
 		{
 			return WANDER_RADIUS + 1;
 		}
-		String band = speechEngine.getContext().getMoodBand();
+		String band = context().getMoodBand();
 		if ("low".equals(band) || "down".equals(band))
 		{
 			// Staying close is what low looks like from the outside.
@@ -2347,7 +2368,7 @@ public class FollowerPlugin extends Plugin
 			return;
 		}
 		// public:end chronicle
-		int idle = speechEngine.getContext().getIdleTicks();
+		int idle = context().getIdleTicks();
 		boolean busy = thrallNpc != null
 			|| errands.isBusy() // public:cut errands
 			|| spectate.isSpectating() // public:cut spectate,spectate-keep-fight-lines
@@ -2372,7 +2393,7 @@ public class FollowerPlugin extends Plugin
 		// picking pockets is the one activity where being underfoot is the
 		// problem - the player is animating constantly, so the idle counter
 		// never climbs and the follower would stand there for the whole run.
-		boolean thieving = speechEngine.getContext().isInThievingSession();
+		boolean thieving = context().isInThievingSession();
 		boolean canWander = wanderAllowed(config.wanderWhenIdle(), busy,
 			follower.isSpawned(), thieving, idle, config.wanderAfterSeconds() * 100 / 60);
 
@@ -2421,7 +2442,7 @@ public class FollowerPlugin extends Plugin
 		int nearest = thieving ? THIEVING_KEEP_MIN : 0;
 		// Somewhere it dislikes there is no going to look at things: it
 		// keeps to the player's far side from whatever is nearest.
-		if (!thieving && speechEngine.getContext().feelsAbout("disliked"))
+		if (!thieving && context().feelsAbout("disliked"))
 		{
 			List<WorldPoint> things = thingsNearby(DISTRACTION_RADIUS);
 			if (!things.isEmpty() && keepToTheFarSide(from, things.get(0)))
@@ -2767,7 +2788,7 @@ public class FollowerPlugin extends Plugin
 			}
 		}
 
-		speechEngine.getContext().setMinutesAway(minutes);
+		context().setMinutesAway(minutes);
 		log.debug("Away for {} minutes", minutes); // public:cut logs
 		touchLastSeen();
 	}
@@ -2778,13 +2799,13 @@ public class FollowerPlugin extends Plugin
 		{
 			return;
 		}
-		configManager.setConfiguration(FollowerConfig.GROUP, "lastSeenMs",
+		setConfig("lastSeenMs",
 			Long.toString(System.currentTimeMillis()));
 	}
 
 	private void readCounters()
 	{
-		metWearingValue = restoreMemory(speechEngine.getContext(), config.counters(),
+		metWearingValue = restoreMemory(context(), config.counters(),
 			gson, metWearingValue);
 		memoryProfileId = currentProfileId();
 		outfitProfileId = memoryProfileId; // public:cut outfit-profiles
@@ -2886,8 +2907,8 @@ public class FollowerPlugin extends Plugin
 			pageNews.clear();
 			// public:end chronicle
 			noteFirstMeeting();
-			speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
-				speechEngine.getContext().setRegionNames(ruleLoader.getRegionNames());
+			context().setNicknames(ruleLoader.getNicknames());
+				context().setRegionNames(ruleLoader.getRegionNames());
 			readTraits();
 			// public:cut outfit-profiles
 			// This profile's own outfits, read before its outfit is restored
@@ -2905,7 +2926,7 @@ public class FollowerPlugin extends Plugin
 			// An open Memory window shows this profile's memory, which is the
 			// one its Forget everything would wipe (QA3).
 			java.util.List<String[]> rows =
-				com.follower.ui.MemoryDialog.summarise(speechEngine.getContext(),
+				com.follower.ui.MemoryDialog.summarise(context(),
 					ruleLoader.getRegionNames(), chronicleProgress::accountKey); // public:cut chronicle
 					// public:else ruleLoader.getRegionNames(), this::accountKey);
 			javax.swing.SwingUtilities.invokeLater(() ->
@@ -2981,7 +3002,7 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void writeCountersIfChanged()
 	{
-		if (speechEngine.getContext().isCountersDirty())
+		if (context().isCountersDirty())
 		{
 			writeCounters();
 		}
@@ -2994,8 +3015,8 @@ public class FollowerPlugin extends Plugin
 			log.debug("Not writing the memory: it belongs to another profile"); // public:cut logs
 			return;
 		}
-		TriggerContext context = speechEngine.getContext();
-		configManager.setConfiguration(FollowerConfig.GROUP, "counters",
+		TriggerContext context = context();
+		setConfig("counters",
 			snapshotMemory(context, metWearingValue, gson));
 		context.clearCountersDirty();
 	}
@@ -3039,7 +3060,7 @@ public class FollowerPlugin extends Plugin
 				SavedTraits saved = gson.fromJson(stored, SavedTraits.class);
 				if (saved != null)
 				{
-					speechEngine.getContext().setTraits(
+					context().setTraits(
 						new java.util.HashSet<>(
 							saved.liked == null ? java.util.Collections.emptyList() : saved.liked),
 						new java.util.HashSet<>(
@@ -3078,10 +3099,10 @@ public class FollowerPlugin extends Plugin
 		rolled.disliked = new java.util.ArrayList<>(
 			shuffled.subList(LIKED_PLACES, LIKED_PLACES + DISLIKED_PLACES));
 
-		speechEngine.getContext().setTraits(
+		context().setTraits(
 			new java.util.HashSet<>(rolled.liked), new java.util.HashSet<>(rolled.disliked));
 		applyCoreTastes(rolled);
-		configManager.setConfiguration(FollowerConfig.GROUP, "traits", gson.toJson(rolled));
+		setConfig("traits", gson.toJson(rolled));
 		log.debug("Rolled traits: likes {}, dislikes {}", rolled.liked, rolled.disliked); // public:cut logs
 	}
 
@@ -3093,7 +3114,7 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void applyCoreTastes(SavedTraits traits)
 	{
-		speechEngine.getContext().setCoreTastes(
+		context().setCoreTastes(
 			traits.liked == null || traits.liked.isEmpty() ? 0 : traits.liked.get(0),
 			traits.disliked == null || traits.disliked.isEmpty() ? 0 : traits.disliked.get(0));
 	}
@@ -3122,7 +3143,7 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void priceWhatYouAreWearing()
 	{
-		TriggerContext context = speechEngine.getContext();
+		TriggerContext context = context();
 		java.util.Set<Integer> worn = context.getEquippedItems();
 		if (worn.equals(lastPricedGear))
 		{
@@ -3142,7 +3163,7 @@ public class FollowerPlugin extends Plugin
 		{
 			metWearingValue = value;
 			context.setMetWearingValue(value);
-			speechEngine.getContext().markCountersDirty();
+			context().markCountersDirty();
 			log.debug("First seen wearing {} gp of gear", value); // public:cut logs
 		}
 	}
@@ -3156,7 +3177,7 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void noteFirstMeeting()
 	{
-		TriggerContext context = speechEngine.getContext();
+		TriggerContext context = context();
 		if (context.getMetOnDay() <= 0)
 		{
 			context.setMetOnDay(java.time.LocalDate.now().toEpochDay());
@@ -3414,7 +3435,7 @@ public class FollowerPlugin extends Plugin
 		clientThread.invoke(() ->
 		{
 			java.util.List<String[]> rows =
-				com.follower.ui.MemoryDialog.summarise(speechEngine.getContext(),
+				com.follower.ui.MemoryDialog.summarise(context(),
 					ruleLoader.getRegionNames(), chronicleProgress::accountKey); // public:cut chronicle
 					// public:else ruleLoader.getRegionNames(), this::accountKey);
 			javax.swing.SwingUtilities.invokeLater(() ->
@@ -3448,7 +3469,7 @@ public class FollowerPlugin extends Plugin
 			// The accounts whose drawings go with this memory, read before
 			// the memory is erased.
 			java.util.List<String> sketched =
-				new java.util.ArrayList<>(speechEngine.getContext().getSketchAccounts());
+				new java.util.ArrayList<>(context().getSketchAccounts());
 			// public:end chronicle
 			configManager.unsetConfiguration(FollowerConfig.GROUP, "counters");
 			configManager.unsetConfiguration(FollowerConfig.GROUP, "traits");
@@ -3469,8 +3490,8 @@ public class FollowerPlugin extends Plugin
 			{
 				speechEngine.primeEdgesOnNextTick();
 			}
-			speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
-				speechEngine.getContext().setRegionNames(ruleLoader.getRegionNames());
+			context().setNicknames(ruleLoader.getNicknames());
+				context().setRegionNames(ruleLoader.getRegionNames());
 			metWearingValue = -1;
 			sessionMinutes = 0;
 			sessionRecordSaid = false;
@@ -3483,12 +3504,12 @@ public class FollowerPlugin extends Plugin
 			// open book stays open under the new memory, so it is noted there.
 			sketching.reset();
 			sketchBook.forgetAll(sketched);
-			speechEngine.getContext().noteSketchAccount(configManager.getRSProfileKey());
+			context().noteSketchAccount(configManager.getRSProfileKey());
 			// public:end chronicle
 			sendStatus("Forgotten. All of it. Clean page.");
 
 			java.util.List<String[]> rows =
-				com.follower.ui.MemoryDialog.summarise(speechEngine.getContext(),
+				com.follower.ui.MemoryDialog.summarise(context(),
 					ruleLoader.getRegionNames(), chronicleProgress::accountKey); // public:cut chronicle
 					// public:else ruleLoader.getRegionNames(), this::accountKey);
 			javax.swing.SwingUtilities.invokeLater(() ->
@@ -4136,7 +4157,7 @@ public class FollowerPlugin extends Plugin
 			return;
 		}
 		setActiveProfile(name.trim());
-		configManager.setConfiguration(FollowerConfig.GROUP, "customOutfit", outfit);
+		setConfig("customOutfit", outfit);
 		// A profile with an identical outfit writes no config change, so the
 		// panel is refreshed here rather than relying on the config event.
 		syncPanel();
@@ -4155,7 +4176,7 @@ public class FollowerPlugin extends Plugin
 	private void setActiveProfile(String name)
 	{
 		activeProfile = name;
-		configManager.setConfiguration(FollowerConfig.GROUP, "activeProfile",
+		setConfig("activeProfile",
 			name == null ? "" : name);
 	}
 
@@ -4167,7 +4188,7 @@ public class FollowerPlugin extends Plugin
 	private void loadOutfitProfiles()
 	{
 		profileStore.load(dataDir, config.outfitProfiles(), config.activeProfile(), config.customOutfit(),
-			json -> configManager.setConfiguration(FollowerConfig.GROUP, "outfitProfiles", json));
+			json -> setConfig("outfitProfiles", json));
 		outfitListProfileId = currentProfileId(); // public:cut thrall-outfits
 	}
 	// public:cut thrall-outfits
@@ -4377,7 +4398,7 @@ public class FollowerPlugin extends Plugin
 
 			// Remember the styles of the body being left, resolved so defaults count
 			// too - what you SEE is what comes back.
-			configManager.setConfiguration(FollowerConfig.GROUP,
+			setConfig(
 				kitMemoryKey(outfit.getGender()), serializeKits(outfit.withDefaultBody()));
 
 			outfit.setGender(gender);
@@ -4570,7 +4591,7 @@ public class FollowerPlugin extends Plugin
 	/** Writes the outfit to config and rebuilds. */
 	private void persistOutfit(Outfit outfit)
 	{
-		configManager.setConfiguration(FollowerConfig.GROUP, "customOutfit", outfit.toString());
+		setConfig("customOutfit", outfit.toString());
 		appearanceService.invalidate();
 		rebuildFollower();
 		syncPanel();
@@ -4861,7 +4882,7 @@ public class FollowerPlugin extends Plugin
 					if (sketchBook != null)
 					{
 						sketchBook.openFor(configManager.getRSProfileKey());
-						speechEngine.getContext().noteSketchAccount(configManager.getRSProfileKey());
+						context().noteSketchAccount(configManager.getRSProfileKey());
 					}
 					if (chronicleProgress != null)
 					{
@@ -4872,12 +4893,12 @@ public class FollowerPlugin extends Plugin
 					}
 					pageNews.clear();
 					// public:end chronicle
-					speechEngine.getContext().clearDailyTallies();
+					context().clearDailyTallies();
 					noteFirstMeeting();
-					speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
-				speechEngine.getContext().setRegionNames(ruleLoader.getRegionNames());
+					context().setNicknames(ruleLoader.getNicknames());
+				context().setRegionNames(ruleLoader.getRegionNames());
 					readTraits();
-					TriggerContext counted = speechEngine.getContext();
+					TriggerContext counted = context();
 					counted.setSessionCount(counted.getSessionCount() + 1);
 					sessionMinutes = 0;
 					sessionRecordSaid = false;
@@ -4909,7 +4930,7 @@ public class FollowerPlugin extends Plugin
 					}
 					if (revision != config.lastRevision())
 					{
-						configManager.setConfiguration(FollowerConfig.GROUP,
+						setConfig(
 							"lastRevision", revision);
 					}
 				}
@@ -5355,7 +5376,7 @@ public class FollowerPlugin extends Plugin
 			follower.isStaying() ? follower.getStayTile() : null, kept);
 		if (!now.equals(kept))
 		{
-			configManager.setConfiguration(FollowerConfig.GROUP, "parkedAt", now);
+			setConfig("parkedAt", now);
 		}
 	}
 
@@ -5587,7 +5608,7 @@ public class FollowerPlugin extends Plugin
 			}
 			s.append(find).append('>').append(replace);
 		});
-		configManager.setConfiguration(FollowerConfig.GROUP, EXACT_PALETTE_KEY, s.toString());
+		setConfig(EXACT_PALETTE_KEY, s.toString());
 	}
 
 	// public:end dev
@@ -6755,7 +6776,7 @@ public class FollowerPlugin extends Plugin
 			// bodies rather than dropping back to a vanilla thrall.
 			String previous = thrallStyle;
 			switchThrall(npc, style);
-			speechEngine.dispatch(TriggerEvent.thrallSwitch(previous, style));
+			dispatch(TriggerEvent.thrallSwitch(previous, style));
 		}
 		else if (thrallExitPendingTicks > 0)
 		{
@@ -6765,7 +6786,7 @@ public class FollowerPlugin extends Plugin
 			String previous = thrallExitStyle;
 			thrallExitPendingTicks = 0;
 			switchThrall(npc, style);
-			speechEngine.dispatch(TriggerEvent.thrallSwitch(previous, style));
+			dispatch(TriggerEvent.thrallSwitch(previous, style));
 		}
 		else if (thrallLimbo)
 		{
@@ -6853,7 +6874,7 @@ public class FollowerPlugin extends Plugin
 		{
 			return;
 		}
-		configManager.setConfiguration(FollowerConfig.GROUP, "thrallHintShown", true);
+		setConfig("thrallHintShown", true);
 		sendStatus(config.thrallOnly()
 			? "Untick Thrall only and Replace thralls in settings to keep your own."
 			: "Untick Replace thralls in settings to keep your own.");
@@ -6869,7 +6890,7 @@ public class FollowerPlugin extends Plugin
 	{
 		speechEngine.setMuted(config.muted() || wasThieving
 			|| absentUntilSummoned(config.thrallOnly(), thrallBusiness()) || thrallQuiet());
-		speechEngine.dispatch(TriggerEvent.thrall(TriggerEvent.Type.THRALL_START, style));
+		dispatch(TriggerEvent.thrall(TriggerEvent.Type.THRALL_START, style));
 	}
 
 	/**
@@ -6916,7 +6937,7 @@ public class FollowerPlugin extends Plugin
 			follower.playSpotAnim(spotAnimRepository.get(thrallImpactSpotAnim(style)));
 		});
 		thrallExitTicks = 4;
-		speechEngine.dispatch(TriggerEvent.thrall(TriggerEvent.Type.THRALL_END, style));
+		dispatch(TriggerEvent.thrall(TriggerEvent.Type.THRALL_END, style));
 	}
 
 	/** Logout/hop teardown: no snap, no message, just clean state. */
@@ -7404,7 +7425,7 @@ public class FollowerPlugin extends Plugin
 	 */
 	private String[] daySummary()
 	{
-		com.follower.speech.TriggerContext context = speechEngine.getContext();
+		com.follower.speech.TriggerContext context = context();
 		return daySummary(talk(),
 			sessionMinutes,
 			context.getTally("kills:today"),
@@ -7531,11 +7552,11 @@ public class FollowerPlugin extends Plugin
 		}
 		// public:end posing
 		// Opening the box is presence too, even before anything is chosen.
-		speechEngine.getContext().noteAttention();
+		context().noteAttention();
 		// A bubble still up when the box opens is two mouths at once; the
 		// queue is likewise held while the box is open (see drainSpeechQueue).
 		overlay.clear();
-		String asked = speechEngine.getContext().getAskedTree();
+		String asked = context().getAskedTree();
 		com.follower.speech.DialogTree tree = dialogLoader.get(asked);
 		if (tree != null)
 		{
@@ -7547,10 +7568,10 @@ public class FollowerPlugin extends Plugin
 		dialog.startNextTick(followerName(),
 			talkScript(talk(), this::daySummary, this::answerQuestion,
 				// public:cut souvenirs-wishes
-				speechEngine.getContext().getWishLabel(),
-				speechEngine.getContext().isWishedItemInBag(),
+				context().getWishLabel(),
+				context().isWishedItemInBag(),
 				// public:end souvenirs-wishes
-				speechEngine.getContext().getMoodBand()), "start");
+				context().getMoodBand()), "start");
 	}
 
 	/**
@@ -7559,7 +7580,7 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void answerQuestion(String answer)
 	{
-		TriggerContext context = speechEngine.getContext();
+		TriggerContext context = context();
 		String tree = context.getAskedTree();
 		// The nickname is the one question whose answer changes the follower's
 		// own state rather than the rules'; settled before the rules hear, so
@@ -7576,7 +7597,7 @@ public class FollowerPlugin extends Plugin
 			}
 		}
 		context.noteAnswered();
-		speechEngine.dispatch(TriggerEvent.answered(answer, tree));
+		dispatch(TriggerEvent.answered(answer, tree));
 	}
 
 	/** The tree in dialogs.json that asks whether the earned name may be used. */
@@ -7725,7 +7746,7 @@ public class FollowerPlugin extends Plugin
 				// Being looked up is worth noticing. The examine text is the
 				// game's line about the follower; a rule gets to give the
 				// follower's line about being looked up.
-				speechEngine.dispatch(TriggerEvent.simple(TriggerEvent.Type.EXAMINED));
+				dispatch(TriggerEvent.simple(TriggerEvent.Type.EXAMINED));
 			});
 
 		addFollowerMenuEntry("Dance", () -> follower.playAnimation(866));
@@ -7791,7 +7812,7 @@ public class FollowerPlugin extends Plugin
 	 */
 	private String talkOption()
 	{
-		return speechEngine.getContext().getAskedTree().isEmpty()
+		return context().getAskedTree().isEmpty()
 			? "Talk-to" : "Answer";
 	}
 
@@ -8192,7 +8213,7 @@ public class FollowerPlugin extends Plugin
 			sketchBook.openFor(event.getNewProfile());
 			// Noted in the memory, so Forget everything knows its drawings
 			// were made under it (the user, 21 Oct).
-			speechEngine.getContext().noteSketchAccount(event.getNewProfile());
+			context().noteSketchAccount(event.getNewProfile());
 		}
 	}
 
@@ -8386,7 +8407,7 @@ public class FollowerPlugin extends Plugin
 
 		updateTrail(local);
 		// Where the follower stands, for the addressed condition.
-		speechEngine.getContext().setFollowerLocation(follower.getWorldLocation());
+		context().setFollowerLocation(follower.getWorldLocation());
 
 		// Learn weapon stances from everyone on screen, including ourselves.
 		stanceLibrary.observe(client);
@@ -8415,7 +8436,7 @@ public class FollowerPlugin extends Plugin
 		// units as everything else a rule can ask about.
 		hoverTicks = hoveredThisTick ? hoverTicks + 1 : 0;
 		hoveredThisTick = false;
-		speechEngine.getContext().setHoverTicks(hoverTicks);
+		context().setHoverTicks(hoverTicks);
 
 		updateStrandedTeleport();
 
@@ -8434,13 +8455,13 @@ public class FollowerPlugin extends Plugin
 			// a crash still keeps the mark; said only on the minute it crosses,
 			// because a record that re-announces every minute for the rest of a
 			// long session stops being a compliment and becomes a clock.
-			TriggerContext context = speechEngine.getContext();
+			TriggerContext context = context();
 			int previousBest = context.getRecord("session");
 			context.setSessionMinutes(++sessionMinutes);
 			if (context.noteRecord("session", sessionMinutes) && !sessionRecordSaid)
 			{
 				sessionRecordSaid = true;
-				speechEngine.dispatch(
+				dispatch(
 					TriggerEvent.record("session", sessionMinutes, previousBest));
 			}
 		}
@@ -8498,15 +8519,15 @@ public class FollowerPlugin extends Plugin
 		// never explain the interface. The wish latches when its line is
 		// actually displayed (inside the drain above), so the rising edge
 		// lands here the same tick.
-		boolean wishingNow = !speechEngine.getContext().getWishLabel().isEmpty();
+		boolean wishingNow = !context().getWishLabel().isEmpty();
 		// While a question waits, Answer opens the question and not Talk-to,
 		// where the handover is; the edge is held until it is answered (QA3).
-		if (speechEngine.getContext().getAskedTree().isEmpty())
+		if (context().getAskedTree().isEmpty())
 		{
 			if (wishingNow && !wasWishing && !config.wishHintShown())
 			{
-				configManager.setConfiguration(FollowerConfig.GROUP, "wishHintShown", true);
-				sendStatus("When you have the " + speechEngine.getContext().getWishLabel()
+				setConfig("wishHintShown", true);
+				sendStatus("When you have the " + context().getWishLabel()
 					+ ", right-click " + followerName()
 					+ " and choose " + talkOption() + " to hand it over.");
 			}
@@ -8524,9 +8545,9 @@ public class FollowerPlugin extends Plugin
 		// The shoulder is for open ground and nothing else going on: not a
 		// fight, not a pocket being worked, not thrall work.
 		follower.setWalksBeside(config.walksBeside() && thrallNpc == null
-			&& !speechEngine.getContext().isInCombat()
-			&& !speechEngine.getContext().isInThievingSession() // public:cut skilling
-			// public:else && !speechEngine.getContext().isInThievingSession());
+			&& !context().isInCombat()
+			&& !context().isInThievingSession() // public:cut skilling
+			// public:else && !context().isInThievingSession());
 			&& !skilling.isWorking()); // public:cut skilling
 		updateMinutes();
 		updateWelfare();
@@ -8542,7 +8563,7 @@ public class FollowerPlugin extends Plugin
 		// the seat is let go first and the stand-clear takes the feet after.
 		// public:end spectate,spectate-keep-fight-lines
 		skilling.tick();
-		skilling.describeTo(speechEngine.getContext());
+		skilling.describeTo(context());
 		// Picking by hand at a patch: the hands emptied of its own gear.
 		refreshEmoteDisarm(follower.isEmotePlaying());
 		// A copy of the work lasts while the follower is beside it: moved
@@ -8580,12 +8601,12 @@ public class FollowerPlugin extends Plugin
 		// After errands, so an errand in progress owns the feet: a follower // public:cut spectate-keep-fight-lines
 		// public:else // The fight's start and end for the rules, as the spectator raised them.
 		// public:else boolean fighting = follower.isSpawned() && !spectateBusy()
-			// public:else && speechEngine.getContext().isInCombat() && !speechEngine.getContext().isInThievingSession();
+			// public:else && context().isInCombat() && !context().isInThievingSession();
 		// public:else if (fighting != wasFighting)
 		// public:else {
 			// public:else wasFighting = fighting;
-			// public:else speechEngine.dispatch(TriggerEvent.combat(fighting ? TriggerEvent.Type.COMBAT_START
-				// public:else : TriggerEvent.Type.COMBAT_END, speechEngine.getContext().getCombatTarget()));
+			// public:else dispatch(TriggerEvent.combat(fighting ? TriggerEvent.Type.COMBAT_START
+				// public:else : TriggerEvent.Type.COMBAT_END, context().getCombatTarget()));
 		// public:else }
 		// public:cut spectate-keep-fight-lines
 		// halfway to a bank should finish the trip rather than be yanked
@@ -8655,8 +8676,8 @@ public class FollowerPlugin extends Plugin
 				// The rule holding the floor is one of the objects just thrown
 				// away, and the exemption that lets it speak is by identity.
 				speechEngine.clearFloor();
-				speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
-				speechEngine.getContext().setRegionNames(ruleLoader.getRegionNames());
+				context().setNicknames(ruleLoader.getNicknames());
+				context().setRegionNames(ruleLoader.getRegionNames());
 				sendStatus("Reloaded " + ruleLoader.getStatus() + ".");
 				reportRuleErrors();
 
@@ -8694,7 +8715,7 @@ public class FollowerPlugin extends Plugin
 		// stopped working. They are dispatched with the mute lifted, because
 		// otherwise the start line is swallowed by the silence it announces and
 		// the end line by the silence it ends.
-		boolean thievingNow = speechEngine.getContext().isInThievingSession();
+		boolean thievingNow = context().isInThievingSession();
 		if (thievingNow != wasThieving)
 		{
 			speechEngine.setMuted(config.muted() || thrallQuiet());
@@ -8706,7 +8727,7 @@ public class FollowerPlugin extends Plugin
 				speechQueue.clear();
 				cutByTheScene = null;
 			}
-			speechEngine.dispatch(TriggerEvent.simple(thievingNow
+			dispatch(TriggerEvent.simple(thievingNow
 				? TriggerEvent.Type.THIEVING_START
 				: TriggerEvent.Type.THIEVING_END));
 			wasThieving = thievingNow;
@@ -8735,7 +8756,7 @@ public class FollowerPlugin extends Plugin
 			net.runelite.api.gameval.InterfaceID.BANKMAIN, 0) != null;
 		if (wasBankOpen && !bankOpen)
 		{
-			speechEngine.getContext().noteBoundary("bank");
+			context().noteBoundary("bank");
 		}
 		wasBankOpen = bankOpen;
 
@@ -8751,14 +8772,14 @@ public class FollowerPlugin extends Plugin
 		{
 			if (lastMusicTrack != null && !track.equals(lastMusicTrack))
 			{
-				speechEngine.dispatch(TriggerEvent.trackChange(track));
+				dispatch(TriggerEvent.trackChange(track));
 			}
 			lastMusicTrack = track;
 		}
 
 		// An NPC dialogue up, or gone for under three ticks: the same reading
 		// the minutes take, so a page flip does not count as the box closing.
-		speechEngine.getContext().setDialogueOpen(npcDialogOpen() || dialogGoneTicks <= 2);
+		context().setDialogueOpen(npcDialogOpen() || dialogGoneTicks <= 2);
 		// And who is in it, so a line about them held through the talk is
 		// still said once the player walks on from them. Not a cutscene's
 		// speakers: nobody the player walked up to.
@@ -8766,7 +8787,7 @@ public class FollowerPlugin extends Plugin
 			net.runelite.api.gameval.InterfaceID.ChatLeft.NAME);
 		if (speaker != null && speaker.getText() != null && !inCutscene())
 		{
-			speechEngine.getContext().noteSpeaker(
+			context().noteSpeaker(
 				net.runelite.client.util.Text.removeTags(speaker.getText()));
 		}
 
@@ -8788,7 +8809,7 @@ public class FollowerPlugin extends Plugin
 				|| flourish.isActive()
 				// A scene holds it where it stands.
 				|| sceneHolds());
-		speechEngine.getContext().setFollowerStaying(stayCommanded);
+		context().setFollowerStaying(stayCommanded);
 		if (stayCommanded != stayReported)
 		{
 			stayReported = stayCommanded;
@@ -8814,7 +8835,7 @@ public class FollowerPlugin extends Plugin
 			else if (leftTheFollowerParked && apart <= 3)
 			{
 				leftTheFollowerParked = false;
-				speechEngine.getContext().noteBoundary("reunion");
+				context().noteBoundary("reunion");
 			}
 		}
 		else
@@ -8822,7 +8843,7 @@ public class FollowerPlugin extends Plugin
 			leftTheFollowerParked = false;
 		}
 
-		int region = speechEngine.getContext().getRegionId();
+		int region = context().getRegionId();
 		if (region != lastRegionId)
 		{
 			int previous = lastRegionId;
@@ -8839,7 +8860,7 @@ public class FollowerPlugin extends Plugin
 			}
 			if (previous != -1)
 			{
-				speechEngine.dispatch(TriggerEvent.regionChange(region, previous));
+				dispatch(TriggerEvent.regionChange(region, previous));
 				// public:cut errands
 				// Somewhere new: once the player settles, the follower may go
 				// and nose at something (the explore errand's arrival trigger).
@@ -8848,7 +8869,7 @@ public class FollowerPlugin extends Plugin
 			}
 		}
 
-		speechEngine.dispatch(TriggerEvent.tick());
+		dispatch(TriggerEvent.tick());
 
 		// public:cut chronicle
 		// A page written gets its mention after this tick's own events have
@@ -8861,7 +8882,7 @@ public class FollowerPlugin extends Plugin
 			pageNewsTicks(speechEngine.moodScaledGap()), lastRegionId);
 		if (news != null)
 		{
-			speechEngine.dispatch(news);
+			dispatch(news);
 		}
 		// public:end chronicle
 	}
@@ -8950,7 +8971,7 @@ public class FollowerPlugin extends Plugin
 			// public:cut moments
 			moments.farewell();
 			// public:end moments
-			speechEngine.dispatch(TriggerEvent.simple(TriggerEvent.Type.FAREWELL));
+			dispatch(TriggerEvent.simple(TriggerEvent.Type.FAREWELL));
 		}
 		// public:cut chronicle
 		if (!opened)
@@ -9162,7 +9183,7 @@ public class FollowerPlugin extends Plugin
 		TriggerEvent spawn = TriggerEvent.npc(TriggerEvent.Type.NPC_SPAWN, npc.getId(), npc.getName());
 		if (ruleLoader.answersSpawn(spawn))
 		{
-			speechEngine.dispatch(spawn);
+			dispatch(spawn);
 		}
 	}
 
@@ -9207,7 +9228,7 @@ public class FollowerPlugin extends Plugin
 		// bundled rule listens for it at all.
 		if (ruleLoader.listensFor(TriggerEvent.Type.NPC_DESPAWN))
 		{
-			speechEngine.dispatch(
+			dispatch(
 				TriggerEvent.npc(TriggerEvent.Type.NPC_DESPAWN, npc.getId(), npc.getName()));
 		}
 	}
@@ -9410,9 +9431,9 @@ public class FollowerPlugin extends Plugin
 
 		// public:end dev
 		// Nor the game's word for a death there: the death rule listens for it.
-		if (!(speechEngine.getContext().isSafeDeathHere() && event.getMessage().startsWith(DEATH_MESSAGE)))
+		if (!(context().isSafeDeathHere() && event.getMessage().startsWith(DEATH_MESSAGE)))
 		{
-			speechEngine.dispatch(TriggerEvent.chat(
+			dispatch(TriggerEvent.chat(
 				event.getMessage(), event.getType().getType(), event.getName()));
 		}
 
@@ -9443,15 +9464,15 @@ public class FollowerPlugin extends Plugin
 				"You have unlocked a new music track:");
 			if (parsed != null)
 			{
-				speechEngine.getContext().tally("music");
-				speechEngine.dispatch(TriggerEvent.musicUnlock(parsed));
+				context().tally("music");
+				dispatch(TriggerEvent.musicUnlock(parsed));
 			}
 			parsed = parseTailAfter(event.getMessage(),
 				"New item added to your collection log:");
 			if (parsed != null)
 			{
-				speechEngine.getContext().tally("collections");
-				speechEngine.dispatch(TriggerEvent.collectionAdd(parsed));
+				context().tally("collections");
+				dispatch(TriggerEvent.collectionAdd(parsed));
 				// public:cut moments
 				if (config.noticesThings() && !filming) // public:cut posing
 				// public:else if (config.noticesThings())
@@ -9515,7 +9536,7 @@ public class FollowerPlugin extends Plugin
 		}
 		String boss = parsed.getKey();
 		int count = parsed.getValue();
-		TriggerContext context = speechEngine.getContext();
+		TriggerContext context = context();
 		// A record rather than a tally: the game's count only ever goes up,
 		// and what the follower keeps is the highest it has heard. The game
 		// keeps it per account, so the follower does too.
@@ -9532,7 +9553,7 @@ public class FollowerPlugin extends Plugin
 		{
 			context.forgetRecord(bare);
 		}
-		speechEngine.dispatch(TriggerEvent.killCount(boss, count, last));
+		dispatch(TriggerEvent.killCount(boss, count, last));
 	}
 
 	/**
@@ -9573,7 +9594,7 @@ public class FollowerPlugin extends Plugin
 		// State-based varbitEquals rules evaluate on the tick heartbeat.
 		if (event.getVarbitId() != -1 && ruleLoader.isVarbitEventRules())
 		{
-			speechEngine.dispatch(TriggerEvent.varbit(event.getVarbitId(), event.getValue(), -1));
+			dispatch(TriggerEvent.varbit(event.getVarbitId(), event.getValue(), -1));
 		}
 
 		// The summoning-cooldown varbit rising is the RELIABLE summon signal:
@@ -9641,8 +9662,8 @@ public class FollowerPlugin extends Plugin
 			{
 				return;
 			}
-			speechEngine.getContext().tally("quests");
-			speechEngine.getContext().noteDoing("finishing " + quest);
+			context().tally("quests");
+			context().noteDoing("finishing " + quest);
 			if (chronicleProgress != null && isStaying()) // public:cut chronicle
 			// public:else noteQuestFinish(quest, isStaying() ? QUEST_NOT_SEEN : java.time.LocalDate.now().toEpochDay());
 			// public:cut chronicle
@@ -9655,7 +9676,7 @@ public class FollowerPlugin extends Plugin
 				chronicleProgress.sawQuestFinish(quest);
 			}
 			// public:end chronicle
-			speechEngine.dispatch(TriggerEvent.questComplete(quest));
+			dispatch(TriggerEvent.questComplete(quest));
 		});
 	} // public:cut chronicle
 	// public:else }
@@ -9670,7 +9691,7 @@ public class FollowerPlugin extends Plugin
 		// public:else {
 			// public:else if (quest.getName().equalsIgnoreCase(questName))
 			// public:else {
-				// public:else speechEngine.getContext().noteQuestSeenFinished(accountKey(quest.name()), epochDay);
+				// public:else context().noteQuestSeenFinished(accountKey(quest.name()), epochDay);
 				// public:else return;
 			// public:else }
 		// public:else }
@@ -9710,7 +9731,7 @@ public class FollowerPlugin extends Plugin
 		}
 		// The clerk receives the telegram wherever you are - that is the joke.
 		String item = itemManager.getItemComposition(offer.getItemId()).getName();
-		speechEngine.dispatch(TriggerEvent.geOffer(bought, item, offer.getSpent()));
+		dispatch(TriggerEvent.geOffer(bought, item, offer.getSpent()));
 	}
 
 	/**
@@ -9764,7 +9785,7 @@ public class FollowerPlugin extends Plugin
 			return;
 		}
 		// Display names arrive padded with non-breaking spaces.
-		speechEngine.dispatch(TriggerEvent.channel(type, who.replace(' ', ' ').trim()));
+		dispatch(TriggerEvent.channel(type, who.replace(' ', ' ').trim()));
 	}
 
 	/**
@@ -9789,7 +9810,7 @@ public class FollowerPlugin extends Plugin
 		{
 			return;
 		}
-		speechEngine.dispatch(TriggerEvent.npcShout(npc.getName(), event.getOverheadText()));
+		dispatch(TriggerEvent.npcShout(npc.getName(), event.getOverheadText()));
 	}
 
 	// public:cut dev
@@ -9980,8 +10001,8 @@ public class FollowerPlugin extends Plugin
 		// public:end chronicle
 		// The follower's tile as of this event, not the last tick's: an emote
 		// done at it is judged on where it is.
-		speechEngine.getContext().setFollowerLocation(follower.getWorldLocation());
-		speechEngine.dispatch(TriggerEvent.animation(animationId));
+		context().setFollowerLocation(follower.getWorldLocation());
+		dispatch(TriggerEvent.animation(animationId));
 	}
 
 	/**
@@ -10128,8 +10149,8 @@ public class FollowerPlugin extends Plugin
 		{
 			// Being hit is combat even when not hitting back, which the
 			// interaction check alone would miss.
-			speechEngine.getContext().noteDamageTaken();
-			speechEngine.dispatch(TriggerEvent.damageTaken(event.getHitsplat().getAmount()));
+			context().noteDamageTaken();
+			dispatch(TriggerEvent.damageTaken(event.getHitsplat().getAmount()));
 			// public:cut agility,agility-all
 			if (com.follower.follower.CrossingWatch.isFallDamage(event.getHitsplat().getHitsplatType()))
 			{
@@ -10143,7 +10164,7 @@ public class FollowerPlugin extends Plugin
 			damagedByPlayer.put(event.getActor(), client.getTickCount());
 			// Landing one is combat too. Facing an NPC is not enough on its
 			// own any more, so this is what arms a fight the player starts.
-			speechEngine.getContext().noteDamageDealt();
+			context().noteDamageDealt();
 			noteRecord("hit", event.getHitsplat().getAmount());
 		}
 	}
@@ -10157,11 +10178,11 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void noteRecord(String what, int value)
 	{
-		TriggerContext context = speechEngine.getContext();
+		TriggerContext context = context();
 		int previous = context.getRecord(what);
 		if (context.noteRecord(what, value))
 		{
-			speechEngine.dispatch(TriggerEvent.record(what, value, previous));
+			dispatch(TriggerEvent.record(what, value, previous));
 		}
 	}
 
@@ -10239,7 +10260,7 @@ public class FollowerPlugin extends Plugin
 			net.runelite.api.Actor target = sightedPlayer.getInteracting();
 			boolean swing = sightingIsASwing(
 				sightedPlayer == client.getLocalPlayer(),
-				speechEngine.getContext().isInCombat(),
+				context().isInCombat(),
 				target == null ? -1 : target.getHealthRatio());
 			if ((hit == null || hit < sightedTick) && swing)
 			{
@@ -10297,10 +10318,10 @@ public class FollowerPlugin extends Plugin
 				// kill challenge counts against and what earns the nickname, and
 				// writing only the daily one left both permanently unreachable -
 				// every wager failed on its deadline however well it went.
-				speechEngine.getContext().tallyBoth("kills");
-				int count = speechEngine.getContext().tally(
+				context().tallyBoth("kills");
+				int count = context().tally(
 					"kill:" + name.toLowerCase(Locale.ROOT));
-				speechEngine.dispatch(TriggerEvent.kill(
+				dispatch(TriggerEvent.kill(
 					npc.getId(), name, npc.getCombatLevel(), count));
 				// public:cut chronicle
 				if (chronicleProgress != null)
@@ -10314,13 +10335,13 @@ public class FollowerPlugin extends Plugin
 
 		// A death a minigame gives back is no death: no grief, no memory and
 		// no mark (the user, 20 Oct, after Castle Wars was mourned for days).
-		if (!speechEngine.getContext().isSafeDeathHere())
+		if (!context().isSafeDeathHere())
 		{
 			// Where, as well as that: the death spot is remembered for the session,
 			// and walking back over it later has its own lines.
-			speechEngine.getContext().noteDeath(local.getWorldLocation());
-			speechEngine.getContext().tallyBoth("deaths");
-			speechEngine.dispatch(TriggerEvent.death());
+			context().noteDeath(local.getWorldLocation());
+			context().tallyBoth("deaths");
+			dispatch(TriggerEvent.death());
 		}
 		dialog.close();
 	}
@@ -10366,9 +10387,9 @@ public class FollowerPlugin extends Plugin
 			// Settled BEFORE the loot line, so the follower collects on its
 			// prediction rather than remarking on the drop and then
 			// remembering it had money on it.
-			speechEngine.getContext().settleBet(worth);
+			context().settleBet(worth);
 			// public:end side-games
-			speechEngine.dispatch(TriggerEvent.loot(worth, best));
+			dispatch(TriggerEvent.loot(worth, best));
 			// public:cut moments
 			if (config.noticesThings() && !filming) // public:cut posing
 			// public:else if (config.noticesThings())
@@ -10388,7 +10409,7 @@ public class FollowerPlugin extends Plugin
 		Integer previous = knownLevels.put(skill, level);
 		if (previous != null && level > previous)
 		{
-			TriggerContext context = speechEngine.getContext();
+			TriggerContext context = context();
 			context.tallyBoth("levels");
 			// The wider ledger, for the milestone rules: where the total and
 			// the lowest skill stood before this level and after it, how many
@@ -10411,7 +10432,7 @@ public class FollowerPlugin extends Plugin
 			long now = System.currentTimeMillis();
 			long sinceAny = context.sinceAnyLevel(now);
 			long sinceLast = context.noteLevel(skill.getName(), level, now);
-			speechEngine.dispatch(TriggerEvent.levelUp(skill.getName(), level,
+			dispatch(TriggerEvent.levelUp(skill.getName(), level,
 				total, total - (level - previous), base, previousBase, masteries,
 				sinceLast, sinceAny));
 			// public:cut moments
@@ -10454,8 +10475,8 @@ public class FollowerPlugin extends Plugin
 				// public:end agility,agility-all
 			}
 			int count = skilling.noteXpDrop(skill); // public:cut skilling
-			// public:else speechEngine.dispatch(TriggerEvent.xpDrop(skill.getName(), 0));
-			speechEngine.dispatch(TriggerEvent.xpDrop(skill.getName(), count)); // public:cut skilling
+			// public:else dispatch(TriggerEvent.xpDrop(skill.getName(), 0));
+			dispatch(TriggerEvent.xpDrop(skill.getName(), count)); // public:cut skilling
 		}
 	}
 
@@ -10638,8 +10659,8 @@ public class FollowerPlugin extends Plugin
 	private void reloadFiles()
 	{
 		ruleLoader.reload();
-		speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
-				speechEngine.getContext().setRegionNames(ruleLoader.getRegionNames());
+		context().setNicknames(ruleLoader.getNicknames());
+				context().setRegionNames(ruleLoader.getRegionNames());
 		// public:cut sharevoice
 		// The sounds file is one of ours on disk too, and the command
 		// reads as "re-read my files". Leaving it out meant an
@@ -10761,7 +10782,7 @@ public class FollowerPlugin extends Plugin
 			{
 				return "The follower is not out.";
 			}
-			if (speechEngine.getContext().isInCombat())
+			if (context().isInCombat())
 			{
 				return "Not during a fight.";
 			}
@@ -10834,7 +10855,7 @@ public class FollowerPlugin extends Plugin
 		Player local = client.getLocalPlayer();
 		WorldPoint feet = local == null ? null : local.getWorldLocation();
 		com.follower.follower.Moments.Tier tier = com.follower.follower.Moments.tierFor(value);
-		speechEngine.dispatch(TriggerEvent.loot(value, item));
+		dispatch(TriggerEvent.loot(value, item));
 		String did = tier == null ? null : moments.forceNoteworthy(tier, feet);
 		return item + " worth " + value + " at your feet: "
 			+ (tier == null ? "too small for the ladder, so nothing." : did == null ? "nothing." : did + ".");
@@ -10849,7 +10870,7 @@ public class FollowerPlugin extends Plugin
 	 */
 	private void setFollowEnabled(boolean enabled)
 	{
-		configManager.setConfiguration(FollowerConfig.GROUP, "followEnabled", enabled);
+		setConfig("followEnabled", enabled);
 	}
 
 	/**
@@ -10894,7 +10915,7 @@ public class FollowerPlugin extends Plugin
 		if (clicked != null && standing != null
 			&& standing.equals(clicked.getWorldLocation()))
 		{
-			speechEngine.getContext().noteUnderfoot();
+			context().noteUnderfoot();
 		}
 	}
 
@@ -11013,7 +11034,7 @@ public class FollowerPlugin extends Plugin
 		if (target != null && !target.isEmpty() && !"null".equals(target))
 		{
 			String named = target.replaceAll("<[^>]*>", "");
-			speechEngine.dispatch(creature ? TriggerEvent.examinedCreature(named)
+			dispatch(creature ? TriggerEvent.examinedCreature(named)
 				: TriggerEvent.examinedThing(named));
 		}
 	}
@@ -11043,7 +11064,7 @@ public class FollowerPlugin extends Plugin
 		{
 			return;
 		}
-		TriggerContext context = speechEngine.getContext();
+		TriggerContext context = context();
 		if (isThievingOption(option))
 		{
 			context.noteThievingIntent();
@@ -11349,7 +11370,7 @@ public class FollowerPlugin extends Plugin
 						// The setting's own range; its box clamps only what it shows (QA3).
 						int asked = Integer.parseInt(args[1]);
 						int offset = Math.max(-64, Math.min(64, asked));
-						configManager.setConfiguration(FollowerConfig.GROUP, "verticalOffset", offset);
+						setConfig("verticalOffset", offset);
 						clientThread.invoke(() -> follower.setVerticalOffset(offset));
 						sendStatus("Height offset " + offset
 							+ (asked > offset ? ", the most it goes" : asked < offset ? ", the least it goes" : "")
@@ -11950,7 +11971,7 @@ public class FollowerPlugin extends Plugin
 					String item = args.length > 2
 						? String.join(" ", java.util.Arrays.copyOfRange(args, 2, args.length))
 						: "Coins";
-					speechEngine.dispatch(TriggerEvent.loot(value, item));
+					dispatch(TriggerEvent.loot(value, item));
 					sendStatus("Faked a " + item + " drop worth " + value + ".");
 				}
 				catch (NumberFormatException e)
@@ -12015,11 +12036,11 @@ public class FollowerPlugin extends Plugin
 					// Per-stage graphics remain available in the settings.
 					if (keep)
 					{
-						configManager.setConfiguration(FollowerConfig.GROUP,
+						setConfig(
 							"spectateShieldGraphic", id);
-						configManager.setConfiguration(FollowerConfig.GROUP,
+						setConfig(
 							"spectateShieldChannelGraphic", id);
-						configManager.setConfiguration(FollowerConfig.GROUP,
+						setConfig(
 							"spectateShieldEndGraphic", id);
 						sendStatus("Graphic " + id
 							+ " is now the shield effect for summon, channel and finish.");
@@ -12178,7 +12199,7 @@ public class FollowerPlugin extends Plugin
 					break;
 				}
 				boolean on = journal.toggle();
-				configManager.setConfiguration(FollowerConfig.GROUP, "transcriptOn", on);
+				setConfig("transcriptOn", on);
 				sendStatus("Transcript " + (on ? "on" : "off")
 					+ " - " + journal.getFile());
 				if (on)
@@ -12190,7 +12211,7 @@ public class FollowerPlugin extends Plugin
 
 			case "mood":
 			{
-				com.follower.speech.TriggerContext context = speechEngine.getContext();
+				com.follower.speech.TriggerContext context = context();
 				if (args.length > 1)
 				{
 					try
@@ -12264,7 +12285,7 @@ public class FollowerPlugin extends Plugin
 			// only visible by going there and seeing whether it notices.
 			case "want":
 			{
-				com.follower.speech.TriggerContext context = speechEngine.getContext();
+				com.follower.speech.TriggerContext context = context();
 				if (!context.isWanting())
 				{
 					sendStatus("Not hoping for anything. Question window "
@@ -12293,8 +12314,8 @@ public class FollowerPlugin extends Plugin
 					sendStatus("Skilling: " + skilling.describe());
 				}
 				// public:end dev,skilling
-				sendStatus("Region " + speechEngine.getContext().getRegionId()
-					+ atTile(speechEngine.getContext().getLocation()));
+				sendStatus("Region " + context().getRegionId()
+					+ atTile(context().getLocation()));
 				break;
 
 			// public:cut dev
@@ -12334,8 +12355,8 @@ public class FollowerPlugin extends Plugin
 				// Split from status: every place that advertises this command
 				// promises the region id, which used to arrive buried after a
 				// model report nobody asked for.
-				sendStatus("You're in region " + speechEngine.getContext().getRegionId()
-					+ onTile(speechEngine.getContext().getLocation())
+				sendStatus("You're in region " + context().getRegionId()
+					+ onTile(context().getLocation())
 					+ ". Use that number under Locations in the Messages window.");
 				break;
 
@@ -12577,7 +12598,7 @@ public class FollowerPlugin extends Plugin
 		// pass: behaviour QA4, 16 Oct, Hans was announced as the follower's
 		// own box closed, 24 s after he had gone. Let go unsaid.
 		if (line.rule != null && line.rule.when != null
-			&& !line.rule.when.standingHolds(speechEngine.getContext(), TriggerEvent.tick()))
+			&& !line.rule.when.standingHolds(context(), TriggerEvent.tick()))
 		{
 			return;
 		}
@@ -13264,7 +13285,7 @@ public class FollowerPlugin extends Plugin
 				if (!name.isEmpty())
 				{
 					named[0] = true;
-					configManager.setConfiguration(FollowerConfig.GROUP,
+					setConfig(
 						"followerName", name);
 					clientThread.invoke(() ->
 						speechEngine.say(name + ". I'll answer to that.",
@@ -13286,7 +13307,7 @@ public class FollowerPlugin extends Plugin
 			// the client never got to close does not count as offered.
 			.onClose(() ->
 			{
-				configManager.setConfiguration(FollowerConfig.GROUP,
+				setConfig(
 					"namePrompted", true);
 				if (!done[0] && nameOfferRetries++ == 0)
 				{
@@ -13404,7 +13425,7 @@ public class FollowerPlugin extends Plugin
 		{
 			return;
 		}
-		configManager.setConfiguration(FollowerConfig.GROUP, "firstSpawnNoticeShown", true);
+		setConfig("firstSpawnNoticeShown", true);
 		sendStatus("Only you can see " + followerName()
 			+ ". Everything it does happens on your screen, and nothing is sent to the game.");
 		sendStatus("Type ::follower in chat for commands.");
@@ -13421,7 +13442,7 @@ public class FollowerPlugin extends Plugin
 		{
 			return;
 		}
-		configManager.setConfiguration(FollowerConfig.GROUP, "sendHintShown", true);
+		setConfig("sendHintShown", true);
 		sendStatus("You can also hold Shift and right-click any tile to Send "
 			+ followerName() + " there.");
 	}
