@@ -114,11 +114,8 @@ public final class TriggerEvent
 	 */
 	public static TriggerEvent xpDrop(String skill, int count)
 	{
-		TriggerEvent event = new TriggerEvent(Type.XP_DROP);
-		event.name = skill == null ? "" : skill;
+		TriggerEvent event = named(Type.XP_DROP, "skill", skill).put("count", count);
 		event.count = count;
-		event.placeholders.put("skill", event.name);
-		event.placeholders.put("count", Integer.toString(count));
 		return event;
 	}
 
@@ -129,20 +126,13 @@ public final class TriggerEvent
 	 */
 	public static TriggerEvent workEnd(String activity, String target)
 	{
-		TriggerEvent event = new TriggerEvent(Type.WORK_END);
-		event.name = activity == null ? "" : activity;
-		event.placeholders.put("activity", event.name);
-		event.placeholders.put("target", target == null ? "" : target);
-		return event;
+		return named(Type.WORK_END, "activity", activity).put("target", target == null ? "" : target);
 	}
 
 	/** The thing being worked changed id or went. {target} names it. */
 	public static TriggerEvent targetDepleted(String target)
 	{
-		TriggerEvent event = new TriggerEvent(Type.TARGET_DEPLETED);
-		event.name = target == null ? "" : target;
-		event.placeholders.put("target", event.name);
-		return event;
+		return named(Type.TARGET_DEPLETED, "target", target);
 	}
 
 	// public:end skilling
@@ -153,10 +143,7 @@ public final class TriggerEvent
 	 */
 	public static TriggerEvent examinedThing(String target)
 	{
-		TriggerEvent event = new TriggerEvent(Type.EXAMINED_THING);
-		event.name = target == null ? "" : target;
-		event.placeholders.put("target", event.name);
-		return event;
+		return named(Type.EXAMINED_THING, "target", target);
 	}
 
 	/**
@@ -177,28 +164,21 @@ public final class TriggerEvent
 	 */
 	public static TriggerEvent trackChange(String track)
 	{
-		TriggerEvent event = new TriggerEvent(Type.TRACK_CHANGE);
-		event.name = track == null ? "" : track;
-		event.placeholders.put("track", event.name);
-		return event;
+		return named(Type.TRACK_CHANGE, "track", track);
 	}
 
 	/** A world hop landed. {world} is the number on the new door. */
 	public static TriggerEvent worldHop(int world)
 	{
-		TriggerEvent event = new TriggerEvent(Type.WORLD_HOP);
+		TriggerEvent event = new TriggerEvent(Type.WORLD_HOP).put("world", world);
 		event.value = world;
-		event.placeholders.put("world", Integer.toString(world));
 		return event;
 	}
 
 	/** A music track just unlocked. {track} names it for the catalogue. */
 	public static TriggerEvent musicUnlock(String track)
 	{
-		TriggerEvent event = new TriggerEvent(Type.MUSIC_UNLOCK);
-		event.name = track == null ? "" : track;
-		event.placeholders.put("track", event.name);
-		return event;
+		return named(Type.MUSIC_UNLOCK, "track", track);
 	}
 
 	// public:cut chronicle
@@ -221,19 +201,13 @@ public final class TriggerEvent
 	/** The other ledger gained a line. {item} is what went in it. */
 	public static TriggerEvent collectionAdd(String item)
 	{
-		TriggerEvent event = new TriggerEvent(Type.COLLECTION_ADD);
-		event.name = item == null ? "" : item;
-		event.placeholders.put("item", event.name);
-		return event;
+		return named(Type.COLLECTION_ADD, "item", item);
 	}
 
 	/** A quest reward scroll was handed over. {quest} names the quest. */
 	public static TriggerEvent questComplete(String quest)
 	{
-		TriggerEvent event = new TriggerEvent(Type.QUEST_COMPLETE);
-		event.name = quest == null ? "" : quest;
-		event.placeholders.put("quest", event.name);
-		return event;
+		return named(Type.QUEST_COMPLETE, "quest", quest);
 	}
 
 	/**
@@ -243,20 +217,16 @@ public final class TriggerEvent
 	 */
 	public static TriggerEvent geOffer(boolean bought, String item, long spent)
 	{
-		TriggerEvent event = new TriggerEvent(Type.GE_OFFER);
+		TriggerEvent event = new TriggerEvent(Type.GE_OFFER).put("item", item == null ? "" : item)
+			.put("value", formatGp(spent));
 		event.name = bought ? "bought" : "sold";
-		event.placeholders.put("item", item == null ? "" : item);
-		event.placeholders.put("value", formatGp(spent));
 		return event;
 	}
 
 	/** Somebody arrived in or left the player's chat channel. {name} says who. */
 	public static TriggerEvent channel(Type type, String who)
 	{
-		TriggerEvent event = new TriggerEvent(type);
-		event.name = who == null ? "" : who;
-		event.placeholders.put("name", event.name);
-		return event;
+		return named(type, "name", who);
 	}
 
 	/**
@@ -266,22 +236,14 @@ public final class TriggerEvent
 	 */
 	public static TriggerEvent npcShout(String npc, String message)
 	{
-		TriggerEvent event = new TriggerEvent(Type.NPC_SHOUT);
-		event.name = npc == null ? "" : npc;
-		event.message = message == null ? "" : message;
-		event.placeholders.put("npc", event.name);
-		event.placeholders.put("message", event.message);
-		return event;
+		return named(Type.NPC_SHOUT, "npc", npc).message("message", message);
 	}
 
 	// public:cut souvenirs-wishes
 	/** The thing it was carrying is gone. {souvenir} names it one last time. */
 	public static TriggerEvent souvenirLost(String what)
 	{
-		TriggerEvent event = new TriggerEvent(Type.SOUVENIR_LOST);
-		event.name = what == null ? "" : what;
-		event.placeholders.put("souvenir", event.name);
-		return event;
+		return named(Type.SOUVENIR_LOST, "souvenir", what);
 	}
 
 	// public:end souvenirs-wishes
@@ -289,19 +251,13 @@ public final class TriggerEvent
 	/** A challenge was met inside the window, or it was not. */
 	public static TriggerEvent challenge(Type type, String about)
 	{
-		TriggerEvent event = new TriggerEvent(type);
-		event.name = about == null ? "" : about;
-		event.placeholders.put("challenge", event.name);
-		return event;
+		return named(type, "challenge", about);
 	}
 
 	/** The player took the follower's advice, or let the window shut. */
 	public static TriggerEvent advice(Type type, String about)
 	{
-		TriggerEvent event = new TriggerEvent(type);
-		event.name = about == null ? "" : about;
-		event.placeholders.put("advice", event.name);
-		return event;
+		return named(type, "advice", about);
 	}
 
 	/** A prediction came good, or did not. */
@@ -324,20 +280,15 @@ public final class TriggerEvent
 	/** The same, naming the tree that was answered, for a rule's {@code of}. */
 	public static TriggerEvent answered(String answer, String tree)
 	{
-		TriggerEvent event = new TriggerEvent(Type.ANSWERED);
-		event.name = answer == null ? "" : answer;
+		TriggerEvent event = named(Type.ANSWERED, "answer", answer);
 		event.message = tree == null ? "" : tree;
-		event.placeholders.put("answer", event.name);
 		return event;
 	}
 
 	/** A want got its answer, one way or the other. {want} names what it was. */
 	public static TriggerEvent want(Type type, String label)
 	{
-		TriggerEvent event = new TriggerEvent(type);
-		event.name = label == null ? "" : label;
-		event.placeholders.put("want", event.name);
-		return event;
+		return named(type, "want", label);
 	}
 
 	/**
@@ -347,12 +298,8 @@ public final class TriggerEvent
 	 */
 	public static TriggerEvent record(String what, int value, int previous)
 	{
-		TriggerEvent event = new TriggerEvent(Type.RECORD);
-		event.name = what == null ? "" : what;
+		TriggerEvent event = named(Type.RECORD, "record", what).put("value", value).put("previous", previous);
 		event.value = value;
-		event.placeholders.put("record", event.name);
-		event.placeholders.put("value", Integer.toString(value));
-		event.placeholders.put("previous", Integer.toString(previous));
 		return event;
 	}
 
@@ -369,11 +316,8 @@ public final class TriggerEvent
 	 */
 	public static TriggerEvent loot(int totalValue, String bestItem)
 	{
-		TriggerEvent event = new TriggerEvent(Type.LOOT);
+		TriggerEvent event = named(Type.LOOT, "item", bestItem).put("value", formatGp(totalValue));
 		event.value = totalValue;
-		event.name = bestItem == null ? "" : bestItem;
-		event.placeholders.put("item", event.name);
-		event.placeholders.put("value", formatGp(totalValue));
 		return event;
 	}
 
@@ -408,9 +352,7 @@ public final class TriggerEvent
 	 */
 	public static TriggerEvent combat(Type type, String npcName)
 	{
-		TriggerEvent event = new TriggerEvent(type);
-		event.name = npcName == null ? "" : npcName;
-		event.placeholders.put("npc", event.name);
+		TriggerEvent event = named(type, "npc", npcName);
 		event.creatures.add("npc");
 		return event;
 	}
@@ -434,21 +376,16 @@ public final class TriggerEvent
 	 */
 	public static TriggerEvent kill(int npcId, String npcName, int combatLevel, int count)
 	{
-		TriggerEvent event = npc(Type.NPC_KILL, npcId, npcName);
+		TriggerEvent event = npc(Type.NPC_KILL, npcId, npcName).put("level", combatLevel).put("count", count);
 		event.value = combatLevel;
 		event.count = count;
-		event.placeholders.put("level", Integer.toString(combatLevel));
-		event.placeholders.put("count", Integer.toString(count));
 		return event;
 	}
 
 	/** Thrall-mode transitions; {@code style} lands in the {style} placeholder. */
 	public static TriggerEvent thrall(Type type, String style)
 	{
-		TriggerEvent event = new TriggerEvent(type);
-		event.name = style == null ? "" : style;
-		event.placeholders.put("style", event.name);
-		return event;
+		return named(type, "style", style);
 	}
 
 	/**
@@ -457,19 +394,14 @@ public final class TriggerEvent
 	 */
 	public static TriggerEvent thrallSwitch(String from, String style)
 	{
-		TriggerEvent event = thrall(Type.THRALL_SWITCH, style);
-		event.placeholders.put("from", from == null ? "" : from);
-		return event;
+		return thrall(Type.THRALL_SWITCH, style).put("from", from == null ? "" : from);
 	}
 
 	// public:cut errands
 	/** Errand transitions; the errand's name matches rule {@code names} lists. */
 	public static TriggerEvent errand(Type type, String errand)
 	{
-		TriggerEvent event = new TriggerEvent(type);
-		event.name = errand == null ? "" : errand;
-		event.placeholders.put("errand", event.name);
-		return event;
+		return named(type, "errand", errand);
 	}
 
 	// public:end errands
@@ -505,6 +437,30 @@ public final class TriggerEvent
 		this.type = type;
 	}
 
+	/** An event about one thing by name, said by the placeholder {@code key}. */
+	private static TriggerEvent named(Type type, String key, String name)
+	{
+		TriggerEvent event = new TriggerEvent(type);
+		event.name = name == null ? "" : name;
+		event.placeholders.put(key, event.name);
+		return event;
+	}
+
+	/** Sets the message, said by the placeholder {@code key}. */
+	private TriggerEvent message(String key, String text)
+	{
+		message = text == null ? "" : text;
+		placeholders.put(key, message);
+		return this;
+	}
+
+	/** Adds a placeholder; a number is written in digits. */
+	private TriggerEvent put(String key, Object value)
+	{
+		placeholders.put(key, String.valueOf(value));
+		return this;
+	}
+
 	public static TriggerEvent tick()
 	{
 		return new TriggerEvent(Type.TICK);
@@ -512,12 +468,8 @@ public final class TriggerEvent
 
 	public static TriggerEvent npc(Type type, int npcId, String npcName)
 	{
-		TriggerEvent event = new TriggerEvent(type);
+		TriggerEvent event = combat(type, npcName).put("npcId", npcId);
 		event.id = npcId;
-		event.name = npcName == null ? "" : npcName;
-		event.placeholders.put("npc", event.name);
-		event.placeholders.put("npcId", Integer.toString(npcId));
-		event.creatures.add("npc");
 		return event;
 	}
 
@@ -529,21 +481,16 @@ public final class TriggerEvent
 	 */
 	public static TriggerEvent chat(String message, int chatTypeId, String sender)
 	{
-		TriggerEvent event = new TriggerEvent(Type.CHAT);
-		event.message = message == null ? "" : message;
+		TriggerEvent event = named(Type.CHAT, "speaker", sender).message("message", message);
 		event.chatTypeId = chatTypeId;
-		event.name = sender == null ? "" : sender;
-		event.placeholders.put("message", event.message);
-		event.placeholders.put("speaker", event.name);
 		return event;
 	}
 
 	public static TriggerEvent varbit(int varbitId, int newValue, int oldValue)
 	{
-		TriggerEvent event = new TriggerEvent(Type.VARBIT);
+		TriggerEvent event = new TriggerEvent(Type.VARBIT).put("value", newValue);
 		event.id = varbitId;
 		event.value = newValue;
-		event.placeholders.put("value", Integer.toString(newValue));
 		return event;
 	}
 
@@ -575,8 +522,10 @@ public final class TriggerEvent
 	public static TriggerEvent levelUp(String skill, int level, int total, int previousTotal,
 		int base, int previousBase, int masteries, long sinceLastMs, long sinceAnyMs)
 	{
-		TriggerEvent event = new TriggerEvent(Type.LEVEL_UP);
-		event.name = skill == null ? "" : skill;
+		TriggerEvent event = named(Type.LEVEL_UP, "skill", skill).put("level", level).put("total", total)
+			.put("base", base).put("nines", Words.number(masteries)).put("ninesOrdinal", Words.ordinal(masteries))
+			.put("sinceLast", sinceLastMs < 0 ? "" : Words.duration(sinceLastMs))
+			.put("sinceAny", sinceAnyMs < 0 ? "" : Words.duration(sinceAnyMs));
 		event.value = level;
 		event.total = total;
 		event.previousTotal = previousTotal;
@@ -584,14 +533,6 @@ public final class TriggerEvent
 		event.previousBase = previousBase;
 		event.count = masteries;
 		event.sinceMs = sinceLastMs;
-		event.placeholders.put("skill", event.name);
-		event.placeholders.put("level", Integer.toString(level));
-		event.placeholders.put("total", Integer.toString(total));
-		event.placeholders.put("base", Integer.toString(base));
-		event.placeholders.put("nines", Words.number(masteries));
-		event.placeholders.put("ninesOrdinal", Words.ordinal(masteries));
-		event.placeholders.put("sinceLast", sinceLastMs < 0 ? "" : Words.duration(sinceLastMs));
-		event.placeholders.put("sinceAny", sinceAnyMs < 0 ? "" : Words.duration(sinceAnyMs));
 		return event;
 	}
 
@@ -604,11 +545,7 @@ public final class TriggerEvent
 	 */
 	public static TriggerEvent noticed(String kind, String thing)
 	{
-		TriggerEvent event = new TriggerEvent(Type.NOTICED);
-		event.name = kind == null ? "" : kind;
-		event.message = thing == null ? "" : thing;
-		event.placeholders.put("kind", event.name);
-		event.placeholders.put("thing", event.message);
+		TriggerEvent event = named(Type.NOTICED, "kind", kind).message("thing", thing);
 		// A landmark's name is a common noun after "this": text QA5, 17 Oct,
 		// "the wording of this Statue". An item keeps the game's spelling.
 		if ("landmark".equals(event.name))
@@ -627,11 +564,7 @@ public final class TriggerEvent
 	 */
 	public static TriggerEvent hesitated(String misgiving, String thing)
 	{
-		TriggerEvent event = new TriggerEvent(Type.HESITATED);
-		event.name = misgiving == null ? "" : misgiving;
-		event.message = thing == null ? "" : thing;
-		event.placeholders.put("misgiving", event.name);
-		event.placeholders.put("thing", event.message);
+		TriggerEvent event = named(Type.HESITATED, "misgiving", misgiving).message("thing", thing);
 		if ("monster".equals(event.name))
 		{
 			event.creatures.add("thing");
@@ -649,23 +582,18 @@ public final class TriggerEvent
 	 */
 	public static TriggerEvent killCount(String boss, int count, int lastCount)
 	{
-		TriggerEvent event = new TriggerEvent(Type.KILL_COUNT);
-		event.name = boss == null ? "" : boss;
+		TriggerEvent event = named(Type.KILL_COUNT, "boss", boss).put("count", count)
+			.put("ordinal", Words.ordinal(count)).put("lastCount", lastCount);
 		event.count = count;
 		event.value = count;
-		event.placeholders.put("boss", event.name);
-		event.placeholders.put("count", Integer.toString(count));
-		event.placeholders.put("ordinal", Words.ordinal(count));
-		event.placeholders.put("lastCount", Integer.toString(lastCount));
 		return event;
 	}
 
 	public static TriggerEvent regionChange(int newRegion, int oldRegion)
 	{
-		TriggerEvent event = new TriggerEvent(Type.REGION_CHANGE);
+		TriggerEvent event = new TriggerEvent(Type.REGION_CHANGE).put("region", newRegion);
 		event.id = newRegion;
 		event.value = newRegion;
-		event.placeholders.put("region", Integer.toString(newRegion));
 		return event;
 	}
 
@@ -712,9 +640,8 @@ public final class TriggerEvent
 
 	public static TriggerEvent damageTaken(int amount)
 	{
-		TriggerEvent event = new TriggerEvent(Type.DAMAGE_TAKEN);
+		TriggerEvent event = new TriggerEvent(Type.DAMAGE_TAKEN).put("damage", amount);
 		event.value = amount;
-		event.placeholders.put("damage", Integer.toString(amount));
 		return event;
 	}
 

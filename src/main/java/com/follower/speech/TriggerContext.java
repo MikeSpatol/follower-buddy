@@ -1114,17 +1114,8 @@ public final class TriggerContext
 		lineWear.merge(wearKey(template), 1, Integer::sum);
 		while (lineWear.size() > MAX_WORN_LINES)
 		{
-			String lightest = null;
-			int least = Integer.MAX_VALUE;
-			for (java.util.Map.Entry<String, Integer> entry : lineWear.entrySet())
-			{
-				if (entry.getValue() < least)
-				{
-					least = entry.getValue();
-					lightest = entry.getKey();
-				}
-			}
-			lineWear.remove(lightest);
+			lineWear.remove(java.util.Collections.min(lineWear.entrySet(),
+				java.util.Map.Entry.comparingByValue()).getKey());
 		}
 	}
 
@@ -2217,21 +2208,8 @@ public final class TriggerContext
 	{
 		while (placeScores.size() > MAX_PLACES)
 		{
-			Integer weakest = null;
-			int least = Integer.MAX_VALUE;
-			for (java.util.Map.Entry<Integer, Integer> entry : placeScores.entrySet())
-			{
-				int strength = Math.abs(entry.getValue());
-				if (strength < least)
-				{
-					least = strength;
-					weakest = entry.getKey();
-				}
-			}
-			if (weakest == null)
-			{
-				return;
-			}
+			Integer weakest = java.util.Collections.min(placeScores.entrySet(),
+				java.util.Comparator.comparingInt(entry -> Math.abs(entry.getValue()))).getKey();
 			placeScores.remove(weakest);
 			placeMemories.remove(weakest);
 		}
@@ -2405,7 +2383,7 @@ public final class TriggerContext
 		wishItems = itemIds == null || itemIds.isEmpty()
 			? java.util.Collections.emptySet()
 			: new java.util.HashSet<>(itemIds);
-		wishDeadlineTick = client.getTickCount() + Math.max(1, minutes) * 100;
+		wishDeadlineTick = minutesFromNow(minutes);
 		lastWishMs = System.currentTimeMillis();
 		log.info("Wish opened: {} for {} minutes, granted by {}", label, minutes, wishItems); // public:cut logs
 	}
@@ -2440,28 +2418,7 @@ public final class TriggerContext
 	// public:cut souvenirs-wishes
 	public boolean isWishedItemInBag()
 	{
-		if (!isWishing())
-		{
-			return false;
-		}
-		if (wishItems.isEmpty())
-		{
-			return true;
-		}
-		net.runelite.api.ItemContainer inventory =
-			client.getItemContainer(net.runelite.api.gameval.InventoryID.INV);
-		if (inventory == null)
-		{
-			return false;
-		}
-		for (net.runelite.api.Item item : inventory.getItems())
-		{
-			if (item != null && wishItems.contains(item.getId()))
-			{
-				return true;
-			}
-		}
-		return false;
+		return isWishing() && (wishItems.isEmpty() || isInInventory(wishItems));
 	}
 
 	public boolean isWishing()
@@ -2519,17 +2476,10 @@ public final class TriggerContext
 	 * <p>Deliberately one at a time. Two open wants would make going anywhere
 	 * satisfy something, which is the same as satisfying nothing.
 	 */
-	public enum WantOutcome
-	{
-		FULFILLED,
-		EXPIRED,
-	}
-
 	private boolean wantOpen;
 	private int wantRegion = -1;
 	private String wantLabel = "";
 	private int wantDeadlineTick;
-	private WantOutcome wantOutcome;
 
 	/**
 	 * Asks for somewhere. Ignored while a want is already open, so a rule that
@@ -2555,8 +2505,7 @@ public final class TriggerContext
 		wantOpen = true;
 		wantRegion = region;
 		wantLabel = label == null ? "" : label;
-		// A hundred ticks to the minute.
-		wantDeadlineTick = client.getTickCount() + Math.max(1, minutes) * 100;
+		wantDeadlineTick = minutesFromNow(minutes);
 
 		// Logged at INFO rather than debug, and so are both endings. A want
 		// happens at most once every twenty minutes, so this is three lines a
@@ -2595,16 +2544,21 @@ public final class TriggerContext
 	}
 
 	/**
-	 * Takes the outcome of a want that has just resolved, if any. Consumed by
-	 * the engine once per tick and turned into an event, so a resolution is
-	 * announced exactly once.
+	 * Takes what has just come of something, if anything: of a want, the
+	 * souvenir, a challenge, advice, a bet, or the player's click underfoot.
+	 * Consumed by the engine once per tick and turned into an event, so each
+	 * is announced exactly once.
 	 */
-	public WantOutcome pollWant()
+	public TriggerEvent.Type poll(String kind)
 	{
-		WantOutcome outcome = wantOutcome;
-		wantOutcome = null;
-		return outcome;
+		return outcomes.remove(kind);
 	}
+
+	/**
+	 * What has just come of each kind ("want", "souvenir", "challenge",
+	 * "advice", "bet", "underfoot"), until polled: the latest.
+	 */
+	private final java.util.Map<String, TriggerEvent.Type> outcomes = new java.util.HashMap<>();
 
 	private void checkWant()
 	{
@@ -2615,14 +2569,14 @@ public final class TriggerContext
 		if (regionId == wantRegion)
 		{
 			wantOpen = false;
-			wantOutcome = WantOutcome.FULFILLED;
+			outcomes.put("want", TriggerEvent.Type.WANT_FULFILLED);
 			log.info("Want fulfilled: {} (region {})", wantLabel, wantRegion); // public:cut logs
 			return;
 		}
 		if (client.getTickCount() >= wantDeadlineTick)
 		{
 			wantOpen = false;
-			wantOutcome = WantOutcome.EXPIRED;
+			outcomes.put("want", TriggerEvent.Type.WANT_EXPIRED);
 			// public:cut logs
 			log.info("Want expired: {} (region {}), never left region {}",
 				wantLabel, wantRegion, regionId);
@@ -2653,7 +2607,7 @@ public final class TriggerContext
 			return;
 		}
 		souvenir = what;
-		souvenirDroppedTick = client.getTickCount() + Math.max(1, minutes) * 100;
+		souvenirDroppedTick = minutesFromNow(minutes);
 		souvenirSinceTick = client.getTickCount();
 		log.debug("Picked up {} for {} minutes", what, minutes); // public:cut logs
 	}
@@ -2675,7 +2629,7 @@ public final class TriggerContext
 		}
 		log.debug("Traded {} for {}", souvenir, what); // public:cut logs
 		souvenir = what;
-		souvenirDroppedTick = client.getTickCount() + Math.max(1, minutes) * 100;
+		souvenirDroppedTick = minutesFromNow(minutes);
 		souvenirSinceTick = client.getTickCount();
 	}
 
@@ -2696,23 +2650,14 @@ public final class TriggerContext
 		return souvenir;
 	}
 
-	private boolean souvenirLost;
-
-	/** Consumed once by the engine when the souvenir goes, like a want outcome. */
-	public boolean pollSouvenirLost()
-	{
-		boolean lost = souvenirLost;
-		souvenirLost = false;
-		return lost;
-	}
-
 	private void checkSouvenir()
 	{
 		if (souvenir.isEmpty() || client.getTickCount() < souvenirDroppedTick)
 		{
 			return;
 		}
-		souvenirLost = true;
+		// Consumed once by the engine, like a want's outcome.
+		outcomes.put("souvenir", TriggerEvent.Type.SOUVENIR_LOST);
 		log.debug("Lost the {}", souvenir); // public:cut logs
 		// The name survives the loss so the line can mourn it by name.
 		souvenirDroppedTick = 0;
@@ -3194,18 +3139,11 @@ public final class TriggerContext
 	 * <p>Measured against a tally it already keeps, so a challenge is a rule
 	 * naming a counter and a number, not a scoring system of its own.
 	 */
-	public enum ChallengeOutcome
-	{
-		MET,
-		FAILED,
-	}
-
 	private String challengeAbout = "";
 	private String challengeTally = "";
 	private int challengeTarget;
 	private int challengeStartedAt;
 	private int challengeDeadlineTick;
-	private ChallengeOutcome challengeOutcome;
 
 	public void setChallenge(String about, String tally, int target, int minutes)
 	{
@@ -3217,7 +3155,7 @@ public final class TriggerContext
 		challengeTally = tally;
 		challengeTarget = Math.max(1, target);
 		challengeStartedAt = getTally(tally);
-		challengeDeadlineTick = client.getTickCount() + Math.max(1, minutes) * 100;
+		challengeDeadlineTick = minutesFromNow(minutes);
 		log.debug("Challenge: {} of {} in {} minutes", target, tally, minutes); // public:cut logs
 	}
 
@@ -3251,21 +3189,14 @@ public final class TriggerContext
 		if (getTally(challengeTally) - challengeStartedAt >= challengeTarget)
 		{
 			challengeDeadlineTick = 0;
-			challengeOutcome = ChallengeOutcome.MET;
+			outcomes.put("challenge", TriggerEvent.Type.CHALLENGE_MET);
 			return;
 		}
 		if (client.getTickCount() >= challengeDeadlineTick)
 		{
 			challengeDeadlineTick = 0;
-			challengeOutcome = ChallengeOutcome.FAILED;
+			outcomes.put("challenge", TriggerEvent.Type.CHALLENGE_FAILED);
 		}
-	}
-
-	public ChallengeOutcome pollChallenge()
-	{
-		ChallengeOutcome outcome = challengeOutcome;
-		challengeOutcome = null;
-		return outcome;
 	}
 
 	// public:end side-games
@@ -3282,18 +3213,9 @@ public final class TriggerContext
 	 * <p>Consumed on read, because it is a moment rather than a state: the tile
 	 * is walked to a second later and the fact stops being true.
 	 */
-	private boolean underfoot;
-
 	public void noteUnderfoot()
 	{
-		underfoot = true;
-	}
-
-	public boolean pollUnderfoot()
-	{
-		boolean was = underfoot;
-		underfoot = false;
-		return was;
+		outcomes.put("underfoot", TriggerEvent.Type.UNDERFOOT);
 	}
 
 	// ------------------------------------------------------- gone, or just still
@@ -3374,12 +3296,6 @@ public final class TriggerContext
 	 * not decided here, so there is no vocabulary of blessed actions in the
 	 * code to fall out of date against the rule file.
 	 */
-	public enum AdviceOutcome
-	{
-		HEEDED,
-		IGNORED,
-	}
-
 	private String adviceAbout = "";
 	private java.util.Set<Integer> adviceIds = java.util.Collections.emptySet();
 	private boolean adviceWantsRoom;
@@ -3399,7 +3315,6 @@ public final class TriggerContext
 	 * three-hour session, all of it noise.
 	 */
 	private static final int ROOM_ADVICE_MIN_TICKS = 25;
-	private AdviceOutcome adviceOutcome;
 
 	/**
 	 * @param ids animations that would settle it - eating, teleporting
@@ -3416,7 +3331,7 @@ public final class TriggerContext
 		adviceWantsRoom = wantsRoom;
 		adviceFreeSlotsAtStart = getFreeInventorySlots();
 		adviceStartTick = client.getTickCount();
-		adviceDeadlineTick = client.getTickCount() + Math.max(1, minutes) * 100;
+		adviceDeadlineTick = minutesFromNow(minutes);
 		log.debug("Advised about {} for {} minutes", about, minutes); // public:cut logs
 	}
 
@@ -3461,24 +3376,20 @@ public final class TriggerContext
 		// public:cut side-games
 		if (isAdvising() && adviceIds.contains(animationId))
 		{
-			settleAdvice(AdviceOutcome.HEEDED);
+			settleAdvice(TriggerEvent.Type.ADVICE_HEEDED);
 		}
 		// public:end side-games
 	}
 	// public:cut side-games
 
-	private void settleAdvice(AdviceOutcome outcome)
+	private void settleAdvice(TriggerEvent.Type outcome)
 	{
 		adviceDeadlineTick = 0;
-		adviceOutcome = outcome;
-		log.debug("Advice about {} was {}", adviceAbout, outcome); // public:cut logs
-	}
-
-	public AdviceOutcome pollAdvice()
-	{
-		AdviceOutcome outcome = adviceOutcome;
-		adviceOutcome = null;
-		return outcome;
+		outcomes.put("advice", outcome);
+		// public:cut logs
+		log.debug("Advice about {} was {}", adviceAbout,
+			outcome == TriggerEvent.Type.ADVICE_HEEDED ? "HEEDED" : "IGNORED");
+		// public:end logs
 	}
 
 	private void checkAdvice()
@@ -3492,12 +3403,12 @@ public final class TriggerContext
 		if (adviceWantsRoom && getFreeInventorySlots() > adviceFreeSlotsAtStart
 			&& client.getTickCount() - adviceStartTick >= ROOM_ADVICE_MIN_TICKS)
 		{
-			settleAdvice(AdviceOutcome.HEEDED);
+			settleAdvice(TriggerEvent.Type.ADVICE_HEEDED);
 			return;
 		}
 		if (client.getTickCount() >= adviceDeadlineTick)
 		{
-			settleAdvice(AdviceOutcome.IGNORED);
+			settleAdvice(TriggerEvent.Type.ADVICE_IGNORED);
 		}
 	}
 
@@ -3510,17 +3421,10 @@ public final class TriggerContext
 	 * which is a different thing from commentary. Being WRONG is the better
 	 * half: anything that can only be right is not really predicting.
 	 */
-	public enum BetOutcome
-	{
-		WON,
-		LOST,
-	}
-
 	private boolean betOpen;
 	private boolean betOnRich;
 	private int betThreshold;
 	private int betDeadlineTick;
-	private BetOutcome betOutcome;
 
 	/**
 	 * @param onRich whether the follower is betting the drop BEATS the
@@ -3536,7 +3440,7 @@ public final class TriggerContext
 		betOpen = true;
 		betOnRich = onRich;
 		betThreshold = threshold;
-		betDeadlineTick = client.getTickCount() + Math.max(1, minutes) * 100;
+		betDeadlineTick = minutesFromNow(minutes);
 	}
 
 	public boolean isBetting()
@@ -3553,18 +3457,11 @@ public final class TriggerContext
 		}
 		betOpen = false;
 		boolean rich = lootValue >= betThreshold;
-		betOutcome = rich == betOnRich ? BetOutcome.WON : BetOutcome.LOST;
+		outcomes.put("bet", rich == betOnRich ? TriggerEvent.Type.BET_WON : TriggerEvent.Type.BET_LOST);
 		// public:cut logs
-		log.debug("Bet {} on {}{}: loot was {}", betOutcome,
+		log.debug("Bet {} on {}{}: loot was {}", rich == betOnRich ? "WON" : "LOST",
 			betOnRich ? ">=" : "<", betThreshold, lootValue);
 		// public:end logs
-	}
-
-	public BetOutcome pollBet()
-	{
-		BetOutcome outcome = betOutcome;
-		betOutcome = null;
-		return outcome;
 	}
 
 	private void checkBet()
@@ -3589,6 +3486,12 @@ public final class TriggerContext
 	public int getHourOfDay()
 	{
 		return java.time.LocalTime.now().getHour();
+	}
+
+	/** The tick so many minutes from now, one at least: a hundred ticks to the minute. */
+	private int minutesFromNow(int minutes)
+	{
+		return client.getTickCount() + Math.max(1, minutes) * 100;
 	}
 
 	/**

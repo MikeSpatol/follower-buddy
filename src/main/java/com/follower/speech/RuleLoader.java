@@ -910,7 +910,7 @@ public class RuleLoader
 		List<SpeechRule> spawning = new ArrayList<>();
 		for (SpeechRule rule : newRules)
 		{
-			if (rule.when != null && rule.when.usesType("npcSpawn"))
+			if (rule.uses("npcSpawn"))
 			{
 				spawning.add(rule);
 			}

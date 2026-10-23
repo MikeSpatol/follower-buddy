@@ -162,8 +162,7 @@ public class SpeechEngine
 	 */
 	private boolean isIdleRemark(SpeechRule rule)
 	{
-		return rule.when != null && (rule.when.usesType("idle") || rule.when.usesType("unattended"))
-			&& !rule.isOccasion();
+		return (rule.uses("idle") || rule.uses("unattended")) && !rule.isOccasion();
 	}
 
 	/** How long after one rule brings up a memory the others wait: ten minutes. */
@@ -184,7 +183,7 @@ public class SpeechEngine
 	private static boolean bringsUpAMemory(SpeechRule rule)
 	{
 		return saysAnyOf(rule, "{memory}", "{here}")
-			|| (rule.when != null && rule.when.usesType("nearDeathSpot"));
+			|| rule.uses("nearDeathSpot");
 	}
 
 	private static boolean saysAnyOf(SpeechRule rule, String... placeholders)
@@ -387,70 +386,56 @@ public class SpeechEngine
 		// A want resolving is state becoming an event. It happens here rather
 		// than in the plugin so the rules see it wherever the engine is driven
 		// from, and exactly once - the poll consumes it.
-		TriggerContext.WantOutcome outcome = context.pollWant();
-		if (outcome != null)
+		TriggerEvent.Type want = context.poll("want");
+		if (want != null)
 		{
 			// Counted as well as announced. A grudge then needs no machinery of
 			// its own: "you have ignored me three times" is a tally condition,
 			// and lives in phrases.json with everything else.
-			context.tally(outcome == TriggerContext.WantOutcome.FULFILLED
-				? "want:kept" : "want:missed");
-			if (outcome == TriggerContext.WantOutcome.FULFILLED)
+			boolean kept = want == TriggerEvent.Type.WANT_FULFILLED;
+			context.tally(kept ? "want:kept" : "want:missed");
+			if (kept)
 			{
 				// A favour done is a favour owed.
 				context.noteFavour();
 			}
-			dispatch(TriggerEvent.want(
-				outcome == TriggerContext.WantOutcome.FULFILLED
-					? TriggerEvent.Type.WANT_FULFILLED
-					: TriggerEvent.Type.WANT_EXPIRED,
-				context.getWantLabel()));
+			dispatch(TriggerEvent.want(want, context.getWantLabel()));
 		}
 
 		// public:cut souvenirs-wishes
 		// The souvenir going, and a prediction coming good or not. Same shape
 		// as the want: state becoming an event, consumed exactly once.
-		if (context.pollSouvenirLost())
+		if (context.poll("souvenir") != null)
 		{
 			dispatch(TriggerEvent.souvenirLost(context.getSouvenir()));
 			context.clearSouvenir();
 		}
 		// public:end souvenirs-wishes
-		if (context.pollUnderfoot())
+		if (context.poll("underfoot") != null)
 		{
 			dispatch(TriggerEvent.simple(TriggerEvent.Type.UNDERFOOT));
 		}
 		// public:cut side-games
 
-		TriggerContext.ChallengeOutcome challenge = context.pollChallenge();
+		TriggerEvent.Type challenge = context.poll("challenge");
 		if (challenge != null)
 		{
-			dispatch(TriggerEvent.challenge(
-				challenge == TriggerContext.ChallengeOutcome.MET
-					? TriggerEvent.Type.CHALLENGE_MET
-					: TriggerEvent.Type.CHALLENGE_FAILED,
-				context.getChallengeAbout()));
+			dispatch(TriggerEvent.challenge(challenge, context.getChallengeAbout()));
 		}
 
-		TriggerContext.AdviceOutcome advice = context.pollAdvice();
+		TriggerEvent.Type advice = context.poll("advice");
 		if (advice != null)
 		{
 			// Counted as well as announced, like a want, so "you never listen"
 			// can be a tally condition rather than machinery of its own.
-			context.tally(advice == TriggerContext.AdviceOutcome.HEEDED
-				? "advice:taken" : "advice:ignored");
-			dispatch(TriggerEvent.advice(
-				advice == TriggerContext.AdviceOutcome.HEEDED
-					? TriggerEvent.Type.ADVICE_HEEDED
-					: TriggerEvent.Type.ADVICE_IGNORED,
-				context.getAdviceAbout()));
+			context.tally(advice == TriggerEvent.Type.ADVICE_HEEDED ? "advice:taken" : "advice:ignored");
+			dispatch(TriggerEvent.advice(advice, context.getAdviceAbout()));
 		}
 
-		TriggerContext.BetOutcome bet = context.pollBet();
+		TriggerEvent.Type bet = context.poll("bet");
 		if (bet != null)
 		{
-			dispatch(TriggerEvent.bet(bet == TriggerContext.BetOutcome.WON
-				? TriggerEvent.Type.BET_WON : TriggerEvent.Type.BET_LOST));
+			dispatch(TriggerEvent.bet(bet));
 		}
 		// public:end side-games
 	}
@@ -467,6 +452,16 @@ public class SpeechEngine
 	{
 		hushUntilMs = 0L;
 		hushOwner = null;
+	}
+
+	/** Holds the floor for the rule's {@code hushMs}, if it says something and has one. */
+	private void takeFloor(SpeechRule rule, long now)
+	{
+		if (rule.hushMs != null && rule.hushMs > 0 && rule.hasSpeech())
+		{
+			hushUntilMs = now + rule.hushMs;
+			hushOwner = rule;
+		}
 	}
 
 	/**
@@ -496,8 +491,7 @@ public class SpeechEngine
 		// An announcement waiting on the old scene's prime window belongs to
 		// that scene, not to the one arriving.
 		afterPriming.clear();
-		hushUntilMs = 0L;
-		hushOwner = null;
+		clearFloor();
 		for (SpeechRule rule : loader.getRules())
 		{
 			// Edges only. The scene changed; what the follower has already said
@@ -521,8 +515,7 @@ public class SpeechEngine
 		unlanded.clear();
 		// A held floor must not outlive the thing that held it: toggling the
 		// plugin mid-hush would otherwise leave the follower mute for it.
-		hushUntilMs = 0L;
-		hushOwner = null;
+		clearFloor();
 		// Edges only, as at a hop: what was said is kept through a logout,
 		// cooldowns and bags. Text QA5, 17-18 Oct: every relog wiped the
 		// cooldowns, so the two-hour fence book came back twelve minutes on,
@@ -649,7 +642,7 @@ public class SpeechEngine
 	 */
 	private long gapFor(SpeechRule rule)
 	{
-		boolean person = Boolean.TRUE.equals(rule.waits) && rule.when != null && rule.when.usesType("npcNearby");
+		boolean person = Boolean.TRUE.equals(rule.waits) && rule.uses("npcNearby");
 		return rule.isOccasion() || person ? Math.min(moodScaledGap(), OCCASION_GAP_MS) : moodScaledGap();
 	}
 
@@ -841,7 +834,7 @@ public class SpeechEngine
 		long now = now();
 		for (SpeechRule rule : loader.getRules())
 		{
-			if (!rule.offCooldown(now) && rule.when != null && rule.when.usesType("pageWritten")
+			if (!rule.offCooldown(now) && rule.uses("pageWritten")
 				&& rule.when.matches(getContext(), news))
 			{
 				return true;
@@ -885,21 +878,10 @@ public class SpeechEngine
 		{
 			return null;
 		}
-		if (rule == hushOwner && now < hushUntilMs)
+		String quiet = muted ? "muted" : sceneQuiet ? "scene" : heldForTheBox() ? "dialogue" : null;
+		if (quiet != null || (rule == hushOwner && now < hushUntilMs))
 		{
-			return muted ? "muted" : sceneQuiet ? "scene" : heldForTheBox() ? "dialogue" : null;
-		}
-		if (muted)
-		{
-			return "muted";
-		}
-		if (sceneQuiet)
-		{
-			return "scene";
-		}
-		if (heldForTheBox())
-		{
-			return "dialogue";
+			return quiet;
 		}
 		// Before the gap, because when both apply the director is the honest
 		// answer: the gap is three seconds and would be gone by the next tick,
@@ -918,7 +900,7 @@ public class SpeechEngine
 		// Any input at all clears the state instantly.
 		if (getContext().getUnattendedTicks() >= UNATTENDED_DAMPER_TICKS
 			&& !rule.isOccasion()
-			&& (rule.when == null || !rule.when.usesType("unattended")))
+			&& !rule.uses("unattended"))
 		{
 			return "unattended";
 		}
@@ -980,7 +962,7 @@ public class SpeechEngine
 	 */
 	private boolean belongsToThisPlace(SpeechRule rule, TriggerEvent event)
 	{
-		if (rule.when != null && rule.when.usesType("feelsAbout"))
+		if (rule.uses("feelsAbout"))
 		{
 			return false;
 		}
@@ -1062,7 +1044,7 @@ public class SpeechEngine
 		// the restore, which runs before the rules and place names are in.
 		if (getContext().isIncidentToRetell())
 		{
-			java.util.List<String> retold = retold();
+			java.util.List<String> retold = retold(false);
 			getContext().retellIncident(retold.isEmpty() ? null : retold.get(0));
 		}
 
@@ -1194,11 +1176,9 @@ public class SpeechEngine
 						// Won in a scene's quiet, it took no floor then (see
 						// the win), so it takes it now, as it is said. Quests
 						// QA5 #53: the grave Persten moment comes out of a scene.
-						if (delayed.rule.hushMs != null && delayed.rule.hushMs > 0 && delayed.rule.hasSpeech()
-							&& !(hushOwner == delayed.rule && now < hushUntilMs))
+						if (!(hushOwner == delayed.rule && now < hushUntilMs))
 						{
-							hushUntilMs = now + delayed.rule.hushMs;
-							hushOwner = delayed.rule;
+							takeFloor(delayed.rule, now);
 						}
 						speak(delayed.rule, delayed.event, now);
 					}
@@ -1361,10 +1341,9 @@ public class SpeechEngine
 		// that arrives later in the same tick would walk straight into it.
 		// Not at a win the scene holds: the floor of a line never said would
 		// outlast the quiet and cost the occasions waiting it out.
-		if (winner.hushMs != null && winner.hushMs > 0 && winner.hasSpeech() && !sceneQuiet)
+		if (!sceneQuiet)
 		{
-			hushUntilMs = now + winner.hushMs;
-			hushOwner = winner;
+			takeFloor(winner, now);
 		}
 
 		// A delayed rule queues instead of speaking now; the cooldown is
@@ -1461,11 +1440,7 @@ public class SpeechEngine
 				long now = now();
 				// Including the floor, so what you see when testing is what the
 				// rule really does rather than a quieter version of it.
-				if (rule.hushMs != null && rule.hushMs > 0 && rule.hasSpeech())
-				{
-					hushUntilMs = now + rule.hushMs;
-					hushOwner = rule;
-				}
+				takeFloor(rule, now);
 				speak(rule, TriggerEvent.simple(TriggerEvent.Type.MANUAL), now);
 				return true;
 			}
@@ -1592,7 +1567,7 @@ public class SpeechEngine
 		// the wish it grants: "the {wish} you found me". Named here, while that
 		// wish is certainly still open.
 		String souvenir = rule.pickUp != null && rule.pickUp.what != null && !text.isEmpty()
-			? substitute(rule.pickUp.what, event) : null;
+			? substitute(rule.pickUp.what, event, null, false) : null;
 		// The gift is the one thing spent at the win. The exchange was
 		// confirmed in the Talk-to box the player is reading, and a thank-you
 		// the queue dropped must not leave the wish open and the gift option
@@ -1620,17 +1595,17 @@ public class SpeechEngine
 				getContext().noteLineSaid(template);
 				event.noteSaid(); // public:cut agility-all,marks
 			}
-			if (rule.asks != null && !rule.asks.isEmpty() && !text.isEmpty())
+			if (leaves.contains("asking"))
 			{
 				getContext().noteQuestion(rule.asks);
 			}
-			if (rule.want != null && rule.want.region != null && !text.isEmpty())
+			if (leaves.contains("wanting"))
 			{
 				getContext().setWant(rule.want.region, rule.want.label,
 					rule.want.minutes == null ? 15 : rule.want.minutes);
 			}
 			// public:cut souvenirs-wishes
-			if (rule.wish != null && rule.wish.what != null && !text.isEmpty())
+			if (leaves.contains("wishing"))
 			{
 				getContext().setWish(rule.wish.what,
 					rule.wish.minutes == null ? 45 : rule.wish.minutes,
@@ -1646,12 +1621,12 @@ public class SpeechEngine
 			}
 			// public:end souvenirs-wishes
 			// public:cut side-games
-			if (rule.bet != null && rule.bet.threshold != null && !text.isEmpty())
+			if (leaves.contains("betting"))
 			{
 				getContext().placeBet(Boolean.TRUE.equals(rule.bet.rich),
 					rule.bet.threshold, rule.bet.minutes == null ? 5 : rule.bet.minutes);
 			}
-			if (rule.challenge != null && rule.challenge.tally != null && !text.isEmpty())
+			if (leaves.contains("challenging"))
 			{
 				getContext().setChallenge(
 					rule.challenge.about,
@@ -1659,7 +1634,7 @@ public class SpeechEngine
 					rule.challenge.target == null ? 10 : rule.challenge.target,
 					rule.challenge.minutes == null ? 5 : rule.challenge.minutes);
 			}
-			if (rule.advise != null && rule.advise.about != null && !text.isEmpty())
+			if (leaves.contains("advising"))
 			{
 				getContext().adviseOn(
 					rule.advise.about,
@@ -2050,11 +2025,6 @@ public class SpeechEngine
 	 * The incident in its rule's words, filled from the particulars kept
 	 * with it: each form that has everything it needs, and is not vague.
 	 */
-	private java.util.List<String> retold()
-	{
-		return retold(false);
-	}
-
 	private java.util.List<String> retold(boolean withoutCreature)
 	{
 		java.util.List<String> phrases = new java.util.ArrayList<>();
@@ -2147,13 +2117,9 @@ public class SpeechEngine
 		return template.contains("{memoryWhen}") || template.contains("{memoryAgo}");
 	}
 
-	/** Replaces {@code {placeholder}} tokens from the event and the state snapshot. */
-	private String substitute(String template, TriggerEvent event)
-	{
-		return substitute(template, event, null, false);
-	}
-
 	/**
+	 * Replaces {@code {placeholder}} tokens from the event and the state snapshot.
+	 *
 	 * @param incomplete set to true at [0] when a known placeholder resolved to nothing
 	 * @param spoken whether this is a line to be said, whose sentences open on a capital
 	 */
@@ -2313,40 +2279,48 @@ public class SpeechEngine
 	/** Makes an "a" or "an" at the end of the text so far a "the", keeping its capital. */
 	private static void definiteArticle(StringBuilder out)
 	{
+		String word = lastWord(out);
+		if (isAOrAn(word))
+		{
+			replaceLastWord(out, word, Character.isUpperCase(word.charAt(0)) ? "The" : "the");
+		}
+	}
+
+	/** The word the text so far ends on, before its space; null when it does not end on a space. */
+	private static String lastWord(StringBuilder out)
+	{
 		int space = out.length() - 1;
 		if (space < 1 || out.charAt(space) != ' ')
 		{
-			return;
+			return null;
 		}
 		int start = space;
 		while (start > 0 && Character.isLetter(out.charAt(start - 1)))
 		{
 			start--;
 		}
-		String word = out.substring(start, space);
-		if (word.equalsIgnoreCase("a") || word.equalsIgnoreCase("an"))
-		{
-			out.replace(start, space, Character.isUpperCase(word.charAt(0)) ? "The" : "the");
-		}
+		return out.substring(start, space);
+	}
+
+	/** Puts {@code with} in place of the last word, which is {@code word}, keeping the space after it. */
+	private static void replaceLastWord(StringBuilder out, String word, String with)
+	{
+		int space = out.length() - 1;
+		out.replace(space - word.length(), space, with);
+	}
+
+	private static boolean isAOrAn(String word)
+	{
+		return "a".equalsIgnoreCase(word) || "an".equalsIgnoreCase(word);
 	}
 
 	/** Takes a "the", "a" or "an" off the end of the text so far, keeping the space before it. */
 	private static void dropArticle(StringBuilder out)
 	{
-		int space = out.length() - 1;
-		if (space < 1 || out.charAt(space) != ' ')
+		String word = lastWord(out);
+		if (isAOrAn(word) || "the".equalsIgnoreCase(word))
 		{
-			return;
-		}
-		int start = space;
-		while (start > 0 && Character.isLetter(out.charAt(start - 1)))
-		{
-			start--;
-		}
-		String word = out.substring(start, space).toLowerCase(Locale.ROOT);
-		if (word.equals("the") || word.equals("a") || word.equals("an"))
-		{
-			out.setLength(start);
+			out.setLength(out.length() - 1 - word.length());
 		}
 	}
 
@@ -2361,19 +2335,9 @@ public class SpeechEngine
 	 */
 	private static String agreeArticle(StringBuilder out, String value, boolean endsPhrase)
 	{
-		int space = out.length() - 1;
-		if (space < 1 || out.charAt(space) != ' ')
-		{
-			return value;
-		}
-		int start = space;
-		while (start > 0 && Character.isLetter(out.charAt(start - 1)))
-		{
-			start--;
-		}
-		String written = out.substring(start, space);
-		boolean article = written.equalsIgnoreCase("a") || written.equalsIgnoreCase("an");
-		if (!article && !POINTING.contains(written.toLowerCase(Locale.ROOT)))
+		String written = lastWord(out);
+		boolean article = isAOrAn(written);
+		if (!article && (written == null || !POINTING.contains(written.toLowerCase(Locale.ROOT))))
 		{
 			return value;
 		}
@@ -2382,7 +2346,7 @@ public class SpeechEngine
 		{
 			if (article)
 			{
-				out.replace(start, space, capital ? "The" : "the");
+				replaceLastWord(out, written, capital ? "The" : "the");
 			}
 			return value.substring(4);
 		}
@@ -2392,29 +2356,19 @@ public class SpeechEngine
 		}
 		if (endsPhrase && Words.takesNoArticle(value))
 		{
-			out.setLength(start);
+			out.setLength(out.length() - 1 - written.length());
 			return capital ? Character.toUpperCase(value.charAt(0)) + value.substring(1) : value;
 		}
 		String fits = Words.article(value);
-		out.replace(start, space, capital ? Character.toUpperCase(fits.charAt(0)) + fits.substring(1) : fits);
+		replaceLastWord(out, written, capital ? Character.toUpperCase(fits.charAt(0)) + fits.substring(1) : fits);
 		return value;
 	}
 
 	/** Whether the text so far ends on a word that points at a thing: a, the, that and the rest. */
 	private static boolean afterAnArticle(StringBuilder out)
 	{
-		int space = out.length() - 1;
-		if (space < 1 || out.charAt(space) != ' ')
-		{
-			return false;
-		}
-		int start = space;
-		while (start > 0 && Character.isLetter(out.charAt(start - 1)))
-		{
-			start--;
-		}
-		String word = out.substring(start, space).toLowerCase(Locale.ROOT);
-		return word.equals("a") || word.equals("an") || POINTING.contains(word);
+		String word = lastWord(out);
+		return isAOrAn(word) || (word != null && POINTING.contains(word.toLowerCase(Locale.ROOT)));
 	}
 
 	/** Whether a value set off by a comma before it and the sentence's end after it is said to someone. */

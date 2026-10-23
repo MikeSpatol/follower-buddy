@@ -570,6 +570,12 @@ public class SpeechRule
 		return cut > 4 && id.startsWith("fun-") ? "quest-" + id.substring(4, cut) : null;
 	}
 
+	/** Whether its condition is, or holds, one of this type. */
+	public boolean uses(String type)
+	{
+		return when != null && when.usesType(type);
+	}
+
 	public boolean isValid()
 	{
 		return when != null && (hasSpeech() || hasAnimationAction());
