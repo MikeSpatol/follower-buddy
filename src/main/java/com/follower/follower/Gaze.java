@@ -306,7 +306,7 @@ public class Gaze
 		double radians = (orientation / 2048.0) * 2.0 * Math.PI;
 		int dx = (int) Math.round(-Math.sin(radians) * tiles);
 		int dy = (int) Math.round(-Math.cos(radians) * tiles);
-		return new WorldPoint(from.getX() + dx, from.getY() + dy, from.getPlane());
+		return from.dx(dx).dy(dy);
 	}
 
 	/** The smaller angle between two yaws, in JAU. */
@@ -358,8 +358,8 @@ public class Gaze
 		{
 			double heading = random.nextDouble() * Math.PI * 2;
 			int distance = between(AROUND_NEAR, AROUND_FAR);
-			at = new WorldPoint(from.getX() + (int) Math.round(Math.cos(heading) * distance),
-				from.getY() + (int) Math.round(Math.sin(heading) * distance), from.getPlane());
+			at = from.dx((int) Math.round(Math.cos(heading) * distance))
+				.dy((int) Math.round(Math.sin(heading) * distance));
 		}
 		if (at.equals(from))
 		{

@@ -434,8 +434,8 @@ public class FilmSet
 		{
 			follower.setStayFaceTile(Gaze.lookTile(from, (facing - 1024) & 0x7ff, FACE_TILES)); // public:cut company-extras,gaze
 			// public:else double radians = facing / 2048.0 * 2.0 * Math.PI;
-			// public:else follower.setStayFaceTile(new WorldPoint(from.getX() + (int) Math.round(-Math.sin(radians) * FACE_TILES),
-				// public:else from.getY() + (int) Math.round(-Math.cos(radians) * FACE_TILES), from.getPlane()));
+			// public:else follower.setStayFaceTile(from.dx((int) Math.round(-Math.sin(radians) * FACE_TILES))
+				// public:else .dy((int) Math.round(-Math.cos(radians) * FACE_TILES)));
 		}
 	}
 

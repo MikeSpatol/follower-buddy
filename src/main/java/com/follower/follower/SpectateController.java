@@ -575,10 +575,7 @@ public class SpectateController
 		{
 			for (int distance = watch; distance >= 2; distance--)
 			{
-				if (seat(new WorldPoint(
-					player.getX() + direction[0] * distance,
-					player.getY() + direction[1] * distance,
-					player.getPlane()), threat))
+				if (seat(player.dx(direction[0] * distance).dy(direction[1] * distance), threat))
 				{
 					return true;
 				}
@@ -595,8 +592,7 @@ public class SpectateController
 			{
 				for (int oy = -distance; oy <= distance; oy++)
 				{
-					if (Math.max(Math.abs(ox), Math.abs(oy)) == distance && seat(new WorldPoint(
-						player.getX() + ox, player.getY() + oy, player.getPlane()), threat))
+					if (Math.max(Math.abs(ox), Math.abs(oy)) == distance && seat(player.dx(ox).dy(oy), threat))
 					{
 						return true;
 					}

@@ -307,8 +307,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		int nearest = Integer.MAX_VALUE;
 		for (int[] step : AROUND)
 		{
-			WorldPoint beside = new WorldPoint(wanted.getX() + step[0],
-				wanted.getY() + step[1], wanted.getPlane());
+			WorldPoint beside = wanted.dx(step[0]).dy(step[1]);
 			if (beside.equals(player) || !goodGround(beside)
 				|| (chosen && furnished(beside)))
 			{
@@ -343,8 +342,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		{
 			return null;
 		}
-		return new WorldPoint(current.getX() - vy * side, current.getY() + vx * side,
-			current.getPlane());
+		return current.dx(-vy * side).dy(vx * side);
 	}
 
 	/** Which side of the line of travel the follower is already on; left when it is on the line. */
@@ -636,8 +634,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 
 			for (int d = distance; d >= 1; d--)
 			{
-				WorldPoint candidate = new WorldPoint(playerTile.getX() - (int) Math.round(bx * d),
-					playerTile.getY() - (int) Math.round(by * d), playerTile.getPlane());
+				WorldPoint candidate = playerTile.dx(-(int) Math.round(bx * d)).dy(-(int) Math.round(by * d));
 
 				if (!candidate.equals(playerTile) && reachable.contains(candidate))
 				{
@@ -679,8 +676,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 				WorldPoint at = frontier.poll();
 				for (int[] step : AROUND)
 				{
-					WorldPoint next = new WorldPoint(
-						at.getX() + step[0], at.getY() + step[1], at.getPlane());
+					WorldPoint next = at.dx(step[0]).dy(step[1]);
 					if (!seen.contains(next) && canStep(at, step[0], step[1]))
 					{
 						seen.add(next);
@@ -713,8 +709,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		int dx = (int) Math.round(-Math.sin(radians));
 		int dy = (int) Math.round(-Math.cos(radians));
 
-		WorldPoint front = new WorldPoint(
-			playerTile.getX() + dx, playerTile.getY() + dy, playerTile.getPlane());
+		WorldPoint front = playerTile.dx(dx).dy(dy);
 
 		if (front.equals(tile))
 		{
@@ -918,7 +913,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 			{
 				continue;
 			}
-			WorldPoint off = new WorldPoint(tile.getX() + step[0], tile.getY() + step[1], tile.getPlane());
+			WorldPoint off = tile.dx(step[0]).dy(step[1]);
 			if (!off.equals(player) && !taken.containsKey(off) && goodGround(off)
 				&& canStep(tile, step[0], step[1]) && stayAt(off))
 			{
@@ -3867,7 +3862,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 
 		if (canStep(origin, dx, dy))
 		{
-			return new WorldPoint(origin.getX() + dx, origin.getY() + dy, origin.getPlane());
+			return origin.dx(dx).dy(dy);
 		}
 		if (dx != 0 && dy != 0)
 		{
@@ -3876,17 +3871,17 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 			int firstDy = firstDx == 0 ? dy : 0;
 			if (canStep(origin, firstDx, firstDy))
 			{
-				return new WorldPoint(origin.getX() + firstDx, origin.getY() + firstDy, origin.getPlane());
+				return origin.dx(firstDx).dy(firstDy);
 			}
 			if (canStep(origin, dx - firstDx, dy - firstDy))
 			{
-				return new WorldPoint(origin.getX() + dx - firstDx, origin.getY() + dy - firstDy, origin.getPlane());
+				return origin.dx(dx - firstDx).dy(dy - firstDy);
 			}
 		}
 
 		// Boxed in. Only the player's own retraced path may step anyway.
 		return allowRaw
-			? new WorldPoint(origin.getX() + dx, origin.getY() + dy, origin.getPlane())
+			? origin.dx(dx).dy(dy)
 			: null;
 	}
 
@@ -3907,14 +3902,14 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 			{
 				return false;
 			}
-			WorldPoint xSide = new WorldPoint(from.getX() + dx, from.getY(), from.getPlane());
-			WorldPoint ySide = new WorldPoint(from.getX(), from.getY() + dy, from.getPlane());
+			WorldPoint xSide = from.dx(dx);
+			WorldPoint ySide = from.dy(dy);
 			return canStep(from, dx, 0) && canStep(from, 0, dy)
 				&& canStep(xSide, 0, dy) && canStep(ySide, dx, 0);
 		}
 
 		Integer fromFlags = flagAt(from);
-		WorldPoint to = new WorldPoint(from.getX() + dx, from.getY() + dy, from.getPlane());
+		WorldPoint to = from.dx(dx).dy(dy);
 		if (hot(to))
 		{
 			// A fire is walkable ground and nobody walks on it. Refused here
@@ -4235,7 +4230,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 			{
 				for (int dy = 0; dy < size; dy++)
 				{
-					taken.put(new WorldPoint(at.getX() + dx, at.getY() + dy, at.getPlane()), npc);
+					taken.put(at.dx(dx).dy(dy), npc);
 				}
 			}
 		}
@@ -4432,8 +4427,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		boolean staying = stayTile != null;
 		for (int[] step : AROUND)
 		{
-			WorldPoint off = new WorldPoint(
-				tile.getX() + step[0], tile.getY() + step[1], tile.getPlane());
+			WorldPoint off = tile.dx(step[0]).dy(step[1]);
 			if (off.equals(player) || !goodGround(off)
 				|| !canStep(tile, step[0], step[1]))
 			{
@@ -4511,8 +4505,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 	private boolean snapBeside(WorldPoint playerTile, String why) // public:cut dev
 	// public:else private boolean snapBeside(WorldPoint playerTile)
 	{
-		WorldPoint beside = landingTile(new WorldPoint(
-			playerTile.getX() - 1, playerTile.getY(), playerTile.getPlane()), playerTile);
+		WorldPoint beside = landingTile(playerTile.dx(-1), playerTile);
 
 		// public:cut dev
 		agilityTrace.accept("follower: snap (" + why + ") from " + CrossingWatch.describe(tile) // public:cut agility,agility-all
@@ -4576,8 +4569,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		LocalPoint beside = null;
 		if (playerTile != null)
 		{
-			WorldPoint landing = landingTile(new WorldPoint(
-				playerTile.getX() - 1, playerTile.getY(), playerTile.getPlane()), playerTile);
+			WorldPoint landing = landingTile(playerTile.dx(-1), playerTile);
 			beside = LocalPoint.fromWorld(client, landing);
 		}
 		if (beside == null)

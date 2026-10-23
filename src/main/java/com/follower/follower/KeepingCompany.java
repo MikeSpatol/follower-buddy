@@ -853,7 +853,7 @@ class KeepingCompany
 		{
 			dy = -1;
 		}
-		return new WorldPoint(base.getX() + dx, base.getY() + dy, base.getPlane());
+		return base.dx(dx).dy(dy);
 	}
 
 	/** The compost went on: two seconds facing the other way, where it stands. */
@@ -1040,8 +1040,7 @@ class KeepingCompany
 		{
 			return;
 		}
-		WorldPoint away = new WorldPoint(seat.getX() + PACE_TILES * dx,
-			seat.getY() + PACE_TILES * dy, seat.getPlane());
+		WorldPoint away = seat.dx(PACE_TILES * dx).dy(PACE_TILES * dy);
 		walk(Arrays.asList(away, seat), false);
 	}
 
@@ -1057,12 +1056,9 @@ class KeepingCompany
 		{
 			dy = 1;
 		}
-		WorldPoint behind = new WorldPoint(here.getX() - 2 * dx, here.getY() - 2 * dy,
-			here.getPlane());
-		WorldPoint flankA = new WorldPoint(here.getX() - 2 * dy, here.getY() + 2 * dx,
-			here.getPlane());
-		WorldPoint flankB = new WorldPoint(here.getX() + 2 * dy, here.getY() - 2 * dx,
-			here.getPlane());
+		WorldPoint behind = here.dx(-2 * dx).dy(-2 * dy);
+		WorldPoint flankA = here.dx(-2 * dy).dy(2 * dx);
+		WorldPoint flankB = here.dx(2 * dy).dy(-2 * dx);
 		WorldPoint other = flankA.distanceTo(seat) >= flankB.distanceTo(seat) ? flankA : flankB;
 		walk(Arrays.asList(behind, other, behind, seat), thenSit);
 	}
@@ -1381,8 +1377,7 @@ class KeepingCompany
 		}
 		int reach = 1 + random.nextInt(2);
 		int side = random.nextInt(3) - 1;
-		return new WorldPoint(target.getX() + dx * reach - dy * side,
-			target.getY() + dy * reach + dx * side, target.getPlane());
+		return target.dx(dx * reach - dy * side).dy(dy * reach + dx * side);
 	}
 
 	// ------------------------------------------------------------------- bag
@@ -1419,8 +1414,8 @@ class KeepingCompany
 			SkillingController.BANK_NAMES);
 		if (bank != null && !parked())
 		{
-			step = new WorldPoint(seat.getX() + Integer.signum(bank.getX() - seat.getX()),
-				seat.getY() + Integer.signum(bank.getY() - seat.getY()), seat.getPlane());
+			step = seat.dx(Integer.signum(bank.getX() - seat.getX()))
+				.dy(Integer.signum(bank.getY() - seat.getY()));
 			stepTicks = SHRUG_TICKS;
 		}
 	}

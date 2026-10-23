@@ -1019,7 +1019,7 @@ public class SkillingController
 	private static WorldPoint farCorner(NPC npc, WorldPoint at)
 	{
 		int size = npc.getComposition() == null ? 1 : Math.max(1, npc.getComposition().getSize());
-		return new WorldPoint(at.getX() + size - 1, at.getY() + size - 1, at.getPlane());
+		return at.dx(size - 1).dy(size - 1);
 	}
 
 	/** A scene load began: what despawns around it is shuffling, not change. */
@@ -1442,8 +1442,8 @@ public class SkillingController
 			return;
 		}
 		double radians = (local.getCurrentOrientation() / 2048.0) * 2.0 * Math.PI;
-		WorldPoint front = new WorldPoint(here.getX() + (int) Math.round(-Math.sin(radians)),
-			here.getY() + (int) Math.round(-Math.cos(radians)), here.getPlane());
+		WorldPoint front = here.dx((int) Math.round(-Math.sin(radians)))
+			.dy((int) Math.round(-Math.cos(radians)));
 		WorkSession opened = new WorkSession("", skill.getName().toLowerCase(Locale.ROOT), "", 0,
 			front, front, null, here, now);
 		opened.standing = true;
@@ -2519,13 +2519,13 @@ public class SkillingController
 		switch (orientationA)
 		{
 			case 1:
-				return new WorldPoint(wallTile.getX() - 1, wallTile.getY(), wallTile.getPlane());
+				return wallTile.dx(-1);
 			case 2:
-				return new WorldPoint(wallTile.getX(), wallTile.getY() + 1, wallTile.getPlane());
+				return wallTile.dy(1);
 			case 4:
-				return new WorldPoint(wallTile.getX() + 1, wallTile.getY(), wallTile.getPlane());
+				return wallTile.dx(1);
 			case 8:
-				return new WorldPoint(wallTile.getX(), wallTile.getY() - 1, wallTile.getPlane());
+				return wallTile.dy(-1);
 			default:
 				return null;
 		}
@@ -3278,8 +3278,7 @@ public class SkillingController
 			for (int[] offset : group)
 			{
 				// Every one of these is two tiles off the player or more.
-				WorldPoint c = new WorldPoint(player.getX() + offset[0], player.getY() + offset[1],
-					player.getPlane());
+				WorldPoint c = player.dx(offset[0]).dy(offset[1]);
 				if (allowed.test(c))
 				{
 					candidates.add(c);

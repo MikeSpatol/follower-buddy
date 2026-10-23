@@ -345,8 +345,8 @@ public class Will
 		int vx = Integer.signum(here.getX() - lastPlayerTile.getX());
 		int vy = Integer.signum(here.getY() - lastPlayerTile.getY());
 		boolean running = lastPlayerTile.distanceTo(here) >= 2;
-		WorldPoint next = new WorldPoint(here.getX() + vx, here.getY() + vy, here.getPlane());
-		WorldPoint after = new WorldPoint(here.getX() + 2 * vx, here.getY() + 2 * vy, here.getPlane());
+		WorldPoint next = here.dx(vx).dy(vy);
+		WorldPoint after = here.dx(2 * vx).dy(2 * vy);
 		if (!tile.equals(next) && !(running && tile.equals(after)))
 		{
 			return;
@@ -354,9 +354,9 @@ public class Will
 		// The two tiles to either side of the line they are walking, then
 		// the one behind the follower along it.
 		WorldPoint[] aside = {
-			new WorldPoint(tile.getX() - vy, tile.getY() + vx, tile.getPlane()),
-			new WorldPoint(tile.getX() + vy, tile.getY() - vx, tile.getPlane()),
-			new WorldPoint(tile.getX() + vx, tile.getY() + vy, tile.getPlane()),
+			tile.dx(-vy).dy(vx),
+			tile.dx(vy).dy(-vx),
+			tile.dx(vx).dy(vy),
 		};
 		for (WorldPoint spot : aside)
 		{

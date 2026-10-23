@@ -861,7 +861,7 @@ public class Moments implements Noticing.Looker // public:cut company-extras,not
 		{
 			dy = -1;
 		}
-		WorldPoint step = new WorldPoint(from.getX() + dx, from.getY() + dy, from.getPlane());
+		WorldPoint step = from.dx(dx).dy(dy);
 		skilling.setExcused(true); // public:cut skilling
 		if (!follower.stayAt(step))
 		{

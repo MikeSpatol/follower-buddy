@@ -2073,7 +2073,7 @@ public class FollowerPlugin extends Plugin
 			double radians = (local.getCurrentOrientation() / 2048.0) * 2.0 * Math.PI;
 			fx = (int) Math.round(-Math.sin(radians));
 			fy = (int) Math.round(-Math.cos(radians));
-			at = new WorldPoint(p.getX() + fx, p.getY() + fy, p.getPlane());
+			at = p.dx(fx).dy(fy);
 		}
 		// The two perpendiculars, in a random order so there is no favourite
 		// shoulder.
@@ -2085,11 +2085,11 @@ public class FollowerPlugin extends Plugin
 			sy = -sy;
 		}
 		WorldPoint[] spots = {
-			new WorldPoint(p.getX() - fx + sx, p.getY() - fy + sy, p.getPlane()),
-			new WorldPoint(p.getX() - fx - sx, p.getY() - fy - sy, p.getPlane()),
-			new WorldPoint(p.getX() + sx, p.getY() + sy, p.getPlane()),
-			new WorldPoint(p.getX() - sx, p.getY() - sy, p.getPlane()),
-			new WorldPoint(p.getX() - fx, p.getY() - fy, p.getPlane()),
+			p.dx(-fx + sx).dy(-fy + sy),
+			p.dx(-fx - sx).dy(-fy - sy),
+			p.dx(sx).dy(sy),
+			p.dx(-sx).dy(-sy),
+			p.dx(-fx).dy(-fy),
 		};
 		for (WorldPoint spot : spots)
 		{
@@ -2460,8 +2460,7 @@ public class FollowerPlugin extends Plugin
 			{
 				continue;
 			}
-			WorldPoint target = new WorldPoint(
-				from.getX() + dx, from.getY() + dy, from.getPlane());
+			WorldPoint target = from.dx(dx).dy(dy);
 			if (follower.stayAt(target))
 			{
 				wandered = true;
@@ -2502,8 +2501,7 @@ public class FollowerPlugin extends Plugin
 				continue;
 			}
 
-			WorldPoint target = new WorldPoint(
-				from.getX() + dx, from.getY() + dy, from.getPlane());
+			WorldPoint target = from.dx(dx).dy(dy);
 			if (follower.stayAt(target))
 			{
 				wandered = true;
@@ -2528,8 +2526,7 @@ public class FollowerPlugin extends Plugin
 		}
 		for (int step = 1; step <= 2; step++)
 		{
-			WorldPoint spot = new WorldPoint(player.getX() + dx * step,
-				player.getY() + dy * step, player.getPlane());
+			WorldPoint spot = player.dx(dx * step).dy(dy * step);
 			if (follower.stayAt(spot))
 			{
 				wandered = true;
@@ -2735,8 +2732,7 @@ public class FollowerPlugin extends Plugin
 
 		for (int[] offset : order)
 		{
-			WorldPoint spot = new WorldPoint(
-				thing.getX() + offset[0], thing.getY() + offset[1], thing.getPlane());
+			WorldPoint spot = thing.dx(offset[0]).dy(offset[1]);
 			if (follower.stayAt(spot))
 			{
 				follower.setStayFaceTile(thing);
@@ -8357,7 +8353,7 @@ public class FollowerPlugin extends Plugin
 		// public:else {
 			// public:else for (int dy = -1; dy <= 1; dy++)
 			// public:else {
-				// public:else WorldPoint spot = new WorldPoint(target.getX() + dx, target.getY() + dy, target.getPlane());
+				// public:else WorldPoint spot = target.dx(dx).dy(dy);
 				// public:else int away = from == null ? 0 : spot.distanceTo(from);
 				// public:else if ((dx != 0 || dy != 0) && follower.goodGround(spot) && !follower.furnished(spot)
 					// public:else && away < nearest)
@@ -11629,7 +11625,7 @@ public class FollowerPlugin extends Plugin
 				int size = npc.getComposition() == null ? 1
 					: Math.max(1, npc.getComposition().getSize());
 				skilling.noteClick(event.getMenuOption(), npc.getName(), npc.getId(), at,
-					new WorldPoint(at.getX() + size - 1, at.getY() + size - 1, at.getPlane()), npc);
+					at.dx(size - 1).dy(size - 1), npc);
 				break;
 			}
 			default:
@@ -14141,7 +14137,7 @@ public class FollowerPlugin extends Plugin
 			StringBuilder sea = new StringBuilder();
 			for (int dx = -4; dx <= 4; dx++)
 			{
-				WorldPoint t = new WorldPoint(at.getX() + dx, at.getY() + dy, at.getPlane());
+				WorldPoint t = at.dx(dx).dy(dy);
 				char c = flagSymbol(client.findWorldViewFromWorldPoint(t), t, dx == 0 && dy == 0);
 				if (c != 'P' && walked.contains(t))
 				{
@@ -14157,7 +14153,7 @@ public class FollowerPlugin extends Plugin
 		{
 			for (int dx = -4; dx <= 4; dx++)
 			{
-				WorldPoint t = new WorldPoint(at.getX() + dx, at.getY() + dy, at.getPlane());
+				WorldPoint t = at.dx(dx).dy(dy);
 				net.runelite.api.WorldView v = client.findWorldViewFromWorldPoint(t);
 				net.runelite.api.coords.LocalPoint lp = v == null ? null : net.runelite.api.coords.LocalPoint.fromWorld(v, t);
 				if (lp == null)

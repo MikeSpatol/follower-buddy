@@ -756,7 +756,7 @@ public class ErrandController
 				int[][] dirs = {{3, 0}, {-3, 0}, {0, 3}, {0, -3}};
 				int[] dir = dirs[random.nextInt(dirs.length)];
 				return startTravelErrand(errand,
-					new WorldPoint(p.getX() + dir[0], p.getY() + dir[1], p.getPlane()));
+					p.dx(dir[0]).dy(dir[1]));
 			}
 			default:
 				return false;
@@ -789,10 +789,10 @@ public class ErrandController
 	private boolean beginSiteVisit(Errand errand, WorldPoint target, String siteKey)
 	{
 		List<WorldPoint> besides = new ArrayList<>(List.of(
-			new WorldPoint(target.getX() + 1, target.getY(), target.getPlane()),
-			new WorldPoint(target.getX() - 1, target.getY(), target.getPlane()),
-			new WorldPoint(target.getX(), target.getY() + 1, target.getPlane()),
-			new WorldPoint(target.getX(), target.getY() - 1, target.getPlane())));
+			target.dx(1),
+			target.dx(-1),
+			target.dy(1),
+			target.dy(-1)));
 		WorldPoint from = follower.getWorldLocation();
 		if (from != null)
 		{
