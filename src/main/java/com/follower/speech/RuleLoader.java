@@ -1,5 +1,6 @@
 package com.follower.speech;
 
+import com.follower.Resources;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -380,8 +381,7 @@ public class RuleLoader extends MergingLoader<RuleFile>
 			}
 			if (!rule.isValid())
 			{
-				problems.add("Rule '" + rule.id + "' needs a 'when' block and at least one of"
-					+ " a non-empty 'say' list, an 'animation', or 'mirrorAnimation'");
+				problems.add("Rule '" + rule.id + Resources.text("ruleIncomplete"));
 				continue;
 			}
 			if (rule.group == null || rule.group.trim().isEmpty())

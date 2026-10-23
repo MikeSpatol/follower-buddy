@@ -134,8 +134,7 @@ public class PhrasesDialog extends EditorDialog // public:cut messages-window
 	private Category category;
 
 	/** What every category has in common; each category adds one line of its own. */
-	private static final String HOW_TO = "One message per line. Edit, remove or add lines,"
-		+ " untick a rule to silence it, then Save - changes reach the follower within a second.";
+	private static final String HOW_TO = Resources.text("messagesHowTo");
 
 	private final JComboBox<String> categoryPicker = new JComboBox<>();
 	private final JLabel hint = Ui.label("", ColorScheme.LIGHT_GRAY_COLOR);
@@ -223,8 +222,7 @@ public class PhrasesDialog extends EditorDialog // public:cut messages-window
 			showCategory();
 		});
 
-		find.setToolTipText("Show only the rules in this category whose title, note or lines"
-			+ " contain this");
+		find.setToolTipText(Resources.text("findTip"));
 		find.getDocument().addDocumentListener(Ui.onChange(this::applyFind));
 		JPanel pickerRow = Ui.panel(new BorderLayout(6, 0));
 		pickerRow.add(categoryPicker, BorderLayout.CENTER);
@@ -298,8 +296,7 @@ public class PhrasesDialog extends EditorDialog // public:cut messages-window
 
 		if (loaded == null)
 		{
-			setStatus("The messages file couldn't be read - it may have been"
-				+ " hand-edited. Fix it or restore a backup, then Reload.", true);
+			setStatus(Resources.text("messagesUnreadable"), true);
 			Ui.relayout(list);
 			return;
 		}
@@ -453,8 +450,7 @@ public class PhrasesDialog extends EditorDialog // public:cut messages-window
 			}
 			else
 			{
-				JLabel special = Ui.label("(triggered by something other than a place"
-					+ " - the messages can still be edited)", ColorScheme.MEDIUM_GRAY_COLOR);
+				JLabel special = Ui.label(Resources.text("notAPlace"), ColorScheme.MEDIUM_GRAY_COLOR);
 				special.setAlignmentX(LEFT_ALIGNMENT);
 				row.add(special);
 			}
@@ -525,7 +521,7 @@ public class PhrasesDialog extends EditorDialog // public:cut messages-window
 				int region = currentRegion.getAsInt();
 				if (region <= 0)
 				{
-					setStatus("The game hasn't said where you are yet - log in first.", true);
+					setStatus(Resources.text("whereUnknown"), true);
 					return;
 				}
 				String existing = regions.getText().trim();
@@ -706,7 +702,7 @@ public class PhrasesDialog extends EditorDialog // public:cut messages-window
 		JsonArray say = parseSay(row.say.getText());
 		if (name.isEmpty() || regions.size() == 0 || say.size() == 0)
 		{
-			warnings.add("new location needs a name, at least one region id and one message");
+			warnings.add(Resources.text("newLocationIncomplete"));
 			return null;
 		}
 
@@ -859,7 +855,7 @@ public class PhrasesDialog extends EditorDialog // public:cut messages-window
 			{
 				// An 11-digit paste used to abort the whole save with a raw
 				// "For input string" - name the token and carry on instead.
-				warnings.add("'" + token + "' isn't a region id the game uses - skipped");
+				warnings.add("'" + token + Resources.text("notARegion"));
 			}
 		}
 		return regions;

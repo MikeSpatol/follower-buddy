@@ -1,6 +1,7 @@
 // public:file dialogs-editor
 package com.follower.ui;
 
+import com.follower.Resources;
 import com.follower.speech.DialogTree;
 import com.google.gson.Gson;
 import java.awt.BorderLayout;
@@ -55,12 +56,7 @@ public class DialogsDialog extends EditorDialog
 	{
 		super("Follower Buddy - Conversations", gson, file, new JPanel(), 300);
 
-		JLabel hint = Ui.label("<html><body style='width:500px'>These are the conversations the follower"
-			+ " <b>starts</b>. While it is waiting for an answer, its Talk-to option becomes"
-			+ " Answer and opens the conversation it asked about instead of the everyday one.<br>"
-			+ "<b>Says</b> is one page per line, spoken by whoever is picked beside the node. <b>Choices</b> are one"
-			+ " per line, written <code>label -&gt; node-id</code>. <b>Answer</b> is what"
-			+ " reaching that node records as your reply.</html>", ColorScheme.LIGHT_GRAY_COLOR);
+		JLabel hint = Ui.label(Resources.text("dialogsHint"), ColorScheme.LIGHT_GRAY_COLOR);
 
 		JPanel top = Ui.panel(new BorderLayout(6, 6));
 		top.add(hint, BorderLayout.CENTER);
@@ -92,8 +88,7 @@ public class DialogsDialog extends EditorDialog
 		top.add(treePicker, BorderLayout.SOUTH);
 
 		JButton add = new JButton("Add node");
-		add.setToolTipText("A new step in this conversation. Point something at it"
-			+ " with Next or a Choice, or nothing will ever reach it.");
+		add.setToolTipText(Resources.text("addNodeTip"));
 		add.addActionListener(e -> addBlankRow());
 		buttons.add(add);
 		addReloadAndSave();
@@ -120,8 +115,7 @@ public class DialogsDialog extends EditorDialog
 		catch (Exception e)
 		{
 			log.warn("Could not read {}", file, e);
-			setStatus("The conversations file couldn't be read - it may have been"
-				+ " hand-edited. Fix it or restore a backup, then Reload.", true);
+			setStatus(Resources.text("dialogsUnreadable"), true);
 			return;
 		}
 
@@ -277,8 +271,7 @@ public class DialogsDialog extends EditorDialog
 			BorderFactory.createEmptyBorder(6, 6, 6, 6)));
 
 		JButton remove = new JButton("Delete");
-		remove.setToolTipText("Remove this node. Anything pointing at it will need"
-			+ " repointing, and Save will say so.");
+		remove.setToolTipText(Resources.text("deleteNodeTip"));
 		remove.addActionListener(e ->
 		{
 			row.deleted = true;

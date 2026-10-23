@@ -23,6 +23,9 @@ public final class Resources
 	/** lists.properties: the small word and id lists, each comma separated. */
 	private static final Properties LISTS = properties("lists.properties");
 
+	/** strings.properties: the longer captions, tooltips and status lines, word for word. */
+	private static final Properties TEXT = properties("strings.properties");
+
 	private Resources()
 	{
 	}
@@ -71,6 +74,12 @@ public final class Resources
 			throw new UncheckedIOException(e);
 		}
 		return rows;
+	}
+
+	/** One of strings.properties' texts. */
+	public static String text(String key)
+	{
+		return TEXT.getProperty(key);
 	}
 
 	/** One of lists.properties' lists, in its order. */

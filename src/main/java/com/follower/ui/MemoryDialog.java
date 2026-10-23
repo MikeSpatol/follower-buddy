@@ -1,6 +1,7 @@
 // public:file memory-window
 package com.follower.ui;
 
+import com.follower.Resources;
 import com.follower.speech.TriggerContext;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -54,12 +55,9 @@ public class MemoryDialog extends JDialog
 		JPanel root = Ui.panel(new BorderLayout(0, 6));
 		root.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-		JLabel hint = Ui.label(wrapped("Everything the follower currently remembers"
-			+ " about you. It is kept with this RuneLite profile's settings, and the"
-			+ " button below erases all of it for good."), ColorScheme.MEDIUM_GRAY_COLOR);
+		JLabel hint = Ui.label(wrapped(Resources.text("memoryHint")), ColorScheme.MEDIUM_GRAY_COLOR);
 
-		JLabel where = Ui.label(wrapped("The Reminiscing toggle in settings silences the"
-			+ " lines that use this; Forget everything erases it."), ColorScheme.MEDIUM_GRAY_COLOR);
+		JLabel where = Ui.label(wrapped(Resources.text("memoryWhere")), ColorScheme.MEDIUM_GRAY_COLOR);
 		where.setBorder(BorderFactory.createEmptyBorder(4, 0, 0, 0));
 
 		JPanel top = Ui.panel(new BorderLayout());
@@ -70,15 +68,12 @@ public class MemoryDialog extends JDialog
 		root.add(Ui.scroller(list), BorderLayout.CENTER);
 
 		JButton forget = new JButton("Forget everything");
-		forget.setToolTipText("Erase every count, best, place, the Chronicle's drawings,"
-			+ " and the day it met you. It meets you again as a stranger.");
+		forget.setToolTipText(Resources.text("forgetTip"));
 		forget.setFocusPainted(false);
 		forget.addActionListener(e ->
 		{
 			int sure = JOptionPane.showConfirmDialog(this,
-				"Everything it knows is erased for good: counts, bests, places,\n"
-					+ "the incident, the day you met, and the drawings in the Chronicle.\n"
-					+ "The follower meets you again as a stranger. There is no undo.",
+				Resources.text("forgetConfirm"),
 				"Forget everything?",
 				JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 			if (sure == JOptionPane.YES_OPTION)
@@ -263,9 +258,8 @@ public class MemoryDialog extends JDialog
 			// as Answer, so with one open the hint says to answer it first (QA3).
 			rows.add(row("Hoping for", c.getWishLabel()
 				+ (c.getAskedTree().isEmpty()
-					? " (right-click the follower and choose Talk-to to hand it over)"
-					: " (answer its question first, then right-click the follower and choose"
-						+ " Talk-to to hand it over)")));
+					? Resources.text("wishHandOver")
+					: Resources.text("wishAnswerFirst"))));
 		}
 		// public:end souvenirs-wishes
 		if (!c.getAskedTree().isEmpty())

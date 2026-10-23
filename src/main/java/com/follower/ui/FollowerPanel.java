@@ -1,5 +1,6 @@
 package com.follower.ui;
 
+import com.follower.Resources;
 import com.follower.appearance.GamePalette;
 import com.follower.appearance.HslColor;
 import com.follower.appearance.ModelRepository;
@@ -260,8 +261,7 @@ public class FollowerPanel extends PluginPanel
 	public void setFollowerName(String name)
 	{
 		SwingUtilities.invokeLater(() -> behaviourCaption.setText(Ui.html(160, "Right-click " + name
-			+ " in game for Talk-to, Stay, Dance, Wave, Step-in-front and Read-chronicle."
-			+ " Hold Shift and right-click any tile to send it there.")));
+			+ Resources.text("behaviourHint"))));
 	}
 
 	// public:cut errands
@@ -633,9 +633,7 @@ public class FollowerPanel extends PluginPanel
 		// unwrapped line, and a single wide child forces the WHOLE panel past
 		// the sidebar, clipping every section against the no-horizontal-scroll
 		// viewport.
-		JLabel identity = caption("Only you"
-			+ " can see this follower. Dress it under Outfit; edit what it says"
-			+ " under Talking; see what it remembers under Memory.");
+		JLabel identity = caption(Resources.text("identityCaption"));
 		identity.setBorder(BorderFactory.createEmptyBorder(0, 0, 4, 0));
 		header.add(identity);
 
@@ -793,19 +791,16 @@ public class FollowerPanel extends PluginPanel
 
 	private void buildTalking(JPanel body)
 	{
-		body.add(caption("What it says and when. Messages holds every line;"
-			+ " Conversations the talks it starts itself."));
+		body.add(caption(Resources.text("talkingCaption")));
 
-		body.add(tick("muted", muteBox, "The follower stops talking. All your other"
-			+ " speech settings are kept. Same switch as Mute in settings."));
+		body.add(tick("muted", muteBox, Resources.text("muteTip")));
 
-		chattinessBox.setToolTipText("How much it talks. Same setting as Chattiness in settings.");
+		chattinessBox.setToolTipText(Resources.text("chattinessTip"));
 		synced.put("chattiness", chattinessBox);
 		chattinessBox.addActionListener(e -> write("chattiness", chattinessBox.getSelectedItem()));
 		body.add(labelledRow("Chattiness", chattinessBox));
 
-		body.add(tick("mirrorToChat", chatboxBox, "Every line also appears in the chatbox under the"
-			+ " follower's name. Same switch as in settings."));
+		body.add(tick("mirrorToChat", chatboxBox, Resources.text("chatboxTip")));
 		body.add(javax.swing.Box.createVerticalStrut(4));
 
 		// Four doors, not nine: the old grid surfaced every internal rule
@@ -818,13 +813,12 @@ public class FollowerPanel extends PluginPanel
 			// public:else );
 		// public:cut messages-window
 		buttons.add(button("Messages...",
-			"Everything the follower says, by subject, to read and edit",
+			Resources.text("messagesTip"),
 			() -> onEditMessages.run()));
 		// public:end messages-window
 		// public:cut dialogs-editor
 		buttons.add(button("Conversations...",
-			"View and edit the conversations the follower starts itself -"
-				+ " the ones its Answer option opens while it waits for your reply",
+			Resources.text("conversationsTip"),
 			() -> onEditDialogs.run()));
 		// public:end dialogs-editor
 		// public:cut sharevoice
@@ -841,12 +835,10 @@ public class FollowerPanel extends PluginPanel
 	// public:cut memory-window
 	private void buildMemory(JPanel body)
 	{
-		body.add(caption("What it remembers about you. The Reminiscing toggle in"
-			+ " settings silences the lines that use this; Forget everything in"
-			+ " the window erases it."));
+		body.add(caption(Resources.text("memoryCaption")));
 		JPanel buttons = buttonColumn(1);
 		buttons.add(button("Memory...",
-			"Everything the follower knows about you, and the button that erases it",
+			Resources.text("memoryTip"),
 			() -> onShowMemory.run()));
 		body.add(buttons);
 	}
@@ -910,8 +902,7 @@ public class FollowerPanel extends PluginPanel
 				javax.swing.JOptionPane.PLAIN_MESSAGE));
 		}));
 
-		profileButtons.add(button(profileDelete, "Remove the selected profile. The built-in looks, and a"
-			+ " profile a thrall wears, cannot be removed.", () ->
+		profileButtons.add(button(profileDelete, Resources.text("deleteProfileTip"), () ->
 		{
 			String name = profileName();
 			if (name.isEmpty())
@@ -943,9 +934,9 @@ public class FollowerPanel extends PluginPanel
 		body.add(status);
 
 		body.add(sectionHeader("EQUIPMENT", null));
-		body.add(caption("Click a slot to change it; right-click to clear it."));
+		body.add(caption(Resources.text("slotTip")));
 		body.add(buildGear());
-		body.add(sectionHeader("BODY", "Styles cycle live on the follower; colours are the game's own"));
+		body.add(sectionHeader("BODY", Resources.text("stylesTip")));
 		// BoxLayout, NOT GridLayout: a grid splits its height evenly between
 		// rows and ignores their maximum size, so every row grew as the
 		// window did. A vertical box honours the fixed row height.
@@ -964,8 +955,7 @@ public class FollowerPanel extends PluginPanel
 		rows.setVisible(false);
 
 		JLabel toggle = Ui.label("+ Used for thralls", ColorScheme.LIGHT_GRAY_COLOR);
-		toggle.setToolTipText("Which profile stands in for each thrall. Same"
-			+ " three settings as in Thrall mode.");
+		toggle.setToolTipText(Resources.text("thrallProfilesTip"));
 		toggle.setAlignmentX(LEFT_ALIGNMENT);
 		toggle.setBorder(BorderFactory.createEmptyBorder(4, 0, 2, 0));
 		clickable(toggle, () ->
@@ -994,8 +984,7 @@ public class FollowerPanel extends PluginPanel
 	private void buildBehaviour(JPanel body)
 	{
 		JPanel buttons = buttonPair();
-		buttons.add(button(stayButton, "Same as right-click Stay and Follow-me on the follower,"
-			+ " and Follow me in settings", () -> onFollowEnabled.accept(staying)));
+		buttons.add(button(stayButton, Resources.text("stayTip"), () -> onFollowEnabled.accept(staying)));
 		buttons.add(button("Come here", "Places the follower at your feet",
 			() -> onComeHere.run()));
 		body.add(buttons);
@@ -1005,8 +994,7 @@ public class FollowerPanel extends PluginPanel
 		body.add(behaviourCaption);
 
 		// public:cut errands
-		body.add(tick("errandsEnabled", errandsBox, "Now and then it wanders off on a small errand and"
-			+ " comes back. Same switch as Go on errands in settings."));
+		body.add(tick("errandsEnabled", errandsBox, Resources.text("errandsTip")));
 
 		JPanel row = Ui.panel(new BorderLayout(6, 0));
 		row.setAlignmentX(LEFT_ALIGNMENT);
@@ -1037,10 +1025,10 @@ public class FollowerPanel extends PluginPanel
 	{
 		JPanel buttons = buttonColumn(2);
 		buttons.add(button("Fix if it vanished",
-			"Re-attaches the follower to the scene, then rebuilds it from the outfit",
+			Resources.text("fixTip"),
 			() -> onFix.run()));
 		buttons.add(button("Reload message and sound files",
-			"Re-reads phrases.json and the attached sounds from disk",
+			Resources.text("reloadTip"),
 			() -> onReload.run()));
 		body.add(buttons);
 		body.add(javax.swing.Box.createVerticalStrut(6));
@@ -1053,7 +1041,7 @@ public class FollowerPanel extends PluginPanel
 		Ui.small(commandList, ColorScheme.LIGHT_GRAY_COLOR).setBackground(ColorScheme.DARKER_GRAY_COLOR);
 		commandList.setBorder(BorderFactory.createEmptyBorder(4, 6, 4, 6));
 		commandList.setAlignmentX(LEFT_ALIGNMENT);
-		commandList.setToolTipText("Type any of these in the chat as ::follower <command>");
+		commandList.setToolTipText(Resources.text("commandsHint"));
 		body.add(commandList);
 
 		Ui.small(regionCaption, ColorScheme.MEDIUM_GRAY_COLOR).setAlignmentX(LEFT_ALIGNMENT);
@@ -1089,8 +1077,7 @@ public class FollowerPanel extends PluginPanel
 		picker.add(search);
 
 		showAll.setText("Show items from every slot");
-		styleTick(showAll, "Some wearable items (mostly quest and holiday ones)"
-			+ " don't say which slot they belong to. Tick to include them in every search.");
+		styleTick(showAll, Resources.text("showAllTip"));
 		showAll.addActionListener(e -> refreshResults());
 		picker.add(showAll);
 
@@ -1340,7 +1327,7 @@ public class FollowerPanel extends PluginPanel
 		{
 			button.setBackground(ColorScheme.MEDIUM_GRAY_COLOR.darker());
 		}
-		button.setToolTipText("Switches the whole body model, and the default kits with it");
+		button.setToolTipText(Resources.text("bodyTip"));
 		button.addActionListener(e ->
 		{
 			if (!selected)
@@ -1581,9 +1568,7 @@ public class FollowerPanel extends PluginPanel
 		// who has never heard of the build tooling.
 		if (!repository.isLoaded() || !repository.hasNames())
 		{
-			resultList.add(hint("Item data didn't"
-				+ " load - try restarting the client. If it keeps happening,"
-				+ " report a bug."));
+			resultList.add(hint(Resources.text("itemsUnloaded")));
 		}
 		else
 		{
@@ -1618,7 +1603,7 @@ public class FollowerPanel extends PluginPanel
 				else
 				{
 					resultList.add(hint("No " + activeSlot.name().toLowerCase()
-						+ " items match - try \"Show items from every slot\""));
+						+ Resources.text("noMatches")));
 				}
 			}
 			else

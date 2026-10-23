@@ -4129,8 +4129,7 @@ public class FollowerPlugin extends Plugin
 		// one; New profile... over one would lose it (QA3).
 		if (profileStore.isProtected(name))
 		{
-			sendStatus("'" + name.trim() + "' is one of the built-in looks"
-				+ " and cannot be replaced. Pick it and edit it instead.");
+			sendStatus("'" + name.trim() + Resources.text("builtInReplace"));
 			return;
 		}
 		// public:end thrall-outfits
@@ -4150,8 +4149,7 @@ public class FollowerPlugin extends Plugin
 		// public:cut thrall-outfits
 		if (profileStore.isProtected(name))
 		{
-			sendStatus("'" + name.trim() + "' is one of the built-in looks"
-				+ " and cannot be deleted. Edit it instead.");
+			sendStatus("'" + name.trim() + Resources.text("builtInDelete"));
 			return;
 		}
 		// public:end thrall-outfits
@@ -7329,7 +7327,7 @@ public class FollowerPlugin extends Plugin
 		java.util.List<String> pages = new java.util.ArrayList<>();
 		if (parts.isEmpty())
 		{
-			pages.add("Today's page is blank. Restful, I call that.");
+			pages.add(Resources.text("blankPage"));
 		}
 		else
 		{
@@ -7599,7 +7597,7 @@ public class FollowerPlugin extends Plugin
 			}
 			if (!follower.moveToFront(local))
 			{
-				speak("There's no room in front of you for me to stand.",
+				speak(Resources.text("noRoomInFront"),
 					com.follower.speech.SpeechOutput.OVERHEAD, null, -1, null);
 			}
 		});
@@ -10339,7 +10337,7 @@ public class FollowerPlugin extends Plugin
 	 * moment" honest: errands are off, or the one asked for could not start
 	 * where the follower is. Wording awaits approval (fx/chat-text.json).
 	 */
-	static final String ERRANDS_OFF = "Errands are off. Tick Go on errands under Errands to send it on one.";
+	static final String ERRANDS_OFF = Resources.text("errandsOff");
 	static final String ERRAND_MISSED = "That errand can't start here.";
 
 	// public:end errands
@@ -10471,7 +10469,7 @@ public class FollowerPlugin extends Plugin
 			}
 			else
 			{
-				sendStatus("No follower model to place. Try ::follower rebuild.");
+				sendStatus(Resources.text("noModel"));
 			}
 		});
 	}
@@ -11576,7 +11574,7 @@ public class FollowerPlugin extends Plugin
 						String.join(",", java.util.Arrays.copyOfRange(args, 1, args.length)));
 					if (ids.length == 0)
 					{
-						sendStatus("Usage: ::follower anim <id> [id ...]");
+						sendStatus(Resources.text("animUsage"));
 						break;
 					}
 					clientThread.invoke(() -> follower.playAnimations(ids));
@@ -11584,7 +11582,7 @@ public class FollowerPlugin extends Plugin
 				}
 				else
 				{
-					sendStatus("Usage: ::follower anim <id> [id ...]");
+					sendStatus(Resources.text("animUsage"));
 				}
 				break;
 
@@ -11782,9 +11780,9 @@ public class FollowerPlugin extends Plugin
 				// public:end spectate,spectate-keep-fight-lines,spectate-shield
 				if (args.length < 2)
 				{
-					sendStatus("::follower gfx <graphicId> - play a spotanim on the follower");
-					sendStatus("::follower gfx <graphicId> <height> - that far up its body");
-					sendStatus("::follower gfx <graphicId> set - and keep it as the shield"); // public:cut spectate,spectate-keep-fight-lines,spectate-shield
+					sendStatus(Resources.text("gfxHelp"));
+					sendStatus(Resources.text("gfxHeightHelp"));
+					sendStatus(Resources.text("gfxSetHelp")); // public:cut spectate,spectate-keep-fight-lines,spectate-shield
 					break;
 				}
 				try
@@ -11821,7 +11819,7 @@ public class FollowerPlugin extends Plugin
 						setConfig(
 							"spectateShieldEndGraphic", id);
 						sendStatus("Graphic " + id
-							+ " is now the shield effect for summon, channel and finish.");
+							+ Resources.text("shieldSet"));
 					}
 					// public:end spectate,spectate-keep-fight-lines,spectate-shield
 					else if (height != 0) // public:cut spectate,spectate-keep-fight-lines,spectate-shield
@@ -11831,13 +11829,12 @@ public class FollowerPlugin extends Plugin
 					}
 					else
 					{
-						sendStatus("Playing graphic " + id + " on the follower."
-							+ " Add 'set' to keep it as the shield.");
+						sendStatus("Playing graphic " + id + Resources.text("gfxAddSet"));
 					}
 				}
 				catch (NumberFormatException e)
 				{
-					sendStatus("Numbers only: ::follower gfx <graphicId> [height|set]");
+					sendStatus(Resources.text("gfxNumbers"));
 				}
 				break;
 			}
@@ -12135,7 +12132,7 @@ public class FollowerPlugin extends Plugin
 				// model report nobody asked for.
 				sendStatus("You're in region " + context().getRegionId()
 					+ onTile(context().getLocation())
-					+ ". Use that number under Locations in the Messages window.");
+					+ Resources.text("useRegion"));
 				break;
 
 			default:
@@ -12688,7 +12685,7 @@ public class FollowerPlugin extends Plugin
 		}
 		if (ruleLoader.getRules().isEmpty())
 		{
-			sendStatus("Couldn't read phrases.json, so the follower is quiet until it's fixed.");
+			sendStatus(Resources.text("phrasesUnreadable"));
 		}
 	}
 
@@ -12696,7 +12693,7 @@ public class FollowerPlugin extends Plugin
 	{
 		return modelRepository.isLoaded()
 			? "The item list is loaded (" + modelRepository.getStatus() + ") but has no data for these slots."
-			: "The game cache hasn't been read yet. Log in, then try ::follower rebuild.";
+			: Resources.text("cacheUnread");
 	}
 
 	// public:cut dev
@@ -13051,7 +13048,7 @@ public class FollowerPlugin extends Plugin
 	{
 		final boolean[] named = {false};
 		final boolean[] done = {false};
-		chatboxPanelManager.openTextInput("Your new follower is waiting. What will you call it?")
+		chatboxPanelManager.openTextInput(Resources.text("namePrompt"))
 			.value("")
 			.charValidator(c -> nameChar((char) c))
 			.onDone((String answer) ->
@@ -13071,11 +13068,9 @@ public class FollowerPlugin extends Plugin
 					if (name.length() == 20 && answer != null
 						&& answer.trim().length() > 20)
 					{
-						sendStatus("Twenty characters is all a name can carry,"
-							+ " so '" + name + "' it is.");
+						sendStatus(Resources.text("nameTooLong") + name + "' it is.");
 					}
-					sendStatus("You can change the name any time in the"
-						+ " plugin's settings, under Follower.");
+					sendStatus(Resources.text("nameLater"));
 				}
 			})
 			// Every way the input can end lands here (Enter runs onDone first,
@@ -13097,8 +13092,7 @@ public class FollowerPlugin extends Plugin
 				}
 				else if (!named[0])
 				{
-					sendStatus("No name for now, then. You can change the name"
-						+ " any time in the plugin's settings, under Follower.");
+					sendStatus(Resources.text("noName"));
 				}
 			})
 			.build();
@@ -13203,7 +13197,7 @@ public class FollowerPlugin extends Plugin
 		}
 		setConfig("firstSpawnNoticeShown", true);
 		sendStatus("Only you can see " + followerName()
-			+ ". Everything it does happens on your screen, and nothing is sent to the game.");
+			+ Resources.text("onlyYourScreen"));
 		sendStatus("Type ::follower in chat for commands.");
 	}
 
@@ -13219,7 +13213,7 @@ public class FollowerPlugin extends Plugin
 			return;
 		}
 		setConfig("sendHintShown", true);
-		sendStatus("You can also hold Shift and right-click any tile to Send "
+		sendStatus(Resources.text("sendHint")
 			+ followerName() + " there.");
 	}
 

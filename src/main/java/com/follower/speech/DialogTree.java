@@ -1,5 +1,6 @@
 package com.follower.speech;
 
+import com.follower.Resources;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -146,7 +147,7 @@ public class DialogTree
 			if (node.answer != null && !node.answer.matches("[a-zA-Z0-9-]+"))
 			{
 				found.add(id + ": '" + node.id + "' answers '" + node.answer
-					+ "'; an answer is a single plain word for a rule to match on");
+					+ Resources.text("answerOneWord"));
 			}
 			if (node.pages().isEmpty() && node.choices == null && node.next == null)
 			{
@@ -167,7 +168,7 @@ public class DialogTree
 		}
 		if (!answerable)
 		{
-			found.add(id + ": no node answers anything, so nothing can come of it");
+			found.add(id + Resources.text("noAnswers"));
 		}
 
 		return found;
