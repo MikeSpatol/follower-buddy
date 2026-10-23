@@ -1,3 +1,4 @@
+// public:file spectate,spectate-keep-fight-lines
 package com.follower.follower;
 
 import com.follower.FollowerConfig;
@@ -140,7 +141,7 @@ public class SpectateSimulationTest
 	private FakeFollower follower;
 	private SpectateController spectate;
 	private List<TriggerEvent> spoken;
-	private List<Boolean> disarms;
+	private List<Boolean> disarms; // public:cut spectate-shield
 	private int tick;
 	/** Whether the player has parked the follower, as the plugin tells it. */
 	private boolean parked;
@@ -152,13 +153,16 @@ public class SpectateSimulationTest
 		context = new TriggerContext(game.client);
 		follower = new FakeFollower();
 		spoken = new ArrayList<>();
-		disarms = new ArrayList<>();
+		disarms = new ArrayList<>(); // public:cut spectate-shield
 
+		// public:cut spectate-shield
 		SpotAnimRepository spotAnims = new SpotAnimRepository(new Gson());
-		spotAnims.load(folder.newFolder().toPath());
+		spotAnims.load(folder.newFolder().toPath()); // public:cut devdump
+		// public:end spectate-shield
 
 		spectate = new SpectateController(game.client, follower, config(),
-			() -> context, spotAnims, spoken::add, disarms::add);
+			() -> context, spotAnims, spoken::add, disarms::add); // public:cut spectate-shield
+			// public:else () -> context, spoken::add);
 	}
 
 	/** The shipped defaults, which is what a player will actually be running. */
@@ -238,7 +242,8 @@ public class SpectateSimulationTest
 		// supplier, so it sees whichever context the engine currently owns.
 		TriggerContext[] live = {context};
 		spectate = new SpectateController(game.client, follower, config(),
-			() -> live[0], new SpotAnimRepository(new Gson()), spoken::add, disarms::add);
+			() -> live[0], new SpotAnimRepository(new Gson()), spoken::add, disarms::add); // public:cut spectate-shield
+			// public:else () -> live[0], spoken::add);
 
 		// A relog: the engine throws its context away and starts a fresh one.
 		live[0] = new TriggerContext(game.client);
@@ -479,6 +484,7 @@ public class SpectateSimulationTest
 		assertEquals(0, panics());
 	}
 
+	// public:cut skilling
 	@Test
 	public void withTheCompanySwitchedOffASuperiorIsJustAnotherFight()
 	{
@@ -491,7 +497,8 @@ public class SpectateSimulationTest
 			}
 		};
 		SpectateController plain = new SpectateController(game.client, follower,
-			off, () -> context, new SpotAnimRepository(new Gson()), spoken::add, disarms::add);
+			off, () -> context, new SpotAnimRepository(new Gson()), spoken::add, disarms::add); // public:cut spectate-shield
+			// public:else off, () -> context, spoken::add);
 
 		NPC superior = fight("Marble gargoyle", 349);
 		game.moveNpc(superior, 3210, 3218, 0);
@@ -509,6 +516,7 @@ public class SpectateSimulationTest
 		assertEquals("and no panic", 0, panics());
 	}
 
+	// public:end skilling
 	@Test
 	public void theFightEndingSendsItBackAndSaysSo()
 	{
@@ -575,15 +583,17 @@ public class SpectateSimulationTest
 		// fight still going.
 		fight("Zulrah", 725);
 		tick(6);
-		assertFalse("the ward is up", disarms.isEmpty());
+		assertFalse("the ward is up", disarms.isEmpty()); // public:cut spectate-shield
 		WorldPoint seat = follower.stayingAt;
 
 		parked = true;
 		tick(3);
 		assertEquals("no goodbye mid-fight", 0, said(TriggerEvent.Type.COMBAT_END));
 		assertEquals("parked where it stood", seat, follower.stayingAt);
+		// public:cut spectate-shield
 		assertEquals("the ward dropped", 0, follower.poseOverride);
 		assertEquals("and the weapon back", Boolean.FALSE, disarms.get(disarms.size() - 1));
+		// public:end spectate-shield
 		assertFalse(spectate.holdsTheFeet());
 
 		game.fighting(null);
@@ -617,6 +627,7 @@ public class SpectateSimulationTest
 		assertFalse(spectate.isSpectating());
 	}
 
+	// public:cut spectate-shield
 	// ---------------------------------------------------------------- shield
 
 	@Test
@@ -762,6 +773,7 @@ public class SpectateSimulationTest
 			follower.spotAnims.size() >= afterSummon);
 	}
 
+	// public:end spectate-shield
 	@Test
 	public void switchingItOffMidFightPutsEverythingBack()
 	{
@@ -774,7 +786,8 @@ public class SpectateSimulationTest
 			}
 		};
 		SpectateController disabled = new SpectateController(game.client, follower,
-			off, () -> context, new SpotAnimRepository(new Gson()), spoken::add, disarms::add);
+			off, () -> context, new SpotAnimRepository(new Gson()), spoken::add, disarms::add); // public:cut spectate-shield
+			// public:else off, () -> context, spoken::add);
 
 		fight("Zulrah", 725);
 		for (int i = 0; i < 10; i++)
@@ -786,8 +799,9 @@ public class SpectateSimulationTest
 		}
 
 		assertFalse("the setting is off", disabled.isSpectating());
-		assertTrue("nothing should have been taken away", disarms.isEmpty());
+		assertTrue("nothing should have been taken away", disarms.isEmpty()); // public:cut spectate-shield
 	}
+	// public:cut dev
 
 	// ------------------------------------------------------------ diagnostics
 
@@ -801,6 +815,7 @@ public class SpectateSimulationTest
 		assertTrue("the report should name what it is doing: " + busy,
 			busy.contains("spectating=true"));
 	}
+	// public:end dev
 
 	@Test
 	public void aLongFightDoesNotAccumulateAnything()

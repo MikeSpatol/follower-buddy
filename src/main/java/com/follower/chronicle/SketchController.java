@@ -1,3 +1,4 @@
+// public:file chronicle
 package com.follower.chronicle;
 
 import com.follower.follower.ErrandController;
@@ -8,7 +9,7 @@ import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.ArrayList; // public:cut dev
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -472,7 +473,8 @@ public class SketchController
 	 */
 	public String askForSketch()
 	{
-		String refused = takeOutTheScroll(true, new ArrayList<>());
+		String refused = takeOutTheScroll(true, new ArrayList<>()); // public:cut dev
+		// public:else String refused = takeOutTheScroll();
 		if (refused != null)
 		{
 			return refused;
@@ -489,6 +491,7 @@ public class SketchController
 		return null;
 	}
 
+	// public:cut dev
 	/**
 	 * ::follower force sketch: this view sketched now, without the count.
 	 * A place already drawn is drawn again, and whatever is on disk for it
@@ -511,6 +514,7 @@ public class SketchController
 			: "; the old one is kept as " + String.join(", ", kept) + ".");
 	}
 
+	// public:end dev
 	/**
 	 * The scroll out and the place chosen, for either way of asking, each
 	 * refusal in its own words: the scribe's when you asked, the chat
@@ -519,21 +523,25 @@ public class SketchController
 	 * @param kept filled with the backups' names
 	 * @return why not, or null with the scroll out and the place chosen
 	 */
-	private String takeOutTheScroll(boolean asking, List<String> kept)
+	private String takeOutTheScroll(boolean asking, List<String> kept) // public:cut dev
+	// public:else private String takeOutTheScroll()
 	{
 		if (stage != Stage.WAITING)
 		{
-			return asking ? NOT_NOW : "Already sketching.";
+			return asking ? NOT_NOW : "Already sketching."; // public:cut dev
+			// public:else return NOT_NOW;
 		}
 		if (busy.getAsBoolean() || !follower.isSpawned() || !follower.isSettled())
 		{
-			return asking ? NOT_NOW : "The follower is busy.";
+			return asking ? NOT_NOW : "The follower is busy."; // public:cut dev
+			// public:else return NOT_NOW;
 		}
 		// A tool kept between trees is still in the hand, and the scroll
 		// would take its place: whichever is out first keeps it.
 		if (hands.isHolding())
 		{
-			return asking ? HANDS_FULL : "The follower's hands are full.";
+			return asking ? HANDS_FULL : "The follower's hands are full."; // public:cut dev
+			// public:else return HANDS_FULL;
 		}
 		int regionId = region.getAsInt();
 		String here = wanted(loader.getEntries(), regionId,
@@ -545,33 +553,39 @@ public class SketchController
 		}
 		if (here == null)
 		{
-			return asking ? NOTHING_HERE : "No page sketches this place (region " + regionId + ").";
+			return asking ? NOTHING_HERE : "No page sketches this place (region " + regionId + ")."; // public:cut dev
+			// public:else return NOTHING_HERE;
 		}
 		if (drawing.contains(here))
 		{
-			return asking ? NOT_NOW : "Still drawing the last sketch of " + here + ".";
+			return asking ? NOT_NOW : "Still drawing the last sketch of " + here + "."; // public:cut dev
+			// public:else return NOT_NOW;
 		}
 		hands.hold(ErrandController.QUILL_PROP, ErrandController.SCROLL_PROP);
 		if (!hands.isHolding())
 		{
-			return asking ? NOT_NOW : "The scroll would not come out.";
+			return asking ? NOT_NOW : "The scroll would not come out."; // public:cut dev
+			// public:else return NOT_NOW;
 		}
 		// Backed up once the scroll is out: taken first, the copies of an
 		// attempt that never began were left on disk and never mentioned.
 		try
 		{
-			kept.addAll(book.backUp(here));
+			kept.addAll(book.backUp(here)); // public:cut dev
+			// public:else book.backUp(here);
 		}
 		catch (IOException | RuntimeException e)
 		{
 			hands.release();
 			log.warn("Could not back up the sketch of {}", here, e);
-			return asking ? NO_BACKUP : "Could not back up the old sketch of " + here + ", so it is left alone.";
+			return asking ? NO_BACKUP : "Could not back up the old sketch of " + here + ", so it is left alone."; // public:cut dev
+			// public:else return NO_BACKUP;
 		}
 		follower.setPoseOverride(ErrandController.WRITE_SCROLL_POSE);
 		key = here;
 		ticks = 0;
-		asked = asking;
+		asked = asking; // public:cut dev
+		// public:else asked = true;
 		pose = -1;
 		return null;
 	}

@@ -1,5 +1,6 @@
 package com.follower.follower;
 
+// public:cut errands
 import com.follower.FollowerConfig;
 import com.follower.speech.TriggerEvent;
 import java.util.ArrayList;
@@ -9,16 +10,22 @@ import java.util.Random;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
+// public:end errands
 import net.runelite.api.Client;
+// public:cut errands
 import net.runelite.api.GameObject;
 import net.runelite.api.NPC;
+// public:end errands
 import net.runelite.api.ObjectComposition;
+// public:cut errands
 import net.runelite.api.Player;
 import net.runelite.api.Scene;
 import net.runelite.api.Tile;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
+// public:end errands
 
+// public:cut errands
 /**
  * Little life errands: now and then the follower notices something nearby - a
  * bank, an altar, a fire, a cat - announces itself, walks over, has its
@@ -30,9 +37,12 @@ import net.runelite.api.coords.WorldPoint;
  * <p>Errands must never cost the player anything: combat, dialogs, thrall
  * mode, the Wilderness, or the player simply leaving all abort or suppress.
  */
-@Slf4j
+// public:end errands
+@Slf4j // public:cut errands
+// public:else /** The writing pose and its props, the shared prop hands, and the multiloc-aware object name. */
 public class ErrandController
 {
+	// public:cut errands
 	/** The errand types; names match the rule {@code names} lists. */
 	private enum Errand
 	{
@@ -69,6 +79,7 @@ public class ErrandController
 		IDLE, TRAVELING, DOING, RETURNING
 	}
 
+	// public:end errands
 	/**
 	 * Writing in a scroll with a quill, the pose the Advanced posing window
 	 * shows as Write with a quill. The animation is authored to play once,
@@ -90,6 +101,7 @@ public class ErrandController
 	public static final int QUILL_PROP = 31829;
 	public static final int SCROLL_PROP = 31830;
 
+	// public:cut errands
 	/**
 	 * What the scribe considers worth walking over to.
 	 *
@@ -161,6 +173,7 @@ public class ErrandController
 		return names;
 	}
 
+	// public:end errands
 	/**
 	 * What holds the prop. Implemented by the plugin, which owns the follower's
 	 * composed appearance; the errand only says when the scroll comes out and
@@ -191,6 +204,7 @@ public class ErrandController
 		 * the flourish skips its scroll over a tool, the borrow skips its
 		 * tool over a scroll. Default false for hands that never say.
 		 */
+		// public:cut skilling
 		/**
 		 * Puts something on, in a slot other than the hand: the hat of a
 		 * skilling outfit while the tool stays in the hand. Hands that only
@@ -210,11 +224,13 @@ public class ErrandController
 			return false;
 		}
 
+		// public:end skilling
 		default boolean isHolding()
 		{
 			return false;
 		}
 	}
+	// public:cut errands
 
 	/**
 	 * Praying at an altar: HUMAN_PRAY_LOOP held as a pose, which kneels and
@@ -339,9 +355,11 @@ public class ErrandController
 	/** Test hook: run an errand now - a specific one by name, or any ("*"). */
 	public void force(String key)
 	{
-		force(key, false);
+		force(key, false); // public:cut skilling
+		// public:else forceKey = key == null || key.isEmpty() ? "*" : key.toLowerCase(java.util.Locale.ROOT);
 	}
 
+	// public:cut skilling
 	/**
 	 * As {@link #force(String)}, with the option of nobody hearing of it.
 	 *
@@ -358,6 +376,7 @@ public class ErrandController
 	/** Whether the forced errand waiting to run keeps its lines to itself. */
 	private boolean forceSilently;
 
+	// public:end skilling
 	/**
 	 * Told the key of a forced errand that could not start where the follower
 	 * is. The command that asked for it promised a run, so the player hears
@@ -383,16 +402,21 @@ public class ErrandController
 		this.session = session;
 	}
 
+	// public:cut skilling
 	/** Whether the errand under way says nothing at either end. */
 	private boolean silent;
 
+	// public:end skilling
 	/** The errand's start or end, unless this run was asked to keep quiet. */
 	private void announce(TriggerEvent event)
 	{
-		if (!silent)
+		if (!silent) // public:cut skilling
+		// public:else dispatch.accept(event);
+		// public:cut skilling
 		{
 			dispatch.accept(event);
 		}
+		// public:end skilling
 	}
 
 	private final Hands hands;
@@ -454,7 +478,7 @@ public class ErrandController
 			// One asked for before errands were switched off is not owed
 			// whenever they next come back on.
 			forceKey = null;
-			forceSilently = false;
+			forceSilently = false; // public:cut skilling
 			return;
 		}
 
@@ -531,8 +555,10 @@ public class ErrandController
 			String key = forceKey;
 			forceKey = null;
 			// Set before the start, since the start is what announces it.
+			// public:cut skilling
 			silent = forceSilently;
 			forceSilently = false;
+			// public:end skilling
 			if (clearToStart())
 			{
 				for (Errand errand : Errand.values())
@@ -543,13 +569,18 @@ public class ErrandController
 					}
 				}
 			}
+			// public:cut skilling
 			boolean quiet = silent;
 			silent = false;
-			log.debug("Forced errand '{}' could not start here", key);
-			if (!quiet)
+			// public:end skilling
+			log.debug("Forced errand '{}' could not start here", key); // public:cut logs
+			if (!quiet) // public:cut skilling
+			// public:else onForcedMiss.accept(key);
+			// public:cut skilling
 			{
 				onForcedMiss.accept(key);
 			}
+			// public:end skilling
 			return;
 		}
 
@@ -664,7 +695,8 @@ public class ErrandController
 				// Most banks have booth/chest OBJECTS; the Grand Exchange has
 				// only banker NPCs (measured by scan - no booth object there).
 				WorldPoint bank = findObject(
-					name -> SkillingController.BANK_NAMES.test(name)
+					name -> SkillingController.BANK_NAMES.test(name) // public:cut skilling
+					// public:else name -> "Bank booth".equalsIgnoreCase(name) || "Bank chest".equalsIgnoreCase(name)
 						|| name.equals("Grand Exchange booth"));
 				if (bank == null)
 				{
@@ -712,7 +744,7 @@ public class ErrandController
 				announce(TriggerEvent.errand(TriggerEvent.Type.ERRAND_START, errand.key));
 				state = State.DOING;
 				waitTicks = 6;
-				log.debug("Errand started: {}", errand.key);
+				log.debug("Errand started: {}", errand.key); // public:cut logs
 				return true;
 			}
 			case STUDY:
@@ -759,7 +791,7 @@ public class ErrandController
 				announce(TriggerEvent.errand(TriggerEvent.Type.ERRAND_START, errand.key));
 				state = State.DOING;
 				waitTicks = 12 + random.nextInt(8);
-				log.debug("Errand started: {}", errand.key);
+				log.debug("Errand started: {}", errand.key); // public:cut logs
 				return true;
 			}
 			case GLANCE:
@@ -824,7 +856,7 @@ public class ErrandController
 					TriggerEvent.Type.ERRAND_START, currentSiteKey));
 				state = State.TRAVELING;
 				waitTicks = TRAVEL_TIMEOUT_TICKS;
-				log.debug("Errand started: {} at {}", currentSiteKey, target);
+				log.debug("Errand started: {} at {}", currentSiteKey, target); // public:cut logs
 				return true;
 			}
 		}
@@ -859,7 +891,7 @@ public class ErrandController
 				announce(TriggerEvent.errand(TriggerEvent.Type.ERRAND_START, errand.key));
 				state = State.TRAVELING;
 				waitTicks = TRAVEL_TIMEOUT_TICKS;
-				log.debug("Errand started: {} beside {}", errand.key, target);
+				log.debug("Errand started: {} beside {}", errand.key, target); // public:cut logs
 				return true;
 			}
 		}
@@ -889,7 +921,7 @@ public class ErrandController
 		announce(TriggerEvent.errand(TriggerEvent.Type.ERRAND_START, announce));
 		state = State.TRAVELING;
 		waitTicks = TRAVEL_TIMEOUT_TICKS;
-		log.debug("Errand started: {} toward {}", errand.key, target);
+		log.debug("Errand started: {} toward {}", errand.key, target); // public:cut logs
 		return true;
 	}
 
@@ -982,7 +1014,7 @@ public class ErrandController
 		Errand done = current;
 		follower.resumeFollowing();
 		announce(TriggerEvent.errand(TriggerEvent.Type.ERRAND_END, endKey(done)));
-		log.debug("Errand finished: {}", endKey(done));
+		log.debug("Errand finished: {}", endKey(done)); // public:cut logs
 		clearErrand();
 	}
 
@@ -1006,7 +1038,7 @@ public class ErrandController
 		follower.playSpotAnim(spotAnims.get(TELEPORT_REVERSE_SPOTANIM),
 			FollowerEntity.TELEPORT_GRAPHIC_HEIGHT);
 		announce(TriggerEvent.errand(TriggerEvent.Type.ERRAND_END, endKey(done)));
-		log.debug("Errand finished: {}", endKey(done));
+		log.debug("Errand finished: {}", endKey(done)); // public:cut logs
 		clearErrand();
 	}
 
@@ -1074,7 +1106,7 @@ public class ErrandController
 		{
 			follower.teleportToPlayer();
 		}
-		log.debug("Errand aborted: {}", current);
+		log.debug("Errand aborted: {}", current); // public:cut logs
 		clearErrand();
 	}
 
@@ -1083,7 +1115,7 @@ public class ErrandController
 		state = State.IDLE;
 		current = null;
 		currentSiteKey = null;
-		silent = false;
+		silent = false; // public:cut skilling
 		targetTile = null;
 		errandSite = null;
 		nextRollTicks = scheduleTicks();
@@ -1130,6 +1162,7 @@ public class ErrandController
 
 	// -------------------------------------------------------------- scanning
 
+	// public:cut dev
 	/** Measurement aid: logs every distinct object and NPC name in scan range. */
 	public void debugScan()
 	{
@@ -1139,16 +1172,17 @@ public class ErrandController
 			names.add(name);
 			return false;
 		});
-		log.info("Errand scan, objects in range: {}", names);
+		log.info("Errand scan, objects in range: {}", names); // public:cut logs
 		java.util.Set<String> npcs = new java.util.TreeSet<>();
 		findNpc(name ->
 		{
 			npcs.add(name);
 			return false;
 		});
-		log.info("Errand scan, npcs in range: {}", npcs);
+		log.info("Errand scan, npcs in range: {}", npcs); // public:cut logs
 	}
 
+	// public:end dev
 	/** The nearest matching scene object's tile within the search radius, or null. */
 	private WorldPoint findObject(java.util.function.Predicate<String> nameMatch)
 	{
@@ -1212,6 +1246,7 @@ public class ErrandController
 		return best;
 	}
 
+	// public:end errands
 	/**
 	 * An object's real name, resolving multilocs.
 	 *
@@ -1242,6 +1277,7 @@ public class ErrandController
 		}
 		return name == null || name.equals("null") ? null : name;
 	}
+	// public:cut errands
 
 	/** The nearest matching NPC's tile within the search radius, or null. */
 	private WorldPoint findNpc(java.util.function.Predicate<String> nameMatch)
@@ -1349,4 +1385,5 @@ public class ErrandController
 				return 2400;
 		}
 	}
+	// public:end errands
 }

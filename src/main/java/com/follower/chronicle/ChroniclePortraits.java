@@ -1,6 +1,7 @@
+// public:file chronicle
 package com.follower.chronicle;
 
-import com.follower.ui.ChatheadRenderer;
+import com.follower.ui.ChatheadRenderer; // public:cut chathead
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -99,8 +100,9 @@ public class ChroniclePortraits
 		// next pose anyone asks for, so it is drawn now and never kept; the
 		// model at rest is its frame reference, as the dialog's head is.
 		Model posed = idle == null ? null : client.applyTransformations(model, idle, frameAt(idle, nowMs), null, 0);
-		BufferedImage image = ChatheadRenderer.render(posed == null ? model : posed, model, width, height,
-			yaw, PITCH, frame[0], 1.0, frame[1], frame[2]);
+		BufferedImage image = ChatheadRenderer.render(posed == null ? model : posed, model, width, height, // public:cut chathead
+		// public:else BufferedImage image = null;
+			yaw, PITCH, frame[0], 1.0, frame[1], frame[2]); // public:cut chathead
 		return unseen && image != null ? silhouette(image) : image;
 	}
 
@@ -194,7 +196,7 @@ public class ChroniclePortraits
 		}
 		catch (RuntimeException e)
 		{
-			log.debug("Could not load idle animation {}", id, e);
+			log.debug("Could not load idle animation {}", id, e); // public:cut logs
 		}
 		boolean playable = loaded != null && (loaded.isMayaAnim()
 			? loaded.getDuration() > 0
@@ -222,7 +224,7 @@ public class ChroniclePortraits
 		}
 		catch (RuntimeException e)
 		{
-			log.debug("Could not build a portrait of NPC {}", npcId, e);
+			log.debug("Could not build a portrait of NPC {}", npcId, e); // public:cut logs
 		}
 		if (built == null)
 		{
@@ -377,7 +379,8 @@ public class ChroniclePortraits
 			Model model = pose.get();
 			for (int step = 0; step < 8; step++)
 			{
-				int[] box = ChatheadRenderer.drawnBounds(model, step * 256, PITCH, zoom, ax, ay);
+				int[] box = ChatheadRenderer.drawnBounds(model, step * 256, PITCH, zoom, ax, ay); // public:cut chathead
+				// public:else int[] box = null;
 				if (box == null)
 				{
 					continue;

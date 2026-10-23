@@ -1,3 +1,4 @@
+// public:file company-extras,will
 package com.follower.follower;
 
 import com.follower.speech.TriggerEvent;
@@ -83,9 +84,11 @@ public class Will
 	private int goOnAt;
 	private final Set<String> hesitatedAt = new HashSet<>();
 
+	// public:cut dev
 	/** Set by ::follower force hesitate: the next Send is wary of any NPC beside its spot. */
 	private boolean wary;
 
+	// public:end dev
 	private WorldPoint lastPlayerTile;
 	private int steppedAsideAt = -1000;
 
@@ -110,8 +113,10 @@ public class Will
 	 */
 	public boolean send(WorldPoint target)
 	{
+		// public:cut dev
 		boolean forced = wary;
 		wary = false;
+		// public:end dev
 		pending = null;
 		misgiving = null;
 		// A tile with a fire on it, or a booth or table in it that the map
@@ -138,7 +143,8 @@ public class Will
 		}
 		else
 		{
-			NPC monster = monsterBeside(target, local, forced);
+			NPC monster = monsterBeside(target, local, forced); // public:cut dev
+			// public:else NPC monster = monsterBeside(target, local);
 			// A monster with no name gives the line nothing to say: "Next to
 			// the that?" So it simply goes.
 			if (monster != null && monster.getName() != null)
@@ -149,7 +155,8 @@ public class Will
 				key = "monster:" + monster.getIndex();
 			}
 		}
-		if (about == null || edge == null || (hesitatedAt.contains(key) && !forced)
+		if (about == null || edge == null || (hesitatedAt.contains(key) && !forced) // public:cut dev
+		// public:else if (about == null || edge == null || hesitatedAt.contains(key)
 			|| !follower.stayAt(edge))
 		{
 			return follower.stayAt(target);
@@ -160,7 +167,7 @@ public class Will
 		follower.setStayFaceTile(here);
 		goOnAt = client.getTickCount() + from.distanceTo(edge) + HESITATE_TICKS;
 		events.accept(TriggerEvent.hesitated(about.key, thing));
-		log.debug("Sent to {} with a misgiving ({}); stopping at {} first", target, about, edge);
+		log.debug("Sent to {} with a misgiving ({}); stopping at {} first", target, about, edge); // public:cut logs
 		return true;
 	}
 
@@ -178,7 +185,8 @@ public class Will
 		}
 		WorldPoint best = target;
 		int nearest = Integer.MAX_VALUE;
-		for (WorldPoint spot : SkillingController.ring(target, target, 1, target.getPlane()))
+		for (WorldPoint spot : SkillingController.ring(target, target, 1, target.getPlane())) // public:cut skilling
+		// public:else for (WorldPoint spot : FollowerEntity.ring(target, target, 1, target.getPlane()))
 		{
 			int away = from == null ? 0 : spot.distanceTo(from);
 			if (follower.goodGround(spot) && !follower.furnished(spot) && away < nearest)
@@ -202,7 +210,8 @@ public class Will
 	 * An NPC beside the target that outclasses the player, or null; with
 	 * {@code anyLevel}, any NPC beside it, as the force-path asks.
 	 */
-	private NPC monsterBeside(WorldPoint target, Player local, boolean anyLevel)
+	private NPC monsterBeside(WorldPoint target, Player local, boolean anyLevel) // public:cut dev
+	// public:else private NPC monsterBeside(WorldPoint target, Player local)
 	{
 		net.runelite.api.WorldView view = client.getTopLevelWorldView();
 		if (view == null || local == null)
@@ -214,7 +223,8 @@ public class Will
 		{
 			WorldPoint at = npc == null ? null : npc.getWorldLocation();
 			if (at == null || npc == local.getInteracting()
-				|| (npc.getCombatLevel() < level + MONSTER_MARGIN && !anyLevel)
+				|| (npc.getCombatLevel() < level + MONSTER_MARGIN && !anyLevel) // public:cut dev
+				// public:else || npc.getCombatLevel() < level + MONSTER_MARGIN
 				|| at.getPlane() != target.getPlane() || at.distanceTo(target) > MONSTER_WITHIN)
 			{
 				continue;
@@ -236,7 +246,8 @@ public class Will
 		}
 		WorldPoint best = null;
 		long bestScore = Long.MAX_VALUE;
-		for (WorldPoint spot : SkillingController.ring(target, target, steps, target.getPlane()))
+		for (WorldPoint spot : SkillingController.ring(target, target, steps, target.getPlane())) // public:cut skilling
+		// public:else for (WorldPoint spot : FollowerEntity.ring(target, target, steps, target.getPlane()))
 		{
 			long ddx = spot.getX() - from.getX();
 			long ddy = spot.getY() - from.getY();
@@ -250,6 +261,7 @@ public class Will
 		return best;
 	}
 
+	// public:cut dev
 	/**
 	 * ::follower force hesitate: the next Send hesitates over any NPC beside
 	 * its spot as it would over one that outclassed the player, even one it
@@ -263,6 +275,7 @@ public class Will
 		wary = true;
 	}
 
+	// public:end dev
 	/** Whether a Send is paused at its edge. */
 	public boolean isHesitating()
 	{
@@ -352,7 +365,7 @@ public class Will
 			{
 				steppedAsideAt = now;
 				events.accept(TriggerEvent.simple(TriggerEvent.Type.STEPPED_ASIDE));
-				log.debug("Walked at: a step aside to {}", spot);
+				log.debug("Walked at: a step aside to {}", spot); // public:cut logs
 				return;
 			}
 		}
@@ -364,7 +377,7 @@ public class Will
 		pending = null;
 		misgiving = null;
 		hesitatedAt.clear();
-		wary = false;
+		wary = false; // public:cut dev
 		lastPlayerTile = null;
 		steppedAsideAt = -1000;
 	}

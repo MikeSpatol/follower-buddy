@@ -289,8 +289,10 @@ public class RuleLoader
 					java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 				Files.write(file,
 					(pretty.toJson(ours) + "\n").getBytes(StandardCharsets.UTF_8));
+				// public:cut logs
 				log.info("Merged {} new rule(s), {} changed rule(s), {} dropped rule(s), {} nickname(s) and {} place name(s) into {}",
 					added, updated, dropped, nicknamesAdded, placesAdded, file);
+				// public:end logs
 			}
 
 			// Written whether or not anything moved, and last, so a merge that
@@ -916,8 +918,10 @@ public class RuleLoader
 		spawnRules = spawning;
 
 		status = summary + (problems.isEmpty() ? "" : ", " + problems.size() + " warning(s)");
+		// public:cut logs
 		log.info("Loaded rules: {}", status);
 		log.debug("Flood events with listeners: {}", listened);
+		// public:end logs
 	}
 
 	private void writeDefaults()
@@ -931,7 +935,7 @@ public class RuleLoader
 			}
 			Files.createDirectories(file.getParent());
 			Files.copy(in, file);
-			log.info("Wrote starter rules to {}", file);
+			log.info("Wrote starter rules to {}", file); // public:cut logs
 		}
 		catch (IOException e)
 		{

@@ -51,6 +51,7 @@ public class SnapEndsTheErrandTest
 		}
 	}
 
+	// public:cut errands
 	/** An errand under way, as far as the plugin can see. */
 	private static final class Errand extends ErrandController
 	{
@@ -76,6 +77,7 @@ public class SnapEndsTheErrandTest
 		}
 	}
 
+	// public:end errands
 	private FollowerPlugin plugin;
 	private Feet feet;
 	private boolean holding;
@@ -136,6 +138,7 @@ public class SnapEndsTheErrandTest
 		assertTrue("and the follower its own again", feet.released);
 	}
 
+	// public:cut errands
 	@Test
 	public void anErrandEndsWithTheSnap() throws ReflectiveOperationException
 	{
@@ -147,15 +150,18 @@ public class SnapEndsTheErrandTest
 		assertTrue("ended in the frame, not on the next tick", errand.reset);
 	}
 
+	// public:end errands
 	@Test
 	public void aSnapWithNothingUnderWayTouchesNothing() throws ReflectiveOperationException
 	{
+		// public:cut errands
 		Errand errand = new Errand();
 		errand.reset = false;
 		errand.busy = false;
 		set("errands", errand);
+		// public:end errands
 		snapped();
-		assertFalse("no fresh schedule for an errand that was never under way", errand.reset);
+		assertFalse("no fresh schedule for an errand that was never under way", errand.reset); // public:cut errands
 		assertFalse(feet.released);
 	}
 

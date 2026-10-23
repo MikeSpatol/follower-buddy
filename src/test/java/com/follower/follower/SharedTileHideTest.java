@@ -143,7 +143,7 @@ public class SharedTileHideTest
 				return type == boolean.class ? false : type == int.class ? 0 : null;
 			});
 		follower.setSpawnAnimation(new int[0]);
-		follower.spawn(new ComposedAppearance(model, ComposedAppearance.Source.DUMP, new Outfit()),
+		follower.spawn(new ComposedAppearance(model, new Outfit()),
 			new WorldPoint(49, 50, 0), null, 0);
 		follower.updateFrame();
 	}

@@ -47,11 +47,14 @@ import net.runelite.api.coords.WorldPoint;
  */
 @Slf4j
 @Singleton
-public class FollowerEntity implements CrossingWatch.Listener
+public class FollowerEntity implements CrossingWatch.Listener // public:cut agility,agility-all
+// public:else public class FollowerEntity
 {
+	// public:cut dev
 	/** Local (fine) units per tile. */
 	private static final int TILE = Perspective.LOCAL_TILE_SIZE;
 
+	// public:end dev
 	/** One client cycle: the clock every routeMove constant is expressed in. */
 	private static final int CYCLE_MS = 20;
 
@@ -65,10 +68,6 @@ public class FollowerEntity implements CrossingWatch.Listener
 	private final StanceLibrary stanceLibrary;
 
 	private RuneLiteObject object;
-
-	/** Animations the follower plays, so they can be opted into interpolation. */
-	private final java.util.Set<Integer> animationIds =
-		java.util.concurrent.ConcurrentHashMap.newKeySet();
 
 	/** The follower's rendered tile - where the fine position has reached. */
 	private WorldPoint tile;
@@ -385,7 +384,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 	private boolean animatable;
 	private boolean emotePlaying;
 	private boolean needsReattach;
-	private int controllerGeneration;
+	private int controllerGeneration; // public:cut dev
 	private int poseOverride;
 	private int wrapTrim = 1;
 
@@ -485,7 +484,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		// prioritySort=true (plain SORTED is not special-cased at all).
 		object.setRenderMode(net.runelite.api.Renderable.RENDERMODE_SORTED_NO_DEPTH);
 
-		animatable = appearance.isAnimatable();
+		animatable = true;
 		object.setModel(appearance.getModel());
 		// Keep the unposed model: measuring wrap points needs to pose it at arbitrary
 		// frames, and getModel() returns the already-animated one.
@@ -591,14 +590,14 @@ public class FollowerEntity implements CrossingWatch.Listener
 		stayTile = null;
 		releaseAfterCast = false;
 		stayFaceTile = null;
-		stayFaceMax = null;
+		stayFaceMax = null; // public:cut skilling
 		goalTile = null;
 		route.clear();
 		routeRun.clear();
 		serverPath.clear();
 		lastSeenPlayerTile = null;
 		playerFollowTile = null;
-		dropCrossings();
+		dropCrossings(); // public:cut agility,agility-all
 		spawned = false;
 		activePose = -1;
 	}
@@ -610,7 +609,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		{
 			return;
 		}
-		animatable = appearance.isAnimatable();
+		animatable = true;
 		object.setModel(appearance.getModel());
 		// Keep the unposed model: measuring wrap points needs to pose it at arbitrary
 		// frames, and getModel() returns the already-animated one.
@@ -624,10 +623,13 @@ public class FollowerEntity implements CrossingWatch.Listener
 			object.setAnimationController(null);
 			activePose = -1;
 		}
-		else if (playing == null || activePose >= 0)
+		else if (playing == null || activePose >= 0) // public:cut agility,agility-all
+		// public:else else
 		{
+			// public:cut agility,agility-all
 			// Not under a crossing's clip, which keeps running on the new
 			// model: a stand put up here would show for a frame.
+			// public:end agility,agility-all
 			applyPose(activePose < 0 ? PlayerPose.IDLE : activePose, true);
 		}
 	}
@@ -779,7 +781,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		// the stay was looking at.
 		stayTile = null;
 		stayFaceTile = null;
-		stayFaceMax = null;
+		stayFaceMax = null; // public:cut skilling
 		goalTile = front;
 		serverPath.clear();
 		return true;
@@ -814,12 +816,14 @@ public class FollowerEntity implements CrossingWatch.Listener
 		return stayTile;
 	}
 
+	// public:cut skilling
 	/** Whether it has finished turning to the way it means to face. */
 	public boolean isTurned()
 	{
 		return yaw == dstYaw;
 	}
 
+	// public:end skilling
 	/**
 	 * True when the follower has fully stopped: no queued route, and its fine
 	 * position rests at its tile's centre. An emote started before this is
@@ -832,12 +836,14 @@ public class FollowerEntity implements CrossingWatch.Listener
 			&& fineWY == tile.getY() * 128L + 64;
 	}
 
+	// public:cut dev
 	/** The model the object is rendering RIGHT NOW (post-animation), for diagnostics. */
 	public net.runelite.api.Model getRenderModel()
 	{
 		return object == null ? null : object.getModel();
 	}
 
+	// public:end dev
 	/**
 	 * A release asked for mid-cast, carried out when the cast ends: a teleport's
 	 * hold is only a stay, and anything let go of mid-cast (a flourish running
@@ -857,8 +863,8 @@ public class FollowerEntity implements CrossingWatch.Listener
 		releaseAfterCast = false;
 		stayTile = null;
 		stayFaceTile = null;
-		stayFaceMax = null;
-		insistedTile = null;
+		stayFaceMax = null; // public:cut skilling
+		insistedTile = null; // public:cut errands
 	}
 
 	/** The tick the scene was last kept, so the frame loop acts once a tick: NPC tiles move on ticks. */
@@ -954,15 +960,18 @@ public class FollowerEntity implements CrossingWatch.Listener
 	 */
 	private WorldPoint stayFaceTile;
 
+	// public:cut skilling
 	/** The far corner when the face is a footprint rather than a tile; null for a tile. */
 	private WorldPoint stayFaceMax;
 
+	// public:end skilling
 	public void setStayFaceTile(WorldPoint tile)
 	{
 		stayFaceTile = tile;
-		stayFaceMax = null;
+		stayFaceMax = null; // public:cut skilling
 	}
 
+	// public:cut skilling
 	/**
 	 * Faces the exact middle of a footprint, as the player does when they
 	 * work it. The middle of a two-by-two tree is the corner its four tiles
@@ -975,6 +984,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		stayFaceMax = max;
 	}
 
+	// public:end skilling
 	/**
 	 * The stay pose's idle facing: the face tile when set, the player
 	 * otherwise. Counting you in for a sketch it is you, even from a drift
@@ -982,10 +992,12 @@ public class FollowerEntity implements CrossingWatch.Listener
 	 */
 	private void faceStayAnchor()
 	{
-		if (stayFaceTile != null && tile != null && !facingThePlayer)
+		if (stayFaceTile != null && tile != null && !facingThePlayer) // public:cut chronicle
+		// public:else if (stayFaceTile != null && tile != null)
 		{
 			// In half tiles, so the middle of an even footprint is exact.
-			WorldPoint far = stayFaceMax == null ? stayFaceTile : stayFaceMax;
+			WorldPoint far = stayFaceMax == null ? stayFaceTile : stayFaceMax; // public:cut skilling
+			// public:else WorldPoint far = stayFaceTile;
 			int dx = 2 * tile.getX() - stayFaceTile.getX() - far.getX();
 			int dy = 2 * tile.getY() - stayFaceTile.getY() - far.getY();
 			if (dx != 0 || dy != 0)
@@ -1019,6 +1031,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 	/** Armed by the comedy death: at the emote's final frame, go dark this long. */
 	private int hideAfterEmoteMs;
 
+	// public:cut chronicle
 	/** Out of the frames drawn while set: the sketch's frame, which the scribe draws and is not in. */
 	@lombok.Setter
 	private boolean outOfPicture;
@@ -1026,6 +1039,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 	/** The body is out for the sketch's frame, not lost: it comes back where it stood. */
 	private boolean pictureHidden;
 
+	// public:end chronicle
 	/**
 	 * Arms a frame-accurate disappearance: the instant the current emote
 	 * finishes, the follower goes invisible for the given time - no standing
@@ -1067,10 +1081,10 @@ public class FollowerEntity implements CrossingWatch.Listener
 		strandedTicks = 0;
 		thrallNpc = npc;
 		lastThrallTile = null;
-		dropCrossings();
+		dropCrossings(); // public:cut agility,agility-all
 		stayTile = null;
 		stayFaceTile = null;
-		stayFaceMax = null;
+		stayFaceMax = null; // public:cut skilling
 		goalTile = null;
 		route.clear();
 		routeRun.clear();
@@ -1167,6 +1181,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		hotGround = hot == null ? at -> false : hot;
 	}
 
+	// public:cut errands
 	/**
 	 * The one tile the follower has been told to walk onto anyway. The
 	 * fire gag walks INTO the flames on purpose and is the only thing in
@@ -1174,9 +1189,11 @@ public class FollowerEntity implements CrossingWatch.Listener
 	 */
 	private WorldPoint insistedTile;
 
+	// public:end errands
 	/** Whether the last frame found the follower standing in a fire. */
 	private boolean inAFire;
 
+	// public:cut errands
 	/**
 	 * Walk onto it even so. Goes through {@link #stayAt} rather than round
 	 * it, so there is still one way to give the follower a spot.
@@ -1192,10 +1209,12 @@ public class FollowerEntity implements CrossingWatch.Listener
 		return went;
 	}
 
+	// public:end errands
 	/** Whether the follower walks round this tile rather than onto it. */
 	boolean hot(WorldPoint at)
 	{
-		return at != null && !at.equals(insistedTile) && hotGround.test(at);
+		return at != null && !at.equals(insistedTile) && hotGround.test(at); // public:cut errands
+		// public:else return at != null && hotGround.test(at);
 	}
 
 	/**
@@ -1208,6 +1227,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		return standable(at) && !hot(at);
 	}
 
+	// public:cut skilling
 	/**
 	 * Whether a wall or fence runs along this tile's edge on the given side:
 	 * a tree behind a fence is square on to the tile across it, and still
@@ -1227,6 +1247,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		return (flags & wall) != 0;
 	}
 
+	// public:end skilling
 	/** Whether the follower could stand on this tile at all. */
 	boolean standable(WorldPoint at)
 	{
@@ -1624,8 +1645,10 @@ public class FollowerEntity implements CrossingWatch.Listener
 		releaseAfterCast = false;
 		goalTile = null;
 		serverPath.clear();
+		// public:cut agility,agility-all
 		// Halfway along a log is not a place to stay: see finishCrossing.
 		stayGivenMidCrossing = playing != null ? tile : null;
+		// public:end agility,agility-all
 	}
 
 	/**
@@ -1646,12 +1669,14 @@ public class FollowerEntity implements CrossingWatch.Listener
 	 */
 	public boolean stayAt(WorldPoint target)
 	{
+		// public:cut errands
 		// The exception lives exactly as long as the destination it was
 		// granted for; any other destination ends it.
 		if (insistedTile != null && !insistedTile.equals(target))
 		{
 			insistedTile = null;
 		}
+		// public:end errands
 		java.util.List<WorldPoint> path = stayRoute(target);
 		if (path == null)
 		{
@@ -1678,6 +1703,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		return true;
 	}
 
+	// public:cut skilling
 	/**
 	 * Whether a stay here would end ON the tile rather than beside it, asked
 	 * without setting off. Closest approach calls stopping beside a rock, or
@@ -1708,6 +1734,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		return settled.equals(target) && restsOn(settled) ? path.size() : -1;
 	}
 
+	// public:end skilling
 	/**
 	 * Whether a stay may end on this tile: not in a fire, and not inside
 	 * furniture the map calls open floor.
@@ -1719,14 +1746,17 @@ public class FollowerEntity implements CrossingWatch.Listener
 	 * on it by closest approach to a blocked tile behind the counter. Asked
 	 * of where the stay ends, which covers both, and once a stay: the walk
 	 * there may still pass through.
+	// public:cut errands
 	 *
 	 * <p>The tile the follower was told to walk onto anyway is let off the
 	 * furniture as it is the fire. A fire is an object placed the way
 	 * furniture is and may well read as one, and the gag walks into it.
+	// public:end errands
 	 */
 	private boolean restsOn(WorldPoint settled)
 	{
-		return !hot(settled) && (settled.equals(insistedTile) || !furnished(settled));
+		return !hot(settled) && (settled.equals(insistedTile) || !furnished(settled)); // public:cut errands
+		// public:else return !hot(settled) && !furnished(settled);
 	}
 
 	/** The walk a stay would take to a tile, or null where it is refused outright. */
@@ -1778,6 +1808,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		return tile;
 	}
 
+	// public:cut agility,agility-all
 	// -------------------------------------------------------------------- agility
 
 	/*
@@ -1896,18 +1927,24 @@ public class FollowerEntity implements CrossingWatch.Listener
 	/** XP, a crossing queued or one finished since the last hop was expected. */
 	private boolean patienceRenewed;
 
+	// public:end agility,agility-all
+	// public:cut dev
 	/** The agility trace's event lines; nowhere unless the plugin says. */
 	private java.util.function.Consumer<String> agilityTrace = line -> { };
 
+	// public:end dev
 	/** Told when a snap lets the agility go, so XP for what was left behind rebuilds nothing. */
 	@lombok.Setter
 	private Runnable onAgilitySnap;
 
+	// public:cut dev
 	public void setAgilityTrace(java.util.function.Consumer<String> trace)
 	{
 		agilityTrace = trace == null ? line -> { } : trace;
 	}
 
+	// public:end dev
+	// public:cut agility,agility-all
 	/** The clock the watch stamps its recordings with: how far behind the player the follower is. */
 	private java.util.function.LongSupplier agilityClock = System::currentTimeMillis;
 
@@ -1939,6 +1976,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		}
 	}
 
+	// public:cut dev
 	/** What agility has the follower doing, in a few words, for the trace. */
 	public String describeAgility()
 	{
@@ -1963,6 +2001,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		return "follow" + hold;
 	}
 
+	// public:end dev
 	public boolean isPlayingCrossing()
 	{
 		return playing != null;
@@ -2003,15 +2042,17 @@ public class FollowerEntity implements CrossingWatch.Listener
 		}
 		if (crossings.size() >= MAX_QUEUED_CROSSINGS)
 		{
-			log.debug("{} crossings behind; letting the queue go", crossings.size());
-			agilityTrace.accept("follower: cap, " + crossings.size() + " crossings queued; queue let go");
+			log.debug("{} crossings behind; letting the queue go", crossings.size()); // public:cut logs
+			agilityTrace.accept("follower: cap, " + crossings.size() + " crossings queued; queue let go"); // public:cut dev
 			clearCrossings();
 			return;
 		}
 		if (playing != null && crossing.getStartedAtMs() < playing.getStartedAtMs())
 		{
+			// public:cut dev
 			agilityTrace.accept("follower: crossing from " + CrossingWatch.describe(crossing.getStart())
 				+ " began before the one playing; too late to copy");
+			// public:end dev
 			return;
 		}
 		takeFeetForAgility();
@@ -2027,8 +2068,10 @@ public class FollowerEntity implements CrossingWatch.Listener
 		awaitedCrossing = null;
 		patienceMs = AGILITY_PATIENCE_MS;
 		patienceRenewed = true;
+		// public:cut dev
 		agilityTrace.accept("follower: queued crossing from " + CrossingWatch.describe(crossing.getStart())
 			+ (crossing.isComplete() ? "" : " (live)") + ", " + crossings.size() + " waiting");
+		// public:end dev
 	}
 
 	@Override
@@ -2074,9 +2117,9 @@ public class FollowerEntity implements CrossingWatch.Listener
 		}
 		stayTile = null;
 		stayFaceTile = null;
-		stayFaceMax = null;
+		stayFaceMax = null; // public:cut skilling
 		goalTile = null;
-		insistedTile = null;
+		insistedTile = null; // public:cut errands
 		releaseAfterCast = false;
 		serverPath.clear();
 		approachTarget = null;
@@ -2113,8 +2156,8 @@ public class FollowerEntity implements CrossingWatch.Listener
 		if (playerTile != null && tile.distanceTo2D(playerTile) > MAX_BEHIND_TILES
 			&& (awaitedCrossing != null || !crossings.isEmpty()))
 		{
-			log.debug("{} tiles behind on agility; letting the queue go", tile.distanceTo2D(playerTile));
-			agilityTrace.accept("follower: cap, " + tile.distanceTo2D(playerTile) + " tiles behind; queue let go");
+			log.debug("{} tiles behind on agility; letting the queue go", tile.distanceTo2D(playerTile)); // public:cut logs
+			agilityTrace.accept("follower: cap, " + tile.distanceTo2D(playerTile) + " tiles behind; queue let go"); // public:cut dev
 			clearCrossings();
 			if (!isDoingAgility())
 			{
@@ -2124,9 +2167,12 @@ public class FollowerEntity implements CrossingWatch.Listener
 		if (playing == null && !crossings.isEmpty() && crossings.peekFirst().isDropped())
 		{
 			// Let go by the watch as not an obstacle before it was begun.
-			Crossing skipped = crossings.pollFirst();
+			Crossing skipped = crossings.pollFirst(); // public:cut dev
+			// public:else crossings.pollFirst();
+			// public:cut dev
 			agilityTrace.accept("follower: skipped crossing from " + CrossingWatch.describe(skipped.getStart())
 				+ ", dropped before it began");
+			// public:end dev
 			return agilityFrame(local, deltaMs);
 		}
 
@@ -2228,10 +2274,12 @@ public class FollowerEntity implements CrossingWatch.Listener
 			{
 				// Walled off from it, or it is on a floor the follower cannot
 				// walk to: put on the spot, as a snap would put it beside you.
-				log.debug("Cannot reach the crossing at {} from {}; placing it there", target, tile);
+				log.debug("Cannot reach the crossing at {} from {}; placing it there", target, tile); // public:cut logs
+				// public:cut dev
 				agilityTrace.accept("follower: placed on the crossing start " + CrossingWatch.describe(target)
 					+ " from " + CrossingWatch.describe(tile) + ", unreachable for "
 					+ CrossingWatch.seconds(approachStillMs));
+				// public:end dev
 				placeAt(target);
 				there = true;
 			}
@@ -2358,9 +2406,11 @@ public class FollowerEntity implements CrossingWatch.Listener
 		easeFromX = fineWX;
 		easeFromY = fineWY;
 		hurrying = false;
+		// public:cut dev
 		agilityTrace.accept("follower: began crossing from " + CrossingWatch.describe(crossing.getStart())
 			+ ", " + CrossingWatch.seconds(agilityClock.getAsLong() - crossing.getStartedAtMs())
 			+ " behind the player" + (crossing.isComplete() ? " (recording done)" : ""));
+		// public:end dev
 		playCrossing(0);
 	}
 
@@ -2419,8 +2469,10 @@ public class FollowerEntity implements CrossingWatch.Listener
 		playing = null;
 		patienceMs = AGILITY_PATIENCE_MS;
 		patienceRenewed = true;
+		// public:cut dev
 		agilityTrace.accept("follower: finished crossing at " + CrossingWatch.describe(tile)
 			+ (done.isFell() ? ", fell" : "") + ", " + crossings.size() + " waiting");
+		// public:end dev
 		crossingController = null;
 		crossingAnimation = -1;
 		setCrossingHands(null);
@@ -2493,7 +2545,8 @@ public class FollowerEntity implements CrossingWatch.Listener
 			}
 		}
 		int[] hands = action ? handItems(wanted) : null;
-		setCrossingHands(hands != null && (hands[0] != FilmSet.KEEP || hands[1] != FilmSet.KEEP) ? hands : null);
+		setCrossingHands(hands != null && (hands[0] != FilmSet.KEEP || hands[1] != FilmSet.KEEP) ? hands : null); // public:cut posing
+		// public:else setCrossingHands(hands != null && (hands[0] != -1 || hands[1] != -1) ? hands : null);
 		AnimationController controller = new AnimationController(client, animation);
 		int frames = animation.getFrameLengths() == null ? 0 : animation.getFrameLengths().length;
 		if (startFrame > 0 && startFrame < frames)
@@ -2507,8 +2560,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		object.setAnimationController(controller);
 		crossingController = controller;
 		crossingAnimation = wanted;
-		animationIds.add(wanted);
-		controllerGeneration++;
+		controllerGeneration++; // public:cut dev
 		activePose = action ? -1 : wanted;
 	}
 
@@ -2548,6 +2600,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		controller.setFrame(Math.max(0, frames - 1));
 	}
 
+	// public:end agility,agility-all
 	// ------------------------------------------------------------------- movement
 
 	/**
@@ -2584,10 +2637,12 @@ public class FollowerEntity implements CrossingWatch.Listener
 			// A null here left the follower frozen at the departure spot until
 			// the player took a step (FTRACE 2026-08-04: sim=9 held for 15s
 			// after a 9-tile teleport).
+			// public:cut dev
 			if (debugEnabled)
 			{
-				log.info("FTRACE obs JUMP from {} to {}", lastSeenPlayerTile, current);
+				log.info("FTRACE obs JUMP from {} to {}", lastSeenPlayerTile, current); // public:cut logs
 			}
+			// public:end dev
 			// The player landed while the copy of their cast still plays.
 			if (lastSeenPlayerTile != null && vanishAfterEmoteArmed)
 			{
@@ -2686,11 +2741,15 @@ public class FollowerEntity implements CrossingWatch.Listener
 		// forever; the server has no such hazard because everything moves in the
 		// same tick.
 		tickCarryMs = 0;
+		// public:cut dev
 		if (debugEnabled)
 		{
+			// public:cut logs
 			log.info("FTRACE obs dist={} ticks={} run={} follow={} path={}",
 				distance, ticksObserved, playerRunning, playerFollowTile, serverPath.size());
+			// public:end logs
 		}
+		// public:end dev
 		for (int i = 0; i < ticksObserved; i++)
 		{
 			releaseSteps();
@@ -2926,7 +2985,8 @@ public class FollowerEntity implements CrossingWatch.Listener
 		// Posed movement - Face-me's walk-around, a Send - is a deliberate WALK:
 		// one step a tick, never the run pair, whatever the run orb says.
 		boolean posed = goalTile != null || stayTile != null;
-		boolean two = !posed && (hurrying || serverPath.size() >= 2 && (playerRunning || serverPath.size() > 2));
+		boolean two = !posed && (hurrying || serverPath.size() >= 2 && (playerRunning || serverPath.size() > 2)); // public:cut agility,agility-all
+		// public:else boolean two = !posed && serverPath.size() >= 2 && (playerRunning || serverPath.size() > 2);
 		int steps = two ? 2 : 1;
 		for (int i = 0; i < steps && !serverPath.isEmpty(); i++)
 		{
@@ -2948,11 +3008,15 @@ public class FollowerEntity implements CrossingWatch.Listener
 			routeRun.addLast(two);
 			simTile = next;
 		}
+		// public:cut dev
 		if (debugEnabled)
 		{
+			// public:cut logs
 			log.info("FTRACE rel steps={} run={} sim={} path={} route={}",
 				steps, two, simTile, serverPath.size(), route.size());
+			// public:end logs
 		}
+		// public:end dev
 	}
 
 	/**
@@ -3027,6 +3091,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 			&& point.getY() >= minY && point.getY() <= maxY;
 	}
 
+	// public:cut dev
 	// ------------------------------------------------------------------ debugging
 
 	/** Live follow diagnostics: overlay lines plus an FTRACE log stream. */
@@ -3056,11 +3121,13 @@ public class FollowerEntity implements CrossingWatch.Listener
 		out.add("sim " + describe(simTile) + "  render " + describe(tile));
 		out.add("path=" + serverPath.size() + "  route=" + route.size()
 			+ "  speed=" + lastMoveSpeed + (playerRunning ? "  RUN" : "  walk"));
+		// public:cut agility,agility-all
 		if (isDoingAgility())
 		{
 			out.add("agility queued=" + crossings.size() + (playing != null ? "  playing" : "")
 				+ (awaitedCrossing != null ? "  awaiting " + describe(awaitedCrossing) : ""));
 		}
+		// public:end agility,agility-all
 		return out;
 	}
 
@@ -3069,6 +3136,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		return p == null ? "-" : p.getX() + "," + p.getY();
 	}
 
+	// public:end dev
 	/** Per-frame update: follow, move, orient, animate, position. */
 	public void updateFrame()
 	{
@@ -3086,7 +3154,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		long now = System.currentTimeMillis();
 		long deltaMs = Math.min(now - lastFrameMs, 600);
 		lastFrameMs = now;
-		patienceMs = Math.max(0, patienceMs - deltaMs);
+		patienceMs = Math.max(0, patienceMs - deltaMs); // public:cut agility,agility-all
 
 		// Mid-teleport: the follower is gone until the player lands (their tile
 		// moves from where it was at the cast's end), then reappears at their
@@ -3118,15 +3186,17 @@ public class FollowerEntity implements CrossingWatch.Listener
 
 		// Briefly gone (the comedy death, or a sketch's frame): nothing
 		// renders, nothing moves.
-		if (outOfPicture || System.currentTimeMillis() < hideUntilMs)
+		if (outOfPicture || System.currentTimeMillis() < hideUntilMs) // public:cut chronicle
+		// public:else if (System.currentTimeMillis() < hideUntilMs)
 		{
 			if (object.isActive())
 			{
 				object.setActive(false);
 			}
-			pictureHidden = outOfPicture;
+			pictureHidden = outOfPicture; // public:cut chronicle
 			return;
 		}
+		// public:cut chronicle
 		if (pictureHidden)
 		{
 			// Put back here, before the watchdog below can take the hide
@@ -3134,6 +3204,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 			pictureHidden = false;
 			object.setActive(true);
 		}
+		// public:end chronicle
 
 		// Thrall mode: the follower IS the thrall. Everything below - follow
 		// pathing, stay poses, leashes - is someone else's life for now.
@@ -3143,6 +3214,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 			return;
 		}
 
+		// public:cut agility,agility-all
 		// Agility: the follower is doing the player's obstacles after them.
 		// Ahead of the follow pathing, the teleport rule and the blocked-tile
 		// hop, none of which apply to somebody halfway along a log.
@@ -3151,6 +3223,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 			return;
 		}
 
+		// public:end agility,agility-all
 		watchPlayer(local);
 		WorldPoint playerTile = local.getWorldLocation();
 		if (tile == null || playerTile == null)
@@ -3165,6 +3238,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		int leash = stayTile != null ? STAY_LEASH : SNAP_DISTANCE;
 		boolean otherFloor = playerTile.getPlane() != tile.getPlane();
 		boolean away = otherFloor || tile.distanceTo(playerTile) > leash;
+		// public:cut agility,agility-all
 		if (away && !castLanded && patienceMs > 0 && stayTile == null
 			&& tile.distanceTo2D(playerTile) <= MAX_BEHIND_TILES)
 		{
@@ -3177,7 +3251,9 @@ public class FollowerEntity implements CrossingWatch.Listener
 				return;
 			}
 		}
-		else if (castLanded || away)
+		// public:end agility,agility-all
+		else if (castLanded || away) // public:cut agility,agility-all
+		// public:else if (castLanded || away)
 		{
 			if (client.getGameState() != GameState.LOGGED_IN)
 			{
@@ -3208,19 +3284,27 @@ public class FollowerEntity implements CrossingWatch.Listener
 
 		// A settled follower whose own tile reads blocked hops to the spot
 		// beside the player: a booth it was placed in while the area loaded,
+		// public:cut agility,agility-all
 		// or a deck facility that arrived after the boarding snap. Not just
 		// after agility: a crossing can end where the map says nobody stands.
+		// public:end agility,agility-all
 		if (isSettled() && blockedUnderfoot(tile, local))
 		{
+			// public:cut agility,agility-all
 			if (patienceMs <= 0)
 			{
-				snapBeside(playerTile, "blocked underfoot");
-				return;
+			// public:end agility,agility-all
+				snapBeside(playerTile, "blocked underfoot"); // public:cut agility,agility-all
+			// public:else snapBeside(playerTile, "blocked underfoot");
+				return; // public:cut agility,agility-all
+			// public:else return;
+			// public:cut agility,agility-all
 			}
 			// Off a crossing that ends where nobody stands, a rope's last
 			// tile: a step off it now, rather than the agility patience
 			// waited out on the rope and then a hop.
 			stepOffTheFire();
+			// public:end agility,agility-all
 		}
 
 		// The follow tile is worked out when the player steps, and the tile
@@ -3245,7 +3329,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 				// it with a command.
 				for (String line : describeFeet())
 				{
-					log.info("FIRES walked in: {}", line);
+					log.info("FIRES walked in: {}", line); // public:cut logs
 				}
 			}
 			if (isSettled())
@@ -3356,7 +3440,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		boolean moving = !route.isEmpty()
 			|| fineWX != tile.getX() * 128L + 64 || fineWY != tile.getY() * 128L + 64;
 		onTheMove = moving;
-		noteAStall(moving, playerTile, deltaMs);
+		noteAStall(moving, playerTile, deltaMs); // public:cut dev
 
 		// Movement always wins over an emote - a dancing follower gliding along
 		// behind you looks broken, and the real game drops emotes on movement too.
@@ -3438,16 +3522,20 @@ public class FollowerEntity implements CrossingWatch.Listener
 				recoverPosition(local, playerTile, "off the loaded scene");
 			}
 		}
+		// public:cut dev
 
 		if (debugEnabled && now - lastDebugMs >= 1000)
 		{
 			lastDebugMs = now;
-			log.info("FTRACE gap {}", debugLines().get(0).trim());
+			log.info("FTRACE gap {}", debugLines().get(0).trim()); // public:cut logs
 		}
+		// public:end dev
 	}
 
+	// public:cut dev
 	private long lastDebugMs;
 
+	// public:end dev
 	/** Sub-unit remainders so fractional-cycle movement never loses distance. */
 	private double moveCarryX;
 	private double moveCarryY;
@@ -3567,11 +3655,15 @@ public class FollowerEntity implements CrossingWatch.Listener
 			pose = stance.run;
 		}
 
+		// public:cut dev
 		if (debugEnabled && pose != stance.walk && pose != stance.run && pose != activePose)
 		{
+			// public:cut logs
 			log.info("FTRACE pose directional {} (travel={} yaw={} delta={})",
 				pose, travelYaw, yaw, delta);
+			// public:end logs
 		}
+		// public:end dev
 		return pose;
 	}
 
@@ -4157,6 +4249,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		this.drawn = drawn == null ? actor -> true : drawn;
 	}
 
+	// public:cut dev
 	/** How long the follower has stood still well out of a follow's reach of the player. */
 	private long stalledMs;
 	static final long STALL_NOTE_MS = 2000;
@@ -4185,11 +4278,13 @@ public class FollowerEntity implements CrossingWatch.Listener
 		String why;
 		if (stayTile != null)
 		{
-			why = "a stay at " + CrossingWatch.describe(stayTile) + " (" + stayOwner.get() + ")";
+			why = "a stay at " + CrossingWatch.describe(stayTile) + " (" + stayOwner.get() + ")"; // public:cut agility,agility-all
+			// public:else why = "a stay at " + describe(stayTile) + " (" + stayOwner.get() + ")";
 		}
 		else if (goalTile != null)
 		{
-			why = "a goal at " + CrossingWatch.describe(goalTile);
+			why = "a goal at " + CrossingWatch.describe(goalTile); // public:cut agility,agility-all
+			// public:else why = "a goal at " + describe(goalTile);
 		}
 		else if (playerFollowTile == null || simTile == null)
 		{
@@ -4200,12 +4295,15 @@ public class FollowerEntity implements CrossingWatch.Listener
 			java.util.List<WorldPoint> path = playerFollowTile.getPlane() != simTile.getPlane() ? null
 				: findPath(simTile, playerFollowTile, true, playerFollowTile.equals(playerTile) ? playerTile : null);
 			why = (path == null ? "no route to " : path.isEmpty() ? "as near as it gets to "
-				: "a route of " + path.size() + " not walked to ") + CrossingWatch.describe(playerFollowTile);
+				: "a route of " + path.size() + " not walked to ") + CrossingWatch.describe(playerFollowTile); // public:cut agility,agility-all
+				// public:else : "a route of " + path.size() + " not walked to ") + describe(playerFollowTile);
 		}
 		agilityTrace.accept("follower: still " + gap + " tiles from the player at "
-			+ CrossingWatch.describe(playerTile) + " for " + CrossingWatch.seconds(stalledMs) + ": " + why);
+			+ CrossingWatch.describe(playerTile) + " for " + CrossingWatch.seconds(stalledMs) + ": " + why); // public:cut agility,agility-all
+			// public:else + describe(playerTile) + " for " + String.format("%.1fs", stalledMs / 1000.0) + ": " + why);
 	}
 
+	// public:end dev
 	/**
 	 * Every tile an NPC stands on, by its whole footprint (a giant's four, not
 	 * only the south-west one it is placed by), with the NPC on it. The
@@ -4445,7 +4543,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 				goalTile = off;
 				serverPath.clear();
 			}
-			log.debug("Standing in a fire at {}; stepping to {}", tile, off);
+			log.debug("Standing in a fire at {}; stepping to {}", tile, off); // public:cut logs
 			return;
 		}
 	}
@@ -4462,8 +4560,9 @@ public class FollowerEntity implements CrossingWatch.Listener
 			+ " sim " + simTile + (isSettled() ? " settled" : " walking"));
 		lines.add("  stay " + stayTile + hotness(stayTile)
 			+ " | goal " + goalTile + hotness(goalTile)
-			+ " | follow " + playerFollowTile + hotness(playerFollowTile)
-			+ " | insisted " + insistedTile);
+			+ " | follow " + playerFollowTile + hotness(playerFollowTile) // public:cut errands
+			// public:else + " | follow " + playerFollowTile + hotness(playerFollowTile));
+			+ " | insisted " + insistedTile); // public:cut errands
 		lines.add("  path " + serverPath.size() + " route " + route.size()
 			+ " beside " + beside + " stranded " + strandedTicks);
 		StringBuilder queued = new StringBuilder();
@@ -4504,20 +4603,28 @@ public class FollowerEntity implements CrossingWatch.Listener
 		WorldPoint beside = landingTile(new WorldPoint(
 			playerTile.getX() - 1, playerTile.getY(), playerTile.getPlane()), playerTile);
 
-		agilityTrace.accept("follower: snap (" + why + ") from " + CrossingWatch.describe(tile)
-			+ " to " + CrossingWatch.describe(beside)
+		// public:cut dev
+		agilityTrace.accept("follower: snap (" + why + ") from " + CrossingWatch.describe(tile) // public:cut agility,agility-all
+		// public:else agilityTrace.accept("follower: snap (" + why + ") from " + describe(tile)
+			+ " to " + CrossingWatch.describe(beside) // public:cut agility,agility-all
+			// public:else + " to " + describe(beside));
+			// public:cut agility,agility-all
 			+ (isDoingAgility() ? ", letting go of " + (crossings.size() + (playing != null ? 1 : 0))
 			+ " crossings" : ""));
+			// public:end agility,agility-all
+		// public:end dev
 		// A forced relocation ends any pose - the tile it was holding is gone,
+		// public:cut agility,agility-all
 		// and the way the pose faced with it. And any agility it was copying.
 		dropCrossings();
 		if (onAgilitySnap != null)
 		{
 			onAgilitySnap.run();
 		}
+		// public:end agility,agility-all
 		stayTile = null;
 		stayFaceTile = null;
-		stayFaceMax = null;
+		stayFaceMax = null; // public:cut skilling
 		goalTile = null;
 		route.clear();
 		routeRun.clear();
@@ -4558,7 +4665,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 
 		route.clear();
 		routeRun.clear();
-		agilityTrace.accept("follower: pinned to the player's scene position (" + why + ")");
+		agilityTrace.accept("follower: pinned to the player's scene position (" + why + ")"); // public:cut dev
 
 		// Last ditch, and still not licence to stand in a wall: pick the
 		// landing tile in world space and come back to local, falling back to
@@ -4697,7 +4804,8 @@ public class FollowerEntity implements CrossingWatch.Listener
 				// for it.
 				recentreSum += centre[1] - STANDING_CENTRE_Z;
 				recentreSamples++;
-				recentreForward = (int) (recentreSum / recentreSamples) + recentreBias;
+				recentreForward = (int) (recentreSum / recentreSamples) + recentreBias; // public:cut dev
+				// public:else recentreForward = (int) (recentreSum / recentreSamples);
 				recentreFrozen = recentreSamples >= RECENTRE_FREEZE_SAMPLES;
 			}
 		}
@@ -4923,8 +5031,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 				measureBestTrim(animation, animation.getFrameLengths().length));
 		}
 
-		controllerGeneration++;
-		animationIds.add(animationId);
+		controllerGeneration++; // public:cut dev
 		activePose = animationId;
 	}
 
@@ -5074,7 +5181,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 			}
 		}
 
-		log.debug("Animation {}: {} frames, measured trim {}", animation.getId(), frames, bestTrim);
+		log.debug("Animation {}: {} frames, measured trim {}", animation.getId(), frames, bestTrim); // public:cut logs
 		return bestTrim;
 	}
 
@@ -5110,11 +5217,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 	/** Interpolate across the loop boundary instead of trimming frames off it. */
 	private boolean wrapLerp = true;
 
-	public boolean isWrapLerp()
-	{
-		return wrapLerp;
-	}
-
+	// public:cut dev
 	/** Switches wrap handling and re-applies the current pose so it takes effect now. */
 	public void setWrapLerp(boolean enabled)
 	{
@@ -5139,6 +5242,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		wrapTrims.put(animationId, Math.max(0, frames));
 	}
 
+	// public:end dev
 	public java.util.Map<Integer, Integer> getWrapTrims()
 	{
 		return new java.util.LinkedHashMap<>(wrapTrims);
@@ -5149,6 +5253,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		return new java.util.LinkedHashMap<>(measuredTrims);
 	}
 
+	// public:cut dev
 	/** Drops manual overrides so measurement takes over again. */
 	public void clearWrapTrims()
 	{
@@ -5156,6 +5261,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		measuredTrims.clear();
 	}
 
+	// public:end dev
 	/**
 	 * Restores saved trims. Measured values are kept rather than recomputed - the
 	 * measurement is deterministic, so reloading them just skips the work.
@@ -5183,22 +5289,14 @@ public class FollowerEntity implements CrossingWatch.Listener
 		return animation != null && filter != null && filter.test(animation.getId());
 	}
 
-	public boolean isSmoothingActive()
-	{
-		return isSmoothingActive(getPoseAnimation());
-	}
-
+	// public:cut dev
 	/** Fallback trim for animations that haven't been tuned individually. */
 	public void setDefaultWrapTrim(int frames)
 	{
 		wrapTrim = Math.max(0, frames);
 	}
 
-	public int getWrapTrim()
-	{
-		return wrapTrim;
-	}
-
+	// public:end dev
 	/**
 	 * Loops an animation without letting it kill itself.
 	 *
@@ -5267,6 +5365,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 	 */
 	private static final int STANDING_CENTRE_Z = 22;
 
+	// public:cut dev
 	/** Live nudge from ::follower centre, for dialling the last few units in. */
 	private int recentreBias;
 
@@ -5285,6 +5384,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		return recentreBias;
 	}
 
+	// public:end dev
 	/**
 	 * Frames averaged before the correction is fixed for good. About two
 	 * seconds at a normal frame rate, comfortably more than one cycle of the
@@ -5335,6 +5435,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		return new int[]{(int) Math.round(sumX / xs.length), (int) Math.round(sumZ / zs.length)};
 	}
 
+	// public:cut dev
 	/**
 	 * The follower's own model height and that of every NPC within a few
 	 * tiles, for {@code ::follower heights}. The overlap rule is a comparison
@@ -5365,12 +5466,6 @@ public class FollowerEntity implements CrossingWatch.Listener
 				own > 0 && height >= own * OVERLAP_HEIGHT_FRACTION ? "HIDES" : "shows through"));
 		}
 		return lines;
-	}
-
-	/** True if the follower is currently using this animation. */
-	public boolean usesAnimation(int animationId)
-	{
-		return animationIds.contains(animationId);
 	}
 
 	public int getActivePose()
@@ -5422,6 +5517,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		return controller == null ? null : controller.getAnimation();
 	}
 
+	// public:end dev
 	/**
 	 * What an animation puts in each hand, as the client gives it: left then
 	 * right, each -1 to keep what that hand holds, -512 to empty it, or an
@@ -5551,7 +5647,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		Animation animation = client.loadAnimation(clip);
 		if (animation == null)
 		{
-			log.debug("Animation {} not in cache, skipping", clip);
+			log.debug("Animation {} not in cache, skipping", clip); // public:cut logs
 			playChain(ids, graphics, graphicHeight, index + 1, generation);
 			return;
 		}
@@ -5566,7 +5662,6 @@ public class FollowerEntity implements CrossingWatch.Listener
 		}
 		controller.setOnFinished(finished -> playChain(ids, graphics, graphicHeight, index + 1, generation));
 		object.setAnimationController(controller);
-		animationIds.add(clip);
 		puttingAway = ids[index] == WRITE_PUT_AWAY;
 		setEmotePlaying(true);
 		// Which clip is on screen right now: activePose is not updated while an
@@ -5893,7 +5988,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		Animation animation = client.loadAnimation(slavedChain[slavedIndex]);
 		if (animation == null)
 		{
-			log.debug("Slaved chain animation {} not in cache, skipping", slavedChain[slavedIndex]);
+			log.debug("Slaved chain animation {} not in cache, skipping", slavedChain[slavedIndex]); // public:cut logs
 			advanceSlavedChain();
 			return;
 		}
@@ -5907,7 +6002,6 @@ public class FollowerEntity implements CrossingWatch.Listener
 		controller.setOnFinished(finished -> finished.setFrame(animation.isMayaAnim()
 			? animation.getDuration() - 1 : animation.getFrameLengths().length - 1));
 		object.setAnimationController(controller);
-		animationIds.add(slavedChain[slavedIndex]);
 		setEmotePlaying(true);
 		emoteClipOn(slavedChain[slavedIndex]);
 
@@ -6152,6 +6246,7 @@ public class FollowerEntity implements CrossingWatch.Listener
 		}
 	}
 
+	// public:cut chronicle
 	/** True while it counts you in for a sketch: your emote is the pose, not work to watch. */
 	private boolean facingThePlayer;
 
@@ -6160,9 +6255,11 @@ public class FollowerEntity implements CrossingWatch.Listener
 		facingThePlayer = facing;
 	}
 
+	// public:end chronicle
 	private void watchTheWork(Player local)
 	{
-		if (local.getAnimation() == -1 || facingThePlayer)
+		if (local.getAnimation() == -1 || facingThePlayer) // public:cut chronicle
+		// public:else if (local.getAnimation() == -1)
 		{
 			facePlayer();
 			return;
@@ -6228,4 +6325,25 @@ public class FollowerEntity implements CrossingWatch.Listener
 		dstYaw = (int) Math.round(Math.atan2(dx, dy) * 325.949) & 0x7ff;
 		return true;
 	}
-}
+} // public:cut skilling
+// public:else
+	// public:else /** The tiles exactly so far from a footprint, nearest corner first. */
+	// public:else public static java.util.List<WorldPoint> ring(WorldPoint min, WorldPoint max, int radius, int plane)
+	// public:else {
+		// public:else WorldPoint far = max == null ? min : max;
+		// public:else java.util.List<WorldPoint> ring = new java.util.ArrayList<>();
+		// public:else for (int x = min.getX() - radius; x <= far.getX() + radius; x++)
+		// public:else {
+			// public:else for (int y = min.getY() - radius; y <= far.getY() + radius; y++)
+			// public:else {
+				// public:else int cx = Math.max(min.getX(), Math.min(far.getX(), x));
+				// public:else int cy = Math.max(min.getY(), Math.min(far.getY(), y));
+				// public:else if (Math.max(Math.abs(x - cx), Math.abs(y - cy)) == radius)
+				// public:else {
+					// public:else ring.add(new WorldPoint(x, y, plane));
+				// public:else }
+			// public:else }
+		// public:else }
+		// public:else return ring;
+	// public:else }
+// public:else }

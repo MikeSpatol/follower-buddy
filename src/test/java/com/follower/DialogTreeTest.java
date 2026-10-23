@@ -162,6 +162,7 @@ public class DialogTreeTest
 		assertTrue("and so does no", reachable.contains("no"));
 	}
 
+	// public:cut dialogs-editor
 	@Test
 	public void whatTheEditorWritesIsWhatTheLoaderReads() throws IOException
 	{
@@ -205,6 +206,7 @@ public class DialogTreeTest
 		List<DialogTree> trees;
 	}
 
+	// public:end dialogs-editor
 	@Test
 	public void everyAskedTreeIsOneThatExists() throws IOException
 	{
@@ -268,7 +270,8 @@ public class DialogTreeTest
 				for (FollowerDialog.Node node : FollowerPlugin.talkScript(
 					() -> new String[]{""},
 					answer -> offered.add(answer.toLowerCase(java.util.Locale.ROOT)),
-					"feather", held, band).values())
+					"feather", held, band).values()) // public:cut souvenirs-wishes
+					// public:else band).values())
 				{
 					node.runFinish();
 				}

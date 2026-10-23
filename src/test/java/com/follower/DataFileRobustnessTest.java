@@ -1,7 +1,7 @@
 package com.follower;
 
 import com.follower.appearance.ModelRepository;
-import com.follower.appearance.PaletteHarvest;
+import com.follower.appearance.PaletteHarvest; // public:cut dev
 import com.follower.appearance.SpotAnimRepository;
 import com.google.gson.Gson;
 import java.io.IOException;
@@ -68,6 +68,7 @@ public class DataFileRobustnessTest
 	{
 		Path empty = dir();
 
+		// public:cut devdump
 		SpotAnimRepository spotAnims = new SpotAnimRepository(new Gson());
 		spotAnims.load(empty);
 		assertNotNull(spotAnims.getStatus());
@@ -76,11 +77,15 @@ public class DataFileRobustnessTest
 		models.load(empty);
 		assertNotNull(models.getStatus());
 
+		// public:end devdump
+		// public:cut dev
 		PaletteHarvest palette = new PaletteHarvest(new Gson());
 		palette.load(empty);
 		assertEquals(0, palette.size());
+		// public:end dev
 	}
 
+	// public:cut devdump
 	@Test
 	public void aMissingDumpLeavesAnEmptyRepositoryNotAnException() throws IOException
 	{
@@ -91,8 +96,10 @@ public class DataFileRobustnessTest
 			null, spotAnims.get(246));
 	}
 
+	// public:end devdump
 	// -------------------------------------------------------------- corrupt
 
+	// public:cut devdump
 	@Test
 	public void aCorruptSpotAnimDumpDoesNotStopStartup() throws IOException
 	{
@@ -123,6 +130,8 @@ public class DataFileRobustnessTest
 		}
 	}
 
+	// public:end devdump
+	// public:cut dev
 	@Test
 	public void aCorruptPaletteHarvestDoesNotStopStartup() throws IOException
 	{
@@ -135,11 +144,13 @@ public class DataFileRobustnessTest
 		}
 	}
 
+	// public:end dev
 	private static String summarise(String contents)
 	{
 		return contents.length() > 30 ? contents.substring(0, 30) + "..." : "'" + contents + "'";
 	}
 
+	// public:cut devdump
 	// ------------------------------------------------------------ a directory
 
 	@Test
@@ -154,6 +165,8 @@ public class DataFileRobustnessTest
 		assertNotNull(repository.getStatus());
 	}
 
+	// public:end devdump
+	// public:cut dev
 	// ------------------------------------------------------------- round trip
 
 	@Test
@@ -188,6 +201,7 @@ public class DataFileRobustnessTest
 		assertEquals("the same observation was counted twice", first, second);
 	}
 
+	// public:end dev
 	// ------------------------------------------------------------- bundled
 
 	@Test

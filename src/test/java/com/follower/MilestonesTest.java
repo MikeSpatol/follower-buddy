@@ -163,6 +163,7 @@ public class MilestonesTest
 		assertNull(FollowerPlugin.parseKillCount("You have 41 kills."));
 	}
 
+	// public:cut chronicle
 	@Test
 	public void theGamesCountIsKeptPerAccount() throws IOException, ReflectiveOperationException
 	{
@@ -249,6 +250,7 @@ public class MilestonesTest
 			h.engine.getContext().getKillCountNames().get("king black dragon"));
 	}
 
+	// public:end chronicle
 	@Test
 	public void aTracksNameComesWithoutTheGamesColourTag()
 	{
@@ -401,9 +403,11 @@ public class MilestonesTest
 	public void theWorkAndTheBossWriteThemselvesDown() throws IOException
 	{
 		Harness h = new Harness(folder.newFolder().toPath());
+		// public:cut skilling
 		h.engine.getContext().setWork(true, "fishing", "Fishing spot", null, 10, 0, 100);
 		h.gameTicks(1);
 		assertEquals("the fishing", h.engine.getContext().getLastThing());
+		// public:end skilling
 
 		// A session that named nothing carries last session's memory forward.
 		com.follower.speech.TriggerContext quiet =

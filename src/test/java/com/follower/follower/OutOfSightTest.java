@@ -130,7 +130,7 @@ public class OutOfSightTest
 				return type == boolean.class ? false : type == int.class ? 0 : null;
 			});
 		follower.setSpawnAnimation(new int[0]);
-		follower.spawn(new ComposedAppearance(model, ComposedAppearance.Source.DUMP, new Outfit()),
+		follower.spawn(new ComposedAppearance(model, new Outfit()),
 			at, null, 0);
 	}
 
@@ -195,6 +195,7 @@ public class OutOfSightTest
 		follower.updateFrame();
 		assertTrue("the new body is not waiting on the old one's landing", follower.isShown());
 	}
+	// public:cut chronicle
 
 	@Test
 	public void aSketchsFrameIsDrawnWithoutTheScribe()
@@ -219,4 +220,5 @@ public class OutOfSightTest
 		assertEquals("where it stood", post, follower.getWorldLocation());
 		assertEquals("still told to stay", stay, follower.getStayTile());
 	}
+	// public:end chronicle
 }

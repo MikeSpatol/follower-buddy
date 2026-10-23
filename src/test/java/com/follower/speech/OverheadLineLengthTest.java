@@ -1,7 +1,9 @@
 package com.follower.speech;
 
+// public:cut chronicle
 import com.follower.chronicle.ChronicleEntry;
 import com.follower.chronicle.ChronicleLoader;
+// public:end chronicle
 import com.follower.sim.Harness;
 import com.follower.ui.GameFont;
 import com.follower.ui.GameFontRepository;
@@ -116,10 +118,12 @@ public class OverheadLineLengthTest
 	private GameFont overheadFont() throws IOException
 	{
 		GameFontRepository fonts = new GameFontRepository(new Gson());
-		fonts.load(folder.newFolder().toPath());
+		fonts.load(folder.newFolder().toPath()); // public:cut devfonts
+		// public:else fonts.load();
 		return fonts.getByName("b12_full");
 	}
 
+	// public:cut chronicle
 	/**
 	 * The longest {page} is the widest name in the book, as a line says it.
 	 * Text QA5 #25: the quest kind's news was measured with a shorter one,
@@ -143,6 +147,7 @@ public class OverheadLineLengthTest
 		assertEquals(widest, LONGEST.get("page"));
 	}
 
+	// public:end chronicle
 	@Test
 	public void everyLineFitsOverheadFilledWithTheLongestValues() throws IOException
 	{

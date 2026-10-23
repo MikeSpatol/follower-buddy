@@ -513,7 +513,8 @@ public class EveryConditionTypeTest
 		note("login", "playerDeath", "levelUp", "damageTaken", "chatMessage",
 			"animationSelf", "varbitChanged", "lootWorth", "npcKill",
 			"combatStart", "combatEnd", "thrallStart", "thrallSwitch",
-			"thrallEnd", "errandStart", "errandEnd");
+			"thrallEnd", "errandStart", "errandEnd"); // public:cut errands
+			// public:else "thrallEnd");
 
 		fires("{\"type\": \"login\"}", TriggerEvent.simple(TriggerEvent.Type.LOGIN));
 		fires("{\"type\": \"playerDeath\"}", TriggerEvent.death());
@@ -531,19 +532,23 @@ public class EveryConditionTypeTest
 			TriggerEvent.loot(50000, "Dragon bones"));
 		fires("{\"type\": \"npcKill\", \"minimum\": 100}",
 			TriggerEvent.kill(2, "Zulrah", 725));
+		// public:cut spectate
 		fires("{\"type\": \"combatStart\"}",
 			TriggerEvent.combat(TriggerEvent.Type.COMBAT_START, "Goblin"));
 		fires("{\"type\": \"combatEnd\"}",
 			TriggerEvent.combat(TriggerEvent.Type.COMBAT_END, "Goblin"));
+		// public:end spectate
 		fires("{\"type\": \"thrallStart\"}",
 			TriggerEvent.thrall(TriggerEvent.Type.THRALL_START, "melee"));
 		fires("{\"type\": \"thrallSwitch\"}", TriggerEvent.thrallSwitch("melee", "magic"));
 		fires("{\"type\": \"thrallEnd\"}",
 			TriggerEvent.thrall(TriggerEvent.Type.THRALL_END, "melee"));
+		// public:cut errands
 		fires("{\"type\": \"errandStart\"}",
 			TriggerEvent.errand(TriggerEvent.Type.ERRAND_START, "bank"));
 		fires("{\"type\": \"errandEnd\"}",
 			TriggerEvent.errand(TriggerEvent.Type.ERRAND_END, "bank"));
+		// public:end errands
 	}
 
 	private void fires(String when, TriggerEvent event) throws IOException
@@ -560,8 +565,10 @@ public class EveryConditionTypeTest
 		note("worldHop", "gameUpdated", "notesEdited", "musicUnlock",
 			"collectionAdd", "questComplete", "geOffer", "channelJoined",
 			"channelLeft", "npcShout", "dateIs", "musicTrack", "examinedThing",
-			"attendedAgain", "minutesTaken", "pageWritten");
+			"attendedAgain", "minutesTaken", "pageWritten"); // public:cut chronicle
+			// public:else "attendedAgain", "minutesTaken");
 
+		// public:cut chronicle
 		fires("{\"type\": \"pageWritten\"}", TriggerEvent.pageWritten("enemy", "Goblin"));
 		fires("{\"type\": \"pageWritten\", \"is\": \"boss\"}",
 			TriggerEvent.pageWritten("boss", "Giant Mole"));
@@ -570,6 +577,7 @@ public class EveryConditionTypeTest
 		wrongKind.dispatch(TriggerEvent.pageWritten("location", "Lumbridge"));
 		assertQuiet(wrongKind, "a place page is not a boss page");
 
+		// public:end chronicle
 		fires("{\"type\": \"attendedAgain\"}",
 			TriggerEvent.simple(TriggerEvent.Type.ATTENDED_AGAIN));
 		fires("{\"type\": \"minutesTaken\"}",
@@ -841,6 +849,7 @@ public class EveryConditionTypeTest
 		assertFired(sour, "feelsAbout disliked");
 	}
 
+	// public:cut souvenirs-wishes
 	@Test
 	public void aWishOpensBySayingAndTheBagDecidesTheGift() throws IOException
 	{
@@ -874,6 +883,7 @@ public class EveryConditionTypeTest
 		h.answers("gift");
 		assertFired(h, "wishing with the feather actually in the bag");
 	}
+	// public:end souvenirs-wishes
 
 	@Test
 	public void standingInTheWildernessIsAStateNotACrossing() throws IOException
@@ -923,11 +933,13 @@ public class EveryConditionTypeTest
 		Harness any = harnessFor("{\"type\": \"boundary\"}");
 		any.gameTicks(2);
 		assertQuiet(any, "still nothing has ended");
-		any.dispatch(TriggerEvent.simple(TriggerEvent.Type.COMBAT_END));
+		any.dispatch(TriggerEvent.simple(TriggerEvent.Type.COMBAT_END)); // public:cut spectate
+		// public:else any.dispatch(TriggerEvent.simple(TriggerEvent.Type.THIEVING_END));
 		assertQuiet(any, "not on the ending event itself");
 		any.gameTicks(2);
 		assertFired(any, "boundary, one beat after the ending");
-		assertEquals("combat", any.engine.getContext().getBoundaryKind());
+		assertEquals("combat", any.engine.getContext().getBoundaryKind()); // public:cut spectate
+		// public:else assertEquals("thieving", any.engine.getContext().getBoundaryKind());
 
 		// And the window CLOSES: a breather is about six seconds, and an
 		// ending gone stale must not open anything. Probed with an answered
@@ -1253,6 +1265,7 @@ public class EveryConditionTypeTest
 		assertQuiet(fourth, "the fourth is no longer three");
 	}
 
+	// public:cut souvenirs-wishes
 	@Test
 	public void whatItIsCarryingAndWhenItLosesIt() throws IOException
 	{
@@ -1279,7 +1292,9 @@ public class EveryConditionTypeTest
 		gone.gameTicks(60);
 		assertFired(gone, "souvenirLost");
 	}
+	// public:end souvenirs-wishes
 
+	// public:cut side-games
 	@Test
 	public void theBetIsPlacedAndSettledBothWays() throws IOException
 	{
@@ -1315,6 +1330,7 @@ public class EveryConditionTypeTest
 		lapsed.gameTicks(120);
 		assertQuiet(lapsed, "an uncollected bet cannot be right by default");
 	}
+	// public:end side-games
 
 	@Test
 	public void theHourAndHowLongWeHaveBeenAtIt() throws IOException
@@ -1441,6 +1457,7 @@ public class EveryConditionTypeTest
 		assertFired(held, "happenedHere, once you have been away and returned");
 	}
 
+	// public:cut side-games
 	@Test
 	public void adviceIsTakenOrIsNot() throws IOException
 	{
@@ -1538,6 +1555,7 @@ public class EveryConditionTypeTest
 		h.gameTicks(2);
 		assertFired(h, "prompt is the point, for food");
 	}
+	// public:end side-games
 
 	@Test
 	public void howLongWeHaveKnownEachOther() throws IOException
@@ -1636,6 +1654,7 @@ public class EveryConditionTypeTest
 		assertQuiet(always, "you were already well dressed");
 	}
 
+	// public:cut side-games
 	@Test
 	public void theChallengeIsMetOrIsNot() throws IOException
 	{
@@ -1677,6 +1696,7 @@ public class EveryConditionTypeTest
 		lost.gameTicks(60);
 		assertFired(lost, "challengeFailed");
 	}
+	// public:end side-games
 
 	@Test
 	public void underfootAndGoneFromTheKeyboard() throws IOException
@@ -1715,8 +1735,10 @@ public class EveryConditionTypeTest
 	@Test
 	public void theSkillingCompany() throws IOException
 	{
-		note("working", "xpDrop", "workEnded", "targetDepleted", "bagFull", "bagHalf");
+		note("working", "xpDrop", "workEnded", "targetDepleted", "bagFull", "bagHalf"); // public:cut skilling
+		// public:else note("xpDrop");
 
+		// public:cut skilling
 		// The session as state, narrowed by the skill and by the target.
 		Harness at = harnessFor("{\"type\": \"working\", \"is\": \"woodcutting\","
 			+ " \"contains\": \"yew\"}");
@@ -1729,6 +1751,7 @@ public class EveryConditionTypeTest
 		at.gameTicks(1);
 		assertFired(at, "working");
 
+		// public:end skilling
 		// The drops, and the every-nth that makes a tally a remark.
 		fires("{\"type\": \"xpDrop\"}", TriggerEvent.xpDrop("Woodcutting", 1));
 		fires("{\"type\": \"xpDrop\", \"names\": [\"Woodcutting\"]}",
@@ -1770,12 +1793,14 @@ public class EveryConditionTypeTest
 		fifth.dispatch(TriggerEvent.animation(1248));
 		assertFired(fifth, "animationSelf every fifth");
 
+		// public:cut skilling
 		fires("{\"type\": \"workEnded\"}", TriggerEvent.workEnd("woodcutting", "Yew tree"));
 		quiet("{\"type\": \"workEnded\", \"names\": [\"mining\"]}",
 			TriggerEvent.workEnd("woodcutting", "Yew tree"));
 		fires("{\"type\": \"targetDepleted\"}", TriggerEvent.targetDepleted("Yew tree"));
 		fires("{\"type\": \"bagFull\"}", TriggerEvent.simple(TriggerEvent.Type.BAG_FULL));
 		fires("{\"type\": \"bagHalf\"}", TriggerEvent.simple(TriggerEvent.Type.BAG_HALF));
+		// public:end skilling
 	}
 
 	@Test
@@ -1783,25 +1808,37 @@ public class EveryConditionTypeTest
 	{
 		note("milestone", "levelGap", "killCount", "grateful", "lastTime", "farewell");
 		fires("{\"type\": \"farewell\"}", TriggerEvent.simple(TriggerEvent.Type.FAREWELL));
+		// public:cut company-extras
+		// public:cut noticing
 		note("noticed");
 		fires("{\"type\": \"noticed\", \"is\": \"impling\", \"contains\": \"dragon\"}",
 			TriggerEvent.noticed("impling", "Dragon impling"));
 		quiet("{\"type\": \"noticed\", \"is\": \"nest\"}",
 			TriggerEvent.noticed("impling", "Dragon impling"));
+		// public:end noticing
+		// public:cut will
 		note("hesitated", "steppedAside");
 		fires("{\"type\": \"hesitated\", \"is\": \"monster\"}",
 			TriggerEvent.hesitated("monster", "Hill Giant"));
 		quiet("{\"type\": \"hesitated\", \"is\": \"wilderness\"}",
 			TriggerEvent.hesitated("monster", "Hill Giant"));
 		fires("{\"type\": \"steppedAside\"}", TriggerEvent.simple(TriggerEvent.Type.STEPPED_ASIDE));
+		// public:end will
+		// public:end company-extras
+		// public:cut agility-all
+		// public:cut agility
 		note("crossed");
 		fires("{\"type\": \"crossed\"}", TriggerEvent.crossed(false));
 		fires("{\"type\": \"crossed\", \"is\": \"fell\"}", TriggerEvent.crossed(true));
 		quiet("{\"type\": \"crossed\", \"is\": \"fell\"}", TriggerEvent.crossed(false));
+		// public:end agility
+		// public:cut marks
 		note("grace");
 		fires("{\"type\": \"grace\"}", TriggerEvent.grace("spotted", null));
 		fires("{\"type\": \"grace\", \"is\": \"left\"}", TriggerEvent.grace("left", null));
 		quiet("{\"type\": \"grace\", \"is\": \"left\"}", TriggerEvent.grace("collected", null));
+		// public:end marks
+		// public:end agility-all
 
 		note("addressed");
 		Harness at = harnessFor("{\"type\": \"addressed\"}");
@@ -1922,7 +1959,7 @@ public class EveryConditionTypeTest
 		answeredHovererAndExamined();
 		inventoryRoomAndCrowdsAndDangerousNeighbours();
 		wantsAreAskedForFulfilledAndForgotten();
-		aWishOpensBySayingAndTheBagDecidesTheGift();
+		aWishOpensBySayingAndTheBagDecidesTheGift(); // public:cut souvenirs-wishes
 		standingInTheWildernessIsAStateNotACrossing();
 		aParkedFollowerKnowsItIsParked();
 		theBreatherAfterSomethingEnds();
@@ -1930,16 +1967,16 @@ public class EveryConditionTypeTest
 		tasteIsAboutWhereTheFollowerIsStanding();
 		thievingEdges();
 		theIncidentItKeepsBringingUp();
-		whatItIsCarryingAndWhenItLosesIt();
-		theBetIsPlacedAndSettledBothWays();
+		whatItIsCarryingAndWhenItLosesIt(); // public:cut souvenirs-wishes
+		theBetIsPlacedAndSettledBothWays(); // public:cut side-games
 		theHourAndHowLongWeHaveBeenAtIt();
 		aQuestionAlreadyOnTheTable();
 		tasteIsEarnedAndOutranksTheRoll();
-		adviceIsTakenOrIsNot();
+		adviceIsTakenOrIsNot(); // public:cut side-games
 		howLongWeHaveKnownEachOther();
 		howLongSinceAOneTimeLineWasSaid();
 		theNameYouEarnAndTheGearYouOutgrew();
-		theChallengeIsMetOrIsNot();
+		theChallengeIsMetOrIsNot(); // public:cut side-games
 		underfootAndGoneFromTheKeyboard();
 		theScribeNoticesTheWiderWorld();
 		theSkillingCompany();

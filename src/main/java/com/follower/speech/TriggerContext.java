@@ -28,7 +28,6 @@ public final class TriggerContext
 	private int prayerPoints;
 	private int maxPrayerPoints;
 	private int regionId = -1;
-	private int previousRegionId = -1;
 	private int idleTicks;
 	private int ticksSincePrayerDrain = Integer.MAX_VALUE;
 	private int lastPrayerPoints = -1;
@@ -103,7 +102,6 @@ public final class TriggerContext
 				// bringing up when you next come back.
 				placesJustFiled.remove(regionId);
 				incidentJustFiled = false;
-				previousRegionId = regionId;
 				regionId = newRegion;
 				noteRegionEntered(newRegion);
 			}
@@ -130,11 +128,13 @@ public final class TriggerContext
 		refreshRepetition(local);
 		ageQuestion();
 		checkWant();
-		checkSouvenir();
+		checkSouvenir(); // public:cut souvenirs-wishes
+		// public:cut side-games
 		checkBet();
 		checkAdvice();
 		checkChallenge();
-		checkWishLapse();
+		// public:end side-games
+		checkWishLapse(); // public:cut souvenirs-wishes
 		refreshAttention();
 		driftMood();
 		noteWhatWeAreDoing();
@@ -289,7 +289,7 @@ public final class TriggerContext
 		{
 			awaitingThievingAnchor = true;
 		}
-		log.debug("Thieving intent at {}", location);
+		log.debug("Thieving intent at {}", location); // public:cut logs
 	}
 
 	/** Set when intent arrived before there was a location to pin it to. */
@@ -970,6 +970,7 @@ public final class TriggerContext
 		return quest == null ? null : questWitness.apply(quest);
 	}
 
+	// public:cut skilling
 	// ---------------------------------------------------------- work sessions
 
 	/**
@@ -986,9 +987,6 @@ public final class TriggerContext
 	private int workTicks;
 	private int xpDropsThisSession;
 	private int ticksSinceXpDrop = Integer.MAX_VALUE;
-
-	/** The last menu option the player clicked, tags stripped. */
-	private String lastMenuOption = "";
 
 	public void setWork(boolean working, String activity, String targetName,
 		WorldPoint targetTile, int ticks, int drops, int ticksSinceDrop)
@@ -1040,16 +1038,7 @@ public final class TriggerContext
 		return ticksSinceXpDrop;
 	}
 
-	public void noteMenuOption(String option)
-	{
-		lastMenuOption = option == null ? "" : option;
-	}
-
-	public String getLastMenuOption()
-	{
-		return lastMenuOption;
-	}
-
+	// public:end skilling
 	// --------------------------------------------------------------- boundaries
 
 	/**
@@ -1252,6 +1241,7 @@ public final class TriggerContext
 		}
 	}
 
+	// public:cut chronicle
 	// -------------------------------------------------------------- chronicle
 
 	/**
@@ -1387,6 +1377,7 @@ public final class TriggerContext
 		}
 	}
 
+	// public:end chronicle
 	// -------------------------------------------------------------- repeating
 
 	/**
@@ -1562,8 +1553,10 @@ public final class TriggerContext
 		incidentNear = isPlaceHereNear();
 		incidentToRetell = false;
 		countersDirty = true;
+		// public:cut logs
 		log.debug("Incident: {} ({}) in {} with '{}', now {}", key, incidentPhrase,
 			incidentWhere, incidentWho, incidentCount);
+		// public:end logs
 	}
 
 	public int getIncidentWhere()
@@ -2101,6 +2094,7 @@ public final class TriggerContext
 		likedRegions = liked == null ? java.util.Collections.emptySet() : liked;
 		dislikedRegions = disliked == null ? java.util.Collections.emptySet() : disliked;
 	}
+	// public:cut memory-window
 
 	public java.util.Set<Integer> getLikedRegions()
 	{
@@ -2111,6 +2105,7 @@ public final class TriggerContext
 	{
 		return dislikedRegions;
 	}
+	// public:end memory-window
 
 	/**
 	 * The ROLLED feeling about where it is standing, ignoring everything
@@ -2313,6 +2308,7 @@ public final class TriggerContext
 		coreLikedRegion = liked;
 		coreDislikedRegion = disliked;
 	}
+	// public:cut memory-window
 
 	public int getCoreLikedRegion()
 	{
@@ -2323,6 +2319,7 @@ public final class TriggerContext
 	{
 		return coreDislikedRegion;
 	}
+	// public:end memory-window
 
 	/**
 	 * Whether the follower feels the named way about where it is standing.
@@ -2363,6 +2360,7 @@ public final class TriggerContext
 			: likedRegions.contains(regionId);
 	}
 
+	// public:cut souvenirs-wishes
 	// ---------------------------------------------------------------- wishes
 
 	/**
@@ -2409,9 +2407,10 @@ public final class TriggerContext
 			: new java.util.HashSet<>(itemIds);
 		wishDeadlineTick = client.getTickCount() + Math.max(1, minutes) * 100;
 		lastWishMs = System.currentTimeMillis();
-		log.info("Wish opened: {} for {} minutes, granted by {}", label, minutes, wishItems);
+		log.info("Wish opened: {} for {} minutes, granted by {}", label, minutes, wishItems); // public:cut logs
 	}
 
+	// public:end souvenirs-wishes
 	/**
 	 * Whether the wished-for thing is actually in the player's bag right now.
 	 * A wish with no item list is grantable on word alone.
@@ -2438,6 +2437,7 @@ public final class TriggerContext
 		return false;
 	}
 
+	// public:cut souvenirs-wishes
 	public boolean isWishedItemInBag()
 	{
 		if (!isWishing())
@@ -2495,11 +2495,14 @@ public final class TriggerContext
 			wishLabel = "";
 			wishItems = java.util.Collections.emptySet();
 			wishBackoffUntilTick = client.getTickCount() + WISH_BACKOFF_TICKS;
+			// public:cut logs
 			log.debug("Wish lapsed unfulfilled; wishing rests until tick {}",
 				wishBackoffUntilTick);
+			// public:end logs
 		}
 	}
 
+	// public:end souvenirs-wishes
 	// ----------------------------------------------------------------- wants
 
 	/**
@@ -2546,7 +2549,7 @@ public final class TriggerContext
 		// except where we are".
 		if (region == regionId)
 		{
-			log.info("Want refused: asked for region {} but we are standing in it", region);
+			log.info("Want refused: asked for region {} but we are standing in it", region); // public:cut logs
 			return;
 		}
 		wantOpen = true;
@@ -2560,8 +2563,10 @@ public final class TriggerContext
 		// session - and when one does not land the way it should, the log is
 		// the only place that can say whether it opened, what it was watching
 		// for, and where the player actually was.
+		// public:cut logs
 		log.info("Want opened: {} (region {}), {} minutes, from region {}",
 			wantLabel, region, minutes, regionId);
+		// public:end logs
 	}
 
 	public boolean isWanting()
@@ -2569,12 +2574,14 @@ public final class TriggerContext
 		return wantOpen;
 	}
 
+	// public:cut dev
 	/** Which region the open want is for, or -1. */
 	public int getWantRegion()
 	{
 		return wantOpen ? wantRegion : -1;
 	}
 
+	// public:end dev
 	/** Ticks left before the open want gives up, or 0. */
 	public int getWantTicksLeft()
 	{
@@ -2609,18 +2616,21 @@ public final class TriggerContext
 		{
 			wantOpen = false;
 			wantOutcome = WantOutcome.FULFILLED;
-			log.info("Want fulfilled: {} (region {})", wantLabel, wantRegion);
+			log.info("Want fulfilled: {} (region {})", wantLabel, wantRegion); // public:cut logs
 			return;
 		}
 		if (client.getTickCount() >= wantDeadlineTick)
 		{
 			wantOpen = false;
 			wantOutcome = WantOutcome.EXPIRED;
+			// public:cut logs
 			log.info("Want expired: {} (region {}), never left region {}",
 				wantLabel, wantRegion, regionId);
+			// public:end logs
 		}
 	}
 
+	// public:cut souvenirs-wishes
 	// --------------------------------------------------------- the souvenir
 
 	/**
@@ -2645,7 +2655,7 @@ public final class TriggerContext
 		souvenir = what;
 		souvenirDroppedTick = client.getTickCount() + Math.max(1, minutes) * 100;
 		souvenirSinceTick = client.getTickCount();
-		log.debug("Picked up {} for {} minutes", what, minutes);
+		log.debug("Picked up {} for {} minutes", what, minutes); // public:cut logs
 	}
 
 	/**
@@ -2663,7 +2673,7 @@ public final class TriggerContext
 		{
 			return;
 		}
-		log.debug("Traded {} for {}", souvenir, what);
+		log.debug("Traded {} for {}", souvenir, what); // public:cut logs
 		souvenir = what;
 		souvenirDroppedTick = client.getTickCount() + Math.max(1, minutes) * 100;
 		souvenirSinceTick = client.getTickCount();
@@ -2703,7 +2713,7 @@ public final class TriggerContext
 			return;
 		}
 		souvenirLost = true;
-		log.debug("Lost the {}", souvenir);
+		log.debug("Lost the {}", souvenir); // public:cut logs
 		// The name survives the loss so the line can mourn it by name.
 		souvenirDroppedTick = 0;
 	}
@@ -2714,6 +2724,7 @@ public final class TriggerContext
 		souvenir = "";
 	}
 
+	// public:end souvenirs-wishes
 	// ---------------------------------------------------- how long we have known each other
 
 	/**
@@ -2781,19 +2792,9 @@ public final class TriggerContext
 		wornValue = value;
 	}
 
-	public int getWornValue()
-	{
-		return wornValue;
-	}
-
 	public void setMetWearingValue(int value)
 	{
 		metWearingValue = value;
-	}
-
-	public int getMetWearingValue()
-	{
-		return metWearingValue;
 	}
 
 	/**
@@ -3122,11 +3123,14 @@ public final class TriggerContext
 	/** The two things the context can see for itself: the work, and a boss. */
 	private void noteWhatWeAreDoing()
 	{
-		if (isWorking() && !workActivity.isEmpty())
+		if (isWorking() && !workActivity.isEmpty()) // public:cut skilling
+		// public:else if (isInCombat() && isBossFight() && !combatTarget.isEmpty())
+		// public:cut skilling
 		{
 			noteDoing("the " + workActivity);
 		}
 		else if (isInCombat() && isBossFight() && !combatTarget.isEmpty())
+		// public:end skilling
 		{
 			noteDoing("fighting " + combatTarget);
 		}
@@ -3176,6 +3180,7 @@ public final class TriggerContext
 		return (int) Math.round(Math.atan2(-dx, -dy) / (2.0 * Math.PI) * 2048.0) & 0x7ff;
 	}
 
+	// public:cut side-games
 	// -------------------------------------------------------- the challenge
 
 	/**
@@ -3213,7 +3218,7 @@ public final class TriggerContext
 		challengeTarget = Math.max(1, target);
 		challengeStartedAt = getTally(tally);
 		challengeDeadlineTick = client.getTickCount() + Math.max(1, minutes) * 100;
-		log.debug("Challenge: {} of {} in {} minutes", target, tally, minutes);
+		log.debug("Challenge: {} of {} in {} minutes", target, tally, minutes); // public:cut logs
 	}
 
 	public boolean isChallenging()
@@ -3263,6 +3268,7 @@ public final class TriggerContext
 		return outcome;
 	}
 
+	// public:end side-games
 	// ------------------------------------------------------------- underfoot
 
 	/**
@@ -3353,6 +3359,7 @@ public final class TriggerContext
 		return stillTicks;
 	}
 
+	// public:cut side-games
 	// ----------------------------------------------------------- the advice
 
 	/**
@@ -3410,7 +3417,7 @@ public final class TriggerContext
 		adviceFreeSlotsAtStart = getFreeInventorySlots();
 		adviceStartTick = client.getTickCount();
 		adviceDeadlineTick = client.getTickCount() + Math.max(1, minutes) * 100;
-		log.debug("Advised about {} for {} minutes", about, minutes);
+		log.debug("Advised about {} for {} minutes", about, minutes); // public:cut logs
 	}
 
 	public boolean isAdvising()
@@ -3424,6 +3431,7 @@ public final class TriggerContext
 		return adviceAbout;
 	}
 
+	// public:end side-games
 	/** The tick each animation the player played was last played. */
 	private final java.util.Map<Integer, Integer> actTicks = new java.util.HashMap<>();
 
@@ -3450,17 +3458,20 @@ public final class TriggerContext
 	public void offerAct(int animationId)
 	{
 		actTicks.put(animationId, client.getTickCount());
+		// public:cut side-games
 		if (isAdvising() && adviceIds.contains(animationId))
 		{
 			settleAdvice(AdviceOutcome.HEEDED);
 		}
+		// public:end side-games
 	}
+	// public:cut side-games
 
 	private void settleAdvice(AdviceOutcome outcome)
 	{
 		adviceDeadlineTick = 0;
 		adviceOutcome = outcome;
-		log.debug("Advice about {} was {}", adviceAbout, outcome);
+		log.debug("Advice about {} was {}", adviceAbout, outcome); // public:cut logs
 	}
 
 	public AdviceOutcome pollAdvice()
@@ -3543,8 +3554,10 @@ public final class TriggerContext
 		betOpen = false;
 		boolean rich = lootValue >= betThreshold;
 		betOutcome = rich == betOnRich ? BetOutcome.WON : BetOutcome.LOST;
+		// public:cut logs
 		log.debug("Bet {} on {}{}: loot was {}", betOutcome,
 			betOnRich ? ">=" : "<", betThreshold, lootValue);
+		// public:end logs
 	}
 
 	public BetOutcome pollBet()
@@ -3564,6 +3577,7 @@ public final class TriggerContext
 		}
 	}
 
+	// public:end side-games
 	// ----------------------------------------------------------- the clock
 
 	/**
@@ -3675,8 +3689,10 @@ public final class TriggerContext
 			askedTree = "";
 			ignoredAsks++;
 			askBackoffUntilTick = client.getTickCount() + ASK_BACKOFF_TICKS;
+			// public:cut logs
 			log.debug("Question ignored ({} this session); asks rest until tick {}",
 				ignoredAsks, askBackoffUntilTick);
+			// public:end logs
 		}
 	}
 
@@ -3688,9 +3704,12 @@ public final class TriggerContext
 	/** Ignored questions per session before the asking stops altogether. */
 	private static final int MAX_IGNORED_ASKS = 2;
 
+	// public:cut souvenirs-wishes
 	/** Ninety minutes of not wishing after a wish lapses unfulfilled. */
 	private static final int WISH_BACKOFF_TICKS = 9_000;
+	// public:end souvenirs-wishes
 
+	// public:cut souvenirs-wishes
 	/**
 	 * How long after asking for something the follower waits before asking
 	 * again, whatever came of it: about a day. Play test, 8 Oct: five wish
@@ -3703,9 +3722,10 @@ public final class TriggerContext
 	/** When the follower last asked for something, as epoch millis, or 0. */
 	private long lastWishMs;
 
+	// public:end souvenirs-wishes
 	private int ignoredAsks;
 	private int askBackoffUntilTick;
-	private int wishBackoffUntilTick;
+	private int wishBackoffUntilTick; // public:cut souvenirs-wishes
 
 	/**
 	 * Whether rules that ASK something should hold their tongue: a question
@@ -3718,6 +3738,7 @@ public final class TriggerContext
 			|| client.getTickCount() < askBackoffUntilTick;
 	}
 
+	// public:cut souvenirs-wishes
 	/**
 	 * Whether the wishing should rest: a wish lapsed unfulfilled lately, or
 	 * one was asked for less than {@link #WISH_REST_MS} ago.
@@ -3739,6 +3760,7 @@ public final class TriggerContext
 		lastWishMs = Math.max(0, epochMs);
 	}
 
+	// public:end souvenirs-wishes
 	// ------------------------------------------------------------------- mood
 
 	/**
@@ -3787,7 +3809,7 @@ public final class TriggerContext
 		mood = Math.max(MOOD_MIN, Math.min(MOOD_MAX, mood + delta));
 		if (mood != before)
 		{
-			log.debug("mood {} -> {} ({}{})", before, mood, delta > 0 ? "+" : "", delta);
+			log.debug("mood {} -> {} ({}{})", before, mood, delta > 0 ? "+" : "", delta); // public:cut logs
 		}
 		return mood;
 	}
@@ -4010,7 +4032,7 @@ public final class TriggerContext
 			}
 		}
 		equippedItems = worn;
-		log.debug("equipment now {}", worn);
+		log.debug("equipment now {}", worn); // public:cut logs
 	}
 
 	public Client getClient()
@@ -4056,11 +4078,6 @@ public final class TriggerContext
 	public int getRegionId()
 	{
 		return regionId;
-	}
-
-	public int getPreviousRegionId()
-	{
-		return previousRegionId;
 	}
 
 	public int getIdleTicks()

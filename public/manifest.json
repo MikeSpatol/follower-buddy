@@ -1,0 +1,44 @@
+{
+  "about": "The public (Plugin Hub) build is generated from this source. Code that belongs to a feature the public build leaves out is marked with comments: '// public:cut f' ... '// public:end f' around a block, a trailing '// public:cut f' on one line, '// public:else text' for the line that replaces a cut one, and '// public:file f' on line 1 of a file that goes whole (<!-- --> in Markdown). A marker naming several features applies when any of them is left out. Markers are comments, so the full build is unchanged. requires: leaving out the key means leaving out those features too. resources: files that go with a feature.",
+  "features": {
+    "chronicle": "the Chronicle book, sketches, portraits and page news",
+    "posing": "Advanced posing and its Scene tab",
+    "sharevoice": "voices (attached sounds) and share packs",
+    "dev": "developer commands, traces and their settings",
+    "logs": "debug and info log lines",
+    "legacy": "migrations for saves from before 1.3",
+    "devdump": "the equipment-models.json / spotanims.json dump-file override",
+    "devfonts": "the fonts.json override and the fallback fonts only it keeps alive",
+    "agility": "agility copying (crossings, falls)",
+    "agility-all": "agility copying and marks of grace",
+    "chathead": "the animated chathead in the dialog box",
+    "company-extras": "gaze, noticing, will and gestures together",
+    "dialogs-editor": "the Conversations editor window",
+    "errands": "errands",
+    "gaze": "turning its head to the cursor and camera, and the look round",
+    "gestures": "the gesture pacing of Moments",
+    "marks": "remarks on marks of grace",
+    "memory-window": "the Memory window",
+    "messages-readonly": "editing in the Messages window (the window stays, read-only)",
+    "messages-window": "the Messages window",
+    "moments": "body language: claps, bows, celebrations, the logout wave, drop reactions",
+    "noticing": "walking over to things it notices",
+    "outfit-profiles": "outfit profiles, thrall outfits included",
+    "posing-preview": "the anim, gfx and pose preview commands",
+    "side-games": "bets, challenges and advice follow-ups",
+    "skilling": "skilling company",
+    "souvenirs-wishes": "souvenirs and wishes",
+    "spectate": "the spectator: standing clear in fights, fight lines, the shield",
+    "spectate-keep-fight-lines": "the spectator, keeping the fight start and end lines",
+    "spectate-shield": "the spectator's shield only",
+    "thrall-outfits": "per-style thrall outfits",
+    "will": "the Wilderness-ditch and strong-monster stops, stepping aside"
+  },
+  "requires": {
+    "devdump": ["dev"],
+    "devfonts": ["dev", "posing"]
+  },
+  "resources": {
+    "chronicle": ["src/main/resources/com/follower/default-chronicle.json"]
+  }
+}

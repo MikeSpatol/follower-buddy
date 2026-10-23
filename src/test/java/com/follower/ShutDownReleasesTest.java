@@ -25,6 +25,7 @@ public class ShutDownReleasesTest
 	@Rule
 	public final TemporaryFolder folder = new TemporaryFolder();
 
+	// public:cut devdump
 	@Test
 	public void theSpotanimCatalogueCanBeLetGo() throws IOException
 	{
@@ -40,6 +41,7 @@ public class ShutDownReleasesTest
 		assertTrue("and loads again", spotanims.isLoaded());
 	}
 
+	// public:end devdump
 	@Test
 	public void shutDownLetsThemGo() throws IOException
 	{
@@ -50,6 +52,6 @@ public class ShutDownReleasesTest
 		String body = plugin.substring(at, plugin.indexOf("\n\t}\n", at));
 		assertTrue(body.contains("modelRepository.unload();"));
 		assertTrue(body.contains("spotAnimRepository.unload();"));
-		assertTrue(body.contains("chronicleWindow.forgetPortraits();"));
+		assertTrue(body.contains("chronicleWindow.forgetPortraits();")); // public:cut chronicle
 	}
 }

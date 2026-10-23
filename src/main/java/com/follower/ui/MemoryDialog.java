@@ -1,3 +1,4 @@
+// public:file memory-window
 package com.follower.ui;
 
 import com.follower.speech.TriggerContext;
@@ -36,19 +37,19 @@ import net.runelite.client.ui.FontManager;
  */
 public class MemoryDialog extends JDialog
 {
-	private final Runnable onForget;
 	private final JPanel list = new JPanel();
 
 	/** The counts with names of their own, in the order the window lists them. */
 	private static final List<String> NAMED_COUNTS = java.util.Arrays.asList(
 		"kills", "kills" + TriggerContext.TODAY, "deaths", "deaths" + TriggerContext.TODAY,
-		"levels", "levels" + TriggerContext.TODAY, "quests", "music", "collections", "graces",
-		"want:kept", "want:missed", "advice:taken", "advice:ignored");
+		"levels", "levels" + TriggerContext.TODAY, "quests", "music", "collections", "graces", // public:cut agility-all,marks
+		// public:else "levels", "levels" + TriggerContext.TODAY, "quests", "music", "collections",
+		"want:kept", "want:missed", "advice:taken", "advice:ignored"); // public:cut side-games
+		// public:else "want:kept", "want:missed");
 
 	public MemoryDialog(Runnable onForget)
 	{
 		super((java.awt.Frame) null, "Follower Buddy - Memory", false);
-		this.onForget = onForget;
 
 		setDefaultCloseOperation(HIDE_ON_CLOSE);
 
@@ -271,6 +272,7 @@ public class MemoryDialog extends JDialog
 
 		rows.add(header("RIGHT NOW"));
 		boolean anything = false;
+		// public:cut souvenirs-wishes
 		if (c.isCarrying())
 		{
 			rows.add(row("Carrying", c.getSouvenir()));
@@ -287,17 +289,20 @@ public class MemoryDialog extends JDialog
 						+ " Talk-to to hand it over)")));
 			anything = true;
 		}
+		// public:end souvenirs-wishes
 		if (!c.getAskedTree().isEmpty())
 		{
 			rows.add(row("Waiting on an answer", askedAbout(c.getAskedTree())));
 			anything = true;
 		}
+		// public:cut side-games
 		if (c.isChallenging())
 		{
 			rows.add(row("The challenge", c.getChallengeAbout()
 				+ " (" + c.getChallengeLeft() + " to go)"));
 			anything = true;
 		}
+		// public:end side-games
 		if (!anything)
 		{
 			rows.add(remark("Nothing in hand."));
@@ -380,21 +385,25 @@ public class MemoryDialog extends JDialog
 				case "collections":
 					label = "Collection log items";
 					break;
+				// public:cut agility-all,marks
 				case "graces":
 					label = "Marks of grace picked up on a course";
 					break;
+				// public:end agility-all,marks
 				case "want:kept":
 					label = "Wishes granted";
 					break;
 				case "want:missed":
 					label = "Wishes missed";
 					break;
+				// public:cut side-games
 				case "advice:taken":
 					label = "Advice taken";
 					break;
 				case "advice:ignored":
 					label = "Advice ignored";
 					break;
+				// public:end side-games
 				case "hit":
 					label = "Biggest hit";
 					break;

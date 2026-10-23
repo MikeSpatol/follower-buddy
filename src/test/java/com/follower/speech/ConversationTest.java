@@ -1,3 +1,4 @@
+// public:file posing
 package com.follower.speech;
 
 import java.lang.reflect.Field;
@@ -178,13 +179,16 @@ public class ConversationTest
 		}
 		// The talk loop the follower's head was animated with all along.
 		assertEquals(588, Conversation.Expression.NEUTRAL.animations()[0]);
+		// public:cut chathead
 		// Talk-to's own box plays it too, at the length for the lines on show.
 		for (int lines = 1; lines <= 4; lines++)
 		{
 			assertEquals(Conversation.Expression.NEUTRAL.animations()[lines - 1],
 				FollowerDialog.talkClip(null, 0, lines));
 		}
+		// public:end chathead
 	}
+	// public:cut chathead
 
 	@Test
 	public void anNpcsChatheadNeverPosesOrFramesTheFollowersHead()
@@ -218,6 +222,7 @@ public class ConversationTest
 		assertEquals(happy[2], FollowerDialog.talkClip(happy, 0, 3));
 		assertEquals(AnimationID.CHATANG1, FollowerDialog.talkClip(null, AnimationID.CHATANG1, 2));
 	}
+	// public:end chathead
 
 	@Test
 	public void theFacesThatMoveOtherHeadsAreLeftOut()

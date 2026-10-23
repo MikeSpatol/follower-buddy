@@ -96,6 +96,7 @@ public class LifecycleGlueTest
 		return reset < 0 ? forget : forget < 0 ? reset : Math.min(reset, forget);
 	}
 
+	// public:cut company-extras
 	@Test
 	public void leavingASceneForgetsWhatWasNoticedInIt() throws IOException
 	{
@@ -105,12 +106,18 @@ public class LifecycleGlueTest
 		// outlived the world it was in, and after a hop the follower walked
 		// to the empty ground and named it.
 		String leaving = method("private void tearDownScene()");
-		for (String reset : new String[]{"noticing.reset();", "gaze.reset();", "will.reset();"})
+		for (String reset : new String[]{
+			"noticing.reset();", // public:cut noticing
+			"gaze.reset();", // public:cut gaze
+			"will.reset();", // public:cut will
+		})
 		{
 			assertTrue("leaving a scene must call " + reset, leaving.contains(reset));
 		}
 	}
 
+	// public:end company-extras
+	// public:cut dev
 	@Test
 	public void aForcedCutsceneGoesWithTheScene() throws IOException
 	{
@@ -121,6 +128,7 @@ public class LifecycleGlueTest
 		assertTrue("leaving a scene must let go of the forced cutscene",
 			method("private void tearDownScene()").contains("cutsceneForced = false;"));
 	}
+	// public:end dev
 
 	@Test
 	public void aSceneGoesWithTheScene() throws IOException
@@ -160,6 +168,7 @@ public class LifecycleGlueTest
 			method("private void noticeTheScene()").contains("speechEngine.setSceneQuiet(sceneQuiet());"));
 		assertTrue("and of the scene itself, which can move a quest on",
 			method("private void noticeTheScene()").contains("speechEngine.setInCutscene(inCutscene());"));
+		// public:cut chronicle
 		// And for a conversation as the rules read it, page flips ridden out:
 		// on the raw box the news went out on a flip (QA, 15 Oct).
 		assertTrue("the page news waits for the quiet",
@@ -167,6 +176,7 @@ public class LifecycleGlueTest
 				"nextPageNews(pageNews, client.getTickCount(), speechEngine.isQuiet(),\n"
 					+ "\t\t\tinConversation() || sceneQuiet() || (first != null && speechEngine.isPageLineCooling(first.event)),\n"
 					+ "\t\t\tpageNewsTicks(speechEngine.moodScaledGap()), lastRegionId);"));
+		// public:end chronicle
 		assertTrue(method("private boolean inConversation()")
 			.contains("return npcDialogOpen() || dialogGoneTicks <= 2;"));
 	}
@@ -205,7 +215,8 @@ public class LifecycleGlueTest
 		// only the first kept line had its clock restarted, so the second
 		// was dropped as stale as the box closed (probe P6).
 		assertTrue("queued while its own box is open", method("private void speak(String text,")
-			.contains("if ((sketching != null && sketching.isPosing()) || dialog.isOpen())"));
+			.contains("if ((sketching != null && sketching.isPosing()) || dialog.isOpen())")); // public:cut chronicle
+			// public:else .contains("if (dialog.isOpen())"));
 		String drain = method("private void drainSpeechQueue()");
 		int every = drain.indexOf("for (Utterance queued : speechQueue)");
 		assertTrue("every kept line", every >= 0
@@ -241,6 +252,7 @@ public class LifecycleGlueTest
 		assertTrue("before it is said", check < drain.indexOf("speakNow(line);"));
 	}
 
+	// public:cut moments
 	@Test
 	public void theMomentsAnswerToNoticesThings() throws IOException
 	{
@@ -261,7 +273,9 @@ public class LifecycleGlueTest
 		}
 		assertEquals(5, calls);
 	}
+	// public:end moments
 
+	// public:cut errands
 	@Test
 	public void theHiddenErrandIsNeverListed() throws IOException
 	{
@@ -294,6 +308,7 @@ public class LifecycleGlueTest
 		assertFalse(errand, errand.matches(".*\\w\\|.*|.*\\|\\w.*"));
 	}
 
+	// public:end errands
 	@Test
 	public void thePanelSaysNothingOnceTheItemsAreIn() throws IOException
 	{
@@ -309,20 +324,37 @@ public class LifecycleGlueTest
 		// Play test, 13 Oct: hold the activities through the quiet too. No
 		// errand, look round or noticing of its own until it is over.
 		String src = source();
-		assertTrue("errands", src.contains("errands.setSession(() -> skilling.isWorking() || sceneQuiet());"));
-		assertEquals("the look round and the noticing", 2, src.split(
-			"isInCombat\\(\\) \\|\\| sceneQuiet\\(\\) \\|\\| filming", -1).length - 1);
+		// public:cut errands
+		assertTrue("errands", src.contains("errands.setSession(() -> skilling.isWorking() || sceneQuiet());")); // public:cut skilling
+		// public:else assertTrue("errands", src.contains("errands.setSession(this::sceneQuiet);"));
+		// public:end errands
+		// public:cut company-extras
+		assertEquals(""
+			+ "the look round" // public:cut gaze
+			+ " and " // public:cut gaze,noticing
+			+ "the noticing", 0 // public:cut noticing
+			// public:else , 0
+			+ 1 // public:cut gaze
+			+ 1, src.split( // public:cut noticing
+			// public:else , src.split(
+			"isInCombat\\(\\) \\|\\| sceneQuiet\\(\\)"
+			+ " \\|\\| filming", -1).length - 1); // public:cut posing
+			// public:else , -1).length - 1);
+		// public:end company-extras
 	}
 
+	// public:cut company-extras,will
 	@Test
 	public void theWillStepsNothingAsideInAScene() throws IOException
 	{
 		// The scene's hold is a stay, and a plain one to the will: walked at
 		// by a scripted walk it stepped into the cast or along the walk.
 		assertTrue(method("protected void startUp()").contains(
-			"&& minutesState == 0 && !emoteHold && !filming && !sceneHolds());"));
+			"&& minutesState == 0 && !emoteHold && !filming && !sceneHolds());")); // public:cut posing
+			// public:else "&& minutesState == 0 && !emoteHold && !sceneHolds());"));
 	}
 
+	// public:end company-extras,will
 	@Test
 	public void aParkWaitingForTheFeetGoesWithTheScene() throws IOException
 	{
@@ -347,13 +379,15 @@ public class LifecycleGlueTest
 		// at every stop beside a standing player, its weapon put away.
 		String leaving = method("private void tearDownScene()");
 		for (String let : new String[]{"follower.clearPoseOverride(mirroredPose);", "mirroredPose = 0;",
-			"pendingMime = 0;", "copyAtWork = false;", "emoteDisarmed = false;"})
+			"pendingMime = 0;", "copyAtWork = false;", "emoteDisarmed = false;"}) // public:cut skilling
+			// public:else "emoteDisarmed = false;"})
 		{
 			assertTrue("leaving a scene must let go of the copy: " + let, leaving.contains(let));
 		}
 		assertTrue("before the body goes", leaving.indexOf("mirroredPose = 0;") < leaving.indexOf("follower.despawn();"));
 	}
 
+	// public:cut chronicle
 	@Test
 	public void theBookClosesWithTheScene() throws IOException
 	{
@@ -364,6 +398,7 @@ public class LifecycleGlueTest
 			method("private void tearDownScene()").contains("chronicleWindow.close();"));
 	}
 
+	// public:end chronicle
 	@Test
 	public void aProfileSwitchTakesTheBaselineAgain() throws IOException
 	{
@@ -387,6 +422,7 @@ public class LifecycleGlueTest
 			switched.contains("speechQueue.clear();"));
 	}
 
+	// public:cut memory-window
 	@Test
 	public void forgettingTakesTheBaselineAgain() throws IOException
 	{
@@ -403,6 +439,7 @@ public class LifecycleGlueTest
 			forget.contains("if (switchTakesTheBaseline(freshLogin))\n\t\t\t{\n"
 				+ "\t\t\t\tspeechEngine.primeEdgesOnNextTick();"));
 	}
+	// public:end memory-window
 
 	@Test
 	public void anEnableInTheWorldTakesTheBaseline() throws IOException
@@ -477,6 +514,7 @@ public class LifecycleGlueTest
 				&& loggedOut.indexOf("tearDownScene();") < loggedOut.indexOf(RESET));
 	}
 
+	// public:cut outfit-profiles
 	@Test
 	public void aLogoutLetsTheMemoryGoButNotTheOutfit() throws IOException
 	{
@@ -494,6 +532,8 @@ public class LifecycleGlueTest
 			source().contains("\toutfitProfileId = -1;"));
 	}
 
+	// public:end outfit-profiles
+	// public:cut chronicle
 	@Test
 	public void aDisablePutsTheSketchingScrollAway() throws IOException
 	{
@@ -504,6 +544,7 @@ public class LifecycleGlueTest
 			method("protected void shutDown()").contains("sketchingNow.reset();"));
 	}
 
+	// public:end chronicle
 	@Test
 	public void aDisableLetsGoOfTheFollowerOnTheClientThread() throws IOException
 	{
@@ -522,7 +563,10 @@ public class LifecycleGlueTest
 		String swing = stopping.substring(0, over);
 		String client = stopping.substring(over, stopping.indexOf("\n\t\t});", over));
 		for (String call : new String[]{"resetThrallQuietly();", "dialog.close();", "flourishNow.abort();",
-			"skillingNow.reset();", "momentsNow.reset();", "sketchingNow.reset();", "errandsNow.reset();",
+			"skillingNow.reset();", // public:cut skilling
+			"momentsNow.reset();", // public:cut moments
+			"sketchingNow.reset();", // public:cut chronicle
+			"errandsNow.reset();", // public:cut errands
 			"endMinutes(false);", "follower.setPoseOverride(0);", "follower.despawn();"})
 		{
 			assertTrue("the stop must call " + call + " on the client thread", client.contains(call));
@@ -537,6 +581,7 @@ public class LifecycleGlueTest
 		}
 	}
 
+	// public:cut posing
 	@Test
 	public void aSceneBeingFilmedEndsWithTheScene() throws IOException
 	{
@@ -582,6 +627,8 @@ public class LifecycleGlueTest
 			opening.contains("javax.swing.SwingUtilities.invokeLater(") && opening.contains("clientThread::invoke"));
 	}
 
+	// public:end posing
+	// public:cut chronicle
 	@Test
 	public void aCreatureIsMetInSightOrByDealingWithItNotByLoading() throws IOException
 	{
@@ -600,6 +647,7 @@ public class LifecycleGlueTest
 			.contains("hasLineOfSightTo(view, mine)"));
 	}
 
+	// public:end chronicle
 	@Test
 	public void theShiftHoverTooltipIsAddedEveryFrame() throws IOException
 	{
@@ -611,13 +659,16 @@ public class LifecycleGlueTest
 			method("public void onClientTick(").contains("tooltipManager"));
 	}
 
+	// public:cut chronicle
 	@Test
 	public void sketchIsOfferedOnlyWhenItWouldStart() throws IOException
 	{
 		assertTrue("the menu asks whether a sketch could start now", source()
-			.contains("if (sketching != null && !filming && sketching.canSketchNow())"));
+			.contains("if (sketching != null && !filming && sketching.canSketchNow())")); // public:cut posing
+			// public:else .contains("if (sketching != null && sketching.canSketchNow())"));
 	}
 
+	// public:end chronicle
 	@Test
 	public void aShiftClickTalksOnTheClientThread() throws IOException
 	{
@@ -649,7 +700,8 @@ public class LifecycleGlueTest
 		// rebuild that followed failed and told the chat the install had no
 		// equipment models. After a stop the block despawns anyway.
 		String starting = method("protected void startUp() throws Exception");
-		for (String letGo : new String[]{"public void release()", "public void takeOff()"})
+		for (String letGo : new String[]{"public void release()", "public void takeOff()"}) // public:cut skilling
+		// public:else for (String letGo : new String[]{"public void release()"})
 		{
 			int at = starting.indexOf(letGo);
 			assertTrue("the hands have no " + letGo + " - the lint has lost its place", at >= 0);
@@ -660,6 +712,7 @@ public class LifecycleGlueTest
 		}
 	}
 
+	// public:cut chronicle
 	@Test
 	public void theSketchBookOpensWhenTheAccountsProfileArrives() throws IOException
 	{
@@ -677,6 +730,7 @@ public class LifecycleGlueTest
 			arrived.contains("event.getNewProfile() != null"));
 	}
 
+	// public:cut memory-window
 	@Test
 	public void forgettingTakesOnlyTheDrawingsMadeUnderThisMemory() throws IOException
 	{
@@ -702,7 +756,9 @@ public class LifecycleGlueTest
 				&& listed < forget.indexOf(FORGET));
 		assertTrue("and Forget takes those", forget.contains("sketchBook.forgetAll(sketched);"));
 	}
+	// public:end memory-window
 
+	// public:end chronicle
 	@Test
 	public void aDeathAMinigameGivesBackIsNoDeath() throws IOException
 	{
@@ -729,11 +785,14 @@ public class LifecycleGlueTest
 		// work, is left on it; the rest goes to the plugin's own worker, made
 		// at the start and stopped at the stop.
 		String source = source();
-		assertEquals("only the voice on the shared executor", 1, source.split("executor[.]execute[(]", -1).length - 1);
+		assertEquals("only the voice on the shared executor", 1, source.split("executor[.]execute[(]", -1).length - 1); // public:cut sharevoice
+		// public:else assertEquals("nothing on the shared executor", 0, source.split("executor[.]execute[(]", -1).length - 1);
+		// public:cut sharevoice
 		assertTrue(source.contains("executor.execute(() -> voices.play(text, volume));"));
 		assertTrue(source.contains("worker.execute(() -> exportPack(target, parent));"));
 		assertTrue(source.contains("worker.execute(() -> importPack(source, parent));"));
-		assertTrue(source.contains("sketchBook, drawManager, worker,"));
+		// public:end sharevoice
+		assertTrue(source.contains("sketchBook, drawManager, worker,")); // public:cut chronicle
 		assertTrue(method("protected void startUp() throws Exception").contains("worker = new "));
 		assertTrue(method("protected void shutDown() throws Exception").contains("worker.shutdown();"));
 	}

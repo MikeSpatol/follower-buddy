@@ -1,3 +1,4 @@
+// public:file skilling
 package com.follower.follower;
 
 import com.follower.FollowerConfig;
@@ -12,7 +13,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 import java.util.Set;
-import java.util.function.BiConsumer;
+import java.util.function.BiConsumer; // public:cut errands
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -189,7 +190,7 @@ public class SkillingController
 
 	/** How long the walk to it is given before the visit is written off. */
 	static final int FIRE_ARRIVAL_PATIENCE = 10;
-	private static final int FIRE_GAG_ONE_IN = 50;
+	private static final int FIRE_GAG_ONE_IN = 50; // public:cut errands
 
 	/** The cold-stamp-feet rule's regions: the Wintertodt camp and the snows. */
 	static final Set<Integer> COLD_REGIONS = new HashSet<>(Arrays.asList(10553, 8253, 6462));
@@ -368,6 +369,7 @@ public class SkillingController
 	/** Ticks the feet are kept after a session for the patch inspector's notes. */
 	private boolean endNoteOut;
 
+	// public:cut errands
 	/**
 	 * A way to start an errand by key, silently or not: the prayer at the
 	 * altar borrows the altar errand, the fire line the too-close gag. Null
@@ -375,6 +377,7 @@ public class SkillingController
 	 */
 	private BiConsumer<String, Boolean> errands;
 
+	// public:end errands
 	public SkillingController(Client client, FollowerEntity follower, FollowerConfig config,
 		ErrandController.Hands hands, Consumer<TriggerEvent> dispatch,
 		BooleanSupplier inCombat, BooleanSupplier feetTaken, BooleanSupplier bankOpen)
@@ -392,6 +395,7 @@ public class SkillingController
 		this.ledger = new PropFlourish(follower, hands);
 	}
 
+	// public:cut errands
 	/**
 	 * Offers the errands: (key, silent), as {@link ErrandController#force}.
 	 * Without one the prayer kneel and the fire gag simply do not happen.
@@ -401,6 +405,7 @@ public class SkillingController
 		this.errands = force;
 	}
 
+	// public:end errands
 	public boolean isWorking()
 	{
 		return session != null;
@@ -451,6 +456,7 @@ public class SkillingController
 		}
 	}
 
+	// public:cut dev
 	public String describe()
 	{
 		if (!config.keepsCompany())
@@ -491,6 +497,7 @@ public class SkillingController
 			+ Borrow.toolFor(session.activity, session.lastAnimation, worn, hand, itemName(hand));
 	}
 
+	// public:end dev
 	/**
 	 * Whether a mirrored pose may play from where the follower stands. During
 	 * a session the answer is only from the seat: a cast copied while the
@@ -509,6 +516,7 @@ public class SkillingController
 			|| joinTile != null || ledger.isActive();
 	}
 
+	// public:cut errands
 	/**
 	 * Whether the errands must stand aside: the feet are held, or a session
 	 * is on - except a prayer at an altar, which is the one session that
@@ -516,6 +524,7 @@ public class SkillingController
 	 * under way must also pass; the errands' own session gate keeps every
 	 * unforced start out of the prayer session too.
 	 */
+	// public:end errands
 	/**
 	 * Excuses the seat for a moment, or hands it back. Excused, the seat is
 	 * kept in mind but not retaken - the moment has the feet - and the
@@ -556,6 +565,7 @@ public class SkillingController
 		return grateful != null && grateful.getAsBoolean() ? GRATEFUL_SEAT_AFTER_TICKS : SEAT_AFTER_TICKS;
 	}
 
+	// public:cut errands
 	public boolean blocksErrands()
 	{
 		// A tool kept between trees is still in the hand, and every errand
@@ -564,6 +574,7 @@ public class SkillingController
 			|| (session != null && !"prayer".equals(session.activity));
 	}
 
+	// public:end errands
 	/** Whether the follower is sitting in for the long haul. */
 	public boolean isSitting()
 	{
@@ -746,7 +757,7 @@ public class SkillingController
 				// moment ago by the same click, would be wiped with the looks.
 				company.aimAt(faceTile(), session.activity, modeFor(here), now);
 			}
-			log.debug("Work moved to {} at {}", name, min);
+			log.debug("Work moved to {} at {}", name, min); // public:cut logs
 			return;
 		}
 
@@ -987,7 +998,7 @@ public class SkillingController
 				// despawn; the depletion's own look covers the other order.
 				company.lookNext(at);
 			}
-			log.debug("The spot moved to {}", at);
+			log.debug("The spot moved to {}", at); // public:cut logs
 		}
 	}
 
@@ -1124,7 +1135,7 @@ public class SkillingController
 		}
 		stunCooldownUntil = now + STUN_COOLDOWN_TICKS;
 		company.gesture(KeepingCompany.HEAD_SHAKE);
-		log.debug("Stunned; a shake of the head");
+		log.debug("Stunned; a shake of the head"); // public:cut logs
 	}
 
 	/** Out of runes: a look at the player and a think. */
@@ -1162,6 +1173,7 @@ public class SkillingController
 		}
 	}
 
+	// public:cut posing
 	/**
 	 * A scene starts being filmed: the ledger's scroll goes away now, and an
 	 * entry still due is not made. Left to run out, its end takes off the
@@ -1173,6 +1185,7 @@ public class SkillingController
 		ledgerAt = 0;
 	}
 
+	// public:end posing
 	/** A new task: a shrug. Whatever it is, it is a lot of them. */
 	private void newTask(int now)
 	{
@@ -1443,12 +1456,14 @@ public class SkillingController
 		opened.lastAnimation = pending.lastAnimation;
 		pending = null;
 		open(opened, now);
+		// public:cut errands
 		// A prayer at an altar takes no seat: the follower goes and kneels
 		// beside the player through the altar errand, with its lines skipped.
 		if ("Pray-at".equalsIgnoreCase(session.option) && errands != null)
 		{
 			errands.accept("altar", true);
 		}
+		// public:end errands
 	}
 
 	/**
@@ -1531,8 +1546,10 @@ public class SkillingController
 		seatDueTick = now + seatAfter();
 		company.begin(now);
 		company.aimAt(faceTile(), session.activity, modeFor(session.workSpot), now);
+		// public:cut logs
 		log.debug("Work session: {} on {} at {}", session.option, session.targetName,
 			session.targetTile);
+		// public:end logs
 	}
 
 	/**
@@ -1619,8 +1636,10 @@ public class SkillingController
 		{
 			dispatch.accept(TriggerEvent.workEnd(done.activity, done.targetName));
 		}
+		// public:cut logs
 		log.debug("Work session over: {} on {}{}", done.option, done.targetName,
 			silent ? " (aborted)" : "");
+		// public:end logs
 	}
 
 	/**
@@ -1689,7 +1708,7 @@ public class SkillingController
 			// Off it now, in case there is nowhere better to be given.
 			follower.resumeFollowing();
 		}
-		log.debug("The seat is not ground any more; choosing again");
+		log.debug("The seat is not ground any more; choosing again"); // public:cut logs
 	}
 
 	/** Whether a kept tool has earned its bow on the way back. */
@@ -1736,7 +1755,7 @@ public class SkillingController
 		}
 		session.depleted = true;
 		dispatch.accept(TriggerEvent.targetDepleted(session.targetName));
-		log.debug("Target depleted: {} at {}", session.targetName, session.targetTile);
+		log.debug("Target depleted: {} at {}", session.targetName, session.targetTile); // public:cut logs
 
 		// Where the next one is: the nearest of the same name that is not
 		// this one. A moved spot may not have turned up yet; npcSpawned
@@ -1815,7 +1834,7 @@ public class SkillingController
 					{
 						trapSeat = candidate;
 						follower.setStayFaceTile(trapTile);
-						log.debug("A trap underfoot; over to {}", candidate);
+						log.debug("A trap underfoot; over to {}", candidate); // public:cut logs
 						break;
 					}
 				}
@@ -1847,7 +1866,7 @@ public class SkillingController
 				trapReadAt = now + jitter(KeepingCompany.WORK_STRETCH_TICKS,
 					KeepingCompany.WORK_STRETCH_SPREAD);
 				follower.setStayFaceTile(min);
-				log.debug("Watching the trap at {} from {}", min, candidate);
+				log.debug("Watching the trap at {} from {}", min, candidate); // public:cut logs
 				return true;
 			}
 		}
@@ -2124,7 +2143,7 @@ public class SkillingController
 			putTheParkedScrollAway();
 			int walk = from == null ? JOIN_ARRIVAL_PATIENCE : from.distanceTo(candidate);
 			joinBy = client.getTickCount() + walk + JOIN_ARRIVAL_PATIENCE;
-			log.debug("Going over to join in at {} by {}", candidate, session.targetName);
+			log.debug("Going over to join in at {} by {}", candidate, session.targetName); // public:cut logs
 			return;
 		}
 	}
@@ -2738,11 +2757,13 @@ public class SkillingController
 		{
 			return;
 		}
+		// public:cut errands
 		if (errands != null && random.nextInt(FIRE_GAG_ONE_IN) == 0)
 		{
 			errands.accept("firedeath", false);
 			return;
 		}
+		// public:end errands
 		WorldPoint from = follower.getWorldLocation();
 		List<WorldPoint> beside = ring(min, max, 1, min.getPlane());
 		beside.removeIf(c -> c.getX() != min.getX() && c.getY() != min.getY());
@@ -2762,7 +2783,7 @@ public class SkillingController
 				int walk = from == null ? FIRE_LINE_TILES : from.distanceTo(candidate);
 				fireWarmAt = now + walk + 2;
 				fireLeaveAt = 0;
-				log.debug("The fourth fire, at {}; going over", min);
+				log.debug("The fourth fire, at {}; going over", min); // public:cut logs
 				return;
 			}
 		}
@@ -2863,7 +2884,7 @@ public class SkillingController
 		bankTripGathering = modeFor(here) == KeepingCompany.Mode.GATHERING;
 		bankTripUntil = now + (banking ? BANK_TRIP_CAP_TICKS : BANK_WALK_TICKS);
 		follower.setStayFaceTile(here);
-		log.debug("A bank trip; the seat at {} is kept", seat);
+		log.debug("A bank trip; the seat at {} is kept", seat); // public:cut logs
 	}
 
 	/**
@@ -2889,7 +2910,7 @@ public class SkillingController
 		{
 			bankTripConfirmed = true;
 			bankTripUntil = now + BANK_TRIP_CAP_TICKS;
-			log.debug("The bank opened; the seat is kept for the trip");
+			log.debug("The bank opened; the seat is kept for the trip"); // public:cut logs
 			return;
 		}
 		boolean near = here.getPlane() == seat.getPlane()
@@ -2980,7 +3001,7 @@ public class SkillingController
 				seat = chosen.from;
 				company.watch(null);
 				seatTheCompany(client.getTickCount());
-				log.debug("Working alongside at {}, from {}", chosen.min, seat);
+				log.debug("Working alongside at {}, from {}", chosen.min, seat); // public:cut logs
 				return;
 			}
 		}
@@ -3023,7 +3044,7 @@ public class SkillingController
 		{
 			follower.setStayFaceTile(face);
 			company.seated(seat, faceTile());
-			log.debug("Kept the seat at {} for {}", seat, session.targetName);
+			log.debug("Kept the seat at {} for {}", seat, session.targetName); // public:cut logs
 			return;
 		}
 		for (WorldPoint candidate : candidates)
@@ -3045,7 +3066,7 @@ public class SkillingController
 			follower.setStayFaceTile(face);
 			company.watch(guard);
 			company.seated(seat, faceTile());
-			log.debug("Seated at {} facing {}", seat, face);
+			log.debug("Seated at {} facing {}", seat, face); // public:cut logs
 			return;
 		}
 		if (held != null && held.equals(follower.getStayTile()) && !feetTaken.getAsBoolean())
@@ -3056,7 +3077,7 @@ public class SkillingController
 		}
 		seat = null;
 		company.unseated();
-		log.debug("No seat by {} for {}; following instead", player, session.targetName);
+		log.debug("No seat by {} for {}; following instead", player, session.targetName); // public:cut logs
 	}
 
 	/** A gathering seat kept for the next target is no further than this from the player. */
@@ -3736,11 +3757,5 @@ public class SkillingController
 		context.setWork(true, session.activity, session.targetName, session.targetTile,
 			now - session.startTick, session.xpDrops,
 			session.lastDropTick < 0 ? Integer.MAX_VALUE : now - session.lastDropTick);
-	}
-
-	/** The option words, for the docs and the tests. */
-	public static List<String> workOptions()
-	{
-		return Arrays.asList(WORK_OPTIONS);
 	}
 }

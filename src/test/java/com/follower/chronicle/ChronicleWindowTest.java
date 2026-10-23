@@ -1,3 +1,4 @@
+// public:file chronicle
 package com.follower.chronicle;
 
 import com.follower.speech.TriggerContext;
@@ -73,7 +74,8 @@ public class ChronicleWindowTest
 				}
 			});
 		fonts = new GameFontRepository(new Gson());
-		fonts.load(folder.newFolder().toPath());
+		fonts.load(folder.newFolder().toPath()); // public:cut devfonts
+		// public:else fonts.load();
 		ChronicleLoader loader = new ChronicleLoader(new Gson());
 		loader.load(folder.newFolder().toPath());
 		window = new ChronicleWindow(client, null, null, null, fonts, loader);

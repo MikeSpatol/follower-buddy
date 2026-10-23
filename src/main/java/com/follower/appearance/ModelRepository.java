@@ -1,15 +1,14 @@
 package com.follower.appearance;
 
 import com.google.gson.Gson;
+// public:cut devdump
 import com.google.gson.JsonSyntaxException;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+// public:end devdump
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,11 +31,13 @@ import net.runelite.api.kit.KitType;
 @Singleton
 public class ModelRepository
 {
+	// public:cut devdump
 	/** Bumped whenever the dump format changes incompatibly. */
 	public static final int SUPPORTED_VERSION = 1;
 
 	public static final String FILE_NAME = "equipment-models.json";
 
+	// public:end devdump
 	/** An item the follower can wear, for the outfit picker. */
 	public static class WearableItem
 	{
@@ -126,6 +127,7 @@ public class ModelRepository
 		}
 	}
 
+	// public:cut devdump
 	public static class Dump
 	{
 		public int version;
@@ -134,11 +136,12 @@ public class ModelRepository
 		public Map<String, Entry> kits;
 	}
 
+	// public:end devdump
 	private final Gson gson;
 
 	@Getter
 	private volatile boolean loaded;
-	private volatile boolean liveRead;
+	private volatile boolean liveRead; // public:cut devdump
 
 	@Getter
 	private volatile String status = "not loaded";
@@ -152,6 +155,7 @@ public class ModelRepository
 		this.gson = gson;
 	}
 
+	// public:cut devdump
 	/**
 	 * Loads from {@code <dataDir>/equipment-models.json}, falling back to a bundled
 	 * resource of the same name if one was shipped with the jar.
@@ -178,18 +182,6 @@ public class ModelRepository
 		{
 			status = "no " + FILE_NAME + " in " + dataDir;
 		}
-
-		try (InputStream in = ModelRepository.class.getResourceAsStream("/com/follower/" + FILE_NAME))
-		{
-			if (in != null)
-			{
-				read(new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8)), "bundled resource");
-			}
-		}
-		catch (IOException | JsonSyntaxException e)
-		{
-			log.warn("Could not read bundled model dump", e);
-		}
 	}
 
 	private boolean read(Reader reader, String source)
@@ -212,10 +204,11 @@ public class ModelRepository
 		loaded = true;
 		status = items.size() + " items, " + kits.size() + " kits"
 			+ (dump.cacheRevision == null ? "" : " (cache " + dump.cacheRevision + ")");
-		log.info("Loaded model dump from {}: {}", source, status);
+		log.info("Loaded model dump from {}: {}", source, status); // public:cut logs
 		return true;
 	}
 
+	// public:end devdump
 	/**
 	 * Builds the catalogue from the client's own loaded cache - the no-dump
 	 * path every Hub install uses. A dump file, when present, wins for the
@@ -240,24 +233,29 @@ public class ModelRepository
 	 */
 	void addLive(Map<String, Entry> liveItems, Map<String, Entry> liveKits)
 	{
+		// public:cut devdump
 		boolean dumped = loaded;
 		liveItems.putAll(items);
 		liveKits.putAll(kits);
+		// public:end devdump
 		items = liveItems;
 		kits = liveKits;
 		loaded = true;
+		// public:cut devdump
 		liveRead = true;
 		if (!dumped)
 		{
+		// public:end devdump
 			status = items.size() + " items, " + kits.size() + " kits (live cache)";
-		}
-		log.info("Loaded model catalogue from live cache: {} items, {} kits", items.size(), kits.size());
+		} // public:cut devdump
+		log.info("Loaded model catalogue from live cache: {} items, {} kits", items.size(), kits.size()); // public:cut logs
 	}
 
 	/** Whether the client's own cache has been read in yet, under a dump or not. */
 	public boolean hasReadTheLiveCache()
 	{
-		return liveRead;
+		return liveRead; // public:cut devdump
+		// public:else return loaded;
 	}
 
 	public void unload()
@@ -265,7 +263,7 @@ public class ModelRepository
 		items = Collections.emptyMap();
 		kits = Collections.emptyMap();
 		loaded = false;
-		liveRead = false;
+		liveRead = false; // public:cut devdump
 		status = "not loaded";
 	}
 
@@ -303,14 +301,18 @@ public class ModelRepository
 				continue;
 			}
 
+			// public:cut devdump
 			try
 			{
+			// public:end devdump
 				matches.add(new WearableItem(Integer.parseInt(entry.getKey()), name));
+			// public:cut devdump
 			}
 			catch (NumberFormatException ignored)
 			{
 				// Malformed key in the dump; skip it.
 			}
+			// public:end devdump
 
 			if (matches.size() >= limit * 4)
 			{
@@ -399,18 +401,22 @@ public class ModelRepository
 			{
 				continue;
 			}
+			// public:cut devdump
 			try
 			{
+			// public:end devdump
 				int id = Integer.parseInt(entry.getKey());
 				if (!nonSelectableKits.contains(id))
 				{
 					ids.add(id);
 				}
+			// public:cut devdump
 			}
 			catch (NumberFormatException ignored)
 			{
 				// Malformed key; skip.
 			}
+			// public:end devdump
 		}
 
 		ids.sort(Integer::compareTo);
@@ -442,30 +448,24 @@ public class ModelRepository
 			+ java.util.Arrays.toString(entry.tr);
 	}
 
-	/** True if the dump carries body-part metadata (older dumps do not). */
-	public boolean hasKitParts()
-	{
-		for (Entry e : kits.values())
-		{
-			return e.bp != null;
-		}
-		return false;
-	}
-
 	/** Every wearable item id in the dump. */
 	public List<Integer> allItemIds()
 	{
 		List<Integer> ids = new ArrayList<>(items.size());
 		for (String key : items.keySet())
 		{
+			// public:cut devdump
 			try
 			{
+			// public:end devdump
 				ids.add(Integer.parseInt(key));
+			// public:cut devdump
 			}
 			catch (NumberFormatException ignored)
 			{
 				// Malformed key; skip.
 			}
+			// public:end devdump
 		}
 		return ids;
 	}
@@ -482,10 +482,5 @@ public class ModelRepository
 	public Entry kit(int kitId)
 	{
 		return kits.get(Integer.toString(kitId));
-	}
-
-	public boolean hasItem(int itemId)
-	{
-		return items.containsKey(Integer.toString(itemId));
 	}
 }

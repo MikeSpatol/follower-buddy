@@ -1,3 +1,4 @@
+// public:file chronicle
 package com.follower.chronicle;
 
 import com.google.gson.Gson;
@@ -140,7 +141,7 @@ public class ChronicleLoader
 		entries.putAll(read);
 		status = entries.size() + " pages (" + source + ")"
 			+ (errors.isEmpty() ? "" : ", " + errors.size() + " problem(s)");
-		log.info("Loaded chronicle: {}", status);
+		log.info("Loaded chronicle: {}", status); // public:cut logs
 		return true;
 	}
 

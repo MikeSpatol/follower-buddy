@@ -191,6 +191,7 @@ public class RunningBitOrderTest
 			Collections.singleton("fun-hans-race-first"), heard(h, HANS));
 	}
 
+	// public:cut skilling
 	@Test
 	public void aFollowerSixtyDaysInNamesGeraldAndLeavesItThere() throws IOException
 	{
@@ -233,6 +234,7 @@ public class RunningBitOrderTest
 		}
 	}
 
+	// public:end skilling
 	@Test
 	public void aOneTimeLineIsDatedAndTheDateSurvivesARestart()
 	{

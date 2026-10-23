@@ -39,14 +39,17 @@ public class AppearanceComposer
 	 * -50, -30)}. Lighting a chathead with the actor constants is what made it
 	 * shade differently from a real dialog's head.
 	 */
+	// public:cut chathead
 	private static final int WIDGET_CONTRAST = 768;
 	private static final int WIDGET_LIGHT_X = -50;
 	private static final int WIDGET_LIGHT_Y = -10;
 	private static final int WIDGET_LIGHT_Z = -50;
+	// public:end chathead
 
 	private final Client client;
 	private final ModelRepository repository;
 
+	// public:cut dev
 	/**
 	 * Exact body recolours captured from the live client by {@code ::follower
 	 * palette}: source colour -> replacement, both packed HSL, applied to the merged
@@ -103,6 +106,7 @@ public class AppearanceComposer
 				+ " y=" + adjustY + " z=" + adjustZ;
 	}
 
+	// public:end dev
 	/**
 	 * Women's worn models that Jagex rigged to the wrong arm, by item id, with
 	 * how far the woman's model sits from the man's.
@@ -186,6 +190,7 @@ public class AppearanceComposer
 					parts.set(i, parts.get(i).cloneVertices().translate(rerig[0], rerig[1], rerig[2]));
 				}
 			}
+			// public:cut dev
 
 			// The nudge, applied to every model this item contributed. After
 			// the colour clones and before the merge: a merged model shares
@@ -201,11 +206,12 @@ public class AppearanceComposer
 					parts.set(i, nudged);
 				}
 			}
+			// public:end dev
 		}
 
 		if (!missing.isEmpty())
 		{
-			log.debug("Model dump has no data for: {}", String.join(", ", missing));
+			log.debug("Model dump has no data for: {}", String.join(", ", missing)); // public:cut logs
 		}
 
 		if (parts.isEmpty())
@@ -219,6 +225,7 @@ public class AppearanceComposer
 			return null;
 		}
 
+		// public:cut dev
 		if (!exactPairs.isEmpty())
 		{
 			// The client's own mechanism: plain find/replace on the merged model.
@@ -230,8 +237,10 @@ public class AppearanceComposer
 		}
 		else
 		{
-			merged = applyBodyColors(merged, resolved.getColors());
-		}
+		// public:end dev
+			merged = applyBodyColors(merged, resolved.getColors()); // public:cut dev
+		// public:else merged = applyBodyColors(merged, resolved.getColors());
+		} // public:cut dev
 
 		// The ground clearance offset is applied when positioning, not baked into the
 		// vertices - it belongs in world space alongside the terrain height, and this
@@ -239,6 +248,7 @@ public class AppearanceComposer
 		return merged.light(AMBIENT, CONTRAST, LIGHT_X, LIGHT_Y, LIGHT_Z);
 	}
 
+	// public:cut chathead
 	/**
 	 * Composes the outfit's dialogue chathead: the game's own separate head models
 	 * (helm head variant, hair chathead, jaw chathead), coloured through the same
@@ -285,6 +295,7 @@ public class AppearanceComposer
 			return null;
 		}
 
+		// public:cut dev
 		if (!exactPairs.isEmpty())
 		{
 			merged = merged.cloneColors();
@@ -295,8 +306,10 @@ public class AppearanceComposer
 		}
 		else
 		{
-			merged = applyBodyColors(merged, resolved.getColors());
-		}
+		// public:end dev
+			merged = applyBodyColors(merged, resolved.getColors()); // public:cut dev
+		// public:else merged = applyBodyColors(merged, resolved.getColors());
+		} // public:cut dev
 
 		return merged.light(AMBIENT, WIDGET_CONTRAST,
 			WIDGET_LIGHT_X, WIDGET_LIGHT_Y, WIDGET_LIGHT_Z);
@@ -345,6 +358,8 @@ public class AppearanceComposer
 		}
 	}
 
+	// public:end chathead
+	// public:cut dev
 	/** ModelData has no translate; the mesh exposes its vertex arrays instead. */
 	private static void translate(ModelData data, float dx, float dy, float dz)
 	{
@@ -358,6 +373,7 @@ public class AppearanceComposer
 			zs[v] += dz;
 		}
 	}
+	// public:end dev
 
 	/**
 	 * Body-kit slots covered by the equipped gear, taken from each item's wearPos data.
@@ -407,6 +423,7 @@ public class AppearanceComposer
 		hidden.removeIf(outfit::isProp);
 		return hidden;
 	}
+	// public:cut dev
 
 	/**
 	 * Extracts the client's body-colour palette by differencing.
@@ -665,6 +682,7 @@ public class AppearanceComposer
 		}
 		return lines;
 	}
+	// public:end dev
 
 	private void addPart(List<ModelData> parts, ModelRepository.Entry entry, int gender)
 	{
@@ -684,7 +702,7 @@ public class AppearanceComposer
 			ModelData data = client.loadModelData(modelId);
 			if (data == null)
 			{
-				log.debug("Model {} not in cache", modelId);
+				log.debug("Model {} not in cache", modelId); // public:cut logs
 				continue;
 			}
 

@@ -1,3 +1,4 @@
+// public:file sharevoice
 package com.follower;
 
 import com.follower.share.PackFile;
@@ -171,7 +172,8 @@ public class PackRoundTripTest
 
 		// A second import must not breed count-2.wav, count-3.wav...
 		PackFile.apply(PackFile.read(pack, GSON), recipient, theirs.getSoundsFolder(), theirs);
-		assertEquals(1, theirs.availableFiles().size());
+		assertEquals(1, theirs.availableFiles().size()); // public:cut messages-window
+		// public:else assertEquals(1, Files.list(theirs.getSoundsFolder()).count());
 	}
 
 	@Test

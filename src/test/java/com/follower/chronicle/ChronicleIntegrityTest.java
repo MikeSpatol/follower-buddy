@@ -1,3 +1,4 @@
+// public:file chronicle
 package com.follower.chronicle;
 
 import com.follower.ui.GameFont;
@@ -396,7 +397,8 @@ public class ChronicleIntegrityTest
 	{
 		ChronicleLoader loader = loadAsAFreshInstall();
 		GameFontRepository fonts = new GameFontRepository(new Gson());
-		fonts.load(folder.newFolder().toPath());
+		fonts.load(folder.newFolder().toPath()); // public:cut devfonts
+		// public:else fonts.load();
 		GameFont small = fonts.getByName("p11_full");
 		assertNotNull("the caption font is not bundled", small);
 
@@ -551,7 +553,8 @@ public class ChronicleIntegrityTest
 	public void everyCharacterUsedHasAGlyphInTheFontsThatDrawIt() throws IOException
 	{
 		GameFontRepository fonts = new GameFontRepository(new Gson());
-		fonts.load(folder.newFolder().toPath());
+		fonts.load(folder.newFolder().toPath()); // public:cut devfonts
+		// public:else fonts.load();
 		GameFont[] used = {fonts.getByName("p12_full"), fonts.getByName("b12_full")};
 		for (GameFont font : used)
 		{

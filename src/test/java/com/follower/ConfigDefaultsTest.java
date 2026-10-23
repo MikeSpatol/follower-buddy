@@ -89,6 +89,7 @@ public class ConfigDefaultsTest
 			"", config.disabledGroups());
 	}
 
+	// public:cut skilling
 	@Test
 	public void theSkillingCompanyIsOnByDefault()
 	{
@@ -96,12 +97,15 @@ public class ConfigDefaultsTest
 		assertTrue("and the borrowed tool", config.borrowsTools());
 	}
 
+	// public:end skilling
+	// public:cut dev
 	@Test
 	public void theDiagnosticsAreOffForEveryoneElse()
 	{
 		assertFalse("developer commands must not ship enabled",
 			config.developerMode());
 	}
+	// public:end dev
 
 	// --------------------------------------------------------------- ranges
 
@@ -132,6 +136,7 @@ public class ConfigDefaultsTest
 	public void animationAndGraphicIdsAreRealNumbers()
 	{
 		int[] ids = {
+			// public:cut spectate,spectate-keep-fight-lines,spectate-shield
 			config.spectateShieldAnimation(),
 			config.spectateShieldChannelStart(),
 			config.spectateShieldChannelEnd(),
@@ -140,6 +145,7 @@ public class ConfigDefaultsTest
 			config.spectateShieldGraphic(),
 			config.spectateShieldChannelGraphic(),
 			config.spectateShieldEndGraphic(),
+			// public:end spectate,spectate-keep-fight-lines,spectate-shield
 			config.restAnimation(),
 		};
 		for (int id : ids)
@@ -149,6 +155,7 @@ public class ConfigDefaultsTest
 		assertTrue("the rest pose has to be something", config.restAnimation() > 0);
 	}
 
+	// public:cut outfit-profiles,thrall-outfits
 	@Test
 	public void theThrallProfilesPointAtProfilesThatExist() throws IOException
 	{
@@ -164,6 +171,7 @@ public class ConfigDefaultsTest
 		}
 	}
 
+	// public:end outfit-profiles,thrall-outfits
 	// ------------------------------------------------------ code and settings
 
 	@Test
@@ -198,6 +206,7 @@ public class ConfigDefaultsTest
 		assertTrue("rule groups a user cannot switch off: " + orphans, orphans.isEmpty());
 	}
 
+	// public:cut errands
 	@Test
 	public void theErrandFrequencyQuotesTheScheduleTheErrandsRun() throws Exception
 	{
@@ -239,6 +248,7 @@ public class ConfigDefaultsTest
 		}
 	}
 
+	// public:end errands
 	@Test
 	public void everySettingIsInASectionAndHasSomethingToSay()
 	{

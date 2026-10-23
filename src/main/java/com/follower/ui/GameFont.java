@@ -130,6 +130,7 @@ public final class GameFont
 		}
 	}
 
+	// public:cut posing
 	/**
 	 * Text as the client draws it, character for character: a no-break
 	 * space as a space, a character with a glyph as itself, and one without
@@ -148,6 +149,7 @@ public final class GameFont
 		return out.toString();
 	}
 
+	// public:end posing
 	/** The exact pixel width the client would measure for this string. */
 	public int stringWidth(String text)
 	{
@@ -163,6 +165,7 @@ public final class GameFont
 		return width;
 	}
 
+	// public:cut chronicle
 	/**
 	 * Draws with {@code y} as the BASELINE, the widget text convention: a text
 	 * line's baseline sits at its top plus the font's ascent.
@@ -172,6 +175,7 @@ public final class GameFont
 		drawTop(g, text, x, y - ascent, rgb, shadowed);
 	}
 
+	// public:end chronicle
 	/** Draws with {@code y} as the TOP of the glyph cell. */
 	public void drawTop(Graphics2D g, String text, int x, int y, int rgb, boolean shadowed)
 	{
@@ -197,12 +201,14 @@ public final class GameFont
 		}
 	}
 
+	// public:cut chronicle
 	/** Centered on {@code x}, baseline at {@code y}. */
 	public void drawCenteredBaseline(Graphics2D g, String text, int x, int y, int rgb, boolean shadowed)
 	{
 		drawBaseline(g, text, x - stringWidth(text) / 2, y, rgb, shadowed);
 	}
 
+	// public:end chronicle
 	/**
 	 * Overhead style, verbatim from the client's chat-above-head draw: the
 	 * black copy sits at {@code (x, y + 1)} - straight below, not diagonal -

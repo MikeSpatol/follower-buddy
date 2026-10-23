@@ -1,3 +1,4 @@
+// public:file agility-all,marks
 package com.follower.follower;
 
 import com.follower.speech.TriggerEvent;
@@ -153,7 +154,8 @@ public final class MarksOfGrace
 			return;
 		}
 		boolean course = crossing
-			|| (lastAgilityXpMs > 0 && nowMs - lastAgilityXpMs <= CrossingWatch.ON_COURSE_MS);
+			|| (lastAgilityXpMs > 0 && nowMs - lastAgilityXpMs <= CrossingWatch.ON_COURSE_MS); // public:cut agility
+				// public:else || (lastAgilityXpMs > 0 && nowMs - lastAgilityXpMs <= 60_000);
 		if (!course)
 		{
 			said.clear();

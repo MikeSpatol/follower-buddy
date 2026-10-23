@@ -96,6 +96,7 @@ public class StandUpHalfTest
 		assertEquals("from its stand-up half", 17, controller.getFrame());
 	}
 
+	// public:cut skilling
 	@Test
 	public void aGestureFromTheSeatStandsUpFirstTheSameWay() throws ReflectiveOperationException
 	{
@@ -104,6 +105,7 @@ public class StandUpHalfTest
 		assertEquals(17, playing(follower).getFrame());
 	}
 
+	// public:end skilling
 	@Test
 	public void theSitEmoteItselfStillPlaysWhole() throws ReflectiveOperationException
 	{
@@ -116,12 +118,14 @@ public class StandUpHalfTest
 	@Test
 	public void everyStandUpIsTheHalfAndFitsItsWait() throws ReflectiveOperationException
 	{
-		assertEquals("the seat's stand-up", FollowerEntity.STAND_UP, KeepingCompany.STAND_UP);
+		assertEquals("the seat's stand-up", FollowerEntity.STAND_UP, KeepingCompany.STAND_UP); // public:cut skilling
 		Field rest = com.follower.FollowerPlugin.class.getDeclaredField("REST_STAND_UP");
 		rest.setAccessible(true);
 		assertEquals("the rest's stand-up", FollowerEntity.STAND_UP, rest.getInt(null));
 		assertNotEquals("an id of its own, so 10053 stays the emote", 10053, FollowerEntity.STAND_UP);
+		// public:cut skilling
 		// Frames 17-25 are 50 client cycles of 20 ms: a second, inside two ticks.
 		assertEquals(2, KeepingCompany.STAND_UP_TICKS);
+		// public:end skilling
 	}
 }

@@ -1,3 +1,4 @@
+// public:file company-extras,gaze
 package com.follower.follower;
 
 import com.follower.FollowerConfig;
@@ -277,6 +278,7 @@ public class GazeTest
 		tick(Gaze.AROUND_MIN_TICKS - 1);
 		assertEquals("and no look round straight after it", 1, follower.glances.size());
 	}
+	// public:cut dev
 
 	// ------------------------------------------------------- the force-path
 
@@ -329,6 +331,7 @@ public class GazeTest
 		assertEquals("Looks where you look is off in the settings.", gaze.forceLook("camera"));
 		assertTrue(follower.glances.isEmpty());
 	}
+	// public:end dev
 
 	@Test
 	public void nothingWhileBusyOrSwitchedOff()

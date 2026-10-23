@@ -41,7 +41,7 @@ public class QuestStepWalksTest
 		s.ticks(6);
 		s.at(3410, 3488, 0);
 		s.ticks(3);
-		s.event(TriggerEvent.combat(TriggerEvent.Type.COMBAT_START, "Monk of Zamorak"), "fight hooded monk");
+		s.event(TriggerEvent.combat(TriggerEvent.Type.COMBAT_START, "Monk of Zamorak"), "fight hooded monk"); // public:cut spectate
 		s.ticks(20);
 		s.event(TriggerEvent.kill(528, "Monk of Zamorak", 30), "kill hooded monk");
 		s.ticks(2);

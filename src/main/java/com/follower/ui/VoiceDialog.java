@@ -1,20 +1,23 @@
+// public:file sharevoice
 package com.follower.ui;
 
 import com.follower.sound.VoiceLibrary;
 import java.awt.BorderLayout;
-import java.awt.Color;
+import java.awt.Color; // public:cut messages-window
 import java.awt.Dimension;
+// public:cut messages-window
 import java.awt.FlowLayout;
 import java.util.ArrayList;
 import java.util.List;
+// public:end messages-window
 import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
+import javax.swing.BoxLayout; // public:cut messages-window
 import javax.swing.JButton;
-import javax.swing.JComboBox;
+import javax.swing.JComboBox; // public:cut messages-window
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
+import javax.swing.JScrollPane; // public:cut messages-window
 import javax.swing.JTextField;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.ui.ColorScheme;
@@ -35,13 +38,14 @@ import net.runelite.client.ui.FontManager;
 public class VoiceDialog extends JDialog
 {
 	private final VoiceLibrary voices;
-	private final java.util.function.IntSupplier volume;
+	private final java.util.function.IntSupplier volume; // public:cut messages-window
 
-	public VoiceDialog(VoiceLibrary voices, java.util.function.IntSupplier volume)
+	public VoiceDialog(VoiceLibrary voices, java.util.function.IntSupplier volume) // public:cut messages-window
+	// public:else public VoiceDialog(VoiceLibrary voices)
 	{
 		super((java.awt.Frame) null, "Follower Buddy - Sounds", false);
 		this.voices = voices;
-		this.volume = volume;
+		this.volume = volume; // public:cut messages-window
 		setDefaultCloseOperation(HIDE_ON_CLOSE);
 	}
 
@@ -63,6 +67,7 @@ public class VoiceDialog extends JDialog
 		show(root, "Follower Buddy - Sounds", new Dimension(560, 200));
 	}
 
+	// public:cut messages-window
 	/**
 	 * @param title what these lines belong to, for the header
 	 * @param lines the rule's lines as they stand in the editor right now,
@@ -109,6 +114,7 @@ public class VoiceDialog extends JDialog
 		show(root, "Follower Buddy - Sounds for " + title, new Dimension(560, 520));
 	}
 
+	// public:end messages-window
 	private void show(JPanel root, String title, Dimension size)
 	{
 		setTitle(title);
@@ -169,6 +175,7 @@ public class VoiceDialog extends JDialog
 		return root;
 	}
 
+	// public:cut messages-window
 	private JPanel row(String line, List<String> files)
 	{
 		JPanel row = new JPanel();
@@ -250,6 +257,7 @@ public class VoiceDialog extends JDialog
 		return index > 0 && index <= files.size() ? files.get(index - 1) : null;
 	}
 
+	// public:end messages-window
 	private void copyFolderPath()
 	{
 		java.nio.file.Path folder = voices.getSoundsFolder();
@@ -269,9 +277,11 @@ public class VoiceDialog extends JDialog
 			log.warn("Could not copy {} to the clipboard", folder, e);
 		}
 	}
+	// public:cut messages-window
 
 	private static String escape(String s)
 	{
 		return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
 	}
+	// public:end messages-window
 }

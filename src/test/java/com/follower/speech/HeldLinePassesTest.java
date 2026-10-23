@@ -178,6 +178,6 @@ public class HeldLinePassesTest
 		ticks(h, 20);
 		assertTrue("not said after the teleport: " + h.spoken, h.firedBy("critical-hp").isEmpty());
 		assertTrue(held.toString(), held.contains("critical-hp:passed"));
-		assertTrue("no advice left open", !h.engine.getContext().isAdvising());
+		assertTrue("no advice left open", !h.engine.getContext().isAdvising()); // public:cut side-games
 	}
 }

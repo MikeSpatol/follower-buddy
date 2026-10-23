@@ -1,3 +1,4 @@
+// public:file memory-window
 package com.follower;
 
 import com.follower.sim.FakeGame;
@@ -50,7 +51,7 @@ public class MemorySurfaceTest
 		context.noteLineSaid("a line");
 		context.setTraits(java.util.Collections.singleton(12850),
 			java.util.Collections.singleton(10553));
-		context.setWish("feather", 5, java.util.Collections.singletonList(314));
+		context.setWish("feather", 5, java.util.Collections.singletonList(314)); // public:cut souvenirs-wishes
 
 		String surface = flat(MemoryDialog.summarise(context,
 			java.util.Collections.singletonMap(12850, "Lumbridge town and castle")));
@@ -75,6 +76,7 @@ public class MemorySurfaceTest
 		assertTrue(surface.contains("Lines counted, to vary them: 1"));
 	}
 
+	// public:cut souvenirs-wishes
 	@Test
 	public void theWishSaysToAnswerFirstWhileAQuestionWaits()
 	{
@@ -88,6 +90,7 @@ public class MemorySurfaceTest
 		assertTrue(surface, surface.contains("Hoping for: feather (answer its question first, then"
 			+ " right-click the follower and choose Talk-to to hand it over)"));
 	}
+	// public:end souvenirs-wishes
 
 	@Test
 	public void killCountsShowThisAccountsOneRowPerBoss()
@@ -154,7 +157,7 @@ public class MemorySurfaceTest
 		assertEquals("Quests completed", MemoryDialog.keyLabel("quests"));
 		assertEquals("Music tracks unlocked", MemoryDialog.keyLabel("music"));
 		assertEquals("Collection log items", MemoryDialog.keyLabel("collections"));
-		assertEquals("Marks of grace picked up on a course", MemoryDialog.keyLabel("graces"));
+		assertEquals("Marks of grace picked up on a course", MemoryDialog.keyLabel("graces")); // public:cut agility-all,marks
 		assertEquals("a key with no words is shown as it is",
 			"someone:else", MemoryDialog.keyLabel("someone:else"));
 		assertEquals("kill:", MemoryDialog.keyLabel("kill:"));
@@ -227,6 +230,7 @@ public class MemorySurfaceTest
 		assertTrue(shown, shown.contains("Waiting on an answer: my-own-tree\n"));
 	}
 
+	// public:cut agility-all,marks
 	@Test
 	public void forgetEverythingTakesTheMarksOfGraceWithIt() throws java.io.IOException
 	{
@@ -244,6 +248,7 @@ public class MemorySurfaceTest
 			.contains("Marks of grace"));
 	}
 
+	// public:end agility-all,marks
 	@Test
 	public void theNamedCountsShowHoweverManyCreaturesWereKilled()
 	{
@@ -262,12 +267,12 @@ public class MemorySurfaceTest
 			context.tallyBoth("kills");
 		}
 		context.tallyBoth("levels");
-		context.tally("graces");
+		context.tally("graces"); // public:cut agility-all,marks
 		context.tally("advice:taken");
 
 		String surface = flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap()));
 		assertTrue(surface, surface.contains("Kills: 600\nKills today: 600\nLevels gained: 1\nLevels gained today: 1\n"));
-		assertTrue(surface, surface.contains("Marks of grace"));
+		assertTrue(surface, surface.contains("Marks of grace")); // public:cut agility-all,marks
 		assertTrue(surface, surface.contains("Advice taken: 1"));
 		assertTrue("the kills by creature, ten of them, most first: " + surface,
 			surface.contains("Creaturel kills: 61\n"));

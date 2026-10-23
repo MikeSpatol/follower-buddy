@@ -59,9 +59,11 @@ public class WrapTrimStore
 			if (saved != null)
 			{
 				follower.restoreTrims(toIntKeys(saved.manual), toIntKeys(saved.measured));
+				// public:cut logs
 				log.info("Loaded {} measured and {} manual wrap trims",
 					saved.measured == null ? 0 : saved.measured.size(),
 					saved.manual == null ? 0 : saved.manual.size());
+				// public:end logs
 			}
 		}
 		catch (IOException | RuntimeException e)
@@ -93,8 +95,10 @@ public class WrapTrimStore
 			{
 				gson.toJson(saved, writer);
 			}
+			// public:cut logs
 			log.info("Saved {} measured and {} manual wrap trims",
 				saved.measured.size(), saved.manual.size());
+			// public:end logs
 		}
 		catch (IOException e)
 		{

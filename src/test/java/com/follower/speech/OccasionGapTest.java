@@ -122,6 +122,7 @@ public class OccasionGapTest
 		assertEquals("said once eight seconds are out", 1, h.firedBy("fred").size());
 	}
 
+	// public:cut side-games
 	@Test
 	public void otherLinesThatWaitKeepTheWholeGap() throws IOException
 	{
@@ -140,4 +141,5 @@ public class OccasionGapTest
 		ticks(h, 50);
 		assertEquals("said once the gap is out", 1, h.firedBy("heeded").size());
 	}
+	// public:end side-games
 }

@@ -130,6 +130,7 @@ public class SpeechRule
 	 */
 	public Boolean holdStill;
 
+	// public:cut skilling
 	/**
 	 * A copy of the player's WORK - a chop, a swing of the pick, a hammer at
 	 * the anvil - made from beside the thing being worked and facing it, or
@@ -140,6 +141,7 @@ public class SpeechRule
 	 */
 	public Boolean atTheWork;
 
+	// public:end skilling
 	/**
 	 * How much this firing moves the follower's mood, positive or negative.
 	 *
@@ -290,6 +292,7 @@ public class SpeechRule
 		public Integer minutes;
 	}
 
+	// public:cut souvenirs-wishes
 	/**
 	 * A small thing the follower says it could use, opened by SAYING so, like
 	 * the want. {@code {"what": "feather", "minutes": 45}}. While it is open
@@ -321,6 +324,7 @@ public class SpeechRule
 	 */
 	public Boolean grantsWish;
 
+	// public:end souvenirs-wishes
 	/**
 	 * Files what just happened as the incident worth bringing up again.
 	 *
@@ -378,6 +382,7 @@ public class SpeechRule
 		}
 	}
 
+	// public:cut souvenirs-wishes
 	/**
 	 * Something the follower picks up and carries about for a while.
 	 *
@@ -399,6 +404,8 @@ public class SpeechRule
 		public Boolean swap;
 	}
 
+	// public:end souvenirs-wishes
+	// public:cut side-games
 	/**
 	 * A prediction about what the next drop is worth.
 	 *
@@ -434,6 +441,7 @@ public class SpeechRule
 		public Integer minutes;
 	}
 
+	// public:end side-games
 	/**
 	 * Marks this line as ADVICE, and says what taking it would look like.
 	 *

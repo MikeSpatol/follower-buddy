@@ -1,3 +1,4 @@
+// public:file dev
 package com.follower;
 
 import java.io.IOException;
@@ -56,7 +57,7 @@ public final class LogRetention
 		}
 		catch (IOException | RuntimeException e)
 		{
-			log.debug("Could not tidy the {} logs in {}", prefix, dir, e);
+			log.debug("Could not tidy the {} logs in {}", prefix, dir, e); // public:cut logs
 		}
 	}
 }

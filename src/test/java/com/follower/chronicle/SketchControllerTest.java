@@ -1,3 +1,4 @@
+// public:file chronicle
 package com.follower.chronicle;
 
 import com.follower.follower.ErrandController;
@@ -738,6 +739,7 @@ public class SketchControllerTest
 		tick(scribe, 20);
 		assertEquals("and not pointed out again this session", 1, said.size());
 	}
+	// public:cut dev
 
 	// ------------------------------------------------------- the force-path
 
@@ -831,6 +833,7 @@ public class SketchControllerTest
 		scribe.tick();
 		assertFalse("moving off still spoils a forced one", scribe.isSketching());
 	}
+	// public:end dev
 
 	@Test
 	public void everyLineItSaysIsTheScribesAndFits()

@@ -1,3 +1,4 @@
+// public:file skilling
 package com.follower.follower;
 
 import com.follower.FollowerConfig;
@@ -1586,11 +1587,11 @@ public class SkillingSessionTest
 		assertFalse("the session let go", skilling.isWorking());
 		assertFalse("and the feet", skilling.holdsTheFeet());
 		assertEquals(1351, held);
-		assertTrue("but not the hand", skilling.blocksErrands());
+		assertTrue("but not the hand", skilling.blocksErrands()); // public:cut errands
 
 		tick(SkillingController.TOOL_GRACE_TICKS);
 		assertEquals("given back", 0, held);
-		assertFalse("and the errands are free again", skilling.blocksErrands());
+		assertFalse("and the errands are free again", skilling.blocksErrands()); // public:cut errands
 	}
 
 	@Test
@@ -3538,7 +3539,7 @@ public class SkillingSessionTest
 		assertEquals(ErrandController.WRITE_SCROLL_POSE, follower.poseOverride);
 		assertEquals("the quill with it", ErrandController.QUILL_PROP, heldLeft);
 		assertEquals("about the anvil, not the player", anvil, follower.facing);
-		assertTrue("and the anvil errand cannot roll on top of it", skilling.blocksErrands());
+		assertTrue("and the anvil errand cannot roll on top of it", skilling.blocksErrands()); // public:cut errands
 
 		int down = -1;
 		for (int i = 1; i <= 60 && down < 0; i++)
@@ -3861,6 +3862,7 @@ public class SkillingSessionTest
 		assertTrue("up and following when the player moves", follower.following);
 	}
 
+	// public:cut errands
 	@Test
 	public void prayingAtAnAltarBorrowsTheAltarErrandSilently()
 	{
@@ -3876,6 +3878,7 @@ public class SkillingSessionTest
 			skilling.blocksErrands());
 	}
 
+	// public:end errands
 	// --------------------------------------------------------------- thieving
 
 	/** HUMAN_PICKPOCKET. */
@@ -4558,6 +4561,7 @@ public class SkillingSessionTest
 		assertTrue(follower.animations.isEmpty());
 	}
 
+	// public:cut errands
 	@Test
 	public void oneFireInFiftyIsTheErrandsTooCloseGag()
 	{
@@ -4579,6 +4583,7 @@ public class SkillingSessionTest
 		assertTrue("the errand has the feet, not the company", follower.following);
 	}
 
+	// public:end errands
 	@Test
 	public void coldAtTheBrazier()
 	{

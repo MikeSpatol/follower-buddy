@@ -38,7 +38,6 @@ public class WrapLerpController extends AnimationController
 
 	/** Ticks elapsed within the current frame, approximated by observation. */
 	private int elapsedInFrame;
-	private int lastSeenFrame = -1;
 
 	/**
 	 * Endpoint poses snapshotted as flat xyz arrays. applyTransformations returns a
@@ -78,7 +77,6 @@ public class WrapLerpController extends AnimationController
 		if (getFrame() != before)
 		{
 			elapsedInFrame = 0;
-			lastSeenFrame = getFrame();
 		}
 		else
 		{

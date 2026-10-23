@@ -124,52 +124,9 @@ public final class Outfit
 		return outfit;
 	}
 
-	public int[] rawEquipment()
-	{
-		return equipment.clone();
-	}
-
-	/**
-	 * This outfit in the game's own composition encoding, for writing back into a
-	 * live {@code PlayerComposition}.
-	 *
-	 * <p>The scheme holds kit ids up to 1791 before they would overflow into the item
-	 * range; anything beyond that is dropped rather than written as a corrupt value.
-	 * No real kit comes close, so in practice nothing is lost.
-	 */
-	public int[] toGameEquipmentIds()
-	{
-		int[] out = new int[SLOTS];
-		for (int i = 0; i < SLOTS; i++)
-		{
-			int value = equipment[i];
-			if (value >= ITEM_OFFSET)
-			{
-				out[i] = GAME_ITEM_OFFSET + (value - ITEM_OFFSET);
-			}
-			else if (value >= KIT_OFFSET)
-			{
-				int kitId = value - KIT_OFFSET;
-				out[i] = kitId < (GAME_ITEM_OFFSET - GAME_KIT_OFFSET)
-					? GAME_KIT_OFFSET + kitId
-					: 0;
-			}
-			else
-			{
-				out[i] = 0;
-			}
-		}
-		return out;
-	}
-
 	public int getRaw(KitType slot)
 	{
 		return equipment[slot.getIndex()];
-	}
-
-	public void setRaw(KitType slot, int raw)
-	{
-		equipment[slot.getIndex()] = raw;
 	}
 
 	public void setItem(KitType slot, int itemId)
@@ -259,19 +216,6 @@ public final class Outfit
 	 * Returns a copy with empty body slots filled by default kits. Item slots and
 	 * already-populated kit slots are untouched, so gear always wins.
 	 */
-	/** The default kit id for a body part, or -1 if that part has no default. */
-	public static int defaultKitId(KitType slot, int gender)
-	{
-		for (int[] pair : (gender == 1 ? DEFAULT_KITS_FEMALE : DEFAULT_KITS_MALE))
-		{
-			if (pair[0] == slot.getIndex())
-			{
-				return pair[1];
-			}
-		}
-		return -1;
-	}
-
 	public Outfit withDefaultBody()
 	{
 		Outfit filled = new Outfit(this);

@@ -25,6 +25,7 @@ public class NamesMidSentenceTest
 		return h;
 	}
 
+	// public:cut company-extras,noticing
 	@Test
 	public void aLandmarkIsACommonNounAfterThis() throws IOException
 	{
@@ -36,6 +37,7 @@ public class NamesMidSentenceTest
 			h.engine.spokenText("Look at this {thing}.", TriggerEvent.noticed("valuable", "Abyssal whip")));
 	}
 
+	// public:end company-extras,noticing
 	@Test
 	public void aThingInTheSceneIsACommonNounToo() throws IOException
 	{

@@ -1,22 +1,24 @@
 package com.follower;
 
+// public:cut chronicle
 import com.follower.chronicle.ChronicleLoader;
 import com.follower.chronicle.SketchBook;
 import com.follower.chronicle.SketchController;
+// public:end chronicle
 import com.follower.follower.ErrandController;
-import com.follower.follower.FilmSet;
+import com.follower.follower.FilmSet; // public:cut posing
 import com.follower.follower.FollowerEntity;
-import com.follower.follower.Gaze;
-import com.follower.follower.Moments;
-import com.follower.follower.Noticing;
+import com.follower.follower.Gaze; // public:cut company-extras,gaze
+import com.follower.follower.Moments; // public:cut moments
+import com.follower.follower.Noticing; // public:cut company-extras,noticing
 import com.follower.follower.PropFlourish;
-import com.follower.follower.SkillingController;
-import com.follower.follower.Will;
+import com.follower.follower.SkillingController; // public:cut skilling
+import com.follower.follower.Will; // public:cut company-extras,will
 import com.follower.sim.Harness;
 import com.follower.speech.FollowerOverlay;
 import com.follower.speech.SpeechOutput;
 import com.follower.speech.SpeechRule;
-import com.follower.ui.FilmDialog;
+import com.follower.ui.FilmDialog; // public:cut posing
 import com.google.gson.Gson;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -354,23 +356,33 @@ public class StayHoldsTest
 	@Test
 	public void everythingThatWouldTakeTheFeetReadsThePark() throws ReflectiveOperationException
 	{
-		for (String gate : new String[]{"seatFeetTaken", "momentFeetTaken", "errandBusy", "spectateBusy"})
+		for (String gate : new String[]{
+			"seatFeetTaken", // public:cut skilling
+			"momentFeetTaken",
+			"errandBusy", // public:cut errands
+			"spectateBusy", // public:cut spectate
+		})
 		{
 			assertFalse(gate + " with nothing going on", (Boolean) call(gate));
 		}
 		call("applyFollowEnabled", false);
-		for (String gate : new String[]{"seatFeetTaken", "errandBusy"})
+		for (String gate : new String[]{
+			"seatFeetTaken", // public:cut skilling
+			"errandBusy", // public:cut errands
+		})
 		{
 			assertTrue(gate + " on a park the player gave", (Boolean) call(gate));
 		}
 		// The moments and the spectator are handed the park apart, since
 		// the wave and the fight's announcements do not move the feet.
-		for (String gate : new String[]{"momentFeetTaken", "spectateBusy"})
+		for (String gate : new String[]{"momentFeetTaken", "spectateBusy"}) // public:cut spectate
+		// public:else for (String gate : new String[]{"momentFeetTaken"})
 		{
 			assertFalse(gate + " is not the park", (Boolean) call(gate));
 		}
 	}
 
+	// public:cut moments
 	@Test
 	public void theLogoutTabIsWavedAtFromThePost() throws ReflectiveOperationException
 	{
@@ -382,6 +394,7 @@ public class StayHoldsTest
 		assertFalse("the wave, where it stands", feet.played.isEmpty());
 		assertEquals(post, feet.stay);
 	}
+	// public:end moments
 
 	/**
 	 * Play test, 29 Sep: opening the logout tab never waved. The panel is
@@ -389,6 +402,7 @@ public class StayHoldsTest
 	 * wave waited for never came with the press. It is watched instead, as
 	 * the panel coming into view.
 	 */
+	// public:cut moments
 	@Test
 	public void openingTheLogoutTabWavesEachTimeItComesIntoView() throws ReflectiveOperationException
 	{
@@ -415,6 +429,7 @@ public class StayHoldsTest
 		call("noticeTheLogoutTab");
 		assertTrue("the session is starting, not ending", feet.played.isEmpty());
 	}
+	// public:end moments
 
 	@Test
 	public void aHoldStillLinePlaysAtThePostWithoutPlanting() throws ReflectiveOperationException
@@ -438,6 +453,7 @@ public class StayHoldsTest
 
 	// ------------------------------------------ given while something has it
 
+	// public:cut moments
 	@Test
 	public void stayHerePressedDuringAMomentIsTheParkAsTheMomentStandsDown()
 		throws ReflectiveOperationException
@@ -462,6 +478,7 @@ public class StayHoldsTest
 		assertEquals(spot, feet.stay);
 		assertTrue(parked());
 	}
+	// public:end moments
 
 	@Test
 	public void aParkGivenWhileSomethingHadTheFeetIsTakenAgainAsItLetsGo()
@@ -525,6 +542,7 @@ public class StayHoldsTest
 		assertTrue(parked());
 	}
 
+	// public:cut company-extras,will
 	@Test
 	public void aSendThatPausedShortOfAMonsterStillGoesOnOnceFree()
 		throws ReflectiveOperationException
@@ -556,6 +574,7 @@ public class StayHoldsTest
 		assertTrue(parked());
 	}
 
+	// public:end company-extras,will
 	@Test
 	public void aParkTakenOffByForceIsOver() throws ReflectiveOperationException
 	{
@@ -572,6 +591,7 @@ public class StayHoldsTest
 
 	// ------------------------------------------------ what the wander lets go
 
+	// public:cut moments
 	@Test
 	public void theWanderHandsOverAStayAMomentTookFromIt() throws ReflectiveOperationException
 	{
@@ -587,6 +607,7 @@ public class StayHoldsTest
 		assertTrue(moments.holdsTheFeet());
 		assertFalse("and the drift is forgotten", (Boolean) get("wandered"));
 	}
+	// public:end moments
 
 	@Test
 	public void aLongDialogKeepsTheMinuteTakerAtTheShoulder() throws ReflectiveOperationException
@@ -609,6 +630,7 @@ public class StayHoldsTest
 		assertEquals("held at the shoulder until the box closes", shoulder, feet.stay);
 		assertEquals(0, feet.released);
 	}
+	// public:cut dev
 
 	// ---------------------------------------------------------- the force-paths
 
@@ -684,11 +706,24 @@ public class StayHoldsTest
 	public void noForceMovesTheBodyInAFight() throws ReflectiveOperationException
 	{
 		h.engine.getContext().noteDamageDealt();
-		for (String what : new String[]{"look", "notice", "shoulder", "wave", "drop", "sketch"})
+		for (String what : new String[]{
+			"look", // public:cut company-extras,gaze
+			"notice", // public:cut company-extras,noticing
+			"shoulder",
+			"wave",
+			"drop",
+			"sketch", // public:cut chronicle
+		})
 		{
 			assertEquals(what, "Not during a fight.", call("forceNow", (Object) new String[]{"force", what}));
 		}
-		assertEquals("No force called 'fly'. Try: look, notice, hesitate, shoulder, cutscene, wave, drop, sketch",
+		assertEquals("No force called 'fly'. Try: "
+			+ "look, " // public:cut company-extras,gaze
+			+ "notice, " // public:cut company-extras,noticing
+			+ "hesitate, " // public:cut company-extras,will
+			+ "shoulder, cutscene, wave, drop"
+			+ ", sketch", // public:cut chronicle
+			// public:else ,
 			call("forceNow", (Object) new String[]{"force", "fly"}));
 	}
 
@@ -707,6 +742,7 @@ public class StayHoldsTest
 		assertFalse("let go with the commands that set it", (Boolean) call("inCutscene"));
 	}
 
+	// public:end dev
 	// ------------------------------------------------------------ a cutscene
 
 	@Test
@@ -761,7 +797,12 @@ public class StayHoldsTest
 	@Test
 	public void nothingOfItsOwnTakesTheFeetInAScene() throws ReflectiveOperationException
 	{
-		String[] gates = {"errandBusy", "momentFeetTaken", "spectateBusy", "seatFeetTaken"};
+		String[] gates = {
+			"errandBusy", // public:cut errands
+			"momentFeetTaken",
+			"spectateBusy", // public:cut spectate
+			"seatFeetTaken", // public:cut skilling
+		};
 		scene(true);
 		for (String gate : gates)
 		{
@@ -771,7 +812,11 @@ public class StayHoldsTest
 		{
 			scene(false);
 		}
-		for (String gate : new String[]{"errandBusy", "spectateBusy", "seatFeetTaken"})
+		for (String gate : new String[]{
+			"errandBusy", // public:cut errands
+			"spectateBusy", // public:cut spectate
+			"seatFeetTaken", // public:cut skilling
+		})
 		{
 			assertFalse(gate + " once it is over", (Boolean) call(gate));
 		}
@@ -826,24 +871,30 @@ public class StayHoldsTest
 			h.gameTick();
 			scene(false);
 		}
+		// public:cut chronicle
 		java.util.Deque<FollowerPlugin.PageNews> news = new java.util.ArrayDeque<>();
 		com.follower.speech.TriggerEvent page =
 			com.follower.speech.TriggerEvent.pageWritten("quest", "Children of the Sun");
 		news.add(new FollowerPlugin.PageNews(page, h.game.client.getTickCount()));
+		// public:end chronicle
 		for (int i = 0; i < FollowerPlugin.SCENE_QUIET_TICKS; i++)
 		{
 			assertTrue("still the quiet", (Boolean) call("sceneQuiet"));
 			call("noticeTheScene");
 			assertTrue(engineQuiet());
+			// public:cut chronicle
 			assertNull("the page waits", FollowerPlugin.nextPageNews(news, h.game.client.getTickCount(), true,
 				(Boolean) call("sceneQuiet"), FollowerPlugin.PAGE_NEWS_TICKS, 0));
+			// public:end chronicle
 			h.gameTick();
 		}
 		assertFalse((Boolean) call("sceneQuiet"));
 		call("noticeTheScene");
 		assertFalse("the engine may speak again", engineQuiet());
+		// public:cut chronicle
 		assertEquals("and the page is mentioned", page, FollowerPlugin.nextPageNews(news,
 			h.game.client.getTickCount(), true, (Boolean) call("sceneQuiet"), FollowerPlugin.PAGE_NEWS_TICKS, 0));
+		// public:end chronicle
 	}
 
 	/**
@@ -860,7 +911,9 @@ public class StayHoldsTest
 		plugin.onVarbitChanged(risen);
 		assertTrue(engineQuiet());
 	}
+	// public:cut dev
 
+	// public:cut moments
 	@Test
 	public void eachForceReachesItsOwnFeature() throws ReflectiveOperationException
 	{
@@ -870,19 +923,29 @@ public class StayHoldsTest
 		FollowerConfig config = new FollowerConfig()
 		{
 		};
+		// public:cut company-extras
+		// public:cut gaze
 		set("gaze", new Gaze(h.game.client, feet, config, () -> 0, () -> 0, () -> false, () -> "",
 			Collections::emptyList, new Random(1)));
+		// public:end gaze
+		// public:cut noticing
 		set("noticing", new Noticing(h.game.client, feet, config, moments, event -> { }, () -> false,
 			() -> 0, Collections::emptyList));
+		// public:end noticing
+		// public:end company-extras
+		// public:cut chronicle
 		set("sketching", new SketchController(h.game.client, feet, (ErrandController.Hands) get("hands"),
 			new ChronicleLoader(new Gson()), new SketchBook(null), null, null, () -> false, () -> 0,
 			() -> 9999, () -> feet.at, () -> -1, line -> { }, line -> { }, line -> { }));
-		set("will", new Will(h.game.client, feet, event -> { }, () -> true));
+		// public:end chronicle
+		set("will", new Will(h.game.client, feet, event -> { }, () -> true)); // public:cut company-extras,will
 		h.gameTick();
 
-		assertEquals("A look the way the camera is turned.", force("look", "camera"));
-		assertEquals("Nothing to notice in view.", force("notice"));
-		assertEquals("No page sketches this place (region 9999).", force("sketch"));
+		// public:cut company-extras
+		assertEquals("A look the way the camera is turned.", force("look", "camera")); // public:cut gaze
+		assertEquals("Nothing to notice in view.", force("notice")); // public:cut noticing
+		// public:end company-extras
+		assertEquals("No page sketches this place (region 9999).", force("sketch")); // public:cut chronicle
 
 		// Straight after a real wave, which the tab's own next one waits out.
 		assertTrue(moments.farewell());
@@ -890,6 +953,7 @@ public class StayHoldsTest
 		assertEquals("A wave, as at the logout tab.", force("wave"));
 		assertFalse(feet.played.isEmpty());
 
+		// public:cut company-extras,will
 		// The will's note shows at the next Send: stopped short of a goblin,
 		// which is nothing to the player.
 		NPC goblin = h.game.spawnNpc(3029, "Goblin", 2);
@@ -897,6 +961,7 @@ public class StayHoldsTest
 		force("hesitate");
 		call("sendTo", new WorldPoint(3231, 3218, 0));
 		assertEquals("stopped short first", new WorldPoint(3228, 3218, 0), feet.stay);
+		// public:end company-extras,will
 	}
 
 	@Test
@@ -914,7 +979,10 @@ public class StayHoldsTest
 		assertEquals("and the loot's words, with the item named", "the Dragon warhammer that dropped",
 			h.engine.getContext().getIncidentPhrase());
 	}
+	// public:end moments
+	// public:end dev
 
+	// public:cut posing
 	// ---------------------------------------------------------------- the film
 
 	@Test
@@ -950,7 +1018,7 @@ public class StayHoldsTest
 	{
 		// No beat at the edge for a monster: the scene has a director.
 		film();
-		set("will", new Will(h.game.client, feet, event -> { }, () -> true));
+		set("will", new Will(h.game.client, feet, event -> { }, () -> true)); // public:cut company-extras,will
 		NPC giant = h.game.spawnNpc(2098, "Hill Giant", 28);
 		h.game.moveNpc(giant, 3232, 3218, 0);
 		h.gameTick();
@@ -964,6 +1032,7 @@ public class StayHoldsTest
 		assertFalse(feet.isStaying());
 	}
 
+	// public:cut company-extras,will
 	@Test
 	public void aSendPausedAtAMonsterBeforeTheSceneDoesNotGoOnIntoIt() throws ReflectiveOperationException
 	{
@@ -991,6 +1060,7 @@ public class StayHoldsTest
 		assertEquals("still where the film sent it", filmsSpot, feet.stay);
 	}
 
+	// public:end company-extras,will
 	@Test
 	public void aFlourishUnderWayWhenTheSceneStartsIsPutAwayFirst() throws ReflectiveOperationException
 	{
@@ -1017,6 +1087,7 @@ public class StayHoldsTest
 		assertTrue(feet.isStaying());
 	}
 
+	// public:cut skilling
 	@Test
 	public void theSlayerLedgerUnderWayWhenTheSceneStartsIsPutAwayFirst() throws ReflectiveOperationException
 	{
@@ -1066,6 +1137,8 @@ public class StayHoldsTest
 		}
 	}
 
+	// public:end skilling
+	// public:cut moments
 	@Test
 	public void aLevelOrAGameMessageInATakeIsNotReactedTo() throws ReflectiveOperationException
 	{
@@ -1075,7 +1148,7 @@ public class StayHoldsTest
 		// runes each turned the follower and played over the film's pose.
 		film();
 		moments();
-		skilling();
+		skilling(); // public:cut skilling
 		h.gameTick();
 		plugin.onStatChanged(new StatChanged(Skill.ATTACK, 0, 10, 10));
 		set("filming", true);
@@ -1087,8 +1160,9 @@ public class StayHoldsTest
 		set("filming", false);
 		levelAndMessages(12);
 		assertEquals("the clap and the nod", Arrays.asList(865, 855), feet.played);
-		assertEquals("the applause and the think", Arrays.asList(865, 857), feet.once);
+		assertEquals("the applause and the think", Arrays.asList(865, 857), feet.once); // public:cut skilling
 	}
+	// public:end moments
 
 	@Test
 	public void aSendTheFilmCannotWalkIsNotSaidOverhead() throws ReflectiveOperationException
@@ -1143,7 +1217,11 @@ public class StayHoldsTest
 	{
 		// Follow me in the film window: no park, and still nothing of its own.
 		set("filming", true);
-		for (String gate : new String[]{"momentFeetTaken", "spectateBusy", "errandBusy"})
+		for (String gate : new String[]{
+			"momentFeetTaken",
+			"spectateBusy", // public:cut spectate
+			"errandBusy", // public:cut errands
+		})
 		{
 			assertTrue(gate + " while filming", (Boolean) call(gate));
 		}
@@ -1186,11 +1264,16 @@ public class StayHoldsTest
 	@Test
 	public void everythingOfItsOwnReadsTheFilm() throws IOException
 	{
-		String source = new String(Files.readAllBytes(
+		String source = PublicMarkers.strip(new String(Files.readAllBytes(
 			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8)
-			.replace("\r\n", "\n");
+			.replace("\r\n", "\n"));
 		String start = source.substring(source.indexOf("protected void startUp() throws Exception"));
-		for (String built : new String[]{"gaze = new", "noticing = new", "sketching = new", "will = new"})
+		for (String built : new String[]{
+			"gaze = new", // public:cut company-extras,gaze
+			"noticing = new", // public:cut company-extras,noticing
+			"sketching = new", // public:cut chronicle
+			"will = new", // public:cut company-extras,will
+		})
 		{
 			int at = start.indexOf(built);
 			assertTrue("startUp no longer builds " + built + " - the lint has lost its place", at >= 0);
@@ -1204,8 +1287,10 @@ public class StayHoldsTest
 			"speechEngine.setMuted(config.muted() || thievingNow || absentNow || thrallQuiet() || filming);"));
 		// The drop's and the graphic's way in, which no test here drives:
 		// each reaction is asked for only outside a take.
-		for (String reaction : new String[]{"skilling.noteChatMessage(", "skilling.noteGraphic(",
-			"moments.levelUp(", "moments.noteworthy("})
+		for (String reaction : new String[]{"skilling.noteChatMessage(", "skilling.noteGraphic(", // public:cut skilling
+		// public:else for (String reaction : new String[]{
+			"moments.levelUp(", "moments.noteworthy("}) // public:cut moments
+			// public:else })
 		{
 			int found = 0;
 			for (int at = source.indexOf(reaction); at >= 0; at = source.indexOf(reaction, at + 1))
@@ -1225,6 +1310,8 @@ public class StayHoldsTest
 			source.contains("dressForPose(outfit, filmHands);"));
 	}
 
+	// public:end posing
+	// public:cut chronicle
 	// ------------------------------------------------------- the posed sketch
 
 	@Test
@@ -1236,11 +1323,13 @@ public class StayHoldsTest
 		set("clientThread", clientThread());
 		set("config", new FollowerConfig()
 		{
+			// public:cut sharevoice
 			@Override
 			public boolean voiceEnabled()
 			{
 				return false;
 			}
+			// public:end sharevoice
 		});
 		// Muted: the count was asked for, so it shows anyway.
 		h.engine.setMuted(true);
@@ -1286,7 +1375,8 @@ public class StayHoldsTest
 	{
 		SketchController scribe = posedSketch(new ArrayList<>());
 		assertNull(scribe.askForSketch());
-		for (String gate : new String[]{"momentFeetTaken", "errandBusy"})
+		for (String gate : new String[]{"momentFeetTaken", "errandBusy"}) // public:cut errands
+		// public:else for (String gate : new String[]{"momentFeetTaken"})
 		{
 			assertTrue(gate + " while posing", (Boolean) call(gate));
 		}
@@ -1334,11 +1424,13 @@ public class StayHoldsTest
 		set("clientThread", clientThread());
 		set("config", new FollowerConfig()
 		{
+			// public:cut sharevoice
 			@Override
 			public boolean voiceEnabled()
 			{
 				return false;
 			}
+			// public:end sharevoice
 		});
 		speakThroughThePlugin();
 		List<String> said = new ArrayList<>();
@@ -1400,6 +1492,7 @@ public class StayHoldsTest
 		assertTrue("no refusal waiting", ((java.util.Deque<?>) get("speechQueue")).isEmpty());
 	}
 
+	// public:cut posing
 	@Test
 	public void aSceneStartingPutsAPoseAwayWithoutAWord() throws ReflectiveOperationException, IOException
 	{
@@ -1417,6 +1510,7 @@ public class StayHoldsTest
 		assertTrue("nor said after it", said.isEmpty());
 	}
 
+	// public:end posing
 	/**
 	 * What no harness drives is read out of the source: the menu offers
 	 * Sketch only where a plate is and never in a take, the command asks on
@@ -1426,14 +1520,14 @@ public class StayHoldsTest
 	@Test
 	public void theSketchIsAskedForAndStoodAsideFor() throws IOException
 	{
-		String source = new String(Files.readAllBytes(
+		String source = PublicMarkers.strip(new String(Files.readAllBytes(
 			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8)
-			.replace("\r\n", "\n");
+			.replace("\r\n", "\n"));
 		int entry = source.indexOf("addFollowerMenuEntry(\"Sketch\", this::askForSketch);");
 		assertTrue("the Sketch entry has moved - the scan broke, not the glue", entry >= 0);
 		String offered = source.substring(source.lastIndexOf("if (", entry), entry);
 		assertTrue("offered only where asking would start one", offered.contains("sketching.canSketchNow()"));
-		assertTrue("and never in a take", offered.contains("!filming"));
+		assertTrue("and never in a take", offered.contains("!filming")); // public:cut posing
 		assertTrue("::follower sketch asks on the client thread",
 			source.contains("case \"sketch\":\n\t\t\t\tclientThread.invoke(this::askForSketch);"));
 
@@ -1442,23 +1536,31 @@ public class StayHoldsTest
 		int skip = animation.indexOf("if (sketching != null && sketching.isSketching())\n\t\t{\n\t\t\treturn;");
 		assertTrue("an emote while sketching is not answered or copied",
 			skip >= 0 && skip < animation.indexOf("speechEngine.dispatch(TriggerEvent.animation(animationId));"));
+		// public:cut posing
 		assertTrue("but the film still keeps it for Copy my emote",
 			animation.indexOf("filmSet.notePlayerAnimation(animationId);") < skip);
+		// public:end posing
 
 		String start = source.substring(source.indexOf("protected void startUp() throws Exception"));
-		for (String built : new String[]{"gaze = new", "noticing = new"})
+		// public:cut company-extras
+		for (String built : new String[]{
+			"gaze = new", // public:cut gaze
+			"noticing = new", // public:cut noticing
+		})
 		{
 			int at = start.indexOf(built);
 			assertTrue("startUp no longer builds " + built + " - the lint has lost its place", at >= 0);
 			String construction = start.substring(at, start.indexOf(");\n", at));
 			assertTrue(built + " ... must stand aside for a sketch", construction.contains("sketching.isSketching()"));
 		}
+		// public:end company-extras
 		int built = start.indexOf("sketching = new");
 		String sketching = start.substring(built, start.indexOf(");\n", built));
 		assertTrue("the done line and the invitation hold to the mute", sketching.contains("speechEngine::remark"));
 		assertTrue("the count is shown whatever the mute", sketching.contains("this::sketchCount"));
 	}
 
+	// public:end chronicle
 	// ---------------------------------------------------------------- the glue
 
 	/**
@@ -1551,17 +1653,21 @@ public class StayHoldsTest
 	// ---------------------------------------------------------------- helpers
 
 	/**
-	 * The film's own pieces on the bare plugin. Its rebuild and its graphics
+	 * The film's own pieces on the bare plugin. Its rebuild and its graphics // public:cut posing
+	 // public:else * The bare plugin, its overlay set and started.
+	// public:cut posing
 	 * go nowhere, since these tests are about who holds the feet; FilmPropsTest
 	 * builds it with the plugin's own rebuild, as startUp does.
+	// public:end posing
 	 */
 	private void film() throws ReflectiveOperationException
 	{
 		set("overlay", new FollowerOverlay(null, null, null, null));
-		set("filmSet", new FilmSet(feet));
+		set("filmSet", new FilmSet(feet)); // public:cut posing
 		set("started", true);
 	}
 
+	// public:cut chronicle
 	/**
 	 * A posed sketch in Lumbridge on these feet, its count shown and its word
 	 * after said the plugin's own way. What it says is recorded in {@code said}.
@@ -1624,6 +1730,7 @@ public class StayHoldsTest
 		return sketching;
 	}
 
+	// public:end chronicle
 	/** What is over the follower's head now, or null. */
 	private String shown() throws ReflectiveOperationException
 	{
@@ -1632,6 +1739,7 @@ public class StayHoldsTest
 		return (String) message.get(get("overlay"));
 	}
 
+	// public:cut skilling
 	/** The seat on these feet and the plugin's hands, with nothing else taking them. */
 	private SkillingController skilling() throws ReflectiveOperationException
 	{
@@ -1642,6 +1750,7 @@ public class StayHoldsTest
 		return skilling;
 	}
 
+	// public:end skilling
 	/** A level up to this, a new collection log item, a slayer task done and no runes. */
 	private void levelAndMessages(int level)
 	{
@@ -1700,6 +1809,7 @@ public class StayHoldsTest
 		h.gameTick();
 	}
 
+	// public:cut moments
 	/** The moments on these feet, wired to the plugin's own gate and park as the plugin wires them. */
 	private Moments moments() throws ReflectiveOperationException
 	{
@@ -1715,17 +1825,22 @@ public class StayHoldsTest
 			{
 			}
 		};
+		// public:cut skilling
 		FollowerConfig config = new FollowerConfig()
 		{
 		};
 		SkillingController skilling = new SkillingController(h.game.client, feet, config, hands,
 			event -> { }, () -> false, () -> false, () -> false);
-		Moments moments = new Moments(h.game.client, feet, skilling,
-			() -> gate("momentFeetTaken"), () -> false, () -> 30, null, () -> false,
+		// public:end skilling
+		Moments moments = new Moments(h.game.client, feet, skilling, // public:cut skilling
+		// public:else Moments moments = new Moments(h.game.client, feet,
+			() -> gate("momentFeetTaken"), () -> false, () -> 30, null, () -> false, // public:cut company-extras,gestures
+			// public:else () -> gate("momentFeetTaken"), () -> false, () -> 30, null,
 			() -> field("parkedByPlayer"));
 		set("moments", moments);
 		return moments;
 	}
+	// public:end moments
 
 	private boolean gate(String name)
 	{
@@ -1804,6 +1919,7 @@ public class StayHoldsTest
 			}
 		});
 	}
+	// public:cut dev
 
 	/** ::follower force with these words after it, as the chat command hands them over. */
 	private String force(String... words) throws ReflectiveOperationException
@@ -1813,6 +1929,7 @@ public class StayHoldsTest
 		System.arraycopy(words, 0, args, 1, words.length);
 		return (String) call("forceNow", (Object) args);
 	}
+	// public:end dev
 
 	private Object call(String name, Object... args) throws ReflectiveOperationException
 	{

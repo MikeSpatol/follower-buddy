@@ -1,3 +1,4 @@
+// public:file chronicle
 package com.follower.chronicle;
 
 import com.follower.ui.GameFont;
@@ -49,7 +50,8 @@ public class ChroniclePageFitTest
 		loader = new ChronicleLoader(new Gson());
 		loader.load(folder.newFolder().toPath());
 		GameFontRepository fonts = new GameFontRepository(new Gson());
-		fonts.load(folder.newFolder().toPath());
+		fonts.load(folder.newFolder().toPath()); // public:cut devfonts
+		// public:else fonts.load();
 		body = fonts.getByName("p12_full");
 		bold = fonts.getByName("b12_full");
 		small = fonts.getByName("p11_full");

@@ -26,10 +26,14 @@ public final class TriggerEvent
 		THRALL_START,
 		THRALL_SWITCH,
 		THRALL_END,
+		// public:cut errands
 		ERRAND_START,
 		ERRAND_END,
+		// public:end errands
+		// public:cut spectate
 		COMBAT_START,
 		COMBAT_END,
+		// public:end spectate
 		THIEVING_START,
 		THIEVING_END,
 		NPC_KILL,
@@ -40,13 +44,15 @@ public final class TriggerEvent
 		WANT_FULFILLED,
 		WANT_EXPIRED,
 		ANSWERED,
-		SOUVENIR_LOST,
+		SOUVENIR_LOST, // public:cut souvenirs-wishes
+		// public:cut side-games
 		BET_WON,
 		BET_LOST,
 		ADVICE_HEEDED,
 		ADVICE_IGNORED,
 		CHALLENGE_MET,
 		CHALLENGE_FAILED,
+		// public:end side-games
 		UNDERFOOT,
 		MANUAL,
 		WORLD_HOP,
@@ -64,26 +70,40 @@ public final class TriggerEvent
 		ATTENDED_AGAIN,
 		MINUTES_TAKEN,
 		XP_DROP,
+		// public:cut skilling
 		WORK_END,
 		TARGET_DEPLETED,
 		BAG_FULL,
 		BAG_HALF,
+		// public:end skilling
 		/** A boss kill count the game reported in chat. */
 		KILL_COUNT,
 		/** The logout tab opened. */
 		FAREWELL,
+		// public:cut company-extras,noticing
 		/** The follower noticed something and went to look. */
 		NOTICED,
+		// public:end company-extras,noticing
+		// public:cut chronicle
 		/** A chronicle page was written for the first time. */
 		PAGE_WRITTEN,
+		// public:end chronicle
+		// public:cut company-extras,will
 		/** A Send with a misgiving in it: the follower stopped at the edge first. */
 		HESITATED,
 		/** The player walked straight at the parked follower and it stepped aside. */
 		STEPPED_ASIDE,
+		// public:end company-extras,will
+		// public:cut agility-all
+		// public:cut agility
 		/** The follower did an agility obstacle after the player. */
 		CROSSED,
+		// public:end agility
+		// public:cut marks
 		/** A mark of grace on a rooftop course: spotted, left behind or collected. */
 		GRACE,
+		// public:end marks
+		// public:end agility-all
 	}
 
 	/**
@@ -102,6 +122,7 @@ public final class TriggerEvent
 		return event;
 	}
 
+	// public:cut skilling
 	/**
 	 * A work session ended. The name is the activity, for {@code names}
 	 * lists; {activity} and {target} say what it was and on what.
@@ -124,6 +145,7 @@ public final class TriggerEvent
 		return event;
 	}
 
+	// public:end skilling
 	/**
 	 * The PLAYER examined something - the reverse direction of
 	 * {@link Type#EXAMINED}, which is somebody examining the follower.
@@ -179,6 +201,7 @@ public final class TriggerEvent
 		return event;
 	}
 
+	// public:cut chronicle
 	/**
 	 * A page of the chronicle was written for the first time. {page} is the
 	 * page's name. What a rule's "is" narrows to is the page's kind (boss,
@@ -194,6 +217,7 @@ public final class TriggerEvent
 		return event;
 	}
 
+	// public:end chronicle
 	/** The other ledger gained a line. {item} is what went in it. */
 	public static TriggerEvent collectionAdd(String item)
 	{
@@ -250,6 +274,7 @@ public final class TriggerEvent
 		return event;
 	}
 
+	// public:cut souvenirs-wishes
 	/** The thing it was carrying is gone. {souvenir} names it one last time. */
 	public static TriggerEvent souvenirLost(String what)
 	{
@@ -259,6 +284,8 @@ public final class TriggerEvent
 		return event;
 	}
 
+	// public:end souvenirs-wishes
+	// public:cut side-games
 	/** A challenge was met inside the window, or it was not. */
 	public static TriggerEvent challenge(Type type, String about)
 	{
@@ -283,6 +310,7 @@ public final class TriggerEvent
 		return new TriggerEvent(type);
 	}
 
+	// public:end side-games
 	/**
 	 * The player answered a question, by picking a branch in the conversation
 	 * the follower opened. {@code yes} or {@code no}, and never anything else -
@@ -322,7 +350,6 @@ public final class TriggerEvent
 		TriggerEvent event = new TriggerEvent(Type.RECORD);
 		event.name = what == null ? "" : what;
 		event.value = value;
-		event.previousValue = previous;
 		event.placeholders.put("record", event.name);
 		event.placeholders.put("value", Integer.toString(value));
 		event.placeholders.put("previous", Integer.toString(previous));
@@ -435,6 +462,7 @@ public final class TriggerEvent
 		return event;
 	}
 
+	// public:cut errands
 	/** Errand transitions; the errand's name matches rule {@code names} lists. */
 	public static TriggerEvent errand(Type type, String errand)
 	{
@@ -444,6 +472,7 @@ public final class TriggerEvent
 		return event;
 	}
 
+	// public:end errands
 	private final Type type;
 	private final Map<String, String> placeholders = new HashMap<>();
 
@@ -457,7 +486,6 @@ public final class TriggerEvent
 
 	/** How many times this has happened before, where the raiser counts. */
 	private int count;
-	private int previousValue;
 	/** The level-up's wider ledger: the total and the base, before and after. */
 	private int total;
 	private int previousTotal;
@@ -467,8 +495,10 @@ public final class TriggerEvent
 	private long sinceMs = -1;
 	private String message = "";
 	private int chatTypeId = -1;
+	// public:cut agility-all,marks
 	/** Told when a line this event raised is heard: the plugin's own bookkeeping, never the rules'. */
 	private Runnable onSaid;
+	// public:end agility-all,marks
 
 	private TriggerEvent(Type type)
 	{
@@ -513,7 +543,6 @@ public final class TriggerEvent
 		TriggerEvent event = new TriggerEvent(Type.VARBIT);
 		event.id = varbitId;
 		event.value = newValue;
-		event.previousValue = oldValue;
 		event.placeholders.put("value", Integer.toString(newValue));
 		return event;
 	}
@@ -566,6 +595,8 @@ public final class TriggerEvent
 		return event;
 	}
 
+	// public:cut company-extras
+	// public:cut noticing
 	/**
 	 * The follower noticed something the player had not, and set off to look
 	 * at it. {kind} is what sort of thing (valuable, nest, impling, star,
@@ -587,6 +618,8 @@ public final class TriggerEvent
 		return event;
 	}
 
+	// public:end noticing
+	// public:cut will
 	/**
 	 * Sent somewhere with a misgiving about it. {misgiving} is the kind
 	 * (wilderness, monster) and {thing} what it is about: "the Wilderness",
@@ -606,6 +639,8 @@ public final class TriggerEvent
 		return event;
 	}
 
+	// public:end will
+	// public:end company-extras
 	/**
 	 * The game said what the kill count is. {boss} names it, {count} is
 	 * the number, {ordinal} says it ("forty-first"), and {lastCount} is the
@@ -618,7 +653,6 @@ public final class TriggerEvent
 		event.name = boss == null ? "" : boss;
 		event.count = count;
 		event.value = count;
-		event.previousValue = lastCount;
 		event.placeholders.put("boss", event.name);
 		event.placeholders.put("count", Integer.toString(count));
 		event.placeholders.put("ordinal", Words.ordinal(count));
@@ -631,11 +665,12 @@ public final class TriggerEvent
 		TriggerEvent event = new TriggerEvent(Type.REGION_CHANGE);
 		event.id = newRegion;
 		event.value = newRegion;
-		event.previousValue = oldRegion;
 		event.placeholders.put("region", Integer.toString(newRegion));
 		return event;
 	}
 
+	// public:cut agility-all
+	// public:cut agility
 	/**
 	 * The follower has done an agility obstacle or shortcut after the player.
 	 * The name is "fell" where the player fell, and so the follower with
@@ -648,6 +683,8 @@ public final class TriggerEvent
 		return event;
 	}
 
+	// public:end agility
+	// public:cut marks
 	/**
 	 * A mark of grace on a rooftop course. The name is "spotted" (it turned
 	 * up on the player's roof), "left" (the player went past it and on to
@@ -670,6 +707,8 @@ public final class TriggerEvent
 			onSaid.run();
 		}
 	}
+	// public:end marks
+	// public:end agility-all
 
 	public static TriggerEvent damageTaken(int amount)
 	{
@@ -707,11 +746,6 @@ public final class TriggerEvent
 	public int getCount()
 	{
 		return count;
-	}
-
-	public int getPreviousValue()
-	{
-		return previousValue;
 	}
 
 	public int getTotal()

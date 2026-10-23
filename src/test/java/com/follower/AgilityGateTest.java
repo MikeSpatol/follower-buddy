@@ -1,6 +1,7 @@
+// public:file agility,agility-all
 package com.follower;
 
-import com.follower.follower.AgilityTrace;
+import com.follower.follower.AgilityTrace; // public:cut dev
 import com.follower.follower.Crossing;
 import com.follower.follower.CrossingWatch;
 import com.follower.follower.FollowerEntity;
@@ -118,7 +119,7 @@ public class AgilityGateTest
 	private final CrossingWatch watch = new CrossingWatch(follower);
 	private final FollowerPlugin plugin = new FollowerPlugin();
 	private boolean settingOn = true;
-	private boolean developer;
+	private boolean developer; // public:cut dev
 
 	@Before
 	public void setUp() throws ReflectiveOperationException
@@ -133,12 +134,14 @@ public class AgilityGateTest
 			{
 				return settingOn;
 			}
+			// public:cut dev
 
 			@Override
 			public boolean developerMode()
 			{
 				return developer;
 			}
+			// public:end dev
 		});
 		game.at(50, 50, 0).basePoses(NORMAL).posing(808);
 		frame();
@@ -174,6 +177,7 @@ public class AgilityGateTest
 		lettingGo();
 	}
 
+	// public:cut posing
 	@Test
 	public void aFilmLetsItGo() throws ReflectiveOperationException
 	{
@@ -181,6 +185,7 @@ public class AgilityGateTest
 		lettingGo();
 	}
 
+	// public:end posing
 	@Test
 	public void theSettingOffLetsItGo() throws ReflectiveOperationException
 	{
@@ -204,7 +209,8 @@ public class AgilityGateTest
 	{
 		somethingOdd();
 		follower.doing = true;
-		set("cutsceneForced", true);
+		set("cutsceneForced", true); // public:cut dev
+		// public:else set("sceneOn", true);
 		frame();
 		assertFalse("the scene's moves are not copied", watch.isWatching());
 		assertEquals("and the queue is kept for after it", 0, follower.cleared);
@@ -224,12 +230,20 @@ public class AgilityGateTest
 	@Test
 	public void theFollowersOwnBusinessStandsAsideForIt() throws ReflectiveOperationException
 	{
-		for (String gate : new String[]{"seatFeetTaken", "momentFeetTaken", "spectateBusy"})
+		for (String gate : new String[]{
+			"seatFeetTaken", // public:cut skilling
+			"momentFeetTaken",
+			"spectateBusy", // public:cut spectate
+		})
 		{
 			assertFalse(gate + " with nothing going on", (Boolean) call(gate));
 		}
 		follower.doing = true;
-		for (String gate : new String[]{"seatFeetTaken", "momentFeetTaken", "spectateBusy"})
+		for (String gate : new String[]{
+			"seatFeetTaken", // public:cut skilling
+			"momentFeetTaken",
+			"spectateBusy", // public:cut spectate
+		})
 		{
 			assertTrue(gate + " while it does agility", (Boolean) call(gate));
 		}
@@ -278,6 +292,7 @@ public class AgilityGateTest
 		assertEquals("their own", 1, follower.held);
 	}
 
+	// public:cut errands
 	/**
 	 * On a course the run back to the first obstacle is not agility, and an
 	 * errand begun there turned the watch off and missed the first climb.
@@ -296,11 +311,13 @@ public class AgilityGateTest
 		assertFalse("a minute on", (Boolean) call("errandBusy"));
 	}
 
+	// public:end errands
 	private void agilityXp(int xp)
 	{
 		plugin.onStatChanged(new net.runelite.api.events.StatChanged(net.runelite.api.Skill.AGILITY, xp, 50, 50));
 	}
 
+	// public:cut dev
 	// ---------------------------------------------------------------- trace
 
 	@Test
@@ -376,8 +393,10 @@ public class AgilityGateTest
 			.anyMatch(line -> line.contains("xp+8 hit 16")));
 	}
 
+	// public:end dev
 	// ---------------------------------------------------------------- helpers
 
+	// public:cut dev
 	private AgilityTrace trace() throws ReflectiveOperationException, IOException
 	{
 		AgilityTrace trace = (AgilityTrace) get("agilityTrace");
@@ -385,6 +404,7 @@ public class AgilityGateTest
 		return trace;
 	}
 
+	// public:end dev
 	private Object get(String name) throws ReflectiveOperationException
 	{
 		Field field = FollowerPlugin.class.getDeclaredField(name);

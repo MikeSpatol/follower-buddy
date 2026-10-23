@@ -1,3 +1,4 @@
+// public:file devdump,posing-preview
 package com.follower;
 
 import com.follower.appearance.SpotAnimRepository;

@@ -102,6 +102,7 @@ public class HotGround
 		return tiles.size();
 	}
 
+	// public:cut dev
 	/**
 	 * What the scene holds against what this does, for {@code ::follower
 	 * fires}. The set is built from events, and a missed event or a tile
@@ -184,6 +185,7 @@ public class HotGround
 		return lines;
 	}
 
+	// public:end dev
 	/** A hop, a logout, a shutdown: the scene is gone and so is what was in it. */
 	public void clear()
 	{

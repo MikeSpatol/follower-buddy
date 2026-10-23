@@ -1,3 +1,4 @@
+// public:file company-extras,noticing
 package com.follower.follower;
 
 import com.follower.FollowerConfig;
@@ -140,10 +141,12 @@ public class Noticing
 	private final Set<String> seen = new HashSet<>();
 	private final List<Map.Entry<String, WorldPoint>> stars = new ArrayList<>();
 
+	// public:cut dev
 	/** Only while ::follower force notice runs: no clocks, and what it found, for the chat line. */
 	private boolean forcing;
 	private String forced;
 
+	// public:end dev
 	public Noticing(Client client, FollowerEntity follower, FollowerConfig config, Looker looker,
 		Consumer<TriggerEvent> events, BooleanSupplier busy, IntSupplier idleTicks,
 		Supplier<List<Map.Entry<String, WorldPoint>>> landmarksNearby)
@@ -248,6 +251,7 @@ public class Noticing
 		}
 	}
 
+	// public:cut dev
 	/**
 	 * ::follower force notice: the best thing in view noticed now, walked
 	 * to, looked at and named, as the tick would - but with no kind's clock,
@@ -294,37 +298,44 @@ public class Noticing
 		}
 	}
 
+	// public:end dev
 	private boolean off(Kind kind, int now)
 	{
 		Integer last = lastAt.get(kind);
-		return forcing || last == null || now - last >= kind.cooldownTicks;
+		return forcing || last == null || now - last >= kind.cooldownTicks; // public:cut dev
+		// public:else return last == null || now - last >= kind.cooldownTicks;
 	}
 
 	private boolean look(Kind kind, String what, WorldPoint at, WorldPoint from, int now,
 		int steps, boolean writes, int holdTicks)
 	{
 		String key = kind.key + ":" + at.getX() + "," + at.getY() + ":" + what;
-		if ((seen.contains(key) && !forcing) || at.getPlane() != from.getPlane()
+		if ((seen.contains(key) && !forcing) || at.getPlane() != from.getPlane() // public:cut dev
+		// public:else if (seen.contains(key) || at.getPlane() != from.getPlane()
 			|| at.distanceTo(from) > VISIBLE_TILES)
 		{
 			return false;
 		}
 		if (!looker.goAndLook(at, steps, writes, holdTicks))
 		{
+			// public:cut dev
 			if (forcing)
 			{
 				forced = "Saw the " + what + " (" + kind.key + ") but could not go and look.";
 			}
+			// public:end dev
 			return false;
 		}
 		seen.add(key);
 		lastAt.put(kind, now);
 		events.accept(TriggerEvent.noticed(kind.key, what));
-		log.debug("Noticed a {}: {} at {}", kind.key, what, at);
+		log.debug("Noticed a {}: {} at {}", kind.key, what, at); // public:cut logs
+		// public:cut dev
 		if (forcing)
 		{
 			forced = "Went to look at the " + what + " (" + kind.key + ").";
 		}
+		// public:end dev
 		return true;
 	}
 
@@ -342,20 +353,25 @@ public class Noticing
 				it.remove();
 				continue;
 			}
+			// public:cut dev
 			// Kept when forcing: the lines are about a drop walked away from,
 			// and said to a player standing on it they are wrong.
+			// public:end dev
 			if (tile.distanceTo(here) < WALKED_AWAY_TILES)
 			{
+				// public:cut dev
 				if (forcing)
 				{
 					forced = "A drop is within " + WALKED_AWAY_TILES + " tiles of you, and its line is"
 						+ " for one you walked away from: step off first.";
 				}
+				// public:end dev
 				continue;
 			}
 			for (Drop drop : entry.getValue())
 			{
-				if (now - drop.since < LEFT_AFTER_TICKS && !forcing)
+				if (now - drop.since < LEFT_AFTER_TICKS && !forcing) // public:cut dev
+				// public:else if (now - drop.since < LEFT_AFTER_TICKS)
 				{
 					continue;
 				}
@@ -423,7 +439,8 @@ public class Noticing
 	private boolean noticeALandmark(int now, WorldPoint here, WorldPoint from)
 	{
 		if (!off(Kind.LANDMARK, now)
-			|| (idleTicks.getAsInt() < LANDMARK_AFTER_IDLE_TICKS && !forcing))
+			|| (idleTicks.getAsInt() < LANDMARK_AFTER_IDLE_TICKS && !forcing)) // public:cut dev
+			// public:else || idleTicks.getAsInt() < LANDMARK_AFTER_IDLE_TICKS)
 		{
 			return false;
 		}

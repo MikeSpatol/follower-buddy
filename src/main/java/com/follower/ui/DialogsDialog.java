@@ -1,3 +1,4 @@
+// public:file dialogs-editor
 package com.follower.ui;
 
 import com.follower.speech.DialogTree;
@@ -196,11 +197,14 @@ public class DialogsDialog extends JDialog
 		setPreferredSize(new Dimension(700, 700));
 		pack();
 		// Narrower cuts the hint; taller than the screen puts Save under the
-		// taskbar, as Advanced posing found (QA3).
+		// taskbar, as Advanced posing found (QA3). // public:cut posing
+		// public:else // taskbar (QA3).
 		setMinimumSize(new Dimension(700, 400));
 		java.awt.GraphicsConfiguration screen = getGraphicsConfiguration();
-		setSize(getWidth(), FilmDialog.heightOnScreen(getHeight(), screen.getBounds(),
-			java.awt.Toolkit.getDefaultToolkit().getScreenInsets(screen)));
+		setSize(getWidth(), FilmDialog.heightOnScreen(getHeight(), screen.getBounds(), // public:cut posing
+		// public:else java.awt.Insets taskbars = java.awt.Toolkit.getDefaultToolkit().getScreenInsets(screen);
+		// public:else setSize(getWidth(), Math.min(getHeight(), screen.getBounds().height - taskbars.top - taskbars.bottom));
+			java.awt.Toolkit.getDefaultToolkit().getScreenInsets(screen))); // public:cut posing
 		setLocationRelativeTo(null);
 	}
 

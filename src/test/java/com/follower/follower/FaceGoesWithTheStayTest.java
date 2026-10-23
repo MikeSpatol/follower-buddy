@@ -53,7 +53,7 @@ public class FaceGoesWithTheStayTest
 		assertTrue(follower.moveToFront(game.player));
 		assertFalse("called over is the end of the stay", follower.isStaying());
 		assertNull("and of the way the stay faced", get("stayFaceTile"));
-		assertNull(get("stayFaceMax"));
+		assertNull(get("stayFaceMax")); // public:cut skilling
 	}
 
 	@Test

@@ -30,7 +30,8 @@ public class BundledFontsTest
 	{
 		GameFontRepository fonts = new GameFontRepository(new Gson());
 		// An empty directory: no override, so this is the bundled resource.
-		fonts.load(folder.newFolder().toPath());
+		fonts.load(folder.newFolder().toPath()); // public:cut devfonts
+		// public:else fonts.load();
 		return fonts;
 	}
 

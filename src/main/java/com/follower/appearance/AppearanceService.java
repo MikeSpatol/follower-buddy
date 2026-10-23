@@ -19,24 +19,14 @@ import net.runelite.api.Model;
 public class AppearanceService
 {
 	private final AppearanceComposer composer;
-	private final CaptureFallback capture;
 
 	@Getter
 	private ComposedAppearance current;
 
-	private Outfit inFlight;
-
 	@Inject
-	public AppearanceService(AppearanceComposer composer, CaptureFallback capture)
+	public AppearanceService(AppearanceComposer composer)
 	{
 		this.composer = composer;
-		this.capture = capture;
-	}
-
-	/** Drives the capture state machine. Call once per frame. */
-	public void tick()
-	{
-		capture.tick();
 	}
 
 	/**
@@ -44,50 +34,21 @@ public class AppearanceService
 	 * the cached and dump paths, or a frame later for the capture path. It may
 	 * receive null if neither path could produce a model.
 	 */
-	public void request(Outfit outfit, ModelSource source, Consumer<ComposedAppearance> onReady)
+	public void request(Outfit outfit, Consumer<ComposedAppearance> onReady)
 	{
 		if (current != null && current.getOutfit().equals(outfit))
 		{
 			onReady.accept(current);
 			return;
 		}
-
-		if (outfit.equals(inFlight))
+		Model model = composer.compose(outfit);
+		if (model != null)
 		{
-			// Capture already running for this exact outfit; let it land.
+			publish(new ComposedAppearance(model, outfit), onReady);
 			return;
 		}
-
-		if (source != ModelSource.CAPTURE_ONLY)
-		{
-			Model model = composer.compose(outfit);
-			if (model != null)
-			{
-				publish(new ComposedAppearance(model, ComposedAppearance.Source.DUMP, outfit), onReady);
-				return;
-			}
-
-			if (source == ModelSource.DUMP_ONLY)
-			{
-				log.warn("No model data for outfit {} and fallback is disabled", outfit);
-				onReady.accept(null);
-				return;
-			}
-
-			log.debug("Dump could not build {}, falling back to capture", outfit);
-		}
-
-		inFlight = new Outfit(outfit);
-		capture.request(outfit, model ->
-		{
-			inFlight = null;
-			if (model == null)
-			{
-				onReady.accept(null);
-				return;
-			}
-			publish(new ComposedAppearance(model, ComposedAppearance.Source.CAPTURE, outfit), onReady);
-		});
+		log.warn("No model data for outfit {} and fallback is disabled", outfit);
+		onReady.accept(null);
 	}
 
 	private void publish(ComposedAppearance appearance, Consumer<ComposedAppearance> onReady)
@@ -99,7 +60,5 @@ public class AppearanceService
 	public void invalidate()
 	{
 		current = null;
-		inFlight = null;
-		capture.abort();
 	}
 }

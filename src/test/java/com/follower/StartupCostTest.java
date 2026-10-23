@@ -1,7 +1,7 @@
 package com.follower;
 
 import com.follower.appearance.ModelRepository;
-import com.follower.appearance.OutfitProfileStore;
+import com.follower.appearance.OutfitProfileStore; // public:cut outfit-profiles
 import com.follower.appearance.SpotAnimRepository;
 import com.follower.follower.StanceLibrary;
 import com.follower.speech.RuleLoader;
@@ -43,26 +43,31 @@ public class StartupCostTest
 		Path dir = folder.newFolder().toPath();
 		Gson gson = new Gson();
 
-		long fonts = millis(() -> new GameFontRepository(gson).load(dir));
+		long fonts = millis(() -> new GameFontRepository(gson).load(dir)); // public:cut devfonts
+		// public:else long fonts = millis(() -> new GameFontRepository(gson).load());
 		long rules = millis(() -> new RuleLoader(gson).initialise(dir));
 		long stances = millis(() ->
 			new StanceLibrary(gson, new ModelRepository(gson)).load(dir));
-		long spotAnims = millis(() -> new SpotAnimRepository(gson).load(dir));
-		long profiles = millis(() -> new OutfitProfileStore(gson).load(dir));
-		long models = millis(() -> new ModelRepository(gson).load(dir));
+		long spotAnims = millis(() -> new SpotAnimRepository(gson).load(dir)); // public:cut devdump
+		// public:else long spotAnims = 0;
+		long profiles = millis(() -> new OutfitProfileStore(gson).load(dir)); // public:cut outfit-profiles
+		long models = millis(() -> new ModelRepository(gson).load(dir)); // public:cut devdump
+		// public:else long models = 0;
 
-		long total = fonts + rules + stances + spotAnims + profiles + models;
+		long total = fonts + rules + stances + spotAnims + profiles + models; // public:cut outfit-profiles
+		// public:else long total = fonts + rules + stances + spotAnims + models;
 
 		System.out.printf("%n  a fresh install's startUp:%n"
 				+ "    fonts.json       %4d ms%n"
 				+ "    phrases.json     %4d ms%n"
 				+ "    stances.json     %4d ms%n"
 				+ "    spotanims.json   %4d ms%n"
-				+ "    profiles         %4d ms%n"
+				+ "    profiles         %4d ms%n" // public:cut outfit-profiles
 				+ "    equipment models %4d ms%n"
 				+ "    ----------------------%n"
 				+ "    total            %4d ms%n%n",
-			fonts, rules, stances, spotAnims, profiles, models, total);
+			fonts, rules, stances, spotAnims, profiles, models, total); // public:cut outfit-profiles
+			// public:else fonts, rules, stances, spotAnims, models, total);
 
 		// Enabling a plugin should not read as a hang. This is deliberately
 		// loose - it is here to catch something going badly wrong, like a
@@ -123,7 +128,8 @@ public class StartupCostTest
 		// a unit test and ruinous in the render loop.
 		Path dir = folder.newFolder().toPath();
 		GameFontRepository fonts = new GameFontRepository(new Gson());
-		fonts.load(dir);
+		fonts.load(dir); // public:cut devfonts
+		// public:else fonts.load();
 
 		long lookups = millis(() ->
 		{

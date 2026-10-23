@@ -1,7 +1,7 @@
 package com.follower.speech;
 
 import com.follower.follower.FollowerEntity;
-import com.follower.ui.ChatheadRenderer;
+import com.follower.ui.ChatheadRenderer; // public:cut chathead
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
@@ -19,7 +19,7 @@ import net.runelite.api.widgets.Widget;
 import net.runelite.client.game.SpriteManager;
 import net.runelite.client.input.MouseAdapter;
 import net.runelite.client.input.MouseManager;
-import net.runelite.client.ui.FontManager;
+import net.runelite.client.ui.FontManager; // public:cut devfonts
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
@@ -55,12 +55,14 @@ public class FollowerDialog extends Overlay
 		/** Latched when the node is reached, run when the conversation ENDS. */
 		private Runnable onFinish;
 
+		// public:cut posing
 		/**
 		 * The face it speaks with: the chathead animations for a box of one,
 		 * two, three and four lines. Null for the dialog's own talk loop.
 		 */
 		private int[] expression;
 
+		// public:end posing
 		private Node(boolean playerSpeaking, String[] pages)
 		{
 			this.playerSpeaking = playerSpeaking;
@@ -87,6 +89,7 @@ public class FollowerDialog extends Overlay
 			return new Node(true, pages);
 		}
 
+		// public:cut posing
 		/**
 		 * Speaks with this face: the chathead animations for a box of one
 		 * to four lines, as the game picks among them by the lines on show.
@@ -97,6 +100,7 @@ public class FollowerDialog extends Overlay
 			return this;
 		}
 
+		// public:end posing
 		/** Continue to another node once the pages are done. */
 		public Node then(String nodeId)
 		{
@@ -158,11 +162,6 @@ public class FollowerDialog extends Overlay
 				found.add(next);
 			}
 			return found;
-		}
-
-		public boolean hasChoices()
-		{
-			return optionText.length > 0;
 		}
 
 		/** The choice labels, in the order they are offered. */
@@ -281,7 +280,7 @@ public class FollowerDialog extends Overlay
 	private static final int BUTTON_STRIP = 23;
 
 	private static final Color PARCHMENT = new Color(0xC8, 0xB8, 0x8F);
-	private static final Color TEXT = Color.BLACK;
+	private static final Color TEXT = Color.BLACK; // public:cut chathead,dev
 
 	/**
 	 * The speaker's name is the client's DARKRED (0x800000). The continue prompt
@@ -290,8 +289,10 @@ public class FollowerDialog extends Overlay
 	 * agreed, so the screenshots win.
 	 */
 	private static final Color NAME = new Color(0x80, 0x00, 0x00);
+	// public:cut chathead,dev
 	private static final Color CONTINUE = new Color(0x00, 0x00, 0xFF);
 	private static final Color HOVER = Color.WHITE;
+	// public:end chathead,dev
 
 	/**
 	 * The dialog's text cells, sniffed off the LIVE widgets (2026-08-04): both
@@ -396,6 +397,7 @@ public class FollowerDialog extends Overlay
 		}
 	}
 
+	// public:cut devfonts
 	/**
 	 * The game's actual dialog font: RuneStar's pixel-perfect recreation of the
 	 * cache's Plain 12, rebuilt glyph for glyph from the font data. RuneLite's
@@ -419,7 +421,7 @@ public class FollowerDialog extends Overlay
 			{
 				java.awt.Font font = java.awt.Font
 					.createFont(java.awt.Font.TRUETYPE_FONT, in).deriveFont(16f);
-				log.info("Loaded dialog font {} -> {}", resource, font.getFontName());
+				log.info("Loaded dialog font {} -> {}", resource, font.getFontName()); // public:cut logs
 				return font;
 			}
 			log.warn("Dialog font {} missing from the jar; falling back to RuneLite's", resource);
@@ -431,15 +433,20 @@ public class FollowerDialog extends Overlay
 		return FontManager.getRunescapeFont();
 	}
 
+	// public:end devfonts
 	private final Client client;
 	private final FollowerEntity follower;
 	private final MouseManager mouseManager;
 	private final SpriteManager spriteManager;
 	private final net.runelite.client.callback.ClientThread clientThread;
+	// public:cut chathead
 	private final com.follower.appearance.AppearanceComposer composer;
-	private final net.runelite.client.input.KeyManager keyManager;
+	private final net.runelite.client.input.KeyManager keyManager; // public:cut dev
+	// public:end chathead
 	private final com.follower.ui.GameFontRepository gameFonts;
 
+	// public:cut chathead
+	// public:cut dev
 	/**
 	 * Head-tuning mode: while on and a dialog is open, the arrow keys nudge the
 	 * head live - left/right for yaw, up/down for tilt, shift for fine steps. A
@@ -493,6 +500,7 @@ public class FollowerDialog extends Overlay
 		}
 	};
 
+	// public:end dev
 	/**
 	 * Where the dialog interface sits inside the chatbox widget - the model clips
 	 * at the INTERFACE edge (the inner parchment), not the chatbox's outer frame.
@@ -512,20 +520,24 @@ public class FollowerDialog extends Overlay
 	 * needs the difference taken off. 14 confirmed by eye against a real dialog;
 	 * still tunable via {@code ::follower head cliptop <n>}.
 	 */
+	// public:cut dev
 	@lombok.Setter
 	@lombok.Getter
+	// public:end dev
 	private int clipTopExtra = 14;
 
 	/** Supplies the follower's outfit so its real chathead can be composed. */
 	@lombok.Setter
 	private java.util.function.Supplier<com.follower.appearance.Outfit> followerOutfit;
 
+	// public:end chathead
 	private String followerName = "Follower";
 	private Map<String, Node> script = new LinkedHashMap<>();
 	private Node node;
 	private int page;
 	private boolean open;
 
+	// public:cut posing
 	/**
 	 * Whether the box on show is a line of a conversation written in the
 	 * film window: the follower keeps the facing the film gave it, and how
@@ -536,6 +548,7 @@ public class FollowerDialog extends Overlay
 	/** Whether the last box closed by being continued past its last page. */
 	private boolean continued;
 
+	// public:end posing
 	/**
 	 * The tick gate: dialog input resolves ON the game tick, never instantly.
 	 * A real dialog's click travels to the server and takes effect when the
@@ -574,25 +587,28 @@ public class FollowerDialog extends Overlay
 	private Rectangle[] optionBounds = new Rectangle[0];
 	private Rectangle continueBounds = new Rectangle();
 
-	private BufferedImage head;
+	private BufferedImage head; // public:cut chathead
 	private boolean headIsPlayer;
 
+	// public:cut chathead
 	/**
 	 * Head angles, copied live from a real NPC dialog's widget whenever one opens
 	 * - the game publishes its exact rotationY (facing) and rotationX (tilt)
 	 * there, which beats guessing. Defaults are the pre-sniff guess; the sniffed
 	 * values overwrite them for the session and are reported so they can be baked.
 	 */
+	// public:cut dev
 	@lombok.Setter
 	@lombok.Getter
 	private int headYaw = ChatheadRenderer.GAME_YAW;
 
+	// public:end dev
 	/** Camera pitch, not a model tilt - see ChatheadRenderer. */
-	@lombok.Setter
+	@lombok.Setter // public:cut dev
 	@lombok.Getter
 	private int headPitch = ChatheadRenderer.GAME_PITCH;
 
-	@lombok.Setter
+	@lombok.Setter // public:cut dev
 	@lombok.Getter
 	private int headZoom = ChatheadRenderer.GAME_ZOOM;
 
@@ -602,7 +618,7 @@ public class FollowerDialog extends Overlay
 	 * side 166 - so the follower and the player face each other, as they do in a
 	 * real conversation.
 	 */
-	@lombok.Setter
+	@lombok.Setter // public:cut dev
 	@lombok.Getter
 	private int npcTurn = ChatheadRenderer.GAME_TURN_NPC;
 
@@ -657,10 +673,13 @@ public class FollowerDialog extends Overlay
 		return headIsPlayer ? ChatheadRenderer.GAME_TURN_PLAYER : npcTurn;
 	}
 
+	// public:cut dev
 	@lombok.Setter
 	@lombok.Getter
+	// public:end dev
 	private double headFraction = 0.26;
 
+	// public:end chathead
 	private final MouseAdapter clickAdapter = new MouseAdapter()
 	{
 		@Override
@@ -684,13 +703,17 @@ public class FollowerDialog extends Overlay
 				return event;
 			}
 
+			// public:cut chathead
+			// public:cut dev
 			if (sweepMode)
 			{
 				close();
 				event.consume();
 				return event;
 			}
+			// public:end dev
 
+			// public:end chathead
 			// One input in flight at a time - the real client ignores clicks
 			// while its "Please wait..." is up.
 			if (pendingAction != null)
@@ -738,8 +761,10 @@ public class FollowerDialog extends Overlay
 		this.mouseManager = mouseManager;
 		this.spriteManager = spriteManager;
 		this.clientThread = clientThread;
+		// public:cut chathead
 		this.composer = composer;
-		this.keyManager = keyManager;
+		this.keyManager = keyManager; // public:cut dev
+		// public:end chathead
 		this.gameFonts = gameFonts;
 		setPosition(OverlayPosition.DYNAMIC);
 		setLayer(OverlayLayer.ABOVE_WIDGETS);
@@ -748,13 +773,13 @@ public class FollowerDialog extends Overlay
 	public void register()
 	{
 		mouseManager.registerMouseListener(clickAdapter);
-		keyManager.registerKeyListener(keyAdapter);
+		keyManager.registerKeyListener(keyAdapter); // public:cut chathead,dev
 	}
 
 	public void unregister()
 	{
 		mouseManager.unregisterMouseListener(clickAdapter);
-		keyManager.unregisterKeyListener(keyAdapter);
+		keyManager.unregisterKeyListener(keyAdapter); // public:cut chathead,dev
 	}
 
 	public boolean isOpen()
@@ -799,12 +824,16 @@ public class FollowerDialog extends Overlay
 	public void close()
 	{
 		open = false;
-		scripted = false;
+		scripted = false; // public:cut posing
+		// public:cut chathead
 		head = null;
 		chatheadBase = null;
 		talkAnimation = null;
+		// public:cut dev
 		sweepMode = false;
 		sweep = null;
+		// public:end dev
+		// public:end chathead
 		// An interrupt-close cancels any input still in flight, or a stale
 		// queued action would fire a tick after the box is gone.
 		pendingAction = null;
@@ -824,6 +853,7 @@ public class FollowerDialog extends Overlay
 	/** Starts a conversation at {@code startId}. */
 	public void start(String speakerName, Map<String, Node> conversation, String startId)
 	{
+		// public:cut posing
 		begin(speakerName, conversation, startId, false);
 	}
 
@@ -845,7 +875,8 @@ public class FollowerDialog extends Overlay
 	/** The page of the box on show, or -1 when none is. */
 	public int pageShown()
 	{
-		return open && !sweepMode && node != null ? page : -1;
+		return open && !sweepMode && node != null ? page : -1; // public:cut chathead,dev
+		// public:else return open && node != null ? page : -1;
 	}
 
 	/** The text of the page on show, or "" when none is. */
@@ -873,11 +904,14 @@ public class FollowerDialog extends Overlay
 
 	private void begin(String speakerName, Map<String, Node> conversation, String startId, boolean scripted)
 	{
+		// public:end posing
 		followerName = speakerName;
 		script = conversation;
 		open = true;
+		// public:cut posing
 		this.scripted = scripted;
 		continued = false;
+		// public:end posing
 		// A fresh conversation inherits nothing from the last one; a leftover
 		// would fire on the wrong ending entirely.
 		pendingFinish = null;
@@ -908,12 +942,16 @@ public class FollowerDialog extends Overlay
 
 		pages = node.dynamicPages != null ? node.dynamicPages.get() : node.pages;
 		page = 0;
+		// public:cut posing
 		// A written line keeps the facing the film gave it: the shot is set up.
 		if (!scripted)
 		{
-			follower.facePlayer();
-		}
-		refreshHead();
+		// public:end posing
+			follower.facePlayer(); // public:cut posing
+		// public:else follower.facePlayer();
+		} // public:cut posing
+		refreshHead(); // public:cut chathead
+		// public:else headIsPlayer = node.playerSpeaking;
 	}
 
 	private void advance()
@@ -929,7 +967,7 @@ public class FollowerDialog extends Overlay
 		}
 		else
 		{
-			continued = true;
+			continued = true; // public:cut posing
 			close();
 		}
 	}
@@ -938,10 +976,12 @@ public class FollowerDialog extends Overlay
 	{
 		return node != null && page >= pages.length && node.optionText.length > 0;
 	}
+	// public:cut chathead
 
 	/** The composed dialogue-head model of the current speaker; null = fallback. */
 	private net.runelite.api.Model chatheadBase;
 
+	// public:cut dev
 	/**
 	 * Angle-picker mode: the head drawn at every 45 degrees at once, labelled, so
 	 * the right facing can be chosen by eye instead of guessed one value per
@@ -1019,6 +1059,7 @@ public class FollowerDialog extends Overlay
 			bounds.x, bounds.width, bounds.y + bounds.height - 4, CONTINUE);
 	}
 
+	// public:end dev
 	/** The talking animation state, advanced on the wall clock while drawing. */
 	private net.runelite.api.Animation talkAnimation;
 	/** The id {@link #talkAnimation} was loaded for. */
@@ -1043,18 +1084,28 @@ public class FollowerDialog extends Overlay
 	 * A chathead talking sequence forced by {@code ::follower head talk}, for
 	 * testing. 0, the default, plays the neutral face for the lines on show.
 	 */
-	@lombok.Setter
+	@lombok.Setter // public:cut dev
 	@lombok.Getter
 	private int talkAnimationId;
+	// public:cut posing
 
+	// public:end posing
+	// public:else
+	// public:else /** The neutral talk, CHATNEU1-4, for a box of one to four lines. */
+	// public:else static final int[] NEUTRAL_TALK = {588, 589, 590, 591};
+	// public:else
 	/**
-	 * The clip a box plays: the line's own face, else a forced one, else the
-	 * neutral face, each at the game's length for the lines on show.
+	 * The clip a box plays: the line's own face, else a forced one, else the // public:cut posing
+	 // public:else * The clip a box plays: a forced one, else the neutral face, at the
+	 * neutral face, each at the game's length for the lines on show. // public:cut posing
+	 // public:else * game's length for the lines on show.
 	 */
-	static int talkClip(int[] face, int forced, int lines)
+	static int talkClip(int[] face, int forced, int lines) // public:cut posing
+	// public:else static int talkClip(int forced, int lines)
 	{
-		int[] clips = face != null ? face
-			: forced > 0 ? new int[]{forced} : Conversation.Expression.NEUTRAL.animations();
+		int[] clips = face != null ? face // public:cut posing
+		// public:else int[] clips = forced > 0 ? new int[]{forced} : NEUTRAL_TALK;
+			: forced > 0 ? new int[]{forced} : Conversation.Expression.NEUTRAL.animations(); // public:cut posing
 		return clips[Math.max(1, Math.min(clips.length, lines)) - 1];
 	}
 
@@ -1085,7 +1136,8 @@ public class FollowerDialog extends Overlay
 	 */
 	public void adoptNpcHead(int animationId, int turn, int pitch, int zoom)
 	{
-		for (int neutral : Conversation.Expression.NEUTRAL.animations())
+		for (int neutral : Conversation.Expression.NEUTRAL.animations()) // public:cut posing
+		// public:else for (int neutral : NEUTRAL_TALK)
 		{
 			if (animationId == neutral)
 			{
@@ -1165,9 +1217,12 @@ public class FollowerDialog extends Overlay
 			return head;
 		}
 
+		// public:cut posing
 		// A face chosen for the line plays the game's own length for the
 		// lines on show, from its first frame on each page.
-		int wanted = talkClip(node.expression, talkAnimationId, lines);
+		// public:end posing
+		int wanted = talkClip(node.expression, talkAnimationId, lines); // public:cut posing
+		// public:else int wanted = talkClip(talkAnimationId, lines);
 		if (talkAnimation != null && (wanted != talkLoadedId || page != talkPage))
 		{
 			talkAnimation = null;
@@ -1215,6 +1270,7 @@ public class FollowerDialog extends Overlay
 		return lastFace;
 	}
 
+	// public:end chathead
 	private String speakerName()
 	{
 		if (!headIsPlayer)
@@ -1228,7 +1284,8 @@ public class FollowerDialog extends Overlay
 	@Override
 	public Dimension render(Graphics2D graphics)
 	{
-		if (!open || (node == null && !sweepMode))
+		if (!open || (node == null && !sweepMode)) // public:cut chathead,dev
+		// public:else if (!open || node == null)
 		{
 			return null;
 		}
@@ -1256,12 +1313,16 @@ public class FollowerDialog extends Overlay
 
 		drawBackground(graphics);
 
+		// public:cut dev
+		// public:cut chathead
 		if (sweepMode)
 		{
 			drawSweep(graphics);
 			return null;
 		}
+		// public:end chathead
 
+		// public:end dev
 		if (optionsVisible())
 		{
 			drawOptions(graphics);
@@ -1271,6 +1332,8 @@ public class FollowerDialog extends Overlay
 			drawSpeech(graphics);
 		}
 
+		// public:cut dev
+		// public:cut chathead
 		if (tuning)
 		{
 			graphics.setFont(PLAIN_12);
@@ -1278,7 +1341,9 @@ public class FollowerDialog extends Overlay
 			graphics.drawString("turn " + npcTurn + "  pitch " + headPitch
 				+ "  (arrows adjust, shift = fine)", bounds.x + 6, bounds.y + 12);
 		}
+		// public:end chathead
 
+		// public:end dev
 		return null;
 	}
 
@@ -1300,7 +1365,9 @@ public class FollowerDialog extends Overlay
 	private void drawSpeech(Graphics2D graphics)
 	{
 		com.follower.ui.GameFont font = gameFonts.get(DIALOG_FONT_ID);
-		String[] wrapped = wrap(graphics, font, pages[page], TEXT_WIDTH);
+		String[] wrapped = wrap(graphics, font, pages[page], TEXT_WIDTH); // public:cut devfonts
+		// public:else String[] wrapped = wrap(pages[page], font::stringWidth, TEXT_WIDTH);
+		// public:cut chathead
 		BufferedImage face = animatedHead(wrapped.length);
 
 		// The canvas is anchored so the model's origin lands at the measured
@@ -1326,6 +1393,7 @@ public class FollowerDialog extends Overlay
 			graphics.setClip(oldClip);
 		}
 
+		// public:end chathead
 		// The measured text column: 380 wide at x=115 beside an NPC head on the
 		// left, x=24 with the player's head on the right.
 		int cellX = bounds.x + (headIsPlayer ? PLAYER_TEXT_X : NPC_TEXT_X);
@@ -1346,7 +1414,8 @@ public class FollowerDialog extends Overlay
 		// tick lands.
 		String prompt = awaitingContinue ? "Please wait..." : "Click here to continue";
 		int promptTop = bounds.y + CONTINUE_TOP;
-		int promptWidth = textWidth(graphics, font, prompt);
+		int promptWidth = textWidth(graphics, font, prompt); // public:cut devfonts
+		// public:else int promptWidth = font.stringWidth(prompt);
 		continueBounds = new Rectangle(
 			cellX + (TEXT_WIDTH - promptWidth) / 2, promptTop, promptWidth, ROW_HEIGHT);
 
@@ -1363,17 +1432,22 @@ public class FollowerDialog extends Overlay
 	private void drawCell(Graphics2D graphics, com.follower.ui.GameFont font,
 		String text, int cellX, int cellWidth, int top, int rgb)
 	{
+		// public:cut devfonts
 		if (font != null)
 		{
+		// public:end devfonts
 			font.drawTop(graphics, text,
 				cellX + (cellWidth - font.stringWidth(text)) / 2, top, rgb, false);
+			// public:cut devfonts
 			return;
 		}
 		graphics.setFont(PLAIN_12);
 		graphics.setColor(new Color(rgb));
 		int width = graphics.getFontMetrics().stringWidth(text);
 		graphics.drawString(text, cellX + (cellWidth - width) / 2, top + 13);
+			// public:end devfonts
 	}
+	// public:cut devfonts
 
 	private int textWidth(Graphics2D graphics, com.follower.ui.GameFont font, String text)
 	{
@@ -1384,6 +1458,7 @@ public class FollowerDialog extends Overlay
 		graphics.setFont(PLAIN_12);
 		return graphics.getFontMetrics().stringWidth(text);
 	}
+	// public:end devfonts
 
 	/** True when the mouse is inside {@code area} on the canvas. */
 	private boolean hovered(Rectangle area)
@@ -1436,6 +1511,8 @@ public class FollowerDialog extends Overlay
 		}
 	}
 
+	// public:cut chathead
+	// public:cut dev
 	/**
 	 * Crisp flat text, centred in its column. Deliberately NO shadow: dialog text
 	 * on parchment has none in the real client, and a shadow visibly fattens the
@@ -1449,16 +1526,22 @@ public class FollowerDialog extends Overlay
 		graphics.drawString(text, left + (width - textWidth) / 2, y);
 	}
 
+	// public:end dev
+	// public:cut devfonts
 	/**
 	 * Greedy word wrap measured with the GAME's own advances when available -
 	 * wrap decisions have to agree with the renderer or lines land wrong.
 	 */
+	// public:end devfonts
+	// public:end chathead
+	// public:cut devfonts
 	private String[] wrap(Graphics2D graphics, com.follower.ui.GameFont font,
 		String text, int maxWidth)
 	{
 		return wrap(text, candidate -> textWidth(graphics, font, candidate), maxWidth);
 	}
 
+	// public:end devfonts
 	/**
 	 * The wrap itself, against any measure. A line break typed into the text
 	 * starts a new line, as the game's own break tag does, and a blank one
@@ -1502,6 +1585,7 @@ public class FollowerDialog extends Overlay
 		}
 		return out.toArray(new String[0]);
 	}
+	// public:cut posing
 
 	/**
 	 * The most lines a box holds. Four, at the spacing the game gives four,
@@ -1542,4 +1626,5 @@ public class FollowerDialog extends Overlay
 	/** The fallback font's measure, for paging before anything is drawn. */
 	private static final java.awt.FontMetrics FALLBACK_METRICS =
 		new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB).createGraphics().getFontMetrics(PLAIN_12);
+	// public:end posing
 }

@@ -1,10 +1,11 @@
+// public:file agility,agility-all
 package com.follower.follower;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.function.Consumer; // public:cut dev
 import net.runelite.api.HitsplatID;
 import net.runelite.api.Player;
 import net.runelite.api.PlayerComposition;
@@ -257,8 +258,10 @@ public final class CrossingWatch
 		boolean confirmed;
 		/** Handed to the follower once confirmed, and grown frame by frame after. */
 		Crossing crossing;
+		// public:cut dev
 		/** What confirmed it, for the trace. */
 		String why;
+		// public:end dev
 		/** The listener was told to expect it. */
 		boolean announced;
 		/** When the player was put down somewhere new, or -1. */
@@ -337,6 +340,7 @@ public final class CrossingWatch
 
 	/** Agility XP has landed and the next frame looks for what it paid for. */
 	private boolean xpToCheck;
+	// public:cut dev
 
 	/** The last frame anything odd moved or posed the player, for the trace's "near agility". */
 	private long lastOddMs = Long.MIN_VALUE;
@@ -344,16 +348,19 @@ public final class CrossingWatch
 	/** Where the trace's event lines go; nowhere unless the plugin says. */
 	private Consumer<String> trace = line -> { };
 
+	// public:end dev
 	public CrossingWatch(Listener listener)
 	{
 		this.listener = listener;
 	}
 
+	// public:cut dev
 	public void setTrace(Consumer<String> trace)
 	{
 		this.trace = trace == null ? line -> { } : trace;
 	}
 
+	// public:end dev
 	/** Agility XP landed: the hop being watched, if any, was an obstacle, and anything missed is rebuilt. */
 	public void noteAgilityXp(long atMs)
 	{
@@ -379,12 +386,14 @@ public final class CrossingWatch
 		return run != null && (run.displaced() || run.glided > 0 || run.hopMs >= 0);
 	}
 
+	// public:cut dev
 	/** Whether anything odd moved or posed the player within this long before {@code nowMs}. */
 	public boolean wasOddWithin(long nowMs, long windowMs)
 	{
 		return lastOddMs != Long.MIN_VALUE && nowMs - lastOddMs <= windowMs;
 	}
 
+	// public:end dev
 	/**
 	 * The follower was put beside the player: whatever the player did before
 	 * now is behind it, and XP arriving for it must not send it back there.
@@ -398,6 +407,7 @@ public final class CrossingWatch
 		}
 	}
 
+	// public:cut dev
 	/** The watch's state in a few words, for the trace. */
 	public String describe(long nowMs)
 	{
@@ -415,6 +425,7 @@ public final class CrossingWatch
 			+ (run.calmSinceMs >= 0 ? " calm" : "");
 	}
 
+	// public:end dev
 	/**
 	 * Stops watching: a logout, a hop, the setting turned off, a cutscene.
 	 * Whatever was half-recorded is dropped. The player's normal set is
@@ -469,7 +480,7 @@ public final class CrossingWatch
 			recent.clear();
 			coveredToMs = s.atMs;
 			xpToCheck = false;
-			trace.accept("watch: teleport of " + (moved / 128) + " tiles; queue let go");
+			trace.accept("watch: teleport of " + (moved / 128) + " tiles; queue let go"); // public:cut dev
 			listener.clearCrossings();
 			return;
 		}
@@ -494,10 +505,12 @@ public final class CrossingWatch
 		boolean unusual = (moved > 0 || planeChanged)
 			&& (planeChanged || !walkingPose || oddPose || s.action != -1);
 		remember(new Seen(s.frame(), !odd && !hop, walking, unusual, s.server));
+		// public:cut dev
 		if (unusual || oddPose)
 		{
 			lastOddMs = s.atMs;
 		}
+		// public:end dev
 
 		if (xpToCheck)
 		{
@@ -557,15 +570,18 @@ public final class CrossingWatch
 			boolean hurt = lastDamageMs >= run.startMs;
 			if (run.glided >= GLIDE_UNITS || leapt)
 			{
-				confirm(leapt ? "leap" : "glide");
+				confirm(leapt ? "leap" : "glide"); // public:cut dev
+				// public:else confirm();
 			}
 			else if (run.hopMs >= 0 && (xp || hurt))
 			{
-				confirm(xp ? "hop+xp" : "hop+fall");
+				confirm(xp ? "hop+xp" : "hop+fall"); // public:cut dev
+				// public:else confirm();
 			}
 			else if (xp && run.displaced())
 			{
-				confirm("moved+xp");
+				confirm("moved+xp"); // public:cut dev
+				// public:else confirm();
 			}
 			else if (run.hopMs >= 0)
 			{
@@ -574,15 +590,18 @@ public final class CrossingWatch
 				if (!run.announced)
 				{
 					run.announced = true;
+					// public:cut dev
 					trace.accept("watch: hop from " + describe(run.start()) + " to " + describe(frame.tile())
 						+ "; holding for xp");
+					// public:end dev
 					listener.expectCrossing(run.start());
 				}
 				long wait = onCourse(s.atMs) ? CONFIRM_WAIT_ON_COURSE_MS : CONFIRM_WAIT_MS;
 				if (s.atMs - run.hopMs > wait)
 				{
 					// No XP and no fall: a ladder, a trapdoor, stairs.
-					discard("no xp " + seconds(wait) + " after the hop");
+					discard("no xp " + seconds(wait) + " after the hop"); // public:cut dev
+					// public:else discard("no xp after the hop");
 					return;
 				}
 			}
@@ -623,7 +642,8 @@ public final class CrossingWatch
 
 		if (s.atMs - run.startMs > MAX_CROSSING_MS || run.frames.size() > MAX_FRAMES)
 		{
-			discard("ran past " + seconds(MAX_CROSSING_MS) + ": not an obstacle");
+			discard("ran past " + seconds(MAX_CROSSING_MS) + ": not an obstacle"); // public:cut dev
+			// public:else discard("ran past");
 			cooling = true;
 			if (s.weapon == normalWeapon)
 			{
@@ -658,13 +678,14 @@ public final class CrossingWatch
 		return lastXpMs != Long.MIN_VALUE && nowMs - lastXpMs <= ON_COURSE_MS;
 	}
 
-	private void confirm(String why)
+	private void confirm(String why) // public:cut dev
+	// public:else private void confirm()
 	{
 		run.confirmed = true;
-		run.why = why;
+		run.why = why; // public:cut dev
 		run.announced = true;
 		run.crossing = Crossing.live(run.frames, normal);
-		trace.accept("watch: crossing recognised (" + why + ") from " + describe(run.start()));
+		trace.accept("watch: crossing recognised (" + why + ") from " + describe(run.start())); // public:cut dev
 		listener.queueCrossing(run.crossing);
 	}
 
@@ -674,8 +695,10 @@ public final class CrossingWatch
 		run = null;
 		done.crossing.end(done.calmIndex + 1, lastDamageMs >= done.startMs);
 		coveredToMs = done.frames.get(done.calmIndex).atMs;
+		// public:cut dev
 		trace.accept("watch: crossing ended at " + describe(done.crossing.getEnd()) + ", "
 			+ seconds(done.crossing.getDurationMs()) + (done.crossing.isFell() ? ", fell" : ""));
+		// public:end dev
 	}
 
 	private void discard(String why)
@@ -699,12 +722,14 @@ public final class CrossingWatch
 				dropped.crossing.cut();
 			}
 			coveredToMs = dropped.frames.get(dropped.frames.size() - 1).atMs;
+			// public:cut dev
 			trace.accept("watch: crossing " + (dropped.crossing.isDropped() ? "dropped" : "cut")
 				+ " (" + why + ") at " + describe(dropped.crossing.getEnd()));
+			// public:end dev
 		}
 		else if (dropped.announced)
 		{
-			trace.accept("watch: let go of the hop (" + why + ")");
+			trace.accept("watch: let go of the hop (" + why + ")"); // public:cut dev
 			listener.cancelExpectedCrossing();
 		}
 	}
@@ -768,7 +793,7 @@ public final class CrossingWatch
 		}
 		if (last < 0 || nowMs - window.get(last).frame.atMs > REBUILD_RECENT_MS)
 		{
-			trace.accept("watch: xp, nothing missed");
+			trace.accept("watch: xp, nothing missed"); // public:cut dev
 			return;
 		}
 
@@ -825,13 +850,15 @@ public final class CrossingWatch
 			lastDamageMs >= frames.get(0).atMs);
 		if (rebuilt.getStart().equals(rebuilt.getEnd()))
 		{
-			trace.accept("watch: xp, odd movement at " + describe(rebuilt.getStart()) + " went nowhere");
+			trace.accept("watch: xp, odd movement at " + describe(rebuilt.getStart()) + " went nowhere"); // public:cut dev
 			return;
 		}
 		coveredToMs = window.get(end).frame.atMs;
+		// public:cut dev
 		trace.accept("watch: crossing rebuilt from xp, " + describe(rebuilt.getStart()) + " to "
 			+ describe(rebuilt.getEnd()) + ", " + seconds(rebuilt.getDurationMs())
 			+ ", " + frames.size() + " frames");
+		// public:end dev
 		listener.queueCrossing(rebuilt);
 	}
 
@@ -859,6 +886,7 @@ public final class CrossingWatch
 		}
 		return false;
 	}
+	// public:cut dev
 
 	public static String describe(WorldPoint p)
 	{
@@ -869,4 +897,5 @@ public final class CrossingWatch
 	{
 		return String.format("%.1fs", ms / 1000.0);
 	}
+	// public:end dev
 }

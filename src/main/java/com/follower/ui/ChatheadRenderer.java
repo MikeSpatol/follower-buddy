@@ -1,3 +1,4 @@
+// public:file chathead
 package com.follower.ui;
 
 import java.awt.image.BufferedImage;
@@ -20,7 +21,6 @@ import net.runelite.api.Model;
  * triangles through {@link GouraudRasterizer}, a verbatim port of the client's
  * integer scanline rasterizer, so the pixels come out the way the game's own
  * renderer produces them - down to which pixels a two-pixel pupil covers. */
-@lombok.extern.slf4j.Slf4j
 public final class ChatheadRenderer
 {
 	private ChatheadRenderer()
@@ -37,7 +37,7 @@ public final class ChatheadRenderer
 	 * character face opposite ways. Applying it as a true Z-roll instead tilts the
 	 * head sideways in the image plane, which is visibly wrong.
 	 */
-	public static final int GAME_YAW = 0;
+	public static final int GAME_YAW = 0; // public:cut dev
 	public static final int GAME_PITCH = 40;
 	public static final int GAME_TURN_NPC = 1882;
 	public static final int GAME_TURN_PLAYER = 166;
@@ -45,9 +45,6 @@ public final class ChatheadRenderer
 
 	/** The client's projection: screen = model * 512 / depth. */
 	private static final double FOCAL_LENGTH = 512;
-
-	/** One-line shading census per render, cheap enough to leave on. */
-	private static final boolean LOG_SHADING = false;
 
 	/** Convenience overload: bounds come from the model itself, game camera. */
 	public static BufferedImage render(Model model, int width, int height,
@@ -237,24 +234,6 @@ public final class ChatheadRenderer
 		// game's rasterizer has none, and crisp edges are part of the look.
 		int[] colors2 = model.getFaceColors2();
 		int[] colors3 = model.getFaceColors3();
-
-		// Faces flagged -1 in colours3 are FLAT shaded - one colour across the
-		// whole triangle - and no amount of interpolation smooths those. If a head
-		// renders faceted, this ratio says whether the model is authored that way
-		// or the blending is at fault.
-		if (LOG_SHADING)
-		{
-			int flatFaces = 0;
-			for (int face : keep)
-			{
-				if (colors3 == null || colors3[face] == -1)
-				{
-					flatFaces++;
-				}
-			}
-			log.info("chathead: {} faces drawn, {} flat-shaded, {} gouraud",
-				keep.size(), flatFaces, keep.size() - flatFaces);
-		}
 
 		// The client's draw2 ordering, not a painter's sort. Faces go into
 		// INTEGER average-depth buckets ((zA+zB+zC)/3 + minDepth) in face-index
@@ -539,6 +518,7 @@ public final class ChatheadRenderer
 	 * it to the camera distance, orbit the camera to its pitch, then divide by
 	 * depth. Returns screen x, screen y and camera-space depth.
 	 */
+	// public:cut chronicle
 	/**
 	 * The pixels {@link #render} would cover, without drawing them: the same
 	 * camera, the same integer projection, the same faces kept and turned
@@ -616,6 +596,7 @@ public final class ChatheadRenderer
 		return minX > maxX ? null : new int[]{minX, minY, maxX + 1, maxY + 1};
 	}
 
+	// public:end chronicle
 	private static double[] project(double vx, double vy, double vz,
 		double yawSin, double yawCos, double pitchSin, double pitchCos,
 		double eyeY, double eyeZ)

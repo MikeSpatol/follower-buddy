@@ -2,9 +2,9 @@ package com.follower.speech;
 
 import com.follower.FollowerConfig;
 import com.follower.follower.FollowerEntity;
-import java.awt.Color;
+import java.awt.Color; // public:cut devfonts
 import java.awt.Dimension;
-import java.awt.FontMetrics;
+import java.awt.FontMetrics; // public:cut devfonts
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 import javax.inject.Inject;
@@ -12,7 +12,7 @@ import net.runelite.api.Client;
 import net.runelite.api.Perspective;
 import net.runelite.api.Point;
 import net.runelite.api.coords.LocalPoint;
-import net.runelite.client.ui.FontManager;
+import net.runelite.client.ui.FontManager; // public:cut devfonts
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
@@ -125,10 +125,13 @@ public class FollowerOverlay extends Overlay
 		// entity's projected height point, black copy one pixel straight down,
 		// coloured text over it. No fade - real overhead text just disappears.
 		com.follower.ui.GameFont b12 = gameFonts.getByName("b12_full");
+		// public:cut devfonts
 		if (b12 != null)
 		{
+		// public:end devfonts
 			b12.drawCenteredOverhead(graphics, message, anchor.getX(), anchor.getY(), rgb);
 			return null;
+		// public:cut devfonts
 		}
 
 		// Fallback while fonts.json is missing: RuneLite's recreation.
@@ -141,5 +144,6 @@ public class FollowerOverlay extends Overlay
 		graphics.drawString(message, x, anchor.getY());
 
 		return null;
+		// public:end devfonts
 	}
 }

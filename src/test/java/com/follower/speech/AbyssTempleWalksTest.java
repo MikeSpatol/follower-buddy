@@ -134,7 +134,7 @@ public class AbyssTempleWalksTest
 	{
 		QuestSim s = abyss(6000, false);
 		assertFalse("a miniquest has no scroll to answer", s.heardIds.contains("quest-complete"));
-		assertTrue(s.transcript(), s.pagesSaid.contains("Enter the Abyss"));
+		assertTrue(s.transcript(), s.pagesSaid.contains("Enter the Abyss")); // public:cut chronicle
 		assertTrue("its page is the witness", s.h.engine.getContext().questWitnessedOn("ENTER_THE_ABYSS") != null);
 	}
 
@@ -290,9 +290,11 @@ public class AbyssTempleWalksTest
 					"qm-temple-of-the-eye-thingummywut",
 					"qm-temple-of-the-eye-persten"), moments(s));
 				assertTrue(s.transcript(), s.heardIds.contains("quest-complete"));
+				// public:cut chronicle
 				// Named once: by the page news, or by the scroll's line, which lets the news go.
 				assertTrue(s.transcript(), s.pagesSaid.contains("Temple of the Eye")
 					!= s.scrollLine().contains("Temple of the Eye"));
+				// public:end chronicle
 			}
 		}
 	}

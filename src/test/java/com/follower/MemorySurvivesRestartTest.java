@@ -49,8 +49,10 @@ public class MemorySurvivesRestartTest
 		context.notePlaceMemory("the drop");
 		context.noteSaidOnce("first-meeting");
 		context.noteSaidOnce("first-page");
+		// public:cut chronicle
 		context.noteChronicled("boss-giant-mole");
 		context.stampChronicled("boss-giant-mole", 20_720L, "Falador");
+		// public:end chronicle
 		context.noteLineSaid("A line said twice.");
 		context.noteLineSaid("A line said twice.");
 		context.setMetOnDay(20_400L);
@@ -60,7 +62,7 @@ public class MemorySurvivesRestartTest
 		context.noteDoing("fighting Vorkath");
 		context.acceptNickname("the swot");
 		context.refuseNickname("the gravedigger");
-		context.noteSketchAccount("rsprofile_Rn0JAOtr");
+		context.noteSketchAccount("rsprofile_Rn0JAOtr"); // public:cut chronicle
 		return context;
 	}
 
@@ -118,6 +120,7 @@ public class MemorySurvivesRestartTest
 		assertTrue(after.hasSaidOnce("first-page"));
 		assertFalse("and nothing else should come back spent",
 			after.hasSaidOnce("first-hour"));
+		// public:cut chronicle
 		assertTrue("a chronicle page once written stays written",
 			after.isChronicled("boss-giant-mole"));
 		assertFalse(after.isChronicled("boss-king-black-dragon"));
@@ -125,6 +128,7 @@ public class MemorySurvivesRestartTest
 		assertEquals("and where", "Falador", after.chronicledAt("boss-giant-mole"));
 		assertTrue("the accounts whose drawings Forget everything takes",
 			after.getSketchAccounts().contains("rsprofile_Rn0JAOtr"));
+		// public:end chronicle
 
 		// Line wear resetting every restart would make retirement (R17) a
 		// per-session mechanism, which is to say no mechanism at all.
@@ -172,6 +176,7 @@ public class MemorySurvivesRestartTest
 			first, second);
 	}
 
+	// public:cut chronicle
 	@Test
 	public void aPagesSavedDateWinsOverOneStampedBeforeTheRead()
 	{
@@ -186,6 +191,7 @@ public class MemorySurvivesRestartTest
 		assertEquals("Falador", after.chronicledAt("boss-giant-mole"));
 	}
 
+	// public:end chronicle
 	@Test
 	public void aFollowerThatHasDoneNothingSavesAndLoadsCleanly()
 	{
@@ -271,6 +277,7 @@ public class MemorySurvivesRestartTest
 		assertFalse(FollowerPlugin.belongsToProfile(-1L, 3L));
 	}
 
+	// public:cut chronicle
 	/**
 	 * The Chronicle's numbers are the follower's own counters, so they come
 	 * back with the rest of its memory: the goblins it saw you kill and the
@@ -296,6 +303,7 @@ public class MemorySurvivesRestartTest
 		assertEquals(3, progress.count(loader.get("enemy-goblin")));
 		assertEquals(41, progress.count(loader.get("boss-giant-mole")));
 	}
+	// public:end chronicle
 
 	@Test
 	public void theRestsFromAskingAndRecallingSurvive()

@@ -1,7 +1,8 @@
+// public:file spectate,spectate-keep-fight-lines
 package com.follower.follower;
 
 import com.follower.FollowerConfig;
-import com.follower.appearance.SpotAnimRepository;
+import com.follower.appearance.SpotAnimRepository; // public:cut spectate-shield
 import com.follower.speech.TriggerContext;
 import com.follower.speech.TriggerEvent;
 import java.util.function.Consumer;
@@ -10,7 +11,7 @@ import net.runelite.api.Actor;
 import net.runelite.api.Client;
 import net.runelite.api.Player;
 import net.runelite.api.coords.WorldPoint;
-import net.runelite.api.gameval.AnimationID;
+import net.runelite.api.gameval.AnimationID; // public:cut spectate-shield
 
 /**
  * Gets the follower out of the way when a fight starts, and gives it something
@@ -107,7 +108,8 @@ public class SpectateController
 	 */
 	private boolean isSuperior(Actor target)
 	{
-		return config.keepsCompany() && target != null && target.getName() != null
+		return config.keepsCompany() && target != null && target.getName() != null // public:cut skilling
+		// public:else return target != null && target.getName() != null
 			&& SUPERIOR_NAMES.contains(target.getName());
 	}
 
@@ -123,6 +125,7 @@ public class SpectateController
 	 */
 	private static final int RESEAT_DISTANCE = 12;
 
+	// public:cut spectate-shield
 	/**
 	 * How often the channelled graphic is renewed, in game ticks.
 	 *
@@ -139,6 +142,7 @@ public class SpectateController
 	 */
 	private static final int DISPEL_HOLD_TICKS = 4;
 
+	// public:end spectate-shield
 	private final Client client;
 	private final FollowerEntity follower;
 	private final FollowerConfig config;
@@ -153,7 +157,7 @@ public class SpectateController
 	 * fights look detected while the follower stood glued to the player.
 	 */
 	private final java.util.function.Supplier<TriggerContext> contextSource;
-	private final SpotAnimRepository spotAnims;
+	private final SpotAnimRepository spotAnims; // public:cut spectate-shield
 	private final Consumer<TriggerEvent> speech;
 
 	private TriggerContext context()
@@ -161,9 +165,11 @@ public class SpectateController
 		return contextSource.get();
 	}
 
+	// public:cut spectate-shield
 	/** Puts the follower's weapon and shield away while it channels. */
 	private final java.util.function.Consumer<Boolean> disarm;
 
+	// public:end spectate-shield
 	/** Whether the follower is currently standing aside for a fight. */
 	private boolean spectating;
 
@@ -176,6 +182,7 @@ public class SpectateController
 
 	private WorldPoint watchTile;
 
+	// public:cut spectate-shield
 	/**
 	 * The shield is a three-part spell rather than a repeating effect: it is
 	 * summoned once, channelled for as long as the follower stands and fights
@@ -213,17 +220,20 @@ public class SpectateController
 
 	private int ticksUnsettled;
 
+	// public:end spectate-shield
 	public SpectateController(Client client, FollowerEntity follower, FollowerConfig config,
-		java.util.function.Supplier<TriggerContext> contextSource, SpotAnimRepository spotAnims,
-		Consumer<TriggerEvent> speech, java.util.function.Consumer<Boolean> disarm)
+		java.util.function.Supplier<TriggerContext> contextSource, SpotAnimRepository spotAnims, // public:cut spectate-shield
+		// public:else java.util.function.Supplier<TriggerContext> contextSource,
+		Consumer<TriggerEvent> speech, java.util.function.Consumer<Boolean> disarm) // public:cut spectate-shield
+		// public:else Consumer<TriggerEvent> speech)
 	{
 		this.client = client;
 		this.follower = follower;
 		this.config = config;
 		this.contextSource = contextSource;
-		this.spotAnims = spotAnims;
+		this.spotAnims = spotAnims; // public:cut spectate-shield
 		this.speech = speech;
-		this.disarm = disarm;
+		this.disarm = disarm; // public:cut spectate-shield
 	}
 
 	public boolean isSpectating()
@@ -244,15 +254,19 @@ public class SpectateController
 	 */
 	public boolean holdsTheFeet()
 	{
-		return spectateOwnsTheFeet(spectating && !parked, releaseTicks);
+		return spectateOwnsTheFeet(spectating && !parked, releaseTicks); // public:cut spectate-shield
+		// public:else return spectating && !parked;
 	}
 
+	// public:cut spectate-shield
 	/** The above as a decision, so it can be tested without a controller. */
 	public static boolean spectateOwnsTheFeet(boolean spectating, int releaseTicks)
 	{
 		return spectating || releaseTicks > 0;
 	}
 
+	// public:end spectate-shield
+	// public:cut dev
 	/**
 	 * Why the follower is or is not standing clear right now, for
 	 * {@code ::follower spectate}. Every gate in {@link #tick} reads back here,
@@ -272,11 +286,15 @@ public class SpectateController
 			+ " boss=" + context().isBossFight()
 			+ " | spectating=" + spectating
 			+ " watchTile=" + watchTile
-			+ " settled=" + follower.isSettled()
+			+ " settled=" + follower.isSettled() // public:cut spectate-shield
+			// public:else + " settled=" + follower.isSettled();
+			// public:cut spectate-shield
 			+ " shield=" + shield
 			+ " releaseTicks=" + releaseTicks;
+			// public:end spectate-shield
 	}
 
+	// public:end dev
 	/**
 	 * @param busy true when something else owns the follower's feet - thrall
 	 * mode or an errand - in which case spectating stays out of the way
@@ -285,6 +303,7 @@ public class SpectateController
 	public void tick(boolean busy, boolean parked)
 	{
 		this.parked = parked;
+		// public:cut spectate-shield
 		// A dispel in progress owns the feet until its animation has played.
 		// The weapon comes back at the same moment, for the same reason: the
 		// rebuild that returns it would otherwise cut the closing cast short.
@@ -294,6 +313,7 @@ public class SpectateController
 			follower.resumeFollowing();
 		}
 
+		// public:end spectate-shield
 		if (!config.spectateCombat() || busy || !follower.isSpawned())
 		{
 			if (spectating)
@@ -342,10 +362,12 @@ public class SpectateController
 			panicDue = false;
 			panicked = true;
 			follower.playAnimation(PANIC);
-			log.debug("A superior; panicking, once");
+			log.debug("A superior; panicking, once"); // public:cut logs
 		}
+		// public:cut spectate-shield
 
 		maybeCastShield();
+		// public:end spectate-shield
 	}
 
 	/**
@@ -356,26 +378,30 @@ public class SpectateController
 	{
 		spectating = true;
 		announced = announce;
-		releaseTicks = 0;
+		releaseTicks = 0; // public:cut spectate-shield
 		unseatedTicks = 0;
 		if (parked)
 		{
-			log.debug("Parked by the player; watching from the post");
+			log.debug("Parked by the player; watching from the post"); // public:cut logs
 		}
 		else if (!moveClear())
 		{
 			// Nowhere to go is not a reason to keep announcing a fight; the
 			// follower simply carries on following.
-			log.debug("Nowhere to stand clear; staying put");
+			log.debug("Nowhere to stand clear; staying put"); // public:cut logs
 		}
 		if (!announce)
 		{
-			log.debug("Standing clear while thieving");
+			log.debug("Standing clear while thieving"); // public:cut logs
 			return;
 		}
-		log.debug("Spectating '{}' level {} boss={} shieldEnabled={}",
+		// public:cut logs
+		log.debug("Spectating '{}' level {} boss={} shieldEnabled={}", // public:cut spectate-shield
+		// public:else log.debug("Spectating '{}' level {} boss={}",
 			context().getCombatTarget(), context().getCombatTargetLevel(),
-			context().isBossFight(), config.spectateShield());
+			context().isBossFight(), config.spectateShield()); // public:cut spectate-shield
+			// public:else context().isBossFight());
+		// public:end logs
 		speech.accept(TriggerEvent.combat(TriggerEvent.Type.COMBAT_START,
 			context().getCombatTarget()));
 	}
@@ -394,6 +420,7 @@ public class SpectateController
 		panicDue = false;
 		panicked = false;
 
+		// public:cut spectate-shield
 		// Finishing the spell is its own moment: drop the channelled pose, play
 		// the closing animation where it stands, and only walk back once it has
 		// had time to play - movement would cut it off otherwise.
@@ -418,11 +445,12 @@ public class SpectateController
 				disarm.accept(false);
 			}
 			// A park the player gave is theirs to end, not the fight's.
+		// public:end spectate-shield
 			if (!parked)
 			{
 				follower.resumeFollowing();
 			}
-		}
+		} // public:cut spectate-shield
 
 		// Only a fight says goodbye. A thieving stand-clear ended is the
 		// follower simply coming back, which needs no remark.
@@ -441,11 +469,13 @@ public class SpectateController
 	 */
 	private void letTheSeatGo()
 	{
+		// public:cut spectate-shield
 		if (shield != Shield.NONE)
 		{
 			dropChannel("parked");
 			disarm.accept(false);
 		}
+		// public:end spectate-shield
 		watchTile = null;
 		panicDue = false;
 	}
@@ -607,6 +637,7 @@ public class SpectateController
 		return false;
 	}
 
+	// public:cut spectate-shield
 	/**
 	 * The protective-shield flourish: a cast animation with a graphic on top,
 	 * played on the follower itself while it watches a boss fight.
@@ -735,7 +766,7 @@ public class SpectateController
 		// Renew on the very next tick rather than after a full interval, so the
 		// ward does not go dark between the summon and the first top-up.
 		ticksSinceShield = SHIELD_MAINTAIN_TICKS;
-		log.debug("Shield: channelling, pose {}", channel);
+		log.debug("Shield: channelling, pose {}", channel); // public:cut logs
 	}
 
 	/**
@@ -755,7 +786,7 @@ public class SpectateController
 	{
 		if (shield != Shield.NONE)
 		{
-			log.debug("Shield: dropping from {} ({})", shield, reason);
+			log.debug("Shield: dropping from {} ({})", shield, reason); // public:cut logs
 		}
 		if (shield == Shield.CHANNELLING)
 		{
@@ -809,8 +840,10 @@ public class SpectateController
 			// Kept, at debug: this is what showed the sit and stand were
 			// running all along and the ids were the problem. ::follower
 			// spectate reports the same state on demand without it.
+			// public:cut logs
 			log.debug("Shield chain: animations {} settled={} emote={}",
 				ids, follower.isSettled(), follower.isEmotePlaying());
+			// public:end logs
 			follower.playAnimations(chain,
 				graphics.toArray(new SpotAnimRepository.Entry[0]));
 			played = true;
@@ -818,4 +851,5 @@ public class SpectateController
 		return played;
 	}
 
+	// public:end spectate-shield
 }

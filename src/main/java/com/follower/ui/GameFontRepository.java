@@ -4,8 +4,10 @@ import com.google.gson.Gson;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
+// public:cut devfonts
 import java.nio.file.Files;
 import java.nio.file.Path;
+// public:end devfonts
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
@@ -82,8 +84,10 @@ public class GameFontRepository
 	 * font that is not there, and both callers fall back to a TTF, so the
 	 * failure is quiet rather than loud.
 	 */
-	public void load(Path dataDir)
+	public void load(Path dataDir) // public:cut devfonts
+	// public:else public void load()
 	{
+		// public:cut devfonts
 		Path file = dataDir.resolve(FILE_NAME);
 		if (Files.isRegularFile(file))
 		{
@@ -101,6 +105,7 @@ public class GameFontRepository
 			}
 		}
 
+		// public:end devfonts
 		try (java.io.InputStream in = GameFontRepository.class
 			.getResourceAsStream("/com/follower/" + FILE_NAME))
 		{
@@ -145,8 +150,10 @@ public class GameFontRepository
 			}
 		}
 		status = fonts.size() + " fonts (cache " + dump.cacheRevision + ")";
+		// public:cut logs
 		log.info("Loaded {} game fonts from {} (cache {})",
 			fonts.size(), source, dump.cacheRevision);
+		// public:end logs
 		return true;
 	}
 

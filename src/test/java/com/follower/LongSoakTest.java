@@ -91,11 +91,13 @@ public class LongSoakTest
 			}
 			else if (roll < 12)
 			{
-				h.dispatch(TriggerEvent.simple(TriggerEvent.Type.COMBAT_START));
+				h.dispatch(TriggerEvent.simple(TriggerEvent.Type.COMBAT_START)); // public:cut spectate
+				// public:else h.dispatch(TriggerEvent.simple(TriggerEvent.Type.THIEVING_START));
 			}
 			else if (roll < 17)
 			{
-				h.dispatch(TriggerEvent.simple(TriggerEvent.Type.COMBAT_END));
+				h.dispatch(TriggerEvent.simple(TriggerEvent.Type.COMBAT_END)); // public:cut spectate
+				// public:else h.dispatch(TriggerEvent.simple(TriggerEvent.Type.THIEVING_END));
 			}
 			else if (roll < 20)
 			{
@@ -309,11 +311,13 @@ public class LongSoakTest
 			int roll = random.nextInt(1000);
 			if (roll < 30)
 			{
-				h.dispatch(TriggerEvent.simple(TriggerEvent.Type.COMBAT_START));
+				h.dispatch(TriggerEvent.simple(TriggerEvent.Type.COMBAT_START)); // public:cut spectate
+				// public:else h.dispatch(TriggerEvent.simple(TriggerEvent.Type.THIEVING_START));
 			}
 			else if (roll < 60)
 			{
-				h.dispatch(TriggerEvent.simple(TriggerEvent.Type.COMBAT_END));
+				h.dispatch(TriggerEvent.simple(TriggerEvent.Type.COMBAT_END)); // public:cut spectate
+				// public:else h.dispatch(TriggerEvent.simple(TriggerEvent.Type.THIEVING_END));
 			}
 			else if (roll < 75)
 			{
@@ -366,12 +370,16 @@ public class LongSoakTest
 				killCount++;
 				h.dispatch(TriggerEvent.killCount("Vorkath", killCount, killCount - 1));
 			}
+			// public:cut company-extras
+			// public:cut noticing
 			else if (roll < 180)
 			{
 				String kind = new String[]{"valuable", "nest", "impling", "star", "landmark"}
 					[random.nextInt(5)];
 				h.dispatch(TriggerEvent.noticed(kind, "a " + kind));
 			}
+			// public:end noticing
+			// public:cut will
 			else if (roll < 183)
 			{
 				h.dispatch(random.nextBoolean()
@@ -386,12 +394,16 @@ public class LongSoakTest
 					h.dispatch(TriggerEvent.simple(TriggerEvent.Type.STEPPED_ASIDE));
 				}
 			}
+			// public:end will
+			// public:end company-extras
+			// public:cut chronicle
 			else if (roll < 193)
 			{
 				h.dispatch(TriggerEvent.pageWritten(
 					new String[]{"boss", "enemy", "location", "faction", "world", "quest"}
 						[random.nextInt(6)], "Giant Mole"));
 			}
+			// public:end chronicle
 			else if (roll < 195)
 			{
 				h.dispatch(TriggerEvent.simple(TriggerEvent.Type.FAREWELL));
@@ -422,8 +434,10 @@ public class LongSoakTest
 			else if (roll < 210)
 			{
 				working = !working;
+				// public:cut skilling
 				String activity = random.nextBoolean() ? "cooking" : "fletching";
 				ctx.setWork(working, activity, "Range", null, 10, 0, Integer.MAX_VALUE);
+				// public:end skilling
 			}
 			else if (roll < 230)
 			{
@@ -444,6 +458,7 @@ public class LongSoakTest
 					{
 						h.dispatch(TriggerEvent.xpDrop("Cooking", 1 + random.nextInt(20)));
 					}
+					// public:cut skilling
 					else
 					{
 						h.dispatch(new TriggerEvent[]{
@@ -452,6 +467,7 @@ public class LongSoakTest
 							TriggerEvent.simple(TriggerEvent.Type.BAG_FULL),
 							TriggerEvent.simple(TriggerEvent.Type.BAG_HALF)}[random.nextInt(4)]);
 					}
+					// public:end skilling
 				}
 			}
 			else if (roll == 230)
@@ -739,11 +755,13 @@ public class LongSoakTest
 				}
 				else if (roll < 3)
 				{
-					h.dispatch(TriggerEvent.simple(TriggerEvent.Type.COMBAT_START));
+					h.dispatch(TriggerEvent.simple(TriggerEvent.Type.COMBAT_START)); // public:cut spectate
+					// public:else h.dispatch(TriggerEvent.simple(TriggerEvent.Type.THIEVING_START));
 				}
 				else if (roll < 6)
 				{
-					h.dispatch(TriggerEvent.simple(TriggerEvent.Type.COMBAT_END));
+					h.dispatch(TriggerEvent.simple(TriggerEvent.Type.COMBAT_END)); // public:cut spectate
+					// public:else h.dispatch(TriggerEvent.simple(TriggerEvent.Type.THIEVING_END));
 				}
 				else if (roll < 8)
 				{

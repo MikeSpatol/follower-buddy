@@ -53,7 +53,8 @@ public class MemoryLineLengthTest
 	private GameFont overheadFont() throws IOException
 	{
 		GameFontRepository fonts = new GameFontRepository(new Gson());
-		fonts.load(folder.newFolder().toPath());
+		fonts.load(folder.newFolder().toPath()); // public:cut devfonts
+		// public:else fonts.load();
 		return fonts.getByName("b12_full");
 	}
 

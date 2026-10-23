@@ -1,6 +1,6 @@
 package com.follower.ui;
 
-import com.follower.sound.VoiceLibrary;
+import com.follower.sound.VoiceLibrary; // public:cut sharevoice
 import com.google.gson.Gson;
 import java.awt.Component;
 import java.awt.Container;
@@ -39,19 +39,27 @@ public class WindowSizesTest
 	public void theThreeEditorsCannotBeDraggedNarrowerThanTheirText() throws Exception
 	{
 		Assume.assumeFalse(GraphicsEnvironment.isHeadless());
+		// public:cut messages-window
 		Path phrases = folder.newFile("phrases.json").toPath();
 		Files.copy(Paths.get("src/main/resources/com/follower/default-phrases.json"), phrases,
 			java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+		// public:end messages-window
+		// public:cut dialogs-editor
 		Path dialogs = folder.newFile("dialogs.json").toPath();
 		Files.copy(Paths.get("src/main/resources/com/follower/default-dialogs.json"), dialogs,
 			java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+		// public:end dialogs-editor
 		SwingUtilities.invokeAndWait(() ->
 		{
+			// public:cut messages-window
 			PhrasesDialog messages = new PhrasesDialog(new Gson(), phrases, Arrays.asList(
-				new PhrasesDialog.Category("Quest NPCs", "quest", "Said.", false)), () -> 0);
+				new PhrasesDialog.Category("Quest NPCs", "quest", "Said.", false)), () -> 0); // public:cut messages-readonly
+				// public:else new PhrasesDialog.Category("Quest NPCs", "quest", "Said.")));
 			assertEquals(new Dimension(620, 400), messages.getMinimumSize());
 			messages.dispose();
+			// public:end messages-window
 
+			// public:cut dialogs-editor
 			DialogsDialog conversations = new DialogsDialog(new Gson(), dialogs);
 			assertEquals(new Dimension(700, 400), conversations.getMinimumSize());
 			java.awt.GraphicsConfiguration screen = conversations.getGraphicsConfiguration();
@@ -59,8 +67,11 @@ public class WindowSizesTest
 			assertTrue("no taller than the screen above the taskbar",
 				conversations.getHeight() <= screen.getBounds().height - bars.top - bars.bottom);
 			conversations.dispose();
+			// public:end dialogs-editor
+			// public:cut sharevoice
 
-			VoiceDialog sounds = new VoiceDialog(new VoiceLibrary(new Gson(), null), () -> 50)
+			VoiceDialog sounds = new VoiceDialog(new VoiceLibrary(new Gson(), null), () -> 50) // public:cut messages-window
+			// public:else VoiceDialog sounds = new VoiceDialog(new VoiceLibrary(new Gson(), null))
 			{
 				@Override
 				public void setVisible(boolean b)
@@ -70,9 +81,11 @@ public class WindowSizesTest
 			sounds.open();
 			assertEquals(540, sounds.getMinimumSize().width);
 			sounds.dispose();
+			// public:end sharevoice
 		});
 	}
 
+	// public:cut messages-window
 	@Test
 	public void aLongTitleIsShownWholeAndOnlyTheIdGivesWay() throws Exception
 	{
@@ -81,12 +94,15 @@ public class WindowSizesTest
 		Files.copy(Paths.get("src/main/resources/com/follower/default-phrases.json"), phrases,
 			java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 		List<PhrasesDialog.Category> categories = Arrays.asList(
-			new PhrasesDialog.Category("Quest NPCs", "quest", "Said.", false),
-			new PhrasesDialog.Category("Locations", "area", "Said.", true));
+			new PhrasesDialog.Category("Quest NPCs", "quest", "Said.", false), // public:cut messages-readonly
+			// public:else new PhrasesDialog.Category("Quest NPCs", "quest", "Said."),
+			new PhrasesDialog.Category("Locations", "area", "Said.", true)); // public:cut messages-readonly
+			// public:else new PhrasesDialog.Category("Locations", "area", "Said."));
 		PhrasesDialog[] made = new PhrasesDialog[1];
 		SwingUtilities.invokeAndWait(() ->
 		{
-			made[0] = new PhrasesDialog(new Gson(), phrases, categories, () -> 0)
+			made[0] = new PhrasesDialog(new Gson(), phrases, categories, () -> 0) // public:cut messages-readonly
+			// public:else made[0] = new PhrasesDialog(new Gson(), phrases, categories)
 			{
 				@Override
 				public void setVisible(boolean b)
@@ -151,4 +167,5 @@ public class WindowSizesTest
 		f.setAccessible(true);
 		return f.get(owner);
 	}
+	// public:end messages-window
 }

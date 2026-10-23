@@ -27,9 +27,11 @@ to the game, and it never acts for you.
 - **Has a character.** A dry, understated scribe with moods, likes and
   dislikes. It remembers moments you shared and brings them up, asks you for
   small favours, and may give you a nickname, though it asks first.
+  <!-- public:cut chronicle -->
 - **Keeps a Chronicle.** A book in the style of the Collection Log, with pages
   for the quests you finish, the bosses, creatures and places you meet, and
   sketches it draws of you. Right-click the follower and pick Read-chronicle.
+  <!-- public:end chronicle -->
 - **Keeps you company.** It skills beside you with a borrowed tool, claps your
   levels, writes up your best drops, spots marks of grace on rooftop courses,
   and now and then goes off on an errand of its own.
@@ -56,12 +58,18 @@ The full guide to the panel, the settings and the commands is in
 
 - **Dress it** in any equipment, body style and colours, and save outfits as
   profiles.
+  <!-- public:cut messages-window -->
 - **Change what it says.** The Messages window lists every line. Edit, add or
   switch off any of them; your changes survive updates.
+  <!-- public:end messages-window -->
+  <!-- public:cut sharevoice -->
 - **Give it a voice.** Attach your own WAV, AIFF or AU file to any line.
 - **Share your lines** with a friend as a `.zip` pack. Importing one adds to
   yours, and shows you what is inside before anything is kept.
+  <!-- public:end sharevoice -->
+  <!-- public:cut posing -->
 - **Pose it** in Advanced posing, and write short scenes for it to play.
+  <!-- public:end posing -->
 
 ## Privacy
 
@@ -70,11 +78,15 @@ The full guide to the panel, the settings and the commands is in
 - What the follower remembers about you is kept in your RuneLite profile's
   settings, which RuneLite syncs if you have profile sync on. The Memory window
   shows all of it and erases it in one click.
+  <!-- public:cut chronicle -->
 - Sketches are pictures of your game view, taken only when you ask for one and
   saved as PNGs in `.runelite/follower/chronicle-sketches`. Forget everything
   deletes the drawings of the accounts used on that RuneLite profile.
+  <!-- public:end chronicle -->
+  <!-- public:cut sharevoice -->
 - Sounds and shared packs are files you choose. Nothing is bundled or
   downloaded, and an imported pack is checked before anything in it is kept.
+  <!-- public:end sharevoice -->
 
 ## Notes for reviewers
 
@@ -86,9 +98,11 @@ The full guide to the panel, the settings and the commands is in
   left-click stays theirs.
 - Speech is a data-driven rule engine (`src/main/resources/com/follower/`). A
   full pass over every rule takes about 0.1 ms.
+  <!-- public:cut sharevoice -->
 - Audio goes through RuneLite's `AudioPlayer`, on files in the user's own
   folder. Packs are plain `java.util.zip` over a file the user picks, with
   fixed entry names and size caps; see `com.follower.share.PackFile`.
+  <!-- public:end sharevoice -->
 - 2,377 tests cover the rule engine, movement, the Chronicle, hostile share
   packs and every bundled rule; see `docs/testing-strategy.md`.
 

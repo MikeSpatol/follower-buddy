@@ -1,3 +1,4 @@
+// public:file devdump
 package com.follower.appearance;
 
 import com.google.gson.Gson;
@@ -247,6 +248,7 @@ public class HiddenSlotsTest
 			wornBanana.equals(eating));
 		assertEquals("a copy keeps its props", eating, new Outfit(eating));
 	}
+	// public:cut dev
 
 	/**
 	 * The {@code ::follower hidden} report walks the same wearPos fields in its
@@ -290,6 +292,7 @@ public class HiddenSlotsTest
 		assertEquals("the report and the renderer disagree about what gear covers",
 			actuallyHidden, reported);
 	}
+	// public:end dev
 
 	@Test
 	public void everyWearableSlotCanBeHiddenBySomething() throws IOException

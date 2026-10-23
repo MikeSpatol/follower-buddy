@@ -22,6 +22,7 @@ way to fresher ones over the weeks. If it is still too much, Chattiness runs
 from Minimal, about one remark a minute at most, up to Chatty. New installs
 start on Occasional with the chatbox mirror off.
 
+<!-- public:cut sharevoice -->
 **You can give it a voice.** Attach a sound file to any line - one you wrote or
 one that ships - and it plays when the follower says it, with the text still
 appearing as usual. Attachments are keyed by the line itself, so reordering a
@@ -34,6 +35,7 @@ lines, and the sounds attached to them, as a `.zip` you can hand to somebody
 else. A pack holds only what you added - never the lines that ship - and
 importing one adds to yours rather than replacing anything. You see exactly what
 a pack contains, and what was left out and why, before any of it is kept.
+<!-- public:end sharevoice -->
 
 **It has a character.** A dry, understated field scribe who writes everything
 down. It keeps a mood that your day moves, likes some places and dislikes others
@@ -54,6 +56,7 @@ cat, or something curious it wants to write up in its scroll - and comes back on
 foot or by teleport. Tell it to Stay and it holds the post, notices when you
 come back, and updates its notes while it waits.
 
+<!-- public:cut chronicle -->
 **It keeps a chronicle.** Right-click it and choose Read-chronicle to open the
 scribe's book, signed with its name and drawn to look like the game's own
 Collection Log. When it writes a new page it says so, and each page records the
@@ -74,6 +77,7 @@ the game view itself, so anything RuneLite draws over the view, such as tile
 markers or ground item names, is drawn in too. Ask again for a retake; the old
 drawing is kept. Click any picture to see it larger. It starts small: eleven
 quests, a miniquest and a handful of pages around them.
+<!-- public:end chronicle -->
 
 **It keeps you company.** Start on a tree, a rock or a fishing spot and it works
 alongside you: the same one when there is room, the next one along when there is
@@ -137,9 +141,11 @@ WAV, AIFF or AU files go in, with a button to copy the path. **Share lines...**
 exports what you have written or takes on somebody else's pack; the Messages
 window's **Share...** button runs the same flow.
 
+<!-- public:cut memory-window -->
 **Memory.** One button, **Memory...**: everything the follower currently knows
 about you, and **Forget everything** to erase all of it, the Chronicle's
 drawings included.
+<!-- public:end memory-window -->
 
 **Outfit.** **Copy my gear** and **Clear all**, then OUTFIT PROFILES: a dropdown
 of saved outfits with **New profile...** and **Delete**; changes save to the

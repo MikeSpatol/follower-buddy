@@ -27,13 +27,14 @@ public final class LiveCacheParser
 	/** Config-index archive ids (net.runelite.cache.ConfigType). */
 	private static final int CONFIG_IDENTKIT = 3;
 	private static final int CONFIG_ITEM = 10;
-	private static final int CONFIG_SEQUENCE = 12;
+	private static final int CONFIG_SEQUENCE = 12; // public:cut dev
 	private static final int CONFIG_SPOTANIM = 13;
 
 	private LiveCacheParser()
 	{
 	}
 
+	// public:cut dev
 	/**
 	 * The id of every animation the cache holds.
 	 *
@@ -57,6 +58,7 @@ public final class LiveCacheParser
 		return ids;
 	}
 
+	// public:end dev
 	/** Wearable items keyed by id, matching equipment-models.json's items map. */
 	public static Map<String, ModelRepository.Entry> parseItems(Client client)
 	{
@@ -141,7 +143,7 @@ public final class LiveCacheParser
 			}
 			catch (RuntimeException e)
 			{
-				log.debug("Kit {} failed to parse", id, e);
+				log.debug("Kit {} failed to parse", id, e); // public:cut logs
 			}
 		}
 		return kits;

@@ -2,7 +2,7 @@ package com.follower;
 
 import com.follower.appearance.Outfit;
 import com.follower.appearance.OutfitParser;
-import com.follower.appearance.OutfitProfileStore;
+import com.follower.appearance.OutfitProfileStore; // public:cut outfit-profiles
 import com.follower.speech.RuleLoader;
 import com.follower.speech.SpeechRule;
 import com.google.gson.Gson;
@@ -102,7 +102,7 @@ public class PhraseFileFidelityTest
 			assertEquals("delay changed on " + a.id, a.delayTicks, b.delayTicks);
 			assertEquals("delay range changed on " + a.id, a.delayTicksMax, b.delayTicksMax);
 			assertEquals("holdStill changed on " + a.id, a.holdStill, b.holdStill);
-			assertEquals("atTheWork changed on " + a.id, a.atTheWork, b.atTheWork);
+			assertEquals("atTheWork changed on " + a.id, a.atTheWork, b.atTheWork); // public:cut skilling
 			assertEquals("mirroring changed on " + a.id, a.mirrorAnimation, b.mirrorAnimation);
 			assertEquals("vanish changed on " + a.id, a.vanishAfter, b.vanishAfter);
 			assertEquals("sync changed on " + a.id, a.syncToPlayer, b.syncToPlayer);
@@ -204,6 +204,7 @@ public class PhraseFileFidelityTest
 				.get(0).getAsJsonObject().getAsJsonArray("say").get(0).getAsString());
 		}
 	}
+	// public:cut outfit-profiles
 
 	// ------------------------------------------------------- outfit profiles
 
@@ -271,4 +272,5 @@ public class PhraseFileFidelityTest
 
 		assertNotNull("the seeded profiles should still be there", store.get("Melee"));
 	}
+	// public:end outfit-profiles
 }

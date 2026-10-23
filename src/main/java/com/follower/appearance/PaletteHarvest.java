@@ -1,3 +1,4 @@
+// public:file dev
 package com.follower.appearance;
 
 import com.google.gson.Gson;
@@ -71,7 +72,7 @@ public class PaletteHarvest
 			{
 				runs = stored;
 			}
-			log.info("Loaded {} harvested palette runs", runs.size());
+			log.info("Loaded {} harvested palette runs", runs.size()); // public:cut logs
 		}
 		catch (IOException | JsonSyntaxException e)
 		{

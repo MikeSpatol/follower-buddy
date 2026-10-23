@@ -1,3 +1,4 @@
+// public:file moments
 package com.follower.follower;
 
 import com.follower.FollowerConfig;
@@ -37,7 +38,7 @@ public class MomentsTest
 		int poseOverride;
 		int movedToFront;
 		boolean moving;
-		boolean agility;
+		boolean agility; // public:cut agility,agility-all
 		final List<Integer> animations = new ArrayList<>();
 		final List<WorldPoint> stays = new ArrayList<>();
 		final List<WorldPoint> glances = new ArrayList<>();
@@ -65,12 +66,14 @@ public class MomentsTest
 			return moving;
 		}
 
+		// public:cut agility,agility-all
 		@Override
 		public boolean isDoingAgility()
 		{
 			return agility;
 		}
 
+		// public:end agility,agility-all
 		@Override
 		public boolean isStaying()
 		{
@@ -109,6 +112,7 @@ public class MomentsTest
 			return stayingAt;
 		}
 
+		// public:cut skilling
 		/** Every walk arrives here, as stayAt does. */
 		@Override
 		public boolean arrivesAt(WorldPoint target)
@@ -116,6 +120,7 @@ public class MomentsTest
 			return target != null;
 		}
 
+		// public:end skilling
 		@Override
 		public int getPoseOverride()
 		{
@@ -189,19 +194,21 @@ public class MomentsTest
 	}
 
 	private static final WorldPoint PLAYER = new WorldPoint(50, 50, 0);
+	// public:cut skilling
 	private static final WorldPoint TREE = new WorldPoint(53, 50, 0);
 
 	/** HUMAN_WOODCUTTING_BRONZE_AXE. */
 	private static final int CHOP = 879;
 
+	// public:end skilling
 	private FakeGame game;
 	private RecordingFollower follower;
-	private SkillingController skilling;
+	private SkillingController skilling; // public:cut skilling
 	private Moments moments;
 	private boolean inCombat;
 	private boolean feetTaken;
 	private boolean parked;
-	private boolean keepsCompany = true;
+	private boolean keepsCompany = true; // public:cut skilling
 	private int daysKnown = 30;
 	private int tick;
 	private PropFlourish flourish;
@@ -209,13 +216,14 @@ public class MomentsTest
 
 	/** The left hand's thing of a pair, the quill, or 0. */
 	private int heldLeft;
-	private boolean grateful;
+	private boolean grateful; // public:cut company-extras,gestures
 
 	@Before
 	public void setUp()
 	{
 		game = new FakeGame().at(PLAYER.getX(), PLAYER.getY(), 0);
 		follower = new RecordingFollower();
+		// public:cut skilling
 		FollowerConfig config = new FollowerConfig()
 		{
 			@Override
@@ -243,6 +251,7 @@ public class MomentsTest
 				{
 				}
 			}, event -> { }, () -> inCombat, () -> feetTaken, () -> false);
+		// public:end skilling
 		ErrandController.Hands hands = new ErrandController.Hands()
 		{
 			@Override
@@ -273,8 +282,10 @@ public class MomentsTest
 			}
 		};
 		flourish = new PropFlourish(follower, hands);
-		moments = new Moments(game.client, follower, skilling,
-			() -> feetTaken, () -> inCombat, () -> daysKnown, flourish, () -> grateful, () -> parked);
+		moments = new Moments(game.client, follower, skilling, // public:cut skilling
+		// public:else moments = new Moments(game.client, follower,
+			() -> feetTaken, () -> inCombat, () -> daysKnown, flourish, () -> grateful, () -> parked); // public:cut company-extras,gestures
+			// public:else () -> feetTaken, () -> inCombat, () -> daysKnown, flourish, () -> parked);
 	}
 
 	private void tick(int count)
@@ -282,12 +293,13 @@ public class MomentsTest
 		for (int i = 0; i < count; i++)
 		{
 			game.tick(++tick);
-			skilling.tick();
+			skilling.tick(); // public:cut skilling
 			flourish.tick();
 			moments.tick();
 		}
 	}
 
+	// public:cut skilling
 	/** A woodcutting session with the seat taken. */
 	private void takeTheSeat()
 	{
@@ -298,6 +310,7 @@ public class MomentsTest
 		assertEquals(skilling.getSeat(), follower.stayingAt);
 	}
 
+	// public:end skilling
 	// --------------------------------------------------------------- level up
 
 	@Test
@@ -345,6 +358,7 @@ public class MomentsTest
 		assertTrue(follower.following);
 	}
 
+	// public:cut agility,agility-all
 	/**
 	 * An Agility level lands as the player finishes an obstacle, with the
 	 * follower still on it a couple of ticks behind. The crossing would
@@ -385,6 +399,7 @@ public class MomentsTest
 		assertFalse(moments.holdsTheFeet());
 	}
 
+	// public:end agility,agility-all
 	@Test
 	public void theFormalEraBowsInstead()
 	{
@@ -420,6 +435,7 @@ public class MomentsTest
 		assertFalse(moments.holdsTheFeet());
 	}
 
+	// public:cut skilling
 	@Test
 	public void theSeatIsExcusedForTheWalkAndRetakenAfter()
 	{
@@ -443,6 +459,7 @@ public class MomentsTest
 		assertEquals(seat, follower.stays.get(follower.stays.size() - 1));
 	}
 
+	// public:end skilling
 	// -------------------------------------------------------------------- pet
 
 	private void petDropped()
@@ -638,6 +655,7 @@ public class MomentsTest
 		assertEquals(0, follower.poseOverride);
 	}
 
+	// public:cut skilling
 	@Test
 	public void aStrangerDuringTheSeatExcusesItAndTheSeatComesBack()
 	{
@@ -694,8 +712,10 @@ public class MomentsTest
 		assertTrue(skilling.isSitting());
 	}
 
+	// public:end skilling
 	// ------------------------------------------------------------------- off
 
+	// public:cut skilling
 	@Test
 	public void theSkillingSwitchLeavesTheMomentsAlone()
 	{
@@ -709,6 +729,7 @@ public class MomentsTest
 		assertTrue("and a big drop is walked over to", moments.isLooking());
 	}
 
+	// public:end skilling
 	@Test
 	public void aResetLetsGoOfEverything()
 	{
@@ -833,6 +854,7 @@ public class MomentsTest
 		assertTrue(follower.glances.contains(PLAYER));
 	}
 
+	// public:cut company-extras,gestures
 	@Test
 	public void aSmallDropGetsAGlanceAndTheLedgerStopsTheNextOne()
 	{
@@ -882,6 +904,7 @@ public class MomentsTest
 			ErrandController.SCROLL_PROP, held);
 	}
 
+	// public:end company-extras,gestures
 	@Test
 	public void withTheHandsFullTheWriteUpIsANod()
 	{
@@ -893,6 +916,7 @@ public class MomentsTest
 			follower.animations);
 	}
 
+	// public:cut company-extras,gestures
 	@Test
 	public void theFarewellIsAWaveAndNotTwiceInFiveMinutes()
 	{
@@ -909,6 +933,7 @@ public class MomentsTest
 		assertEquals(2, follower.animations.size());
 	}
 
+	// public:end company-extras,gestures
 	@Test
 	public void aParkThePlayerGaveBeatsTheWalksButNotTheWave()
 	{
@@ -966,6 +991,7 @@ public class MomentsTest
 		assertFalse(moments.isLooking());
 		assertEquals("the player's park, not handed back to following", post, follower.stayingAt);
 	}
+	// public:cut dev
 
 	// ------------------------------------------------------- the force-path
 
@@ -1014,6 +1040,7 @@ public class MomentsTest
 		assertEquals(0, held);
 	}
 
+	// public:cut company-extras,gestures
 	@Test
 	public void theForcedWaveComesHoweverLatelyTheLastOneWas()
 	{
@@ -1059,6 +1086,8 @@ public class MomentsTest
 		assertFalse("the tab's next wave still waits out the last real one", moments.farewell());
 		assertEquals(1, follower.animations.size());
 	}
+	// public:end company-extras,gestures
+	// public:end dev
 
 	@Test
 	public void theLadderMatchesTheLootRules()

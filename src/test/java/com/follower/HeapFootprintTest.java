@@ -74,6 +74,7 @@ public class HeapFootprintTest
 			+ " growth, raise the budget and say why", mb < budgetMb);
 	}
 
+	// public:cut devdump
 	@Test
 	public void theEquipmentCatalogueFitsInItsBudget() throws IOException
 	{
@@ -104,6 +105,7 @@ public class HeapFootprintTest
 		report("spotanim catalogue", after - before, 9);
 	}
 
+	// public:end devdump
 	@Test
 	public void theGameFontsFitInTheirBudget() throws IOException
 	{
@@ -115,7 +117,8 @@ public class HeapFootprintTest
 		// form is decoded bytes.
 		long before = usedBytes();
 		GameFontRepository fonts = new GameFontRepository(new Gson());
-		fonts.load(LIVE_DATA);
+		fonts.load(LIVE_DATA); // public:cut devfonts
+		// public:else fonts.load();
 		long after = usedBytes();
 
 		report("game fonts", after - before, 3);

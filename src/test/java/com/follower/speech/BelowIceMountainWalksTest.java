@@ -299,9 +299,11 @@ public class BelowIceMountainWalksTest
 					assertEquals(s.transcript(), expected(seen), moments(s));
 					assertTrue(s.transcript(), s.lost.isEmpty());
 					assertTrue(s.transcript(), s.heardIds.contains("quest-complete"));
+					// public:cut chronicle
 					// Named once: by the page news, or by the scroll's line, which lets the news go.
 					assertTrue(s.transcript(), s.pagesSaid.contains("Below Ice Mountain")
 						!= s.scrollLine().contains("Below Ice Mountain"));
+					// public:end chronicle
 				}
 			}
 		}
@@ -432,6 +434,7 @@ public class BelowIceMountainWalksTest
 			assertTrue(s.transcript(), s.heardIds.contains("fun-" + who.toLowerCase() + "-after-below-ice-mountain"));
 		}
 	}
+	// public:cut skilling
 
 	/**
 	 * Barronite in the ruins, once the quest is seen done: a line now and
@@ -479,4 +482,5 @@ public class BelowIceMountainWalksTest
 		s.ticks(20);
 		return s;
 	}
+	// public:end skilling
 }

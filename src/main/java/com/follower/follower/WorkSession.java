@@ -1,3 +1,4 @@
+// public:file skilling
 package com.follower.follower;
 
 import net.runelite.api.NPC;
@@ -111,55 +112,14 @@ public final class WorkSession
 		return targetName;
 	}
 
-	public int getTargetId()
-	{
-		return targetId;
-	}
-
 	public WorldPoint getTargetTile()
 	{
 		return targetTile;
 	}
 
-	/** The far corner of the footprint; the same tile as the target for a 1x1. */
-	public WorldPoint getTargetMax()
-	{
-		return targetMax;
-	}
-
-	public NPC getTargetNpc()
-	{
-		return targetNpc;
-	}
-
 	public boolean isStanding()
 	{
 		return standing;
-	}
-
-	public int getStartTick()
-	{
-		return startTick;
-	}
-
-	public WorldPoint getWorkSpot()
-	{
-		return workSpot;
-	}
-
-	public int getXpDrops()
-	{
-		return xpDrops;
-	}
-
-	public int getLastDropTick()
-	{
-		return lastDropTick;
-	}
-
-	public int getLastAnimation()
-	{
-		return lastAnimation;
 	}
 
 	public boolean isDepleted()

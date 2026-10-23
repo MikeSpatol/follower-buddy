@@ -100,7 +100,7 @@ class EaseInOutController extends AnimationController
 			&& temp.getVerticesZ() != model.getVerticesZ();
 		if (!separate || temp.getVerticesCount() * 3 != standingXyz.length)
 		{
-			log.debug("Render temp is not safe to write; easing off for this clip");
+			log.debug("Render temp is not safe to write; easing off for this clip"); // public:cut logs
 			unsafe = true;
 			return temp;
 		}

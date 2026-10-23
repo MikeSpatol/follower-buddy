@@ -1,3 +1,4 @@
+// public:file skilling
 package com.follower.follower;
 
 import com.follower.FollowerConfig;
@@ -658,7 +659,7 @@ class KeepingCompany
 			{
 				seat = step;
 				seatMoved = step;
-				log.debug("A step toward the bank, to {}", step);
+				log.debug("A step toward the bank, to {}", step); // public:cut logs
 			}
 			step = null;
 		}
@@ -843,7 +844,7 @@ class KeepingCompany
 		facing = null;
 		// On arrival at the front tile: on the way, moving would drop it.
 		follower.playWhenStill(PEER, PEER_TICKS);
-		log.debug("A look over the shoulder");
+		log.debug("A look over the shoulder"); // public:cut logs
 	}
 
 	/**
@@ -1070,7 +1071,7 @@ class KeepingCompany
 		{
 			stopped = true;
 			stopWait = jitter(STOP_WAIT_TICKS, 2);
-			log.debug("The player stopped; looking over");
+			log.debug("The player stopped; looking over"); // public:cut logs
 		}
 		if (stopped && stopWait > 0 && --stopWait == 0)
 		{
@@ -1163,7 +1164,7 @@ class KeepingCompany
 			{
 				face(target);
 			}
-			log.debug("The walk to {} was refused", next);
+			log.debug("The walk to {} was refused", next); // public:cut logs
 			return;
 		}
 		// Face whoever is there while stood at a waypoint, the work once home.
@@ -1185,7 +1186,7 @@ class KeepingCompany
 		putScrollAway();
 		sitting = true;
 		follower.setPoseOverride(pose);
-		log.debug("Sitting in for the long haul");
+		log.debug("Sitting in for the long haul"); // public:cut logs
 	}
 
 	/** @return whether there was a sit to stand from */

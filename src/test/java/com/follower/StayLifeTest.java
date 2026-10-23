@@ -4,7 +4,7 @@ import com.follower.sim.Harness;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.Rule;
-import com.follower.follower.SpectateController;
+import com.follower.follower.SpectateController; // public:cut spectate,spectate-keep-fight-lines,spectate-shield
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
@@ -70,28 +70,42 @@ public class StayLifeTest
 		// the real-play transcript showed the cost: "this spot is mine now"
 		// thirty times in an afternoon of the follower's own drifting.
 		assertTrue(FollowerPlugin.stayIsPlayerCommanded(
-			true, false, false, false, false, false, false, false));
+			true, false, false, false, false, false, false, false)); // public:cut errands,spectate,spectate-keep-fight-lines
+			// public:else true, false, false, false, false, false, false));
 		assertTrue("wandering is not a post",
-			!FollowerPlugin.stayIsPlayerCommanded(true, true, false, false, false, false, false, false));
+			!FollowerPlugin.stayIsPlayerCommanded(true, true, false, false, false, false, false, false)); // public:cut errands,spectate,spectate-keep-fight-lines
+			// public:else !FollowerPlugin.stayIsPlayerCommanded(true, true, false, false, false, false, false));
+		// public:cut errands
 		assertTrue("an errand is not a post",
-			!FollowerPlugin.stayIsPlayerCommanded(true, false, false, true, false, false, false, false));
+			!FollowerPlugin.stayIsPlayerCommanded(true, false, false, true, false, false, false, false)); // public:cut spectate,spectate-keep-fight-lines
+			// public:else !FollowerPlugin.stayIsPlayerCommanded(true, false, false, true, false, false, false));
+		// public:end errands
+		// public:cut spectate,spectate-keep-fight-lines
 		assertTrue("spectating is not a post",
-			!FollowerPlugin.stayIsPlayerCommanded(true, false, false, false, true, false, false, false));
+			!FollowerPlugin.stayIsPlayerCommanded(true, false, false, false, true, false, false, false)); // public:cut errands
+			// public:else !FollowerPlugin.stayIsPlayerCommanded(true, false, false, true, false, false, false));
+		// public:end spectate,spectate-keep-fight-lines
 		assertTrue("thrall work is not a post",
-			!FollowerPlugin.stayIsPlayerCommanded(true, false, true, false, false, false, false, false));
+			!FollowerPlugin.stayIsPlayerCommanded(true, false, true, false, false, false, false, false)); // public:cut errands,spectate,spectate-keep-fight-lines
+			// public:else !FollowerPlugin.stayIsPlayerCommanded(true, false, true, false, false, false, false));
 		// The second play report: a teleport plants the follower for its
 		// cast, and that plant read as a Stay command.
 		assertTrue("planting for an emote is not a post",
-			!FollowerPlugin.stayIsPlayerCommanded(true, false, false, false, false, true, false, false));
+			!FollowerPlugin.stayIsPlayerCommanded(true, false, false, false, false, true, false, false)); // public:cut errands,spectate,spectate-keep-fight-lines
+			// public:else !FollowerPlugin.stayIsPlayerCommanded(true, false, false, false, true, false, false));
 		assertTrue("minuting a meeting is not a post",
-			!FollowerPlugin.stayIsPlayerCommanded(true, false, false, false, false, false, true, false));
+			!FollowerPlugin.stayIsPlayerCommanded(true, false, false, false, false, false, true, false)); // public:cut errands,spectate,spectate-keep-fight-lines
+			// public:else !FollowerPlugin.stayIsPlayerCommanded(true, false, false, false, false, true, false));
 		// The seat the skilling company takes by the tree parks it the same way.
 		assertTrue("keeping company at the tree is not a post",
-			!FollowerPlugin.stayIsPlayerCommanded(true, false, false, false, false, false, false, true));
+			!FollowerPlugin.stayIsPlayerCommanded(true, false, false, false, false, false, false, true)); // public:cut errands,spectate,spectate-keep-fight-lines
+			// public:else !FollowerPlugin.stayIsPlayerCommanded(true, false, false, false, false, false, true));
 		assertTrue("and following at heel is nothing at all",
-			!FollowerPlugin.stayIsPlayerCommanded(false, false, false, false, false, false, false, false));
+			!FollowerPlugin.stayIsPlayerCommanded(false, false, false, false, false, false, false, false)); // public:cut errands,spectate,spectate-keep-fight-lines
+			// public:else !FollowerPlugin.stayIsPlayerCommanded(false, false, false, false, false, false, false));
 	}
 
+	// public:cut spectate,spectate-keep-fight-lines,spectate-shield
 	/**
 	 * The gap between a fight ending and the follower walking back.
 	 *
@@ -113,10 +127,12 @@ public class StayLifeTest
 			SpectateController.spectateOwnsTheFeet(false, 0));
 
 		assertFalse("so the post is not announced on the way back",
-			FollowerPlugin.stayIsPlayerCommanded(true, false, false, false,
+			FollowerPlugin.stayIsPlayerCommanded(true, false, false, false, // public:cut errands
+			// public:else FollowerPlugin.stayIsPlayerCommanded(true, false, false,
 				SpectateController.spectateOwnsTheFeet(false, 4), false, false, false));
 	}
 
+	// public:end spectate,spectate-keep-fight-lines,spectate-shield
 	@Test
 	public void theWanderGateOpensLateAndClosesForTheRest()
 	{

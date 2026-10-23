@@ -77,6 +77,7 @@ public class FollowerPanel extends PluginPanel
 	/** (body colour slot 0-4, palette index) - the exact-palette picker. */
 	private final BiConsumer<Integer, Integer> onBodyColor;
 
+	// public:cut messages-window
 	/** Opens the message editor window; set by the plugin after construction. */
 	private Runnable onEditMessages = () -> { };
 
@@ -85,6 +86,7 @@ public class FollowerPanel extends PluginPanel
 		this.onEditMessages = onEditMessages;
 	}
 
+	// public:end messages-window
 	// ------------------------------------------------------------------- mute
 
 	/**
@@ -122,6 +124,7 @@ public class FollowerPanel extends PluginPanel
 		});
 	}
 
+	// public:cut memory-window
 	/** Opens the memory window (R20); set by the plugin after construction. */
 	private Runnable onShowMemory = () -> { };
 
@@ -130,6 +133,8 @@ public class FollowerPanel extends PluginPanel
 		this.onShowMemory = onShowMemory;
 	}
 
+	// public:end memory-window
+	// public:cut posing
 	/** Opens the film window; set by the plugin after construction. */
 	private Runnable onFilm = () -> { };
 
@@ -138,6 +143,8 @@ public class FollowerPanel extends PluginPanel
 		this.onFilm = onFilm;
 	}
 
+	// public:end posing
+	// public:cut dialogs-editor
 	/** Opens the conversation editor; set by the plugin after construction. */
 	private Runnable onEditDialogs = () -> { };
 
@@ -146,6 +153,8 @@ public class FollowerPanel extends PluginPanel
 		this.onEditDialogs = onEditDialogs;
 	}
 
+	// public:end dialogs-editor
+	// public:cut sharevoice
 	/** Opens the Sounds window with no lines, just the folder and the how-to. */
 	private Runnable onAttachSounds = () -> { };
 
@@ -162,6 +171,7 @@ public class FollowerPanel extends PluginPanel
 		this.onShareLines = onShareLines;
 	}
 
+	// public:end sharevoice
 	// -------------------------------------------------------- synced settings
 
 	/**
@@ -173,11 +183,11 @@ public class FollowerPanel extends PluginPanel
 		new javax.swing.JComboBox<>(com.follower.speech.Chattiness.values());
 	private final javax.swing.JCheckBox chatboxBox =
 		new javax.swing.JCheckBox("Also show lines in the chatbox");
-	private final javax.swing.JCheckBox errandsBox = new javax.swing.JCheckBox("Go on errands");
+	private final javax.swing.JCheckBox errandsBox = new javax.swing.JCheckBox("Go on errands"); // public:cut errands
 
 	private Consumer<com.follower.speech.Chattiness> onChattiness = c -> { };
 	private Consumer<Boolean> onMirrorToChat = m -> { };
-	private Consumer<Boolean> onErrandsEnabled = e -> { };
+	private Consumer<Boolean> onErrandsEnabled = e -> { }; // public:cut errands
 
 	/** Set while a synced control is being set FROM config, so it does not echo. */
 	private boolean suppressSyncEvents;
@@ -192,11 +202,13 @@ public class FollowerPanel extends PluginPanel
 		this.onMirrorToChat = onMirrorToChat;
 	}
 
+	// public:cut errands
 	public void setOnErrandsEnabled(Consumer<Boolean> onErrandsEnabled)
 	{
 		this.onErrandsEnabled = onErrandsEnabled;
 	}
 
+	// public:end errands
 	public void setChattiness(com.follower.speech.Chattiness chattiness)
 	{
 		synced(() -> chattinessBox.setSelectedItem(chattiness));
@@ -207,11 +219,13 @@ public class FollowerPanel extends PluginPanel
 		synced(() -> chatboxBox.setSelected(on));
 	}
 
+	// public:cut errands
 	public void setErrandsEnabled(boolean on)
 	{
 		synced(() -> errandsBox.setSelected(on));
 	}
 
+	// public:end errands
 	/** Applies a config-side value on the event thread with the echo guard up. */
 	private void synced(Runnable update)
 	{
@@ -236,9 +250,11 @@ public class FollowerPanel extends PluginPanel
 	private Consumer<Boolean> onFollowEnabled = f -> { };
 	private Runnable onComeHere = () -> { };
 	private final JLabel behaviourCaption = new JLabel();
+	// public:cut errands
 	private final javax.swing.JComboBox<String> errandBox = new javax.swing.JComboBox<>();
 	private List<String> errandKeys = java.util.Collections.emptyList();
 	private Consumer<String> onErrand = k -> { };
+	// public:end errands
 
 	public void setOnFollowEnabled(Consumer<Boolean> onFollowEnabled)
 	{
@@ -250,11 +266,13 @@ public class FollowerPanel extends PluginPanel
 		this.onComeHere = onComeHere;
 	}
 
+	// public:cut errands
 	public void setOnErrand(Consumer<String> onErrand)
 	{
 		this.onErrand = onErrand;
 	}
 
+	// public:end errands
 	/** Reflects the player-commanded stay; the button always offers the other state. */
 	public void setStaying(boolean staying)
 	{
@@ -273,6 +291,7 @@ public class FollowerPanel extends PluginPanel
 				+ " Hold Shift and right-click any tile to send it there.</body></html>"));
 	}
 
+	// public:cut errands
 	/** The errands on offer, key to display name, in the order to list them. */
 	public void setErrands(Map<String, String> keyToLabel)
 	{
@@ -287,6 +306,7 @@ public class FollowerPanel extends PluginPanel
 		});
 	}
 
+	// public:end errands
 	// ---------------------------------------------------------------- commands
 
 	private Runnable onFix = () -> { };
@@ -371,6 +391,7 @@ public class FollowerPanel extends PluginPanel
 		return open;
 	}
 
+	// public:cut outfit-profiles
 	// ---------------------------------------------------------------- profiles
 
 	private final javax.swing.JComboBox<String> profileCombo = new javax.swing.JComboBox<>();
@@ -380,9 +401,11 @@ public class FollowerPanel extends PluginPanel
 	private Consumer<String> onProfileSave = s -> { };
 	private Consumer<String> onProfileDelete = s -> { };
 
+	// public:cut thrall-outfits
 	/** Whether a profile is one of the seeded thrall looks; set by the plugin. */
 	private java.util.function.Predicate<String> profileProtected = n -> false;
 
+	// public:end thrall-outfits
 	public void setOnProfileLoad(Consumer<String> onProfileLoad)
 	{
 		this.onProfileLoad = onProfileLoad;
@@ -398,11 +421,13 @@ public class FollowerPanel extends PluginPanel
 		this.onProfileDelete = onProfileDelete;
 	}
 
+	// public:cut thrall-outfits
 	public void setProfileProtected(java.util.function.Predicate<String> profileProtected)
 	{
 		this.profileProtected = profileProtected;
 	}
 
+	// public:end thrall-outfits
 	/** Set while the dropdown is being repopulated, so selection events are ignored. */
 	private boolean suppressProfileEvents;
 
@@ -438,7 +463,7 @@ public class FollowerPanel extends PluginPanel
 			{
 				suppressProfileEvents = false;
 			}
-			fillThrallBoxes();
+			fillThrallBoxes(); // public:cut thrall-outfits
 			refreshDeleteButton();
 		});
 	}
@@ -461,7 +486,8 @@ public class FollowerPanel extends PluginPanel
 			return;
 		}
 		String name = typed.trim();
-		if (!profileProtected.test(name) && profileNames.contains(name) && !confirmReplace(name))
+		if (!profileProtected.test(name) && profileNames.contains(name) && !confirmReplace(name)) // public:cut thrall-outfits
+		// public:else if (profileNames.contains(name) && !confirmReplace(name))
 		{
 			return;
 		}
@@ -476,6 +502,7 @@ public class FollowerPanel extends PluginPanel
 			"New profile", javax.swing.JOptionPane.YES_NO_OPTION) == javax.swing.JOptionPane.YES_OPTION;
 	}
 
+	// public:cut thrall-outfits
 	// ----------------------------------------------------------------- thralls
 
 	/** Style key to its dropdown, in the order the rows are shown. */
@@ -557,14 +584,17 @@ public class FollowerPanel extends PluginPanel
 		return styles.isEmpty() ? "" : " (thrall: " + String.join(", ", styles) + ")";
 	}
 
+	// public:end thrall-outfits
 	/** Delete is offered only for a profile no thrall depends on. */
 	private void refreshDeleteButton()
 	{
 		String name = profileName();
-		profileDelete.setEnabled(!name.isEmpty() && !profileProtected.test(name)
-			&& thrallSuffix(name).isEmpty());
+		profileDelete.setEnabled(!name.isEmpty() && !profileProtected.test(name) // public:cut thrall-outfits
+		// public:else profileDelete.setEnabled(!name.isEmpty());
+			&& thrallSuffix(name).isEmpty()); // public:cut thrall-outfits
 	}
 
+	// public:end outfit-profiles
 	private final JPanel gearGrid = new JPanel();
 	private final JPanel bodyList = new JPanel();
 	private final JPanel picker = new JPanel();
@@ -631,7 +661,7 @@ public class FollowerPanel extends PluginPanel
 		column.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
 		column.add(buildHeader());
 		buildTalking(section("talking", "TALKING"));
-		buildMemory(section("memory", "MEMORY"));
+		buildMemory(section("memory", "MEMORY")); // public:cut memory-window
 		buildOutfit(section("outfit", "OUTFIT"));
 		buildBehaviour(section("behaviour", "BEHAVIOUR"));
 		buildCommands(section("commands", "COMMANDS"));
@@ -868,23 +898,34 @@ public class FollowerPanel extends PluginPanel
 		// Four doors, not nine: the old grid surfaced every internal rule
 		// group as its own button, a navigation decision nobody should have
 		// to make cold. The categories live in a dropdown inside Messages.
-		JPanel buttons = buttonColumn(4);
+		JPanel buttons = buttonColumn(0
+			+ 1 // public:cut messages-window
+			+ 1 // public:cut dialogs-editor
+			+ 2); // public:cut sharevoice
+			// public:else );
+		// public:cut messages-window
 		buttons.add(button("Messages...",
 			"Everything the follower says, by subject, to read and edit",
 			() -> onEditMessages.run()));
+		// public:end messages-window
+		// public:cut dialogs-editor
 		buttons.add(button("Conversations...",
 			"View and edit the conversations the follower starts itself -"
 				+ " the ones its Answer option opens while it waits for your reply",
 			() -> onEditDialogs.run()));
+		// public:end dialogs-editor
+		// public:cut sharevoice
 		buttons.add(button("Attach sounds...",
 			"Where sound files go, and how to attach one to a line",
 			() -> onAttachSounds.run()));
 		buttons.add(button("Share lines...",
 			"Export what you have written, or take on somebody else's",
 			() -> onShareLines.run()));
+		// public:end sharevoice
 		body.add(buttons);
 	}
 
+	// public:cut memory-window
 	private void buildMemory(JPanel body)
 	{
 		body.add(caption("What it remembers about you. The Reminiscing toggle in"
@@ -897,6 +938,7 @@ public class FollowerPanel extends PluginPanel
 		body.add(buttons);
 	}
 
+	// public:end memory-window
 	private void buildOutfit(JPanel body)
 	{
 		JPanel buttons = buttonPair();
@@ -906,6 +948,7 @@ public class FollowerPanel extends PluginPanel
 			"Strip the follower back to the default body", () -> onClearAll.run()));
 		body.add(buttons);
 		body.add(javax.swing.Box.createVerticalStrut(6));
+		// public:cut outfit-profiles
 
 		JLabel profilesLabel = new JLabel("OUTFIT PROFILES");
 		profilesLabel.setFont(FontManager.getRunescapeSmallFont());
@@ -917,6 +960,7 @@ public class FollowerPanel extends PluginPanel
 		// saved straight back to it. New profile makes one, Delete removes it.
 		profileCombo.setAlignmentX(LEFT_ALIGNMENT);
 		profileCombo.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
+		// public:cut thrall-outfits
 		// The item stays the bare name; only its rendering says which thrall
 		// wears it, so profileName() and the plugin see the name as stored.
 		profileCombo.setRenderer(new javax.swing.DefaultListCellRenderer()
@@ -929,6 +973,7 @@ public class FollowerPanel extends PluginPanel
 				return super.getListCellRendererComponent(list, shown, index, isSelected, cellHasFocus);
 			}
 		});
+		// public:end thrall-outfits
 		profileCombo.addActionListener(e ->
 		{
 			// Fires for programmatic repopulation too; the guard keeps a
@@ -982,7 +1027,8 @@ public class FollowerPanel extends PluginPanel
 			((JButton) button).setMargin(new java.awt.Insets(2, 2, 2, 2));
 		}
 		body.add(profileButtons);
-		body.add(buildThrallRow());
+		body.add(buildThrallRow()); // public:cut thrall-outfits
+		// public:end outfit-profiles
 
 		status.setFont(FontManager.getRunescapeSmallFont());
 		status.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
@@ -1003,6 +1049,7 @@ public class FollowerPanel extends PluginPanel
 		body.add(bodyList);
 	}
 
+	// public:cut outfit-profiles,thrall-outfits
 	/**
 	 * Which profile each thrall wears, folded under the profiles row: three
 	 * dropdowns over the same names, writing the three thrall settings.
@@ -1056,6 +1103,7 @@ public class FollowerPanel extends PluginPanel
 		return wrap;
 	}
 
+	// public:end outfit-profiles,thrall-outfits
 	private void buildBehaviour(JPanel body)
 	{
 		JPanel buttons = buttonPair();
@@ -1074,6 +1122,7 @@ public class FollowerPanel extends PluginPanel
 		behaviourCaption.setBorder(BorderFactory.createEmptyBorder(4, 0, 4, 0));
 		body.add(behaviourCaption);
 
+		// public:cut errands
 		styleTick(errandsBox, "Now and then it wanders off on a small errand and"
 			+ " comes back. Same switch as Go on errands in settings.");
 		errandsBox.addActionListener(e ->
@@ -1099,6 +1148,8 @@ public class FollowerPanel extends PluginPanel
 			}
 		}), BorderLayout.EAST);
 		body.add(row);
+		// public:end errands
+		// public:cut posing
 		body.add(javax.swing.Box.createVerticalStrut(6));
 
 		JPanel film = buttonColumn(1);
@@ -1106,6 +1157,7 @@ public class FollowerPanel extends PluginPanel
 			"A window to pose it, turn it, give it lines, and play out a scene you write",
 			() -> onFilm.run()));
 		body.add(film);
+		// public:end posing
 	}
 
 	private void buildCommands(JPanel body)

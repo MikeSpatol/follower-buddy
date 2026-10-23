@@ -56,11 +56,13 @@ public class DialogueHushTest
 		set(plugin, "client", withOpen(open));
 		set(plugin, "config", new FollowerConfig()
 		{
+			// public:cut sharevoice
 			@Override
 			public boolean voiceEnabled()
 			{
 				return false;
 			}
+			// public:end sharevoice
 		});
 
 		boolean[] said = {false};

@@ -142,7 +142,8 @@ public class IdleTrailOffTest
 
 		// A fight. Not a step - steps happen constantly while pottering and
 		// must not reset anything.
-		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.COMBAT_START));
+		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.COMBAT_START)); // public:cut spectate
+		// public:else h.dispatch(TriggerEvent.simple(TriggerEvent.Type.THIEVING_START));
 
 		potterFor(h, 500);       // five minutes afterwards
 		assertTrue("after real activity the follower should perk back up: had "

@@ -1,3 +1,4 @@
+// public:file agility,agility-all
 package com.follower.follower;
 
 import java.util.ArrayList;
@@ -59,11 +60,6 @@ public final class Crossing
 		public WorldPoint tile()
 		{
 			return new WorldPoint((int) (fineX >> 7), (int) (fineY >> 7), plane);
-		}
-
-		public long getAtMs()
-		{
-			return atMs;
 		}
 
 		public int getPose()

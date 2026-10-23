@@ -1,3 +1,4 @@
+// public:file company-extras,noticing
 package com.follower.follower;
 
 import com.follower.FollowerConfig;
@@ -85,7 +86,7 @@ public class NoticingTest
 	private boolean busy;
 	private int idle;
 	private boolean notices = true;
-	private boolean keepsCompany = true;
+	private boolean keepsCompany = true; // public:cut skilling
 	private List<Map.Entry<String, WorldPoint>> landmarks = Collections.emptyList();
 	private int tick;
 
@@ -101,12 +102,14 @@ public class NoticingTest
 			{
 				return notices;
 			}
+			// public:cut skilling
 
 			@Override
 			public boolean keepsCompany()
 			{
 				return keepsCompany;
 			}
+			// public:end skilling
 		};
 		noticing = new Noticing(game.client, new StandingFollower(), config, looker,
 			events::add, () -> busy, () -> idle, () -> landmarks);
@@ -177,6 +180,7 @@ public class NoticingTest
 		assertEquals("each thing once", 1, looker.looks.size());
 	}
 
+	// public:cut skilling
 	@Test
 	public void itNoticesWithWorksBesideYouOff()
 	{
@@ -191,6 +195,7 @@ public class NoticingTest
 		assertEquals(Collections.singletonList(DROP), looker.looks);
 	}
 
+	// public:end skilling
 	@Test
 	public void aSecondDropWaitsOutTheKindsClock()
 	{
@@ -376,6 +381,7 @@ public class NoticingTest
 		tick(Noticing.SCAN_EVERY_TICKS + 1);
 		assertTrue(looker.looks.isEmpty());
 	}
+	// public:cut dev
 
 	// ------------------------------------------------------- the force-path
 
@@ -458,6 +464,7 @@ public class NoticingTest
 		tick(Noticing.LEFT_AFTER_TICKS + 2);
 		assertEquals("the whip is seen now, and the kind on its clock", 1, looker.looks.size());
 	}
+	// public:end dev
 
 	@Test
 	public void aLookTheFeetRefuseLeavesTheThingForLater()

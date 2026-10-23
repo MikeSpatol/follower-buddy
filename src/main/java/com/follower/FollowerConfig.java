@@ -35,6 +35,7 @@ public interface FollowerConfig extends Config
 	)
 	String speechSection = "speech";
 
+	// public:cut sharevoice
 	@ConfigSection(
 		name = "Sounds",
 		description = "Sound files you attach to lines. Nothing ships with the plugin.",
@@ -42,6 +43,7 @@ public interface FollowerConfig extends Config
 	)
 	String soundsSection = "sounds";
 
+	// public:end sharevoice
 	@ConfigSection(
 		name = "Messages",
 		description = "Turn whole subjects on or off. To read or edit the lines"
@@ -59,6 +61,7 @@ public interface FollowerConfig extends Config
 	)
 	String thrallSection = "thrall";
 
+	// public:cut errands
 	@ConfigSection(
 		name = "Errands",
 		description = "Little trips the follower makes on its own - banks, altars, cats",
@@ -66,6 +69,8 @@ public interface FollowerConfig extends Config
 	)
 	String errandSection = "errands";
 
+	// public:end errands
+	// public:cut skilling
 	@ConfigSection(
 		name = "Skilling",
 		description = "What the follower does while you work a tree, a rock, a spot",
@@ -73,6 +78,7 @@ public interface FollowerConfig extends Config
 	)
 	String skillingSection = "skilling";
 
+	// public:end skilling
 	@ConfigSection(
 		name = "Company",
 		description = "The small habits of somebody keeping you company: where it"
@@ -81,6 +87,7 @@ public interface FollowerConfig extends Config
 	)
 	String companySection = "company";
 
+	// public:cut spectate,spectate-keep-fight-lines
 	@ConfigSection(
 		name = "Combat",
 		description = "What the follower does while you are fighting",
@@ -88,6 +95,7 @@ public interface FollowerConfig extends Config
 	)
 	String combatSection = "combat";
 
+	// public:end spectate,spectate-keep-fight-lines
 	@ConfigSection(
 		name = "Advanced",
 		description = "Animation and graphic ids. Preview one with ::follower anim <id>,"
@@ -98,6 +106,7 @@ public interface FollowerConfig extends Config
 		closedByDefault = true
 	)
 	String shieldSection = "shield";
+	// public:cut dev
 
 	@ConfigSection(
 		name = "Developer",
@@ -106,7 +115,9 @@ public interface FollowerConfig extends Config
 		closedByDefault = true
 	)
 	String developerSection = "developer";
+	// public:end dev
 
+	// public:cut spectate,spectate-keep-fight-lines
 	@ConfigItem(
 		keyName = "spectateCombat",
 		name = "Stand clear in combat",
@@ -121,6 +132,7 @@ public interface FollowerConfig extends Config
 		return true;
 	}
 
+	// public:cut spectate-shield
 	@ConfigItem(
 		keyName = "spectateShield",
 		name = "Cast a shield on bosses",
@@ -276,6 +288,9 @@ public interface FollowerConfig extends Config
 		return 246;
 	}
 
+	// public:end spectate-shield
+	// public:end spectate,spectate-keep-fight-lines
+	// public:cut dev
 	/**
 	 * Gates the diagnostic half of the chat commands.
 	 *
@@ -302,7 +317,9 @@ public interface FollowerConfig extends Config
 	{
 		return false;
 	}
+	// public:end dev
 
+	// public:cut errands
 	enum ErrandFrequency
 	{
 		RARE("Rare"),
@@ -323,6 +340,7 @@ public interface FollowerConfig extends Config
 		}
 	}
 
+	// public:end errands
 	// ------------------------------------------------------------- appearance
 
 	@ConfigItem(
@@ -558,6 +576,7 @@ public interface FollowerConfig extends Config
 		return com.follower.speech.Chattiness.OCCASIONAL;
 	}
 
+	// public:cut sharevoice
 	@ConfigItem(
 		keyName = "voiceEnabled",
 		name = "Play sounds attached to lines",
@@ -586,6 +605,7 @@ public interface FollowerConfig extends Config
 		return 100;
 	}
 
+	// public:end sharevoice
 	@ConfigItem(
 		keyName = "mirrorToChat",
 		name = "Also show lines in the chatbox",
@@ -643,6 +663,7 @@ public interface FollowerConfig extends Config
 	{
 		return false;
 	}
+	// public:cut outfit-profiles,thrall-outfits
 
 	@ConfigItem(
 		keyName = "thrallMeleeProfile",
@@ -685,6 +706,7 @@ public interface FollowerConfig extends Config
 	{
 		return "Magic";
 	}
+	// public:end outfit-profiles,thrall-outfits
 
 	// The three per-style attack animation pickers were removed: the follower
 	// now swings whatever its own weapon swings, learned by watching real
@@ -692,6 +714,7 @@ public interface FollowerConfig extends Config
 	// hands. The per-style fallbacks live in FollowerPlugin as constants for
 	// the case where nothing has been observed yet.
 
+	// public:cut errands
 	// --------------------------------------------------------------- errands
 
 	@ConfigItem(
@@ -834,6 +857,8 @@ public interface FollowerConfig extends Config
 		return true;
 	}
 
+	// public:end errands
+	// public:cut skilling
 	// --------------------------------------------------------------- skilling
 
 	@ConfigItem(
@@ -866,8 +891,10 @@ public interface FollowerConfig extends Config
 		return true;
 	}
 
+	// public:end skilling
 	// ---------------------------------------------------------------- company
 
+	// public:cut company-extras,gaze
 	@ConfigItem(
 		keyName = "paysAttention",
 		name = "Looks where you look",
@@ -882,6 +909,7 @@ public interface FollowerConfig extends Config
 		return true;
 	}
 
+	// public:end company-extras,gaze
 	@ConfigItem(
 		keyName = "noticesThings",
 		name = "Notices things",
@@ -1036,6 +1064,7 @@ public interface FollowerConfig extends Config
 		return true;
 	}
 
+	// public:cut souvenirs-wishes
 	@ConfigItem(
 		keyName = "groupSouvenir",
 		name = "Souvenirs",
@@ -1050,6 +1079,8 @@ public interface FollowerConfig extends Config
 		return true;
 	}
 
+	// public:end souvenirs-wishes
+	// public:cut side-games
 	@ConfigItem(
 		keyName = "groupBet",
 		name = "Predictions",
@@ -1064,6 +1095,7 @@ public interface FollowerConfig extends Config
 		return true;
 	}
 
+	// public:end side-games
 	@ConfigItem(
 		keyName = "groupClock",
 		name = "The hour and the session",
@@ -1149,6 +1181,7 @@ public interface FollowerConfig extends Config
 		return true;
 	}
 
+	// public:cut agility,agility-all
 	@ConfigItem(
 		keyName = "copiesAgility",
 		name = "Does agility with you",
@@ -1163,6 +1196,7 @@ public interface FollowerConfig extends Config
 		return true;
 	}
 
+	// public:end agility,agility-all
 	@Range(min = 0)
 	@ConfigItem(
 		keyName = "restAnimation",
@@ -1186,6 +1220,7 @@ public interface FollowerConfig extends Config
 		return 10061;
 	}
 
+	// public:cut outfit-profiles
 	@ConfigItem(
 		keyName = "activeProfile",
 		name = "Active outfit profile",
@@ -1197,6 +1232,8 @@ public interface FollowerConfig extends Config
 		return "";
 	}
 
+	// public:end outfit-profiles
+	// public:cut dev
 	@ConfigItem(
 		keyName = "exactPalette",
 		name = "Exact palette",
@@ -1207,6 +1244,7 @@ public interface FollowerConfig extends Config
 	{
 		return "";
 	}
+	// public:end dev
 
 	@ConfigItem(
 		keyName = "panelFolds",
@@ -1230,6 +1268,7 @@ public interface FollowerConfig extends Config
 	{
 		return "";
 	}
+	// public:cut dev
 
 	@ConfigItem(
 		keyName = "transcriptOn",
@@ -1242,6 +1281,7 @@ public interface FollowerConfig extends Config
 	{
 		return false;
 	}
+	// public:end dev
 
 	@ConfigItem(
 		keyName = "namePrompted",
@@ -1255,6 +1295,7 @@ public interface FollowerConfig extends Config
 		return false;
 	}
 
+	// public:cut outfit-profiles
 	@ConfigItem(
 		keyName = "outfitProfiles",
 		name = "Outfit profiles",
@@ -1266,6 +1307,7 @@ public interface FollowerConfig extends Config
 		return "";
 	}
 
+	// public:end outfit-profiles
 	@ConfigItem(
 		keyName = "parkedAt",
 		name = "Parked at",
@@ -1302,6 +1344,7 @@ public interface FollowerConfig extends Config
 		return false;
 	}
 
+	// public:cut souvenirs-wishes
 	@ConfigItem(
 		keyName = "wishHintShown",
 		name = "Wish hint shown",
@@ -1314,6 +1357,7 @@ public interface FollowerConfig extends Config
 		return false;
 	}
 
+	// public:end souvenirs-wishes
 	@ConfigItem(
 		keyName = "thrallHintShown",
 		name = "Thrall hint shown",
@@ -1325,6 +1369,7 @@ public interface FollowerConfig extends Config
 	{
 		return false;
 	}
+	// public:cut legacy
 
 	@ConfigItem(
 		keyName = "attacksRelearnedSkilling",
@@ -1349,6 +1394,7 @@ public interface FollowerConfig extends Config
 	{
 		return false;
 	}
+	// public:end legacy
 
 	@ConfigItem(
 		keyName = "lastRevision",

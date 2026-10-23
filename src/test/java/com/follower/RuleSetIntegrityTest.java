@@ -70,13 +70,18 @@ public class RuleSetIntegrityTest
 		"challenging", "challengemet", "challengefailed",
 		"unattended", "underfoot",
 		"milestone", "levelgap", "killcount", "grateful", "lasttime", "farewell",
-		"noticed", "hesitated", "steppedaside", "crossed", "addressed", "nicknameearned",
+		"noticed", // public:cut company-extras,noticing
+		"hesitated", "steppedaside", // public:cut company-extras,will
+		"crossed", // public:cut agility,agility-all
+		"addressed", "nicknameearned",
 		"dateis", "worldhop", "gameupdated", "notesedited",
 		"musicunlock", "collectionadd", "questcomplete", "geoffer",
 		"channeljoined", "channelleft", "npcshout", "musictrack",
 		"examinedthing", "attendedagain", "minutestaken", "pagewritten",
-		"working", "xpdrop", "workended", "targetdepleted", "bagfull", "baghalf",
-		"dayssincesaid", "questwitnessed", "grace"));
+		"working", "xpdrop", "workended", "targetdepleted", "bagfull", "baghalf", // public:cut skilling
+		// public:else "xpdrop",
+		"dayssincesaid", "questwitnessed", "grace")); // public:cut agility-all,marks
+		// public:else "dayssincesaid", "questwitnessed"));
 
 	private static JsonObject bundled(String resource) throws IOException
 	{
@@ -580,6 +585,7 @@ public class RuleSetIntegrityTest
 		return false;
 	}
 
+	// public:cut errands
 	/**
 	 * Every study target the controller can find has its lines, both ends.
 	 *
@@ -622,6 +628,7 @@ public class RuleSetIntegrityTest
 			+ String.join("\n  ", missing), missing.isEmpty());
 	}
 
+	// public:end errands
 	/**
 	 * The voice eras (R16) must tile the calendar: on every day known there
 	 * is exactly one greeting and one level-up voice - no gap where the
@@ -715,6 +722,7 @@ public class RuleSetIntegrityTest
 		}
 	}
 
+	// public:cut errands
 	/** The explore list is held to the same bargain as the study list above. */
 	@Test
 	public void everyExploreTargetHasItsLines() throws IOException
@@ -749,6 +757,7 @@ public class RuleSetIntegrityTest
 			+ String.join("\n  ", missing), missing.isEmpty());
 	}
 
+	// public:end errands
 	private static String bundledText(String resource) throws IOException
 	{
 		try (InputStream in = RuleSetIntegrityTest.class.getResourceAsStream(resource))
@@ -792,8 +801,10 @@ public class RuleSetIntegrityTest
 		byType.put("levelgap", gapExtras);
 		byType.put("killcount", new HashSet<>(Arrays.asList("boss", "count", "ordinal", "lastCount")));
 		byType.put("lasttime", new HashSet<>(Arrays.asList("lastTime")));
-		byType.put("noticed", new HashSet<>(Arrays.asList("kind", "thing")));
-		byType.put("hesitated", new HashSet<>(Arrays.asList("misgiving", "thing")));
+		// public:cut company-extras
+		byType.put("noticed", new HashSet<>(Arrays.asList("kind", "thing"))); // public:cut noticing
+		byType.put("hesitated", new HashSet<>(Arrays.asList("misgiving", "thing"))); // public:cut will
+		// public:end company-extras
 		byType.put("chatmessage", new HashSet<>(Arrays.asList("message")));
 		byType.put("varbitchanged", new HashSet<>(Arrays.asList("value")));
 		byType.put("thrallstart", new HashSet<>(Arrays.asList("style")));
@@ -1059,6 +1070,7 @@ public class RuleSetIntegrityTest
 	 * rest sit at 500 idle ticks: in the 500-620 window it said it had picked
 	 * something up as it sat down, and its body did nothing (QA, 15 Oct).
 	 */
+	// public:cut souvenirs-wishes
 	@Test
 	public void aSouvenirIsBentForBeforeTheRestSit() throws IOException
 	{
@@ -1077,6 +1089,7 @@ public class RuleSetIntegrityTest
 		}
 		assertTrue(souvenirs >= 5);
 	}
+	// public:end souvenirs-wishes
 
 	/** The tightest idleBelow a condition tree's top-level all puts on it, or MAX_VALUE. */
 	private static int idleBelow(Condition condition)
@@ -1295,7 +1308,9 @@ public class RuleSetIntegrityTest
 		for (SpeechRule rule : h.loader.getRules())
 		{
 			boolean opener = rule.asks != null || rule.want != null
-				|| rule.wish != null || rule.challenge != null;
+				|| rule.wish != null // public:cut souvenirs-wishes
+				|| rule.challenge != null; // public:cut side-games
+				// public:else ;
 			if (opener && !consultsType(rule.when, "repeating"))
 			{
 				unguarded.add(rule.id);

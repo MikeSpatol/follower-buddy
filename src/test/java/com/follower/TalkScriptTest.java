@@ -41,7 +41,8 @@ public class TalkScriptTest
 		// are checked in their own tests below.
 		return FollowerPlugin.talkScript(
 			() -> FollowerPlugin.daySummary(95, 12, 2, 1, "good", "that chicken"),
-			answer -> { }, "feather", true, "even");
+			answer -> { }, "feather", true, "even"); // public:cut souvenirs-wishes
+			// public:else answer -> { }, "even");
 	}
 
 	/** Every node id something points at, via {@code then} or a choice. */
@@ -98,6 +99,7 @@ public class TalkScriptTest
 			+ String.join("\n  ", problems), problems.isEmpty());
 	}
 
+	// public:cut souvenirs-wishes
 	@Test
 	public void theGiftOptionOnlyExistsWhileAWishDoes()
 	{
@@ -150,6 +152,7 @@ public class TalkScriptTest
 		assertTrue("and the two branches answer differently",
 			reactions.contains("gift") && reactions.contains("bluff"));
 	}
+	// public:end souvenirs-wishes
 
 	@Test
 	public void aLowDaySharpensTheQuestion()
@@ -160,7 +163,8 @@ public class TalkScriptTest
 		java.util.List<String> answers = new java.util.ArrayList<>();
 
 		Map<String, FollowerDialog.Node> low = FollowerPlugin.talkScript(
-			() -> new String[]{""}, answers::add, "", false, "low");
+			() -> new String[]{""}, answers::add, "", false, "low"); // public:cut souvenirs-wishes
+			// public:else () -> new String[]{""}, answers::add, "low");
 		assertTrue("the sharpened option leads somewhere real",
 			low.containsKey("allright-q"));
 		assertTrue("and the hub offers it",
@@ -174,12 +178,14 @@ public class TalkScriptTest
 		// bottom of the mood range, not just its floor. (Only "low" was
 		// tested at first; the strategy's mutation analysis caught it.)
 		Map<String, FollowerDialog.Node> down = FollowerPlugin.talkScript(
-			() -> new String[]{""}, answers::add, "", false, "down");
+			() -> new String[]{""}, answers::add, "", false, "down"); // public:cut souvenirs-wishes
+			// public:else () -> new String[]{""}, answers::add, "down");
 		assertTrue("a down day sharpens the question too",
 			down.get("start").getOptionLabels().contains("You all right?"));
 
 		Map<String, FollowerDialog.Node> fine = FollowerPlugin.talkScript(
-			() -> new String[]{""}, answers::add, "", false, "good");
+			() -> new String[]{""}, answers::add, "", false, "good"); // public:cut souvenirs-wishes
+			// public:else () -> new String[]{""}, answers::add, "good");
 		assertTrue("on a fine day the everyday question is back",
 			fine.get("start").getOptionLabels().contains("How have you been?"));
 		assertTrue("and nobody asks a cheerful follower if it is all right",
@@ -200,7 +206,7 @@ public class TalkScriptTest
 		{
 			assertTrue("the thrall talk never mentions " + style, text.contains(style));
 		}
-		assertTrue("never says to set an outfit for each", text.contains("outfit for each"));
+		assertTrue("never says to set an outfit for each", text.contains("outfit for each")); // public:cut outfit-profiles,thrall-outfits
 	}
 
 	/**
@@ -220,13 +226,16 @@ public class TalkScriptTest
 		{
 			variants.put(band + "/no-wish", FollowerPlugin.talkScript(
 				() -> FollowerPlugin.daySummary(95, 12, 2, 1, "good", "that chicken"),
-				answer -> { }, "", false, band));
+				answer -> { }, "", false, band)); // public:cut souvenirs-wishes
+				// public:else answer -> { }, band));
+			// public:cut souvenirs-wishes
 			variants.put(band + "/wish-held", FollowerPlugin.talkScript(
 				() -> FollowerPlugin.daySummary(95, 12, 2, 1, "good", "that chicken"),
 				answer -> { }, "feather", true, band));
 			variants.put(band + "/wish-empty", FollowerPlugin.talkScript(
 				() -> FollowerPlugin.daySummary(95, 12, 2, 1, "good", "that chicken"),
 				answer -> { }, "feather", false, band));
+			// public:end souvenirs-wishes
 		}
 		return variants;
 	}

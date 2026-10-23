@@ -151,36 +151,6 @@ public class OutfitRoundTripTest
 		}
 	}
 
-	// -------------------------------------------------------- the game's ids
-
-	@Test
-	public void theGameEncodingRoundTripsThroughAComposition()
-	{
-		Outfit outfit = new Outfit();
-		outfit.setItem(KitType.WEAPON, 4151);
-		outfit.setKit(KitType.HAIR, 3);
-
-		int[] game = outfit.toGameEquipmentIds();
-		assertEquals("an item must land in the game's item range",
-			2048 + 4151, game[KitType.WEAPON.getIndex()]);
-		assertEquals("a kit must land in the game's kit range",
-			256 + 3, game[KitType.HAIR.getIndex()]);
-	}
-
-	@Test
-	public void anAbsurdKitIdIsDroppedRatherThanWrittenAsAnItem()
-	{
-		// The game's scheme only has room for kit ids below 1792; above that a
-		// kit would be written as though it were an item, which would put a
-		// random weapon on the follower's head.
-		Outfit outfit = new Outfit();
-		outfit.setKit(KitType.HAIR, 5000);
-
-		int[] game = outfit.toGameEquipmentIds();
-		assertEquals("an out-of-range kit must be dropped, not corrupted",
-			0, game[KitType.HAIR.getIndex()]);
-	}
-
 	// ------------------------------------------------------------ the parser
 
 	@Test
@@ -226,7 +196,7 @@ public class OutfitRoundTripTest
 		assertReports("hat=item:1", "Unknown slot");
 		assertReports("weapon=item:abc", "is not a number");
 		assertReports("weapon=hat:5", "Expected 'item' or 'kit'");
-		assertReports("color.hair=red", "no longer supported");
+		assertReports("color.hair=red", "no longer supported"); // public:cut legacy
 		assertReports("colors=a/b", "Bad colour index");
 	}
 
@@ -268,7 +238,6 @@ public class OutfitRoundTripTest
 			Outfit outfit = OutfitParser.parse(text);
 			// Whatever it made of it, it must still be usable.
 			outfit.toString();
-			outfit.toGameEquipmentIds();
 			outfit.withDefaultBody();
 		}
 	}

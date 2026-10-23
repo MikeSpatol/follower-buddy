@@ -1,9 +1,9 @@
+// public:file devdump
 package com.follower;
 
 import com.follower.appearance.AppearanceService;
 import com.follower.appearance.ComposedAppearance;
 import com.follower.appearance.ModelRepository;
-import com.follower.appearance.ModelSource;
 import com.follower.appearance.Outfit;
 import com.follower.follower.ErrandController;
 import com.follower.follower.FollowerEntity;
@@ -120,10 +120,10 @@ public class EmoteHandsTest
 				return "WEAPON=item:" + WHIP + ",SHIELD=item:" + DRAGON_SQUARE;
 			}
 		});
-		set("appearanceService", new AppearanceService(null, null)
+		set("appearanceService", new AppearanceService(null)
 		{
 			@Override
-			public void request(Outfit outfit, ModelSource source, Consumer<ComposedAppearance> onReady)
+			public void request(Outfit outfit, Consumer<ComposedAppearance> onReady)
 			{
 				built.add(new Outfit(outfit));
 			}
@@ -214,6 +214,7 @@ public class EmoteHandsTest
 		assertEquals(DRAGON_SQUARE, lastBuilt().itemId(KitType.SHIELD));
 	}
 
+	// public:cut skilling
 	@Test
 	public void aCopyOfTheWorkKeepsToTheBorrowedTools() throws ReflectiveOperationException
 	{
@@ -222,6 +223,7 @@ public class EmoteHandsTest
 		assertFalse(lastBuilt().isItem(KitType.SHIELD));
 	}
 
+	// public:end skilling
 	@Test
 	public void aBlockKeepsTheWeaponAndShieldUp() throws ReflectiveOperationException
 	{

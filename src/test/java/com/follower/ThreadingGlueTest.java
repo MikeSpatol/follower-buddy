@@ -32,6 +32,7 @@ public class ThreadingGlueTest
 		return source.substring(start, source.indexOf("\n\t}\n", start));
 	}
 
+	// public:cut outfit-profiles
 	@Test
 	public void aProfileWornByCommandIsTheOneTheDropdownShows() throws IOException
 	{
@@ -58,6 +59,8 @@ public class ThreadingGlueTest
 		}
 	}
 
+	// public:end outfit-profiles
+	// public:cut sharevoice
 	@Test
 	public void aPackIsReadAndWrittenOffTheEventThread() throws IOException
 	{
@@ -85,4 +88,5 @@ public class ThreadingGlueTest
 		assertTrue(speak.substring(Math.max(0, at - 60), at),
 			speak.substring(Math.max(0, at - 60), at).contains("executor.execute("));
 	}
+	// public:end sharevoice
 }

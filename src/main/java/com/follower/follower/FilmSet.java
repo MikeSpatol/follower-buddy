@@ -1,3 +1,4 @@
+// public:file posing
 package com.follower.follower;
 
 import java.io.BufferedReader;
@@ -386,8 +387,11 @@ public class FilmSet
 	/**
 	 * Turns it to an actor orientation - 0 south, 512 west, 1024 north, 1536
 	 * east - and keeps it there. A stay faces a tile, so this is a far tile
-	 * that way. Gaze.lookTile adds a half turn to what it is given, so the
+	 * that way. Gaze.lookTile adds a half turn to what it is given, so the // public:cut company-extras,gaze
+	 // public:else * that way.
+	// public:cut company-extras,gaze
 	 * half turn is taken off first.
+	// public:end company-extras,gaze
 	 */
 	public void face(int orientation)
 	{
@@ -428,7 +432,10 @@ public class FilmSet
 		WorldPoint from = follower.getStayTile() != null ? follower.getStayTile() : follower.getWorldLocation();
 		if (from != null)
 		{
-			follower.setStayFaceTile(Gaze.lookTile(from, (facing - 1024) & 0x7ff, FACE_TILES));
+			follower.setStayFaceTile(Gaze.lookTile(from, (facing - 1024) & 0x7ff, FACE_TILES)); // public:cut company-extras,gaze
+			// public:else double radians = facing / 2048.0 * 2.0 * Math.PI;
+			// public:else follower.setStayFaceTile(new WorldPoint(from.getX() + (int) Math.round(-Math.sin(radians) * FACE_TILES),
+				// public:else from.getY() + (int) Math.round(-Math.cos(radians) * FACE_TILES), from.getPlane()));
 		}
 	}
 

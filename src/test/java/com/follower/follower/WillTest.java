@@ -1,3 +1,4 @@
+// public:file company-extras,will
 package com.follower.follower;
 
 import com.follower.sim.FakeGame;
@@ -294,6 +295,7 @@ public class WillTest
 		assertEquals(new WorldPoint(7, 13, 0),
 			Will.edgeShortOf(new WorldPoint(10, 10, 0), new WorldPoint(0, 20, 0), 3));
 	}
+	// public:cut dev
 
 	// ------------------------------------------------------- the force-path
 
@@ -363,6 +365,7 @@ public class WillTest
 		assertFalse(will.isHesitating());
 		assertTrue(events.isEmpty());
 	}
+	// public:end dev
 
 	// -------------------------------------------------------- the step aside
 

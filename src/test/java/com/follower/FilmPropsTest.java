@@ -1,10 +1,10 @@
+// public:file devdump,posing
 package com.follower;
 
 import com.follower.appearance.AppearanceComposer;
 import com.follower.appearance.AppearanceService;
 import com.follower.appearance.ComposedAppearance;
 import com.follower.appearance.ModelRepository;
-import com.follower.appearance.ModelSource;
 import com.follower.appearance.Outfit;
 import com.follower.follower.ErrandController;
 import com.follower.follower.FilmSet;
@@ -167,10 +167,10 @@ public class FilmPropsTest
 				return "WEAPON=item:" + WHIP + ",SHIELD=item:" + DRAGON_SQUARE;
 			}
 		});
-		set("appearanceService", new AppearanceService(null, null)
+		set("appearanceService", new AppearanceService(null)
 		{
 			@Override
-			public void request(Outfit outfit, ModelSource source, Consumer<ComposedAppearance> onReady)
+			public void request(Outfit outfit, Consumer<ComposedAppearance> onReady)
 			{
 				built.add(new Outfit(outfit));
 			}

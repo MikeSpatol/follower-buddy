@@ -73,7 +73,7 @@ public class PropFlourish
 			hands.hold(itemId);
 		}
 		follower.setPoseOverride(poseId);
-		log.debug("Flourish started: items {} and {} pose {} for {} ticks", leftItemId, itemId, poseId, ticks);
+		log.debug("Flourish started: items {} and {} pose {} for {} ticks", leftItemId, itemId, poseId, ticks); // public:cut logs
 		return true;
 	}
 

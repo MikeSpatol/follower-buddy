@@ -92,7 +92,8 @@ public class SceneCutTest
 		String src = new String(Files.readAllBytes(
 			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8);
 		assertTrue(src.contains("timeToReadMs(onScreen.text)) ? onScreen : null;"));
-		assertTrue(src.contains("if (cutByTheScene != null && (sceneQuiet() || filming || inConversation()))"));
+		assertTrue(src.contains("if (cutByTheScene != null && (sceneQuiet() || filming || inConversation()))")); // public:cut posing
+		// public:else assertTrue(src.contains("if (cutByTheScene != null && (sceneQuiet() || inConversation()))"));
 	}
 
 	/**

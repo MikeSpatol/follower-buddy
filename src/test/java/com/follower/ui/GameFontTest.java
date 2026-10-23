@@ -35,7 +35,8 @@ public class GameFontTest
 	{
 		GameFontRepository fonts = new GameFontRepository(new Gson());
 		Path empty = folder.newFolder().toPath();
-		fonts.load(empty);
+		fonts.load(empty); // public:cut devfonts
+		// public:else fonts.load();
 		overhead = fonts.getByName("b12_full");
 		dialog = fonts.get(497);
 		assertNotNull(overhead);
@@ -117,8 +118,10 @@ public class GameFontTest
 		Graphics2D graphics = canvas();
 		overhead.drawTop(graphics, "Hello", 10, 10, 0xFFFFFF, false);
 		overhead.drawTop(graphics, "Hello", 10, 10, 0xFFFFFF, true);
+		// public:cut chronicle
 		overhead.drawBaseline(graphics, "Hello", 10, 40, 0xFFFFFF, false);
 		overhead.drawCenteredBaseline(graphics, "Hello", 200, 40, 0xFFFFFF, true);
+		// public:end chronicle
 		overhead.drawCenteredOverhead(graphics, "Hello", 200, 60, 0x00FF00);
 	}
 
@@ -212,9 +215,11 @@ public class GameFontTest
 			case 1:
 				overhead.drawTop(g, text, 5, 5, 0xFFFFFF, true);
 				break;
+			// public:cut chronicle
 			case 2:
 				overhead.drawCenteredBaseline(g, text, 100, 25, 0xFFFFFF, true);
 				break;
+			// public:end chronicle
 			default:
 				overhead.drawCenteredOverhead(g, text, 100, 25, 0xFFFF00);
 				break;

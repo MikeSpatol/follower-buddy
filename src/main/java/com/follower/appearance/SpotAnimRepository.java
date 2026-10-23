@@ -1,11 +1,13 @@
 package com.follower.appearance;
 
 import com.google.gson.Gson;
+// public:cut devdump
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+// public:end devdump
 import java.util.Collections;
 import java.util.Map;
 import javax.inject.Inject;
@@ -27,8 +29,10 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class SpotAnimRepository
 {
+	// public:cut devdump
 	public static final String FILE_NAME = "spotanims.json";
 
+	// public:end devdump
 	/** One spotanim definition. Field names mirror the dumper's. */
 	public static class Entry
 	{
@@ -80,6 +84,7 @@ public class SpotAnimRepository
 		}
 	}
 
+	// public:cut devdump
 	private static class Dump
 	{
 		int version;
@@ -87,6 +92,7 @@ public class SpotAnimRepository
 		Map<String, Entry> spotanims;
 	}
 
+	// public:end devdump
 	private final Gson gson;
 
 	private Map<String, Entry> spotanims = Collections.emptyMap();
@@ -101,6 +107,7 @@ public class SpotAnimRepository
 		this.gson = gson;
 	}
 
+	// public:cut devdump
 	public void load(Path dataDir)
 	{
 		Path file = dataDir.resolve(FILE_NAME);
@@ -122,8 +129,10 @@ public class SpotAnimRepository
 			}
 			spotanims = dump.spotanims;
 			status = spotanims.size() + " spotanims (cache " + dump.cacheRevision + ")";
+			// public:cut logs
 			log.info("Loaded {} spotanims from {} (cache {})",
 				spotanims.size(), file, dump.cacheRevision);
+			// public:end logs
 		}
 		catch (IOException | RuntimeException e)
 		{
@@ -132,6 +141,7 @@ public class SpotAnimRepository
 		}
 	}
 
+	// public:end devdump
 	/**
 	 * Builds the catalogue from the client's own loaded cache - the no-dump
 	 * path every Hub install uses. A dump file, when present, wins for the
@@ -154,19 +164,25 @@ public class SpotAnimRepository
 		{
 			return;
 		}
+		// public:cut devdump
 		int dumped = spotanims.size();
 		live.putAll(spotanims);
+		// public:end devdump
 		spotanims = live;
 		liveRead = true;
+		// public:cut devdump
 		if (dumped == 0)
 		{
+		// public:end devdump
 			status = spotanims.size() + " spotanims (live cache)";
-			log.info("Loaded {} spotanims from live cache", spotanims.size());
+			log.info("Loaded {} spotanims from live cache", spotanims.size()); // public:cut logs
+		// public:cut devdump
 		}
 		else
 		{
-			log.info("Added {} spotanims from the live cache to the dump's {}", spotanims.size() - dumped, dumped);
+			log.info("Added {} spotanims from the live cache to the dump's {}", spotanims.size() - dumped, dumped); // public:cut logs
 		}
+		// public:end devdump
 	}
 
 	/** Whether the client's own cache has been read in yet, under a dump or not. */

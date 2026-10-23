@@ -34,6 +34,7 @@ public class StatusLinesTest
 		return source.substring(start, source.indexOf("\n\t}\n", start));
 	}
 
+	// public:cut outfit-profiles
 	/**
 	 * "Wearing outfit profile 'Default follower'" was said on every start,
 	 * plugin enable and profile switch, and was the first thing a new player
@@ -53,6 +54,8 @@ public class StatusLinesTest
 			method("private void loadOutfitProfile(String name)\n").contains("loadOutfitProfile(name, false)"));
 	}
 
+	// public:end outfit-profiles
+	// public:cut errands
 	/**
 	 * With errands off, ::follower errand and the panel's Go now promised a
 	 * run the controller would never make. The ask is refused before the
@@ -72,6 +75,7 @@ public class StatusLinesTest
 			source().contains("errands.setOnForcedMiss("));
 	}
 
+	// public:end errands
 	/**
 	 * With ::follower chatwatch on, each echo was a CONSOLE line, posted as a
 	 * chat message, and echoed again, endlessly; every status line also went
@@ -84,12 +88,17 @@ public class StatusLinesTest
 			method("private void sendStatus(String message)").contains(".type(ChatMessageType.CONSOLE)"));
 		String chat = method("public void onChatMessage(ChatMessage event)");
 		int skip = chat.indexOf("if (event.getType() == ChatMessageType.CONSOLE)");
-		int echo = chat.indexOf("if (watchChat)");
+		int echo = chat.indexOf("if (watchChat)"); // public:cut dev
 		int rules = chat.indexOf("speechEngine.dispatch(TriggerEvent.chat(");
-		assertTrue("the lint has lost its place", echo >= 0 && rules >= 0);
-		assertTrue("CONSOLE lines return before the echo and the rules",
+		assertTrue("the lint has lost its place", echo >= 0 && rules >= 0); // public:cut dev
+		// public:else assertTrue("the lint has lost its place", rules >= 0);
+		assertTrue("CONSOLE lines return before the echo and the rules", // public:cut dev
+		// public:else assertTrue("CONSOLE lines return before the rules",
+			// public:else skip >= 0 && skip < rules && chat.substring(skip, rules).contains("return;"));
+			// public:cut dev
 			skip >= 0 && skip < echo && skip < rules
 				&& chat.substring(skip, echo).contains("return;"));
+			// public:end dev
 	}
 
 	/** where and status printed "at WorldPoint(x=3222, y=3218, plane=0)", or "at null". */
@@ -100,7 +109,9 @@ public class StatusLinesTest
 			FollowerPlugin.atTile(new net.runelite.api.coords.WorldPoint(3222, 3218, 0)));
 		assertEquals("", FollowerPlugin.atTile(null));
 	}
+	// public:cut dev
 
+	// public:cut skilling
 	/** status dumped the skilling state, raw item ids and all, to everyone. */
 	@Test
 	public void theSkillingDumpIsADevelopersOnly() throws IOException
@@ -115,6 +126,8 @@ public class StatusLinesTest
 			body.substring(0, dump).contains("if (config.developerMode())"));
 		assertFalse("no raw tile", body.contains("+ \" at \" + speechEngine"));
 	}
+	// public:end skilling
+	// public:end dev
 
 	/**
 	 * A phrases.json with a syntax error at startup left the follower silent
@@ -173,6 +186,7 @@ public class StatusLinesTest
 		assertTrue("the unknown word stops short of the list",
 			source.substring(unknown, list).contains("break;"));
 	}
+	// public:cut posing-preview
 
 	/** ::follower pose with no id said nothing; every other command answers with its usage. */
 	@Test
@@ -186,4 +200,5 @@ public class StatusLinesTest
 		assertTrue("the bare call has a branch of its own", bare >= 0);
 		assertTrue("and it gives the usage", body.substring(bare).contains("sendStatus(\"Usage: ::follower pose"));
 	}
+	// public:end posing-preview
 }

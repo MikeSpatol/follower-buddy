@@ -1,3 +1,4 @@
+// public:file chronicle
 package com.follower.chronicle;
 
 import java.awt.image.BufferedImage;
@@ -114,7 +115,7 @@ public class SketchBook
 		}
 		catch (IOException | RuntimeException e)
 		{
-			log.debug("Could not read the poses at {}", folder, e);
+			log.debug("Could not read the poses at {}", folder, e); // public:cut logs
 		}
 	}
 
@@ -148,7 +149,7 @@ public class SketchBook
 		}
 		if (picture == null)
 		{
-			log.debug("Skipping unreadable sketch {}", file);
+			log.debug("Skipping unreadable sketch {}", file); // public:cut logs
 			return pictures.get(key);
 		}
 		// A sketch filed while this one was read is the newer.

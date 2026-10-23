@@ -1,3 +1,4 @@
+// public:file skilling
 package com.follower.follower;
 
 import java.util.Arrays;
@@ -181,11 +182,13 @@ public class Borrow
 		return hat != 0;
 	}
 
+	// public:cut dev
 	public int hatWorn()
 	{
 		return hat;
 	}
 
+	// public:end dev
 	/** Whether anything at all is on loan, in the hand or on the head. */
 	public boolean isBorrowing()
 	{
@@ -210,7 +213,7 @@ public class Borrow
 			return false;
 		}
 		hat = itemId;
-		log.debug("Borrowed hat {}", itemId);
+		log.debug("Borrowed hat {}", itemId); // public:cut logs
 		return true;
 	}
 
@@ -233,7 +236,7 @@ public class Borrow
 			return false;
 		}
 		held = itemId;
-		log.debug("Borrowed item {}", itemId);
+		log.debug("Borrowed item {}", itemId); // public:cut logs
 		return true;
 	}
 
@@ -274,7 +277,7 @@ public class Borrow
 				follower.playAnimation(beat);
 			}
 		}
-		log.debug("Returned item {} and hat {}{}", held, hat, withBeat ? " with a beat" : "");
+		log.debug("Returned item {} and hat {}{}", held, hat, withBeat ? " with a beat" : ""); // public:cut logs
 		if (hat != 0)
 		{
 			hat = 0;
@@ -311,7 +314,7 @@ public class Borrow
 		}
 		aside = true;
 		hands.release();
-		log.debug("Item {} set aside", held);
+		log.debug("Item {} set aside", held); // public:cut logs
 		return true;
 	}
 
@@ -357,7 +360,7 @@ public class Borrow
 		{
 			// Refused on the way back, which the outward hold makes unlikely;
 			// the loan is over rather than pending forever.
-			log.debug("Item {} was not taken back", held);
+			log.debug("Item {} was not taken back", held); // public:cut logs
 			held = 0;
 		}
 	}

@@ -1,7 +1,9 @@
 package com.follower;
 
+// public:cut sharevoice
 import com.follower.share.PackFile;
 import com.follower.sound.VoiceLibrary;
+// public:end sharevoice
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import java.lang.reflect.Field;
@@ -28,6 +30,7 @@ public class CrossThreadTest
 	@Rule
 	public final TemporaryFolder folder = new TemporaryFolder();
 
+	// public:cut sharevoice
 	@Test
 	public void anImportReplacesTheFileWholeAndLeavesNothingBeside() throws Exception
 	{
@@ -66,7 +69,9 @@ public class CrossThreadTest
 		assertEquals("the playing thread never misses a line that is there", 0, lost.get());
 		assertEquals(3_001, voices.attachmentCount());
 	}
+	// public:end sharevoice
 
+	// public:cut memory-window
 	@Test
 	public void forgetEverythingDoesNothingOnceThePluginIsStopped() throws Exception
 	{
@@ -91,4 +96,5 @@ public class CrossThreadTest
 		forget.setAccessible(true);
 		forget.invoke(plugin);
 	}
+	// public:end memory-window
 }

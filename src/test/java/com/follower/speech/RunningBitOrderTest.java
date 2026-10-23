@@ -64,6 +64,7 @@ public class RunningBitOrderTest
 			}
 		}
 	}
+	// public:cut skilling
 
 	@Test
 	public void geraldIsIntroducedFirst() throws IOException
@@ -79,4 +80,5 @@ public class RunningBitOrderTest
 			assertEquals("fun-gerald-first", h.spoken.get(0).rule.id);
 		}
 	}
+	// public:end skilling
 }

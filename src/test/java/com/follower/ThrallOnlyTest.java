@@ -2,10 +2,9 @@ package com.follower;
 
 import com.follower.appearance.AppearanceService;
 import com.follower.appearance.ComposedAppearance;
-import com.follower.appearance.ModelSource;
 import com.follower.appearance.Outfit;
 import com.follower.appearance.OutfitParser;
-import com.follower.appearance.OutfitProfileStore;
+import com.follower.appearance.OutfitProfileStore; // public:cut outfit-profiles
 import com.follower.follower.FollowerEntity;
 import com.follower.sim.FakeGame;
 import com.follower.sim.Harness;
@@ -139,7 +138,7 @@ public class ThrallOnlyTest
 			}
 		});
 		List<Outfit> asked = new ArrayList<>();
-		set(plugin, "appearanceService", new AppearanceService(null, null)
+		set(plugin, "appearanceService", new AppearanceService(null)
 		{
 			@Override
 			public void invalidate()
@@ -148,7 +147,7 @@ public class ThrallOnlyTest
 			}
 
 			@Override
-			public void request(Outfit outfit, ModelSource source, Consumer<ComposedAppearance> onReady)
+			public void request(Outfit outfit, Consumer<ComposedAppearance> onReady)
 			{
 				asked.add(outfit);
 			}
@@ -199,7 +198,7 @@ public class ThrallOnlyTest
 		});
 		set(plugin, "speechEngine", h.engine);
 		set(plugin, "ruleLoader", h.loader);
-		set(plugin, "profileStore", new OutfitProfileStore(new Gson()));
+		set(plugin, "profileStore", new OutfitProfileStore(new Gson())); // public:cut outfit-profiles
 		// The body's part runs on the client thread; only the taking is asked about.
 		set(plugin, "clientThread", new ClientThread()
 		{

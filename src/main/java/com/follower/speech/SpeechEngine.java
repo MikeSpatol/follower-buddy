@@ -219,7 +219,7 @@ public class SpeechEngine
 	private static final java.util.Set<TriggerEvent.Type> REAL_ACTIVITY =
 		java.util.EnumSet.of(
 			TriggerEvent.Type.ANIMATION,
-			TriggerEvent.Type.COMBAT_START,
+			TriggerEvent.Type.COMBAT_START, // public:cut spectate
 			TriggerEvent.Type.THIEVING_START,
 			TriggerEvent.Type.NPC_KILL,
 			TriggerEvent.Type.LOOT,
@@ -407,6 +407,7 @@ public class SpeechEngine
 				context.getWantLabel()));
 		}
 
+		// public:cut souvenirs-wishes
 		// The souvenir going, and a prediction coming good or not. Same shape
 		// as the want: state becoming an event, consumed exactly once.
 		if (context.pollSouvenirLost())
@@ -414,10 +415,12 @@ public class SpeechEngine
 			dispatch(TriggerEvent.souvenirLost(context.getSouvenir()));
 			context.clearSouvenir();
 		}
+		// public:end souvenirs-wishes
 		if (context.pollUnderfoot())
 		{
 			dispatch(TriggerEvent.simple(TriggerEvent.Type.UNDERFOOT));
 		}
+		// public:cut side-games
 
 		TriggerContext.ChallengeOutcome challenge = context.pollChallenge();
 		if (challenge != null)
@@ -449,6 +452,7 @@ public class SpeechEngine
 			dispatch(TriggerEvent.bet(bet == TriggerContext.BetOutcome.WON
 				? TriggerEvent.Type.BET_WON : TriggerEvent.Type.BET_LOST));
 		}
+		// public:end side-games
 	}
 
 	/**
@@ -805,6 +809,7 @@ public class SpeechEngine
 		}
 	}
 
+	// public:cut chronicle
 	/**
 	 * Whether the follower has the floor: nothing waiting its turn, the login
 	 * baseline taken, not muted or hushed, and the gap since the last line
@@ -845,20 +850,7 @@ public class SpeechEngine
 		return false;
 	}
 
-	/**
-	 * Whether this rule is allowed to say its line right now.
-	 *
-	 * <p>The mute and the global window throttle SPEECH; a rule that only plays
-	 * an animation (teleport mirroring, the flinch) is not chatter and skips
-	 * both. The rule holding the floor skips them too - it is the reason
-	 * everything else is quiet, so being caught by its own hush, or held back
-	 * by whatever spoke a second before it, would defeat the point.
-	 */
-	private boolean cannotSpeak(SpeechRule rule, long now)
-	{
-		return blockedBy(rule, now) != null;
-	}
-
+	// public:end chronicle
 	/**
 	 * Whether a line that waits its turn is held for an NPC conversation:
 	 * the box is up, or went under three ticks ago (the context rides out a
@@ -940,10 +932,12 @@ public class SpeechEngine
 		{
 			return "ignored";
 		}
+		// public:cut souvenirs-wishes
 		if (rule.wish != null && getContext().isWishBackedOff())
 		{
 			return "ignored";
 		}
+		// public:end souvenirs-wishes
 		if (isIdleRemark(rule) && now - lastIdleRemarkMs < trailWaitMs())
 		{
 			return "trailing";
@@ -1001,8 +995,10 @@ public class SpeechEngine
 			case LOOT:
 			case LEVEL_UP:
 			case DAMAGE_TAKEN:
+			// public:cut spectate
 			case COMBAT_START:
 			case COMBAT_END:
+			// public:end spectate
 			case THIEVING_START:
 			case THIEVING_END:
 			case REGION_CHANGE:
@@ -1191,8 +1187,10 @@ public class SpeechEngine
 					}
 					if (held == null)
 					{
+						// public:cut logs
 						log.debug("rule '{}' fired after its {}-tick delay",
 							delayed.rule.describe(), delayed.delay);
+						// public:end logs
 						// Won in a scene's quiet, it took no floor then (see
 						// the win), so it takes it now, as it is said. Quests
 						// QA5 #53: the grave Persten moment comes out of a scene.
@@ -1243,12 +1241,15 @@ public class SpeechEngine
 				file(rule, event);
 			}
 
+			// public:cut souvenirs-wishes
 			// Except the gift. The answer that brings it is given once, so a
 			// gift held back is a gift lost; and it trades whatever the pocket
 			// holds when it is thanked for, so a rock still on its way only
 			// changes the words.
+			// public:end souvenirs-wishes
 			if (!rising || !isActive(rule) || !rule.offCooldown(now) || isWaiting(rule)
-				|| (!Boolean.TRUE.equals(rule.grantsWish) && awaitsALanding(rule, now)))
+				|| (!Boolean.TRUE.equals(rule.grantsWish) && awaitsALanding(rule, now))) // public:cut souvenirs-wishes
+				// public:else || awaitsALanding(rule, now))
 			{
 				continue;
 			}
@@ -1285,9 +1286,11 @@ public class SpeechEngine
 		// hear them in.
 		switch (event.getType())
 		{
+			// public:cut spectate
 			case COMBAT_END:
 				getContext().noteBoundary("combat");
 				break;
+			// public:end spectate
 			case LEVEL_UP:
 				getContext().noteBoundary("level");
 				break;
@@ -1391,13 +1394,13 @@ public class SpeechEngine
 		{
 			// Still charge the cooldown so a suppressed rule doesn't fire the instant
 			// the global window opens.
-			log.debug("rule '{}' won but was suppressed ({})", winner.describe(), blocked);
+			log.debug("rule '{}' won but was suppressed ({})", winner.describe(), blocked); // public:cut logs
 			noteSuppressed(winner, blocked);
 			winner.markFired(now);
 			return;
 		}
 
-		log.debug("rule '{}' fired on {}", winner.describe(), event.getType());
+		log.debug("rule '{}' fired on {}", winner.describe(), event.getType()); // public:cut logs
 		speak(winner, event, now);
 	}
 
@@ -1584,6 +1587,7 @@ public class SpeechEngine
 		// leaves that interaction unexplained. They latch when the sink says the
 		// line landed, and so does everything else a line leaves behind.
 		//
+		// public:cut souvenirs-wishes
 		// A souvenir is substituted like a spoken line, so it can be named after
 		// the wish it grants: "the {wish} you found me". Named here, while that
 		// wish is certainly still open.
@@ -1601,6 +1605,7 @@ public class SpeechEngine
 			getContext().clearWish();
 			getContext().noteFavour();
 		}
+		// public:end souvenirs-wishes
 		// Until it lands, a rule reading what it leaves behind waits for it.
 		java.util.Set<String> leaves = text.isEmpty()
 			? java.util.Collections.emptySet() : leavesBehind(rule);
@@ -1613,7 +1618,7 @@ public class SpeechEngine
 			if (!text.isEmpty())
 			{
 				getContext().noteLineSaid(template);
-				event.noteSaid();
+				event.noteSaid(); // public:cut agility-all,marks
 			}
 			if (rule.asks != null && !rule.asks.isEmpty() && !text.isEmpty())
 			{
@@ -1624,6 +1629,7 @@ public class SpeechEngine
 				getContext().setWant(rule.want.region, rule.want.label,
 					rule.want.minutes == null ? 15 : rule.want.minutes);
 			}
+			// public:cut souvenirs-wishes
 			if (rule.wish != null && rule.wish.what != null && !text.isEmpty())
 			{
 				getContext().setWish(rule.wish.what,
@@ -1638,6 +1644,8 @@ public class SpeechEngine
 			{
 				pocket(rule, souvenir);
 			}
+			// public:end souvenirs-wishes
+			// public:cut side-games
 			if (rule.bet != null && rule.bet.threshold != null && !text.isEmpty())
 			{
 				getContext().placeBet(Boolean.TRUE.equals(rule.bet.rich),
@@ -1661,6 +1669,7 @@ public class SpeechEngine
 					Boolean.TRUE.equals(rule.advise.room),
 					rule.advise.minutes == null ? 1 : rule.advise.minutes);
 			}
+			// public:end side-games
 
 			// A first is only spent once it has been heard. A line the mute,
 			// the queue or the dialogue hush swallowed was never said, and
@@ -1707,8 +1716,10 @@ public class SpeechEngine
 			}
 			sink.speak(text, output, rule, animation == null ? -1 : animation, onSaid);
 		}
+		// public:cut logs
 		log.debug("Rule '{}' fired: {}", rule.describe(),
 			text.isEmpty() ? "(animation " + animation + ")" : text);
+		// public:end logs
 	}
 
 	/** How recent a fight has to be for a memory filed now to be about it, in ticks: six seconds. */
@@ -1849,6 +1860,7 @@ public class SpeechEngine
 		return false;
 	}
 
+	// public:cut souvenirs-wishes
 	/** Carries the souvenir a line names, if it names one. */
 	private void pocket(SpeechRule rule, String souvenir)
 	{
@@ -1871,13 +1883,14 @@ public class SpeechEngine
 		}
 	}
 
+	// public:end souvenirs-wishes
 	/**
 	 * What a line latches when it lands, named as the conditions that read
 	 * it. Not the gift's pocket and wish: those are spent at the win.
 	 */
 	private static java.util.Set<String> leavesBehind(SpeechRule rule)
 	{
-		boolean gift = Boolean.TRUE.equals(rule.grantsWish);
+		boolean gift = Boolean.TRUE.equals(rule.grantsWish); // public:cut souvenirs-wishes
 		java.util.Set<String> states = new java.util.HashSet<>();
 		if (rule.asks != null && !rule.asks.isEmpty())
 		{
@@ -1887,6 +1900,7 @@ public class SpeechEngine
 		{
 			states.add("wanting");
 		}
+		// public:cut souvenirs-wishes
 		if (rule.wish != null && rule.wish.what != null)
 		{
 			states.add("wishing");
@@ -1895,6 +1909,8 @@ public class SpeechEngine
 		{
 			states.add("carrying");
 		}
+		// public:end souvenirs-wishes
+		// public:cut side-games
 		if (rule.bet != null && rule.bet.threshold != null)
 		{
 			states.add("betting");
@@ -1907,6 +1923,7 @@ public class SpeechEngine
 		{
 			states.add("advising");
 		}
+		// public:end side-games
 		return states;
 	}
 
@@ -2162,13 +2179,15 @@ public class SpeechEngine
 		values.putIfAbsent("place", ctx.getPlaceHere());
 		values.putIfAbsent("where", ctx.getWhereHere());
 		values.putIfAbsent("foe", ctx.getCombatTarget());
+		// public:cut souvenirs-wishes
 		values.putIfAbsent("souvenir", ctx.getSouvenir());
 		values.putIfAbsent("wish", ctx.getWishLabel());
+		// public:end souvenirs-wishes
 		values.putIfAbsent("here", ctx.getPlaceMemory());
 		values.putIfAbsent("nickname", ctx.getNickname());
 		values.putIfAbsent("candidate", ctx.getEarnedNickname());
 		values.putIfAbsent("lastTime", ctx.getLastTime());
-		values.putIfAbsent("left", Integer.toString(ctx.getChallengeLeft()));
+		values.putIfAbsent("left", Integer.toString(ctx.getChallengeLeft())); // public:cut side-games
 		values.putIfAbsent("days", Integer.toString(ctx.getDaysKnown()));
 		values.putIfAbsent("hp", Integer.toString(ctx.getHitpoints()));
 		values.putIfAbsent("maxHp", Integer.toString(ctx.getMaxHitpoints()));

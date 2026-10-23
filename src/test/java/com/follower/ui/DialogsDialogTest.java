@@ -1,3 +1,4 @@
+// public:file dialogs-editor
 package com.follower.ui;
 
 import org.junit.Test;

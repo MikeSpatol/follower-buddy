@@ -32,7 +32,9 @@ import net.runelite.api.NPC;
  *   <tr><td>itemEquipped</td><td>{@code ids}</td></tr>
  *   <tr><td>poisoned / venomed / skulled</td><td>no fields</td></tr>
  *   <tr><td>thrallStart / thrallSwitch / thrallEnd</td><td>no fields; {@code {style}} and, for a switch, {@code {from}}</td></tr>
+// public:cut errands
  *   <tr><td>errandStart / errandEnd</td><td>optional {@code names} (errand names); {@code {errand}} placeholder</td></tr>
+// public:end errands
  *   <tr><td>petNearby</td><td>{@code within} — any NPC the game flags as a follower, i.e. any pet</td></tr>
  *   <tr><td>idleBelow</td><td>{@code ticks} — the other bound, for fidgets that should stop once resting</td></tr>
  *   <tr><td>playerDeath</td><td>no fields — the moment of death</td></tr>
@@ -41,7 +43,9 @@ import net.runelite.api.NPC;
  *   <tr><td>returnVisit</td><td>{@code minimum} — entering a region already visited that many times this session</td></tr>
  *   <tr><td>combat</td><td>no fields — true throughout a fight, including the gaps between targets</td></tr>
  *   <tr><td>bossFight</td><td>{@code minimum} — target combat level, default 100</td></tr>
+// public:cut spectate
  *   <tr><td>combatStart / combatEnd</td><td>optional {@code names}; {@code {npc}} placeholder</td></tr>
+// public:end spectate
  *   <tr><td>npcKill</td><td>{@code minimum} / {@code maximum} combat level, optional {@code names} / {@code ids}, or {@code boss: true} for either big enough or named in the boss rules, or {@code namedBoss: true} for named only</td></tr>
  *   <tr><td>energyBelow</td><td>{@code percent}</td></tr>
  *   <tr><td>idle</td><td>{@code ticks}</td></tr>
@@ -524,6 +528,8 @@ public class Condition
 			// What the two of them were doing when the last session ended, for
 			// the greeting. Login only, and only when there is something to
 			// say; {lastTime} says it.
+			// public:cut company-extras
+			// public:cut noticing
 			// The follower noticed something and went to look at it. "is" is
 			// the kind (valuable, nest, impling, star, landmark); "contains"
 			// narrows on the thing's name. {kind}, {thing}.
@@ -533,6 +539,8 @@ public class Condition
 					&& (contains == null || event.getMessage().toLowerCase(Locale.ROOT)
 						.contains(contains.toLowerCase(Locale.ROOT)));
 
+			// public:end noticing
+			// public:cut will
 			// A Send the follower had misgivings about: it has stopped at the
 			// edge and turned to the player. "is" is the kind (wilderness,
 			// monster); {misgiving}, {thing}.
@@ -545,18 +553,26 @@ public class Condition
 			case "steppedaside":
 				return event.getType() == TriggerEvent.Type.STEPPED_ASIDE;
 
+			// public:end will
+			// public:end company-extras
+			// public:cut agility-all
+			// public:cut agility
 			// The follower did an agility obstacle after the player. "is" is
 			// "fell" for a fall copied, "crossed" for a clean one.
 			case "crossed":
 				return event.getType() == TriggerEvent.Type.CROSSED
 					&& (is == null || is.equalsIgnoreCase(event.getName()));
 
+			// public:end agility
+			// public:cut marks
 			// A mark of grace on a rooftop course. "is" is "spotted", "left"
 			// (walked past and on to the next obstacle) or "collected".
 			case "grace":
 				return event.getType() == TriggerEvent.Type.GRACE
 					&& (is == null || is.equalsIgnoreCase(event.getName()));
 
+			// public:end marks
+			// public:end agility-all
 			// An earned name the player has not been asked about yet. {candidate}
 			// says it; the asking rule is what turns it into a nickname.
 			case "nicknameearned":
@@ -658,6 +674,7 @@ public class Condition
 			case "thrallend":
 				return event.getType() == TriggerEvent.Type.THRALL_END;
 
+			// public:cut errands
 			case "errandstart":
 				return event.getType() == TriggerEvent.Type.ERRAND_START
 					&& (names == null || matchesAnyName(event.getName()));
@@ -665,6 +682,8 @@ public class Condition
 				return event.getType() == TriggerEvent.Type.ERRAND_END
 					&& (names == null || matchesAnyName(event.getName()));
 
+			// public:end errands
+			// public:cut spectate
 			// The moment a fight starts or ends, as opposed to "combat", which
 			// stays true throughout one. Optional names match what is fought.
 			case "combatstart":
@@ -679,6 +698,7 @@ public class Condition
 						|| boss == ctx.isBoss(event.getName(), ctx.getCombatTargetLevel()))
 					&& (names == null || matchesAnyName(event.getName()));
 
+			// public:end spectate
 			// Something the player killed. "minimum"/"maximum" bracket the
 			// victim's COMBAT LEVEL, which is how one rule celebrates a boss
 			// and another shrugs at a chicken; "names"/"ids" narrow it further.
@@ -756,6 +776,7 @@ public class Condition
 			case "underfoot":
 				return event.getType() == TriggerEvent.Type.UNDERFOOT;
 
+			// public:cut side-games
 			// A challenge is outstanding, was met, or ran out. {challenge}
 			// names it. "challenging" is mostly used negated, so the follower
 			// does not set a second one over the top of the first.
@@ -766,6 +787,7 @@ public class Condition
 			case "challengefailed":
 				return event.getType() == TriggerEvent.Type.CHALLENGE_FAILED;
 
+			// public:end side-games
 			// Nobody has touched the camera for this long. Distinct from idle,
 			// which a player working a furnace also satisfies.
 			case "unattended":
@@ -815,6 +837,7 @@ public class Condition
 				return ctx.hasNickname()
 					&& (is == null || is.equalsIgnoreCase(ctx.getNickname()));
 
+			// public:cut side-games
 			// The player did what the follower suggested, or the window shut
 			// without them. {advice} names what it was about. "is" narrows to
 			// one piece of advice, so the food line and the bag line can react
@@ -831,6 +854,7 @@ public class Condition
 			case "advising":
 				return ctx.isAdvising();
 
+			// public:end side-games
 			// Something happened HERE that the follower has not let go of.
 			// {here} says it. Distinct from "remembers", which holds one
 			// incident wherever you are; this one is the place's, and waits
@@ -857,6 +881,7 @@ public class Condition
 				return ctx.isAwaitingAnswer()
 					&& (is == null || is.equalsIgnoreCase(ctx.getAskedTree()));
 
+			// public:cut souvenirs-wishes
 			// Carrying something it picked up. Mostly used negated, to stop it
 			// picking up a second thing while its hands are full. A minimum
 			// is minutes held: behaviour QA, 16 Oct, "I've carried it through
@@ -867,6 +892,8 @@ public class Condition
 			case "souvenirlost":
 				return event.getType() == TriggerEvent.Type.SOUVENIR_LOST;
 
+			// public:end souvenirs-wishes
+			// public:cut side-games
 			// A prediction is outstanding. Negated, this stops it betting twice
 			// on the same drop.
 			case "betting":
@@ -877,6 +904,7 @@ public class Condition
 			case "betlost":
 				return event.getType() == TriggerEvent.Type.BET_LOST;
 
+			// public:end side-games
 			// The hour on the player's own wall, not the game's. "minimum" and
 			// "maximum" bound it, wrapping past midnight so a late-night window
 			// can be written the way a person would say it: 23 to 5.
@@ -952,6 +980,7 @@ public class Condition
 			case "questcomplete":
 				return event.getType() == TriggerEvent.Type.QUEST_COMPLETE;
 
+			// public:cut chronicle
 			// A chronicle page was written for the first time. "is" narrows it
 			// to one kind of page met or walked into (boss, enemy, location,
 			// faction, world), or "quest" for any page a quest opened.
@@ -959,6 +988,7 @@ public class Condition
 				return event.getType() == TriggerEvent.Type.PAGE_WRITTEN
 					&& (is == null || is.equalsIgnoreCase(event.getName()));
 
+			// public:end chronicle
 			// A Grand Exchange offer finished; "is" narrows to bought or sold.
 			case "geoffer":
 				return event.getType() == TriggerEvent.Type.GE_OFFER
@@ -997,6 +1027,7 @@ public class Condition
 			case "wanting":
 				return ctx.isWanting();
 
+			// public:cut souvenirs-wishes
 			// A small thing has been wished for and not yet found. Negated by
 			// the wish rules (one hope at a time) and required by the gift's
 			// thank-you, which names the thing via {wish}.
@@ -1008,15 +1039,18 @@ public class Condition
 			// gift's thank-you requires this; the bluff rule requires its
 			// absence - claiming to have found a feather is checkable, and a
 			// follower that cannot tell is a follower that cannot see.
+			// public:end souvenirs-wishes
 			// One of these items is in the bag now: state, so a rule rises when
 			// it arrives - the golden key in Priest in Peril, picked up off the
 			// right monk.
 			case "inventoryhas":
 				return ctx.isInInventory(ids);
 
+			// public:cut souvenirs-wishes
 			case "wishitemheld":
 				return ctx.isWishedItemInBag();
 
+			// public:end souvenirs-wishes
 			case "wantfulfilled":
 				return event.getType() == TriggerEvent.Type.WANT_FULFILLED;
 			case "wantexpired":
@@ -1105,6 +1139,7 @@ public class Condition
 				return ctx.getRepeatingTicks() >= orDefault(ticks, 100)
 					&& (ids == null || idsContain(ctx.getRepeatingAnimation()));
 
+			// public:cut skilling
 			// The player is working something - a tree, a rock, a spot - as
 			// the skilling company sees it. "is" names the skill, "contains"
 			// a piece of the target's name, so a yew can have its own line.
@@ -1114,6 +1149,7 @@ public class Condition
 					&& (contains == null || ctx.getWorkTargetName().toLowerCase(Locale.ROOT)
 						.contains(contains.toLowerCase(Locale.ROOT)));
 
+			// public:end skilling
 			// The tick of an XP drop. "every" counts within the work session,
 			// the way npcKill's counts within the fight: 8 fires on the
 			// eighth drop and every eighth after.
@@ -1122,6 +1158,7 @@ public class Condition
 					&& (names == null || matchesAnyName(event.getName()))
 					&& (every == null || every <= 0
 						|| (event.getCount() > 0 && event.getCount() % every == 0));
+			// public:cut skilling
 
 			case "workended":
 				return event.getType() == TriggerEvent.Type.WORK_END
@@ -1134,6 +1171,7 @@ public class Condition
 				return event.getType() == TriggerEvent.Type.BAG_FULL;
 			case "baghalf":
 				return event.getType() == TriggerEvent.Type.BAG_HALF;
+			// public:end skilling
 
 			default:
 				log.warn("Unknown condition type '{}'", type);

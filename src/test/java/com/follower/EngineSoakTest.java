@@ -111,8 +111,10 @@ public class EngineSoakTest
 		"{\"type\": \"thrallStart\"}",
 		"{\"type\": \"thrallSwitch\"}",
 		"{\"type\": \"thrallEnd\"}",
+		// public:cut errands
 		"{\"type\": \"errandStart\", \"names\": [\"bank\"]}",
 		"{\"type\": \"errandEnd\"}",
+		// public:end errands
 		"{\"type\": \"thievingStart\"}",
 		"{\"type\": \"thievingEnd\"}",
 		"{\"type\": \"personalBest\"}",
@@ -178,22 +180,28 @@ public class EngineSoakTest
 		"{\"type\": \"grateful\"}",
 		"{\"type\": \"lastTime\"}",
 		"{\"type\": \"farewell\"}",
-		"{\"type\": \"noticed\", \"is\": \"impling\"}",
+		// public:cut company-extras
+		"{\"type\": \"noticed\", \"is\": \"impling\"}", // public:cut noticing
+		// public:cut will
 		"{\"type\": \"hesitated\", \"is\": \"monster\"}",
 		"{\"type\": \"steppedAside\"}",
+		// public:end will
+		// public:end company-extras
 		"{\"type\": \"crossed\", \"is\": \"fell\"}",
 		"{\"type\": \"grace\", \"is\": \"left\"}",
 		"{\"type\": \"addressed\"}",
 		"{\"type\": \"nicknameEarned\"}",
 		"{\"type\": \"memoryHere\"}",
 		"{\"type\": \"memoryFoeNearby\", \"within\": 12}",
-		"{\"type\": \"pageWritten\", \"is\": \"boss\"}",
-		"{\"type\": \"working\", \"is\": \"woodcutting\"}",
+		"{\"type\": \"pageWritten\", \"is\": \"boss\"}", // public:cut chronicle
+		"{\"type\": \"working\", \"is\": \"woodcutting\"}", // public:cut skilling
 		"{\"type\": \"xpDrop\", \"every\": 2}",
+		// public:cut skilling
 		"{\"type\": \"workEnded\"}",
 		"{\"type\": \"targetDepleted\"}",
 		"{\"type\": \"bagFull\"}",
 		"{\"type\": \"bagHalf\"}",
+		// public:end skilling
 	};
 
 	/** Types that are the same for the whole of a run, whatever the driver does. */
@@ -352,7 +360,7 @@ public class EngineSoakTest
 			{
 				// The plugin settles an open bet on the loot it was about.
 				int worth = random.nextInt(200000);
-				ctx.settleBet(worth);
+				ctx.settleBet(worth); // public:cut side-games
 				h.dispatch(TriggerEvent.loot(worth, "Bones"));
 				break;
 			}
@@ -370,7 +378,8 @@ public class EngineSoakTest
 				h.dispatch(TriggerEvent.damageTaken(1 + random.nextInt(40)));
 				break;
 			case 6:
-				h.dispatch(TriggerEvent.combat(TriggerEvent.Type.COMBAT_START, "Goblin"));
+				h.dispatch(TriggerEvent.combat(TriggerEvent.Type.COMBAT_START, "Goblin")); // public:cut spectate
+				// public:else h.dispatch(TriggerEvent.simple(TriggerEvent.Type.THIEVING_START));
 				break;
 			case 7:
 				// With what a login brings: the count, the time away, and now
@@ -463,7 +472,8 @@ public class EngineSoakTest
 				h.game.fighting(new NPC[]{null, goblin, boss}[random.nextInt(3)]);
 				break;
 			case 21:
-				h.dispatch(TriggerEvent.combat(TriggerEvent.Type.COMBAT_END, "Goblin"));
+				h.dispatch(TriggerEvent.combat(TriggerEvent.Type.COMBAT_END, "Goblin")); // public:cut spectate
+				// public:else h.dispatch(TriggerEvent.simple(TriggerEvent.Type.THIEVING_END));
 				break;
 			case 22:
 				h.dispatch(new TriggerEvent[]{
@@ -471,10 +481,12 @@ public class EngineSoakTest
 					TriggerEvent.thrallSwitch("melee", "magic"),
 					TriggerEvent.thrall(TriggerEvent.Type.THRALL_END, "magic")}[random.nextInt(3)]);
 				break;
+			// public:cut errands
 			case 23:
 				h.dispatch(TriggerEvent.errand(random.nextBoolean()
 					? TriggerEvent.Type.ERRAND_START : TriggerEvent.Type.ERRAND_END, "bank"));
 				break;
+			// public:end errands
 			case 24:
 				h.dispatch(TriggerEvent.simple(random.nextBoolean()
 					? TriggerEvent.Type.THIEVING_START : TriggerEvent.Type.THIEVING_END));
@@ -529,27 +541,27 @@ public class EngineSoakTest
 				ctx.setWant((away ? HOME : AWAY).getRegionID(), "the walk", 1);
 				break;
 			case 35:
-				ctx.setWish("a feather", 1, Collections.singletonList(314));
+				ctx.setWish("a feather", 1, Collections.singletonList(314)); // public:cut souvenirs-wishes
 				break;
 			case 36:
 				ctx.noteIncident("the-death", "the way that went", "Goblin",
 					System.currentTimeMillis());
 				break;
 			case 37:
-				ctx.pickUp("a nice flat rock", 1);
+				ctx.pickUp("a nice flat rock", 1); // public:cut souvenirs-wishes
 				break;
 			case 38:
-				ctx.placeBet(random.nextBoolean(), 50_000, 1);
+				ctx.placeBet(random.nextBoolean(), 50_000, 1); // public:cut side-games
 				break;
 			case 39:
-				ctx.adviseOn("food", new HashSet<>(Collections.singletonList(829)), false, 1);
+				ctx.adviseOn("food", new HashSet<>(Collections.singletonList(829)), false, 1); // public:cut side-games
 				break;
 			case 40:
 				// Eating, which is what the food advice was asking for.
 				h.dispatch(TriggerEvent.animation(829));
 				break;
 			case 41:
-				ctx.setChallenge("a kill", "kills", 1, 1);
+				ctx.setChallenge("a kill", "kills", 1, 1); // public:cut side-games
 				break;
 			case 42:
 				ctx.noteUnderfoot();
@@ -596,21 +608,25 @@ public class EngineSoakTest
 				break;
 			}
 			case 50:
+				// public:cut skilling
 				ctx.setWork(random.nextBoolean(), "woodcutting", "Yew tree", null, 10, 0,
 					Integer.MAX_VALUE);
+				// public:end skilling
 				break;
 			case 51:
 				h.dispatch(TriggerEvent.xpDrop("Woodcutting", 1 + random.nextInt(8)));
 				break;
 			case 52:
-				h.dispatch(TriggerEvent.workEnd("woodcutting", "Yew tree"));
+				h.dispatch(TriggerEvent.workEnd("woodcutting", "Yew tree")); // public:cut skilling
 				break;
 			case 53:
-				h.dispatch(TriggerEvent.targetDepleted("Yew tree"));
+				h.dispatch(TriggerEvent.targetDepleted("Yew tree")); // public:cut skilling
 				break;
 			case 54:
+				// public:cut skilling
 				h.dispatch(TriggerEvent.simple(random.nextBoolean()
 					? TriggerEvent.Type.BAG_FULL : TriggerEvent.Type.BAG_HALF));
+				// public:end skilling
 				break;
 			case 55:
 				killCount++;
@@ -619,26 +635,36 @@ public class EngineSoakTest
 			case 56:
 				h.dispatch(TriggerEvent.simple(TriggerEvent.Type.FAREWELL));
 				break;
+			// public:cut company-extras
+			// public:cut noticing
 			case 57:
 				h.dispatch(random.nextBoolean()
 					? TriggerEvent.noticed("impling", "Dragon impling")
 					: TriggerEvent.noticed("nest", "Bird nest"));
 				break;
+			// public:end noticing
+			// public:cut will
 			case 58:
 				h.dispatch(random.nextBoolean()
 					? TriggerEvent.hesitated("monster", "Hill Giant")
 					: TriggerEvent.hesitated("wilderness", "the Wilderness"));
 				break;
+			// public:end will
+			// public:end company-extras
 			case 59:
-				h.dispatch(TriggerEvent.simple(TriggerEvent.Type.STEPPED_ASIDE));
-				h.dispatch(TriggerEvent.crossed(true));
-				h.dispatch(TriggerEvent.grace("left", null));
+				h.dispatch(TriggerEvent.simple(TriggerEvent.Type.STEPPED_ASIDE)); // public:cut company-extras,will
+				// public:cut agility-all
+				h.dispatch(TriggerEvent.crossed(true)); // public:cut agility
+				h.dispatch(TriggerEvent.grace("left", null)); // public:cut marks
+				// public:end agility-all
 				break;
+			// public:cut chronicle
 			case 60:
 				h.dispatch(TriggerEvent.pageWritten(
 					new String[]{"boss", "enemy", "location", "quest"}[random.nextInt(4)],
 					"Giant Mole"));
 				break;
+			// public:end chronicle
 			case 61:
 				ctx.setSessionMinutes(random.nextInt(120));
 				break;

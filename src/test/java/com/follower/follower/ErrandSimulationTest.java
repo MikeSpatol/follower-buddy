@@ -1,3 +1,4 @@
+// public:file errands
 package com.follower.follower;
 
 import com.follower.FollowerConfig;
@@ -176,7 +177,7 @@ public class ErrandSimulationTest
 		busy = false;
 
 		SpotAnimRepository spotAnims = new SpotAnimRepository(new Gson());
-		spotAnims.load(folder.newFolder().toPath());
+		spotAnims.load(folder.newFolder().toPath()); // public:cut devdump
 
 		errands = new ErrandController(game.client, follower, config(),
 			dispatched::add, spotAnims, () -> busy, new ErrandController.Hands()
@@ -357,6 +358,7 @@ public class ErrandSimulationTest
 		assertFalse(errands.isBusy());
 	}
 
+	// public:cut skilling
 	@Test
 	public void aSilentlyForcedErrandSaysNothingAtEitherEnd()
 	{
@@ -373,6 +375,7 @@ public class ErrandSimulationTest
 		assertTrue(started("bootlace"));
 	}
 
+	// public:end skilling
 	@Test
 	public void aSessionKeepsEveryErrandInButTheOneItAskedFor()
 	{
@@ -388,6 +391,7 @@ public class ErrandSimulationTest
 		assertFalse("no errand of its own during a session", errands.isBusy());
 		assertTrue(dispatched.isEmpty());
 
+		// public:cut skilling
 		// The one the session sent for goes ahead.
 		errands.force("bootlace", true);
 		tick(1);
@@ -395,6 +399,7 @@ public class ErrandSimulationTest
 		tick(10);
 		assertTrue(follower.following);
 
+		// public:end skilling
 		// The session over, the same arrival earns its look.
 		working = false;
 		errands.noticeArrival();
@@ -421,10 +426,12 @@ public class ErrandSimulationTest
 		assertFalse("no bank, no errand", errands.isBusy());
 		assertEquals("and the miss is told", Collections.singletonList("bank"), missed);
 
+		// public:cut skilling
 		// Asked for silently, a miss is nobody's business.
 		errands.force("bank", true);
 		tick(1);
 		assertEquals("a silent force tells nobody", 1, missed.size());
+		// public:end skilling
 	}
 
 	@Test

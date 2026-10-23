@@ -1,3 +1,4 @@
+// public:file outfit-profiles
 package com.follower;
 
 import com.follower.appearance.OutfitProfileStore;

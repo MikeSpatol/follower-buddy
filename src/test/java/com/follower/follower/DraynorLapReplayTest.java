@@ -1,3 +1,4 @@
+// public:file agility,agility-all
 package com.follower.follower;
 
 import com.follower.appearance.ModelRepository;
@@ -117,7 +118,7 @@ public class DraynorLapReplayTest
 		stances.load(folder.newFolder().toPath());
 		follower = new FollowerEntity(game.client, stances);
 		follower.setOnSnapped(() -> snaps++);
-		follower.setAgilityTrace(trace::add);
+		follower.setAgilityTrace(trace::add); // public:cut dev
 		follower.setOnCrossed(done::add);
 		set("object", new RuneLiteObject(game.client));
 		set("animatable", true);
@@ -268,7 +269,7 @@ public class DraynorLapReplayTest
 			plane = at.getPlane();
 			drawnX = serverX * 128 + 64;
 			drawnY = serverY * 128 + 64;
-			watch.setTrace(trace::add);
+			watch.setTrace(trace::add); // public:cut dev
 			follower.setAgilityClock(() -> (long) clockMs);
 			// Started beside the player, as after any snap.
 			game.fineAt((int) drawnX, (int) drawnY, plane);

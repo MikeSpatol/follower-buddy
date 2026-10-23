@@ -99,7 +99,8 @@ public class AttentionDamperTest
 
 		// A real event, which cannot happen from the kettle.
 		Harness fighting = abandoned();
-		fighting.dispatch(TriggerEvent.simple(TriggerEvent.Type.COMBAT_START));
+		fighting.dispatch(TriggerEvent.simple(TriggerEvent.Type.COMBAT_START)); // public:cut spectate
+		// public:else fighting.dispatch(TriggerEvent.simple(TriggerEvent.Type.THIEVING_START));
 		fighting.dispatch(TriggerEvent.npc(TriggerEvent.Type.NPC_SPAWN, 3029, "Goblin"));
 		assertEquals("a fight starting is presence", 1, fighting.firedBy("reaction").size());
 	}

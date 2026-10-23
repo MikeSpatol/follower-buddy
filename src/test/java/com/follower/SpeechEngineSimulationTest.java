@@ -340,11 +340,13 @@ public class SpeechEngineSimulationTest
 	{
 		Harness h = new Harness(scratch(), rules(
 			"{\"id\": \"greet\", \"group\": \"t\", \"cooldownMs\": 0,"
-				+ " \"when\": {\"type\": \"combatStart\"},"
+				+ " \"when\": {\"type\": \"combatStart\"}," // public:cut spectate
+				// public:else + " \"when\": {\"type\": \"npcKill\"},"
 				+ " \"say\": [\"{player} versus {npc} at {hpPercent} percent\"]}"));
 
 		h.gameTicks(1);
-		h.dispatch(TriggerEvent.combat(TriggerEvent.Type.COMBAT_START, "Zulrah"));
+		h.dispatch(TriggerEvent.combat(TriggerEvent.Type.COMBAT_START, "Zulrah")); // public:cut spectate
+		// public:else h.dispatch(TriggerEvent.kill(2042, "Zulrah", 725));
 
 		assertEquals(1, h.spoken.size());
 		assertEquals("Tester versus Zulrah at 100 percent", h.spoken.get(0).text);
@@ -363,6 +365,7 @@ public class SpeechEngineSimulationTest
 		assertEquals("hello {nonsense}", h.spoken.get(0).text);
 	}
 
+	// public:cut souvenirs-wishes
 	@Test
 	public void aLineThatOpensOnANameOpensOnACapital() throws IOException
 	{
@@ -381,6 +384,7 @@ public class SpeechEngineSimulationTest
 		assertEquals("A feather, gone. Why? A feather was the good one... a feather, of all things.",
 			h.spoken.get(0).text);
 	}
+	// public:end souvenirs-wishes
 
 	@Test
 	public void aPlayerNameOpeningALineKeepsItsOwnSpelling() throws IOException
@@ -421,6 +425,7 @@ public class SpeechEngineSimulationTest
 	public void anArticleBeforeAPlaceholderAgreesWithWhatFillsIt() throws IOException
 	{
 		// Straight from the transcripts: the lines as shipped, the names as met.
+		// public:cut company-extras,noticing
 		String impling = "{\"type\": \"noticed\", \"is\": \"impling\"}";
 		assertEquals("There's an Eclectic impling. It won't wait.", says(impling,
 			"There's a {thing}. It won't wait.", TriggerEvent.noticed("impling", "Eclectic impling")));
@@ -431,6 +436,7 @@ public class SpeechEngineSimulationTest
 		assertEquals("A Young impling, if you're quick.", says(impling,
 			"A {thing}, if you're quick.", TriggerEvent.noticed("impling", "Young impling")));
 
+		// public:end company-extras,noticing
 		String hit = "{\"type\": \"personalBest\", \"names\": [\"hit\"]}";
 		assertEquals("An 80! Underline it. Twice.", says(hit,
 			"A {value}! Underline it. Twice.", TriggerEvent.record("hit", 80, 62)));
@@ -448,16 +454,19 @@ public class SpeechEngineSimulationTest
 		String examine = "{\"type\": \"examinedThing\"}";
 		assertEquals("I looked where you looked. I saw Soft clay.", says(examine,
 			"I looked where you looked. I saw a {target}.", TriggerEvent.examinedThing("Soft clay")));
+		// public:cut company-extras,noticing
 		String left = "{\"type\": \"noticed\", \"is\": \"valuable\"}";
 		assertEquals("You're walking away from Coins.", says(left,
 			"You're walking away from a {thing}.", TriggerEvent.noticed("valuable", "Coins")));
 		assertEquals("You're walking away from an Abyssal whip.", says(left,
 			"You're walking away from a {thing}.", TriggerEvent.noticed("valuable", "Abyssal whip")));
+		// public:end company-extras,noticing
 		// A name that only looks plural keeps what it had.
 		assertEquals("Very much a Brutus.", says(examine,
 			"Very much a {target}.", TriggerEvent.examinedThing("Brutus")));
 	}
 
+	// public:cut company-extras,noticing
 	@Test
 	public void aValueThatOpensASentenceTakesItsCapital() throws IOException
 	{
@@ -471,6 +480,7 @@ public class SpeechEngineSimulationTest
 			"Look. {thing}, right there.", TriggerEvent.noticed("valuable", "soft clay")));
 	}
 
+	// public:end company-extras,noticing
 	@Test
 	public void anArticleInFrontOfADescribingPlaceholderStays() throws IOException
 	{
@@ -554,12 +564,14 @@ public class SpeechEngineSimulationTest
 		assertEquals("Careful with the Kraken.", says(kill, "Careful with the {npc}.",
 			TriggerEvent.kill(494, "Kraken", 291)));
 
+		// public:cut company-extras,will
 		// QA, 15 Oct: the same goes for {thing} when it is a monster, and for
 		// the creature a memory is about. "Next to the Goblin?"
 		assertEquals("Next to the moss giant?", says("{\"type\": \"hesitated\", \"is\": \"monster\"}",
 			"Next to the {thing}?", TriggerEvent.hesitated("monster", "Moss giant")));
 		assertEquals("Not the Wilderness.", says("{\"type\": \"hesitated\", \"is\": \"wilderness\"}",
 			"Not {thing}.", TriggerEvent.hesitated("wilderness", "the Wilderness")));
+		// public:end company-extras,will
 		Harness h = new Harness(scratch(), rules(
 			"{\"id\": \"t\", \"group\": \"t\", \"cooldownMs\": 0, \"when\": " + kill + ","
 				+ " \"say\": [\"That's a {memoryWho}.\"]}"));

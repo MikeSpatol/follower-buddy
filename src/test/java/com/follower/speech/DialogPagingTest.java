@@ -21,11 +21,13 @@ public class DialogPagingTest
 		return FollowerDialog.wrap(text, s -> SIX.applyAsInt(s) * 6, 60);
 	}
 
+	// public:cut posing
 	private static String[] pages(String text)
 	{
 		return FollowerDialog.pages(text, s -> SIX.applyAsInt(s) * 6, 60);
 	}
 
+	// public:end posing
 	@Test
 	public void textWithNoBreakWrapsAsItAlwaysDid()
 	{
@@ -53,6 +55,7 @@ public class DialogPagingTest
 		assertArrayEquals(new String[]{"Hello.", "", "Bye."}, wrap("Hello.\n\nBye."));
 		assertArrayEquals(new String[]{"one two", "three", "four"}, wrap("one two three\nfour"));
 	}
+	// public:cut posing
 
 	@Test
 	public void aLongLineGoesOntoPagesOfFourLines()
@@ -90,4 +93,5 @@ public class DialogPagingTest
 	{
 		assertEquals(4, FollowerDialog.LINES_PER_PAGE);
 	}
+	// public:end posing
 }

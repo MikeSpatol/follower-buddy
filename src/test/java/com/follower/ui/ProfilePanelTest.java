@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class ProfilePanelTest
 {
+	// public:cut outfit-profiles
 	private static final List<String> NAMES =
 		Arrays.asList("Default follower", "Melee", "Ranged", "Magic", "Fishing");
 
@@ -48,12 +49,14 @@ public class ProfilePanelTest
 			panel.newProfile("Fishing");
 			assertEquals("Yes replaces it", Arrays.asList("Mining", "Fishing"), saved);
 
+			// public:cut thrall-outfits
 			// A thrall look is not offered for replacing; the plugin refuses it.
 			asked.clear();
 			panel.newProfile("Melee");
 			assertTrue("not asked about", asked.isEmpty());
 			assertEquals("Melee", saved.get(saved.size() - 1));
 
+			// public:end thrall-outfits
 			saved.clear();
 			panel.newProfile("   ");
 			panel.newProfile(null);
@@ -61,6 +64,7 @@ public class ProfilePanelTest
 		});
 	}
 
+	// public:end outfit-profiles
 	@Test
 	public void theDropdownsAndMuteAreChangedOnlyOnTheEventThread() throws Exception
 	{
@@ -101,13 +105,15 @@ public class ProfilePanelTest
 		});
 
 		// As a profile switch does: from a thread that is not Swing's.
-		panel.setProfileNames(Arrays.asList("Default follower", "Melee", "Woodcutting"), "Woodcutting");
+		panel.setProfileNames(Arrays.asList("Default follower", "Melee", "Woodcutting"), "Woodcutting"); // public:cut outfit-profiles
 		panel.setMuted(true);
 		SwingUtilities.invokeAndWait(() -> { });
 
 		assertTrue("Swing touched off its thread: " + offThread, offThread.isEmpty());
+		// public:cut outfit-profiles
 		SwingUtilities.invokeAndWait(() -> assertEquals("and still applied", "Woodcutting",
 			profileCombo(panel).getSelectedItem()));
+		// public:end outfit-profiles
 	}
 
 	private static void note(List<String> offThread, String what)
@@ -128,7 +134,9 @@ public class ProfilePanelTest
 		{
 			made[0] = new FollowerPanel(null, new ModelRepository(new Gson()),
 				(a, b) -> { }, k -> { }, () -> { }, () -> { }, g -> { }, (k, d) -> { }, (c, p) -> { },
-				"outfit")
+				"outfit") // public:cut outfit-profiles
+				// public:else "outfit");
+			// public:cut outfit-profiles
 			{
 				@Override
 				boolean confirmReplace(String name)
@@ -138,12 +146,14 @@ public class ProfilePanelTest
 				}
 			};
 			made[0].setOnProfileSave(saved::add);
-			made[0].setProfileProtected(n -> Arrays.asList("Default follower", "Melee", "Ranged", "Magic").contains(n));
+			made[0].setProfileProtected(n -> Arrays.asList("Default follower", "Melee", "Ranged", "Magic").contains(n)); // public:cut thrall-outfits
+			// public:end outfit-profiles
 		});
-		made[0].setProfileNames(NAMES, "Fishing");
+		made[0].setProfileNames(NAMES, "Fishing"); // public:cut outfit-profiles
 		SwingUtilities.invokeAndWait(() -> { });
 		return made[0];
 	}
+	// public:cut outfit-profiles
 
 	private static JComboBox<?> profileCombo(FollowerPanel panel)
 	{
@@ -158,6 +168,7 @@ public class ProfilePanelTest
 			throw new IllegalStateException(e);
 		}
 	}
+	// public:end outfit-profiles
 
 	private static List<java.awt.Component> all(java.awt.Container root)
 	{

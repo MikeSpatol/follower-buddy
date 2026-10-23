@@ -294,7 +294,7 @@ public class StanceLibrary
 			{
 				int added = read(new java.io.BufferedReader(
 					new java.io.InputStreamReader(in, StandardCharsets.UTF_8)), bundled);
-				log.info("Loaded {} bundled weapon stances", added);
+				log.info("Loaded {} bundled weapon stances", added); // public:cut logs
 			}
 		}
 		catch (IOException | RuntimeException e)
@@ -310,7 +310,8 @@ public class StanceLibrary
 		try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8))
 		{
 			// Local observations win: this client saw them first-hand.
-			log.info("Loaded {} learned weapon stances", read(reader, learned));
+			log.info("Loaded {} learned weapon stances", read(reader, learned)); // public:cut logs
+			// public:else read(reader, learned);
 		}
 		catch (IOException | RuntimeException e)
 		{
@@ -346,7 +347,7 @@ public class StanceLibrary
 		{
 			backUp();
 			dirty = true;
-			log.info("Trimmed {} learned stance(s) the shipped library already holds", copies);
+			log.info("Trimmed {} learned stance(s) the shipped library already holds", copies); // public:cut logs
 		}
 	}
 
@@ -442,6 +443,7 @@ public class StanceLibrary
 		return added;
 	}
 
+	// public:cut legacy
 	/**
 	 * Forgets every learned attack, keeping how each weapon is CARRIED.
 	 *
@@ -470,10 +472,11 @@ public class StanceLibrary
 		if (cleared > 0)
 		{
 			dirty = true;
-			log.info("Cleared {} learned attack animation(s) for relearning", cleared);
+			log.info("Cleared {} learned attack animation(s) for relearning", cleared); // public:cut logs
 		}
 	}
 
+	// public:end legacy
 	public void save()
 	{
 		if (!dirty || file == null)
@@ -565,7 +568,7 @@ public class StanceLibrary
 		if (forgotten > 0)
 		{
 			dirty = true;
-			log.info("Forgot {} learned stance(s) taken from a player on an obstacle or mid-swap", forgotten);
+			log.info("Forgot {} learned stance(s) taken from a player on an obstacle or mid-swap", forgotten); // public:cut logs
 		}
 	}
 
@@ -595,8 +598,10 @@ public class StanceLibrary
 		for (int pose : new int[]{stance.idle, stance.walk, stance.run})
 		{
 			net.runelite.api.Animation animation = client.loadAnimation(pose);
-			if (animation != null && (animation.getLeftHandItem() == FilmSet.EMPTY
-				|| animation.getRightHandItem() == FilmSet.EMPTY))
+			if (animation != null && (animation.getLeftHandItem() == FilmSet.EMPTY // public:cut posing
+			// public:else if (animation != null && (animation.getLeftHandItem() == -512
+				|| animation.getRightHandItem() == FilmSet.EMPTY)) // public:cut posing
+				// public:else || animation.getRightHandItem() == -512))
 			{
 				return true;
 			}
@@ -654,9 +659,11 @@ public class StanceLibrary
 
 		learned.put(weaponId, observed);
 		dirty = true;
+		// public:cut logs
 		log.debug("Learned stance for weapon {}: idle={} walk={} run={} back={} left={} right={}",
 			weaponId, observed.idle, observed.walk, observed.run,
 			observed.walkBack, observed.walkLeft, observed.walkRight);
+		// public:end logs
 	}
 
 	/**
@@ -722,8 +729,10 @@ public class StanceLibrary
 			{
 				stance.attackByStyle[style] = animationId;
 				dirty = true;
+				// public:cut logs
 				log.debug("Learned attack animation {} for weapon {} in style {}",
 					animationId, weaponId, style);
+				// public:end logs
 			}
 		}
 
@@ -736,7 +745,7 @@ public class StanceLibrary
 		}
 		stance.attack = animationId;
 		dirty = true;
-		log.debug("Learned attack animation {} for weapon {}", animationId, weaponId);
+		log.debug("Learned attack animation {} for weapon {}", animationId, weaponId); // public:cut logs
 	}
 
 	/**
@@ -1099,8 +1108,10 @@ public class StanceLibrary
 			stance.attack = attack;
 		}
 		dirty = true;
+		// public:cut logs
 		log.info("Stance set by hand for weapon {}: idle={} walk={} run={} attack={}",
 			id, idle, walk, run, stance.attack);
+		// public:end logs
 	}
 
 	/** A weapon's own stance, learned poses over shipped, or null when never seen or set. */
@@ -1108,6 +1119,7 @@ public class StanceLibrary
 	{
 		return stanceOf(weaponItemId <= 0 ? UNARMED : weaponItemId);
 	}
+	// public:cut dev
 
 	/** Every weapon's own stance, learned poses over shipped, for auditing what the library actually holds. */
 	public Map<Integer, Stance> all()
@@ -1120,6 +1132,7 @@ public class StanceLibrary
 		return Collections.unmodifiableMap(all);
 	}
 
+	// public:end dev
 	/**
 	 * A learned record's poses when it has them, else the shipped stance. A
 	 * learned record can hold just a swing, seen with a weapon carried exactly

@@ -41,13 +41,16 @@ public final class QuestSim
 	public final List<String> heard = new ArrayList<>();
 	public final List<String> heardIds = new ArrayList<>();
 	public final List<String> lost = new ArrayList<>();
+	// public:cut chronicle
 	/** Pages mentioned, pages whose news lapsed unsaid, and pages whose news no line spoke. */
 	public final List<String> pagesSaid = new ArrayList<>();
 	public final List<String> pagesLost = new ArrayList<>();
 	public final List<String> pagesDropped = new ArrayList<>();
 	/** Rules handed to the plugin's side, for whether the page news spoke. */
 	private final List<String> handed = new ArrayList<>();
+	// public:end chronicle
 
+	// public:cut chronicle
 	/** A page written and waiting for its mention: the event, its name, and when its wait began. */
 	private static final class Page
 	{
@@ -65,6 +68,7 @@ public final class QuestSim
 
 	private final ArrayDeque<Page> pages = new ArrayDeque<>();
 
+	// public:end chronicle
 	// world
 	public boolean npcDialog;
 	/** Who is talking in the box, as the plugin reads it off CHAT_LEFT's name; null for nobody named. */
@@ -129,7 +133,7 @@ public final class QuestSim
 
 	private void pluginSpeak(String text, SpeechRule rule, int anim, Runnable onSaid)
 	{
-		handed.add(id(rule));
+		handed.add(id(rule)); // public:cut chronicle
 		if (text.isEmpty())
 		{
 			speakNow(new U(text, rule, anim, onSaid, ms[0]));
@@ -169,11 +173,13 @@ public final class QuestSim
 			speakingUntil = ms[0] + readingTime(u.text) + 400;
 			heard.add(u.text);
 			heardIds.add(id(u.rule));
+			// public:cut chronicle
 			// FollowerPlugin.speakNow: the scroll's line, naming its quest, is that quest's page news.
 			if ("quest-complete".equals(id(u.rule)) || "quest-complete-parked".equals(id(u.rule)))
 			{
 				pages.removeIf(page -> "quest".equals(page.event.getName()) && u.text.contains(page.name));
 			}
+			// public:end chronicle
 			note("SAYS [" + id(u.rule) + "] \"" + u.text + "\"" + (u.anim > 0 ? " anim=" + u.anim : "")
 				+ (u.rule != null && u.rule.mood != null ? " mood=" + u.rule.mood : "")
 				+ (u.rule != null && u.rule.remember != null ? " remembers='" + u.rule.remember.as + "'" : ""));
@@ -310,7 +316,7 @@ public final class QuestSim
 			h.engine.getContext().noteSpeaker(speaker);
 		}
 		h.gameTick();
-		pageNews();
+		pageNews(); // public:cut chronicle
 		int now = regionOf(h.engine.getContext().getRegionId());
 		if (now != region)
 		{
@@ -465,11 +471,13 @@ public final class QuestSim
 		note("   quest scroll: " + name);
 		seenFinished.put(q.name(), java.time.LocalDate.now().toEpochDay());
 		h.engine.setQuestWitness(seenFinished::get);
+		// public:cut chronicle
 		pageWritten("quest", name);
 		for (String page : morePages)
 		{
 			pageWritten("quest", page);
 		}
+		// public:end chronicle
 		h.engine.getContext().tally("quests");
 		h.dispatch(TriggerEvent.questComplete(name));
 	}
@@ -485,9 +493,10 @@ public final class QuestSim
 		note("   finished, no scroll: " + name);
 		seenFinished.put(q.name(), java.time.LocalDate.now().toEpochDay());
 		h.engine.setQuestWitness(seenFinished::get);
-		pageWritten("quest", name);
+		pageWritten("quest", name); // public:cut chronicle
 	}
 
+	// public:cut chronicle
 	/** A chronicle page written now; its news waits for the floor. */
 	public void pageWritten(String kind, String name)
 	{
@@ -532,6 +541,7 @@ public final class QuestSim
 		}
 	}
 
+	// public:end chronicle
 	/** MINUTES_TAKEN, as the plugin raises it when a conversation the follower minuted closes. */
 	public void minutes()
 	{
@@ -554,7 +564,7 @@ public final class QuestSim
 	{
 		note("HEARD, in order: " + heardIds);
 		note("LOST: " + lost);
-		note("PAGES said: " + pagesSaid + "  lapsed: " + pagesLost + "  dropped: " + pagesDropped);
+		note("PAGES said: " + pagesSaid + "  lapsed: " + pagesLost + "  dropped: " + pagesDropped); // public:cut chronicle
 	}
 
 	/** The scroll's line as heard, or empty: when it names the quest, the quest's page news goes. */

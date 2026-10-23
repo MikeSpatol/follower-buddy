@@ -104,7 +104,7 @@ public class SwallowedLineTest
 		// already handed over.
 		Harness h = new Harness(folder.newFolder().toPath(), LATCHES);
 		h.gameTicks(1);
-		h.engine.getContext().setWish("soft clay", 5);
+		h.engine.getContext().setWish("soft clay", 5); // public:cut souvenirs-wishes
 
 		h.engine.setSink((text, output, rule, animationId, onSaid) -> { });
 		for (String id : LATCHING)
@@ -114,11 +114,13 @@ public class SwallowedLineTest
 
 		assertFalse("a first nobody heard is not spent",
 			h.engine.getContext().hasSaidOnce("first"));
-		assertFalse("nor is a rock picked up", h.engine.getContext().isCarrying());
+		assertFalse("nor is a rock picked up", h.engine.getContext().isCarrying()); // public:cut souvenirs-wishes
+		// public:cut side-games
 		assertFalse("nor a bet placed", h.engine.getContext().isBetting());
 		assertFalse("nor a dare set", h.engine.getContext().isChallenging());
 		assertFalse("nor advice given", h.engine.getContext().isAdvising());
-		assertFalse("but the gift is spent: the wish is closed", h.engine.getContext().isWishing());
+		// public:end side-games
+		assertFalse("but the gift is spent: the wish is closed", h.engine.getContext().isWishing()); // public:cut souvenirs-wishes
 		assertTrue("and the favour owed", h.engine.getContext().isGrateful());
 
 		// Still owed, so the next time it rises it is said, and spent then.
@@ -133,7 +135,7 @@ public class SwallowedLineTest
 	{
 		Harness h = new Harness(folder.newFolder().toPath(), LATCHES);
 		h.gameTicks(1);
-		h.engine.getContext().setWish("soft clay", 5);
+		h.engine.getContext().setWish("soft clay", 5); // public:cut souvenirs-wishes
 
 		List<Runnable> held = new ArrayList<>();
 		h.engine.setSink((text, output, rule, animationId, onSaid) -> held.add(onSaid));
@@ -143,18 +145,20 @@ public class SwallowedLineTest
 		}
 		assertFalse("waiting its turn is not yet said",
 			h.engine.getContext().hasSaidOnce("first"));
-		assertFalse(h.engine.getContext().isCarrying());
-		assertFalse(h.engine.getContext().isBetting());
-		assertFalse("the gift alone is spent at the win", h.engine.getContext().isWishing());
+		assertFalse(h.engine.getContext().isCarrying()); // public:cut souvenirs-wishes
+		assertFalse(h.engine.getContext().isBetting()); // public:cut side-games
+		assertFalse("the gift alone is spent at the win", h.engine.getContext().isWishing()); // public:cut souvenirs-wishes
 
 		held.forEach(Runnable::run);
 		assertTrue("the moment it lands, the first is spent",
 			h.engine.getContext().hasSaidOnce("first"));
-		assertEquals("the rock is carried", "a flat rock", h.engine.getContext().getSouvenir());
+		assertEquals("the rock is carried", "a flat rock", h.engine.getContext().getSouvenir()); // public:cut souvenirs-wishes
+		// public:cut side-games
 		assertTrue("the bet is on", h.engine.getContext().isBetting());
 		assertTrue("the dare is set", h.engine.getContext().isChallenging());
 		assertTrue("the advice is given", h.engine.getContext().isAdvising());
-		assertFalse("and the wish is granted", h.engine.getContext().isWishing());
+		// public:end side-games
+		assertFalse("and the wish is granted", h.engine.getContext().isWishing()); // public:cut souvenirs-wishes
 		assertTrue(h.engine.getContext().isGrateful());
 	}
 
@@ -175,8 +179,10 @@ public class SwallowedLineTest
 		h.engine.force("asker");
 		h.engine.force("wanter");
 
+		// public:cut souvenirs-wishes
 		assertFalse("a wish nobody heard must not open",
 			h.engine.getContext().isWishing());
+		// public:end souvenirs-wishes
 		assertEquals("nor a question", "", h.engine.getContext().getAskedTree());
 		assertFalse("nor a want", h.engine.getContext().isWanting());
 	}
@@ -217,15 +223,19 @@ public class SwallowedLineTest
 		h.engine.force("asker");
 		h.engine.force("wanter");
 
+		// public:cut souvenirs-wishes
 		assertFalse("waiting its turn behind the overhead box is not yet said",
 			h.engine.getContext().isWishing());
+		// public:end souvenirs-wishes
 		assertEquals("", h.engine.getContext().getAskedTree());
 		assertFalse(h.engine.getContext().isWanting());
 
 		held.forEach(Runnable::run);
+		// public:cut souvenirs-wishes
 		assertTrue("the moment it lands, the wish is open",
 			h.engine.getContext().isWishing());
 		assertEquals("soft clay", h.engine.getContext().getWishLabel());
+		// public:end souvenirs-wishes
 		assertEquals("and the question", "want-outing",
 			h.engine.getContext().getAskedTree());
 		assertTrue("and the want", h.engine.getContext().isWanting());
@@ -262,9 +272,11 @@ public class SwallowedLineTest
 			java.util.Arrays.asList("adviser", "keeper"), handedOver);
 
 		held.forEach(Runnable::run);
+		// public:cut side-games
 		assertTrue("landed, the advice answers the guard itself",
 			h.engine.getContext().isAdvising());
-		assertEquals("a flat rock", h.engine.getContext().getSouvenir());
+		// public:end side-games
+		assertEquals("a flat rock", h.engine.getContext().getSouvenir()); // public:cut souvenirs-wishes
 
 		// And a landed line is waited on no longer: the rock can be talked about.
 		h.gameTicks(1);
@@ -296,8 +308,10 @@ public class SwallowedLineTest
 		h.gameTicks(1);
 		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.EXAMINED));
 		assertTrue("past landing, the dare is free to open", handedOver.contains("darer"));
+		// public:cut side-games
 		assertFalse("and the advice nobody heard is not outstanding",
 			h.engine.getContext().isAdvising());
+		// public:end side-games
 	}
 
 	@Test

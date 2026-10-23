@@ -13,7 +13,7 @@ import org.junit.rules.TemporaryFolder;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertNull; // public:cut legacy
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -425,6 +425,7 @@ public class StanceInheritanceTest
 		assertTrue("the bundled library should hold hundreds of weapons",
 			shipped.size() > 100);
 	}
+	// public:cut legacy
 
 	@Test
 	public void clearingLearnedAttacksKeepsHowEachWeaponIsCarried()
@@ -449,4 +450,5 @@ public class StanceInheritanceTest
 		assertEquals("the weapon forgot how it is held, not just how it swings",
 			SCIMITAR[0], library.forWeapon(BASE + 40).idle);
 	}
+	// public:end legacy
 }

@@ -164,8 +164,10 @@ public class DialogLoader
 					java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 				Files.write(file, (pretty.toJson(ours) + "\n")
 					.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+				// public:cut logs
 				log.info("Merged {} new tree(s) and {} changed tree(s) into {}",
 					added, updated, file);
+				// public:end logs
 			}
 
 			// Last, and whether or not anything moved, so a merge that only
@@ -381,21 +383,13 @@ public class DialogLoader
 		}
 	}
 
-	private static String treeIdOf(com.google.gson.JsonElement element)
-	{
-		if (!element.isJsonObject())
-		{
-			return null;
-		}
-		com.google.gson.JsonElement id = element.getAsJsonObject().get("id");
-		return id != null && id.isJsonPrimitive() ? id.getAsString() : null;
-	}
-
+	// public:cut dialogs-editor
 	public Path getFile()
 	{
 		return file;
 	}
 
+	// public:end dialogs-editor
 	public DialogTree get(String id)
 	{
 		return id == null ? null : trees.get(id);
@@ -495,7 +489,7 @@ public class DialogLoader
 				+ (problems.isEmpty() ? "" : ", " + problems.size() + " warning(s)");
 			// At INFO like the rule loader: when a conversation does not open,
 			// the first thing worth knowing is whether it loaded at all.
-			log.info("Loaded dialogs: {}", status);
+			log.info("Loaded dialogs: {}", status); // public:cut logs
 		}
 		catch (IOException e)
 		{
@@ -524,7 +518,7 @@ public class DialogLoader
 			}
 			Files.createDirectories(file.getParent());
 			Files.copy(in, file);
-			log.debug("Wrote default dialogs to {}", file);
+			log.debug("Wrote default dialogs to {}", file); // public:cut logs
 		}
 		catch (IOException e)
 		{
@@ -545,20 +539,6 @@ public class DialogLoader
 			// Only costs the first update a merge against 1.4.0's trees.
 			log.warn("Could not record the starter dialogs in {}", baseFile, e);
 		}
-	}
-
-	public void restoreDefaults()
-	{
-		try
-		{
-			Files.deleteIfExists(file);
-		}
-		catch (IOException e)
-		{
-			log.warn("Could not remove {}", file, e);
-		}
-		writeDefaults();
-		reload();
 	}
 
 	private static final class DialogFile

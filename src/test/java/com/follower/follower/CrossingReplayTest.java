@@ -1,3 +1,4 @@
+// public:file agility,agility-all
 package com.follower.follower;
 
 import com.follower.appearance.ModelRepository;
@@ -91,7 +92,7 @@ public class CrossingReplayTest
 		stances.load(folder.newFolder().toPath());
 		follower = new FollowerEntity(game.client, stances);
 		follower.setOnSnapped(() -> snaps++);
-		follower.setAgilityTrace(trace::add);
+		follower.setAgilityTrace(trace::add); // public:cut dev
 		follower.setOnCrossed(done::add);
 		set("object", new RuneLiteObject(game.client));
 		set("animatable", true);
@@ -393,7 +394,6 @@ public class CrossingReplayTest
 							net.runelite.api.Model.class.getClassLoader(), new Class<?>[]{net.runelite.api.Model.class},
 							(proxy, method, args) -> method.getReturnType() == boolean.class ? false
 								: method.getReturnType() == int.class ? 0 : null),
-						com.follower.appearance.ComposedAppearance.Source.DUMP,
 						new com.follower.appearance.Outfit()));
 					assertTrue("the climb keeps playing on the new model, no stand put up for a frame",
 						((RuneLiteObject) get("object")).getAnimationController() == clip);
@@ -703,6 +703,7 @@ public class CrossingReplayTest
 		assertFalse("nor is anything taken while it is gone", follower.isDoingAgility());
 	}
 
+	// public:cut chronicle
 	@Test
 	public void hiddenItWaitsAndCarriesOnAfter() throws ReflectiveOperationException
 	{
@@ -718,6 +719,7 @@ public class CrossingReplayTest
 		assertEquals(List.of(log), done);
 	}
 
+	// public:end chronicle
 	// ---------------------------------------------------------------- helpers
 
 	/** A recording made frame by frame, twenty milliseconds apart, from a starting tile. */
@@ -810,7 +812,7 @@ public class CrossingReplayTest
 			x = tileX * 128L + 64;
 			y = tileY * 128L + 64;
 			this.plane = plane;
-			watch.setTrace(trace::add);
+			watch.setTrace(trace::add); // public:cut dev
 			follower.setAgilityClock(() -> clock);
 			frame();
 		}

@@ -1,3 +1,4 @@
+// public:file chronicle
 package com.follower.speech;
 
 import com.follower.chronicle.ChronicleEntry;

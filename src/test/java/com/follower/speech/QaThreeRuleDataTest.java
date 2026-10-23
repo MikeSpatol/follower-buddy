@@ -75,6 +75,7 @@ public class QaThreeRuleDataTest
 	 * HUMAN_SPELLCAST_ARCEUUS_TELEPORT 6575, POH_SMASH_MAGIC_TABLET 4069,
 	 * POH_ABSORB_TABLET_TELEPORT 4071 - the casts mirror-teleport knows.
 	 */
+	// public:cut side-games
 	@Test
 	public void aTabletOrALunarTeleportHeedsGetOut() throws IOException
 	{
@@ -91,6 +92,7 @@ public class QaThreeRuleDataTest
 			assertEquals("cast " + cast + " heeds it", 1, h.engine.getContext().getTally("advice:taken"));
 		}
 	}
+	// public:end side-games
 
 	/**
 	 * Quests QA, 16 Oct: Prince Itzla's line rose inside the delegation's
@@ -159,6 +161,7 @@ public class QaThreeRuleDataTest
 	 * passed, came 8-19 s after the picking up in 5 of 12 days. It waits ten
 	 * minutes of carrying.
 	 */
+	// public:cut souvenirs-wishes
 	@Test
 	public void aSouvenirIsMentionedOnlyOnceItHasBeenCarriedAWhile() throws IOException
 	{
@@ -190,4 +193,5 @@ public class QaThreeRuleDataTest
 		}
 		assertTrue("the shipped mention waits ten minutes", waits);
 	}
+	// public:end souvenirs-wishes
 }

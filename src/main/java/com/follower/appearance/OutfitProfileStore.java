@@ -1,3 +1,4 @@
+// public:file outfit-profiles
 package com.follower.appearance;
 
 import com.google.gson.Gson;
@@ -115,7 +116,8 @@ public class OutfitProfileStore
 		// one is restored on load. Same-name edits are kept; only absence heals.
 		for (Map.Entry<String, String> entry : DEFAULTS.entrySet())
 		{
-			if (!profiles.containsKey(entry.getKey()))
+			if (!profiles.containsKey(entry.getKey())) // public:cut thrall-outfits
+			// public:else if (first && !profiles.containsKey(entry.getKey()))
 			{
 				profiles.put(entry.getKey(), entry.getValue());
 				changed = true;
@@ -125,7 +127,7 @@ public class OutfitProfileStore
 		{
 			save();
 		}
-		log.info("Loaded {} outfit profiles{}", profiles.size(), fromShared ? " (from the shared list)" : "");
+		log.info("Loaded {} outfit profiles{}", profiles.size(), fromShared ? " (from the shared list)" : ""); // public:cut logs
 	}
 
 	/** The list every profile shared before this version, or null. */
@@ -165,6 +167,7 @@ public class OutfitProfileStore
 		return new ArrayList<>(profiles.keySet());
 	}
 
+	// public:cut thrall-outfits
 	/**
 	 * Whether this profile is one of the seeded combat-style looks. Those
 	 * double as the thrall-mode outfits, which are configured BY NAME, so
@@ -175,6 +178,7 @@ public class OutfitProfileStore
 		return name != null && DEFAULTS.containsKey(name.trim());
 	}
 
+	// public:end thrall-outfits
 	/**
 	 * The first profile the user made themselves, or {@link #DEFAULT_PROFILE}
 	 * when they have not made any - what a fresh session should be wearing.

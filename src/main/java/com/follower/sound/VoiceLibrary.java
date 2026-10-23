@@ -1,3 +1,4 @@
+// public:file sharevoice
 package com.follower.sound;
 
 import com.google.gson.Gson;
@@ -8,13 +9,17 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+// public:cut messages-window
 import java.util.ArrayList;
 import java.util.Collections;
+// public:end messages-window
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.HashSet; // public:cut messages-window
 import java.util.LinkedHashMap;
+// public:cut messages-window
 import java.util.List;
 import java.util.Locale;
+// public:end messages-window
 import java.util.Map;
 import java.util.Set;
 import javax.inject.Inject;
@@ -56,10 +61,12 @@ public class VoiceLibrary
 	/** Where the player's own recordings live, beside the rules that use them. */
 	public static final String SOUND_DIR = "sounds";
 
+	// public:cut messages-window
 	/** What Java can open without a decoder on the classpath. */
 	private static final Set<String> PLAYABLE =
 		new HashSet<>(java.util.Arrays.asList(".wav", ".aif", ".aiff", ".au"));
 
+	// public:end messages-window
 	private final Gson gson;
 	private final AudioPlayer audio;
 
@@ -98,7 +105,7 @@ public class VoiceLibrary
 		{
 			log.warn("Could not create the sounds folder at {}", sounds, e);
 		}
-		log.debug("Voice library: {} line(s) with a sound", attached.size());
+		log.debug("Voice library: {} line(s) with a sound", attached.size()); // public:cut logs
 	}
 
 	private Map<String, String> read()
@@ -142,6 +149,7 @@ public class VoiceLibrary
 		}
 	}
 
+	// public:cut messages-window
 	/** The sound files the player has put in the folder, for the picker. */
 	public List<String> availableFiles()
 	{
@@ -178,6 +186,7 @@ public class VoiceLibrary
 		return false;
 	}
 
+	// public:end messages-window
 	public Path getSoundsFolder()
 	{
 		return sounds;
@@ -228,6 +237,7 @@ public class VoiceLibrary
 		sound(attachmentFor(line), volume);
 	}
 
+	// public:cut messages-window
 	/** Plays a file directly, for the preview button in the editor. */
 	public void preview(String fileName, int volume)
 	{
@@ -236,6 +246,7 @@ public class VoiceLibrary
 		sound(fileName, Math.max(1, volume));
 	}
 
+	// public:end messages-window
 	private void sound(String fileName, int volume)
 	{
 		if (fileName == null || fileName.isEmpty()

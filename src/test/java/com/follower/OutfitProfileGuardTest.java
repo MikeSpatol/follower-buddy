@@ -1,3 +1,4 @@
+// public:file outfit-profiles
 package com.follower;
 
 import com.follower.appearance.OutfitProfileStore;
@@ -27,6 +28,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class OutfitProfileGuardTest
 {
+	// public:cut thrall-outfits
 	@Test
 	public void aThrallLookIsNotWrittenOverByNewProfile() throws Exception
 	{
@@ -69,6 +71,7 @@ public class OutfitProfileGuardTest
 		assertTrue(said.toString(), said.get(0).contains("'Melee'") && !said.get(0).contains("created"));
 	}
 
+	// public:end thrall-outfits
 	@Test
 	public void twoThreadsSavingAtOnceLoseNoProfile() throws Exception
 	{

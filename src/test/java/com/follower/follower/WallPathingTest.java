@@ -495,15 +495,18 @@ public class WallPathingTest
 				}
 			}
 		}
+		// public:cut skilling
 		for (WorldPoint booth : BOOTHS)
 		{
 			assertFalse("a seat chosen by the steps it takes", follower.arrivesAt(booth));
 		}
+		// public:end skilling
 
 		assertFalse("facing the booth, in front of them is no place to stand",
 			follower.moveToFront(game.turned(1024).player));
 	}
 
+	// public:cut company-extras,will
 	/**
 	 * A Send at the booth is the player's own choice, and their rule is the
 	 * same: they mean over there, not into that, so it lands beside the
@@ -550,6 +553,8 @@ public class WallPathingTest
 			follower.furnished(follower.getStayTile()));
 	}
 
+	// public:end company-extras,will
+	// public:cut errands
 	/**
 	 * The bank errand walks to the booth itself, and closest approach stops
 	 * it in front. A booth the map calls open is walked into instead, which
@@ -607,6 +612,7 @@ public class WallPathingTest
 		assertEquals(fire, follower.getStayTile());
 	}
 
+	// public:end errands
 	/**
 	 * Where the player stops, the follow tile is where the follower comes to
 	 * rest. It is the tile they last stepped from, which may be the booth,

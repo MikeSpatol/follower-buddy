@@ -1,5 +1,6 @@
 package com.follower.ui;
 
+// public:cut messages-window
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -10,16 +11,18 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+// public:cut messages-readonly
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.FileSystemException;
+// public:end messages-readonly
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardCopyOption; // public:cut messages-readonly
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashSet; // public:cut messages-readonly
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
+import java.util.Set; // public:cut messages-readonly
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -27,7 +30,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
+import javax.swing.JOptionPane; // public:cut messages-readonly
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -57,8 +60,11 @@ import net.runelite.client.ui.FontManager;
  * are sentences, and editing sentences in a 225px column is misery.
  */
 @Slf4j
-public class PhrasesDialog extends JDialog
+// public:end messages-window
+public class PhrasesDialog extends JDialog // public:cut messages-window
+// public:else public class PhrasesDialog
 {
+	// public:cut messages-window
 	/**
 	 * One entry of the category dropdown: a set of rule groups shown under one
 	 * user-facing name. Usually one group, but related groups can be shown
@@ -71,28 +77,31 @@ public class PhrasesDialog extends JDialog
 		final String name;
 		final List<String> groups;
 		final String hint;
-		final boolean structural;
+		final boolean structural; // public:cut messages-readonly
 
 		/**
 		 * @param groups one or more rule groups, comma separated; the first
 		 * receives any rules added from this window
 		 */
-		public Category(String name, String groups, String hint, boolean structural)
+		public Category(String name, String groups, String hint, boolean structural) // public:cut messages-readonly
+		// public:else public Category(String name, String groups, String hint)
 		{
 			this.name = name;
 			this.groups = java.util.Arrays.asList(groups.split("\\s*,\\s*"));
 			this.hint = hint;
-			this.structural = structural;
+			this.structural = structural; // public:cut messages-readonly
 		}
 	}
 
 	private final Gson gson;
 	private final Path file;
-	private final List<Category> categories;
 
+	// public:cut messages-readonly
 	/** Where "Use my current location" gets its region id; may be null. */
 	private final java.util.function.IntSupplier currentRegion;
+	// public:end messages-readonly
 
+	// public:cut sharevoice
 	/** The export-or-import choice, shared with the side panel; may be null. */
 	private Runnable onShare;
 
@@ -101,12 +110,14 @@ public class PhrasesDialog extends JDialog
 		this.onShare = onShare;
 	}
 
+	// public:cut messages-readonly
 	/** Whether the window holds edits the file does not; the panel's Share checks it. */
 	public boolean isDirty()
 	{
 		return dirty;
 	}
 
+	// public:end messages-readonly
 	/** Opens the sound picker for a rule's lines; may be null. */
 	private java.util.function.BiConsumer<String, java.util.List<String>> onEditSounds;
 
@@ -116,18 +127,21 @@ public class PhrasesDialog extends JDialog
 		this.onEditSounds = onEditSounds;
 	}
 
+	// public:end sharevoice
 	private Category category;
 
+	// public:cut messages-readonly
 	/** What every category has in common; each category adds one line of its own. */
 	private static final String HOW_TO = "One message per line. Edit, remove or add lines,"
 		+ " untick a rule to silence it, then Save - changes reach the follower within a second.";
 
+	// public:end messages-readonly
 	private final JComboBox<String> categoryPicker = new JComboBox<>();
 	private final JLabel hint = new JLabel();
 
 	/** Hides rows that do not mention the text, within the current category. */
 	private final JTextField find = new JTextField(14);
-	private final JButton addLocation = new JButton("Add location");
+	private final JButton addLocation = new JButton("Add location"); // public:cut messages-readonly
 	private final JPanel list = new WidthTrackingPanel();
 	private JScrollPane scroll;
 	private final JLabel status = new JLabel(" ");
@@ -135,9 +149,12 @@ public class PhrasesDialog extends JDialog
 	private String loadedStatus = " ";
 	private boolean findMatchedNothing;
 	private final List<Row> rows = new ArrayList<>();
+	// public:cut messages-readonly
 	private final List<Row> added = new ArrayList<>();
 	private final Set<String> deleted = new HashSet<>();
+	// public:end messages-readonly
 
+	// public:cut messages-readonly
 	/** True while the category picker is being set programmatically. */
 	private boolean switching;
 
@@ -169,15 +186,20 @@ public class PhrasesDialog extends JDialog
 		}
 	};
 
+	// public:end messages-readonly
+	// public:cut sharevoice
 	/** The sounds button of the row being built, waiting for its say area. */
 	private JButton soundsButton;
 
+	// public:end sharevoice
 	private static final class Row
 	{
 		String id;
+		// public:cut messages-readonly
 		final JTextField name;
 		final JCheckBox enabled;
 		final JTextField regions;
+		// public:end messages-readonly
 		final JTextArea say;
 		JPanel panel;
 
@@ -185,26 +207,31 @@ public class PhrasesDialog extends JDialog
 		String title = "";
 		String note = "";
 
-		Row(String id, JTextField name, JCheckBox enabled, JTextField regions, JTextArea say)
+		Row(String id, JTextField name, JCheckBox enabled, JTextField regions, JTextArea say) // public:cut messages-readonly
+		// public:else Row(String id, JTextArea say)
 		{
 			this.id = id;
+			// public:cut messages-readonly
 			this.name = name;
 			this.enabled = enabled;
 			this.regions = regions;
+			// public:end messages-readonly
 			this.say = say;
 		}
 	}
 
-	public PhrasesDialog(Gson gson, Path file, List<Category> categories,
-		java.util.function.IntSupplier currentRegion)
+	public PhrasesDialog(Gson gson, Path file, List<Category> categories, // public:cut messages-readonly
+	// public:else public PhrasesDialog(Gson gson, Path file, List<Category> categories)
+		java.util.function.IntSupplier currentRegion) // public:cut messages-readonly
 	{
 		super((java.awt.Frame) null, "Follower Buddy - Messages", false);
-		this.gson = gson.newBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+		this.gson = gson.newBuilder().setPrettyPrinting().disableHtmlEscaping().create(); // public:cut messages-readonly
+		// public:else this.gson = gson;
 		this.file = file;
-		this.categories = categories;
-		this.currentRegion = currentRegion;
+		this.currentRegion = currentRegion; // public:cut messages-readonly
 		this.category = categories.get(0);
 
+		// public:cut messages-readonly
 		// Closing is handled below so unsaved edits get a say first.
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 		addWindowListener(new java.awt.event.WindowAdapter()
@@ -218,6 +245,7 @@ public class PhrasesDialog extends JDialog
 				}
 			}
 		});
+		// public:end messages-readonly
 
 		JPanel root = new JPanel(new BorderLayout(0, 6));
 		root.setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -229,10 +257,12 @@ public class PhrasesDialog extends JDialog
 		}
 		categoryPicker.addActionListener(e ->
 		{
-			if (switching || categoryPicker.getSelectedIndex() < 0)
+			if (switching || categoryPicker.getSelectedIndex() < 0) // public:cut messages-readonly
+			// public:else if (categoryPicker.getSelectedIndex() < 0)
 			{
 				return;
 			}
+			// public:cut messages-readonly
 			if (!confirmDirty())
 			{
 				// Cancelled: put the picker back without re-entering this.
@@ -241,6 +271,7 @@ public class PhrasesDialog extends JDialog
 				switching = false;
 				return;
 			}
+			// public:end messages-readonly
 			category = categories.get(categoryPicker.getSelectedIndex());
 			showCategory();
 		});
@@ -299,12 +330,15 @@ public class PhrasesDialog extends JDialog
 
 		JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
 		buttons.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		// public:cut messages-readonly
 		addLocation.setToolTipText("A new place for the follower to comment on");
 		addLocation.addActionListener(e -> addBlankRow());
 		// Only the structural category can add rules; showCategory() keeps the
 		// button's visibility in step with the picked category.
 		addLocation.setVisible(category.structural);
 		buttons.add(addLocation);
+		// public:end messages-readonly
+		// public:cut sharevoice
 		JButton share = new JButton("Share...");
 		share.setToolTipText("Export what you have written, or take on somebody else's");
 		share.addActionListener(e ->
@@ -312,13 +346,16 @@ public class PhrasesDialog extends JDialog
 			// Both halves work on the file rather than on this window, so
 			// half-typed lines have to be settled before either runs. An
 			// import re-opens this window on the grown file.
-			if (confirmDirty() && onShare != null)
+			if (confirmDirty() && onShare != null) // public:cut messages-readonly
+			// public:else if (onShare != null)
 			{
 				onShare.run();
 			}
 		});
 		buttons.add(share);
+		// public:end sharevoice
 
+		// public:cut messages-readonly
 		JButton reload = new JButton("Reload");
 		reload.setToolTipText("Discard unsaved edits and reload from disk");
 		reload.addActionListener(e -> refresh());
@@ -326,6 +363,7 @@ public class PhrasesDialog extends JDialog
 		JButton save = new JButton("Save");
 		save.addActionListener(e -> save());
 		buttons.add(save);
+		// public:end messages-readonly
 		bottom.add(buttons, BorderLayout.EAST);
 
 		root.add(bottom, BorderLayout.SOUTH);
@@ -345,14 +383,17 @@ public class PhrasesDialog extends JDialog
 	 */
 	public void open()
 	{
+		// public:cut messages-readonly
 		if (!dirty)
 		{
+		// public:end messages-readonly
 			refresh();
-		}
+		} // public:cut messages-readonly
 		setVisible(true);
 		toFront();
 	}
 
+	// public:cut messages-readonly
 	/**
 	 * Gives unsaved edits a say before they would be lost.
 	 *
@@ -380,6 +421,7 @@ public class PhrasesDialog extends JDialog
 		}
 		return false;
 	}
+	// public:end messages-readonly
 
 	/**
 	 * The file as last read, by open(), Reload or a save, or null when it
@@ -406,8 +448,10 @@ public class PhrasesDialog extends JDialog
 	private void showCategory()
 	{
 		rows.clear();
+		// public:cut messages-readonly
 		added.clear();
 		deleted.clear();
+		// public:end messages-readonly
 		list.removeAll();
 
 		if (loaded == null)
@@ -432,14 +476,14 @@ public class PhrasesDialog extends JDialog
 		}
 
 		hint.setText("<html><body style='width:440px'>" + HOW_TO + "<br>" + category.hint + "</body></html>");
-		addLocation.setVisible(category.structural);
+		addLocation.setVisible(category.structural); // public:cut messages-readonly
 		loadedStatus = count + " rules loaded";
 		findMatchedNothing = false;
 		setStatus(loadedStatus, false);
 		applyFind();
 		list.revalidate();
 		list.repaint();
-		dirty = false;
+		dirty = false; // public:cut messages-readonly
 		// Every say area moves its caret as its text goes in, and each queues
 		// a scroll to bring that caret into view, so the last of them decided
 		// where the list opened. QA, 15 Oct: Messages opened near the bottom.
@@ -524,9 +568,11 @@ public class PhrasesDialog extends JDialog
 		JCheckBox enabled = new JCheckBox("On");
 		enabled.setSelected(!rule.has("enabled") || rule.get("enabled").getAsBoolean());
 		enabled.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		enabled.setToolTipText("Untick to silence just this rule");
-		enabled.addItemListener(e -> dirty = true);
+		enabled.setToolTipText("Untick to silence just this rule"); // public:cut messages-readonly
+		enabled.addItemListener(e -> dirty = true); // public:cut messages-readonly
+		// public:else enabled.setEnabled(false);
 		controls.add(enabled);
+		// public:cut sharevoice
 		if (onEditSounds != null)
 		{
 			JButton sounds = new JButton("Sounds");
@@ -535,6 +581,8 @@ public class PhrasesDialog extends JDialog
 			// Wired below, once the say area it reads from exists.
 			soundsButton = sounds;
 		}
+		// public:end sharevoice
+		// public:cut messages-readonly
 		if (category.structural)
 		{
 			JButton delete = new JButton("Delete");
@@ -551,6 +599,7 @@ public class PhrasesDialog extends JDialog
 			});
 			controls.add(delete);
 		}
+		// public:end messages-readonly
 		header.add(controls, BorderLayout.EAST);
 		row.add(header);
 
@@ -565,6 +614,7 @@ public class PhrasesDialog extends JDialog
 			row.add(items);
 		}
 
+		// public:cut messages-readonly
 		JTextField regionsField = null;
 		if (category.structural)
 		{
@@ -590,6 +640,7 @@ public class PhrasesDialog extends JDialog
 				row.add(special);
 			}
 		}
+		// public:end messages-readonly
 
 		StringBuilder text = new StringBuilder();
 		JsonArray say = rule.has("say") ? rule.getAsJsonArray("say") : new JsonArray();
@@ -602,9 +653,11 @@ public class PhrasesDialog extends JDialog
 			text.append(line.getAsString());
 		}
 		JTextArea area = sayArea(text.toString(), Math.max(2, say.size()));
-		area.getDocument().addDocumentListener(dirtyMarker);
+		area.getDocument().addDocumentListener(dirtyMarker); // public:cut messages-readonly
+		// public:else area.setEditable(false);
 		row.add(area);
 
+		// public:cut sharevoice
 		if (soundsButton != null)
 		{
 			// Reads the box rather than the file: a line can be given a voice
@@ -616,7 +669,9 @@ public class PhrasesDialog extends JDialog
 				java.util.Arrays.asList(area.getText().split("\\r?\\n"))));
 		}
 
-		Row r = new Row(id, null, enabled, regionsField, area);
+		// public:end sharevoice
+		Row r = new Row(id, null, enabled, regionsField, area); // public:cut messages-readonly
+		// public:else Row r = new Row(id, area);
 		r.panel = row;
 		r.title = ruleTitle;
 		// Find looks through what is shown, not the hidden note.
@@ -625,6 +680,7 @@ public class PhrasesDialog extends JDialog
 		return row;
 	}
 
+	// public:cut messages-readonly
 	private void addBlankRow()
 	{
 		JPanel row = rowShell();
@@ -921,6 +977,7 @@ public class PhrasesDialog extends JDialog
 		return rule;
 	}
 
+	// public:end messages-readonly
 	// ------------------------------------------------------------------ helpers
 
 	/**
@@ -1016,6 +1073,7 @@ public class PhrasesDialog extends JDialog
 		return area;
 	}
 
+	// public:cut messages-readonly
 	private static JsonArray parseSay(String text)
 	{
 		JsonArray say = new JsonArray();
@@ -1103,6 +1161,7 @@ public class PhrasesDialog extends JDialog
 			&& condition.has("regions") && condition.get("regions").isJsonArray();
 	}
 
+	// public:end messages-readonly
 	private JsonObject readFile() throws IOException
 	{
 		return gson.fromJson(new String(Files.readAllBytes(file), StandardCharsets.UTF_8), JsonObject.class);
@@ -1144,6 +1203,7 @@ public class PhrasesDialog extends JDialog
 		return about == null || about.trim().isEmpty() ? null : about.trim();
 	}
 
+	// public:end messages-window
 	static String prettyName(String id)
 	{
 		if (id == null)
@@ -1178,9 +1238,11 @@ public class PhrasesDialog extends JDialog
 		s = Character.toUpperCase(s.charAt(0)) + s.substring(1);
 		return set ? "Full " + s + " (set)" : s;
 	}
+	// public:cut messages-window
 
 	private static String escapeHtml(String s)
 	{
 		return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
 	}
+	// public:end messages-window
 }

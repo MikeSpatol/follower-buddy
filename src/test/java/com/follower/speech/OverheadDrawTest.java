@@ -123,7 +123,8 @@ public class OverheadDrawTest
 		};
 		FollowerOverlay overlay = new FollowerOverlay(client, below, new FollowerConfig()
 		{
-		}, new GameFontRepository(new Gson()));
+		}, new GameFontRepository(new Gson())); // public:cut devfonts
+		// public:else }, loaded());
 		overlay.show("Hm.", 60_000);
 		BufferedImage canvas = new BufferedImage(800, 600, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D graphics = canvas.createGraphics();
@@ -149,7 +150,15 @@ public class OverheadDrawTest
 		assertTrue("the floors are well apart on screen: " + own + " and " + players, Math.abs(own - players) > 40);
 		assertTrue("drawn on the follower's floor (" + own + "), not the player's (" + players + "): " + lowest,
 			Math.abs(lowest - own) <= 4);
-	}
+	} // public:cut devfonts
+	// public:else }
+	// public:else
+	// public:else private static GameFontRepository loaded()
+	// public:else {
+		// public:else GameFontRepository fonts = new GameFontRepository(new Gson());
+		// public:else fonts.load();
+		// public:else return fonts;
+	// public:else }
 
 	/**
 	 * A client that projects a fixed camera over floors 240 units apart, the

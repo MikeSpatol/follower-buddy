@@ -45,6 +45,7 @@ public class QuestSimTest
 		t.h.engine.reset();
 		assertNotNull(t.h.engine.getContext().questWitnessedOn("RUNE_MYSTERIES"));
 	}
+	// public:cut chronicle
 
 	@Test
 	public void aPageIsCountedSaidOnlyWhenALineSaysIt() throws Exception
@@ -69,4 +70,5 @@ public class QuestSimTest
 			assertTrue(s.transcript(), s.transcript().contains("chronicle page written: " + page));
 		}
 	}
+	// public:end chronicle
 }

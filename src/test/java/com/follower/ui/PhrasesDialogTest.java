@@ -1,3 +1,4 @@
+// public:file messages-window
 package com.follower.ui;
 
 import com.google.gson.Gson;
@@ -39,9 +40,12 @@ public class PhrasesDialogTest
 	public final TemporaryFolder folder = new TemporaryFolder();
 
 	private static final List<PhrasesDialog.Category> CATEGORIES = Arrays.asList(
-		new PhrasesDialog.Category("Items", "gear", "Said when you equip something.", false),
-		new PhrasesDialog.Category("Locations", "area", "Said in places.", true),
-		new PhrasesDialog.Category("Bosses", "boss", "Said about bosses.", false));
+		new PhrasesDialog.Category("Items", "gear", "Said when you equip something.", false), // public:cut messages-readonly
+		// public:else new PhrasesDialog.Category("Items", "gear", "Said when you equip something."),
+		new PhrasesDialog.Category("Locations", "area", "Said in places.", true), // public:cut messages-readonly
+		// public:else new PhrasesDialog.Category("Locations", "area", "Said in places."),
+		new PhrasesDialog.Category("Bosses", "boss", "Said about bosses.", false)); // public:cut messages-readonly
+		// public:else new PhrasesDialog.Category("Bosses", "boss", "Said about bosses."));
 
 	@Test
 	public void aBossIsNamedWithoutTheCategorysPrefix()
@@ -153,10 +157,11 @@ public class PhrasesDialogTest
 		List<PhrasesDialog.Category> all = new java.util.ArrayList<>();
 		for (String g : groups)
 		{
-			all.add(new PhrasesDialog.Category(g, g, "Said.", "area".equals(g)));
+			all.add(new PhrasesDialog.Category(g, g, "Said.", "area".equals(g))); // public:cut messages-readonly
+			// public:else all.add(new PhrasesDialog.Category(g, g, "Said."));
 		}
 		PhrasesDialog dialog = dialog(false, all);
-		dialog.setOnEditSounds((t, l) -> { });
+		dialog.setOnEditSounds((t, l) -> { }); // public:cut sharevoice
 		SwingUtilities.invokeAndWait(dialog::open);
 		JScrollPane scroll = (JScrollPane) field(dialog, "scroll");
 		JComboBox<?> picker = (JComboBox<?>) field(dialog, "categoryPicker");
@@ -210,6 +215,7 @@ public class PhrasesDialogTest
 		SwingUtilities.invokeAndWait(dialog::dispose);
 	}
 
+	// public:cut messages-readonly
 	@Test
 	public void aPlaceLineWithAQuestOrAChanceStillHasItsRegions() throws Exception
 	{
@@ -269,6 +275,7 @@ public class PhrasesDialogTest
 		SwingUtilities.invokeAndWait(dialog::dispose);
 	}
 
+	// public:end messages-readonly
 	private static void collectButtons(java.awt.Container root, List<javax.swing.AbstractButton> out)
 	{
 		for (Component c : root.getComponents())
@@ -323,7 +330,8 @@ public class PhrasesDialogTest
 		PhrasesDialog[] made = new PhrasesDialog[1];
 		SwingUtilities.invokeAndWait(() ->
 		{
-			made[0] = new PhrasesDialog(new Gson(), file, categories, () -> 12850)
+			made[0] = new PhrasesDialog(new Gson(), file, categories, () -> 12850) // public:cut messages-readonly
+			// public:else made[0] = new PhrasesDialog(new Gson(), file, categories)
 			{
 				@Override
 				public void setVisible(boolean b)

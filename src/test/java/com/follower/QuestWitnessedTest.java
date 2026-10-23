@@ -1,7 +1,9 @@
 package com.follower;
 
+// public:cut chronicle
 import com.follower.chronicle.ChronicleLoader;
 import com.follower.chronicle.ChronicleProgress;
+// public:end chronicle
 import com.follower.sim.Harness;
 import com.follower.speech.Condition;
 import com.follower.speech.SpeechRule;
@@ -51,15 +53,22 @@ public class QuestWitnessedTest
 	private final class World
 	{
 		final Harness h;
-		final ChronicleProgress book;
+		final ChronicleProgress book; // public:cut chronicle
 
 		World(String... ids) throws IOException
 		{
 			h = harnessWith(Arrays.asList(ids));
-			ChronicleLoader pages = new ChronicleLoader(new Gson());
+			ChronicleLoader pages = new ChronicleLoader(new Gson()); // public:cut chronicle
+			// public:else h.engine.setQuestWitness(quest ->
+			// public:else {
+				// public:else Long seen = h.engine.getContext().questSeenFinishedOn(quest);
+				// public:else return seen == null || seen == -1L ? null : seen;
+			// public:else });
+			// public:cut chronicle
 			pages.load(folder.newFolder().toPath());
 			book = new ChronicleProgress(h.game.client, pages, h.engine::getContext);
 			h.engine.setQuestWitness(book::witnessedOn);
+			// public:end chronicle
 		}
 
 		World ticks(int count)
@@ -67,7 +76,7 @@ public class QuestWitnessedTest
 			for (int i = 0; i < count; i++)
 			{
 				h.gameTick();
-				book.refresh(++tick);
+				book.refresh(++tick); // public:cut chronicle
 			}
 			return this;
 		}
@@ -127,7 +136,8 @@ public class QuestWitnessedTest
 		w.h.game.quest(Quest.DRAGON_SLAYER_I, QuestState.IN_PROGRESS);
 		w.ticks(2);
 		w.h.game.quest(Quest.DRAGON_SLAYER_I, QuestState.FINISHED);
-		w.book.sawQuestFinish("Dragon Slayer I");
+		w.book.sawQuestFinish("Dragon Slayer I"); // public:cut chronicle
+		// public:else w.h.engine.getContext().noteQuestSeenFinished("DRAGON_SLAYER_I", java.time.LocalDate.now().toEpochDay());
 		w.ticks(2);
 		w.h.game.spawnNpc(3308, "Ned", 0);
 		w.ticks(4);
@@ -142,7 +152,8 @@ public class QuestWitnessedTest
 		// callback fell silent after the first logout (QA pass 3, #4).
 		World w = new World("quest-ned", "fun-ned-after-dragon-slayer");
 		w.h.game.quest(Quest.DRAGON_SLAYER_I, QuestState.FINISHED);
-		w.book.sawQuestFinish("Dragon Slayer I");
+		w.book.sawQuestFinish("Dragon Slayer I"); // public:cut chronicle
+		// public:else w.h.engine.getContext().noteQuestSeenFinished("DRAGON_SLAYER_I", java.time.LocalDate.now().toEpochDay());
 		Gson gson = new Gson();
 		String stored = FollowerPlugin.snapshotMemory(w.h.engine.getContext(), 0, gson);
 		w.h.engine.reset();
@@ -160,11 +171,13 @@ public class QuestWitnessedTest
 		String plugin = new String(java.nio.file.Files.readAllBytes(
 			java.nio.file.Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8);
 		assertTrue("the plugin wires the book to the engine",
-			plugin.contains("speechEngine.setQuestWitness(chronicleProgress::witnessedOn);"));
+			plugin.contains("speechEngine.setQuestWitness(chronicleProgress::witnessedOn);")); // public:cut chronicle
+			// public:else plugin.contains("speechEngine.setQuestWitness(quest ->"));
 		assertTrue("a context's lookup is gone at the next reset",
 			!plugin.contains("getContext().setQuestWitness("));
 	}
 
+	// public:cut chronicle
 	@Test
 	public void aQuestPageWrittenAsItsQuestFinishedIsWitnessEnough() throws IOException
 	{
@@ -186,6 +199,7 @@ public class QuestWitnessedTest
 			Arrays.asList("quest-duke-horacio"), said(veteran.h));
 	}
 
+	// public:end chronicle
 	@Test
 	public void aQuestFinishedWithTheFollowerParkedElsewhereWasNotWitnessed() throws IOException
 	{
@@ -198,22 +212,28 @@ public class QuestWitnessedTest
 		w.ticks(2);
 		w.h.game.quest(Quest.COOKS_ASSISTANT, QuestState.FINISHED);
 		w.ticks(2);
+		// public:cut chronicle
 		w.book.missedQuestFinish("Cook's Assistant");
 		assertNull("the page dated that day does not stand in for it",
 			w.book.witnessedOn("COOKS_ASSISTANT"));
+		// public:end chronicle
 		w.h.game.spawnNpc(815, "Duke Horacio", 0);
 		w.ticks(4);
 		assertEquals(Arrays.asList("quest-duke-horacio"), said(w.h));
 
-		String scroll = new String(java.nio.file.Files.readAllBytes(
+		String scroll = PublicMarkers.strip(new String(java.nio.file.Files.readAllBytes(
 			java.nio.file.Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8)
-			.replace("\r\n", "\n");
+			.replace("\r\n", "\n"));
 		assertTrue("the scroll asks whether the player parked it", scroll.contains(
-			"if (chronicleProgress != null && isStaying())\n\t\t\t{\n"
+			"if (chronicleProgress != null && isStaying())\n\t\t\t{\n" // public:cut chronicle
+			// public:else "noteQuestFinish(quest, isStaying() ? QUEST_NOT_SEEN"));
+				// public:cut chronicle
 				+ "\t\t\t\t// Parked elsewhere by the player, it did not see this one.\n"
 				+ "\t\t\t\tchronicleProgress.missedQuestFinish(quest);"));
+				// public:end chronicle
 	}
 
+	// public:cut chronicle
 	/**
 	 * Enter the Abyss is a miniquest, and a miniquest ends with no reward
 	 * scroll (the wiki's Miniquests page: nothing marks one's start or end
@@ -257,6 +277,7 @@ public class QuestWitnessedTest
 			plugin.contains("chronicleProgress.setAway(this::isStaying);"));
 	}
 
+	// public:end chronicle
 	@Test
 	public void tobynOnTheRoofIsRememberedTheDayAfterAndNotAsTheQuestEnds() throws IOException
 	{
@@ -266,7 +287,8 @@ public class QuestWitnessedTest
 		World today = new World("quest-sergeant-tobyn", "fun-sergeant-tobyn-after-children-of-the-sun");
 		today.h.game.spawnNpc(12648, "Sergeant Tobyn", 0);
 		today.h.game.quest(Quest.CHILDREN_OF_THE_SUN, QuestState.FINISHED);
-		today.book.sawQuestFinish("Children of the Sun");
+		today.book.sawQuestFinish("Children of the Sun"); // public:cut chronicle
+		// public:else today.h.engine.getContext().noteQuestSeenFinished("CHILDREN_OF_THE_SUN", java.time.LocalDate.now().toEpochDay());
 		today.ticks(4);
 		assertEquals("not a 'still' on the day itself", Arrays.asList("quest-sergeant-tobyn"), said(today.h));
 
@@ -337,7 +359,8 @@ public class QuestWitnessedTest
 		World there = new World("qm-x-marks-the-spot-the-cipher",
 			"qm-x-marks-the-spot-the-cipher-after-prince-ali-rescue");
 		there.h.game.quest(Quest.PRINCE_ALI_RESCUE, QuestState.FINISHED);
-		there.book.sawQuestFinish("Prince Ali Rescue");
+		there.book.sawQuestFinish("Prince Ali Rescue"); // public:cut chronicle
+		// public:else there.h.engine.getContext().noteQuestSeenFinished("PRINCE_ALI_RESCUE", java.time.LocalDate.now().toEpochDay());
 		there.ticks(2);
 		there.h.game.varbit(8063, 5);
 		there.ticks(4);
@@ -345,6 +368,7 @@ public class QuestWitnessedTest
 			said(there.h));
 	}
 
+	// public:cut chronicle
 	// ----------------------------------------------------------- the memory
 
 	@Test
@@ -371,6 +395,7 @@ public class QuestWitnessedTest
 			after.questSeenFinishedOn("THE_RESTLESS_GHOST@main"));
 	}
 
+	// public:end chronicle
 	// ----------------------------------------------------------- the rule set
 
 	@Test

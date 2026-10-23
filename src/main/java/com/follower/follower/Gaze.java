@@ -1,3 +1,4 @@
+// public:file company-extras,gaze
 package com.follower.follower;
 
 import com.follower.FollowerConfig;
@@ -253,7 +254,7 @@ public class Gaze
 		glancedKey = hover.key;
 		hoverCooldownUntil = now + HOVER_COOLDOWN_TICKS;
 		follower.glanceAt(at, HOVER_GLANCE_MS);
-		log.debug("Cursor on {}: a look", hover.key);
+		log.debug("Cursor on {}: a look", hover.key); // public:cut logs
 		return true;
 	}
 
@@ -290,7 +291,7 @@ public class Gaze
 		}
 		cameraCooldownUntil = now + CAMERA_COOLDOWN_TICKS;
 		follower.glanceAt(lookTile(from, yaw, CAMERA_LOOK_TILES), CAMERA_GLANCE_MS);
-		log.debug("Camera settled at {}: a look that way", yaw);
+		log.debug("Camera settled at {}: a look that way", yaw); // public:cut logs
 		return true;
 	}
 
@@ -365,10 +366,11 @@ public class Gaze
 			return null;
 		}
 		follower.glanceAt(at, disliked ? DISLIKED_MS : liked ? LIKED_MS : AROUND_MS);
-		log.debug("A look round at {} ({})", at, feeling.isEmpty() ? "nothing felt" : feeling);
+		log.debug("A look round at {} ({})", at, feeling.isEmpty() ? "nothing felt" : feeling); // public:cut logs
 		return at;
 	}
 
+	// public:cut dev
 	/**
 	 * ::follower force look: a look now, without the standing about or the
 	 * wait between looks. The look round by default, as the tick makes it;
@@ -416,6 +418,7 @@ public class Gaze
 			: "A look round at " + at.getX() + ", " + at.getY() + ".";
 	}
 
+	// public:end dev
 	private int between(int min, int max)
 	{
 		return min + random.nextInt(Math.max(1, max - min + 1));

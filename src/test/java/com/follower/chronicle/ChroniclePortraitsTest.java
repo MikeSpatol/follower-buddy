@@ -1,3 +1,4 @@
+// public:file chathead,chronicle
 package com.follower.chronicle;
 
 import com.follower.ui.ChatheadRenderer;

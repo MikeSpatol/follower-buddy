@@ -66,6 +66,7 @@ public final class OutfitParser
 				continue;
 			}
 
+			// public:cut legacy
 			// The heuristic-era free-form overrides. Body colours are now palette
 			// indices (the colors= key), which is how the game itself stores them.
 			if (key.toLowerCase().startsWith("color.") || key.toLowerCase().startsWith("colour."))
@@ -75,6 +76,7 @@ public final class OutfitParser
 				continue;
 			}
 
+			// public:end legacy
 			KitType slot = slotByName(key);
 			if (slot == null)
 			{
@@ -161,6 +163,6 @@ public final class OutfitParser
 		{
 			errors.add(message);
 		}
-		log.debug("Outfit parse: {}", message);
+		log.debug("Outfit parse: {}", message); // public:cut logs
 	}
 }
