@@ -478,7 +478,7 @@ def prepare(out):
     if os.path.normcase(out + os.sep).startswith(os.path.normcase(REPO + os.sep)) or \
             os.path.normcase(out) == os.path.normcase(REPO):
         sys.exit('make_public: --out must be outside the repository')
-    if os.path.isdir(out) and os.listdir(out):
+    if os.path.isdir(out) and set(os.listdir(out)) - {'.git'}:
         if not os.path.isfile(os.path.join(out, STAMP)):
             sys.exit('make_public: %s is not empty and is not an earlier output; not clearing it' % out)
         for name in os.listdir(out):
