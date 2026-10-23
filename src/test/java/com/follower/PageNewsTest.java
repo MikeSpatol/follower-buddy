@@ -201,8 +201,8 @@ public class PageNewsTest
 	{
 		try
 		{
-			return new String(java.nio.file.Files.readAllBytes(PLUGIN), java.nio.charset.StandardCharsets.UTF_8)
-				.replace("\r\n", "\n");
+			return PublicMarkers.strip(new String(java.nio.file.Files.readAllBytes(PLUGIN), java.nio.charset.StandardCharsets.UTF_8)
+				.replace("\r\n", "\n"));
 		}
 		catch (IOException e)
 		{

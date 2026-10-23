@@ -168,9 +168,9 @@ public class ConversationPanelTest
 	@Test
 	public void playAndStopGoThroughTheWindowsDoor() throws IOException
 	{
-		String source = new String(Files.readAllBytes(
+		String source = com.follower.PublicMarkers.strip(new String(Files.readAllBytes(
 			Paths.get("src/main/java/com/follower/ui/ConversationPanel.java")), StandardCharsets.UTF_8)
-			.replace("\r\n", "\n");
+			.replace("\r\n", "\n"));
 		String code = source.replaceAll("(?s)/\\*.*?\\*/", "").replaceAll("//[^\n]*", "");
 		assertTrue("Play hands the conversation over, with any note on how a line will show",
 			code.contains("act.accept(c -> c.play(script), lineNote(script.lines));"));
@@ -178,9 +178,9 @@ public class ConversationPanelTest
 		assertFalse("the tab never reaches the game itself", code.contains("net.runelite.api"));
 		assertFalse(code.contains("clientThread"));
 
-		String window = new String(Files.readAllBytes(
+		String window = com.follower.PublicMarkers.strip(new String(Files.readAllBytes(
 			Paths.get("src/main/java/com/follower/ui/FilmDialog.java")), StandardCharsets.UTF_8)
-			.replace("\r\n", "\n");
+			.replace("\r\n", "\n"));
 		assertTrue("the tab is given the window's door",
 			window.contains("new ConversationPanel(this::act, store, followerName, status::setText)"));
 		assertTrue("and Esc in the window stops it through the same door",

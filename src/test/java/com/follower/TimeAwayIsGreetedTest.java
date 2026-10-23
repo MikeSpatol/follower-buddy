@@ -173,9 +173,9 @@ public class TimeAwayIsGreetedTest
 	@Test
 	public void thePluginRaisesLoginAfterThePrime() throws IOException
 	{
-		String source = new String(java.nio.file.Files.readAllBytes(
+		String source = PublicMarkers.strip(new String(java.nio.file.Files.readAllBytes(
 			java.nio.file.Paths.get("src/main/java/com/follower/FollowerPlugin.java")),
-			java.nio.charset.StandardCharsets.UTF_8);
+			java.nio.charset.StandardCharsets.UTF_8));
 		String login = "TriggerEvent.simple(TriggerEvent.Type.LOGIN)";
 		int at = source.indexOf(login);
 		assertTrue("the plugin raises LOGIN", at >= 0);

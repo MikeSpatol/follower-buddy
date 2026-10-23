@@ -52,8 +52,8 @@ public class SceneCutTest
 	@Test
 	public void aCutLineWhoseStepMovedOnIsNotSaidAgain() throws IOException
 	{
-		String src = new String(Files.readAllBytes(
-			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8);
+		String src = PublicMarkers.strip(new String(Files.readAllBytes(
+			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8));
 		assertTrue(src.contains(
 			"if (cutByTheScene.rule.when.questStepHolds(speechEngine.getContext(), TriggerEvent.tick()))"));
 	}
@@ -89,8 +89,8 @@ public class SceneCutTest
 	@Test
 	public void thePluginJudgesOnReadingTimeAndKeepsTheLineThroughAConversation() throws IOException
 	{
-		String src = new String(Files.readAllBytes(
-			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8);
+		String src = PublicMarkers.strip(new String(Files.readAllBytes(
+			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8));
 		assertTrue(src.contains("timeToReadMs(onScreen.text)) ? onScreen : null;"));
 		assertTrue(src.contains("if (cutByTheScene != null && (sceneQuiet() || filming || inConversation()))")); // public:cut posing
 		// public:else assertTrue(src.contains("if (cutByTheScene != null && (sceneQuiet() || inConversation()))"));
@@ -104,8 +104,8 @@ public class SceneCutTest
 	@Test
 	public void everyQueueResetDropsTheHeldLine() throws IOException
 	{
-		String[] lines = new String(Files.readAllBytes(
-			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8)
+		String[] lines = PublicMarkers.strip(new String(Files.readAllBytes(
+			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8))
 			.split("\r?\n");
 		int clears = 0;
 		int dropped = 0;

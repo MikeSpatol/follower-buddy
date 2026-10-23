@@ -44,8 +44,8 @@ public class PlayerOverlapTest
 	@Test
 	public void theDrawHidesForAPlayerAsForAnNpc() throws java.io.IOException
 	{
-		String source = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(
-			"src/main/java/com/follower/follower/FollowerEntity.java")), java.nio.charset.StandardCharsets.UTF_8);
+		String source = com.follower.PublicMarkers.strip(new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(
+			"src/main/java/com/follower/follower/FollowerEntity.java")), java.nio.charset.StandardCharsets.UTF_8));
 		assertTrue(source.contains("hiddenForNpcOverlap = isSettled() && (npcOnTile(tile) || playerOnTile(tile));"));
 	}
 

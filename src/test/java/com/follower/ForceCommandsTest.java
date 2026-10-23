@@ -35,7 +35,7 @@ public class ForceCommandsTest
 	private static String read(Path path) throws IOException
 	{
 		assertTrue("cannot read " + path, Files.isRegularFile(path));
-		return new String(Files.readAllBytes(path), StandardCharsets.UTF_8).replace("\r\n", "\n");
+		return PublicMarkers.strip(new String(Files.readAllBytes(path), StandardCharsets.UTF_8).replace("\r\n", "\n"));
 	}
 
 	/** Each force's name, the first word of its usage. */

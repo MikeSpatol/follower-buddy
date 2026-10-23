@@ -141,8 +141,8 @@ public class RuleGestureTest
 	public void aWritingFlourishIsNotTakenOutOnTheRestEither() throws IOException
 	{
 		// The flourish would put the writing pose over the sit: the same pop.
-		String source = new String(Files.readAllBytes(Paths.get("src/main/java/com/follower/FollowerPlugin.java")),
-			StandardCharsets.UTF_8).replace("\r\n", "\n");
+		String source = PublicMarkers.strip(new String(Files.readAllBytes(Paths.get("src/main/java/com/follower/FollowerPlugin.java")),
+			StandardCharsets.UTF_8).replace("\r\n", "\n"));
 		int flourish = source.indexOf("if (rule != null && rule.prop != null && flourish != null");
 		assertTrue("the flourish has moved", flourish > 0);
 		assertTrue(source.substring(flourish, source.indexOf("{", flourish)).contains("!seated"));
@@ -154,8 +154,8 @@ public class RuleGestureTest
 		// QA, 15 Oct: the prop was put in the hand and then the reach played,
 		// so the follower bent to the floor already holding it. And the
 		// writing pair takes no reach: 13302 lifts them from the waist itself.
-		String source = new String(Files.readAllBytes(Paths.get("src/main/java/com/follower/FollowerPlugin.java")),
-			StandardCharsets.UTF_8).replace("\r\n", "\n");
+		String source = PublicMarkers.strip(new String(Files.readAllBytes(Paths.get("src/main/java/com/follower/FollowerPlugin.java")),
+			StandardCharsets.UTF_8).replace("\r\n", "\n"));
 		int pair = source.indexOf("public void hold(int leftItemId, int rightItemId)");
 		int single = source.indexOf("public void hold(int itemId)");
 		assertTrue(pair > 0 && single > 0);

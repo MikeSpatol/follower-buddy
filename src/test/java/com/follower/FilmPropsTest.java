@@ -324,9 +324,9 @@ public class FilmPropsTest
 	@Test
 	public void theFilmIsWiredToTheModelTheGraphicsAndTheFrame() throws IOException
 	{
-		String source = new String(Files.readAllBytes(
+		String source = PublicMarkers.strip(new String(Files.readAllBytes(
 			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8)
-			.replace("\r\n", "\n");
+			.replace("\r\n", "\n"));
 		String start = source.substring(source.indexOf("protected void startUp() throws Exception"));
 		assertTrue("startUp builds the film with the plugin's rebuild and the follower's graphics", start.contains(
 			"filmSet = new com.follower.follower.FilmSet(follower, this::rebuildFollower,\n"

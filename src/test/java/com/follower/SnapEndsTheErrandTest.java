@@ -168,8 +168,8 @@ public class SnapEndsTheErrandTest
 	@Test
 	public void theSnapIsWiredAtStartUp() throws IOException
 	{
-		String source = new String(Files.readAllBytes(
-			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8);
+		String source = PublicMarkers.strip(new String(Files.readAllBytes(
+			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8));
 		assertTrue(source.contains("follower.setOnSnapped(this::followerSnapped);"));
 	}
 }

@@ -71,9 +71,9 @@ public class GraphicCopyTest
 	@Test
 	public void theWindowOpensOnlyForARuleThatCopiesGraphics() throws IOException
 	{
-		String source = new String(Files.readAllBytes(
+		String source = PublicMarkers.strip(new String(Files.readAllBytes(
 			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8)
-			.replace("\r\n", "\n");
+			.replace("\r\n", "\n"));
 		int opens = source.indexOf("mirrorGraphicsUntilTick = client.getTickCount() + MIRROR_GRAPHIC_WINDOW_TICKS;");
 		assertTrue(opens > 0);
 		String guard = source.substring(source.lastIndexOf("if (", opens), opens);

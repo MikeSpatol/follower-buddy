@@ -28,7 +28,7 @@ public class ConversationGlueTest
 	private static String source() throws IOException
 	{
 		assertTrue("cannot read " + PLUGIN, Files.isRegularFile(PLUGIN));
-		return new String(Files.readAllBytes(PLUGIN), StandardCharsets.UTF_8).replace("\r\n", "\n");
+		return PublicMarkers.strip(new String(Files.readAllBytes(PLUGIN), StandardCharsets.UTF_8).replace("\r\n", "\n"));
 	}
 
 	/** One method, from its signature to the brace that closes it at the given depth. */

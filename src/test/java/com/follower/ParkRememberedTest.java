@@ -84,8 +84,8 @@ public class ParkRememberedTest
 	@Test
 	public void bothSpawnsALoginTakesReadThePost() throws IOException
 	{
-		String source = new String(Files.readAllBytes(
-			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8);
+		String source = PublicMarkers.strip(new String(Files.readAllBytes(
+			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8));
 		int reads = 0;
 		for (int at = source.indexOf("parkToReturnTo(config.parkedAt()"); at >= 0;
 			at = source.indexOf("parkToReturnTo(config.parkedAt()", at + 1))

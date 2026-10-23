@@ -40,8 +40,8 @@ public class SpawnPassTest
 	@Test
 	public void thePluginAsksBeforeItPasses() throws IOException
 	{
-		String plugin = new String(Files.readAllBytes(Paths.get("src/main/java/com/follower/FollowerPlugin.java")),
-			StandardCharsets.UTF_8).replace("\r\n", "\n");
+		String plugin = com.follower.PublicMarkers.strip(new String(Files.readAllBytes(Paths.get("src/main/java/com/follower/FollowerPlugin.java")),
+			StandardCharsets.UTF_8).replace("\r\n", "\n"));
 		int at = plugin.indexOf("public void onNpcSpawned(");
 		assertTrue("no onNpcSpawned - the lint has lost its place", at >= 0);
 		String body = plugin.substring(at, plugin.indexOf("\n\t}\n", at));

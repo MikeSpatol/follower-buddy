@@ -33,7 +33,7 @@ public class MenuOverTheSceneTest
 	private static String source() throws IOException
 	{
 		assertTrue("cannot read " + PLUGIN, Files.isRegularFile(PLUGIN));
-		return new String(Files.readAllBytes(PLUGIN), StandardCharsets.UTF_8).replace("\r\n", "\n");
+		return PublicMarkers.strip(new String(Files.readAllBytes(PLUGIN), StandardCharsets.UTF_8).replace("\r\n", "\n"));
 	}
 
 	/** The plugin's members, split where one closes at the class's own depth. */

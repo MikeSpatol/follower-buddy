@@ -25,7 +25,7 @@ public class DeveloperOnlyChatTest
 	private static String method(String signature) throws IOException
 	{
 		assertTrue("cannot read " + PLUGIN, Files.isRegularFile(PLUGIN));
-		String source = new String(Files.readAllBytes(PLUGIN), StandardCharsets.UTF_8).replace("\r\n", "\n");
+		String source = PublicMarkers.strip(new String(Files.readAllBytes(PLUGIN), StandardCharsets.UTF_8).replace("\r\n", "\n"));
 		int start = source.indexOf(signature);
 		assertTrue("the plugin has no " + signature + " - the lint has lost its place", start >= 0);
 		return source.substring(start, source.indexOf("\n\t}\n", start));

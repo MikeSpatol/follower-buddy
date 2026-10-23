@@ -145,8 +145,8 @@ public class OutfitProfilesPerProfileTest
 	@Test
 	public void aSwitchReadsTheNewProfilesListBeforeRestoringItsOutfit() throws IOException
 	{
-		String source = new String(Files.readAllBytes(
-			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8);
+		String source = PublicMarkers.strip(new String(Files.readAllBytes(
+			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8));
 		int handler = source.indexOf("public void onProfileChanged(");
 		int end = source.indexOf("\n\t}", handler);
 		String body = source.substring(handler, end);

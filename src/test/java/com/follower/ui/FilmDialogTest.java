@@ -145,9 +145,9 @@ public class FilmDialogTest
 		// thread, and the window's presses arrive on the Swing thread. The
 		// crew is reached in one place, inside the hand-over, and what comes
 		// back is shown on the Swing thread again.
-		String source = new String(Files.readAllBytes(
+		String source = com.follower.PublicMarkers.strip(new String(Files.readAllBytes(
 			Paths.get("src/main/java/com/follower/ui/FilmDialog.java")), StandardCharsets.UTF_8)
-			.replace("\r\n", "\n");
+			.replace("\r\n", "\n"));
 		int act = source.indexOf("private void act(Function<Crew, String> work, String done)");
 		assertTrue("the window has no act - the lint has lost its place", act >= 0);
 		String body = source.substring(act, source.indexOf("\n\t}\n", act));

@@ -1413,8 +1413,8 @@ public class RuleSetIntegrityTest
 		{
 			java.nio.file.Path path = java.nio.file.Paths.get(source);
 			assertTrue("cannot read " + source, java.nio.file.Files.isRegularFile(path));
-			collectTalliedKeys(new String(
-				java.nio.file.Files.readAllBytes(path), StandardCharsets.UTF_8),
+			collectTalliedKeys(PublicMarkers.strip(new String(
+				java.nio.file.Files.readAllBytes(path), StandardCharsets.UTF_8)),
 				written, prefixes);
 		}
 		assertFalse("no tally calls found at all - the scan broke, not the rules",

@@ -375,9 +375,9 @@ public class WallPathingTest
 	@Test
 	public void noPlacementIsMadeFromAMapStillLoading() throws java.io.IOException
 	{
-		String source = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(
+		String source = com.follower.PublicMarkers.strip(new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(
 			"src/main/java/com/follower/follower/FollowerEntity.java")),
-			java.nio.charset.StandardCharsets.UTF_8).replace("\r\n", "\n");
+			java.nio.charset.StandardCharsets.UTF_8).replace("\r\n", "\n"));
 		String loaded = "client.getGameState() == GameState.LOGGED_IN";
 		assertTrue("the teleport landing waits for the area to load",
 			source.contains("if (" + loaded + " && (landed || now - vanishedAtMs > 8000))"));
@@ -398,9 +398,9 @@ public class WallPathingTest
 	@Test
 	public void aSceneIsLookedAtBeforeAStayIsFaced() throws java.io.IOException
 	{
-		String source = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(
+		String source = com.follower.PublicMarkers.strip(new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(
 			"src/main/java/com/follower/follower/FollowerEntity.java")),
-			java.nio.charset.StandardCharsets.UTF_8).replace("\r\n", "\n");
+			java.nio.charset.StandardCharsets.UTF_8).replace("\r\n", "\n"));
 		int start = source.indexOf("private void faceTheHold(");
 		int scene = source.indexOf("if (watchingWithThePlayer)", start);
 		int stay = source.indexOf("faceStayAnchor();", start);

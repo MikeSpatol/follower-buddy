@@ -262,8 +262,8 @@ public class EmoteHandsTest
 	@Test
 	public void eachClipOfAnEmoteReachesTheHands() throws IOException
 	{
-		String source = new String(Files.readAllBytes(
-			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8);
+		String source = PublicMarkers.strip(new String(Files.readAllBytes(
+			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8));
 		assertTrue(source.contains("follower.setOnEmoteClip(this::dressEmoteHands);"));
 	}
 

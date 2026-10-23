@@ -168,8 +168,8 @@ public class QuestWitnessedTest
 	@Test
 	public void thePluginHandsTheBookToTheEngineNotToOneContext() throws IOException
 	{
-		String plugin = new String(java.nio.file.Files.readAllBytes(
-			java.nio.file.Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8);
+		String plugin = PublicMarkers.strip(new String(java.nio.file.Files.readAllBytes(
+			java.nio.file.Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8));
 		assertTrue("the plugin wires the book to the engine",
 			plugin.contains("speechEngine.setQuestWitness(chronicleProgress::witnessedOn);")); // public:cut chronicle
 			// public:else plugin.contains("speechEngine.setQuestWitness(quest ->"));
@@ -271,8 +271,8 @@ public class QuestWitnessedTest
 		away.ticks(4);
 		assertEquals(Arrays.asList("quest-mage-of-zamorak"), said(away.h));
 
-		String plugin = new String(java.nio.file.Files.readAllBytes(
-			java.nio.file.Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8);
+		String plugin = PublicMarkers.strip(new String(java.nio.file.Files.readAllBytes(
+			java.nio.file.Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8));
 		assertTrue("the plugin tells the book when the follower is parked",
 			plugin.contains("chronicleProgress.setAway(this::isStaying);"));
 	}

@@ -180,8 +180,8 @@ public class SceneExtraTest
 	@Test
 	public void theFrameFacesTheHoldOnlyThroughTheScenesLook() throws java.io.IOException
 	{
-		String source = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(
-			"src/main/java/com/follower/follower/FollowerEntity.java")), java.nio.charset.StandardCharsets.UTF_8);
+		String source = com.follower.PublicMarkers.strip(new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(
+			"src/main/java/com/follower/follower/FollowerEntity.java")), java.nio.charset.StandardCharsets.UTF_8));
 		int calls = 0;
 		for (int at = source.indexOf("faceStayAnchor();"); at >= 0; at = source.indexOf("faceStayAnchor();", at + 1))
 		{

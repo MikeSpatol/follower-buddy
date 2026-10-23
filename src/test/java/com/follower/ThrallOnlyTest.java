@@ -79,9 +79,9 @@ public class ThrallOnlyTest
 	{
 		// QA3: "Untick Replace thralls" does nothing with Thrall only on, so
 		// with it ticked the hint names both switches (QA4, approved wording).
-		String source = new String(Files.readAllBytes(
+		String source = PublicMarkers.strip(new String(Files.readAllBytes(
 			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8)
-			.replace("\r\n", "\n");
+			.replace("\r\n", "\n"));
 		int at = source.indexOf("private void maybeSendThrallHint()");
 		assertTrue("the lint has lost its place", at >= 0);
 		String body = source.substring(at, source.indexOf("\n\t}", at));
@@ -353,8 +353,8 @@ public class ThrallOnlyTest
 		// What the thrall says while it fights goes through the tick's mute,
 		// glue no harness drives; the tick has to ask, as the thieving lift
 		// that says the thieving lines does.
-		String source = new String(Files.readAllBytes(
-			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8);
+		String source = PublicMarkers.strip(new String(Files.readAllBytes(
+			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8));
 		assertTrue("the tick's mute asks",
 			source.contains("speechEngine.setMuted(config.muted() || thievingNow || absentNow || thrallQuiet()"));
 		assertTrue("and so does the thieving lift",

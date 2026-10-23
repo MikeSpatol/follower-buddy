@@ -1575,8 +1575,8 @@ public class StayHoldsTest
 	@Test
 	public void everyParkThePlayerGivesIsMarkedAsTheirs() throws IOException
 	{
-		String source = new String(Files.readAllBytes(
-			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8);
+		String source = PublicMarkers.strip(new String(Files.readAllBytes(
+			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8));
 		List<String> unmarked = new ArrayList<>();
 		int ops = 0;
 		for (String marker : new String[]{"addFollowerMenuEntry(", ".onClick("})
@@ -1617,8 +1617,8 @@ public class StayHoldsTest
 	@Test
 	public void theMenuOffersStayUnlessThePlayerParkedIt() throws IOException
 	{
-		String source = new String(Files.readAllBytes(
-			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8);
+		String source = PublicMarkers.strip(new String(Files.readAllBytes(
+			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8));
 		int follow = source.indexOf("addFollowerMenuEntry(\"Follow-me\"");
 		assertTrue("the Follow entry has moved - the scan broke, not the glue", follow >= 0);
 		int branch = source.lastIndexOf("if (", follow);

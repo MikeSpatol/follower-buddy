@@ -63,8 +63,8 @@ public class PageNameTest
 			h.engine.spokenText("Starting a page on {page}.", news));
 		assertEquals("The Wizards' Tower has a page now.",
 			h.engine.spokenText("{page} has a page now.", news));
-		String plugin = new String(java.nio.file.Files.readAllBytes(
-			java.nio.file.Paths.get("src/main/java/com/follower/FollowerPlugin.java")), java.nio.charset.StandardCharsets.UTF_8);
+		String plugin = com.follower.PublicMarkers.strip(new String(java.nio.file.Files.readAllBytes(
+			java.nio.file.Paths.get("src/main/java/com/follower/FollowerPlugin.java")), java.nio.charset.StandardCharsets.UTF_8));
 		assertTrue("the plugin's page news says the spoken name",
 			plugin.contains("TriggerEvent.pageWritten(byQuest ? \"quest\" : entry.kindOrEmpty(), entry.spokenName())"));
 	}

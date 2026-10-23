@@ -172,8 +172,8 @@ public class MemorySurfaceTest
 		for (String file : new String[]{"src/main/java/com/follower/FollowerPlugin.java",
 			"src/main/java/com/follower/speech/SpeechEngine.java"})
 		{
-			source.append(new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(file)),
-				java.nio.charset.StandardCharsets.UTF_8));
+			source.append(PublicMarkers.strip(new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(file)),
+				java.nio.charset.StandardCharsets.UTF_8)));
 		}
 		java.util.regex.Matcher m = java.util.regex.Pattern.compile(
 			"(?:\\.tally|tallyBoth|noteRecord)\\(\\s*\"([^\"]+)\"|\\? \"(\\w+:\\w+)\" : \"(\\w+:\\w+)\"")
