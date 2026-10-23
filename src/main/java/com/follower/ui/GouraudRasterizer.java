@@ -2,8 +2,8 @@
 package com.follower.ui;
 
 /**
- * The client's own triangle rasterizer, ported line for line from
- * {@code Pix3D.gouraudTriangle} and {@code Pix3D.gouraudRaster}.
+ * The client's own triangle rasterizer, ported from {@code Pix3D.gouraudTriangle}
+ * and {@code Pix3D.gouraudRaster}.
  *
  * <p>This replaces a float barycentric fill that sampled pixel centres. On
  * triangles a few pixels across - the pupils of a chathead's eyes - the two
@@ -20,9 +20,15 @@ package com.follower.ui;
  *     raster as {@code x >> 16} / {@code colour >> 7}, and the raster indexes
  *     the colour table with {@code colour >> 8} per pixel. Java's int division
  *     and shifts truncate exactly like the client's {@code | 0} arithmetic.</li>
- * <li>The three top-level cases order the vertices by smallest y; each splits
- *     again on edge-slope comparisons so the left/right raster arguments stay
- *     sorted without per-scanline swaps.</li>
+ * <li>The client spells out three top-level cases, one per vertex that can be
+ *     topmost, and they are the same code with the vertices rotated. Each edge
+ *     step is the same value whichever way round it is computed, so rotating
+ *     the arguments and running the first case reproduces the other two
+ *     exactly. Inside that case the client splits on which vertex is in the
+ *     middle and, for each, on which edge is on the left; the two orders of
+ *     each pair differ only in the order the span ends are passed, which is
+ *     {@link #span}'s flag. The left/right tests are the client's own, ties
+ *     included.</li>
  * <li>Only the paths this plugin exercises are ported: high detail
  *     ({@code lowDetail = false}), opaque ({@code trans = 0}), with horizontal
  *     clipping always on - the client's {@code hclip = false} path is a
@@ -35,25 +41,40 @@ final class GouraudRasterizer
 {
 	private final int[] pixels;
 	private final int width;
-	private final int sizeX;
 	private final int clipMaxY;
-	private final int[] scanline;
 
 	GouraudRasterizer(int[] pixels, int width, int height)
 	{
 		this.pixels = pixels;
 		this.width = width;
-		this.sizeX = width;
 		this.clipMaxY = height;
-		this.scanline = new int[height];
-		for (int y = 0; y < height; y++)
+	}
+
+	void gouraudTriangle(int xA, int xB, int xC, int yA, int yB, int yC,
+		int colourA, int colourB, int colourC)
+	{
+		if (yA <= yB && yA <= yC)
 		{
-			scanline[y] = width * y;
+			fromTop(0, xA, xB, xC, yA, yB, yC, colourA, colourB, colourC);
+		}
+		else if (yB <= yC)
+		{
+			fromTop(1, xB, xC, xA, yB, yC, yA, colourB, colourC, colourA);
+		}
+		else
+		{
+			fromTop(2, xC, xA, xB, yC, yA, yB, colourC, colourA, colourB);
 		}
 	}
 
-	@SuppressWarnings("java:S3776") // the client's control flow, kept verbatim
-	void gouraudTriangle(int xA, int xB, int xC, int yA, int yB, int yC,
+	/**
+	 * The client's first case, vertex A topmost, run on the vertices rotated
+	 * {@code rotation} places. The client's other two cases are this code
+	 * rotated, except that they leave out the tie tests that cannot fire on
+	 * their unclipped rows - and so skip them on clipped rows too, which can
+	 * tie. {@code tieTest} keeps that difference.
+	 */
+	private void fromTop(int rotation, int xA, int xB, int xC, int yA, int yB, int yC,
 		int colourA, int colourB, int colourC)
 	{
 		int xStepAB = 0;
@@ -80,566 +101,89 @@ final class GouraudRasterizer
 			colourStepAC = ((colourA - colourC) << 15) / (yA - yC);
 		}
 
-		if (yA <= yB && yA <= yC)
+		if (yA >= clipMaxY)
 		{
-			if (yA >= clipMaxY)
-			{
-				return;
-			}
-			if (yB > clipMaxY)
-			{
-				yB = clipMaxY;
-			}
-			if (yC > clipMaxY)
-			{
-				yC = clipMaxY;
-			}
-
-			if (yB < yC)
-			{
-				xC = xA <<= 16;
-				colourC = colourA <<= 15;
-				if (yA < 0)
-				{
-					xC -= xStepAC * yA;
-					xA -= xStepAB * yA;
-					colourC -= colourStepAC * yA;
-					colourA -= colourStepAB * yA;
-					yA = 0;
-				}
-				xB <<= 16;
-				colourB <<= 15;
-				if (yB < 0)
-				{
-					xB -= xStepBC * yB;
-					colourB -= colourStepBC * yB;
-					yB = 0;
-				}
-				if ((yA != yB && xStepAC < xStepAB) || (yA == yB && xStepAC > xStepBC))
-				{
-					yC -= yB;
-					yB -= yA;
-					yA = scanline[yA];
-					while (true)
-					{
-						yB--;
-						if (yB < 0)
-						{
-							while (true)
-							{
-								yC--;
-								if (yC < 0)
-								{
-									return;
-								}
-								gouraudRaster(xC >> 16, xB >> 16, colourC >> 7, colourB >> 7, yA);
-								xC += xStepAC;
-								xB += xStepBC;
-								colourC += colourStepAC;
-								colourB += colourStepBC;
-								yA += width;
-							}
-						}
-						gouraudRaster(xC >> 16, xA >> 16, colourC >> 7, colourA >> 7, yA);
-						xC += xStepAC;
-						xA += xStepAB;
-						colourC += colourStepAC;
-						colourA += colourStepAB;
-						yA += width;
-					}
-				}
-				else
-				{
-					yC -= yB;
-					yB -= yA;
-					yA = scanline[yA];
-					while (true)
-					{
-						yB--;
-						if (yB < 0)
-						{
-							while (true)
-							{
-								yC--;
-								if (yC < 0)
-								{
-									return;
-								}
-								gouraudRaster(xB >> 16, xC >> 16, colourB >> 7, colourC >> 7, yA);
-								xC += xStepAC;
-								xB += xStepBC;
-								colourC += colourStepAC;
-								colourB += colourStepBC;
-								yA += width;
-							}
-						}
-						gouraudRaster(xA >> 16, xC >> 16, colourA >> 7, colourC >> 7, yA);
-						xC += xStepAC;
-						xA += xStepAB;
-						colourC += colourStepAC;
-						colourA += colourStepAB;
-						yA += width;
-					}
-				}
-			}
-			else
-			{
-				xB = xA <<= 16;
-				colourB = colourA <<= 15;
-				if (yA < 0)
-				{
-					xB -= xStepAC * yA;
-					xA -= xStepAB * yA;
-					colourB -= colourStepAC * yA;
-					colourA -= colourStepAB * yA;
-					yA = 0;
-				}
-				xC <<= 16;
-				colourC <<= 15;
-				if (yC < 0)
-				{
-					xC -= xStepBC * yC;
-					colourC -= colourStepBC * yC;
-					yC = 0;
-				}
-				if ((yA != yC && xStepAC < xStepAB) || (yA == yC && xStepBC > xStepAB))
-				{
-					yB -= yC;
-					yC -= yA;
-					yA = scanline[yA];
-					while (true)
-					{
-						yC--;
-						if (yC < 0)
-						{
-							while (true)
-							{
-								yB--;
-								if (yB < 0)
-								{
-									return;
-								}
-								gouraudRaster(xC >> 16, xA >> 16, colourC >> 7, colourA >> 7, yA);
-								xC += xStepBC;
-								xA += xStepAB;
-								colourC += colourStepBC;
-								colourA += colourStepAB;
-								yA += width;
-							}
-						}
-						gouraudRaster(xB >> 16, xA >> 16, colourB >> 7, colourA >> 7, yA);
-						xB += xStepAC;
-						xA += xStepAB;
-						colourB += colourStepAC;
-						colourA += colourStepAB;
-						yA += width;
-					}
-				}
-				else
-				{
-					yB -= yC;
-					yC -= yA;
-					yA = scanline[yA];
-					while (true)
-					{
-						yC--;
-						if (yC < 0)
-						{
-							while (true)
-							{
-								yB--;
-								if (yB < 0)
-								{
-									return;
-								}
-								gouraudRaster(xA >> 16, xC >> 16, colourA >> 7, colourC >> 7, yA);
-								xC += xStepBC;
-								xA += xStepAB;
-								colourC += colourStepBC;
-								colourA += colourStepAB;
-								yA += width;
-							}
-						}
-						gouraudRaster(xA >> 16, xB >> 16, colourA >> 7, colourB >> 7, yA);
-						xB += xStepAC;
-						xA += xStepAB;
-						colourB += colourStepAC;
-						colourA += colourStepAB;
-						yA += width;
-					}
-				}
-			}
+			return;
 		}
-		else if (yB <= yC)
-		{
-			if (yB >= clipMaxY)
-			{
-				return;
-			}
-			if (yC > clipMaxY)
-			{
-				yC = clipMaxY;
-			}
-			if (yA > clipMaxY)
-			{
-				yA = clipMaxY;
-			}
+		yB = Math.min(yB, clipMaxY);
+		yC = Math.min(yC, clipMaxY);
 
-			if (yC < yA)
-			{
-				xA = xB <<= 16;
-				colourA = colourB <<= 15;
-				if (yB < 0)
-				{
-					xA -= xStepAB * yB;
-					xB -= xStepBC * yB;
-					colourA -= colourStepAB * yB;
-					colourB -= colourStepBC * yB;
-					yB = 0;
-				}
-				xC <<= 16;
-				colourC <<= 15;
-				if (yC < 0)
-				{
-					xC -= xStepAC * yC;
-					colourC -= colourStepAC * yC;
-					yC = 0;
-				}
-				if ((yB != yC && xStepAB < xStepBC) || (yB == yC && xStepAB > xStepAC))
-				{
-					yA -= yC;
-					yC -= yB;
-					yB = scanline[yB];
-					while (true)
-					{
-						yC--;
-						if (yC < 0)
-						{
-							while (true)
-							{
-								yA--;
-								if (yA < 0)
-								{
-									return;
-								}
-								gouraudRaster(xA >> 16, xC >> 16, colourA >> 7, colourC >> 7, yB);
-								xA += xStepAB;
-								xC += xStepAC;
-								colourA += colourStepAB;
-								colourC += colourStepAC;
-								yB += width;
-							}
-						}
-						gouraudRaster(xA >> 16, xB >> 16, colourA >> 7, colourB >> 7, yB);
-						xA += xStepAB;
-						xB += xStepBC;
-						colourA += colourStepAB;
-						colourB += colourStepBC;
-						yB += width;
-					}
-				}
-				else
-				{
-					yA -= yC;
-					yC -= yB;
-					yB = scanline[yB];
-					while (true)
-					{
-						yC--;
-						if (yC < 0)
-						{
-							while (true)
-							{
-								yA--;
-								if (yA < 0)
-								{
-									return;
-								}
-								gouraudRaster(xC >> 16, xA >> 16, colourC >> 7, colourA >> 7, yB);
-								xA += xStepAB;
-								xC += xStepAC;
-								colourA += colourStepAB;
-								colourC += colourStepAC;
-								yB += width;
-							}
-						}
-						gouraudRaster(xB >> 16, xA >> 16, colourB >> 7, colourA >> 7, yB);
-						xA += xStepAB;
-						xB += xStepBC;
-						colourA += colourStepAB;
-						colourB += colourStepBC;
-						yB += width;
-					}
-				}
-			}
-			else
-			{
-				xC = xB <<= 16;
-				colourC = colourB <<= 15;
-				if (yB < 0)
-				{
-					xC -= xStepAB * yB;
-					xB -= xStepBC * yB;
-					colourC -= colourStepAB * yB;
-					colourB -= colourStepBC * yB;
-					yB = 0;
-				}
-				xA <<= 16;
-				colourA <<= 15;
-				if (yA < 0)
-				{
-					xA -= xStepAC * yA;
-					colourA -= colourStepAC * yA;
-					yA = 0;
-				}
-				yC -= yA;
-				yA -= yB;
-				yB = scanline[yB];
-				if (xStepAB < xStepBC)
-				{
-					while (true)
-					{
-						yA--;
-						if (yA < 0)
-						{
-							while (true)
-							{
-								yC--;
-								if (yC < 0)
-								{
-									return;
-								}
-								gouraudRaster(xA >> 16, xB >> 16, colourA >> 7, colourB >> 7, yB);
-								xA += xStepAC;
-								xB += xStepBC;
-								colourA += colourStepAC;
-								colourB += colourStepBC;
-								yB += width;
-							}
-						}
-						gouraudRaster(xC >> 16, xB >> 16, colourC >> 7, colourB >> 7, yB);
-						xC += xStepAB;
-						xB += xStepBC;
-						colourC += colourStepAB;
-						colourB += colourStepBC;
-						yB += width;
-					}
-				}
-				else
-				{
-					while (true)
-					{
-						yA--;
-						if (yA < 0)
-						{
-							while (true)
-							{
-								yC--;
-								if (yC < 0)
-								{
-									return;
-								}
-								gouraudRaster(xB >> 16, xA >> 16, colourB >> 7, colourA >> 7, yB);
-								xA += xStepAC;
-								xB += xStepBC;
-								colourA += colourStepAC;
-								colourB += colourStepBC;
-								yB += width;
-							}
-						}
-						gouraudRaster(xB >> 16, xC >> 16, colourB >> 7, colourC >> 7, yB);
-						xC += xStepAB;
-						xB += xStepBC;
-						colourC += colourStepAB;
-						colourB += colourStepBC;
-						yB += width;
-					}
-				}
-			}
+		if (yB < yC)
+		{
+			walk(xA, xB, yA, yB, yC, colourA, colourB, xStepAB, colourStepAB,
+				xStepBC, colourStepBC, xStepAC, colourStepAC, false, rotation < 2);
 		}
 		else
 		{
-			if (yC >= clipMaxY)
-			{
-				return;
-			}
-			if (yA > clipMaxY)
-			{
-				yA = clipMaxY;
-			}
-			if (yB > clipMaxY)
-			{
-				yB = clipMaxY;
-			}
+			walk(xA, xC, yA, yC, yB, colourA, colourC, xStepAC, colourStepAC,
+				xStepBC, colourStepBC, xStepAB, colourStepAB, true, rotation == 0);
+		}
+	}
 
-			if (yA < yB)
-			{
-				xB = xC <<= 16;
-				colourB = colourC <<= 15;
-				if (yC < 0)
-				{
-					xB -= xStepBC * yC;
-					xC -= xStepAC * yC;
-					colourB -= colourStepBC * yC;
-					colourC -= colourStepAC * yC;
-					yC = 0;
-				}
-				xA <<= 16;
-				colourA <<= 15;
-				if (yA < 0)
-				{
-					xA -= xStepAB * yA;
-					colourA -= colourStepAB * yA;
-					yA = 0;
-				}
-				yB -= yA;
-				yA -= yC;
-				yC = scanline[yC];
-				if (xStepBC < xStepAC)
-				{
-					while (true)
-					{
-						yA--;
-						if (yA < 0)
-						{
-							while (true)
-							{
-								yB--;
-								if (yB < 0)
-								{
-									return;
-								}
-								gouraudRaster(xB >> 16, xA >> 16, colourB >> 7, colourA >> 7, yC);
-								xB += xStepBC;
-								xA += xStepAB;
-								colourB += colourStepBC;
-								colourA += colourStepAB;
-								yC += width;
-							}
-						}
-						gouraudRaster(xB >> 16, xC >> 16, colourB >> 7, colourC >> 7, yC);
-						xB += xStepBC;
-						xC += xStepAC;
-						colourB += colourStepBC;
-						colourC += colourStepAC;
-						yC += width;
-					}
-				}
-				else
-				{
-					while (true)
-					{
-						yA--;
-						if (yA < 0)
-						{
-							while (true)
-							{
-								yB--;
-								if (yB < 0)
-								{
-									return;
-								}
-								gouraudRaster(xA >> 16, xB >> 16, colourA >> 7, colourB >> 7, yC);
-								xB += xStepBC;
-								xA += xStepAB;
-								colourB += colourStepBC;
-								colourA += colourStepAB;
-								yC += width;
-							}
-						}
-						gouraudRaster(xC >> 16, xB >> 16, colourC >> 7, colourB >> 7, yC);
-						xB += xStepBC;
-						xC += xStepAC;
-						colourB += colourStepBC;
-						colourC += colourStepAC;
-						yC += width;
-					}
-				}
-			}
-			else
-			{
-				xA = xC <<= 16;
-				colourA = colourC <<= 15;
-				if (yC < 0)
-				{
-					xA -= xStepBC * yC;
-					xC -= xStepAC * yC;
-					colourA -= colourStepBC * yC;
-					colourC -= colourStepAC * yC;
-					yC = 0;
-				}
-				xB <<= 16;
-				colourB <<= 15;
-				if (yB < 0)
-				{
-					xB -= xStepAB * yB;
-					colourB -= colourStepAB * yB;
-					yB = 0;
-				}
-				yA -= yB;
-				yB -= yC;
-				yC = scanline[yC];
-				if (xStepBC < xStepAC)
-				{
-					while (true)
-					{
-						yB--;
-						if (yB < 0)
-						{
-							while (true)
-							{
-								yA--;
-								if (yA < 0)
-								{
-									return;
-								}
-								gouraudRaster(xB >> 16, xC >> 16, colourB >> 7, colourC >> 7, yC);
-								xB += xStepAB;
-								xC += xStepAC;
-								colourB += colourStepAB;
-								colourC += colourStepAC;
-								yC += width;
-							}
-						}
-						gouraudRaster(xA >> 16, xC >> 16, colourA >> 7, colourC >> 7, yC);
-						xA += xStepBC;
-						xC += xStepAC;
-						colourA += colourStepBC;
-						colourC += colourStepAC;
-						yC += width;
-					}
-				}
-				else
-				{
-					while (true)
-					{
-						yB--;
-						if (yB < 0)
-						{
-							while (true)
-							{
-								yA--;
-								if (yA < 0)
-								{
-									return;
-								}
-								gouraudRaster(xC >> 16, xB >> 16, colourC >> 7, colourB >> 7, yC);
-								xB += xStepAB;
-								xC += xStepAC;
-								colourB += colourStepAB;
-								colourC += colourStepAC;
-								yC += width;
-							}
-						}
-						gouraudRaster(xC >> 16, xA >> 16, colourC >> 7, colourA >> 7, yC);
-						xA += xStepBC;
-						xC += xStepAC;
-						colourA += colourStepBC;
-						colourC += colourStepAC;
-						yC += width;
-					}
-				}
-			}
+	/**
+	 * Fills from the top vertex down: the long edge runs top to bottom, the
+	 * short edges top to middle and middle to bottom. {@code midIsC} is the
+	 * client's second sub-case, where C is the middle vertex; it only changes
+	 * which way an exact tie of slopes falls.
+	 */
+	private void walk(int xTop, int xMid, int yTop, int yMid, int yBottom, int colourTop, int colourMid,
+		int xStepShort, int colourStepShort, int xStepLower, int colourStepLower,
+		int xStepLong, int colourStepLong, boolean midIsC, boolean tieTest)
+	{
+		int xLong = xTop << 16;
+		int xShort = xLong;
+		int colourLong = colourTop << 15;
+		int colourShort = colourLong;
+		if (yTop < 0)
+		{
+			xLong -= xStepLong * yTop;
+			xShort -= xStepShort * yTop;
+			colourLong -= colourStepLong * yTop;
+			colourShort -= colourStepShort * yTop;
+			yTop = 0;
+		}
+		xMid <<= 16;
+		colourMid <<= 15;
+		if (yMid < 0)
+		{
+			xMid -= xStepLower * yMid;
+			colourMid -= colourStepLower * yMid;
+			yMid = 0;
+		}
+
+		// The client's left/right test, made on the clipped rows.
+		boolean longLeft = !tieTest || yTop != yMid
+			? xStepLong < xStepShort || (midIsC && xStepLong == xStepShort)
+			: xStepLong > xStepLower || (midIsC && xStepLong == xStepLower);
+		int off = width * yTop;
+		for (int rows = yMid - yTop; rows-- > 0; off += width)
+		{
+			span(longLeft, xLong, xShort, colourLong, colourShort, off);
+			xLong += xStepLong;
+			xShort += xStepShort;
+			colourLong += colourStepLong;
+			colourShort += colourStepShort;
+		}
+		for (int rows = yBottom - yMid; rows-- > 0; off += width)
+		{
+			span(longLeft, xLong, xMid, colourLong, colourMid, off);
+			xLong += xStepLong;
+			xMid += xStepLower;
+			colourLong += colourStepLong;
+			colourMid += colourStepLower;
+		}
+	}
+
+	/** One scanline between the long edge and a short one, in left-to-right order. */
+	private void span(boolean longLeft, int xLong, int xShort, int colourLong, int colourShort, int off)
+	{
+		if (longLeft)
+		{
+			gouraudRaster(xLong >> 16, xShort >> 16, colourLong >> 7, colourShort >> 7, off);
+		}
+		else
+		{
+			gouraudRaster(xShort >> 16, xLong >> 16, colourShort >> 7, colourLong >> 7, off);
 		}
 	}
 
@@ -647,8 +191,8 @@ final class GouraudRasterizer
 	 * One scanline, the client's high-detail opaque path: interpolate the packed
 	 * palette index from {@code xA} (inclusive) to {@code xB} (exclusive) and
 	 * resolve each pixel through the colour table. {@code off} is the row's base
-	 * offset (from the scanline table). Alpha is forced opaque for the ARGB
-	 * output image - the client's canvas has no alpha channel to set.
+	 * offset. Alpha is forced opaque for the ARGB output image - the client's
+	 * canvas has no alpha channel to set.
 	 */
 	private void gouraudRaster(int xA, int xB, int colourA, int colourB, int off)
 	{
@@ -657,27 +201,19 @@ final class GouraudRasterizer
 			return;
 		}
 		int colourStep = (colourB - colourA) / (xB - xA);
-		if (xB > sizeX)
+		if (xB > width)
 		{
-			xB = sizeX;
+			xB = width;
 		}
 		if (xA < 0)
 		{
 			colourA -= xA * colourStep;
 			xA = 0;
 		}
-		if (xA >= xB)
-		{
-			return;
-		}
-		off += xA;
-		int len = xB - xA;
-		do
+		for (off += xA; xA < xB; xA++)
 		{
 			pixels[off++] = 0xFF000000 | GameColourTable.rgb(colourA >> 8);
 			colourA += colourStep;
-			len--;
 		}
-		while (len > 0);
 	}
 }

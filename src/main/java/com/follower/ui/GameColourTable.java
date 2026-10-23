@@ -2,7 +2,7 @@
 package com.follower.ui;
 
 /**
- * The client's 65,536-entry colour table, ported line for line from
+ * The client's 65,536-entry colour table, ported from
  * {@code Pix3D.initColourTable}.
  *
  * <p>The game never converts packed HSL to RGB with a formula at draw time: it
@@ -38,24 +38,7 @@ public final class GameColourTable
 	 */
 	public static void setBrightnessSetting(int varpValue)
 	{
-		double gamma;
-		switch (varpValue)
-		{
-			case 1:
-				gamma = 0.9;
-				break;
-			case 3:
-				gamma = 0.7;
-				break;
-			case 4:
-				gamma = 0.6;
-				break;
-			case 2:
-			default:
-				gamma = 0.8;
-				break;
-		}
-
+		double gamma = varpValue >= 1 && varpValue <= 4 ? (10 - varpValue) / 10.0 : 0.8;
 		if (gamma != currentGamma)
 		{
 			currentGamma = gamma;
@@ -80,45 +63,35 @@ public final class GameColourTable
 
 			for (int x = 0; x < 128; x++)
 			{
+				// Saturation is never 0 here (it starts at 1/16), so the client's
+				// grey branch never runs.
 				double lightness = x / 128.0;
-				double r = lightness;
-				double g = lightness;
-				double b = lightness;
-
-				if (saturation != 0.0)
+				double q;
+				if (lightness < 0.5)
 				{
-					double q;
-					if (lightness < 0.5)
-					{
-						q = lightness * (saturation + 1.0);
-					}
-					else
-					{
-						q = lightness + saturation - lightness * saturation;
-					}
-
-					double p = lightness * 2.0 - q;
-
-					double t = hue + (1.0 / 3.0);
-					if (t > 1.0)
-					{
-						t--;
-					}
-					double d = hue - (1.0 / 3.0);
-					if (d < 0.0)
-					{
-						d++;
-					}
-
-					r = channel(p, q, t);
-					g = channel(p, q, hue);
-					b = channel(p, q, d);
+					q = lightness * (saturation + 1.0);
+				}
+				else
+				{
+					q = lightness + saturation - lightness * saturation;
 				}
 
-				int rgb = ((int) (r * 256.0) << 16)
-					+ ((int) (g * 256.0) << 8)
-					+ (int) (b * 256.0);
-				table[offset++] = gammaCorrect(rgb, brightness);
+				double p = lightness * 2.0 - q;
+
+				double t = hue + (1.0 / 3.0);
+				if (t > 1.0)
+				{
+					t--;
+				}
+				double d = hue - (1.0 / 3.0);
+				if (d < 0.0)
+				{
+					d++;
+				}
+
+				table[offset++] = gammaCorrect(channel(p, q, t), brightness) << 16
+					| gammaCorrect(channel(p, q, hue), brightness) << 8
+					| gammaCorrect(channel(p, q, d), brightness);
 			}
 		}
 		return table;
@@ -141,14 +114,13 @@ public final class GameColourTable
 		return p;
 	}
 
-	private static int gammaCorrect(int rgb, double gamma)
+	/**
+	 * One channel, quantised to 8 bits and then gamma-corrected, as the client
+	 * does it. Every channel stays below 1.0, so the 8-bit fields never carry
+	 * into each other and can be built one at a time.
+	 */
+	private static int gammaCorrect(double channel, double gamma)
 	{
-		double r = (rgb >> 16) / 256.0;
-		double g = ((rgb >> 8) & 0xFF) / 256.0;
-		double b = (rgb & 0xFF) / 256.0;
-
-		return ((int) (Math.pow(r, gamma) * 256.0) << 16)
-			+ ((int) (Math.pow(g, gamma) * 256.0) << 8)
-			+ (int) (Math.pow(b, gamma) * 256.0);
+		return (int) (Math.pow((int) (channel * 256.0) / 256.0, gamma) * 256.0);
 	}
 }

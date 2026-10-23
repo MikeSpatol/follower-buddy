@@ -3,6 +3,7 @@ package com.follower.ui;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import net.runelite.api.Model;
 
@@ -18,7 +19,7 @@ import net.runelite.api.Model;
  *
  * <p>Uses the client's own widget-model camera - perspective, orbited to the
  * dialog's pitch at its zoom - with painter's-algorithm depth sorting, and fills
- * triangles through {@link GouraudRasterizer}, a verbatim port of the client's
+ * triangles through {@link GouraudRasterizer}, a faithful port of the client's
  * integer scanline rasterizer, so the pixels come out the way the game's own
  * renderer produces them - down to which pixels a two-pixel pupil covers. */
 public final class ChatheadRenderer
@@ -46,13 +47,16 @@ public final class ChatheadRenderer
 	/** The client's projection: screen = model * 512 / depth. */
 	private static final double FOCAL_LENGTH = 512;
 
-	/** Convenience overload: bounds come from the model itself, game camera. */
-	public static BufferedImage render(Model model, int width, int height,
-		int yaw, double headFraction)
+	// public:cut dev
+	/** Anchored at the centre, for the developer's sweep of angles. */
+	public static BufferedImage render(Model model, Model boundsFrom, int width, int height,
+		int yaw, int cameraPitch, int zoom, double headFraction)
 	{
-		return render(model, null, width, height, yaw, GAME_PITCH, GAME_ZOOM, headFraction);
+		return render(model, boundsFrom, width, height, yaw, cameraPitch, zoom,
+			headFraction, -1, -1);
 	}
 
+	// public:end dev
 	/**
 	 * @param model        the (possibly posed) model to draw
 	 * @param boundsFrom   model to compute framing from, or null to use
@@ -65,20 +69,11 @@ public final class ChatheadRenderer
 	 * @param zoom         camera distance, the widget's modelZoom
 	 * @param headFraction share of the model's height, from the top, to include;
 	 *                     1.0 draws the whole model (a real chathead model)
+	 * @param anchorX      pixel where the model's ORIGIN projects, or -1 for centre.
+	 *                     The client anchors widget models at the widget's centre and
+	 *                     lets geometry overflow, clipped by the interface surface -
+	 *                     which is how tall hair gets cut at the dialog's top edge.
 	 * @return the rendered image, or null if the model cannot be drawn
-	 */
-	public static BufferedImage render(Model model, Model boundsFrom, int width, int height,
-		int yaw, int cameraPitch, int zoom, double headFraction)
-	{
-		return render(model, boundsFrom, width, height, yaw, cameraPitch, zoom,
-			headFraction, -1, -1);
-	}
-
-	/**
-	 * @param anchorX pixel where the model's ORIGIN projects, or -1 for centre.
-	 *                The client anchors widget models at the widget's centre and
-	 *                lets geometry overflow, clipped by the interface surface -
-	 *                which is how tall hair gets cut at the dialog's top edge.
 	 */
 	public static BufferedImage render(Model model, Model boundsFrom, int width, int height,
 		int yaw, int cameraPitch, int zoom, double headFraction, int anchorX, int anchorY)
@@ -98,7 +93,6 @@ public final class ChatheadRenderer
 		int[] fb = model.getFaceIndices2();
 		int[] fc = model.getFaceIndices3();
 		int[] colors = model.getFaceColors1();
-		int[] hidden = model.getFaceColors3();
 
 		if (vx == null || vy == null || vz == null || fx == null || fy == null
 			|| fa == null || fb == null || fc == null || colors == null)
@@ -129,54 +123,6 @@ public final class ChatheadRenderer
 		double eyeY = pitchSin * zoom;
 		double eyeZ = pitchCos * zoom;
 
-		float[] rx = new float[verts];
-		float[] ry = new float[verts];
-		float[] rz = new float[verts];
-
-		for (int i = 0; i < verts; i++)
-		{
-			double[] p = project(vx[i], vy[i], vz[i], yawSin, yawCos, pitchSin, pitchCos, eyeY, eyeZ);
-			rx[i] = (float) p[0];
-			ry[i] = (float) p[1];
-			rz[i] = (float) p[2];
-		}
-
-		float minY = Float.MAX_VALUE;
-		float maxY = -Float.MAX_VALUE;
-		for (int i = 0; i < verts; i++)
-		{
-			minY = Math.min(minY, fy[i]);
-			maxY = Math.max(maxY, fy[i]);
-		}
-		float cutoff = minY + (maxY - minY) * (float) headFraction;
-
-		// Faces wholly inside the head region OF THE FRAME model, skipping ones
-		// the client hides. Using the frame keeps face selection stable across
-		// animation frames.
-		List<Integer> keep = new ArrayList<>();
-		for (int i = 0; i < fa.length; i++)
-		{
-			if (hidden != null && i < hidden.length && hidden[i] == -2)
-			{
-				continue;
-			}
-			int a = fa[i];
-			int b = fb[i];
-			int c = fc[i];
-			if (a >= verts || b >= verts || c >= verts || a < 0 || b < 0 || c < 0)
-			{
-				continue;
-			}
-			if (fy[a] <= cutoff && fy[b] <= cutoff && fy[c] <= cutoff)
-			{
-				keep.add(i);
-			}
-		}
-		if (keep.isEmpty())
-		{
-			return null;
-		}
-
 		// The client's own projection scale, not a fit-to-box. Widget models are
 		// drawn at a fixed focal length about the model's ORIGIN, and they
 		// overflow their widget rectangle freely - the real chathead widget is
@@ -185,44 +131,50 @@ public final class ChatheadRenderer
 		// game.
 		int offsetX = anchorX < 0 ? width / 2 : anchorX;
 		int offsetY = anchorY < 0 ? height / 2 : anchorY;
-
-		// Screen coordinates the client's way: vertexScreenX = centerX +
-		// (x << 9) / z, truncated to an INTEGER per vertex before any face is
-		// drawn. The rasterizer walks scanlines between these ints; feeding it
-		// float pixel centres instead is what dropped the sub-pixel eye faces.
-		int[] sx = new int[verts];
-		int[] sy = new int[verts];
-		int[] sz = new int[verts];
 		// vertexScreenZ, the client's convention: camera depth relative to the
 		// model origin's depth (midZ), an INTEGER per vertex.
 		double midZ = eyeY * pitchSin + eyeZ * pitchCos;
-		for (int i = 0; i < verts; i++)
-		{
-			sx[i] = offsetX + (int) (rx[i] * FOCAL_LENGTH);
-			sy[i] = offsetY + (int) (ry[i] * FOCAL_LENGTH);
-			sz[i] = (int) (rz[i] - midZ);
-		}
 
+		float[] rz = new float[verts];
+		int[] sx = new int[verts];
+		int[] sy = new int[verts];
+		int[] sz = new int[verts];
+		float minY = Float.MAX_VALUE;
+		float maxY = -Float.MAX_VALUE;
 		// The client's calculateBoundsCylinder, for the depth-bucket range.
 		double boundMaxY = 0;
 		double boundMinY = 0;
 		double radiusSqr = 0;
 		for (int i = 0; i < verts; i++)
 		{
-			if (-vy[i] > boundMaxY)
-			{
-				boundMaxY = -vy[i];
-			}
-			if (vy[i] > boundMinY)
-			{
-				boundMinY = vy[i];
-			}
-			double r = vx[i] * vx[i] + vz[i] * vz[i];
-			if (r > radiusSqr)
-			{
-				radiusSqr = r;
-			}
+			// One vertex through the client's widget-model transform: yaw the
+			// model, push it to the camera distance, orbit the camera to its
+			// pitch, then divide by depth.
+			double x = vz[i] * yawSin + vx[i] * yawCos;
+			double z = vz[i] * yawCos - vx[i] * yawSin + eyeZ;
+			double y = vy[i] + eyeY;
+			double cy = y * pitchCos - z * pitchSin;
+			double cz = y * pitchSin + z * pitchCos;
+			// Behind or level with the camera: park it far away rather than
+			// divide by zero; such faces are dropped by the depth guard below.
+			boolean behind = cz < 1;
+			rz[i] = behind ? -1 : (float) cz;
+			// Screen coordinates the client's way: vertexScreenX = centerX +
+			// (x << 9) / z, truncated to an INTEGER per vertex before any face
+			// is drawn. The rasterizer walks scanlines between these ints;
+			// feeding it float pixel centres instead dropped the sub-pixel eye
+			// faces.
+			sx[i] = offsetX + (int) ((behind ? 0 : (float) (x / cz)) * FOCAL_LENGTH);
+			sy[i] = offsetY + (int) ((behind ? 0 : (float) (cy / cz)) * FOCAL_LENGTH);
+			sz[i] = (int) (rz[i] - midZ);
+
+			minY = Math.min(minY, fy[i]);
+			maxY = Math.max(maxY, fy[i]);
+			boundMaxY = Math.max(boundMaxY, -vy[i]);
+			boundMinY = Math.max(boundMinY, vy[i]);
+			radiusSqr = Math.max(radiusSqr, vx[i] * vx[i] + vz[i] * vz[i]);
 		}
+		float cutoff = minY + (maxY - minY) * (float) headFraction;
 		int radius = (int) (Math.sqrt(radiusSqr) + 0.99);
 		int minDepth = (int) (Math.sqrt(radius * radius + boundMaxY * boundMaxY) + 0.99);
 		int maxDepth = minDepth + (int) (Math.sqrt(radius * radius + boundMinY * boundMinY) + 0.99);
@@ -235,64 +187,56 @@ public final class ChatheadRenderer
 		int[] colors2 = model.getFaceColors2();
 		int[] colors3 = model.getFaceColors3();
 
-		// The client's draw2 ordering, not a painter's sort. Faces go into
-		// INTEGER average-depth buckets ((zA+zB+zC)/3 + minDepth) in face-index
-		// order, and buckets are emitted far to near with insertion order kept
-		// inside each bucket. Model authors rely on that: a pupil sits coplanar
-		// ON the eye-white face and is authored LATER in face order so the same
-		// bucket draws it on top. Sorting by exact float depth instead let the
-		// eye-white face land on top of the pupil on some animation frames -
-		// the stray white pixels in the eyes.
+		// Faces wholly inside the head region OF THE FRAME model, skipping ones
+		// the client hides. Using the frame keeps face selection stable across
+		// animation frames.
 		//
-		// Backface culling happens here, before bucketing, with the client's own
-		// test on the same INTEGER screen coordinates it rasterises with. Without
-		// it the BACK of the head - lit from behind, darker - bled through along
-		// cheeks and brow as triangular patches.
-		int[] bucketCount = new int[maxDepth + 1];
-		int[][] buckets = new int[maxDepth + 1][];
-		for (int face : keep)
+		// The client's draw2 ordering, not a painter's sort. Faces get INTEGER
+		// average depths ((zA+zB+zC)/3 + minDepth) and draw far to near, in
+		// face-index order within one depth. Model authors rely on that: a pupil
+		// sits coplanar ON the eye-white face and is authored LATER in face order
+		// so the same depth draws it on top. Sorting by exact float depth instead
+		// let the eye-white face land on top of the pupil on some animation
+		// frames - the stray white pixels in the eyes.
+		//
+		// Backface culling happens before that, with the client's own test on the
+		// same INTEGER screen coordinates it rasterises with. Without it the BACK
+		// of the head - lit from behind, darker - bled through along cheeks and
+		// brow as triangular patches.
+		boolean anyInHead = false;
+		int[] depth = new int[fa.length];
+		List<Integer> faces = new ArrayList<>();
+		for (int i = 0; i < fa.length; i++)
 		{
-			int a = fa[face];
-			int b = fb[face];
-			int c = fc[face];
-			if (rz[a] < 0 || rz[b] < 0 || rz[c] < 0)
+			int a = fa[i];
+			int b = fb[i];
+			int c = fc[i];
+			if ((colors3 != null && i < colors3.length && colors3[i] == -2)
+				|| a >= verts || b >= verts || c >= verts || a < 0 || b < 0 || c < 0
+				|| !(fy[a] <= cutoff && fy[b] <= cutoff && fy[c] <= cutoff))
 			{
 				continue;
 			}
-			if ((sx[a] - sx[b]) * (sy[c] - sy[b]) - (sy[a] - sy[b]) * (sx[c] - sx[b]) <= 0)
+			anyInHead = true;
+			if (rz[a] < 0 || rz[b] < 0 || rz[c] < 0
+				|| (sx[a] - sx[b]) * (sy[c] - sy[b]) - (sy[a] - sy[b]) * (sx[c] - sx[b]) <= 0)
 			{
 				continue;
 			}
-
-			int depthAverage = (sz[a] + sz[b] + sz[c]) / 3 + minDepth;
-			if (depthAverage < 0)
-			{
-				depthAverage = 0;
-			}
-			else if (depthAverage > maxDepth)
-			{
-				depthAverage = maxDepth;
-			}
-			if (buckets[depthAverage] == null)
-			{
-				buckets[depthAverage] = new int[8];
-			}
-			else if (bucketCount[depthAverage] == buckets[depthAverage].length)
-			{
-				int[] grown = new int[buckets[depthAverage].length * 2];
-				System.arraycopy(buckets[depthAverage], 0, grown, 0, bucketCount[depthAverage]);
-				buckets[depthAverage] = grown;
-			}
-			buckets[depthAverage][bucketCount[depthAverage]++] = face;
+			depth[i] = Math.max(0, Math.min(maxDepth, (sz[a] + sz[b] + sz[c]) / 3 + minDepth));
+			faces.add(i);
 		}
-
-		int[] drawOrder = resolveDrawOrder(model.getFaceRenderPriorities(),
-			buckets, bucketCount, maxDepth, fa.length);
+		if (!anyInHead)
+		{
+			return null;
+		}
+		// Stable, so faces at one depth keep their face-index order.
+		faces.sort((p, q) -> depth[q] - depth[p]);
 
 		int[] pixels = new int[width * height];
 		GouraudRasterizer raster = new GouraudRasterizer(pixels, width, height);
 
-		for (int face : drawOrder)
+		for (int face : resolveDrawOrder(model.getFaceRenderPriorities(), faces, depth))
 		{
 			int a = fa[face];
 			int b = fb[face];
@@ -318,206 +262,62 @@ public final class ChatheadRenderer
 	}
 
 	/**
-	 * The client's draw2 emission order, ported line for line. Without per-face
-	 * render priorities: buckets far to near, insertion order within each. With
-	 * priorities: the client's 12-class algorithm - faces collect into priority
-	 * classes in depth order, classes 0..9 emit in class order, and the special
-	 * classes 10 and 11 interleave into the stream whenever their next face is
-	 * deeper than the running depth averages of classes 1+2 (checked before
-	 * class 0), 3+4 (before class 3), and 6+8 (before class 5), with the
-	 * leftovers emitted at the end. Player and NPC models rely on this to
-	 * layer coplanar detail correctly.
+	 * The client's draw2 emission order. Without per-face render priorities:
+	 * far to near, as sorted. With priorities: the client's 12-class algorithm
+	 * - faces collect into priority classes in depth order, classes 0..9 emit
+	 * in class order, and the special classes 10 and 11 (all of 10, then all of
+	 * 11) cut into the stream whenever their next face is deeper than the
+	 * running depth averages of classes 1+2 (checked before class 0), 3+4
+	 * (before class 3), and 6+8 (before class 5), with the leftovers emitted at
+	 * the end. Player and NPC models rely on this to layer coplanar detail
+	 * correctly.
 	 */
-	private static int[] resolveDrawOrder(byte[] priorities,
-		int[][] buckets, int[] bucketCount, int maxDepth, int faceTotal)
+	private static List<Integer> resolveDrawOrder(byte[] priorities, List<Integer> faces, int[] depth)
 	{
-		int[] order = new int[faceTotal];
-		int emitted = 0;
-
 		if (priorities == null)
 		{
-			for (int depth = maxDepth; depth >= 0; depth--)
-			{
-				int count = bucketCount[depth];
-				for (int i = 0; i < count; i++)
-				{
-					order[emitted++] = buckets[depth][i];
-				}
-			}
-			return java.util.Arrays.copyOf(order, emitted);
+			return faces;
 		}
 
-		int[] priorityFaceCounts = new int[12];
-		int[][] priorityFaceLists = new int[12][faceTotal];
-		int[] priorityDepthSum = new int[12];
-		int[] priority10FaceDepth = new int[faceTotal];
-		int[] priority11FaceDepth = new int[faceTotal];
-
-		for (int depth = maxDepth; depth >= 0; depth--)
+		int[][] classes = new int[12][faces.size()];
+		int[] counts = new int[12];
+		int[] depthSums = new int[12];
+		for (int face : faces)
 		{
-			int faceCount = bucketCount[depth];
-			for (int i = 0; i < faceCount; i++)
+			int priorityClass = Math.max(0, Math.min(11, priorities[face]));
+			classes[priorityClass][counts[priorityClass]++] = face;
+			depthSums[priorityClass] += depth[face];
+		}
+		int[] special = Arrays.copyOf(classes[10], counts[10] + counts[11]);
+		System.arraycopy(classes[11], 0, special, counts[10], counts[11]);
+
+		List<Integer> order = new ArrayList<>(faces.size());
+		int next = 0;
+		for (int priority = 0; priority <= 10; priority++)
+		{
+			int deeperThan = priority == 0 ? average(counts, depthSums, 1, 2)
+				: priority == 3 ? average(counts, depthSums, 3, 4)
+				: priority == 5 ? average(counts, depthSums, 6, 8)
+				: priority == 10 ? -1 : Integer.MAX_VALUE;
+			while (next < special.length && depth[special[next]] > deeperThan)
 			{
-				int face = buckets[depth][i];
-				int priorityClass = Math.max(0, Math.min(11, priorities[face]));
-				int classCount = priorityFaceCounts[priorityClass]++;
-				priorityFaceLists[priorityClass][classCount] = face;
-				if (priorityClass < 10)
-				{
-					priorityDepthSum[priorityClass] += depth;
-				}
-				else if (priorityClass == 10)
-				{
-					priority10FaceDepth[classCount] = depth;
-				}
-				else
-				{
-					priority11FaceDepth[classCount] = depth;
-				}
+				order.add(special[next++]);
+			}
+			for (int i = 0; priority < 10 && i < counts[priority]; i++)
+			{
+				order.add(classes[priority][i]);
 			}
 		}
-
-		int averagePriorityDepthSum1_2 = 0;
-		if (priorityFaceCounts[1] > 0 || priorityFaceCounts[2] > 0)
-		{
-			averagePriorityDepthSum1_2 = (priorityDepthSum[1] + priorityDepthSum[2])
-				/ (priorityFaceCounts[1] + priorityFaceCounts[2]);
-		}
-
-		int averagePriorityDepthSum3_4 = 0;
-		if (priorityFaceCounts[3] > 0 || priorityFaceCounts[4] > 0)
-		{
-			averagePriorityDepthSum3_4 = (priorityDepthSum[3] + priorityDepthSum[4])
-				/ (priorityFaceCounts[3] + priorityFaceCounts[4]);
-		}
-
-		int averagePriorityDepthSum6_8 = 0;
-		if (priorityFaceCounts[6] > 0 || priorityFaceCounts[8] > 0)
-		{
-			averagePriorityDepthSum6_8 = (priorityDepthSum[6] + priorityDepthSum[8])
-				/ (priorityFaceCounts[6] + priorityFaceCounts[8]);
-		}
-
-		int priorityFace = 0;
-		int priorityFaceCount = priorityFaceCounts[10];
-		int[] priorityFaces = priorityFaceLists[10];
-		int[] priorityFaceDepths = priority10FaceDepth;
-		if (priorityFace == priorityFaceCount)
-		{
-			priorityFace = 0;
-			priorityFaceCount = priorityFaceCounts[11];
-			priorityFaces = priorityFaceLists[11];
-			priorityFaceDepths = priority11FaceDepth;
-		}
-
-		int priorityDepth;
-		if (priorityFace < priorityFaceCount)
-		{
-			priorityDepth = priorityFaceDepths[priorityFace];
-		}
-		else
-		{
-			priorityDepth = -1000;
-		}
-
-		for (int priority = 0; priority < 10; priority++)
-		{
-			while (priority == 0 && priorityDepth > averagePriorityDepthSum1_2)
-			{
-				order[emitted++] = priorityFaces[priorityFace++];
-				if (priorityFace == priorityFaceCount && priorityFaces != priorityFaceLists[11])
-				{
-					priorityFace = 0;
-					priorityFaceCount = priorityFaceCounts[11];
-					priorityFaces = priorityFaceLists[11];
-					priorityFaceDepths = priority11FaceDepth;
-				}
-				if (priorityFace < priorityFaceCount)
-				{
-					priorityDepth = priorityFaceDepths[priorityFace];
-				}
-				else
-				{
-					priorityDepth = -1000;
-				}
-			}
-
-			while (priority == 3 && priorityDepth > averagePriorityDepthSum3_4)
-			{
-				order[emitted++] = priorityFaces[priorityFace++];
-				if (priorityFace == priorityFaceCount && priorityFaces != priorityFaceLists[11])
-				{
-					priorityFace = 0;
-					priorityFaceCount = priorityFaceCounts[11];
-					priorityFaces = priorityFaceLists[11];
-					priorityFaceDepths = priority11FaceDepth;
-				}
-				if (priorityFace < priorityFaceCount)
-				{
-					priorityDepth = priorityFaceDepths[priorityFace];
-				}
-				else
-				{
-					priorityDepth = -1000;
-				}
-			}
-
-			while (priority == 5 && priorityDepth > averagePriorityDepthSum6_8)
-			{
-				order[emitted++] = priorityFaces[priorityFace++];
-				if (priorityFace == priorityFaceCount && priorityFaces != priorityFaceLists[11])
-				{
-					priorityFace = 0;
-					priorityFaceCount = priorityFaceCounts[11];
-					priorityFaces = priorityFaceLists[11];
-					priorityFaceDepths = priority11FaceDepth;
-				}
-				if (priorityFace < priorityFaceCount)
-				{
-					priorityDepth = priorityFaceDepths[priorityFace];
-				}
-				else
-				{
-					priorityDepth = -1000;
-				}
-			}
-
-			int count = priorityFaceCounts[priority];
-			int[] faces = priorityFaceLists[priority];
-			for (int i = 0; i < count; i++)
-			{
-				order[emitted++] = faces[i];
-			}
-		}
-
-		while (priorityDepth != -1000)
-		{
-			order[emitted++] = priorityFaces[priorityFace++];
-			if (priorityFace == priorityFaceCount && priorityFaces != priorityFaceLists[11])
-			{
-				priorityFace = 0;
-				priorityFaces = priorityFaceLists[11];
-				priorityFaceCount = priorityFaceCounts[11];
-				priorityFaceDepths = priority11FaceDepth;
-			}
-			if (priorityFace < priorityFaceCount)
-			{
-				priorityDepth = priorityFaceDepths[priorityFace];
-			}
-			else
-			{
-				priorityDepth = -1000;
-			}
-		}
-
-		return java.util.Arrays.copyOf(order, emitted);
+		return order;
 	}
 
-	/**
-	 * One vertex through the client's widget-model transform: yaw the model, push
-	 * it to the camera distance, orbit the camera to its pitch, then divide by
-	 * depth. Returns screen x, screen y and camera-space depth.
-	 */
+	/** The running depth average of two priority classes, 0 when both are empty. */
+	private static int average(int[] counts, int[] depthSums, int first, int second)
+	{
+		int count = counts[first] + counts[second];
+		return count > 0 ? (depthSums[first] + depthSums[second]) / count : 0;
+	}
+
 	// public:cut chronicle
 	/**
 	 * The pixels {@link #render} would cover, without drawing them: the same
@@ -596,7 +396,11 @@ public final class ChatheadRenderer
 		return minX > maxX ? null : new int[]{minX, minY, maxX + 1, maxY + 1};
 	}
 
-	// public:end chronicle
+	/**
+	 * One vertex through the client's widget-model transform: yaw the model, push
+	 * it to the camera distance, orbit the camera to its pitch, then divide by
+	 * depth. Returns screen x, screen y and camera-space depth.
+	 */
 	private static double[] project(double vx, double vy, double vz,
 		double yawSin, double yawCos, double pitchSin, double pitchCos,
 		double eyeY, double eyeZ)
@@ -619,4 +423,6 @@ public final class ChatheadRenderer
 		}
 		return new double[]{x / cz, cy / cz, cz};
 	}
+
+	// public:end chronicle
 }
