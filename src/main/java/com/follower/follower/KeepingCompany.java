@@ -342,65 +342,22 @@ class KeepingCompany
 		return sitting;
 	}
 
-	/** A session began; every counter starts over, each with its own jitter. */
+	/**
+	 * A session began. The controller makes a fresh company for every
+	 * session, so everything else starts over as it was made; here the
+	 * counters each draw their own jitter.
+	 */
 	void begin(int now)
 	{
 		startTick = now;
-		seat = null;
-		target = null;
-		facing = null;
-		lastTallyDrop = 0;
 		tallyJitter = random.nextInt(3) - 1;
-		scrollOut = false;
-		scrollTicks = 0;
-		toolAside = false;
 		lastDropTick = -1;
-		fast = false;
-		lastNodDrop = 0;
 		nodGap = nextNodGap();
-		lookTicks = 0;
-		lastHere = null;
-		stillTicks = 0;
-		stopped = false;
-		stopWait = 0;
-		stopCooldownUntil = 0;
 		paceAt = jitter(PACE_AFTER_TICKS, 50);
 		sitAt = jitter(SIT_AFTER_TICKS, 60);
 		stretchAt = jitter(STRETCH_AFTER_TICKS, 300);
 		stretchAgainAt = jitter(STRETCH_AGAIN_TICKS, 300);
-		paced = false;
-		stretched = false;
-		stretchedAgain = false;
-		sitting = false;
-		legs.clear();
-		legWait = 0;
-		walking = false;
-		playerLookTicks = 0;
-		step = null;
-		stepTicks = 0;
-		seatMoved = null;
-		looks.clear();
-		currentLook = null;
-		currentLookTicks = 0;
 		lastDepletionTick = -1;
-		workMin = null;
-		workMax = null;
-		working = 0;
-		workGone = false;
-		facingTheWork = false;
-		facedAt = 0;
-		workTicks = 0;
-		stretch = 0;
-		mode = Mode.NONE;
-		activity = "";
-		guard = null;
-		guardGlanceAt = 0;
-		warmAt = 0;
-		studyTicks = 0;
-		studyResume = 0;
-		peerTicks = 0;
-		fumesDrops = 0;
-		wasAnimating = false;
 	}
 
 	/**
@@ -425,14 +382,13 @@ class KeepingCompany
 		{
 			case ANVIL:
 			case FOREMAN:
-				takeOutTheScroll(0);
-				studyTicks = jitter(STUDY_SHRUG_EVERY, 5);
+				study();
 				break;
 			case WHEEL:
 				sit();
 				break;
 			case ALTAR:
-				emote(KNEEL);
+				gesture(KNEEL);
 				break;
 			default:
 				break;
@@ -608,6 +564,18 @@ class KeepingCompany
 		stampAt = now + jitter(STAMP_EVERY_TICKS, STAMP_SPREAD);
 		guardGlanceAt = 0;
 		fumesDrops = 0;
+		forgetLooks();
+	}
+
+	/** The notes out for the whole session, put down for a shrug now and then. */
+	private void study()
+	{
+		takeOutTheScroll(0);
+		studyTicks = jitter(STUDY_SHRUG_EVERY, 5);
+	}
+
+	private void forgetLooks()
+	{
 		looks.clear();
 		currentLook = null;
 		currentLookTicks = 0;
@@ -763,13 +731,12 @@ class KeepingCompany
 				if (scrollOut && --studyTicks <= 0)
 				{
 					putScrollAway();
-					emote(SHRUG);
+					gesture(SHRUG);
 					studyResume = STUDY_RESUME_TICKS;
 				}
 				else if (!scrollOut && studyResume > 0 && --studyResume == 0)
 				{
-					takeOutTheScroll(0);
-					studyTicks = jitter(STUDY_SHRUG_EVERY, 5);
+					study();
 				}
 				break;
 			case STANDING:
@@ -786,14 +753,14 @@ class KeepingCompany
 			case FOREMAN:
 				if (wasAnimating && !animating)
 				{
-					emote(NOD);
+					gesture(NOD);
 				}
 				break;
 			case BRAZIER:
 				if (now >= stampAt && !sitting)
 				{
 					stampAt = now + jitter(STAMP_EVERY_TICKS, STAMP_SPREAD);
-					emote(STAMP_FEET);
+					gesture(STAMP_FEET);
 				}
 				break;
 			default:
@@ -899,12 +866,6 @@ class KeepingCompany
 		look(awayTile(), COMPOST_TICKS);
 	}
 
-	/** A one-shot for the controller's own reactions, stood up first when sitting. */
-	void gesture(int animationId)
-	{
-		emote(animationId);
-	}
-
 	/** The same for a chain - the level-up's send-off - stood up first when sitting. */
 	void gesture(int[] animationIds)
 	{
@@ -944,19 +905,7 @@ class KeepingCompany
 	 */
 	int endNote()
 	{
-		if (borrow.isHolding() || hands.isHolding())
-		{
-			return 0;
-		}
-		hands.hold(ErrandController.QUILL_PROP, ErrandController.SCROLL_PROP);
-		if (!hands.isHolding())
-		{
-			return 0;
-		}
-		follower.setPoseOverride(ErrandController.WRITE_SCROLL_POSE);
-		scrollOut = true;
-		scrollTicks = 0;
-		return NOTE_TICKS;
+		return borrow.isHolding() || hands.isHolding() || !holdTheScroll(0) ? 0 : NOTE_TICKS;
 	}
 
 	private void face(WorldPoint tile)
@@ -1075,7 +1024,7 @@ class KeepingCompany
 		}
 		if (stopped && stopWait > 0 && --stopWait == 0)
 		{
-			emote(SCRATCH_HEAD);
+			gesture(SCRATCH_HEAD);
 			stopCooldownUntil = now + jitter(STOP_COOLDOWN_TICKS, 30);
 		}
 	}
@@ -1127,9 +1076,7 @@ class KeepingCompany
 		sitAfterWalk = thenSit;
 		stopped = false;
 		lookTicks = 0;
-		looks.clear();
-		currentLook = null;
-		currentLookTicks = 0;
+		forgetLooks();
 		// Up first, and the walk waits for it.
 		legWait = standUp() ? STAND_UP_TICKS : 0;
 	}
@@ -1202,8 +1149,11 @@ class KeepingCompany
 		return true;
 	}
 
-	/** A one-shot, stood up first when sitting; the pose sits it back down after. */
-	private void emote(int animationId)
+	/**
+	 * A one-shot, the controller's own reactions among them, stood up first
+	 * when sitting; the pose sits it back down after.
+	 */
+	void gesture(int animationId)
 	{
 		if (sitting)
 		{
@@ -1232,14 +1182,26 @@ class KeepingCompany
 		{
 			return;
 		}
+		holdTheScroll(ticks);
+	}
+
+	/**
+	 * The scroll and quill into the errand's hands and the writing pose on,
+	 * out for so many ticks, or until put away for none.
+	 *
+	 * @return false when the hands decline them
+	 */
+	private boolean holdTheScroll(int ticks)
+	{
 		hands.hold(ErrandController.QUILL_PROP, ErrandController.SCROLL_PROP);
 		if (!hands.isHolding())
 		{
-			return;
+			return false;
 		}
 		follower.setPoseOverride(ErrandController.WRITE_SCROLL_POSE);
 		scrollOut = true;
 		scrollTicks = ticks;
+		return true;
 	}
 
 	/**
@@ -1268,19 +1230,11 @@ class KeepingCompany
 		{
 			toolAside = borrow.setAside();
 		}
-		if (hands.isHolding())
-		{
-			// Something else is in the hand; not the scroll's to take.
-			return;
-		}
-		hands.hold(ErrandController.QUILL_PROP, ErrandController.SCROLL_PROP);
+		// Something else in the hand is not the scroll's to take.
 		if (!hands.isHolding())
 		{
-			return;
+			holdTheScroll(ticks);
 		}
-		follower.setPoseOverride(ErrandController.WRITE_SCROLL_POSE);
-		scrollOut = true;
-		scrollTicks = ticks;
 	}
 
 	void putScrollAway()
@@ -1380,7 +1334,7 @@ class KeepingCompany
 		}
 		if ("woodcutting".equals(activity) && worked >= TIMBER_AFTER_TICKS)
 		{
-			emote(FLINCH);
+			gesture(FLINCH);
 			look(here, PLAYER_BEAT_TICKS);
 			look(next, NEXT_LOOK_TICKS);
 			return;
@@ -1409,7 +1363,7 @@ class KeepingCompany
 		look(tile, NEXT_LOOK_TICKS);
 		if (peerProven && !walking)
 		{
-			emote(NEST_LOOK);
+			gesture(NEST_LOOK);
 		}
 	}
 
@@ -1457,7 +1411,7 @@ class KeepingCompany
 		putScrollAway();
 		playerLookTicks = PLAYER_LOOK_TICKS;
 		face(here);
-		emote(SHRUG);
+		gesture(SHRUG);
 		sitting = false;
 		follower.setPoseOverride(0);
 
@@ -1501,9 +1455,7 @@ class KeepingCompany
 		facing = null;
 		step = null;
 		stepTicks = 0;
-		looks.clear();
-		currentLook = null;
-		currentLookTicks = 0;
+		forgetLooks();
 		return leadIn;
 	}
 

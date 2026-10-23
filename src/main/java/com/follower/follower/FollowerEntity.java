@@ -314,7 +314,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		{
 			return wanted;
 		}
-		WorldPoint player = playerTileToAvoid();
+		WorldPoint player = playerTile(client);
 		WorldPoint from = simTile != null ? simTile : tile;
 		WorldPoint best = null;
 		int nearest = Integer.MAX_VALUE;
@@ -1778,7 +1778,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		}
 
 		WorldPoint from = simTile != null ? simTile : tile;
-		return findPath(from, target, true, playerTileToAvoid());
+		return findPath(from, target, true, playerTile(client));
 	}
 
 	/** Drops queued route steps. */
@@ -2232,7 +2232,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 			|| (!serverPath.isEmpty() && !serverPath.peekLast().equals(approachPlanned)))
 		{
 			// Planned once, and again only if something else took the walk.
-			planApproach(target, waiting ? playerTileToAvoid() : null);
+			planApproach(target, waiting ? playerTile(client) : null);
 			// The first step at once rather than on the next tick's release:
 			// the start is usually the tile the player has just stepped off,
 			// and the crossing begins START_LAG_MS after they did.
@@ -2941,8 +2941,11 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		}
 	}
 
-	/** The player's tile, for BFS routes to walk around rather than through. */
-	private WorldPoint playerTileToAvoid()
+	/**
+	 * Where the player stands, or null while there is no player: the tile
+	 * BFS routes walk around rather than through, and the controllers' "here".
+	 */
+	public static WorldPoint playerTile(Client client)
 	{
 		Player local = client.getLocalPlayer();
 		return local == null ? null : local.getWorldLocation();
@@ -3377,7 +3380,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 			}
 			else if (serverPath.isEmpty() && route.isEmpty())
 			{
-				extendPathBfs(stayTile, playerTileToAvoid());
+				extendPathBfs(stayTile, playerTile(client));
 			}
 		}
 		// A posed goal suspends following: the goal's path is the only target
@@ -3394,7 +3397,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 			}
 			else if (serverPath.isEmpty() && route.isEmpty())
 			{
-				extendPathBfs(goalTile, playerTileToAvoid());
+				extendPathBfs(goalTile, playerTile(client));
 			}
 		}
 		// Fallback for the cases the eager extension can't see - after a spawn,
@@ -4519,7 +4522,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 	 */
 	private void stepOffTheFire()
 	{
-		WorldPoint player = playerTileToAvoid();
+		WorldPoint player = playerTile(client);
 		boolean staying = stayTile != null;
 		int[][] steps = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {-1, 1}, {1, -1}, {-1, -1}};
 		for (int[] step : steps)
@@ -5910,8 +5913,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		vanishAfterEmoteArmed = false;
 		vanished = true;
 		vanishedAtMs = System.currentTimeMillis();
-		Player local = client.getLocalPlayer();
-		vanishPlayerTile = local == null ? null : local.getWorldLocation();
+		vanishPlayerTile = playerTile(client);
 		if (object != null)
 		{
 			object.setActive(false);

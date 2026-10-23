@@ -1020,9 +1020,8 @@ public class ErrandController
 
 	private int distanceToPlayer()
 	{
-		Player local = client.getLocalPlayer();
 		WorldPoint at = follower.getWorldLocation();
-		WorldPoint pt = local == null ? null : local.getWorldLocation();
+		WorldPoint pt = FollowerEntity.playerTile(client);
 		return at != null && pt != null && at.getPlane() == pt.getPlane()
 			? at.distanceTo(pt) : Integer.MAX_VALUE;
 	}
@@ -1282,8 +1281,7 @@ public class ErrandController
 	/** The nearest matching NPC's tile within the search radius, or null. */
 	private WorldPoint findNpc(java.util.function.Predicate<String> nameMatch)
 	{
-		Player local = client.getLocalPlayer();
-		WorldPoint centre = local == null ? null : local.getWorldLocation();
+		WorldPoint centre = FollowerEntity.playerTile(client);
 		if (centre == null)
 		{
 			return null;

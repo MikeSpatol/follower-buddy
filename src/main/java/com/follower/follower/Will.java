@@ -298,8 +298,7 @@ public class Will
 	public void tick()
 	{
 		int now = client.getTickCount();
-		Player local = client.getLocalPlayer();
-		WorldPoint here = local == null ? null : local.getWorldLocation();
+		WorldPoint here = FollowerEntity.playerTile(client);
 		if (pending != null)
 		{
 			if (!follower.isStaying())

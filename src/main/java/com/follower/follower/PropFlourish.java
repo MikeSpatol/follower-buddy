@@ -86,13 +86,8 @@ public class PropFlourish
 		}
 		if (--holdTicks <= 0)
 		{
-			finish();
+			putEverythingBack();
 		}
-	}
-
-	private void finish()
-	{
-		putEverythingBack();
 	}
 
 	/**

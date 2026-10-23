@@ -177,7 +177,7 @@ public class FireLineTest
 	 * the player's own tile and returns, never reaching north or south.
 	 *
 	 * <p>Then {@code updateFrame} routes that goal with
-	 * {@code extendPathBfs(goalTile, playerTileToAvoid())} - the player's
+	 * {@code extendPathBfs(goalTile, playerTile(client))} - the player's
 	 * tile is the one thing the route is told to go around - so the escape
 	 * resolves to closest approach, which is the tile the follower is already
 	 * standing on. The step out of the fire is a silent no-op, every time.

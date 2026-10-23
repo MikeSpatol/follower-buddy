@@ -257,8 +257,8 @@ public class SkillingController
 	/** Every counter's jitter comes from here; a test may seed it. */
 	final Random random = new Random();
 
-	/** What the follower does in the seat; see {@link KeepingCompany}. */
-	private final KeepingCompany company;
+	/** What the follower does in the seat, made afresh for each session; see {@link KeepingCompany}. */
+	private KeepingCompany company;
 
 	/** The last menu option the player clicked, tags off, work or not. */
 	private String lastOption = "";
@@ -453,6 +453,27 @@ public class SkillingController
 		catch (RuntimeException notInTheCache)
 		{
 			return null;
+		}
+	}
+
+	/** Where the player stands, or null while there is no player. */
+	private WorldPoint playerTile()
+	{
+		return FollowerEntity.playerTile(client);
+	}
+
+	/** Whether the follower is somebody else's just now, fighting, or not out at all. */
+	private boolean elsewhere()
+	{
+		return feetTaken.getAsBoolean() || inCombat.getAsBoolean() || !follower.isSpawned();
+	}
+
+	/** Hands the feet back, when they are still the company's to give. */
+	private void letGo()
+	{
+		if (follower.isStaying() && !feetTaken.getAsBoolean())
+		{
+			follower.resumeFollowing();
 		}
 	}
 
@@ -711,8 +732,7 @@ public class SkillingController
 		{
 			return;
 		}
-		Player local = client.getLocalPlayer();
-		WorldPoint here = local == null ? null : local.getWorldLocation();
+		WorldPoint here = playerTile();
 		if (here == null)
 		{
 			return;
@@ -777,8 +797,7 @@ public class SkillingController
 		{
 			// The trap object turns up on the player's tile a moment later.
 			layTick = client.getTickCount();
-			Player local = client.getLocalPlayer();
-			layTile = local == null ? null : local.getWorldLocation();
+			layTile = playerTile();
 		}
 		// A click parked during a session is the player moving on to
 		// something else; the swing that follows is its proof, and the old
@@ -821,8 +840,7 @@ public class SkillingController
 		{
 			return;
 		}
-		Player local = client.getLocalPlayer();
-		if (local != null && tile.equals(local.getWorldLocation()))
+		if (tile.equals(playerTile()))
 		{
 			company.nest(tile, nestLookProven);
 		}
@@ -870,9 +888,7 @@ public class SkillingController
 				// seat may be the wrong shape for it: across a fire, not on
 				// its flank. Chosen again, once the player is at it.
 				session.activity = named;
-				Player local = client.getLocalPlayer();
-				WorldPoint here = local == null ? null : local.getWorldLocation();
-				company.aimAt(faceTile(), named, modeFor(here), now);
+				company.aimAt(faceTile(), named, modeFor(playerTile()), now);
 				if (seat != null)
 				{
 					reseat = true;
@@ -924,10 +940,10 @@ public class SkillingController
 			{
 				// The trap sprang, or fell: a glance at the player.
 				trapId = id;
-				Player local = client.getLocalPlayer();
-				if (trapSeat != null && local != null && local.getWorldLocation() != null)
+				WorldPoint here = playerTile();
+				if (trapSeat != null && here != null)
 				{
-					follower.setStayFaceTile(local.getWorldLocation());
+					follower.setStayFaceTile(here);
 					trapLookTicks = TRAP_LOOK_TICKS;
 				}
 			}
@@ -1011,23 +1027,44 @@ public class SkillingController
 			return null;
 		}
 		WorldPoint best = null;
+		for (NPC npc : sameNameNpcs(view, session.targetTile, NEW_SPOT_TILES))
+		{
+			WorldPoint at = npc.getWorldLocation();
+			// The one on the target's own tile is the target, or what is
+			// left of it in the list this tick.
+			if (!at.equals(session.targetTile) && (best == null
+				|| at.distanceTo(session.targetTile) < best.distanceTo(session.targetTile)))
+			{
+				best = at;
+			}
+		}
+		return best;
+	}
+
+	/**
+	 * The NPCs named as the target, other than the target itself, on a tile's
+	 * plane and within so many tiles of it.
+	 */
+	private List<NPC> sameNameNpcs(WorldView view, WorldPoint near, int reach)
+	{
+		List<NPC> found = new ArrayList<>();
 		for (NPC npc : view.npcs())
 		{
 			WorldPoint at = npc == null ? null : npc.getWorldLocation();
-			// The one on the target's own tile is the target, or what is
-			// left of it in the list this tick.
-			if (at == null || npc == session.targetNpc || at.equals(session.targetTile)
-				|| !session.targetName.equals(npc.getName())
-				|| at.getPlane() != session.targetTile.getPlane()
-				|| at.distanceTo(session.targetTile) > NEW_SPOT_TILES
-				|| (best != null && at.distanceTo(session.targetTile)
-					>= best.distanceTo(session.targetTile)))
+			if (at != null && npc != session.targetNpc && session.targetName.equals(npc.getName())
+				&& at.getPlane() == near.getPlane() && at.distanceTo(near) <= reach)
 			{
-				continue;
+				found.add(npc);
 			}
-			best = at;
 		}
-		return best;
+		return found;
+	}
+
+	/** The far corner of an NPC's footprint, from its south-west tile. */
+	private static WorldPoint farCorner(NPC npc, WorldPoint at)
+	{
+		int size = npc.getComposition() == null ? 1 : Math.max(1, npc.getComposition().getSize());
+		return new WorldPoint(at.getX() + size - 1, at.getY() + size - 1, at.getPlane());
 	}
 
 	/** A scene load began: what despawns around it is shuffling, not change. */
@@ -1036,21 +1073,36 @@ public class SkillingController
 		ticksSinceLoading = 0;
 	}
 
-	/** Logout, hop, shutdown: everything let go of, nothing said. */
-	public void reset()
+	/**
+	 * The session, the kept seat, the trap, the fire and the kept tool, all
+	 * let go of silently.
+	 *
+	 * @param announce whether the rules hear the session end
+	 * @param notes whether the notes, the ledger and a parked click go too
+	 */
+	private void dropEverything(boolean announce, boolean notes)
 	{
 		if (session != null)
 		{
-			end(true, false, false);
+			end(true, false, announce);
 		}
 		dropTheBankTrip(true);
 		dropTheTrap(true);
 		dropTheFireLine(true);
 		dropTheGrace(false);
-		letGoOfTheNotes();
-		ledger.abort();
-		ledgerAt = 0;
-		pending = null;
+		if (notes)
+		{
+			letGoOfTheNotes();
+			ledger.abort();
+			ledgerAt = 0;
+			pending = null;
+		}
+	}
+
+	/** Logout, hop, shutdown: everything let go of, nothing said. */
+	public void reset()
+	{
+		dropEverything(false, true);
 		releaseTicks = 0;
 		excused = false;
 		alongside = null;
@@ -1090,20 +1142,10 @@ public class SkillingController
 		{
 			outOfRunes(now);
 		}
-		else if (plain.contains(TASK_DONE_MESSAGE))
+		else if (plain.contains(TASK_DONE_MESSAGE)
+			|| Arrays.stream(NEW_TASK_MESSAGES).anyMatch(plain::contains))
 		{
-			taskDone(now);
-		}
-		else
-		{
-			for (String fragment : NEW_TASK_MESSAGES)
-			{
-				if (plain.contains(fragment))
-				{
-					newTask(now);
-					return;
-				}
-			}
+			ledgerBeat(now, plain.contains(TASK_DONE_MESSAGE));
 		}
 	}
 
@@ -1146,28 +1188,25 @@ public class SkillingController
 			return;
 		}
 		runesCooldownUntil = now + RUNES_COOLDOWN_TICKS;
-		Player local = client.getLocalPlayer();
-		if (local != null && local.getWorldLocation() != null)
-		{
-			company.lookAt(local.getWorldLocation(), CLAP_TICKS);
-		}
+		company.lookAt(playerTile(), CLAP_TICKS);
 		company.gesture(KeepingCompany.SCRATCH_HEAD);
 	}
 
 	/**
-	 * The task ledger: applause, then the scroll for the entry. The scroll
-	 * goes through its own flourish, which holds the feet, so it is skipped
-	 * while something else has them.
+	 * The task ledger. A task done: applause, then the scroll for the entry.
+	 * The scroll goes through its own flourish, which holds the feet, so it
+	 * is skipped while something else has them. A new task: a shrug -
+	 * whatever it is, it is a lot of them.
 	 */
-	private void taskDone(int now)
+	private void ledgerBeat(int now, boolean done)
 	{
 		if (now < ledgerCooldownUntil)
 		{
 			return;
 		}
 		ledgerCooldownUntil = now + LEDGER_COOLDOWN_TICKS;
-		company.gesture(CLAP);
-		if (!holdsTheFeet() && !feetTaken.getAsBoolean())
+		company.gesture(done ? CLAP : KeepingCompany.SHRUG);
+		if (done && !holdsTheFeet() && !feetTaken.getAsBoolean())
 		{
 			ledgerAt = now + CLAP_TICKS;
 		}
@@ -1186,17 +1225,6 @@ public class SkillingController
 	}
 
 	// public:end posing
-	/** A new task: a shrug. Whatever it is, it is a lot of them. */
-	private void newTask(int now)
-	{
-		if (now < ledgerCooldownUntil)
-		{
-			return;
-		}
-		ledgerCooldownUntil = now + LEDGER_COOLDOWN_TICKS;
-		company.gesture(KeepingCompany.SHRUG);
-	}
-
 	// ------------------------------------------------------------------ tick
 
 	/** Call once per game tick, on the client thread. */
@@ -1210,44 +1238,23 @@ public class SkillingController
 
 		if (!config.keepsCompany())
 		{
-			if (session != null)
-			{
-				end(true, false, true);
-			}
-			dropTheBankTrip(true);
-			dropTheTrap(true);
-			dropTheFireLine(true);
-			dropTheGrace(false);
-			letGoOfTheNotes();
-			ledger.abort();
-			ledgerAt = 0;
-			pending = null;
+			dropEverything(true, true);
 			return;
 		}
 
 		if (releaseTicks > 0 && --releaseTicks == 0)
 		{
 			letGoOfTheNotes();
-			if (follower.isStaying() && !feetTaken.getAsBoolean())
-			{
-				// Only when the seat is still ours: a thrall or the spectator
-				// that took the feet during the bow must not be released by us.
-				follower.resumeFollowing();
-			}
+			// Only when the seat is still ours: a thrall or the spectator
+			// that took the feet during the bow must not be released by us.
+			letGo();
 		}
 
 		Player local = client.getLocalPlayer();
 		WorldPoint here = local == null ? null : local.getWorldLocation();
 		if (here == null)
 		{
-			if (session != null)
-			{
-				end(true, false, true);
-			}
-			dropTheBankTrip(true);
-			dropTheTrap(true);
-			dropTheFireLine(true);
-			dropTheGrace(false);
+			dropEverything(true, false);
 			previousHere = null;
 			return;
 		}
@@ -1302,8 +1309,7 @@ public class SkillingController
 
 		// The abort paths: something else owns the follower, or the world
 		// changed under the session. Silent, tool straight back.
-		if (feetTaken.getAsBoolean() || !follower.isSpawned() || inCombat.getAsBoolean()
-			|| here.getPlane() != session.workSpot.getPlane())
+		if (elsewhere() || here.getPlane() != session.workSpot.getPlane())
 		{
 			end(true, false, true);
 			return;
@@ -1438,8 +1444,7 @@ public class SkillingController
 
 	private void startPending()
 	{
-		if (pending == null || inCombat.getAsBoolean() || feetTaken.getAsBoolean()
-			|| !follower.isSpawned())
+		if (pending == null || elsewhere())
 		{
 			return;
 		}
@@ -1447,9 +1452,11 @@ public class SkillingController
 		// Where they work is where they stand at the first swing, not where
 		// they clicked from: a click from across the clearing, as every one
 		// back from the bank is, read as having walked off on the swing.
-		Player local = client.getLocalPlayer();
-		WorldPoint at = local == null || local.getWorldLocation() == null
-			? pending.workSpot : local.getWorldLocation();
+		WorldPoint at = playerTile();
+		if (at == null)
+		{
+			at = pending.workSpot;
+		}
 		WorkSession opened = new WorkSession(pending.option, pending.activity,
 			pending.targetName, pending.targetId, pending.targetTile, pending.targetMax,
 			pending.targetNpc, at, now);
@@ -1475,8 +1482,7 @@ public class SkillingController
 	{
 		Player local = client.getLocalPlayer();
 		WorldPoint here = local == null ? null : local.getWorldLocation();
-		if (here == null || !config.keepsCompany() || inCombat.getAsBoolean()
-			|| feetTaken.getAsBoolean() || !follower.isSpawned())
+		if (here == null || !config.keepsCompany() || elsewhere())
 		{
 			return;
 		}
@@ -1544,6 +1550,7 @@ public class SkillingController
 		refusedTool = 0;
 		refusedHat = 0;
 		seatDueTick = now + seatAfter();
+		company = new KeepingCompany(client, follower, config, hands, borrow, random);
 		company.begin(now);
 		company.aimAt(faceTile(), session.activity, modeFor(session.workSpot), now);
 		// public:cut logs
@@ -1586,26 +1593,22 @@ public class SkillingController
 			beatWait = 0;
 		}
 		boolean beat = !silent && !carry && withBeat && borrow.isBorrowing();
-		if (carry)
-		{
-			if (standUp > 0)
-			{
-				follower.playAnimation(standUp);
-			}
-		}
-		else if (beat)
+		if (beat)
 		{
 			// The bow is to the player, not to the tree.
-			Player local = client.getLocalPlayer();
-			if (seat != null && local != null && local.getWorldLocation() != null)
+			WorldPoint here = playerTile();
+			if (seat != null && here != null)
 			{
-				follower.setStayFaceTile(local.getWorldLocation());
+				follower.setStayFaceTile(here);
 			}
 			borrow.giveBack(true, standUp);
 		}
 		else
 		{
-			borrow.abort();
+			if (!carry)
+			{
+				borrow.abort();
+			}
 			if (standUp > 0)
 			{
 				follower.playAnimation(standUp);
@@ -1625,11 +1628,11 @@ public class SkillingController
 				releaseTicks = RELEASE_HOLD_TICKS + note
 					+ (standUp > 0 ? KeepingCompany.STAND_UP_TICKS : 0);
 			}
-			else if (follower.isStaying() && !feetTaken.getAsBoolean())
+			else
 			{
 				// Only when the seat is still ours: a thrall or the spectator
 				// that just took the feet must not be released by us.
-				follower.resumeFollowing();
+				letGo();
 			}
 		}
 		if (announce)
@@ -1649,7 +1652,7 @@ public class SkillingController
 	 */
 	private void watchTheGrace()
 	{
-		if (inCombat.getAsBoolean() || feetTaken.getAsBoolean() || !follower.isSpawned())
+		if (elsewhere())
 		{
 			dropTheGrace(false);
 			return;
@@ -1703,11 +1706,8 @@ public class SkillingController
 		seat = null;
 		reseat = false;
 		seatDueTick = now + 1;
-		if (follower.isStaying() && !feetTaken.getAsBoolean())
-		{
-			// Off it now, in case there is nowhere better to be given.
-			follower.resumeFollowing();
-		}
+		// Off it now, in case there is nowhere better to be given.
+		letGo();
 		log.debug("The seat is not ground any more; choosing again"); // public:cut logs
 	}
 
@@ -1734,8 +1734,7 @@ public class SkillingController
 		{
 			return;
 		}
-		Player local = client.getLocalPlayer();
-		WorldPoint here = local == null ? null : local.getWorldLocation();
+		WorldPoint here = playerTile();
 		if (earned && owedTheSendOff() && follower.isSettled() && here != null)
 		{
 			follower.glanceAt(here, BEAT_GLANCE_MS);
@@ -1770,8 +1769,7 @@ public class SkillingController
 			next = nearestObject(client, session.targetTile, NEXT_TARGET_TILES,
 				session.targetName::equals, session.targetTile, session.targetMax);
 		}
-		Player local = client.getLocalPlayer();
-		WorldPoint here = local == null ? null : local.getWorldLocation();
+		WorldPoint here = playerTile();
 		Alongside at = work();
 		if (at != null && !at.min.equals(session.targetTile))
 		{
@@ -1802,8 +1800,7 @@ public class SkillingController
 	private boolean maybeTheTrap(int id, WorldPoint min, WorldPoint max)
 	{
 		int now = client.getTickCount();
-		Player local = client.getLocalPlayer();
-		WorldPoint here = local == null ? null : local.getWorldLocation();
+		WorldPoint here = playerTile();
 		WorldPoint laidAt = layTile != null ? layTile : here;
 		if (now - layTick > LAY_SETTLE_TICKS || here == null || laidAt == null
 			|| !covers(min, max, laidAt))
@@ -1824,7 +1821,7 @@ public class SkillingController
 				List<WorldPoint> ring = ring(trapTile, trapTile, TRAP_WATCH_TILES, here.getPlane());
 				if (from != null)
 				{
-					ring.sort((a, b) -> Integer.compare(square(a, from), square(b, from)));
+					ring.sort(nearestTo(from));
 				}
 				for (WorldPoint candidate : ring)
 				{
@@ -1841,8 +1838,7 @@ public class SkillingController
 			}
 			return true;
 		}
-		if (bankTrip || fireSeat != null || feetTaken.getAsBoolean() || inCombat.getAsBoolean()
-			|| !follower.isSpawned())
+		if (bankTrip || fireSeat != null || elsewhere())
 		{
 			return true;
 		}
@@ -1851,7 +1847,7 @@ public class SkillingController
 		ring.removeIf(here::equals);
 		if (from != null)
 		{
-			ring.sort((a, b) -> Integer.compare(a.distanceTo(from), b.distanceTo(from)));
+			ring.sort(stepsFrom(from));
 		}
 		for (WorldPoint candidate : ring)
 		{
@@ -1970,9 +1966,9 @@ public class SkillingController
 		trapSeat = null;
 		trapTile = null;
 		trapLookTicks = 0;
-		if (release && follower.isStaying() && !feetTaken.getAsBoolean())
+		if (release)
 		{
-			follower.resumeFollowing();
+			letGo();
 		}
 	}
 
@@ -2110,23 +2106,20 @@ public class SkillingController
 	private void startTheJoin()
 	{
 		if (joinTile != null || seat == null || bankTrip || fireSeat != null
-			|| trapSeat != null || feetTaken.getAsBoolean() || inCombat.getAsBoolean()
-			|| !follower.isSpawned() || session.targetTile == null || session.standing)
+			|| trapSeat != null || elsewhere() || session.targetTile == null || session.standing)
 		{
 			return;
 		}
-		Player local = client.getLocalPlayer();
-		WorldPoint player = local == null ? null : local.getWorldLocation();
+		WorldPoint player = playerTile();
 		WorldPoint from = follower.getWorldLocation();
-		WorldPoint max = session.targetMax == null ? session.targetTile : session.targetMax;
 		// Square on, as the player works it: a corner is not within reach
 		// of anything in the game, so a swing from one misses the trunk.
-		List<WorldPoint> beside = ring(session.targetTile, max, 1,
+		List<WorldPoint> beside = ring(session.targetTile, session.targetMax, 1,
 			session.targetTile.getPlane());
 		beside.removeIf(c -> c.equals(player) || !againstTheWork(c));
 		if (from != null)
 		{
-			beside.sort((a, b) -> Integer.compare(square(a, from), square(b, from)));
+			beside.sort(nearestTo(from));
 		}
 		for (WorldPoint candidate : beside)
 		{
@@ -2164,8 +2157,7 @@ public class SkillingController
 	/** Faces the middle of the work's footprint, exactly, as the player does. */
 	private void faceTheWork()
 	{
-		follower.setStayFaceArea(session.targetTile,
-			session.targetMax == null ? session.targetTile : session.targetMax);
+		follower.setStayFaceArea(session.targetTile, session.targetMax);
 	}
 
 	/** Gave up on the walk over, or something took the feet while it walked. */
@@ -2180,8 +2172,7 @@ public class SkillingController
 			// Got there: the walk's patience is spent, and the copy runs on.
 			joinBy = 0;
 		}
-		if (session == null || !follower.isSpawned() || feetTaken.getAsBoolean()
-			|| inCombat.getAsBoolean() || excused || session.depleted
+		if (session == null || elsewhere() || excused || session.depleted
 			|| !joinTile.equals(follower.getStayTile())
 			|| !follower.goodGround(joinTile) || !workableFrom(joinTile)
 			|| (joinBy > 0 && now > joinBy && !joinedIn()))
@@ -2203,18 +2194,12 @@ public class SkillingController
 			return false;
 		}
 		WorldPoint min = session.targetTile;
-		WorldPoint max = session.targetMax == null ? min : session.targetMax;
-		if (at.getPlane() != min.getPlane() || !squareOn(min, max, at))
+		WorldPoint max = session.targetMax;
+		if (at.getPlane() != min.getPlane() || !squareOn(min, max, at) || fenced(min, max, at))
 		{
 			return false;
 		}
 		boolean xIn = at.getX() >= min.getX() && at.getX() <= max.getX();
-		int dx = xIn ? 0 : at.getX() < min.getX() ? 1 : -1;
-		int dy = !xIn ? 0 : at.getY() < min.getY() ? 1 : -1;
-		if (follower.walledToward(at, dx, dy))
-		{
-			return false;
-		}
 		WorldPoint player = session.workSpot;
 		return !ONE_SIDED.contains(session.targetId)
 			|| (at.getX() == player.getX() && !xIn) || (at.getY() == player.getY() && xIn);
@@ -2255,11 +2240,6 @@ public class SkillingController
 		final WorldPoint from;
 		/** A patch: the same patch while it stands, whatever its crop is called now. */
 		final boolean anyState;
-
-		Alongside(int id, NPC npc, boolean wall, WorldPoint min, WorldPoint max, WorldPoint from)
-		{
-			this(id, npc, wall, min, max, from, false);
-		}
 
 		Alongside(int id, NPC npc, boolean wall, WorldPoint min, WorldPoint max, WorldPoint from,
 			boolean anyState)
@@ -2452,7 +2432,7 @@ public class SkillingController
 			return found;
 		}
 		WorldPoint min = session.targetTile;
-		WorldPoint max = session.targetMax == null ? min : session.targetMax;
+		WorldPoint max = session.targetMax;
 		boolean patch = farmingPatch();
 		if (!stillLive(new Alongside(session.targetId, session.targetNpc, false, min, max, min,
 			patch)))
@@ -2483,45 +2463,33 @@ public class SkillingController
 		int reach = ALONGSIDE_TILES + 1;
 		if (session.targetNpc != null)
 		{
-			for (NPC npc : view.npcs())
+			for (NPC npc : sameNameNpcs(view, player, reach))
 			{
-				WorldPoint at = npc == null ? null : npc.getWorldLocation();
-				if (at == null || npc == session.targetNpc || at.getPlane() != player.getPlane()
-					|| at.distanceTo(player) > reach || !liveNpc(npc))
+				WorldPoint at = npc.getWorldLocation();
+				if (!liveNpc(npc))
 				{
 					continue;
 				}
-				int size = npc.getComposition() == null ? 1
-					: Math.max(1, npc.getComposition().getSize());
-				WorldPoint far = new WorldPoint(at.getX() + size - 1, at.getY() + size - 1,
-					at.getPlane());
+				WorldPoint far = farCorner(npc, at);
 				for (WorldPoint c : workTilesOf(at, far, npc.getId()))
 				{
-					found.add(new Alongside(npc.getId(), npc, false, at, far, c));
+					found.add(new Alongside(npc.getId(), npc, false, at, far, c, false));
 				}
 			}
 			return found;
 		}
-		Tile[][][] tiles = view.getScene() == null ? null : view.getScene().getTiles();
 		int plane = player.getPlane();
-		if (tiles == null || plane < 0 || plane >= tiles.length)
-		{
-			return found;
-		}
 		WorldPoint min = session.targetTile;
-		WorldPoint max = session.targetMax == null ? min : session.targetMax;
+		WorldPoint max = session.targetMax;
 		for (int x = player.getX() - reach; x <= player.getX() + reach; x++)
 		{
 			for (int y = player.getY() - reach; y <= player.getY() + reach; y++)
 			{
-				int sx = x - view.getBaseX();
-				int sy = y - view.getBaseY();
-				if (sx < 0 || sy < 0 || sx >= tiles[plane].length || sy >= tiles[plane][sx].length
-					|| tiles[plane][sx][sy] == null)
+				Tile tile = sceneTile(view, x, y, plane);
+				if (tile == null)
 				{
 					continue;
 				}
-				Tile tile = tiles[plane][sx][sy];
 				WorldPoint here = new WorldPoint(x, y, plane);
 				WallObject wall = tile.getWallObject();
 				if (wall != null && !covers(min, max, here) && liveKind(resolved(wall.getId())))
@@ -2529,7 +2497,7 @@ public class SkillingController
 					WorldPoint from = acrossTheWall(here, wall.getOrientationA());
 					if (from != null && follower.goodGround(from))
 					{
-						found.add(new Alongside(wall.getId(), null, true, here, here, from));
+						found.add(new Alongside(wall.getId(), null, true, here, here, from, false));
 					}
 				}
 				for (GameObject object : tile.getGameObjects())
@@ -2549,7 +2517,7 @@ public class SkillingController
 					for (WorldPoint c : workTilesOf(footprint[0], footprint[1], object.getId()))
 					{
 						found.add(new Alongside(object.getId(), null, false, footprint[0],
-							footprint[1], c));
+							footprint[1], c, false));
 					}
 				}
 			}
@@ -2568,19 +2536,21 @@ public class SkillingController
 		}
 		for (WorldPoint c : ring(min, max, 1, min.getPlane()))
 		{
-			if (!squareOn(min, max, c) || !follower.goodGround(c))
-			{
-				continue;
-			}
-			boolean xIn = c.getX() >= min.getX() && c.getX() <= max.getX();
-			int dx = xIn ? 0 : c.getX() < min.getX() ? 1 : -1;
-			int dy = !xIn ? 0 : c.getY() < min.getY() ? 1 : -1;
-			if (!follower.walledToward(c, dx, dy))
+			if (squareOn(min, max, c) && follower.goodGround(c) && !fenced(min, max, c))
 			{
 				tiles.add(c);
 			}
 		}
 		return tiles;
+	}
+
+	/** Whether a fence runs along the edge between a square-on tile and the footprint. */
+	private boolean fenced(WorldPoint min, WorldPoint max, WorldPoint c)
+	{
+		boolean xIn = c.getX() >= min.getX() && c.getX() <= max.getX();
+		int dx = xIn ? 0 : c.getX() < min.getX() ? 1 : -1;
+		int dy = !xIn ? 0 : c.getY() < min.getY() ? 1 : -1;
+		return follower.walledToward(c, dx, dy);
 	}
 
 	/**
@@ -2672,7 +2642,8 @@ public class SkillingController
 		{
 			return a.min.equals(a.npc.getWorldLocation()) && liveNpc(a.npc);
 		}
-		Tile tile = sceneTile(a.min);
+		Tile tile = sceneTile(client.getTopLevelWorldView(), a.min.getX(), a.min.getY(),
+			a.min.getPlane());
 		if (tile == null)
 		{
 			return false;
@@ -2692,23 +2663,18 @@ public class SkillingController
 		return false;
 	}
 
-	private Tile sceneTile(WorldPoint at)
+	/** The scene's tile at a world tile, or null off the loaded scene. */
+	private static Tile sceneTile(WorldView view, int x, int y, int plane)
 	{
-		WorldView view = client.getTopLevelWorldView();
 		Tile[][][] tiles = view == null || view.getScene() == null ? null : view.getScene().getTiles();
-		if (tiles == null || at == null)
+		if (tiles == null || plane < 0 || plane >= tiles.length)
 		{
 			return null;
 		}
-		int plane = at.getPlane();
-		int sx = at.getX() - view.getBaseX();
-		int sy = at.getY() - view.getBaseY();
-		if (plane < 0 || plane >= tiles.length || sx < 0 || sy < 0
-			|| sx >= tiles[plane].length || sy >= tiles[plane][sx].length)
-		{
-			return null;
-		}
-		return tiles[plane][sx][sy];
+		int sx = x - view.getBaseX();
+		int sy = y - view.getBaseY();
+		return sx < 0 || sy < 0 || sx >= tiles[plane].length || sy >= tiles[plane][sx].length
+			? null : tiles[plane][sx][sy];
 	}
 
 	/** Where the other players stand: their tiles are theirs. */
@@ -2753,7 +2719,7 @@ public class SkillingController
 		lastFireTick = now;
 		fires++;
 		if (fires % FIRE_LINE_EVERY != 0 || fireSeat != null || trapSeat != null || bankTrip
-			|| feetTaken.getAsBoolean() || inCombat.getAsBoolean() || !follower.isSpawned())
+			|| elsewhere())
 		{
 			return;
 		}
@@ -2769,7 +2735,7 @@ public class SkillingController
 		beside.removeIf(c -> c.getX() != min.getX() && c.getY() != min.getY());
 		if (from != null)
 		{
-			beside.sort((a, b) -> Integer.compare(a.distanceTo(from), b.distanceTo(from)));
+			beside.sort(stepsFrom(from));
 		}
 		for (WorldPoint candidate : beside)
 		{
@@ -2841,9 +2807,9 @@ public class SkillingController
 		fireSeat = null;
 		fireWarmAt = 0;
 		fireLeaveAt = 0;
-		if (release && follower.isStaying() && !feetTaken.getAsBoolean())
+		if (release)
 		{
-			follower.resumeFollowing();
+			letGo();
 		}
 	}
 
@@ -2951,9 +2917,9 @@ public class SkillingController
 		bankTripConfirmed = false;
 		seat = null;
 		alongside = null;
-		if (release && follower.isStaying() && !feetTaken.getAsBoolean())
+		if (release)
 		{
-			follower.resumeFollowing();
+			letGo();
 		}
 	}
 
@@ -3007,28 +2973,19 @@ public class SkillingController
 		}
 		alongside = null;
 		List<WorldPoint> candidates;
-		NPC guard = null;
+		NPC guard = mode == KeepingCompany.Mode.STALL ? nearestGuard(player) : null;
+		WorldPoint post = guard == null ? null : guard.getWorldLocation();
 		WorldPoint face = faceTile();
-		if (mode == KeepingCompany.Mode.STALL)
+		if (post != null)
 		{
-			guard = nearestGuard(player);
-			WorldPoint post = guard == null ? null : guard.getWorldLocation();
-			if (post != null)
-			{
-				candidates = stallCandidates(player, post, session.targetTile, session.targetMax);
-				face = post;
-			}
-			else
-			{
-				// No guard worth watching, but a seat still beats the alternative:
-				// with none taken the thieving drift owns the feet, and that was
-				// written to keep moving rather than to settle anywhere.
-				candidates = seatCandidates(player, session.targetTile, session.targetMax,
-					reservedTiles(), variantFor(mode, session.activity));
-			}
+			candidates = stallCandidates(player, post, session.targetTile, session.targetMax);
+			face = post;
 		}
 		else
 		{
+			// A stall with no guard worth watching still takes a seat: with
+			// none taken the thieving drift owns the feet, and that was
+			// written to keep moving rather than to settle anywhere.
 			candidates = seatCandidates(player, session.targetTile, session.targetMax,
 				reservedTiles(), variantFor(mode, session.activity));
 		}
@@ -3341,35 +3298,20 @@ public class SkillingController
 				}
 			}
 		}
-		else if ("beside".equals(activity))
+		else if ("beside".equals(activity) || "ring".equals(activity))
 		{
-			// Alongside the footprint: the tiles that touch one of its edges
-			// square on, not at a corner, nearest the player first.
-			List<WorldPoint> sides = new ArrayList<>();
-			for (WorldPoint c : ring(min, max, 1, player.getPlane()))
+			// Beside: the tiles that touch one of the footprint's edges square
+			// on, not at a corner. Ring: three tiles off it. Nearest the player
+			// first.
+			boolean beside = "beside".equals(activity);
+			for (WorldPoint c : ring(min, max, beside ? 1 : 3, player.getPlane()))
 			{
-				boolean xIn = c.getX() >= min.getX() && c.getX() <= max.getX();
-				boolean yIn = c.getY() >= min.getY() && c.getY() <= max.getY();
-				if ((xIn || yIn) && allowed.test(c))
+				if ((!beside || squareOn(min, max, c)) && allowed.test(c))
 				{
-					sides.add(c);
+					candidates.add(c);
 				}
 			}
-			sides.sort((a, b) -> Integer.compare(square(a, player), square(b, player)));
-			candidates.addAll(sides);
-		}
-		else if ("ring".equals(activity))
-		{
-			List<WorldPoint> around = new ArrayList<>();
-			for (WorldPoint c : ring(min, max, 3, player.getPlane()))
-			{
-				if (allowed.test(c))
-				{
-					around.add(c);
-				}
-			}
-			around.sort((a, b) -> Integer.compare(square(a, player), square(b, player)));
-			candidates.addAll(around);
+			candidates.sort(nearestTo(player));
 		}
 
 		if ("fishing".equals(activity))
@@ -3388,7 +3330,7 @@ public class SkillingController
 			}
 			// The bank tile nearest the player is the bank; the water side
 			// of the spot is the ground's to refuse.
-			candidates.sort((a, b) -> Integer.compare(square(a, player), square(b, player)));
+			candidates.sort(nearestTo(player));
 			return candidates;
 		}
 
@@ -3406,17 +3348,28 @@ public class SkillingController
 		{
 			for (int[] offset : group)
 			{
+				// Every one of these is two tiles off the player or more.
 				WorldPoint c = new WorldPoint(player.getX() + offset[0], player.getY() + offset[1],
 					player.getPlane());
-				if (candidates.contains(c) || avoid.contains(c) || covers(min, max, c)
-					|| c.equals(player) || onTheLine(player, nx, ny, c))
+				if (allowed.test(c))
 				{
-					continue;
+					candidates.add(c);
 				}
-				candidates.add(c);
 			}
 		}
 		return candidates;
+	}
+
+	/** Nearest a tile first, as the crow flies. */
+	static Comparator<WorldPoint> nearestTo(WorldPoint to)
+	{
+		return Comparator.comparingInt(a -> square(a, to));
+	}
+
+	/** Nearest a tile first, in steps. */
+	static Comparator<WorldPoint> stepsFrom(WorldPoint to)
+	{
+		return Comparator.comparingInt(a -> a.distanceTo(to));
 	}
 
 	private static int square(WorldPoint a, WorldPoint b)
@@ -3468,42 +3421,20 @@ public class SkillingController
 		}
 		if (session.targetNpc != null)
 		{
-			for (NPC npc : view.npcs())
+			for (NPC npc : sameNameNpcs(view, min, NEIGHBOUR_TILES))
 			{
-				WorldPoint at = npc == null ? null : npc.getWorldLocation();
-				if (at == null || npc == session.targetNpc
-					|| !session.targetName.equals(npc.getName())
-					|| at.getPlane() != min.getPlane()
-					|| at.distanceTo(min) > NEIGHBOUR_TILES)
-				{
-					continue;
-				}
-				int size = npc.getComposition() == null ? 1
-					: Math.max(1, npc.getComposition().getSize());
-				addFootprint(reserved, at, new WorldPoint(at.getX() + size - 1,
-					at.getY() + size - 1, at.getPlane()));
+				WorldPoint at = npc.getWorldLocation();
+				addFootprint(reserved, at, farCorner(npc, at));
 			}
 			return reserved;
 		}
 
-		Tile[][][] tiles = view.getScene() == null ? null : view.getScene().getTiles();
-		if (tiles == null)
-		{
-			return reserved;
-		}
 		int plane = view.getPlane();
 		for (int x = min.getX() - NEIGHBOUR_TILES; x <= max.getX() + NEIGHBOUR_TILES; x++)
 		{
 			for (int y = min.getY() - NEIGHBOUR_TILES; y <= max.getY() + NEIGHBOUR_TILES; y++)
 			{
-				int sx = x - view.getBaseX();
-				int sy = y - view.getBaseY();
-				if (plane < 0 || plane >= tiles.length || sx < 0 || sy < 0
-					|| sx >= tiles[plane].length || sy >= tiles[plane][sx].length)
-				{
-					continue;
-				}
-				Tile tile = tiles[plane][sx][sy];
+				Tile tile = sceneTile(view, x, y, plane);
 				if (tile == null)
 				{
 					continue;
@@ -3664,9 +3595,7 @@ public class SkillingController
 		Predicate<String> nameMatch, WorldPoint skipMin, WorldPoint skipMax)
 	{
 		WorldView view = client.getTopLevelWorldView();
-		Tile[][][] tiles = view == null || view.getScene() == null ? null
-			: view.getScene().getTiles();
-		if (tiles == null || centre == null)
+		if (view == null || centre == null)
 		{
 			return null;
 		}
@@ -3677,15 +3606,12 @@ public class SkillingController
 		{
 			for (int y = centre.getY() - radius; y <= centre.getY() + radius; y++)
 			{
-				int sx = x - view.getBaseX();
-				int sy = y - view.getBaseY();
-				if (plane < 0 || plane >= tiles.length || sx < 0 || sy < 0
-					|| sx >= tiles[plane].length || sy >= tiles[plane][sx].length
-					|| tiles[plane][sx][sy] == null)
+				Tile tile = sceneTile(view, x, y, plane);
+				if (tile == null)
 				{
 					continue;
 				}
-				for (GameObject object : tiles[plane][sx][sy].getGameObjects())
+				for (GameObject object : tile.getGameObjects())
 				{
 					if (object == null || object.getWorldLocation() == null
 						|| covers(skipMin, skipMax, object.getWorldLocation())

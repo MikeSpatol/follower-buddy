@@ -274,11 +274,7 @@ public class Moments implements Noticing.Looker // public:cut company-extras,not
 		// public:end agility,agility-all
 		if (levels % WALK_EVERY == 0 && free() && follower.moveToFront(local))
 		{
-			skilling.setExcused(true); // public:cut skilling
-			doing = Doing.LEVEL;
-			beat = play;
-			arriveAt = now + walkTicks(here);
-			leaveAt = 0;
+			clap(play, here);
 			log.debug("Level {}: walking over", level); // public:cut logs
 			return;
 		}
@@ -288,12 +284,7 @@ public class Moments implements Noticing.Looker // public:cut company-extras,not
 		// claps on the next tick, planted for it as the walk over is.
 		if (follower.isMoving() && free())
 		{
-			skilling.setExcused(true); // public:cut skilling
-			follower.stayHere();
-			doing = Doing.LEVEL;
-			beat = play;
-			arriveAt = now + 1;
-			leaveAt = 0;
+			clap(play, null);
 			log.debug("Level {}: stopping to clap", level); // public:cut logs
 			return;
 		}
@@ -311,6 +302,26 @@ public class Moments implements Noticing.Looker // public:cut company-extras,not
 		// public:else follower.playAnimations(animationIds);
 	}
 
+	/**
+	 * The level's own moment: the seat excused, and the clap played on
+	 * arrival.
+	 *
+	 * @param walkTo the player's tile to walk over to, or null to stop where
+	 * it stands and clap on the next tick
+	 */
+	private void clap(int[] play, WorldPoint walkTo)
+	{
+		skilling.setExcused(true); // public:cut skilling
+		if (walkTo == null)
+		{
+			follower.stayHere();
+		}
+		doing = Doing.LEVEL;
+		beat = play;
+		arriveAt = client.getTickCount() + (walkTo == null ? 1 : walkTicks(walkTo));
+		leaveAt = 0;
+	}
+
 	// public:cut agility,agility-all
 	/** A clap owed from a level gained on an obstacle, and the tick it is let go. */
 	private int[] owed;
@@ -324,16 +335,10 @@ public class Moments implements Noticing.Looker // public:cut company-extras,not
 	{
 		int[] play = owed;
 		owed = null;
-		if (now > owedUntil)
+		if (now <= owedUntil)
 		{
-			return;
+			clap(play, null);
 		}
-		skilling.setExcused(true); // public:cut skilling
-		follower.stayHere();
-		doing = Doing.LEVEL;
-		beat = play;
-		arriveAt = now + 1;
-		leaveAt = 0;
 	}
 
 	// public:end agility,agility-all
@@ -435,24 +440,40 @@ public class Moments implements Noticing.Looker // public:cut company-extras,not
 		{
 			return;
 		}
-		List<WorldPoint> beside = SkillingController.ring(at, at, 1, at.getPlane()); // public:cut skilling
-		// public:else List<WorldPoint> beside = FollowerEntity.ring(at, at, 1, at.getPlane());
-		beside.sort((a, b) -> Integer.compare(a.distanceTo(from), b.distanceTo(from)));
-		skilling.setExcused(true); // public:cut skilling
-		for (WorldPoint candidate : beside)
+		if (goBeside(at, 1, Doing.PET))
 		{
-			if (follower.stayAt(candidate))
+			pet = npc;
+			log.debug("A pet at {}; going to see", at); // public:cut logs
+		}
+	}
+
+	/**
+	 * Over to the nearest tile so many steps off a thing that the follower
+	 * will stand on, faced at it, as the moment given.
+	 *
+	 * @return whether it set off; false leaves the seat as it was
+	 */
+	private boolean goBeside(WorldPoint at, int steps, Doing what)
+	{
+		WorldPoint from = follower.getWorldLocation();
+		List<WorldPoint> spots = SkillingController.ring(at, at, steps, at.getPlane()); // public:cut skilling
+		// public:else List<WorldPoint> spots = FollowerEntity.ring(at, at, steps, at.getPlane());
+		spots.sort(SkillingController.stepsFrom(from)); // public:cut skilling
+		// public:else spots.sort(java.util.Comparator.comparingInt(a -> a.distanceTo(from)));
+		skilling.setExcused(true); // public:cut skilling
+		for (WorldPoint spot : spots)
+		{
+			if (follower.stayAt(spot))
 			{
-				doing = Doing.PET;
-				pet = npc;
+				doing = what;
 				follower.setStayFaceTile(at);
-				arriveAt = now + from.distanceTo(candidate) + 2;
+				arriveAt = client.getTickCount() + from.distanceTo(spot) + 2;
 				leaveAt = 0;
-				log.debug("A pet at {}; going to see", at); // public:cut logs
-				return;
+				return true;
 			}
 		}
 		skilling.setExcused(false); // public:cut skilling
+		return false;
 	}
 
 	// ------------------------------------------------------------ the news
@@ -502,8 +523,7 @@ public class Moments implements Noticing.Looker // public:cut company-extras,not
 		{
 			return null;
 		}
-		Player local = client.getLocalPlayer();
-		WorldPoint here = local == null ? null : local.getWorldLocation();
+		WorldPoint here = FollowerEntity.playerTile(client);
 		if (here == null || !follower.isSpawned())
 		{
 			return null;
@@ -581,10 +601,8 @@ public class Moments implements Noticing.Looker // public:cut company-extras,not
 			log.debug("News: the notes out, facing {}", facing); // public:cut logs
 			return "the notes out where it stands";
 		}
-		Player local = client.getLocalPlayer();
-		WorldPoint here = local == null ? null : local.getWorldLocation();
-		skilling.gesture(new int[]{NOD}, here); // public:cut skilling
-		// public:else gesture(new int[]{NOD}, here);
+		skilling.gesture(new int[]{NOD}, FollowerEntity.playerTile(client)); // public:cut skilling
+		// public:else gesture(new int[]{NOD}, FollowerEntity.playerTile(client));
 		return "a nod";
 	}
 
@@ -619,8 +637,7 @@ public class Moments implements Noticing.Looker // public:cut company-extras,not
 	private boolean farewell(boolean forced)
 	{
 		// public:end dev
-		Player local = client.getLocalPlayer();
-		WorldPoint here = local == null ? null : local.getWorldLocation();
+		WorldPoint here = FollowerEntity.playerTile(client);
 		if (here == null || !follower.isSpawned() || feetTaken.getAsBoolean()
 			|| inCombat.getAsBoolean()
 			// public:cut company-extras,gestures
@@ -650,31 +667,15 @@ public class Moments implements Noticing.Looker // public:cut company-extras,not
 	public boolean goAndLook(WorldPoint at, int steps, boolean writes, int holdTicks)
 	{
 		WorldPoint from = follower.getWorldLocation();
-		if (at == null || from == null || !free() || at.getPlane() != from.getPlane())
+		if (at == null || from == null || !free() || at.getPlane() != from.getPlane()
+			|| !goBeside(at, Math.max(1, steps), Doing.LOOK))
 		{
 			return false;
 		}
-		int now = client.getTickCount();
-		List<WorldPoint> spots = SkillingController.ring(at, at, Math.max(1, steps), at.getPlane()); // public:cut skilling
-		// public:else List<WorldPoint> spots = FollowerEntity.ring(at, at, Math.max(1, steps), at.getPlane());
-		spots.sort((a, b) -> Integer.compare(a.distanceTo(from), b.distanceTo(from)));
-		skilling.setExcused(true); // public:cut skilling
-		for (WorldPoint spot : spots)
-		{
-			if (follower.stayAt(spot))
-			{
-				doing = Doing.LOOK;
-				lookWrites = writes;
-				lookHoldTicks = Math.max(1, holdTicks);
-				follower.setStayFaceTile(at);
-				arriveAt = now + from.distanceTo(spot) + 2;
-				leaveAt = 0;
-				lookUpAt = 0;
-				return true;
-			}
-		}
-		skilling.setExcused(false); // public:cut skilling
-		return false;
+		lookWrites = writes;
+		lookHoldTicks = Math.max(1, holdTicks);
+		lookUpAt = 0;
+		return true;
 	}
 
 	/** Whether the follower is off looking at something, or writing it up. */
@@ -720,94 +721,70 @@ public class Moments implements Noticing.Looker // public:cut company-extras,not
 				follower.playAnimation(NOD);
 			}
 		}
+		// Every moment but the level and the wind is let go of when its stay
+		// is; then the arrival, the look up from the notes, and the leaving.
+		if (doing == Doing.NOTHING)
+		{
+			return;
+		}
+		if (interrupted() || (doing != Doing.LEVEL && doing != Doing.WIND && !follower.isStaying()))
+		{
+			letGo(false);
+		}
+		else if (doing == Doing.STRANGER)
+		{
+			// It may wander as it talks; the peer follows it.
+			WorldPoint at = stranger.getWorldLocation();
+			if (at != null)
+			{
+				follower.setStayFaceTile(at);
+			}
+		}
+		else if (arriveAt > 0 && now >= arriveAt)
+		{
+			arriveAt = 0;
+			arrived(now);
+		}
+		else if (doing == Doing.LOOK && lookUpAt > 0 && now >= lookUpAt)
+		{
+			lookUpAt = 0;
+			follower.glanceAt(here, LOOK_UP_MS);
+			follower.playAnimation(NOD);
+		}
+		else if (leaveAt > 0 && now >= leaveAt)
+		{
+			letGo(true);
+		}
+	}
+
+	/** There: what each moment does on arrival, and how long it holds. */
+	private void arrived(int now)
+	{
 		switch (doing)
 		{
 			case LEVEL:
+				follower.playAnimations(beat);
+				leaveAt = now + (beat.length > 1 ? CELEBRATION_TICKS : BEAT_TICKS);
+				break;
 			case WIND:
-				if (interrupted())
-				{
-					letGo(false);
-				}
-				else if (arriveAt > 0 && now >= arriveAt)
-				{
-					arriveAt = 0;
-					if (doing == Doing.LEVEL)
-					{
-						follower.playAnimations(beat);
-						leaveAt = now + (beat.length > 1 ? CELEBRATION_TICKS : BEAT_TICKS);
-					}
-					else
-					{
-						// Already facing them, from the front: a second of it.
-						leaveAt = now + LOOK_BACK_TICKS;
-					}
-				}
-				else if (leaveAt > 0 && now >= leaveAt)
-				{
-					letGo(true);
-				}
+				// Already facing them, from the front: a second of it.
+				leaveAt = now + LOOK_BACK_TICKS;
 				break;
 			case PET:
-				if (interrupted() || !follower.isStaying())
-				{
-					letGo(false);
-				}
-				else if (arriveAt > 0 && now >= arriveAt)
-				{
-					arriveAt = 0;
-					follower.playAnimation(BEND);
-					leaveAt = now + BEND_TICKS;
-				}
-				else if (leaveAt > 0 && now >= leaveAt)
-				{
-					letGo(true);
-				}
-				break;
-			case LOOK:
-				if (interrupted() || !follower.isStaying())
-				{
-					letGo(false);
-				}
-				else if (arriveAt > 0 && now >= arriveAt)
-				{
-					arriveAt = 0;
-					if (lookWrites && flourish != null && flourish.start(
-						ErrandController.QUILL_PROP, ErrandController.SCROLL_PROP,
-						ErrandController.WRITE_SCROLL_POSE, lookHoldTicks))
-					{
-						// The flourish planted it where it stands, which is the
-						// spot; the look up comes a beat before the notes go away.
-						lookUpAt = now + lookHoldTicks - 1;
-					}
-					leaveAt = now + lookHoldTicks;
-				}
-				else if (lookUpAt > 0 && now >= lookUpAt)
-				{
-					lookUpAt = 0;
-					follower.glanceAt(here, LOOK_UP_MS);
-					follower.playAnimation(NOD);
-				}
-				else if (leaveAt > 0 && now >= leaveAt)
-				{
-					letGo(true);
-				}
-				break;
-			case STRANGER:
-				if (interrupted() || !follower.isStaying())
-				{
-					letGo(false);
-				}
-				else
-				{
-					// It may wander as it talks; the peer follows it.
-					WorldPoint at = stranger.getWorldLocation();
-					if (at != null)
-					{
-						follower.setStayFaceTile(at);
-					}
-				}
+				follower.playAnimation(BEND);
+				leaveAt = now + BEND_TICKS;
 				break;
 			default:
+				// A look: the notes out on arrival when it writes.
+				if (lookWrites && flourish != null && flourish.start(
+					ErrandController.QUILL_PROP, ErrandController.SCROLL_PROP,
+					ErrandController.WRITE_SCROLL_POSE, lookHoldTicks))
+				{
+					// The flourish planted it where it stands, which is the
+					// spot; the look up comes a beat before the notes go away.
+					lookUpAt = now + lookHoldTicks - 1;
+				}
+				leaveAt = now + lookHoldTicks;
 				break;
 		}
 	}

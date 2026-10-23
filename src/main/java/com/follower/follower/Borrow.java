@@ -368,10 +368,6 @@ public class Borrow
 	/** The silent release, for every abort path. Safe with nothing held. */
 	public void abort()
 	{
-		if (held == 0 && hat == 0)
-		{
-			return;
-		}
 		giveBack(false);
 	}
 
@@ -446,17 +442,17 @@ public class Borrow
 		switch (activity)
 		{
 			case "woodcutting":
-				return wornOr(worn, AXES, AXES[0]);
+				return wornOr(worn, AXES);
 			case "mining":
-				return wornOr(worn, PICKAXES, PICKAXES[0]);
+				return wornOr(worn, PICKAXES);
 			case "fishing":
 				if (animationId == HARPOON_ANIMATION)
 				{
-					return wornOr(worn, HARPOONS, HARPOONS[0]);
+					return wornOr(worn, HARPOONS);
 				}
 				if (animationId == ROD_ANIMATION || animationId == FLY_ROD_ANIMATION)
 				{
-					return wornOr(worn, RODS, RODS[0]);
+					return wornOr(worn, RODS);
 				}
 				if (animationId == NET_ANIMATION)
 				{
@@ -542,7 +538,8 @@ public class Borrow
 		return 0;
 	}
 
-	private static int wornOr(Set<Integer> worn, int[] tiers, int fallback)
+	/** The first of the tiers that is worn, or the first tier, the bronze one, when none is. */
+	private static int wornOr(Set<Integer> worn, int[] tiers)
 	{
 		if (worn != null)
 		{
@@ -554,7 +551,7 @@ public class Borrow
 				}
 			}
 		}
-		return fallback;
+		return tiers[0];
 	}
 
 	/**
