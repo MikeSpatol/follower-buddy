@@ -202,7 +202,7 @@ public class RuleTargetAudit
 			return;
 		}
 		// Each list is matched as its call site matches it: SpectateController
-		// isSuperior and SkillingController nearestGuard exactly, BANK_NAMES
+		// isSuperior and SkillingController's stall guard (nearestNpc) exactly, BANK_NAMES
 		// and Noticing.isLandmark in any case. Change one, change both.
 		Path java = Paths.get(source, "com", "follower", "follower");
 		List<String> deadLists = new ArrayList<>();
