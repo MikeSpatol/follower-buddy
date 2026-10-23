@@ -6,8 +6,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
@@ -45,6 +47,30 @@ public final class Resources
 			throw new UncheckedIOException(e);
 		}
 		return properties;
+	}
+
+	/**
+	 * A bundled table (.tsv): its rows in order, each split at its tabs.
+	 * Blank lines and lines that start with # are not rows.
+	 */
+	public static List<String[]> rows(String name)
+	{
+		List<String[]> rows = new ArrayList<>();
+		try (BufferedReader in = reader(name))
+		{
+			for (String line = in.readLine(); line != null; line = in.readLine())
+			{
+				if (!line.isEmpty() && !line.startsWith("#"))
+				{
+					rows.add(line.split("\t", -1));
+				}
+			}
+		}
+		catch (IOException e)
+		{
+			throw new UncheckedIOException(e);
+		}
+		return rows;
 	}
 
 	/** One of lists.properties' lists, in its order. */

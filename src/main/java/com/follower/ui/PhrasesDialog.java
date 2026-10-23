@@ -1,6 +1,7 @@
 package com.follower.ui;
 
 // public:cut messages-window
+import com.follower.Resources;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -84,6 +85,18 @@ public class PhrasesDialog extends EditorDialog // public:cut messages-window
 			this.hint = hint;
 			this.structural = structural; // public:cut messages-readonly
 		}
+	}
+
+	/** The categories, in the dropdown's order, from message-categories.tsv. */
+	public static List<Category> categories()
+	{
+		List<Category> categories = new ArrayList<>();
+		for (String[] row : Resources.rows("message-categories.tsv"))
+		{
+			categories.add(new Category(row[0], row[1], row[3], Boolean.parseBoolean(row[2]))); // public:cut messages-readonly
+			// public:else categories.add(new Category(row[0], row[1], row[3]));
+		}
+		return categories;
 	}
 
 	// public:cut messages-readonly

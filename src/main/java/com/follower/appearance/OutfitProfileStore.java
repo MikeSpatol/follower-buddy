@@ -1,6 +1,7 @@
 // public:file outfit-profiles
 package com.follower.appearance;
 
+import com.follower.Resources;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import java.io.IOException;
@@ -57,16 +58,10 @@ public class OutfitProfileStore
 	{
 		// An empty outfit is the plain default body with no clothing.
 		DEFAULTS.put(DEFAULT_PROFILE, "");
-		DEFAULTS.put("Melee",
-			"HEAD=item:1149,WEAPON=item:21009,TORSO=item:3140,SHIELD=item:21895,ARMS=kit:26,"
-				+ "LEGS=item:4087,HAIR=kit:0,HANDS=kit:33,BOOTS=kit:42,JAW=kit:10");
-		DEFAULTS.put("Ranged",
-			"HEAD=item:2581,WEAPON=item:841,TORSO=item:12596,ARMS=kit:98,LEGS=item:23249,"
-				+ "HAIR=kit:128,HANDS=kit:69,BOOTS=kit:79,JAW=kit:296,gender=female");
-		DEFAULTS.put("Magic",
-			"HEAD=item:7394,AMULET=item:10366,WEAPON=item:1383,TORSO=item:7390,SHIELD=item:6889,"
-				+ "ARMS=kit:98,LEGS=item:7386,HAIR=kit:143,HANDS=kit:69,BOOTS=item:2579,"
-				+ "JAW=kit:296,gender=female");
+		for (String[] row : Resources.rows("outfits.tsv"))
+		{
+			DEFAULTS.put(row[0], row[1]);
+		}
 	}
 
 	/** Without a RuneLite profile to keep them in: the shared list and the defaults, nothing written. */

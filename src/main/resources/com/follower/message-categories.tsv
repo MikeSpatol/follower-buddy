@@ -1,0 +1,26 @@
+# The Messages window's categories, in the order its dropdown lists them:
+# the name, the rule groups it shows (the first takes any rule added from
+# the window), whether it is the structural one (region ids editable, rules
+# added and deleted), and the line shown under the dropdown. Tab separated.
+Items	gear	false	Said when you equip something it has an opinion on, and when your bag is nearly full.
+Locations	area	true	Said on entering a place, and about places it likes, dislikes or remembers. Region ids are editable and Add location makes a new one.
+Bosses	boss	false	Said when that boss appears nearby, and at boss kills and kill counts.
+Combat	combat	false	Said while it stands clear and watches you fight, and when something big comes near.
+Statuses	health	false	Your HP, prayer, poison, venom, skull and run energy.
+Idle chatter	idle	false	Small talk while nothing much is happening.
+Quest NPCs	quest	false	Said near famous quest figures, at moments partway through some quests, and when you finish one.
+# public:cut errands
+Errands	errand	false	Each errand has a line for setting off and one for coming back. Go on errands in settings turns them off.
+# public:end errands
+Mimicry	mimic	false	Said now and then while it copies your emotes, spells or teleports, or eats when you eat.
+Reminiscing	memory	false	Things that happened before, the outings it was and was not taken on, and how long it has known you.
+# public:cut souvenirs-wishes
+Souvenirs	souvenir	false	Things it picks up, carries about and loses.
+# public:end souvenirs-wishes
+# public:cut side-games
+Predictions	bet	false	Its calls on the next drop and its bets on you, and how it takes being wrong.
+# public:end side-games
+The hour and the session	clock	false	What time it is where you are, how long you have been playing, and the odd date.
+Reactions	reactions	false	Deaths, drops, thieving, level-ups, being thanked or looked at, and what goes on in the chat.
+Thrall	thrall	false	Said as it takes a thrall's place and when the thrall's time runs out. Mute the thrall in settings silences them.
+Everything else	misc	false	Hellos, goodbyes, milestones and the rest. To silence them all, add misc to Silence groups or rule ids by name in settings.

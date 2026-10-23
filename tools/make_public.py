@@ -42,7 +42,7 @@ import xml.etree.ElementTree as ET
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BUILD_DIR = 'build-public'
 STAMP = BUILD_DIR + '/make_public.stamp'
-MARKED = ('.java', '.md', '.properties')
+MARKED = ('.java', '.md', '.properties', '.tsv')
 JAVA = 'src/main/java/com/follower/'
 TESTS = 'src/test/java/com/follower/'
 RES = 'src/main/resources/com/follower/'
@@ -61,7 +61,7 @@ class MarkerError(Exception):
 def _patterns(path):
     if path.endswith('.md'):
         o, c = r'<!--\s*', r'\s*-->'
-    elif path.endswith('.properties'):
+    elif path.endswith(('.properties', '.tsv')):
         o, c = r'#\s*', ''
     else:
         o, c = r'//\s*', ''
@@ -412,10 +412,9 @@ def settings(out):
 
 
 def commands(out):
-    """The everyday command list's commands and the ::follower switch's own case labels."""
+    """The everyday command list's commands (commands.tsv) and the ::follower switch's own case labels."""
+    listed = re.findall(r'^([a-z]+)', read(os.path.join(out, RES, 'commands.tsv')), re.M)
     code, mask = java_code(read(os.path.join(out, JAVA, 'FollowerPlugin.java')))
-    at = mask.index('EVERYDAY_COMMANDS =')
-    listed = re.findall(r'\bcommand\("([a-z]+)', code[at:mask.index(';', at)])
     start = mask.index('{', mask.index('switch (sub)', mask.index('void onCommandExecuted(')))
     end = closing(mask, start)
     handled = []

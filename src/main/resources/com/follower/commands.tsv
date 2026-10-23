@@ -1,0 +1,30 @@
+# The everyday ::follower commands, in the order the help and the side
+# panel's Commands section list them: the command, a tab, what it does.
+# {errands} is the errand keys a player is shown, spaced so the list wraps
+# between keys rather than mid-word.
+say <text>	make the follower say it
+here	place the follower at your feet
+fix	re-attach it if it vanished
+rebuild	rebuild its model from the outfit
+copy	dress it in your gear (also a panel button)
+# public:cut outfit-profiles
+outfit <name>	wear a saved profile (also in the panel)
+# public:end outfit-profiles
+# public:cut posing-preview
+anim <id...>	preview an animation on it
+gfx <id> [height]	preview a graphic on it, that far up its body
+pose <id>	hold a looping pose, 0 to release
+# public:end posing-preview
+# public:cut posing
+posing	the Advanced posing window: pose it, give it lines, or play out a scene
+# public:end posing
+# public:cut chronicle
+sketch	pose for the chronicle's sketch of this place, as right-click Sketch
+# public:end chronicle
+height <n>	lift or lower it
+# public:cut errands
+errand [{errands}]	send it on an errand now
+# public:end errands
+reload	re-read the phrase and sound files
+status	models, rules and spawn state
+where	your region id, for Locations in the Messages window
