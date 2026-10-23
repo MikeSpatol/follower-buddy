@@ -229,7 +229,7 @@ def declared_types(root):
 # ------------------------------------------------------------------ stages
 
 def excluded(rel, exclude):
-    return any(rel == e or (e.endswith('/') and rel.startswith(e)) for e in exclude)
+    return any(rel.rstrip('/') == e.rstrip('/') or (e.endswith('/') and rel.startswith(e)) for e in exclude)
 
 
 def export(out, worktree, exclude):
