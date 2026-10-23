@@ -1,5 +1,6 @@
 package com.follower.appearance;
 
+import net.runelite.api.JagexColor;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -31,9 +32,9 @@ public class HslColorTest
 	{
 		short packed = pack(37, 5, 91);
 
-		assertEquals("hue", 37, HslColor.hue(packed));
-		assertEquals("saturation", 5, HslColor.saturation(packed));
-		assertEquals("luminance", 91, HslColor.luminance(packed));
+		assertEquals("hue", 37, JagexColor.unpackHue(packed));
+		assertEquals("saturation", 5, JagexColor.unpackSaturation(packed));
+		assertEquals("luminance", 91, JagexColor.unpackLuminance(packed));
 	}
 
 	@Test
@@ -43,19 +44,19 @@ public class HslColorTest
 		// in. Each of these is one field at its maximum with the others zero,
 		// so anything reading past its own bits picks the extra up.
 		short hueOnly = pack(63, 0, 0);
-		assertEquals(63, HslColor.hue(hueOnly));
-		assertEquals("saturation read hue's bits", 0, HslColor.saturation(hueOnly));
-		assertEquals("luminance read hue's bits", 0, HslColor.luminance(hueOnly));
+		assertEquals(63, JagexColor.unpackHue(hueOnly));
+		assertEquals("saturation read hue's bits", 0, JagexColor.unpackSaturation(hueOnly));
+		assertEquals("luminance read hue's bits", 0, JagexColor.unpackLuminance(hueOnly));
 
 		short saturationOnly = pack(0, 7, 0);
-		assertEquals(7, HslColor.saturation(saturationOnly));
-		assertEquals("hue read saturation's bits", 0, HslColor.hue(saturationOnly));
-		assertEquals("luminance read saturation's bits", 0, HslColor.luminance(saturationOnly));
+		assertEquals(7, JagexColor.unpackSaturation(saturationOnly));
+		assertEquals("hue read saturation's bits", 0, JagexColor.unpackHue(saturationOnly));
+		assertEquals("luminance read saturation's bits", 0, JagexColor.unpackLuminance(saturationOnly));
 
 		short luminanceOnly = pack(0, 0, 127);
-		assertEquals(127, HslColor.luminance(luminanceOnly));
-		assertEquals("hue read luminance's bits", 0, HslColor.hue(luminanceOnly));
-		assertEquals("saturation read luminance's bits", 0, HslColor.saturation(luminanceOnly));
+		assertEquals(127, JagexColor.unpackLuminance(luminanceOnly));
+		assertEquals("hue read luminance's bits", 0, JagexColor.unpackHue(luminanceOnly));
+		assertEquals("saturation read luminance's bits", 0, JagexColor.unpackSaturation(luminanceOnly));
 	}
 
 	@Test
@@ -66,9 +67,9 @@ public class HslColorTest
 		// stops that, and this is the value that proves it.
 		short allBits = (short) 0xFFFF;
 
-		assertEquals("hue ran past its six bits", 63, HslColor.hue(allBits));
-		assertEquals("saturation ran past its three bits", 7, HslColor.saturation(allBits));
-		assertEquals("luminance ran past its seven bits", 127, HslColor.luminance(allBits));
+		assertEquals("hue ran past its six bits", 63, JagexColor.unpackHue(allBits));
+		assertEquals("saturation ran past its three bits", 7, JagexColor.unpackSaturation(allBits));
+		assertEquals("luminance ran past its seven bits", 127, JagexColor.unpackLuminance(allBits));
 	}
 
 	@Test
@@ -76,15 +77,15 @@ public class HslColorTest
 	{
 		for (int hue = 0; hue <= 63; hue++)
 		{
-			assertEquals(hue, HslColor.hue(pack(hue, 0, 0)));
+			assertEquals(hue, JagexColor.unpackHue(pack(hue, 0, 0)));
 		}
 		for (int saturation = 0; saturation <= 7; saturation++)
 		{
-			assertEquals(saturation, HslColor.saturation(pack(0, saturation, 0)));
+			assertEquals(saturation, JagexColor.unpackSaturation(pack(0, saturation, 0)));
 		}
 		for (int luminance = 0; luminance <= 127; luminance++)
 		{
-			assertEquals(luminance, HslColor.luminance(pack(0, 0, luminance)));
+			assertEquals(luminance, JagexColor.unpackLuminance(pack(0, 0, luminance)));
 		}
 	}
 

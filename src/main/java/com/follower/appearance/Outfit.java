@@ -1,6 +1,8 @@
 package com.follower.appearance;
 
 import java.util.Arrays;
+import java.util.stream.Collectors;
+import lombok.EqualsAndHashCode;
 import net.runelite.api.PlayerComposition;
 import net.runelite.api.kit.KitType;
 
@@ -16,7 +18,12 @@ import net.runelite.api.kit.KitType;
  *
  * Slot order is {@link KitType#getIndex()}: HEAD, CAPE, AMULET, WEAPON, TORSO,
  * SHIELD, ARMS, LEGS, HAIR, HANDS, BOOTS, JAW.
+ *
+ * <p>Two outfits are equal when every field is: a prop shows where the same
+ * item worn might be hidden, so it is another model. The fields are compared
+ * as they are, not through getColors' copy.
  */
+@EqualsAndHashCode(doNotUseGetters = true)
 public final class Outfit
 {
 	/**
@@ -88,7 +95,10 @@ public final class Outfit
 
 	public Outfit(Outfit other)
 	{
-		copyFrom(other);
+		System.arraycopy(other.equipment, 0, equipment, 0, SLOTS);
+		System.arraycopy(other.colors, 0, colors, 0, colors.length);
+		gender = other.gender;
+		props = other.props;
 	}
 
 	public static Outfit from(PlayerComposition composition)
@@ -112,10 +122,6 @@ public final class Outfit
 				else if (raw >= GAME_KIT_OFFSET)
 				{
 					outfit.equipment[i] = KIT_OFFSET + (raw - GAME_KIT_OFFSET);
-				}
-				else
-				{
-					outfit.equipment[i] = 0;
 				}
 			}
 		}
@@ -204,14 +210,6 @@ public final class Outfit
 		}
 	}
 
-	public void copyFrom(Outfit other)
-	{
-		System.arraycopy(other.equipment, 0, equipment, 0, SLOTS);
-		System.arraycopy(other.colors, 0, colors, 0, colors.length);
-		gender = other.gender;
-		props = other.props;
-	}
-
 	/**
 	 * Returns a copy with empty body slots filled by default kits. Item slots and
 	 * already-populated kit slots are untouched, so gear always wins.
@@ -237,39 +235,7 @@ public final class Outfit
 
 	public boolean isEmpty()
 	{
-		for (int v : equipment)
-		{
-			if (v != 0)
-			{
-				return false;
-			}
-		}
-		return true;
-	}
-
-	@Override
-	public boolean equals(Object o)
-	{
-		if (this == o)
-		{
-			return true;
-		}
-		if (!(o instanceof Outfit))
-		{
-			return false;
-		}
-		Outfit other = (Outfit) o;
-		// A prop shows where the same item worn might be hidden, so it is another model.
-		return gender == other.gender
-			&& props == other.props
-			&& Arrays.equals(equipment, other.equipment)
-			&& Arrays.equals(colors, other.colors);
-	}
-
-	@Override
-	public int hashCode()
-	{
-		return 31 * (31 * (31 * Arrays.hashCode(equipment) + Arrays.hashCode(colors)) + gender) + props;
+		return Arrays.stream(equipment).allMatch(v -> v == 0);
 	}
 
 	@Override
@@ -299,26 +265,10 @@ public final class Outfit
 		// Body-colour indices into the game's palette tables; the parser already
 		// reads this key, but until 2026-08-02 nothing wrote it, so panel-chosen
 		// indices silently vanished on every save.
-		boolean anyColor = false;
-		for (int c : colors)
+		if (Arrays.stream(colors).anyMatch(c -> c != 0))
 		{
-			if (c != 0)
-			{
-				anyColor = true;
-				break;
-			}
-		}
-		if (anyColor)
-		{
-			sb.append(sb.length() > 0 ? "," : "").append("colors=");
-			for (int i = 0; i < colors.length; i++)
-			{
-				if (i > 0)
-				{
-					sb.append('/');
-				}
-				sb.append(colors[i]);
-			}
+			sb.append(sb.length() > 0 ? "," : "").append("colors=")
+				.append(Arrays.stream(colors).mapToObj(String::valueOf).collect(Collectors.joining("/")));
 		}
 
 		return sb.toString();

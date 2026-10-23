@@ -1,33 +1,20 @@
 package com.follower.appearance;
 
 import java.awt.Color;
+import net.runelite.api.JagexColor;
 
 /**
  * Conversions for the game's packed colour format.
  *
  * <p>Model face colours are 16-bit HSL: hue in bits 10-15, saturation in bits 7-9,
- * luminance in bits 0-6. Lighting rewrites only the luminance bits, which is why
- * hue and saturation read off a lit model are the authored values.
+ * luminance in bits 0-6, unpacked by RuneLite's {@link JagexColor}. Lighting
+ * rewrites only the luminance bits, which is why hue and saturation read off a
+ * lit model are the authored values.
  */
 public final class HslColor
 {
 	private HslColor()
 	{
-	}
-
-	public static int hue(short packed)
-	{
-		return (packed >> 10) & 0x3F;
-	}
-
-	public static int saturation(short packed)
-	{
-		return (packed >> 7) & 0x07;
-	}
-
-	public static int luminance(short packed)
-	{
-		return packed & 0x7F;
 	}
 
 	/**
@@ -38,9 +25,9 @@ public final class HslColor
 	 */
 	public static int toRgb(short packed)
 	{
-		float h = hue(packed) / 63f;
-		float s = saturation(packed) / 7f;
-		float l = luminance(packed) / 127f;
+		float h = JagexColor.unpackHue(packed) / 63f;
+		float s = JagexColor.unpackSaturation(packed) / 7f;
+		float l = JagexColor.unpackLuminance(packed) / 127f;
 
 		// HSL to RGB via HSB, which java.awt provides directly.
 		float brightness = l + s * Math.min(l, 1f - l);

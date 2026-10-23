@@ -6,6 +6,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
+import net.runelite.api.JagexColor; // public:cut dev
 import net.runelite.api.Model;
 import net.runelite.api.ModelData;
 import net.runelite.api.kit.KitType;
@@ -584,7 +585,7 @@ public class AppearanceComposer
 	private static String describeHsl(short packed)
 	{
 		return String.format("h%02d s%d l%03d",
-			HslColor.hue(packed), HslColor.saturation(packed), HslColor.luminance(packed));
+			JagexColor.unpackHue(packed), JagexColor.unpackSaturation(packed), JagexColor.unpackLuminance(packed));
 	}
 
 	/** Reports which slots the current gear covers, and which item covers each. */
