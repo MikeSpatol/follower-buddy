@@ -351,8 +351,10 @@ public class LifecycleGlueTest
 		// The scene's hold is a stay, and a plain one to the will: walked at
 		// by a scripted walk it stepped into the cast or along the walk.
 		assertTrue(method("protected void startUp()").contains(
-			"&& minutesState == 0 && !emoteHold && !filming && !sceneHolds());")); // public:cut posing
-			// public:else "&& minutesState == 0 && !emoteHold && !sceneHolds());"));
+			"() -> !ownBusiness() && !filming && !sceneHolds());")); // public:cut posing
+			// public:else "() -> !ownBusiness() && !sceneHolds());"));
+		assertTrue("its own business still holds an emote and the minutes",
+			method("private boolean ownBusiness()").contains("|| emoteHold || minutesState != 0"));
 	}
 
 	// public:end company-extras,will

@@ -4334,33 +4334,28 @@ public final class TriggerContext
 		SavedCounters saved = new SavedCounters();
 		saved.tallies = trimCounters(tallies);
 		saved.records = trimCounters(records);
-		saved.killCountNames = killCountNames.isEmpty() ? null
-			: new java.util.HashMap<>(killCountNames);
+		saved.killCountNames = copyOrNull(killCountNames);
 		saved.sessions = sessionCount;
 		saved.incidentKey = incidentKey;
 		saved.incidentPhrase = incidentPhrase;
 		saved.incidentCount = incidentCount;
 		saved.incidentWhere = incidentWhere;
 		saved.incidentWhenMs = incidentWhenMs;
-		saved.incidentWho = incidentWho.isEmpty() ? null : incidentWho;
-		saved.incidentPlace = getIncidentPlace().isEmpty() ? null : getIncidentPlace();
+		saved.incidentWho = orNull(incidentWho);
+		saved.incidentPlace = orNull(getIncidentPlace());
 		saved.incidentNear = isIncidentNear() ? Boolean.TRUE : null;
-		saved.incidentItem = incidentItem.isEmpty() ? null : incidentItem;
+		saved.incidentItem = orNull(incidentItem);
 		saved.incidentHp = incidentHp < 0 ? null : incidentHp;
 		saved.incidentRecalledMs = incidentRecalledMs;
 		saved.placeScores = placeScores;
 		saved.placeMemories = placeMemories;
 		saved.spokenOnce = new java.util.ArrayList<>(spokenOnce);
-		saved.spokenOnceOn = spokenOnceOn.isEmpty() ? null
-			: new java.util.HashMap<>(spokenOnceOn);
-		saved.questsSeenFinished = questsSeenFinished.isEmpty() ? null
-			: new java.util.HashMap<>(questsSeenFinished);
+		saved.spokenOnceOn = copyOrNull(spokenOnceOn);
+		saved.questsSeenFinished = copyOrNull(questsSeenFinished);
 		// public:cut chronicle
 		saved.chronicled = new java.util.ArrayList<>(getChronicled());
-		saved.chronicledOn = getChronicledOn().isEmpty() ? null
-			: new java.util.HashMap<>(getChronicledOn());
-		saved.chronicledAt = getChronicledAt().isEmpty() ? null
-			: new java.util.HashMap<>(getChronicledAt());
+		saved.chronicledOn = copyOrNull(getChronicledOn());
+		saved.chronicledAt = copyOrNull(getChronicledAt());
 		saved.sketchAccounts = getSketchAccounts().isEmpty() ? null
 			: new java.util.ArrayList<>(getSketchAccounts());
 		// public:end chronicle
@@ -4368,10 +4363,9 @@ public final class TriggerContext
 		saved.metOnDay = metOnDay;
 		saved.lastWishMs = lastWishMs; // public:cut souvenirs-wishes
 		saved.metWearingValue = metWearing;
-		saved.levelStamps = levelStamps.isEmpty() ? null
-			: new java.util.HashMap<>(levelStamps);
-		saved.lastThing = lastThing.isEmpty() ? null : lastThing;
-		saved.nickname = acceptedNickname.isEmpty() ? null : acceptedNickname;
+		saved.levelStamps = copyOrNull(levelStamps);
+		saved.lastThing = orNull(lastThing);
+		saved.nickname = orNull(acceptedNickname);
 		saved.refusedNicknames = refusedNicknames.isEmpty() ? null
 			: new java.util.ArrayList<>(new java.util.TreeSet<>(refusedNicknames));
 		saved.nicknameAskedMs = nicknameAskedMs;
@@ -4384,6 +4378,18 @@ public final class TriggerContext
 			saved.deathPlane = died.getPlane();
 		}
 		return gson.toJson(saved);
+	}
+
+	/** Nothing is written as absent. */
+	private static String orNull(String text)
+	{
+		return text.isEmpty() ? null : text;
+	}
+
+	/** A copy to write, or absent for an empty map. */
+	private static <K, V> java.util.Map<K, V> copyOrNull(java.util.Map<K, V> map)
+	{
+		return map.isEmpty() ? null : new java.util.HashMap<>(map);
 	}
 
 	private static java.util.Map<String, Integer> trimCounters(java.util.Map<String, Integer> counters)
