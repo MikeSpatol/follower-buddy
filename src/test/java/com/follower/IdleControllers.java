@@ -55,7 +55,9 @@ final class IdleControllers
 		// public:cut moments
 		fillIn(plugin, "moments", () -> new com.follower.follower.Moments(client, follower,
 			(com.follower.follower.SkillingController) get(plugin, "skilling"), // public:cut skilling
-			() -> false, () -> false, () -> 0));
+			() -> false, () -> false, () -> 0, null,
+			() -> false, // public:cut company-extras,gestures
+			() -> false));
 		// public:end moments
 		// public:cut company-extras,will
 		// With no player tile to read, Will.send falls straight back to

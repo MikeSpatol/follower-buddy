@@ -132,7 +132,7 @@ public class GiftTest
 	public void oneWishAtATime() throws IOException
 	{
 		Harness h = wishing();
-		h.engine.getContext().setWish("pot of ink", 45);
+		h.engine.getContext().setWish("pot of ink", 45, null);
 
 		assertEquals("a second wish cannot replace the first",
 			"feather", h.engine.getContext().getWishLabel());

@@ -1170,11 +1170,6 @@ public final class TriggerContext
 		return spokenOnce;
 	}
 
-	public void restoreSpokenOnce(java.util.Collection<String> saved)
-	{
-		restoreSpokenOnce(saved, null);
-	}
-
 	/**
 	 * The lines and, where saved, their days. A line saved before the days
 	 * were kept is dated today: its bit then starts again from its first
@@ -1460,21 +1455,13 @@ public final class TriggerContext
 	}
 
 	/**
-	 * Files an incident, or counts another of the same.
+	 * Files an incident, or counts another of the same, with the particulars.
+	 * Another of the same kind keeps the count and takes the newest
+	 * particulars: the memory it brings up is the freshest one, and the count
+	 * is what makes "again" honest.
 	 *
 	 * @param key   what happened, for a rule to recognise
 	 * @param phrase how to refer to it out loud - "that chicken"
-	 */
-	public void noteIncident(String key, String phrase)
-	{
-		noteIncident(key, phrase, "", System.currentTimeMillis());
-	}
-
-	/**
-	 * The same with the particulars. Another of the same kind keeps the
-	 * count and takes the newest particulars: the memory it brings up is the
-	 * freshest one, and the count is what makes "again" honest.
-	 *
 	 * @param who the NPC involved, or empty
 	 */
 	public void noteIncident(String key, String phrase, String who, long nowMs)
@@ -1916,11 +1903,6 @@ public final class TriggerContext
 	}
 
 	/** Puts back the incident a previous session was still thinking about. */
-	public void restoreIncident(String key, String phrase, int count)
-	{
-		restoreIncident(key, phrase, count, 0, 0L, "");
-	}
-
 	public void restoreIncident(String key, String phrase, int count, int where, long whenMs,
 		String who)
 	{
@@ -2321,11 +2303,6 @@ public final class TriggerContext
 	private String wishLabel = "";
 	private int wishDeadlineTick;
 	private java.util.Set<Integer> wishItems = java.util.Collections.emptySet();
-
-	public void setWish(String label, int minutes)
-	{
-		setWish(label, minutes, null);
-	}
 
 	/**
 	 * @param itemIds the real inventory items that grant this wish. The wish
@@ -3677,13 +3654,6 @@ public final class TriggerContext
 			return "good";
 		}
 		return "high";
-	}
-
-	/** Every band name, so a rule naming one that does not exist can be caught. */
-	public static java.util.Set<String> moodBands()
-	{
-		return new java.util.LinkedHashSet<>(
-			java.util.Arrays.asList("low", "down", "even", "good", "high"));
 	}
 
 	/**

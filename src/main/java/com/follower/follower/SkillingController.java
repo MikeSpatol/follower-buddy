@@ -613,14 +613,9 @@ public class SkillingController
 
 	// ---------------------------------------------------------------- inputs
 
-	/** Any menu option the player clicked, tags off; the bag reads it. */
-	public void noteMenuOption(String plain)
-	{
-		noteMenuOption(plain, "");
-	}
-
 	/**
-	 * The same with the option's target, tags off. Compost goes on a patch
+	 * Any menu option the player clicked, with the option's target, tags off;
+	 * the bag reads it. Compost goes on a patch
 	 * as "Use" with the compost named in the target, and the follower turns
 	 * away from it where it stands.
 	 */
@@ -3153,18 +3148,7 @@ public class SkillingController
 	 * behind the player. Never the footprint, never a reserved tile, never
 	 * the player's own tile, never on the straight line to the target.
 	 *
-	 * @param min the target footprint's south-west tile
-	 * @param max its far corner
-	 * @param reserved tiles of the same-name neighbours the player may click next
-	 */
-	static List<WorldPoint> seatCandidates(WorldPoint player, WorldPoint min, WorldPoint max,
-		Collection<WorldPoint> reserved)
-	{
-		return seatCandidates(player, min, max, reserved, "");
-	}
-
-	/**
-	 * The same, shaped to the work: a miner's company sits diagonal-behind,
+	 * <p>Shaped to the work: a miner's company sits diagonal-behind,
 	 * two back, where the swing is in view and the rock is not; an angler's
 	 * on the bank beside the spot, the nearest bank tile that is not the
 	 * player's, so it looks at the water rather than at a back. Three more
@@ -3172,6 +3156,10 @@ public class SkillingController
 	 * "beside" (one tile along the side of a range or a wheel) and "ring"
 	 * (three tiles off a hotspot or a brazier). Every shape falls back to
 	 * the flank when the ground refuses it.
+	 *
+	 * @param min the target footprint's south-west tile
+	 * @param max its far corner
+	 * @param reserved tiles of the same-name neighbours the player may click next
 	 */
 	static List<WorldPoint> seatCandidates(WorldPoint player, WorldPoint min, WorldPoint max,
 		Collection<WorldPoint> reserved, String activity)

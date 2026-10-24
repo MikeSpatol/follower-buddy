@@ -269,7 +269,7 @@ public class IncidentTest
 			now - 3L * 24 * 60 * 60_000L);
 		assertEquals("three days ago", context.getMemoryWhen(now));
 		assertEquals("a repeat keeps the count", 2, context.getIncidentCount());
-		context.restoreIncident("the-boss", "the size of that thing", 1);
+		context.restoreIncident("the-boss", "the size of that thing", 1, 0, 0L, "");
 		assertEquals("an old record with no date", "a while ago", context.getMemoryWhen(now));
 		assertEquals("Varrock", context.placeName(12853));
 		assertEquals("", context.placeName(999));

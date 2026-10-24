@@ -126,7 +126,7 @@ public class OnceOnlyTest
 	{
 		Harness h = harness();
 		h.engine.getContext().restoreSpokenOnce(
-			java.util.Collections.singletonList("hello-first"));
+			java.util.Collections.singletonList("hello-first"), null);
 
 		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.EXAMINED));
 		assertTrue("a restored session must not repeat the introduction",

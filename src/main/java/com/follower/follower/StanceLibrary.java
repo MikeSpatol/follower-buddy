@@ -679,13 +679,7 @@ public class StanceLibrary
 	 * woodcutting, mining, cooking, emotes, eating - either target a scene
 	 * object or nothing at all. Skilling with an axe therefore never gets
 	 * mistaken for an axe attack.
-	 */
-	public void learnAttack(Player player, int animationId)
-	{
-		learnAttack(player, animationId, -1);
-	}
-
-	/**
+	 *
 	 * @param style the attack style the swing was performed in (COM_MODE,
 	 * 0-3), or -1 when it cannot be known - which is every player but the
 	 * local one
@@ -818,15 +812,6 @@ public class StanceLibrary
 	private static final int STYLES = 4;
 
 	/**
-	 * @param style the style the swing should be in (COM_MODE, 0-3), or -1 to
-	 * take whatever the weapon is generally known to do
-	 */
-	public int attackFor(int weaponItemId, int style)
-	{
-		return attackFor(weaponItemId, style, -1);
-	}
-
-	/**
 	 * The swing for a weapon, most trusted answer first:
 	 * <ol>
 	 * <li>the shipped swing for the kind of blow being thrown;</li>
@@ -848,6 +833,7 @@ public class StanceLibrary
 	 * the style.
 	 *
 	 * @param style the style button the player has selected (COM_MODE, 0-3), or -1
+	 * to take whatever the weapon is generally known to do
 	 * @param kind the kind of blow that style deals, {@link #STAB}, {@link #SLASH}
 	 * or {@link #CRUSH} (see {@link #attackKind}), or -1 when it is not a melee blow
 	 */

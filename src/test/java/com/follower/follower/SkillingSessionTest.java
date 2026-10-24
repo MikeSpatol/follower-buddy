@@ -583,7 +583,7 @@ public class SkillingSessionTest
 				int ny = Math.max(min.getY(), Math.min(max.getY(), y));
 				WorldPoint nearest = new WorldPoint(nx, ny, 0);
 
-				List<WorldPoint> seats = SkillingController.seatCandidates(player, min, max, reserved);
+				List<WorldPoint> seats = SkillingController.seatCandidates(player, min, max, reserved, "");
 				assertFalse("no seat at all from " + player, seats.isEmpty());
 				for (WorldPoint seat : seats)
 				{
@@ -2200,7 +2200,7 @@ public class SkillingSessionTest
 	{
 		game.placeObject(9030, "Bank booth", 60, 50, 0);
 		workTheRange();
-		skilling.noteMenuOption("Drop");
+		skilling.noteMenuOption("Drop", "");
 		game.inventoryUsing(10);
 		tick(1);
 		game.inventoryUsing(14);

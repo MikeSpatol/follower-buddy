@@ -919,14 +919,6 @@ public class FollowerDialog extends Overlay
 		goTo(startId);
 	}
 
-	/** A one-off line with no branching. */
-	public void say(String speakerName, String... pages)
-	{
-		Map<String, Node> single = new LinkedHashMap<>();
-		single.put("start", Node.says(pages));
-		start(speakerName, single, "start");
-	}
-
 	/** The current node's pages, resolved per ENTRY so dynamic nodes re-roll. */
 	private String[] pages = new String[0];
 

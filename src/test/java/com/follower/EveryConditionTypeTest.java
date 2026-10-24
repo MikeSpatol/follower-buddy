@@ -1199,7 +1199,7 @@ public class EveryConditionTypeTest
 		Harness here = harnessFor("{\"type\": \"memoryHere\"}");
 		here.game.regions(12850).at(3222, 3218, 0);
 		here.gameTicks(1);
-		here.engine.getContext().noteIncident("the-death", "the way that went");
+		here.engine.getContext().noteIncident("the-death", "the way that went", "", System.currentTimeMillis());
 		here.game.at(3300, 3300, 0);
 		here.gameTicks(2);
 		assertQuiet(here, "somewhere else");
@@ -1221,7 +1221,7 @@ public class EveryConditionTypeTest
 		Harness any = harnessFor("{\"type\": \"remembers\"}");
 		any.gameTicks(2);
 		assertQuiet(any, "nothing has happened worth remembering");
-		any.engine.getContext().noteIncident("chicken-death", "that chicken");
+		any.engine.getContext().noteIncident("chicken-death", "that chicken", "", System.currentTimeMillis());
 		any.gameTicks(1);
 		assertFired(any, "remembers");
 
@@ -1229,20 +1229,20 @@ public class EveryConditionTypeTest
 		// this the follower brings up the chicken after drowning in the sea.
 		Harness named = harnessFor(
 			"{\"type\": \"remembers\", \"is\": \"chicken-death\"}");
-		named.engine.getContext().noteIncident("drowned", "the swim back");
+		named.engine.getContext().noteIncident("drowned", "the swim back", "", System.currentTimeMillis());
 		named.gameTicks(2);
 		assertQuiet(named, "a different incident is on its mind");
-		named.engine.getContext().noteIncident("chicken-death", "that chicken");
+		named.engine.getContext().noteIncident("chicken-death", "that chicken", "", System.currentTimeMillis());
 		named.gameTicks(1);
 		assertFired(named, "remembers named");
 
 		// And the count, which is what makes "again" honest.
 		Harness twice = harnessFor(
 			"{\"type\": \"remembers\", \"is\": \"chicken-death\", \"minimum\": 2}");
-		twice.engine.getContext().noteIncident("chicken-death", "that chicken");
+		twice.engine.getContext().noteIncident("chicken-death", "that chicken", "", System.currentTimeMillis());
 		twice.gameTicks(2);
 		assertQuiet(twice, "it has only happened once");
-		twice.engine.getContext().noteIncident("chicken-death", "that chicken");
+		twice.engine.getContext().noteIncident("chicken-death", "that chicken", "", System.currentTimeMillis());
 		twice.gameTicks(1);
 		assertFired(twice, "remembers twice");
 
@@ -1252,14 +1252,14 @@ public class EveryConditionTypeTest
 		Harness thrice = harnessFor(third);
 		for (int i = 0; i < 3; i++)
 		{
-			thrice.engine.getContext().noteIncident("chicken-death", "that chicken");
+			thrice.engine.getContext().noteIncident("chicken-death", "that chicken", "", System.currentTimeMillis());
 		}
 		thrice.gameTicks(1);
 		assertFired(thrice, "remembers exactly three times");
 		Harness fourth = harnessFor(third);
 		for (int i = 0; i < 4; i++)
 		{
-			fourth.engine.getContext().noteIncident("chicken-death", "that chicken");
+			fourth.engine.getContext().noteIncident("chicken-death", "that chicken", "", System.currentTimeMillis());
 		}
 		fourth.gameTicks(2);
 		assertQuiet(fourth, "the fourth is no longer three");

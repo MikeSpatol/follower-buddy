@@ -332,7 +332,7 @@ public class QuestMomentTest
 		// The next session reads the spent firsts back from disk. No
 		// priming, so the rule really does rise.
 		Harness next = harness(moment("the-orb", varbit(5619, 4, 4), NOT_IN_DIALOGUE));
-		next.engine.getContext().restoreSpokenOnce(h.engine.getContext().getSpokenOnce());
+		next.engine.getContext().restoreSpokenOnce(h.engine.getContext().getSpokenOnce(), null);
 		next.game.varbit(5619, 4);
 		ticks(next, 5);
 		assertTrue("nor in the next session", next.spoken.isEmpty());

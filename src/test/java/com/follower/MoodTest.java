@@ -28,6 +28,17 @@ public class MoodTest
 	@Rule
 	public final TemporaryFolder folder = new TemporaryFolder();
 
+	/**
+	 * Every band name, so a rule naming one that does not exist can be caught.
+	 * Kept here, word for word as TriggerContext had it, since only the tests
+	 * ever asked for the list.
+	 */
+	private static java.util.Set<String> moodBands()
+	{
+		return new java.util.LinkedHashSet<>(
+			java.util.Arrays.asList("low", "down", "even", "good", "high"));
+	}
+
 	private static String rules(String... bodies)
 	{
 		return "{\"version\": 1, \"rules\": [" + String.join(",", bodies) + "]}";
@@ -55,14 +66,14 @@ public class MoodTest
 			context.adjustMood(value - context.getMood());
 			String band = context.getMoodBand();
 			assertTrue("mood " + value + " is in no band at all",
-				TriggerContext.moodBands().contains(band));
+				moodBands().contains(band));
 			if (seen.isEmpty() || !seen.get(seen.size() - 1).equals(band))
 			{
 				seen.add(band);
 			}
 		}
 		assertEquals("the bands should run low to high in order",
-			new ArrayList<>(TriggerContext.moodBands()), seen);
+			new ArrayList<>(moodBands()), seen);
 	}
 
 	@Test
@@ -253,7 +264,7 @@ public class MoodTest
 			return;
 		}
 		if ("mood".equalsIgnoreCase(condition.type) && condition.is != null
-			&& !TriggerContext.moodBands().contains(condition.is))
+			&& !moodBands().contains(condition.is))
 		{
 			unknown.add(rule.id + ": \"" + condition.is + "\"");
 		}
@@ -310,7 +321,7 @@ public class MoodTest
 			{
 				continue;
 			}
-			for (String band : TriggerContext.moodBands())
+			for (String band : moodBands())
 			{
 				if (namesBand(rule.when, band))
 				{
@@ -319,8 +330,8 @@ public class MoodTest
 			}
 		}
 		assertEquals("moods with no idle posture: "
-				+ new java.util.TreeSet<>(subtract(TriggerContext.moodBands(), covered)),
-			TriggerContext.moodBands().size(), covered.size());
+				+ new java.util.TreeSet<>(subtract(moodBands(), covered)),
+			moodBands().size(), covered.size());
 	}
 
 	private static java.util.Set<String> subtract(java.util.Set<String> all,

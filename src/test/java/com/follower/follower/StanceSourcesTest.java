@@ -206,7 +206,7 @@ public class StanceSourcesTest
 		// 10990 SULPHUR_BLADE_SLASH: Weapon Animation Replacer files it as the
 		// Dual Macauhuitl's special, which must not make it a banned swing.
 		Player player = player(SULPHUR_BLADES, new int[]{808, 819, 824, 820, 821, 822, 823, 823}, true);
-		library.learnAttack(player, 10990);
+		library.learnAttack(player, 10990, -1);
 
 		assertEquals(10990, library.attackFor(SULPHUR_BLADES));
 	}
@@ -217,9 +217,9 @@ public class StanceSourcesTest
 		library.setManual(BASE + 6, INVENTED[0], INVENTED[1], INVENTED[2], 0);
 		library.forWeapon(BASE + 6).attackByStyle = new int[]{397, 1162, 390, 0};
 
-		assertEquals("a block", 0, library.attackFor(BASE + 6, 0));
-		assertEquals("a spell cast at the target", 0, library.attackFor(BASE + 6, 1));
-		assertEquals("a real swing", 390, library.attackFor(BASE + 6, 2));
+		assertEquals("a block", 0, library.attackFor(BASE + 6, 0, -1));
+		assertEquals("a spell cast at the target", 0, library.attackFor(BASE + 6, 1, -1));
+		assertEquals("a real swing", 390, library.attackFor(BASE + 6, 2, -1));
 	}
 
 	@Test
@@ -416,7 +416,7 @@ public class StanceSourcesTest
 		library.learnAttack(player, 390, 1);
 
 		assertEquals("carried as shipped", 1660, library.forWeapon(WHIP).walk);
-		assertEquals("the style it was seen in", 390, library.attackFor(WHIP, 1));
+		assertEquals("the style it was seen in", 390, library.attackFor(WHIP, 1, -1));
 
 		// Saved as the swing alone: a copy of the shipped poses would outlive
 		// every later fix to them.
@@ -446,7 +446,7 @@ public class StanceSourcesTest
 		library.observe(client(player(WHIP, new int[]{INVENTED[0], 1660, 11466, 1660, 1660, 1660, 823, 823}, false)));
 
 		assertEquals(11466, library.forWeapon(WHIP).run);
-		assertEquals("the swing in the style it was seen in", 390, library.attackFor(WHIP, 1));
+		assertEquals("the swing in the style it was seen in", 390, library.attackFor(WHIP, 1, -1));
 	}
 
 	// ------------------------------------------------- a player on an obstacle

@@ -37,7 +37,7 @@ public class OneMemoryAtATimeTest
 		h.engine.setClock(() -> ms[0]);
 		h.gameTicks(1);
 		// From an earlier session: a memory filed just now is too fresh to bring up.
-		h.engine.getContext().restoreIncident("bag", "the guard with the very large bag", 1);
+		h.engine.getContext().restoreIncident("bag", "the guard with the very large bag", 1, 0, 0L, "");
 
 		h.dispatch(TriggerEvent.levelUp("Attack", 30));
 		assertEquals(1, h.firedBy("recall-idle").size());
@@ -68,7 +68,7 @@ public class OneMemoryAtATimeTest
 		h.engine.setClock(() -> ms[0]);
 		h.game.at(3222, 3218, 0);
 		h.gameTicks(1);
-		h.engine.getContext().restoreIncident("the-death", "your death to the Hill Giant", 1);
+		h.engine.getContext().restoreIncident("the-death", "your death to the Hill Giant", 1, 0, 0L, "");
 		h.engine.getContext().restorePlaces(java.util.Collections.emptyMap(),
 			java.util.Collections.singletonMap(h.engine.getContext().getRegionId(), "you died to the Hill Giant"));
 		h.engine.getContext().restoreDeathSpot(new net.runelite.api.coords.WorldPoint(3222, 3218, 0));

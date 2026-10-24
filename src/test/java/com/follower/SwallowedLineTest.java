@@ -104,7 +104,7 @@ public class SwallowedLineTest
 		// already handed over.
 		Harness h = new Harness(folder.newFolder().toPath(), LATCHES);
 		h.gameTicks(1);
-		h.engine.getContext().setWish("soft clay", 5); // public:cut souvenirs-wishes
+		h.engine.getContext().setWish("soft clay", 5, null); // public:cut souvenirs-wishes
 
 		h.engine.setSink((text, output, rule, animationId, onSaid) -> { });
 		for (String id : LATCHING)
@@ -135,7 +135,7 @@ public class SwallowedLineTest
 	{
 		Harness h = new Harness(folder.newFolder().toPath(), LATCHES);
 		h.gameTicks(1);
-		h.engine.getContext().setWish("soft clay", 5); // public:cut souvenirs-wishes
+		h.engine.getContext().setWish("soft clay", 5, null); // public:cut souvenirs-wishes
 
 		List<Runnable> held = new ArrayList<>();
 		h.engine.setSink((text, output, rule, animationId, onSaid) -> held.add(onSaid));

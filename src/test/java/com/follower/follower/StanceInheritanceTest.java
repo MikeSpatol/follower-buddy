@@ -101,9 +101,9 @@ public class StanceInheritanceTest
 		assertEquals("with no style asked for, the generic swing",
 			390, library.attackFor(BASE + 40));
 		assertEquals("the animation this weapon really uses in that style",
-			386, library.attackFor(BASE + 40, 1));
+			386, library.attackFor(BASE + 40, 1, -1));
 		assertEquals("a style it has never been swung in falls back",
-			390, library.attackFor(BASE + 40, 2));
+			390, library.attackFor(BASE + 40, 2, -1));
 	}
 
 	@Test
@@ -118,7 +118,7 @@ public class StanceInheritanceTest
 		observe(BASE + 42, "Rune longsword", SCIMITAR, 390);
 
 		assertEquals("it took the neighbour's styled animation",
-			390, library.attackFor(BASE + 42, 1));
+			390, library.attackFor(BASE + 42, 1, -1));
 	}
 
 	// -------------------------------------------------------------- variants

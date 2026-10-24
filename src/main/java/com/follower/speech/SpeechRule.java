@@ -689,11 +689,6 @@ public class SpeechRule
 		bagPos = 0;
 	}
 
-	public String pickPhrase()
-	{
-		return pickPhrase(java.util.Collections.<String>emptySet());
-	}
-
 	public String pickPhrase(java.util.Set<String> recentlySaid)
 	{
 		return pickPhrase(recentlySaid, line -> 0);

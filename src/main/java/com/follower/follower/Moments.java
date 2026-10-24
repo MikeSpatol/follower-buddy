@@ -188,18 +188,6 @@ public class Moments implements Noticing.Looker // public:cut company-extras,not
 	private final Map<NPC, Integer> newcomers = new LinkedHashMap<>();
 	private NPC stranger;
 
-	public Moments(Client client, FollowerEntity follower,
-		SkillingController skilling, BooleanSupplier feetTaken, BooleanSupplier inCombat, // public:cut skilling
-		// public:else BooleanSupplier feetTaken, BooleanSupplier inCombat,
-		IntSupplier daysKnown)
-	{
-		this(client, follower,
-			skilling, // public:cut skilling
-			feetTaken, inCombat, daysKnown, null,
-			() -> false, // public:cut company-extras,gestures
-			() -> false);
-	}
-
 	/**
 	 * @param flourish the scroll-and-pose flourish for a write-up, or null
 	// public:cut company-extras,gestures

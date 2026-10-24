@@ -160,14 +160,6 @@ public final class CrossingWatch
 		/** The tile the server has them on, which leads the drawn one on a walk. */
 		final WorldPoint server;
 
-		public Sample(long atMs, long fineX, long fineY, int plane, int orientation,
-			int pose, int poseFrame, int action, int actionFrame, int[] base, int weapon,
-			boolean interacting)
-		{
-			this(atMs, fineX, fineY, plane, orientation, pose, poseFrame, action, actionFrame, base, weapon,
-				interacting, new WorldPoint((int) (fineX >> 7), (int) (fineY >> 7), plane));
-		}
-
 		Sample(long atMs, long fineX, long fineY, int plane, int orientation,
 			int pose, int poseFrame, int action, int actionFrame, int[] base, int weapon,
 			boolean interacting, WorldPoint server)

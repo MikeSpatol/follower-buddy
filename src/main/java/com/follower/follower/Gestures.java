@@ -83,17 +83,6 @@ public class Gestures
 		lastAt.put(gesture, tick.getAsInt());
 	}
 
-	/** Takes the gesture if it may be made: true means go ahead, it is spent. */
-	public boolean take(Gesture gesture)
-	{
-		if (!may(gesture))
-		{
-			return false;
-		}
-		spent(gesture);
-		return true;
-	}
-
 	/** Logout, hop: the ledger belongs to the session. */
 	public void reset()
 	{

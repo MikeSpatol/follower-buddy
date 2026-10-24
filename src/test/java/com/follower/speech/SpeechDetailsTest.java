@@ -124,18 +124,18 @@ public class SpeechDetailsTest
 		rule.say = java.util.Collections.singletonList("only line");
 		for (int i = 0; i < 20; i++)
 		{
-			assertEquals("only line", rule.pickPhrase());
+			assertEquals("only line", rule.pickPhrase(java.util.Collections.<String>emptySet()));
 		}
 	}
 
 	@Test
 	public void aRuleWithNoLinesSaysNothingRatherThanFailing()
 	{
-		assertEquals("", new SpeechRule().pickPhrase());
+		assertEquals("", new SpeechRule().pickPhrase(java.util.Collections.<String>emptySet()));
 
 		SpeechRule empty = new SpeechRule();
 		empty.say = new java.util.ArrayList<>();
-		assertEquals("", empty.pickPhrase());
+		assertEquals("", empty.pickPhrase(java.util.Collections.<String>emptySet()));
 	}
 
 	@Test
@@ -147,7 +147,7 @@ public class SpeechDetailsTest
 		String previous = null;
 		for (int i = 0; i < 500; i++)
 		{
-			String picked = rule.pickPhrase();
+			String picked = rule.pickPhrase(java.util.Collections.<String>emptySet());
 			assertFalse("said '" + picked + "' twice in a row", picked.equals(previous));
 			previous = picked;
 		}
@@ -171,7 +171,7 @@ public class SpeechDetailsTest
 		java.util.Set<String> seen = new java.util.HashSet<>();
 		for (int i = 0; i < 100; i++)
 		{
-			String picked = rule.pickPhrase();
+			String picked = rule.pickPhrase(java.util.Collections.<String>emptySet());
 			seen.add(picked);
 			if (previous != null)
 			{

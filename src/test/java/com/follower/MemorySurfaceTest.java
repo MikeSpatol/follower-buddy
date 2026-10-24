@@ -44,7 +44,7 @@ public class MemorySurfaceTest
 		context.tally("kill:goblin");
 		context.tally("kill:goblin");
 		context.noteRecord("hit", 42);
-		context.noteIncident("chicken-death", "that chicken");
+		context.noteIncident("chicken-death", "that chicken", "", System.currentTimeMillis());
 		context.notePlaceFeeling(45);
 		context.notePlaceMemory("the drop");
 		context.noteSaidOnce("first-meeting");
@@ -54,7 +54,7 @@ public class MemorySurfaceTest
 		context.setWish("feather", 5, java.util.Collections.singletonList(314)); // public:cut souvenirs-wishes
 
 		String surface = flat(MemoryDialog.summarise(context,
-			java.util.Collections.singletonMap(12850, "Lumbridge town and castle")));
+			java.util.Collections.singletonMap(12850, "Lumbridge town and castle"), key -> key));
 
 		assertTrue(surface.contains("(31 days ago)"));
 		assertTrue(surface.contains("Sessions together: 36"));
@@ -86,7 +86,7 @@ public class MemorySurfaceTest
 		TriggerContext context = new TriggerContext(new FakeGame().client);
 		context.setWish("feather", 5, java.util.Collections.singletonList(314));
 		context.noteQuestion("want-outing");
-		String surface = flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap()));
+		String surface = flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap(), key -> key));
 		assertTrue(surface, surface.contains("Hoping for: feather (answer its question first, then"
 			+ " right-click the follower and choose Talk-to to hand it over)"));
 	}
@@ -204,15 +204,15 @@ public class MemorySurfaceTest
 		long today = LocalDate.now().toEpochDay();
 
 		context.setMetOnDay(today);
-		assertTrue(flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap()))
+		assertTrue(flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap(), key -> key))
 			.contains("First met: " + LocalDate.ofEpochDay(today) + " (today)\n"));
 
 		context.setMetOnDay(today - 1);
-		assertTrue(flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap()))
+		assertTrue(flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap(), key -> key))
 			.contains("First met: " + LocalDate.ofEpochDay(today - 1) + " (1 day ago)\n"));
 
 		context.setMetOnDay(today - 2);
-		assertTrue(flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap()))
+		assertTrue(flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap(), key -> key))
 			.contains("First met: " + LocalDate.ofEpochDay(today - 2) + " (2 days ago)\n"));
 	}
 
@@ -223,10 +223,10 @@ public class MemorySurfaceTest
 		// player's own still shows its id, having nothing better to show.
 		TriggerContext context = new TriggerContext(new FakeGame().client);
 		context.noteQuestion("want-outing");
-		String shown = flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap()));
+		String shown = flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap(), key -> key));
 		assertTrue(shown, shown.contains("Waiting on an answer: Whether you'll take it somewhere\n"));
 		context.noteQuestion("my-own-tree");
-		shown = flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap()));
+		shown = flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap(), key -> key));
 		assertTrue(shown, shown.contains("Waiting on an answer: my-own-tree\n"));
 	}
 
@@ -240,11 +240,11 @@ public class MemorySurfaceTest
 		com.follower.sim.Harness h = new com.follower.sim.Harness(dir);
 		h.engine.getContext().tally("graces");
 		h.engine.getContext().tally("graces");
-		assertTrue(flat(MemoryDialog.summarise(h.engine.getContext(), java.util.Collections.emptyMap()))
+		assertTrue(flat(MemoryDialog.summarise(h.engine.getContext(), java.util.Collections.emptyMap(), key -> key))
 			.contains("Marks of grace picked up on a course: 2"));
 		h.engine.reset();
 		assertEquals(0, h.engine.getContext().getTally("graces"));
-		assertFalse(flat(MemoryDialog.summarise(h.engine.getContext(), java.util.Collections.emptyMap()))
+		assertFalse(flat(MemoryDialog.summarise(h.engine.getContext(), java.util.Collections.emptyMap(), key -> key))
 			.contains("Marks of grace"));
 	}
 
@@ -270,7 +270,7 @@ public class MemorySurfaceTest
 		context.tally("graces"); // public:cut agility-all,marks
 		context.tally("advice:taken");
 
-		String surface = flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap()));
+		String surface = flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap(), key -> key));
 		assertTrue(surface, surface.contains("Kills: 600\nKills today: 600\nLevels gained: 1\nLevels gained today: 1\n"));
 		assertTrue(surface, surface.contains("Marks of grace")); // public:cut agility-all,marks
 		assertTrue(surface, surface.contains("Advice taken: 1"));
@@ -284,7 +284,7 @@ public class MemorySurfaceTest
 	public void aStrangerHasNothingToShow()
 	{
 		TriggerContext context = new TriggerContext(new FakeGame().client);
-		String surface = flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap()));
+		String surface = flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap(), key -> key));
 
 		assertTrue(surface.contains("First met: not recorded yet"));
 		assertTrue(surface.contains("Sessions together: 0"));

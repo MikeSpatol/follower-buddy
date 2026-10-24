@@ -132,13 +132,6 @@ public class MemoryDialog extends JDialog
 	 *
 	 * @param regionNames place names by region id, from the Locations rules;
 	 * an id with no name is shown bare
-	 */
-	public static List<String[]> summarise(TriggerContext c, Map<Integer, String> regionNames)
-	{
-		return summarise(c, regionNames, key -> key);
-	}
-
-	/**
 	 * @param accountKey the key a kill count is kept under for this account
 	 * (ChronicleProgress.accountKey); only this account's counts are shown
 	 */
