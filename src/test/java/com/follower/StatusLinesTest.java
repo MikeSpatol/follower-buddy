@@ -146,7 +146,8 @@ public class StatusLinesTest
 		int login = source.indexOf("if (freshLogin)\n\t\t\t\t{");
 		assertTrue("the lint has lost its place", login >= 0);
 		assertTrue("the login tells them",
-			source.substring(login, source.indexOf("TriggerEvent.Type.LOGIN", login)).contains("reportLoadErrors();"));
+			source.substring(login, source.indexOf("TriggerEvent.simple(TriggerEvent.Type.LOGIN)", login))
+				.contains("reportLoadErrors();"));
 		String report = method("private void reportLoadErrors()");
 		assertTrue("rules and dialogs both", report.contains("reportRuleErrors();")
 			&& report.contains("dialogLoader.getErrors()"));
