@@ -29,7 +29,12 @@
     "class-lombok",
     "guava",
     "micro",
-    "join-literals"
+    "join-literals",
+    "inline-constants",
+    "private",
+    "merge-fields",
+    "merge-locals",
+    "var-all"
   ],
   "features": {
     "chronicle": "the Chronicle book, sketches, portraits and page news",
