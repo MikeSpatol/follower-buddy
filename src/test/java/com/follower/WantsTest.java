@@ -1,9 +1,5 @@
 package com.follower;
 
-import com.follower.sim.Harness;
-import com.follower.speech.Condition;
-import com.follower.speech.SpeechRule;
-import com.follower.speech.TriggerEvent;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
@@ -37,7 +33,14 @@ public class WantsTest
 		Set<Integer> found = new TreeSet<>();
 		if (condition != null)
 		{
-			condition.collectRegions(found);
+			if (condition.regions != null)
+			{
+				condition.regions.stream().filter(java.util.Objects::nonNull).forEach(found::add);
+			}
+			if (condition.conditions != null)
+			{
+				condition.conditions.forEach(child -> found.addAll(regionsOf(child)));
+			}
 		}
 		return found;
 	}

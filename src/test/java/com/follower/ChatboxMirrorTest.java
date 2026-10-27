@@ -1,6 +1,5 @@
 package com.follower;
 
-import com.follower.speech.SpeechOutput;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;

@@ -1,9 +1,5 @@
 package com.follower;
 
-import com.follower.sim.Harness;
-import com.follower.speech.SpeechRule;
-import com.follower.speech.TriggerContext;
-import com.follower.speech.TriggerEvent;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
@@ -88,7 +84,7 @@ public class CourtesyTest
 	@Test
 	public void theDiagonalsCountAsFacing()
 	{
-		TriggerContext context = new TriggerContext(new com.follower.sim.FakeGame()
+		TriggerContext context = new TriggerContext(new FakeGame()
 			.at(50, 50, 0).turned(TriggerContext.bearing(1, 1)).client);
 		context.setFollowerLocation(new WorldPoint(51, 51, 0));
 		assertTrue("north-east, facing north-east", context.isAddressingFollower());

@@ -1,7 +1,5 @@
 package com.follower;
 
-import com.follower.sim.FakeGame;
-import com.follower.speech.TriggerContext;
 import com.google.gson.Gson;
 import java.util.Arrays;
 import net.runelite.api.coords.WorldPoint;
@@ -45,12 +43,9 @@ public class MemorySurvivesRestartTest
 		context.noteKillCountName("TzTok-Jad");
 		context.setSessionCount(36);
 		context.noteIncident("chicken-death", "that chicken", "Chicken", 1_700_000_000_000L);
-		context.notePlaceFeeling(10);
 		context.notePlaceMemory("the drop");
 		context.noteSaidOnce("first-meeting");
 		context.noteSaidOnce("first-page");
-		context.noteChronicled("boss-giant-mole");
-		context.stampChronicled("boss-giant-mole", 20_720L, "Falador");
 		context.noteLineSaid("A line said twice.");
 		context.noteLineSaid("A line said twice.");
 		context.setMetOnDay(20_400L);
@@ -58,9 +53,6 @@ public class MemorySurvivesRestartTest
 		context.restoreDeathSpot(new WorldPoint(3200, 3200, 1));
 		context.noteLevel("Fishing", 70, 1_700_000_000_000L);
 		context.noteDoing("fighting Vorkath");
-		context.acceptNickname("the swot");
-		context.refuseNickname("the gravedigger");
-		context.noteSketchAccount("rsprofile_Rn0JAOtr");
 		return context;
 	}
 
@@ -108,9 +100,6 @@ public class MemorySurvivesRestartTest
 			after.getLevelStamps().get("fishing"));
 		assertEquals("what you were doing last time", "fighting Vorkath",
 			after.getLastTime());
-		assertEquals("the name you agreed to", "the swot", after.getNickname());
-		assertTrue("and the one you turned down",
-			after.getRefusedNicknames().contains("the gravedigger"));
 
 		// The one that would be silent if it broke.
 		assertTrue("a spent introduction has to survive a restart",
@@ -118,13 +107,6 @@ public class MemorySurvivesRestartTest
 		assertTrue(after.hasSaidOnce("first-page"));
 		assertFalse("and nothing else should come back spent",
 			after.hasSaidOnce("first-hour"));
-		assertTrue("a chronicle page once written stays written",
-			after.isChronicled("boss-giant-mole"));
-		assertFalse(after.isChronicled("boss-king-black-dragon"));
-		assertEquals("and the day it was written", Long.valueOf(20_720L), after.chronicledOn("boss-giant-mole"));
-		assertEquals("and where", "Falador", after.chronicledAt("boss-giant-mole"));
-		assertTrue("the accounts whose drawings Forget everything takes",
-			after.getSketchAccounts().contains("rsprofile_Rn0JAOtr"));
 
 		// Line wear resetting every restart would make retirement (R17) a
 		// per-session mechanism, which is to say no mechanism at all.
@@ -173,20 +155,6 @@ public class MemorySurvivesRestartTest
 	}
 
 	@Test
-	public void aPagesSavedDateWinsOverOneStampedBeforeTheRead()
-	{
-		// Enabled mid-session, a tick can land before the memory is read, and
-		// the book dates what it sees against the blank memory. The page was
-		// written long before; the saved day is the true one.
-		String blob = FollowerPlugin.snapshotMemory(lived(), 1_234, gson);
-		TriggerContext after = fresh();
-		after.stampChronicled("boss-giant-mole", 20_900L, "Lumbridge");
-		FollowerPlugin.restoreMemory(after, blob, gson, 0);
-		assertEquals(Long.valueOf(20_720L), after.chronicledOn("boss-giant-mole"));
-		assertEquals("Falador", after.chronicledAt("boss-giant-mole"));
-	}
-
-	@Test
 	public void aFollowerThatHasDoneNothingSavesAndLoadsCleanly()
 	{
 		String blob = FollowerPlugin.snapshotMemory(fresh(), 0, gson);
@@ -215,6 +183,25 @@ public class MemorySurvivesRestartTest
 		assertTrue("a missing spent-set reads as nothing said yet",
 			after.getSpokenOnce().isEmpty());
 		assertFalse(after.hasSaidOnce("first-meeting"));
+	}
+
+	@Test
+	public void aBlobWithANicknameAndPlaceOpinionsLoadsInEveryBuild()
+	{
+		// What the full build (and 1.4.1) writes. The public build may leave
+		// the nickname and the place opinions out; the blob still has to load
+		// there, the rest of it with it.
+		String full = "{\"tallies\":{\"kill:rat\":3},\"sessions\":12,\"deathPlane\":-1,"
+			+ "\"placeScores\":{\"12850\":45},\"placeMemories\":{\"12850\":\"the drop\"},"
+			+ "\"nickname\":\"the swot\",\"refusedNicknames\":[\"the gravedigger\"],"
+			+ "\"nicknameAskedMs\":1700000000000,\"nicknameAsksIgnored\":2}";
+
+		TriggerContext after = fresh();
+		FollowerPlugin.restoreMemory(after, full, gson, 0);
+
+		assertEquals(3, after.getTally("kill:rat"));
+		assertEquals(12, after.getSessionCount());
+		assertEquals("the drop", after.getPlaceMemories().get(12850));
 	}
 
 	@Test
@@ -271,44 +258,16 @@ public class MemorySurvivesRestartTest
 		assertFalse(FollowerPlugin.belongsToProfile(-1L, 3L));
 	}
 
-	/**
-	 * The Chronicle's numbers are the follower's own counters, so they come
-	 * back with the rest of its memory: the goblins it saw you kill and the
-	 * mole's kill count are on their pages after a restart, not nought again.
-	 */
-	@Test
-	public void theChroniclesNumbersComeBack()
-	{
-		TriggerContext before = fresh();
-		before.tally("kill:goblin");
-		before.tally("kill:goblin");
-		before.tally("kill:goblin");
-		before.noteRecord("kc:giant mole", 41);
-
-		TriggerContext after = fresh();
-		FollowerPlugin.restoreMemory(after, FollowerPlugin.snapshotMemory(before, 0, gson), gson, 0);
-
-		// No data directory: the bundled book, as a fresh install reads it.
-		com.follower.chronicle.ChronicleLoader loader = new com.follower.chronicle.ChronicleLoader(gson);
-		loader.load(null);
-		com.follower.chronicle.ChronicleProgress progress =
-			new com.follower.chronicle.ChronicleProgress(new FakeGame().client, loader, () -> after);
-		assertEquals(3, progress.count(loader.get("enemy-goblin")));
-		assertEquals(41, progress.count(loader.get("boss-giant-mole")));
-	}
 
 	@Test
-	public void theRestsFromAskingAndRecallingSurvive()
+	public void theRestFromRecallingSurvives()
 	{
 		// Text QA5: the nickname asked again at every login, and one memory
 		// brought up at every one; both rests are kept with the memory.
 		TriggerContext before = lived();
-		before.restoreNicknameAsks(1_700_000_000_000L, 3);
 		before.noteIncidentRecalled(1_700_000_100_000L);
 		TriggerContext after = fresh();
 		FollowerPlugin.restoreMemory(after, FollowerPlugin.snapshotMemory(before, 0, gson), gson, 0);
-		assertEquals(1_700_000_000_000L, after.getNicknameAskedMs());
-		assertEquals(3, after.getNicknameAsksIgnored());
 		assertEquals(1_700_000_100_000L, after.getIncidentRecalledMs());
 	}
 }

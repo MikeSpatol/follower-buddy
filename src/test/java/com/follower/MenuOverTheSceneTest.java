@@ -33,7 +33,7 @@ public class MenuOverTheSceneTest
 	private static String source() throws IOException
 	{
 		assertTrue("cannot read " + PLUGIN, Files.isRegularFile(PLUGIN));
-		return new String(Files.readAllBytes(PLUGIN), StandardCharsets.UTF_8).replace("\r\n", "\n");
+		return PublicMarkers.strip(new String(Files.readAllBytes(PLUGIN), StandardCharsets.UTF_8).replace("\r\n", "\n"));
 	}
 
 	/** The plugin's members, split where one closes at the class's own depth. */
@@ -83,7 +83,7 @@ public class MenuOverTheSceneTest
 			entry(MenuAction.CANCEL), entry(MenuAction.WALK), entry(MenuAction.GROUND_ITEM_THIRD_OPTION)}));
 		assertFalse(FollowerPlugin.onlyGroundUnder(null));
 
-		String tick = source().substring(source().indexOf("public void onClientTick("));
+		String tick = source().substring(source().indexOf("void onClientTick("));
 		tick = tick.substring(0, tick.indexOf("\n\t}\n"));
 		int added = tick.indexOf("addFollowerMenuEntry(talkOption()");
 		assertTrue("the hover entry has moved - the lint has lost its place", added >= 0);
@@ -121,7 +121,7 @@ public class MenuOverTheSceneTest
 		int found = 0;
 		for (String member : members())
 		{
-			if (member.contains("private void addFollowerMenuEntry("))
+			if (member.contains("void addFollowerMenuEntry("))
 			{
 				continue;
 			}

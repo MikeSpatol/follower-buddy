@@ -89,8 +89,8 @@ public class NamePromptTest
 	public void everyUseOfTheNameGoesThroughTheCleanOne() throws java.io.IOException
 	{
 		java.nio.file.Path plugin = java.nio.file.Paths.get("src/main/java/com/follower/FollowerPlugin.java");
-		String source = new String(java.nio.file.Files.readAllBytes(plugin),
-			java.nio.charset.StandardCharsets.UTF_8);
+		String source = PublicMarkers.strip(new String(java.nio.file.Files.readAllBytes(plugin),
+			java.nio.charset.StandardCharsets.UTF_8));
 		int uses = source.split("config\\.followerName\\(\\)", -1).length - 1;
 		org.junit.Assert.assertEquals("the raw setting is read in one place only", 1, uses);
 		org.junit.Assert.assertTrue("the plugin's own menu entries are found by their exact target",

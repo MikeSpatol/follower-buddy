@@ -1,8 +1,5 @@
 package com.follower;
 
-import com.follower.sim.Harness;
-import com.follower.speech.SpeechRule;
-import com.follower.speech.TriggerEvent;
 import java.io.IOException;
 import net.runelite.api.ChatMessageType;
 import org.junit.Rule;

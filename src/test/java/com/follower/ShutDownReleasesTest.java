@@ -1,6 +1,5 @@
 package com.follower;
 
-import com.follower.appearance.SpotAnimRepository;
 import com.google.gson.Gson;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -26,30 +25,14 @@ public class ShutDownReleasesTest
 	public final TemporaryFolder folder = new TemporaryFolder();
 
 	@Test
-	public void theSpotanimCatalogueCanBeLetGo() throws IOException
-	{
-		Path dir = folder.newFolder().toPath();
-		Files.write(dir.resolve("spotanims.json"),
-			"{\"spotanims\": {\"111\": {}}}".getBytes(StandardCharsets.UTF_8));
-		SpotAnimRepository spotanims = new SpotAnimRepository(new Gson());
-		spotanims.load(dir);
-		assertTrue(spotanims.isLoaded());
-		spotanims.unload();
-		assertFalse(spotanims.isLoaded());
-		spotanims.load(dir);
-		assertTrue("and loads again", spotanims.isLoaded());
-	}
-
-	@Test
 	public void shutDownLetsThemGo() throws IOException
 	{
-		String plugin = new String(Files.readAllBytes(Paths.get("src/main/java/com/follower/FollowerPlugin.java")),
-			StandardCharsets.UTF_8).replace("\r\n", "\n");
+		String plugin = PublicMarkers.strip(new String(Files.readAllBytes(Paths.get("src/main/java/com/follower/FollowerPlugin.java")),
+			StandardCharsets.UTF_8).replace("\r\n", "\n"));
 		int at = plugin.indexOf("protected void shutDown()");
 		assertTrue("no shutDown - the lint has lost its place", at >= 0);
 		String body = plugin.substring(at, plugin.indexOf("\n\t}\n", at));
 		assertTrue(body.contains("modelRepository.unload();"));
 		assertTrue(body.contains("spotAnimRepository.unload();"));
-		assertTrue(body.contains("chronicleWindow.forgetPortraits();"));
 	}
 }

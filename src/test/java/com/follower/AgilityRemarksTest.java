@@ -1,8 +1,5 @@
 package com.follower;
 
-import com.follower.sim.Harness;
-import com.follower.speech.SpeechRule;
-import com.follower.speech.TriggerEvent;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;

@@ -1,9 +1,5 @@
 package com.follower;
 
-import com.follower.sim.Harness;
-import com.follower.speech.RuleLoader;
-import com.follower.speech.SpeechRule;
-import com.follower.speech.TriggerEvent;
 import com.google.gson.Gson;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

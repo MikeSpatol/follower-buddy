@@ -1,6 +1,5 @@
 package com.follower;
 
-import com.follower.sim.Harness;
 import net.runelite.api.CollisionDataFlag;
 import java.io.IOException;
 import org.junit.Rule;
@@ -104,13 +103,13 @@ public class NpcVisibilityTest
 		Harness h = new Harness(folder.newFolder().toPath());
 		for (String id : new String[]{"something-big-nearby", "cats-and-pets", "boss-while-low"})
 		{
-			com.follower.speech.SpeechRule rule = h.rule(id);
+			SpeechRule rule = h.rule(id);
 			assertTrue(id + " points at an NPC and must require sight of it",
 				requiresSight(rule.when));
 		}
 	}
 
-	private static boolean requiresSight(com.follower.speech.Condition condition)
+	private static boolean requiresSight(Condition condition)
 	{
 		if (condition == null)
 		{
@@ -123,7 +122,7 @@ public class NpcVisibilityTest
 		}
 		if (condition.conditions != null)
 		{
-			for (com.follower.speech.Condition child : condition.conditions)
+			for (Condition child : condition.conditions)
 			{
 				if (requiresSight(child))
 				{

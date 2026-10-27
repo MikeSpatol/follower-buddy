@@ -1,8 +1,5 @@
 package com.follower;
 
-import com.follower.sim.Harness;
-import com.follower.speech.TriggerContext;
-import com.follower.speech.TriggerEvent;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -168,7 +165,7 @@ public class IncidentTest
 		Harness h = new Harness(folder.newFolder().toPath());
 		long[] ms = {1_000_000L};
 		h.engine.setClock(() -> ms[0]);
-		h.engine.setGlobalCooldownMs(com.follower.speech.Chattiness.OCCASIONAL.getGapMs());
+		h.engine.setGlobalCooldownMs(Chattiness.OCCASIONAL.getGapMs());
 		h.gameTicks(1);
 		for (int death = 1; death <= 4; death++)
 		{
@@ -259,7 +256,7 @@ public class IncidentTest
 	@Test
 	public void whenAndWhereReadAsSomebodyWouldSayThem()
 	{
-		TriggerContext context = new TriggerContext(new com.follower.sim.FakeGame().client);
+		TriggerContext context = new TriggerContext(new FakeGame().client);
 		assertEquals("", context.getMemoryWhen(5_000L));
 		context.setRegionNames(names());
 		long now = 10_000_000_000L;
@@ -269,7 +266,7 @@ public class IncidentTest
 			now - 3L * 24 * 60 * 60_000L);
 		assertEquals("three days ago", context.getMemoryWhen(now));
 		assertEquals("a repeat keeps the count", 2, context.getIncidentCount());
-		context.restoreIncident("the-boss", "the size of that thing", 1);
+		context.restoreIncident("the-boss", "the size of that thing", 1, 0, 0L, "");
 		assertEquals("an old record with no date", "a while ago", context.getMemoryWhen(now));
 		assertEquals("Varrock", context.placeName(12853));
 		assertEquals("", context.placeName(999));
@@ -280,9 +277,9 @@ public class IncidentTest
 	{
 		// QA, 15 Oct: "in The God Wars Dungeon", "in Lumbridge town and
 		// castle". The Locations notes describe; a line wants the name.
-		com.follower.speech.RuleLoader rules = new com.follower.speech.RuleLoader(new com.google.gson.Gson());
+		RuleLoader rules = new RuleLoader(new com.google.gson.Gson());
 		rules.initialise(folder.newFolder().toPath());
-		TriggerContext context = new TriggerContext(new com.follower.sim.FakeGame().client);
+		TriggerContext context = new TriggerContext(new FakeGame().client);
 		context.setRegionNames(rules.getRegionNames());
 		Map<String, String> said = new java.util.TreeMap<>();
 		for (Map.Entry<Integer, String> place : rules.getRegionNames().entrySet())
@@ -371,7 +368,7 @@ public class IncidentTest
 	public void everyRememberHasAPlainFormForWhenTheParticularsAreMissing() throws IOException
 	{
 		Harness h = new Harness(folder.newFolder().toPath());
-		for (com.follower.speech.SpeechRule rule : h.loader.getRules())
+		for (SpeechRule rule : h.loader.getRules())
 		{
 			if (rule.remember == null || rule.remember.as == null || rule.remember.as.indexOf('{') < 0)
 			{

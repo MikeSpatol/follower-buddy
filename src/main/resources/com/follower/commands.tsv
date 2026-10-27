@@ -1,0 +1,15 @@
+# The everyday ::follower commands, in the order the help and the side
+# panel's Commands section list them: the command, a tab, what it does.
+# {errands} is the errand keys a player is shown, spaced so the list wraps
+# between keys rather than mid-word.
+say <text>	make the follower say it
+here	place the follower at your feet
+fix	re-attach it if it vanished
+rebuild	rebuild its model from the outfit
+copy	dress it in your gear (also a panel button)
+outfit <name>	wear a saved profile (also in the panel)
+height <n>	lift or lower it
+errand [{errands}]	send it on an errand now
+reload	re-read the phrase files
+status	models, rules and spawn state
+where	your region id, for Locations in the Messages window

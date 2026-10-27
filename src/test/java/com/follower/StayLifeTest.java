@@ -1,10 +1,8 @@
 package com.follower;
 
-import com.follower.sim.Harness;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.Rule;
-import com.follower.follower.SpectateController;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 

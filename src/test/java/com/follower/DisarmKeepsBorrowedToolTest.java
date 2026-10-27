@@ -1,6 +1,5 @@
 package com.follower;
 
-import com.follower.appearance.Outfit;
 import net.runelite.api.kit.KitType;
 import org.junit.Test;
 

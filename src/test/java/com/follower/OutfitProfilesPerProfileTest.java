@@ -1,6 +1,5 @@
 package com.follower;
 
-import com.follower.appearance.OutfitProfileStore;
 import com.google.gson.Gson;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -144,9 +143,9 @@ public class OutfitProfilesPerProfileTest
 	@Test
 	public void aSwitchReadsTheNewProfilesListBeforeRestoringItsOutfit() throws IOException
 	{
-		String source = new String(Files.readAllBytes(
-			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8);
-		int handler = source.indexOf("public void onProfileChanged(");
+		String source = PublicMarkers.strip(new String(Files.readAllBytes(
+			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8));
+		int handler = source.indexOf("void onProfileChanged(");
 		int end = source.indexOf("\n\t}", handler);
 		String body = source.substring(handler, end);
 		int load = body.indexOf("loadOutfitProfiles();");

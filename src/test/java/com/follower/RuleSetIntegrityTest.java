@@ -1,8 +1,5 @@
 package com.follower;
 
-import com.follower.sim.Harness;
-import com.follower.speech.Condition;
-import com.follower.speech.SpeechRule;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -59,24 +56,24 @@ public class RuleSetIntegrityTest
 		"tally", "personalbest", "sessioncount",
 		"answered", "hovered", "examined",
 		"inventoryfree", "playersnearby",
-		"wanting", "wantfulfilled", "wantexpired", "feelsabout", "wishing",
-		"wishitemheld", "rolledfeeling", "boundary", "staying", "inwilderness",
-		"remembers", "memoryhere", "memoryfoenearby", "carrying", "souvenirlost",
-		"betting", "betwon", "betlost",
+		"wanting", "wantfulfilled", "wantexpired",
+		"boundary", "staying", "inwilderness",
+		"remembers", "memoryhere", "memoryfoenearby",
 		"timeofday", "sessionminutes", "asking",
-		"placescore", "happenedhere",
-		"heeded", "ignored", "advising",
-		"daysknown", "anniversary", "outgrew", "nicknamed",
-		"challenging", "challengemet", "challengefailed",
+		"happenedhere",
+		"daysknown", "anniversary", "outgrew",
 		"unattended", "underfoot",
 		"milestone", "levelgap", "killcount", "grateful", "lasttime", "farewell",
-		"noticed", "hesitated", "steppedaside", "crossed", "addressed", "nicknameearned",
+		"noticed",
+		"hesitated", "steppedaside",
+		"crossed",
+		"addressed",
 		"dateis", "worldhop", "gameupdated", "notesedited",
 		"musicunlock", "collectionadd", "questcomplete", "geoffer",
 		"channeljoined", "channelleft", "npcshout", "musictrack",
-		"examinedthing", "attendedagain", "minutestaken", "pagewritten",
+		"examinedthing", "attendedagain", "minutestaken",
 		"working", "xpdrop", "workended", "targetdepleted", "bagfull", "baghalf",
-		"dayssincesaid", "questwitnessed", "grace"));
+		"dayssincesaid", "questwitnessed"));
 
 	private static JsonObject bundled(String resource) throws IOException
 	{
@@ -594,9 +591,9 @@ public class RuleSetIntegrityTest
 	{
 		Harness h = new Harness(folder.newFolder().toPath());
 		List<String> missing = new ArrayList<>();
-		for (String target : com.follower.follower.ErrandController.STUDY_TARGETS)
+		for (String target : ErrandController.STUDY_TARGETS)
 		{
-			String key = com.follower.follower.ErrandController.studyKey(target);
+			String key = ErrandController.siteKey("study", target);
 			boolean start = false;
 			boolean end = false;
 			for (SpeechRule rule : h.loader.getRules())
@@ -721,9 +718,9 @@ public class RuleSetIntegrityTest
 	{
 		Harness h = new Harness(folder.newFolder().toPath());
 		List<String> missing = new ArrayList<>();
-		for (String target : com.follower.follower.ErrandController.EXPLORE_TARGETS)
+		for (String target : ErrandController.EXPLORE_TARGETS)
 		{
-			String key = com.follower.follower.ErrandController.exploreKey(target);
+			String key = ErrandController.siteKey("explore", target);
 			boolean start = false;
 			boolean end = false;
 			for (SpeechRule rule : h.loader.getRules())
@@ -1059,24 +1056,6 @@ public class RuleSetIntegrityTest
 	 * rest sit at 500 idle ticks: in the 500-620 window it said it had picked
 	 * something up as it sat down, and its body did nothing (QA, 15 Oct).
 	 */
-	@Test
-	public void aSouvenirIsBentForBeforeTheRestSit() throws IOException
-	{
-		Harness h = new Harness(folder.newFolder().toPath());
-		int souvenirs = 0;
-		for (SpeechRule rule : h.loader.getRules())
-		{
-			if (rule.pickUp == null || !rule.id.startsWith("souvenir-"))
-			{
-				continue;
-			}
-			souvenirs++;
-			assertEquals(rule.id + " bends to the floor for it", Integer.valueOf(827), rule.animation);
-			assertEquals(rule.id + " stands still to", Boolean.TRUE, rule.holdStill);
-			assertTrue(rule.id + " fires on the rest", idleBelow(rule.when) <= 500);
-		}
-		assertTrue(souvenirs >= 5);
-	}
 
 	/** The tightest idleBelow a condition tree's top-level all puts on it, or MAX_VALUE. */
 	private static int idleBelow(Condition condition)
@@ -1295,7 +1274,7 @@ public class RuleSetIntegrityTest
 		for (SpeechRule rule : h.loader.getRules())
 		{
 			boolean opener = rule.asks != null || rule.want != null
-				|| rule.wish != null || rule.challenge != null;
+				;
 			if (opener && !consultsType(rule.when, "repeating"))
 			{
 				unguarded.add(rule.id);
@@ -1394,12 +1373,12 @@ public class RuleSetIntegrityTest
 		Set<String> prefixes = new TreeSet<>();
 		for (String source : new String[]{
 			"src/main/java/com/follower/FollowerPlugin.java",
-			"src/main/java/com/follower/speech/SpeechEngine.java"})
+			"src/main/java/com/follower/SpeechEngine.java"})
 		{
 			java.nio.file.Path path = java.nio.file.Paths.get(source);
 			assertTrue("cannot read " + source, java.nio.file.Files.isRegularFile(path));
-			collectTalliedKeys(new String(
-				java.nio.file.Files.readAllBytes(path), StandardCharsets.UTF_8),
+			collectTalliedKeys(PublicMarkers.strip(new String(
+				java.nio.file.Files.readAllBytes(path), StandardCharsets.UTF_8)),
 				written, prefixes);
 		}
 		assertFalse("no tally calls found at all - the scan broke, not the rules",

@@ -1,6 +1,5 @@
 package com.follower;
 
-import com.follower.sim.Harness;
 import java.io.IOException;
 import java.util.HashSet;
 import net.runelite.api.coords.WorldPoint;
@@ -65,46 +64,4 @@ public class LowMoodTest
 		assertTrue("no game either", h.firedBy("offer-game").isEmpty());
 	}
 
-	@Test
-	public void theGrudgeConcedesTheFactsAndKeepsItself() throws IOException
-	{
-		Harness h = new Harness(folder.newFolder().toPath());
-		h.gameTicks(1);
-
-		// Rolled dislike for where we are standing, against an earned record
-		// good enough that feelsAbout has flipped to liked. The defence fires
-		// on the disagreement itself.
-		int here = new WorldPoint(3222, 3218, 0).getRegionID();
-		h.engine.getContext().setTraits(
-			new HashSet<>(java.util.Collections.singletonList(here + 1)),
-			new HashSet<>(java.util.Collections.singletonList(here)));
-		h.engine.getContext().notePlaceFeeling(30);
-		h.engine.getContext().notePlaceFeeling(30);
-		assertTrue("the ledger has won the argument feelsAbout can see",
-			h.engine.getContext().feelsAbout("liked"));
-
-		h.gameTicks(12);
-		assertEquals("so the follower concedes it, once",
-			1, h.firedBy("defended-dislike").size());
-	}
-
-	@Test
-	public void loyaltyArguesWithTheRecordTheSameWay() throws IOException
-	{
-		Harness h = new Harness(folder.newFolder().toPath());
-		h.gameTicks(1);
-
-		int here = new WorldPoint(3222, 3218, 0).getRegionID();
-		h.engine.getContext().setTraits(
-			new HashSet<>(java.util.Collections.singletonList(here)),
-			new HashSet<>(java.util.Collections.singletonList(here + 1)));
-		h.engine.getContext().notePlaceFeeling(-30);
-		h.engine.getContext().notePlaceFeeling(-30);
-		assertTrue("nothing but trouble here, says the record",
-			h.engine.getContext().feelsAbout("disliked"));
-
-		h.gameTicks(12);
-		assertEquals("and the fondness stands its ground, once",
-			1, h.firedBy("defended-like").size());
-	}
 }

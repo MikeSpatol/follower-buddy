@@ -1,8 +1,5 @@
 package com.follower;
 
-import com.follower.sim.Harness;
-import com.follower.speech.Condition;
-import com.follower.speech.SpeechRule;
 import com.google.gson.Gson;
 import java.io.IOException;
 import java.util.ArrayList;

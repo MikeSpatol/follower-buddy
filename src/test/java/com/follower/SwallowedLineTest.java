@@ -1,7 +1,5 @@
 package com.follower;
 
-import com.follower.sim.Harness;
-import com.follower.speech.TriggerEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -104,7 +102,6 @@ public class SwallowedLineTest
 		// already handed over.
 		Harness h = new Harness(folder.newFolder().toPath(), LATCHES);
 		h.gameTicks(1);
-		h.engine.getContext().setWish("soft clay", 5);
 
 		h.engine.setSink((text, output, rule, animationId, onSaid) -> { });
 		for (String id : LATCHING)
@@ -114,12 +111,6 @@ public class SwallowedLineTest
 
 		assertFalse("a first nobody heard is not spent",
 			h.engine.getContext().hasSaidOnce("first"));
-		assertFalse("nor is a rock picked up", h.engine.getContext().isCarrying());
-		assertFalse("nor a bet placed", h.engine.getContext().isBetting());
-		assertFalse("nor a dare set", h.engine.getContext().isChallenging());
-		assertFalse("nor advice given", h.engine.getContext().isAdvising());
-		assertFalse("but the gift is spent: the wish is closed", h.engine.getContext().isWishing());
-		assertTrue("and the favour owed", h.engine.getContext().isGrateful());
 
 		// Still owed, so the next time it rises it is said, and spent then.
 		h.engine.setSink((text, output, rule, animationId, onSaid) -> onSaid.run());
@@ -133,7 +124,6 @@ public class SwallowedLineTest
 	{
 		Harness h = new Harness(folder.newFolder().toPath(), LATCHES);
 		h.gameTicks(1);
-		h.engine.getContext().setWish("soft clay", 5);
 
 		List<Runnable> held = new ArrayList<>();
 		h.engine.setSink((text, output, rule, animationId, onSaid) -> held.add(onSaid));
@@ -143,19 +133,10 @@ public class SwallowedLineTest
 		}
 		assertFalse("waiting its turn is not yet said",
 			h.engine.getContext().hasSaidOnce("first"));
-		assertFalse(h.engine.getContext().isCarrying());
-		assertFalse(h.engine.getContext().isBetting());
-		assertFalse("the gift alone is spent at the win", h.engine.getContext().isWishing());
 
 		held.forEach(Runnable::run);
 		assertTrue("the moment it lands, the first is spent",
 			h.engine.getContext().hasSaidOnce("first"));
-		assertEquals("the rock is carried", "a flat rock", h.engine.getContext().getSouvenir());
-		assertTrue("the bet is on", h.engine.getContext().isBetting());
-		assertTrue("the dare is set", h.engine.getContext().isChallenging());
-		assertTrue("the advice is given", h.engine.getContext().isAdvising());
-		assertFalse("and the wish is granted", h.engine.getContext().isWishing());
-		assertTrue(h.engine.getContext().isGrateful());
 	}
 
 	@Test
@@ -175,8 +156,6 @@ public class SwallowedLineTest
 		h.engine.force("asker");
 		h.engine.force("wanter");
 
-		assertFalse("a wish nobody heard must not open",
-			h.engine.getContext().isWishing());
 		assertEquals("nor a question", "", h.engine.getContext().getAskedTree());
 		assertFalse("nor a want", h.engine.getContext().isWanting());
 	}
@@ -217,88 +196,16 @@ public class SwallowedLineTest
 		h.engine.force("asker");
 		h.engine.force("wanter");
 
-		assertFalse("waiting its turn behind the overhead box is not yet said",
-			h.engine.getContext().isWishing());
 		assertEquals("", h.engine.getContext().getAskedTree());
 		assertFalse(h.engine.getContext().isWanting());
 
 		held.forEach(Runnable::run);
-		assertTrue("the moment it lands, the wish is open",
-			h.engine.getContext().isWishing());
-		assertEquals("soft clay", h.engine.getContext().getWishLabel());
 		assertEquals("and the question", "want-outing",
 			h.engine.getContext().getAskedTree());
 		assertTrue("and the want", h.engine.getContext().isWanting());
 	}
 
-	@Test
-	public void aGuardWaitsForTheLineItGuardsAgainst() throws IOException
-	{
-		// The advice and the rock latch when their lines land, so while they
-		// wait in the queue a guard reading them sees nothing yet. Judged then,
-		// the dare opened over the advice and the gift went into hands the
-		// rock was about to fill, and both played back to back.
-		long[] now = {1_000_000L};
-		Harness h = new Harness(folder.newFolder().toPath(), GUARDS);
-		h.engine.setClock(() -> now[0]);
-		h.gameTicks(1);
 
-		List<String> handedOver = new ArrayList<>();
-		List<Runnable> held = new ArrayList<>();
-		h.engine.setSink((text, output, rule, animationId, onSaid) ->
-		{
-			handedOver.add(rule.id);
-			held.add(onSaid);
-		});
-		h.engine.force("adviser");
-		h.engine.force("keeper");
-
-		now[0] += 5_000L;
-		h.gameTicks(1);
-		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.EXAMINED));
-		h.gameTicks(1);
-		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.UNDERFOOT));
-		assertEquals("nothing opens over a line still on its way",
-			java.util.Arrays.asList("adviser", "keeper"), handedOver);
-
-		held.forEach(Runnable::run);
-		assertTrue("landed, the advice answers the guard itself",
-			h.engine.getContext().isAdvising());
-		assertEquals("a flat rock", h.engine.getContext().getSouvenir());
-
-		// And a landed line is waited on no longer: the rock can be talked about.
-		h.gameTicks(1);
-		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.NOTES_EDITED));
-		assertEquals("mentioner", handedOver.get(handedOver.size() - 1));
-	}
-
-	@Test
-	public void aDroppedLineIsNotWaitedOnOnceItCanNoLongerLand() throws IOException
-	{
-		// A line the queue dropped never lands. Once it is older than any line
-		// the queue will still say, the guard stops waiting and reads the
-		// state as it is.
-		long[] now = {1_000_000L};
-		Harness h = new Harness(folder.newFolder().toPath(), GUARDS);
-		h.engine.setClock(() -> now[0]);
-		h.gameTicks(1);
-
-		List<String> handedOver = new ArrayList<>();
-		h.engine.setSink((text, output, rule, animationId, onSaid) -> handedOver.add(rule.id));
-		h.engine.force("adviser");
-
-		now[0] += 5_000L;
-		h.gameTicks(1);
-		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.EXAMINED));
-		assertFalse("still able to land, so still waited on", handedOver.contains("darer"));
-
-		now[0] += 20_000L;
-		h.gameTicks(1);
-		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.EXAMINED));
-		assertTrue("past landing, the dare is free to open", handedOver.contains("darer"));
-		assertFalse("and the advice nobody heard is not outstanding",
-			h.engine.getContext().isAdvising());
-	}
 
 	@Test
 	public void aProfileSwitchTakesTheQueuedLinesWithIt() throws IOException
@@ -308,10 +215,10 @@ public class SwallowedLineTest
 		// first still queued from the old one was spent in the new one and
 		// owed in the old one for good. The switch is plugin glue the harness
 		// cannot reach, so its source is read instead.
-		String source = new String(java.nio.file.Files.readAllBytes(
+		String source = PublicMarkers.strip(new String(java.nio.file.Files.readAllBytes(
 			java.nio.file.Paths.get("src/main/java/com/follower/FollowerPlugin.java")),
-			java.nio.charset.StandardCharsets.UTF_8);
-		int start = source.indexOf("public void onProfileChanged(ProfileChanged event)");
+			java.nio.charset.StandardCharsets.UTF_8));
+		int start = source.indexOf("void onProfileChanged(ProfileChanged event)");
 		assertTrue("the switch handler was not found", start >= 0);
 		String switched = source.substring(start, source.indexOf("\n\t}", start));
 		assertTrue("the old profile's queued lines go with it",

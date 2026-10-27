@@ -1,7 +1,5 @@
 package com.follower;
 
-import com.follower.sim.Harness;
-import com.follower.speech.SpeechRule;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -62,7 +60,7 @@ public class SpeechQueueTimingTest
 		// and stops waiting once the line is too old to land. Shorter than the
 		// queue's own wait, a line could land after the guard let go, and the
 		// dare would open over the advice after all.
-		Field field = com.follower.speech.SpeechEngine.class.getDeclaredField("LONGEST_WAIT_MS");
+		Field field = SpeechEngine.class.getDeclaredField("LONGEST_WAIT_MS");
 		field.setAccessible(true);
 		long waited = ((Number) field.get(null)).longValue();
 		long stale = constant("SPEECH_STALE_MS");

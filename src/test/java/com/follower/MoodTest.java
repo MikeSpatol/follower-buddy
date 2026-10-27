@@ -1,9 +1,5 @@
 package com.follower;
 
-import com.follower.sim.Harness;
-import com.follower.speech.SpeechRule;
-import com.follower.speech.TriggerContext;
-import com.follower.speech.TriggerEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +24,17 @@ public class MoodTest
 	@Rule
 	public final TemporaryFolder folder = new TemporaryFolder();
 
+	/**
+	 * Every band name, so a rule naming one that does not exist can be caught.
+	 * Kept here, word for word as TriggerContext had it, since only the tests
+	 * ever asked for the list.
+	 */
+	private static java.util.Set<String> moodBands()
+	{
+		return new java.util.LinkedHashSet<>(
+			java.util.Arrays.asList("low", "down", "even", "good", "high"));
+	}
+
 	private static String rules(String... bodies)
 	{
 		return "{\"version\": 1, \"rules\": [" + String.join(",", bodies) + "]}";
@@ -48,27 +55,27 @@ public class MoodTest
 	@Test
 	public void theBandsCoverTheWholeRangeWithNoGaps()
 	{
-		TriggerContext context = new TriggerContext(new com.follower.sim.FakeGame().client);
+		TriggerContext context = new TriggerContext(new FakeGame().client);
 		List<String> seen = new ArrayList<>();
 		for (int value = 0; value <= 100; value++)
 		{
 			context.adjustMood(value - context.getMood());
 			String band = context.getMoodBand();
 			assertTrue("mood " + value + " is in no band at all",
-				TriggerContext.moodBands().contains(band));
+				moodBands().contains(band));
 			if (seen.isEmpty() || !seen.get(seen.size() - 1).equals(band))
 			{
 				seen.add(band);
 			}
 		}
 		assertEquals("the bands should run low to high in order",
-			new ArrayList<>(TriggerContext.moodBands()), seen);
+			new ArrayList<>(moodBands()), seen);
 	}
 
 	@Test
 	public void moodCannotLeaveItsRange()
 	{
-		TriggerContext context = new TriggerContext(new com.follower.sim.FakeGame().client);
+		TriggerContext context = new TriggerContext(new FakeGame().client);
 
 		context.adjustMood(10000);
 		assertEquals("no amount of good news goes past the top", 100, context.getMood());
@@ -245,7 +252,7 @@ public class MoodTest
 			+ " never fire: " + unknown, unknown.isEmpty());
 	}
 
-	private void collectBands(SpeechRule rule, com.follower.speech.Condition condition,
+	private void collectBands(SpeechRule rule, Condition condition,
 		List<String> unknown)
 	{
 		if (condition == null)
@@ -253,13 +260,13 @@ public class MoodTest
 			return;
 		}
 		if ("mood".equalsIgnoreCase(condition.type) && condition.is != null
-			&& !TriggerContext.moodBands().contains(condition.is))
+			&& !moodBands().contains(condition.is))
 		{
 			unknown.add(rule.id + ": \"" + condition.is + "\"");
 		}
 		if (condition.conditions != null)
 		{
-			for (com.follower.speech.Condition child : condition.conditions)
+			for (Condition child : condition.conditions)
 			{
 				collectBands(rule, child, unknown);
 			}
@@ -310,7 +317,7 @@ public class MoodTest
 			{
 				continue;
 			}
-			for (String band : TriggerContext.moodBands())
+			for (String band : moodBands())
 			{
 				if (namesBand(rule.when, band))
 				{
@@ -319,8 +326,8 @@ public class MoodTest
 			}
 		}
 		assertEquals("moods with no idle posture: "
-				+ new java.util.TreeSet<>(subtract(TriggerContext.moodBands(), covered)),
-			TriggerContext.moodBands().size(), covered.size());
+				+ new java.util.TreeSet<>(subtract(moodBands(), covered)),
+			moodBands().size(), covered.size());
 	}
 
 	private static java.util.Set<String> subtract(java.util.Set<String> all,
@@ -331,7 +338,7 @@ public class MoodTest
 		return missing;
 	}
 
-	private boolean namesBand(com.follower.speech.Condition condition, String band)
+	private boolean namesBand(Condition condition, String band)
 	{
 		if (condition == null)
 		{
@@ -343,7 +350,7 @@ public class MoodTest
 		}
 		if (condition.conditions != null)
 		{
-			for (com.follower.speech.Condition child : condition.conditions)
+			for (Condition child : condition.conditions)
 			{
 				if (namesBand(child, band))
 				{

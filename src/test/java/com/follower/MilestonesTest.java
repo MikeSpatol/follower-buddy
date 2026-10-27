@@ -1,8 +1,5 @@
 package com.follower;
 
-import com.follower.sim.Harness;
-import com.follower.speech.TriggerEvent;
-import com.follower.speech.Words;
 import java.io.IOException;
 import java.util.List;
 import org.junit.Rule;
@@ -129,8 +126,8 @@ public class MilestonesTest
 	@Test
 	public void theContextKeepsTheStampsAndMeasuresTheGap()
 	{
-		com.follower.speech.TriggerContext context =
-			new com.follower.speech.TriggerContext(new com.follower.sim.FakeGame().client);
+		TriggerContext context =
+			new TriggerContext(new FakeGame().client);
 		assertEquals(-1, context.sinceAnyLevel(1000L));
 		assertEquals(-1, context.noteLevel("Fishing", 70, 1000L));
 		assertEquals(0, context.sinceAnyLevel(1000L));
@@ -161,92 +158,6 @@ public class MilestonesTest
 			"Your subdued Wintertodt count is: 1,024.").getValue());
 		assertNull(FollowerPlugin.parseKillCount("Your Slayer task is complete."));
 		assertNull(FollowerPlugin.parseKillCount("You have 41 kills."));
-	}
-
-	@Test
-	public void theGamesCountIsKeptPerAccount() throws IOException, ReflectiveOperationException
-	{
-		// One RuneLite profile, two accounts: the alt's King Black Dragon page
-		// showed the main's count (QA pass 3, #40).
-		Harness h = new Harness(folder.newFolder().toPath());
-		com.follower.chronicle.ChronicleLoader pages =
-			new com.follower.chronicle.ChronicleLoader(new com.google.gson.Gson());
-		pages.load(folder.newFolder().toPath());
-		com.follower.chronicle.ChronicleProgress book =
-			new com.follower.chronicle.ChronicleProgress(h.game.client, pages, h.engine::getContext);
-		String[] who = {"main"};
-		book.setAccount(() -> who[0]);
-		FollowerPlugin plugin = new FollowerPlugin();
-		for (Object[] field : new Object[][]{{"config", new FollowerConfig()
-		{
-		}}, {"speechEngine", h.engine}, {"chronicleProgress", book}})
-		{
-			java.lang.reflect.Field f = FollowerPlugin.class.getDeclaredField((String) field[0]);
-			f.setAccessible(true);
-			f.set(plugin, field[1]);
-		}
-		net.runelite.api.events.ChatMessage message = new net.runelite.api.events.ChatMessage();
-		message.setType(net.runelite.api.ChatMessageType.GAMEMESSAGE);
-		message.setName("");
-		message.setMessage("Your King Black Dragon kill count is: <col=ff0000>1,200</col>.");
-		plugin.onChatMessage(message);
-		who[0] = "alt";
-		message.setMessage("Your King Black Dragon kill count is: <col=ff0000>4</col>.");
-		plugin.onChatMessage(message);
-
-		com.follower.chronicle.ChronicleEntry kbd = pages.get("boss-king-black-dragon");
-		assertEquals("the alt's own count", 4, book.count(kbd));
-		who[0] = "main";
-		assertEquals(1200, book.count(kbd));
-	}
-
-	@Test
-	public void theCountKeptBeforeAccountsRetiresOnceItsAccountReachesIt()
-		throws IOException, ReflectiveOperationException
-	{
-		// QA pass 4, #41: the profile-wide count from before counts were per
-		// account stood in, for good, for any account without its own.
-		Harness h = new Harness(folder.newFolder().toPath());
-		com.follower.chronicle.ChronicleLoader pages =
-			new com.follower.chronicle.ChronicleLoader(new com.google.gson.Gson());
-		pages.load(folder.newFolder().toPath());
-		com.follower.chronicle.ChronicleProgress book =
-			new com.follower.chronicle.ChronicleProgress(h.game.client, pages, h.engine::getContext);
-		String[] who = {"alt"};
-		book.setAccount(() -> who[0]);
-		FollowerPlugin plugin = new FollowerPlugin();
-		for (Object[] field : new Object[][]{{"config", new FollowerConfig()
-		{
-		}}, {"speechEngine", h.engine}, {"chronicleProgress", book}})
-		{
-			java.lang.reflect.Field f = FollowerPlugin.class.getDeclaredField((String) field[0]);
-			f.setAccessible(true);
-			f.set(plugin, field[1]);
-		}
-		h.engine.getContext().noteRecord("kc:king black dragon", 1200);
-		com.follower.chronicle.ChronicleEntry kbd = pages.get("boss-king-black-dragon");
-		net.runelite.api.events.ChatMessage message = new net.runelite.api.events.ChatMessage();
-		message.setType(net.runelite.api.ChatMessageType.GAMEMESSAGE);
-		message.setName("");
-
-		// An alt's lower count says the old one was someone else's: it stays.
-		message.setMessage("Your King Black Dragon kill count is: <col=ff0000>4</col>.");
-		plugin.onChatMessage(message);
-		assertEquals(1200, h.engine.getContext().getRecord("kc:king black dragon"));
-		who[0] = "main";
-		assertEquals("the main has none of its own yet", 1200, book.count(kbd));
-
-		// The main reaching it says it was the main's: it has done its job.
-		message.setMessage("Your King Black Dragon kill count is: <col=ff0000>1,201</col>.");
-		plugin.onChatMessage(message);
-		assertEquals(0, h.engine.getContext().getRecord("kc:king black dragon"));
-		assertEquals(1201, book.count(kbd));
-		who[0] = "alt";
-		assertEquals(4, book.count(kbd));
-		who[0] = "another";
-		assertEquals("an account that never killed it has no tally", 0, book.count(kbd));
-		assertEquals("the game's own spelling, for the Memory window", "King Black Dragon",
-			h.engine.getContext().getKillCountNames().get("king black dragon"));
 	}
 
 	@Test
@@ -343,7 +254,7 @@ public class MilestonesTest
 		h.gameTicks(1);
 		assertFalse("grateful", h.firedBy("probe").isEmpty());
 		h.clear();
-		h.gameTicks(com.follower.speech.TriggerContext.FAVOUR_TICKS + 2);
+		h.gameTicks(TriggerContext.FAVOUR_TICKS + 2);
 		h.clear();
 		h.gameTicks(1);
 		assertTrue("the debt lapses", h.firedBy("probe").isEmpty());
@@ -363,15 +274,6 @@ public class MilestonesTest
 		kept.game.at(12850 >> 8 << 6, (12850 & 0xFF) << 6, 0);
 		kept.gameTicks(3);
 		assertTrue("taken where it wanted to go", kept.engine.getContext().isGrateful());
-
-		Harness given = new Harness(folder.newFolder().toPath());
-		given.gameTicks(1);
-		assertTrue(given.engine.force("wish-feather"));
-		given.game.inventoryContaining(314);
-		assertFalse(given.engine.getContext().isGrateful());
-		given.answers("gift");
-		given.gameTicks(3);
-		assertTrue("handed the thing it wished for", given.engine.getContext().isGrateful());
 	}
 
 	// ----------------------------------------------------------- last time
@@ -406,8 +308,8 @@ public class MilestonesTest
 		assertEquals("the fishing", h.engine.getContext().getLastThing());
 
 		// A session that named nothing carries last session's memory forward.
-		com.follower.speech.TriggerContext quiet =
-			new com.follower.speech.TriggerContext(new com.follower.sim.FakeGame().client);
+		TriggerContext quiet =
+			new TriggerContext(new FakeGame().client);
 		quiet.restoreLastThing("fighting Vorkath");
 		assertEquals("fighting Vorkath", quiet.getLastTime());
 		assertEquals("fighting Vorkath", quiet.getLastThing());

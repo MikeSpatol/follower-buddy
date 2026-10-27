@@ -1,0 +1,110 @@
+# The cache definition formats LiveCacheParser reads, opcode by opcode: a
+# port of runelite-cache's ItemLoader, KitLoader and SpotAnimLoader,
+# transcribed from the library's bytecode and validated in game by diffing
+# every entry against the offline dumper's output.
+#
+# A definition is a stream of opcodes, each followed by its own payload, ended
+# by a zero. EVERY opcode must be consumed at its exact width or the stream
+# desynchronises and the rest of the definition parses as garbage, so an
+# opcode that is not listed here fails the definition instead of guessing.
+#
+# One line per opcode, or per run of opcodes with the same payload:
+#   <type> <opcodes> <fields...>      opcodes: 4  or  3,9  or  30-39
+# The fields are read in order:
+#   b  byte (signed)          B  byte (unsigned)
+#   h  unsigned short         i  int
+#   s  string, ended by a zero byte
+#   f  a flag: no payload, its presence is the value
+#   c  find/replace pairs: a count byte, then that many (find short, replace short)
+#   H  a count byte, then that many unsigned shorts
+#   I  a count byte, then that many ints
+#   L  an unsigned short count, then that many unsigned shorts
+#   o  item menu sub-ops: a group byte, then (index byte, string) pairs ended by a zero index
+#   p  params: a count byte, then that many (isString byte, 24-bit key, string or int)
+# A field written kind=name keeps its value under that name; a bare field is
+# read and skipped. When two opcodes write the same name, the later one in the
+# stream wins, as in the loaders.
+
+# ------------------------------------------------------------------- items
+item 1        h             # inventory model
+item 2        s=name
+item 3,9      s             # examine, unknown1
+item 4-8      h             # 2d zoom, rotation, offsets
+item 11,15,16,65,160,251    # flags with no payload (251: bronzeman)
+item 12       i             # cost
+item 13       b=wearPos1
+item 14       b=wearPos2
+item 27       b=wearPos3
+item 23       h=male0 B=maleOffset
+item 24       h=male1
+item 78       h=male2
+item 25       h=female0 B=femaleOffset
+item 26       h=female1
+item 79       h=female2
+item 30-39    s             # ground and interface actions
+item 40       c=colours
+item 41       c=textures
+item 42       b             # shift-click drop index
+item 43       o             # menu sub-ops
+item 44       i             # large inventory model
+item 45       i=male0 B=maleOffset
+item 46       i=male1
+item 47       i=male2
+item 48       i=female0 B=femaleOffset
+item 49       i=female1
+item 50       i=female2
+item 51       i=maleHead0
+item 52       i=maleHead1
+item 53       i=femaleHead0
+item 54       i=femaleHead1
+item 75       h             # weight
+item 90       h=maleHead0
+item 92       h=maleHead1
+item 91       h=femaleHead0
+item 93       h=femaleHead1
+item 94,95,97,98,110,111,112,139,140,148,149  h   # category, noted, resize, links
+item 99       h             # full recolour
+item 100-109  h h           # stack count variants
+item 113,114  b             # ambient, contrast
+item 115      B             # team
+item 161      L             # holding whitelist
+item 200      B B s         # EntityOpsLoader.decodeSubOp
+item 201      B h h i i s   # decodeConditionalOp
+item 202      B h h h i i s # decodeConditionalSubOp
+item 249      p
+
+# -------------------------------------------------------------------- kits
+kit 1         B=bodyPart
+kit 2         H=models
+kit 3         f=nonSelectable   # character creation never offers this style
+kit 5         I=models
+kit 40        c=colours     # signed shorts in the loader; the same 16 bits
+kit 41        c=textures
+kit 60        h=head0
+kit 61        h=head1
+kit 62        h=head2
+kit 63        h=head3
+kit 64        h=head4
+kit 70        i=head0
+kit 71        i=head1
+kit 72        i=head2
+kit 73        i=head3
+kit 74        i=head4
+
+# --------------------------------------------------------------- spotanims
+spotanim 1    h=model
+spotanim 2    h=animation
+spotanim 3    i=model
+spotanim 4    h=resizeX
+spotanim 5    h=resizeY
+spotanim 6    h=rotation
+spotanim 7    B=ambient
+spotanim 8    B=contrast
+spotanim 9    s             # debug name
+# A newer flag opcode with NO payload - proven empirically: the offline
+# dumper's library ignores unknown opcodes without consuming bytes, and every
+# affected definition (39 of them, ids 3882+) still dumped perfectly clean.
+spotanim 10
+spotanim 40   c=colours
+spotanim 41   c=textures
+spotanim 42   h             # full recolour

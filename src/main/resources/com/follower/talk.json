@@ -1,0 +1,636 @@
+{
+  "note": "The everyday Talk-to conversation, opened when the follower has asked nothing. Kept apart from dialogs.json because it does not change with play - it is what the follower is, not what it is currently up to; the trees in dialogs.json are the ones the follower OPENS, which is a different job. Bundled only, never copied out or edited in game. Three rules hold this together. Every choice leads to a node where the PLAYER says that exact line: the game works that way and players read it that way - the option is the sentence you are about to speak, not a summary of it. Jumping straight to a menu instead reads as the click having gone astray, and an option whose node says something slightly different reads as a bug, because it is one. A test enforces the match. Nothing here is a feature list: what the follower can do comes out as habits and grievances, the way a person describes their job, because a companion reciting its own capabilities is a manual with a face. And a branch never replays a line already read - hence the -menu nodes, which re-offer the follow-ups without the preamble. A node with \"when\" is built only while every fact it names holds, and a fact with ! only while it does not: lowish (the mood band is low or down), the band itself (low, down, even, good, high), and errands and thrall-outfits (the build has them). Of the nodes sharing an id exactly one is built, in its place in the list. moods: what the day summary says of each mood band; any other band gets the ordinary one.",
+  "jokes": [
+    [
+      "Why did the Wise Old Man rob the bank of Draynor?",
+      "Because that's where the money was."
+    ],
+    [
+      "What do you call an adventurer who takes their whole bank into the Wilderness?",
+      "A benefactor."
+    ],
+    [
+      "Why did the chicken cross the road?",
+      "In Lumbridge? It never got the chance."
+    ],
+    [
+      "I tried talking to a camel in Al Kharid once.",
+      "Apparently you need a special amulet. He made his opinion clear without one."
+    ]
+  ],
+  "moods": {
+    "low": "I've had better days, if I'm honest.",
+    "down": "Not our finest, but we're still walking.",
+    "good": "A good day, that. I'd take another like it.",
+    "high": "One of the good ones. I mean that.",
+    "ordinary": "An ordinary day. There's nothing wrong with those."
+  },
+  "nodes": [
+    {
+      "id": "start",
+      "when": "lowish",
+      "says": [
+        "Yes?"
+      ],
+      "choices": [
+        { "label": "Who are you, exactly?", "next": "who-q" },
+        { "label": "What is it you actually do?", "next": "do-q" },
+        { "label": "You all right?", "next": "allright-q" },
+        { "label": "Let's just talk.", "next": "chat-q" },
+        { "label": "Never mind.", "next": "bye-q" }
+      ]
+    },
+    {
+      "id": "start",
+      "when": "!lowish",
+      "says": [
+        "Yes?"
+      ],
+      "choices": [
+        { "label": "Who are you, exactly?", "next": "who-q" },
+        { "label": "What is it you actually do?", "next": "do-q" },
+        { "label": "How have you been?", "next": "how-q" },
+        { "label": "Let's just talk.", "next": "chat-q" },
+        { "label": "Never mind.", "next": "bye-q" }
+      ]
+    },
+    {
+      "id": "menu",
+      "when": "lowish",
+      "choices": [
+        { "label": "Who are you, exactly?", "next": "who-q" },
+        { "label": "What is it you actually do?", "next": "do-q" },
+        { "label": "You all right?", "next": "allright-q" },
+        { "label": "Let's just talk.", "next": "chat-q" },
+        { "label": "That's all for now.", "next": "done-q" }
+      ]
+    },
+    {
+      "id": "menu",
+      "when": "!lowish",
+      "choices": [
+        { "label": "Who are you, exactly?", "next": "who-q" },
+        { "label": "What is it you actually do?", "next": "do-q" },
+        { "label": "How have you been?", "next": "how-q" },
+        { "label": "Let's just talk.", "next": "chat-q" },
+        { "label": "That's all for now.", "next": "done-q" }
+      ]
+    },
+    {
+      "id": "allright-q",
+      "when": "lowish",
+      "note": "Answering its mood. Asking is itself the kindness: reaching the answer node is what counts (latched on arrival, like every answer), so closing the box early still asked. The lift arrives from the comforted rule; the pages differ by band because \"not the best day\" and \"middling\" are different admissions. Either way the usual how-menu follows - a low day does not lock away the notebook.",
+      "you": [
+        "You all right?"
+      ],
+      "next": "allright-a"
+    },
+    {
+      "id": "allright-a",
+      "when": "low",
+      "says": [
+        "Honestly? Not the best day in the ledger.",
+        "But you noticed. That's worth an entry of its own."
+      ],
+      "next": "how-menu",
+      "answer": "comforted"
+    },
+    {
+      "id": "allright-a",
+      "when": "down",
+      "says": [
+        "Middling. The ink's been thicker.",
+        "Asking helps. Don't tell anyone I said that."
+      ],
+      "next": "how-menu",
+      "answer": "comforted"
+    },
+    {
+      "id": "bye-q",
+      "note": "Shared closings. Both are spoken, like every other option.",
+      "you": [
+        "Never mind."
+      ],
+      "next": "bye"
+    },
+    {
+      "id": "done-q",
+      "you": [
+        "That's all for now."
+      ],
+      "next": "bye"
+    },
+    {
+      "id": "back-q",
+      "you": [
+        "Back to business."
+      ],
+      "next": "menu"
+    },
+    {
+      "id": "bye",
+      "says": [
+        "Right you are. One step behind."
+      ]
+    },
+    {
+      "id": "who-q",
+      "note": "Who are you. Retired entirely while a wish is open: neither hub offers it then (the five-slot cap spends its seat on the gift), and a node nothing leads to is dialogue nobody will ever read - the reachability test says exactly that.",
+      "you": [
+        "Who are you, exactly?"
+      ],
+      "next": "who-a"
+    },
+    {
+      "id": "who-a",
+      "says": [
+        "Now there's a question.",
+        "A scribe. Somebody has to write all this down."
+      ],
+      "next": "who-b"
+    },
+    {
+      "id": "who-b",
+      "says": [
+        "You dress me, I walk behind you, and I keep quiet about your bank."
+      ],
+      "choices": [
+        { "label": "Writing what, exactly?", "next": "who-me-q" },
+        { "label": "Do you have a name?", "next": "who-name-q" },
+        { "label": "Don't you get tired of following me?", "next": "who-tired-q" },
+        { "label": "Back to business.", "next": "back-q" }
+      ]
+    },
+    {
+      "id": "who-menu",
+      "choices": [
+        { "label": "Writing what, exactly?", "next": "who-me-q" },
+        { "label": "Do you have a name?", "next": "who-name-q" },
+        { "label": "Don't you get tired of following me?", "next": "who-tired-q" },
+        { "label": "Back to business.", "next": "back-q" }
+      ]
+    },
+    {
+      "id": "who-me-q",
+      "you": [
+        "Writing what, exactly?"
+      ],
+      "next": "who-me-a"
+    },
+    {
+      "id": "who-me-a",
+      "says": [
+        "Everything. Roads, rulers, prices, what lives under things.",
+        "It's a long project. Nobody's asked to read it."
+      ],
+      "next": "who-menu"
+    },
+    {
+      "id": "who-name-q",
+      "you": [
+        "Do you have a name?"
+      ],
+      "next": "who-name-a"
+    },
+    {
+      "id": "who-name-a",
+      "says": [
+        "Whatever you've been calling me. I'd have picked my own, but nobody asked.",
+        "It's grown on me."
+      ],
+      "next": "who-menu"
+    },
+    {
+      "id": "who-tired-q",
+      "you": [
+        "Don't you get tired of following me?"
+      ],
+      "next": "who-tired-a"
+    },
+    {
+      "id": "who-tired-a",
+      "says": [
+        "Tired? I once watched you stand at a furnace for three hours.",
+        "Nothing has tired me since."
+      ],
+      "next": "who-menu"
+    },
+    {
+      "id": "do-q",
+      "note": "What do you do.",
+      "you": [
+        "What is it you actually do?"
+      ],
+      "next": "do-a"
+    },
+    {
+      "id": "do-a",
+      "says": [
+        "Walk behind you. It's more involved than it sounds."
+      ],
+      "next": "do-menu"
+    },
+    {
+      "id": "do-menu",
+      "choices": [
+        { "label": "Tell me about the walking.", "next": "do-follow-q" },
+        { "label": "What do you do when I'm fighting?", "next": "do-fight-q" },
+        { "label": "And when I'm working?", "next": "do-work-q" },
+        { "label": "Can you dance?", "next": "do-emote-q" },
+        { "label": "That's all I needed.", "next": "do-done-q" }
+      ]
+    },
+    {
+      "id": "do-done-q",
+      "you": [
+        "That's all I needed."
+      ],
+      "next": "menu"
+    },
+    {
+      "id": "do-follow-q",
+      "you": [
+        "Tell me about the walking."
+      ],
+      "next": "do-follow-a"
+    },
+    {
+      "id": "do-follow-a",
+      "says": [
+        "One tile behind. Corners, doorways, stairs, running: I keep up.",
+        "Where you go I go, teleports included. Same swirl, half a step later."
+      ],
+      "next": "do-follow-b"
+    },
+    {
+      "id": "do-follow-b",
+      "says": [
+        "Tell me to Stay and I'll hold the spot until you want me back.",
+        "Or hold Shift, right-click a tile and pick Send. I'll walk there myself."
+      ],
+      "next": "do-menu"
+    },
+    {
+      "id": "do-fight-q",
+      "you": [
+        "What do you do when I'm fighting?"
+      ],
+      "next": "do-fight-a"
+    },
+    {
+      "id": "do-fight-a",
+      "says": [
+        "Get out of the way, mainly. Then watch.",
+        "If something enormous is near, I mention it first. For all the good that does."
+      ],
+      "next": "do-fight-b"
+    },
+    {
+      "id": "do-fight-b",
+      "says": [
+        "And when it goes down I make a fuss. You've usually earned it by then."
+      ],
+      "choices": [
+        { "label": "What about my thralls?", "next": "do-thrall-q" },
+        { "label": "Good to know.", "next": "do-fight-done-q" }
+      ]
+    },
+    {
+      "id": "do-fight-done-q",
+      "you": [
+        "Good to know."
+      ],
+      "next": "do-menu"
+    },
+    {
+      "id": "do-thrall-q",
+      "note": "The thrall styles are measured, not guessed: zombie ids are melee, skeleton ranged, ghost magic, and each has its own outfit profile in the settings. Worth saying out loud - the follower turning up to a mage fight in melee gear is the one thing about this that looks broken rather than deliberate.",
+      "you": [
+        "What about my thralls?"
+      ],
+      "next": "do-thrall-a"
+    },
+    {
+      "id": "do-thrall-a",
+      "says": [
+        "Raise one of those Arceuus things and I'll take its place.",
+        "Same walking, same swinging, far better dressed."
+      ],
+      "next": "do-thrall-b"
+    },
+    {
+      "id": "do-thrall-b",
+      "when": "thrall-outfits",
+      "note": "Without per-style thrall outfits (a public build that leaves them out) the branch ends here, at do-menu.",
+      "says": [
+        "Three sorts, mind. Zombie, skeleton and ghost, for melee, ranged and magic."
+      ],
+      "next": "do-thrall-c"
+    },
+    {
+      "id": "do-thrall-b",
+      "when": "!thrall-outfits",
+      "says": [
+        "Three sorts, mind. Zombie, skeleton and ghost, for melee, ranged and magic."
+      ],
+      "next": "do-menu"
+    },
+    {
+      "id": "do-thrall-c",
+      "when": "thrall-outfits",
+      "says": [
+        "Set me an outfit for each in the settings.",
+        "Otherwise I turn up to a mage fight holding a greataxe and we both look foolish."
+      ],
+      "next": "do-menu"
+    },
+    {
+      "id": "do-work-q",
+      "you": [
+        "And when I'm working?"
+      ],
+      "next": "do-work-a"
+    },
+    {
+      "id": "do-work-a",
+      "says": [
+        "Depends what you're at.",
+        "If it's pockets, I give you room and watch the street until you're done."
+      ],
+      "next": "do-work-b"
+    },
+    {
+      "id": "do-work-b",
+      "when": "errands",
+      "note": "Without errands (a public build that leaves them out) the second page goes.",
+      "says": [
+        "Trees, rocks, fishing spots. I set up beside you and do a bit myself.",
+        "Now and then I wander off on an errand of my own. I always come back."
+      ],
+      "next": "do-menu"
+    },
+    {
+      "id": "do-work-b",
+      "when": "!errands",
+      "says": [
+        "Trees, rocks, fishing spots. I set up beside you and do a bit myself."
+      ],
+      "next": "do-menu"
+    },
+    {
+      "id": "do-emote-q",
+      "you": [
+        "Can you dance?"
+      ],
+      "next": "do-emote-a"
+    },
+    {
+      "id": "do-emote-a",
+      "says": [
+        "Ask and find out. Right-click me for a wave or a dance, whatever the moment wants.",
+        "Or do one yourself and I'll join in a beat behind. I'm not a mirror. I have timing."
+      ],
+      "next": "do-menu"
+    },
+    {
+      "id": "how-q",
+      "when": "!lowish",
+      "note": "The inner life. The everyday entrance; on a lowish day allright-q replaces it (and leads to the same menu), so it is only built when reachable.",
+      "you": [
+        "How have you been?"
+      ],
+      "next": "how-a"
+    },
+    {
+      "id": "how-a",
+      "when": "!lowish",
+      "says": [
+        "That depends on the day. You've given me some days."
+      ],
+      "next": "how-menu"
+    },
+    {
+      "id": "how-menu",
+      "choices": [
+        { "label": "How did today go?", "next": "how-today-q" },
+        { "label": "You keep track of things?", "next": "how-count-q" },
+        { "label": "You have moods?", "next": "how-mood-q" },
+        { "label": "Anywhere you'd rather be?", "next": "how-place-q" },
+        { "label": "Back to business.", "next": "back-q" }
+      ]
+    },
+    {
+      "id": "how-today-q",
+      "note": "The one page in the script that is different every time it is read. Everything in it is already counted - the tallies exist for the milestone lines - so this is the same memory said as a sentence rather than as a number, which is what makes it sound like somebody who was there rather than a scoreboard. how-today-a's pages are that summary, built on each visit.",
+      "you": [
+        "How did today go?"
+      ],
+      "next": "how-today-a"
+    },
+    {
+      "id": "how-today-a",
+      "next": "how-menu"
+    },
+    {
+      "id": "how-count-q",
+      "you": [
+        "You keep track of things?"
+      ],
+      "next": "how-count-a"
+    },
+    {
+      "id": "how-count-a",
+      "says": [
+        "It's the job. Every rat, every level, every time you've gone down in front of me.",
+        "It isn't judgement. Somebody should, that's all."
+      ],
+      "next": "how-count-b"
+    },
+    {
+      "id": "how-count-b",
+      "says": [
+        "I remember it between days, too. You come back and the number's still there."
+      ],
+      "next": "how-menu"
+    },
+    {
+      "id": "how-mood-q",
+      "you": [
+        "You have moods?"
+      ],
+      "next": "how-mood-a"
+    },
+    {
+      "id": "how-mood-a",
+      "says": [
+        "I do. You'd know if you looked up.",
+        "When it's gone well I stand one way. When it hasn't, I stand another."
+      ],
+      "next": "how-mood-b"
+    },
+    {
+      "id": "how-mood-b",
+      "says": [
+        "It passes. Everything does, if you keep walking."
+      ],
+      "next": "how-menu"
+    },
+    {
+      "id": "how-place-q",
+      "you": [
+        "Anywhere you'd rather be?"
+      ],
+      "next": "how-place-b"
+    },
+    {
+      "id": "how-place-b",
+      "says": [
+        "If I ever ask you to take me somewhere, come and talk to me and I'll say where.",
+        "I won't ask twice. It's not that sort of arrangement."
+      ],
+      "next": "how-menu"
+    },
+    {
+      "id": "chat-q",
+      "note": "Small talk.",
+      "you": [
+        "Let's just talk."
+      ],
+      "next": "chat-a"
+    },
+    {
+      "id": "chat-a",
+      "says": [
+        "My favourite duty."
+      ],
+      "next": "chat-menu"
+    },
+    {
+      "id": "chat-menu",
+      "choices": [
+        { "label": "Seen anything interesting?", "next": "chat-seen-q" },
+        { "label": "What do you think of my outfit?", "next": "chat-outfit-q" },
+        { "label": "Any advice?", "next": "advice-q" },
+        { "label": "Tell me a joke.", "next": "chat-joke-q" },
+        { "label": "Back to business.", "next": "back-q" }
+      ]
+    },
+    {
+      "id": "chat-seen-q",
+      "you": [
+        "Seen anything interesting?"
+      ],
+      "next": "chat-seen-a"
+    },
+    {
+      "id": "chat-seen-a",
+      "says": [
+        "Mostly the back of your head.",
+        "It's a fine head. It could carry a better hat."
+      ],
+      "next": "chat-menu"
+    },
+    {
+      "id": "chat-outfit-q",
+      "you": [
+        "What do you think of my outfit?"
+      ],
+      "next": "chat-outfit-a"
+    },
+    {
+      "id": "chat-outfit-a",
+      "says": [
+        "Anyone who dresses their follower this well has taste.",
+        "The rest of your wardrobe I couldn't comment on."
+      ],
+      "next": "chat-menu"
+    },
+    {
+      "id": "chat-joke-q",
+      "note": "Every visit re-rolls from the pool (never the same joke twice in a row), and the loop lets you keep asking. Both loop options get their own spoken node so the label and the line stay identical. chat-joke-a and chat-joke2-a speak a joke from the pool above, drawn on each visit.",
+      "you": [
+        "Tell me a joke."
+      ],
+      "next": "chat-joke-a"
+    },
+    {
+      "id": "chat-joke-a",
+      "choices": [
+        { "label": "Heh. Got another one?", "next": "chat-joke2-q" },
+        { "label": "That's terrible.", "next": "chat-groan-q" }
+      ]
+    },
+    {
+      "id": "chat-joke2-q",
+      "you": [
+        "Heh. Got another one?"
+      ],
+      "next": "chat-joke2-a"
+    },
+    {
+      "id": "chat-joke2-a",
+      "choices": [
+        { "label": "Another!", "next": "chat-joke3-q" },
+        { "label": "That's terrible.", "next": "chat-groan-q" }
+      ]
+    },
+    {
+      "id": "chat-joke3-q",
+      "you": [
+        "Another!"
+      ],
+      "next": "chat-joke2-a"
+    },
+    {
+      "id": "chat-groan-q",
+      "you": [
+        "That's terrible."
+      ],
+      "next": "chat-groan-a"
+    },
+    {
+      "id": "chat-groan-a",
+      "says": [
+        "I've been saving that one since Lumbridge.",
+        "There's more where it came from. Choose your next question carefully."
+      ],
+      "next": "chat-menu"
+    },
+    {
+      "id": "advice-q",
+      "note": "Advice.",
+      "you": [
+        "Any advice?"
+      ],
+      "next": "advice-a"
+    },
+    {
+      "id": "advice-a",
+      "says": [
+        "Don't take the detour for the cabbage. It is never worth it."
+      ],
+      "next": "advice-b"
+    },
+    {
+      "id": "advice-b",
+      "says": [
+        "A stranger offering to trim your armour is no barber."
+      ],
+      "next": "advice-c"
+    },
+    {
+      "id": "advice-c",
+      "says": [
+        "And bank before you think you need to. A gravestone is not storage."
+      ],
+      "next": "advice-d"
+    },
+    {
+      "id": "advice-d",
+      "says": [
+        "That's the lot. The rest I've learned to keep to myself."
+      ],
+      "next": "chat-menu"
+    }
+  ]
+}

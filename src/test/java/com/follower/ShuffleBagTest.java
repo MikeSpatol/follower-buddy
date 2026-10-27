@@ -1,8 +1,5 @@
 package com.follower;
 
-import com.follower.sim.Harness;
-import com.follower.speech.SpeechRule;
-import com.follower.speech.TriggerEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -155,7 +152,7 @@ public class ShuffleBagTest
 			for (int i = 0; i < size; i++)
 			{
 				assertTrue("size " + size + ": line repeated after " + i + " draws",
-					drawn.add(rule.pickPhrase()));
+					drawn.add(rule.pickPhrase(java.util.Collections.<String>emptySet())));
 			}
 			assertEquals("the bag should have held every line", size, drawn.size());
 		}
@@ -170,7 +167,7 @@ public class ShuffleBagTest
 			Set<String> drawn = new HashSet<>();
 			for (int i = 0; i < 6; i++)
 			{
-				drawn.add(rule.pickPhrase());
+				drawn.add(rule.pickPhrase(java.util.Collections.<String>emptySet()));
 			}
 			assertEquals("cycle " + cycle + " did not cover the whole set", 6, drawn.size());
 		}
@@ -189,7 +186,7 @@ public class ShuffleBagTest
 			String previous = null;
 			for (int i = 0; i < 40; i++)
 			{
-				String line = rule.pickPhrase();
+				String line = rule.pickPhrase(java.util.Collections.<String>emptySet());
 				assertFalse("said \"" + line + "\" twice running", line.equals(previous));
 				previous = line;
 			}
@@ -208,7 +205,7 @@ public class ShuffleBagTest
 			StringBuilder order = new StringBuilder();
 			for (int i = 0; i < 5; i++)
 			{
-				order.append(rule.pickPhrase()).append('|');
+				order.append(rule.pickPhrase(java.util.Collections.<String>emptySet())).append('|');
 			}
 			orders.add(order.toString());
 		}
@@ -218,9 +215,9 @@ public class ShuffleBagTest
 	@Test
 	public void theEasyCasesStillWork()
 	{
-		assertEquals("", new SpeechRule().pickPhrase());
-		assertEquals("only", of("only").pickPhrase());
-		assertEquals("only", of("only").pickPhrase());
+		assertEquals("", new SpeechRule().pickPhrase(java.util.Collections.<String>emptySet()));
+		assertEquals("only", of("only").pickPhrase(java.util.Collections.<String>emptySet()));
+		assertEquals("only", of("only").pickPhrase(java.util.Collections.<String>emptySet()));
 	}
 
 	// ------------------------------------------------- the corpus-wide window
@@ -320,7 +317,7 @@ public class ShuffleBagTest
 			List<String> order = new ArrayList<>();
 			for (int i = 0; i < 15; i++)
 			{
-				order.add(rule.pickPhrase());
+				order.add(rule.pickPhrase(java.util.Collections.<String>emptySet()));
 			}
 
 			Set<String> window = new HashSet<>(order.subList(3, 15));
@@ -418,7 +415,7 @@ public class ShuffleBagTest
 		Set<String> first = new HashSet<>();
 		for (int i = 0; i < 3; i++)
 		{
-			first.add(rule.pickPhrase());
+			first.add(rule.pickPhrase(java.util.Collections.<String>emptySet()));
 		}
 
 		rule.resetEdges();
@@ -426,7 +423,7 @@ public class ShuffleBagTest
 		for (int i = 0; i < 3; i++)
 		{
 			assertTrue("a hop mid-bag must not re-deal what was already said",
-				first.add(rule.pickPhrase()));
+				first.add(rule.pickPhrase(java.util.Collections.<String>emptySet())));
 		}
 		assertEquals(6, first.size());
 	}

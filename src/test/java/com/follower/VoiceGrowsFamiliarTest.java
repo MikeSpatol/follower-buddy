@@ -1,7 +1,5 @@
 package com.follower;
 
-import com.follower.sim.Harness;
-import com.follower.speech.TriggerEvent;
 import java.io.IOException;
 import java.time.LocalDate;
 import org.junit.Rule;

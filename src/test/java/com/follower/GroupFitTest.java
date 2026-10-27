@@ -1,6 +1,5 @@
 package com.follower;
 
-import com.follower.sim.Harness;
 import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
@@ -23,10 +22,6 @@ public class GroupFitTest
 	public void theDareIsAPredictionAndTheEditRemarkIsEverythingElse() throws IOException
 	{
 		Harness h = new Harness(folder.newFolder().toPath());
-		for (String id : new String[]{"offer-challenge", "challenge-met", "challenge-failed"})
-		{
-			assertEquals(id, "bet", h.rule(id).group);
-		}
 		assertEquals("misc", h.rule("notes-edited").group);
 	}
 }

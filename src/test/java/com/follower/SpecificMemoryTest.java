@@ -1,9 +1,5 @@
 package com.follower;
 
-import com.follower.sim.FakeGame;
-import com.follower.sim.Harness;
-import com.follower.speech.TriggerContext;
-import com.follower.speech.TriggerEvent;
 import com.google.gson.Gson;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -326,7 +322,7 @@ public class SpecificMemoryTest
 	{
 		Harness h = new Harness(folder.newFolder().toPath());
 		int checked = 0;
-		for (com.follower.speech.SpeechRule rule : h.loader.getRules())
+		for (SpeechRule rule : h.loader.getRules())
 		{
 			if (rule.remember != null && rule.remember.plain != null
 				&& !rule.remember.plain.equals(rule.remember.as))

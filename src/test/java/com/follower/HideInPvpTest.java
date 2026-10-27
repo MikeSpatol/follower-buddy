@@ -1,6 +1,5 @@
 package com.follower;
 
-import com.follower.sim.FakeGame;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import net.runelite.api.gameval.VarbitID;

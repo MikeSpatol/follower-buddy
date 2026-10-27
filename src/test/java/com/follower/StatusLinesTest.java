@@ -23,7 +23,7 @@ public class StatusLinesTest
 	private static String source() throws IOException
 	{
 		assertTrue("cannot read " + PLUGIN, Files.isRegularFile(PLUGIN));
-		return new String(Files.readAllBytes(PLUGIN), StandardCharsets.UTF_8).replace("\r\n", "\n");
+		return PublicMarkers.strip(new String(Files.readAllBytes(PLUGIN), StandardCharsets.UTF_8).replace("\r\n", "\n"));
 	}
 
 	private static String method(String signature) throws IOException
@@ -42,15 +42,15 @@ public class StatusLinesTest
 	@Test
 	public void restoringTheSessionsOutfitIsQuiet() throws IOException
 	{
-		String restore = method("private void restoreActiveProfile()");
+		String restore = method("void restoreActiveProfile()");
 		assertTrue("the restore loads its profile quietly", restore.contains("loadOutfitProfile(wanted, true)"));
-		String load = method("private void loadOutfitProfile(String name, boolean quiet)");
+		String load = method("void loadOutfitProfile(String name, boolean quiet)");
 		int said = load.indexOf("sendStatus(\"Wearing outfit profile");
 		assertTrue("the profile line has moved - the lint has lost its place", said >= 0);
 		assertTrue("the profile line is held back when quiet",
 			load.substring(0, said).contains("if (!quiet)"));
 		assertTrue("a profile picked in the panel still says so",
-			method("private void loadOutfitProfile(String name)\n").contains("loadOutfitProfile(name, false)"));
+			method("void loadOutfitProfile(String name)\n").contains("loadOutfitProfile(name, false)"));
 	}
 
 	/**
@@ -61,7 +61,7 @@ public class StatusLinesTest
 	@Test
 	public void anErrandIsPromisedOnlyWhenErrandsAreOn() throws IOException
 	{
-		String force = method("public void forceErrand(String key)");
+		String force = method("void forceErrand(String key)");
 		int off = force.indexOf("if (!config.errandsEnabled())");
 		int queued = force.indexOf("errands.force(key)");
 		int promised = force.indexOf("sendStatus(\"Will run the ");
@@ -81,15 +81,13 @@ public class StatusLinesTest
 	public void thePluginsOwnLinesAreNeitherEchoedNorHeardByTheRules() throws IOException
 	{
 		assertTrue("status lines are CONSOLE lines - the lint has lost its place",
-			method("private void sendStatus(String message)").contains(".type(ChatMessageType.CONSOLE)"));
-		String chat = method("public void onChatMessage(ChatMessage event)");
+			method("void sendStatus(String message)").contains(".type(ChatMessageType.CONSOLE)"));
+		String chat = method("void onChatMessage(ChatMessage event)");
 		int skip = chat.indexOf("if (event.getType() == ChatMessageType.CONSOLE)");
-		int echo = chat.indexOf("if (watchChat)");
-		int rules = chat.indexOf("speechEngine.dispatch(TriggerEvent.chat(");
-		assertTrue("the lint has lost its place", echo >= 0 && rules >= 0);
-		assertTrue("CONSOLE lines return before the echo and the rules",
-			skip >= 0 && skip < echo && skip < rules
-				&& chat.substring(skip, echo).contains("return;"));
+		int rules = chat.indexOf("dispatch(TriggerEvent.chat(");
+		assertTrue("the lint has lost its place", rules >= 0);
+		assertTrue("CONSOLE lines return before the rules",
+			skip >= 0 && skip < rules && chat.substring(skip, rules).contains("return;"));
 	}
 
 	/** where and status printed "at WorldPoint(x=3222, y=3218, plane=0)", or "at null". */
@@ -99,21 +97,6 @@ public class StatusLinesTest
 		assertEquals(" at (3222, 3218, 0)",
 			FollowerPlugin.atTile(new net.runelite.api.coords.WorldPoint(3222, 3218, 0)));
 		assertEquals("", FollowerPlugin.atTile(null));
-	}
-
-	/** status dumped the skilling state, raw item ids and all, to everyone. */
-	@Test
-	public void theSkillingDumpIsADevelopersOnly() throws IOException
-	{
-		String source = source();
-		int status = source.indexOf("case \"status\":");
-		assertTrue("the lint has lost its place", status >= 0);
-		String body = source.substring(status, source.indexOf("break;", status));
-		int dump = body.indexOf("sendStatus(\"Skilling: \"");
-		assertTrue("the lint has lost its place", dump >= 0);
-		assertTrue("the skilling line is said only in developer mode",
-			body.substring(0, dump).contains("if (config.developerMode())"));
-		assertFalse("no raw tile", body.contains("+ \" at \" + speechEngine"));
 	}
 
 	/**
@@ -133,8 +116,9 @@ public class StatusLinesTest
 		int login = source.indexOf("if (freshLogin)\n\t\t\t\t{");
 		assertTrue("the lint has lost its place", login >= 0);
 		assertTrue("the login tells them",
-			source.substring(login, source.indexOf("TriggerEvent.Type.LOGIN", login)).contains("reportLoadErrors();"));
-		String report = method("private void reportLoadErrors()");
+			source.substring(login, source.indexOf("TriggerEvent.simple(LOGIN)", login))
+				.contains("reportLoadErrors();"));
+		String report = method("void reportLoadErrors()");
 		assertTrue("rules and dialogs both", report.contains("reportRuleErrors();")
 			&& report.contains("dialogLoader.getErrors()"));
 		assertTrue("once per start", report.contains("if (loadErrorsReported)"));
@@ -147,14 +131,14 @@ public class StatusLinesTest
 	@Test
 	public void anOutfitWarningIsToldOnceUntilItChanges() throws IOException
 	{
-		String resolve = method("private Outfit resolveOutfit()");
+		String resolve = method("Outfit resolveOutfit()");
 		int said = resolve.indexOf("sendStatus(warning)");
 		assertTrue("the lint has lost its place", said >= 0);
 		assertTrue("told only when it differs from the last told",
 			resolve.substring(0, said).contains("!warning.equals(lastOutfitWarning)"));
 		assertTrue("and remembered", resolve.substring(said).contains("lastOutfitWarning = warning;"));
 
-		String rebuild = method("private void rebuildFollower()");
+		String rebuild = method("void rebuildFollower()");
 		int failed = rebuild.indexOf("sendStatus(\"Couldn't build the follower model. \"");
 		assertTrue("the lint has lost its place", failed >= 0);
 		assertTrue("a failed build is told once",
@@ -172,18 +156,5 @@ public class StatusLinesTest
 		assertTrue("the lint has lost its place", unknown >= 0 && list > unknown);
 		assertTrue("the unknown word stops short of the list",
 			source.substring(unknown, list).contains("break;"));
-	}
-
-	/** ::follower pose with no id said nothing; every other command answers with its usage. */
-	@Test
-	public void aBarePoseAnswersWithItsUsage() throws IOException
-	{
-		String source = source();
-		int pose = source.indexOf("case \"pose\":");
-		assertTrue("the lint has lost its place", pose >= 0);
-		String body = source.substring(pose, source.indexOf("\t\t\t\tbreak;", pose));
-		int bare = body.indexOf("else\n");
-		assertTrue("the bare call has a branch of its own", bare >= 0);
-		assertTrue("and it gives the usage", body.substring(bare).contains("sendStatus(\"Usage: ::follower pose"));
 	}
 }

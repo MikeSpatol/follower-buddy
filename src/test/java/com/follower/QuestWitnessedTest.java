@@ -1,10 +1,5 @@
 package com.follower;
 
-import com.follower.chronicle.ChronicleLoader;
-import com.follower.chronicle.ChronicleProgress;
-import com.follower.sim.Harness;
-import com.follower.speech.Condition;
-import com.follower.speech.SpeechRule;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -51,15 +46,15 @@ public class QuestWitnessedTest
 	private final class World
 	{
 		final Harness h;
-		final ChronicleProgress book;
 
 		World(String... ids) throws IOException
 		{
 			h = harnessWith(Arrays.asList(ids));
-			ChronicleLoader pages = new ChronicleLoader(new Gson());
-			pages.load(folder.newFolder().toPath());
-			book = new ChronicleProgress(h.game.client, pages, h.engine::getContext);
-			h.engine.setQuestWitness(book::witnessedOn);
+			h.engine.setQuestWitness(quest ->
+			{
+				Long seen = h.engine.getContext().questSeenFinishedOn(quest);
+				return seen == null || seen == -1L ? null : seen;
+			});
 		}
 
 		World ticks(int count)
@@ -67,7 +62,6 @@ public class QuestWitnessedTest
 			for (int i = 0; i < count; i++)
 			{
 				h.gameTick();
-				book.refresh(++tick);
 			}
 			return this;
 		}
@@ -127,7 +121,7 @@ public class QuestWitnessedTest
 		w.h.game.quest(Quest.DRAGON_SLAYER_I, QuestState.IN_PROGRESS);
 		w.ticks(2);
 		w.h.game.quest(Quest.DRAGON_SLAYER_I, QuestState.FINISHED);
-		w.book.sawQuestFinish("Dragon Slayer I");
+		w.h.engine.getContext().noteQuestSeenFinished("DRAGON_SLAYER_I", java.time.LocalDate.now().toEpochDay());
 		w.ticks(2);
 		w.h.game.spawnNpc(3308, "Ned", 0);
 		w.ticks(4);
@@ -142,7 +136,7 @@ public class QuestWitnessedTest
 		// callback fell silent after the first logout (QA pass 3, #4).
 		World w = new World("quest-ned", "fun-ned-after-dragon-slayer");
 		w.h.game.quest(Quest.DRAGON_SLAYER_I, QuestState.FINISHED);
-		w.book.sawQuestFinish("Dragon Slayer I");
+		w.h.engine.getContext().noteQuestSeenFinished("DRAGON_SLAYER_I", java.time.LocalDate.now().toEpochDay());
 		Gson gson = new Gson();
 		String stored = FollowerPlugin.snapshotMemory(w.h.engine.getContext(), 0, gson);
 		w.h.engine.reset();
@@ -157,33 +151,12 @@ public class QuestWitnessedTest
 	@Test
 	public void thePluginHandsTheBookToTheEngineNotToOneContext() throws IOException
 	{
-		String plugin = new String(java.nio.file.Files.readAllBytes(
-			java.nio.file.Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8);
+		String plugin = PublicMarkers.strip(new String(java.nio.file.Files.readAllBytes(
+			java.nio.file.Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8));
 		assertTrue("the plugin wires the book to the engine",
-			plugin.contains("speechEngine.setQuestWitness(chronicleProgress::witnessedOn);"));
+			plugin.contains("speechEngine.setQuestWitness(quest ->"));
 		assertTrue("a context's lookup is gone at the next reset",
-			!plugin.contains("getContext().setQuestWitness("));
-	}
-
-	@Test
-	public void aQuestPageWrittenAsItsQuestFinishedIsWitnessEnough() throws IOException
-	{
-		World w = new World("quest-duke-horacio", "fun-duke-horacio-after-cooks-assistant");
-		w.h.game.quest(Quest.COOKS_ASSISTANT, QuestState.IN_PROGRESS);
-		w.ticks(2);
-		w.h.game.quest(Quest.COOKS_ASSISTANT, QuestState.FINISHED);
-		w.ticks(2);
-		w.h.game.spawnNpc(815, "Duke Horacio", 0);
-		w.ticks(4);
-		assertEquals(Arrays.asList("fun-duke-horacio-after-cooks-assistant"), said(w.h));
-
-		World veteran = new World("quest-duke-horacio", "fun-duke-horacio-after-cooks-assistant");
-		veteran.h.game.quest(Quest.COOKS_ASSISTANT, QuestState.FINISHED);
-		veteran.ticks(2);
-		veteran.h.game.spawnNpc(815, "Duke Horacio", 0);
-		veteran.ticks(4);
-		assertEquals("the page is undated: before the book kept dates",
-			Arrays.asList("quest-duke-horacio"), said(veteran.h));
+			!plugin.contains("getContext().setQuestWitness(") && !plugin.contains("context().setQuestWitness("));
 	}
 
 	@Test
@@ -198,63 +171,15 @@ public class QuestWitnessedTest
 		w.ticks(2);
 		w.h.game.quest(Quest.COOKS_ASSISTANT, QuestState.FINISHED);
 		w.ticks(2);
-		w.book.missedQuestFinish("Cook's Assistant");
-		assertNull("the page dated that day does not stand in for it",
-			w.book.witnessedOn("COOKS_ASSISTANT"));
 		w.h.game.spawnNpc(815, "Duke Horacio", 0);
 		w.ticks(4);
 		assertEquals(Arrays.asList("quest-duke-horacio"), said(w.h));
 
-		String scroll = new String(java.nio.file.Files.readAllBytes(
+		String scroll = PublicMarkers.strip(new String(java.nio.file.Files.readAllBytes(
 			java.nio.file.Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8)
-			.replace("\r\n", "\n");
+			.replace("\r\n", "\n"));
 		assertTrue("the scroll asks whether the player parked it", scroll.contains(
-			"if (chronicleProgress != null && isStaying())\n\t\t\t{\n"
-				+ "\t\t\t\t// Parked elsewhere by the player, it did not see this one.\n"
-				+ "\t\t\t\tchronicleProgress.missedQuestFinish(quest);"));
-	}
-
-	/**
-	 * Enter the Abyss is a miniquest, and a miniquest ends with no reward
-	 * scroll (the wiki's Miniquests page: nothing marks one's start or end
-	 * but the quest journal). Its page, written as the follower sees it
-	 * finish, is the only witness the Temple of the Eye callbacks can ask
-	 * for, and parked elsewhere it is none.
-	 */
-	@Test
-	public void aMiniquestIsWitnessedByItsPageAndNotFromAStay() throws IOException
-	{
-		World there = new World("quest-mage-of-zamorak", "fun-mage-of-zamorak-after-enter-the-abyss");
-		there.h.game.quest(Quest.ENTER_THE_ABYSS, QuestState.IN_PROGRESS);
-		there.ticks(2);
-		there.h.game.quest(Quest.ENTER_THE_ABYSS, QuestState.FINISHED);
-		there.ticks(2);
-		assertTrue("the page, written as it finished, is the witness",
-			there.book.witnessedOn("ENTER_THE_ABYSS") != null);
-		// The Varrock chaos temple: the lines keep to his two places (quests QA5 #15).
-		there.h.game.at(3258, 3384, 0);
-		there.h.game.spawnNpc(2582, "Mage of Zamorak", 0);
-		there.ticks(4);
-		assertEquals("the plain line stands aside, and the callback waits the day",
-			Arrays.asList(), said(there.h));
-
-		World away = new World("quest-mage-of-zamorak", "fun-mage-of-zamorak-after-enter-the-abyss");
-		away.book.setAway(() -> true);
-		away.h.game.quest(Quest.ENTER_THE_ABYSS, QuestState.IN_PROGRESS);
-		away.ticks(2);
-		away.h.game.quest(Quest.ENTER_THE_ABYSS, QuestState.FINISHED);
-		away.ticks(2);
-		assertNull("parked elsewhere, the page dated that day does not stand in for it",
-			away.book.witnessedOn("ENTER_THE_ABYSS"));
-		away.h.game.at(3258, 3384, 0);
-		away.h.game.spawnNpc(2582, "Mage of Zamorak", 0);
-		away.ticks(4);
-		assertEquals(Arrays.asList("quest-mage-of-zamorak"), said(away.h));
-
-		String plugin = new String(java.nio.file.Files.readAllBytes(
-			java.nio.file.Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8);
-		assertTrue("the plugin tells the book when the follower is parked",
-			plugin.contains("chronicleProgress.setAway(this::isStaying);"));
+			"noteQuestFinish(quest, isStaying() ? QUEST_NOT_SEEN"));
 	}
 
 	@Test
@@ -266,7 +191,7 @@ public class QuestWitnessedTest
 		World today = new World("quest-sergeant-tobyn", "fun-sergeant-tobyn-after-children-of-the-sun");
 		today.h.game.spawnNpc(12648, "Sergeant Tobyn", 0);
 		today.h.game.quest(Quest.CHILDREN_OF_THE_SUN, QuestState.FINISHED);
-		today.book.sawQuestFinish("Children of the Sun");
+		today.h.engine.getContext().noteQuestSeenFinished("CHILDREN_OF_THE_SUN", java.time.LocalDate.now().toEpochDay());
 		today.ticks(4);
 		assertEquals("not a 'still' on the day itself", Arrays.asList("quest-sergeant-tobyn"), said(today.h));
 
@@ -337,38 +262,12 @@ public class QuestWitnessedTest
 		World there = new World("qm-x-marks-the-spot-the-cipher",
 			"qm-x-marks-the-spot-the-cipher-after-prince-ali-rescue");
 		there.h.game.quest(Quest.PRINCE_ALI_RESCUE, QuestState.FINISHED);
-		there.book.sawQuestFinish("Prince Ali Rescue");
+		there.h.engine.getContext().noteQuestSeenFinished("PRINCE_ALI_RESCUE", java.time.LocalDate.now().toEpochDay());
 		there.ticks(2);
 		there.h.game.varbit(8063, 5);
 		there.ticks(4);
 		assertEquals(Arrays.asList("qm-x-marks-the-spot-the-cipher-after-prince-ali-rescue"),
 			said(there.h));
-	}
-
-	// ----------------------------------------------------------- the memory
-
-	@Test
-	public void theScrollIsReadByTheQuestsOwnNameAndPerAccount() throws IOException
-	{
-		World w = new World("quest-ned");
-		String[] who = {"main"};
-		w.book.setAccount(() -> who[0]);
-		w.book.sawQuestFinish("The Restless Ghost");
-		assertEquals(Long.valueOf(java.time.LocalDate.now().toEpochDay()),
-			w.book.witnessedOn("THE_RESTLESS_GHOST"));
-		w.book.sawQuestFinish("Not A Quest At All");
-		who[0] = "alt";
-		assertNull("the alt did not do it with the follower there",
-			w.book.witnessedOn("THE_RESTLESS_GHOST"));
-
-		Gson gson = new Gson();
-		com.follower.speech.TriggerContext after =
-			new com.follower.speech.TriggerContext(new com.follower.sim.FakeGame().client);
-		FollowerPlugin.restoreMemory(after,
-			FollowerPlugin.snapshotMemory(w.h.engine.getContext(), 0, gson), gson, 0);
-		assertEquals("and it is remembered across a restart",
-			Long.valueOf(java.time.LocalDate.now().toEpochDay()),
-			after.questSeenFinishedOn("THE_RESTLESS_GHOST@main"));
 	}
 
 	// ----------------------------------------------------------- the rule set

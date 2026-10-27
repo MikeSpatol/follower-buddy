@@ -1,6 +1,5 @@
 package com.follower;
 
-import com.follower.speech.SpeechRule;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -52,10 +51,10 @@ public class SceneCutTest
 	@Test
 	public void aCutLineWhoseStepMovedOnIsNotSaidAgain() throws IOException
 	{
-		String src = new String(Files.readAllBytes(
-			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8);
+		String src = PublicMarkers.strip(new String(Files.readAllBytes(
+			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8));
 		assertTrue(src.contains(
-			"if (cutByTheScene.rule.when.questStepHolds(speechEngine.getContext(), TriggerEvent.tick()))"));
+			"if (cutByTheScene.rule.when.questStepHolds(context(), TriggerEvent.tick()))"));
 	}
 
 	/**
@@ -89,10 +88,10 @@ public class SceneCutTest
 	@Test
 	public void thePluginJudgesOnReadingTimeAndKeepsTheLineThroughAConversation() throws IOException
 	{
-		String src = new String(Files.readAllBytes(
-			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8);
+		String src = PublicMarkers.strip(new String(Files.readAllBytes(
+			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8));
 		assertTrue(src.contains("timeToReadMs(onScreen.text)) ? onScreen : null;"));
-		assertTrue(src.contains("if (cutByTheScene != null && (sceneQuiet() || filming || inConversation()))"));
+		assertTrue(src.contains("if (cutByTheScene != null && (sceneQuiet() || inConversation()))"));
 	}
 
 	/**
@@ -103,8 +102,8 @@ public class SceneCutTest
 	@Test
 	public void everyQueueResetDropsTheHeldLine() throws IOException
 	{
-		String[] lines = new String(Files.readAllBytes(
-			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8)
+		String[] lines = PublicMarkers.strip(new String(Files.readAllBytes(
+			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8))
 			.split("\r?\n");
 		int clears = 0;
 		int dropped = 0;
@@ -122,6 +121,6 @@ public class SceneCutTest
 		}
 		// The two that keep it: the scene's own start, and the sketch's
 		// reshuffle, which puts the queue straight back.
-		assertEquals(clears - 2, dropped);
+		assertEquals(clears - 1, dropped);
 	}
 }

@@ -1,10 +1,5 @@
 package com.follower;
 
-import com.follower.follower.AgilityTrace;
-import com.follower.follower.Crossing;
-import com.follower.follower.CrossingWatch;
-import com.follower.follower.FollowerEntity;
-import com.follower.sim.FakeGame;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -118,7 +113,6 @@ public class AgilityGateTest
 	private final CrossingWatch watch = new CrossingWatch(follower);
 	private final FollowerPlugin plugin = new FollowerPlugin();
 	private boolean settingOn = true;
-	private boolean developer;
 
 	@Before
 	public void setUp() throws ReflectiveOperationException
@@ -133,13 +127,8 @@ public class AgilityGateTest
 			{
 				return settingOn;
 			}
-
-			@Override
-			public boolean developerMode()
-			{
-				return developer;
-			}
 		});
+		IdleControllers.fill(plugin);
 		game.at(50, 50, 0).basePoses(NORMAL).posing(808);
 		frame();
 	}
@@ -175,13 +164,6 @@ public class AgilityGateTest
 	}
 
 	@Test
-	public void aFilmLetsItGo() throws ReflectiveOperationException
-	{
-		set("filming", true);
-		lettingGo();
-	}
-
-	@Test
 	public void theSettingOffLetsItGo() throws ReflectiveOperationException
 	{
 		settingOn = false;
@@ -204,7 +186,7 @@ public class AgilityGateTest
 	{
 		somethingOdd();
 		follower.doing = true;
-		set("cutsceneForced", true);
+		set("sceneOn", true);
 		frame();
 		assertFalse("the scene's moves are not copied", watch.isWatching());
 		assertEquals("and the queue is kept for after it", 0, follower.cleared);
@@ -224,12 +206,20 @@ public class AgilityGateTest
 	@Test
 	public void theFollowersOwnBusinessStandsAsideForIt() throws ReflectiveOperationException
 	{
-		for (String gate : new String[]{"seatFeetTaken", "momentFeetTaken", "spectateBusy"})
+		for (String gate : new String[]{
+			"seatFeetTaken",
+			"momentFeetTaken",
+			"spectateBusy",
+		})
 		{
 			assertFalse(gate + " with nothing going on", (Boolean) call(gate));
 		}
 		follower.doing = true;
-		for (String gate : new String[]{"seatFeetTaken", "momentFeetTaken", "spectateBusy"})
+		for (String gate : new String[]{
+			"seatFeetTaken",
+			"momentFeetTaken",
+			"spectateBusy",
+		})
 		{
 			assertTrue(gate + " while it does agility", (Boolean) call(gate));
 		}
@@ -267,7 +257,7 @@ public class AgilityGateTest
 	@Test
 	public void xpTheWatchCannotReadHoldsNothing() throws ReflectiveOperationException, IOException
 	{
-		set("speechEngine", new com.follower.sim.Harness(folder.newFolder().toPath()).engine);
+		set("speechEngine", new Harness(folder.newFolder().toPath()).engine);
 		game.transformedInto(1480);
 		agilityXp(1000);
 		agilityXp(1010);
@@ -286,8 +276,8 @@ public class AgilityGateTest
 	@Test
 	public void noErrandWithinAMinuteOfAgilityXp() throws ReflectiveOperationException, IOException
 	{
-		set("dialog", new com.follower.speech.FollowerDialog(null, null, null, null, null, null, null, null));
-		set("speechEngine", new com.follower.sim.Harness(folder.newFolder().toPath()).engine);
+		set("dialog", new FollowerDialog(null, null, null, null, null, null, null, null));
+		set("speechEngine", new Harness(folder.newFolder().toPath()).engine);
 		assertFalse("nothing going on", (Boolean) call("errandBusy"));
 		agilityXp(1000);
 		agilityXp(1010);
@@ -301,89 +291,7 @@ public class AgilityGateTest
 		plugin.onStatChanged(new net.runelite.api.events.StatChanged(net.runelite.api.Skill.AGILITY, xp, 50, 50));
 	}
 
-	// ---------------------------------------------------------------- trace
-
-	@Test
-	public void theTraceIsWrittenOnlyWithDeveloperCommandsOn() throws ReflectiveOperationException, IOException
-	{
-		AgilityTrace trace = trace();
-		somethingThatMoves();
-		call("traceAgilityTick");
-		trace.flush();
-		assertFalse("nothing at all with it off", Files.exists(trace.getFile()));
-
-		developer = true;
-		call("traceAgilityTick");
-		trace.flush();
-		List<String> lines = Files.readAllLines(trace.getFile());
-		assertTrue("opened with its columns: " + lines, lines.get(0).contains("agility trace on"));
-		assertTrue("and a tick line: " + lines, lines.stream().anyMatch(line ->
-			line.contains("fps | 50,50,0 pose 808 anim 741 gfx -1 still xp+0 hit - | watch ")
-				&& line.contains("| - q0 follow")));
-
-		developer = false;
-		call("traceAgilityTick");
-		call("traceAgilityTick");
-		trace.flush();
-		List<String> after = Files.readAllLines(trace.getFile());
-		assertEquals("closed, and nothing after", lines.size() + 1, after.size());
-		assertTrue(after.get(after.size() - 1).contains("agility trace off"));
-	}
-
-	@Test
-	public void theTraceKeepsQuietWithNoAgilityAbout() throws ReflectiveOperationException, IOException
-	{
-		AgilityTrace trace = trace();
-		developer = true;
-		for (int i = 0; i < 5; i++)
-		{
-			frame();
-			call("traceAgilityTick");
-		}
-		trace.flush();
-		assertEquals("just the heading: " + Files.readAllLines(trace.getFile()),
-			1, Files.readAllLines(trace.getFile()).size());
-	}
-
-	/** A clip that moves nobody - a skilling loop, an emote - is not agility about (QA4 #20). */
-	@Test
-	public void theTraceKeepsQuietThroughASkillingLoop() throws ReflectiveOperationException, IOException
-	{
-		AgilityTrace trace = trace();
-		developer = true;
-		somethingOdd();
-		for (int i = 0; i < 5; i++)
-		{
-			frame();
-			call("traceAgilityTick");
-		}
-		trace.flush();
-		assertTrue("watched, but nothing moved", watch.isWatching());
-		assertEquals("just the heading: " + Files.readAllLines(trace.getFile()),
-			1, Files.readAllLines(trace.getFile()).size());
-	}
-
-	@Test
-	public void theTraceTakesTheTicksXpAndHitsplat() throws ReflectiveOperationException, IOException
-	{
-		AgilityTrace trace = trace();
-		developer = true;
-		set("agilityXpThisTick", 8);
-		set("agilityHitsplatThisTick", 16);
-		call("traceAgilityTick");
-		trace.flush();
-		assertTrue(Files.readAllLines(trace.getFile()).stream()
-			.anyMatch(line -> line.contains("xp+8 hit 16")));
-	}
-
 	// ---------------------------------------------------------------- helpers
-
-	private AgilityTrace trace() throws ReflectiveOperationException, IOException
-	{
-		AgilityTrace trace = (AgilityTrace) get("agilityTrace");
-		trace.initialise(folder.newFolder().toPath());
-		return trace;
-	}
 
 	private Object get(String name) throws ReflectiveOperationException
 	{

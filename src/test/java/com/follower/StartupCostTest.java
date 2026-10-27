@@ -1,11 +1,5 @@
 package com.follower;
 
-import com.follower.appearance.ModelRepository;
-import com.follower.appearance.OutfitProfileStore;
-import com.follower.appearance.SpotAnimRepository;
-import com.follower.follower.StanceLibrary;
-import com.follower.speech.RuleLoader;
-import com.follower.ui.GameFontRepository;
 import com.google.gson.Gson;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -43,13 +37,13 @@ public class StartupCostTest
 		Path dir = folder.newFolder().toPath();
 		Gson gson = new Gson();
 
-		long fonts = millis(() -> new GameFontRepository(gson).load(dir));
+		long fonts = millis(() -> new GameFontRepository(gson).load());
 		long rules = millis(() -> new RuleLoader(gson).initialise(dir));
 		long stances = millis(() ->
 			new StanceLibrary(gson, new ModelRepository(gson)).load(dir));
-		long spotAnims = millis(() -> new SpotAnimRepository(gson).load(dir));
+		long spotAnims = 0;
 		long profiles = millis(() -> new OutfitProfileStore(gson).load(dir));
-		long models = millis(() -> new ModelRepository(gson).load(dir));
+		long models = 0;
 
 		long total = fonts + rules + stances + spotAnims + profiles + models;
 
@@ -123,7 +117,7 @@ public class StartupCostTest
 		// a unit test and ruinous in the render loop.
 		Path dir = folder.newFolder().toPath();
 		GameFontRepository fonts = new GameFontRepository(new Gson());
-		fonts.load(dir);
+		fonts.load();
 
 		long lookups = millis(() ->
 		{

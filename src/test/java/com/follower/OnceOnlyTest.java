@@ -1,8 +1,5 @@
 package com.follower;
 
-import com.follower.sim.Harness;
-import com.follower.speech.RuleLoader;
-import com.follower.speech.TriggerEvent;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -126,7 +123,7 @@ public class OnceOnlyTest
 	{
 		Harness h = harness();
 		h.engine.getContext().restoreSpokenOnce(
-			java.util.Collections.singletonList("hello-first"));
+			java.util.Collections.singletonList("hello-first"), null);
 
 		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.EXAMINED));
 		assertTrue("a restored session must not repeat the introduction",

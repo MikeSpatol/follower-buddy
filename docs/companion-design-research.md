@@ -698,7 +698,7 @@ This is a strong position. The gaps are narrower than the list below suggests.
 9 rules have 1; **99 have exactly 2**. Norm is 8–20+ for anything heard often.
 
 **G2 — The picker turns 2-variant rules into perfect alternation. (§1.2)**
-`SpeechRule.pickPhrase()` re-rolls until the index differs from the last. With
+`SpeechRule.pickPhrase(...)` re-rolls until the index differs from the last. With
 two variants that is a guaranteed A-B-A-B cycle — *more* predictable than plain
 random. A defect, not a tuning question.
 

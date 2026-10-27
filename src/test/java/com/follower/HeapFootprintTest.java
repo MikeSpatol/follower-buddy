@@ -1,9 +1,5 @@
 package com.follower;
 
-import com.follower.appearance.ModelRepository;
-import com.follower.appearance.SpotAnimRepository;
-import com.follower.speech.RuleLoader;
-import com.follower.ui.GameFontRepository;
 import com.google.gson.Gson;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -75,36 +71,6 @@ public class HeapFootprintTest
 	}
 
 	@Test
-	public void theEquipmentCatalogueFitsInItsBudget() throws IOException
-	{
-		Path dump = LIVE_DATA.resolve("equipment-models.json");
-		assumeTrue("no equipment dump on this machine", Files.isRegularFile(dump));
-
-		long before = usedBytes();
-		ModelRepository repository = new ModelRepository(new Gson());
-		repository.load(LIVE_DATA);
-		long after = usedBytes();
-
-		// Held for the whole session so the outfit panel can search it.
-		report("equipment catalogue", after - before, 7);
-		assertTrue("the dump did not actually load", repository.getStatus() != null);
-	}
-
-	@Test
-	public void theSpotAnimCatalogueFitsInItsBudget() throws IOException
-	{
-		Path dump = LIVE_DATA.resolve("spotanims.json");
-		assumeTrue("no spotanim dump on this machine", Files.isRegularFile(dump));
-
-		long before = usedBytes();
-		SpotAnimRepository repository = new SpotAnimRepository(new Gson());
-		repository.load(LIVE_DATA);
-		long after = usedBytes();
-
-		report("spotanim catalogue", after - before, 9);
-	}
-
-	@Test
 	public void theGameFontsFitInTheirBudget() throws IOException
 	{
 		Path dump = LIVE_DATA.resolve("fonts.json");
@@ -115,7 +81,7 @@ public class HeapFootprintTest
 		// form is decoded bytes.
 		long before = usedBytes();
 		GameFontRepository fonts = new GameFontRepository(new Gson());
-		fonts.load(LIVE_DATA);
+		fonts.load();
 		long after = usedBytes();
 
 		report("game fonts", after - before, 3);

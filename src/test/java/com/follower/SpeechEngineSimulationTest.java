@@ -1,9 +1,5 @@
 package com.follower;
 
-import com.follower.sim.Harness;
-import com.follower.speech.SpeechOutput;
-import com.follower.speech.SpeechRule;
-import com.follower.speech.TriggerEvent;
 import java.io.IOException;
 import java.nio.file.Path;
 import org.junit.Rule;
@@ -260,8 +256,8 @@ public class SpeechEngineSimulationTest
 		// setting: 30 seconds on Quiet, nearly two minutes on Minimal, and
 		// the quest's line was dropped again in both. The shipped rules, so
 		// the level line and the quest line are the real ones.
-		for (com.follower.speech.Chattiness setting : new com.follower.speech.Chattiness[]{
-			com.follower.speech.Chattiness.QUIET, com.follower.speech.Chattiness.MINIMAL})
+		for (Chattiness setting : new Chattiness[]{
+			Chattiness.QUIET, Chattiness.MINIMAL})
 		{
 			Harness h = new Harness(scratch());
 			long[] ms = {1_000_000L};
@@ -363,24 +359,6 @@ public class SpeechEngineSimulationTest
 		assertEquals("hello {nonsense}", h.spoken.get(0).text);
 	}
 
-	@Test
-	public void aLineThatOpensOnANameOpensOnACapital() throws IOException
-	{
-		// A souvenir, an earned name, a stretch of time: the values are written
-		// for the middle of a sentence ("a feather", "the local menace", "two
-		// minutes"), so a sentence that opens on one opened in lower case. Only
-		// an opening is touched: mid-sentence, and after an ellipsis, it stays.
-		Harness h = new Harness(scratch(), rules(
-			"{\"id\": \"lost\", \"group\": \"t\", \"cooldownMs\": 0,"
-				+ " \"when\": {\"type\": \"souvenirLost\"},"
-				+ " \"say\": [\"{souvenir}, gone. Why? {souvenir} was the good one... {souvenir}, of all things.\"]}"));
-
-		h.gameTicks(1);
-		h.dispatch(TriggerEvent.souvenirLost("a feather"));
-
-		assertEquals("A feather, gone. Why? A feather was the good one... a feather, of all things.",
-			h.spoken.get(0).text);
-	}
 
 	@Test
 	public void aPlayerNameOpeningALineKeepsItsOwnSpelling() throws IOException

@@ -1,10 +1,5 @@
 package com.follower;
 
-import com.follower.appearance.Outfit;
-import com.follower.appearance.OutfitParser;
-import com.follower.sim.Harness;
-import com.follower.speech.SpeechOutput;
-import com.follower.speech.SpeechRule;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -96,12 +91,6 @@ public class ConfigDefaultsTest
 		assertTrue("and the borrowed tool", config.borrowsTools());
 	}
 
-	@Test
-	public void theDiagnosticsAreOffForEveryoneElse()
-	{
-		assertFalse("developer commands must not ship enabled",
-			config.developerMode());
-	}
 
 	// --------------------------------------------------------------- ranges
 
@@ -115,8 +104,8 @@ public class ConfigDefaultsTest
 
 		// The raw milliseconds box became a named setting; every level still
 		// has to leave a gap, and they have to run in the order they read.
-		com.follower.speech.Chattiness previous = null;
-		for (com.follower.speech.Chattiness level : com.follower.speech.Chattiness.values())
+		Chattiness previous = null;
+		for (Chattiness level : Chattiness.values())
 		{
 			assertTrue(level + " must leave some gap", level.getGapMs() > 0);
 			if (previous != null)
@@ -152,8 +141,8 @@ public class ConfigDefaultsTest
 	@Test
 	public void theThrallProfilesPointAtProfilesThatExist() throws IOException
 	{
-		com.follower.appearance.OutfitProfileStore store =
-			new com.follower.appearance.OutfitProfileStore(new com.google.gson.Gson());
+		OutfitProfileStore store =
+			new OutfitProfileStore(new com.google.gson.Gson());
 		store.load(folder.newFolder().toPath());
 
 		for (String name : new String[]{config.thrallMeleeProfile(),
@@ -205,7 +194,7 @@ public class ConfigDefaultsTest
 		// files; a comment on each asked for them to be changed together.
 		String description = FollowerConfig.class.getMethod("errandFrequency")
 			.getAnnotation(ConfigItem.class).description();
-		Method base = com.follower.follower.ErrandController.class.getDeclaredMethod("baseScheduleTicks");
+		Method base = ErrandController.class.getDeclaredMethod("baseScheduleTicks");
 		base.setAccessible(true);
 		for (FollowerConfig.ErrandFrequency frequency : FollowerConfig.ErrandFrequency.values())
 		{
@@ -217,10 +206,10 @@ public class ConfigDefaultsTest
 					return frequency;
 				}
 			};
-			com.follower.follower.ErrandController errands = new com.follower.follower.ErrandController(
+			ErrandController errands = new ErrandController(
 				null, null, chosen, event ->
 				{
-				}, null, () -> false, new com.follower.follower.ErrandController.Hands()
+				}, null, () -> false, new ErrandController.Hands()
 				{
 					@Override
 					public void hold(int itemId)

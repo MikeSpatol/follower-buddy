@@ -1,0 +1,711 @@
+package com.follower;
+
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.Set;
+import java.util.function.ToIntFunction;
+
+/**
+ * One trigger -> phrase rule, as authored in phrases.json.
+ *
+ * <p>A rule fires on the <em>rising edge</em> of its {@code when} block: the tick it
+ * becomes true having been false. That means {@code healthBelow: 30} speaks once
+ * when you drop under 30%, not every tick you spend there.
+ */
+class SpeechRule
+{
+	/** Stable identifier; used for cooldown bookkeeping and log messages. */
+	String id;
+
+	/** Free text for your own benefit. Ignored by the plugin. */
+	String note;
+
+	/** The rule's name in the panel; an area rule's names its place, before the comma. */
+	String title;
+
+	/** Group name, so the config panel can switch whole categories off. */
+	String group = "misc";
+
+	Boolean enabled = Boolean.TRUE;
+
+	/** Highest priority wins when several rules fire on the same event. */
+	int priority = 50;
+
+	/** Minimum gap between firings of this rule. */
+	long cooldownMs = 10_000L;
+
+	/**
+	 * Game ticks to wait between the trigger and the line - a companion
+	 * NOTICING something has a beat before the comment, where an instant
+	 * reaction reads as scripted. The suppression checks (mute, global speech
+	 * window) apply when the delay expires, not when it is queued.
+	 */
+	Integer delayTicks;
+
+	/**
+	 * Upper bound for a VARIABLE delay: when set, each firing waits a fresh
+	 * number of ticks drawn between {@link #delayTicks} and this, inclusive.
+	 *
+	 * <p>A fixed delay still lands on the same beat every time, which reads as
+	 * machinery once you have seen it twice - most obvious when the follower
+	 * copies an emote, where a constant offset looks like a delay line rather
+	 * than someone joining in. Leave it unset for a fixed wait.
+	 */
+	Integer delayTicksMax;
+
+	/** Overrides the config default. One of overhead / chatbox / both. */
+	String output;
+
+	/** Optional emote animation id to play alongside the phrase. */
+	Integer animation;
+
+	/**
+	 * Replay the PLAYER'S animation on the follower instead of a fixed id. Only
+	 * meaningful when the rule triggers on an animation event ({@code animationSelf});
+	 * with it, one rule mirrors every teleport in its id list without hardcoding
+	 * which animation the follower answers with.
+	 */
+	Boolean mirrorAnimation;
+
+	/**
+	 * Copy the graphic the player's cast puts on them as well - a teleport's
+	 * swirl, an alchemy's flash: the first one within a few ticks of the rule
+	 * firing, and only the one. Off, a rule leaves the player's graphics alone,
+	 * so a bite of food mid-fight does not have the follower wear the next
+	 * spell that lands on the player.
+	 */
+	Boolean copiesGraphics;
+
+	/**
+	 * Mirror the player's animation as a held POSE rather than a one-shot, for
+	 * the emotes you can keep doing until you stop.
+	 *
+	 * <p>The game splits those in two: clicking Dance plays an entry clip and
+	 * then loops a second animation for as long as you hold it. The entry is a
+	 * one-shot and {@link #mirrorAnimation} handles it; the loop never ends, so
+	 * playing it as an emote would wait forever for a finish that never comes
+	 * and leave the follower stuck. A pose override loops by nature and is
+	 * released when the player's animation changes, which is what "until I am
+	 * done" actually means.
+	 */
+	Boolean mirrorPose;
+
+	/**
+	 * A CHAIN of animation ids played back to back - for sequences authored as
+	 * separate clips, like the home teleport's five stages. Takes precedence
+	 * over {@link #animation} and {@link #mirrorAnimation}.
+	 */
+	List<Integer> animations;
+
+	/**
+	 * Spotanim (graphic) ids paired stage-for-stage with {@link #animations}:
+	 * each fires as its stage begins. -1 skips a stage. The home teleport pairs
+	 * its rune-circle pieces this way.
+	 */
+	List<Integer> graphics;
+
+	/**
+	 * Chain pacing: {@code true} advances each stage when the PLAYER's animation
+	 * steps to its next stage - the server's own schedule - instead of when the
+	 * follower's clip runs out. Teleport clips end in long hold frames the
+	 * server always cuts short, so clip-length pacing freezes between stages.
+	 */
+	Boolean syncToPlayer;
+
+	/**
+	 * Teleport exit: when the follower's mirrored animation ends, it VANISHES -
+	 * as the player does at the end of their cast - and reappears beside them
+	 * once they land. An interrupted cast (the animation gets cancelled)
+	 * disarms it, keeping the follower where it stands.
+	 */
+	Boolean vanishAfter;
+
+	/**
+	 * Plant the follower where it stands for the length of the animation, and
+	 * let it follow again once the animation ends.
+	 *
+	 * <p>Movement always wins over an emote, so an animation played while the
+	 * follower is walking is cut off the moment it starts. That is most of the
+	 * time for anything triggered by a fight: it walks back to you the instant
+	 * the fight is over. Without this, a celebration is a celebration nobody
+	 * ever sees.
+	 */
+	Boolean holdStill;
+
+	/**
+	 * A copy of the player's WORK - a chop, a swing of the pick, a hammer at
+	 * the anvil - made from beside the thing being worked and facing it, or
+	 * not made at all. The follower first walks to a tile the game would let
+	 * the player work from, and the copy stops the moment it is moved off
+	 * it. With no work on there is nothing to stand against, so no copy: an
+	 * axe swung at open air is what this is here to stop.
+	 */
+	Boolean atTheWork;
+
+	/**
+	 * How much this firing moves the follower's mood, positive or negative.
+	 *
+	 * <p>This is the whole mechanism by which anything affects mood: there is
+	 * no list of significant events in the code. A rule that already knows how
+	 * to notice a boss dying or a death or a good drop is exactly the thing
+	 * that should say how much it mattered, and a new influence is a line in
+	 * this file rather than a change to the engine.
+	 *
+	 * <p>Applied when the rule actually fires, so a rule suppressed by its
+	 * cooldown or a disabled group does not move the mood either - the
+	 * follower's state and what it says stay the same story.
+	 */
+	Integer mood;
+
+	/**
+	 * Marks this line as a question, and names the dialog tree that answers it.
+	 *
+	 * <p>The value is a tree id from dialogs.json. While the question is open,
+	 * right-clicking Talk-to opens THAT conversation instead of the everyday
+	 * one, and picking the branch marked with an answer is what replies.
+	 *
+	 * <p>The answer used to be a word typed into public chat. That asked the
+	 * player to know a magic word, and it asked the follower to listen to
+	 * everything said near it - in a crowd, somebody else's "yes" was
+	 * indistinguishable from yours. A menu of options can be neither misheard
+	 * nor guessed at.
+	 *
+	 * <p>The window is opened by SAYING it, not by winning: a question the mute
+	 * swallowed is one the player never heard.
+	 */
+	String asks;
+
+	/**
+	 * Takes the floor: nothing else speaks for this many milliseconds.
+	 *
+	 * <p>For the handful of moments worth more than whatever the follower was
+	 * otherwise about to say. Arriving where it asked to be taken is the clear
+	 * case - the region change raises an area line at the same instant, and two
+	 * lines about one arrival is one too many.
+	 *
+	 * <p>The floor is taken when the rule WINS rather than when it speaks, or a
+	 * rule with a delay would leave its own gap open for exactly the line it
+	 * meant to displace. The holder is also exempt from the global speech gap,
+	 * since being held back by whatever spoke a second earlier is the same
+	 * failure from the other end.
+	 *
+	 * <p>Only speech is hushed. An animation-only rule is movement rather than
+	 * chatter and carries on regardless.
+	 */
+	Integer hushMs;
+
+	/**
+	 * A line the follower must not be too busy to say.
+	 *
+	 * <p>Distinct from {@link #priority}, which only decides who wins when
+	 * several rules fire at once. This decides whether the winner gets through
+	 * a RELAX period - the director stops ordinary chatter after a burst, and
+	 * this is what the stopping was for. An occasion also spends no intensity
+	 * of its own, so the moment does not cost the follower the next thing it
+	 * wanted to say.
+	 *
+	 * <p>Two kinds of line qualify, and they are not the same kind. One is the
+	 * moment worth marking - the pet, the anniversary, the place it asked to be
+	 * taken. The other is the warning that has to land: if the player is about
+	 * to die and the director has just told the follower to be quiet, silence
+	 * is a worse failure than repetition could ever be.
+	 *
+	 * <p>Reserve it anyway, and judge it by how often the player HEARS one
+	 * rather than by how many rules carry the flag. Forty-seven boss lines look
+	 * like a lot in the file and amount to one a session in play.
+	 */
+	Boolean occasion;
+
+	/**
+	 * Waits its turn as an occasion does - out a cutscene and the quiet after
+	 * it, an NPC conversation, and the gap after another line - rather than
+	 * being dropped. It also waits out one of the director's rests, where an
+	 * occasion goes through, and it counts towards the next rest when said;
+	 * the empty-chair damper still drops it. For a line with one chance: the
+	 * meeting of a quest's people, the payoff of something the follower set
+	 * up. Play test, 15 Oct (Children of the Sun): Prince Itzla's line came up
+	 * as the cutscene opened and Sergeant Tobyn's six seconds after a cat, and
+	 * neither was heard.
+	 */
+	Boolean waits;
+
+	/**
+	 * Said once, ever, and then never again.
+	 *
+	 * <p>For firsts. A line that only has to hold up on a single hearing can be
+	 * specific in a way no repeating line can afford to be - it can name the
+	 * moment, admit something, or land a joke that would be unbearable the
+	 * fourth time. That makes it the highest value per word in the file, and
+	 * the only kind of line that never wears out.
+	 *
+	 * <p>What was spent is remembered by ID, alongside the tallies and the
+	 * places, rather than on this object - so it survives both a restart and a
+	 * rule reload, which throws every rule away and parses the file afresh.
+	 */
+	Boolean once;
+
+	/**
+	 * A held prop and a pose to play over it, for the length of the line's
+	 * moment: the writing flourish.
+	 *
+	 * <p>{@code {"left": 31829, "item": 31830, "pose": 13302, "ticks": 8}} -
+	 * the follower stops, the quill and the scroll come out, the writing pose
+	 * holds for the ticks given, and everything goes back where it was. For
+	 * the lines that CLAIM the notebook - "That's going in the book" - so the
+	 * claim and the act finally happen together. {@code left} is optional: a
+	 * second thing for the left hand (the shield slot), with {@code item} then
+	 * in the right (the weapon slot), as the pose names them.
+	 *
+	 * <p>The item must be wearable (the prop is equipment, transiently). The
+	 * pose is held as a pose override, which starts a one-shot again from its
+	 * first frame each time it ends, so it repeats for the ticks given. The
+	 * shipped pairing is the one the Advanced posing window dresses Write with
+	 * a quill in; see docs/prop-and-animation-catalogue.md before inventing
+	 * new ones. Best effort by design: if the follower is mid-errand or otherwise
+	 * spoken for, the line still says its words and the gesture is dropped.
+	 */
+	Flourish prop;
+
+	static class Flourish
+	{
+		Integer left,
+			item,
+			pose,
+			ticks;
+	}
+
+	/**
+	 * Somewhere the follower would like to go, expressed as part of saying so.
+	 *
+	 * <p>{@code {"region": 10553, "label": "the fishing guild", "minutes": 20}}.
+	 * Going there before the deadline fulfils it; the deadline passing expires
+	 * it. Either way a rule gets to react, and the {want} placeholder carries
+	 * the label - so the follower can be pleased about the specific thing it
+	 * asked for rather than pleased in general.
+	 */
+	Want want;
+
+	static class Want
+	{
+		Integer region;
+		String label;
+		Integer minutes;
+	}
+
+	/**
+	 * Files what just happened as the incident worth bringing up again.
+	 *
+	 * <p>{@code {"key": "chicken-death", "as": "that chicken"}}. The key is what
+	 * a later rule recognises; the phrase is how the follower says it out loud,
+	 * via {memory}.
+	 *
+	 * <p>This is the difference between counting and remembering. A tally makes
+	 * "your four hundredth yew" possible, which is data delivered well. An
+	 * incident makes "careful, I've seen what a chicken can do to you"
+	 * possible, which is a shared history - and only one of those sounds like
+	 * somebody who was there.
+	 */
+	Incident remember;
+
+	static class Incident
+	{
+		String key;
+		/**
+		 * How to refer to it, with the event's and the moment's placeholders
+		 * filled in when it is filed: "how close that was with the {foe}".
+		 */
+		String as;
+		/**
+		 * Fallbacks tried in turn when {@link #as} cannot be filled, before
+		 * {@link #plain}: "your death {where}" when there was no foe.
+		 */
+		List<String> or;
+		/** What to file instead when a placeholder in {@link #as} has nothing to say. */
+		String plain;
+
+		/** Every way of saying it, most particular first: as, each or, then plain. */
+		List<String> forms()
+		{
+			List<String> forms = new java.util.ArrayList<>();
+			if (as != null)
+				forms.add(as);
+			if (or != null)
+			{
+				for (String form : or)
+				{
+					if (form != null)
+						forms.add(form);
+				}
+			}
+			if (plain != null)
+				forms.add(plain);
+			return forms;
+		}
+	}
+
+	/**
+	 * Marks this line as ADVICE, and says what taking it would look like.
+	 *
+	 * <p>{@code {"about": "food", "ids": [829, 1191], "minutes": 1}} - the
+	 * follower says eat something, and eating inside the minute settles it.
+	 * {@code "room": true} settles instead on the inventory getting emptier,
+	 * which covers banking, dropping, and eating the thing in the way.
+	 *
+	 * <p>What counts is named HERE rather than known by the engine, so adding a
+	 * new piece of advice is a rule and not a code change.
+	 *
+	 * <p>Like a question, it only opens if the line was actually said: advice
+	 * the mute swallowed is advice the player was never given, and holding it
+	 * against them would be unfair as well as wrong.
+	 */
+	Advice advise;
+
+	static class Advice
+	{
+		String about;
+		List<Integer> ids;
+		Boolean room;
+		Integer minutes;
+	}
+
+	/**
+	 * Files this moment against the PLACE, for a rule to bring up next time you
+	 * are standing here.
+	 *
+	 * <p>{@code "markHere": "the drop"} - said later via {here}, as in "this is
+	 * where you got the drop". The incident in {@link #remember} is one thing
+	 * anywhere; this is one thing per place, and waits for you to come back.
+	 */
+	String markHere;
+
+	/**
+	 * Fallbacks for {@link #markHere}, tried in turn when a placeholder in it
+	 * has nothing to say, as a remember block's {@code or}: "you died to the
+	 * {foe}", then "you died".
+	 */
+	List<String> markHereOr;
+
+	Condition when;
+
+	/**
+	 * Phrases to choose from, drawn without replacement. Optional when the rule
+	 * plays an animation: an animation-only rule is a valid rule with no speech
+	 * at all.
+	 */
+	List<String> say;
+
+	// ---- runtime state, not serialised ----
+	transient boolean lastState;
+	transient long lastFiredMs;
+	transient int lastPhraseIndex = -1;
+
+	/**
+	 * The shuffle bag: a shuffled run of every index, drawn through in order
+	 * and refilled when it empties.
+	 *
+	 * <p>Uniform random with an anti-immediate-repeat guard sounds like the
+	 * right thing and is not, because a player does not hear "random" - they
+	 * hear the second time. With thirty variants, uniform draws start repeating
+	 * after about eight, which is a quarter of the value of the writing. A bag
+	 * gives all thirty first, every time.
+	 */
+	transient int[] bag;
+	transient int bagPos;
+
+	/** How long the say list was when the bag was built, so a hot-reloaded
+	 * rule gets a fresh bag; the bag itself may be shorter than the list
+	 * when worn lines are standing aside. */
+	transient int bagSaySize;
+
+	/**
+	 * Says past which a line is worn out: with anything fresher in the same
+	 * rule, a line heard this many times stands aside at the next refill
+	 * (R17). Relative rather than absolute - when every line in a rule is
+	 * this worn, all of them come back, because retiring the lot would
+	 * retire the rule.
+	 */
+	static final int TIRED_AFTER = 20;
+
+	boolean isEnabled()
+	{
+		return enabled == null || enabled;
+	}
+
+	boolean isOccasion()
+	{
+		return Boolean.TRUE.equals(occasion);
+	}
+
+	/** Whether it waits out a scene and the gap rather than being dropped: an occasion, or {@link #waits}. */
+	boolean waitsItsTurn()
+	{
+		return isOccasion() || Boolean.TRUE.equals(waits);
+	}
+
+	boolean isOnce()
+	{
+		return Boolean.TRUE.equals(once);
+	}
+
+	/**
+	 * What a once rule is spent under. A callback - a moment's other version
+	 * for a player who has done the quest it names, "-after-" in its id - is
+	 * spent with its base: they are one moment, and only one of them is ever
+	 * said. QA, 15 Oct: the mugger on Rune Mysteries' street was said, the
+	 * player finished Children of the Sun next door, and the callback said
+	 * the mugger again at the same step.
+	 */
+	String onceKey()
+	{
+		int cut = id == null ? -1 : id.indexOf("-after-");
+		return cut > 0 ? id.substring(0, cut) : id;
+	}
+
+	/**
+	 * The plain line a quest person's callback stands in for: quest-duke-horacio
+	 * for fun-duke-horacio-after-cooks-assistant. Null for any other rule.
+	 */
+	String plainLineId()
+	{
+		int cut = id == null ? -1 : id.indexOf("-after-");
+		return cut > 4 && id.startsWith("fun-") ? "quest-" + id.substring(4, cut) : null;
+	}
+
+	/** Whether its condition is, or holds, one of this type. */
+	boolean uses(String type)
+	{
+		return when != null && when.usesType(type);
+	}
+
+	boolean isValid()
+	{
+		return when != null && (hasSpeech() || hasAnimationAction());
+	}
+
+	boolean hasSpeech()
+	{
+		return say != null && !say.isEmpty();
+	}
+
+	/**
+	 * How many ticks THIS firing waits: {@link #delayTicks}, or a fresh draw
+	 * between it and {@link #delayTicksMax} when that is set. Rolled once per
+	 * firing, so the wait is decided at the win and not re-rolled while the
+	 * firing sits pending.
+	 */
+	int rollDelayTicks()
+	{
+		int min = delayTicks == null ? 0 : Math.max(0, delayTicks),
+			max = delayTicksMax == null ? min : Math.max(min, delayTicksMax);
+		return max > min
+			? min + ThreadLocalRandom.current().nextInt(max - min + 1)
+			: min;
+	}
+
+	boolean hasAnimationAction()
+	{
+		return animation != null
+			|| Boolean.TRUE.equals(mirrorAnimation)
+			|| Boolean.TRUE.equals(mirrorPose)
+			|| hasAnimationChain();
+	}
+
+	boolean hasAnimationChain()
+	{
+		return animations != null && !animations.isEmpty();
+	}
+
+	/**
+	 * The animation this firing should play, or null for none: the fixed
+	 * {@link #animation} id, unless {@link #mirrorAnimation} is set and the
+	 * triggering event carries the player's animation to copy.
+	 */
+	Integer resolveAnimation(TriggerEvent event)
+	{
+		if ((Boolean.TRUE.equals(mirrorAnimation) || Boolean.TRUE.equals(mirrorPose))
+			&& event != null
+			&& event.getType() == TriggerEvent.Type.ANIMATION
+			&& event.getId() != -1)
+			return event.getId();
+		return animation;
+	}
+
+	/**
+	 * Updates the stored edge state and reports whether this evaluation is a rising
+	 * edge. Always call exactly once per evaluation pass, even when the rule is
+	 * going to be skipped for cooldown, or the edge tracking drifts.
+	 */
+	boolean risingEdge(boolean nowMatching)
+	{
+		boolean rising = nowMatching && !lastState;
+		lastState = nowMatching;
+		return rising;
+	}
+
+	/** Leaves this pass's edge unspent, so a condition still true rises again on the next pass. */
+	void riseAgain()
+	{
+		lastState = false;
+	}
+
+	boolean offCooldown(long nowMs)
+	{
+		return nowMs - lastFiredMs >= cooldownMs;
+	}
+
+	void markFired(long nowMs)
+	{
+		lastFiredMs = nowMs;
+	}
+
+	/** When it last fired, so a line let go unsaid can give its cooldown back. */
+	long lastFiredMs()
+	{
+		return lastFiredMs;
+	}
+
+	/**
+	 * Forgets the edge, so a condition still true rises again. Deliberately
+	 * leaves the cooldown and the shuffle bag alone: what the follower has
+	 * already said is not scene state. Behaviour QA, 16 Oct: a hop that
+	 * cleared the cooldown too had Callisto's intro said again a minute
+	 * later, and crowded-here again after every GE hop. And a player who hops
+	 * worlds often would otherwise be handed the front of a fresh bag every
+	 * time and hear the same few lines for it.
+	 */
+	void resetEdges()
+	{
+		lastState = false;
+	}
+
+	/** The full clear, cooldown and bag included. For starting the follower over. */
+	void reset()
+	{
+		resetEdges();
+		lastFiredMs = 0L;
+		lastPhraseIndex = -1;
+		bag = null;
+		bagPos = 0;
+	}
+
+	String pickPhrase(Set<String> recentlySaid)
+	{
+		return pickPhrase(recentlySaid, line -> 0);
+	}
+
+	/**
+	 * The next line, drawn without replacement.
+	 *
+	 * @param recentlySaid lines the follower has used lately, ACROSS every
+	 * rule. Skipped when there is an alternative, which is what stops two
+	 * neighbouring rules from ping-ponging the same observation at each other -
+	 * a bag can only keep one rule honest about itself. Never allowed to
+	 * produce silence: if everything in the bag has been heard lately, the
+	 * draw stands, because a repeated line beats no line.
+	 * @param wear how many times a line has been said across every session;
+	 * lines at {@link #TIRED_AFTER} or beyond stand aside at the refill while
+	 * anything fresher exists.
+	 */
+	String pickPhrase(Set<String> recentlySaid,
+		ToIntFunction<String> wear)
+	{
+		if (say == null || say.isEmpty())
+			return "";
+		if (say.size() == 1)
+			return say.get(0);
+
+		int index = draw(wear);
+
+		// One pass over what is left in the bag, in bag order, looking for
+		// something unheard. Bounded deliberately: the alternative is
+		// reshuffling until something fits, which never terminates for a rule
+		// whose every line is already in the window.
+		if (recentlySaid.contains(say.get(index)))
+		{
+			int drawnAt = bagPos - 1;
+			for (int i = bagPos; i < bag.length; i++)
+			{
+				if (!recentlySaid.contains(say.get(bag[i])))
+				{
+					// The rejected line goes back into the un-drawn part of the
+					// bag, so it still gets its turn later in this cycle.
+					//
+					// The second assignment is dead and kept on purpose. Slots
+					// below bagPos are never read again before the array is
+					// rebuilt, so writing the fresher index there changes
+					// nothing - but it keeps the array a true permutation at
+					// every instant, which is the invariant this is easiest to
+					// reason about and to assert. A mutation sweep flagged it
+					// as unreachable, which is correct and not a defect.
+					int fresher = bag[i];
+					bag[i] = bag[drawnAt];
+					bag[drawnAt] = fresher;
+					index = fresher;
+					break;
+				}
+			}
+		}
+
+		lastPhraseIndex = index;
+		return say.get(index);
+	}
+
+	/** The next index out of the bag, refilling it when it runs dry. */
+	int draw(ToIntFunction<String> wear)
+	{
+		if (bag == null || bagSaySize != say.size() || bagPos >= bag.length)
+			refill(wear);
+		return bag[bagPos++];
+	}
+
+	void refill(ToIntFunction<String> wear)
+	{
+		// Worn lines stand aside here, which keeps the bag's guarantee intact
+		// for what remains: a cycle is still a cycle, just of fresher lines.
+		// Wear is checked at the refill rather than the draw, so a line
+		// crossing the threshold mid-cycle still finishes its turn.
+		int fresh = 0;
+		boolean[] tired = new boolean[say.size()];
+		for (int i = 0; i < say.size(); i++)
+		{
+			tired[i] = wear.applyAsInt(say.get(i)) >= TIRED_AFTER;
+			if (!tired[i])
+				fresh++;
+		}
+		boolean everyoneWorn = fresh == 0;
+
+		bag = new int[everyoneWorn ? say.size() : fresh];
+		int at = 0;
+		for (int i = 0; i < say.size(); i++)
+		{
+			if (everyoneWorn || !tired[i])
+				bag[at++] = i;
+		}
+		for (int i = bag.length - 1; i > 0; i--)
+		{
+			int j = ThreadLocalRandom.current().nextInt(i + 1),
+				swap = bag[i];
+			bag[i] = bag[j];
+			bag[j] = swap;
+		}
+
+		// The one seam a bag has: the last line of one bag and the first of the
+		// next are adjacent draws with nothing stopping them being the same
+		// line. That is the exact back-to-back repeat the old code existed to
+		// prevent, and it would happen once per bag rather than at random.
+		if (bag.length > 1 && bag[0] == lastPhraseIndex)
+		{
+			int j = 1 + ThreadLocalRandom.current().nextInt(bag.length - 1);
+			bag[0] = bag[j];
+			bag[j] = lastPhraseIndex;
+		}
+		bagSaySize = say.size();
+		bagPos = 0;
+	}
+
+	String describe()
+	{
+		return id == null ? "(unnamed rule in group " + group + ")" : id;
+	}
+}

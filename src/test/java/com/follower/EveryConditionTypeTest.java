@@ -1,7 +1,5 @@
 package com.follower;
 
-import com.follower.sim.Harness;
-import com.follower.speech.TriggerEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -560,15 +558,7 @@ public class EveryConditionTypeTest
 		note("worldHop", "gameUpdated", "notesEdited", "musicUnlock",
 			"collectionAdd", "questComplete", "geOffer", "channelJoined",
 			"channelLeft", "npcShout", "dateIs", "musicTrack", "examinedThing",
-			"attendedAgain", "minutesTaken", "pageWritten");
-
-		fires("{\"type\": \"pageWritten\"}", TriggerEvent.pageWritten("enemy", "Goblin"));
-		fires("{\"type\": \"pageWritten\", \"is\": \"boss\"}",
-			TriggerEvent.pageWritten("boss", "Giant Mole"));
-		Harness wrongKind = harnessFor("{\"type\": \"pageWritten\", \"is\": \"boss\"}");
-		wrongKind.gameTicks(1);
-		wrongKind.dispatch(TriggerEvent.pageWritten("location", "Lumbridge"));
-		assertQuiet(wrongKind, "a place page is not a boss page");
+			"attendedAgain", "minutesTaken");
 
 		fires("{\"type\": \"attendedAgain\"}",
 			TriggerEvent.simple(TriggerEvent.Type.ATTENDED_AGAIN));
@@ -816,64 +806,7 @@ public class EveryConditionTypeTest
 		assertFired(sessions, "sessionCount");
 	}
 
-	@Test
-	public void tasteIsAboutWhereTheFollowerIsStanding() throws IOException
-	{
-		note("feelsAbout");
 
-		Harness h = harnessFor("{\"type\": \"feelsAbout\", \"is\": \"liked\"}");
-		h.gameTicks(2);
-		assertQuiet(h, "a follower with no taste yet likes nowhere in particular");
-
-		int here = new WorldPoint(3222, 3218, 0).getRegionID();
-		h.engine.getContext().setTraits(
-			new HashSet<>(java.util.Collections.singletonList(here)),
-			new HashSet<>(java.util.Collections.singletonList(here + 1)));
-		h.gameTicks(2);
-		assertFired(h, "feelsAbout");
-
-		// The other half: a place it dislikes is not one it likes.
-		Harness sour = harnessFor("{\"type\": \"feelsAbout\", \"is\": \"disliked\"}");
-		sour.engine.getContext().setTraits(
-			new HashSet<>(java.util.Collections.singletonList(here + 1)),
-			new HashSet<>(java.util.Collections.singletonList(here)));
-		sour.gameTicks(2);
-		assertFired(sour, "feelsAbout disliked");
-	}
-
-	@Test
-	public void aWishOpensBySayingAndTheBagDecidesTheGift() throws IOException
-	{
-		note("wishing", "wishItemHeld");
-
-		Harness h = new Harness(folder.newFolder().toPath(),
-			"{\"version\": 1, \"rules\": ["
-				+ "{\"id\": \"wisher\", \"group\": \"t\", \"cooldownMs\": 0,"
-				+ " \"wish\": {\"what\": \"feather\", \"minutes\": 5, \"items\": [314]},"
-				+ " \"when\": {\"type\": \"login\"}, \"say\": [\"a feather, if you see one\"]},"
-				+ "{\"id\": \"probe\", \"group\": \"t\", \"cooldownMs\": 0,"
-				+ " \"when\": {\"type\": \"all\", \"conditions\": ["
-				+ "{\"type\": \"wishing\", \"is\": \"feather\"},"
-				+ "{\"type\": \"wishItemHeld\"},"
-				+ "{\"type\": \"answered\", \"is\": \"gift\"}]},"
-				+ " \"say\": [\"fired\"]}]}");
-		h.gameTicks(1);
-
-		h.answers("gift");
-		assertQuiet(h, "no wish is open yet, so the gift lands on nothing");
-
-		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.LOGIN));
-		h.gameTicks(1);
-		assertTrue("saying the wish opens it", h.engine.getContext().isWishing());
-
-		h.game.inventoryContaining();
-		h.answers("gift");
-		assertQuiet(h, "wishing, but the bag has no feather in it");
-
-		h.game.inventoryContaining(314);
-		h.answers("gift");
-		assertFired(h, "wishing with the feather actually in the bag");
-	}
 
 	@Test
 	public void standingInTheWildernessIsAStateNotACrossing() throws IOException
@@ -950,30 +883,6 @@ public class EveryConditionTypeTest
 		assertFired(stale, "a fresh ending is");
 	}
 
-	@Test
-	public void theRollStaysReadableUnderTheOverride() throws IOException
-	{
-		// rolledFeeling reads the raw roll where feelsAbout reads the verdict.
-		// The proof is the disagreement: pile enough earned good fortune on a
-		// rolled-disliked region that feelsAbout flips to liked, and the roll
-		// must still answer disliked underneath.
-		note("rolledFeeling");
-
-		Harness h = harnessFor("{\"type\": \"rolledFeeling\", \"is\": \"disliked\"}");
-		h.gameTicks(2);
-		assertQuiet(h, "no temperament rolled yet, so nothing is disliked");
-
-		int here = new WorldPoint(3222, 3218, 0).getRegionID();
-		h.engine.getContext().setTraits(
-			new HashSet<>(java.util.Collections.singletonList(here + 1)),
-			new HashSet<>(java.util.Collections.singletonList(here)));
-		h.engine.getContext().notePlaceFeeling(30);
-		h.engine.getContext().notePlaceFeeling(30);
-		assertTrue("the earned record has overridden the verdict",
-			h.engine.getContext().feelsAbout("liked"));
-		h.gameTicks(2);
-		assertFired(h, "rolledFeeling disliked, whatever the ledger says");
-	}
 
 	@Test
 	public void wantsAreAskedForFulfilledAndForgotten() throws IOException
@@ -1187,7 +1096,7 @@ public class EveryConditionTypeTest
 		Harness here = harnessFor("{\"type\": \"memoryHere\"}");
 		here.game.regions(12850).at(3222, 3218, 0);
 		here.gameTicks(1);
-		here.engine.getContext().noteIncident("the-death", "the way that went");
+		here.engine.getContext().noteIncident("the-death", "the way that went", "", System.currentTimeMillis());
 		here.game.at(3300, 3300, 0);
 		here.gameTicks(2);
 		assertQuiet(here, "somewhere else");
@@ -1209,7 +1118,7 @@ public class EveryConditionTypeTest
 		Harness any = harnessFor("{\"type\": \"remembers\"}");
 		any.gameTicks(2);
 		assertQuiet(any, "nothing has happened worth remembering");
-		any.engine.getContext().noteIncident("chicken-death", "that chicken");
+		any.engine.getContext().noteIncident("chicken-death", "that chicken", "", System.currentTimeMillis());
 		any.gameTicks(1);
 		assertFired(any, "remembers");
 
@@ -1217,20 +1126,20 @@ public class EveryConditionTypeTest
 		// this the follower brings up the chicken after drowning in the sea.
 		Harness named = harnessFor(
 			"{\"type\": \"remembers\", \"is\": \"chicken-death\"}");
-		named.engine.getContext().noteIncident("drowned", "the swim back");
+		named.engine.getContext().noteIncident("drowned", "the swim back", "", System.currentTimeMillis());
 		named.gameTicks(2);
 		assertQuiet(named, "a different incident is on its mind");
-		named.engine.getContext().noteIncident("chicken-death", "that chicken");
+		named.engine.getContext().noteIncident("chicken-death", "that chicken", "", System.currentTimeMillis());
 		named.gameTicks(1);
 		assertFired(named, "remembers named");
 
 		// And the count, which is what makes "again" honest.
 		Harness twice = harnessFor(
 			"{\"type\": \"remembers\", \"is\": \"chicken-death\", \"minimum\": 2}");
-		twice.engine.getContext().noteIncident("chicken-death", "that chicken");
+		twice.engine.getContext().noteIncident("chicken-death", "that chicken", "", System.currentTimeMillis());
 		twice.gameTicks(2);
 		assertQuiet(twice, "it has only happened once");
-		twice.engine.getContext().noteIncident("chicken-death", "that chicken");
+		twice.engine.getContext().noteIncident("chicken-death", "that chicken", "", System.currentTimeMillis());
 		twice.gameTicks(1);
 		assertFired(twice, "remembers twice");
 
@@ -1240,81 +1149,20 @@ public class EveryConditionTypeTest
 		Harness thrice = harnessFor(third);
 		for (int i = 0; i < 3; i++)
 		{
-			thrice.engine.getContext().noteIncident("chicken-death", "that chicken");
+			thrice.engine.getContext().noteIncident("chicken-death", "that chicken", "", System.currentTimeMillis());
 		}
 		thrice.gameTicks(1);
 		assertFired(thrice, "remembers exactly three times");
 		Harness fourth = harnessFor(third);
 		for (int i = 0; i < 4; i++)
 		{
-			fourth.engine.getContext().noteIncident("chicken-death", "that chicken");
+			fourth.engine.getContext().noteIncident("chicken-death", "that chicken", "", System.currentTimeMillis());
 		}
 		fourth.gameTicks(2);
 		assertQuiet(fourth, "the fourth is no longer three");
 	}
 
-	@Test
-	public void whatItIsCarryingAndWhenItLosesIt() throws IOException
-	{
-		note("carrying", "souvenirLost");
 
-		Harness h = harnessFor("{\"type\": \"carrying\"}");
-		h.gameTicks(2);
-		assertQuiet(h, "its hands are empty");
-		h.engine.getContext().pickUp("a nice flat rock", 1);
-		h.gameTicks(1);
-		assertFired(h, "carrying");
-
-		// One at a time: a second pick-up while holding something is refused,
-		// or the follower ends up describing a rock it swapped out silently.
-		h.engine.getContext().pickUp("a shinier rock", 5);
-		assertEquals("it can only carry one thing", "a nice flat rock",
-			h.engine.getContext().getSouvenir());
-
-		// And the losing of it, a minute later.
-		Harness gone = harnessFor("{\"type\": \"souvenirLost\"}");
-		gone.engine.getContext().pickUp("a nice flat rock", 1);
-		gone.gameTicks(50);
-		assertQuiet(gone, "it is still holding the thing");
-		gone.gameTicks(60);
-		assertFired(gone, "souvenirLost");
-	}
-
-	@Test
-	public void theBetIsPlacedAndSettledBothWays() throws IOException
-	{
-		note("betting", "betWon", "betLost");
-
-		Harness open = harnessFor("{\"type\": \"betting\"}");
-		open.gameTicks(2);
-		assertQuiet(open, "no prediction is outstanding");
-		open.engine.getContext().placeBet(false, 50_000, 5);
-		open.gameTicks(1);
-		assertFired(open, "betting");
-
-		// Betting the drop comes in UNDER 50k, and it does.
-		Harness won = harnessFor("{\"type\": \"betWon\"}");
-		won.engine.getContext().placeBet(false, 50_000, 5);
-		won.gameTicks(1);
-		won.engine.getContext().settleBet(1_200);
-		won.gameTicks(2);
-		assertFired(won, "betWon");
-
-		// Same prediction, a drop that beats it. The half that has to work for
-		// the other half to mean anything.
-		Harness lost = harnessFor("{\"type\": \"betLost\"}");
-		lost.engine.getContext().placeBet(false, 50_000, 5);
-		lost.gameTicks(1);
-		lost.engine.getContext().settleBet(2_000_000);
-		lost.gameTicks(2);
-		assertFired(lost, "betLost");
-
-		// A bet nobody ever collected on is not a win.
-		Harness lapsed = harnessFor("{\"type\": \"betWon\"}");
-		lapsed.engine.getContext().placeBet(false, 50_000, 1);
-		lapsed.gameTicks(120);
-		assertQuiet(lapsed, "an uncollected bet cannot be right by default");
-	}
 
 	@Test
 	public void theHourAndHowLongWeHaveBeenAtIt() throws IOException
@@ -1387,39 +1235,9 @@ public class EveryConditionTypeTest
 	}
 
 	@Test
-	public void tasteIsEarnedAndOutranksTheRoll() throws IOException
+	public void aPlaceKeepsItsOwnMemory() throws IOException
 	{
-		note("placeScore", "happenedHere");
-
-		Harness h = harnessFor("{\"type\": \"placeScore\", \"maximum\": -80}");
-		h.gameTicks(2);
-		assertQuiet(h, "nothing has happened here yet");
-
-		// Five deaths' worth of misery, in the units the rules already use.
-		for (int i = 0; i < 5; i++)
-		{
-			h.engine.getContext().notePlaceFeeling(-25);
-		}
-		h.gameTicks(1);
-		assertFired(h, "placeScore");
-
-		// And the point of it: experience beats the shuffle. A place the roll
-		// called a favourite is not a favourite once it has taken you twice.
-		Harness sour = harnessFor("{\"type\": \"feelsAbout\", \"is\": \"liked\"}");
-		int here = new WorldPoint(3222, 3218, 0).getRegionID();
-		sour.engine.getContext().setTraits(
-			new HashSet<>(java.util.Collections.singletonList(here)),
-			new HashSet<>());
-		sour.gameTicks(2);
-		assertFired(sour, "the rolled taste still answers where nothing has happened");
-
-		sour.clear();
-		for (int i = 0; i < 3; i++)
-		{
-			sour.engine.getContext().notePlaceFeeling(-25);
-		}
-		sour.gameTicks(2);
-		assertQuiet(sour, "a place it has learned to dislike is not liked");
+		note("happenedHere");
 
 		// The place's own memory, which waits here rather than following you.
 		Harness held = harnessFor("{\"type\": \"happenedHere\"}");
@@ -1433,7 +1251,7 @@ public class EveryConditionTypeTest
 		held.game.at(3300, 3300, 0);
 		held.gameTicks(2);
 		assertQuiet(held, "a different region holds a different nothing");
-		held.gameTicks(com.follower.speech.TriggerContext.MEMORY_MIN_AGE_TICKS);
+		held.gameTicks(TriggerContext.MEMORY_MIN_AGE_TICKS);
 
 		// And coming back, twenty minutes on, is what makes it worth saying.
 		held.game.at(3222, 3218, 0);
@@ -1441,103 +1259,6 @@ public class EveryConditionTypeTest
 		assertFired(held, "happenedHere, once you have been away and returned");
 	}
 
-	@Test
-	public void adviceIsTakenOrIsNot() throws IOException
-	{
-		note("heeded", "ignored", "advising");
-
-		Harness open = harnessFor("{\"type\": \"advising\"}");
-		open.gameTicks(2);
-		assertQuiet(open, "no advice is outstanding");
-		open.engine.getContext().adviseOn("food",
-			new HashSet<>(java.util.Arrays.asList(829)), false, 1);
-		open.gameTicks(1);
-		assertFired(open, "advising");
-
-		// Doing the thing inside the window settles it.
-		Harness took = harnessFor("{\"type\": \"heeded\", \"is\": \"food\"}");
-		took.engine.getContext().adviseOn("food",
-			new HashSet<>(java.util.Arrays.asList(829)), false, 1);
-		took.gameTicks(2);
-		assertQuiet(took, "nothing has been eaten");
-		took.dispatch(TriggerEvent.animation(829));
-		took.gameTicks(2);
-		assertFired(took, "heeded");
-
-		// A DIFFERENT animation is not the thing that was asked for.
-		Harness wrong = harnessFor("{\"type\": \"heeded\"}");
-		wrong.engine.getContext().adviseOn("food",
-			new HashSet<>(java.util.Arrays.asList(829)), false, 1);
-		wrong.dispatch(TriggerEvent.animation(714));
-		wrong.gameTicks(3);
-		assertQuiet(wrong, "teleporting is not eating");
-
-		// And the window shutting on nothing.
-		Harness lapsed = harnessFor("{\"type\": \"ignored\"}");
-		lapsed.engine.getContext().adviseOn("food",
-			new HashSet<>(java.util.Arrays.asList(829)), false, 1);
-		lapsed.gameTicks(50);
-		assertQuiet(lapsed, "the minute is not up");
-		lapsed.gameTicks(60);
-		assertFired(lapsed, "ignored");
-	}
-
-	@Test
-	public void adviceAboutTheBagIsSettledByMakingRoom() throws IOException
-	{
-		// The one piece of advice with no animation to watch for. Room is made
-		// by banking, dropping, or eating the thing that was in the way, and
-		// the follower should not care which.
-		Harness h = harnessFor("{\"type\": \"heeded\", \"is\": \"the bag\"}");
-		h.game.inventoryUsing(27);
-		h.gameTicks(1);
-		h.engine.getContext().adviseOn("the bag", null, true, 3);
-		h.gameTicks(2);
-		assertQuiet(h, "the bag is as full as it was");
-
-		h.game.inventoryUsing(22);
-		h.gameTicks(2);
-		assertQuiet(h, "emptying it instantly is not taking advice");
-
-		// It settles once enough time has passed that the player can be said
-		// to have acted on it rather than to have been about to anyway.
-		h.gameTicks(30);
-		assertFired(h, "heeded via making room");
-	}
-
-	@Test
-	public void makingRoomAtOnceIsNotTakingAdvice() throws IOException
-	{
-		// Found in a transcript rather than by review. Three hours of Guardians
-		// of the Rift produced fifty-six lines - a fifth of everything said -
-		// of the follower warning about the bag and thanking the player four
-		// seconds later, because emptying the bag IS the activity. A bag
-		// getting emptier is ambient in a way that eating is not, so the room
-		// kind needs a beat before it counts.
-		Harness h = harnessFor("{\"type\": \"heeded\"}");
-		h.game.inventoryUsing(27);
-		h.gameTicks(1);
-		h.engine.getContext().adviseOn("the bag", null, true, 3);
-
-		h.game.inventoryUsing(10);
-		h.gameTicks(4);
-		assertQuiet(h, "four seconds is not a response, it is a coincidence");
-	}
-
-	@Test
-	public void eatingWhenToldToEatStillCountsImmediately() throws IOException
-	{
-		// The other half: the delay must NOT apply to an animation. Eating
-		// promptly when told to eat is exactly the thing worth acknowledging,
-		// and it is attributable in a way that a slot freeing up is not.
-		Harness h = harnessFor("{\"type\": \"heeded\", \"is\": \"food\"}");
-		h.gameTicks(1);
-		h.engine.getContext().adviseOn("food",
-			new HashSet<>(java.util.Arrays.asList(829)), false, 1);
-		h.dispatch(TriggerEvent.animation(829));
-		h.gameTicks(2);
-		assertFired(h, "prompt is the point, for food");
-	}
 
 	@Test
 	public void howLongWeHaveKnownEachOther() throws IOException
@@ -1581,43 +1302,9 @@ public class EveryConditionTypeTest
 	}
 
 	@Test
-	public void theNameYouEarnAndTheGearYouOutgrew() throws IOException
+	public void theGearYouOutgrew() throws IOException
 	{
-		note("nicknamed", "nicknameEarned", "outgrew");
-
-		Harness h = harnessFor("{\"type\": \"nicknameEarned\"}");
-		java.util.Map<String, String> names = new java.util.LinkedHashMap<>();
-		names.put("deaths", "the gravedigger");
-		names.put("kills", "the local menace");
-		h.engine.getContext().setNicknames(names);
-		h.gameTicks(2);
-		assertQuiet(h, "nothing has been done often enough to earn a name");
-
-		for (int i = 0; i < 30; i++)
-		{
-			h.engine.getContext().tally("deaths");
-		}
-		h.gameTicks(1);
-		assertFired(h, "nicknameEarned");
-		assertEquals("the biggest tally names you",
-			"the gravedigger", h.engine.getContext().getEarnedNickname());
-		assertEquals("but it is a candidate until agreed", "", h.engine.getContext().getNickname());
-
-		// Agreed, it is the name; and it MOVES. A name earned by dying is
-		// not kept once you mostly kill - the new one is offered afresh.
-		Harness named = harnessFor("{\"type\": \"nicknamed\"}");
-		named.engine.getContext().setNicknames(names);
-		named.gameTicks(2);
-		assertQuiet(named, "nothing agreed");
-		named.engine.getContext().acceptNickname("the gravedigger");
-		named.gameTicks(1);
-		assertFired(named, "nicknamed");
-		for (int i = 0; i < 60; i++)
-		{
-			h.engine.getContext().tally("kills");
-		}
-		assertEquals("the candidate follows what you actually do",
-			"the local menace", h.engine.getContext().getEarnedNickname());
+		note("outgrew");
 
 		Harness rich = harnessFor("{\"type\": \"outgrew\", \"minimum\": 10}");
 		rich.engine.getContext().setWornValue(500_000);
@@ -1636,47 +1323,6 @@ public class EveryConditionTypeTest
 		assertQuiet(always, "you were already well dressed");
 	}
 
-	@Test
-	public void theChallengeIsMetOrIsNot() throws IOException
-	{
-		note("challenging", "challengeMet", "challengeFailed");
-
-		Harness open = harnessFor("{\"type\": \"challenging\"}");
-		open.gameTicks(2);
-		assertQuiet(open, "nothing has been wagered");
-		open.engine.getContext().setChallenge("ten kills", "kills", 10, 5);
-		open.gameTicks(1);
-		assertFired(open, "challenging");
-
-		Harness won = harnessFor("{\"type\": \"challengeMet\"}");
-		won.engine.getContext().setChallenge("ten kills", "kills", 3, 5);
-		won.gameTicks(2);
-		assertQuiet(won, "nothing has been killed");
-		for (int i = 0; i < 3; i++)
-		{
-			won.engine.getContext().tally("kills");
-		}
-		won.gameTicks(2);
-		assertFired(won, "challengeMet");
-
-		// Counted from where the wager STARTED, not from zero: a challenge set
-		// after four hundred kills must not settle itself on the spot.
-		Harness late = harnessFor("{\"type\": \"challengeMet\"}");
-		for (int i = 0; i < 400; i++)
-		{
-			late.engine.getContext().tally("kills");
-		}
-		late.engine.getContext().setChallenge("ten kills", "kills", 10, 5);
-		late.gameTicks(3);
-		assertQuiet(late, "a wager is measured from when it was made");
-
-		Harness lost = harnessFor("{\"type\": \"challengeFailed\"}");
-		lost.engine.getContext().setChallenge("ten kills", "kills", 10, 1);
-		lost.gameTicks(50);
-		assertQuiet(lost, "there is time left");
-		lost.gameTicks(60);
-		assertFired(lost, "challengeFailed");
-	}
 
 	@Test
 	public void underfootAndGoneFromTheKeyboard() throws IOException
@@ -1798,10 +1444,6 @@ public class EveryConditionTypeTest
 		fires("{\"type\": \"crossed\"}", TriggerEvent.crossed(false));
 		fires("{\"type\": \"crossed\", \"is\": \"fell\"}", TriggerEvent.crossed(true));
 		quiet("{\"type\": \"crossed\", \"is\": \"fell\"}", TriggerEvent.crossed(false));
-		note("grace");
-		fires("{\"type\": \"grace\"}", TriggerEvent.grace("spotted", null));
-		fires("{\"type\": \"grace\", \"is\": \"left\"}", TriggerEvent.grace("left", null));
-		quiet("{\"type\": \"grace\", \"is\": \"left\"}", TriggerEvent.grace("collected", null));
 
 		note("addressed");
 		Harness at = harnessFor("{\"type\": \"addressed\"}");
@@ -1922,24 +1564,17 @@ public class EveryConditionTypeTest
 		answeredHovererAndExamined();
 		inventoryRoomAndCrowdsAndDangerousNeighbours();
 		wantsAreAskedForFulfilledAndForgotten();
-		aWishOpensBySayingAndTheBagDecidesTheGift();
 		standingInTheWildernessIsAStateNotACrossing();
 		aParkedFollowerKnowsItIsParked();
 		theBreatherAfterSomethingEnds();
-		theRollStaysReadableUnderTheOverride();
-		tasteIsAboutWhereTheFollowerIsStanding();
 		thievingEdges();
 		theIncidentItKeepsBringingUp();
-		whatItIsCarryingAndWhenItLosesIt();
-		theBetIsPlacedAndSettledBothWays();
 		theHourAndHowLongWeHaveBeenAtIt();
 		aQuestionAlreadyOnTheTable();
-		tasteIsEarnedAndOutranksTheRoll();
-		adviceIsTakenOrIsNot();
+		aPlaceKeepsItsOwnMemory();
 		howLongWeHaveKnownEachOther();
 		howLongSinceAOneTimeLineWasSaid();
-		theNameYouEarnAndTheGearYouOutgrew();
-		theChallengeIsMetOrIsNot();
+		theGearYouOutgrew();
 		underfootAndGoneFromTheKeyboard();
 		theScribeNoticesTheWiderWorld();
 		theSkillingCompany();

@@ -1,10 +1,5 @@
 package com.follower;
 
-import com.follower.sim.Harness;
-import com.follower.speech.Condition;
-import com.follower.speech.SpeechRule;
-import com.follower.speech.TriggerContext;
-import com.follower.speech.TriggerEvent;
 import com.google.gson.Gson;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -72,7 +67,6 @@ public class EngineSoakTest
 		"{\"type\": \"boundary\", \"is\": \"bank\"}",
 		"{\"type\": \"staying\"}",
 		"{\"type\": \"inWilderness\"}",
-		"{\"type\": \"rolledFeeling\", \"is\": \"disliked\"}",
 		"{\"type\": \"daysKnown\", \"minimum\": 0, \"maximum\": 3}",
 		"{\"type\": \"daysSinceSaid\", \"rule\": \"probe\", \"maximum\": 3}",
 		"{\"type\": \"none\", \"conditions\": [{\"type\": \"repeating\"}]}",
@@ -140,28 +134,12 @@ public class EngineSoakTest
 		"{\"type\": \"wanting\"}",
 		"{\"type\": \"wantFulfilled\"}",
 		"{\"type\": \"wantExpired\"}",
-		"{\"type\": \"wishing\"}",
-		"{\"type\": \"wishItemHeld\"}",
-		"{\"type\": \"feelsAbout\", \"is\": \"liked\"}",
 		"{\"type\": \"remembers\"}",
-		"{\"type\": \"carrying\"}",
-		"{\"type\": \"souvenirLost\"}",
-		"{\"type\": \"betting\"}",
-		"{\"type\": \"betWon\"}",
-		"{\"type\": \"betLost\"}",
 		"{\"type\": \"asking\"}",
-		"{\"type\": \"placeScore\", \"maximum\": -50}",
 		"{\"type\": \"happenedHere\"}",
-		"{\"type\": \"advising\"}",
-		"{\"type\": \"heeded\"}",
-		"{\"type\": \"ignored\"}",
-		"{\"type\": \"challenging\"}",
-		"{\"type\": \"challengeMet\"}",
-		"{\"type\": \"challengeFailed\"}",
 		"{\"type\": \"underfoot\"}",
 		"{\"type\": \"anniversary\"}",
 		"{\"type\": \"outgrew\", \"minimum\": 10}",
-		"{\"type\": \"nicknamed\"}",
 		"{\"type\": \"sessionMinutes\", \"minimum\": 60}",
 		// The player's own wall clock and calendar. Nothing a driver can
 		// flip, so these are constants for the length of a run.
@@ -182,12 +160,9 @@ public class EngineSoakTest
 		"{\"type\": \"hesitated\", \"is\": \"monster\"}",
 		"{\"type\": \"steppedAside\"}",
 		"{\"type\": \"crossed\", \"is\": \"fell\"}",
-		"{\"type\": \"grace\", \"is\": \"left\"}",
 		"{\"type\": \"addressed\"}",
-		"{\"type\": \"nicknameEarned\"}",
 		"{\"type\": \"memoryHere\"}",
 		"{\"type\": \"memoryFoeNearby\", \"within\": 12}",
-		"{\"type\": \"pageWritten\", \"is\": \"boss\"}",
 		"{\"type\": \"working\", \"is\": \"woodcutting\"}",
 		"{\"type\": \"xpDrop\", \"every\": 2}",
 		"{\"type\": \"workEnded\"}",
@@ -323,12 +298,6 @@ public class EngineSoakTest
 		killCount = 0;
 
 		TriggerContext ctx = h.engine.getContext();
-		ctx.setTraits(new HashSet<>(Collections.singletonList(HOME.getRegionID())),
-			new HashSet<>(Collections.singletonList(AWAY.getRegionID())));
-		Map<String, String> nicknames = new HashMap<>();
-		nicknames.put("deaths", "the gravedigger");
-		nicknames.put("kills", "the local menace");
-		ctx.setNicknames(nicknames);
 		for (int i = 0; i < 24; i++)
 		{
 			ctx.tallyBoth("deaths");
@@ -352,7 +321,6 @@ public class EngineSoakTest
 			{
 				// The plugin settles an open bet on the loot it was about.
 				int worth = random.nextInt(200000);
-				ctx.settleBet(worth);
 				h.dispatch(TriggerEvent.loot(worth, "Bones"));
 				break;
 			}
@@ -529,27 +497,22 @@ public class EngineSoakTest
 				ctx.setWant((away ? HOME : AWAY).getRegionID(), "the walk", 1);
 				break;
 			case 35:
-				ctx.setWish("a feather", 1, Collections.singletonList(314));
 				break;
 			case 36:
 				ctx.noteIncident("the-death", "the way that went", "Goblin",
 					System.currentTimeMillis());
 				break;
 			case 37:
-				ctx.pickUp("a nice flat rock", 1);
 				break;
 			case 38:
-				ctx.placeBet(random.nextBoolean(), 50_000, 1);
 				break;
 			case 39:
-				ctx.adviseOn("food", new HashSet<>(Collections.singletonList(829)), false, 1);
 				break;
 			case 40:
 				// Eating, which is what the food advice was asking for.
 				h.dispatch(TriggerEvent.animation(829));
 				break;
 			case 41:
-				ctx.setChallenge("a kill", "kills", 1, 1);
 				break;
 			case 42:
 				ctx.noteUnderfoot();
@@ -558,11 +521,11 @@ public class EngineSoakTest
 				h.game.cameraMoved();
 				break;
 			case 44:
-				ctx.notePlaceFeeling(random.nextBoolean() ? 25 : -25);
+				random.nextBoolean();
 				if (random.nextBoolean())
 				{
 					// From an earlier session: one filed now is too fresh to come up.
-					ctx.restorePlaces(new java.util.HashMap<>(ctx.getPlaceScores()),
+					ctx.restorePlaces(
 						Collections.singletonMap(ctx.getRegionId(), "the Armadyl chestplate dropped"));
 				}
 				break;
@@ -580,7 +543,6 @@ public class EngineSoakTest
 				break;
 			case 47:
 				// The player saying yes to the name on offer.
-				ctx.acceptNickname(ctx.getEarnedNickname());
 				break;
 			case 48:
 				ctx.noteFavour();
@@ -632,12 +594,6 @@ public class EngineSoakTest
 			case 59:
 				h.dispatch(TriggerEvent.simple(TriggerEvent.Type.STEPPED_ASIDE));
 				h.dispatch(TriggerEvent.crossed(true));
-				h.dispatch(TriggerEvent.grace("left", null));
-				break;
-			case 60:
-				h.dispatch(TriggerEvent.pageWritten(
-					new String[]{"boss", "enemy", "location", "quest"}[random.nextInt(4)],
-					"Giant Mole"));
 				break;
 			case 61:
 				ctx.setSessionMinutes(random.nextInt(120));

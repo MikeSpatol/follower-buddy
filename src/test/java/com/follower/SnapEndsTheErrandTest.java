@@ -1,7 +1,5 @@
 package com.follower;
 
-import com.follower.follower.ErrandController;
-import com.follower.follower.FollowerEntity;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -162,8 +160,8 @@ public class SnapEndsTheErrandTest
 	@Test
 	public void theSnapIsWiredAtStartUp() throws IOException
 	{
-		String source = new String(Files.readAllBytes(
-			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8);
+		String source = PublicMarkers.strip(new String(Files.readAllBytes(
+			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8));
 		assertTrue(source.contains("follower.setOnSnapped(this::followerSnapped);"));
 	}
 }

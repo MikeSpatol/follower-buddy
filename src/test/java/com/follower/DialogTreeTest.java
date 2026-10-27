@@ -1,11 +1,5 @@
 package com.follower;
 
-import com.follower.speech.Condition;
-import com.follower.speech.DialogLoader;
-import com.follower.speech.DialogTree;
-import com.follower.speech.FollowerDialog;
-import com.follower.speech.RuleLoader;
-import com.follower.speech.SpeechRule;
 import com.google.gson.Gson;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -163,49 +157,6 @@ public class DialogTreeTest
 	}
 
 	@Test
-	public void whatTheEditorWritesIsWhatTheLoaderReads() throws IOException
-	{
-		// The editor rebuilds the whole file from its own model and writes it
-		// back. If that model has drifted from the loader's - a renamed field,
-		// a list where an object was - the save silently produces a file that
-		// no longer loads, and the first anyone knows is an empty Talk-to.
-		DialogLoader first = loaded();
-		int before = first.getTrees().size();
-
-		Gson pretty = new Gson().newBuilder().setPrettyPrinting()
-			.disableHtmlEscaping().create();
-		EditorShape shape = new EditorShape();
-		shape.version = 1;
-		shape.trees = first.getTrees();
-
-		Path dir = folder.newFolder().toPath();
-		Files.write(dir.resolve(DialogLoader.FILE_NAME),
-			pretty.toJson(shape).getBytes(StandardCharsets.UTF_8));
-
-		DialogLoader second = new DialogLoader(new Gson());
-		second.initialise(dir);
-		assertTrue("a round trip through the editor's shape must load clean: "
-			+ second.getErrors(), second.getErrors().isEmpty());
-		assertEquals("and keep every tree", before, second.getTrees().size());
-
-		DialogTree tree = second.get("want-outing");
-		assertNotNull("including the one that answers the question", tree);
-		boolean playerSpeaks = false;
-		for (DialogTree.DialogNode node : tree.nodes)
-		{
-			playerSpeaks |= node.isPlayerSpeaking();
-		}
-		assertTrue("and who speaks each line has to survive it", playerSpeaks);
-	}
-
-	/** The shape {@code DialogsDialog} serialises; kept in step by the test above. */
-	private static final class EditorShape
-	{
-		int version;
-		List<DialogTree> trees;
-	}
-
-	@Test
 	public void everyAskedTreeIsOneThatExists() throws IOException
 	{
 		// A rule naming a tree that is not there falls back to the everyday
@@ -265,10 +216,10 @@ public class DialogTreeTest
 		{
 			for (String band : new String[]{"even", "low"})
 			{
-				for (FollowerDialog.Node node : FollowerPlugin.talkScript(
+				for (FollowerDialog.Node node : FollowerPlugin.talkScript(TalkScriptTest.talk(),
 					() -> new String[]{""},
 					answer -> offered.add(answer.toLowerCase(java.util.Locale.ROOT)),
-					"feather", held, band).values())
+					band).values())
 				{
 					node.runFinish();
 				}

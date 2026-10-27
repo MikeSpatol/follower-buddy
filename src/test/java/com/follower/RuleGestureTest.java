@@ -1,9 +1,5 @@
 package com.follower;
 
-import com.follower.follower.FollowerEntity;
-import com.follower.sim.Harness;
-import com.follower.speech.SpeechOutput;
-import com.follower.speech.SpeechRule;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -95,7 +91,7 @@ public class RuleGestureTest
 		});
 		set("follower", body);
 		set("speechEngine", h.engine);
-		set("dialog", new com.follower.speech.FollowerDialog(null, null, null, null, null, null, null, null));
+		set("dialog", new FollowerDialog(null, null, null, null, null, null, null, null));
 		set("clientThread", onTheClientThread());
 	}
 
@@ -141,8 +137,8 @@ public class RuleGestureTest
 	public void aWritingFlourishIsNotTakenOutOnTheRestEither() throws IOException
 	{
 		// The flourish would put the writing pose over the sit: the same pop.
-		String source = new String(Files.readAllBytes(Paths.get("src/main/java/com/follower/FollowerPlugin.java")),
-			StandardCharsets.UTF_8).replace("\r\n", "\n");
+		String source = PublicMarkers.strip(new String(Files.readAllBytes(Paths.get("src/main/java/com/follower/FollowerPlugin.java")),
+			StandardCharsets.UTF_8).replace("\r\n", "\n"));
 		int flourish = source.indexOf("if (rule != null && rule.prop != null && flourish != null");
 		assertTrue("the flourish has moved", flourish > 0);
 		assertTrue(source.substring(flourish, source.indexOf("{", flourish)).contains("!seated"));
@@ -154,8 +150,8 @@ public class RuleGestureTest
 		// QA, 15 Oct: the prop was put in the hand and then the reach played,
 		// so the follower bent to the floor already holding it. And the
 		// writing pair takes no reach: 13302 lifts them from the waist itself.
-		String source = new String(Files.readAllBytes(Paths.get("src/main/java/com/follower/FollowerPlugin.java")),
-			StandardCharsets.UTF_8).replace("\r\n", "\n");
+		String source = PublicMarkers.strip(new String(Files.readAllBytes(Paths.get("src/main/java/com/follower/FollowerPlugin.java")),
+			StandardCharsets.UTF_8).replace("\r\n", "\n"));
 		int pair = source.indexOf("public void hold(int leftItemId, int rightItemId)");
 		int single = source.indexOf("public void hold(int itemId)");
 		assertTrue(pair > 0 && single > 0);
@@ -163,14 +159,14 @@ public class RuleGestureTest
 			source.substring(single, source.indexOf("\n\t\t\t\t}\n", single)).contains("takeOut(true);"));
 		assertTrue("the quill and scroll do not",
 			source.substring(pair, source.indexOf("\n\t\t\t\t}\n", pair)).contains("takeOut(false);"));
-		int takeOut = source.indexOf("private void takeOut(boolean reach)");
+		int takeOut = source.indexOf("void takeOut(boolean reach)");
 		String body = source.substring(takeOut, source.indexOf("\n\t\t\t\t}\n", takeOut));
 		int reach = body.indexOf("follower.playAnimations(clip);");
 		assertTrue("the reach plays", reach > 0);
 		assertTrue("the prop waits behind it", body.lastIndexOf("propBehindReach = true;", reach) > 0);
 		assertTrue("and comes in partway",
 			body.indexOf("follower.atEmoteFraction(REACH_BOTTOM", reach) > reach);
-		String rebuild = source.substring(source.indexOf("private void rebuildFollower()"));
+		String rebuild = source.substring(source.indexOf("void rebuildFollower()"));
 		assertTrue("the model leaves out a prop behind its reach",
 			rebuild.substring(0, rebuild.indexOf("\n\t}\n")).contains("!propBehindReach"));
 	}

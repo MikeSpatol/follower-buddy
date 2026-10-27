@@ -1,6 +1,5 @@
 package com.follower;
 
-import com.follower.appearance.OutfitProfileStore;
 import com.google.gson.Gson;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;

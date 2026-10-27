@@ -1,8 +1,5 @@
 package com.follower;
 
-import com.follower.sim.Harness;
-import com.follower.speech.SpeechRule;
-import com.follower.speech.TriggerEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -203,7 +200,7 @@ public class SystemsTogetherTest
 		for (String id : new String[]{"first-meeting", "first-page", "first-hour", "first-return"})
 		{
 			assertFalse(id + " must not live in a group the damper thins",
-				com.follower.speech.SpeechDirector.isLore(h.rule(id)));
+				SpeechDirector.isLore(h.rule(id)));
 		}
 	}
 

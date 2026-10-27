@@ -1,0 +1,7 @@
+# One line ending everywhere: LF in the repository and in every checkout and
+# git archive, whatever core.autocrlf says on the machine. Scripts that read
+# or rewrite the sources then never meet a mix of CRLF and LF.
+* text=auto eol=lf
+
+# cmd.exe expects CRLF in batch files.
+*.bat text eol=crlf

@@ -1,7 +1,5 @@
 package com.follower;
 
-import com.follower.sim.Harness;
-import com.follower.speech.TriggerEvent;
 import java.io.IOException;
 import java.time.LocalDate;
 import org.junit.Rule;
@@ -173,10 +171,10 @@ public class TimeAwayIsGreetedTest
 	@Test
 	public void thePluginRaisesLoginAfterThePrime() throws IOException
 	{
-		String source = new String(java.nio.file.Files.readAllBytes(
+		String source = PublicMarkers.strip(new String(java.nio.file.Files.readAllBytes(
 			java.nio.file.Paths.get("src/main/java/com/follower/FollowerPlugin.java")),
-			java.nio.charset.StandardCharsets.UTF_8);
-		String login = "TriggerEvent.simple(TriggerEvent.Type.LOGIN)";
+			java.nio.charset.StandardCharsets.UTF_8));
+		String login = "TriggerEvent.simple(LOGIN)";
 		int at = source.indexOf(login);
 		assertTrue("the plugin raises LOGIN", at >= 0);
 		assertEquals("once", at, source.lastIndexOf(login));

@@ -1,7 +1,5 @@
 package com.follower;
 
-import com.follower.speech.SpeechOutput;
-import com.follower.speech.SpeechRule;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -56,11 +54,6 @@ public class DialogueHushTest
 		set(plugin, "client", withOpen(open));
 		set(plugin, "config", new FollowerConfig()
 		{
-			@Override
-			public boolean voiceEnabled()
-			{
-				return false;
-			}
 		});
 
 		boolean[] said = {false};

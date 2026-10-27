@@ -1,9 +1,5 @@
 package com.follower;
 
-import com.follower.sim.FakeGame;
-import com.follower.sim.Harness;
-import com.follower.speech.TriggerContext;
-import com.follower.speech.TriggerEvent;
 import com.google.gson.Gson;
 import java.io.IOException;
 import java.lang.reflect.Field;

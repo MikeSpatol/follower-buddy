@@ -1,181 +1,112 @@
 package com.follower;
 
-import com.follower.appearance.AppearanceService;
-import com.follower.appearance.CaptureFallback;
-import com.follower.appearance.ModelRepository;
-import com.follower.appearance.Outfit;
-import com.follower.appearance.OutfitParser;
-import com.follower.follower.FollowerEntity;
-import com.follower.speech.FollowerOverlay;
-import com.follower.speech.RuleLoader;
-import com.follower.speech.SpeechEngine;
-import com.follower.speech.SpeechOutput;
-import com.follower.speech.SpeechRule;
-import com.follower.speech.TriggerContext;
-import com.follower.speech.TriggerEvent;
+import com.google.common.base.Strings;
 import com.google.inject.Provides;
 import java.io.IOException;
+import java.nio.file.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.*;
 import net.runelite.api.Actor;
-import net.runelite.api.ChatMessageType;
-import net.runelite.api.Client;
-import net.runelite.api.GameState;
-import net.runelite.api.Model;
-import net.runelite.api.NPC;
 import net.runelite.api.Player;
-import net.runelite.api.PlayerComposition;
 import net.runelite.api.Skill;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.kit.KitType;
+import net.runelite.api.gameval.*;
 import net.runelite.api.gameval.VarbitID;
-import net.runelite.api.events.AnimationChanged;
-import net.runelite.api.events.BeforeRender;
-import net.runelite.api.events.ChatMessage;
-import net.runelite.api.events.CommandExecuted;
-import net.runelite.api.events.GameStateChanged;
-import net.runelite.client.events.ProfileChanged;
-import net.runelite.client.events.RuneScapeProfileChanged;
-import net.runelite.api.events.GameTick;
-import net.runelite.api.events.GraphicChanged;
-import net.runelite.api.events.HitsplatApplied;
-import net.runelite.api.events.MenuOptionClicked;
-import net.runelite.api.events.NpcDespawned;
-import net.runelite.api.events.NpcSpawned;
-import net.runelite.api.events.PlayerChanged;
-import net.runelite.api.events.StatChanged;
-import net.runelite.api.events.VarbitChanged;
+import net.runelite.api.events.*;
+import net.runelite.client.events.*;
 import net.runelite.client.RuneLite;
-import net.runelite.client.callback.ClientThread;
-import net.runelite.client.chat.ChatColorType;
-import net.runelite.client.chat.ChatMessageBuilder;
-import net.runelite.client.chat.ChatMessageManager;
-import net.runelite.client.chat.QueuedMessage;
+import net.runelite.client.callback.*;
+import net.runelite.client.chat.*;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
-import net.runelite.client.events.ConfigChanged;
-import net.runelite.client.plugins.Plugin;
-import net.runelite.client.plugins.PluginDescriptor;
-import net.runelite.client.ui.overlay.OverlayManager;
+import net.runelite.client.plugins.*;
+import net.runelite.client.ui.overlay.*;
+import lombok.Setter;
+import com.google.gson.Gson;
+import java.awt.Rectangle;
+import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
+import java.time.LocalDate;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Consumer;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import javax.swing.SwingUtilities;
+import net.runelite.api.Point;
+import net.runelite.api.Tile;
+import net.runelite.api.gameval.AnimationID;
+import net.runelite.api.gameval.InterfaceID;
+import net.runelite.api.widgets.Widget;
+import net.runelite.client.game.*;
+import net.runelite.client.input.MouseAdapter;
+import net.runelite.client.ui.NavigationButton;
+import net.runelite.client.ui.overlay.Overlay;
+import com.follower.StanceLibrary.StyleSource;
+import com.follower.TriggerEvent.Type;
+import java.util.Map.Entry;
+import static java.lang.System.*;
+import static com.follower.TriggerEvent.Type.*;
+import static java.lang.Math.*;
+import static net.runelite.api.kit.KitType.*;
 
 @Slf4j
 @PluginDescriptor(
 	name = "Follower Buddy",
-	description = "A companion that follows you in any gear you like and talks about"
-		+ " what you're doing. Dress it in the Follower Buddy side panel.",
+	description = "A companion that follows you in any gear you like and talks about what you're doing. Dress it in the Follower Buddy side panel.",
 	tags = {"follower", "companion", "pet", "player", "model", "chat", "cosmetic", "outfit"}
 )
 public class FollowerPlugin extends Plugin
 {
-	private static final String DATA_DIR_NAME = "follower";
-	private static final String EXACT_PALETTE_KEY = "exactPalette";
-	private static final String COMMAND = "follower";
 
-	/** ~2 seconds at 600ms per tick, after the world becomes visible. */
-	private static final int SPAWN_DELAY_TICKS = 4;
-
-	/** Game ticks to let the client rebuild a changed player model before reading it. */
-	private static final int MODEL_REBUILD_TICKS = 4;
-
-	/** How often the chronicle looks at quest states while the book is shut: six seconds. */
-	private static final int CHRONICLE_LOOK_TICKS = 10;
-
-	/** How long a page written waits for the follower to have the floor before it goes unsaid: a minute. */
-	static final int PAGE_NEWS_TICKS = 100;
-
-	/**
-	 * The page news's wait for a gap this long, in ticks: a minute, or two
-	 * gaps and a little over when they are longer. Quests QA, 16 Oct: at
-	 * Minimal the news needs 45 s of quiet after the quest's own line, so
-	 * any other line in that minute, or a low mood, lost every quest's page.
-	 */
-	public static int pageNewsTicks(long gapMs)
-	{
-		return Math.max(PAGE_NEWS_TICKS, (int) (2 * gapMs / 600L) + 20);
-	}
-
-	/** A page written, waiting to be mentioned. */
-	static final class PageNews
-	{
-		final TriggerEvent event;
-		/** When its minute began: the writing, or the close of a dialogue it waited out. */
-		int tick;
-		/** For a place's page, the regions it is about; null for news that holds anywhere. */
-		final java.util.List<Integer> where;
-
-		PageNews(TriggerEvent event, int tick)
-		{
-			this(event, tick, null);
-		}
-
-		PageNews(TriggerEvent event, int tick, java.util.List<Integer> where)
-		{
-			this.event = event;
-			this.tick = tick;
-			this.where = where;
-		}
-	}
-
-	/**
-	 * Pages written and not yet mentioned, oldest first. Said the moment they
-	 * were written they met the reaction to the same moment and lost - the
-	 * boss's own line, a place's arrival line - so they wait for quiet.
-	 */
-	private final java.util.ArrayDeque<PageNews> pageNews = new java.util.ArrayDeque<>();
 
 
 
 	@Inject
-	private Client client;
+	Client client;
 
 	@Inject
-	private ClientThread clientThread;
+	ClientThread clientThread;
 
 	@Inject
-	private OverlayManager overlayManager;
+	OverlayManager overlayManager;
 
 	@Inject
-	private ChatMessageManager chatMessageManager;
+	ChatMessageManager chatMessageManager;
 
 	@Inject
-	private ConfigManager configManager;
+	ConfigManager configManager;
 
 	@Inject
-	private FollowerConfig config;
+	FollowerConfig config;
 
 	@Inject
-	private com.follower.sound.VoiceLibrary voices;
+	ModelRepository modelRepository;
 
 	@Inject
-	private ModelRepository modelRepository;
+	SpotAnimRepository spotAnimRepository;
 
 	@Inject
-	private com.follower.appearance.SpotAnimRepository spotAnimRepository;
+	GameFontRepository gameFontRepository;
 
 	@Inject
-	private com.follower.ui.GameFontRepository gameFontRepository;
+	net.runelite.client.ui.overlay.tooltip.TooltipManager tooltipManager;
 
 	@Inject
-	private net.runelite.client.ui.overlay.tooltip.TooltipManager tooltipManager;
+	net.runelite.client.input.MouseManager mouseManager;
 
 	@Inject
-	private net.runelite.client.input.MouseManager mouseManager;
+	net.runelite.client.game.SpriteManager spriteManager;
 
 	@Inject
-	private net.runelite.client.game.SpriteManager spriteManager;
-
-	@Inject
-	private net.runelite.client.game.chatbox.ChatboxPanelManager chatboxPanelManager;
+	net.runelite.client.game.chatbox.ChatboxPanelManager chatboxPanelManager;
 
 	/**
 	 * The client's red click cross, drawn to its own recipe: on an entity op
@@ -183,21 +114,21 @@ public class FollowerPlugin extends Plugin
 	 * per 100ms, dead at 400ms, plotted 12 pixels up-left of the click
 	 * (crossX - 8 - 4 in its source). Red frames are sprites 519-522.
 	 */
-	private long crossStartMs;
-	private java.awt.Point crossPoint;
+	long crossStartMs;
+	java.awt.Point crossPoint;
 
-	private void showRedCross()
+	void showRedCross()
 	{
-		net.runelite.api.Point mouse = client.getMouseCanvasPosition();
+		var mouse = client.getMouseCanvasPosition();
 		if (mouse != null)
 		{
 			crossPoint = new java.awt.Point(mouse.getX(), mouse.getY());
-			crossStartMs = System.currentTimeMillis();
+			crossStartMs = currentTimeMillis();
 		}
 	}
 
-	private final net.runelite.client.ui.overlay.Overlay crossOverlay =
-		new net.runelite.client.ui.overlay.Overlay()
+	final Overlay crossOverlay =
+		new Overlay()
 	{
 		{
 			setPosition(net.runelite.client.ui.overlay.OverlayPosition.DYNAMIC);
@@ -207,16 +138,15 @@ public class FollowerPlugin extends Plugin
 		@Override
 		public java.awt.Dimension render(java.awt.Graphics2D graphics)
 		{
-			long elapsed = System.currentTimeMillis() - crossStartMs;
+			long elapsed = currentTimeMillis() - crossStartMs;
 			if (crossPoint == null || elapsed >= 400)
-			{
 				return null;
-			}
 			int frame = (int) (elapsed / 100);
-			java.awt.image.BufferedImage sprite = spriteManager.getSprite(
-				RED_CLICK_SPRITE_FIRST + frame, 0);
+			var sprite = spriteManager.getSprite(
+				// RED_CLICK_SPRITE_FIRST: The four red click-cross frames, 519-522 (the old api SpriteID
+				// RED_CLICK_ANIMATION_1..4, deprecated without a gameval equivalent name).
+				519 /* RED_CLICK_SPRITE_FIRST */ + frame, 0);
 			if (sprite != null)
-			{
 				// Centre each frame's own image on the click: the cache sprites
 				// carry per-frame padding offsets the client's plotSprite
 				// applies, but the sprite manager returns them trimmed - a
@@ -225,7 +155,6 @@ public class FollowerPlugin extends Plugin
 				graphics.drawImage(sprite,
 					crossPoint.x - sprite.getWidth() / 2,
 					crossPoint.y - sprite.getHeight() / 2, null);
-			}
 			return null;
 		}
 	};
@@ -236,34 +165,30 @@ public class FollowerPlugin extends Plugin
 	 * trusting the injected menu entry to be present on the click's exact
 	 * frame. The click is consumed so it doesn't also walk.
 	 */
-	private final net.runelite.client.input.MouseAdapter shiftClickAdapter =
-		new net.runelite.client.input.MouseAdapter()
+	final MouseAdapter shiftClickAdapter =
+		new MouseAdapter()
 	{
 		@Override
-		public java.awt.event.MouseEvent mousePressed(java.awt.event.MouseEvent event)
+		public MouseEvent mousePressed(MouseEvent event)
 		{
-			if (!javax.swing.SwingUtilities.isLeftMouseButton(event)
-				|| !client.isKeyPressed(net.runelite.api.KeyCode.KC_SHIFT)
+			if (!SwingUtilities.isLeftMouseButton(event)
+				|| !client.isKeyPressed(KeyCode.KC_SHIFT)
 				|| client.isMenuOpen()
 				|| dialog.isOpen()
 				|| !follower.isSpawned()
-				|| !follower.isUnderMouse(new net.runelite.api.Point(event.getX(), event.getY()))
+				|| !follower.isUnderMouse(new Point(event.getX(), event.getY()))
 				|| !offersWalkHere(client.getMenu().getMenuEntries()))
-			{
 				return event;
-			}
 
 			crossPoint = event.getPoint();
-			crossStartMs = System.currentTimeMillis();
+			crossStartMs = currentTimeMillis();
 			// The mouse is heard on the Swing thread, and the box reads the
 			// bag for a wished item, which only the client thread may. Asked
 			// again there: a second click can queue before the first opens it.
 			clientThread.invoke(() ->
 			{
 				if (started && !dialog.isOpen())
-				{
 					startTalking();
-				}
 			});
 			event.consume();
 			return event;
@@ -271,184 +196,130 @@ public class FollowerPlugin extends Plugin
 	};
 
 	@Inject
-	private AppearanceService appearanceService;
+	AppearanceService appearanceService;
 
 	@Inject
-	private com.follower.appearance.AppearanceComposer appearanceComposer;
+	FollowerEntity follower;
 
 	@Inject
-	private com.follower.appearance.PaletteHarvest paletteHarvest;
+	FollowerDialog dialog;
+
+
 
 	@Inject
-	private com.follower.appearance.ColorHarvester colorHarvester;
+	StanceLibrary stanceLibrary;
 
 	@Inject
-	private CaptureFallback captureFallback;
+	WrapTrimStore wrapTrimStore;
 
 	@Inject
-	private FollowerEntity follower;
+	SpeechEngine speechEngine;
 
 	@Inject
-	private com.follower.follower.FollowDebugOverlay followDebugOverlay;
+	RuleLoader ruleLoader;
 
 	@Inject
-	private com.follower.speech.FollowerDialog dialog;
+	DialogLoader dialogLoader;
 
 	@Inject
-	private com.follower.chronicle.ChronicleLoader chronicle;
+	FollowerOverlay overlay;
 
 	@Inject
-	private com.follower.chronicle.ChronicleWindow chronicleWindow;
-
-	/** Which chronicle pages can be read; built on the memory in startUp. */
-	private com.follower.chronicle.ChronicleProgress chronicleProgress;
-
-	/** The scribe's sketches of places, and the habit of making them. */
-	private com.follower.chronicle.SketchBook sketchBook;
-	private com.follower.chronicle.SketchController sketching;
+	net.runelite.client.game.ItemManager itemManager;
 
 	@Inject
-	private net.runelite.client.ui.DrawManager drawManager;
+	net.runelite.client.ui.ClientToolbar clientToolbar;
+
+
+	FollowerPanel panel;
+	NavigationButton navButton;
+	PhrasesDialog messagesDialog;
+	MemoryDialog memoryDialog;
 
 	@Inject
-	private java.util.concurrent.ScheduledExecutorService executor;
-
-	/**
-	 * The plugin's own worker for its slow work off the client and event
-	 * threads: reading and writing packs, and drawing sketches. RuneLite's
-	 * executor is one thread every plugin shares, so a 64 MB pack or a
-	 * second-long sketch on it held up all else queued there, a line's voice
-	 * among them (qa5 #68). Made in startUp, stopped in shutDown.
-	 */
-	private java.util.concurrent.ExecutorService worker;
+	Gson gson;
 
 	@Inject
-	private com.follower.follower.StanceLibrary stanceLibrary;
+	OutfitProfileStore profileStore;
 
-	@Inject
-	private com.follower.follower.WrapTrimStore wrapTrimStore;
-
-	@Inject
-	private com.follower.speech.ConversationStore conversationStore;
-
-	@Inject
-	private net.runelite.client.input.KeyManager keyManager;
-
-	@Inject
-	private SpeechEngine speechEngine;
-
-	@Inject
-	private RuleLoader ruleLoader;
-
-	@Inject
-	private com.follower.speech.DialogLoader dialogLoader;
-
-	@Inject
-	private FollowerOverlay overlay;
-
-	@Inject
-	private net.runelite.client.game.ItemManager itemManager;
-
-	@Inject
-	private net.runelite.client.ui.ClientToolbar clientToolbar;
-
-
-	private com.follower.ui.FollowerPanel panel;
-	private net.runelite.client.ui.NavigationButton navButton;
-	private com.follower.ui.PhrasesDialog messagesDialog;
-	private com.follower.ui.VoiceDialog voiceDialog;
-	private com.follower.ui.DialogsDialog dialogsDialog;
-	private com.follower.ui.MemoryDialog memoryDialog;
-
-	@Inject
-	private com.google.gson.Gson gson;
-
-	@Inject
-	private com.follower.appearance.OutfitProfileStore profileStore;
-
-	private com.follower.follower.ErrandController errands;
+	ErrandController errands;
 
 	/** The rule-level writing gesture; null until startUp builds it. */
-	private com.follower.follower.PropFlourish flourish;
+	PropFlourish flourish;
 
 	/** Stands the follower clear of a fight; see SpectateController. */
-	private com.follower.follower.SpectateController spectate;
+	SpectateController spectate;
 
 	/** The skilling company: the seat, the borrowed tool, the session the rules read. */
-	private com.follower.follower.SkillingController skilling;
+	SkillingController skilling;
 
 	/** The moments: a level, the pet, second wind, a stranger for the player. */
-	private com.follower.follower.Moments moments;
+	Moments moments;
 
 	/** Where the follower looks when nothing else owns its head. */
-	private com.follower.follower.Gaze gaze;
+	Gaze gaze;
 
 	/** What it notices that the player has not, and goes to look at. */
-	private com.follower.follower.Noticing noticing;
-
-	/** Marks of grace on a rooftop course: spotted, left behind, picked up. */
-	private com.follower.follower.MarksOfGrace marksOfGrace;
+	Noticing noticing;
 
 	/** The beat before yes: a Send with a misgiving, the late step aside. */
-	private com.follower.follower.Will will;
+	Will will;
 
 	/** The player's agility obstacles, recorded for the follower to take after them. */
-	private com.follower.follower.CrossingWatch crossingWatch;
+	CrossingWatch crossingWatch;
 
 	/** Walkable ground nobody walks on: the lit fires in the scene. */
-	private com.follower.follower.HotGround hotGround;
+	HotGround hotGround;
 
-	private Path dataDir;
-	private WorldPoint lastPlayerTile;
-	private int lastRegionId = -1;
+	Path dataDir;
+	WorldPoint lastPlayerTile;
+	int lastRegionId = -1;
 	/** The player-commanded stay state last handed to onStayStateChanged. */
-	private boolean stayReported;
+	boolean stayReported;
 	/**
 	 * A park the player gave - right-click Stay, a Send, Follow me off - held
 	 * until they say Follow. Nothing of the follower's own takes the feet
 	 * from it: the wander, the seat, the moments, the spectator and the
 	 * errands all read it as their feet taken.
 	 */
-	private boolean parkedByPlayer;
+	boolean parkedByPlayer;
 	/**
 	 * A park given while something of the follower's own had the feet: that
 	 * stands down, and the follower is parked again once it has let go.
 	 */
-	private boolean parkWhenFree;
+	boolean parkWhenFree;
 	/**
 	 * Where a Send given then pointed, walked to once free. Null for a Stay,
 	 * which parks where the follower then stands.
 	 */
-	private WorldPoint sentWhenFree;
+	WorldPoint sentWhenFree;
 	/** Told as the player-commanded stay starts or ends; the side panel's button reads it. */
-	private java.util.function.Consumer<Boolean> onStayStateChanged;
-	private int reloadPollTicks;
-	private int spawnDelayTicks;
-	private boolean rebuildQueued;
+	@Setter
+	Consumer<Boolean> onStayStateChanged;
+	int reloadPollTicks,
+		spawnDelayTicks;
+	boolean rebuildQueued;
 
 	/** Ticks until the one-time naming prompt opens; 0 = nothing pending. */
-	private int namePromptDelayTicks;
+	int namePromptDelayTicks;
 
 	/** Times the naming prompt closed unanswered this session; one re-offer. */
-	private int nameOfferRetries;
-
-	/** Whether a wish was open last tick, to spot the moment one opens. */
-	private boolean wasWishing;
+	int nameOfferRetries;
 
 	/** Whether the follower was absent (thrall-only mode) last tick. */
-	private boolean wasAbsent;
+	boolean wasAbsent;
 
 	/** The track playing last tick; null until the first read seeds it. */
-	private String lastMusicTrack;
+	String lastMusicTrack;
 
 	/** Whether the bank was open last tick, for the close-is-a-boundary watch. */
-	private boolean wasBankOpen;
+	boolean wasBankOpen;
 
 	/** True once the player has walked out of sight of a parked follower. */
-	private boolean leftTheFollowerParked;
+	boolean leftTheFollowerParked;
 
 	/** Ten seconds after the first spawn, so the arrival isn't talked over. */
-	private static final int NAME_PROMPT_DELAY_TICKS = 17;
+	static final int NAME_PROMPT_DELAY_TICKS = 17;
 
 	/**
 	 * LOGGED_IN fires after EVERY map chunk reload, not just at login - running
@@ -457,7 +328,7 @@ public class FollowerPlugin extends Plugin
 	 * priming only happen when the player actually logged in, not every time
 	 * they jog into a freshly loaded part of the map.
 	 */
-	private boolean freshLogin;
+	boolean freshLogin;
 
 	/**
 	 * Set while a world hop is in flight, so coming back is told apart from
@@ -466,129 +337,32 @@ public class FollowerPlugin extends Plugin
 	 * them reads as a fresh rising edge and the follower greets the new world
 	 * with a monologue.
 	 */
-	private boolean hopped;
-	private boolean watchAnimations;
-
-	/** ::follower watch all - also report graphics played by other players. */
-	private boolean watchOthers;
-
-	/** ::follower chatwatch - print chat messages so a rule can quote them exactly. */
-	private boolean watchChat;
-
-	/** ::follower examinewatch - prints what every Examine click resolved to. */
-	private boolean watchExamine;
-
-	/**
-	 * ::follower scan - a tick-by-tick timeline of every animation slot the
-	 * player is using.
-	 *
-	 * <p>{@code watch} only reports the one-shot animation slot, because that is
-	 * what AnimationChanged fires for. A pose - standing, walking, or SITTING -
-	 * lives in a different slot that raises no event at all, so an emote that
-	 * settles into a held position is invisible to it. This samples all of them
-	 * every tick and records what changed, which is the only way to see a
-	 * sequence's transitions in the order they actually happen.
-	 */
-	private int scanTicksLeft;
-	private int scanAnimation = -2;
-	private int scanPose = -2;
-	private int scanIdlePose = -2;
-	private int scanGraphic = -2;
-	private String scanCombat = "";
-	private int scanStartTick;
-	private final List<String> scanTimeline = new ArrayList<>();
-
-	private void tickScan()
-	{
-		if (scanTicksLeft <= 0)
-		{
-			return;
-		}
-		Player local = client.getLocalPlayer();
-		if (local == null)
-		{
-			return;
-		}
-
-		int animation = local.getAnimation();
-		int pose = local.getPoseAnimation();
-		int idlePose = local.getIdlePoseAnimation();
-		net.runelite.api.ActorSpotAnim spot = latestSpotAnim(local);
-		int graphic = spot == null ? -1 : spot.getId();
-		int at = client.getTickCount() - scanStartTick;
-
-		// Every input the combat check reads, spelled out. refreshCombat wants
-		// an NPC, a combat level above zero and a health ratio that is not
-		// zero; when it does not fire there is no way to tell which of the
-		// three failed without seeing all of them.
-		net.runelite.api.Actor target = local.getInteracting();
-		String combat = target == null
-			? "interacting = none"
-			: "interacting = " + target.getName()
-				+ " [" + target.getClass().getSimpleName() + "]"
-				+ " isNPC=" + (target instanceof NPC)
-				+ " level=" + target.getCombatLevel()
-				+ " healthRatio=" + target.getHealthRatio();
-		if (!combat.equals(scanCombat))
-		{
-			scanCombat = combat;
-			String line = "t+" + at + "  " + combat;
-			scanTimeline.add(line);
-			log.info("SCAN {}", line);
-		}
-
-		if (animation != scanAnimation)
-		{
-			scanAnimation = animation;
-			record(at, "animation", animation);
-		}
-		if (pose != scanPose)
-		{
-			scanPose = pose;
-			record(at, "pose", pose);
-		}
-		if (idlePose != scanIdlePose)
-		{
-			scanIdlePose = idlePose;
-			record(at, "idlePose", idlePose);
-		}
-		if (graphic != scanGraphic)
-		{
-			scanGraphic = graphic;
-			record(at, "graphic", graphic);
-		}
-
-		if (--scanTicksLeft == 0)
-		{
-			log.info("SCAN complete, {} changes:\n  {}",
-				scanTimeline.size(), String.join("\n  ", scanTimeline));
-			sendStatus("Scan finished - " + scanTimeline.size()
-				+ " changes recorded to the log.");
-		}
-	}
-
-	private void record(int tick, String slot, int value)
-	{
-		String line = "t+" + tick + "  " + slot + " = " + value;
-		scanTimeline.add(line);
-		log.info("SCAN {}", line);
-	}
-	private int animTraceRemaining;
-	private final List<Integer> animTrace = new ArrayList<>();
-	private final List<Integer> playerTrace = new ArrayList<>();
-	private final List<String> animTraceMarks = new ArrayList<>();
-	private int lastControllerGeneration = -1;
-
-	/**
-	 * Frames sampled by ::follower animtrace. Long enough to span a full cycle -
-	 * a pose frame can be held for 20-odd renders, so a 12-frame animation runs
-	 * about five seconds and a short trace never reaches the wrap.
-	 */
-	private static final int ANIM_TRACE_FRAMES = 480;
-	private final Map<Skill, Integer> knownLevels = new EnumMap<>(Skill.class);
+	boolean hopped;
+	final Map<Skill, Integer> knownLevels = new EnumMap<>(Skill.class);
 
 	/** Last XP seen per skill; a rise is a drop, whatever the level did. */
-	private final Map<Skill, Integer> knownXp = new EnumMap<>(Skill.class);
+	final Map<Skill, Integer> knownXp = new EnumMap<>(Skill.class);
+
+	/**
+	 * The engine's context now. Forget everything and a profile switch give
+	 * the engine a new one, so it is read each time and never kept.
+	 */
+	TriggerContext context()
+	{
+		return speechEngine.getContext();
+	}
+
+	/** Hands an event to the speech engine. */
+	void dispatch(TriggerEvent event)
+	{
+		speechEngine.dispatch(event);
+	}
+
+	/** Stores one of the plugin's settings. */
+	void setConfig(String key, Object value)
+	{
+		configManager.setConfiguration(FollowerConfig.GROUP, key, value);
+	}
 
 	@Provides
 	FollowerConfig provideConfig(ConfigManager configManager)
@@ -599,16 +373,13 @@ public class FollowerPlugin extends Plugin
 	@Override
 	protected void startUp() throws Exception
 	{
-		// One thread; work handed it once stopped (a sketch's frame arriving
-		// after shutDown) is dropped, not thrown into the caller.
-		worker = new java.util.concurrent.ThreadPoolExecutor(1, 1, 0, java.util.concurrent.TimeUnit.MILLISECONDS,
-			new java.util.concurrent.LinkedBlockingQueue<>(), work ->
-			{
-				Thread thread = new Thread(work, "Follower Buddy worker");
-				thread.setDaemon(true);
-				return thread;
-			}, new java.util.concurrent.ThreadPoolExecutor.DiscardPolicy());
-		dataDir = RuneLite.RUNELITE_DIR.toPath().resolve(DATA_DIR_NAME);
+		// The controllers (errands, skilling, moments, gaze, ...) are built
+		// below and never set back to null. RuneLite registers the event
+		// handlers only after this returns, so the handlers and the ticks use
+		// them without a null check. What this method or shutDown can reach
+		// keeps its checks: shutDown also runs when startUp throws part-way.
+
+		dataDir = RuneLite.RUNELITE_DIR.toPath().resolve("follower" /* DATA_DIR_NAME */);
 		try
 		{
 			Files.createDirectories(dataDir);
@@ -618,10 +389,7 @@ public class FollowerPlugin extends Plugin
 			log.warn("Could not create {}", dataDir, e);
 		}
 
-		modelRepository.load(dataDir);
-		spotAnimRepository.load(dataDir);
-		gameFontRepository.load(dataDir);
-		chronicle.load(dataDir);
+		gameFontRepository.load();
 		// With merging: an existing install's files gain the rules and trees
 		// this build added, which otherwise never reach it (the starter files
 		// are only written when missing - a tester's file from 1.0.0 had no
@@ -632,44 +400,15 @@ public class FollowerPlugin extends Plugin
 		loadErrorsReported = false;
 		lastOutfitWarning = null;
 		buildFailureTold = false;
-		voices.load(dataDir);
-		journal.initialise(dataDir);
-		journal.setRegionSource(() -> speechEngine.getContext().getRegionId());
-		journal.setEnabled(config.transcriptOn());
 		dialogLoader.initialise(dataDir, true);
 		stanceLibrary.load(dataDir);
-		// One-time repair: until the observer learned to tell a swing from a
-		// flinch, any block seen on a fighting player was filed as that
-		// weapon's attack - so a shortbow "shot" by blocking. The bad entries
-		// are already on disk and nothing else would ever overwrite them.
-		// Second repair, same shape as the first and for the neighbouring
-		// reason: the flinch guard stopped blocks being filed as swings, and
-		// left skilling animations doing it. Everything learned before the
-		// fight check went in was observed under a test that could not tell a
-		// swing from a pickaxe, so all of it is suspect and cheap to reobserve.
-		if (!config.attacksRelearned() || !config.attacksRelearnedSkilling())
-		{
-			stanceLibrary.clearLearnedAttacks();
-			// Written NOW, not at the next clean shutdown. The flag below says
-			// the repair has happened, and a client that is killed before it
-			// saves would leave that promise sitting over an unrepaired file
-			// with nothing left to run the repair again.
-			stanceLibrary.save();
-			configManager.setConfiguration(FollowerConfig.GROUP, "attacksRelearned", true);
-			configManager.setConfiguration(
-				FollowerConfig.GROUP, "attacksRelearnedSkilling", true);
-		}
-		paletteHarvest.load(dataDir);
 		wrapTrimStore.load(dataDir, follower);
-		conversationStore.load(dataDir);
 		loadOutfitProfiles();
 
 		speechEngine.setSink(this::speak);
 		// Lines are fitted to the overhead in the font it is drawn in.
-		com.follower.ui.GameFont overheadFont = gameFontRepository.getByName("b12_full");
-		speechEngine.setOverheadWidth(overheadFont == null ? null : overheadFont::stringWidth);
+		speechEngine.setOverheadWidth(gameFontRepository.getByName("b12_full")::stringWidth);
 		applyConfig();
-		loadExactPalette();
 		renderCallbacks.register(thrallHider);
 		// Anything the dump files didn't provide is parsed from the client's
 		// own cache; retried from the login states until the indexes exist.
@@ -677,12 +416,12 @@ public class FollowerPlugin extends Plugin
 		// The same transient-prop path the dev commands use: overlaid on the
 		// outfit at compose time, never persisted. Shared by the errand, the
 		// rule-level flourish and the minutes-taking; all on the client thread.
-		hands = new com.follower.follower.ErrandController.Hands()
+		hands = new ErrandController.Hands()
 			{
 				@Override
 				public void hold(int itemId)
 				{
-					KitType slot = handSlot(itemId);
+					var slot = handSlot(itemId);
 					if (slot == null)
 					{
 						log.warn("Prop {} has no wearable slot", itemId);
@@ -721,7 +460,7 @@ public class FollowerPlugin extends Plugin
 				 * and is left alone. A rebuild mid-emote leaves the emote be
 				 * (the pose waits on it), so the prop can come in partway.
 				 */
-				private void takeOut(boolean reach)
+				void takeOut(boolean reach)
 				{
 					int[] clip = reach ? parseAnimationIds(config.reachAnimation()) : new int[0];
 					if (clip.length == 0 || follower.isEmotePlaying())
@@ -748,9 +487,7 @@ public class FollowerPlugin extends Plugin
 					// Idempotent: the reset and abort paths call this with
 					// nothing held, including once at construction time.
 					if (propSlot == null && propHands == null)
-					{
 						return;
-					}
 					boolean writing = propHands != null;
 					propSlot = null;
 					propItemId = 0;
@@ -766,15 +503,11 @@ public class FollowerPlugin extends Plugin
 						follower.atEmoteFraction(1, () ->
 						{
 							if (started)
-							{
 								rebuildFollower();
-							}
 						});
 					}
 					else if (started)
-					{
 						rebuildFollower();
-					}
 				}
 
 				@Override
@@ -789,12 +522,9 @@ public class FollowerPlugin extends Plugin
 					// The second prop is anything but the hand, so a hat can be
 					// worn over a held tool. Something that resolves to the hand
 					// belongs to hold(), and is declined here rather than fought over.
-					KitType slot = resolveSlot(itemId);
-					if (slot == null || slot == KitType.WEAPON || slot == KitType.SHIELD)
-					{
-						log.debug("Prop {} is not something to wear", itemId);
+					var slot = resolveSlot(itemId);
+					if (slot == null || slot == WEAPON || slot == SHIELD)
 						return;
-					}
 					wornSlot = slot;
 					wornItemId = itemId;
 					rebuildFollower();
@@ -804,16 +534,12 @@ public class FollowerPlugin extends Plugin
 				public void takeOff()
 				{
 					if (wornSlot == null)
-					{
 						return;
-					}
 					wornSlot = null;
 					wornItemId = 0;
 					// As release: after a stop there is nothing to rebuild.
 					if (started)
-					{
 						rebuildFollower();
-					}
 				}
 
 				@Override
@@ -823,101 +549,71 @@ public class FollowerPlugin extends Plugin
 				}
 			};
 		// Before every mover: the feet consult this on each step they plan.
-		hotGround = new com.follower.follower.HotGround(client);
+		hotGround = new HotGround(client);
 		follower.setHotGround(hotGround::hot);
-		errands = new com.follower.follower.ErrandController(client, follower, config,
+		errands = new ErrandController(client, follower, config,
 			speechEngine::dispatch, spotAnimRepository, this::errandBusy, hands);
-		flourish = new com.follower.follower.PropFlourish(follower, hands);
+		flourish = new PropFlourish(follower, hands);
 		// A SUPPLIER, not the context itself: the engine replaces its context
 		// on every reset, and a controller holding the original object read a
 		// context that had stopped being refreshed - inCombat false forever,
 		// spectating dead after the first relog. See the field note in
 		// SpectateController.
-		spectate = new com.follower.follower.SpectateController(client, follower, config,
+		spectate = new SpectateController(client, follower, config,
 			speechEngine::getContext, spotAnimRepository, speechEngine::dispatch,
 			this::setSpectateDisarmed);
-		skilling = new com.follower.follower.SkillingController(client, follower, config,
+		skilling = new SkillingController(client, follower, config,
 			hands, speechEngine::dispatch,
-			() -> speechEngine.getContext().isInCombat(),
+			() -> context().isInCombat(),
 			this::seatFeetTaken,
-			() -> client.getWidget(net.runelite.api.gameval.InterfaceID.BANKMAIN, 0) != null);
+			() -> client.getWidget(InterfaceID.BANKMAIN, 0) != null);
 		// The prayer at the altar and the fire line borrow two of the errands.
 		skilling.setErrands(errands::force);
 		// The seat is taken sooner for the half hour after a favour.
-		skilling.setGrateful(() -> speechEngine.getContext().isGrateful());
+		skilling.setGrateful(() -> context().isGrateful());
 		// And in return no errand of the follower's own starts mid-session,
 		// or in a scene or the quiet after one.
 		errands.setSession(() -> skilling.isWorking() || sceneQuiet());
-		errands.setOnForcedMiss(key -> sendStatus(ERRAND_MISSED));
-		moments = new com.follower.follower.Moments(client, follower, skilling,
+		errands.setOnForcedMiss(key -> sendStatus("That errand can't start here." /* ERRAND_MISSED */));
+		moments = new Moments(client, follower, skilling,
 			this::momentFeetTaken,
-			() -> speechEngine.getContext().isInCombat(),
-			() -> speechEngine.getContext().getDaysKnown(),
+			() -> context().isInCombat(),
+			() -> context().getDaysKnown(),
 			flourish,
-			() -> speechEngine.getContext().isGrateful(),
+			() -> context().isGrateful(),
 			() -> parkedByPlayer);
 		// The head: the cursor, the camera and the look round. Busy is anything
 		// that owns the head or the feet; the seat's own looks are its own.
-		gaze = new com.follower.follower.Gaze(client, follower, config,
+		gaze = new Gaze(client, follower, config,
 			client::getCameraYaw,
-			() -> speechEngine.getContext().getIdleTicks(),
-			() -> thrallNpc != null || errands.isBusy() || spectate.holdsTheFeet()
-				|| dialog.isOpen() || emoteHold || minutesState != 0 || resting
-				|| skilling.holdsTheFeet() || moments.holdsTheFeet() || flourish.isActive()
-				|| speechEngine.getContext().isInCombat() || sceneQuiet() || filming
-				|| (sketching != null && sketching.isSketching()),
-			() -> speechEngine.getContext().feelsAbout("disliked") ? "disliked"
-				: speechEngine.getContext().feelsAbout("liked") ? "liked" : "",
-			() -> thingsNearby(com.follower.follower.Gaze.AROUND_FAR + 2),
+			() -> context().getIdleTicks(),
+			() -> ownBusiness() || dialog.isOpen() || resting
+				|| context().isInCombat() || sceneQuiet()
+				,
+			() -> thingsNearby(Gaze.AROUND_FAR + 2),
 			new java.util.Random());
 		// The eyes for things: the walk is the moments', the feet theirs.
-		noticing = new com.follower.follower.Noticing(client, follower, config, moments,
+		noticing = new Noticing(client, follower, config, moments,
 			speechEngine::dispatch,
-			() -> thrallNpc != null || errands.isBusy() || spectate.holdsTheFeet()
-				|| dialog.isOpen() || emoteHold || minutesState != 0
-				|| skilling.holdsTheFeet() || moments.holdsTheFeet() || flourish.isActive()
-				|| speechEngine.getContext().isInCombat() || sceneQuiet() || filming
-				|| (sketching != null && sketching.isSketching()),
-			() -> speechEngine.getContext().getIdleTicks(),
+			() -> ownBusiness() || dialog.isOpen()
+				|| context().isInCombat() || sceneQuiet()
+				,
+			() -> context().getIdleTicks(),
 			this::landmarksNearby);
 		// A park that is plainly a park - a wander, a player's Stay - may be
-		// stepped out of; a seat, a moment or an errand has its own reasons,
-		// and so does a scene being filmed.
-		will = new com.follower.follower.Will(client, follower, speechEngine::dispatch,
-			() -> thrallNpc == null && !errands.isBusy() && !spectate.holdsTheFeet()
-				&& !skilling.holdsTheFeet() && !moments.holdsTheFeet() && !flourish.isActive()
-				&& minutesState == 0 && !emoteHold && !filming && !sceneHolds());
-		crossingWatch = new com.follower.follower.CrossingWatch(follower);
-		// The count is the context's, read at the time: Forget everything
-		// makes a new one, and the count goes with it.
-		marksOfGrace = new com.follower.follower.MarksOfGrace(event ->
-		{
-			agilityTrace.event("grace: " + event.getName() + " raised");
-			speechEngine.dispatch(event);
-		},
-			() -> speechEngine.getContext().tally("graces"));
-		follower.setOnCrossed(crossing -> speechEngine.dispatch(
+		// stepped out of; a seat, a moment or an errand has its own reasons.
+		will = new Will(client, follower, speechEngine::dispatch,
+			() -> !ownBusiness() && !sceneHolds());
+		crossingWatch = new CrossingWatch(follower);
+		follower.setOnCrossed(crossing -> dispatch(
 			TriggerEvent.crossed(crossing.isFell())));
-		agilityTrace.initialise(dataDir);
-		crossingWatch.setTrace(agilityTrace::event);
-		follower.setAgilityTrace(agilityTrace::event);
 		follower.setOnAgilitySnap(crossingWatch::forgetMissed);
-		// The trace's line on a stall names whose stay held the follower.
-		follower.setStayOwner(() -> isStaying() ? "the player's Stay" : skilling.holdsTheFeet() ? "skilling"
-			: moments.holdsTheFeet() ? "a moment" : errands.isBusy() ? "an errand"
-			: spectate.holdsTheFeet() ? "spectating" : flourish.isActive() ? "a flourish"
-			: sceneHolds() ? "a scene" : "unknown");
 		// Later in the frame, and only if still out: a despawn lets a crossing go too.
 		follower.setOnCrossingHands(() -> clientThread.invokeLater(() ->
 		{
 			if (follower.isSpawned())
-			{
 				rebuildFollower();
-			}
 		}));
-		filmSet = new com.follower.follower.FilmSet(follower, this::rebuildFollower,
-			(graphicId, height) -> follower.playSpotAnim(spotAnimRepository.get(graphicId), height));
-		conversation = new com.follower.speech.ConversationPlayer(conversationStage());
 
 		// On a fresh client boot the LOGIN_SCREEN transition can happen before
 		// this plugin subscribes, so the first login would not read as fresh.
@@ -926,70 +622,17 @@ public class FollowerPlugin extends Plugin
 		freshLogin = client.getGameState() != GameState.LOGGED_IN;
 
 		overlayManager.add(overlay);
-		overlayManager.add(followDebugOverlay);
 		overlayManager.add(dialog);
-		overlayManager.add(chronicleWindow);
 		overlayManager.add(crossOverlay);
 		dialog.register();
-		keyManager.registerKeyListener(escapeStopsTheConversation);
-		// The chronicle reads quests from the game and the rest from the
-		// follower's memory, so it is built on the same context the memory
-		// lives in and is saved with it.
-		chronicleProgress = new com.follower.chronicle.ChronicleProgress(client, chronicle,
-			() -> speechEngine.getContext());
-		chronicleWindow.attach(chronicleProgress);
-		// A page written is a page the follower mentions, once it has the
-		// floor: its own rules say what, from the page's kind and name, or
-		// "quest" for a page a quest opened, which the follower has not seen.
-		chronicleProgress.setOnWritten((entry, byQuest) -> pageNews.add(new PageNews(
-			TriggerEvent.pageWritten(byQuest ? "quest" : entry.kindOrEmpty(), entry.spokenName()),
-			client.getTickCount(),
-			!byQuest && "location".equals(entry.kindOrEmpty()) && entry.unlock != null
-				? entry.unlock.regions : null)));
-		// Quest pages are per account, where the memory is per profile.
-		chronicleProgress.setAccount(() -> configManager.getRSProfileKey());
-		// A callback that remembers a quest together asks the book whether
-		// the follower was there for it.
-		speechEngine.setQuestWitness(chronicleProgress::witnessedOn);
-		// A miniquest has no scroll: its page, dated as it finishes, is all
-		// the witness it has, and parked elsewhere the follower saw nothing.
-		chronicleProgress.setAway(this::isStaying);
-		// The book is the follower's, and signed with its name.
-		chronicleWindow.setOwner(config::followerName);
-		sketchBook = new com.follower.chronicle.SketchBook(dataDir);
-		chronicleWindow.attach(sketchBook);
-		// The scribe sketches the places it has pages for, when you pose for
-		// it: never mid-fight, mid-errand, mid-conversation, or with any
-		// window open over the view, since the view is the picture.
-		sketching = new com.follower.chronicle.SketchController(client, follower, hands, chronicle,
-			sketchBook, drawManager, worker,
-			() -> thrallNpc != null || errands.isBusy() || spectate.holdsTheFeet()
-				|| dialog.isOpen() || chronicleWindow.isOpen() || emoteHold || minutesState != 0
-				|| skilling.holdsTheFeet() || moments.holdsTheFeet() || flourish.isActive()
-				|| speechEngine.getContext().isInCombat() || inCutscene() || windowOverTheView(client)
-				|| filming,
-			() -> speechEngine.getContext().getIdleTicks(),
-			// In an instance, the region it is a copy of, which is what a
-			// plate names. Quests QA5 #14: the essence mine is an instance,
-			// and its own region id matched no plate.
-			() -> client.getLocalPlayer() == null || client.getLocalPlayer().getLocalLocation() == null ? -1
-				: WorldPoint.fromLocalInstance(client, client.getLocalPlayer().getLocalLocation()).getRegionID(),
-			() -> client.getLocalPlayer() == null ? null : client.getLocalPlayer().getWorldLocation(),
-			() -> client.getLocalPlayer() == null ? -1 : client.getLocalPlayer().getAnimation(),
-			// Through the engine, so the mute and the output setting hold.
-			speechEngine::remark,
-			// The same, ahead of what waited through the pose.
-			this::sketchSaysNext,
-			// The count was asked for, so it is shown whatever the mute.
-			this::sketchCount);
-		// The invitations are remembered, so a place is not pointed out at every login.
-		sketching.setMemory(() -> speechEngine.getContext());
-		if (client.getGameState() == GameState.LOGGED_IN)
+		// A callback that remembers a quest together asks whether the follower
+		// saw it finish: the day, kept per account, or null for one finished
+		// before it came along or while it was parked elsewhere.
+		speechEngine.setQuestWitness(quest ->
 		{
-			sketchBook.openFor(configManager.getRSProfileKey());
-			speechEngine.getContext().noteSketchAccount(configManager.getRSProfileKey());
-		}
-		chronicleWindow.register();
+			var seen = context().questSeenFinishedOn(accountKey(quest));
+			return seen == null || seen == QUEST_NOT_SEEN ? null : seen;
+		});
 		mouseManager.registerMouseListener(shiftClickAdapter);
 		dialog.setFollowerOutfit(() -> OutfitParser.parse(config.customOutfit()));
 		addPanel();
@@ -1015,17 +658,7 @@ public class FollowerPlugin extends Plugin
 			clientThread.invoke(() ->
 			{
 				readCounters();
-				if (chronicleProgress != null)
-				{
-					// A tick can land before this restore, on the blank memory;
-					// anything the book made of that is taken stock of again.
-					chronicleProgress.reset();
-				}
-				pageNews.clear();
-				noteFirstMeeting();
-				speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
-				speechEngine.getContext().setRegionNames(ruleLoader.getRegionNames());
-				readTraits();
+				knowThePlayer();
 				rebuildFollower();
 			});
 		}
@@ -1037,16 +670,6 @@ public class FollowerPlugin extends Plugin
 	{
 		// First, so work already queued for the client thread finds it gone.
 		started = false;
-		// Diagnostics: one that throws must not cost the teardown after it.
-		try
-		{
-			journal.flush();
-			agilityTrace.flush();
-		}
-		catch (RuntimeException e)
-		{
-			log.warn("Could not write the transcript or trace at shutdown", e);
-		}
 		renderCallbacks.unregister(thrallHider);
 		// Before the engine is reset: an orderly shutdown is the one chance to
 		// save what the last few ticks counted.
@@ -1059,22 +682,14 @@ public class FollowerPlugin extends Plugin
 		// a toggle off and on again at the login screen would save it there.
 		memoryProfileId = -1;
 		overlayManager.remove(overlay);
-		overlayManager.remove(followDebugOverlay);
 		overlayManager.remove(dialog);
-		overlayManager.remove(chronicleWindow);
 		overlayManager.remove(crossOverlay);
 		dialog.unregister();
-		keyManager.unregisterKeyListener(escapeStopsTheConversation);
-		chronicleWindow.unregister();
-		chronicleWindow.close();
 		mouseManager.unregisterMouseListener(shiftClickAdapter);
 		overlay.clear();
 		speechQueue.clear();
 		cutByTheScene = null;
 		speakingUntilMs = 0;
-		voices.close();
-		// A pack being written is let finish, not cut off half-way.
-		worker.shutdown();
 
 		if (navButton != null)
 		{
@@ -1082,34 +697,16 @@ public class FollowerPlugin extends Plugin
 			navButton = null;
 			panel = null;
 		}
-		if (dialogsDialog != null)
-		{
-			dialogsDialog.dispose();
-			dialogsDialog = null;
-		}
 		if (messagesDialog != null)
 		{
 			messagesDialog.dispose();
 			messagesDialog = null;
-		}
-		if (voiceDialog != null)
-		{
-			voiceDialog.dispose();
-			voiceDialog = null;
 		}
 		// Left open, its Forget everything still ran for a stopped plugin (QA3).
 		if (memoryDialog != null)
 		{
 			memoryDialog.dispose();
 			memoryDialog = null;
-		}
-		// Disposing is not closing, so no cut is sent: the block below takes
-		// the film's pose off with every other, and the scene's flags go with
-		// the transient state at the end.
-		if (filmDialog != null)
-		{
-			filmDialog.dispose();
-			filmDialog = null;
 		}
 
 		// RuneLite calls this on the Swing thread, and letting go of the
@@ -1118,11 +715,10 @@ public class FollowerPlugin extends Plugin
 		// on for good, and the rest of this never ran. So all of it goes over,
 		// with the controllers of this session, not any a quick re-enable
 		// has built since.
-		com.follower.follower.PropFlourish flourishNow = flourish;
-		com.follower.follower.SkillingController skillingNow = skilling;
-		com.follower.follower.Moments momentsNow = moments;
-		com.follower.chronicle.SketchController sketchingNow = sketching;
-		com.follower.follower.ErrandController errandsNow = errands;
+		var flourishNow = flourish;
+		var skillingNow = skilling;
+		var momentsNow = moments;
+		var errandsNow = errands;
 		clientThread.invoke(() ->
 		{
 			resetThrallQuietly();
@@ -1130,36 +726,21 @@ public class FollowerPlugin extends Plugin
 			// read the client.
 			dialog.close();
 			if (flourishNow != null)
-			{
 				flourishNow.abort();
-			}
 			if (skillingNow != null)
-			{
 				skillingNow.reset();
-			}
 			if (momentsNow != null)
-			{
 				momentsNow.reset();
-			}
-			if (sketchingNow != null)
-			{
-				sketchingNow.reset();
-			}
 			if (errandsNow != null)
-			{
 				errandsNow.reset();
-			}
 			// The scroll must not survive a disable either.
 			endMinutes(false);
 			// The follower outlives a disable, and so does a pose left on it by
 			// what the resets above do not own: a mirrored loop, the rest, the
 			// shield's channel. The new session would never know to take it off.
 			follower.setPoseOverride(0);
-			captureFallback.abort();
-			colorHarvester.abort();
 			follower.despawn();
 			appearanceService.invalidate();
-			chronicleWindow.forgetPortraits();
 		});
 
 		stanceLibrary.save();
@@ -1190,7 +771,7 @@ public class FollowerPlugin extends Plugin
 	 * <p>The diagnostics go too: a scan or trace left running against a plugin
 	 * that is no longer loaded should not resume when it is.
 	 */
-	private void resetTransientState()
+	void resetTransientState()
 	{
 		spectateDisarmed = false;
 		emoteDisarmed = false;
@@ -1213,34 +794,12 @@ public class FollowerPlugin extends Plugin
 		hoverTicks = 0;
 		hopped = false;
 		if (gaze != null)
-		{
 			gaze.reset();
-		}
 		if (noticing != null)
-		{
 			noticing.reset();
-		}
-		if (marksOfGrace != null)
-		{
-			marksOfGrace.reset();
-		}
 		if (will != null)
-		{
 			will.reset();
-		}
 		strandedLandingTicks = 0;
-		filming = false;
-		filmParked = false;
-
-		scanTicksLeft = 0;
-		animTraceRemaining = 0;
-		poseProbeTicks = 0;
-		autoHarvestTicks = 0;
-		watchAnimations = false;
-		watchOthers = false;
-		watchChat = false;
-		watchExamine = false;
-		cutsceneForced = false;
 		sceneOn = false;
 		sceneGoneTicks = 0;
 		quietUntilTick = 0;
@@ -1260,38 +819,24 @@ public class FollowerPlugin extends Plugin
 
 	// ------------------------------------------------------------------- panel
 
-	private void addPanel()
+	void addPanel()
 	{
-		panel = new com.follower.ui.FollowerPanel(itemManager, modelRepository,
+		panel = new FollowerPanel(itemManager, modelRepository,
 			this::equipFromPanel, this::clearSlotFromPanel,
 			() -> clientThread.invoke(this::copyGearToCustomOutfit),
 			this::clearOutfit, this::setGender, this::cycleKit, this::setBodyColor,
 			config.panelFolds());
-		panel.setOnFoldsChanged(open -> configManager.setConfiguration(
-			FollowerConfig.GROUP, "panelFolds", open));
-		panel.setOnEditMessages(this::openMessagesDialog);
-		panel.setOnEditDialogs(this::openDialogsDialog);
-		panel.setOnShowMemory(this::openMemoryDialog);
-		panel.setOnAttachSounds(this::openSoundsDialog);
-		panel.setOnShareLines(this::shareLinesFromPanel);
 		// The panel's Mute and the settings' Mute are the same config key,
 		// synced both ways, so they can never disagree. Chattiness, the
-		// chatbox mirror, errands and the thrall profiles work the same way.
-		panel.setOnMute(muted -> configManager.setConfiguration(
-			FollowerConfig.GROUP, "muted", muted));
-		panel.setMuted(config.muted());
-		panel.setOnChattiness(chattiness -> configManager.setConfiguration(
-			FollowerConfig.GROUP, "chattiness", chattiness));
-		panel.setChattiness(config.chattiness());
-		panel.setOnMirrorToChat(on -> configManager.setConfiguration(
-			FollowerConfig.GROUP, "mirrorToChat", on));
-		panel.setMirrorToChat(config.mirrorToChat());
-		panel.setOnErrandsEnabled(on -> configManager.setConfiguration(
-			FollowerConfig.GROUP, "errandsEnabled", on));
-		panel.setErrandsEnabled(config.errandsEnabled());
-		panel.setOnThrallProfile((style, name) -> configManager.setConfiguration(
-			FollowerConfig.GROUP, "thrall" + Character.toUpperCase(style.charAt(0))
-				+ style.substring(1) + "Profile", name));
+		// chatbox mirror, errands, the thrall profiles and the open sections
+		// work the same way.
+		panel.setOnSetting(this::setConfig);
+		panel.setOnEditMessages(this::openMessagesDialog);
+		panel.setOnShowMemory(this::openMemoryDialog);
+		panel.setSetting("muted", config.muted());
+		panel.setSetting("chattiness", config.chattiness());
+		panel.setSetting("mirrorToChat", config.mirrorToChat());
+		panel.setSetting("errandsEnabled", config.errandsEnabled());
 		panel.setThrallProfiles(config.thrallMeleeProfile(),
 			config.thrallRangedProfile(), config.thrallMagicProfile());
 		panel.setProfileProtected(profileStore::isProtected);
@@ -1300,17 +845,14 @@ public class FollowerPlugin extends Plugin
 		setOnStayStateChanged(staying ->
 		{
 			if (panel != null)
-			{
 				panel.setStaying(staying);
-			}
 		});
 		panel.setOnComeHere(this::placeHere);
-		panel.setOnFilm(this::openFilmDialog);
 		panel.setFollowerName(followerName());
 		// The too-close fire variant is the scheduler's own roll, not a
 		// choice to offer.
-		java.util.Map<String, String> errandNames =
-			com.follower.follower.ErrandController.displayNames();
+		var errandNames =
+			ErrandController.displayNames();
 		errandNames.remove("firedeath");
 		panel.setErrands(errandNames);
 		panel.setOnErrand(key -> clientThread.invoke(() -> forceErrand(key)));
@@ -1332,7 +874,7 @@ public class FollowerPlugin extends Plugin
 		// ImageUtil.loadImageResource THROWS on a missing resource rather than
 		// returning null, and an exception here aborts startUp() and makes RuneLite
 		// disable the whole plugin. A cosmetic icon must never be able to do that.
-		java.awt.image.BufferedImage icon;
+		BufferedImage icon;
 		try
 		{
 			icon = net.runelite.client.util.ImageUtil
@@ -1341,11 +883,11 @@ public class FollowerPlugin extends Plugin
 		catch (RuntimeException e)
 		{
 			log.warn("Panel icon missing, falling back to a blank one", e);
-			icon = new java.awt.image.BufferedImage(16, 16,
-				java.awt.image.BufferedImage.TYPE_INT_ARGB);
+			icon = new BufferedImage(16, 16,
+				BufferedImage.TYPE_INT_ARGB);
 		}
 
-		navButton = net.runelite.client.ui.NavigationButton.builder()
+		navButton = NavigationButton.builder()
 			.tooltip("Follower Buddy")
 			.priority(7)
 			.icon(icon)
@@ -1366,41 +908,34 @@ public class FollowerPlugin extends Plugin
 	 * only sensible choices per slot. Runs off the client thread because it touches
 	 * several thousand items; the panel stays usable (unfiltered) until it lands.
 	 */
-	private void buildSlotIndexAsync()
+	void buildSlotIndexAsync()
 	{
-		List<Integer> ids = modelRepository.allItemIds();
+		var ids = modelRepository.allItemIds();
 		if (ids.isEmpty())
-		{
 			return;
-		}
-		indexChunk(ids, 0, new java.util.HashMap<>());
+		indexChunk(ids, 0, new HashMap<>());
 	}
 
-	/** Items per client-thread pass. Small enough not to be felt as a stutter. */
-	private static final int SLOT_INDEX_CHUNK = 250;
-
-	private void indexChunk(List<Integer> ids, int start, java.util.Map<Integer, KitType> index)
+	void indexChunk(List<Integer> ids, int start, Map<Integer, KitType> index)
 	{
 		// getItemStats -> getItemComposition asserts the client thread, so this cannot
 		// run on an executor. invokeLater spreads the work over successive frames.
 		clientThread.invokeLater(() ->
 		{
-			int end = Math.min(start + SLOT_INDEX_CHUNK, ids.size());
+			// SLOT_INDEX_CHUNK: Items per client-thread pass. Small enough not to be felt as a stutter.
+			int end = min(start + 250 /* SLOT_INDEX_CHUNK */, ids.size());
 			for (int i = start; i < end; i++)
 			{
 				int itemId = ids.get(i);
 				try
 				{
-					KitType slot = resolveSlot(itemId);
+					var slot = resolveSlot(itemId);
 					if (slot != null)
-					{
 						index.put(itemId, slot);
-					}
 				}
 				catch (RuntimeException e)
 				{
 					// A single bad item must not abort the whole index.
-					log.debug("Could not resolve slot for item {}", itemId, e);
 				}
 			}
 
@@ -1410,24 +945,19 @@ public class FollowerPlugin extends Plugin
 				return;
 			}
 
-			log.info("Indexed {} of {} wearable items by slot", index.size(), ids.size());
 			if (index.isEmpty())
-			{
 				// The item stats were not ready. This runs during login, and an
 				// index of nothing would leave the picker unfiltered for the whole
 				// session, so it is dropped and ensureCatalogues asks again.
 				return;
-			}
 			slotIndex = index;
 			if (panel != null)
-			{
 				panel.setSlotIndex(index);
-			}
 		});
 	}
 
 	/** Item id -> equipment slot, kept so the stance audit can walk every weapon. */
-	private Map<Integer, KitType> slotIndex = java.util.Collections.emptyMap();
+	Map<Integer, KitType> slotIndex = Collections.emptyMap();
 
 	/**
 	 * The sit emote's own stand-up, captured alongside the sit itself: its
@@ -1435,17 +965,17 @@ public class FollowerPlugin extends Plugin
 	 * standing. Its partner rather than a generic getting-up animation, so
 	 * the two read as one gesture the way they do when a player performs it.
 	 */
-	static final int REST_STAND_UP = com.follower.follower.FollowerEntity.STAND_UP;
+	static final int REST_STAND_UP = FollowerEntity.STAND_UP;
 
 	/** Matches idle-long's five minutes, so the sitting and the "we live here
 	 * now" lines arrive as one mood rather than two systems coinciding. */
-	private static final int REST_AFTER_TICKS = 500;
+	static final int REST_AFTER_TICKS = 500;
 
-	private boolean resting;
+	boolean resting;
 
 	/** The sit the rest put on: the one it lets go of, even if the Rest pose
 	 * setting has changed since. */
-	private int restPose;
+	int restPose;
 
 	/**
 	 * Sits the follower down once the player has been still a long while, and
@@ -1457,26 +987,32 @@ public class FollowerPlugin extends Plugin
 	 * counter resets on any player movement or animation, so combat can never
 	 * meet a seated follower.
 	 */
-	private void updateRest()
+	/**
+	 * Something has the follower already: thrall work, an errand, the
+	 * spectator or the dialog box. The rest, the minute-taking, the welfare
+	 * check and the wander each start from this and add their own.
+	 */
+	boolean occupied()
 	{
-		boolean busy = thrallNpc != null
-			|| (errands != null && errands.isBusy())
-			|| (spectate != null && spectate.isSpectating())
-			|| dialog.isOpen()
+		return thrallNpc != null
+			|| errands.isBusy()
+			|| spectate.isSpectating()
+			|| dialog.isOpen();
+	}
+
+	void updateRest()
+	{
+		boolean busy = occupied()
 			// A long dialog must not sit the minute-taker down mid-sentence.
-			|| minutesState != 0
-			// Nor sit down over a pose the film has it holding.
-			|| filming;
+			|| minutesState != 0;
 		boolean wantRest = config.restWhenIdle()
 			&& config.restAnimation() > 0
 			&& !busy
 			&& follower.isSpawned()
 			&& follower.isSettled()
-			&& speechEngine.getContext().getIdleTicks() >= REST_AFTER_TICKS;
+			&& context().getIdleTicks() >= REST_AFTER_TICKS;
 		if (wantRest == resting)
-		{
 			return;
-		}
 		resting = wantRest;
 		sitOrStand(wantRest, config.restAnimation());
 	}
@@ -1493,9 +1029,7 @@ public class FollowerPlugin extends Plugin
 			follower.setPoseOverride(restPose);
 		}
 		else
-		{
 			letGoOfTheSit(follower, restPose);
-		}
 	}
 
 	/**
@@ -1509,30 +1043,26 @@ public class FollowerPlugin extends Plugin
 		boolean sitting = follower.getPoseOverride() == sitPose && !follower.isEmotePlaying();
 		follower.clearPoseOverride(sitPose);
 		if (sitting)
-		{
 			// Cancelled harmlessly by the next movement frame if the follower
 			// is already walking, which is the usual reason rest ended.
 			follower.playAnimation(REST_STAND_UP);
-		}
 	}
 
 	// --------------------------------------------------------- taking minutes
 
 	/** The shared prop surface, kept so the minutes-taking can borrow it. */
-	private com.follower.follower.ErrandController.Hands hands;
+	ErrandController.Hands hands;
 
 	/** 0 = not taking minutes, 1 = walking to the flank, 2 = writing. */
-	private int minutesState;
+	int minutesState;
 
 	/** Whether the current dialog already rolled for minutes, win or lose. */
-	private boolean minutesConsidered;
+	boolean minutesConsidered;
 
 	/** Consecutive ticks with no dialog widget up, to ride out page flips. */
-	private int dialogGoneTicks = 1000;
+	int dialogGoneTicks = 1000;
 
-	/** A meeting is minuted at most this often. */
-	private static final long MINUTES_COOLDOWN_MS = 480_000;
-	private long lastMinutesMs;
+	long lastMinutesMs;
 
 	/**
 	 * Whether a meeting is written up rather than only attended: now and
@@ -1541,19 +1071,13 @@ public class FollowerPlugin extends Plugin
 	 */
 	static boolean minutesWritten(boolean handFull, long sinceLastMs, int roll)
 	{
-		return !handFull && sinceLastMs >= MINUTES_COOLDOWN_MS && roll < 35;
+		// MINUTES_COOLDOWN_MS: A meeting is minuted at most this often.
+		return !handFull && sinceLastMs >= 480_000L /* MINUTES_COOLDOWN_MS */ && roll < 35;
 	}
 
-	/**
-	 * ::follower force cutscene: held on as if one were playing, until turned
-	 * off, until Developer commands are, or until the scene goes, as a real
-	 * one does.
-	 */
-	private boolean cutsceneForced;
-
 	/** A cutscene seen, and not yet three clean ticks gone (noticeTheScene). */
-	private boolean sceneOn;
-	private int sceneGoneTicks;
+	boolean sceneOn;
+	int sceneGoneTicks;
 
 	/**
 	 * How long the follower keeps quiet after a scene ends, in ticks: fifteen
@@ -1563,7 +1087,7 @@ public class FollowerPlugin extends Plugin
 	static final int SCENE_QUIET_TICKS = 25;
 
 	/** The tick the quiet after the last scene ends. */
-	private int quietUntilTick;
+	int quietUntilTick;
 
 	/**
 	 * A line a starting scene cut off just after it went up, said again once
@@ -1580,22 +1104,19 @@ public class FollowerPlugin extends Plugin
 	 */
 	static final long SCENE_CUT_GRACE_MS = 2_000L;
 
-	/** As long as the engine holds an occasion for a scene: five minutes. */
-	static final int SCENE_CUT_KEPT_TICKS = 500;
-
 	/** The line on the overhead now, and when it went up. */
-	private Utterance onScreen;
-	private long onScreenSinceMs;
+	Utterance onScreen;
+	long onScreenSinceMs;
 
 	/** The line held over the scene, and for how many ticks it has been. */
-	private Utterance cutByTheScene;
-	private int cutHeldTicks;
+	Utterance cutByTheScene;
+	int cutHeldTicks;
 
 	/** Whether a line up this long, from this rule, taking this long to read, is said again after the scene. */
 	static boolean saysAgainAfterTheScene(SpeechRule rule, long upForMs, long toReadMs)
 	{
 		return rule != null && (rule.isOnce() || rule.waitsItsTurn())
-			&& upForMs < Math.max(SCENE_CUT_GRACE_MS, toReadMs);
+			&& upForMs < max(SCENE_CUT_GRACE_MS, toReadMs);
 	}
 
 	/**
@@ -1605,9 +1126,9 @@ public class FollowerPlugin extends Plugin
 	 * where the player looks and says nothing. It still mirrors an emote - the
 	 * mimic is the part that reads best.
 	 */
-	private boolean inCutscene()
+	boolean inCutscene()
 	{
-		return cutsceneForced || sceneOn;
+		return sceneOn;
 	}
 
 	/**
@@ -1616,15 +1137,15 @@ public class FollowerPlugin extends Plugin
 	 * noticing or moment. Play test, 13 Oct: hold the activities through the
 	 * quiet too, not only the words.
 	 */
-	private boolean sceneQuiet()
+	boolean sceneQuiet()
 	{
 		return inCutscene() || client.getTickCount() < quietUntilTick;
 	}
 
-	/** Whether the scene keeps the follower: not the player's park, a film's, or thrall work. */
-	private boolean sceneHolds()
+	/** Whether the scene keeps the follower: not the player's park or thrall work. */
+	boolean sceneHolds()
 	{
-		return inCutscene() && !parkedByPlayer && !filming && !thrallBusiness();
+		return inCutscene() && !parkedByPlayer && !thrallBusiness();
 	}
 
 	/**
@@ -1633,21 +1154,17 @@ public class FollowerPlugin extends Plugin
 	 * (Children of the Sun): the follower walked to the player's shoulder and
 	 * back on every line of the scene and stood in the cast.
 	 */
-	private void noticeTheScene()
+	void noticeTheScene()
 	{
-		boolean up = cutsceneForced
-			|| client.getVarbitValue(net.runelite.api.gameval.VarbitID.CUTSCENE_STATUS) != 0;
-		sceneGoneTicks = up ? 0 : Math.min(sceneGoneTicks + 1, 1000);
+		boolean up = client.getVarbitValue(VarbitID.CUTSCENE_STATUS) != 0;
+		sceneGoneTicks = up ? 0 : min(sceneGoneTicks + 1, 1000);
 		boolean on = up || (sceneOn && sceneGoneTicks <= 2);
 		if (on != sceneOn)
 		{
 			sceneOn = on;
-			// The cause at the start: at the end a forced scene's force is
-			// already off.
-			journal.scene(on, !on ? "-" : cutsceneForced ? "forced" : "542");
 			if (on)
 			{
-				long now = System.currentTimeMillis();
+				long now = currentTimeMillis();
 				cutByTheScene = onScreen != null && now < speakingUntilMs
 					&& saysAgainAfterTheScene(onScreen.rule, now - onScreenSinceMs,
 						timeToReadMs(onScreen.text)) ? onScreen : null;
@@ -1659,10 +1176,8 @@ public class FollowerPlugin extends Plugin
 			}
 			else
 			{
-				if (!parkedByPlayer && !filming && !thrallBusiness())
-				{
+				if (!parkedByPlayer && !thrallBusiness())
 					follower.resumeFollowing();
-				}
 				// Not off on a wander on the idle time the scene ran up.
 				wanderCountdown = WANDER_MIN_GAP;
 				quietUntilTick = client.getTickCount() + SCENE_QUIET_TICKS;
@@ -1676,12 +1191,11 @@ public class FollowerPlugin extends Plugin
 		// only: the rule's own business ran when the line first went up.
 		// Kept through a conversation too, as the engine keeps a line that
 		// waits, rather than said into it and dropped.
-		if (cutByTheScene != null && (sceneQuiet() || filming || inConversation()))
+		if (cutByTheScene != null && (sceneQuiet() || inConversation()))
 		{
-			if (++cutHeldTicks > SCENE_CUT_KEPT_TICKS)
-			{
+			// SCENE_CUT_KEPT_TICKS: As long as the engine holds an occasion for a scene: five minutes.
+			if (++cutHeldTicks > 500 /* SCENE_CUT_KEPT_TICKS */)
 				cutByTheScene = null;
-			}
 		}
 		else if (cutByTheScene != null)
 		{
@@ -1690,24 +1204,22 @@ public class FollowerPlugin extends Plugin
 			// was said again after the scene that moved the step, and the next
 			// step's moment came 6 s behind it. The step is read from the
 			// game; no event plays a part in it.
-			if (cutByTheScene.rule.when.questStepHolds(speechEngine.getContext(), TriggerEvent.tick()))
-			{
+			if (cutByTheScene.rule.when.questStepHolds(context(), TriggerEvent.tick()))
 				speechEngine.remark(cutByTheScene.text);
-			}
 			cutByTheScene = null;
 		}
 	}
 
 	/** Whether any NPC-dialog interface is up (heads or the options menu). */
-	private boolean npcDialogOpen()
+	boolean npcDialogOpen()
 	{
-		return client.getWidget(net.runelite.api.gameval.InterfaceID.CHAT_LEFT, 0) != null
-			|| client.getWidget(net.runelite.api.gameval.InterfaceID.CHAT_RIGHT, 0) != null
-			|| client.getWidget(net.runelite.api.gameval.InterfaceID.CHATMENU, 0) != null;
+		return client.getWidget(InterfaceID.CHAT_LEFT, 0) != null
+			|| client.getWidget(InterfaceID.CHAT_RIGHT, 0) != null
+			|| client.getWidget(InterfaceID.CHATMENU, 0) != null;
 	}
 
 	/** An NPC dialogue up, or gone under three ticks: the reading the rules get, page flips ridden out. */
-	private boolean inConversation()
+	boolean inConversation()
 	{
 		return npcDialogOpen() || dialogGoneTicks <= 2;
 	}
@@ -1738,38 +1250,29 @@ public class FollowerPlugin extends Plugin
 	 * errands, spectating, a player-commanded Stay, combat, a work session)
 	 * declines both outright.
 	 */
-	private void updateMinutes()
+	void updateMinutes()
 	{
-		boolean open = npcDialogOpen() || pretendMeeting();
+		boolean open = npcDialogOpen();
 		if (open)
-		{
 			dialogGoneTicks = 0;
-		}
 		else if (dialogGoneTicks < 1000)
-		{
 			dialogGoneTicks++;
-		}
 		// Page flips and choice menus drop the widget for a beat; only three
 		// clean ticks of absence mean the meeting is really over.
 		boolean over = !open && dialogGoneTicks > 2;
 
-		boolean busy = thrallNpc != null
-			|| (errands != null && errands.isBusy())
-			|| (spectate != null && spectate.isSpectating())
-			|| dialog.isOpen()
-			|| (skilling != null && skilling.isWorking())
-			|| speechEngine.getContext().isInCombat()
+		boolean busy = occupied()
+			|| skilling.isWorking()
+			|| context().isInCombat()
 			// A scene's lines are its own: no trip to the shoulder for each.
 			|| inCutscene();
 
-		Player local = client.getLocalPlayer();
+		var local = client.getLocalPlayer();
 		switch (minutesState)
 		{
 			case 0:
 				if (over)
-				{
 					minutesConsidered = false;
-				}
 				else if (open && !minutesConsidered)
 				{
 					minutesConsidered = true;
@@ -1780,12 +1283,10 @@ public class FollowerPlugin extends Plugin
 					{
 						// Over the shoulder every time; the scroll now and then.
 						boolean writes = minutesWritten(hands.isHolding(),
-							System.currentTimeMillis() - lastMinutesMs,
-							java.util.concurrent.ThreadLocalRandom.current().nextInt(100));
+							currentTimeMillis() - lastMinutesMs,
+							ThreadLocalRandom.current().nextInt(100));
 						if (writes)
-						{
-							lastMinutesMs = System.currentTimeMillis();
-						}
+							lastMinutesMs = currentTimeMillis();
 						minutesState = writes ? 1 : 3;
 					}
 				}
@@ -1793,16 +1294,14 @@ public class FollowerPlugin extends Plugin
 
 			case 1:
 				if (over || busy || local == null)
-				{
 					// The meeting ended before it got there; nothing was held.
 					endMinutes(false);
-				}
 				else if (follower.isStaying() && follower.isSettled())
 				{
-					hands.hold(com.follower.follower.ErrandController.QUILL_PROP,
-						com.follower.follower.ErrandController.SCROLL_PROP);
+					hands.hold(ErrandController.QUILL_PROP,
+						ErrandController.SCROLL_PROP);
 					follower.setPoseOverride(
-						com.follower.follower.ErrandController.WRITE_SCROLL_POSE);
+						ErrandController.WRITE_SCROLL_POSE);
 					minutesState = 2;
 				}
 				break;
@@ -1813,14 +1312,10 @@ public class FollowerPlugin extends Plugin
 					|| follower.getWorldLocation() == null
 					|| local.getWorldLocation() == null
 					|| follower.getWorldLocation().distanceTo(local.getWorldLocation()) > 8)
-				{
 					endMinutes(false);
-				}
 				else if (over)
-				{
 					// Only a written meeting is minuted; attending is not.
 					endMinutes(minutesState == 2);
-				}
 				break;
 
 			default:
@@ -1835,20 +1330,16 @@ public class FollowerPlugin extends Plugin
 	 * which is where the NPC stood when the box opened. Behind first, then the
 	 * flanks, then straight behind, whichever the ground allows.
 	 */
-	private boolean standOverTheShoulder(Player local)
+	boolean standOverTheShoulder(Player local)
 	{
-		WorldPoint p = local.getWorldLocation();
+		var p = local.getWorldLocation();
 		if (p == null)
-		{
 			return false;
-		}
 		WorldPoint at = null;
 		if (local.getInteracting() instanceof NPC)
-		{
 			at = local.getInteracting().getWorldLocation();
-		}
-		int fx;
-		int fy;
+		int fx,
+			fy;
 		if (at != null && at.getPlane() == p.getPlane() && !at.equals(p))
 		{
 			fx = Integer.signum(at.getX() - p.getX());
@@ -1856,28 +1347,28 @@ public class FollowerPlugin extends Plugin
 		}
 		else
 		{
-			double radians = (local.getCurrentOrientation() / 2048.0) * 2.0 * Math.PI;
-			fx = (int) Math.round(-Math.sin(radians));
-			fy = (int) Math.round(-Math.cos(radians));
-			at = new WorldPoint(p.getX() + fx, p.getY() + fy, p.getPlane());
+			double radians = (local.getCurrentOrientation() / 2048.0) * 2.0 * PI;
+			fx = (int) round(-sin(radians));
+			fy = (int) round(-cos(radians));
+			at = p.dx(fx).dy(fy);
 		}
 		// The two perpendiculars, in a random order so there is no favourite
 		// shoulder.
-		int sx = -fy;
-		int sy = fx;
-		if (java.util.concurrent.ThreadLocalRandom.current().nextBoolean())
+		int sx = -fy,
+			sy = fx;
+		if (ThreadLocalRandom.current().nextBoolean())
 		{
 			sx = -sx;
 			sy = -sy;
 		}
 		WorldPoint[] spots = {
-			new WorldPoint(p.getX() - fx + sx, p.getY() - fy + sy, p.getPlane()),
-			new WorldPoint(p.getX() - fx - sx, p.getY() - fy - sy, p.getPlane()),
-			new WorldPoint(p.getX() + sx, p.getY() + sy, p.getPlane()),
-			new WorldPoint(p.getX() - sx, p.getY() - sy, p.getPlane()),
-			new WorldPoint(p.getX() - fx, p.getY() - fy, p.getPlane()),
+			p.dx(-fx + sx).dy(-fy + sy),
+			p.dx(-fx - sx).dy(-fy - sy),
+			p.dx(sx).dy(sy),
+			p.dx(-sx).dy(-sy),
+			p.dx(-fx).dy(-fy),
 		};
-		for (WorldPoint spot : spots)
+		for (var spot : spots)
 		{
 			if (!spot.equals(at) && follower.stayAt(spot))
 			{
@@ -1892,7 +1383,7 @@ public class FollowerPlugin extends Plugin
 	 * Ends the minute-taking, on completion and every abort path alike. The
 	 * event only fires when the meeting was actually written through.
 	 */
-	private void endMinutes(boolean wrote)
+	void endMinutes(boolean wrote)
 	{
 		if (minutesState == 2)
 		{
@@ -1900,15 +1391,10 @@ public class FollowerPlugin extends Plugin
 			hands.release();
 		}
 		if (minutesState != 0)
-		{
 			follower.resumeFollowing();
-		}
 		minutesState = 0;
-		shoulderForcedTicks = 0;
 		if (wrote)
-		{
-			speechEngine.dispatch(TriggerEvent.simple(TriggerEvent.Type.MINUTES_TAKEN));
-		}
+			dispatch(TriggerEvent.simple(MINUTES_TAKEN));
 	}
 
 	/**
@@ -1918,85 +1404,17 @@ public class FollowerPlugin extends Plugin
 	 * beside the landed player, and the snap no longer defeats the minutes'
 	 * own leash.
 	 */
-	private void followerSnapped()
+	void followerSnapped()
 	{
 		if (errands != null && errands.isBusy())
-		{
 			errands.reset();
-		}
 		if (minutesState != 0)
-		{
 			endMinutes(false);
-		}
 	}
-
-	/** How long the meeting ::follower force shoulder pretends lasts, at most: twelve seconds. */
-	static final int SHOULDER_FORCE_TICKS = 20;
-
-	/** The pretend meeting's ticks left, and the tile the player stood on for it. */
-	private int shoulderForcedTicks;
-	private WorldPoint shoulderForcedAt;
-
-	/**
-	 * ::follower force shoulder: the shoulder taken as if an NPC dialog had
-	 * just opened, through the same step the minutes take for a real one,
-	 * and let go as a real one is once the pretend meeting ends: at the
-	 * player's first step off the tile, or after SHOULDER_FORCE_TICKS. The
-	 * gates are the real ones: a Stay, a fight, anything with the feet. The
-	 * scroll stays on its own roll.
-	 */
-	String forceShoulder()
-	{
-		Player local = client.getLocalPlayer();
-		if (minutesState != 0)
-		{
-			return "Already over your shoulder.";
-		}
-		if (local == null || local.getWorldLocation() == null)
-		{
-			return "No player to stand behind.";
-		}
-		shoulderForcedTicks = SHOULDER_FORCE_TICKS;
-		shoulderForcedAt = local.getWorldLocation();
-		minutesConsidered = false;
-		updateMinutes();
-		if (minutesState != 0)
-		{
-			return "Over your shoulder, as for a meeting, until you step off or twelve seconds pass.";
-		}
-		shoulderForcedTicks = 0;
-		return follower.isStaying() && !wandered ? "The follower is staying put."
-			: "The follower is busy, or there is no ground over your shoulder.";
-	}
-
-	/**
-	 * Whether the meeting ::follower force shoulder pretends is still on,
-	 * counted down once a call: over at the player's first step off the
-	 * tile they stood on for it, or when its time runs out.
-	 */
-	private boolean pretendMeeting()
-	{
-		if (shoulderForcedTicks <= 0)
-		{
-			return false;
-		}
-		Player local = client.getLocalPlayer();
-		WorldPoint at = local == null ? null : local.getWorldLocation();
-		if (--shoulderForcedTicks <= 0 || at == null || !at.equals(shoulderForcedAt))
-		{
-			shoulderForcedTicks = 0;
-			return false;
-		}
-		return true;
-	}
-
 	// --------------------------------------------------------- welfare check
 
-	/** How long the camera goes untouched before it comes round to look. */
-	private static final int WELFARE_AFTER_TICKS = 600;
-
 	/** Whether it came round this absence; cleared when the player returns. */
-	private boolean welfareChecked;
+	boolean welfareChecked;
 
 	/**
 	 * Leave the keyboard long enough and the follower walks round in front of
@@ -2007,40 +1425,32 @@ public class FollowerPlugin extends Plugin
 	 * nobody is there to read it. The payoff line rides ATTENDED_AGAIN, which
 	 * fires the moment the camera moves again.
 	 */
-	private void updateWelfare()
+	void updateWelfare()
 	{
-		int unattended = speechEngine.getContext().getUnattendedTicks();
+		int unattended = context().getUnattendedTicks();
 		if (welfareChecked)
 		{
 			if (unattended == 0)
 			{
 				welfareChecked = false;
-				speechEngine.dispatch(
-					TriggerEvent.simple(TriggerEvent.Type.ATTENDED_AGAIN));
+				dispatch(
+					TriggerEvent.simple(ATTENDED_AGAIN));
 			}
 			return;
 		}
-		if (unattended < WELFARE_AFTER_TICKS)
-		{
+		// WELFARE_AFTER_TICKS: How long the camera goes untouched before it comes round to look.
+		if (unattended < 600 /* WELFARE_AFTER_TICKS */)
 			return;
-		}
-		boolean busy = thrallNpc != null
-			|| (errands != null && errands.isBusy())
-			|| (spectate != null && spectate.isSpectating())
-			|| dialog.isOpen()
+		boolean busy = occupied()
 			|| minutesState != 0
 			|| follower.isStaying()
-			|| (skilling != null && skilling.isWorking())
-			|| speechEngine.getContext().isInCombat();
-		Player local = client.getLocalPlayer();
+			|| skilling.isWorking()
+			|| context().isInCombat();
+		var local = client.getLocalPlayer();
 		if (busy || local == null || !follower.isSpawned())
-		{
 			return;
-		}
 		if (follower.moveToFront(local))
-		{
 			welfareChecked = true;
-		}
 	}
 
 	/**
@@ -2055,11 +1465,10 @@ public class FollowerPlugin extends Plugin
 	static final int WANDER_AFTER_TICKS = 80;
 
 	/** Ticks between drifts, picked fresh each time so it never reads as a metronome. */
-	private static final int WANDER_MIN_GAP = 25;
-	private static final int WANDER_MAX_GAP = 70;
+	static final int WANDER_MIN_GAP = 25;
 
 	/** How far from the player a drift may take it. */
-	private static final int WANDER_RADIUS = 4;
+	static final int WANDER_RADIUS = 4;
 
 	/**
 	 * How far a drift may take it, scaled by mood.
@@ -2071,38 +1480,22 @@ public class FollowerPlugin extends Plugin
 	 * time the follower is not already at your heel, so it is the only place
 	 * where distance is the follower's choice to make.
 	 */
-	private int wanderRadius()
+	int wanderRadius()
 	{
-		if (moments != null && moments.keepsClose())
-		{
+		if (moments.keepsClose())
 			// The ten minutes after a pet: it stays by the new arrival.
-			return Math.max(2, WANDER_RADIUS - 2);
-		}
-		// Taste before mood: somewhere it dislikes it keeps close whatever
-		// it is feeling, and somewhere it likes it strays a tile further.
-		if (speechEngine.getContext().feelsAbout("disliked"))
-		{
-			return Math.max(2, WANDER_RADIUS - 2);
-		}
-		if (speechEngine.getContext().feelsAbout("liked"))
-		{
-			return WANDER_RADIUS + 1;
-		}
-		String band = speechEngine.getContext().getMoodBand();
+			return max(2, WANDER_RADIUS - 2);
+		String band = context().getMoodBand();
 		if ("low".equals(band) || "down".equals(band))
-		{
 			// Staying close is what low looks like from the outside.
-			return Math.max(2, WANDER_RADIUS - 2);
-		}
+			return max(2, WANDER_RADIUS - 2);
 		if ("high".equals(band))
-		{
 			return WANDER_RADIUS + 2;
-		}
 		return WANDER_RADIUS;
 	}
 
-	private int wanderCountdown;
-	private boolean wandered;
+	int wanderCountdown;
+	boolean wandered;
 
 	/**
 	 * Lets the follower drift about while the player stands still.
@@ -2122,39 +1515,25 @@ public class FollowerPlugin extends Plugin
 	 * that the follower would stay parked where it drifted, since a stay
 	 * persists by design.
 	 */
-	private void updateWander()
+	void updateWander()
 	{
-		// A sketch under way: no drift starts, and none is let go of. A drift
-		// let go of walked the scribe back to you mid-count with the scroll
-		// out, asked for where it had drifted to; the release below runs once
-		// the scroll is away.
-		if (sketching != null && sketching.isSketching())
-		{
-			return;
-		}
-		int idle = speechEngine.getContext().getIdleTicks();
-		boolean busy = thrallNpc != null
-			|| (errands != null && errands.isBusy())
-			|| (spectate != null && spectate.isSpectating())
-			|| dialog.isOpen()
+		int idle = context().getIdleTicks();
+		boolean busy = occupied()
 			|| emoteHold
-			|| (skilling != null && skilling.holdsTheFeet())
-			|| (moments != null && moments.holdsTheFeet())
+			|| skilling.holdsTheFeet()
+			|| moments.holdsTheFeet()
 			|| inCutscene()
 			|| resting
 			// A long dialog must not walk the minute-taker off the shoulder.
 			|| minutesState != 0
-			|| parkedByPlayer
-			// The park covers a scene held still; this covers one walked with
-			// Follow me, where the player stops to type a line.
-			|| filming;
+			|| parkedByPlayer;
 
 		// Thieving wanders too, and does not wait to be invited. The idle gate
 		// exists so the follower does not drift while the player is busy, but
 		// picking pockets is the one activity where being underfoot is the
 		// problem - the player is animating constantly, so the idle counter
 		// never climbs and the follower would stand there for the whole run.
-		boolean thieving = speechEngine.getContext().isInThievingSession();
+		boolean thieving = context().isInThievingSession();
 		boolean canWander = wanderAllowed(config.wanderWhenIdle(), busy,
 			follower.isSpawned(), thieving, idle, config.wanderAfterSeconds() * 100 / 60);
 
@@ -2166,9 +1545,7 @@ public class FollowerPlugin extends Plugin
 				// feet from it since - a moment, the minutes, the seat - owns
 				// that stay now and hands it back itself.
 				if (!feetBorrowed())
-				{
 					follower.resumeFollowing();
-				}
 				wandered = false;
 			}
 			wanderCountdown = 0;
@@ -2176,21 +1553,17 @@ public class FollowerPlugin extends Plugin
 		}
 
 		if (--wanderCountdown > 0)
-		{
 			return;
-		}
 		wanderCountdown = WANDER_MIN_GAP
-			+ java.util.concurrent.ThreadLocalRandom.current()
-				.nextInt(WANDER_MAX_GAP - WANDER_MIN_GAP);
+			+ ThreadLocalRandom.current()
+				.nextInt(70 /* WANDER_MAX_GAP */ - WANDER_MIN_GAP);
 
-		Player local = client.getLocalPlayer();
+		var local = client.getLocalPlayer();
 		if (local == null || local.getWorldLocation() == null)
-		{
 			return;
-		}
-		WorldPoint from = local.getWorldLocation();
-		java.util.concurrent.ThreadLocalRandom random =
-			java.util.concurrent.ThreadLocalRandom.current();
+		var from = local.getWorldLocation();
+		var random =
+			ThreadLocalRandom.current();
 
 		// Something to go and look at, if there is anything. A drift toward a
 		// chicken reads as curiosity where the same walk to an empty tile reads
@@ -2201,20 +1574,8 @@ public class FollowerPlugin extends Plugin
 		// something underfoot, or it would inspect its way straight back into
 		// the way.
 		int nearest = thieving ? THIEVING_KEEP_MIN : 0;
-		// Somewhere it dislikes there is no going to look at things: it
-		// keeps to the player's far side from whatever is nearest.
-		if (!thieving && speechEngine.getContext().feelsAbout("disliked"))
-		{
-			List<WorldPoint> things = thingsNearby(DISTRACTION_RADIUS);
-			if (!things.isEmpty() && keepToTheFarSide(from, things.get(0)))
-			{
-				return;
-			}
-		}
-		else if (driftToward(pickDistraction(local, from, nearest)))
-		{
+		if (driftToward(pickDistraction(from, nearest)))
 			return;
-		}
 
 		// Nothing far enough away to be worth looking at, so just keep clear.
 		if (thieving)
@@ -2229,20 +1590,12 @@ public class FollowerPlugin extends Plugin
 		// and indoors most of the ring is wall.
 		for (int attempt = 0; attempt < 6; attempt++)
 		{
-			int dx = random.nextInt(-radius, radius + 1);
-			int dy = random.nextInt(-radius, radius + 1);
+			int dx = random.nextInt(-radius, radius + 1),
+				dy = random.nextInt(-radius, radius + 1);
 			if (dx == 0 && dy == 0)
-			{
 				continue;
-			}
-			WorldPoint target = new WorldPoint(
-				from.getX() + dx, from.getY() + dy, from.getPlane());
-			if (follower.stayAt(target))
-			{
-				wandered = true;
-				follower.setStayFaceTile(null);
+			if (wanderTo(from.dx(dx).dy(dy), null))
 				return;
-			}
 		}
 	}
 
@@ -2253,8 +1606,7 @@ public class FollowerPlugin extends Plugin
 	 * that matters, near enough to still read as waiting for you rather than
 	 * having left.
 	 */
-	private static final int THIEVING_KEEP_MIN = 4;
-	private static final int THIEVING_KEEP_MAX = 7;
+	static final int THIEVING_KEEP_MIN = 4;
 
 	/**
 	 * Picks somewhere in a ring around the player and goes there.
@@ -2263,68 +1615,22 @@ public class FollowerPlugin extends Plugin
 	 * them again, and a plain random offset would keep choosing tiles that are
 	 * technically a drift and practically underfoot.
 	 */
-	private void driftAwayFrom(WorldPoint from,
-		java.util.concurrent.ThreadLocalRandom random)
+	void driftAwayFrom(WorldPoint from,
+		ThreadLocalRandom random)
 	{
 		for (int attempt = 0; attempt < 10; attempt++)
 		{
-			double angle = random.nextDouble() * Math.PI * 2;
-			int distance = random.nextInt(THIEVING_KEEP_MIN, THIEVING_KEEP_MAX + 1);
-			int dx = (int) Math.round(Math.cos(angle) * distance);
-			int dy = (int) Math.round(Math.sin(angle) * distance);
+			double angle = random.nextDouble() * PI * 2;
+			int distance = random.nextInt(THIEVING_KEEP_MIN, 7 /* THIEVING_KEEP_MAX */ + 1),
+				dx = (int) round(cos(angle) * distance),
+				dy = (int) round(sin(angle) * distance);
 			if (dx == 0 && dy == 0)
-			{
 				continue;
-			}
 
-			WorldPoint target = new WorldPoint(
-				from.getX() + dx, from.getY() + dy, from.getPlane());
-			if (follower.stayAt(target))
-			{
-				wandered = true;
-				follower.setStayFaceTile(null);
+			if (wanderTo(from.dx(dx).dy(dy), null))
 				return;
-			}
 		}
 	}
-
-	/**
-	 * The tile beside the player on the side away from the thing, or the
-	 * next one out. Where the follower stands somewhere it would rather not
-	 * be: close, and with the player between it and whatever that is.
-	 */
-	private boolean keepToTheFarSide(WorldPoint player, WorldPoint thing)
-	{
-		int dx = Integer.signum(player.getX() - thing.getX());
-		int dy = Integer.signum(player.getY() - thing.getY());
-		if (dx == 0 && dy == 0)
-		{
-			dy = 1;
-		}
-		for (int step = 1; step <= 2; step++)
-		{
-			WorldPoint spot = new WorldPoint(player.getX() + dx * step,
-				player.getY() + dy * step, player.getPlane());
-			if (follower.stayAt(spot))
-			{
-				wandered = true;
-				follower.setStayFaceTile(null);
-				return true;
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * How far to look for something worth drifting over to.
-	 *
-	 * <p>Wider than the plain wander radius, because the follower walks to a
-	 * tile BESIDE the thing and a nearer ring would only ever find what is
-	 * already underfoot. Not much wider though: the walk has to read as going
-	 * to look at something rather than as wandering off, and the follower is
-	 * still meant to be waiting for you.
-	 */
-	private static final int DISTRACTION_RADIUS = 6;
 
 	/**
 	 * Something nearby worth a look, or null if the place is empty.
@@ -2337,37 +1643,17 @@ public class FollowerPlugin extends Plugin
 	 * objects would need the tile walk the errands do, and are the thing
 	 * errands are already for.
 	 */
-	private WorldPoint pickDistraction(Player local, WorldPoint from, int nearest)
+	WorldPoint pickDistraction(WorldPoint from, int nearest)
 	{
-		List<WorldPoint> candidates = new ArrayList<>();
-		net.runelite.api.WorldView view = client.getTopLevelWorldView();
-		if (view == null)
-		{
-			return null;
-		}
-
-		for (NPC npc : view.npcs())
-		{
-			// The thrall is the follower's own body in thrall mode, and
-			// wandering is suppressed then anyway.
-			if (npc == null || npc == thrallNpc)
-			{
-				continue;
-			}
-			addIfNear(candidates, npc.getWorldLocation(), from, nearest);
-		}
-
-		for (Player other : view.players())
-		{
-			if (other == null || other == local)
-			{
-				continue;
-			}
-			addIfNear(candidates, other.getWorldLocation(), from, nearest);
-		}
-
+		// DISTRACTION_RADIUS: How far to look for something worth drifting over to.
+		// <p>Wider than the plain wander radius, because the follower walks to a
+		// tile BESIDE the thing and a nearer ring would only ever find what is
+		// already underfoot. Not much wider though: the walk has to read as going
+		// to look at something rather than as wandering off, and the follower is
+		// still meant to be waiting for you.
+		var candidates = peopleNear(from, 6 /* DISTRACTION_RADIUS */, nearest);
 		return candidates.isEmpty() ? null
-			: candidates.get(java.util.concurrent.ThreadLocalRandom.current()
+			: candidates.get(ThreadLocalRandom.current()
 				.nextInt(candidates.size()));
 	}
 
@@ -2377,31 +1663,37 @@ public class FollowerPlugin extends Plugin
 	 * the wander's distraction and for the same reason: they are what the
 	 * client already lists.
 	 */
-	private List<WorldPoint> thingsNearby(int radius)
+	List<WorldPoint> thingsNearby(int radius)
+	{
+		var from = follower.getWorldLocation();
+		var found = peopleNear(from, radius, 1);
+		found.sort(Comparator.comparingInt(a -> a.distanceTo(from)));
+		return found;
+	}
+
+	/**
+	 * The tiles of the NPCs and the other players from {@code nearest} to
+	 * {@code radius} tiles of {@code from}, on its plane, in the order the
+	 * client lists them; none with no tile or no scene. Not the thrall: it is
+	 * the follower's own body in thrall mode.
+	 */
+	List<WorldPoint> peopleNear(WorldPoint from, int radius, int nearest)
 	{
 		List<WorldPoint> found = new ArrayList<>();
-		WorldPoint from = follower.getWorldLocation();
-		net.runelite.api.WorldView view = client.getTopLevelWorldView();
-		Player local = client.getLocalPlayer();
+		var view = client.getTopLevelWorldView();
+		var local = client.getLocalPlayer();
 		if (from == null || view == null)
-		{
 			return found;
-		}
-		for (NPC npc : view.npcs())
+		for (var npc : view.npcs())
 		{
 			if (npc != null && npc != thrallNpc)
-			{
-				addIfNear(found, npc.getWorldLocation(), from, radius, 1);
-			}
+				addIfNear(found, npc.getWorldLocation(), from, radius, nearest);
 		}
-		for (Player other : view.players())
+		for (var other : view.players())
 		{
 			if (other != null && other != local)
-			{
-				addIfNear(found, other.getWorldLocation(), from, radius, 1);
-			}
+				addIfNear(found, other.getWorldLocation(), from, radius, nearest);
 		}
-		found.sort((a, b) -> Integer.compare(a.distanceTo(from), b.distanceTo(from)));
 		return found;
 	}
 
@@ -2410,61 +1702,58 @@ public class FollowerPlugin extends Plugin
 	 * name and tile. A seven by seven scan of the scene, run only while the
 	 * player has stood still a while, so its cost is nothing in play.
 	 */
-	private List<java.util.Map.Entry<String, WorldPoint>> landmarksNearby()
+	List<Entry<String, WorldPoint>> landmarksNearby()
 	{
-		List<java.util.Map.Entry<String, WorldPoint>> found = new ArrayList<>();
-		Player local = client.getLocalPlayer();
-		net.runelite.api.coords.LocalPoint lp = local == null ? null : local.getLocalLocation();
-		net.runelite.api.WorldView view = client.getTopLevelWorldView();
+		List<Entry<String, WorldPoint>> found = new ArrayList<>();
+		var local = client.getLocalPlayer();
+		var lp = local == null ? null : local.getLocalLocation();
+		var view = client.getTopLevelWorldView();
 		if (lp == null || view == null || view.getScene() == null)
-		{
 			return found;
-		}
-		net.runelite.api.Tile[][][] tiles = view.getScene().getTiles();
-		int plane = view.getPlane();
-		int reach = com.follower.follower.Noticing.LANDMARK_WITHIN + 1;
+		var tiles = view.getScene().getTiles();
+		int plane = view.getPlane(),
+			reach = Noticing.LANDMARK_WITHIN + 1;
 		for (int dx = -reach; dx <= reach; dx++)
 		{
 			for (int dy = -reach; dy <= reach; dy++)
 			{
-				int x = lp.getSceneX() + dx;
-				int y = lp.getSceneY() + dy;
+				int x = lp.getSceneX() + dx,
+					y = lp.getSceneY() + dy;
 				if (plane < 0 || plane >= tiles.length || x < 0 || y < 0
 					|| x >= tiles[plane].length || y >= tiles[plane][x].length
 					|| tiles[plane][x][y] == null)
-				{
 					continue;
-				}
-				for (net.runelite.api.GameObject object : tiles[plane][x][y].getGameObjects())
+				for (var object : tiles[plane][x][y].getGameObjects())
 				{
 					if (object == null)
-					{
 						continue;
-					}
-					String name = com.follower.follower.ErrandController.objectName(
+					String name = ErrandController.objectName(
 						client, object.getId());
-					if (com.follower.follower.Noticing.isLandmark(name))
-					{
-						found.add(new java.util.AbstractMap.SimpleImmutableEntry<>(
+					if (Noticing.isLandmark(name))
+						found.add(new AbstractMap.SimpleImmutableEntry<>(
 							name, object.getWorldLocation()));
-					}
 				}
 			}
 		}
 		return found;
 	}
 
-	private static void addIfNear(List<WorldPoint> into, WorldPoint at, WorldPoint from,
-		int radius, int nearest)
+	/**
+	 * What of the follower's own has its feet or holds it still: thrall
+	 * work, an errand, the spectator's stand, an emote held, the minutes, the
+	 * seat, a moment or a flourish. The head, the eyes and the will each stand
+	 * down for it. Not occupied(): the spectator here is only its stand, and
+	 * the dialog box is each caller's own business.
+	 */
+	boolean ownBusiness()
 	{
-		if (at != null && at.getPlane() == from.getPlane())
-		{
-			int distance = at.distanceTo(from);
-			if (distance <= radius && distance >= nearest)
-			{
-				into.add(at);
-			}
-		}
+		return thrallNpc != null
+			|| errands.isBusy()
+			|| spectate.holdsTheFeet()
+			|| emoteHold || minutesState != 0
+			|| skilling.holdsTheFeet()
+			|| moments.holdsTheFeet()
+			|| flourish.isActive();
 	}
 
 	/**
@@ -2472,16 +1761,14 @@ public class FollowerPlugin extends Plugin
 	 * Zero normally; while thieving it is the distance the follower is keeping,
 	 * so that going to look at something cannot bring it back underfoot.
 	 */
-	private void addIfNear(List<WorldPoint> into, WorldPoint at, WorldPoint from, int nearest)
+	static void addIfNear(List<WorldPoint> into, WorldPoint at, WorldPoint from,
+		int radius, int nearest)
 	{
-		if (at == null || at.getPlane() != from.getPlane())
+		if (at != null && at.getPlane() == from.getPlane())
 		{
-			return;
-		}
-		int distance = at.distanceTo(from);
-		if (distance <= DISTRACTION_RADIUS && distance >= nearest)
-		{
-			into.add(at);
+			int distance = at.distanceTo(from);
+			if (distance <= radius && distance >= nearest)
+				into.add(at);
 		}
 	}
 
@@ -2495,29 +1782,34 @@ public class FollowerPlugin extends Plugin
 	 *
 	 * @return true if it set off
 	 */
-	private boolean driftToward(WorldPoint thing)
+	boolean driftToward(WorldPoint thing)
 	{
 		if (thing == null)
-		{
 			return false;
-		}
 
 		int[][] beside = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {-1, -1}, {1, -1}, {-1, 1}};
-		List<int[]> order = new ArrayList<>(java.util.Arrays.asList(beside));
-		java.util.Collections.shuffle(order);
+		List<int[]> order = new ArrayList<>(Arrays.asList(beside));
+		Collections.shuffle(order);
 
 		for (int[] offset : order)
 		{
-			WorldPoint spot = new WorldPoint(
-				thing.getX() + offset[0], thing.getY() + offset[1], thing.getPlane());
-			if (follower.stayAt(spot))
-			{
-				follower.setStayFaceTile(thing);
-				wandered = true;
+			if (wanderTo(thing.dx(offset[0]).dy(offset[1]), thing))
 				return true;
-			}
 		}
 		return false;
+	}
+
+	/**
+	 * Parks on the spot, if the ground lets it, as the follower's own drift,
+	 * facing the given tile, or nothing in particular for null.
+	 */
+	boolean wanderTo(WorldPoint spot, WorldPoint face)
+	{
+		if (!follower.stayAt(spot))
+			return false;
+		wandered = true;
+		follower.setStayFaceTile(face);
+		return true;
 	}
 
 	/**
@@ -2532,12 +1824,12 @@ public class FollowerPlugin extends Plugin
 	 * or is killed never gets to write anything on the way out - without that,
 	 * every crash would look like an absence of however long the session ran.
 	 */
-	private void readTimeAway()
+	void readTimeAway()
 	{
-		long now = System.currentTimeMillis();
+		long now = currentTimeMillis();
 		String stored = config.lastSeenMs();
 		long minutes = -1;
-		if (stored != null && !stored.isEmpty())
+		if (!Strings.isNullOrEmpty(stored))
 		{
 			try
 			{
@@ -2547,147 +1839,24 @@ public class FollowerPlugin extends Plugin
 			}
 			catch (NumberFormatException e)
 			{
-				log.debug("last seen was not a number: {}", stored);
 			}
 		}
 
-		speechEngine.getContext().setMinutesAway(minutes);
-		log.debug("Away for {} minutes", minutes);
+		context().setMinutesAway(minutes);
 		touchLastSeen();
 	}
 
-	private void touchLastSeen()
+	void touchLastSeen()
 	{
 		if (!onMemoryProfile())
-		{
 			return;
-		}
-		configManager.setConfiguration(FollowerConfig.GROUP, "lastSeenMs",
-			Long.toString(System.currentTimeMillis()));
+		setConfig("lastSeenMs",
+			Long.toString(currentTimeMillis()));
 	}
 
-	/**
-	 * What the follower has counted, kept between sessions.
-	 *
-	 * <p>The counts themselves are the point of the feature: "your fiftieth"
-	 * means nothing if the fifty were all this afternoon, and everything if
-	 * they were the fifty since you met. A session-scoped tally is a scoreboard;
-	 * this is a memory.
-	 *
-	 * <p>One config value holding one JSON object, for the same reason the
-	 * last-seen stamp is a config value: RuneLite already persists config per
-	 * profile, and a file of our own would be more machinery than this deserves.
-	 */
-	private static final class SavedCounters
+	void readCounters()
 	{
-		java.util.Map<String, Integer> tallies;
-		java.util.Map<String, Integer> records;
-		/** Each boss's name as the game writes it, by its lower-case kill count key. */
-		java.util.Map<String, String> killCountNames;
-		int sessions;
-
-		/** The incident the follower is still thinking about, and how to say it. */
-		String incidentKey;
-		String incidentPhrase;
-		int incidentCount;
-		/** Where (a region id), when (epoch ms) and who it was with. */
-		int incidentWhere;
-		long incidentWhenMs;
-		String incidentWho;
-		/**
-		 * The place as said, whether that is only the nearest named place,
-		 * the item and the hitpoints left. Absent from older saves, which
-		 * read the place off the region and know no item or hitpoints.
-		 */
-		String incidentPlace;
-		Boolean incidentNear;
-		String incidentItem;
-		Integer incidentHp;
-		/** When it was last brought up unprompted, so that is once a day. */
-		long incidentRecalledMs;
-
-		/**
-		 * Where the last death happened. Session-scoped memory made
-		 * nearDeathSpot a thing that could only fire on the walk back; kept
-		 * between sessions it becomes an anniversary, which is a much better
-		 * line - "this is the spot" six weeks later.
-		 */
-		int deathX;
-		int deathY;
-		int deathPlane = -1;
-
-		/**
-		 * What each place has come to mean, and the one thing worth bringing up
-		 * about it. Keyed by region id. Earned rather than rolled, so unlike the
-		 * traits blob this one is never regenerated - losing it would have the
-		 * follower forget which places it has reason to feel anything about.
-		 */
-		java.util.Map<Integer, Integer> placeScores;
-		java.util.Map<Integer, String> placeMemories;
-
-		/**
-		 * Ids of the one-time lines already said. Small and slow-growing: there
-		 * are only ever as many entries as there are firsts worth marking.
-		 */
-		java.util.List<String> spokenOnce;
-		/** And the day (an epoch day) each was said; missing from older saves. */
-		java.util.Map<String, Long> spokenOnceOn;
-		/** Quests the follower saw finish, by quest and account, and the day. */
-		java.util.Map<String, Long> questsSeenFinished;
-		/** Chronicle pages written so far, by entry id. */
-		java.util.List<String> chronicled;
-		/** And when (an epoch day) and where each was written, where known. */
-		java.util.Map<String, Long> chronicledOn;
-		java.util.Map<String, String> chronicledAt;
-		/** The accounts whose sketch book was opened under this memory; absent from older saves. */
-		java.util.List<String> sketchAccounts;
-
-		/**
-		 * How worn each line is - times actually said, keyed by the template's
-		 * hash so the blob stays small. Capped at 500 entries by the context,
-		 * least-worn dropped first.
-		 */
-		java.util.Map<String, Integer> lineWear;
-
-		/**
-		 * The day the follower first met this player, as an epoch day. Written
-		 * once and never again: it is the only thing here that would be a lie
-		 * if it were ever recalculated.
-		 */
-		long metOnDay;
-
-		/** What the player was wearing then, so an upgrade has something to beat. */
-		int metWearingValue = -1;
-
-		/** When the follower last asked for something, so the next ask waits a day. */
-		long lastWishMs;
-
-		/** When each skill last went up, so the next level knows how long it took. */
-		java.util.Map<String, Long> levelStamps;
-
-		/** What the two of them were doing when the session ended, for the greeting. */
-		String lastThing;
-
-		/** The name the player agreed to be called, and the ones they turned down. */
-		String nickname;
-		java.util.List<String> refusedNicknames;
-		/** When the name was last asked about, and the asks since that went unanswered. */
-		long nicknameAskedMs;
-		int nicknameAsksIgnored;
-	}
-
-	/**
-	 * How many counters are kept. Every distinct NPC name the player has ever
-	 * killed earns an entry, so this grows for as long as the plugin is used;
-	 * without a bound it would grow into the config file forever. The rarest
-	 * counts go first, since a count of one is the least likely to be the
-	 * subject of a milestone rule.
-	 */
-	private static final int MAX_COUNTERS = 300;
-
-	private void readCounters()
-	{
-		metWearingValue = restoreMemory(speechEngine.getContext(), config.counters(),
+		metWearingValue = restoreMemory(context(), config.counters(),
 			gson, metWearingValue);
 		memoryProfileId = currentProfileId();
 		outfitProfileId = memoryProfileId;
@@ -2708,23 +1877,23 @@ public class FollowerPlugin extends Plugin
 	 * two-day-old outfit on. So every write of state checks it is still on
 	 * the profile the state came from, and a switch re-reads from the new one.
 	 */
-	private long memoryProfileId = -1;
+	long memoryProfileId = -1;
 
 	/**
 	 * The same, for the outfit, and never let go of. A logout drops the
 	 * memory but not the outfit, which is still worn and still this
 	 * profile's: an edit made at the login screen belongs under its name.
 	 */
-	private long outfitProfileId = -1;
+	long outfitProfileId = -1;
 
-	private long currentProfileId()
+	long currentProfileId()
 	{
-		net.runelite.client.config.ConfigProfile profile = configManager.getProfile();
+		var profile = configManager.getProfile();
 		return profile == null ? -1 : profile.getId();
 	}
 
 	/** Whether the follower's state belongs to the profile that is current now. */
-	private boolean onMemoryProfile()
+	boolean onMemoryProfile()
 	{
 		return belongsToProfile(memoryProfileId, currentProfileId());
 	}
@@ -2739,7 +1908,7 @@ public class FollowerPlugin extends Plugin
 	 * Between startUp and shutDown. Work queued for the client thread can
 	 * run after a stop on the Swing thread, and must then do nothing.
 	 */
-	private volatile boolean started;
+	volatile boolean started;
 
 	/**
 	 * The RuneLite profile changed under the plugin. The changed keys have
@@ -2749,7 +1918,7 @@ public class FollowerPlugin extends Plugin
 	 * old profile's mood, wants and counters go with it.
 	 */
 	@Subscribe
-	public void onProfileChanged(ProfileChanged event)
+	void onProfileChanged(ProfileChanged event)
 	{
 		clientThread.invoke(() ->
 		{
@@ -2758,10 +1927,7 @@ public class FollowerPlugin extends Plugin
 			// profile's memory into the engine the stop had just cleared, and
 			// the next start read its own on top: two memories added together.
 			if (!started)
-			{
 				return;
-			}
-			log.debug("Profile changed to {}; re-reading the follower's memory", currentProfileId());
 			// Lines the old profile's follower queued go with it: delivered,
 			// a wish or a want they ask would open in the new one's memory.
 			speechQueue.clear();
@@ -2772,43 +1938,25 @@ public class FollowerPlugin extends Plugin
 			// place stood in would rise as news on the next tick. Same cure
 			// as login: they are baseline.
 			if (switchTakesTheBaseline(freshLogin))
-			{
 				speechEngine.primeEdgesOnNextTick();
-			}
 			metWearingValue = -1;
 			readCounters();
-			if (chronicleProgress != null)
-			{
-				// Another profile's memory: its pages are taken stock of, not
-				// compared with the last profile's and announced.
-				chronicleProgress.reset();
-			}
-			pageNews.clear();
-			noteFirstMeeting();
-			speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
-				speechEngine.getContext().setRegionNames(ruleLoader.getRegionNames());
-			readTraits();
+			knowThePlayer();
 			// This profile's own outfits, read before its outfit is restored
 			// from them: the last profile's list must not dress this one.
 			loadOutfitProfiles();
 			if (panel != null)
-			{
 				restoreActiveProfile();
-			}
 			appearanceService.invalidate();
 			rebuildFollower();
 			syncPanel();
 			// An open Memory window shows this profile's memory, which is the
 			// one its Forget everything would wipe (QA3).
-			java.util.List<String[]> rows =
-				com.follower.ui.MemoryDialog.summarise(speechEngine.getContext(),
-					ruleLoader.getRegionNames(), chronicleProgress::accountKey);
-			javax.swing.SwingUtilities.invokeLater(() ->
+			var rows = memoryRows();
+			SwingUtilities.invokeLater(() ->
 			{
 				if (memoryDialog != null && memoryDialog.isVisible())
-				{
 					memoryDialog.show(rows);
-				}
 			});
 		});
 	}
@@ -2849,51 +1997,11 @@ public class FollowerPlugin extends Plugin
 	 * out, which is what actually crosses the disk.
 	 */
 	static int restoreMemory(TriggerContext context, String stored,
-		com.google.gson.Gson gson, int fallbackMetWearing)
+		Gson gson, int fallbackMetWearing)
 	{
-		if (stored == null || stored.isEmpty())
-		{
-			return fallbackMetWearing;
-		}
 		try
 		{
-			SavedCounters saved = gson.fromJson(stored, SavedCounters.class);
-			if (saved == null)
-			{
-				return fallbackMetWearing;
-			}
-			context.restoreCounters(saved.tallies, saved.records);
-			context.restoreKillCountNames(saved.killCountNames);
-			context.setSessionCount(saved.sessions);
-			context.restoreIncident(saved.incidentKey, saved.incidentPhrase,
-				saved.incidentCount, saved.incidentWhere, saved.incidentWhenMs, saved.incidentWho,
-				saved.incidentPlace, Boolean.TRUE.equals(saved.incidentNear), saved.incidentItem,
-				saved.incidentHp == null ? -1 : saved.incidentHp);
-			context.restoreIncidentRecalled(saved.incidentRecalledMs);
-			context.restorePlaces(saved.placeScores, saved.placeMemories);
-			context.restoreSpokenOnce(saved.spokenOnce, saved.spokenOnceOn);
-			context.restoreQuestsSeenFinished(saved.questsSeenFinished);
-			context.restoreChronicled(saved.chronicled);
-			context.restoreChronicledStamps(saved.chronicledOn, saved.chronicledAt);
-			context.restoreSketchAccounts(saved.sketchAccounts);
-			context.restoreLineWear(saved.lineWear);
-			context.setMetOnDay(saved.metOnDay);
-			context.setLastWishMs(saved.lastWishMs);
-			context.setMetWearingValue(saved.metWearingValue);
-			context.restoreLevelStamps(saved.levelStamps);
-			context.restoreLastThing(saved.lastThing);
-			context.restoreNickname(saved.nickname, saved.refusedNicknames);
-			context.restoreNicknameAsks(saved.nicknameAskedMs, saved.nicknameAsksIgnored);
-			if (saved.deathPlane >= 0)
-			{
-				context.restoreDeathSpot(new WorldPoint(
-					saved.deathX, saved.deathY, saved.deathPlane));
-			}
-			log.debug("Restored {} tallies, {} records, session {}",
-				saved.tallies == null ? 0 : saved.tallies.size(),
-				saved.records == null ? 0 : saved.records.size(),
-				saved.sessions);
-			return saved.metWearingValue;
+			return context.restoreMemory(stored, gson, fallbackMetWearing);
 		}
 		catch (com.google.gson.JsonSyntaxException e)
 		{
@@ -2913,173 +2021,27 @@ public class FollowerPlugin extends Plugin
 	 * only moves on a day that beats every previous one - so most of those
 	 * writes serialised and stored a value identical to the one already there.
 	 */
-	private void writeCountersIfChanged()
+	void writeCountersIfChanged()
 	{
-		if (speechEngine.getContext().isCountersDirty())
-		{
+		if (context().isCountersDirty())
 			writeCounters();
-		}
 	}
 
-	private void writeCounters()
+	void writeCounters()
 	{
 		if (!onMemoryProfile())
-		{
-			log.debug("Not writing the memory: it belongs to another profile");
 			return;
-		}
-		TriggerContext context = speechEngine.getContext();
-		configManager.setConfiguration(FollowerConfig.GROUP, "counters",
+		var context = context();
+		setConfig("counters",
 			snapshotMemory(context, metWearingValue, gson));
 		context.clearCountersDirty();
 	}
 
 	/** Everything the follower remembers, as it goes to disk. See {@link #restoreMemory}. */
 	static String snapshotMemory(TriggerContext context, int metWearing,
-		com.google.gson.Gson gson)
+		Gson gson)
 	{
-		SavedCounters saved = new SavedCounters();
-		saved.tallies = trimCounters(context.getTallies());
-		saved.records = trimCounters(context.getRecords());
-		saved.killCountNames = context.getKillCountNames().isEmpty() ? null
-			: new java.util.HashMap<>(context.getKillCountNames());
-		saved.sessions = context.getSessionCount();
-		saved.incidentKey = context.getIncidentKey();
-		saved.incidentPhrase = context.getIncidentPhrase();
-		saved.incidentCount = context.getIncidentCount();
-		saved.incidentWhere = context.getIncidentWhere();
-		saved.incidentWhenMs = context.getIncidentWhenMs();
-		saved.incidentWho = context.getIncidentWho().isEmpty() ? null : context.getIncidentWho();
-		saved.incidentPlace = context.getIncidentPlace().isEmpty() ? null : context.getIncidentPlace();
-		saved.incidentNear = context.isIncidentNear() ? Boolean.TRUE : null;
-		saved.incidentItem = context.getIncidentItem().isEmpty() ? null : context.getIncidentItem();
-		saved.incidentHp = context.getIncidentHp() < 0 ? null : context.getIncidentHp();
-		saved.incidentRecalledMs = context.getIncidentRecalledMs();
-		saved.placeScores = context.getPlaceScores();
-		saved.placeMemories = context.getPlaceMemories();
-		saved.spokenOnce = new java.util.ArrayList<>(context.getSpokenOnce());
-		saved.spokenOnceOn = context.getSpokenOnceOn().isEmpty() ? null
-			: new java.util.HashMap<>(context.getSpokenOnceOn());
-		saved.questsSeenFinished = context.getQuestsSeenFinished().isEmpty() ? null
-			: new java.util.HashMap<>(context.getQuestsSeenFinished());
-		saved.chronicled = new java.util.ArrayList<>(context.getChronicled());
-		saved.chronicledOn = context.getChronicledOn().isEmpty() ? null
-			: new java.util.HashMap<>(context.getChronicledOn());
-		saved.chronicledAt = context.getChronicledAt().isEmpty() ? null
-			: new java.util.HashMap<>(context.getChronicledAt());
-		saved.sketchAccounts = context.getSketchAccounts().isEmpty() ? null
-			: new java.util.ArrayList<>(context.getSketchAccounts());
-		saved.lineWear = context.getLineWear();
-		saved.metOnDay = context.getMetOnDay();
-		saved.lastWishMs = context.getLastWishMs();
-		saved.metWearingValue = metWearing;
-		saved.levelStamps = context.getLevelStamps().isEmpty() ? null
-			: new java.util.HashMap<>(context.getLevelStamps());
-		saved.lastThing = context.getLastThing().isEmpty() ? null : context.getLastThing();
-		saved.nickname = context.getNickname().isEmpty() ? null : context.getNickname();
-		saved.refusedNicknames = context.getRefusedNicknames().isEmpty() ? null
-			: new java.util.ArrayList<>(new java.util.TreeSet<>(context.getRefusedNicknames()));
-		saved.nicknameAskedMs = context.getNicknameAskedMs();
-		saved.nicknameAsksIgnored = context.getNicknameAsksIgnored();
-		WorldPoint died = context.getDeathLocation();
-		if (died != null)
-		{
-			saved.deathX = died.getX();
-			saved.deathY = died.getY();
-			saved.deathPlane = died.getPlane();
-		}
-		return gson.toJson(saved);
-	}
-
-	/**
-	 * What this follower likes and dislikes. Rolled once, then kept for good.
-	 */
-	private static final class SavedTraits
-	{
-		java.util.List<Integer> liked;
-		java.util.List<Integer> disliked;
-	}
-
-	/** How many places a follower gets to be fond of, and to grumble about. */
-	private static final int LIKED_PLACES = 3;
-	private static final int DISLIKED_PLACES = 2;
-
-	/**
-	 * Gives the follower its taste, rolling it the first time and reading it
-	 * back every time after.
-	 *
-	 * <p>The pool is the regions the RULE SET already has opinions about, which
-	 * means it maintains itself: every area rule added later widens what a
-	 * follower can come to love, and no separate list can fall out of date
-	 * against the one that matters.
-	 */
-	private void readTraits()
-	{
-		String stored = config.traits();
-		if (stored != null && !stored.isEmpty())
-		{
-			try
-			{
-				SavedTraits saved = gson.fromJson(stored, SavedTraits.class);
-				if (saved != null)
-				{
-					speechEngine.getContext().setTraits(
-						new java.util.HashSet<>(
-							saved.liked == null ? java.util.Collections.emptyList() : saved.liked),
-						new java.util.HashSet<>(
-							saved.disliked == null ? java.util.Collections.emptyList() : saved.disliked));
-					applyCoreTastes(saved);
-					return;
-				}
-			}
-			catch (com.google.gson.JsonSyntaxException e)
-			{
-				log.warn("Stored traits were not readable, rolling again", e);
-			}
-		}
-
-		java.util.Set<Integer> pool = new java.util.TreeSet<>();
-		for (SpeechRule rule : ruleLoader.getRules())
-		{
-			if (rule.when != null)
-			{
-				rule.when.collectRegions(pool);
-			}
-		}
-		if (pool.size() < LIKED_PLACES + DISLIKED_PLACES)
-		{
-			// No rules loaded yet, or a rule set with no places in it. Leave it
-			// unrolled rather than writing out a taste of one place: the next
-			// login will try again with a full set.
-			log.debug("Not enough places to roll traits from ({})", pool.size());
-			return;
-		}
-
-		java.util.List<Integer> shuffled = new java.util.ArrayList<>(pool);
-		java.util.Collections.shuffle(shuffled);
-		SavedTraits rolled = new SavedTraits();
-		rolled.liked = new java.util.ArrayList<>(shuffled.subList(0, LIKED_PLACES));
-		rolled.disliked = new java.util.ArrayList<>(
-			shuffled.subList(LIKED_PLACES, LIKED_PLACES + DISLIKED_PLACES));
-
-		speechEngine.getContext().setTraits(
-			new java.util.HashSet<>(rolled.liked), new java.util.HashSet<>(rolled.disliked));
-		applyCoreTastes(rolled);
-		configManager.setConfiguration(FollowerConfig.GROUP, "traits", gson.toJson(rolled));
-		log.debug("Rolled traits: likes {}, dislikes {}", rolled.liked, rolled.disliked);
-	}
-
-	/**
-	 * The core tastes (R23) are the FIRST entry of each rolled list: the blob
-	 * stores ordered lists, so the same two regions come back on every
-	 * restore, including from blobs written before cores existed. One like
-	 * and one grudge the earned record can never argue away.
-	 */
-	private void applyCoreTastes(SavedTraits traits)
-	{
-		speechEngine.getContext().setCoreTastes(
-			traits.liked == null || traits.liked.isEmpty() ? 0 : traits.liked.get(0),
-			traits.disliked == null || traits.disliked.isEmpty() ? 0 : traits.disliked.get(0));
+		return context.snapshotMemory(gson, metWearing);
 	}
 
 	/**
@@ -3087,10 +2049,10 @@ public class FollowerPlugin extends Plugin
 	 * -1 until it has been measured, which cannot happen until the composition
 	 * is readable - several ticks after login on a slow world.
 	 */
-	private int metWearingValue = -1;
+	int metWearingValue = -1;
 
 	/** The worn set last priced, so the prices are not looked up every tick. */
-	private java.util.Set<Integer> lastPricedGear = java.util.Collections.emptySet();
+	Set<Integer> lastPricedGear = Collections.emptySet();
 
 	/**
 	 * Puts a number on what the player has on, and remembers the first one.
@@ -3104,31 +2066,39 @@ public class FollowerPlugin extends Plugin
 	 * not readable for a few ticks, and a follower that recorded zero would
 	 * spend the rest of its life claiming you were naked when you met.
 	 */
-	private void priceWhatYouAreWearing()
+	void priceWhatYouAreWearing()
 	{
-		TriggerContext context = speechEngine.getContext();
-		java.util.Set<Integer> worn = context.getEquippedItems();
+		var context = context();
+		var worn = context.getEquippedItems();
 		if (worn.equals(lastPricedGear))
-		{
 			return;
-		}
-		lastPricedGear = new java.util.HashSet<>(worn);
+		lastPricedGear = new HashSet<>(worn);
 
 		long total = 0;
 		for (int id : worn)
-		{
-			total += Math.max(0, itemManager.getItemPrice(id));
-		}
-		int value = (int) Math.min(total, Integer.MAX_VALUE);
+			total += max(0, itemManager.getItemPrice(id));
+		int value = (int) min(total, Integer.MAX_VALUE);
 		context.setWornValue(value);
 
 		if (metWearingValue < 0 && value > 0)
 		{
 			metWearingValue = value;
 			context.setMetWearingValue(value);
-			speechEngine.getContext().markCountersDirty();
-			log.debug("First seen wearing {} gp of gear", value);
+			context().markCountersDirty();
 		}
+	}
+
+	/** The rule files' nicknames and region names, into the context now. */
+	void giveTheNames()
+	{
+		context().setRegionNames(ruleLoader.getRegionNames());
+	}
+
+	/** The follower meets the player: the first day, the names and its traits. */
+	void knowThePlayer()
+	{
+		noteFirstMeeting();
+		giveTheNames();
 	}
 
 	/**
@@ -3138,66 +2108,18 @@ public class FollowerPlugin extends Plugin
 	 * available: the alternative is a follower that can never say how long it
 	 * has known anybody because it was born before it started counting.
 	 */
-	private void noteFirstMeeting()
+	void noteFirstMeeting()
 	{
-		TriggerContext context = speechEngine.getContext();
+		var context = context();
 		if (context.getMetOnDay() <= 0)
-		{
-			context.setMetOnDay(java.time.LocalDate.now().toEpochDay());
-			log.debug("First meeting recorded as {}", java.time.LocalDate.now());
-		}
+			context.setMetOnDay(LocalDate.now().toEpochDay());
 	}
 
-	private static java.util.Map<String, Integer> trimCounters(java.util.Map<String, Integer> counters)
-	{
-		// Today's counters are for today. Writing them out would have the
-		// follower's summary open with yesterday's afternoon still in it.
-		java.util.Map<String, Integer> lasting = new java.util.LinkedHashMap<>();
-		counters.forEach((key, value) ->
-		{
-			if (!key.endsWith(TriggerContext.TODAY))
-			{
-				lasting.put(key, value);
-			}
-		});
-		counters = lasting;
-
-		if (counters.size() <= MAX_COUNTERS)
-		{
-			return counters;
-		}
-		return counters.entrySet().stream()
-			.sorted(java.util.Map.Entry.<String, Integer>comparingByValue().reversed())
-			.limit(MAX_COUNTERS)
-			.collect(java.util.stream.Collectors.toMap(
-				java.util.Map.Entry::getKey, java.util.Map.Entry::getValue,
-				(a, b) -> a, java.util.LinkedHashMap::new));
-	}
-
-	/**
-	 * How long the follower may be walled off before it gives up and teleports.
-	 *
-	 * <p>The count only climbs while there is no route AT ALL - the pathfinder
-	 * searches the whole loaded scene and settles for the closest reachable
-	 * tile, so an empty answer means a sealed room or a locked door rather
-	 * than a long way round. Five ticks is three seconds: long enough that
-	 * walking briefly out of sight is not a teleport, short enough that the
-	 * follower does not stand at a wall looking foolish.
-	 */
-	private static final int STRANDED_TELEPORT_TICKS = 5;
-
-	/**
-	 * The standard teleport cast and its landing, with the swirls that go with
-	 * them - the same pair the errand return uses, measured from the cache:
-	 * 714 casts at 1.58s, 715 lands at 1.56s, spotanims 111 out and 1299 back.
-	 */
-	private static final int TELEPORT_CAST_ANIMATION = 714;
-	private static final int TELEPORT_ARRIVE_ANIMATION = 715;
-	private static final int TELEPORT_CAST_SPOTANIM = 111;
-	private static final int TELEPORT_ARRIVE_SPOTANIM = 1299;
+	static final int TELEPORT_ARRIVE_ANIMATION = 715,
+		TELEPORT_CAST_SPOTANIM = 111;
 
 	/** Ticks left before the stranded teleport lands, or 0 when none is in flight. */
-	private int strandedLandingTicks;
+	int strandedLandingTicks;
 
 	/**
 	 * Teleports the follower to the player when there is genuinely no way to
@@ -3212,7 +2134,7 @@ public class FollowerPlugin extends Plugin
 	 * from one side of a wall to the other is barely better. It casts where it
 	 * is standing, then lands beside you three ticks later.
 	 */
-	private void updateStrandedTeleport()
+	void updateStrandedTeleport()
 	{
 		if (strandedLandingTicks > 0)
 		{
@@ -3220,7 +2142,7 @@ public class FollowerPlugin extends Plugin
 			{
 				follower.teleportToPlayer();
 				follower.playAnimation(TELEPORT_ARRIVE_ANIMATION);
-				follower.playSpotAnim(spotAnimRepository.get(TELEPORT_ARRIVE_SPOTANIM),
+				follower.playSpotAnim(spotAnimRepository.get(1299 /* TELEPORT_ARRIVE_SPOTANIM */),
 					FollowerEntity.TELEPORT_GRAPHIC_HEIGHT);
 			}
 			return;
@@ -3230,10 +2152,8 @@ public class FollowerPlugin extends Plugin
 		// it: a Stay, a Send, an errand, a possessed thrall. Being away from
 		// the player is the point of all four, and none of them is stuck.
 		if (!follower.isSpawned() || follower.isStaying() || follower.isPosed()
-			|| follower.isNpcSlaved() || (errands != null && errands.isBusy()))
-		{
+			|| follower.isNpcSlaved() || errands.isBusy())
 			return;
-		}
 		// Agility too: a follower a floor below on a rooftop course, or
 		// waiting on an obstacle about to be queued, is behind, not stuck.
 		if (follower.isDoingAgility() || follower.isHoldingForAgility())
@@ -3242,15 +2162,21 @@ public class FollowerPlugin extends Plugin
 			return;
 		}
 
-		if (follower.getStrandedTicks() < STRANDED_TELEPORT_TICKS)
-		{
+		// STRANDED_TELEPORT_TICKS: How long the follower may be walled off before it gives up and teleports.
+		// <p>The count only climbs while there is no route AT ALL - the pathfinder
+		// searches the whole loaded scene and settles for the closest reachable
+		// tile, so an empty answer means a sealed room or a locked door rather
+		// than a long way round. Five ticks is three seconds: long enough that
+		// walking briefly out of sight is not a teleport, short enough that the
+		// follower does not stand at a wall looking foolish.
+		if (follower.getStrandedTicks() < 5 /* STRANDED_TELEPORT_TICKS */)
 			return;
-		}
 
-		log.debug("Follower walled off for {} ticks; teleporting",
-			follower.getStrandedTicks());
 		follower.clearStranded();
-		follower.playAnimation(TELEPORT_CAST_ANIMATION);
+		// TELEPORT_CAST_ANIMATION: The standard teleport cast and its landing, with the swirls that go with
+		// them - the same pair the errand return uses, measured from the cache:
+		// 714 casts at 1.58s, 715 lands at 1.56s, spotanims 111 out and 1299 back.
+		follower.playAnimation(714 /* TELEPORT_CAST_ANIMATION */);
 		follower.playSpotAnim(spotAnimRepository.get(TELEPORT_CAST_SPOTANIM),
 			FollowerEntity.TELEPORT_GRAPHIC_HEIGHT);
 		// Gone on the cast's last frame rather than standing there waiting for
@@ -3263,30 +2189,21 @@ public class FollowerPlugin extends Plugin
 		strandedLandingTicks = 3;
 	}
 
-	/** Ticks between writing the last-seen stamp: about a minute. */
-	private static final int LAST_SEEN_TICKS = 100;
-
-	private int ticksSinceLastSeen;
+	int ticksSinceLastSeen;
 
 	/** Minutes this session has run, for the longest-session record. */
-	private int sessionMinutes;
+	int sessionMinutes;
 
 	/** Whether the longest-session record has already been remarked on today. */
-	private boolean sessionRecordSaid;
+	boolean sessionRecordSaid;
 
 	/** Set by the client tick when the mouse is over the follower; read once a game tick. */
-	private boolean hoveredThisTick;
+	boolean hoveredThisTick;
 
 	/** Consecutive game ticks the mouse has rested on the follower. */
-	private int hoverTicks;
+	int hoverTicks;
 
-	/**
-	 * How often learned animation data is flushed to disk: one minute, so an
-	 * unclean exit costs at most that much observation rather than a session.
-	 */
-	private static final int LEARNING_SAVE_TICKS = 100;
-
-	private int ticksSinceLearningSave;
+	int ticksSinceLearningSave;
 
 	/** Pushes the current outfit into the panel so it shows what is actually worn. */
 	/**
@@ -3295,109 +2212,40 @@ public class FollowerPlugin extends Plugin
 	 * category dropdown; only Locations is structural (regions editable,
 	 * rules addable).
 	 */
-	private void openMessagesDialog()
+	void openMessagesDialog()
 	{
-		javax.swing.SwingUtilities.invokeLater(() ->
+		SwingUtilities.invokeLater(() ->
 		{
 			if (messagesDialog == null)
-			{
-				messagesDialog = new com.follower.ui.PhrasesDialog(gson, ruleLoader.getFile(),
-					java.util.Arrays.asList(
-						new com.follower.ui.PhrasesDialog.Category("Items", "gear",
-							"Said when you equip something it has an opinion on, and when your"
-								+ " bag is nearly full.",
-							false),
-						new com.follower.ui.PhrasesDialog.Category("Locations", "area",
-							"Said on entering a place, and about places it likes, dislikes or"
-								+ " remembers. Region ids are editable and Add location makes a new one.",
-							true),
-						new com.follower.ui.PhrasesDialog.Category("Bosses", "boss",
-							"Said when that boss appears nearby, and at boss kills and kill counts.",
-							false),
-						new com.follower.ui.PhrasesDialog.Category("Combat", "combat",
-							"Said while it stands clear and watches you fight, and when something"
-								+ " big comes near.",
-							false),
-						new com.follower.ui.PhrasesDialog.Category("Statuses", "health",
-							"Your HP, prayer, poison, venom, skull and run energy.",
-							false),
-						new com.follower.ui.PhrasesDialog.Category("Idle chatter", "idle",
-							"Small talk while nothing much is happening.",
-							false),
-						new com.follower.ui.PhrasesDialog.Category("Quest NPCs", "quest",
-							"Said near famous quest figures, at moments partway through some"
-								+ " quests, and when you finish one.",
-							false),
-						new com.follower.ui.PhrasesDialog.Category("Errands", "errand",
-							"Each errand has a line for setting off and one for coming"
-								+ " back. Go on errands in settings turns them off.",
-							false),
-						new com.follower.ui.PhrasesDialog.Category("Mimicry", "mimic",
-							"Said now and then while it copies your emotes, spells or teleports,"
-								+ " or eats when you eat.",
-							false),
-						new com.follower.ui.PhrasesDialog.Category("Reminiscing", "memory",
-							"Things that happened before, the outings it was and was not"
-								+ " taken on, and how long it has known you.",
-							false),
-						new com.follower.ui.PhrasesDialog.Category("Souvenirs", "souvenir",
-							"Things it picks up, carries about and loses.",
-							false),
-						new com.follower.ui.PhrasesDialog.Category("Predictions", "bet",
-							"Its calls on the next drop and its bets on you, and how it takes"
-								+ " being wrong.",
-							false),
-						new com.follower.ui.PhrasesDialog.Category("The hour and the session", "clock",
-							"What time it is where you are, how long you have been playing,"
-								+ " and the odd date.",
-							false),
-						new com.follower.ui.PhrasesDialog.Category("Reactions", "reactions",
-							"Deaths, drops, thieving, level-ups, being thanked or looked"
-								+ " at, and what goes on in the chat.",
-							false),
-						new com.follower.ui.PhrasesDialog.Category("Thrall", "thrall",
-							"Said as it takes a thrall's place and when the thrall's time"
-								+ " runs out. Mute the thrall in settings silences them.",
-							false),
-						new com.follower.ui.PhrasesDialog.Category("Everything else", "misc",
-							"Hellos, goodbyes, milestones and the rest. To silence them all,"
-								+ " add misc to Silence groups or rule ids by name in settings.",
-							false)),
+				messagesDialog = new PhrasesDialog(gson, ruleLoader.getFile(),
+					PhrasesDialog.categories(),
 					// The tick loop keeps lastRegionId current; reading a
 					// slightly stale int from the EDT is harmless.
 					() -> lastRegionId);
-				messagesDialog.setOnShare(() -> shareLines(messagesDialog));
-				messagesDialog.setOnEditSounds((title, lines) ->
-				{
-					if (voiceDialog == null)
-					{
-						voiceDialog = new com.follower.ui.VoiceDialog(
-							voices, config::voiceVolume);
-					}
-					voiceDialog.open(title, lines);
-				});
-			}
 			messagesDialog.open();
 		});
+	}
+
+	/** The Memory window's rows: what the follower remembers now, read on the client thread. */
+	List<String[]> memoryRows()
+	{
+		return MemoryDialog.summarise(context(),
+			ruleLoader.getRegionNames(), this::accountKey);
 	}
 
 	/**
 	 * Opens the memory window (R20) on a snapshot taken on the client thread,
 	 * so the Swing side never reads live maps the game loop is writing.
 	 */
-	private void openMemoryDialog()
+	void openMemoryDialog()
 	{
 		clientThread.invoke(() ->
 		{
-			java.util.List<String[]> rows =
-				com.follower.ui.MemoryDialog.summarise(speechEngine.getContext(),
-					ruleLoader.getRegionNames(), chronicleProgress::accountKey);
-			javax.swing.SwingUtilities.invokeLater(() ->
+			var rows = memoryRows();
+			SwingUtilities.invokeLater(() ->
 			{
 				if (memoryDialog == null)
-				{
-					memoryDialog = new com.follower.ui.MemoryDialog(this::forgetEverything);
-				}
+					memoryDialog = new MemoryDialog(this::forgetEverything);
 				memoryDialog.show(rows);
 			});
 		});
@@ -3411,18 +2259,12 @@ public class FollowerPlugin extends Plugin
 	 * one-time arrival arc is unspent, so it can introduce itself again,
 	 * which is both the charm and the proof the wipe worked.
 	 */
-	private void forgetEverything()
+	void forgetEverything()
 	{
 		clientThread.invoke(() ->
 		{
 			if (!started)
-			{
 				return;
-			}
-			// The accounts whose drawings go with this memory, read before
-			// the memory is erased.
-			java.util.List<String> sketched =
-				new java.util.ArrayList<>(speechEngine.getContext().getSketchAccounts());
 			configManager.unsetConfiguration(FollowerConfig.GROUP, "counters");
 			configManager.unsetConfiguration(FollowerConfig.GROUP, "traits");
 			configManager.unsetConfiguration(FollowerConfig.GROUP, "lastSeenMs");
@@ -3439,624 +2281,20 @@ public class FollowerPlugin extends Plugin
 			// as a switch: baseline, unless a login is coming to take its own.
 			// The stranger still introduces itself at the next login.
 			if (switchTakesTheBaseline(freshLogin))
-			{
 				speechEngine.primeEdgesOnNextTick();
-			}
-			speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
-				speechEngine.getContext().setRegionNames(ruleLoader.getRegionNames());
+			giveTheNames();
 			metWearingValue = -1;
 			sessionMinutes = 0;
 			sessionRecordSaid = false;
 			knownLevels.clear();
-			// The Chronicle goes too (the user, 16 Oct): its dates live in the
-			// memory just erased, and its drawings are torn out here, with
-			// one being posed for or drawn (the user, 20 Oct), for the
-			// accounts used under this memory only (the user, 21 Oct). The
-			// open book stays open under the new memory, so it is noted there.
-			sketching.reset();
-			sketchBook.forgetAll(sketched);
-			speechEngine.getContext().noteSketchAccount(configManager.getRSProfileKey());
 			sendStatus("Forgotten. All of it. Clean page.");
 
-			java.util.List<String[]> rows =
-				com.follower.ui.MemoryDialog.summarise(speechEngine.getContext(),
-					ruleLoader.getRegionNames(), chronicleProgress::accountKey);
-			javax.swing.SwingUtilities.invokeLater(() ->
+			var rows = memoryRows();
+			SwingUtilities.invokeLater(() ->
 			{
 				if (memoryDialog != null)
-				{
 					memoryDialog.show(rows);
-				}
 			});
-		});
-	}
-
-	/** The Sounds window on its own, from the panel: the folder, and how to attach a file. */
-	private void openSoundsDialog()
-	{
-		javax.swing.SwingUtilities.invokeLater(() ->
-		{
-			if (voiceDialog == null)
-			{
-				voiceDialog = new com.follower.ui.VoiceDialog(voices, config::voiceVolume);
-			}
-			voiceDialog.open();
-		});
-	}
-
-	// ------------------------------------------------------------------ filming
-
-	/**
-	 * Whether a scene is being filmed: the follower stands where it is told,
-	 * strikes the poses it is given and says only the lines typed for it.
-	 * Nothing of its own - no chatter, errands, wander, rest, sketch, look
-	 * round, noticing, moments, step-aside or copied emote.
-	 */
-	private boolean filming;
-
-	/**
-	 * Whether the film parked the follower, rather than finding it parked by
-	 * the player. Only then does the end of the scene hand it back to following.
-	 */
-	private boolean filmParked;
-
-	/** The film's hold on the follower's pose and facing; built in startUp. */
-	private com.follower.follower.FilmSet filmSet;
-
-	private com.follower.ui.FilmDialog filmDialog;
-
-	/** The film window, from the panel's Film a scene or ::follower film. */
-	private void openFilmDialog()
-	{
-		javax.swing.SwingUtilities.invokeLater(() ->
-		{
-			if (filmDialog == null)
-			{
-				filmDialog = new com.follower.ui.FilmDialog(filmCrew(), clientThread::invoke,
-					conversationStore, this::followerName);
-			}
-			filmDialog.open();
-		});
-	}
-
-	/**
-	 * The scene starts: the follower stops where it stands and goes quiet.
-	 * Anything waiting to be said goes, as at a silence. The park is the
-	 * player's own, so everything that reads one stands down for it.
-	 */
-	private void startFilming()
-	{
-		filming = true;
-		speechQueue.clear();
-		cutByTheScene = null;
-		overlay.clear();
-		// A scroll still out is put away before the film puts anything on.
-		// Left to run out, its end takes off the pose the film has put on
-		// since, and hands the follower back to following, facing and all.
-		if (flourish != null)
-		{
-			flourish.abort();
-		}
-		if (skilling != null)
-		{
-			skilling.putTheLedgerAway();
-		}
-		// A sketch being posed for goes too, without a word: its count and
-		// its line after would be said over the take.
-		if (sketching != null)
-		{
-			sketching.abort();
-		}
-		// A Send paused at a monster's edge would go on into the take.
-		if (will != null)
-		{
-			will.reset();
-		}
-		if (!parkedByPlayer)
-		{
-			follower.stayHere();
-			parkForTheFilm(null);
-		}
-	}
-
-	/**
-	 * The scene is over: the film's pose and facing are let go of, and the
-	 * follower follows again if the film was what parked it. A park the
-	 * player gave before filming is theirs, and stays.
-	 */
-	private void endFilming()
-	{
-		// A conversation can play without the follower out, so before the
-		// check: whatever ends the scene ends it too.
-		if (conversation != null)
-		{
-			conversation.stop(null);
-		}
-		if (!filming)
-		{
-			return;
-		}
-		filming = false;
-		filmSet.letGo();
-		if (filmParked && config.followEnabled())
-		{
-			followAgain();
-		}
-		filmParked = false;
-	}
-
-	/**
-	 * Every film action starts here, so a scene that a logout or a hop ended
-	 * starts again with the next press in the window. A press queued just
-	 * before a stop finds the plugin off, as a queued shift-click does.
-	 *
-	 * @return why nothing can be filmed, or null
-	 */
-	private String ensureFilming()
-	{
-		if (!started || !follower.isSpawned())
-		{
-			return "The follower is not out right now.";
-		}
-		if (!filming)
-		{
-			startFilming();
-		}
-		return null;
-	}
-
-	/**
-	 * A park for the film, given as the player's own, which everything that
-	 * would take the feet reads as theirs taken. Marked as the film's when
-	 * the follower had been following, so the end of the scene hands it back.
-	 */
-	private void parkForTheFilm(WorldPoint sentTo)
-	{
-		if (!parkedByPlayer)
-		{
-			filmParked = true;
-		}
-		parkedByThePlayer(sentTo);
-	}
-
-	/** Choosing a facing holds it still, or the follow would turn it straight back. */
-	private void holdStillForTheFilm()
-	{
-		if (!follower.isStaying())
-		{
-			follower.stayHere();
-			parkForTheFilm(null);
-		}
-	}
-
-	/** A film action once the scene is sure to be under way. */
-	private String film(Runnable action)
-	{
-		String refused = ensureFilming();
-		if (refused == null)
-		{
-			action.run();
-		}
-		return refused;
-	}
-
-	/** A word for the film window's status line, from the client thread. */
-	private void tellTheFilm(String text)
-	{
-		javax.swing.SwingUtilities.invokeLater(() ->
-		{
-			if (filmDialog != null)
-			{
-				filmDialog.status(text);
-			}
-		});
-	}
-
-	/** What the film window asks for, each on the client thread. */
-	private com.follower.ui.FilmDialog.Crew filmCrew()
-	{
-		return new com.follower.ui.FilmDialog.Crew()
-		{
-			@Override
-			public String start()
-			{
-				return ensureFilming();
-			}
-
-			@Override
-			public String hold(int animationId)
-			{
-				return film(() ->
-				{
-					filmSet.hold(animationId);
-					refreshEmoteDisarm(follower.isEmotePlaying());
-				});
-			}
-
-			@Override
-			public String once(int animationId)
-			{
-				return film(() -> filmSet.once(animationId));
-			}
-
-			@Override
-			public String again()
-			{
-				String refused = ensureFilming();
-				if (refused != null)
-				{
-					return refused;
-				}
-				return filmSet.again() ? null : "Again repeats the last [once] pose. Play one first.";
-			}
-
-			@Override
-			public String standNormally()
-			{
-				return film(() ->
-				{
-					filmSet.standNormally();
-					refreshEmoteDisarm(follower.isEmotePlaying());
-				});
-			}
-
-			@Override
-			public int lastPlayerAnimation()
-			{
-				return filmSet.getLastPlayerAnimation();
-			}
-
-			@Override
-			public String face(int orientation)
-			{
-				return film(() ->
-				{
-					holdStillForTheFilm();
-					filmSet.face(orientation);
-				});
-			}
-
-			@Override
-			public String faceMe()
-			{
-				return film(() ->
-				{
-					holdStillForTheFilm();
-					filmSet.faceMe();
-				});
-			}
-
-			@Override
-			public String faceCamera()
-			{
-				return film(() ->
-				{
-					holdStillForTheFilm();
-					filmSet.face(com.follower.follower.FilmSet.cameraFacing(client.getCameraYaw()));
-				});
-			}
-
-			@Override
-			public String holdHere()
-			{
-				return film(() ->
-				{
-					follower.stayHere();
-					parkForTheFilm(null);
-					filmSet.reaim();
-				});
-			}
-
-			@Override
-			public String followMe()
-			{
-				// As right-click Follow: the park is over, whoever gave it.
-				// The facing went with the stay.
-				return film(() ->
-				{
-					followAgain();
-					setFollowEnabled(true);
-					filmSet.faceMe();
-				});
-			}
-
-			@Override
-			public String followerSays(String text)
-			{
-				String refused = ensureFilming();
-				if (refused != null)
-				{
-					return refused;
-				}
-				if (npcDialogOpen())
-				{
-					return "It keeps quiet while a dialogue box is open.";
-				}
-				// Straight away, over whatever is up. No rule, so the film's
-				// own gate lets it through, with its voice and the chatbox
-				// mirror as any line has them.
-				speechQueue.clear();
-				cutByTheScene = null;
-				speakingUntilMs = 0;
-				speak(text, com.follower.speech.SpeechOutput.OVERHEAD, null, -1, null);
-				return null;
-			}
-
-			@Override
-			public String playerSays(String text)
-			{
-				Player me = client.getLocalPlayer();
-				if (me == null)
-				{
-					return "You are not in the game.";
-				}
-				// Over the player's own head whether the follower is out or not.
-				ensureFilming();
-				filmSet.playerSays(me, text, readingTimeMs(text));
-				return null;
-			}
-
-			@Override
-			public String play(com.follower.speech.Conversation script)
-			{
-				if (client.getLocalPlayer() == null)
-				{
-					return "You are not in the game.";
-				}
-				// The follower holds still and quiet for it, as for any line.
-				// A conversation of the player's lines alone plays without it.
-				String refused = ensureFilming();
-				if (refused != null && script.followerSpeaks())
-				{
-					return refused;
-				}
-				return conversation.play(script, System.currentTimeMillis());
-			}
-
-			@Override
-			public String stopConversation()
-			{
-				if (!conversation.isPlaying())
-				{
-					return "Nothing is playing.";
-				}
-				conversation.stop("Stopped.");
-				return null;
-			}
-
-			@Override
-			public void cut()
-			{
-				// The pose's props go with it, and its own gear comes back.
-				endFilming();
-			}
-		};
-	}
-
-	/** The film window's conversation, played; built in startUp. */
-	private com.follower.speech.ConversationPlayer conversation;
-
-	/**
-	 * The player's written chat line last put in the chatbox, until the
-	 * chatbox hands it back to onChatMessage: written, not said, so no rule
-	 * hears it. QA2, 15 Oct: "hello" in a take set off greet-back.
-	 */
-	private String scriptedChat;
-
-	/** Esc in the game stops a conversation playing, and is the conversation's while one is. */
-	private final net.runelite.client.input.KeyListener escapeStopsTheConversation =
-		new net.runelite.client.input.KeyListener()
-	{
-		@Override
-		public void keyTyped(java.awt.event.KeyEvent e)
-		{
-		}
-
-		@Override
-		public void keyReleased(java.awt.event.KeyEvent e)
-		{
-		}
-
-		@Override
-		public void keyPressed(java.awt.event.KeyEvent e)
-		{
-			com.follower.speech.ConversationPlayer playing = conversation;
-			if (e.getKeyCode() == java.awt.event.KeyEvent.VK_ESCAPE && playing != null && playing.isPlaying())
-			{
-				clientThread.invoke(() -> playing.stop("Stopped."));
-				e.consume();
-			}
-		}
-	};
-
-	/** Where the conversation plays: the dialogue box, the chatbox and the overheads. */
-	private com.follower.speech.ConversationPlayer.Stage conversationStage()
-	{
-		return new com.follower.speech.ConversationPlayer.Stage()
-		{
-			@Override
-			public boolean gameDialogueOpen()
-			{
-				// The game's other boxes over the chatbox too: a message, an
-				// item, two items, a level-up. QA2, 15 Oct: a written line
-				// was drawn over one and took its "Click here to continue".
-				// QA3: and Make-X, the destroy question, the graphic box and
-				// a chatbox prompt such as Enter amount.
-				return npcDialogOpen()
-					|| client.getWidget(net.runelite.api.gameval.InterfaceID.MESSAGEBOX, 0) != null
-					|| client.getWidget(net.runelite.api.gameval.InterfaceID.OBJECTBOX, 0) != null
-					|| client.getWidget(net.runelite.api.gameval.InterfaceID.OBJECTBOX_DOUBLE, 0) != null
-					|| client.getWidget(net.runelite.api.gameval.InterfaceID.LEVELUP_DISPLAY, 0) != null
-					|| client.getWidget(net.runelite.api.gameval.InterfaceID.SKILLMULTI, 0) != null
-					|| client.getWidget(net.runelite.api.gameval.InterfaceID.CONFIRMDESTROY, 0) != null
-					|| client.getWidget(net.runelite.api.gameval.InterfaceID.GRAPHICBOX, 0) != null
-					|| client.getVarcIntValue(net.runelite.api.gameval.VarClientID.MESLAYERMODE) != 0;
-			}
-
-			@Override
-			public boolean talkToOpen()
-			{
-				return dialog.isOpen();
-			}
-
-			@Override
-			public void showBox(com.follower.speech.Conversation.Line line)
-			{
-				String[] pages = dialog.pagesFor(com.follower.speech.Conversation.shown(line));
-				com.follower.speech.FollowerDialog.Node node =
-					line.speaker == com.follower.speech.Conversation.Speaker.YOU
-						? com.follower.speech.FollowerDialog.Node.you(pages)
-						: com.follower.speech.FollowerDialog.Node.says(pages);
-				// A bubble still up is two mouths at once, as at a Talk-to.
-				overlay.clear();
-				dialog.showScripted(followerName(), node.face(line.expression.animations()));
-			}
-
-			@Override
-			public int boxPage()
-			{
-				return dialog.pageShown();
-			}
-
-			@Override
-			public String boxPageText()
-			{
-				return dialog.pageText();
-			}
-
-			@Override
-			public boolean boxContinued()
-			{
-				return dialog.wasContinued();
-			}
-
-			@Override
-			public void continueBox()
-			{
-				dialog.continueNow();
-			}
-
-			@Override
-			public void closeBox()
-			{
-				dialog.close();
-			}
-
-			@Override
-			public void say(com.follower.speech.Conversation.Line line, long ms)
-			{
-				if (line.speaker == com.follower.speech.Conversation.Speaker.FOLLOWER)
-				{
-					// Straight away, over whatever is up, and the floor held
-					// for as long as it is.
-					speechQueue.clear();
-					cutByTheScene = null;
-					speakingUntilMs = System.currentTimeMillis() + ms + SPEECH_GAP_MS;
-				}
-				else
-				{
-					// Before it lands: the chatbox hands it straight to onChatMessage.
-					scriptedChat = com.follower.speech.ConversationPlayer.inChat(line);
-				}
-				com.follower.speech.ConversationPlayer.sayInChat(client, filmSet, followerName(),
-					overlay::show, line, ms);
-			}
-
-			@Override
-			public void unsay(com.follower.speech.Conversation.Line line)
-			{
-				if (line.speaker == com.follower.speech.Conversation.Speaker.FOLLOWER)
-				{
-					overlay.clear();
-					return;
-				}
-				Player me = client.getLocalPlayer();
-				if (me != null)
-				{
-					me.setOverheadCycle(0);
-				}
-			}
-
-			@Override
-			public long readingTimeMs(String text)
-			{
-				return FollowerPlugin.this.readingTimeMs(text);
-			}
-
-			@Override
-			public void tell(String text)
-			{
-				tellTheFilm(text);
-			}
-		};
-	}
-
-	/**
-	 * The Share choice: export what the player has written, or take on a
-	 * pack. The Messages window's Share button and the panel's Share lines
-	 * button both run it; each settles unsaved edits before calling.
-	 */
-	private void shareLines(java.awt.Component parent)
-	{
-		Object[] choices = {"Export mine", "Import a pack", "Cancel"};
-		int picked = javax.swing.JOptionPane.showOptionDialog(parent,
-			"Share the lines you have written, and the sounds attached to them."
-				+ "\n\nExporting writes a .zip holding only what you have added,"
-				+ "\nnot the lines that ship with the plugin."
-				+ "\n\nImporting adds somebody else's to yours. Nothing is replaced.",
-			"Share", javax.swing.JOptionPane.DEFAULT_OPTION,
-			javax.swing.JOptionPane.QUESTION_MESSAGE, null, choices, choices[0]);
-		// The packs are read and written on the worker: up to 64 MB of
-		// sounds held the event thread, and with it the game's input (QA pass 4).
-		if (picked == 0)
-		{
-			java.io.File target = choosePack(true, parent);
-			if (target != null)
-			{
-				worker.execute(() -> exportPack(target, parent));
-			}
-		}
-		else if (picked == 1)
-		{
-			java.io.File source = choosePack(false, parent);
-			if (source != null)
-			{
-				worker.execute(() -> importPack(source, parent));
-			}
-		}
-	}
-
-	/** A message box, shown on the event thread from wherever it is said. */
-	private static void tell(java.awt.Component parent, String message, String title, int kind)
-	{
-		javax.swing.SwingUtilities.invokeLater(() ->
-			javax.swing.JOptionPane.showMessageDialog(parent, message, title, kind));
-	}
-
-	/** Share lines from the panel, unless the Messages window holds edits the file does not. */
-	private void shareLinesFromPanel()
-	{
-		javax.swing.SwingUtilities.invokeLater(() ->
-		{
-			if (messagesDialog != null && messagesDialog.isDirty())
-			{
-				sendStatus("Save or discard the edits in the Messages window first.");
-				return;
-			}
-			shareLines(panel);
-		});
-	}
-
-	/** Lazily builds the conversation editor window and fronts it. */
-	private void openDialogsDialog()
-	{
-		javax.swing.SwingUtilities.invokeLater(() ->
-		{
-			if (dialogsDialog == null)
-			{
-				dialogsDialog = new com.follower.ui.DialogsDialog(gson, dialogLoader.getFile());
-			}
-			dialogsDialog.open();
 		});
 	}
 
@@ -4065,11 +2303,11 @@ public class FollowerPlugin extends Plugin
 	 * outfit change is written straight back to it, so the dropdown behaves
 	 * like a live wardrobe rather than a pair of load/save buttons.
 	 */
-	private String activeProfile;
+	String activeProfile;
 
 	// The follower is redressed through the same config write the panel uses,
 	// so the existing config-changed path does the rebuild and panel sync.
-	private void loadOutfitProfile(String name)
+	void loadOutfitProfile(String name)
 	{
 		loadOutfitProfile(name, false);
 	}
@@ -4079,35 +2317,29 @@ public class FollowerPlugin extends Plugin
 	 * every start and profile switch is not news, and on a fresh install it was
 	 * the first thing the plugin ever said. A profile the player picks says so.
 	 */
-	private void loadOutfitProfile(String name, boolean quiet)
+	void loadOutfitProfile(String name, boolean quiet)
 	{
 		String outfit = profileStore.get(name);
 		if (outfit == null)
-		{
 			return;
-		}
 		setActiveProfile(name.trim());
-		configManager.setConfiguration(FollowerConfig.GROUP, "customOutfit", outfit);
+		setConfig("customOutfit", outfit);
 		// A profile with an identical outfit writes no config change, so the
 		// panel is refreshed here rather than relying on the config event.
 		syncPanel();
 		// And the dropdown, which a profile worn by chat command left on the
 		// old one, while the edits after it saved into this one (QA pass 4).
 		if (panel != null)
-		{
 			panel.setProfileNames(profileStore.names(), activeProfile);
-		}
 		if (!quiet)
-		{
 			sendStatus("Wearing outfit profile '" + activeProfile + "'.");
-		}
 	}
 
-	private void setActiveProfile(String name)
+	void setActiveProfile(String name)
 	{
 		activeProfile = name;
-		configManager.setConfiguration(FollowerConfig.GROUP, "activeProfile",
-			name == null ? "" : name);
+		setConfig("activeProfile",
+			Strings.nullToEmpty(name));
 	}
 
 	/**
@@ -4115,10 +2347,10 @@ public class FollowerPlugin extends Plugin
 	 * list shared by every profile let two of them on the same name write over
 	 * each other's outfit, and a switch put the other profile's on this one.
 	 */
-	private void loadOutfitProfiles()
+	void loadOutfitProfiles()
 	{
 		profileStore.load(dataDir, config.outfitProfiles(), config.activeProfile(), config.customOutfit(),
-			json -> configManager.setConfiguration(FollowerConfig.GROUP, "outfitProfiles", json));
+			json -> setConfig("outfitProfiles", json));
 		outfitListProfileId = currentProfileId();
 	}
 
@@ -4128,14 +2360,14 @@ public class FollowerPlugin extends Plugin
 	 * still the last profile's; a thrall outfit named only in the new one's
 	 * list is not unknown, just not read yet.
 	 */
-	private long outfitListProfileId = -1;
+	long outfitListProfileId = -1;
 
 	/**
 	 * Picks the profile a session starts in: the one last worn, else the first
 	 * the user made themselves, else the bare default body. Applied so the
 	 * panel and the follower always agree with the dropdown on startup.
 	 */
-	private void restoreActiveProfile()
+	void restoreActiveProfile()
 	{
 		String stored = config.activeProfile();
 		String wanted = stored != null && !stored.trim().isEmpty()
@@ -4146,18 +2378,15 @@ public class FollowerPlugin extends Plugin
 		panel.setProfileNames(profileStore.names(), activeProfile);
 	}
 
-	private void saveOutfitProfile(String name)
+	void saveOutfitProfile(String name)
 	{
 		if (name == null || name.trim().isEmpty())
-		{
 			return;
-		}
 		// The thrall looks are worn by name and nothing restores a changed
 		// one; New profile... over one would lose it (QA3).
 		if (profileStore.isProtected(name))
 		{
-			sendStatus("'" + name.trim() + "' is one of the built-in looks"
-				+ " and cannot be replaced. Pick it and edit it instead.");
+			sendStatus("'" + name.trim() + Resources.text("builtInReplace"));
 			return;
 		}
 		boolean replacing = profileStore.get(name.trim()) != null;
@@ -4167,16 +2396,13 @@ public class FollowerPlugin extends Plugin
 		sendStatus("Outfit profile '" + activeProfile + (replacing ? "' replaced." : "' created."));
 	}
 
-	private void deleteOutfitProfile(String name)
+	void deleteOutfitProfile(String name)
 	{
 		if (name == null || name.trim().isEmpty())
-		{
 			return;
-		}
 		if (profileStore.isProtected(name))
 		{
-			sendStatus("'" + name.trim() + "' is one of the built-in looks"
-				+ " and cannot be deleted. Edit it instead.");
+			sendStatus("'" + name.trim() + Resources.text("builtInDelete"));
 			return;
 		}
 		if (!profileStore.remove(name))
@@ -4185,11 +2411,9 @@ public class FollowerPlugin extends Plugin
 			return;
 		}
 		if (name.trim().equals(activeProfile))
-		{
 			// Fall back to something real rather than leaving the dropdown
 			// pointing at a profile that no longer exists.
 			loadOutfitProfile(profileStore.firstUserProfile());
-		}
 		panel.setProfileNames(profileStore.names(), activeProfile);
 		sendStatus("Outfit profile '" + name.trim() + "' deleted.");
 	}
@@ -4200,12 +2424,10 @@ public class FollowerPlugin extends Plugin
 	 * sync: loading a profile leaves the two identical and writes nothing,
 	 * while an actual edit differs and is saved.
 	 */
-	private void autoSaveActiveProfile()
+	void autoSaveActiveProfile()
 	{
 		if (activeProfile == null)
-		{
 			return;
-		}
 		String stored = profileStore.get(activeProfile);
 		if (stored == null)
 		{
@@ -4216,22 +2438,16 @@ public class FollowerPlugin extends Plugin
 		// profile; filing it under this profile's outfit name is how a
 		// two-day-old outfit came back (issue #1).
 		if (!belongsToProfile(outfitProfileId, currentProfileId()))
-		{
 			return;
-		}
 		String current = config.customOutfit();
 		if (!stored.equals(current))
-		{
 			profileStore.put(activeProfile, current);
-		}
 	}
 
-	private void syncPanel()
+	void syncPanel()
 	{
 		if (panel == null)
-		{
 			return;
-		}
 		// Every route to a changed outfit lands here, so this is the one place
 		// the active profile needs keeping up to date.
 		autoSaveActiveProfile();
@@ -4249,18 +2465,18 @@ public class FollowerPlugin extends Plugin
 	 * resolved from the item's own equipment stats, which is what stops a torso item
 	 * being written into the legs slot.
 	 */
-	private void equipFromPanel(int itemId, KitType slot)
+	void equipFromPanel(int itemId, KitType slot)
 	{
 		clientThread.invoke(() ->
 		{
-			KitType target = slot != null ? slot : resolveSlot(itemId);
+			var target = slot != null ? slot : resolveSlot(itemId);
 			if (target == null)
 			{
 				sendStatus("Couldn't work out which slot item " + itemId + " goes in.");
 				return;
 			}
 
-			Outfit outfit = OutfitParser.parse(config.customOutfit());
+			var outfit = OutfitParser.parse(config.customOutfit());
 			outfit.setItem(target, itemId);
 			persistOutfit(outfit);
 
@@ -4271,62 +2487,42 @@ public class FollowerPlugin extends Plugin
 			// Weapon animations can only be learned by watching a real player
 			// hold one (measured: they are not in the cache as data). Say so
 			// rather than let an unknown weapon silently stand unarmed.
-			if (target == KitType.WEAPON && !stanceLibrary.knows(itemId))
-			{
-				// The hand-set command is developer-gated, so only offer it to
-				// someone who has that switched on - otherwise this reads as
-				// advice that does not work.
-				sendStatus("No stances learned for that weapon yet. Wield it once, or stand"
-					+ " near someone who has."
-					+ (config.developerMode()
-						? " For one you cannot get hold of: ::follower stance " + itemId
-							+ " <idle> <walk> <run> [attack]"
-						: ""));
-			}
+			if (target == WEAPON && !stanceLibrary.knows(itemId))
+				sendStatus("No stances learned for that weapon yet. Wield it once, or stand near someone who has.");
 		});
 	}
 
-	private void clearSlotFromPanel(KitType slot)
+	void clearSlotFromPanel(KitType slot)
 	{
 		clientThread.invoke(() ->
 		{
-			Outfit outfit = OutfitParser.parse(config.customOutfit());
+			var outfit = OutfitParser.parse(config.customOutfit());
 			outfit.clear(slot);
 			persistOutfit(outfit);
 		});
 	}
 
-	/** The body parts whose kits are gender-specific and so need per-gender memory. */
-	private static final KitType[] BODY_KIT_PARTS = {
-		KitType.HAIR, KitType.JAW, KitType.TORSO, KitType.ARMS,
-		KitType.HANDS, KitType.LEGS, KitType.BOOTS,
-	};
-
-	private void setGender(int gender)
+	void setGender(int gender)
 	{
 		clientThread.invoke(() ->
 		{
-			Outfit outfit = OutfitParser.parse(config.customOutfit());
+			var outfit = OutfitParser.parse(config.customOutfit());
 			if (outfit.getGender() == gender)
-			{
 				return;
-			}
 
 			// Remember the styles of the body being left, resolved so defaults count
 			// too - what you SEE is what comes back.
-			configManager.setConfiguration(FollowerConfig.GROUP,
+			setConfig(
 				kitMemoryKey(outfit.getGender()), serializeKits(outfit.withDefaultBody()));
 
 			outfit.setGender(gender);
 			// Kit ids are gender-specific, so the old ones would render as the wrong
 			// body. Drop them, then restore what this gender wore last time; anything
 			// not remembered falls back to withDefaultBody() as before.
-			for (KitType part : BODY_KIT_PARTS)
+			for (var part : ModelRepository.BODY_PARTS)
 			{
 				if (outfit.isKit(part))
-				{
 					outfit.clear(part);
-				}
 			}
 			applyKitMemory(outfit,
 				configManager.getConfiguration(FollowerConfig.GROUP, kitMemoryKey(gender)));
@@ -4335,22 +2531,20 @@ public class FollowerPlugin extends Plugin
 		});
 	}
 
-	private static String kitMemoryKey(int gender)
+	static String kitMemoryKey(int gender)
 	{
 		return gender == 1 ? "bodyKitsFemale" : "bodyKitsMale";
 	}
 
-	private static String serializeKits(Outfit resolved)
+	static String serializeKits(Outfit resolved)
 	{
-		StringBuilder sb = new StringBuilder();
-		for (KitType part : BODY_KIT_PARTS)
+		var sb = new StringBuilder();
+		for (var part : ModelRepository.BODY_PARTS)
 		{
 			if (resolved.isKit(part))
 			{
 				if (sb.length() > 0)
-				{
 					sb.append(';');
-				}
 				sb.append(part.name()).append('=').append(resolved.kitId(part));
 			}
 		}
@@ -4360,25 +2554,21 @@ public class FollowerPlugin extends Plugin
 		return sb.toString();
 	}
 
-	private void applyKitMemory(Outfit outfit, String stored)
+	void applyKitMemory(Outfit outfit, String stored)
 	{
 		if (stored == null || stored.trim().isEmpty())
-		{
 			return;
-		}
 		for (String token : stored.split(";"))
 		{
-			String[] halves = token.split("=");
+			var halves = token.split("=");
 			if (halves.length != 2)
-			{
 				continue;
-			}
 			try
 			{
 				if (halves[0].trim().equalsIgnoreCase("SKIN"))
 				{
 					int index = Integer.parseInt(halves[1].trim());
-					if (index >= 0 && index < com.follower.appearance.GamePalette.SKIN.length)
+					if (index >= 0 && index < GamePalette.SKIN.length)
 					{
 						int[] colors = outfit.getColors();
 						colors[4] = index;
@@ -4387,14 +2577,12 @@ public class FollowerPlugin extends Plugin
 					continue;
 				}
 
-				KitType part = KitType.valueOf(halves[0].trim());
+				var part = KitType.valueOf(halves[0].trim());
 				int kitId = Integer.parseInt(halves[1].trim());
 				// The dump may have changed since this was saved; only restore kits
 				// that still exist, and let defaults cover the rest.
 				if (modelRepository.kit(kitId) != null)
-				{
 					outfit.setKit(part, kitId);
-				}
 			}
 			catch (IllegalArgumentException ignored)
 			{
@@ -4408,15 +2596,15 @@ public class FollowerPlugin extends Plugin
 	 * no names in the cache, so they're browsed by eye - the follower rebuilds live,
 	 * which makes it its own preview.
 	 */
-	private void cycleKit(KitType part, int direction)
+	void cycleKit(KitType part, int direction)
 	{
 		clientThread.invoke(() ->
 		{
-			Outfit outfit = OutfitParser.parse(config.customOutfit()).withDefaultBody();
+			var outfit = OutfitParser.parse(config.customOutfit()).withDefaultBody();
 
 			// Only kits whose bodyPartId matches this slot AND this body type, so a
 			// beard can never land in the boots slot and genders never cross over.
-			List<Integer> choices = modelRepository.kitsFor(part, outfit.getGender());
+			var choices = modelRepository.kitsFor(part, outfit.getGender());
 			if (choices.isEmpty())
 			{
 				sendStatus("No styles available for " + part.name().toLowerCase(Locale.ROOT) + ".");
@@ -4426,9 +2614,9 @@ public class FollowerPlugin extends Plugin
 			// Every part always holds a kit. There is no "none": a bare slot leaves a
 			// hole in the body, and the clean-shaven look is itself one of the jaw
 			// kits rather than the absence of one.
-			int index = outfit.isKit(part) ? choices.indexOf(outfit.kitId(part)) : -1;
-			int current = Math.max(index, 0);
-			int next = Math.floorMod(current + direction, choices.size());
+			int index = outfit.isKit(part) ? choices.indexOf(outfit.kitId(part)) : -1,
+				current = max(index, 0),
+				next = floorMod(current + direction, choices.size());
 
 			outfit.setKit(part, choices.get(next));
 			persistOutfit(outfit);
@@ -4439,45 +2627,14 @@ public class FollowerPlugin extends Plugin
 	}
 
 	/** Sets a body-colour palette index from the panel's exact picker. */
-	private void setBodyColor(int colorSlot, int index)
+	void setBodyColor(int colorSlot, int index)
 	{
 		clientThread.invoke(() ->
 		{
-			Outfit outfit = OutfitParser.parse(config.customOutfit());
+			var outfit = OutfitParser.parse(config.customOutfit());
 			int[] colors = outfit.getColors();
 			if (colorSlot < 0 || colorSlot >= colors.length)
-			{
 				return;
-			}
-
-			// If colours copied from the player are active, convert them to their
-			// equivalent palette indices first - the pairs ARE table entries, so the
-			// reverse lookup is exact and nothing shifts except the picked slot.
-			// Without this, exact-pairs mode would bypass the picker's choice.
-			java.util.Map<Short, Short> pairs = appearanceComposer.getExactPairs();
-			if (!pairs.isEmpty())
-			{
-				for (int s = 0; s < colors.length; s++)
-				{
-					Short replacement = pairs.get(com.follower.appearance.GamePalette.find(s));
-					short[] table = com.follower.appearance.GamePalette.table(s);
-					if (replacement == null || table == null)
-					{
-						continue;
-					}
-					for (int i = 0; i < table.length; i++)
-					{
-						if (table[i] == replacement)
-						{
-							colors[s] = i;
-							break;
-						}
-					}
-				}
-				appearanceComposer.setExactPairs(java.util.Collections.emptyMap());
-				configManager.unsetConfiguration(FollowerConfig.GROUP, EXACT_PALETTE_KEY);
-				sendStatus("Copied colours converted to palette picks. The picker's in charge now.");
-			}
 
 			colors[colorSlot] = index;
 			outfit.setColors(colors);
@@ -4486,26 +2643,24 @@ public class FollowerPlugin extends Plugin
 		});
 	}
 
-	private void clearOutfit()
+	void clearOutfit()
 	{
 		clientThread.invoke(() -> persistOutfit(new Outfit()));
 	}
 
-	private void copyGearToCustomOutfit()
+	void copyGearToCustomOutfit()
 	{
-		Player local = client.getLocalPlayer();
+		var local = client.getLocalPlayer();
 		if (local == null)
-		{
 			return;
-		}
 		persistOutfit(Outfit.from(local.getPlayerComposition()));
 		sendStatus("Copied your gear onto the follower.");
 	}
 
 	/** Writes the outfit to config and rebuilds. */
-	private void persistOutfit(Outfit outfit)
+	void persistOutfit(Outfit outfit)
 	{
-		configManager.setConfiguration(FollowerConfig.GROUP, "customOutfit", outfit.toString());
+		setConfig("customOutfit", outfit.toString());
 		appearanceService.invalidate();
 		rebuildFollower();
 		syncPanel();
@@ -4524,56 +2679,32 @@ public class FollowerPlugin extends Plugin
 	 * which is why the animation arrived without its particle. Every teleport
 	 * elsewhere in the plugin resolves at the moment of use; this now does too.
 	 */
-	private com.follower.appearance.SpotAnimRepository.Entry spawnGraphic()
+	SpotAnimRepository.Entry spawnGraphic()
 	{
 		int[] ids = parseAnimationIds(config.spawnGraphic());
 		if (ids.length == 0)
-		{
 			return null;
-		}
-		com.follower.appearance.SpotAnimRepository.Entry fx = spotAnimRepository.get(ids[0]);
-		if (fx == null)
-		{
-			log.debug("Spawn graphic {} is not in the spotanim repository", ids[0]);
-		}
+		var fx = spotAnimRepository.get(ids[0]);
 		return fx;
 	}
 
-	private static int[] parseAnimationIds(String text)
+	static int[] parseAnimationIds(String text)
 	{
-		if (text == null || text.trim().isEmpty())
-		{
+		if (text == null)
 			return new int[0];
-		}
-
-		List<Integer> ids = new ArrayList<>();
-		for (String token : text.split("[,\\s]+"))
+		return Arrays.stream(text.split("[,\\s]+")).mapToInt(token ->
 		{
-			String trimmed = token.trim();
-			if (trimmed.isEmpty())
-			{
-				continue;
-			}
 			try
 			{
-				int id = Integer.parseInt(trimmed);
-				if (id > 0)
-				{
-					ids.add(id);
-				}
+				return Integer.parseInt(token.trim());
 			}
 			catch (NumberFormatException ignored)
 			{
-				// Not a number; skip it rather than refusing the whole chain.
+				// Not a number, or nothing at all; skip it rather than
+				// refusing the whole chain.
+				return 0;
 			}
-		}
-
-		int[] out = new int[ids.size()];
-		for (int i = 0; i < out.length; i++)
-		{
-			out[i] = ids.get(i);
-		}
-		return out;
+		}).filter(id -> id > 0).toArray();
 	}
 
 	/**
@@ -4588,48 +2719,36 @@ public class FollowerPlugin extends Plugin
 	 * <p>A weapon with no equipment stats, or none that favour any style,
 	 * reports UNKNOWN and the library declines to borrow rather than guess.
 	 */
-	private int weaponUsage(int itemId)
+	int weaponUsage(int itemId)
 	{
-		net.runelite.client.game.ItemStats stats = itemManager.getItemStats(itemId);
+		var stats = itemManager.getItemStats(itemId);
 		if (stats == null || stats.getEquipment() == null)
-		{
-			return com.follower.follower.StanceLibrary.StyleSource.UNKNOWN;
-		}
-		net.runelite.client.game.ItemEquipmentStats equipment = stats.getEquipment();
-		int melee = Math.max(equipment.getAstab(),
-			Math.max(equipment.getAslash(), equipment.getAcrush()));
-		int ranged = equipment.getArange();
-		int magic = equipment.getAmagic();
+			return StyleSource.UNKNOWN;
+		var equipment = stats.getEquipment();
+		int melee = max(equipment.getAstab(),
+			max(equipment.getAslash(), equipment.getAcrush()));
+		int ranged = equipment.getArange(),
+			magic = equipment.getAmagic();
 
 		int style;
 		if (ranged > melee && ranged >= magic)
-		{
-			style = com.follower.follower.StanceLibrary.StyleSource.RANGED;
-		}
+			style = StyleSource.RANGED;
 		else if (magic > melee && magic > ranged)
-		{
-			style = com.follower.follower.StanceLibrary.StyleSource.MAGIC;
-		}
+			style = StyleSource.MAGIC;
 		else if (melee == 0 && ranged == 0 && magic == 0)
-		{
 			// A weapon with no offensive bonus at all says nothing about itself.
-			return com.follower.follower.StanceLibrary.StyleSource.UNKNOWN;
-		}
+			return StyleSource.UNKNOWN;
 		else
-		{
-			style = com.follower.follower.StanceLibrary.StyleSource.MELEE;
-		}
-		return com.follower.follower.StanceLibrary.StyleSource.packed(
+			style = StyleSource.MELEE;
+		return StyleSource.packed(
 			style, equipment.isTwoHanded());
 	}
 
-	private KitType resolveSlot(int itemId)
+	KitType resolveSlot(int itemId)
 	{
-		net.runelite.client.game.ItemStats stats = itemManager.getItemStats(itemId);
+		var stats = itemManager.getItemStats(itemId);
 		if (stats != null && stats.getEquipment() != null)
-		{
 			return slotFromEquipmentIndex(stats.getEquipment().getSlot());
-		}
 
 		// The stats database only knows items with combat stats. Purely
 		// cosmetic wearables - a plain Scroll, the Book of portraiture - have
@@ -4638,7 +2757,7 @@ public class FollowerPlugin extends Plugin
 		// well. Our own model dump carries the cache's wear position, and it
 		// is the same dump the renderer builds from: if the item is in there,
 		// the follower can wear it, by construction.
-		ModelRepository.Entry entry = modelRepository.item(itemId);
+		var entry = modelRepository.item(itemId);
 		return entry != null && entry.wp1 != null
 			? slotFromEquipmentIndex(entry.wp1)
 			: null;
@@ -4651,13 +2770,11 @@ public class FollowerPlugin extends Plugin
 	 * for the work animation only - so the follower fished with nothing in
 	 * its hands ("Prop 307 has no wearable slot").
 	 */
-	private KitType handSlot(int itemId)
+	KitType handSlot(int itemId)
 	{
-		KitType slot = resolveSlot(itemId);
+		var slot = resolveSlot(itemId);
 		if (slot != null)
-		{
 			return slot;
-		}
 		return handSlot(itemId, false);
 	}
 
@@ -4669,70 +2786,46 @@ public class FollowerPlugin extends Plugin
 	 * slot, not both fighting over the weapon hand. Null for an item with no
 	 * worn model: the game draws nothing in that hand.
 	 */
-	private KitType handSlot(int itemId, boolean leftHand)
+	KitType handSlot(int itemId, boolean leftHand)
 	{
-		ModelRepository.Entry entry = modelRepository.item(itemId);
+		var entry = modelRepository.item(itemId);
 		if (entry == null || !hasWornModel(entry))
-		{
 			return null;
-		}
-		return leftHand ? KitType.SHIELD : KitType.WEAPON;
+		return leftHand ? SHIELD : WEAPON;
 	}
 
-	private static boolean hasWornModel(ModelRepository.Entry entry)
+	static boolean hasWornModel(ModelRepository.Entry entry)
 	{
 		for (int[] models : new int[][]{entry.m, entry.f})
 		{
 			if (models == null)
-			{
 				continue;
-			}
 			for (int model : models)
 			{
 				if (model >= 0)
-				{
 					return true;
-				}
 			}
 		}
 		return false;
 	}
 
-	private static KitType slotFromEquipmentIndex(int slot)
+	static KitType slotFromEquipmentIndex(int slot)
 	{
 		// Equipment container indices are NOT contiguous and do NOT line up with
 		// KitType ordinals (6, 8 and 11 are kit-only slots with no equippable item),
 		// so map them explicitly rather than relying on ordinal coincidence.
-		switch (slot)
-		{
-			case 0:
-				return KitType.HEAD;
-			case 1:
-				return KitType.CAPE;
-			case 2:
-				return KitType.AMULET;
-			case 3:
-				return KitType.WEAPON;
-			case 4:
-				return KitType.TORSO;
-			case 5:
-				return KitType.SHIELD;
-			case 7:
-				return KitType.LEGS;
-			case 9:
-				return KitType.HANDS;
-			case 10:
-				return KitType.BOOTS;
-			default:
-				// Rings and ammo have no worn model; ARMS/HAIR/JAW are body kits.
-				return null;
-		}
+		// Rings and ammo have no worn model; ARMS/HAIR/JAW are body kits.
+		return slot >= 0 && slot < KIT_BY_EQUIPMENT_INDEX.length ? KIT_BY_EQUIPMENT_INDEX[slot] : null;
 	}
+
+	/** The worn slot of each equipment container index; null where there is no worn model. */
+	static final KitType[] KIT_BY_EQUIPMENT_INDEX = {HEAD, CAPE, AMULET,
+		WEAPON, TORSO, SHIELD, null, LEGS, null, HANDS, BOOTS};
 
 	// --------------------------------------------------------------- lifecycle
 
 	@Subscribe
-	public void onGameStateChanged(GameStateChanged event)
+	void onGameStateChanged(GameStateChanged event)
 	{
 		switch (event.getGameState())
 		{
@@ -4741,7 +2834,8 @@ public class FollowerPlugin extends Plugin
 				// camera is snapping into place and collision data may not be ready,
 				// so a follower spawned right now appears mid-load and in the wrong
 				// spot. Let the world become visible first.
-				spawnDelayTicks = SPAWN_DELAY_TICKS;
+				// SPAWN_DELAY_TICKS: ~2 seconds at 600ms per tick, after the world becomes visible.
+				spawnDelayTicks = 4 /* SPAWN_DELAY_TICKS */;
 				rebuildQueued = true;
 
 				// The GE replay arrives between here and the first tick.
@@ -4786,31 +2880,13 @@ public class FollowerPlugin extends Plugin
 					// is known to be the one it came from. Not again after a
 					// switch at the login screen, which has already read it.
 					if (loginReadsTheMemory(memoryProfileId, currentProfileId()))
-					{
 						readCounters();
-					}
 					// Cooldowns kept through the logout are this account's.
 					speechEngine.loggedInAs(client.getAccountHash());
 					readTimeAway();
-					if (sketchBook != null)
-					{
-						sketchBook.openFor(configManager.getRSProfileKey());
-						speechEngine.getContext().noteSketchAccount(configManager.getRSProfileKey());
-					}
-					if (chronicleProgress != null)
-					{
-						// A new session, perhaps another account: what the book
-						// can read is taken stock of afresh, not compared with
-						// the last character's.
-						chronicleProgress.reset();
-					}
-					pageNews.clear();
-					speechEngine.getContext().clearDailyTallies();
-					noteFirstMeeting();
-					speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
-				speechEngine.getContext().setRegionNames(ruleLoader.getRegionNames());
-					readTraits();
-					TriggerContext counted = speechEngine.getContext();
+					context().clearDailyTallies();
+					knowThePlayer();
+					var counted = context();
 					counted.setSessionCount(counted.getSessionCount() + 1);
 					sessionMinutes = 0;
 					sessionRecordSaid = false;
@@ -4828,7 +2904,7 @@ public class FollowerPlugin extends Plugin
 					// 15 Oct, dispatched before it, logging in poisoned or in the
 					// Wilderness had that standing state rise on the login pass,
 					// outrank the greeting, and take the hello.
-					speechEngine.dispatchAfterPriming(TriggerEvent.simple(TriggerEvent.Type.LOGIN));
+					speechEngine.dispatchAfterPriming(TriggerEvent.simple(LOGIN));
 
 					// The world literally changes under everyone's feet once a
 					// week; a scribe keeping maps would notice. Seeded silently
@@ -4836,15 +2912,11 @@ public class FollowerPlugin extends Plugin
 					// install does not announce an update that is not one.
 					int revision = client.getRevision();
 					if (config.lastRevision() > 0 && revision != config.lastRevision())
-					{
 						speechEngine.dispatchAfterPriming(
-							TriggerEvent.simple(TriggerEvent.Type.GAME_UPDATE));
-					}
+							TriggerEvent.simple(GAME_UPDATE));
 					if (revision != config.lastRevision())
-					{
-						configManager.setConfiguration(FollowerConfig.GROUP,
+						setConfig(
 							"lastRevision", revision);
-					}
 				}
 
 				// Sync the colour table to the brightness setting as it stands now;
@@ -4852,9 +2924,7 @@ public class FollowerPlugin extends Plugin
 				clientThread.invokeLater(() ->
 				{
 					int brightness = client.getVarpValue(BRIGHTNESS_VARP);
-					com.follower.ui.GameColourTable.setBrightnessSetting(brightness);
-					log.debug("Brightness at login: varp {} -> gamma {}",
-						brightness, com.follower.ui.GameColourTable.getCurrentGamma());
+					GameColourTable.setBrightnessSetting(brightness);
 				});
 				break;
 
@@ -4872,18 +2942,12 @@ public class FollowerPlugin extends Plugin
 				// a lost tick of movement - which is what made it stop and then snap.
 				// A real teleport is caught by the distance check in updateTrail.
 				follower.markNeedsReattach();
-				if (hotGround != null)
-				{
-					// The scene is rebuilt from here; its fires are announced
-					// again as it loads, so the old set is only ever stale.
-					hotGround.clear();
-				}
-				if (skilling != null)
-				{
-					// Objects and NPCs dropped around a load are shuffling,
-					// not a tree falling; the company ignores them for a beat.
-					skilling.sceneLoading();
-				}
+				// The scene is rebuilt from here; its fires are announced
+				// again as it loads, so the old set is only ever stale.
+				hotGround.clear();
+				// Objects and NPCs dropped around a load are shuffling,
+				// not a tree falling; the company ignores them for a beat.
+				skilling.sceneLoading();
 				break;
 
 			case LOGGING_IN:
@@ -4904,15 +2968,6 @@ public class FollowerPlugin extends Plugin
 				// the death that usually prompts the logout, and any once-ever
 				// line said in that window, which then said itself again.
 				writeCountersIfChanged();
-				if (sketching != null)
-				{
-					sketching.reset();
-				}
-				if (chronicleProgress != null)
-				{
-					chronicleProgress.reset();
-				}
-				pageNews.clear();
 				// A session really ending. What the follower was feeling, what
 				// it was hoping for and the question it was waiting on all
 				// belonged to that session.
@@ -4949,53 +3004,25 @@ public class FollowerPlugin extends Plugin
 	 * logging out or only changing worlds. Deliberately holds nothing about
 	 * what the follower knows or feels - that is the difference between the two.
 	 */
-	private void tearDownScene()
+	void tearDownScene()
 	{
-		if (hotGround != null)
-		{
-			hotGround.clear();
-		}
+		hotGround.clear();
 		ensureCatalogues();
 		resetThrallQuietly();
 		// Actor references from a scene that is going away.
 		damagedByPlayer.clear();
-		if (errands != null)
-		{
-			errands.reset();
-		}
-		if (flourish != null)
-		{
-			// Mid-gesture when the scene went: the scroll must not survive it.
-			flourish.abort();
-		}
-		if (skilling != null)
-		{
-			// The session, the seat and the borrowed tool all belonged to it.
-			skilling.reset();
-		}
-		if (moments != null)
-		{
-			moments.reset();
-		}
+		errands.reset();
+		// Mid-gesture when the scene went: the scroll must not survive it.
+		flourish.abort();
+		// The session, the seat and the borrowed tool all belonged to it.
+		skilling.reset();
+		moments.reset();
 		// What was noticed, looked at and hesitated over was all in this
 		// scene. No despawn comes for a scene thrown away, so a drop or a star
 		// left behind was walked to and named in the next world.
-		if (noticing != null)
-		{
-			noticing.reset();
-		}
-		if (marksOfGrace != null)
-		{
-			marksOfGrace.reset();
-		}
-		if (gaze != null)
-		{
-			gaze.reset();
-		}
-		if (will != null)
-		{
-			will.reset();
-		}
+		noticing.reset();
+		gaze.reset();
+		will.reset();
 		// The conversation too. Left open at a logout it took the presses in
 		// the chatbox at the login screen, and at the next login the first
 		// step closed it and gave the last session's answer to this one.
@@ -5004,15 +3031,6 @@ public class FollowerPlugin extends Plugin
 		dialog.close();
 		// Same for the minute-taking: the meeting went with the scene.
 		endMinutes(false);
-		// And the film. Its window stays open, and the next press in it
-		// starts the scene again in the new one. The window says so, or it
-		// would go on saying a scene is under way while the follower is back
-		// to its own business.
-		if (filming)
-		{
-			tellTheFilm("Posing ended when you left the world. Press anything here to start again.");
-		}
-		endFilming();
 		// A held copy (a sit, a dance loop) too. Its pose override outlives
 		// the body, and the next one held it at every stop, weapon away.
 		if (mirroredPose != 0)
@@ -5025,14 +3043,9 @@ public class FollowerPlugin extends Plugin
 		pendingMime = 0;
 		copyAtWork = false;
 		welfareChecked = false;
-		captureFallback.abort();
 		follower.despawn();
 		appearanceService.invalidate();
 		overlay.clear();
-		// The book shuts with the scene, as the game's own windows do. Left
-		// open at a logout it was not drawn, but it still took the presses
-		// where it had been, over the login screen's buttons.
-		chronicleWindow.close();
 		// Anything still waiting its turn belongs to the scene that just went;
 		// it must not surface in the next one.
 		speechQueue.clear();
@@ -5051,10 +3064,6 @@ public class FollowerPlugin extends Plugin
 		sentWhenFree = null;
 		// A logout tab still up when the next scene starts is not a goodbye.
 		logoutTabOpen = true;
-		// A forced cutscene ends with the scene, as a real one does. Left on,
-		// it held the follower still through logouts and hops with nothing
-		// to say so.
-		cutsceneForced = false;
 		sceneOn = false;
 		sceneGoneTicks = 0;
 		quietUntilTick = 0;
@@ -5063,49 +3072,26 @@ public class FollowerPlugin extends Plugin
 	}
 
 	@Subscribe
-	public void onConfigChanged(ConfigChanged event)
+	void onConfigChanged(ConfigChanged event)
 	{
 		if (!FollowerConfig.GROUP.equals(event.getGroup()))
-		{
 			return;
-		}
 
 		applyConfig();
 
 		String key = event.getKey();
-		// The force hold goes with the commands that set it: once they are
-		// off, ::follower force cutscene off is refused, and nothing else
-		// would ever let it go.
-		if ("developerMode".equals(key) && !config.developerMode())
-		{
-			cutsceneForced = false;
-		}
-		if ("muted".equals(key) && panel != null)
-		{
-			panel.setMuted(config.muted());
-		}
 		if (panel != null)
 		{
+			if ("muted".equals(key))
+				panel.setSetting(key, config.muted());
 			if ("chattiness".equals(key))
-			{
-				panel.setChattiness(config.chattiness());
-			}
+				panel.setSetting(key, config.chattiness());
 			if ("mirrorToChat".equals(key))
-			{
-				panel.setMirrorToChat(config.mirrorToChat());
-			}
+				panel.setSetting(key, config.mirrorToChat());
 			if ("errandsEnabled".equals(key))
-			{
-				panel.setErrandsEnabled(config.errandsEnabled());
-			}
+				panel.setSetting(key, config.errandsEnabled());
 			if ("followerName".equals(key))
-			{
 				panel.setFollowerName(followerName());
-			}
-			if ("developerMode".equals(key))
-			{
-				panel.setCommands(commandLines());
-			}
 		}
 		// The Follow me toggle, finally wired to its own description ("stays
 		// where it was last placed"): off parks the follower through the same
@@ -5129,38 +3115,28 @@ public class FollowerPlugin extends Plugin
 			String name = typed == null ? "" : typed.trim();
 			if (!name.isEmpty() && profileStore.get(name) == null
 				&& belongsToProfile(outfitListProfileId, currentProfileId()))
-			{
 				sendStatus(unknownProfileMessage(name));
-			}
 			if (panel != null)
-			{
 				panel.setThrallProfiles(config.thrallMeleeProfile(),
 					config.thrallRangedProfile(), config.thrallMagicProfile());
-			}
 		}
-		if ("thrallOnly".equals(key))
-		{
-			// Turned off, the follower comes back now and in its own outfit:
-			// the mode's login built it no model, and its exit left the
-			// thrall's behind. Turned on, the same rebuild hides it.
-			clientThread.invoke(() ->
-			{
-				appearanceService.invalidate();
-				rebuildFollower();
-			});
-		}
-		if ("customOutfit".equals(key) || "verticalOffset".equals(key))
+		// Thrall only turned off brings the follower back now and in its own
+		// outfit: the mode's login built it no model, and its exit left the
+		// thrall's behind. Turned on, the same rebuild hides it.
+		boolean outfitChanged = "customOutfit".equals(key) || "verticalOffset".equals(key);
+		if (outfitChanged || "thrallOnly".equals(key))
 		{
 			clientThread.invoke(() ->
 			{
 				appearanceService.invalidate();
 				rebuildFollower();
 			});
+		}
+		if (outfitChanged)
 			// The outfit can change from outside the panel - loading a profile,
 			// the chat commands - and the equipment grid and body-kit rows have
 			// to follow it, not just the follower.
 			syncPanel();
-		}
 	}
 
 	/**
@@ -5181,14 +3157,12 @@ public class FollowerPlugin extends Plugin
 	 * only a value it is not already living gets applied, so that write is
 	 * a no-op.
 	 */
-	private void applyFollowEnabled(boolean wantFollow)
+	void applyFollowEnabled(boolean wantFollow)
 	{
 		if (followToggleNeedsAction(wantFollow, parkedByPlayer))
 		{
 			if (wantFollow)
-			{
 				followAgain();
-			}
 			else
 			{
 				follower.stayHere();
@@ -5206,7 +3180,7 @@ public class FollowerPlugin extends Plugin
 	 *
 	 * @param sentTo the tile a Send settled on, or null for a Stay
 	 */
-	private void parkedByThePlayer(WorldPoint sentTo)
+	void parkedByThePlayer(WorldPoint sentTo)
 	{
 		parkedByPlayer = true;
 		wandered = false;
@@ -5223,14 +3197,10 @@ public class FollowerPlugin extends Plugin
 	static WorldPoint parkToReturnTo(String kept, WorldPoint player)
 	{
 		if (kept == null || player == null)
-		{
 			return null;
-		}
-		String[] parts = kept.split(",");
+		var parts = kept.split(",");
 		if (parts.length != 3)
-		{
 			return null;
-		}
 		WorldPoint post;
 		try
 		{
@@ -5243,9 +3213,7 @@ public class FollowerPlugin extends Plugin
 		}
 		if (post.getPlane() != player.getPlane()
 			|| post.distanceTo(player) > FollowerEntity.STAY_LEASH - 2)
-		{
 			return null;
-		}
 		return post;
 	}
 
@@ -5260,34 +3228,26 @@ public class FollowerPlugin extends Plugin
 		WorldPoint stayTile, String kept)
 	{
 		if (!spawned)
-		{
 			return kept;
-		}
 		if (!parkedByPlayer)
-		{
 			return "";
-		}
 		if (waitingToPark || stayTile == null)
-		{
 			return kept;
-		}
 		return stayTile.getX() + "," + stayTile.getY() + "," + stayTile.getPlane();
 	}
 
 	/** Once a tick, after the park is kept: records where it holds, for the next spawn. */
-	private void rememberThePark()
+	void rememberThePark()
 	{
 		String kept = config.parkedAt();
 		String now = parkToKeep(follower.isSpawned(), parkedByPlayer, parkWhenFree,
 			follower.isStaying() ? follower.getStayTile() : null, kept);
 		if (!now.equals(kept))
-		{
-			configManager.setConfiguration(FollowerConfig.GROUP, "parkedAt", now);
-		}
+			setConfig("parkedAt", now);
 	}
 
 	/** The player said Follow: the park is over, whoever had the feet. */
-	private void followAgain()
+	void followAgain()
 	{
 		parkedByPlayer = false;
 		parkWhenFree = false;
@@ -5305,22 +3265,18 @@ public class FollowerPlugin extends Plugin
 	 * taken off by force - the leash, a teleport, thrall work - is over,
 	 * since those bring it along to the player.
 	 */
-	private void keepThePlayersPark()
+	void keepThePlayersPark()
 	{
 		if (parkWhenFree && !feetBorrowed())
 		{
 			parkWhenFree = false;
 			if (!follower.isStaying()
 				&& (sentWhenFree == null || !follower.stayAt(sentWhenFree)))
-			{
 				follower.stayHere();
-			}
 			sentWhenFree = null;
 		}
 		if (!parkWhenFree && !follower.isStaying())
-		{
 			parkedByPlayer = false;
-		}
 	}
 
 	/**
@@ -5328,7 +3284,7 @@ public class FollowerPlugin extends Plugin
 	 * errand, the spectator, a planted emote, the minutes, the seat, a moment
 	 * or a write-up. Each hands them back itself when it is done.
 	 */
-	private boolean feetBorrowed()
+	boolean feetBorrowed()
 	{
 		return thrallBusiness()
 			|| (errands != null && errands.isBusy())
@@ -5348,24 +3304,20 @@ public class FollowerPlugin extends Plugin
 	 * a walk with Follow me and no park at all, or for a sketch, or for a
 	 * cutscene.
 	 */
-	private boolean errandBusy()
+	boolean errandBusy()
 	{
 		return dialog.isOpen() || follower.isNpcSlaved() || minutesState != 0
 			|| (skilling != null && skilling.blocksErrands())
 			|| (moments != null && moments.holdsTheFeet())
-			|| parkedByPlayer || filming
-			|| (sketching != null && sketching.isSketching())
+			|| parkedByPlayer
 			|| inCutscene() || follower.isDoingAgility()
-			|| System.currentTimeMillis() - lastAgilityXpMs < ERRANDS_AFTER_AGILITY_MS;
+			// ERRANDS_AFTER_AGILITY_MS: Agility XP this recently keeps errands off: on a course the run back
+			// to the first obstacle is not agility, and an errand begun there turns
+			// the watch off and misses the first climb.
+			|| currentTimeMillis() - lastAgilityXpMs < 60_000L /* ERRANDS_AFTER_AGILITY_MS */;
 	}
 
-	/**
-	 * Agility XP this recently keeps errands off: on a course the run back
-	 * to the first obstacle is not agility, and an errand begun there turns
-	 * the watch off and misses the first climb.
-	 */
-	private static final long ERRANDS_AFTER_AGILITY_MS = 60_000;
-	private long lastAgilityXpMs;
+	long lastAgilityXpMs;
 
 	/**
 	 * What beats the seat. Thrall work and the spectator, over their whole
@@ -5373,7 +3325,7 @@ public class FollowerPlugin extends Plugin
 	 * gave, which no work nearby takes the follower off. And a cutscene: a
 	 * seat taken again after the scene's catch-up walked it back and forth.
 	 */
-	private boolean seatFeetTaken()
+	boolean seatFeetTaken()
 	{
 		return thrallBusiness() || (spectate != null && spectate.holdsTheFeet())
 			|| parkedByPlayer || inCutscene() || follower.isDoingAgility();
@@ -5392,11 +3344,10 @@ public class FollowerPlugin extends Plugin
 	 * And a cutscene and the quiet after it: no peering at the cast as it
 	 * turns to the player, and nothing begun the moment the scene lets go.
 	 */
-	private boolean momentFeetTaken()
+	boolean momentFeetTaken()
 	{
 		return thrallBusiness() || (spectate != null && spectate.holdsTheFeet())
-			|| (errands != null && errands.isBusy()) || filming
-			|| (sketching != null && sketching.isSketching())
+			|| (errands != null && errands.isBusy())
 			|| sceneQuiet() || follower.isDoingAgility();
 	}
 
@@ -5406,9 +3357,11 @@ public class FollowerPlugin extends Plugin
 	 * boss's intro among them. A park the player gave is handed to it apart:
 	 * the fight is still announced at both ends, but watched from the post.
 	 */
-	private boolean spectateBusy()
+	boolean spectateBusy()
 	{
-		return thrallBusiness() || (errands != null && errands.isBusy()) || filming || inCutscene()
+		return thrallBusiness()
+			|| errands.isBusy()
+			|| inCutscene()
 			|| follower.isDoingAgility();
 	}
 
@@ -5418,7 +3371,7 @@ public class FollowerPlugin extends Plugin
 	 * touching the setting, so the write can be a no-op that raises no
 	 * change event; then the move is applied here instead.
 	 */
-	private void followFromPanel(boolean enabled)
+	void followFromPanel(boolean enabled)
 	{
 		if (config.followEnabled() == enabled)
 		{
@@ -5429,7 +3382,7 @@ public class FollowerPlugin extends Plugin
 	}
 
 	/** The answer to a profile name nothing is saved under; the thrall settings share it. */
-	private String unknownProfileMessage(String name)
+	String unknownProfileMessage(String name)
 	{
 		return "No outfit profile named '" + name + "'. Saved: "
 			+ (profileStore.names().isEmpty()
@@ -5437,160 +3390,66 @@ public class FollowerPlugin extends Plugin
 	}
 
 	/** Whether the follower is parked by the player: Follow me off, a right-click Stay or a Send. */
-	public boolean isStaying()
+	boolean isStaying()
 	{
 		return stayReported;
 	}
 
-	/** Called on the client thread as the player-commanded stay starts or ends. */
-	public void setOnStayStateChanged(java.util.function.Consumer<Boolean> listener)
-	{
-		onStayStateChanged = listener;
-	}
-
-	/** The region the player stands in, the id the Locations rules use; -1 before the first tick. */
-	public int currentRegionId()
-	{
-		return lastRegionId;
-	}
-
-	/** Restores exact palette pairs saved by ::follower palette, format "find>replace;...". */
-	private void loadExactPalette()
-	{
-		String stored = config.exactPalette();
-		java.util.Map<Short, Short> pairs = new java.util.LinkedHashMap<>();
-		if (stored != null && !stored.trim().isEmpty())
-		{
-			for (String token : stored.split(";"))
-			{
-				String[] halves = token.split(">");
-				if (halves.length != 2)
-				{
-					continue;
-				}
-				try
-				{
-					pairs.put(Short.parseShort(halves[0].trim()), Short.parseShort(halves[1].trim()));
-				}
-				catch (NumberFormatException ignored)
-				{
-					// Corrupt token; skip it rather than lose the rest.
-				}
-			}
-		}
-		appearanceComposer.setExactPairs(pairs);
-		if (!pairs.isEmpty())
-		{
-			log.info("Restored {} exact palette pairs", pairs.size());
-		}
-	}
-
-	private void saveExactPalette(java.util.Map<Short, Short> pairs)
-	{
-		StringBuilder s = new StringBuilder();
-		pairs.forEach((find, replace) ->
-		{
-			if (s.length() > 0)
-			{
-				s.append(';');
-			}
-			s.append(find).append('>').append(replace);
-		});
-		configManager.setConfiguration(FollowerConfig.GROUP, EXACT_PALETTE_KEY, s.toString());
-	}
-
-	private void applyConfig()
+	void applyConfig()
 	{
 		follower.setVerticalOffset(config.verticalOffset());
 		speechEngine.setDefaultOutput(config.defaultOutput());
 		speechEngine.setGlobalCooldownMs(config.chattiness().getGapMs());
 		speechEngine.setMuted(config.muted());
 		speechEngine.setDisabledGroups(collectDisabledGroups());
-		speechEngine.setOnSuppressed(journal::suppressed);
 	}
 
-	private Set<String> collectDisabledGroups()
+	Set<String> collectDisabledGroups()
 	{
 		Set<String> disabled = new HashSet<>();
 		if (!config.groupBoss())
-		{
 			disabled.add("boss");
-		}
 		if (!config.groupHealth())
-		{
 			disabled.add("health");
-		}
 		if (!config.groupArea())
-		{
 			disabled.add("area");
-		}
 		if (!config.groupIdle())
-		{
 			disabled.add("idle");
-		}
 		if (!config.groupGear())
-		{
 			disabled.add("gear");
-		}
 		if (!config.groupQuest())
-		{
 			disabled.add("quest");
-		}
 		if (!config.groupCombat())
-		{
 			disabled.add("combat");
-		}
 		if (!config.groupMimic())
-		{
 			disabled.add("mimic");
-		}
 		if (!config.groupMemory())
-		{
 			disabled.add("memory");
-		}
-		if (!config.groupSouvenir())
-		{
-			disabled.add("souvenir");
-		}
-		if (!config.groupBet())
-		{
-			disabled.add("bet");
-		}
 		if (!config.groupClock())
-		{
 			disabled.add("clock");
-		}
 		if (!config.groupReactions())
-		{
 			disabled.add("reactions");
-		}
 		// Copying agility, the follower falls after the player does, and
 		// agility-fell says so once it has. fail-slip, on the player's own
 		// 'You slip', would make that two remarks about one fall.
 		if (config.copiesAgility())
-		{
 			disabled.add("fail-slip");
-		}
 		for (String token : config.disabledGroups().split(","))
 		{
 			String trimmed = token.trim().toLowerCase(Locale.ROOT);
 			if (!trimmed.isEmpty())
-			{
 				disabled.add(trimmed);
-			}
 		}
 		return disabled;
 	}
 
 	// ---------------------------------------------------------------- follower
 
-	private void rebuildFollower()
+	void rebuildFollower()
 	{
-		Player local = client.getLocalPlayer();
+		var local = client.getLocalPlayer();
 		if (local == null || local.getWorldLocation() == null)
-		{
 			return;
-		}
 
 		if (shouldHide())
 		{
@@ -5599,21 +3458,20 @@ public class FollowerPlugin extends Plugin
 		}
 
 		// The prop is skipped in thrall mode, whose override is a shared object
-		// and whose conscript has no time to read. So are the film's pose's
-		// hands, which stand in for the emote disarm while they are on.
-		int[] filmHands = outfitOverride == null && filmSet != null ? filmSet.hands() : null;
+		// and whose conscript has no time to read.
 		// Nor a prop still behind its reach: it comes in at the bottom of it.
 		boolean propShown = outfitOverride == null && !propBehindReach;
-		Outfit outfit = dressForRender(resolveOutfit(), spectateDisarmed || emoteDisarmed && filmHands == null,
+		var outfit = dressForRender(resolveOutfit(),
+			spectateDisarmed ||
+			emoteDisarmed,
 			propShown ? propSlot : null, propItemId,
 			outfitOverride == null ? wornSlot : null, wornItemId);
 		dressForPose(outfit, propShown ? propHands : null);
 		dressForPose(outfit, outfitOverride == null ? emoteHands : null);
 		dressForPose(outfit, outfitOverride == null && emoteHands == null ? loopHands : null);
 		dressForPose(outfit, outfitOverride == null ? follower.getCrossingHands() : null);
-		dressForPose(outfit, filmHands);
 
-		appearanceService.request(outfit, com.follower.appearance.ModelSource.DUMP_ONLY, appearance ->
+		appearanceService.request(outfit, appearance ->
 		{
 			if (appearance == null)
 			{
@@ -5627,19 +3485,20 @@ public class FollowerPlugin extends Plugin
 				return;
 			}
 			buildFailureTold = false;
+			// The dialogue heads are asked for with each look, so a model the
+			// client has never drawn has landed by the first Talk-to.
+			dialog.fetchHeads();
 
 			// Stances follow the weapon the FOLLOWER holds, not the one we hold.
-			follower.setWeapon(outfit.isItem(KitType.WEAPON)
-				? outfit.itemId(KitType.WEAPON)
-				: com.follower.follower.StanceLibrary.UNARMED);
+			follower.setWeapon(outfit.isItem(WEAPON)
+				? outfit.itemId(WEAPON)
+				: StanceLibrary.UNARMED);
 			// A staff is swung one-handed when the other hand holds a shield.
-			followerHoldsShield = outfit.isItem(KitType.SHIELD);
+			followerHoldsShield = outfit.isItem(SHIELD);
 
 
 			if (follower.isSpawned())
-			{
 				follower.setAppearance(appearance);
-			}
 			else
 			{
 				if (thrallNpc != null)
@@ -5648,420 +3507,45 @@ public class FollowerPlugin extends Plugin
 					// thrall's tile, with the thrall's own burst and no arrival
 					// puff or spawn animation of its own.
 					follower.setSpawnAnimation(new int[0]);
-					WorldPoint at = thrallNpc.getWorldLocation();
+					var at = thrallNpc.getWorldLocation();
 					follower.spawn(appearance, at != null ? at : local.getWorldLocation(), null, 0);
 					return;
 				}
 				follower.setSpawnAnimation(parseAnimationIds(config.spawnAnimation()));
-
-				// Arrive on a free tile behind the player rather than inside
-				// them, or back on the post it was left waiting on.
-				WorldPoint post = config.followEnabled() ? null
-					: parkToReturnTo(config.parkedAt(), local.getWorldLocation());
-				WorldPoint behind = post != null ? post : follower.restingTileBehind(local, 2);
-				follower.spawn(appearance, behind != null ? behind : local.getWorldLocation(),
-					spawnGraphic(), config.spawnGraphicHeight(), post != null);
-
-				// The very first spawn ever is the one moment naming is cheap
-				// and natural. THIS is the spawn a login takes - the queued
-				// rebuild - not the bare auto-spawn fallback below in the tick
-				// loop, which is why the countdown is armed in both places.
-				if (!config.namePrompted())
-				{
-					namePromptDelayTicks = NAME_PROMPT_DELAY_TICKS;
-				}
-				maybeSendCommandHint();
-
-				// Spawned with Follow me off: parked from the first tile, not
-				// following until somebody notices the toggle.
-				if (!config.followEnabled())
-				{
-					follower.stayHere();
-					parkedByThePlayer(null);
-				}
+				spawnFollower(appearance, local, true);
 			}
 		});
 	}
 
 	/**
-	 * Validation for the live cache parsers: diffs every entry the offline
-	 * dumper produced against the runtime parse of the same cache. Field-level
-	 * equality via JSON serialisation - identical output proves the ported
-	 * opcode readers byte-exact. Run on a machine that has the dump files.
+	 * Puts the follower in the world: back on the post it was left waiting
+	 * on, else on a free tile behind the player rather than inside them (when
+	 * {@code behind}), else on the player's tile. The queued rebuild a login
+	 * takes spawns behind; the tick's bare fallback does not.
 	 */
-	/**
-	 * Checks every animation the RULES play against the cache they play from.
-	 *
-	 * <p>Two failures are possible and neither announces itself. An id that is
-	 * not in the cache simply does nothing, and the rule looks broken for no
-	 * visible reason. Worse, an id that is an AUTHORED LOOP never reaches the
-	 * end its chain is waiting for: {@code playChain} finishes on the animation
-	 * controller's callback, which a looping clip never fires, so the follower
-	 * is left mid-emote - and since an emote empties its hands, holding nothing
-	 * for the rest of the session.
-	 *
-	 * <p>Only animations a rule PLAYS are checked. The ids in an
-	 * {@code animationSelf} trigger are the player's own and are none of the
-	 * follower's business, and a pose id (the rest) is applied through the pose
-	 * slot, where looping is the whole point.
-	 *
-	 * @return the number of problems found
-	 */
-	private int auditRuleAnimations()
+	void spawnFollower(ComposedAppearance appearance, Player local,
+		boolean behind)
 	{
-		java.util.Map<Integer, java.util.List<String>> played = new java.util.LinkedHashMap<>();
-		for (com.follower.speech.SpeechRule rule : ruleLoader.getRules())
+		var post = config.followEnabled() ? null
+			: parkToReturnTo(config.parkedAt(), local.getWorldLocation());
+		var free = post != null ? post : behind ? follower.restingTileBehind(local, 2) : null;
+		follower.spawn(appearance, free != null ? free : local.getWorldLocation(),
+			spawnGraphic(), config.spawnGraphicHeight(), post != null);
+
+		// The very first spawn ever is the one moment naming is cheap and
+		// natural, and both spawns can be it: the queued rebuild a login
+		// takes, and the tick's fallback.
+		if (!config.namePrompted())
+			namePromptDelayTicks = NAME_PROMPT_DELAY_TICKS;
+		maybeSendCommandHint();
+
+		// Spawned with Follow me off: parked from the first tile, not
+		// following until somebody notices the toggle.
+		if (!config.followEnabled())
 		{
-			if (rule.animation != null)
-			{
-				played.computeIfAbsent(rule.animation, id -> new ArrayList<>()).add(rule.id);
-			}
-			if (rule.animations != null)
-			{
-				for (Integer id : rule.animations)
-				{
-					if (id != null)
-					{
-						played.computeIfAbsent(id, key -> new ArrayList<>()).add(rule.id);
-					}
-				}
-			}
+			follower.stayHere();
+			parkedByThePlayer(null);
 		}
-
-		int problems = 0;
-		for (java.util.Map.Entry<Integer, java.util.List<String>> entry : played.entrySet())
-		{
-			int id = entry.getKey();
-			String rules = String.join(", ", entry.getValue());
-
-			net.runelite.api.Animation animation = client.loadAnimation(id);
-			if (animation == null)
-			{
-				log.warn("cachecheck: animation {} is not in the cache, used by {}", id, rules);
-				problems++;
-				continue;
-			}
-			if (animation.getFrameStep() >= 0)
-			{
-				log.warn("cachecheck: animation {} is an authored loop (frameStep {}),"
-						+ " used by {} - a chain would never finish and the follower"
-						+ " would be left mid-emote holding nothing",
-					id, animation.getFrameStep(), rules);
-				problems++;
-			}
-		}
-
-		problems += auditMirroredAnimations();
-
-		log.info("cachecheck: {} animations played by rules, {} problems",
-			played.size(), problems);
-		return problems;
-	}
-
-	/**
-	 * Checks the two mimic rules have their animations the right way round.
-	 *
-	 * <p>They divide by whether an animation loops, and the division is what
-	 * makes each one work: a one-shot mirrored as a POSE would freeze on its
-	 * last frame until the player moved, and a loop mirrored as an EMOTE would
-	 * never reach the finish its chain waits for. Neither says anything when it
-	 * goes wrong, so the cache is asked directly.
-	 *
-	 * @return the number of animations on the wrong side
-	 */
-	private int auditMirroredAnimations()
-	{
-		int problems = 0;
-		for (com.follower.speech.SpeechRule rule : ruleLoader.getRules())
-		{
-			if (rule.when == null || rule.when.ids == null)
-			{
-				continue;
-			}
-			boolean wantsLoop = Boolean.TRUE.equals(rule.mirrorPose);
-			boolean wantsOneShot = Boolean.TRUE.equals(rule.mirrorAnimation);
-			if (!wantsLoop && !wantsOneShot)
-			{
-				continue;
-			}
-
-			for (Integer id : rule.when.ids)
-			{
-				net.runelite.api.Animation animation =
-					id == null ? null : client.loadAnimation(id);
-				if (animation == null)
-				{
-					log.warn("cachecheck: {} lists animation {}, which is not in the cache",
-						rule.id, id);
-					problems++;
-					continue;
-				}
-				boolean loops = animation.getFrameStep() >= 0;
-				if (loops != wantsLoop)
-				{
-					log.warn("cachecheck: {} lists animation {} which {}, but the rule"
-							+ " mirrors it as a {}",
-						rule.id, id, loops ? "LOOPS" : "is a one-shot",
-						wantsLoop ? "held pose" : "one-shot emote");
-					problems++;
-				}
-			}
-		}
-		return problems;
-	}
-
-	private void runCacheCheck()
-	{
-		try
-		{
-			java.nio.file.Path modelFile = dataDir.resolve(com.follower.appearance.ModelRepository.FILE_NAME);
-			java.nio.file.Path spotFile = dataDir.resolve(com.follower.appearance.SpotAnimRepository.FILE_NAME);
-			if (!java.nio.file.Files.isRegularFile(modelFile) || !java.nio.file.Files.isRegularFile(spotFile))
-			{
-				sendStatus("cachecheck needs the dump files present to compare against");
-				return;
-			}
-
-			com.follower.appearance.ModelRepository.Dump dump;
-			try (java.io.Reader reader = java.nio.file.Files.newBufferedReader(modelFile))
-			{
-				dump = gson.fromJson(reader, com.follower.appearance.ModelRepository.Dump.class);
-			}
-			com.google.gson.JsonObject spotRoot;
-			try (java.io.Reader reader = java.nio.file.Files.newBufferedReader(spotFile))
-			{
-				spotRoot = gson.fromJson(reader, com.google.gson.JsonObject.class);
-			}
-			java.util.Map<String, com.follower.appearance.SpotAnimRepository.Entry> dumpSpots =
-				gson.fromJson(spotRoot.get("spotanims"),
-					new com.google.gson.reflect.TypeToken<java.util.Map<String,
-						com.follower.appearance.SpotAnimRepository.Entry>>() { }.getType());
-
-			int problems = 0;
-			problems += diffCatalogue("items", dump.items,
-				com.follower.appearance.LiveCacheParser.parseItems(client));
-			problems += diffCatalogue("kits", dump.kits,
-				com.follower.appearance.LiveCacheParser.parseKits(client));
-			problems += diffCatalogue("spotanims", dumpSpots,
-				com.follower.appearance.LiveCacheParser.parseSpotAnims(client));
-
-			problems += auditRuleAnimations();
-
-			sendStatus(problems == 0
-				? "cachecheck: PERFECT MATCH across items, kits, spotanims and rule animations"
-				: "cachecheck: " + problems + " differences - see the client log");
-		}
-		catch (java.io.IOException | RuntimeException e)
-		{
-			log.warn("cachecheck failed", e);
-			sendStatus("cachecheck failed: " + e.getMessage());
-		}
-	}
-
-	/** @return the number of differing, missing or extra entries. */
-	private int diffCatalogue(String label, java.util.Map<String, ?> fromDump,
-		java.util.Map<String, ?> fromLive)
-	{
-		int problems = 0;
-		int logged = 0;
-		for (java.util.Map.Entry<String, ?> entry : fromDump.entrySet())
-		{
-			Object live = fromLive.get(entry.getKey());
-			if (live == null)
-			{
-				problems++;
-				if (logged++ < 5)
-				{
-					log.warn("cachecheck {}: id {} in dump but not live", label, entry.getKey());
-				}
-				continue;
-			}
-			String a = gson.toJson(entry.getValue());
-			String b = gson.toJson(live);
-			if (!a.equals(b))
-			{
-				problems++;
-				if (logged++ < 5)
-				{
-					log.warn("cachecheck {}: id {} differs\n  dump: {}\n  live: {}",
-						label, entry.getKey(), a, b);
-				}
-			}
-		}
-		for (String key : fromLive.keySet())
-		{
-			if (!fromDump.containsKey(key))
-			{
-				problems++;
-				if (logged++ < 5)
-				{
-					log.warn("cachecheck {}: id {} live but not in dump", label, key);
-				}
-			}
-		}
-		log.info("cachecheck {}: dump {}, live {}, {} problems",
-			label, fromDump.size(), fromLive.size(), problems);
-		return problems;
-	}
-
-	/**
-	 * Audits the stance library: what it claims must be real, and how much of
-	 * the game it actually covers.
-	 *
-	 * <p>The library can never be PROVEN complete. Weapon stances are not in
-	 * the cache - four probes settled that - so the only proof a given weapon
-	 * animates correctly is watching a player wield it. What can be settled is
-	 * everything short of that, and none of it needs a human to eyeball a
-	 * follower:
-	 *
-	 * <ul>
-	 *   <li>Every animation id the library names exists in the cache. A typo
-	 *       or a bad outside source shows up here as an id the game does not
-	 *       have, and would otherwise be a follower that silently stops
-	 *       animating.</li>
-	 *   <li>Every weapon in the game either resolves to a stance directly,
-	 *       inherits one from its plain version, or is reported by name as
-	 *       falling back to unarmed.</li>
-	 *   <li>The same for attacks, which resolve through class borrowing and
-	 *       otherwise land on the configured default.</li>
-	 * </ul>
-	 */
-	private void runStanceAudit()
-	{
-		Set<Integer> sequences = com.follower.appearance.LiveCacheParser.sequenceIds(client);
-		if (sequences.isEmpty())
-		{
-			sendStatus("stanceaudit needs the client's cache loaded - log in and try again");
-			return;
-		}
-
-		int badIds = 0;
-		int noDirectionals = 0;
-		int withAttack = 0;
-		for (Map.Entry<Integer, com.follower.follower.StanceLibrary.Stance> entry
-			: stanceLibrary.all().entrySet())
-		{
-			int weaponId = entry.getKey();
-			com.follower.follower.StanceLibrary.Stance stance = entry.getValue();
-			String name = weaponId == com.follower.follower.StanceLibrary.UNARMED
-				? "(unarmed)" : modelRepository.itemName(weaponId);
-
-			badIds += auditAnimationId(sequences, weaponId, name, "idle", stance.idle);
-			badIds += auditAnimationId(sequences, weaponId, name, "walk", stance.walk);
-			badIds += auditAnimationId(sequences, weaponId, name, "run", stance.run);
-			badIds += auditAnimationId(sequences, weaponId, name, "attack", stance.attack);
-			badIds += auditAnimationId(sequences, weaponId, name, "walkBack", stance.walkBack);
-			badIds += auditAnimationId(sequences, weaponId, name, "walkLeft", stance.walkLeft);
-			badIds += auditAnimationId(sequences, weaponId, name, "walkRight", stance.walkRight);
-			badIds += auditAnimationId(sequences, weaponId, name, "turnLeft", stance.turnLeft);
-			badIds += auditAnimationId(sequences, weaponId, name, "turnRight", stance.turnRight);
-
-			if (stance.attack > 0)
-			{
-				withAttack++;
-			}
-			// No directional poses means the entry was either typed in by hand
-			// or observed before those fields existed. Its idle/walk/run may be
-			// perfectly good; it just cannot have come from a live sighting
-			// recently enough to carry the full set.
-			if (stance.walkLeft == 0 && weaponId != com.follower.follower.StanceLibrary.UNARMED)
-			{
-				noDirectionals++;
-			}
-		}
-
-		int weapons = 0;
-		int direct = 0;
-		int inherited = 0;
-		int attackOwn = 0;
-		int attackFromClass = 0;
-		int attackGeneric = 0;
-		List<String> uncovered = new ArrayList<>();
-		for (Map.Entry<Integer, KitType> entry : slotIndex.entrySet())
-		{
-			if (entry.getValue() != KitType.WEAPON)
-			{
-				continue;
-			}
-			int itemId = entry.getKey();
-			weapons++;
-
-			com.follower.follower.StanceLibrary.Stance own = stanceLibrary.describe(itemId);
-			boolean hasStance = stanceLibrary.knows(itemId);
-			if (own != null)
-			{
-				direct++;
-			}
-			else if (hasStance)
-			{
-				inherited++;
-			}
-			else
-			{
-				String name = modelRepository.itemName(itemId);
-				uncovered.add((name == null ? "?" : name) + " (" + itemId + ")");
-			}
-
-			// Three very different things, worth counting apart. A weapon that
-			// was seen swung has its OWN attack. One that shares a class with
-			// such a weapon borrows a correct animation for its kind. But a
-			// weapon with no stance at all falls back to the unarmed pose set,
-			// and the unarmed class is the big default one - so it picks up a
-			// GENERIC swing for its combat style. That last is better than a
-			// bow doing a sword's slash, and it is not the weapon's own
-			// animation. Reporting them as one number flatters the library.
-			if (stanceLibrary.attackFor(itemId) > 0)
-			{
-				if (own != null && own.attack > 0)
-				{
-					attackOwn++;
-				}
-				else if (hasStance)
-				{
-					attackFromClass++;
-				}
-				else
-				{
-					attackGeneric++;
-				}
-			}
-		}
-
-		java.util.Collections.sort(uncovered);
-		log.info("stanceaudit: {} stances, {} name an animation the cache does not have,"
-				+ " {} carry no directional poses, {} have a learned attack",
-			stanceLibrary.all().size(), badIds, noDirectionals, withAttack);
-		log.info("stanceaudit: {} weapons in the slot index - {} with their own stance,"
-				+ " {} inheriting one, {} falling back to unarmed",
-			weapons, direct, inherited, uncovered.size());
-		log.info("stanceaudit: attacks - {} weapons swing their own learned animation,"
-				+ " {} borrow one from their weapon class, {} get a generic swing for their"
-				+ " style through the unarmed fallback, {} use the configured default",
-			attackOwn, attackFromClass, attackGeneric,
-			weapons - attackOwn - attackFromClass - attackGeneric);
-		if (!uncovered.isEmpty())
-		{
-			log.info("stanceaudit: weapons with no stance:\n  {}", String.join("\n  ", uncovered));
-		}
-
-		sendStatus(badIds == 0
-			? "stanceaudit: every animation id checks out. " + direct + " weapons matched,"
-				+ " " + inherited + " inherited, " + uncovered.size() + " unknown; "
-				+ (attackOwn + attackFromClass) + " with a real attack - see the log."
-			: "stanceaudit: " + badIds + " animation ids do not exist - see the client log");
-	}
-
-	/** @return 1 when the id is set but is not a real animation, else 0. */
-	private int auditAnimationId(Set<Integer> sequences, int weaponId, String name,
-		String field, int animationId)
-	{
-		if (animationId <= 0 || sequences.contains(animationId))
-		{
-			return 0;
-		}
-		log.warn("stanceaudit: {} ({}) has {} = {}, which is not an animation in the cache",
-			name == null ? "item" : name, weaponId, field, animationId);
-		return 1;
 	}
 
 	/**
@@ -6069,14 +3553,12 @@ public class FollowerPlugin extends Plugin
 	 * from the client's own loaded cache. Retried from login-adjacent states
 	 * because the cache indexes may not exist when the plugin starts.
 	 */
-	private void ensureCatalogues()
+	void ensureCatalogues()
 	{
 		if (modelRepository.isLoaded() && slotIndex.isEmpty())
-		{
 			// An index that came back empty on an earlier pass, from a login
 			// that beat the item stats to it.
 			buildSlotIndexAsync();
-		}
 		// Read under a dump too, so what the game added since the dump is there.
 		if (!modelRepository.hasReadTheLiveCache())
 		{
@@ -6090,40 +3572,25 @@ public class FollowerPlugin extends Plugin
 			}
 		}
 		if (!spotAnimRepository.hasReadTheLiveCache())
-		{
 			spotAnimRepository.loadFromClient(client);
-		}
 		if (!kitSelectabilityLoaded)
 		{
 			// Always from the LIVE cache, even when a dump supplied the
 			// entries: the flag is not part of the dump format, and the
 			// picker needs it to hide the styles character creation hides.
-			java.util.Set<Integer> nonSelectable = new java.util.HashSet<>();
-			com.follower.appearance.LiveCacheParser.parseKits(client, nonSelectable);
+			Set<Integer> nonSelectable = new HashSet<>();
+			LiveCacheParser.parseKits(client, nonSelectable);
 			if (!nonSelectable.isEmpty())
 			{
 				modelRepository.setNonSelectableKits(nonSelectable);
 				kitSelectabilityLoaded = true;
-				log.debug("{} kits flagged non-selectable by the cache", nonSelectable.size());
-				logKitCatalogue();
 				syncPanel();
 			}
 		}
 	}
 
-	private boolean kitSelectabilityLoaded;
+	boolean kitSelectabilityLoaded;
 
-	/** One-line-per-part census of what the picker will offer, for verification. */
-	private void logKitCatalogue()
-	{
-		for (KitType part : new KitType[]{KitType.HAIR, KitType.JAW, KitType.TORSO,
-			KitType.ARMS, KitType.HANDS, KitType.LEGS, KitType.BOOTS})
-		{
-			log.debug("kits offered for {}: male {}, female {}", part,
-				modelRepository.kitsFor(part, 0).size(),
-				modelRepository.kitsFor(part, 1).size());
-		}
-	}
 
 	/**
 	 * A transient item shown on the follower without touching the saved
@@ -6131,41 +3598,37 @@ public class FollowerPlugin extends Plugin
 	 * writing animations move the arms and draw nothing, because in the real
 	 * game the book comes from the reader's own equipment.
 	 */
-	private KitType propSlot;
-	private int propItemId;
+	KitType propSlot;
+	int propItemId;
 
 	/**
 	 * A thing in each hand instead, left then right, as an animation names
 	 * them - the quill and the scroll of the writing pose - or null. Dressed
 	 * as the film dresses a pose's hands.
 	 */
-	private int[] propHands;
+	int[] propHands;
 
 	/** A prop taken out but not yet shown: the reach for it is still going down. */
-	private boolean propBehindReach;
+	boolean propBehindReach;
 
 	/** How far into the reach the prop comes into the hand: the bottom of the bend. */
 	static final double REACH_BOTTOM = 0.5;
 
 	/** The second transient prop, worn rather than held: a borrowed hat. */
-	private KitType wornSlot;
-	private int wornItemId;
+	KitType wornSlot;
+	int wornItemId;
 
-	private Outfit resolveOutfit()
+	Outfit resolveOutfit()
 	{
 		// Thrall mode dresses the follower without touching the configured
 		// outfit, so leaving the mode restores exactly what the player set up.
 		if (outfitOverride != null)
-		{
 			return outfitOverride;
-		}
 		List<String> errors = new ArrayList<>();
-		Outfit outfit = OutfitParser.parse(config.customOutfit(), errors);
+		var outfit = OutfitParser.parse(config.customOutfit(), errors);
 		String warning = errors.isEmpty() ? null : "Outfit warnings: " + String.join("; ", errors);
 		if (warning != null && !warning.equals(lastOutfitWarning))
-		{
 			sendStatus(warning);
-		}
 		lastOutfitWarning = warning;
 		return outfit;
 	}
@@ -6176,8 +3639,8 @@ public class FollowerPlugin extends Plugin
 	 * string repeated its warning on each unrelated tweak (QA, 15 Oct). Told
 	 * again only when it changes, or comes back after a clean build.
 	 */
-	private String lastOutfitWarning;
-	private boolean buildFailureTold;
+	String lastOutfitWarning;
+	boolean buildFailureTold;
 
 	/**
 	 * The last two steps before the model is built: the disarm, then the prop.
@@ -6208,24 +3671,20 @@ public class FollowerPlugin extends Plugin
 	{
 		if (disarmed)
 		{
-			outfit.clear(KitType.WEAPON);
-			outfit.clear(KitType.SHIELD);
+			outfit.clear(WEAPON);
+			outfit.clear(SHIELD);
 		}
 		if (propSlot != null)
 		{
 			// A prop in the weapon hand takes the shield with it. Nobody reads
 			// a scroll or swings a borrowed axe with a shield still strapped on,
 			// and the hand the prop goes in is the one the shield argues with.
-			if (propSlot == KitType.WEAPON)
-			{
-				outfit.clear(KitType.SHIELD);
-			}
+			if (propSlot == WEAPON)
+				outfit.clear(SHIELD);
 			outfit.setItem(propSlot, propItemId);
 		}
 		if (wornSlot != null)
-		{
 			outfit.setItem(wornSlot, wornItemId);
-		}
 		return outfit;
 	}
 
@@ -6237,39 +3696,35 @@ public class FollowerPlugin extends Plugin
 	 * since the game draws nothing there either. An item goes in as a prop,
 	 * drawn whatever the gear hides, as the game draws it.
 	 *
-	 * @param hands from {@link com.follower.follower.FilmSet#hands()}, or null
+	 * @param hands left and right, -1 to keep, or null
 	 *              to leave the outfit as it is
 	 */
-	private void dressForPose(Outfit outfit, int[] hands)
+	void dressForPose(Outfit outfit, int[] hands)
 	{
 		if (hands == null)
-		{
 			return;
-		}
 		dressHand(outfit, hands[0], true);
 		dressHand(outfit, hands[1], false);
 	}
 
-	private void dressHand(Outfit outfit, int item, boolean leftHand)
+	void dressHand(Outfit outfit, int item, boolean leftHand)
 	{
-		if (item == com.follower.follower.FilmSet.KEEP)
-		{
+		if (item == -1)
 			return;
-		}
-		KitType slot = item >= 0 ? handSlot(item, leftHand) : null;
+		var slot = item >= 0 ? handSlot(item, leftHand) : null;
 		if (slot == null)
 		{
-			outfit.clear(leftHand ? KitType.SHIELD : KitType.WEAPON);
+			outfit.clear(leftHand ? SHIELD : WEAPON);
 			return;
 		}
 		outfit.setProp(slot, item);
 	}
 
 	/** True while the shield channel has the follower's weapon and shield put away. */
-	private boolean spectateDisarmed;
+	boolean spectateDisarmed;
 
 	/** True while an emote has them put away. */
-	private boolean emoteDisarmed;
+	boolean emoteDisarmed;
 
 	/**
 	 * Empties the follower's hands for the duration of an emote.
@@ -6290,9 +3745,9 @@ public class FollowerPlugin extends Plugin
 	 * mid-celebration.
 	 */
 	/** Whether a thieving session was running last tick, for the two edges. */
-	private boolean wasThieving;
+	boolean wasThieving;
 
-	private boolean emoteHold;
+	boolean emoteHold;
 
 	/**
 	 * The looping animation currently being held to match the player's, or 0.
@@ -6301,24 +3756,24 @@ public class FollowerPlugin extends Plugin
 	 * finishes, so the chain would wait forever. A pose override loops on its
 	 * own and is released when the player's animation changes.
 	 */
-	private int mirroredPose;
+	int mirroredPose;
 
 	/** A copy waiting on the follower to walk over to the work first. */
-	private int pendingMime;
+	int pendingMime;
 
 	/** Whether the waiting copy is a one-shot - a hammer blow - rather than a held loop. */
-	private boolean pendingOneShot;
+	boolean pendingOneShot;
 
 	/** Whether the copy under way is of the work, and so lasts only while beside it. */
-	private boolean copyAtWork;
+	boolean copyAtWork;
 
 	/**
 	 * What a held emote loop names for the hands (Explore's sextant), kept
 	 * apart from emoteHands, which its entry clip's end takes off.
 	 */
-	private int[] loopHands;
+	int[] loopHands;
 
-	private void startPoseMirror(int animationId)
+	void startPoseMirror(int animationId)
 	{
 		mirroredPose = animationId;
 		clientThread.invoke(() -> follower.setPoseOverride(animationId));
@@ -6327,24 +3782,17 @@ public class FollowerPlugin extends Plugin
 		boolean disarmed = emoteDisarmed;
 		refreshEmoteDisarm(follower.isEmotePlaying());
 		if (loopHands != null && disarmed == emoteDisarmed)
-		{
 			rebuildFollower();
-		}
 	}
 
-	private void stopPoseMirror()
+	void stopPoseMirror()
 	{
 		pendingMime = 0;
 		copyAtWork = false;
-		if (skilling != null)
-		{
-			// Whatever it walked over for is finished; back to the seat.
-			skilling.dropTheJoin();
-		}
+		// Whatever it walked over for is finished; back to the seat.
+		skilling.dropTheJoin();
 		if (mirroredPose == 0)
-		{
 			return;
-		}
 		int held = mirroredPose;
 		mirroredPose = 0;
 		// Only its own: a moment that stepped in may have put a pose of its own on.
@@ -6354,25 +3802,18 @@ public class FollowerPlugin extends Plugin
 		boolean disarmed = emoteDisarmed;
 		refreshEmoteDisarm(follower.isEmotePlaying());
 		if (handsBack && disarmed == emoteDisarmed)
-		{
 			rebuildFollower();
-		}
 	}
 
 	/** How long a rule's gesture said on the move waits for the follower to stand. */
 	static final int EMOTE_WAIT_TICKS = 3;
 
-	private void updateEmoteDisarm(boolean emoting)
+	void updateEmoteDisarm(boolean emoting)
 	{
 		if (!emoting && emoteHold)
 		{
 			emoteHold = false;
 			follower.resumeFollowing();
-		}
-		if (!emoting && filmSet != null)
-		{
-			// A one-shot of the film's is over: its props come off.
-			filmSet.onceOver();
 		}
 		// The emote's own things go with it, in the same rebuild as the
 		// weapon coming back when there is one.
@@ -6382,9 +3823,7 @@ public class FollowerPlugin extends Plugin
 		boolean disarmed = emoteDisarmed;
 		refreshEmoteDisarm(emoting);
 		if (handsBack && disarmed == emoteDisarmed)
-		{
 			rebuildFollower();
-		}
 	}
 
 	/**
@@ -6393,7 +3832,7 @@ public class FollowerPlugin extends Plugin
 	 * charting quill and scroll, the home teleport's chalk stick, a teleport
 	 * scroll, a smith's hammer. Dressed as the film dresses a pose.
 	 */
-	private int[] emoteHands;
+	int[] emoteHands;
 
 	/**
 	 * Clips that keep both hands as they are, as the game plays them: the
@@ -6401,16 +3840,16 @@ public class FollowerPlugin extends Plugin
 	 * staff. Not the mood idles, keep-handed too, where a kiteshield would
 	 * cross the face.
 	 */
-	private static final Set<Integer> KEEPS_HANDS = Set.of(
-		net.runelite.api.gameval.AnimationID.HUMAN_UNARMEDBLOCK,
-		net.runelite.api.gameval.AnimationID.ZAROS_VERTICAL_CASTING,
-		net.runelite.api.gameval.AnimationID.HUMAN_SPELLCAST_ARCEUUS_TELEPORT);
+	static final Set<Integer> KEEPS_HANDS = Set.of(
+		AnimationID.HUMAN_UNARMEDBLOCK,
+		AnimationID.ZAROS_VERTICAL_CASTING,
+		AnimationID.HUMAN_SPELLCAST_ARCEUUS_TELEPORT);
 
 	/** Whether the emote clip on now is one of those. */
-	private boolean clipKeepsHands;
+	boolean clipKeepsHands;
 
 	/** Each clip of an emote, as it goes on: dresses the hands it names. */
-	private void dressEmoteHands(int clip)
+	void dressEmoteHands(int clip)
 	{
 		if (clipKeepsHands != KEEPS_HANDS.contains(clip))
 		{
@@ -6418,10 +3857,8 @@ public class FollowerPlugin extends Plugin
 			refreshEmoteDisarm(follower.isEmotePlaying());
 		}
 		int[] hands = thrallNpc == null ? follower.emoteHandItems(clip) : null;
-		if (java.util.Arrays.equals(hands, emoteHands))
-		{
+		if (Arrays.equals(hands, emoteHands))
 			return;
-		}
 		emoteHands = hands;
 		rebuildFollower();
 	}
@@ -6429,18 +3866,14 @@ public class FollowerPlugin extends Plugin
 	/**
 	 * Empties the follower's hands while it is emoting AT ALL - a one-shot copy
 	 * or a held pose. Both are emotes as far as a player is concerned, so both
-	 * put the weapon away. Not the film's poses, which hold what the game's own
-	 * animation names for each hand, or keep what is there.
+	 * put the weapon away.
 	 */
-	private void refreshEmoteDisarm(boolean emoting)
+	void refreshEmoteDisarm(boolean emoting)
 	{
 		boolean wanted = (emoting && !clipKeepsHands || mirroredPose != 0
-			|| skilling != null && skilling.worksBareHanded()) && thrallNpc == null
-			&& (filmSet == null || !filmSet.isPosing());
+			|| skilling != null && skilling.worksBareHanded()) && thrallNpc == null;
 		if (wanted == emoteDisarmed)
-		{
 			return;
-		}
 		emoteDisarmed = wanted;
 		rebuildFollower();
 	}
@@ -6455,34 +3888,28 @@ public class FollowerPlugin extends Plugin
 	 * be the stand-and-kneel-again that took three attempts to get rid of. The
 	 * cast is playing at that point and covers it.
 	 */
-	private void setSpectateDisarmed(boolean disarmed)
+	void setSpectateDisarmed(boolean disarmed)
 	{
 		if (spectateDisarmed == disarmed)
-		{
 			return;
-		}
 		spectateDisarmed = disarmed;
 		clientThread.invoke(this::rebuildFollower);
 	}
 
 	// ------------------------------------------------------------- thrall mode
 
-	private NPC thrallNpc;
-	private String thrallStyle = "";
-	private Outfit outfitOverride;
+	NPC thrallNpc;
+	String thrallStyle = "";
+	Outfit outfitOverride;
 
 	/** Countdown to stage two of the exit flourish (snap home + redress). */
-	private int thrallExitTicks;
+	int thrallExitTicks;
 
 	/** Plays the spawn-in burst a tick late, once the follower stands at the thrall. */
-	private int pendingThrallSpawnFxTicks;
-
-	/** Exit motion, and the necromancy shimmer for the return to follower form. */
-	private static final int THRALL_EXIT_ANIMATION = 8973;
-	private static final int THRALL_RETURN_SPOTANIM = 1290;
+	int pendingThrallSpawnFxTicks;
 
 	/** Per-style resurrect impact vfx: the burst when a thrall phases in or out. */
-	private static int thrallImpactSpotAnim(String style)
+	static int thrallImpactSpotAnim(String style)
 	{
 		switch (style)
 		{
@@ -6496,7 +3923,7 @@ public class FollowerPlugin extends Plugin
 	}
 
 	@Inject
-	private net.runelite.client.callback.RenderCallbackManager renderCallbacks;
+	net.runelite.client.callback.RenderCallbackManager renderCallbacks;
 
 	/**
 	 * Hides the REAL thrall while the follower stands in for it. Reference
@@ -6509,8 +3936,8 @@ public class FollowerPlugin extends Plugin
 	 * is the same question in the same place - return false and the thing is
 	 * not drawn.
 	 */
-	private final net.runelite.client.callback.RenderCallback thrallHider =
-		new net.runelite.client.callback.RenderCallback()
+	final RenderCallback thrallHider =
+		new RenderCallback()
 		{
 			@Override
 			public boolean addEntity(net.runelite.api.Renderable renderable, boolean drawingUi)
@@ -6527,21 +3954,10 @@ public class FollowerPlugin extends Plugin
 	 * skeletons (ranged) 10881-10883, zombies (melee) 10884-10886, one id per
 	 * tier (lesser/superior/greater).
 	 */
-	private static String thrallStyleFor(int npcId)
+	static String thrallStyleFor(int npcId)
 	{
-		if (npcId >= 10884 && npcId <= 10886)
-		{
-			return "melee";
-		}
-		if (npcId >= 10881 && npcId <= 10883)
-		{
-			return "ranged";
-		}
-		if (npcId >= 10878 && npcId <= 10880)
-		{
-			return "magic";
-		}
-		return null;
+		return npcId >= 10878 && npcId <= 10886
+			? new String[]{"magic", "ranged", "melee"}[(npcId - 10878) / 3] : null;
 	}
 
 	/**
@@ -6556,54 +3972,46 @@ public class FollowerPlugin extends Plugin
 	 * metronomic 10s drops while the thrall stood healthy. Detection signal
 	 * ONLY; it says nothing about the thrall's remaining lifetime.
 	 */
-	private static final int THRALL_SUMMONED_VARBIT = 12290;
+	static final int THRALL_SUMMONED_VARBIT = 12290;
 
 	/**
 	 * Possession briefly lost to a scene rebuild: the thrall NPC despawned
 	 * during a load, not by expiry, so the follower keeps its outfit and
 	 * silently re-possesses the NPC when the scene brings it back.
 	 */
-	private boolean thrallLimbo;
+	boolean thrallLimbo;
 
 	/** Ticks spent in limbo; a respawn that never comes ends the possession. */
-	private int thrallLimboTicks;
+	int thrallLimboTicks;
 
 	/** Ticks since the last LOADING state, to classify NPC despawns. */
-	private int ticksSinceLoading = 1000;
+	int ticksSinceLoading = 1000;
 
-	private void maybeAdoptThrall(NPC npc)
+	void maybeAdoptThrall(NPC npc)
 	{
 		if (!replacesThralls(config.thrallMode(), config.thrallOnly()) || npc == thrallNpc)
-		{
 			return;
-		}
 		// A fresh summon shows as the cooldown varbit reading 1 (it stays up
 		// for ten seconds after any cast - fresh, mid-combat or resummon). A
 		// limbo re-acquire may come later than that, so limbo bypasses it and
 		// matches purely on thrall id and proximity.
 		if (client.getVarbitValue(THRALL_SUMMONED_VARBIT) != 1 && !thrallLimbo)
-		{
 			return;
-		}
 		String style = thrallStyleFor(npc.getId());
 		if (style == null)
-		{
 			return;
-		}
-		Player local = client.getLocalPlayer();
+		var local = client.getLocalPlayer();
 		int distance = local != null && local.getWorldLocation() != null && npc.getWorldLocation() != null
 			? npc.getWorldLocation().distanceTo(local.getWorldLocation()) : -1;
 		if (distance < 0 || distance > 6)
-		{
 			return;
-		}
 		if (thrallNpc != null)
 		{
 			// A resummon while the old thrall is still in the scene: switch
 			// bodies rather than dropping back to a vanilla thrall.
 			String previous = thrallStyle;
 			switchThrall(npc, style);
-			speechEngine.dispatch(TriggerEvent.thrallSwitch(previous, style));
+			dispatch(TriggerEvent.thrallSwitch(previous, style));
 		}
 		else if (thrallExitPendingTicks > 0)
 		{
@@ -6613,7 +4021,7 @@ public class FollowerPlugin extends Plugin
 			String previous = thrallExitStyle;
 			thrallExitPendingTicks = 0;
 			switchThrall(npc, style);
-			speechEngine.dispatch(TriggerEvent.thrallSwitch(previous, style));
+			dispatch(TriggerEvent.thrallSwitch(previous, style));
 		}
 		else if (thrallLimbo)
 		{
@@ -6622,52 +4030,41 @@ public class FollowerPlugin extends Plugin
 			switchThrall(npc, style);
 		}
 		else
-		{
 			adoptThrall(npc, style);
-		}
 	}
 
 	/** Adopts a thrall already in the scene when the varbit beats its spawn event. */
-	private void adoptExistingThrall()
+	void adoptExistingThrall()
 	{
-		net.runelite.api.WorldView view = client.getTopLevelWorldView();
+		var view = client.getTopLevelWorldView();
 		if (view == null)
-		{
 			return;
-		}
-		for (NPC npc : view.npcs())
+		for (var npc : view.npcs())
 		{
 			if (npc != null && thrallStyleFor(npc.getId()) != null)
-			{
 				maybeAdoptThrall(npc);
-			}
 		}
 	}
 
-	private void switchThrall(NPC npc, String style)
+	void switchThrall(NPC npc, String style)
 	{
 		boolean styleChanged = !style.equals(thrallStyle);
 		thrallNpc = npc;
 		thrallStyle = style;
 		thrallExitTicks = 0;
 		pendingThrallSpawnFxTicks = 1;
-		log.debug("Switching possession to {} thrall (id {})", style, npc.getId());
 		if (styleChanged)
-		{
 			outfitOverride = resolveThrallOutfit(style);
-		}
 		clientThread.invoke(() ->
 		{
 			follower.slaveToNpc(npc);
 			follower.setThrallCircleFromNpcModel(thrallCircleModelId(npc));
 			if (styleChanged)
-			{
 				rebuildFollower();
-			}
 		});
 	}
 
-	private void adoptThrall(NPC npc, String style)
+	void adoptThrall(NPC npc, String style)
 	{
 
 		thrallNpc = npc;
@@ -6675,7 +4072,6 @@ public class FollowerPlugin extends Plugin
 		thrallExitTicks = 0;
 		pendingThrallSpawnFxTicks = 1;
 		outfitOverride = resolveThrallOutfit(style);
-		log.debug("Possessing {} thrall (id {})", style, npc.getId());
 		clientThread.invoke(() ->
 		{
 			follower.slaveToNpc(npc);
@@ -6690,14 +4086,12 @@ public class FollowerPlugin extends Plugin
 	 * Replace thralls is on by default, so a player who wanted their own
 	 * thrall is told once, at the first summon taken, how to have it back.
 	 */
-	private void maybeSendThrallHint()
+	void maybeSendThrallHint()
 	{
 		// Thrall only replaces them too, so with it ticked the hint names both.
 		if (!replacesThralls(config.thrallMode(), config.thrallOnly()) || config.thrallHintShown())
-		{
 			return;
-		}
-		configManager.setConfiguration(FollowerConfig.GROUP, "thrallHintShown", true);
+		setConfig("thrallHintShown", true);
 		sendStatus(config.thrallOnly()
 			? "Untick Thrall only and Replace thralls in settings to keep your own."
 			: "Untick Replace thralls in settings to keep your own.");
@@ -6709,11 +4103,11 @@ public class FollowerPlugin extends Plugin
 	 * so the mute is set again here from the thrall just taken, the way the
 	 * thieving lines are said with theirs lifted.
 	 */
-	private void announceSummon(String style)
+	void announceSummon(String style)
 	{
 		speechEngine.setMuted(config.muted() || wasThieving
 			|| absentUntilSummoned(config.thrallOnly(), thrallBusiness()) || thrallQuiet());
-		speechEngine.dispatch(TriggerEvent.thrall(TriggerEvent.Type.THRALL_START, style));
+		dispatch(TriggerEvent.thrall(THRALL_START, style));
 	}
 
 	/**
@@ -6721,34 +4115,31 @@ public class FollowerPlugin extends Plugin
 	 * composition (measured: 41985/41989/41988 for melee/ranged/magic).
 	 * Reading it live keeps every tier authentic.
 	 */
-	private static int thrallCircleModelId(NPC npc)
+	static int thrallCircleModelId(NPC npc)
 	{
-		net.runelite.api.NPCComposition comp = npc.getTransformedComposition() != null
+		var comp = npc.getTransformedComposition() != null
 			? npc.getTransformedComposition() : npc.getComposition();
 		int[] models = comp == null ? null : comp.getModels();
 		return models != null && models.length > 0 ? models[0] : -1;
 	}
 
 	/** Ticks left before a vanished thrall counts as gone rather than resummoned. */
-	private int thrallExitPendingTicks;
-	private String thrallExitStyle = "";
+	int thrallExitPendingTicks;
+	String thrallExitStyle = "";
 
-	private void exitThrallMode()
+	void exitThrallMode()
 	{
 		if (thrallNpc == null && !thrallLimbo)
-		{
 			return;
-		}
 		performThrallExit(thrallStyle);
 	}
 
 	/** The exit proper: phase out where it stands, then home and redressed. */
-	private void performThrallExit(String style)
+	void performThrallExit(String style)
 	{
 		thrallExitPendingTicks = 0;
 		thrallNpc = null;
 		thrallLimbo = false;
-		log.debug("Thrall gone; phasing the follower out");
 
 		// Stage one: still in thrall dress at the thrall's last spot, the
 		// follower phases out through the same per-style burst a thrall
@@ -6756,15 +4147,16 @@ public class FollowerPlugin extends Plugin
 		clientThread.invoke(() ->
 		{
 			follower.endNpcSlaveHolding();
-			follower.playAnimation(THRALL_EXIT_ANIMATION);
+			// THRALL_EXIT_ANIMATION: Exit motion, and the necromancy shimmer for the return to follower form.
+			follower.playAnimation(8973 /* THRALL_EXIT_ANIMATION */);
 			follower.playSpotAnim(spotAnimRepository.get(thrallImpactSpotAnim(style)));
 		});
 		thrallExitTicks = 4;
-		speechEngine.dispatch(TriggerEvent.thrall(TriggerEvent.Type.THRALL_END, style));
+		dispatch(TriggerEvent.thrall(THRALL_END, style));
 	}
 
 	/** Logout/hop teardown: no snap, no message, just clean state. */
-	private void resetThrallQuietly()
+	void resetThrallQuietly()
 	{
 		pendingThrallSpawnFxTicks = 0;
 		thrallExitTicks = 0;
@@ -6778,38 +4170,22 @@ public class FollowerPlugin extends Plugin
 		}
 	}
 
-	private Outfit resolveThrallOutfit(String style)
+	Outfit resolveThrallOutfit(String style)
 	{
 		String profileName = "melee".equals(style) ? config.thrallMeleeProfile()
 			: "ranged".equals(style) ? config.thrallRangedProfile()
 			: config.thrallMagicProfile();
 		String outfit = profileStore.get(profileName);
 		if (outfit == null)
-		{
 			// The configured profile was renamed or deleted; the seeded style
 			// profiles are restored on every load, so these always exist.
 			outfit = profileStore.get("melee".equals(style) ? "Melee"
 				: "ranged".equals(style) ? "Ranged" : "Magic");
-		}
 		return OutfitParser.parse(outfit == null ? "" : outfit);
 	}
 
-	/**
-	 * Generic swings, used only until the follower's actual weapon has been
-	 * seen used: an unarmed-style slash, a bow shot and a strike spell cast.
-	 *
-	 * <p>These were three settings once. They stopped making sense when the
-	 * stance library learned to match the animation to the weapon in the
-	 * follower's hands - a typed-in id could only contradict it, and the honest
-	 * answer for an unknown weapon is a plain swing of the right kind rather
-	 * than whatever someone last typed.
-	 */
-	private static final int GENERIC_MELEE_ATTACK = 390;
-	private static final int GENERIC_RANGED_ATTACK = 426;
-	private static final int GENERIC_MAGIC_ATTACK = 1162;
-
 	/** Whether the follower's current outfit has something in the shield slot. */
-	private boolean followerHoldsShield;
+	boolean followerHoldsShield;
 
 	/**
 	 * What the follower swings, matched to what it is actually holding: its
@@ -6817,7 +4193,7 @@ public class FollowerPlugin extends Plugin
 	 * that is known, else a generic swing for the style. A scimitar should not
 	 * slash like a godsword just because both are melee.
 	 */
-	private int thrallAttackAnimation()
+	int thrallAttackAnimation()
 	{
 		return thrallSwing(stanceLibrary, thrallStyle, follower.getWeaponItemId(),
 			client.getVarbitValue(VarbitID.COMBAT_WEAPON_CATEGORY), attackStyle(), followerHoldsShield);
@@ -6833,12 +4209,12 @@ public class FollowerPlugin extends Plugin
 	 * @param style the player's selected style button (COM_MODE)
 	 * @param shield whether the follower's outfit has something in the shield slot
 	 */
-	static int thrallSwing(com.follower.follower.StanceLibrary library, String thrallStyle,
+	static int thrallSwing(StanceLibrary library, String thrallStyle,
 		int weapon, int weaponCategory, int style, boolean shield)
 	{
 		int kind = library.attackKind(weaponCategory, style);
 		return thrallSwing(thrallStyle, library.castFor(weapon),
-			com.follower.follower.StanceLibrary.withShield(
+			StanceLibrary.withShield(
 				library.attackFor(weapon, style, kind), shield));
 	}
 
@@ -6854,14 +4230,17 @@ public class FollowerPlugin extends Plugin
 	static int thrallSwing(String thrallStyle, int cast, int swing)
 	{
 		if (!"melee".equals(thrallStyle) && !"ranged".equals(thrallStyle))
-		{
-			return cast > 0 ? cast : GENERIC_MAGIC_ATTACK;
-		}
+			return cast > 0 ? cast : 1162 /* GENERIC_MAGIC_ATTACK */;
 		if (swing > 0)
-		{
 			return swing;
-		}
-		return "melee".equals(thrallStyle) ? GENERIC_MELEE_ATTACK : GENERIC_RANGED_ATTACK;
+		// GENERIC_MELEE_ATTACK: Generic swings, used only until the follower's actual weapon has been
+		// seen used: an unarmed-style slash, a bow shot and a strike spell cast.
+		// <p>These were three settings once. They stopped making sense when the
+		// stance library learned to match the animation to the weapon in the
+		// follower's hands - a typed-in id could only contradict it, and the honest
+		// answer for an unknown weapon is a plain swing of the right kind rather
+		// than whatever someone last typed.
+		return "melee".equals(thrallStyle) ? 390 /* GENERIC_MELEE_ATTACK */ : 426 /* GENERIC_RANGED_ATTACK */;
 	}
 
 	/**
@@ -6873,7 +4252,7 @@ public class FollowerPlugin extends Plugin
 	 * disabled the PvP hide for anyone who parked their follower - the two
 	 * settings are about different things, and neither may veto the other.
 	 */
-	private boolean shouldHide()
+	boolean shouldHide()
 	{
 		// The setting says the Wilderness and other PvP areas: PVP_AREA_CLIENT
 		// is the game's own flag for the rest, a PvP world outside its safe
@@ -6887,7 +4266,7 @@ public class FollowerPlugin extends Plugin
 	 * Whether a thrall has the follower in any way: possessed, in limbo
 	 * across a load, waiting out a resummon, or mid-exit.
 	 */
-	private boolean thrallBusiness()
+	boolean thrallBusiness()
 	{
 		return thrallNpc != null || thrallLimbo || thrallExitPendingTicks > 0 || thrallExitTicks > 0;
 	}
@@ -6923,7 +4302,7 @@ public class FollowerPlugin extends Plugin
 		return muteThrall && thrallBusiness;
 	}
 
-	private boolean thrallQuiet()
+	boolean thrallQuiet()
 	{
 		return thrallKeepsQuiet(config.muteThrall(), thrallBusiness());
 	}
@@ -6937,31 +4316,21 @@ public class FollowerPlugin extends Plugin
 	 * the watching: the scene moves the player as it likes, and what is
 	 * queued waits for it to end.
 	 */
-	private void watchForAgility()
+	void watchForAgility()
 	{
-		if (crossingWatch == null)
-		{
-			return;
-		}
-		agilityFramesThisTick++;
-		GameState state = client.getGameState();
+		var state = client.getGameState();
 		if (state == GameState.LOADING)
-		{
 			// A rebuild: the recording carries on after it, in world units.
 			return;
-		}
-		Player local = client.getLocalPlayer();
+		var local = client.getLocalPlayer();
 		boolean watching = config.copiesAgility() && local != null && state == GameState.LOGGED_IN
-			&& follower.isSpawned() && !parkedByPlayer && !thrallBusiness() && !filming
-			&& (errands == null || !errands.isBusy())
-			&& (sketching == null || !sketching.isSketching());
+			&& follower.isSpawned() && !parkedByPlayer && !thrallBusiness()
+			&& !errands.isBusy();
 		if (!watching)
 		{
 			crossingWatch.reset();
 			if (follower.isDoingAgility() || follower.isHoldingForAgility())
-			{
 				follower.clearCrossings();
-			}
 			return;
 		}
 		if (inCutscene())
@@ -6969,287 +4338,20 @@ public class FollowerPlugin extends Plugin
 			crossingWatch.reset();
 			return;
 		}
-		crossingWatch.sample(com.follower.follower.CrossingWatch.Sample.read(local,
-			System.currentTimeMillis()));
+		crossingWatch.sample(CrossingWatch.Sample.read(local,
+			currentTimeMillis()));
 	}
 
-	/** The agility trace, written while Developer commands is on. */
-	private final com.follower.follower.AgilityTrace agilityTrace = new com.follower.follower.AgilityTrace();
-
-	/** Agility XP, and the local player's last hitsplat type, since the last tick line. */
-	private int agilityXpThisTick;
-	private int agilityHitsplatThisTick = -1;
-
-	/** Where the player was drawn at the last tick line, for its moving column. */
-	private net.runelite.api.coords.LocalPoint agilityTraceLast;
-
-	/** Frames drawn since the last game tick, and when that was: the trace's fps, which the glide depends on. */
-	private int agilityFramesThisTick;
-	private long agilityTickMs;
-
-	/** An odd pose or movement this recently still counts as agility about, for the trace. */
-	private static final long AGILITY_TRACE_NEAR_MS = 3000;
-	/** Tick lines go on this long after, to see the follower off the course. */
-	private static final long AGILITY_TRACE_AFTER_MS = 10_000;
-	private long agilityTraceUntilMs;
-
-	/**
-	 * Once a game tick: a line of the agility trace, when Developer commands
-	 * is on and there is agility about - something watched that has moved
-	 * the player (not a skilling loop or an emote), a crossing queued, the
-	 * follower holding for one, agility XP this tick, or an odd pose or move
-	 * in the last few seconds. Nothing at all otherwise, so a day's file is
-	 * the laps and little else.
-	 */
-	private void traceAgilityTick()
-	{
-		agilityTrace.setEnabled(config.developerMode());
-		int xp = agilityXpThisTick;
-		int hit = agilityHitsplatThisTick;
-		agilityXpThisTick = 0;
-		agilityHitsplatThisTick = -1;
-		long now = System.currentTimeMillis();
-		int fps = agilityTickMs > 0 && now > agilityTickMs
-			? (int) Math.round(agilityFramesThisTick * 1000.0 / (now - agilityTickMs)) : 0;
-		agilityFramesThisTick = 0;
-		agilityTickMs = now;
-		Player local = client.getLocalPlayer();
-		if (!agilityTrace.isEnabled() || local == null || crossingWatch == null)
-		{
-			return;
-		}
-		net.runelite.api.coords.LocalPoint at = local.getLocalLocation();
-		boolean moving = at != null && agilityTraceLast != null && !at.equals(agilityTraceLast);
-		agilityTraceLast = at;
-		if (crossingWatch.isWatchingMovement() || follower.isDoingAgility() || follower.isHoldingForAgility()
-			|| xp > 0 || crossingWatch.wasOddWithin(now, AGILITY_TRACE_NEAR_MS))
-		{
-			agilityTraceUntilMs = now + AGILITY_TRACE_AFTER_MS;
-		}
-		if (now < agilityTraceUntilMs)
-		{
-			int graphic = -1;
-			if (local.getSpotAnims() != null)
-			{
-				for (net.runelite.api.ActorSpotAnim spotAnim : local.getSpotAnims())
-				{
-					graphic = spotAnim.getId();
-					break;
-				}
-			}
-			agilityTrace.tick(String.format("t%d %dfps | %s pose %d anim %d gfx %d %s xp+%d hit %s | %s | %s q%d %s",
-				client.getTickCount(), fps,
-				com.follower.follower.CrossingWatch.describe(local.getWorldLocation()),
-				local.getPoseAnimation(), local.getAnimation(), graphic, moving ? "moving" : "still",
-				xp, hit < 0 ? "-" : String.valueOf(hit),
-				crossingWatch.describe(now),
-				com.follower.follower.CrossingWatch.describe(follower.getWorldLocation()),
-				follower.getCrossingsQueued(), follower.describeAgility()));
-		}
-		agilityTrace.flushIfDue();
-	}
 
 	@Subscribe
-	public void onBeforeRender(BeforeRender event)
+	void onBeforeRender(BeforeRender event)
 	{
-		appearanceService.tick();
-		colorHarvester.tick();
 		// Before the follower's frame: a crossing seen this frame holds it
 		// before the teleport rule can snap it after a player on the roof.
 		watchForAgility();
 		follower.updateFrame();
 		shiftHoverTooltip();
-		if (filmSet != null)
-		{
-			// A held film pose's props come off for a walk and back on after it.
-			filmSet.frame();
-		}
-
-		if (animTraceRemaining > 0)
-		{
-			// Encode the frame with markers, so one trace separates the cases a bare
-			// frame index cannot: R = a new controller was installed (a restart, which
-			// looks exactly like a wrap otherwise), B = the untransformed base model
-			// was handed to the renderer, which would read as a freeze.
-			int generation = follower.getControllerGeneration();
-			String marker = "";
-			if (generation != lastControllerGeneration)
-			{
-				marker += "R";
-				lastControllerGeneration = generation;
-			}
-			if (follower.isRenderingBaseModel())
-			{
-				marker += "B";
-			}
-			animTraceMarks.add(marker);
-			animTrace.add(follower.getPoseFrame());
-
-			Player local = client.getLocalPlayer();
-			playerTrace.add(local == null ? -1 : local.getPoseAnimationFrame());
-
-			if (--animTraceRemaining == 0)
-			{
-				reportAnimationTrace();
-			}
-		}
 	}
-
-	/** Static facts about the animation currently driving the follower. */
-	private void reportAnimationInfo()
-	{
-		net.runelite.api.Animation animation = follower.getPoseAnimation();
-		if (animation == null)
-		{
-			sendStatus("No animation on the follower right now (pose "
-				+ follower.getActivePose() + ").");
-			return;
-		}
-
-		int[] lengths = animation.getFrameLengths();
-		java.util.function.IntPredicate filter = client.getAnimationInterpolationFilter();
-
-		sendStatus("Animation " + animation.getId() + ": " + animation.getNumFrames()
-			+ " frames, duration " + animation.getDuration()
-			+ ", frameStep " + animation.getFrameStep()
-			+ ", restartMode " + animation.getRestartMode()
-			+ (animation.isMayaAnim() ? ", maya" : ""));
-
-		// If this says NO, interpolation isn't reaching us and the raw frame index is
-		// being rendered - which is what makes long frames read as a stall.
-		sendStatus("Smoothing active: "
-			+ (follower.isSmoothingActive(animation) ? "YES" : "NO")
-			+ " (the client's own setting)"
-			+ (filter == null ? " | no interpolation filter installed" : ""));
-
-		StringBuilder measured = new StringBuilder();
-		for (java.util.Map.Entry<Integer, Integer> entry : follower.getMeasuredTrims().entrySet())
-		{
-			measured.append(measured.length() > 0 ? ", " : "")
-				.append(entry.getKey()).append('=').append(entry.getValue());
-		}
-		sendStatus("Measured trims: " + (measured.length() == 0 ? "none yet" : measured));
-
-		StringBuilder manual = new StringBuilder();
-		for (java.util.Map.Entry<Integer, Integer> entry : follower.getWrapTrims().entrySet())
-		{
-			manual.append(manual.length() > 0 ? ", " : "")
-				.append(entry.getKey()).append('=').append(entry.getValue());
-		}
-		if (manual.length() > 0)
-		{
-			sendStatus("Manual overrides: " + manual + " (::follower wrapauto to drop them)");
-		}
-
-		if (lengths != null)
-		{
-			StringBuilder sb = new StringBuilder();
-			for (int i = 0; i < lengths.length && i < 24; i++)
-			{
-				sb.append(i > 0 ? "," : "").append(lengths[i]);
-			}
-			sendStatus("Frame lengths: " + sb + (lengths.length > 24 ? ",..." : ""));
-		}
-	}
-
-	/** The frame sequence actually rendered, so a stall or restart is visible. */
-	private void reportAnimationTrace()
-	{
-		int restarts = 0;
-		int baseFrames = 0;
-		for (String mark : animTraceMarks)
-		{
-			if (mark.contains("R"))
-			{
-				restarts++;
-			}
-			if (mark.contains("B"))
-			{
-				baseFrames++;
-			}
-		}
-
-		sendStatus("FOLLOWER " + summariseTrace(animTrace));
-		sendStatus("YOU      " + summariseTrace(playerTrace));
-		sendStatus("Controller restarts: " + restarts + " | frames drawn from the base "
-			+ "model: " + baseFrames + " of " + animTrace.size());
-		sendStatus(restarts > 1
-			? "Restarts mean the pose is being reinstalled - that is the pause."
-			: (baseFrames > 0
-				? "Base-model frames mean the animation dropped out momentarily."
-				: "Neither restarts nor dropouts - the pause is not in the animation."));
-	}
-
-	/** Collapses a frame sequence into "frame xHeld" runs, with a dwell average. */
-	private String summariseTrace(List<Integer> trace)
-	{
-		StringBuilder sb = new StringBuilder();
-		int previous = Integer.MIN_VALUE;
-		int run = 0;
-		int runs = 0;
-		int total = 0;
-
-		for (int frame : trace)
-		{
-			if (frame == previous)
-			{
-				run++;
-				continue;
-			}
-			if (previous != Integer.MIN_VALUE)
-			{
-				if (sb.length() < 90)
-				{
-					sb.append(previous).append('x').append(run).append(' ');
-				}
-				runs++;
-				total += run;
-			}
-			previous = frame;
-			run = 1;
-		}
-		if (previous != Integer.MIN_VALUE)
-		{
-			runs++;
-			total += run;
-		}
-
-		String average = runs == 0 ? "-" : String.valueOf(Math.round(total / (float) runs));
-		return "(avg hold " + average + " renders, " + runs + " changes): " + sb;
-	}
-
-	/**
-	 * A sample branching conversation, enough to show what the dialog system can
-	 * do. Real content will come from the rules file once speech and dialog share
-	 * a source.
-	 */
-	/** Shorthand for the conversation script below. */
-	private static com.follower.speech.FollowerDialog.Node says(String... pages)
-	{
-		return com.follower.speech.FollowerDialog.Node.says(pages);
-	}
-
-	private static com.follower.speech.FollowerDialog.Node you(String... pages)
-	{
-		return com.follower.speech.FollowerDialog.Node.you(pages);
-	}
-
-	/**
-	 * The joke pool, each entry a setup page and a punchline page. Every
-	 * conversation draws a random one, and "Got another one?" serves a second,
-	 * guaranteed different joke.
-	 */
-	private static final String[][] JOKES = {
-		{"Why did the Wise Old Man rob the bank of Draynor?",
-			"Because that's where the money was."},
-		{"What do you call an adventurer who takes their whole bank into the Wilderness?",
-			"A benefactor."},
-		{"Why did the chicken cross the road?",
-			"In Lumbridge? It never got the chance."},
-		{"I tried talking to a camel in Al Kharid once.",
-			"Apparently you need a special amulet. He made his opinion clear without one."},
-	};
-
 	/**
 	 * What today came to, in the follower's words.
 	 *
@@ -7261,18 +4363,18 @@ public class FollowerPlugin extends Plugin
 	 * dutifully reports nought kills and nought deaths reads like a form; one
 	 * that leaves those out reads like somebody remembering.
 	 */
-	private String[] daySummary()
+	String[] daySummary()
 	{
-		com.follower.speech.TriggerContext context = speechEngine.getContext();
-		return daySummary(
+		var context = context();
+		return daySummary(talk(),
 			sessionMinutes,
 			context.getTally("kills:today"),
 			context.getTally("levels:today"),
 			context.getTally("deaths:today"),
 			context.getMoodBand(),
-			context.hasIncident() && !com.follower.speech.TriggerContext.isVague(context.getIncidentPhrase())
+			context.hasIncident() && !TriggerContext.isVague(context.getIncidentPhrase())
 				? context.getIncidentPhrase() + context.getMemoryWhere()
-				+ ", " + context.getMemoryWhen(System.currentTimeMillis()) : null);
+				+ ", " + context.getMemoryWhen(currentTimeMillis()) : null);
 	}
 
 	/**
@@ -7281,17 +4383,17 @@ public class FollowerPlugin extends Plugin
 	 * what did and did not happen today, and they are all sentences the player
 	 * reads.
 	 */
-	static String[] daySummary(int minutes, int kills, int levels, int deaths,
+	static String[] daySummary(Talk talk, int minutes, int kills, int levels, int deaths,
 		String moodBand, String incident)
 	{
-		java.util.List<String> parts = new java.util.ArrayList<>();
+		List<String> parts = new ArrayList<>();
 
 		if (minutes >= 1)
 		{
 			// A scribe does not round 95 minutes down to "1 hour" - the
 			// half hour happened and it was there for it.
-			int hours = minutes / 60;
-			int rest = minutes % 60;
+			int hours = minutes / 60,
+				rest = minutes % 60;
 			parts.add(hours == 0
 				? minutes + (minutes == 1 ? " minute" : " minutes")
 				: hours + (hours == 1 ? " hour" : " hours")
@@ -7300,82 +4402,52 @@ public class FollowerPlugin extends Plugin
 		}
 
 		if (kills > 0)
-		{
 			parts.add(kills + (kills == 1 ? " thing killed" : " things killed"));
-		}
 		if (levels > 0)
-		{
 			parts.add(levels + (levels == 1 ? " level" : " levels"));
-		}
 		if (deaths > 0)
-		{
 			parts.add(deaths + (deaths == 1 ? " death" : " deaths"));
-		}
 
-		java.util.List<String> pages = new java.util.ArrayList<>();
+		List<String> pages = new ArrayList<>();
 		if (parts.isEmpty())
-		{
-			pages.add("Today's page is blank. Restful, I call that.");
-		}
+			pages.add(Resources.text("blankPage"));
 		else
-		{
 			pages.add("Today's page: " + join(parts) + ".");
-		}
 
 		// The mood is the follower's own verdict on all that, which is a
-		// different thing from the figures and worth saying separately.
-		switch (moodBand == null ? "" : moodBand)
-		{
-			case "low":
-				pages.add("I've had better days, if I'm honest.");
-				break;
-			case "down":
-				pages.add("Not our finest, but we're still walking.");
-				break;
-			case "good":
-				pages.add("A good day, that. I'd take another like it.");
-				break;
-			case "high":
-				pages.add("One of the good ones. I mean that.");
-				break;
-			default:
-				pages.add("An ordinary day. There's nothing wrong with those.");
-				break;
-		}
+		// different thing from the figures and worth saying separately: the
+		// band's line from talk.json, or the ordinary one for any other band.
+		pages.add(talk.moods.getOrDefault(moodBand, talk.moods.get("ordinary")));
 
 		// And the one thing it has not let go of.
-		if (incident != null && !incident.isEmpty())
-		{
+		if (!Strings.isNullOrEmpty(incident))
 			pages.add("I'm still thinking about " + incident + ".");
-		}
 		return pages.toArray(new String[0]);
 	}
 
 	/** "a, b and c" - the way a person lists things. */
-	private static String join(java.util.List<String> parts)
+	static String join(List<String> parts)
 	{
 		if (parts.size() == 1)
-		{
 			return parts.get(0);
-		}
 		return String.join(", ", parts.subList(0, parts.size() - 1))
 			+ " and " + parts.get(parts.size() - 1);
 	}
 
 	/** The previous joke, so consecutive draws never repeat. */
-	private static int lastJoke = -1;
+	static int lastJoke = -1;
 
 	/** A random joke from the pool, guaranteed different from the last one told. */
-	private static String[] nextJoke()
+	static String[] nextJoke(List<String[]> jokes)
 	{
 		int pick;
 		do
 		{
-			pick = java.util.concurrent.ThreadLocalRandom.current().nextInt(JOKES.length);
+			pick = ThreadLocalRandom.current().nextInt(jokes.size());
 		}
-		while (pick == lastJoke && JOKES.length > 1);
+		while (pick == lastJoke && jokes.size() > 1);
 		lastJoke = pick;
-		return JOKES[pick];
+		return jokes.get(pick);
 	}
 
 	/**
@@ -7395,461 +4467,113 @@ public class FollowerPlugin extends Plugin
 	 * obvious thing - talk to it - is about what it asked, and the everyday
 	 * script waits its turn.
 	 */
-	private void startTalking()
+	void startTalking()
 	{
-		// A conversation playing has the box; Talk-to waits for its end.
-		if (conversation != null && conversation.isPlaying())
-		{
-			tellTheFilm("Talk-to is off until the scene is over.");
-			return;
-		}
 		// Opening the box is presence too, even before anything is chosen.
-		speechEngine.getContext().noteAttention();
+		context().noteAttention();
 		// A bubble still up when the box opens is two mouths at once; the
 		// queue is likewise held while the box is open (see drainSpeechQueue).
 		overlay.clear();
-		String asked = speechEngine.getContext().getAskedTree();
-		com.follower.speech.DialogTree tree = dialogLoader.get(asked);
+		// And again a tick before the box draws them, for a look changed since.
+		dialog.fetchHeads();
+		String asked = context().getAskedTree();
+		var tree = dialogLoader.get(asked);
 		if (tree != null)
 		{
 			dialog.startNextTick(followerName(),
-				com.follower.speech.FollowerDialog.build(tree, this::answerQuestion, speechEngine::fill),
+				FollowerDialog.build(tree, this::answerQuestion, speechEngine::fill),
 				tree.startId());
 			return;
 		}
 		dialog.startNextTick(followerName(),
-			talkScript(this::daySummary, this::answerQuestion,
-				speechEngine.getContext().getWishLabel(),
-				speechEngine.getContext().isWishedItemInBag(),
-				speechEngine.getContext().getMoodBand()), "start");
+			talkScript(talk(), this::daySummary, this::answerQuestion,
+				context().getMoodBand()), "start");
 	}
 
 	/**
 	 * The player picked a branch that answers. Closes the question and tells
 	 * the rules, which is what turns a conversation into a consequence.
 	 */
-	private void answerQuestion(String answer)
+	void answerQuestion(String answer)
 	{
-		TriggerContext context = speechEngine.getContext();
+		var context = context();
 		String tree = context.getAskedTree();
-		// The nickname is the one question whose answer changes the follower's
-		// own state rather than the rules'; settled before the rules hear, so
-		// the thank-you can say the name.
-		if (NICKNAME_TREE.equals(tree))
-		{
-			if ("yes".equals(answer))
-			{
-				context.acceptNickname(context.getEarnedNickname());
-			}
-			else if ("no".equals(answer))
-			{
-				context.refuseNickname(context.getEarnedNickname());
-			}
-		}
 		context.noteAnswered();
-		speechEngine.dispatch(TriggerEvent.answered(answer, tree));
+		dispatch(TriggerEvent.answered(answer, tree));
 	}
 
-	/** The tree in dialogs.json that asks whether the earned name may be used. */
-	static final String NICKNAME_TREE = "nickname-offer";
-
 	/**
-	 * The everyday Talk-to conversation.
-	 *
-	 * <p>Written in Java rather than kept in dialogs.json because it does not
-	 * change with play - it is what the follower is, not what it is currently
-	 * up to. The trees in dialogs.json are the ones the follower OPENS, which
-	 * is a different job.
-	 *
-	 * <p>Three rules hold this together.
-	 *
-	 * <p>Every choice leads to a node where the PLAYER says that exact line.
-	 * The game works that way and players read it that way: the option is the
-	 * sentence you are about to speak, not a summary of it. Jumping straight
-	 * to a menu instead reads as the click having gone astray, and an option
-	 * whose node says something slightly different reads as a bug, because it
-	 * is one. A test enforces the match.
-	 *
-	 * <p>Nothing here is a feature list: what the follower can do comes out as
-	 * habits and grievances, the way a person describes their job, because a
-	 * companion reciting its own capabilities is a manual with a face.
-	 *
-	 * <p>And a branch never replays a line already read - hence the
-	 * {@code -menu} nodes, which re-offer the follow-ups without the preamble.
+	 * The everyday Talk-to conversation, built from talk.json for what holds
+	 * right now: whether a wish is open and the bag has the thing, the mood
+	 * band, and which features this build has. The file's note says what
+	 * keeps the conversation together and how a node names what it needs.
 	 *
 	 * <p>Package-private so the test can reach it. It is the only speech in the
 	 * plugin outside phrases.json, and so the only speech nothing checked.
 	 */
-	static java.util.Map<String, com.follower.speech.FollowerDialog.Node> talkScript(
+	static Map<String, FollowerDialog.Node> talkScript(Talk talk,
 		java.util.function.Supplier<String[]> summary,
-		java.util.function.Consumer<String> onAnswer,
-		String wish,
-		boolean wishItemInBag,
+		Consumer<String> onAnswer,
 		String moodBand)
 	{
-		java.util.Map<String, com.follower.speech.FollowerDialog.Node> script =
-			new java.util.LinkedHashMap<>();
-
-		// The gift option only exists while a wish is open, and it names the
-		// thing, because the first design taught us the failure the hard way:
-		// "Found you something" with no something reads as a null action, and
-		// giving with no wanting before it has no pull. The follower asks for
-		// a feather; the option is "Found you that feather."; everything
-		// downstream says feather. The script is rebuilt on every Talk-to, so
-		// the option appears and disappears with the wish.
-		boolean wishing = wish != null && !wish.isEmpty();
-		String giftLabel = "Found you that " + wish + ".";
-
-		// When the follower is not itself, "How have you been?" sharpens into
-		// "You all right?" - same slot, same spirit, pointed by state. The
-		// research calls this answering its mood, and it is the one thing a
-		// player can DO about a low band besides witness it.
-		boolean lowish = "low".equals(moodBand) || "down".equals(moodBand);
-		String howLabel = lowish ? "You all right?" : "How have you been?";
-		String howTarget = lowish ? "allright-q" : "how-q";
-
-		// While a wish is open the five-slot box retires who-are-you, not the
-		// small talk: who-a stays reachable from the returning hub later, but
-		// the jokes and advice are the perishable first-hour charm, and a
-		// 45-minute wish window used to wall them off from the opening screen.
-		script.put("start", wishing
-			? says("Yes?").choices(
-				"What is it you actually do?", "do-q",
-				howLabel, howTarget,
-				giftLabel, "gift-q",
-				"Let's just talk.", "chat-q",
-				"Never mind.", "bye-q")
-			: says("Yes?").choices(
-				"Who are you, exactly?", "who-q",
-				"What is it you actually do?", "do-q",
-				howLabel, howTarget,
-				"Let's just talk.", "chat-q",
-				"Never mind.", "bye-q"));
-
-		// The returning hub, without the greeting. Five options is the most
-		// the box has measured spacing for, so while a wish is open the hub
-		// retires who-are-you to make room - somebody coming BACK
-		// mid-conversation knows who it is.
-		script.put("menu", wishing
-			? says().choices(
-				"What is it you actually do?", "do-q",
-				howLabel, howTarget,
-				giftLabel, "gift-q",
-				"Let's just talk.", "chat-q",
-				"That's all for now.", "done-q")
-			: says().choices(
-				"Who are you, exactly?", "who-q",
-				"What is it you actually do?", "do-q",
-				howLabel, howTarget,
-				"Let's just talk.", "chat-q",
-				"That's all for now.", "done-q"));
-
-		// ------------------------------------------------ answering its mood
-		// Asking is itself the kindness: reaching the answer node is what
-		// counts (latched on arrival, like every answer), so closing the box
-		// early still asked. The lift arrives from the comforted rule; the
-		// pages differ by band because "not the best day" and "middling" are
-		// different admissions. Either way the usual how-menu follows - a low
-		// day does not lock away the notebook.
-		if (lowish)
+		Set<String> facts = new HashSet<>(Arrays.asList(
+			"low".equals(moodBand) || "down".equals(moodBand) ? "lowish" : "",
+			"errands",
+			"thrall-outfits",
+			moodBand));
+		var tree = new DialogTree();
+		tree.nodes = new ArrayList<>();
+		for (var line : talk.nodes)
 		{
-			script.put("allright-q", you("You all right?").then("allright-a"));
-			script.put("allright-a", "low".equals(moodBand)
-				? says(
-					"Honestly? Not the best day in the ledger.",
-					"But you noticed. That's worth an entry of its own.")
-					.onFinish(() -> onAnswer.accept("comforted"))
-					.then("how-menu")
-				: says(
-					"Middling. The ink's been thicker.",
-					"Asking helps. Don't tell anyone I said that.")
-					.onFinish(() -> onAnswer.accept("comforted"))
-					.then("how-menu"));
+			// "!fact" holds while the fact does not.
+			if (line.when == null || Arrays.stream(line.when.split(" "))
+				.allMatch(fact -> facts.contains(fact.replace("!", "")) != fact.startsWith("!")))
+				tree.nodes.add(line);
 		}
-
-		// ------------------------------------------------ the gift
-		// Client-side, so nothing real changes hands: the box closes on the
-		// handover and the verdict arrives overhead from the gifted-* rules,
-		// the shape the hands game uses - fixed text here, consequence from
-		// the rules.
-		if (wishing)
-		{
-			// The box branches on the bag, because the first neutral version
-			// ("Let's see it, then." either way) read as the follower not
-			// looking - and a scribe that does not look is out of character
-			// in its own conversation. The bag is read when the script is
-			// built; the rules re-check at dispatch, so the rare mid-box drop
-			// still gets an honest overhead answer.
-			script.put("gift-q", you(giftLabel).then("gift-a"));
-			if (wishItemInBag)
-			{
-				// Second page, and it earns its click: nothing is consumed,
-				// so the player walks away still holding the thing they just
-				// handed over, and a handover that leaves the bag untouched
-				// reads as the gift not having registered. The follower
-				// trading its worn one back is the honest account of what the
-				// bag will show - the count does not move because a swap does
-				// not move it - and it is truer to a scribe than pretending
-				// to pocket something it cannot pocket.
-				script.put("gift-a", says(
-					"Let's see it, then. ...That's the one.",
-					"Take my old one in trade. Still good for your crafting,"
-						+ " so your bag comes out even.")
-					.onFinish(() -> onAnswer.accept("gift")));
-			}
-			else
-			{
-				// The catch happens HERE, in the conversation, where the claim
-				// was made. The overhead coda afterwards is one dry line, not
-				// a second telling-off.
-				script.put("gift-a", says(
-					"You're patting an empty bag. I can hear it from here.",
-					"Bring me a real " + wish + " and I'll be delighted.")
-					.onFinish(() -> onAnswer.accept("bluff")));
-			}
-		}
-
-		// Shared closings. Both are spoken, like every other option.
-		script.put("bye-q", you("Never mind.").then("bye"));
-		script.put("done-q", you("That's all for now.").then("bye"));
-		script.put("back-q", you("Back to business.").then("menu"));
-		script.put("bye", says("Right you are. One step behind."));
-
-		// ------------------------------------------------ who are you
-		// Retired entirely while a wish is open: neither hub offers it then
-		// (the five-slot cap spends its seat on the gift), and a node nothing
-		// leads to is dialogue nobody will ever read - the reachability test
-		// says exactly that.
-		if (!wishing)
-		{
-			script.put("who-q", you("Who are you, exactly?").then("who-a"));
-			script.put("who-a", says(
-				"Now there's a question.",
-				"A scribe. Somebody has to write all this down.")
-				.then("who-b"));
-			script.put("who-b", says(
-				"You dress me, I walk behind you, and I keep quiet about your bank.")
-				.choices(
-					"Writing what, exactly?", "who-me-q",
-					"Do you have a name?", "who-name-q",
-					"Don't you get tired of following me?", "who-tired-q",
-					"Back to business.", "back-q"));
-
-			script.put("who-menu", says()
-				.choices(
-					"Writing what, exactly?", "who-me-q",
-					"Do you have a name?", "who-name-q",
-					"Don't you get tired of following me?", "who-tired-q",
-					"Back to business.", "back-q"));
-
-			script.put("who-me-q", you("Writing what, exactly?").then("who-me-a"));
-			script.put("who-me-a", says(
-				"Everything. Roads, rulers, prices, what lives under things.",
-				"It's a long project. Nobody's asked to read it.")
-				.then("who-menu"));
-
-			script.put("who-name-q", you("Do you have a name?").then("who-name-a"));
-			script.put("who-name-a", says(
-				"Whatever you've been calling me. I'd have picked my own, but nobody asked.",
-				"It's grown on me.")
-				.then("who-menu"));
-
-			script.put("who-tired-q", you("Don't you get tired of following me?").then("who-tired-a"));
-			script.put("who-tired-a", says(
-				"Tired? I once watched you stand at a furnace for three hours.",
-				"Nothing has tired me since.")
-				.then("who-menu"));
-		}
-
-		// ------------------------------------------------ what do you do
-		script.put("do-q", you("What is it you actually do?").then("do-a"));
-		script.put("do-a", says("Walk behind you. It's more involved than it sounds.")
-			.then("do-menu"));
-		script.put("do-menu", says()
-			.choices(
-				"Tell me about the walking.", "do-follow-q",
-				"What do you do when I'm fighting?", "do-fight-q",
-				"And when I'm working?", "do-work-q",
-				"Can you dance?", "do-emote-q",
-				"That's all I needed.", "do-done-q"));
-		script.put("do-done-q", you("That's all I needed.").then("menu"));
-
-		script.put("do-follow-q", you("Tell me about the walking.").then("do-follow-a"));
-		script.put("do-follow-a", says(
-			"One tile behind. Corners, doorways, stairs, running: I keep up.",
-			"Where you go I go, teleports included. Same swirl, half a step later.")
-			.then("do-follow-b"));
-		script.put("do-follow-b", says(
-			"Tell me to Stay and I'll hold the spot until you want me back.",
-			"Or hold Shift, right-click a tile and pick Send. I'll walk there myself.")
-			.then("do-menu"));
-
-		script.put("do-fight-q", you("What do you do when I'm fighting?").then("do-fight-a"));
-		script.put("do-fight-a", says(
-			"Get out of the way, mainly. Then watch.",
-			"If something enormous is near, I mention it first. For all the good that does.")
-			.then("do-fight-b"));
-		script.put("do-fight-b", says(
-			"And when it goes down I make a fuss. You've usually earned it by then.")
-			.choices(
-				"What about my thralls?", "do-thrall-q",
-				"Good to know.", "do-fight-done-q"));
-		script.put("do-fight-done-q", you("Good to know.").then("do-menu"));
-
-		// The thrall styles are measured, not guessed: zombie ids are melee,
-		// skeleton ranged, ghost magic, and each has its own outfit profile in
-		// the settings. Worth saying out loud - the follower turning up to a
-		// mage fight in melee gear is the one thing about this that looks
-		// broken rather than deliberate.
-		script.put("do-thrall-q", you("What about my thralls?").then("do-thrall-a"));
-		script.put("do-thrall-a", says(
-			"Raise one of those Arceuus things and I'll take its place.",
-			"Same walking, same swinging, far better dressed.")
-			.then("do-thrall-b"));
-		script.put("do-thrall-b", says(
-			"Three sorts, mind. Zombie, skeleton and ghost, for melee, ranged and magic.")
-			.then("do-thrall-c"));
-		script.put("do-thrall-c", says(
-			"Set me an outfit for each in the settings.",
-			"Otherwise I turn up to a mage fight holding a greataxe and we both look foolish.")
-			.then("do-menu"));
-
-		script.put("do-work-q", you("And when I'm working?").then("do-work-a"));
-		script.put("do-work-a", says(
-			"Depends what you're at.",
-			"If it's pockets, I give you room and watch the street until you're done.")
-			.then("do-work-b"));
-		script.put("do-work-b", says(
-			"Trees, rocks, fishing spots. I set up beside you and do a bit myself.",
-			"Now and then I wander off on an errand of my own. I always come back.")
-			.then("do-menu"));
-
-		script.put("do-emote-q", you("Can you dance?").then("do-emote-a"));
-		script.put("do-emote-a", says(
-			"Ask and find out. Right-click me for a wave or a dance, whatever the moment wants.",
-			"Or do one yourself and I'll join in a beat behind. I'm not a mirror. I have timing.")
-			.then("do-menu"));
-
-		// ------------------------------------------------ the inner life
-		// The everyday entrance; on a lowish day allright-q replaces it (and
-		// leads to the same menu), so it is only built when reachable.
-		if (!lowish)
-		{
-			script.put("how-q", you("How have you been?").then("how-a"));
-			script.put("how-a", says(
-				"That depends on the day. You've given me some days.")
-				.then("how-menu"));
-		}
-		script.put("how-menu", says()
-			.choices(
-				"How did today go?", "how-today-q",
-				"You keep track of things?", "how-count-q",
-				"You have moods?", "how-mood-q",
-				"Anywhere you'd rather be?", "how-place-q",
-				"Back to business.", "back-q"));
-
-		// The one page in the script that is different every time it is read.
-		// Everything in it is already counted - the tallies exist for the
-		// milestone lines - so this is the same memory said as a sentence
-		// rather than as a number, which is what makes it sound like somebody
-		// who was there rather than a scoreboard.
-		script.put("how-today-q", you("How did today go?").then("how-today-a"));
-		script.put("how-today-a", com.follower.speech.FollowerDialog.Node
-			.saysDynamic(summary)
-			.then("how-menu"));
-
-		script.put("how-count-q", you("You keep track of things?").then("how-count-a"));
-		script.put("how-count-a", says(
-			"It's the job. Every rat, every level, every time you've gone down in front of me.",
-			"It isn't judgement. Somebody should, that's all.")
-			.then("how-count-b"));
-		script.put("how-count-b", says(
-			"I remember it between days, too. You come back and the number's still there.")
-			.then("how-menu"));
-
-		script.put("how-mood-q", you("You have moods?").then("how-mood-a"));
-		script.put("how-mood-a", says(
-			"I do. You'd know if you looked up.",
-			"When it's gone well I stand one way. When it hasn't, I stand another.")
-			.then("how-mood-b"));
-		script.put("how-mood-b", says(
-			"It passes. Everything does, if you keep walking.")
-			.then("how-menu"));
-
-		script.put("how-place-q", you("Anywhere you'd rather be?").then("how-place-a"));
-		script.put("how-place-a", says(
-			"There are places I like. I couldn't tell you why.",
-			"And one or two I'd sooner we didn't linger in. You'll hear about those.")
-			.then("how-place-b"));
-		script.put("how-place-b", says(
-			"If I ever ask you to take me somewhere, come and talk to me and I'll say where.",
-			"I won't ask twice. It's not that sort of arrangement.")
-			.then("how-menu"));
-
-		// ------------------------------------------------ small talk
-		script.put("chat-q", you("Let's just talk.").then("chat-a"));
-		script.put("chat-a", says("My favourite duty.").then("chat-menu"));
-		script.put("chat-menu", says()
-			.choices(
-				"Seen anything interesting?", "chat-seen-q",
-				"What do you think of my outfit?", "chat-outfit-q",
-				"Any advice?", "advice-q",
-				"Tell me a joke.", "chat-joke-q",
-				"Back to business.", "back-q"));
-
-		script.put("chat-seen-q", you("Seen anything interesting?").then("chat-seen-a"));
-		script.put("chat-seen-a", says(
-			"Mostly the back of your head.",
-			"It's a fine head. It could carry a better hat.")
-			.then("chat-menu"));
-
-		script.put("chat-outfit-q", you("What do you think of my outfit?").then("chat-outfit-a"));
-		script.put("chat-outfit-a", says(
-			"Anyone who dresses their follower this well has taste.",
-			"The rest of your wardrobe I couldn't comment on.")
-			.then("chat-menu"));
-
-		// Every visit re-rolls from the pool (never the same joke twice in a
-		// row), and the loop lets you keep asking. Both loop options get their
-		// own spoken node so the label and the line stay identical.
-		script.put("chat-joke-q", you("Tell me a joke.").then("chat-joke-a"));
-		script.put("chat-joke-a", com.follower.speech.FollowerDialog.Node
-			.saysDynamic(FollowerPlugin::nextJoke)
-			.choices(
-				"Heh. Got another one?", "chat-joke2-q",
-				"That's terrible.", "chat-groan-q"));
-
-		script.put("chat-joke2-q", you("Heh. Got another one?").then("chat-joke2-a"));
-		script.put("chat-joke2-a", com.follower.speech.FollowerDialog.Node
-			.saysDynamic(FollowerPlugin::nextJoke)
-			.choices(
-				"Another!", "chat-joke3-q",
-				"That's terrible.", "chat-groan-q"));
-
-		script.put("chat-joke3-q", you("Another!").then("chat-joke2-a"));
-
-		script.put("chat-groan-q", you("That's terrible.").then("chat-groan-a"));
-		script.put("chat-groan-a", says(
-			"I've been saving that one since Lumbridge.",
-			"There's more where it came from. Choose your next question carefully.")
-			.then("chat-menu"));
-
-		// ------------------------------------------------ advice
-		script.put("advice-q", you("Any advice?").then("advice-a"));
-		script.put("advice-a", says(
-			"Don't take the detour for the cabbage. It is never worth it.")
-			.then("advice-b"));
-		script.put("advice-b", says(
-			"A stranger offering to trim your armour is no barber.")
-			.then("advice-c"));
-		script.put("advice-c", says(
-			"And bank before you think you need to. A gravestone is not storage.")
-			.then("advice-d"));
-		script.put("advice-d", says(
-			"That's the lot. The rest I've learned to keep to myself.")
-			.then("chat-menu"));
-
+		var script = FollowerDialog.build(tree,
+			onAnswer);
+		// The pages made fresh on every visit: what today came to, and a joke.
+		script.get("how-today-a").dynamic(summary);
+		script.get("chat-joke-a").dynamic(() -> nextJoke(talk.jokes));
+		script.get("chat-joke2-a").dynamic(() -> nextJoke(talk.jokes));
 		return script;
+	}
+
+	/** talk.json: the Talk-to script's nodes, its joke pool and the day summary's moods. */
+	static class Talk
+	{
+		/** Each a setup page and a punchline page. */
+		List<String[]> jokes;
+
+		/** What the day summary says of each mood band, and of any other ("ordinary"). */
+		Map<String, String> moods;
+
+		List<Line> nodes;
+
+		/** A node, built only while the facts its {@code when} names hold. */
+		static class Line extends DialogTree.DialogNode
+		{
+			String when;
+		}
+	}
+
+	/** talk.json, read from the jar on the first Talk-to. */
+	Talk talk;
+
+	Talk talk()
+	{
+		if (talk == null)
+		{
+			try (java.io.Reader in = Resources.reader("talk.json"))
+			{
+				talk = gson.fromJson(in, Talk.class);
+			}
+			catch (IOException e)
+			{
+				throw new java.io.UncheckedIOException(e);
+			}
+		}
+		return talk;
 	}
 
 	/**
@@ -7859,12 +4583,10 @@ public class FollowerPlugin extends Plugin
 	 * bottom-up: the last one created displays on top.
 	 */
 	@Subscribe
-	public void onMenuOpened(net.runelite.api.events.MenuOpened event)
+	void onMenuOpened(MenuOpened event)
 	{
 		if (!follower.isSpawned())
-		{
 			return;
-		}
 
 		if (!follower.isUnderMouse(client.getMouseCanvasPosition()))
 		{
@@ -7875,67 +4597,41 @@ public class FollowerPlugin extends Plugin
 		// Over an interface drawn on top of the follower - the bank, the
 		// inventory, the chatbox - the menu is the interface's.
 		if (!offersWalkHere(event.getMenuEntries()))
-		{
 			return;
-		}
 
 		// The hover hint injects a Talk-to every client tick so the game draws
 		// the top-left text natively; when the menu OPENS that entry is still
 		// in it, and adding a fresh set would duplicate it. Strip our own
 		// entries first, then rebuild the full menu in NPC order.
-		net.runelite.api.MenuEntry[] existing = client.getMenu().getMenuEntries();
-		java.util.List<net.runelite.api.MenuEntry> kept = new java.util.ArrayList<>();
-		for (net.runelite.api.MenuEntry entry : existing)
-		{
-			if (entry.getType() != net.runelite.api.MenuAction.RUNELITE
+		client.getMenu().setMenuEntries(Arrays.stream(client.getMenu().getMenuEntries())
+			.filter(entry -> entry.getType() != MenuAction.RUNELITE
 				|| !followerTarget().equals(entry.getTarget()))
-			{
-				kept.add(entry);
-			}
-		}
-		client.getMenu().setMenuEntries(kept.toArray(new net.runelite.api.MenuEntry[0]));
+			.toArray(MenuEntry[]::new));
 
 		// Examine sits where a real NPC's does: below Walk here, above Cancel -
 		// index 1 in the bottom-up entry array (Cancel is index 0).
-		client.getMenu().createMenuEntry(1)
-			.setOption("Examine")
-			.setTarget(followerTarget())
-			.setType(net.runelite.api.MenuAction.RUNELITE)
-			.onClick(e ->
-			{
-				showRedCross();
-				client.addChatMessage(
-					net.runelite.api.ChatMessageType.NPC_EXAMINE, "",
-					"A travelling scribe. Always writing something down.", null);
-				// Being looked up is worth noticing. The examine text is the
-				// game's line about the follower; a rule gets to give the
-				// follower's line about being looked up.
-				speechEngine.dispatch(TriggerEvent.simple(TriggerEvent.Type.EXAMINED));
-			});
+		addFollowerMenuEntry(1, "Examine", () ->
+		{
+			client.addChatMessage(
+				net.runelite.api.ChatMessageType.NPC_EXAMINE, "",
+				"A travelling scribe. Always writing something down.", null);
+			// Being looked up is worth noticing. The examine text is the
+			// game's line about the follower; a rule gets to give the
+			// follower's line about being looked up.
+			dispatch(TriggerEvent.simple(EXAMINED));
+		});
 
 		addFollowerMenuEntry("Dance", () -> follower.playAnimation(866));
 		addFollowerMenuEntry("Wave", () -> follower.playAnimation(863));
 		addFollowerMenuEntry("Step-in-front", () ->
 		{
-			Player local = client.getLocalPlayer();
+			var local = client.getLocalPlayer();
 			if (local == null)
-			{
 				return;
-			}
 			if (!follower.moveToFront(local))
-			{
-				speak("There's no room in front of you for me to stand.",
-					com.follower.speech.SpeechOutput.OVERHEAD, null, -1, null);
-			}
+				speak(Resources.text("noRoomInFront"),
+					SpeechOutput.OVERHEAD, null, -1, null);
 		});
-		// Only where a page has a plate for the place, so the option showing
-		// is itself the sign a sketch can be made here; not over one already
-		// under way, nor in a scene being filmed.
-		if (sketching != null && !filming && sketching.canSketchNow())
-		{
-			addFollowerMenuEntry("Sketch", this::askForSketch);
-		}
-		addFollowerMenuEntry("Read-chronicle", chronicleWindow::openNextTick);
 		// Second from the top, under Talk-to: the control a new player needs
 		// most, not buried under the emotes. The player's own park decides, not
 		// any stay: standing clear to watch a fight, the seat and the wander hold
@@ -7970,9 +4666,9 @@ public class FollowerPlugin extends Plugin
 	 * follower is waiting on you, and it explains why the dialog that opens
 	 * is not the everyday one.
 	 */
-	private String talkOption()
+	String talkOption()
 	{
-		return speechEngine.getContext().getAskedTree().isEmpty()
+		return context().getAskedTree().isEmpty()
 			? "Talk-to" : "Answer";
 	}
 
@@ -7985,39 +4681,23 @@ public class FollowerPlugin extends Plugin
 	 * left-click from Walk here. Only menus that actually target the ground (they contain
 	 * a Walk here entry) get one.
 	 */
-	private void addSendFollowerEntry(net.runelite.api.events.MenuOpened event)
+	void addSendFollowerEntry(MenuOpened event)
 	{
-		if (!client.isKeyPressed(net.runelite.api.KeyCode.KC_SHIFT))
-		{
+		if (!client.isKeyPressed(KeyCode.KC_SHIFT))
 			return;
-		}
 
-		net.runelite.api.WorldView view = client.getTopLevelWorldView();
+		var view = client.getTopLevelWorldView();
 		if (view == null)
-		{
 			return;
-		}
-		net.runelite.api.Tile sceneTile = view.getSelectedSceneTile();
+		var sceneTile = view.getSelectedSceneTile();
 		if (sceneTile == null)
-		{
 			return;
-		}
 
 		if (!offersWalkHere(event.getMenuEntries()))
-		{
 			return;
-		}
 
-		WorldPoint target = sceneTile.getWorldLocation();
-		client.getMenu().createMenuEntry(1)
-			.setOption("Send")
-			.setTarget(followerTarget())
-			.setType(net.runelite.api.MenuAction.RUNELITE)
-			.onClick(e ->
-			{
-				showRedCross();
-				clientThread.invoke(() -> sendTo(target));
-			});
+		var target = sceneTile.getWorldLocation();
+		addFollowerMenuEntry(1, "Send", () -> sendTo(target));
 	}
 
 	/**
@@ -8029,128 +4709,26 @@ public class FollowerPlugin extends Plugin
 	 * swallowed. Send has always asked this; the hover entry, the right-click
 	 * options and shift-click ask it too.
 	 */
-	static boolean offersWalkHere(net.runelite.api.MenuEntry[] entries)
+	static boolean offersWalkHere(MenuEntry[] entries)
 	{
-		if (entries == null)
-		{
-			return false;
-		}
-		for (net.runelite.api.MenuEntry entry : entries)
-		{
-			if (entry != null && entry.getType() == net.runelite.api.MenuAction.WALK)
-			{
-				return true;
-			}
-		}
-		return false;
+		return entries != null && Arrays.stream(entries)
+			.anyMatch(entry -> entry != null && entry.getType() == MenuAction.WALK);
 	}
 
 	/** The Send op's move, on the client thread. */
-	private void sendTo(WorldPoint target)
+	void sendTo(WorldPoint target)
 	{
-		if (filming)
-		{
-			// Straight there, with no beat before it: the scene has a
-			// director. A refusal goes to the window, out of the shot.
-			if (!follower.stayAt(target))
-			{
-				tellTheFilm("It can't get to that spot from here.");
-				return;
-			}
-			parkForTheFilm(follower.getStayTile());
-			filmSet.reaim();
-			return;
-		}
 		// Through the will, which stops at an edge it has misgivings
 		// about before going on.
-		boolean sent = will != null ? will.send(target) : follower.stayAt(target);
+		boolean sent = will.send(target);
 		if (!sent)
-		{
 			speak("I can't get to that spot from here.",
-				com.follower.speech.SpeechOutput.OVERHEAD, null, -1, null);
-		}
+				SpeechOutput.OVERHEAD, null, -1, null);
 		else
-		{
 			// Where the Send ends, not where it pauses: let go by something
 			// that had the feet, the pause is over, and the follower parked on
 			// the edge stayed three tiles short of a monster for good.
-			parkedByThePlayer(will != null ? will.endsAt() : follower.getStayTile());
-		}
-	}
-
-	/**
-	 * Right-click Sketch and ::follower sketch, on the client thread. A
-	 * refusal is one line over its head, as Step-in-front's is; in a scene
-	 * being filmed it goes to the chat instead, out of the shot. Asked again
-	 * mid-sketch, as only the command can be, nothing is said: the sketch
-	 * under way is the answer, and a refusal held through the count was said
-	 * after the picture, as if the sketch just taken had been refused.
-	 */
-	private void askForSketch()
-	{
-		if (sketching == null || sketching.isSketching())
-		{
-			return;
-		}
-		String refused = sketching.askForSketch();
-		if (refused == null)
-		{
-			return;
-		}
-		if (filming)
-		{
-			sendStatus(refused);
-		}
-		else
-		{
-			speak(refused, com.follower.speech.SpeechOutput.OVERHEAD, null, -1, null);
-		}
-	}
-
-	/**
-	 * A line of the sketch's count shows at least this long, and is gone
-	 * before the next, so the count reads as a count.
-	 */
-	private static final long SKETCH_COUNT_MS = 1_100L;
-
-	/**
-	 * The sketch's count, straight over the follower's head: asked for, so
-	 * the mute does not hold it back, and holding the floor as a line does,
-	 * so nothing queued lands on it. Null clears it, for the picture.
-	 */
-	private void sketchCount(String line)
-	{
-		if (line == null)
-		{
-			overlay.clear();
-			return;
-		}
-		// No count runs in a scene, which puts the scroll away: what would be
-		// said is the word for the sketch broken off, over the scene.
-		if (inCutscene())
-		{
-			return;
-		}
-		long showFor = Math.min(MAX_SPEECH_MS, Math.max(SKETCH_COUNT_MS,
-			(long) line.length() * 1000L / Math.max(1, config.readingSpeed())));
-		overlay.show(line, showFor);
-		speakingUntilMs = System.currentTimeMillis() + showFor + SPEECH_GAP_MS;
-	}
-
-	/**
-	 * The sketch's word after the picture, through the engine so the mute
-	 * and the output setting hold, and next in line. "There." still has the
-	 * floor when it comes, and queued behind the lines held through the pose
-	 * it was said seconds late, after some unrelated remark, or dropped with
-	 * three waiting. The queue is emptied for the moment it goes in, and
-	 * what waited goes back in behind it, in its order.
-	 */
-	private void sketchSaysNext(String line)
-	{
-		List<Utterance> waiting = new ArrayList<>(speechQueue);
-		speechQueue.clear();
-		speechEngine.remark(line);
-		speechQueue.addAll(waiting);
+			parkedByThePlayer(will.endsAt());
 	}
 
 	/**
@@ -8163,16 +4741,9 @@ public class FollowerPlugin extends Plugin
 	 * it comes out in the client's exact font and colours for free.
 	 */
 	@Subscribe
-	public void onClientTick(net.runelite.api.events.ClientTick event)
+	void onClientTick(net.runelite.api.events.ClientTick event)
 	{
-		if (conversation != null)
-		{
-			conversation.update(System.currentTimeMillis());
-		}
-		if (gaze != null)
-		{
-			gaze.noteHover(com.follower.follower.Gaze.read(client, follower));
-		}
+		gaze.noteHover(Gaze.read(client, follower));
 
 		boolean over = !client.isMenuOpen() && follower.isSpawned()
 			&& follower.isUnderMouse(client.getMouseCanvasPosition())
@@ -8187,9 +4758,7 @@ public class FollowerPlugin extends Plugin
 		// goes on top of the menu, and the follower walks at the heel, so it
 		// would take that click all day.
 		if (!over || !onlyGroundUnder(client.getMenu().getMenuEntries()))
-		{
 			return;
-		}
 
 		addFollowerMenuEntry(talkOption(), this::startTalking);
 	}
@@ -8201,28 +4770,15 @@ public class FollowerPlugin extends Plugin
 	 * and an NPC to attack, the annoyance the game's own "Move follower
 	 * options lower down" setting exists for with real pets.
 	 */
-	static boolean onlyGroundUnder(net.runelite.api.MenuEntry[] entries)
+	static boolean onlyGroundUnder(MenuEntry[] entries)
 	{
-		if (entries == null)
-		{
-			return false;
-		}
-		for (net.runelite.api.MenuEntry entry : entries)
-		{
-			if (entry == null)
-			{
-				continue;
-			}
-			net.runelite.api.MenuAction type = entry.getType();
-			if (type != net.runelite.api.MenuAction.WALK
-				&& type != net.runelite.api.MenuAction.CANCEL
-				&& type != net.runelite.api.MenuAction.RUNELITE)
-			{
-				return false;
-			}
-		}
-		return true;
+		return entries != null && Arrays.stream(entries)
+			.allMatch(entry -> entry == null || GROUND_OPS.contains(entry.getType()));
 	}
+
+	/** Walk here, Cancel and the plugins' own entries: what bare ground offers. */
+	static final Set<MenuAction> GROUND_OPS = java.util.EnumSet.of(
+		MenuAction.WALK, MenuAction.CANCEL, MenuAction.RUNELITE);
 
 	/**
 	 * Shift-hover: the same little action tooltip a real NPC gets, drawn by
@@ -8231,60 +4787,31 @@ public class FollowerPlugin extends Plugin
 	 * added once a client tick it was missing from every frame past fifty a
 	 * second, and flickered (play test, 8 Oct).
 	 */
-	private void shiftHoverTooltip()
+	void shiftHoverTooltip()
 	{
-		if (client.isKeyPressed(net.runelite.api.KeyCode.KC_SHIFT) && !client.isMenuOpen()
+		if (client.isKeyPressed(KeyCode.KC_SHIFT) && !client.isMenuOpen()
 			&& follower.isSpawned() && follower.isUnderMouse(client.getMouseCanvasPosition())
 			&& offersWalkHere(client.getMenu().getMenuEntries()))
-		{
 			tooltipManager.add(new net.runelite.client.ui.overlay.tooltip.Tooltip(
 				talkOption() + " <col=ffff00>" + followerName() + "</col>"));
-		}
+	}
+
+	void addFollowerMenuEntry(String option, Runnable action)
+	{
+		addFollowerMenuEntry(-1, option, action);
 	}
 
 	/**
-	 * Whether an interface - the bank, a shop, a quest journal, the world
-	 * map - is open over the game view: a slot of whichever layout is in use
-	 * has something in it. The bank and its like open in the main modal slot;
-	 * the world map, the settings and the collection log in the floater slot,
-	 * which stays open as you walk; and the world map made full screen in a
-	 * layout of its own. A sketch of the view with the bank in it is a sketch
-	 * of the bank - and the Falador sketch came out a picture of the world
-	 * map, tooltip and all, while only the main modal slot was looked in.
+	 * An entry on the follower at {@code index}: -1 on top, 1 just above
+	 * Cancel. Menu clicks come on the client thread, where the action then
+	 * runs straight away.
 	 */
-	static boolean windowOverTheView(Client client)
+	void addFollowerMenuEntry(int index, String option, Runnable action)
 	{
-		int[] slots = {
-			net.runelite.api.gameval.InterfaceID.Toplevel.MAINMODAL,
-			net.runelite.api.gameval.InterfaceID.ToplevelOsrsStretch.MAINMODAL,
-			net.runelite.api.gameval.InterfaceID.ToplevelPreEoc.MAINMODAL,
-			net.runelite.api.gameval.InterfaceID.Toplevel.FLOATER,
-			net.runelite.api.gameval.InterfaceID.ToplevelOsrsStretch.FLOATER,
-			net.runelite.api.gameval.InterfaceID.ToplevelPreEoc.FLOATER,
-			net.runelite.api.gameval.InterfaceID.ToplevelDisplay.DISPLAYMODAL,
-		};
-		for (int slot : slots)
-		{
-			net.runelite.api.widgets.Widget modal = client.getWidget(slot);
-			if (modal == null || modal.isHidden())
-			{
-				continue;
-			}
-			net.runelite.api.widgets.Widget[] inside = modal.getNestedChildren();
-			if (inside != null && inside.length > 0)
-			{
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private void addFollowerMenuEntry(String option, Runnable action)
-	{
-		client.getMenu().createMenuEntry(-1)
+		client.getMenu().createMenuEntry(index)
 			.setOption(option)
 			.setTarget(followerTarget())
-			.setType(net.runelite.api.MenuAction.RUNELITE)
+			.setType(MenuAction.RUNELITE)
 			.onClick(e ->
 			{
 				// An op on an entity flashes the red click cross, like any NPC.
@@ -8293,155 +4820,38 @@ public class FollowerPlugin extends Plugin
 			});
 	}
 
-	@Subscribe
-	public void onPlayerChanged(PlayerChanged event)
-	{
-		if (event.getPlayer() == client.getLocalPlayer())
-		{
-			// Any appearance change might be a new colour worth banking - queue an
-			// auto-harvest once the client has rebuilt the model. Duplicate colour
-			// sets are deduplicated in the store, so gear swaps cost nothing.
-			autoHarvestTicks = MODEL_REBUILD_TICKS;
-		}
-	}
-
-	@Subscribe
-	public void onRuneScapeProfileChanged(RuneScapeProfileChanged event)
-	{
-		// An account's first login makes its profile after the login itself,
-		// so the book opened then had nowhere to keep what it drew. A logout
-		// brings no profile and is left alone: a sketch still being drawn
-		// belongs in the folder it was begun for.
-		if (sketchBook != null && event.getNewProfile() != null)
-		{
-			sketchBook.openFor(event.getNewProfile());
-			// Noted in the memory, so Forget everything knows its drawings
-			// were made under it (the user, 21 Oct).
-			speechEngine.getContext().noteSketchAccount(event.getNewProfile());
-		}
-	}
-
-	/** Ticks until a queued auto-harvest runs; 0 = idle. */
-	private int autoHarvestTicks;
-
-	/** Colour indices at the last banked harvest, to skip no-op extractions early. */
-	private int[] lastHarvestColors;
-
-	/**
-	 * Banks the player's current colours automatically after an appearance change,
-	 * so cycling colours at the makeover mage needs no typed commands. Bank-only:
-	 * the follower's own colours change only via the explicit palette command,
-	 * otherwise it would flicker through every colour being tried on.
-	 */
-	private void autoHarvest(Player local)
-	{
-		if (autoHarvestTicks <= 0 || --autoHarvestTicks > 0)
-		{
-			return;
-		}
-
-		PlayerComposition comp = local.getPlayerComposition();
-		if (comp == null)
-		{
-			return;
-		}
-
-		int[] colors = comp.getColors();
-		if (colors != null && java.util.Arrays.equals(colors, lastHarvestColors))
-		{
-			return;
-		}
-
-		java.util.Map<Short, Short> pairs = new java.util.LinkedHashMap<>();
-		List<String> lines = appearanceComposer.comparePalette(
-			Outfit.from(comp), local.getModel(), pairs);
-		if (pairs.isEmpty())
-		{
-			// Alignment failed or nothing recoloured; log why, stay quiet in chat.
-			lines.forEach(line -> log.debug("auto-harvest: {}", line));
-			return;
-		}
-
-		lastHarvestColors = colors == null ? null : colors.clone();
-		int before = paletteHarvest.size();
-		int total = paletteHarvest.record(colors, pairs);
-		// Said only to a developer: the palette command it points at is one of
-		// theirs, and to anybody else it is advice that does not work, about
-		// a harvest they never asked for (QA, 15 Oct).
-		if (total > before && config.developerMode())
-		{
-			sendStatus("Banked colour set #" + total
-				+ " - run '::follower palette' to put this one on the follower.");
-		}
-	}
-
 	// ------------------------------------------------------------------ ticks
 
 	@Subscribe
-	public void onGameTick(GameTick event)
+	void onGameTick(GameTick event)
 	{
-		Player local = client.getLocalPlayer();
+		var local = client.getLocalPlayer();
 		if (local == null)
-		{
 			return;
-		}
-		traceAgilityTick();
-		noteCreaturesInSight(local);
 		if (pendingMime != 0)
 		{
 			// Arrived beside the work: now the copying reads as joining in.
-			if (skilling == null || !skilling.joiningIn())
-			{
+			if (!skilling.joiningIn())
 				pendingMime = 0;
-			}
 			else if (!pendingOneShot && local.getAnimation() != pendingMime)
-			{
 				// Stopped while it walked over, and no animation event said so.
 				stopPoseMirror();
-			}
 			else if (skilling.joinedIn())
 			{
 				int copy = pendingMime;
 				pendingMime = 0;
 				copyAtWork = true;
 				if (pendingOneShot)
-				{
 					clientThread.invoke(() -> follower.playAnimation(copy));
-				}
 				else
-				{
 					startPoseMirror(copy);
-				}
 			}
-		}
-		if (config.developerMode())
-		{
-			// Ground truth for ::follower boat: tiles the player has actually
-			// stood on are walkable whatever the collision map says.
-			if (walked.size() > 4000)
-			{
-				walked.clear();
-			}
-			walked.add(local.getWorldLocation());
 		}
 
 		// The dialog's tick gate: queued clicks (open, continue, option,
 		// dismiss) resolve here, one tick after the input - the same beat a
 		// real dialog takes for its server round trip.
 		dialog.tick();
-		chronicleWindow.tick();
-		if (sketching != null)
-		{
-			sketching.tick();
-		}
-		// Every tick while the book is open, and every few otherwise, so a
-		// quest begun or finished is seen soon after and its pages dated then
-		// and there.
-		if (chronicleProgress != null
-			&& (chronicleWindow.isOpen() || client.getTickCount() % CHRONICLE_LOOK_TICKS == 0))
-		{
-			chronicleProgress.refresh(client.getTickCount());
-		}
 
 		// Watchdog: a slaved chain waits on the player's next stage; if that
 		// never arrives (desync, logout race), release the follower rather than
@@ -8449,12 +4859,8 @@ public class FollowerPlugin extends Plugin
 		// never seen to finish keeps the follower rather than vanishing it.
 		if (follower.isSlavedChainActive()
 			&& client.getTickCount() - follower.getSlavedAdvanceTick() > 25)
-		{
 			follower.cancelEmote();
-		}
 
-		logPoseComparison(local);
-		autoHarvest(local);
 
 		noticeTheScene();
 		if (spawnDelayTicks > 0)
@@ -8473,34 +4879,22 @@ public class FollowerPlugin extends Plugin
 		if (shouldHide())
 		{
 			if (follower.isSpawned())
-			{
 				follower.despawn();
-			}
 		}
+		else if (appearanceService.partsArrived())
+			// A model the client has never drawn is downloaded on the first ask,
+			// and the look built meanwhile goes without it: built again once it
+			// lands, ahead of the bare respawn below, which would bring back the
+			// unfinished one. Public QA, 27 Oct: a new shirt and legs on a fresh
+			// install left the follower without a torso or legs for a while.
+			rebuildFollower();
 		else if (!follower.isSpawned() && appearanceService.getCurrent() != null)
-		{
 			// Back on its post if it was left waiting, as the rebuild does.
-			WorldPoint post = config.followEnabled() ? null
-				: parkToReturnTo(config.parkedAt(), local.getWorldLocation());
-			follower.spawn(appearanceService.getCurrent(), post != null ? post : local.getWorldLocation(),
-				spawnGraphic(), config.spawnGraphicHeight(), post != null);
-
-			if (!config.namePrompted())
-			{
-				namePromptDelayTicks = NAME_PROMPT_DELAY_TICKS;
-			}
-			maybeSendCommandHint();
-
-			if (!config.followEnabled())
-			{
-				follower.stayHere();
-				parkedByThePlayer(null);
-			}
-		}
+			spawnFollower(appearanceService.getCurrent(), local, false);
 
 		updateTrail(local);
 		// Where the follower stands, for the addressed condition.
-		speechEngine.getContext().setFollowerLocation(follower.getWorldLocation());
+		context().setFollowerLocation(follower.getWorldLocation());
 
 		// Learn weapon stances from everyone on screen, including ourselves.
 		stanceLibrary.observe(client);
@@ -8515,7 +4909,9 @@ public class FollowerPlugin extends Plugin
 		//
 		// save() no-ops unless something actually changed, so on the
 		// overwhelming majority of ticks this costs a comparison.
-		if (++ticksSinceLearningSave >= LEARNING_SAVE_TICKS)
+		// LEARNING_SAVE_TICKS: How often learned animation data is flushed to disk: one minute, so an
+		// unclean exit costs at most that much observation rather than a session.
+		if (++ticksSinceLearningSave >= 100 /* LEARNING_SAVE_TICKS */)
 		{
 			ticksSinceLearningSave = 0;
 			stanceLibrary.save();
@@ -8529,11 +4925,12 @@ public class FollowerPlugin extends Plugin
 		// units as everything else a rule can ask about.
 		hoverTicks = hoveredThisTick ? hoverTicks + 1 : 0;
 		hoveredThisTick = false;
-		speechEngine.getContext().setHoverTicks(hoverTicks);
+		context().setHoverTicks(hoverTicks);
 
 		updateStrandedTeleport();
 
-		if (++ticksSinceLastSeen >= LAST_SEEN_TICKS)
+		// LAST_SEEN_TICKS: Ticks between writing the last-seen stamp: about a minute.
+		if (++ticksSinceLastSeen >= 100 /* LAST_SEEN_TICKS */)
 		{
 			ticksSinceLastSeen = 0;
 			touchLastSeen();
@@ -8541,50 +4938,40 @@ public class FollowerPlugin extends Plugin
 			// the last-seen stamp on a crash, and this is already the "write
 			// what would otherwise be lost" tick.
 			writeCountersIfChanged();
-			journal.flushIfDue();
 
 			// A hundred ticks is a minute, so the timer that saves is also the
 			// one that measures how long today has run. Stored every minute so
 			// a crash still keeps the mark; said only on the minute it crosses,
 			// because a record that re-announces every minute for the rest of a
 			// long session stops being a compliment and becomes a clock.
-			TriggerContext context = speechEngine.getContext();
+			var context = context();
 			int previousBest = context.getRecord("session");
 			context.setSessionMinutes(++sessionMinutes);
 			if (context.noteRecord("session", sessionMinutes) && !sessionRecordSaid)
 			{
 				sessionRecordSaid = true;
-				speechEngine.dispatch(
+				dispatch(
 					TriggerEvent.record("session", sessionMinutes, previousBest));
 			}
 		}
 
 		if (ticksSinceLoading < 1000)
-		{
 			ticksSinceLoading++;
-		}
 		// A tick means the login's offer replay and any channel roster replay
 		// have been delivered; what arrives from here on is news.
 		geOffersSettled = true;
 		if (channelSettleTicks > 0)
-		{
 			channelSettleTicks--;
-		}
 
 		// A limbo whose thrall never respawns - it expired during the very
 		// load that dropped it - ends the possession after a grace period.
 		if (thrallLimbo && ++thrallLimboTicks > 15)
-		{
-			log.debug("Thrall never respawned after the load; ending possession");
 			exitThrallMode();
-		}
 
 		// No resummon arrived in the grace window, so the thrall really did
 		// expire: say goodbye and go home.
 		if (thrallExitPendingTicks > 0 && --thrallExitPendingTicks == 0)
-		{
 			performThrallExit(thrallExitStyle);
-		}
 
 		if (namePromptDelayTicks > 0 && --namePromptDelayTicks == 0
 			&& follower.isSpawned())
@@ -8593,106 +4980,50 @@ public class FollowerPlugin extends Plugin
 			// seconds after first spawn is exactly when a new user is still
 			// clicking around. The one naming moment is not spent while the
 			// bank or another input is up - the countdown re-arms instead.
-			if (client.getWidget(net.runelite.api.gameval.InterfaceID.BANKMAIN, 0) != null
+			if (client.getWidget(InterfaceID.BANKMAIN, 0) != null
 				|| chatboxPanelManager.getCurrentInput() != null)
-			{
 				namePromptDelayTicks = NAME_PROMPT_DELAY_TICKS;
-			}
 			else
-			{
 				offerName();
-			}
 		}
 
 		drainSpeechQueue();
 
-		// The first wish that ever opens gets one out-of-character line naming
-		// the handover mechanism - the wish lines themselves stay in voice and
-		// never explain the interface. The wish latches when its line is
-		// actually displayed (inside the drain above), so the rising edge
-		// lands here the same tick.
-		boolean wishingNow = !speechEngine.getContext().getWishLabel().isEmpty();
-		// While a question waits, Answer opens the question and not Talk-to,
-		// where the handover is; the edge is held until it is answered (QA3).
-		if (speechEngine.getContext().getAskedTree().isEmpty())
-		{
-			if (wishingNow && !wasWishing && !config.wishHintShown())
-			{
-				configManager.setConfiguration(FollowerConfig.GROUP, "wishHintShown", true);
-				sendStatus("When you have the " + speechEngine.getContext().getWishLabel()
-					+ ", right-click " + followerName()
-					+ " and choose " + talkOption() + " to hand it over.");
-			}
-			wasWishing = wishingNow;
-		}
-		tickScan();
 		commitAttackSighting();
 		expireKillClaims();
 		updateWander();
-		if (gaze != null)
-		{
-			gaze.tick();
-		}
+		gaze.tick();
 		follower.setFollowDistance(config.followDistance());
 		// The shoulder is for open ground and nothing else going on: not a
 		// fight, not a pocket being worked, not thrall work.
 		follower.setWalksBeside(config.walksBeside() && thrallNpc == null
-			&& !speechEngine.getContext().isInCombat()
-			&& !speechEngine.getContext().isInThievingSession()
-			&& (skilling == null || !skilling.isWorking()));
+			&& !context().isInCombat()
+			&& !context().isInThievingSession()
+			&& !skilling.isWorking());
 		updateMinutes();
 		updateWelfare();
 		updateRest();
 
-		if (errands != null)
-		{
-			errands.tick();
-		}
-		if (flourish != null)
-		{
-			flourish.tick();
-		}
+		errands.tick();
+		flourish.tick();
 		// Before the spectator, which beats it: on the tick a fight is seen
 		// the seat is let go first and the stand-clear takes the feet after.
-		if (skilling != null)
-		{
-			skilling.tick();
-			skilling.describeTo(speechEngine.getContext());
-			// Picking by hand at a patch: the hands emptied of its own gear.
-			refreshEmoteDisarm(follower.isEmotePlaying());
-			// A copy of the work lasts while the follower is beside it: moved
-			// off it, or the work over, and the copy stops there and then,
-			// rather than carrying on wherever it was taken. A one-shot is
-			// over when its swing is, and back to the seat it goes.
-			if (copyAtWork && (!skilling.stillJoined()
-				|| (mirroredPose == 0 && !follower.isEmotePlaying())))
-			{
-				stopPoseMirror();
-			}
-		}
-		if (moments != null)
-		{
-			// After the seat, which it excuses itself from.
-			moments.tick();
-		}
-		if (noticing != null)
-		{
-			// After the moments, whose feet it borrows for the walk.
-			noticing.tick();
-		}
-		if (marksOfGrace != null && crossingWatch != null)
-		{
-			net.runelite.api.ItemContainer inventory =
-				client.getItemContainer(net.runelite.api.gameval.InventoryID.INV);
-			marksOfGrace.tick(System.currentTimeMillis(), local.getWorldLocation(),
-				crossingWatch.isWatchingMovement(), lastAgilityXpMs,
-				inventory == null ? -1 : inventory.count(com.follower.follower.MarksOfGrace.MARK),
-				follower.isSpawned() && !isStaying());
-		}
-		if (will != null)
-		{
-			will.tick();
-		}
+		skilling.tick();
+		skilling.describeTo(context());
+		// Picking by hand at a patch: the hands emptied of its own gear.
+		refreshEmoteDisarm(follower.isEmotePlaying());
+		// A copy of the work lasts while the follower is beside it: moved
+		// off it, or the work over, and the copy stops there and then,
+		// rather than carrying on wherever it was taken. A one-shot is
+		// over when its swing is, and back to the seat it goes.
+		if (copyAtWork && (!skilling.stillJoined()
+			|| (mirroredPose == 0 && !follower.isEmotePlaying())))
+			stopPoseMirror();
+		// After the seat, which it excuses itself from.
+		moments.tick();
+		// After the moments, whose feet it borrows for the walk.
+		noticing.tick();
+		will.tick();
 
 		// After errands, so an errand in progress owns the feet: a follower
 		// halfway to a bank should finish the trip rather than be yanked
@@ -8702,10 +5033,7 @@ public class FollowerPlugin extends Plugin
 		// finished with the feet, and a spectate started in that window had
 		// its seat wiped by the exit machinery. Play report: fresh out of
 		// thrall mode, wards at the player's side, no stepping away.
-		if (spectate != null)
-		{
-			spectate.tick(spectateBusy(), parkedByPlayer);
-		}
+		spectate.tick(spectateBusy(), parkedByPlayer);
 		// After everything that borrows the feet, so a park the player gave
 		// is taken again on the tick they are let go.
 		keepThePlayersPark();
@@ -8715,10 +5043,8 @@ public class FollowerPlugin extends Plugin
 		// The spawn-in burst waits one tick so the follower has already been
 		// rendered standing at the thrall's spot when it plays.
 		if (pendingThrallSpawnFxTicks > 0 && --pendingThrallSpawnFxTicks == 0 && thrallNpc != null)
-		{
 			clientThread.invoke(() ->
 				follower.playSpotAnim(spotAnimRepository.get(thrallImpactSpotAnim(thrallStyle))));
-		}
 
 		// Stage two of the exit flourish: home, redressed, shimmering back in.
 		// In thrall-only mode there is no home to go to: the phase-out was
@@ -8742,7 +5068,7 @@ public class FollowerPlugin extends Plugin
 					follower.resumeFollowing();
 					follower.releaseNpcSlave();
 					rebuildFollower();
-					follower.playSpotAnim(spotAnimRepository.get(THRALL_RETURN_SPOTANIM));
+					follower.playSpotAnim(spotAnimRepository.get(1290 /* THRALL_RETURN_SPOTANIM */));
 				});
 			}
 		}
@@ -8754,17 +5080,14 @@ public class FollowerPlugin extends Plugin
 			{
 				sendStatus("Reloaded " + dialogLoader.getStatus() + ".");
 				for (String problem : dialogLoader.getErrors())
-				{
 					sendStatus("Problem in dialogs.json: " + problem);
-				}
 			}
 			if (ruleLoader.reloadIfChanged())
 			{
 				// The rule holding the floor is one of the objects just thrown
 				// away, and the exemption that lets it speak is by identity.
 				speechEngine.clearFloor();
-				speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
-				speechEngine.getContext().setRegionNames(ruleLoader.getRegionNames());
+				giveTheNames();
 				sendStatus("Reloaded " + ruleLoader.getStatus() + ".");
 				reportRuleErrors();
 
@@ -8783,7 +5106,7 @@ public class FollowerPlugin extends Plugin
 				// And the remark waits for that baseline, or the re-risen gear
 				// and area rules outrank it and speak in its place.
 				speechEngine.dispatchAfterPriming(
-					TriggerEvent.simple(TriggerEvent.Type.NOTES_EDITED));
+					TriggerEvent.simple(NOTES_EDITED));
 			}
 		}
 
@@ -8802,7 +5125,7 @@ public class FollowerPlugin extends Plugin
 		// stopped working. They are dispatched with the mute lifted, because
 		// otherwise the start line is swallowed by the silence it announces and
 		// the end line by the silence it ends.
-		boolean thievingNow = speechEngine.getContext().isInThievingSession();
+		boolean thievingNow = context().isInThievingSession();
 		if (thievingNow != wasThieving)
 		{
 			speechEngine.setMuted(config.muted() || thrallQuiet());
@@ -8814,9 +5137,9 @@ public class FollowerPlugin extends Plugin
 				speechQueue.clear();
 				cutByTheScene = null;
 			}
-			speechEngine.dispatch(TriggerEvent.simple(thievingNow
-				? TriggerEvent.Type.THIEVING_START
-				: TriggerEvent.Type.THIEVING_END));
+			dispatch(TriggerEvent.simple(thievingNow
+				? THIEVING_START
+				: THIEVING_END));
 			wasThieving = thievingNow;
 		}
 		// Absent in thrall-only mode is absent: nothing said, and nothing kept
@@ -8828,52 +5151,43 @@ public class FollowerPlugin extends Plugin
 			cutByTheScene = null;
 		}
 		wasAbsent = absentNow;
-		// A take is a silence too. Muted, a rule's line is held back in the
-		// engine, as under the Mute, rather than counted as said and then
-		// dropped at the film's gate on its way out.
-		speechEngine.setMuted(config.muted() || thievingNow || absentNow || thrallQuiet() || filming);
+		speechEngine.setMuted(config.muted() || thievingNow || absentNow || thrallQuiet());
 
 		// The bank has no close event of its own; watched by widget presence.
 		// Closing it is an ending (R6) - the restock is done, the breather is
 		// real - and it is the one boundary no dispatched event can supply.
 		boolean bankOpen = client.getWidget(
-			net.runelite.api.gameval.InterfaceID.BANKMAIN, 0) != null;
+			InterfaceID.BANKMAIN, 0) != null;
 		if (wasBankOpen && !bankOpen)
-		{
-			speechEngine.getContext().noteBoundary("bank");
-		}
+			context().noteBoundary("bank");
 		wasBankOpen = bankOpen;
 
 		// The local song: the music tab's now-playing text is script-updated
 		// on every track change whether or not the tab is fronted. The first
 		// read after a login is baseline, not news, same as the region you
 		// logged in standing.
-		net.runelite.api.widgets.Widget nowPlaying = client.getWidget(
-			net.runelite.api.gameval.InterfaceID.Music.NOW_PLAYING_TEXT);
+		var nowPlaying = client.getWidget(
+			InterfaceID.Music.NOW_PLAYING_TEXT);
 		String track = nowPlaying == null || nowPlaying.getText() == null
 			? null : nowPlaying.getText().replaceAll("<[^>]*>", "").trim();
-		if (track != null && !track.isEmpty())
+		if (!Strings.isNullOrEmpty(track))
 		{
 			if (lastMusicTrack != null && !track.equals(lastMusicTrack))
-			{
-				speechEngine.dispatch(TriggerEvent.trackChange(track));
-			}
+				dispatch(TriggerEvent.trackChange(track));
 			lastMusicTrack = track;
 		}
 
 		// An NPC dialogue up, or gone for under three ticks: the same reading
 		// the minutes take, so a page flip does not count as the box closing.
-		speechEngine.getContext().setDialogueOpen(npcDialogOpen() || dialogGoneTicks <= 2);
+		context().setDialogueOpen(npcDialogOpen() || dialogGoneTicks <= 2);
 		// And who is in it, so a line about them held through the talk is
 		// still said once the player walks on from them. Not a cutscene's
 		// speakers: nobody the player walked up to.
-		net.runelite.api.widgets.Widget speaker = client.getWidget(
-			net.runelite.api.gameval.InterfaceID.ChatLeft.NAME);
+		var speaker = client.getWidget(
+			InterfaceID.ChatLeft.NAME);
 		if (speaker != null && speaker.getText() != null && !inCutscene())
-		{
-			speechEngine.getContext().noteSpeaker(
+			context().noteSpeaker(
 				net.runelite.client.util.Text.removeTags(speaker.getText()));
-		}
 
 		// A player-commanded Stay (R25): the follower's own machinery also
 		// parks it - errands, spectating, thrall work, and the WANDER, which
@@ -8883,139 +5197,73 @@ public class FollowerPlugin extends Plugin
 		// the post thirty times in an afternoon of its own pottering.
 		boolean stayCommanded = stayIsPlayerCommanded(follower.isStaying(),
 			wandered, thrallNpc != null,
-			errands != null && errands.isBusy(),
-			spectate != null && spectate.holdsTheFeet(),
+			errands.isBusy(),
+			spectate.holdsTheFeet(),
 			emoteHold, minutesState != 0,
-			(skilling != null && skilling.holdsTheFeet())
-				|| (moments != null && moments.holdsTheFeet())
+			skilling.holdsTheFeet()
+				|| moments.holdsTheFeet()
 				// A write-up plants the follower for the length of the notes.
-				|| (flourish != null && flourish.isActive())
+				|| flourish.isActive()
 				// A scene holds it where it stands.
 				|| sceneHolds());
-		speechEngine.getContext().setFollowerStaying(stayCommanded);
+		context().setFollowerStaying(stayCommanded);
 		if (stayCommanded != stayReported)
 		{
 			stayReported = stayCommanded;
 			if (onStayStateChanged != null)
-			{
 				onStayStateChanged.accept(stayCommanded);
-			}
 		}
 
 		// An absence ending is a boundary too: the player went out of sight
 		// of the parked follower and has now come back to it.
 		if (stayCommanded)
 		{
-			WorldPoint parked = follower.getWorldLocation();
-			WorldPoint player = local.getWorldLocation();
+			WorldPoint parked = follower.getWorldLocation(),
+				player = local.getWorldLocation();
 			int apart = parked == null || player == null
 				|| parked.getPlane() != player.getPlane()
 				? Integer.MAX_VALUE : parked.distanceTo(player);
 			if (apart > 12)
-			{
 				leftTheFollowerParked = true;
-			}
 			else if (leftTheFollowerParked && apart <= 3)
 			{
 				leftTheFollowerParked = false;
-				speechEngine.getContext().noteBoundary("reunion");
+				context().noteBoundary("reunion");
 			}
 		}
 		else
-		{
 			leftTheFollowerParked = false;
-		}
 
-		int region = speechEngine.getContext().getRegionId();
+		int region = context().getRegionId();
 		if (region != lastRegionId)
 		{
 			int previous = lastRegionId;
 			lastRegionId = region;
-			if (chronicleProgress != null)
-			{
-				chronicleProgress.noteRegion(region);
-			}
 			if (panel != null)
-			{
 				panel.setRegionId(region);
-			}
 			if (previous != -1)
 			{
-				speechEngine.dispatch(TriggerEvent.regionChange(region, previous));
+				dispatch(TriggerEvent.regionChange(region, previous));
 				// Somewhere new: once the player settles, the follower may go
 				// and nose at something (the explore errand's arrival trigger).
-				if (errands != null)
-				{
-					errands.noticeArrival();
-				}
+				errands.noticeArrival();
 			}
 		}
 
-		speechEngine.dispatch(TriggerEvent.tick());
+		dispatch(TriggerEvent.tick());
 
-		// A page written gets its mention after this tick's own events have
-		// been heard, and only when nothing else is being said. The dialogue
-		// as the rules read it, page flips ridden out: on the raw box the news
-		// went out on a flip and sat over the conversation (QA, 15 Oct).
-		PageNews first = pageNews.peek();
-		TriggerEvent news = nextPageNews(pageNews, client.getTickCount(), speechEngine.isQuiet(),
-			inConversation() || sceneQuiet() || (first != null && speechEngine.isPageLineCooling(first.event)),
-			pageNewsTicks(speechEngine.moodScaledGap()), lastRegionId);
-		if (news != null)
-		{
-			speechEngine.dispatch(news);
-		}
 	}
 
-	/**
-	 * The page to mention now, or null: the oldest still inside its minute,
-	 * once the follower has the floor. Play test, 7 Oct: a quest begun in
-	 * conversation writes its pages with the box still up, and a line said
-	 * over a dialogue is dropped, so starting Priest in Peril with King Roald
-	 * was never mentioned. While a dialogue is up the news waits, and its
-	 * minute starts again when the box closes. A cutscene and the quiet after
-	 * it hold it the same way: a page a scene writes is mentioned after.
-	 * Its minute is {@code window} ticks, as {@link #pageNewsTicks} has it.
-	 *
-	 * <p>A place's page is news only while the player is there. Text QA4,
-	 * 16 Oct: at Minimal it was mostly said after they had left, asking them
-	 * to pose for a sketch they could no longer take.
-	 */
-	static TriggerEvent nextPageNews(java.util.Deque<PageNews> news, int now, boolean quiet,
-		boolean waits, int window, int region)
-	{
-		news.removeIf(page -> page.where != null && !page.where.contains(region));
-		if (waits)
-		{
-			for (PageNews waiting : news)
-			{
-				waiting.tick = now;
-			}
-			return null;
-		}
-		while (!news.isEmpty() && now - news.peek().tick > window)
-		{
-			news.poll();
-		}
-		return !news.isEmpty() && quiet ? news.poll().event : null;
-	}
-
-	private void updateTrail(Player local)
+	void updateTrail(Player local)
 	{
 		// The follower observes the player's movement itself, per frame - this tick
 		// hook only tracks the tile for region-change speech triggers.
-		WorldPoint tile = local.getWorldLocation();
+		var tile = local.getWorldLocation();
 		if (tile != null)
 		{
 			// Walking away ends a conversation, as it does with any real NPC.
 			if (dialog.isOpen() && lastPlayerTile != null && !lastPlayerTile.equals(tile))
-			{
 				dialog.close();
-			}
-			if (chronicleWindow.isOpen() && lastPlayerTile != null && !lastPlayerTile.equals(tile))
-			{
-				chronicleWindow.close();
-			}
 			lastPlayerTile = tile;
 		}
 	}
@@ -9034,29 +5282,18 @@ public class FollowerPlugin extends Plugin
 	 * only shows it, so the load never came with the press (play test, 29
 	 * Sep): it is watched once a tick instead, as the panel coming into view.
 	 */
-	private void noticeTheLogoutTab()
+	void noticeTheLogoutTab()
 	{
-		net.runelite.api.widgets.Widget panel =
-			client.getWidget(net.runelite.api.gameval.InterfaceID.LOGOUT, 0);
-		boolean open = panel != null && !panel.isHidden();
-		boolean opened = open && !logoutTabOpen;
+		var panel =
+			client.getWidget(InterfaceID.LOGOUT, 0);
+		boolean open = panel != null && !panel.isHidden(),
+			opened = open && !logoutTabOpen;
 		logoutTabOpen = open;
 		logoutTabTicks = ticksOnShow(logoutTabTicks, open, opened);
 		if (logoutTabTicks == FAREWELL_AFTER_TICKS)
 		{
-			if (moments != null)
-			{
-				moments.farewell();
-			}
-			speechEngine.dispatch(TriggerEvent.simple(TriggerEvent.Type.FAREWELL));
-		}
-		if (!opened)
-		{
-			return;
-		}
-		if (chronicleProgress != null)
-		{
-			chronicleProgress.refresh(client.getTickCount());
+			moments.farewell();
+			dispatch(TriggerEvent.simple(FAREWELL));
 		}
 	}
 
@@ -9064,10 +5301,10 @@ public class FollowerPlugin extends Plugin
 	 * Whether the logout tab was on show at the last look. True between
 	 * sessions, so a tab still up as one starts is not taken for a goodbye.
 	 */
-	private boolean logoutTabOpen = true;
+	boolean logoutTabOpen = true;
 
 	/** Ticks the logout panel has been on show since it was opened, or 0. */
-	private int logoutTabTicks;
+	int logoutTabTicks;
 
 	/**
 	 * The goodbye waits a tick with the panel still up. Behaviour QA5, 16-20
@@ -9083,78 +5320,71 @@ public class FollowerPlugin extends Plugin
 	}
 
 	@Subscribe
-	public void onWidgetLoaded(net.runelite.api.events.WidgetLoaded event)
+	void onWidgetLoaded(net.runelite.api.events.WidgetLoaded event)
 	{
 		int group = event.getGroupId();
 
 		// The quest reward scroll - the one moment the game hands the player
 		// a literal scroll, witnessed by a professional.
-		if (group == net.runelite.api.gameval.InterfaceID.QUESTSCROLL)
+		if (group == InterfaceID.QUESTSCROLL)
 		{
 			noteQuestScroll();
 			return;
 		}
 
-		if (group != net.runelite.api.gameval.InterfaceID.CHAT_LEFT
-			&& group != net.runelite.api.gameval.InterfaceID.CHAT_RIGHT)
-		{
+		if (group != InterfaceID.CHAT_LEFT
+			&& group != InterfaceID.CHAT_RIGHT)
 			return;
-		}
 
 		// The children are populated after the load event; read them next cycle.
 		clientThread.invokeLater(() ->
 		{
 			for (int child = 0; child < 16; child++)
 			{
-				net.runelite.api.widgets.Widget widget = client.getWidget(group, child);
+				var widget = client.getWidget(group, child);
 				if (widget == null
 					|| widget.getType() != net.runelite.api.widgets.WidgetType.MODEL)
-				{
 					continue;
-				}
 
-				java.awt.Rectangle headRect = widget.getBounds();
+				var headRect = widget.getBounds();
 				// Relative to the CHATBOX widget - the same base the dialog overlay
 				// positions against - not the dialog root, which sits inset from it.
-				net.runelite.api.widgets.Widget root = client.getWidget(
-					net.runelite.api.gameval.InterfaceID.CHATBOX, 0);
-				java.awt.Rectangle rootRect = root == null ? null : root.getBounds();
+				var root = client.getWidget(
+					InterfaceID.CHATBOX, 0);
+				var rootRect = root == null ? null : root.getBounds();
 
 				// Copy the real head's rectangle, expressed relative to the dialog,
-				// so ours sits at the same place and size instead of a guess.
-				if (group == net.runelite.api.gameval.InterfaceID.CHAT_RIGHT
-					&& headRect != null && rootRect != null
+				// so ours sits at the same place and size instead of a guess. The
+				// group is one of the two chat sides: the NPC's on the left.
+				boolean npcSide = group == InterfaceID.CHAT_LEFT;
+				if (headRect != null && rootRect != null
 					&& headRect.width > 0 && headRect.height > 0)
 				{
-					// The player side's right-hand head cell, kept calibrated.
-					dialog.setPlayerHeadRect(new java.awt.Rectangle(
+					var cell = new Rectangle(
 						headRect.x - rootRect.x, headRect.y - rootRect.y,
-						headRect.width, headRect.height));
-				}
-				if (group == net.runelite.api.gameval.InterfaceID.CHAT_LEFT
-					&& headRect != null && rootRect != null
-					&& headRect.width > 0 && headRect.height > 0)
-				{
-					dialog.setHeadRect(new java.awt.Rectangle(
-						headRect.x - rootRect.x, headRect.y - rootRect.y,
-						headRect.width, headRect.height));
-
-					// The dialog interface's inset within the chatbox is the model
-					// clip line (the inner parchment edge).
-					net.runelite.api.widgets.Widget dialogRoot = client.getWidget(group, 0);
-					if (dialogRoot != null && dialogRoot.getBounds() != null)
+						headRect.width, headRect.height);
+					if (!npcSide)
+						// The player side's right-hand head cell, kept calibrated.
+						dialog.setPlayerHeadRect(cell);
+					else
 					{
-						dialog.setDialogInsetX(Math.max(0, dialogRoot.getBounds().x - rootRect.x));
-						dialog.setDialogInsetY(Math.max(0, dialogRoot.getBounds().y - rootRect.y));
+						dialog.setHeadRect(cell);
+
+						// The dialog interface's inset within the chatbox is the model
+						// clip line (the inner parchment edge).
+						var dialogRoot = client.getWidget(group, 0);
+						if (dialogRoot != null && dialogRoot.getBounds() != null)
+						{
+							dialog.setDialogInsetX(max(0, dialogRoot.getBounds().x - rootRect.x));
+							dialog.setDialogInsetY(max(0, dialogRoot.getBounds().y - rootRect.y));
+						}
 					}
 				}
 				// Our dialog lays the head out like the NPC side (left), so adopt a
 				// human NPC head's framing; rotationZ is the head's actual angle.
-				if (group == net.runelite.api.gameval.InterfaceID.CHAT_LEFT)
-				{
+				if (npcSide)
 					dialog.adoptNpcHead(widget.getAnimationId(), widget.getRotationZ(),
 						widget.getRotationX(), widget.getModelZoom());
-				}
 				return;
 			}
 		});
@@ -9166,99 +5396,38 @@ public class FollowerPlugin extends Plugin
 	 * NPC means they attacked.
 	 */
 	@Subscribe
-	public void onInteractingChanged(net.runelite.api.events.InteractingChanged event)
+	void onInteractingChanged(net.runelite.api.events.InteractingChanged event)
 	{
-		// Talked to, fought, or set upon: met, however far off it stands.
-		Player me = client.getLocalPlayer();
-		if (chronicleProgress != null && me != null)
-		{
-			if (event.getSource() == me && event.getTarget() instanceof NPC)
-			{
-				chronicleProgress.noteNpc(event.getTarget().getName());
-			}
-			else if (event.getTarget() == me && event.getSource() instanceof NPC)
-			{
-				chronicleProgress.noteNpc(event.getSource().getName());
-			}
-		}
 		if (dialog.isOpen()
 			&& event.getSource() == client.getLocalPlayer()
 			&& event.getTarget() != null)
-		{
 			dialog.close();
-		}
-	}
-
-	/** How close a creature has to be, in clear sight, to count as met: eight tiles. */
-	static final int MEET_TILES = 8;
-
-	/**
-	 * Play test, 7 Oct: a page was written for every creature loaded within
-	 * about 15 tiles, through walls and floors, so walking in to see King
-	 * Roald wrote the Monk of Zamorak's from its cage under the stairs,
-	 * unseen. Met now means close, on the same floor, with nothing in the
-	 * way, or talked to, fought or examined.
-	 */
-	static boolean closeEnoughToMeet(int creaturePlane, int myPlane, int distance)
-	{
-		return creaturePlane == myPlane && distance <= MEET_TILES;
-	}
-
-	/** Writes up the creatures with a page waiting that are in clear sight now. */
-	private void noteCreaturesInSight(Player me)
-	{
-		net.runelite.api.WorldView view = client.getTopLevelWorldView();
-		net.runelite.api.coords.WorldArea mine = me.getWorldArea();
-		if (chronicleProgress == null || view == null || mine == null)
-		{
-			return;
-		}
-		for (NPC npc : view.npcs())
-		{
-			if (npc == null || !chronicleProgress.wantsToMeet(npc.getName()))
-			{
-				continue;
-			}
-			net.runelite.api.coords.WorldArea theirs = npc.getWorldArea();
-			if (theirs != null && closeEnoughToMeet(theirs.getPlane(), mine.getPlane(), theirs.distanceTo(mine))
-				&& theirs.hasLineOfSightTo(view, mine))
-			{
-				chronicleProgress.noteNpc(npc.getName());
-			}
-		}
 	}
 
 	// ----------------------------------------------------------- game events
 
 	@Subscribe
-	public void onNpcSpawned(NpcSpawned event)
+	void onNpcSpawned(NpcSpawned event)
 	{
-		NPC npc = event.getNpc();
+		var npc = event.getNpc();
 		// Not written up here: a spawn is anything loaded within about 15
 		// tiles, through walls and floors. See noteCreaturesInSight.
 		maybeAdoptThrall(npc);
-		if (skilling != null)
-		{
-			skilling.npcSpawned(npc);
-		}
-		if (moments != null && config.noticesThings())
-		{
+		skilling.npcSpawned(npc);
+		if (config.noticesThings())
 			moments.npcSpawned(npc);
-		}
 
 		// A chunk load raises one of these for every NPC in the new scene, and
 		// each costs a pass over every rule. Only pay it when a rule names it.
-		TriggerEvent spawn = TriggerEvent.npc(TriggerEvent.Type.NPC_SPAWN, npc.getId(), npc.getName());
+		var spawn = TriggerEvent.npc(NPC_SPAWN, npc.getId(), npc.getName());
 		if (ruleLoader.answersSpawn(spawn))
-		{
-			speechEngine.dispatch(spawn);
-		}
+			dispatch(spawn);
 	}
 
 	@Subscribe
-	public void onNpcDespawned(NpcDespawned event)
+	void onNpcDespawned(NpcDespawned event)
 	{
-		NPC npc = event.getNpc();
+		var npc = event.getNpc();
 		if (npc == thrallNpc)
 		{
 			// NpcDespawned also fires for every NPC a chunk reload drops from
@@ -9266,7 +5435,6 @@ public class FollowerPlugin extends Plugin
 			// LOADING state is the scene shuffling, not the thrall dying.
 			if (client.getGameState() != GameState.LOGGED_IN || ticksSinceLoading <= 2)
 			{
-				log.debug("Thrall NPC dropped by a scene load; holding possession for its respawn");
 				thrallNpc = null;
 				thrallLimbo = true;
 				thrallLimboTicks = 0;
@@ -9279,38 +5447,29 @@ public class FollowerPlugin extends Plugin
 				// despawn reaches us before the new spawn. Saying goodbye here
 				// made a resummon speak the farewell line. Hold the exit for a
 				// few ticks; if a thrall turns up, it was a switch.
-				log.debug("Thrall NPC gone; holding the exit in case this is a resummon");
 				thrallExitStyle = thrallStyle;
 				thrallExitPendingTicks = 3;
 				thrallNpc = null;
 				clientThread.invoke(follower::endNpcSlaveHolding);
 			}
 		}
-		if (skilling != null)
-		{
-			skilling.npcDespawned(npc);
-		}
-		if (moments != null)
-		{
-			moments.npcDespawned(npc);
-		}
+		skilling.npcDespawned(npc);
+		moments.npcDespawned(npc);
 		// As with spawns: the whole scene despawns on a chunk load, and no
 		// bundled rule listens for it at all.
-		if (ruleLoader.listensFor(TriggerEvent.Type.NPC_DESPAWN))
-		{
-			speechEngine.dispatch(
-				TriggerEvent.npc(TriggerEvent.Type.NPC_DESPAWN, npc.getId(), npc.getName()));
-		}
+		if (ruleLoader.listensFor(NPC_DESPAWN))
+			dispatch(
+				TriggerEvent.npc(NPC_DESPAWN, npc.getId(), npc.getName()));
 	}
 
 	@Subscribe
-	public void onGameObjectSpawned(net.runelite.api.events.GameObjectSpawned event)
+	void onGameObjectSpawned(net.runelite.api.events.GameObjectSpawned event)
 	{
 		noteObjectChange(event.getGameObject(), true);
 	}
 
 	@Subscribe
-	public void onGameObjectDespawned(net.runelite.api.events.GameObjectDespawned event)
+	void onGameObjectDespawned(net.runelite.api.events.GameObjectDespawned event)
 	{
 		noteObjectChange(event.getGameObject(), false);
 	}
@@ -9321,57 +5480,30 @@ public class FollowerPlugin extends Plugin
 	 * the event arrives.
 	 */
 	@Subscribe
-	public void onItemSpawned(net.runelite.api.events.ItemSpawned event)
+	void onItemSpawned(net.runelite.api.events.ItemSpawned event)
 	{
 		if (event.getItem() == null || event.getTile() == null)
-		{
 			return;
-		}
-		// Every mark, chunk load or not: one already on a roof is spotted on arrival.
-		if (marksOfGrace != null)
-		{
-			if (event.getItem().getId() == com.follower.follower.MarksOfGrace.MARK)
-			{
-				agilityTrace.event("grace: mark appeared at " + event.getTile().getWorldLocation()
-					+ (ticksSinceLoading > 2 ? "" : " (with a load)"));
-			}
-			marksOfGrace.spawned(event.getItem().getId(), event.getTile().getWorldLocation());
-		}
 		// A chunk load raises one of these per item already lying about;
 		// none of those is a drop the player just walked away from.
-		if (noticing != null && ticksSinceLoading > 2)
+		if (ticksSinceLoading > 2)
 		{
 			int id = event.getItem().getId();
 			noticing.itemSpawned(event.getItem(), event.getTile().getWorldLocation(),
 				itemManager.getItemComposition(id).getName(),
 				(long) itemManager.getItemPrice(id) * event.getItem().getQuantity());
 		}
-		if (skilling == null || !skilling.isWorking())
-		{
+		if (!skilling.isWorking())
 			return;
-		}
 		skilling.itemSpawned(itemManager.getItemComposition(event.getItem().getId()).getName(),
 			event.getTile().getWorldLocation());
 	}
 
 	@Subscribe
-	public void onItemDespawned(net.runelite.api.events.ItemDespawned event)
+	void onItemDespawned(net.runelite.api.events.ItemDespawned event)
 	{
-		if (noticing != null && event.getItem() != null && event.getTile() != null)
-		{
+		if (event.getItem() != null && event.getTile() != null)
 			noticing.itemDespawned(event.getItem(), event.getTile().getWorldLocation());
-		}
-		// Not one a load shuffles: its spawn comes back to the same tile, and
-		// the mark keeps what the follower already made of it.
-		if (marksOfGrace != null && event.getItem() != null && event.getTile() != null
-			&& client.getGameState() == GameState.LOGGED_IN && ticksSinceLoading > 2)
-		{
-			if (event.getItem().getId() == com.follower.follower.MarksOfGrace.MARK)
-			{
-				agilityTrace.event("grace: mark gone from " + event.getTile().getWorldLocation());
-			}
-			marksOfGrace.despawned(event.getItem().getId(), event.getTile().getWorldLocation());
-		}
 	}
 
 	/**
@@ -9382,123 +5514,78 @@ public class FollowerPlugin extends Plugin
 	 * and the fire they just lit, session or none - and the company itself
 	 * drops everything a load shuffles and keeps only what touches its tiles.
 	 */
-	private void noteObjectChange(net.runelite.api.GameObject object, boolean spawned)
+	void noteObjectChange(GameObject object, boolean spawned)
 	{
+		if (object == null)
+			return;
 		// The fires, first and ungated: a chunk load raises one of these per
 		// object in the scene, and that IS how the set is built - the tiles
 		// the follower walks round have to be known before it takes a step,
 		// whatever the company settings say.
-		if (hotGround != null && object != null)
+		var box = footprint(object, object.getPlane());
+		if (box != null)
 		{
-			net.runelite.api.WorldView fires = client.getTopLevelWorldView();
-			net.runelite.api.Point from = object.getSceneMinLocation();
-			net.runelite.api.Point to = object.getSceneMaxLocation();
-			if (fires != null && from != null && to != null)
-			{
-				WorldPoint low = WorldPoint.fromScene(fires, from.getX(), from.getY(),
-					object.getPlane());
-				WorldPoint high = WorldPoint.fromScene(fires, to.getX(), to.getY(),
-					object.getPlane());
-				if (spawned)
-				{
-					hotGround.objectSpawned(object.getId(), low, high);
-				}
-				else
-				{
-					hotGround.objectDespawned(object.getId(), low, high);
-				}
-			}
+			if (spawned)
+				hotGround.objectSpawned(object.getId(), box[0], box[1]);
+			else
+				hotGround.objectDespawned(object.getId(), box[0], box[1]);
 		}
 
 		// A star landing. Names are only looked up outside a chunk load,
 		// which raises one of these per object in the scene.
-		if (noticing != null && object != null && ticksSinceLoading > 2)
+		if (ticksSinceLoading > 2)
 		{
-			String name = com.follower.follower.ErrandController.objectName(client, object.getId());
+			String name = ErrandController.objectName(client, object.getId());
 			if (spawned)
-			{
 				noticing.objectSpawned(name, object.getWorldLocation());
-			}
 			else
-			{
 				noticing.objectDespawned(name, object.getWorldLocation());
-			}
 		}
-		if (skilling == null || object == null
-			|| (spawned ? !config.keepsCompany() : !skilling.isWorking()))
-		{
+		if (box == null || (spawned ? !config.keepsCompany() : !skilling.isWorking()))
 			return;
-		}
-		net.runelite.api.WorldView view = client.getTopLevelWorldView();
-		net.runelite.api.Point lo = object.getSceneMinLocation();
-		net.runelite.api.Point hi = object.getSceneMaxLocation();
-		if (view == null || lo == null || hi == null)
-		{
-			return;
-		}
-		WorldPoint min = WorldPoint.fromScene(view, lo.getX(), lo.getY(), object.getPlane());
-		WorldPoint max = WorldPoint.fromScene(view, hi.getX(), hi.getY(), object.getPlane());
 		if (spawned)
-		{
-			skilling.objectSpawned(object.getId(), min, max);
-		}
+			skilling.objectSpawned(object.getId(), box[0], box[1]);
 		else
-		{
-			skilling.objectDespawned(object.getId(), min, max);
-		}
+			skilling.objectDespawned(object.getId(), box[0], box[1]);
+	}
+
+	/** A scenery object's footprint as world tiles, {min, max}, or null off the scene. */
+	WorldPoint[] footprint(GameObject object, int plane)
+	{
+		var view = client.getTopLevelWorldView();
+		Point lo = object.getSceneMinLocation(),
+			hi = object.getSceneMaxLocation();
+		return view == null || lo == null || hi == null ? null : new WorldPoint[]{
+			WorldPoint.fromScene(view, lo.getX(), lo.getY(), plane),
+			WorldPoint.fromScene(view, hi.getX(), hi.getY(), plane)};
 	}
 
 	@Subscribe
-	public void onChatMessage(ChatMessage event)
+	void onChatMessage(ChatMessage event)
 	{
 		// The follower's own lines land in public chat under its name; feeding
 		// them back into the rules would let it react to itself.
 		if (followerName().equals(event.getName()))
-		{
 			return;
-		}
-		// Nor the player's lines written in the film window and played back.
-		if (event.getType() == ChatMessageType.PUBLICCHAT && scriptedChat != null
-			&& scriptedChat.equals(event.getMessage()))
-		{
-			scriptedChat = null;
-			return;
-		}
 		// Nor its status lines, which are CONSOLE lines, as are the echoes
 		// below: with chatwatch on, each echo was itself echoed, endlessly.
 		// The game says nothing a rule listens for as CONSOLE; that is
 		// RuneLite's and the plugins' own channel.
 		if (event.getType() == ChatMessageType.CONSOLE)
-		{
 			return;
-		}
-		// ::follower chatwatch - the same idea as watching animations. A
-		// chatMessage rule has to match the game's exact wording, and wording
-		// taken from memory or a wiki is how a rule ends up never firing.
-		if (watchChat)
-		{
-			sendStatus("Chat [" + event.getType() + "] " + event.getMessage());
-			log.info("WATCH chat [{}] {}", event.getType(), event.getMessage());
-		}
-
 		// Nor the game's word for a death there: the death rule listens for it.
-		if (!(speechEngine.getContext().isSafeDeathHere() && event.getMessage().startsWith(DEATH_MESSAGE)))
-		{
-			speechEngine.dispatch(TriggerEvent.chat(
+		// DEATH_MESSAGE: What the game says at a death, which the death rule answers.
+		if (!(context().isSafeDeathHere() && event.getMessage().startsWith("Oh dear, you are dead" /* DEATH_MESSAGE */)))
+			dispatch(TriggerEvent.chat(
 				event.getMessage(), event.getType().getType(), event.getName()));
-		}
 
-		if (skilling != null && !filming)
-		{
+		if (skilling != null)
 			// The stun, the empty rune pouch, the slayer task: silent reactions,
 			// and none in a take, where they would turn and gesture over the pose.
 			skilling.noteChatMessage(event.getMessage(), event.getType());
-		}
-		if (moments != null && config.noticesThings())
-		{
+		if (config.noticesThings())
 			// The pet drop: the walk over to see it.
 			moments.noteChatMessage(event.getMessage(), event.getType());
-		}
 
 		// Two game messages worth parsing rather than merely matching: the
 		// tail is a NAME a line can say, which a plain chatMessage rule can
@@ -9510,21 +5597,19 @@ public class FollowerPlugin extends Plugin
 				"You have unlocked a new music track:");
 			if (parsed != null)
 			{
-				speechEngine.getContext().tally("music");
-				speechEngine.dispatch(TriggerEvent.musicUnlock(parsed));
+				context().tally("music");
+				dispatch(TriggerEvent.musicUnlock(parsed));
 			}
 			parsed = parseTailAfter(event.getMessage(),
 				"New item added to your collection log:");
 			if (parsed != null)
 			{
-				speechEngine.getContext().tally("collections");
-				speechEngine.dispatch(TriggerEvent.collectionAdd(parsed));
-				if (moments != null && config.noticesThings() && !filming)
-				{
+				context().tally("collections");
+				dispatch(TriggerEvent.collectionAdd(parsed));
+				if (config.noticesThings())
 					// A first-ever thing is news whatever it sells for; it is
 					// in the bag, so the write-up faces the player.
-					moments.noteworthy(com.follower.follower.Moments.Tier.MEDIUM, null);
-				}
+					moments.noteworthy(Moments.Tier.MEDIUM, null);
 			}
 			noteKillCount(event.getMessage());
 		}
@@ -9536,32 +5621,26 @@ public class FollowerPlugin extends Plugin
 	 * count is: 12." The account's number rather than the follower's tally,
 	 * which is what lets it say "your forty-first" on the day they met.
 	 */
-	private static final java.util.regex.Pattern KILL_COUNT = java.util.regex.Pattern.compile(
+	static final Pattern KILL_COUNT = Pattern.compile(
 		"^Your (?:completed |subdued )?(.+?)(?: kill| chest| completion| success)? count is:? ?([\\d,]+)");
 
 	/** The boss and the number out of a kill-count message, or null for any other message. */
-	static java.util.Map.Entry<String, Integer> parseKillCount(String message)
+	static Entry<String, Integer> parseKillCount(String message)
 	{
 		if (message == null)
-		{
 			return null;
-		}
-		java.util.regex.Matcher m = KILL_COUNT.matcher(message.replaceAll("<[^>]*>", "").trim());
+		var m = KILL_COUNT.matcher(message.replaceAll("<[^>]*>", "").trim());
 		if (!m.find())
-		{
 			return null;
-		}
 		String boss = m.group(1).trim();
 		// The agility courses and the herbiboar are counted in the same words,
 		// "Your Varrock Rooftop lap count is: 25.", and a lap is not a kill:
 		// the boss lines made it "That makes 25 Varrock Rooftop lap."
 		if (boss.endsWith(" lap") || boss.endsWith(" harvest") || boss.endsWith(" Total Ticket"))
-		{
 			return null;
-		}
 		try
 		{
-			return new java.util.AbstractMap.SimpleImmutableEntry<>(
+			return new AbstractMap.SimpleImmutableEntry<>(
 				boss, Integer.parseInt(m.group(2).replace(",", "")));
 		}
 		catch (NumberFormatException e)
@@ -9570,21 +5649,19 @@ public class FollowerPlugin extends Plugin
 		}
 	}
 
-	private void noteKillCount(String message)
+	void noteKillCount(String message)
 	{
-		java.util.Map.Entry<String, Integer> parsed = parseKillCount(message);
+		var parsed = parseKillCount(message);
 		if (parsed == null)
-		{
 			return;
-		}
 		String boss = parsed.getKey();
 		int count = parsed.getValue();
-		TriggerContext context = speechEngine.getContext();
+		var context = context();
 		// A record rather than a tally: the game's count only ever goes up,
 		// and what the follower keeps is the highest it has heard. The game
 		// keeps it per account, so the follower does too.
-		String bare = "kc:" + boss.toLowerCase(Locale.ROOT);
-		String key = chronicleProgress == null ? bare : chronicleProgress.accountKey(bare);
+		String bare = "kc:" + boss.toLowerCase(Locale.ROOT),
+			key = accountKey(bare);
 		int last = context.getRecord(key);
 		context.noteRecord(key, count);
 		context.noteKillCountName(boss);
@@ -9592,10 +5669,8 @@ public class FollowerPlugin extends Plugin
 		// once this one has reached it, and it has done its job: kept, it
 		// would stand in for an alt that never killed the boss, for good.
 		if (!key.equals(bare) && count >= context.getRecord(bare))
-		{
 			context.forgetRecord(bare);
-		}
-		speechEngine.dispatch(TriggerEvent.killCount(boss, count, last));
+		dispatch(TriggerEvent.killCount(boss, count, last));
 	}
 
 	/**
@@ -9607,37 +5682,29 @@ public class FollowerPlugin extends Plugin
 	static String parseTailAfter(String message, String prefix)
 	{
 		if (message == null)
-		{
 			return null;
-		}
 		String plain = message.replaceAll("<[^>]*>|@[a-z0-9_]+@", "").trim();
 		if (!plain.startsWith(prefix))
-		{
 			return null;
-		}
 		String tail = plain.substring(prefix.length()).replaceAll("[.!]+$", "").trim();
 		return tail.isEmpty() ? null : tail;
 	}
 
 	@Subscribe
-	public void onVarbitChanged(VarbitChanged event)
+	void onVarbitChanged(VarbitChanged event)
 	{
 		// A scene's first tick is read on the game tick, after this tick's
 		// messages: quiet from the varbit itself, so a line fired alongside
 		// it is held. noticeTheScene still owns the edges.
-		if (event.getVarbitId() == net.runelite.api.gameval.VarbitID.CUTSCENE_STATUS
+		if (event.getVarbitId() == VarbitID.CUTSCENE_STATUS
 			&& event.getValue() != 0)
-		{
 			speechEngine.setSceneQuiet(true);
-		}
 
 		// Only pay the full rule pass when something actually listens for
 		// varbit EVENTS - varbit floods (login inits) are otherwise free.
 		// State-based varbitEquals rules evaluate on the tick heartbeat.
 		if (event.getVarbitId() != -1 && ruleLoader.isVarbitEventRules())
-		{
-			speechEngine.dispatch(TriggerEvent.varbit(event.getVarbitId(), event.getValue(), -1));
-		}
+			dispatch(TriggerEvent.varbit(event.getVarbitId(), event.getValue(), -1));
 
 		// The summoning-cooldown varbit rising is the RELIABLE summon signal:
 		// casting mid combat never surfaces the cast animation (the
@@ -9647,21 +5714,14 @@ public class FollowerPlugin extends Plugin
 		if (event.getVarbitId() == THRALL_SUMMONED_VARBIT
 			&& replacesThralls(config.thrallMode(), config.thrallOnly())
 			&& event.getValue() == 1)
-		{
-			log.debug("Thrall summoned (cooldown varbit up)");
 			// The thrall NPC may already be in the scene - spawn-event
 			// ordering within the tick is not guaranteed.
 			adoptExistingThrall();
-		}
 
 		// The brightness setting: the chathead's colour table must be on the same
 		// gamma as the real chatheads around it, and must follow slider changes.
 		if (event.getVarpId() == BRIGHTNESS_VARP)
-		{
-			com.follower.ui.GameColourTable.setBrightnessSetting(event.getValue());
-			log.debug("Brightness setting {} -> colour table gamma {}",
-				event.getValue(), com.follower.ui.GameColourTable.getCurrentGamma());
-		}
+			GameColourTable.setBrightnessSetting(event.getValue());
 	}
 
 	/**
@@ -9669,48 +5729,52 @@ public class FollowerPlugin extends Plugin
 	 * The Restless Ghost!"). The children are populated after the load event,
 	 * so it is read next cycle, like the chathead calibration.
 	 */
-	private void noteQuestScroll()
+	void noteQuestScroll()
 	{
-		if (chronicleProgress != null)
-		{
-			chronicleProgress.refresh(client.getTickCount());
-		}
 		clientThread.invokeLater(() ->
 		{
-			net.runelite.api.widgets.Widget title = client.getWidget(
-				net.runelite.api.gameval.InterfaceID.Questscroll.QUEST_TITLE);
+			var title = client.getWidget(
+				InterfaceID.Questscroll.QUEST_TITLE);
 			if (title == null || title.getText() == null)
-			{
 				return;
-			}
-			String text = title.getText().replaceAll("<[^>]*>", "").trim();
-			String prefix = "You have completed ";
+			String text = title.getText().replaceAll("<[^>]*>", "").trim(),
+				prefix = "You have completed ";
 			if (!text.startsWith(prefix))
-			{
 				// Speedruns and oddities use their own scrolls; a completion
 				// this could not read is better silent than misquoted.
-				log.debug("Quest scroll title in an unexpected shape: {}", text);
 				return;
-			}
 			String quest = text.substring(prefix.length())
 				.replaceAll("[.!]+$", "").trim();
 			if (quest.isEmpty())
+				return;
+			context().tally("quests");
+			context().noteDoing("finishing " + quest);
+			noteQuestFinish(quest, isStaying() ? QUEST_NOT_SEEN : LocalDate.now().toEpochDay());
+			dispatch(TriggerEvent.questComplete(quest));
+		});
+	}
+	
+	/** Recorded for a quest finished while the follower was parked elsewhere. */
+	static final long QUEST_NOT_SEEN = -1L;
+	
+	/** The quest the scroll names, by its constant, dated or marked missed for this account. */
+	void noteQuestFinish(String questName, long epochDay)
+	{
+		for (var quest : Quest.values())
+		{
+			if (quest.getName().equalsIgnoreCase(questName))
 			{
+				context().noteQuestSeenFinished(accountKey(quest.name()), epochDay);
 				return;
 			}
-			speechEngine.getContext().tally("quests");
-			speechEngine.getContext().noteDoing("finishing " + quest);
-			if (chronicleProgress != null && isStaying())
-			{
-				// Parked elsewhere by the player, it did not see this one.
-				chronicleProgress.missedQuestFinish(quest);
-			}
-			else if (chronicleProgress != null)
-			{
-				chronicleProgress.sawQuestFinish(quest);
-			}
-			speechEngine.dispatch(TriggerEvent.questComplete(quest));
-		});
+		}
+	}
+	
+	/** The key a quest's day, or a boss's kill count, is kept under: per account, where the memory is per profile. */
+	String accountKey(String key)
+	{
+		String who = configManager.getRSProfileKey();
+		return Strings.isNullOrEmpty(who) ? key : key + "@" + who;
 	}
 
 	/**
@@ -9719,28 +5783,22 @@ public class FollowerPlugin extends Plugin
 	 * there; reacting to those would report last week's flips as news. Armed
 	 * by the first game tick, cleared whenever the game state churns.
 	 */
-	private boolean geOffersSettled;
+	boolean geOffersSettled;
 
 	@Subscribe
-	public void onGrandExchangeOfferChanged(net.runelite.api.events.GrandExchangeOfferChanged event)
+	void onGrandExchangeOfferChanged(net.runelite.api.events.GrandExchangeOfferChanged event)
 	{
 		if (!geOffersSettled)
-		{
 			return;
-		}
-		net.runelite.api.GrandExchangeOffer offer = event.getOffer();
+		var offer = event.getOffer();
 		if (offer == null)
-		{
 			return;
-		}
-		boolean bought = offer.getState() == net.runelite.api.GrandExchangeOfferState.BOUGHT;
-		if (!bought && offer.getState() != net.runelite.api.GrandExchangeOfferState.SOLD)
-		{
+		boolean bought = offer.getState() == GrandExchangeOfferState.BOUGHT;
+		if (!bought && offer.getState() != GrandExchangeOfferState.SOLD)
 			return;
-		}
 		// The clerk receives the telegram wherever you are - that is the joke.
 		String item = itemManager.getItemComposition(offer.getItemId()).getName();
-		speechEngine.dispatch(TriggerEvent.geOffer(bought, item, offer.getSpent()));
+		dispatch(TriggerEvent.geOffer(bought, item, offer.getSpent()));
 	}
 
 	/**
@@ -9749,52 +5807,50 @@ public class FollowerPlugin extends Plugin
 	 * window after the channel itself changes is swallowed, the same
 	 * settle-delay trick the NPC spawn flood uses.
 	 */
-	private int channelSettleTicks;
+	int channelSettleTicks;
 
 	@Subscribe
-	public void onFriendsChatChanged(net.runelite.api.events.FriendsChatChanged event)
+	void onFriendsChatChanged(net.runelite.api.events.FriendsChatChanged event)
 	{
 		channelSettleTicks = 5;
 	}
 
 	@Subscribe
-	public void onClanChannelChanged(net.runelite.api.events.ClanChannelChanged event)
+	void onClanChannelChanged(net.runelite.api.events.ClanChannelChanged event)
 	{
 		channelSettleTicks = 5;
 	}
 
 	@Subscribe
-	public void onFriendsChatMemberJoined(net.runelite.api.events.FriendsChatMemberJoined event)
+	void onFriendsChatMemberJoined(net.runelite.api.events.FriendsChatMemberJoined event)
 	{
-		dispatchChannel(TriggerEvent.Type.CHANNEL_JOIN, event.getMember().getName());
+		dispatchChannel(CHANNEL_JOIN, event.getMember().getName());
 	}
 
 	@Subscribe
-	public void onFriendsChatMemberLeft(net.runelite.api.events.FriendsChatMemberLeft event)
+	void onFriendsChatMemberLeft(net.runelite.api.events.FriendsChatMemberLeft event)
 	{
-		dispatchChannel(TriggerEvent.Type.CHANNEL_LEAVE, event.getMember().getName());
+		dispatchChannel(CHANNEL_LEAVE, event.getMember().getName());
 	}
 
 	@Subscribe
-	public void onClanMemberJoined(net.runelite.api.events.ClanMemberJoined event)
+	void onClanMemberJoined(net.runelite.api.events.ClanMemberJoined event)
 	{
-		dispatchChannel(TriggerEvent.Type.CHANNEL_JOIN, event.getClanMember().getName());
+		dispatchChannel(CHANNEL_JOIN, event.getClanMember().getName());
 	}
 
 	@Subscribe
-	public void onClanMemberLeft(net.runelite.api.events.ClanMemberLeft event)
+	void onClanMemberLeft(net.runelite.api.events.ClanMemberLeft event)
 	{
-		dispatchChannel(TriggerEvent.Type.CHANNEL_LEAVE, event.getClanMember().getName());
+		dispatchChannel(CHANNEL_LEAVE, event.getClanMember().getName());
 	}
 
-	private void dispatchChannel(TriggerEvent.Type type, String who)
+	void dispatchChannel(Type type, String who)
 	{
 		if (channelSettleTicks > 0 || who == null)
-		{
 			return;
-		}
 		// Display names arrive padded with non-breaking spaces.
-		speechEngine.dispatch(TriggerEvent.channel(type, who.replace(' ', ' ').trim()));
+		dispatch(TriggerEvent.channel(type, who.replace(' ', ' ').trim()));
 	}
 
 	/**
@@ -9804,40 +5860,18 @@ public class FollowerPlugin extends Plugin
 	 * pass over every rule is only paid when a rule actually listens.
 	 */
 	@Subscribe
-	public void onOverheadTextChanged(net.runelite.api.events.OverheadTextChanged event)
+	void onOverheadTextChanged(net.runelite.api.events.OverheadTextChanged event)
 	{
 		if (!(event.getActor() instanceof NPC)
-			|| !ruleLoader.listensFor(TriggerEvent.Type.NPC_SHOUT))
-		{
+			|| !ruleLoader.listensFor(NPC_SHOUT))
 			return;
-		}
-		NPC npc = (NPC) event.getActor();
+		var npc = (NPC) event.getActor();
 		// An NPC with no name of its own answers "null", and the follower
 		// took dictation from it: "Noted, null. Volume down next time."
 		if (npc.getName() == null || "null".equals(npc.getName())
 			|| event.getOverheadText() == null)
-		{
 			return;
-		}
-		speechEngine.dispatch(TriggerEvent.npcShout(npc.getName(), event.getOverheadText()));
-	}
-
-	/**
-	 * What {@code ::follower stance <weaponId>} reports: the weapon's own
-	 * stance, and the swing the follower actually uses with it. That swing can
-	 * be the shipped one while the weapon's learned record knows none.
-	 */
-	static String stanceStatus(com.follower.follower.StanceLibrary library, String name, int weaponId)
-	{
-		com.follower.follower.StanceLibrary.Stance known = library.describe(weaponId);
-		int attack = library.attackFor(weaponId);
-		return known == null
-			? (name == null ? "Item " + weaponId : name)
-				+ ": no stance known - it will stand unarmed"
-			: (name == null ? "Item " + weaponId : name)
-				+ ": idle " + known.idle + ", walk " + known.walk
-				+ ", run " + known.run
-				+ ", attack " + (attack > 0 ? attack : "unknown");
+		dispatch(TriggerEvent.npcShout(npc.getName(), event.getOverheadText()));
 	}
 
 	/**
@@ -9847,65 +5881,40 @@ public class FollowerPlugin extends Plugin
 	 * number means depends on the weapon type, and the follower only ever
 	 * needs the animation that goes with the style, never its name.
 	 */
-	private int attackStyle()
+	int attackStyle()
 	{
 		return client.getVarpValue(net.runelite.api.gameval.VarPlayerID.COM_MODE);
 	}
 
 	/** The client's brightness setting (1 Dark .. 4 V.Bright, 2 = Normal). */
-	private static final int BRIGHTNESS_VARP = 166;
-
-	/**
-	 * The four red click-cross frames, 519-522 (the old api SpriteID
-	 * RED_CLICK_ANIMATION_1..4, deprecated without a gameval equivalent name).
-	 */
-	private static final int RED_CLICK_SPRITE_FIRST = 519;
+	static final int BRIGHTNESS_VARP = 166;
 
 	/**
 	 * The newest spotanim on an actor - the one a GraphicChanged event is
 	 * reporting. Replaces the deprecated single-graphic accessors now that
 	 * actors carry a list.
 	 */
-	private static net.runelite.api.ActorSpotAnim latestSpotAnim(net.runelite.api.Actor actor)
+	static ActorSpotAnim latestSpotAnim(Actor actor)
 	{
-		net.runelite.api.ActorSpotAnim latest = null;
-		for (net.runelite.api.ActorSpotAnim spotAnim : actor.getSpotAnims())
+		ActorSpotAnim latest = null;
+		for (var spotAnim : actor.getSpotAnims())
 		{
 			if (latest == null || spotAnim.getStartCycle() > latest.getStartCycle())
-			{
 				latest = spotAnim;
-			}
 		}
 		return latest;
 	}
 
-	/**
-	 * Prints every player animation id as it plays. For harvesting animation
-	 * ids from the running game - the cache gives animations no names, so the
-	 * only honest way to find "the one where you write on a scroll" is to
-	 * watch somebody do it. Players only: an NPC animation id cannot play on
-	 * the follower's player skeleton, so sniffing NPCs would only collect ids
-	 * the follower can never use.
-	 */
-	private boolean sniffAnims;
-
 	@Subscribe
-	public void onAnimationChanged(AnimationChanged event)
+	void onAnimationChanged(AnimationChanged event)
 	{
 		// Every player in the scene teaches their weapon's attack animation,
 		// the same way they teach its walk and idle poses. The follower then
 		// swings whatever it is actually holding.
 		if (event.getActor() instanceof Player)
 		{
-			Player animating = (Player) event.getActor();
+			var animating = (Player) event.getActor();
 			noteAttackSighting(animating);
-
-			if (sniffAnims && animating.getAnimation() != -1)
-			{
-				sendStatus((animating == client.getLocalPlayer()
-					? "You" : String.valueOf(animating.getName()))
-					+ " played animation " + animating.getAnimation());
-			}
 		}
 
 		// The possessed thrall attacking: the follower answers with the PLAYER
@@ -9923,27 +5932,18 @@ public class FollowerPlugin extends Plugin
 			return;
 		}
 
-		if (skilling != null && event.getActor() instanceof Player)
-		{
+		if (event.getActor() instanceof Player)
 			// Any player's: the proof that an animation is safe on a player
 			// skeleton is a player playing it.
 			skilling.notePlayerAnimation(event.getActor().getAnimation());
-		}
 
 		if (event.getActor() != client.getLocalPlayer())
-		{
 			return;
-		}
 
 		int animationId = event.getActor().getAnimation();
-		// The last thing the player did, for the film window's Copy my emote.
-		filmSet.notePlayerAnimation(animationId);
 
-		if (skilling != null)
-		{
-			// Proof that a work click turned into work, or that it goes on.
-			skilling.noteAnimation(animationId);
-		}
+		// Proof that a work click turned into work, or that it goes on.
+		skilling.noteAnimation(animationId);
 
 		// A slaved chain (the home teleport) steps stage-for-stage with the
 		// PLAYER's sequence: the server cuts each stage short by starting the
@@ -9953,47 +5953,23 @@ public class FollowerPlugin extends Plugin
 		if (follower.isSlavedChainActive())
 		{
 			if (animationId == -1)
-			{
 				clientThread.invoke(follower::slavedPlayerStopped);
-			}
 			else
-			{
 				clientThread.invoke(follower::advanceSlavedChain);
-			}
 		}
 
 		// A held emote ends the moment the player's animation becomes anything
 		// else, which is the only signal there is that they have stopped.
 		if (mirroredPose != 0 && animationId != mirroredPose)
-		{
 			stopPoseMirror();
-		}
 		// Stopped before the follower got over there: no copy on arrival.
 		else if (pendingMime != 0 && !pendingOneShot && animationId != pendingMime)
-		{
 			stopPoseMirror();
-		}
-
-		// ::follower watch - report ids as they play, so an animation can be
-		// identified by performing it rather than guessing from community id lists.
-		if (watchAnimations && animationId != -1)
-		{
-			sendStatus("Animation " + animationId
-				+ "  (::follower anim " + animationId + " to replay it)");
-			log.info("WATCH self animation {}", animationId);
-		}
-
-		// An emote while it sketches is the pose: not copied over the scroll,
-		// and not answered while the view is being taken.
-		if (sketching != null && sketching.isSketching())
-		{
-			return;
-		}
 
 		// The follower's tile as of this event, not the last tick's: an emote
 		// done at it is judged on where it is.
-		speechEngine.getContext().setFollowerLocation(follower.getWorldLocation());
-		speechEngine.dispatch(TriggerEvent.animation(animationId));
+		context().setFollowerLocation(follower.getWorldLocation());
+		dispatch(TriggerEvent.animation(animationId));
 	}
 
 	/**
@@ -10003,58 +5979,25 @@ public class FollowerPlugin extends Plugin
 	 * deliver the graphic on a later tick than the animation, and a multi-stage
 	 * teleport (home teleport) trickles graphics in for several seconds.
 	 */
-	private static final int MIRROR_GRAPHIC_WINDOW_TICKS = 12;
-	private int mirrorGraphicsUntilTick = -1;
+	static final int MIRROR_GRAPHIC_WINDOW_TICKS = 12;
+	int mirrorGraphicsUntilTick = -1;
 
 	@Subscribe
-	public void onGraphicChanged(GraphicChanged event)
+	void onGraphicChanged(GraphicChanged event)
 	{
 		if (event.getActor() != client.getLocalPlayer())
-		{
-			// Watching everyone is how a graphic gets identified when you do not
-			// own the thing that makes it: stand near someone who does and let
-			// them perform it. NPCs count too - plenty of effects render on
-			// what is being hit rather than on whoever swung.
-			if (watchOthers)
-			{
-				net.runelite.api.ActorSpotAnim other = latestSpotAnim(event.getActor());
-				if (other != null)
-				{
-					String who = event.getActor() instanceof NPC ? "NPC " : "";
-					sendStatus(who + event.getActor().getName() + " graphic " + other.getId()
-						+ "  (::follower gfx " + other.getId() + " to replay it)");
-					log.info("WATCH {}{} graphic {}", who, event.getActor().getName(),
-						other.getId());
-				}
-			}
 			return;
-		}
 
-		net.runelite.api.ActorSpotAnim spotAnim = latestSpotAnim(event.getActor());
+		var spotAnim = latestSpotAnim(event.getActor());
 		if (spotAnim == null)
-		{
 			return;
-		}
-		int graphicId = spotAnim.getId();
-		int graphicHeight = spotAnim.getHeight();
-		if (skilling != null && !filming)
-		{
+		int graphicId = spotAnim.getId(),
+			graphicHeight = spotAnim.getHeight();
+		if (skilling != null)
 			// The thieving stun's stars, which land before its message.
 			skilling.noteGraphic(graphicId);
-		}
-		if (watchAnimations)
-		{
-			sendStatus("Graphic " + graphicId + " at height " + graphicHeight
-				+ "  (::follower gfx " + graphicId + " to replay, add 'set' to keep it)");
-			// Also to the log: chat scrolls away, and a captured id is the
-			// whole point of watching.
-			log.info("WATCH self graphic {} height {}", graphicId, graphicHeight);
-		}
-
 		if (takesMirroredGraphic(client.getTickCount()))
-		{
 			mirrorGraphic(graphicId, graphicHeight);
-		}
 	}
 
 	/**
@@ -10065,22 +6008,16 @@ public class FollowerPlugin extends Plugin
 	boolean takesMirroredGraphic(int tick)
 	{
 		if (tick > mirrorGraphicsUntilTick)
-		{
 			return false;
-		}
 		mirrorGraphicsUntilTick = -1;
 		return true;
 	}
 
-	private void mirrorGraphic(int graphicId, int height)
+	void mirrorGraphic(int graphicId, int height)
 	{
-		com.follower.appearance.SpotAnimRepository.Entry fx = spotAnimRepository.get(graphicId);
+		var fx = spotAnimRepository.get(graphicId);
 		if (fx == null)
-		{
-			log.info("graphic {} not mirrored: {}", graphicId,
-				spotAnimRepository.isLoaded() ? "not in spotanims.json" : spotAnimRepository.getStatus());
 			return;
-		}
 		clientThread.invoke(() -> follower.playSpotAnim(fx, height));
 	}
 
@@ -10096,42 +6033,27 @@ public class FollowerPlugin extends Plugin
 	 * not be claimed when something else finishes it minutes later, and holding
 	 * actor references for a dead scene would keep it from being collected.
 	 */
-	private final Map<Actor, Integer> damagedByPlayer = new HashMap<>();
-
-	/** How long a hit stays claimable. Comfortably longer than any kill takes to land. */
-	private static final int KILL_CLAIM_TICKS = 30;
+	final Map<Actor, Integer> damagedByPlayer = new HashMap<>();
 
 	@Subscribe
-	public void onHitsplatApplied(HitsplatApplied event)
+	void onHitsplatApplied(HitsplatApplied event)
 	{
 		// Recorded before the size check, and for anybody: a block animation
 		// plays on a zero as readily as on a forty, and it is the tell that an
 		// animation was a defence rather than a swing.
 		if (event.getActor() instanceof Player)
-		{
 			playersHit.put(event.getActor(), client.getTickCount());
-		}
-		if (event.getActor() == client.getLocalPlayer())
-		{
-			// For the agility trace, zeros included: which types a fall is.
-			agilityHitsplatThisTick = event.getHitsplat().getHitsplatType();
-		}
 
 		if (event.getHitsplat().getAmount() <= 0)
-		{
 			return;
-		}
 		if (event.getActor() == client.getLocalPlayer())
 		{
 			// Being hit is combat even when not hitting back, which the
 			// interaction check alone would miss.
-			speechEngine.getContext().noteDamageTaken();
-			speechEngine.dispatch(TriggerEvent.damageTaken(event.getHitsplat().getAmount()));
-			if (crossingWatch != null
-				&& com.follower.follower.CrossingWatch.isFallDamage(event.getHitsplat().getHitsplatType()))
-			{
-				crossingWatch.noteDamage(System.currentTimeMillis());
-			}
+			context().noteDamageTaken();
+			dispatch(TriggerEvent.damageTaken(event.getHitsplat().getAmount()));
+			if (CrossingWatch.isFallDamage(event.getHitsplat().getHitsplatType()))
+				crossingWatch.noteDamage(currentTimeMillis());
 			dialog.close();
 		}
 		else if (event.getActor() instanceof NPC && event.getHitsplat().isMine())
@@ -10139,7 +6061,7 @@ public class FollowerPlugin extends Plugin
 			damagedByPlayer.put(event.getActor(), client.getTickCount());
 			// Landing one is combat too. Facing an NPC is not enough on its
 			// own any more, so this is what arms a fight the player starts.
-			speechEngine.getContext().noteDamageDealt();
+			context().noteDamageDealt();
 			noteRecord("hit", event.getHitsplat().getAmount());
 		}
 	}
@@ -10151,14 +6073,12 @@ public class FollowerPlugin extends Plugin
 	 * deliberate: a record that is stored without being said is invisible, and
 	 * one that is said without being stored is said again next time.
 	 */
-	private void noteRecord(String what, int value)
+	void noteRecord(String what, int value)
 	{
-		TriggerContext context = speechEngine.getContext();
+		var context = context();
 		int previous = context.getRecord(what);
 		if (context.noteRecord(what, value))
-		{
-			speechEngine.dispatch(TriggerEvent.record(what, value, previous));
-		}
+			dispatch(TriggerEvent.record(what, value, previous));
 	}
 
 	/** Drops damage claims that have gone stale, so the map cannot grow without bound. */
@@ -10167,13 +6087,13 @@ public class FollowerPlugin extends Plugin
 	 * they TAKE a hit, and nothing in the animation itself says which of the
 	 * two it was.
 	 */
-	private final java.util.Map<net.runelite.api.Actor, Integer> playersHit =
-		new java.util.HashMap<>();
+	final Map<Actor, Integer> playersHit =
+		new HashMap<>();
 
 	/** The most recent animation seen on a player, held for one tick. */
-	private Player sightedPlayer;
-	private int sightedAnimation;
-	private int sightedTick;
+	Player sightedPlayer;
+	int sightedAnimation,
+		sightedTick;
 
 	/**
 	 * Notes an animation that MIGHT be an attack worth learning.
@@ -10191,12 +6111,10 @@ public class FollowerPlugin extends Plugin
 	 * attack repeats every few ticks all fight long, so one missed is free,
 	 * and a wrong one learned is not.
 	 */
-	private void noteAttackSighting(Player animating)
+	void noteAttackSighting(Player animating)
 	{
 		if (animating.getAnimation() <= 0 || animating.getInteracting() == null)
-		{
 			return;
-		}
 		sightedPlayer = animating;
 		sightedAnimation = animating.getAnimation();
 		sightedTick = client.getTickCount();
@@ -10227,24 +6145,22 @@ public class FollowerPlugin extends Plugin
 	}
 
 	/** Commits a held sighting once the tick it belongs to is complete. */
-	private void commitAttackSighting()
+	void commitAttackSighting()
 	{
 		if (sightedPlayer != null && sightedTick < client.getTickCount())
 		{
-			Integer hit = playersHit.get(sightedPlayer);
-			net.runelite.api.Actor target = sightedPlayer.getInteracting();
+			var hit = playersHit.get(sightedPlayer);
+			var target = sightedPlayer.getInteracting();
 			boolean swing = sightingIsASwing(
 				sightedPlayer == client.getLocalPlayer(),
-				speechEngine.getContext().isInCombat(),
+				context().isInCombat(),
 				target == null ? -1 : target.getHealthRatio());
 			if ((hit == null || hit < sightedTick) && swing)
-			{
 				// Only the local player's selected style is knowable - varps
 				// are theirs alone - so everyone else teaches the generic
 				// swing and your own play teaches the styled ones.
 				stanceLibrary.learnAttack(sightedPlayer, sightedAnimation,
 					sightedPlayer == client.getLocalPlayer() ? attackStyle() : -1);
-			}
 			sightedPlayer = null;
 		}
 
@@ -10255,66 +6171,56 @@ public class FollowerPlugin extends Plugin
 		}
 	}
 
-	private void expireKillClaims()
+	void expireKillClaims()
 	{
 		if (damagedByPlayer.isEmpty())
-		{
 			return;
-		}
-		int cutoff = client.getTickCount() - KILL_CLAIM_TICKS;
+		// KILL_CLAIM_TICKS: How long a hit stays claimable. Comfortably longer than any kill takes to land.
+		int cutoff = client.getTickCount() - 30 /* KILL_CLAIM_TICKS */;
 		damagedByPlayer.values().removeIf(tick -> tick < cutoff);
 	}
 
-	/** What the game says at a death, which the death rule answers. */
-	static final String DEATH_MESSAGE = "Oh dear, you are dead";
-
 	@Subscribe
-	public void onActorDeath(net.runelite.api.events.ActorDeath event)
+	void onActorDeath(net.runelite.api.events.ActorDeath event)
 	{
-		Player local = client.getLocalPlayer();
+		var local = client.getLocalPlayer();
 		if (local == null)
-		{
 			return;
-		}
 
 		if (event.getActor() != local)
 		{
 			// Someone else's death is only news if the player had a hand in it.
-			Integer hit = damagedByPlayer.remove(event.getActor());
+			var hit = damagedByPlayer.remove(event.getActor());
 			if (hit != null && event.getActor() instanceof NPC)
 			{
-				NPC npc = (NPC) event.getActor();
+				var npc = (NPC) event.getActor();
 				// Counted here, where the kill is known to be the player's, so
 				// the tally and the event can never disagree about it. Keyed by
 				// name rather than id: a player counts kalphites, not the four
 				// ids the game happens to use for them.
-				String name = npc.getName() == null ? "" : npc.getName();
+				String name = Strings.nullToEmpty(npc.getName());
 				// tallyBoth, like deaths and levels: the LIFETIME key is what the
 				// kill challenge counts against and what earns the nickname, and
 				// writing only the daily one left both permanently unreachable -
 				// every wager failed on its deadline however well it went.
-				speechEngine.getContext().tallyBoth("kills");
-				int count = speechEngine.getContext().tally(
+				context().tallyBoth("kills");
+				int count = context().tally(
 					"kill:" + name.toLowerCase(Locale.ROOT));
-				speechEngine.dispatch(TriggerEvent.kill(
+				dispatch(TriggerEvent.kill(
 					npc.getId(), name, npc.getCombatLevel(), count));
-				if (chronicleProgress != null)
-				{
-					chronicleProgress.noteNpc(name);
-				}
 			}
 			return;
 		}
 
 		// A death a minigame gives back is no death: no grief, no memory and
 		// no mark (the user, 20 Oct, after Castle Wars was mourned for days).
-		if (!speechEngine.getContext().isSafeDeathHere())
+		if (!context().isSafeDeathHere())
 		{
 			// Where, as well as that: the death spot is remembered for the session,
 			// and walking back over it later has its own lines.
-			speechEngine.getContext().noteDeath(local.getWorldLocation());
-			speechEngine.getContext().tallyBoth("deaths");
-			speechEngine.dispatch(TriggerEvent.death());
+			context().noteDeath(local.getWorldLocation());
+			context().tallyBoth("deaths");
+			dispatch(TriggerEvent.death());
 		}
 		dialog.close();
 	}
@@ -10323,27 +6229,27 @@ public class FollowerPlugin extends Plugin
 	// of which plugins are enabled. The loot tracker's own LootReceived event
 	// would have been silent whenever that plugin was off.
 	@Subscribe
-	public void onNpcLootReceived(net.runelite.client.events.NpcLootReceived event)
+	void onNpcLootReceived(net.runelite.client.events.NpcLootReceived event)
 	{
 		dispatchLoot(event.getItems(),
 			event.getNpc() == null ? null : event.getNpc().getWorldLocation());
 	}
 
 	@Subscribe
-	public void onPlayerLootReceived(net.runelite.client.events.PlayerLootReceived event)
+	void onPlayerLootReceived(net.runelite.client.events.PlayerLootReceived event)
 	{
 		dispatchLoot(event.getItems(),
 			event.getPlayer() == null ? null : event.getPlayer().getWorldLocation());
 	}
 
 	/** @param at where the drop landed, for the body to look at; null if unknown */
-	private void dispatchLoot(java.util.Collection<net.runelite.client.game.ItemStack> items,
+	void dispatchLoot(java.util.Collection<ItemStack> items,
 		WorldPoint at)
 	{
 		long total = 0;
 		String best = null;
 		long bestValue = -1;
-		for (net.runelite.client.game.ItemStack stack : items)
+		for (var stack : items)
 		{
 			long price = (long) itemManager.getItemPrice(stack.getId()) * stack.getQuantity();
 			total += price;
@@ -10355,264 +6261,137 @@ public class FollowerPlugin extends Plugin
 		}
 		if (total > 0)
 		{
-			int worth = (int) Math.min(total, Integer.MAX_VALUE);
-			// Settled BEFORE the loot line, so the follower collects on its
-			// prediction rather than remarking on the drop and then
-			// remembering it had money on it.
-			speechEngine.getContext().settleBet(worth);
-			speechEngine.dispatch(TriggerEvent.loot(worth, best));
-			if (moments != null && config.noticesThings() && !filming)
-			{
+			int worth = (int) min(total, Integer.MAX_VALUE);
+			dispatch(TriggerEvent.loot(worth, best));
+			if (config.noticesThings())
 				// The body's share: a glance, the notes, or the walk over.
-				moments.noteworthy(com.follower.follower.Moments.tierFor(total), at);
-			}
+				moments.noteworthy(Moments.tierFor(total), at);
 		}
 	}
 
 	@Subscribe
-	public void onStatChanged(StatChanged event)
+	void onStatChanged(StatChanged event)
 	{
-		Skill skill = event.getSkill();
+		var skill = event.getSkill();
 		int level = event.getLevel();
-		Integer previous = knownLevels.put(skill, level);
+		var previous = knownLevels.put(skill, level);
 		if (previous != null && level > previous)
 		{
-			TriggerContext context = speechEngine.getContext();
+			var context = context();
 			context.tallyBoth("levels");
 			// The wider ledger, for the milestone rules: where the total and
 			// the lowest skill stood before this level and after it, how many
 			// skills are maxed now, and how long this one took.
-			int total = 0;
-			int base = Integer.MAX_VALUE;
-			int previousBase = Integer.MAX_VALUE;
-			int masteries = 0;
-			for (Skill each : Skill.values())
+			int total = 0,
+				base = Integer.MAX_VALUE,
+				previousBase = Integer.MAX_VALUE,
+				masteries = 0;
+			for (var each : Skill.values())
 			{
 				int real = each == skill ? level : client.getRealSkillLevel(each);
 				total += real;
-				base = Math.min(base, real);
-				previousBase = Math.min(previousBase, each == skill ? previous : real);
+				base = min(base, real);
+				previousBase = min(previousBase, each == skill ? previous : real);
 				if (real >= 99)
-				{
 					masteries++;
-				}
 			}
-			long now = System.currentTimeMillis();
-			long sinceAny = context.sinceAnyLevel(now);
-			long sinceLast = context.noteLevel(skill.getName(), level, now);
-			speechEngine.dispatch(TriggerEvent.levelUp(skill.getName(), level,
+			long now = currentTimeMillis(),
+				sinceAny = context.sinceAnyLevel(now),
+				sinceLast = context.noteLevel(skill.getName(), level, now);
+			dispatch(TriggerEvent.levelUp(skill.getName(), level,
 				total, total - (level - previous), base, previousBase, masteries,
 				sinceLast, sinceAny));
-			if (moments != null && config.noticesThings() && !filming)
-			{
+			if (config.noticesThings())
 				// The clap, or the walk over for it; the line is the rules'.
 				moments.levelUp(level);
-			}
 		}
 
 		// A rise in XP is a drop, whatever the level did. The work session
 		// counts it and the rules hear of it on the tick it lands; the first
 		// reading after a login is baseline, like the level above.
 		int xp = event.getXp();
-		Integer previousXp = knownXp.put(skill, xp);
+		var previousXp = knownXp.put(skill, xp);
 		if (previousXp != null && xp > previousXp)
 		{
-			if (skill == Skill.AGILITY && crossingWatch != null)
+			if (skill == Skill.AGILITY)
 			{
 				// What tells a climb from a ladder, and rebuilds an obstacle missed.
-				crossingWatch.noteAgilityXp(System.currentTimeMillis());
-				lastAgilityXpMs = System.currentTimeMillis();
-				agilityXpThisTick += xp - previousXp;
-				agilityTrace.event("xp +" + (xp - previousXp));
+				crossingWatch.noteAgilityXp(currentTimeMillis());
+				lastAgilityXpMs = currentTimeMillis();
 				// Not while the watch cannot read them: as a greegree monkey on
 				// Ape Atoll nothing is copied, and the follower joins them as before.
-				if (config.copiesAgility() && !parkedByPlayer && com.follower.follower.CrossingWatch.Sample
-					.read(client.getLocalPlayer(), System.currentTimeMillis()) != null)
-				{
+				if (config.copiesAgility() && !parkedByPlayer && CrossingWatch.Sample
+					.read(client.getLocalPlayer(), currentTimeMillis()) != null)
 					// Whatever the player is on is about to be queued: no snap meanwhile.
 					follower.holdForAgility();
-				}
 			}
-			int count = skilling == null ? 0 : skilling.noteXpDrop(skill);
-			speechEngine.dispatch(TriggerEvent.xpDrop(skill.getName(), count));
+			int count = skilling.noteXpDrop(skill);
+			dispatch(TriggerEvent.xpDrop(skill.getName(), count));
 		}
 	}
 
 	// --------------------------------------------------------------- commands
 
-	/**
-	 * The instruments used to BUILD the plugin, hidden behind the Developer
-	 * commands setting.
-	 *
-	 * <p>Everything here answers a question about the plugin's internals -
-	 * which face priority a model part landed in, what the wrap point of an
-	 * animation measured at, whether the live cache parse still matches the
-	 * offline dump. Left ungated they were a wall of chat text a step away from
-	 * anyone who typed the wrong word.
-	 *
-	 * <p>Commands a player has a reason to run are deliberately NOT here: say,
-	 * here, anim, gfx, pose, height, errand, outfit, reload, copy, fix,
-	 * rebuild, status and where all stay available.
-	 *
-	 * <p>{@code watch} and {@code stance} are gated too, despite being useful
-	 * to a determined user - one prints an animation id for writing a rule, the
-	 * other hand-sets a weapon's animations. Both are authoring tools for
-	 * someone extending the plugin rather than playing with it, and every place
-	 * the documentation points at them names the setting they need.
-	 */
-	/** Tiles the player has stood on, for the boat dump; developer mode only. */
-	private final Set<WorldPoint> walked = new HashSet<>();
-
-	private static final Set<String> DEVELOPER_COMMANDS = new HashSet<>(java.util.Arrays.asList(
-		"priorities", "palette", "harvest", "hidden",
-		"pitchsweep", "headsweep", "head", "followtrace",
-		"wraplerp", "wrapauto", "wrapearly",
-		"animinfo", "animtrace", "errandscan", "cachecheck", "stanceaudit", "fires",
-		"watch", "stance", "spectate", "shield", "centre", "center", "loot",
-		"scan", "heights", "mood", "chatwatch", "examinewatch", "fire", "want", "transcript",
-		"boat", "force",
-		"thieftargets", "sniffanims", "finditem", "prop", "propoffset"));
-
 	/** The errand keys ::follower errand accepts, read from the enum itself. */
-	private static final java.util.List<String> ERRAND_KEYS =
-		com.follower.follower.ErrandController.keys();
+	static final List<String> ERRAND_KEYS =
+		ErrandController.keys();
 
 	/**
 	 * The errand keys a player is shown: all but firedeath, which stays
 	 * accepted but unlisted, as in the panel's dropdown, so the joke is not
 	 * spoiled by a list.
 	 */
-	private static final String LISTED_ERRAND_KEYS = ERRAND_KEYS.stream()
+	static final String LISTED_ERRAND_KEYS = ERRAND_KEYS.stream()
 		.filter(k -> !"firedeath".equals(k))
-		.collect(java.util.stream.Collectors.joining("|"));
+		.collect(Collectors.joining("|"));
 
 	/**
 	 * The two answers that keep "Will run the errand at the next quiet
 	 * moment" honest: errands are off, or the one asked for could not start
 	 * where the follower is. Wording awaits approval (fx/chat-text.json).
 	 */
-	static final String ERRANDS_OFF = "Errands are off. Tick Go on errands under Errands to send it on one.";
-	static final String ERRAND_MISSED = "That errand can't start here.";
+	static final String ERRANDS_OFF = Resources.text("errandsOff");
 
 	/**
-	 * The everyday commands as (command, description) pairs. The help printer
-	 * and the side panel's Commands section both read this list, so the two
-	 * cannot drift apart.
+	 * The everyday commands as (command, description) pairs, from
+	 * commands.tsv. The help printer and the side panel's Commands section
+	 * both read this list, so the two cannot drift apart.
 	 */
-	public static final java.util.List<java.util.Map.Entry<String, String>> EVERYDAY_COMMANDS =
-		java.util.Collections.unmodifiableList(java.util.Arrays.asList(
-			command("say <text>", "make the follower say it"),
-			command("here", "place the follower at your feet"),
-			command("fix", "re-attach it if it vanished"),
-			command("rebuild", "rebuild its model from the outfit"),
-			command("copy", "dress it in your gear (also a panel button)"),
-			command("outfit <name>", "wear a saved profile (also in the panel)"),
-			command("anim <id...>", "preview an animation on it"),
-			command("gfx <id> [height]", "preview a graphic on it, that far up its body"),
-			command("pose <id>", "hold a looping pose, 0 to release"),
-			command("posing", "the Advanced posing window: pose it, give it lines, or play out a scene"),
-			command("sketch", "pose for the chronicle's sketch of this place, as right-click Sketch"),
-			command("height <n>", "lift or lower it"),
-			// Spaced, so the list wraps between keys rather than mid-word.
-			command("errand [" + LISTED_ERRAND_KEYS.replace("|", " | ") + "]", "send it on an errand now"),
-			command("reload", "re-read the phrase and sound files"),
-			command("status", "models, rules and spawn state"),
-			command("where", "your region id, for Locations in the Messages window")));
+	static final List<Entry<String, String>> EVERYDAY_COMMANDS =
+		Collections.unmodifiableList(Resources.rows("commands.tsv").stream()
+			.map(row -> command(row[0].replace("{errands}", LISTED_ERRAND_KEYS.replace("|", " | ")), row[1]))
+			.collect(Collectors.toList()));
 
-	private static java.util.Map.Entry<String, String> command(String name, String effect)
+	static Entry<String, String> command(String name, String effect)
 	{
-		return new java.util.AbstractMap.SimpleImmutableEntry<>(name, effect);
+		return new AbstractMap.SimpleImmutableEntry<>(name, effect);
 	}
 
-	/**
-	 * The gated commands with their one-line effects, for the panel's
-	 * Commands section once Developer commands is on. The same table as
-	 * docs/DEVELOPMENT.md; keep the two together.
-	 */
-	private static final java.util.List<java.util.Map.Entry<String, String>> DEVELOPER_COMMAND_HELP =
-		java.util.Collections.unmodifiableList(java.util.Arrays.asList(
-			command("watch [all]", "print the ids of your animations and graphics; watch all adds everyone's"),
-			command("stance <weaponId> [idle walk run attack]", "show or hand-set a weapon's animations"),
-			command("hidden", "which slots each equipped item covers"),
-			command("palette", "copy your exact body colours onto it; palette clear drops them"),
-			command("harvest", "extract the client's colour tables; harvest stop aborts"),
-			command("followtrace", "live follow-state overlay and log rows; off to stop"),
-			command("animinfo", "frame count, duration and interpolation of the playing animation"),
-			command("animtrace", "trace its and your pose frames side by side for about 8s"),
-			command("wrapearly <n>", "override the loop trim of the playing animation"),
-			command("wrapauto", "drop manual trims and let measurement decide"),
-			command("boat", "dump the world views, collision and objects around you"),
-			command("cachecheck", "diff the live cache parse against the offline dump"),
-			command("stanceaudit", "check every stance animation id and report weapon coverage"),
-			command("chatwatch", "print every chat line with its type, for chatMessage rules"),
-			command("mood [0-100]", "read or set the mood"),
-			command("fire <rule-id>", "say a rule now, whatever its conditions"),
-			command("force <what> [args]", "a feature's body now: look, notice, hesitate, shoulder,"
-				+ " cutscene, wave, drop, sketch"),
-			command("want", "what it is hoping for, and whether a question is open")));
-
-	/**
-	 * The force-paths, as (usage, effect) pairs: each feature's body
-	 * behaviour now, through its own code, for the play session that would
-	 * otherwise wait on luck. ::follower force lists them; ForceCommandsTest
-	 * holds each to a case in forceNow, a place in the help above and a row
-	 * in docs/DEVELOPMENT.md.
-	 */
-	static final java.util.List<java.util.Map.Entry<String, String>> FORCE_COMMANDS =
-		java.util.Collections.unmodifiableList(java.util.Arrays.asList(
-			command("look [camera|cursor]", "the look round now, or a look where the camera or cursor is"),
-			command("notice", "the best thing in view noticed now: the walk, the look and the line"),
-			command("hesitate", "the next Send hesitates over any NPC beside its spot"),
-			command("shoulder", "the dialogue shoulder, as if an NPC dialogue had just opened"),
-			command("cutscene on|off", "hold the cutscene behaviour as if one were playing"),
-			command("wave", "the logout wave now"),
-			command("drop <gp> [item name]", "the drop ladder's reaction to a drop at your feet"),
-			command("sketch", "the chronicle sketch of this view now; an old one is kept as .bak")));
-
-	/** The panel's command listing: the everyday commands, and the developer ones once they are on. */
-	private java.util.List<String> commandLines()
+	/** The panel's command listing: the everyday commands. */
+	List<String> commandLines()
 	{
-		java.util.List<String> lines = new java.util.ArrayList<>();
+		List<String> lines = new ArrayList<>();
 		lines.add("Type ::follower and one of:");
-		for (java.util.Map.Entry<String, String> entry : EVERYDAY_COMMANDS)
-		{
+		for (var entry : EVERYDAY_COMMANDS)
 			lines.add(entry.getKey() + " - " + entry.getValue());
-		}
-		if (config.developerMode())
-		{
-			lines.add("");
-			lines.add("Developer commands:");
-			for (java.util.Map.Entry<String, String> entry : DEVELOPER_COMMAND_HELP)
-			{
-				lines.add(entry.getKey() + " - " + entry.getValue());
-			}
-		}
 		return lines;
 	}
 
 	/** ::follower reload: re-reads the phrase and sound files from disk. */
-	private void reloadFiles()
+	void reloadFiles()
 	{
 		ruleLoader.reload();
-		speechEngine.getContext().setNicknames(ruleLoader.getNicknames());
-				speechEngine.getContext().setRegionNames(ruleLoader.getRegionNames());
-		// The sounds file is one of ours on disk too, and the command
-		// reads as "re-read my files". Leaving it out meant an
-		// attachment edited by hand - or removed by hand - only took
-		// effect when the Sounds window happened to be opened, which
-		// is a strange place to hide a reload.
-		voices.reload();
-		sendStatus("Rules: " + ruleLoader.getStatus()
-			+ "; sounds: " + voices.attachmentCount() + " attached");
+		giveTheNames();
+		sendStatus("Rules: " + ruleLoader.getStatus());
 		reportRuleErrors();
 	}
 
 	/** ::follower here: puts the follower at the player's feet. */
-	private void placeHere()
+	void placeHere()
 	{
 		clientThread.invoke(() ->
 		{
-			Player local = client.getLocalPlayer();
+			var local = client.getLocalPlayer();
 			if (local != null && appearanceService.getCurrent() != null)
 			{
 				follower.spawn(appearanceService.getCurrent(), local.getWorldLocation(),
@@ -10620,14 +6399,12 @@ public class FollowerPlugin extends Plugin
 				sendStatus("Here I am.");
 			}
 			else
-			{
-				sendStatus("No follower model to place. Try ::follower rebuild.");
-			}
+				sendStatus(Resources.text("noModel"));
 		});
 	}
 
 	/** ::follower rebuild: rebuilds the model from the current outfit. */
-	private void rebuildFromOutfit()
+	void rebuildFromOutfit()
 	{
 		clientThread.invoke(() ->
 		{
@@ -10642,7 +6419,7 @@ public class FollowerPlugin extends Plugin
 	 * ::follower fix: re-adds the object to the scene without a full rebuild
 	 * or a plugin toggle - the quick way back if the follower ever vanishes.
 	 */
-	private void reattach()
+	void reattach()
 	{
 		clientThread.invoke(() ->
 		{
@@ -10656,12 +6433,10 @@ public class FollowerPlugin extends Plugin
 	 * the next due one when the key is null. The side panel's Go now button
 	 * calls this too, so both print the same status.
 	 */
-	public void forceErrand(String key)
+	void forceErrand(String key)
 	{
 		if (errands == null)
-		{
 			return;
-		}
 		// Validated here, because force() stores any string and the
 		// scheduler only ever matches real keys - a typo used to
 		// claim success and then nothing happened, forever.
@@ -10684,107 +6459,13 @@ public class FollowerPlugin extends Plugin
 	}
 
 	/**
-	 * ::follower force: one force-path now, on the client thread, and one
-	 * line saying what it did or why it could not. Each goes through the
-	 * feature's own code and skips only what leaves it to luck - a timer, a
-	 * roll, a cooldown - never the gates that keep it safe, which stay the
-	 * feature's own: a fight, a Stay, a follower already busy.
-	 */
-	String forceNow(String[] args)
-	{
-		String what = args[1].toLowerCase(Locale.ROOT);
-		String arg = args.length > 2 ? args[2].toLowerCase(Locale.ROOT) : null;
-		java.util.List<String> names = new java.util.ArrayList<>();
-		for (java.util.Map.Entry<String, String> entry : FORCE_COMMANDS)
-		{
-			names.add(entry.getKey().split(" ")[0]);
-		}
-		if (!names.contains(what))
-		{
-			return "No force called '" + what + "'. Try: " + String.join(", ", names);
-		}
-		// The hold and the note for the next Send move nothing now. The rest
-		// move the body, which has to be out, and is not theirs in a fight.
-		if (!"cutscene".equals(what) && !"hesitate".equals(what))
-		{
-			if (!follower.isSpawned())
-			{
-				return "The follower is not out.";
-			}
-			if (speechEngine.getContext().isInCombat())
-			{
-				return "Not during a fight.";
-			}
-		}
-		switch (what)
-		{
-			case "look":
-				return gaze.forceLook(arg);
-			case "notice":
-				return noticing.forceNotice();
-			case "hesitate":
-				will.forceHesitate();
-				return "The next Send hesitates over any NPC beside its spot, as over a strong one.";
-			case "shoulder":
-				return forceShoulder();
-			case "cutscene":
-				if ("on".equals(arg) || "off".equals(arg))
-				{
-					cutsceneForced = "on".equals(arg);
-					return cutsceneForced
-						? "Holding the cutscene: it keeps its place and looks where you look."
-						: "The cutscene hold is off.";
-				}
-				return "::follower force cutscene on|off - the hold is " + (cutsceneForced ? "on." : "off.");
-			case "wave":
-				return moments.forceFarewell() ? "A wave, as at the logout tab." : "The follower is busy.";
-			case "drop":
-				return forceDrop(args);
-			case "sketch":
-				return sketching.forceSketch();
-			default:
-				// Listed and never dispatched; ForceCommandsTest keeps it from shipping.
-				return "The force '" + what + "' is not wired up.";
-		}
-	}
-
-	/**
-	 * ::follower force drop: the drop ladder's reaction to a drop of that
-	 * worth at the player's feet, as the loot would get once out of the
-	 * fight's grace, and its words as ::follower loot says them. The bet
-	 * is left unsettled: nothing was really won.
-	 */
-	private String forceDrop(String[] args)
-	{
-		int value;
-		try
-		{
-			value = Integer.parseInt(args.length > 2 ? args[2] : "");
-		}
-		catch (NumberFormatException e)
-		{
-			return "::follower force drop <gp> [item name] - e.g. ::follower force drop 2500000 Dragon warhammer";
-		}
-		String item = args.length > 3
-			? String.join(" ", java.util.Arrays.copyOfRange(args, 3, args.length))
-			: "Coins";
-		Player local = client.getLocalPlayer();
-		WorldPoint feet = local == null ? null : local.getWorldLocation();
-		com.follower.follower.Moments.Tier tier = com.follower.follower.Moments.tierFor(value);
-		speechEngine.dispatch(TriggerEvent.loot(value, item));
-		String did = tier == null ? null : moments.forceNoteworthy(tier, feet);
-		return item + " worth " + value + " at your feet: "
-			+ (tier == null ? "too small for the ladder, so nothing." : did == null ? "nothing." : did + ".");
-	}
-
-	/**
 	 * Writes the Follow me setting, the one record of follow versus stay. The
 	 * caller has already moved the follower, so onConfigChanged finds nothing
 	 * left to apply.
 	 */
-	private void setFollowEnabled(boolean enabled)
+	void setFollowEnabled(boolean enabled)
 	{
-		configManager.setConfiguration(FollowerConfig.GROUP, "followEnabled", enabled);
+		setConfig("followEnabled", enabled);
 	}
 
 	/**
@@ -10797,41 +6478,26 @@ public class FollowerPlugin extends Plugin
 	 * happens - being wrong here should cost nothing.
 	 */
 	@Subscribe
-	public void onMenuOptionClicked(MenuOptionClicked event)
+	void onMenuOptionClicked(MenuOptionClicked event)
 	{
-		// Examined: met, at any distance.
-		if (chronicleProgress != null && event.getMenuAction() == net.runelite.api.MenuAction.EXAMINE_NPC
-			&& event.getMenuEntry().getNpc() != null)
-		{
-			chronicleProgress.noteNpc(event.getMenuEntry().getNpc().getName());
-		}
 		noteIntentFrom(event.getMenuOption());
 		noteExamine(event);
-		speechEngine.getContext().noteMenuOption(
-			com.follower.follower.SkillingController.plainOption(event.getMenuOption()));
-		if (skilling != null)
-		{
-			skilling.noteMenuOption(
-				com.follower.follower.SkillingController.plainOption(event.getMenuOption()),
-				com.follower.follower.SkillingController.plainOption(event.getMenuTarget()));
-		}
+		skilling.noteMenuOption(
+			SkillingController.plainOption(event.getMenuOption()),
+			SkillingController.plainOption(event.getMenuTarget()));
 		noteWorkClick(event);
 
-		if (event.getMenuAction() != net.runelite.api.MenuAction.WALK
+		if (event.getMenuAction() != MenuAction.WALK
 			|| !follower.isSpawned())
-		{
 			return;
-		}
 		// WorldView's, not the deprecated Client shortcut: the shortcut just
 		// forwards to the top-level view, and it is on its way out.
-		net.runelite.api.WorldView view = client.getTopLevelWorldView();
-		net.runelite.api.Tile clicked = view == null ? null : view.getSelectedSceneTile();
-		WorldPoint standing = follower.getWorldLocation();
+		var view = client.getTopLevelWorldView();
+		var clicked = view == null ? null : view.getSelectedSceneTile();
+		var standing = follower.getWorldLocation();
 		if (clicked != null && standing != null
 			&& standing.equals(clicked.getWorldLocation()))
-		{
-			speechEngine.getContext().noteUnderfoot();
-		}
+			context().noteUnderfoot();
 	}
 
 	/**
@@ -10840,26 +6506,19 @@ public class FollowerPlugin extends Plugin
 	 * its companion looks at. The head-turn IS the reaction; a spoken note is
 	 * the rare garnish, left to the rules.
 	 */
-	private void noteExamine(MenuOptionClicked event)
+	void noteExamine(MenuOptionClicked event)
 	{
 		if (!follower.isSpawned())
-		{
 			return;
-		}
 		String target = null;
 		WorldPoint at = null;
 		boolean creature = false;
-		net.runelite.api.WorldView view = client.getTopLevelWorldView();
-		if (watchExamine)
-		{
-			sendStatus("Examine: action " + event.getMenuAction()
-				+ ", option '" + event.getMenuOption() + "', id " + event.getId());
-		}
+		var view = client.getTopLevelWorldView();
 		switch (event.getMenuAction())
 		{
 			case EXAMINE_NPC:
 			{
-				NPC npc = event.getMenuEntry().getNpc();
+				var npc = event.getMenuEntry().getNpc();
 				if (npc != null)
 				{
 					target = npc.getName();
@@ -10874,25 +6533,21 @@ public class FollowerPlugin extends Plugin
 				// whose base definition is named "null" until the impostor is
 				// asked, and reading the base name alone was quietly dropping
 				// the line for a large share of everything examinable.
-				target = com.follower.follower.ErrandController.objectName(
+				target = ErrandController.objectName(
 					client, event.getId());
 				// Named as a creature is, a common noun after "the": this statue.
 				creature = true;
 				if (view != null)
-				{
 					at = WorldPoint.fromScene(view,
 						event.getParam0(), event.getParam1(), view.getPlane());
-				}
 				break;
 			}
 			case EXAMINE_ITEM_GROUND:
 			{
 				target = itemManager.getItemComposition(event.getId()).getName();
 				if (view != null)
-				{
 					at = WorldPoint.fromScene(view,
 						event.getParam0(), event.getParam1(), view.getPlane());
-				}
 				break;
 			}
 			case CC_OP_LOW_PRIORITY:
@@ -10905,24 +6560,20 @@ public class FollowerPlugin extends Plugin
 				// word is the discriminator, exactly as RuneLite's own examine
 				// does it.
 				if (!"Examine".equals(event.getMenuOption()))
-				{
 					return;
-				}
 				int itemId = event.getItemId();
 				if (itemId <= 0)
 				{
 					// The event's own id is the widget's, not the item's, so
 					// the id comes off the slot that was clicked.
-					net.runelite.api.widgets.Widget parent =
+					var parent =
 						client.getWidget(event.getParam1());
-					net.runelite.api.widgets.Widget slot = parent == null
+					var slot = parent == null
 						? null : parent.getChild(event.getParam0());
 					itemId = slot == null ? -1 : slot.getItemId();
 				}
 				if (itemId > 0)
-				{
 					target = itemManager.getItemComposition(itemId).getName();
-				}
 				// No tile, deliberately: the thing is in a bag rather than in
 				// the world, so there is nowhere to turn and look. The line
 				// still lands; only the glance is skipped.
@@ -10932,20 +6583,13 @@ public class FollowerPlugin extends Plugin
 				return;
 		}
 		if (at != null)
-		{
 			follower.glanceAt(at, 2400);
-		}
 		// Multiloc objects answer "null" until their impostor resolves; a
 		// glance without a line is fine, a line naming "null" is not.
-		if (watchExamine)
-		{
-			sendStatus("   resolved to '" + target + "'"
-				+ (at == null ? ", no tile (no glance)" : " at " + at));
-		}
 		if (target != null && !target.isEmpty() && !"null".equals(target))
 		{
 			String named = target.replaceAll("<[^>]*>", "");
-			speechEngine.dispatch(creature ? TriggerEvent.examinedCreature(named)
+			dispatch(creature ? TriggerEvent.examinedCreature(named)
 				: TriggerEvent.examinedThing(named));
 		}
 	}
@@ -10969,30 +6613,22 @@ public class FollowerPlugin extends Plugin
 	 * <p>{@code ::follower thieftargets} lists what the NPCs around you
 	 * actually offer, so this can be checked rather than believed.
 	 */
-	private void noteIntentFrom(String option)
+	void noteIntentFrom(String option)
 	{
-		if (option == null || option.isEmpty())
-		{
+		if (Strings.isNullOrEmpty(option))
 			return;
-		}
-		TriggerContext context = speechEngine.getContext();
+		var context = context();
 		if (isThievingOption(option))
-		{
 			context.noteThievingIntent();
-		}
 		else if (option.equalsIgnoreCase("Attack"))
-		{
 			context.noteFightIntent();
-		}
 	}
 
 	/** Whether a menu option means "I am about to take that". */
 	static boolean isThievingOption(String option)
 	{
 		if (option == null)
-		{
 			return false;
-		}
 		// The game colours menu text with tags; strip them before matching.
 		String plain = option.replaceAll("<[^>]*>", "").toLowerCase(Locale.ROOT);
 		return plain.contains("pickpocket") || plain.contains("steal");
@@ -11005,18 +6641,13 @@ public class FollowerPlugin extends Plugin
 	 * looked up on its own tile for the true footprint, since the click
 	 * carries one tile of a two-by-two tree.
 	 */
-	private void noteWorkClick(MenuOptionClicked event)
+	void noteWorkClick(MenuOptionClicked event)
 	{
-		if (skilling == null
-			|| !com.follower.follower.SkillingController.isWorkOption(event.getMenuOption()))
-		{
+		if (!SkillingController.isWorkOption(event.getMenuOption()))
 			return;
-		}
-		net.runelite.api.WorldView view = client.getTopLevelWorldView();
+		var view = client.getTopLevelWorldView();
 		if (view == null)
-		{
 			return;
-		}
 		switch (event.getMenuAction())
 		{
 			case GAME_OBJECT_FIRST_OPTION:
@@ -11026,34 +6657,32 @@ public class FollowerPlugin extends Plugin
 			case GAME_OBJECT_FIFTH_OPTION:
 			case WIDGET_TARGET_ON_GAME_OBJECT:
 			{
-				int id = event.getId();
-				int plane = view.getPlane();
-				int sx = event.getParam0();
-				int sy = event.getParam1();
-				WorldPoint min = WorldPoint.fromScene(view, sx, sy, plane);
-				WorldPoint max = min;
-				net.runelite.api.Tile[][][] tiles = view.getScene() == null
+				int id = event.getId(),
+					plane = view.getPlane(),
+					sx = event.getParam0(),
+					sy = event.getParam1();
+				WorldPoint min = WorldPoint.fromScene(view, sx, sy, plane),
+					max = min;
+				Tile[][][] tiles = view.getScene() == null
 					? null : view.getScene().getTiles();
 				if (tiles != null && plane >= 0 && plane < tiles.length && sx >= 0 && sy >= 0
 					&& sx < tiles[plane].length && sy < tiles[plane][sx].length
 					&& tiles[plane][sx][sy] != null)
 				{
-					for (net.runelite.api.GameObject object : tiles[plane][sx][sy].getGameObjects())
+					for (var object : tiles[plane][sx][sy].getGameObjects())
 					{
-						if (object != null && object.getId() == id
-							&& object.getSceneMinLocation() != null
-							&& object.getSceneMaxLocation() != null)
+						WorldPoint[] box = object == null || object.getId() != id ? null
+							: footprint(object, plane);
+						if (box != null)
 						{
-							min = WorldPoint.fromScene(view, object.getSceneMinLocation().getX(),
-								object.getSceneMinLocation().getY(), plane);
-							max = WorldPoint.fromScene(view, object.getSceneMaxLocation().getX(),
-								object.getSceneMaxLocation().getY(), plane);
+							min = box[0];
+							max = box[1];
 							break;
 						}
 					}
 				}
 				skilling.noteClick(event.getMenuOption(),
-					com.follower.follower.ErrandController.objectName(client, id), id, min, max, null);
+					ErrandController.objectName(client, id), id, min, max, null);
 				break;
 			}
 			case NPC_FIRST_OPTION:
@@ -11063,16 +6692,12 @@ public class FollowerPlugin extends Plugin
 			case NPC_FIFTH_OPTION:
 			case WIDGET_TARGET_ON_NPC:
 			{
-				NPC npc = event.getMenuEntry() == null ? null : event.getMenuEntry().getNpc();
-				WorldPoint at = npc == null ? null : npc.getWorldLocation();
+				var npc = event.getMenuEntry() == null ? null : event.getMenuEntry().getNpc();
+				var at = npc == null ? null : npc.getWorldLocation();
 				if (at == null)
-				{
 					return;
-				}
-				int size = npc.getComposition() == null ? 1
-					: Math.max(1, npc.getComposition().getSize());
 				skilling.noteClick(event.getMenuOption(), npc.getName(), npc.getId(), at,
-					new WorldPoint(at.getX() + size - 1, at.getY() + size - 1, at.getPlane()), npc);
+					SkillingController.farCorner(npc, at), npc);
 				break;
 			}
 			default:
@@ -11081,26 +6706,13 @@ public class FollowerPlugin extends Plugin
 	}
 
 	@Subscribe
-	public void onCommandExecuted(CommandExecuted event)
+	void onCommandExecuted(CommandExecuted event)
 	{
-		if (!COMMAND.equalsIgnoreCase(event.getCommand()))
-		{
+		if (!"follower" /* COMMAND */.equalsIgnoreCase(event.getCommand()))
 			return;
-		}
 
-		String[] args = event.getArguments();
+		var args = event.getArguments();
 		String sub = args.length > 0 ? args[0].toLowerCase(Locale.ROOT) : "help";
-
-		if (DEVELOPER_COMMANDS.contains(sub) && !config.developerMode())
-		{
-			sendStatus("'" + sub + "' is a developer command. Turn on Developer commands"
-				+ " in the plugin settings to use it."
-				// The campfire errand shares the name; don't send somebody
-				// chasing it into developer mode by accident.
-				+ ("fire".equals(sub) ? " Looking for the campfire errand?"
-					+ " That's ::follower errand fire." : ""));
-			return;
-		}
 
 		switch (sub)
 		{
@@ -11116,153 +6728,17 @@ public class FollowerPlugin extends Plugin
 
 			case "say":
 				if (args.length > 1)
-				{
-					speechEngine.say(String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length)), null);
-				}
+					speechEngine.say(String.join(" ", Arrays.copyOfRange(args, 1, args.length)), null);
 				else
-				{
 					sendStatus("Usage: ::follower say <text>");
-				}
 				break;
 
 			case "here":
 				placeHere();
 				break;
 
-			case "posing":
-				openFilmDialog();
-				break;
-
-			case "sketch":
-				clientThread.invoke(this::askForSketch);
-				break;
-
 			case "rebuild":
 				rebuildFromOutfit();
-				break;
-
-			case "priorities":
-				// OSRS sorts faces by priority bucket, not by a depth buffer. Two parts
-				// that overlap in space are separated by priority alone, so if the
-				// composed model carries different priority data than the client's own
-				// player model, overlaps resolve differently - which is what a cape
-				// poking through a shoulder looks like. The earlier probe showed the
-				// COMPOSED model matching the client exactly; the per-stage lines
-				// below chase the remaining suspect - the RENDER model, after the
-				// animation pipeline has had its way with it.
-				clientThread.invoke(() ->
-				{
-					compareAgainstClient("PROBE");
-					Player me = client.getLocalPlayer();
-					logPriorities("player live model",
-						me == null ? null : me.getModel());
-					logPriorities("follower base model", follower.getBaseModel());
-					logPriorities("follower render model", follower.getRenderModel());
-
-					// The model actually DRAWN each frame is the animated temp the
-					// animation pipeline produces, not the base we set - if the
-					// temp loses the priority array, the engine falls back to its
-					// simple depth path whose insertion-order ties are exactly the
-					// torso-over-cape / hair-over-hat symptom.
-					net.runelite.api.Model base = follower.getBaseModel();
-					net.runelite.api.Animation idle =
-						client.loadAnimation(com.follower.follower.PlayerPose.IDLE);
-					if (base != null && idle != null)
-					{
-						net.runelite.api.Model temp =
-							client.applyTransformations(base, idle, 0, null, 0);
-						logPriorities("animated temp", temp);
-					}
-				});
-				break;
-
-			case "palette":
-				// Reads the client's own body-colour palette out of the live player
-				// model by differencing, then applies the recovered pairs to the
-				// follower. Wear the colours you want copied.
-				if (args.length > 1 && args[1].equalsIgnoreCase("clear"))
-				{
-					clientThread.invoke(() ->
-					{
-						appearanceComposer.setExactPairs(java.util.Collections.emptyMap());
-						configManager.unsetConfiguration(FollowerConfig.GROUP, EXACT_PALETTE_KEY);
-						appearanceService.invalidate();
-						follower.despawn();
-						rebuildFollower();
-						sendStatus("Exact palette cleared - picker colours are back in charge.");
-					});
-					break;
-				}
-				clientThread.invoke(() ->
-				{
-					Player me = client.getLocalPlayer();
-					PlayerComposition comp = me == null ? null : me.getPlayerComposition();
-					if (comp == null)
-					{
-						sendStatus("No player model to read yet.");
-						return;
-					}
-
-					java.util.Map<Short, Short> pairs = new java.util.LinkedHashMap<>();
-					for (String line : appearanceComposer.comparePalette(
-						Outfit.from(comp), me.getModel(), pairs))
-					{
-						sendStatus(line);
-						log.info("PALETTE {}", line);
-					}
-
-					if (!pairs.isEmpty())
-					{
-						appearanceComposer.setExactPairs(pairs);
-						saveExactPalette(pairs);
-
-						// Every distinct extraction also banks one entry of the client's
-						// hardcoded colour tables - cycling colours at the makeover mage
-						// reconstructs them for an exact picker later.
-						int banked = paletteHarvest.record(comp.getColors(), pairs);
-
-						appearanceService.invalidate();
-						follower.despawn();
-						rebuildFollower();
-						sendStatus("Applied " + pairs.size() + " exact colour pairs to the "
-							+ "follower and saved them (" + banked + " colour set"
-							+ (banked == 1 ? "" : "s") + " banked for the picker). "
-							+ "'::follower palette clear' to undo.");
-					}
-				});
-				break;
-
-			case "harvest":
-				// Steps every colour index of every body slot through the player's
-				// composition client-side, banking each extraction. ~107 entries in a
-				// few seconds; the character flickers while it runs.
-				if (args.length > 1 && args[1].equalsIgnoreCase("stop"))
-				{
-					clientThread.invoke(colorHarvester::abort);
-					break;
-				}
-				clientThread.invoke(() ->
-				{
-					if (captureFallback.isBusy())
-					{
-						sendStatus("Capture in flight - try again in a moment.");
-						return;
-					}
-					colorHarvester.start(this::sendStatus);
-				});
-				break;
-
-			case "hidden":
-				// Shows the game's own wearPos hide rules for the current gear, so a
-				// clipping part can be checked against what should be drawn at all.
-				clientThread.invoke(() ->
-				{
-					for (String line : appearanceComposer.describeHidden(
-						OutfitParser.parse(config.customOutfit())))
-					{
-						sendStatus(line);
-					}
-				});
 				break;
 
 			case "height":
@@ -11272,9 +6748,9 @@ public class FollowerPlugin extends Plugin
 					try
 					{
 						// The setting's own range; its box clamps only what it shows (QA3).
-						int asked = Integer.parseInt(args[1]);
-						int offset = Math.max(-64, Math.min(64, asked));
-						configManager.setConfiguration(FollowerConfig.GROUP, "verticalOffset", offset);
+						int asked = Integer.parseInt(args[1]),
+							offset = max(-64, min(64, asked));
+						setConfig("verticalOffset", offset);
 						clientThread.invoke(() -> follower.setVerticalOffset(offset));
 						sendStatus("Height offset " + offset
 							+ (asked > offset ? ", the most it goes" : asked < offset ? ", the least it goes" : "")
@@ -11286,711 +6762,16 @@ public class FollowerPlugin extends Plugin
 					}
 				}
 				else
-				{
 					sendStatus("Usage: ::follower height <number>");
-				}
 				break;
 
 			case "fix":
 				reattach();
 				break;
 
-			case "pitchsweep":
-			case "headsweep":
-			{
-				// Draws eight heads at once, labelled, so the right facing can be
-				// picked by eye. Centre and step narrow it: "headsweep 256 32"
-				// sweeps finely around a candidate instead of the whole circle.
-				int centre = 0;
-				int step = 2048 / 8;
-				try
-				{
-					if (args.length > 1)
-					{
-						centre = Integer.parseInt(args[1]) & 0x7ff;
-					}
-					if (args.length > 2)
-					{
-						step = Math.max(1, Integer.parseInt(args[2]));
-					}
-				}
-				catch (NumberFormatException e)
-				{
-					sendStatus("Usage: ::follower headsweep [centre] [step]");
-					break;
-				}
-
-				int useCentre = centre;
-				int useStep = step;
-				boolean pitchAxis = "pitchsweep".equals(sub);
-				clientThread.invoke(() -> dialog.showSweep(
-					OutfitParser.parse(config.customOutfit()), useCentre, useStep, pitchAxis));
-				sendStatus(pitchAxis
-					? "Pick the best tilt, then: ::follower head pitch <number>"
-					: "Pick the one facing you, then: ::follower head yaw <number>");
-				break;
-			}
-
-			case "head":
-			{
-				// The chathead projection is the one thing I cannot check by eye, so
-				// every knob is named and tunable live while a dialog is open.
-				if (args.length < 3)
-				{
-					sendStatus("Usage: ::follower head yaw|pitch|roll|zoom|crop|cliptop|talk|tune <value>");
-					sendStatus("Currently: yaw " + dialog.getHeadYaw()
-						+ ", pitch " + dialog.getHeadPitch()
-						+ ", crop " + dialog.getHeadFraction()
-						+ ", talk " + dialog.getTalkAnimationId());
-					break;
-				}
-
-				try
-				{
-					String knob = args[1].toLowerCase(Locale.ROOT);
-					switch (knob)
-					{
-						case "tune":
-							dialog.setTuning(!args[2].equalsIgnoreCase("off"));
-							sendStatus(dialog.isTuning()
-								? "Head tuning ON - open the dialog, then arrow keys adjust "
-									+ "(shift = fine). Values show top-left."
-								: "Head tuning off.");
-							return;
-						case "yaw":
-							dialog.setHeadYaw(Integer.parseInt(args[2]) & 0x7ff);
-							break;
-						case "pitch":
-							dialog.setHeadPitch(Integer.parseInt(args[2]) & 0x7ff);
-							break;
-						case "zoom":
-							dialog.setHeadZoom(Math.max(1, Integer.parseInt(args[2])));
-							break;
-						case "roll":
-							dialog.setNpcTurn(Integer.parseInt(args[2]) & 0x7ff);
-							break;
-						case "cliptop":
-							dialog.setClipTopExtra(Integer.parseInt(args[2]));
-							break;
-						case "crop":
-							dialog.setHeadFraction(Double.parseDouble(args[2]));
-							break;
-						case "talk":
-							dialog.setTalkAnimationId(Integer.parseInt(args[2]));
-							break;
-						default:
-							sendStatus("Usage: ::follower head yaw|pitch|roll|zoom|crop|cliptop|talk|tune <value>");
-							return;
-					}
-					sendStatus("Chathead " + knob + " = " + args[2]
-						+ " (updates live while a dialog is open).");
-				}
-				catch (NumberFormatException e)
-				{
-					sendStatus("Usage: ::follower head yaw|pitch|roll|zoom|crop|cliptop|talk|tune <value>");
-				}
-				break;
-			}
-
-			case "followtrace":
-			{
-				// Live follow diagnostics: an on-screen state overlay plus FTRACE
-				// rows in the client log for offline analysis.
-				boolean enable = args.length < 2 || !args[1].equalsIgnoreCase("off");
-				clientThread.invoke(() ->
-				{
-					follower.setDebugEnabled(enable);
-					sendStatus(enable
-						? "Follow debug ON - overlay top-left, FTRACE rows in the client log."
-						: "Follow debug off.");
-				});
-				break;
-			}
-
-			case "wraplerp":
-			{
-				// The real fix vs the trim workaround, switchable live for comparison.
-				boolean enable = args.length < 2 || !args[1].equalsIgnoreCase("off");
-				clientThread.invoke(() ->
-				{
-					follower.setWrapLerp(enable);
-					sendStatus(enable
-						? "Wrap interpolation ON - the loop boundary is lerped like any other frame."
-						: "Wrap interpolation OFF - back to the frame-trim workaround.");
-				});
-				break;
-			}
-
-			case "wrapauto":
-				// Drop hand-tuned values and let measurement decide again.
-				clientThread.invoke(() ->
-				{
-					follower.clearWrapTrims();
-					sendStatus("Cleared manual trims - each animation is now measured "
-						+ "on first use.");
-				});
-				break;
-
-			case "wrapearly":
-			{
-				// Frames trimmed from the end of a looping pose. 1 avoids the
-				// interpolation dead-end; 0 restores the original behaviour. The
-				// residual jump is the cost of the skipped frame, so it is adjustable.
-				int trim = 1;
-				if (args.length > 1)
-				{
-					try
-					{
-						trim = Integer.parseInt(args[1]);
-					}
-					catch (NumberFormatException e)
-					{
-						trim = args[1].equalsIgnoreCase("off") ? 0 : 1;
-					}
-				}
-
-				int value = trim;
-				clientThread.invoke(() ->
-				{
-					// Applies to whatever is playing right now, so each pose can be
-					// tuned while you watch it: stand still for the idle, walk for the
-					// walk, hold shift-run for the run.
-					net.runelite.api.Animation animation = follower.getPoseAnimation();
-					if (animation == null)
-					{
-						sendStatus("No animation playing to tune.");
-						return;
-					}
-
-					follower.setWrapTrim(animation.getId(), value);
-					follower.setDefaultWrapTrim(value);
-
-					int frames = animation.getFrameLengths() == null
-						? 0 : animation.getFrameLengths().length;
-					sendStatus("Animation " + animation.getId() + " (" + frames
-						+ " frames): trim " + value
-						+ (value == 0 ? " - original behaviour" : ""));
-				});
-				break;
-			}
-
-			case "pose":
-				// Force a looping pose. 808 = unarmed idle (12 frames), 819 = walk.
-				// If the pause period follows the animation's length, it is
-				// animation-linked; if not, the animation is a red herring.
-				if (args.length > 1)
-				{
-					try
-					{
-						int id = Integer.parseInt(args[1]);
-						clientThread.invoke(() -> follower.setPoseOverride(id));
-						sendStatus(id > 0
-							? "Pose forced to " + id + " (::follower pose 0 to release)."
-							: "Pose released back to the stance library.");
-					}
-					catch (NumberFormatException e)
-					{
-						sendStatus("Usage: ::follower pose <id>  (0 to release)");
-					}
-				}
-				else
-				{
-					// A bare call answers with its usage, as the others do.
-					sendStatus("Usage: ::follower pose <id>  (0 to release)");
-				}
-				break;
-
-			case "animinfo":
-				clientThread.invoke(this::reportAnimationInfo);
-				break;
-
-			case "animtrace":
-				// Samples the frame index every render for a couple of seconds. A stall
-				// shows as the same frame repeating; a restart shows as a jump to 0.
-				animTraceRemaining = ANIM_TRACE_FRAMES;
-				animTrace.clear();
-				playerTrace.clear();
-				animTraceMarks.clear();
-				lastControllerGeneration = follower.getControllerGeneration();
-				sendStatus("Tracing frames for about 8s. Keep the follower doing the thing "
-					+ "that skips.");
-				break;
-
-			case "finditem":
-			{
-				// Wearable items by name, from the same index the outfit picker
-				// uses. For finding the follower a book to hold: animations
-				// carry no prop, so the prop has to be an item, and items DO
-				// have names to search.
-				if (args.length < 2)
-				{
-					sendStatus("Usage: ::follower finditem <name fragment>");
-					break;
-				}
-				String fragment = String.join(" ",
-					java.util.Arrays.copyOfRange(args, 1, args.length))
-					.toLowerCase(Locale.ROOT);
-				int shown = 0;
-				int matches = 0;
-				for (Map.Entry<Integer, KitType> entry : slotIndex.entrySet())
-				{
-					String name = modelRepository.itemName(entry.getKey());
-					if (name == null || !name.toLowerCase(Locale.ROOT).contains(fragment))
-					{
-						continue;
-					}
-					matches++;
-					if (shown < 15)
-					{
-						shown++;
-						sendStatus(entry.getKey() + "  " + name + "  ("
-							+ entry.getValue().name().toLowerCase(Locale.ROOT) + ")");
-					}
-				}
-				sendStatus(matches == 0
-					? "No wearable item matches '" + fragment + "'."
-					: matches + " wearable match(es)." + (matches > shown
-						? " Showing " + shown + "; narrow the name." : "")
-					+ " Try one with ::follower prop <id>.");
-				break;
-			}
-
-			case "prop":
-			{
-				// A transient held item, for pairing with pose/anim: prop the
-				// book, play the reading animation, judge the pair together.
-				if (args.length < 2)
-				{
-					sendStatus("Usage: ::follower prop <itemId>  (0 to clear)");
-					break;
-				}
-				try
-				{
-					int itemId = Integer.parseInt(args[1]);
-					if (itemId <= 0)
-					{
-						propSlot = null;
-						propItemId = 0;
-						// A nudge belongs to the item it was eyeballed for.
-						appearanceComposer.setItemAdjustment(-1, 0, 0, 0);
-						clientThread.invoke(this::rebuildFollower);
-						sendStatus("Prop cleared.");
-						break;
-					}
-					clientThread.invoke(() ->
-					{
-						KitType slot = resolveSlot(itemId);
-						if (slot == null)
-						{
-							sendStatus("Item " + itemId + " is not wearable, so it"
-								+ " cannot be held. ::follower finditem to hunt.");
-							return;
-						}
-						propSlot = slot;
-						propItemId = itemId;
-						propBehindReach = false;
-						appearanceComposer.setItemAdjustment(-1, 0, 0, 0);
-						rebuildFollower();
-						String name = modelRepository.itemName(itemId);
-						sendStatus("Propped " + (name == null ? "item " + itemId : name)
-							+ " in the " + slot.name().toLowerCase(Locale.ROOT)
-							+ " slot. Pair it: ::follower pose <animId>."
-							+ " ::follower prop 0 to clear.");
-					});
-				}
-				catch (NumberFormatException e)
-				{
-					sendStatus("Usage: ::follower prop <itemId>  (0 to clear)");
-				}
-				break;
-			}
-
-			case "propoffset":
-			{
-				// The nudging half of the prop workflow. The item model's place
-				// on the body is baked into its vertices and authored for a
-				// different pose, so a prop that sits wrong under the reading
-				// animation is corrected by eye: nudge, look, nudge again.
-				// y is vertical and NEGATIVE is up; a tile is 128 units, so
-				// useful steps are 4 to 16.
-				if (propSlot == null)
-				{
-					sendStatus("No prop is held. ::follower prop <itemId> first.");
-					break;
-				}
-				if (args.length < 4)
-				{
-					sendStatus("Usage: ::follower propoffset <x> <y> <z>   (0 0 0"
-						+ " to reset; negative y is up; currently "
-						+ appearanceComposer.describeItemAdjustment() + ")");
-					break;
-				}
-				try
-				{
-					float x = Float.parseFloat(args[1]);
-					float y = Float.parseFloat(args[2]);
-					float z = Float.parseFloat(args[3]);
-					appearanceComposer.setItemAdjustment(propItemId, x, y, z);
-					clientThread.invoke(this::rebuildFollower);
-					sendStatus("Prop nudged: " + appearanceComposer.describeItemAdjustment()
-						+ ". Keep the pose running and adjust until it sits right.");
-				}
-				catch (NumberFormatException e)
-				{
-					sendStatus("Usage: ::follower propoffset <x> <y> <z>");
-				}
-				break;
-			}
-
-			case "sniffanims":
-				sniffAnims = !sniffAnims;
-				sendStatus(sniffAnims
-					? "Printing every player animation with its id. Do the thing"
-						+ " (read a clue, use a lectern) or stand near someone doing"
-						+ " it, then preview with ::follower pose <id>."
-						+ " ::follower sniffanims again to stop."
-					: "Stopped sniffing animations.");
-				break;
-
-			case "examinewatch":
-				watchExamine = !watchExamine;
-				sendStatus(watchExamine
-					? "Printing what every Examine click resolves to. Examine"
-						+ " something. ::follower examinewatch again to stop."
-					: "Stopped watching examines.");
-				break;
-
-			case "chatwatch":
-				watchChat = !watchChat;
-				sendStatus(watchChat
-					? "Printing every chat message with its type. Do the thing you"
-						+ " want a rule for and copy the wording exactly."
-						+ " ::follower chatwatch again to stop."
-					: "Stopped watching chat.");
-				break;
-
-			case "watch":
-				watchAnimations = !watchAnimations;
-				// "all" widens it to everyone in the scene, for identifying an
-				// effect you cannot produce yourself.
-				watchOthers = watchAnimations && args.length > 1
-					&& "all".equalsIgnoreCase(args[1]);
-				sendStatus(watchAnimations
-					? "Watching your animations and " + (watchOthers ? "everyone's " : "")
-						+ "graphics. Perform the one you want and its id is printed here."
-						+ " ::follower watch again to stop."
-					: "Stopped watching.");
-				break;
-
-			case "anim":
-				// Preview animations without editing config and relogging. Accepts a
-				// sequence so multi-clip effects can be judged as they'd actually play.
-				if (args.length > 1)
-				{
-					int[] ids = parseAnimationIds(
-						String.join(",", java.util.Arrays.copyOfRange(args, 1, args.length)));
-					if (ids.length == 0)
-					{
-						sendStatus("Usage: ::follower anim <id> [id ...]");
-						break;
-					}
-					clientThread.invoke(() -> follower.playAnimations(ids));
-					sendStatus("Playing " + java.util.Arrays.toString(ids) + " on the follower.");
-				}
-				else
-				{
-					sendStatus("Usage: ::follower anim <id> [id ...]");
-				}
-				break;
-
 			case "errand":
 				forceErrand(args.length > 1 ? args[1].toLowerCase(Locale.ROOT) : null);
 				break;
-
-			case "errandscan":
-			{
-				if (errands != null)
-				{
-					errands.debugScan();
-					sendStatus("Errand scan logged.");
-				}
-				break;
-			}
-
-			case "shield":
-			{
-				// A stored setting always beats a changed default, so a shipped
-				// default that arrives after someone has touched the setting
-				// would never reach them. This clears the six back to what the
-				// plugin ships, and with no argument just reports them.
-				String[] keys = {
-					"spectateShieldAnimation", "spectateShieldGraphic",
-					"spectateShieldChannelStart", "spectateShieldChannelAnimation",
-					"spectateShieldChannelGraphic", "spectateShieldChannelEnd",
-					"spectateShieldEndAnimation", "spectateShieldEndGraphic",
-				};
-				if (args.length > 1 && "defaults".equalsIgnoreCase(args[1]))
-				{
-					for (String key : keys)
-					{
-						configManager.unsetConfiguration(FollowerConfig.GROUP, key);
-					}
-					sendStatus("Shield settings reset to the shipped defaults.");
-				}
-				sendStatus("Shield: summon " + config.spectateShieldAnimation()
-					+ "/" + config.spectateShieldGraphic()
-					+ " | sit " + config.spectateShieldChannelStart()
-					+ " | channel " + config.spectateShieldChannelAnimation()
-					+ "/" + config.spectateShieldChannelGraphic()
-					+ " | stand " + config.spectateShieldChannelEnd()
-					+ " | finish " + config.spectateShieldEndAnimation()
-					+ "/" + config.spectateShieldEndGraphic()
-					+ "  (animation/graphic)");
-				break;
-			}
-
-			case "heights":
-			{
-				clientThread.invoke(() ->
-				{
-					for (String line : follower.describeHeights())
-					{
-						sendStatus(line);
-						log.info("HEIGHTS {}", line);
-					}
-				});
-				break;
-			}
-
-			case "centre":
-			case "center":
-			{
-				// Measures how far an animation throws the model off its tile,
-				// so a correction can be a number rather than a guess. Run it
-				// while the pose in question is playing.
-				// ::follower centre <n> nudges the correction live, so the last
-				// few units can be dialled in by eye without a rebuild.
-				if (args.length > 1)
-				{
-					try
-					{
-						int bias = Integer.parseInt(args[1]);
-						clientThread.invoke(() -> follower.setRecentreBias(bias));
-						// The sign reads backwards from the field it feeds:
-						// recentreForward is negative while kneeling, so ADDING
-						// to it shortens the correction and lets the model sit
-						// further forward.
-						sendStatus("Recentre bias " + bias
-							+ " units (negative pulls it further back, positive lets it forward).");
-					}
-					catch (NumberFormatException e)
-					{
-						sendStatus("Numbers only: ::follower centre <units>");
-					}
-					break;
-				}
-
-				clientThread.invoke(() ->
-				{
-					int[] centre = follower.modelCentre();
-					// Labelled with the pose it belongs to: a reading is
-					// meaningless without knowing what was playing, and a
-					// standing baseline is needed to tell the animation's
-					// displacement from the model's own asymmetry.
-					int pose = follower.getActivePose();
-					sendStatus(centre == null
-						? "No model to measure."
-						: "Pose " + pose + ": centre x=" + centre[0] + " z=" + centre[1]
-							+ " (128 = one tile), bias " + follower.getRecentreBias());
-					if (centre != null)
-					{
-						log.info("MODEL CENTRE pose={} x={} z={}", pose, centre[0], centre[1]);
-					}
-				});
-				break;
-			}
-
-			case "scan":
-			{
-				int seconds = 15;
-				if (args.length > 1)
-				{
-					try
-					{
-						seconds = Integer.parseInt(args[1]);
-					}
-					catch (NumberFormatException e)
-					{
-						sendStatus("Numbers only: ::follower scan [seconds]");
-						break;
-					}
-				}
-				scanTicksLeft = Math.max(1, seconds) * 5 / 3;
-				scanStartTick = client.getTickCount();
-				scanTimeline.clear();
-				// -2 rather than -1: -1 is a real value for "no animation", and
-				// starting there would swallow the first change.
-				scanAnimation = -2;
-				scanPose = -2;
-				scanIdlePose = -2;
-				scanGraphic = -2;
-				scanCombat = "";
-				sendStatus("Scanning your animation slots for " + seconds
-					+ "s - perform it now.");
-				break;
-			}
-
-			case "loot":
-			{
-				// Fakes a loot drop, because the real thing cannot be tested on
-				// demand: the reaction fires on kill loot, which means waiting
-				// for an actual 100k+ drop. Dropping an item yourself fires no
-				// loot event at all - deliberately, or the follower would cheer
-				// every time you rearranged your bank.
-				if (args.length < 2)
-				{
-					sendStatus("::follower loot <value> [item name] - fake a drop, e.g."
-						+ " ::follower loot 2500000 Dragon warhammer");
-					break;
-				}
-				try
-				{
-					int value = Integer.parseInt(args[1]);
-					String item = args.length > 2
-						? String.join(" ", java.util.Arrays.copyOfRange(args, 2, args.length))
-						: "Coins";
-					speechEngine.dispatch(TriggerEvent.loot(value, item));
-					sendStatus("Faked a " + item + " drop worth " + value + ".");
-				}
-				catch (NumberFormatException e)
-				{
-					sendStatus("Numbers only: ::follower loot <value> [item name]");
-				}
-				break;
-			}
-
-			case "spectate":
-			{
-				if (spectate == null)
-				{
-					sendStatus("Spectating is not running.");
-					break;
-				}
-				String state = spectate.describe(
-					thrallNpc != null || (errands != null && errands.isBusy()));
-				sendStatus(state);
-				log.info("{}", state);
-				break;
-			}
-
-			case "gfx":
-			{
-				// Auditions a spotanim on the follower. "What a protective
-				// shield looks like" has no answer in the cache to measure, so
-				// the shield effect is chosen by eye and this is how.
-				if (args.length < 2)
-				{
-					sendStatus("::follower gfx <graphicId> - play a spotanim on the follower");
-					sendStatus("::follower gfx <graphicId> <height> - that far up its body");
-					sendStatus("::follower gfx <graphicId> set - and keep it as the shield");
-					break;
-				}
-				try
-				{
-					int id = Integer.parseInt(args[1]);
-					// The third word keeps it as the shield, or lifts it: a
-					// graphic built to sit on the body - a teleport's swirl, a
-					// book's turning page - shows at the feet without the
-					// height the game sends with it, which watch prints.
-					boolean keep = args.length > 2 && "set".equalsIgnoreCase(args[2]);
-					int height = args.length > 2 && !keep ? Integer.parseInt(args[2]) : 0;
-					com.follower.appearance.SpotAnimRepository.Entry fx = spotAnimRepository.get(id);
-					if (fx == null)
-					{
-						sendStatus("No graphic " + id + " in the cache.");
-						break;
-					}
-					clientThread.invoke(() -> follower.playSpotAnim(fx, height));
-
-					// Auditioning is only useful if the winner can be kept
-					// without going hunting through the settings. All three
-					// stages are set together: "the shield particle" is one
-					// idea, and the stages differ by animation, not by effect.
-					// Per-stage graphics remain available in the settings.
-					if (keep)
-					{
-						configManager.setConfiguration(FollowerConfig.GROUP,
-							"spectateShieldGraphic", id);
-						configManager.setConfiguration(FollowerConfig.GROUP,
-							"spectateShieldChannelGraphic", id);
-						configManager.setConfiguration(FollowerConfig.GROUP,
-							"spectateShieldEndGraphic", id);
-						sendStatus("Graphic " + id
-							+ " is now the shield effect for summon, channel and finish.");
-					}
-					else if (height != 0)
-					{
-						sendStatus("Playing graphic " + id + " on the follower at height " + height + ".");
-					}
-					else
-					{
-						sendStatus("Playing graphic " + id + " on the follower."
-							+ " Add 'set' to keep it as the shield.");
-					}
-				}
-				catch (NumberFormatException e)
-				{
-					sendStatus("Numbers only: ::follower gfx <graphicId> [height|set]");
-				}
-				break;
-			}
-
-			case "cachecheck":
-			{
-				clientThread.invokeLater(this::runCacheCheck);
-				break;
-			}
-
-			case "stanceaudit":
-			{
-				clientThread.invokeLater(this::runStanceAudit);
-				break;
-			}
-
-			case "stance":
-			{
-				// Weapon animations are not in the cache anywhere (measured -
-				// see tools/cache-dumper probes), so a weapon nobody can be
-				// seen wielding has to be entered by hand.
-				if (args.length < 2)
-				{
-					sendStatus("::follower stance <weaponId> - shows what is known");
-					sendStatus("::follower stance <weaponId> <idle> <walk> <run> [attack]"
-						+ " - sets it by hand");
-					break;
-				}
-				try
-				{
-					int weaponId = Integer.parseInt(args[1]);
-					if (args.length < 5)
-					{
-						sendStatus(stanceStatus(stanceLibrary, modelRepository.itemName(weaponId), weaponId));
-						break;
-					}
-					stanceLibrary.setManual(weaponId,
-						Integer.parseInt(args[2]), Integer.parseInt(args[3]),
-						Integer.parseInt(args[4]),
-						args.length > 5 ? Integer.parseInt(args[5]) : 0);
-					stanceLibrary.save();
-					clientThread.invoke(this::rebuildFollower);
-					sendStatus("Stance set for item " + weaponId + " and saved.");
-				}
-				catch (NumberFormatException e)
-				{
-					sendStatus("Numbers only: ::follower stance <weaponId> <idle> <walk> <run> [attack]");
-				}
-				break;
-			}
 
 			case "outfit":
 			{
@@ -12001,13 +6782,11 @@ public class FollowerPlugin extends Plugin
 					break;
 				}
 				// Profile names may contain spaces; the args past "outfit" are one name.
-				StringBuilder joined = new StringBuilder();
+				var joined = new StringBuilder();
 				for (int i = 1; i < args.length; i++)
 				{
 					if (joined.length() > 0)
-					{
 						joined.append(' ');
-					}
 					joined.append(args[i]);
 				}
 				// loadOutfitProfile stays silent on a miss because the startup
@@ -12021,214 +6800,21 @@ public class FollowerPlugin extends Plugin
 				break;
 			}
 
-			// Mood is felt through what the follower says rather than shown, so
-			// this is the only way to see the number behind it.
-			case "thieftargets":
-			{
-				// Answers "does the silence cover this target" without having
-				// to rob one and watch. Reads the options the game itself
-				// hands out, so it cannot drift from what the player sees.
-				java.util.Map<String, String> found = new java.util.TreeMap<>();
-				int scanned = 0;
-				net.runelite.api.WorldView view = client.getTopLevelWorldView();
-				for (NPC npc : view == null
-					? java.util.Collections.<NPC>emptyList() : view.npcs())
-				{
-					net.runelite.api.NPCComposition composition =
-						npc.getTransformedComposition() != null
-							? npc.getTransformedComposition() : npc.getComposition();
-					if (composition == null || composition.getActions() == null)
-					{
-						continue;
-					}
-					scanned++;
-					for (String action : composition.getActions())
-					{
-						if (isThievingOption(action))
-						{
-							found.put(composition.getName() + " - " + action,
-								"id " + composition.getId());
-						}
-					}
-				}
-				sendStatus("Scanned " + scanned + " NPCs nearby.");
-				if (found.isEmpty())
-				{
-					sendStatus("None of them offer anything worth stealing.");
-				}
-				for (java.util.Map.Entry<String, String> e : found.entrySet())
-				{
-					sendStatus("  " + e.getKey() + "  (" + e.getValue() + ")");
-				}
-				break;
-			}
-
-			case "transcript":
-			{
-				if (args.length > 1 && "stats".equalsIgnoreCase(args[1]))
-				{
-					for (String line : journal.summary())
-					{
-						sendStatus(line);
-					}
-					break;
-				}
-				boolean on = journal.toggle();
-				configManager.setConfiguration(FollowerConfig.GROUP, "transcriptOn", on);
-				sendStatus("Transcript " + (on ? "on" : "off")
-					+ " - " + journal.getFile());
-				if (on)
-				{
-					sendStatus("'::follower transcript stats' for the session so far.");
-				}
-				break;
-			}
-
-			case "mood":
-			{
-				com.follower.speech.TriggerContext context = speechEngine.getContext();
-				if (args.length > 1)
-				{
-					try
-					{
-						int to = Integer.parseInt(args[1]);
-						context.adjustMood(to - context.getMood());
-					}
-					catch (NumberFormatException e)
-					{
-						sendStatus("::follower mood [0-100]");
-						break;
-					}
-				}
-				sendStatus("Mood " + context.getMood() + " (" + context.getMoodBand() + ")");
-
-				// The other half of how much gets said, and the half with no
-				// visible symptom: a follower resting after a burst and a
-				// follower with nothing to say look exactly alike.
-				com.follower.speech.SpeechDirector director = speechEngine.getDirector();
-				long now = System.currentTimeMillis();
-				sendStatus(String.format("Pace: intensity %.1f, %s%s",
-					director.getIntensity(),
-					director.isRelaxing(now)
-						? "resting for another " + (director.relaxRemainingMs(now) / 1000) + "s"
-						: "listening",
-					director.isSettlingIn() ? ", still settling in" : ""));
-				break;
-			}
-
-			// Fires a rule out of nowhere. Several of the newer ones only
-			// happen on a small roll after a minute of standing still, or on
-			// the hundredth login, and waiting for those in a live client is
-			// hoping rather than testing.
-			case "fire":
-			{
-				if (args.length < 2)
-				{
-					sendStatus("::follower fire <rule-id> - try ask-outing, want-fulfilled, examined");
-					break;
-				}
-				String ruleId = args[1];
-				if (speechEngine.force(ruleId))
-				{
-					sendStatus("Fired '" + ruleId + "'.");
-				}
-				else
-				{
-					sendStatus("No rule called '" + ruleId + "'");
-				}
-				break;
-			}
-
-			// Fire says a rule's words; this does a feature's body, through
-			// the feature's own code, for the ones that wait on luck.
-			case "force":
-			{
-				if (args.length < 2)
-				{
-					sendStatus("::follower force <what>:");
-					for (java.util.Map.Entry<String, String> entry : FORCE_COMMANDS)
-					{
-						sendStatus("  " + entry.getKey() + " - " + entry.getValue());
-					}
-					break;
-				}
-				clientThread.invoke(() -> sendStatus(forceNow(args)));
-				break;
-			}
-
-			// What the follower is currently hoping for, which is otherwise
-			// only visible by going there and seeing whether it notices.
-			case "want":
-			{
-				com.follower.speech.TriggerContext context = speechEngine.getContext();
-				if (!context.isWanting())
-				{
-					sendStatus("Not hoping for anything. Question window "
-						+ (context.isAwaitingAnswer() ? "OPEN - answer yes or no" : "closed"));
-					break;
-				}
-				int wanted = context.getWantRegion();
-				int here = context.getRegionId();
-				sendStatus("Wants " + context.getWantLabel() + " = region " + wanted
-					+ ". You are in region " + here
-					+ (wanted == here ? " - MATCH, it should fire this tick"
-					: " - no match, keep going")
-					+ ". " + (context.getWantTicksLeft() / 100) + " minutes left.");
-				break;
-			}
-
 			case "status":
 				sendStatus("Models: " + modelRepository.getStatus()
 					+ " | Rules: " + ruleLoader.getStatus()
 					+ " | Follower " + (follower.isSpawned() ? "spawned" : "not spawned"));
-				// The skilling state is a developer's: raw item ids and names.
-				if (config.developerMode())
-				{
-					sendStatus("Skilling: " + skilling.describe());
-				}
-				sendStatus("Region " + speechEngine.getContext().getRegionId()
-					+ atTile(speechEngine.getContext().getLocation()));
+				sendStatus("Region " + context().getRegionId()
+					+ atTile(context().getLocation()));
 				break;
-
-			case "boat":
-				dumpBoat();
-				break;
-
-			case "fires":
-			{
-				// Stand where the follower is misbehaving and run this. It
-				// answers the only question that matters: does the follower
-				// KNOW about the fire it is standing in.
-				clientThread.invoke(() ->
-				{
-					net.runelite.api.Player me = client.getLocalPlayer();
-					WorldPoint here = me == null ? null : me.getWorldLocation();
-					for (String line : hotGround.describe(here, 12))
-					{
-						sendStatus(line);
-						log.info("FIRES {}", line);
-					}
-					for (String line : follower.describeFeet())
-					{
-						sendStatus(line);
-						log.info("FIRES {}", line);
-					}
-					if (skilling != null)
-					{
-						sendStatus("Skilling: " + skilling.describe());
-						log.info("FIRES skilling {}", skilling.describe());
-					}
-				});
-				break;
-			}
 
 			case "where":
 				// Split from status: every place that advertises this command
 				// promises the region id, which used to arrive buried after a
 				// model report nobody asked for.
-				sendStatus("You're in region " + speechEngine.getContext().getRegionId()
-					+ onTile(speechEngine.getContext().getLocation())
-					+ ". Use that number under Locations in the Messages window.");
+				sendStatus("You're in region " + context().getRegionId()
+					+ onTile(context().getLocation())
+					+ Resources.text("useRegion"));
 				break;
 
 			default:
@@ -12240,24 +6826,9 @@ public class FollowerPlugin extends Plugin
 					break;
 				}
 				sendStatus("::follower commands:");
-				for (java.util.Map.Entry<String, String> entry : EVERYDAY_COMMANDS)
-				{
+				for (var entry : EVERYDAY_COMMANDS)
 					sendStatus("  " + entry.getKey() + " - " + entry.getValue());
-				}
 				sendStatus("More in the Follower Buddy side panel.");
-				if (config.developerMode())
-				{
-					sendStatus("Developer: watch | stance <weaponId> [idle walk run attack] | "
-						+ "priorities | palette | harvest | hidden | "
-						+ "pitchsweep | headsweep | head <...> | followtrace | boat | "
-						+ "wraplerp | wrapauto | wrapearly | animinfo | "
-						+ "animtrace | errandscan | cachecheck | stanceaudit | examinewatch | "
-						+ "fires | "
-						+ "mood [0-100] | chatwatch | sniffanims | finditem <name> | "
-						+ "prop <itemId> | propoffset <x y z> | fire <rule-id> | force <what> | want | "
-						+ "spectate | shield | centre [units] | loot <value> | "
-						+ "scan | heights | transcript | thieftargets");
-				}
 			// ::follower interp was removed: the interpolation filter is keyed on
 			// animation id, so it could not be changed for the follower without
 			// changing it for the player too.
@@ -12272,14 +6843,14 @@ public class FollowerPlugin extends Plugin
 	 * One line waiting its turn, kept whole so the overhead text, the chatbox
 	 * mirror and any animation stay together.
 	 */
-	private static final class Utterance
+	static class Utterance
 	{
-		private final String text;
-		private final SpeechOutput output;
-		private final SpeechRule rule;
-		private final int animationId;
-		private final Runnable onSaid;
-		private long queuedAtMs;
+		final String text;
+		final SpeechOutput output;
+		final SpeechRule rule;
+		final int animationId;
+		final Runnable onSaid;
+		long queuedAtMs;
 
 		Utterance(String text, SpeechOutput output, SpeechRule rule, int animationId,
 			Runnable onSaid)
@@ -12289,36 +6860,27 @@ public class FollowerPlugin extends Plugin
 			this.rule = rule;
 			this.animationId = animationId;
 			this.onSaid = onSaid;
-			this.queuedAtMs = System.currentTimeMillis();
+			this.queuedAtMs = currentTimeMillis();
 		}
 	}
 
-	private final java.util.ArrayDeque<Utterance> speechQueue = new java.util.ArrayDeque<>();
+	final ArrayDeque<Utterance> speechQueue = new ArrayDeque<>();
 
 	/** When the line currently being spoken stops occupying the overhead box. */
-	/**
-	 * A record of what was actually said, and of what was held back. Off by
-	 * default and behind the developer flag: it writes a file about the
-	 * player's session, which is a surprising thing for a plugin to do
-	 * unasked.
-	 */
-	private final com.follower.speech.SpeechJournal journal =
-		new com.follower.speech.SpeechJournal();
-
-	private long speakingUntilMs;
+	long speakingUntilMs;
 
 	/**
 	 * How many lines may wait. Two rules firing together is the case worth
 	 * handling - walking into a boss both spots it and starts a fight - while a
 	 * deep backlog would have the follower narrating minutes late.
 	 */
-	private static final int SPEECH_QUEUE_LIMIT = 3;
+	static final int SPEECH_QUEUE_LIMIT = 3;
 
 	/** Nothing holds the overhead, or the queue behind it, longer than this. */
-	private static final long MAX_SPEECH_MS = 12_000L;
+	static final long MAX_SPEECH_MS = 12_000L;
 
 	/** A breath between lines, so two in a row do not read as one. */
-	private static final long SPEECH_GAP_MS = 400;
+	static final long SPEECH_GAP_MS = 400;
 
 	/**
 	 * A queued line older than this is dropped rather than said out of its
@@ -12338,7 +6900,7 @@ public class FollowerPlugin extends Plugin
 	 * display time high enough was sufficient to stop the queue delivering
 	 * anything at all, ever, using nothing but a slider the plugin offers.
 	 */
-	private static final long SPEECH_STALE_MS = MAX_SPEECH_MS + SPEECH_GAP_MS + 3_000L;
+	static final long SPEECH_STALE_MS = MAX_SPEECH_MS + SPEECH_GAP_MS + 3_000L;
 
 	/**
 	 * Queues a line rather than letting it stamp over whatever is being said.
@@ -12348,23 +6910,16 @@ public class FollowerPlugin extends Plugin
 	 * holds one message, so the second used to replace the first mid-word and
 	 * both were lost.
 	 */
-	private void speak(String text, SpeechOutput output, SpeechRule rule, int animationId,
+	void speak(String text, SpeechOutput output, SpeechRule rule, int animationId,
 		Runnable onSaid)
 	{
-		if (cutForTheFilm(filming, rule))
-		{
-			return;
-		}
 		// Nor a silent rule's gesture while a sketch is under way: an idle
 		// fidget played over the scroll, and could be in the picture. It is
 		// body language, not worth playing late, so it goes. So in its own
 		// Talk-to box: behaviour QA4, 16 Oct, it yawned, shrugged and struck
 		// its distant pose while its chathead was talking to you.
-		if (rule != null && text.isEmpty()
-			&& ((sketching != null && sketching.isSketching()) || dialog.isOpen()))
-		{
+		if (rule != null && text.isEmpty() && dialog.isOpen())
 			return;
-		}
 		// A silent rule - an emote mirror, a fidget - contends for nothing:
 		// the queue exists to serialise the overhead text box, and holding an
 		// emote back until a line finishes would have the follower wave at
@@ -12379,22 +6934,18 @@ public class FollowerPlugin extends Plugin
 		// once the scroll is away. So in the follower's own Talk-to box:
 		// behaviour QA, 16 Oct, a line went overhead with the box open,
 		// two mouths at once.
-		if ((sketching != null && sketching.isPosing()) || dialog.isOpen())
+		if (dialog.isOpen())
 		{
 			if (speechQueue.size() < SPEECH_QUEUE_LIMIT)
-			{
 				speechQueue.addLast(new Utterance(text, output, rule, animationId, onSaid));
-			}
 			return;
 		}
 
-		long now = System.currentTimeMillis();
+		long now = currentTimeMillis();
 		if (now < speakingUntilMs || keptForTheBox(rule, inConversation()))
 		{
 			if (speechQueue.size() < SPEECH_QUEUE_LIMIT)
-			{
 				speechQueue.addLast(new Utterance(text, output, rule, animationId, onSaid));
-			}
 			return;
 		}
 		speakNow(new Utterance(text, output, rule, animationId, onSaid));
@@ -12404,62 +6955,45 @@ public class FollowerPlugin extends Plugin
 	 * Starts the next queued line once the current one has had its time.
 	 * Called every game tick.
 	 */
-	private void drainSpeechQueue()
+	void drainSpeechQueue()
 	{
-		long now = System.currentTimeMillis();
+		long now = currentTimeMillis();
 		// A line that waits its turn is kept through a conversation - an
 		// NPC's, or the follower's own box - and its staleness counts from the
 		// box closing. Every such line in the queue, not only the first:
 		// behaviour QA, 16 Oct, the second was dropped as stale as the box
 		// closed, and one kept through the follower's own box aged out in it.
 		boolean box = dialog.isOpen() || inConversation();
-		for (Utterance queued : speechQueue)
+		for (var queued : speechQueue)
 		{
 			if (keptForTheBox(queued.rule, box))
-			{
 				queued.queuedAtMs = now;
-			}
 		}
 		// Nothing overhead while the follower is talking to you in the box:
 		// a bubble above its head mid-conversation is two mouths at once.
 		// Held, not dropped - the stale sweep below decides what survives
 		// a long conversation, same as any other wait.
 		if (dialog.isOpen())
-		{
 			return;
-		}
-		// Nor over a sketch's count, nor into its picture: held the same way.
-		if (sketching != null && sketching.isPosing())
-		{
-			return;
-		}
 		// Nor into an NPC conversation, a line that waits and what is behind
 		// it: said into the box it would be dropped.
-		Utterance next = speechQueue.peekFirst();
+		var next = speechQueue.peekFirst();
 		if (next != null && keptForTheBox(next.rule, inConversation()))
-		{
 			return;
-		}
 		while (!speechQueue.isEmpty()
 			&& now - speechQueue.peekFirst().queuedAtMs > SPEECH_STALE_MS)
-		{
 			// Said too late is worse than not said: a boss sighting a dozen
 			// seconds after the fact is just noise.
 			speechQueue.removeFirst();
-		}
 		if (speechQueue.isEmpty() || now < speakingUntilMs)
-		{
 			return;
-		}
-		Utterance line = speechQueue.removeFirst();
+		var line = speechQueue.removeFirst();
 		// Kept waiting here, as in the engine, the moment it was about can
 		// pass: behaviour QA4, 16 Oct, Hans was announced as the follower's
 		// own box closed, 24 s after he had gone. Let go unsaid.
 		if (line.rule != null && line.rule.when != null
-			&& !line.rule.when.standingHolds(speechEngine.getContext(), TriggerEvent.tick()))
-		{
+			&& !line.rule.when.standingHolds(context(), TriggerEvent.tick()))
 			return;
-		}
 		speakNow(line);
 	}
 
@@ -12479,15 +7013,15 @@ public class FollowerPlugin extends Plugin
 	 * it. Capped, because a runaway line should not hold the floor all day -
 	 * the queue waits on this too.
 	 */
-	private long readingTimeMs(String text)
+	long readingTimeMs(String text)
 	{
-		return Math.min(MAX_SPEECH_MS, Math.max(config.speechDurationMs(), timeToReadMs(text)));
+		return min(MAX_SPEECH_MS, max(config.speechDurationMs(), timeToReadMs(text)));
 	}
 
 	/** How long the line itself takes to read at the player's speed, with no minimum. */
-	private long timeToReadMs(String text)
+	long timeToReadMs(String text)
 	{
-		return (long) text.length() * 1000L / Math.max(1, config.readingSpeed());
+		return (long) text.length() * 1000L / max(1, config.readingSpeed());
 	}
 
 	/**
@@ -12500,21 +7034,10 @@ public class FollowerPlugin extends Plugin
 		return mirrorToChat;
 	}
 
-	/**
-	 * Whether a line is cut while a scene is filmed: anything a rule says,
-	 * and with it the rule's emote copies, plants and chains, which all come
-	 * through here. A line with no rule is the player's own - typed in the
-	 * film window, or ::follower say - and is said.
-	 */
-	static boolean cutForTheFilm(boolean filming, SpeechRule rule)
+	void speakNow(Utterance utterance)
 	{
-		return filming && rule != null;
-	}
-
-	private void speakNow(Utterance utterance)
-	{
-		SpeechOutput output = utterance.output;
-		SpeechRule rule = utterance.rule;
+		var output = utterance.output;
+		var rule = utterance.rule;
 		int animationId = utterance.animationId;
 
 		// Somebody else has the floor. While an NPC dialogue is up the words
@@ -12531,53 +7054,23 @@ public class FollowerPlugin extends Plugin
 		// the scene - opens nothing. A wish nobody heard used to leave a gift
 		// option sitting in the Talk-to box with no ask behind it.
 		if (utterance.onSaid != null && !hushed)
-		{
 			utterance.onSaid.run();
-		}
-
-		if (!hushed)
-		{
-			journal.spoke(rule, text);
-		}
-
-		// The scroll's line, naming its quest, is that quest's page news
-		// already. Text QA5 #63: "Priest in Peril, done and witnessed." then
-		// "That's Priest in Peril in the book." The quest's other pages keep theirs.
-		if (!text.isEmpty() && rule != null
-			&& ("quest-complete".equals(rule.id) || "quest-complete-parked".equals(rule.id)))
-		{
-			pageNews.removeIf(page -> "quest".equals(page.event.getName())
-				&& text.contains(page.event.getPlaceholders().get("page")));
-		}
-
-		// The line's own voice, if the player has given it one. After the
-		// journal so a sounded line is recorded like any other, and before
-		// the text so the mouth and the words start together.
-		// Played off the client thread: opening the file and the audio line
-		// is disk and driver work, enough to drop a frame (QA pass 4).
-		if (!text.isEmpty() && config.voiceEnabled() && voices.has(text))
-		{
-			int volume = config.voiceVolume();
-			executor.execute(() -> voices.play(text, volume));
-		}
 
 		if (!text.isEmpty() && output.showsOverhead())
 		{
 			long showFor = readingTimeMs(text);
 			overlay.show(text, showFor);
 			onScreen = utterance;
-			onScreenSinceMs = System.currentTimeMillis();
-			speakingUntilMs = System.currentTimeMillis() + showFor + SPEECH_GAP_MS;
+			onScreenSinceMs = currentTimeMillis();
+			speakingUntilMs = currentTimeMillis() + showFor + SPEECH_GAP_MS;
 		}
 
 		if (!text.isEmpty() && postsToChatbox(config.mirrorToChat(), output))
-		{
 			// Every spoken line lands in the chatbox as PUBLIC CHAT under the
 			// follower's name - "Name: message" in the game's own chat colours
 			// - exactly as a real player's overhead words mirror into chat.
 			clientThread.invoke(() -> client.addChatMessage(
 				ChatMessageType.PUBLICCHAT, followerName(), text, null));
-		}
 
 		// The writing flourish: the scroll comes out as the line is said, so
 		// the claim and the act happen together. Best effort - mid-errand or
@@ -12587,47 +7080,43 @@ public class FollowerPlugin extends Plugin
 		// seat with no stand-up, and sit down again after it (QA, 15 Oct).
 		// The words come and the body stays seated. Not a copy of the
 		// player's own animation: that ends the rest a tick later anyway.
-		boolean seated = resting && rule != null && !Boolean.TRUE.equals(rule.mirrorAnimation)
-			&& !Boolean.TRUE.equals(rule.mirrorPose);
+		boolean pose = rule != null && Boolean.TRUE.equals(rule.mirrorPose),
+			hold = rule != null && Boolean.TRUE.equals(rule.holdStill),
+			vanish = rule != null && Boolean.TRUE.equals(rule.vanishAfter),
+			seated = resting && rule != null && !Boolean.TRUE.equals(rule.mirrorAnimation) && !pose;
 
 		if (rule != null && rule.prop != null && flourish != null
 			&& !text.isEmpty() && !seated
 			&& follower.isSpawned() && !follower.isStaying()
 			&& !follower.isNpcSlaved() && !errands.isBusy() && !dialog.isOpen())
-		{
 			clientThread.invoke(() -> flourish.start(
 				rule.prop.left == null ? 0 : rule.prop.left,
 				rule.prop.item == null ? 0 : rule.prop.item,
 				rule.prop.pose == null ? 0 : rule.prop.pose,
 				rule.prop.ticks == null ? 8 : rule.prop.ticks));
-		}
 
 		if (seated)
-		{
 			return;
-		}
 
 		// A copy of the work is made from beside the WORK, not from the
 		// seat: the seat is placed against the PLAYER, so a chop copied from
 		// it is an axe swung at open air two tiles from the trunk. The walk
 		// over is the controller's; the copy waits here until it has got
 		// there, and is refused outright when there is no work to stand at.
-		boolean atTheWork = rule != null && Boolean.TRUE.equals(rule.atTheWork)
-			&& utterance.animationId > 0;
+		boolean atTheWork = rule != null && Boolean.TRUE.equals(rule.atTheWork) && animationId > 0;
 		if (atTheWork)
 		{
 			// A loop is copied only while the player is still at it: the rule
 			// can fire on the last few ticks' memory of the swing, after the
 			// tree has fallen and the player has stopped.
-			Player local = client.getLocalPlayer();
-			boolean stopped = Boolean.TRUE.equals(rule.mirrorPose)
-				&& (local == null || local.getAnimation() != utterance.animationId);
+			var local = client.getLocalPlayer();
+			boolean stopped = pose && (local == null || local.getAnimation() != animationId);
 			if (stopped || skilling == null || !skilling.joinIn())
 			{
 				if (skilling != null && skilling.joiningIn())
 				{
-					pendingMime = utterance.animationId;
-					pendingOneShot = !Boolean.TRUE.equals(rule.mirrorPose);
+					pendingMime = animationId;
+					pendingOneShot = !pose;
 				}
 				return;
 			}
@@ -12636,10 +7125,9 @@ public class FollowerPlugin extends Plugin
 
 		// A held emote takes the pose path instead of playing anything: the
 		// follower matches the loop for as long as the player keeps it up.
-		if (rule != null && Boolean.TRUE.equals(rule.mirrorPose)
-			&& utterance.animationId > 0)
+		if (pose && animationId > 0)
 		{
-			startPoseMirror(utterance.animationId);
+			startPoseMirror(animationId);
 			return;
 		}
 
@@ -12648,7 +7136,7 @@ public class FollowerPlugin extends Plugin
 		// Not at the work, where the walk over already holds the feet, and
 		// not on a park the player gave: the clip plays at the post, and the
 		// plant's release at its end would hand the follower back to following.
-		if (rule != null && Boolean.TRUE.equals(rule.holdStill) && rule.hasAnimationAction()
+		if (hold && rule.hasAnimationAction()
 			&& !atTheWork && !parkedByPlayer)
 		{
 			emoteHold = true;
@@ -12662,8 +7150,8 @@ public class FollowerPlugin extends Plugin
 			// even when the trigger was a cosmetic override the follower lacks.
 			int stages = rule.animations.size();
 			int[] chain = new int[stages];
-			com.follower.appearance.SpotAnimRepository.Entry[] stageGraphics =
-				new com.follower.appearance.SpotAnimRepository.Entry[stages];
+			var stageGraphics =
+				new SpotAnimRepository.Entry[stages];
 			for (int i = 0; i < stages; i++)
 			{
 				chain[i] = rule.animations.get(i);
@@ -12672,13 +7160,9 @@ public class FollowerPlugin extends Plugin
 				stageGraphics[i] = graphicId >= 0 ? spotAnimRepository.get(graphicId) : null;
 			}
 			if (Boolean.TRUE.equals(rule.syncToPlayer))
-			{
 				clientThread.invoke(() -> follower.startSlavedChain(chain, stageGraphics));
-			}
 			else
-			{
 				clientThread.invoke(() -> follower.playAnimations(chain, stageGraphics));
-			}
 		}
 		else if (animationId >= 0)
 		{
@@ -12687,27 +7171,20 @@ public class FollowerPlugin extends Plugin
 			// and a greeting typed mid-walk all usually come on the move, so
 			// the line was said and the body did nothing (QA, 15 Oct). It
 			// waits for the follower to stand, a few ticks at most.
-			boolean waits = rule != null && !Boolean.TRUE.equals(rule.holdStill) && !atTheWork
-				&& !Boolean.TRUE.equals(rule.vanishAfter);
+			boolean waits = rule != null && !hold && !atTheWork && !vanish;
 			clientThread.invoke(() ->
 			{
 				if (waits)
-				{
 					follower.playWhenStill(animationId, EMOTE_WAIT_TICKS);
-				}
 				else
-				{
 					follower.playAnimation(animationId);
-				}
 			});
 		}
 
 		// A teleporting follower leaves with its cast: once the mirrored
 		// animation finishes, vanish and reappear beside the landed player.
-		if (rule != null && Boolean.TRUE.equals(rule.vanishAfter))
-		{
+		if (vanish)
 			clientThread.invoke(follower::vanishAfterEmote);
-		}
 
 		// A rule that copies graphics opens the graphic-copy window, and any
 		// spotanim already showing on the player (it can precede the animation
@@ -12717,12 +7194,10 @@ public class FollowerPlugin extends Plugin
 			mirrorGraphicsUntilTick = client.getTickCount() + MIRROR_GRAPHIC_WINDOW_TICKS;
 			clientThread.invoke(() ->
 			{
-				Player local = client.getLocalPlayer();
-				net.runelite.api.ActorSpotAnim active = local == null ? null : latestSpotAnim(local);
+				var local = client.getLocalPlayer();
+				var active = local == null ? null : latestSpotAnim(local);
 				if (active != null && takesMirroredGraphic(client.getTickCount()))
-				{
 					mirrorGraphic(active.getId(), active.getHeight());
-				}
 			});
 		}
 	}
@@ -12733,315 +7208,31 @@ public class FollowerPlugin extends Plugin
 	 * tell them in, so a phrases.json with a syntax error left the follower
 	 * silent and nothing said why (QA, 15 Oct). Once per start, at the login.
 	 */
-	private boolean loadErrorsReported;
+	boolean loadErrorsReported;
 
-	private void reportLoadErrors()
+	void reportLoadErrors()
 	{
 		if (loadErrorsReported)
-		{
 			return;
-		}
 		loadErrorsReported = true;
 		reportRuleErrors();
 		for (String problem : dialogLoader.getErrors())
-		{
 			sendStatus("Problem in dialogs.json: " + problem);
-		}
 	}
 
-	private void reportRuleErrors()
+	void reportRuleErrors()
 	{
 		for (String error : ruleLoader.getErrors())
-		{
 			sendStatus("Problem in phrases.json: " + error);
-		}
 		if (ruleLoader.getRules().isEmpty())
-		{
-			sendStatus("Couldn't read phrases.json, so the follower is quiet until it's fixed.");
-		}
+			sendStatus(Resources.text("phrasesUnreadable"));
 	}
 
-	private String modelHint()
+	String modelHint()
 	{
 		return modelRepository.isLoaded()
 			? "The item list is loaded (" + modelRepository.getStatus() + ") but has no data for these slots."
-			: "The game cache hasn't been read yet. Log in, then try ::follower rebuild.";
-	}
-
-	/**
-	 * Composes a model from the player's own live equipment and reports it alongside
-	 * the model the client built from that same equipment.
-	 *
-	 * <p>Both sides are the same outfit by construction, which is the only way the
-	 * numbers mean anything. Two earlier attempts at this comparison were confounded:
-	 * against the player's live model while the follower wore different gear, and via
-	 * the capture path, which re-encodes the outfit into the game's {@code 256+kit} /
-	 * {@code 2048+item} scheme, which was being written with the wrong item offset.
-	 */
-	private void compareAgainstClient(String tag)
-	{
-		try
-		{
-			Player local = client.getLocalPlayer();
-			PlayerComposition composition = local == null ? null : local.getPlayerComposition();
-			if (composition == null)
-			{
-				log.info("{}: no player composition yet", tag);
-				return;
-			}
-
-			Outfit yours = Outfit.from(composition);
-			log.info("{} outfit: {}", tag, describeSlots(yours));
-			net.runelite.api.Model composed = appearanceComposer.compose(yours);
-			net.runelite.api.Model clients = local.getModel();
-			log.info("{} composed: {}", tag, describePriorities(composed));
-			log.info("{} client:   {}", tag, describePriorities(clients));
-
-			// Identical histograms can still hide two rendering-relevant
-			// differences: a transparency array (which reroutes the model onto
-			// the GPU's alpha path, drawn without depth writes) and FACE ORDER
-			// (equal-priority coincident faces tie-break by draw order).
-			if (composed != null && clients != null)
-			{
-				log.info("{} alpha: composed={} trans={} | client={} trans={}", tag,
-					composed.getFaceTransparencies() == null ? "null"
-						: composed.getFaceTransparencies().length + " entries",
-					composed.getTransparency(),
-					clients.getFaceTransparencies() == null ? "null"
-						: clients.getFaceTransparencies().length + " entries",
-					clients.getTransparency());
-
-				byte[] composedPriorities = composed.getFaceRenderPriorities();
-				byte[] clientPriorities = clients.getFaceRenderPriorities();
-				if (composedPriorities != null && clientPriorities != null
-					&& composedPriorities.length == clientPriorities.length)
-				{
-					int firstMismatch = -1;
-					for (int i = 0; i < composedPriorities.length; i++)
-					{
-						if (composedPriorities[i] != clientPriorities[i])
-						{
-							firstMismatch = i;
-							break;
-						}
-					}
-					log.info("{} face order: {}", tag, firstMismatch < 0
-						? "priorities IDENTICAL index-for-index"
-						: "first priority mismatch at face " + firstMismatch
-							+ " (composed " + composedPriorities[firstMismatch]
-							+ " vs client " + clientPriorities[firstMismatch] + ")");
-				}
-
-				// The last uncompared dimension: the GEOMETRY. The client
-				// translates each worn part by its wear offsets before merging;
-				// a part sitting even a couple of units off pokes through its
-				// neighbour on ANY renderer. Compare the unposed vertices.
-				logVertexDiff(tag, composed, clients);
-			}
-			poseProbeTicks = POSE_PROBE_SAMPLES;
-		}
-		catch (RuntimeException e)
-		{
-			log.info("{} failed", tag, e);
-		}
-	}
-
-	/**
-	 * Ticks of pose sampling after a model comparison. Long enough to outlast the
-	 * spawn emote - a 12-tick window landed entirely inside it and captured nothing
-	 * but animation 715 at frame 0.
-	 */
-	private static final int POSE_PROBE_SAMPLES = 60;
-
-	private int poseProbeTicks;
-
-	/**
-	 * Samples the pose animation driving each model.
-	 *
-	 * <p>With identical geometry proven, a visual difference has to come from the
-	 * two being posed differently - either a different animation entirely, or the
-	 * same one at a different frame. A cape hangs off the shoulders, so it shows
-	 * pose differences that a torso would hide.
-	 */
-	private void logPoseComparison(Player local)
-	{
-		if (poseProbeTicks <= 0)
-		{
-			return;
-		}
-		poseProbeTicks--;
-
-		net.runelite.api.Animation pose = follower.getPoseAnimation();
-		log.info("POSE follower anim={} frame={} | player anim={} frame={}",
-			pose == null ? -1 : pose.getId(), follower.getPoseFrame(),
-			local.getPoseAnimation(), local.getPoseAnimationFrame());
-	}
-
-	/** Compact slot listing, so a comparison can be tied back to actual gear. */
-	private String describeSlots(Outfit outfit)
-	{
-		StringBuilder out = new StringBuilder();
-		for (KitType slot : KitType.values())
-		{
-			if (outfit.getRaw(slot) == 0)
-			{
-				continue;
-			}
-			boolean item = outfit.isItem(slot);
-			int id = item ? outfit.itemId(slot) : outfit.kitId(slot);
-			String name = item ? modelRepository.itemName(id) : null;
-			out.append(slot.name().toLowerCase(java.util.Locale.ROOT))
-				.append('=')
-				.append(item ? "item" : "kit")
-				.append(id)
-				.append(name == null ? "" : "(" + name + ")")
-				.append(' ');
-		}
-		return out.length() == 0 ? "empty" : out.toString().trim();
-	}
-
-	/**
-	 * Summarises a model's face render priorities.
-	 *
-	 * <p>A null array means every face sits in the same bucket and overlaps are
-	 * settled by raw depth, which is how a cape ends up drawn over a shoulder it
-	 * should sit behind.
-	 */
-	private String describePriorities(Model model)
-	{
-		if (model == null)
-		{
-			return "no model";
-		}
-
-		byte[] priorities;
-		try
-		{
-			priorities = model.getFaceRenderPriorities();
-		}
-		catch (RuntimeException | LinkageError e)
-		{
-			return "priorities unavailable (" + e.getClass().getSimpleName() + ")";
-		}
-
-		if (priorities == null)
-		{
-			return "no priority array - all faces in one bucket, depth-sorted";
-		}
-
-		java.util.Map<Integer, Integer> histogram = new java.util.TreeMap<>();
-		for (byte p : priorities)
-		{
-			histogram.merge((int) p, 1, Integer::sum);
-		}
-
-		StringBuilder out = new StringBuilder(priorities.length + " faces:");
-		histogram.forEach((priority, count) -> out.append(" p").append(priority).append("x").append(count));
-		return out.toString();
-	}
-
-	/**
-	 * Diffs the composed model's vertices against the client's own, posed with
-	 * the player's CURRENT pose so like compares with like. The client model's
-	 * vertices are snapshotted FIRST - it and applyTransformations can share
-	 * the same animation scratch buffer, and posing ours would overwrite it.
-	 */
-	private void logVertexDiff(String tag, net.runelite.api.Model composed,
-		net.runelite.api.Model clientModel)
-	{
-		int count = clientModel.getVerticesCount();
-		float[] snapX = java.util.Arrays.copyOf(clientModel.getVerticesX(), count);
-		float[] snapY = java.util.Arrays.copyOf(clientModel.getVerticesY(), count);
-		float[] snapZ = java.util.Arrays.copyOf(clientModel.getVerticesZ(), count);
-
-		Player local = client.getLocalPlayer();
-		net.runelite.api.Model posed = composed;
-		if (local != null)
-		{
-			net.runelite.api.Animation pose = client.loadAnimation(local.getPoseAnimation());
-			if (pose != null)
-			{
-				net.runelite.api.Model tmp = client.applyTransformations(
-					composed, pose, local.getPoseAnimationFrame(), null, 0);
-				if (tmp != null)
-				{
-					posed = tmp;
-				}
-			}
-		}
-
-		if (posed.getVerticesCount() != count)
-		{
-			log.info("{} vertices: counts differ - composed {} vs client {}",
-				tag, posed.getVerticesCount(), count);
-			return;
-		}
-
-		float[] vx = posed.getVerticesX();
-		float[] vy = posed.getVerticesY();
-		float[] vz = posed.getVerticesZ();
-		float maxDx = 0;
-		float maxDy = 0;
-		float maxDz = 0;
-		int differing = 0;
-		int worst = -1;
-		float worstDistance = 0;
-		for (int i = 0; i < count; i++)
-		{
-			float dx = Math.abs(vx[i] - snapX[i]);
-			float dy = Math.abs(vy[i] - snapY[i]);
-			float dz = Math.abs(vz[i] - snapZ[i]);
-			maxDx = Math.max(maxDx, dx);
-			maxDy = Math.max(maxDy, dy);
-			maxDz = Math.max(maxDz, dz);
-			float distance = dx + dy + dz;
-			if (distance > 1f)
-			{
-				differing++;
-				if (distance > worstDistance)
-				{
-					worstDistance = distance;
-					worst = i;
-				}
-			}
-		}
-
-		log.info("{} vertices: {} total, {} differ by >1 unit, max |dx|={} |dy|={} |dz|={}, "
-				+ "worst vertex {} (composed {},{},{} vs client {},{},{})",
-			tag, count, differing, maxDx, maxDy, maxDz, worst,
-			worst < 0 ? 0 : vx[worst], worst < 0 ? 0 : vy[worst], worst < 0 ? 0 : vz[worst],
-			worst < 0 ? 0 : snapX[worst], worst < 0 ? 0 : snapY[worst], worst < 0 ? 0 : snapZ[worst]);
-	}
-
-	/** One line per model: face count and a render-priority histogram, or "no data". */
-	private void logPriorities(String label, net.runelite.api.Model model)
-	{
-		if (model == null)
-		{
-			sendStatus(label + ": no model");
-			log.info("priorities {}: no model", label);
-			return;
-		}
-
-		byte[] priorities = model.getFaceRenderPriorities();
-		if (priorities == null)
-		{
-			sendStatus(label + ": " + model.getFaceCount() + " faces, NO priority data");
-			log.info("priorities {}: {} faces, NO priority data", label, model.getFaceCount());
-			return;
-		}
-
-		java.util.Map<Integer, Integer> histogram = new java.util.TreeMap<>();
-		for (byte priority : priorities)
-		{
-			histogram.merge((int) priority, 1, Integer::sum);
-		}
-		String alpha = model.getFaceTransparencies() == null
-			? "no alpha array" : "ALPHA ARRAY (" + model.getFaceTransparencies().length + ")";
-		sendStatus(label + ": " + model.getFaceCount() + " faces, priorities " + histogram
-			+ ", " + alpha);
-		log.info("priorities {}: {} faces, priorities {}, {}",
-			label, model.getFaceCount(), histogram, alpha);
+			: Resources.text("cacheUnread");
 	}
 
 	/**
@@ -13058,7 +7249,7 @@ public class FollowerPlugin extends Plugin
 	{
 		return enabled && !busy && spawned
 			&& (thieving
-				|| (idleTicks >= Math.max(1, afterTicks) && idleTicks < REST_AFTER_TICKS));
+				|| (idleTicks >= max(1, afterTicks) && idleTicks < REST_AFTER_TICKS));
 	}
 
 	/**
@@ -13075,10 +7266,15 @@ public class FollowerPlugin extends Plugin
 	 * so does the skilling company's seat.
 	 */
 	static boolean stayIsPlayerCommanded(boolean staying, boolean wandered,
-		boolean thrall, boolean errandBusy, boolean spectating, boolean emoteHold,
+		boolean thrall,
+		boolean errandBusy,
+		boolean spectating,
+		boolean emoteHold,
 		boolean takingMinutes, boolean keepingCompany)
 	{
-		return staying && !wandered && !thrall && !errandBusy && !spectating
+		return staying && !wandered && !thrall
+			&& !errandBusy
+			&& !spectating
 			&& !emoteHold && !takingMinutes && !keepingCompany;
 	}
 
@@ -13091,11 +7287,11 @@ public class FollowerPlugin extends Plugin
 	 * pointer at the setting rides along either way so the name stays
 	 * findable once the prompt is gone.
 	 */
-	private void offerName()
+	void offerName()
 	{
 		final boolean[] named = {false};
 		final boolean[] done = {false};
-		chatboxPanelManager.openTextInput("Your new follower is waiting. What will you call it?")
+		chatboxPanelManager.openTextInput(Resources.text("namePrompt"))
 			.value("")
 			.charValidator(c -> nameChar((char) c))
 			.onDone((String answer) ->
@@ -13105,21 +7301,17 @@ public class FollowerPlugin extends Plugin
 				if (!name.isEmpty())
 				{
 					named[0] = true;
-					configManager.setConfiguration(FollowerConfig.GROUP,
+					setConfig(
 						"followerName", name);
 					clientThread.invoke(() ->
 						speechEngine.say(name + ". I'll answer to that.",
-							com.follower.speech.SpeechOutput.OVERHEAD));
+							SpeechOutput.OVERHEAD));
 					// The 20-char cap in cleanFollowerName is silent; a pasted
 					// longer name should hear where the rest went.
 					if (name.length() == 20 && answer != null
 						&& answer.trim().length() > 20)
-					{
-						sendStatus("Twenty characters is all a name can carry,"
-							+ " so '" + name + "' it is.");
-					}
-					sendStatus("You can change the name any time in the"
-						+ " plugin's settings, under Follower.");
+						sendStatus(Resources.text("nameTooLong") + name + "' it is.");
+					sendStatus(Resources.text("nameLater"));
 				}
 			})
 			// Every way the input can end lands here (Enter runs onDone first,
@@ -13127,10 +7319,9 @@ public class FollowerPlugin extends Plugin
 			// the client never got to close does not count as offered.
 			.onClose(() ->
 			{
-				configManager.setConfiguration(FollowerConfig.GROUP,
+				setConfig(
 					"namePrompted", true);
 				if (!done[0] && nameOfferRetries++ == 0)
-				{
 					// Closed without Enter: Esc, or destroyed by another
 					// interface opening. The client routes both through the
 					// same close (verified against the client's chatbox
@@ -13138,12 +7329,8 @@ public class FollowerPlugin extends Plugin
 					// prompt from a declined one - one quiet re-offer covers
 					// the ambush without nagging the decliner.
 					namePromptDelayTicks = NAME_PROMPT_DELAY_TICKS;
-				}
 				else if (!named[0])
-				{
-					sendStatus("No name for now, then. You can change the name"
-						+ " any time in the plugin's settings, under Follower.");
-				}
+					sendStatus(Resources.text("noName"));
 			})
 			.build();
 	}
@@ -13200,7 +7387,7 @@ public class FollowerPlugin extends Plugin
 	 * merely contained in a target matched anything, and a blank one matched
 	 * every entry on the menu.
 	 */
-	private String followerTarget()
+	String followerTarget()
 	{
 		return "<col=ffff00>" + followerName() + "</col>";
 	}
@@ -13214,23 +7401,17 @@ public class FollowerPlugin extends Plugin
 	static String cleanFollowerName(String raw)
 	{
 		if (raw == null)
-		{
 			return "";
-		}
-		StringBuilder kept = new StringBuilder();
+		var kept = new StringBuilder();
 		for (int i = 0; i < raw.length(); i++)
 		{
 			char c = raw.charAt(i);
 			if (nameChar(c))
-			{
 				kept.append(c);
-			}
 		}
 		String name = kept.toString().trim().replaceAll(" {2,}", " ");
 		if (name.length() > 20)
-		{
 			name = name.substring(0, 20).trim();
-		}
 		return name;
 	}
 
@@ -13239,15 +7420,13 @@ public class FollowerPlugin extends Plugin
 	 * client-side (the one fact a Hub user most needs and nothing in game ever
 	 * states), and that ::follower exists (nothing else in game names it).
 	 */
-	private void maybeSendCommandHint()
+	void maybeSendCommandHint()
 	{
 		if (config.firstSpawnNoticeShown())
-		{
 			return;
-		}
-		configManager.setConfiguration(FollowerConfig.GROUP, "firstSpawnNoticeShown", true);
+		setConfig("firstSpawnNoticeShown", true);
 		sendStatus("Only you can see " + followerName()
-			+ ". Everything it does happens on your screen, and nothing is sent to the game.");
+			+ Resources.text("onlyYourScreen"));
 		sendStatus("Type ::follower in chat for commands.");
 	}
 
@@ -13256,395 +7435,16 @@ public class FollowerPlugin extends Plugin
 	 * opens), so it is taught once, at the first Stay - the moment the user
 	 * has just demonstrated they want positional control.
 	 */
-	private void maybeSendSendHint()
+	void maybeSendSendHint()
 	{
 		if (config.sendHintShown())
-		{
 			return;
-		}
-		configManager.setConfiguration(FollowerConfig.GROUP, "sendHintShown", true);
-		sendStatus("You can also hold Shift and right-click any tile to Send "
+		setConfig("sendHintShown", true);
+		sendStatus(Resources.text("sendHint")
 			+ followerName() + " there.");
 	}
 
-	// ---------------------------------------------------------------- sharing
-
-	/** A file chooser pointed at the follower's own folder, for packs. */
-	private java.io.File choosePack(boolean saving, java.awt.Component parent)
-	{
-		javax.swing.JFileChooser chooser = new javax.swing.JFileChooser(dataDir.toFile());
-		chooser.setDialogTitle(saving ? "Save your pack" : "Open a pack");
-		chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
-			"Follower Buddy pack (*.zip)", "zip"));
-		int answer = saving
-			? chooser.showSaveDialog(parent)
-			: chooser.showOpenDialog(parent);
-		if (answer != javax.swing.JFileChooser.APPROVE_OPTION)
-		{
-			return null;
-		}
-		java.io.File picked = chooser.getSelectedFile();
-		if (saving && !picked.getName().toLowerCase(java.util.Locale.ROOT).endsWith(".zip"))
-		{
-			picked = new java.io.File(picked.getParentFile(), picked.getName() + ".zip");
-		}
-		return picked;
-	}
-
-	/** Writes everything the player has added to a pack they can hand over. */
-	private void exportPack(java.io.File target, java.awt.Component parent)
-	{
-		try
-		{
-			com.google.gson.JsonObject mine = gson.fromJson(
-				new String(java.nio.file.Files.readAllBytes(ruleLoader.getFile()),
-					java.nio.charset.StandardCharsets.UTF_8),
-				com.google.gson.JsonObject.class);
-			com.google.gson.JsonObject shipped =
-				com.follower.share.PackFile.shippedRules(gson);
-			if (shipped == null)
-			{
-				// No defaults to diff against means everything would look like
-				// the player's own work, and the pack would carry all two
-				// thousand shipped lines. Better to write nothing.
-				tell(parent,
-					"The plugin's own lines could not be read, so there is nothing"
-						+ " to compare yours against. No pack was written.",
-					"Pack not saved", javax.swing.JOptionPane.ERROR_MESSAGE);
-				return;
-			}
-
-			com.follower.share.PackFile.Summary made = com.follower.share.PackFile.export(
-				target.toPath(), mine, shipped, voices, gson, followerName());
-
-			if (made.isEmpty())
-			{
-				tell(parent,
-					"There is nothing of your own to share yet. Add a line or a rule"
-						+ " in the Messages window first, and it will go in the pack.",
-					"Nothing to share", javax.swing.JOptionPane.INFORMATION_MESSAGE);
-				return;
-			}
-			tell(parent,
-				"Saved " + target.getName() + " with " +
-					+ made.rules + " rule(s), " + made.lines + " line(s), "
-					+ made.sounds + " sound(s)."
-					+ (made.problems.isEmpty() ? ""
-					: System.lineSeparator() + System.lineSeparator() + String.join(System.lineSeparator(), made.problems)),
-				"Pack saved", javax.swing.JOptionPane.INFORMATION_MESSAGE);
-		}
-		catch (Exception e)
-		{
-			log.warn("Could not write the pack", e);
-			tell(parent,
-				"That pack could not be written: " + e.getMessage(),
-				"Pack not saved", javax.swing.JOptionPane.ERROR_MESSAGE);
-		}
-	}
-
-	/**
-	 * Takes on somebody else's pack, after showing exactly what it holds. The
-	 * file is read and checked in full before a single line of it is kept.
-	 */
-	private void importPack(java.io.File source, java.awt.Component parent)
-	{
-		try
-		{
-			com.follower.share.PackFile.Loaded loaded =
-				com.follower.share.PackFile.read(source.toPath(), gson);
-			javax.swing.SwingUtilities.invokeLater(() -> takePack(loaded, parent));
-		}
-		catch (Exception e)
-		{
-			log.warn("Could not read the pack", e);
-			tell(parent, "That pack could not be read: " + e.getMessage(),
-				"Pack not imported", javax.swing.JOptionPane.ERROR_MESSAGE);
-		}
-	}
-
-	/**
-	 * The read pack, asked about and added, on the event thread: the Messages
-	 * window saves the same file there, so nothing can save between this
-	 * reading the file and writing it back.
-	 */
-	private void takePack(com.follower.share.PackFile.Loaded loaded, java.awt.Component parent)
-	{
-		// Edits begun while the pack was read would save over what it adds.
-		if (messagesDialog != null && messagesDialog.isDirty())
-		{
-			sendStatus("Save or discard the edits in the Messages window first.");
-			return;
-		}
-		try
-		{
-			if (loaded.summary.isEmpty())
-			{
-				javax.swing.JOptionPane.showMessageDialog(parent,
-					"There was nothing usable in that pack."
-						+ (loaded.summary.problems.isEmpty() ? ""
-						: System.lineSeparator() + System.lineSeparator() + String.join(System.lineSeparator(), loaded.summary.problems)),
-					"Nothing to import", javax.swing.JOptionPane.WARNING_MESSAGE);
-				return;
-			}
-
-			String from = loaded.summary.author == null || loaded.summary.author.isEmpty()
-				? "" : " from " + loaded.summary.author;
-			int confirm = javax.swing.JOptionPane.showConfirmDialog(parent,
-				"This pack" + from + " holds:" + System.lineSeparator()
-					+ System.lineSeparator() + "  " + loaded.summary.rules + " rule(s)"
-					+ System.lineSeparator() + "  " + loaded.summary.lines + " line(s)"
-					+ System.lineSeparator() + "  " + loaded.summary.sounds + " sound file(s), "
-					+ (loaded.summary.bytes / 1024) + " KB"
-					+ System.lineSeparator() + System.lineSeparator() + "They are added to yours. Nothing you have"
-					+ " written is replaced."
-					+ (loaded.summary.problems.isEmpty() ? ""
-					: System.lineSeparator() + System.lineSeparator() + "Left out:" + System.lineSeparator()
-						+ String.join(System.lineSeparator(), loaded.summary.problems)),
-				"Import this pack?", javax.swing.JOptionPane.OK_CANCEL_OPTION);
-			if (confirm != javax.swing.JOptionPane.OK_OPTION)
-			{
-				return;
-			}
-
-			com.google.gson.JsonObject mine = gson.fromJson(
-				new String(java.nio.file.Files.readAllBytes(ruleLoader.getFile()),
-					java.nio.charset.StandardCharsets.UTF_8),
-				com.google.gson.JsonObject.class);
-
-			com.follower.share.PackFile.Summary took = com.follower.share.PackFile.apply(
-				loaded, mine, voices.getSoundsFolder(), voices);
-			com.follower.share.PackFile.save(ruleLoader.getFile(), mine,
-				gson.newBuilder().setPrettyPrinting().disableHtmlEscaping().create());
-
-			javax.swing.JOptionPane.showMessageDialog(parent,
-				"Taken on " + took.lines + " new line(s) across " + took.rules
-					+ " rule(s), and " + took.sounds + " sound file(s)."
-					+ System.lineSeparator() + System.lineSeparator() + "The follower has them already."
-					+ (took.problems.isEmpty() ? ""
-					: System.lineSeparator() + System.lineSeparator() + "Left out:"
-						+ System.lineSeparator()
-						+ String.join(System.lineSeparator(), took.problems)),
-				"Pack imported", javax.swing.JOptionPane.INFORMATION_MESSAGE);
-			if (messagesDialog != null && messagesDialog.isVisible())
-			{
-				// The file has grown underneath the window; show what it says now.
-				messagesDialog.open();
-			}
-		}
-		catch (Exception e)
-		{
-			log.warn("Could not read the pack", e);
-			javax.swing.JOptionPane.showMessageDialog(parent,
-				"That pack could not be read: " + e.getMessage(),
-				"Pack not imported", javax.swing.JOptionPane.ERROR_MESSAGE);
-		}
-	}
-
-	/**
-	 * Developer dump of the world views around the player, for boats: which
-	 * view the player stands in, what its collision map says for the nine by
-	 * nine tiles around them, read the way the follower reads it, against the
-	 * sea map underneath, every object on those tiles, and the tiles the
-	 * player has stood on since developer mode went on. Written to the client
-	 * log. A walked tile marked blocked means the map is being misread.
-	 */
-	private void dumpBoat()
-	{
-		Player me = client.getLocalPlayer();
-		if (me == null)
-		{
-			sendStatus("Not logged in.");
-			return;
-		}
-		WorldPoint at = me.getWorldLocation();
-		net.runelite.api.WorldView top = client.getTopLevelWorldView();
-		StringBuilder out = new StringBuilder();
-		out.append("BOAT player at ").append(at).append(" local ").append(me.getLocalLocation())
-			.append("\n  player view: ").append(describeView(me.getWorldView()))
-			.append("\n  found view : ").append(describeView(client.findWorldViewFromWorldPoint(at)))
-			.append("\n  top view   : ").append(describeView(top))
-			.append("\n  follower at ").append(follower.getWorldLocation())
-			.append("\n  flags array: ").append(describeFlags(client.findWorldViewFromWorldPoint(at), at.getPlane()))
-			.append("\n  your tile in the scene array: ").append(describeTile(client.findWorldViewFromWorldPoint(at), at))
-			.append("\n  walked tiles remembered: ").append(walked.size())
-			.append("\n  grid: P you, . open, # blocked, o walked+open, X walked+BLOCKED, w wall bits, x other bits, - not in view, ? no data\n");
-		int lines = 0;
-		for (int dy = 4; dy >= -4; dy--)
-		{
-			StringBuilder row = new StringBuilder();
-			StringBuilder sea = new StringBuilder();
-			for (int dx = -4; dx <= 4; dx++)
-			{
-				WorldPoint t = new WorldPoint(at.getX() + dx, at.getY() + dy, at.getPlane());
-				char c = flagSymbol(client.findWorldViewFromWorldPoint(t), t, dx == 0 && dy == 0);
-				if (c != 'P' && walked.contains(t))
-				{
-					c = c == '#' ? 'X' : c == '.' ? 'o' : c;
-				}
-				row.append(c);
-				sea.append(flagSymbol(top, t, dx == 0 && dy == 0));
-			}
-			out.append("  ").append(row).append("   sea: ").append(sea).append('\n');
-			lines++;
-		}
-		for (int dy = 4; dy >= -4; dy--)
-		{
-			for (int dx = -4; dx <= 4; dx++)
-			{
-				WorldPoint t = new WorldPoint(at.getX() + dx, at.getY() + dy, at.getPlane());
-				net.runelite.api.WorldView v = client.findWorldViewFromWorldPoint(t);
-				net.runelite.api.coords.LocalPoint lp = v == null ? null : net.runelite.api.coords.LocalPoint.fromWorld(v, t);
-				if (lp == null)
-				{
-					continue;
-				}
-				StringBuilder objs = new StringBuilder();
-				net.runelite.api.Tile[][][] tiles = v.getScene() == null ? null : v.getScene().getTiles();
-				net.runelite.api.Tile tile = tiles == null || t.getPlane() >= tiles.length
-					|| lp.getSceneX() >= tiles[t.getPlane()].length
-					|| lp.getSceneY() >= tiles[t.getPlane()][lp.getSceneX()].length
-					? null : tiles[t.getPlane()][lp.getSceneX()][lp.getSceneY()];
-				if (tile != null)
-				{
-					if (tile.getGameObjects() != null)
-					{
-						for (net.runelite.api.GameObject g : tile.getGameObjects())
-						{
-							if (g != null)
-							{
-								objs.append(" obj ").append(g.getId()).append(' ').append(objectName(g.getId()))
-									.append(' ').append(g.sizeX()).append('x').append(g.sizeY());
-							}
-						}
-					}
-					if (tile.getWallObject() != null)
-					{
-						objs.append(" wall ").append(tile.getWallObject().getId());
-					}
-					if (tile.getGroundObject() != null)
-					{
-						objs.append(" ground ").append(tile.getGroundObject().getId());
-					}
-					if (tile.getDecorativeObject() != null)
-					{
-						objs.append(" decor ").append(tile.getDecorativeObject().getId());
-					}
-				}
-				Integer flags = flagsIn(v, lp, t.getPlane());
-				if (objs.length() > 0 || (flags != null && flags != 0))
-				{
-					out.append("  (").append(dx).append(',').append(dy).append(") view ").append(v.getId())
-						.append(" scene ").append(lp.getSceneX()).append(',').append(lp.getSceneY())
-						.append(" flags ").append(flags == null ? "none" : "0x" + Integer.toHexString(flags))
-						.append(objs).append('\n');
-					lines++;
-				}
-			}
-		}
-		log.info(out.toString());
-		sendStatus("Boat dump written to the client log, " + lines + " lines.");
-	}
-
-	private String objectName(int id)
-	{
-		try
-		{
-			net.runelite.api.ObjectComposition def = client.getObjectDefinition(id);
-			return def == null ? "?" : def.getName();
-		}
-		catch (Exception e)
-		{
-			return "?";
-		}
-	}
-
-	private static String describeFlags(net.runelite.api.WorldView v, int plane)
-	{
-		if (v == null || v.getCollisionMaps() == null || plane >= v.getCollisionMaps().length
-			|| v.getCollisionMaps()[plane] == null)
-		{
-			return "none";
-		}
-		int[][] flags = v.getCollisionMaps()[plane].getFlags();
-		StringBuilder edge = new StringBuilder();
-		for (int x = 0; x < flags.length && x < 12; x++)
-		{
-			edge.append(" 0x").append(Integer.toHexString(flags[x][Math.min(10, flags[x].length - 1)]));
-		}
-		return flags.length + "x" + (flags.length == 0 ? 0 : flags[0].length)
-			+ " for a view " + v.getSizeX() + "x" + v.getSizeY()
-			+ " | raw row [x][10] by x:" + edge;
-	}
-
-	private static String describeTile(net.runelite.api.WorldView v, WorldPoint at)
-	{
-		net.runelite.api.coords.LocalPoint lp = v == null ? null
-			: net.runelite.api.coords.LocalPoint.fromWorld(v, at);
-		if (lp == null || v.getScene() == null || v.getScene().getTiles() == null)
-		{
-			return "unresolved";
-		}
-		net.runelite.api.Tile[][][] tiles = v.getScene().getTiles();
-		net.runelite.api.Tile tile = at.getPlane() < tiles.length
-			&& lp.getSceneX() < tiles[at.getPlane()].length
-			&& lp.getSceneY() < tiles[at.getPlane()][lp.getSceneX()].length
-			? tiles[at.getPlane()][lp.getSceneX()][lp.getSceneY()] : null;
-		return "array " + tiles.length + "x" + tiles[0].length + "x" + tiles[0][0].length
-			+ " looked up [" + at.getPlane() + "][" + lp.getSceneX() + "][" + lp.getSceneY() + "] -> "
-			+ (tile == null ? "null" : "scene " + tile.getSceneLocation() + " world " + tile.getWorldLocation()
-				+ " plane " + tile.getPlane());
-	}
-
-	private static String describeView(net.runelite.api.WorldView v)
-	{
-		if (v == null)
-		{
-			return "null";
-		}
-		net.runelite.api.CollisionData[] maps = v.getCollisionMaps();
-		return "id " + v.getId() + (v.isTopLevel() ? " top" : " sub") + " base " + v.getBaseX() + ","
-			+ v.getBaseY() + " size " + v.getSizeX() + "x" + v.getSizeY() + " plane " + v.getPlane()
-			+ " maps " + (maps == null ? "null" : String.valueOf(maps.length));
-	}
-
-	/** The follower's own read, inset and all, so the dump shows what it sees. */
-	private static Integer flagsIn(net.runelite.api.WorldView v, net.runelite.api.coords.LocalPoint lp, int plane)
-	{
-		return com.follower.follower.FollowerEntity.sceneFlags(v, plane, lp.getSceneX(), lp.getSceneY());
-	}
-
-	private static char flagSymbol(net.runelite.api.WorldView v, WorldPoint t, boolean me)
-	{
-		if (v == null)
-		{
-			return '?';
-		}
-		net.runelite.api.coords.LocalPoint lp = net.runelite.api.coords.LocalPoint.fromWorld(v, t);
-		if (lp == null)
-		{
-			return '-';
-		}
-		Integer flags = flagsIn(v, lp, t.getPlane());
-		if (flags == null)
-		{
-			return '?';
-		}
-		if (me)
-		{
-			return 'P';
-		}
-		if ((flags & net.runelite.api.CollisionDataFlag.BLOCK_MOVEMENT_FULL) != 0)
-		{
-			return '#';
-		}
-		if ((flags & 0xFF) != 0)
-		{
-			return 'w';
-		}
-		return flags == 0 ? '.' : 'x';
-	}
-
-	private void sendStatus(String message)
+	void sendStatus(String message)
 	{
 		chatMessageManager.queue(QueuedMessage.builder()
 			.type(ChatMessageType.CONSOLE)

@@ -1,8 +1,5 @@
 package com.follower;
 
-import com.follower.sim.Harness;
-import com.follower.speech.TriggerContext;
-import com.follower.speech.TriggerEvent;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.concurrent.atomic.AtomicLong;
@@ -83,20 +80,6 @@ public class ShadowedRulesTest
 		assertEquals(1, h.firedBy("quest-milestone-10").size());
 		assertTrue(h.firedBy("quest-complete").isEmpty());
 		assertTrue("an occasion", h.rule("quest-milestone-10").isOccasion());
-	}
-
-	@Test
-	public void aBetIsOpenedOnSomeFights() throws IOException
-	{
-		int bets = 0;
-		for (int trial = 0; trial < 80 && bets == 0; trial++)
-		{
-			Harness h = harness();
-			h.dispatch(TriggerEvent.combat(TriggerEvent.Type.COMBAT_START, "Goblin"));
-			ticks(h, 2);
-			bets += h.firedBy("bet-rich").size();
-		}
-		assertTrue("bet-rich wins the fight's start when it rolls", bets > 0);
 	}
 
 	@Test

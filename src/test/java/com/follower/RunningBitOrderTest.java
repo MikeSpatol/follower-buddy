@@ -1,7 +1,5 @@
 package com.follower;
 
-import com.follower.sim.Harness;
-import com.follower.speech.TriggerContext;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -44,7 +42,7 @@ public class RunningBitOrderTest
 		"fun-fence-book-finished", "fun-fence-book-sequel");
 	private static final List<String> GULL = Arrays.asList(
 		"fun-gull-rival-first", "fun-gull-rival-early", "fun-gull-rival-middle",
-		"fun-gull-rival-late", "fun-gull-feather");
+		"fun-gull-rival-late");
 	private static final List<String> HANS = Arrays.asList(
 		"fun-hans-race-first", "fun-hans-race-early", "fun-hans-race-middle",
 		"fun-hans-race-late");
@@ -161,16 +159,6 @@ public class RunningBitOrderTest
 		}
 		assertEquals("the rivalry opens, and nothing later follows it the same day",
 			Collections.singleton("fun-gull-rival-first"), heard(h, GULL));
-
-		Harness later = harnessWith(GULL);
-		later.engine.getContext().setMetOnDay(daysAgo(400));
-		later.engine.getContext().restoreSpokenOnce(
-			Collections.singletonList("fun-gull-rival-first"),
-			Collections.singletonMap("fun-gull-rival-first", daysAgo(95)));
-		later.game.spawnNpc(1338, "Seagull", 2);
-		later.gameTicks(5);
-		assertEquals("ninety days after the opener, the truce",
-			Collections.singleton("fun-gull-feather"), heard(later, GULL));
 	}
 
 	@Test
@@ -237,14 +225,14 @@ public class RunningBitOrderTest
 	public void aOneTimeLineIsDatedAndTheDateSurvivesARestart()
 	{
 		Gson gson = new Gson();
-		TriggerContext before = new TriggerContext(new com.follower.sim.FakeGame().client);
+		TriggerContext before = new TriggerContext(new FakeGame().client);
 		before.noteSaidOnce("fun-fence-book-start");
 		assertEquals("said today", 0, before.daysSinceSaid("fun-fence-book-start"));
 		assertEquals("never said", -1, before.daysSinceSaid("fun-gull-rival-first"));
 		before.restoreSpokenOnce(Collections.singletonList("fun-hans-race-first"),
 			Collections.singletonMap("fun-hans-race-first", daysAgo(30)));
 
-		TriggerContext after = new TriggerContext(new com.follower.sim.FakeGame().client);
+		TriggerContext after = new TriggerContext(new FakeGame().client);
 		FollowerPlugin.restoreMemory(after, FollowerPlugin.snapshotMemory(before, 0, gson), gson, 0);
 		assertEquals(0, after.daysSinceSaid("fun-fence-book-start"));
 		assertEquals(30, after.daysSinceSaid("fun-hans-race-first"));
@@ -259,7 +247,7 @@ public class RunningBitOrderTest
 		Gson gson = new Gson();
 		String older = "{\"sessions\":40,\"metOnDay\":" + daysAgo(66)
 			+ ",\"spokenOnce\":[\"fun-fence-book-start\",\"first-meeting\"],\"deathPlane\":-1}";
-		TriggerContext after = new TriggerContext(new com.follower.sim.FakeGame().client);
+		TriggerContext after = new TriggerContext(new FakeGame().client);
 		FollowerPlugin.restoreMemory(after, older, gson, 0);
 		assertTrue(after.hasSaidOnce("fun-fence-book-start"));
 		assertEquals(0, after.daysSinceSaid("fun-fence-book-start"));
@@ -273,7 +261,7 @@ public class RunningBitOrderTest
 		// "once", is never true and fails silently.
 		Harness h = new Harness(folder.newFolder().toPath());
 		Set<String> once = new HashSet<>();
-		for (com.follower.speech.SpeechRule rule : h.loader.getRules())
+		for (SpeechRule rule : h.loader.getRules())
 		{
 			if (rule.isOnce())
 			{
@@ -283,9 +271,9 @@ public class RunningBitOrderTest
 		List<String> bad = new java.util.ArrayList<>();
 		List<String> sameDay = new java.util.ArrayList<>();
 		int found = 0;
-		for (com.follower.speech.SpeechRule rule : h.loader.getRules())
+		for (SpeechRule rule : h.loader.getRules())
 		{
-			for (com.follower.speech.Condition c : flatten(rule.when))
+			for (Condition c : flatten(rule.when))
 			{
 				if ("daysSinceSaid".equalsIgnoreCase(c.type))
 				{
@@ -307,15 +295,15 @@ public class RunningBitOrderTest
 		assertTrue("a stage that can share its opener's day: " + sameDay, sameDay.isEmpty());
 	}
 
-	private static List<com.follower.speech.Condition> flatten(com.follower.speech.Condition c)
+	private static List<Condition> flatten(Condition c)
 	{
-		List<com.follower.speech.Condition> out = new java.util.ArrayList<>();
+		List<Condition> out = new java.util.ArrayList<>();
 		if (c != null)
 		{
 			out.add(c);
 			if (c.conditions != null)
 			{
-				for (com.follower.speech.Condition child : c.conditions)
+				for (Condition child : c.conditions)
 				{
 					out.addAll(flatten(child));
 				}

@@ -1,14 +1,5 @@
 package com.follower;
 
-import com.follower.appearance.AppearanceService;
-import com.follower.appearance.ComposedAppearance;
-import com.follower.appearance.ModelSource;
-import com.follower.appearance.Outfit;
-import com.follower.appearance.OutfitParser;
-import com.follower.appearance.OutfitProfileStore;
-import com.follower.follower.FollowerEntity;
-import com.follower.sim.FakeGame;
-import com.follower.sim.Harness;
 import com.google.gson.Gson;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -80,10 +71,10 @@ public class ThrallOnlyTest
 	{
 		// QA3: "Untick Replace thralls" does nothing with Thrall only on, so
 		// with it ticked the hint names both switches (QA4, approved wording).
-		String source = new String(Files.readAllBytes(
+		String source = PublicMarkers.strip(new String(Files.readAllBytes(
 			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8)
-			.replace("\r\n", "\n");
-		int at = source.indexOf("private void maybeSendThrallHint()");
+			.replace("\r\n", "\n"));
+		int at = source.indexOf("void maybeSendThrallHint()");
 		assertTrue("the lint has lost its place", at >= 0);
 		String body = source.substring(at, source.indexOf("\n\t}", at));
 		assertTrue(body, body.contains("config.thrallOnly()\n\t\t\t? \"Untick Thrall only and Replace thralls"
@@ -139,7 +130,7 @@ public class ThrallOnlyTest
 			}
 		});
 		List<Outfit> asked = new ArrayList<>();
-		set(plugin, "appearanceService", new AppearanceService(null, null)
+		set(plugin, "appearanceService", new AppearanceService(null)
 		{
 			@Override
 			public void invalidate()
@@ -148,7 +139,7 @@ public class ThrallOnlyTest
 			}
 
 			@Override
-			public void request(Outfit outfit, ModelSource source, Consumer<ComposedAppearance> onReady)
+			public void request(Outfit outfit, Consumer<ComposedAppearance> onReady)
 			{
 				asked.add(outfit);
 			}
@@ -354,8 +345,8 @@ public class ThrallOnlyTest
 		// What the thrall says while it fights goes through the tick's mute,
 		// glue no harness drives; the tick has to ask, as the thieving lift
 		// that says the thieving lines does.
-		String source = new String(Files.readAllBytes(
-			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8);
+		String source = PublicMarkers.strip(new String(Files.readAllBytes(
+			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8));
 		assertTrue("the tick's mute asks",
 			source.contains("speechEngine.setMuted(config.muted() || thievingNow || absentNow || thrallQuiet()"));
 		assertTrue("and so does the thieving lift",

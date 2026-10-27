@@ -1,8 +1,5 @@
 package com.follower;
 
-import com.follower.sim.Harness;
-import com.follower.speech.TriggerContext;
-import com.follower.speech.TriggerEvent;
 import java.io.IOException;
 import java.time.LocalDate;
 import org.junit.Rule;
@@ -66,9 +63,9 @@ public class ArrivalArcTest
 		}
 	}
 
-	private static com.follower.speech.Condition sessionMinutesWindow(Harness h, String ruleId)
+	private static Condition sessionMinutesWindow(Harness h, String ruleId)
 	{
-		for (com.follower.speech.Condition part : h.rule(ruleId).when.conditions)
+		for (Condition part : h.rule(ruleId).when.conditions)
 		{
 			if ("sessionMinutes".equalsIgnoreCase(part.type))
 			{

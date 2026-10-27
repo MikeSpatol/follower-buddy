@@ -1,9 +1,5 @@
 package com.follower;
 
-import com.follower.sim.Harness;
-import com.follower.speech.SpeechRule;
-import com.follower.speech.TriggerContext;
-import com.follower.speech.TriggerEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -289,7 +285,6 @@ public class LongSoakTest
 		// last time.
 		Harness h = soakHarness();
 		TriggerContext ctx = h.engine.getContext();
-		ctx.setNicknames(h.loader.getNicknames());
 		h.game.spawnNpc(2098, "Hill Giant", 28);
 		h.gameTicks(3);
 		h.clear();
@@ -386,12 +381,6 @@ public class LongSoakTest
 					h.dispatch(TriggerEvent.simple(TriggerEvent.Type.STEPPED_ASIDE));
 				}
 			}
-			else if (roll < 193)
-			{
-				h.dispatch(TriggerEvent.pageWritten(
-					new String[]{"boss", "enemy", "location", "faction", "world", "quest"}
-						[random.nextInt(6)], "Giant Mole"));
-			}
 			else if (roll < 195)
 			{
 				h.dispatch(TriggerEvent.simple(TriggerEvent.Type.FAREWELL));
@@ -471,7 +460,6 @@ public class LongSoakTest
 			else if (roll == 232)
 			{
 				// The player saying yes to the name on offer.
-				ctx.acceptNickname(ctx.getEarnedNickname());
 			}
 			else if (roll == 233 && random.nextInt(10) == 0)
 			{
@@ -613,7 +601,7 @@ public class LongSoakTest
 		// empty chair, and two quest people met on one tick. Six seeds of two
 		// hours each, the scenes, boxes and absences at random among the rest.
 		java.lang.reflect.Field pendingField =
-			com.follower.speech.SpeechEngine.class.getDeclaredField("pending");
+			SpeechEngine.class.getDeclaredField("pending");
 		pendingField.setAccessible(true);
 		List<String> problems = new ArrayList<>();
 		int waitsHeard = 0;

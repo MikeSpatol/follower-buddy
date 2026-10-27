@@ -1,10 +1,5 @@
 package com.follower;
 
-import com.follower.appearance.Outfit;
-import com.follower.appearance.OutfitParser;
-import com.follower.appearance.OutfitProfileStore;
-import com.follower.speech.RuleLoader;
-import com.follower.speech.SpeechRule;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;

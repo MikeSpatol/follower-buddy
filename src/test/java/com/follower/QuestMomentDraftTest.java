@@ -1,10 +1,5 @@
 package com.follower;
 
-import com.follower.sim.Harness;
-import com.follower.speech.Condition;
-import com.follower.speech.SpeechEngine;
-import com.follower.speech.SpeechRule;
-import com.follower.speech.TriggerEvent;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.io.IOException;

@@ -75,7 +75,7 @@ mild and its worst insult is a pause.
 
 Exemplars, for calibration. All are shipped lines — the first five from
 `default-phrases.json`, the last from the Talk-to script in
-`FollowerPlugin.talkScript()`:
+`talk.json` (built by `FollowerPlugin.talkScript()`):
 
 > "I've named the rocks. That one's Gerald."
 > "Bring pie. I'm serious. It's the only currency he respects."
@@ -166,7 +166,7 @@ to be made, summoned or created, and exactly one brushed against a life before
 the player — on reading, it didn't. Only sixteen edits were needed, all
 player-visible.
 
-**The premise, in `FollowerPlugin.talkScript()`:**
+**The premise, in `talk.json` (built by `FollowerPlugin.talkScript()`):**
 
 | Was | Now |
 |---|---|

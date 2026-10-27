@@ -1,6 +1,5 @@
 package com.follower;
 
-import com.follower.sim.Harness;
 import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;

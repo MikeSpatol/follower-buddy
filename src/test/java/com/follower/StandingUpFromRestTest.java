@@ -1,7 +1,5 @@
 package com.follower;
 
-import com.follower.follower.ErrandController;
-import com.follower.follower.FollowerEntity;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;

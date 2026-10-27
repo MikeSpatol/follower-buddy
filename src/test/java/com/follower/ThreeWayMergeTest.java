@@ -1,6 +1,5 @@
 package com.follower;
 
-import com.follower.speech.RuleLoader;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;

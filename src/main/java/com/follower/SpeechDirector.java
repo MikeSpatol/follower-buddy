@@ -1,0 +1,206 @@
+package com.follower;
+
+import java.util.concurrent.ThreadLocalRandom;
+import lombok.*;
+
+/**
+ * Decides when the follower has said enough for now.
+ *
+ * <p>The speech gap already stops two lines landing on top of each other, but a
+ * gap is a floor and nothing more: at three seconds apart, a follower with
+ * plenty to react to will talk for as long as things keep happening, and every
+ * line lands in the same flat stream as the one before it. Nothing is ever
+ * quiet, so nothing is ever loud.
+ *
+ * <p>This is the survival-horror director model, which exists for exactly that
+ * problem. A running intensity rises with each thing said and decays with time;
+ * crossing a peak forces a RELAX period during which only an occasion gets
+ * through. The relax is the point. Contrast is not something a line can have on
+ * its own - it is the silence either side of it - and the only way to make a
+ * good line land is to have said less shortly before it.
+ *
+ * <p>The same object holds the settling-in damper, because it is the same
+ * question asked about a longer span of time: how much should be said, given
+ * what has been said lately.
+ */
+class SpeechDirector
+{
+
+	/**
+	 * How long a peak buys, in milliseconds, as a range.
+	 *
+	 * <p>Randomised because a constant is a metronome: a player who notices the
+	 * follower goes quiet for exactly thirty seconds has found the machinery,
+	 * and from then on hears a timer rather than someone choosing not to speak.
+	 */
+	static final long RELAX_MIN_MS = 30_000L;
+
+	/** Groups that recite what the world is, rather than react to what happened in it. */
+	static final java.util.Set<String> LORE_GROUPS =
+		new java.util.HashSet<>(java.util.Arrays.asList("area", "gear"));
+
+	@Getter
+	double intensity;
+	long lastDecayMs,
+		relaxUntilMs,
+		lastLoreMs;
+
+	/**
+	 * The base speech gap, in milliseconds. Everything here is expressed as a
+	 * multiple of it, so the chattiness setting moves the whole model at once.
+	 *
+	 * <p>Zero switches the director off entirely, which falls out of the same
+	 * fact rather than being a special case bolted on: every window here is a
+	 * multiple of the gap, so a gap of nothing makes all of them nothing. The
+	 * chattiness setting has no such level - this is for the test harness,
+	 * which wants rules evaluated without pacing in the way.
+	 */
+	long baseGapMs = 3_000L;
+
+	void setBaseGapMs(long baseGapMs)
+	{
+		this.baseGapMs = Math.max(0L, baseGapMs);
+	}
+
+	boolean isPacing()
+	{
+		return baseGapMs > 0L;
+	}
+
+	/**
+	 * Sessions so far, this one included. Drives the settling-in damper only.
+	 *
+	 * <p>Zero means nobody has said yet, which is treated as NOT settling in.
+	 * The damper is a claim that the follower is new, and an unanswered
+	 * question is not evidence for it - defaulting the other way would have
+	 * every fresh engine start out quiet about the scenery until something got
+	 * round to correcting it.
+	 */
+	@Setter
+	int sessionCount;
+
+	boolean isSettlingIn()
+	{
+		// SETTLING_SESSIONS: Sessions during which the follower is still settling in. The first
+		// evening and the first return.
+		return sessionCount >= 1 && sessionCount <= 2 /* SETTLING_SESSIONS */;
+	}
+
+	boolean isRelaxing(long now)
+	{
+		return now < relaxUntilMs;
+	}
+
+	long relaxRemainingMs(long now)
+	{
+		return Math.max(0L, relaxUntilMs - now);
+	}
+
+	/**
+	 * Why this rule should stay quiet right now, or null to let it speak.
+	 *
+	 * <p>Only ever consulted for rules that actually say something; an
+	 * animation-only firing is movement rather than chatter and never reaches
+	 * here.
+	 */
+	String blocks(SpeechRule rule, long now)
+	{
+		if (!isPacing())
+			return null;
+
+		// An occasion is exempt from EVERYTHING this class does, and that has to
+		// be said once at the top rather than repeated per damper. It was not,
+		// and the settling check below quietly acquired the power to swallow
+		// enter-wilderness - a line whose whole job is to reach a player who has
+		// never seen the place, from a follower that is only settling in
+		// because the player is new. The two conditions peak together.
+		if (rule.isOccasion())
+			return null;
+
+		if (isRelaxing(now))
+			return "relax";
+		// SETTLING_LORE_GAPS: Gaps a settling-in follower leaves between two lore lines.
+		if (isLore(rule) && isSettlingIn() && now - lastLoreMs < baseGapMs * 4 /* SETTLING_LORE_GAPS */)
+			return "settling";
+		return null;
+	}
+
+	/**
+	 * Whether this rule recites what the world IS, rather than reacting to
+	 * what happened in it. Public so a test can assert the other way round -
+	 * that nothing which must always be heard has been left in a group the
+	 * damper thins.
+	 */
+	static boolean isLore(SpeechRule rule)
+	{
+		return rule.group != null
+			&& LORE_GROUPS.contains(rule.group.toLowerCase(java.util.Locale.ROOT));
+	}
+
+	/**
+	 * Records that a line was actually said, and starts a relax period if that
+	 * was one line too many.
+	 *
+	 * <p>Counted at the point of SPEAKING rather than of winning, for the same
+	 * reason the mood is: a line the mute swallowed cost the player no
+	 * attention, and resting afterwards would be resting from nothing.
+	 */
+	void noteSpoke(SpeechRule rule, long now)
+	{
+		if (!isPacing())
+			return;
+		decayTo(now);
+
+		if (isLore(rule))
+			lastLoreMs = now;
+
+		// An occasion is the thing the quiet was being saved for. Letting it
+		// also build towards the next quiet would have the follower punish
+		// itself for the one line it most wanted to say.
+		if (rule.isOccasion())
+			return;
+
+		// RISE_PER_LINE: What one spoken line adds to the running intensity.
+		intensity += 1.0 /* RISE_PER_LINE */;
+		// PEAK_AT: Intensity at which the follower has had its say and stops for a bit.
+		// <p>Three lines close together, and not the 3.0 that implies: the third
+		// arrives two gaps after the first and the decay has already taken a slice
+		// off the two before it. Asking for a full three units would quietly mean
+		// four lines, which is a different and much longer burst.
+		if (intensity >= 2.5 /* PEAK_AT */)
+		{
+			intensity = 0.0;
+			relaxUntilMs = now + RELAX_MIN_MS
+				+ (long) ThreadLocalRandom.current().nextInt((int) (45_000L /* RELAX_MAX_MS */ - RELAX_MIN_MS) + 1);
+		}
+	}
+
+	void decayTo(long now)
+	{
+		if (lastDecayMs == 0L)
+		{
+			lastDecayMs = now;
+			return;
+		}
+		long elapsed = now - lastDecayMs;
+		lastDecayMs = now;
+		if (elapsed <= 0L)
+			return;
+		// DECAY_GAPS: Intensity decays one unit per this many speech gaps.
+		// <p>Expressed in gaps rather than seconds so the whole model scales with
+		// the chattiness setting instead of fighting it. At Normal, three lines
+		// inside forty-five seconds is a burst worth resting after; at Quiet, where
+		// the floor between lines is already twelve seconds, the same three lines
+		// are spread far enough that they never peak - which is correct, because a
+		// player who asked for quiet has already been given the contrast.
+		intensity = Math.max(0.0, intensity - elapsed / (5.0 /* DECAY_GAPS */ * baseGapMs));
+	}
+
+	void reset()
+	{
+		intensity = 0.0;
+		lastDecayMs = 0L;
+		relaxUntilMs = 0L;
+		lastLoreMs = 0L;
+	}
+}

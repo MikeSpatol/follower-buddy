@@ -1,7 +1,5 @@
 package com.follower;
 
-import com.follower.sim.FakeGame;
-import com.follower.speech.TriggerContext;
 import net.runelite.api.NPC;
 import net.runelite.api.coords.WorldPoint;
 import org.junit.Test;

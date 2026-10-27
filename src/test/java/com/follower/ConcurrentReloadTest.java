@@ -1,7 +1,5 @@
 package com.follower;
 
-import com.follower.speech.RuleLoader;
-import com.follower.speech.SpeechRule;
 import com.google.gson.Gson;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

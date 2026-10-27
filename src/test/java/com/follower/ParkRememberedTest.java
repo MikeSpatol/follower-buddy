@@ -1,6 +1,5 @@
 package com.follower;
 
-import com.follower.follower.FollowerEntity;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -84,23 +83,25 @@ public class ParkRememberedTest
 	@Test
 	public void bothSpawnsALoginTakesReadThePost() throws IOException
 	{
-		String source = new String(Files.readAllBytes(
-			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8);
+		String source = PublicMarkers.strip(new String(Files.readAllBytes(
+			Paths.get("src/main/java/com/follower/FollowerPlugin.java")), StandardCharsets.UTF_8));
 		int reads = 0;
 		for (int at = source.indexOf("parkToReturnTo(config.parkedAt()"); at >= 0;
 			at = source.indexOf("parkToReturnTo(config.parkedAt()", at + 1))
 		{
 			reads++;
 		}
-		assertEquals("the queued rebuild and the tick's auto-spawn", 2, reads);
+		assertEquals("one spawn reads it", 1, reads);
+		assertTrue("the queued rebuild spawns through it", source.contains("spawnFollower(appearance, local, true);"));
+		assertTrue("and the tick's auto-spawn", source.contains("spawnFollower(appearanceService.getCurrent(), local, false);"));
 		int asPost = 0;
 		for (int at = source.indexOf("config.spawnGraphicHeight(), post != null)"); at >= 0;
 			at = source.indexOf("config.spawnGraphicHeight(), post != null)", at + 1))
 		{
 			asPost++;
 		}
-		assertEquals("and both spawn it AS a post, or the landing draws it back to the player"
-			+ " (PostArrivalTest)", 2, asPost);
+		assertEquals("and it spawns it AS a post, or the landing draws it back to the player"
+			+ " (PostArrivalTest)", 1, asPost);
 		assertTrue("and the tick keeps the park", source.contains("rememberThePark();"));
 	}
 }

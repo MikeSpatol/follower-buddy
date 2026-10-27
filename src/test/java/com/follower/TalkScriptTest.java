@@ -1,6 +1,5 @@
 package com.follower;
 
-import com.follower.speech.FollowerDialog;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.io.IOException;
@@ -39,9 +38,9 @@ public class TalkScriptTest
 		// Built WITH a wish open and the thing in the bag, so the gift branch
 		// exists and every structural check walks it too; the other variants
 		// are checked in their own tests below.
-		return FollowerPlugin.talkScript(
-			() -> FollowerPlugin.daySummary(95, 12, 2, 1, "good", "that chicken"),
-			answer -> { }, "feather", true, "even");
+		return FollowerPlugin.talkScript(talk(),
+			() -> FollowerPlugin.daySummary(talk(), 95, 12, 2, 1, "good", "that chicken"),
+			answer -> { }, "even");
 	}
 
 	/** Every node id something points at, via {@code then} or a choice. */
@@ -98,58 +97,6 @@ public class TalkScriptTest
 			+ String.join("\n  ", problems), problems.isEmpty());
 	}
 
-	@Test
-	public void theGiftOptionOnlyExistsWhileAWishDoes()
-	{
-		// The first gift design offered "Found you something." at all times,
-		// and it failed in play precisely because there was no something and
-		// no wanting. The option now appears with the wish, names the thing,
-		// and disappears with it.
-		Map<String, FollowerDialog.Node> wishing = script();
-		assertTrue("with a wish open the gift branch exists",
-			wishing.containsKey("gift-q"));
-		assertTrue("and the option names the thing",
-			wishing.get("start").getOptionLabels().contains("Found you that feather."));
-
-		Map<String, FollowerDialog.Node> wishless = FollowerPlugin.talkScript(
-			() -> FollowerPlugin.daySummary(95, 12, 2, 1, "good", "that chicken"),
-			answer -> { }, "", false, "even");
-		assertTrue("with no wish there is no gift branch at all",
-			!wishless.containsKey("gift-q"));
-		for (FollowerDialog.Node node : wishless.values())
-		{
-			for (String label : node.getOptionLabels())
-			{
-				assertTrue("a wishless script must not offer a gift: " + label,
-					!label.startsWith("Found you"));
-			}
-		}
-	}
-
-	@Test
-	public void theBoxItselfKnowsWhetherTheBagHoldsTheThing()
-	{
-		// The neutral version - "Let's see it, then." either way - read in
-		// play as the follower not looking, and a scribe that does not look
-		// is out of character in its own conversation. Same claim, different
-		// reception, decided by the bag.
-		java.util.List<String> reactions = new java.util.ArrayList<>();
-
-		Map<String, FollowerDialog.Node> holding = FollowerPlugin.talkScript(
-			() -> new String[]{""}, reactions::add, "feather", true, "even");
-		holding.get("gift-a").runFinish();
-		assertTrue("with the feather in the bag, the box accepts",
-			holding.get("gift-a").getPages().get(0).contains("That's the one"));
-
-		Map<String, FollowerDialog.Node> bluffing = FollowerPlugin.talkScript(
-			() -> new String[]{""}, reactions::add, "feather", false, "even");
-		bluffing.get("gift-a").runFinish();
-		assertTrue("with an empty bag, the box catches the bluff",
-			bluffing.get("gift-a").getPages().get(0).contains("empty bag"));
-
-		assertTrue("and the two branches answer differently",
-			reactions.contains("gift") && reactions.contains("bluff"));
-	}
 
 	@Test
 	public void aLowDaySharpensTheQuestion()
@@ -159,8 +106,8 @@ public class TalkScriptTest
 		// itself the kindness: the answer node latches "comforted" on arrival.
 		java.util.List<String> answers = new java.util.ArrayList<>();
 
-		Map<String, FollowerDialog.Node> low = FollowerPlugin.talkScript(
-			() -> new String[]{""}, answers::add, "", false, "low");
+		Map<String, FollowerDialog.Node> low = FollowerPlugin.talkScript(talk(),
+			() -> new String[]{""}, answers::add, "low");
 		assertTrue("the sharpened option leads somewhere real",
 			low.containsKey("allright-q"));
 		assertTrue("and the hub offers it",
@@ -173,13 +120,13 @@ public class TalkScriptTest
 		// "down" is lowish too - the sharpened question covers the whole
 		// bottom of the mood range, not just its floor. (Only "low" was
 		// tested at first; the strategy's mutation analysis caught it.)
-		Map<String, FollowerDialog.Node> down = FollowerPlugin.talkScript(
-			() -> new String[]{""}, answers::add, "", false, "down");
+		Map<String, FollowerDialog.Node> down = FollowerPlugin.talkScript(talk(),
+			() -> new String[]{""}, answers::add, "down");
 		assertTrue("a down day sharpens the question too",
 			down.get("start").getOptionLabels().contains("You all right?"));
 
-		Map<String, FollowerDialog.Node> fine = FollowerPlugin.talkScript(
-			() -> new String[]{""}, answers::add, "", false, "good");
+		Map<String, FollowerDialog.Node> fine = FollowerPlugin.talkScript(talk(),
+			() -> new String[]{""}, answers::add, "good");
 		assertTrue("on a fine day the everyday question is back",
 			fine.get("start").getOptionLabels().contains("How have you been?"));
 		assertTrue("and nobody asks a cheerful follower if it is all right",
@@ -218,15 +165,9 @@ public class TalkScriptTest
 			new java.util.LinkedHashMap<>();
 		for (String band : new String[]{"low", "even"})
 		{
-			variants.put(band + "/no-wish", FollowerPlugin.talkScript(
-				() -> FollowerPlugin.daySummary(95, 12, 2, 1, "good", "that chicken"),
-				answer -> { }, "", false, band));
-			variants.put(band + "/wish-held", FollowerPlugin.talkScript(
-				() -> FollowerPlugin.daySummary(95, 12, 2, 1, "good", "that chicken"),
-				answer -> { }, "feather", true, band));
-			variants.put(band + "/wish-empty", FollowerPlugin.talkScript(
-				() -> FollowerPlugin.daySummary(95, 12, 2, 1, "good", "that chicken"),
-				answer -> { }, "feather", false, band));
+			variants.put(band + "/no-wish", FollowerPlugin.talkScript(talk(),
+				() -> FollowerPlugin.daySummary(talk(), 95, 12, 2, 1, "good", "that chicken"),
+				answer -> { }, band));
 		}
 		return variants;
 	}
@@ -323,7 +264,7 @@ public class TalkScriptTest
 			{
 				for (String incident : new String[]{null, "that chicken"})
 				{
-					String[] pages = FollowerPlugin.daySummary(
+					String[] pages = FollowerPlugin.daySummary(talk(),
 						f[0], f[1], f[2], f[3], mood, incident);
 					String where = mood + " " + java.util.Arrays.toString(f);
 
@@ -368,7 +309,7 @@ public class TalkScriptTest
 	{
 		// 95 minutes used to read "1 hour" - the diary of somebody who was
 		// not really keeping one.
-		String[] pages = FollowerPlugin.daySummary(95, 0, 0, 0, "neutral", null);
+		String[] pages = FollowerPlugin.daySummary(talk(), 95, 0, 0, 0, "neutral", null);
 		assertTrue("the extra minutes went missing: " + pages[0],
 			pages[0].contains("1 hour and 35 minutes"));
 	}
@@ -379,7 +320,7 @@ public class TalkScriptTest
 		// The reason the branch exists at all. A follower that answers "0
 		// kills, 0 levels, 0 deaths" has read the tallies out; one that says
 		// nothing happened has understood them.
-		String[] pages = FollowerPlugin.daySummary(0, 0, 0, 0, "neutral", null);
+		String[] pages = FollowerPlugin.daySummary(talk(), 0, 0, 0, 0, "neutral", null);
 		String first = pages[0];
 		assertFalse("reported a zero: " + first, first.contains("0 "));
 		assertFalse("reported a zero: " + first, first.startsWith("So far:"));
@@ -478,7 +419,7 @@ public class TalkScriptTest
 		// question is the capability and does not.
 		assertTrue("nothing about counting or remembering", text.contains("keep track"));
 		assertTrue("nothing about having moods", text.contains("mood"));
-		assertTrue("nothing about places it likes", text.contains("places i like"));
+		assertFalse("places it likes, in a build without them", text.contains("places i like"));
 		assertTrue("nothing about asking to be taken somewhere",
 			text.contains("take me somewhere"));
 		assertTrue("nothing about giving you room while thieving",
@@ -488,6 +429,20 @@ public class TalkScriptTest
 	}
 
 	// ------------------------------------------------------------- plumbing
+
+	/** talk.json, read as the plugin reads it. */
+	static FollowerPlugin.Talk talk()
+	{
+		try (java.io.Reader in = new InputStreamReader(
+			TalkScriptTest.class.getResourceAsStream("/com/follower/talk.json"), StandardCharsets.UTF_8))
+		{
+			return new com.google.gson.Gson().fromJson(in, FollowerPlugin.Talk.class);
+		}
+		catch (IOException e)
+		{
+			throw new java.io.UncheckedIOException(e);
+		}
+	}
 
 	/** Every line the script can put on screen, lowercased. */
 	private static String allText()

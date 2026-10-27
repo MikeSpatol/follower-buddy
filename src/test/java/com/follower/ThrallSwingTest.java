@@ -1,7 +1,5 @@
 package com.follower;
 
-import com.follower.appearance.ModelRepository;
-import com.follower.follower.StanceLibrary;
 import com.google.gson.Gson;
 import java.io.IOException;
 import org.junit.Rule;

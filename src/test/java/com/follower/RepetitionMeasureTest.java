@@ -1,7 +1,5 @@
 package com.follower;
 
-import com.follower.sim.Harness;
-import com.follower.speech.SpeechRule;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
@@ -46,7 +44,7 @@ public class RepetitionMeasureTest
 			Set<String> first = new HashSet<>();
 			for (int i = 0; i < size; i++)
 			{
-				if (!first.add(rule.pickPhrase()))
+				if (!first.add(rule.pickPhrase(java.util.Collections.<String>emptySet())))
 				{
 					worst.append("\n  ").append(rule.id)
 						.append(": repeated after ").append(i)
@@ -57,7 +55,7 @@ public class RepetitionMeasureTest
 			Set<String> second = new HashSet<>();
 			for (int i = 0; i < size; i++)
 			{
-				if (!second.add(rule.pickPhrase()))
+				if (!second.add(rule.pickPhrase(java.util.Collections.<String>emptySet())))
 				{
 					worst.append("\n  ").append(rule.id)
 						.append(": second bag repeated after ").append(i)
@@ -87,7 +85,7 @@ public class RepetitionMeasureTest
 		Set<String> heard = new HashSet<>();
 		for (int i = 0; i < rule.say.size(); i++)
 		{
-			heard.add(rule.pickPhrase());
+			heard.add(rule.pickPhrase(java.util.Collections.<String>emptySet()));
 		}
 		assertTrue("all " + rule.say.size() + " should come out before any repeats,"
 			+ " but only " + heard.size() + " did",

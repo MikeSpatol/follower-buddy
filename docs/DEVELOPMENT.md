@@ -646,8 +646,8 @@ Edit them in **Conversations...** in the side panel: one row per node, with who
 speaks, the pages, the choices and the answer. Save validates before writing, so
 a broken tree is reported rather than saved.
 
-The everyday Talk-to script is still written in Java. It never changes, so a
-file would buy nothing; these are different because they are content.
+The everyday Talk-to script is bundled as talk.json and never changes in game;
+these are different because they are content the player edits.
 
 `say` is optional when the rule plays an animation: an animation-only rule is
 valid, and it skips the mute and the global speech gap entirely - those throttle
@@ -1013,8 +1013,10 @@ rather than failing silently.
 | `::follower height <n>` | Ground clearance, if the feet clip into terrain |
 
 The side panel's Commands section lists these same everyday commands, and the
-gated ones once Developer commands is on; both read `EVERYDAY_COMMANDS` and
-`DEVELOPER_COMMAND_HELP` in `FollowerPlugin`, so a new command goes in there.
+gated ones once Developer commands is on; both read `EVERYDAY_COMMANDS` (loaded from
+`src/main/resources/com/follower/commands.tsv`) and `DEVELOPER_COMMAND_HELP` in
+`FollowerPlugin`, so a new everyday command goes in commands.tsv and a gated one in
+`DEVELOPER_COMMAND_HELP`.
 
 **Appearance**
 
@@ -1276,7 +1278,7 @@ the whole widget) or line-for-line from the preserved client:
 | Projection | `eyeY=sin(rx)*zoom`, `eyeZ=cos(rx)*zoom`, then perspective divide | `Client.drawInterface` |
 | Widget lighting | `calculateNormals(64, 768, -50, -10, -50)` | `IfType.getTempModel` - differs from actors' `(64,850,-30,-50,-30)` |
 | Colours | 65,536-entry gamma-corrected table, interpolated as PACKED indices | `Pix3D.initColourTable` / `gouraudTriangle` |
-| Rasterizer | integer scanline walker, 16.16 x steps / 15-bit colour steps | `Pix3D.gouraudTriangle` + `gouraudRaster`, ported verbatim in `GouraudRasterizer` |
+| Rasterizer | integer scanline walker, 16.16 x steps / 15-bit colour steps | `Pix3D.gouraudTriangle` + `gouraudRaster`, ported in `GouraudRasterizer` (the client's three rotated cases as one walk, pixel for pixel the same) |
 | Draw order | integer depth buckets + face-index order, then the 12-class priority algorithm | `Model.draw2` / `calculateBoundsCylinder`, ported in `ChatheadRenderer.resolveDrawOrder` |
 | Brightness | varp 166: 1..4 -> gamma 0.9/0.8/0.7/0.6 | `Client.clientVar`; read at login and on change |
 | Head origin | widget centre, measured (69, 75) in the chatbox | sniffed |
@@ -1295,7 +1297,7 @@ pixel-centre-sampling rasterizer looks right until the triangles get small:
 sub-pixel faces (the pupils of the eyes) miss every sample point and vanish, and
 one-pixel cracks open along edges shared with culled faces, letting the
 parchment show through as stray light pixels - which is why the fill is the
-client's own integer scanline rasterizer, ported verbatim, fed the same
+client's own integer scanline rasterizer, ported pixel for pixel, fed the same
 truncated integer screen coordinates the client computes per vertex. Depth
 sorting must ALSO be the client's: models layer coplanar detail (the pupil on
 the eye-white face) by relying on integer depth buckets falling back to
@@ -1734,7 +1736,7 @@ beside them last; a tile it already stands on first; only
 The work pose is the player's own looping animation (`WorkSession.workPose`,
 an id whose `frameStep` is 0 or more - so every tool tier and the wall swings
 come for free, and a bite to eat is not taken for the work); for a patch, one
-of `Borrow.FARMING_TOOLS`, whose tool is swapped into the hand as the work
+of the `tool.farming.<animation>` rows of `skilling.properties`, whose tool is swapped into the hand as the work
 changes (bare hands to pick). `KeepingCompany.keepAtTheWork` holds it once the
 follower stands on its tile, turned to the work, a tick after the turn began;
 a look, the player stopping or the work going pauses it, and somebody else's
@@ -1808,7 +1810,7 @@ are worth naming because none of them is about fires as such.
   fire lit a moment ago and west is the player, who is standing where they
   just lit it. A player's tile is not in the collision map and is not hot, so
   it passed every test the escape had.
-- *And the route refuses to walk there.* `playerTileToAvoid` is handed to the
+- *And the route refuses to walk there.* `FollowerEntity.playerTile` is handed to the
   pathfinder as the one tile to go around, so the escape it had just chosen
   could not be reached from anywhere.
 - *And the stay settled for where it already was.* An unreachable destination
@@ -1925,7 +1927,7 @@ is a real end. What is borrowed when the hand cannot answer:
 | Woodcutting | the worn axe off the table (every wieldable tier in the cache, felling axes and ornament kits included), or bronze 1351 |
 | Mining | the worn pickaxe off the table (likewise), or bronze 1265 |
 | Fishing | by the animation: harpoon 311 or barb-tail 10129 with 618; fishing rod 307 or fly rod 309 with 622/623; small net 303, big net 305, lobster pot 301 |
-| Farming | by the animation (`Borrow.FARMING_TOOLS`): rake 5341, secateurs 5329 (magic 7409 for the fairy prune), seed dibber 5343, bucket 1925, plant cure 6036, watering can 5340, spade 952, trowel 5325, bare hands to pick; secateurs otherwise |
+| Farming | by the animation (the `tool.farming.<animation>` rows of `skilling.properties`): rake 5341, secateurs 5329 (magic 7409 for the fairy prune), seed dibber 5343, bucket 1925, plant cure 6036, watering can 5340, spade 952, trowel 5325, bare hands to pick; secateurs otherwise |
 | Construction | saw 8794 |
 | Firemaking | torch 8987, if the cache says it is wearable |
 | Smithing | rock hammer 4162, likewise |
@@ -2760,7 +2762,7 @@ src/main/java/com/follower/
 │   ├── ModelRepository.java     loads equipment-models.json
 │   ├── AppearanceComposer.java  loadModelData -> mergeModels -> palette -> light
 │   ├── GamePalette.java         the client's body-colour tables, recovered exactly
-│   ├── HslColor.java            packed-HSL helpers + swatch RGB approximation
+│   ├── HslColor.java            swatch RGB approximation of a packed-HSL colour
 │   ├── PaletteHarvest.java      append-only record of palette extractions
 │   ├── ColorHarvester.java      ::follower harvest - steps every colour index
 │   ├── CaptureFallback.java     capture path: composition swap, one-frame grab
