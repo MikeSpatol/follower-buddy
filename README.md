@@ -21,6 +21,8 @@ to the game, and it never acts for you.
   Magic outfit you pick, and swings its weapon as it fights. The real thrall is
   hidden on your screen only. Turn on **Thrall only** and the follower appears
   only as your thrall.
+  <!-- public:cut chronicle,likes,nicknames,souvenirs-wishes,side-games,marks -->
+  <!-- TODO text items mix-readme-talks-count, ln-readme-character-both, mix-readme-company-marks: the else lines repeat the public list as it reads today until the owner approves the public wording -->
 - **Talks** about what's happening: bosses, levels, drops, deaths, quests, the
   places you visit and the gear you wear. Around 2,700 lines, overhead or in the
   chatbox. Chattiness goes from Minimal (a remark a minute at most) to Chatty.
@@ -37,6 +39,18 @@ to the game, and it never acts for you.
   and now and then goes off on an errand of its own.
 - **Talk-to** opens a proper dialog box: ask how today went, or answer
   something it asked you.
+<!-- public:end chronicle,likes,nicknames,souvenirs-wishes,side-games,marks -->
+<!-- public:else - **Talks** about what's happening: bosses, levels, drops, deaths, quests, the -->
+<!-- public:else   places you visit and the gear you wear. Around 2,700 lines, overhead or in the -->
+<!-- public:else   chatbox. Chattiness goes from Minimal (a remark a minute at most) to Chatty. -->
+<!-- public:else - **Has a character.** A dry, understated scribe with moods, likes and -->
+<!-- public:else   dislikes. It remembers moments you shared and brings them up, asks you for -->
+<!-- public:else   small favours, and may give you a nickname, though it asks first. -->
+<!-- public:else - **Keeps you company.** It skills beside you with a borrowed tool, claps your -->
+<!-- public:else   levels, writes up your best drops, spots marks of grace on rooftop courses, -->
+<!-- public:else   and now and then goes off on an errand of its own. -->
+<!-- public:else - **Talk-to** opens a proper dialog box: ask how today went, or answer -->
+<!-- public:else   something it asked you. -->
 
 ## Getting started
 
@@ -103,8 +117,13 @@ The full guide to the panel, the settings and the commands is in
   folder. Packs are plain `java.util.zip` over a file the user picks, with
   fixed entry names and size caps; see `com.follower.share.PackFile`.
   <!-- public:end sharevoice -->
+  <!-- public:cut chronicle,sharevoice -->
+  <!-- TODO text item mix-readme-public-tests: the else lines repeat today's text until the owner approves the public wording -->
 - 2,377 tests cover the rule engine, movement, the Chronicle, hostile share
   packs and every bundled rule; see `docs/testing-strategy.md`.
+<!-- public:end chronicle,sharevoice -->
+<!-- public:else - 2,377 tests cover the rule engine, movement, the Chronicle, hostile share -->
+<!-- public:else   packs and every bundled rule; see `docs/testing-strategy.md`. -->
 
 ## More
 

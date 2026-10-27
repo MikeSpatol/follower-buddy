@@ -98,10 +98,17 @@ public interface FollowerConfig extends Config
 	// public:end spectate,spectate-keep-fight-lines
 	@ConfigSection(
 		name = "Advanced",
+		// public:cut dev,posing-preview
+		// TODO text item mix-advanced-section: the else lines repeat today's text until the owner approves the public wording
 		description = "Animation and graphic ids. Preview one with ::follower anim <id>,"
 			+ " ::follower gfx <id> or ::follower pose <id>; with Developer commands"
 			+ " on, ::follower watch prints ids as they play. The defaults look"
 			+ " right; nothing here needs changing.",
+		// public:end dev,posing-preview
+		// public:else description = "Animation and graphic ids. Preview one with ::follower anim <id>,"
+		// public:else 	+ " ::follower gfx <id> or ::follower pose <id>; with Developer commands"
+		// public:else 	+ " on, ::follower watch prints ids as they play. The defaults look"
+		// public:else 	+ " right; nothing here needs changing.",
 		position = 10,
 		closedByDefault = true
 	)
@@ -162,8 +169,13 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "spectateShieldAnimation",
 		name = "Shield summon animation",
+		// public:cut posing-preview
+		// TODO text item p0b-preview-hint-spectateShieldAnimation: the else lines repeat today's text until the owner approves the public wording
 		description = "Animation as the shield goes up. 0 for none."
 			+ " Preview any id with ::follower anim <id>.",
+		// public:end posing-preview
+		// public:else description = "Animation as the shield goes up. 0 for none."
+		// public:else 	+ " Preview any id with ::follower anim <id>.",
 		section = shieldSection,
 		position = 5
 	)
@@ -175,8 +187,13 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "spectateShieldGraphic",
 		name = "Shield summon graphic",
+		// public:cut posing-preview
+		// TODO text item p0b-preview-hint-spectateShieldGraphic: the else lines repeat today's text until the owner approves the public wording
 		description = "Graphic laid over the summon. 0 for none."
 			+ " Audition ids with ::follower gfx <id>.",
+		// public:end posing-preview
+		// public:else description = "Graphic laid over the summon. 0 for none."
+		// public:else 	+ " Audition ids with ::follower gfx <id>.",
 		section = shieldSection,
 		position = 6
 	)
@@ -425,8 +442,13 @@ public interface FollowerConfig extends Config
 		name = "Arrival animation",
 		description = "Animation played as the follower arrives. Default 715 is the"
 			+ " teleport arrival. Comma-separate to chain clips, e.g. \"6723,4191\""
+			// public:cut posing-preview
+			// TODO text item p0b-preview-hint-spawnAnimation: the else lines repeat today's text until the owner approves the public wording
 			+ " for a landing followed by a get-up; preview with"
 			+ " ::follower anim 6723 4191. Blank or 0 for none.",
+			// public:end posing-preview
+			// public:else + " for a landing followed by a get-up; preview with"
+			// public:else + " ::follower anim 6723 4191. Blank or 0 for none.",
 		section = shieldSection,
 		position = 1
 	)
@@ -439,8 +461,13 @@ public interface FollowerConfig extends Config
 		keyName = "spawnGraphic",
 		name = "Arrival graphic",
 		description = "Effect drawn as the follower arrives. Default 1299 is the"
+			// public:cut posing-preview
+			// TODO text item p0b-preview-hint-spawnGraphic: the else lines repeat today's text until the owner approves the public wording
 			+ " teleport arrival that goes with animation 715. Blank or 0 for none."
 			+ " Preview with ::follower gfx 1299.",
+			// public:end posing-preview
+			// public:else + " teleport arrival that goes with animation 715. Blank or 0 for none."
+			// public:else + " Preview with ::follower gfx 1299.",
 		section = shieldSection,
 		position = 2
 	)
@@ -1206,8 +1233,13 @@ public interface FollowerConfig extends Config
 		keyName = "restAnimation",
 		name = "Rest pose",
 		description = "Animation held while it sits. Set 0 and it never sits down. Default"
+			// public:cut posing-preview
+			// TODO text item p0b-preview-hint-restAnimation: the else lines repeat today's text until the owner approves the public wording
 			+ " 10061 is the game's own sit emote; audition others with"
 			+ " ::follower pose <id>.",
+			// public:end posing-preview
+			// public:else + " 10061 is the game's own sit emote; audition others with"
+			// public:else + " ::follower pose <id>.",
 		section = shieldSection,
 		position = 0
 	)
@@ -1459,8 +1491,13 @@ public interface FollowerConfig extends Config
 			+ " its hand. The thing comes into the hand halfway through. The"
 			+ " quill and scroll need none: the writing pose lifts them itself."
 			+ " Default 827 is the bend the errands already use. Others worth a"
+			// public:cut posing-preview
+			// TODO text item p0b-preview-hint-reachAnimation: the else lines repeat today's text until the owner approves the public wording
 			+ " look: 832, 5207, 895, 1649, 6217. Preview with"
 			+ " ::follower anim <id>. Blank or 0 for none.",
+			// public:end posing-preview
+			// public:else + " look: 832, 5207, 895, 1649, 6217. Preview with"
+			// public:else + " ::follower anim <id>. Blank or 0 for none.",
 		section = shieldSection,
 		position = 13
 	)

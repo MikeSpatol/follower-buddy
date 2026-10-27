@@ -12,6 +12,8 @@ a real follower does, carrying its weapon the way a player would. Right-click it
 for Talk-to, Stay, Follow-me, Step-in-front and a couple of emotes, or hold
 Shift and right-click any tile to Send it there.
 
+<!-- public:cut chronicle,likes,nicknames,souvenirs-wishes,side-games,marks -->
+<!-- TODO text items mix-guide-talks-count, p0b-guide-talks: the else lines repeat today's text until the owner approves the public wording -->
 **It talks.** Over 2,700 lines across 671 rules, chosen by what's happening:
 bosses sighted and fought, levels, deaths, drops, low HP and prayer, the places
 you visit, the gear you put on, things you examine, famous quest NPCs nearby,
@@ -21,6 +23,16 @@ itself within a session's short memory, and lines you've heard many times give
 way to fresher ones over the weeks. If it is still too much, Chattiness runs
 from Minimal, about one remark a minute at most, up to Chatty. New installs
 start on Occasional with the chatbox mirror off.
+<!-- public:end chronicle,likes,nicknames,souvenirs-wishes,side-games,marks -->
+<!-- public:else **It talks.** Over 2,700 lines across 671 rules, chosen by what's happening: -->
+<!-- public:else bosses sighted and fought, levels, deaths, drops, low HP and prayer, the places -->
+<!-- public:else you visit, the gear you put on, things you examine, famous quest NPCs nearby, -->
+<!-- public:else moments along the way in the quests its book covers, and long stretches of -->
+<!-- public:else nothing at all. Lines appear overhead, in the chatbox, or both. It never repeats -->
+<!-- public:else itself within a session's short memory, and lines you've heard many times give -->
+<!-- public:else way to fresher ones over the weeks. If it is still too much, Chattiness runs -->
+<!-- public:else from Minimal, about one remark a minute at most, up to Chatty. New installs -->
+<!-- public:else start on Occasional with the chatbox mirror off. -->
 
 <!-- public:cut sharevoice -->
 **You can give it a voice.** Attach a sound file to any line - one you wrote or
@@ -37,6 +49,8 @@ importing one adds to yours rather than replacing anything. You see exactly what
 a pack contains, and what was left out and why, before any of it is kept.
 <!-- public:end sharevoice -->
 
+<!-- public:cut likes,nicknames,souvenirs-wishes,side-games -->
+<!-- TODO text item mix-guide-character: the else lines repeat today's text until the owner approves the public wording -->
 **It has a character.** A dry, understated field scribe who writes everything
 down. It keeps a mood that your day moves, likes some places and dislikes others
 (and won't be argued out of two of them), remembers one incident, where it
@@ -45,7 +59,18 @@ papyrus) that you can hand over through Talk-to, makes predictions about drops
 and has to live with being wrong, and greets you more formally in the first days
 than after a month together. When your play has earned you a name in its notes,
 it asks before it uses it.
+<!-- public:end likes,nicknames,souvenirs-wishes,side-games -->
+<!-- public:else **It has a character.** A dry, understated field scribe who writes everything -->
+<!-- public:else down. It keeps a mood that your day moves, likes some places and dislikes others -->
+<!-- public:else (and won't be argued out of two of them), remembers one incident, where it -->
+<!-- public:else happened and when, and brings it up, asks you for small things (a feather, some -->
+<!-- public:else papyrus) that you can hand over through Talk-to, makes predictions about drops -->
+<!-- public:else and has to live with being wrong, and greets you more formally in the first days -->
+<!-- public:else than after a month together. When your play has earned you a name in its notes, -->
+<!-- public:else it asks before it uses it. -->
 
+<!-- public:cut marks -->
+<!-- TODO text item mix-guide-life-marks: the else lines repeat today's text until the owner approves the public wording -->
 **It has a life.** Between events it copies your emotes and your teleports, has
 a go at whatever you're skilling, wanders when you stand still and sits down
 when you stand still for long enough. Take an agility obstacle or a shortcut and
@@ -55,6 +80,16 @@ behind. Now and then it goes on an errand - a nearby bank, an altar, a fire, a
 cat, or something curious it wants to write up in its scroll - and comes back on
 foot or by teleport. Tell it to Stay and it holds the post, notices when you
 come back, and updates its notes while it waits.
+<!-- public:end marks -->
+<!-- public:else **It has a life.** Between events it copies your emotes and your teleports, has -->
+<!-- public:else a go at whatever you're skilling, wanders when you stand still and sits down -->
+<!-- public:else when you stand still for long enough. Take an agility obstacle or a shortcut and -->
+<!-- public:else it takes it after you, the same way and in the same order, falls included. On a -->
+<!-- public:else rooftop course it watches for marks of grace and says so when you leave one -->
+<!-- public:else behind. Now and then it goes on an errand - a nearby bank, an altar, a fire, a -->
+<!-- public:else cat, or something curious it wants to write up in its scroll - and comes back on -->
+<!-- public:else foot or by teleport. Tell it to Stay and it holds the post, notices when you -->
+<!-- public:else come back, and updates its notes while it waits. -->
 
 <!-- public:cut chronicle -->
 **It keeps a chronicle.** Right-click it and choose Read-chronicle to open the
@@ -107,10 +142,17 @@ behind. On a long run over open ground it draws level and walks at your
 shoulder. Movement settings set how far behind it follows and how long you stand
 still before it wanders.
 
+<!-- public:cut souvenirs-wishes -->
+<!-- TODO text item mix-guide-talk-to: the else lines repeat today's text until the owner approves the public wording -->
 **Talk-to.** A proper NPC-style dialog box with a chathead. Ask how today went
 and it summarises the session; ask how it's been and it answers by mood; give it
 the thing it asked for. When it has asked you something itself - an outing, a
 guessing game - Talk-to becomes Answer and opens that conversation.
+<!-- public:end souvenirs-wishes -->
+<!-- public:else **Talk-to.** A proper NPC-style dialog box with a chathead. Ask how today went -->
+<!-- public:else and it summarises the session; ask how it's been and it answers by mood; give it -->
+<!-- public:else the thing it asked for. When it has asked you something itself - an outing, a -->
+<!-- public:else guessing game - Talk-to becomes Answer and opens that conversation. -->
 
 **Thrall mode.** Summon an Arceuus thrall and the follower takes its place, with
 a per-style outfit, the summoning circle, and the real thrall hidden
@@ -126,6 +168,8 @@ The **Follower Buddy** side panel is behind its icon on the right-hand toolbar.
 It has five sections, each folding on its header; Talking and Outfit start open,
 and the panel remembers which you leave open.
 
+<!-- public:cut sharevoice,dialogs-editor,souvenirs-wishes,side-games -->
+<!-- TODO text item mix-guide-talking: the else lines repeat today's text until the owner approves the public wording -->
 **Talking.** A **Mute the follower** tick, a **Chattiness** dropdown and an
 **Also show lines in the chatbox** tick, each the same setting as in the
 plugin's config. Then four buttons. **Messages...** opens every line it can say,
@@ -140,6 +184,21 @@ itself. **Attach sounds...** opens the Sounds window on its own: the folder your
 WAV, AIFF or AU files go in, with a button to copy the path. **Share lines...**
 exports what you have written or takes on somebody else's pack; the Messages
 window's **Share...** button runs the same flow.
+<!-- public:end sharevoice,dialogs-editor,souvenirs-wishes,side-games -->
+<!-- public:else **Talking.** A **Mute the follower** tick, a **Chattiness** dropdown and an -->
+<!-- public:else **Also show lines in the chatbox** tick, each the same setting as in the -->
+<!-- public:else plugin's config. Then four buttons. **Messages...** opens every line it can say, -->
+<!-- public:else one category per subject: Items, Locations, Bosses, Combat, Statuses, Idle -->
+<!-- public:else chatter, Quest NPCs, Errands, Mimicry, Reminiscing, Souvenirs, Predictions, The -->
+<!-- public:else hour and the session, Reactions, Thrall, Everything else. Each rule shows its id -->
+<!-- public:else in grey beside its title, and nearly every rule has a short note under it on -->
+<!-- public:else when it is said. A **Find** box narrows the category to rules containing the -->
+<!-- public:else text, and every rule has a **Sounds** button that attaches a recording to any of -->
+<!-- public:else its lines. **Conversations...** edits the Talk-to trees the follower starts -->
+<!-- public:else itself. **Attach sounds...** opens the Sounds window on its own: the folder your -->
+<!-- public:else WAV, AIFF or AU files go in, with a button to copy the path. **Share lines...** -->
+<!-- public:else exports what you have written or takes on somebody else's pack; the Messages -->
+<!-- public:else window's **Share...** button runs the same flow. -->
 
 <!-- public:cut memory-window -->
 **Memory.** One button, **Memory...**: everything the follower currently knows
@@ -190,9 +249,18 @@ Developer (closed by default).
 Everything it says lives in `.runelite/follower/phrases.json`, hot-reloaded
 within a second of saving.
 
+<!-- public:cut posing,chronicle,dev,posing-preview -->
+<!-- TODO text item mix-guide-chat-commands: the else lines repeat today's text until the owner approves the public wording -->
 Chat commands: type `::follower` on its own for the list. The everyday ones are
 `say <text>`, `here`, `fix`, `rebuild`, `copy`, `outfit <name>`, `anim <id...>`,
 `gfx <id>`, `pose <id>`, `posing`, `sketch`, `height <n>`, `errand [<name>]`,
 `reload`, `status` and `where`. The diagnostic commands (`watch`, `stance`,
 `mood`, `fire` and the rest) are gated behind **Developer commands** in the
 Developer section, and typing one while it is off says so.
+<!-- public:end posing,chronicle,dev,posing-preview -->
+<!-- public:else Chat commands: type `::follower` on its own for the list. The everyday ones are -->
+<!-- public:else `say <text>`, `here`, `fix`, `rebuild`, `copy`, `outfit <name>`, `anim <id...>`, -->
+<!-- public:else `gfx <id>`, `pose <id>`, `posing`, `sketch`, `height <n>`, `errand [<name>]`, -->
+<!-- public:else `reload`, `status` and `where`. The diagnostic commands (`watch`, `stance`, -->
+<!-- public:else `mood`, `fire` and the rest) are gated behind **Developer commands** in the -->
+<!-- public:else Developer section, and typing one while it is off says so. -->

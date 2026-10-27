@@ -3,7 +3,11 @@
 # the window), whether it is the structural one (region ids editable, rules
 # added and deleted), and the line shown under the dropdown. Tab separated.
 Items	gear	false	Said when you equip something it has an opinion on, and when your bag is nearly full.
+# public:cut likes
+# TODO text item ln-locations-hint-likes: the else line repeats today's text until the owner approves the public wording
 Locations	area	true	Said on entering a place, and about places it likes, dislikes or remembers. Region ids are editable and Add location makes a new one.
+# public:end likes
+# public:else Locations	area	true	Said on entering a place, and about places it likes, dislikes or remembers. Region ids are editable and Add location makes a new one.
 Bosses	boss	false	Said when that boss appears nearby, and at boss kills and kill counts.
 Combat	combat	false	Said while it stands clear and watches you fight, and when something big comes near.
 Statuses	health	false	Your HP, prayer, poison, venom, skull and run energy.
