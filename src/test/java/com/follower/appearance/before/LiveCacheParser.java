@@ -260,6 +260,7 @@ public final class LiveCacheParser
 				case 16:
 				case 65:
 				case 160:
+				case 251:
 					break; // flag opcodes carry no payload
 				case 12:
 					in.readInt(); // cost
@@ -395,6 +396,7 @@ public final class LiveCacheParser
 				case 95:
 				case 97:
 				case 98:
+				case 99:
 				case 110:
 				case 111:
 				case 112:
@@ -423,6 +425,12 @@ public final class LiveCacheParser
 					break;
 				case 115:
 					in.readUnsignedByte(); // team
+					break;
+				case 161:
+					for (int count = in.readUnsignedShort(); count > 0; count--)
+					{
+						in.readUnsignedShort(); // holding whitelist
+					}
 					break;
 				case 200:
 					// EntityOpsLoader.decodeSubOp: byte, byte, string.
@@ -671,6 +679,9 @@ public final class LiveCacheParser
 					}
 					break;
 				}
+				case 42:
+					in.readUnsignedShort(); // full recolour
+					break;
 				default:
 					throw new IllegalStateException("unknown spotanim opcode " + opcode);
 			}

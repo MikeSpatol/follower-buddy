@@ -320,10 +320,11 @@ public final class LiveCacheParser
 				return pairs;
 			case 'H':
 			case 'I':
-				int[] list = new int[in.get() & 0xFF];
+			case 'L':
+				int[] list = new int[kind == 'L' ? in.getShort() & 0xFFFF : in.get() & 0xFF];
 				for (int i = 0; i < list.length; i++)
 				{
-					list[i] = kind == 'H' ? in.getShort() & 0xFFFF : in.getInt();
+					list[i] = kind == 'I' ? in.getInt() : in.getShort() & 0xFFFF;
 				}
 				return list;
 			case 'o':

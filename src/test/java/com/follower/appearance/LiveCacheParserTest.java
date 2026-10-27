@@ -212,7 +212,7 @@ public class LiveCacheParserTest
 		// the cursor landed exactly where it should have.
 		int[][] withPayload = {
 			{1, 2}, {12, 4}, {42, 1}, {44, 4}, {75, 2},
-			{94, 2}, {95, 2}, {97, 2}, {98, 2}, {110, 2}, {111, 2}, {112, 2},
+			{94, 2}, {95, 2}, {97, 2}, {98, 2}, {99, 2}, {110, 2}, {111, 2}, {112, 2},
 		};
 
 		for (int[] pair : withPayload)
@@ -245,13 +245,22 @@ public class LiveCacheParserTest
 	@Test
 	public void theFlagOpcodesReadNothingAtAll()
 	{
-		for (int opcode : new int[]{11, 15, 16, 65, 160})
+		for (int opcode : new int[]{11, 15, 16, 65, 160, 251})
 		{
 			ModelRepository.Entry entry = LiveCacheParser.decodeItem(
 				wearable().op(opcode).op(2).str("marker").end());
 			assertEquals("opcode " + opcode + " consumed a payload it does not have",
 				"marker", entry.n);
 		}
+	}
+
+	@Test
+	public void theHoldingListReadsAShortCount()
+	{
+		// Opcode 161: an unsigned short count, then that many unsigned shorts.
+		ModelRepository.Entry entry = LiveCacheParser.decodeItem(
+			wearable().op(161).u16(2).u16(7).u16(8).op(2).str("marker").end());
+		assertEquals("marker", entry.n);
 	}
 
 	@Test
