@@ -358,10 +358,12 @@ public class MemoryDialog extends JDialog
 					break;
 				// public:end agility-all,marks
 				case "want:kept":
-					label = "Wishes granted";
+					label = "Wishes granted"; // public:cut souvenirs-wishes
+					// public:else label = "Outings taken";
 					break;
 				case "want:missed":
-					label = "Wishes missed";
+					label = "Wishes missed"; // public:cut souvenirs-wishes
+					// public:else label = "Outings missed";
 					break;
 				// public:cut side-games
 				case "advice:taken":

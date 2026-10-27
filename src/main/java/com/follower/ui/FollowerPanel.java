@@ -1027,7 +1027,8 @@ public class FollowerPanel extends PluginPanel
 		buttons.add(button("Fix if it vanished",
 			Resources.text("fixTip"),
 			() -> onFix.run()));
-		buttons.add(button("Reload message and sound files",
+		buttons.add(button("Reload message and sound files", // public:cut sharevoice
+		// public:else buttons.add(button("Reload message files",
 			Resources.text("reloadTip"),
 			() -> onReload.run()));
 		body.add(buttons);

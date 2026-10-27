@@ -21,14 +21,19 @@ describes the marker language). This tool:
     field, group, id or tally the manifest's "rules" lists for a cut feature, and
     the top-level keys "rules" lists go too; then a dialog tree in
     default-dialogs.json goes when no rule left asks for it, and so does every
-    rule that answers it (an answered condition whose "of" names it);
- 6. regenerates docs/lines.md with tools/lines.py;
- 7. checks the result: no leftover names of dropped classes or resources, the
+    rule that answers it (an answered condition whose "of" names it); a kept
+    rule's note is rewritten where "rules" gives one;
+ 6. prunes talk.json: a node goes when its "when" needs a fact the manifest's
+    "talk" lists for a cut feature (that build never sets it), a "!fact" of one
+    goes from the rest (it always holds), and the listed text goes from the
+    file's note;
+ 7. regenerates docs/lines.md with tools/lines.py;
+ 8. checks the result: no leftover names of dropped classes or resources, the
     settings, commands and follower menu entries the manifest expects, and the
     unknown-condition guard wherever a condition type is gone;
- 8. counts it with the Hub replica (hub_count.py, given by --hub-count or the
+ 9. counts it with the Hub replica (hub_count.py, given by --hub-count or the
     FOLLOWER_HUB_COUNT environment variable) against the manifest's "budget";
- 9. builds it and runs its tests (gradle, build dir DIR/build-public).
+10. builds it and runs its tests (gradle, build dir DIR/build-public).
 
 Every failure is reported; the exit code is 1 if there was any. DIR must be new,
 empty, or an earlier output of this tool (its .git, if any, is kept).
@@ -47,7 +52,7 @@ import xml.etree.ElementTree as ET
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BUILD_DIR = 'build-public'
 STAMP = BUILD_DIR + '/make_public.stamp'
-MARKED = ('.java', '.md', '.properties', '.tsv')
+MARKED = ('.java', '.md', '.properties', '.tsv', '.py')
 JAVA = 'src/main/java/com/follower/'
 TESTS = 'src/test/java/com/follower/'
 RES = 'src/main/resources/com/follower/'
@@ -66,7 +71,7 @@ class MarkerError(Exception):
 def _patterns(path):
     if path.endswith('.md'):
         o, c = r'<!--\s*', r'\s*-->'
-    elif path.endswith(('.properties', '.tsv')):
+    elif path.endswith(('.properties', '.tsv', '.py')):
         o, c = r'#\s*', ''
     else:
         o, c = r'//\s*', ''
@@ -2140,11 +2145,16 @@ def drop_trees(text, ids):
 def prune_stage(out, cut, rules_cfg, fail):
     """Drops the bundled rules whose code is gone, the manifest's top-level keys of the
     rule file, then the dialog trees no rule left asks for and the rules that answer
-    them. Returns (kept, [(id, why)], [dialog trees dropped])."""
+    them, and gives kept rules the notes the manifest rewrites. Returns
+    (kept, [(id, why)], [dialog trees dropped])."""
     want = {k: set() for k in ('fields', 'groups', 'ids', 'tallies', 'keys')}
+    notes = {}
     for feature in cut:
         for k, v in rules_cfg.get(feature, {}).items():
-            want[k].update(v)
+            if k == 'notes':
+                notes.update(v)
+            else:
+                want[k].update(v)
     live = live_types(out)
     path = os.path.join(out, RES, 'default-phrases.json')
     text = read(path)
@@ -2213,9 +2223,84 @@ def prune_stage(out, cut, rules_cfg, fail):
         else:
             write(dpath, new)
 
+    for rid, note in sorted(notes.items()):
+        rule = [r for r in kept if r.get('id') == rid]
+        if len(rule) != 1 or 'note' not in rule[0]:
+            fail('rules: the manifest rewrites the note of rule %s, which is not one kept rule with a note' % rid)
+        else:
+            rule[0]['note'] = note
+
     data['rules'] = kept
     write(path, json.dumps(data, indent=2, ensure_ascii=False) + '\n')
     return len(kept), dropped, gone
+
+
+def talk_stage(out, cut, talk_cfg, fail):
+    """talk.json without the nodes that need a fact the cut features' build never
+    sets, without "!fact" for those facts (always true there) and without the
+    manifest's text in the file's note. The file is laid out by hand, so it is
+    edited as text and checked by parsing back. Returns the node ids dropped."""
+    facts, drops = set(), []
+    for feature in sorted(cut):
+        facts.update(talk_cfg.get(feature, {}).get('facts', []))
+        drops += talk_cfg.get(feature, {}).get('note', [])
+    if not facts and not drops:
+        return []
+    path = os.path.join(out, RES, 'talk.json')
+    text = read(path)
+    data = json.loads(text)
+    spans = json_objects(text, re.search(r'"nodes"\s*:\s*\[', text).end() - 1)
+    if len(spans) != len(data['nodes']):
+        fail('talk: could not find the nodes of talk.json')
+        return []
+    for t in sorted(facts - {t.lstrip('!') for n in data['nodes'] for t in (n.get('when') or '').split()}):
+        fail('talk: the manifest names fact %s, which no node of talk.json needs' % t)
+    kept, gone = [], []
+    for (s, e), node in zip(spans, data['nodes']):
+        terms = (node.get('when') or '').split()
+        if any(t in facts for t in terms):
+            gone.append(node.get('id'))
+            continue
+        chunk = text[s:e]
+        rest = [t for t in terms if t.lstrip('!') not in facts]
+        if rest != terms:
+            line = re.compile(r'\n[ \t]*"when": %s,' % re.escape(json.dumps(node['when'])))
+            if len(line.findall(chunk)) != 1:
+                fail('talk: node %s: its "when" is not on a line of its own' % node.get('id'))
+                return []
+            if rest:
+                node['when'] = ' '.join(rest)
+                chunk = line.sub(lambda m: m.group(0).replace(json.dumps(' '.join(terms)), json.dumps(node['when'])),
+                                 chunk)
+            else:
+                del node['when']
+                chunk = line.sub('', chunk)
+        kept.append((chunk, node))
+    note = data['note']
+    for d in drops:
+        if d not in note:
+            fail('talk: the manifest takes %r out of the note of talk.json, which does not have it' % d)
+        note = note.replace(d, '', 1)
+    ids = {n.get('id') for _, n in kept}
+    for _, n in kept:
+        for target in [n.get('next')] + [c.get('next') for c in n.get('choices') or []]:
+            if target is not None and target not in ids:
+                fail('talk: node %s leads to %s, which the public talk.json does not have' % (n.get('id'), target))
+    sep = text[spans[0][1]:spans[1][0]] if len(spans) > 1 else ''
+    new = text[:spans[0][0]] + sep.join(c for c, _ in kept) + text[spans[-1][1]:]
+    if note != data['note']:
+        old_note = json.dumps(data['note'], ensure_ascii=False)
+        if new.count(old_note) != 1:
+            fail('talk: the note of talk.json is not where this tool looks for it')
+            return gone
+        new = new.replace(old_note, json.dumps(note, ensure_ascii=False))
+    data['note'] = note
+    data['nodes'] = [n for _, n in kept]
+    if json.loads(new) != data:
+        fail('talk: talk.json did not parse back as expected after the pruning')
+        return gone
+    write(path, new)
+    return gone
 
 
 # ------------------------------------------------------------------ checks
@@ -2410,6 +2495,7 @@ def main():
     for rid, why in pruned:
         print('    %-44s %s' % (rid, ','.join(why)))
     print('  dialogs: dropped %s' % (', '.join(trees) or '-'))
+    print('  talk: dropped %s' % (', '.join(talk_stage(out, cut, manifest.get('talk', {}), fail)) or '-'))
 
     if subprocess.run([sys.executable, os.path.join(out, 'tools', 'lines.py')], cwd=out,
                       stdout=subprocess.DEVNULL).returncode:

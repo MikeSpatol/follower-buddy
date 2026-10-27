@@ -1,7 +1,11 @@
 # Follower Buddy
 
+<!-- public:cut chronicle -->
 A companion that follows you around, wears whatever you dress it in, and talks
 about what you're doing. It also keeps a book about your adventures.
+<!-- public:end chronicle -->
+<!-- public:else A companion that follows you around, wears whatever you dress it in, and talks -->
+<!-- public:else about what you're doing. -->
 
 Summon an Arceuus thrall and the follower can take its place, fighting beside
 you in the outfit you choose for each combat style.
@@ -22,7 +26,6 @@ to the game, and it never acts for you.
   hidden on your screen only. Turn on **Thrall only** and the follower appears
   only as your thrall.
   <!-- public:cut chronicle,likes,nicknames,souvenirs-wishes,side-games,marks -->
-  <!-- TODO text items mix-readme-talks-count, ln-readme-character-both, mix-readme-company-marks: the else lines repeat the public list as it reads today until the owner approves the public wording -->
 - **Talks** about what's happening: bosses, levels, drops, deaths, quests, the
   places you visit and the gear you wear. Around 2,700 lines, overhead or in the
   chatbox. Chattiness goes from Minimal (a remark a minute at most) to Chatty.
@@ -41,14 +44,13 @@ to the game, and it never acts for you.
   something it asked you.
 <!-- public:end chronicle,likes,nicknames,souvenirs-wishes,side-games,marks -->
 <!-- public:else - **Talks** about what's happening: bosses, levels, drops, deaths, quests, the -->
-<!-- public:else   places you visit and the gear you wear. Around 2,700 lines, overhead or in the -->
+<!-- public:else   places you visit and the gear you wear. Around 2,500 lines, overhead or in the -->
 <!-- public:else   chatbox. Chattiness goes from Minimal (a remark a minute at most) to Chatty. -->
-<!-- public:else - **Has a character.** A dry, understated scribe with moods, likes and -->
-<!-- public:else   dislikes. It remembers moments you shared and brings them up, asks you for -->
-<!-- public:else   small favours, and may give you a nickname, though it asks first. -->
+<!-- public:else - **Has a character.** A dry, understated scribe with moods. It remembers -->
+<!-- public:else   moments you shared and brings them up, and asks you for small favours. -->
 <!-- public:else - **Keeps you company.** It skills beside you with a borrowed tool, claps your -->
-<!-- public:else   levels, writes up your best drops, spots marks of grace on rooftop courses, -->
-<!-- public:else   and now and then goes off on an errand of its own. -->
+<!-- public:else   levels, writes up your best drops, and now and then goes off on an errand of -->
+<!-- public:else   its own. -->
 <!-- public:else - **Talk-to** opens a proper dialog box: ask how today went, or answer -->
 <!-- public:else   something it asked you. -->
 
@@ -57,6 +59,7 @@ to the game, and it never acts for you.
 Install Follower Buddy from the Plugin Hub. The follower appears beside you
 when you log in.
 
+<!-- public:cut chronicle -->
 - Right-click it for Talk-to, Stay, Follow me, Sketch and Read-chronicle.
   Hold Shift and right-click a tile to send it there.
 - The **Follower Buddy** side panel, behind its icon on the right-hand toolbar,
@@ -64,6 +67,14 @@ when you log in.
   say.
 - Everything else is in the plugin's settings. Type `::follower` in chat for
   its commands.
+<!-- public:end chronicle -->
+<!-- public:else - Right-click it for Talk-to, Stay and Follow me. -->
+<!-- public:else   Hold Shift and right-click a tile to send it there. -->
+<!-- public:else - The **Follower Buddy** side panel, behind its icon on the right-hand toolbar, -->
+<!-- public:else   has its outfit, how chatty it is, its memory of you, and every line it can -->
+<!-- public:else   say. -->
+<!-- public:else - Everything else is in the plugin's settings. Type `::follower` in chat for -->
+<!-- public:else   its commands. -->
 
 The full guide to the panel, the settings and the commands is in
 [docs/GUIDE.md](docs/GUIDE.md).
@@ -118,12 +129,11 @@ The full guide to the panel, the settings and the commands is in
   fixed entry names and size caps; see `com.follower.share.PackFile`.
   <!-- public:end sharevoice -->
   <!-- public:cut chronicle,sharevoice -->
-  <!-- TODO text item mix-readme-public-tests: the else lines repeat today's text until the owner approves the public wording -->
-- 2,377 tests cover the rule engine, movement, the Chronicle, hostile share
+- 2,410 tests cover the rule engine, movement, the Chronicle, hostile share
   packs and every bundled rule; see `docs/testing-strategy.md`.
 <!-- public:end chronicle,sharevoice -->
-<!-- public:else - 2,377 tests cover the rule engine, movement, the Chronicle, hostile share -->
-<!-- public:else   packs and every bundled rule; see `docs/testing-strategy.md`. -->
+<!-- public:else - 1,814 tests cover the rule engine, movement and every bundled rule; see -->
+<!-- public:else   `docs/testing-strategy.md`. -->
 
 ## More
 

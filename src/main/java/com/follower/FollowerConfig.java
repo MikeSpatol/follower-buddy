@@ -15,8 +15,11 @@ public interface FollowerConfig extends Config
 
 	@ConfigSection(
 		name = "Follower",
+		// public:cut long-descriptions
 		description = "The basics. The outfit is dressed in the Follower Buddy side"
 			+ " panel, the icon on the right-hand toolbar.",
+		// public:end long-descriptions
+		// public:else description = "The basics. The outfit is dressed in the Follower Buddy side panel.",
 		position = 0
 	)
 	String appearanceSection = "appearance";
@@ -46,17 +49,25 @@ public interface FollowerConfig extends Config
 	// public:end sharevoice
 	@ConfigSection(
 		name = "Messages",
+		// public:cut long-descriptions
 		description = "Turn whole subjects on or off. To read or edit the lines"
 			+ " themselves, open Messages in the Follower Buddy side panel.",
+		// public:end long-descriptions
+		// public:else description = "Turn whole subjects on or off. Edit the"
+		// public:else 	+ " lines under Messages in the side panel.",
 		position = 4
 	)
 	String groupsSection = "groups";
 
 	@ConfigSection(
 		name = "Thrall mode",
+		// public:cut long-descriptions
 		description = "Thralls are the undead helpers from the Arceuus spellbook's"
 			+ " Resurrect spells. With this on, the follower stands in for the one"
 			+ " you summon and the real thrall is hidden, on your screen only.",
+		// public:end long-descriptions
+		// public:else description = "With this on, the follower stands in for the"
+		// public:else 	+ " Arceuus thrall you summon, on your screen only.",
 		position = 5
 	)
 	String thrallSection = "thrall";
@@ -81,8 +92,16 @@ public interface FollowerConfig extends Config
 	// public:end skilling
 	@ConfigSection(
 		name = "Company",
+		// public:cut gaze,company-extras
+		// public:cut long-descriptions
 		description = "The small habits of somebody keeping you company: where it"
 			+ " looks, what it notices, how it walks with you",
+		// public:end long-descriptions
+		// public:else description = "Small habits of company: where it looks,"
+		// public:else 	+ " what it notices, how it walks with you",
+		// public:end gaze,company-extras
+		// public:else description = "The small habits of somebody keeping you"
+		// public:else 	+ " company: what it notices, how it walks with you",
 		position = 8
 	)
 	String companySection = "company";
@@ -99,16 +118,13 @@ public interface FollowerConfig extends Config
 	@ConfigSection(
 		name = "Advanced",
 		// public:cut dev,posing-preview
-		// TODO text item mix-advanced-section: the else lines repeat today's text until the owner approves the public wording
 		description = "Animation and graphic ids. Preview one with ::follower anim <id>,"
 			+ " ::follower gfx <id> or ::follower pose <id>; with Developer commands"
 			+ " on, ::follower watch prints ids as they play. The defaults look"
 			+ " right; nothing here needs changing.",
 		// public:end dev,posing-preview
-		// public:else description = "Animation and graphic ids. Preview one with ::follower anim <id>,"
-		// public:else 	+ " ::follower gfx <id> or ::follower pose <id>; with Developer commands"
-		// public:else 	+ " on, ::follower watch prints ids as they play. The defaults look"
-		// public:else 	+ " right; nothing here needs changing.",
+		// public:else description = "Animation and graphic ids. The defaults look right;"
+		// public:else 	+ " nothing here needs changing.",
 		position = 10,
 		closedByDefault = true
 	)
@@ -128,9 +144,13 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "spectateCombat",
 		name = "Stand clear in combat",
+		// public:cut long-descriptions
 		description = "When a fight starts, the follower walks a few tiles clear and watches,"
 			+ " so it is never sitting on top of the boss you are trying to see or click."
 			+ " Thrall mode is exempt, being in the fight by definition.",
+		// public:end long-descriptions
+		// public:else description = "In a fight, the follower stands a few tiles"
+		// public:else 	+ " clear and watches. Thrall mode is exempt.",
 		section = combatSection,
 		position = 0
 	)
@@ -143,9 +163,13 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "spectateShield",
 		name = "Cast a shield on bosses",
+		// public:cut long-descriptions
 		description = "In every boss fight it watches, the follower raises a ward: a cast with"
 			+ " a graphic over it, then a kneel that holds it until the fight ends."
 			+ " Needs Stand clear in combat.",
+		// public:end long-descriptions
+		// public:else description = "In boss fights it watches, it casts a ward and"
+		// public:else 	+ " kneels to hold it. Needs Stand clear in combat.",
 		section = combatSection,
 		position = 1
 	)
@@ -170,12 +194,10 @@ public interface FollowerConfig extends Config
 		keyName = "spectateShieldAnimation",
 		name = "Shield summon animation",
 		// public:cut posing-preview
-		// TODO text item p0b-preview-hint-spectateShieldAnimation: the else lines repeat today's text until the owner approves the public wording
 		description = "Animation as the shield goes up. 0 for none."
 			+ " Preview any id with ::follower anim <id>.",
 		// public:end posing-preview
-		// public:else description = "Animation as the shield goes up. 0 for none."
-		// public:else 	+ " Preview any id with ::follower anim <id>.",
+		// public:else description = "Animation as the shield goes up. 0 for none.",
 		section = shieldSection,
 		position = 5
 	)
@@ -188,12 +210,10 @@ public interface FollowerConfig extends Config
 		keyName = "spectateShieldGraphic",
 		name = "Shield summon graphic",
 		// public:cut posing-preview
-		// TODO text item p0b-preview-hint-spectateShieldGraphic: the else lines repeat today's text until the owner approves the public wording
 		description = "Graphic laid over the summon. 0 for none."
 			+ " Audition ids with ::follower gfx <id>.",
 		// public:end posing-preview
-		// public:else description = "Graphic laid over the summon. 0 for none."
-		// public:else 	+ " Audition ids with ::follower gfx <id>.",
+		// public:else description = "Graphic laid over the summon. 0 for none.",
 		section = shieldSection,
 		position = 6
 	)
@@ -206,8 +226,11 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "spectateShieldChannelStart",
 		name = "Channel start animation",
+		// public:cut long-descriptions
 		description = "Played once as the follower settles into the channel, before the"
 			+ " looping pose takes over. 0 for none.",
+		// public:end long-descriptions
+		// public:else description = "Played once as the follower settles into the channel. 0 for none.",
 		section = shieldSection,
 		position = 7
 	)
@@ -226,9 +249,12 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "spectateShieldChannelEnd",
 		name = "Channel end animation",
+		// public:cut long-descriptions
 		description = "Played as the channel ends, before the finishing cast. 0 for none."
 			+ " With the default kneel (179), the default 534 is played as the kneel's"
 			+ " own rise.",
+		// public:end long-descriptions
+		// public:else description = "Played as the channel ends, before the finishing cast. 0 for none.",
 		section = shieldSection,
 		position = 10
 	)
@@ -241,9 +267,13 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "spectateShieldChannelAnimation",
 		name = "Shield channel animation",
+		// public:cut long-descriptions
 		description = "Looping pose held after the summon, for as long as the follower stands"
 			+ " and the fight lasts. Unlike the others this one repeats, so pick something"
 			+ " that reads as sustained effort. 0 for none.",
+		// public:end long-descriptions
+		// public:else description = "Looping pose held after the summon while the fight"
+		// public:else 	+ " lasts. Pick one that reads as effort. 0 for none.",
 		section = shieldSection,
 		position = 8
 	)
@@ -260,8 +290,12 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "spectateShieldChannelGraphic",
 		name = "Shield channel graphic",
+		// public:cut long-descriptions
 		description = "Renewed every second or so while channelling, since a looping pose"
 			+ " shows no particles of its own. 0 for none.",
+		// public:end long-descriptions
+		// public:else description = "Renewed every second or so while channelling,"
+		// public:else 	+ " as a loop shows no particles. 0 for none.",
 		section = shieldSection,
 		position = 9
 	)
@@ -273,8 +307,12 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "spectateShieldEndAnimation",
 		name = "Shield finish animation",
+		// public:cut long-descriptions
 		description = "Played as the fight ends and the spell is completed. The follower"
 			+ " waits for it to finish before walking back. 0 for none.",
+		// public:end long-descriptions
+		// public:else description = "Played as the fight ends; the follower waits"
+		// public:else 	+ " for it before walking back. 0 for none.",
 		section = shieldSection,
 		position = 11
 	)
@@ -364,9 +402,13 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "followerName",
 		name = "Follower name",
+		// public:cut long-descriptions
 		description = "What it is called in the dialog box, right-click menu and"
 			+ " chat. Its gear, body and colours are set in the Follower Buddy"
 			+ " side panel, not here.",
+		// public:end long-descriptions
+		// public:else description = "What it is called in the dialog box, menu"
+		// public:else 	+ " and chat. Dress it in the side panel.",
 		section = appearanceSection,
 		position = 0
 	)
@@ -409,9 +451,13 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "followEnabled",
 		name = "Follow me",
+		// public:cut long-descriptions
 		description = "Off parks the follower where it stands. Same as right-click"
 			+ " Stay and Follow-me on the follower. Hold Shift and right-click a tile"
 			+ " to send it somewhere in particular.",
+		// public:end long-descriptions
+		// public:else description = "Off parks the follower where it stands, like"
+		// public:else 	+ " right-click Stay. Shift right-click a tile to send it.",
 		section = appearanceSection,
 		position = 1
 	)
@@ -424,9 +470,13 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "verticalOffset",
 		name = "Height offset",
+		// public:cut long-descriptions
 		description = "Lifts the follower if its boots sink into the ground. Positive"
 			+ " lifts. In small model units; the default 15 lifts the boots just"
 			+ " clear. Tune it live with ::follower height <n>.",
+		// public:end long-descriptions
+		// public:else description = "Lifts the follower if its boots sink into the"
+		// public:else 	+ " ground. Tune it live with ::follower height <n>.",
 		section = shieldSection,
 		position = 4
 	)
@@ -440,15 +490,17 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "spawnAnimation",
 		name = "Arrival animation",
+		// public:cut long-descriptions
 		description = "Animation played as the follower arrives. Default 715 is the"
 			+ " teleport arrival. Comma-separate to chain clips, e.g. \"6723,4191\""
 			// public:cut posing-preview
-			// TODO text item p0b-preview-hint-spawnAnimation: the else lines repeat today's text until the owner approves the public wording
 			+ " for a landing followed by a get-up; preview with"
 			+ " ::follower anim 6723 4191. Blank or 0 for none.",
 			// public:end posing-preview
-			// public:else + " for a landing followed by a get-up; preview with"
-			// public:else + " ::follower anim 6723 4191. Blank or 0 for none.",
+			// public:else + " for a landing followed by a get-up. Blank or 0 for none.",
+		// public:end long-descriptions
+		// public:else description = "Animation as it arrives. Default 715, the teleport"
+		// public:else 	+ " arrival. Comma-separate to chain clips; 0 for none.",
 		section = shieldSection,
 		position = 1
 	)
@@ -460,14 +512,16 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "spawnGraphic",
 		name = "Arrival graphic",
+		// public:cut long-descriptions
 		description = "Effect drawn as the follower arrives. Default 1299 is the"
 			// public:cut posing-preview
-			// TODO text item p0b-preview-hint-spawnGraphic: the else lines repeat today's text until the owner approves the public wording
 			+ " teleport arrival that goes with animation 715. Blank or 0 for none."
 			+ " Preview with ::follower gfx 1299.",
 			// public:end posing-preview
-			// public:else + " teleport arrival that goes with animation 715. Blank or 0 for none."
-			// public:else + " Preview with ::follower gfx 1299.",
+			// public:else + " teleport arrival that goes with animation 715. Blank or 0 for none.",
+		// public:end long-descriptions
+		// public:else description = "Effect drawn as it arrives. Default 1299 goes"
+		// public:else 	+ " with animation 715. Blank or 0 for none.",
 		section = shieldSection,
 		position = 2
 	)
@@ -555,8 +609,12 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "speechDurationMs",
 		name = "Shortest time on screen",
+		// public:cut long-descriptions
 		description = "In milliseconds: 4000 is four seconds, 6000 is six. Longer"
 			+ " lines are given longer, at the reading speed below.",
+		// public:end long-descriptions
+		// public:else description = "In milliseconds: 4000 is four seconds. Longer"
+		// public:else 	+ " lines stay longer, at the reading speed.",
 		section = speechSection,
 		position = 3
 	)
@@ -595,8 +653,12 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "chattiness",
 		name = "Chattiness",
+		// public:cut long-descriptions
 		description = "How much it talks. Minimal is a remark every minute or so at"
 			+ " most; Chatty is a running commentary. Occasional is the default.",
+		// public:end long-descriptions
+		// public:else description = "How much it talks, from a remark a minute or"
+		// public:else 	+ " so on Minimal to running commentary on Chatty.",
 		section = appearanceSection,
 		position = 3
 	)
@@ -641,8 +703,12 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "mirrorToChat",
 		name = "Also show lines in the chatbox",
+		// public:cut long-descriptions
 		description = "Every line also appears in the chatbox under the follower's"
 			+ " name. Off by default because it can crowd out the game's own chat.",
+		// public:end long-descriptions
+		// public:else description = "Every line also appears in the chatbox. Off"
+		// public:else 	+ " by default, as it can crowd the game's chat.",
 		section = speechSection,
 		position = 0
 	)
@@ -656,9 +722,13 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "thrallMode",
 		name = "Replace thralls",
+		// public:cut long-descriptions
 		description = "When you summon an Arceuus thrall, the follower takes its place, moving"
 			+ " and attacking as the thrall does. Thrall only does this too, even with"
 			+ " this unticked.",
+		// public:end long-descriptions
+		// public:else description = "When you summon an Arceuus thrall, the follower"
+		// public:else 	+ " takes its place and fights as the thrall does.",
 		section = thrallSection,
 		position = 0
 	)
@@ -670,10 +740,14 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "thrallOnly",
 		name = "Thrall only",
+		// public:cut long-descriptions
 		description = "The follower is absent until you summon a thrall, takes its"
 			+ " place while it lasts, and when the thrall goes it phases out and"
 			+ " is gone until the next summon: for people who only want the thrall"
 			+ " replacement. It talks as the thrall unless Mute the thrall is ticked.",
+		// public:end long-descriptions
+		// public:else description = "The follower only appears as your thrall, while"
+		// public:else 	+ " the thrall lasts. For thrall replacement alone.",
 		section = thrallSection,
 		position = 1
 	)
@@ -685,9 +759,13 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "muteThrall",
 		name = "Mute the thrall",
+		// public:cut long-descriptions
 		description = "While the follower is your thrall it says nothing: no hello"
 			+ " when you summon it, no remarks while it fights, no goodbye when it"
 			+ " goes. The rest of the time it talks as usual.",
+		// public:end long-descriptions
+		// public:else description = "While the follower is your thrall it says"
+		// public:else 	+ " nothing. The rest of the time it talks as usual.",
 		section = thrallSection,
 		position = 2
 	)
@@ -700,9 +778,13 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "thrallMeleeProfile",
 		name = "Melee outfit profile",
+		// public:cut long-descriptions
 		description = "Outfit profile it wears in place of a zombie (melee) thrall."
 			+ " Type a name from OUTFIT PROFILES in the side panel, or pick it"
 			+ " there; if no profile has that name the ready-made Melee one is used.",
+		// public:end long-descriptions
+		// public:else description = "Outfit profile worn as a zombie (melee) thrall."
+		// public:else 	+ " Unknown names use the ready-made Melee one.",
 		section = thrallSection,
 		position = 3
 	)
@@ -714,9 +796,13 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "thrallRangedProfile",
 		name = "Ranged outfit profile",
+		// public:cut long-descriptions
 		description = "Outfit profile it wears in place of a skeleton (ranged) thrall."
 			+ " Type a name from OUTFIT PROFILES in the side panel, or pick it"
 			+ " there; if no profile has that name the ready-made Ranged one is used.",
+		// public:end long-descriptions
+		// public:else description = "Outfit profile worn as a skeleton (ranged) thrall."
+		// public:else 	+ " Unknown names use the ready-made Ranged one.",
 		section = thrallSection,
 		position = 4
 	)
@@ -728,9 +814,13 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "thrallMagicProfile",
 		name = "Magic outfit profile",
+		// public:cut long-descriptions
 		description = "Outfit profile it wears in place of a ghost (magic) thrall."
 			+ " Type a name from OUTFIT PROFILES in the side panel, or pick it"
 			+ " there; if no profile has that name the ready-made Magic one is used.",
+		// public:end long-descriptions
+		// public:else description = "Outfit profile worn as a ghost (magic) thrall."
+		// public:else 	+ " Unknown names use the ready-made Magic one.",
 		section = thrallSection,
 		position = 5
 	)
@@ -752,8 +842,11 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "errandsEnabled",
 		name = "Go on errands",
+		// public:cut long-descriptions
 		description = "Now and then it wanders off on a small errand and comes back."
 			+ " Untick to keep it at your heel.",
+		// public:end long-descriptions
+		// public:else description = "Now and then it wanders off on a small errand and comes back.",
 		section = errandSection,
 		position = 0
 	)
@@ -878,9 +971,13 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "errandExplore",
 		name = "Exploring",
+		// public:cut long-descriptions
 		description = "Noses at whatever the place offers - a chest, a trapdoor,"
 			+ " a signpost - and notes it down, especially somewhere it has"
 			+ " just arrived (::follower errand explore)",
+		// public:end long-descriptions
+		// public:else description = "Noses at a chest, trapdoor or signpost nearby"
+		// public:else 	+ " and notes it down (::follower errand explore)",
 		section = errandSection,
 		position = 10
 	)
@@ -896,10 +993,14 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "keepsCompany",
 		name = "Works beside you when skilling",
+		// public:cut long-descriptions
 		description = "While you chop, mine or fish it works alongside you: the same"
 			+ " tree, rock or spot when there is room, the next one along when"
 			+ " there is not. At a farming patch it works the patch with you. Now"
 			+ " and then it stops for its notes. Untick to keep it at your heel.",
+		// public:end long-descriptions
+		// public:else description = "Works alongside you at the same tree,"
+		// public:else 	+ " rock, spot or patch, or the next one along.",
 		section = skillingSection,
 		position = 0
 	)
@@ -911,10 +1012,14 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "borrowsTools",
 		name = "Borrows your tools",
+		// public:cut long-descriptions
 		description = "Holds a copy of the tool the work wants for the session - your"
 			+ " axe or pickaxe (the one you are wearing, or a bronze one), a net,"
 			+ " a rod, a rake - and gives it back with a bow when you are done."
 			+ " Without it, it keeps you company with its notes instead.",
+		// public:end long-descriptions
+		// public:else description = "Holds a copy of the tool the work wants,"
+		// public:else 	+ " and gives it back when you are done.",
 		section = skillingSection,
 		position = 1
 	)
@@ -930,9 +1035,13 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "paysAttention",
 		name = "Looks where you look",
+		// public:cut long-descriptions
 		description = "Turns its head to whatever your cursor rests on and to where"
 			+ " you turn the camera, and looks round at what is nearby while you"
 			+ " stand about. Head only; it never moves its feet for this.",
+		// public:end long-descriptions
+		// public:else description = "Turns its head to your cursor, your camera"
+		// public:else 	+ " and what is nearby. Head only, never its feet.",
 		section = companySection,
 		position = 0
 	)
@@ -945,11 +1054,19 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "noticesThings",
 		name = "Notices things",
+		// public:cut noticing,company-extras
+		// public:cut long-descriptions
 		description = "Goes to look at a drop of yours you walked away from, a bird's"
 			+ " nest, an impling, a crashed star, or a signpost or statue you stop"
 			+ " beside, and says so once. It also claps your levels, greets a new"
 			+ " pet, comes over to see a good drop and keeps an eye on a stranger"
 			+ " who walks up to you.",
+		// public:end long-descriptions
+		// public:else description = "Goes to look at drops, nests, implings,"
+		// public:else 	+ " stars and landmarks, and claps your levels.",
+		// public:end noticing,company-extras
+		// public:else description = "Claps your levels, greets a new pet, comes over to see a good"
+		// public:else 	+ " drop and keeps an eye on a stranger who walks up to you.",
 		section = companySection,
 		position = 1
 	)
@@ -961,9 +1078,13 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "walksBeside",
 		name = "Walks at your side",
+		// public:cut long-descriptions
 		description = "On a long run it draws level and walks at your shoulder instead of"
 			+ " trailing behind, and drops back the moment the ground narrows."
 			+ " Untick to keep it at your heel.",
+		// public:end long-descriptions
+		// public:else description = "On a long run it walks at your shoulder,"
+		// public:else 	+ " and drops back when the ground narrows.",
 		section = companySection,
 		position = 2
 	)
@@ -977,8 +1098,11 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "groupBoss",
 		name = "Bosses",
+		// public:cut long-descriptions
 		description = "Tips, lore and jokes when a boss appears (group \"boss\")."
 			+ " Editable under Bosses in Messages.",
+		// public:end long-descriptions
+		// public:else description = "Tips, lore and jokes when a boss appears (group \"boss\").",
 		section = groupsSection,
 		position = 2
 	)
@@ -990,8 +1114,12 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "groupHealth",
 		name = "Statuses",
+		// public:cut long-descriptions
 		description = "Remarks on your HP, prayer, poison, venom, skull and run energy"
 			+ " (group \"health\"). Editable under Statuses in Messages.",
+		// public:end long-descriptions
+		// public:else description = "Remarks on your HP, prayer, poison, venom,"
+		// public:else 	+ " skull and run energy (group \"health\").",
 		section = groupsSection,
 		position = 4
 	)
@@ -1029,9 +1157,13 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "groupGear",
 		name = "Items",
+		// public:cut long-descriptions
 		description = "Comments when you equip notable items, and the warning that"
 			+ " your bag is nearly full (group \"gear\")."
 			+ " Editable under Items in Messages.",
+		// public:end long-descriptions
+		// public:else description = "Comments on notable items you equip,"
+		// public:else 	+ " and a nearly full bag (group \"gear\").",
 		section = groupsSection,
 		position = 0
 	)
@@ -1043,9 +1175,13 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "groupQuest",
 		name = "Quest NPCs",
+		// public:cut long-descriptions
 		description = "Comments near famous quest figures, at moments partway through some"
 			+ " quests, and when you finish one (group \"quest\")."
 			+ " Editable under Quest NPCs in Messages.",
+		// public:end long-descriptions
+		// public:else description = "Comments near famous quest figures, during some"
+		// public:else 	+ " quests and when you finish one (group \"quest\").",
 		section = groupsSection,
 		position = 6
 	)
@@ -1070,9 +1206,13 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "groupMimic",
 		name = "Mimicry",
+		// public:cut long-descriptions
 		description = "It copies your emotes, spells and teleports, joins in when you eat"
 			+ " or work, and answers an emote made at it (group \"mimic\")."
 			+ " Editable under Mimicry in Messages.",
+		// public:end long-descriptions
+		// public:else description = "It copies your emotes, spells and teleports,"
+		// public:else 	+ " and answers emotes at it (group \"mimic\").",
 		section = groupsSection,
 		position = 7
 	)
@@ -1084,10 +1224,14 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "groupMemory",
 		name = "Reminiscing",
+		// public:cut long-descriptions
 		description = "It brings up things that happened and keeps score of the outings"
 			+ " it was and was not taken on (group \"memory\"). Turning it off does"
 			+ " not stop it remembering; Forget everything in the Memory window"
 			+ " erases what it remembers. Editable under Reminiscing in Messages.",
+		// public:end long-descriptions
+		// public:else description = "It brings up past events and keeps score of outings"
+		// public:else 	+ " (group \"memory\"). It still remembers when off.",
 		section = groupsSection,
 		position = 8
 	)
@@ -1131,9 +1275,13 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "groupClock",
 		name = "The hour and the session",
+		// public:cut long-descriptions
 		description = "Remarks about what time it is where you are and how long you"
 			+ " have been playing (group \"clock\")."
 			+ " Editable under The hour and the session in Messages.",
+		// public:end long-descriptions
+		// public:else description = "Remarks on the time where you are and"
+		// public:else 	+ " how long you have played (group \"clock\").",
 		section = groupsSection,
 		position = 11
 	)
@@ -1145,9 +1293,13 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "groupReactions",
 		name = "Reactions",
+		// public:cut long-descriptions
 		description = "Deaths, drops, thieving, level-ups and the chat, and its other answers"
 			+ " to what you do and what it sees (group \"reactions\")."
 			+ " Editable under Reactions in Messages.",
+		// public:end long-descriptions
+		// public:else description = "Deaths, drops, thieving, level-ups, chat and its"
+		// public:else 	+ " other answers to what happens (group \"reactions\").",
 		section = groupsSection,
 		position = 12
 	)
@@ -1159,9 +1311,13 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "wanderWhenIdle",
 		name = "Wander when idle",
+		// public:cut long-descriptions
 		description = "While you stand still, the follower drifts to a nearby tile every"
 			+ " half a minute or so instead of standing to attention. It stops after"
 			+ " five minutes, when it would sit down.",
+		// public:end long-descriptions
+		// public:else description = "While you stand still, it drifts to a nearby"
+		// public:else 	+ " tile now and then, until it would sit down.",
 		section = movementSection,
 		position = 1
 	)
@@ -1173,9 +1329,13 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "wanderAfterSeconds",
 		name = "Wander after (seconds)",
+		// public:cut long-descriptions
 		description = "How long you stand still before it starts drifting about."
 			+ " Forty-eight seconds by default, so sorting a bank tab does not"
 			+ " read as a stay; set it low to have it potter almost at once.",
+		// public:end long-descriptions
+		// public:else description = "How long you stand still before it starts"
+		// public:else 	+ " drifting about. Forty-eight seconds by default.",
 		section = movementSection,
 		position = 2
 	)
@@ -1188,9 +1348,12 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "followDistance",
 		name = "Follow distance (tiles)",
+		// public:cut long-descriptions
 		description = "How many steps behind you it walks and stops. One is the"
 			+ " game's own pet distance; two or three keep it out from under"
 			+ " your feet when you stop.",
+		// public:end long-descriptions
+		// public:else description = "How many steps behind you it walks. One is the game's pet distance.",
 		section = movementSection,
 		position = 0
 	)
@@ -1217,9 +1380,13 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "copiesAgility",
 		name = "Does agility with you",
+		// public:cut long-descriptions
 		description = "Takes the obstacles and most shortcuts you take, after you and the"
 			+ " same way, falls and all. Untick and it walks round to you, or appears"
 			+ " beside you, instead.",
+		// public:end long-descriptions
+		// public:else description = "Takes the obstacles and shortcuts you take,"
+		// public:else 	+ " falls and all. Untick and it walks round instead.",
 		section = movementSection,
 		position = 4
 	)
@@ -1232,14 +1399,16 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "restAnimation",
 		name = "Rest pose",
+		// public:cut long-descriptions
 		description = "Animation held while it sits. Set 0 and it never sits down. Default"
 			// public:cut posing-preview
-			// TODO text item p0b-preview-hint-restAnimation: the else lines repeat today's text until the owner approves the public wording
 			+ " 10061 is the game's own sit emote; audition others with"
 			+ " ::follower pose <id>.",
 			// public:end posing-preview
-			// public:else + " 10061 is the game's own sit emote; audition others with"
-			// public:else + " ::follower pose <id>.",
+			// public:else + " 10061 is the game's own sit emote.",
+		// public:end long-descriptions
+		// public:else description = "Animation held while it sits; 0 and it never"
+		// public:else 	+ " sits. Default 10061 is the game's sit emote.",
 		section = shieldSection,
 		position = 0
 	)
@@ -1486,18 +1655,20 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "reachAnimation",
 		name = "Reaching for something",
+		// public:cut long-descriptions
 		description = "Animation played as the follower takes a single thing out,"
 			+ " such as a tool it is borrowing, so it does not simply appear in"
 			+ " its hand. The thing comes into the hand halfway through. The"
 			+ " quill and scroll need none: the writing pose lifts them itself."
 			+ " Default 827 is the bend the errands already use. Others worth a"
 			// public:cut posing-preview
-			// TODO text item p0b-preview-hint-reachAnimation: the else lines repeat today's text until the owner approves the public wording
 			+ " look: 832, 5207, 895, 1649, 6217. Preview with"
 			+ " ::follower anim <id>. Blank or 0 for none.",
 			// public:end posing-preview
-			// public:else + " look: 832, 5207, 895, 1649, 6217. Preview with"
-			// public:else + " ::follower anim <id>. Blank or 0 for none.",
+			// public:else + " look: 832, 5207, 895, 1649, 6217. Blank or 0 for none.",
+		// public:end long-descriptions
+		// public:else description = "Animation as it takes out one thing, like"
+		// public:else 	+ " a borrowed tool. Default 827; 0 for none.",
 		section = shieldSection,
 		position = 13
 	)
@@ -1509,10 +1680,14 @@ public interface FollowerConfig extends Config
 	@ConfigItem(
 		keyName = "disabledGroups",
 		name = "Silence groups or rule ids by name",
+		// public:cut long-descriptions
 		description = "Comma-separated group names or single rule ids to silence,"
 			+ " beyond the toggles in the Messages section. Each of those toggles"
 			+ " shows its group name in brackets; rule ids are shown in the"
 			+ " Messages window.",
+		// public:end long-descriptions
+		// public:else description = "Comma-separated group names (shown in brackets"
+		// public:else 	+ " on the toggles) or rule ids to silence.",
 		section = groupsSection,
 		position = 13
 	)

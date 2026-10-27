@@ -7493,6 +7493,7 @@ public class FollowerPlugin extends Plugin
 			wishing && wishItemInBag ? "held" : "", // public:cut souvenirs-wishes
 			"errands", // public:cut errands
 			"thrall-outfits", // public:cut outfit-profiles,thrall-outfits
+			"likes", // public:cut likes
 			moodBand));
 		com.follower.speech.DialogTree tree = new com.follower.speech.DialogTree();
 		tree.nodes = new ArrayList<>();

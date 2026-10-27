@@ -1,6 +1,6 @@
 {
-  "about": "The public (Plugin Hub) build is generated from this source. Code that belongs to a feature the public build leaves out is marked with comments: '// public:cut f' ... '// public:end f' around a block, a trailing '// public:cut f' on one line, '// public:else text' for the line that replaces a cut one, and '// public:file f' on line 1 of a file that goes whole (<!-- --> in Markdown, # in .properties files and .tsv tables). A marker naming several features applies when any of them is left out. Markers are comments, so the full build is unchanged. requires: leaving out the key means leaving out those features too. resources: files that go with a feature.",
-  "build": "tools/make_public.py builds the public tree from this one: cut lists the features it leaves out, exclude the paths it never copies, export_rewrites the rewrites of tools/make_public.py it applies to the copy, by name and in order (each one's description says what it changes), resources a cut feature's files to drop, to move (to the tests) and its fonts to take out of fonts.json, rules the rule fields, groups, ids and tallies of a cut feature to prune beyond the condition types its code no longer has, and the top-level keys of the rule file to drop (a dialog tree no remaining rule asks for goes by itself, with the rules that answer it), expect the settings (by section), commands and follower menu entries the public build must have exactly, and budget the most the Hub replica (hub_count.py) may count.",
+  "about": "The public (Plugin Hub) build is generated from this source. Code that belongs to a feature the public build leaves out is marked with comments: '// public:cut f' ... '// public:end f' around a block, a trailing '// public:cut f' on one line, '// public:else text' for the line that replaces a cut one, and '// public:file f' on line 1 of a file that goes whole (<!-- --> in Markdown, # in .properties files, .tsv tables and Python scripts). A marker naming several features applies when any of them is left out. Markers are comments, so the full build is unchanged. requires: leaving out the key means leaving out those features too. resources: files that go with a feature.",
+  "build": "tools/make_public.py builds the public tree from this one: cut lists the features it leaves out, exclude the paths it never copies, export_rewrites the rewrites of tools/make_public.py it applies to the copy, by name and in order (each one's description says what it changes), resources a cut feature's files to drop, to move (to the tests) and its fonts to take out of fonts.json, rules the rule fields, groups, ids and tallies of a cut feature to prune beyond the condition types its code no longer has, the top-level keys of the rule file to drop (a dialog tree no remaining rule asks for goes by itself, with the rules that answer it) and the notes of kept rules to rewrite, talk the Talk-to facts (talk.json) a cut feature's build never sets, so the nodes that need one go, and the text that goes from the file's note, expect the settings (by section), commands and follower menu entries the public build must have exactly, and budget the most the Hub replica (hub_count.py) may count.",
   "cut": [
     "chronicle",
     "posing",
@@ -16,7 +16,8 @@
     "side-games",
     "souvenirs-wishes",
     "likes",
-    "nicknames"
+    "nicknames",
+    "long-descriptions"
   ],
   "budget": 190000,
   "exclude": [
@@ -61,6 +62,7 @@
     "gaze": "turning its head to the cursor and camera, and the look round",
     "gestures": "the gesture pacing of Moments",
     "likes": "place likes and dislikes: the rolled and earned favourite and disliked places",
+    "long-descriptions": "the full build's longer setting descriptions (the public build shows short ones)",
     "marks": "remarks on marks of grace",
     "memory-window": "the Memory window",
     "messages-readonly": "editing in the Messages window (the window stays, read-only)",
@@ -119,6 +121,26 @@
     "souvenirs-wishes": {
       "groups": [
         "souvenir"
+      ],
+      "notes": {
+        "grateful-idle": "The half hour after the player did what the follower asked and went where it wanted. The body pays the favour back on its own (closer attention, quicker gestures); this is the rare line that says so."
+      }
+    }
+  },
+  "talk": {
+    "likes": {
+      "facts": [
+        "likes"
+      ]
+    },
+    "souvenirs-wishes": {
+      "facts": [
+        "held",
+        "wish"
+      ],
+      "note": [
+        "wish (a wish is open), held (it is, and the wished thing is in the bag), ",
+        " {wish} is the wished thing."
       ]
     }
   },

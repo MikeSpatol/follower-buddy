@@ -487,7 +487,8 @@ public class TalkScriptTest
 		// question is the capability and does not.
 		assertTrue("nothing about counting or remembering", text.contains("keep track"));
 		assertTrue("nothing about having moods", text.contains("mood"));
-		assertTrue("nothing about places it likes", text.contains("places i like"));
+		assertTrue("nothing about places it likes", text.contains("places i like")); // public:cut likes
+		// public:else assertFalse("places it likes, in a build without them", text.contains("places i like"));
 		assertTrue("nothing about asking to be taken somewhere",
 			text.contains("take me somewhere"));
 		assertTrue("nothing about giving you room while thieving",

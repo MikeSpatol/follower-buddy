@@ -25,6 +25,9 @@ height <n>	lift or lower it
 # public:cut errands
 errand [{errands}]	send it on an errand now
 # public:end errands
+# public:cut sharevoice
 reload	re-read the phrase and sound files
+# public:end sharevoice
+# public:else reload	re-read the phrase files
 status	models, rules and spawn state
 where	your region id, for Locations in the Messages window

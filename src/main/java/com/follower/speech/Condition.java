@@ -1117,7 +1117,8 @@ public class Condition
 			}
 			catch (IllegalArgumentException e)
 			{
-				log.warn("Unknown chat type '{}' - see ::follower chatwatch for the real names", is);
+				log.warn("Unknown chat type '{}' - see ::follower chatwatch for the real names", is); // public:cut dev
+				// public:else log.warn("Unknown chat type '{}'", is);
 			}
 			wantedChatType = resolved;
 		}

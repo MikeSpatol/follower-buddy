@@ -92,7 +92,8 @@ public class StringsFileTest
 			+ " repointing, and Save will say so.");
 		// public:end dialogs-editor
 		// FollowerPanel
-		OLD.put("behaviourHint", " in game for Talk-to, Stay, Dance, Wave, Step-in-front and Read-chronicle."
+		OLD.put("behaviourHint", " in game for Talk-to, Stay, Dance, Wave, Step-in-front and Read-chronicle." // public:cut chronicle
+		// public:else OLD.put("behaviourHint", " in game for Talk-to, Stay, Dance, Wave and Step-in-front."
 			+ " Hold Shift and right-click any tile to send it there.");
 		OLD.put("identityCaption", "Only you"
 			+ " can see this follower. Dress it under Outfit; edit what it says"
@@ -106,8 +107,11 @@ public class StringsFileTest
 			+ " speech settings are kept. Same switch as Mute in settings.");
 		OLD.put("chatboxTip", "Every line also appears in the chatbox under the"
 			+ " follower's name. Same switch as in settings.");
+		// public:cut dialogs-editor
 		OLD.put("talkingCaption", "What it says and when. Messages holds every line;"
 			+ " Conversations the talks it starts itself.");
+		// public:end dialogs-editor
+		// public:else OLD.put("talkingCaption", "What it says and when. Messages holds every line.");
 		OLD.put("stayTip", "Same as right-click Stay and Follow-me on the follower,"
 			+ " and Follow me in settings");
 		OLD.put("fixTip", "Re-attaches the follower to the scene, then rebuilds it from the outfit");
@@ -116,7 +120,8 @@ public class StringsFileTest
 		OLD.put("stylesTip", "Styles cycle live on the follower; colours are the game's own");
 		OLD.put("commandsHint", "Type any of these in the chat as ::follower <command>");
 		OLD.put("bodyTip", "Switches the whole body model, and the default kits with it");
-		OLD.put("reloadTip", "Re-reads phrases.json and the attached sounds from disk");
+		OLD.put("reloadTip", "Re-reads phrases.json and the attached sounds from disk"); // public:cut sharevoice
+		// public:else OLD.put("reloadTip", "Re-reads phrases.json from disk");
 		OLD.put("noMatches", " items match - try \"Show items from every slot\"");
 		// public:cut dialogs-editor
 		OLD.put("conversationsTip", "View and edit the conversations the follower starts itself -"
@@ -133,11 +138,15 @@ public class StringsFileTest
 		OLD.put("memoryTip", "Everything the follower knows about you, and the button that erases it");
 		// public:end memory-window
 		// public:cut messages-window
-		OLD.put("messagesTip", "Everything the follower says, by subject, to read and edit");
+		OLD.put("messagesTip", "Everything the follower says, by subject, to read and edit"); // public:cut messages-readonly
+		// public:else OLD.put("messagesTip", "Everything the follower says, by subject, to read");
 		// public:end messages-window
 		// public:cut outfit-profiles
+		// public:cut thrall-outfits
 		OLD.put("deleteProfileTip", "Remove the selected profile. The built-in looks, and a"
 			+ " profile a thrall wears, cannot be removed.");
+		// public:end thrall-outfits
+		// public:else OLD.put("deleteProfileTip", "Remove the selected profile.");
 		// public:end outfit-profiles
 		// public:cut outfit-profiles,thrall-outfits
 		OLD.put("thrallProfilesTip", "Which profile stands in for each thrall. Same"
@@ -146,12 +155,14 @@ public class StringsFileTest
 		// MemoryDialog
 		// public:cut memory-window
 		OLD.put("forgetConfirm", "Everything it knows is erased for good: counts, bests, places,\n"
-			+ "the incident, the day you met, and the drawings in the Chronicle.\n"
+			+ "the incident, the day you met, and the drawings in the Chronicle.\n" // public:cut chronicle
+			// public:else + "the incident and the day you met.\n"
 			+ "The follower meets you again as a stranger. There is no undo.");
 		OLD.put("memoryHint", "Everything the follower currently remembers"
 			+ " about you. It is kept with this RuneLite profile's settings, and the"
 			+ " button below erases all of it for good.");
-		OLD.put("forgetTip", "Erase every count, best, place, the Chronicle's drawings,"
+		OLD.put("forgetTip", "Erase every count, best, place, the Chronicle's drawings," // public:cut chronicle
+		// public:else OLD.put("forgetTip", "Erase every count, best, place,"
 			+ " and the day it met you. It meets you again as a stranger.");
 		OLD.put("memoryWhere", "The Reminiscing toggle in settings silences the"
 			+ " lines that use this; Forget everything erases it.");
@@ -169,9 +180,11 @@ public class StringsFileTest
 		OLD.put("newLocationIncomplete", "new location needs a name, at least one region id and one message");
 		OLD.put("notARegion", "' isn't a region id the game uses - skipped");
 		// public:end messages-readonly,messages-window
-		// public:cut messages-window
+		// public:cut messages-readonly,messages-window
 		OLD.put("messagesHowTo", "One message per line. Edit, remove or add lines,"
 			+ " untick a rule to silence it, then Save - changes reach the follower within a second.");
+		// public:end messages-readonly,messages-window
+		// public:cut messages-window
 		OLD.put("messagesUnreadable", "The messages file couldn't be read - it may have been"
 			+ " hand-edited. Fix it or restore a backup, then Reload.");
 		OLD.put("findTip", "Show only the rules in this category whose title, note or lines"

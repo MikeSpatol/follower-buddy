@@ -58,7 +58,8 @@ public class CommandsFileTest
 			// Spaced, so the list wraps between keys rather than mid-word.
 			command("errand [" + LISTED_ERRAND_KEYS.replace("|", " | ") + "]", "send it on an errand now"),
 			// public:end errands
-			command("reload", "re-read the phrase and sound files"),
+			command("reload", "re-read the phrase and sound files"), // public:cut sharevoice
+			// public:else command("reload", "re-read the phrase files"),
 			command("status", "models, rules and spawn state"),
 			command("where", "your region id, for Locations in the Messages window")));
 	}

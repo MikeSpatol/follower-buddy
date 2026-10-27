@@ -133,9 +133,11 @@ public class PhrasesDialog extends EditorDialog // public:cut messages-window
 	// public:end sharevoice
 	private Category category;
 
+	// public:cut messages-readonly
 	/** What every category has in common; each category adds one line of its own. */
 	private static final String HOW_TO = Resources.text("messagesHowTo");
 
+	// public:end messages-readonly
 	private final JComboBox<String> categoryPicker = new JComboBox<>();
 	private final JLabel hint = Ui.label("", ColorScheme.LIGHT_GRAY_COLOR);
 
@@ -313,7 +315,8 @@ public class PhrasesDialog extends EditorDialog // public:cut messages-window
 			count++;
 		}
 
-		hint.setText("<html><body style='width:440px'>" + HOW_TO + "<br>" + category.hint + "</body></html>");
+		hint.setText("<html><body style='width:440px'>" + HOW_TO + "<br>" + category.hint + "</body></html>"); // public:cut messages-readonly
+		// public:else hint.setText("<html><body style='width:440px'>" + category.hint + "</body></html>");
 		addLocation.setVisible(category.structural); // public:cut messages-readonly
 		loadedStatus = count + " rules loaded";
 		findMatchedNothing = false;

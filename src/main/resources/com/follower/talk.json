@@ -1,5 +1,5 @@
 {
-  "note": "The everyday Talk-to conversation, opened when the follower has asked nothing. Kept apart from dialogs.json because it does not change with play - it is what the follower is, not what it is currently up to; the trees in dialogs.json are the ones the follower OPENS, which is a different job. Bundled only, never copied out or edited in game. Three rules hold this together. Every choice leads to a node where the PLAYER says that exact line: the game works that way and players read it that way - the option is the sentence you are about to speak, not a summary of it. Jumping straight to a menu instead reads as the click having gone astray, and an option whose node says something slightly different reads as a bug, because it is one. A test enforces the match. Nothing here is a feature list: what the follower can do comes out as habits and grievances, the way a person describes their job, because a companion reciting its own capabilities is a manual with a face. And a branch never replays a line already read - hence the -menu nodes, which re-offer the follow-ups without the preamble. A node with \"when\" is built only while every fact it names holds, and a fact with ! only while it does not: wish (a wish is open), held (it is, and the wished thing is in the bag), lowish (the mood band is low or down), the band itself (low, down, even, good, high), and errands and thrall-outfits (the build has them). Of the nodes sharing an id exactly one is built, in its place in the list. {wish} is the wished thing. moods: what the day summary says of each mood band; any other band gets the ordinary one.",
+  "note": "The everyday Talk-to conversation, opened when the follower has asked nothing. Kept apart from dialogs.json because it does not change with play - it is what the follower is, not what it is currently up to; the trees in dialogs.json are the ones the follower OPENS, which is a different job. Bundled only, never copied out or edited in game. Three rules hold this together. Every choice leads to a node where the PLAYER says that exact line: the game works that way and players read it that way - the option is the sentence you are about to speak, not a summary of it. Jumping straight to a menu instead reads as the click having gone astray, and an option whose node says something slightly different reads as a bug, because it is one. A test enforces the match. Nothing here is a feature list: what the follower can do comes out as habits and grievances, the way a person describes their job, because a companion reciting its own capabilities is a manual with a face. And a branch never replays a line already read - hence the -menu nodes, which re-offer the follow-ups without the preamble. A node with \"when\" is built only while every fact it names holds, and a fact with ! only while it does not: wish (a wish is open), held (it is, and the wished thing is in the bag), lowish (the mood band is low or down), the band itself (low, down, even, good, high), and errands, thrall-outfits and likes (the build has them). Of the nodes sharing an id exactly one is built, in its place in the list. {wish} is the wished thing. moods: what the day summary says of each mood band; any other band gets the ordinary one.",
   "jokes": [
     [
       "Why did the Wise Old Man rob the bank of Draynor?",
@@ -568,13 +568,23 @@
     },
     {
       "id": "how-place-q",
+      "when": "likes",
       "you": [
         "Anywhere you'd rather be?"
       ],
       "next": "how-place-a"
     },
     {
+      "id": "how-place-q",
+      "when": "!likes",
+      "you": [
+        "Anywhere you'd rather be?"
+      ],
+      "next": "how-place-b"
+    },
+    {
       "id": "how-place-a",
+      "when": "likes",
       "says": [
         "There are places I like. I couldn't tell you why.",
         "And one or two I'd sooner we didn't linger in. You'll hear about those."

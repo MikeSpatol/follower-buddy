@@ -153,8 +153,10 @@ public class MemorySurfaceTest
 		assertEquals("Kills today", MemoryDialog.keyLabel("kills" + TriggerContext.TODAY));
 		assertEquals("Levels gained today", MemoryDialog.keyLabel("levels:today"));
 		assertEquals("Deaths today", MemoryDialog.keyLabel("deaths:today"));
-		assertEquals("Wishes granted", MemoryDialog.keyLabel("want:kept"));
-		assertEquals("Wishes missed", MemoryDialog.keyLabel("want:missed"));
+		assertEquals("Wishes granted", MemoryDialog.keyLabel("want:kept")); // public:cut souvenirs-wishes
+		// public:else assertEquals("Outings taken", MemoryDialog.keyLabel("want:kept"));
+		assertEquals("Wishes missed", MemoryDialog.keyLabel("want:missed")); // public:cut souvenirs-wishes
+		// public:else assertEquals("Outings missed", MemoryDialog.keyLabel("want:missed"));
 		assertEquals("Advice taken", MemoryDialog.keyLabel("advice:taken")); // public:cut side-games
 		assertEquals("Advice ignored", MemoryDialog.keyLabel("advice:ignored")); // public:cut side-games
 		assertEquals("Zulrah kill count", MemoryDialog.keyLabel("kc:zulrah"));

@@ -444,11 +444,14 @@ final class OldTalk
 			"It passes. Everything does, if you keep walking.")
 			.then("how-menu"));
 
-		script.put("how-place-q", you("Anywhere you'd rather be?").then("how-place-a"));
+		script.put("how-place-q", you("Anywhere you'd rather be?").then("how-place-a")); // public:cut likes
+		// public:else script.put("how-place-q", you("Anywhere you'd rather be?").then("how-place-b"));
+		// public:cut likes
 		script.put("how-place-a", says(
 			"There are places I like. I couldn't tell you why.",
 			"And one or two I'd sooner we didn't linger in. You'll hear about those.")
 			.then("how-place-b"));
+		// public:end likes
 		script.put("how-place-b", says(
 			"If I ever ask you to take me somewhere, come and talk to me and I'll say where.",
 			"I won't ask twice. It's not that sort of arrangement.")

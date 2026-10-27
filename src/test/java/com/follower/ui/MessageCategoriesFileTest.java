@@ -24,7 +24,8 @@ public class MessageCategoriesFileTest
 					// public:else + " bag is nearly full."),
 				false), // public:cut messages-readonly
 			new com.follower.ui.PhrasesDialog.Category("Locations", "area",
-				"Said on entering a place, and about places it likes, dislikes or"
+				"Said on entering a place, and about places it likes, dislikes or" // public:cut likes
+				// public:else "Said on entering a place, and about places it"
 					+ " remembers. Region ids are editable and Add location makes a new one.", // public:cut messages-readonly
 					// public:else + " remembers. Region ids are editable and Add location makes a new one."),
 				true), // public:cut messages-readonly
@@ -33,7 +34,8 @@ public class MessageCategoriesFileTest
 				// public:else "Said when that boss appears nearby, and at boss kills and kill counts."),
 				false), // public:cut messages-readonly
 			new com.follower.ui.PhrasesDialog.Category("Combat", "combat",
-				"Said while it stands clear and watches you fight, and when something"
+				"Said while it stands clear and watches you fight, and when something" // public:cut spectate,spectate-keep-fight-lines
+				// public:else "Said while you fight, and when something"
 					+ " big comes near.", // public:cut messages-readonly
 					// public:else + " big comes near."),
 				false), // public:cut messages-readonly

@@ -31,7 +31,8 @@ GROUPS = OrderedDict([
     ("combat", "The fight from the sidelines, and its ends"),
     ("health", "Hitpoints, prayer, poison, the warnings that must land"),
     ("memory", "Deaths, incidents, comforts, the things it keeps bringing up"),
-    ("area", "Places: named lines, tastes, earned verdicts, the defences"),
+    ("area", "Places: named lines, tastes, earned verdicts, the defences"),  # public:cut likes
+    # public:else ("area", "Places: named lines, return visits, the places it remembers"),
     ("errand", "Its little trips: bank, altar, fire, cat, studies, explores"),
     ("souvenir", "Wishes, gifts, the pocket, and what it carries"),
     ("bet", "Its predictions about drops"),
@@ -281,6 +282,8 @@ def build():
     out.append("")
     for g, blurb in GROUPS.items():
         rs = by_group.get(g, [])
+        if not rs:
+            continue
         n = sum(len(r.get("say") or []) for r in rs)
         out.append("- [%s](#%s) - %s (%d rules, %d lines)" % (g, g, blurb, len(rs), n))
     out.append("- [dialogs](#dialogs) - the conversations it starts (%d trees)"
@@ -343,12 +346,20 @@ def build():
 
     out.append("## talk-to")
     out.append("")
+    # public:cut souvenirs-wishes
     out.append("The everyday Talk-to script is built in code"
                " (`FollowerPlugin.talkScript`) because it branches on live"
                " state - the mood band, the open wish, whether the wished item"
                " is in the bag, today's summary. Its text is reviewed in"
                " `TalkScriptTest`, which walks every structural variant. Read"
                " it there; it is deliberately not duplicated here.")
+    # public:end souvenirs-wishes
+    # public:else out.append("The everyday Talk-to script is bundled as talk.json and built by"
+    # public:else            " `FollowerPlugin.talkScript`, which keeps the nodes that fit the"
+    # public:else            " mood band and adds today's summary and the jokes on each visit."
+    # public:else            " Its text is reviewed in `TalkScriptTest`, which walks every"
+    # public:else            " structural variant. Read it there; it is deliberately not"
+    # public:else            " duplicated here.")
     out.append("")
     return "\n".join(out) + "\n"
 
