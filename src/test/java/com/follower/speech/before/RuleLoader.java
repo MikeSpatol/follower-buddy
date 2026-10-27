@@ -276,6 +276,7 @@ public class RuleLoader
 				}
 			}
 
+			// public:cut nicknames
 			int nicknamesAdded = 0;
 			if (bundled.has("nicknames") && bundled.get("nicknames").isJsonObject())
 			{
@@ -293,6 +294,7 @@ public class RuleLoader
 				}
 				ours.add("nicknames", held);
 			}
+			// public:end nicknames
 
 			int placesAdded = 0;
 			if (bundled.has("places") && bundled.get("places").isJsonObject())
@@ -312,15 +314,20 @@ public class RuleLoader
 				ours.add("places", held);
 			}
 
-			if (added > 0 || updated > 0 || dropped > 0 || nicknamesAdded > 0 || placesAdded > 0)
+			if (added > 0 || updated > 0 || dropped > 0 || nicknamesAdded > 0 || placesAdded > 0) // public:cut nicknames
+			// public:else if (added > 0 || updated > 0 || dropped > 0 || placesAdded > 0)
 			{
 				Files.copy(file, file.resolveSibling(file.getFileName() + ".bak"),
 					java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 				Files.write(file,
 					(pretty.toJson(ours) + "\n").getBytes(StandardCharsets.UTF_8));
 				// public:cut logs
+				// public:cut nicknames
 				log.info("Merged {} new rule(s), {} changed rule(s), {} dropped rule(s), {} nickname(s) and {} place name(s) into {}",
 					added, updated, dropped, nicknamesAdded, placesAdded, file);
+				// public:end nicknames
+				// public:else log.info("Merged {} new rule(s), {} changed rule(s), {} dropped rule(s) and {} place name(s) into {}",
+				// public:else 	added, updated, dropped, placesAdded, file);
 				// public:end logs
 			}
 
@@ -648,8 +655,10 @@ public class RuleLoader
 			}
 
 			valid.sort((a, b) -> Integer.compare(b.priority, a.priority));
+			// public:cut nicknames
 			nicknames = parsed.nicknames == null
 				? Collections.<String, String>emptyMap() : parsed.nicknames;
+			// public:end nicknames
 			filePlaces = parsed.places == null
 				? Collections.<Integer, String>emptyMap() : parsed.places;
 			apply(valid, problems, valid.size() + " rules");
@@ -670,6 +679,7 @@ public class RuleLoader
 		}
 	}
 
+	// public:cut nicknames
 	/**
 	 * Whether the bundled names for a tally only add to the player's: theirs
 	 * is still one of ours, untouched, and ours now offers a choice. "the
@@ -713,6 +723,7 @@ public class RuleLoader
 	{
 		return this.nicknames;
 	}
+	// public:end nicknames
 
 	/**
 	 * Which condition type answers which event. Only the types that are gated

@@ -824,6 +824,7 @@ public class EveryConditionTypeTest
 		assertFired(sessions, "sessionCount");
 	}
 
+	// public:cut likes
 	@Test
 	public void tasteIsAboutWhereTheFollowerIsStanding() throws IOException
 	{
@@ -848,6 +849,7 @@ public class EveryConditionTypeTest
 		sour.gameTicks(2);
 		assertFired(sour, "feelsAbout disliked");
 	}
+	// public:end likes
 
 	// public:cut souvenirs-wishes
 	@Test
@@ -962,6 +964,7 @@ public class EveryConditionTypeTest
 		assertFired(stale, "a fresh ending is");
 	}
 
+	// public:cut likes
 	@Test
 	public void theRollStaysReadableUnderTheOverride() throws IOException
 	{
@@ -986,6 +989,7 @@ public class EveryConditionTypeTest
 		h.gameTicks(2);
 		assertFired(h, "rolledFeeling disliked, whatever the ledger says");
 	}
+	// public:end likes
 
 	@Test
 	public void wantsAreAskedForFulfilledAndForgotten() throws IOException
@@ -1403,9 +1407,12 @@ public class EveryConditionTypeTest
 	}
 
 	@Test
-	public void tasteIsEarnedAndOutranksTheRoll() throws IOException
+	public void tasteIsEarnedAndOutranksTheRoll() throws IOException // public:cut likes
+	// public:else public void aPlaceKeepsItsOwnMemory() throws IOException
 	{
-		note("placeScore", "happenedHere");
+		note("placeScore", "happenedHere"); // public:cut likes
+		// public:else note("happenedHere");
+		// public:cut likes
 
 		Harness h = harnessFor("{\"type\": \"placeScore\", \"maximum\": -80}");
 		h.gameTicks(2);
@@ -1436,6 +1443,7 @@ public class EveryConditionTypeTest
 		}
 		sour.gameTicks(2);
 		assertQuiet(sour, "a place it has learned to dislike is not liked");
+		// public:end likes
 
 		// The place's own memory, which waits here rather than following you.
 		Harness held = harnessFor("{\"type\": \"happenedHere\"}");
@@ -1599,9 +1607,12 @@ public class EveryConditionTypeTest
 	}
 
 	@Test
-	public void theNameYouEarnAndTheGearYouOutgrew() throws IOException
+	public void theNameYouEarnAndTheGearYouOutgrew() throws IOException // public:cut nicknames
+	// public:else public void theGearYouOutgrew() throws IOException
 	{
-		note("nicknamed", "nicknameEarned", "outgrew");
+		note("nicknamed", "nicknameEarned", "outgrew"); // public:cut nicknames
+		// public:else note("outgrew");
+		// public:cut nicknames
 
 		Harness h = harnessFor("{\"type\": \"nicknameEarned\"}");
 		java.util.Map<String, String> names = new java.util.LinkedHashMap<>();
@@ -1636,6 +1647,7 @@ public class EveryConditionTypeTest
 		}
 		assertEquals("the candidate follows what you actually do",
 			"the local menace", h.engine.getContext().getEarnedNickname());
+		// public:end nicknames
 
 		Harness rich = harnessFor("{\"type\": \"outgrew\", \"minimum\": 10}");
 		rich.engine.getContext().setWornValue(500_000);
@@ -1963,19 +1975,21 @@ public class EveryConditionTypeTest
 		standingInTheWildernessIsAStateNotACrossing();
 		aParkedFollowerKnowsItIsParked();
 		theBreatherAfterSomethingEnds();
-		theRollStaysReadableUnderTheOverride();
-		tasteIsAboutWhereTheFollowerIsStanding();
+		theRollStaysReadableUnderTheOverride(); // public:cut likes
+		tasteIsAboutWhereTheFollowerIsStanding(); // public:cut likes
 		thievingEdges();
 		theIncidentItKeepsBringingUp();
 		whatItIsCarryingAndWhenItLosesIt(); // public:cut souvenirs-wishes
 		theBetIsPlacedAndSettledBothWays(); // public:cut side-games
 		theHourAndHowLongWeHaveBeenAtIt();
 		aQuestionAlreadyOnTheTable();
-		tasteIsEarnedAndOutranksTheRoll();
+		tasteIsEarnedAndOutranksTheRoll(); // public:cut likes
+		// public:else aPlaceKeepsItsOwnMemory();
 		adviceIsTakenOrIsNot(); // public:cut side-games
 		howLongWeHaveKnownEachOther();
 		howLongSinceAOneTimeLineWasSaid();
-		theNameYouEarnAndTheGearYouOutgrew();
+		theNameYouEarnAndTheGearYouOutgrew(); // public:cut nicknames
+		// public:else theGearYouOutgrew();
 		theChallengeIsMetOrIsNot(); // public:cut side-games
 		underfootAndGoneFromTheKeyboard();
 		theScribeNoticesTheWiderWorld();

@@ -1,6 +1,6 @@
 {
   "about": "The public (Plugin Hub) build is generated from this source. Code that belongs to a feature the public build leaves out is marked with comments: '// public:cut f' ... '// public:end f' around a block, a trailing '// public:cut f' on one line, '// public:else text' for the line that replaces a cut one, and '// public:file f' on line 1 of a file that goes whole (<!-- --> in Markdown, # in .properties files and .tsv tables). A marker naming several features applies when any of them is left out. Markers are comments, so the full build is unchanged. requires: leaving out the key means leaving out those features too. resources: files that go with a feature.",
-  "build": "tools/make_public.py builds the public tree from this one: cut lists the features it leaves out, exclude the paths it never copies, export_rewrites the rewrites of tools/make_public.py it applies to the copy, by name and in order (each one's description says what it changes), resources a cut feature's files to drop, to move (to the tests) and its fonts to take out of fonts.json, rules the rule fields, groups, ids and tallies of a cut feature to prune beyond the condition types its code no longer has, expect the settings (by section), commands and follower menu entries the public build must have exactly, and budget the most the Hub replica (hub_count.py) may count.",
+  "build": "tools/make_public.py builds the public tree from this one: cut lists the features it leaves out, exclude the paths it never copies, export_rewrites the rewrites of tools/make_public.py it applies to the copy, by name and in order (each one's description says what it changes), resources a cut feature's files to drop, to move (to the tests) and its fonts to take out of fonts.json, rules the rule fields, groups, ids and tallies of a cut feature to prune beyond the condition types its code no longer has, and the top-level keys of the rule file to drop (a dialog tree no remaining rule asks for goes by itself, with the rules that answer it), expect the settings (by section), commands and follower menu entries the public build must have exactly, and budget the most the Hub replica (hub_count.py) may count.",
   "cut": [
     "chronicle",
     "posing",
@@ -53,11 +53,13 @@
     "errands": "errands",
     "gaze": "turning its head to the cursor and camera, and the look round",
     "gestures": "the gesture pacing of Moments",
+    "likes": "place likes and dislikes: the rolled and earned favourite and disliked places",
     "marks": "remarks on marks of grace",
     "memory-window": "the Memory window",
     "messages-readonly": "editing in the Messages window (the window stays, read-only)",
     "messages-window": "the Messages window",
     "moments": "body language: claps, bows, celebrations, the logout wave, drop reactions",
+    "nicknames": "earned nicknames: the offer, the Talk-to question and the name in its lines",
     "noticing": "walking over to things it notices",
     "outfit-profiles": "outfit profiles, thrall outfits included",
     "posing-preview": "the anim, gfx and pose preview commands",
@@ -95,7 +97,13 @@
       }
     }
   },
-  "rules": {},
+  "rules": {
+    "nicknames": {
+      "keys": [
+        "nicknames"
+      ]
+    }
+  },
   "expect": {
     "settings": {
       "": [

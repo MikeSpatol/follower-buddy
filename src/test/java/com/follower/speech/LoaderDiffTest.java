@@ -152,7 +152,8 @@ public class LoaderDiffTest
 			{
 				com.follower.speech.before.RuleLoader loader = new com.follower.speech.before.RuleLoader(new Gson());
 				return new Driven(loader::initialise, loader::reloadIfChanged, loader::reload,
-					() -> rules(loader.getStatus(), loader.getErrors(), loader.getRules(), loader.getNicknames(),
+					() -> rules(loader.getStatus(), loader.getErrors(), loader.getRules(), loader.getNicknames(), // public:cut nicknames
+					// public:else () -> rules(loader.getStatus(), loader.getErrors(), loader.getRules(),
 						loader.getRegionNames(), loader.getBossNames(), loader::listensFor,
 						loader.isVarbitEventRules(), loader.getFile()));
 			},
@@ -160,7 +161,8 @@ public class LoaderDiffTest
 			{
 				RuleLoader loader = new RuleLoader(new Gson());
 				return new Driven(loader::initialise, loader::reloadIfChanged, loader::reload,
-					() -> rules(loader.getStatus(), loader.getErrors(), loader.getRules(), loader.getNicknames(),
+					() -> rules(loader.getStatus(), loader.getErrors(), loader.getRules(), loader.getNicknames(), // public:cut nicknames
+					// public:else () -> rules(loader.getStatus(), loader.getErrors(), loader.getRules(),
 						loader.getRegionNames(), loader.getBossNames(), loader::listensFor,
 						loader.isVarbitEventRules(), loader.getFile()));
 			}));
@@ -332,7 +334,8 @@ public class LoaderDiffTest
 	}
 
 	private static String rules(String status, List<String> errors, List<SpeechRule> rules,
-		Map<String, String> nicknames, Map<Integer, String> regions, Set<String> bosses,
+		Map<String, String> nicknames, Map<Integer, String> regions, Set<String> bosses, // public:cut nicknames
+		// public:else Map<Integer, String> regions, Set<String> bosses,
 		Predicate<TriggerEvent.Type> listens, boolean varbit, Path file)
 	{
 		List<String> ids = new ArrayList<>();
@@ -346,7 +349,8 @@ public class LoaderDiffTest
 			heard.append(type).append('=').append(listens.test(type)).append(' ');
 		}
 		return "status " + status + "\nerrors " + errors + "\nrules " + ids
-			+ "\nnick " + new TreeMap<>(nicknames) + "\nregions " + new TreeMap<>(regions)
+			+ "\nnick " + new TreeMap<>(nicknames) + "\nregions " + new TreeMap<>(regions) // public:cut nicknames
+			// public:else + "\nregions " + new TreeMap<>(regions)
 			+ "\nbosses " + new TreeSet<>(bosses) + "\nlistens " + heard + "null=" + listens.test(null)
 			+ " varbit=" + varbit + "\npath " + file + "\n";
 	}

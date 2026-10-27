@@ -926,7 +926,8 @@ public class StayHoldsTest
 		};
 		// public:cut company-extras
 		// public:cut gaze
-		set("gaze", new Gaze(h.game.client, feet, config, () -> 0, () -> 0, () -> false, () -> "",
+		set("gaze", new Gaze(h.game.client, feet, config, () -> 0, () -> 0, () -> false, () -> "", // public:cut likes
+		// public:else set("gaze", new Gaze(h.game.client, feet, config, () -> 0, () -> 0, () -> false,
 			Collections::emptyList, new Random(1)));
 		// public:end gaze
 		// public:cut noticing

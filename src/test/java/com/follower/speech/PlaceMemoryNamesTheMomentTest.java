@@ -70,10 +70,12 @@ public class PlaceMemoryNamesTheMomentTest
 		for (String old : new String[]{"it went wrong for you", "you got that drop", "you put that thing down",
 			"you hit harder than you ever had"})
 		{
-			c.restorePlaces(Collections.emptyMap(), Collections.singletonMap(c.getRegionId(), old));
+			c.restorePlaces(Collections.emptyMap(), Collections.singletonMap(c.getRegionId(), old)); // public:cut likes
+			// public:else c.restorePlaces(Collections.singletonMap(c.getRegionId(), old));
 			assertFalse(old, c.hasPlaceMemory());
 		}
-		c.restorePlaces(Collections.emptyMap(), Collections.singletonMap(c.getRegionId(), "you died"));
+		c.restorePlaces(Collections.emptyMap(), Collections.singletonMap(c.getRegionId(), "you died")); // public:cut likes
+		// public:else c.restorePlaces(Collections.singletonMap(c.getRegionId(), "you died"));
 		assertTrue(c.hasPlaceMemory());
 	}
 
@@ -84,7 +86,8 @@ public class PlaceMemoryNamesTheMomentTest
 			+ " \"when\": {\"type\": \"levelUp\", \"names\": [\"Attack\"]},"
 			+ " \"say\": [\"You may not remember. This is where {here}.\", \"Here. {here}.\"]}");
 		TriggerContext c = h.engine.getContext();
-		c.restorePlaces(Collections.emptyMap(), Collections.singletonMap(c.getRegionId(),
+		c.restorePlaces(Collections.emptyMap(), Collections.singletonMap(c.getRegionId(), // public:cut likes
+		// public:else c.restorePlaces(Collections.singletonMap(c.getRegionId(),
 			"the Twisted ancestral colour kit dropped off the Great Olm"));
 		for (int i = 0; i < 6; i++)
 		{

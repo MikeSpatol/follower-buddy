@@ -61,6 +61,7 @@ public class Gaze
 	static final int AROUND_MIN_TICKS = 33;
 	static final int AROUND_MAX_TICKS = 66;
 	static final int AROUND_MS = 1500;
+	// public:cut likes
 	/** Somewhere it likes: slower, longer, taking it in. */
 	static final int LIKED_MIN_TICKS = 50;
 	static final int LIKED_MAX_TICKS = 83;
@@ -69,6 +70,7 @@ public class Gaze
 	static final int DISLIKED_MIN_TICKS = 13;
 	static final int DISLIKED_MAX_TICKS = 25;
 	static final int DISLIKED_MS = 900;
+	// public:end likes
 	static final int AROUND_NEAR = 3;
 	public static final int AROUND_FAR = 6;
 
@@ -99,8 +101,10 @@ public class Gaze
 	private final IntSupplier idleTicks;
 	/** Something else has the head or the feet: nothing here applies. */
 	private final BooleanSupplier busy;
+	// public:cut likes
 	/** "liked", "disliked" or "" for where the follower is standing. */
 	private final Supplier<String> placeFeeling;
+	// public:end likes
 	/** Tiles of the things nearby worth a look, nearest first. */
 	private final Supplier<List<WorldPoint>> nearby;
 	private final Random random;
@@ -121,7 +125,8 @@ public class Gaze
 
 	public Gaze(Client client, FollowerEntity follower, FollowerConfig config,
 		IntSupplier cameraYaw, IntSupplier idleTicks, BooleanSupplier busy,
-		Supplier<String> placeFeeling, Supplier<List<WorldPoint>> nearby, Random random)
+		Supplier<String> placeFeeling, Supplier<List<WorldPoint>> nearby, Random random) // public:cut likes
+		// public:else Supplier<List<WorldPoint>> nearby, Random random)
 	{
 		this.client = client;
 		this.follower = follower;
@@ -129,7 +134,7 @@ public class Gaze
 		this.cameraYaw = cameraYaw;
 		this.idleTicks = idleTicks;
 		this.busy = busy;
-		this.placeFeeling = placeFeeling;
+		this.placeFeeling = placeFeeling; // public:cut likes
 		this.nearby = nearby;
 		this.random = random;
 	}
@@ -323,14 +328,19 @@ public class Gaze
 			aroundIn = -1;
 			return;
 		}
+		// public:cut likes
 		String feeling = placeFeeling.get();
 		boolean disliked = "disliked".equals(feeling);
 		boolean liked = "liked".equals(feeling);
+		// public:end likes
 		if (aroundIn < 0)
 		{
+			// public:cut likes
 			aroundIn = disliked ? between(DISLIKED_MIN_TICKS, DISLIKED_MAX_TICKS)
 				: liked ? between(LIKED_MIN_TICKS, LIKED_MAX_TICKS)
 				: between(AROUND_MIN_TICKS, AROUND_MAX_TICKS);
+			// public:end likes
+			// public:else aroundIn = between(AROUND_MIN_TICKS, AROUND_MAX_TICKS);
 			return;
 		}
 		if (--aroundIn > 0)
@@ -338,21 +348,28 @@ public class Gaze
 			return;
 		}
 		aroundIn = -1;
-		lookRoundNow(from, feeling);
+		lookRoundNow(from, feeling); // public:cut likes
+		// public:else lookRoundNow(from);
 	}
 
 	/** The look round itself, at something nearby or nothing in particular: where, or null. */
-	private WorldPoint lookRoundNow(WorldPoint from, String feeling)
+	private WorldPoint lookRoundNow(WorldPoint from, String feeling) // public:cut likes
+	// public:else private WorldPoint lookRoundNow(WorldPoint from)
 	{
+		// public:cut likes
 		boolean disliked = "disliked".equals(feeling);
 		boolean liked = "liked".equals(feeling);
+		// public:end likes
 		List<WorldPoint> things = nearby.get();
 		WorldPoint at = null;
 		if (things != null && !things.isEmpty())
 		{
+			// public:cut likes
 			// Somewhere it dislikes, the nearest thing that moves; anywhere
 			// else, any of them.
 			at = disliked ? things.get(0) : things.get(random.nextInt(things.size()));
+			// public:end likes
+			// public:else at = things.get(random.nextInt(things.size()));
 		}
 		if (at == null)
 		{
@@ -365,8 +382,12 @@ public class Gaze
 		{
 			return null;
 		}
-		follower.glanceAt(at, disliked ? DISLIKED_MS : liked ? LIKED_MS : AROUND_MS);
-		log.debug("A look round at {} ({})", at, feeling.isEmpty() ? "nothing felt" : feeling); // public:cut logs
+		follower.glanceAt(at, disliked ? DISLIKED_MS : liked ? LIKED_MS : AROUND_MS); // public:cut likes
+		// public:else follower.glanceAt(at, AROUND_MS);
+		// public:cut logs
+		log.debug("A look round at {} ({})", at, feeling.isEmpty() ? "nothing felt" : feeling); // public:cut likes
+		// public:else log.debug("A look round at {} (nothing felt)", at);
+		// public:end logs
 		return at;
 	}
 
@@ -413,7 +434,8 @@ public class Gaze
 			return "A look at what the cursor is on.";
 		}
 		aroundIn = -1;
-		WorldPoint at = lookRoundNow(from, placeFeeling.get());
+		WorldPoint at = lookRoundNow(from, placeFeeling.get()); // public:cut likes
+		// public:else WorldPoint at = lookRoundNow(from);
 		return at == null ? "Nowhere to look round at."
 			: "A look round at " + at.getX() + ", " + at.getY() + ".";
 	}

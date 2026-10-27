@@ -187,25 +187,35 @@ public class RuleLoader extends MergingLoader<RuleFile>
 			}
 		}
 
-		int nicknamesAdded = addMissing(bundled, ours, "nicknames", true);
-		int placesAdded = addMissing(bundled, ours, "places", false);
-		if (added + updated + dropped + nicknamesAdded + placesAdded > 0)
+		int nicknamesAdded = addMissing(bundled, ours, "nicknames", true); // public:cut nicknames
+		int placesAdded = addMissing(bundled, ours, "places", false); // public:cut nicknames
+		// public:else int placesAdded = addMissing(bundled, ours, "places");
+		if (added + updated + dropped + nicknamesAdded + placesAdded > 0) // public:cut nicknames
+		// public:else if (added + updated + dropped + placesAdded > 0)
 		{
 			save(ours);
 			// public:cut logs
+			// public:cut nicknames
 			log.info("Merged {} new rule(s), {} changed rule(s), {} dropped rule(s), {} nickname(s) and {} place name(s) into {}",
 				added, updated, dropped, nicknamesAdded, placesAdded, file);
+			// public:end nicknames
+			// public:else log.info("Merged {} new rule(s), {} changed rule(s), {} dropped rule(s) and {} place name(s) into {}",
+			// public:else 	added, updated, dropped, placesAdded, file);
 			// public:end logs
 		}
 	}
 
 	/**
+	// public:cut nicknames
 	 * The entries of a bundled map the player's lacks, or for nicknames, whose
 	 * bundled names {@link #widens} theirs.
+	// public:end nicknames
+	// public:else  * The entries of a bundled map the player's lacks.
 	 *
 	 * @return how many arrived
 	 */
-	private static int addMissing(JsonObject bundled, JsonObject ours, String key, boolean widening)
+	private static int addMissing(JsonObject bundled, JsonObject ours, String key, boolean widening) // public:cut nicknames
+	// public:else private static int addMissing(JsonObject bundled, JsonObject ours, String key)
 	{
 		if (!bundled.has(key) || !bundled.get(key).isJsonObject())
 		{
@@ -215,7 +225,8 @@ public class RuleLoader extends MergingLoader<RuleFile>
 		int added = 0;
 		for (Map.Entry<String, JsonElement> entry : bundled.getAsJsonObject(key).entrySet())
 		{
-			if (!held.has(entry.getKey()) || widening && widens(held.get(entry.getKey()), entry.getValue()))
+			if (!held.has(entry.getKey()) || widening && widens(held.get(entry.getKey()), entry.getValue())) // public:cut nicknames
+			// public:else if (!held.has(entry.getKey()))
 			{
 				held.add(entry.getKey(), entry.getValue());
 				added++;
@@ -394,13 +405,16 @@ public class RuleLoader extends MergingLoader<RuleFile>
 		}
 
 		valid.sort((a, b) -> Integer.compare(b.priority, a.priority));
+		// public:cut nicknames
 		nicknames = parsed.nicknames == null
 			? Collections.<String, String>emptyMap() : parsed.nicknames;
+		// public:end nicknames
 		filePlaces = parsed.places == null
 			? Collections.<Integer, String>emptyMap() : parsed.places;
 		apply(valid, problems, valid.size() + " rules");
 	}
 
+	// public:cut nicknames
 	/**
 	 * Whether the bundled names for a tally only add to the player's: theirs
 	 * is still one of ours, untouched, and ours now offers a choice. "the
@@ -441,6 +455,7 @@ public class RuleLoader extends MergingLoader<RuleFile>
 	@Getter
 	private Map<String, String> nicknames = Collections.emptyMap();
 
+	// public:end nicknames
 	/**
 	 * Which condition type answers which event. Only the types that are gated
 	 * on a specific event appear: a state condition (healthBelow, inRegion) can

@@ -943,6 +943,7 @@ public class SpeechEngine
 		return null;
 	}
 
+	// public:cut likes
 	/**
 	 * Whether this firing says anything about WHERE it happened.
 	 *
@@ -992,6 +993,7 @@ public class SpeechEngine
 		}
 	}
 
+	// public:end likes
 	/**
 	 * The speech gap, stretched or shortened by how the follower feels.
 	 *
@@ -1540,6 +1542,7 @@ public class SpeechEngine
 		if (rule.mood != null && rule.mood != 0)
 		{
 			getContext().adjustMood(rule.mood);
+			// public:cut likes
 
 			// And the place keeps its share of it. The rules already say how
 			// much a moment was worth; this is only remembering where it was.
@@ -1547,6 +1550,7 @@ public class SpeechEngine
 			{
 				getContext().notePlaceFeeling(rule.mood);
 			}
+			// public:end likes
 		}
 
 		// A question only counts as asked once it has actually been said - a
@@ -2149,8 +2153,10 @@ public class SpeechEngine
 		values.putIfAbsent("wish", ctx.getWishLabel());
 		// public:end souvenirs-wishes
 		values.putIfAbsent("here", ctx.getPlaceMemory());
-		values.putIfAbsent("nickname", ctx.getNickname());
-		values.putIfAbsent("candidate", ctx.getEarnedNickname());
+		values.putIfAbsent("nickname", ctx.getNickname()); // public:cut nicknames
+		// public:else values.putIfAbsent("nickname", "");
+		values.putIfAbsent("candidate", ctx.getEarnedNickname()); // public:cut nicknames
+		// public:else values.putIfAbsent("candidate", "");
 		values.putIfAbsent("lastTime", ctx.getLastTime());
 		values.putIfAbsent("left", Integer.toString(ctx.getChallengeLeft())); // public:cut side-games
 		values.putIfAbsent("days", Integer.toString(ctx.getDaysKnown()));
@@ -2194,6 +2200,7 @@ public class SpeechEngine
 				boolean endsPhrase = close + 2 >= template.length()
 					|| template.charAt(close + 1) != ' '
 					|| !Character.isLetter(template.charAt(close + 2));
+				// public:cut nicknames
 				// The agreed nickname is written for the middle of a sentence,
 				// "the swot". Said to the player it is a name: "Hello, swot.",
 				// never "Hello, the swot." A {candidate} is only talked about.
@@ -2201,6 +2208,7 @@ public class SpeechEngine
 				{
 					replacement = replacement.replaceFirst("(?i)^the ", "");
 				}
+				// public:end nicknames
 				// A name that brings its own "The" is a proper one.
 				boolean named = replacement.regionMatches(true, 0, "the ", 0, 4);
 				// Vorkath is somebody, not a kind of thing: never the Vorkath,
@@ -2370,6 +2378,7 @@ public class SpeechEngine
 		return isAOrAn(word) || (word != null && POINTING.contains(word.toLowerCase(Locale.ROOT)));
 	}
 
+	// public:cut nicknames
 	/** Whether a value set off by a comma before it and the sentence's end after it is said to someone. */
 	private static boolean addressed(StringBuilder out, String template, int close)
 	{
@@ -2378,6 +2387,7 @@ public class SpeechEngine
 			&& (close + 1 >= template.length() || ".!?".indexOf(template.charAt(close + 1)) >= 0);
 	}
 
+	// public:end nicknames
 	/**
 	 * Whether the placeholder at {@code at} opens a sentence: the start of the
 	 * line, or after a full stop, a question or an exclamation. Not after an

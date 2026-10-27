@@ -65,6 +65,7 @@ public class LowMoodTest
 		assertTrue("no game either", h.firedBy("offer-game").isEmpty());
 	}
 
+	// public:cut likes
 	@Test
 	public void theGrudgeConcedesTheFactsAndKeepsItself() throws IOException
 	{
@@ -107,4 +108,5 @@ public class LowMoodTest
 		assertEquals("and the fondness stands its ground, once",
 			1, h.firedBy("defended-like").size());
 	}
+	// public:end likes
 }

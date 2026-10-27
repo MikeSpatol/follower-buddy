@@ -45,12 +45,14 @@ public class MemorySurfaceTest
 		context.tally("kill:goblin");
 		context.noteRecord("hit", 42);
 		context.noteIncident("chicken-death", "that chicken", "", System.currentTimeMillis());
-		context.notePlaceFeeling(45);
+		context.notePlaceFeeling(45); // public:cut likes
 		context.notePlaceMemory("the drop");
 		context.noteSaidOnce("first-meeting");
 		context.noteLineSaid("a line");
+		// public:cut likes
 		context.setTraits(java.util.Collections.singleton(12850),
 			java.util.Collections.singleton(10553));
+		// public:end likes
 		context.setWish("feather", 5, java.util.Collections.singletonList(314)); // public:cut souvenirs-wishes
 
 		String surface = flat(MemoryDialog.summarise(context,
@@ -63,6 +65,7 @@ public class MemorySurfaceTest
 		assertTrue("the incident quoted as its words: " + surface,
 			surface.contains("\"that chicken, just now\" (x1)"));
 		assertFalse("and not by its file key: " + surface, surface.contains("chicken-death"));
+		// public:cut likes
 		assertTrue("the place, its feeling and its memory: " + surface,
 			surface.contains("likes it (+45) - the drop"));
 		// A region the Locations rules name is shown by its name alone; one
@@ -70,6 +73,8 @@ public class MemorySurfaceTest
 		assertTrue("the named region: " + surface,
 			surface.contains("Likes on a whim: Lumbridge town and castle\n"));
 		assertTrue(surface.contains("region 10553\n"));
+		// public:end likes
+		// public:else assertFalse("no place likes or dislikes in this build: " + surface, surface.contains("PLACES"));
 		assertTrue("the open wish says how to hand it over: " + surface,
 			surface.contains("Hoping for: feather (right-click the follower and choose Talk-to to hand it over)"));
 		assertTrue(surface.contains("One-time lines already said: 1"));
@@ -291,8 +296,10 @@ public class MemorySurfaceTest
 		assertTrue(surface.contains("Nothing counted yet."));
 		assertTrue(surface.contains("No records held yet."));
 		assertTrue(surface.contains("Nothing has stuck yet."));
+		// public:cut likes
 		assertTrue(surface.contains("Opinions held: 0"));
 		assertTrue(surface.contains("nowhere in particular"));
+		// public:end likes
 		assertTrue(surface.contains("Nothing in hand."));
 		assertTrue(surface.contains("One-time lines already said: 0"));
 

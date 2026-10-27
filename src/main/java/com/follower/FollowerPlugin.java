@@ -964,8 +964,10 @@ public class FollowerPlugin extends Plugin
 				// public:else || context().isInCombat() || sceneQuiet()
 				|| (sketching != null && sketching.isSketching()), // public:cut chronicle
 				// public:else ,
+			// public:cut likes
 			() -> context().feelsAbout("disliked") ? "disliked"
 				: context().feelsAbout("liked") ? "liked" : "",
+			// public:end likes
 			() -> thingsNearby(com.follower.follower.Gaze.AROUND_FAR + 2),
 			new java.util.Random());
 		// public:end gaze
@@ -2295,6 +2297,7 @@ public class FollowerPlugin extends Plugin
 			return Math.max(2, WANDER_RADIUS - 2);
 		}
 		// public:end moments
+		// public:cut likes
 		// Taste before mood: somewhere it dislikes it keeps close whatever
 		// it is feeling, and somewhere it likes it strays a tile further.
 		if (context().feelsAbout("disliked"))
@@ -2305,6 +2308,7 @@ public class FollowerPlugin extends Plugin
 		{
 			return WANDER_RADIUS + 1;
 		}
+		// public:end likes
 		String band = context().getMoodBand();
 		if ("low".equals(band) || "down".equals(band))
 		{
@@ -2420,6 +2424,7 @@ public class FollowerPlugin extends Plugin
 		// something underfoot, or it would inspect its way straight back into
 		// the way.
 		int nearest = thieving ? THIEVING_KEEP_MIN : 0;
+		// public:cut likes
 		// Somewhere it dislikes there is no going to look at things: it
 		// keeps to the player's far side from whatever is nearest.
 		if (!thieving && context().feelsAbout("disliked"))
@@ -2430,7 +2435,9 @@ public class FollowerPlugin extends Plugin
 				return;
 			}
 		}
-		else if (driftToward(pickDistraction(from, nearest)))
+		// public:end likes
+		else if (driftToward(pickDistraction(from, nearest))) // public:cut likes
+		// public:else if (driftToward(pickDistraction(from, nearest)))
 		{
 			return;
 		}
@@ -2499,6 +2506,7 @@ public class FollowerPlugin extends Plugin
 		}
 	}
 
+	// public:cut likes
 	/**
 	 * The tile beside the player on the side away from the thing, or the
 	 * next one out. Where the follower stands somewhere it would rather not
@@ -2522,6 +2530,7 @@ public class FollowerPlugin extends Plugin
 		return false;
 	}
 
+	// public:end likes
 	/**
 	 * How far to look for something worth drifting over to.
 	 *
@@ -2998,6 +3007,7 @@ public class FollowerPlugin extends Plugin
 		return context.snapshotMemory(gson, metWearing);
 	}
 
+	// public:cut likes
 	/**
 	 * What this follower likes and dislikes. Rolled once, then kept for good.
 	 */
@@ -3084,6 +3094,7 @@ public class FollowerPlugin extends Plugin
 		context().setCoreTastes(liked.isEmpty() ? 0 : liked.get(0), disliked.isEmpty() ? 0 : disliked.get(0));
 	}
 
+	// public:end likes
 	/**
 	 * What the player was wearing the day the follower met them, in gp.
 	 * -1 until it has been measured, which cannot happen until the composition
@@ -3136,7 +3147,7 @@ public class FollowerPlugin extends Plugin
 	/** The rule files' nicknames and region names, into the context now. */
 	private void giveTheNames()
 	{
-		context().setNicknames(ruleLoader.getNicknames());
+		context().setNicknames(ruleLoader.getNicknames()); // public:cut nicknames
 		context().setRegionNames(ruleLoader.getRegionNames());
 	}
 
@@ -3145,7 +3156,7 @@ public class FollowerPlugin extends Plugin
 	{
 		noteFirstMeeting();
 		giveTheNames();
-		readTraits();
+		readTraits(); // public:cut likes
 	}
 
 	/**
@@ -7432,6 +7443,7 @@ public class FollowerPlugin extends Plugin
 	{
 		TriggerContext context = context();
 		String tree = context.getAskedTree();
+		// public:cut nicknames
 		// The nickname is the one question whose answer changes the follower's
 		// own state rather than the rules'; settled before the rules hear, so
 		// the thank-you can say the name.
@@ -7446,13 +7458,16 @@ public class FollowerPlugin extends Plugin
 				context.refuseNickname(context.getEarnedNickname());
 			}
 		}
+		// public:end nicknames
 		context.noteAnswered();
 		dispatch(TriggerEvent.answered(answer, tree));
 	}
 
+	// public:cut nicknames
 	/** The tree in dialogs.json that asks whether the earned name may be used. */
 	static final String NICKNAME_TREE = "nickname-offer";
 
+	// public:end nicknames
 	/**
 	 * The everyday Talk-to conversation, built from talk.json for what holds
 	 * right now: whether a wish is open and the bag has the thing, the mood

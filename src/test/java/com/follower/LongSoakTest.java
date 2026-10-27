@@ -291,7 +291,7 @@ public class LongSoakTest
 		// last time.
 		Harness h = soakHarness();
 		TriggerContext ctx = h.engine.getContext();
-		ctx.setNicknames(h.loader.getNicknames());
+		ctx.setNicknames(h.loader.getNicknames()); // public:cut nicknames
 		h.game.spawnNpc(2098, "Hill Giant", 28);
 		h.gameTicks(3);
 		h.clear();
@@ -487,7 +487,7 @@ public class LongSoakTest
 			else if (roll == 232)
 			{
 				// The player saying yes to the name on offer.
-				ctx.acceptNickname(ctx.getEarnedNickname());
+				ctx.acceptNickname(ctx.getEarnedNickname()); // public:cut nicknames
 			}
 			else if (roll == 233 && random.nextInt(10) == 0)
 			{

@@ -61,7 +61,7 @@ public class GazeTest
 	private int idle;
 	private boolean busy;
 	private boolean attentive = true;
-	private String feeling = "";
+	private String feeling = ""; // public:cut likes
 	private List<WorldPoint> nearby = Collections.emptyList();
 	private int tick;
 
@@ -79,7 +79,8 @@ public class GazeTest
 			}
 		};
 		gaze = new Gaze(game.client, follower, config, () -> yaw, () -> idle, () -> busy,
-			() -> feeling, () -> nearby, new Random(7));
+			() -> feeling, () -> nearby, new Random(7)); // public:cut likes
+			// public:else () -> nearby, new Random(7));
 	}
 
 	private void tick(int count)
@@ -227,6 +228,7 @@ public class GazeTest
 		assertTrue("a few tiles off: " + away, away >= Gaze.AROUND_NEAR - 1 && away <= Gaze.AROUND_FAR + 1);
 	}
 
+	// public:cut likes
 	@Test
 	public void somewhereItDislikesTheLooksAreQuickAndAtTheNearestThing()
 	{
@@ -250,6 +252,7 @@ public class GazeTest
 		assertEquals(1, follower.glances.size());
 		assertEquals(Gaze.LIKED_MS, (int) follower.holds.get(0));
 	}
+	// public:end likes
 
 	@Test
 	public void aSharedLookStartsTheLookRoundsWaitAgain()
@@ -293,12 +296,14 @@ public class GazeTest
 		assertTrue("at something nearby, as the tick looks", nearby.contains(follower.glances.get(0)));
 		assertEquals(Gaze.AROUND_MS, (int) follower.holds.get(0));
 		assertTrue(said, said.startsWith("A look round at"));
+		// public:cut likes
 
 		feeling = "disliked";
 		gaze.forceLook(null);
 		assertEquals("the place's feeling holds, as in the tick: the nearest",
 			new WorldPoint(53, 50, 0), follower.glances.get(1));
 		assertEquals(Gaze.DISLIKED_MS, (int) follower.holds.get(1));
+		// public:end likes
 	}
 
 	@Test

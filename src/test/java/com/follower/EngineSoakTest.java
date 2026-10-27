@@ -72,7 +72,7 @@ public class EngineSoakTest
 		"{\"type\": \"boundary\", \"is\": \"bank\"}",
 		"{\"type\": \"staying\"}",
 		"{\"type\": \"inWilderness\"}",
-		"{\"type\": \"rolledFeeling\", \"is\": \"disliked\"}",
+		"{\"type\": \"rolledFeeling\", \"is\": \"disliked\"}", // public:cut likes
 		"{\"type\": \"daysKnown\", \"minimum\": 0, \"maximum\": 3}",
 		"{\"type\": \"daysSinceSaid\", \"rule\": \"probe\", \"maximum\": 3}",
 		"{\"type\": \"none\", \"conditions\": [{\"type\": \"repeating\"}]}",
@@ -144,7 +144,7 @@ public class EngineSoakTest
 		"{\"type\": \"wantExpired\"}",
 		"{\"type\": \"wishing\"}",
 		"{\"type\": \"wishItemHeld\"}",
-		"{\"type\": \"feelsAbout\", \"is\": \"liked\"}",
+		"{\"type\": \"feelsAbout\", \"is\": \"liked\"}", // public:cut likes
 		"{\"type\": \"remembers\"}",
 		"{\"type\": \"carrying\"}",
 		"{\"type\": \"souvenirLost\"}",
@@ -152,7 +152,7 @@ public class EngineSoakTest
 		"{\"type\": \"betWon\"}",
 		"{\"type\": \"betLost\"}",
 		"{\"type\": \"asking\"}",
-		"{\"type\": \"placeScore\", \"maximum\": -50}",
+		"{\"type\": \"placeScore\", \"maximum\": -50}", // public:cut likes
 		"{\"type\": \"happenedHere\"}",
 		"{\"type\": \"advising\"}",
 		"{\"type\": \"heeded\"}",
@@ -163,7 +163,7 @@ public class EngineSoakTest
 		"{\"type\": \"underfoot\"}",
 		"{\"type\": \"anniversary\"}",
 		"{\"type\": \"outgrew\", \"minimum\": 10}",
-		"{\"type\": \"nicknamed\"}",
+		"{\"type\": \"nicknamed\"}", // public:cut nicknames
 		"{\"type\": \"sessionMinutes\", \"minimum\": 60}",
 		// The player's own wall clock and calendar. Nothing a driver can
 		// flip, so these are constants for the length of a run.
@@ -190,7 +190,7 @@ public class EngineSoakTest
 		"{\"type\": \"crossed\", \"is\": \"fell\"}",
 		"{\"type\": \"grace\", \"is\": \"left\"}",
 		"{\"type\": \"addressed\"}",
-		"{\"type\": \"nicknameEarned\"}",
+		"{\"type\": \"nicknameEarned\"}", // public:cut nicknames
 		"{\"type\": \"memoryHere\"}",
 		"{\"type\": \"memoryFoeNearby\", \"within\": 12}",
 		"{\"type\": \"pageWritten\", \"is\": \"boss\"}", // public:cut chronicle
@@ -331,12 +331,16 @@ public class EngineSoakTest
 		killCount = 0;
 
 		TriggerContext ctx = h.engine.getContext();
+		// public:cut likes
 		ctx.setTraits(new HashSet<>(Collections.singletonList(HOME.getRegionID())),
 			new HashSet<>(Collections.singletonList(AWAY.getRegionID())));
+		// public:end likes
+		// public:cut nicknames
 		Map<String, String> nicknames = new HashMap<>();
 		nicknames.put("deaths", "the gravedigger");
 		nicknames.put("kills", "the local menace");
 		ctx.setNicknames(nicknames);
+		// public:end nicknames
 		for (int i = 0; i < 24; i++)
 		{
 			ctx.tallyBoth("deaths");
@@ -570,11 +574,13 @@ public class EngineSoakTest
 				h.game.cameraMoved();
 				break;
 			case 44:
-				ctx.notePlaceFeeling(random.nextBoolean() ? 25 : -25);
+				ctx.notePlaceFeeling(random.nextBoolean() ? 25 : -25); // public:cut likes
+				// public:else random.nextBoolean();
 				if (random.nextBoolean())
 				{
 					// From an earlier session: one filed now is too fresh to come up.
-					ctx.restorePlaces(new java.util.HashMap<>(ctx.getPlaceScores()),
+					ctx.restorePlaces(new java.util.HashMap<>(ctx.getPlaceScores()), // public:cut likes
+					// public:else ctx.restorePlaces(
 						Collections.singletonMap(ctx.getRegionId(), "the Armadyl chestplate dropped"));
 				}
 				break;
@@ -592,7 +598,7 @@ public class EngineSoakTest
 				break;
 			case 47:
 				// The player saying yes to the name on offer.
-				ctx.acceptNickname(ctx.getEarnedNickname());
+				ctx.acceptNickname(ctx.getEarnedNickname()); // public:cut nicknames
 				break;
 			case 48:
 				ctx.noteFavour();

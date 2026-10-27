@@ -54,6 +54,7 @@ public class MoodAndPlaceTest
 		assertEquals(base, SpeechEngine.gapForMood(base, null));
 	}
 
+	// public:cut likes
 	@Test
 	public void loggingInDoesNotMakeYourBankTheFollowersFavouritePlace()
 		throws IOException
@@ -106,6 +107,7 @@ public class MoodAndPlaceTest
 		assertEquals("somewhere else is still innocent",
 			0, h.engine.getContext().getPlaceScore());
 	}
+	// public:end likes
 
 	@Test
 	public void aPlaceDoesNotRemindYouOfSomethingYouJustDid() throws IOException
@@ -135,6 +137,7 @@ public class MoodAndPlaceTest
 			h.firedBy("recall").isEmpty());
 	}
 
+	// public:cut likes
 	@Test
 	public void aPlaceCannotTalkItselfIntoAnOpinion() throws IOException
 	{
@@ -160,4 +163,5 @@ public class MoodAndPlaceTest
 		assertEquals("liking a place is not evidence that the place is likeable",
 			0, h.engine.getContext().getPlaceScore());
 	}
+	// public:end likes
 }

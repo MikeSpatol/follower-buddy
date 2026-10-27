@@ -37,7 +37,15 @@ public class WantsTest
 		Set<Integer> found = new TreeSet<>();
 		if (condition != null)
 		{
-			condition.collectRegions(found);
+			condition.collectRegions(found); // public:cut likes
+			// public:else if (condition.regions != null)
+			// public:else {
+			// public:else 	condition.regions.stream().filter(java.util.Objects::nonNull).forEach(found::add);
+			// public:else }
+			// public:else if (condition.conditions != null)
+			// public:else {
+			// public:else 	condition.conditions.forEach(child -> found.addAll(regionsOf(child)));
+			// public:else }
 		}
 		return found;
 	}

@@ -6,7 +6,7 @@ import com.follower.speech.TriggerContext;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Comparator; // public:cut likes
 import java.util.List;
 import java.util.Map;
 import java.util.function.UnaryOperator;
@@ -208,6 +208,7 @@ public class MemoryDialog extends JDialog
 				+ c.getIncidentCount() + ")")
 			: remark("Nothing has stuck yet."));
 
+		// public:cut likes
 		rows.add(header("PLACES"));
 		rows.add(row("Opinions held", c.getPlaceScores().size()));
 		List<Map.Entry<Integer, Integer>> places =
@@ -237,6 +238,7 @@ public class MemoryDialog extends JDialog
 			}
 			rows.add(row("Won't be argued out of", core.toString()));
 		}
+		// public:end likes
 
 		rows.add(header("RIGHT NOW"));
 		int before = rows.size();
@@ -291,8 +293,10 @@ public class MemoryDialog extends JDialog
 				return "Whether you'll take it somewhere";
 			case "game-hands":
 				return "Which hand it's hiding something in";
+			// public:cut nicknames
 			case "nickname-offer":
 				return "The name it suggested for you";
+			// public:end nicknames
 			default:
 				return tree;
 		}
@@ -438,6 +442,7 @@ public class MemoryDialog extends JDialog
 	{
 		return new String[]{text, ""};
 	}
+	// public:cut likes
 
 	/** The places, by name where a rule gives one, or "nowhere in particular". */
 	private static String joined(java.util.Set<Integer> regions, Map<Integer, String> names)
@@ -460,4 +465,5 @@ public class MemoryDialog extends JDialog
 		String name = names == null ? null : names.get(region);
 		return name == null ? "region " + region : name;
 	}
+	// public:end likes
 }

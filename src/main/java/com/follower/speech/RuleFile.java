@@ -12,6 +12,7 @@ public class RuleFile
 
 	/** Optional free text; ignored by the plugin. */
 	public String comment;
+	// public:cut nicknames
 
 	/**
 	 * Names the follower may take to calling you by, keyed by the tally that
@@ -23,6 +24,7 @@ public class RuleFile
 	 * never gives you one.
 	 */
 	public java.util.Map<String, String> nicknames;
+	// public:end nicknames
 
 	/**
 	 * Place names by region id, for the regions no area rule names:

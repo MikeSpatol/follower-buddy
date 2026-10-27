@@ -69,7 +69,8 @@ public class OneMemoryAtATimeTest
 		h.game.at(3222, 3218, 0);
 		h.gameTicks(1);
 		h.engine.getContext().restoreIncident("the-death", "your death to the Hill Giant", 1, 0, 0L, "");
-		h.engine.getContext().restorePlaces(java.util.Collections.emptyMap(),
+		h.engine.getContext().restorePlaces(java.util.Collections.emptyMap(), // public:cut likes
+		// public:else h.engine.getContext().restorePlaces(
 			java.util.Collections.singletonMap(h.engine.getContext().getRegionId(), "you died to the Hill Giant"));
 		h.engine.getContext().restoreDeathSpot(new net.runelite.api.coords.WorldPoint(3222, 3218, 0));
 

@@ -1436,6 +1436,7 @@ public interface FollowerConfig extends Config
 		return "";
 	}
 
+	// public:cut likes
 	// The places this follower likes and dislikes, rolled once when it first met you;
 	// managed by the plugin
 	@ConfigItem(
@@ -1449,6 +1450,7 @@ public interface FollowerConfig extends Config
 		return "";
 	}
 
+	// public:end likes
 	@ConfigItem(
 		keyName = "reachAnimation",
 		name = "Reaching for something",

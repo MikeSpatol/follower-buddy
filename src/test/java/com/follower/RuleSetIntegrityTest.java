@@ -59,21 +59,28 @@ public class RuleSetIntegrityTest
 		"tally", "personalbest", "sessioncount",
 		"answered", "hovered", "examined",
 		"inventoryfree", "playersnearby",
-		"wanting", "wantfulfilled", "wantexpired", "feelsabout", "wishing",
-		"wishitemheld", "rolledfeeling", "boundary", "staying", "inwilderness",
+		"wanting", "wantfulfilled", "wantexpired",
+		"feelsabout", // public:cut likes
+		"wishing",
+		"wishitemheld",
+		"rolledfeeling", // public:cut likes
+		"boundary", "staying", "inwilderness",
 		"remembers", "memoryhere", "memoryfoenearby", "carrying", "souvenirlost",
 		"betting", "betwon", "betlost",
 		"timeofday", "sessionminutes", "asking",
-		"placescore", "happenedhere",
+		"placescore", // public:cut likes
+		"happenedhere",
 		"heeded", "ignored", "advising",
-		"daysknown", "anniversary", "outgrew", "nicknamed",
+		"daysknown", "anniversary", "outgrew",
+		"nicknamed", // public:cut nicknames
 		"challenging", "challengemet", "challengefailed",
 		"unattended", "underfoot",
 		"milestone", "levelgap", "killcount", "grateful", "lasttime", "farewell",
 		"noticed", // public:cut company-extras,noticing
 		"hesitated", "steppedaside", // public:cut company-extras,will
 		"crossed", // public:cut agility,agility-all
-		"addressed", "nicknameearned",
+		"addressed",
+		"nicknameearned", // public:cut nicknames
 		"dateis", "worldhop", "gameupdated", "notesedited",
 		"musicunlock", "collectionadd", "questcomplete", "geoffer",
 		"channeljoined", "channelleft", "npcshout", "musictrack",

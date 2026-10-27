@@ -60,7 +60,8 @@ public class LoginGreetingHeardTest
 	{
 		Harness h = new Harness(folder.newFolder().toPath());
 		for (String id : new String[]{"login-greeting", "login-greeting-new", "login-greeting-settling",
-			"login-nickname", "away-a-while", "away-a-day", "away-a-long-time", "last-time"})
+			"login-nickname", // public:cut nicknames
+			"away-a-while", "away-a-day", "away-a-long-time", "last-time"})
 		{
 			SpeechRule rule = h.rule(id);
 			assertNotNull(id, rule.hushMs);

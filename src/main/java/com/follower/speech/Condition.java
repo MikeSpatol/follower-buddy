@@ -65,7 +65,9 @@ import net.runelite.api.NPC;
  *   <tr><td>playersNearby</td><td>{@code minimum} count, {@code within} tiles</td></tr>
  *   <tr><td>wanting</td><td>no fields — a want is open; usually used negated</td></tr>
  *   <tr><td>wantFulfilled / wantExpired</td><td>no fields; {@code {want}} placeholder</td></tr>
+// public:cut likes
  *   <tr><td>feelsAbout</td><td>{@code is} liked|disliked — about the CURRENT region</td></tr>
+// public:end likes
  *   <tr><td>remembers</td><td>optional {@code is} incident key, {@code minimum} times; {@code {memory}}</td></tr>
  *   <tr><td>carrying</td><td>optional {@code minimum} minutes held — holding a souvenir; {@code {souvenir}}</td></tr>
  *   <tr><td>souvenirLost</td><td>no fields; {@code {souvenir}} names it one last time</td></tr>
@@ -284,8 +286,8 @@ public class Condition
 	// can still hold rules of theirs. Their condition types are unknown there:
 	// such a condition is false, and its type is warned about once a session,
 	// not on every evaluation.
-	// public:cut agility,agility-all,chronicle,company-extras,errands,marks,noticing,side-games,skilling,souvenirs-wishes,spectate,will
-	// public:end agility,agility-all,chronicle,company-extras,errands,marks,noticing,side-games,skilling,souvenirs-wishes,spectate,will
+	// public:cut agility,agility-all,chronicle,company-extras,errands,likes,marks,nicknames,noticing,side-games,skilling,souvenirs-wishes,spectate,will
+	// public:end agility,agility-all,chronicle,company-extras,errands,likes,marks,nicknames,noticing,side-games,skilling,souvenirs-wishes,spectate,will
 	// public:else private static final java.util.Set<String> UNKNOWN_TYPES = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
 	public boolean matches(TriggerContext ctx, TriggerEvent event)
@@ -517,11 +519,13 @@ public class Condition
 			case "grateful":
 				return ctx.isGrateful();
 
+			// public:cut nicknames
 			// An earned name the player has not been asked about yet. {candidate}
 			// says it; the asking rule is what turns it into a nickname.
 			case "nicknameearned":
 				return ctx.hasNicknameToOffer();
 
+			// public:end nicknames
 			// The player is addressing the follower: within a tile and turned
 			// toward it. What makes an emote a reply rather than an echo.
 			case "addressed":
@@ -706,11 +710,13 @@ public class Condition
 			case "outgrew":
 				return ctx.getTimesBetterDressed() >= orDefault(minimum, 10);
 
+			// public:cut nicknames
 			// The follower has taken to calling you something. {nickname} says
 			// it; without this guard the placeholder prints nothing.
 			case "nicknamed":
 				return ctx.hasNickname() && isAny(ctx.getNickname());
 
+			// public:end nicknames
 			// public:cut side-games
 			// The player did what the follower suggested, or the window shut
 			// without them. {advice} names what it was about. "is" narrows to
@@ -734,12 +740,14 @@ public class Condition
 			case "happenedhere":
 				return ctx.hasPlaceMemory();
 
+			// public:cut likes
 			// How strongly it feels about where it is standing, as a number
 			// rather than a verdict, so a rule can want a STRONG opinion.
 			// Negative is the bad direction.
 			case "placescore":
 				return inRange(ctx.getPlaceScore(), Integer.MIN_VALUE);
 
+			// public:end likes
 			// A question is already on the table. Used NEGATED, and every rule
 			// with an "asks" needs it: opening a second question replaces the
 			// first, so without the guard a follower that asks to go somewhere
@@ -798,6 +806,7 @@ public class Condition
 					? from : untilMonth * 100 + untilDay);
 			}
 
+			// public:cut likes
 			// How this particular follower feels about where it is standing.
 			// The set is rolled once per character, so the answer is a fact
 			// about your follower rather than about the game.
@@ -811,6 +820,7 @@ public class Condition
 			case "rolledfeeling":
 				return ctx.rolledFeeling(is == null ? "liked" : is);
 
+			// public:end likes
 			// The follower is hoping for something. Mostly used NEGATED, to stop
 			// a second want being asked for while one is still open.
 			case "wanting":
@@ -914,7 +924,7 @@ public class Condition
 				}
 				if (eventType == null)
 				{
-					log.warn("Unknown condition type '{}'", type); // public:cut agility,agility-all,chronicle,company-extras,errands,marks,noticing,side-games,skilling,souvenirs-wishes,spectate,will
+					log.warn("Unknown condition type '{}'", type); // public:cut agility,agility-all,chronicle,company-extras,errands,likes,marks,nicknames,noticing,side-games,skilling,souvenirs-wishes,spectate,will
 					// public:else if (UNKNOWN_TYPES.add(type))
 					// public:else {
 					// public:else 	log.warn("Unknown condition type '{}'", type);
@@ -1222,6 +1232,7 @@ public class Condition
 		return false;
 	}
 
+	// public:cut likes
 	/**
 	 * Every region id this condition tree names, for the trait roll - the
 	 * follower's likes are drawn from the places the rule set already has
@@ -1251,6 +1262,7 @@ public class Condition
 		}
 	}
 
+	// public:end likes
 	/** Whether this condition tree contains the given type (case-insensitive). */
 	/** Whether this is, or holds, an npcSpawn condition this spawn would make true. */
 	public boolean answersSpawn(TriggerEvent spawn)

@@ -45,7 +45,7 @@ public class MemorySurvivesRestartTest
 		context.noteKillCountName("TzTok-Jad");
 		context.setSessionCount(36);
 		context.noteIncident("chicken-death", "that chicken", "Chicken", 1_700_000_000_000L);
-		context.notePlaceFeeling(10);
+		context.notePlaceFeeling(10); // public:cut likes
 		context.notePlaceMemory("the drop");
 		context.noteSaidOnce("first-meeting");
 		context.noteSaidOnce("first-page");
@@ -60,8 +60,10 @@ public class MemorySurvivesRestartTest
 		context.restoreDeathSpot(new WorldPoint(3200, 3200, 1));
 		context.noteLevel("Fishing", 70, 1_700_000_000_000L);
 		context.noteDoing("fighting Vorkath");
+		// public:cut nicknames
 		context.acceptNickname("the swot");
 		context.refuseNickname("the gravedigger");
+		// public:end nicknames
 		context.noteSketchAccount("rsprofile_Rn0JAOtr"); // public:cut chronicle
 		return context;
 	}
@@ -110,9 +112,11 @@ public class MemorySurvivesRestartTest
 			after.getLevelStamps().get("fishing"));
 		assertEquals("what you were doing last time", "fighting Vorkath",
 			after.getLastTime());
+		// public:cut nicknames
 		assertEquals("the name you agreed to", "the swot", after.getNickname());
 		assertTrue("and the one you turned down",
 			after.getRefusedNicknames().contains("the gravedigger"));
+		// public:end nicknames
 
 		// The one that would be silent if it broke.
 		assertTrue("a spent introduction has to survive a restart",
@@ -224,6 +228,28 @@ public class MemorySurvivesRestartTest
 	}
 
 	@Test
+	public void aBlobWithANicknameAndPlaceOpinionsLoadsInEveryBuild()
+	{
+		// What the full build (and 1.4.1) writes. The public build may leave
+		// the nickname and the place opinions out; the blob still has to load
+		// there, the rest of it with it.
+		String full = "{\"tallies\":{\"kill:rat\":3},\"sessions\":12,\"deathPlane\":-1,"
+			+ "\"placeScores\":{\"12850\":45},\"placeMemories\":{\"12850\":\"the drop\"},"
+			+ "\"nickname\":\"the swot\",\"refusedNicknames\":[\"the gravedigger\"],"
+			+ "\"nicknameAskedMs\":1700000000000,\"nicknameAsksIgnored\":2}";
+
+		TriggerContext after = fresh();
+		FollowerPlugin.restoreMemory(after, full, gson, 0);
+
+		assertEquals(3, after.getTally("kill:rat"));
+		assertEquals(12, after.getSessionCount());
+		assertEquals("the drop", after.getPlaceMemories().get(12850));
+		assertEquals(Integer.valueOf(45), after.getPlaceScores().get(12850)); // public:cut likes
+		assertEquals("the swot", after.getNickname()); // public:cut nicknames
+		assertEquals(2, after.getNicknameAsksIgnored()); // public:cut nicknames
+	}
+
+	@Test
 	public void ruinedMemoryCostsTheMemoryAndNotTheSession()
 	{
 		// A corrupt value is sad but survivable. Refusing to start over it
@@ -306,17 +332,18 @@ public class MemorySurvivesRestartTest
 	// public:end chronicle
 
 	@Test
-	public void theRestsFromAskingAndRecallingSurvive()
+	public void theRestsFromAskingAndRecallingSurvive() // public:cut nicknames
+	// public:else public void theRestFromRecallingSurvives()
 	{
 		// Text QA5: the nickname asked again at every login, and one memory
 		// brought up at every one; both rests are kept with the memory.
 		TriggerContext before = lived();
-		before.restoreNicknameAsks(1_700_000_000_000L, 3);
+		before.restoreNicknameAsks(1_700_000_000_000L, 3); // public:cut nicknames
 		before.noteIncidentRecalled(1_700_000_100_000L);
 		TriggerContext after = fresh();
 		FollowerPlugin.restoreMemory(after, FollowerPlugin.snapshotMemory(before, 0, gson), gson, 0);
-		assertEquals(1_700_000_000_000L, after.getNicknameAskedMs());
-		assertEquals(3, after.getNicknameAsksIgnored());
+		assertEquals(1_700_000_000_000L, after.getNicknameAskedMs()); // public:cut nicknames
+		assertEquals(3, after.getNicknameAsksIgnored()); // public:cut nicknames
 		assertEquals(1_700_000_100_000L, after.getIncidentRecalledMs());
 	}
 }

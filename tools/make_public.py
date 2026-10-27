@@ -18,7 +18,10 @@ describes the marker language). This tool:
  5. prunes default-phrases.json: a rule goes when its condition tree names a type
     that is no case in the public Condition.java (nor a key of
     event-conditions.properties, when that file exists), or when it carries a
-    field, group, id or tally the manifest's "rules" lists for a cut feature;
+    field, group, id or tally the manifest's "rules" lists for a cut feature, and
+    the top-level keys "rules" lists go too; then a dialog tree in
+    default-dialogs.json goes when no rule left asks for it, and so does every
+    rule that answers it (an answered condition whose "of" names it);
  6. regenerates docs/lines.md with tools/lines.py;
  7. checks the result: no leftover names of dropped classes or resources, the
     settings, commands and follower menu entries the manifest expects, and the
@@ -2086,9 +2089,59 @@ def condition_types(node, out, tallies):
             condition_types(v, out, tallies)
 
 
+def answered_trees(node, out):
+    """The dialog trees an answered condition in this condition tree names with "of"."""
+    if isinstance(node, dict):
+        if str(node.get('type', '')).lower() == 'answered' and isinstance(node.get('of'), str):
+            out.add(node['of'])
+        for v in node.values():
+            answered_trees(v, out)
+    elif isinstance(node, list):
+        for v in node:
+            answered_trees(v, out)
+
+
+def json_objects(text, start):
+    """(start, end) of each object in the JSON array whose '[' is text[start]."""
+    spans, depth, i, begin = [], 0, start + 1, 0
+    while True:
+        c = text[i]
+        if c == '"':
+            i += 1
+            while text[i] != '"':
+                i += 2 if text[i] == BS else 1
+        elif c in '{[':
+            if depth == 0:
+                begin = i
+            depth += 1
+        elif c in '}]':
+            if depth == 0:
+                return spans
+            depth -= 1
+            if depth == 0:
+                spans.append((begin, i + 1))
+        i += 1
+
+
+def drop_trees(text, ids):
+    """default-dialogs.json without the trees of these ids; every other byte is kept,
+    since the file is laid out by hand. None if the result does not parse as expected."""
+    data = json.loads(text)
+    spans = json_objects(text, re.search(r'"trees"\s*:\s*\[', text).end() - 1)
+    if len(spans) != len(data['trees']):
+        return None
+    keep = [s for s, t in zip(spans, data['trees']) if t.get('id') not in ids]
+    sep = text[spans[0][1]:spans[1][0]] if len(spans) > 1 else ''
+    new = text[:spans[0][0]] + sep.join(text[s:e] for s, e in keep) + text[spans[-1][1]:]
+    data['trees'] = [t for t in data['trees'] if t.get('id') not in ids]
+    return new if keep and json.loads(new) == data else None
+
+
 def prune_stage(out, cut, rules_cfg, fail):
-    """Drops the bundled rules whose code is gone. Returns (kept, [(id, why)])."""
-    want = {k: set() for k in ('fields', 'groups', 'ids', 'tallies')}
+    """Drops the bundled rules whose code is gone, the manifest's top-level keys of the
+    rule file, then the dialog trees no rule left asks for and the rules that answer
+    them. Returns (kept, [(id, why)], [dialog trees dropped])."""
+    want = {k: set() for k in ('fields', 'groups', 'ids', 'tallies', 'keys')}
     for feature in cut:
         for k, v in rules_cfg.get(feature, {}).items():
             want[k].update(v)
@@ -2098,7 +2151,12 @@ def prune_stage(out, cut, rules_cfg, fail):
     data = json.loads(text)
     if json.dumps(data, indent=2, ensure_ascii=False) + '\n' != text:
         fail('rules: default-phrases.json is not in the indent-2 form this tool writes')
-        return len(data['rules']), []
+        return len(data['rules']), [], []
+    for key in sorted(want.pop('keys')):
+        if key in data and key != 'rules':
+            del data[key]
+        else:
+            fail('rules: the manifest drops key %s, which default-phrases.json does not have' % key)
     kept, dropped, matched = [], [], set()
     for r in data['rules']:
         types, tallies = set(), set()
@@ -2118,9 +2176,46 @@ def prune_stage(out, cut, rules_cfg, fail):
         for name in sorted(names):
             if (k, name) not in matched:
                 fail('rules: the manifest prunes %s %s, which no rule has' % (k, name))
+
+    # A tree only a dropped rule asked for can never open: it goes, and so do the
+    # rules that answer it (an "answered" condition whose "of" names it).
+    dpath = os.path.join(out, RES, 'default-dialogs.json')
+    dtext = read(dpath)
+    trees = [t.get('id') for t in json.loads(dtext)['trees']]
+    gone = []
+    while True:
+        asked = {r.get('asks') for r in kept}
+        newly = [t for t in trees if t not in asked and t not in gone]
+        if not newly:
+            break
+        gone += newly
+        still = []
+        for r in kept:
+            answers = set()
+            answered_trees(r.get('when'), answers)
+            hits = sorted(answers & set(gone))
+            if hits:
+                dropped.append((r.get('id'), ['answers ' + t for t in hits]))
+            else:
+                still.append(r)
+        kept = still
+    for r in kept:
+        named = set()
+        answered_trees(r.get('when'), named)
+        if r.get('asks'):
+            named.add(r['asks'])
+        for t in sorted(named - set(trees)):
+            fail('dialogs: rule %s names tree %s, which default-dialogs.json does not have' % (r.get('id'), t))
+    if gone:
+        new = drop_trees(dtext, set(gone))
+        if new is None:
+            fail('dialogs: could not take the trees %s out of default-dialogs.json' % ','.join(gone))
+        else:
+            write(dpath, new)
+
     data['rules'] = kept
     write(path, json.dumps(data, indent=2, ensure_ascii=False) + '\n')
-    return len(kept), dropped
+    return len(kept), dropped, gone
 
 
 # ------------------------------------------------------------------ checks
@@ -2310,10 +2405,11 @@ def main():
     gone, moved = resource_stage(out, cut, manifest.get('resources', {}), fail)
     print('  resources: dropped %s; moved %s' % (', '.join(gone) or '-', ', '.join(moved) or '-'))
 
-    kept, pruned = prune_stage(out, cut, manifest.get('rules', {}), fail)
+    kept, pruned, trees = prune_stage(out, cut, manifest.get('rules', {}), fail)
     print('  rules: %d kept, %d pruned' % (kept, len(pruned)))
     for rid, why in pruned:
         print('    %-44s %s' % (rid, ','.join(why)))
+    print('  dialogs: dropped %s' % (', '.join(trees) or '-'))
 
     if subprocess.run([sys.executable, os.path.join(out, 'tools', 'lines.py')], cwd=out,
                       stdout=subprocess.DEVNULL).returncode:

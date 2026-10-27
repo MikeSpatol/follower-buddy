@@ -2005,6 +2005,7 @@ public final class TriggerContext
 		return false;
 	}
 
+	// public:cut likes
 	// ---------------------------------------------------------------- traits
 
 	/**
@@ -2078,6 +2079,7 @@ public final class TriggerContext
 	 */
 	private final java.util.Map<Integer, Integer> placeScores = new java.util.HashMap<>();
 
+	// public:end likes
 	/** What the follower brings up about a place, keyed the same way. */
 	private final java.util.Map<Integer, String> placeMemories = new java.util.HashMap<>();
 
@@ -2097,6 +2099,7 @@ public final class TriggerContext
 	/** The tick each place's memory was filed on in this session, for {@link #MEMORY_MIN_AGE_TICKS}. */
 	private final java.util.Map<Integer, Integer> placeFiledTick = new java.util.HashMap<>();
 
+	// public:cut likes
 	/** Past this, an accumulation of small moments counts as an opinion. */
 	public static final int OPINION_AT = 40;
 
@@ -2108,9 +2111,11 @@ public final class TriggerContext
 	 */
 	private static final int OPINION_CAP = 150;
 
+	// public:end likes
 	/** How many places it can hold an opinion about, oldest-weakest evicted. */
 	private static final int MAX_PLACES = 60;
 
+	// public:cut likes
 	/**
 	 * Records that something worth {@code delta} happened where we are standing.
 	 *
@@ -2128,6 +2133,7 @@ public final class TriggerContext
 		trimPlaces();
 	}
 
+	// public:end likes
 	/** Records what happened here, for a rule to bring up next time. */
 	public void notePlaceMemory(String phrase)
 	{
@@ -2149,6 +2155,7 @@ public final class TriggerContext
 	 */
 	private void trimPlaces()
 	{
+		// public:cut likes
 		while (placeScores.size() > MAX_PLACES)
 		{
 			Integer weakest = java.util.Collections.min(placeScores.entrySet(),
@@ -2156,12 +2163,14 @@ public final class TriggerContext
 			placeScores.remove(weakest);
 			placeMemories.remove(weakest);
 		}
+		// public:end likes
 		while (placeMemories.size() > MAX_PLACES)
 		{
 			placeMemories.remove(placeMemories.keySet().iterator().next());
 		}
 	}
 
+	// public:cut likes
 	public int getPlaceScore()
 	{
 		return placeScores.getOrDefault(regionId, 0);
@@ -2172,20 +2181,24 @@ public final class TriggerContext
 		return placeScores;
 	}
 
+	// public:end likes
 	public java.util.Map<Integer, String> getPlaceMemories()
 	{
 		return placeMemories;
 	}
 
-	public void restorePlaces(java.util.Map<Integer, Integer> scores,
+	public void restorePlaces(java.util.Map<Integer, Integer> scores, // public:cut likes
+	// public:else public void restorePlaces(
 		java.util.Map<Integer, String> memories)
 	{
-		placeScores.clear();
+		placeScores.clear(); // public:cut likes
 		placeMemories.clear();
+		// public:cut likes
 		if (scores != null)
 		{
 			placeScores.putAll(scores);
 		}
+		// public:end likes
 		if (memories != null)
 		{
 			placeMemories.putAll(memories);
@@ -2214,6 +2227,7 @@ public final class TriggerContext
 		return !getPlaceMemory().isEmpty();
 	}
 
+	// public:cut likes
 	/**
 	 * One rolled like and one rolled dislike that experience can never
 	 * override (R23): a place it is fond of for no reason it will give.
@@ -2281,6 +2295,7 @@ public final class TriggerContext
 			: likedRegions.contains(regionId);
 	}
 
+	// public:end likes
 	// public:cut souvenirs-wishes
 	// ---------------------------------------------------------------- wishes
 
@@ -2693,6 +2708,7 @@ public final class TriggerContext
 		return wornValue / Math.max(1, metWearingValue);
 	}
 
+	// public:cut nicknames
 	// ------------------------------------------------------------ the nickname
 
 	/**
@@ -2868,6 +2884,7 @@ public final class TriggerContext
 		return refusedNicknames;
 	}
 
+	// public:end nicknames
 	// ---------------------------------------------------------- the levels
 
 	/**
@@ -3455,11 +3472,13 @@ public final class TriggerContext
 	{
 		ticksSinceQuestion = 0;
 		askedTree = treeId == null ? "" : treeId;
+		// public:cut nicknames
 		if (NICKNAME_TREE.equals(askedTree))
 		{
 			nicknameAskedMs = System.currentTimeMillis();
 			countersDirty = true;
 		}
+		// public:end nicknames
 	}
 
 	/** Called once the player has answered, or declined to. */
@@ -3471,11 +3490,13 @@ public final class TriggerContext
 		// exists for a player who is not answering, not one who just did.
 		ignoredAsks = 0;
 		askBackoffUntilTick = 0;
+		// public:cut nicknames
 		if (nicknameAsksIgnored > 0)
 		{
 			nicknameAsksIgnored = 0;
 			countersDirty = true;
 		}
+		// public:end nicknames
 	}
 
 	public boolean isAwaitingAnswer()
@@ -3502,11 +3523,13 @@ public final class TriggerContext
 		// ignored earns a long pause; two of them end the asking for the day.
 		if (ticksSinceQuestion == ANSWER_WINDOW_TICKS + 1 && !askedTree.isEmpty())
 		{
+			// public:cut nicknames
 			if (NICKNAME_TREE.equals(askedTree))
 			{
 				nicknameAsksIgnored++;
 				countersDirty = true;
 			}
+			// public:end nicknames
 			askedTree = "";
 			ignoredAsks++;
 			askBackoffUntilTick = client.getTickCount() + ASK_BACKOFF_TICKS;
@@ -4149,7 +4172,7 @@ public final class TriggerContext
 		 * traits blob this one is never regenerated - losing it would have the
 		 * follower forget which places it has reason to feel anything about.
 		 */
-		java.util.Map<Integer, Integer> placeScores;
+		java.util.Map<Integer, Integer> placeScores; // public:cut likes
 		java.util.Map<Integer, String> placeMemories;
 
 		/**
@@ -4198,6 +4221,7 @@ public final class TriggerContext
 
 		/** What the two of them were doing when the session ended, for the greeting. */
 		String lastThing;
+		// public:cut nicknames
 
 		/** The name the player agreed to be called, and the ones they turned down. */
 		String nickname;
@@ -4205,6 +4229,7 @@ public final class TriggerContext
 		/** When the name was last asked about, and the asks since that went unanswered. */
 		long nicknameAskedMs;
 		int nicknameAsksIgnored;
+		// public:end nicknames
 	}
 
 	/**
@@ -4243,7 +4268,8 @@ public final class TriggerContext
 			saved.incidentPlace, Boolean.TRUE.equals(saved.incidentNear), saved.incidentItem,
 			saved.incidentHp == null ? -1 : saved.incidentHp);
 		restoreIncidentRecalled(saved.incidentRecalledMs);
-		restorePlaces(saved.placeScores, saved.placeMemories);
+		restorePlaces(saved.placeScores, saved.placeMemories); // public:cut likes
+		// public:else restorePlaces(saved.placeMemories);
 		restoreSpokenOnce(saved.spokenOnce, saved.spokenOnceOn);
 		if (saved.questsSeenFinished != null)
 		{
@@ -4267,6 +4293,7 @@ public final class TriggerContext
 			saved.levelStamps.forEach((skill, stamp) -> levelStamps.merge(skill, stamp, Math::max));
 		}
 		restoreLastThing(saved.lastThing);
+		// public:cut nicknames
 		if (saved.nickname != null)
 		{
 			acceptedNickname = saved.nickname;
@@ -4276,6 +4303,7 @@ public final class TriggerContext
 			refusedNicknames.addAll(saved.refusedNicknames);
 		}
 		restoreNicknameAsks(saved.nicknameAskedMs, saved.nicknameAsksIgnored);
+		// public:end nicknames
 		if (saved.deathPlane >= 0)
 		{
 			restoreDeathSpot(new WorldPoint(
@@ -4309,7 +4337,7 @@ public final class TriggerContext
 		saved.incidentItem = orNull(incidentItem);
 		saved.incidentHp = incidentHp < 0 ? null : incidentHp;
 		saved.incidentRecalledMs = incidentRecalledMs;
-		saved.placeScores = placeScores;
+		saved.placeScores = placeScores; // public:cut likes
 		saved.placeMemories = placeMemories;
 		saved.spokenOnce = new java.util.ArrayList<>(spokenOnce);
 		saved.spokenOnceOn = copyOrNull(spokenOnceOn);
@@ -4327,11 +4355,13 @@ public final class TriggerContext
 		saved.metWearingValue = metWearing;
 		saved.levelStamps = copyOrNull(levelStamps);
 		saved.lastThing = orNull(lastThing);
+		// public:cut nicknames
 		saved.nickname = orNull(acceptedNickname);
 		saved.refusedNicknames = refusedNicknames.isEmpty() ? null
 			: new java.util.ArrayList<>(new java.util.TreeSet<>(refusedNicknames));
 		saved.nicknameAskedMs = nicknameAskedMs;
 		saved.nicknameAsksIgnored = nicknameAsksIgnored;
+		// public:end nicknames
 		WorldPoint died = deathLocation;
 		if (died != null)
 		{
