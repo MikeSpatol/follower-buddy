@@ -121,7 +121,7 @@ public class SwallowedLineTest
 		assertFalse("nor advice given", h.engine.getContext().isAdvising());
 		// public:end side-games
 		assertFalse("but the gift is spent: the wish is closed", h.engine.getContext().isWishing()); // public:cut souvenirs-wishes
-		assertTrue("and the favour owed", h.engine.getContext().isGrateful());
+		assertTrue("and the favour owed", h.engine.getContext().isGrateful()); // public:cut souvenirs-wishes
 
 		// Still owed, so the next time it rises it is said, and spent then.
 		h.engine.setSink((text, output, rule, animationId, onSaid) -> onSaid.run());
@@ -159,7 +159,7 @@ public class SwallowedLineTest
 		assertTrue("the advice is given", h.engine.getContext().isAdvising());
 		// public:end side-games
 		assertFalse("and the wish is granted", h.engine.getContext().isWishing()); // public:cut souvenirs-wishes
-		assertTrue(h.engine.getContext().isGrateful());
+		assertTrue(h.engine.getContext().isGrateful()); // public:cut souvenirs-wishes
 	}
 
 	@Test
@@ -241,6 +241,7 @@ public class SwallowedLineTest
 		assertTrue("and the want", h.engine.getContext().isWanting());
 	}
 
+	// public:cut side-games,souvenirs-wishes
 	@Test
 	public void aGuardWaitsForTheLineItGuardsAgainst() throws IOException
 	{
@@ -283,7 +284,9 @@ public class SwallowedLineTest
 		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.NOTES_EDITED));
 		assertEquals("mentioner", handedOver.get(handedOver.size() - 1));
 	}
+	// public:end side-games,souvenirs-wishes
 
+	// public:cut side-games
 	@Test
 	public void aDroppedLineIsNotWaitedOnOnceItCanNoLongerLand() throws IOException
 	{
@@ -313,6 +316,7 @@ public class SwallowedLineTest
 			h.engine.getContext().isAdvising());
 		// public:end side-games
 	}
+	// public:end side-games
 
 	@Test
 	public void aProfileSwitchTakesTheQueuedLinesWithIt() throws IOException

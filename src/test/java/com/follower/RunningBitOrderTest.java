@@ -44,7 +44,8 @@ public class RunningBitOrderTest
 		"fun-fence-book-finished", "fun-fence-book-sequel");
 	private static final List<String> GULL = Arrays.asList(
 		"fun-gull-rival-first", "fun-gull-rival-early", "fun-gull-rival-middle",
-		"fun-gull-rival-late", "fun-gull-feather");
+		"fun-gull-rival-late", "fun-gull-feather"); // public:cut souvenirs-wishes
+		// public:else "fun-gull-rival-late");
 	private static final List<String> HANS = Arrays.asList(
 		"fun-hans-race-first", "fun-hans-race-early", "fun-hans-race-middle",
 		"fun-hans-race-late");
@@ -161,6 +162,7 @@ public class RunningBitOrderTest
 		}
 		assertEquals("the rivalry opens, and nothing later follows it the same day",
 			Collections.singleton("fun-gull-rival-first"), heard(h, GULL));
+		// public:cut souvenirs-wishes
 
 		Harness later = harnessWith(GULL);
 		later.engine.getContext().setMetOnDay(daysAgo(400));
@@ -171,6 +173,7 @@ public class RunningBitOrderTest
 		later.gameTicks(5);
 		assertEquals("ninety days after the opener, the truce",
 			Collections.singleton("fun-gull-feather"), heard(later, GULL));
+		// public:end souvenirs-wishes
 	}
 
 	@Test

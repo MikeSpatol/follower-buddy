@@ -61,19 +61,20 @@ public class RuleSetIntegrityTest
 		"inventoryfree", "playersnearby",
 		"wanting", "wantfulfilled", "wantexpired",
 		"feelsabout", // public:cut likes
-		"wishing",
-		"wishitemheld",
+		"wishing", // public:cut souvenirs-wishes
+		"wishitemheld", // public:cut souvenirs-wishes
 		"rolledfeeling", // public:cut likes
 		"boundary", "staying", "inwilderness",
-		"remembers", "memoryhere", "memoryfoenearby", "carrying", "souvenirlost",
-		"betting", "betwon", "betlost",
+		"remembers", "memoryhere", "memoryfoenearby", "carrying", "souvenirlost", // public:cut souvenirs-wishes
+		// public:else "remembers", "memoryhere", "memoryfoenearby",
+		"betting", "betwon", "betlost", // public:cut side-games
 		"timeofday", "sessionminutes", "asking",
 		"placescore", // public:cut likes
 		"happenedhere",
-		"heeded", "ignored", "advising",
+		"heeded", "ignored", "advising", // public:cut side-games
 		"daysknown", "anniversary", "outgrew",
 		"nicknamed", // public:cut nicknames
-		"challenging", "challengemet", "challengefailed",
+		"challenging", "challengemet", "challengefailed", // public:cut side-games
 		"unattended", "underfoot",
 		"milestone", "levelgap", "killcount", "grateful", "lasttime", "farewell",
 		"noticed", // public:cut company-extras,noticing

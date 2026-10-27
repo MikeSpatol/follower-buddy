@@ -75,8 +75,10 @@ public class MemorySurfaceTest
 		assertTrue(surface.contains("region 10553\n"));
 		// public:end likes
 		// public:else assertFalse("no place likes or dislikes in this build: " + surface, surface.contains("PLACES"));
+		// public:cut souvenirs-wishes
 		assertTrue("the open wish says how to hand it over: " + surface,
 			surface.contains("Hoping for: feather (right-click the follower and choose Talk-to to hand it over)"));
+		// public:end souvenirs-wishes
 		assertTrue(surface.contains("One-time lines already said: 1"));
 		assertTrue(surface.contains("Lines counted, to vary them: 1"));
 	}
@@ -153,8 +155,8 @@ public class MemorySurfaceTest
 		assertEquals("Deaths today", MemoryDialog.keyLabel("deaths:today"));
 		assertEquals("Wishes granted", MemoryDialog.keyLabel("want:kept"));
 		assertEquals("Wishes missed", MemoryDialog.keyLabel("want:missed"));
-		assertEquals("Advice taken", MemoryDialog.keyLabel("advice:taken"));
-		assertEquals("Advice ignored", MemoryDialog.keyLabel("advice:ignored"));
+		assertEquals("Advice taken", MemoryDialog.keyLabel("advice:taken")); // public:cut side-games
+		assertEquals("Advice ignored", MemoryDialog.keyLabel("advice:ignored")); // public:cut side-games
 		assertEquals("Zulrah kill count", MemoryDialog.keyLabel("kc:zulrah"));
 		assertEquals("Zulrah kill count", MemoryDialog.keyLabel("kc:zulrah@main"));
 		assertEquals("Biggest hit", MemoryDialog.keyLabel("hit"));
@@ -273,12 +275,12 @@ public class MemorySurfaceTest
 		}
 		context.tallyBoth("levels");
 		context.tally("graces"); // public:cut agility-all,marks
-		context.tally("advice:taken");
+		context.tally("advice:taken"); // public:cut side-games
 
 		String surface = flat(MemoryDialog.summarise(context, java.util.Collections.emptyMap(), key -> key));
 		assertTrue(surface, surface.contains("Kills: 600\nKills today: 600\nLevels gained: 1\nLevels gained today: 1\n"));
 		assertTrue(surface, surface.contains("Marks of grace")); // public:cut agility-all,marks
-		assertTrue(surface, surface.contains("Advice taken: 1"));
+		assertTrue(surface, surface.contains("Advice taken: 1")); // public:cut side-games
 		assertTrue("the kills by creature, ten of them, most first: " + surface,
 			surface.contains("Creaturel kills: 61\n"));
 		assertFalse(surface, surface.contains("Creaturea kills"));

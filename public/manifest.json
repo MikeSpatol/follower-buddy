@@ -9,7 +9,14 @@
     "logs",
     "legacy",
     "devdump",
-    "devfonts"
+    "devfonts",
+    "marks",
+    "posing-preview",
+    "dialogs-editor",
+    "side-games",
+    "souvenirs-wishes",
+    "likes",
+    "nicknames"
   ],
   "budget": 190000,
   "exclude": [
@@ -102,6 +109,17 @@
       "keys": [
         "nicknames"
       ]
+    },
+    "side-games": {
+      "tallies": [
+        "advice:ignored",
+        "advice:taken"
+      ]
+    },
+    "souvenirs-wishes": {
+      "groups": [
+        "souvenir"
+      ]
     }
   },
   "expect": {
@@ -119,9 +137,7 @@
         "panelFolds",
         "parkedAt",
         "sendHintShown",
-        "thrallHintShown",
-        "traits",
-        "wishHintShown"
+        "thrallHintShown"
       ],
       "Advanced": [
         "reachAnimation",
@@ -171,7 +187,6 @@
       "Messages": [
         "disabledGroups",
         "groupArea",
-        "groupBet",
         "groupBoss",
         "groupClock",
         "groupCombat",
@@ -181,8 +196,7 @@
         "groupMemory",
         "groupMimic",
         "groupQuest",
-        "groupReactions",
-        "groupSouvenir"
+        "groupReactions"
       ],
       "Movement": [
         "copiesAgility",
@@ -213,15 +227,12 @@
     },
     "commands": {
       "everyday": [
-        "anim",
         "copy",
         "errand",
         "fix",
-        "gfx",
         "height",
         "here",
         "outfit",
-        "pose",
         "rebuild",
         "reload",
         "say",
@@ -229,15 +240,12 @@
         "where"
       ],
       "handled": [
-        "anim",
         "copy",
         "errand",
         "fix",
-        "gfx",
         "height",
         "here",
         "outfit",
-        "pose",
         "rebuild",
         "reload",
         "say",

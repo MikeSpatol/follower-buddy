@@ -142,24 +142,24 @@ public class EngineSoakTest
 		"{\"type\": \"wanting\"}",
 		"{\"type\": \"wantFulfilled\"}",
 		"{\"type\": \"wantExpired\"}",
-		"{\"type\": \"wishing\"}",
-		"{\"type\": \"wishItemHeld\"}",
+		"{\"type\": \"wishing\"}", // public:cut souvenirs-wishes
+		"{\"type\": \"wishItemHeld\"}", // public:cut souvenirs-wishes
 		"{\"type\": \"feelsAbout\", \"is\": \"liked\"}", // public:cut likes
 		"{\"type\": \"remembers\"}",
-		"{\"type\": \"carrying\"}",
-		"{\"type\": \"souvenirLost\"}",
-		"{\"type\": \"betting\"}",
-		"{\"type\": \"betWon\"}",
-		"{\"type\": \"betLost\"}",
+		"{\"type\": \"carrying\"}", // public:cut souvenirs-wishes
+		"{\"type\": \"souvenirLost\"}", // public:cut souvenirs-wishes
+		"{\"type\": \"betting\"}", // public:cut side-games
+		"{\"type\": \"betWon\"}", // public:cut side-games
+		"{\"type\": \"betLost\"}", // public:cut side-games
 		"{\"type\": \"asking\"}",
 		"{\"type\": \"placeScore\", \"maximum\": -50}", // public:cut likes
 		"{\"type\": \"happenedHere\"}",
-		"{\"type\": \"advising\"}",
-		"{\"type\": \"heeded\"}",
-		"{\"type\": \"ignored\"}",
-		"{\"type\": \"challenging\"}",
-		"{\"type\": \"challengeMet\"}",
-		"{\"type\": \"challengeFailed\"}",
+		"{\"type\": \"advising\"}", // public:cut side-games
+		"{\"type\": \"heeded\"}", // public:cut side-games
+		"{\"type\": \"ignored\"}", // public:cut side-games
+		"{\"type\": \"challenging\"}", // public:cut side-games
+		"{\"type\": \"challengeMet\"}", // public:cut side-games
+		"{\"type\": \"challengeFailed\"}", // public:cut side-games
 		"{\"type\": \"underfoot\"}",
 		"{\"type\": \"anniversary\"}",
 		"{\"type\": \"outgrew\", \"minimum\": 10}",
@@ -188,7 +188,7 @@ public class EngineSoakTest
 		// public:end will
 		// public:end company-extras
 		"{\"type\": \"crossed\", \"is\": \"fell\"}",
-		"{\"type\": \"grace\", \"is\": \"left\"}",
+		"{\"type\": \"grace\", \"is\": \"left\"}", // public:cut agility-all,marks
 		"{\"type\": \"addressed\"}",
 		"{\"type\": \"nicknameEarned\"}", // public:cut nicknames
 		"{\"type\": \"memoryHere\"}",

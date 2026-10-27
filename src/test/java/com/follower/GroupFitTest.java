@@ -23,10 +23,12 @@ public class GroupFitTest
 	public void theDareIsAPredictionAndTheEditRemarkIsEverythingElse() throws IOException
 	{
 		Harness h = new Harness(folder.newFolder().toPath());
+		// public:cut side-games
 		for (String id : new String[]{"offer-challenge", "challenge-met", "challenge-failed"})
 		{
 			assertEquals(id, "bet", h.rule(id).group);
 		}
+		// public:end side-games
 		assertEquals("misc", h.rule("notes-edited").group);
 	}
 }

@@ -621,7 +621,8 @@ public class SceneQuietTest
 	public void theLinesAnAbsenceCostWaitTheirTurn() throws IOException
 	{
 		Harness h = new Harness(folder.newFolder().toPath());
-		for (String id : new String[]{"been-at-it-two-hours", "souvenir-lost"})
+		for (String id : new String[]{"been-at-it-two-hours", "souvenir-lost"}) // public:cut souvenirs-wishes
+		// public:else for (String id : new String[]{"been-at-it-two-hours"})
 		{
 			assertTrue(id, h.rule(id).waitsItsTurn());
 			assertFalse("waiting, not an occasion's exemptions: " + id, h.rule(id).isOccasion());
@@ -650,6 +651,7 @@ public class SceneQuietTest
 		assertTrue("nothing dropped", held.isEmpty());
 	}
 
+	// public:cut side-games
 	/** The payoffs of something the follower set up itself: the setup was heard, so is its end. */
 	@Test
 	public void everyShippedPayoffWaitsItsTurn() throws IOException
@@ -662,4 +664,5 @@ public class SceneQuietTest
 			assertFalse("waiting, not an occasion's exemptions: " + id, h.rule(id).isOccasion());
 		}
 	}
+	// public:end side-games
 }

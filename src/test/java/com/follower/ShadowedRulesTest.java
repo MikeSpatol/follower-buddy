@@ -85,7 +85,7 @@ public class ShadowedRulesTest
 		assertTrue("an occasion", h.rule("quest-milestone-10").isOccasion());
 	}
 
-	// public:cut spectate
+	// public:cut spectate,side-games
 	@Test
 	public void aBetIsOpenedOnSomeFights() throws IOException
 	{
@@ -100,7 +100,7 @@ public class ShadowedRulesTest
 		assertTrue("bet-rich wins the fight's start when it rolls", bets > 0);
 	}
 
-	// public:end spectate
+	// public:end spectate,side-games
 	@Test
 	public void theHundredthBossKillIsCountedNotOnlyCelebrated() throws IOException
 	{

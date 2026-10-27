@@ -367,6 +367,7 @@ public class MilestonesTest
 		kept.game.at(12850 >> 8 << 6, (12850 & 0xFF) << 6, 0);
 		kept.gameTicks(3);
 		assertTrue("taken where it wanted to go", kept.engine.getContext().isGrateful());
+		// public:cut souvenirs-wishes
 
 		Harness given = new Harness(folder.newFolder().toPath());
 		given.gameTicks(1);
@@ -376,6 +377,7 @@ public class MilestonesTest
 		given.answers("gift");
 		given.gameTicks(3);
 		assertTrue("handed the thing it wished for", given.engine.getContext().isGrateful());
+		// public:end souvenirs-wishes
 	}
 
 	// ----------------------------------------------------------- last time

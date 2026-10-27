@@ -163,7 +163,6 @@ public class IgnoredOverturesTest
 		h.dispatch(TriggerEvent.simple(TriggerEvent.Type.PLAYER_DEATH));
 		assertEquals("and no longer than that", 2, h.firedBy("wisher").size());
 	}
-	// public:end souvenirs-wishes
 
 	/** The day's rest is kept with the memory, so a relog or a restart does not reset it. */
 	@Test
@@ -179,4 +178,5 @@ public class IgnoredOverturesTest
 		restarted.dispatch(TriggerEvent.simple(TriggerEvent.Type.PLAYER_DEATH));
 		assertEquals("the new session remembers it asked", 0, restarted.firedBy("wisher").size());
 	}
+	// public:end souvenirs-wishes
 }
