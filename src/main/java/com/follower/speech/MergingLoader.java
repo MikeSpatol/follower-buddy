@@ -70,11 +70,8 @@ public abstract class MergingLoader<T>
 	 */
 	private final String listName;
 
-	/** What the status line calls the loaded content. */
+	/** What the status line and the client log call the loaded content. */
 	private final String noun;
-
-	/** What the client log calls the content when writing and loading it. */
-	private final String what;
 
 	@Getter
 	Path file;
@@ -120,12 +117,6 @@ public abstract class MergingLoader<T>
 	/** Called once the merge, and its record, are written. */
 	void merged(byte[] shipped) throws IOException
 	{
-	}
-
-	/** The jar lacks its own defaults: a broken build. */
-	void missing()
-	{
-		log.warn("Bundled /com/follower/default-{} is missing", fileName);
 	}
 
 	// public:cut logs
@@ -281,7 +272,8 @@ public abstract class MergingLoader<T>
 		{
 			if (in == null)
 			{
-				missing();
+				// The jar lacks its own defaults: a broken build.
+				log.warn("Bundled /com/follower/default-{} is missing", fileName);
 				return;
 			}
 			Files.createDirectories(file.getParent());
@@ -290,7 +282,7 @@ public abstract class MergingLoader<T>
 		}
 		catch (IOException e)
 		{
-			log.warn("Could not write default {} to {}", what, file, e);
+			log.warn("Could not write default {} to {}", noun, file, e);
 			return;
 		}
 		// Recorded at once, so the first update merges against what was
@@ -305,7 +297,7 @@ public abstract class MergingLoader<T>
 		catch (IOException e)
 		{
 			// Only costs the first update a merge against 1.4.0's defaults.
-			log.warn("Could not record the starter {} in {}", what, baseFile, e);
+			log.warn("Could not record the starter {} in {}", noun, baseFile, e);
 		}
 	}
 
@@ -391,7 +383,7 @@ public abstract class MergingLoader<T>
 		status = summary + (problems.isEmpty() ? "" : ", " + problems.size() + " warning(s)");
 		// At INFO: when a rule never fires or a conversation does not open,
 		// the first thing worth knowing is whether it loaded at all.
-		log.info("Loaded {}: {}", what, status); // public:cut logs
+		log.info("Loaded {}: {}", noun, status); // public:cut logs
 	}
 
 	/** Makes {@code held} a copy of {@code with}, in place: it is the object the file holds. */

@@ -80,7 +80,7 @@ public class RuleLoader extends MergingLoader<RuleFile>
 	@Inject
 	public RuleLoader(Gson gson)
 	{
-		super(gson, RuleFile.class, FILE_NAME, BASE_FILE, "rules", "rules", "rules");
+		super(gson, RuleFile.class, FILE_NAME, BASE_FILE, "rules", "rules");
 	}
 
 	@Override
@@ -95,12 +95,6 @@ public class RuleLoader extends MergingLoader<RuleFile>
 	void merged(byte[] shipped) throws IOException
 	{
 		Files.write(file.resolveSibling(MERGE_STAMP), mergeStamp(shipped).getBytes(StandardCharsets.UTF_8));
-	}
-
-	@Override
-	void missing()
-	{
-		log.warn("Bundled default rules missing from jar");
 	}
 
 	// public:cut logs

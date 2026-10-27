@@ -309,9 +309,23 @@ public class LoaderDiffTest
 		}
 		for (ILoggingEvent event : logged.list)
 		{
+			String message = event.getFormattedMessage();
+			if (event.getLoggerName().contains(".before."))
+			{
+				// The words the client log has changed since: the dialogs
+				// loader says conversations, as its status line does, and
+				// both say a missing bundled file the same way.
+				message = message
+					.replaceFirst("^Bundled default rules missing from jar$",
+						"Bundled /com/follower/default-phrases.json is missing")
+					.replaceFirst("^Could not write default dialogs to ", "Could not write default conversations to ")
+					.replaceFirst("^Could not record the starter dialogs in ",
+						"Could not record the starter conversations in ")
+					.replaceFirst("^Loaded dialogs: ", "Loaded conversations: ");
+			}
 			rec.append("log ").append(event.getLevel()).append(' ')
 				.append(event.getLoggerName().replace(".before.", ".")).append(' ')
-				.append(event.getFormattedMessage());
+				.append(message);
 			IThrowableProxy thrown = event.getThrowableProxy();
 			if (thrown != null)
 			{

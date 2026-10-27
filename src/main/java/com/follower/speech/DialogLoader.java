@@ -47,7 +47,7 @@ public class DialogLoader extends MergingLoader<DialogLoader.DialogFile>
 	@Inject
 	public DialogLoader(Gson gson)
 	{
-		super(gson, DialogFile.class, FILE_NAME, BASE_FILE, "trees", "conversations", "dialogs");
+		super(gson, DialogFile.class, FILE_NAME, BASE_FILE, "trees", "conversations");
 	}
 
 	// public:cut logs
