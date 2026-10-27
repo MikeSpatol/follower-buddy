@@ -140,6 +140,17 @@ public class AppearanceComposer
 	 */
 	public Model compose(Outfit outfit)
 	{
+		return compose(outfit, null);
+	}
+
+	/**
+	 * As {@link #compose(Outfit)}, noting in {@code downloading} each model it
+	 * went without because the client does not have it yet. A model the client
+	 * has never drawn is fetched from the game's servers: the first ask starts
+	 * the download and gets nothing, and an ask once it has landed gets it.
+	 */
+	public Model compose(Outfit outfit, List<Integer> downloading)
+	{
 		if (!repository.isLoaded())
 		{
 			return null;
@@ -183,7 +194,7 @@ public class AppearanceComposer
 			int before = parts.size();
 			// A woman's model rigged to the wrong arm is drawn from the man's.
 			int[] rerig = item && resolved.getGender() == 1 ? FEMALE_FROM_MALE.get(id) : null;
-			addPart(parts, entry, rerig != null ? 0 : resolved.getGender());
+			addPart(parts, entry, rerig != null ? 0 : resolved.getGender(), downloading);
 			if (rerig != null)
 			{
 				for (int i = before; i < parts.size(); i++)
@@ -422,7 +433,7 @@ public class AppearanceComposer
 			}
 
 			int before = parts.size();
-			addPart(parts, entry, resolved.getGender());
+			addPart(parts, entry, resolved.getGender(), null);
 			while (partSlots.size() < parts.size())
 			{
 				partSlots.add(slot);
@@ -632,7 +643,7 @@ public class AppearanceComposer
 	}
 	// public:end dev
 
-	private void addPart(List<ModelData> parts, ModelRepository.Entry entry, int gender)
+	private void addPart(List<ModelData> parts, ModelRepository.Entry entry, int gender, List<Integer> downloading)
 	{
 		int[] modelIds = entry.models(gender);
 		if (modelIds == null)
@@ -651,6 +662,10 @@ public class AppearanceComposer
 			if (data == null)
 			{
 				log.debug("Model {} not in cache", modelId); // public:cut logs
+				if (downloading != null)
+				{
+					downloading.add(modelId);
+				}
 				continue;
 			}
 
@@ -668,6 +683,19 @@ public class AppearanceComposer
 
 			parts.add(data);
 		}
+	}
+
+	/** Whether any of these models, missing from an earlier build, has landed since. */
+	public boolean anyArrived(List<Integer> modelIds)
+	{
+		for (int modelId : modelIds)
+		{
+			if (client.loadModelData(modelId) != null)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/** Applies the five body-colour indices through the game's own palette tables. */

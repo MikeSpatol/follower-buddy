@@ -8220,6 +8220,15 @@ public class FollowerPlugin extends Plugin
 				follower.despawn();
 			}
 		}
+		else if (appearanceService.partsArrived())
+		{
+			// A model the client has never drawn is downloaded on the first ask,
+			// and the look built meanwhile goes without it: built again once it
+			// lands, ahead of the bare respawn below, which would bring back the
+			// unfinished one. Public QA, 27 Oct: a new shirt and legs on a fresh
+			// install left the follower without a torso or legs for a while.
+			rebuildFollower();
+		}
 		else if (!follower.isSpawned() && appearanceService.getCurrent() != null)
 		{
 			// Back on its post if it was left waiting, as the rebuild does.
