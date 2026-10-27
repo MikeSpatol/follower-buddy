@@ -131,6 +131,9 @@
     "likes": {
       "facts": [
         "likes"
+      ],
+      "note": [
+        "likes, "
       ]
     },
     "souvenirs-wishes": {
