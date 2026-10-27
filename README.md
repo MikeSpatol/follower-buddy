@@ -129,10 +129,10 @@ The full guide to the panel, the settings and the commands is in
   fixed entry names and size caps; see `com.follower.share.PackFile`.
   <!-- public:end sharevoice -->
   <!-- public:cut chronicle,sharevoice -->
-- 2,410 tests cover the rule engine, movement, the Chronicle, hostile share
+- 2,432 tests cover the rule engine, movement, the Chronicle, hostile share
   packs and every bundled rule; see `docs/testing-strategy.md`.
 <!-- public:end chronicle,sharevoice -->
-<!-- public:else - 1,814 tests cover the rule engine, movement and every bundled rule; see -->
+<!-- public:else - 1,836 tests cover the rule engine, movement and every bundled rule; see -->
 <!-- public:else   `docs/testing-strategy.md`. -->
 
 ## More
